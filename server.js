@@ -109,6 +109,15 @@ app.get("/healthz", (_req, res) => {
   });
 });
 
+// Domain-verification file for x402 directories (402 Index instant approval).
+// Free route (declared before the paywall). Hash set via env so it's editable without code changes.
+app.get("/.well-known/402index-verify.txt", (_req, res) => {
+  res.type("text/plain").send(
+    process.env.INDEX402_VERIFY_HASH ||
+      "a1d5312d7ee9189ae3cbb1eb74f0f3903001e373dab8dfb209a942a41be5a80b"
+  );
+});
+
 // The paid route. Unpaid request -> HTTP 402 with payment requirements.
 // Paid request (X-PAYMENT header with a valid signed authorization) -> 200 + body.
 app.use(
