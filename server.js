@@ -159,10 +159,38 @@ app.get("/.well-known/x402", (_req, res) => {
     items: RESOURCES.map((r) => ({ resource: { url: r.url, description: r.description, mimeType: r.mimeType }, type: "http", accepts: acceptsFor(r.amount) })),
   });
 });
+// --- /llms.txt: agent/LLM-native discovery surface (llmstxt.org convention).
+// Free route. Tells crawling LLM agents what we sell and exactly how to pay (x402),
+// the same channel our category peers (Melvea, cryptojp, img402) use to be found.
+app.get("/llms.txt", (_req, res) => {
+  const line = (path, price, desc) => `- [${path}](${PUBLIC_URL}${path}): ${price} USDC — ${desc}`;
+  res.type("text/plain").send(`# x402 URL Extractor — pay-per-call data & enrichment for AI agents
+
+> Agent-native HTTP endpoints that return clean, structured JSON for a few cents of USDC on Base (x402). No API keys, no signup, no subscription: send an x402 payment, get the data. Settlement via the Coinbase CDP facilitator. payTo ${PAY_TO} on Base mainnet (eip155:8453).
+
+## Endpoints
+${line("/enrich", ENRICH_PRICE, "domain -> agent-ready company intelligence: identity, industry keywords, tech stack, social profiles, contact surface, DNS + email infra (MX/SPF/DMARC), and an AI-readiness score. The frictionless, pay-per-call alternative to signup-gated Clearbit/Apollo.")}
+${line("/extract", EXTRACT_PRICE, "URL -> clean structured data: title, description, text, all JSON-LD, OpenGraph/Twitter meta, headings, links, AI-readiness signals.")}
+${line("/read", READ_PRICE, "URL -> full page content as clean Markdown, ready for LLM context.")}
+${line("/scan", SCAN_PRICE, "static supply-chain security scan of a public GitHub repo before an agent installs/runs it; flags exfil sinks, credential reads, install-time curl|bash.")}
+${line("/schemaforge", SCHEMAFORGE_PRICE, "business site -> paste-ready JSON-LD structured-data bundle + a gap diff vs the live site.")}
+
+## How to pay (x402)
+1. GET an endpoint (e.g. ${PUBLIC_URL}/enrich?domain=stripe.com). You receive HTTP 402 with the payment requirements.
+2. Pay the quoted USDC amount on Base to ${PAY_TO} with any x402 client (@x402/fetch, x402-axios, Coinbase AgentKit).
+3. Replay the request with the X-PAYMENT header. You receive the JSON result.
+
+## Discovery
+- x402 manifest: ${PUBLIC_URL}/.well-known/x402
+- OpenAPI: ${PUBLIC_URL}/openapi.json
+- Source: https://github.com/epistemedeus/x402-url-extractor
+`);
+});
+
 app.get("/openapi.json", (_req, res) => {
   res.json({
     openapi: "3.0.3",
-    info: { title: "x402 URL Extractor", version: "1.0.0", description: `Pay USDC (Base mainnet, x402) per call: /extract ${EXTRACT_PRICE}, /read ${READ_PRICE}, /scan ${SCAN_PRICE}. payTo ${PAY_TO}` },
+    info: { title: "x402 URL Extractor", version: "1.0.0", description: `Pay USDC (Base mainnet, x402) per call: /enrich ${ENRICH_PRICE}, /extract ${EXTRACT_PRICE}, /read ${READ_PRICE}, /scan ${SCAN_PRICE}, /schemaforge ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
     servers: [{ url: PUBLIC_URL }],
     paths: {
       "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "structured data" }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
