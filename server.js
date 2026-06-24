@@ -25,6 +25,7 @@ import { extract, readMarkdown } from "./extract.mjs";
 import { scanRepo } from "./scan.mjs";
 import { schemaforge } from "./schemaforge.mjs";
 import { enrich } from "./enrich.mjs";
+import { walletEnrich } from "./wallet-enrich.mjs";
 
 // ---------------------------------------------------------------------------
 // 1. CONFIG (all via env so we change facilitator/network with zero code edits)
@@ -50,6 +51,10 @@ const SCHEMAFORGE_PRICE = process.env.SCHEMAFORGE_PRICE || "$0.25";
 // Enrich: domain -> agent-ready company intelligence. ENRICHMENT is the #1 verified-earning x402 category
 // (volume model: cheap-per-call x high call-volume). Priced at the transacting micro-band -> $0.05.
 const ENRICH_PRICE = process.env.ENRICH_PRICE || "$0.05";
+// Wallet-enrich: 0x address -> agent-ready on-chain profile (EOA/contract, native + token holdings,
+// token/NFT metadata, proxy + activity). Same ENRICHMENT category, aimed at the crypto-native agents who
+// actually transact USDC on Base. Priced at the proven micro-band to maximize first-paid-call odds -> $0.05.
+const WALLET_ENRICH_PRICE = process.env.WALLET_ENRICH_PRICE || "$0.05";
 
 // "$0.05" -> "50000" atomic USDC units (6 decimals) so the discovery docs
 // (/.well-known/x402, /openapi.json) always match the paywall price exactly.
@@ -123,7 +128,7 @@ app.get("/healthz", (_req, res) => {
     ok: true,
     payTo: PAY_TO,
     network: NETWORK,
-    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE },
+    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
   });
@@ -151,6 +156,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/scan`, amount: priceToAtomic(SCAN_PRICE), description: "Static supply-chain security scan of a public GitHub repo before an agent installs/runs it. Flags exfil sinks, obfuscation, credential reads, install-time curl|bash. risk=clean|suspicious|dangerous.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/schemaforge`, amount: priceToAtomic(SCHEMAFORGE_PRICE), description: "Generate a complete, paste-ready JSON-LD structured-data bundle (LocalBusiness/MedicalBusiness + Service/OfferCatalog + FAQPage + Review/AggregateRating + geo/hours) for a business site, tuned to the fields the pages that surface for high-intent vertical queries carry, plus a gap diff vs the live site and a ranked fix list. Makes a page eligible to be cited by AI assistants.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/enrich`, amount: priceToAtomic(ENRICH_PRICE), description: "Domain -> agent-ready company intelligence in one call: identity (name/legal name/description/logo), industry keywords, tech stack (CMS/framework/analytics), social profiles, contact surface (emails/phone/address), DNS + email infrastructure (MX/SPF/DMARC), and AI-search-readiness signals. No auth, no API keys, no subscription. Pay per request in USDC.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/wallet-enrich`, amount: priceToAtomic(WALLET_ENRICH_PRICE), description: "Base/EVM address -> agent-ready on-chain profile in one call: EOA vs contract, native ETH + curated Base token holdings, token/NFT contract metadata (ERC-20/721/1155, name/symbol/decimals/supply), EIP-1967 proxy detection, activity (outbound tx count), and a single derived profile label. Pure Base-mainnet RPC, public data only; no keys, no subscription. The frictionless, pay-per-call way for an agent to size up a wallet/contract before it sends funds, swaps, or calls it.", mimeType: "application/json" },
 ];
 app.get("/.well-known/x402", (_req, res) => {
   res.json({
@@ -170,6 +176,7 @@ app.get("/llms.txt", (_req, res) => {
 
 ## Endpoints
 ${line("/enrich", ENRICH_PRICE, "domain -> agent-ready company intelligence: identity, industry keywords, tech stack, social profiles, contact surface, DNS + email infra (MX/SPF/DMARC), and an AI-readiness score. The frictionless, pay-per-call alternative to signup-gated Clearbit/Apollo.")}
+${line("/wallet-enrich", WALLET_ENRICH_PRICE, "Base/EVM 0x address -> agent-ready on-chain profile: EOA vs contract, native ETH + token holdings, token/NFT contract metadata, proxy + activity signals, and a derived profile label. Pure Base RPC, no keys. Size up a wallet/contract before sending funds, swapping, or calling it.")}
 ${line("/extract", EXTRACT_PRICE, "URL -> clean structured data: title, description, text, all JSON-LD, OpenGraph/Twitter meta, headings, links, AI-readiness signals.")}
 ${line("/read", READ_PRICE, "URL -> full page content as clean Markdown, ready for LLM context.")}
 ${line("/scan", SCAN_PRICE, "static supply-chain security scan of a public GitHub repo before an agent installs/runs it; flags exfil sinks, credential reads, install-time curl|bash.")}
@@ -190,7 +197,7 @@ ${line("/schemaforge", SCHEMAFORGE_PRICE, "business site -> paste-ready JSON-LD 
 app.get("/openapi.json", (_req, res) => {
   res.json({
     openapi: "3.0.3",
-    info: { title: "x402 URL Extractor", version: "1.0.0", description: `Pay USDC (Base mainnet, x402) per call: /enrich ${ENRICH_PRICE}, /extract ${EXTRACT_PRICE}, /read ${READ_PRICE}, /scan ${SCAN_PRICE}, /schemaforge ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
+    info: { title: "x402 URL Extractor", version: "1.0.0", description: `Pay USDC (Base mainnet, x402) per call: /enrich ${ENRICH_PRICE}, /wallet-enrich ${WALLET_ENRICH_PRICE}, /extract ${EXTRACT_PRICE}, /read ${READ_PRICE}, /scan ${SCAN_PRICE}, /schemaforge ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
     servers: [{ url: PUBLIC_URL }],
     paths: {
       "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "structured data" }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
@@ -198,6 +205,7 @@ app.get("/openapi.json", (_req, res) => {
       "/scan": { get: { summary: RESOURCES[2].description, parameters: [{ name: "repo", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "security risk report" }, "402": { description: `payment required (x402, ${SCAN_PRICE} USDC base)` } } } },
       "/schemaforge": { get: { summary: RESOURCES[3].description, parameters: [{ name: "site", in: "query", required: true, schema: { type: "string" } }, { name: "vertical", in: "query", required: false, schema: { type: "string" } }, { name: "city", in: "query", required: false, schema: { type: "string" } }], responses: { "200": { description: "paste-ready JSON-LD bundle + gap diff + fix list" }, "402": { description: `payment required (x402, ${SCHEMAFORGE_PRICE} USDC base)` } } } },
       "/enrich": { get: { summary: RESOURCES[4].description, parameters: [{ name: "domain", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "agent-ready company intelligence (identity, tech, social, contact, DNS, AI-readiness)" }, "402": { description: `payment required (x402, ${ENRICH_PRICE} USDC base)` } } } },
+      "/wallet-enrich": { get: { summary: RESOURCES[5].description, parameters: [{ name: "address", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "agent-ready on-chain profile (type, native + token holdings, contract/token metadata, proxy, activity, profile label)" }, "402": { description: `payment required (x402, ${WALLET_ENRICH_PRICE} USDC base)` } } } },
     },
   });
 });
@@ -399,6 +407,50 @@ app.use(
           }),
         },
       },
+      "GET /wallet-enrich": {
+        accepts: [{ scheme: "exact", price: WALLET_ENRICH_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description:
+          "Base/EVM address -> agent-ready on-chain profile in one call. Hand it a bare 0x address; get back whether it's an EOA or a contract, native ETH balance, holdings across a curated set of major Base tokens (USDC/USDbC/USDT/EURC/DAI/WETH/cbETH/cbBTC/AERO/DEGEN/VIRTUAL), and — for contracts — token/NFT standard + metadata (ERC-20/721/1155, name/symbol/decimals/totalSupply) and EIP-1967 proxy detection, plus activity (outbound tx count) and a single derived profile label. Pure Base-mainnet JSON-RPC, public data only; no keys, no subscription. Lets an agent size up a wallet or contract before it sends funds, swaps, or calls it.",
+        mimeType: "application/json",
+        extensions: {
+          ...declareDiscoveryExtension({
+            input: { address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" },
+            inputSchema: {
+              type: "object",
+              properties: { address: { type: "string", description: "A Base/EVM address (0x + 40 hex), e.g. 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" } },
+              required: ["address"],
+            },
+            output: {
+              example: {
+                ok: true,
+                address: "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+                network: "base-mainnet (eip155:8453)",
+                type: "contract",
+                native: { symbol: "ETH", balance: "0.0098" },
+                tokenHoldings: [{ symbol: "USDC", amount: "1000.0", kind: "stable" }],
+                holdingsSummary: { distinctTokens: 1, stablecoinUnits: 1000, hasStablecoins: true },
+                contract: { standard: "ERC-20 (token)", token: { symbol: "USDC", name: "USD Coin", decimals: 6, totalSupply: "4157703919.56" } },
+                profile: "token-contract:USDC",
+              },
+            },
+            outputSchema: {
+              type: "object",
+              properties: {
+                ok: { type: "boolean" },
+                address: { type: "string" },
+                type: { type: "string", enum: ["eoa", "contract"] },
+                native: { type: "object" },
+                tokenHoldings: { type: "array" },
+                holdingsSummary: { type: "object" },
+                contract: { type: "object" },
+                activity: { type: "object" },
+                profile: { type: "string" },
+              },
+              required: ["ok", "address", "type"],
+            },
+          }),
+        },
+      },
     },
     resourceServer
   )
@@ -473,6 +525,19 @@ app.get("/enrich", async (req, res) => {
   }
 });
 
+// Paid: Base/EVM address -> agent-ready on-chain profile (enrichment, aimed at crypto-native agent buyers).
+app.get("/wallet-enrich", async (req, res) => {
+  const address = req.query.address || req.query.wallet || req.query.addr;
+  if (!address || typeof address !== "string") {
+    return res.status(400).json({ ok: false, error: "missing required query param: address (a 0x EVM address)" });
+  }
+  try {
+    res.json(await walletEnrich(address));
+  } catch (e) {
+    res.status(200).json({ ok: false, address, error: String(e.message || e) });
+  }
+});
+
 // Free landing so a human/agent hitting the root learns what this is + how to pay.
 app.get("/", (_req, res) => {
   res.json({
@@ -484,6 +549,7 @@ app.get("/", (_req, res) => {
       "GET /scan?repo=": `${SCAN_PRICE} — static supply-chain security scan of a public GitHub repo before install.`,
       "GET /schemaforge?site=&vertical=&city=": `${SCHEMAFORGE_PRICE} — generate a paste-ready JSON-LD structured-data bundle + gap diff so a business page is eligible to be cited by AI assistants.`,
       "GET /enrich?domain=": `${ENRICH_PRICE} — domain -> agent-ready company intelligence: identity, tech stack, social, contact, DNS/email-infra, AI-readiness. No auth, pay-per-call.`,
+      "GET /wallet-enrich?address=": `${WALLET_ENRICH_PRICE} — Base/EVM 0x address -> agent-ready on-chain profile: EOA/contract, native + token holdings, token/NFT metadata, proxy + activity, profile label. Pure Base RPC, no keys.`,
     },
     network: NETWORK,
     payTo: PAY_TO,
