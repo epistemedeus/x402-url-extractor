@@ -374,7 +374,7 @@ app.use(
               example: {
                 ok: true,
                 domain: "stripe.com",
-                company: { name: "Stripe", legalName: "Stripe, LLC", description: "Financial services platform...", logo: "https://.../favicon.svg", keywords: [] },
+                company: { name: "Stripe", legalName: "Stripe, LLC", description: "Financial services platform...", logo: "https://.../favicon.svg", keywords: ["stripe", "financial", "infrastructure", "payments", "revenue"], keywordsSource: "derived" },
                 contact: { emails: [], phones: [], address: null },
                 social: { twitter: "https://twitter.com/stripe", linkedin: "https://www.linkedin.com/company/stripe/", github: "https://github.com/stripe" },
                 tech: ["Next.js"],

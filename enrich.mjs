@@ -164,6 +164,49 @@ async function headOk(url) {
   } catch { return false; } finally { clearTimeout(t); }
 }
 
+// Collect declared keywords/topics from the JSON-LD graph (keywords, knowsAbout,
+// applicationCategory). Strings may be comma-joined; arrays may hold strings or {name}.
+function ldKeywords(ld) {
+  const out = [];
+  const push = (v) => {
+    if (!v) return;
+    if (typeof v === "string") out.push(...v.split(/[,;|]/));
+    else if (Array.isArray(v)) for (const x of v) out.push(typeof x === "string" ? x : x?.name || "");
+    else if (typeof v === "object" && v.name) out.push(String(v.name));
+  };
+  const walk = (o) => {
+    if (!o || typeof o !== "object") return;
+    if (Array.isArray(o)) return o.forEach(walk);
+    push(o.keywords); push(o.knowsAbout); push(o.applicationCategory);
+    for (const v of Object.values(o)) if (v && typeof v === "object") walk(v);
+  };
+  ld.forEach(walk);
+  return out;
+}
+
+// Stopwords for deterministic keyword derivation from title/description marketing copy.
+const KW_STOP = new Set(
+  ("the a an and or but for to of in on at by with from into over under out up down off as is are be been being was were am do does did has have had can could will would should may might must just not no nor yes new use used using via per your you our we us they them their his her its it this that these those there here what which who whom whose how why when where all any both each few more most other some such only own same so than too very s t don now get got make made build built help helps best free open one two get more about contact privacy terms cookie cookies login signup sign log home page site web app apps data api apis pay call calls click learn read see view start today")
+    .split(/\s+/)
+);
+
+// Deterministic salient-term extraction from title + description when no
+// declared keywords exist. Ranks by frequency then first-appearance. Honest
+// fallback (flagged keywordsSource:"derived"), never fabricated.
+function deriveKeywords(text, max = 8) {
+  const freq = new Map();
+  const order = [];
+  for (const raw of String(text || "").toLowerCase().split(/[^a-z0-9+]+/)) {
+    const w = raw.trim();
+    if (w.length < 4 || KW_STOP.has(w) || /^\d+$/.test(w)) continue;
+    if (!freq.has(w)) order.push(w);
+    freq.set(w, (freq.get(w) || 0) + 1);
+  }
+  return order
+    .sort((a, b) => freq.get(b) - freq.get(a) || order.indexOf(a) - order.indexOf(b))
+    .slice(0, max);
+}
+
 export async function enrich(rawDomain) {
   const u = normalizeToOrigin(rawDomain);
   const origin = u.origin;
@@ -187,7 +230,23 @@ export async function enrich(rawDomain) {
   ]);
 
   const social = socialProfiles([...links], org.sameAs);
-  const keywords = (meta.keywords || "").split(",").map((s) => clean(s)).filter(Boolean).slice(0, 15);
+  // Keywords: prefer DECLARED keywords (meta keywords/news_keywords/article tags +
+  // JSON-LD keywords/knowsAbout). Modern sites rarely set the legacy keywords meta,
+  // so fall back to deterministic salient terms from the title + description.
+  const declaredKw = [
+    ...String(meta.keywords || "").split(","),
+    ...String(meta["news_keywords"] || "").split(","),
+    ...String(meta["article:tag"] || "").split(","),
+    ...ldKeywords(ld),
+  ].map((s) => clean(String(s))).filter((s) => s && s.length <= 40);
+  const seen = new Set();
+  const keywords = [];
+  const addKw = (k) => { const low = String(k).toLowerCase(); if (k && !seen.has(low) && keywords.length < 15) { seen.add(low); keywords.push(k); } };
+  for (const k of declaredKw) addKw(k);
+  const declaredCount = keywords.length;
+  // Top up to ~6 with deterministic derived terms when declared keywords are sparse/absent.
+  if (keywords.length < 6) for (const k of deriveKeywords(`${title} ${description || ""}`)) addKw(k);
+  const keywordsSource = declaredCount === 0 ? "derived" : declaredCount >= keywords.length ? "declared" : "mixed";
 
   return {
     ok: true,
@@ -201,6 +260,7 @@ export async function enrich(rawDomain) {
       logo: org.logo || meta["og:image"] || null,
       foundingDate: org.foundingDate,
       keywords,
+      keywordsSource,
     },
     contact: {
       emails: emails(html),
