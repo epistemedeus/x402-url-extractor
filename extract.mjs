@@ -197,6 +197,10 @@ export async function readMarkdown(rawUrl, maxChars = 40000) {
   };
 }
 
+// Re-export low-level helpers so sibling services (enrich.mjs) reuse the same
+// SSRF guard + fetch + parse instead of duplicating them.
+export { assertPublicHttpUrl, fetchWithGuards, metaTags, jsonLdBlocks, headings, clean, decodeEntities };
+
 // CLI smoke test: node extract.mjs https://example.com
 if (import.meta.url === `file://${process.argv[1]}`) {
   const url = process.argv[2] || 'https://example.com';
