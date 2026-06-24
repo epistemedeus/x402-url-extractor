@@ -1,0 +1,21 @@
+{
+  "name": "x402-merchant",
+  "version": "1.0.0",
+  "description": "x402 paid HTTP endpoint that charges AI agents in USDC and settles to our own Base wallet",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@coinbase/x402": "2.1.0",
+    "@x402/core": "2.16.0",
+    "@x402/evm": "2.16.0",
+    "@x402/express": "2.16.0",
+    "@x402/extensions": "2.16.0",
+    "express": "^4.21.2"
+  }
+}
