@@ -118,6 +118,36 @@ app.get("/.well-known/402index-verify.txt", (_req, res) => {
   );
 });
 
+// --- x402 discovery document (/.well-known/x402) so agents + indexes (x402scan,
+// domain crawlers) self-discover our paid resources. Free route, before the paywall.
+const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
+const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const ACCEPTS = [
+  { scheme: "exact", network: NETWORK, asset: USDC_BASE, amount: "10000", payTo: PAY_TO, maxTimeoutSeconds: 300, extra: { name: "USD Coin", version: "2" } },
+];
+const RESOURCES = [
+  { url: `${PUBLIC_URL}/extract`, description: "URL -> clean structured data: title, description, text, ALL JSON-LD, OpenGraph/Twitter meta, headings, links, AI-readiness signals.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/read`, description: "URL -> full page content as clean Markdown, ready for LLM context. Strips nav/ads/scripts, preserves headings/links/lists.", mimeType: "application/json" },
+];
+app.get("/.well-known/x402", (_req, res) => {
+  res.json({
+    x402Version: 2,
+    lastUpdated: Math.floor(Date.now() / 1000),
+    items: RESOURCES.map((r) => ({ resource: r, type: "http", accepts: ACCEPTS })),
+  });
+});
+app.get("/openapi.json", (_req, res) => {
+  res.json({
+    openapi: "3.0.3",
+    info: { title: "x402 URL Extractor", version: "1.0.0", description: "Pay $0.01 USDC (Base mainnet, x402) per call. payTo " + PAY_TO },
+    servers: [{ url: PUBLIC_URL }],
+    paths: {
+      "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "structured data" }, "402": { description: "payment required (x402, $0.01 USDC base)" } } } },
+      "/read": { get: { summary: RESOURCES[1].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "markdown" }, "402": { description: "payment required (x402, $0.01 USDC base)" } } } },
+    },
+  });
+});
+
 // The paid route. Unpaid request -> HTTP 402 with payment requirements.
 // Paid request (X-PAYMENT header with a valid signed authorization) -> 200 + body.
 app.use(
