@@ -22,6 +22,8 @@ import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
 import { createFacilitatorConfig } from "@coinbase/x402";
 import { extract, readMarkdown } from "./extract.mjs";
+import { scanRepo } from "./scan.mjs";
+const SCAN_PRICE = process.env.SCAN_PRICE || "$0.02";
 
 // ---------------------------------------------------------------------------
 // 1. CONFIG (all via env so we change facilitator/network with zero code edits)
@@ -122,18 +124,19 @@ app.get("/.well-known/402index-verify.txt", (_req, res) => {
 // domain crawlers) self-discover our paid resources. Free route, before the paywall.
 const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
 const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-const ACCEPTS = [
-  { scheme: "exact", network: NETWORK, asset: USDC_BASE, amount: "10000", payTo: PAY_TO, maxTimeoutSeconds: 300, extra: { name: "USD Coin", version: "2" } },
+const acceptsFor = (amount) => [
+  { scheme: "exact", network: NETWORK, asset: USDC_BASE, amount, payTo: PAY_TO, maxTimeoutSeconds: 300, extra: { name: "USD Coin", version: "2" } },
 ];
 const RESOURCES = [
-  { url: `${PUBLIC_URL}/extract`, description: "URL -> clean structured data: title, description, text, ALL JSON-LD, OpenGraph/Twitter meta, headings, links, AI-readiness signals.", mimeType: "application/json" },
-  { url: `${PUBLIC_URL}/read`, description: "URL -> full page content as clean Markdown, ready for LLM context. Strips nav/ads/scripts, preserves headings/links/lists.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/extract`, amount: "10000", description: "URL -> clean structured data: title, description, text, ALL JSON-LD, OpenGraph/Twitter meta, headings, links, AI-readiness signals.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/read`, amount: "10000", description: "URL -> full page content as clean Markdown, ready for LLM context. Strips nav/ads/scripts, preserves headings/links/lists.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/scan`, amount: "20000", description: "Static supply-chain security scan of a public GitHub repo before an agent installs/runs it. Flags exfil sinks, obfuscation, credential reads, install-time curl|bash. risk=clean|suspicious|dangerous.", mimeType: "application/json" },
 ];
 app.get("/.well-known/x402", (_req, res) => {
   res.json({
     x402Version: 2,
     lastUpdated: Math.floor(Date.now() / 1000),
-    items: RESOURCES.map((r) => ({ resource: r, type: "http", accepts: ACCEPTS })),
+    items: RESOURCES.map((r) => ({ resource: { url: r.url, description: r.description, mimeType: r.mimeType }, type: "http", accepts: acceptsFor(r.amount) })),
   });
 });
 app.get("/openapi.json", (_req, res) => {
@@ -144,6 +147,7 @@ app.get("/openapi.json", (_req, res) => {
     paths: {
       "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "structured data" }, "402": { description: "payment required (x402, $0.01 USDC base)" } } } },
       "/read": { get: { summary: RESOURCES[1].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "markdown" }, "402": { description: "payment required (x402, $0.01 USDC base)" } } } },
+      "/scan": { get: { summary: RESOURCES[2].description, parameters: [{ name: "repo", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "security risk report" }, "402": { description: "payment required (x402, $0.02 USDC base)" } } } },
     },
   });
 });
@@ -236,6 +240,37 @@ app.use(
           }),
         },
       },
+      "GET /scan": {
+        accepts: [{ scheme: "exact", price: SCAN_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description:
+          "Static supply-chain SECURITY scan of a public GitHub repo BEFORE an agent installs/runs it (a dependency, a Claude/MCP skill, an MCP server). Flags exfil sinks, obfuscated code execution, credential-file reads, env-harvest+network, install-time curl|bash. Returns risk = clean|suspicious|dangerous + findings. Static only, never runs the code. Low false positives.",
+        mimeType: "application/json",
+        extensions: {
+          ...declareDiscoveryExtension({
+            input: { repo: "owner/name" },
+            inputSchema: {
+              type: "object",
+              properties: { repo: { type: "string", description: "Public GitHub repo: owner/name or https://github.com/owner/name" } },
+              required: ["repo"],
+            },
+            output: {
+              example: { ok: true, repo: "owner/name", risk: "clean", filesScanned: 12, summary: "No known malware/exfil/obfuscation patterns found.", findings: [] },
+            },
+            outputSchema: {
+              type: "object",
+              properties: {
+                ok: { type: "boolean" },
+                repo: { type: "string" },
+                risk: { type: "string", enum: ["clean", "suspicious", "dangerous"] },
+                filesScanned: { type: "number" },
+                summary: { type: "string" },
+                findings: { type: "array" },
+              },
+              required: ["ok", "repo", "risk"],
+            },
+          }),
+        },
+      },
     },
     resourceServer
   )
@@ -266,6 +301,19 @@ app.get("/read", async (req, res) => {
     res.json(await readMarkdown(url));
   } catch (e) {
     res.status(200).json({ ok: false, url, error: String(e.message || e) });
+  }
+});
+
+// Paid: static supply-chain security scan of a public GitHub repo.
+app.get("/scan", async (req, res) => {
+  const repo = req.query.repo;
+  if (!repo || typeof repo !== "string") {
+    return res.status(400).json({ ok: false, error: "missing required query param: repo (owner/name)" });
+  }
+  try {
+    res.json(await scanRepo(repo));
+  } catch (e) {
+    res.status(200).json({ ok: false, repo, error: String(e.message || e) });
   }
 });
 
