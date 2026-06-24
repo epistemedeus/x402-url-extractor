@@ -147,6 +147,56 @@ export async function extract(rawUrl) {
   };
 }
 
+// --- /read : full page content as clean Markdown (LLM-ready context) ---
+function htmlToMarkdown(html) {
+  let body = (html.match(/<body\b[^>]*>([\s\S]*)<\/body>/i) || [, html])[1];
+  // drop non-content regions
+  body = body
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
+    .replace(/<(nav|header|footer|aside|form)\b[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ");
+  // structural -> markdown
+  body = body
+    .replace(/<h1\b[^>]*>([\s\S]*?)<\/h1>/gi, (_, t) => `\n\n# ${clean(t.replace(/<[^>]+>/g, " "))}\n\n`)
+    .replace(/<h2\b[^>]*>([\s\S]*?)<\/h2>/gi, (_, t) => `\n\n## ${clean(t.replace(/<[^>]+>/g, " "))}\n\n`)
+    .replace(/<h3\b[^>]*>([\s\S]*?)<\/h3>/gi, (_, t) => `\n\n### ${clean(t.replace(/<[^>]+>/g, " "))}\n\n`)
+    .replace(/<h[4-6]\b[^>]*>([\s\S]*?)<\/h[4-6]>/gi, (_, t) => `\n\n#### ${clean(t.replace(/<[^>]+>/g, " "))}\n\n`)
+    .replace(/<li\b[^>]*>([\s\S]*?)<\/li>/gi, (_, t) => `\n- ${clean(t.replace(/<[^>]+>/g, " "))}`)
+    .replace(/<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (_, href, t) => {
+      const txt = clean(t.replace(/<[^>]+>/g, " "));
+      return txt ? `[${txt}](${href})` : "";
+    })
+    .replace(/<(p|div|section|article|br|tr|h[1-6])\b[^>]*>/gi, "\n")
+    .replace(/<\/(p|div|section|article|li|tr)>/gi, "\n")
+    .replace(/<[^>]+>/g, " ");
+  // tidy
+  return decodeEntities(body)
+    .split("\n").map(l => l.replace(/[ \t]+/g, " ").trim()).join("\n")
+    .replace(/\n{3,}/g, "\n\n").trim();
+}
+
+export async function readMarkdown(rawUrl, maxChars = 40000) {
+  const u = assertPublicHttpUrl(rawUrl);
+  const { res, html } = await fetchWithGuards(u.href);
+  const title = clean((html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || "");
+  let md = htmlToMarkdown(html);
+  const truncated = md.length > maxChars;
+  if (truncated) md = md.slice(0, maxChars);
+  return {
+    ok: true,
+    url: res.url || u.href,
+    status: res.status,
+    title,
+    markdown: md,
+    wordCount: md.split(/\s+/).filter(Boolean).length,
+    truncated,
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
 // CLI smoke test: node extract.mjs https://example.com
 if (import.meta.url === `file://${process.argv[1]}`) {
   const url = process.argv[2] || 'https://example.com';

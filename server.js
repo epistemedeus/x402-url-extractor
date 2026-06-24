@@ -21,7 +21,7 @@ import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
 import { createFacilitatorConfig } from "@coinbase/x402";
-import { extract } from "./extract.mjs";
+import { extract, readMarkdown } from "./extract.mjs";
 
 // ---------------------------------------------------------------------------
 // 1. CONFIG (all via env so we change facilitator/network with zero code edits)
@@ -175,6 +175,37 @@ app.use(
           }),
         },
       },
+      "GET /read": {
+        accepts: [{ scheme: "exact", price: PRICE, network: NETWORK, payTo: PAY_TO }],
+        description:
+          "URL -> full page content as clean Markdown, ready for LLM context. Strips nav/ads/scripts, preserves headings/links/lists. Handles redirects, timeouts, size caps, SSRF. The reliable web-reader agents need before feeding a page to a model.",
+        mimeType: "application/json",
+        extensions: {
+          ...declareDiscoveryExtension({
+            input: { url: "https://example.com" },
+            inputSchema: {
+              type: "object",
+              properties: { url: { type: "string", description: "Public http(s) URL to read as Markdown." } },
+              required: ["url"],
+            },
+            output: {
+              example: { ok: true, url: "https://example.com", title: "Example Domain", markdown: "# Example Domain\n\n...", wordCount: 28 },
+            },
+            outputSchema: {
+              type: "object",
+              properties: {
+                ok: { type: "boolean" },
+                url: { type: "string" },
+                title: { type: "string" },
+                markdown: { type: "string" },
+                wordCount: { type: "number" },
+                truncated: { type: "boolean" },
+              },
+              required: ["ok", "url", "markdown"],
+            },
+          }),
+        },
+      },
     },
     resourceServer
   )
@@ -191,6 +222,19 @@ app.get("/extract", async (req, res) => {
     res.json(data);
   } catch (e) {
     // Paid but extraction failed (bad/unreachable URL): return a clean, useful error.
+    res.status(200).json({ ok: false, url, error: String(e.message || e) });
+  }
+});
+
+// Paid: full page content as clean Markdown (LLM-ready).
+app.get("/read", async (req, res) => {
+  const url = req.query.url;
+  if (!url || typeof url !== "string") {
+    return res.status(400).json({ ok: false, error: "missing required query param: url" });
+  }
+  try {
+    res.json(await readMarkdown(url));
+  } catch (e) {
     res.status(200).json({ ok: false, url, error: String(e.message || e) });
   }
 });
