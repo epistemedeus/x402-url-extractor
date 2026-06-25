@@ -26,6 +26,7 @@ import { scanRepo } from "./scan.mjs";
 import { schemaforge } from "./schemaforge.mjs";
 import { enrich } from "./enrich.mjs";
 import { walletEnrich } from "./wallet-enrich.mjs";
+import { z } from "zod";
 
 // ---------------------------------------------------------------------------
 // 1. CONFIG (all via env so we change facilitator/network with zero code edits)
@@ -565,3 +566,29 @@ app.listen(PORT, () => {
   console.log(`  facilitator: ${FACILITATOR} (${facilitatorClient.url})`);
   console.log(`  paid route:  GET /extract`);
 });
+
+// --- Paid MCP server at POST /mcp (streamable-HTTP), x402-gated ---------------
+// Reaches MCP-enabled agent clients (Claude Desktop, Cursor, Windsurf) — a buyer
+// pool the HTTP / x402scan / Bazaar channels don't touch. `tools/list` is FREE
+// (discovery); `tools/call` is paid in USDC to the SAME payTo via the SAME
+// facilitator. Mounted AFTER listen, async + NON-FATAL: any MCP setup failure
+// leaves the 6 HTTP paid routes fully intact (logged, never thrown).
+import("./mcp-server.mjs")
+  .then(({ mountMcp }) =>
+    mountMcp(app, {
+      facilitatorClient,
+      network: NETWORK,
+      payTo: PAY_TO,
+      serverInfo: { name: "x402-data-gateway", version: "1.0.0" },
+      tools: [
+        { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to extract") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
+        { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to read as Markdown") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
+        { name: "scan", description: RESOURCES[2].description, price: SCAN_PRICE, inputSchema: { repo: z.string().describe("Public GitHub repo: owner/name or URL") }, run: (a) => scanRepo(a.repo), tags: ["security", "supply-chain", "github"] },
+        { name: "schemaforge", description: RESOURCES[3].description, price: SCHEMAFORGE_PRICE, inputSchema: { site: z.string().describe("Public business site URL"), vertical: z.string().optional().describe("Vertical, e.g. med-spas"), city: z.string().optional().describe("City the business serves") }, run: (a) => schemaforge({ site: a.site, vertical: a.vertical, city: a.city }), tags: ["seo", "json-ld", "geo"] },
+        { name: "enrich", description: RESOURCES[4].description, price: ENRICH_PRICE, inputSchema: { domain: z.string().describe("A domain or URL, e.g. stripe.com") }, run: (a) => enrich(a.domain), tags: ["enrichment", "company-data", "firmographics"] },
+        { name: "wallet_enrich", description: RESOURCES[5].description, price: WALLET_ENRICH_PRICE, inputSchema: { address: z.string().describe("Base/EVM 0x address") }, run: (a) => walletEnrich(a.address), tags: ["enrichment", "onchain", "wallet"] },
+      ],
+    })
+  )
+  .then((r) => console.log(`  MCP server:  POST /mcp (${r.toolCount} paid tools)`))
+  .catch((e) => console.error(`  /mcp mount FAILED (HTTP routes unaffected): ${e.message}`));
