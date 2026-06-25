@@ -26,6 +26,7 @@ import { scanRepo } from "./scan.mjs";
 import { schemaforge } from "./schemaforge.mjs";
 import { enrich } from "./enrich.mjs";
 import { walletEnrich } from "./wallet-enrich.mjs";
+import { deepAudit } from "./deep-audit.mjs";
 import { z } from "zod";
 
 // ---------------------------------------------------------------------------
@@ -56,6 +57,9 @@ const ENRICH_PRICE = process.env.ENRICH_PRICE || "$0.05";
 // token/NFT metadata, proxy + activity). Same ENRICHMENT category, aimed at the crypto-native agents who
 // actually transact USDC on Base. Priced at the proven micro-band to maximize first-paid-call odds -> $0.05.
 const WALLET_ENRICH_PRICE = process.env.WALLET_ENRICH_PRICE || "$0.05";
+// Deep-audit: the bundled "deep" tier (enrich + schemaforge -> one AI-search-readiness audit).
+// Premium tier; priced = schemaforge for strictly more value (env-overridable).
+const DEEP_AUDIT_PRICE = process.env.DEEP_AUDIT_PRICE || "$0.25";
 
 // "$0.05" -> "50000" atomic USDC units (6 decimals) so the discovery docs
 // (/.well-known/x402, /openapi.json) always match the paywall price exactly.
@@ -129,7 +133,7 @@ app.get("/healthz", (_req, res) => {
     ok: true,
     payTo: PAY_TO,
     network: NETWORK,
-    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE },
+    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
   });
@@ -158,6 +162,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/schemaforge`, amount: priceToAtomic(SCHEMAFORGE_PRICE), description: "Generate a complete, paste-ready JSON-LD structured-data bundle (LocalBusiness/MedicalBusiness + Service/OfferCatalog + FAQPage + Review/AggregateRating + geo/hours) for a business site, tuned to the fields the pages that surface for high-intent vertical queries carry, plus a gap diff vs the live site and a ranked fix list. Makes a page eligible to be cited by AI assistants.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/enrich`, amount: priceToAtomic(ENRICH_PRICE), description: "Domain -> agent-ready company intelligence in one call: identity (name/legal name/description/logo), industry keywords, tech stack (CMS/framework/analytics), social profiles, contact surface (emails/phone/address), DNS + email infrastructure (MX/SPF/DMARC), and AI-search-readiness signals. No auth, no API keys, no subscription. Pay per request in USDC.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/wallet-enrich`, amount: priceToAtomic(WALLET_ENRICH_PRICE), description: "Base/EVM address -> agent-ready on-chain profile in one call: EOA vs contract, native ETH + curated Base token holdings, token/NFT contract metadata (ERC-20/721/1155, name/symbol/decimals/supply), EIP-1967 proxy detection, activity (outbound tx count), and a single derived profile label. Pure Base-mainnet RPC, public data only; no keys, no subscription. The frictionless, pay-per-call way for an agent to size up a wallet/contract before it sends funds, swaps, or calls it.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/deep-audit`, amount: priceToAtomic(DEEP_AUDIT_PRICE), description: "Domain -> ONE complete AI-search-readiness audit: firmographics + tech stack + contact + DNS/email infra + a 0-100 AI-readiness score, PLUS a structured-data gap analysis with a paste-ready JSON-LD fix list and a combined letter grade. The bundled deep tier (enrich + schemaforge in one call). No auth, no API keys; pay-per-call USDC.", mimeType: "application/json" },
 ];
 app.get("/.well-known/x402", (_req, res) => {
   res.json({
@@ -408,6 +413,12 @@ app.use(
           }),
         },
       },
+      "GET /deep-audit": {
+        accepts: [{ scheme: "exact", price: DEEP_AUDIT_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description:
+          "Domain -> one complete AI-search-readiness audit (firmographics + tech + contact + DNS/email infra + a 0-100 AI-readiness score + a structured-data gap analysis with a paste-ready JSON-LD fix list + a combined letter grade). The bundled deep tier = enrich + schemaforge in one call. Public data only; no auth, no API keys, no subscription.",
+        mimeType: "application/json",
+      },
       "GET /wallet-enrich": {
         accepts: [{ scheme: "exact", price: WALLET_ENRICH_PRICE, network: NETWORK, payTo: PAY_TO }],
         description:
@@ -521,6 +532,19 @@ app.get("/enrich", async (req, res) => {
   }
   try {
     res.json(await enrich(domain));
+  } catch (e) {
+    res.status(200).json({ ok: false, domain, error: String(e.message || e) });
+  }
+});
+
+// Paid: domain -> ONE bundled AI-search-readiness audit (enrich + schemaforge). The premium "deep" tier.
+app.get("/deep-audit", async (req, res) => {
+  const domain = req.query.domain || req.query.url;
+  if (!domain || typeof domain !== "string") {
+    return res.status(400).json({ ok: false, error: "missing required query param: domain (e.g. stripe.com)" });
+  }
+  try {
+    res.json(await deepAudit(domain, { vertical: req.query.vertical, city: req.query.city }));
   } catch (e) {
     res.status(200).json({ ok: false, domain, error: String(e.message || e) });
   }
