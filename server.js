@@ -611,6 +611,7 @@ import("./mcp-server.mjs")
         { name: "schemaforge", description: RESOURCES[3].description, price: SCHEMAFORGE_PRICE, inputSchema: { site: z.string().describe("Public business site URL"), vertical: z.string().optional().describe("Vertical, e.g. med-spas"), city: z.string().optional().describe("City the business serves") }, run: (a) => schemaforge({ site: a.site, vertical: a.vertical, city: a.city }), tags: ["seo", "json-ld", "geo"] },
         { name: "enrich", description: RESOURCES[4].description, price: ENRICH_PRICE, inputSchema: { domain: z.string().describe("A domain or URL, e.g. stripe.com") }, run: (a) => enrich(a.domain), tags: ["enrichment", "company-data", "firmographics"] },
         { name: "wallet_enrich", description: RESOURCES[5].description, price: WALLET_ENRICH_PRICE, inputSchema: { address: z.string().describe("Base/EVM 0x address") }, run: (a) => walletEnrich(a.address), tags: ["enrichment", "onchain", "wallet"] },
+        { name: "deep_audit", description: RESOURCES[6].description, price: DEEP_AUDIT_PRICE, inputSchema: { domain: z.string().describe("A domain or URL, e.g. stripe.com") }, run: (a) => deepAudit(a.domain), tags: ["audit", "ai-readiness", "geo", "enrichment"] },
       ],
     })
   )
