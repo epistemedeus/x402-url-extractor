@@ -1,4 +1,20 @@
-# x402-merchant — paid HTTP endpoint that charges AI agents in USDC
+# SameDayDesk x402 Data Gateway
+
+[![Smithery listing](https://smithery.ai/badge/epistemedeus/x402-data-gateway)](https://smithery.ai/servers/epistemedeus/x402-data-gateway)
+
+Seven pay-per-call tools for URL extraction, Markdown reading, repository
+security scans, company and wallet enrichment, structured data generation, and
+AI-search readiness audits.
+
+- Product page: https://samedaydesk.com/x402
+- Smithery: https://smithery.ai/servers/epistemedeus/x402-data-gateway
+- Remote MCP: https://x402-url-extractor-production.up.railway.app/mcp
+- Live resource manifest: https://x402-url-extractor-production.up.railway.app/.well-known/x402
+
+No API key or subscription is required. Calls settle exact USDC amounts on Base
+mainnet through x402.
+
+## Original rail implementation
 
 A Node/Express server that returns **HTTP 402 Payment Required** when unpaid and
 serves the resource after payment, settling **USDC on Base mainnet** straight to
