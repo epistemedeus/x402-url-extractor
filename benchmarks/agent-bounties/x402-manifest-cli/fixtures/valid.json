@@ -1,0 +1,132 @@
+{
+  "x402Version": 2,
+  "lastUpdated": 1786125140,
+  "items": [
+    {
+      "resource": {
+        "url": "https://x402-url-extractor-production.up.railway.app/extract",
+        "description": "URL extraction",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "50000",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+          "maxTimeoutSeconds": 300
+        }
+      ]
+    },
+    {
+      "resource": {
+        "url": "https://x402-url-extractor-production.up.railway.app/read",
+        "description": "Markdown reader",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "50000",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+          "maxTimeoutSeconds": 300
+        }
+      ]
+    },
+    {
+      "resource": {
+        "url": "https://x402-url-extractor-production.up.railway.app/scan",
+        "description": "Repository security scan",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "200000",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+          "maxTimeoutSeconds": 300
+        }
+      ]
+    },
+    {
+      "resource": {
+        "url": "https://x402-url-extractor-production.up.railway.app/schemaforge",
+        "description": "Structured data generation",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "250000",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+          "maxTimeoutSeconds": 300
+        }
+      ]
+    },
+    {
+      "resource": {
+        "url": "https://x402-url-extractor-production.up.railway.app/enrich",
+        "description": "Company enrichment",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "20000",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+          "maxTimeoutSeconds": 300
+        }
+      ]
+    },
+    {
+      "resource": {
+        "url": "https://x402-url-extractor-production.up.railway.app/wallet-enrich",
+        "description": "Wallet enrichment",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "20000",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+          "maxTimeoutSeconds": 300
+        }
+      ]
+    },
+    {
+      "resource": {
+        "url": "https://x402-url-extractor-production.up.railway.app/deep-audit",
+        "description": "AI search readiness audit",
+        "mimeType": "application/json"
+      },
+      "type": "http",
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "250000",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+          "maxTimeoutSeconds": 300
+        }
+      ]
+    }
+  ]
+}
