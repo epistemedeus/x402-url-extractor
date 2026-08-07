@@ -1,0 +1,14 @@
+{
+  "wallet": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+  "chainId": 8453,
+  "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "allowedRecipients": [
+    "0x7b056457d04bcdbb5851112d007168aba30adf49"
+  ],
+  "maxValueBaseUnits": "1010000",
+  "maxAuthorizationWindowSeconds": 1800,
+  "allowedPrimaryTypes": [
+    "TransferWithAuthorization",
+    "ReceiveWithAuthorization"
+  ]
+}

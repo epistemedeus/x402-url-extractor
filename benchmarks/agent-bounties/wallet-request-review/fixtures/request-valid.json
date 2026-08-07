@@ -1,0 +1,7 @@
+{
+  "method": "eth_signTypedData_v4",
+  "params": [
+    "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "{\"types\":{\"EIP712Domain\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"version\",\"type\":\"string\"},{\"name\":\"chainId\",\"type\":\"uint256\"},{\"name\":\"verifyingContract\",\"type\":\"address\"}],\"TransferWithAuthorization\":[{\"name\":\"from\",\"type\":\"address\"},{\"name\":\"to\",\"type\":\"address\"},{\"name\":\"value\",\"type\":\"uint256\"},{\"name\":\"validAfter\",\"type\":\"uint256\"},{\"name\":\"validBefore\",\"type\":\"uint256\"},{\"name\":\"nonce\",\"type\":\"bytes32\"}]},\"domain\":{\"name\":\"USD Coin\",\"version\":\"2\",\"chainId\":8453,\"verifyingContract\":\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\"},\"primaryType\":\"TransferWithAuthorization\",\"message\":{\"from\":\"0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee\",\"to\":\"0x7b056457d04bcdbb5851112d007168aba30adf49\",\"value\":\"10000\",\"validAfter\":\"1786125000\",\"validBefore\":\"1786125900\",\"nonce\":\"0x3333333333333333333333333333333333333333333333333333333333333333\"}}"
+  ]
+}
