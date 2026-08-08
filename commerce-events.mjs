@@ -71,15 +71,28 @@ function safeEqual(left, right) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-export function classifyCommerceResult({ kind, matched, paymentPresent, status }) {
+export function classifyCommerceResult({ route, kind, matched, paymentPresent, status }) {
   if (!matched) return "unmatched";
   if (kind === "discovery" || kind === "referral") return "discovery";
   if (kind !== "paid") return "request";
   if (status === 402) return "challenge";
   if (status >= 500) return "service_failure";
   if (status >= 400) return "validation_failure";
+  if (route === "/mcp" && !paymentPresent && status >= 200 && status < 300) {
+    return "protocol_discovery";
+  }
   if (paymentPresent && status >= 200 && status < 300) return "paid_success";
   return "paid_route_response";
+}
+
+function eventResult(event) {
+  return classifyCommerceResult({
+    route: event.route,
+    kind: event.kind,
+    matched: event.matched,
+    paymentPresent: event.paymentPresent,
+    status: event.status,
+  });
 }
 
 function emptyCounts() {
@@ -178,6 +191,7 @@ export function createCommerceTelemetry({
         paymentPresent,
         status,
         result: classifyCommerceResult({
+          route: route.route,
           kind: route.kind,
           matched: route.matched,
           paymentPresent,
@@ -206,9 +220,9 @@ export function createCommerceTelemetry({
     const unmatched = emptyCounts();
     const actors = new Map();
     for (const event of events) {
-      increment(byResult, event.result);
+      increment(byResult, eventResult(event));
       increment(byRoute, event.route);
-      if (event.result === "unmatched") increment(unmatched, event.route);
+      if (eventResult(event) === "unmatched") increment(unmatched, event.route);
       actors.set(event.actor, (actors.get(event.actor) || 0) + 1);
     }
 

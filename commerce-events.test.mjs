@@ -32,6 +32,7 @@ test("paid response classes separate challenge, validation, success, and failure
   assert.equal(classifyCommerceResult({ kind: "paid", matched: true, paymentPresent: true, status: 200 }), "paid_success");
   assert.equal(classifyCommerceResult({ kind: "paid", matched: true, paymentPresent: true, status: 503 }), "service_failure");
   assert.equal(classifyCommerceResult({ kind: "unmatched", matched: false, paymentPresent: false, status: 404 }), "unmatched");
+  assert.equal(classifyCommerceResult({ route: "/mcp", kind: "paid", matched: true, paymentPresent: false, status: 200 }), "protocol_discovery");
 });
 
 test("aggregate snapshot excludes internal and crawler events and exposes no actor IDs", async () => {
@@ -67,6 +68,7 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   run({ path: "/.well-known/x402", status: 200 });
   run({ path: "/defi/morpho-position", status: 402, query: { address: "secret-value" } });
   run({ path: "/defi/morpho-position", status: 200, headers: { "payment-signature": "not-stored" } });
+  run({ path: "/mcp", status: 200 });
   run({ path: "/owner", status: 404, headers: { "x-samedaydesk-internal": "owner-canary" } });
   run({ path: "/crawler", status: 404, headers: { "user-agent": "ExampleBot/1.0" } });
   run({ path: "/mcp", status: 200, headers: { "user-agent": "SentinelOracle/0.1 liveness-only" } });
@@ -80,12 +82,13 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.ok(storage.currentBytes > 0);
   assert.equal(storage.boundedBytes, 2 * 1024 * 1024);
   const snapshot = await telemetry.snapshot({ days: 1 });
-  assert.equal(snapshot.externalEvents, 3);
+  assert.equal(snapshot.externalEvents, 4);
   assert.equal(snapshot.externalActors, 1);
   assert.equal(snapshot.repeatExternalActors, 1);
   assert.equal(snapshot.byResult.discovery, 1);
   assert.equal(snapshot.byResult.challenge, 1);
   assert.equal(snapshot.byResult.paid_success, 1);
+  assert.equal(snapshot.byResult.protocol_discovery, 1);
   assert.equal(JSON.stringify(snapshot).includes("secret-value"), false);
   assert.equal(JSON.stringify(snapshot).includes("not-stored"), false);
   assert.equal(JSON.stringify(snapshot).includes("actor"), false);
