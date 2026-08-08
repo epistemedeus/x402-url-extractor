@@ -162,6 +162,12 @@ function allowAgoraBridge(req) {
   return true;
 }
 
+app.head("/integrations/agoragentic/ai-readiness-audit", (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.set("X-Robots-Tag", "noindex, nofollow");
+  return res.status(200).end();
+});
+
 app.post("/integrations/agoragentic/ai-readiness-audit", async (req, res) => {
   if (!allowAgoraBridge(req)) {
     res.set("Retry-After", "60");
