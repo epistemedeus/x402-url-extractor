@@ -600,7 +600,7 @@ app.use(
       "GET /schemaforge": {
         accepts: [{ scheme: "exact", price: SCHEMAFORGE_PRICE, network: NETWORK, payTo: PAY_TO }],
         description:
-          "Generate a complete, paste-ready JSON-LD structured-data bundle for a business site (LocalBusiness/MedicalBusiness + Service/OfferCatalog + FAQPage + Review/AggregateRating + geo/openingHours), tuned to the field set that the pages which surface for high-intent vertical queries carry. Also returns a gap diff vs the live site's current structured data and a ranked fix list. Makes a page eligible to be cited by AI assistants. Deterministic, valid by construction; rating/review fields are placeholders for the business's real values.",
+          "Business website -> deterministic, paste-ready JSON-LD bundle plus a live structured-data gap analysis and ranked fixes. Covers local business and service, FAQ, offer catalog, reviews, geo, and opening hours. Rating and review fields remain explicit placeholders for the business's real values.",
         mimeType: "application/json",
         extensions: {
           ...declareDiscoveryExtension({
@@ -636,7 +636,7 @@ app.use(
       "GET /enrich": {
         accepts: [{ scheme: "exact", price: ENRICH_PRICE, network: NETWORK, payTo: PAY_TO }],
         description:
-          "Domain -> agent-ready company intelligence in one call. Hand it a bare domain; get back clean structured firmographics (name, legal name, description, logo, keywords), tech stack (CMS/framework/analytics fingerprint), social profiles, contact surface (emails, phone, postal address), DNS + email infrastructure (A/MX/NS, SPF/DMARC presence), and AI-search-readiness signals (JSON-LD schema types, OpenGraph, robots/sitemap/llms.txt, a 0-100 score). Public data only; no auth, no API keys, no subscription. The frictionless, pay-per-call alternative to signup-gated enrichment APIs.",
+          "Public domain -> structured company intelligence for agents: identity, keywords, tech stack, social and contact surface, DNS and email infrastructure, and AI-search-readiness signals with a 0-100 score. Public data only; no account, API key, or subscription.",
         mimeType: "application/json",
         extensions: {
           ...declareDiscoveryExtension({
@@ -725,7 +725,7 @@ app.use(
       "GET /wallet-enrich": {
         accepts: [{ scheme: "exact", price: WALLET_ENRICH_PRICE, network: NETWORK, payTo: PAY_TO }],
         description:
-          "Base/EVM address -> agent-ready on-chain profile in one call. Hand it a bare 0x address; get back whether it's an EOA or a contract, native ETH balance, holdings across a curated set of major Base tokens (USDC/USDbC/USDT/EURC/DAI/WETH/cbETH/cbBTC/AERO/DEGEN/VIRTUAL), and — for contracts — token/NFT standard + metadata (ERC-20/721/1155, name/symbol/decimals/totalSupply) and EIP-1967 proxy detection, plus activity (outbound tx count) and a single derived profile label. Pure Base-mainnet JSON-RPC, public data only; no keys, no subscription. Lets an agent size up a wallet or contract before it sends funds, swaps, or calls it.",
+          "Base address -> agent-ready on-chain profile: EOA or contract, ETH and major-token holdings, token or NFT metadata, EIP-1967 proxy detection, activity, and a derived profile label. Uses public Base mainnet RPC with no account or API key. Useful before an agent sends funds, swaps, or calls a contract.",
         mimeType: "application/json",
         extensions: {
           ...declareDiscoveryExtension({
