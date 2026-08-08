@@ -29,7 +29,9 @@ probabilities or transaction recommendations.
 
 The service also keeps a privacy-safe demand telescope on a persistent Railway
 volume. It records route families, query key names, challenge/success classes,
-and pseudonymous repeat-use signals. It does not record raw IP addresses, user
+and pseudonymous repeat-use signals. External fetches are acquisition signals,
+not verified buyers, because unidentified automated indexers can remain. It does
+not record raw IP addresses, user
 agents, URLs, query values, bodies, payment headers, marketplace payloads, or
 credentials. Public output is aggregate only; owner and crawler traffic are
 excluded.

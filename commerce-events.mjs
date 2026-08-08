@@ -210,12 +210,12 @@ export function createCommerceTelemetry({
       generatedAt: new Date().toISOString(),
       windowDays: safeDays,
       externalEvents: events.length,
-      independentActors: actors.size,
-      repeatActors: [...actors.values()].filter((count) => count > 1).length,
+      externalActors: actors.size,
+      repeatExternalActors: [...actors.values()].filter((count) => count > 1).length,
       byResult,
       byRoute,
       unmatched,
-      boundary: "Aggregate external observations only. Internal and crawler traffic are excluded. Counts are demand signals, not buyer identities or calibrated forecasts.",
+      boundary: "Aggregate external observations only. Known internal and crawler traffic are excluded, but unidentified automated fetchers can remain. Counts are acquisition signals, not verified buyers, buyer identities, or calibrated forecasts.",
     };
   }
 

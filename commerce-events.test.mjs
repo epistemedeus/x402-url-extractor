@@ -77,8 +77,8 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.equal(storage.boundedBytes, 2 * 1024 * 1024);
   const snapshot = await telemetry.snapshot({ days: 1 });
   assert.equal(snapshot.externalEvents, 3);
-  assert.equal(snapshot.independentActors, 1);
-  assert.equal(snapshot.repeatActors, 1);
+  assert.equal(snapshot.externalActors, 1);
+  assert.equal(snapshot.repeatExternalActors, 1);
   assert.equal(snapshot.byResult.discovery, 1);
   assert.equal(snapshot.byResult.challenge, 1);
   assert.equal(snapshot.byResult.paid_success, 1);
