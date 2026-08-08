@@ -7,7 +7,7 @@ outside the supplied evidence set.
 
 ## Endpoints
 
-- `GET /healthz` reports the provider, model, project, and protection state.
+- `GET /readyz` reports the provider, model, project, and protection state.
 - `GET /demo` runs a fixed SameDayDesk evidence brief. Results are cached for 15
   minutes and fresh model calls are capped at eight per instance-hour.
 - `POST /synthesize` accepts a bounded custom evidence set and requires the

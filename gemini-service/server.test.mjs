@@ -82,6 +82,10 @@ test("HTTP routes protect arbitrary synthesis and expose a cached public demo", 
   const { port } = server.address();
   const base = `http://127.0.0.1:${port}`;
 
+  const ready = await fetch(`${base}/readyz`).then((response) => response.json());
+  assert.equal(ready.ok, true);
+  assert.equal(ready.project, "test-project");
+
   const denied = await fetch(`${base}/synthesize`, {
     method: "POST",
     headers: { "content-type": "application/json" },

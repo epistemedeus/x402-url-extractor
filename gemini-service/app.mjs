@@ -213,12 +213,12 @@ export function createApp({ generate, model, project, accessKey = "", now = Date
       name: "SameDayDesk Gemini Evidence Miner",
       provider: "Google Cloud Vertex AI",
       model,
-      endpoints: ["/healthz", "/demo", "/synthesize"],
+      endpoints: ["/readyz", "/demo", "/synthesize"],
       source: "https://github.com/epistemedeus/x402-url-extractor/tree/master/gemini-service",
     });
   });
 
-  app.get("/healthz", (_req, res) => {
+  app.get("/readyz", (_req, res) => {
     res.json({ ok: true, provider: "vertex-ai", model, project, protectedSynthesis: Boolean(accessKey) });
   });
 
