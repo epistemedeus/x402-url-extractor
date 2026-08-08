@@ -6,7 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test referral.test.mjs enrich.test.mjs the402.test.mjs"
+    "test": "node --test referral.test.mjs enrich.test.mjs the402.test.mjs platform-health.test.mjs platform-health-page.test.mjs"
   },
   "engines": {
     "node": ">=20"

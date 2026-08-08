@@ -29,6 +29,18 @@ import { walletEnrich } from "./wallet-enrich.mjs";
 import { deepAudit } from "./deep-audit.mjs";
 import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
+import {
+  PLATFORM_HEALTH_SCHEMA,
+  buildPlatformHealthResponse,
+  getPlatformHealthCard,
+  listPlatformHealthCards,
+} from "./platform-health.mjs";
+import {
+  renderAlertPilot,
+  renderMethodology,
+  renderPlatformCard,
+  renderPlatformIndex,
+} from "./platform-health-page.mjs";
 import { z } from "zod";
 
 // ---------------------------------------------------------------------------
@@ -358,12 +370,51 @@ ${line("/schemaforge", SCHEMAFORGE_PRICE, "business site -> paste-ready JSON-LD 
 `);
 });
 
+// Free Settlement Radar v0. This is evidence-backed discovery, not a paid
+// score API. Keep it before the x402 middleware so users can inspect the proof
+// asset before joining the alert demand test.
+const setRadarCache = (res) => res.set("Cache-Control", "public, max-age=300, stale-while-revalidate=900");
+
+app.get(["/radar", "/platforms"], (_req, res) => {
+  setRadarCache(res);
+  return res.type("html").send(renderPlatformIndex(listPlatformHealthCards()));
+});
+
+app.get("/platforms/methodology", (_req, res) => {
+  setRadarCache(res);
+  return res.type("html").send(renderMethodology());
+});
+
+app.get("/platforms/:platformId", (req, res) => {
+  const card = getPlatformHealthCard(req.params.platformId);
+  if (!card) return res.status(404).json({ ok: false, error: "platform_card_not_found" });
+  setRadarCache(res);
+  return res.type("html").send(renderPlatformCard(card));
+});
+
+app.get("/v0/cards.json", (_req, res) => {
+  setRadarCache(res);
+  return res.json(buildPlatformHealthResponse());
+});
+
+app.get("/schemas/platform-health-card-v0.json", (_req, res) => {
+  setRadarCache(res);
+  return res.json(PLATFORM_HEALTH_SCHEMA);
+});
+
+app.get("/alerts", (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  return res.type("html").send(renderAlertPilot());
+});
+
 app.get("/openapi.json", (_req, res) => {
   res.json({
     openapi: "3.0.3",
     info: { title: "x402 URL Extractor", version: "1.0.0", description: `Pay USDC (Base mainnet, x402) per call: /enrich ${ENRICH_PRICE}, /wallet-enrich ${WALLET_ENRICH_PRICE}, /extract ${EXTRACT_PRICE}, /read ${READ_PRICE}, /scan ${SCAN_PRICE}, /schemaforge ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
     servers: [{ url: PUBLIC_URL }],
     paths: {
+      "/v0/cards.json": { get: { summary: "Free incident-backed platform health cards. Categories are not calibrated scores.", responses: { "200": { description: "SameDayDesk platform health index v0" } } } },
+      "/platforms": { get: { summary: "Human-readable Settlement Radar health cards.", responses: { "200": { description: "HTML platform health index" } } } },
       "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "structured data" }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
       "/read": { get: { summary: RESOURCES[1].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "markdown" }, "402": { description: `payment required (x402, ${READ_PRICE} USDC base)` } } } },
       "/scan": { get: { summary: RESOURCES[2].description, parameters: [{ name: "repo", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "security risk report" }, "402": { description: `payment required (x402, ${SCAN_PRICE} USDC base)` } } } },
@@ -724,8 +775,15 @@ app.get("/wallet-enrich", async (req, res) => {
 // Free landing so a human/agent hitting the root learns what this is + how to pay.
 app.get("/", (_req, res) => {
   res.json({
-    service: "x402 data + security gateway",
-    what: "Pay USDC (Base mainnet, x402) per call. Three paid endpoints settle directly to our wallet.",
+    service: "SameDayDesk agent evidence + x402 gateway",
+    what: "Free incident-backed platform health plus pay-per-call data tools that settle USDC on Base.",
+    settlementRadar: {
+      pages: "/platforms",
+      json: "/v0/cards.json",
+      methodology: "/platforms/methodology",
+      alertPilot: "/alerts",
+      boundary: "Categories are dated observations, not calibrated reliability scores or payout guarantees.",
+    },
     paidRoutes: {
       "GET /extract?url=": `${EXTRACT_PRICE} — URL -> clean structured JSON (text, JSON-LD, OG, headings, links, AI-readiness signals).`,
       "GET /read?url=": `${READ_PRICE} — URL -> LLM-ready Markdown.`,
@@ -736,7 +794,7 @@ app.get("/", (_req, res) => {
     },
     network: NETWORK,
     payTo: PAY_TO,
-    docs: "/healthz for config; /openapi.json for the spec; send an x402 payment to any paid route.",
+    docs: "/platforms for free health cards; /healthz for config; /openapi.json for the spec; send an x402 payment to any paid route.",
   });
 });
 
