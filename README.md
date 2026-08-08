@@ -71,17 +71,17 @@ output schemas.
 
 ---
 
-## TL;DR — the decision
+## Current production decision
 
 | Path | Account/API key? | Base mainnet? | Discovery reach |
 |---|---|---|---|
-| **xpay public facilitator** (`facilitator.xpay.sh`) — **DEFAULT** | **None** (fully autonomous) | **Yes** (`eip155:8453`, exact scheme, live) | We advertise the URL ourselves (no central catalog) |
-| **CDP facilitator** (`api.cdp.coinbase.com/platform/v2/x402`) | **Yes** — Coinbase CDP account + `CDP_API_KEY_ID` / `CDP_API_KEY_SECRET` | Yes | **CDP Bazaar** (~4,400 buyers), auto-listed after first settlement |
-| **x402.org public facilitator** (`x402.org/facilitator`) | None | **No — Base Sepolia testnet only** | Its own small catalog at `x402.org/facilitator/discovery/resources` |
+| **CDP facilitator** (`api.cdp.coinbase.com/platform/v2/x402`) | **Yes**, Coinbase CDP account plus `CDP_API_KEY_ID` and `CDP_API_KEY_SECRET` | Yes | **Production default.** CDP Bazaar catalog, merchant lookup, and semantic search after first settlement |
+| **xpay public facilitator** (`facilitator.xpay.sh`) | **None** | **Yes** (`eip155:8453`, exact scheme) | Fallback settlement path with self-published discovery only |
+| **x402.org public facilitator** (`x402.org/facilitator`) | None | **No**, Base Sepolia testnet only | Separate test catalog at `x402.org/facilitator/discovery/resources` |
 
-**Recommended path: ship now on xpay (mainnet, no account, non-custodial).** The
-moment a CDP key is available, flip `FACILITATOR=cdp` (no code change) to also get
-Bazaar reach.
+Production uses CDP. All eight routes passed live CDP verification, completed a
+real settlement, and appear in Bazaar merchant discovery. Keep xpay as the
+no-key continuity fallback, not as the normal production facilitator.
 
 ---
 
@@ -90,11 +90,12 @@ Bazaar reach.
 The `exact` scheme settles USDC via an **EIP-3009 `transferWithAuthorization`**:
 the buyer (agent) signs an authorization that moves USDC **directly from their
 wallet to our `payTo`** on-chain. The facilitator only **verifies the signature
-and broadcasts the transaction** — it never holds the money. So:
+and broadcasts the transaction**; it never holds the money. So:
 
 - Whatever facilitator we pick, the USDC lands in **our** `payTo` wallet.
 - We hold the key to `payTo`; the facilitator does not.
-- xpay is **non-custodial** and pays the gas, so we receive the full USDC amount.
+- CDP and xpay are non-custodial facilitator paths. CDP relayed the eight live
+  seller canaries and the exact USDC amounts reached our wallet.
 
 This is the same rail Frantic used to pay real mainnet USDC to this wallet, so we
 already know settlement to `0x8904…3Cee` works.
@@ -104,20 +105,18 @@ already know settlement to `0x8904…3Cee` works.
 ## Answers to the five questions
 
 ### 1. Facilitator + autonomy
-- The **public x402.org facilitator supports Base Sepolia testnet ONLY**
+- The **public x402.org facilitator supports Base Sepolia testnet only**
   (`eip155:84532`); its `/supported` endpoint does **not** list `eip155:8453`.
   Mainnet via x402.org is impossible.
-- **Base mainnet settlement does NOT strictly require a Coinbase CDP account.**
+- **Base mainnet settlement does not strictly require a Coinbase CDP account.**
   The **xpay public facilitator (`https://facilitator.xpay.sh`) supports Base
   mainnet `eip155:8453` exact scheme with no account and no API key** (verified
   against its live `/supported` endpoint). This is the fully-autonomous mainnet
   path.
-- The **CDP facilitator** also does mainnet, but **requires a CDP account +
-  API keys**. Its advantage is **Bazaar discovery (~4,400 buyers)**: routes are
-  auto-catalogued after their first CDP-settled payment.
-- **Tradeoff:** xpay = full autonomy + real mainnet money, but **no central
-  discovery catalog** (we drive demand by publishing the URL). CDP = an operator
-  must create the account once, in exchange for Bazaar reach.
+- The **CDP facilitator** requires a CDP account and API keys. Its advantage is
+  Bazaar merchant discovery, semantic search, and the Bazaar MCP buyer surface.
+- Production chose CDP after a live verify-only matrix and eight successful
+  settlements. xpay remains the no-key fallback.
 
 ### 2. Exact seller code
 See `server.js`. Current package line (NOT the legacy flat `x402-express@1.x`):
@@ -133,7 +132,9 @@ See `server.js`. Current package line (NOT the legacy flat `x402-express@1.x`):
 Core wiring:
 
 ```js
-const facilitatorClient = new HTTPFacilitatorClient({ url: "https://facilitator.xpay.sh" });
+const facilitatorClient = new HTTPFacilitatorClient(
+  createFacilitatorConfig(process.env.CDP_API_KEY_ID, process.env.CDP_API_KEY_SECRET)
+);
 const resourceServer = new x402ResourceServer(facilitatorClient)
   .register("eip155:8453", new ExactEvmScheme());
 
@@ -150,14 +151,18 @@ The route's `extensions` uses `declareDiscoveryExtension({ input, inputSchema,
 output, outputSchema })` (already in `server.js`). This advertises the route and
 its JSON schemas in the 402 payload (verified present in the live response).
 **Surfacing in the CDP Bazaar requires the CDP facilitator**: CDP catalogs a
-route the first time it **settles** a payment for it. On xpay/testnet the same
-metadata is still emitted (so any client can read the schema), but there is no
-central CDP catalog — discovery is via the URL we publish. The x402.org
-facilitator keeps its own separate catalog at `/facilitator/discovery/resources`.
+route after its first successful settlement. The production merchant lookup now
+returns all eight SameDayDesk routes. CDP also finds the Morpho and deep-audit
+routes through semantic search.
+
+CDP rejected three older route payloads whose discovery descriptions were 535,
+581, and 629 characters even though local extension validation passed. Concise
+rewrites of 294, 258, and 301 characters passed. Keep new discovery descriptions
+under 400 characters and run live CDP verify before a funded canary.
 
 ### 4. Settlement verification
 After a paid call, confirm USDC landed at `payTo` on Base mainnet. The 402/200
-flow also returns an `X-PAYMENT-RESPONSE` header with the tx hash. Independently:
+flow also returns a `PAYMENT-RESPONSE` header with settlement data. Independently:
 
 ```bash
 # USDC balanceOf(payTo) on Base mainnet via public RPC, no key:
@@ -171,9 +176,9 @@ Result is hex atomic USDC (divide by 1e6). Or use our existing Base-mainnet
 balance checker. Or view the wallet on https://basescan.org/address/0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee
 
 ### 5. Cleanest recommended path
-**Deploy on xpay (mainnet, zero account) right now.** It is the only path that is
-both fully autonomous and real mainnet money. Keep CDP as a one-env-flip upgrade
-for Bazaar reach if/when an operator provides a CDP key.
+**Deploy on CDP for the production storefront.** It preserves direct USDC
+settlement and adds the catalog, semantic search, merchant lookup, and Bazaar MCP
+buyer surface. Keep xpay configured as the no-key recovery path.
 
 ---
 
@@ -188,10 +193,13 @@ The repo is a no-config Node app: `npm start` runs `node server.js` and binds
    PAY_TO=0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee
    NETWORK=eip155:8453
    PRICE=$0.05
-   FACILITATOR=xpay
+   FACILITATOR=cdp
+   CDP_API_KEY_ID=<CDP API key ID>
+   CDP_API_KEY_SECRET=<CDP API key secret>
    COMMERCE_DATA_DIR=/data
    COMMERCE_ACTOR_SECRET=<random 32-byte secret>
    COMMERCE_INTERNAL_TOKEN=<random owner-canary token>
+   COMMERCE_EXTERNAL_SINCE=<ISO timestamp after controlled launch canaries>
    ```
    Core payment settings have safe defaults. Production telemetry uses a Railway
    volume mounted at `/data` plus the two secret variables above.
@@ -201,18 +209,17 @@ The repo is a no-config Node app: `npm start` runs `node server.js` and binds
    curl https://<your-domain>/healthz          # -> {ok:true, network:eip155:8453, ...}
    curl -i 'https://<your-domain>/defi/morpho-position?address=0x...' # -> HTTP 402 + PAYMENT-REQUIRED header
    ```
-5. **Advertise the endpoint** so agents find it (the URL, a `/.well-known`
-   pointer, README, posts). On xpay there is no central catalog.
+5. **Complete one bounded settlement per discoverable route**, then confirm the
+   merchant lookup and semantic search. Record owner settlements as test flow,
+   not revenue.
 
-### Upgrade to CDP Bazaar later (one flip, no code change)
-When a CDP key exists, set on the same service:
+### Fall back to xpay without changing route code
+If CDP is unavailable and continuity matters more than central discovery, set:
 ```
-FACILITATOR=cdp
-CDP_API_KEY_ID=<id>
-CDP_API_KEY_SECRET=<secret>
+FACILITATOR=xpay
 ```
-Redeploy. Mainnet settlement continues; the route now auto-lists in the Bazaar
-after its first CDP-settled payment.
+Redeploy. Base mainnet settlement continues, but new calls no longer feed the
+CDP Bazaar quality and activity signals.
 
 ### Prove the rail on testnet first (optional)
 ```
@@ -245,7 +252,7 @@ curl -i 'http://localhost:3000/defi/morpho-position?address=0x...' # HTTP 402
   structured result instead of the placeholder `{value:42}`. Add `?url` to the
   Bazaar `inputSchema` when you wire it up.
 
-## Sources (primary, verified June 2026)
+## Sources (primary, verified August 2026)
 - x402 seller quickstart: https://docs.x402.org/getting-started/quickstart-for-sellers
 - CDP x402 docs: https://docs.cdp.coinbase.com/x402/welcome
 - CDP network support (x402.org = testnet only; CDP = mainnet + keys): https://docs.cdp.coinbase.com/x402/network-support
