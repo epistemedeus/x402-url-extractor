@@ -17,11 +17,20 @@ async function generate({ prompt, schema }) {
       responseJsonSchema: schema,
       temperature: 0.1,
       seed: 7,
-      maxOutputTokens: 900,
+      maxOutputTokens: 2048,
       labels: { application: "samedaydesk-evidence-miner", surface: "cloud-run-demo" },
     },
   });
-  return JSON.parse(response.text || "{}");
+  const text = response.text || "";
+  try {
+    return JSON.parse(text);
+  } catch (cause) {
+    const finishReason = response.candidates?.[0]?.finishReason || "unknown";
+    throw new SyntaxError(
+      `Gemini returned invalid JSON (finishReason=${finishReason}, chars=${text.length}).`,
+      { cause },
+    );
+  }
 }
 
 const app = createApp({

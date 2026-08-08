@@ -4,7 +4,7 @@ export const LIMITS = Object.freeze({
   questionChars: 280,
   evidenceItems: 5,
   excerptChars: 1200,
-  outputClaims: 8,
+  outputClaims: 5,
 });
 
 export const DEMO_INPUT = Object.freeze({
@@ -37,7 +37,7 @@ const OUTPUT_SCHEMA = Object.freeze({
   additionalProperties: false,
   required: ["summary", "claims", "caveats"],
   properties: {
-    summary: { type: "string", maxLength: 900 },
+    summary: { type: "string", maxLength: 600 },
     claims: {
       type: "array",
       maxItems: LIMITS.outputClaims,
@@ -46,7 +46,7 @@ const OUTPUT_SCHEMA = Object.freeze({
         additionalProperties: false,
         required: ["claim", "evidenceIds", "confidence"],
         properties: {
-          claim: { type: "string", maxLength: 500 },
+          claim: { type: "string", maxLength: 320 },
           evidenceIds: {
             type: "array",
             minItems: 1,
@@ -62,8 +62,8 @@ const OUTPUT_SCHEMA = Object.freeze({
     },
     caveats: {
       type: "array",
-      maxItems: 6,
-      items: { type: "string", maxLength: 400 },
+      maxItems: 4,
+      items: { type: "string", maxLength: 240 },
     },
   },
 });
@@ -154,7 +154,7 @@ export function verifyModelOutput(raw, input) {
   const sourceById = Object.fromEntries(input.evidence.map((item) => [item.id, item.url]));
 
   for (const candidate of Array.isArray(raw?.claims) ? raw.claims : []) {
-    const claim = cleanText(candidate?.claim, 500);
+    const claim = cleanText(candidate?.claim, 320);
     const evidenceIds = Array.isArray(candidate?.evidenceIds)
       ? [...new Set(candidate.evidenceIds.filter((id) => typeof id === "string"))]
       : [];
@@ -174,12 +174,12 @@ export function verifyModelOutput(raw, input) {
   }
 
   return {
-    summary: cleanText(raw?.summary, 900),
+    summary: cleanText(raw?.summary, 600),
     claims: verifiedClaims.slice(0, LIMITS.outputClaims),
     caveats: (Array.isArray(raw?.caveats) ? raw.caveats : [])
-      .map((item) => cleanText(item, 400))
+      .map((item) => cleanText(item, 240))
       .filter(Boolean)
-      .slice(0, 6),
+      .slice(0, 4),
     grounding: {
       suppliedEvidenceCount: input.evidence.length,
       verifiedClaimCount: verifiedClaims.length,

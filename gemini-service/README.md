@@ -15,7 +15,9 @@ outside the supplied evidence set.
 
 The service accepts no arbitrary URLs to fetch, caps request and output size,
 uses structured JSON output, and never exposes a Google API key. On Cloud Run it
-authenticates to Vertex AI through Application Default Credentials.
+authenticates to Vertex AI through Application Default Credentials. Structured
+responses are capped to five short claims and four caveats, with a 2,048-token
+model ceiling so valid JSON can finish without permitting unbounded output.
 
 ## Local verification
 
