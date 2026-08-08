@@ -27,8 +27,10 @@ import { schemaforge } from "./schemaforge.mjs";
 import { enrich } from "./enrich.mjs";
 import { walletEnrich } from "./wallet-enrich.mjs";
 import { deepAudit } from "./deep-audit.mjs";
+import { morphoPosition } from "./morpho-position.mjs";
 import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
+import { createCommerceTelemetry } from "./commerce-events.mjs";
 import {
   PLATFORM_HEALTH_SCHEMA,
   buildPlatformHealthResponse,
@@ -75,6 +77,8 @@ const WALLET_ENRICH_PRICE = process.env.WALLET_ENRICH_PRICE || "$0.05";
 // Deep-audit: the bundled "deep" tier (enrich + schemaforge -> one AI-search-readiness audit).
 // Premium tier; priced = schemaforge for strictly more value (env-overridable).
 const DEEP_AUDIT_PRICE = process.env.DEEP_AUDIT_PRICE || "$0.25";
+// Read-only deterministic Morpho position snapshot and stress canary.
+const MORPHO_POSITION_PRICE = process.env.MORPHO_POSITION_PRICE || "$0.02";
 
 // "$0.05" -> "50000" atomic USDC units (6 decimals) so the discovery docs
 // (/.well-known/x402, /openapi.json) always match the paywall price exactly.
@@ -164,6 +168,9 @@ app.use(express.json({
     req.rawBody = Buffer.from(buffer);
   },
 }));
+
+const commerceTelemetry = createCommerceTelemetry();
+app.use(commerceTelemetry.middleware);
 
 // the402 marketplace bridge. Unlike the public x402 routes, the marketplace
 // owns buyer payment and escrow. We authenticate signed dispatches, acknowledge
@@ -264,7 +271,7 @@ app.get("/healthz", (_req, res) => {
     ok: true,
     payTo: PAY_TO,
     network: NETWORK,
-    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE },
+    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
     the402: {
@@ -272,6 +279,16 @@ app.get("/healthz", (_req, res) => {
       serviceConfigured: Boolean(THE402_SERVICE_ID),
     },
   });
+});
+
+app.get("/v0/commerce-demand.json", async (req, res) => {
+  try {
+    const days = typeof req.query.days === "string" ? Number(req.query.days) : 90;
+    res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+    return res.json(await commerceTelemetry.snapshot({ days }));
+  } catch (error) {
+    return res.status(503).json({ ok: false, error: "commerce_telemetry_unavailable" });
+  }
 });
 
 // Domain-verification file for x402 directories (402 Index instant approval).
@@ -334,6 +351,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/enrich`, amount: priceToAtomic(ENRICH_PRICE), description: "Domain -> agent-ready company intelligence in one call: identity (name/legal name/description/logo), industry keywords, tech stack (CMS/framework/analytics), social profiles, contact surface (emails/phone/address), DNS + email infrastructure (MX/SPF/DMARC), and AI-search-readiness signals. No auth, no API keys, no subscription. Pay per request in USDC.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/wallet-enrich`, amount: priceToAtomic(WALLET_ENRICH_PRICE), description: "Base/EVM address -> agent-ready on-chain profile in one call: EOA vs contract, native ETH + curated Base token holdings, token/NFT contract metadata (ERC-20/721/1155, name/symbol/decimals/supply), EIP-1967 proxy detection, activity (outbound tx count), and a single derived profile label. Pure Base-mainnet RPC, public data only; no keys, no subscription. The frictionless, pay-per-call way for an agent to size up a wallet/contract before it sends funds, swaps, or calls it.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/deep-audit`, amount: priceToAtomic(DEEP_AUDIT_PRICE), description: "Domain -> ONE complete AI-search-readiness audit: firmographics + tech stack + contact + DNS/email infra + a 0-100 AI-readiness score, PLUS a structured-data gap analysis with a paste-ready JSON-LD fix list and a combined letter grade. The bundled deep tier (enrich + schemaforge in one call). No auth, no API keys; pay-per-call USDC.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/defi/morpho-position`, amount: priceToAtomic(MORPHO_POSITION_PRICE), description: "Base address -> deterministic Morpho borrower position snapshot and collateral-price stress scenarios. Returns LTV, LLTV, health factor, liquidation headroom, source freshness, and scenario outcomes. Read-only indexed observation; direct RPC verification is required before execution.", mimeType: "application/json" },
 ];
 app.get("/.well-known/x402", (_req, res) => {
   res.json({
@@ -346,18 +364,20 @@ app.get("/.well-known/x402", (_req, res) => {
 // Free route. Tells crawling LLM agents what we sell and exactly how to pay (x402),
 // the same channel our category peers (Melvea, cryptojp, img402) use to be found.
 app.get("/llms.txt", (_req, res) => {
-  const line = (path, price, desc) => `- [${path}](${PUBLIC_URL}${path}): ${price} USDC — ${desc}`;
-  res.type("text/plain").send(`# x402 URL Extractor — pay-per-call data & enrichment for AI agents
+  const line = (path, price, desc) => `- [${path}](${PUBLIC_URL}${path}): ${price} USDC - ${desc}`;
+  res.type("text/plain").send(`# SameDayDesk machine commerce gateway
 
-> Agent-native HTTP endpoints that return clean, structured JSON for a few cents of USDC on Base (x402). No API keys, no signup, no subscription: send an x402 payment, get the data. Settlement via the Coinbase CDP facilitator. payTo ${PAY_TO} on Base mainnet (eip155:8453).
+> Machine-discoverable HTTP and MCP capabilities that settle USDC on Base through x402. No account or subscription is required. Current facilitator: ${FACILITATOR}. payTo ${PAY_TO} on Base mainnet (eip155:8453).
 
 ## Endpoints
+${line("/defi/morpho-position", MORPHO_POSITION_PRICE, "Base borrower address -> deterministic Morpho LTV, LLTV, health factor, liquidation headroom, direct-RPC cross-check, and collateral-price stress scenarios. Read-only; scenarios are not probabilities.")}
 ${line("/enrich", ENRICH_PRICE, "domain -> agent-ready company intelligence: identity, industry keywords, tech stack, social profiles, contact surface, DNS + email infra (MX/SPF/DMARC), and an AI-readiness score. The frictionless, pay-per-call alternative to signup-gated Clearbit/Apollo.")}
 ${line("/wallet-enrich", WALLET_ENRICH_PRICE, "Base/EVM 0x address -> agent-ready on-chain profile: EOA vs contract, native ETH + token holdings, token/NFT contract metadata, proxy + activity signals, and a derived profile label. Pure Base RPC, no keys. Size up a wallet/contract before sending funds, swapping, or calling it.")}
 ${line("/extract", EXTRACT_PRICE, "URL -> clean structured data: title, description, text, all JSON-LD, OpenGraph/Twitter meta, headings, links, AI-readiness signals.")}
 ${line("/read", READ_PRICE, "URL -> full page content as clean Markdown, ready for LLM context.")}
 ${line("/scan", SCAN_PRICE, "static supply-chain security scan of a public GitHub repo before an agent installs/runs it; flags exfil sinks, credential reads, install-time curl|bash.")}
 ${line("/schemaforge", SCHEMAFORGE_PRICE, "business site -> paste-ready JSON-LD structured-data bundle + a gap diff vs the live site.")}
+${line("/deep-audit", DEEP_AUDIT_PRICE, "domain -> bundled AI-search-readiness audit with firmographics, technical signals, structured-data gaps, and a paste-ready fix list.")}
 
 ## How to pay (x402)
 1. GET an endpoint (e.g. ${PUBLIC_URL}/enrich?domain=stripe.com). You receive HTTP 402 with the payment requirements.
@@ -367,6 +387,7 @@ ${line("/schemaforge", SCHEMAFORGE_PRICE, "business site -> paste-ready JSON-LD 
 ## Discovery
 - x402 manifest: ${PUBLIC_URL}/.well-known/x402
 - OpenAPI: ${PUBLIC_URL}/openapi.json
+- Aggregate demand telemetry: ${PUBLIC_URL}/v0/commerce-demand.json
 - Source: https://github.com/epistemedeus/x402-url-extractor
 `);
 });
@@ -431,10 +452,11 @@ app.get("/alerts", (_req, res) => {
 app.get("/openapi.json", (_req, res) => {
   res.json({
     openapi: "3.0.3",
-    info: { title: "x402 URL Extractor", version: "1.0.0", description: `Pay USDC (Base mainnet, x402) per call: /enrich ${ENRICH_PRICE}, /wallet-enrich ${WALLET_ENRICH_PRICE}, /extract ${EXTRACT_PRICE}, /read ${READ_PRICE}, /scan ${SCAN_PRICE}, /schemaforge ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
+    info: { title: "SameDayDesk machine commerce gateway", version: "1.1.0", description: `Machine-discoverable paid capabilities on Base: Morpho position risk ${MORPHO_POSITION_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
     servers: [{ url: PUBLIC_URL }],
     paths: {
       "/v0/cards.json": { get: { summary: "Free incident-backed platform health cards. Categories are not calibrated scores.", responses: { "200": { description: "SameDayDesk platform health index v0" } } } },
+      "/v0/commerce-demand.json": { get: { summary: "Privacy-safe aggregate external machine demand observations.", parameters: [{ name: "days", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 365, default: 90 } }], responses: { "200": { description: "Aggregate discovery, challenge, paid-success, and unmatched-intent counts. Internal and crawler traffic excluded." } } } },
       "/platforms": { get: { summary: "Human-readable Settlement Radar health cards.", responses: { "200": { description: "HTML platform health index" } } } },
       "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "structured data" }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
       "/read": { get: { summary: RESOURCES[1].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "markdown" }, "402": { description: `payment required (x402, ${READ_PRICE} USDC base)` } } } },
@@ -442,6 +464,7 @@ app.get("/openapi.json", (_req, res) => {
       "/schemaforge": { get: { summary: RESOURCES[3].description, parameters: [{ name: "site", in: "query", required: true, schema: { type: "string" } }, { name: "vertical", in: "query", required: false, schema: { type: "string" } }, { name: "city", in: "query", required: false, schema: { type: "string" } }], responses: { "200": { description: "paste-ready JSON-LD bundle + gap diff + fix list" }, "402": { description: `payment required (x402, ${SCHEMAFORGE_PRICE} USDC base)` } } } },
       "/enrich": { get: { summary: RESOURCES[4].description, parameters: [{ name: "domain", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "agent-ready company intelligence (identity, tech, social, contact, DNS, AI-readiness)" }, "402": { description: `payment required (x402, ${ENRICH_PRICE} USDC base)` } } } },
       "/wallet-enrich": { get: { summary: RESOURCES[5].description, parameters: [{ name: "address", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "agent-ready on-chain profile (type, native + token holdings, contract/token metadata, proxy, activity, profile label)" }, "402": { description: `payment required (x402, ${WALLET_ENRICH_PRICE} USDC base)` } } } },
+      "/defi/morpho-position": { get: { summary: RESOURCES[7].description, parameters: [{ name: "address", in: "query", required: true, schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" } }, { name: "shocks", in: "query", required: false, description: "Comma-separated collateral price shocks in percent, from -99 through 100.", schema: { type: "string", example: "-10,-20,-30" } }], responses: { "200": { description: "read-only Morpho position snapshot and deterministic stress scenarios" }, "402": { description: `payment required (x402, ${MORPHO_POSITION_PRICE} USDC base)` } } } },
     },
   });
 });
@@ -693,6 +716,50 @@ app.use(
           }),
         },
       },
+      "GET /defi/morpho-position": {
+        accepts: [{ scheme: "exact", price: MORPHO_POSITION_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description: RESOURCES[7].description,
+        mimeType: "application/json",
+        extensions: {
+          ...declareDiscoveryExtension({
+            input: {
+              address: "0x4352Cc849b33a936Ad93bB109aFDec1c89653b4f",
+              shocks: "-10,-20,-30",
+            },
+            inputSchema: {
+              type: "object",
+              properties: {
+                address: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$", description: "Borrower EVM address on Base mainnet." },
+                shocks: { type: "string", description: "Optional comma-separated collateral-price shocks in percent." },
+              },
+              required: ["address"],
+            },
+            output: {
+              example: {
+                ok: true,
+                chain: { id: 8453, name: "Base mainnet" },
+                positionCount: 1,
+                positions: [{ marketId: "0x...", risk: { currentLtvPct: 72, liquidationLtvPct: 86, healthFactor: 1.194, liquidatableAtIndexedState: false }, scenarios: [{ collateralPriceShockPct: -10, healthFactor: 1.075, liquidatable: false }] }],
+              },
+            },
+            outputSchema: {
+              type: "object",
+              properties: {
+                ok: { type: "boolean" },
+                address: { type: "string" },
+                chain: { type: "object" },
+                fetchedAt: { type: "string" },
+                latestIndexedAt: { type: "string", nullable: true },
+                positionCount: { type: "integer" },
+                positions: { type: "array" },
+                source: { type: "object" },
+                boundary: { type: "string" },
+              },
+              required: ["ok", "address", "chain", "positionCount", "positions", "source", "boundary"],
+            },
+          }),
+        },
+      },
     },
     resourceServer
   )
@@ -793,6 +860,28 @@ app.get("/wallet-enrich", async (req, res) => {
   }
 });
 
+// Paid: Base borrower address -> read-only Morpho position snapshot and deterministic stress scenarios.
+app.get("/defi/morpho-position", async (req, res) => {
+  const address = req.query.address || req.query.wallet || req.query.borrower;
+  if (!address || typeof address !== "string") {
+    return res.status(400).json({ ok: false, error: "missing required query param: address (a 0x EVM address)" });
+  }
+  const shocks = typeof req.query.shocks === "string"
+    ? req.query.shocks.split(",").map((value) => value.trim()).filter(Boolean)
+    : undefined;
+  try {
+    res.set("Cache-Control", "no-store");
+    return res.json(await morphoPosition(address, { shocks }));
+  } catch (error) {
+    return res.status(200).json({
+      ok: false,
+      address,
+      error: String(error?.message || error),
+      boundary: "No transaction was prepared or executed.",
+    });
+  }
+});
+
 // Free landing so a human/agent hitting the root learns what this is + how to pay.
 app.get("/", (_req, res) => {
   res.json({
@@ -805,13 +894,22 @@ app.get("/", (_req, res) => {
       alertPilot: "/alerts",
       boundary: "Categories are dated observations, not calibrated reliability scores or payout guarantees.",
     },
+    machineCommerce: {
+      manifest: "/.well-known/x402",
+      openapi: "/openapi.json",
+      llms: "/llms.txt",
+      mcp: "POST /mcp",
+      aggregateDemand: "/v0/commerce-demand.json",
+      flow: "discover -> validate schema and price -> pay -> call -> receive deterministic result and receipt",
+    },
     paidRoutes: {
-      "GET /extract?url=": `${EXTRACT_PRICE} — URL -> clean structured JSON (text, JSON-LD, OG, headings, links, AI-readiness signals).`,
-      "GET /read?url=": `${READ_PRICE} — URL -> LLM-ready Markdown.`,
-      "GET /scan?repo=": `${SCAN_PRICE} — static supply-chain security scan of a public GitHub repo before install.`,
-      "GET /schemaforge?site=&vertical=&city=": `${SCHEMAFORGE_PRICE} — generate a paste-ready JSON-LD structured-data bundle + gap diff so a business page is eligible to be cited by AI assistants.`,
-      "GET /enrich?domain=": `${ENRICH_PRICE} — domain -> agent-ready company intelligence: identity, tech stack, social, contact, DNS/email-infra, AI-readiness. No auth, pay-per-call.`,
-      "GET /wallet-enrich?address=": `${WALLET_ENRICH_PRICE} — Base/EVM 0x address -> agent-ready on-chain profile: EOA/contract, native + token holdings, token/NFT metadata, proxy + activity, profile label. Pure Base RPC, no keys.`,
+      "GET /extract?url=": `${EXTRACT_PRICE} - URL -> clean structured JSON (text, JSON-LD, OG, headings, links, AI-readiness signals).`,
+      "GET /read?url=": `${READ_PRICE} - URL -> LLM-ready Markdown.`,
+      "GET /scan?repo=": `${SCAN_PRICE} - static supply-chain security scan of a public GitHub repo before install.`,
+      "GET /schemaforge?site=&vertical=&city=": `${SCHEMAFORGE_PRICE} - generate a paste-ready JSON-LD structured-data bundle + gap diff so a business page is eligible to be cited by AI assistants.`,
+      "GET /enrich?domain=": `${ENRICH_PRICE} - domain -> agent-ready company intelligence: identity, tech stack, social, contact, DNS/email-infra, AI-readiness. No auth, pay-per-call.`,
+      "GET /wallet-enrich?address=": `${WALLET_ENRICH_PRICE} - Base/EVM 0x address -> agent-ready on-chain profile: EOA/contract, native + token holdings, token/NFT metadata, proxy + activity, profile label. Pure Base RPC, no keys.`,
+      "GET /defi/morpho-position?address=&shocks=": `${MORPHO_POSITION_PRICE} - Base borrower address -> deterministic Morpho LTV, health, liquidation headroom, and collateral-price stress scenarios. Read-only.`,
     },
     network: NETWORK,
     payTo: PAY_TO,
@@ -849,6 +947,7 @@ import("./mcp-server.mjs")
         { name: "enrich", description: RESOURCES[4].description, price: ENRICH_PRICE, inputSchema: { domain: z.string().describe("A domain or URL, e.g. stripe.com") }, run: (a) => enrich(a.domain), tags: ["enrichment", "company-data", "firmographics"] },
         { name: "wallet_enrich", description: RESOURCES[5].description, price: WALLET_ENRICH_PRICE, inputSchema: { address: z.string().describe("Base/EVM 0x address") }, run: (a) => walletEnrich(a.address), tags: ["enrichment", "onchain", "wallet"] },
         { name: "deep_audit", description: RESOURCES[6].description, price: DEEP_AUDIT_PRICE, inputSchema: { domain: z.string().describe("A domain or URL, e.g. stripe.com") }, run: (a) => deepAudit(a.domain), tags: ["audit", "ai-readiness", "geo", "enrichment"] },
+        { name: "morpho_position", description: RESOURCES[7].description, price: MORPHO_POSITION_PRICE, inputSchema: { address: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Borrower EVM address on Base mainnet"), shocks: z.array(z.number().min(-99).max(100)).max(8).optional().describe("Collateral price shocks in percent") }, run: (a) => morphoPosition(a.address, { shocks: a.shocks }), tags: ["defi", "morpho", "risk", "borrower-protection"] },
       ],
     })
   )

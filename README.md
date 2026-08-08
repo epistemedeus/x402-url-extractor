@@ -2,9 +2,9 @@
 
 [![Smithery listing](https://smithery.ai/badge/epistemedeus/x402-data-gateway)](https://smithery.ai/servers/epistemedeus/x402-data-gateway)
 
-Seven pay-per-call tools for URL extraction, Markdown reading, repository
-security scans, company and wallet enrichment, structured data generation, and
-AI-search readiness audits.
+Eight pay-per-call tools for deterministic Morpho borrower risk, URL extraction,
+Markdown reading, repository security scans, company and wallet enrichment,
+structured data generation, and AI-search readiness audits.
 
 - Product page: https://samedaydesk.com/x402
 - Smithery: https://smithery.ai/servers/epistemedeus/x402-data-gateway
@@ -12,12 +12,27 @@ AI-search readiness audits.
 - Live resource manifest: https://agents.samedaydesk.com/.well-known/x402
 - Settlement Radar: https://agents.samedaydesk.com/platforms
 - Platform health JSON: https://agents.samedaydesk.com/v0/cards.json
+- Aggregate machine-demand telemetry: https://agents.samedaydesk.com/v0/commerce-demand.json
+- Morpho position risk: `GET /defi/morpho-position?address=0x...&shocks=-10,-20,-30`
 - Material-change alert probe: https://agents.samedaydesk.com/alerts
 - Agoragentic seller callback: `POST /integrations/agoragentic/ai-readiness-audit`
 - the402 signed fulfillment webhook: `POST /integrations/the402/webhook`
 
 No API key or subscription is required. Calls settle exact USDC amounts on Base
 mainnet through x402.
+
+The Morpho route is read-only. It calculates LTV, LLTV, health factor,
+liquidation headroom, and collateral-price shock scenarios from integer protocol
+values, then cross-checks indexed collateral, borrow shares, and oracle price
+against direct Base RPC state. Scenarios are calculations rather than
+probabilities or transaction recommendations.
+
+The service also keeps a privacy-safe demand telescope on a persistent Railway
+volume. It records route families, query key names, challenge/success classes,
+and pseudonymous repeat-use signals. It does not record raw IP addresses, user
+agents, URLs, query values, bodies, payment headers, marketplace payloads, or
+credentials. Public output is aggregate only; owner and crawler traffic are
+excluded.
 
 The Agoragentic callback is a separate marketplace distribution bridge. The
 marketplace handles buyer routing, settlement, and seller accounting, while the
@@ -45,10 +60,12 @@ our own wallet:
 payTo = 0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee
 ```
 
-Verified live (June 2026). The server boots, returns a correct 402 with
-machine-readable payment requirements (`network=eip155:8453`, `amount=10000`
-= $0.01, `asset=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` = Base USDC,
-`payTo=`our wallet), and a Bazaar discovery extension with input/output schemas.
+Verified live (June through August 2026). The server boots and returns correct
+402 responses with machine-readable payment requirements. The Morpho canary is
+`amount=20000` = 0.02 USDC, `network=eip155:8453`, and
+`asset=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` = Base USDC,
+`payTo` equal to our wallet, plus a Bazaar discovery extension with input and
+output schemas.
 
 ---
 
@@ -163,22 +180,24 @@ for Bazaar reach if/when an operator provides a CDP key.
 The repo is a no-config Node app: `npm start` runs `node server.js` and binds
 `process.env.PORT` (Railway sets it).
 
-1. **Push these three files** (`server.js`, `package.json`, `README.md`) to the
-   service source, or deploy this directory directly.
+1. Deploy this directory directly or push the repository source.
 2. **Set env vars** on the Railway service:
    ```
    PAY_TO=0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee
    NETWORK=eip155:8453
-   PRICE=$0.01
+   PRICE=$0.05
    FACILITATOR=xpay
+   COMMERCE_DATA_DIR=/data
+   COMMERCE_ACTOR_SECRET=<random 32-byte secret>
+   COMMERCE_INTERNAL_TOKEN=<random owner-canary token>
    ```
-   (All have safe defaults baked in, so even with zero env vars it runs on
-   xpay/mainnet/$0.01 to our wallet.)
+   Core payment settings have safe defaults. Production telemetry uses a Railway
+   volume mounted at `/data` plus the two secret variables above.
 3. **Generate a public domain** for the service.
 4. **Verify:**
    ```bash
    curl https://<your-domain>/healthz          # -> {ok:true, network:eip155:8453, ...}
-   curl -i https://<your-domain>/premium        # -> HTTP 402 + PAYMENT-REQUIRED header
+   curl -i 'https://<your-domain>/defi/morpho-position?address=0x...' # -> HTTP 402 + PAYMENT-REQUIRED header
    ```
 5. **Advertise the endpoint** so agents find it (the URL, a `/.well-known`
    pointer, README, posts). On xpay there is no central catalog.
@@ -209,11 +228,13 @@ before taking mainnet money.
 npm install
 npm start
 # then:
-curl -i http://localhost:3000/premium   # HTTP 402 with payment requirements
+curl -i 'http://localhost:3000/defi/morpho-position?address=0x...' # HTTP 402
 ```
 
 ## Files
 - `server.js` — the server (env-driven facilitator/network/price).
+- `commerce-events.mjs` — privacy-safe durable demand telemetry.
+- `morpho-position.mjs` — deterministic Morpho snapshot, stress, and RPC checks.
 - `package.json` — exact pinned deps (verified to install & boot).
 - `README.md` — this guide.
 - `extract.mjs` — pre-existing zero-dependency "URL → clean structured data"

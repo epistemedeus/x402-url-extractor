@@ -1,0 +1,228 @@
+import { createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { appendFile, chmod, mkdir, readFile, rename, stat, unlink } from "node:fs/promises";
+import path from "node:path";
+
+const CRAWLER_PATTERN = /bot|crawler|spider|slurp|uptime|monitor|headless|preview/i;
+const PAYMENT_HEADERS = ["payment-signature", "x-payment", "x-payment-signature"];
+
+const EXACT_ROUTES = new Map([
+  ["/", { route: "/", kind: "discovery" }],
+  ["/healthz", { route: "/healthz", kind: "excluded" }],
+  ["/.well-known/x402", { route: "/.well-known/x402", kind: "discovery" }],
+  ["/.well-known/402index-verify.txt", { route: "/.well-known/402index-verify.txt", kind: "excluded" }],
+  ["/llms.txt", { route: "/llms.txt", kind: "discovery" }],
+  ["/robots.txt", { route: "/robots.txt", kind: "discovery" }],
+  ["/sitemap.xml", { route: "/sitemap.xml", kind: "discovery" }],
+  ["/openapi.json", { route: "/openapi.json", kind: "discovery" }],
+  ["/v0/cards.json", { route: "/v0/cards.json", kind: "discovery" }],
+  ["/v0/commerce-demand.json", { route: "/v0/commerce-demand.json", kind: "excluded" }],
+  ["/schemas/platform-health-card-v0.json", { route: "/schemas/platform-health-card-v0.json", kind: "discovery" }],
+  ["/radar", { route: "/radar", kind: "discovery" }],
+  ["/platforms", { route: "/platforms", kind: "discovery" }],
+  ["/platforms/methodology", { route: "/platforms/methodology", kind: "discovery" }],
+  ["/alerts", { route: "/alerts", kind: "discovery" }],
+  ["/extract", { route: "/extract", kind: "paid" }],
+  ["/read", { route: "/read", kind: "paid" }],
+  ["/scan", { route: "/scan", kind: "paid" }],
+  ["/schemaforge", { route: "/schemaforge", kind: "paid" }],
+  ["/enrich", { route: "/enrich", kind: "paid" }],
+  ["/wallet-enrich", { route: "/wallet-enrich", kind: "paid" }],
+  ["/deep-audit", { route: "/deep-audit", kind: "paid" }],
+  ["/defi/morpho-position", { route: "/defi/morpho-position", kind: "paid" }],
+  ["/mcp", { route: "/mcp", kind: "paid" }],
+]);
+
+function safePathSegment(value) {
+  const segment = String(value || "").toLowerCase();
+  if (!/^[a-z][a-z0-9_-]{0,39}$/.test(segment)) return ":opaque";
+  return segment;
+}
+
+export function classifyCommerceRoute(rawPath) {
+  const pathname = String(rawPath || "/").split("?", 1)[0] || "/";
+  const exact = EXACT_ROUTES.get(pathname);
+  if (exact) return { ...exact, matched: true };
+  if (/^\/platforms\/[^/]+$/.test(pathname)) {
+    return { route: "/platforms/:platformId", kind: "discovery", matched: true };
+  }
+  if (/^\/go\/(topify|manychat)$/.test(pathname)) {
+    return { route: "/go/:offer", kind: "referral", matched: true };
+  }
+  if (pathname.startsWith("/integrations/")) {
+    return { route: "/integrations/:private", kind: "excluded", matched: true };
+  }
+  const first = pathname.split("/").filter(Boolean)[0];
+  return {
+    route: first ? `/${safePathSegment(first)}/*` : "/:opaque",
+    kind: "unmatched",
+    matched: false,
+  };
+}
+
+function headerValue(headers, name) {
+  const value = headers?.[name];
+  return Array.isArray(value) ? value.join(",") : String(value || "");
+}
+
+function safeEqual(left, right) {
+  if (!left || !right) return false;
+  const a = Buffer.from(left);
+  const b = Buffer.from(right);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+export function classifyCommerceResult({ kind, matched, paymentPresent, status }) {
+  if (!matched) return "unmatched";
+  if (kind === "discovery" || kind === "referral") return "discovery";
+  if (kind !== "paid") return "request";
+  if (status === 402) return "challenge";
+  if (status >= 500) return "service_failure";
+  if (status >= 400) return "validation_failure";
+  if (paymentPresent && status >= 200 && status < 300) return "paid_success";
+  return "paid_route_response";
+}
+
+function emptyCounts() {
+  return Object.create(null);
+}
+
+function increment(counts, key) {
+  counts[key] = (counts[key] || 0) + 1;
+}
+
+async function readEvents(filePath) {
+  try {
+    const contents = await readFile(filePath, "utf8");
+    return contents
+      .split("\n")
+      .filter(Boolean)
+      .flatMap((line) => {
+        try {
+          return [JSON.parse(line)];
+        } catch {
+          return [];
+        }
+      });
+  } catch (error) {
+    if (error?.code === "ENOENT") return [];
+    throw error;
+  }
+}
+
+export function createCommerceTelemetry({
+  dataDir = process.env.COMMERCE_DATA_DIR || path.join(process.cwd(), "data"),
+  secret = process.env.COMMERCE_ACTOR_SECRET || randomBytes(32).toString("hex"),
+  internalToken = process.env.COMMERCE_INTERNAL_TOKEN || "",
+  maxBytes = 5 * 1024 * 1024,
+} = {}) {
+  const currentPath = path.join(dataDir, "commerce-events.ndjson");
+  const rotatedPath = path.join(dataDir, "commerce-events.1.ndjson");
+  let queue = Promise.resolve();
+
+  async function appendEvent(event) {
+    await mkdir(dataDir, { recursive: true, mode: 0o700 });
+    await chmod(dataDir, 0o700).catch(() => {});
+    const size = await stat(currentPath).then((entry) => entry.size).catch(() => 0);
+    if (size >= maxBytes) {
+      await unlink(rotatedPath).catch((error) => {
+        if (error?.code !== "ENOENT") throw error;
+      });
+      await rename(currentPath, rotatedPath).catch((error) => {
+        if (error?.code !== "ENOENT") throw error;
+      });
+    }
+    await appendFile(currentPath, `${JSON.stringify(event)}\n`, { encoding: "utf8", mode: 0o600 });
+    await chmod(currentPath, 0o600).catch(() => {});
+  }
+
+  function enqueue(event) {
+    queue = queue.then(() => appendEvent(event)).catch((error) => {
+      console.error(`commerce telemetry write failed: ${error.message}`);
+    });
+  }
+
+  function middleware(req, res, next) {
+    const route = classifyCommerceRoute(req.path || req.url);
+    if (route.kind === "excluded") return next();
+
+    const startedAt = Date.now();
+    const headers = req.headers || {};
+    const userAgent = headerValue(headers, "user-agent");
+    const suppliedInternal = headerValue(headers, "x-samedaydesk-internal");
+    const originClass = safeEqual(suppliedInternal, internalToken)
+      ? "internal"
+      : CRAWLER_PATTERN.test(userAgent)
+        ? "crawler"
+        : "external";
+    const actorMaterial = `${req.ip || req.socket?.remoteAddress || "unknown"}|${userAgent}`;
+    const actor = createHmac("sha256", secret).update(actorMaterial).digest("hex").slice(0, 24);
+    const paymentPresent = PAYMENT_HEADERS.some((name) => Boolean(headerValue(headers, name)));
+    const queryKeys = Object.keys(req.query || {}).sort().slice(0, 20);
+
+    res.once("finish", () => {
+      const status = Number(res.statusCode || 0);
+      enqueue({
+        v: 1,
+        id: randomUUID(),
+        ts: new Date().toISOString(),
+        actor,
+        originClass,
+        method: String(req.method || "GET").toUpperCase(),
+        route: route.route,
+        matched: route.matched,
+        kind: route.kind,
+        queryKeys,
+        paymentPresent,
+        status,
+        result: classifyCommerceResult({
+          kind: route.kind,
+          matched: route.matched,
+          paymentPresent,
+          status,
+        }),
+        durationMs: Math.max(0, Date.now() - startedAt),
+      });
+    });
+    return next();
+  }
+
+  async function snapshot({ days = 90 } = {}) {
+    await queue;
+    const safeDays = Math.max(1, Math.min(365, Number(days) || 90));
+    const cutoff = Date.now() - safeDays * 86_400_000;
+    const events = [
+      ...(await readEvents(rotatedPath)),
+      ...(await readEvents(currentPath)),
+    ].filter((event) => Date.parse(event.ts) >= cutoff && event.originClass === "external");
+
+    const byResult = emptyCounts();
+    const byRoute = emptyCounts();
+    const unmatched = emptyCounts();
+    const actors = new Map();
+    for (const event of events) {
+      increment(byResult, event.result);
+      increment(byRoute, event.route);
+      if (event.result === "unmatched") increment(unmatched, event.route);
+      actors.set(event.actor, (actors.get(event.actor) || 0) + 1);
+    }
+
+    return {
+      generatedAt: new Date().toISOString(),
+      windowDays: safeDays,
+      externalEvents: events.length,
+      independentActors: actors.size,
+      repeatActors: [...actors.values()].filter((count) => count > 1).length,
+      byResult,
+      byRoute,
+      unmatched,
+      boundary: "Aggregate external observations only. Internal and crawler traffic are excluded. Counts are demand signals, not buyer identities or calibrated forecasts.",
+    };
+  }
+
+  return {
+    middleware,
+    snapshot,
+    flush: () => queue,
+    paths: { currentPath, rotatedPath },
+  };
+}
