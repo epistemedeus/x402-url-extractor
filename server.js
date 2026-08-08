@@ -141,6 +141,60 @@ const resourceServer = new x402ResourceServer(facilitatorClient).register(
 // ---------------------------------------------------------------------------
 
 const app = express();
+app.use(express.json({ limit: "16kb" }));
+
+// Agoragentic distribution bridge. Agoragentic performs buyer routing,
+// settlement, and seller accounting; this callback performs the actual audit.
+// Keep it outside the x402 middleware so the marketplace can sandbox-verify and
+// invoke it. A small per-IP limiter bounds unauthenticated direct use while the
+// normal public product remains paid at GET /deep-audit.
+const agoraWindows = new Map();
+function allowAgoraBridge(req) {
+  const key = req.ip || req.socket?.remoteAddress || "unknown";
+  const now = Date.now();
+  const current = agoraWindows.get(key);
+  if (!current || current.resetAt <= now) {
+    agoraWindows.set(key, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+  if (current.count >= 12) return false;
+  current.count += 1;
+  return true;
+}
+
+app.post("/integrations/agoragentic/ai-readiness-audit", async (req, res) => {
+  if (!allowAgoraBridge(req)) {
+    res.set("Retry-After", "60");
+    return res.status(429).json({ ok: false, error: "rate_limit_exceeded" });
+  }
+
+  const input = req.body?.input && typeof req.body.input === "object"
+    ? req.body.input
+    : req.body;
+  const domain = input?.domain || input?.url;
+  if (!domain || typeof domain !== "string" || domain.length > 253) {
+    return res.status(400).json({
+      ok: false,
+      error: "domain is required and must be at most 253 characters",
+    });
+  }
+
+  try {
+    const result = await deepAudit(domain, {
+      vertical: typeof input.vertical === "string" ? input.vertical : undefined,
+      city: typeof input.city === "string" ? input.city : undefined,
+    });
+    res.set("Cache-Control", "no-store");
+    res.set("X-Robots-Tag", "noindex, nofollow");
+    return res.json(result);
+  } catch (error) {
+    return res.status(200).json({
+      ok: false,
+      domain,
+      error: String(error?.message || error),
+    });
+  }
+});
 
 // Free health check (NOT behind paywall — used by Railway).
 app.get("/healthz", (_req, res) => {

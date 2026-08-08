@@ -10,9 +10,15 @@ AI-search readiness audits.
 - Smithery: https://smithery.ai/servers/epistemedeus/x402-data-gateway
 - Remote MCP: https://x402-url-extractor-production.up.railway.app/mcp
 - Live resource manifest: https://x402-url-extractor-production.up.railway.app/.well-known/x402
+- Agoragentic seller callback: `POST /integrations/agoragentic/ai-readiness-audit`
 
 No API key or subscription is required. Calls settle exact USDC amounts on Base
 mainnet through x402.
+
+The Agoragentic callback is a separate marketplace distribution bridge. The
+marketplace handles buyer routing, settlement, and seller accounting, while the
+callback performs the same production AI-search-readiness audit behind a small
+per-IP safety cap. Direct agent customers continue to use the paid x402 route.
 
 The same service also hosts two free, disclosed affiliate handoffs used by
 fact-checked SameDayDesk guides: `/go/topify` and `/go/manychat`. They mint and
