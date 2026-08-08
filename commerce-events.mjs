@@ -2,7 +2,7 @@ import { createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypt
 import { appendFile, chmod, mkdir, readFile, rename, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 
-const CRAWLER_PATTERN = /bot|crawler|spider|slurp|uptime|monitor|headless|preview/i;
+const CRAWLER_PATTERN = /bot|crawler|spider|slurp|uptime|monitor|headless|preview|liveness|healthcheck|sentineloracle|mcpbeat|agentreeve|agent402|trust[- ]?oracle/i;
 const PAYMENT_HEADERS = ["payment-signature", "x-payment", "x-payment-signature"];
 
 const EXACT_ROUTES = new Map([

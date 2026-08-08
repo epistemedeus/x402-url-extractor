@@ -69,6 +69,10 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   run({ path: "/defi/morpho-position", status: 200, headers: { "payment-signature": "not-stored" } });
   run({ path: "/owner", status: 404, headers: { "x-samedaydesk-internal": "owner-canary" } });
   run({ path: "/crawler", status: 404, headers: { "user-agent": "ExampleBot/1.0" } });
+  run({ path: "/mcp", status: 200, headers: { "user-agent": "SentinelOracle/0.1 liveness-only" } });
+  run({ path: "/extract", status: 402, headers: { "user-agent": "AgentReeve/5.1" } });
+  run({ path: "/openapi.json", status: 200, headers: { "user-agent": "Agent402/1.0" } });
+  run({ path: "/defi/morpho-position", status: 402, headers: { "user-agent": "entropy-daemon-trust-oracle/2.0" } });
 
   await telemetry.flush();
   const storage = await telemetry.storageStatus();
