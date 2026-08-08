@@ -88,3 +88,39 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
 
   await rm(dataDir, { recursive: true, force: true });
 });
+
+test("aggregate snapshot honors a declared external experiment baseline", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-baseline-"));
+  const externalSince = new Date(Date.now() + 60_000).toISOString();
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "test-secret",
+    externalSince,
+  });
+  const listeners = new Map();
+  const req = {
+    path: "/extract",
+    url: "/extract",
+    method: "GET",
+    headers: {},
+    query: { url: "not-stored" },
+    ip: "203.0.113.20",
+    socket: {},
+  };
+  const res = {
+    statusCode: 402,
+    once(name, listener) {
+      listeners.set(name, listener);
+    },
+  };
+  telemetry.middleware(req, res, () => {});
+  listeners.get("finish")?.();
+  await telemetry.flush();
+
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.externalSince, externalSince);
+  assert.equal(snapshot.externalEvents, 0);
+  assert.equal(JSON.stringify(snapshot).includes("not-stored"), false);
+
+  await rm(dataDir, { recursive: true, force: true });
+});

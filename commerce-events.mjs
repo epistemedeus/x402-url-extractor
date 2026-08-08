@@ -113,10 +113,13 @@ export function createCommerceTelemetry({
   dataDir = process.env.COMMERCE_DATA_DIR || path.join(process.cwd(), "data"),
   secret = process.env.COMMERCE_ACTOR_SECRET || randomBytes(32).toString("hex"),
   internalToken = process.env.COMMERCE_INTERNAL_TOKEN || "",
+  externalSince = process.env.COMMERCE_EXTERNAL_SINCE || "",
   maxBytes = 5 * 1024 * 1024,
 } = {}) {
   const currentPath = path.join(dataDir, "commerce-events.ndjson");
   const rotatedPath = path.join(dataDir, "commerce-events.1.ndjson");
+  const parsedExternalSince = Date.parse(externalSince);
+  const externalSinceMs = Number.isFinite(parsedExternalSince) ? parsedExternalSince : null;
   let queue = Promise.resolve();
 
   async function appendEvent(event) {
@@ -189,7 +192,10 @@ export function createCommerceTelemetry({
   async function snapshot({ days = 90 } = {}) {
     await queue;
     const safeDays = Math.max(1, Math.min(365, Number(days) || 90));
-    const cutoff = Date.now() - safeDays * 86_400_000;
+    const windowCutoff = Date.now() - safeDays * 86_400_000;
+    const cutoff = externalSinceMs === null
+      ? windowCutoff
+      : Math.max(windowCutoff, externalSinceMs);
     const events = [
       ...(await readEvents(rotatedPath)),
       ...(await readEvents(currentPath)),
@@ -209,13 +215,14 @@ export function createCommerceTelemetry({
     return {
       generatedAt: new Date().toISOString(),
       windowDays: safeDays,
+      externalSince: externalSinceMs === null ? null : new Date(externalSinceMs).toISOString(),
       externalEvents: events.length,
       externalActors: actors.size,
       repeatExternalActors: [...actors.values()].filter((count) => count > 1).length,
       byResult,
       byRoute,
       unmatched,
-      boundary: "Aggregate external observations only. Known internal and crawler traffic are excluded, but unidentified automated fetchers can remain. Counts are acquisition signals, not verified buyers, buyer identities, or calibrated forecasts.",
+      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal and crawler traffic are excluded, but unidentified automated fetchers can remain. Counts are acquisition signals, not verified buyers, buyer identities, or calibrated forecasts.",
     };
   }
 
