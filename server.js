@@ -162,6 +162,9 @@ const resourceServer = new x402ResourceServer(facilitatorClient).register(
 // ---------------------------------------------------------------------------
 
 const app = express();
+// Railway terminates TLS before forwarding to Express. Trust exactly one proxy
+// hop so x402 payment requirements preserve the public https:// resource URL.
+app.set("trust proxy", 1);
 app.use(express.json({
   limit: "16kb",
   verify(req, _res, buffer) {
