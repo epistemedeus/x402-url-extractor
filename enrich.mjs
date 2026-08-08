@@ -207,6 +207,37 @@ function deriveKeywords(text, max = 8) {
     .slice(0, max);
 }
 
+// Pure seam for regression tests and downstream callers that need the exact
+// keyword contract without performing a network fetch.
+export function keywordSignals({ meta = {}, ld = [], title = "", description = "" } = {}) {
+  const declaredKw = [
+    ...String(meta.keywords || "").split(","),
+    ...String(meta["news_keywords"] || "").split(","),
+    ...String(meta["article:tag"] || "").split(","),
+    ...ldKeywords(ld),
+  ].map((s) => clean(String(s))).filter((s) => s && s.length <= 40);
+  const seen = new Set();
+  const keywords = [];
+  const addKw = (keyword) => {
+    const normalized = String(keyword).toLowerCase();
+    if (keyword && !seen.has(normalized) && keywords.length < 15) {
+      seen.add(normalized);
+      keywords.push(keyword);
+    }
+  };
+  for (const keyword of declaredKw) addKw(keyword);
+  const declaredCount = keywords.length;
+  if (keywords.length < 6) {
+    for (const keyword of deriveKeywords(`${title} ${description || ""}`)) addKw(keyword);
+  }
+  const keywordsSource = declaredCount === 0
+    ? "derived"
+    : declaredCount >= keywords.length
+      ? "declared"
+      : "mixed";
+  return { keywords, keywordsSource };
+}
+
 export async function enrich(rawDomain) {
   const u = normalizeToOrigin(rawDomain);
   const origin = u.origin;
@@ -233,20 +264,7 @@ export async function enrich(rawDomain) {
   // Keywords: prefer DECLARED keywords (meta keywords/news_keywords/article tags +
   // JSON-LD keywords/knowsAbout). Modern sites rarely set the legacy keywords meta,
   // so fall back to deterministic salient terms from the title + description.
-  const declaredKw = [
-    ...String(meta.keywords || "").split(","),
-    ...String(meta["news_keywords"] || "").split(","),
-    ...String(meta["article:tag"] || "").split(","),
-    ...ldKeywords(ld),
-  ].map((s) => clean(String(s))).filter((s) => s && s.length <= 40);
-  const seen = new Set();
-  const keywords = [];
-  const addKw = (k) => { const low = String(k).toLowerCase(); if (k && !seen.has(low) && keywords.length < 15) { seen.add(low); keywords.push(k); } };
-  for (const k of declaredKw) addKw(k);
-  const declaredCount = keywords.length;
-  // Top up to ~6 with deterministic derived terms when declared keywords are sparse/absent.
-  if (keywords.length < 6) for (const k of deriveKeywords(`${title} ${description || ""}`)) addKw(k);
-  const keywordsSource = declaredCount === 0 ? "derived" : declaredCount >= keywords.length ? "declared" : "mixed";
+  const { keywords, keywordsSource } = keywordSignals({ meta, ld, title, description });
 
   return {
     ok: true,
