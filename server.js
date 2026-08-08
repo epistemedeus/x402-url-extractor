@@ -680,6 +680,47 @@ app.use(
         description:
           "Domain -> one complete AI-search-readiness audit (firmographics + tech + contact + DNS/email infra + a 0-100 AI-readiness score + a structured-data gap analysis with a paste-ready JSON-LD fix list + a combined letter grade). The bundled deep tier = enrich + schemaforge in one call. Public data only; no auth, no API keys, no subscription.",
         mimeType: "application/json",
+        extensions: {
+          ...declareDiscoveryExtension({
+            input: { domain: "stripe.com", vertical: "fintech", city: "San Francisco" },
+            inputSchema: {
+              type: "object",
+              properties: {
+                domain: { type: "string", description: "A public domain or URL, for example stripe.com." },
+                vertical: { type: "string", description: "Optional business vertical used to tune the structured-data gap analysis." },
+                city: { type: "string", description: "Optional city used to tune local-business structured data." },
+              },
+              required: ["domain"],
+            },
+            output: {
+              example: {
+                ok: true,
+                product: "deep-audit",
+                domain: "stripe.com",
+                summary: {
+                  aiReadinessScore: 84,
+                  structuredDataGaps: 2,
+                  hasJsonLd: true,
+                  grade: "B (78/100)",
+                },
+                components: { enrich: true, schemaforge: true },
+              },
+            },
+            outputSchema: {
+              type: "object",
+              properties: {
+                ok: { type: "boolean" },
+                product: { type: "string", const: "deep-audit" },
+                domain: { type: "string" },
+                summary: { type: "object" },
+                identity: { type: ["object", "null"] },
+                structuredData: { type: ["object", "null"] },
+                components: { type: "object" },
+              },
+              required: ["ok", "product", "domain", "summary", "components"],
+            },
+          }),
+        },
       },
       "GET /wallet-enrich": {
         accepts: [{ scheme: "exact", price: WALLET_ENRICH_PRICE, network: NETWORK, payTo: PAY_TO }],
