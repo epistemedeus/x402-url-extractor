@@ -28,6 +28,7 @@ import { enrich } from "./enrich.mjs";
 import { walletEnrich } from "./wallet-enrich.mjs";
 import { deepAudit } from "./deep-audit.mjs";
 import { createReferralResolver } from "./referral.mjs";
+import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
 import { z } from "zod";
 
 // ---------------------------------------------------------------------------
@@ -68,6 +69,9 @@ const priceToAtomic = (p) =>
   String(Math.round(parseFloat(String(p).replace(/[^0-9.]/g, "")) * 1e6));
 
 const PORT = process.env.PORT || 3000;
+const THE402_API_KEY = process.env.THE402_API_KEY;
+const THE402_WEBHOOK_SECRET = process.env.THE402_WEBHOOK_SECRET;
+const THE402_SERVICE_ID = process.env.THE402_SERVICE_ID;
 
 const AGENTHANSA_API_KEY = process.env.AGENTHANSA_API_KEY;
 const TOPIFY_OFFER_ID =
@@ -141,7 +145,46 @@ const resourceServer = new x402ResourceServer(facilitatorClient).register(
 // ---------------------------------------------------------------------------
 
 const app = express();
-app.use(express.json({ limit: "16kb" }));
+app.use(express.json({
+  limit: "16kb",
+  verify(req, _res, buffer) {
+    req.rawBody = Buffer.from(buffer);
+  },
+}));
+
+// the402 marketplace bridge. Unlike the public x402 routes, the marketplace
+// owns buyer payment and escrow. We authenticate signed dispatches, acknowledge
+// immediately, run the audit, and post structured delivery to the official
+// callback URL. Keys live only in Railway environment variables.
+app.head("/integrations/the402/webhook", (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.set("X-Robots-Tag", "noindex, nofollow");
+  return res.status(200).end();
+});
+
+app.post("/integrations/the402/webhook", (req, res) => {
+  const verification = verifyThe402Webhook({
+    headers: req.headers,
+    rawBody: req.rawBody,
+    apiKey: THE402_API_KEY,
+    webhookSecret: THE402_WEBHOOK_SECRET,
+  });
+  if (!verification.ok) {
+    return res.status(verification.status).json({ ok: false, error: verification.error });
+  }
+
+  res.set("Cache-Control", "no-store");
+  res.set("X-Robots-Tag", "noindex, nofollow");
+  res.status(200).json({ ok: true, accepted: true, type: req.body?.type || null });
+
+  setImmediate(() => {
+    fulfillThe402Job(req.body, {
+      apiKey: THE402_API_KEY,
+      serviceId: THE402_SERVICE_ID,
+      deepAudit,
+    }).catch((error) => console.error(`the402 fulfillment failed: ${error.message}`));
+  });
+});
 
 // Agoragentic distribution bridge. Agoragentic performs buyer routing,
 // settlement, and seller accounting; this callback performs the actual audit.
@@ -211,6 +254,10 @@ app.get("/healthz", (_req, res) => {
     prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
+    the402: {
+      configured: Boolean(THE402_API_KEY && THE402_WEBHOOK_SECRET),
+      serviceConfigured: Boolean(THE402_SERVICE_ID),
+    },
   });
 });
 

@@ -8,9 +8,10 @@ AI-search readiness audits.
 
 - Product page: https://samedaydesk.com/x402
 - Smithery: https://smithery.ai/servers/epistemedeus/x402-data-gateway
-- Remote MCP: https://x402-url-extractor-production.up.railway.app/mcp
-- Live resource manifest: https://x402-url-extractor-production.up.railway.app/.well-known/x402
+- Remote MCP: https://agents.samedaydesk.com/mcp
+- Live resource manifest: https://agents.samedaydesk.com/.well-known/x402
 - Agoragentic seller callback: `POST /integrations/agoragentic/ai-readiness-audit`
+- the402 signed fulfillment webhook: `POST /integrations/the402/webhook`
 
 No API key or subscription is required. Calls settle exact USDC amounts on Base
 mainnet through x402.
@@ -19,6 +20,12 @@ The Agoragentic callback is a separate marketplace distribution bridge. The
 marketplace handles buyer routing, settlement, and seller accounting, while the
 callback performs the same production AI-search-readiness audit behind a small
 per-IP safety cap. Direct agent customers continue to use the paid x402 route.
+
+The the402 bridge is a second marketplace distribution path. It authenticates
+signed job dispatches with timestamped HMAC verification, accepts callbacks only
+on the official API origin, and submits a structured audit deliverable for
+automatic settlement. `THE402_API_KEY`, `THE402_WEBHOOK_SECRET`, and
+`THE402_SERVICE_ID` are Railway-only environment variables.
 
 The same service also hosts two free, disclosed affiliate handoffs used by
 fact-checked SameDayDesk guides: `/go/topify` and `/go/manychat`. They mint and
