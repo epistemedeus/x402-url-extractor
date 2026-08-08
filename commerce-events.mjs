@@ -219,9 +219,34 @@ export function createCommerceTelemetry({
     };
   }
 
+  async function storageStatus() {
+    try {
+      await queue;
+      await mkdir(dataDir, { recursive: true, mode: 0o700 });
+      const [currentBytes, rotatedBytes] = await Promise.all([
+        stat(currentPath).then((entry) => entry.size).catch(() => 0),
+        stat(rotatedPath).then((entry) => entry.size).catch(() => 0),
+      ]);
+      return {
+        ready: true,
+        currentBytes,
+        rotatedBytes,
+        boundedBytes: maxBytes * 2,
+      };
+    } catch {
+      return {
+        ready: false,
+        currentBytes: null,
+        rotatedBytes: null,
+        boundedBytes: maxBytes * 2,
+      };
+    }
+  }
+
   return {
     middleware,
     snapshot,
+    storageStatus,
     flush: () => queue,
     paths: { currentPath, rotatedPath },
   };

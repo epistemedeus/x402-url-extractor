@@ -266,7 +266,8 @@ app.post("/integrations/agoragentic/ai-readiness-audit", async (req, res) => {
 });
 
 // Free health check (NOT behind paywall — used by Railway).
-app.get("/healthz", (_req, res) => {
+app.get("/healthz", async (_req, res) => {
+  const telemetryStorage = await commerceTelemetry.storageStatus();
   res.json({
     ok: true,
     payTo: PAY_TO,
@@ -274,6 +275,11 @@ app.get("/healthz", (_req, res) => {
     prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
+    commerceTelemetry: {
+      storage: telemetryStorage,
+      publicAggregate: "/v0/commerce-demand.json",
+      privacy: "aggregate external observations only; raw event data is not exposed",
+    },
     the402: {
       configured: Boolean(THE402_API_KEY && THE402_WEBHOOK_SECRET),
       serviceConfigured: Boolean(THE402_SERVICE_ID),

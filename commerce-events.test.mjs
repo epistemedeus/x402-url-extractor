@@ -71,6 +71,10 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   run({ path: "/crawler", status: 404, headers: { "user-agent": "ExampleBot/1.0" } });
 
   await telemetry.flush();
+  const storage = await telemetry.storageStatus();
+  assert.equal(storage.ready, true);
+  assert.ok(storage.currentBytes > 0);
+  assert.equal(storage.boundedBytes, 2 * 1024 * 1024);
   const snapshot = await telemetry.snapshot({ days: 1 });
   assert.equal(snapshot.externalEvents, 3);
   assert.equal(snapshot.independentActors, 1);
