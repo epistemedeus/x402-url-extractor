@@ -27,6 +27,7 @@ import { schemaforge } from "./schemaforge.mjs";
 import { enrich } from "./enrich.mjs";
 import { walletEnrich } from "./wallet-enrich.mjs";
 import { deepAudit } from "./deep-audit.mjs";
+import { createReferralResolver } from "./referral.mjs";
 import { z } from "zod";
 
 // ---------------------------------------------------------------------------
@@ -67,6 +68,14 @@ const priceToAtomic = (p) =>
   String(Math.round(parseFloat(String(p).replace(/[^0-9.]/g, "")) * 1e6));
 
 const PORT = process.env.PORT || 3000;
+
+const AGENTHANSA_API_KEY = process.env.AGENTHANSA_API_KEY;
+const TOPIFY_OFFER_ID =
+  process.env.TOPIFY_OFFER_ID || "cd10af36-7e5b-460e-b74b-73c71fe3cf40";
+const resolveTopifyReferral = createReferralResolver({
+  apiKey: AGENTHANSA_API_KEY,
+  offerId: TOPIFY_OFFER_ID,
+});
 
 // ---------------------------------------------------------------------------
 // 2. FACILITATOR SELECTION  (this is the autonomy lever)
@@ -146,6 +155,24 @@ app.get("/.well-known/402index-verify.txt", (_req, res) => {
     process.env.INDEX402_VERIFY_HASH ||
       "a1d5312d7ee9189ae3cbb1eb74f0f3903001e373dab8dfb209a942a41be5a80b"
   );
+});
+
+// Durable, disclosed affiliate redirect used by SameDayDesk's AI-visibility
+// tool guide. Agent Hansa referral URLs expire after 30 days, so resolve and
+// cache a fresh signed URL server-side without exposing the agent API key.
+app.get("/go/topify", async (_req, res) => {
+  if (!AGENTHANSA_API_KEY) {
+    return res.status(503).json({ error: "referral_not_configured" });
+  }
+
+  try {
+    const referral = await resolveTopifyReferral();
+    res.set("Cache-Control", "no-store");
+    res.set("X-Robots-Tag", "noindex, nofollow");
+    return res.redirect(302, referral.url);
+  } catch {
+    return res.status(502).json({ error: "referral_temporarily_unavailable" });
+  }
 });
 
 // --- x402 discovery document (/.well-known/x402) so agents + indexes (x402scan,
