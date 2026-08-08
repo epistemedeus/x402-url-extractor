@@ -71,3 +71,34 @@ test("rejects an unexpected redirect host", async () => {
   await assert.rejects(resolveReferral, /untrusted referral URL/);
 });
 
+test("keeps caches isolated across separate offer resolvers", async () => {
+  const offerIds = [];
+  const fetchImpl = async (url) => {
+    const offerId = url.split("/api/offers/")[1].split("/ref")[0];
+    offerIds.push(offerId);
+    return new Response(
+      JSON.stringify({
+        referral_url: `${REFERRAL_URL}-${offerId}`,
+        expires_at: "2026-09-07T00:00:00Z",
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    );
+  };
+  const topify = createReferralResolver({
+    apiKey: "test-key",
+    offerId: "topify",
+    now: () => Date.parse("2026-08-08T00:00:00Z"),
+    fetchImpl,
+  });
+  const manychat = createReferralResolver({
+    apiKey: "test-key",
+    offerId: "manychat",
+    now: () => Date.parse("2026-08-08T00:00:00Z"),
+    fetchImpl,
+  });
+
+  assert.equal((await topify()).url, `${REFERRAL_URL}-topify`);
+  assert.equal((await manychat()).url, `${REFERRAL_URL}-manychat`);
+  assert.equal((await topify()).url, `${REFERRAL_URL}-topify`);
+  assert.deepEqual(offerIds, ["topify", "manychat"]);
+});
