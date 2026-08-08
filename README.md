@@ -10,6 +10,9 @@ AI-search readiness audits.
 - Smithery: https://smithery.ai/servers/epistemedeus/x402-data-gateway
 - Remote MCP: https://agents.samedaydesk.com/mcp
 - Live resource manifest: https://agents.samedaydesk.com/.well-known/x402
+- Settlement Radar: https://agents.samedaydesk.com/platforms
+- Platform health JSON: https://agents.samedaydesk.com/v0/cards.json
+- Material-change alert probe: https://agents.samedaydesk.com/alerts
 - Agoragentic seller callback: `POST /integrations/agoragentic/ai-readiness-audit`
 - the402 signed fulfillment webhook: `POST /integrations/the402/webhook`
 

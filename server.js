@@ -40,6 +40,7 @@ import {
   renderMethodology,
   renderPlatformCard,
   renderPlatformIndex,
+  renderRobotsTxt,
 } from "./platform-health-page.mjs";
 import { z } from "zod";
 
@@ -368,6 +369,26 @@ ${line("/schemaforge", SCHEMAFORGE_PRICE, "business site -> paste-ready JSON-LD 
 - OpenAPI: ${PUBLIC_URL}/openapi.json
 - Source: https://github.com/epistemedeus/x402-url-extractor
 `);
+});
+
+app.get("/robots.txt", (_req, res) => {
+  res.set("Cache-Control", "public, max-age=86400");
+  return res.type("text/plain").send(renderRobotsTxt(PUBLIC_URL));
+});
+
+app.get("/sitemap.xml", (_req, res) => {
+  const locations = [
+    "/",
+    "/platforms",
+    "/platforms/methodology",
+    ...listPlatformHealthCards().map((card) => `/platforms/${card.platform_id}`),
+    "/alerts",
+  ];
+  const urls = locations
+    .map((pathname) => `  <url><loc>${PUBLIC_URL}${pathname}</loc></url>`)
+    .join("\n");
+  res.set("Cache-Control", "public, max-age=3600");
+  return res.type("application/xml").send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
 });
 
 // Free Settlement Radar v0. This is evidence-backed discovery, not a paid

@@ -22,6 +22,11 @@ const date = (value) =>
     timeZone: "UTC",
   }).format(new Date(value));
 
+export function renderRobotsTxt(publicUrl) {
+  const origin = String(publicUrl ?? "").replace(/\/$/, "");
+  return `User-agent: *\nAllow: /\n\n# Public evidence and machine-readable product surfaces\nSitemap: ${origin}/sitemap.xml\n`;
+}
+
 const css = `
 :root { color-scheme: dark; --bg:#07100d; --panel:#0d1914; --ink:#effff6; --muted:#9ab5a7; --line:#223d30; --lime:#b8ff68; --amber:#ffcb6b; --red:#ff7b72; --blue:#77c8ff; }
 * { box-sizing:border-box; }

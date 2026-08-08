@@ -7,6 +7,7 @@ import {
   renderMethodology,
   renderPlatformCard,
   renderPlatformIndex,
+  renderRobotsTxt,
 } from "./platform-health-page.mjs";
 
 test("index renders five cards without numerical trust language", () => {
@@ -31,4 +32,11 @@ test("methodology and pilot preserve product boundaries", () => {
   assert.match(renderMethodology(), /does not assign a numerical trust score/);
   assert.match(renderAlertPilot(), /\$19 per month/);
   assert.match(renderAlertPilot(), /No payment is collected yet/);
+});
+
+test("robots permits public discovery and names the canonical sitemap", () => {
+  assert.equal(
+    renderRobotsTxt("https://agents.samedaydesk.com/"),
+    "User-agent: *\nAllow: /\n\n# Public evidence and machine-readable product surfaces\nSitemap: https://agents.samedaydesk.com/sitemap.xml\n"
+  );
 });
