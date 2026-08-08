@@ -14,6 +14,11 @@ AI-search readiness audits.
 No API key or subscription is required. Calls settle exact USDC amounts on Base
 mainnet through x402.
 
+The same service also hosts two free, disclosed affiliate handoffs used by
+fact-checked SameDayDesk guides: `/go/topify` and `/go/manychat`. They mint and
+cache Agent Hansa's expiring signed links server-side, validate the redirect
+host, expose no API key, and return `noindex, nofollow` plus `no-store`.
+
 ## Original rail implementation
 
 A Node/Express server that returns **HTTP 402 Payment Required** when unpaid and

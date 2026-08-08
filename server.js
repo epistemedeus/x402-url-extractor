@@ -76,6 +76,12 @@ const resolveTopifyReferral = createReferralResolver({
   apiKey: AGENTHANSA_API_KEY,
   offerId: TOPIFY_OFFER_ID,
 });
+const MANYCHAT_OFFER_ID =
+  process.env.MANYCHAT_OFFER_ID || "1fd74c91-98f5-4b6f-bc1b-74f0d85438c1";
+const resolveManyChatReferral = createReferralResolver({
+  apiKey: AGENTHANSA_API_KEY,
+  offerId: MANYCHAT_OFFER_ID,
+});
 
 // ---------------------------------------------------------------------------
 // 2. FACILITATOR SELECTION  (this is the autonomy lever)
@@ -167,6 +173,24 @@ app.get("/go/topify", async (_req, res) => {
 
   try {
     const referral = await resolveTopifyReferral();
+    res.set("Cache-Control", "no-store");
+    res.set("X-Robots-Tag", "noindex, nofollow");
+    return res.redirect(302, referral.url);
+  } catch {
+    return res.status(502).json({ error: "referral_temporarily_unavailable" });
+  }
+});
+
+// Same durable referral pattern for the practical social-DM automation guide.
+// The public guide contains the recommendation and disclosure; this endpoint
+// only keeps Agent Hansa's signed 30-day tracking URL fresh and secret-safe.
+app.get("/go/manychat", async (_req, res) => {
+  if (!AGENTHANSA_API_KEY) {
+    return res.status(503).json({ error: "referral_not_configured" });
+  }
+
+  try {
+    const referral = await resolveManyChatReferral();
     res.set("Cache-Control", "no-store");
     res.set("X-Robots-Tag", "noindex, nofollow");
     return res.redirect(302, referral.url);
