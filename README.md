@@ -2,10 +2,11 @@
 
 [![Smithery listing](https://smithery.ai/badge/epistemedeus/x402-data-gateway)](https://smithery.ai/servers/epistemedeus/x402-data-gateway)
 
-Twelve pay-per-call tools for deterministic agent-work opportunity preflight,
-Morpho borrower and market decisions, protection plans, URL extraction,
-Markdown reading, repository security scans, company and wallet enrichment,
-structured data generation, and AI-search readiness audits.
+Thirteen pay-per-call tools for deterministic agent-work opportunity preflight,
+machine-service discoverability, Morpho borrower and market decisions,
+protection plans, URL extraction, Markdown reading, repository security scans,
+company and wallet enrichment, structured data generation, and AI-search
+readiness audits.
 
 - Product page: https://samedaydesk.com/x402
 - Smithery: https://smithery.ai/servers/epistemedeus/x402-data-gateway
@@ -25,6 +26,7 @@ structured data generation, and AI-search readiness audits.
 - Morpho market underwriting: `GET /defi/morpho-market-underwrite?marketId=0x...`
 - Morpho PreLiquidation replay: `GET /defi/morpho-preliquidation-replay?transactionHash=0x...`
 - Opportunity preflight: `GET /work/opportunity-preflight?rewardUsd=10&hours=0.25&hourlyCostUsd=4&selectionProbabilityPct=20`
+- Agent discoverability audit: `GET /distribution/agent-discoverability-audit?origin=https://example.com&intent=extract+a+public+website+into+structured+JSON&route=/extract`
 - Material-change alert probe: https://agents.samedaydesk.com/alerts
 - Agoragentic seller callback: `POST /integrations/agoragentic/ai-readiness-audit`
 - the402 signed fulfillment webhook: `POST /integrations/the402/webhook`
@@ -80,9 +82,9 @@ and missing-reference counts by payment class. Raw headers and transaction
 references stay on the private volume. A missing reference becomes a material
 settlement-integrity event without exposing the reference itself.
 
-Version 1.10.2 content-negotiates the root without changing its machine
+Version 1.11.0 content-negotiates the root without changing its machine
 contract. Browser navigation with an explicit `Accept: text/html` receives a
-responsive human map of the twelve tools, payment flow, and authoritative
+responsive human map of the thirteen tools, payment flow, and authoritative
 discovery links. JSON clients, curl's wildcard accept header, and agents keep
 the stable JSON descriptor. The response varies on `Accept`, and the human page
 duplicates no payment schema.
@@ -140,7 +142,7 @@ OpenAPI document remains `/openapi.json`, with `/openapi.yaml` and
 `/mpp-openapi.json`, with `/openapi.mpp.json` as an alias. `GET /mcp` returns a free transport descriptor;
 actual MCP discovery and paid tool calls use streamable HTTP at `POST /mcp`.
 Agents that prefer a compact instruction contract can read `/skill.md` (or
-`/SKILL.md`), while `/api/actions` returns the twelve canonical GET actions with
+`/SKILL.md`), while `/api/actions` returns the thirteen canonical GET actions with
 their URL, description, exact atomic USDC price, MIME type, network, and payTo.
 The A2A v1.0 card at `/.well-known/agent-card.json` advertises one bounded free
 skill, `discover-x402-paid-actions`. `POST /a2a/message:send` returns that exact
@@ -237,9 +239,13 @@ failure. The secret-free reproduction is attached to
 Keep xpay as the no-key continuity fallback, not as the normal production
 facilitator.
 
-The twelfth route, `/work/opportunity-preflight`, is live in version 1.8.0 and
-advertises a 0.05 USDC Base payment challenge. It has not been self-paid merely
-to manufacture a catalog or demand signal.
+The twelfth route, `/work/opportunity-preflight`, is live at 0.05 USDC and
+completed an owner-excluded settlement for integration and indexing QA. The
+thirteenth route, `/distribution/agent-discoverability-audit`, is live at 0.25
+USDC and productizes the brand-blind catalog benchmark used on SameDayDesk
+itself. It queries Bazaar, Agent402, Circle, and the official MPP catalog without
+catalog credentials or payments, preserves registry-native order, and reports
+coverage and rank as point-in-time observations rather than a composite score.
 
 ---
 
@@ -317,7 +323,7 @@ extensions, but remain absent beyond the documented cache window. CDP also
 finds the original Morpho and deep-audit routes through semantic search. Use the
 merchant lookup as evidence of CDP catalog state, not as the canonical count of
 SameDayDesk capabilities; the owned manifest, MCP, A2A, and OpenAPI surfaces
-remain complete at twelve.
+remain complete at thirteen.
 
 CDP rejected three older route payloads whose discovery descriptions were 535,
 581, and 629 characters even though local extension validation passed. Concise

@@ -1,8 +1,8 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.epistemedeus/x402-data-gateway",
-  "description": "Twelve x402 tools for data, audits, Morpho decisions, and opportunity preflight on Base.",
-  "version": "1.8.0",
+  "description": "Thirteen x402 and MPP tools for data, agent discoverability, audits, Morpho decisions, and opportunity preflight on Base.",
+  "version": "1.11.0",
   "websiteUrl": "https://agents.samedaydesk.com/",
   "repository": {
     "url": "https://github.com/epistemedeus/x402-url-extractor",

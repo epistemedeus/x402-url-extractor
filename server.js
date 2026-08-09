@@ -41,6 +41,10 @@ import {
   normalizeOpportunityPreflightInput,
   opportunityPreflight,
 } from "./opportunity-preflight.mjs";
+import {
+  agentDiscoverabilityAudit,
+  normalizeDiscoverabilityAuditInput,
+} from "./agent-discoverability-audit.mjs";
 import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
 import { createCommerceTelemetry } from "./commerce-events.mjs";
@@ -113,6 +117,8 @@ const MORPHO_MARKET_UNDERWRITE_PRICE = process.env.MORPHO_MARKET_UNDERWRITE_PRIC
 const MORPHO_PRELIQUIDATION_REPLAY_PRICE = process.env.MORPHO_PRELIQUIDATION_REPLAY_PRICE || "$0.10";
 // Work opportunity preflight: deterministic break-even and evidence gates for agents.
 const OPPORTUNITY_PREFLIGHT_PRICE = process.env.OPPORTUNITY_PREFLIGHT_PRICE || "$0.05";
+// Brand-blind cross-registry rank and coverage audit for machine-service sellers.
+const AGENT_DISCOVERABILITY_AUDIT_PRICE = process.env.AGENT_DISCOVERABILITY_AUDIT_PRICE || "$0.25";
 
 // "$0.05" -> "50000" atomic USDC units (6 decimals) so the discovery docs
 // (/.well-known/x402, /openapi.json) always match the paywall price exactly.
@@ -338,7 +344,7 @@ app.get("/healthz", async (_req, res) => {
     ok: true,
     payTo: PAY_TO,
     network: NETWORK,
-    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE, "morpho-protection": MORPHO_PROTECTION_PRICE, "morpho-market-underwrite": MORPHO_MARKET_UNDERWRITE_PRICE, "morpho-preliquidation-replay": MORPHO_PRELIQUIDATION_REPLAY_PRICE, "opportunity-preflight": OPPORTUNITY_PREFLIGHT_PRICE },
+    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE, "morpho-protection": MORPHO_PROTECTION_PRICE, "morpho-market-underwrite": MORPHO_MARKET_UNDERWRITE_PRICE, "morpho-preliquidation-replay": MORPHO_PRELIQUIDATION_REPLAY_PRICE, "opportunity-preflight": OPPORTUNITY_PREFLIGHT_PRICE, "agent-discoverability-audit": AGENT_DISCOVERABILITY_AUDIT_PRICE },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
     paymentProtocols: {
@@ -462,6 +468,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/defi/morpho-market-underwrite`, amount: priceToAtomic(MORPHO_MARKET_UNDERWRITE_PRICE), description: "Base Morpho market -> deterministic underwriting facts: parameter integrity, direct-chain checks, liquidity, utilization, APY history, borrower concentration and health bands, bad debt, and PreLiquidation supply. Read-only evidence flags; no opaque score or capital action.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/defi/morpho-preliquidation-replay`, amount: priceToAtomic(MORPHO_PRELIQUIDATION_REPLAY_PRICE), description: "Base transaction -> deterministic Morpho PreLiquidation replay: strict event decode, block-time contract parameters and oracle price, repaid debt, seized collateral, gross incentive, and gas. Historical evidence only; no profitability claim or execution.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/work/opportunity-preflight`, amount: priceToAtomic(OPPORTUNITY_PREFLIGHT_PRICE), description: "Agent work opportunity -> deterministic attempt, verify-first, or abandon preflight using caller-supplied cost and selection assumptions plus dated platform evidence. Returns break-even probability, expected surplus, hard gates, and source-linked evidence. No claim, bid, payment, or submission.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/distribution/agent-discoverability-audit`, amount: priceToAtomic(AGENT_DISCOVERABILITY_AUDIT_PRICE), description: "Audit whether agents can find a machine service for one brand-blind capability intent across Coinbase Bazaar, Agent402, Circle Agent Marketplace, and the official MPP catalog. Returns registry-native rank, coverage, expected-route presence, top competing results, source outages, and explicit method limits. No catalog credentials or payments.", mimeType: "application/json" },
 ];
 
 const RESOURCE_DISCOVERY_METADATA = {
@@ -477,6 +484,7 @@ const RESOURCE_DISCOVERY_METADATA = {
   "/defi/morpho-market-underwrite": { operationId: "underwriteMorphoMarket", tags: ["DeFi"] },
   "/defi/morpho-preliquidation-replay": { operationId: "replayMorphoPreLiquidation", tags: ["DeFi"] },
   "/work/opportunity-preflight": { operationId: "preflightAgentOpportunity", tags: ["Agent Operations"] },
+  "/distribution/agent-discoverability-audit": { operationId: "auditAgentDiscoverability", tags: ["Distribution"] },
 };
 
 const mppDualStack = createMppDualStack({
@@ -613,7 +621,7 @@ app.get(["/skill.md", "/SKILL.md"], (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
   return res.type("text/markdown").send(`# SameDayDesk machine commerce gateway
 
-Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, agent-work opportunity economics, Morpho borrower-risk, market-underwriting evidence, historical PreLiquidation replay, or unsigned Morpho protection plans and can pay exact USDC on Base through x402 or native MPP Payment authentication.
+Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, agent-work opportunity economics, cross-registry agent discoverability, Morpho borrower-risk, market-underwriting evidence, historical PreLiquidation replay, or unsigned Morpho protection plans and can pay exact USDC on Base through x402 or native MPP Payment authentication.
 
 ## Discover
 
@@ -640,6 +648,7 @@ Use this service when an agent needs deterministic web, company, wallet, AI-sear
 - Morpho PreLiquidation replay reconstructs gross historical event economics. It does not infer net profit or future executability.
 - Repository scan output is static evidence, not permission to execute untrusted code.
 - Opportunity preflight uses caller-supplied cost and selection assumptions plus dated categorical platform evidence. It makes no claim, bid, payment, or submission on the source platform.
+- Agent discoverability audit sends one brand-blind capability intent to public catalogs. It measures point-in-time rank and coverage, not demand, conversion, reliability, or future rank.
 - Demand telemetry is aggregate and does not expose buyer identities or raw request data.
 `);
 });
@@ -703,6 +712,7 @@ ${line("/read", READ_PRICE, "URL -> full page content as clean Markdown, ready f
 ${line("/scan", SCAN_PRICE, "static supply-chain security scan of a public GitHub repo before an agent installs/runs it; flags exfil sinks, credential reads, install-time curl|bash.")}
 ${line("/schemaforge", SCHEMAFORGE_PRICE, "business site -> paste-ready JSON-LD structured-data bundle + a gap diff vs the live site.")}
 ${line("/deep-audit", DEEP_AUDIT_PRICE, "domain -> bundled AI-search-readiness audit with firmographics, technical signals, structured-data gaps, and a paste-ready fix list.")}
+${line("/distribution/agent-discoverability-audit", AGENT_DISCOVERABILITY_AUDIT_PRICE, "public HTTPS service origin plus a brand-blind capability intent -> point-in-time rank, coverage, expected-route presence, and top competing results across Bazaar, Agent402, Circle, and the official MPP catalog. Catalog queries use no credentials or payments.")}
 
 ## How to pay
 1. GET an endpoint such as ${PUBLIC_URL}/enrich?domain=stripe.com. One HTTP 402 advertises both protocols.
@@ -783,8 +793,8 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.10.2",
-      description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, wallet context, and Morpho decision evidence. Pay per call in Base USDC through x402 or native MPP.",
+      version: "1.11.0",
+      description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, wallet context, and Morpho decision evidence. Pay per call in Base USDC through x402 or native MPP.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
     },
@@ -805,6 +815,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       { name: "Blockchain" },
       { name: "Company Intelligence" },
       { name: "DeFi" },
+      { name: "Distribution" },
       { name: "Security" },
       { name: "Settlement Radar" },
       { name: "Web Data" },
@@ -816,6 +827,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       "/a2a/message:send": { post: { summary: "Return the exact-price x402 and MPP action catalog as an A2A direct message.", responses: { "200": { description: "A2A message containing the action catalog" }, "400": { description: "Invalid request or unsupported A2A version" } } } },
       "/platforms": { get: { summary: "Human-readable Settlement Radar health cards.", responses: { "200": { description: "HTML platform health index" } } } },
       "/work/opportunity-preflight": { get: { summary: RESOURCES[11].description, parameters: [{ name: "platform", in: "query", required: false, schema: { type: "string", example: "taskmarket" } }, { name: "rewardUsd", in: "query", required: true, schema: { type: "number", exclusiveMinimum: 0 } }, { name: "hours", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "hourlyCostUsd", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "computeUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "mandatorySpendUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "reusableValueUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "selectionProbabilityPct", in: "query", required: false, schema: { type: "number", minimum: 0, maximum: 100 } }, { name: "competition", in: "query", required: false, schema: { type: "integer", minimum: 0, default: 0 } }, { name: "slots", in: "query", required: false, schema: { type: "integer", minimum: 1, default: 1 } }, { name: "agentAccess", in: "query", required: false, schema: { type: "string", enum: ["agent_allowed", "agent_only", "mixed", "human_only", "unknown"], default: "unknown" } }, { name: "acceptance", in: "query", required: false, schema: { type: "string", enum: ["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"], default: "unknown" } }, { name: "settlement", in: "query", required: false, schema: { type: "string", enum: ["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"], default: "unknown" } }], responses: { "200": { description: "deterministic opportunity economics and evidence preflight" }, "400": { description: "invalid required input, charged nothing" }, "402": { description: `payment required (x402, ${OPPORTUNITY_PREFLIGHT_PRICE} USDC base)` } } } },
+      "/distribution/agent-discoverability-audit": { get: { summary: RESOURCES[12].description, parameters: [{ name: "origin", in: "query", required: true, description: "Public HTTPS origin of the machine service, with no path or query.", schema: { type: "string", format: "uri", example: "https://agents.samedaydesk.com" } }, { name: "intent", in: "query", required: true, description: "Brand-blind capability description used as the registry query.", schema: { type: "string", minLength: 20, maxLength: 500, example: "extract a public web page into structured JSON metadata headings links and JSON-LD" } }, { name: "route", in: "query", required: false, description: "Expected exact path whose presence should be checked.", schema: { type: "string", pattern: "^/[^?#]*$", example: "/extract" } }, { name: "payTo", in: "query", required: false, description: "Optional EVM settlement address used to identify aliased service origins.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" } }], responses: { "200": { description: "brand-blind point-in-time discovery ranks, coverage, route presence, and method limits" }, "400": { description: "invalid or branded input, charged nothing" }, "402": { description: `payment required (x402, ${AGENT_DISCOVERABILITY_AUDIT_PRICE} USDC base)` } } } },
       "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "structured data" }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
       "/read": { get: { summary: RESOURCES[1].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "markdown" }, "402": { description: `payment required (x402, ${READ_PRICE} USDC base)` } } } },
       "/scan": { get: { summary: RESOURCES[2].description, parameters: [{ name: "repo", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "security risk report" }, "402": { description: `payment required (x402, ${SCAN_PRICE} USDC base)` } } } },
@@ -930,6 +942,21 @@ app.get("/defi/morpho-preliquidation-replay", (req, res, next) => {
 app.get("/work/opportunity-preflight", (req, res, next) => {
   try {
     normalizeOpportunityPreflightInput(req.query);
+    return next();
+  } catch (error) {
+    return res.status(400).json({
+      ok: false,
+      error: String(error?.message || error),
+      charged: false,
+    });
+  }
+});
+
+// Validate public targeting and brand-blind intent before payment. The paid
+// audit never fetches the target origin and uses no marketplace credentials.
+app.get("/distribution/agent-discoverability-audit", (req, res, next) => {
+  try {
+    normalizeDiscoverabilityAuditInput(req.query);
     return next();
   } catch (error) {
     return res.status(400).json({
@@ -1496,6 +1523,57 @@ const x402Paywall = paymentMiddleware(
           }),
         },
       },
+      "GET /distribution/agent-discoverability-audit": {
+        accepts: [{ scheme: "exact", price: AGENT_DISCOVERABILITY_AUDIT_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description: RESOURCES[12].description,
+        mimeType: "application/json",
+        extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
+          ...declareDiscoveryExtension({
+            input: {
+              origin: "https://agents.samedaydesk.com",
+              intent: "extract a public web page into structured JSON metadata headings links and JSON-LD",
+              route: "/extract",
+              payTo: PAY_TO,
+            },
+            inputSchema: {
+              type: "object",
+              properties: {
+                origin: { type: "string", minLength: 9, maxLength: 253, description: "Public HTTPS service origin with no path, query, fragment, or credentials." },
+                intent: { type: "string", minLength: 20, maxLength: 500, description: "Brand-blind capability description. Do not include the target hostname." },
+                route: { type: "string", pattern: "^/[^?#]*$", description: "Optional exact expected path." },
+                payTo: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$", description: "Optional EVM payTo used to identify service aliases." },
+              },
+              required: ["origin", "intent"],
+            },
+            output: {
+              example: {
+                ok: true,
+                product: "samedaydesk-agent-discoverability-audit",
+                summary: { sourceCount: 4, availableSourceCount: 4, targetFoundSourceCount: 2, expectedRouteFoundSourceCount: 2 },
+                sources: { "coinbase-bazaar": { status: "ok", targetFound: true, bestTargetRank: 9 } },
+                safety: { credentialsUsed: false, paymentSentToCatalogs: false, targetOriginFetched: false },
+              },
+            },
+            outputSchema: {
+              type: "object",
+              properties: {
+                ok: { type: "boolean" },
+                product: { type: "string", const: "samedaydesk-agent-discoverability-audit" },
+                version: { type: "string" },
+                generatedAt: { type: "string" },
+                input: { type: "object" },
+                summary: { type: "object" },
+                sources: { type: "object" },
+                method: { type: "string" },
+                safety: { type: "object" },
+                boundary: { type: "string" },
+              },
+              required: ["ok", "product", "version", "generatedAt", "input", "summary", "sources", "method", "safety", "boundary"],
+            },
+          }),
+        },
+      },
     },
     resourceServer
   );
@@ -1692,6 +1770,20 @@ app.get("/work/opportunity-preflight", async (req, res) => {
   }
 });
 
+// Paid: brand-blind cross-registry discovery audit for machine-service sellers.
+app.get("/distribution/agent-discoverability-audit", async (req, res) => {
+  try {
+    res.set("Cache-Control", "no-store");
+    return res.json(await agentDiscoverabilityAudit(req.query));
+  } catch (error) {
+    return res.status(503).json({
+      ok: false,
+      error: String(error?.message || error),
+      boundary: "No catalog credential or payment was used, and the target service origin was not fetched.",
+    });
+  }
+});
+
 // One root, negotiated by audience. Browser navigation gets a fast human map;
 // API clients, curl, and agents retain the stable JSON descriptor.
 app.get("/", (req, res) => {
@@ -1733,6 +1825,7 @@ app.get("/", (req, res) => {
       "GET /defi/morpho-market-underwrite?marketId=": `${MORPHO_MARKET_UNDERWRITE_PRICE} - deterministic Morpho market integrity, liquidity, concentration, health-band, history, bad-debt, and PreLiquidation evidence.`,
       "GET /defi/morpho-preliquidation-replay?transactionHash=": `${MORPHO_PRELIQUIDATION_REPLAY_PRICE} - reconstruct a historical PreLiquidation event, protocol-oracle gross incentive, and gas from direct Base reads.`,
       "GET /work/opportunity-preflight?rewardUsd=&hours=&hourlyCostUsd=": `${OPPORTUNITY_PREFLIGHT_PRICE} - deterministic attempt, verify-first, or abandon economics with optional dated platform evidence.`,
+      "GET /distribution/agent-discoverability-audit?origin=&intent=&route=&payTo=": `${AGENT_DISCOVERABILITY_AUDIT_PRICE} - brand-blind agent discovery rank, coverage, expected-route presence, and competing results across four machine-service catalogs.`,
     },
     network: NETWORK,
     payTo: PAY_TO,
@@ -1770,7 +1863,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.10.2" },
+      serverInfo: { name: "x402-data-gateway", version: "1.11.0" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to extract") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to read as Markdown") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
@@ -1784,6 +1877,7 @@ import("./mcp-server.mjs")
         { name: "morpho_market_underwrite", description: RESOURCES[9].description, price: MORPHO_MARKET_UNDERWRITE_PRICE, inputSchema: { marketId: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Morpho market ID on Base mainnet") }, run: (a) => morphoMarketUnderwrite(a.marketId), tags: ["defi", "morpho", "underwriting", "risk", "preliquidation"] },
         { name: "morpho_preliquidation_replay", description: RESOURCES[10].description, price: MORPHO_PRELIQUIDATION_REPLAY_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Successful Base transaction containing a Morpho PreLiquidate event") }, run: (a) => morphoPreLiquidationReplay(a.transactionHash), tags: ["defi", "morpho", "preliquidation", "replay", "economics"] },
         { name: "opportunity_preflight", description: RESOURCES[11].description, price: OPPORTUNITY_PREFLIGHT_PRICE, inputSchema: { platform: z.string().max(100).optional(), rewardUsd: z.number().positive(), hours: z.number().min(0).max(10000), hourlyCostUsd: z.number().min(0).max(100000), computeUsd: z.number().min(0).default(0), mandatorySpendUsd: z.number().min(0).default(0), reusableValueUsd: z.number().min(0).default(0), selectionProbabilityPct: z.number().min(0).max(100).optional(), competition: z.number().int().min(0).default(0), slots: z.number().int().min(1).default(1), agentAccess: z.enum(["agent_allowed", "agent_only", "mixed", "human_only", "unknown"]).default("unknown"), acceptance: z.enum(["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"]).default("unknown"), settlement: z.enum(["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"]).default("unknown") }, run: (a) => opportunityPreflight(a, { platformCard: a.platform ? getPlatformHealthCard(a.platform.toLowerCase()) : null }), tags: ["work", "bounty", "economics", "preflight", "settlement-evidence"] },
+        { name: "agent_discoverability_audit", description: RESOURCES[12].description, price: AGENT_DISCOVERABILITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Public HTTPS service origin"), intent: z.string().min(20).max(500).describe("Brand-blind capability description"), route: z.string().regex(/^\/[^?#]*$/).optional().describe("Optional expected exact path"), payTo: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional EVM payTo for alias matching") }, run: (a) => agentDiscoverabilityAudit(a), tags: ["distribution", "discovery", "x402", "mpp", "agent402"] },
       ],
     })
   )
