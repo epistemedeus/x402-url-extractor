@@ -154,6 +154,11 @@ input and to the three Morpho protection controls. This improves machine call
 construction while leaving names, routes, prices, required inputs, defaults,
 payment gates, and execution behavior unchanged.
 
+Version 1.11.11 gives all four Morpho MCP tools explicit sibling-selection
+guidance. Borrower diagnosis, future protection planning, market underwriting,
+and historical PreLiquidation replay are now distinct machine choices without
+renaming a tool or changing its route, price, schema, payment gate, or handler.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured

@@ -21,6 +21,10 @@ test("makes each overlapping web and company tool chooseable without renaming it
   const enrich = decorate("enrich");
   const deepAudit = decorate("deep_audit");
   const wallet = decorate("wallet_enrich");
+  const morphoPosition = decorate("morpho_position");
+  const morphoProtection = decorate("morpho_protection");
+  const morphoUnderwrite = decorate("morpho_market_underwrite");
+  const morphoReplay = decorate("morpho_preliquidation_replay");
 
   assert.equal(extract.name, "extract");
   assert.match(extract.description, /Use `read` instead/);
@@ -31,6 +35,11 @@ test("makes each overlapping web and company tool chooseable without renaming it
   assert.match(deepAudit.description, /evidence from `enrich`/);
   assert.match(deepAudit.description, /template from `schemaforge`/);
   assert.match(wallet.description, /Use `enrich` for a company domain/);
+  assert.match(morphoPosition.description, /Use `morpho_protection`/);
+  assert.match(morphoProtection.description, /Use `morpho_position`/);
+  assert.match(morphoUnderwrite.description, /Use `morpho_position` or `morpho_protection`/);
+  assert.match(morphoReplay.description, /Use `morpho_market_underwrite`/);
+  assert.match(morphoProtection.description, /unsigned ERC-20 approval plus Morpho call templates/);
 });
 
 test("fails closed when a live tool lacks explicit selection metadata", () => {

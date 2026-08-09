@@ -28,15 +28,19 @@ const TOOL_METADATA = Object.freeze({
   },
   morpho_position: {
     title: "Inspect Morpho Borrower Position",
+    description: "Inspect one Base borrower across Morpho markets and return position balances, LTV, health factor, liquidation headroom, direct-RPC verification, and caller-selected collateral-price stress scenarios. Use `morpho_protection` when you need exact repay or add-collateral amounts and unsigned transaction templates, `morpho_market_underwrite` for market-wide risk, or `morpho_preliquidation_replay` for one completed historical event. Read-only; no wallet, signing, broadcast, or custody.",
   },
   morpho_protection: {
     title: "Plan Morpho Borrower Protection",
+    description: "Calculate two alternative protection plans for one Base Morpho borrower under a selected collateral-price shock and target health factor: partial repayment or added collateral. Each plan includes the bounded asset amount, expected stressed health factor, evidence basis, and unsigned ERC-20 approval plus Morpho call templates. Use `morpho_position` for diagnosis without an action plan, `morpho_market_underwrite` for market-wide risk, or `morpho_preliquidation_replay` for a completed historical event. Read-only; no wallet, signing, broadcast, or custody.",
   },
   morpho_market_underwrite: {
     title: "Underwrite Morpho Market",
+    description: "Underwrite one Base Morpho market with independent GraphQL, REST, and direct-RPC evidence for configuration integrity, liquidity, utilization, concentration, borrower health bands, recent history, bad debt, and PreLiquidation availability. Use `morpho_position` or `morpho_protection` for one borrower's current position or protection plan, and `morpho_preliquidation_replay` for the economics of one completed historical event. Read-only evidence with explicit disagreements; no opaque risk score or transaction action.",
   },
   morpho_preliquidation_replay: {
     title: "Replay Morpho PreLiquidation",
+    description: "Reconstruct one successful Base Morpho PreLiquidation transaction from its receipt and the exact block state, returning repaid and seized assets, protocol-oracle valuation, gross incentive, configured health window, and transaction gas before off-chain costs. Use `morpho_market_underwrite` for current market risk, `morpho_position` for a current borrower, or `morpho_protection` for a future protection plan. Historical read-only evidence; no transaction simulation, wallet, signing, or broadcast.",
   },
   opportunity_preflight: {
     title: "Preflight Agent Work Opportunity",
