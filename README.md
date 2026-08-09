@@ -51,13 +51,19 @@ The service also keeps a privacy-safe demand telescope on a persistent Railway
 volume. It records route families, query key names, challenge/success classes,
 and pseudonymous repeat-use signals. External fetches are acquisition signals,
 not verified buyers, because unidentified automated indexers can remain.
+Recognized crawler and agent-indexer user agents are reduced at ingestion to a
+controlled source label and reported in a separate machine-discovery lens with
+source and route coverage. Those observations measure fetches, not authenticated
+catalog referrals, intent, or demand.
 Unmatched requests are reported separately from a conservative semantic-candidate
 subset; neither becomes demand until an independent caller repeats or converts.
 It does not record raw IP addresses, user
 agents, URLs, query values, bodies, payment headers, marketplace payloads, or
-credentials. Public output is aggregate only; owner and crawler traffic are
-excluded. Common exploit probes such as `.env`, `.git`, and WordPress discovery
-paths are classified as scanner traffic and excluded as well.
+credentials. Public output is aggregate only; owner traffic is excluded and
+crawler traffic remains excluded from demand even when its controlled discovery
+counts are reported separately. Common exploit probes such as `.env`, `.git`,
+and WordPress discovery paths are classified as scanner traffic and excluded as
+well.
 
 Version 1.9.4 adds explicit paid-traffic classes without exposing buyer
 addresses. `COMMERCE_PAYER_CLASSES` accepts a JSON array of `{ "address",
@@ -82,12 +88,18 @@ and missing-reference counts by payment class. Raw headers and transaction
 references stay on the private volume. A missing reference becomes a material
 settlement-integrity event without exposing the reference itself.
 
-Version 1.11.1 content-negotiates the root without changing its machine
+Version 1.11.2 content-negotiates the root without changing its machine
 contract. Browser navigation with an explicit `Accept: text/html` receives a
 responsive human map of the thirteen tools, payment flow, and authoritative
 discovery links. JSON clients, curl's wildcard accept header, and agents keep
 the stable JSON descriptor. The response varies on `Accept`, and the human page
 duplicates no payment schema.
+
+Version 1.11.2 also adds the source-attributed machine-discovery lens. It keeps
+raw user agents and network addresses out of the public snapshot, reports exact
+future indexer observations by controlled source and route, and gives the radar
+only first-source and first-route coverage changes as material events. Repeated
+crawl volume remains visible data without becoming an attention alert or demand.
 
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction

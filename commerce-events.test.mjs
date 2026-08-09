@@ -5,12 +5,23 @@ import path from "node:path";
 import test from "node:test";
 
 import {
+  classifyAgentDiscoverySource,
   classifyCommerceResult,
   classifyCommerceRoute,
   createCommerceTelemetry,
   isSemanticUnmatched,
   normalizeCommercePayerClasses,
 } from "./commerce-events.mjs";
+
+test("agent discovery sources reduce user agents to controlled labels", () => {
+  assert.equal(classifyAgentDiscoverySource("Agent402/1.0"), "agent402");
+  assert.equal(classifyAgentDiscoverySource("Coinbase CDP x402 Bazaar Indexer"), "coinbase-bazaar");
+  assert.equal(classifyAgentDiscoverySource("Circle x402 Agent Marketplace"), "circle-agent-marketplace");
+  assert.equal(classifyAgentDiscoverySource("ModelContextProtocol MCP-Registry/1.0"), "mcp-registry");
+  assert.equal(classifyAgentDiscoverySource("Smithery crawler"), "smithery");
+  assert.equal(classifyAgentDiscoverySource("ExampleBot/1.0"), "generic-agent-indexer");
+  assert.equal(classifyAgentDiscoverySource("Mozilla/5.0"), null);
+});
 
 test("payer classification policy validates controlled explicit labels", () => {
   const classes = normalizeCommercePayerClasses([
@@ -159,6 +170,13 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.equal(snapshot.repeatPaidSuccessActors, 0);
   assert.equal(snapshot.independentPaidSuccessActors, 0);
   assert.equal(snapshot.repeatIndependentPaidSuccessActors, 0);
+  assert.equal(snapshot.agentDiscoveryObservations, 5);
+  assert.equal(snapshot.agentDiscoveryActors, 5);
+  assert.equal(snapshot.repeatAgentDiscoveryActors, 0);
+  assert.equal(snapshot.agentDiscoveryBySource.agent402, 1);
+  assert.equal(snapshot.agentDiscoveryBySource["generic-agent-indexer"], 4);
+  assert.equal(snapshot.agentDiscoveryByRoute["/openapi.json"], 1);
+  assert.equal(snapshot.agentDiscoveryBySourceRoute.agent402["/openapi.json"], 1);
   assert.equal(snapshot.paidSuccessByClass.validation, 1);
   assert.equal(snapshot.paidSuccessByClassRoute.validation["/defi/morpho-position"], 1);
   assert.equal(snapshot.settlementReferenceEligiblePaidSuccesses, 1);
