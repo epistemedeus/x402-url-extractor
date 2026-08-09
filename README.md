@@ -56,6 +56,10 @@ catalog as an A2A direct message, giving A2A clients a standards-based path from
 agent discovery to the existing paid x402 actions without claiming arbitrary
 task execution.
 
+The repository-root `agent-card.json` is a compatibility manifest for the
+Global A2A Registry's current GitHub importer. It points back to the canonical
+v1.0 Agent Card and OpenAPI document; it does not replace the production card.
+
 The Agoragentic callback is a separate marketplace distribution bridge. The
 marketplace handles buyer routing, settlement, and seller accounting, while the
 callback performs the same production AI-search-readiness audit behind a small

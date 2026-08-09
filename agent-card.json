@@ -1,0 +1,66 @@
+{
+  "package_name": "com.samedaydesk.machine-commerce",
+  "display_name": "SameDayDesk Machine Commerce Storefront",
+  "description": "Discovers exact-price x402 data and risk actions that settle USDC on Base.",
+  "version": "1.1.0",
+  "manifest_url": "https://agents.samedaydesk.com/.well-known/agent-card.json",
+  "openapi_url": "https://agents.samedaydesk.com/openapi.json",
+  "capabilities": {
+    "discover_paid_actions": {
+      "description": "Return the current eight-action x402 catalog with exact USDC prices, settlement network, input URLs, and payment instructions.",
+      "endpoint": "https://agents.samedaydesk.com/a2a/message:send",
+      "method": "POST",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string",
+                "const": "ROLE_USER"
+              },
+              "messageId": {
+                "type": "string"
+              },
+              "parts": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "text"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "role",
+              "messageId",
+              "parts"
+            ]
+          }
+        },
+        "required": [
+          "message"
+        ]
+      }
+    }
+  },
+  "authentication": {
+    "type": "none",
+    "description": "Catalog discovery is free. Paid actions negotiate exact x402 USDC payment on Base."
+  },
+  "default_input_modes": [
+    "text",
+    "json"
+  ],
+  "default_output_modes": [
+    "json"
+  ]
+}
