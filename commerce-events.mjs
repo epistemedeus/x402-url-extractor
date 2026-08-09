@@ -7,6 +7,7 @@ const EXPLOIT_PROBE_PATH_PATTERN = /(?:^|\/)\.(?:env|git)(?:[./]|$)|^\/(?:wp-adm
 const PAYMENT_HEADERS = ["payment-signature", "x-payment", "x-payment-signature"];
 const PAYMENT_ID_PATTERN = /^[A-Za-z0-9_-]{16,128}$/;
 const EVM_ADDRESS_PATTERN = /^0x[0-9a-fA-F]{40}$/;
+const SEMANTIC_UNMATCHED_ROUTE_PATTERN = /(?:morpho|liquidat|underwrit|protect|risk|readiness|audit|schema|enrich|extract|wallet|payment|settle|receipt|bount|opportunit|reputation|research|scan)/i;
 
 const EXACT_ROUTES = new Map([
   ["/", { route: "/", kind: "discovery" }],
@@ -129,6 +130,11 @@ function eventResult(event) {
     replayed: event.replayed,
     status: event.status,
   });
+}
+
+export function isSemanticUnmatched(event) {
+  return eventResult(event) === "unmatched"
+    && SEMANTIC_UNMATCHED_ROUTE_PATTERN.test(String(event?.route || ""));
 }
 
 function emptyCounts() {
@@ -267,8 +273,10 @@ export function createCommerceTelemetry({
 
     const byResult = emptyCounts();
     const byRoute = emptyCounts();
-    const unmatched = emptyCounts();
+    const unmatchedRequests = emptyCounts();
+    const semanticUnmatched = emptyCounts();
     const actors = new Map();
+    const semanticUnmatchedActors = new Map();
     const paidActors = new Map();
     const paidSuccessByRoute = emptyCounts();
     let paymentIdentifierEvents = 0;
@@ -277,7 +285,16 @@ export function createCommerceTelemetry({
       const result = eventResult(event);
       increment(byResult, result);
       increment(byRoute, event.route);
-      if (result === "unmatched") increment(unmatched, event.route);
+      if (result === "unmatched") {
+        increment(unmatchedRequests, event.route);
+        if (isSemanticUnmatched(event)) {
+          increment(semanticUnmatched, event.route);
+          semanticUnmatchedActors.set(
+            event.actor,
+            (semanticUnmatchedActors.get(event.actor) || 0) + 1,
+          );
+        }
+      }
       if (event.paymentIdentifier) paymentIdentifierEvents += 1;
       if (result === "replay_success") replaySuccessEvents += 1;
       if (result === "paid_success") {
@@ -302,8 +319,14 @@ export function createCommerceTelemetry({
       replaySuccessEvents,
       byResult,
       byRoute,
-      unmatched,
-      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, crawler, and exploit-probe traffic is excluded, but unidentified automated fetchers can remain. Paid-success actors use a secret-keyed payer pseudonym when the payment payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are acquisition signals, not public buyer identities or calibrated forecasts.",
+      unmatchedRequests,
+      semanticUnmatchedEvents: Object.values(semanticUnmatched).reduce((sum, count) => sum + count, 0),
+      semanticUnmatchedActors: semanticUnmatchedActors.size,
+      repeatSemanticUnmatchedActors: [...semanticUnmatchedActors.values()].filter((count) => count > 1).length,
+      semanticUnmatched,
+      semanticUnmatchedHeuristic: "v1-high-precision-route-keywords",
+      unmatched: unmatchedRequests,
+      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, crawler, and exploit-probe traffic is excluded, but unidentified automated fetchers can remain. Unmatched requests are acquisition misses, not intents. Semantic-unmatched counts are a high-precision route-keyword heuristic and still do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when the payment payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
     };
   }
 

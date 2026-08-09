@@ -44,8 +44,10 @@ accesses a wallet, signs, broadcasts, or takes custody.
 The service also keeps a privacy-safe demand telescope on a persistent Railway
 volume. It records route families, query key names, challenge/success classes,
 and pseudonymous repeat-use signals. External fetches are acquisition signals,
-not verified buyers, because unidentified automated indexers can remain. It does
-not record raw IP addresses, user
+not verified buyers, because unidentified automated indexers can remain.
+Unmatched requests are reported separately from a conservative semantic-candidate
+subset; neither becomes demand until an independent caller repeats or converts.
+It does not record raw IP addresses, user
 agents, URLs, query values, bodies, payment headers, marketplace payloads, or
 credentials. Public output is aggregate only; owner and crawler traffic are
 excluded. Common exploit probes such as `.env`, `.git`, and WordPress discovery

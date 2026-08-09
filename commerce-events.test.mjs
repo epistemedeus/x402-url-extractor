@@ -8,6 +8,7 @@ import {
   classifyCommerceResult,
   classifyCommerceRoute,
   createCommerceTelemetry,
+  isSemanticUnmatched,
 } from "./commerce-events.mjs";
 
 test("route classification preserves useful intent without recording opaque path values", () => {
@@ -42,6 +43,14 @@ test("paid response classes separate challenge, validation, success, and failure
   assert.equal(classifyCommerceResult({ kind: "paid", matched: true, paymentPresent: true, status: 503 }), "service_failure");
   assert.equal(classifyCommerceResult({ kind: "unmatched", matched: false, paymentPresent: false, status: 404 }), "unmatched");
   assert.equal(classifyCommerceResult({ route: "/mcp", kind: "paid", matched: true, paymentPresent: false, status: 200 }), "protocol_discovery");
+});
+
+test("semantic unmatched classification is high precision and excludes technical misses", () => {
+  assert.equal(isSemanticUnmatched({ route: "/morpho-risk/*", kind: "unmatched", matched: false, status: 404 }), true);
+  assert.equal(isSemanticUnmatched({ route: "/repository-audit/*", kind: "unmatched", matched: false, status: 404 }), true);
+  assert.equal(isSemanticUnmatched({ route: "/assets/*", kind: "unmatched", matched: false, status: 404 }), false);
+  assert.equal(isSemanticUnmatched({ route: "/:opaque/*", kind: "unmatched", matched: false, status: 404 }), false);
+  assert.equal(isSemanticUnmatched({ route: "/defi/morpho-position", kind: "paid", matched: true, status: 402 }), false);
 });
 
 test("aggregate snapshot excludes internal and crawler events and exposes no actor IDs", async () => {
@@ -98,6 +107,9 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   run({ path: "/api/config", status: 404, headers: { "user-agent": "Mozilla/5.0" } });
   run({ path: "/js/env.js", status: 404, headers: { "user-agent": "Mozilla/5.0" } });
   run({ path: "/deep-audit", status: 402, headers: { "user-agent": "litebeam-probe/1.0" } });
+  run({ path: "/morpho-risk/quote", status: 404 });
+  run({ path: "/assets/logo.svg", status: 404 });
+  run({ path: "/someone@example.com/private", status: 404 });
 
   await telemetry.flush();
   const storage = await telemetry.storageStatus();
@@ -105,7 +117,7 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.ok(storage.currentBytes > 0);
   assert.equal(storage.boundedBytes, 2 * 1024 * 1024);
   const snapshot = await telemetry.snapshot({ days: 1 });
-  assert.equal(snapshot.externalEvents, 5);
+  assert.equal(snapshot.externalEvents, 8);
   assert.equal(snapshot.externalActors, 1);
   assert.equal(snapshot.repeatExternalActors, 1);
   assert.equal(snapshot.byResult.discovery, 1);
@@ -118,6 +130,14 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.equal(snapshot.paidSuccessByRoute["/defi/morpho-position"], 1);
   assert.equal(snapshot.paymentIdentifierEvents, 2);
   assert.equal(snapshot.byResult.protocol_discovery, 1);
+  assert.equal(snapshot.byResult.unmatched, 3);
+  assert.equal(snapshot.unmatchedRequests["/morpho-risk/*"], 1);
+  assert.equal(snapshot.unmatchedRequests["/assets/*"], 1);
+  assert.equal(snapshot.unmatchedRequests["/:opaque/*"], 1);
+  assert.equal(snapshot.semanticUnmatchedEvents, 1);
+  assert.equal(snapshot.semanticUnmatchedActors, 1);
+  assert.equal(snapshot.repeatSemanticUnmatchedActors, 0);
+  assert.deepEqual({ ...snapshot.semanticUnmatched }, { "/morpho-risk/*": 1 });
   assert.equal(JSON.stringify(snapshot).includes("secret-value"), false);
   assert.equal(JSON.stringify(snapshot).includes("0x1111111111111111111111111111111111111111"), false);
   assert.equal(JSON.stringify(snapshot).includes("order_1234567890abcdef"), false);
