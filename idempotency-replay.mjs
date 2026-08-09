@@ -1,6 +1,7 @@
 import { createHash, createHmac, randomBytes } from "node:crypto";
 import { chmod, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { Credential } from "mppx";
 
 const PAYMENT_HEADERS = ["payment-signature", "x-payment", "x-payment-signature"];
 const PAYMENT_ID_PATTERN = /^[A-Za-z0-9_-]{16,128}$/;
@@ -25,6 +26,7 @@ const DEFAULT_PAID_ROUTES = new Set([
   "/defi/morpho-protection",
   "/defi/morpho-market-underwrite",
   "/defi/morpho-preliquidation-replay",
+  "/work/opportunity-preflight",
 ]);
 
 function headerValue(headers, name) {
@@ -32,8 +34,12 @@ function headerValue(headers, name) {
   return Array.isArray(value) ? value.join(",") : String(value || "");
 }
 
-function paymentHeader(headers) {
+function x402PaymentHeader(headers) {
   return PAYMENT_HEADERS.map((name) => headerValue(headers, name)).find(Boolean) || "";
+}
+
+function mppPaymentHeader(headers) {
+  return Credential.extractPaymentScheme(headerValue(headers, "authorization")) || "";
 }
 
 function normalizeAddress(value) {
@@ -52,26 +58,61 @@ export function canonicalReplayUrl(value) {
 }
 
 export function decodeReplayPayment(headers) {
-  const encoded = paymentHeader(headers);
-  if (!encoded) return null;
-  try {
-    const payment = JSON.parse(Buffer.from(encoded.trim(), "base64").toString("utf8"));
-    const id = payment?.extensions?.["payment-identifier"]?.info?.id;
-    const payer = normalizeAddress(payment?.payload?.authorization?.from || payment?.payload?.from);
-    const accepted = payment?.accepted;
-    if (!PAYMENT_ID_PATTERN.test(String(id || "")) || !payer || payment?.x402Version !== 2) return null;
-    if (!accepted || typeof accepted !== "object") return null;
-    const terms = {
-      scheme: String(accepted.scheme || ""),
-      network: String(accepted.network || ""),
-      asset: normalizeAddress(accepted.asset),
-      amount: String(accepted.amount || ""),
-      payTo: normalizeAddress(accepted.payTo),
-    };
-    if (terms.scheme !== "exact" || !terms.network || !terms.asset || !/^\d+$/.test(terms.amount) || !terms.payTo) {
+  const encoded = x402PaymentHeader(headers);
+  if (encoded) {
+    try {
+      const payment = JSON.parse(Buffer.from(encoded.trim(), "base64").toString("utf8"));
+      const id = payment?.extensions?.["payment-identifier"]?.info?.id;
+      const payer = normalizeAddress(payment?.payload?.authorization?.from || payment?.payload?.from);
+      const accepted = payment?.accepted;
+      if (!PAYMENT_ID_PATTERN.test(String(id || "")) || !payer || payment?.x402Version !== 2) return null;
+      if (!accepted || typeof accepted !== "object") return null;
+      const terms = {
+        scheme: String(accepted.scheme || ""),
+        network: String(accepted.network || ""),
+        asset: normalizeAddress(accepted.asset),
+        amount: String(accepted.amount || ""),
+        payTo: normalizeAddress(accepted.payTo),
+      };
+      if (terms.scheme !== "exact" || !terms.network || !terms.asset || !/^\d+$/.test(terms.amount) || !terms.payTo) {
+        return null;
+      }
+      return { id: String(id), payer, protocol: "x402", terms };
+    } catch {
       return null;
     }
-    return { id: String(id), payer, terms };
+  }
+
+  const authorization = mppPaymentHeader(headers);
+  if (!authorization) return null;
+  try {
+    const credential = Credential.deserialize(authorization);
+    const request = credential?.challenge?.request;
+    const details = request?.methodDetails;
+    const payer = normalizeAddress(credential?.payload?.from);
+    const payTo = normalizeAddress(request?.recipient);
+    const asset = normalizeAddress(request?.currency);
+    const amount = String(request?.amount || "");
+    const chainId = Number(details?.chainId);
+    if (credential?.challenge?.method !== "evm" || credential?.challenge?.intent !== "charge") return null;
+    if (!payer || !payTo || !asset || !/^\d+$/.test(amount) || !Number.isSafeInteger(chainId) || chainId <= 0) {
+      return null;
+    }
+    if (normalizeAddress(credential?.payload?.to) !== payTo || String(credential?.payload?.value || "") !== amount) {
+      return null;
+    }
+    return {
+      id: createHash("sha256").update(authorization).digest("hex"),
+      payer,
+      protocol: "mpp",
+      terms: {
+        scheme: "evm-charge",
+        network: `eip155:${chainId}`,
+        asset,
+        amount,
+        payTo,
+      },
+    };
   } catch {
     return null;
   }

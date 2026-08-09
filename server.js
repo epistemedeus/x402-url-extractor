@@ -45,6 +45,7 @@ import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
 import { createCommerceTelemetry } from "./commerce-events.mjs";
 import { createIdempotencyReplay } from "./idempotency-replay.mjs";
+import { createMppDualStack } from "./mpp-dual-stack.mjs";
 import {
   A2A_VERSION,
   buildAgentCard,
@@ -115,6 +116,15 @@ const OPPORTUNITY_PREFLIGHT_PRICE = process.env.OPPORTUNITY_PREFLIGHT_PRICE || "
 // (/.well-known/x402, /openapi.json) always match the paywall price exactly.
 const priceToAtomic = (p) =>
   String(Math.round(parseFloat(String(p).replace(/[^0-9.]/g, "")) * 1e6));
+
+const atomicUsdcToDisplay = (amount) => {
+  const atomic = String(amount);
+  if (!/^\d+$/.test(atomic)) throw new Error(`Invalid atomic USDC amount: ${amount}`);
+  const padded = atomic.padStart(7, "0");
+  const whole = padded.slice(0, -6);
+  const fraction = padded.slice(-6).replace(/0+$/, "");
+  return fraction ? `${whole}.${fraction}` : whole;
+};
 
 const PORT = process.env.PORT || 3000;
 const THE402_API_KEY = process.env.THE402_API_KEY;
@@ -325,6 +335,15 @@ app.get("/healthz", async (_req, res) => {
     prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE, "morpho-protection": MORPHO_PROTECTION_PRICE, "morpho-market-underwrite": MORPHO_MARKET_UNDERWRITE_PRICE, "morpho-preliquidation-replay": MORPHO_PRELIQUIDATION_REPLAY_PRICE, "opportunity-preflight": OPPORTUNITY_PREFLIGHT_PRICE },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
+    paymentProtocols: {
+      x402: { enabled: true, routeCount: RESOURCES.length },
+      mpp: {
+        enabled: mppDualStack.enabled,
+        realm: mppDualStack.realm,
+        routeCount: mppDualStack.routeCount,
+        reason: mppDualStack.enabled ? null : mppDualStack.reason,
+      },
+    },
     commerceTelemetry: {
       storage: telemetryStorage,
       publicAggregate: "/v0/commerce-demand.json",
@@ -403,9 +422,14 @@ app.get("/go/manychat", async (_req, res) => {
 // --- x402 discovery document (/.well-known/x402) so agents + indexes (x402scan,
 // domain crawlers) self-discover our paid resources. Free route, before the paywall.
 const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
-const USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const USDC_BY_NETWORK = {
+  "eip155:8453": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "eip155:84532": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+};
+const USDC_ASSET = USDC_BY_NETWORK[NETWORK];
+if (!USDC_ASSET) throw new Error(`Unsupported USDC network: ${NETWORK}`);
 const acceptsFor = (amount) => [
-  { scheme: "exact", network: NETWORK, asset: USDC_BASE, amount, payTo: PAY_TO, maxTimeoutSeconds: 300, extra: { name: "USD Coin", version: "2" } },
+  { scheme: "exact", network: NETWORK, asset: USDC_ASSET, amount, payTo: PAY_TO, maxTimeoutSeconds: 300, extra: { name: "USD Coin", version: "2" } },
 ];
 const RESOURCES = [
   { url: `${PUBLIC_URL}/extract`, amount: priceToAtomic(EXTRACT_PRICE), description: "URL -> clean structured data: title, description, text, ALL JSON-LD, OpenGraph/Twitter meta, headings, links, AI-readiness signals.", mimeType: "application/json" },
@@ -422,11 +446,56 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/work/opportunity-preflight`, amount: priceToAtomic(OPPORTUNITY_PREFLIGHT_PRICE), description: "Agent work opportunity -> deterministic attempt, verify-first, or abandon preflight using caller-supplied cost and selection assumptions plus dated platform evidence. Returns break-even probability, expected surplus, hard gates, and source-linked evidence. No claim, bid, payment, or submission.", mimeType: "application/json" },
 ];
 
+const mppDualStack = createMppDualStack({
+  facilitatorClient,
+  network: NETWORK,
+  payTo: PAY_TO,
+  publicUrl: PUBLIC_URL,
+  realm: new URL(PUBLIC_URL).hostname,
+  routes: RESOURCES.map((resource) => ({
+    amount: atomicUsdcToDisplay(resource.amount),
+    description: resource.description,
+    method: "GET",
+    path: new URL(resource.url).pathname,
+  })),
+  secretKey: process.env.MPP_SECRET_KEY,
+});
+
+const paymentInfoFor = (resource) => ({
+  offers: [
+    {
+      amount: resource.amount,
+      currency: USDC_ASSET,
+      description: resource.description,
+      intent: "charge",
+      method: "evm",
+      recipient: PAY_TO,
+      network: NETWORK,
+      methodDetails: {
+        chainId: Number(NETWORK.split(":")[1]),
+        credentialTypes: ["authorization"],
+        decimals: 6,
+      },
+    },
+    {
+      amount: resource.amount,
+      currency: USDC_ASSET,
+      description: resource.description,
+      intent: "exact",
+      method: "x402",
+      network: NETWORK,
+      payTo: PAY_TO,
+      scheme: "exact",
+    },
+  ],
+});
+
 const machineActionCatalog = () => ({
   schema: "samedaydesk.machine-actions.v1",
   service: "SameDayDesk machine commerce gateway",
   network: NETWORK,
-  settlement: "x402 exact USDC on Base",
+  settlement: "x402 exact or MPP evm/charge USDC on Base",
+  paymentProtocols: ["x402", "mpp"],
   payTo: PAY_TO,
   actions: RESOURCES.map((resource) => {
     const route = new URL(resource.url).pathname;
@@ -438,12 +507,14 @@ const machineActionCatalog = () => ({
       description: resource.description,
       priceAtomicUsdc: resource.amount,
       priceUsdc: Number(resource.amount) / 1e6,
+      paymentProtocols: ["x402", "mpp"],
       mimeType: resource.mimeType,
     };
   }),
   discovery: {
     manifest: `${PUBLIC_URL}/.well-known/x402`,
     openapi: `${PUBLIC_URL}/openapi.json`,
+    mppOpenapi: `${PUBLIC_URL}/openapi.json`,
     skill: `${PUBLIC_URL}/skill.md`,
     mcp: `${PUBLIC_URL}/mcp`,
     a2aAgentCard: `${PUBLIC_URL}/.well-known/agent-card.json`,
@@ -471,7 +542,7 @@ app.get("/mcp", (_req, res) => {
     endpoint: `${PUBLIC_URL}/mcp`,
     method: "POST",
     toolCount: RESOURCES.length,
-    payment: "x402 USDC on Base per tool call",
+    payment: "x402 USDC on Base per MCP tool call; HTTP actions also accept native MPP",
     manifest: `${PUBLIC_URL}/.well-known/x402`,
     openapi: `${PUBLIC_URL}/openapi.json`,
   });
@@ -483,12 +554,13 @@ app.get(["/skill.md", "/SKILL.md"], (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
   return res.type("text/markdown").send(`# SameDayDesk machine commerce gateway
 
-Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, agent-work opportunity economics, Morpho borrower-risk, market-underwriting evidence, historical PreLiquidation replay, or unsigned Morpho protection plans and can pay exact USDC on Base through x402.
+Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, agent-work opportunity economics, Morpho borrower-risk, market-underwriting evidence, historical PreLiquidation replay, or unsigned Morpho protection plans and can pay exact USDC on Base through x402 or native MPP Payment authentication.
 
 ## Discover
 
 - x402 manifest: ${PUBLIC_URL}/.well-known/x402
 - OpenAPI: ${PUBLIC_URL}/openapi.json
+- MPP discovery: ${PUBLIC_URL}/openapi.json (per-operation x-payment-info)
 - Action catalog: ${PUBLIC_URL}/api/actions
 - MCP transport: POST ${PUBLIC_URL}/mcp
 - A2A agent card: ${PUBLIC_URL}/.well-known/agent-card.json
@@ -496,10 +568,10 @@ Use this service when an agent needs deterministic web, company, wallet, AI-sear
 ## Call and pay
 
 1. Choose an action from the manifest or action catalog.
-2. Send the declared GET request. An unpaid call returns HTTP 402 with x402 v2 payment requirements.
+2. Send the declared GET request. One unpaid HTTP 402 carries x402 v2 payment requirements and a native MPP WWW-Authenticate Payment challenge.
 3. Verify the HTTPS resource, exact amount, Base network, canonical USDC asset, and payTo wallet.
-4. Sign the exact payment authorization and replay the same request with the payment header.
-5. Reconcile the payment response and result before continuing a workflow.
+4. Pay through x402 and replay with PAYMENT-SIGNATURE, or pay through MPP and replay with Authorization: Payment.
+5. Reconcile PAYMENT-RESPONSE for x402 or Payment-Receipt for MPP before continuing a workflow.
 
 ## Boundaries
 
@@ -520,7 +592,7 @@ app.get("/api/actions", (_req, res) => {
 
 // A2A v1.0 machine-facing storefront. This is intentionally a bounded free
 // discovery agent: it returns the exact paid action catalog, then buyers call
-// and settle the chosen x402 HTTP or MCP action through the existing routes.
+// and settle HTTP actions through x402 or MPP. MCP actions remain x402-gated.
 app.get(["/.well-known/agent-card.json", "/.well-known/agent.json"], (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
   return res.json(agentCard);
@@ -533,7 +605,7 @@ app.get("/a2a", (_req, res) => {
     version: A2A_VERSION,
     agentCard: `${PUBLIC_URL}/.well-known/agent-card.json`,
     sendMessage: `${PUBLIC_URL}/a2a/message:send`,
-    skill: "discover-x402-paid-actions",
+      skill: "discover-machine-paid-actions",
   });
 });
 
@@ -559,7 +631,7 @@ app.get("/llms.txt", (_req, res) => {
   const line = (path, price, desc) => `- [${path}](${PUBLIC_URL}${path}): ${price} USDC - ${desc}`;
   res.type("text/plain").send(`# SameDayDesk machine commerce gateway
 
-> Machine-discoverable HTTP and MCP capabilities that settle USDC on Base through x402. No account or subscription is required. Current facilitator: ${FACILITATOR}. payTo ${PAY_TO} on Base mainnet (eip155:8453).
+> Machine-discoverable HTTP capabilities settle USDC on Base through either x402 or native MPP Payment authentication. MCP remains x402-gated. No account or subscription is required. Current facilitator: ${FACILITATOR}. payTo ${PAY_TO} on ${NETWORK}.
 
 ## Endpoints
 ${line("/defi/morpho-position", MORPHO_POSITION_PRICE, "Base borrower address -> deterministic Morpho LTV, LLTV, health factor, liquidation headroom, direct-RPC cross-check, and collateral-price stress scenarios. Read-only; scenarios are not probabilities.")}
@@ -573,10 +645,11 @@ ${line("/scan", SCAN_PRICE, "static supply-chain security scan of a public GitHu
 ${line("/schemaforge", SCHEMAFORGE_PRICE, "business site -> paste-ready JSON-LD structured-data bundle + a gap diff vs the live site.")}
 ${line("/deep-audit", DEEP_AUDIT_PRICE, "domain -> bundled AI-search-readiness audit with firmographics, technical signals, structured-data gaps, and a paste-ready fix list.")}
 
-## How to pay (x402)
-1. GET an endpoint (e.g. ${PUBLIC_URL}/enrich?domain=stripe.com). You receive HTTP 402 with the payment requirements.
-2. Pay the quoted USDC amount on Base to ${PAY_TO} with any x402 client (@x402/fetch, x402-axios, Coinbase AgentKit).
-3. Replay the request with the X-PAYMENT header. You receive the JSON result.
+## How to pay
+1. GET an endpoint such as ${PUBLIC_URL}/enrich?domain=stripe.com. One HTTP 402 advertises both protocols.
+2. For x402, use PAYMENT-REQUIRED with an x402 v2 client and replay with PAYMENT-SIGNATURE. A successful response carries PAYMENT-RESPONSE.
+3. For MPP, use WWW-Authenticate: Payment with an mppx EVM charge client and replay with Authorization: Payment. A successful response carries Payment-Receipt.
+4. Both paths settle the same quoted USDC amount to ${PAY_TO} on ${NETWORK}.
 
 ## Discovery
 - x402 manifest: ${PUBLIC_URL}/.well-known/x402
@@ -647,15 +720,23 @@ app.get("/alerts", (_req, res) => {
 });
 
 app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
-  res.json({
-    openapi: "3.0.3",
-    info: { title: "SameDayDesk machine commerce gateway", version: "1.8.0", description: `Twelve machine-discoverable paid capabilities on Base: work opportunity preflight ${OPPORTUNITY_PREFLIGHT_PRICE}, AI-search readiness audit ${DEEP_AUDIT_PRICE}, Morpho position risk ${MORPHO_POSITION_PRICE}, protection plans ${MORPHO_PROTECTION_PRICE}, market underwriting ${MORPHO_MARKET_UNDERWRITE_PRICE}, PreLiquidation replay ${MORPHO_PRELIQUIDATION_REPLAY_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, and structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
+  const document = {
+    openapi: "3.1.0",
+    info: { title: "SameDayDesk machine commerce gateway", version: "1.9.0", description: `Twelve machine-discoverable paid capabilities on Base with x402 and native MPP settlement: work opportunity preflight ${OPPORTUNITY_PREFLIGHT_PRICE}, AI-search readiness audit ${DEEP_AUDIT_PRICE}, Morpho position risk ${MORPHO_POSITION_PRICE}, protection plans ${MORPHO_PROTECTION_PRICE}, market underwriting ${MORPHO_MARKET_UNDERWRITE_PRICE}, PreLiquidation replay ${MORPHO_PRELIQUIDATION_REPLAY_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, and structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
+    "x-service-info": {
+      categories: ["agentic-payments", "machine-commerce", "data", "defi"],
+      docs: {
+        apiReference: `${PUBLIC_URL}/openapi.json`,
+        homepage: PUBLIC_URL,
+        llms: `${PUBLIC_URL}/llms.txt`,
+      },
+    },
     servers: [{ url: PUBLIC_URL }],
     paths: {
       "/v0/cards.json": { get: { summary: "Free incident-backed platform health cards. Categories are not calibrated scores.", responses: { "200": { description: "SameDayDesk platform health index v0" } } } },
       "/v0/commerce-demand.json": { get: { summary: "Privacy-safe aggregate external machine-commerce observations.", parameters: [{ name: "days", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 365, default: 90 } }], responses: { "200": { description: "Aggregate discovery, challenge, paid-success, unmatched-request, and high-precision semantic-candidate counts. Known internal and crawler traffic is excluded; unidentified automation can remain." } } } },
       "/.well-known/agent-card.json": { get: { summary: "A2A v1.0 agent card for the free machine-commerce storefront.", responses: { "200": { description: "A2A AgentCard" } } } },
-      "/a2a/message:send": { post: { summary: "Return the exact-price x402 action catalog as an A2A direct message.", responses: { "200": { description: "A2A message containing the action catalog" }, "400": { description: "Invalid request or unsupported A2A version" } } } },
+      "/a2a/message:send": { post: { summary: "Return the exact-price x402 and MPP action catalog as an A2A direct message.", responses: { "200": { description: "A2A message containing the action catalog" }, "400": { description: "Invalid request or unsupported A2A version" } } } },
       "/platforms": { get: { summary: "Human-readable Settlement Radar health cards.", responses: { "200": { description: "HTML platform health index" } } } },
       "/work/opportunity-preflight": { get: { summary: RESOURCES[11].description, parameters: [{ name: "platform", in: "query", required: false, schema: { type: "string", example: "taskmarket" } }, { name: "rewardUsd", in: "query", required: true, schema: { type: "number", exclusiveMinimum: 0 } }, { name: "hours", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "hourlyCostUsd", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "computeUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "mandatorySpendUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "reusableValueUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "selectionProbabilityPct", in: "query", required: false, schema: { type: "number", minimum: 0, maximum: 100 } }, { name: "competition", in: "query", required: false, schema: { type: "integer", minimum: 0, default: 0 } }, { name: "slots", in: "query", required: false, schema: { type: "integer", minimum: 1, default: 1 } }, { name: "agentAccess", in: "query", required: false, schema: { type: "string", enum: ["agent_allowed", "agent_only", "mixed", "human_only", "unknown"], default: "unknown" } }, { name: "acceptance", in: "query", required: false, schema: { type: "string", enum: ["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"], default: "unknown" } }, { name: "settlement", in: "query", required: false, schema: { type: "string", enum: ["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"], default: "unknown" } }], responses: { "200": { description: "deterministic opportunity economics and evidence preflight" }, "400": { description: "invalid required input, charged nothing" }, "402": { description: `payment required (x402, ${OPPORTUNITY_PREFLIGHT_PRICE} USDC base)` } } } },
       "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "structured data" }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
@@ -670,7 +751,13 @@ app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
       "/defi/morpho-market-underwrite": { get: { summary: RESOURCES[9].description, parameters: [{ name: "marketId", in: "query", required: true, description: "Morpho market ID on Base mainnet.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" } }], responses: { "200": { description: "deterministic multi-source Morpho market underwriting evidence" }, "400": { description: "invalid request, charged nothing" }, "402": { description: `payment required (x402, ${MORPHO_MARKET_UNDERWRITE_PRICE} USDC base)` } } } },
       "/defi/morpho-preliquidation-replay": { get: { summary: RESOURCES[10].description, parameters: [{ name: "transactionHash", in: "query", required: true, description: "Successful Base transaction containing a Morpho PreLiquidate event.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" } }], responses: { "200": { description: "historical deterministic Morpho PreLiquidation event replay" }, "400": { description: "invalid request, charged nothing" }, "402": { description: `payment required (x402, ${MORPHO_PRELIQUIDATION_REPLAY_PRICE} USDC base)` } } } },
     },
-  });
+  };
+  for (const resource of RESOURCES) {
+    const pathname = new URL(resource.url).pathname;
+    const operation = document.paths[pathname]?.get;
+    if (operation) operation["x-payment-info"] = paymentInfoFor(resource);
+  }
+  return res.json(document);
 });
 
 // Return a short-lived response for an exact logical retry before validation or
@@ -731,10 +818,10 @@ app.get("/work/opportunity-preflight", (req, res, next) => {
   }
 });
 
-// The paid route. Unpaid request -> HTTP 402 with payment requirements.
-// Paid request (X-PAYMENT header with a valid signed authorization) -> 200 + body.
-app.use(
-  paymentMiddleware(
+// The paid route. Native MPP challenges are merged into the same unpaid 402,
+// while the existing extension-rich x402 middleware remains authoritative for
+// x402 credentials. A settled MPP credential bypasses only the duplicate gate.
+const x402Paywall = paymentMiddleware(
     {
       "GET /extract": {
         accepts: [
@@ -1290,8 +1377,13 @@ app.use(
       },
     },
     resourceServer
-  )
-);
+  );
+
+app.use(mppDualStack.middleware);
+app.use((req, res, next) => {
+  if (res.locals?.samedaydeskPayment?.protocol === "mpp") return next();
+  return x402Paywall(req, res, next);
+});
 
 // Handler runs ONLY after payment is verified/settled by the middleware.
 app.get("/extract", async (req, res) => {
@@ -1482,7 +1574,7 @@ app.get("/work/opportunity-preflight", async (req, res) => {
 // Free landing so a human/agent hitting the root learns what this is + how to pay.
 app.get("/", (_req, res) => {
   res.json({
-    service: "SameDayDesk agent evidence + x402 gateway",
+    service: "SameDayDesk agent evidence + machine payment gateway",
     what: "Free incident-backed platform health plus pay-per-call data tools that settle USDC on Base.",
     settlementRadar: {
       pages: "/platforms",
@@ -1492,6 +1584,7 @@ app.get("/", (_req, res) => {
       boundary: "Categories are dated observations, not calibrated reliability scores or payout guarantees.",
     },
     machineCommerce: {
+      paymentProtocols: ["x402", "mpp"],
       manifest: "/.well-known/x402",
       manifestAliases: ["/.well-known/x402.json", "/x402.json", "/api/x402"],
       openapi: "/openapi.json",
@@ -1520,7 +1613,7 @@ app.get("/", (_req, res) => {
     },
     network: NETWORK,
     payTo: PAY_TO,
-    docs: "/platforms for free health cards; /healthz for config; /openapi.json for the spec; send an x402 payment to any paid route.",
+    docs: "/platforms for free health cards; /healthz for config; /openapi.json for x402 and MPP discovery; pay any HTTP route with either protocol.",
   });
 });
 
@@ -1530,6 +1623,7 @@ app.listen(PORT, () => {
   console.log(`  network:     ${NETWORK}`);
   console.log(`  price:       ${PRICE}`);
   console.log(`  facilitator: ${FACILITATOR} (${facilitatorClient.url})`);
+  console.log(`  protocols:   x402 + MPP (${mppDualStack.enabled ? "enabled" : "disabled"})`);
   console.log(`  paid route:  GET /extract`);
 });
 
@@ -1545,7 +1639,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.8.0" },
+      serverInfo: { name: "x402-data-gateway", version: "1.9.0" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to extract") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to read as Markdown") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },

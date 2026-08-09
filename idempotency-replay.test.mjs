@@ -70,6 +70,7 @@ test("canonical replay URL binds sorted query keys and values", () => {
 test("payment decoder requires a complete x402 v2 exact payment binding", () => {
   const decoded = decodeReplayPayment({ "payment-signature": encodedPayment() });
   assert.equal(decoded.id, paymentId);
+  assert.equal(decoded.protocol, "x402");
   assert.equal(decoded.payer, payer);
   assert.equal(decoded.terms.amount, "20000");
   assert.equal(decodeReplayPayment({ "payment-signature": "not-base64-json" }), null);

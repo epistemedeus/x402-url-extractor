@@ -33,6 +33,7 @@ test("route classification preserves useful intent without recording opaque path
   assert.equal(classifyCommerceRoute("/api/actions").route, "/api/actions");
   assert.equal(classifyCommerceRoute("/.well-known/agent.json").route, "/.well-known/agent-card.json");
   assert.equal(classifyCommerceRoute("/a2a/message:send").route, "/a2a/message:send");
+  assert.equal(classifyCommerceRoute("/work/opportunity-preflight").kind, "paid");
 });
 
 test("paid response classes separate challenge, validation, success, and failure", () => {
@@ -87,7 +88,15 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   }
 
   run({ path: "/.well-known/x402", status: 200 });
-  run({ path: "/defi/morpho-position", status: 402, query: { address: "secret-value" } });
+  run({
+    path: "/defi/morpho-position",
+    status: 402,
+    query: { address: "secret-value" },
+    responseHeaders: {
+      "payment-required": "opaque-x402-challenge",
+      "www-authenticate": "Payment id=opaque",
+    },
+  });
   const paymentSignature = Buffer.from(JSON.stringify({
     payload: { authorization: { from: "0x1111111111111111111111111111111111111111" } },
     extensions: { "payment-identifier": { info: { id: "order_1234567890abcdef" } } },
@@ -128,6 +137,10 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.equal(snapshot.paidSuccessActors, 1);
   assert.equal(snapshot.repeatPaidSuccessActors, 0);
   assert.equal(snapshot.paidSuccessByRoute["/defi/morpho-position"], 1);
+  assert.equal(snapshot.paidSuccessByProtocol.x402, 1);
+  assert.equal(snapshot.byProtocolResult.mpp_challenge, 1);
+  assert.equal(snapshot.byProtocolResult.x402_challenge, 1);
+  assert.equal(snapshot.byProtocolResult.x402_paid_success, 1);
   assert.equal(snapshot.paymentIdentifierEvents, 2);
   assert.equal(snapshot.byResult.protocol_discovery, 1);
   assert.equal(snapshot.byResult.unmatched, 3);

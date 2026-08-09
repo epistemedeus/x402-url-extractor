@@ -48,6 +48,7 @@ const EXACT_ROUTES = new Map([
   ["/defi/morpho-protection", { route: "/defi/morpho-protection", kind: "paid" }],
   ["/defi/morpho-market-underwrite", { route: "/defi/morpho-market-underwrite", kind: "paid" }],
   ["/defi/morpho-preliquidation-replay", { route: "/defi/morpho-preliquidation-replay", kind: "paid" }],
+  ["/work/opportunity-preflight", { route: "/work/opportunity-preflight", kind: "paid" }],
   ["/mcp", { route: "/mcp", kind: "paid" }],
 ]);
 
@@ -81,6 +82,27 @@ export function classifyCommerceRoute(rawPath) {
 function headerValue(headers, name) {
   const value = headers?.[name];
   return Array.isArray(value) ? value.join(",") : String(value || "");
+}
+
+function hasMppAuthorization(headers) {
+  return /(?:^|,)\s*Payment\s+[A-Za-z0-9_-]+/i.test(headerValue(headers, "authorization"));
+}
+
+function paymentProtocol(headers) {
+  if (hasMppAuthorization(headers)) return "mpp";
+  if (PAYMENT_HEADERS.some((name) => Boolean(headerValue(headers, name)))) return "x402";
+  return null;
+}
+
+function offeredPaymentProtocols(res) {
+  const offered = [];
+  if (/(?:^|,)\s*Payment\s+/i.test(String(res.getHeader?.("www-authenticate") || ""))) {
+    offered.push("mpp");
+  }
+  if (res.getHeader?.("payment-required") || res.getHeader?.("x-payment-required")) {
+    offered.push("x402");
+  }
+  return offered;
 }
 
 function safeEqual(left, right) {
@@ -216,7 +238,8 @@ export function createCommerceTelemetry({
         : "external";
     const actorMaterial = `${req.ip || req.socket?.remoteAddress || "unknown"}|${userAgent}`;
     const actor = createHmac("sha256", secret).update(actorMaterial).digest("hex").slice(0, 24);
-    const paymentPresent = PAYMENT_HEADERS.some((name) => Boolean(headerValue(headers, name)));
+    const protocol = paymentProtocol(headers);
+    const paymentPresent = Boolean(protocol);
     const paymentMetadata = decodePaymentMetadata(headers);
     const paymentActor = paymentMetadata.payer
       ? createHmac("sha256", secret).update(`payer:${paymentMetadata.payer}`).digest("hex").slice(0, 24)
@@ -229,6 +252,7 @@ export function createCommerceTelemetry({
     res.once("finish", () => {
       const status = Number(res.statusCode || 0);
       const replayed = String(res.getHeader?.("x-payment-replay") || "").toLowerCase() === "hit";
+      const protocolsOffered = offeredPaymentProtocols(res);
       enqueue({
         v: 1,
         id: randomUUID(),
@@ -241,6 +265,8 @@ export function createCommerceTelemetry({
         kind: route.kind,
         queryKeys,
         paymentPresent,
+        paymentProtocol: protocol,
+        protocolsOffered,
         replayed,
         paymentActor,
         paymentIdentifier,
@@ -279,6 +305,8 @@ export function createCommerceTelemetry({
     const semanticUnmatchedActors = new Map();
     const paidActors = new Map();
     const paidSuccessByRoute = emptyCounts();
+    const byProtocolResult = emptyCounts();
+    const paidSuccessByProtocol = emptyCounts();
     let paymentIdentifierEvents = 0;
     let replaySuccessEvents = 0;
     for (const event of events) {
@@ -299,8 +327,16 @@ export function createCommerceTelemetry({
       if (result === "replay_success") replaySuccessEvents += 1;
       if (result === "paid_success") {
         increment(paidSuccessByRoute, event.route);
+        if (event.paymentProtocol) increment(paidSuccessByProtocol, event.paymentProtocol);
         const paidActor = event.paymentActor || event.actor;
         paidActors.set(paidActor, (paidActors.get(paidActor) || 0) + 1);
+      }
+      if (result === "challenge") {
+        for (const protocol of event.protocolsOffered || []) {
+          increment(byProtocolResult, `${protocol}_challenge`);
+        }
+      } else if (event.paymentProtocol) {
+        increment(byProtocolResult, `${event.paymentProtocol}_${result}`);
       }
       actors.set(event.actor, (actors.get(event.actor) || 0) + 1);
     }
@@ -315,6 +351,8 @@ export function createCommerceTelemetry({
       paidSuccessActors: paidActors.size,
       repeatPaidSuccessActors: [...paidActors.values()].filter((count) => count > 1).length,
       paidSuccessByRoute,
+      paidSuccessByProtocol,
+      byProtocolResult,
       paymentIdentifierEvents,
       replaySuccessEvents,
       byResult,
@@ -326,7 +364,7 @@ export function createCommerceTelemetry({
       semanticUnmatched,
       semanticUnmatchedHeuristic: "v1-high-precision-route-keywords",
       unmatched: unmatchedRequests,
-      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, crawler, and exploit-probe traffic is excluded, but unidentified automated fetchers can remain. Unmatched requests are acquisition misses, not intents. Semantic-unmatched counts are a high-precision route-keyword heuristic and still do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when the payment payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
+      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, crawler, and exploit-probe traffic is excluded, but unidentified automated fetchers can remain. Unmatched requests are acquisition misses, not intents. Semantic-unmatched counts are a high-precision route-keyword heuristic and still do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
     };
   }
 

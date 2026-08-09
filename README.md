@@ -1,4 +1,4 @@
-# SameDayDesk x402 Data Gateway
+# SameDayDesk x402 and MPP Data Gateway
 
 [![Smithery listing](https://smithery.ai/badge/epistemedeus/x402-data-gateway)](https://smithery.ai/servers/epistemedeus/x402-data-gateway)
 
@@ -28,8 +28,10 @@ structured data generation, and AI-search readiness audits.
 - Agoragentic seller callback: `POST /integrations/agoragentic/ai-readiness-audit`
 - the402 signed fulfillment webhook: `POST /integrations/the402/webhook`
 
-No API key or subscription is required. Calls settle exact USDC amounts on Base
-mainnet through x402.
+No API key or subscription is required. Every paid HTTP route advertises x402
+and native MPP Payment authentication in the same 402 response. Both protocols
+settle the same exact USDC amount to the same Base mainnet merchant wallet. MCP
+tool calls remain x402-gated.
 
 The Morpho route is read-only. It calculates LTV, LLTV, health factor,
 liquidation headroom, and collateral-price shock scenarios from integer protocol
@@ -53,6 +55,16 @@ agents, URLs, query values, bodies, payment headers, marketplace payloads, or
 credentials. Public output is aggregate only; owner and crawler traffic are
 excluded. Common exploit probes such as `.env`, `.git`, and WordPress discovery
 paths are classified as scanner traffic and excluded as well.
+
+Version 1.9 adds same-route MPP `evm/charge` support to all twelve paid HTTP
+capabilities without replacing the existing x402 middleware. An unpaid request
+now carries both `WWW-Authenticate: Payment` and `PAYMENT-REQUIRED`. Native MPP
+credentials use `Authorization: Payment` and successful calls return
+`Payment-Receipt`; x402 keeps its Bazaar, payment-identifier, signed
+offer/receipt, and `PAYMENT-RESPONSE` extensions. MPP challenges are bound to the
+canonical method, path, and sorted query. Both protocols participate in
+privacy-safe telemetry and request replay, and OpenAPI 3.1 exposes valid
+per-operation `x-payment-info` offers.
 
 Version 1.8 adds a deterministic paid opportunity preflight. The caller supplies
 reward, execution time, hourly opportunity cost, compute, mandatory spend,
@@ -223,6 +235,7 @@ See `server.js`. Current package line (NOT the legacy flat `x402-express@1.x`):
 @x402/evm         2.16.0   ExactEvmScheme          (import from @x402/evm/exact/server)
 @x402/extensions  2.16.0   declareDiscoveryExtension (import from @x402/extensions/bazaar)
 @coinbase/x402    2.1.0    createFacilitatorConfig (only needed for CDP mainnet)
+mppx              0.8.15   native MPP EVM charge challenge, credential, and receipt support
 ```
 
 Core wiring:
@@ -297,6 +310,7 @@ The repo is a no-config Node app: `npm start` runs `node server.js` and binds
    FACILITATOR=cdp
    CDP_API_KEY_ID=<CDP API key ID>
    CDP_API_KEY_SECRET=<CDP API key secret>
+   MPP_SECRET_KEY=<random secret of at least 32 bytes>
    COMMERCE_DATA_DIR=/data
    COMMERCE_ACTOR_SECRET=<random 32-byte secret>
    COMMERCE_INTERNAL_TOKEN=<random owner-canary token>
@@ -308,7 +322,7 @@ The repo is a no-config Node app: `npm start` runs `node server.js` and binds
 4. **Verify:**
    ```bash
    curl https://<your-domain>/healthz          # -> {ok:true, network:eip155:8453, ...}
-   curl -i 'https://<your-domain>/defi/morpho-position?address=0x...' # -> HTTP 402 + PAYMENT-REQUIRED header
+   curl -i 'https://<your-domain>/defi/morpho-position?address=0x...' # -> HTTP 402 + WWW-Authenticate and PAYMENT-REQUIRED
    ```
 5. **Complete one bounded settlement per discoverable route**, then confirm the
    merchant lookup and semantic search. Record owner settlements as test flow,
@@ -344,6 +358,7 @@ curl -i 'http://localhost:3000/defi/morpho-position?address=0x...' # HTTP 402
 ## Files
 - `server.js` — the server (env-driven facilitator/network/price).
 - `commerce-events.mjs` — privacy-safe durable demand telemetry.
+- `mpp-dual-stack.mjs` — same-route native MPP authorization and receipt adapter.
 - `morpho-position.mjs` — deterministic Morpho snapshot, stress, and RPC checks.
 - `morpho-protection.mjs` — exact stressed repair amounts and unsigned action templates.
 - `morpho-market-underwrite.mjs` — multi-source market integrity, liquidity, concentration, borrower-health, history, bad-debt, and PreLiquidation evidence.
