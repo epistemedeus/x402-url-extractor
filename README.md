@@ -73,6 +73,13 @@ transport evidence, alert on unclassified paid use for investigation, and
 advance the demand thesis only for explicitly independent or repeat-independent
 buyers.
 
+Version 1.9.6 privately captures a valid Base transaction hash from successful
+x402 `PAYMENT-RESPONSE` or MPP `Payment-Receipt` headers after an explicit
+evidence baseline. Public telemetry exposes only proof coverage, distinct-count,
+and missing-reference counts by payment class. Raw headers and transaction
+references stay on the private volume. A missing reference becomes a material
+settlement-integrity event without exposing the reference itself.
+
 Version 1.9 adds same-route MPP `evm/charge` support to all twelve paid HTTP
 capabilities without replacing the existing x402 middleware. An unpaid request
 now carries both `WWW-Authenticate: Payment` and `PAYMENT-REQUIRED`. Native MPP
@@ -342,6 +349,7 @@ The repo is a no-config Node app: `npm start` runs `node server.js` and binds
    COMMERCE_ACTOR_SECRET=<random 32-byte secret>
    COMMERCE_INTERNAL_TOKEN=<random owner-canary token>
    COMMERCE_EXTERNAL_SINCE=<ISO timestamp after controlled launch canaries>
+   COMMERCE_SETTLEMENT_EVIDENCE_SINCE=<ISO timestamp after settlement-proof release>
    COMMERCE_PAYER_CLASSES='[{"address":"0x...","class":"validation"}]'
    ```
    Core payment settings have safe defaults. Production telemetry uses a Railway

@@ -71,6 +71,7 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
     dataDir,
     secret: "test-secret",
     internalToken: "owner-canary",
+    settlementEvidenceSince: "2020-01-01T00:00:00.000Z",
     payerClasses: [{ address: "0x1111111111111111111111111111111111111111", class: "validation" }],
     maxBytes: 1024 * 1024,
   });
@@ -113,8 +114,15 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
     payload: { authorization: { from: "0x1111111111111111111111111111111111111111" } },
     extensions: { "payment-identifier": { info: { id: "order_1234567890abcdef" } } },
   })).toString("base64");
-  run({ path: "/defi/morpho-position", status: 200, headers: { "payment-signature": paymentSignature } });
-  run({ path: "/defi/morpho-position", status: 200, headers: { "payment-signature": paymentSignature }, responseHeaders: { "x-payment-replay": "hit" } });
+  const settlementReference = `0x${"3".repeat(64)}`;
+  const paymentResponse = Buffer.from(JSON.stringify({
+    success: true,
+    transaction: settlementReference,
+    amount: "20000",
+    network: "eip155:8453",
+  })).toString("base64");
+  run({ path: "/defi/morpho-position", status: 200, headers: { "payment-signature": paymentSignature }, responseHeaders: { "payment-response": paymentResponse } });
+  run({ path: "/defi/morpho-position", status: 200, headers: { "payment-signature": paymentSignature }, responseHeaders: { "payment-response": paymentResponse, "x-payment-replay": "hit" } });
   run({ path: "/mcp", status: 200 });
   run({ path: "/owner", status: 404, headers: { "x-samedaydesk-internal": "owner-canary" } });
   run({ path: "/crawler", status: 404, headers: { "user-agent": "ExampleBot/1.0" } });
@@ -152,6 +160,16 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.equal(snapshot.repeatIndependentPaidSuccessActors, 0);
   assert.equal(snapshot.paidSuccessByClass.validation, 1);
   assert.equal(snapshot.paidSuccessByClassRoute.validation["/defi/morpho-position"], 1);
+  assert.equal(snapshot.settlementReferenceEligiblePaidSuccesses, 1);
+  assert.equal(snapshot.settlementReferencePaidSuccesses, 1);
+  assert.equal(snapshot.missingSettlementReferencePaidSuccesses, 0);
+  assert.equal(snapshot.distinctSettlementReferences, 1);
+  assert.equal(snapshot.settlementReferenceCoverage, 1);
+  assert.deepEqual({ ...snapshot.settlementEvidenceByClass.validation }, {
+    paidSuccesses: 1,
+    withReference: 1,
+    missingReference: 0,
+  });
   assert.equal(snapshot.paidSuccessByRoute["/defi/morpho-position"], 1);
   assert.equal(snapshot.paidSuccessByProtocol.x402, 1);
   assert.equal(snapshot.byProtocolResult.mpp_challenge, 1);
@@ -169,6 +187,7 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.deepEqual({ ...snapshot.semanticUnmatched }, { "/morpho-risk/*": 1 });
   assert.equal(JSON.stringify(snapshot).includes("secret-value"), false);
   assert.equal(JSON.stringify(snapshot).includes("0x1111111111111111111111111111111111111111"), false);
+  assert.equal(JSON.stringify(snapshot).includes(settlementReference), false);
   assert.equal(JSON.stringify(snapshot).includes("order_1234567890abcdef"), false);
   assert.equal(Object.prototype.hasOwnProperty.call(snapshot, "actors"), false);
   assert.equal(JSON.stringify(snapshot).includes("0x1111111111111111111111111111111111111111"), false);
@@ -185,6 +204,7 @@ test("only explicitly classified independent payers enter independent demand", a
   const telemetry = createCommerceTelemetry({
     dataDir,
     secret: "test-secret",
+    settlementEvidenceSince: "2020-01-01T00:00:00.000Z",
     payerClasses: [{ address: payer, class: "independent" }],
   });
 
@@ -211,6 +231,10 @@ test("only explicitly classified independent payers enter independent demand", a
   assert.equal(snapshot.paidSuccessByClassRoute.independent["/extract"], 2);
   assert.equal(snapshot.independentPaidSuccessActors, 1);
   assert.equal(snapshot.repeatIndependentPaidSuccessActors, 1);
+  assert.equal(snapshot.settlementReferenceEligiblePaidSuccesses, 2);
+  assert.equal(snapshot.missingSettlementReferencePaidSuccesses, 2);
+  assert.equal(snapshot.settlementReferenceCoverage, 0);
+  assert.equal(snapshot.settlementEvidenceByClass.independent.missingReference, 2);
   assert.equal(JSON.stringify(snapshot).includes(payer), false);
   await rm(dataDir, { recursive: true, force: true });
 });

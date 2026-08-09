@@ -7,6 +7,7 @@ const EXPLOIT_PROBE_PATH_PATTERN = /(?:^|\/)\.(?:env|git)(?:[./]|$)|^\/(?:wp-adm
 const PAYMENT_HEADERS = ["payment-signature", "x-payment", "x-payment-signature"];
 const PAYMENT_ID_PATTERN = /^[A-Za-z0-9_-]{16,128}$/;
 const EVM_ADDRESS_PATTERN = /^0x[0-9a-fA-F]{40}$/;
+const TRANSACTION_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 const PAYMENT_CLASSES = new Set(["internal", "validation", "incentivized", "affiliated", "independent"]);
 const SEMANTIC_UNMATCHED_ROUTE_PATTERN = /(?:morpho|liquidat|underwrit|protect|risk|readiness|audit|schema|enrich|extract|wallet|payment|settle|receipt|bount|opportunit|reputation|research|scan)/i;
 
@@ -156,6 +157,37 @@ function decodePaymentMetadata(headers) {
   }
 }
 
+function decodeResponseSettlement(res) {
+  const candidates = [
+    ["x402", res.getHeader?.("payment-response") || res.getHeader?.("x-payment-response")],
+    ["mpp", res.getHeader?.("payment-receipt")],
+  ];
+  for (const [protocol, header] of candidates) {
+    if (!header || String(header).length > 65_536) continue;
+    try {
+      const payload = JSON.parse(Buffer.from(String(header).trim(), "base64url").toString("utf8"));
+      const successful = protocol === "x402" ? payload?.success === true : payload?.status === "success";
+      if (!successful) continue;
+      const reference = protocol === "x402"
+        ? payload?.transaction || payload?.txHash
+        : payload?.reference;
+      if (!TRANSACTION_HASH_PATTERN.test(String(reference || ""))) continue;
+      const amount = protocol === "x402" ? payload?.amount : payload?.settlement?.amount;
+      const currency = protocol === "x402" ? payload?.asset || payload?.currency : payload?.settlement?.currency;
+      return {
+        protocol,
+        reference: String(reference).toLowerCase(),
+        amountAtomic: /^\d+$/.test(String(amount ?? "")) ? String(amount) : null,
+        network: typeof payload?.network === "string" ? payload.network.slice(0, 100) : null,
+        currency: typeof currency === "string" ? currency.slice(0, 200) : null,
+      };
+    } catch {
+      // An unreadable optional response proof must not expose or retain the raw header.
+    }
+  }
+  return null;
+}
+
 export function classifyCommerceResult({ route, kind, matched, paymentPresent, replayed = false, status }) {
   if (!matched) return "unmatched";
   if (kind === "discovery" || kind === "referral") return "discovery";
@@ -219,6 +251,7 @@ export function createCommerceTelemetry({
   secret = process.env.COMMERCE_ACTOR_SECRET || randomBytes(32).toString("hex"),
   internalToken = process.env.COMMERCE_INTERNAL_TOKEN || "",
   externalSince = process.env.COMMERCE_EXTERNAL_SINCE || "",
+  settlementEvidenceSince = process.env.COMMERCE_SETTLEMENT_EVIDENCE_SINCE || "",
   payerClasses = process.env.COMMERCE_PAYER_CLASSES || "",
   maxBytes = 5 * 1024 * 1024,
 } = {}) {
@@ -226,6 +259,10 @@ export function createCommerceTelemetry({
   const rotatedPath = path.join(dataDir, "commerce-events.1.ndjson");
   const parsedExternalSince = Date.parse(externalSince);
   const externalSinceMs = Number.isFinite(parsedExternalSince) ? parsedExternalSince : null;
+  const parsedSettlementEvidenceSince = Date.parse(settlementEvidenceSince);
+  const settlementEvidenceSinceMs = Number.isFinite(parsedSettlementEvidenceSince)
+    ? parsedSettlementEvidenceSince
+    : null;
   const normalizedPayerClasses = normalizeCommercePayerClasses(payerClasses);
   const paymentClassByActor = new Map([...normalizedPayerClasses].map(([address, paymentClass]) => [
     createHmac("sha256", secret).update(`payer:${address}`).digest("hex").slice(0, 24),
@@ -287,6 +324,7 @@ export function createCommerceTelemetry({
       const status = Number(res.statusCode || 0);
       const replayed = String(res.getHeader?.("x-payment-replay") || "").toLowerCase() === "hit";
       const protocolsOffered = offeredPaymentProtocols(res);
+      const settlement = decodeResponseSettlement(res);
       enqueue({
         v: 1,
         id: randomUUID(),
@@ -304,6 +342,10 @@ export function createCommerceTelemetry({
         replayed,
         paymentActor,
         paymentIdentifier,
+        settlementReference: settlement?.reference || null,
+        settlementAmountAtomic: settlement?.amountAtomic || null,
+        settlementNetwork: settlement?.network || null,
+        settlementCurrency: settlement?.currency || null,
         status,
         result: classifyCommerceResult({
           route: route.route,
@@ -346,6 +388,10 @@ export function createCommerceTelemetry({
     const independentPaidActors = new Map();
     let paymentIdentifierEvents = 0;
     let replaySuccessEvents = 0;
+    let settlementReferenceEligiblePaidSuccesses = 0;
+    let settlementReferencePaidSuccesses = 0;
+    const settlementReferences = new Set();
+    const settlementEvidenceByClass = Object.create(null);
     for (const event of events) {
       const result = eventResult(event);
       increment(byResult, result);
@@ -376,6 +422,20 @@ export function createCommerceTelemetry({
         if (paymentClass === "independent") {
           independentPaidActors.set(paidActor, (independentPaidActors.get(paidActor) || 0) + 1);
         }
+        if (settlementEvidenceSinceMs !== null && Date.parse(event.ts) >= settlementEvidenceSinceMs) {
+          settlementReferenceEligiblePaidSuccesses += 1;
+          if (!settlementEvidenceByClass[paymentClass]) {
+            settlementEvidenceByClass[paymentClass] = { paidSuccesses: 0, withReference: 0, missingReference: 0 };
+          }
+          settlementEvidenceByClass[paymentClass].paidSuccesses += 1;
+          if (TRANSACTION_HASH_PATTERN.test(String(event.settlementReference || ""))) {
+            settlementReferencePaidSuccesses += 1;
+            settlementReferences.add(String(event.settlementReference).toLowerCase());
+            settlementEvidenceByClass[paymentClass].withReference += 1;
+          } else {
+            settlementEvidenceByClass[paymentClass].missingReference += 1;
+          }
+        }
       }
       if (result === "challenge") {
         for (const protocol of event.protocolsOffered || []) {
@@ -402,6 +462,15 @@ export function createCommerceTelemetry({
       paidSuccessByProtocol,
       paidSuccessByClass,
       paidSuccessByClassRoute,
+      settlementEvidenceSince: settlementEvidenceSinceMs === null ? null : new Date(settlementEvidenceSinceMs).toISOString(),
+      settlementReferenceEligiblePaidSuccesses,
+      settlementReferencePaidSuccesses,
+      missingSettlementReferencePaidSuccesses: settlementReferenceEligiblePaidSuccesses - settlementReferencePaidSuccesses,
+      distinctSettlementReferences: settlementReferences.size,
+      settlementReferenceCoverage: settlementReferenceEligiblePaidSuccesses
+        ? settlementReferencePaidSuccesses / settlementReferenceEligiblePaidSuccesses
+        : null,
+      settlementEvidenceByClass,
       byProtocolResult,
       paymentIdentifierEvents,
       replaySuccessEvents,
@@ -415,7 +484,8 @@ export function createCommerceTelemetry({
       semanticUnmatchedHeuristic: "v1-high-precision-route-keywords",
       unmatched: unmatchedRequests,
       paymentClassPolicy: "Explicit known-payer rules classify internal, marketplace validation, incentivized, affiliated, or independently confirmed buyers. Unknown or missing payer identities remain unclassified and never become independent by inference.",
-      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, crawler, and exploit-probe traffic is excluded, but unidentified automated fetchers can remain. Unmatched requests are acquisition misses, not intents. Semantic-unmatched counts are a high-precision route-keyword heuristic and still do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Payment classes are applied against those pseudonyms at read time, so known marketplace verification can be reclassified without storing a raw address. Unknown payers remain unclassified. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
+      settlementEvidencePolicy: "After the declared settlement-evidence baseline, a successful paid response should carry a valid Base transaction reference in PAYMENT-RESPONSE or Payment-Receipt. Raw response headers and transaction references remain private; public output exposes only coverage counts by evidence class.",
+      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, crawler, and exploit-probe traffic is excluded, but unidentified automated fetchers can remain. Unmatched requests are acquisition misses, not intents. Semantic-unmatched counts are a high-precision route-keyword heuristic and still do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Payment classes are applied against those pseudonyms at read time, so known marketplace verification can be reclassified without storing a raw address. Unknown payers remain unclassified. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Settlement-reference coverage begins only at its declared baseline; raw transaction references remain on the private volume and are not returned publicly. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
     };
   }
 
