@@ -174,6 +174,13 @@ challenge exposes both the example and the concrete required response fields
 before an agent authorizes payment. Routes, inputs, prices, settlement, and
 handlers are unchanged.
 
+Version 1.11.14 projects the same thirteen response contracts into the free
+OpenAPI and action catalog. Discovery agents can now inspect concrete required
+fields and an example before probing a paid route; `/read` is also described as
+the JSON object its handler actually returns rather than a raw Markdown string.
+One route-keyed contract map drives the x402 challenge, OpenAPI, and action
+catalog to prevent the three machine surfaces from drifting apart.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured
