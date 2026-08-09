@@ -142,6 +142,13 @@ remain later outcomes. Public aggregates separate header noise from parseable
 attempts and report protocol, result, route, controlled source, and explicit
 payer class without raw credentials, actor IDs, or addresses.
 
+Version 1.11.9 improves MCP tool selection without renaming or duplicating any
+tool. Every tool now has a unique action-oriented title. The overlapping web
+and company tools explicitly say when to choose `extract` versus `read`,
+`enrich` versus `schemaforge`, and the combined `deep_audit`; `wallet_enrich`
+also states that its input is an EVM address rather than a company domain. The
+payment routes, names, prices, schemas, and handlers are unchanged.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured

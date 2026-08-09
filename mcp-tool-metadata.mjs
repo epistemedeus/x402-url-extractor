@@ -1,0 +1,65 @@
+const TOOL_METADATA = Object.freeze({
+  extract: {
+    title: "Extract Web Page as Structured JSON",
+    description: "Fetch a public HTTP(S) page and return compact extraction signals for programmatic inspection: title, meta description, Open Graph/Twitter metadata, JSON-LD, headings, links, text excerpt, and AI-readiness flags. Use `read` instead when you need the page body as LLM-ready Markdown rather than metadata or a link inventory. Does not execute JavaScript; follows redirects and applies SSRF, timeout, and response-size guards.",
+  },
+  read: {
+    title: "Read Web Page as Markdown",
+    description: "Fetch a public HTTP(S) page and return its readable body as cleaned Markdown for LLM context, preserving headings, links, and lists while dropping navigation, ads, scripts, headers, footers, asides, and forms. Use `extract` instead when you need metadata, JSON-LD, Open Graph/Twitter tags, or a link inventory. Markdown is capped at 40,000 characters and no JavaScript is executed.",
+  },
+  scan: {
+    title: "Scan GitHub Repository Before Install",
+  },
+  schemaforge: {
+    title: "Generate Business JSON-LD",
+    description: "Analyze a public business site and return a deterministic, paste-ready JSON-LD template plus the live structured-data gap diff and ranked fixes. Use `deep_audit` instead when the same call must also return company, technology, contact, and DNS/email evidence. Generated markup contains placeholders that must be replaced with real business values; this tool makes no site changes and does not guarantee AI citations.",
+  },
+  enrich: {
+    title: "Enrich Company Domain",
+    description: "Inspect a public company domain and return structured identity, technology, social, contact, DNS, email-infrastructure, and AI-readiness evidence. Use `schemaforge` instead for a paste-ready JSON-LD template and remediation diff, or `deep_audit` when both outputs are required together. Public data only; this tool makes no site changes.",
+  },
+  wallet_enrich: {
+    title: "Enrich Base Wallet or Contract",
+    description: "Inspect a public Base or EVM address and return an agent-ready on-chain profile: EOA or contract type, native and curated token holdings, token/NFT metadata, proxy evidence, activity, and a derived profile label. Use `enrich` for a company domain; the two tools accept different identifiers and return different evidence. Read-only public chain data; no wallet action or custody.",
+  },
+  deep_audit: {
+    title: "Audit Complete AI Search Readiness",
+    description: "Run one read-only AI-search-readiness audit for a public business domain: company, technology, contact, and DNS/email evidence from `enrich`, plus the live structured-data gap analysis and paste-ready JSON-LD template from `schemaforge`. Use `enrich` for company facts only or `schemaforge` for structured-data remediation only. The template contains placeholders for real data; the score is diagnostic, no site changes are made, and it does not guarantee AI citations.",
+  },
+  morpho_position: {
+    title: "Inspect Morpho Borrower Position",
+  },
+  morpho_protection: {
+    title: "Plan Morpho Borrower Protection",
+  },
+  morpho_market_underwrite: {
+    title: "Underwrite Morpho Market",
+  },
+  morpho_preliquidation_replay: {
+    title: "Replay Morpho PreLiquidation",
+  },
+  opportunity_preflight: {
+    title: "Preflight Agent Work Opportunity",
+  },
+  agent_discoverability_audit: {
+    title: "Audit Agent Service Discoverability",
+  },
+});
+
+export function decorateMcpTool(tool) {
+  if (!tool || typeof tool !== "object") throw new Error("MCP tool config is required");
+  const name = String(tool.name || "");
+  const metadata = TOOL_METADATA[name];
+  if (!metadata) throw new Error(`Missing MCP selection metadata for ${name || "unnamed tool"}`);
+  const baseDescription = String(tool.description || "").trim();
+  if (!baseDescription) throw new Error(`Missing MCP description for ${name}`);
+  return {
+    ...tool,
+    title: metadata.title,
+    description: metadata.description || baseDescription,
+  };
+}
+
+export function listMcpToolMetadata() {
+  return Object.entries(TOOL_METADATA).map(([name, metadata]) => ({ name, ...metadata }));
+}

@@ -42,7 +42,7 @@ function asToolResult(obj) {
  * @param {string} cfg.network          - CAIP-2, e.g. "eip155:8453"
  * @param {string} cfg.payTo            - our wallet; USDC settles here
  * @param {{name:string,version:string}} cfg.serverInfo
- * @param {Array<{name:string,description:string,price:string,inputSchema:Record<string,z.ZodTypeAny>,run:(args:any)=>Promise<any>,tags?:string[]}>} cfg.tools
+ * @param {Array<{name:string,title?:string,description:string,price:string,inputSchema:Record<string,z.ZodTypeAny>,run:(args:any)=>Promise<any>,tags?:string[]}>} cfg.tools
  * @returns {Promise<{toolCount:number}>}
  */
 export async function mountMcp(app, { facilitatorClient, network, payTo, serverInfo, tools }) {
@@ -79,14 +79,14 @@ export async function mountMcp(app, { facilitatorClient, network, payTo, serverI
         return { ...asToolResult({ ok: false, error: String(e?.message || e) }), isError: true };
       }
     });
-    prepared.push({ name: t.name, description: t.description, inputSchema: t.inputSchema, handler });
+    prepared.push({ name: t.name, title: t.title, description: t.description, inputSchema: t.inputSchema, handler });
   }
 
   // A fresh MCP server per request (stateless mode requires server+transport per call).
   const makeServer = () => {
     const server = new McpServer(serverInfo);
     for (const t of prepared) {
-      server.registerTool(t.name, { description: t.description, inputSchema: t.inputSchema }, t.handler);
+      server.registerTool(t.name, { title: t.title, description: t.description, inputSchema: t.inputSchema }, t.handler);
     }
     return server;
   };

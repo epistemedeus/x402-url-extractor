@@ -1,0 +1,39 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import { decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
+
+test("publishes unique action-oriented titles for every live MCP tool", () => {
+  const metadata = listMcpToolMetadata();
+  assert.equal(metadata.length, 13);
+  assert.equal(new Set(metadata.map((entry) => entry.name)).size, 13);
+  assert.equal(new Set(metadata.map((entry) => entry.title)).size, 13);
+  for (const entry of metadata) {
+    assert.match(entry.title, /^(?:Extract|Read|Scan|Generate|Enrich|Audit|Inspect|Plan|Underwrite|Replay|Preflight)\b/);
+  }
+});
+
+test("makes each overlapping web and company tool chooseable without renaming it", () => {
+  const decorate = (name) => decorateMcpTool({ name, description: `${name} base contract` });
+  const extract = decorate("extract");
+  const read = decorate("read");
+  const schemaforge = decorate("schemaforge");
+  const enrich = decorate("enrich");
+  const deepAudit = decorate("deep_audit");
+  const wallet = decorate("wallet_enrich");
+
+  assert.equal(extract.name, "extract");
+  assert.match(extract.description, /Use `read` instead/);
+  assert.match(read.description, /Use `extract` instead/);
+  assert.match(schemaforge.description, /Use `deep_audit` instead/);
+  assert.match(schemaforge.description, /does not guarantee AI citations/);
+  assert.match(enrich.description, /Use `schemaforge` instead/);
+  assert.match(deepAudit.description, /evidence from `enrich`/);
+  assert.match(deepAudit.description, /template from `schemaforge`/);
+  assert.match(wallet.description, /Use `enrich` for a company domain/);
+});
+
+test("fails closed when a live tool lacks explicit selection metadata", () => {
+  assert.throws(() => decorateMcpTool({ name: "new_tool", description: "new" }), /Missing MCP selection metadata/);
+  assert.throws(() => decorateMcpTool({ name: "extract", description: "" }), /Missing MCP description/);
+});
