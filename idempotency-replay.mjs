@@ -249,7 +249,7 @@ export function createIdempotencyReplay({
     const originalEnd = res.end.bind(res);
     const capture = (chunk, encoding) => {
       if (chunk == null || overflow) return;
-      const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, encoding);
+      const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, typeof encoding === "string" ? encoding : undefined);
       capturedBytes += buffer.length;
       if (capturedBytes > maxResponseBytes) {
         overflow = true;
@@ -262,19 +262,28 @@ export function createIdempotencyReplay({
       capture(chunk, encoding);
       return originalWrite(chunk, encoding, callback);
     };
+    let endScheduled = false;
     res.end = function(chunk, encoding, callback) {
       capture(chunk, encoding);
-      return originalEnd(chunk, encoding, callback);
-    };
-    res.once("finish", () => {
-      if (overflow || res.statusCode < 200 || res.statusCode >= 300) return;
       const responseHeaders = res.getHeaders?.() || {};
+      const hasSettlementProof = Boolean(
+        responseHeaders["payment-response"]
+        || responseHeaders["payment-receipt"]
+        || responseHeaders["x-payment-response"],
+      );
+      if (endScheduled || overflow || res.statusCode < 200 || res.statusCode >= 300 || !hasSettlementProof) {
+        return originalEnd(chunk, encoding, callback);
+      }
+      endScheduled = true;
       void store(binding, {
         status: res.statusCode,
         headers: responseHeaders,
         body: Buffer.concat(chunks),
-      }).catch((error) => console.error(`idempotency replay write failed: ${error.message}`));
-    });
+      })
+        .catch((error) => console.error(`idempotency replay write failed: ${error.message}`))
+        .finally(() => originalEnd(chunk, encoding, callback));
+      return res;
+    };
     return next();
   }
 

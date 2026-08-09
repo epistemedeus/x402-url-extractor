@@ -179,3 +179,52 @@ test("expired records return to normal payment processing", async () => {
   assert.equal(status.activeEntries, 0);
   await rm(dataDir, { recursive: true, force: true });
 });
+
+test("a newly settled response is durable before the network response ends", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "idempotency-before-end-"));
+  const replay = createIdempotencyReplay({ dataDir, secret: "test-secret", ttlMs: 60_000 });
+  const headers = {
+    "payment-signature": encodedPayment(),
+    host: "agents.samedaydesk.com",
+    "x-forwarded-proto": "https",
+  };
+  const req = {
+    method: "GET",
+    path: "/defi/morpho-position",
+    originalUrl: "/defi/morpho-position?address=0xabc",
+    headers,
+    protocol: "http",
+  };
+  const responseHeaders = { "content-type": "application/json" };
+  let resolveEnded;
+  const ended = new Promise((resolve) => { resolveEnded = resolve; });
+  const res = {
+    statusCode: 200,
+    set(name, value) {
+      responseHeaders[String(name).toLowerCase()] = String(value);
+      return this;
+    },
+    getHeaders() {
+      return { ...responseHeaders };
+    },
+    write() {
+      return true;
+    },
+    end() {
+      resolveEnded();
+      return this;
+    },
+  };
+  await replay.middleware(req, res, () => {
+    res.set("payment-response", "signed-settlement");
+    res.end('{"ok":true}');
+  });
+  await ended;
+  const binding = replay.bindingFor({
+    method: "GET",
+    url: "https://agents.samedaydesk.com/defi/morpho-position?address=0xabc",
+    headers,
+  });
+  assert.equal((await replay.lookup(binding)).kind, "hit");
+  await rm(dataDir, { recursive: true, force: true });
+});
