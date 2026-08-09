@@ -11,6 +11,8 @@ structured data generation, and AI-search readiness audits.
 - Remote MCP: https://agents.samedaydesk.com/mcp
 - Live resource manifest: https://agents.samedaydesk.com/.well-known/x402
 - OpenAPI: https://agents.samedaydesk.com/openapi.json
+- Skill contract: https://agents.samedaydesk.com/skill.md
+- Action catalog: https://agents.samedaydesk.com/api/actions
 - Settlement Radar: https://agents.samedaydesk.com/platforms
 - Platform health JSON: https://agents.samedaydesk.com/v0/cards.json
 - Aggregate machine-demand telemetry: https://agents.samedaydesk.com/v0/commerce-demand.json
@@ -44,6 +46,9 @@ manifest remains `/.well-known/x402`, with compatible aliases at
 document remains `/openapi.json`, with `/openapi.yaml` and `/swagger.json`
 returning the same JSON document. `GET /mcp` returns a free transport descriptor;
 actual MCP discovery and paid tool calls use streamable HTTP at `POST /mcp`.
+Agents that prefer a compact instruction contract can read `/skill.md` (or
+`/SKILL.md`), while `/api/actions` returns the eight canonical GET actions with
+their URL, description, exact atomic USDC price, MIME type, network, and payTo.
 
 The Agoragentic callback is a separate marketplace distribution bridge. The
 marketplace handles buyer routing, settlement, and seller accounting, while the

@@ -386,6 +386,67 @@ app.get("/mcp", (_req, res) => {
     openapi: `${PUBLIC_URL}/openapi.json`,
   });
 });
+
+// Compact skill contract for agents that probe a domain for a directly usable
+// instruction file before they parse OpenAPI or start an MCP session.
+app.get(["/skill.md", "/SKILL.md"], (_req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  return res.type("text/markdown").send(`# SameDayDesk machine commerce gateway
+
+Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, or Morpho borrower-risk data and can pay exact USDC on Base through x402.
+
+## Discover
+
+- x402 manifest: ${PUBLIC_URL}/.well-known/x402
+- OpenAPI: ${PUBLIC_URL}/openapi.json
+- Action catalog: ${PUBLIC_URL}/api/actions
+- MCP transport: POST ${PUBLIC_URL}/mcp
+
+## Call and pay
+
+1. Choose an action from the manifest or action catalog.
+2. Send the declared GET request. An unpaid call returns HTTP 402 with x402 v2 payment requirements.
+3. Verify the HTTPS resource, exact amount, Base network, canonical USDC asset, and payTo wallet.
+4. Sign the exact payment authorization and replay the same request with the payment header.
+5. Reconcile the payment response and result before continuing a workflow.
+
+## Boundaries
+
+- Morpho output is a read-only indexed snapshot with deterministic stress calculations. Verify direct RPC state before any financial action.
+- Repository scan output is static evidence, not permission to execute untrusted code.
+- Demand telemetry is aggregate and does not expose buyer identities or raw request data.
+`);
+});
+
+app.get("/api/actions", (_req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  return res.json({
+    schema: "samedaydesk.machine-actions.v1",
+    service: "SameDayDesk machine commerce gateway",
+    network: NETWORK,
+    settlement: "x402 exact USDC on Base",
+    payTo: PAY_TO,
+    actions: RESOURCES.map((resource) => {
+      const route = new URL(resource.url).pathname;
+      return {
+        name: route.replace(/^\//, "").replaceAll("/", "_"),
+        method: "GET",
+        route,
+        url: resource.url,
+        description: resource.description,
+        priceAtomicUsdc: resource.amount,
+        priceUsdc: Number(resource.amount) / 1e6,
+        mimeType: resource.mimeType,
+      };
+    }),
+    discovery: {
+      manifest: `${PUBLIC_URL}/.well-known/x402`,
+      openapi: `${PUBLIC_URL}/openapi.json`,
+      skill: `${PUBLIC_URL}/skill.md`,
+      mcp: `${PUBLIC_URL}/mcp`,
+    },
+  });
+});
 // --- /llms.txt: agent/LLM-native discovery surface (llmstxt.org convention).
 // Free route. Tells crawling LLM agents what we sell and exactly how to pay (x402),
 // the same channel our category peers (Melvea, cryptojp, img402) use to be found.
@@ -413,6 +474,8 @@ ${line("/deep-audit", DEEP_AUDIT_PRICE, "domain -> bundled AI-search-readiness a
 ## Discovery
 - x402 manifest: ${PUBLIC_URL}/.well-known/x402
 - OpenAPI: ${PUBLIC_URL}/openapi.json
+- Skill contract: ${PUBLIC_URL}/skill.md
+- Action catalog: ${PUBLIC_URL}/api/actions
 - Aggregate demand telemetry: ${PUBLIC_URL}/v0/commerce-demand.json
 - Source: https://github.com/epistemedeus/x402-url-extractor
 `);
@@ -967,6 +1030,8 @@ app.get("/", (_req, res) => {
       manifestAliases: ["/.well-known/x402.json", "/x402.json", "/api/x402"],
       openapi: "/openapi.json",
       openapiAliases: ["/openapi.yaml", "/swagger.json"],
+      skill: "/skill.md",
+      actions: "/api/actions",
       llms: "/llms.txt",
       mcp: "POST /mcp",
       aggregateDemand: "/v0/commerce-demand.json",
