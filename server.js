@@ -461,7 +461,7 @@ const mppDualStack = createMppDualStack({
   secretKey: process.env.MPP_SECRET_KEY,
 });
 
-const paymentInfoFor = (resource) => ({
+const agentCashPaymentInfoFor = (resource) => ({
   price: {
     amount: atomicUsdcToDisplay(resource.amount),
     currency: "USD",
@@ -484,6 +484,9 @@ const paymentInfoFor = (resource) => ({
       },
     },
   ],
+});
+
+const mppPaymentInfoFor = (resource) => ({
   offers: [
     {
       amount: resource.amount,
@@ -536,7 +539,7 @@ const machineActionCatalog = () => ({
   discovery: {
     manifest: `${PUBLIC_URL}/.well-known/x402`,
     openapi: `${PUBLIC_URL}/openapi.json`,
-    mppOpenapi: `${PUBLIC_URL}/openapi.json`,
+    mppOpenapi: `${PUBLIC_URL}/mpp-openapi.json`,
     skill: `${PUBLIC_URL}/skill.md`,
     mcp: `${PUBLIC_URL}/mcp`,
     a2aAgentCard: `${PUBLIC_URL}/.well-known/agent-card.json`,
@@ -582,7 +585,7 @@ Use this service when an agent needs deterministic web, company, wallet, AI-sear
 
 - x402 manifest: ${PUBLIC_URL}/.well-known/x402
 - OpenAPI: ${PUBLIC_URL}/openapi.json
-- MPP discovery: ${PUBLIC_URL}/openapi.json (per-operation x-payment-info)
+- MPP discovery: ${PUBLIC_URL}/mpp-openapi.json (per-operation offers)
 - Action catalog: ${PUBLIC_URL}/api/actions
 - MCP transport: POST ${PUBLIC_URL}/mcp
 - A2A agent card: ${PUBLIC_URL}/.well-known/agent-card.json
@@ -741,12 +744,12 @@ app.get("/alerts", (_req, res) => {
   return res.type("html").send(renderAlertPilot());
 });
 
-app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
+const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
   const document = {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.9.1",
+      version: "1.9.2",
       description: `Twelve machine-discoverable paid capabilities on Base with x402 and native MPP settlement: work opportunity preflight ${OPPORTUNITY_PREFLIGHT_PRICE}, AI-search readiness audit ${DEEP_AUDIT_PRICE}, Morpho position risk ${MORPHO_POSITION_PRICE}, protection plans ${MORPHO_PROTECTION_PRICE}, market underwriting ${MORPHO_MARKET_UNDERWRITE_PRICE}, PreLiquidation replay ${MORPHO_PRELIQUIDATION_REPLAY_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, and structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}`,
       contact: { url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
@@ -754,7 +757,9 @@ app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
     "x-service-info": {
       categories: ["agentic-payments", "machine-commerce", "data", "defi"],
       docs: {
-        apiReference: `${PUBLIC_URL}/openapi.json`,
+        apiReference: profile === "mpp"
+          ? `${PUBLIC_URL}/mpp-openapi.json`
+          : `${PUBLIC_URL}/openapi.json`,
         homepage: PUBLIC_URL,
         llms: `${PUBLIC_URL}/llms.txt`,
       },
@@ -784,7 +789,9 @@ app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
     const pathname = new URL(resource.url).pathname;
     const operation = document.paths[pathname]?.get;
     if (!operation) continue;
-    operation["x-payment-info"] = paymentInfoFor(resource);
+    operation["x-payment-info"] = profile === "mpp"
+      ? mppPaymentInfoFor(resource)
+      : agentCashPaymentInfoFor(resource);
     const mediaType = pathname === "/read" ? "text/markdown" : "application/json";
     operation.responses["200"].content = {
       [mediaType]: {
@@ -799,7 +806,20 @@ app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
       if (!operation["x-payment-info"]) operation.security = [];
     }
   }
-  return res.json(document);
+  return document;
+};
+
+app.get(["/favicon.ico", "/favicon.svg"], (req, res) => {
+  const filename = req.path.endsWith(".svg") ? "favicon.svg" : "favicon.ico";
+  return res.redirect(302, `https://samedaydesk.com/${filename}`);
+});
+
+app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
+  return res.json(buildOpenApiDocument({ profile: "agentcash" }));
+});
+
+app.get(["/mpp-openapi.json", "/openapi.mpp.json"], (_req, res) => {
+  return res.json(buildOpenApiDocument({ profile: "mpp" }));
 });
 
 // Return a short-lived response for an exact logical retry before validation or
@@ -1655,7 +1675,7 @@ app.get("/", (_req, res) => {
     },
     network: NETWORK,
     payTo: PAY_TO,
-    docs: "/platforms for free health cards; /healthz for config; /openapi.json for x402 and MPP discovery; pay any HTTP route with either protocol.",
+    docs: "/platforms for free health cards; /healthz for config; /openapi.json for AgentCash discovery; /mpp-openapi.json for official MPP discovery; pay any HTTP route with either protocol.",
   });
 });
 
@@ -1681,7 +1701,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.9.1" },
+      serverInfo: { name: "x402-data-gateway", version: "1.9.2" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to extract") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to read as Markdown") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },

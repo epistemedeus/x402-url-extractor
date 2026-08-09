@@ -12,6 +12,7 @@ structured data generation, and AI-search readiness audits.
 - Remote MCP: https://agents.samedaydesk.com/mcp
 - Live resource manifest: https://agents.samedaydesk.com/.well-known/x402
 - OpenAPI: https://agents.samedaydesk.com/openapi.json
+- Official MPP OpenAPI: https://agents.samedaydesk.com/mpp-openapi.json
 - Skill contract: https://agents.samedaydesk.com/skill.md
 - Action catalog: https://agents.samedaydesk.com/api/actions
 - A2A agent card: https://agents.samedaydesk.com/.well-known/agent-card.json
@@ -66,11 +67,12 @@ canonical method, path, and sorted query. Both protocols participate in
 privacy-safe telemetry and request replay, and OpenAPI 3.1 exposes valid
 per-operation `x-payment-info` offers.
 
-Version 1.9.1 keeps those official MPP offers and adds the structured USD price,
+Version 1.9.2 generates two registry-specific discovery views from the same
+route and price source. `/openapi.json` carries the structured USD price,
 protocol declarations, agent guidance, public-route auth declarations, and
-truthful response schemas used by AgentCash, MPPScan, and x402-oriented
-discovery clients. Runtime 402 challenges remain authoritative for settlement
-terms.
+truthful response schemas used by AgentCash and MPPScan.
+`/mpp-openapi.json` carries official MPP `offers[]` without incompatible flat
+fields. Runtime 402 challenges remain authoritative for both views.
 
 Version 1.8 adds a deterministic paid opportunity preflight. The caller supplies
 reward, execution time, hourly opportunity cost, compute, mandatory spend,
@@ -91,9 +93,10 @@ new paid-success events.
 
 Observed agent crawlers use several discovery conventions. The canonical
 manifest remains `/.well-known/x402`, with compatible aliases at
-`/.well-known/x402.json`, `/x402.json`, and `/api/x402`. The canonical OpenAPI
-document remains `/openapi.json`, with `/openapi.yaml` and `/swagger.json`
-returning the same JSON document. `GET /mcp` returns a free transport descriptor;
+`/.well-known/x402.json`, `/x402.json`, and `/api/x402`. The AgentCash-compatible
+OpenAPI document remains `/openapi.json`, with `/openapi.yaml` and
+`/swagger.json` returning the same JSON document. Official MPP discovery uses
+`/mpp-openapi.json`, with `/openapi.mpp.json` as an alias. `GET /mcp` returns a free transport descriptor;
 actual MCP discovery and paid tool calls use streamable HTTP at `POST /mcp`.
 Agents that prefer a compact instruction contract can read `/skill.md` (or
 `/SKILL.md`), while `/api/actions` returns the twelve canonical GET actions with
