@@ -462,6 +462,28 @@ const mppDualStack = createMppDualStack({
 });
 
 const paymentInfoFor = (resource) => ({
+  price: {
+    amount: atomicUsdcToDisplay(resource.amount),
+    currency: "USD",
+    mode: "fixed",
+  },
+  protocols: [
+    {
+      x402: {
+        asset: USDC_ASSET,
+        network: NETWORK,
+        scheme: "exact",
+      },
+    },
+    {
+      mpp: {
+        currency: USDC_ASSET,
+        intent: "charge",
+        method: "evm",
+        network: NETWORK,
+      },
+    },
+  ],
   offers: [
     {
       amount: resource.amount,
@@ -722,7 +744,13 @@ app.get("/alerts", (_req, res) => {
 app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
   const document = {
     openapi: "3.1.0",
-    info: { title: "SameDayDesk machine commerce gateway", version: "1.9.0", description: `Twelve machine-discoverable paid capabilities on Base with x402 and native MPP settlement: work opportunity preflight ${OPPORTUNITY_PREFLIGHT_PRICE}, AI-search readiness audit ${DEEP_AUDIT_PRICE}, Morpho position risk ${MORPHO_POSITION_PRICE}, protection plans ${MORPHO_PROTECTION_PRICE}, market underwriting ${MORPHO_MARKET_UNDERWRITE_PRICE}, PreLiquidation replay ${MORPHO_PRELIQUIDATION_REPLAY_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, and structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
+    info: {
+      title: "SameDayDesk machine commerce gateway",
+      version: "1.9.1",
+      description: `Twelve machine-discoverable paid capabilities on Base with x402 and native MPP settlement: work opportunity preflight ${OPPORTUNITY_PREFLIGHT_PRICE}, AI-search readiness audit ${DEEP_AUDIT_PRICE}, Morpho position risk ${MORPHO_POSITION_PRICE}, protection plans ${MORPHO_PROTECTION_PRICE}, market underwriting ${MORPHO_MARKET_UNDERWRITE_PRICE}, PreLiquidation replay ${MORPHO_PRELIQUIDATION_REPLAY_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, and structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}`,
+      contact: { url: "https://samedaydesk.com" },
+      "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
+    },
     "x-service-info": {
       categories: ["agentic-payments", "machine-commerce", "data", "defi"],
       docs: {
@@ -755,7 +783,21 @@ app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
   for (const resource of RESOURCES) {
     const pathname = new URL(resource.url).pathname;
     const operation = document.paths[pathname]?.get;
-    if (operation) operation["x-payment-info"] = paymentInfoFor(resource);
+    if (!operation) continue;
+    operation["x-payment-info"] = paymentInfoFor(resource);
+    const mediaType = pathname === "/read" ? "text/markdown" : "application/json";
+    operation.responses["200"].content = {
+      [mediaType]: {
+        schema: pathname === "/read"
+          ? { type: "string" }
+          : { type: "object", additionalProperties: true },
+      },
+    };
+  }
+  for (const pathItem of Object.values(document.paths)) {
+    for (const operation of Object.values(pathItem)) {
+      if (!operation["x-payment-info"]) operation.security = [];
+    }
   }
   return res.json(document);
 });
@@ -1639,7 +1681,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.9.0" },
+      serverInfo: { name: "x402-data-gateway", version: "1.9.1" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to extract") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to read as Markdown") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },

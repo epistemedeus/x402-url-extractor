@@ -66,6 +66,12 @@ canonical method, path, and sorted query. Both protocols participate in
 privacy-safe telemetry and request replay, and OpenAPI 3.1 exposes valid
 per-operation `x-payment-info` offers.
 
+Version 1.9.1 keeps those official MPP offers and adds the structured USD price,
+protocol declarations, agent guidance, public-route auth declarations, and
+truthful response schemas used by AgentCash, MPPScan, and x402-oriented
+discovery clients. Runtime 402 challenges remain authoritative for settlement
+terms.
+
 Version 1.8 adds a deterministic paid opportunity preflight. The caller supplies
 reward, execution time, hourly opportunity cost, compute, mandatory spend,
 reusable value, competition, and an explicit selection probability. The result
