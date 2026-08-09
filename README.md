@@ -163,7 +163,7 @@ output schemas.
 | **xpay public facilitator** (`facilitator.xpay.sh`) | **None** | **Yes** (`eip155:8453`, exact scheme) | Fallback settlement path with self-published discovery only |
 | **x402.org public facilitator** (`x402.org/facilitator`) | None | **No**, Base Sepolia testnet only | Separate test catalog at `x402.org/facilitator/discovery/resources` |
 
-Production uses CDP. The original eleven routes passed live CDP verification and
+Production uses CDP. The first eleven routes passed live CDP verification and
 completed a real settlement. The original eight appear in Bazaar merchant
 discovery. The three newer Morpho decision routes have successful settlement
 receipts, and a distinct funded payer produced `isValid: true` plus Bazaar
@@ -174,6 +174,10 @@ failure. The secret-free reproduction is attached to
 [x402 issue #2156](https://github.com/x402-foundation/x402/issues/2156#issuecomment-5229812482).
 Keep xpay as the no-key continuity fallback, not as the normal production
 facilitator.
+
+The twelfth route, `/work/opportunity-preflight`, is live in version 1.8.0 and
+advertises a 0.05 USDC Base payment challenge. It has not been self-paid merely
+to manufacture a catalog or demand signal.
 
 ---
 
