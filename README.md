@@ -101,6 +101,13 @@ future indexer observations by controlled source and route, and gives the radar
 only first-source and first-route coverage changes as material events. Repeated
 crawl volume remains visible data without becoming an attention alert or demand.
 
+Version 1.11.3 makes that reach lens prospective and self-excluding. A distinct
+`COMMERCE_AGENT_DISCOVERY_SINCE` baseline prevents pre-instrumentation crawler
+history from becoming attributed reach, while SameDayDesk-owned monitor user
+agents are excluded from both discovery and external-demand observations. This
+keeps integrity sweeps, brand-blind benchmarks, and radar probes from creating
+their own acquisition signal.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured

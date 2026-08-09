@@ -148,6 +148,7 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   run({ path: "/api/config", status: 404, headers: { "user-agent": "Mozilla/5.0" } });
   run({ path: "/js/env.js", status: 404, headers: { "user-agent": "Mozilla/5.0" } });
   run({ path: "/deep-audit", status: 402, headers: { "user-agent": "litebeam-probe/1.0" } });
+  run({ path: "/openapi.json", status: 200, headers: { "user-agent": "SameDayDesk-Agent402-Integrity/0.1" } });
   run({ path: "/morpho-risk/quote", status: 404 });
   run({ path: "/assets/logo.svg", status: 404 });
   run({ path: "/someone@example.com/private", status: 404 });
@@ -291,5 +292,39 @@ test("aggregate snapshot honors a declared external experiment baseline", async 
   assert.equal(snapshot.externalEvents, 0);
   assert.equal(JSON.stringify(snapshot).includes("not-stored"), false);
 
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("machine discovery uses an independent baseline and excludes owned monitors", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-discovery-baseline-"));
+  const baseline = new Date(Date.now() + 60_000).toISOString();
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "test-secret",
+    agentDiscoverySince: baseline,
+  });
+
+  function run(userAgent) {
+    const listeners = new Map();
+    const req = {
+      path: "/openapi.json", url: "/openapi.json", method: "GET",
+      headers: { "user-agent": userAgent }, query: {}, ip: "203.0.113.40", socket: {},
+    };
+    const res = {
+      statusCode: 200,
+      once(name, listener) { listeners.set(name, listener); },
+      getHeader() { return undefined; },
+    };
+    telemetry.middleware(req, res, () => {});
+    listeners.get("finish")?.();
+  }
+
+  run("Agent402/1.0");
+  run("SameDayDesk-Agent402-Integrity/0.1");
+  await telemetry.flush();
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.agentDiscoverySince, baseline);
+  assert.equal(snapshot.agentDiscoveryObservations, 0);
+  assert.equal(snapshot.externalEvents, 0);
   await rm(dataDir, { recursive: true, force: true });
 });
