@@ -232,7 +232,7 @@ test("only explicitly classified independent payers enter independent demand", a
     const listeners = new Map();
     const req = {
       path: "/extract", url: "/extract", method: "GET",
-      headers: { "payment-signature": signature }, query: {}, ip: "203.0.113.30", socket: {},
+      headers: { "payment-signature": signature, "user-agent": "Agent402/1.0" }, query: {}, ip: "203.0.113.30", socket: {},
     };
     const res = {
       statusCode: 200,
@@ -249,6 +249,10 @@ test("only explicitly classified independent payers enter independent demand", a
   const snapshot = await telemetry.snapshot({ days: 1 });
   assert.equal(snapshot.paidSuccessByClass.independent, 2);
   assert.equal(snapshot.paidSuccessByClassRoute.independent["/extract"], 2);
+  assert.equal(snapshot.paidSuccessByDiscoverySource.agent402, 2);
+  assert.equal(snapshot.paidSuccessByDiscoverySourceRoute.agent402["/extract"], 2);
+  assert.equal(snapshot.independentPaidSuccessByDiscoverySource.agent402, 2);
+  assert.equal(snapshot.agentDiscoveryObservations, 0);
   assert.equal(snapshot.independentPaidSuccessActors, 1);
   assert.equal(snapshot.repeatIndependentPaidSuccessActors, 1);
   assert.equal(snapshot.settlementReferenceEligiblePaidSuccesses, 2);

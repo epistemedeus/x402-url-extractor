@@ -108,6 +108,13 @@ agents are excluded from both discovery and external-demand observations. This
 keeps integrity sweeps, brand-blind benchmarks, and radar probes from creating
 their own acquisition signal.
 
+Version 1.11.4 preserves paying agents even when their user agent identifies as
+a crawler or indexer. A valid submitted x402 or MPP credential moves the event
+into economic telemetry before crawler classification, while the controlled
+user-agent label records source-to-paid conversion by source and route. Channel
+labels are still self-declared rather than authenticated referral proof, and
+independent demand still requires the explicit payer-class policy.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured

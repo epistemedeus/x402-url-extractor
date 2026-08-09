@@ -327,19 +327,21 @@ export function createCommerceTelemetry({
     const userAgent = headerValue(headers, "user-agent");
     const agentDiscoverySource = classifyAgentDiscoverySource(userAgent);
     const suppliedInternal = headerValue(headers, "x-samedaydesk-internal");
+    const protocol = paymentProtocol(headers);
+    const paymentPresent = Boolean(protocol);
     const originClass = safeEqual(suppliedInternal, internalToken)
       ? "internal"
       : EXPLOIT_PROBE_PATH_PATTERN.test(req.path || req.url || "")
         ? "scanner"
       : OWNER_MONITOR_USER_AGENT_PATTERN.test(userAgent)
         ? "owner_monitor"
+      : paymentPresent
+        ? "external"
       : CRAWLER_PATTERN.test(userAgent)
         ? "crawler"
         : "external";
     const actorMaterial = `${req.ip || req.socket?.remoteAddress || "unknown"}|${userAgent}`;
     const actor = createHmac("sha256", secret).update(actorMaterial).digest("hex").slice(0, 24);
-    const protocol = paymentProtocol(headers);
-    const paymentPresent = Boolean(protocol);
     const paymentMetadata = decodePaymentMetadata(headers);
     const paymentActor = paymentMetadata.payer
       ? createHmac("sha256", secret).update(`payer:${paymentMetadata.payer}`).digest("hex").slice(0, 24)
@@ -436,8 +438,11 @@ export function createCommerceTelemetry({
     const paidSuccessByRoute = emptyCounts();
     const byProtocolResult = emptyCounts();
     const paidSuccessByProtocol = emptyCounts();
+    const paidSuccessByDiscoverySource = emptyCounts();
+    const paidSuccessByDiscoverySourceRoute = Object.create(null);
     const paidSuccessByClass = emptyCounts();
     const paidSuccessByClassRoute = Object.create(null);
+    const independentPaidSuccessByDiscoverySource = emptyCounts();
     const independentPaidActors = new Map();
     let paymentIdentifierEvents = 0;
     let replaySuccessEvents = 0;
@@ -469,11 +474,21 @@ export function createCommerceTelemetry({
         const paymentClass = event.paymentActor
           ? paymentClassByActor.get(event.paymentActor) || "unclassified"
           : "unclassified";
+        const discoverySource = typeof event.agentDiscoverySource === "string"
+          && /^[a-z][a-z0-9-]{1,39}$/.test(event.agentDiscoverySource)
+          ? event.agentDiscoverySource
+          : "direct-or-unattributed";
+        increment(paidSuccessByDiscoverySource, discoverySource);
+        if (!paidSuccessByDiscoverySourceRoute[discoverySource]) {
+          paidSuccessByDiscoverySourceRoute[discoverySource] = emptyCounts();
+        }
+        increment(paidSuccessByDiscoverySourceRoute[discoverySource], event.route);
         increment(paidSuccessByClass, paymentClass);
         if (!paidSuccessByClassRoute[paymentClass]) paidSuccessByClassRoute[paymentClass] = emptyCounts();
         increment(paidSuccessByClassRoute[paymentClass], event.route);
         if (paymentClass === "independent") {
           independentPaidActors.set(paidActor, (independentPaidActors.get(paidActor) || 0) + 1);
+          increment(independentPaidSuccessByDiscoverySource, discoverySource);
         }
         if (settlementEvidenceSinceMs !== null && Date.parse(event.ts) >= settlementEvidenceSinceMs) {
           settlementReferenceEligiblePaidSuccesses += 1;
@@ -520,8 +535,11 @@ export function createCommerceTelemetry({
       agentDiscoveryBySourceRoute,
       paidSuccessByRoute,
       paidSuccessByProtocol,
+      paidSuccessByDiscoverySource,
+      paidSuccessByDiscoverySourceRoute,
       paidSuccessByClass,
       paidSuccessByClassRoute,
+      independentPaidSuccessByDiscoverySource,
       settlementEvidenceSince: settlementEvidenceSinceMs === null ? null : new Date(settlementEvidenceSinceMs).toISOString(),
       settlementReferenceEligiblePaidSuccesses,
       settlementReferencePaidSuccesses,
@@ -545,6 +563,7 @@ export function createCommerceTelemetry({
       agentDiscoveryPolicy: "After the declared machine-discovery baseline, recognized crawler and agent-indexer user-agent families are reduced to a controlled source label at ingestion. SameDayDesk-owned monitor user agents are excluded. Raw user-agent strings and network addresses are not retained in the public snapshot. These observations measure machine fetches of known discovery or paid routes, not authenticated referrals, buyer intent, or demand.",
       unmatched: unmatchedRequests,
       paymentClassPolicy: "Explicit known-payer rules classify internal, marketplace validation, incentivized, affiliated, or independently confirmed buyers. Unknown or missing payer identities remain unclassified and never become independent by inference.",
+      discoveryConversionPolicy: "A submitted payment credential overrides crawler classification so paying agents remain in economic telemetry. Controlled user-agent source labels attribute the client channel but are self-declared and do not independently authenticate a registry referral. SameDayDesk owner monitors remain excluded before this rule.",
       settlementEvidencePolicy: "After the declared settlement-evidence baseline, a successful paid response should carry a valid Base transaction reference in PAYMENT-RESPONSE or Payment-Receipt. Raw response headers and transaction references remain private; public output exposes only coverage counts by evidence class.",
       boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, SameDayDesk-owned monitor, crawler, and exploit-probe traffic is excluded from demand, but unidentified automated fetchers can remain. Separately reported agent-discovery observations begin at their own declared baseline and are user-agent-declared crawler or indexer fetches of known discovery and paid routes; SameDayDesk-owned monitor user agents are excluded, and the remainder are neither authenticated catalog referrals nor buyer intent. Unmatched requests are acquisition misses, not intents. Semantic-unmatched counts are a high-precision route-keyword heuristic and still do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Payment classes are applied against those pseudonyms at read time, so known marketplace verification can be reclassified without storing a raw address. Unknown payers remain unclassified. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Settlement-reference coverage begins only at its declared baseline; raw transaction references remain on the private volume and are not returned publicly. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
     };
