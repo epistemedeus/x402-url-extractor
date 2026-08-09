@@ -44,6 +44,7 @@ const EXACT_ROUTES = new Map([
   ["/defi/morpho-position", { route: "/defi/morpho-position", kind: "paid" }],
   ["/defi/morpho-protection", { route: "/defi/morpho-protection", kind: "paid" }],
   ["/defi/morpho-market-underwrite", { route: "/defi/morpho-market-underwrite", kind: "paid" }],
+  ["/defi/morpho-preliquidation-replay", { route: "/defi/morpho-preliquidation-replay", kind: "paid" }],
   ["/mcp", { route: "/mcp", kind: "paid" }],
 ]);
 

@@ -2,7 +2,7 @@
 
 [![Smithery listing](https://smithery.ai/badge/epistemedeus/x402-data-gateway)](https://smithery.ai/servers/epistemedeus/x402-data-gateway)
 
-Ten pay-per-call tools for deterministic Morpho borrower and market decisions,
+Eleven pay-per-call tools for deterministic Morpho borrower and market decisions,
 protection plans, URL extraction, Markdown reading, repository security scans,
 company and wallet enrichment, structured data generation, and AI-search
 readiness audits.
@@ -22,6 +22,7 @@ readiness audits.
 - Morpho position risk: `GET /defi/morpho-position?address=0x...&shocks=-10,-20,-30`
 - Morpho protection quote: `GET /defi/morpho-protection?address=0x...&targetHealthFactor=1.25&protectAgainstShockPct=-10`
 - Morpho market underwriting: `GET /defi/morpho-market-underwrite?marketId=0x...`
+- Morpho PreLiquidation replay: `GET /defi/morpho-preliquidation-replay?transactionHash=0x...`
 - Material-change alert probe: https://agents.samedaydesk.com/alerts
 - Agoragentic seller callback: `POST /integrations/agoragentic/ai-readiness-audit`
 - the402 signed fulfillment webhook: `POST /integrations/the402/webhook`
@@ -57,7 +58,7 @@ document remains `/openapi.json`, with `/openapi.yaml` and `/swagger.json`
 returning the same JSON document. `GET /mcp` returns a free transport descriptor;
 actual MCP discovery and paid tool calls use streamable HTTP at `POST /mcp`.
 Agents that prefer a compact instruction contract can read `/skill.md` (or
-`/SKILL.md`), while `/api/actions` returns the ten canonical GET actions with
+`/SKILL.md`), while `/api/actions` returns the eleven canonical GET actions with
 their URL, description, exact atomic USDC price, MIME type, network, and payTo.
 The A2A v1.0 card at `/.well-known/agent-card.json` advertises one bounded free
 skill, `discover-x402-paid-actions`. `POST /a2a/message:send` returns that exact
@@ -282,6 +283,8 @@ curl -i 'http://localhost:3000/defi/morpho-position?address=0x...' # HTTP 402
 - `morpho-position.mjs` — deterministic Morpho snapshot, stress, and RPC checks.
 - `morpho-protection.mjs` — exact stressed repair amounts and unsigned action templates.
 - `morpho-market-underwrite.mjs` — multi-source market integrity, liquidity, concentration, borrower-health, history, bad-debt, and PreLiquidation evidence.
+- `morpho-preliquidation-replay.mjs` — historical PreLiquidate event economics from direct block-state reads.
+- `morpho-preliquidation-census.mjs` — repeatable Base supply, authorization, and execution census for internal market selection.
 - `package.json` — exact pinned deps (verified to install & boot).
 - `README.md` — this guide.
 - `extract.mjs` — pre-existing zero-dependency "URL → clean structured data"
