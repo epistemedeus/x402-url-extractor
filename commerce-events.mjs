@@ -7,6 +7,7 @@ const EXPLOIT_PROBE_PATH_PATTERN = /(?:^|\/)\.(?:env|git)(?:[./]|$)|^\/(?:wp-adm
 const PAYMENT_HEADERS = ["payment-signature", "x-payment", "x-payment-signature"];
 const PAYMENT_ID_PATTERN = /^[A-Za-z0-9_-]{16,128}$/;
 const EVM_ADDRESS_PATTERN = /^0x[0-9a-fA-F]{40}$/;
+const PAYMENT_CLASSES = new Set(["internal", "validation", "incentivized", "affiliated", "independent"]);
 const SEMANTIC_UNMATCHED_ROUTE_PATTERN = /(?:morpho|liquidat|underwrit|protect|risk|readiness|audit|schema|enrich|extract|wallet|payment|settle|receipt|bount|opportunit|reputation|research|scan)/i;
 
 const EXACT_ROUTES = new Map([
@@ -112,6 +113,33 @@ function safeEqual(left, right) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
+export function normalizeCommercePayerClasses(value) {
+  if (value === undefined || value === null || value === "") return new Map();
+  let entries = value;
+  if (typeof entries === "string") {
+    try {
+      entries = JSON.parse(entries);
+    } catch {
+      throw new Error("COMMERCE_PAYER_CLASSES must be valid JSON");
+    }
+  }
+  if (!Array.isArray(entries) || entries.length > 100) {
+    throw new Error("commerce payer classes must be an array of at most 100 entries");
+  }
+  const normalized = new Map();
+  for (const entry of entries) {
+    const address = String(entry?.address || "").toLowerCase();
+    const paymentClass = String(entry?.class || "").toLowerCase();
+    if (!EVM_ADDRESS_PATTERN.test(address)) throw new Error("commerce payer class address is invalid");
+    if (!PAYMENT_CLASSES.has(paymentClass)) throw new Error("commerce payer class is invalid");
+    if (normalized.has(address) && normalized.get(address) !== paymentClass) {
+      throw new Error("commerce payer address has conflicting classes");
+    }
+    normalized.set(address, paymentClass);
+  }
+  return normalized;
+}
+
 function decodePaymentMetadata(headers) {
   const encoded = PAYMENT_HEADERS.map((name) => headerValue(headers, name)).find(Boolean);
   if (!encoded) return { payer: null, paymentId: null };
@@ -191,12 +219,18 @@ export function createCommerceTelemetry({
   secret = process.env.COMMERCE_ACTOR_SECRET || randomBytes(32).toString("hex"),
   internalToken = process.env.COMMERCE_INTERNAL_TOKEN || "",
   externalSince = process.env.COMMERCE_EXTERNAL_SINCE || "",
+  payerClasses = process.env.COMMERCE_PAYER_CLASSES || "",
   maxBytes = 5 * 1024 * 1024,
 } = {}) {
   const currentPath = path.join(dataDir, "commerce-events.ndjson");
   const rotatedPath = path.join(dataDir, "commerce-events.1.ndjson");
   const parsedExternalSince = Date.parse(externalSince);
   const externalSinceMs = Number.isFinite(parsedExternalSince) ? parsedExternalSince : null;
+  const normalizedPayerClasses = normalizeCommercePayerClasses(payerClasses);
+  const paymentClassByActor = new Map([...normalizedPayerClasses].map(([address, paymentClass]) => [
+    createHmac("sha256", secret).update(`payer:${address}`).digest("hex").slice(0, 24),
+    paymentClass,
+  ]));
   let queue = Promise.resolve();
 
   async function appendEvent(event) {
@@ -307,6 +341,9 @@ export function createCommerceTelemetry({
     const paidSuccessByRoute = emptyCounts();
     const byProtocolResult = emptyCounts();
     const paidSuccessByProtocol = emptyCounts();
+    const paidSuccessByClass = emptyCounts();
+    const paidSuccessByClassRoute = Object.create(null);
+    const independentPaidActors = new Map();
     let paymentIdentifierEvents = 0;
     let replaySuccessEvents = 0;
     for (const event of events) {
@@ -330,6 +367,15 @@ export function createCommerceTelemetry({
         if (event.paymentProtocol) increment(paidSuccessByProtocol, event.paymentProtocol);
         const paidActor = event.paymentActor || event.actor;
         paidActors.set(paidActor, (paidActors.get(paidActor) || 0) + 1);
+        const paymentClass = event.paymentActor
+          ? paymentClassByActor.get(event.paymentActor) || "unclassified"
+          : "unclassified";
+        increment(paidSuccessByClass, paymentClass);
+        if (!paidSuccessByClassRoute[paymentClass]) paidSuccessByClassRoute[paymentClass] = emptyCounts();
+        increment(paidSuccessByClassRoute[paymentClass], event.route);
+        if (paymentClass === "independent") {
+          independentPaidActors.set(paidActor, (independentPaidActors.get(paidActor) || 0) + 1);
+        }
       }
       if (result === "challenge") {
         for (const protocol of event.protocolsOffered || []) {
@@ -350,8 +396,12 @@ export function createCommerceTelemetry({
       repeatExternalActors: [...actors.values()].filter((count) => count > 1).length,
       paidSuccessActors: paidActors.size,
       repeatPaidSuccessActors: [...paidActors.values()].filter((count) => count > 1).length,
+      independentPaidSuccessActors: independentPaidActors.size,
+      repeatIndependentPaidSuccessActors: [...independentPaidActors.values()].filter((count) => count > 1).length,
       paidSuccessByRoute,
       paidSuccessByProtocol,
+      paidSuccessByClass,
+      paidSuccessByClassRoute,
       byProtocolResult,
       paymentIdentifierEvents,
       replaySuccessEvents,
@@ -364,7 +414,8 @@ export function createCommerceTelemetry({
       semanticUnmatched,
       semanticUnmatchedHeuristic: "v1-high-precision-route-keywords",
       unmatched: unmatchedRequests,
-      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, crawler, and exploit-probe traffic is excluded, but unidentified automated fetchers can remain. Unmatched requests are acquisition misses, not intents. Semantic-unmatched counts are a high-precision route-keyword heuristic and still do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
+      paymentClassPolicy: "Explicit known-payer rules classify internal, marketplace validation, incentivized, affiliated, or independently confirmed buyers. Unknown or missing payer identities remain unclassified and never become independent by inference.",
+      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, crawler, and exploit-probe traffic is excluded, but unidentified automated fetchers can remain. Unmatched requests are acquisition misses, not intents. Semantic-unmatched counts are a high-precision route-keyword heuristic and still do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Payment classes are applied against those pseudonyms at read time, so known marketplace verification can be reclassified without storing a raw address. Unknown payers remain unclassified. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
     };
   }
 

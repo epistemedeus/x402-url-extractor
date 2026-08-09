@@ -9,7 +9,18 @@ import {
   classifyCommerceRoute,
   createCommerceTelemetry,
   isSemanticUnmatched,
+  normalizeCommercePayerClasses,
 } from "./commerce-events.mjs";
+
+test("payer classification policy validates controlled explicit labels", () => {
+  const classes = normalizeCommercePayerClasses([
+    { address: "0x1111111111111111111111111111111111111111", class: "validation" },
+  ]);
+  assert.equal(classes.get("0x1111111111111111111111111111111111111111"), "validation");
+  assert.throws(() => normalizeCommercePayerClasses("not json"), /valid JSON/);
+  assert.throws(() => normalizeCommercePayerClasses([{ address: "0x1234", class: "independent" }]), /address is invalid/);
+  assert.throws(() => normalizeCommercePayerClasses([{ address: "0x1111111111111111111111111111111111111111", class: "organic" }]), /class is invalid/);
+});
 
 test("route classification preserves useful intent without recording opaque path values", () => {
   assert.deepEqual(classifyCommerceRoute("/defi/morpho-position"), {
@@ -60,6 +71,7 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
     dataDir,
     secret: "test-secret",
     internalToken: "owner-canary",
+    payerClasses: [{ address: "0x1111111111111111111111111111111111111111", class: "validation" }],
     maxBytes: 1024 * 1024,
   });
 
@@ -136,6 +148,10 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.equal(snapshot.replaySuccessEvents, 1);
   assert.equal(snapshot.paidSuccessActors, 1);
   assert.equal(snapshot.repeatPaidSuccessActors, 0);
+  assert.equal(snapshot.independentPaidSuccessActors, 0);
+  assert.equal(snapshot.repeatIndependentPaidSuccessActors, 0);
+  assert.equal(snapshot.paidSuccessByClass.validation, 1);
+  assert.equal(snapshot.paidSuccessByClassRoute.validation["/defi/morpho-position"], 1);
   assert.equal(snapshot.paidSuccessByRoute["/defi/morpho-position"], 1);
   assert.equal(snapshot.paidSuccessByProtocol.x402, 1);
   assert.equal(snapshot.byProtocolResult.mpp_challenge, 1);
@@ -155,7 +171,47 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.equal(JSON.stringify(snapshot).includes("0x1111111111111111111111111111111111111111"), false);
   assert.equal(JSON.stringify(snapshot).includes("order_1234567890abcdef"), false);
   assert.equal(Object.prototype.hasOwnProperty.call(snapshot, "actors"), false);
+  assert.equal(JSON.stringify(snapshot).includes("0x1111111111111111111111111111111111111111"), false);
 
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("only explicitly classified independent payers enter independent demand", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-independent-"));
+  const payer = "0x2222222222222222222222222222222222222222";
+  const signature = Buffer.from(JSON.stringify({
+    payload: { authorization: { from: payer } },
+  })).toString("base64");
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "test-secret",
+    payerClasses: [{ address: payer, class: "independent" }],
+  });
+
+  function paidSuccess() {
+    const listeners = new Map();
+    const req = {
+      path: "/extract", url: "/extract", method: "GET",
+      headers: { "payment-signature": signature }, query: {}, ip: "203.0.113.30", socket: {},
+    };
+    const res = {
+      statusCode: 200,
+      once(name, listener) { listeners.set(name, listener); },
+      getHeader() { return undefined; },
+    };
+    telemetry.middleware(req, res, () => {});
+    listeners.get("finish")?.();
+  }
+
+  paidSuccess();
+  paidSuccess();
+  await telemetry.flush();
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.paidSuccessByClass.independent, 2);
+  assert.equal(snapshot.paidSuccessByClassRoute.independent["/extract"], 2);
+  assert.equal(snapshot.independentPaidSuccessActors, 1);
+  assert.equal(snapshot.repeatIndependentPaidSuccessActors, 1);
+  assert.equal(JSON.stringify(snapshot).includes(payer), false);
   await rm(dataDir, { recursive: true, force: true });
 });
 

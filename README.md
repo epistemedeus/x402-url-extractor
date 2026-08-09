@@ -57,6 +57,22 @@ credentials. Public output is aggregate only; owner and crawler traffic are
 excluded. Common exploit probes such as `.env`, `.git`, and WordPress discovery
 paths are classified as scanner traffic and excluded as well.
 
+Version 1.9.4 adds explicit paid-traffic classes without exposing buyer
+addresses. `COMMERCE_PAYER_CLASSES` accepts a JSON array of `{ "address",
+"class" }` records. Controlled classes are `internal`, `validation`,
+`incentivized`, `affiliated`, and `independent`. Addresses are converted to the
+same secret-keyed payer pseudonyms already used by telemetry and classified at
+read time, which also permits retroactive correction without storing a raw
+address. Unknown payers remain `unclassified`; unfamiliar wallets never become
+independent demand by inference. The public snapshot reports paid success by
+class plus independent and repeat-independent actor counts.
+
+Version 1.9.5 adds route-level paid-success counts inside each evidence class.
+This lets downstream monitors treat marketplace validation as accounting and
+transport evidence, alert on unclassified paid use for investigation, and
+advance the demand thesis only for explicitly independent or repeat-independent
+buyers.
+
 Version 1.9 adds same-route MPP `evm/charge` support to all twelve paid HTTP
 capabilities without replacing the existing x402 middleware. An unpaid request
 now carries both `WWW-Authenticate: Payment` and `PAYMENT-REQUIRED`. Native MPP
@@ -326,6 +342,7 @@ The repo is a no-config Node app: `npm start` runs `node server.js` and binds
    COMMERCE_ACTOR_SECRET=<random 32-byte secret>
    COMMERCE_INTERNAL_TOKEN=<random owner-canary token>
    COMMERCE_EXTERNAL_SINCE=<ISO timestamp after controlled launch canaries>
+   COMMERCE_PAYER_CLASSES='[{"address":"0x...","class":"validation"}]'
    ```
    Core payment settings have safe defaults. Production telemetry uses a Railway
    volume mounted at `/data` plus the two secret variables above.
