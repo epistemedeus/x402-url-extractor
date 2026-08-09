@@ -116,9 +116,12 @@ output schemas.
 | **xpay public facilitator** (`facilitator.xpay.sh`) | **None** | **Yes** (`eip155:8453`, exact scheme) | Fallback settlement path with self-published discovery only |
 | **x402.org public facilitator** (`x402.org/facilitator`) | None | **No**, Base Sepolia testnet only | Separate test catalog at `x402.org/facilitator/discovery/resources` |
 
-Production uses CDP. All eight routes passed live CDP verification, completed a
-real settlement, and appear in Bazaar merchant discovery. Keep xpay as the
-no-key continuity fallback, not as the normal production facilitator.
+Production uses CDP. All eleven routes passed live CDP verification and
+completed a real settlement. The original eight appear in Bazaar merchant
+discovery; the three newer Morpho decision routes have successful settlement
+receipts and remain inside CDP's asynchronous catalog-refresh window as of the
+latest check. Keep xpay as the no-key continuity fallback, not as the normal
+production facilitator.
 
 ---
 
@@ -188,9 +191,11 @@ The route's `extensions` uses `declareDiscoveryExtension({ input, inputSchema,
 output, outputSchema })` (already in `server.js`). This advertises the route and
 its JSON schemas in the 402 payload (verified present in the live response).
 **Surfacing in the CDP Bazaar requires the CDP facilitator**: CDP catalogs a
-route after its first successful settlement. The production merchant lookup now
-returns all eight SameDayDesk routes. CDP also finds the Morpho and deep-audit
-routes through semantic search.
+route after its first successful settlement. The production merchant lookup
+returns the original eight SameDayDesk routes; all three newer Morpho decision
+routes have successful CDP settlements and await the asynchronous catalog
+refresh. CDP also finds the original Morpho and deep-audit routes through
+semantic search.
 
 CDP rejected three older route payloads whose discovery descriptions were 535,
 581, and 629 characters even though local extension validation passed. Concise
