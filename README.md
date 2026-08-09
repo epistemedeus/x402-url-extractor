@@ -14,6 +14,7 @@ structured data generation, and AI-search readiness audits.
 - Skill contract: https://agents.samedaydesk.com/skill.md
 - Action catalog: https://agents.samedaydesk.com/api/actions
 - A2A agent card: https://agents.samedaydesk.com/.well-known/agent-card.json
+- Global A2A Registry: https://www.a2a-registry.org/agent/9cb0b8e6-cb1f-422b-a604-861d0a79e24b
 - Settlement Radar: https://agents.samedaydesk.com/platforms
 - Platform health JSON: https://agents.samedaydesk.com/v0/cards.json
 - Aggregate machine-demand telemetry: https://agents.samedaydesk.com/v0/commerce-demand.json
@@ -59,6 +60,9 @@ task execution.
 The repository-root `agent-card.json` is a compatibility manifest for the
 Global A2A Registry's current GitHub importer. It points back to the canonical
 v1.0 Agent Card and OpenAPI document; it does not replace the production card.
+The registry's own generated ownership manifest is hosted separately at
+`https://samedaydesk.com/.well-known/agent-card.json`; the standards-compliant
+A2A v1.0 card remains canonical on `agents.samedaydesk.com`.
 
 The Agoragentic callback is a separate marketplace distribution bridge. The
 marketplace handles buyer routing, settlement, and seller accounting, while the
