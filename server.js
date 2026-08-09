@@ -47,6 +47,7 @@ import { createCommerceTelemetry } from "./commerce-events.mjs";
 import { createCommerceSettlementReconciler } from "./commerce-settlement-reconciler.mjs";
 import { createIdempotencyReplay } from "./idempotency-replay.mjs";
 import { createMppDualStack } from "./mpp-dual-stack.mjs";
+import { renderGatewayLanding, wantsGatewayHtml } from "./gateway-landing.mjs";
 import {
   A2A_VERSION,
   buildAgentCard,
@@ -781,7 +782,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.9.7",
+      version: "1.10.0",
       description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, wallet context, and Morpho decision evidence. Pay per call in Base USDC through x402 or native MPP.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
@@ -1691,9 +1692,10 @@ app.get("/work/opportunity-preflight", async (req, res) => {
   }
 });
 
-// Free landing so a human/agent hitting the root learns what this is + how to pay.
-app.get("/", (_req, res) => {
-  res.json({
+// One root, negotiated by audience. Browser navigation gets a fast human map;
+// API clients, curl, and agents retain the stable JSON descriptor.
+app.get("/", (req, res) => {
+  const gateway = {
     service: "SameDayDesk agent evidence + machine payment gateway",
     what: "Free incident-backed platform health plus pay-per-call data tools that settle USDC on Base.",
     settlementRadar: {
@@ -1725,6 +1727,7 @@ app.get("/", (_req, res) => {
       "GET /schemaforge?site=&vertical=&city=": `${SCHEMAFORGE_PRICE} - generate a paste-ready JSON-LD structured-data bundle + gap diff so a business page is eligible to be cited by AI assistants.`,
       "GET /enrich?domain=": `${ENRICH_PRICE} - domain -> agent-ready company intelligence: identity, tech stack, social, contact, DNS/email-infra, AI-readiness. No auth, pay-per-call.`,
       "GET /wallet-enrich?address=": `${WALLET_ENRICH_PRICE} - Base/EVM 0x address -> agent-ready on-chain profile: EOA/contract, native + token holdings, token/NFT metadata, proxy + activity, profile label. Pure Base RPC, no keys.`,
+      "GET /deep-audit?domain=": `${DEEP_AUDIT_PRICE} - bundled AI-search-readiness audit with firmographics, infrastructure, structured-data gaps, and a paste-ready fix list.`,
       "GET /defi/morpho-position?address=&shocks=": `${MORPHO_POSITION_PRICE} - Base borrower address -> deterministic Morpho LTV, health, liquidation headroom, and collateral-price stress scenarios. Read-only.`,
       "GET /defi/morpho-protection?address=&targetHealthFactor=&protectAgainstShockPct=&executionBufferBps=": `${MORPHO_PROTECTION_PRICE} - deterministic Morpho repair amounts plus unsigned approval/action templates.`,
       "GET /defi/morpho-market-underwrite?marketId=": `${MORPHO_MARKET_UNDERWRITE_PRICE} - deterministic Morpho market integrity, liquidity, concentration, health-band, history, bad-debt, and PreLiquidation evidence.`,
@@ -1734,7 +1737,14 @@ app.get("/", (_req, res) => {
     network: NETWORK,
     payTo: PAY_TO,
     docs: "/platforms for free health cards; /healthz for config; /openapi.json for AgentCash discovery; /mpp-openapi.json for official MPP discovery; pay any HTTP route with either protocol.",
-  });
+  };
+  res.vary("Accept");
+  res.set("X-Content-Type-Options", "nosniff");
+  if (wantsGatewayHtml(req.get("accept"))) {
+    res.set("Cache-Control", "public, max-age=300, stale-while-revalidate=3600");
+    return res.type("html").send(renderGatewayLanding(gateway));
+  }
+  return res.json(gateway);
 });
 
 app.listen(PORT, () => {
@@ -1760,7 +1770,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.9.7" },
+      serverInfo: { name: "x402-data-gateway", version: "1.10.0" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to extract") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to read as Markdown") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },

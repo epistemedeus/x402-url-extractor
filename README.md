@@ -80,6 +80,13 @@ and missing-reference counts by payment class. Raw headers and transaction
 references stay on the private volume. A missing reference becomes a material
 settlement-integrity event without exposing the reference itself.
 
+Version 1.10.0 content-negotiates the root without changing its machine
+contract. Browser navigation with an explicit `Accept: text/html` receives a
+responsive human map of the twelve tools, payment flow, and authoritative
+discovery links. JSON clients, curl's wildcard accept header, and agents keep
+the stable JSON descriptor. The response varies on `Accept`, and the human page
+duplicates no payment schema.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured

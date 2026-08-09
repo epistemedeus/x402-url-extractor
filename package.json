@@ -1,12 +1,12 @@
 {
   "name": "x402-merchant",
-  "version": "1.9.7",
+  "version": "1.10.0",
   "description": "Dual-stack x402 and MPP paid HTTP capabilities that settle USDC to our own Base wallet",
   "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test referral.test.mjs enrich.test.mjs the402.test.mjs platform-health.test.mjs platform-health-page.test.mjs opportunity-preflight.test.mjs commerce-events.test.mjs commerce-settlement-reconciler.test.mjs commerce-trust.test.mjs idempotency-replay.test.mjs mpp-dual-stack.test.mjs morpho-position.test.mjs morpho-protection.test.mjs morpho-market-underwrite.test.mjs morpho-preliquidation-replay.test.mjs morpho-preliquidation-shadow.test.mjs a2a-storefront.test.mjs"
+    "test": "node --test referral.test.mjs enrich.test.mjs the402.test.mjs platform-health.test.mjs platform-health-page.test.mjs gateway-landing.test.mjs opportunity-preflight.test.mjs commerce-events.test.mjs commerce-settlement-reconciler.test.mjs commerce-trust.test.mjs idempotency-replay.test.mjs mpp-dual-stack.test.mjs morpho-position.test.mjs morpho-protection.test.mjs morpho-market-underwrite.test.mjs morpho-preliquidation-replay.test.mjs morpho-preliquidation-shadow.test.mjs a2a-storefront.test.mjs"
   },
   "engines": {
     "node": ">=20"
