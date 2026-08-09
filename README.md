@@ -149,6 +149,11 @@ and company tools explicitly say when to choose `extract` versus `read`,
 also states that its input is an EVM address rather than a company domain. The
 payment routes, names, prices, schemas, and handlers are unchanged.
 
+Version 1.11.10 adds explicit descriptions to every `opportunity_preflight`
+input and to the three Morpho protection controls. This improves machine call
+construction while leaving names, routes, prices, required inputs, defaults,
+payment gates, and execution behavior unchanged.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured
