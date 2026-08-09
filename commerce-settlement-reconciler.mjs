@@ -76,7 +76,9 @@ function addAmount(bucket, key, amount) {
   bucket[key].amountAtomic = (BigInt(bucket[key].amountAtomic) + amount).toString();
 }
 
-export function summarizeCommerceSettlementLedger(contents) {
+export function summarizeCommerceSettlementLedger(contents, {
+  paymentClassBySourceEventId = new Map(),
+} = {}) {
   const parsed = parseLines(contents);
   const byClass = Object.create(null);
   const byRoute = Object.create(null);
@@ -93,7 +95,10 @@ export function summarizeCommerceSettlementLedger(contents) {
     const amount = BigInt(record.amountAtomic);
     reconciledSettlements += 1;
     amountAtomic += amount;
-    addAmount(byClass, String(record.paymentClass || "unclassified"), amount);
+    const currentPaymentClass = paymentClassBySourceEventId.get(String(record.sourceEventId || ""))
+      || record.paymentClass
+      || "unclassified";
+    addAmount(byClass, String(currentPaymentClass), amount);
     addAmount(byRoute, String(record.route || "/:unknown"), amount);
   }
   return {
@@ -105,6 +110,25 @@ export function summarizeCommerceSettlementLedger(contents) {
     byRoute,
     invalidLines: parsed.invalidLines,
   };
+}
+
+function currentPaymentClassBySourceEventId(eventContents, {
+  actorSecret,
+  payerClasses,
+  settlementEvidenceSince,
+} = {}) {
+  const classesByActor = payerClassByActor(actorSecret, payerClasses);
+  const sinceMs = Date.parse(settlementEvidenceSince);
+  const result = new Map();
+  for (const event of parseLines(eventContents).records) {
+    if (event?.result !== "paid_success" || Date.parse(event.ts) < sinceMs) continue;
+    const sourceEventId = String(event.id || "");
+    if (!sourceEventId) continue;
+    result.set(sourceEventId, event.paymentActor
+      ? classesByActor.get(event.paymentActor) || "unclassified"
+      : "unclassified");
+  }
+  return result;
 }
 
 export async function reconcileCommerceSettlementEvents(eventContents, ledgerContents, {
@@ -293,7 +317,17 @@ export function createCommerceSettlementReconciler({
   let running = Promise.resolve();
 
   async function status() {
-    const ledger = await readExisting(ledgerPath);
+    const [ledger, eventParts] = await Promise.all([
+      readExisting(ledgerPath),
+      Promise.all(paths.map(readExisting)),
+    ]);
+    const paymentClassBySourceEventId = enabled
+      ? currentPaymentClassBySourceEventId(eventParts.join("\n"), {
+        actorSecret,
+        payerClasses,
+        settlementEvidenceSince,
+      })
+      : new Map();
     return {
       enabled,
       settlementEvidenceSince: Number.isFinite(Date.parse(settlementEvidenceSince))
@@ -303,7 +337,7 @@ export function createCommerceSettlementReconciler({
       lastError,
       issues: lastIssueCounts,
       lastScan,
-      ledger: summarizeCommerceSettlementLedger(ledger),
+      ledger: summarizeCommerceSettlementLedger(ledger, { paymentClassBySourceEventId }),
     };
   }
 

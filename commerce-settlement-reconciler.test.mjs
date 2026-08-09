@@ -101,6 +101,24 @@ test("reconciles one canonical Base USDC transfer with payer continuity", async 
   assert.equal(JSON.stringify(summary).includes(PAYER), false);
 });
 
+test("reclassifies an existing settlement summary from current payer policy without rewriting the ledger", () => {
+  const ledger = `${JSON.stringify({
+    schemaVersion: "samedaydesk.commerce-settlement-reconciliation.v1",
+    state: "reconciled",
+    sourceEventId: "event-owned-canary",
+    route: "/enrich",
+    paymentClass: "unclassified",
+    settlementReference: REFERENCE,
+    amountAtomic: "50000",
+  })}\n`;
+  const summary = summarizeCommerceSettlementLedger(ledger, {
+    paymentClassBySourceEventId: new Map([["event-owned-canary", "internal"]]),
+  });
+  assert.deepEqual({ ...summary.byClass }, {
+    internal: { settlements: 1, amountAtomic: "50000" },
+  });
+});
+
 test("fails closed on duplicate references and canonical settlement mismatches", async () => {
   const duplicate = await reconcile([event(), event({ id: "event-2" })]);
   assert.deepEqual(duplicate.issues.map((item) => item.code), ["duplicate_paid_event_reference"]);
