@@ -159,6 +159,12 @@ guidance. Borrower diagnosis, future protection planning, market underwriting,
 and historical PreLiquidation replay are now distinct machine choices without
 renaming a tool or changing its route, price, schema, payment gate, or handler.
 
+Version 1.11.12 starts a prospective MCP transport-friction probe. It separates
+four common client expectations, `/mcp/sse`, `/mcp/messages`, `/mcp/tools`, and
+`/mcp/events`, from arbitrary `/mcp/*` misses without serving a guessed alias.
+Public aggregates expose only route counts and secret-keyed actor totals. A
+compatibility route is justified only by repeated independent use or conversion.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured
