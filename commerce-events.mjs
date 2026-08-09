@@ -105,7 +105,7 @@ function decodePaymentMetadata(headers) {
   }
 }
 
-export function classifyCommerceResult({ route, kind, matched, paymentPresent, status }) {
+export function classifyCommerceResult({ route, kind, matched, paymentPresent, replayed = false, status }) {
   if (!matched) return "unmatched";
   if (kind === "discovery" || kind === "referral") return "discovery";
   if (kind !== "paid") return "request";
@@ -115,6 +115,7 @@ export function classifyCommerceResult({ route, kind, matched, paymentPresent, s
   if (route === "/mcp" && !paymentPresent && status >= 200 && status < 300) {
     return "protocol_discovery";
   }
+  if (replayed && paymentPresent && status >= 200 && status < 300) return "replay_success";
   if (paymentPresent && status >= 200 && status < 300) return "paid_success";
   return "paid_route_response";
 }
@@ -125,6 +126,7 @@ function eventResult(event) {
     kind: event.kind,
     matched: event.matched,
     paymentPresent: event.paymentPresent,
+    replayed: event.replayed,
     status: event.status,
   });
 }
@@ -220,6 +222,7 @@ export function createCommerceTelemetry({
 
     res.once("finish", () => {
       const status = Number(res.statusCode || 0);
+      const replayed = String(res.getHeader?.("x-payment-replay") || "").toLowerCase() === "hit";
       enqueue({
         v: 1,
         id: randomUUID(),
@@ -232,6 +235,7 @@ export function createCommerceTelemetry({
         kind: route.kind,
         queryKeys,
         paymentPresent,
+        replayed,
         paymentActor,
         paymentIdentifier,
         status,
@@ -240,6 +244,7 @@ export function createCommerceTelemetry({
           kind: route.kind,
           matched: route.matched,
           paymentPresent,
+          replayed,
           status,
         }),
         durationMs: Math.max(0, Date.now() - startedAt),
@@ -267,12 +272,14 @@ export function createCommerceTelemetry({
     const paidActors = new Map();
     const paidSuccessByRoute = emptyCounts();
     let paymentIdentifierEvents = 0;
+    let replaySuccessEvents = 0;
     for (const event of events) {
       const result = eventResult(event);
       increment(byResult, result);
       increment(byRoute, event.route);
       if (result === "unmatched") increment(unmatched, event.route);
       if (event.paymentIdentifier) paymentIdentifierEvents += 1;
+      if (result === "replay_success") replaySuccessEvents += 1;
       if (result === "paid_success") {
         increment(paidSuccessByRoute, event.route);
         const paidActor = event.paymentActor || event.actor;
@@ -292,10 +299,11 @@ export function createCommerceTelemetry({
       repeatPaidSuccessActors: [...paidActors.values()].filter((count) => count > 1).length,
       paidSuccessByRoute,
       paymentIdentifierEvents,
+      replaySuccessEvents,
       byResult,
       byRoute,
       unmatched,
-      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, crawler, and exploit-probe traffic is excluded, but unidentified automated fetchers can remain. Paid-success actors use a secret-keyed payer pseudonym when the payment payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Counts are acquisition signals, not public buyer identities or calibrated forecasts.",
+      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, crawler, and exploit-probe traffic is excluded, but unidentified automated fetchers can remain. Paid-success actors use a secret-keyed payer pseudonym when the payment payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are acquisition signals, not public buyer identities or calibrated forecasts.",
     };
   }
 

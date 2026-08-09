@@ -51,6 +51,16 @@ credentials. Public output is aggregate only; owner and crawler traffic are
 excluded. Common exploit probes such as `.env`, `.git`, and WordPress discovery
 paths are classified as scanner traffic and excluded as well.
 
+Version 1.7 adds request-bound idempotent replay for HTTP buyers that supply the
+x402 payment-identifier extension. A successful JSON response is cached for 15
+minutes on the private Railway volume. The cache key is an HMAC of the logical
+payment ID, and the binding covers the full canonical URL, HTTP method, payer,
+network, asset, amount, and recipient. Raw payment IDs, payer addresses, and
+request URLs are not stored. An exact retry receives the original response and
+signed settlement receipt without a second payment; changed input, payer, or
+payment terms return an uncharged HTTP 409. Replays are counted separately from
+new paid-success events.
+
 Observed agent crawlers use several discovery conventions. The canonical
 manifest remains `/.well-known/x402`, with compatible aliases at
 `/.well-known/x402.json`, `/x402.json`, and `/api/x402`. The canonical OpenAPI

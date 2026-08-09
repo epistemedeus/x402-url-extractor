@@ -38,6 +38,7 @@ test("paid response classes separate challenge, validation, success, and failure
   assert.equal(classifyCommerceResult({ kind: "paid", matched: true, paymentPresent: false, status: 402 }), "challenge");
   assert.equal(classifyCommerceResult({ kind: "paid", matched: true, paymentPresent: true, status: 400 }), "validation_failure");
   assert.equal(classifyCommerceResult({ kind: "paid", matched: true, paymentPresent: true, status: 200 }), "paid_success");
+  assert.equal(classifyCommerceResult({ kind: "paid", matched: true, paymentPresent: true, replayed: true, status: 200 }), "replay_success");
   assert.equal(classifyCommerceResult({ kind: "paid", matched: true, paymentPresent: true, status: 503 }), "service_failure");
   assert.equal(classifyCommerceResult({ kind: "unmatched", matched: false, paymentPresent: false, status: 404 }), "unmatched");
   assert.equal(classifyCommerceResult({ route: "/mcp", kind: "paid", matched: true, paymentPresent: false, status: 200 }), "protocol_discovery");
@@ -52,7 +53,7 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
     maxBytes: 1024 * 1024,
   });
 
-  function run({ path: requestPath, status = 200, headers = {}, query = {}, ip = "203.0.113.10" }) {
+  function run({ path: requestPath, status = 200, headers = {}, responseHeaders = {}, query = {}, ip = "203.0.113.10" }) {
     const listeners = new Map();
     const req = {
       path: requestPath,
@@ -68,6 +69,9 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
       once(name, listener) {
         listeners.set(name, listener);
       },
+      getHeader(name) {
+        return responseHeaders[String(name).toLowerCase()];
+      },
     };
     telemetry.middleware(req, res, () => {});
     listeners.get("finish")?.();
@@ -80,6 +84,7 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
     extensions: { "payment-identifier": { info: { id: "order_1234567890abcdef" } } },
   })).toString("base64");
   run({ path: "/defi/morpho-position", status: 200, headers: { "payment-signature": paymentSignature } });
+  run({ path: "/defi/morpho-position", status: 200, headers: { "payment-signature": paymentSignature }, responseHeaders: { "x-payment-replay": "hit" } });
   run({ path: "/mcp", status: 200 });
   run({ path: "/owner", status: 404, headers: { "x-samedaydesk-internal": "owner-canary" } });
   run({ path: "/crawler", status: 404, headers: { "user-agent": "ExampleBot/1.0" } });
@@ -100,16 +105,18 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.ok(storage.currentBytes > 0);
   assert.equal(storage.boundedBytes, 2 * 1024 * 1024);
   const snapshot = await telemetry.snapshot({ days: 1 });
-  assert.equal(snapshot.externalEvents, 4);
+  assert.equal(snapshot.externalEvents, 5);
   assert.equal(snapshot.externalActors, 1);
   assert.equal(snapshot.repeatExternalActors, 1);
   assert.equal(snapshot.byResult.discovery, 1);
   assert.equal(snapshot.byResult.challenge, 1);
   assert.equal(snapshot.byResult.paid_success, 1);
+  assert.equal(snapshot.byResult.replay_success, 1);
+  assert.equal(snapshot.replaySuccessEvents, 1);
   assert.equal(snapshot.paidSuccessActors, 1);
   assert.equal(snapshot.repeatPaidSuccessActors, 0);
   assert.equal(snapshot.paidSuccessByRoute["/defi/morpho-position"], 1);
-  assert.equal(snapshot.paymentIdentifierEvents, 1);
+  assert.equal(snapshot.paymentIdentifierEvents, 2);
   assert.equal(snapshot.byResult.protocol_discovery, 1);
   assert.equal(JSON.stringify(snapshot).includes("secret-value"), false);
   assert.equal(JSON.stringify(snapshot).includes("0x1111111111111111111111111111111111111111"), false);

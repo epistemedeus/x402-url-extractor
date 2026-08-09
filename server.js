@@ -40,6 +40,7 @@ import { morphoPreLiquidationReplay } from "./morpho-preliquidation-replay.mjs";
 import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
 import { createCommerceTelemetry } from "./commerce-events.mjs";
+import { createIdempotencyReplay } from "./idempotency-replay.mjs";
 import {
   A2A_VERSION,
   buildAgentCard,
@@ -212,6 +213,7 @@ app.use(express.json({
 
 const commerceTelemetry = createCommerceTelemetry();
 app.use(commerceTelemetry.middleware);
+const idempotencyReplay = createIdempotencyReplay();
 
 // the402 marketplace bridge. Unlike the public x402 routes, the marketplace
 // owns buyer payment and escrow. We authenticate signed dispatches, acknowledge
@@ -309,6 +311,7 @@ app.post("/integrations/agoragentic/ai-readiness-audit", async (req, res) => {
 // Free health check (NOT behind paywall — used by Railway).
 app.get("/healthz", async (_req, res) => {
   const telemetryStorage = await commerceTelemetry.storageStatus();
+  const replayStorage = await idempotencyReplay.storageStatus();
   res.json({
     ok: true,
     payTo: PAY_TO,
@@ -324,9 +327,11 @@ app.get("/healthz", async (_req, res) => {
     trustArtifacts: {
       paymentIdentifier: true,
       signedOfferReceipt: commerceTrust.enabled,
+      requestBoundReplay: true,
       receiptSigner: commerceTrust.signerAddress,
       receiptKeyId: commerceTrust.keyId,
     },
+    idempotencyReplay: replayStorage,
     the402: {
       configured: Boolean(THE402_API_KEY && THE402_WEBHOOK_SECRET),
       serviceConfigured: Boolean(THE402_SERVICE_ID),
@@ -636,7 +641,7 @@ app.get("/alerts", (_req, res) => {
 app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
   res.json({
     openapi: "3.0.3",
-    info: { title: "SameDayDesk machine commerce gateway", version: "1.6.0", description: `Machine-discoverable paid capabilities on Base: Morpho position risk ${MORPHO_POSITION_PRICE}, protection plans ${MORPHO_PROTECTION_PRICE}, market underwriting ${MORPHO_MARKET_UNDERWRITE_PRICE}, PreLiquidation replay ${MORPHO_PRELIQUIDATION_REPLAY_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
+    info: { title: "SameDayDesk machine commerce gateway", version: "1.7.0", description: `Machine-discoverable paid capabilities on Base: Morpho position risk ${MORPHO_POSITION_PRICE}, protection plans ${MORPHO_PROTECTION_PRICE}, market underwriting ${MORPHO_MARKET_UNDERWRITE_PRICE}, PreLiquidation replay ${MORPHO_PRELIQUIDATION_REPLAY_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
     servers: [{ url: PUBLIC_URL }],
     paths: {
       "/v0/cards.json": { get: { summary: "Free incident-backed platform health cards. Categories are not calibrated scores.", responses: { "200": { description: "SameDayDesk platform health index v0" } } } },
@@ -658,6 +663,10 @@ app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
     },
   });
 });
+
+// Return a short-lived response for an exact logical retry before validation or
+// settlement. Changed request bindings fail with an uncharged 409.
+app.use(idempotencyReplay.middleware);
 
 // Validate the higher-value quote before the x402 middleware so malformed calls
 // fail with HTTP 400 and are never challenged for payment.
@@ -1379,7 +1388,7 @@ app.get("/", (_req, res) => {
       a2aAgentCard: "/.well-known/agent-card.json",
       a2aSendMessage: "POST /a2a/message:send",
       aggregateDemand: "/v0/commerce-demand.json",
-      flow: "discover -> validate schema and price -> pay -> call -> receive deterministic result and receipt",
+      flow: "discover -> validate schema and price -> pay -> call -> receive deterministic result and receipt -> safely replay the same logical request",
     },
     paidRoutes: {
       "GET /extract?url=": `${EXTRACT_PRICE} - URL -> clean structured JSON (text, JSON-LD, OG, headings, links, AI-readiness signals).`,
@@ -1420,7 +1429,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.6.0" },
+      serverInfo: { name: "x402-data-gateway", version: "1.7.0" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to extract") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to read as Markdown") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
