@@ -44,6 +44,7 @@ import {
 import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
 import { createCommerceTelemetry } from "./commerce-events.mjs";
+import { createCommerceSettlementReconciler } from "./commerce-settlement-reconciler.mjs";
 import { createIdempotencyReplay } from "./idempotency-replay.mjs";
 import { createMppDualStack } from "./mpp-dual-stack.mjs";
 import {
@@ -230,6 +231,7 @@ app.use(express.json({
 const commerceTelemetry = createCommerceTelemetry();
 app.use(commerceTelemetry.middleware);
 const idempotencyReplay = createIdempotencyReplay();
+let commerceSettlementReconciler;
 
 // the402 marketplace bridge. Unlike the public x402 routes, the marketplace
 // owns buyer payment and escrow. We authenticate signed dispatches, acknowledge
@@ -326,8 +328,11 @@ app.post("/integrations/agoragentic/ai-readiness-audit", async (req, res) => {
 
 // Free health check (NOT behind paywall — used by Railway).
 app.get("/healthz", async (_req, res) => {
-  const telemetryStorage = await commerceTelemetry.storageStatus();
-  const replayStorage = await idempotencyReplay.storageStatus();
+  const [telemetryStorage, replayStorage, settlementReconciliation] = await Promise.all([
+    commerceTelemetry.storageStatus(),
+    idempotencyReplay.storageStatus(),
+    commerceSettlementReconciler?.status() || Promise.resolve({ enabled: false }),
+  ]);
   res.json({
     ok: true,
     payTo: PAY_TO,
@@ -349,6 +354,7 @@ app.get("/healthz", async (_req, res) => {
       publicAggregate: "/v0/commerce-demand.json",
       privacy: "aggregate external observations only; raw event data is not exposed",
     },
+    settlementReconciliation,
     trustArtifacts: {
       paymentIdentifier: true,
       signedOfferReceipt: commerceTrust.enabled,
@@ -367,8 +373,12 @@ app.get("/healthz", async (_req, res) => {
 app.get("/v0/commerce-demand.json", async (req, res) => {
   try {
     const days = typeof req.query.days === "string" ? Number(req.query.days) : 90;
+    const [snapshot, settlementReconciliation] = await Promise.all([
+      commerceTelemetry.snapshot({ days }),
+      commerceSettlementReconciler?.status() || Promise.resolve({ enabled: false }),
+    ]);
     res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
-    return res.json(await commerceTelemetry.snapshot({ days }));
+    return res.json({ ...snapshot, settlementReconciliation });
   } catch (error) {
     return res.status(503).json({ ok: false, error: "commerce_telemetry_unavailable" });
   }
@@ -428,6 +438,12 @@ const USDC_BY_NETWORK = {
 };
 const USDC_ASSET = USDC_BY_NETWORK[NETWORK];
 if (!USDC_ASSET) throw new Error(`Unsupported USDC network: ${NETWORK}`);
+commerceSettlementReconciler = createCommerceSettlementReconciler({
+  asset: USDC_ASSET,
+  eventPaths: [commerceTelemetry.paths.rotatedPath, commerceTelemetry.paths.currentPath],
+  network: NETWORK,
+  treasury: PAY_TO,
+});
 const acceptsFor = (amount) => [
   { scheme: "exact", network: NETWORK, asset: USDC_ASSET, amount, payTo: PAY_TO, maxTimeoutSeconds: 300, extra: { name: "USD Coin", version: "2" } },
 ];
@@ -765,7 +781,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.9.6",
+      version: "1.9.7",
       description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, wallet context, and Morpho decision evidence. Pay per call in Base USDC through x402 or native MPP.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
@@ -1722,6 +1738,7 @@ app.get("/", (_req, res) => {
 });
 
 app.listen(PORT, () => {
+  commerceSettlementReconciler.schedule(process.env.COMMERCE_RECONCILIATION_INTERVAL_MS || 60_000);
   console.log(`x402-merchant listening on :${PORT}`);
   console.log(`  payTo:       ${PAY_TO}`);
   console.log(`  network:     ${NETWORK}`);
@@ -1743,7 +1760,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.9.6" },
+      serverInfo: { name: "x402-data-gateway", version: "1.9.7" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to extract") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to read as Markdown") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },

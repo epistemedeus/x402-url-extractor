@@ -80,6 +80,15 @@ and missing-reference counts by payment class. Raw headers and transaction
 references stay on the private volume. A missing reference becomes a material
 settlement-integrity event without exposing the reference itself.
 
+Version 1.9.7 privately reconciles each post-baseline reference against its
+canonical Base receipt. A record is accepted only when the transaction
+succeeded, exactly one canonical Base USDC transfer reached the configured
+treasury, the atomic amount matches the paid response, and the transfer sender
+matches the request payer pseudonym when available. Duplicate references and
+all mismatches fail closed. The private mode-0600 ledger retains the reference;
+public health and demand output expose only aggregate settlement counts, atomic
+amounts by evidence class and route, issue counts, and a generic error state.
+
 Version 1.9 adds same-route MPP `evm/charge` support to all twelve paid HTTP
 capabilities without replacing the existing x402 middleware. An unpaid request
 now carries both `WWW-Authenticate: Payment` and `PAYMENT-REQUIRED`. Native MPP
