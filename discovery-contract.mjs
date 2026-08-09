@@ -1,4 +1,8 @@
-import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
+import {
+  declareDiscoveryExtension,
+  validateDiscoveryExtension,
+  validateDiscoveryExtensionSpec,
+} from "@x402/extensions/bazaar";
 
 const outputContracts = new Map();
 
@@ -16,7 +20,7 @@ export function declareDiscoveryContract(config = {}) {
     if (outputContracts.has(routeKey)) throw new Error(`Duplicate discovery route key: ${routeKey}`);
     outputContracts.set(routeKey, structuredClone({ example: output.example, schema: outputSchema }));
   }
-  return declareDiscoveryExtension({
+  const declared = declareDiscoveryExtension({
     ...rest,
     ...(output ? {
       output: {
@@ -25,6 +29,18 @@ export function declareDiscoveryContract(config = {}) {
       },
     } : {}),
   });
+  if (routeKey !== undefined) {
+    const extension = structuredClone(declared.bazaar);
+    extension.info.input.method = "GET";
+    const schemaResult = validateDiscoveryExtension(extension);
+    const specResult = validateDiscoveryExtensionSpec(extension);
+    const errors = [...(schemaResult.errors || []), ...(specResult.errors || [])];
+    if (!schemaResult.valid || !specResult.valid) {
+      outputContracts.delete(routeKey);
+      throw new Error(`Invalid Bazaar discovery contract for ${routeKey}: ${errors.join("; ")}`);
+    }
+  }
+  return declared;
 }
 
 export function getDiscoveryOutputContract(routeKey) {

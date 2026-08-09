@@ -806,7 +806,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.11.14",
+      version: "1.11.15",
       description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, wallet context, and Morpho decision evidence. Pay per call in Base USDC through x402 or native MPP.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
@@ -1304,9 +1304,12 @@ const x402Paywall = paymentMiddleware(
             output: {
               example: {
                 ok: true,
+                address: "0x4352Cc849b33a936Ad93bB109aFDec1c89653b4f",
                 chain: { id: 8453, name: "Base mainnet" },
                 positionCount: 1,
                 positions: [{ marketId: "0x...", risk: { currentLtvPct: 72, liquidationLtvPct: 86, healthFactor: 1.194, liquidatableAtIndexedState: false }, scenarios: [{ collateralPriceShockPct: -10, healthFactor: 1.075, liquidatable: false }] }],
+                source: { indexed: "Morpho API", directRpc: "required before execution" },
+                boundary: "Read-only indexed observation; verify against direct RPC before execution.",
               },
             },
             outputSchema: {
@@ -1355,10 +1358,14 @@ const x402Paywall = paymentMiddleware(
               example: {
                 ok: true,
                 product: "morpho-protection-quote",
+                address: "0x4352Cc849b33a936Ad93bB109aFDec1c89653b4f",
+                inputs: { targetHealthFactor: 1.25, protectAgainstShockPct: -10, executionBufferBps: 25 },
                 positionCount: 1,
                 actionableCount: 1,
+                unverifiedCount: 0,
                 quotes: [{ status: "protection_available", plans: [{ id: "partial_repay", amount: "125.4", transactions: [{ to: "0x...", value: "0", data: "0x..." }] }] }],
                 invariants: { signing: "none", broadcasting: "none", custody: "none" },
+                boundary: "Unsigned planning output only; re-verify state and simulate before execution.",
               },
             },
             outputSchema: {
@@ -1403,10 +1410,12 @@ const x402Paywall = paymentMiddleware(
                 ok: true,
                 product: "morpho-market-underwrite",
                 marketId: "0x...",
+                chain: { id: 8453, name: "Base mainnet" },
                 market: { listed: true, state: { utilizationPct: 72, liquidityAssetsUsd: 500000 } },
                 borrowers: { totalCount: 24, concentration: { top1BorrowPct: 18, top5BorrowPct: 51 }, healthBands: { below1_05: 0 } },
                 verification: { marketParamsHashMatches: true, restMatchesGraphql: true, directRpc: { verdict: "stored_state_exact_match" } },
                 decisionChecks: [{ id: "market_params_integrity", status: "pass" }],
+                boundary: "Read-only underwriting evidence; not an allocation instruction or execution authorization.",
               },
             },
             outputSchema: {
@@ -1452,9 +1461,12 @@ const x402Paywall = paymentMiddleware(
               example: {
                 ok: true,
                 product: "morpho-preliquidation-replay",
+                chain: { id: 8453, name: "Base mainnet" },
                 transaction: { hash: "0x...", status: "success", gasCostEth: "0.00014" },
                 eventCount: 1,
                 events: [{ assets: { repaid: { symbol: "USDC", amount: "26.27" }, seized: { symbol: "cbBTC", amount: "0.000427" } }, grossEconomics: { incentiveInLoanAmount: "1.15", incentivePct: 4.38 } }],
+                verification: { receiptStatus: "success", eventDecoded: true },
+                boundary: "Historical deterministic replay; not a forward profit forecast or execution instruction.",
               },
             },
             outputSchema: {
@@ -1520,7 +1532,9 @@ const x402Paywall = paymentMiddleware(
               example: {
                 ok: true,
                 product: "samedaydesk-opportunity-preflight",
+                version: "1.0.0",
                 decision: "abandon",
+                input: { platform: "taskmarket", rewardUsd: 10, hours: 0.25, hourlyCostUsd: 4, selectionProbabilityPct: 2 },
                 economics: {
                   totalAtRiskUsd: 1.5,
                   expectedSurplusUsd: -0.3,
@@ -1528,6 +1542,8 @@ const x402Paywall = paymentMiddleware(
                   equalEntryShareReferencePct: 1.25,
                 },
                 gates: { hardBlocks: [], requiredChecks: [], warnings: ["platform_has_observed_oversupply_or_selection_dilution"] },
+                platformEvidence: null,
+                boundary: "Deterministic preflight only; this call does not claim, bid, pay, or submit.",
               },
             },
             outputSchema: {
@@ -1576,9 +1592,16 @@ const x402Paywall = paymentMiddleware(
               example: {
                 ok: true,
                 product: "samedaydesk-agent-discoverability-audit",
+                version: "1.0.1",
+                generatedAt: "2026-08-09T00:00:00.000Z",
+                input: { origin: "https://agents.samedaydesk.com", intent: "extract a public web page into structured JSON metadata headings links and JSON-LD", route: "/extract" },
                 summary: { sourceCount: 4, availableSourceCount: 4, targetFoundSourceCount: 2, expectedRouteFoundSourceCount: 2 },
                 sources: { "coinbase-bazaar": { status: "ok", targetFound: true, bestTargetRank: 9 } },
+                findings: [{ code: "target_not_top_three", source: "coinbase-bazaar" }],
+                nextActions: [{ action: "clarify_semantic_description", evidence: "target ranked below three competitors" }],
+                method: "Brand-blind point-in-time catalog query with registry-native ordering.",
                 safety: { credentialsUsed: false, paymentSentToCatalogs: false, targetOriginFetched: false },
+                boundary: "Point-in-time discovery evidence; not buyer demand, conversion, reliability, or future-rank proof.",
               },
             },
             outputSchema: {
@@ -1892,7 +1915,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.11.14" },
+      serverInfo: { name: "x402-data-gateway", version: "1.11.15" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },

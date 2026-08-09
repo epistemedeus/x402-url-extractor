@@ -181,6 +181,13 @@ the JSON object its handler actually returns rather than a raw Markdown string.
 One route-keyed contract map drives the x402 challenge, OpenAPI, and action
 catalog to prevent the three machine surfaces from drifting apart.
 
+Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
+before startup. Six newer routes previously settled successfully while Coinbase
+rejected their discovery metadata because their output examples omitted fields
+marked required by the same schemas. The examples now conform, and
+`bazaar-contract-audit.mjs` checks every live paid route through credential-free
+HTTP 402 probes without retaining headers or query values.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured
