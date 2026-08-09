@@ -2,10 +2,10 @@
 
 [![Smithery listing](https://smithery.ai/badge/epistemedeus/x402-data-gateway)](https://smithery.ai/servers/epistemedeus/x402-data-gateway)
 
-Eleven pay-per-call tools for deterministic Morpho borrower and market decisions,
-protection plans, URL extraction, Markdown reading, repository security scans,
-company and wallet enrichment, structured data generation, and AI-search
-readiness audits.
+Twelve pay-per-call tools for deterministic agent-work opportunity preflight,
+Morpho borrower and market decisions, protection plans, URL extraction,
+Markdown reading, repository security scans, company and wallet enrichment,
+structured data generation, and AI-search readiness audits.
 
 - Product page: https://samedaydesk.com/x402
 - Smithery: https://smithery.ai/servers/epistemedeus/x402-data-gateway
@@ -23,6 +23,7 @@ readiness audits.
 - Morpho protection quote: `GET /defi/morpho-protection?address=0x...&targetHealthFactor=1.25&protectAgainstShockPct=-10`
 - Morpho market underwriting: `GET /defi/morpho-market-underwrite?marketId=0x...`
 - Morpho PreLiquidation replay: `GET /defi/morpho-preliquidation-replay?transactionHash=0x...`
+- Opportunity preflight: `GET /work/opportunity-preflight?rewardUsd=10&hours=0.25&hourlyCostUsd=4&selectionProbabilityPct=20`
 - Material-change alert probe: https://agents.samedaydesk.com/alerts
 - Agoragentic seller callback: `POST /integrations/agoragentic/ai-readiness-audit`
 - the402 signed fulfillment webhook: `POST /integrations/the402/webhook`
@@ -53,7 +54,14 @@ credentials. Public output is aggregate only; owner and crawler traffic are
 excluded. Common exploit probes such as `.env`, `.git`, and WordPress discovery
 paths are classified as scanner traffic and excluded as well.
 
-Version 1.7 adds request-bound idempotent replay for HTTP buyers that supply the
+Version 1.8 adds a deterministic paid opportunity preflight. The caller supplies
+reward, execution time, hourly opportunity cost, compute, mandatory spend,
+reusable value, competition, and an explicit selection probability. The result
+returns `attempt`, `verify_first`, or `abandon`, transparent break-even economics,
+hard access and funding gates, and an optional dated Settlement Radar card. It
+does not scrape a restricted board or touch a source-platform account, claim,
+bid, payment, or submission. Version 1.7 added request-bound idempotent replay
+for HTTP buyers that supply the
 x402 payment-identifier extension. A successful JSON response is cached for 15
 minutes on the private Railway volume. The cache key is an HMAC of the logical
 payment ID, and the binding covers the full canonical URL, HTTP method, payer,
@@ -70,7 +78,7 @@ document remains `/openapi.json`, with `/openapi.yaml` and `/swagger.json`
 returning the same JSON document. `GET /mcp` returns a free transport descriptor;
 actual MCP discovery and paid tool calls use streamable HTTP at `POST /mcp`.
 Agents that prefer a compact instruction contract can read `/skill.md` (or
-`/SKILL.md`), while `/api/actions` returns the eleven canonical GET actions with
+`/SKILL.md`), while `/api/actions` returns the twelve canonical GET actions with
 their URL, description, exact atomic USDC price, MIME type, network, and payTo.
 The A2A v1.0 card at `/.well-known/agent-card.json` advertises one bounded free
 skill, `discover-x402-paid-actions`. `POST /a2a/message:send` returns that exact
@@ -155,7 +163,7 @@ output schemas.
 | **xpay public facilitator** (`facilitator.xpay.sh`) | **None** | **Yes** (`eip155:8453`, exact scheme) | Fallback settlement path with self-published discovery only |
 | **x402.org public facilitator** (`x402.org/facilitator`) | None | **No**, Base Sepolia testnet only | Separate test catalog at `x402.org/facilitator/discovery/resources` |
 
-Production uses CDP. All eleven routes passed live CDP verification and
+Production uses CDP. The original eleven routes passed live CDP verification and
 completed a real settlement. The original eight appear in Bazaar merchant
 discovery. The three newer Morpho decision routes have successful settlement
 receipts, and a distinct funded payer produced `isValid: true` plus Bazaar
@@ -242,7 +250,7 @@ extensions, but remain absent beyond the documented cache window. CDP also
 finds the original Morpho and deep-audit routes through semantic search. Use the
 merchant lookup as evidence of CDP catalog state, not as the canonical count of
 SameDayDesk capabilities; the owned manifest, MCP, A2A, and OpenAPI surfaces
-remain complete at eleven.
+remain complete at twelve.
 
 CDP rejected three older route payloads whose discovery descriptions were 535,
 581, and 629 characters even though local extension validation passed. Concise

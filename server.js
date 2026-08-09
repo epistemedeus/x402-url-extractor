@@ -37,6 +37,10 @@ import { morphoPosition } from "./morpho-position.mjs";
 import { morphoProtection } from "./morpho-protection.mjs";
 import { morphoMarketUnderwrite } from "./morpho-market-underwrite.mjs";
 import { morphoPreLiquidationReplay } from "./morpho-preliquidation-replay.mjs";
+import {
+  normalizeOpportunityPreflightInput,
+  opportunityPreflight,
+} from "./opportunity-preflight.mjs";
 import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
 import { createCommerceTelemetry } from "./commerce-events.mjs";
@@ -104,6 +108,8 @@ const MORPHO_PROTECTION_PRICE = process.env.MORPHO_PROTECTION_PRICE || "$0.10";
 const MORPHO_MARKET_UNDERWRITE_PRICE = process.env.MORPHO_MARKET_UNDERWRITE_PRICE || "$0.25";
 // Historical PreLiquidation economics reconstructed from direct block-state reads.
 const MORPHO_PRELIQUIDATION_REPLAY_PRICE = process.env.MORPHO_PRELIQUIDATION_REPLAY_PRICE || "$0.10";
+// Work opportunity preflight: deterministic break-even and evidence gates for agents.
+const OPPORTUNITY_PREFLIGHT_PRICE = process.env.OPPORTUNITY_PREFLIGHT_PRICE || "$0.05";
 
 // "$0.05" -> "50000" atomic USDC units (6 decimals) so the discovery docs
 // (/.well-known/x402, /openapi.json) always match the paywall price exactly.
@@ -413,6 +419,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/defi/morpho-protection`, amount: priceToAtomic(MORPHO_PROTECTION_PRICE), description: "Base Morpho borrower -> exact partial-repay and add-collateral amounts for a chosen stress and target health factor, plus unsigned approval/action templates and explicit invariants. Deterministic and read-only; no wallet, signing, broadcast, or custody.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/defi/morpho-market-underwrite`, amount: priceToAtomic(MORPHO_MARKET_UNDERWRITE_PRICE), description: "Base Morpho market -> deterministic underwriting facts: parameter integrity, direct-chain checks, liquidity, utilization, APY history, borrower concentration and health bands, bad debt, and PreLiquidation supply. Read-only evidence flags; no opaque score or capital action.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/defi/morpho-preliquidation-replay`, amount: priceToAtomic(MORPHO_PRELIQUIDATION_REPLAY_PRICE), description: "Base transaction -> deterministic Morpho PreLiquidation replay: strict event decode, block-time contract parameters and oracle price, repaid debt, seized collateral, gross incentive, and gas. Historical evidence only; no profitability claim or execution.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/work/opportunity-preflight`, amount: priceToAtomic(OPPORTUNITY_PREFLIGHT_PRICE), description: "Agent work opportunity -> deterministic attempt, verify-first, or abandon preflight using caller-supplied cost and selection assumptions plus dated platform evidence. Returns break-even probability, expected surplus, hard gates, and source-linked evidence. No claim, bid, payment, or submission.", mimeType: "application/json" },
 ];
 
 const machineActionCatalog = () => ({
@@ -476,7 +483,7 @@ app.get(["/skill.md", "/SKILL.md"], (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
   return res.type("text/markdown").send(`# SameDayDesk machine commerce gateway
 
-Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, Morpho borrower-risk, market-underwriting evidence, historical PreLiquidation replay, or unsigned Morpho protection plans and can pay exact USDC on Base through x402.
+Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, agent-work opportunity economics, Morpho borrower-risk, market-underwriting evidence, historical PreLiquidation replay, or unsigned Morpho protection plans and can pay exact USDC on Base through x402.
 
 ## Discover
 
@@ -501,6 +508,7 @@ Use this service when an agent needs deterministic web, company, wallet, AI-sear
 - Morpho market underwriting exposes separate evidence flags rather than one opaque risk score. The caller owns policy and any capital decision.
 - Morpho PreLiquidation replay reconstructs gross historical event economics. It does not infer net profit or future executability.
 - Repository scan output is static evidence, not permission to execute untrusted code.
+- Opportunity preflight uses caller-supplied cost and selection assumptions plus dated categorical platform evidence. It makes no claim, bid, payment, or submission on the source platform.
 - Demand telemetry is aggregate and does not expose buyer identities or raw request data.
 `);
 });
@@ -641,7 +649,7 @@ app.get("/alerts", (_req, res) => {
 app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
   res.json({
     openapi: "3.0.3",
-    info: { title: "SameDayDesk machine commerce gateway", version: "1.7.2", description: `Eleven machine-discoverable paid capabilities on Base: AI-search readiness audit ${DEEP_AUDIT_PRICE}, Morpho position risk ${MORPHO_POSITION_PRICE}, protection plans ${MORPHO_PROTECTION_PRICE}, market underwriting ${MORPHO_MARKET_UNDERWRITE_PRICE}, PreLiquidation replay ${MORPHO_PRELIQUIDATION_REPLAY_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, and structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
+    info: { title: "SameDayDesk machine commerce gateway", version: "1.8.0", description: `Twelve machine-discoverable paid capabilities on Base: work opportunity preflight ${OPPORTUNITY_PREFLIGHT_PRICE}, AI-search readiness audit ${DEEP_AUDIT_PRICE}, Morpho position risk ${MORPHO_POSITION_PRICE}, protection plans ${MORPHO_PROTECTION_PRICE}, market underwriting ${MORPHO_MARKET_UNDERWRITE_PRICE}, PreLiquidation replay ${MORPHO_PRELIQUIDATION_REPLAY_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, and structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
     servers: [{ url: PUBLIC_URL }],
     paths: {
       "/v0/cards.json": { get: { summary: "Free incident-backed platform health cards. Categories are not calibrated scores.", responses: { "200": { description: "SameDayDesk platform health index v0" } } } },
@@ -649,6 +657,7 @@ app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
       "/.well-known/agent-card.json": { get: { summary: "A2A v1.0 agent card for the free machine-commerce storefront.", responses: { "200": { description: "A2A AgentCard" } } } },
       "/a2a/message:send": { post: { summary: "Return the exact-price x402 action catalog as an A2A direct message.", responses: { "200": { description: "A2A message containing the action catalog" }, "400": { description: "Invalid request or unsupported A2A version" } } } },
       "/platforms": { get: { summary: "Human-readable Settlement Radar health cards.", responses: { "200": { description: "HTML platform health index" } } } },
+      "/work/opportunity-preflight": { get: { summary: RESOURCES[11].description, parameters: [{ name: "platform", in: "query", required: false, schema: { type: "string", example: "taskmarket" } }, { name: "rewardUsd", in: "query", required: true, schema: { type: "number", exclusiveMinimum: 0 } }, { name: "hours", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "hourlyCostUsd", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "computeUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "mandatorySpendUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "reusableValueUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "selectionProbabilityPct", in: "query", required: false, schema: { type: "number", minimum: 0, maximum: 100 } }, { name: "competition", in: "query", required: false, schema: { type: "integer", minimum: 0, default: 0 } }, { name: "slots", in: "query", required: false, schema: { type: "integer", minimum: 1, default: 1 } }, { name: "agentAccess", in: "query", required: false, schema: { type: "string", enum: ["agent_allowed", "agent_only", "mixed", "human_only", "unknown"], default: "unknown" } }, { name: "acceptance", in: "query", required: false, schema: { type: "string", enum: ["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"], default: "unknown" } }, { name: "settlement", in: "query", required: false, schema: { type: "string", enum: ["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"], default: "unknown" } }], responses: { "200": { description: "deterministic opportunity economics and evidence preflight" }, "400": { description: "invalid required input, charged nothing" }, "402": { description: `payment required (x402, ${OPPORTUNITY_PREFLIGHT_PRICE} USDC base)` } } } },
       "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "structured data" }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
       "/read": { get: { summary: RESOURCES[1].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "markdown" }, "402": { description: `payment required (x402, ${READ_PRICE} USDC base)` } } } },
       "/scan": { get: { summary: RESOURCES[2].description, parameters: [{ name: "repo", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "security risk report" }, "402": { description: `payment required (x402, ${SCAN_PRICE} USDC base)` } } } },
@@ -705,6 +714,21 @@ app.get("/defi/morpho-preliquidation-replay", (req, res, next) => {
     return res.status(400).json({ ok: false, error: "transactionHash must be a 0x-prefixed 32-byte hex value", charged: false });
   }
   return next();
+});
+
+// Validate explicit opportunity economics before payment. Malformed or
+// incomplete required inputs return an uncharged 400.
+app.get("/work/opportunity-preflight", (req, res, next) => {
+  try {
+    normalizeOpportunityPreflightInput(req.query);
+    return next();
+  } catch (error) {
+    return res.status(400).json({
+      ok: false,
+      error: String(error?.message || error),
+      charged: false,
+    });
+  }
 });
 
 // The paid route. Unpaid request -> HTTP 402 with payment requirements.
@@ -1191,6 +1215,79 @@ app.use(
           }),
         },
       },
+      "GET /work/opportunity-preflight": {
+        accepts: [{ scheme: "exact", price: OPPORTUNITY_PREFLIGHT_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description: RESOURCES[11].description,
+        mimeType: "application/json",
+        extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
+          ...declareDiscoveryExtension({
+            input: {
+              platform: "taskmarket",
+              rewardUsd: 10,
+              hours: 0.25,
+              hourlyCostUsd: 4,
+              computeUsd: 0.5,
+              mandatorySpendUsd: 0,
+              reusableValueUsd: 1,
+              selectionProbabilityPct: 2,
+              competition: 80,
+              slots: 1,
+              agentAccess: "agent_allowed",
+              acceptance: "discretionary",
+              settlement: "escrow",
+            },
+            inputSchema: {
+              type: "object",
+              properties: {
+                platform: { type: "string", description: "Optional platform ID from the free Settlement Radar, such as gofrantic or taskmarket." },
+                rewardUsd: { type: "number", exclusiveMinimum: 0, description: "Gross reward in USD or stablecoin-equivalent units." },
+                hours: { type: "number", minimum: 0, description: "Expected execution and QA hours." },
+                hourlyCostUsd: { type: "number", minimum: 0, description: "Caller's fully loaded hourly opportunity cost." },
+                computeUsd: { type: "number", minimum: 0, default: 0 },
+                mandatorySpendUsd: { type: "number", minimum: 0, default: 0 },
+                reusableValueUsd: { type: "number", minimum: 0, default: 0, description: "Conservative value retained even if the reward is not selected." },
+                selectionProbabilityPct: { type: "number", minimum: 0, maximum: 100, description: "Caller-supplied overall reward probability. Omit to receive verify_first." },
+                competition: { type: "integer", minimum: 0, default: 0 },
+                slots: { type: "integer", minimum: 1, default: 1 },
+                agentAccess: { type: "string", enum: ["agent_allowed", "agent_only", "mixed", "human_only", "unknown"], default: "unknown" },
+                acceptance: { type: "string", enum: ["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"], default: "unknown" },
+                settlement: { type: "string", enum: ["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"], default: "unknown" },
+              },
+              required: ["rewardUsd", "hours", "hourlyCostUsd"],
+            },
+            output: {
+              example: {
+                ok: true,
+                product: "samedaydesk-opportunity-preflight",
+                decision: "abandon",
+                economics: {
+                  totalAtRiskUsd: 1.5,
+                  expectedSurplusUsd: -0.3,
+                  breakEvenSelectionProbabilityPct: 5,
+                  equalEntryShareReferencePct: 1.25,
+                },
+                gates: { hardBlocks: [], requiredChecks: [], warnings: ["platform_has_observed_oversupply_or_selection_dilution"] },
+              },
+            },
+            outputSchema: {
+              type: "object",
+              properties: {
+                ok: { type: "boolean" },
+                product: { type: "string", const: "samedaydesk-opportunity-preflight" },
+                version: { type: "string" },
+                decision: { type: "string", enum: ["attempt", "verify_first", "abandon"] },
+                input: { type: "object" },
+                economics: { type: "object" },
+                gates: { type: "object" },
+                platformEvidence: { type: ["object", "null"] },
+                boundary: { type: "string" },
+              },
+              required: ["ok", "product", "version", "decision", "input", "economics", "gates", "platformEvidence", "boundary"],
+            },
+          }),
+        },
+      },
     },
     resourceServer
   )
@@ -1364,6 +1461,24 @@ app.get("/defi/morpho-preliquidation-replay", async (req, res) => {
   }
 });
 
+// Paid: deterministic opportunity economics and evidence preflight. This route
+// reads no account and performs no claim, bid, submission, or payment action on
+// the source platform.
+app.get("/work/opportunity-preflight", async (req, res) => {
+  try {
+    const platform = typeof req.query.platform === "string" ? req.query.platform.trim().toLowerCase() : null;
+    const platformCard = platform ? getPlatformHealthCard(platform) : null;
+    res.set("Cache-Control", "no-store");
+    return res.json(opportunityPreflight(req.query, { platformCard }));
+  } catch (error) {
+    return res.status(503).json({
+      ok: false,
+      error: String(error?.message || error),
+      boundary: "No source-platform account, claim, bid, payment, or submission was touched.",
+    });
+  }
+});
+
 // Free landing so a human/agent hitting the root learns what this is + how to pay.
 app.get("/", (_req, res) => {
   res.json({
@@ -1401,6 +1516,7 @@ app.get("/", (_req, res) => {
       "GET /defi/morpho-protection?address=&targetHealthFactor=&protectAgainstShockPct=&executionBufferBps=": `${MORPHO_PROTECTION_PRICE} - deterministic Morpho repair amounts plus unsigned approval/action templates.`,
       "GET /defi/morpho-market-underwrite?marketId=": `${MORPHO_MARKET_UNDERWRITE_PRICE} - deterministic Morpho market integrity, liquidity, concentration, health-band, history, bad-debt, and PreLiquidation evidence.`,
       "GET /defi/morpho-preliquidation-replay?transactionHash=": `${MORPHO_PRELIQUIDATION_REPLAY_PRICE} - reconstruct a historical PreLiquidation event, protocol-oracle gross incentive, and gas from direct Base reads.`,
+      "GET /work/opportunity-preflight?rewardUsd=&hours=&hourlyCostUsd=": `${OPPORTUNITY_PREFLIGHT_PRICE} - deterministic attempt, verify-first, or abandon economics with optional dated platform evidence.`,
     },
     network: NETWORK,
     payTo: PAY_TO,
@@ -1429,7 +1545,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.7.2" },
+      serverInfo: { name: "x402-data-gateway", version: "1.8.0" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to extract") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to read as Markdown") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
@@ -1442,6 +1558,7 @@ import("./mcp-server.mjs")
         { name: "morpho_protection", description: RESOURCES[8].description, price: MORPHO_PROTECTION_PRICE, inputSchema: { address: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Borrower EVM address on Base mainnet"), targetHealthFactor: z.number().gt(1).max(5).default(1.25), protectAgainstShockPct: z.number().min(-99).max(0).default(-10), executionBufferBps: z.number().int().min(0).max(500).default(25) }, run: (a) => morphoProtection(a.address, a), tags: ["defi", "morpho", "protection", "unsigned-transaction-plan"] },
         { name: "morpho_market_underwrite", description: RESOURCES[9].description, price: MORPHO_MARKET_UNDERWRITE_PRICE, inputSchema: { marketId: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Morpho market ID on Base mainnet") }, run: (a) => morphoMarketUnderwrite(a.marketId), tags: ["defi", "morpho", "underwriting", "risk", "preliquidation"] },
         { name: "morpho_preliquidation_replay", description: RESOURCES[10].description, price: MORPHO_PRELIQUIDATION_REPLAY_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Successful Base transaction containing a Morpho PreLiquidate event") }, run: (a) => morphoPreLiquidationReplay(a.transactionHash), tags: ["defi", "morpho", "preliquidation", "replay", "economics"] },
+        { name: "opportunity_preflight", description: RESOURCES[11].description, price: OPPORTUNITY_PREFLIGHT_PRICE, inputSchema: { platform: z.string().max(100).optional(), rewardUsd: z.number().positive(), hours: z.number().min(0).max(10000), hourlyCostUsd: z.number().min(0).max(100000), computeUsd: z.number().min(0).default(0), mandatorySpendUsd: z.number().min(0).default(0), reusableValueUsd: z.number().min(0).default(0), selectionProbabilityPct: z.number().min(0).max(100).optional(), competition: z.number().int().min(0).default(0), slots: z.number().int().min(1).default(1), agentAccess: z.enum(["agent_allowed", "agent_only", "mixed", "human_only", "unknown"]).default("unknown"), acceptance: z.enum(["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"]).default("unknown"), settlement: z.enum(["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"]).default("unknown") }, run: (a) => opportunityPreflight(a, { platformCard: a.platform ? getPlatformHealthCard(a.platform.toLowerCase()) : null }), tags: ["work", "bounty", "economics", "preflight", "settlement-evidence"] },
       ],
     })
   )
