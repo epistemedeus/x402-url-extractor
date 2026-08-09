@@ -446,6 +446,21 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/work/opportunity-preflight`, amount: priceToAtomic(OPPORTUNITY_PREFLIGHT_PRICE), description: "Agent work opportunity -> deterministic attempt, verify-first, or abandon preflight using caller-supplied cost and selection assumptions plus dated platform evidence. Returns break-even probability, expected surplus, hard gates, and source-linked evidence. No claim, bid, payment, or submission.", mimeType: "application/json" },
 ];
 
+const RESOURCE_DISCOVERY_METADATA = {
+  "/extract": { operationId: "extractUrl", tags: ["Web Data"] },
+  "/read": { operationId: "readUrlAsMarkdown", tags: ["Web Data"] },
+  "/scan": { operationId: "scanRepositoryRisk", tags: ["Security"] },
+  "/schemaforge": { operationId: "generateStructuredData", tags: ["Company Intelligence"] },
+  "/enrich": { operationId: "enrichCompany", tags: ["Company Intelligence"] },
+  "/wallet-enrich": { operationId: "enrichWallet", tags: ["Blockchain"] },
+  "/deep-audit": { operationId: "auditAiSearchReadiness", tags: ["Company Intelligence"] },
+  "/defi/morpho-position": { operationId: "inspectMorphoPosition", tags: ["DeFi"] },
+  "/defi/morpho-protection": { operationId: "planMorphoProtection", tags: ["DeFi"] },
+  "/defi/morpho-market-underwrite": { operationId: "underwriteMorphoMarket", tags: ["DeFi"] },
+  "/defi/morpho-preliquidation-replay": { operationId: "replayMorphoPreLiquidation", tags: ["DeFi"] },
+  "/work/opportunity-preflight": { operationId: "preflightAgentOpportunity", tags: ["Agent Operations"] },
+};
+
 const mppDualStack = createMppDualStack({
   facilitatorClient,
   network: NETWORK,
@@ -534,6 +549,7 @@ const machineActionCatalog = () => ({
       priceUsdc: Number(resource.amount) / 1e6,
       paymentProtocols: ["x402", "mpp"],
       mimeType: resource.mimeType,
+      tags: RESOURCE_DISCOVERY_METADATA[route]?.tags || [],
     };
   }),
   discovery: {
@@ -749,9 +765,9 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.9.2",
-      description: `Twelve machine-discoverable paid capabilities on Base with x402 and native MPP settlement: work opportunity preflight ${OPPORTUNITY_PREFLIGHT_PRICE}, AI-search readiness audit ${DEEP_AUDIT_PRICE}, Morpho position risk ${MORPHO_POSITION_PRICE}, protection plans ${MORPHO_PROTECTION_PRICE}, market underwriting ${MORPHO_MARKET_UNDERWRITE_PRICE}, PreLiquidation replay ${MORPHO_PRELIQUIDATION_REPLAY_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, and structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}`,
-      contact: { url: "https://samedaydesk.com" },
+      version: "1.9.3",
+      description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, wallet context, and Morpho decision evidence. Pay per call in Base USDC through x402 or native MPP.",
+      contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
     },
     "x-service-info": {
@@ -765,6 +781,16 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       },
     },
     servers: [{ url: PUBLIC_URL }],
+    tags: [
+      { name: "A2A" },
+      { name: "Agent Operations" },
+      { name: "Blockchain" },
+      { name: "Company Intelligence" },
+      { name: "DeFi" },
+      { name: "Security" },
+      { name: "Settlement Radar" },
+      { name: "Web Data" },
+    ],
     paths: {
       "/v0/cards.json": { get: { summary: "Free incident-backed platform health cards. Categories are not calibrated scores.", responses: { "200": { description: "SameDayDesk platform health index v0" } } } },
       "/v0/commerce-demand.json": { get: { summary: "Privacy-safe aggregate external machine-commerce observations.", parameters: [{ name: "days", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 365, default: 90 } }], responses: { "200": { description: "Aggregate discovery, challenge, paid-success, unmatched-request, and high-precision semantic-candidate counts. Known internal and crawler traffic is excluded; unidentified automation can remain." } } } },
@@ -789,6 +815,9 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     const pathname = new URL(resource.url).pathname;
     const operation = document.paths[pathname]?.get;
     if (!operation) continue;
+    const metadata = RESOURCE_DISCOVERY_METADATA[pathname];
+    operation.operationId = metadata.operationId;
+    operation.tags = metadata.tags;
     operation["x-payment-info"] = profile === "mpp"
       ? mppPaymentInfoFor(resource)
       : agentCashPaymentInfoFor(resource);
@@ -800,6 +829,19 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
           : { type: "object", additionalProperties: true },
       },
     };
+  }
+  const freeOperationMetadata = {
+    "/v0/cards.json": { operationId: "listPlatformHealthCards", tags: ["Settlement Radar"] },
+    "/v0/commerce-demand.json": { operationId: "getCommerceDemand", tags: ["Settlement Radar"] },
+    "/.well-known/agent-card.json": { operationId: "getA2aAgentCard", tags: ["A2A"] },
+    "/a2a/message:send": { operationId: "sendA2aMessage", tags: ["A2A"] },
+    "/platforms": { operationId: "viewSettlementRadar", tags: ["Settlement Radar"] },
+  };
+  for (const [pathname, metadata] of Object.entries(freeOperationMetadata)) {
+    const pathItem = document.paths[pathname];
+    const operation = pathItem.get || pathItem.post;
+    operation.operationId = metadata.operationId;
+    operation.tags = metadata.tags;
   }
   for (const pathItem of Object.values(document.paths)) {
     for (const operation of Object.values(pathItem)) {
@@ -1701,7 +1743,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.9.2" },
+      serverInfo: { name: "x402-data-gateway", version: "1.9.3" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to extract") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to read as Markdown") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },

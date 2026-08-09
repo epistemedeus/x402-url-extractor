@@ -67,12 +67,14 @@ canonical method, path, and sorted query. Both protocols participate in
 privacy-safe telemetry and request replay, and OpenAPI 3.1 exposes valid
 per-operation `x-payment-info` offers.
 
-Version 1.9.2 generates two registry-specific discovery views from the same
+Version 1.9.3 generates two registry-specific discovery views from the same
 route and price source. `/openapi.json` carries the structured USD price,
 protocol declarations, agent guidance, public-route auth declarations, and
 truthful response schemas used by AgentCash and MPPScan.
 `/mpp-openapi.json` carries official MPP `offers[]` without incompatible flat
-fields. Runtime 402 challenges remain authoritative for both views.
+fields. Stable operation IDs and capability tags make the public catalog easier
+for agents to search, rank, and invoke. Runtime 402 challenges remain
+authoritative for both views.
 
 Version 1.8 adds a deterministic paid opportunity preflight. The caller supplies
 reward, execution time, hourly opportunity cost, compute, mandatory spend,
