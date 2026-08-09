@@ -181,6 +181,13 @@ the JSON object its handler actually returns rather than a raw Markdown string.
 One route-keyed contract map drives the x402 challenge, OpenAPI, and action
 catalog to prevent the three machine surfaces from drifting apart.
 
+Version 1.11.16 links the versioned, credential-free
+[`agent-payment-policy`](https://github.com/epistemedeus/agent-payment-policy)
+reference from the machine root, OpenAPI service metadata, and `llms.txt`. The
+reference has no wallet executor, payment signer, custody, or hosted paid
+verifier. It gives machine buyers a stable policy and evidence primitive without
+changing the merchant's routes, prices, payment requirements, or settlement.
+
 Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
 before startup. Six newer routes previously settled successfully while Coinbase
 rejected their discovery metadata because their output examples omitted fields
