@@ -165,6 +165,15 @@ four common client expectations, `/mcp/sse`, `/mcp/messages`, `/mcp/tools`, and
 Public aggregates expose only route counts and secret-keyed actor totals. A
 compatibility route is justified only by repeated independent use or conversion.
 
+Version 1.11.13 repairs the pre-payment response contract exposed to machine
+buyers. All thirteen routes already authored explicit JSON output schemas, but
+the Bazaar v2 helper expects that schema under `output.schema`; the previous
+top-level `outputSchema` field was silently ignored. A single tested adapter now
+places each authored schema at the protocol-defined location, so an unpaid 402
+challenge exposes both the example and the concrete required response fields
+before an agent authorizes payment. Routes, inputs, prices, settlement, and
+handlers are unchanged.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured

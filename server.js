@@ -19,7 +19,7 @@ import express from "express";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
-import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
+import { declareDiscoveryContract } from "./discovery-contract.mjs";
 import {
   PAYMENT_IDENTIFIER,
   declarePaymentIdentifierExtension,
@@ -804,7 +804,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.11.12",
+      version: "1.11.13",
       description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, wallet context, and Morpho decision evidence. Pay per call in Base USDC through x402 or native MPP.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
@@ -998,7 +998,7 @@ const x402Paywall = paymentMiddleware(
         // --- Bazaar / discovery metadata: tells agents exactly how to call us ---
         extensions: {
           ...COMMON_COMMERCE_EXTENSIONS,
-          ...declareDiscoveryExtension({
+          ...declareDiscoveryContract({
             input: { url: "https://example.com" },
             inputSchema: {
               type: "object",
@@ -1043,7 +1043,7 @@ const x402Paywall = paymentMiddleware(
         mimeType: "application/json",
         extensions: {
           ...COMMON_COMMERCE_EXTENSIONS,
-          ...declareDiscoveryExtension({
+          ...declareDiscoveryContract({
             input: { url: "https://example.com" },
             inputSchema: {
               type: "object",
@@ -1075,7 +1075,7 @@ const x402Paywall = paymentMiddleware(
         mimeType: "application/json",
         extensions: {
           ...COMMON_COMMERCE_EXTENSIONS,
-          ...declareDiscoveryExtension({
+          ...declareDiscoveryContract({
             input: { repo: "owner/name" },
             inputSchema: {
               type: "object",
@@ -1107,7 +1107,7 @@ const x402Paywall = paymentMiddleware(
         mimeType: "application/json",
         extensions: {
           ...COMMON_COMMERCE_EXTENSIONS,
-          ...declareDiscoveryExtension({
+          ...declareDiscoveryContract({
             input: { site: "https://example-clinic.com", vertical: "med-spas", city: "Austin" },
             inputSchema: {
               type: "object",
@@ -1144,7 +1144,7 @@ const x402Paywall = paymentMiddleware(
         mimeType: "application/json",
         extensions: {
           ...COMMON_COMMERCE_EXTENSIONS,
-          ...declareDiscoveryExtension({
+          ...declareDiscoveryContract({
             input: { domain: "stripe.com" },
             inputSchema: {
               type: "object",
@@ -1187,7 +1187,7 @@ const x402Paywall = paymentMiddleware(
         mimeType: "application/json",
         extensions: {
           ...COMMON_COMMERCE_EXTENSIONS,
-          ...declareDiscoveryExtension({
+          ...declareDiscoveryContract({
             input: { domain: "stripe.com", vertical: "fintech", city: "San Francisco" },
             inputSchema: {
               type: "object",
@@ -1235,7 +1235,7 @@ const x402Paywall = paymentMiddleware(
         mimeType: "application/json",
         extensions: {
           ...COMMON_COMMERCE_EXTENSIONS,
-          ...declareDiscoveryExtension({
+          ...declareDiscoveryContract({
             input: { address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" },
             inputSchema: {
               type: "object",
@@ -1279,7 +1279,7 @@ const x402Paywall = paymentMiddleware(
         mimeType: "application/json",
         extensions: {
           ...COMMON_COMMERCE_EXTENSIONS,
-          ...declareDiscoveryExtension({
+          ...declareDiscoveryContract({
             input: {
               address: "0x4352Cc849b33a936Ad93bB109aFDec1c89653b4f",
               shocks: "-10,-20,-30",
@@ -1324,7 +1324,7 @@ const x402Paywall = paymentMiddleware(
         mimeType: "application/json",
         extensions: {
           ...COMMON_COMMERCE_EXTENSIONS,
-          ...declareDiscoveryExtension({
+          ...declareDiscoveryContract({
             input: {
               address: "0x4352Cc849b33a936Ad93bB109aFDec1c89653b4f",
               targetHealthFactor: 1.25,
@@ -1376,7 +1376,7 @@ const x402Paywall = paymentMiddleware(
         mimeType: "application/json",
         extensions: {
           ...COMMON_COMMERCE_EXTENSIONS,
-          ...declareDiscoveryExtension({
+          ...declareDiscoveryContract({
             input: {
               marketId: "0xbd9754505799c229af1b85a02e4f5cda74603411ba7edb585025eefd7ef9e5f4",
             },
@@ -1425,7 +1425,7 @@ const x402Paywall = paymentMiddleware(
         mimeType: "application/json",
         extensions: {
           ...COMMON_COMMERCE_EXTENSIONS,
-          ...declareDiscoveryExtension({
+          ...declareDiscoveryContract({
             input: {
               transactionHash: "0xa8d73ec64db7a9e801ab78956133db0799e54e1a9c4a58231cd31ec3b90d9dc6",
             },
@@ -1468,7 +1468,7 @@ const x402Paywall = paymentMiddleware(
         mimeType: "application/json",
         extensions: {
           ...COMMON_COMMERCE_EXTENSIONS,
-          ...declareDiscoveryExtension({
+          ...declareDiscoveryContract({
             input: {
               platform: "taskmarket",
               rewardUsd: 10,
@@ -1541,7 +1541,7 @@ const x402Paywall = paymentMiddleware(
         mimeType: "application/json",
         extensions: {
           ...COMMON_COMMERCE_EXTENSIONS,
-          ...declareDiscoveryExtension({
+          ...declareDiscoveryContract({
             input: {
               origin: "https://agents.samedaydesk.com",
               intent: "extract a public web page into structured JSON metadata headings links and JSON-LD",
@@ -1878,7 +1878,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.11.12" },
+      serverInfo: { name: "x402-data-gateway", version: "1.11.13" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
