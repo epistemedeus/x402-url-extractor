@@ -26,6 +26,7 @@ import {
   paymentIdentifierResourceServerExtension,
 } from "@x402/extensions/payment-identifier";
 import { createFacilitatorConfig } from "@coinbase/x402";
+import { createCommerceTrust } from "./commerce-trust.mjs";
 import { extract, readMarkdown } from "./extract.mjs";
 import { scanRepo } from "./scan.mjs";
 import { schemaforge } from "./schemaforge.mjs";
@@ -180,8 +181,17 @@ const resourceServer = new x402ResourceServer(facilitatorClient).register(
   new ExactEvmScheme()
 );
 resourceServer.registerExtension(paymentIdentifierResourceServerExtension);
+const commerceTrust = createCommerceTrust({
+  privateKey: process.env.RECEIPT_SIGNING_PRIVATE_KEY,
+  network: NETWORK,
+  includeTxHash: true,
+});
+if (commerceTrust.enabled) {
+  resourceServer.registerExtension(commerceTrust.resourceServerExtension);
+}
 const COMMON_COMMERCE_EXTENSIONS = {
   [PAYMENT_IDENTIFIER]: declarePaymentIdentifierExtension(false),
+  ...commerceTrust.routeExtensions,
 };
 
 // ---------------------------------------------------------------------------
@@ -310,6 +320,12 @@ app.get("/healthz", async (_req, res) => {
       storage: telemetryStorage,
       publicAggregate: "/v0/commerce-demand.json",
       privacy: "aggregate external observations only; raw event data is not exposed",
+    },
+    trustArtifacts: {
+      paymentIdentifier: true,
+      signedOfferReceipt: commerceTrust.enabled,
+      receiptSigner: commerceTrust.signerAddress,
+      receiptKeyId: commerceTrust.keyId,
     },
     the402: {
       configured: Boolean(THE402_API_KEY && THE402_WEBHOOK_SECRET),
@@ -620,7 +636,7 @@ app.get("/alerts", (_req, res) => {
 app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
   res.json({
     openapi: "3.0.3",
-    info: { title: "SameDayDesk machine commerce gateway", version: "1.5.0", description: `Machine-discoverable paid capabilities on Base: Morpho position risk ${MORPHO_POSITION_PRICE}, protection plans ${MORPHO_PROTECTION_PRICE}, market underwriting ${MORPHO_MARKET_UNDERWRITE_PRICE}, PreLiquidation replay ${MORPHO_PRELIQUIDATION_REPLAY_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
+    info: { title: "SameDayDesk machine commerce gateway", version: "1.6.0", description: `Machine-discoverable paid capabilities on Base: Morpho position risk ${MORPHO_POSITION_PRICE}, protection plans ${MORPHO_PROTECTION_PRICE}, market underwriting ${MORPHO_MARKET_UNDERWRITE_PRICE}, PreLiquidation replay ${MORPHO_PRELIQUIDATION_REPLAY_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
     servers: [{ url: PUBLIC_URL }],
     paths: {
       "/v0/cards.json": { get: { summary: "Free incident-backed platform health cards. Categories are not calibrated scores.", responses: { "200": { description: "SameDayDesk platform health index v0" } } } },
@@ -1404,7 +1420,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.5.0" },
+      serverInfo: { name: "x402-data-gateway", version: "1.6.0" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to extract") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to read as Markdown") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
