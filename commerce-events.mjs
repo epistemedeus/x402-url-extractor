@@ -420,6 +420,7 @@ export function createCommerceTelemetry({
     const agentChallengeByRoute = emptyCounts();
     const agentChallengeBySourceRoute = Object.create(null);
     const agentChallengeActors = new Map();
+    const agentChallengeFirstAt = new Map();
     let agentPaidRouteObservations = 0;
     let agentChallengeObservations = 0;
     for (const event of agentDiscoveryEvents) {
@@ -441,6 +442,11 @@ export function createCommerceTelemetry({
           if (!agentChallengeBySourceRoute[source]) agentChallengeBySourceRoute[source] = emptyCounts();
           increment(agentChallengeBySourceRoute[source], event.route);
           agentChallengeActors.set(event.actor, (agentChallengeActors.get(event.actor) || 0) + 1);
+          const observedAt = Date.parse(event.ts);
+          const prior = agentChallengeFirstAt.get(event.actor);
+          if (Number.isFinite(observedAt) && (!Number.isFinite(prior) || observedAt < prior)) {
+            agentChallengeFirstAt.set(event.actor, observedAt);
+          }
         }
       }
     }
@@ -461,6 +467,11 @@ export function createCommerceTelemetry({
     const paidSuccessByClassRoute = Object.create(null);
     const independentPaidSuccessByDiscoverySource = emptyCounts();
     const independentPaidActors = new Map();
+    const agentChallengeConvertedActors = new Map();
+    const independentAgentChallengeConvertedActors = new Map();
+    const agentChallengeConvertedBySource = emptyCounts();
+    const agentChallengeConvertedByClass = emptyCounts();
+    let agentChallengeConvertedPaidSuccesses = 0;
     let paymentIdentifierEvents = 0;
     let replaySuccessEvents = 0;
     let settlementReferenceEligiblePaidSuccesses = 0;
@@ -506,6 +517,23 @@ export function createCommerceTelemetry({
         if (paymentClass === "independent") {
           independentPaidActors.set(paidActor, (independentPaidActors.get(paidActor) || 0) + 1);
           increment(independentPaidSuccessByDiscoverySource, discoverySource);
+        }
+        const challengeFirstAt = agentChallengeFirstAt.get(event.actor);
+        const paidAt = Date.parse(event.ts);
+        if (Number.isFinite(challengeFirstAt) && Number.isFinite(paidAt) && paidAt >= challengeFirstAt) {
+          agentChallengeConvertedPaidSuccesses += 1;
+          agentChallengeConvertedActors.set(
+            event.actor,
+            (agentChallengeConvertedActors.get(event.actor) || 0) + 1,
+          );
+          increment(agentChallengeConvertedBySource, discoverySource);
+          increment(agentChallengeConvertedByClass, paymentClass);
+          if (paymentClass === "independent") {
+            independentAgentChallengeConvertedActors.set(
+              event.actor,
+              (independentAgentChallengeConvertedActors.get(event.actor) || 0) + 1,
+            );
+          }
         }
         if (settlementEvidenceSinceMs !== null && Date.parse(event.ts) >= settlementEvidenceSinceMs) {
           settlementReferenceEligiblePaidSuccesses += 1;
@@ -560,6 +588,14 @@ export function createCommerceTelemetry({
       agentChallengeBySource,
       agentChallengeByRoute,
       agentChallengeBySourceRoute,
+      agentChallengeConvertedPaidSuccesses,
+      agentChallengeConvertedActors: agentChallengeConvertedActors.size,
+      independentAgentChallengeConvertedActors: independentAgentChallengeConvertedActors.size,
+      agentChallengeActorConversionRate: agentChallengeActors.size
+        ? agentChallengeConvertedActors.size / agentChallengeActors.size
+        : null,
+      agentChallengeConvertedBySource,
+      agentChallengeConvertedByClass,
       paidSuccessByRoute,
       paidSuccessByProtocol,
       paidSuccessByDiscoverySource,
@@ -590,7 +626,7 @@ export function createCommerceTelemetry({
       agentDiscoveryPolicy: "After the declared machine-discovery baseline, recognized crawler and agent-indexer user-agent families are reduced to a controlled source label at ingestion. SameDayDesk-owned monitor user agents are excluded. Raw user-agent strings and network addresses are not retained in the public snapshot. Paid-route observations and HTTP 402 challenge delivery are reported separately by controlled source and route so discovery reach can be distinguished from payment conversion. These observations are not authenticated referrals, buyer intent, or demand.",
       unmatched: unmatchedRequests,
       paymentClassPolicy: "Explicit known-payer rules classify internal, marketplace validation, incentivized, affiliated, or independently confirmed buyers. Unknown or missing payer identities remain unclassified and never become independent by inference.",
-      discoveryConversionPolicy: "A submitted payment credential overrides crawler classification so paying agents remain in economic telemetry. Controlled user-agent source labels attribute the client channel but are self-declared and do not independently authenticate a registry referral. SameDayDesk owner monitors remain excluded before this rule.",
+      discoveryConversionPolicy: "A submitted payment credential overrides crawler classification so paying agents remain in economic telemetry. Controlled user-agent source labels attribute the client channel but are self-declared and do not independently authenticate a registry referral. Challenge-to-paid conversion uses the same secret-keyed network-and-user-agent actor before and after the challenge and is therefore a conservative continuity lower bound, not an identity claim. SameDayDesk owner monitors remain excluded before this rule.",
       settlementEvidencePolicy: "After the declared settlement-evidence baseline, a successful paid response should carry a valid Base transaction reference in PAYMENT-RESPONSE or Payment-Receipt. Raw response headers and transaction references remain private; public output exposes only coverage counts by evidence class.",
       boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, SameDayDesk-owned monitor, crawler, and exploit-probe traffic is excluded from demand, but unidentified automated fetchers can remain. Separately reported agent-discovery observations begin at their own declared baseline and are user-agent-declared crawler or indexer fetches of known discovery and paid routes; SameDayDesk-owned monitor user agents are excluded, and the remainder are neither authenticated catalog referrals nor buyer intent. Unmatched requests are acquisition misses, not intents. Semantic-unmatched counts are a high-precision route-keyword heuristic and still do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Payment classes are applied against those pseudonyms at read time, so known marketplace verification can be reclassified without storing a raw address. Unknown payers remain unclassified. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Settlement-reference coverage begins only at its declared baseline; raw transaction references remain on the private volume and are not returned publicly. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
     };

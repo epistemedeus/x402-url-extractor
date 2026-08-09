@@ -188,6 +188,10 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.equal(snapshot.agentChallengeByRoute["/defi/morpho-position"], 1);
   assert.equal(snapshot.agentChallengeByRoute["/deep-audit"], 1);
   assert.equal(snapshot.agentChallengeBySourceRoute["generic-agent-indexer"]["/extract"], 1);
+  assert.equal(snapshot.agentChallengeConvertedPaidSuccesses, 0);
+  assert.equal(snapshot.agentChallengeConvertedActors, 0);
+  assert.equal(snapshot.independentAgentChallengeConvertedActors, 0);
+  assert.equal(snapshot.agentChallengeActorConversionRate, 0);
   assert.equal(snapshot.paidSuccessByClass.validation, 1);
   assert.equal(snapshot.paidSuccessByClassRoute.validation["/defi/morpho-position"], 1);
   assert.equal(snapshot.settlementReferenceEligiblePaidSuccesses, 1);
@@ -266,6 +270,9 @@ test("only explicitly classified independent payers enter independent demand", a
   assert.equal(snapshot.agentPaidRouteObservations, 0);
   assert.equal(snapshot.agentChallengeObservations, 0);
   assert.equal(snapshot.agentChallengeRate, null);
+  assert.equal(snapshot.agentChallengeConvertedPaidSuccesses, 0);
+  assert.equal(snapshot.agentChallengeConvertedActors, 0);
+  assert.equal(snapshot.agentChallengeActorConversionRate, null);
   assert.equal(snapshot.independentPaidSuccessActors, 1);
   assert.equal(snapshot.repeatIndependentPaidSuccessActors, 1);
   assert.equal(snapshot.settlementReferenceEligiblePaidSuccesses, 2);
@@ -273,6 +280,55 @@ test("only explicitly classified independent payers enter independent demand", a
   assert.equal(snapshot.settlementReferenceCoverage, 0);
   assert.equal(snapshot.settlementEvidenceByClass.independent.missingReference, 2);
   assert.equal(JSON.stringify(snapshot).includes(payer), false);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("challenge conversion requires conservative same-actor continuity", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-challenge-conversion-"));
+  const payer = "0x3333333333333333333333333333333333333333";
+  const signature = Buffer.from(JSON.stringify({
+    payload: { authorization: { from: payer } },
+  })).toString("base64");
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "test-secret",
+    agentDiscoverySince: "2020-01-01T00:00:00.000Z",
+    payerClasses: [{ address: payer, class: "independent" }],
+  });
+
+  function run({ headers, ip, status }) {
+    const listeners = new Map();
+    const req = {
+      path: "/extract", url: "/extract", method: "GET",
+      headers, query: { url: "not-stored" }, ip, socket: {},
+    };
+    const res = {
+      statusCode: status,
+      once(name, listener) { listeners.set(name, listener); },
+      getHeader() { return undefined; },
+    };
+    telemetry.middleware(req, res, () => {});
+    listeners.get("finish")?.();
+  }
+
+  const userAgent = "Agent402/2.0";
+  run({ headers: { "user-agent": userAgent }, ip: "203.0.113.60", status: 402 });
+  run({ headers: { "user-agent": userAgent, "payment-signature": signature }, ip: "203.0.113.60", status: 200 });
+  run({ headers: { "user-agent": "DifferentBuyer/1.0", "payment-signature": signature }, ip: "203.0.113.61", status: 200 });
+
+  await telemetry.flush();
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.agentChallengeObservations, 1);
+  assert.equal(snapshot.agentChallengeActors, 1);
+  assert.equal(snapshot.agentChallengeConvertedPaidSuccesses, 1);
+  assert.equal(snapshot.agentChallengeConvertedActors, 1);
+  assert.equal(snapshot.independentAgentChallengeConvertedActors, 1);
+  assert.equal(snapshot.agentChallengeActorConversionRate, 1);
+  assert.equal(snapshot.agentChallengeConvertedBySource.agent402, 1);
+  assert.equal(snapshot.agentChallengeConvertedByClass.independent, 1);
+  assert.equal(snapshot.paidSuccessByClass.independent, 2);
+  assert.equal(JSON.stringify(snapshot).includes(payer), false);
+  assert.equal(JSON.stringify(snapshot).includes("not-stored"), false);
   await rm(dataDir, { recursive: true, force: true });
 });
 
@@ -345,6 +401,9 @@ test("machine discovery uses an independent baseline and excludes owned monitors
   assert.equal(snapshot.agentPaidRouteObservations, 0);
   assert.equal(snapshot.agentChallengeObservations, 0);
   assert.equal(snapshot.agentChallengeRate, null);
+  assert.equal(snapshot.agentChallengeConvertedPaidSuccesses, 0);
+  assert.equal(snapshot.agentChallengeConvertedActors, 0);
+  assert.equal(snapshot.agentChallengeActorConversionRate, null);
   assert.equal(snapshot.externalEvents, 0);
   await rm(dataDir, { recursive: true, force: true });
 });
