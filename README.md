@@ -82,7 +82,7 @@ and missing-reference counts by payment class. Raw headers and transaction
 references stay on the private volume. A missing reference becomes a material
 settlement-integrity event without exposing the reference itself.
 
-Version 1.11.0 content-negotiates the root without changing its machine
+Version 1.11.1 content-negotiates the root without changing its machine
 contract. Browser navigation with an explicit `Accept: text/html` receives a
 responsive human map of the thirteen tools, payment flow, and authoritative
 discovery links. JSON clients, curl's wildcard accept header, and agents keep
@@ -241,11 +241,12 @@ facilitator.
 
 The twelfth route, `/work/opportunity-preflight`, is live at 0.05 USDC and
 completed an owner-excluded settlement for integration and indexing QA. The
-thirteenth route, `/distribution/agent-discoverability-audit`, is live at 0.25
+thirteenth route, `/distribution/agent-discoverability-audit`, is live at 0.05
 USDC and productizes the brand-blind catalog benchmark used on SameDayDesk
 itself. It queries Bazaar, Agent402, Circle, and the official MPP catalog without
 catalog credentials or payments, preserves registry-native order, and reports
-coverage and rank as point-in-time observations rather than a composite score.
+coverage, rank, competitors above the target, and evidence-based next actions as
+point-in-time observations rather than a composite score.
 
 ---
 

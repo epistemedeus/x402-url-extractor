@@ -215,6 +215,7 @@ function summarizeSource(items, input) {
     targetRanks.push(index + 1);
     if (!input.route || item.route === input.route) expectedRouteRanks.push(index + 1);
   });
+  const bestTargetIndex = targetRanks.length ? targetRanks[0] - 1 : null;
   return {
     status: "ok",
     resultCount: items.length,
@@ -223,6 +224,13 @@ function summarizeSource(items, input) {
     bestTargetRank: targetRanks[0] ?? null,
     expectedRouteFound: input.route ? expectedRouteRanks.length > 0 : null,
     expectedRouteRanks: input.route ? expectedRouteRanks : [],
+    targetResults: items
+      .map((item, index) => ({ rank: index + 1, ...item }))
+      .filter((item) => targetMatch(item, input))
+      .slice(0, 5),
+    competitorsAboveTarget: bestTargetIndex === null
+      ? items.slice(0, 5).map((item, index) => ({ rank: index + 1, ...item }))
+      : items.slice(0, bestTargetIndex).slice(0, 5).map((item, index) => ({ rank: index + 1, ...item })),
     topResults: items.slice(0, 3).map((item, index) => ({ rank: index + 1, ...item })),
   };
 }
@@ -258,10 +266,35 @@ export async function agentDiscoverabilityAudit(rawInput, {
   const routeFoundSources = input.route
     ? availableSources.filter((source) => sources[source].expectedRouteFound)
     : [];
+  const findings = [];
+  const nextActions = [];
+  for (const source of SOURCE_ORDER) {
+    const observation = sources[source];
+    if (observation.status !== "ok") {
+      findings.push({ source, finding: "source_unavailable" });
+      nextActions.push({ source, action: "rerun_after_source_recovers", basis: "No rank conclusion is valid while the source is unavailable." });
+      continue;
+    }
+    if (!observation.targetFound) {
+      findings.push({ source, finding: "target_absent_from_ranked_results" });
+      nextActions.push({ source, action: "verify_listing_then_refresh_task_outcome_metadata", basis: "The target did not appear in the first ranked result window for this exact brand-blind intent." });
+      continue;
+    }
+    if (input.route && !observation.expectedRouteFound) {
+      findings.push({ source, finding: "origin_found_expected_route_absent", bestTargetRank: observation.bestTargetRank });
+      nextActions.push({ source, action: "index_or_reconcile_expected_route", basis: "The seller appeared, but the requested route did not." });
+      continue;
+    }
+    const band = observation.bestTargetRank <= 3 ? "top_3" : observation.bestTargetRank <= 10 ? "top_10" : "below_top_10";
+    findings.push({ source, finding: "target_ranked", bestTargetRank: observation.bestTargetRank, band });
+    if (observation.bestTargetRank > 3) {
+      nextActions.push({ source, action: "compare_task_outcome_language_with_competitors_above", basis: `${observation.bestTargetRank - 1} ranked result(s) appeared above the target for this intent.` });
+    }
+  }
   return {
     ok: true,
     product: "samedaydesk-agent-discoverability-audit",
-    version: "1.0.0",
+    version: "1.0.1",
     generatedAt: new Date(now).toISOString(),
     input: {
       origin: input.origin,
@@ -275,11 +308,15 @@ export async function agentDiscoverabilityAudit(rawInput, {
       availableSourceCount: availableSources.length,
       targetFoundSourceCount: foundSources.length,
       expectedRouteFoundSourceCount: input.route ? routeFoundSources.length : null,
+      topThreeSourceCount: foundSources.filter((source) => sources[source].bestTargetRank <= 3).length,
+      topTenSourceCount: foundSources.filter((source) => sources[source].bestTargetRank <= 10).length,
       foundSources,
       missingSources: availableSources.filter((source) => !sources[source].targetFound),
       unavailableSources: SOURCE_ORDER.filter((source) => sources[source].status !== "ok"),
     },
     sources,
+    findings,
+    nextActions,
     method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agent402, and Circle. MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata.",
     safety: {
       credentialsUsed: false,
@@ -291,4 +328,3 @@ export async function agentDiscoverabilityAudit(rawInput, {
     boundary: "This is a point-in-time discovery observation, not demand, conversion, reliability, or future-rank evidence. Runtime payment terms must still be preflighted before purchase.",
   };
 }
-

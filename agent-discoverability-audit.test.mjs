@@ -58,9 +58,14 @@ test("preserves registry ranks and identifies the target by origin or payTo", as
   }, { fetchImpl, now: 0 });
   assert.equal(result.summary.targetFoundSourceCount, 3);
   assert.equal(result.sources["coinbase-bazaar"].bestTargetRank, 2);
+  assert.equal(result.sources["coinbase-bazaar"].competitorsAboveTarget.length, 1);
+  assert.equal(result.sources["coinbase-bazaar"].targetResults[0].rank, 2);
   assert.equal(result.sources["agent402-router"].bestTargetRank, 1);
   assert.equal(result.sources["official-mpp-catalog"].expectedRouteFound, true);
   assert.deepEqual(result.summary.missingSources, ["circle-marketplace"]);
+  assert.equal(result.summary.topThreeSourceCount, 3);
+  assert.ok(result.findings.some((finding) => finding.source === "circle-marketplace" && finding.finding === "target_absent_from_ranked_results"));
+  assert.ok(result.nextActions.some((action) => action.source === "circle-marketplace"));
   assert.equal(result.safety.paymentSentToCatalogs, false);
   assert.equal(result.input.brandBlind, true);
 });
