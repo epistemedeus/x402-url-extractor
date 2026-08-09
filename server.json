@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.epistemedeus/x402-data-gateway",
-  "description": "Pay-per-call USDC tools for AI agents (x402/Base): company + wallet enrichment, web read, repo scan.",
-  "version": "1.0.0",
-  "websiteUrl": "https://x402-url-extractor-production.up.railway.app/",
+  "description": "Eight x402 tools settling USDC on Base: web data, repo risk, enrichment, audits, and Morpho risk.",
+  "version": "1.1.0",
+  "websiteUrl": "https://agents.samedaydesk.com/",
   "repository": {
     "url": "https://github.com/epistemedeus/x402-url-extractor",
     "source": "github"
@@ -11,7 +11,7 @@
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://x402-url-extractor-production.up.railway.app/mcp"
+      "url": "https://agents.samedaydesk.com/mcp"
     }
   ]
 }

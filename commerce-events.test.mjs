@@ -30,6 +30,8 @@ test("route classification preserves useful intent without recording opaque path
   assert.equal(classifyCommerceRoute("/swagger.json").route, "/openapi.json");
   assert.equal(classifyCommerceRoute("/SKILL.md").route, "/skill.md");
   assert.equal(classifyCommerceRoute("/api/actions").route, "/api/actions");
+  assert.equal(classifyCommerceRoute("/.well-known/agent.json").route, "/.well-known/agent-card.json");
+  assert.equal(classifyCommerceRoute("/a2a/message:send").route, "/a2a/message:send");
 });
 
 test("paid response classes separate challenge, validation, success, and failure", () => {

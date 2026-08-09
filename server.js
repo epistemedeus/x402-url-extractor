@@ -32,6 +32,14 @@ import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
 import { createCommerceTelemetry } from "./commerce-events.mjs";
 import {
+  A2A_VERSION,
+  buildAgentCard,
+  buildCatalogMessage,
+  validateA2aMessage,
+  validationProblem,
+  versionProblem,
+} from "./a2a-storefront.mjs";
+import {
   PLATFORM_HEALTH_SCHEMA,
   buildPlatformHealthResponse,
   getPlatformHealthCard,
@@ -167,6 +175,7 @@ const app = express();
 app.set("trust proxy", 1);
 app.use(express.json({
   limit: "16kb",
+  type: ["application/json", "application/*+json"],
   verify(req, _res, buffer) {
     req.rawBody = Buffer.from(buffer);
   },
@@ -362,6 +371,37 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/deep-audit`, amount: priceToAtomic(DEEP_AUDIT_PRICE), description: "Domain -> ONE complete AI-search-readiness audit: firmographics + tech stack + contact + DNS/email infra + a 0-100 AI-readiness score, PLUS a structured-data gap analysis with a paste-ready JSON-LD fix list and a combined letter grade. The bundled deep tier (enrich + schemaforge in one call). No auth, no API keys; pay-per-call USDC.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/defi/morpho-position`, amount: priceToAtomic(MORPHO_POSITION_PRICE), description: "Base address -> deterministic Morpho borrower position snapshot and collateral-price stress scenarios. Returns LTV, LLTV, health factor, liquidation headroom, source freshness, and scenario outcomes. Read-only indexed observation; direct RPC verification is required before execution.", mimeType: "application/json" },
 ];
+
+const machineActionCatalog = () => ({
+  schema: "samedaydesk.machine-actions.v1",
+  service: "SameDayDesk machine commerce gateway",
+  network: NETWORK,
+  settlement: "x402 exact USDC on Base",
+  payTo: PAY_TO,
+  actions: RESOURCES.map((resource) => {
+    const route = new URL(resource.url).pathname;
+    return {
+      name: route.replace(/^\//, "").replaceAll("/", "_"),
+      method: "GET",
+      route,
+      url: resource.url,
+      description: resource.description,
+      priceAtomicUsdc: resource.amount,
+      priceUsdc: Number(resource.amount) / 1e6,
+      mimeType: resource.mimeType,
+    };
+  }),
+  discovery: {
+    manifest: `${PUBLIC_URL}/.well-known/x402`,
+    openapi: `${PUBLIC_URL}/openapi.json`,
+    skill: `${PUBLIC_URL}/skill.md`,
+    mcp: `${PUBLIC_URL}/mcp`,
+    a2aAgentCard: `${PUBLIC_URL}/.well-known/agent-card.json`,
+  },
+});
+
+const agentCard = buildAgentCard({ publicUrl: PUBLIC_URL });
+
 app.get(["/.well-known/x402", "/.well-known/x402.json", "/x402.json", "/api/x402"], (_req, res) => {
   res.json({
     x402Version: 2,
@@ -401,6 +441,7 @@ Use this service when an agent needs deterministic web, company, wallet, AI-sear
 - OpenAPI: ${PUBLIC_URL}/openapi.json
 - Action catalog: ${PUBLIC_URL}/api/actions
 - MCP transport: POST ${PUBLIC_URL}/mcp
+- A2A agent card: ${PUBLIC_URL}/.well-known/agent-card.json
 
 ## Call and pay
 
@@ -420,32 +461,42 @@ Use this service when an agent needs deterministic web, company, wallet, AI-sear
 
 app.get("/api/actions", (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
+  return res.json(machineActionCatalog());
+});
+
+// A2A v1.0 machine-facing storefront. This is intentionally a bounded free
+// discovery agent: it returns the exact paid action catalog, then buyers call
+// and settle the chosen x402 HTTP or MCP action through the existing routes.
+app.get(["/.well-known/agent-card.json", "/.well-known/agent.json"], (_req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  return res.json(agentCard);
+});
+
+app.get("/a2a", (_req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
   return res.json({
-    schema: "samedaydesk.machine-actions.v1",
-    service: "SameDayDesk machine commerce gateway",
-    network: NETWORK,
-    settlement: "x402 exact USDC on Base",
-    payTo: PAY_TO,
-    actions: RESOURCES.map((resource) => {
-      const route = new URL(resource.url).pathname;
-      return {
-        name: route.replace(/^\//, "").replaceAll("/", "_"),
-        method: "GET",
-        route,
-        url: resource.url,
-        description: resource.description,
-        priceAtomicUsdc: resource.amount,
-        priceUsdc: Number(resource.amount) / 1e6,
-        mimeType: resource.mimeType,
-      };
-    }),
-    discovery: {
-      manifest: `${PUBLIC_URL}/.well-known/x402`,
-      openapi: `${PUBLIC_URL}/openapi.json`,
-      skill: `${PUBLIC_URL}/skill.md`,
-      mcp: `${PUBLIC_URL}/mcp`,
-    },
+    protocol: "A2A",
+    version: A2A_VERSION,
+    agentCard: `${PUBLIC_URL}/.well-known/agent-card.json`,
+    sendMessage: `${PUBLIC_URL}/a2a/message:send`,
+    skill: "discover-x402-paid-actions",
   });
+});
+
+app.post("/a2a/message:send", (req, res) => {
+  const requestedVersion = String(req.get("A2A-Version") || A2A_VERSION);
+  if (requestedVersion !== A2A_VERSION) {
+    return res.status(400).type("application/problem+json").send(versionProblem(requestedVersion));
+  }
+  const invalid = validateA2aMessage(req.body);
+  if (invalid) {
+    return res.status(400).type("application/problem+json").send(validationProblem(invalid));
+  }
+  res.set("Cache-Control", "no-store");
+  return res.type("application/a2a+json").send(buildCatalogMessage({
+    request: req.body,
+    catalog: machineActionCatalog(),
+  }));
 });
 // --- /llms.txt: agent/LLM-native discovery surface (llmstxt.org convention).
 // Free route. Tells crawling LLM agents what we sell and exactly how to pay (x402),
@@ -476,6 +527,7 @@ ${line("/deep-audit", DEEP_AUDIT_PRICE, "domain -> bundled AI-search-readiness a
 - OpenAPI: ${PUBLIC_URL}/openapi.json
 - Skill contract: ${PUBLIC_URL}/skill.md
 - Action catalog: ${PUBLIC_URL}/api/actions
+- A2A agent card: ${PUBLIC_URL}/.well-known/agent-card.json
 - Aggregate demand telemetry: ${PUBLIC_URL}/v0/commerce-demand.json
 - Source: https://github.com/epistemedeus/x402-url-extractor
 `);
@@ -546,6 +598,8 @@ app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
     paths: {
       "/v0/cards.json": { get: { summary: "Free incident-backed platform health cards. Categories are not calibrated scores.", responses: { "200": { description: "SameDayDesk platform health index v0" } } } },
       "/v0/commerce-demand.json": { get: { summary: "Privacy-safe aggregate external machine-commerce observations.", parameters: [{ name: "days", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 365, default: 90 } }], responses: { "200": { description: "Aggregate discovery, challenge, paid-success, and unmatched-intent counts. Known internal and crawler traffic is excluded; unidentified automation can remain." } } } },
+      "/.well-known/agent-card.json": { get: { summary: "A2A v1.0 agent card for the free machine-commerce storefront.", responses: { "200": { description: "A2A AgentCard" } } } },
+      "/a2a/message:send": { post: { summary: "Return the exact-price x402 action catalog as an A2A direct message.", responses: { "200": { description: "A2A message containing the action catalog" }, "400": { description: "Invalid request or unsupported A2A version" } } } },
       "/platforms": { get: { summary: "Human-readable Settlement Radar health cards.", responses: { "200": { description: "HTML platform health index" } } } },
       "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "structured data" }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
       "/read": { get: { summary: RESOURCES[1].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "markdown" }, "402": { description: `payment required (x402, ${READ_PRICE} USDC base)` } } } },
@@ -1034,6 +1088,8 @@ app.get("/", (_req, res) => {
       actions: "/api/actions",
       llms: "/llms.txt",
       mcp: "POST /mcp",
+      a2aAgentCard: "/.well-known/agent-card.json",
+      a2aSendMessage: "POST /a2a/message:send",
       aggregateDemand: "/v0/commerce-demand.json",
       flow: "discover -> validate schema and price -> pay -> call -> receive deterministic result and receipt",
     },

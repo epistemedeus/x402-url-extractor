@@ -13,6 +13,7 @@ structured data generation, and AI-search readiness audits.
 - OpenAPI: https://agents.samedaydesk.com/openapi.json
 - Skill contract: https://agents.samedaydesk.com/skill.md
 - Action catalog: https://agents.samedaydesk.com/api/actions
+- A2A agent card: https://agents.samedaydesk.com/.well-known/agent-card.json
 - Settlement Radar: https://agents.samedaydesk.com/platforms
 - Platform health JSON: https://agents.samedaydesk.com/v0/cards.json
 - Aggregate machine-demand telemetry: https://agents.samedaydesk.com/v0/commerce-demand.json
@@ -49,6 +50,11 @@ actual MCP discovery and paid tool calls use streamable HTTP at `POST /mcp`.
 Agents that prefer a compact instruction contract can read `/skill.md` (or
 `/SKILL.md`), while `/api/actions` returns the eight canonical GET actions with
 their URL, description, exact atomic USDC price, MIME type, network, and payTo.
+The A2A v1.0 card at `/.well-known/agent-card.json` advertises one bounded free
+skill, `discover-x402-paid-actions`. `POST /a2a/message:send` returns that exact
+catalog as an A2A direct message, giving A2A clients a standards-based path from
+agent discovery to the existing paid x402 actions without claiming arbitrary
+task execution.
 
 The Agoragentic callback is a separate marketplace distribution bridge. The
 marketplace handles buyer routing, settlement, and seller accounting, while the
