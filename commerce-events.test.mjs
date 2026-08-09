@@ -82,6 +82,9 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   run({ path: "/.env.production", status: 404, headers: { "user-agent": "Mozilla/5.0" } });
   run({ path: "/.git/HEAD", status: 404, headers: { "user-agent": "Mozilla/5.0" } });
   run({ path: "/wp-json/", status: 404, headers: { "user-agent": "Mozilla/5.0" } });
+  run({ path: "/api/config", status: 404, headers: { "user-agent": "Mozilla/5.0" } });
+  run({ path: "/js/env.js", status: 404, headers: { "user-agent": "Mozilla/5.0" } });
+  run({ path: "/deep-audit", status: 402, headers: { "user-agent": "litebeam-probe/1.0" } });
 
   await telemetry.flush();
   const storage = await telemetry.storageStatus();
