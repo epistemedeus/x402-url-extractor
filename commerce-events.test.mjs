@@ -75,7 +75,11 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
 
   run({ path: "/.well-known/x402", status: 200 });
   run({ path: "/defi/morpho-position", status: 402, query: { address: "secret-value" } });
-  run({ path: "/defi/morpho-position", status: 200, headers: { "payment-signature": "not-stored" } });
+  const paymentSignature = Buffer.from(JSON.stringify({
+    payload: { authorization: { from: "0x1111111111111111111111111111111111111111" } },
+    extensions: { "payment-identifier": { info: { id: "order_1234567890abcdef" } } },
+  })).toString("base64");
+  run({ path: "/defi/morpho-position", status: 200, headers: { "payment-signature": paymentSignature } });
   run({ path: "/mcp", status: 200 });
   run({ path: "/owner", status: 404, headers: { "x-samedaydesk-internal": "owner-canary" } });
   run({ path: "/crawler", status: 404, headers: { "user-agent": "ExampleBot/1.0" } });
@@ -102,10 +106,15 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.equal(snapshot.byResult.discovery, 1);
   assert.equal(snapshot.byResult.challenge, 1);
   assert.equal(snapshot.byResult.paid_success, 1);
+  assert.equal(snapshot.paidSuccessActors, 1);
+  assert.equal(snapshot.repeatPaidSuccessActors, 0);
+  assert.equal(snapshot.paidSuccessByRoute["/defi/morpho-position"], 1);
+  assert.equal(snapshot.paymentIdentifierEvents, 1);
   assert.equal(snapshot.byResult.protocol_discovery, 1);
   assert.equal(JSON.stringify(snapshot).includes("secret-value"), false);
-  assert.equal(JSON.stringify(snapshot).includes("not-stored"), false);
-  assert.equal(JSON.stringify(snapshot).includes("actor"), false);
+  assert.equal(JSON.stringify(snapshot).includes("0x1111111111111111111111111111111111111111"), false);
+  assert.equal(JSON.stringify(snapshot).includes("order_1234567890abcdef"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(snapshot, "actors"), false);
 
   await rm(dataDir, { recursive: true, force: true });
 });

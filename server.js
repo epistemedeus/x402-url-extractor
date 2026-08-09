@@ -20,6 +20,11 @@ import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { declareDiscoveryExtension } from "@x402/extensions/bazaar";
+import {
+  PAYMENT_IDENTIFIER,
+  declarePaymentIdentifierExtension,
+  paymentIdentifierResourceServerExtension,
+} from "@x402/extensions/payment-identifier";
 import { createFacilitatorConfig } from "@coinbase/x402";
 import { extract, readMarkdown } from "./extract.mjs";
 import { scanRepo } from "./scan.mjs";
@@ -174,6 +179,10 @@ const resourceServer = new x402ResourceServer(facilitatorClient).register(
   NETWORK,
   new ExactEvmScheme()
 );
+resourceServer.registerExtension(paymentIdentifierResourceServerExtension);
+const COMMON_COMMERCE_EXTENSIONS = {
+  [PAYMENT_IDENTIFIER]: declarePaymentIdentifierExtension(false),
+};
 
 // ---------------------------------------------------------------------------
 // 3. APP + PAID ROUTE
@@ -611,7 +620,7 @@ app.get("/alerts", (_req, res) => {
 app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
   res.json({
     openapi: "3.0.3",
-    info: { title: "SameDayDesk machine commerce gateway", version: "1.4.0", description: `Machine-discoverable paid capabilities on Base: Morpho position risk ${MORPHO_POSITION_PRICE}, protection plans ${MORPHO_PROTECTION_PRICE}, market underwriting ${MORPHO_MARKET_UNDERWRITE_PRICE}, PreLiquidation replay ${MORPHO_PRELIQUIDATION_REPLAY_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
+    info: { title: "SameDayDesk machine commerce gateway", version: "1.5.0", description: `Machine-discoverable paid capabilities on Base: Morpho position risk ${MORPHO_POSITION_PRICE}, protection plans ${MORPHO_PROTECTION_PRICE}, market underwriting ${MORPHO_MARKET_UNDERWRITE_PRICE}, PreLiquidation replay ${MORPHO_PRELIQUIDATION_REPLAY_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
     servers: [{ url: PUBLIC_URL }],
     paths: {
       "/v0/cards.json": { get: { summary: "Free incident-backed platform health cards. Categories are not calibrated scores.", responses: { "200": { description: "SameDayDesk platform health index v0" } } } },
@@ -692,6 +701,7 @@ app.use(
         mimeType: "application/json",
         // --- Bazaar / discovery metadata: tells agents exactly how to call us ---
         extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryExtension({
             input: { url: "https://example.com" },
             inputSchema: {
@@ -736,6 +746,7 @@ app.use(
           "URL -> full page content as clean Markdown, ready for LLM context. Strips nav/ads/scripts, preserves headings/links/lists. Handles redirects, timeouts, size caps, SSRF. The reliable web-reader agents need before feeding a page to a model.",
         mimeType: "application/json",
         extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryExtension({
             input: { url: "https://example.com" },
             inputSchema: {
@@ -767,6 +778,7 @@ app.use(
           "Static supply-chain SECURITY scan of a public GitHub repo BEFORE an agent installs/runs it (a dependency, a Claude/MCP skill, an MCP server). Flags exfil sinks, obfuscated code execution, credential-file reads, env-harvest+network, install-time curl|bash. Returns risk = clean|suspicious|dangerous + findings. Static only, never runs the code. Low false positives.",
         mimeType: "application/json",
         extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryExtension({
             input: { repo: "owner/name" },
             inputSchema: {
@@ -798,6 +810,7 @@ app.use(
           "Business website -> deterministic, paste-ready JSON-LD bundle plus a live structured-data gap analysis and ranked fixes. Covers local business and service, FAQ, offer catalog, reviews, geo, and opening hours. Rating and review fields remain explicit placeholders for the business's real values.",
         mimeType: "application/json",
         extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryExtension({
             input: { site: "https://example-clinic.com", vertical: "med-spas", city: "Austin" },
             inputSchema: {
@@ -834,6 +847,7 @@ app.use(
           "Public domain -> structured company intelligence for agents: identity, keywords, tech stack, social and contact surface, DNS and email infrastructure, and AI-search-readiness signals with a 0-100 score. Public data only; no account, API key, or subscription.",
         mimeType: "application/json",
         extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryExtension({
             input: { domain: "stripe.com" },
             inputSchema: {
@@ -876,6 +890,7 @@ app.use(
           "Domain -> one complete AI-search-readiness audit (firmographics + tech + contact + DNS/email infra + a 0-100 AI-readiness score + a structured-data gap analysis with a paste-ready JSON-LD fix list + a combined letter grade). The bundled deep tier = enrich + schemaforge in one call. Public data only; no auth, no API keys, no subscription.",
         mimeType: "application/json",
         extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryExtension({
             input: { domain: "stripe.com", vertical: "fintech", city: "San Francisco" },
             inputSchema: {
@@ -923,6 +938,7 @@ app.use(
           "Base address -> agent-ready on-chain profile: EOA or contract, ETH and major-token holdings, token or NFT metadata, EIP-1967 proxy detection, activity, and a derived profile label. Uses public Base mainnet RPC with no account or API key. Useful before an agent sends funds, swaps, or calls a contract.",
         mimeType: "application/json",
         extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryExtension({
             input: { address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" },
             inputSchema: {
@@ -966,6 +982,7 @@ app.use(
         description: RESOURCES[7].description,
         mimeType: "application/json",
         extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryExtension({
             input: {
               address: "0x4352Cc849b33a936Ad93bB109aFDec1c89653b4f",
@@ -1010,6 +1027,7 @@ app.use(
         description: RESOURCES[8].description,
         mimeType: "application/json",
         extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryExtension({
             input: {
               address: "0x4352Cc849b33a936Ad93bB109aFDec1c89653b4f",
@@ -1061,6 +1079,7 @@ app.use(
         description: RESOURCES[9].description,
         mimeType: "application/json",
         extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryExtension({
             input: {
               marketId: "0xbd9754505799c229af1b85a02e4f5cda74603411ba7edb585025eefd7ef9e5f4",
@@ -1109,6 +1128,7 @@ app.use(
         description: RESOURCES[10].description,
         mimeType: "application/json",
         extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
           ...declareDiscoveryExtension({
             input: {
               transactionHash: "0xa8d73ec64db7a9e801ab78956133db0799e54e1a9c4a58231cd31ec3b90d9dc6",
@@ -1384,7 +1404,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.4.0" },
+      serverInfo: { name: "x402-data-gateway", version: "1.5.0" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to extract") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to read as Markdown") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },

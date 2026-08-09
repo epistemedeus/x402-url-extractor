@@ -5,6 +5,8 @@ import path from "node:path";
 const CRAWLER_PATTERN = /bot|crawler|spider|slurp|uptime|monitor|observer|probe|indexer|headless|preview|liveness|healthcheck|sentineloracle|mcpbeat|agentreeve|agent402|trust[- ]?oracle/i;
 const EXPLOIT_PROBE_PATH_PATTERN = /(?:^|\/)\.(?:env|git)(?:[./]|$)|^\/(?:wp-admin|wp-login\.php|wp-json|xmlrpc\.php)(?:\/|$)|^\/(?:api\/)?(?:config|env|settings)(?:[./]|$)|^\/js\/(?:config|env)\.js$/i;
 const PAYMENT_HEADERS = ["payment-signature", "x-payment", "x-payment-signature"];
+const PAYMENT_ID_PATTERN = /^[A-Za-z0-9_-]{16,128}$/;
+const EVM_ADDRESS_PATTERN = /^0x[0-9a-fA-F]{40}$/;
 
 const EXACT_ROUTES = new Map([
   ["/", { route: "/", kind: "discovery" }],
@@ -85,6 +87,22 @@ function safeEqual(left, right) {
   const a = Buffer.from(left);
   const b = Buffer.from(right);
   return a.length === b.length && timingSafeEqual(a, b);
+}
+
+function decodePaymentMetadata(headers) {
+  const encoded = PAYMENT_HEADERS.map((name) => headerValue(headers, name)).find(Boolean);
+  if (!encoded) return { payer: null, paymentId: null };
+  try {
+    const payload = JSON.parse(Buffer.from(encoded.trim(), "base64").toString("utf8"));
+    const payerCandidate = payload?.payload?.authorization?.from || payload?.payload?.from || null;
+    const paymentIdCandidate = payload?.extensions?.["payment-identifier"]?.info?.id || null;
+    return {
+      payer: EVM_ADDRESS_PATTERN.test(String(payerCandidate || "")) ? String(payerCandidate).toLowerCase() : null,
+      paymentId: PAYMENT_ID_PATTERN.test(String(paymentIdCandidate || "")) ? String(paymentIdCandidate) : null,
+    };
+  } catch {
+    return { payer: null, paymentId: null };
+  }
 }
 
 export function classifyCommerceResult({ route, kind, matched, paymentPresent, status }) {
@@ -191,6 +209,13 @@ export function createCommerceTelemetry({
     const actorMaterial = `${req.ip || req.socket?.remoteAddress || "unknown"}|${userAgent}`;
     const actor = createHmac("sha256", secret).update(actorMaterial).digest("hex").slice(0, 24);
     const paymentPresent = PAYMENT_HEADERS.some((name) => Boolean(headerValue(headers, name)));
+    const paymentMetadata = decodePaymentMetadata(headers);
+    const paymentActor = paymentMetadata.payer
+      ? createHmac("sha256", secret).update(`payer:${paymentMetadata.payer}`).digest("hex").slice(0, 24)
+      : null;
+    const paymentIdentifier = paymentMetadata.paymentId
+      ? createHmac("sha256", secret).update(`payment-id:${paymentMetadata.paymentId}`).digest("hex").slice(0, 24)
+      : null;
     const queryKeys = Object.keys(req.query || {}).sort().slice(0, 20);
 
     res.once("finish", () => {
@@ -207,6 +232,8 @@ export function createCommerceTelemetry({
         kind: route.kind,
         queryKeys,
         paymentPresent,
+        paymentActor,
+        paymentIdentifier,
         status,
         result: classifyCommerceResult({
           route: route.route,
@@ -237,10 +264,20 @@ export function createCommerceTelemetry({
     const byRoute = emptyCounts();
     const unmatched = emptyCounts();
     const actors = new Map();
+    const paidActors = new Map();
+    const paidSuccessByRoute = emptyCounts();
+    let paymentIdentifierEvents = 0;
     for (const event of events) {
-      increment(byResult, eventResult(event));
+      const result = eventResult(event);
+      increment(byResult, result);
       increment(byRoute, event.route);
-      if (eventResult(event) === "unmatched") increment(unmatched, event.route);
+      if (result === "unmatched") increment(unmatched, event.route);
+      if (event.paymentIdentifier) paymentIdentifierEvents += 1;
+      if (result === "paid_success") {
+        increment(paidSuccessByRoute, event.route);
+        const paidActor = event.paymentActor || event.actor;
+        paidActors.set(paidActor, (paidActors.get(paidActor) || 0) + 1);
+      }
       actors.set(event.actor, (actors.get(event.actor) || 0) + 1);
     }
 
@@ -251,10 +288,14 @@ export function createCommerceTelemetry({
       externalEvents: events.length,
       externalActors: actors.size,
       repeatExternalActors: [...actors.values()].filter((count) => count > 1).length,
+      paidSuccessActors: paidActors.size,
+      repeatPaidSuccessActors: [...paidActors.values()].filter((count) => count > 1).length,
+      paidSuccessByRoute,
+      paymentIdentifierEvents,
       byResult,
       byRoute,
       unmatched,
-      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, crawler, and exploit-probe traffic is excluded, but unidentified automated fetchers can remain. Counts are acquisition signals, not verified buyers, buyer identities, or calibrated forecasts.",
+      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, crawler, and exploit-probe traffic is excluded, but unidentified automated fetchers can remain. Paid-success actors use a secret-keyed payer pseudonym when the payment payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Counts are acquisition signals, not public buyer identities or calibrated forecasts.",
     };
   }
 
