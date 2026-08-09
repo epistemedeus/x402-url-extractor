@@ -80,7 +80,7 @@ and missing-reference counts by payment class. Raw headers and transaction
 references stay on the private volume. A missing reference becomes a material
 settlement-integrity event without exposing the reference itself.
 
-Version 1.10.1 content-negotiates the root without changing its machine
+Version 1.10.2 content-negotiates the root without changing its machine
 contract. Browser navigation with an explicit `Accept: text/html` receives a
 responsive human map of the twelve tools, payment flow, and authoritative
 discovery links. JSON clients, curl's wildcard accept header, and agents keep
