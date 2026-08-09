@@ -2,9 +2,10 @@
 
 [![Smithery listing](https://smithery.ai/badge/epistemedeus/x402-data-gateway)](https://smithery.ai/servers/epistemedeus/x402-data-gateway)
 
-Eight pay-per-call tools for deterministic Morpho borrower risk, URL extraction,
-Markdown reading, repository security scans, company and wallet enrichment,
-structured data generation, and AI-search readiness audits.
+Nine pay-per-call tools for deterministic Morpho borrower risk and unsigned
+protection plans, URL extraction, Markdown reading, repository security scans,
+company and wallet enrichment, structured data generation, and AI-search
+readiness audits.
 
 - Product page: https://samedaydesk.com/x402
 - Smithery: https://smithery.ai/servers/epistemedeus/x402-data-gateway
@@ -19,6 +20,7 @@ structured data generation, and AI-search readiness audits.
 - Platform health JSON: https://agents.samedaydesk.com/v0/cards.json
 - Aggregate machine-demand telemetry: https://agents.samedaydesk.com/v0/commerce-demand.json
 - Morpho position risk: `GET /defi/morpho-position?address=0x...&shocks=-10,-20,-30`
+- Morpho protection quote: `GET /defi/morpho-protection?address=0x...&targetHealthFactor=1.25&protectAgainstShockPct=-10`
 - Material-change alert probe: https://agents.samedaydesk.com/alerts
 - Agoragentic seller callback: `POST /integrations/agoragentic/ai-readiness-audit`
 - the402 signed fulfillment webhook: `POST /integrations/the402/webhook`
@@ -30,7 +32,12 @@ The Morpho route is read-only. It calculates LTV, LLTV, health factor,
 liquidation headroom, and collateral-price shock scenarios from integer protocol
 values, then cross-checks indexed collateral, borrow shares, and oracle price
 against direct Base RPC state. Scenarios are calculations rather than
-probabilities or transaction recommendations.
+probabilities or transaction recommendations. The separate protection route
+uses a fresh direct-RPC oracle read and direct confirmation of collateral and
+borrow shares to calculate exact partial-repay and add-collateral amounts. It
+returns unsigned token-approval and Morpho-call templates, explicit execution
+buffers, revalidation requirements, and economic postconditions. It never
+accesses a wallet, signs, broadcasts, or takes custody.
 
 The service also keeps a privacy-safe demand telescope on a persistent Railway
 volume. It records route families, query key names, challenge/success classes,
@@ -49,7 +56,7 @@ document remains `/openapi.json`, with `/openapi.yaml` and `/swagger.json`
 returning the same JSON document. `GET /mcp` returns a free transport descriptor;
 actual MCP discovery and paid tool calls use streamable HTTP at `POST /mcp`.
 Agents that prefer a compact instruction contract can read `/skill.md` (or
-`/SKILL.md`), while `/api/actions` returns the eight canonical GET actions with
+`/SKILL.md`), while `/api/actions` returns the nine canonical GET actions with
 their URL, description, exact atomic USDC price, MIME type, network, and payTo.
 The A2A v1.0 card at `/.well-known/agent-card.json` advertises one bounded free
 skill, `discover-x402-paid-actions`. `POST /a2a/message:send` returns that exact

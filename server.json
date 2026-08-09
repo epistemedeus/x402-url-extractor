@@ -1,8 +1,8 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.epistemedeus/x402-data-gateway",
-  "description": "Eight x402 tools settling USDC on Base: web data, repo risk, enrichment, audits, and Morpho risk.",
-  "version": "1.1.0",
+  "description": "Nine x402 tools settling USDC on Base: web data, repo risk, enrichment, audits, Morpho risk, and unsigned protection plans.",
+  "version": "1.2.0",
   "websiteUrl": "https://agents.samedaydesk.com/",
   "repository": {
     "url": "https://github.com/epistemedeus/x402-url-extractor",

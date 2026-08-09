@@ -37,6 +37,7 @@ const POSITION_QUERY = `
           loanAsset { address symbol decimals price { usd timestamp } }
           collateralAsset { address symbol decimals price { usd timestamp } }
           oracle { address }
+          irmAddress
           state { timestamp price }
         }
         state {
@@ -209,6 +210,7 @@ async function directRpcCrossCheck({ address, positions, fetchImpl, timeoutMs, r
       const blockHex = byId.get(1)?.result;
       const blockNumber = blockHex ? Number(BigInt(blockHex)) : null;
       let exact = 0;
+      let coreExact = 0;
       for (let index = 0; index < selected.length; index += 1) {
         const positionReply = byId.get(100 + index);
         const oracleReply = byId.get(oracleCallIds.get(String(selected[index].oracle.address).toLowerCase()));
@@ -229,21 +231,30 @@ async function directRpcCrossCheck({ address, positions, fetchImpl, timeoutMs, r
         const collateralMatches = collateral.toString() === selected[index]._raw.collateral;
         const borrowSharesMatches = borrowShares.toString() === selected[index]._raw.borrowShares;
         const oraclePriceMatches = oraclePrice.toString() === selected[index]._raw.price;
-        const verified = collateralMatches && borrowSharesMatches && oraclePriceMatches;
+        const corePositionVerified = collateralMatches && borrowSharesMatches;
+        const verified = corePositionVerified && oraclePriceMatches;
+        if (corePositionVerified) coreExact += 1;
         if (verified) exact += 1;
         selected[index].directRpc = {
           verified,
+          corePositionVerified,
           blockNumber,
           collateralMatches,
           borrowSharesMatches,
           oraclePriceMatches,
+          oraclePriceRaw: oraclePrice.toString(),
         };
       }
       return {
         blockNumber,
         checkedPositions: selected.length,
         exactPositions: exact,
-        verdict: exact === selected.length ? "exact_match" : "mismatch",
+        coreExactPositions: coreExact,
+        verdict: exact === selected.length
+          ? "exact_match"
+          : coreExact === selected.length
+            ? "core_position_match_oracle_moved"
+            : "mismatch",
         rpcUrl,
       };
     } catch (error) {
@@ -259,6 +270,7 @@ async function directRpcCrossCheck({ address, positions, fetchImpl, timeoutMs, r
     blockNumber: null,
     checkedPositions: selected.length,
     exactPositions: 0,
+    coreExactPositions: 0,
     verdict: "unavailable",
     rpcUrl: null,
     error: String(lastError?.message || lastError || "RPC unavailable"),
@@ -318,6 +330,13 @@ export async function morphoPosition(rawAddress, {
 
     return [{
       marketId: market.marketId,
+      marketParams: {
+        loanToken: market.loanAsset?.address || null,
+        collateralToken: market.collateralAsset?.address || null,
+        oracle: market.oracle?.address || null,
+        irm: market.irmAddress || null,
+        lltvRaw: lltv.toString(),
+      },
       assets: {
         collateral: {
           address: market.collateralAsset?.address || null,
@@ -326,6 +345,7 @@ export async function morphoPosition(rawAddress, {
           amount: formatUnits(collateral, collateralDecimals),
           amountRaw: collateral.toString(),
           usd: nullableNumber(state.collateralUsd),
+          usdPrice: nullableNumber(market.collateralAsset?.price?.usd),
         },
         loan: {
           address: market.loanAsset?.address || null,
@@ -334,6 +354,7 @@ export async function morphoPosition(rawAddress, {
           borrowed: formatUnits(borrowed, loanDecimals),
           borrowedRaw: borrowed.toString(),
           borrowedUsd: nullableNumber(state.borrowAssetsUsd),
+          usdPrice: nullableNumber(market.loanAsset?.price?.usd),
         },
       },
       oracle: {
@@ -345,6 +366,7 @@ export async function morphoPosition(rawAddress, {
       risk: {
         currentLtvPct: wadNumber(risk.currentLtvWad) * 100,
         liquidationLtvPct: wadNumber(lltv) * 100,
+        liquidationLtvRaw: lltv.toString(),
         healthFactor: computedHealth,
         apiHealthFactor: apiHealth,
         healthFactorDifference: apiHealth === null ? null : Math.abs(computedHealth - apiHealth),

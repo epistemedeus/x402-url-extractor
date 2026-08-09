@@ -42,6 +42,7 @@ const EXACT_ROUTES = new Map([
   ["/wallet-enrich", { route: "/wallet-enrich", kind: "paid" }],
   ["/deep-audit", { route: "/deep-audit", kind: "paid" }],
   ["/defi/morpho-position", { route: "/defi/morpho-position", kind: "paid" }],
+  ["/defi/morpho-protection", { route: "/defi/morpho-protection", kind: "paid" }],
   ["/mcp", { route: "/mcp", kind: "paid" }],
 ]);
 

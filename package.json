@@ -1,12 +1,12 @@
 {
   "name": "x402-merchant",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "x402 paid HTTP endpoint that charges AI agents in USDC and settles to our own Base wallet",
   "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test referral.test.mjs enrich.test.mjs the402.test.mjs platform-health.test.mjs platform-health-page.test.mjs commerce-events.test.mjs morpho-position.test.mjs a2a-storefront.test.mjs"
+    "test": "node --test referral.test.mjs enrich.test.mjs the402.test.mjs platform-health.test.mjs platform-health-page.test.mjs commerce-events.test.mjs morpho-position.test.mjs morpho-protection.test.mjs a2a-storefront.test.mjs"
   },
   "engines": {
     "node": ">=20"

@@ -28,6 +28,7 @@ import { enrich } from "./enrich.mjs";
 import { walletEnrich } from "./wallet-enrich.mjs";
 import { deepAudit } from "./deep-audit.mjs";
 import { morphoPosition } from "./morpho-position.mjs";
+import { morphoProtection } from "./morpho-protection.mjs";
 import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
 import { createCommerceTelemetry } from "./commerce-events.mjs";
@@ -87,6 +88,8 @@ const WALLET_ENRICH_PRICE = process.env.WALLET_ENRICH_PRICE || "$0.05";
 const DEEP_AUDIT_PRICE = process.env.DEEP_AUDIT_PRICE || "$0.25";
 // Read-only deterministic Morpho position snapshot and stress canary.
 const MORPHO_POSITION_PRICE = process.env.MORPHO_POSITION_PRICE || "$0.02";
+// Protection quote: deterministic repair amounts plus unsigned approval/action templates.
+const MORPHO_PROTECTION_PRICE = process.env.MORPHO_PROTECTION_PRICE || "$0.10";
 
 // "$0.05" -> "50000" atomic USDC units (6 decimals) so the discovery docs
 // (/.well-known/x402, /openapi.json) always match the paywall price exactly.
@@ -284,7 +287,7 @@ app.get("/healthz", async (_req, res) => {
     ok: true,
     payTo: PAY_TO,
     network: NETWORK,
-    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE },
+    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE, "morpho-protection": MORPHO_PROTECTION_PRICE },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
     commerceTelemetry: {
@@ -370,6 +373,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/wallet-enrich`, amount: priceToAtomic(WALLET_ENRICH_PRICE), description: "Base/EVM address -> agent-ready on-chain profile in one call: EOA vs contract, native ETH + curated Base token holdings, token/NFT contract metadata (ERC-20/721/1155, name/symbol/decimals/supply), EIP-1967 proxy detection, activity (outbound tx count), and a single derived profile label. Pure Base-mainnet RPC, public data only; no keys, no subscription. The frictionless, pay-per-call way for an agent to size up a wallet/contract before it sends funds, swaps, or calls it.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/deep-audit`, amount: priceToAtomic(DEEP_AUDIT_PRICE), description: "Domain -> ONE complete AI-search-readiness audit: firmographics + tech stack + contact + DNS/email infra + a 0-100 AI-readiness score, PLUS a structured-data gap analysis with a paste-ready JSON-LD fix list and a combined letter grade. The bundled deep tier (enrich + schemaforge in one call). No auth, no API keys; pay-per-call USDC.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/defi/morpho-position`, amount: priceToAtomic(MORPHO_POSITION_PRICE), description: "Base address -> deterministic Morpho borrower position snapshot and collateral-price stress scenarios. Returns LTV, LLTV, health factor, liquidation headroom, source freshness, and scenario outcomes. Read-only indexed observation; direct RPC verification is required before execution.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/defi/morpho-protection`, amount: priceToAtomic(MORPHO_PROTECTION_PRICE), description: "Base Morpho borrower -> exact partial-repay and add-collateral amounts for a chosen stress and target health factor, plus unsigned approval/action templates and explicit invariants. Deterministic and read-only; no wallet, signing, broadcast, or custody.", mimeType: "application/json" },
 ];
 
 const machineActionCatalog = () => ({
@@ -433,7 +437,7 @@ app.get(["/skill.md", "/SKILL.md"], (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
   return res.type("text/markdown").send(`# SameDayDesk machine commerce gateway
 
-Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, or Morpho borrower-risk data and can pay exact USDC on Base through x402.
+Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, Morpho borrower-risk, or unsigned Morpho protection plans and can pay exact USDC on Base through x402.
 
 ## Discover
 
@@ -454,6 +458,7 @@ Use this service when an agent needs deterministic web, company, wallet, AI-sear
 ## Boundaries
 
 - Morpho output is a read-only indexed snapshot with deterministic stress calculations. Verify direct RPC state before any financial action.
+- Morpho protection output is a deterministic quote plus unsigned templates. Re-read, simulate, and apply caller policy before signing elsewhere.
 - Repository scan output is static evidence, not permission to execute untrusted code.
 - Demand telemetry is aggregate and does not expose buyer identities or raw request data.
 `);
@@ -593,7 +598,7 @@ app.get("/alerts", (_req, res) => {
 app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
   res.json({
     openapi: "3.0.3",
-    info: { title: "SameDayDesk machine commerce gateway", version: "1.1.0", description: `Machine-discoverable paid capabilities on Base: Morpho position risk ${MORPHO_POSITION_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
+    info: { title: "SameDayDesk machine commerce gateway", version: "1.2.0", description: `Machine-discoverable paid capabilities on Base: Morpho position risk ${MORPHO_POSITION_PRICE}, Morpho protection plans ${MORPHO_PROTECTION_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
     servers: [{ url: PUBLIC_URL }],
     paths: {
       "/v0/cards.json": { get: { summary: "Free incident-backed platform health cards. Categories are not calibrated scores.", responses: { "200": { description: "SameDayDesk platform health index v0" } } } },
@@ -609,8 +614,31 @@ app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
       "/wallet-enrich": { get: { summary: RESOURCES[5].description, parameters: [{ name: "address", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "agent-ready on-chain profile (type, native + token holdings, contract/token metadata, proxy, activity, profile label)" }, "402": { description: `payment required (x402, ${WALLET_ENRICH_PRICE} USDC base)` } } } },
       "/deep-audit": { get: { summary: RESOURCES[6].description, parameters: [{ name: "domain", in: "query", required: true, schema: { type: "string", example: "example.com" } }, { name: "vertical", in: "query", required: false, schema: { type: "string" } }, { name: "city", in: "query", required: false, schema: { type: "string" } }], responses: { "200": { description: "bundled AI-search-readiness audit with firmographics, infrastructure, structured-data gaps, and a fix list" }, "402": { description: `payment required (x402, ${DEEP_AUDIT_PRICE} USDC base)` } } } },
       "/defi/morpho-position": { get: { summary: RESOURCES[7].description, parameters: [{ name: "address", in: "query", required: true, schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" } }, { name: "shocks", in: "query", required: false, description: "Comma-separated collateral price shocks in percent, from -99 through 100.", schema: { type: "string", example: "-10,-20,-30" } }], responses: { "200": { description: "read-only Morpho position snapshot and deterministic stress scenarios" }, "402": { description: `payment required (x402, ${MORPHO_POSITION_PRICE} USDC base)` } } } },
+      "/defi/morpho-protection": { get: { summary: RESOURCES[8].description, parameters: [{ name: "address", in: "query", required: true, schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" } }, { name: "targetHealthFactor", in: "query", required: false, description: "Target Morpho health factor after the stress scenario.", schema: { type: "number", exclusiveMinimum: 1, maximum: 5, default: 1.25 } }, { name: "protectAgainstShockPct", in: "query", required: false, description: "Collateral-price shock percentage to withstand.", schema: { type: "number", minimum: -99, maximum: 0, default: -10 } }, { name: "executionBufferBps", in: "query", required: false, description: "Explicit amount buffer for debt accrual and integer rounding.", schema: { type: "integer", minimum: 0, maximum: 500, default: 25 } }], responses: { "200": { description: "deterministic protection quote with unsigned transaction templates" }, "400": { description: "invalid request, charged nothing" }, "402": { description: `payment required (x402, ${MORPHO_PROTECTION_PRICE} USDC base)` } } } },
     },
   });
+});
+
+// Validate the higher-value quote before the x402 middleware so malformed calls
+// fail with HTTP 400 and are never challenged for payment.
+app.get("/defi/morpho-protection", (req, res, next) => {
+  const address = req.query.address || req.query.wallet || req.query.borrower;
+  const target = req.query.targetHealthFactor ?? "1.25";
+  const shock = req.query.protectAgainstShockPct ?? "-10";
+  const buffer = req.query.executionBufferBps ?? "25";
+  if (typeof address !== "string" || !/^0x[0-9a-fA-F]{40}$/.test(address)) {
+    return res.status(400).json({ ok: false, error: "address must be a 0x-prefixed 40-hex EVM address", charged: false });
+  }
+  if (!Number.isFinite(Number(target)) || Number(target) <= 1 || Number(target) > 5) {
+    return res.status(400).json({ ok: false, error: "targetHealthFactor must be greater than 1 and at most 5", charged: false });
+  }
+  if (!Number.isFinite(Number(shock)) || Number(shock) < -99 || Number(shock) > 0) {
+    return res.status(400).json({ ok: false, error: "protectAgainstShockPct must be from -99 through 0", charged: false });
+  }
+  if (!Number.isInteger(Number(buffer)) || Number(buffer) < 0 || Number(buffer) > 500) {
+    return res.status(400).json({ ok: false, error: "executionBufferBps must be an integer from 0 through 500", charged: false });
+  }
+  return next();
 });
 
 // The paid route. Unpaid request -> HTTP 402 with payment requirements.
@@ -945,6 +973,57 @@ app.use(
           }),
         },
       },
+      "GET /defi/morpho-protection": {
+        accepts: [{ scheme: "exact", price: MORPHO_PROTECTION_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description: RESOURCES[8].description,
+        mimeType: "application/json",
+        extensions: {
+          ...declareDiscoveryExtension({
+            input: {
+              address: "0x4352Cc849b33a936Ad93bB109aFDec1c89653b4f",
+              targetHealthFactor: 1.25,
+              protectAgainstShockPct: -10,
+              executionBufferBps: 25,
+            },
+            inputSchema: {
+              type: "object",
+              properties: {
+                address: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$", description: "Borrower EVM address on Base mainnet." },
+                targetHealthFactor: { type: "number", exclusiveMinimum: 1, maximum: 5, default: 1.25 },
+                protectAgainstShockPct: { type: "number", minimum: -99, maximum: 0, default: -10 },
+                executionBufferBps: { type: "integer", minimum: 0, maximum: 500, default: 25 },
+              },
+              required: ["address"],
+            },
+            output: {
+              example: {
+                ok: true,
+                product: "morpho-protection-quote",
+                positionCount: 1,
+                actionableCount: 1,
+                quotes: [{ status: "protection_available", plans: [{ id: "partial_repay", amount: "125.4", transactions: [{ to: "0x...", value: "0", data: "0x..." }] }] }],
+                invariants: { signing: "none", broadcasting: "none", custody: "none" },
+              },
+            },
+            outputSchema: {
+              type: "object",
+              properties: {
+                ok: { type: "boolean" },
+                product: { type: "string", const: "morpho-protection-quote" },
+                address: { type: "string" },
+                inputs: { type: "object" },
+                positionCount: { type: "integer" },
+                actionableCount: { type: "integer" },
+                unverifiedCount: { type: "integer" },
+                quotes: { type: "array" },
+                invariants: { type: "object" },
+                boundary: { type: "string" },
+              },
+              required: ["ok", "product", "address", "inputs", "positionCount", "actionableCount", "unverifiedCount", "quotes", "invariants", "boundary"],
+            },
+          }),
+        },
+      },
     },
     resourceServer
   )
@@ -1067,6 +1146,26 @@ app.get("/defi/morpho-position", async (req, res) => {
   }
 });
 
+// Paid: deterministic Morpho protection quote plus unsigned transaction plans.
+app.get("/defi/morpho-protection", async (req, res) => {
+  const address = req.query.address || req.query.wallet || req.query.borrower;
+  try {
+    res.set("Cache-Control", "no-store");
+    return res.json(await morphoProtection(address, {
+      targetHealthFactor: req.query.targetHealthFactor ?? "1.25",
+      protectAgainstShockPct: req.query.protectAgainstShockPct ?? -10,
+      executionBufferBps: Number(req.query.executionBufferBps ?? 25),
+    }));
+  } catch (error) {
+    return res.status(503).json({
+      ok: false,
+      address,
+      error: String(error?.message || error),
+      boundary: "No wallet was accessed and no transaction was signed or broadcast.",
+    });
+  }
+});
+
 // Free landing so a human/agent hitting the root learns what this is + how to pay.
 app.get("/", (_req, res) => {
   res.json({
@@ -1101,6 +1200,7 @@ app.get("/", (_req, res) => {
       "GET /enrich?domain=": `${ENRICH_PRICE} - domain -> agent-ready company intelligence: identity, tech stack, social, contact, DNS/email-infra, AI-readiness. No auth, pay-per-call.`,
       "GET /wallet-enrich?address=": `${WALLET_ENRICH_PRICE} - Base/EVM 0x address -> agent-ready on-chain profile: EOA/contract, native + token holdings, token/NFT metadata, proxy + activity, profile label. Pure Base RPC, no keys.`,
       "GET /defi/morpho-position?address=&shocks=": `${MORPHO_POSITION_PRICE} - Base borrower address -> deterministic Morpho LTV, health, liquidation headroom, and collateral-price stress scenarios. Read-only.`,
+      "GET /defi/morpho-protection?address=&targetHealthFactor=&protectAgainstShockPct=&executionBufferBps=": `${MORPHO_PROTECTION_PRICE} - deterministic Morpho repair amounts plus unsigned approval/action templates.`,
     },
     network: NETWORK,
     payTo: PAY_TO,
@@ -1129,7 +1229,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.0.0" },
+      serverInfo: { name: "x402-data-gateway", version: "1.2.0" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to extract") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to read as Markdown") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
@@ -1139,6 +1239,7 @@ import("./mcp-server.mjs")
         { name: "wallet_enrich", description: RESOURCES[5].description, price: WALLET_ENRICH_PRICE, inputSchema: { address: z.string().describe("Base/EVM 0x address") }, run: (a) => walletEnrich(a.address), tags: ["enrichment", "onchain", "wallet"] },
         { name: "deep_audit", description: RESOURCES[6].description, price: DEEP_AUDIT_PRICE, inputSchema: { domain: z.string().describe("A domain or URL, e.g. stripe.com") }, run: (a) => deepAudit(a.domain), tags: ["audit", "ai-readiness", "geo", "enrichment"] },
         { name: "morpho_position", description: RESOURCES[7].description, price: MORPHO_POSITION_PRICE, inputSchema: { address: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Borrower EVM address on Base mainnet"), shocks: z.array(z.number().min(-99).max(100)).max(8).optional().describe("Collateral price shocks in percent") }, run: (a) => morphoPosition(a.address, { shocks: a.shocks }), tags: ["defi", "morpho", "risk", "borrower-protection"] },
+        { name: "morpho_protection", description: RESOURCES[8].description, price: MORPHO_PROTECTION_PRICE, inputSchema: { address: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Borrower EVM address on Base mainnet"), targetHealthFactor: z.number().gt(1).max(5).default(1.25), protectAgainstShockPct: z.number().min(-99).max(0).default(-10), executionBufferBps: z.number().int().min(0).max(500).default(25) }, run: (a) => morphoProtection(a.address, a), tags: ["defi", "morpho", "protection", "unsigned-transaction-plan"] },
       ],
     })
   )

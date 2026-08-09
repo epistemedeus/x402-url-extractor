@@ -31,6 +31,7 @@ test("computes Morpho LTV, health, liquidation distance, and shocks from integer
             market: {
               marketId: `0x${"1".repeat(64)}`,
               lltv: "800000000000000000",
+              irmAddress: `0x${"5".repeat(40)}`,
               loanAsset: { address: `0x${"2".repeat(40)}`, symbol: "USDC", decimals: 6, price: { usd: 1, timestamp: 1786218000 } },
               collateralAsset: { address: `0x${"3".repeat(40)}`, symbol: "COL", decimals: 18, price: { usd: 2, timestamp: 1786218000 } },
               oracle: { address: `0x${"4".repeat(40)}` },
@@ -59,6 +60,7 @@ test("computes Morpho LTV, health, liquidation distance, and shocks from integer
   assert.equal(result.positions[0].risk.currentLtvPct, 50);
   assert.equal(result.positions[0].risk.liquidationLtvPct, 80);
   assert.equal(result.positions[0].risk.healthFactor, 1.6);
+  assert.equal(result.positions[0].marketParams.irm, `0x${"5".repeat(40)}`);
   assert.equal(result.positions[0].risk.collateralPriceMoveToLiquidationPct, -37.5);
   assert.equal(result.positions[0].scenarios[0].healthFactor, 1.44);
   assert.equal(result.positions[0].scenarios[0].liquidatable, false);
