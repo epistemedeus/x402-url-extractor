@@ -19,6 +19,7 @@ test("agent discovery sources reduce user agents to controlled labels", () => {
   assert.equal(classifyAgentDiscoverySource("Circle x402 Agent Marketplace"), "circle-agent-marketplace");
   assert.equal(classifyAgentDiscoverySource("ModelContextProtocol MCP-Registry/1.0"), "mcp-registry");
   assert.equal(classifyAgentDiscoverySource("Smithery crawler"), "smithery");
+  assert.equal(classifyAgentDiscoverySource("Glama MCP Connector Indexer"), "glama");
   assert.equal(classifyAgentDiscoverySource("ExampleBot/1.0"), "generic-agent-indexer");
   assert.equal(classifyAgentDiscoverySource("Mozilla/5.0"), null);
 });
@@ -54,6 +55,7 @@ test("route classification preserves useful intent without recording opaque path
   assert.equal(classifyCommerceRoute("/SKILL.md").route, "/skill.md");
   assert.equal(classifyCommerceRoute("/api/actions").route, "/api/actions");
   assert.equal(classifyCommerceRoute("/.well-known/agent.json").route, "/.well-known/agent-card.json");
+  assert.equal(classifyCommerceRoute("/.well-known/glama.json").route, "/.well-known/glama.json");
   assert.equal(classifyCommerceRoute("/a2a/message:send").route, "/a2a/message:send");
   assert.equal(classifyCommerceRoute("/work/opportunity-preflight").kind, "paid");
   assert.equal(classifyCommerceRoute("/distribution/agent-discoverability-audit").kind, "paid");

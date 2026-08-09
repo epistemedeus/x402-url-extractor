@@ -130,6 +130,11 @@ conversion rate, and controlled source and evidence-class totals without actor
 IDs. Network or user-agent drift can only create false negatives, so the metric
 is a lower bound rather than an identity claim.
 
+Version 1.11.7 adds project-owned Glama connector verification at
+`/.well-known/glama.json` using the public SameDayDesk business email. Glama
+requests have their own controlled discovery-source label, so a propagated
+directory claim can be measured without becoming demand.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured
