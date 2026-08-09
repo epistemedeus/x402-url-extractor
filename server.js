@@ -448,8 +448,9 @@ commerceSettlementReconciler = createCommerceSettlementReconciler({
 const acceptsFor = (amount) => [
   { scheme: "exact", network: NETWORK, asset: USDC_ASSET, amount, payTo: PAY_TO, maxTimeoutSeconds: 300, extra: { name: "USD Coin", version: "2" } },
 ];
+const EXTRACT_DISCOVERY_DESCRIPTION = "Extract a public web page into clean structured JSON for agent workflows: title, description, main text, all JSON-LD, Open Graph and Twitter metadata, headings, links, and AI-crawler and structured-data signals. Follows redirects and enforces timeout, response-size, and SSRF safeguards.";
 const RESOURCES = [
-  { url: `${PUBLIC_URL}/extract`, amount: priceToAtomic(EXTRACT_PRICE), description: "URL -> clean structured data: title, description, text, ALL JSON-LD, OpenGraph/Twitter meta, headings, links, AI-readiness signals.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/extract`, amount: priceToAtomic(EXTRACT_PRICE), description: EXTRACT_DISCOVERY_DESCRIPTION, mimeType: "application/json" },
   { url: `${PUBLIC_URL}/read`, amount: priceToAtomic(READ_PRICE), description: "URL -> full page content as clean Markdown, ready for LLM context. Strips nav/ads/scripts, preserves headings/links/lists.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/scan`, amount: priceToAtomic(SCAN_PRICE), description: "Static supply-chain security scan of a public GitHub repo before an agent installs/runs it. Flags exfil sinks, obfuscation, credential reads, install-time curl|bash. risk=clean|suspicious|dangerous.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/schemaforge`, amount: priceToAtomic(SCHEMAFORGE_PRICE), description: "Generate a complete, paste-ready JSON-LD structured-data bundle (LocalBusiness/MedicalBusiness + Service/OfferCatalog + FAQPage + Review/AggregateRating + geo/hours) for a business site, tuned to the fields the pages that surface for high-intent vertical queries carry, plus a gap diff vs the live site and a ranked fix list. Makes a page eligible to be cited by AI assistants.", mimeType: "application/json" },
@@ -953,8 +954,7 @@ const x402Paywall = paymentMiddleware(
             payTo: PAY_TO,
           },
         ],
-        description:
-          "URL -> clean structured data in one call: title, description, full text excerpt, ALL JSON-LD, OpenGraph/Twitter meta, headings, links, and AI-crawler/structured-data signals. Handles redirects, timeouts, size caps, and SSRF safely.",
+        description: EXTRACT_DISCOVERY_DESCRIPTION,
         mimeType: "application/json",
         // --- Bazaar / discovery metadata: tells agents exactly how to call us ---
         extensions: {
@@ -1721,7 +1721,7 @@ app.get("/", (req, res) => {
       flow: "discover -> validate schema and price -> pay -> call -> receive deterministic result and receipt -> safely replay the same logical request",
     },
     paidRoutes: {
-      "GET /extract?url=": `${EXTRACT_PRICE} - URL -> clean structured JSON (text, JSON-LD, OG, headings, links, AI-readiness signals).`,
+      "GET /extract?url=": `${EXTRACT_PRICE} - ${EXTRACT_DISCOVERY_DESCRIPTION}`,
       "GET /read?url=": `${READ_PRICE} - URL -> LLM-ready Markdown.`,
       "GET /scan?repo=": `${SCAN_PRICE} - static supply-chain security scan of a public GitHub repo before install.`,
       "GET /schemaforge?site=&vertical=&city=": `${SCHEMAFORGE_PRICE} - generate a paste-ready JSON-LD structured-data bundle + gap diff so a business page is eligible to be cited by AI assistants.`,
@@ -1770,7 +1770,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.10.1" },
+      serverInfo: { name: "x402-data-gateway", version: "1.10.2" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to extract") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public http(s) URL to read as Markdown") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
