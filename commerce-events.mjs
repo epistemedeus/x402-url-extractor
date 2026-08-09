@@ -1,6 +1,7 @@
 import { createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { appendFile, chmod, mkdir, readFile, rename, stat, unlink } from "node:fs/promises";
 import path from "node:path";
+import { Credential } from "mppx";
 
 const CRAWLER_PATTERN = /bot|crawler|spider|slurp|uptime|monitor|observer|probe|indexer|headless|preview|liveness|healthcheck|sentineloracle|mcpbeat|agentreeve|agent402|trust[- ]?oracle/i;
 const EXPLOIT_PROBE_PATH_PATTERN = /(?:^|\/)\.(?:env|git)(?:[./]|$)|^\/(?:wp-admin|wp-login\.php|wp-json|xmlrpc\.php)(?:\/|$)|^\/(?:api\/)?(?:config|env|settings)(?:[./]|$)|^\/js\/(?:config|env)\.js$/i;
@@ -166,17 +167,63 @@ export function normalizeCommercePayerClasses(value) {
 
 function decodePaymentMetadata(headers) {
   const encoded = PAYMENT_HEADERS.map((name) => headerValue(headers, name)).find(Boolean);
-  if (!encoded) return { payer: null, paymentId: null };
+  if (encoded) {
+    try {
+      const payload = JSON.parse(Buffer.from(encoded.trim(), "base64").toString("utf8"));
+      const payerCandidate = payload?.payload?.authorization?.from || payload?.payload?.from || null;
+      const paymentIdCandidate = payload?.extensions?.["payment-identifier"]?.info?.id || null;
+      const accepted = payload?.accepted;
+      const payer = EVM_ADDRESS_PATTERN.test(String(payerCandidate || ""))
+        ? String(payerCandidate).toLowerCase()
+        : null;
+      const credentialParsed = payload?.x402Version === 2
+        && accepted?.scheme === "exact"
+        && typeof accepted?.network === "string"
+        && /^eip155:\d+$/.test(accepted.network)
+        && /^\d+$/.test(String(accepted?.amount || ""))
+        && EVM_ADDRESS_PATTERN.test(String(accepted?.asset || ""))
+        && EVM_ADDRESS_PATTERN.test(String(accepted?.payTo || ""))
+        && Boolean(payer);
+      return {
+        credentialParsed,
+        payer: credentialParsed ? payer : null,
+        paymentId: credentialParsed && PAYMENT_ID_PATTERN.test(String(paymentIdCandidate || ""))
+          ? String(paymentIdCandidate)
+          : null,
+      };
+    } catch {
+      return { credentialParsed: false, payer: null, paymentId: null };
+    }
+  }
+
+  const serialized = Credential.extractPaymentScheme(headerValue(headers, "authorization"));
+  if (!serialized) return { credentialParsed: false, payer: null, paymentId: null };
   try {
-    const payload = JSON.parse(Buffer.from(encoded.trim(), "base64").toString("utf8"));
-    const payerCandidate = payload?.payload?.authorization?.from || payload?.payload?.from || null;
-    const paymentIdCandidate = payload?.extensions?.["payment-identifier"]?.info?.id || null;
+    const credential = Credential.deserialize(serialized);
+    const request = credential?.challenge?.request;
+    const chainId = Number(request?.methodDetails?.chainId);
+    const payerCandidate = credential?.payload?.from;
+    const payer = EVM_ADDRESS_PATTERN.test(String(payerCandidate || ""))
+      ? String(payerCandidate).toLowerCase()
+      : null;
+    const credentialParsed = credential?.challenge?.method === "evm"
+      && credential?.challenge?.intent === "charge"
+      && Number.isSafeInteger(chainId)
+      && chainId > 0
+      && /^\d+$/.test(String(request?.amount || ""))
+      && EVM_ADDRESS_PATTERN.test(String(request?.currency || ""))
+      && EVM_ADDRESS_PATTERN.test(String(request?.recipient || ""))
+      && EVM_ADDRESS_PATTERN.test(String(credential?.payload?.to || ""))
+      && String(credential.payload.to).toLowerCase() === String(request.recipient).toLowerCase()
+      && String(credential?.payload?.value || "") === String(request.amount)
+      && Boolean(payer);
     return {
-      payer: EVM_ADDRESS_PATTERN.test(String(payerCandidate || "")) ? String(payerCandidate).toLowerCase() : null,
-      paymentId: PAYMENT_ID_PATTERN.test(String(paymentIdCandidate || "")) ? String(paymentIdCandidate) : null,
+      credentialParsed,
+      payer: credentialParsed ? payer : null,
+      paymentId: null,
     };
   } catch {
-    return { payer: null, paymentId: null };
+    return { credentialParsed: false, payer: null, paymentId: null };
   }
 }
 
@@ -275,6 +322,7 @@ export function createCommerceTelemetry({
   internalToken = process.env.COMMERCE_INTERNAL_TOKEN || "",
   externalSince = process.env.COMMERCE_EXTERNAL_SINCE || "",
   agentDiscoverySince = process.env.COMMERCE_AGENT_DISCOVERY_SINCE || "",
+  credentialAttemptSince = process.env.COMMERCE_CREDENTIAL_ATTEMPT_SINCE || "",
   settlementEvidenceSince = process.env.COMMERCE_SETTLEMENT_EVIDENCE_SINCE || "",
   payerClasses = process.env.COMMERCE_PAYER_CLASSES || "",
   maxBytes = 5 * 1024 * 1024,
@@ -286,6 +334,10 @@ export function createCommerceTelemetry({
   const parsedAgentDiscoverySince = Date.parse(agentDiscoverySince);
   const agentDiscoverySinceMs = Number.isFinite(parsedAgentDiscoverySince)
     ? parsedAgentDiscoverySince
+    : null;
+  const parsedCredentialAttemptSince = Date.parse(credentialAttemptSince);
+  const credentialAttemptSinceMs = Number.isFinite(parsedCredentialAttemptSince)
+    ? parsedCredentialAttemptSince
     : null;
   const parsedSettlementEvidenceSince = Date.parse(settlementEvidenceSince);
   const settlementEvidenceSinceMs = Number.isFinite(parsedSettlementEvidenceSince)
@@ -371,6 +423,7 @@ export function createCommerceTelemetry({
         kind: route.kind,
         queryKeys,
         paymentPresent,
+        paymentCredentialParsed: paymentMetadata.credentialParsed === true,
         paymentProtocol: protocol,
         protocolsOffered,
         replayed,
@@ -407,6 +460,13 @@ export function createCommerceTelemetry({
       ...(await readEvents(currentPath)),
     ].filter((event) => Date.parse(event.ts) >= cutoff);
     const events = observedEvents.filter((event) => event.originClass === "external");
+    const credentialHeaderEvents = events.filter((event) => (
+      event.paymentPresent === true
+      && event.kind === "paid"
+      && event.matched === true
+      && (credentialAttemptSinceMs === null || Date.parse(event.ts) >= credentialAttemptSinceMs)
+    ));
+    const credentialAttemptEvents = credentialHeaderEvents.filter((event) => event.paymentCredentialParsed === true);
     const agentDiscoveryEvents = observedEvents.filter((event) => (
       event.originClass === "crawler"
       && (agentDiscoverySinceMs === null || Date.parse(event.ts) >= agentDiscoverySinceMs)
@@ -474,6 +534,28 @@ export function createCommerceTelemetry({
     const agentChallengeConvertedBySource = emptyCounts();
     const agentChallengeConvertedByClass = emptyCounts();
     let agentChallengeConvertedPaidSuccesses = 0;
+    const credentialAttemptByProtocol = emptyCounts();
+    const credentialAttemptByResult = emptyCounts();
+    const credentialAttemptByRoute = emptyCounts();
+    const credentialAttemptBySource = emptyCounts();
+    const credentialAttemptByClass = emptyCounts();
+    const credentialAttemptActors = new Map();
+    for (const event of credentialAttemptEvents) {
+      if (event.paymentProtocol) increment(credentialAttemptByProtocol, event.paymentProtocol);
+      increment(credentialAttemptByResult, eventResult(event));
+      increment(credentialAttemptByRoute, event.route);
+      const source = typeof event.agentDiscoverySource === "string"
+        && /^[a-z][a-z0-9-]{1,39}$/.test(event.agentDiscoverySource)
+        ? event.agentDiscoverySource
+        : "direct-or-unattributed";
+      increment(credentialAttemptBySource, source);
+      const paymentClass = event.paymentActor
+        ? paymentClassByActor.get(event.paymentActor) || "unclassified"
+        : "unclassified";
+      increment(credentialAttemptByClass, paymentClass);
+      const attemptActor = event.paymentActor || event.actor;
+      credentialAttemptActors.set(attemptActor, (credentialAttemptActors.get(attemptActor) || 0) + 1);
+    }
     let paymentIdentifierEvents = 0;
     let replaySuccessEvents = 0;
     let settlementReferenceEligiblePaidSuccesses = 0;
@@ -598,6 +680,17 @@ export function createCommerceTelemetry({
         : null,
       agentChallengeConvertedBySource,
       agentChallengeConvertedByClass,
+      credentialAttemptSince: credentialAttemptSinceMs === null ? null : new Date(credentialAttemptSinceMs).toISOString(),
+      paymentHeaderEvents: credentialHeaderEvents.length,
+      parseableCredentialAttemptEvents: credentialAttemptEvents.length,
+      unparseablePaymentHeaderEvents: credentialHeaderEvents.length - credentialAttemptEvents.length,
+      parseableCredentialAttemptActors: credentialAttemptActors.size,
+      repeatParseableCredentialAttemptActors: [...credentialAttemptActors.values()].filter((count) => count > 1).length,
+      credentialAttemptByProtocol,
+      credentialAttemptByResult,
+      credentialAttemptByRoute,
+      credentialAttemptBySource,
+      credentialAttemptByClass,
       paidSuccessByRoute,
       paidSuccessByProtocol,
       paidSuccessByDiscoverySource,
@@ -629,6 +722,7 @@ export function createCommerceTelemetry({
       unmatched: unmatchedRequests,
       paymentClassPolicy: "Explicit known-payer rules classify internal, marketplace validation, incentivized, affiliated, or independently confirmed buyers. Unknown or missing payer identities remain unclassified and never become independent by inference.",
       discoveryConversionPolicy: "A submitted payment credential overrides crawler classification so paying agents remain in economic telemetry. Controlled user-agent source labels attribute the client channel but are self-declared and do not independently authenticate a registry referral. Challenge-to-paid conversion uses the same secret-keyed network-and-user-agent actor before and after the challenge and is therefore a conservative continuity lower bound, not an identity claim. SameDayDesk owner monitors remain excluded before this rule.",
+      credentialAttemptPolicy: "After the declared credential-attempt baseline, a parseable attempt must carry a syntactically complete x402 v2 exact Base-style binding or MPP evm/charge credential. Signature validity and settlement are separate later outcomes. Public output contains only aggregate protocol, result, route, controlled source, and explicit payer-class counts; raw credentials, actors, and payer addresses are not exposed.",
       settlementEvidencePolicy: "After the declared settlement-evidence baseline, a successful paid response should carry a valid Base transaction reference in PAYMENT-RESPONSE or Payment-Receipt. Raw response headers and transaction references remain private; public output exposes only coverage counts by evidence class.",
       boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, SameDayDesk-owned monitor, crawler, and exploit-probe traffic is excluded from demand, but unidentified automated fetchers can remain. Separately reported agent-discovery observations begin at their own declared baseline and are user-agent-declared crawler or indexer fetches of known discovery and paid routes; SameDayDesk-owned monitor user agents are excluded, and the remainder are neither authenticated catalog referrals nor buyer intent. Unmatched requests are acquisition misses, not intents. Semantic-unmatched counts are a high-precision route-keyword heuristic and still do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Payment classes are applied against those pseudonyms at read time, so known marketplace verification can be reclassified without storing a raw address. Unknown payers remain unclassified. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Settlement-reference coverage begins only at its declared baseline; raw transaction references remain on the private volume and are not returned publicly. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
     };

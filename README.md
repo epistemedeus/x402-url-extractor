@@ -135,6 +135,13 @@ Version 1.11.7 adds project-owned Glama connector verification at
 requests have their own controlled discovery-source label, so a propagated
 directory claim can be measured without becoming demand.
 
+Version 1.11.8 starts a separate credential-attempt funnel. After a declared
+baseline, a parseable attempt must include a syntactically complete x402 v2
+exact binding or MPP evm/charge credential. Signature validity and settlement
+remain later outcomes. Public aggregates separate header noise from parseable
+attempts and report protocol, result, route, controlled source, and explicit
+payer class without raw credentials, actor IDs, or addresses.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured

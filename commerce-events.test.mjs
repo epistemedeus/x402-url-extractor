@@ -125,6 +125,8 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
     },
   });
   const paymentSignature = Buffer.from(JSON.stringify({
+    x402Version: 2,
+    accepted: { scheme: "exact", network: "eip155:8453", amount: "20000", asset: "0x2222222222222222222222222222222222222222", payTo: "0x3333333333333333333333333333333333333333" },
     payload: { authorization: { from: "0x1111111111111111111111111111111111111111" } },
     extensions: { "payment-identifier": { info: { id: "order_1234567890abcdef" } } },
   })).toString("base64");
@@ -194,6 +196,15 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.equal(snapshot.agentChallengeConvertedActors, 0);
   assert.equal(snapshot.independentAgentChallengeConvertedActors, 0);
   assert.equal(snapshot.agentChallengeActorConversionRate, 0);
+  assert.equal(snapshot.paymentHeaderEvents, 2);
+  assert.equal(snapshot.parseableCredentialAttemptEvents, 2);
+  assert.equal(snapshot.unparseablePaymentHeaderEvents, 0);
+  assert.equal(snapshot.parseableCredentialAttemptActors, 1);
+  assert.equal(snapshot.repeatParseableCredentialAttemptActors, 1);
+  assert.equal(snapshot.credentialAttemptByProtocol.x402, 2);
+  assert.equal(snapshot.credentialAttemptByResult.paid_success, 1);
+  assert.equal(snapshot.credentialAttemptByResult.replay_success, 1);
+  assert.equal(snapshot.credentialAttemptByClass.validation, 2);
   assert.equal(snapshot.paidSuccessByClass.validation, 1);
   assert.equal(snapshot.paidSuccessByClassRoute.validation["/defi/morpho-position"], 1);
   assert.equal(snapshot.settlementReferenceEligiblePaidSuccesses, 1);
@@ -235,6 +246,8 @@ test("only explicitly classified independent payers enter independent demand", a
   const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-independent-"));
   const payer = "0x2222222222222222222222222222222222222222";
   const signature = Buffer.from(JSON.stringify({
+    x402Version: 2,
+    accepted: { scheme: "exact", network: "eip155:8453", amount: "50000", asset: "0x4444444444444444444444444444444444444444", payTo: "0x5555555555555555555555555555555555555555" },
     payload: { authorization: { from: payer } },
   })).toString("base64");
   const telemetry = createCommerceTelemetry({
@@ -275,6 +288,8 @@ test("only explicitly classified independent payers enter independent demand", a
   assert.equal(snapshot.agentChallengeConvertedPaidSuccesses, 0);
   assert.equal(snapshot.agentChallengeConvertedActors, 0);
   assert.equal(snapshot.agentChallengeActorConversionRate, null);
+  assert.equal(snapshot.parseableCredentialAttemptEvents, 2);
+  assert.equal(snapshot.credentialAttemptByClass.independent, 2);
   assert.equal(snapshot.independentPaidSuccessActors, 1);
   assert.equal(snapshot.repeatIndependentPaidSuccessActors, 1);
   assert.equal(snapshot.settlementReferenceEligiblePaidSuccesses, 2);
@@ -289,6 +304,8 @@ test("challenge conversion requires conservative same-actor continuity", async (
   const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-challenge-conversion-"));
   const payer = "0x3333333333333333333333333333333333333333";
   const signature = Buffer.from(JSON.stringify({
+    x402Version: 2,
+    accepted: { scheme: "exact", network: "eip155:8453", amount: "50000", asset: "0x6666666666666666666666666666666666666666", payTo: "0x7777777777777777777777777777777777777777" },
     payload: { authorization: { from: payer } },
   })).toString("base64");
   const telemetry = createCommerceTelemetry({
@@ -329,6 +346,14 @@ test("challenge conversion requires conservative same-actor continuity", async (
   assert.equal(snapshot.agentChallengeConvertedBySource.agent402, 1);
   assert.equal(snapshot.agentChallengeConvertedByClass.independent, 1);
   assert.equal(snapshot.paidSuccessByClass.independent, 2);
+  assert.equal(snapshot.paymentHeaderEvents, 2);
+  assert.equal(snapshot.parseableCredentialAttemptEvents, 2);
+  assert.equal(snapshot.unparseablePaymentHeaderEvents, 0);
+  assert.equal(snapshot.parseableCredentialAttemptActors, 1);
+  assert.equal(snapshot.repeatParseableCredentialAttemptActors, 1);
+  assert.equal(snapshot.credentialAttemptByProtocol.x402, 2);
+  assert.equal(snapshot.credentialAttemptByResult.paid_success, 2);
+  assert.equal(snapshot.credentialAttemptByClass.independent, 2);
   assert.equal(JSON.stringify(snapshot).includes(payer), false);
   assert.equal(JSON.stringify(snapshot).includes("not-stored"), false);
   await rm(dataDir, { recursive: true, force: true });
@@ -406,6 +431,8 @@ test("machine discovery uses an independent baseline and excludes owned monitors
   assert.equal(snapshot.agentChallengeConvertedPaidSuccesses, 0);
   assert.equal(snapshot.agentChallengeConvertedActors, 0);
   assert.equal(snapshot.agentChallengeActorConversionRate, null);
+  assert.equal(snapshot.parseableCredentialAttemptEvents, 0);
+  assert.equal(snapshot.unparseablePaymentHeaderEvents, 0);
   assert.equal(snapshot.externalEvents, 0);
   await rm(dataDir, { recursive: true, force: true });
 });
