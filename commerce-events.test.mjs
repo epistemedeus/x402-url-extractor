@@ -178,6 +178,16 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.equal(snapshot.agentDiscoveryBySource["generic-agent-indexer"], 4);
   assert.equal(snapshot.agentDiscoveryByRoute["/openapi.json"], 1);
   assert.equal(snapshot.agentDiscoveryBySourceRoute.agent402["/openapi.json"], 1);
+  assert.equal(snapshot.agentPaidRouteObservations, 4);
+  assert.equal(snapshot.agentChallengeObservations, 3);
+  assert.equal(snapshot.agentChallengeActors, 3);
+  assert.equal(snapshot.repeatAgentChallengeActors, 0);
+  assert.equal(snapshot.agentChallengeRate, 0.75);
+  assert.equal(snapshot.agentChallengeBySource["generic-agent-indexer"], 3);
+  assert.equal(snapshot.agentChallengeByRoute["/extract"], 1);
+  assert.equal(snapshot.agentChallengeByRoute["/defi/morpho-position"], 1);
+  assert.equal(snapshot.agentChallengeByRoute["/deep-audit"], 1);
+  assert.equal(snapshot.agentChallengeBySourceRoute["generic-agent-indexer"]["/extract"], 1);
   assert.equal(snapshot.paidSuccessByClass.validation, 1);
   assert.equal(snapshot.paidSuccessByClassRoute.validation["/defi/morpho-position"], 1);
   assert.equal(snapshot.settlementReferenceEligiblePaidSuccesses, 1);
@@ -253,6 +263,9 @@ test("only explicitly classified independent payers enter independent demand", a
   assert.equal(snapshot.paidSuccessByDiscoverySourceRoute.agent402["/extract"], 2);
   assert.equal(snapshot.independentPaidSuccessByDiscoverySource.agent402, 2);
   assert.equal(snapshot.agentDiscoveryObservations, 0);
+  assert.equal(snapshot.agentPaidRouteObservations, 0);
+  assert.equal(snapshot.agentChallengeObservations, 0);
+  assert.equal(snapshot.agentChallengeRate, null);
   assert.equal(snapshot.independentPaidSuccessActors, 1);
   assert.equal(snapshot.repeatIndependentPaidSuccessActors, 1);
   assert.equal(snapshot.settlementReferenceEligiblePaidSuccesses, 2);
@@ -329,6 +342,9 @@ test("machine discovery uses an independent baseline and excludes owned monitors
   const snapshot = await telemetry.snapshot({ days: 1 });
   assert.equal(snapshot.agentDiscoverySince, baseline);
   assert.equal(snapshot.agentDiscoveryObservations, 0);
+  assert.equal(snapshot.agentPaidRouteObservations, 0);
+  assert.equal(snapshot.agentChallengeObservations, 0);
+  assert.equal(snapshot.agentChallengeRate, null);
   assert.equal(snapshot.externalEvents, 0);
   await rm(dataDir, { recursive: true, force: true });
 });

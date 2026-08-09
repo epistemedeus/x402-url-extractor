@@ -115,6 +115,13 @@ user-agent label records source-to-paid conversion by source and route. Channel
 labels are still self-declared rather than authenticated referral proof, and
 independent demand still requires the explicit payer-class policy.
 
+Version 1.11.5 separates paid-route reach from challenge delivery. Prospective
+agent/indexer observations now report paid-route probes, HTTP 402 challenges,
+distinct and repeat challenge actors, challenge rate, and controlled source and
+route breakdowns. This identifies whether the machine funnel stops before the
+paywall, at the challenge, or after a submitted credential without treating an
+indexer probe as purchase intent.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured

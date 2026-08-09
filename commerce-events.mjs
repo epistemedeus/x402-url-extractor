@@ -416,6 +416,12 @@ export function createCommerceTelemetry({
     const agentDiscoveryByRoute = emptyCounts();
     const agentDiscoveryBySourceRoute = Object.create(null);
     const agentDiscoveryActors = new Map();
+    const agentChallengeBySource = emptyCounts();
+    const agentChallengeByRoute = emptyCounts();
+    const agentChallengeBySourceRoute = Object.create(null);
+    const agentChallengeActors = new Map();
+    let agentPaidRouteObservations = 0;
+    let agentChallengeObservations = 0;
     for (const event of agentDiscoveryEvents) {
       const source = typeof event.agentDiscoverySource === "string"
         && /^[a-z][a-z0-9-]{1,39}$/.test(event.agentDiscoverySource)
@@ -426,6 +432,17 @@ export function createCommerceTelemetry({
       if (!agentDiscoveryBySourceRoute[source]) agentDiscoveryBySourceRoute[source] = emptyCounts();
       increment(agentDiscoveryBySourceRoute[source], event.route);
       agentDiscoveryActors.set(event.actor, (agentDiscoveryActors.get(event.actor) || 0) + 1);
+      if (event.kind === "paid") {
+        agentPaidRouteObservations += 1;
+        if (eventResult(event) === "challenge") {
+          agentChallengeObservations += 1;
+          increment(agentChallengeBySource, source);
+          increment(agentChallengeByRoute, event.route);
+          if (!agentChallengeBySourceRoute[source]) agentChallengeBySourceRoute[source] = emptyCounts();
+          increment(agentChallengeBySourceRoute[source], event.route);
+          agentChallengeActors.set(event.actor, (agentChallengeActors.get(event.actor) || 0) + 1);
+        }
+      }
     }
 
     const byResult = emptyCounts();
@@ -533,6 +550,16 @@ export function createCommerceTelemetry({
       agentDiscoveryBySource,
       agentDiscoveryByRoute,
       agentDiscoveryBySourceRoute,
+      agentPaidRouteObservations,
+      agentChallengeObservations,
+      agentChallengeActors: agentChallengeActors.size,
+      repeatAgentChallengeActors: [...agentChallengeActors.values()].filter((count) => count > 1).length,
+      agentChallengeRate: agentPaidRouteObservations
+        ? agentChallengeObservations / agentPaidRouteObservations
+        : null,
+      agentChallengeBySource,
+      agentChallengeByRoute,
+      agentChallengeBySourceRoute,
       paidSuccessByRoute,
       paidSuccessByProtocol,
       paidSuccessByDiscoverySource,
@@ -560,7 +587,7 @@ export function createCommerceTelemetry({
       repeatSemanticUnmatchedActors: [...semanticUnmatchedActors.values()].filter((count) => count > 1).length,
       semanticUnmatched,
       semanticUnmatchedHeuristic: "v1-high-precision-route-keywords",
-      agentDiscoveryPolicy: "After the declared machine-discovery baseline, recognized crawler and agent-indexer user-agent families are reduced to a controlled source label at ingestion. SameDayDesk-owned monitor user agents are excluded. Raw user-agent strings and network addresses are not retained in the public snapshot. These observations measure machine fetches of known discovery or paid routes, not authenticated referrals, buyer intent, or demand.",
+      agentDiscoveryPolicy: "After the declared machine-discovery baseline, recognized crawler and agent-indexer user-agent families are reduced to a controlled source label at ingestion. SameDayDesk-owned monitor user agents are excluded. Raw user-agent strings and network addresses are not retained in the public snapshot. Paid-route observations and HTTP 402 challenge delivery are reported separately by controlled source and route so discovery reach can be distinguished from payment conversion. These observations are not authenticated referrals, buyer intent, or demand.",
       unmatched: unmatchedRequests,
       paymentClassPolicy: "Explicit known-payer rules classify internal, marketplace validation, incentivized, affiliated, or independently confirmed buyers. Unknown or missing payer identities remain unclassified and never become independent by inference.",
       discoveryConversionPolicy: "A submitted payment credential overrides crawler classification so paying agents remain in economic telemetry. Controlled user-agent source labels attribute the client channel but are self-declared and do not independently authenticate a registry referral. SameDayDesk owner monitors remain excluded before this rule.",
