@@ -145,10 +145,15 @@ output schemas.
 
 Production uses CDP. All eleven routes passed live CDP verification and
 completed a real settlement. The original eight appear in Bazaar merchant
-discovery; the three newer Morpho decision routes have successful settlement
-receipts and remain inside CDP's asynchronous catalog-refresh window as of the
-latest check. Keep xpay as the no-key continuity fallback, not as the normal
-production facilitator.
+discovery. The three newer Morpho decision routes have successful settlement
+receipts, and a distinct funded payer produced `isValid: true` plus Bazaar
+extension status `processing` for all three. They still did not enter merchant
+discovery after the documented cache window and a fresh settlement, so this is
+tracked as a downstream CDP indexing incident rather than a route-metadata
+failure. The secret-free reproduction is attached to
+[x402 issue #2156](https://github.com/x402-foundation/x402/issues/2156#issuecomment-5229812482).
+Keep xpay as the no-key continuity fallback, not as the normal production
+facilitator.
 
 ---
 
@@ -220,9 +225,12 @@ its JSON schemas in the 402 payload (verified present in the live response).
 **Surfacing in the CDP Bazaar requires the CDP facilitator**: CDP catalogs a
 route after its first successful settlement. The production merchant lookup
 returns the original eight SameDayDesk routes; all three newer Morpho decision
-routes have successful CDP settlements and await the asynchronous catalog
-refresh. CDP also finds the original Morpho and deep-audit routes through
-semantic search.
+routes have successful CDP settlements and accepted `processing` Bazaar
+extensions, but remain absent beyond the documented cache window. CDP also
+finds the original Morpho and deep-audit routes through semantic search. Use the
+merchant lookup as evidence of CDP catalog state, not as the canonical count of
+SameDayDesk capabilities; the owned manifest, MCP, A2A, and OpenAPI surfaces
+remain complete at eleven.
 
 CDP rejected three older route payloads whose discovery descriptions were 535,
 581, and 629 characters even though local extension validation passed. Concise
