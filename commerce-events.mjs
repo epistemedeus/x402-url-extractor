@@ -3,17 +3,23 @@ import { appendFile, chmod, mkdir, readFile, rename, stat, unlink } from "node:f
 import path from "node:path";
 
 const CRAWLER_PATTERN = /bot|crawler|spider|slurp|uptime|monitor|headless|preview|liveness|healthcheck|sentineloracle|mcpbeat|agentreeve|agent402|trust[- ]?oracle/i;
+const EXPLOIT_PROBE_PATH_PATTERN = /(?:^|\/)\.(?:env|git)(?:[./]|$)|^\/(?:wp-admin|wp-login\.php|wp-json|xmlrpc\.php)(?:\/|$)/i;
 const PAYMENT_HEADERS = ["payment-signature", "x-payment", "x-payment-signature"];
 
 const EXACT_ROUTES = new Map([
   ["/", { route: "/", kind: "discovery" }],
   ["/healthz", { route: "/healthz", kind: "excluded" }],
   ["/.well-known/x402", { route: "/.well-known/x402", kind: "discovery" }],
+  ["/.well-known/x402.json", { route: "/.well-known/x402", kind: "discovery" }],
+  ["/x402.json", { route: "/.well-known/x402", kind: "discovery" }],
+  ["/api/x402", { route: "/.well-known/x402", kind: "discovery" }],
   ["/.well-known/402index-verify.txt", { route: "/.well-known/402index-verify.txt", kind: "excluded" }],
   ["/llms.txt", { route: "/llms.txt", kind: "discovery" }],
   ["/robots.txt", { route: "/robots.txt", kind: "discovery" }],
   ["/sitemap.xml", { route: "/sitemap.xml", kind: "discovery" }],
   ["/openapi.json", { route: "/openapi.json", kind: "discovery" }],
+  ["/openapi.yaml", { route: "/openapi.json", kind: "discovery" }],
+  ["/swagger.json", { route: "/openapi.json", kind: "discovery" }],
   ["/v0/cards.json", { route: "/v0/cards.json", kind: "discovery" }],
   ["/v0/commerce-demand.json", { route: "/v0/commerce-demand.json", kind: "excluded" }],
   ["/schemas/platform-health-card-v0.json", { route: "/schemas/platform-health-card-v0.json", kind: "discovery" }],
@@ -167,6 +173,8 @@ export function createCommerceTelemetry({
     const suppliedInternal = headerValue(headers, "x-samedaydesk-internal");
     const originClass = safeEqual(suppliedInternal, internalToken)
       ? "internal"
+      : EXPLOIT_PROBE_PATH_PATTERN.test(req.path || req.url || "")
+        ? "scanner"
       : CRAWLER_PATTERN.test(userAgent)
         ? "crawler"
         : "external";
@@ -236,7 +244,7 @@ export function createCommerceTelemetry({
       byResult,
       byRoute,
       unmatched,
-      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal and crawler traffic are excluded, but unidentified automated fetchers can remain. Counts are acquisition signals, not verified buyers, buyer identities, or calibrated forecasts.",
+      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, crawler, and exploit-probe traffic is excluded, but unidentified automated fetchers can remain. Counts are acquisition signals, not verified buyers, buyer identities, or calibrated forecasts.",
     };
   }
 

@@ -10,6 +10,7 @@ structured data generation, and AI-search readiness audits.
 - Smithery: https://smithery.ai/servers/epistemedeus/x402-data-gateway
 - Remote MCP: https://agents.samedaydesk.com/mcp
 - Live resource manifest: https://agents.samedaydesk.com/.well-known/x402
+- OpenAPI: https://agents.samedaydesk.com/openapi.json
 - Settlement Radar: https://agents.samedaydesk.com/platforms
 - Platform health JSON: https://agents.samedaydesk.com/v0/cards.json
 - Aggregate machine-demand telemetry: https://agents.samedaydesk.com/v0/commerce-demand.json
@@ -34,7 +35,15 @@ not verified buyers, because unidentified automated indexers can remain. It does
 not record raw IP addresses, user
 agents, URLs, query values, bodies, payment headers, marketplace payloads, or
 credentials. Public output is aggregate only; owner and crawler traffic are
-excluded.
+excluded. Common exploit probes such as `.env`, `.git`, and WordPress discovery
+paths are classified as scanner traffic and excluded as well.
+
+Observed agent crawlers use several discovery conventions. The canonical
+manifest remains `/.well-known/x402`, with compatible aliases at
+`/.well-known/x402.json`, `/x402.json`, and `/api/x402`. The canonical OpenAPI
+document remains `/openapi.json`, with `/openapi.yaml` and `/swagger.json`
+returning the same JSON document. `GET /mcp` returns a free transport descriptor;
+actual MCP discovery and paid tool calls use streamable HTTP at `POST /mcp`.
 
 The Agoragentic callback is a separate marketplace distribution bridge. The
 marketplace handles buyer routing, settlement, and seller accounting, while the

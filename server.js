@@ -362,11 +362,28 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/deep-audit`, amount: priceToAtomic(DEEP_AUDIT_PRICE), description: "Domain -> ONE complete AI-search-readiness audit: firmographics + tech stack + contact + DNS/email infra + a 0-100 AI-readiness score, PLUS a structured-data gap analysis with a paste-ready JSON-LD fix list and a combined letter grade. The bundled deep tier (enrich + schemaforge in one call). No auth, no API keys; pay-per-call USDC.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/defi/morpho-position`, amount: priceToAtomic(MORPHO_POSITION_PRICE), description: "Base address -> deterministic Morpho borrower position snapshot and collateral-price stress scenarios. Returns LTV, LLTV, health factor, liquidation headroom, source freshness, and scenario outcomes. Read-only indexed observation; direct RPC verification is required before execution.", mimeType: "application/json" },
 ];
-app.get("/.well-known/x402", (_req, res) => {
+app.get(["/.well-known/x402", "/.well-known/x402.json", "/x402.json", "/api/x402"], (_req, res) => {
   res.json({
     x402Version: 2,
     lastUpdated: Math.floor(Date.now() / 1000),
     items: RESOURCES.map((r) => ({ resource: { url: r.url, description: r.description, mimeType: r.mimeType }, type: "http", accepts: acceptsFor(r.amount) })),
+  });
+});
+
+// A browser or indexer sometimes probes MCP with GET before opening the
+// streamable-HTTP POST transport. Return a free machine descriptor instead of
+// a 405; actual tool discovery and calls remain on POST /mcp.
+app.get("/mcp", (_req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  return res.json({
+    name: "x402-data-gateway",
+    transport: "streamable-http",
+    endpoint: `${PUBLIC_URL}/mcp`,
+    method: "POST",
+    toolCount: RESOURCES.length,
+    payment: "x402 USDC on Base per tool call",
+    manifest: `${PUBLIC_URL}/.well-known/x402`,
+    openapi: `${PUBLIC_URL}/openapi.json`,
   });
 });
 // --- /llms.txt: agent/LLM-native discovery surface (llmstxt.org convention).
@@ -458,7 +475,7 @@ app.get("/alerts", (_req, res) => {
   return res.type("html").send(renderAlertPilot());
 });
 
-app.get("/openapi.json", (_req, res) => {
+app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
   res.json({
     openapi: "3.0.3",
     info: { title: "SameDayDesk machine commerce gateway", version: "1.1.0", description: `Machine-discoverable paid capabilities on Base: Morpho position risk ${MORPHO_POSITION_PRICE}, company enrichment ${ENRICH_PRICE}, wallet enrichment ${WALLET_ENRICH_PRICE}, URL extraction ${EXTRACT_PRICE}, Markdown reading ${READ_PRICE}, repository scan ${SCAN_PRICE}, structured data ${SCHEMAFORGE_PRICE}. payTo ${PAY_TO}` },
@@ -946,7 +963,9 @@ app.get("/", (_req, res) => {
     },
     machineCommerce: {
       manifest: "/.well-known/x402",
+      manifestAliases: ["/.well-known/x402.json", "/x402.json", "/api/x402"],
       openapi: "/openapi.json",
+      openapiAliases: ["/openapi.yaml", "/swagger.json"],
       llms: "/llms.txt",
       mcp: "POST /mcp",
       aggregateDemand: "/v0/commerce-demand.json",

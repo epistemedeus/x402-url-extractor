@@ -24,6 +24,10 @@ test("route classification preserves useful intent without recording opaque path
   assert.equal(classifyCommerceRoute("/morpho/0x4352cc849b33a936ad93bb109afdec1c89653b4f").route, "/morpho/*");
   assert.equal(classifyCommerceRoute("/someone@example.com/private").route, "/:opaque/*");
   assert.equal(classifyCommerceRoute("/integrations/the402/webhook").kind, "excluded");
+  assert.equal(classifyCommerceRoute("/.well-known/x402.json").route, "/.well-known/x402");
+  assert.equal(classifyCommerceRoute("/api/x402").route, "/.well-known/x402");
+  assert.equal(classifyCommerceRoute("/openapi.yaml").route, "/openapi.json");
+  assert.equal(classifyCommerceRoute("/swagger.json").route, "/openapi.json");
 });
 
 test("paid response classes separate challenge, validation, success, and failure", () => {
@@ -75,6 +79,9 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   run({ path: "/extract", status: 402, headers: { "user-agent": "AgentReeve/5.1" } });
   run({ path: "/openapi.json", status: 200, headers: { "user-agent": "Agent402/1.0" } });
   run({ path: "/defi/morpho-position", status: 402, headers: { "user-agent": "entropy-daemon-trust-oracle/2.0" } });
+  run({ path: "/.env.production", status: 404, headers: { "user-agent": "Mozilla/5.0" } });
+  run({ path: "/.git/HEAD", status: 404, headers: { "user-agent": "Mozilla/5.0" } });
+  run({ path: "/wp-json/", status: 404, headers: { "user-agent": "Mozilla/5.0" } });
 
   await telemetry.flush();
   const storage = await telemetry.storageStatus();
