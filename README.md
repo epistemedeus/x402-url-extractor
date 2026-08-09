@@ -73,6 +73,33 @@ The registry's own generated ownership manifest is hosted separately at
 `https://samedaydesk.com/.well-known/agent-card.json`; the standards-compliant
 A2A v1.0 card remains canonical on `agents.samedaydesk.com`.
 
+## PreLiquidation shadow watcher
+
+`morpho-preliquidation-shadow.mjs` is the observation-only forward evidence
+lane selected by the complete Base census. It watches the five markets that
+concentrate historical execution, derives each market's actual PreLiquidation
+health threshold from LLTV and pre-LLTV, checks every observed authorization
+directly at one explicit Base block, and uses per-contract event cursors.
+
+New execution transactions are replayed through the deterministic archive-RPC
+engine, up to 20 per run. The record includes detection latency, gross
+loan-asset incentive, and native gas while retaining the explicit boundary that
+swap, funding, failure, competition, and MEV costs remain outside the replay.
+Positions below the explicit 1 USD debt observation floor are classified as
+dust rather than opportunities.
+
+```bash
+node morpho-preliquidation-shadow.mjs \
+  --state /data/morpho-preliquidation-shadow-state.json \
+  --history /data/morpho-preliquidation-shadow-history.ndjson
+```
+
+State and history files are forced to mode 0600. A material change means a new
+or removed authorization, a transition into or out of the protocol-specific
+risk window, a large liquidity or utilization move, or a new verified
+PreLiquidation execution. No wallet, signer, authorization, custody, or
+principal is part of the watcher.
+
 The Agoragentic callback is a separate marketplace distribution bridge. The
 marketplace handles buyer routing, settlement, and seller accounting, while the
 callback performs the same production AI-search-readiness audit behind a small
