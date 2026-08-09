@@ -2,12 +2,12 @@
   "package_name": "com.samedaydesk.machine-commerce",
   "display_name": "SameDayDesk Machine Commerce Storefront",
   "description": "Discovers exact-price x402 data and risk actions that settle USDC on Base.",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "manifest_url": "https://agents.samedaydesk.com/.well-known/agent-card.json",
   "openapi_url": "https://agents.samedaydesk.com/openapi.json",
   "capabilities": {
     "discover_paid_actions": {
-      "description": "Return the current nine-action x402 catalog with exact USDC prices, settlement network, input URLs, and payment instructions.",
+      "description": "Return the current ten-action x402 catalog with exact USDC prices, settlement network, input URLs, and payment instructions.",
       "endpoint": "https://agents.samedaydesk.com/a2a/message:send",
       "method": "POST",
       "input_schema": {

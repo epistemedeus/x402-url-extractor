@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 const A2A_VERSION = "1.0";
 
-export function buildAgentCard({ publicUrl, serviceVersion = "1.2.0" }) {
+export function buildAgentCard({ publicUrl, serviceVersion = "1.3.0" }) {
   return {
     name: "SameDayDesk machine commerce storefront",
     description: "Discovers exact-price x402 data and risk actions that settle USDC on Base.",
