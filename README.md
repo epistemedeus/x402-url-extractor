@@ -270,6 +270,10 @@ response. It reports only which `X-ACF-*` header names reached the origin and
 whether signature, timestamp, and usage proof fields are present. It never
 returns their values, and proxied responses are marked `private, no-store`.
 
+Version 1.11.31 includes the same value-free diagnostic in the proxied catalog
+body because AgenticTrade intentionally returns only its own billing headers to
+the caller. Direct catalog responses remain unchanged and publicly cacheable.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured

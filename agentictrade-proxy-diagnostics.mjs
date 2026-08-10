@@ -20,11 +20,11 @@ export function summarizeAgenticTradeProxyHeaders(headers) {
 
 export function exposeAgenticTradeProxyDiagnostics(req, res) {
   const summary = summarizeAgenticTradeProxyHeaders(req.headers);
-  if (!summary.headerNames.length) return false;
+  if (!summary.headerNames.length) return null;
   res.set("Cache-Control", "private, no-store");
   res.set("X-SameDayDesk-AgenticTrade-Headers", summary.headerNames.join(","));
   res.set("X-SameDayDesk-AgenticTrade-Signature", summary.signaturePresent ? "present" : "absent");
   res.set("X-SameDayDesk-AgenticTrade-Timestamp", summary.timestampPresent ? "present" : "absent");
   res.set("X-SameDayDesk-AgenticTrade-Usage", summary.usageIdPresent ? "present" : "absent");
-  return true;
+  return summary;
 }

@@ -23,11 +23,17 @@ test("reports only AgenticTrade header names and boolean proof signals", () => {
 test("sets no-store diagnostics only when AgenticTrade headers are present", () => {
   const set = new Map();
   const response = { set: (name, value) => set.set(name, value) };
-  assert.equal(exposeAgenticTradeProxyDiagnostics({ headers: { accept: "application/json" } }, response), false);
+  assert.equal(exposeAgenticTradeProxyDiagnostics({ headers: { accept: "application/json" } }, response), null);
   assert.equal(set.size, 0);
-  assert.equal(exposeAgenticTradeProxyDiagnostics({
+  assert.deepEqual(exposeAgenticTradeProxyDiagnostics({
     headers: { "x-acf-signature": "abc", "x-acf-timestamp": "123" },
-  }, response), true);
+  }, response), {
+    headerNames: ["x-acf-signature", "x-acf-timestamp"],
+    signaturePresent: true,
+    timestampPresent: true,
+    usageIdPresent: false,
+    amountPresent: false,
+  });
   assert.equal(set.get("Cache-Control"), "private, no-store");
   assert.equal(set.get("X-SameDayDesk-AgenticTrade-Headers"), "x-acf-signature,x-acf-timestamp");
   assert.equal(set.get("X-SameDayDesk-AgenticTrade-Signature"), "present");
