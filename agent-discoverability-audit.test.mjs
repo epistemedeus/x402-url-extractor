@@ -46,6 +46,12 @@ test("preserves registry ranks and identifies the target by origin or payTo", as
       endpoints: [{ url: "https://api.example.com/extract", description: "extract structured metadata", pricing: { amount: "0.05" } }],
     }] });
     if (target.includes("circle.com")) return response({ items: [] });
+    if (target.includes("agentictrade.io")) return response({ services: [{
+      name: "Target Catalog",
+      description: "extract a public website into structured JSON metadata",
+      endpoint: "https://api.example.com/api/actions",
+      pricing: { price_per_call: "0.0" },
+    }] });
     if (target.includes("mpp.dev")) return response({ services: [{
       name: "Target MPP",
       description: "Structured website extraction",
@@ -61,16 +67,16 @@ test("preserves registry ranks and identifies the target by origin or payTo", as
     route: "/extract",
     payTo,
   }, { fetchImpl, now: 0 });
-  assert.equal(result.summary.targetFoundSourceCount, 4);
-  assert.equal(result.summary.targetFoundSourceFamilyCount, 3);
-  assert.deepEqual(result.summary.foundSourceFamilies, ["coinbase", "agent402", "mpp"]);
+  assert.equal(result.summary.targetFoundSourceCount, 5);
+  assert.equal(result.summary.targetFoundSourceFamilyCount, 4);
+  assert.deepEqual(result.summary.foundSourceFamilies, ["coinbase", "agent402", "agentictrade", "mpp"]);
   assert.equal(result.sources["coinbase-bazaar"].bestTargetRank, 2);
   assert.equal(result.sources["coinbase-bazaar"].competitorsAboveTarget.length, 1);
   assert.equal(result.sources["coinbase-bazaar"].targetResults[0].rank, 2);
   assert.equal(result.sources["agent402-router"].bestTargetRank, 1);
   assert.equal(result.sources["official-mpp-catalog"].expectedRouteFound, true);
   assert.deepEqual(result.summary.missingSources, ["circle-marketplace"]);
-  assert.equal(result.summary.topThreeSourceCount, 4);
+  assert.equal(result.summary.topThreeSourceCount, 5);
   assert.ok(result.findings.some((finding) => finding.source === "circle-marketplace" && finding.finding === "target_absent_from_ranked_results"));
   assert.ok(result.nextActions.some((action) => action.source === "circle-marketplace"));
   assert.equal(result.safety.paymentSentToCatalogs, false);
@@ -84,6 +90,7 @@ test("contains one source failure while preserving the other observations", asyn
     if (target.includes("agent402.tools")) return response({ results: [] });
     if (target.includes("agentic.market")) return response({ services: [] });
     if (target.includes("circle.com")) return response({ items: [] });
+    if (target.includes("agentictrade.io")) return response({ services: [] });
     if (target.includes("mpp.dev")) return response({ services: [] });
     throw new Error(`unexpected ${target}`);
   };
@@ -91,7 +98,7 @@ test("contains one source failure while preserving the other observations", asyn
     origin: "https://api.example.com",
     intent: "extract a public website into structured JSON metadata",
   }, { fetchImpl, now: 0 });
-  assert.equal(result.summary.availableSourceCount, 4);
+  assert.equal(result.summary.availableSourceCount, 5);
   assert.deepEqual(result.summary.unavailableSources, ["coinbase-bazaar"]);
   assert.equal(result.sources["coinbase-bazaar"].status, "error");
   assert.equal(JSON.stringify(result).includes("secret"), false);

@@ -435,12 +435,17 @@ completed an owner-excluded settlement for integration and indexing QA. The
 thirteenth route, `/distribution/agent-discoverability-audit`, is live at 0.05
 USDC and productizes the brand-blind catalog benchmark used on SameDayDesk
 itself. It queries Bazaar, Agentic Market, Agent402, Circle, and the official MPP
-catalog without catalog credentials or payments, preserves registry-native
-order, and reports coverage, rank, competitors above the target, and
+catalog plus AgenticTrade without catalog credentials or payments, preserves
+registry-native order, and reports coverage, rank, competitors above the target, and
 evidence-based next actions as point-in-time observations rather than a
 composite score. Bazaar and Agentic Market are explicitly one Coinbase source
 family, so the output does not inflate independent reach by counting both views
 as separate acquisition channels.
+
+Version 1.11.32 adds AgenticTrade as a sixth registry view and fifth independent
+source family in that paid audit. Its public text-search order is preserved and
+reported separately from semantic registries and the locally ranked flat MPP
+catalog.
 
 The fourteenth route, `/commerce/payment-offer-preflight`, is live at 0.005
 USDC. It productizes the buyer-side authorization boundary: fetch the unpaid

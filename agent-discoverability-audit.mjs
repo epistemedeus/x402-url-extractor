@@ -2,6 +2,7 @@ const BAZAAR_SEARCH = "https://api.cdp.coinbase.com/platform/v2/x402/discovery/s
 const AGENT402_ROUTE = "https://agent402.tools/api/route";
 const CIRCLE_SEARCH = "https://api.circle.com/v2/x402/discovery/resources";
 const AGENTIC_MARKET_SEARCH = "https://api.agentic.market/v1/services/search";
+const AGENTICTRADE_SEARCH = "https://agentictrade.io/api/v1/discover";
 const MPP_CATALOG = "https://mpp.dev/api/services";
 
 const SOURCE_ORDER = [
@@ -9,6 +10,7 @@ const SOURCE_ORDER = [
   "coinbase-agentic-market",
   "agent402-router",
   "circle-marketplace",
+  "agentictrade-catalog",
   "official-mpp-catalog",
 ];
 const SOURCE_FAMILIES = Object.freeze({
@@ -16,6 +18,7 @@ const SOURCE_FAMILIES = Object.freeze({
   "coinbase-agentic-market": "coinbase",
   "agent402-router": "agent402",
   "circle-marketplace": "circle",
+  "agentictrade-catalog": "agentictrade",
   "official-mpp-catalog": "mpp",
 });
 
@@ -145,6 +148,16 @@ function normalizeAgenticMarket(payload) {
   })));
 }
 
+function normalizeAgenticTrade(payload) {
+  if (!Array.isArray(payload?.services)) throw new Error("AgenticTrade response is missing services");
+  return payload.services.map((service) => candidate({
+    name: service.name,
+    url: service.endpoint,
+    description: service.description,
+    priceUsd: service.pricing?.price_per_call,
+  }));
+}
+
 function tokens(value) {
   return new Set(String(value || "").toLowerCase().match(/[a-z0-9]{2,}/g) || []);
 }
@@ -272,6 +285,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
     })),
     "circle-marketplace": async () => normalizeCircle(await fetchJson(`${CIRCLE_SEARCH}?query=${encoded}&limit=${limit}`, { fetchImpl })),
     "coinbase-agentic-market": async () => normalizeAgenticMarket(await fetchJson(`${AGENTIC_MARKET_SEARCH}?q=${encoded}`, { fetchImpl })),
+    "agentictrade-catalog": async () => normalizeAgenticTrade(await fetchJson(`${AGENTICTRADE_SEARCH}?q=${encoded}&limit=${limit}`, { fetchImpl })),
     "official-mpp-catalog": async () => normalizeMpp(await fetchJson(MPP_CATALOG, { fetchImpl }), input.intent, limit),
   };
   const settled = await Promise.allSettled(SOURCE_ORDER.map((source) => calls[source]()));
@@ -324,7 +338,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
   return {
     ok: true,
     product: "samedaydesk-agent-discoverability-audit",
-    version: "1.1.0",
+    version: "1.2.0",
     generatedAt: new Date(now).toISOString(),
     input: {
       origin: input.origin,
@@ -354,7 +368,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
     sources,
     findings,
     nextActions,
-    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, and Circle. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata.",
+    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, and AgenticTrade. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. AgenticTrade uses its public text-search order. MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata.",
     safety: {
       credentialsUsed: false,
       paymentSignedToCatalogs: false,
