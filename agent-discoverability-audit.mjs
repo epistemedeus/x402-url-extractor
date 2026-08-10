@@ -1,14 +1,23 @@
 const BAZAAR_SEARCH = "https://api.cdp.coinbase.com/platform/v2/x402/discovery/search";
 const AGENT402_ROUTE = "https://agent402.tools/api/route";
 const CIRCLE_SEARCH = "https://api.circle.com/v2/x402/discovery/resources";
+const AGENTIC_MARKET_SEARCH = "https://api.agentic.market/v1/services/search";
 const MPP_CATALOG = "https://mpp.dev/api/services";
 
 const SOURCE_ORDER = [
   "coinbase-bazaar",
+  "coinbase-agentic-market",
   "agent402-router",
   "circle-marketplace",
   "official-mpp-catalog",
 ];
+const SOURCE_FAMILIES = Object.freeze({
+  "coinbase-bazaar": "coinbase",
+  "coinbase-agentic-market": "coinbase",
+  "agent402-router": "agent402",
+  "circle-marketplace": "circle",
+  "official-mpp-catalog": "mpp",
+});
 
 function cleanString(value, maximum = 500) {
   if (typeof value !== "string") return null;
@@ -123,6 +132,17 @@ function normalizeCircle(payload) {
     priceUsd: decimalPrice(item.accepts),
     payTo: item.accepts?.[0]?.payTo,
   }));
+}
+
+function normalizeAgenticMarket(payload) {
+  if (!Array.isArray(payload?.services)) throw new Error("Agentic Market response is missing services");
+  return payload.services.flatMap((service) => (service.endpoints || []).map((endpoint) => candidate({
+    name: service.name,
+    url: endpoint.url,
+    origin: service.providerUrl,
+    description: `${service.description || ""} ${endpoint.description || ""}`,
+    priceUsd: endpoint.pricing?.amount,
+  })));
 }
 
 function tokens(value) {
@@ -251,6 +271,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
       body: { query: input.intent, top: limit, include: "all" },
     })),
     "circle-marketplace": async () => normalizeCircle(await fetchJson(`${CIRCLE_SEARCH}?query=${encoded}&limit=${limit}`, { fetchImpl })),
+    "coinbase-agentic-market": async () => normalizeAgenticMarket(await fetchJson(`${AGENTIC_MARKET_SEARCH}?q=${encoded}`, { fetchImpl })),
     "official-mpp-catalog": async () => normalizeMpp(await fetchJson(MPP_CATALOG, { fetchImpl }), input.intent, limit),
   };
   const settled = await Promise.allSettled(SOURCE_ORDER.map((source) => calls[source]()));
@@ -265,6 +286,15 @@ export async function agentDiscoverabilityAudit(rawInput, {
   const foundSources = availableSources.filter((source) => sources[source].targetFound);
   const routeFoundSources = input.route
     ? availableSources.filter((source) => sources[source].expectedRouteFound)
+    : [];
+  const sourceFamilies = [...new Set(SOURCE_ORDER.map((source) => SOURCE_FAMILIES[source]))];
+  const availableSourceFamilies = sourceFamilies.filter((family) =>
+    SOURCE_ORDER.some((source) => SOURCE_FAMILIES[source] === family && sources[source].status === "ok"));
+  const foundSourceFamilies = availableSourceFamilies.filter((family) =>
+    SOURCE_ORDER.some((source) => SOURCE_FAMILIES[source] === family && sources[source].status === "ok" && sources[source].targetFound));
+  const routeFoundSourceFamilies = input.route
+    ? availableSourceFamilies.filter((family) => SOURCE_ORDER.some((source) =>
+      SOURCE_FAMILIES[source] === family && sources[source].status === "ok" && sources[source].expectedRouteFound))
     : [];
   const findings = [];
   const nextActions = [];
@@ -294,7 +324,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
   return {
     ok: true,
     product: "samedaydesk-agent-discoverability-audit",
-    version: "1.0.1",
+    version: "1.1.0",
     generatedAt: new Date(now).toISOString(),
     input: {
       origin: input.origin,
@@ -313,11 +343,18 @@ export async function agentDiscoverabilityAudit(rawInput, {
       foundSources,
       missingSources: availableSources.filter((source) => !sources[source].targetFound),
       unavailableSources: SOURCE_ORDER.filter((source) => sources[source].status !== "ok"),
+      sourceFamilyCount: sourceFamilies.length,
+      availableSourceFamilyCount: availableSourceFamilies.length,
+      targetFoundSourceFamilyCount: foundSourceFamilies.length,
+      expectedRouteFoundSourceFamilyCount: input.route ? routeFoundSourceFamilies.length : null,
+      foundSourceFamilies,
+      missingSourceFamilies: availableSourceFamilies.filter((family) => !foundSourceFamilies.includes(family)),
+      unavailableSourceFamilies: sourceFamilies.filter((family) => !availableSourceFamilies.includes(family)),
     },
     sources,
     findings,
     nextActions,
-    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agent402, and Circle. MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata.",
+    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, and Circle. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata.",
     safety: {
       credentialsUsed: false,
       paymentSignedToCatalogs: false,

@@ -382,10 +382,13 @@ The twelfth route, `/work/opportunity-preflight`, is live at 0.05 USDC and
 completed an owner-excluded settlement for integration and indexing QA. The
 thirteenth route, `/distribution/agent-discoverability-audit`, is live at 0.05
 USDC and productizes the brand-blind catalog benchmark used on SameDayDesk
-itself. It queries Bazaar, Agent402, Circle, and the official MPP catalog without
-catalog credentials or payments, preserves registry-native order, and reports
-coverage, rank, competitors above the target, and evidence-based next actions as
-point-in-time observations rather than a composite score.
+itself. It queries Bazaar, Agentic Market, Agent402, Circle, and the official MPP
+catalog without catalog credentials or payments, preserves registry-native
+order, and reports coverage, rank, competitors above the target, and
+evidence-based next actions as point-in-time observations rather than a
+composite score. Bazaar and Agentic Market are explicitly one Coinbase source
+family, so the output does not inflate independent reach by counting both views
+as separate acquisition channels.
 
 ---
 
