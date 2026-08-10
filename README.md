@@ -246,6 +246,12 @@ non-public targets, unresolved parameters, and redirects, pins a public DNS
 result, reads only response headers, never signs or sends a target payment, and
 returns no opaque challenge state.
 
+Version 1.11.27 keeps the compact `/skill.md` agent contract synchronized with
+the fourteen-route action catalog. It now names payment-offer preflight in its
+selection vocabulary and states the target-inspection boundary: no credential,
+target signature or payment, redirect, or response-body read. A regression test
+keeps this focused buyer-authorization product present in future releases.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured

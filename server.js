@@ -32,6 +32,7 @@ import {
 } from "@x402/extensions/payment-identifier";
 import { createFacilitatorConfig } from "@coinbase/x402";
 import { createCommerceTrust } from "./commerce-trust.mjs";
+import { buildSkillContract } from "./skill-contract.mjs";
 import { extract, readMarkdown } from "./extract.mjs";
 import { scanRepo } from "./scan.mjs";
 import { schemaforge } from "./schemaforge.mjs";
@@ -671,39 +672,7 @@ app.get("/mcp", (_req, res) => {
 // instruction file before they parse OpenAPI or start an MCP session.
 app.get(["/skill.md", "/SKILL.md"], (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
-  return res.type("text/markdown").send(`# SameDayDesk machine commerce gateway
-
-Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, agent-work opportunity economics, cross-registry agent discoverability, Morpho borrower-risk, market-underwriting evidence, historical PreLiquidation replay, or unsigned Morpho protection plans and can pay exact USDC on Base through x402 or native MPP Payment authentication.
-
-## Discover
-
-- x402 manifest: ${PUBLIC_URL}/.well-known/x402
-- OpenAPI: ${PUBLIC_URL}/openapi.json
-- MPP discovery: ${PUBLIC_URL}/mpp-openapi.json (per-operation offers)
-- Action catalog: ${PUBLIC_URL}/api/actions
-- MCP transport: POST ${PUBLIC_URL}/mcp
-- A2A agent card: ${PUBLIC_URL}/.well-known/agent-card.json
-
-## Call and pay
-
-1. Choose an action from the manifest or action catalog.
-2. Send the declared GET request. Agent Skills clients should include X-SameDayDesk-Agent-Source: agent-skills-v1 on the initial request and paid replay. This declared label is attribution only, not authentication or payment.
-3. One unpaid HTTP 402 carries x402 v2 payment requirements and a native MPP WWW-Authenticate Payment challenge.
-4. Verify the HTTPS resource, exact amount, Base network, canonical USDC asset, and payTo wallet.
-5. Pay through x402 and replay with PAYMENT-SIGNATURE, or pay through MPP and replay with Authorization: Payment.
-6. Reconcile PAYMENT-RESPONSE for x402 or Payment-Receipt for MPP before continuing a workflow.
-
-## Boundaries
-
-- Morpho output is a read-only indexed snapshot with deterministic stress calculations. Verify direct RPC state before any financial action.
-- Morpho protection output is a deterministic quote plus unsigned templates. Re-read, simulate, and apply caller policy before signing elsewhere.
-- Morpho market underwriting exposes separate evidence flags rather than one opaque risk score. The caller owns policy and any capital decision.
-- Morpho PreLiquidation replay reconstructs gross historical event economics. It does not infer net profit or future executability.
-- Repository scan output is static evidence, not permission to execute untrusted code.
-- Opportunity preflight uses caller-supplied cost and selection assumptions plus dated categorical platform evidence. It makes no claim, bid, payment, or submission on the source platform.
-- Agent discoverability audit sends one brand-blind capability intent to public catalogs. It measures point-in-time rank and coverage, not demand, conversion, reliability, or future rank.
-- Demand telemetry is aggregate and does not expose buyer identities or raw request data.
-`);
+  return res.type("text/markdown").send(buildSkillContract(PUBLIC_URL));
 });
 
 app.get("/api/actions", (_req, res) => {
@@ -848,7 +817,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.11.26",
+      version: "1.11.27",
       description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, machine-payment preflight, wallet context, and Morpho decision evidence. Pay per call in Base USDC through x402 or native MPP.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
@@ -2085,7 +2054,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.11.26" },
+      serverInfo: { name: "x402-data-gateway", version: "1.11.27" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
