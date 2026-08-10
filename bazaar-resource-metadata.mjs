@@ -53,6 +53,10 @@ export const BAZAAR_RESOURCE_METADATA = Object.freeze({
     serviceName: "SameDayDesk",
     tags: Object.freeze(["x402", "mpp", "agent-discovery", "rank-audit", "api-discoverability"]),
   }),
+  "/commerce/payment-offer-preflight": Object.freeze({
+    serviceName: "SameDayDesk",
+    tags: Object.freeze(["x402", "mpp", "payment-preflight", "buyer-safety", "offer-parity"]),
+  }),
 });
 
 export function validateBazaarResourceMetadata(metadata = BAZAAR_RESOURCE_METADATA) {

@@ -5,9 +5,9 @@ import { decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
 
 test("publishes unique action-oriented titles for every live MCP tool", () => {
   const metadata = listMcpToolMetadata();
-  assert.equal(metadata.length, 13);
-  assert.equal(new Set(metadata.map((entry) => entry.name)).size, 13);
-  assert.equal(new Set(metadata.map((entry) => entry.title)).size, 13);
+  assert.equal(metadata.length, 14);
+  assert.equal(new Set(metadata.map((entry) => entry.name)).size, 14);
+  assert.equal(new Set(metadata.map((entry) => entry.title)).size, 14);
   for (const entry of metadata) {
     assert.match(entry.title, /^(?:Extract|Read|Scan|Generate|Enrich|Audit|Inspect|Plan|Underwrite|Replay|Preflight)\b/);
   }

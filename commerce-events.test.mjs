@@ -261,6 +261,7 @@ test("route classification preserves useful intent without recording opaque path
   assert.equal(classifyCommerceRoute("/a2a/message:send").route, "/a2a/message:send");
   assert.equal(classifyCommerceRoute("/work/opportunity-preflight").kind, "paid");
   assert.equal(classifyCommerceRoute("/distribution/agent-discoverability-audit").kind, "paid");
+  assert.equal(classifyCommerceRoute("/commerce/payment-offer-preflight").kind, "paid");
   assert.deepEqual(classifyCommerceRoute("/mcp/sse"), {
     route: "/mcp/sse",
     kind: "unmatched",

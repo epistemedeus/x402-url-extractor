@@ -27,6 +27,8 @@ const DEFAULT_PAID_ROUTES = new Set([
   "/defi/morpho-market-underwrite",
   "/defi/morpho-preliquidation-replay",
   "/work/opportunity-preflight",
+  "/distribution/agent-discoverability-audit",
+  "/commerce/payment-offer-preflight",
 ]);
 
 function headerValue(headers, name) {

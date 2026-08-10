@@ -48,6 +48,10 @@ const TOOL_METADATA = Object.freeze({
   agent_discoverability_audit: {
     title: "Audit Agent Service Discoverability",
   },
+  payment_offer_preflight: {
+    title: "Preflight x402 and MPP Offer",
+    description: "Inspect one exact public HTTPS GET route before buyer authorization and return normalized x402 and MPP terms, URL and realm binding, expiry, and cross-protocol economic parity. Use `agent_discoverability_audit` instead when you need to know whether catalogs rank or expose a service. This tool uses no target credential, signs and sends no target payment, follows no redirect, reads no response body, and does not establish seller trust or settlement reliability.",
+  },
 });
 
 export function decorateMcpTool(tool) {

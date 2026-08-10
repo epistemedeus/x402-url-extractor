@@ -2,11 +2,11 @@
 
 [![Smithery listing](https://smithery.ai/badge/epistemedeus/x402-data-gateway)](https://smithery.ai/servers/epistemedeus/x402-data-gateway)
 
-Thirteen pay-per-call tools for deterministic agent-work opportunity preflight,
-machine-service discoverability, Morpho borrower and market decisions,
-protection plans, URL extraction, Markdown reading, repository security scans,
-company and wallet enrichment, structured data generation, and AI-search
-readiness audits.
+Fourteen pay-per-call tools for deterministic agent-work opportunity preflight,
+machine-service discoverability, payment-offer preflight, Morpho borrower and
+market decisions, protection plans, URL extraction, Markdown reading,
+repository security scans, company and wallet enrichment, structured data
+generation, and AI-search readiness audits.
 
 - Product page: https://samedaydesk.com/x402
 - Smithery: https://smithery.ai/servers/epistemedeus/x402-data-gateway
@@ -27,6 +27,7 @@ readiness audits.
 - Morpho PreLiquidation replay: `GET /defi/morpho-preliquidation-replay?transactionHash=0x...`
 - Opportunity preflight: `GET /work/opportunity-preflight?rewardUsd=10&hours=0.25&hourlyCostUsd=4&selectionProbabilityPct=20`
 - Agent discoverability audit: `GET /distribution/agent-discoverability-audit?origin=https://example.com&intent=extract+a+public+website+into+structured+JSON&route=/extract`
+- Payment offer preflight: `GET /commerce/payment-offer-preflight?url=https://example.com/paid-route`
 - Material-change alert probe: https://agents.samedaydesk.com/alerts
 - Agoragentic seller callback: `POST /integrations/agoragentic/ai-readiness-audit`
 - the402 signed fulfillment webhook: `POST /integrations/the402/webhook`
@@ -90,7 +91,7 @@ settlement-integrity event without exposing the reference itself.
 
 Version 1.11.2 content-negotiates the root without changing its machine
 contract. Browser navigation with an explicit `Accept: text/html` receives a
-responsive human map of the thirteen tools, payment flow, and authoritative
+responsive human map of the fourteen tools, payment flow, and authoritative
 discovery links. JSON clients, curl's wildcard accept header, and agents keep
 the stable JSON descriptor. The response varies on `Accept`, and the human page
 duplicates no payment schema.
@@ -214,7 +215,7 @@ and treats every label as an unauthenticated observation rather than referral
 proof.
 
 Version 1.11.20 repairs the resource metadata consumed by payment-capable
-wallet agents. Every one of the thirteen x402 v2 challenges now carries the
+wallet agents. Every one of the fourteen x402 v2 challenges now carries the
 validated provider-level `serviceName` and five bounded route capability tags
 in the standard top-level resource object. Startup fails closed if paid-route
 coverage and metadata coverage diverge. The Bazaar contract audit now rejects
@@ -235,6 +236,14 @@ Version 1.11.24 publishes each tool's exact live x402 payment options in MCP
 recipient, and scheme before calling, then attach a fresh signed payload to the
 first `tools/call` instead of relying on a challenge retry. Runtime verification
 and settlement remain authoritative, and the unpaid challenge path is unchanged.
+
+Version 1.11.25 adds `/commerce/payment-offer-preflight` at 0.005 USDC. A buyer
+agent supplies one exact public HTTPS GET URL and receives normalized x402 and
+MPP terms, URL and realm binding checks, expiry findings, and dual-protocol
+economic parity. The request rejects credentials, local or non-public targets,
+unresolved parameters, and redirects. It pins a public DNS result, reads only
+response headers, never signs or sends a target payment, and returns no opaque
+challenge state.
 
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
@@ -404,6 +413,12 @@ composite score. Bazaar and Agentic Market are explicitly one Coinbase source
 family, so the output does not inflate independent reach by counting both views
 as separate acquisition channels.
 
+The fourteenth route, `/commerce/payment-offer-preflight`, is live at 0.005
+USDC. It productizes the buyer-side authorization boundary: fetch the unpaid
+headers of one exact public GET route, normalize x402 and MPP offers, verify URL
+and realm binding, detect expiry and cross-protocol drift, and return a bounded
+decision before the buyer signs the target payment.
+
 ---
 
 ## How the rail works (why "no account" is safe)
@@ -480,7 +495,7 @@ extensions, but remain absent beyond the documented cache window. CDP also
 finds the original Morpho and deep-audit routes through semantic search. Use the
 merchant lookup as evidence of CDP catalog state, not as the canonical count of
 SameDayDesk capabilities; the owned manifest, MCP, A2A, and OpenAPI surfaces
-remain complete at thirteen.
+remain complete at fourteen.
 
 CDP rejected three older route payloads whose discovery descriptions were 535,
 581, and 629 characters even though local extension validation passed. Concise
