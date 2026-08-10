@@ -237,13 +237,14 @@ recipient, and scheme before calling, then attach a fresh signed payload to the
 first `tools/call` instead of relying on a challenge retry. Runtime verification
 and settlement remain authoritative, and the unpaid challenge path is unchanged.
 
-Version 1.11.25 adds `/commerce/payment-offer-preflight` at 0.005 USDC. A buyer
-agent supplies one exact public HTTPS GET URL and receives normalized x402 and
-MPP terms, URL and realm binding checks, expiry findings, and dual-protocol
-economic parity. The request rejects credentials, local or non-public targets,
-unresolved parameters, and redirects. It pins a public DNS result, reads only
-response headers, never signs or sends a target payment, and returns no opaque
-challenge state.
+Version 1.11.26 sharpens the machine-facing selection contract for
+`/commerce/payment-offer-preflight`: compare x402 and MPP payment challenges and
+terms before buyer authorization. The 0.005-USDC product still accepts one exact
+public HTTPS GET URL and returns normalized offers, URL and realm binding checks,
+expiry findings, and economic parity. It rejects credentials, local or
+non-public targets, unresolved parameters, and redirects, pins a public DNS
+result, reads only response headers, never signs or sends a target payment, and
+returns no opaque challenge state.
 
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction

@@ -504,7 +504,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/defi/morpho-preliquidation-replay`, amount: priceToAtomic(MORPHO_PRELIQUIDATION_REPLAY_PRICE), description: "Base transaction -> deterministic Morpho PreLiquidation replay: strict event decode, block-time contract parameters and oracle price, repaid debt, seized collateral, gross incentive, and gas. Historical evidence only; no profitability claim or execution.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/work/opportunity-preflight`, amount: priceToAtomic(OPPORTUNITY_PREFLIGHT_PRICE), description: "Agent work opportunity -> deterministic attempt, verify-first, or abandon preflight using caller-supplied cost and selection assumptions plus dated platform evidence. Returns break-even probability, expected surplus, hard gates, and source-linked evidence. No claim, bid, payment, or submission.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/distribution/agent-discoverability-audit`, amount: priceToAtomic(AGENT_DISCOVERABILITY_AUDIT_PRICE), description: "Buyer-intent rank audit for one x402 or MPP service across Coinbase Bazaar, Coinbase Agentic Market, Agent402, Circle Agent Marketplace, and the official MPP catalog. Returns registry-native position, source-family-aware coverage, competitors above the target, expected-route presence, coverage gaps, evidence-based next actions, source outages, and explicit method limits. No catalog credentials or payments.", mimeType: "application/json" },
-  { url: `${PUBLIC_URL}/commerce/payment-offer-preflight`, amount: priceToAtomic(PAYMENT_OFFER_PREFLIGHT_PRICE), description: "Inspect one public HTTPS GET route before authorizing its payment. Returns normalized x402 and MPP terms, exact URL and realm binding checks, expiry and dual-protocol economic parity findings, and an explicit parseable, review-required, or no-offer decision. Uses no target credential, signs nothing, sends no payment, follows no redirects, and reads no response body.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/commerce/payment-offer-preflight`, amount: priceToAtomic(PAYMENT_OFFER_PREFLIGHT_PRICE), description: "Compare x402 and MPP payment challenges and terms before buyer authorization for one exact public HTTPS GET URL. Returns normalized offers, URL and realm binding checks, expiry and economic-parity findings, and an explicit parseable, review-required, or no-offer decision. Uses no target credential, signs nothing, sends no payment, follows no redirects, and reads no response body.", mimeType: "application/json" },
 ];
 
 const bazaarResourceMetadataValidation = validateBazaarResourceMetadata();
@@ -766,7 +766,7 @@ ${line("/scan", SCAN_PRICE, "static supply-chain security scan of a public GitHu
 ${line("/schemaforge", SCHEMAFORGE_PRICE, "business site -> paste-ready JSON-LD structured-data bundle + a gap diff vs the live site.")}
 ${line("/deep-audit", DEEP_AUDIT_PRICE, "domain -> bundled AI-search-readiness audit with firmographics, technical signals, structured-data gaps, and a paste-ready fix list.")}
 ${line("/distribution/agent-discoverability-audit", AGENT_DISCOVERABILITY_AUDIT_PRICE, "public HTTPS service origin plus a brand-blind capability intent -> point-in-time rank, source-family-aware coverage, expected-route presence, and top competing results across Bazaar, Agentic Market, Agent402, Circle, and the official MPP catalog. Catalog queries use no credentials or payments.")}
-${line("/commerce/payment-offer-preflight", PAYMENT_OFFER_PREFLIGHT_PRICE, "exact public HTTPS GET URL -> normalized x402 and MPP payment terms, route and realm binding, expiry, and dual-protocol economic parity. Uses no target credential, signature, payment, redirect, or response body.")}
+${line("/commerce/payment-offer-preflight", PAYMENT_OFFER_PREFLIGHT_PRICE, "exact public HTTPS GET URL -> compare and normalize x402 and MPP payment challenges and terms before buyer authorization; check route and realm binding, expiry, and economic parity. Uses no target credential, signature, payment, redirect, or response body.")}
 
 ## How to pay
 1. GET an endpoint such as ${PUBLIC_URL}/enrich?domain=stripe.com. One HTTP 402 advertises both protocols.
@@ -848,7 +848,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.11.25",
+      version: "1.11.26",
       description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, machine-payment preflight, wallet context, and Morpho decision evidence. Pay per call in Base USDC through x402 or native MPP.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
@@ -2047,7 +2047,7 @@ app.get("/", (req, res) => {
       "GET /defi/morpho-preliquidation-replay?transactionHash=": `${MORPHO_PRELIQUIDATION_REPLAY_PRICE} - reconstruct a historical PreLiquidation event, protocol-oracle gross incentive, and gas from direct Base reads.`,
       "GET /work/opportunity-preflight?rewardUsd=&hours=&hourlyCostUsd=": `${OPPORTUNITY_PREFLIGHT_PRICE} - deterministic attempt, verify-first, or abandon economics with optional dated platform evidence.`,
       "GET /distribution/agent-discoverability-audit?origin=&intent=&route=&payTo=": `${AGENT_DISCOVERABILITY_AUDIT_PRICE} - brand-blind agent discovery rank, source-family-aware coverage, expected-route presence, and competing results across five machine-service views.`,
-      "GET /commerce/payment-offer-preflight?url=": `${PAYMENT_OFFER_PREFLIGHT_PRICE} - credential-free x402 and MPP term normalization, binding checks, expiry, and dual-protocol parity before buyer authorization.`,
+      "GET /commerce/payment-offer-preflight?url=": `${PAYMENT_OFFER_PREFLIGHT_PRICE} - compare and normalize x402 and MPP payment challenges and terms, binding checks, expiry, and economic parity before buyer authorization.`,
     },
     network: NETWORK,
     payTo: PAY_TO,
@@ -2085,7 +2085,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.11.25" },
+      serverInfo: { name: "x402-data-gateway", version: "1.11.26" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
