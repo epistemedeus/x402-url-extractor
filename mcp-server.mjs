@@ -30,6 +30,18 @@ import { createPaymentWrapper } from "@x402/mcp";
 const MCP_PAYMENT_META_KEY = "x402/payment";
 const MAX_PAYMENT_SIGNATURE_HEADER_BYTES = 32 * 1024;
 
+export function createX402ToolMeta(accepts) {
+  if (!Array.isArray(accepts) || accepts.length === 0) {
+    throw new Error("MCP x402 tool metadata requires at least one payment option");
+  }
+  return {
+    x402: {
+      paymentRequired: true,
+      accepts,
+    },
+  };
+}
+
 /**
  * Bridge x402 clients that send the signed PaymentPayload in the standard
  * PAYMENT-SIGNATURE HTTP header but fail to mirror it into MCP tools/call
@@ -124,14 +136,26 @@ export async function mountMcp(app, { facilitatorClient, network, payTo, serverI
         return { ...asToolResult({ ok: false, error: String(e?.message || e) }), isError: true };
       }
     });
-    prepared.push({ name: t.name, title: t.title, description: t.description, inputSchema: t.inputSchema, handler });
+    prepared.push({
+      name: t.name,
+      title: t.title,
+      description: t.description,
+      inputSchema: t.inputSchema,
+      paymentMeta: createX402ToolMeta(accepts),
+      handler,
+    });
   }
 
   // A fresh MCP server per request (stateless mode requires server+transport per call).
   const makeServer = () => {
     const server = new McpServer(serverInfo);
     for (const t of prepared) {
-      server.registerTool(t.name, { title: t.title, description: t.description, inputSchema: t.inputSchema }, t.handler);
+      server.registerTool(t.name, {
+        title: t.title,
+        description: t.description,
+        inputSchema: t.inputSchema,
+        _meta: t.paymentMeta,
+      }, t.handler);
     }
     return server;
   };

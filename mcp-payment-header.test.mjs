@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { injectPaymentSignatureHeader } from "./mcp-server.mjs";
+import { createX402ToolMeta, injectPaymentSignatureHeader } from "./mcp-server.mjs";
 
 const encode = (value) => Buffer.from(JSON.stringify(value)).toString("base64");
 const payment = {
@@ -53,3 +53,16 @@ test("ignores payment headers outside tools/call", () => {
   assert.equal(req.body.params._meta, undefined);
 });
 
+test("advertises exact payment options for proactive MCP buyers", () => {
+  const accepts = [{
+    scheme: "exact",
+    network: "eip155:8453",
+    amount: "20000",
+    asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    payTo: "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+  }];
+  assert.deepEqual(createX402ToolMeta(accepts), {
+    x402: { paymentRequired: true, accepts },
+  });
+  assert.throws(() => createX402ToolMeta([]), /at least one payment option/);
+});

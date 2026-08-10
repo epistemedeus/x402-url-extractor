@@ -230,6 +230,12 @@ metadata, and passes the result to the existing `@x402/mcp` verifier. The bridge
 does not trust the header, change payment terms, or bypass signature, amount,
 asset, network, nonce, or settlement validation.
 
+Version 1.11.24 publishes each tool's exact live x402 payment options in MCP
+`tools/list` metadata. Compatible clients can inspect price, asset, network,
+recipient, and scheme before calling, then attach a fresh signed payload to the
+first `tools/call` instead of relying on a challenge retry. Runtime verification
+and settlement remain authoritative, and the unpaid challenge path is unchanged.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured
