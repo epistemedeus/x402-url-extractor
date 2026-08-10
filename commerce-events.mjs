@@ -309,6 +309,21 @@ function increment(counts, key) {
   counts[key] = (counts[key] || 0) + 1;
 }
 
+function incrementActorBySource(actorCountsBySource, source, actor) {
+  if (!actorCountsBySource.has(source)) actorCountsBySource.set(source, new Map());
+  const actors = actorCountsBySource.get(source);
+  actors.set(actor, (actors.get(actor) || 0) + 1);
+}
+
+function actorCount(actorCountsBySource, source) {
+  return actorCountsBySource.get(source)?.size || 0;
+}
+
+function repeatActorCount(actorCountsBySource, source) {
+  return [...(actorCountsBySource.get(source)?.values() || [])]
+    .filter((count) => count > 1).length;
+}
+
 async function readEvents(filePath) {
   try {
     const contents = await readFile(filePath, "utf8");
@@ -498,11 +513,16 @@ export function createCommerceTelemetry({
     const agentDiscoveryByRoute = emptyCounts();
     const agentDiscoveryBySourceRoute = Object.create(null);
     const agentDiscoveryActors = new Map();
+    const agentDiscoveryActorCountsBySource = new Map();
+    const agentPaidRouteBySource = emptyCounts();
+    const agentPaidRouteActorCountsBySource = new Map();
     const agentChallengeBySource = emptyCounts();
     const agentChallengeByRoute = emptyCounts();
     const agentChallengeBySourceRoute = Object.create(null);
     const agentChallengeActors = new Map();
+    const agentChallengeActorCountsBySource = new Map();
     const agentChallengeFirstAt = new Map();
+    const agentChallengeFirstSource = new Map();
     let agentPaidRouteObservations = 0;
     let agentChallengeObservations = 0;
     for (const event of agentDiscoveryEvents) {
@@ -515,8 +535,11 @@ export function createCommerceTelemetry({
       if (!agentDiscoveryBySourceRoute[source]) agentDiscoveryBySourceRoute[source] = emptyCounts();
       increment(agentDiscoveryBySourceRoute[source], event.route);
       agentDiscoveryActors.set(event.actor, (agentDiscoveryActors.get(event.actor) || 0) + 1);
+      incrementActorBySource(agentDiscoveryActorCountsBySource, source, event.actor);
       if (event.kind === "paid") {
         agentPaidRouteObservations += 1;
+        increment(agentPaidRouteBySource, source);
+        incrementActorBySource(agentPaidRouteActorCountsBySource, source, event.actor);
         if (eventResult(event) === "challenge") {
           agentChallengeObservations += 1;
           increment(agentChallengeBySource, source);
@@ -524,10 +547,12 @@ export function createCommerceTelemetry({
           if (!agentChallengeBySourceRoute[source]) agentChallengeBySourceRoute[source] = emptyCounts();
           increment(agentChallengeBySourceRoute[source], event.route);
           agentChallengeActors.set(event.actor, (agentChallengeActors.get(event.actor) || 0) + 1);
+          incrementActorBySource(agentChallengeActorCountsBySource, source, event.actor);
           const observedAt = Date.parse(event.ts);
           const prior = agentChallengeFirstAt.get(event.actor);
           if (Number.isFinite(observedAt) && (!Number.isFinite(prior) || observedAt < prior)) {
             agentChallengeFirstAt.set(event.actor, observedAt);
+            agentChallengeFirstSource.set(event.actor, source);
           }
         }
       }
@@ -547,13 +572,16 @@ export function createCommerceTelemetry({
     const paidSuccessByProtocol = emptyCounts();
     const paidSuccessByDiscoverySource = emptyCounts();
     const paidSuccessByDiscoverySourceRoute = Object.create(null);
+    const paidSuccessActorCountsByDiscoverySource = new Map();
     const paidSuccessByClass = emptyCounts();
     const paidSuccessByClassRoute = Object.create(null);
     const independentPaidSuccessByDiscoverySource = emptyCounts();
+    const independentPaidSuccessActorCountsByDiscoverySource = new Map();
     const independentPaidActors = new Map();
     const agentChallengeConvertedActors = new Map();
     const independentAgentChallengeConvertedActors = new Map();
     const agentChallengeConvertedBySource = emptyCounts();
+    const agentChallengeConvertedActorCountsBySource = new Map();
     const agentChallengeConvertedByClass = emptyCounts();
     let agentChallengeConvertedPaidSuccesses = 0;
     const credentialAttemptByProtocol = emptyCounts();
@@ -562,6 +590,7 @@ export function createCommerceTelemetry({
     const credentialAttemptBySource = emptyCounts();
     const credentialAttemptByClass = emptyCounts();
     const credentialAttemptActors = new Map();
+    const credentialAttemptActorCountsBySource = new Map();
     for (const event of credentialAttemptEvents) {
       if (event.paymentProtocol) increment(credentialAttemptByProtocol, event.paymentProtocol);
       increment(credentialAttemptByResult, eventResult(event));
@@ -577,6 +606,7 @@ export function createCommerceTelemetry({
       increment(credentialAttemptByClass, paymentClass);
       const attemptActor = event.paymentActor || event.actor;
       credentialAttemptActors.set(attemptActor, (credentialAttemptActors.get(attemptActor) || 0) + 1);
+      incrementActorBySource(credentialAttemptActorCountsBySource, source, attemptActor);
     }
     let paymentIdentifierEvents = 0;
     let replaySuccessEvents = 0;
@@ -621,6 +651,7 @@ export function createCommerceTelemetry({
           ? event.agentDiscoverySource
           : "direct-or-unattributed";
         increment(paidSuccessByDiscoverySource, discoverySource);
+        incrementActorBySource(paidSuccessActorCountsByDiscoverySource, discoverySource, paidActor);
         if (!paidSuccessByDiscoverySourceRoute[discoverySource]) {
           paidSuccessByDiscoverySourceRoute[discoverySource] = emptyCounts();
         }
@@ -631,16 +662,26 @@ export function createCommerceTelemetry({
         if (paymentClass === "independent") {
           independentPaidActors.set(paidActor, (independentPaidActors.get(paidActor) || 0) + 1);
           increment(independentPaidSuccessByDiscoverySource, discoverySource);
+          incrementActorBySource(
+            independentPaidSuccessActorCountsByDiscoverySource,
+            discoverySource,
+            paidActor,
+          );
         }
         const challengeFirstAt = agentChallengeFirstAt.get(event.actor);
+        const challengeSource = agentChallengeFirstSource.get(event.actor);
         const paidAt = Date.parse(event.ts);
-        if (Number.isFinite(challengeFirstAt) && Number.isFinite(paidAt) && paidAt >= challengeFirstAt) {
+        if (Number.isFinite(challengeFirstAt)
+          && challengeSource
+          && Number.isFinite(paidAt)
+          && paidAt >= challengeFirstAt) {
           agentChallengeConvertedPaidSuccesses += 1;
           agentChallengeConvertedActors.set(
             event.actor,
             (agentChallengeConvertedActors.get(event.actor) || 0) + 1,
           );
-          increment(agentChallengeConvertedBySource, discoverySource);
+          increment(agentChallengeConvertedBySource, challengeSource);
+          incrementActorBySource(agentChallengeConvertedActorCountsBySource, challengeSource, event.actor);
           increment(agentChallengeConvertedByClass, paymentClass);
           if (paymentClass === "independent") {
             independentAgentChallengeConvertedActors.set(
@@ -674,6 +715,61 @@ export function createCommerceTelemetry({
       actors.set(event.actor, (actors.get(event.actor) || 0) + 1);
     }
 
+    const agentSourceFunnel = Object.create(null);
+    const agentSourceKeys = new Set([
+      ...Object.keys(agentDiscoveryBySource),
+      ...Object.keys(agentPaidRouteBySource),
+      ...Object.keys(agentChallengeBySource),
+      ...Object.keys(credentialAttemptBySource),
+      ...Object.keys(paidSuccessByDiscoverySource),
+      ...Object.keys(independentPaidSuccessByDiscoverySource),
+      ...agentChallengeConvertedActorCountsBySource.keys(),
+    ]);
+    for (const source of [...agentSourceKeys].sort()) {
+      const paidRouteObservations = agentPaidRouteBySource[source] || 0;
+      const paidRouteActors = actorCount(agentPaidRouteActorCountsBySource, source);
+      const challengeObservations = agentChallengeBySource[source] || 0;
+      const challengeActors = actorCount(agentChallengeActorCountsBySource, source);
+      const challengeConvertedActors = actorCount(
+        agentChallengeConvertedActorCountsBySource,
+        source,
+      );
+      agentSourceFunnel[source] = {
+        discoveryObservations: agentDiscoveryBySource[source] || 0,
+        discoveryActors: actorCount(agentDiscoveryActorCountsBySource, source),
+        repeatDiscoveryActors: repeatActorCount(agentDiscoveryActorCountsBySource, source),
+        paidRouteObservations,
+        paidRouteActors,
+        repeatPaidRouteActors: repeatActorCount(agentPaidRouteActorCountsBySource, source),
+        challengeObservations,
+        challengeActors,
+        repeatChallengeActors: repeatActorCount(agentChallengeActorCountsBySource, source),
+        challengeObservationRate: paidRouteObservations
+          ? challengeObservations / paidRouteObservations
+          : null,
+        challengeActorRate: paidRouteActors ? challengeActors / paidRouteActors : null,
+        credentialAttemptEvents: credentialAttemptBySource[source] || 0,
+        credentialAttemptActors: actorCount(credentialAttemptActorCountsBySource, source),
+        repeatCredentialAttemptActors: repeatActorCount(
+          credentialAttemptActorCountsBySource,
+          source,
+        ),
+        challengeConvertedPaidSuccesses: agentChallengeConvertedBySource[source] || 0,
+        challengeConvertedActors,
+        challengeActorConversionRate: challengeActors
+          ? challengeConvertedActors / challengeActors
+          : null,
+        paidSuccesses: paidSuccessByDiscoverySource[source] || 0,
+        paidSuccessActors: actorCount(paidSuccessActorCountsByDiscoverySource, source),
+        repeatPaidSuccessActors: repeatActorCount(paidSuccessActorCountsByDiscoverySource, source),
+        independentPaidSuccesses: independentPaidSuccessByDiscoverySource[source] || 0,
+        independentPaidSuccessActors: actorCount(
+          independentPaidSuccessActorCountsByDiscoverySource,
+          source,
+        ),
+      };
+    }
+
     return {
       generatedAt: new Date().toISOString(),
       windowDays: safeDays,
@@ -692,6 +788,7 @@ export function createCommerceTelemetry({
       agentDiscoveryBySource,
       agentDiscoveryByRoute,
       agentDiscoveryBySourceRoute,
+      agentSourceFunnel,
       agentPaidRouteObservations,
       agentChallengeObservations,
       agentChallengeActors: agentChallengeActors.size,
@@ -754,7 +851,7 @@ export function createCommerceTelemetry({
       semanticUnmatched,
       semanticUnmatchedHeuristic: "v1-high-precision-route-keywords",
       mcpTransportProbePolicy: "After the declared MCP transport-probe baseline, only four common public client expectations are counted: /mcp/sse, /mcp/messages, /mcp/tools, and /mcp/events. Arbitrary MCP subpaths remain grouped as /mcp/*, and probe counts remain acquisition-friction evidence rather than demand until an independent actor repeats or converts.",
-      agentDiscoveryPolicy: "After the declared machine-discovery baseline, recognized crawler and agent-indexer user-agent families are reduced to a controlled source label at ingestion. SameDayDesk-owned monitor user agents are excluded. Raw user-agent strings and network addresses are not retained in the public snapshot. Paid-route observations and HTTP 402 challenge delivery are reported separately by controlled source and route so discovery reach can be distinguished from payment conversion. These observations are not authenticated referrals, buyer intent, or demand.",
+      agentDiscoveryPolicy: "After the declared machine-discovery baseline, recognized crawler and agent-indexer user-agent families are reduced to a controlled source label at ingestion. SameDayDesk-owned monitor user agents are excluded. Raw user-agent strings and network addresses are not retained in the public snapshot. Per-source observations, distinct and repeat secret-keyed actors, paid-route reach, HTTP 402 challenge delivery, credential attempts, and paid outcomes distinguish broad machine reach from repeated crawler volume and later payment conversion. Challenge-to-payment conversion is attributed to the source of the first observed same-actor challenge. These observations are not authenticated referrals, buyer intent, or demand.",
       unmatched: unmatchedRequests,
       paymentClassPolicy: "Explicit known-payer rules classify internal, marketplace validation, incentivized, affiliated, or independently confirmed buyers. Unknown or missing payer identities remain unclassified and never become independent by inference.",
       discoveryConversionPolicy: "A submitted payment credential overrides crawler classification so paying agents remain in economic telemetry. Controlled user-agent source labels attribute the client channel but are self-declared and do not independently authenticate a registry referral. Challenge-to-paid conversion uses the same secret-keyed network-and-user-agent actor before and after the challenge and is therefore a conservative continuity lower bound, not an identity claim. SameDayDesk owner monitors remain excluded before this rule.",

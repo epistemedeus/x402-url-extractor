@@ -195,6 +195,15 @@ marked required by the same schemas. The examples now conform, and
 `bazaar-contract-audit.mjs` checks every live paid route through credential-free
 HTTP 402 probes without retaining headers or query values.
 
+Version 1.11.18 adds a source-quality funnel to the public aggregate. Each
+controlled discovery source now reports observations alongside distinct and
+repeat actors at discovery, paid-route, challenge, credential-attempt, and paid
+success stages. Challenge rates are available both per request and per actor,
+so one high-frequency crawler no longer looks like broad machine reach.
+Challenge-to-payment conversions are attributed to the source of the first
+observed challenge. Raw user agents, network addresses, and actor identifiers
+remain private and are not returned.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured

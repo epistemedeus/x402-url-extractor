@@ -61,14 +61,39 @@ test("declared Agent Skills traffic enters the measured challenge funnel without
 
   run({ requestPath: "/openapi.json", status: 200, ip: "203.0.113.70" });
   run({ requestPath: "/extract", status: 402, ip: "203.0.113.71" });
+  run({ requestPath: "/skill.md", status: 200, ip: "203.0.113.70" });
   await telemetry.flush();
 
   const snapshot = await telemetry.snapshot({ days: 1 });
-  assert.equal(snapshot.agentDiscoveryObservations, 2);
-  assert.equal(snapshot.agentDiscoveryBySource["agent-skills"], 2);
+  assert.equal(snapshot.agentDiscoveryObservations, 3);
+  assert.equal(snapshot.agentDiscoveryBySource["agent-skills"], 3);
   assert.equal(snapshot.agentPaidRouteObservations, 1);
   assert.equal(snapshot.agentChallengeObservations, 1);
   assert.equal(snapshot.agentChallengeBySource["agent-skills"], 1);
+  assert.deepEqual(snapshot.agentSourceFunnel["agent-skills"], {
+    discoveryObservations: 3,
+    discoveryActors: 2,
+    repeatDiscoveryActors: 1,
+    paidRouteObservations: 1,
+    paidRouteActors: 1,
+    repeatPaidRouteActors: 0,
+    challengeObservations: 1,
+    challengeActors: 1,
+    repeatChallengeActors: 0,
+    challengeObservationRate: 1,
+    challengeActorRate: 1,
+    credentialAttemptEvents: 0,
+    credentialAttemptActors: 0,
+    repeatCredentialAttemptActors: 0,
+    challengeConvertedPaidSuccesses: 0,
+    challengeConvertedActors: 0,
+    challengeActorConversionRate: 0,
+    paidSuccesses: 0,
+    paidSuccessActors: 0,
+    repeatPaidSuccessActors: 0,
+    independentPaidSuccesses: 0,
+    independentPaidSuccessActors: 0,
+  });
   assert.equal(snapshot.externalEvents, 0);
   assert.equal(JSON.stringify(snapshot).includes("agent-skills-v1"), false);
 
@@ -411,6 +436,33 @@ test("challenge conversion requires conservative same-actor continuity", async (
   assert.equal(snapshot.agentChallengeActorConversionRate, 1);
   assert.equal(snapshot.agentChallengeConvertedBySource.agent402, 1);
   assert.equal(snapshot.agentChallengeConvertedByClass.independent, 1);
+  assert.deepEqual(snapshot.agentSourceFunnel.agent402, {
+    discoveryObservations: 1,
+    discoveryActors: 1,
+    repeatDiscoveryActors: 0,
+    paidRouteObservations: 1,
+    paidRouteActors: 1,
+    repeatPaidRouteActors: 0,
+    challengeObservations: 1,
+    challengeActors: 1,
+    repeatChallengeActors: 0,
+    challengeObservationRate: 1,
+    challengeActorRate: 1,
+    credentialAttemptEvents: 1,
+    credentialAttemptActors: 1,
+    repeatCredentialAttemptActors: 0,
+    challengeConvertedPaidSuccesses: 1,
+    challengeConvertedActors: 1,
+    challengeActorConversionRate: 1,
+    paidSuccesses: 1,
+    paidSuccessActors: 1,
+    repeatPaidSuccessActors: 0,
+    independentPaidSuccesses: 1,
+    independentPaidSuccessActors: 1,
+  });
+  assert.equal(snapshot.agentSourceFunnel["direct-or-unattributed"].credentialAttemptActors, 1);
+  assert.equal(snapshot.agentSourceFunnel["direct-or-unattributed"].paidSuccessActors, 1);
+  assert.equal(snapshot.agentSourceFunnel["direct-or-unattributed"].challengeActors, 0);
   assert.equal(snapshot.paidSuccessByClass.independent, 2);
   assert.equal(snapshot.paymentHeaderEvents, 2);
   assert.equal(snapshot.parseableCredentialAttemptEvents, 2);
