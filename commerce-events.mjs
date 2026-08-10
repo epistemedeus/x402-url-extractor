@@ -39,6 +39,7 @@ const AGENT_DISCOVERY_SOURCE_PATTERNS = [
 ];
 const DECLARED_AGENT_DISCOVERY_SOURCES = new Map([
   ["agent-skills-v1", "agent-skills"],
+  ["aws-agentcore-v1", "aws-agentcore"],
 ]);
 
 const EXACT_ROUTES = new Map([

@@ -37,6 +37,8 @@ test("agent discovery sources reduce user agents to controlled labels", () => {
   assert.equal(classifyAgentDiscoverySource("Mozilla/5.0"), null);
   assert.equal(classifyDeclaredAgentDiscoverySource("agent-skills-v1"), "agent-skills");
   assert.equal(classifyDeclaredAgentDiscoverySource(" AGENT-SKILLS-V1 "), "agent-skills");
+  assert.equal(classifyDeclaredAgentDiscoverySource("aws-agentcore-v1"), "aws-agentcore");
+  assert.equal(classifyDeclaredAgentDiscoverySource(" AWS-AGENTCORE-V1 "), "aws-agentcore");
   assert.equal(classifyDeclaredAgentDiscoverySource("unknown-client"), null);
 });
 
@@ -119,7 +121,7 @@ test("declared Agent Skills traffic enters the measured challenge funnel without
     agentSourceDetailSince: "2020-01-01T00:00:00.000Z",
   });
 
-  function run({ requestPath, status, ip }) {
+  function run({ requestPath, status, ip, declaredSource = "agent-skills-v1" }) {
     const listeners = new Map();
     const req = {
       path: requestPath,
@@ -127,7 +129,7 @@ test("declared Agent Skills traffic enters the measured challenge funnel without
       method: "GET",
       headers: {
         "user-agent": "curl/8.0",
-        "x-samedaydesk-agent-source": "agent-skills-v1",
+        "x-samedaydesk-agent-source": declaredSource,
       },
       query: {},
       ip,
@@ -145,14 +147,22 @@ test("declared Agent Skills traffic enters the measured challenge funnel without
   run({ requestPath: "/openapi.json", status: 200, ip: "203.0.113.70" });
   run({ requestPath: "/extract", status: 402, ip: "203.0.113.71" });
   run({ requestPath: "/skill.md", status: 200, ip: "203.0.113.70" });
+  run({
+    requestPath: "/wallet-enrich",
+    status: 402,
+    ip: "203.0.113.72",
+    declaredSource: " AWS-AGENTCORE-V1 ",
+  });
   await telemetry.flush();
 
   const snapshot = await telemetry.snapshot({ days: 1 });
-  assert.equal(snapshot.agentDiscoveryObservations, 3);
+  assert.equal(snapshot.agentDiscoveryObservations, 4);
   assert.equal(snapshot.agentDiscoveryBySource["agent-skills"], 3);
-  assert.equal(snapshot.agentPaidRouteObservations, 1);
-  assert.equal(snapshot.agentChallengeObservations, 1);
+  assert.equal(snapshot.agentDiscoveryBySource["aws-agentcore"], 1);
+  assert.equal(snapshot.agentPaidRouteObservations, 2);
+  assert.equal(snapshot.agentChallengeObservations, 2);
   assert.equal(snapshot.agentChallengeBySource["agent-skills"], 1);
+  assert.equal(snapshot.agentChallengeBySource["aws-agentcore"], 1);
   assert.deepEqual(snapshot.agentSourceFunnel["agent-skills"], {
     discoveryObservations: 3,
     discoveryActors: 2,
@@ -179,14 +189,39 @@ test("declared Agent Skills traffic enters the measured challenge funnel without
   });
   assert.equal(snapshot.agentSourceTaxonomyVersion, "ai-provider-purpose-v1");
   assert.equal(snapshot.agentSourceTaxonomyLabels.length, 9);
-  assert.equal(snapshot.agentSourceDetailObservations, 3);
-  assert.equal(snapshot.agentSourceDetailActors, 2);
+  assert.equal(snapshot.agentSourceDetailObservations, 4);
+  assert.equal(snapshot.agentSourceDetailActors, 3);
   assert.deepEqual(
     snapshot.agentSourceDetailFunnel["agent-skills"],
     snapshot.agentSourceFunnel["agent-skills"],
   );
+  assert.deepEqual(snapshot.agentSourceFunnel["aws-agentcore"], {
+    discoveryObservations: 1,
+    discoveryActors: 1,
+    repeatDiscoveryActors: 0,
+    paidRouteObservations: 1,
+    paidRouteActors: 1,
+    repeatPaidRouteActors: 0,
+    challengeObservations: 1,
+    challengeActors: 1,
+    repeatChallengeActors: 0,
+    challengeObservationRate: 1,
+    challengeActorRate: 1,
+    credentialAttemptEvents: 0,
+    credentialAttemptActors: 0,
+    repeatCredentialAttemptActors: 0,
+    challengeConvertedPaidSuccesses: 0,
+    challengeConvertedActors: 0,
+    challengeActorConversionRate: 0,
+    paidSuccesses: 0,
+    paidSuccessActors: 0,
+    repeatPaidSuccessActors: 0,
+    independentPaidSuccesses: 0,
+    independentPaidSuccessActors: 0,
+  });
   assert.equal(snapshot.externalEvents, 0);
   assert.equal(JSON.stringify(snapshot).includes("agent-skills-v1"), false);
+  assert.equal(JSON.stringify(snapshot).includes("aws-agentcore-v1"), false);
 
   await rm(dataDir, { recursive: true, force: true });
 });
