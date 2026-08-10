@@ -1,5 +1,28 @@
-export function buildSkillContract(publicUrl) {
+function actionLines(actions) {
+  if (!Array.isArray(actions) || actions.length === 0) {
+    throw new TypeError("actions must be a non-empty array");
+  }
+  const seen = new Set();
+  return actions.map((action) => {
+    const method = String(action?.method || "").toUpperCase();
+    const route = String(action?.route || "");
+    const priceUsdc = Number(action?.priceUsdc);
+    const protocols = Array.isArray(action?.paymentProtocols)
+      ? action.paymentProtocols.map((protocol) => String(protocol)).join(" + ")
+      : "";
+    const key = `${method} ${route}`;
+    if (!/^[A-Z]+$/.test(method) || !route.startsWith("/") || !Number.isFinite(priceUsdc) || priceUsdc <= 0 || !protocols) {
+      throw new TypeError(`invalid action contract: ${key}`);
+    }
+    if (seen.has(key)) throw new TypeError(`duplicate action contract: ${key}`);
+    seen.add(key);
+    return `- ${key}: ${priceUsdc} USDC through ${protocols}`;
+  }).join("\n");
+}
+
+export function buildSkillContract(publicUrl, actions) {
   const origin = new URL(publicUrl).origin;
+  const actionsMarkdown = actionLines(actions);
   return `# SameDayDesk machine commerce gateway
 
 Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, work-opportunity economics, cross-registry discoverability, x402 and MPP offer preflight, Morpho borrower risk, market underwriting, historical PreLiquidation replay, or unsigned Morpho protection plans and can pay exact USDC on Base through x402 or native MPP Payment authentication.
@@ -12,6 +35,10 @@ Use this service when an agent needs deterministic web, company, wallet, AI-sear
 - Action catalog: ${origin}/api/actions
 - MCP transport: POST ${origin}/mcp
 - A2A agent card: ${origin}/.well-known/agent-card.json
+
+## Paid actions
+
+${actionsMarkdown}
 
 ## Call and pay
 

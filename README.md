@@ -252,6 +252,12 @@ selection vocabulary and states the target-inspection boundary: no credential,
 target signature or payment, redirect, or response-body read. A regression test
 keeps this focused buyer-authorization product present in future releases.
 
+Version 1.11.28 removes the manual route-inventory failure mode. The compact
+contract now renders and validates every paid action, exact price, and supported
+protocol from the canonical machine action catalog. Empty, malformed, or
+duplicate action contracts fail closed, so a future route addition cannot leave
+the compact agent surface silently stale.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured
