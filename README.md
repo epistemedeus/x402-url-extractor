@@ -258,6 +258,13 @@ protocol from the canonical machine action catalog. Empty, malformed, or
 duplicate action contracts fail closed, so a future route addition cannot leave
 the compact agent surface silently stale.
 
+Version 1.11.29 adds a free machine-catalog handoff for AgenticTrade without
+placing a second payment gate in front of SameDayDesk. The catalog tells buyers
+to call the selected action URL directly, satisfy its route-bound x402 or MPP
+challenge, and optionally carry the declared `agentictrade-v1` source label.
+That label enters the measured discovery-to-payment funnel, stores no raw token,
+and cannot change price, payment, or access.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured

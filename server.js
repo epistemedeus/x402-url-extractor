@@ -613,6 +613,15 @@ const machineActionCatalog = () => ({
   settlement: "x402 exact or MPP evm/charge USDC on Base",
   paymentProtocols: ["x402", "mpp"],
   payTo: PAY_TO,
+  acquisition: {
+    directCallRequired: true,
+    note: "This free catalog is discovery only. Call the selected action URL directly and satisfy its live x402 or MPP challenge; no marketplace proxy can stand in for the route-bound payment credential.",
+    declaredSourceHeader: {
+      header: "X-SameDayDesk-Agent-Source",
+      allowedValues: ["agent-skills-v1", "agentictrade-v1"],
+      boundary: "Optional declared attribution only. It is not authenticated and cannot change price, payment, or access.",
+    },
+  },
   actions: RESOURCES.map((resource) => {
     const route = new URL(resource.url).pathname;
     const response = getDiscoveryOutputContract(`GET ${route}`);
@@ -817,7 +826,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.11.28",
+      version: "1.11.29",
       description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, machine-payment preflight, wallet context, and Morpho decision evidence. Pay per call in Base USDC through x402 or native MPP.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
@@ -1999,6 +2008,10 @@ app.get("/", (req, res) => {
         source: "agent-skills",
         boundary: "Optional declared attribution only. It is not authenticated and does not affect price, payment, or access.",
       },
+      declaredAgentSources: [
+        { value: "agent-skills-v1", source: "agent-skills" },
+        { value: "agentictrade-v1", source: "agentictrade" },
+      ],
       buyerPolicyReference: BUYER_POLICY_REFERENCE,
       flow: "discover -> validate schema and price -> pay -> call -> receive deterministic result and receipt -> safely replay the same logical request",
     },
@@ -2054,7 +2067,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.11.28" },
+      serverInfo: { name: "x402-data-gateway", version: "1.11.29" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },

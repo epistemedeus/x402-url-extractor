@@ -37,9 +37,49 @@ test("agent discovery sources reduce user agents to controlled labels", () => {
   assert.equal(classifyAgentDiscoverySource("Mozilla/5.0"), null);
   assert.equal(classifyDeclaredAgentDiscoverySource("agent-skills-v1"), "agent-skills");
   assert.equal(classifyDeclaredAgentDiscoverySource(" AGENT-SKILLS-V1 "), "agent-skills");
+  assert.equal(classifyDeclaredAgentDiscoverySource("agentictrade-v1"), "agentictrade");
+  assert.equal(classifyDeclaredAgentDiscoverySource(" AGENTICTRADE-V1 "), "agentictrade");
   assert.equal(classifyDeclaredAgentDiscoverySource("aws-agentcore-v1"), "aws-agentcore");
   assert.equal(classifyDeclaredAgentDiscoverySource(" AWS-AGENTCORE-V1 "), "aws-agentcore");
   assert.equal(classifyDeclaredAgentDiscoverySource("unknown-client"), null);
+});
+
+test("declared AgenticTrade handoff enters the paid-route funnel without exposing the source token", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-agentictrade-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "test-secret",
+    agentDiscoverySince: "2020-01-01T00:00:00.000Z",
+    agentSourceDetailSince: "2020-01-01T00:00:00.000Z",
+  });
+  const listeners = new Map();
+  const req = {
+    path: "/commerce/payment-offer-preflight",
+    url: "/commerce/payment-offer-preflight?url=https%3A%2F%2Fexample.com",
+    method: "GET",
+    headers: {
+      "user-agent": "curl/8.0",
+      "x-samedaydesk-agent-source": "agentictrade-v1",
+    },
+    query: { url: "https://example.com" },
+    ip: "203.0.113.90",
+    socket: {},
+  };
+  const res = {
+    statusCode: 402,
+    once(name, listener) { listeners.set(name, listener); },
+    getHeader() { return undefined; },
+  };
+  telemetry.middleware(req, res, () => {});
+  listeners.get("finish")?.();
+  await telemetry.flush();
+
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.agentDiscoveryBySource.agentictrade, 1);
+  assert.equal(snapshot.agentChallengeBySource.agentictrade, 1);
+  assert.equal(snapshot.agentSourceFunnel.agentictrade.challengeActors, 1);
+  assert.equal(JSON.stringify(snapshot).includes("agentictrade-v1"), false);
+  await rm(dataDir, { recursive: true, force: true });
 });
 
 test("provider user fetchers enter the prospective source-quality cohort", async () => {
