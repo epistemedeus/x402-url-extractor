@@ -46,6 +46,7 @@ import {
   normalizeOpportunityPreflightInput,
   opportunityPreflight,
 } from "./opportunity-preflight.mjs";
+import { createInternalOpportunityPreflightHandler } from "./internal-opportunity-gateway.mjs";
 import {
   agentDiscoverabilityAudit,
   normalizeDiscoverabilityAuditInput,
@@ -247,6 +248,16 @@ const commerceTelemetry = createCommerceTelemetry();
 app.use(commerceTelemetry.middleware);
 const idempotencyReplay = createIdempotencyReplay();
 let commerceSettlementReconciler;
+
+// A pay.sh Solana gateway injects the existing internal token only after its
+// own payment gate succeeds. The exact public path then reaches the same
+// deterministic implementation without triggering a second Base payment.
+// Missing or incorrect credentials fall through to the ordinary paid route.
+app.get("/work/opportunity-preflight", createInternalOpportunityPreflightHandler({
+  token: process.env.COMMERCE_INTERNAL_TOKEN,
+  getPlatformHealthCard,
+  opportunityPreflight,
+}));
 
 // the402 marketplace bridge. Unlike the public x402 routes, the marketplace
 // owns buyer payment and escrow. We authenticate signed dispatches, acknowledge
