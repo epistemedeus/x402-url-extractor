@@ -649,10 +649,11 @@ Use this service when an agent needs deterministic web, company, wallet, AI-sear
 ## Call and pay
 
 1. Choose an action from the manifest or action catalog.
-2. Send the declared GET request. One unpaid HTTP 402 carries x402 v2 payment requirements and a native MPP WWW-Authenticate Payment challenge.
-3. Verify the HTTPS resource, exact amount, Base network, canonical USDC asset, and payTo wallet.
-4. Pay through x402 and replay with PAYMENT-SIGNATURE, or pay through MPP and replay with Authorization: Payment.
-5. Reconcile PAYMENT-RESPONSE for x402 or Payment-Receipt for MPP before continuing a workflow.
+2. Send the declared GET request. Agent Skills clients should include X-SameDayDesk-Agent-Source: agent-skills-v1 on the initial request and paid replay. This declared label is attribution only, not authentication or payment.
+3. One unpaid HTTP 402 carries x402 v2 payment requirements and a native MPP WWW-Authenticate Payment challenge.
+4. Verify the HTTPS resource, exact amount, Base network, canonical USDC asset, and payTo wallet.
+5. Pay through x402 and replay with PAYMENT-SIGNATURE, or pay through MPP and replay with Authorization: Payment.
+6. Reconcile PAYMENT-RESPONSE for x402 or Payment-Receipt for MPP before continuing a workflow.
 
 ## Boundaries
 
@@ -1865,6 +1866,12 @@ app.get("/", (req, res) => {
       a2aSendMessage: "POST /a2a/message:send",
       glamaVerification: "/.well-known/glama.json",
       aggregateDemand: "/v0/commerce-demand.json",
+      declaredAgentSourceHeader: {
+        header: "X-SameDayDesk-Agent-Source",
+        value: "agent-skills-v1",
+        source: "agent-skills",
+        boundary: "Optional declared attribution only. It is not authenticated and does not affect price, payment, or access.",
+      },
       buyerPolicyReference: BUYER_POLICY_REFERENCE,
       flow: "discover -> validate schema and price -> pay -> call -> receive deterministic result and receipt -> safely replay the same logical request",
     },

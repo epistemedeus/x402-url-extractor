@@ -6,6 +6,7 @@ import test from "node:test";
 
 import {
   classifyAgentDiscoverySource,
+  classifyDeclaredAgentDiscoverySource,
   classifyCommerceResult,
   classifyCommerceRoute,
   createCommerceTelemetry,
@@ -22,6 +23,56 @@ test("agent discovery sources reduce user agents to controlled labels", () => {
   assert.equal(classifyAgentDiscoverySource("Glama MCP Connector Indexer"), "glama");
   assert.equal(classifyAgentDiscoverySource("ExampleBot/1.0"), "generic-agent-indexer");
   assert.equal(classifyAgentDiscoverySource("Mozilla/5.0"), null);
+  assert.equal(classifyDeclaredAgentDiscoverySource("agent-skills-v1"), "agent-skills");
+  assert.equal(classifyDeclaredAgentDiscoverySource(" AGENT-SKILLS-V1 "), "agent-skills");
+  assert.equal(classifyDeclaredAgentDiscoverySource("unknown-client"), null);
+});
+
+test("declared Agent Skills traffic enters the measured challenge funnel without storing the raw header", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-agent-skills-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "test-secret",
+    agentDiscoverySince: "2020-01-01T00:00:00.000Z",
+  });
+
+  function run({ requestPath, status, ip }) {
+    const listeners = new Map();
+    const req = {
+      path: requestPath,
+      url: requestPath,
+      method: "GET",
+      headers: {
+        "user-agent": "curl/8.0",
+        "x-samedaydesk-agent-source": "agent-skills-v1",
+      },
+      query: {},
+      ip,
+      socket: {},
+    };
+    const res = {
+      statusCode: status,
+      once(name, listener) { listeners.set(name, listener); },
+      getHeader() { return undefined; },
+    };
+    telemetry.middleware(req, res, () => {});
+    listeners.get("finish")?.();
+  }
+
+  run({ requestPath: "/openapi.json", status: 200, ip: "203.0.113.70" });
+  run({ requestPath: "/extract", status: 402, ip: "203.0.113.71" });
+  await telemetry.flush();
+
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.agentDiscoveryObservations, 2);
+  assert.equal(snapshot.agentDiscoveryBySource["agent-skills"], 2);
+  assert.equal(snapshot.agentPaidRouteObservations, 1);
+  assert.equal(snapshot.agentChallengeObservations, 1);
+  assert.equal(snapshot.agentChallengeBySource["agent-skills"], 1);
+  assert.equal(snapshot.externalEvents, 0);
+  assert.equal(JSON.stringify(snapshot).includes("agent-skills-v1"), false);
+
+  await rm(dataDir, { recursive: true, force: true });
 });
 
 test("payer classification policy validates controlled explicit labels", () => {

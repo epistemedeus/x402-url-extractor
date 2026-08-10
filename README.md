@@ -250,6 +250,12 @@ actual MCP discovery and paid tool calls use streamable HTTP at `POST /mcp`.
 Agents that prefer a compact instruction contract can read `/skill.md` (or
 `/SKILL.md`), while `/api/actions` returns the thirteen canonical GET actions with
 their URL, description, exact atomic USDC price, MIME type, network, and payTo.
+Agent Skills clients may send
+`X-SameDayDesk-Agent-Source: agent-skills-v1` on the initial request and paid
+replay. Telemetry reduces that exact allowlisted value to the public-safe
+`agent-skills` label and never stores the raw header. This is declared,
+spoofable attribution rather than authentication, and it cannot change price,
+payment, or access.
 The A2A v1.0 card at `/.well-known/agent-card.json` advertises one bounded free
 skill, `discover-x402-paid-actions`. `POST /a2a/message:send` returns that exact
 catalog as an A2A direct message, giving A2A clients a standards-based path from

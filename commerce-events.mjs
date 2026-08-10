@@ -25,6 +25,9 @@ const AGENT_DISCOVERY_SOURCE_PATTERNS = [
   ["agentcash", /agentcash/i],
   ["a2a-ecosystem", /(?:^|[^a-z0-9])a2a(?:[^a-z0-9]|$)|agent[- ]?card/i],
 ];
+const DECLARED_AGENT_DISCOVERY_SOURCES = new Map([
+  ["agent-skills-v1", "agent-skills"],
+]);
 
 const EXACT_ROUTES = new Map([
   ["/", { route: "/", kind: "discovery" }],
@@ -112,6 +115,10 @@ export function classifyAgentDiscoverySource(userAgent) {
     if (pattern.test(value)) return source;
   }
   return CRAWLER_PATTERN.test(value) ? "generic-agent-indexer" : null;
+}
+
+export function classifyDeclaredAgentDiscoverySource(value) {
+  return DECLARED_AGENT_DISCOVERY_SOURCES.get(String(value || "").trim().toLowerCase()) || null;
 }
 
 function hasMppAuthorization(headers) {
@@ -389,7 +396,10 @@ export function createCommerceTelemetry({
     const startedAt = Date.now();
     const headers = req.headers || {};
     const userAgent = headerValue(headers, "user-agent");
-    const agentDiscoverySource = classifyAgentDiscoverySource(userAgent);
+    const declaredAgentDiscoverySource = classifyDeclaredAgentDiscoverySource(
+      headerValue(headers, "x-samedaydesk-agent-source"),
+    );
+    const agentDiscoverySource = declaredAgentDiscoverySource || classifyAgentDiscoverySource(userAgent);
     const suppliedInternal = headerValue(headers, "x-samedaydesk-internal");
     const protocol = paymentProtocol(headers);
     const paymentPresent = Boolean(protocol);
@@ -401,7 +411,7 @@ export function createCommerceTelemetry({
         ? "owner_monitor"
       : paymentPresent
         ? "external"
-      : CRAWLER_PATTERN.test(userAgent)
+      : declaredAgentDiscoverySource || CRAWLER_PATTERN.test(userAgent)
         ? "crawler"
         : "external";
     const actorMaterial = `${req.ip || req.socket?.remoteAddress || "unknown"}|${userAgent}`;
