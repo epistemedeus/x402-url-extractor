@@ -13,6 +13,17 @@ const PAYMENT_CLASSES = new Set(["internal", "validation", "incentivized", "affi
 const SEMANTIC_UNMATCHED_ROUTE_PATTERN = /(?:morpho|liquidat|underwrit|protect|risk|readiness|audit|schema|enrich|extract|wallet|payment|settle|receipt|bount|opportunit|reputation|research|scan)/i;
 const OWNER_MONITOR_USER_AGENT_PATTERN = /^SameDayDesk(?:[- /]|[A-Z])/i;
 const MCP_TRANSPORT_PROBE_ROUTES = new Set(["/mcp/sse", "/mcp/messages", "/mcp/tools", "/mcp/events"]);
+const AI_PROVIDER_SOURCE_PATTERNS = [
+  ["openai-search", /\bOAI-SearchBot\b/i],
+  ["openai-user", /\bChatGPT-User\b/i],
+  ["openai-training", /\bGPTBot\b/i],
+  ["anthropic-search", /\bClaude-SearchBot\b/i],
+  ["anthropic-user", /\bClaude-User\b/i],
+  ["anthropic-training", /\bClaudeBot\b/i],
+  ["perplexity-search", /\bPerplexityBot\b/i],
+  ["perplexity-user", /\bPerplexity-User\b/i],
+  ["google-vertex-agent", /\bGoogle-CloudVertexBot\b/i],
+];
 const AGENT_DISCOVERY_SOURCE_PATTERNS = [
   ["agent402", /agent402/i],
   ["coinbase-bazaar", /(?:coinbase|\bcdp\b).*(?:x402|bazaar)|(?:x402|bazaar).*(?:coinbase|\bcdp\b)/i],
@@ -24,6 +35,7 @@ const AGENT_DISCOVERY_SOURCE_PATTERNS = [
   ["mpp-ecosystem", /(?:^|[^a-z])mpp(?:[^a-z]|$)|tempo.*payment/i],
   ["agentcash", /agentcash/i],
   ["a2a-ecosystem", /(?:^|[^a-z0-9])a2a(?:[^a-z0-9]|$)|agent[- ]?card/i],
+  ...AI_PROVIDER_SOURCE_PATTERNS,
 ];
 const DECLARED_AGENT_DISCOVERY_SOURCES = new Map([
   ["agent-skills-v1", "agent-skills"],
@@ -324,6 +336,133 @@ function repeatActorCount(actorCountsBySource, source) {
     .filter((count) => count > 1).length;
 }
 
+function controlledEventSource(event, fallback) {
+  return typeof event?.agentDiscoverySource === "string"
+    && /^[a-z][a-z0-9-]{1,39}$/.test(event.agentDiscoverySource)
+    ? event.agentDiscoverySource
+    : fallback;
+}
+
+function buildAgentSourceFunnel({
+  discoveryEvents,
+  credentialAttemptEvents,
+  paidSuccessEvents,
+  paymentClassByActor,
+}) {
+  const discoveryBySource = emptyCounts();
+  const discoveryActorCountsBySource = new Map();
+  const paidRouteBySource = emptyCounts();
+  const paidRouteActorCountsBySource = new Map();
+  const challengeBySource = emptyCounts();
+  const challengeActorCountsBySource = new Map();
+  const credentialBySource = emptyCounts();
+  const credentialActorCountsBySource = new Map();
+  const paidBySource = emptyCounts();
+  const paidActorCountsBySource = new Map();
+  const independentPaidBySource = emptyCounts();
+  const independentPaidActorCountsBySource = new Map();
+  const convertedBySource = emptyCounts();
+  const convertedActorCountsBySource = new Map();
+  const challengeFirstAt = new Map();
+  const challengeFirstSource = new Map();
+
+  for (const event of discoveryEvents) {
+    const source = controlledEventSource(event, "unattributed-crawler");
+    increment(discoveryBySource, source);
+    incrementActorBySource(discoveryActorCountsBySource, source, event.actor);
+    if (event.kind !== "paid") continue;
+    increment(paidRouteBySource, source);
+    incrementActorBySource(paidRouteActorCountsBySource, source, event.actor);
+    if (eventResult(event) !== "challenge") continue;
+    increment(challengeBySource, source);
+    incrementActorBySource(challengeActorCountsBySource, source, event.actor);
+    const observedAt = Date.parse(event.ts);
+    const prior = challengeFirstAt.get(event.actor);
+    if (Number.isFinite(observedAt) && (!Number.isFinite(prior) || observedAt < prior)) {
+      challengeFirstAt.set(event.actor, observedAt);
+      challengeFirstSource.set(event.actor, source);
+    }
+  }
+
+  for (const event of credentialAttemptEvents) {
+    const source = controlledEventSource(event, "direct-or-unattributed");
+    const actor = event.paymentActor || event.actor;
+    increment(credentialBySource, source);
+    incrementActorBySource(credentialActorCountsBySource, source, actor);
+  }
+
+  for (const event of paidSuccessEvents) {
+    const source = controlledEventSource(event, "direct-or-unattributed");
+    const paidActor = event.paymentActor || event.actor;
+    const paymentClass = event.paymentActor
+      ? paymentClassByActor.get(event.paymentActor) || "unclassified"
+      : "unclassified";
+    increment(paidBySource, source);
+    incrementActorBySource(paidActorCountsBySource, source, paidActor);
+    if (paymentClass === "independent") {
+      increment(independentPaidBySource, source);
+      incrementActorBySource(independentPaidActorCountsBySource, source, paidActor);
+    }
+    const challengedAt = challengeFirstAt.get(event.actor);
+    const challengeSource = challengeFirstSource.get(event.actor);
+    const paidAt = Date.parse(event.ts);
+    if (Number.isFinite(challengedAt)
+      && challengeSource
+      && Number.isFinite(paidAt)
+      && paidAt >= challengedAt) {
+      increment(convertedBySource, challengeSource);
+      incrementActorBySource(convertedActorCountsBySource, challengeSource, event.actor);
+    }
+  }
+
+  const funnel = Object.create(null);
+  const sourceKeys = new Set([
+    ...Object.keys(discoveryBySource),
+    ...Object.keys(paidRouteBySource),
+    ...Object.keys(challengeBySource),
+    ...Object.keys(credentialBySource),
+    ...Object.keys(paidBySource),
+    ...Object.keys(independentPaidBySource),
+    ...convertedActorCountsBySource.keys(),
+  ]);
+  for (const source of [...sourceKeys].sort()) {
+    const paidRouteObservations = paidRouteBySource[source] || 0;
+    const paidRouteActors = actorCount(paidRouteActorCountsBySource, source);
+    const challengeObservations = challengeBySource[source] || 0;
+    const challengeActors = actorCount(challengeActorCountsBySource, source);
+    const challengeConvertedActors = actorCount(convertedActorCountsBySource, source);
+    funnel[source] = {
+      discoveryObservations: discoveryBySource[source] || 0,
+      discoveryActors: actorCount(discoveryActorCountsBySource, source),
+      repeatDiscoveryActors: repeatActorCount(discoveryActorCountsBySource, source),
+      paidRouteObservations,
+      paidRouteActors,
+      repeatPaidRouteActors: repeatActorCount(paidRouteActorCountsBySource, source),
+      challengeObservations,
+      challengeActors,
+      repeatChallengeActors: repeatActorCount(challengeActorCountsBySource, source),
+      challengeObservationRate: paidRouteObservations
+        ? challengeObservations / paidRouteObservations
+        : null,
+      challengeActorRate: paidRouteActors ? challengeActors / paidRouteActors : null,
+      credentialAttemptEvents: credentialBySource[source] || 0,
+      credentialAttemptActors: actorCount(credentialActorCountsBySource, source),
+      repeatCredentialAttemptActors: repeatActorCount(credentialActorCountsBySource, source),
+      challengeConvertedPaidSuccesses: convertedBySource[source] || 0,
+      challengeConvertedActors,
+      challengeActorConversionRate: challengeActors
+        ? challengeConvertedActors / challengeActors
+        : null,
+      paidSuccesses: paidBySource[source] || 0,
+      paidSuccessActors: actorCount(paidActorCountsBySource, source),
+      repeatPaidSuccessActors: repeatActorCount(paidActorCountsBySource, source),
+      independentPaidSuccesses: independentPaidBySource[source] || 0,
+      independentPaidSuccessActors: actorCount(independentPaidActorCountsBySource, source),
+    };
+  }
+  return funnel;
+}
+
 async function readEvents(filePath) {
   try {
     const contents = await readFile(filePath, "utf8");
@@ -349,6 +488,7 @@ export function createCommerceTelemetry({
   internalToken = process.env.COMMERCE_INTERNAL_TOKEN || "",
   externalSince = process.env.COMMERCE_EXTERNAL_SINCE || "",
   agentDiscoverySince = process.env.COMMERCE_AGENT_DISCOVERY_SINCE || "",
+  agentSourceDetailSince = process.env.COMMERCE_AGENT_SOURCE_DETAIL_SINCE || "",
   mcpTransportProbeSince = process.env.COMMERCE_MCP_TRANSPORT_PROBE_SINCE || "2026-08-09T18:56:00.000Z",
   credentialAttemptSince = process.env.COMMERCE_CREDENTIAL_ATTEMPT_SINCE || "",
   settlementEvidenceSince = process.env.COMMERCE_SETTLEMENT_EVIDENCE_SINCE || "",
@@ -362,6 +502,10 @@ export function createCommerceTelemetry({
   const parsedAgentDiscoverySince = Date.parse(agentDiscoverySince);
   const agentDiscoverySinceMs = Number.isFinite(parsedAgentDiscoverySince)
     ? parsedAgentDiscoverySince
+    : null;
+  const parsedAgentSourceDetailSince = Date.parse(agentSourceDetailSince);
+  const agentSourceDetailSinceMs = Number.isFinite(parsedAgentSourceDetailSince)
+    ? parsedAgentSourceDetailSince
     : null;
   const parsedMcpTransportProbeSince = Date.parse(mcpTransportProbeSince);
   const mcpTransportProbeSinceMs = Number.isFinite(parsedMcpTransportProbeSince)
@@ -426,7 +570,7 @@ export function createCommerceTelemetry({
         ? "owner_monitor"
       : paymentPresent
         ? "external"
-      : declaredAgentDiscoverySource || CRAWLER_PATTERN.test(userAgent)
+      : agentDiscoverySource
         ? "crawler"
         : "external";
     const actorMaterial = `${req.ip || req.socket?.remoteAddress || "unknown"}|${userAgent}`;
@@ -513,14 +657,10 @@ export function createCommerceTelemetry({
     const agentDiscoveryByRoute = emptyCounts();
     const agentDiscoveryBySourceRoute = Object.create(null);
     const agentDiscoveryActors = new Map();
-    const agentDiscoveryActorCountsBySource = new Map();
-    const agentPaidRouteBySource = emptyCounts();
-    const agentPaidRouteActorCountsBySource = new Map();
     const agentChallengeBySource = emptyCounts();
     const agentChallengeByRoute = emptyCounts();
     const agentChallengeBySourceRoute = Object.create(null);
     const agentChallengeActors = new Map();
-    const agentChallengeActorCountsBySource = new Map();
     const agentChallengeFirstAt = new Map();
     const agentChallengeFirstSource = new Map();
     let agentPaidRouteObservations = 0;
@@ -535,11 +675,8 @@ export function createCommerceTelemetry({
       if (!agentDiscoveryBySourceRoute[source]) agentDiscoveryBySourceRoute[source] = emptyCounts();
       increment(agentDiscoveryBySourceRoute[source], event.route);
       agentDiscoveryActors.set(event.actor, (agentDiscoveryActors.get(event.actor) || 0) + 1);
-      incrementActorBySource(agentDiscoveryActorCountsBySource, source, event.actor);
       if (event.kind === "paid") {
         agentPaidRouteObservations += 1;
-        increment(agentPaidRouteBySource, source);
-        incrementActorBySource(agentPaidRouteActorCountsBySource, source, event.actor);
         if (eventResult(event) === "challenge") {
           agentChallengeObservations += 1;
           increment(agentChallengeBySource, source);
@@ -547,7 +684,6 @@ export function createCommerceTelemetry({
           if (!agentChallengeBySourceRoute[source]) agentChallengeBySourceRoute[source] = emptyCounts();
           increment(agentChallengeBySourceRoute[source], event.route);
           agentChallengeActors.set(event.actor, (agentChallengeActors.get(event.actor) || 0) + 1);
-          incrementActorBySource(agentChallengeActorCountsBySource, source, event.actor);
           const observedAt = Date.parse(event.ts);
           const prior = agentChallengeFirstAt.get(event.actor);
           if (Number.isFinite(observedAt) && (!Number.isFinite(prior) || observedAt < prior)) {
@@ -572,16 +708,13 @@ export function createCommerceTelemetry({
     const paidSuccessByProtocol = emptyCounts();
     const paidSuccessByDiscoverySource = emptyCounts();
     const paidSuccessByDiscoverySourceRoute = Object.create(null);
-    const paidSuccessActorCountsByDiscoverySource = new Map();
     const paidSuccessByClass = emptyCounts();
     const paidSuccessByClassRoute = Object.create(null);
     const independentPaidSuccessByDiscoverySource = emptyCounts();
-    const independentPaidSuccessActorCountsByDiscoverySource = new Map();
     const independentPaidActors = new Map();
     const agentChallengeConvertedActors = new Map();
     const independentAgentChallengeConvertedActors = new Map();
     const agentChallengeConvertedBySource = emptyCounts();
-    const agentChallengeConvertedActorCountsBySource = new Map();
     const agentChallengeConvertedByClass = emptyCounts();
     let agentChallengeConvertedPaidSuccesses = 0;
     const credentialAttemptByProtocol = emptyCounts();
@@ -590,7 +723,6 @@ export function createCommerceTelemetry({
     const credentialAttemptBySource = emptyCounts();
     const credentialAttemptByClass = emptyCounts();
     const credentialAttemptActors = new Map();
-    const credentialAttemptActorCountsBySource = new Map();
     for (const event of credentialAttemptEvents) {
       if (event.paymentProtocol) increment(credentialAttemptByProtocol, event.paymentProtocol);
       increment(credentialAttemptByResult, eventResult(event));
@@ -606,7 +738,6 @@ export function createCommerceTelemetry({
       increment(credentialAttemptByClass, paymentClass);
       const attemptActor = event.paymentActor || event.actor;
       credentialAttemptActors.set(attemptActor, (credentialAttemptActors.get(attemptActor) || 0) + 1);
-      incrementActorBySource(credentialAttemptActorCountsBySource, source, attemptActor);
     }
     let paymentIdentifierEvents = 0;
     let replaySuccessEvents = 0;
@@ -651,7 +782,6 @@ export function createCommerceTelemetry({
           ? event.agentDiscoverySource
           : "direct-or-unattributed";
         increment(paidSuccessByDiscoverySource, discoverySource);
-        incrementActorBySource(paidSuccessActorCountsByDiscoverySource, discoverySource, paidActor);
         if (!paidSuccessByDiscoverySourceRoute[discoverySource]) {
           paidSuccessByDiscoverySourceRoute[discoverySource] = emptyCounts();
         }
@@ -662,11 +792,6 @@ export function createCommerceTelemetry({
         if (paymentClass === "independent") {
           independentPaidActors.set(paidActor, (independentPaidActors.get(paidActor) || 0) + 1);
           increment(independentPaidSuccessByDiscoverySource, discoverySource);
-          incrementActorBySource(
-            independentPaidSuccessActorCountsByDiscoverySource,
-            discoverySource,
-            paidActor,
-          );
         }
         const challengeFirstAt = agentChallengeFirstAt.get(event.actor);
         const challengeSource = agentChallengeFirstSource.get(event.actor);
@@ -681,7 +806,6 @@ export function createCommerceTelemetry({
             (agentChallengeConvertedActors.get(event.actor) || 0) + 1,
           );
           increment(agentChallengeConvertedBySource, challengeSource);
-          incrementActorBySource(agentChallengeConvertedActorCountsBySource, challengeSource, event.actor);
           increment(agentChallengeConvertedByClass, paymentClass);
           if (paymentClass === "independent") {
             independentAgentChallengeConvertedActors.set(
@@ -715,60 +839,28 @@ export function createCommerceTelemetry({
       actors.set(event.actor, (actors.get(event.actor) || 0) + 1);
     }
 
-    const agentSourceFunnel = Object.create(null);
-    const agentSourceKeys = new Set([
-      ...Object.keys(agentDiscoveryBySource),
-      ...Object.keys(agentPaidRouteBySource),
-      ...Object.keys(agentChallengeBySource),
-      ...Object.keys(credentialAttemptBySource),
-      ...Object.keys(paidSuccessByDiscoverySource),
-      ...Object.keys(independentPaidSuccessByDiscoverySource),
-      ...agentChallengeConvertedActorCountsBySource.keys(),
-    ]);
-    for (const source of [...agentSourceKeys].sort()) {
-      const paidRouteObservations = agentPaidRouteBySource[source] || 0;
-      const paidRouteActors = actorCount(agentPaidRouteActorCountsBySource, source);
-      const challengeObservations = agentChallengeBySource[source] || 0;
-      const challengeActors = actorCount(agentChallengeActorCountsBySource, source);
-      const challengeConvertedActors = actorCount(
-        agentChallengeConvertedActorCountsBySource,
-        source,
-      );
-      agentSourceFunnel[source] = {
-        discoveryObservations: agentDiscoveryBySource[source] || 0,
-        discoveryActors: actorCount(agentDiscoveryActorCountsBySource, source),
-        repeatDiscoveryActors: repeatActorCount(agentDiscoveryActorCountsBySource, source),
-        paidRouteObservations,
-        paidRouteActors,
-        repeatPaidRouteActors: repeatActorCount(agentPaidRouteActorCountsBySource, source),
-        challengeObservations,
-        challengeActors,
-        repeatChallengeActors: repeatActorCount(agentChallengeActorCountsBySource, source),
-        challengeObservationRate: paidRouteObservations
-          ? challengeObservations / paidRouteObservations
-          : null,
-        challengeActorRate: paidRouteActors ? challengeActors / paidRouteActors : null,
-        credentialAttemptEvents: credentialAttemptBySource[source] || 0,
-        credentialAttemptActors: actorCount(credentialAttemptActorCountsBySource, source),
-        repeatCredentialAttemptActors: repeatActorCount(
-          credentialAttemptActorCountsBySource,
-          source,
-        ),
-        challengeConvertedPaidSuccesses: agentChallengeConvertedBySource[source] || 0,
-        challengeConvertedActors,
-        challengeActorConversionRate: challengeActors
-          ? challengeConvertedActors / challengeActors
-          : null,
-        paidSuccesses: paidSuccessByDiscoverySource[source] || 0,
-        paidSuccessActors: actorCount(paidSuccessActorCountsByDiscoverySource, source),
-        repeatPaidSuccessActors: repeatActorCount(paidSuccessActorCountsByDiscoverySource, source),
-        independentPaidSuccesses: independentPaidSuccessByDiscoverySource[source] || 0,
-        independentPaidSuccessActors: actorCount(
-          independentPaidSuccessActorCountsByDiscoverySource,
-          source,
-        ),
-      };
-    }
+    const paidSuccessEvents = events.filter((event) => eventResult(event) === "paid_success");
+    const agentSourceFunnel = buildAgentSourceFunnel({
+      discoveryEvents: agentDiscoveryEvents,
+      credentialAttemptEvents,
+      paidSuccessEvents,
+      paymentClassByActor,
+    });
+    const agentSourceDetailDiscoveryEvents = agentSourceDetailSinceMs === null
+      ? []
+      : agentDiscoveryEvents.filter((event) => Date.parse(event.ts) >= agentSourceDetailSinceMs);
+    const agentSourceDetailCredentialEvents = agentSourceDetailSinceMs === null
+      ? []
+      : credentialAttemptEvents.filter((event) => Date.parse(event.ts) >= agentSourceDetailSinceMs);
+    const agentSourceDetailPaidSuccessEvents = agentSourceDetailSinceMs === null
+      ? []
+      : paidSuccessEvents.filter((event) => Date.parse(event.ts) >= agentSourceDetailSinceMs);
+    const agentSourceDetailFunnel = buildAgentSourceFunnel({
+      discoveryEvents: agentSourceDetailDiscoveryEvents,
+      credentialAttemptEvents: agentSourceDetailCredentialEvents,
+      paidSuccessEvents: agentSourceDetailPaidSuccessEvents,
+      paymentClassByActor,
+    });
 
     return {
       generatedAt: new Date().toISOString(),
@@ -789,6 +881,16 @@ export function createCommerceTelemetry({
       agentDiscoveryByRoute,
       agentDiscoveryBySourceRoute,
       agentSourceFunnel,
+      agentSourceTaxonomyVersion: "ai-provider-purpose-v1",
+      agentSourceTaxonomyLabels: AI_PROVIDER_SOURCE_PATTERNS.map(([source]) => source),
+      agentSourceDetailSince: agentSourceDetailSinceMs === null
+        ? null
+        : new Date(agentSourceDetailSinceMs).toISOString(),
+      agentSourceDetailObservations: agentSourceDetailDiscoveryEvents.length,
+      agentSourceDetailActors: new Set(
+        agentSourceDetailDiscoveryEvents.map((event) => event.actor),
+      ).size,
+      agentSourceDetailFunnel,
       agentPaidRouteObservations,
       agentChallengeObservations,
       agentChallengeActors: agentChallengeActors.size,
@@ -852,6 +954,7 @@ export function createCommerceTelemetry({
       semanticUnmatchedHeuristic: "v1-high-precision-route-keywords",
       mcpTransportProbePolicy: "After the declared MCP transport-probe baseline, only four common public client expectations are counted: /mcp/sse, /mcp/messages, /mcp/tools, and /mcp/events. Arbitrary MCP subpaths remain grouped as /mcp/*, and probe counts remain acquisition-friction evidence rather than demand until an independent actor repeats or converts.",
       agentDiscoveryPolicy: "After the declared machine-discovery baseline, recognized crawler and agent-indexer user-agent families are reduced to a controlled source label at ingestion. SameDayDesk-owned monitor user agents are excluded. Raw user-agent strings and network addresses are not retained in the public snapshot. Per-source observations, distinct and repeat secret-keyed actors, paid-route reach, HTTP 402 challenge delivery, credential attempts, and paid outcomes distinguish broad machine reach from repeated crawler volume and later payment conversion. Challenge-to-payment conversion is attributed to the source of the first observed same-actor challenge. These observations are not authenticated referrals, buyer intent, or demand.",
+      agentSourceDetailPolicy: "The ai-provider-purpose-v1 cohort begins only at agentSourceDetailSince and classifies exact provider-published HTTP user-agent tokens for OpenAI search, user fetch, and training; Anthropic search, user fetch, and training; Perplexity search and user fetch; and Google Cloud Vertex agent crawls. Google-Extended is intentionally absent because Google documents that it has no separate HTTP user-agent string. Labels are user-agent observations rather than IP-verified identities or referral proof. Historical generic events are not reclassified.",
       unmatched: unmatchedRequests,
       paymentClassPolicy: "Explicit known-payer rules classify internal, marketplace validation, incentivized, affiliated, or independently confirmed buyers. Unknown or missing payer identities remain unclassified and never become independent by inference.",
       discoveryConversionPolicy: "A submitted payment credential overrides crawler classification so paying agents remain in economic telemetry. Controlled user-agent source labels attribute the client channel but are self-declared and do not independently authenticate a registry referral. Challenge-to-paid conversion uses the same secret-keyed network-and-user-agent actor before and after the challenge and is therefore a conservative continuity lower bound, not an identity claim. SameDayDesk owner monitors remain excluded before this rule.",

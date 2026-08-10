@@ -204,6 +204,15 @@ Challenge-to-payment conversions are attributed to the source of the first
 observed challenge. Raw user agents, network addresses, and actor identifiers
 remain private and are not returned.
 
+Version 1.11.19 starts a separate prospective AI-provider source cohort. It
+uses exact provider-published HTTP tokens to distinguish OpenAI, Anthropic, and
+Perplexity search, user-fetch, and training traffic plus Google Cloud Vertex
+agent crawls. `Google-Extended` is intentionally excluded because Google states
+that it has no distinct HTTP user-agent string. The detail cohort has its own
+baseline, preserves historical generic records, reports the same actor funnel,
+and treats every label as an unauthenticated observation rather than referral
+proof.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured
@@ -493,6 +502,7 @@ The repo is a no-config Node app: `npm start` runs `node server.js` and binds
    COMMERCE_ACTOR_SECRET=<random 32-byte secret>
    COMMERCE_INTERNAL_TOKEN=<random owner-canary token>
    COMMERCE_EXTERNAL_SINCE=<ISO timestamp after controlled launch canaries>
+   COMMERCE_AGENT_SOURCE_DETAIL_SINCE=<ISO timestamp after provider taxonomy release>
    COMMERCE_SETTLEMENT_EVIDENCE_SINCE=<ISO timestamp after settlement-proof release>
    COMMERCE_PAYER_CLASSES='[{"address":"0x...","class":"validation"}]'
    ```

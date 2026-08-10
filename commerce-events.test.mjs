@@ -21,11 +21,93 @@ test("agent discovery sources reduce user agents to controlled labels", () => {
   assert.equal(classifyAgentDiscoverySource("ModelContextProtocol MCP-Registry/1.0"), "mcp-registry");
   assert.equal(classifyAgentDiscoverySource("Smithery crawler"), "smithery");
   assert.equal(classifyAgentDiscoverySource("Glama MCP Connector Indexer"), "glama");
+  assert.equal(classifyAgentDiscoverySource("compatible; OAI-SearchBot/1.4"), "openai-search");
+  assert.equal(classifyAgentDiscoverySource("compatible; ChatGPT-User/1.0"), "openai-user");
+  assert.equal(classifyAgentDiscoverySource("compatible; GPTBot/1.4"), "openai-training");
+  assert.equal(classifyAgentDiscoverySource("Claude-SearchBot/1.0"), "anthropic-search");
+  assert.equal(classifyAgentDiscoverySource("Claude-User/1.0"), "anthropic-user");
+  assert.equal(classifyAgentDiscoverySource("ClaudeBot/1.0"), "anthropic-training");
+  assert.equal(classifyAgentDiscoverySource("compatible; PerplexityBot/1.0"), "perplexity-search");
+  assert.equal(classifyAgentDiscoverySource("compatible; Perplexity-User/1.0"), "perplexity-user");
+  assert.equal(classifyAgentDiscoverySource("Google-CloudVertexBot/1.0"), "google-vertex-agent");
+  assert.equal(classifyAgentDiscoverySource("Google-Extended"), null);
+  assert.equal(classifyAgentDiscoverySource("OAI-AdsBot/1.0"), "generic-agent-indexer");
+  assert.equal(classifyAgentDiscoverySource("myGPTBotClone/1.0"), "generic-agent-indexer");
   assert.equal(classifyAgentDiscoverySource("ExampleBot/1.0"), "generic-agent-indexer");
   assert.equal(classifyAgentDiscoverySource("Mozilla/5.0"), null);
   assert.equal(classifyDeclaredAgentDiscoverySource("agent-skills-v1"), "agent-skills");
   assert.equal(classifyDeclaredAgentDiscoverySource(" AGENT-SKILLS-V1 "), "agent-skills");
   assert.equal(classifyDeclaredAgentDiscoverySource("unknown-client"), null);
+});
+
+test("provider user fetchers enter the prospective source-quality cohort", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-provider-sources-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "test-secret",
+    agentDiscoverySince: "2020-01-01T00:00:00.000Z",
+    agentSourceDetailSince: "2020-01-01T00:00:00.000Z",
+  });
+
+  function run({ userAgent, requestPath, status, ip }) {
+    const listeners = new Map();
+    const req = {
+      path: requestPath,
+      url: requestPath,
+      method: "GET",
+      headers: { "user-agent": userAgent },
+      query: {},
+      ip,
+      socket: {},
+    };
+    const res = {
+      statusCode: status,
+      once(name, listener) { listeners.set(name, listener); },
+      getHeader() { return undefined; },
+    };
+    telemetry.middleware(req, res, () => {});
+    listeners.get("finish")?.();
+  }
+
+  run({
+    userAgent: "Mozilla/5.0 compatible; ChatGPT-User/1.0",
+    requestPath: "/openapi.json",
+    status: 200,
+    ip: "203.0.113.80",
+  });
+  run({
+    userAgent: "Mozilla/5.0 compatible; ChatGPT-User/1.0",
+    requestPath: "/extract",
+    status: 402,
+    ip: "203.0.113.80",
+  });
+  run({
+    userAgent: "Claude-User/1.0",
+    requestPath: "/openapi.json",
+    status: 200,
+    ip: "203.0.113.81",
+  });
+  run({
+    userAgent: "Perplexity-User/1.0",
+    requestPath: "/extract",
+    status: 402,
+    ip: "203.0.113.82",
+  });
+  await telemetry.flush();
+
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.externalEvents, 0);
+  assert.equal(snapshot.agentSourceDetailObservations, 4);
+  assert.equal(snapshot.agentSourceDetailActors, 3);
+  assert.equal(snapshot.agentSourceDetailFunnel["openai-user"].discoveryActors, 1);
+  assert.equal(snapshot.agentSourceDetailFunnel["openai-user"].repeatDiscoveryActors, 1);
+  assert.equal(snapshot.agentSourceDetailFunnel["openai-user"].challengeActors, 1);
+  assert.equal(snapshot.agentSourceDetailFunnel["anthropic-user"].challengeActors, 0);
+  assert.equal(snapshot.agentSourceDetailFunnel["perplexity-user"].challengeActors, 1);
+  assert.equal(snapshot.agentSourceDetailFunnel["perplexity-user"].challengeActorRate, 1);
+  assert.equal(JSON.stringify(snapshot).includes("ChatGPT-User/1.0"), false);
+
+  await rm(dataDir, { recursive: true, force: true });
 });
 
 test("declared Agent Skills traffic enters the measured challenge funnel without storing the raw header", async () => {
@@ -34,6 +116,7 @@ test("declared Agent Skills traffic enters the measured challenge funnel without
     dataDir,
     secret: "test-secret",
     agentDiscoverySince: "2020-01-01T00:00:00.000Z",
+    agentSourceDetailSince: "2020-01-01T00:00:00.000Z",
   });
 
   function run({ requestPath, status, ip }) {
@@ -94,6 +177,14 @@ test("declared Agent Skills traffic enters the measured challenge funnel without
     independentPaidSuccesses: 0,
     independentPaidSuccessActors: 0,
   });
+  assert.equal(snapshot.agentSourceTaxonomyVersion, "ai-provider-purpose-v1");
+  assert.equal(snapshot.agentSourceTaxonomyLabels.length, 9);
+  assert.equal(snapshot.agentSourceDetailObservations, 3);
+  assert.equal(snapshot.agentSourceDetailActors, 2);
+  assert.deepEqual(
+    snapshot.agentSourceDetailFunnel["agent-skills"],
+    snapshot.agentSourceFunnel["agent-skills"],
+  );
   assert.equal(snapshot.externalEvents, 0);
   assert.equal(JSON.stringify(snapshot).includes("agent-skills-v1"), false);
 
@@ -552,5 +643,43 @@ test("machine discovery uses an independent baseline and excludes owned monitors
   assert.equal(snapshot.parseableCredentialAttemptEvents, 0);
   assert.equal(snapshot.unparseablePaymentHeaderEvents, 0);
   assert.equal(snapshot.externalEvents, 0);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("provider source detail starts prospectively without reclassifying earlier events", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-source-detail-baseline-"));
+  const detailBaseline = new Date(Date.now() + 60_000).toISOString();
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "test-secret",
+    agentDiscoverySince: "2020-01-01T00:00:00.000Z",
+    agentSourceDetailSince: detailBaseline,
+  });
+  const listeners = new Map();
+  const req = {
+    path: "/openapi.json",
+    url: "/openapi.json",
+    method: "GET",
+    headers: { "user-agent": "OAI-SearchBot/1.4" },
+    query: {},
+    ip: "203.0.113.90",
+    socket: {},
+  };
+  const res = {
+    statusCode: 200,
+    once(name, listener) { listeners.set(name, listener); },
+    getHeader() { return undefined; },
+  };
+  telemetry.middleware(req, res, () => {});
+  listeners.get("finish")?.();
+  await telemetry.flush();
+
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.agentDiscoveryBySource["openai-search"], 1);
+  assert.equal(snapshot.agentSourceDetailSince, detailBaseline);
+  assert.equal(snapshot.agentSourceDetailObservations, 0);
+  assert.equal(snapshot.agentSourceDetailActors, 0);
+  assert.equal(Object.keys(snapshot.agentSourceDetailFunnel).length, 0);
+
   await rm(dataDir, { recursive: true, force: true });
 });
