@@ -33,6 +33,7 @@ import {
 import { createFacilitatorConfig } from "@coinbase/x402";
 import { createCommerceTrust } from "./commerce-trust.mjs";
 import { buildSkillContract } from "./skill-contract.mjs";
+import { exposeAgenticTradeProxyDiagnostics } from "./agentictrade-proxy-diagnostics.mjs";
 import { extract, readMarkdown } from "./extract.mjs";
 import { scanRepo } from "./scan.mjs";
 import { schemaforge } from "./schemaforge.mjs";
@@ -684,8 +685,8 @@ app.get(["/skill.md", "/SKILL.md"], (_req, res) => {
   return res.type("text/markdown").send(buildSkillContract(PUBLIC_URL, machineActionCatalog().actions));
 });
 
-app.get("/api/actions", (_req, res) => {
-  res.set("Cache-Control", "public, max-age=300");
+app.get("/api/actions", (req, res) => {
+  if (!exposeAgenticTradeProxyDiagnostics(req, res)) res.set("Cache-Control", "public, max-age=300");
   return res.json(machineActionCatalog());
 });
 
@@ -826,7 +827,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.11.29",
+      version: "1.11.30",
       description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, machine-payment preflight, wallet context, and Morpho decision evidence. Pay per call in Base USDC through x402 or native MPP.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
@@ -2067,7 +2068,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.11.29" },
+      serverInfo: { name: "x402-data-gateway", version: "1.11.30" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
