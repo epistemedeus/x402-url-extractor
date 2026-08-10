@@ -4,6 +4,7 @@ import {
   validateDiscoveryExtension,
   validateDiscoveryExtensionSpec,
 } from "@x402/extensions/bazaar";
+import { validateBazaarResourceMetadata } from "./bazaar-resource-metadata.mjs";
 
 const SCHEMA_VERSION = "samedaydesk.bazaar-contract-audit.v1";
 const CREDENTIAL_KEY = /(?:key|token|secret|password|credential|auth)/i;
@@ -57,11 +58,22 @@ export function validatePaymentRequiredHeader(header) {
     if (!extension || typeof extension !== "object") {
       return { valid: false, errors: ["bazaar_extension_missing"] };
     }
+    const resourceMetadata = validateBazaarResourceMetadata({
+      "/resource": {
+        serviceName: payload?.resource?.serviceName,
+        tags: payload?.resource?.tags,
+      },
+    });
     const schemaResult = validateDiscoveryExtension(extension);
     const specResult = validateDiscoveryExtensionSpec(extension);
+    const errors = [
+      ...(schemaResult.errors || []),
+      ...(specResult.errors || []),
+      ...resourceMetadata.errors.map((error) => `resource_metadata: ${error}`),
+    ].slice(0, 20);
     return {
-      valid: schemaResult.valid === true && specResult.valid === true,
-      errors: [...(schemaResult.errors || []), ...(specResult.errors || [])].slice(0, 20),
+      valid: schemaResult.valid === true && specResult.valid === true && resourceMetadata.valid,
+      errors,
     };
   } catch {
     return { valid: false, errors: ["malformed_payment_required"] };

@@ -21,6 +21,11 @@ import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { declareDiscoveryContract, getDiscoveryOutputContract } from "./discovery-contract.mjs";
 import {
+  BAZAAR_RESOURCE_METADATA,
+  bazaarResourceMetadataFor,
+  validateBazaarResourceMetadata,
+} from "./bazaar-resource-metadata.mjs";
+import {
   PAYMENT_IDENTIFIER,
   declarePaymentIdentifierExtension,
   paymentIdentifierResourceServerExtension,
@@ -482,6 +487,18 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/distribution/agent-discoverability-audit`, amount: priceToAtomic(AGENT_DISCOVERABILITY_AUDIT_PRICE), description: "Buyer-intent rank audit for one x402 or MPP service across Coinbase Bazaar, Agent402, Circle Agent Marketplace, and the official MPP catalog. Returns registry-native position, competitors above the target, expected-route presence, coverage gaps, evidence-based next actions, source outages, and explicit method limits. No catalog credentials or payments.", mimeType: "application/json" },
 ];
 
+const bazaarResourceMetadataValidation = validateBazaarResourceMetadata();
+if (!bazaarResourceMetadataValidation.valid) {
+  throw new Error(`Invalid Bazaar resource metadata: ${bazaarResourceMetadataValidation.errors.join("; ")}`);
+}
+const paidResourceRoutes = new Set(RESOURCES.map((resource) => new URL(resource.url).pathname));
+const metadataRoutes = new Set(Object.keys(BAZAAR_RESOURCE_METADATA));
+const missingMetadataRoutes = [...paidResourceRoutes].filter((route) => !metadataRoutes.has(route));
+const unknownMetadataRoutes = [...metadataRoutes].filter((route) => !paidResourceRoutes.has(route));
+if (missingMetadataRoutes.length || unknownMetadataRoutes.length) {
+  throw new Error(`Bazaar resource metadata coverage mismatch: missing=${missingMetadataRoutes.join(",") || "none"}; unknown=${unknownMetadataRoutes.join(",") || "none"}`);
+}
+
 const RESOURCE_DISCOVERY_METADATA = {
   "/extract": { operationId: "extractUrl", tags: ["Web Data"] },
   "/read": { operationId: "readUrlAsMarkdown", tags: ["Web Data"] },
@@ -587,7 +604,7 @@ const machineActionCatalog = () => ({
       priceUsdc: Number(resource.amount) / 1e6,
       paymentProtocols: ["x402", "mpp"],
       mimeType: resource.mimeType,
-      tags: RESOURCE_DISCOVERY_METADATA[route]?.tags || [],
+      tags: BAZAAR_RESOURCE_METADATA[route]?.tags || [],
       response: response ? { mimeType: "application/json", ...response } : null,
     };
   }),
@@ -809,7 +826,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.11.19",
+      version: "1.11.20",
       description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, wallet context, and Morpho decision evidence. Pay per call in Base USDC through x402 or native MPP.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
@@ -990,6 +1007,7 @@ app.get("/distribution/agent-discoverability-audit", (req, res, next) => {
 const x402Paywall = paymentMiddleware(
     {
       "GET /extract": {
+        ...bazaarResourceMetadataFor("/extract"),
         accepts: [
           {
             scheme: "exact",
@@ -1043,6 +1061,7 @@ const x402Paywall = paymentMiddleware(
         },
       },
       "GET /read": {
+        ...bazaarResourceMetadataFor("/read"),
         accepts: [{ scheme: "exact", price: READ_PRICE, network: NETWORK, payTo: PAY_TO }],
         description:
           "URL -> full page content as clean Markdown, ready for LLM context. Strips nav/ads/scripts, preserves headings/links/lists. Handles redirects, timeouts, size caps, SSRF. The reliable web-reader agents need before feeding a page to a model.",
@@ -1076,6 +1095,7 @@ const x402Paywall = paymentMiddleware(
         },
       },
       "GET /scan": {
+        ...bazaarResourceMetadataFor("/scan"),
         accepts: [{ scheme: "exact", price: SCAN_PRICE, network: NETWORK, payTo: PAY_TO }],
         description:
           "Static supply-chain SECURITY scan of a public GitHub repo BEFORE an agent installs/runs it (a dependency, a Claude/MCP skill, an MCP server). Flags exfil sinks, obfuscated code execution, credential-file reads, env-harvest+network, install-time curl|bash. Returns risk = clean|suspicious|dangerous + findings. Static only, never runs the code. Low false positives.",
@@ -1109,6 +1129,7 @@ const x402Paywall = paymentMiddleware(
         },
       },
       "GET /schemaforge": {
+        ...bazaarResourceMetadataFor("/schemaforge"),
         accepts: [{ scheme: "exact", price: SCHEMAFORGE_PRICE, network: NETWORK, payTo: PAY_TO }],
         description:
           "Business website -> deterministic, paste-ready JSON-LD bundle plus a live structured-data gap analysis and ranked fixes. Covers local business and service, FAQ, offer catalog, reviews, geo, and opening hours. Rating and review fields remain explicit placeholders for the business's real values.",
@@ -1147,6 +1168,7 @@ const x402Paywall = paymentMiddleware(
         },
       },
       "GET /enrich": {
+        ...bazaarResourceMetadataFor("/enrich"),
         accepts: [{ scheme: "exact", price: ENRICH_PRICE, network: NETWORK, payTo: PAY_TO }],
         description:
           "Public domain -> structured company intelligence for agents: identity, keywords, tech stack, social and contact surface, DNS and email infrastructure, and AI-search-readiness signals with a 0-100 score. Public data only; no account, API key, or subscription.",
@@ -1191,6 +1213,7 @@ const x402Paywall = paymentMiddleware(
         },
       },
       "GET /deep-audit": {
+        ...bazaarResourceMetadataFor("/deep-audit"),
         accepts: [{ scheme: "exact", price: DEEP_AUDIT_PRICE, network: NETWORK, payTo: PAY_TO }],
         description:
           "Domain -> one complete AI-search-readiness audit (firmographics + tech + contact + DNS/email infra + a 0-100 AI-readiness score + a structured-data gap analysis with a paste-ready JSON-LD fix list + a combined letter grade). The bundled deep tier = enrich + schemaforge in one call. Public data only; no auth, no API keys, no subscription.",
@@ -1240,6 +1263,7 @@ const x402Paywall = paymentMiddleware(
         },
       },
       "GET /wallet-enrich": {
+        ...bazaarResourceMetadataFor("/wallet-enrich"),
         accepts: [{ scheme: "exact", price: WALLET_ENRICH_PRICE, network: NETWORK, payTo: PAY_TO }],
         description:
           "Base address -> agent-ready on-chain profile: EOA or contract, ETH and major-token holdings, token or NFT metadata, EIP-1967 proxy detection, activity, and a derived profile label. Uses public Base mainnet RPC with no account or API key. Useful before an agent sends funds, swaps, or calls a contract.",
@@ -1286,6 +1310,7 @@ const x402Paywall = paymentMiddleware(
         },
       },
       "GET /defi/morpho-position": {
+        ...bazaarResourceMetadataFor("/defi/morpho-position"),
         accepts: [{ scheme: "exact", price: MORPHO_POSITION_PRICE, network: NETWORK, payTo: PAY_TO }],
         description: RESOURCES[7].description,
         mimeType: "application/json",
@@ -1335,6 +1360,7 @@ const x402Paywall = paymentMiddleware(
         },
       },
       "GET /defi/morpho-protection": {
+        ...bazaarResourceMetadataFor("/defi/morpho-protection"),
         accepts: [{ scheme: "exact", price: MORPHO_PROTECTION_PRICE, network: NETWORK, payTo: PAY_TO }],
         description: RESOURCES[8].description,
         mimeType: "application/json",
@@ -1392,6 +1418,7 @@ const x402Paywall = paymentMiddleware(
         },
       },
       "GET /defi/morpho-market-underwrite": {
+        ...bazaarResourceMetadataFor("/defi/morpho-market-underwrite"),
         accepts: [{ scheme: "exact", price: MORPHO_MARKET_UNDERWRITE_PRICE, network: NETWORK, payTo: PAY_TO }],
         description: RESOURCES[9].description,
         mimeType: "application/json",
@@ -1444,6 +1471,7 @@ const x402Paywall = paymentMiddleware(
         },
       },
       "GET /defi/morpho-preliquidation-replay": {
+        ...bazaarResourceMetadataFor("/defi/morpho-preliquidation-replay"),
         accepts: [{ scheme: "exact", price: MORPHO_PRELIQUIDATION_REPLAY_PRICE, network: NETWORK, payTo: PAY_TO }],
         description: RESOURCES[10].description,
         mimeType: "application/json",
@@ -1491,6 +1519,7 @@ const x402Paywall = paymentMiddleware(
         },
       },
       "GET /work/opportunity-preflight": {
+        ...bazaarResourceMetadataFor("/work/opportunity-preflight"),
         accepts: [{ scheme: "exact", price: OPPORTUNITY_PREFLIGHT_PRICE, network: NETWORK, payTo: PAY_TO }],
         description: RESOURCES[11].description,
         mimeType: "application/json",
@@ -1569,6 +1598,7 @@ const x402Paywall = paymentMiddleware(
         },
       },
       "GET /distribution/agent-discoverability-audit": {
+        ...bazaarResourceMetadataFor("/distribution/agent-discoverability-audit"),
         accepts: [{ scheme: "exact", price: AGENT_DISCOVERABILITY_AUDIT_PRICE, network: NETWORK, payTo: PAY_TO }],
         description: RESOURCES[12].description,
         mimeType: "application/json",
@@ -1926,7 +1956,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.11.19" },
+      serverInfo: { name: "x402-data-gateway", version: "1.11.20" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },

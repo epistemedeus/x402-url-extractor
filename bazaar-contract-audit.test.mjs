@@ -27,7 +27,17 @@ test("validates the exact Bazaar extension carried by a payment challenge", () =
     outputSchema: { type: "object", properties: { ok: { type: "boolean" } }, required: ["ok"] },
   }).bazaar;
   extension.info.input.method = "GET";
-  const header = Buffer.from(JSON.stringify({ extensions: { bazaar: extension } })).toString("base64");
+  const header = Buffer.from(JSON.stringify({
+    resource: {
+      serviceName: "SameDayDesk Audit Fixture",
+      tags: ["audit", "fixture"],
+    },
+    extensions: { bazaar: extension },
+  })).toString("base64");
   assert.deepEqual(validatePaymentRequiredHeader(header), { valid: true, errors: [] });
+  const missingMetadata = Buffer.from(JSON.stringify({ extensions: { bazaar: extension } })).toString("base64");
+  const missingValidation = validatePaymentRequiredHeader(missingMetadata);
+  assert.equal(missingValidation.valid, false);
+  assert.ok(missingValidation.errors.some((error) => error.includes("resource_metadata")));
   assert.deepEqual(validatePaymentRequiredHeader("not-json"), { valid: false, errors: ["malformed_payment_required"] });
 });

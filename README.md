@@ -213,6 +213,15 @@ baseline, preserves historical generic records, reports the same actor funnel,
 and treats every label as an unauthenticated observation rather than referral
 proof.
 
+Version 1.11.20 repairs the resource metadata consumed by payment-capable
+wallet agents. Every one of the thirteen x402 v2 challenges now carries the
+validated provider-level `serviceName` and five bounded route capability tags
+in the standard top-level resource object. Startup fails closed if paid-route
+coverage and metadata coverage diverge. The Bazaar contract audit now rejects
+a route whose extension is valid but whose resource name or tags are absent or
+invalid.
+Prices, outputs, settlement, privacy, routes, and native MPP terms are unchanged.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured
