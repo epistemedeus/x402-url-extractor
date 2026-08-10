@@ -222,6 +222,14 @@ a route whose extension is valid but whose resource name or tags are absent or
 invalid.
 Prices, outputs, settlement, privacy, routes, and native MPP terms are unchanged.
 
+Version 1.11.23 adds a narrow compatibility bridge for MCP clients that retry a
+paid `tools/call` with the x402 `PAYMENT-SIGNATURE` HTTP header but fail to copy
+the same signed payload into `_meta["x402/payment"]`. The merchant decodes only
+a bounded, object-shaped header on `tools/call`, never overrides canonical MCP
+metadata, and passes the result to the existing `@x402/mcp` verifier. The bridge
+does not trust the header, change payment terms, or bypass signature, amount,
+asset, network, nonce, or settlement validation.
+
 Version 1.9.7 privately reconciles each post-baseline reference against its
 canonical Base receipt. A record is accepted only when the transaction
 succeeded, exactly one canonical Base USDC transfer reached the configured

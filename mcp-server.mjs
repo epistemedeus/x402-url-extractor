@@ -27,6 +27,51 @@ import { x402ResourceServer } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { createPaymentWrapper } from "@x402/mcp";
 
+const MCP_PAYMENT_META_KEY = "x402/payment";
+const MAX_PAYMENT_SIGNATURE_HEADER_BYTES = 32 * 1024;
+
+/**
+ * Bridge x402 clients that send the signed PaymentPayload in the standard
+ * PAYMENT-SIGNATURE HTTP header but fail to mirror it into MCP tools/call
+ * metadata. The existing @x402/mcp wrapper remains the only verifier and
+ * settlement authority. A valid-looking header only becomes untrusted input
+ * to that wrapper; it never bypasses payment verification.
+ */
+export function injectPaymentSignatureHeader(req) {
+  const body = req?.body;
+  if (!body || Array.isArray(body) || body.method !== "tools/call") return false;
+  if (!body.params || typeof body.params !== "object" || Array.isArray(body.params)) return false;
+
+  const existingMeta = body.params._meta;
+  if (existingMeta && typeof existingMeta === "object" && existingMeta[MCP_PAYMENT_META_KEY]) {
+    return false;
+  }
+
+  const raw = req.get?.("PAYMENT-SIGNATURE");
+  if (typeof raw !== "string" || raw.length === 0) return false;
+  if (Buffer.byteLength(raw, "utf8") > MAX_PAYMENT_SIGNATURE_HEADER_BYTES) return false;
+  if (!/^[A-Za-z0-9+/_-]+={0,2}$/.test(raw)) return false;
+
+  let payment;
+  try {
+    const decoded = Buffer.from(raw, "base64");
+    if (decoded.length === 0 || decoded.length > MAX_PAYMENT_SIGNATURE_HEADER_BYTES) return false;
+    payment = JSON.parse(decoded.toString("utf8"));
+  } catch {
+    return false;
+  }
+  if (!payment || typeof payment !== "object" || Array.isArray(payment)) return false;
+  if (!Number.isInteger(payment.x402Version) || !payment.payload || typeof payment.payload !== "object") {
+    return false;
+  }
+
+  body.params._meta = {
+    ...(existingMeta && typeof existingMeta === "object" && !Array.isArray(existingMeta) ? existingMeta : {}),
+    [MCP_PAYMENT_META_KEY]: payment,
+  };
+  return true;
+}
+
 // Turn a tool's raw result object into an MCP tool result. Errors are returned as a
 // clean structured ok:false payload (not thrown) so the caller always gets legible JSON.
 function asToolResult(obj) {
@@ -93,6 +138,7 @@ export async function mountMcp(app, { facilitatorClient, network, payTo, serverI
 
   // Stateless streamable-HTTP transport. express.json() scoped to this route only.
   app.post("/mcp", express.json({ limit: "1mb" }), async (req, res) => {
+    injectPaymentSignatureHeader(req);
     const server = makeServer();
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     res.on("close", () => {
