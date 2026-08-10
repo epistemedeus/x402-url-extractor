@@ -5,6 +5,7 @@ import { Challenge } from "mppx";
 
 import {
   PaymentOfferPreflightError,
+  createPinnedLookup,
   normalizePaymentTarget,
   paymentOfferPreflight,
   publicAddress,
@@ -72,6 +73,14 @@ test("public address policy rejects private, reserved, and documentation ranges"
   for (const address of ["10.0.0.1", "127.0.0.1", "169.254.1.1", "192.168.1.1", "203.0.113.4", "::1", "fe80::1", "2001:db8::1"]) {
     assert.equal(publicAddress(address), false, address);
   }
+});
+
+test("pinned DNS lookup supports scalar and all-address Node callback contracts", async () => {
+  const lookup = createPinnedLookup({ address: "8.8.8.8", family: 4 });
+  const scalar = await new Promise((resolve, reject) => lookup("example.com", {}, (error, address, family) => error ? reject(error) : resolve({ address, family })));
+  const all = await new Promise((resolve, reject) => lookup("example.com", { all: true }, (error, addresses) => error ? reject(error) : resolve(addresses)));
+  assert.deepEqual(scalar, { address: "8.8.8.8", family: 4 });
+  assert.deepEqual(all, [{ address: "8.8.8.8", family: 4 }]);
 });
 
 test("normalizes matching x402 and MPP offers without credentials or payment", async () => {

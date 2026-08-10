@@ -119,6 +119,13 @@ function headersFromRaw(rawHeaders = []) {
   return headers;
 }
 
+export function createPinnedLookup(resolved) {
+  return (_hostname, options, callback) => {
+    if (options?.all === true) return callback(null, [{ address: resolved.address, family: resolved.family }]);
+    return callback(null, resolved.address, resolved.family);
+  };
+}
+
 export async function requestPaymentHeaders(target, {
   timeoutMs = DEFAULT_TIMEOUT_MS,
   lookupImpl = dnsLookup,
@@ -133,7 +140,7 @@ export async function requestPaymentHeaders(target, {
         "user-agent": "SameDayDesk-Payment-Offer-Preflight/1.0 (+https://samedaydesk.com)",
       },
       maxHeaderSize: MAX_HEADER_VALUE_BYTES,
-      lookup: (_hostname, _options, callback) => callback(null, resolved.address, resolved.family),
+      lookup: createPinnedLookup(resolved),
     }, (response) => {
       const result = {
         finalUrl: target.toString(),
