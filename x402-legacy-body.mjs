@@ -9,6 +9,38 @@ function decodePaymentRequired(value) {
   }
 }
 
+function legacyInputFields(discovery, schema) {
+  const input = discovery?.input;
+  const inputSchema = schema?.properties?.input?.properties;
+  if (!input || typeof input !== "object" || !inputSchema || typeof inputSchema !== "object") {
+    return input;
+  }
+
+  const projectFields = (container, examples) => {
+    if (!container || typeof container !== "object" || !container.properties || typeof container.properties !== "object") {
+      return null;
+    }
+    const required = new Set(Array.isArray(container.required) ? container.required : []);
+    return Object.fromEntries(Object.entries(container.properties).map(([name, definition]) => {
+      const field = definition && typeof definition === "object" ? structuredClone(definition) : {};
+      const example = examples && typeof examples === "object" ? examples[name] : undefined;
+      return [name, {
+        ...field,
+        required: required.has(name),
+        ...(["string", "number", "boolean"].includes(typeof example) ? { default: example } : {}),
+      }];
+    }));
+  };
+
+  const bodyFields = projectFields(inputSchema.body, input.body);
+  const queryParams = projectFields(inputSchema.queryParams, input.queryParams);
+  return {
+    ...structuredClone(input),
+    ...(bodyFields ? { bodyFields } : {}),
+    ...(queryParams ? { queryParams } : {}),
+  };
+}
+
 export function buildLegacyCompatiblePaymentRequired(value) {
   const decoded = decodePaymentRequired(value);
   if (!decoded) return null;
@@ -18,7 +50,10 @@ export function buildLegacyCompatiblePaymentRequired(value) {
     : {};
   const discovery = decoded.extensions?.bazaar?.info;
   const outputSchema = discovery && typeof discovery === "object"
-    ? structuredClone(discovery)
+    ? {
+        ...structuredClone(discovery),
+        input: legacyInputFields(discovery, decoded.extensions?.bazaar?.schema),
+      }
     : undefined;
 
   return {

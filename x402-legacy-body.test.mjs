@@ -47,6 +47,52 @@ test("mirrors v2 payment data with legacy aliases without changing the offer", (
   assert.equal(body.accepts[0].extra.serviceName, "SameDayDesk");
 });
 
+test("projects canonical POST body schema into legacy bodyFields for registry UIs", () => {
+  const canonical = structuredClone(paymentRequired);
+  canonical.extensions.bazaar.info.input = {
+    type: "http",
+    method: "POST",
+    bodyType: "json",
+    body: { url: "https://example.com" },
+  };
+  canonical.extensions.bazaar.schema = {
+    type: "object",
+    properties: {
+      input: {
+        type: "object",
+        properties: {
+          type: { type: "string", const: "http" },
+          method: { type: "string", enum: ["POST"] },
+          bodyType: { type: "string", enum: ["json"] },
+          body: {
+            type: "object",
+            properties: {
+              url: { type: "string", format: "uri", maxLength: 2048, description: "Exact public HTTPS URL." },
+            },
+            required: ["url"],
+            additionalProperties: false,
+          },
+        },
+        required: ["type", "method", "bodyType", "body"],
+      },
+    },
+    required: ["input"],
+  };
+
+  const body = buildLegacyCompatiblePaymentRequired(encoded(canonical));
+  assert.equal(body.accepts[0].outputSchema.input.method, "POST");
+  assert.equal(body.accepts[0].outputSchema.input.bodyType, "json");
+  assert.deepEqual(body.accepts[0].outputSchema.input.body, { url: "https://example.com" });
+  assert.deepEqual(body.accepts[0].outputSchema.input.bodyFields.url, {
+    type: "string",
+    format: "uri",
+    maxLength: 2048,
+    description: "Exact public HTTPS URL.",
+    required: true,
+    default: "https://example.com",
+  });
+});
+
 test("fails closed for malformed or non-v2 values", () => {
   assert.equal(buildLegacyCompatiblePaymentRequired("not-base64"), null);
   assert.equal(buildLegacyCompatiblePaymentRequired(encoded({ x402Version: 1, accepts: [] })), null);
