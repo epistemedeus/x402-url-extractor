@@ -65,6 +65,13 @@ test("preserves registry ranks and identifies the target by origin or payTo", as
       protocols: ["mpp", "x402"],
       endpoint: { method: "GET", path: "/extract", summary: "extract structured metadata", authMode: "paid", price: "0.050000 USD" },
     }] } } });
+    if (target.includes("payanagent.com")) return response({ offers: [{
+      _id: "kh736e0z6aw86kvtn28ert5na18c4kb1",
+      title: "https://api.example.com/extract",
+      description: "extract structured metadata",
+      priceUsd: 0.05,
+      buyUrl: "/x402/kh736e0z6aw86kvtn28ert5na18c4kb1",
+    }] });
     throw new Error(`unexpected ${target}`);
   };
   const result = await agentDiscoverabilityAudit({
@@ -73,16 +80,19 @@ test("preserves registry ranks and identifies the target by origin or payTo", as
     route: "/extract",
     payTo,
   }, { fetchImpl, now: 0 });
-  assert.equal(result.summary.targetFoundSourceCount, 6);
-  assert.equal(result.summary.targetFoundSourceFamilyCount, 5);
-  assert.deepEqual(result.summary.foundSourceFamilies, ["coinbase", "agent402", "agentictrade", "mpp", "mppscan"]);
+  assert.equal(result.summary.targetFoundSourceCount, 7);
+  assert.equal(result.summary.targetFoundSourceFamilyCount, 6);
+  assert.deepEqual(result.summary.foundSourceFamilies, ["coinbase", "agent402", "agentictrade", "mpp", "mppscan", "payanagent"]);
   assert.equal(result.sources["coinbase-bazaar"].bestTargetRank, 2);
   assert.equal(result.sources["coinbase-bazaar"].competitorsAboveTarget.length, 1);
   assert.equal(result.sources["coinbase-bazaar"].targetResults[0].rank, 2);
   assert.equal(result.sources["agent402-router"].bestTargetRank, 1);
   assert.equal(result.sources["official-mpp-catalog"].expectedRouteFound, true);
   assert.deepEqual(result.summary.missingSources, ["circle-marketplace"]);
-  assert.equal(result.summary.topThreeSourceCount, 6);
+  assert.equal(result.summary.topThreeSourceCount, 7);
+  assert.deepEqual(result.summary.dependentSources, ["payanagent-public-search"]);
+  assert.equal(result.summary.independentTargetFoundSourceCount, 6);
+  assert.match(result.sourceDependencies["payanagent-public-search"], /not independent underlying supply/);
   assert.ok(result.findings.some((finding) => finding.source === "circle-marketplace" && finding.finding === "target_absent_from_ranked_results"));
   assert.ok(result.nextActions.some((action) => action.source === "circle-marketplace"));
   assert.equal(result.safety.paymentSentToCatalogs, false);
@@ -99,13 +109,14 @@ test("contains one source failure while preserving the other observations", asyn
     if (target.includes("agentictrade.io")) return response({ services: [] });
     if (target.includes("mpp.dev")) return response({ services: [] });
     if (target.includes("mppscan.com")) return response({ result: { data: { json: [] } } });
+    if (target.includes("payanagent.com")) return response({ offers: [] });
     throw new Error(`unexpected ${target}`);
   };
   const result = await agentDiscoverabilityAudit({
     origin: "https://api.example.com",
     intent: "extract a public website into structured JSON metadata",
   }, { fetchImpl, now: 0 });
-  assert.equal(result.summary.availableSourceCount, 6);
+  assert.equal(result.summary.availableSourceCount, 7);
   assert.deepEqual(result.summary.unavailableSources, ["coinbase-bazaar"]);
   assert.equal(result.sources["coinbase-bazaar"].status, "error");
   assert.equal(JSON.stringify(result).includes("secret"), false);
@@ -119,6 +130,7 @@ test("keeps dynamic or absent MPPScan prices unknown rather than free", async ()
       title: "Dynamic",
       endpoint: { method: "GET", path: "/route", summary: "dynamic priced service", price: "0.10-1000.00 USD" },
     }] } } });
+    if (target.includes("payanagent.com")) return response({ offers: [] });
     if (target.includes("coinbase.com")) return response({ resources: [] });
     if (target.includes("agent402.tools")) return response({ results: [] });
     if (target.includes("agentic.market")) return response({ services: [] });

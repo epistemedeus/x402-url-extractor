@@ -5,6 +5,7 @@ const AGENTIC_MARKET_SEARCH = "https://api.agentic.market/v1/services/search";
 const AGENTICTRADE_SEARCH = "https://agentictrade.io/api/v1/discover";
 const MPP_CATALOG = "https://mpp.dev/api/services";
 const MPPSCAN_SEARCH = "https://www.mppscan.com/api/trpc/discover.search";
+const PAYANAGENT_SEARCH = "https://payanagent.com/api/v1/discover";
 
 const SOURCE_ORDER = [
   "coinbase-bazaar",
@@ -14,6 +15,7 @@ const SOURCE_ORDER = [
   "agentictrade-catalog",
   "official-mpp-catalog",
   "mppscan-public-search",
+  "payanagent-public-search",
 ];
 const SOURCE_FAMILIES = Object.freeze({
   "coinbase-bazaar": "coinbase",
@@ -23,6 +25,10 @@ const SOURCE_FAMILIES = Object.freeze({
   "agentictrade-catalog": "agentictrade",
   "official-mpp-catalog": "mpp",
   "mppscan-public-search": "mppscan",
+  "payanagent-public-search": "payanagent",
+});
+const DEPENDENT_SOURCES = Object.freeze({
+  "payanagent-public-search": "Aggregates ecosystem supply, including Coinbase-origin records; retrieval is a distinct buyer surface but not independent underlying supply.",
 });
 
 function cleanString(value, maximum = 500) {
@@ -182,6 +188,30 @@ function normalizeMppscan(payload) {
   });
 }
 
+function normalizePayanAgent(payload) {
+  const items = payload?.offers;
+  if (!Array.isArray(items) || items.length > 100) throw new Error("PayanAgent response is missing or excessive");
+  const seen = new Set();
+  return items.flatMap((item) => {
+    const id = cleanString(item?._id ?? item?.id, 100);
+    const buyPath = cleanString(item?.buyUrl, 200);
+    const title = cleanString(item?.title, 200);
+    const description = cleanString(item?.description, 500);
+    if (!id || !/^[a-z0-9]{20,100}$/.test(id) || buyPath !== `/x402/${id}` || !title || !description) return [];
+    if (seen.has(id)) throw new Error(`PayanAgent response contained duplicate offer ${id}`);
+    seen.add(id);
+    const target = httpsUrl(title);
+    return [candidate({
+      name: title,
+      url: `https://payanagent.com${buyPath}`,
+      origin: target?.origin,
+      route: target?.pathname,
+      description,
+      priceUsd: item?.priceUsd,
+    })];
+  });
+}
+
 function tokens(value) {
   return new Set(String(value || "").toLowerCase().match(/[a-z0-9]{2,}/g) || []);
 }
@@ -314,6 +344,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
     "agentictrade-catalog": async () => normalizeAgenticTrade(await fetchJson(`${AGENTICTRADE_SEARCH}?q=${encoded}&limit=${limit}`, { fetchImpl })),
     "official-mpp-catalog": async () => normalizeMpp(await fetchJson(MPP_CATALOG, { fetchImpl }), input.intent, limit),
     "mppscan-public-search": async () => normalizeMppscan(await fetchJson(mppscanUrl, { fetchImpl })).slice(0, limit),
+    "payanagent-public-search": async () => normalizePayanAgent(await fetchJson(`${PAYANAGENT_SEARCH}?q=${encoded}&limit=${limit}`, { fetchImpl })),
   };
   const settled = await Promise.allSettled(SOURCE_ORDER.map((source) => calls[source]()));
   const sources = {};
@@ -337,6 +368,8 @@ export async function agentDiscoverabilityAudit(rawInput, {
     ? availableSourceFamilies.filter((family) => SOURCE_ORDER.some((source) =>
       SOURCE_FAMILIES[source] === family && sources[source].status === "ok" && sources[source].expectedRouteFound))
     : [];
+  const dependentSources = SOURCE_ORDER.filter((source) => DEPENDENT_SOURCES[source]);
+  const independentSources = SOURCE_ORDER.filter((source) => !DEPENDENT_SOURCES[source]);
   const findings = [];
   const nextActions = [];
   for (const source of SOURCE_ORDER) {
@@ -365,7 +398,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
   return {
     ok: true,
     product: "samedaydesk-agent-discoverability-audit",
-    version: "1.3.0",
+    version: "1.4.0",
     generatedAt: new Date(now).toISOString(),
     input: {
       origin: input.origin,
@@ -391,11 +424,14 @@ export async function agentDiscoverabilityAudit(rawInput, {
       foundSourceFamilies,
       missingSourceFamilies: availableSourceFamilies.filter((family) => !foundSourceFamilies.includes(family)),
       unavailableSourceFamilies: sourceFamilies.filter((family) => !availableSourceFamilies.includes(family)),
+      dependentSources,
+      independentTargetFoundSourceCount: independentSources.filter((source) => sources[source].status === "ok" && sources[source].targetFound).length,
     },
     sources,
     findings,
     nextActions,
-    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, and MPPScan public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. AgenticTrade and MPPScan use their public text-search order. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata.",
+    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, and PayanAgent public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent is a distinct buyer-facing retrieval surface but aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. AgenticTrade, MPPScan, and PayanAgent use their public text-search order. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata.",
+    sourceDependencies: DEPENDENT_SOURCES,
     safety: {
       credentialsUsed: false,
       paymentSignedToCatalogs: false,
