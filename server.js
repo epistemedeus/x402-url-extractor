@@ -539,7 +539,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/defi/morpho-market-underwrite`, amount: priceToAtomic(MORPHO_MARKET_UNDERWRITE_PRICE), description: "Base Morpho market -> deterministic underwriting facts: parameter integrity, direct-chain checks, liquidity, utilization, APY history, borrower concentration and health bands, bad debt, and PreLiquidation supply. Read-only evidence flags; no opaque score or capital action.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/defi/morpho-preliquidation-replay`, amount: priceToAtomic(MORPHO_PRELIQUIDATION_REPLAY_PRICE), description: "Base transaction -> deterministic Morpho PreLiquidation replay: strict event decode, block-time contract parameters and oracle price, repaid debt, seized collateral, gross incentive, and gas. Historical evidence only; no profitability claim or execution.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/work/opportunity-preflight`, amount: priceToAtomic(OPPORTUNITY_PREFLIGHT_PRICE), description: "Agent work opportunity -> deterministic attempt, verify-first, or abandon preflight using caller-supplied cost and selection assumptions plus dated platform evidence. Returns break-even probability, expected surplus, hard gates, and source-linked evidence. No claim, bid, payment, or submission.", mimeType: "application/json" },
-  { url: `${PUBLIC_URL}/distribution/agent-discoverability-audit`, amount: priceToAtomic(AGENT_DISCOVERABILITY_AUDIT_PRICE), description: "Buyer-intent rank audit for one x402 or MPP service across Coinbase Bazaar, Coinbase Agentic Market, Agent402, Circle Agent Marketplace, AgenticTrade, the official MPP catalog, MPPScan, PayanAgent, and 8004Market public search. Returns registry-native position, dependency-labeled source coverage, competitors above the target, expected-route presence, coverage gaps, evidence-based next actions, source outages, and explicit method limits. No catalog credentials or payments.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/distribution/agent-discoverability-audit`, amount: priceToAtomic(AGENT_DISCOVERABILITY_AUDIT_PRICE), description: "Buyer-intent rank audit for one x402 or MPP service across Coinbase Bazaar, Coinbase Agentic Market, Agent402, Circle Agent Marketplace, AgenticTrade, the official MPP catalog, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Returns registry-native position, dependency-labeled source coverage, competitors above the target, expected-route presence, coverage gaps, evidence-based next actions, source outages, and explicit method limits. No catalog credentials or payments.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/commerce/payment-offer-preflight`, amount: priceToAtomic(PAYMENT_OFFER_PREFLIGHT_PRICE), description: "Compare x402 and MPP payment challenges and terms before buyer authorization for one exact public HTTPS GET URL. Returns normalized offers, URL and realm binding checks, expiry and economic-parity findings, and an explicit parseable, review-required, or no-offer decision. Uses no target credential, signs nothing, sends no payment, follows no redirects, and reads no response body.", mimeType: "application/json" },
 ];
 const circleGateway = buildCircleGatewayRoute({
@@ -830,7 +830,7 @@ ${line("/read", READ_PRICE, "URL -> full page content as clean Markdown, ready f
 ${line("/scan", SCAN_PRICE, "static supply-chain security scan of a public GitHub repo before an agent installs/runs it; flags exfil sinks, credential reads, install-time curl|bash.")}
 ${line("/schemaforge", SCHEMAFORGE_PRICE, "business site -> paste-ready JSON-LD structured-data bundle + a gap diff vs the live site.")}
 ${line("/deep-audit", DEEP_AUDIT_PRICE, "domain -> bundled AI-search-readiness audit with firmographics, technical signals, structured-data gaps, and a paste-ready fix list.")}
-${line("/distribution/agent-discoverability-audit", AGENT_DISCOVERABILITY_AUDIT_PRICE, "public HTTPS service origin plus a brand-blind capability intent -> point-in-time rank, dependency-labeled source coverage, expected-route presence, and top competing results across Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, the official MPP catalog, MPPScan, PayanAgent, and 8004Market public search. Catalog queries use no credentials or payments.")}
+${line("/distribution/agent-discoverability-audit", AGENT_DISCOVERABILITY_AUDIT_PRICE, "public HTTPS service origin plus a brand-blind capability intent -> point-in-time rank, dependency-labeled source coverage, expected-route presence, and top competing results across Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, the official MPP catalog, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Catalog queries use no credentials or payments.")}
 ${line("/commerce/payment-offer-preflight", PAYMENT_OFFER_PREFLIGHT_PRICE, "exact public HTTPS GET URL -> compare and normalize x402 and MPP payment challenges and terms before buyer authorization; check route and realm binding, expiry, and economic parity. Uses no target credential, signature, payment, redirect, or response body.")}
 ${circleGateway.enabled ? line(CIRCLE_GATEWAY_PATH, PAYMENT_OFFER_PREFLIGHT_PRICE, "the same payment-offer preflight product through Circle Gateway x402 Nanopayments, with gasless buyer authorization and batched USDC settlement.") : ""}
 
@@ -916,7 +916,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.11.39",
+      version: "1.11.40",
       description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, machine-payment preflight, wallet context, and Morpho decision evidence. Pay per call through Base x402 or native MPP, with a Circle Gateway Nanopayments path for gasless batched USDC.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
@@ -1767,10 +1767,10 @@ const x402Paywall = paymentMiddleware(
               example: {
                 ok: true,
                 product: "samedaydesk-agent-discoverability-audit",
-                version: "1.3.0",
+                version: "1.6.0",
                 generatedAt: "2026-08-09T00:00:00.000Z",
                 input: { origin: "https://agents.samedaydesk.com", intent: "extract a public web page into structured JSON metadata headings links and JSON-LD", route: "/extract" },
-                summary: { sourceCount: 7, availableSourceCount: 7, targetFoundSourceCount: 3, expectedRouteFoundSourceCount: 3, sourceFamilyCount: 6, targetFoundSourceFamilyCount: 2 },
+                summary: { sourceCount: 10, availableSourceCount: 10, targetFoundSourceCount: 4, expectedRouteFoundSourceCount: 4, sourceFamilyCount: 9, targetFoundSourceFamilyCount: 4 },
                 sources: { "coinbase-bazaar": { status: "ok", targetFound: true, bestTargetRank: 9 } },
                 findings: [{ code: "target_not_top_three", source: "coinbase-bazaar" }],
                 nextActions: [{ action: "clarify_semantic_description", evidence: "target ranked below three competitors" }],
@@ -2210,7 +2210,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.11.39" },
+      serverInfo: { name: "x402-data-gateway", version: "1.11.40" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },

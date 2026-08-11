@@ -435,7 +435,7 @@ completed an owner-excluded settlement for integration and indexing QA. The
 thirteenth route, `/distribution/agent-discoverability-audit`, is live at 0.05
 USDC and productizes the brand-blind catalog benchmark used on SameDayDesk
 itself. It queries Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, the official MPP
-catalog, MPPScan, PayanAgent, and 8004Market public search without catalog credentials or payments,
+catalog, MPPScan, PayanAgent, x402.jobs, and 8004Market public search without catalog credentials or payments,
 preserves registry-native order, and reports coverage, rank, competitors above the target, and
 evidence-based next actions as point-in-time observations rather than a
 composite score. Bazaar and Agentic Market are explicitly one Coinbase source
@@ -447,6 +447,17 @@ underlying supply. 8004Market is labeled as an identity-propagation surface
 because it indexes on-chain Solana Agent Registry identities; retrieval there
 proves public identity and capability propagation, not a buyer call, settlement,
 or independent demand.
+
+Version 1.11.40 adds x402.jobs as a tenth public search view. The adapter uses a
+deterministic, disclosed compact keyword query because x402.jobs search is
+lexical rather than semantic, then preserves its public popularity order and
+checks the expected target route. SameDayDesk's verified owned server now lists
+all fourteen Base routes with a zero-call, zero-value baseline, so later
+activity can be measured without calling validation or listing traffic demand.
+
+Version 1.11.39 adds the public x402.jobs server-ownership proof at
+`/.well-known/x402-verification.json`. The challenge is a public directory
+claim only and grants no API, wallet, or payment authority.
 
 Version 1.11.38 adds a distinct Circle Gateway Nanopayments access path for
 payment-offer preflight at the same 0.005-USDC price. It uses the official

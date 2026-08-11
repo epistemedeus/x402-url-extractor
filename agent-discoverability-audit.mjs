@@ -6,6 +6,7 @@ const AGENTICTRADE_SEARCH = "https://agentictrade.io/api/v1/discover";
 const MPP_CATALOG = "https://mpp.dev/api/services";
 const MPPSCAN_SEARCH = "https://www.mppscan.com/api/trpc/discover.search";
 const PAYANAGENT_SEARCH = "https://payanagent.com/api/v1/discover";
+const X402_JOBS_SEARCH = "https://api.x402.jobs/api/v1/resources";
 import { searchMarket8004 } from "./market8004-discovery.mjs";
 
 const SOURCE_ORDER = [
@@ -17,6 +18,7 @@ const SOURCE_ORDER = [
   "official-mpp-catalog",
   "mppscan-public-search",
   "payanagent-public-search",
+  "x402jobs-public-search",
   "8004market-public-search",
 ];
 const SOURCE_FAMILIES = Object.freeze({
@@ -28,6 +30,7 @@ const SOURCE_FAMILIES = Object.freeze({
   "official-mpp-catalog": "mpp",
   "mppscan-public-search": "mppscan",
   "payanagent-public-search": "payanagent",
+  "x402jobs-public-search": "x402jobs",
   "8004market-public-search": "market8004",
 });
 const DEPENDENT_SOURCES = Object.freeze({
@@ -224,6 +227,30 @@ function normalizePayanAgent(payload) {
   });
 }
 
+function normalizeX402Jobs(payload) {
+  const items = payload?.resources;
+  if (!Array.isArray(items) || items.length > 100) throw new Error("x402.jobs response is missing or excessive");
+  const seen = new Set();
+  return items.flatMap((item) => {
+    const id = cleanString(item?.id, 100);
+    const resourceUrl = httpsUrl(item?.resource_url ?? item?.url);
+    if (!id || !resourceUrl) return [];
+    if (seen.has(id)) throw new Error(`x402.jobs response contained duplicate resource ${id}`);
+    seen.add(id);
+    const atomic = String(item?.max_amount_required ?? "");
+    const priceUsd = /^\d+$/.test(atomic) ? Number(atomic) / 1_000_000 : null;
+    return [candidate({
+      name: item?.name,
+      url: item?.x402jobs_url ?? resourceUrl.toString(),
+      origin: resourceUrl.origin,
+      route: resourceUrl.pathname,
+      description: item?.description,
+      priceUsd,
+      payTo: item?.pay_to,
+    })];
+  });
+}
+
 function normalizeMarket8004(items) {
   return items.map((item) => candidate({
     name: item.name,
@@ -235,6 +262,24 @@ function normalizeMarket8004(items) {
 
 function tokens(value) {
   return new Set(String(value || "").toLowerCase().match(/[a-z0-9]{2,}/g) || []);
+}
+
+const X402_JOBS_GENERIC_ROUTE_TERMS = new Set(["api", "v0", "v1", "defi", "commerce", "distribution", "work"]);
+const X402_JOBS_STOP_TERMS = new Set(["the", "and", "for", "from", "into", "with", "without", "one", "https"]);
+
+function x402JobsLexicalQuery(input) {
+  const routeTerms = [...tokens(input.route)].filter((term) => !X402_JOBS_GENERIC_ROUTE_TERMS.has(term));
+  const intentTerms = [...tokens(input.intent)].filter((term) => !X402_JOBS_STOP_TERMS.has(term));
+  const selected = [];
+  for (const term of routeTerms) {
+    if (!selected.includes(term)) selected.push(term);
+    if (selected.length === 2) break;
+  }
+  for (const term of intentTerms) {
+    if (!selected.includes(term)) selected.push(term);
+    if (selected.length === 2) break;
+  }
+  return selected.join(" ");
 }
 
 function overlap(queryTokens, value, weight) {
@@ -357,6 +402,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
   const input = normalizeDiscoverabilityAuditInput(rawInput);
   if (!Number.isInteger(limit) || limit < 1 || limit > 20) throw new Error("limit must be an integer from 1 through 20");
   const encoded = encodeURIComponent(input.intent);
+  const x402JobsQuery = x402JobsLexicalQuery(input);
   const mppscanUrl = new URL(MPPSCAN_SEARCH);
   mppscanUrl.searchParams.set("input", JSON.stringify({ json: { query: input.intent } }));
   const calls = {
@@ -372,6 +418,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
     "official-mpp-catalog": async () => normalizeMpp(await fetchJson(MPP_CATALOG, { fetchImpl }), input.intent, limit),
     "mppscan-public-search": async () => normalizeMppscan(await fetchJson(mppscanUrl, { fetchImpl })).slice(0, limit),
     "payanagent-public-search": async () => normalizePayanAgent(await fetchJson(`${PAYANAGENT_SEARCH}?q=${encoded}&limit=${limit}`, { fetchImpl })),
+    "x402jobs-public-search": async () => normalizeX402Jobs(await fetchJson(`${X402_JOBS_SEARCH}?search=${encodeURIComponent(x402JobsQuery)}&limit=${limit}&sort=popular`, { fetchImpl })),
     "8004market-public-search": async () => normalizeMarket8004(await searchMarket8004(input.intent, { fetchImpl, limit })),
   };
   const settled = await Promise.allSettled(SOURCE_ORDER.map((source) => calls[source]()));
@@ -382,6 +429,10 @@ export async function agentDiscoverabilityAudit(rawInput, {
       ? summarizeSource(result.value, input)
       : { status: "error", error: cleanString(result.reason?.message || "catalog unavailable", 200) };
   });
+  if (sources["x402jobs-public-search"].status === "ok") {
+    sources["x402jobs-public-search"].queryUsed = x402JobsQuery;
+    sources["x402jobs-public-search"].queryAdapted = x402JobsQuery !== input.intent.toLowerCase();
+  }
   const availableSources = SOURCE_ORDER.filter((source) => sources[source].status === "ok");
   const foundSources = availableSources.filter((source) => sources[source].targetFound);
   const routeFoundSources = input.route
@@ -426,7 +477,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
   return {
     ok: true,
     product: "samedaydesk-agent-discoverability-audit",
-    version: "1.5.0",
+    version: "1.6.0",
     generatedAt: new Date(now).toISOString(),
     input: {
       origin: input.origin,
@@ -458,7 +509,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
     sources,
     findings,
     nextActions,
-    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata.",
+    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata.",
     sourceDependencies: DEPENDENT_SOURCES,
     safety: {
       credentialsUsed: false,

@@ -85,6 +85,19 @@ test("preserves registry ranks and identifies the target by origin or payTo", as
       priceUsd: 0.05,
       buyUrl: "/x402/kh736e0z6aw86kvtn28ert5na18c4kb1",
     }] });
+    if (target.includes("x402.jobs")) {
+      assert.match(target, /search=extract%20public/);
+      return response({ resources: [{
+      id: "resource-target",
+      name: "Target x402.jobs",
+      resource_url: "https://api.example.com/extract?url=https%3A%2F%2Fexample.org",
+      x402jobs_url: "https://x402.jobs/resources/api-example-com/extract",
+      description: "extract structured metadata",
+      max_amount_required: "50000",
+      network: "base",
+      pay_to: payTo,
+      }] });
+    }
     if (target.includes("8004market.io")) return market8004Response();
     throw new Error(`unexpected ${target}`);
   };
@@ -94,18 +107,20 @@ test("preserves registry ranks and identifies the target by origin or payTo", as
     route: "/extract",
     payTo,
   }, { fetchImpl, now: 0 });
-  assert.equal(result.summary.targetFoundSourceCount, 8);
-  assert.equal(result.summary.targetFoundSourceFamilyCount, 7);
-  assert.deepEqual(result.summary.foundSourceFamilies, ["coinbase", "agent402", "agentictrade", "mpp", "mppscan", "payanagent", "market8004"]);
+  assert.equal(result.summary.targetFoundSourceCount, 9);
+  assert.equal(result.summary.targetFoundSourceFamilyCount, 8);
+  assert.deepEqual(result.summary.foundSourceFamilies, ["coinbase", "agent402", "agentictrade", "mpp", "mppscan", "payanagent", "x402jobs", "market8004"]);
   assert.equal(result.sources["coinbase-bazaar"].bestTargetRank, 2);
   assert.equal(result.sources["coinbase-bazaar"].competitorsAboveTarget.length, 1);
   assert.equal(result.sources["coinbase-bazaar"].targetResults[0].rank, 2);
   assert.equal(result.sources["agent402-router"].bestTargetRank, 1);
   assert.equal(result.sources["official-mpp-catalog"].expectedRouteFound, true);
+  assert.equal(result.sources["x402jobs-public-search"].queryUsed, "extract public");
+  assert.equal(result.sources["x402jobs-public-search"].queryAdapted, true);
   assert.deepEqual(result.summary.missingSources, ["circle-marketplace"]);
-  assert.equal(result.summary.topThreeSourceCount, 8);
+  assert.equal(result.summary.topThreeSourceCount, 9);
   assert.deepEqual(result.summary.dependentSources, ["payanagent-public-search", "8004market-public-search"]);
-  assert.equal(result.summary.independentTargetFoundSourceCount, 6);
+  assert.equal(result.summary.independentTargetFoundSourceCount, 7);
   assert.match(result.sourceDependencies["payanagent-public-search"], /not independent underlying supply/);
   assert.match(result.sourceDependencies["8004market-public-search"], /identity propagation/);
   assert.ok(result.findings.some((finding) => finding.source === "circle-marketplace" && finding.finding === "target_absent_from_ranked_results"));
@@ -125,6 +140,7 @@ test("contains one source failure while preserving the other observations", asyn
     if (target.includes("mpp.dev")) return response({ services: [] });
     if (target.includes("mppscan.com")) return response({ result: { data: { json: [] } } });
     if (target.includes("payanagent.com")) return response({ offers: [] });
+    if (target.includes("x402.jobs")) return response({ resources: [] });
     if (target.includes("8004market.io")) return market8004Response({ target: false });
     throw new Error(`unexpected ${target}`);
   };
@@ -132,7 +148,7 @@ test("contains one source failure while preserving the other observations", asyn
     origin: "https://api.example.com",
     intent: "extract a public website into structured JSON metadata",
   }, { fetchImpl, now: 0 });
-  assert.equal(result.summary.availableSourceCount, 8);
+  assert.equal(result.summary.availableSourceCount, 9);
   assert.deepEqual(result.summary.unavailableSources, ["coinbase-bazaar"]);
   assert.equal(result.sources["coinbase-bazaar"].status, "error");
   assert.equal(JSON.stringify(result).includes("secret"), false);
@@ -147,6 +163,7 @@ test("keeps dynamic or absent MPPScan prices unknown rather than free", async ()
       endpoint: { method: "GET", path: "/route", summary: "dynamic priced service", price: "0.10-1000.00 USD" },
     }] } } });
     if (target.includes("payanagent.com")) return response({ offers: [] });
+    if (target.includes("x402.jobs")) return response({ resources: [] });
     if (target.includes("8004market.io")) return market8004Response({ target: false, query: "find a dynamically priced machine service for agents" });
     if (target.includes("coinbase.com")) return response({ resources: [] });
     if (target.includes("agent402.tools")) return response({ results: [] });
