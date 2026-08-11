@@ -30,6 +30,7 @@ const DEFAULT_PAID_ROUTES = new Set([
   "/distribution/agent-discoverability-audit",
   "/commerce/payment-offer-preflight",
   "/commerce/settlement-proof",
+  "/chain/transaction-receipt",
 ]);
 
 function headerValue(headers, name) {

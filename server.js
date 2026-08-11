@@ -66,6 +66,11 @@ import {
   normalizeSettlementProofInput,
   settlementProof,
 } from "./settlement-proof.mjs";
+import {
+  TransactionReceiptError,
+  normalizeTransactionReceiptInput,
+  transactionReceipt,
+} from "./transaction-receipt.mjs";
 import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
 import { createCommerceTelemetry } from "./commerce-events.mjs";
@@ -163,6 +168,9 @@ const AGENT_DISCOVERABILITY_AUDIT_PRICE = process.env.AGENT_DISCOVERABILITY_AUDI
 const PAYMENT_OFFER_PREFLIGHT_PRICE = process.env.PAYMENT_OFFER_PREFLIGHT_PRICE || "$0.005";
 // Independent post-settlement proof for one canonical Base USDC transfer.
 const SETTLEMENT_PROOF_PRICE = process.env.SETTLEMENT_PROOF_PRICE || "$0.005";
+// Normalized Base or Ethereum receipt evidence. Commodity-priced below the
+// observed $0.005 raw-receipt route while adding decoded transfer evidence.
+const TRANSACTION_RECEIPT_PRICE = process.env.TRANSACTION_RECEIPT_PRICE || "$0.002";
 
 // "$0.05" -> "50000" atomic USDC units (6 decimals) so the discovery docs
 // (/.well-known/x402, /openapi.json) always match the paywall price exactly.
@@ -431,7 +439,7 @@ app.get("/healthz", async (_req, res) => {
     ok: true,
     payTo: PAY_TO,
     network: NETWORK,
-    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE, "morpho-protection": MORPHO_PROTECTION_PRICE, "morpho-market-underwrite": MORPHO_MARKET_UNDERWRITE_PRICE, "morpho-preliquidation-replay": MORPHO_PRELIQUIDATION_REPLAY_PRICE, "opportunity-preflight": OPPORTUNITY_PREFLIGHT_PRICE, "agent-discoverability-audit": AGENT_DISCOVERABILITY_AUDIT_PRICE, "payment-offer-preflight": PAYMENT_OFFER_PREFLIGHT_PRICE, "settlement-proof": SETTLEMENT_PROOF_PRICE },
+    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE, "morpho-protection": MORPHO_PROTECTION_PRICE, "morpho-market-underwrite": MORPHO_MARKET_UNDERWRITE_PRICE, "morpho-preliquidation-replay": MORPHO_PRELIQUIDATION_REPLAY_PRICE, "opportunity-preflight": OPPORTUNITY_PREFLIGHT_PRICE, "agent-discoverability-audit": AGENT_DISCOVERABILITY_AUDIT_PRICE, "payment-offer-preflight": PAYMENT_OFFER_PREFLIGHT_PRICE, "settlement-proof": SETTLEMENT_PROOF_PRICE, "transaction-receipt": TRANSACTION_RECEIPT_PRICE },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
     paymentProtocols: {
@@ -590,6 +598,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/distribution/agent-discoverability-audit`, amount: priceToAtomic(AGENT_DISCOVERABILITY_AUDIT_PRICE), description: "Buyer-intent rank audit for one x402 or MPP service across Coinbase Bazaar, Coinbase Agentic Market, Agent402, Circle Agent Marketplace, AgenticTrade, the official MPP catalog, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Returns registry-native position, dependency-labeled source coverage, competitors above the target, expected-route presence, coverage gaps, evidence-based next actions, source outages, and explicit method limits. No catalog credentials or payments.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/commerce/payment-offer-preflight`, amount: priceToAtomic(PAYMENT_OFFER_PREFLIGHT_PRICE), description: "Compare x402 and MPP payment challenges and terms before buyer authorization for one exact public HTTPS GET URL. Returns normalized offers, URL and realm binding checks, expiry and economic-parity findings, and an explicit parseable, review-required, or no-offer decision. Uses no target credential, signs nothing, sends no payment, follows no redirects, and reads no response body.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/commerce/settlement-proof`, amount: priceToAtomic(SETTLEMENT_PROOF_PRICE), description: "Verify one claimed canonical Base USDC settlement against the successful on-chain transaction receipt. Binds an exact transaction hash, recipient, atomic amount, and optional payer; returns a deterministic verified or not-verified result, block time, mismatch findings, and no private merchant-ledger data. Read-only and performs no wallet, signing, broadcast, custody, or execution action.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/chain/transaction-receipt`, amount: priceToAtomic(TRANSACTION_RECEIPT_PRICE), description: "Get a normalized Base or Ethereum transaction receipt from one hash: success or revert status, block time, gas used, effective gas price, total transaction fee, decoded ERC-20 Transfer events, and canonical USDC transfers. Returns explicit not-found or RPC-unavailable evidence, excludes raw logs, and performs no wallet, signing, broadcast, custody, or execution action.", mimeType: "application/json" },
 ];
 const circleGateway = buildCircleGatewayRoute({
   sellerAddress: PAY_TO,
@@ -631,6 +640,7 @@ const RESOURCE_DISCOVERY_METADATA = {
   "/distribution/agent-discoverability-audit": { operationId: "auditAgentDiscoverability", tags: ["Distribution"] },
   "/commerce/payment-offer-preflight": { operationId: "preflightPaymentOffer", tags: ["Agent Operations"] },
   "/commerce/settlement-proof": { operationId: "verifyBaseUsdcSettlement", tags: ["Blockchain"] },
+  "/chain/transaction-receipt": { operationId: "getTransactionReceipt", tags: ["Blockchain"] },
 };
 
 const mppDualStack = createMppDualStack({
@@ -1050,6 +1060,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
         },
       },
       "/commerce/settlement-proof": { get: { summary: RESOURCES[14].description, parameters: [{ name: "transactionHash", in: "query", required: true, description: "Base mainnet transaction hash whose canonical USDC Transfer logs should be checked.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" } }, { name: "recipient", in: "query", required: true, description: "Expected USDC recipient.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" } }, { name: "amountAtomic", in: "query", required: true, description: "Expected positive USDC amount in six-decimal atomic units.", schema: { type: "string", pattern: "^[1-9][0-9]{0,20}$", maxLength: 21 } }, { name: "payer", in: "query", required: false, description: "Optional expected USDC payer.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" } }], responses: { "200": { description: "deterministic canonical Base USDC settlement proof or mismatch findings" }, "400": { description: "invalid settlement claim, charged nothing" }, "402": { description: `payment required (x402 or MPP, ${SETTLEMENT_PROOF_PRICE} USDC base)` } } } },
+      "/chain/transaction-receipt": { get: { summary: RESOURCES[15].description, parameters: [{ name: "transactionHash", in: "query", required: true, description: "Mined Base or Ethereum transaction hash whose normalized receipt should be returned.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" } }, { name: "network", in: "query", required: false, description: "Receipt network. Defaults to Base mainnet.", schema: { type: "string", enum: ["base", "ethereum"], default: "base" } }], responses: { "200": { description: "normalized transaction receipt with fee and decoded transfer evidence" }, "400": { description: "invalid hash or unsupported network, charged nothing" }, "402": { description: `payment required (x402 or MPP, ${TRANSACTION_RECEIPT_PRICE} USDC base)` } } } },
       "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "structured data" }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
       "/read": { get: { summary: RESOURCES[1].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "markdown" }, "402": { description: `payment required (x402, ${READ_PRICE} USDC base)` } } } },
       "/scan": { get: { summary: RESOURCES[2].description, parameters: [{ name: "repo", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "security risk report" }, "402": { description: `payment required (x402, ${SCAN_PRICE} USDC base)` } } } },
@@ -1321,6 +1332,23 @@ app.get("/commerce/settlement-proof", (req, res, next) => {
       ok: false,
       product: "samedaydesk-base-usdc-settlement-proof",
       code: error instanceof SettlementProofError ? error.code : "invalid_settlement_request",
+      error: String(error?.message || error),
+      charged: false,
+    });
+  }
+});
+
+// Reject malformed receipt requests before payment. Public RPC reads happen
+// only after settlement because the normalized receipt is the sold work.
+app.get("/chain/transaction-receipt", (req, res, next) => {
+  try {
+    normalizeTransactionReceiptInput(req.query);
+    return next();
+  } catch (error) {
+    return res.status(400).json({
+      ok: false,
+      product: "samedaydesk-transaction-receipt",
+      code: error instanceof TransactionReceiptError ? error.code : "invalid_transaction_receipt_request",
       error: String(error?.message || error),
       charged: false,
     });
@@ -2188,6 +2216,67 @@ const x402Paywall = paymentMiddleware(
           }),
         },
       },
+      "GET /chain/transaction-receipt": {
+        ...bazaarResourceMetadataFor("/chain/transaction-receipt"),
+        accepts: [{ scheme: "exact", price: TRANSACTION_RECEIPT_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description: RESOURCES[15].description,
+        mimeType: "application/json",
+        extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
+          ...declareDiscoveryContract({
+            routeKey: "GET /chain/transaction-receipt",
+            input: {
+              transactionHash: "0xcfcbb367fecf27052db9ca855e5146e99cacbce1cab94f20f9f95a74170a8987",
+              network: "base",
+            },
+            inputSchema: {
+              type: "object",
+              properties: {
+                transactionHash: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$", description: "Mined Base or Ethereum transaction hash." },
+                network: { type: "string", enum: ["base", "ethereum"], default: "base", description: "Receipt network. Defaults to Base mainnet." },
+              },
+              required: ["transactionHash"],
+              additionalProperties: false,
+            },
+            output: {
+              example: {
+                ok: true,
+                product: "samedaydesk-transaction-receipt",
+                version: "1.0.0",
+                checkedAt: "2026-08-11T13:50:00.000Z",
+                decision: "found",
+                request: { transactionHash: "0xcfcbb3...a8987", network: "base" },
+                chain: { id: 8453, name: "Base mainnet", network: "eip155:8453" },
+                transaction: { hash: "0xcfcbb3...a8987", status: "success", blockNumber: "49823378", blockTimestamp: "2026-08-11T08:15:03.000Z", gasUsedAtomic: "128761", effectiveGasPriceWei: "10000000", transactionFeeWei: "1287610000000" },
+                receipt: { found: true, logCount: 2, decodedTransferCount: 1, canonicalUsdcTransferCount: 1, transfersTruncated: false },
+                transfers: [{ token: USDC_ASSET, from: "0x990C...7f17", to: PAY_TO, amountAtomic: "5000", canonicalUsdc: true, amountUsdc: "0.005", logIndex: "1" }],
+                canonicalUsdcTransfers: [{ token: USDC_ASSET, from: "0x990C...7f17", to: PAY_TO, amountAtomic: "5000", canonicalUsdc: true, amountUsdc: "0.005", logIndex: "1" }],
+                findings: [],
+                boundary: { source: "bounded public Base mainnet receipt and block RPC", rawLogsReturned: false, privateLedgerRead: false, walletAccessed: false, transactionSigned: false, transactionBroadcast: false, transactionModified: false },
+              },
+            },
+            outputSchema: {
+              type: "object",
+              properties: {
+                ok: { type: "boolean" },
+                product: { type: "string", const: "samedaydesk-transaction-receipt" },
+                version: { type: "string" },
+                checkedAt: { type: "string" },
+                decision: { type: "string", enum: ["found", "not_found", "rpc_unavailable"] },
+                request: { type: "object" },
+                chain: { type: "object" },
+                transaction: { type: "object" },
+                receipt: { type: "object" },
+                transfers: { type: "array" },
+                canonicalUsdcTransfers: { type: "array" },
+                findings: { type: "array" },
+                boundary: { type: "object" },
+              },
+              required: ["ok", "product", "version", "checkedAt", "decision", "request", "chain", "transaction", "receipt", "transfers", "canonicalUsdcTransfers", "findings", "boundary"],
+            },
+          }),
+        },
+      },
     },
     resourceServer
   );
@@ -2220,6 +2309,11 @@ const servePaymentOfferPreflight = async (req, res) => {
 const serveSettlementProof = async (req, res) => {
   res.set("Cache-Control", "no-store");
   return res.json(await settlementProof(req.query));
+};
+
+const serveTransactionReceipt = async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  return res.json(await transactionReceipt(req.query));
 };
 
 if (circleGateway.enabled) {
@@ -2443,6 +2537,7 @@ app.get("/distribution/agent-discoverability-audit", async (req, res) => {
 app.get("/commerce/payment-offer-preflight", servePaymentOfferPreflight);
 app.post("/commerce/payment-offer-preflight", servePaymentOfferPreflight);
 app.get("/commerce/settlement-proof", serveSettlementProof);
+app.get("/chain/transaction-receipt", serveTransactionReceipt);
 
 // One root, negotiated by audience. Browser navigation gets a fast human map;
 // API clients, curl, and agents retain the stable JSON descriptor.
@@ -2508,6 +2603,7 @@ app.get("/", (req, res) => {
       "GET /distribution/agent-discoverability-audit?origin=&intent=&route=&payTo=": `${AGENT_DISCOVERABILITY_AUDIT_PRICE} - brand-blind agent discovery rank, dependency-labeled coverage, expected-route presence, and competing results across nine machine-service views.`,
       "GET /commerce/payment-offer-preflight?url=": `${PAYMENT_OFFER_PREFLIGHT_PRICE} - compare and normalize x402 and MPP payment challenges and terms, binding checks, expiry, and economic parity before buyer authorization.`,
       "GET /commerce/settlement-proof?transactionHash=&recipient=&amountAtomic=&payer=": `${SETTLEMENT_PROOF_PRICE} - verify one claimed canonical Base USDC transfer against the successful on-chain receipt, with exact recipient, amount, and optional payer binding.`,
+      "GET /chain/transaction-receipt?transactionHash=&network=": `${TRANSACTION_RECEIPT_PRICE} - normalized Base or Ethereum receipt status, block time, gas fee, decoded ERC-20 transfers, and canonical USDC transfer evidence.`,
       ...(circleGateway.enabled ? {
         [`GET ${CIRCLE_GATEWAY_PATH}?url=`]: `${PAYMENT_OFFER_PREFLIGHT_PRICE} - the same preflight through Circle Gateway gasless batched USDC Nanopayments.`,
       } : {}),
@@ -2565,6 +2661,7 @@ import("./mcp-server.mjs")
         { name: "agent_discoverability_audit", description: RESOURCES[12].description, price: AGENT_DISCOVERABILITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Public HTTPS service origin"), intent: z.string().min(20).max(500).describe("Brand-blind capability description"), route: z.string().regex(/^\/[^?#]*$/).optional().describe("Optional expected exact path"), payTo: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional EVM payTo for alias matching") }, run: (a) => agentDiscoverabilityAudit(a), tags: ["distribution", "discovery", "x402", "mpp", "agent402"] },
         { name: "payment_offer_preflight", description: RESOURCES[13].description, price: PAYMENT_OFFER_PREFLIGHT_PRICE, inputSchema: { url: z.string().url().max(2048).describe("Exact public HTTPS GET route whose unpaid x402 and MPP challenge headers should be inspected before buyer authorization. Credential-like query keys, fragments, unresolved parameters, local hosts, redirects, and non-public IPs are rejected.") }, run: (a) => paymentOfferPreflight(a), tags: ["payments", "x402", "mpp", "buyer-safety", "preflight"] },
         { name: "settlement_proof", description: RESOURCES[14].description, price: SETTLEMENT_PROOF_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Base mainnet transaction hash containing the claimed canonical USDC transfer."), recipient: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Expected canonical Base USDC recipient."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,20}$/).describe("Expected positive USDC amount in six-decimal atomic units."), payer: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional expected canonical Base USDC payer.") }, run: (a) => settlementProof(a), tags: ["payments", "x402", "settlement", "reconciliation", "base-usdc"] },
+        { name: "transaction_receipt", description: RESOURCES[15].description, price: TRANSACTION_RECEIPT_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Mined Base or Ethereum transaction hash whose normalized receipt should be returned."), network: z.enum(["base", "ethereum"]).default("base").describe("Receipt network. Defaults to Base mainnet.") }, run: (a) => transactionReceipt(a), tags: ["blockchain", "receipt", "gas", "erc20", "usdc"] },
       ].map(decorateMcpTool),
     })
   )

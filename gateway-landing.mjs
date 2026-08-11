@@ -49,7 +49,7 @@ export function renderGatewayLanding(gateway) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SameDayDesk Agent Payment Gateway</title>
-  <meta name="description" content="Thirteen deterministic pay-per-call tools accepting x402 and native MPP with Base USDC settlement.">
+  <meta name="description" content="${routes.length} deterministic pay-per-call tools accepting x402 and native MPP with Base USDC settlement.">
   <link rel="canonical" href="https://agents.samedaydesk.com/">
   <script type="application/ld+json">${structuredData}</script>
   <style>
@@ -127,7 +127,7 @@ export function renderGatewayLanding(gateway) {
         <div class="flow"><div class="step"><strong>Discover</strong><span>OpenAPI, x402, MPP, MCP, or A2A</span></div><div class="step"><strong>Validate</strong><span>Schema, request binding, price, and recipient</span></div><div class="step"><strong>Pay</strong><span>Choose x402 or native MPP</span></div><div class="step"><strong>Receive</strong><span>Deterministic JSON plus receipt</span></div><div class="step"><strong>Reconcile</strong><span>Verify settlement and replay safely</span></div></div>
       </section>
       <section id="tools">
-        <div class="section-head"><div><p class="eyebrow">Live inventory</p><h2>Thirteen focused machine calls.</h2></div><p>The gateway covers web extraction, security, company and wallet intelligence, agent discoverability, AI-readiness evidence, Morpho decisions, and agent-work economics. Prices are per successful call.</p></div>
+        <div class="section-head"><div><p class="eyebrow">Live inventory</p><h2>${routes.length} focused machine calls.</h2></div><p>The gateway covers web extraction, security, company and wallet intelligence, blockchain receipts and settlement, agent discoverability, AI-readiness evidence, Morpho decisions, and agent-work economics. Prices are per successful call.</p></div>
         <div class="tools">${routes.map(routeCard).join("")}</div>
       </section>
       <section>

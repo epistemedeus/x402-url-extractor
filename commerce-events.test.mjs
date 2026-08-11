@@ -307,6 +307,11 @@ test("route classification preserves useful intent without recording opaque path
     kind: "paid",
     matched: true,
   });
+  assert.deepEqual(classifyCommerceRoute("/chain/transaction-receipt"), {
+    route: "/chain/transaction-receipt",
+    kind: "paid",
+    matched: true,
+  });
   assert.deepEqual(classifyCommerceRoute("/mcp/sse"), {
     route: "/mcp/sse",
     kind: "unmatched",

@@ -2,11 +2,12 @@
 
 [![Smithery listing](https://smithery.ai/badge/epistemedeus/x402-data-gateway)](https://smithery.ai/servers/epistemedeus/x402-data-gateway)
 
-Fourteen pay-per-call tools for deterministic agent-work opportunity preflight,
+Sixteen pay-per-call tools for deterministic agent-work opportunity preflight,
 machine-service discoverability, payment-offer preflight, Morpho borrower and
 market decisions, protection plans, URL extraction, Markdown reading,
 repository security scans, company and wallet enrichment, structured data
-generation, and AI-search readiness audits.
+generation, transaction receipt evidence, settlement proof, and AI-search
+readiness audits.
 
 - Product page: https://samedaydesk.com/x402
 - Smithery: https://smithery.ai/servers/epistemedeus/x402-data-gateway
@@ -28,6 +29,8 @@ generation, and AI-search readiness audits.
 - Opportunity preflight: `GET /work/opportunity-preflight?rewardUsd=10&hours=0.25&hourlyCostUsd=4&selectionProbabilityPct=20`
 - Agent discoverability audit: `GET /distribution/agent-discoverability-audit?origin=https://example.com&intent=extract+a+public+website+into+structured+JSON&route=/extract`
 - Payment offer preflight: `GET /commerce/payment-offer-preflight?url=https://example.com/paid-route`
+- Base USDC settlement proof: `GET /commerce/settlement-proof?transactionHash=0x...&recipient=0x...&amountAtomic=5000`
+- Base or Ethereum transaction receipt: `GET /chain/transaction-receipt?transactionHash=0x...&network=base`
 - Material-change alert probe: https://agents.samedaydesk.com/alerts
 - Agoragentic seller callback: `POST /integrations/agoragentic/ai-readiness-audit`
 - the402 signed fulfillment webhook: `POST /integrations/the402/webhook`
@@ -222,6 +225,15 @@ coverage and metadata coverage diverge. The Bazaar contract audit now rejects
 a route whose extension is valid but whose resource name or tags are absent or
 invalid.
 Prices, outputs, settlement, privacy, routes, and native MPP terms are unchanged.
+
+Version 1.12.0 adds `/chain/transaction-receipt` at 0.002 USDC after a live
+market experiment found provider-level settlement for cheap chain utilities but
+two zero-spend delivery failures from a heavily viewed competing receipt route.
+The new route accepts one mined Base or Ethereum transaction hash and returns
+normalized status, block time, gas and fee fields, decoded ERC-20 Transfer
+events, and canonical USDC transfers. Invalid hashes and unsupported networks
+are rejected before payment. Raw logs, wallet access, signing, and broadcast are
+outside the product boundary.
 
 Version 1.11.23 adds a narrow compatibility bridge for MCP clients that retry a
 paid `tools/call` with the x402 `PAYMENT-SIGNATURE` HTTP header but fail to copy
@@ -509,7 +521,7 @@ public text-search order remains separate from the direct-listing state.
 Version 1.11.32 added AgenticTrade; the official MPP flat catalog remains
 locally ranked.
 
-The fourteenth route, `/commerce/payment-offer-preflight`, is live at 0.005
+The payment-offer preflight route is live at 0.005
 USDC. It productizes the buyer-side authorization boundary: fetch the unpaid
 headers of one exact public GET route, normalize x402 and MPP offers, verify URL
 and realm binding, detect expiry and cross-protocol drift, and return a bounded

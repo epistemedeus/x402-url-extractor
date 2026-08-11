@@ -87,6 +87,7 @@ const EXACT_ROUTES = new Map([
   ["/distribution/agent-discoverability-audit", { route: "/distribution/agent-discoverability-audit", kind: "paid" }],
   ["/commerce/payment-offer-preflight", { route: "/commerce/payment-offer-preflight", kind: "paid" }],
   ["/commerce/settlement-proof", { route: "/commerce/settlement-proof", kind: "paid" }],
+  ["/chain/transaction-receipt", { route: "/chain/transaction-receipt", kind: "paid" }],
   ["/gateway/commerce/payment-offer-preflight", { route: "/gateway/commerce/payment-offer-preflight", kind: "paid" }],
   ["/mcp", { route: "/mcp", kind: "paid" }],
 ]);

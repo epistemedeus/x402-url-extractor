@@ -56,6 +56,10 @@ const TOOL_METADATA = Object.freeze({
     title: "Verify Base USDC Settlement",
     description: "Verify one claimed canonical Base USDC settlement after execution by matching a successful transaction receipt to the exact recipient, atomic amount, and optional payer. Use `payment_offer_preflight` before authorization when you need to inspect an unpaid x402 or MPP offer instead. This tool reads only public Base receipt and log data; it reads no merchant ledger and performs no wallet, signing, broadcast, custody, or execution action.",
   },
+  transaction_receipt: {
+    title: "Inspect Transaction Receipt",
+    description: "Inspect one Base or Ethereum transaction hash and return normalized success or revert status, block time, gas and fee fields, decoded ERC-20 Transfer events, and canonical USDC transfers. Use `settlement_proof` instead when you must verify an exact canonical Base USDC recipient, amount, and optional payer claim. Raw logs are excluded; this tool performs no wallet, signing, broadcast, custody, or execution action.",
+  },
 });
 
 export function decorateMcpTool(tool) {
