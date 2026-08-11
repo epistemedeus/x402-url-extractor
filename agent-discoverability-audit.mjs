@@ -4,6 +4,7 @@ const CIRCLE_SEARCH = "https://api.circle.com/v2/x402/discovery/resources";
 const AGENTIC_MARKET_SEARCH = "https://api.agentic.market/v1/services/search";
 const AGENTICTRADE_SEARCH = "https://agentictrade.io/api/v1/discover";
 const MPP_CATALOG = "https://mpp.dev/api/services";
+const MPPSCAN_SEARCH = "https://www.mppscan.com/api/trpc/discover.search";
 
 const SOURCE_ORDER = [
   "coinbase-bazaar",
@@ -12,6 +13,7 @@ const SOURCE_ORDER = [
   "circle-marketplace",
   "agentictrade-catalog",
   "official-mpp-catalog",
+  "mppscan-public-search",
 ];
 const SOURCE_FAMILIES = Object.freeze({
   "coinbase-bazaar": "coinbase",
@@ -20,6 +22,7 @@ const SOURCE_FAMILIES = Object.freeze({
   "circle-marketplace": "circle",
   "agentictrade-catalog": "agentictrade",
   "official-mpp-catalog": "mpp",
+  "mppscan-public-search": "mppscan",
 });
 
 function cleanString(value, maximum = 500) {
@@ -158,6 +161,27 @@ function normalizeAgenticTrade(payload) {
   }));
 }
 
+function normalizeMppscan(payload) {
+  const items = payload?.result?.data?.json;
+  if (!Array.isArray(items) || items.length > 100) throw new Error("MPPScan response is missing or excessive");
+  return items.flatMap((item) => {
+    const origin = httpsUrl(item?.origin)?.origin;
+    const route = cleanString(item?.endpoint?.path, 200);
+    const method = cleanString(item?.endpoint?.method, 20)?.toUpperCase();
+    if (!origin || !route?.startsWith("/") || route.startsWith("//") || /[?#]/.test(route)) return [];
+    if (!method || !/^[A-Z]+$/.test(method)) return [];
+    const exactPrice = /^([0-9]+(?:\.[0-9]+)?) USD$/i.exec(String(item?.endpoint?.price || "").trim());
+    return [candidate({
+      name: item?.title,
+      url: new URL(route, `${origin}/`).toString(),
+      origin,
+      route,
+      description: `${item?.description || ""} ${item?.endpoint?.summary || ""}`,
+      priceUsd: exactPrice ? Number(exactPrice[1]) : null,
+    })];
+  });
+}
+
 function tokens(value) {
   return new Set(String(value || "").toLowerCase().match(/[a-z0-9]{2,}/g) || []);
 }
@@ -276,6 +300,8 @@ export async function agentDiscoverabilityAudit(rawInput, {
   const input = normalizeDiscoverabilityAuditInput(rawInput);
   if (!Number.isInteger(limit) || limit < 1 || limit > 20) throw new Error("limit must be an integer from 1 through 20");
   const encoded = encodeURIComponent(input.intent);
+  const mppscanUrl = new URL(MPPSCAN_SEARCH);
+  mppscanUrl.searchParams.set("input", JSON.stringify({ json: { query: input.intent } }));
   const calls = {
     "coinbase-bazaar": async () => normalizeBazaar(await fetchJson(`${BAZAAR_SEARCH}?query=${encoded}&limit=${limit}`, { fetchImpl })),
     "agent402-router": async () => normalizeAgent402(await fetchJson(AGENT402_ROUTE, {
@@ -287,6 +313,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
     "coinbase-agentic-market": async () => normalizeAgenticMarket(await fetchJson(`${AGENTIC_MARKET_SEARCH}?q=${encoded}`, { fetchImpl })),
     "agentictrade-catalog": async () => normalizeAgenticTrade(await fetchJson(`${AGENTICTRADE_SEARCH}?q=${encoded}&limit=${limit}`, { fetchImpl })),
     "official-mpp-catalog": async () => normalizeMpp(await fetchJson(MPP_CATALOG, { fetchImpl }), input.intent, limit),
+    "mppscan-public-search": async () => normalizeMppscan(await fetchJson(mppscanUrl, { fetchImpl })).slice(0, limit),
   };
   const settled = await Promise.allSettled(SOURCE_ORDER.map((source) => calls[source]()));
   const sources = {};
@@ -338,7 +365,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
   return {
     ok: true,
     product: "samedaydesk-agent-discoverability-audit",
-    version: "1.2.0",
+    version: "1.3.0",
     generatedAt: new Date(now).toISOString(),
     input: {
       origin: input.origin,
@@ -368,7 +395,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
     sources,
     findings,
     nextActions,
-    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, and AgenticTrade. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. AgenticTrade uses its public text-search order. MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata.",
+    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, and MPPScan public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. AgenticTrade and MPPScan use their public text-search order. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata.",
     safety: {
       credentialsUsed: false,
       paymentSignedToCatalogs: false,
