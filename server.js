@@ -74,6 +74,11 @@ import { createIdempotencyReplay } from "./idempotency-replay.mjs";
 import { createMppDualStack } from "./mpp-dual-stack.mjs";
 import { legacyCompatibleX402Body } from "./x402-legacy-body.mjs";
 import {
+  VIBES_DISCOVERABILITY_PATH,
+  VIBES_DISCOVERABILITY_SLUG,
+  createVibesChannel,
+} from "./vibes-coded-channel.mjs";
+import {
   glamaConnectorVerification,
   x402JobsVerification,
 } from "./directory-verification.mjs";
@@ -176,6 +181,7 @@ const PORT = process.env.PORT || 3000;
 const THE402_API_KEY = process.env.THE402_API_KEY;
 const THE402_WEBHOOK_SECRET = process.env.THE402_WEBHOOK_SECRET;
 const THE402_SERVICE_ID = process.env.THE402_SERVICE_ID;
+const VIBES_CODED_API_KEY = process.env.VIBES_CODED_API_KEY || "";
 
 const AGENTHANSA_API_KEY = process.env.AGENTHANSA_API_KEY;
 const TOPIFY_OFFER_ID =
@@ -380,6 +386,37 @@ app.post("/integrations/agoragentic/ai-readiness-audit", async (req, res) => {
       error: String(error?.message || error),
     });
   }
+});
+
+// Vibes-Coded settles the buyer's x402 payment before forwarding the exact
+// JSON body to this target. Verify the opaque call ticket and body hash through
+// the platform, run the existing read-only product without a second payment
+// gate, then consume the ticket with a hash-bound delivery receipt.
+const vibesDiscoverabilityChannel = createVibesChannel({
+  apiKey: VIBES_CODED_API_KEY,
+  expectedSlug: VIBES_DISCOVERABILITY_SLUG,
+  expectedPriceCents: 50,
+  validateInput: normalizeDiscoverabilityAuditInput,
+  product: agentDiscoverabilityAudit,
+});
+
+app.head(VIBES_DISCOVERABILITY_PATH, (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.set("X-Robots-Tag", "noindex, nofollow");
+  res.set("X-SameDayDesk-Channel", "vibes-coded");
+  return res.status(200).end();
+});
+
+app.post(VIBES_DISCOVERABILITY_PATH, async (req, res) => {
+  const result = await vibesDiscoverabilityChannel.execute({
+    ticket: req.get("x-vibes-call-ticket"),
+    rawBody: req.rawBody,
+    body: req.body,
+  });
+  res.set("Cache-Control", "no-store");
+  res.set("X-Robots-Tag", "noindex, nofollow");
+  res.set("X-SameDayDesk-Channel", "vibes-coded");
+  return res.status(result.status).json(result.body);
 });
 
 // Free health check (NOT behind paywall — used by Railway).
@@ -942,7 +979,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.11.48",
+      version: "1.11.49",
       description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, payment preflight and settlement proof, wallet context, and Morpho decision evidence. Pay per call through Base x402 or native MPP, with a Circle Gateway Nanopayments path for gasless batched USDC.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
@@ -2510,7 +2547,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.11.48" },
+      serverInfo: { name: "x402-data-gateway", version: "1.11.49" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
