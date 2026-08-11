@@ -197,3 +197,31 @@ export function opportunityPreflight(input, { platformCard = null } = {}) {
       "Deterministic arithmetic and dated categorical evidence only. The caller supplies cost and selection assumptions, must reverify the primary listing, and owns legal, policy, identity, spending, and execution decisions. No platform account, claim, bid, payment, or submission is made.",
   };
 }
+
+export function opportunityPreflightTrial() {
+  const result = opportunityPreflight({
+    rewardUsd: 100,
+    hours: 1,
+    hourlyCostUsd: 20,
+    computeUsd: 0,
+    mandatorySpendUsd: 0,
+    reusableValueUsd: 0,
+    selectionProbabilityPct: 25,
+    competition: 4,
+    slots: 1,
+    agentAccess: "agent_allowed",
+    acceptance: "deterministic",
+    settlement: "escrow",
+  });
+  return {
+    ...result,
+    sample: true,
+    charged: false,
+    trial: {
+      contract: "fixed-non-authoritative-example",
+      next: "Send rewardUsd, hours, and hourlyCostUsd as GET query parameters or POST JSON, then satisfy the returned 0.05-USDC x402 or MPP challenge for a custom result.",
+    },
+    boundary:
+      "Free fixed arithmetic sample for machine evaluation. It contains no caller opportunity, platform evidence, account action, payment, or revenue. Custom inputs remain payment-gated and must be independently verified.",
+  };
+}

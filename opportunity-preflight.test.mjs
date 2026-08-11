@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   normalizeOpportunityPreflightRequest,
   opportunityPreflight,
+  opportunityPreflightTrial,
 } from "./opportunity-preflight.mjs";
 import { getPlatformHealthCard } from "./platform-health.mjs";
 
@@ -120,4 +121,19 @@ test("normalizes workflow JSON input through the same opportunity contract", () 
   assert.equal(result.input.rewardUsd, 10);
   assert.equal(result.input.hours, 0.25);
   assert.equal(result.input.hourlyCostUsd, 4);
+});
+
+test("returns a fixed uncharged trial without weakening custom-input validation", () => {
+  const trial = opportunityPreflightTrial();
+  assert.equal(trial.ok, true);
+  assert.equal(trial.sample, true);
+  assert.equal(trial.charged, false);
+  assert.equal(trial.decision, "attempt");
+  assert.equal(trial.input.rewardUsd, 100);
+  assert.equal(trial.input.selectionProbabilityPct, 25);
+  assert.match(trial.trial.next, /0\.05-USDC/);
+  assert.throws(
+    () => normalizeOpportunityPreflightRequest({ method: "GET", query: { trial: "1" } }),
+    /rewardUsd is required/,
+  );
 });

@@ -455,6 +455,11 @@ payment challenge; missing or malformed paid input remains an uncharged 400.
 This makes one useful product directly callable from integer-cent workflow
 markets without a duplicate route or a misleading price.
 
+Version 1.11.43 adds an exact `GET /work/opportunity-preflight?trial=1` free
+sample for machine catalogs. It returns fixed arithmetic with `sample: true`
+and `charged: false`, performs no external work, and accepts no caller inputs.
+Custom GET and POST calls remain 0.05-USDC payment-gated.
+
 Version 1.11.41 mirrors the canonical x402 v2 `Payment-Required` offer into the
 otherwise-empty 402 JSON body for registries that still index the legacy body.
 The payment-offer preflight also exposes an equivalent JSON-body POST route for

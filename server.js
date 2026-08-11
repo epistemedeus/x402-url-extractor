@@ -49,6 +49,7 @@ import { morphoPreLiquidationReplay } from "./morpho-preliquidation-replay.mjs";
 import {
   normalizeOpportunityPreflightRequest,
   opportunityPreflight,
+  opportunityPreflightTrial,
 } from "./opportunity-preflight.mjs";
 import { createInternalOpportunityPreflightHandler } from "./internal-opportunity-gateway.mjs";
 import {
@@ -932,7 +933,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.11.42",
+      version: "1.11.43",
       description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, machine-payment preflight, wallet context, and Morpho decision evidence. Pay per call through Base x402 or native MPP, with a Circle Gateway Nanopayments path for gasless batched USDC.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
@@ -1182,6 +1183,25 @@ app.get("/defi/morpho-preliquidation-replay", (req, res, next) => {
 // incomplete required inputs return an uncharged 400. Empty credential-free
 // HEAD and POST requests may reach the payment challenge so machine registries
 // can inspect the route without manufacturing a paid attempt.
+const hasPaymentCredential = (req) => Boolean(
+  req.get("payment-signature") ||
+  req.get("x-payment") ||
+  req.get("x-payment-signature") ||
+  /^Payment\s+/i.test(req.get("authorization") || "")
+);
+
+// Machine catalogs can exercise one fixed, cost-free example before buying a
+// custom result. This branch accepts exactly `trial=1`, performs no external
+// work, and cannot bypass a credential-bearing or caller-supplied paid call.
+app.get("/work/opportunity-preflight", (req, res, next) => {
+  const keys = Object.keys(req.query || {});
+  if (keys.length !== 1 || keys[0] !== "trial" || req.query.trial !== "1" || hasPaymentCredential(req)) {
+    return next();
+  }
+  res.set("Cache-Control", "public, max-age=300");
+  return res.json(opportunityPreflightTrial());
+});
+
 const validateOpportunityPreflightRequest = (req, res, next) => {
   try {
     normalizeOpportunityPreflightRequest({
@@ -1221,13 +1241,6 @@ app.get("/distribution/agent-discoverability-audit", (req, res, next) => {
 // Reject malformed, credential-bearing, non-HTTPS, or local targets before a
 // payment challenge. DNS resolution and the headers-only target request happen
 // only after settlement because they are the work this route sells.
-const hasPaymentCredential = (req) => Boolean(
-  req.get("payment-signature") ||
-  req.get("x-payment") ||
-  req.get("x-payment-signature") ||
-  /^Payment\s+/i.test(req.get("authorization") || "")
-);
-
 const validatePaymentOfferPreflightRequest = (req, res, next) => {
   try {
     const url = req.method === "POST" ? req.body?.url : req.query.url;
@@ -2345,7 +2358,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.11.42" },
+      serverInfo: { name: "x402-data-gateway", version: "1.11.43" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
