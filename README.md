@@ -245,6 +245,16 @@ second Base payment gate. Requests without the exact private header retain the
 ordinary Base x402 and MPP behavior. Target credentials and target payments
 remain outside the preflight product boundary.
 
+Version 1.12.2 keeps seller-owned discovery surfaces synchronized with the
+canonical paid action catalog. The A2A Agent Card now uses the actual service
+version, retains the aggregate catalog skill first, and appends one explicit
+discovery-only skill per paid route. The ERC-8004 registration document retains
+its protocol entry points and adds the same direct paid action URLs. The A2A
+descriptor reuses the canonical aggregate skill ID, and inbound messages must
+carry the normative user role, message ID, and at least one part. These changes
+improve route discovery but do not claim support for unimplemented A2A task
+operations.
+
 Version 1.11.23 adds a narrow compatibility bridge for MCP clients that retry a
 paid `tools/call` with the x402 `PAYMENT-SIGNATURE` HTTP header but fail to copy
 the same signed payload into `_meta["x402/payment"]`. The merchant decodes only

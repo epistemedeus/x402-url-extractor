@@ -1,8 +1,39 @@
 import { randomUUID } from "node:crypto";
 
 const A2A_VERSION = "1.0";
+const A2A_CATALOG_SKILL_ID = "discover-x402-paid-actions";
 
-export function buildAgentCard({ publicUrl, serviceVersion = "1.4.0" }) {
+const skillSlug = (action) => String(action?.name || action?.route || "")
+  .toLowerCase()
+  .replace(/[^a-z0-9_-]+/g, "-")
+  .replace(/^-+|-+$/g, "")
+  .slice(0, 80);
+
+export function buildPaidActionSkills(actions = []) {
+  if (!Array.isArray(actions)) throw new Error("actions must be an array");
+  const seen = new Set();
+  return actions.map((action) => {
+    const slug = skillSlug(action);
+    if (!slug) throw new Error("paid action needs a stable name or route");
+    const id = `discover-paid-action-${slug}`;
+    if (seen.has(id)) throw new Error(`duplicate paid action skill: ${id}`);
+    seen.add(id);
+    const route = String(action.route || "");
+    const price = String(action.priceAtomicUsdc || "");
+    return {
+      id,
+      name: `Discover paid action ${route || slug}`,
+      description: `Discover the direct ${route || slug} machine-paid action, its ${price || "current"} atomic USDC price, and x402/MPP invocation URL. Discovery only; invoke and pay the returned action URL directly.`,
+      tags: [...new Set(["x402", "mpp", "paid-action", "discovery", ...(action.tags || [])])],
+      examples: [`Find the ${route || slug} paid action and its exact current price.`],
+      inputModes: ["text/plain", "application/json"],
+      outputModes: ["application/json"],
+    };
+  });
+}
+
+export function buildAgentCard({ publicUrl, serviceVersion, actions = [] }) {
+  if (!serviceVersion) throw new Error("serviceVersion is required");
   return {
     name: "SameDayDesk machine commerce storefront",
     description: "Discovers exact-price x402 data and risk actions that settle USDC on Base.",
@@ -28,7 +59,7 @@ export function buildAgentCard({ publicUrl, serviceVersion = "1.4.0" }) {
     defaultOutputModes: ["application/json"],
     skills: [
       {
-        id: "discover-x402-paid-actions",
+        id: A2A_CATALOG_SKILL_ID,
         name: "Discover x402 paid actions",
         description: "Returns the current machine-action catalog with exact USDC prices, input URLs, settlement network, and payment instructions.",
         tags: ["x402", "payments", "Base", "USDC", "data", "risk"],
@@ -39,6 +70,7 @@ export function buildAgentCard({ publicUrl, serviceVersion = "1.4.0" }) {
         inputModes: ["text/plain", "application/json"],
         outputModes: ["application/json"],
       },
+      ...buildPaidActionSkills(actions),
     ],
   };
 }
@@ -50,6 +82,12 @@ export function validateA2aMessage(body) {
   const message = body.message;
   if (!message || typeof message !== "object" || Array.isArray(message)) {
     return "message is required.";
+  }
+  if (typeof message.messageId !== "string" || !message.messageId.trim()) {
+    return "message.messageId is required.";
+  }
+  if (message.role !== "ROLE_USER") {
+    return "message.role must be ROLE_USER.";
   }
   if (!Array.isArray(message.parts) || message.parts.length === 0) {
     return "message.parts must contain at least one part.";
@@ -93,4 +131,4 @@ export function validationProblem(detail) {
   };
 }
 
-export { A2A_VERSION };
+export { A2A_CATALOG_SKILL_ID, A2A_VERSION };

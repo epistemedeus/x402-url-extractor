@@ -42,6 +42,24 @@ test("binds the final asset to the exact mainnet registry", () => {
   ]);
 });
 
+test("appends canonical paid actions without replacing protocol entry points", () => {
+  const actions = [
+    { name: "extract", route: "/extract" },
+    { name: "defi_morpho_position", route: "/defi/morpho-position" },
+  ];
+  const registration = buildSolanaAgentRegistration({
+    publicUrl: "https://agents.samedaydesk.com",
+    actions,
+  });
+  const paid = registration.services.filter(({ name }) => name.startsWith("paid-action:"));
+  assert.deepEqual(paid, [
+    { name: "paid-action:extract", endpoint: "https://agents.samedaydesk.com/extract" },
+    { name: "paid-action:defi_morpho_position", endpoint: "https://agents.samedaydesk.com/defi/morpho-position" },
+  ]);
+  assert.equal(registration.services[0].name, "MCP");
+  assert.equal(registration.services.at(-1).name, "agentWallet");
+});
+
 test("rejects path-bearing origins and malformed asset IDs", () => {
   assert.throws(
     () => buildSolanaAgentRegistration({ publicUrl: "https://agents.example/path" }),
@@ -50,5 +68,12 @@ test("rejects path-bearing origins and malformed asset IDs", () => {
   assert.throws(
     () => buildSolanaAgentRegistration({ publicUrl: "https://agents.example", agentAsset: "not-a-key" }),
     /Solana public key/,
+  );
+  assert.throws(
+    () => buildSolanaAgentRegistration({
+      publicUrl: "https://agents.example",
+      actions: [{ name: "extract", route: "/extract" }, { name: "other", route: "/extract" }],
+    }),
+    /routes must be unique/,
   );
 });

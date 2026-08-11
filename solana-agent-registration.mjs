@@ -14,10 +14,22 @@ const normalizeOrigin = (value) => {
   return url.origin;
 };
 
-export function buildSolanaAgentRegistration({ publicUrl, agentAsset } = {}) {
+export function buildSolanaAgentRegistration({ publicUrl, agentAsset, actions = [] } = {}) {
   const origin = normalizeOrigin(publicUrl);
   if (agentAsset !== undefined && !BASE58_PUBLIC_KEY.test(agentAsset)) {
     throw new Error("agentAsset must be a Solana public key");
+  }
+  if (!Array.isArray(actions)) throw new Error("actions must be an array");
+  const paidServices = actions.map((action) => {
+    const route = String(action?.route || "");
+    const name = String(action?.name || "");
+    if (!name || !route.startsWith("/") || route.startsWith("//")) {
+      throw new Error("paid actions need a name and origin-relative route");
+    }
+    return { name: `paid-action:${name}`, endpoint: `${origin}${route}` };
+  });
+  if (new Set(paidServices.map(({ endpoint }) => endpoint)).size !== paidServices.length) {
+    throw new Error("paid action routes must be unique");
   }
 
   return {
@@ -33,6 +45,7 @@ export function buildSolanaAgentRegistration({ publicUrl, agentAsset } = {}) {
       { name: "MPP", endpoint: `${origin}/mpp-openapi.json` },
       { name: "x402-solana", endpoint: `${SOLANA_PAID_ORIGIN}/.well-known/x402` },
       { name: "MPP-solana", endpoint: `${SOLANA_PAID_ORIGIN}/mpp-openapi.json` },
+      ...paidServices,
       {
         name: "agentWallet",
         endpoint: `solana:${SOLANA_MAINNET_CHAIN_ID}:${SOLANA_MERCHANT_WALLET}`,

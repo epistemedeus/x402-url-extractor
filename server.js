@@ -564,15 +564,6 @@ app.get("/go/manychat", async (_req, res) => {
 // --- x402 discovery document (/.well-known/x402) so agents + indexes (x402scan,
 // domain crawlers) self-discover our paid resources. Free route, before the paywall.
 const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
-const solanaAgentRegistration = buildSolanaAgentRegistration({
-  publicUrl: PUBLIC_URL,
-  ...(process.env.SOLANA_AGENT_ASSET ? { agentAsset: process.env.SOLANA_AGENT_ASSET } : {}),
-});
-
-app.get("/.well-known/agent-registration.json", (_req, res) => {
-  res.set("Cache-Control", "public, max-age=300");
-  return res.json(solanaAgentRegistration);
-});
 const USDC_BY_NETWORK = {
   "eip155:8453": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
   "eip155:84532": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
@@ -801,7 +792,22 @@ const machineActionCatalog = () => ({
   },
 });
 
-const agentCard = buildAgentCard({ publicUrl: PUBLIC_URL });
+const machineActions = machineActionCatalog().actions;
+const agentCard = buildAgentCard({
+  publicUrl: PUBLIC_URL,
+  serviceVersion: SERVICE_VERSION,
+  actions: machineActions,
+});
+const solanaAgentRegistration = buildSolanaAgentRegistration({
+  publicUrl: PUBLIC_URL,
+  actions: machineActions,
+  ...(process.env.SOLANA_AGENT_ASSET ? { agentAsset: process.env.SOLANA_AGENT_ASSET } : {}),
+});
+
+app.get("/.well-known/agent-registration.json", (_req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  return res.json(solanaAgentRegistration);
+});
 
 app.get(["/.well-known/x402", "/.well-known/x402.json", "/x402.json", "/api/x402"], (_req, res) => {
   const items = RESOURCES.map((r) => ({
@@ -872,7 +878,7 @@ app.get("/a2a", (_req, res) => {
     version: A2A_VERSION,
     agentCard: `${PUBLIC_URL}/.well-known/agent-card.json`,
     sendMessage: `${PUBLIC_URL}/a2a/message:send`,
-      skill: "discover-machine-paid-actions",
+    skill: agentCard.skills[0].id,
   });
 });
 
