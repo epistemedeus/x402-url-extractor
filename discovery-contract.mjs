@@ -14,8 +14,11 @@ const outputContracts = new Map();
  */
 export function declareDiscoveryContract(config = {}) {
   const { output, outputSchema, routeKey, ...rest } = config;
+  let routeMethod;
   if (routeKey !== undefined) {
-    if (!/^GET \/[^?#]+$/.test(routeKey)) throw new Error(`Invalid discovery route key: ${routeKey}`);
+    const match = /^(GET|POST) \/[^?#]+$/.exec(routeKey);
+    if (!match) throw new Error(`Invalid discovery route key: ${routeKey}`);
+    routeMethod = match[1];
     if (!output?.example || !outputSchema) throw new Error(`Discovery route ${routeKey} requires an example and output schema`);
     if (outputContracts.has(routeKey)) throw new Error(`Duplicate discovery route key: ${routeKey}`);
     outputContracts.set(routeKey, structuredClone({ example: output.example, schema: outputSchema }));
@@ -31,7 +34,7 @@ export function declareDiscoveryContract(config = {}) {
   });
   if (routeKey !== undefined) {
     const extension = structuredClone(declared.bazaar);
-    extension.info.input.method = "GET";
+    extension.info.input.method = routeMethod;
     const schemaResult = validateDiscoveryExtension(extension);
     const specResult = validateDiscoveryExtensionSpec(extension);
     const errors = [...(schemaResult.errors || []), ...(specResult.errors || [])];

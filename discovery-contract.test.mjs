@@ -44,9 +44,42 @@ test("places the authored output schema in the Bazaar v2 response contract", () 
 });
 
 test("requires a unique safe route key for projected contracts", () => {
-  assert.throws(() => declareDiscoveryContract({ routeKey: "POST /bad", output: { example: {} }, outputSchema: { type: "object" } }), /Invalid discovery route key/);
+  assert.throws(() => declareDiscoveryContract({ routeKey: "PUT /bad", output: { example: {} }, outputSchema: { type: "object" } }), /Invalid discovery route key/);
   assert.throws(() => declareDiscoveryContract({ routeKey: "GET /missing-shape" }), /requires an example and output schema/);
   assert.throws(() => declareDiscoveryContract({ routeKey: "GET /test-contract", output: { example: {} }, outputSchema: { type: "object" } }), /Duplicate discovery route key/);
+});
+
+test("declares and preserves a validated POST JSON-body contract", () => {
+  const extension = declareDiscoveryContract({
+    routeKey: "POST /body-contract",
+    method: "POST",
+    bodyType: "json",
+    input: { url: "https://example.com" },
+    inputSchema: {
+      type: "object",
+      properties: { url: { type: "string", format: "uri" } },
+      required: ["url"],
+      additionalProperties: false,
+    },
+    output: { example: { ok: true } },
+    outputSchema: {
+      type: "object",
+      properties: { ok: { type: "boolean" } },
+      required: ["ok"],
+    },
+  });
+
+  assert.equal(extension.bazaar.info.input.method, "POST");
+  assert.equal(extension.bazaar.info.input.bodyType, "json");
+  assert.deepEqual(extension.bazaar.info.input.body, { url: "https://example.com" });
+  assert.deepEqual(getDiscoveryOutputContract("POST /body-contract"), {
+    example: { ok: true },
+    schema: {
+      type: "object",
+      properties: { ok: { type: "boolean" } },
+      required: ["ok"],
+    },
+  });
 });
 
 test("rejects a Bazaar contract whose output example does not satisfy its schema", () => {
