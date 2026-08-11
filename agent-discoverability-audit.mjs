@@ -1,3 +1,14 @@
+import { lookup as dnsLookup } from "node:dns/promises";
+import { request as httpsRequest } from "node:https";
+
+import {
+  PaymentOfferPreflightError,
+  createPinnedLookup,
+  normalizePaymentTarget,
+  resolvePublicAddress,
+} from "./payment-offer-preflight.mjs";
+import { searchMarket8004 } from "./market8004-discovery.mjs";
+
 const BAZAAR_SEARCH = "https://api.cdp.coinbase.com/platform/v2/x402/discovery/search";
 const AGENT402_ROUTE = "https://agent402.tools/api/route";
 const CIRCLE_SEARCH = "https://api.circle.com/v2/x402/discovery/resources";
@@ -7,7 +18,13 @@ const MPP_CATALOG = "https://mpp.dev/api/services";
 const MPPSCAN_SEARCH = "https://www.mppscan.com/api/trpc/discover.search";
 const PAYANAGENT_SEARCH = "https://payanagent.com/api/v1/discover";
 const X402_JOBS_SEARCH = "https://api.x402.jobs/api/v1/resources";
-import { searchMarket8004 } from "./market8004-discovery.mjs";
+const TARGET_SURFACES = Object.freeze({
+  agentCard: "/.well-known/agent-card.json",
+  agentRegistration: "/.well-known/agent-registration.json",
+  actionCatalog: "/api/actions",
+});
+const TARGET_SURFACE_MAX_BYTES = 512 * 1024;
+const TARGET_SURFACE_TIMEOUT_MS = 5_000;
 
 const SOURCE_ORDER = [
   "coinbase-bazaar",
@@ -85,12 +102,146 @@ export function normalizeDiscoverabilityAuditInput(raw = {}) {
     ? null
     : String(raw.payTo).toLowerCase();
   if (payTo && !/^0x[0-9a-f]{40}$/.test(payTo)) throw new Error("payTo must be a 0x-prefixed EVM address");
+  let surfaceAudit = false;
+  if (![undefined, null, "", false, "false", "0", true, "true", "1"].includes(raw.surfaceAudit)) {
+    throw new Error("surfaceAudit must be true or false");
+  }
+  if ([true, "true", "1"].includes(raw.surfaceAudit)) surfaceAudit = true;
   return {
     origin: originUrl.origin,
     hostname: originUrl.hostname.toLowerCase(),
     intent,
     route: expectedRoute,
     payTo,
+    surfaceAudit,
+  };
+}
+
+function targetSurfaceError(error) {
+  if (error instanceof PaymentOfferPreflightError) {
+    return { status: "error", code: error.code, error: cleanString(error.message, 200) };
+  }
+  return { status: "error", code: "surface_fetch_failed", error: cleanString(error?.message || "surface unavailable", 200) };
+}
+
+export async function fetchPinnedTargetJson(urlValue, {
+  lookupImpl = dnsLookup,
+  requestImpl = httpsRequest,
+  timeoutMs = TARGET_SURFACE_TIMEOUT_MS,
+  maxBytes = TARGET_SURFACE_MAX_BYTES,
+} = {}) {
+  const target = normalizePaymentTarget(urlValue);
+  const resolved = await resolvePublicAddress(target.hostname.replace(/^\[|\]$/g, ""), { lookupImpl });
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (fn, value) => {
+      if (settled) return;
+      settled = true;
+      fn(value);
+    };
+    const request = requestImpl(target, {
+      method: "GET",
+      headers: {
+        accept: "application/json",
+        "accept-encoding": "identity",
+        "user-agent": "SameDayDesk-Discoverability-Surface-Audit/1.0 (+https://samedaydesk.com)",
+      },
+      maxHeaderSize: 64 * 1024,
+      lookup: createPinnedLookup(resolved),
+    }, (response) => {
+      const status = Number(response.statusCode || 0);
+      if (status >= 300 && status < 400) {
+        response.destroy();
+        return finish(reject, new PaymentOfferPreflightError("target surface redirect was rejected", { code: "redirect_rejected", statusCode: 502 }));
+      }
+      if (status !== 200) {
+        response.destroy();
+        return finish(reject, new PaymentOfferPreflightError(`target surface returned HTTP ${status}`, { code: "surface_http_error", statusCode: 502 }));
+      }
+      const chunks = [];
+      let bytes = 0;
+      response.on("data", (chunk) => {
+        bytes += chunk.length;
+        if (bytes > maxBytes) {
+          response.destroy();
+          finish(reject, new PaymentOfferPreflightError("target surface exceeded the response-size limit", { code: "surface_too_large", statusCode: 502 }));
+          return;
+        }
+        chunks.push(chunk);
+      });
+      response.once("error", (error) => finish(reject, new PaymentOfferPreflightError(String(error?.message || error), { code: "surface_fetch_failed", statusCode: 502 })));
+      response.once("end", () => {
+        if (settled) return;
+        try {
+          const payload = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+          if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new Error("target surface JSON must be an object");
+          finish(resolve, payload);
+        } catch (error) {
+          finish(reject, new PaymentOfferPreflightError(String(error?.message || "target surface returned malformed JSON"), { code: "surface_json_invalid", statusCode: 502 }));
+        }
+      });
+    });
+    request.setTimeout(timeoutMs, () => request.destroy(new Error("target surface request timed out")));
+    request.once("error", (error) => finish(reject, new PaymentOfferPreflightError(String(error?.message || error), { code: "surface_fetch_failed", statusCode: 502 })));
+    request.end();
+  });
+}
+
+function mentionsExactRoute(value, route) {
+  if (typeof value !== "string") return false;
+  return value.split(/\s+/).some((token) => token
+    .replace(/^[('"`]+/, "")
+    .replace(/[)'"`,.;:!?]+$/, "") === route);
+}
+
+function routeInAgentCard(payload, route) {
+  const skills = Array.isArray(payload?.skills) ? payload.skills.slice(0, 200) : [];
+  const routeFound = route ? skills.some((skill) => [skill?.id, skill?.name, skill?.description, ...(Array.isArray(skill?.examples) ? skill.examples : [])]
+    .some((value) => mentionsExactRoute(value, route))) : null;
+  return { status: "ok", skillCount: skills.length, expectedRouteFound: routeFound };
+}
+
+function routeInRegistration(payload, route, origin) {
+  const services = Array.isArray(payload?.services) ? payload.services.slice(0, 500) : [];
+  const routeFound = route ? services.some((service) => {
+    const endpoint = httpsUrl(service?.endpoint);
+    return endpoint?.origin === origin && endpoint.pathname === route;
+  }) : null;
+  return { status: "ok", serviceCount: services.length, expectedRouteFound: routeFound };
+}
+
+function routeInActionCatalog(payload, route, origin) {
+  const actions = Array.isArray(payload?.actions) ? payload.actions.slice(0, 500) : [];
+  const routeFound = route ? actions.some((action) => {
+    const actionUrl = httpsUrl(action?.url);
+    return action?.route === route || (actionUrl?.origin === origin && actionUrl.pathname === route);
+  }) : null;
+  return { status: "ok", actionCount: actions.length, expectedRouteFound: routeFound };
+}
+
+export async function auditTargetDiscoverySurfaces(input, { surfaceFetchImpl = fetchPinnedTargetJson } = {}) {
+  const entries = Object.entries(TARGET_SURFACES);
+  const settled = await Promise.allSettled(entries.map(([, path]) => surfaceFetchImpl(`${input.origin}${path}`)));
+  const surfaces = {};
+  entries.forEach(([name], index) => {
+    const result = settled[index];
+    if (result.status === "rejected") {
+      surfaces[name] = targetSurfaceError(result.reason);
+      return;
+    }
+    if (name === "agentCard") surfaces[name] = routeInAgentCard(result.value, input.route);
+    if (name === "agentRegistration") surfaces[name] = routeInRegistration(result.value, input.route, input.origin);
+    if (name === "actionCatalog") surfaces[name] = routeInActionCatalog(result.value, input.route, input.origin);
+  });
+  const available = entries.map(([name]) => name).filter((name) => surfaces[name].status === "ok");
+  const found = input.route ? available.filter((name) => surfaces[name].expectedRouteFound) : [];
+  return {
+    requested: true,
+    availableSurfaceCount: available.length,
+    expectedRouteFoundSurfaceCount: input.route ? found.length : null,
+    expectedRouteFoundSurfaces: found,
+    surfaces,
+    method: "Three fixed same-origin JSON documents are fetched after payment with pinned public DNS, no redirects, a five-second timeout, a 512-KiB response cap, and no credentials.",
   };
 }
 
@@ -396,6 +547,7 @@ function summarizeSource(items, input) {
 
 export async function agentDiscoverabilityAudit(rawInput, {
   fetchImpl = fetch,
+  surfaceFetchImpl = fetchPinnedTargetJson,
   limit = 20,
   now = Date.now(),
 } = {}) {
@@ -474,16 +626,40 @@ export async function agentDiscoverabilityAudit(rawInput, {
       nextActions.push({ source, action: "compare_task_outcome_language_with_competitors_above", basis: `${observation.bestTargetRank - 1} ranked result(s) appeared above the target for this intent.` });
     }
   }
+  const targetSurfaces = input.surfaceAudit
+    ? await auditTargetDiscoverySurfaces(input, { surfaceFetchImpl })
+    : { requested: false, reason: "Set surfaceAudit=true to inspect the target's public Agent Card, registration document, and action catalog." };
+  if (input.surfaceAudit && targetSurfaces.availableSurfaceCount === 0) {
+    findings.push({ source: "target-owned-discovery-surfaces", finding: "owned_surfaces_unavailable" });
+    nextActions.push({
+      source: "target-owned-discovery-surfaces",
+      action: "verify_public_dns_and_machine_document_availability",
+      basis: "None of the three fixed seller-owned machine-discovery documents could be read safely.",
+    });
+  } else if (input.surfaceAudit && input.route && targetSurfaces.expectedRouteFoundSurfaceCount < targetSurfaces.availableSurfaceCount) {
+    findings.push({
+      source: "target-owned-discovery-surfaces",
+      finding: "expected_route_missing_from_one_or_more_owned_surfaces",
+      foundSurfaceCount: targetSurfaces.expectedRouteFoundSurfaceCount,
+      availableSurfaceCount: targetSurfaces.availableSurfaceCount,
+    });
+    nextActions.push({
+      source: "target-owned-discovery-surfaces",
+      action: "synchronize_agent_card_registration_and_action_catalog",
+      basis: "A reachable expected route is missing from one or more available seller-owned machine-discovery documents.",
+    });
+  }
   return {
     ok: true,
     product: "samedaydesk-agent-discoverability-audit",
-    version: "1.6.0",
+    version: "1.7.0",
     generatedAt: new Date(now).toISOString(),
     input: {
       origin: input.origin,
       intent: input.intent,
       route: input.route,
       payTo: input.payTo,
+      surfaceAudit: input.surfaceAudit,
       brandBlind: true,
     },
     summary: {
@@ -507,15 +683,18 @@ export async function agentDiscoverabilityAudit(rawInput, {
       independentTargetFoundSourceCount: independentSources.filter((source) => sources[source].status === "ok" && sources[source].targetFound).length,
     },
     sources,
+    targetSurfaces,
     findings,
     nextActions,
-    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata.",
+    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata. When explicitly requested, the target-surface check reads only three fixed same-origin public JSON documents after payment.",
     sourceDependencies: DEPENDENT_SOURCES,
     safety: {
       credentialsUsed: false,
       paymentSignedToCatalogs: false,
       paymentSentToCatalogs: false,
-      targetOriginFetched: false,
+      targetOriginFetchAttempted: input.surfaceAudit,
+      targetOriginFetched: input.surfaceAudit && targetSurfaces.availableSurfaceCount > 0,
+      targetOriginFetchScope: input.surfaceAudit ? Object.values(TARGET_SURFACES) : [],
       redirectsFollowed: false,
     },
     boundary: "This is a point-in-time discovery observation, not demand, conversion, reliability, or future-rank evidence. Runtime payment terms must still be preflighted before purchase.",

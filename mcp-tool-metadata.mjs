@@ -47,6 +47,7 @@ const TOOL_METADATA = Object.freeze({
   },
   agent_discoverability_audit: {
     title: "Audit Agent Service Discoverability",
+    description: "Measure one service's brand-blind rank, source-family coverage, expected-route presence, and competitors across ten public machine-service discovery views. Set `surfaceAudit` only when you also want the target's public Agent Card, ERC-8004 registration document, and action catalog checked for the expected route. Catalog queries use no credentials or payments; the optional target fetch is DNS-pinned, same-origin, redirect-free, size-capped, and read-only. Results are point-in-time reach evidence, not demand or future-rank proof.",
   },
   payment_offer_preflight: {
     title: "Preflight x402 and MPP Offer",

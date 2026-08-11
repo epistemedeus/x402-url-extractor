@@ -92,7 +92,7 @@ export function normalizePaymentTarget(value) {
   return target;
 }
 
-async function resolvePublicAddress(hostname, { lookupImpl = dnsLookup } = {}) {
+export async function resolvePublicAddress(hostname, { lookupImpl = dnsLookup } = {}) {
   if (isIP(hostname)) return { address: hostname, family: isIP(hostname) };
   let addresses;
   try {

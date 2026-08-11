@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
+import { EventEmitter } from "node:events";
+import { Readable } from "node:stream";
 import test from "node:test";
 
 import {
   agentDiscoverabilityAudit,
+  auditTargetDiscoverySurfaces,
+  fetchPinnedTargetJson,
   normalizeDiscoverabilityAuditInput,
 } from "./agent-discoverability-audit.mjs";
 
@@ -38,6 +42,105 @@ test("requires a public origin and a brand-blind capability intent", () => {
     route: "/extract",
     payTo: `0x${"1".repeat(40)}`,
   }).origin, "https://api.example.com");
+  assert.equal(normalizeDiscoverabilityAuditInput({
+    origin: "https://api.example.com",
+    intent: "extract a public website into structured JSON metadata",
+    surfaceAudit: "true",
+  }).surfaceAudit, true);
+  assert.throws(() => normalizeDiscoverabilityAuditInput({
+    origin: "https://api.example.com",
+    intent: "extract a public website into structured JSON metadata",
+    surfaceAudit: "yes",
+  }), /surfaceAudit/);
+});
+
+test("audits three fixed target discovery documents only when explicitly requested", async () => {
+  const input = normalizeDiscoverabilityAuditInput({
+    origin: "https://api.example.com",
+    intent: "extract a public website into structured JSON metadata",
+    route: "/extract",
+    surfaceAudit: true,
+  });
+  const calls = [];
+  const result = await auditTargetDiscoverySurfaces(input, {
+    surfaceFetchImpl: async (url) => {
+      calls.push(url);
+      if (url.endsWith("agent-card.json")) return { skills: [{ id: "discover-extract", description: "Discover /extract." }] };
+      if (url.endsWith("agent-registration.json")) return { services: [{ name: "paid-action:extract", endpoint: "https://api.example.com/extract" }] };
+      if (url.endsWith("/api/actions")) return { actions: [{ route: "/other", url: "https://api.example.com/other" }] };
+      throw new Error("unexpected surface");
+    },
+  });
+  assert.deepEqual(calls, [
+    "https://api.example.com/.well-known/agent-card.json",
+    "https://api.example.com/.well-known/agent-registration.json",
+    "https://api.example.com/api/actions",
+  ]);
+  assert.equal(result.availableSurfaceCount, 3);
+  assert.equal(result.expectedRouteFoundSurfaceCount, 2);
+  assert.deepEqual(result.expectedRouteFoundSurfaces, ["agentCard", "agentRegistration"]);
+  assert.equal(result.surfaces.actionCatalog.expectedRouteFound, false);
+
+  const noPrefixMatch = await auditTargetDiscoverySurfaces(input, {
+    surfaceFetchImpl: async (url) => url.endsWith("agent-card.json")
+      ? { skills: [{ description: "Discover /extract-v2." }] }
+      : {},
+  });
+  assert.equal(noPrefixMatch.surfaces.agentCard.expectedRouteFound, false);
+});
+
+function requestFixture({ status = 200, body = "{}" } = {}) {
+  return (_target, options, callback) => {
+    const request = new EventEmitter();
+    request.setTimeout = () => request;
+    request.destroy = (error) => {
+      if (error) queueMicrotask(() => request.emit("error", error));
+    };
+    request.end = () => queueMicrotask(() => {
+      const response = Readable.from([Buffer.from(body)]);
+      response.statusCode = status;
+      callback(response);
+    });
+    assert.equal(typeof options.lookup, "function");
+    return request;
+  };
+}
+
+test("target-surface fetch pins public DNS and rejects mixed private answers", async () => {
+  const result = await fetchPinnedTargetJson("https://api.example.com/.well-known/agent-card.json", {
+    lookupImpl: async () => [{ address: "8.8.8.8", family: 4 }],
+    requestImpl: requestFixture({ body: JSON.stringify({ skills: [] }) }),
+  });
+  assert.deepEqual(result, { skills: [] });
+  await assert.rejects(
+    fetchPinnedTargetJson("https://api.example.com/.well-known/agent-card.json", {
+      lookupImpl: async () => [
+        { address: "8.8.8.8", family: 4 },
+        { address: "127.0.0.1", family: 4 },
+      ],
+      requestImpl: () => { throw new Error("request must not run"); },
+    }),
+    (error) => error?.code === "ssrf_rejected",
+  );
+});
+
+test("target-surface fetch rejects redirects and oversized JSON", async () => {
+  const lookupImpl = async () => [{ address: "8.8.8.8", family: 4 }];
+  await assert.rejects(
+    fetchPinnedTargetJson("https://api.example.com/.well-known/agent-card.json", {
+      lookupImpl,
+      requestImpl: requestFixture({ status: 302 }),
+    }),
+    (error) => error?.code === "redirect_rejected",
+  );
+  await assert.rejects(
+    fetchPinnedTargetJson("https://api.example.com/.well-known/agent-card.json", {
+      lookupImpl,
+      requestImpl: requestFixture({ body: JSON.stringify({ value: "x".repeat(100) }) }),
+      maxBytes: 32,
+    }),
+    (error) => error?.code === "surface_too_large",
+  );
 });
 
 test("preserves registry ranks and identifies the target by origin or payTo", async () => {

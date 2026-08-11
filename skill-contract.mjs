@@ -58,7 +58,7 @@ ${actionsMarkdown}
 - Morpho PreLiquidation replay reconstructs gross historical event economics. It does not infer net profit or future executability.
 - Repository scan output is static evidence, not permission to execute untrusted code.
 - Opportunity preflight uses caller-supplied cost and selection assumptions plus dated categorical platform evidence. It makes no claim, bid, payment, or submission on the source platform.
-- Agent discoverability audit sends one brand-blind capability intent to public catalogs. It measures point-in-time rank and coverage, not demand, conversion, reliability, or future rank.
+- Agent discoverability audit sends one brand-blind capability intent to public catalogs. An explicit surfaceAudit option also checks three fixed public same-origin discovery documents with pinned public DNS, no redirects, bounded time, and bounded response size. It measures point-in-time rank and coverage, not demand, conversion, reliability, or future rank.
 - Demand telemetry is aggregate and does not expose buyer identities or raw request data.
 `;
 }

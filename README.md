@@ -27,7 +27,7 @@ readiness audits.
 - Morpho market underwriting: `GET /defi/morpho-market-underwrite?marketId=0x...`
 - Morpho PreLiquidation replay: `GET /defi/morpho-preliquidation-replay?transactionHash=0x...`
 - Opportunity preflight: `GET /work/opportunity-preflight?rewardUsd=10&hours=0.25&hourlyCostUsd=4&selectionProbabilityPct=20`
-- Agent discoverability audit: `GET /distribution/agent-discoverability-audit?origin=https://example.com&intent=extract+a+public+website+into+structured+JSON&route=/extract`
+- Agent discoverability audit: `GET /distribution/agent-discoverability-audit?origin=https://example.com&intent=extract+a+public+website+into+structured+JSON&route=/extract&surfaceAudit=true`
 - Payment offer preflight: `GET /commerce/payment-offer-preflight?url=https://example.com/paid-route`
 - Base USDC settlement proof: `GET /commerce/settlement-proof?transactionHash=0x...&recipient=0x...&amountAtomic=5000`
 - Base or Ethereum transaction receipt: `GET /chain/transaction-receipt?transactionHash=0x...&network=base`
@@ -255,6 +255,14 @@ carry the normative user role, message ID, and at least one part. These changes
 improve route discovery but do not claim support for unimplemented A2A task
 operations.
 
+Version 1.12.3 turns that discovery lesson into an optional seller audit. Set
+`surfaceAudit=true` on the existing paid discoverability route to check whether
+the expected route appears in the target's public A2A Agent Card, ERC-8004
+registration document, and action catalog. The target fetch is restricted to
+three fixed same-origin JSON paths, pins a fully public DNS answer, rejects
+redirects, caps each response at 512 KiB, and times out after five seconds. The
+default remains catalog-only and does not fetch the target origin.
+
 Version 1.11.23 adds a narrow compatibility bridge for MCP clients that retry a
 paid `tools/call` with the x402 `PAYMENT-SIGNATURE` HTTP header but fail to copy
 the same signed payload into `_meta["x402/payment"]`. The merchant decodes only
@@ -478,7 +486,9 @@ Coinbase-origin supply; its retrieval rank is useful, but is not independent
 underlying supply. 8004Market is labeled as an identity-propagation surface
 because it indexes on-chain Solana Agent Registry identities; retrieval there
 proves public identity and capability propagation, not a buyer call, settlement,
-or independent demand.
+or independent demand. An optional bounded seller-surface check reports whether one exact
+route appears in the target's public Agent Card, ERC-8004 registration, and
+action catalog without weakening the default credential-free catalog method.
 
 Version 1.11.42 adds a JSON-body `POST /work/opportunity-preflight` contract for
 machine workflow buyers while preserving the existing GET contract and 0.05
