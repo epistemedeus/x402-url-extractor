@@ -196,8 +196,10 @@ Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
 before startup. Six newer routes previously settled successfully while Coinbase
 rejected their discovery metadata because their output examples omitted fields
 marked required by the same schemas. The examples now conform, and
-`bazaar-contract-audit.mjs` checks every live paid route through credential-free
-HTTP 402 probes without retaining headers or query values.
+`bazaar-contract-audit.mjs` checks every live CDP Bazaar-eligible paid route
+through credential-free HTTP 402 probes without retaining headers or query
+values. Alternate x402 settlement rails are reported as explicit exclusions
+instead of being misclassified as failed Bazaar declarations.
 
 Version 1.11.18 adds a source-quality funnel to the public aggregate. Each
 controlled discovery source now reports observations alongside distinct and

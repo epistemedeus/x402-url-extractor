@@ -23,8 +23,9 @@ function parameterExample(parameter) {
   if (name === "domain") return "example.com";
   if (name === "repo") return "expressjs/express";
   if (name === "intent") return "extract a public web page into structured JSON metadata";
-  if (name === "address") return `0x${"0".repeat(40)}`;
+  if (name === "address" || name === "recipient" || name === "payer") return `0x${"0".repeat(40)}`;
   if (name === "marketId" || name === "transactionHash") return `0x${"0".repeat(64)}`;
+  if (name === "amountAtomic") return "1";
   if (schema.type === "number" || schema.type === "integer") {
     const minimum = Number(schema.minimum ?? 0);
     return String(schema.exclusiveMinimum !== undefined ? Number(schema.exclusiveMinimum) + 1 : minimum);
@@ -46,6 +47,22 @@ export function buildAuditTarget(origin, route, operation) {
   }
   target.searchParams.sort();
   return target.toString();
+}
+
+export function cdpBazaarEligibility(operation) {
+  const x402Protocols = (operation?.["x-payment-info"]?.protocols || [])
+    .map((protocol) => protocol?.x402)
+    .filter((protocol) => protocol && typeof protocol === "object");
+  if (x402Protocols.length === 0) return { eligible: false, settlement: null };
+  const eligible = x402Protocols.find((protocol) => {
+    const settlement = String(protocol.settlement || "").trim().toLowerCase();
+    return settlement === "" || settlement === "cdp" || settlement === "coinbase-cdp";
+  });
+  if (eligible) return { eligible: true, settlement: eligible.settlement || "cdp-default" };
+  return {
+    eligible: false,
+    settlement: String(x402Protocols[0]?.settlement || "explicit-non-cdp"),
+  };
 }
 
 export function validatePaymentRequiredHeader(header) {
@@ -92,10 +109,14 @@ export async function auditBazaarContracts({ origin, fetchImpl = fetch } = {}) {
   });
   if (!openApiResponse?.ok) throw new Error(`OpenAPI returned HTTP ${openApiResponse?.status}`);
   const openapi = await openApiResponse.json();
-  const operations = Object.entries(openapi?.paths || {})
+  const paidOperations = Object.entries(openapi?.paths || {})
     .filter(([, item]) => item?.get?.["x-payment-info"])
-    .map(([route, item]) => ({ route, operation: item.get }))
+    .map(([route, item]) => ({ route, operation: item.get, eligibility: cdpBazaarEligibility(item.get) }))
     .sort((left, right) => left.route.localeCompare(right.route));
+  const operations = paidOperations.filter((entry) => entry.eligibility.eligible);
+  const excludedRoutes = paidOperations
+    .filter((entry) => !entry.eligibility.eligible)
+    .map((entry) => ({ route: entry.route, settlement: entry.eligibility.settlement }));
 
   const routes = [];
   for (const { route, operation } of operations) {
@@ -122,6 +143,8 @@ export async function auditBazaarContracts({ origin, fetchImpl = fetch } = {}) {
     origin: base.origin,
     version: openapi?.info?.version || null,
     routeCount: routes.length,
+    excludedRouteCount: excludedRoutes.length,
+    excludedRoutes,
     validRoutes,
     invalidRoutes: routes.length - validRoutes,
     routes,
