@@ -435,7 +435,7 @@ completed an owner-excluded settlement for integration and indexing QA. The
 thirteenth route, `/distribution/agent-discoverability-audit`, is live at 0.05
 USDC and productizes the brand-blind catalog benchmark used on SameDayDesk
 itself. It queries Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, the official MPP
-catalog, MPPScan, and PayanAgent public search without catalog credentials or payments,
+catalog, MPPScan, PayanAgent, and 8004Market public search without catalog credentials or payments,
 preserves registry-native order, and reports coverage, rank, competitors above the target, and
 evidence-based next actions as point-in-time observations rather than a
 composite score. Bazaar and Agentic Market are explicitly one Coinbase source
@@ -443,7 +443,15 @@ family, so the output does not inflate independent reach by counting both views
 as separate acquisition channels. PayanAgent is labeled as a dependent
 aggregator surface because its catalog includes ecosystem records such as
 Coinbase-origin supply; its retrieval rank is useful, but is not independent
-underlying supply.
+underlying supply. 8004Market is labeled as an identity-propagation surface
+because it indexes on-chain Solana Agent Registry identities; retrieval there
+proves public identity and capability propagation, not a buyer call, settlement,
+or independent demand.
+
+Version 1.11.37 adds 8004Market as a ninth public search view in the paid
+discoverability audit. It matches the target by durable service origins and
+routes embedded in the indexed Solana identity metadata while preserving
+8004Market's server-native semantic order.
 
 Version 1.11.36 expands the Solana identity metadata with the real route-level
 capabilities and the Base and Solana OpenAPI, skill, x402, and MPP discovery

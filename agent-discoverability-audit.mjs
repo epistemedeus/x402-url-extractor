@@ -6,6 +6,7 @@ const AGENTICTRADE_SEARCH = "https://agentictrade.io/api/v1/discover";
 const MPP_CATALOG = "https://mpp.dev/api/services";
 const MPPSCAN_SEARCH = "https://www.mppscan.com/api/trpc/discover.search";
 const PAYANAGENT_SEARCH = "https://payanagent.com/api/v1/discover";
+import { searchMarket8004 } from "./market8004-discovery.mjs";
 
 const SOURCE_ORDER = [
   "coinbase-bazaar",
@@ -16,6 +17,7 @@ const SOURCE_ORDER = [
   "official-mpp-catalog",
   "mppscan-public-search",
   "payanagent-public-search",
+  "8004market-public-search",
 ];
 const SOURCE_FAMILIES = Object.freeze({
   "coinbase-bazaar": "coinbase",
@@ -26,9 +28,11 @@ const SOURCE_FAMILIES = Object.freeze({
   "official-mpp-catalog": "mpp",
   "mppscan-public-search": "mppscan",
   "payanagent-public-search": "payanagent",
+  "8004market-public-search": "market8004",
 });
 const DEPENDENT_SOURCES = Object.freeze({
   "payanagent-public-search": "Aggregates ecosystem supply, including Coinbase-origin records; retrieval is a distinct buyer surface but not independent underlying supply.",
+  "8004market-public-search": "Indexes Solana Agent Registry identities; retrieval proves on-chain identity propagation, not a buyer call, settlement, or independent demand.",
 });
 
 function cleanString(value, maximum = 500) {
@@ -95,9 +99,12 @@ function decimalPrice(accepts) {
   return Number.isFinite(value) ? value : null;
 }
 
-function candidate({ name, url, origin, route, description, priceUsd, score, payTo }) {
+function candidate({ name, url, origin, route, description, priceUsd, score, payTo, serviceUrls }) {
   const safeUrl = httpsUrl(url)?.toString() || null;
   const safeOrigin = httpsUrl(origin)?.origin || (safeUrl ? new URL(safeUrl).origin : null);
+  const safeServiceUrls = [...new Set((serviceUrls || [])
+    .map((value) => httpsUrl(value)?.toString())
+    .filter(Boolean))].slice(0, 50);
   return {
     name: cleanString(name, 200),
     url: safeUrl,
@@ -107,6 +114,11 @@ function candidate({ name, url, origin, route, description, priceUsd, score, pay
     priceUsd: priceUsd !== null && priceUsd !== undefined && Number.isFinite(Number(priceUsd)) ? Number(priceUsd) : null,
     score: score !== null && score !== undefined && Number.isFinite(Number(score)) ? Number(score) : null,
     payTo: /^0x[0-9a-f]{40}$/i.test(String(payTo || "")) ? String(payTo).toLowerCase() : null,
+    ...(safeServiceUrls.length ? {
+      serviceUrls: safeServiceUrls,
+      serviceOrigins: [...new Set(safeServiceUrls.map((value) => new URL(value).origin))],
+      serviceRoutes: [...new Set(safeServiceUrls.map((value) => new URL(value).pathname))],
+    } : {}),
   };
 }
 
@@ -212,6 +224,15 @@ function normalizePayanAgent(payload) {
   });
 }
 
+function normalizeMarket8004(items) {
+  return items.map((item) => candidate({
+    name: item.name,
+    url: item.listingUrl,
+    description: item.description,
+    serviceUrls: item.serviceUrls,
+  }));
+}
+
 function tokens(value) {
   return new Set(String(value || "").toLowerCase().match(/[a-z0-9]{2,}/g) || []);
 }
@@ -291,7 +312,13 @@ async function fetchJson(urlValue, { fetchImpl, method = "GET", body } = {}) {
 }
 
 function targetMatch(item, input) {
-  return item.origin === input.origin || item.payTo === input.payTo && input.payTo !== null;
+  return item.origin === input.origin
+    || item.serviceOrigins?.includes(input.origin)
+    || item.payTo === input.payTo && input.payTo !== null;
+}
+
+function routeMatch(item, route) {
+  return item.route === route || item.serviceRoutes?.includes(route);
 }
 
 function summarizeSource(items, input) {
@@ -300,7 +327,7 @@ function summarizeSource(items, input) {
   items.forEach((item, index) => {
     if (!targetMatch(item, input)) return;
     targetRanks.push(index + 1);
-    if (!input.route || item.route === input.route) expectedRouteRanks.push(index + 1);
+    if (!input.route || routeMatch(item, input.route)) expectedRouteRanks.push(index + 1);
   });
   const bestTargetIndex = targetRanks.length ? targetRanks[0] - 1 : null;
   return {
@@ -345,6 +372,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
     "official-mpp-catalog": async () => normalizeMpp(await fetchJson(MPP_CATALOG, { fetchImpl }), input.intent, limit),
     "mppscan-public-search": async () => normalizeMppscan(await fetchJson(mppscanUrl, { fetchImpl })).slice(0, limit),
     "payanagent-public-search": async () => normalizePayanAgent(await fetchJson(`${PAYANAGENT_SEARCH}?q=${encoded}&limit=${limit}`, { fetchImpl })),
+    "8004market-public-search": async () => normalizeMarket8004(await searchMarket8004(input.intent, { fetchImpl, limit })),
   };
   const settled = await Promise.allSettled(SOURCE_ORDER.map((source) => calls[source]()));
   const sources = {};
@@ -398,7 +426,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
   return {
     ok: true,
     product: "samedaydesk-agent-discoverability-audit",
-    version: "1.4.0",
+    version: "1.5.0",
     generatedAt: new Date(now).toISOString(),
     input: {
       origin: input.origin,
@@ -430,7 +458,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
     sources,
     findings,
     nextActions,
-    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, and PayanAgent public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent is a distinct buyer-facing retrieval surface but aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. AgenticTrade, MPPScan, and PayanAgent use their public text-search order. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata.",
+    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata.",
     sourceDependencies: DEPENDENT_SOURCES,
     safety: {
       credentialsUsed: false,
