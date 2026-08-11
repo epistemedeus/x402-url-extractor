@@ -47,7 +47,7 @@ import { morphoProtection } from "./morpho-protection.mjs";
 import { morphoMarketUnderwrite } from "./morpho-market-underwrite.mjs";
 import { morphoPreLiquidationReplay } from "./morpho-preliquidation-replay.mjs";
 import {
-  normalizeOpportunityPreflightInput,
+  normalizeOpportunityPreflightRequest,
   opportunityPreflight,
 } from "./opportunity-preflight.mjs";
 import { createInternalOpportunityPreflightHandler } from "./internal-opportunity-gateway.mjs";
@@ -599,6 +599,12 @@ const mppDualStack = createMppDualStack({
       path: new URL(resource.url).pathname,
     })),
     {
+      amount: atomicUsdcToDisplay(RESOURCES[11].amount),
+      description: RESOURCES[11].description,
+      method: "POST",
+      path: "/work/opportunity-preflight",
+    },
+    {
       amount: atomicUsdcToDisplay(RESOURCES[13].amount),
       description: RESOURCES[13].description,
       method: "POST",
@@ -926,7 +932,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.11.41",
+      version: "1.11.42",
       description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, machine-payment preflight, wallet context, and Morpho decision evidence. Pay per call through Base x402 or native MPP, with a Circle Gateway Nanopayments path for gasless batched USDC.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
@@ -1007,6 +1013,45 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       "/defi/morpho-market-underwrite": { get: { summary: RESOURCES[9].description, parameters: [{ name: "marketId", in: "query", required: true, description: "Morpho market ID on Base mainnet.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" } }], responses: { "200": { description: "deterministic multi-source Morpho market underwriting evidence" }, "400": { description: "invalid request, charged nothing" }, "402": { description: `payment required (x402, ${MORPHO_MARKET_UNDERWRITE_PRICE} USDC base)` } } } },
       "/defi/morpho-preliquidation-replay": { get: { summary: RESOURCES[10].description, parameters: [{ name: "transactionHash", in: "query", required: true, description: "Successful Base transaction containing a Morpho PreLiquidate event.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" } }], responses: { "200": { description: "historical deterministic Morpho PreLiquidation event replay" }, "400": { description: "invalid request, charged nothing" }, "402": { description: `payment required (x402, ${MORPHO_PRELIQUIDATION_REPLAY_PRICE} USDC base)` } } } },
     },
+  };
+  document.paths["/work/opportunity-preflight"].post = {
+    operationId: "preflightAgentOpportunityForWorkflow",
+    tags: ["Agent Operations"],
+    summary: `${RESOURCES[11].description} JSON-body form for machine workflow builders.`,
+    requestBody: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              platform: { type: "string", maxLength: 100 },
+              rewardUsd: { type: "number", exclusiveMinimum: 0 },
+              hours: { type: "number", minimum: 0, maximum: 10000 },
+              hourlyCostUsd: { type: "number", minimum: 0, maximum: 100000 },
+              computeUsd: { type: "number", minimum: 0, default: 0 },
+              mandatorySpendUsd: { type: "number", minimum: 0, default: 0 },
+              reusableValueUsd: { type: "number", minimum: 0, default: 0 },
+              selectionProbabilityPct: { type: "number", minimum: 0, maximum: 100 },
+              competition: { type: "integer", minimum: 0, default: 0 },
+              slots: { type: "integer", minimum: 1, default: 1 },
+              agentAccess: { type: "string", enum: ["agent_allowed", "agent_only", "mixed", "human_only", "unknown"], default: "unknown" },
+              acceptance: { type: "string", enum: ["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"], default: "unknown" },
+              settlement: { type: "string", enum: ["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"], default: "unknown" },
+            },
+            required: ["rewardUsd", "hours", "hourlyCostUsd"],
+          },
+        },
+      },
+    },
+    responses: {
+      "200": { description: "deterministic opportunity economics and evidence preflight" },
+      "400": { description: "invalid or missing input, charged nothing" },
+      "402": { description: `payment required (x402 or MPP, ${OPPORTUNITY_PREFLIGHT_PRICE} USDC base)` },
+    },
+    "x-payment-info": profile === "mpp"
+      ? mppPaymentInfoFor(RESOURCES[11])
+      : agentCashPaymentInfoFor(RESOURCES[11]),
   };
   if (profile === "agentcash" && circleGateway.enabled) {
     document.paths[CIRCLE_GATEWAY_PATH] = {
@@ -1134,10 +1179,17 @@ app.get("/defi/morpho-preliquidation-replay", (req, res, next) => {
 });
 
 // Validate explicit opportunity economics before payment. Malformed or
-// incomplete required inputs return an uncharged 400.
-app.get("/work/opportunity-preflight", (req, res, next) => {
+// incomplete required inputs return an uncharged 400. Empty credential-free
+// HEAD and POST requests may reach the payment challenge so machine registries
+// can inspect the route without manufacturing a paid attempt.
+const validateOpportunityPreflightRequest = (req, res, next) => {
   try {
-    normalizeOpportunityPreflightInput(req.query);
+    normalizeOpportunityPreflightRequest({
+      method: req.method,
+      query: req.query,
+      body: req.body,
+      hasPaymentCredential: hasPaymentCredential(req),
+    });
     return next();
   } catch (error) {
     return res.status(400).json({
@@ -1146,7 +1198,10 @@ app.get("/work/opportunity-preflight", (req, res, next) => {
       charged: false,
     });
   }
-});
+};
+app.head("/work/opportunity-preflight", validateOpportunityPreflightRequest);
+app.get("/work/opportunity-preflight", validateOpportunityPreflightRequest);
+app.post("/work/opportunity-preflight", validateOpportunityPreflightRequest);
 
 // Validate public targeting and brand-blind intent before payment. The paid
 // audit never fetches the target origin and uses no marketplace credentials.
@@ -1790,6 +1845,20 @@ const x402Paywall = paymentMiddleware(
           }),
         },
       },
+      "HEAD /work/opportunity-preflight": {
+        ...bazaarResourceMetadataFor("/work/opportunity-preflight"),
+        accepts: [{ scheme: "exact", price: OPPORTUNITY_PREFLIGHT_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description: RESOURCES[11].description,
+        mimeType: "application/json",
+        extensions: { ...COMMON_COMMERCE_EXTENSIONS },
+      },
+      "POST /work/opportunity-preflight": {
+        ...bazaarResourceMetadataFor("/work/opportunity-preflight"),
+        accepts: [{ scheme: "exact", price: OPPORTUNITY_PREFLIGHT_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description: RESOURCES[11].description,
+        mimeType: "application/json",
+        extensions: { ...COMMON_COMMERCE_EXTENSIONS },
+      },
       "GET /distribution/agent-discoverability-audit": {
         ...bazaarResourceMetadataFor("/distribution/agent-discoverability-audit"),
         accepts: [{ scheme: "exact", price: AGENT_DISCOVERABILITY_AUDIT_PRICE, network: NETWORK, payTo: PAY_TO }],
@@ -2136,12 +2205,13 @@ app.get("/defi/morpho-preliquidation-replay", async (req, res) => {
 // Paid: deterministic opportunity economics and evidence preflight. This route
 // reads no account and performs no claim, bid, submission, or payment action on
 // the source platform.
-app.get("/work/opportunity-preflight", async (req, res) => {
+const serveOpportunityPreflight = async (req, res) => {
   try {
-    const platform = typeof req.query.platform === "string" ? req.query.platform.trim().toLowerCase() : null;
+    const input = req.method === "POST" ? req.body : req.query;
+    const platform = typeof input?.platform === "string" ? input.platform.trim().toLowerCase() : null;
     const platformCard = platform ? getPlatformHealthCard(platform) : null;
     res.set("Cache-Control", "no-store");
-    return res.json(opportunityPreflight(req.query, { platformCard }));
+    return res.json(opportunityPreflight(input, { platformCard }));
   } catch (error) {
     return res.status(503).json({
       ok: false,
@@ -2149,7 +2219,9 @@ app.get("/work/opportunity-preflight", async (req, res) => {
       boundary: "No source-platform account, claim, bid, payment, or submission was touched.",
     });
   }
-});
+};
+app.get("/work/opportunity-preflight", serveOpportunityPreflight);
+app.post("/work/opportunity-preflight", serveOpportunityPreflight);
 
 // Paid: brand-blind cross-registry discovery audit for machine-service sellers.
 app.get("/distribution/agent-discoverability-audit", async (req, res) => {
@@ -2273,7 +2345,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.11.41" },
+      serverInfo: { name: "x402-data-gateway", version: "1.11.42" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },

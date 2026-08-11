@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { opportunityPreflight } from "./opportunity-preflight.mjs";
+import {
+  normalizeOpportunityPreflightRequest,
+  opportunityPreflight,
+} from "./opportunity-preflight.mjs";
 import { getPlatformHealthCard } from "./platform-health.mjs";
 
 const base = {
@@ -80,4 +83,41 @@ test("fails closed on malformed numeric or enum inputs", () => {
   assert.throws(() => opportunityPreflight({ ...base, selectionProbabilityPct: 101 }), /selectionProbabilityPct/);
   assert.throws(() => opportunityPreflight({ ...base, agentAccess: "maybe" }), /agentAccess/);
   assert.throws(() => opportunityPreflight({ ...base, slots: 0 }), /slots/);
+});
+
+test("permits only credential-free empty HEAD and POST registry probes", () => {
+  assert.deepEqual(
+    normalizeOpportunityPreflightRequest({ method: "HEAD" }),
+    { discoveryProbe: true, input: {} },
+  );
+  assert.deepEqual(
+    normalizeOpportunityPreflightRequest({ method: "POST", body: {} }),
+    { discoveryProbe: true, input: {} },
+  );
+  assert.throws(
+    () => normalizeOpportunityPreflightRequest({ method: "POST", body: {}, hasPaymentCredential: true }),
+    /rewardUsd is required/,
+  );
+  assert.throws(
+    () => normalizeOpportunityPreflightRequest({ method: "GET", query: {} }),
+    /rewardUsd is required/,
+  );
+});
+
+test("normalizes workflow JSON input through the same opportunity contract", () => {
+  const result = normalizeOpportunityPreflightRequest({
+    method: "POST",
+    body: {
+      platform: " TaskMarket ",
+      rewardUsd: 10,
+      hours: 0.25,
+      hourlyCostUsd: 4,
+      selectionProbabilityPct: 2,
+    },
+  });
+  assert.equal(result.discoveryProbe, false);
+  assert.equal(result.input.platform, "taskmarket");
+  assert.equal(result.input.rewardUsd, 10);
+  assert.equal(result.input.hours, 0.25);
+  assert.equal(result.input.hourlyCostUsd, 4);
 });

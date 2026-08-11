@@ -448,6 +448,13 @@ because it indexes on-chain Solana Agent Registry identities; retrieval there
 proves public identity and capability propagation, not a buyer call, settlement,
 or independent demand.
 
+Version 1.11.42 adds a JSON-body `POST /work/opportunity-preflight` contract for
+machine workflow buyers while preserving the existing GET contract and 0.05
+USDC price. Empty credential-free HEAD or POST registry probes can inspect the
+payment challenge; missing or malformed paid input remains an uncharged 400.
+This makes one useful product directly callable from integer-cent workflow
+markets without a duplicate route or a misleading price.
+
 Version 1.11.41 mirrors the canonical x402 v2 `Payment-Required` offer into the
 otherwise-empty 402 JSON body for registries that still index the legacy body.
 The payment-offer preflight also exposes an equivalent JSON-body POST route for

@@ -74,6 +74,27 @@ export function normalizeOpportunityPreflightInput(input = {}) {
   };
 }
 
+export function normalizeOpportunityPreflightRequest({
+  method = "GET",
+  query = {},
+  body = {},
+  hasPaymentCredential = false,
+} = {}) {
+  const normalizedMethod = String(method || "GET").trim().toUpperCase();
+  const input = normalizedMethod === "POST" ? body : query;
+  const isEmpty = !input || typeof input !== "object" || Object.keys(input).length === 0;
+  const discoveryProbe = (normalizedMethod === "HEAD" || normalizedMethod === "POST")
+    && !hasPaymentCredential
+    && isEmpty;
+
+  if (discoveryProbe) return { discoveryProbe: true, input: {} };
+
+  return {
+    discoveryProbe: false,
+    input: normalizeOpportunityPreflightInput(input),
+  };
+}
+
 function platformEvidence(card) {
   if (!card) return null;
   return {
