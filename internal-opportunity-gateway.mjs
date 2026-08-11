@@ -97,3 +97,37 @@ export function createInternalPaymentOfferPreflightHandler({
     }
   };
 }
+
+export function createInternalSolanaTransactionReceiptHandler({
+  token,
+  solanaTransactionReceipt,
+}) {
+  if (typeof solanaTransactionReceipt !== "function") throw new TypeError("solanaTransactionReceipt is required");
+
+  return async function internalSolanaTransactionReceipt(req, res, next) {
+    if (!internalGatewayAuthorized(req.headers, token)) return next();
+
+    try {
+      const result = await solanaTransactionReceipt(req.query);
+      res.set("Cache-Control", "no-store");
+      res.set("X-Robots-Tag", "noindex, nofollow");
+      return res.json({
+        ...result,
+        delivery: {
+          transport: "pay-solana-gateway",
+          upstreamAuthenticated: true,
+          paymentEvidenceBoundary:
+            "The external gateway owns payment verification and settlement. This response proves authenticated internal delivery only.",
+        },
+      });
+    } catch (error) {
+      return res.status(400).json({
+        ok: false,
+        product: "samedaydesk-solana-transaction-receipt",
+        code: error?.code || "invalid_solana_transaction_receipt_request",
+        error: String(error?.message || error),
+        charged: false,
+      });
+    }
+  };
+}

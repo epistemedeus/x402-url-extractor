@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   createInternalPaymentOfferPreflightHandler,
+  createInternalSolanaTransactionReceiptHandler,
   createInternalOpportunityPreflightHandler,
   internalGatewayAuthorized,
 } from "./internal-opportunity-gateway.mjs";
@@ -151,4 +152,29 @@ test("authorized payment-offer errors preserve a bounded target-payment boundary
   assert.equal(res.body.code, "invalid_challenge");
   assert.equal(res.body.boundary.targetPaymentSent, false);
   assert.match(res.body.boundary.gatewayPayment, /gateway owns/);
+});
+
+test("Solana receipt internal gateway delivers only after exact internal authorization", async () => {
+  const handler = createInternalSolanaTransactionReceiptHandler({
+    token: TOKEN,
+    solanaTransactionReceipt: async (input) => ({
+      ok: true,
+      product: "samedaydesk-solana-transaction-receipt",
+      decision: "verified",
+      request: input,
+    }),
+  });
+  let nextCalls = 0;
+  await handler({ headers: {}, query: { signature: "sig" } }, responseRecorder(), () => { nextCalls += 1; });
+  assert.equal(nextCalls, 1);
+
+  const res = responseRecorder();
+  await handler({
+    headers: { "x-samedaydesk-internal": TOKEN },
+    query: { signature: "sig" },
+  }, res, () => assert.fail("authorized request must not reach the Base paywall"));
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.decision, "verified");
+  assert.equal(res.body.delivery.transport, "pay-solana-gateway");
+  assert.equal(res.body.delivery.upstreamAuthenticated, true);
 });

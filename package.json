@@ -1,12 +1,12 @@
 {
   "name": "x402-merchant",
-  "version": "1.12.4",
+  "version": "1.13.0",
   "description": "Dual-stack x402 and MPP paid HTTP capabilities that settle USDC to our own Base wallet",
   "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test referral.test.mjs enrich.test.mjs the402.test.mjs platform-health.test.mjs platform-health-page.test.mjs gateway-landing.test.mjs opportunity-preflight.test.mjs internal-opportunity-gateway.test.mjs agent-discoverability-audit.test.mjs payment-offer-preflight.test.mjs settlement-proof.test.mjs transaction-receipt.test.mjs circle-gateway-route.test.mjs vibes-coded-channel.test.mjs skill-contract.test.mjs buyer-policy-reference.test.mjs agentictrade-proxy-diagnostics.test.mjs commerce-events.test.mjs commerce-settlement-reconciler.test.mjs commerce-trust.test.mjs directory-verification.test.mjs discovery-contract.test.mjs bazaar-resource-metadata.test.mjs bazaar-contract-audit.test.mjs mcp-tool-metadata.test.mjs mcp-payment-header.test.mjs idempotency-replay.test.mjs mpp-dual-stack.test.mjs x402-legacy-body.test.mjs morpho-position.test.mjs morpho-protection.test.mjs morpho-market-underwrite.test.mjs morpho-preliquidation-replay.test.mjs morpho-preliquidation-shadow.test.mjs a2a-storefront.test.mjs solana-agent-registration.test.mjs service-version.test.mjs startup-smoke.test.mjs"
+    "test": "node --test referral.test.mjs enrich.test.mjs the402.test.mjs platform-health.test.mjs platform-health-page.test.mjs gateway-landing.test.mjs opportunity-preflight.test.mjs internal-opportunity-gateway.test.mjs agent-discoverability-audit.test.mjs payment-offer-preflight.test.mjs settlement-proof.test.mjs transaction-receipt.test.mjs solana-transaction-receipt.test.mjs circle-gateway-route.test.mjs vibes-coded-channel.test.mjs skill-contract.test.mjs buyer-policy-reference.test.mjs agentictrade-proxy-diagnostics.test.mjs commerce-events.test.mjs commerce-settlement-reconciler.test.mjs commerce-trust.test.mjs directory-verification.test.mjs discovery-contract.test.mjs bazaar-resource-metadata.test.mjs bazaar-contract-audit.test.mjs mcp-tool-metadata.test.mjs mcp-payment-header.test.mjs idempotency-replay.test.mjs mpp-dual-stack.test.mjs x402-legacy-body.test.mjs morpho-position.test.mjs morpho-protection.test.mjs morpho-market-underwrite.test.mjs morpho-preliquidation-replay.test.mjs morpho-preliquidation-shadow.test.mjs a2a-storefront.test.mjs solana-agent-registration.test.mjs service-version.test.mjs startup-smoke.test.mjs"
   },
   "engines": {
     "node": ">=20"

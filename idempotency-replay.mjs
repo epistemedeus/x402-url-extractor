@@ -31,6 +31,7 @@ const DEFAULT_PAID_ROUTES = new Set([
   "/commerce/payment-offer-preflight",
   "/commerce/settlement-proof",
   "/chain/transaction-receipt",
+  "/chain/solana-transaction-receipt",
 ]);
 
 function headerValue(headers, name) {

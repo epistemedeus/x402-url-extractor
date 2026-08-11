@@ -61,6 +61,10 @@ const TOOL_METADATA = Object.freeze({
     title: "Inspect Transaction Receipt",
     description: "Inspect one Base or Ethereum transaction hash and return normalized success or revert status, block time, gas and fee fields, decoded ERC-20 Transfer events, and canonical USDC transfers. Use `settlement_proof` instead when you must verify an exact canonical Base USDC recipient, amount, and optional payer claim. Raw logs are excluded; this tool performs no wallet, signing, broadcast, custody, or execution action.",
   },
+  solana_transaction_receipt: {
+    title: "Inspect Solana Transaction Receipt",
+    description: "Inspect one finalized Solana mainnet transaction signature and return normalized success or failure status, slot, block time, fee, SPL-token owner deltas, and canonical USDC deltas. Supply recipient, amount, and optional payer when an exact settlement claim must be verified; use `transaction_receipt` for Base or Ethereum. Raw instructions and logs are excluded, and this tool performs no wallet, signing, broadcast, custody, or execution action.",
+  },
 });
 
 export function decorateMcpTool(tool) {

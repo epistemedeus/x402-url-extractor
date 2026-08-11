@@ -88,6 +88,7 @@ const EXACT_ROUTES = new Map([
   ["/commerce/payment-offer-preflight", { route: "/commerce/payment-offer-preflight", kind: "paid" }],
   ["/commerce/settlement-proof", { route: "/commerce/settlement-proof", kind: "paid" }],
   ["/chain/transaction-receipt", { route: "/chain/transaction-receipt", kind: "paid" }],
+  ["/chain/solana-transaction-receipt", { route: "/chain/solana-transaction-receipt", kind: "paid" }],
   ["/gateway/commerce/payment-offer-preflight", { route: "/gateway/commerce/payment-offer-preflight", kind: "paid" }],
   ["/mcp", { route: "/mcp", kind: "paid" }],
 ]);

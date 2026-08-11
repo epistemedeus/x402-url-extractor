@@ -5,9 +5,9 @@ import { decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
 
 test("publishes unique action-oriented titles for every live MCP tool", () => {
   const metadata = listMcpToolMetadata();
-  assert.equal(metadata.length, 16);
-  assert.equal(new Set(metadata.map((entry) => entry.name)).size, 16);
-  assert.equal(new Set(metadata.map((entry) => entry.title)).size, 16);
+  assert.equal(metadata.length, 17);
+  assert.equal(new Set(metadata.map((entry) => entry.name)).size, 17);
+  assert.equal(new Set(metadata.map((entry) => entry.title)).size, 17);
   for (const entry of metadata) {
     assert.match(entry.title, /^(?:Extract|Read|Scan|Generate|Enrich|Audit|Inspect|Plan|Underwrite|Replay|Preflight|Verify)\b/);
   }
@@ -27,6 +27,7 @@ test("makes each overlapping web and company tool chooseable without renaming it
   const morphoReplay = decorate("morpho_preliquidation_replay");
   const settlementProof = decorate("settlement_proof");
   const transactionReceipt = decorate("transaction_receipt");
+  const solanaTransactionReceipt = decorate("solana_transaction_receipt");
 
   assert.equal(extract.name, "extract");
   assert.match(extract.description, /Use `read` instead/);
@@ -44,6 +45,7 @@ test("makes each overlapping web and company tool chooseable without renaming it
   assert.match(morphoProtection.description, /unsigned ERC-20 approval plus Morpho call templates/);
   assert.match(settlementProof.description, /Use `payment_offer_preflight` before authorization/);
   assert.match(transactionReceipt.description, /Use `settlement_proof` instead/);
+  assert.match(solanaTransactionReceipt.description, /use `transaction_receipt` for Base or Ethereum/);
 });
 
 test("fails closed when a live tool lacks explicit selection metadata", () => {

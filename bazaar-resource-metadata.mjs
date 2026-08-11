@@ -65,6 +65,10 @@ export const BAZAAR_RESOURCE_METADATA = Object.freeze({
     serviceName: "SameDayDesk",
     tags: Object.freeze(["transaction-receipt", "ethereum", "base", "erc20", "gas"]),
   }),
+  "/chain/solana-transaction-receipt": Object.freeze({
+    serviceName: "SameDayDesk",
+    tags: Object.freeze(["transaction-receipt", "solana", "spl-token", "usdc", "settlement"]),
+  }),
 });
 
 export function validateBazaarResourceMetadata(metadata = BAZAAR_RESOURCE_METADATA) {
