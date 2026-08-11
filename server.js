@@ -1371,8 +1371,10 @@ app.get("/chain/transaction-receipt", (req, res, next) => {
 });
 
 function declareOpportunityPreflightContract(routeKey) {
+  const post = routeKey.startsWith("POST ");
   return declareDiscoveryContract({
     routeKey,
+    ...(post ? { method: "POST", bodyType: "json" } : {}),
     input: {
       platform: "taskmarket",
       rewardUsd: 10,
