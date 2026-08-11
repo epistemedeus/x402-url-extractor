@@ -448,6 +448,11 @@ because it indexes on-chain Solana Agent Registry identities; retrieval there
 proves public identity and capability propagation, not a buyer call, settlement,
 or independent demand.
 
+Version 1.11.41 mirrors the canonical x402 v2 `Payment-Required` offer into the
+otherwise-empty 402 JSON body for registries that still index the legacy body.
+The payment-offer preflight also exposes an equivalent JSON-body POST route for
+workflow builders while preserving the validated GET route.
+
 Version 1.11.40 adds x402.jobs as a tenth public search view. The adapter uses a
 deterministic, disclosed compact keyword query because x402.jobs search is
 lexical rather than semantic, then preserves its public popularity order and

@@ -66,6 +66,7 @@ import { createCommerceTelemetry } from "./commerce-events.mjs";
 import { createCommerceSettlementReconciler } from "./commerce-settlement-reconciler.mjs";
 import { createIdempotencyReplay } from "./idempotency-replay.mjs";
 import { createMppDualStack } from "./mpp-dual-stack.mjs";
+import { legacyCompatibleX402Body } from "./x402-legacy-body.mjs";
 import {
   glamaConnectorVerification,
   x402JobsVerification,
@@ -263,6 +264,7 @@ app.use(express.json({
     req.rawBody = Buffer.from(buffer);
   },
 }));
+app.use(legacyCompatibleX402Body);
 
 const commerceTelemetry = createCommerceTelemetry();
 app.use(commerceTelemetry.middleware);
@@ -589,12 +591,20 @@ const mppDualStack = createMppDualStack({
   payTo: PAY_TO,
   publicUrl: PUBLIC_URL,
   realm: new URL(PUBLIC_URL).hostname,
-  routes: RESOURCES.map((resource) => ({
-    amount: atomicUsdcToDisplay(resource.amount),
-    description: resource.description,
-    method: "GET",
-    path: new URL(resource.url).pathname,
-  })),
+  routes: [
+    ...RESOURCES.map((resource) => ({
+      amount: atomicUsdcToDisplay(resource.amount),
+      description: resource.description,
+      method: "GET",
+      path: new URL(resource.url).pathname,
+    })),
+    {
+      amount: atomicUsdcToDisplay(RESOURCES[13].amount),
+      description: RESOURCES[13].description,
+      method: "POST",
+      path: "/commerce/payment-offer-preflight",
+    },
+  ],
   secretKey: process.env.MPP_SECRET_KEY,
 });
 
@@ -916,7 +926,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.11.40",
+      version: "1.11.41",
       description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, machine-payment preflight, wallet context, and Morpho decision evidence. Pay per call through Base x402 or native MPP, with a Circle Gateway Nanopayments path for gasless batched USDC.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
@@ -955,7 +965,36 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       "/platforms": { get: { summary: "Human-readable Settlement Radar health cards.", responses: { "200": { description: "HTML platform health index" } } } },
       "/work/opportunity-preflight": { get: { summary: RESOURCES[11].description, parameters: [{ name: "platform", in: "query", required: false, schema: { type: "string", example: "taskmarket" } }, { name: "rewardUsd", in: "query", required: true, schema: { type: "number", exclusiveMinimum: 0 } }, { name: "hours", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "hourlyCostUsd", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "computeUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "mandatorySpendUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "reusableValueUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "selectionProbabilityPct", in: "query", required: false, schema: { type: "number", minimum: 0, maximum: 100 } }, { name: "competition", in: "query", required: false, schema: { type: "integer", minimum: 0, default: 0 } }, { name: "slots", in: "query", required: false, schema: { type: "integer", minimum: 1, default: 1 } }, { name: "agentAccess", in: "query", required: false, schema: { type: "string", enum: ["agent_allowed", "agent_only", "mixed", "human_only", "unknown"], default: "unknown" } }, { name: "acceptance", in: "query", required: false, schema: { type: "string", enum: ["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"], default: "unknown" } }, { name: "settlement", in: "query", required: false, schema: { type: "string", enum: ["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"], default: "unknown" } }], responses: { "200": { description: "deterministic opportunity economics and evidence preflight" }, "400": { description: "invalid required input, charged nothing" }, "402": { description: `payment required (x402, ${OPPORTUNITY_PREFLIGHT_PRICE} USDC base)` } } } },
       "/distribution/agent-discoverability-audit": { get: { summary: RESOURCES[12].description, parameters: [{ name: "origin", in: "query", required: true, description: "Public HTTPS origin of the machine service, with no path or query.", schema: { type: "string", format: "uri", example: "https://agents.samedaydesk.com" } }, { name: "intent", in: "query", required: true, description: "Brand-blind capability description used as the registry query.", schema: { type: "string", minLength: 20, maxLength: 500, example: "extract a public web page into structured JSON metadata headings links and JSON-LD" } }, { name: "route", in: "query", required: false, description: "Expected exact path whose presence should be checked.", schema: { type: "string", pattern: "^/[^?#]*$", example: "/extract" } }, { name: "payTo", in: "query", required: false, description: "Optional EVM settlement address used to identify aliased service origins.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" } }], responses: { "200": { description: "brand-blind point-in-time discovery ranks, coverage, route presence, and method limits" }, "400": { description: "invalid or branded input, charged nothing" }, "402": { description: `payment required (x402, ${AGENT_DISCOVERABILITY_AUDIT_PRICE} USDC base)` } } } },
-      "/commerce/payment-offer-preflight": { get: { summary: RESOURCES[13].description, parameters: [{ name: "url", in: "query", required: true, description: "Exact public HTTPS GET route to inspect without credentials or payment.", schema: { type: "string", format: "uri", maxLength: 2048, example: "https://agents.samedaydesk.com/defi/morpho-position?address=0x8ee9c15c3e5332cbc6ef39a2bb036c63c6549b6e" } }], responses: { "200": { description: "normalized x402 and MPP offers, binding checks, economic parity, and a bounded decision" }, "400": { description: "invalid or credential-bearing target, charged nothing" }, "402": { description: `payment required (x402, ${PAYMENT_OFFER_PREFLIGHT_PRICE} USDC base)` }, "502": { description: "target DNS, transport, redirect, or challenge failure after the paid attempt" } } } },
+      "/commerce/payment-offer-preflight": {
+        get: { summary: RESOURCES[13].description, parameters: [{ name: "url", in: "query", required: true, description: "Exact public HTTPS GET route to inspect without credentials or payment.", schema: { type: "string", format: "uri", maxLength: 2048, example: "https://agents.samedaydesk.com/defi/morpho-position?address=0x8ee9c15c3e5332cbc6ef39a2bb036c63c6549b6e" } }], responses: { "200": { description: "normalized x402 and MPP offers, binding checks, economic parity, and a bounded decision" }, "400": { description: "invalid or credential-bearing target, charged nothing" }, "402": { description: `payment required (x402, ${PAYMENT_OFFER_PREFLIGHT_PRICE} USDC base)` }, "502": { description: "target DNS, transport, redirect, or challenge failure after the paid attempt" } } },
+        post: {
+          operationId: "preflightPaymentOfferForWorkflow",
+          tags: ["Agent Operations"],
+          summary: `${RESOURCES[13].description} JSON-body form for machine workflow builders.`,
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: { url: { type: "string", format: "uri", maxLength: 2048 } },
+                  required: ["url"],
+                  additionalProperties: false,
+                },
+              },
+            },
+          },
+          responses: {
+            "200": { description: "normalized x402 and MPP offers, binding checks, economic parity, and a bounded decision" },
+            "400": { description: "invalid or missing target, charged nothing" },
+            "402": { description: `payment required (x402 or MPP, ${PAYMENT_OFFER_PREFLIGHT_PRICE} USDC base)` },
+            "502": { description: "target DNS, transport, redirect, or challenge failure after the paid attempt" },
+          },
+          "x-payment-info": profile === "mpp"
+            ? mppPaymentInfoFor(RESOURCES[13])
+            : agentCashPaymentInfoFor(RESOURCES[13]),
+        },
+      },
       "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "structured data" }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
       "/read": { get: { summary: RESOURCES[1].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "markdown" }, "402": { description: `payment required (x402, ${READ_PRICE} USDC base)` } } } },
       "/scan": { get: { summary: RESOURCES[2].description, parameters: [{ name: "repo", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "security risk report" }, "402": { description: `payment required (x402, ${SCAN_PRICE} USDC base)` } } } },
@@ -1127,9 +1166,21 @@ app.get("/distribution/agent-discoverability-audit", (req, res, next) => {
 // Reject malformed, credential-bearing, non-HTTPS, or local targets before a
 // payment challenge. DNS resolution and the headers-only target request happen
 // only after settlement because they are the work this route sells.
+const hasPaymentCredential = (req) => Boolean(
+  req.get("payment-signature") ||
+  req.get("x-payment") ||
+  req.get("x-payment-signature") ||
+  /^Payment\s+/i.test(req.get("authorization") || "")
+);
+
 const validatePaymentOfferPreflightRequest = (req, res, next) => {
   try {
-    normalizePaymentTarget(req.query.url);
+    const url = req.method === "POST" ? req.body?.url : req.query.url;
+    // Permit the empty unauthenticated POST used by registry discovery to
+    // reach the payment challenge. A paid request still requires a valid URL
+    // before the facilitator is asked to verify or settle anything.
+    if (req.method === "POST" && !url && !hasPaymentCredential(req)) return next();
+    normalizePaymentTarget(url);
     return next();
   } catch (error) {
     return res.status(400).json({
@@ -1141,6 +1192,7 @@ const validatePaymentOfferPreflightRequest = (req, res, next) => {
   }
 };
 app.get(["/commerce/payment-offer-preflight", CIRCLE_GATEWAY_PATH], validatePaymentOfferPreflightRequest);
+app.post("/commerce/payment-offer-preflight", validatePaymentOfferPreflightRequest);
 
 // The paid route. Native MPP challenges are merged into the same unpaid 402,
 // while the existing extension-rich x402 middleware remains authoritative for
@@ -1862,6 +1914,15 @@ const x402Paywall = paymentMiddleware(
           }),
         },
       },
+      "POST /commerce/payment-offer-preflight": {
+        ...bazaarResourceMetadataFor("/commerce/payment-offer-preflight"),
+        accepts: [{ scheme: "exact", price: PAYMENT_OFFER_PREFLIGHT_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description: RESOURCES[13].description,
+        mimeType: "application/json",
+        extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
+        },
+      },
     },
     resourceServer
   );
@@ -1869,7 +1930,8 @@ const x402Paywall = paymentMiddleware(
 const servePaymentOfferPreflight = async (req, res) => {
   try {
     res.set("Cache-Control", "no-store");
-    return res.json(await paymentOfferPreflight({ url: req.query.url }));
+    const url = req.method === "POST" ? req.body?.url : req.query.url;
+    return res.json(await paymentOfferPreflight({ url }));
   } catch (error) {
     const status = error instanceof PaymentOfferPreflightError
       ? Math.max(400, Math.min(599, Number(error.statusCode) || 502))
@@ -2106,6 +2168,7 @@ app.get("/distribution/agent-discoverability-audit", async (req, res) => {
 // Paid: credential-free, headers-only x402 and MPP payment-offer inspection.
 // URL syntax and obvious local targets were already rejected before payment.
 app.get("/commerce/payment-offer-preflight", servePaymentOfferPreflight);
+app.post("/commerce/payment-offer-preflight", servePaymentOfferPreflight);
 
 // One root, negotiated by audience. Browser navigation gets a fast human map;
 // API clients, curl, and agents retain the stable JSON descriptor.
@@ -2210,7 +2273,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.11.40" },
+      serverInfo: { name: "x402-data-gateway", version: "1.11.41" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
