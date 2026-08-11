@@ -123,14 +123,14 @@ const PAY_TO = process.env.PAY_TO || "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee
 // Network: "eip155:8453" = Base MAINNET (real USDC). "eip155:84532" = Base Sepolia (testnet).
 const NETWORK = process.env.NETWORK || "eip155:8453";
 
-// Price per request (USDC). Repriced 2026-06-24 off the $0.01 floor toward the
-// observed x402 center of gravity (~$0.05-0.50): commodity extract/read at $0.05,
-// the differentiated supply-chain /scan at $0.20 (no competitor in the census does
-// pre-install repo scanning). Each is independently env-overridable; PRICE is the
-// legacy shared fallback for extract/read.
+// Price per request (USDC). A 2026-08-11 brand-blind live-market screen found
+// directly competing extraction and Markdown routes concentrated around
+// $0.002-$0.008 and $0.005-$0.030 respectively. Keep the two low-cost commodity
+// routes at the shared $0.005 conversion-test price while preserving independent
+// environment overrides for every product. PRICE remains the generic fallback.
 const PRICE = process.env.PRICE || "$0.05";
-const EXTRACT_PRICE = process.env.EXTRACT_PRICE || PRICE;
-const READ_PRICE = process.env.READ_PRICE || PRICE;
+const EXTRACT_PRICE = process.env.EXTRACT_PRICE || "$0.005";
+const READ_PRICE = process.env.READ_PRICE || "$0.005";
 const SCAN_PRICE = process.env.SCAN_PRICE || "$0.20";
 // SchemaForge: generates a paste-ready, corpus-tuned JSON-LD bundle + gap diff. Differentiated -> $0.25.
 const SCHEMAFORGE_PRICE = process.env.SCHEMAFORGE_PRICE || "$0.25";
