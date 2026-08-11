@@ -237,6 +237,14 @@ events, and canonical USDC transfers. Invalid hashes and unsupported networks
 are rejected before payment. Raw logs, wallet access, signing, and broadcast are
 outside the product boundary.
 
+Version 1.12.1 repairs the authenticated delivery boundary for the Solana
+`/commerce/payment-offer-preflight` storefront. After the Solana gateway has
+verified and settled its own x402 or MPP payment, its private internal header
+now reaches the deterministic product directly instead of encountering a
+second Base payment gate. Requests without the exact private header retain the
+ordinary Base x402 and MPP behavior. Target credentials and target payments
+remain outside the preflight product boundary.
+
 Version 1.11.23 adds a narrow compatibility bridge for MCP clients that retry a
 paid `tools/call` with the x402 `PAYMENT-SIGNATURE` HTTP header but fail to copy
 the same signed payload into `_meta["x402/payment"]`. The merchant decodes only

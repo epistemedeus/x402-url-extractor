@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  createInternalPaymentOfferPreflightHandler,
   createInternalOpportunityPreflightHandler,
   internalGatewayAuthorized,
 } from "./internal-opportunity-gateway.mjs";
@@ -90,4 +91,64 @@ test("authorized gateway returns a bounded delivery error", async () => {
     error: "rewardUsd is required",
     boundary: "No source-platform account, claim, bid, payment, or submission was touched.",
   });
+});
+
+test("authorized Solana payment-offer delivery bypasses the duplicate Base gate", async () => {
+  let captured;
+  const handler = createInternalPaymentOfferPreflightHandler({
+    token: TOKEN,
+    paymentOfferPreflight: async (input) => {
+      captured = input;
+      return {
+        ok: true,
+        product: "samedaydesk-payment-offer-preflight",
+        decision: "authorize",
+      };
+    },
+  });
+  const res = responseRecorder();
+  await handler({
+    headers: { "x-samedaydesk-internal": TOKEN },
+    query: { url: "https://example.com/paid" },
+  }, res, () => assert.fail("authorized request must not reach the Base paywall"));
+
+  assert.deepEqual(captured, { url: "https://example.com/paid" });
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.product, "samedaydesk-payment-offer-preflight");
+  assert.equal(res.body.delivery.transport, "pay-solana-gateway");
+  assert.equal(res.body.delivery.upstreamAuthenticated, true);
+  assert.equal(res.headers["cache-control"], "no-store");
+  assert.equal(res.headers["x-robots-tag"], "noindex, nofollow");
+});
+
+test("unauthorized payment-offer delivery still reaches the ordinary Base gate", async () => {
+  let nextCalls = 0;
+  const handler = createInternalPaymentOfferPreflightHandler({
+    token: TOKEN,
+    paymentOfferPreflight: async () => assert.fail("unauthorized request must not run work"),
+  });
+  const res = responseRecorder();
+  await handler({ headers: {}, query: {} }, res, () => { nextCalls += 1; });
+  assert.equal(nextCalls, 1);
+  assert.equal(res.body, null);
+});
+
+test("authorized payment-offer errors preserve a bounded target-payment boundary", async () => {
+  const error = new Error("target challenge was malformed");
+  error.code = "invalid_challenge";
+  error.statusCode = 502;
+  const handler = createInternalPaymentOfferPreflightHandler({
+    token: TOKEN,
+    paymentOfferPreflight: async () => { throw error; },
+  });
+  const res = responseRecorder();
+  await handler({
+    headers: { "x-samedaydesk-internal": TOKEN },
+    query: { url: "https://example.com/paid" },
+  }, res, () => assert.fail("authorized request must not reach the Base paywall"));
+
+  assert.equal(res.statusCode, 502);
+  assert.equal(res.body.code, "invalid_challenge");
+  assert.equal(res.body.boundary.targetPaymentSent, false);
+  assert.match(res.body.boundary.gatewayPayment, /gateway owns/);
 });

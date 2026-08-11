@@ -51,7 +51,10 @@ import {
   opportunityPreflight,
   opportunityPreflightTrial,
 } from "./opportunity-preflight.mjs";
-import { createInternalOpportunityPreflightHandler } from "./internal-opportunity-gateway.mjs";
+import {
+  createInternalOpportunityPreflightHandler,
+  createInternalPaymentOfferPreflightHandler,
+} from "./internal-opportunity-gateway.mjs";
 import {
   agentDiscoverabilityAudit,
   normalizeDiscoverabilityAuditInput,
@@ -302,6 +305,10 @@ app.get("/work/opportunity-preflight", createInternalOpportunityPreflightHandler
   token: process.env.COMMERCE_INTERNAL_TOKEN,
   getPlatformHealthCard,
   opportunityPreflight,
+}));
+app.get("/commerce/payment-offer-preflight", createInternalPaymentOfferPreflightHandler({
+  token: process.env.COMMERCE_INTERNAL_TOKEN,
+  paymentOfferPreflight,
 }));
 
 // the402 marketplace bridge. Unlike the public x402 routes, the marketplace
