@@ -445,6 +445,11 @@ aggregator surface because its catalog includes ecosystem records such as
 Coinbase-origin supply; its retrieval rank is useful, but is not independent
 underlying supply.
 
+Version 1.11.36 expands the Solana identity metadata with the real route-level
+capabilities and the Base and Solana OpenAPI, skill, x402, and MPP discovery
+surfaces after the first frozen 8004Market benchmark exposed zero capability
+retrieval from the broader launch description.
+
 Version 1.11.35 adds `/.well-known/agent-registration.json`, a durable
 ERC-8004-compatible registration document for the Solana Agent Registry. It
 binds the existing MCP and A2A surfaces, the Solana x402 and MPP storefront,

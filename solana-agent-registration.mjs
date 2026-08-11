@@ -23,12 +23,16 @@ export function buildSolanaAgentRegistration({ publicUrl, agentAsset } = {}) {
   return {
     type: "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
     name: "SameDayDesk Machine Commerce",
-    description: "Deterministic agent-facing APIs with machine discovery, x402 and MPP payment offers, receipts, replay protection, and direct USDC settlement on Base and Solana.",
+    description: "Machine-paid APIs for web extraction to structured JSON and Markdown, GitHub repository security scans, Schema.org JSON-LD generation, company and Base wallet enrichment, AI-search audits, Morpho borrower position, protection, market underwriting and PreLiquidation replay, agent-work economics, cross-registry discoverability, and x402/MPP payment-offer preflight. MCP, A2A, OpenAPI, x402 and MPP settle USDC on Base and Solana.",
     services: [
       { name: "MCP", endpoint: `${origin}/mcp` },
       { name: "A2A", endpoint: `${origin}/.well-known/agent-card.json` },
-      { name: "x402", endpoint: `${SOLANA_PAID_ORIGIN}/.well-known/x402` },
-      { name: "MPP", endpoint: `${SOLANA_PAID_ORIGIN}/mpp-openapi.json` },
+      { name: "OpenAPI", endpoint: `${origin}/openapi.json` },
+      { name: "SKILL", endpoint: `${origin}/skill.md` },
+      { name: "x402", endpoint: `${origin}/.well-known/x402` },
+      { name: "MPP", endpoint: `${origin}/mpp-openapi.json` },
+      { name: "x402-solana", endpoint: `${SOLANA_PAID_ORIGIN}/.well-known/x402` },
+      { name: "MPP-solana", endpoint: `${SOLANA_PAID_ORIGIN}/mpp-openapi.json` },
       {
         name: "agentWallet",
         endpoint: `solana:${SOLANA_MAINNET_CHAIN_ID}:${SOLANA_MERCHANT_WALLET}`,
