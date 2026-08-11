@@ -110,3 +110,27 @@ test("contains one source failure while preserving the other observations", asyn
   assert.equal(result.sources["coinbase-bazaar"].status, "error");
   assert.equal(JSON.stringify(result).includes("secret"), false);
 });
+
+test("keeps dynamic or absent MPPScan prices unknown rather than free", async () => {
+  const fetchImpl = async (url) => {
+    const target = String(url);
+    if (target.includes("mppscan.com")) return response({ result: { data: { json: [{
+      origin: "https://other.example",
+      title: "Dynamic",
+      endpoint: { method: "GET", path: "/route", summary: "dynamic priced service", price: "0.10-1000.00 USD" },
+    }] } } });
+    if (target.includes("coinbase.com")) return response({ resources: [] });
+    if (target.includes("agent402.tools")) return response({ results: [] });
+    if (target.includes("agentic.market")) return response({ services: [] });
+    if (target.includes("circle.com")) return response({ items: [] });
+    if (target.includes("agentictrade.io")) return response({ services: [] });
+    if (target.includes("mpp.dev")) return response({ services: [] });
+    throw new Error(`unexpected ${target}`);
+  };
+  const result = await agentDiscoverabilityAudit({
+    origin: "https://api.example.com",
+    intent: "find a dynamically priced machine service for agents",
+  }, { fetchImpl, now: 0 });
+  assert.equal(result.sources["mppscan-public-search"].topResults[0].priceUsd, null);
+  assert.equal(result.sources["mppscan-public-search"].topResults[0].score, null);
+});

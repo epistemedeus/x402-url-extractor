@@ -98,8 +98,8 @@ function candidate({ name, url, origin, route, description, priceUsd, score, pay
     origin: safeOrigin,
     route: cleanString(route, 200) || (safeUrl ? new URL(safeUrl).pathname : null),
     description: cleanString(description, 500),
-    priceUsd: Number.isFinite(Number(priceUsd)) ? Number(priceUsd) : null,
-    score: Number.isFinite(Number(score)) ? Number(score) : null,
+    priceUsd: priceUsd !== null && priceUsd !== undefined && Number.isFinite(Number(priceUsd)) ? Number(priceUsd) : null,
+    score: score !== null && score !== undefined && Number.isFinite(Number(score)) ? Number(score) : null,
     payTo: /^0x[0-9a-f]{40}$/i.test(String(payTo || "")) ? String(payTo).toLowerCase() : null,
   };
 }
