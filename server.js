@@ -1370,6 +1370,79 @@ app.get("/chain/transaction-receipt", (req, res, next) => {
   }
 });
 
+function declareOpportunityPreflightContract(routeKey) {
+  return declareDiscoveryContract({
+    routeKey,
+    input: {
+      platform: "taskmarket",
+      rewardUsd: 10,
+      hours: 0.25,
+      hourlyCostUsd: 4,
+      computeUsd: 0.5,
+      mandatorySpendUsd: 0,
+      reusableValueUsd: 1,
+      selectionProbabilityPct: 2,
+      competition: 80,
+      slots: 1,
+      agentAccess: "agent_allowed",
+      acceptance: "discretionary",
+      settlement: "escrow",
+    },
+    inputSchema: {
+      type: "object",
+      properties: {
+        platform: { type: "string", description: "Optional platform ID from the free Settlement Radar, such as gofrantic or taskmarket." },
+        rewardUsd: { type: "number", exclusiveMinimum: 0, description: "Gross reward in USD or stablecoin-equivalent units." },
+        hours: { type: "number", minimum: 0, description: "Expected execution and QA hours." },
+        hourlyCostUsd: { type: "number", minimum: 0, description: "Caller's fully loaded hourly opportunity cost." },
+        computeUsd: { type: "number", minimum: 0, default: 0 },
+        mandatorySpendUsd: { type: "number", minimum: 0, default: 0 },
+        reusableValueUsd: { type: "number", minimum: 0, default: 0, description: "Conservative value retained even if the reward is not selected." },
+        selectionProbabilityPct: { type: "number", minimum: 0, maximum: 100, description: "Caller-supplied overall reward probability. Omit to receive verify_first." },
+        competition: { type: "integer", minimum: 0, default: 0 },
+        slots: { type: "integer", minimum: 1, default: 1 },
+        agentAccess: { type: "string", enum: ["agent_allowed", "agent_only", "mixed", "human_only", "unknown"], default: "unknown" },
+        acceptance: { type: "string", enum: ["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"], default: "unknown" },
+        settlement: { type: "string", enum: ["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"], default: "unknown" },
+      },
+      required: ["rewardUsd", "hours", "hourlyCostUsd"],
+    },
+    output: {
+      example: {
+        ok: true,
+        product: "samedaydesk-opportunity-preflight",
+        version: "1.0.0",
+        decision: "abandon",
+        input: { platform: "taskmarket", rewardUsd: 10, hours: 0.25, hourlyCostUsd: 4, selectionProbabilityPct: 2 },
+        economics: {
+          totalAtRiskUsd: 1.5,
+          expectedSurplusUsd: -0.3,
+          breakEvenSelectionProbabilityPct: 5,
+          equalEntryShareReferencePct: 1.25,
+        },
+        gates: { hardBlocks: [], requiredChecks: [], warnings: ["platform_has_observed_oversupply_or_selection_dilution"] },
+        platformEvidence: null,
+        boundary: "Deterministic preflight only; this call does not claim, bid, pay, or submit.",
+      },
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        ok: { type: "boolean" },
+        product: { type: "string", const: "samedaydesk-opportunity-preflight" },
+        version: { type: "string" },
+        decision: { type: "string", enum: ["attempt", "verify_first", "abandon"] },
+        input: { type: "object" },
+        economics: { type: "object" },
+        gates: { type: "object" },
+        platformEvidence: { type: ["object", "null"] },
+        boundary: { type: "string" },
+      },
+      required: ["ok", "product", "version", "decision", "input", "economics", "gates", "platformEvidence", "boundary"],
+    },
+  });
+}
+
 // The paid route. Native MPP challenges are merged into the same unpaid 402,
 // while the existing extension-rich x402 middleware remains authoritative for
 // x402 credentials. A settled MPP credential bypasses only the duplicate gate.
@@ -1894,76 +1967,7 @@ const x402Paywall = paymentMiddleware(
         mimeType: "application/json",
         extensions: {
           ...COMMON_COMMERCE_EXTENSIONS,
-          ...declareDiscoveryContract({
-            routeKey: "GET /work/opportunity-preflight",
-            input: {
-              platform: "taskmarket",
-              rewardUsd: 10,
-              hours: 0.25,
-              hourlyCostUsd: 4,
-              computeUsd: 0.5,
-              mandatorySpendUsd: 0,
-              reusableValueUsd: 1,
-              selectionProbabilityPct: 2,
-              competition: 80,
-              slots: 1,
-              agentAccess: "agent_allowed",
-              acceptance: "discretionary",
-              settlement: "escrow",
-            },
-            inputSchema: {
-              type: "object",
-              properties: {
-                platform: { type: "string", description: "Optional platform ID from the free Settlement Radar, such as gofrantic or taskmarket." },
-                rewardUsd: { type: "number", exclusiveMinimum: 0, description: "Gross reward in USD or stablecoin-equivalent units." },
-                hours: { type: "number", minimum: 0, description: "Expected execution and QA hours." },
-                hourlyCostUsd: { type: "number", minimum: 0, description: "Caller's fully loaded hourly opportunity cost." },
-                computeUsd: { type: "number", minimum: 0, default: 0 },
-                mandatorySpendUsd: { type: "number", minimum: 0, default: 0 },
-                reusableValueUsd: { type: "number", minimum: 0, default: 0, description: "Conservative value retained even if the reward is not selected." },
-                selectionProbabilityPct: { type: "number", minimum: 0, maximum: 100, description: "Caller-supplied overall reward probability. Omit to receive verify_first." },
-                competition: { type: "integer", minimum: 0, default: 0 },
-                slots: { type: "integer", minimum: 1, default: 1 },
-                agentAccess: { type: "string", enum: ["agent_allowed", "agent_only", "mixed", "human_only", "unknown"], default: "unknown" },
-                acceptance: { type: "string", enum: ["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"], default: "unknown" },
-                settlement: { type: "string", enum: ["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"], default: "unknown" },
-              },
-              required: ["rewardUsd", "hours", "hourlyCostUsd"],
-            },
-            output: {
-              example: {
-                ok: true,
-                product: "samedaydesk-opportunity-preflight",
-                version: "1.0.0",
-                decision: "abandon",
-                input: { platform: "taskmarket", rewardUsd: 10, hours: 0.25, hourlyCostUsd: 4, selectionProbabilityPct: 2 },
-                economics: {
-                  totalAtRiskUsd: 1.5,
-                  expectedSurplusUsd: -0.3,
-                  breakEvenSelectionProbabilityPct: 5,
-                  equalEntryShareReferencePct: 1.25,
-                },
-                gates: { hardBlocks: [], requiredChecks: [], warnings: ["platform_has_observed_oversupply_or_selection_dilution"] },
-                platformEvidence: null,
-                boundary: "Deterministic preflight only; this call does not claim, bid, pay, or submit.",
-              },
-            },
-            outputSchema: {
-              type: "object",
-              properties: {
-                ok: { type: "boolean" },
-                product: { type: "string", const: "samedaydesk-opportunity-preflight" },
-                version: { type: "string" },
-                decision: { type: "string", enum: ["attempt", "verify_first", "abandon"] },
-                input: { type: "object" },
-                economics: { type: "object" },
-                gates: { type: "object" },
-                platformEvidence: { type: ["object", "null"] },
-                boundary: { type: "string" },
-              },
-              required: ["ok", "product", "version", "decision", "input", "economics", "gates", "platformEvidence", "boundary"],
-            },
-          }),
+          ...declareOpportunityPreflightContract("GET /work/opportunity-preflight"),
         },
       },
       "HEAD /work/opportunity-preflight": {
@@ -1978,7 +1982,10 @@ const x402Paywall = paymentMiddleware(
         accepts: [{ scheme: "exact", price: OPPORTUNITY_PREFLIGHT_PRICE, network: NETWORK, payTo: PAY_TO }],
         description: RESOURCES[11].description,
         mimeType: "application/json",
-        extensions: { ...COMMON_COMMERCE_EXTENSIONS },
+        extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
+          ...declareOpportunityPreflightContract("POST /work/opportunity-preflight"),
+        },
       },
       "GET /distribution/agent-discoverability-audit": {
         ...bazaarResourceMetadataFor("/distribution/agent-discoverability-audit"),

@@ -263,6 +263,13 @@ three fixed same-origin JSON paths, pins a fully public DNS answer, rejects
 redirects, caps each response at 512 KiB, and times out after five seconds. The
 default remains catalog-only and does not fetch the target origin.
 
+Version 1.12.4 gives the JSON `POST /work/opportunity-preflight` probe the same
+complete Bazaar input and output contract as the existing GET route. This
+removes machine-discovery schema errors without changing the price, validation,
+handler, response, or payment behavior. Empty unauthenticated POST remains a
+discovery-only challenge; a paid call must still supply and bind the required
+body.
+
 Version 1.11.23 adds a narrow compatibility bridge for MCP clients that retry a
 paid `tools/call` with the x402 `PAYMENT-SIGNATURE` HTTP header but fail to copy
 the same signed payload into `_meta["x402/payment"]`. The merchant decodes only
