@@ -52,6 +52,10 @@ const TOOL_METADATA = Object.freeze({
     title: "Preflight x402 and MPP Offer",
     description: "Compare x402 and MPP payment challenges and terms for one exact public HTTPS GET route before buyer authorization, including URL and realm binding, expiry, and cross-protocol economic parity. Use `agent_discoverability_audit` instead when you need to know whether catalogs rank or expose a service. This tool uses no target credential, signs and sends no target payment, follows no redirect, reads no response body, and does not establish seller trust or settlement reliability.",
   },
+  settlement_proof: {
+    title: "Verify Base USDC Settlement",
+    description: "Verify one claimed canonical Base USDC settlement after execution by matching a successful transaction receipt to the exact recipient, atomic amount, and optional payer. Use `payment_offer_preflight` before authorization when you need to inspect an unpaid x402 or MPP offer instead. This tool reads only public Base receipt and log data; it reads no merchant ledger and performs no wallet, signing, broadcast, custody, or execution action.",
+  },
 });
 
 export function decorateMcpTool(tool) {

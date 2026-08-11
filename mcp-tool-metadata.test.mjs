@@ -5,11 +5,11 @@ import { decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
 
 test("publishes unique action-oriented titles for every live MCP tool", () => {
   const metadata = listMcpToolMetadata();
-  assert.equal(metadata.length, 14);
-  assert.equal(new Set(metadata.map((entry) => entry.name)).size, 14);
-  assert.equal(new Set(metadata.map((entry) => entry.title)).size, 14);
+  assert.equal(metadata.length, 15);
+  assert.equal(new Set(metadata.map((entry) => entry.name)).size, 15);
+  assert.equal(new Set(metadata.map((entry) => entry.title)).size, 15);
   for (const entry of metadata) {
-    assert.match(entry.title, /^(?:Extract|Read|Scan|Generate|Enrich|Audit|Inspect|Plan|Underwrite|Replay|Preflight)\b/);
+    assert.match(entry.title, /^(?:Extract|Read|Scan|Generate|Enrich|Audit|Inspect|Plan|Underwrite|Replay|Preflight|Verify)\b/);
   }
 });
 
@@ -25,6 +25,7 @@ test("makes each overlapping web and company tool chooseable without renaming it
   const morphoProtection = decorate("morpho_protection");
   const morphoUnderwrite = decorate("morpho_market_underwrite");
   const morphoReplay = decorate("morpho_preliquidation_replay");
+  const settlementProof = decorate("settlement_proof");
 
   assert.equal(extract.name, "extract");
   assert.match(extract.description, /Use `read` instead/);
@@ -40,6 +41,7 @@ test("makes each overlapping web and company tool chooseable without renaming it
   assert.match(morphoUnderwrite.description, /Use `morpho_position` or `morpho_protection`/);
   assert.match(morphoReplay.description, /Use `morpho_market_underwrite`/);
   assert.match(morphoProtection.description, /unsigned ERC-20 approval plus Morpho call templates/);
+  assert.match(settlementProof.description, /Use `payment_offer_preflight` before authorization/);
 });
 
 test("fails closed when a live tool lacks explicit selection metadata", () => {

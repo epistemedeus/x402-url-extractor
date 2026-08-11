@@ -61,6 +61,11 @@ import {
   normalizePaymentTarget,
   paymentOfferPreflight,
 } from "./payment-offer-preflight.mjs";
+import {
+  SettlementProofError,
+  normalizeSettlementProofInput,
+  settlementProof,
+} from "./settlement-proof.mjs";
 import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
 import { createCommerceTelemetry } from "./commerce-events.mjs";
@@ -150,6 +155,8 @@ const AGENT_DISCOVERABILITY_AUDIT_PRICE = process.env.AGENT_DISCOVERABILITY_AUDI
 // Credential-free x402/MPP offer normalization and parity checks for buyer agents.
 // The low price is deliberate: this is a pre-authorization safety primitive.
 const PAYMENT_OFFER_PREFLIGHT_PRICE = process.env.PAYMENT_OFFER_PREFLIGHT_PRICE || "$0.005";
+// Independent post-settlement proof for one canonical Base USDC transfer.
+const SETTLEMENT_PROOF_PRICE = process.env.SETTLEMENT_PROOF_PRICE || "$0.005";
 
 // "$0.05" -> "50000" atomic USDC units (6 decimals) so the discovery docs
 // (/.well-known/x402, /openapi.json) always match the paywall price exactly.
@@ -386,7 +393,7 @@ app.get("/healthz", async (_req, res) => {
     ok: true,
     payTo: PAY_TO,
     network: NETWORK,
-    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE, "morpho-protection": MORPHO_PROTECTION_PRICE, "morpho-market-underwrite": MORPHO_MARKET_UNDERWRITE_PRICE, "morpho-preliquidation-replay": MORPHO_PRELIQUIDATION_REPLAY_PRICE, "opportunity-preflight": OPPORTUNITY_PREFLIGHT_PRICE, "agent-discoverability-audit": AGENT_DISCOVERABILITY_AUDIT_PRICE, "payment-offer-preflight": PAYMENT_OFFER_PREFLIGHT_PRICE },
+    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE, "morpho-protection": MORPHO_PROTECTION_PRICE, "morpho-market-underwrite": MORPHO_MARKET_UNDERWRITE_PRICE, "morpho-preliquidation-replay": MORPHO_PRELIQUIDATION_REPLAY_PRICE, "opportunity-preflight": OPPORTUNITY_PREFLIGHT_PRICE, "agent-discoverability-audit": AGENT_DISCOVERABILITY_AUDIT_PRICE, "payment-offer-preflight": PAYMENT_OFFER_PREFLIGHT_PRICE, "settlement-proof": SETTLEMENT_PROOF_PRICE },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
     paymentProtocols: {
@@ -544,6 +551,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/work/opportunity-preflight`, amount: priceToAtomic(OPPORTUNITY_PREFLIGHT_PRICE), description: "Agent work opportunity -> deterministic attempt, verify-first, or abandon preflight using caller-supplied cost and selection assumptions plus dated platform evidence. Returns break-even probability, expected surplus, hard gates, and source-linked evidence. No claim, bid, payment, or submission.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/distribution/agent-discoverability-audit`, amount: priceToAtomic(AGENT_DISCOVERABILITY_AUDIT_PRICE), description: "Buyer-intent rank audit for one x402 or MPP service across Coinbase Bazaar, Coinbase Agentic Market, Agent402, Circle Agent Marketplace, AgenticTrade, the official MPP catalog, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Returns registry-native position, dependency-labeled source coverage, competitors above the target, expected-route presence, coverage gaps, evidence-based next actions, source outages, and explicit method limits. No catalog credentials or payments.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/commerce/payment-offer-preflight`, amount: priceToAtomic(PAYMENT_OFFER_PREFLIGHT_PRICE), description: "Compare x402 and MPP payment challenges and terms before buyer authorization for one exact public HTTPS GET URL. Returns normalized offers, URL and realm binding checks, expiry and economic-parity findings, and an explicit parseable, review-required, or no-offer decision. Uses no target credential, signs nothing, sends no payment, follows no redirects, and reads no response body.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/commerce/settlement-proof`, amount: priceToAtomic(SETTLEMENT_PROOF_PRICE), description: "Verify one claimed canonical Base USDC settlement against the successful on-chain transaction receipt. Binds an exact transaction hash, recipient, atomic amount, and optional payer; returns a deterministic verified or not-verified result, block time, mismatch findings, and no private merchant-ledger data. Read-only and performs no wallet, signing, broadcast, custody, or execution action.", mimeType: "application/json" },
 ];
 const circleGateway = buildCircleGatewayRoute({
   sellerAddress: PAY_TO,
@@ -584,6 +592,7 @@ const RESOURCE_DISCOVERY_METADATA = {
   "/work/opportunity-preflight": { operationId: "preflightAgentOpportunity", tags: ["Agent Operations"] },
   "/distribution/agent-discoverability-audit": { operationId: "auditAgentDiscoverability", tags: ["Distribution"] },
   "/commerce/payment-offer-preflight": { operationId: "preflightPaymentOffer", tags: ["Agent Operations"] },
+  "/commerce/settlement-proof": { operationId: "verifyBaseUsdcSettlement", tags: ["Blockchain"] },
 };
 
 const mppDualStack = createMppDualStack({
@@ -933,8 +942,8 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.11.46",
-      description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, machine-payment preflight, wallet context, and Morpho decision evidence. Pay per call through Base x402 or native MPP, with a Circle Gateway Nanopayments path for gasless batched USDC.",
+      version: "1.11.47",
+      description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, payment preflight and settlement proof, wallet context, and Morpho decision evidence. Pay per call through Base x402 or native MPP, with a Circle Gateway Nanopayments path for gasless batched USDC.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
     },
@@ -1002,6 +1011,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
             : agentCashPaymentInfoFor(RESOURCES[13]),
         },
       },
+      "/commerce/settlement-proof": { get: { summary: RESOURCES[14].description, parameters: [{ name: "transactionHash", in: "query", required: true, description: "Base mainnet transaction hash whose canonical USDC Transfer logs should be checked.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" } }, { name: "recipient", in: "query", required: true, description: "Expected USDC recipient.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" } }, { name: "amountAtomic", in: "query", required: true, description: "Expected positive USDC amount in six-decimal atomic units.", schema: { type: "string", pattern: "^[1-9][0-9]{0,20}$", maxLength: 21 } }, { name: "payer", in: "query", required: false, description: "Optional expected USDC payer.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" } }], responses: { "200": { description: "deterministic canonical Base USDC settlement proof or mismatch findings" }, "400": { description: "invalid settlement claim, charged nothing" }, "402": { description: `payment required (x402 or MPP, ${SETTLEMENT_PROOF_PRICE} USDC base)` } } } },
       "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "structured data" }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
       "/read": { get: { summary: RESOURCES[1].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "markdown" }, "402": { description: `payment required (x402, ${READ_PRICE} USDC base)` } } } },
       "/scan": { get: { summary: RESOURCES[2].description, parameters: [{ name: "repo", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "security risk report" }, "402": { description: `payment required (x402, ${SCAN_PRICE} USDC base)` } } } },
@@ -1261,6 +1271,23 @@ const validatePaymentOfferPreflightRequest = (req, res, next) => {
 };
 app.get(["/commerce/payment-offer-preflight", CIRCLE_GATEWAY_PATH], validatePaymentOfferPreflightRequest);
 app.post("/commerce/payment-offer-preflight", validatePaymentOfferPreflightRequest);
+
+// Reject malformed settlement claims before payment. Receipt and block reads
+// happen only after settlement because they are the work this route sells.
+app.get("/commerce/settlement-proof", (req, res, next) => {
+  try {
+    normalizeSettlementProofInput(req.query);
+    return next();
+  } catch (error) {
+    return res.status(400).json({
+      ok: false,
+      product: "samedaydesk-base-usdc-settlement-proof",
+      code: error instanceof SettlementProofError ? error.code : "invalid_settlement_request",
+      error: String(error?.message || error),
+      charged: false,
+    });
+  }
+});
 
 // The paid route. Native MPP challenges are merged into the same unpaid 402,
 // while the existing extension-rich x402 middleware remains authoritative for
@@ -2060,6 +2087,69 @@ const x402Paywall = paymentMiddleware(
           }),
         },
       },
+      "GET /commerce/settlement-proof": {
+        ...bazaarResourceMetadataFor("/commerce/settlement-proof"),
+        accepts: [{ scheme: "exact", price: SETTLEMENT_PROOF_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description: RESOURCES[14].description,
+        mimeType: "application/json",
+        extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
+          ...declareDiscoveryContract({
+            routeKey: "GET /commerce/settlement-proof",
+            input: {
+              transactionHash: "0xcfcbb367fecf27052db9ca855e5146e99cacbce1cab94f20f9f95a74170a8987",
+              recipient: PAY_TO,
+              amountAtomic: "5000",
+              payer: "0x990CC4f469dfe854c16C601c7B8eE6534B267f17",
+            },
+            inputSchema: {
+              type: "object",
+              properties: {
+                transactionHash: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$", description: "Base mainnet transaction hash containing the claimed canonical USDC transfer." },
+                recipient: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$", description: "Expected canonical Base USDC recipient." },
+                amountAtomic: { type: "string", pattern: "^[1-9][0-9]{0,20}$", maxLength: 21, description: "Expected positive USDC amount in six-decimal atomic units." },
+                payer: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$", description: "Optional expected canonical Base USDC payer." },
+              },
+              required: ["transactionHash", "recipient", "amountAtomic"],
+              additionalProperties: false,
+            },
+            output: {
+              example: {
+                ok: true,
+                product: "samedaydesk-base-usdc-settlement-proof",
+                version: "1.0.0",
+                checkedAt: "2026-08-11T08:30:00.000Z",
+                decision: "verified",
+                request: { transactionHash: "0xcfcbb3...a8987", recipient: PAY_TO, amountAtomic: "5000", payer: "0x990C...7f17" },
+                chain: { id: 8453, name: "Base mainnet", network: "eip155:8453" },
+                asset: { address: USDC_ASSET, symbol: "USDC", decimals: 6 },
+                transaction: { hash: "0xcfcbb3...a8987", status: "success", blockNumber: "49823378", blockTimestamp: "2026-08-11T08:15:03.000Z" },
+                settlement: { verified: true, exactTransferCount: 1, recipientTransferCount: 1, observed: { payer: "0x990C...7f17", recipient: PAY_TO, amountAtomic: "5000", amountUsdc: "0.005" } },
+                findings: [],
+                boundary: { source: "public Base mainnet receipt and logs", privateLedgerRead: false, auditedTransactionModified: false, walletAccessed: false, executionAuthorized: false },
+              },
+            },
+            outputSchema: {
+              type: "object",
+              properties: {
+                ok: { type: "boolean" },
+                product: { type: "string", const: "samedaydesk-base-usdc-settlement-proof" },
+                version: { type: "string" },
+                checkedAt: { type: "string" },
+                decision: { type: "string", enum: ["verified", "not_verified", "receipt_unavailable"] },
+                request: { type: "object" },
+                chain: { type: "object" },
+                asset: { type: "object" },
+                transaction: { type: "object" },
+                settlement: { type: "object" },
+                findings: { type: "array" },
+                boundary: { type: "object" },
+              },
+              required: ["ok", "product", "version", "checkedAt", "decision", "request", "chain", "asset", "transaction", "settlement", "findings", "boundary"],
+            },
+          }),
+        },
+      },
     },
     resourceServer
   );
@@ -2087,6 +2177,11 @@ const servePaymentOfferPreflight = async (req, res) => {
       },
     });
   }
+};
+
+const serveSettlementProof = async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  return res.json(await settlementProof(req.query));
 };
 
 if (circleGateway.enabled) {
@@ -2309,6 +2404,7 @@ app.get("/distribution/agent-discoverability-audit", async (req, res) => {
 // URL syntax and obvious local targets were already rejected before payment.
 app.get("/commerce/payment-offer-preflight", servePaymentOfferPreflight);
 app.post("/commerce/payment-offer-preflight", servePaymentOfferPreflight);
+app.get("/commerce/settlement-proof", serveSettlementProof);
 
 // One root, negotiated by audience. Browser navigation gets a fast human map;
 // API clients, curl, and agents retain the stable JSON descriptor.
@@ -2373,6 +2469,7 @@ app.get("/", (req, res) => {
       "GET /work/opportunity-preflight?rewardUsd=&hours=&hourlyCostUsd=": `${OPPORTUNITY_PREFLIGHT_PRICE} - deterministic attempt, verify-first, or abandon economics with optional dated platform evidence.`,
       "GET /distribution/agent-discoverability-audit?origin=&intent=&route=&payTo=": `${AGENT_DISCOVERABILITY_AUDIT_PRICE} - brand-blind agent discovery rank, dependency-labeled coverage, expected-route presence, and competing results across nine machine-service views.`,
       "GET /commerce/payment-offer-preflight?url=": `${PAYMENT_OFFER_PREFLIGHT_PRICE} - compare and normalize x402 and MPP payment challenges and terms, binding checks, expiry, and economic parity before buyer authorization.`,
+      "GET /commerce/settlement-proof?transactionHash=&recipient=&amountAtomic=&payer=": `${SETTLEMENT_PROOF_PRICE} - verify one claimed canonical Base USDC transfer against the successful on-chain receipt, with exact recipient, amount, and optional payer binding.`,
       ...(circleGateway.enabled ? {
         [`GET ${CIRCLE_GATEWAY_PATH}?url=`]: `${PAYMENT_OFFER_PREFLIGHT_PRICE} - the same preflight through Circle Gateway gasless batched USDC Nanopayments.`,
       } : {}),
@@ -2413,7 +2510,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.11.46" },
+      serverInfo: { name: "x402-data-gateway", version: "1.11.47" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
@@ -2429,6 +2526,7 @@ import("./mcp-server.mjs")
         { name: "opportunity_preflight", description: RESOURCES[11].description, price: OPPORTUNITY_PREFLIGHT_PRICE, inputSchema: { platform: z.string().max(100).optional().describe("Optional platform slug used to attach dated platform-health evidence when a matching card exists."), rewardUsd: z.number().positive().describe("Maximum gross reward in USD if the opportunity is selected and paid."), hours: z.number().min(0).max(10000).describe("Estimated human and agent work time in hours for one complete attempt."), hourlyCostUsd: z.number().min(0).max(100000).describe("Internal opportunity cost per hour in USD."), computeUsd: z.number().min(0).default(0).describe("Expected model, API, hosting, and compute spend in USD for one attempt."), mandatorySpendUsd: z.number().min(0).default(0).describe("Non-recoverable cash spend in USD required before the opportunity can settle."), reusableValueUsd: z.number().min(0).default(0).describe("Conservative USD value of reusable code, research, distribution, or other assets created by the attempt."), selectionProbabilityPct: z.number().min(0).max(100).optional().describe("Caller-supplied probability, from 0 to 100, of receiving the reward; omit to receive a verify-first decision."), competition: z.number().int().min(0).default(0).describe("Known number of competing submissions or workers; use 0 when unknown."), slots: z.number().int().min(1).default(1).describe("Number of independently paid winner or worker slots."), agentAccess: z.enum(["agent_allowed", "agent_only", "mixed", "human_only", "unknown"]).default("unknown").describe("Whether the platform explicitly allows agent participation, is agent-only, mixes agents and humans, is human-only, or remains unknown."), acceptance: z.enum(["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"]).default("unknown").describe("How completion is accepted: deterministic proof, machine score, review deadline, discretionary judgment, or unknown."), settlement: z.enum(["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"]).default("unknown").describe("How the reward is funded and paid: direct, escrow, platform balance, discretionary, unfunded, or unknown.") }, run: (a) => opportunityPreflight(a, { platformCard: a.platform ? getPlatformHealthCard(a.platform.toLowerCase()) : null }), tags: ["work", "bounty", "economics", "preflight", "settlement-evidence"] },
         { name: "agent_discoverability_audit", description: RESOURCES[12].description, price: AGENT_DISCOVERABILITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Public HTTPS service origin"), intent: z.string().min(20).max(500).describe("Brand-blind capability description"), route: z.string().regex(/^\/[^?#]*$/).optional().describe("Optional expected exact path"), payTo: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional EVM payTo for alias matching") }, run: (a) => agentDiscoverabilityAudit(a), tags: ["distribution", "discovery", "x402", "mpp", "agent402"] },
         { name: "payment_offer_preflight", description: RESOURCES[13].description, price: PAYMENT_OFFER_PREFLIGHT_PRICE, inputSchema: { url: z.string().url().max(2048).describe("Exact public HTTPS GET route whose unpaid x402 and MPP challenge headers should be inspected before buyer authorization. Credential-like query keys, fragments, unresolved parameters, local hosts, redirects, and non-public IPs are rejected.") }, run: (a) => paymentOfferPreflight(a), tags: ["payments", "x402", "mpp", "buyer-safety", "preflight"] },
+        { name: "settlement_proof", description: RESOURCES[14].description, price: SETTLEMENT_PROOF_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Base mainnet transaction hash containing the claimed canonical USDC transfer."), recipient: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Expected canonical Base USDC recipient."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,20}$/).describe("Expected positive USDC amount in six-decimal atomic units."), payer: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional expected canonical Base USDC payer.") }, run: (a) => settlementProof(a), tags: ["payments", "x402", "settlement", "reconciliation", "base-usdc"] },
       ].map(decorateMcpTool),
     })
   )
