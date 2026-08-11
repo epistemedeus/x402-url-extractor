@@ -448,6 +448,15 @@ because it indexes on-chain Solana Agent Registry identities; retrieval there
 proves public identity and capability propagation, not a buyer call, settlement,
 or independent demand.
 
+Version 1.11.38 adds a distinct Circle Gateway Nanopayments access path for
+payment-offer preflight at the same 0.005-USDC price. It uses the official
+`@circle-fin/x402-batching` 3.3.0 seller middleware, advertises
+`GatewayWalletBatched` x402 requirements across the networks Circle reports at
+runtime, and settles into the seller's Gateway balance. The existing Base
+exact, native MPP, MCP, product implementation, and direct routes are unchanged,
+so a Gateway outage cannot block them. The main OpenAPI and x402 manifest expose
+the alternative path; the MPP OpenAPI does not mislabel it as an MPP route.
+
 Version 1.11.37 adds 8004Market as a ninth public search view in the paid
 discoverability audit. It matches the target by durable service origins and
 routes embedded in the indexed Solana identity metadata while preserving
