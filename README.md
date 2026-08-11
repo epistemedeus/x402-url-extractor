@@ -270,6 +270,14 @@ handler, response, or payment behavior. Empty unauthenticated POST remains a
 discovery-only challenge; a paid call must still supply and bind the required
 body.
 
+Version 1.13.0 adds a 0.002-USDC finalized Solana transaction-receipt product.
+It validates the signature and any optional mint, recipient, amount, and payer
+claim before payment, then returns bounded finalized status, fee, SPL-token
+owner deltas, canonical-USDC deltas, and deterministic match findings. It reads
+public RPC state only after settlement and has no wallet, signing, custody, or
+broadcast authority. The route is available through Base x402, native MPP,
+MCP, A2A, and the separate Solana payment gateway.
+
 Version 1.11.23 adds a narrow compatibility bridge for MCP clients that retry a
 paid `tools/call` with the x402 `PAYMENT-SIGNATURE` HTTP header but fail to copy
 the same signed payload into `_meta["x402/payment"]`. The merchant decodes only
