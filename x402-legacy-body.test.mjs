@@ -85,8 +85,6 @@ test("projects canonical POST body schema into legacy bodyFields for registry UI
   assert.deepEqual(body.accepts[0].outputSchema.input.body, { url: "https://example.com" });
   assert.deepEqual(body.accepts[0].outputSchema.input.bodyFields.url, {
     type: "string",
-    format: "uri",
-    maxLength: 2048,
     description: "Exact public HTTPS URL.",
     required: true,
     default: "https://example.com",

@@ -22,8 +22,15 @@ function legacyInputFields(discovery, schema) {
     }
     const required = new Set(Array.isArray(container.required) ? container.required : []);
     return Object.fromEntries(Object.entries(container.properties).map(([name, definition]) => {
-      const field = definition && typeof definition === "object" ? structuredClone(definition) : {};
+      const source = definition && typeof definition === "object" ? definition : {};
       const example = examples && typeof examples === "object" ? examples[name] : undefined;
+      const field = {
+        ...(typeof source.type === "string" ? { type: source.type } : {}),
+        ...(typeof source.description === "string" ? { description: source.description } : {}),
+        ...(Array.isArray(source.enum) ? { enum: structuredClone(source.enum) } : {}),
+        ...(source.items && typeof source.items === "object" ? { items: structuredClone(source.items) } : {}),
+        ...(["string", "number", "boolean"].includes(typeof source.default) ? { default: source.default } : {}),
+      };
       return [name, {
         ...field,
         required: required.has(name),
