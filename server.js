@@ -68,6 +68,7 @@ import { glamaConnectorVerification } from "./directory-verification.mjs";
 import { renderGatewayLanding, wantsGatewayHtml } from "./gateway-landing.mjs";
 import { decorateMcpTool } from "./mcp-tool-metadata.mjs";
 import { BUYER_POLICY_REFERENCE } from "./buyer-policy-reference.mjs";
+import { buildSolanaAgentRegistration } from "./solana-agent-registration.mjs";
 import {
   A2A_VERSION,
   buildAgentCard,
@@ -476,6 +477,15 @@ app.get("/go/manychat", async (_req, res) => {
 // --- x402 discovery document (/.well-known/x402) so agents + indexes (x402scan,
 // domain crawlers) self-discover our paid resources. Free route, before the paywall.
 const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
+const solanaAgentRegistration = buildSolanaAgentRegistration({
+  publicUrl: PUBLIC_URL,
+  ...(process.env.SOLANA_AGENT_ASSET ? { agentAsset: process.env.SOLANA_AGENT_ASSET } : {}),
+});
+
+app.get("/.well-known/agent-registration.json", (_req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  return res.json(solanaAgentRegistration);
+});
 const USDC_BY_NETWORK = {
   "eip155:8453": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
   "eip155:84532": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
@@ -648,6 +658,7 @@ const machineActionCatalog = () => ({
     mcp: `${PUBLIC_URL}/mcp`,
     a2aAgentCard: `${PUBLIC_URL}/.well-known/agent-card.json`,
     glamaVerification: `${PUBLIC_URL}/.well-known/glama.json`,
+    solanaAgentRegistration: `${PUBLIC_URL}/.well-known/agent-registration.json`,
   },
 });
 
@@ -760,6 +771,7 @@ ${line("/commerce/payment-offer-preflight", PAYMENT_OFFER_PREFLIGHT_PRICE, "exac
 - Skill contract: ${PUBLIC_URL}/skill.md
 - Action catalog: ${PUBLIC_URL}/api/actions
 - A2A agent card: ${PUBLIC_URL}/.well-known/agent-card.json
+- Solana Agent Registry metadata: ${PUBLIC_URL}/.well-known/agent-registration.json
 - Aggregate demand telemetry: ${PUBLIC_URL}/v0/commerce-demand.json
 - Buyer policy reference: ${BUYER_POLICY_REFERENCE.release}
 - Source: https://github.com/epistemedeus/x402-url-extractor
@@ -828,7 +840,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     openapi: "3.1.0",
     info: {
       title: "SameDayDesk machine commerce gateway",
-      version: "1.11.34",
+      version: "1.11.35",
       description: "Deterministic agent APIs for web and company intelligence, repository security, agent-work economics, machine-service discoverability, machine-payment preflight, wallet context, and Morpho decision evidence. Pay per call in Base USDC through x402 or native MPP.",
       contact: { email: "contact@samedaydesk.com", url: "https://samedaydesk.com" },
       "x-guidance": "Choose the narrowest route that answers the task. Supply required query parameters, inspect the HTTP 402 x402 and MPP offers, enforce your own price and network policy, then retry the identical method, path, and query with one supported payment credential. Treat runtime payment challenges as authoritative.",
@@ -861,6 +873,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       "/v0/commerce-demand.json": { get: { summary: "Privacy-safe aggregate external machine-commerce observations.", parameters: [{ name: "days", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 365, default: 90 } }], responses: { "200": { description: "Aggregate discovery, challenge, paid-success, unmatched-request, and high-precision semantic-candidate counts. Known internal and crawler traffic is excluded; unidentified automation can remain." } } } },
       "/.well-known/agent-card.json": { get: { summary: "A2A v1.0 agent card for the free machine-commerce storefront.", responses: { "200": { description: "A2A AgentCard" } } } },
       "/.well-known/glama.json": { get: { summary: "Project-owned Glama connector maintainer verification.", responses: { "200": { description: "Glama connector verification" } } } },
+      "/.well-known/agent-registration.json": { get: { summary: "ERC-8004-compatible SameDayDesk registration metadata for the Solana Agent Registry.", responses: { "200": { description: "SameDayDesk agent identity, service endpoints, settlement wallet, and x402 support" } } } },
       "/a2a/message:send": { post: { summary: "Return the exact-price x402 and MPP action catalog as an A2A direct message.", responses: { "200": { description: "A2A message containing the action catalog" }, "400": { description: "Invalid request or unsupported A2A version" } } } },
       "/platforms": { get: { summary: "Human-readable Settlement Radar health cards.", responses: { "200": { description: "HTML platform health index" } } } },
       "/work/opportunity-preflight": { get: { summary: RESOURCES[11].description, parameters: [{ name: "platform", in: "query", required: false, schema: { type: "string", example: "taskmarket" } }, { name: "rewardUsd", in: "query", required: true, schema: { type: "number", exclusiveMinimum: 0 } }, { name: "hours", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "hourlyCostUsd", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "computeUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "mandatorySpendUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "reusableValueUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "selectionProbabilityPct", in: "query", required: false, schema: { type: "number", minimum: 0, maximum: 100 } }, { name: "competition", in: "query", required: false, schema: { type: "integer", minimum: 0, default: 0 } }, { name: "slots", in: "query", required: false, schema: { type: "integer", minimum: 1, default: 1 } }, { name: "agentAccess", in: "query", required: false, schema: { type: "string", enum: ["agent_allowed", "agent_only", "mixed", "human_only", "unknown"], default: "unknown" } }, { name: "acceptance", in: "query", required: false, schema: { type: "string", enum: ["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"], default: "unknown" } }, { name: "settlement", in: "query", required: false, schema: { type: "string", enum: ["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"], default: "unknown" } }], responses: { "200": { description: "deterministic opportunity economics and evidence preflight" }, "400": { description: "invalid required input, charged nothing" }, "402": { description: `payment required (x402, ${OPPORTUNITY_PREFLIGHT_PRICE} USDC base)` } } } },
@@ -901,6 +914,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     "/v0/cards.json": { operationId: "listPlatformHealthCards", tags: ["Settlement Radar"] },
     "/v0/commerce-demand.json": { operationId: "getCommerceDemand", tags: ["Settlement Radar"] },
     "/.well-known/agent-card.json": { operationId: "getA2aAgentCard", tags: ["A2A"] },
+    "/.well-known/agent-registration.json": { operationId: "getSolanaAgentRegistration", tags: ["A2A"] },
     "/a2a/message:send": { operationId: "sendA2aMessage", tags: ["A2A"] },
     "/platforms": { operationId: "viewSettlementRadar", tags: ["Settlement Radar"] },
   };
@@ -2003,6 +2017,7 @@ app.get("/", (req, res) => {
       a2aAgentCard: "/.well-known/agent-card.json",
       a2aSendMessage: "POST /a2a/message:send",
       glamaVerification: "/.well-known/glama.json",
+      solanaAgentRegistration: "/.well-known/agent-registration.json",
       aggregateDemand: "/v0/commerce-demand.json",
       declaredAgentSourceHeader: {
         header: "X-SameDayDesk-Agent-Source",
@@ -2069,7 +2084,7 @@ import("./mcp-server.mjs")
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: "1.11.34" },
+      serverInfo: { name: "x402-data-gateway", version: "1.11.35" },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },

@@ -445,6 +445,14 @@ aggregator surface because its catalog includes ecosystem records such as
 Coinbase-origin supply; its retrieval rank is useful, but is not independent
 underlying supply.
 
+Version 1.11.35 adds `/.well-known/agent-registration.json`, a durable
+ERC-8004-compatible registration document for the Solana Agent Registry. It
+binds the existing MCP and A2A surfaces, the Solana x402 and MPP storefront,
+the dedicated Solana settlement wallet, and explicit x402 support. The
+on-chain asset identifier is injected only after successful registration, so
+the URI stays stable and the document never invents an identity before it
+exists.
+
 Version 1.11.34 adds PayanAgent public search as an eighth registry view with an
 explicit dependency label. Version 1.11.33 added MPPScan public search; its
 public text-search order remains separate from the direct-listing state.
