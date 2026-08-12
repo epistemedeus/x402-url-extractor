@@ -1,5 +1,6 @@
 import { lookup as dnsLookup } from "node:dns/promises";
 import { request as httpsRequest } from "node:https";
+import { evaluateListingIdentity } from "agent-payment-policy";
 
 import {
   PaymentOfferPreflightError,
@@ -633,31 +634,61 @@ function summarizePrice(items, input) {
   };
 }
 
-function summarizeIdentity(items, input) {
+function listingIdentityRecords(source, items, input) {
+  return items.flatMap((item, index) => {
+    const url = [...new Set([
+      item.url,
+      ...(item.serviceUrls || []),
+      item.origin && item.route ? `${item.origin}${item.route}` : null,
+    ].filter(Boolean))].find((candidateUrl) => httpsUrl(candidateUrl)?.pathname === input.route);
+    const parsed = httpsUrl(url);
+    if (!parsed) return [];
+    const record = {
+      source,
+      url: parsed.toString(),
+      ...(item.payTo ? { settlementIdentity: item.payTo } : {}),
+      rank: index + 1,
+    };
+    try {
+      evaluateListingIdentity({
+        schemaVersion: "agent-payment-policy.listing-identity-observation.v1",
+        target: {
+          canonicalOrigin: input.origin,
+          route: input.route,
+          ...(input.payTo ? { settlementIdentity: input.payTo } : {}),
+        },
+        sources: [source],
+        records: [record],
+      }, { now: 0 });
+      return [record];
+    } catch {
+      return [];
+    }
+  }).slice(0, 100);
+}
+
+function summarizeIdentity(source, items, input) {
   if (!input.route) return null;
-  const routeItems = items.filter((item) => targetMatch(item, input) && routeMatch(item, input.route));
-  const canonicalRecords = routeItems.filter((item) => item.origin === input.origin);
-  const aliasOrigins = [...new Set(routeItems
-    .map((item) => item.origin)
-    .filter((origin) => origin && origin !== input.origin))].sort();
-  let status = "canonical";
-  if (!routeItems.length) status = "route_absent";
-  else if (routeItems.length > 1) status = aliasOrigins.length ? "alias_collision" : "duplicate_records";
-  else if (!canonicalRecords.length && aliasOrigins.length) status = "alias_only";
+  const report = evaluateListingIdentity({
+    schemaVersion: "agent-payment-policy.listing-identity-observation.v1",
+    target: {
+      canonicalOrigin: input.origin,
+      route: input.route,
+      ...(input.payTo ? { settlementIdentity: input.payTo } : {}),
+    },
+    sources: [source],
+    records: listingIdentityRecords(source, items, input),
+  });
+  const observation = report.sources[0];
   return {
-    status,
-    exactRouteRecordCount: routeItems.length,
-    canonicalRecordCount: canonicalRecords.length,
-    aliasOrigins,
-    identityBasis: "canonical_origin_or_caller_payto_match",
-    ownershipProven: aliasOrigins.length === 0,
-    evidenceBoundary: aliasOrigins.length
-      ? "A non-canonical record matched the caller-supplied payTo and exact route. This links advertised settlement identity but does not prove hostname ownership."
-      : "Canonical status means the observed record uses the caller-supplied origin; it does not prove marketplace ownership or control.",
+    ...observation,
+    schemaVersion: report.schemaVersion,
+    decision: report.decision,
+    identityBasis: "agent-payment-policy@0.8.0",
   };
 }
 
-function summarizeSource(items, input) {
+function summarizeSource(source, items, input) {
   const targetRanks = [];
   const expectedRouteRanks = [];
   items.forEach((item, index) => {
@@ -675,7 +706,7 @@ function summarizeSource(items, input) {
     expectedRouteFound: input.route ? expectedRouteRanks.length > 0 : null,
     expectedRouteRanks: input.route ? expectedRouteRanks : [],
     priceObservation: summarizePrice(items, input),
-    identityObservation: summarizeIdentity(items, input),
+    identityObservation: summarizeIdentity(source, items, input),
     targetResults: items
       .map((item, index) => ({ rank: index + 1, ...item }))
       .filter((item) => targetMatch(item, input))
@@ -732,7 +763,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
   SOURCE_ORDER.forEach((source, index) => {
     const result = settled[index];
     sources[source] = result.status === "fulfilled"
-      ? summarizeSource(result.value, comparisonInput)
+      ? summarizeSource(source, result.value, comparisonInput)
       : { status: "error", error: cleanString(result.reason?.message || "catalog unavailable", 200) };
   });
   if (sources["x402jobs-public-search"].status === "ok") {

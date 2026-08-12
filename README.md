@@ -303,6 +303,14 @@ now returns `identityBasis`, `ownershipProven`, and a plain-language evidence
 boundary so an automated repair can preserve the canonical record without
 retiring a third-party endpoint on circumstantial evidence.
 
+Version 1.16.4 replaces the route-audit's private identity classifier with the
+public, provenance-bearing `agent-payment-policy@0.8.0` primitive. Catalogs
+that return no matching records are now still recorded as checked and
+`route_absent`; canonical origin matches remain observations rather than
+ownership claims. This creates one shared, installable contract for the live
+seller and independent buyer tooling without adding credentials, wallet
+access, signing, payment, or retained settlement identities.
+
 Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
 before startup. Six newer routes previously settled successfully while Coinbase
 rejected their discovery metadata because their output examples omitted fields

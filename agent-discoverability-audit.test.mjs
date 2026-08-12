@@ -388,9 +388,13 @@ test("reports duplicate and alias-only identities without treating them as deman
   assert.equal(result.sources["coinbase-bazaar"].identityObservation.status, "alias_collision");
   assert.equal(result.sources["coinbase-bazaar"].identityObservation.exactRouteRecordCount, 2);
   assert.deepEqual(result.sources["coinbase-bazaar"].identityObservation.aliasOrigins, ["https://legacy.example.net"]);
+  assert.equal(result.sources["coinbase-bazaar"].identityObservation.schemaVersion, "agent-payment-policy.listing-identity-report.v1");
+  assert.equal(result.sources["coinbase-bazaar"].identityObservation.decision, "review_required");
+  assert.equal(result.sources["coinbase-bazaar"].identityObservation.identityBasis, "agent-payment-policy@0.8.0");
   assert.equal(result.sources["coinbase-bazaar"].identityObservation.ownershipProven, false);
   assert.match(result.sources["coinbase-bazaar"].identityObservation.evidenceBoundary, /does not prove hostname ownership/);
   assert.equal(result.sources["agent402-router"].identityObservation.status, "alias_only");
+  assert.equal(result.sources["x402jobs-public-search"].identityObservation.status, "route_absent");
   assert.deepEqual(result.summary.identityConflictSources, ["coinbase-bazaar", "agent402-router"]);
   assert.equal(result.summary.identityConflictSourceCount, 2);
   assert.ok(result.findings.some((finding) => finding.source === "agent402-router" && finding.finding === "route_listing_identity_conflict"));
