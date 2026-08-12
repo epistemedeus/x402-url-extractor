@@ -36,6 +36,8 @@ test("requires a public origin and a brand-blind capability intent", () => {
   assert.throws(() => normalizeDiscoverabilityAuditInput({ origin: "https://api.example.com", intent: "find api.example.com for website extraction" }), /brand-blind/);
   assert.throws(() => normalizeDiscoverabilityAuditInput({ origin: "https://api.example.com", intent: "too short" }), /20 to 500/);
   assert.throws(() => normalizeDiscoverabilityAuditInput({ origin: "https://api.example.com", intent: "extract a public website into structured JSON", route: "/extract?x=1" }), /route/);
+  assert.throws(() => normalizeDiscoverabilityAuditInput({ origin: "https://api.example.com", intent: "extract a public website into structured JSON", expectedPriceUsd: "0.005" }), /requires an exact route/);
+  assert.throws(() => normalizeDiscoverabilityAuditInput({ origin: "https://api.example.com", intent: "extract a public website into structured JSON", route: "/extract", expectedPriceUsd: "0.0000001" }), /at most six fractional digits/);
   assert.equal(normalizeDiscoverabilityAuditInput({
     origin: "https://api.example.com",
     intent: "extract a public website into structured JSON metadata",
@@ -47,6 +49,21 @@ test("requires a public origin and a brand-blind capability intent", () => {
     intent: "extract a public website into structured JSON metadata",
     surfaceAudit: "true",
   }).surfaceAudit, true);
+  assert.deepEqual(normalizeDiscoverabilityAuditInput({
+    origin: "https://api.example.com",
+    intent: "extract a public website into structured JSON metadata",
+    route: "/extract",
+    expectedPriceUsd: "0.005000",
+  }), {
+    origin: "https://api.example.com",
+    hostname: "api.example.com",
+    intent: "extract a public website into structured JSON metadata",
+    route: "/extract",
+    payTo: null,
+    surfaceAudit: false,
+    expectedPriceUsd: 0.005,
+    expectedPriceAtomic: "5000",
+  });
   assert.throws(() => normalizeDiscoverabilityAuditInput({
     origin: "https://api.example.com",
     intent: "extract a public website into structured JSON metadata",
@@ -165,7 +182,7 @@ test("preserves registry ranks and identifies the target by origin or payTo", as
     if (target.includes("agentictrade.io")) return response({ services: [{
       name: "Target Catalog",
       description: "extract a public website into structured JSON metadata",
-      endpoint: "https://api.example.com/api/actions",
+      endpoint: "https://api.example.com/extract",
       pricing: { price_per_call: "0.0" },
     }] });
     if (target.includes("mpp.dev")) return response({ services: [{
@@ -209,6 +226,7 @@ test("preserves registry ranks and identifies the target by origin or payTo", as
     intent: "extract a public website into structured JSON metadata",
     route: "/extract",
     payTo,
+    expectedPriceUsd: "0.05",
   }, { fetchImpl, now: 0 });
   assert.equal(result.summary.targetFoundSourceCount, 9);
   assert.equal(result.summary.targetFoundSourceFamilyCount, 8);
@@ -230,6 +248,17 @@ test("preserves registry ranks and identifies the target by origin or payTo", as
   assert.ok(result.nextActions.some((action) => action.source === "circle-marketplace"));
   assert.equal(result.safety.paymentSentToCatalogs, false);
   assert.equal(result.input.brandBlind, true);
+  assert.equal(result.input.expectedPriceAtomic, "50000");
+  assert.equal(result.summary.matchedPriceSourceCount, 7);
+  assert.equal(result.summary.driftedPriceSourceCount, 1);
+  assert.equal(result.summary.unknownPriceSourceCount, 2);
+  assert.deepEqual(result.summary.driftedPriceSources, ["agentictrade-catalog"]);
+  assert.equal(result.sources["coinbase-bazaar"].priceObservation.status, "matched");
+  assert.equal(result.sources["agentictrade-catalog"].priceObservation.status, "drift");
+  assert.equal(result.sources["8004market-public-search"].priceObservation.status, "price_unknown");
+  assert.ok(result.findings.some((finding) => finding.source === "agentictrade-catalog" && finding.finding === "expected_route_price_drift"));
+  assert.ok(result.nextActions.some((action) => action.source === "agentictrade-catalog" && action.action === "reconcile_stale_catalog_price"));
+  assert.match(result.boundary, /caller-supplied expectation/);
 });
 
 test("contains one source failure while preserving the other observations", async () => {

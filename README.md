@@ -246,6 +246,15 @@ publishes the free construction contract. The evaluator comes from public
 `agent-payment-policy@0.6.0`, accepts no credentials or raw provider payloads,
 and keeps provider-policy and application enforcement separate.
 
+Version 1.15.1 turns first-person stale-catalog evidence into a bounded
+discoverability-audit feature. Callers can provide `expectedPriceUsd` together
+with an exact route to compare catalog-advertised route prices across the ten
+public discovery views. The result distinguishes matched, drifted, mixed,
+unknown-price, and absent-route states and returns a one-canary maximum
+remediation sequence only after owned live terms agree. It never treats the
+caller expectation as runtime truth, makes no catalog payment, and leaves
+asynchronous propagation to event-driven monitoring.
+
 Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
 before startup. Six newer routes previously settled successfully while Coinbase
 rejected their discovery metadata because their output examples omitted fields

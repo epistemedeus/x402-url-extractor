@@ -107,6 +107,19 @@ export function normalizeDiscoverabilityAuditInput(raw = {}) {
     throw new Error("surfaceAudit must be true or false");
   }
   if ([true, "true", "1"].includes(raw.surfaceAudit)) surfaceAudit = true;
+  let expectedPriceAtomic = null;
+  let expectedPriceUsd = null;
+  if (raw.expectedPriceUsd !== undefined && raw.expectedPriceUsd !== null && raw.expectedPriceUsd !== "") {
+    if (!expectedRoute) throw new Error("expectedPriceUsd requires an exact route");
+    const priceText = String(raw.expectedPriceUsd).trim();
+    if (!/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,6})?$/.test(priceText)) {
+      throw new Error("expectedPriceUsd must be a non-negative decimal with at most six fractional digits");
+    }
+    const [whole, fraction = ""] = priceText.split(".");
+    expectedPriceAtomic = (BigInt(whole) * 1_000_000n + BigInt(fraction.padEnd(6, "0"))).toString();
+    if (BigInt(expectedPriceAtomic) > 1_000_000_000_000n) throw new Error("expectedPriceUsd exceeds the supported bound");
+    expectedPriceUsd = Number(expectedPriceAtomic) / 1_000_000;
+  }
   return {
     origin: originUrl.origin,
     hostname: originUrl.hostname.toLowerCase(),
@@ -114,6 +127,8 @@ export function normalizeDiscoverabilityAuditInput(raw = {}) {
     route: expectedRoute,
     payTo,
     surfaceAudit,
+    expectedPriceUsd,
+    expectedPriceAtomic,
   };
 }
 
@@ -517,6 +532,50 @@ function routeMatch(item, route) {
   return item.route === route || item.serviceRoutes?.includes(route);
 }
 
+function observedPriceAtomic(priceUsd) {
+  if (!Number.isFinite(priceUsd) || priceUsd < 0) return null;
+  const atomic = Math.round(priceUsd * 1_000_000);
+  return Number.isSafeInteger(atomic) ? String(atomic) : null;
+}
+
+function summarizePrice(items, input) {
+  if (input.expectedPriceAtomic === null) return null;
+  const routeItems = items.filter((item) => targetMatch(item, input) && routeMatch(item, input.route));
+  if (!routeItems.length) {
+    return {
+      status: "route_absent",
+      expectedPriceUsd: input.expectedPriceUsd,
+      expectedPriceAtomic: input.expectedPriceAtomic,
+      observedPricesUsd: [],
+      observedPricesAtomic: [],
+    };
+  }
+  const observations = routeItems.flatMap((item) => {
+    const atomic = observedPriceAtomic(item.priceUsd);
+    return atomic === null ? [] : [{ usd: Number(atomic) / 1_000_000, atomic }];
+  });
+  const observedPricesAtomic = [...new Set(observations.map((item) => item.atomic))];
+  const observedPricesUsd = observedPricesAtomic.map((atomic) => Number(atomic) / 1_000_000);
+  if (!observedPricesAtomic.length) {
+    return {
+      status: "price_unknown",
+      expectedPriceUsd: input.expectedPriceUsd,
+      expectedPriceAtomic: input.expectedPriceAtomic,
+      observedPricesUsd,
+      observedPricesAtomic,
+    };
+  }
+  const matches = observedPricesAtomic.includes(input.expectedPriceAtomic);
+  const drifts = observedPricesAtomic.some((atomic) => atomic !== input.expectedPriceAtomic);
+  return {
+    status: matches && drifts ? "mixed" : matches ? "matched" : "drift",
+    expectedPriceUsd: input.expectedPriceUsd,
+    expectedPriceAtomic: input.expectedPriceAtomic,
+    observedPricesUsd,
+    observedPricesAtomic,
+  };
+}
+
 function summarizeSource(items, input) {
   const targetRanks = [];
   const expectedRouteRanks = [];
@@ -534,6 +593,7 @@ function summarizeSource(items, input) {
     bestTargetRank: targetRanks[0] ?? null,
     expectedRouteFound: input.route ? expectedRouteRanks.length > 0 : null,
     expectedRouteRanks: input.route ? expectedRouteRanks : [],
+    priceObservation: summarizePrice(items, input),
     targetResults: items
       .map((item, index) => ({ rank: index + 1, ...item }))
       .filter((item) => targetMatch(item, input))
@@ -599,6 +659,12 @@ export async function agentDiscoverabilityAudit(rawInput, {
     ? availableSourceFamilies.filter((family) => SOURCE_ORDER.some((source) =>
       SOURCE_FAMILIES[source] === family && sources[source].status === "ok" && sources[source].expectedRouteFound))
     : [];
+  const priceObservationSources = input.expectedPriceAtomic === null
+    ? []
+    : availableSources.filter((source) => sources[source].priceObservation !== null);
+  const matchedPriceSources = priceObservationSources.filter((source) => sources[source].priceObservation.status === "matched");
+  const driftedPriceSources = priceObservationSources.filter((source) => ["drift", "mixed"].includes(sources[source].priceObservation.status));
+  const unknownPriceSources = priceObservationSources.filter((source) => ["price_unknown", "route_absent"].includes(sources[source].priceObservation.status));
   const dependentSources = SOURCE_ORDER.filter((source) => DEPENDENT_SOURCES[source]);
   const independentSources = SOURCE_ORDER.filter((source) => !DEPENDENT_SOURCES[source]);
   const findings = [];
@@ -619,6 +685,38 @@ export async function agentDiscoverabilityAudit(rawInput, {
       findings.push({ source, finding: "origin_found_expected_route_absent", bestTargetRank: observation.bestTargetRank });
       nextActions.push({ source, action: "index_or_reconcile_expected_route", basis: "The seller appeared, but the requested route did not." });
       continue;
+    }
+    if (input.expectedPriceAtomic !== null && observation.priceObservation.status === "drift") {
+      findings.push({
+        source,
+        finding: "expected_route_price_drift",
+        expectedPriceAtomic: input.expectedPriceAtomic,
+        observedPricesAtomic: observation.priceObservation.observedPricesAtomic,
+      });
+      nextActions.push({
+        source,
+        action: "reconcile_stale_catalog_price",
+        basis: "Verify the seller's live unsigned payment terms first. If owned x402, MPP, OpenAPI, and manifest terms agree and this catalog documents settlement-triggered materialization, use at most one bounded owner canary, then hand propagation to event-driven monitoring.",
+      });
+    } else if (input.expectedPriceAtomic !== null && observation.priceObservation.status === "mixed") {
+      findings.push({
+        source,
+        finding: "mixed_current_and_stale_route_prices",
+        expectedPriceAtomic: input.expectedPriceAtomic,
+        observedPricesAtomic: observation.priceObservation.observedPricesAtomic,
+      });
+      nextActions.push({
+        source,
+        action: "deduplicate_or_reconcile_route_price_records",
+        basis: "The catalog exposes both the caller-expected price and at least one conflicting price for the same route. Preserve the current record and reconcile stale duplicates without repeated owner traffic.",
+      });
+    } else if (input.expectedPriceAtomic !== null && observation.priceObservation.status === "price_unknown") {
+      findings.push({ source, finding: "expected_route_price_unavailable" });
+      nextActions.push({
+        source,
+        action: "inspect_source_price_contract",
+        basis: "The expected route is present but this discovery view did not expose a parseable exact price.",
+      });
     }
     const band = observation.bestTargetRank <= 3 ? "top_3" : observation.bestTargetRank <= 10 ? "top_10" : "below_top_10";
     findings.push({ source, finding: "target_ranked", bestTargetRank: observation.bestTargetRank, band });
@@ -652,7 +750,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
   return {
     ok: true,
     product: "samedaydesk-agent-discoverability-audit",
-    version: "1.7.0",
+    version: "1.8.0",
     generatedAt: new Date(now).toISOString(),
     input: {
       origin: input.origin,
@@ -660,6 +758,8 @@ export async function agentDiscoverabilityAudit(rawInput, {
       route: input.route,
       payTo: input.payTo,
       surfaceAudit: input.surfaceAudit,
+      expectedPriceUsd: input.expectedPriceUsd,
+      expectedPriceAtomic: input.expectedPriceAtomic,
       brandBlind: true,
     },
     summary: {
@@ -676,6 +776,13 @@ export async function agentDiscoverabilityAudit(rawInput, {
       availableSourceFamilyCount: availableSourceFamilies.length,
       targetFoundSourceFamilyCount: foundSourceFamilies.length,
       expectedRouteFoundSourceFamilyCount: input.route ? routeFoundSourceFamilies.length : null,
+      priceObservationSourceCount: input.expectedPriceAtomic === null ? null : priceObservationSources.length,
+      matchedPriceSourceCount: input.expectedPriceAtomic === null ? null : matchedPriceSources.length,
+      driftedPriceSourceCount: input.expectedPriceAtomic === null ? null : driftedPriceSources.length,
+      unknownPriceSourceCount: input.expectedPriceAtomic === null ? null : unknownPriceSources.length,
+      matchedPriceSources: input.expectedPriceAtomic === null ? [] : matchedPriceSources,
+      driftedPriceSources: input.expectedPriceAtomic === null ? [] : driftedPriceSources,
+      unknownPriceSources: input.expectedPriceAtomic === null ? [] : unknownPriceSources,
       foundSourceFamilies,
       missingSourceFamilies: availableSourceFamilies.filter((family) => !foundSourceFamilies.includes(family)),
       unavailableSourceFamilies: sourceFamilies.filter((family) => !availableSourceFamilies.includes(family)),
@@ -686,7 +793,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
     targetSurfaces,
     findings,
     nextActions,
-    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata. When explicitly requested, the target-surface check reads only three fixed same-origin public JSON documents after payment.",
+    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata. A caller-supplied expected price is compared only with route-level prices exposed by each discovery view; it is not treated as runtime truth. When explicitly requested, the target-surface check reads only three fixed same-origin public JSON documents after payment.",
     sourceDependencies: DEPENDENT_SOURCES,
     safety: {
       credentialsUsed: false,
@@ -697,6 +804,6 @@ export async function agentDiscoverabilityAudit(rawInput, {
       targetOriginFetchScope: input.surfaceAudit ? Object.values(TARGET_SURFACES) : [],
       redirectsFollowed: false,
     },
-    boundary: "This is a point-in-time discovery observation, not demand, conversion, reliability, or future-rank evidence. Runtime payment terms must still be preflighted before purchase.",
+    boundary: "This is a point-in-time discovery observation, not demand, conversion, reliability, or future-rank evidence. A price match or drift compares public catalog metadata with a caller-supplied expectation, not with live unsigned terms. Runtime payment terms must still be preflighted before purchase.",
   };
 }

@@ -1,6 +1,6 @@
 {
   "name": "x402-merchant",
-  "version": "1.15.0",
+  "version": "1.15.1",
   "description": "Dual-stack x402 and MPP paid HTTP capabilities that settle USDC to our own Base wallet",
   "type": "module",
   "main": "server.js",
