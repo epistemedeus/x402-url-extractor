@@ -30,6 +30,8 @@ settlement proof, and AI-search readiness audits.
 - Agent discoverability audit: `GET /distribution/agent-discoverability-audit?origin=https://example.com&intent=extract+a+public+website+into+structured+JSON&route=/extract&runtimeUrl=https%3A%2F%2Fexample.com%2Fextract%3Furl%3Dhttps%253A%252F%252Fexample.org&surfaceAudit=true`
 - Payment offer preflight: `GET /commerce/payment-offer-preflight?url=https://example.com/paid-route`
 - Seller integrity audit: `GET /commerce/seller-integrity-audit?origin=https://seller.example&route=/paid-route&method=GET&requiredPaths=data.attributes`
+  returns a bounded advisory OpenAPI repair plan for missing buyer-required
+  paths without mutating seller files or inferring undeclared property types.
 - Base USDC settlement proof: `GET /commerce/settlement-proof?transactionHash=0x...&recipient=0x...&amountAtomic=5000`
 - Base or Ethereum transaction receipt: `GET /chain/transaction-receipt?transactionHash=0x...&network=base`
 - Wallet policy conformance: `POST /security/wallet-policy-conformance`

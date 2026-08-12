@@ -57,7 +57,7 @@ export function sellerIntegrityAuditOutputSchema() {
     properties: {
       ok: { type: "boolean" },
       product: { type: "string", const: "samedaydesk-seller-integrity-audit" },
-      version: { type: "string", const: "1.1.0" },
+      version: { type: "string", const: "1.2.0" },
       checkedAt: { type: "string", format: "date-time" },
       decision: { type: "string", enum: ["machine_buyable", "contract_ready", "repair_required"] },
       request: {
@@ -92,8 +92,47 @@ export function sellerIntegrityAuditOutputSchema() {
           economics: { type: ["object", "null"] },
           discovery: { type: ["object", "null"] },
           responseContract: { type: ["object", "null"] },
+          repairPlan: {
+            type: ["object", "null"],
+            additionalProperties: false,
+            properties: {
+              mode: { type: "string", const: "advisory_openapi_repair" },
+              requiredPaths: { type: "array", maxItems: 16, items: { type: "string" } },
+              guaranteedPaths: { type: "array", maxItems: 16, items: { type: "string" } },
+              actions: {
+                type: "array",
+                maxItems: 16,
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    requiredPath: { type: "string" },
+                    action: { type: "string", enum: ["add_property_to_required", "define_and_require_property", "define_nested_property_path"] },
+                    parentPath: { type: "string" },
+                    property: { type: "string" },
+                    propertyDeclared: { type: "boolean" },
+                    propertyType: { type: ["string", "null"] },
+                  },
+                  required: ["requiredPath", "action", "parentPath", "property", "propertyDeclared", "propertyType"],
+                },
+              },
+              complete: { type: "boolean" },
+              boundary: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  schemaMutationApplied: { type: "boolean", const: false },
+                  propertyTypesInferred: { type: "boolean", const: false },
+                  sellerRuntimeVerified: { type: "boolean", const: false },
+                  statement: { type: "string" },
+                },
+                required: ["schemaMutationApplied", "propertyTypesInferred", "sellerRuntimeVerified", "statement"],
+              },
+            },
+            required: ["mode", "requiredPaths", "guaranteedPaths", "actions", "complete", "boundary"],
+          },
         },
-        required: ["auditCompleted", "failureCode", "schemaVersion", "sellerVersions", "status", "runtimeChallengeVerified", "probe", "protocols", "valid", "findings", "economics", "discovery", "responseContract"],
+        required: ["auditCompleted", "failureCode", "schemaVersion", "sellerVersions", "status", "runtimeChallengeVerified", "probe", "protocols", "valid", "findings", "economics", "discovery", "responseContract", "repairPlan"],
       },
       nextActions: { type: "array", items: { type: "string" } },
       boundary: {
@@ -119,14 +158,14 @@ export function sellerIntegrityAuditOutputSchema() {
 export const SELLER_INTEGRITY_AUDIT_EXAMPLE = Object.freeze({
   ok: true,
   product: "samedaydesk-seller-integrity-audit",
-  version: "1.1.0",
+  version: "1.2.0",
   checkedAt: "2026-08-12T07:50:00.000Z",
   decision: "machine_buyable",
   request: { origin: "https://agents.samedaydesk.com", route: "/commerce/payment-offer-preflight", method: "GET", requiredPaths: ["decision", "offers"], requireBazaar: true },
   report: {
     auditCompleted: true,
     failureCode: null,
-    schemaVersion: "agent-payment-integrity.audit.v3",
+    schemaVersion: "agent-payment-integrity.audit.v4",
     sellerVersions: { x402: "1.18.3", mpp: "1.18.3" },
     status: 402,
     runtimeChallengeVerified: true,
@@ -137,6 +176,19 @@ export const SELLER_INTEGRITY_AUDIT_EXAMPLE = Object.freeze({
     economics: { x402: { amountAtomic: "5000" }, mpp: { amountAtomic: "5000" } },
     discovery: { bazaar: { present: true, valid: true } },
     responseContract: { decision: "admissible", requiredPaths: ["boundary", "decision", "offers", "ok"] },
+    repairPlan: {
+      mode: "advisory_openapi_repair",
+      requiredPaths: ["decision", "offers"],
+      guaranteedPaths: ["decision", "offers"],
+      actions: [],
+      complete: true,
+      boundary: {
+        schemaMutationApplied: false,
+        propertyTypesInferred: false,
+        sellerRuntimeVerified: false,
+        statement: "Apply only after the seller confirms each property's real runtime type and semantics, then rerun integrity CI.",
+      },
+    },
   },
   nextActions: [],
   boundary: {
@@ -186,7 +238,7 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
     return {
       ok: false,
       product: "samedaydesk-seller-integrity-audit",
-      version: "1.1.0",
+      version: "1.2.0",
       checkedAt: new Date().toISOString(),
       decision: "repair_required",
       request,
@@ -204,6 +256,7 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
         economics: null,
         discovery: null,
         responseContract: null,
+        repairPlan: null,
       },
       nextActions: [failureCode === "exact_route_not_declared"
         ? `Declare the exact paid ${request.method} route in the seller OpenAPI document.`
@@ -231,7 +284,7 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
   return {
     ok: decision !== "repair_required",
     product: "samedaydesk-seller-integrity-audit",
-    version: "1.1.0",
+    version: "1.2.0",
     checkedAt: report.checkedAt,
     decision,
     request,
@@ -249,6 +302,7 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
       economics: routeReport.economics,
       discovery: routeReport.discovery,
       responseContract: routeReport.responseContract,
+      repairPlan: routeReport.repairPlan,
     },
     nextActions: nextActionsFor(routeReport),
     boundary: {

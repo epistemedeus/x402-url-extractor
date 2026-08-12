@@ -9,7 +9,7 @@ import {
 } from "./seller-integrity-audit.mjs";
 
 const REPORT = {
-  schemaVersion: "agent-payment-integrity.audit.v3",
+  schemaVersion: "agent-payment-integrity.audit.v4",
   checkedAt: "2026-08-12T07:50:00.000Z",
   versions: { x402: "1.0.0", mpp: "1.0.0" },
   ok: true,
@@ -25,6 +25,14 @@ const REPORT = {
     economics: { x402: { amountAtomic: "5000" }, mpp: { amountAtomic: "5000" } },
     discovery: { bazaar: { present: true, valid: true } },
     responseContract: { decision: "admissible", requiredPaths: ["ok", "title"] },
+    repairPlan: {
+      mode: "advisory_openapi_repair",
+      requiredPaths: [],
+      guaranteedPaths: [],
+      actions: [],
+      complete: true,
+      boundary: { schemaMutationApplied: false, propertyTypesInferred: false, sellerRuntimeVerified: false, statement: "Seller must verify runtime semantics." },
+    },
   }],
 };
 
@@ -62,6 +70,7 @@ test("returns bounded machine-buyable evidence without schemas or target payment
   assert.deepEqual(sellerIntegrityAuditOutputSchema().required, ["ok", "product", "version", "checkedAt", "decision", "request", "report", "nextActions", "boundary"]);
   assert.equal(result.report.auditCompleted, true);
   assert.equal(result.report.failureCode, null);
+  assert.equal(result.report.repairPlan.complete, true);
 });
 
 test("separates static POST contract readiness from live machine buyability", async () => {
@@ -78,6 +87,7 @@ test("separates static POST contract readiness from live machine buyability", as
   assert.equal(result.decision, "contract_ready");
   assert.equal(result.report.runtimeChallengeVerified, false);
   assert.equal(result.boundary.targetRequestSent, false);
+  assert.equal(result.report.repairPlan.mode, "advisory_openapi_repair");
 });
 
 test("turns controlled findings into seller repair actions", async () => {
