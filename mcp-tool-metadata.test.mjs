@@ -47,6 +47,8 @@ test("makes each overlapping web and company tool chooseable without renaming it
   assert.match(settlementProof.description, /Use `payment_offer_preflight` before authorization/);
   assert.match(sellerIntegrity.description, /Use `payment_offer_preflight` instead/);
   assert.match(sellerIntegrity.description, /`agent_discoverability_audit` for catalog rank/);
+  assert.match(sellerIntegrity.description, /GET or POST seller route/);
+  assert.match(sellerIntegrity.description, /POST performs static-safe OpenAPI contract analysis and sends no target request/);
   assert.match(transactionReceipt.description, /Use `settlement_proof` instead/);
   assert.match(solanaTransactionReceipt.description, /use `transaction_receipt` for Base or Ethereum/);
 });

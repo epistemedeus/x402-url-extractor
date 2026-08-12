@@ -55,7 +55,7 @@ const TOOL_METADATA = Object.freeze({
   },
   seller_integrity_audit: {
     title: "Audit Seller Machine Buyability",
-    description: "Audit one exact paid GET seller route for machine-buyability: constructible non-secret input, exact request binding, live x402 and MPP economics, optional Bazaar catalog eligibility, and recursively guaranteed JSON success-response paths. Use `payment_offer_preflight` instead when you already have one exact callable URL and only need its current unpaid offer before buyer authorization, or `agent_discoverability_audit` for catalog rank and identity. Uses no target credential, signature, or target payment and retains no seller schema or query values.",
+    description: "Audit one exact paid GET or POST seller route against buyer-required JSON success paths. GET verifies constructible non-secret input, exact request binding, live x402 and MPP economics, and optional Bazaar eligibility; POST performs static-safe OpenAPI contract analysis and sends no target request. Use `payment_offer_preflight` instead when you already have one exact callable GET URL and only need its current unpaid offer before buyer authorization, or `agent_discoverability_audit` for catalog rank and identity. Uses no target credential, signature, or target payment and retains no seller schema, body, or query values.",
   },
   settlement_proof: {
     title: "Verify Base USDC Settlement",
