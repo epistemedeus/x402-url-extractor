@@ -120,7 +120,10 @@ import {
 import { renderGatewayLanding, wantsGatewayHtml } from "./gateway-landing.mjs";
 import { decorateMcpTool } from "./mcp-tool-metadata.mjs";
 import { BUYER_POLICY_REFERENCE } from "./buyer-policy-reference.mjs";
-import { buildSolanaAgentRegistration } from "./solana-agent-registration.mjs";
+import {
+  buildSolanaAgentRegistration,
+  SOLANA_AGENT_REGISTRATION,
+} from "./solana-agent-registration.mjs";
 import {
   CIRCLE_GATEWAY_PATH,
   buildCircleGatewayRoute,
@@ -148,6 +151,7 @@ import {
 } from "./platform-health-page.mjs";
 import { z } from "zod";
 import { SERVICE_VERSION } from "./service-version.mjs";
+import { loadServiceDeploymentPublication } from "./service-deployment-publication.mjs";
 
 // ---------------------------------------------------------------------------
 // 1. CONFIG (all via env so we change facilitator/network with zero code edits)
@@ -526,6 +530,18 @@ app.get("/healthz", async (_req, res) => {
       requestBoundReplay: true,
       receiptSigner: commerceTrust.signerAddress,
       receiptKeyId: commerceTrust.keyId,
+      serviceDeployment: {
+        active: serviceDeploymentPublication.active,
+        statement: serviceDeploymentPublication.paths.statement,
+        publicKey: serviceDeploymentPublication.paths.publicKey,
+        statementId: serviceDeploymentPublication.statementId,
+        publicKeyFingerprint: serviceDeploymentPublication.publicKeyFingerprint,
+        operationalWallet: serviceDeploymentPublication.operationalWallet,
+        expiresAt: serviceDeploymentPublication.expiresAt,
+        expiresInMs: serviceDeploymentPublication.expiresInMs,
+        routeCount: serviceDeploymentPublication.routeCount,
+        settlementCount: serviceDeploymentPublication.settlementCount,
+      },
     },
     idempotencyReplay: replayStorage,
     the402: {
@@ -619,6 +635,13 @@ const USDC_BY_NETWORK = {
 };
 const USDC_ASSET = USDC_BY_NETWORK[NETWORK];
 if (!USDC_ASSET) throw new Error(`Unsupported USDC network: ${NETWORK}`);
+const serviceDeploymentPublication = loadServiceDeploymentPublication({
+  canonicalOrigin: PUBLIC_URL,
+  network: NETWORK,
+  asset: USDC_ASSET,
+  recipient: PAY_TO,
+  operationalWallet: SOLANA_AGENT_REGISTRATION.merchantWallet,
+});
 commerceSettlementReconciler = createCommerceSettlementReconciler({
   asset: USDC_ASSET,
   eventPaths: [commerceTelemetry.paths.rotatedPath, commerceTelemetry.paths.currentPath],
@@ -897,6 +920,23 @@ app.get("/.well-known/agent-registration.json", (_req, res) => {
   return res.json(solanaAgentRegistration);
 });
 
+app.get(serviceDeploymentPublication.paths.statement, (_req, res) => {
+  res.set("Cache-Control", "public, max-age=300, must-revalidate");
+  res.set("X-Agent-Payment-Policy-Statement", serviceDeploymentPublication.statementId);
+  res.set("X-Agent-Payment-Policy-Expires", serviceDeploymentPublication.expiresAt);
+  res.set("X-Agent-Payment-Policy-Key-Fingerprint", serviceDeploymentPublication.publicKeyFingerprint);
+  res.links({
+    "agent-payment-policy-key": `${PUBLIC_URL}${serviceDeploymentPublication.paths.publicKey}`,
+    "erc8004-registration": `${PUBLIC_URL}/.well-known/agent-registration.json`,
+  });
+  return res.json(serviceDeploymentPublication.envelope);
+});
+
+app.get(serviceDeploymentPublication.paths.publicKey, (_req, res) => {
+  res.set("Cache-Control", "public, max-age=300, must-revalidate");
+  res.type("application/x-pem-file").send(serviceDeploymentPublication.publicKeyPem);
+});
+
 app.get(["/.well-known/x402", "/.well-known/x402.json", "/x402.json", "/api/x402"], (_req, res) => {
   const items = RESOURCES.map((r) => ({
     resource: { url: r.url, description: r.description, mimeType: r.mimeType },
@@ -1140,6 +1180,8 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       "/.well-known/glama.json": { get: { summary: "Project-owned Glama connector maintainer verification.", responses: { "200": { description: "Glama connector verification" } } } },
       "/.well-known/x402-verification.json": { get: { summary: "Public server-ownership proof for the x402.jobs resource registry.", responses: { "200": { description: "x402.jobs ownership verification" } } } },
       "/.well-known/agent-registration.json": { get: { summary: "ERC-8004-compatible SameDayDesk registration metadata for the Solana Agent Registry.", responses: { "200": { description: "SameDayDesk agent identity, service endpoints, settlement wallet, and x402 support" } } } },
+      "/.well-known/agent-payment-policy-service-deployment.json": { get: { summary: "Signed short-lived binding from the ERC-8004 agent wallet to the canonical SameDayDesk origin, exact paid routes, and exact x402 and MPP settlement identities.", responses: { "200": { description: "Ed25519 JWS deployment statement plus public identity pointers" } } } },
+      "/.well-known/agent-payment-policy-service-deployment.pem": { get: { summary: "Ed25519 public key whose raw 32-byte value is the ERC-8004 operational Solana wallet.", responses: { "200": { description: "PEM-encoded Ed25519 public key" } } } },
       "/schemas/wallet-policy-conformance-v1.json": { get: { summary: "Free canonical case matrix and JSON Schemas for the wallet-policy conformance product.", responses: { "200": { description: "Versioned credential-free wallet-policy conformance contract" } } } },
       "/schemas/stateful-wallet-policy-conformance-v1.json": { get: { summary: "Free canonical stateful case matrix and JSON Schemas for cumulative wallet-policy conformance.", responses: { "200": { description: "Versioned credential-free stateful wallet-policy conformance contract" } } } },
       "/a2a/message:send": { post: { summary: "Return the exact-price x402 and MPP action catalog as an A2A direct message.", responses: { "200": { description: "A2A message containing the action catalog" }, "400": { description: "Invalid request or unsupported A2A version" } } } },
@@ -2866,6 +2908,8 @@ app.get("/", (req, res) => {
       glamaVerification: "/.well-known/glama.json",
       x402JobsVerification: "/.well-known/x402-verification.json",
       solanaAgentRegistration: "/.well-known/agent-registration.json",
+      serviceDeploymentStatement: serviceDeploymentPublication.paths.statement,
+      serviceDeploymentPublicKey: serviceDeploymentPublication.paths.publicKey,
       aggregateDemand: "/v0/commerce-demand.json",
       declaredAgentSourceHeader: {
         header: "X-SameDayDesk-Agent-Source",

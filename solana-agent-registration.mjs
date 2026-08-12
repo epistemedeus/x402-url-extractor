@@ -2,6 +2,8 @@ const SOLANA_MAINNET_CHAIN_ID = "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
 const SOLANA_8004_REGISTRY = "8oo4dC4JvBLwy5tGgiH3WwK4B9PWxL9Z4XjA2jzkQMbQ";
 const SOLANA_MERCHANT_WALLET = "DSG8V4tkhPQH9tWibYKzWePHYEgfocJXMWBfDxGDtaED";
 const SOLANA_PAID_ORIGIN = "https://solana.samedaydesk.com";
+const SERVICE_DEPLOYMENT_PATH = "/.well-known/agent-payment-policy-service-deployment.json";
+const SERVICE_DEPLOYMENT_KEY_PATH = "/.well-known/agent-payment-policy-service-deployment.pem";
 
 const BASE58_PUBLIC_KEY = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
@@ -43,6 +45,8 @@ export function buildSolanaAgentRegistration({ publicUrl, agentAsset, actions = 
       { name: "SKILL", endpoint: `${origin}/skill.md` },
       { name: "x402", endpoint: `${origin}/.well-known/x402` },
       { name: "MPP", endpoint: `${origin}/mpp-openapi.json` },
+      { name: "ServiceDeployment", endpoint: `${origin}${SERVICE_DEPLOYMENT_PATH}` },
+      { name: "ServiceDeploymentKey", endpoint: `${origin}${SERVICE_DEPLOYMENT_KEY_PATH}` },
       { name: "x402-solana", endpoint: `${SOLANA_PAID_ORIGIN}/.well-known/x402` },
       { name: "MPP-solana", endpoint: `${SOLANA_PAID_ORIGIN}/mpp-openapi.json` },
       ...paidServices,

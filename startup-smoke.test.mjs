@@ -18,6 +18,7 @@ test("production entry reaches the listening state without a startup exception",
       COMMERCE_DATA_DIR: dataDir,
       COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
       MPP_SECRET_KEY: "",
+      PUBLIC_URL: "https://agents.samedaydesk.com",
     },
     stdio: ["ignore", "pipe", "pipe"],
   });

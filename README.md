@@ -303,13 +303,31 @@ now returns `identityBasis`, `ownershipProven`, and a plain-language evidence
 boundary so an automated repair can preserve the canonical record without
 retiring a third-party endpoint on circumstantial evidence.
 
-Version 1.16.4 replaces the route-audit's private identity classifier with the
+Version 1.16.4 replaced the route-audit's private identity classifier with the
 public, provenance-bearing `agent-payment-policy@0.8.0` primitive. Catalogs
 that return no matching records are now still recorded as checked and
 `route_absent`; canonical origin matches remain observations rather than
 ownership claims. This creates one shared, installable contract for the live
 seller and independent buyer tooling without adding credentials, wallet
 access, signing, payment, or retained settlement identities.
+
+Version 1.17.0 closes the catalog-alias ambiguity with an optional signed
+deployment statement from `agent-payment-policy@0.9.0`. The short-lived JWS at
+`/.well-known/agent-payment-policy-service-deployment.json` binds the canonical
+`agents.samedaydesk.com` origin to all nineteen paid HTTP method and path pairs
+and to the exact Base USDC x402 and MPP settlement identities. Each deployment
+origin carries its own route and settlement scope, so a future alias cannot
+inherit another origin's authority.
+
+The public Ed25519 key at
+`/.well-known/agent-payment-policy-service-deployment.pem` is the same raw key
+as the `agentWallet` in SameDayDesk's Solana ERC-8004 registration. The signing
+key remains offline and is not deployed. The JWS response stays a strict
+envelope; its key and registration pointers use HTTP `Link` headers and the
+ERC-8004 registration document. `/healthz` reports the statement ID, key
+fingerprint, route count, expiry, and active state so rotation can be monitored.
+The statement proves control of that registered key and the declared service
+binding. It does not authorize, sign, or send a buyer payment.
 
 Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
 before startup. Six newer routes previously settled successfully while Coinbase

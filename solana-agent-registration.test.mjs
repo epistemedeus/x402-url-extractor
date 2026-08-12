@@ -16,13 +16,15 @@ test("builds a stable pre-registration document without inventing an agent ID", 
   assert.equal(registration.registrations, undefined);
   assert.deepEqual(
     registration.services.map(({ name }) => name),
-    ["MCP", "A2A", "OpenAPI", "SKILL", "x402", "MPP", "x402-solana", "MPP-solana", "agentWallet"],
+    ["MCP", "A2A", "OpenAPI", "SKILL", "x402", "MPP", "ServiceDeployment", "ServiceDeploymentKey", "x402-solana", "MPP-solana", "agentWallet"],
   );
   assert.equal(registration.services[0].endpoint, "https://agents.samedaydesk.com/mcp");
   assert.equal(registration.services[2].endpoint, "https://agents.samedaydesk.com/openapi.json");
-  assert.equal(registration.services[6].endpoint, "https://solana.samedaydesk.com/.well-known/x402");
+  assert.equal(registration.services[6].endpoint, "https://agents.samedaydesk.com/.well-known/agent-payment-policy-service-deployment.json");
+  assert.equal(registration.services[7].endpoint, "https://agents.samedaydesk.com/.well-known/agent-payment-policy-service-deployment.pem");
+  assert.equal(registration.services[8].endpoint, "https://solana.samedaydesk.com/.well-known/x402");
   assert.equal(
-    registration.services[8].endpoint,
+    registration.services[10].endpoint,
     `solana:${SOLANA_AGENT_REGISTRATION.chainId}:${SOLANA_AGENT_REGISTRATION.merchantWallet}`,
   );
 });
