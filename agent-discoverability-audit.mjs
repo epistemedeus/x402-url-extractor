@@ -649,6 +649,11 @@ function summarizeIdentity(items, input) {
     exactRouteRecordCount: routeItems.length,
     canonicalRecordCount: canonicalRecords.length,
     aliasOrigins,
+    identityBasis: "canonical_origin_or_caller_payto_match",
+    ownershipProven: aliasOrigins.length === 0,
+    evidenceBoundary: aliasOrigins.length
+      ? "A non-canonical record matched the caller-supplied payTo and exact route. This links advertised settlement identity but does not prove hostname ownership."
+      : "Canonical status means the observed record uses the caller-supplied origin; it does not prove marketplace ownership or control.",
   };
 }
 
@@ -807,7 +812,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
       nextActions.push({
         source,
         action: "preserve_canonical_listing_and_reconcile_aliases",
-        basis: "The exact route appears through duplicate records or a non-canonical origin. Preserve the durable canonical identity, retire only proven stale aliases, and update metadata in place.",
+        basis: "The exact route appears through duplicate records or a non-canonical origin matched by caller-supplied identity evidence. Preserve the durable canonical record, independently prove an alias is stale before retiring it, and update metadata in place.",
       });
     }
     if (priceReference !== null && observation.priceObservation.status === "drift") {
@@ -923,7 +928,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
     targetSurfaces,
     findings,
     nextActions,
-    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata. For an exact route, every source also reports whether the matched records are canonical, duplicated, alias-only, or collide across canonical and non-canonical origins. Alias attribution requires the explicit caller payTo or a canonical origin match; hostname similarity is never treated as identity proof. When runtimeUrl is supplied, one same-origin, exact-route, credentials-free headers-only request derives the comparison amount only from a parseable coherent live offer. Otherwise an optional caller-supplied expected price remains clearly labeled as caller expected. When explicitly requested, the target-surface check reads only three fixed same-origin public JSON documents after payment.",
+    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata. For an exact route, every source also reports whether the matched records are canonical, duplicated, alias-only, or collide across canonical and non-canonical origins. A non-canonical record becomes an alias candidate only when it matches the caller-supplied payTo and exact route; that links advertised settlement identity but does not prove hostname ownership. When runtimeUrl is supplied, one same-origin, exact-route, credentials-free headers-only request derives the comparison amount only from a parseable coherent live offer. Otherwise an optional caller-supplied expected price remains clearly labeled as caller expected. When explicitly requested, the target-surface check reads only three fixed same-origin public JSON documents after payment.",
     sourceDependencies: DEPENDENT_SOURCES,
     safety: {
       credentialsUsed: false,

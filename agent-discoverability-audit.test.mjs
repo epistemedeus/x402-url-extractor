@@ -388,6 +388,8 @@ test("reports duplicate and alias-only identities without treating them as deman
   assert.equal(result.sources["coinbase-bazaar"].identityObservation.status, "alias_collision");
   assert.equal(result.sources["coinbase-bazaar"].identityObservation.exactRouteRecordCount, 2);
   assert.deepEqual(result.sources["coinbase-bazaar"].identityObservation.aliasOrigins, ["https://legacy.example.net"]);
+  assert.equal(result.sources["coinbase-bazaar"].identityObservation.ownershipProven, false);
+  assert.match(result.sources["coinbase-bazaar"].identityObservation.evidenceBoundary, /does not prove hostname ownership/);
   assert.equal(result.sources["agent402-router"].identityObservation.status, "alias_only");
   assert.deepEqual(result.summary.identityConflictSources, ["coinbase-bazaar", "agent402-router"]);
   assert.equal(result.summary.identityConflictSourceCount, 2);
@@ -395,6 +397,7 @@ test("reports duplicate and alias-only identities without treating them as deman
   assert.ok(result.nextActions.some((action) => action.action === "preserve_canonical_listing_and_reconcile_aliases"));
   assert.equal(result.safety.paymentSentToCatalogs, false);
   assert.match(result.boundary, /not demand/);
+  assert.match(result.method, /alias candidate/);
 });
 
 test("keeps dynamic or absent MPPScan prices unknown rather than free", async () => {

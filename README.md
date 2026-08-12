@@ -290,11 +290,18 @@ response body.
 Version 1.16.2 adds route-level listing identity to that same audit. Each
 catalog observation now reports whether the exact route is canonical,
 duplicated, alias-only, or split across canonical and non-canonical origins.
-Alias attribution requires an explicit payTo or canonical origin match, so
-hostname similarity is never treated as identity proof. This catches stale
+An alias candidate requires an explicit payTo and exact-route match, and the
+output states that this does not prove hostname ownership. This catches stale
 marketplace aliases and URL-keyed duplicate listings alongside price drift,
 while preserving the same 0.05-USDC product, request boundary, and no-spend
 catalog sweep.
+
+Version 1.16.3 makes the identity evidence boundary explicit. A
+non-canonical record that shares the caller-supplied payTo and exact route is
+an alias candidate, not proof that the seller owns the hostname. Every source
+now returns `identityBasis`, `ownershipProven`, and a plain-language evidence
+boundary so an automated repair can preserve the canonical record without
+retiring a third-party endpoint on circumstantial evidence.
 
 Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
 before startup. Six newer routes previously settled successfully while Coinbase
