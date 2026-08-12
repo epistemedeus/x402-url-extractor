@@ -89,6 +89,15 @@ import {
   walletPolicyConformanceInputSchema,
   walletPolicyConformanceOutputSchema,
 } from "./wallet-policy-conformance.mjs";
+import {
+  STATEFUL_WALLET_POLICY_CASE_NAMES,
+  StatefulWalletPolicyConformanceError,
+  normalizeStatefulWalletPolicyConformanceInput,
+  statefulWalletPolicyConformance,
+  statefulWalletPolicyConformanceContract,
+  statefulWalletPolicyConformanceInputSchema,
+  statefulWalletPolicyConformanceOutputSchema,
+} from "./stateful-wallet-policy-conformance.mjs";
 import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
 import { createCommerceTelemetry } from "./commerce-events.mjs";
@@ -195,6 +204,7 @@ const SOLANA_TRANSACTION_RECEIPT_PRICE = process.env.SOLANA_TRANSACTION_RECEIPT_
 // Priced as a low-cost safety primitive while the first independent paid use is
 // still the economic acceptance gate.
 const WALLET_POLICY_CONFORMANCE_PRICE = process.env.WALLET_POLICY_CONFORMANCE_PRICE || "$0.01";
+const STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE = process.env.STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE || "$0.01";
 
 // "$0.05" -> "50000" atomic USDC units (6 decimals) so the discovery docs
 // (/.well-known/x402, /openapi.json) always match the paywall price exactly.
@@ -624,6 +634,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/chain/transaction-receipt`, amount: priceToAtomic(TRANSACTION_RECEIPT_PRICE), description: "Get a normalized Base or Ethereum transaction receipt from one hash: success or revert status, block time, gas used, effective gas price, total transaction fee, decoded ERC-20 Transfer events, and canonical USDC transfers. Returns explicit not-found or RPC-unavailable evidence, excludes raw logs, and performs no wallet, signing, broadcast, custody, or execution action.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/chain/solana-transaction-receipt`, amount: priceToAtomic(SOLANA_TRANSACTION_RECEIPT_PRICE), description: "Get a normalized finalized Solana transaction receipt from one signature: success or failure status, slot, block time, fee, SPL-token owner deltas, canonical USDC deltas, and optional exact mint, recipient, amount, and payer verification. Returns explicit not-found or RPC-unavailable evidence, excludes raw instructions and logs, and performs no wallet, signing, broadcast, custody, or execution action.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/security/wallet-policy-conformance`, method: "POST", amount: priceToAtomic(WALLET_POLICY_CONFORMANCE_PRICE), description: "Evaluate a credential-free standardized allow/deny matrix for an agent wallet or delegated signer. Distinguishes explicit provider policy denials from validation and generic provider failures, separates operation allowlisting from exact execution-shape control, and returns conformant, partial, or unsafe without an opaque score. Accepts no credentials, wallet IDs, signatures, transactions, or raw provider responses.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/security/stateful-wallet-policy-conformance`, method: "POST", amount: priceToAtomic(STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE), description: "Evaluate credential-free stateful wallet-policy observations for sequential cumulative limits, signed-but-unbroadcast accounting, ABI extraction integrity, concurrent oversubscription, counter-reference failure, and application serialization. Separates provider-policy enforcement from application guards and returns conformant, partial, or unsafe without an opaque score. Accepts no credentials, wallet or resource IDs, counter values, signatures, transactions, or raw provider responses.", mimeType: "application/json" },
 ];
 
 const WALLET_POLICY_DISCOVERY_INPUT = Object.freeze({
@@ -640,6 +651,22 @@ const WALLET_POLICY_DISCOVERY_INPUT = Object.freeze({
 const WALLET_POLICY_CONTRACT = walletPolicyConformanceContract({
   endpoint: `${PUBLIC_URL}/security/wallet-policy-conformance`,
   priceAtomicUsdc: priceToAtomic(WALLET_POLICY_CONFORMANCE_PRICE),
+});
+const STATEFUL_WALLET_POLICY_DISCOVERY_INPUT = Object.freeze({
+  profileId: "privy-base-sepolia-stateful-cap",
+  provider: "Privy",
+  network: "eip155:11155111",
+  protocol: "x402",
+  observations: Object.freeze([
+    Object.freeze({ case: "first_within_cap", actual: "allowed", enforcementClass: "none", code: "signed" }),
+    Object.freeze({ case: "sequential_exceeds_cap", actual: "denied", enforcementClass: "policy", code: "policy_violation" }),
+    Object.freeze({ case: "unrecognized_calldata", actual: "allowed", enforcementClass: "none", code: "signed" }),
+    Object.freeze({ case: "concurrent_exceeds_cap", actual: "allowed", enforcementClass: "none", code: "oversubscribed" }),
+  ]),
+});
+const STATEFUL_WALLET_POLICY_CONTRACT = statefulWalletPolicyConformanceContract({
+  endpoint: `${PUBLIC_URL}/security/stateful-wallet-policy-conformance`,
+  priceAtomicUsdc: priceToAtomic(STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE),
 });
 const circleGateway = buildCircleGatewayRoute({
   sellerAddress: PAY_TO,
@@ -684,6 +711,7 @@ const RESOURCE_DISCOVERY_METADATA = {
   "/chain/transaction-receipt": { operationId: "getTransactionReceipt", tags: ["Blockchain"] },
   "/chain/solana-transaction-receipt": { operationId: "getSolanaTransactionReceipt", tags: ["Blockchain"] },
   "/security/wallet-policy-conformance": { operationId: "evaluateWalletPolicyConformance", tags: ["Security"] },
+  "/security/stateful-wallet-policy-conformance": { operationId: "evaluateStatefulWalletPolicyConformance", tags: ["Security"] },
 };
 
 const mppDualStack = createMppDualStack({
@@ -966,6 +994,7 @@ ${line("/deep-audit", DEEP_AUDIT_PRICE, "domain -> bundled AI-search-readiness a
 ${line("/distribution/agent-discoverability-audit", AGENT_DISCOVERABILITY_AUDIT_PRICE, "public HTTPS service origin plus a brand-blind capability intent -> point-in-time rank, dependency-labeled source coverage, expected-route presence, and top competing results across Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, the official MPP catalog, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Optional surfaceAudit checks the target's public Agent Card, ERC-8004 registration document, and action catalog. Catalog queries use no credentials or payments.")}
 ${line("/commerce/payment-offer-preflight", PAYMENT_OFFER_PREFLIGHT_PRICE, "exact public HTTPS GET URL -> compare and normalize x402 and MPP payment challenges and terms before buyer authorization; check route and realm binding, expiry, and economic parity. Uses no target credential, signature, payment, redirect, or response body.")}
 ${line("/security/wallet-policy-conformance", WALLET_POLICY_CONFORMANCE_PRICE, "POST standardized wallet-policy observations -> explicit conformant, partial, or unsafe decision. Distinguishes provider policy denial from validation and generic provider failure, and tests exact execution shape separately from operation allowlisting. Accepts no wallet credentials or raw provider payloads.")}
+${line("/security/stateful-wallet-policy-conformance", STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE, "POST standardized stateful wallet-policy observations -> explicit conformant, partial, or unsafe decision for sequential caps, signed-but-unbroadcast accounting, ABI extraction, concurrency, counter references, and application serialization. Accepts no counter values, resource IDs, credentials, or raw provider payloads.")}
 ${circleGateway.enabled ? line(CIRCLE_GATEWAY_PATH, PAYMENT_OFFER_PREFLIGHT_PRICE, "the same payment-offer preflight product through Circle Gateway x402 Nanopayments, with gasless buyer authorization and batched USDC settlement.") : ""}
 
 ## How to pay
@@ -985,6 +1014,7 @@ ${circleGateway.enabled ? line(CIRCLE_GATEWAY_PATH, PAYMENT_OFFER_PREFLIGHT_PRIC
 - Aggregate demand telemetry: ${PUBLIC_URL}/v0/commerce-demand.json
 - Buyer policy reference: ${BUYER_POLICY_REFERENCE.release}
 - Wallet-policy conformance contract: ${PUBLIC_URL}/schemas/wallet-policy-conformance-v1.json
+- Stateful wallet-policy conformance contract: ${PUBLIC_URL}/schemas/stateful-wallet-policy-conformance-v1.json
 - Source: https://github.com/epistemedeus/x402-url-extractor
 `);
 });
@@ -992,6 +1022,11 @@ ${circleGateway.enabled ? line(CIRCLE_GATEWAY_PATH, PAYMENT_OFFER_PREFLIGHT_PRIC
 app.get("/schemas/wallet-policy-conformance-v1.json", (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
   return res.json(WALLET_POLICY_CONTRACT);
+});
+
+app.get("/schemas/stateful-wallet-policy-conformance-v1.json", (_req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  return res.json(STATEFUL_WALLET_POLICY_CONTRACT);
 });
 
 app.get("/robots.txt", (_req, res) => {
@@ -1092,6 +1127,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       "/.well-known/x402-verification.json": { get: { summary: "Public server-ownership proof for the x402.jobs resource registry.", responses: { "200": { description: "x402.jobs ownership verification" } } } },
       "/.well-known/agent-registration.json": { get: { summary: "ERC-8004-compatible SameDayDesk registration metadata for the Solana Agent Registry.", responses: { "200": { description: "SameDayDesk agent identity, service endpoints, settlement wallet, and x402 support" } } } },
       "/schemas/wallet-policy-conformance-v1.json": { get: { summary: "Free canonical case matrix and JSON Schemas for the wallet-policy conformance product.", responses: { "200": { description: "Versioned credential-free wallet-policy conformance contract" } } } },
+      "/schemas/stateful-wallet-policy-conformance-v1.json": { get: { summary: "Free canonical stateful case matrix and JSON Schemas for cumulative wallet-policy conformance.", responses: { "200": { description: "Versioned credential-free stateful wallet-policy conformance contract" } } } },
       "/a2a/message:send": { post: { summary: "Return the exact-price x402 and MPP action catalog as an A2A direct message.", responses: { "200": { description: "A2A message containing the action catalog" }, "400": { description: "Invalid request or unsupported A2A version" } } } },
       "/platforms": { get: { summary: "Human-readable Settlement Radar health cards.", responses: { "200": { description: "HTML platform health index" } } } },
       "/work/opportunity-preflight": { get: { summary: RESOURCES[11].description, parameters: [{ name: "platform", in: "query", required: false, schema: { type: "string", example: "taskmarket" } }, { name: "rewardUsd", in: "query", required: true, schema: { type: "number", exclusiveMinimum: 0 } }, { name: "hours", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "hourlyCostUsd", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "computeUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "mandatorySpendUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "reusableValueUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "selectionProbabilityPct", in: "query", required: false, schema: { type: "number", minimum: 0, maximum: 100 } }, { name: "competition", in: "query", required: false, schema: { type: "integer", minimum: 0, default: 0 } }, { name: "slots", in: "query", required: false, schema: { type: "integer", minimum: 1, default: 1 } }, { name: "agentAccess", in: "query", required: false, schema: { type: "string", enum: ["agent_allowed", "agent_only", "mixed", "human_only", "unknown"], default: "unknown" } }, { name: "acceptance", in: "query", required: false, schema: { type: "string", enum: ["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"], default: "unknown" } }, { name: "settlement", in: "query", required: false, schema: { type: "string", enum: ["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"], default: "unknown" } }], responses: { "200": { description: "deterministic opportunity economics and evidence preflight" }, "400": { description: "invalid required input, charged nothing" }, "402": { description: `payment required (x402, ${OPPORTUNITY_PREFLIGHT_PRICE} USDC base)` } } } },
@@ -1143,6 +1179,22 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
           "x-payment-info": profile === "mpp"
             ? mppPaymentInfoFor(RESOURCES[17])
             : agentCashPaymentInfoFor(RESOURCES[17]),
+        },
+      },
+      "/security/stateful-wallet-policy-conformance": {
+        post: {
+          operationId: "evaluateStatefulWalletPolicyConformance",
+          tags: ["Security"],
+          summary: RESOURCES[18].description,
+          requestBody: { required: true, content: { "application/json": { schema: statefulWalletPolicyConformanceInputSchema() } } },
+          responses: {
+            "200": { description: "credential-free stateful wallet-policy conformance evidence" },
+            "400": { description: "invalid standardized stateful observation matrix, charged nothing" },
+            "402": { description: `payment required (x402 or MPP, ${STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE} USDC base)` },
+          },
+          "x-payment-info": profile === "mpp"
+            ? mppPaymentInfoFor(RESOURCES[18])
+            : agentCashPaymentInfoFor(RESOURCES[18]),
         },
       },
       "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "structured data" }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
@@ -2471,6 +2523,24 @@ const x402Paywall = paymentMiddleware(
           }),
         },
       },
+      "POST /security/stateful-wallet-policy-conformance": {
+        ...bazaarResourceMetadataFor("/security/stateful-wallet-policy-conformance"),
+        accepts: [{ scheme: "exact", price: STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description: RESOURCES[18].description,
+        mimeType: "application/json",
+        extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
+          ...declareDiscoveryContract({
+            routeKey: "POST /security/stateful-wallet-policy-conformance",
+            method: "POST",
+            bodyType: "json",
+            input: STATEFUL_WALLET_POLICY_DISCOVERY_INPUT,
+            inputSchema: statefulWalletPolicyConformanceInputSchema(),
+            output: { example: statefulWalletPolicyConformance(STATEFUL_WALLET_POLICY_DISCOVERY_INPUT) },
+            outputSchema: statefulWalletPolicyConformanceOutputSchema(),
+          }),
+        },
+      },
     },
     resourceServer
   );
@@ -2537,6 +2607,25 @@ app.post("/security/wallet-policy-conformance", (req, res, next) => {
     return res.status(400).json({
       ok: false,
       product: "samedaydesk-wallet-policy-conformance",
+      error: message,
+      charged: false,
+      boundary: { credentialsAccepted: false, walletAccessed: false, transactionBroadcast: false },
+    });
+  }
+});
+
+app.post("/security/stateful-wallet-policy-conformance", (req, res, next) => {
+  try {
+    res.locals.statefulWalletPolicyConformanceInput = normalizeStatefulWalletPolicyConformanceInput(req.body);
+    return next();
+  } catch (error) {
+    const message = error instanceof StatefulWalletPolicyConformanceError
+      ? error.message
+      : "invalid stateful wallet-policy conformance request";
+    res.set("Cache-Control", "no-store");
+    return res.status(400).json({
+      ok: false,
+      product: "samedaydesk-stateful-wallet-policy-conformance",
       error: message,
       charged: false,
       boundary: { credentialsAccepted: false, walletAccessed: false, transactionBroadcast: false },
@@ -2764,6 +2853,10 @@ app.post("/security/wallet-policy-conformance", (req, res) => {
   res.set("Cache-Control", "no-store");
   return res.json(walletPolicyConformance(res.locals.walletPolicyConformanceInput));
 });
+app.post("/security/stateful-wallet-policy-conformance", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  return res.json(statefulWalletPolicyConformance(res.locals.statefulWalletPolicyConformanceInput));
+});
 
 // One root, negotiated by audience. Browser navigation gets a fast human map;
 // API clients, curl, and agents retain the stable JSON descriptor.
@@ -2816,6 +2909,11 @@ app.get("/", (req, res) => {
         priceUsdc: Number(priceToAtomic(WALLET_POLICY_CONFORMANCE_PRICE)) / 1e6,
         contract: "/schemas/wallet-policy-conformance-v1.json",
       },
+      statefulWalletPolicyConformance: {
+        route: "POST /security/stateful-wallet-policy-conformance",
+        priceUsdc: Number(priceToAtomic(STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE)) / 1e6,
+        contract: "/schemas/stateful-wallet-policy-conformance-v1.json",
+      },
       flow: "discover -> validate schema and price -> pay -> call -> receive deterministic result and receipt -> safely replay the same logical request",
     },
     paidRoutes: {
@@ -2837,6 +2935,7 @@ app.get("/", (req, res) => {
       "GET /chain/transaction-receipt?transactionHash=&network=": `${TRANSACTION_RECEIPT_PRICE} - normalized Base or Ethereum receipt status, block time, gas fee, decoded ERC-20 transfers, and canonical USDC transfer evidence.`,
       "GET /chain/solana-transaction-receipt?signature=&mint=&recipient=&amountAtomic=&payer=": `${SOLANA_TRANSACTION_RECEIPT_PRICE} - normalized finalized Solana receipt, SPL-token owner deltas, canonical USDC deltas, and optional exact settlement verification.`,
       "POST /security/wallet-policy-conformance": `${WALLET_POLICY_CONFORMANCE_PRICE} - evaluate safe standardized delegated-signer allow/deny observations, distinguish provider policy from validation failure, and test exact execution shape without accepting credentials.`,
+      "POST /security/stateful-wallet-policy-conformance": `${STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE} - evaluate safe standardized cumulative-cap, ABI extraction, concurrency, counter-reference, and application-serialization observations without accepting credentials or raw provider payloads.`,
       ...(circleGateway.enabled ? {
         [`GET ${CIRCLE_GATEWAY_PATH}?url=`]: `${PAYMENT_OFFER_PREFLIGHT_PRICE} - the same preflight through Circle Gateway gasless batched USDC Nanopayments.`,
       } : {}),
@@ -2897,6 +2996,7 @@ import("./mcp-server.mjs")
         { name: "transaction_receipt", description: RESOURCES[15].description, price: TRANSACTION_RECEIPT_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Mined Base or Ethereum transaction hash whose normalized receipt should be returned."), network: z.enum(["base", "ethereum"]).default("base").describe("Receipt network. Defaults to Base mainnet.") }, run: (a) => transactionReceipt(a), tags: ["blockchain", "receipt", "gas", "erc20", "usdc"] },
         { name: "solana_transaction_receipt", description: RESOURCES[16].description, price: SOLANA_TRANSACTION_RECEIPT_PRICE, inputSchema: { signature: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/).describe("Finalized Solana mainnet transaction signature."), mint: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional SPL-token mint; defaults to canonical Solana USDC."), recipient: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional expected token recipient owner."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,19}$/).optional().describe("Optional expected positive token amount in atomic units; requires recipient."), payer: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional expected token payer owner; requires recipient and amountAtomic.") }, run: (a) => solanaTransactionReceipt(a), tags: ["blockchain", "solana", "receipt", "spl-token", "usdc"] },
         { name: "wallet_policy_conformance", description: RESOURCES[17].description, price: WALLET_POLICY_CONFORMANCE_PRICE, inputSchema: { profileId: z.string().min(1).max(128).describe("Caller-defined policy profile identifier with no credential or wallet secret."), provider: z.string().min(1).max(128).describe("Wallet or delegated-signer provider name."), network: z.string().min(1).max(128).describe("Network identifier used by the tested profile."), protocol: z.string().min(1).max(128).describe("Payment or execution protocol bound by the tested profile."), observations: z.array(z.object({ case: z.enum(WALLET_POLICY_CASE_NAMES).describe("Standardized mutation or control case."), actual: z.enum(["allowed", "denied", "error"]).describe("Observed high-level outcome."), denialClass: z.enum(["none", "policy", "validation", "provider"]).describe("Where the denial or error occurred; only policy earns provider-native coverage."), code: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$/).optional().describe("Optional safe provider code only, never a raw message or payload.") }).strict()).min(1).max(16).describe("Unique standardized observations. Raw provider responses, signatures, transactions, credentials, and wallet IDs are rejected.") }, run: (a) => walletPolicyConformance(a), tags: ["security", "wallet-policy", "delegated-signer", "conformance", "execution-shape"] },
+        { name: "stateful_wallet_policy_conformance", description: RESOURCES[18].description, price: STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE, inputSchema: { profileId: z.string().min(1).max(128).describe("Caller-defined stateful policy profile identifier with no credential, wallet, or counter secret."), provider: z.string().min(1).max(128).describe("Wallet or delegated-signer provider name."), network: z.string().min(1).max(128).describe("Network identifier used by the tested stateful profile."), protocol: z.string().min(1).max(128).describe("Payment or execution protocol bound by the tested stateful profile."), observations: z.array(z.object({ case: z.enum(STATEFUL_WALLET_POLICY_CASE_NAMES).describe("Standardized cumulative, extraction, concurrency, reference, or application-serialization case."), actual: z.enum(["allowed", "denied", "error"]).describe("Observed high-level outcome."), enforcementClass: z.enum(["none", "policy", "application", "validation", "provider"]).describe("Where enforcement occurred. Provider policy and application guards remain separate."), code: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$/).optional().describe("Optional safe provider code only, never a raw message, counter value, or payload.") }).strict()).min(1).max(7).describe("Unique standardized stateful observations. Raw provider responses, signatures, transactions, counter values, credentials, wallet IDs, and resource IDs are rejected.") }, run: (a) => statefulWalletPolicyConformance(a), tags: ["security", "wallet-policy", "stateful-policy", "spend-cap", "concurrency"] },
       ].map(decorateMcpTool),
     })
   )

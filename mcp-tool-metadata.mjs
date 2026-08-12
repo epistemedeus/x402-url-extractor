@@ -69,6 +69,10 @@ const TOOL_METADATA = Object.freeze({
     title: "Evaluate Agent Wallet Policy Conformance",
     description: "Evaluate safe standardized allow, deny, and error observations from an agent wallet or delegated signer. Use this after running a bounded provider policy test matrix to distinguish explicit provider-policy enforcement from validation or generic provider failures and to test exact execution shape separately from operation allowlisting. Accepts no credentials, wallet IDs, signatures, transactions, or raw provider responses; it evaluates caller-supplied observations and does not run the provider tests itself.",
   },
+  stateful_wallet_policy_conformance: {
+    title: "Evaluate Stateful Wallet Policy Conformance",
+    description: "Evaluate safe standardized observations from wallet policies that track prior or concurrent requests. Use `wallet_policy_conformance` instead for one-request action shape, method, chain, token, recipient, amount, and function controls. This tool separately tests sequential cumulative limits, signed-but-unbroadcast accounting, ABI extraction, concurrent oversubscription, counter-reference failure, and application serialization. It accepts no credentials, counter values, wallet or resource IDs, signatures, transactions, or raw provider responses and does not run the provider tests itself.",
+  },
 });
 
 export function decorateMcpTool(tool) {

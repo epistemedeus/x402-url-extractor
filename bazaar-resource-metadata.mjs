@@ -73,6 +73,10 @@ export const BAZAAR_RESOURCE_METADATA = Object.freeze({
     serviceName: "SameDayDesk",
     tags: Object.freeze(["wallet-policy", "delegated-signer", "conformance", "agent-safety", "execution-shape"]),
   }),
+  "/security/stateful-wallet-policy-conformance": Object.freeze({
+    serviceName: "SameDayDesk",
+    tags: Object.freeze(["wallet-policy", "spend-cap", "stateful-policy", "concurrency", "agent-safety"]),
+  }),
 });
 
 export function validateBazaarResourceMetadata(metadata = BAZAAR_RESOURCE_METADATA) {

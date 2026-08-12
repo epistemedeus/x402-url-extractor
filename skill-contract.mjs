@@ -25,7 +25,7 @@ export function buildSkillContract(publicUrl, actions) {
   const actionsMarkdown = actionLines(actions);
   return `# SameDayDesk machine commerce gateway
 
-Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, delegated-signer policy conformance, work-opportunity economics, cross-registry discoverability, x402 and MPP offer preflight, Morpho borrower risk, market underwriting, historical PreLiquidation replay, or unsigned Morpho protection plans and can pay exact USDC on Base through x402 or native MPP Payment authentication.
+Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, exact-action or stateful delegated-signer policy conformance, work-opportunity economics, cross-registry discoverability, x402 and MPP offer preflight, Morpho borrower risk, market underwriting, historical PreLiquidation replay, or unsigned Morpho protection plans and can pay exact USDC on Base through x402 or native MPP Payment authentication.
 
 ## Discover
 
@@ -43,7 +43,7 @@ ${actionsMarkdown}
 ## Call and pay
 
 1. Choose an action from the manifest or action catalog.
-2. Send the exact declared method and input. Most actions use GET query parameters; wallet-policy conformance uses a bounded POST JSON body. Agent Skills clients should include X-SameDayDesk-Agent-Source: agent-skills-v1 on the initial request and paid replay. This declared label is attribution only, not authentication or payment.
+2. Send the exact declared method and input. Most actions use GET query parameters; both wallet-policy conformance routes use bounded POST JSON bodies. Agent Skills clients should include X-SameDayDesk-Agent-Source: agent-skills-v1 on the initial request and paid replay. This declared label is attribution only, not authentication or payment.
 3. One unpaid HTTP 402 carries x402 v2 payment requirements and a native MPP WWW-Authenticate Payment challenge.
 4. Verify the HTTPS resource, exact amount, Base network, canonical USDC asset, and payTo wallet.
 5. Pay through x402 and replay with PAYMENT-SIGNATURE, or pay through MPP and replay with Authorization: Payment.
@@ -58,6 +58,7 @@ ${actionsMarkdown}
 - Morpho PreLiquidation replay reconstructs gross historical event economics. It does not infer net profit or future executability.
 - Repository scan output is static evidence, not permission to execute untrusted code.
 - Wallet-policy conformance evaluates safe caller-supplied outcomes from a standardized provider test matrix. It accepts no credentials or raw provider payloads and does not independently run, sign, or verify those provider tests.
+- Stateful wallet-policy conformance separately evaluates cumulative limits, signed-but-unbroadcast accounting, metric extraction, concurrent oversubscription, counter-reference failure, and application serialization. It accepts no counter values, resource IDs, credentials, or raw provider payloads and does not run concurrent requests itself.
 - Opportunity preflight uses caller-supplied cost and selection assumptions plus dated categorical platform evidence. It makes no claim, bid, payment, or submission on the source platform.
 - Agent discoverability audit sends one brand-blind capability intent to public catalogs. An explicit surfaceAudit option also checks three fixed public same-origin discovery documents with pinned public DNS, no redirects, bounded time, and bounded response size. It measures point-in-time rank and coverage, not demand, conversion, reliability, or future rank.
 - Demand telemetry is aggregate and does not expose buyer identities or raw request data.

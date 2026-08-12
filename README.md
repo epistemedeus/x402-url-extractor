@@ -33,6 +33,8 @@ settlement proof, and AI-search readiness audits.
 - Base or Ethereum transaction receipt: `GET /chain/transaction-receipt?transactionHash=0x...&network=base`
 - Wallet policy conformance: `POST /security/wallet-policy-conformance`
 - Wallet policy conformance contract: `GET /schemas/wallet-policy-conformance-v1.json`
+- Stateful wallet policy conformance: `POST /security/stateful-wallet-policy-conformance`
+- Stateful wallet policy contract: `GET /schemas/stateful-wallet-policy-conformance-v1.json`
 - Material-change alert probe: https://agents.samedaydesk.com/alerts
 - Agoragentic seller callback: `POST /integrations/agoragentic/ai-readiness-audit`
 - the402 signed fulfillment webhook: `POST /integrations/the402/webhook`
@@ -233,6 +235,16 @@ longer mask an allowed duplicate-approved-action case. The Privy Tempo and
 Solana adapters both classify exact execution shape as unverified and the
 overall native policies as unsafe, matching the first-person evidence. Route,
 price, payment, and credential boundaries remain unchanged.
+
+Version 1.15.0 adds a separate stateful wallet-policy product from the project's
+first-person Privy cumulative-cap experiment. `POST
+/security/stateful-wallet-policy-conformance` evaluates seven safe standardized
+cases for sequential caps, signed-but-unbroadcast accounting, ABI extraction,
+concurrent oversubscription, counter-reference failure, and application
+serialization. `GET /schemas/stateful-wallet-policy-conformance-v1.json`
+publishes the free construction contract. The evaluator comes from public
+`agent-payment-policy@0.6.0`, accepts no credentials or raw provider payloads,
+and keeps provider-policy and application enforcement separate.
 
 Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
 before startup. Six newer routes previously settled successfully while Coinbase
