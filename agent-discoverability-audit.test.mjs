@@ -342,7 +342,7 @@ test("uses one coherent live unsigned offer as the catalog price reference", asy
     payTo: `0x${"1".repeat(40)}`,
     expectedPriceUsd: "0.05",
   }, { fetchImpl, paymentPreflightImpl, now: 0 });
-  assert.equal(result.version, "1.9.0");
+  assert.equal(result.version, "1.10.0");
   assert.deepEqual(result.summary.priceReference, {
     basis: "live_unsigned_offer",
     amountAtomic: "5000",
@@ -355,6 +355,46 @@ test("uses one coherent live unsigned offer as the catalog price reference", asy
   assert.equal(result.safety.runtimePaymentSent, false);
   assert.equal(result.safety.runtimeResponseBodyRead, false);
   assert.match(result.method, /live offer/);
+});
+
+test("reports duplicate and alias-only identities without treating them as demand", async () => {
+  const payTo = `0x${"1".repeat(40)}`;
+  const fetchImpl = async (url) => {
+    const target = String(url);
+    if (target.includes("coinbase.com")) return response({ resources: [
+      { serviceName: "Canonical", resource: "https://api.example.com/extract", accepts: [{ amount: "5000", payTo }] },
+      { serviceName: "Alias", resource: "https://legacy.example.net/extract", accepts: [{ amount: "5000", payTo }] },
+    ] });
+    if (target.includes("agent402.tools")) return response({ results: [
+      { name: "Alias only", seller: "https://legacy.example.net", route: "/extract", url: "https://legacy.example.net/extract", priceUsd: 0.005, payTo },
+    ] });
+    if (target.includes("agentic.market")) return response({ services: [] });
+    if (target.includes("circle.com")) return response({ items: [] });
+    if (target.includes("agentictrade.io")) return response({ services: [] });
+    if (target.includes("mpp.dev")) return response({ services: [] });
+    if (target.includes("mppscan.com")) return response({ result: { data: { json: [] } } });
+    if (target.includes("payanagent.com")) return response({ offers: [] });
+    if (target.includes("x402.jobs")) return response({ resources: [] });
+    if (target.includes("8004market.io")) return market8004Response({ target: false });
+    throw new Error(`unexpected ${target}`);
+  };
+  const result = await agentDiscoverabilityAudit({
+    origin: "https://api.example.com",
+    intent: "extract a public website into structured JSON metadata",
+    route: "/extract",
+    payTo,
+    expectedPriceUsd: "0.005",
+  }, { fetchImpl, now: 0 });
+  assert.equal(result.sources["coinbase-bazaar"].identityObservation.status, "alias_collision");
+  assert.equal(result.sources["coinbase-bazaar"].identityObservation.exactRouteRecordCount, 2);
+  assert.deepEqual(result.sources["coinbase-bazaar"].identityObservation.aliasOrigins, ["https://legacy.example.net"]);
+  assert.equal(result.sources["agent402-router"].identityObservation.status, "alias_only");
+  assert.deepEqual(result.summary.identityConflictSources, ["coinbase-bazaar", "agent402-router"]);
+  assert.equal(result.summary.identityConflictSourceCount, 2);
+  assert.ok(result.findings.some((finding) => finding.source === "agent402-router" && finding.finding === "route_listing_identity_conflict"));
+  assert.ok(result.nextActions.some((action) => action.action === "preserve_canonical_listing_and_reconcile_aliases"));
+  assert.equal(result.safety.paymentSentToCatalogs, false);
+  assert.match(result.boundary, /not demand/);
 });
 
 test("keeps dynamic or absent MPPScan prices unknown rather than free", async () => {

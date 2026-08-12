@@ -2,7 +2,7 @@
 
 [![Smithery listing](https://smithery.ai/badge/epistemedeus/x402-data-gateway)](https://smithery.ai/servers/epistemedeus/x402-data-gateway)
 
-Eighteen pay-per-call tools for deterministic agent-work opportunity preflight,
+Nineteen pay-per-call tools for deterministic agent-work opportunity preflight,
 machine-service discoverability, payment-offer preflight, Morpho borrower and
 market decisions, protection plans, URL extraction, Markdown reading,
 repository security scans, company and wallet enrichment, structured data
@@ -286,6 +286,15 @@ Caller-supplied expectations remain supported and clearly labeled, while a
 disagreement with runtime truth becomes its own finding. The result still
 signs nothing, sends no target payment, follows no redirect, and reads no target
 response body.
+
+Version 1.16.2 adds route-level listing identity to that same audit. Each
+catalog observation now reports whether the exact route is canonical,
+duplicated, alias-only, or split across canonical and non-canonical origins.
+Alias attribution requires an explicit payTo or canonical origin match, so
+hostname similarity is never treated as identity proof. This catches stale
+marketplace aliases and URL-keyed duplicate listings alongside price drift,
+while preserving the same 0.05-USDC product, request boundary, and no-spend
+catalog sweep.
 
 Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
 before startup. Six newer routes previously settled successfully while Coinbase

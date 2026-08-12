@@ -47,7 +47,7 @@ const TOOL_METADATA = Object.freeze({
   },
   agent_discoverability_audit: {
     title: "Audit Agent Service Discoverability",
-    description: "Measure one service's brand-blind rank, source-family coverage, expected-route presence, competitors, and exact-price drift across ten public machine-service discovery views. Supply `runtimeUrl` with an exact route to derive the comparison price from one coherent live unsigned x402 or MPP offer; otherwise `expectedPriceUsd` remains caller-supplied. Set `surfaceAudit` only when you also want the target's public Agent Card, ERC-8004 registration document, and action catalog checked. Catalog queries use no credentials or payments, and runtime inspection is DNS-pinned, redirect-free, headers-only, and unsigned. Results are point-in-time reach and catalog-coherence evidence, not demand, seller trust, or future-rank proof.",
+    description: "Measure one service's brand-blind rank, source-family coverage, expected-route presence, canonical-vs-alias listing identity, duplicate records, competitors, and exact-price drift across ten public machine-service discovery views. Supply `runtimeUrl` with an exact route to derive the comparison price from one coherent live unsigned x402 or MPP offer; otherwise `expectedPriceUsd` remains caller-supplied. Set `surfaceAudit` only when you also want the target's public Agent Card, ERC-8004 registration document, and action catalog checked. Catalog queries use no credentials or payments, and runtime inspection is DNS-pinned, redirect-free, headers-only, and unsigned. Results are point-in-time reach and catalog-coherence evidence, not demand, seller trust, or future-rank proof.",
   },
   payment_offer_preflight: {
     title: "Preflight x402 and MPP Offer",

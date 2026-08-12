@@ -368,6 +368,7 @@ function normalizeAgent402(payload) {
     description: item.description,
     priceUsd: item.priceUsd ?? item.price,
     score: item.score,
+    payTo: item.payTo ?? item.recipient,
   }));
 }
 
@@ -632,6 +633,25 @@ function summarizePrice(items, input) {
   };
 }
 
+function summarizeIdentity(items, input) {
+  if (!input.route) return null;
+  const routeItems = items.filter((item) => targetMatch(item, input) && routeMatch(item, input.route));
+  const canonicalRecords = routeItems.filter((item) => item.origin === input.origin);
+  const aliasOrigins = [...new Set(routeItems
+    .map((item) => item.origin)
+    .filter((origin) => origin && origin !== input.origin))].sort();
+  let status = "canonical";
+  if (!routeItems.length) status = "route_absent";
+  else if (routeItems.length > 1) status = aliasOrigins.length ? "alias_collision" : "duplicate_records";
+  else if (!canonicalRecords.length && aliasOrigins.length) status = "alias_only";
+  return {
+    status,
+    exactRouteRecordCount: routeItems.length,
+    canonicalRecordCount: canonicalRecords.length,
+    aliasOrigins,
+  };
+}
+
 function summarizeSource(items, input) {
   const targetRanks = [];
   const expectedRouteRanks = [];
@@ -650,6 +670,7 @@ function summarizeSource(items, input) {
     expectedRouteFound: input.route ? expectedRouteRanks.length > 0 : null,
     expectedRouteRanks: input.route ? expectedRouteRanks : [],
     priceObservation: summarizePrice(items, input),
+    identityObservation: summarizeIdentity(items, input),
     targetResults: items
       .map((item, index) => ({ rank: index + 1, ...item }))
       .filter((item) => targetMatch(item, input))
@@ -733,6 +754,11 @@ export async function agentDiscoverabilityAudit(rawInput, {
   const matchedPriceSources = priceObservationSources.filter((source) => sources[source].priceObservation.status === "matched");
   const driftedPriceSources = priceObservationSources.filter((source) => ["drift", "mixed"].includes(sources[source].priceObservation.status));
   const unknownPriceSources = priceObservationSources.filter((source) => ["price_unknown", "route_absent"].includes(sources[source].priceObservation.status));
+  const identityObservationSources = input.route
+    ? availableSources.filter((source) => sources[source].identityObservation !== null)
+    : [];
+  const identityConflictSources = identityObservationSources.filter((source) =>
+    ["alias_collision", "alias_only", "duplicate_records"].includes(sources[source].identityObservation.status));
   const dependentSources = SOURCE_ORDER.filter((source) => DEPENDENT_SOURCES[source]);
   const independentSources = SOURCE_ORDER.filter((source) => !DEPENDENT_SOURCES[source]);
   const findings = [];
@@ -768,6 +794,21 @@ export async function agentDiscoverabilityAudit(rawInput, {
       findings.push({ source, finding: "origin_found_expected_route_absent", bestTargetRank: observation.bestTargetRank });
       nextActions.push({ source, action: "index_or_reconcile_expected_route", basis: "The seller appeared, but the requested route did not." });
       continue;
+    }
+    if (observation.identityObservation && ["alias_collision", "alias_only", "duplicate_records"].includes(observation.identityObservation.status)) {
+      findings.push({
+        source,
+        finding: "route_listing_identity_conflict",
+        status: observation.identityObservation.status,
+        exactRouteRecordCount: observation.identityObservation.exactRouteRecordCount,
+        canonicalRecordCount: observation.identityObservation.canonicalRecordCount,
+        aliasOrigins: observation.identityObservation.aliasOrigins,
+      });
+      nextActions.push({
+        source,
+        action: "preserve_canonical_listing_and_reconcile_aliases",
+        basis: "The exact route appears through duplicate records or a non-canonical origin. Preserve the durable canonical identity, retire only proven stale aliases, and update metadata in place.",
+      });
     }
     if (priceReference !== null && observation.priceObservation.status === "drift") {
       findings.push({
@@ -833,7 +874,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
   return {
     ok: true,
     product: "samedaydesk-agent-discoverability-audit",
-    version: "1.9.0",
+    version: "1.10.0",
     generatedAt: new Date(now).toISOString(),
     input: {
       origin: input.origin,
@@ -868,6 +909,9 @@ export async function agentDiscoverabilityAudit(rawInput, {
       matchedPriceSources: priceReference === null ? [] : matchedPriceSources,
       driftedPriceSources: priceReference === null ? [] : driftedPriceSources,
       unknownPriceSources: priceReference === null ? [] : unknownPriceSources,
+      identityObservationSourceCount: input.route ? identityObservationSources.length : null,
+      identityConflictSourceCount: input.route ? identityConflictSources.length : null,
+      identityConflictSources: input.route ? identityConflictSources : [],
       foundSourceFamilies,
       missingSourceFamilies: availableSourceFamilies.filter((family) => !foundSourceFamilies.includes(family)),
       unavailableSourceFamilies: sourceFamilies.filter((family) => !availableSourceFamilies.includes(family)),
@@ -879,7 +923,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
     targetSurfaces,
     findings,
     nextActions,
-    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata. When runtimeUrl is supplied, one same-origin, exact-route, credentials-free headers-only request derives the comparison amount only from a parseable coherent live offer. Otherwise an optional caller-supplied expected price remains clearly labeled as caller expected. When explicitly requested, the target-surface check reads only three fixed same-origin public JSON documents after payment.",
+    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata. For an exact route, every source also reports whether the matched records are canonical, duplicated, alias-only, or collide across canonical and non-canonical origins. Alias attribution requires the explicit caller payTo or a canonical origin match; hostname similarity is never treated as identity proof. When runtimeUrl is supplied, one same-origin, exact-route, credentials-free headers-only request derives the comparison amount only from a parseable coherent live offer. Otherwise an optional caller-supplied expected price remains clearly labeled as caller expected. When explicitly requested, the target-surface check reads only three fixed same-origin public JSON documents after payment.",
     sourceDependencies: DEPENDENT_SOURCES,
     safety: {
       credentialsUsed: false,
