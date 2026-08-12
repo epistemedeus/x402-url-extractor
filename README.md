@@ -334,6 +334,12 @@ JSON success schema with typed required fields. It never reads the paid target
 body, and the seller declaration remains advisory until a paid response passes
 the buyer's independently authorized output validator.
 
+Version 1.22.2 excludes both the canonical SameDayDesk origin and its known
+former Railway catalog alias from contract-qualified search. Agent402 ranked
+both records for the first live buyer-language query, proving that excluding
+only the canonical hostname did not exclude owned supply at the service-
+identity level.
+
 Version 1.22.1 adds mandatory MCP selection metadata for the new search tool
 and strengthens the production startup smoke test so a release cannot pass
 merely because HTTP is listening while the asynchronous MCP mount failed.

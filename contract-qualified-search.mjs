@@ -3,6 +3,10 @@ import { auditOrigin } from "agent-payment-integrity";
 
 const AGENT402_ROUTE_URL = "https://agent402.tools/api/route";
 const MPP_SERVICES_URL = "https://mpp.dev/api/services";
+const DEFAULT_EXCLUDED_ORIGINS = Object.freeze([
+  "https://agents.samedaydesk.com",
+  "https://x402-url-extractor-production.up.railway.app",
+]);
 const SAFE_PATH = /^\/(?!\/)[A-Za-z0-9._~!$&'()*+,;=:@%/-]+$/;
 const UNRESOLVED_ROUTE = /(?:^|\/)\:[A-Za-z][A-Za-z0-9_]*|\{[^}]+\}/;
 const REQUIRED_PATH = /^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+){0,7}$/;
@@ -218,7 +222,7 @@ export async function contractQualifiedSearch(input, {
   now = () => new Date(),
   agent402Url = AGENT402_ROUTE_URL,
   mppUrl = MPP_SERVICES_URL,
-  excludedOrigins = ["https://agents.samedaydesk.com"],
+  excludedOrigins = DEFAULT_EXCLUDED_ORIGINS,
 } = {}) {
   const request = normalizeContractQualifiedSearchInput(input);
   const queryDigest = `sha256:${createHash("sha256").update(request.query).digest("hex")}`;

@@ -58,11 +58,12 @@ test("searches both directories and returns only contract-qualified candidates",
   assert.deepEqual(result.boundary.querySentTo, ["agent402"]);
 });
 
-test("discards colon-style unresolved routes and owned supply before auditing", async () => {
+test("discards colon-style unresolved routes and canonical or alias owned supply before auditing", async () => {
   let audits = 0;
   const payload = { results: [
     { seller: "https://unsafe.example", url: "https://unsafe.example/domain/:name", route: "/domain/:name", method: "GET", priceUsd: 0.005, payable: "x402", description: "source provenance", score: 20 },
     { seller: "https://agents.samedaydesk.com", url: "https://agents.samedaydesk.com/read", route: "/read", method: "GET", priceUsd: 0.005, payable: "x402", description: "source provenance", score: 19 },
+    { seller: "https://x402-url-extractor-production.up.railway.app", url: "https://x402-url-extractor-production.up.railway.app/commerce/contract-qualified-search", route: "/commerce/contract-qualified-search", method: "GET", priceUsd: 0.01, payable: "x402", description: "source provenance", score: 18 },
   ] };
   const result = await contractQualifiedSearch(request, {
     fetchImpl: async (url) => response(String(url).includes("agent402") ? payload : { services: [] }),
