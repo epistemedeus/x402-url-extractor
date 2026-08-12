@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createX402ToolMeta, injectPaymentSignatureHeader } from "./mcp-server.mjs";
+import { asToolResult, createX402ToolMeta, injectPaymentSignatureHeader } from "./mcp-server.mjs";
 
 const encode = (value) => Buffer.from(JSON.stringify(value)).toString("base64");
 const payment = {
@@ -65,4 +65,16 @@ test("advertises exact payment options for proactive MCP buyers", () => {
     x402: { paymentRequired: true, accepts },
   });
   assert.throws(() => createX402ToolMeta([]), /at least one payment option/);
+});
+
+test("adds structured content only for a tool with a truthful output schema", () => {
+  const value = { ok: true, decision: "within_budget" };
+  assert.deepEqual(asToolResult(value), {
+    content: [{ type: "text", text: JSON.stringify(value) }],
+  });
+  assert.deepEqual(asToolResult(value, { structured: true }), {
+    content: [{ type: "text", text: JSON.stringify(value) }],
+    structuredContent: value,
+  });
+  assert.equal("structuredContent" in asToolResult("not-an-object", { structured: true }), false);
 });

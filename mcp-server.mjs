@@ -86,8 +86,12 @@ export function injectPaymentSignatureHeader(req) {
 
 // Turn a tool's raw result object into an MCP tool result. Errors are returned as a
 // clean structured ok:false payload (not thrown) so the caller always gets legible JSON.
-function asToolResult(obj) {
-  return { content: [{ type: "text", text: JSON.stringify(obj) }] };
+export function asToolResult(obj, { structured = false } = {}) {
+  const result = { content: [{ type: "text", text: JSON.stringify(obj) }] };
+  if (structured && obj && typeof obj === "object" && !Array.isArray(obj)) {
+    result.structuredContent = obj;
+  }
+  return result;
 }
 
 /**
@@ -131,7 +135,7 @@ export async function mountMcp(app, { facilitatorClient, network, payTo, serverI
     // a structured ok:false so a paid call never yields an opaque failure.
     const handler = paid(async (args) => {
       try {
-        return asToolResult(await t.run(args));
+        return asToolResult(await t.run(args), { structured: Boolean(t.outputSchema) });
       } catch (e) {
         return { ...asToolResult({ ok: false, error: String(e?.message || e) }), isError: true };
       }
@@ -141,6 +145,7 @@ export async function mountMcp(app, { facilitatorClient, network, payTo, serverI
       title: t.title,
       description: t.description,
       inputSchema: t.inputSchema,
+      outputSchema: t.outputSchema,
       paymentMeta: createX402ToolMeta(accepts),
       handler,
     });
@@ -154,6 +159,7 @@ export async function mountMcp(app, { facilitatorClient, network, payTo, serverI
         title: t.title,
         description: t.description,
         inputSchema: t.inputSchema,
+        outputSchema: t.outputSchema,
         _meta: t.paymentMeta,
       }, t.handler);
     }

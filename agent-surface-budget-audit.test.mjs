@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   agentSurfaceBudgetAudit,
+  agentSurfaceBudgetAuditMcpOutputSchema,
   normalizeAgentSurfaceBudgetAuditInput,
   resolveAuditAddress,
 } from "./agent-surface-budget-audit.mjs";
@@ -140,4 +141,24 @@ test("reports bounded MCP pagination without exposing a cursor", async () => {
   assert.equal(result.mcp.pageCount, 2);
   assert.equal(result.mcp.toolCount, 2);
   assert.equal(JSON.stringify(result).includes("cursor"), false);
+});
+
+test("the MCP output schema accepts complete success and controlled failure results", async () => {
+  const success = await agentSurfaceBudgetAudit(request, {
+    now: () => new Date("2026-08-12T15:00:00.000Z"),
+    mcpAcquireImpl: async () => ({ bytes: 100, protocolVersion: "2025-11-25", server: {}, tools: [] }),
+    openApiAcquireImpl: async () => ({ bytes: 100, document: { paths: {} } }),
+  });
+  assert.equal(agentSurfaceBudgetAuditMcpOutputSchema.safeParse(success).success, true);
+
+  const auth = new Error("/mcp returned HTTP 401");
+  auth.code = "authentication_required";
+  auth.httpStatus = 401;
+  const failure = await agentSurfaceBudgetAudit(request, {
+    now: () => new Date("2026-08-12T15:00:00.000Z"),
+    mcpAcquireImpl: async () => { throw auth; },
+    openApiAcquireImpl: async () => ({ bytes: 100, document: { paths: {} } }),
+  });
+  assert.equal(agentSurfaceBudgetAuditMcpOutputSchema.safeParse(failure).success, true);
+  assert.equal(agentSurfaceBudgetAuditMcpOutputSchema.safeParse({ ...failure, extra: true }).success, false);
 });

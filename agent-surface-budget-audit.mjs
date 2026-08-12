@@ -1,4 +1,5 @@
 import { request as httpsRequest } from "node:https";
+import { z } from "zod";
 
 import {
   createPinnedLookup,
@@ -15,7 +16,7 @@ const MAX_OPERATION_COUNT = 2_000;
 const DEFAULT_MCP_BUDGET = 65_536;
 const DEFAULT_OPENAPI_BUDGET = 524_288;
 const DOH_URL = "https://cloudflare-dns.com/dns-query";
-const FAILURE_CODES = new Set([
+const FAILURE_CODE_VALUES = Object.freeze([
   "authentication_required",
   "bounded_transport_failure",
   "connection_reset",
@@ -29,6 +30,71 @@ const FAILURE_CODES = new Set([
   "transport_timeout",
   "upstream_unavailable",
 ]);
+const FAILURE_CODES = new Set(FAILURE_CODE_VALUES);
+
+const surfaceFailureSchema = z.object({
+  available: z.literal(false),
+  failureCode: z.enum(FAILURE_CODE_VALUES),
+  httpStatus: z.number().int().min(300).max(599).optional(),
+}).strict();
+
+const heavyToolSchema = z.object({
+  name: z.string(),
+  bytes: z.number().int().nonnegative(),
+  descriptionBytes: z.number().int().nonnegative(),
+  inputSchemaBytes: z.number().int().nonnegative(),
+  outputSchemaBytes: z.number().int().nonnegative(),
+  hasTitle: z.boolean(),
+  hasDescription: z.boolean(),
+  hasInputSchema: z.boolean(),
+  hasOutputSchema: z.boolean(),
+}).strict();
+
+const mcpSurfaceSchema = z.discriminatedUnion("available", [
+  surfaceFailureSchema,
+  z.object({
+    available: z.literal(true), bytes: z.number().int().nonnegative(),
+    byteDerivedTokenEstimate: z.number().int().nonnegative(), budgetBytes: z.number().int().positive(),
+    withinBudget: z.boolean(), protocolVersion: z.string().nullable(),
+    server: z.object({ name: z.string().nullable(), version: z.string().nullable() }).strict(),
+    toolCount: z.number().int().nonnegative(), pageCount: z.number().int().positive(),
+    selectionBytes: z.number().int().nonnegative(), missingTitleCount: z.number().int().nonnegative(),
+    missingDescriptionCount: z.number().int().nonnegative(), missingInputSchemaCount: z.number().int().nonnegative(),
+    missingOutputSchemaCount: z.number().int().nonnegative(), heaviestTools: z.array(heavyToolSchema).max(8),
+  }).strict(),
+]);
+
+const heavyOperationSchema = z.object({
+  method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]),
+  path: z.string(), bytes: z.number().int().nonnegative(), summaryBytes: z.number().int().nonnegative(),
+  hasOperationId: z.boolean(),
+}).strict();
+
+const openApiSurfaceSchema = z.discriminatedUnion("available", [
+  surfaceFailureSchema,
+  z.object({
+    available: z.literal(true), bytes: z.number().int().nonnegative(),
+    byteDerivedTokenEstimate: z.number().int().nonnegative(), budgetBytes: z.number().int().positive(),
+    withinBudget: z.boolean(), operationCount: z.number().int().nonnegative(),
+    missingOperationIdCount: z.number().int().nonnegative(), heaviestOperations: z.array(heavyOperationSchema).max(8),
+  }).strict(),
+]);
+
+export const agentSurfaceBudgetAuditMcpOutputSchema = z.object({
+  ok: z.boolean(), product: z.literal("samedaydesk-agent-surface-budget-audit"), version: z.literal("1.1.0"),
+  checkedAt: z.string().datetime(), decision: z.enum(["within_budget", "optimize", "surface_incomplete"]),
+  request: z.object({
+    origin: z.string().url(), mcpPath: z.string(), openApiPath: z.string(),
+    mcpBudgetBytes: z.number().int().positive(), openApiBudgetBytes: z.number().int().positive(),
+  }).strict(),
+  mcp: mcpSurfaceSchema, openapi: openApiSurfaceSchema, actions: z.array(z.string()).max(16),
+  boundary: z.object({
+    credentialsUsed: z.literal(false), toolsCalled: z.literal(false), targetPaymentSigned: z.literal(false),
+    targetPaymentSent: z.literal(false), redirectsFollowed: z.literal(false), responseBodiesReturned: z.literal(false),
+    schemasRetained: z.literal(false), sessionIdentifiersReturned: z.literal(false),
+    tokenEstimateMethod: z.literal("ceil(UTF-8 bytes / 4); comparative estimate, not tokenizer billing"),
+  }).strict(),
+}).strict();
 
 export class AgentSurfaceBudgetAuditError extends Error {
   constructor(message, { code = "invalid_request", statusCode = 400 } = {}) {
@@ -435,7 +501,7 @@ export function agentSurfaceBudgetAuditOutputSchema() {
     properties: {
       ok: { type: "boolean" },
       product: { type: "string", const: "samedaydesk-agent-surface-budget-audit" },
-      version: { type: "string", const: "1.0.0" },
+      version: { type: "string", const: "1.1.0" },
       checkedAt: { type: "string", format: "date-time" },
       decision: { type: "string", enum: ["within_budget", "optimize", "surface_incomplete"] },
       request: { type: "object" },
@@ -479,7 +545,7 @@ export async function agentSurfaceBudgetAudit(input, {
   return {
     ok: complete,
     product: "samedaydesk-agent-surface-budget-audit",
-    version: "1.0.0",
+    version: "1.1.0",
     checkedAt: now().toISOString(),
     decision: !complete ? "surface_incomplete" : withinBudget ? "within_budget" : "optimize",
     request,
@@ -503,7 +569,7 @@ export async function agentSurfaceBudgetAudit(input, {
 export const AGENT_SURFACE_BUDGET_AUDIT_EXAMPLE = Object.freeze({
   ok: true,
   product: "samedaydesk-agent-surface-budget-audit",
-  version: "1.0.0",
+  version: "1.1.0",
   checkedAt: "2026-08-12T15:00:00.000Z",
   decision: "optimize",
   request: { origin: "https://agents.samedaydesk.com", mcpPath: "/mcp", openApiPath: "/openapi.json", mcpBudgetBytes: 65536, openApiBudgetBytes: 524288 },
