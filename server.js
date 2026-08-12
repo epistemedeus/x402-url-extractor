@@ -81,10 +81,13 @@ import {
   solanaTransactionReceipt,
 } from "./solana-transaction-receipt.mjs";
 import {
-  WALLET_POLICY_CASES,
+  WALLET_POLICY_CASE_NAMES,
   WalletPolicyConformanceError,
   normalizeWalletPolicyConformanceInput,
   walletPolicyConformance,
+  walletPolicyConformanceContract,
+  walletPolicyConformanceInputSchema,
+  walletPolicyConformanceOutputSchema,
 } from "./wallet-policy-conformance.mjs";
 import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
@@ -623,51 +626,6 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/security/wallet-policy-conformance`, method: "POST", amount: priceToAtomic(WALLET_POLICY_CONFORMANCE_PRICE), description: "Evaluate a credential-free standardized allow/deny matrix for an agent wallet or delegated signer. Distinguishes explicit provider policy denials from validation and generic provider failures, separates operation allowlisting from exact execution-shape control, and returns conformant, partial, or unsafe without an opaque score. Accepts no credentials, wallet IDs, signatures, transactions, or raw provider responses.", mimeType: "application/json" },
 ];
 
-const WALLET_POLICY_CASE_NAMES = Object.freeze(Object.keys(WALLET_POLICY_CASES));
-const walletPolicyObservationSchema = () => ({
-  type: "object",
-  properties: {
-    case: { type: "string", enum: WALLET_POLICY_CASE_NAMES },
-    actual: { type: "string", enum: ["allowed", "denied", "error"] },
-    denialClass: { type: "string", enum: ["none", "policy", "validation", "provider"] },
-    code: { type: "string", pattern: "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$" },
-  },
-  required: ["case", "actual", "denialClass"],
-  additionalProperties: false,
-});
-const walletPolicyConformanceInputSchema = () => ({
-  type: "object",
-  properties: {
-    profileId: { type: "string", minLength: 1, maxLength: 128 },
-    provider: { type: "string", minLength: 1, maxLength: 128 },
-    network: { type: "string", minLength: 1, maxLength: 128 },
-    protocol: { type: "string", minLength: 1, maxLength: 128 },
-    observations: { type: "array", minItems: 1, maxItems: 16, items: walletPolicyObservationSchema() },
-  },
-  required: ["profileId", "provider", "network", "protocol", "observations"],
-  additionalProperties: false,
-});
-const walletPolicyConformanceOutputSchema = () => ({
-  type: "object",
-  properties: {
-    schemaVersion: { type: "string", const: "samedaydesk.wallet-policy-conformance.v1" },
-    product: { type: "string", const: "samedaydesk-wallet-policy-conformance" },
-    evaluatedAt: { type: "string", format: "date-time" },
-    profile: { type: "object" },
-    decision: { type: "string", enum: ["conformant", "partial", "unsafe"] },
-    complete: { type: "boolean" },
-    exactShapePassed: { type: "boolean" },
-    results: { type: "array" },
-    providerNativeVerified: { type: "array", items: { type: "string" } },
-    providerNativeUnverified: { type: "array", items: { type: "string" } },
-    notEvaluatedByWalletPolicy: { type: "array", items: { type: "string" } },
-    missingRequiredCases: { type: "array", items: { type: "string" } },
-    unsafeCases: { type: "array", items: { type: "string" } },
-    inconclusiveCases: { type: "array", items: { type: "string" } },
-    boundary: { type: "object" },
-  },
-  required: ["schemaVersion", "product", "evaluatedAt", "profile", "decision", "complete", "exactShapePassed", "results", "providerNativeVerified", "providerNativeUnverified", "notEvaluatedByWalletPolicy", "missingRequiredCases", "unsafeCases", "inconclusiveCases", "boundary"],
-});
 const WALLET_POLICY_DISCOVERY_INPUT = Object.freeze({
   profileId: "privy-solana-lab",
   provider: "Privy",
@@ -678,6 +636,10 @@ const WALLET_POLICY_DISCOVERY_INPUT = Object.freeze({
     Object.freeze({ case: "wrong_operation", actual: "denied", denialClass: "policy", code: "policy_violation" }),
     Object.freeze({ case: "duplicate_approved_action", actual: "allowed", denialClass: "none", code: "signed" }),
   ]),
+});
+const WALLET_POLICY_CONTRACT = walletPolicyConformanceContract({
+  endpoint: `${PUBLIC_URL}/security/wallet-policy-conformance`,
+  priceAtomicUsdc: priceToAtomic(WALLET_POLICY_CONFORMANCE_PRICE),
 });
 const circleGateway = buildCircleGatewayRoute({
   sellerAddress: PAY_TO,
@@ -1022,8 +984,14 @@ ${circleGateway.enabled ? line(CIRCLE_GATEWAY_PATH, PAYMENT_OFFER_PREFLIGHT_PRIC
 - Solana Agent Registry metadata: ${PUBLIC_URL}/.well-known/agent-registration.json
 - Aggregate demand telemetry: ${PUBLIC_URL}/v0/commerce-demand.json
 - Buyer policy reference: ${BUYER_POLICY_REFERENCE.release}
+- Wallet-policy conformance contract: ${PUBLIC_URL}/schemas/wallet-policy-conformance-v1.json
 - Source: https://github.com/epistemedeus/x402-url-extractor
 `);
+});
+
+app.get("/schemas/wallet-policy-conformance-v1.json", (_req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  return res.json(WALLET_POLICY_CONTRACT);
 });
 
 app.get("/robots.txt", (_req, res) => {
@@ -1123,6 +1091,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       "/.well-known/glama.json": { get: { summary: "Project-owned Glama connector maintainer verification.", responses: { "200": { description: "Glama connector verification" } } } },
       "/.well-known/x402-verification.json": { get: { summary: "Public server-ownership proof for the x402.jobs resource registry.", responses: { "200": { description: "x402.jobs ownership verification" } } } },
       "/.well-known/agent-registration.json": { get: { summary: "ERC-8004-compatible SameDayDesk registration metadata for the Solana Agent Registry.", responses: { "200": { description: "SameDayDesk agent identity, service endpoints, settlement wallet, and x402 support" } } } },
+      "/schemas/wallet-policy-conformance-v1.json": { get: { summary: "Free canonical case matrix and JSON Schemas for the wallet-policy conformance product.", responses: { "200": { description: "Versioned credential-free wallet-policy conformance contract" } } } },
       "/a2a/message:send": { post: { summary: "Return the exact-price x402 and MPP action catalog as an A2A direct message.", responses: { "200": { description: "A2A message containing the action catalog" }, "400": { description: "Invalid request or unsupported A2A version" } } } },
       "/platforms": { get: { summary: "Human-readable Settlement Radar health cards.", responses: { "200": { description: "HTML platform health index" } } } },
       "/work/opportunity-preflight": { get: { summary: RESOURCES[11].description, parameters: [{ name: "platform", in: "query", required: false, schema: { type: "string", example: "taskmarket" } }, { name: "rewardUsd", in: "query", required: true, schema: { type: "number", exclusiveMinimum: 0 } }, { name: "hours", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "hourlyCostUsd", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "computeUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "mandatorySpendUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "reusableValueUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "selectionProbabilityPct", in: "query", required: false, schema: { type: "number", minimum: 0, maximum: 100 } }, { name: "competition", in: "query", required: false, schema: { type: "integer", minimum: 0, default: 0 } }, { name: "slots", in: "query", required: false, schema: { type: "integer", minimum: 1, default: 1 } }, { name: "agentAccess", in: "query", required: false, schema: { type: "string", enum: ["agent_allowed", "agent_only", "mixed", "human_only", "unknown"], default: "unknown" } }, { name: "acceptance", in: "query", required: false, schema: { type: "string", enum: ["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"], default: "unknown" } }, { name: "settlement", in: "query", required: false, schema: { type: "string", enum: ["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"], default: "unknown" } }], responses: { "200": { description: "deterministic opportunity economics and evidence preflight" }, "400": { description: "invalid required input, charged nothing" }, "402": { description: `payment required (x402, ${OPPORTUNITY_PREFLIGHT_PRICE} USDC base)` } } } },
@@ -2842,6 +2811,11 @@ app.get("/", (req, res) => {
         { value: "agentictrade-v1", source: "agentictrade" },
       ],
       buyerPolicyReference: BUYER_POLICY_REFERENCE,
+      walletPolicyConformance: {
+        route: "POST /security/wallet-policy-conformance",
+        priceUsdc: Number(priceToAtomic(WALLET_POLICY_CONFORMANCE_PRICE)) / 1e6,
+        contract: "/schemas/wallet-policy-conformance-v1.json",
+      },
       flow: "discover -> validate schema and price -> pay -> call -> receive deterministic result and receipt -> safely replay the same logical request",
     },
     paidRoutes: {

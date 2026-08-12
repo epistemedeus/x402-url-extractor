@@ -4,6 +4,9 @@ import {
   WalletPolicyConformanceError,
   WALLET_POLICY_CASES,
   normalizeWalletPolicyConformanceInput,
+  walletPolicyConformanceContract,
+  walletPolicyConformanceInputSchema,
+  walletPolicyConformanceOutputSchema,
   walletPolicyConformance,
 } from "./wallet-policy-conformance.mjs";
 
@@ -130,3 +133,24 @@ test("raw error messages and nested evidence are rejected", () => {
   );
 });
 
+test("publishes one canonical free machine contract from the evaluator cases", () => {
+  const contract = walletPolicyConformanceContract({
+    endpoint: "https://agents.samedaydesk.com/security/wallet-policy-conformance",
+    priceAtomicUsdc: "10000",
+  });
+  assert.equal(contract.schemaVersion, "samedaydesk.wallet-policy-conformance-contract.v1");
+  assert.equal(contract.endpoint.method, "POST");
+  assert.equal(contract.endpoint.priceAtomicUsdc, "10000");
+  assert.deepEqual(contract.endpoint.paymentProtocols, ["x402", "mpp"]);
+  assert.deepEqual(contract.inputSchema, walletPolicyConformanceInputSchema());
+  assert.deepEqual(contract.outputSchema, walletPolicyConformanceOutputSchema());
+  assert.deepEqual(contract.cases.map(({ name }) => name), Object.keys(WALLET_POLICY_CASES));
+  assert.ok(contract.requiredCases.includes("duplicate_approved_action"));
+});
+
+test("contract publication rejects unsafe endpoints, prices, and protocols", () => {
+  assert.throws(() => walletPolicyConformanceContract({ endpoint: "http://example.com/report", priceAtomicUsdc: "10000" }), /HTTPS/);
+  assert.throws(() => walletPolicyConformanceContract({ endpoint: "https://user@example.com/report", priceAtomicUsdc: "10000" }), /credential-free/);
+  assert.throws(() => walletPolicyConformanceContract({ endpoint: "https://example.com/report", priceAtomicUsdc: "0" }), /positive integer/);
+  assert.throws(() => walletPolicyConformanceContract({ endpoint: "https://example.com/report", priceAtomicUsdc: "10000", paymentProtocols: ["other"] }), /x402 or mpp/);
+});

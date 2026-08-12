@@ -19,6 +19,8 @@ export const WALLET_POLICY_CASES = Object.freeze({
   missing_validity: Object.freeze({ expected: "deny", control: "execution_shape", required: false }),
 });
 
+export const WALLET_POLICY_CASE_NAMES = Object.freeze(Object.keys(WALLET_POLICY_CASES));
+
 export const WALLET_POLICY_CONTROL_DIMENSIONS = Object.freeze([
   "authorization",
   "operation",
@@ -100,6 +102,95 @@ function normalizeObservation(value, index) {
     actual: observation.actual,
     denialClass,
     ...(observation.code ? { code: observation.code } : {}),
+  });
+}
+
+export function walletPolicyConformanceInputSchema() {
+  return {
+    $schema: "https://json-schema.org/draft/2020-12/schema",
+    type: "object",
+    properties: {
+      profileId: { type: "string", minLength: 1, maxLength: 128 },
+      provider: { type: "string", minLength: 1, maxLength: 128 },
+      network: { type: "string", minLength: 1, maxLength: 128 },
+      protocol: { type: "string", minLength: 1, maxLength: 128 },
+      observations: {
+        type: "array",
+        minItems: 1,
+        maxItems: 16,
+        items: {
+          type: "object",
+          properties: {
+            case: { type: "string", enum: [...WALLET_POLICY_CASE_NAMES] },
+            actual: { type: "string", enum: ["allowed", "denied", "error"] },
+            denialClass: { type: "string", enum: ["none", "policy", "validation", "provider"] },
+            code: { type: "string", pattern: "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$" },
+          },
+          required: ["case", "actual", "denialClass"],
+          additionalProperties: false,
+        },
+      },
+    },
+    required: ["profileId", "provider", "network", "protocol", "observations"],
+    additionalProperties: false,
+  };
+}
+
+export function walletPolicyConformanceOutputSchema() {
+  return {
+    $schema: "https://json-schema.org/draft/2020-12/schema",
+    type: "object",
+    properties: {
+      schemaVersion: { type: "string", const: SCHEMA_VERSION },
+      product: { type: "string", const: "samedaydesk-wallet-policy-conformance" },
+      evaluatedAt: { type: "string", format: "date-time" },
+      profile: { type: "object" },
+      decision: { type: "string", enum: ["conformant", "partial", "unsafe"] },
+      complete: { type: "boolean" },
+      exactShapePassed: { type: "boolean" },
+      results: { type: "array" },
+      providerNativeVerified: { type: "array", items: { type: "string" } },
+      providerNativeUnverified: { type: "array", items: { type: "string" } },
+      notEvaluatedByWalletPolicy: { type: "array", items: { type: "string" } },
+      missingRequiredCases: { type: "array", items: { type: "string" } },
+      unsafeCases: { type: "array", items: { type: "string" } },
+      inconclusiveCases: { type: "array", items: { type: "string" } },
+      boundary: { type: "object" },
+    },
+    required: ["schemaVersion", "product", "evaluatedAt", "profile", "decision", "complete", "exactShapePassed", "results", "providerNativeVerified", "providerNativeUnverified", "notEvaluatedByWalletPolicy", "missingRequiredCases", "unsafeCases", "inconclusiveCases", "boundary"],
+  };
+}
+
+export function walletPolicyConformanceContract({ endpoint, priceAtomicUsdc, paymentProtocols = ["x402", "mpp"] } = {}) {
+  let url;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    fail("contract endpoint must be an absolute HTTPS URL");
+  }
+  if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) {
+    fail("contract endpoint must be a credential-free absolute HTTPS URL");
+  }
+  const amount = String(priceAtomicUsdc || "");
+  if (!/^[1-9][0-9]{0,20}$/.test(amount)) fail("contract priceAtomicUsdc must be a positive integer string");
+  if (!Array.isArray(paymentProtocols) || paymentProtocols.length < 1 || paymentProtocols.some((value) => !["x402", "mpp"].includes(value))) {
+    fail("contract paymentProtocols must contain x402 or mpp");
+  }
+  return Object.freeze({
+    schemaVersion: "samedaydesk.wallet-policy-conformance-contract.v1",
+    product: "samedaydesk-wallet-policy-conformance",
+    endpoint: Object.freeze({ method: "POST", url: url.href, priceAtomicUsdc: amount, paymentProtocols: Object.freeze([...new Set(paymentProtocols)]) }),
+    cases: Object.freeze(Object.entries(WALLET_POLICY_CASES).map(([name, definition]) => Object.freeze({ name, ...definition }))),
+    requiredCases: REQUIRED_CASES,
+    inputSchema: Object.freeze(walletPolicyConformanceInputSchema()),
+    outputSchema: Object.freeze(walletPolicyConformanceOutputSchema()),
+    evidenceClasses: Object.freeze({
+      policy: "Explicit provider-policy denial; eligible for provider-native control credit.",
+      validation: "Request or SDK validation stopped the case before provider-policy enforcement.",
+      provider: "Generic provider rejection without proof that the configured policy caused it.",
+      none: "No denial occurred; required for an allowed outcome.",
+    }),
+    boundary: "Free machine contract only. The paid evaluator accepts no credential fields or raw provider payloads and does not access a wallet, sign, broadcast, or independently run the provider tests.",
   });
 }
 
@@ -207,4 +298,3 @@ export function walletPolicyConformance(input) {
     }),
   });
 }
-

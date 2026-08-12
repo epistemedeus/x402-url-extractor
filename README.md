@@ -32,6 +32,7 @@ settlement proof, and AI-search readiness audits.
 - Base USDC settlement proof: `GET /commerce/settlement-proof?transactionHash=0x...&recipient=0x...&amountAtomic=5000`
 - Base or Ethereum transaction receipt: `GET /chain/transaction-receipt?transactionHash=0x...&network=base`
 - Wallet policy conformance: `POST /security/wallet-policy-conformance`
+- Wallet policy conformance contract: `GET /schemas/wallet-policy-conformance-v1.json`
 - Material-change alert probe: https://agents.samedaydesk.com/alerts
 - Agoragentic seller callback: `POST /integrations/agoragentic/ai-readiness-audit`
 - the402 signed fulfillment webhook: `POST /integrations/the402/webhook`
@@ -209,6 +210,12 @@ explicit provider policy denial as provider-native enforcement, and returns
 secret-bearing shapes are rejected before payment. The evaluator accepts no
 wallet credential, signature, transaction body, wallet access, or broadcast
 authority and does not claim to have executed the caller's provider tests.
+
+Version 1.14.1 publishes the exact standardized cases, evidence classes, input
+schema, output schema, method, protocols, and atomic price at the free canonical
+`/schemas/wallet-policy-conformance-v1.json` contract. The paid route, price,
+decision logic, payment gates, and settlement remain unchanged. Machine clients
+can now construct and validate the matrix without decoding a payment challenge.
 
 Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
 before startup. Six newer routes previously settled successfully while Coinbase
