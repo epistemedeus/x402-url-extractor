@@ -15,6 +15,20 @@ const MAX_OPERATION_COUNT = 2_000;
 const DEFAULT_MCP_BUDGET = 65_536;
 const DEFAULT_OPENAPI_BUDGET = 524_288;
 const DOH_URL = "https://cloudflare-dns.com/dns-query";
+const FAILURE_CODES = new Set([
+  "authentication_required",
+  "bounded_transport_failure",
+  "connection_reset",
+  "dns_failed",
+  "method_not_allowed",
+  "rate_limited",
+  "redirect_rejected",
+  "surface_invalid",
+  "surface_too_large",
+  "surface_unavailable",
+  "transport_timeout",
+  "upstream_unavailable",
+]);
 
 export class AgentSurfaceBudgetAuditError extends Error {
   constructor(message, { code = "invalid_request", statusCode = 400 } = {}) {
@@ -23,6 +37,32 @@ export class AgentSurfaceBudgetAuditError extends Error {
     this.code = code;
     this.statusCode = statusCode;
   }
+}
+
+class SurfaceAcquisitionError extends Error {
+  constructor(message, { code, httpStatus = null } = {}) {
+    super(message);
+    this.name = "SurfaceAcquisitionError";
+    this.code = code;
+    this.httpStatus = httpStatus;
+  }
+}
+
+function httpFailure(url, status) {
+  const code = status === 401 || status === 403
+    ? "authentication_required"
+    : status === 404
+      ? "surface_unavailable"
+      : status === 405
+        ? "method_not_allowed"
+        : status === 429
+          ? "rate_limited"
+          : status >= 500 && status <= 599
+            ? "upstream_unavailable"
+            : status >= 300 && status <= 399
+              ? "redirect_rejected"
+              : "bounded_transport_failure";
+  return new SurfaceAcquisitionError(`${url.pathname} returned HTTP ${status}`, { code, httpStatus: status });
 }
 
 function integer(value, fallback, minimum, maximum, name) {
@@ -156,7 +196,7 @@ async function requestBounded(url, {
       if (status !== 200) {
         settled = true;
         response.destroy();
-        reject(new Error(`${url.pathname} returned HTTP ${status}`));
+        reject(httpFailure(url, status));
         return;
       }
       const declared = Number(response.headers["content-length"]);
@@ -349,14 +389,43 @@ function analyzeOpenApi(surface, budget) {
 
 function failure(error) {
   const message = String(error?.message || error);
-  const code = /exceeded .*bytes|exceeds the .*ceiling/.test(message)
+  let code = FAILURE_CODES.has(error?.code)
+    ? error.code
+    : /exceeded .*bytes|exceeds the .*ceiling/.test(message)
     ? "surface_too_large"
     : /HTTP 404|missing paths|missing or exceeds/.test(message)
       ? "surface_unavailable"
       : /did not return JSON|JSON-RPC/.test(message)
         ? "surface_invalid"
-        : "bounded_transport_failure";
-  return { available: false, failureCode: code };
+        : /timed out|ETIMEDOUT/.test(message)
+          ? "transport_timeout"
+          : /ECONNRESET|socket hang up/.test(message)
+            ? "connection_reset"
+            : /DNS|ENOTFOUND|EAI_AGAIN/.test(message)
+              ? "dns_failed"
+              : "bounded_transport_failure";
+  if (!FAILURE_CODES.has(code)) code = "bounded_transport_failure";
+  const result = { available: false, failureCode: code };
+  if (Number.isInteger(error?.httpStatus) && error.httpStatus >= 300 && error.httpStatus <= 599) {
+    result.httpStatus = error.httpStatus;
+  }
+  return result;
+}
+
+function unavailableAction(kind, surface) {
+  const label = kind === "mcp" ? "MCP initialize and tools/list" : "same-origin OpenAPI";
+  if (surface.failureCode === "authentication_required") return `Expose a bounded credential-free ${label} surface, or publish the exact authorization requirement so agents can classify it before selection.`;
+  if (surface.failureCode === "method_not_allowed") return `Serve ${label} on the declared method and path, or update the public descriptor to the exact supported endpoint.`;
+  if (surface.failureCode === "rate_limited") return `Document and provide a bounded anonymous discovery quota for ${label}; discovery should not require repeated retries.`;
+  if (surface.failureCode === "redirect_rejected") return `Serve ${label} directly at the declared same-origin path instead of redirecting discovery.`;
+  if (surface.failureCode === "upstream_unavailable") return `Restore the declared ${label} endpoint and add a credential-free readiness check before catalog publication.`;
+  if (surface.failureCode === "transport_timeout" || surface.failureCode === "connection_reset") return `Stabilize the declared ${label} transport and verify it with a bounded credential-free readiness probe.`;
+  if (surface.failureCode === "dns_failed") return `Publish stable public DNS for the declared ${label} origin, or correct the public descriptor to the reachable canonical origin.`;
+  if (surface.failureCode === "surface_invalid") return `Return a valid bounded ${label} document at the declared path.`;
+  if (surface.failureCode === "surface_too_large") return `Publish a bounded task-scoped ${label} view that fits the declared acquisition ceiling.`;
+  return kind === "mcp"
+    ? "Publish a bounded credential-free MCP initialize and tools/list surface on the declared path."
+    : "Publish a bounded same-origin OpenAPI document for exact operation discovery.";
 }
 
 export function agentSurfaceBudgetAuditOutputSchema() {
@@ -392,14 +461,14 @@ export async function agentSurfaceBudgetAudit(input, {
   const mcp = mcpResult.status === "fulfilled" ? analyzeMcp(mcpResult.value, request.mcpBudgetBytes) : failure(mcpResult.reason);
   const openapi = openApiResult.status === "fulfilled" ? analyzeOpenApi(openApiResult.value, request.openApiBudgetBytes) : failure(openApiResult.reason);
   const actions = [];
-  if (!mcp.available) actions.push("Publish a bounded credential-free MCP initialize and tools/list surface on the declared path.");
+  if (!mcp.available) actions.push(unavailableAction("mcp", mcp));
   else {
     if (!mcp.withinBudget) actions.push("Add progressive MCP tool discovery or split the server into task-focused tool sets so clients do not ingest the full catalog every turn.");
     if (mcp.heaviestTools.some((tool) => tool.bytes > 8_192)) actions.push("Reduce the heaviest tool definitions by moving examples and long guidance to linked resources while preserving selection-critical descriptions and schemas.");
     if (mcp.missingTitleCount || mcp.missingDescriptionCount || mcp.missingInputSchemaCount) actions.push("Give every tool a concise selection title, disambiguating description, and explicit input schema.");
     if (mcp.missingOutputSchemaCount) actions.push("Add truthful outputSchema declarations where the runtime can guarantee them; keep optional or dynamic fields explicit.");
   }
-  if (!openapi.available) actions.push("Publish a bounded same-origin OpenAPI document for exact operation discovery.");
+  if (!openapi.available) actions.push(unavailableAction("openapi", openapi));
   else {
     if (!openapi.withinBudget) actions.push("Publish route-scoped or tag-scoped OpenAPI discovery views so agents can fetch only the operations relevant to their task.");
     if (openapi.heaviestOperations.some((operation) => operation.bytes > 32_768)) actions.push("Move long operation examples or prose to linked documentation while retaining request and response contracts in OpenAPI.");

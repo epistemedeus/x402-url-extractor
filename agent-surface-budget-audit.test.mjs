@@ -85,6 +85,34 @@ test("fails one surface closed while preserving the other measurement", async ()
   assert.match(result.actions.join(" "), /Publish a bounded credential-free MCP/);
 });
 
+test("preserves decision-grade acquisition failures and recommends the matching repair", async () => {
+  const auth = new Error("/mcp returned HTTP 401");
+  auth.code = "authentication_required";
+  auth.httpStatus = 401;
+  const outage = new Error("/openapi.json returned HTTP 503");
+  outage.code = "upstream_unavailable";
+  outage.httpStatus = 503;
+  const result = await agentSurfaceBudgetAudit(request, {
+    mcpAcquireImpl: async () => { throw auth; },
+    openApiAcquireImpl: async () => { throw outage; },
+  });
+  assert.deepEqual(result.mcp, { available: false, failureCode: "authentication_required", httpStatus: 401 });
+  assert.deepEqual(result.openapi, { available: false, failureCode: "upstream_unavailable", httpStatus: 503 });
+  assert.match(result.actions.join(" "), /authorization requirement/);
+  assert.match(result.actions.join(" "), /readiness check/);
+  assert.doesNotMatch(result.actions.join(" "), /Publish a bounded credential-free MCP initialize/);
+});
+
+test("classifies timeout and reset without exposing transport detail", async () => {
+  const result = await agentSurfaceBudgetAudit(request, {
+    mcpAcquireImpl: async () => { throw new Error("/mcp request timed out"); },
+    openApiAcquireImpl: async () => { const error = new Error("socket hang up"); error.code = "ECONNRESET"; throw error; },
+  });
+  assert.equal(result.mcp.failureCode, "transport_timeout");
+  assert.equal(result.openapi.failureCode, "connection_reset");
+  assert.equal(JSON.stringify(result).includes("socket hang up"), false);
+});
+
 test("returns within_budget only when both surfaces fit", async () => {
   const result = await agentSurfaceBudgetAudit(request, {
     mcpAcquireImpl: async () => ({ bytes: 100, protocolVersion: "2025-11-25", server: {}, tools: [{ name: "x", title: "X", description: "X", inputSchema: { type: "object" }, outputSchema: { type: "object" } }] }),
