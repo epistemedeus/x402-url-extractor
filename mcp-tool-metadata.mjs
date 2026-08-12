@@ -61,6 +61,10 @@ const TOOL_METADATA = Object.freeze({
     title: "Search Contract-Qualified Services",
     description: "Search Agent402 and the official MPP catalog for paid machine services that both match a capability intent and guarantee buyer-required JSON response paths. Use `agent_discoverability_audit` when you are measuring one known seller's catalog reach or rank, `seller_integrity_audit` when you already know the exact seller route to inspect, or `payment_offer_preflight` when you already have one exact callable GET URL. This search excludes SameDayDesk-owned supply and unresolved routes before audit, uses no credential or wallet, sends no seller POST or target payment, reads no paid response body, and returns only a query digest.",
   },
+  agent_surface_budget_audit: {
+    title: "Audit Agent Surface Budget",
+    description: "Measure one public service's credential-free MCP tools/list and OpenAPI discovery burden before any tool call or target payment. Use `agent_discoverability_audit` for catalog reach and rank, `seller_integrity_audit` for one exact operation's response contract, or this tool for byte budgets, heaviest definitions, missing selection contracts, and progressive-discovery fixes. It follows no redirect, calls no target tool, sends no credential or target payment, and returns no target schema, response body, or session identifier.",
+  },
   settlement_proof: {
     title: "Verify Base USDC Settlement",
     description: "Verify one claimed canonical Base USDC settlement after execution by matching a successful transaction receipt to the exact recipient, atomic amount, and optional payer. Use `payment_offer_preflight` before authorization when you need to inspect an unpaid x402 or MPP offer instead. This tool reads only public Base receipt and log data; it reads no merchant ledger and performs no wallet, signing, broadcast, custody, or execution action.",

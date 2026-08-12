@@ -1,8 +1,8 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.epistemedeus/x402-data-gateway",
-  "description": "Twenty-one paid x402 and MPP tools for service search, payment safety, data, and DeFi.",
-  "version": "1.22.3",
+  "description": "Twenty-two paid x402 and MPP tools for agent discovery, payment safety, data, and DeFi.",
+  "version": "1.23.0",
   "websiteUrl": "https://agents.samedaydesk.com/",
   "repository": {
     "url": "https://github.com/epistemedeus/x402-url-extractor",

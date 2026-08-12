@@ -65,6 +65,10 @@ export const BAZAAR_RESOURCE_METADATA = Object.freeze({
     serviceName: "SameDayDesk",
     tags: Object.freeze(["agent-search", "x402", "mpp", "response-contract", "buyer-safety"]),
   }),
+  "/distribution/agent-surface-budget-audit": Object.freeze({
+    serviceName: "SameDayDesk",
+    tags: Object.freeze(["mcp", "openapi", "context-budget", "tool-discovery", "agent-finops"]),
+  }),
   "/commerce/settlement-proof": Object.freeze({
     serviceName: "SameDayDesk",
     tags: Object.freeze(["x402", "settlement-proof", "base", "usdc", "reconciliation"]),
