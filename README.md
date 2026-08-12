@@ -265,6 +265,17 @@ contract read to paid-route challenge, parseable credential, and delivery.
 The public snapshot exposes no actor, credential, raw path, wallet, or provider
 payload, and contract reads remain reach evidence rather than demand.
 
+Version 1.16.0 upgrades payment-offer preflight from protocol parity alone to
+optional catalog-to-runtime coherence. A caller can submit one exact catalog
+candidate with the POST or MCP form, and the product compares it only with the
+matching live unsigned protocol offer across request, protocol, amount,
+network, asset, recipient, and expiry using public
+`agent-payment-policy@0.7.0`. Explicit drift produces `review_required`;
+missing catalog fields remain a visible partial result. The x402 validity
+window is derived from `maxTimeoutSeconds`, malformed catalog input is rejected
+before payment, and the request still uses no target credential, wallet,
+signature, settlement, redirect, or response body.
+
 Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
 before startup. Six newer routes previously settled successfully while Coinbase
 rejected their discovery metadata because their output examples omitted fields

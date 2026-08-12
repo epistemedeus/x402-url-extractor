@@ -95,6 +95,7 @@ test("normalizes matching x402 and MPP offers without credentials or payment", a
   assert.equal(result.decision, "parseable_offer");
   assert.deepEqual(result.protocols, ["mpp", "x402"]);
   assert.equal(result.offerCount, 2);
+  assert.equal(result.offers.find((offer) => offer.protocol === "x402").expiresAt, "2026-08-10T20:05:00.000Z");
   assert.deepEqual(result.parity, { compared: true, consistent: true, driftFields: [] });
   assert.equal(result.offers.find((offer) => offer.protocol === "mpp").amountDisplay, "0.005");
   assert.deepEqual(result.boundary, {
@@ -107,6 +108,85 @@ test("normalizes matching x402 and MPP offers without credentials or payment", a
   });
   assert.equal(JSON.stringify(result).includes("opaque"), false);
   assert.equal(JSON.stringify(result).includes("test-payment-challenge"), false);
+});
+
+test("compares caller-supplied catalog metadata with each live unsigned offer", async () => {
+  const catalog = {
+    source: "coinbase-bazaar",
+    protocol: "x402",
+    method: "GET",
+    url: TARGET,
+    amountAtomic: "5000",
+    network: "eip155:8453",
+    asset: ASSET,
+    recipient: RECIPIENT,
+  };
+  const result = await paymentOfferPreflight({ url: TARGET, catalog }, {
+    now: NOW,
+    requestImpl: async () => response({ paymentRequired: x402Header() }),
+  });
+  assert.equal(result.decision, "parseable_offer");
+  assert.equal(result.catalogCoherence[0].decision, "partial");
+  assert.deepEqual(result.catalogCoherence[0].unknown, ["expiry"]);
+  assert.equal(result.findings.some((finding) => finding.code === "catalog_runtime_offer_partial"), true);
+  assert.equal(JSON.stringify(result.catalogCoherence).includes("a=1"), false);
+});
+
+test("compares a protocol-specific catalog candidate only with that live protocol", async () => {
+  const result = await paymentOfferPreflight({
+    url: TARGET,
+    catalog: {
+      source: "coinbase-bazaar",
+      protocol: "x402",
+      method: "GET",
+      url: TARGET,
+      amountAtomic: "5000",
+      network: "eip155:8453",
+      asset: ASSET,
+      recipient: RECIPIENT,
+    },
+  }, {
+    now: NOW,
+    requestImpl: async () => response({ paymentRequired: x402Header(), authenticate: mppHeader() }),
+  });
+  assert.equal(result.decision, "parseable_offer");
+  assert.equal(result.catalogCoherence.length, 1);
+  assert.equal(result.catalogCoherence[0].runtime.protocol, "x402");
+  assert.equal(result.catalogCoherence[0].decision, "partial");
+});
+
+test("turns explicit catalog to runtime drift into review-required before authorization", async () => {
+  const result = await paymentOfferPreflight({
+    url: TARGET,
+    catalog: {
+      source: "agent402-index",
+      protocol: "x402",
+      method: "GET",
+      url: TARGET,
+      amountAtomic: "7000",
+      network: "eip155:8453",
+      asset: ASSET,
+      recipient: RECIPIENT,
+    },
+  }, {
+    now: NOW,
+    requestImpl: async () => response({ paymentRequired: x402Header({ amount: "5000" }) }),
+  });
+  assert.equal(result.decision, "review_required");
+  assert.deepEqual(result.catalogCoherence[0].drifted, ["amount"]);
+  assert.equal(result.findings.some((finding) => finding.code === "catalog_runtime_offer_drift"), true);
+});
+
+test("rejects malformed catalog metadata before any target request", async () => {
+  let called = false;
+  await assert.rejects(paymentOfferPreflight({
+    url: TARGET,
+    catalog: { source: "registry", method: "POST", url: TARGET },
+  }, {
+    now: NOW,
+    requestImpl: async () => { called = true; return response(); },
+  }), (error) => error instanceof PaymentOfferPreflightError && error.code === "invalid_catalog");
+  assert.equal(called, false);
 });
 
 test("flags economic drift across protocols", async () => {

@@ -62,7 +62,10 @@ import {
 } from "./agent-discoverability-audit.mjs";
 import {
   PaymentOfferPreflightError,
+  normalizePaymentOfferPreflightInput,
   normalizePaymentTarget,
+  paymentOfferPreflightInputSchema,
+  paymentOfferPreflightOutputSchema,
   paymentOfferPreflight,
 } from "./payment-offer-preflight.mjs";
 import {
@@ -193,6 +196,17 @@ const AGENT_DISCOVERABILITY_AUDIT_PRICE = process.env.AGENT_DISCOVERABILITY_AUDI
 // Credential-free x402/MPP offer normalization and parity checks for buyer agents.
 // The low price is deliberate: this is a pre-authorization safety primitive.
 const PAYMENT_OFFER_PREFLIGHT_PRICE = process.env.PAYMENT_OFFER_PREFLIGHT_PRICE || "$0.005";
+const PAYMENT_OFFER_CATALOG_SCHEMA = z.object({
+  source: z.string().min(1).max(128).describe("Public catalog or registry name."),
+  protocol: z.enum(["x402", "mpp"]).optional().describe("Optional advertised payment protocol."),
+  method: z.literal("GET").describe("Catalog request method. The current product inspects exact GET routes."),
+  url: z.string().url().max(2048).describe("Exact catalog candidate URL, including all non-secret query values."),
+  amountAtomic: z.string().regex(/^(?:0|[1-9][0-9]{0,77})$/).optional().describe("Optional advertised price in atomic currency units."),
+  network: z.string().min(1).max(200).optional().describe("Optional advertised network identifier."),
+  asset: z.string().min(1).max(200).optional().describe("Optional advertised currency or asset identifier."),
+  recipient: z.string().min(1).max(200).optional().describe("Optional advertised payment recipient."),
+  expiresAt: z.string().datetime().optional().describe("Optional advertised offer expiry."),
+}).strict();
 // Independent post-settlement proof for one canonical Base USDC transfer.
 const SETTLEMENT_PROOF_PRICE = process.env.SETTLEMENT_PROOF_PRICE || "$0.005";
 // Normalized Base or Ethereum receipt evidence. Commodity-priced below the
@@ -629,7 +643,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/defi/morpho-preliquidation-replay`, amount: priceToAtomic(MORPHO_PRELIQUIDATION_REPLAY_PRICE), description: "Base transaction -> deterministic Morpho PreLiquidation replay: strict event decode, block-time contract parameters and oracle price, repaid debt, seized collateral, gross incentive, and gas. Historical evidence only; no profitability claim or execution.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/work/opportunity-preflight`, amount: priceToAtomic(OPPORTUNITY_PREFLIGHT_PRICE), description: "Agent work opportunity -> deterministic attempt, verify-first, or abandon preflight using caller-supplied cost and selection assumptions plus dated platform evidence. Returns break-even probability, expected surplus, hard gates, and source-linked evidence. No claim, bid, payment, or submission.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/distribution/agent-discoverability-audit`, amount: priceToAtomic(AGENT_DISCOVERABILITY_AUDIT_PRICE), description: "Buyer-intent rank and stale-price audit for one x402 or MPP service across Coinbase Bazaar, Coinbase Agentic Market, Agent402, Circle Agent Marketplace, AgenticTrade, the official MPP catalog, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Returns registry-native position, dependency-labeled source coverage, competitors above the target, expected-route presence, optional exact-price drift, evidence-based next actions, source outages, and explicit method limits. Optional surfaceAudit checks the target's public Agent Card, ERC-8004 registration document, and action catalog through a bounded same-origin fetch. No catalog credentials or payments.", mimeType: "application/json" },
-  { url: `${PUBLIC_URL}/commerce/payment-offer-preflight`, amount: priceToAtomic(PAYMENT_OFFER_PREFLIGHT_PRICE), description: "Compare x402 and MPP payment challenges and terms before buyer authorization for one exact public HTTPS GET URL. Returns normalized offers, URL and realm binding checks, expiry and economic-parity findings, and an explicit parseable, review-required, or no-offer decision. Uses no target credential, signs nothing, sends no payment, follows no redirects, and reads no response body.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/commerce/payment-offer-preflight`, amount: priceToAtomic(PAYMENT_OFFER_PREFLIGHT_PRICE), description: "Compare x402 and MPP payment challenges and terms before buyer authorization for one exact public HTTPS GET URL. Optionally compare caller-supplied catalog metadata with each live unsigned offer across request, protocol, amount, network, asset, recipient, and expiry. Returns normalized offers, binding and parity findings, catalog coherence, and an explicit parseable, review-required, or no-offer decision. Uses no target credential, signs nothing, sends no payment, follows no redirects, and reads no response body.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/commerce/settlement-proof`, amount: priceToAtomic(SETTLEMENT_PROOF_PRICE), description: "Verify one claimed canonical Base USDC settlement against the successful on-chain transaction receipt. Binds an exact transaction hash, recipient, atomic amount, and optional payer; returns a deterministic verified or not-verified result, block time, mismatch findings, and no private merchant-ledger data. Read-only and performs no wallet, signing, broadcast, custody, or execution action.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/chain/transaction-receipt`, amount: priceToAtomic(TRANSACTION_RECEIPT_PRICE), description: "Get a normalized Base or Ethereum transaction receipt from one hash: success or revert status, block time, gas used, effective gas price, total transaction fee, decoded ERC-20 Transfer events, and canonical USDC transfers. Returns explicit not-found or RPC-unavailable evidence, excludes raw logs, and performs no wallet, signing, broadcast, custody, or execution action.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/chain/solana-transaction-receipt`, amount: priceToAtomic(SOLANA_TRANSACTION_RECEIPT_PRICE), description: "Get a normalized finalized Solana transaction receipt from one signature: success or failure status, slot, block time, fee, SPL-token owner deltas, canonical USDC deltas, and optional exact mint, recipient, amount, and payer verification. Returns explicit not-found or RPC-unavailable evidence, excludes raw instructions and logs, and performs no wallet, signing, broadcast, custody, or execution action.", mimeType: "application/json" },
@@ -1144,9 +1158,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
               "application/json": {
                 schema: {
                   type: "object",
-                  properties: { url: { type: "string", format: "uri", maxLength: 2048 } },
-                  required: ["url"],
-                  additionalProperties: false,
+                  ...paymentOfferPreflightInputSchema(),
                 },
               },
             },
@@ -1440,12 +1452,12 @@ app.get("/distribution/agent-discoverability-audit", (req, res, next) => {
 // only after settlement because they are the work this route sells.
 const validatePaymentOfferPreflightRequest = (req, res, next) => {
   try {
-    const url = req.method === "POST" ? req.body?.url : req.query.url;
+    const input = req.method === "POST" ? req.body : { url: req.query.url };
     // Permit the empty unauthenticated POST used by registry discovery to
     // reach the payment challenge. A paid request still requires a valid URL
     // before the facilitator is asked to verify or settle anything.
-    if (req.method === "POST" && !url && !hasPaymentCredential(req)) return next();
-    normalizePaymentTarget(url);
+    if (req.method === "POST" && !input?.url && !hasPaymentCredential(req)) return next();
+    normalizePaymentOfferPreflightInput(input);
     return next();
   } catch (error) {
     return res.status(400).json({
@@ -2220,7 +2232,7 @@ const x402Paywall = paymentMiddleware(
               example: {
                 ok: true,
                 product: "samedaydesk-payment-offer-preflight",
-                version: "1.0.0",
+                version: "1.1.0",
                 checkedAt: "2026-08-10T20:00:00.000Z",
                 target: { method: "GET", url: "https://agents.samedaydesk.com/defi/morpho-position?address=0x8ee9c15c3e5332cbc6ef39a2bb036c63c6549b6e", httpStatus: 402 },
                 decision: "parseable_offer",
@@ -2228,28 +2240,12 @@ const x402Paywall = paymentMiddleware(
                 offerCount: 2,
                 offers: [{ protocol: "x402", scheme: "exact", intent: "exact", network: "eip155:8453", amountAtomic: "20000", valid: true }],
                 parity: { compared: true, consistent: true, driftFields: [] },
+                catalogCoherence: [],
                 findings: [],
                 boundary: { credentialsUsed: false, paymentSigned: false, paymentSent: false, responseBodyRead: false, redirectsFollowed: false },
               },
             },
-            outputSchema: {
-              type: "object",
-              properties: {
-                ok: { type: "boolean" },
-                product: { type: "string", const: "samedaydesk-payment-offer-preflight" },
-                version: { type: "string" },
-                checkedAt: { type: "string" },
-                target: { type: "object" },
-                decision: { type: "string", enum: ["parseable_offer", "review_required", "no_parseable_offer"] },
-                protocols: { type: "array", items: { type: "string", enum: ["mpp", "x402"] } },
-                offerCount: { type: "integer", minimum: 0 },
-                offers: { type: "array" },
-                parity: { type: "object" },
-                findings: { type: "array" },
-                boundary: { type: "object" },
-              },
-              required: ["ok", "product", "version", "checkedAt", "target", "decision", "protocols", "offerCount", "offers", "parity", "findings", "boundary"],
-            },
+            outputSchema: paymentOfferPreflightOutputSchema(),
           }),
         },
       },
@@ -2267,24 +2263,12 @@ const x402Paywall = paymentMiddleware(
             input: {
               url: "https://agents.samedaydesk.com/defi/morpho-position?address=0x8ee9c15c3e5332cbc6ef39a2bb036c63c6549b6e",
             },
-            inputSchema: {
-              type: "object",
-              properties: {
-                url: {
-                  type: "string",
-                  format: "uri",
-                  maxLength: 2048,
-                  description: "Exact public HTTPS GET URL to inspect. Credential-like query keys, fragments, unresolved parameters, local hosts, redirects, and non-public IPs are rejected.",
-                },
-              },
-              required: ["url"],
-              additionalProperties: false,
-            },
+            inputSchema: paymentOfferPreflightInputSchema(),
             output: {
               example: {
                 ok: true,
                 product: "samedaydesk-payment-offer-preflight",
-                version: "1.0.0",
+                version: "1.1.0",
                 checkedAt: "2026-08-10T20:00:00.000Z",
                 target: { method: "GET", url: "https://agents.samedaydesk.com/defi/morpho-position?address=0x8ee9c15c3e5332cbc6ef39a2bb036c63c6549b6e", httpStatus: 402 },
                 decision: "parseable_offer",
@@ -2292,28 +2276,12 @@ const x402Paywall = paymentMiddleware(
                 offerCount: 2,
                 offers: [{ protocol: "x402", scheme: "exact", intent: "exact", network: "eip155:8453", amountAtomic: "20000", valid: true }],
                 parity: { compared: true, consistent: true, driftFields: [] },
+                catalogCoherence: [],
                 findings: [],
                 boundary: { credentialsUsed: false, paymentSigned: false, paymentSent: false, responseBodyRead: false, redirectsFollowed: false },
               },
             },
-            outputSchema: {
-              type: "object",
-              properties: {
-                ok: { type: "boolean" },
-                product: { type: "string", const: "samedaydesk-payment-offer-preflight" },
-                version: { type: "string" },
-                checkedAt: { type: "string" },
-                target: { type: "object" },
-                decision: { type: "string", enum: ["parseable_offer", "review_required", "no_parseable_offer"] },
-                protocols: { type: "array", items: { type: "string", enum: ["mpp", "x402"] } },
-                offerCount: { type: "integer", minimum: 0 },
-                offers: { type: "array" },
-                parity: { type: "object" },
-                findings: { type: "array" },
-                boundary: { type: "object" },
-              },
-              required: ["ok", "product", "version", "checkedAt", "target", "decision", "protocols", "offerCount", "offers", "parity", "findings", "boundary"],
-            },
+            outputSchema: paymentOfferPreflightOutputSchema(),
           }),
         },
       },
@@ -2550,8 +2518,8 @@ const x402Paywall = paymentMiddleware(
 const servePaymentOfferPreflight = async (req, res) => {
   try {
     res.set("Cache-Control", "no-store");
-    const url = req.method === "POST" ? req.body?.url : req.query.url;
-    return res.json(await paymentOfferPreflight({ url }));
+    const input = req.method === "POST" ? req.body : { url: req.query.url };
+    return res.json(await paymentOfferPreflight(input));
   } catch (error) {
     const status = error instanceof PaymentOfferPreflightError
       ? Math.max(400, Math.min(599, Number(error.statusCode) || 502))
@@ -2993,7 +2961,7 @@ import("./mcp-server.mjs")
         { name: "morpho_preliquidation_replay", description: RESOURCES[10].description, price: MORPHO_PRELIQUIDATION_REPLAY_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Successful Base transaction containing a Morpho PreLiquidate event") }, run: (a) => morphoPreLiquidationReplay(a.transactionHash), tags: ["defi", "morpho", "preliquidation", "replay", "economics"] },
         { name: "opportunity_preflight", description: RESOURCES[11].description, price: OPPORTUNITY_PREFLIGHT_PRICE, inputSchema: { platform: z.string().max(100).optional().describe("Optional platform slug used to attach dated platform-health evidence when a matching card exists."), rewardUsd: z.number().positive().describe("Maximum gross reward in USD if the opportunity is selected and paid."), hours: z.number().min(0).max(10000).describe("Estimated human and agent work time in hours for one complete attempt."), hourlyCostUsd: z.number().min(0).max(100000).describe("Internal opportunity cost per hour in USD."), computeUsd: z.number().min(0).default(0).describe("Expected model, API, hosting, and compute spend in USD for one attempt."), mandatorySpendUsd: z.number().min(0).default(0).describe("Non-recoverable cash spend in USD required before the opportunity can settle."), reusableValueUsd: z.number().min(0).default(0).describe("Conservative USD value of reusable code, research, distribution, or other assets created by the attempt."), selectionProbabilityPct: z.number().min(0).max(100).optional().describe("Caller-supplied probability, from 0 to 100, of receiving the reward; omit to receive a verify-first decision."), competition: z.number().int().min(0).default(0).describe("Known number of competing submissions or workers; use 0 when unknown."), slots: z.number().int().min(1).default(1).describe("Number of independently paid winner or worker slots."), agentAccess: z.enum(["agent_allowed", "agent_only", "mixed", "human_only", "unknown"]).default("unknown").describe("Whether the platform explicitly allows agent participation, is agent-only, mixes agents and humans, is human-only, or remains unknown."), acceptance: z.enum(["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"]).default("unknown").describe("How completion is accepted: deterministic proof, machine score, review deadline, discretionary judgment, or unknown."), settlement: z.enum(["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"]).default("unknown").describe("How the reward is funded and paid: direct, escrow, platform balance, discretionary, unfunded, or unknown.") }, run: (a) => opportunityPreflight(a, { platformCard: a.platform ? getPlatformHealthCard(a.platform.toLowerCase()) : null }), tags: ["work", "bounty", "economics", "preflight", "settlement-evidence"] },
         { name: "agent_discoverability_audit", description: RESOURCES[12].description, price: AGENT_DISCOVERABILITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Public HTTPS service origin"), intent: z.string().min(20).max(500).describe("Brand-blind capability description"), route: z.string().regex(/^\/[^?#]*$/).optional().describe("Optional expected exact path"), payTo: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional EVM payTo for alias matching"), expectedPriceUsd: z.union([z.number().min(0).max(1000000), z.string().regex(/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,6})?$/)]).optional().describe("Optional exact route price expected by the caller. Requires route; compares catalog metadata only."), surfaceAudit: z.boolean().optional().describe("When true, inspect the target's public Agent Card, ERC-8004 registration document, and action catalog for the expected route through bounded same-origin fetches.") }, run: (a) => agentDiscoverabilityAudit(a), tags: ["distribution", "discovery", "x402", "mpp", "agent402", "catalog-price", "a2a", "erc-8004"] },
-        { name: "payment_offer_preflight", description: RESOURCES[13].description, price: PAYMENT_OFFER_PREFLIGHT_PRICE, inputSchema: { url: z.string().url().max(2048).describe("Exact public HTTPS GET route whose unpaid x402 and MPP challenge headers should be inspected before buyer authorization. Credential-like query keys, fragments, unresolved parameters, local hosts, redirects, and non-public IPs are rejected.") }, run: (a) => paymentOfferPreflight(a), tags: ["payments", "x402", "mpp", "buyer-safety", "preflight"] },
+        { name: "payment_offer_preflight", description: RESOURCES[13].description, price: PAYMENT_OFFER_PREFLIGHT_PRICE, inputSchema: { url: z.string().url().max(2048).describe("Exact public HTTPS GET route whose unpaid x402 and MPP challenge headers should be inspected before buyer authorization. Credential-like query keys, fragments, unresolved parameters, local hosts, redirects, and non-public IPs are rejected."), catalog: PAYMENT_OFFER_CATALOG_SCHEMA.optional().describe("Optional caller-supplied catalog candidate. When present, the tool compares it with every live unsigned offer across request, protocol, amount, network, asset, recipient, and expiry.") }, run: (a) => paymentOfferPreflight(a), tags: ["payments", "x402", "mpp", "buyer-safety", "preflight", "catalog-coherence"] },
         { name: "settlement_proof", description: RESOURCES[14].description, price: SETTLEMENT_PROOF_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Base mainnet transaction hash containing the claimed canonical USDC transfer."), recipient: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Expected canonical Base USDC recipient."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,20}$/).describe("Expected positive USDC amount in six-decimal atomic units."), payer: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional expected canonical Base USDC payer.") }, run: (a) => settlementProof(a), tags: ["payments", "x402", "settlement", "reconciliation", "base-usdc"] },
         { name: "transaction_receipt", description: RESOURCES[15].description, price: TRANSACTION_RECEIPT_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Mined Base or Ethereum transaction hash whose normalized receipt should be returned."), network: z.enum(["base", "ethereum"]).default("base").describe("Receipt network. Defaults to Base mainnet.") }, run: (a) => transactionReceipt(a), tags: ["blockchain", "receipt", "gas", "erc20", "usdc"] },
         { name: "solana_transaction_receipt", description: RESOURCES[16].description, price: SOLANA_TRANSACTION_RECEIPT_PRICE, inputSchema: { signature: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/).describe("Finalized Solana mainnet transaction signature."), mint: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional SPL-token mint; defaults to canonical Solana USDC."), recipient: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional expected token recipient owner."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,19}$/).optional().describe("Optional expected positive token amount in atomic units; requires recipient."), payer: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional expected token payer owner; requires recipient and amountAtomic.") }, run: (a) => solanaTransactionReceipt(a), tags: ["blockchain", "solana", "receipt", "spl-token", "usdc"] },

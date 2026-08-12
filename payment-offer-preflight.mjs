@@ -3,11 +3,13 @@ import { request as httpsRequest } from "node:https";
 import { BlockList, isIP } from "node:net";
 
 import { Challenge } from "mppx";
+import { evaluateOfferCoherence } from "agent-payment-policy";
 
 const MAX_URL_LENGTH = 2_048;
 const MAX_HEADER_VALUE_BYTES = 64 * 1024;
 const DEFAULT_TIMEOUT_MS = 8_000;
 const SENSITIVE_QUERY_KEY = /(?:^|[-_.])(api[-_.]?key|access[-_.]?token|auth|authorization|credential|password|secret|token)(?:$|[-_.])/i;
+const CATALOG_SOURCE = /^[\u0020-\u007e]{1,128}$/;
 
 const blockedAddresses = new BlockList();
 for (const [address, prefix, family] of [
@@ -90,6 +92,108 @@ export function normalizePaymentTarget(value) {
   }
   target.searchParams.sort();
   return target;
+}
+
+function strictRecord(value, label, allowed) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) fail(`${label} must be an object`, { code: "invalid_catalog" });
+  const extras = Object.keys(value).filter((key) => !allowed.has(key));
+  if (extras.length) fail(`${label} contains unsupported fields: ${extras.join(", ")}`, { code: "invalid_catalog" });
+  return value;
+}
+
+export function normalizePaymentOfferPreflightInput(input) {
+  const value = typeof input === "string" ? { url: input } : strictRecord(
+    input,
+    "request",
+    new Set(["url", "catalog"]),
+  );
+  const target = normalizePaymentTarget(value.url);
+  if (value.catalog === undefined || value.catalog === null) return { url: target.toString(), catalog: null };
+  const catalog = strictRecord(value.catalog, "catalog", new Set([
+    "source", "protocol", "method", "url", "amountAtomic", "network", "asset", "recipient", "expiresAt",
+  ]));
+  const source = cleanString(catalog.source, 128);
+  if (!source || !CATALOG_SOURCE.test(source)) fail("catalog source is invalid", { code: "invalid_catalog" });
+  if (String(catalog.method || "").toUpperCase() !== "GET") fail("catalog method must be GET", { code: "invalid_catalog" });
+  const normalized = { source, method: "GET", url: normalizePaymentTarget(catalog.url).toString() };
+  if (catalog.protocol !== undefined) {
+    const protocol = String(catalog.protocol).toLowerCase();
+    if (!new Set(["x402", "mpp"]).has(protocol)) fail("catalog protocol must be x402 or mpp", { code: "invalid_catalog" });
+    normalized.protocol = protocol;
+  }
+  if (catalog.amountAtomic !== undefined) {
+    const amount = String(catalog.amountAtomic);
+    if (!/^(?:0|[1-9][0-9]{0,77})$/.test(amount)) fail("catalog amountAtomic is invalid", { code: "invalid_catalog" });
+    normalized.amountAtomic = amount;
+  }
+  for (const field of ["network", "asset", "recipient"]) {
+    if (catalog[field] === undefined) continue;
+    const item = cleanString(catalog[field], 200);
+    if (!item) fail(`catalog ${field} is invalid`, { code: "invalid_catalog" });
+    normalized[field] = item;
+  }
+  if (catalog.expiresAt !== undefined) {
+    const expiry = Date.parse(catalog.expiresAt);
+    if (!Number.isFinite(expiry)) fail("catalog expiresAt is invalid", { code: "invalid_catalog" });
+    normalized.expiresAt = new Date(expiry).toISOString();
+  }
+  return { url: target.toString(), catalog: normalized };
+}
+
+export function paymentOfferPreflightInputSchema() {
+  return {
+    type: "object",
+    properties: {
+      url: {
+        type: "string",
+        format: "uri",
+        maxLength: 2048,
+        description: "Exact public HTTPS GET URL whose unpaid payment challenges should be inspected.",
+      },
+      catalog: {
+        type: "object",
+        description: "Optional caller-supplied catalog candidate to compare with each live unsigned offer.",
+        properties: {
+          source: { type: "string", minLength: 1, maxLength: 128 },
+          protocol: { type: "string", enum: ["x402", "mpp"] },
+          method: { type: "string", const: "GET" },
+          url: { type: "string", format: "uri", maxLength: 2048 },
+          amountAtomic: { type: "string", pattern: "^(?:0|[1-9][0-9]{0,77})$" },
+          network: { type: "string", minLength: 1, maxLength: 200 },
+          asset: { type: "string", minLength: 1, maxLength: 200 },
+          recipient: { type: "string", minLength: 1, maxLength: 200 },
+          expiresAt: { type: "string", format: "date-time" },
+        },
+        required: ["source", "method", "url"],
+        additionalProperties: false,
+      },
+    },
+    required: ["url"],
+    additionalProperties: false,
+  };
+}
+
+export function paymentOfferPreflightOutputSchema() {
+  return {
+    type: "object",
+    properties: {
+      ok: { type: "boolean", const: true },
+      product: { type: "string", const: "samedaydesk-payment-offer-preflight" },
+      version: { type: "string", const: "1.1.0" },
+      checkedAt: { type: "string", format: "date-time" },
+      target: { type: "object" },
+      decision: { type: "string", enum: ["parseable_offer", "review_required", "no_parseable_offer"] },
+      protocols: { type: "array", items: { type: "string", enum: ["mpp", "x402"] } },
+      offerCount: { type: "integer", minimum: 0 },
+      offers: { type: "array" },
+      parity: { type: "object" },
+      catalogCoherence: { type: "array" },
+      findings: { type: "array" },
+      boundary: { type: "object" },
+    },
+    required: ["ok", "product", "version", "checkedAt", "target", "decision", "protocols", "offerCount", "offers", "parity", "catalogCoherence", "findings", "boundary"],
+    additionalProperties: false,
+  };
 }
 
 export async function resolvePublicAddress(hostname, { lookupImpl = dnsLookup } = {}) {
@@ -183,7 +287,7 @@ function decimalAmount(amountAtomic, decimals) {
   return fraction ? `${whole}.${fraction}` : whole;
 }
 
-function normalizeX402(header, target, findings) {
+function normalizeX402(header, target, findings, now) {
   let payload;
   try {
     payload = JSON.parse(Buffer.from(header, "base64").toString("utf8"));
@@ -211,7 +315,11 @@ function normalizeX402(header, target, findings) {
     const asset = cleanString(offer?.asset, 200);
     const amountAtomic = /^\d+$/.test(String(offer?.amount || "")) && BigInt(offer.amount) > 0n ? String(offer.amount) : null;
     const recipient = cleanString(offer?.payTo, 200);
-    const valid = Boolean(resourceMatches && scheme && network && asset && amountAtomic && recipient);
+    const maxTimeoutSeconds = Number(offer?.maxTimeoutSeconds);
+    const expiresAt = Number.isInteger(maxTimeoutSeconds) && maxTimeoutSeconds > 0 && maxTimeoutSeconds <= 86_400
+      ? new Date(now + maxTimeoutSeconds * 1_000).toISOString()
+      : null;
+    const valid = Boolean(resourceMatches && scheme && network && asset && amountAtomic && recipient && expiresAt);
     if (!valid) findings.push({ severity: "error", code: "x402_offer_invalid", message: `x402 offer ${index} is incomplete or invalid.` });
     return {
       protocol: "x402",
@@ -223,7 +331,7 @@ function normalizeX402(header, target, findings) {
       decimals: null,
       amountDisplay: null,
       recipient,
-      expiresAt: null,
+      expiresAt,
       valid,
     };
   });
@@ -256,7 +364,7 @@ function normalizeMpp(header, target, findings, now) {
     const expiryMs = expiresAt ? Date.parse(expiresAt) : null;
     const expired = Number.isFinite(expiryMs) && expiryMs <= now;
     const realmMatches = realm === target.host;
-    const valid = Boolean(method && intent && realmMatches && amountAtomic && asset && recipient && !expired);
+    const valid = Boolean(method && intent && realmMatches && amountAtomic && asset && recipient && Number.isFinite(expiryMs) && !expired);
     if (!realmMatches) findings.push({ severity: "error", code: "mpp_realm_mismatch", message: `MPP challenge ${index} realm does not match the target host.` });
     if (expired) findings.push({ severity: "error", code: "mpp_expired", message: `MPP challenge ${index} is expired.` });
     if (!valid && realmMatches && !expired) findings.push({ severity: "error", code: "mpp_offer_invalid", message: `MPP challenge ${index} is incomplete or invalid.` });
@@ -295,7 +403,8 @@ export async function paymentOfferPreflight(input, {
   now = Date.now(),
   requestImpl = requestPaymentHeaders,
 } = {}) {
-  const target = normalizePaymentTarget(input?.url ?? input);
+  const normalizedInput = normalizePaymentOfferPreflightInput(input);
+  const target = normalizePaymentTarget(normalizedInput.url);
   const response = await requestImpl(target);
   const status = Number(response?.status || 0);
   const findings = [];
@@ -308,7 +417,7 @@ export async function paymentOfferPreflight(input, {
 
   const offers = [];
   const x402Header = headerValue(response?.headers, "payment-required");
-  if (x402Header) offers.push(...normalizeX402(x402Header, target, findings));
+  if (x402Header) offers.push(...normalizeX402(x402Header, target, findings, now));
   const mppHeader = headerValue(response?.headers, "www-authenticate");
   if (mppHeader && /(?:^|,)\s*Payment\s/i.test(mppHeader)) {
     offers.push(...normalizeMpp(mppHeader, target, findings, now));
@@ -322,6 +431,29 @@ export async function paymentOfferPreflight(input, {
   if (economicParity.compared && !economicParity.consistent) {
     findings.push({ severity: "error", code: "protocol_economic_drift", message: `Protocols differ on ${economicParity.driftFields.join(", ")}.` });
   }
+  const catalogComparableOffers = normalizedInput.catalog?.protocol
+    ? validOffers.filter((offer) => offer.protocol === normalizedInput.catalog.protocol)
+    : validOffers;
+  const catalogCoherence = normalizedInput.catalog
+    ? (catalogComparableOffers.length ? catalogComparableOffers : validOffers).map((offer) => evaluateOfferCoherence({
+      catalog: normalizedInput.catalog,
+      runtime: {
+        protocol: offer.protocol,
+        method: "GET",
+        url: target.toString(),
+        amountAtomic: offer.amountAtomic,
+        network: offer.network,
+        asset: offer.asset,
+        recipient: offer.recipient,
+        expiresAt: offer.expiresAt,
+      },
+    }, { now }))
+    : [];
+  if (catalogCoherence.some((report) => report.decision === "drifted")) {
+    findings.push({ severity: "error", code: "catalog_runtime_offer_drift", message: "At least one live offer differs from the supplied catalog candidate." });
+  } else if (catalogCoherence.some((report) => report.decision === "partial")) {
+    findings.push({ severity: "warning", code: "catalog_runtime_offer_partial", message: "The supplied catalog candidate omits terms needed to establish complete coherence." });
+  }
   const hasError = findings.some((finding) => finding.severity === "error");
   const decision = status !== 402 || validOffers.length === 0
     ? "no_parseable_offer"
@@ -332,7 +464,7 @@ export async function paymentOfferPreflight(input, {
   return {
     ok: true,
     product: "samedaydesk-payment-offer-preflight",
-    version: "1.0.0",
+    version: "1.1.0",
     checkedAt: new Date(now).toISOString(),
     target: { method: "GET", url: target.toString(), httpStatus: status },
     decision,
@@ -340,6 +472,7 @@ export async function paymentOfferPreflight(input, {
     offerCount: validOffers.length,
     offers,
     parity: economicParity,
+    catalogCoherence,
     findings,
     boundary: {
       credentialsUsed: false,
