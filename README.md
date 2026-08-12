@@ -255,6 +255,16 @@ remediation sequence only after owned live terms agree. It never treats the
 caller expectation as runtime truth, makes no catalog payment, and leaves
 asynchronous propagation to event-driven monitoring.
 
+Version 1.15.2 repairs the measurement path for the two free wallet-policy
+contracts and their matching paid evaluators. All four routes now have exact
+commerce classifications. Historical `/schemas/*` events remain in the raw
+unmatched count but are excluded from semantic-demand interpretation because
+the privacy-safe ledger did not retain enough path detail to reclassify them.
+New exact events produce aggregate same-client funnels from successful free
+contract read to paid-route challenge, parseable credential, and delivery.
+The public snapshot exposes no actor, credential, raw path, wallet, or provider
+payload, and contract reads remain reach evidence rather than demand.
+
 Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
 before startup. Six newer routes previously settled successfully while Coinbase
 rejected their discovery metadata because their output examples omitted fields

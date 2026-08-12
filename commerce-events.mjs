@@ -11,6 +11,16 @@ const EVM_ADDRESS_PATTERN = /^0x[0-9a-fA-F]{40}$/;
 const TRANSACTION_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 const PAYMENT_CLASSES = new Set(["internal", "validation", "incentivized", "affiliated", "independent"]);
 const SEMANTIC_UNMATCHED_ROUTE_PATTERN = /(?:morpho|liquidat|underwrit|protect|risk|readiness|audit|schema|enrich|extract|wallet|payment|settle|receipt|bount|opportunit|reputation|research|scan)/i;
+const POLICY_CONTRACT_FUNNELS = Object.freeze({
+  exactAction: Object.freeze({
+    contractRoute: "/schemas/wallet-policy-conformance-v1.json",
+    paidRoute: "/security/wallet-policy-conformance",
+  }),
+  stateful: Object.freeze({
+    contractRoute: "/schemas/stateful-wallet-policy-conformance-v1.json",
+    paidRoute: "/security/stateful-wallet-policy-conformance",
+  }),
+});
 const OWNER_MONITOR_USER_AGENT_PATTERN = /^SameDayDesk(?:[- /]|[A-Z])/i;
 const MCP_TRANSPORT_PROBE_ROUTES = new Set(["/mcp/sse", "/mcp/messages", "/mcp/tools", "/mcp/events"]);
 const AI_PROVIDER_SOURCE_PATTERNS = [
@@ -68,6 +78,8 @@ const EXACT_ROUTES = new Map([
   ["/a2a/message:send", { route: "/a2a/message:send", kind: "discovery" }],
   ["/v0/commerce-demand.json", { route: "/v0/commerce-demand.json", kind: "excluded" }],
   ["/schemas/platform-health-card-v0.json", { route: "/schemas/platform-health-card-v0.json", kind: "discovery" }],
+  ["/schemas/wallet-policy-conformance-v1.json", { route: "/schemas/wallet-policy-conformance-v1.json", kind: "discovery" }],
+  ["/schemas/stateful-wallet-policy-conformance-v1.json", { route: "/schemas/stateful-wallet-policy-conformance-v1.json", kind: "discovery" }],
   ["/radar", { route: "/radar", kind: "discovery" }],
   ["/platforms", { route: "/platforms", kind: "discovery" }],
   ["/platforms/methodology", { route: "/platforms/methodology", kind: "discovery" }],
@@ -89,6 +101,8 @@ const EXACT_ROUTES = new Map([
   ["/commerce/settlement-proof", { route: "/commerce/settlement-proof", kind: "paid" }],
   ["/chain/transaction-receipt", { route: "/chain/transaction-receipt", kind: "paid" }],
   ["/chain/solana-transaction-receipt", { route: "/chain/solana-transaction-receipt", kind: "paid" }],
+  ["/security/wallet-policy-conformance", { route: "/security/wallet-policy-conformance", kind: "paid" }],
+  ["/security/stateful-wallet-policy-conformance", { route: "/security/stateful-wallet-policy-conformance", kind: "paid" }],
   ["/gateway/commerce/payment-offer-preflight", { route: "/gateway/commerce/payment-offer-preflight", kind: "paid" }],
   ["/mcp", { route: "/mcp", kind: "paid" }],
 ]);
@@ -316,6 +330,7 @@ function eventResult(event) {
 
 export function isSemanticUnmatched(event) {
   return eventResult(event) === "unmatched"
+    && String(event?.route || "") !== "/schemas/*"
     && (SEMANTIC_UNMATCHED_ROUTE_PATTERN.test(String(event?.route || ""))
       || MCP_TRANSPORT_PROBE_ROUTES.has(String(event?.route || "")));
 }
@@ -326,6 +341,41 @@ function emptyCounts() {
 
 function increment(counts, key) {
   counts[key] = (counts[key] || 0) + 1;
+}
+
+function summarizePolicyContractFunnels(events) {
+  return Object.fromEntries(Object.entries(POLICY_CONTRACT_FUNNELS).map(([name, routes]) => {
+    const firstReadByActor = new Map();
+    let contractReads = 0;
+    for (const event of events) {
+      if (event.route !== routes.contractRoute || event.kind !== "discovery" || event.status < 200 || event.status >= 300) continue;
+      contractReads += 1;
+      const observedAt = Date.parse(event.ts);
+      if (!Number.isFinite(observedAt)) continue;
+      const prior = firstReadByActor.get(event.actor);
+      if (!Number.isFinite(prior) || observedAt < prior) firstReadByActor.set(event.actor, observedAt);
+    }
+    const challenged = new Set();
+    const credentialed = new Set();
+    const delivered = new Set();
+    for (const event of events) {
+      const firstReadAt = firstReadByActor.get(event.actor);
+      if (!Number.isFinite(firstReadAt) || event.route !== routes.paidRoute || Date.parse(event.ts) < firstReadAt) continue;
+      const result = eventResult(event);
+      if (result === "challenge") challenged.add(event.actor);
+      if (event.paymentCredentialParsed === true) credentialed.add(event.actor);
+      if (result === "paid_success") delivered.add(event.actor);
+    }
+    return [name, {
+      contractRoute: routes.contractRoute,
+      paidRoute: routes.paidRoute,
+      contractReads,
+      contractActors: firstReadByActor.size,
+      challengeContinuationActors: challenged.size,
+      credentialContinuationActors: credentialed.size,
+      paidDeliveryContinuationActors: delivered.size,
+    }];
+  }));
 }
 
 function incrementActorBySource(actorCountsBySource, source, actor) {
@@ -646,6 +696,9 @@ export function createCommerceTelemetry({
       ...(await readEvents(currentPath)),
     ].filter((event) => Date.parse(event.ts) >= cutoff);
     const events = observedEvents.filter((event) => event.originClass === "external");
+    const policyContractFunnel = summarizePolicyContractFunnels(observedEvents.filter((event) => (
+      event.originClass === "external" || event.originClass === "crawler"
+    )));
     const credentialHeaderEvents = events.filter((event) => (
       event.paymentPresent === true
       && event.kind === "paid"
@@ -959,6 +1012,8 @@ export function createCommerceTelemetry({
       repeatSemanticUnmatchedActors: [...semanticUnmatchedActors.values()].filter((count) => count > 1).length,
       semanticUnmatched,
       semanticUnmatchedHeuristic: "v1-high-precision-route-keywords",
+      policyContractFunnel,
+      policyContractFunnelPolicy: "Prospective exact-route measurement only. It counts privacy-safe same-client progression from a successful free policy-contract read to the matching paid-route challenge, parseable credential, and paid delivery. Historical /schemas/* events are ambiguous and excluded. Counts include external and declared crawler clients, retain no actor identifiers, and are reach or funnel evidence rather than authenticated identity or demand.",
       mcpTransportProbePolicy: "After the declared MCP transport-probe baseline, only four common public client expectations are counted: /mcp/sse, /mcp/messages, /mcp/tools, and /mcp/events. Arbitrary MCP subpaths remain grouped as /mcp/*, and probe counts remain acquisition-friction evidence rather than demand until an independent actor repeats or converts.",
       agentDiscoveryPolicy: "After the declared machine-discovery baseline, recognized crawler and agent-indexer user-agent families are reduced to a controlled source label at ingestion. SameDayDesk-owned monitor user agents are excluded. Raw user-agent strings and network addresses are not retained in the public snapshot. Per-source observations, distinct and repeat secret-keyed actors, paid-route reach, HTTP 402 challenge delivery, credential attempts, and paid outcomes distinguish broad machine reach from repeated crawler volume and later payment conversion. Challenge-to-payment conversion is attributed to the source of the first observed same-actor challenge. These observations are not authenticated referrals, buyer intent, or demand.",
       agentSourceDetailPolicy: "The ai-provider-purpose-v1 cohort begins only at agentSourceDetailSince and classifies exact provider-published HTTP user-agent tokens for OpenAI search, user fetch, and training; Anthropic search, user fetch, and training; Perplexity search and user fetch; and Google Cloud Vertex agent crawls. Google-Extended is intentionally absent because Google documents that it has no separate HTTP user-agent string. Labels are user-agent observations rather than IP-verified identities or referral proof. Historical generic events are not reclassified.",

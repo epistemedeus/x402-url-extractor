@@ -299,6 +299,16 @@ test("route classification preserves useful intent without recording opaque path
   assert.equal(classifyCommerceRoute("/.well-known/agent.json").route, "/.well-known/agent-card.json");
   assert.equal(classifyCommerceRoute("/.well-known/glama.json").route, "/.well-known/glama.json");
   assert.equal(classifyCommerceRoute("/a2a/message:send").route, "/a2a/message:send");
+  assert.deepEqual(classifyCommerceRoute("/schemas/wallet-policy-conformance-v1.json"), {
+    route: "/schemas/wallet-policy-conformance-v1.json",
+    kind: "discovery",
+    matched: true,
+  });
+  assert.deepEqual(classifyCommerceRoute("/schemas/stateful-wallet-policy-conformance-v1.json"), {
+    route: "/schemas/stateful-wallet-policy-conformance-v1.json",
+    kind: "discovery",
+    matched: true,
+  });
   assert.equal(classifyCommerceRoute("/work/opportunity-preflight").kind, "paid");
   assert.equal(classifyCommerceRoute("/distribution/agent-discoverability-audit").kind, "paid");
   assert.equal(classifyCommerceRoute("/commerce/payment-offer-preflight").kind, "paid");
@@ -312,6 +322,8 @@ test("route classification preserves useful intent without recording opaque path
     kind: "paid",
     matched: true,
   });
+  assert.equal(classifyCommerceRoute("/security/wallet-policy-conformance").kind, "paid");
+  assert.equal(classifyCommerceRoute("/security/stateful-wallet-policy-conformance").kind, "paid");
   assert.deepEqual(classifyCommerceRoute("/mcp/sse"), {
     route: "/mcp/sse",
     kind: "unmatched",
@@ -337,6 +349,7 @@ test("semantic unmatched classification is high precision and excludes technical
   assert.equal(isSemanticUnmatched({ route: "/:opaque/*", kind: "unmatched", matched: false, status: 404 }), false);
   assert.equal(isSemanticUnmatched({ route: "/mcp/sse", kind: "unmatched", matched: false, status: 404 }), true);
   assert.equal(isSemanticUnmatched({ route: "/mcp/*", kind: "unmatched", matched: false, status: 404 }), false);
+  assert.equal(isSemanticUnmatched({ route: "/schemas/*", kind: "unmatched", matched: false, status: 404 }), false);
   assert.equal(isSemanticUnmatched({ route: "/defi/morpho-position", kind: "paid", matched: true, status: 402 }), false);
 });
 
@@ -419,6 +432,8 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   run({ path: "/mcp/sse", status: 404 });
   run({ path: "/assets/logo.svg", status: 404 });
   run({ path: "/someone@example.com/private", status: 404 });
+  run({ path: "/schemas/wallet-policy-conformance-v1.json", status: 200 });
+  run({ path: "/security/wallet-policy-conformance", status: 402 });
 
   await telemetry.flush();
   const storage = await telemetry.storageStatus();
@@ -426,11 +441,11 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.ok(storage.currentBytes > 0);
   assert.equal(storage.boundedBytes, 2 * 1024 * 1024);
   const snapshot = await telemetry.snapshot({ days: 1 });
-  assert.equal(snapshot.externalEvents, 9);
+  assert.equal(snapshot.externalEvents, 11);
   assert.equal(snapshot.externalActors, 1);
   assert.equal(snapshot.repeatExternalActors, 1);
-  assert.equal(snapshot.byResult.discovery, 1);
-  assert.equal(snapshot.byResult.challenge, 1);
+  assert.equal(snapshot.byResult.discovery, 2);
+  assert.equal(snapshot.byResult.challenge, 2);
   assert.equal(snapshot.byResult.paid_success, 1);
   assert.equal(snapshot.byResult.replay_success, 1);
   assert.equal(snapshot.replaySuccessEvents, 1);
@@ -500,6 +515,17 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   assert.equal(snapshot.semanticUnmatchedActors, 1);
   assert.equal(snapshot.repeatSemanticUnmatchedActors, 1);
   assert.deepEqual({ ...snapshot.semanticUnmatched }, { "/morpho-risk/*": 1, "/mcp/sse": 1 });
+  assert.deepEqual(snapshot.policyContractFunnel.exactAction, {
+    contractRoute: "/schemas/wallet-policy-conformance-v1.json",
+    paidRoute: "/security/wallet-policy-conformance",
+    contractReads: 1,
+    contractActors: 1,
+    challengeContinuationActors: 1,
+    credentialContinuationActors: 0,
+    paidDeliveryContinuationActors: 0,
+  });
+  assert.equal(snapshot.policyContractFunnel.stateful.contractReads, 0);
+  assert.match(snapshot.policyContractFunnelPolicy, /Historical \/schemas\/\*/);
   assert.equal(JSON.stringify(snapshot).includes("secret-value"), false);
   assert.equal(JSON.stringify(snapshot).includes("0x1111111111111111111111111111111111111111"), false);
   assert.equal(JSON.stringify(snapshot).includes(settlementReference), false);
