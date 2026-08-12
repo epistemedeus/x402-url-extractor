@@ -32,6 +32,7 @@ const base = (observations = completeMatrix()) => ({
 test("a complete explicit provider-policy matrix is conformant", () => {
   const result = walletPolicyConformance(base());
   assert.equal(result.schemaVersion, "samedaydesk.wallet-policy-conformance.v1");
+  assert.equal(result.standardSchemaVersion, "agent-payment-policy.wallet-policy-observation-report.v1");
   assert.equal(result.decision, "conformant");
   assert.equal(result.complete, true);
   assert.equal(result.exactShapePassed, true);
@@ -139,6 +140,13 @@ test("publishes one canonical free machine contract from the evaluator cases", (
     priceAtomicUsdc: "10000",
   });
   assert.equal(contract.schemaVersion, "samedaydesk.wallet-policy-conformance-contract.v1");
+  assert.deepEqual(contract.standard, {
+    package: "agent-payment-policy",
+    version: "0.5.0",
+    inputSchemaVersion: "agent-payment-policy.wallet-policy-observation.v1",
+    outputSchemaVersion: "agent-payment-policy.wallet-policy-observation-report.v1",
+    repository: "https://github.com/epistemedeus/agent-payment-policy",
+  });
   assert.equal(contract.endpoint.method, "POST");
   assert.equal(contract.endpoint.priceAtomicUsdc, "10000");
   assert.deepEqual(contract.endpoint.paymentProtocols, ["x402", "mpp"]);
