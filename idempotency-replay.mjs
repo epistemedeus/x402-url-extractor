@@ -32,6 +32,8 @@ const DEFAULT_PAID_ROUTES = new Set([
   "/commerce/settlement-proof",
   "/chain/transaction-receipt",
   "/chain/solana-transaction-receipt",
+  "/security/wallet-policy-conformance",
+  "/security/stateful-wallet-policy-conformance",
 ]);
 
 function headerValue(headers, name) {
@@ -82,7 +84,13 @@ export function decodeReplayPayment(headers) {
       if (terms.scheme !== "exact" || !terms.network || !terms.asset || !/^\d+$/.test(terms.amount) || !terms.payTo) {
         return null;
       }
-      return { id: String(id), payer, protocol: "x402", terms };
+      return {
+        id: String(id),
+        payer,
+        protocol: "x402",
+        credentialBinding: createHash("sha256").update(encoded.trim()).digest("hex"),
+        terms,
+      };
     } catch {
       return null;
     }
@@ -110,6 +118,7 @@ export function decodeReplayPayment(headers) {
       id: createHash("sha256").update(authorization).digest("hex"),
       payer,
       protocol: "mpp",
+      credentialBinding: createHash("sha256").update(authorization).digest("hex"),
       terms: {
         scheme: "evm-charge",
         network: `eip155:${chainId}`,
@@ -162,15 +171,22 @@ export function createIdempotencyReplay({
 
   const digest = (label, value) => createHmac("sha256", secret).update(`${label}:${value}`).digest("hex");
 
-  function bindingFor({ method, url, headers }) {
+  function bindingFor({ method, url, headers, bodyBytes }) {
     const payment = decodeReplayPayment(headers);
     if (!payment) return null;
     const canonicalUrl = canonicalReplayUrl(url);
+    const normalizedMethod = String(method || "GET").toUpperCase();
+    const hasRequestBody = !["GET", "HEAD"].includes(normalizedMethod);
+    const requestBody = Buffer.isBuffer(bodyBytes)
+      ? bodyBytes
+      : Buffer.from(bodyBytes == null ? "" : String(bodyBytes));
     const material = JSON.stringify({
-      v: 1,
-      method: String(method || "GET").toUpperCase(),
+      v: 2,
+      method: normalizedMethod,
       url: canonicalUrl,
+      bodySha256: hasRequestBody ? createHash("sha256").update(requestBody).digest("hex") : null,
       payer: payment.payer,
+      credentialBinding: payment.credentialBinding,
       ...payment.terms,
     });
     return {
@@ -266,7 +282,12 @@ export function createIdempotencyReplay({
 
   async function middleware(req, res, next) {
     if (!routes.has(req.path)) return next();
-    const binding = bindingFor({ method: req.method, url: publicRequestUrl(req), headers: req.headers });
+    const binding = bindingFor({
+      method: req.method,
+      url: publicRequestUrl(req),
+      headers: req.headers,
+      bodyBytes: req.rawBody,
+    });
     if (!binding) return next();
 
     const cached = await lookup(binding);

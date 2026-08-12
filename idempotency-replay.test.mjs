@@ -15,7 +15,7 @@ const payTo = "0x2222222222222222222222222222222222222222";
 const asset = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const paymentId = "order_1234567890abcdef";
 
-function encodedPayment({ id = paymentId, from = payer, amount = "20000" } = {}) {
+function encodedPayment({ id = paymentId, from = payer, amount = "20000", signature = "0xsigned-original" } = {}) {
   return Buffer.from(JSON.stringify({
     x402Version: 2,
     accepted: {
@@ -26,7 +26,7 @@ function encodedPayment({ id = paymentId, from = payer, amount = "20000" } = {})
       payTo,
       maxTimeoutSeconds: 300,
     },
-    payload: { authorization: { from } },
+    payload: { authorization: { from }, signature },
     extensions: { "payment-identifier": { info: { id } } },
   })).toString("base64");
 }
@@ -151,6 +151,82 @@ test("same payment ID on changed input or payer fails with uncharged 409", async
     assert.equal(res.statusCode, 409);
     assert.equal(JSON.parse(res.body).charged, false);
     assert.equal(res.headers["x-payment-idempotency"], "conflict");
+  }
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("cached x402 response requires the exact credential that originally settled", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "idempotency-credential-"));
+  const replay = createIdempotencyReplay({ dataDir, secret: "test-secret", ttlMs: 60_000 });
+  const originalHeaders = { "payment-signature": encodedPayment() };
+  const original = replay.bindingFor({
+    method: "GET",
+    url: "https://agents.samedaydesk.com/defi/morpho-position?address=0xabc",
+    headers: originalHeaders,
+  });
+  await replay.store(original, {
+    status: 200,
+    headers: { "content-type": "application/json", "payment-response": "signed-settlement" },
+    body: Buffer.from('{"ok":true}'),
+  });
+
+  let nextRuns = 0;
+  const res = fakeResponse();
+  await replay.middleware({
+    method: "GET",
+    path: "/defi/morpho-position",
+    originalUrl: "/defi/morpho-position?address=0xabc",
+    headers: {
+      "payment-signature": encodedPayment({ signature: "0xlookalike" }),
+      host: "agents.samedaydesk.com",
+      "x-forwarded-proto": "https",
+    },
+    protocol: "http",
+  }, res, () => { nextRuns += 1; });
+  assert.equal(nextRuns, 0);
+  assert.equal(res.statusCode, 409);
+  assert.equal(JSON.parse(res.body).error, "payment_identifier_request_conflict");
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("paid POST replay binds the exact request bytes and rejects body drift before the handler", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "idempotency-post-body-"));
+  const replay = createIdempotencyReplay({ dataDir, secret: "test-secret", ttlMs: 60_000 });
+  const headers = { "payment-signature": encodedPayment() };
+  const originalBody = Buffer.from('{"provider":"openfort","observations":[]}');
+  const original = replay.bindingFor({
+    method: "POST",
+    url: "https://agents.samedaydesk.com/security/wallet-policy-conformance",
+    headers,
+    bodyBytes: originalBody,
+  });
+  await replay.store(original, {
+    status: 200,
+    headers: { "content-type": "application/json", "payment-response": "signed-settlement" },
+    body: Buffer.from('{"ok":true}'),
+  });
+
+  for (const [rawBody, expectedStatus, expectedHeader] of [
+    [originalBody, 200, "hit"],
+    [Buffer.from('{"provider":"privy","observations":[]}'), 409, undefined],
+  ]) {
+    let nextRuns = 0;
+    const res = fakeResponse();
+    await replay.middleware({
+      method: "POST",
+      path: "/security/wallet-policy-conformance",
+      originalUrl: "/security/wallet-policy-conformance",
+      rawBody,
+      headers: { ...headers, host: "agents.samedaydesk.com", "x-forwarded-proto": "https" },
+      protocol: "http",
+    }, res, () => { nextRuns += 1; });
+    assert.equal(nextRuns, 0);
+    assert.equal(res.statusCode, expectedStatus);
+    assert.equal(res.headers["x-payment-replay"], expectedHeader);
+    if (expectedStatus === 409) {
+      assert.equal(JSON.parse(res.body).error, "payment_identifier_request_conflict");
+      assert.equal(JSON.parse(res.body).charged, false);
+    }
   }
   await rm(dataDir, { recursive: true, force: true });
 });

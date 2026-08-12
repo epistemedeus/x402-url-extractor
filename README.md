@@ -540,7 +540,12 @@ fields. Stable operation IDs and capability tags make the public catalog easier
 for agents to search, rank, and invoke. Runtime 402 challenges remain
 authoritative for both views.
 
-Version 1.8 adds a deterministic paid opportunity preflight. The caller supplies
+Version 1.23.6 extends request-bound replay to every paid JSON POST route and
+binds the replay fingerprint to both the exact previously settled payment
+credential and the exact raw request bytes. This lets a lost successful POST
+response be replayed without executing the handler or charging again, while a
+changed credential, body, input, payer, or payment term fails with an uncharged
+HTTP 409. Version 1.8 adds a deterministic paid opportunity preflight. The caller supplies
 reward, execution time, hourly opportunity cost, compute, mandatory spend,
 reusable value, competition, and an explicit selection probability. The result
 returns `attempt`, `verify_first`, or `abandon`, transparent break-even economics,
