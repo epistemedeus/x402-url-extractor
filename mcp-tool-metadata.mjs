@@ -53,6 +53,10 @@ const TOOL_METADATA = Object.freeze({
     title: "Preflight x402 and MPP Offer",
     description: "Compare x402 and MPP payment challenges, terms, and seller-declared JSON success-response readiness for one exact public HTTPS GET route before buyer authorization, including URL and realm binding, expiry, cross-protocol economic parity, and exact-route OpenAPI evidence. Use `agent_discoverability_audit` instead when you need to know whether catalogs rank or expose a service. This tool uses no target credential, signature, or target payment, follows no redirect, never reads the paid target body, and reads only the same-origin public OpenAPI document under a strict size cap. A seller declaration is advisory and does not establish runtime validity, seller trust, utility, or settlement reliability.",
   },
+  seller_integrity_audit: {
+    title: "Audit Seller Machine Buyability",
+    description: "Audit one exact paid GET seller route for machine-buyability: constructible non-secret input, exact request binding, live x402 and MPP economics, optional Bazaar catalog eligibility, and recursively guaranteed JSON success-response paths. Use `payment_offer_preflight` instead when you already have one exact callable URL and only need its current unpaid offer before buyer authorization, or `agent_discoverability_audit` for catalog rank and identity. Uses no target credential, signature, or target payment and retains no seller schema or query values.",
+  },
   settlement_proof: {
     title: "Verify Base USDC Settlement",
     description: "Verify one claimed canonical Base USDC settlement after execution by matching a successful transaction receipt to the exact recipient, atomic amount, and optional payer. Use `payment_offer_preflight` before authorization when you need to inspect an unpaid x402 or MPP offer instead. This tool reads only public Base receipt and log data; it reads no merchant ledger and performs no wallet, signing, broadcast, custody, or execution action.",

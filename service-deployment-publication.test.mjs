@@ -32,7 +32,7 @@ test("binds every production route to both exact Base settlement protocols", () 
   const value = publication();
   assert.equal(value.active, true);
   assert.equal(value.routeCount, SERVICE_DEPLOYMENT_ROUTES.length);
-  assert.equal(value.routeCount, 21);
+  assert.equal(value.routeCount, 22);
   assert.equal(value.settlementCount, 2);
   assert.equal(value.operationalWallet, SOLANA_AGENT_REGISTRATION.merchantWallet);
   assert.match(value.publicKeyFingerprint, /^sha256:[0-9a-f]{64}$/);

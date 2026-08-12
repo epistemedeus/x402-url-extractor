@@ -69,6 +69,13 @@ import {
   paymentOfferPreflight,
 } from "./payment-offer-preflight.mjs";
 import {
+  SELLER_INTEGRITY_AUDIT_EXAMPLE,
+  SellerIntegrityAuditError,
+  normalizeSellerIntegrityAuditInput,
+  sellerIntegrityAudit,
+  sellerIntegrityAuditOutputSchema,
+} from "./seller-integrity-audit.mjs";
+import {
   SettlementProofError,
   normalizeSettlementProofInput,
   settlementProof,
@@ -200,6 +207,7 @@ const AGENT_DISCOVERABILITY_AUDIT_PRICE = process.env.AGENT_DISCOVERABILITY_AUDI
 // Credential-free x402/MPP offer normalization and parity checks for buyer agents.
 // The low price is deliberate: this is a pre-authorization safety primitive.
 const PAYMENT_OFFER_PREFLIGHT_PRICE = process.env.PAYMENT_OFFER_PREFLIGHT_PRICE || "$0.005";
+const SELLER_INTEGRITY_AUDIT_PRICE = process.env.SELLER_INTEGRITY_AUDIT_PRICE || "$0.01";
 const PAYMENT_OFFER_CATALOG_SCHEMA = z.object({
   source: z.string().min(1).max(128).describe("Public catalog or registry name."),
   protocol: z.enum(["x402", "mpp"]).optional().describe("Optional advertised payment protocol."),
@@ -499,7 +507,7 @@ app.get("/healthz", async (_req, res) => {
     ok: true,
     payTo: PAY_TO,
     network: NETWORK,
-    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE, "morpho-protection": MORPHO_PROTECTION_PRICE, "morpho-market-underwrite": MORPHO_MARKET_UNDERWRITE_PRICE, "morpho-preliquidation-replay": MORPHO_PRELIQUIDATION_REPLAY_PRICE, "opportunity-preflight": OPPORTUNITY_PREFLIGHT_PRICE, "agent-discoverability-audit": AGENT_DISCOVERABILITY_AUDIT_PRICE, "payment-offer-preflight": PAYMENT_OFFER_PREFLIGHT_PRICE, "settlement-proof": SETTLEMENT_PROOF_PRICE, "transaction-receipt": TRANSACTION_RECEIPT_PRICE, "solana-transaction-receipt": SOLANA_TRANSACTION_RECEIPT_PRICE, "wallet-policy-conformance": WALLET_POLICY_CONFORMANCE_PRICE, "stateful-wallet-policy-conformance": STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE },
+    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE, "morpho-protection": MORPHO_PROTECTION_PRICE, "morpho-market-underwrite": MORPHO_MARKET_UNDERWRITE_PRICE, "morpho-preliquidation-replay": MORPHO_PRELIQUIDATION_REPLAY_PRICE, "opportunity-preflight": OPPORTUNITY_PREFLIGHT_PRICE, "agent-discoverability-audit": AGENT_DISCOVERABILITY_AUDIT_PRICE, "payment-offer-preflight": PAYMENT_OFFER_PREFLIGHT_PRICE, "seller-integrity-audit": SELLER_INTEGRITY_AUDIT_PRICE, "settlement-proof": SETTLEMENT_PROOF_PRICE, "transaction-receipt": TRANSACTION_RECEIPT_PRICE, "solana-transaction-receipt": SOLANA_TRANSACTION_RECEIPT_PRICE, "wallet-policy-conformance": WALLET_POLICY_CONFORMANCE_PRICE, "stateful-wallet-policy-conformance": STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
     paymentProtocols: {
@@ -672,6 +680,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/chain/solana-transaction-receipt`, amount: priceToAtomic(SOLANA_TRANSACTION_RECEIPT_PRICE), description: "Get a normalized finalized Solana transaction receipt from one signature: success or failure status, slot, block time, fee, SPL-token owner deltas, canonical USDC deltas, and optional exact mint, recipient, amount, and payer verification. Returns explicit not-found or RPC-unavailable evidence, excludes raw instructions and logs, and performs no wallet, signing, broadcast, custody, or execution action.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/security/wallet-policy-conformance`, method: "POST", amount: priceToAtomic(WALLET_POLICY_CONFORMANCE_PRICE), description: "Evaluate a credential-free standardized allow/deny matrix for an agent wallet or delegated signer. Distinguishes explicit provider policy denials from validation and generic provider failures, separates operation allowlisting from exact execution-shape control, and returns conformant, partial, or unsafe without an opaque score. Accepts no credentials, wallet IDs, signatures, transactions, or raw provider responses.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/security/stateful-wallet-policy-conformance`, method: "POST", amount: priceToAtomic(STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE), description: "Evaluate credential-free stateful wallet-policy observations for sequential cumulative limits, signed-but-unbroadcast accounting, ABI extraction integrity, concurrent oversubscription, counter-reference failure, and application serialization. Separates provider-policy enforcement from application guards and returns conformant, partial, or unsafe without an opaque score. Accepts no credentials, wallet or resource IDs, counter values, signatures, transactions, or raw provider responses.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/commerce/seller-integrity-audit`, amount: priceToAtomic(SELLER_INTEGRITY_AUDIT_PRICE), description: "Audit one exact paid GET route for machine-buyability before buyers spend: constructible non-secret input, complete request binding, live x402 and MPP economics, optional Bazaar catalog contract, and recursively guaranteed success-response paths. Returns machine_buyable or repair_required with controlled findings and concrete next actions. Uses public pinned DNS, no credentials, no target payment, no redirect, no paid target body, and retains no seller schema or query values.", mimeType: "application/json" },
 ];
 
 const WALLET_POLICY_DISCOVERY_INPUT = Object.freeze({
@@ -744,6 +753,7 @@ const RESOURCE_DISCOVERY_METADATA = {
   "/work/opportunity-preflight": { operationId: "preflightAgentOpportunity", tags: ["Agent Operations"] },
   "/distribution/agent-discoverability-audit": { operationId: "auditAgentDiscoverability", tags: ["Distribution"] },
   "/commerce/payment-offer-preflight": { operationId: "preflightPaymentOffer", tags: ["Agent Operations"] },
+  "/commerce/seller-integrity-audit": { operationId: "auditSellerIntegrity", tags: ["Agent Operations"] },
   "/commerce/settlement-proof": { operationId: "verifyBaseUsdcSettlement", tags: ["Blockchain"] },
   "/chain/transaction-receipt": { operationId: "getTransactionReceipt", tags: ["Blockchain"] },
   "/chain/solana-transaction-receipt": { operationId: "getSolanaTransactionReceipt", tags: ["Blockchain"] },
@@ -1047,6 +1057,7 @@ ${line("/schemaforge", SCHEMAFORGE_PRICE, "business site -> paste-ready JSON-LD 
 ${line("/deep-audit", DEEP_AUDIT_PRICE, "domain -> bundled AI-search-readiness audit with firmographics, technical signals, structured-data gaps, and a paste-ready fix list.")}
 ${line("/distribution/agent-discoverability-audit", AGENT_DISCOVERABILITY_AUDIT_PRICE, "public HTTPS service origin plus a brand-blind capability intent -> point-in-time rank, dependency-labeled coverage, canonical-vs-alias identity, duplicate records, expected-route presence, and price drift across ten public machine-service discovery views. Optional runtimeUrl derives the comparison price from a same-origin unsigned x402 or MPP offer; optional surfaceAudit checks the target's public Agent Card, ERC-8004 registration document, and action catalog. No catalog credential, signature, or payment.")}
 ${line("/commerce/payment-offer-preflight", PAYMENT_OFFER_PREFLIGHT_PRICE, "exact public HTTPS GET URL -> compare and normalize x402 and MPP payment challenges and terms before buyer authorization; check route and realm binding, expiry, and economic parity. Uses no target credential, signature, payment, redirect, or response body.")}
+${line("/commerce/seller-integrity-audit", SELLER_INTEGRITY_AUDIT_PRICE, "public seller origin plus exact paid GET path -> machine-buyability audit for constructible input, exact x402 and MPP terms, optional Bazaar discovery, and recursively guaranteed success-response paths. Returns controlled repair actions without target credentials or payment.")}
 ${line("/security/wallet-policy-conformance", WALLET_POLICY_CONFORMANCE_PRICE, "POST standardized wallet-policy observations -> explicit conformant, partial, or unsafe decision. Distinguishes provider policy denial from validation and generic provider failure, and tests exact execution shape separately from operation allowlisting. Accepts no wallet credentials or raw provider payloads.")}
 ${line("/security/stateful-wallet-policy-conformance", STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE, "POST standardized stateful wallet-policy observations -> explicit conformant, partial, or unsafe decision for sequential caps, signed-but-unbroadcast accounting, ABI extraction, concurrency, counter references, and application serialization. Accepts no counter values, resource IDs, credentials, or raw provider payloads.")}
 ${circleGateway.enabled ? line(CIRCLE_GATEWAY_PATH, PAYMENT_OFFER_PREFLIGHT_PRICE, "the same payment-offer preflight product through Circle Gateway x402 Nanopayments, with gasless buyer authorization and batched USDC settlement.") : ""}
@@ -1214,6 +1225,24 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
           "x-payment-info": profile === "mpp"
             ? mppPaymentInfoFor(RESOURCES[13])
             : agentCashPaymentInfoFor(RESOURCES[13]),
+        },
+      },
+      "/commerce/seller-integrity-audit": {
+        get: {
+          summary: RESOURCES[19].description,
+          parameters: [
+            { name: "origin", in: "query", required: true, description: "Credential-free public HTTPS seller origin on port 443.", schema: { type: "string", format: "uri", example: "https://agents.samedaydesk.com" } },
+            { name: "route", in: "query", required: true, description: "Exact paid GET path declared by the seller, without query or template parameters.", schema: { type: "string", pattern: "^/(?!/)[^?#{}]+$", example: "/commerce/payment-offer-preflight" } },
+            { name: "requireBazaar", in: "query", required: false, description: "When true, missing Bazaar discovery metadata becomes a repair finding.", schema: { type: "boolean", default: false } },
+          ],
+          responses: {
+            "200": { description: "bounded seller machine-buyability report and repair actions", content: { "application/json": { schema: sellerIntegrityAuditOutputSchema() } } },
+            "400": { description: "invalid public origin or exact route, charged nothing" },
+            "402": { description: `payment required (x402 or MPP, ${SELLER_INTEGRITY_AUDIT_PRICE} USDC base)` },
+          },
+          "x-payment-info": profile === "mpp"
+            ? mppPaymentInfoFor(RESOURCES[19])
+            : agentCashPaymentInfoFor(RESOURCES[19]),
         },
       },
       "/commerce/settlement-proof": { get: { summary: RESOURCES[14].description, parameters: [{ name: "transactionHash", in: "query", required: true, description: "Base mainnet transaction hash whose canonical USDC Transfer logs should be checked.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$", example: "0xcfcbb367fecf27052db9ca855e5146e99cacbce1cab94f20f9f95a74170a8987" } }, { name: "recipient", in: "query", required: true, description: "Expected USDC recipient.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$", example: "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" } }, { name: "amountAtomic", in: "query", required: true, description: "Expected positive USDC amount in six-decimal atomic units.", schema: { type: "string", pattern: "^[1-9][0-9]{0,20}$", maxLength: 21, example: "5000" } }, { name: "payer", in: "query", required: false, description: "Optional expected USDC payer.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" } }], responses: { "200": { description: "deterministic canonical Base USDC settlement proof or mismatch findings" }, "400": { description: "invalid settlement claim, charged nothing" }, "402": { description: `payment required (x402 or MPP, ${SETTLEMENT_PROOF_PRICE} USDC base)` } } } },
@@ -1512,6 +1541,26 @@ const validatePaymentOfferPreflightRequest = (req, res, next) => {
 };
 app.get(["/commerce/payment-offer-preflight", CIRCLE_GATEWAY_PATH], validatePaymentOfferPreflightRequest);
 app.post("/commerce/payment-offer-preflight", validatePaymentOfferPreflightRequest);
+
+// Reject malformed seller origins and paths before either payment rail runs.
+app.get("/commerce/seller-integrity-audit", (req, res, next) => {
+  try {
+    res.locals.sellerIntegrityAuditInput = normalizeSellerIntegrityAuditInput(req.query);
+    return next();
+  } catch (error) {
+    const message = error instanceof SellerIntegrityAuditError
+      ? error.message
+      : "invalid seller-integrity audit request";
+    res.set("Cache-Control", "no-store");
+    return res.status(400).json({
+      ok: false,
+      product: "samedaydesk-seller-integrity-audit",
+      error: message,
+      charged: false,
+      boundary: { credentialsUsed: false, targetPaymentSigned: false, targetPaymentSent: false },
+    });
+  }
+});
 
 // Reject malformed settlement claims before payment. Receipt and block reads
 // happen only after settlement because they are the work this route sells.
@@ -2335,6 +2384,35 @@ const x402Paywall = paymentMiddleware(
           }),
         },
       },
+      "GET /commerce/seller-integrity-audit": {
+        ...bazaarResourceMetadataFor("/commerce/seller-integrity-audit"),
+        accepts: [{ scheme: "exact", price: SELLER_INTEGRITY_AUDIT_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description: RESOURCES[19].description,
+        mimeType: "application/json",
+        extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
+          ...declareDiscoveryContract({
+            routeKey: "GET /commerce/seller-integrity-audit",
+            input: {
+              origin: "https://agents.samedaydesk.com",
+              route: "/commerce/payment-offer-preflight",
+              requireBazaar: true,
+            },
+            inputSchema: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                origin: { type: "string", format: "uri", description: "Credential-free public HTTPS seller origin on port 443." },
+                route: { type: "string", pattern: "^/(?!/)[^?#{}]+$", description: "Exact paid GET path declared by the seller." },
+                requireBazaar: { type: "boolean", default: false, description: "Whether Bazaar catalog eligibility is a required gate." },
+              },
+              required: ["origin", "route"],
+            },
+            output: { example: SELLER_INTEGRITY_AUDIT_EXAMPLE },
+            outputSchema: sellerIntegrityAuditOutputSchema(),
+          }),
+        },
+      },
       "GET /commerce/settlement-proof": {
         ...bazaarResourceMetadataFor("/commerce/settlement-proof"),
         accepts: [{ scheme: "exact", price: SETTLEMENT_PROOF_PRICE, network: NETWORK, payTo: PAY_TO }],
@@ -2588,6 +2666,11 @@ const servePaymentOfferPreflight = async (req, res) => {
       },
     });
   }
+};
+
+const serveSellerIntegrityAudit = async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  return res.json(await sellerIntegrityAudit(res.locals.sellerIntegrityAuditInput));
 };
 
 const serveSettlementProof = async (req, res) => {
@@ -2866,6 +2949,7 @@ app.get("/distribution/agent-discoverability-audit", async (req, res) => {
 // URL syntax and obvious local targets were already rejected before payment.
 app.get("/commerce/payment-offer-preflight", servePaymentOfferPreflight);
 app.post("/commerce/payment-offer-preflight", servePaymentOfferPreflight);
+app.get("/commerce/seller-integrity-audit", serveSellerIntegrityAudit);
 app.get("/commerce/settlement-proof", serveSettlementProof);
 app.get("/chain/transaction-receipt", serveTransactionReceipt);
 app.get("/chain/solana-transaction-receipt", serveSolanaTransactionReceipt);
@@ -2953,6 +3037,7 @@ app.get("/", (req, res) => {
       "GET /work/opportunity-preflight?rewardUsd=&hours=&hourlyCostUsd=": `${OPPORTUNITY_PREFLIGHT_PRICE} - deterministic attempt, verify-first, or abandon economics with optional dated platform evidence.`,
       "GET /distribution/agent-discoverability-audit?origin=&intent=&route=&runtimeUrl=&payTo=&surfaceAudit=": `${AGENT_DISCOVERABILITY_AUDIT_PRICE} - brand-blind agent discovery rank, dependency-labeled coverage, canonical-vs-alias identity, duplicate records, expected-route presence, runtime-derived catalog-price coherence, optional seller-owned surface coverage, and competing results across ten machine-service views.`,
       "GET /commerce/payment-offer-preflight?url=": `${PAYMENT_OFFER_PREFLIGHT_PRICE} - compare and normalize x402 and MPP payment challenges and terms, binding checks, expiry, and economic parity before buyer authorization.`,
+      "GET /commerce/seller-integrity-audit?origin=&route=&requireBazaar=": `${SELLER_INTEGRITY_AUDIT_PRICE} - audit one paid GET seller route for constructible input, exact payment terms, optional Bazaar discovery, response-contract completeness, and actionable repair findings.`,
       "GET /commerce/settlement-proof?transactionHash=&recipient=&amountAtomic=&payer=": `${SETTLEMENT_PROOF_PRICE} - verify one claimed canonical Base USDC transfer against the successful on-chain receipt, with exact recipient, amount, and optional payer binding.`,
       "GET /chain/transaction-receipt?transactionHash=&network=": `${TRANSACTION_RECEIPT_PRICE} - normalized Base or Ethereum receipt status, block time, gas fee, decoded ERC-20 transfers, and canonical USDC transfer evidence.`,
       "GET /chain/solana-transaction-receipt?signature=&mint=&recipient=&amountAtomic=&payer=": `${SOLANA_TRANSACTION_RECEIPT_PRICE} - normalized finalized Solana receipt, SPL-token owner deltas, canonical USDC deltas, and optional exact settlement verification.`,
@@ -3014,6 +3099,7 @@ import("./mcp-server.mjs")
         { name: "opportunity_preflight", description: RESOURCES[11].description, price: OPPORTUNITY_PREFLIGHT_PRICE, inputSchema: { platform: z.string().max(100).optional().describe("Optional platform slug used to attach dated platform-health evidence when a matching card exists."), rewardUsd: z.number().positive().describe("Maximum gross reward in USD if the opportunity is selected and paid."), hours: z.number().min(0).max(10000).describe("Estimated human and agent work time in hours for one complete attempt."), hourlyCostUsd: z.number().min(0).max(100000).describe("Internal opportunity cost per hour in USD."), computeUsd: z.number().min(0).default(0).describe("Expected model, API, hosting, and compute spend in USD for one attempt."), mandatorySpendUsd: z.number().min(0).default(0).describe("Non-recoverable cash spend in USD required before the opportunity can settle."), reusableValueUsd: z.number().min(0).default(0).describe("Conservative USD value of reusable code, research, distribution, or other assets created by the attempt."), selectionProbabilityPct: z.number().min(0).max(100).optional().describe("Caller-supplied probability, from 0 to 100, of receiving the reward; omit to receive a verify-first decision."), competition: z.number().int().min(0).default(0).describe("Known number of competing submissions or workers; use 0 when unknown."), slots: z.number().int().min(1).default(1).describe("Number of independently paid winner or worker slots."), agentAccess: z.enum(["agent_allowed", "agent_only", "mixed", "human_only", "unknown"]).default("unknown").describe("Whether the platform explicitly allows agent participation, is agent-only, mixes agents and humans, is human-only, or remains unknown."), acceptance: z.enum(["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"]).default("unknown").describe("How completion is accepted: deterministic proof, machine score, review deadline, discretionary judgment, or unknown."), settlement: z.enum(["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"]).default("unknown").describe("How the reward is funded and paid: direct, escrow, platform balance, discretionary, unfunded, or unknown.") }, run: (a) => opportunityPreflight(a, { platformCard: a.platform ? getPlatformHealthCard(a.platform.toLowerCase()) : null }), tags: ["work", "bounty", "economics", "preflight", "settlement-evidence"] },
         { name: "agent_discoverability_audit", description: RESOURCES[12].description, price: AGENT_DISCOVERABILITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Public HTTPS service origin"), intent: z.string().min(20).max(500).describe("Brand-blind capability description"), route: z.string().regex(/^\/[^?#]*$/).optional().describe("Optional expected exact path"), runtimeUrl: z.string().url().max(2048).optional().describe("Optional exact same-origin HTTPS GET URL whose unpaid x402 or MPP offer supplies the runtime price reference. Requires route and an exactly matching pathname."), payTo: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional EVM payTo for alias matching"), expectedPriceUsd: z.union([z.number().min(0).max(1000000), z.string().regex(/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,6})?$/)]).optional().describe("Optional exact route price expected by the caller. A coherent runtimeUrl offer takes precedence and caller drift is reported."), surfaceAudit: z.boolean().optional().describe("When true, inspect the target's public Agent Card, ERC-8004 registration document, and action catalog for the expected route through bounded same-origin fetches.") }, run: (a) => agentDiscoverabilityAudit(a), tags: ["distribution", "discovery", "x402", "mpp", "agent402", "catalog-price", "runtime-coherence", "a2a", "erc-8004"] },
         { name: "payment_offer_preflight", description: RESOURCES[13].description, price: PAYMENT_OFFER_PREFLIGHT_PRICE, inputSchema: { url: z.string().url().max(2048).describe("Exact public HTTPS GET route whose unpaid x402 and MPP challenge headers and same-origin OpenAPI success-response declaration should be inspected before buyer authorization. Credential-like query keys, fragments, unresolved parameters, local hosts, redirects, and non-public IPs are rejected."), catalog: PAYMENT_OFFER_CATALOG_SCHEMA.optional().describe("Optional caller-supplied catalog candidate. When present, the tool compares it with every live unsigned offer across request, protocol, amount, network, asset, recipient, and expiry.") }, run: (a) => paymentOfferPreflight(a), tags: ["payments", "x402", "mpp", "buyer-safety", "preflight", "catalog-coherence", "response-contract"] },
+        { name: "seller_integrity_audit", description: RESOURCES[19].description, price: SELLER_INTEGRITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Credential-free public HTTPS seller origin on port 443."), route: z.string().regex(/^\/(?!\/)[^?#{}]+$/).describe("Exact paid GET path declared by the seller, without query or template parameters."), requireBazaar: z.boolean().default(false).describe("When true, missing Bazaar discovery metadata becomes a repair finding.") }, run: (a) => sellerIntegrityAudit(a), tags: ["payments", "seller-ci", "x402", "mpp", "response-contract", "machine-buyability"] },
         { name: "settlement_proof", description: RESOURCES[14].description, price: SETTLEMENT_PROOF_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Base mainnet transaction hash containing the claimed canonical USDC transfer."), recipient: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Expected canonical Base USDC recipient."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,20}$/).describe("Expected positive USDC amount in six-decimal atomic units."), payer: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional expected canonical Base USDC payer.") }, run: (a) => settlementProof(a), tags: ["payments", "x402", "settlement", "reconciliation", "base-usdc"] },
         { name: "transaction_receipt", description: RESOURCES[15].description, price: TRANSACTION_RECEIPT_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Mined Base or Ethereum transaction hash whose normalized receipt should be returned."), network: z.enum(["base", "ethereum"]).default("base").describe("Receipt network. Defaults to Base mainnet.") }, run: (a) => transactionReceipt(a), tags: ["blockchain", "receipt", "gas", "erc20", "usdc"] },
         { name: "solana_transaction_receipt", description: RESOURCES[16].description, price: SOLANA_TRANSACTION_RECEIPT_PRICE, inputSchema: { signature: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/).describe("Finalized Solana mainnet transaction signature."), mint: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional SPL-token mint; defaults to canonical Solana USDC."), recipient: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional expected token recipient owner."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,19}$/).optional().describe("Optional expected positive token amount in atomic units; requires recipient."), payer: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional expected token payer owner; requires recipient and amountAtomic.") }, run: (a) => solanaTransactionReceipt(a), tags: ["blockchain", "solana", "receipt", "spl-token", "usdc"] },

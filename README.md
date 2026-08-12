@@ -2,7 +2,7 @@
 
 [![Smithery listing](https://smithery.ai/badge/epistemedeus/x402-data-gateway)](https://smithery.ai/servers/epistemedeus/x402-data-gateway)
 
-Nineteen pay-per-call tools for deterministic agent-work opportunity preflight,
+Twenty pay-per-call tools for deterministic agent-work opportunity preflight,
 machine-service discoverability, payment-offer preflight, Morpho borrower and
 market decisions, protection plans, URL extraction, Markdown reading,
 repository security scans, company and wallet enrichment, structured data
@@ -29,6 +29,7 @@ settlement proof, and AI-search readiness audits.
 - Opportunity preflight: `GET /work/opportunity-preflight?rewardUsd=10&hours=0.25&hourlyCostUsd=4&selectionProbabilityPct=20`
 - Agent discoverability audit: `GET /distribution/agent-discoverability-audit?origin=https://example.com&intent=extract+a+public+website+into+structured+JSON&route=/extract&runtimeUrl=https%3A%2F%2Fexample.com%2Fextract%3Furl%3Dhttps%253A%252F%252Fexample.org&surfaceAudit=true`
 - Payment offer preflight: `GET /commerce/payment-offer-preflight?url=https://example.com/paid-route`
+- Seller integrity audit: `GET /commerce/seller-integrity-audit?origin=https://seller.example&route=/paid-route`
 - Base USDC settlement proof: `GET /commerce/settlement-proof?transactionHash=0x...&recipient=0x...&amountAtomic=5000`
 - Base or Ethereum transaction receipt: `GET /chain/transaction-receipt?transactionHash=0x...&network=base`
 - Wallet policy conformance: `POST /security/wallet-policy-conformance`
@@ -333,7 +334,7 @@ the buyer's independently authorized output validator.
 Version 1.17.0 closed the catalog-alias ambiguity with an optional signed
 deployment statement from `agent-payment-policy@0.9.0`. The short-lived JWS at
 `/.well-known/agent-payment-policy-service-deployment.json` binds the canonical
-`agents.samedaydesk.com` origin to all twenty-one paid HTTP method and path pairs
+`agents.samedaydesk.com` origin to all twenty-two paid HTTP method and path pairs
 and to the exact Base USDC x402 and MPP settlement identities. Each deployment
 origin carries its own route and settlement scope, so a future alias cannot
 inherit another origin's authority.
