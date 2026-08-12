@@ -32,7 +32,12 @@ const FAILURE_CODE_VALUES = Object.freeze([
 ]);
 const FAILURE_CODES = new Set(FAILURE_CODE_VALUES);
 
+const surfaceNotRequestedSchema = z.object({
+  requested: z.literal(false),
+}).strict();
+
 const surfaceFailureSchema = z.object({
+  requested: z.literal(true),
   available: z.literal(false),
   failureCode: z.enum(FAILURE_CODE_VALUES),
   httpStatus: z.number().int().min(300).max(599).optional(),
@@ -50,9 +55,11 @@ const heavyToolSchema = z.object({
   hasOutputSchema: z.boolean(),
 }).strict();
 
-const mcpSurfaceSchema = z.discriminatedUnion("available", [
+const mcpSurfaceSchema = z.union([
+  surfaceNotRequestedSchema,
   surfaceFailureSchema,
   z.object({
+    requested: z.literal(true),
     available: z.literal(true), bytes: z.number().int().nonnegative(),
     byteDerivedTokenEstimate: z.number().int().nonnegative(), budgetBytes: z.number().int().positive(),
     withinBudget: z.boolean(), protocolVersion: z.string().nullable(),
@@ -70,9 +77,11 @@ const heavyOperationSchema = z.object({
   hasOperationId: z.boolean(),
 }).strict();
 
-const openApiSurfaceSchema = z.discriminatedUnion("available", [
+const openApiSurfaceSchema = z.union([
+  surfaceNotRequestedSchema,
   surfaceFailureSchema,
   z.object({
+    requested: z.literal(true),
     available: z.literal(true), bytes: z.number().int().nonnegative(),
     byteDerivedTokenEstimate: z.number().int().nonnegative(), budgetBytes: z.number().int().positive(),
     withinBudget: z.boolean(), operationCount: z.number().int().nonnegative(),
@@ -81,10 +90,10 @@ const openApiSurfaceSchema = z.discriminatedUnion("available", [
 ]);
 
 export const agentSurfaceBudgetAuditMcpOutputSchema = z.object({
-  ok: z.boolean(), product: z.literal("samedaydesk-agent-surface-budget-audit"), version: z.literal("1.1.0"),
+  ok: z.boolean(), product: z.literal("samedaydesk-agent-surface-budget-audit"), version: z.literal("1.2.0"),
   checkedAt: z.string().datetime(), decision: z.enum(["within_budget", "optimize", "surface_incomplete"]),
   request: z.object({
-    origin: z.string().url(), mcpPath: z.string(), openApiPath: z.string(),
+    origin: z.string().url(), surfaceMode: z.enum(["mcp", "openapi", "both"]), mcpPath: z.string(), openApiPath: z.string(),
     mcpBudgetBytes: z.number().int().positive(), openApiBudgetBytes: z.number().int().positive(),
   }).strict(),
   mcp: mcpSurfaceSchema, openapi: openApiSurfaceSchema, actions: z.array(z.string()).max(16),
@@ -143,7 +152,7 @@ export function normalizeAgentSurfaceBudgetAuditInput(input = {}) {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
     throw new AgentSurfaceBudgetAuditError("input must be an object");
   }
-  const allowed = new Set(["origin", "mcpPath", "openApiPath", "mcpBudgetBytes", "openApiBudgetBytes"]);
+  const allowed = new Set(["origin", "surfaceMode", "mcpPath", "openApiPath", "mcpBudgetBytes", "openApiBudgetBytes"]);
   const unknown = Object.keys(input).filter((key) => !allowed.has(key)).sort();
   if (unknown.length) throw new AgentSurfaceBudgetAuditError(`unsupported input field: ${unknown[0]}`);
 
@@ -156,6 +165,10 @@ export function normalizeAgentSurfaceBudgetAuditInput(input = {}) {
   if (target.pathname !== "/" || target.search || target.port) {
     throw new AgentSurfaceBudgetAuditError("origin must not contain a path, query, fragment, or non-default port");
   }
+  const surfaceMode = input.surfaceMode === undefined || input.surfaceMode === "" ? "both" : String(input.surfaceMode);
+  if (!new Set(["mcp", "openapi", "both"]).has(surfaceMode)) {
+    throw new AgentSurfaceBudgetAuditError("surfaceMode must be mcp, openapi, or both");
+  }
   const safePath = (value, fallback, name) => {
     const path = String(value || fallback);
     if (!/^\/(?!\/)[A-Za-z0-9._~!$&'()*+,;=:@%/-]+$/.test(path) || path.includes("{") || path.includes("?")) {
@@ -165,6 +178,7 @@ export function normalizeAgentSurfaceBudgetAuditInput(input = {}) {
   };
   return Object.freeze({
     origin: target.origin,
+    surfaceMode,
     mcpPath: safePath(input.mcpPath, "/mcp", "mcpPath"),
     openApiPath: safePath(input.openApiPath, "/openapi.json", "openApiPath"),
     mcpBudgetBytes: integer(input.mcpBudgetBytes, DEFAULT_MCP_BUDGET, 8_192, MAX_MCP_BYTES, "mcpBudgetBytes"),
@@ -402,6 +416,7 @@ function analyzeMcp(surface, budget) {
   }).sort((left, right) => right.bytes - left.bytes || left.name.localeCompare(right.name));
   const selectionBytes = tools.reduce((sum, tool) => sum + tool.bytes, 0);
   return {
+    requested: true,
     available: true,
     bytes: surface.bytes,
     byteDerivedTokenEstimate: tokenEstimate(surface.bytes),
@@ -442,6 +457,7 @@ function analyzeOpenApi(surface, budget) {
   }
   operations.sort((left, right) => right.bytes - left.bytes || `${left.method} ${left.path}`.localeCompare(`${right.method} ${right.path}`));
   return {
+    requested: true,
     available: true,
     bytes: surface.bytes,
     byteDerivedTokenEstimate: tokenEstimate(surface.bytes),
@@ -471,7 +487,7 @@ function failure(error) {
               ? "dns_failed"
               : "bounded_transport_failure";
   if (!FAILURE_CODES.has(code)) code = "bounded_transport_failure";
-  const result = { available: false, failureCode: code };
+  const result = { requested: true, available: false, failureCode: code };
   if (Number.isInteger(error?.httpStatus) && error.httpStatus >= 300 && error.httpStatus <= 599) {
     result.httpStatus = error.httpStatus;
   }
@@ -501,7 +517,7 @@ export function agentSurfaceBudgetAuditOutputSchema() {
     properties: {
       ok: { type: "boolean" },
       product: { type: "string", const: "samedaydesk-agent-surface-budget-audit" },
-      version: { type: "string", const: "1.1.0" },
+      version: { type: "string", const: "1.2.0" },
       checkedAt: { type: "string", format: "date-time" },
       decision: { type: "string", enum: ["within_budget", "optimize", "surface_incomplete"] },
       request: { type: "object" },
@@ -520,32 +536,42 @@ export async function agentSurfaceBudgetAudit(input, {
   now = () => new Date(),
 } = {}) {
   const request = normalizeAgentSurfaceBudgetAuditInput(input);
+  const wantsMcp = request.surfaceMode !== "openapi";
+  const wantsOpenApi = request.surfaceMode !== "mcp";
   const [mcpResult, openApiResult] = await Promise.allSettled([
-    mcpAcquireImpl(request),
-    openApiAcquireImpl(request),
+    wantsMcp ? mcpAcquireImpl(request) : Promise.resolve(null),
+    wantsOpenApi ? openApiAcquireImpl(request) : Promise.resolve(null),
   ]);
-  const mcp = mcpResult.status === "fulfilled" ? analyzeMcp(mcpResult.value, request.mcpBudgetBytes) : failure(mcpResult.reason);
-  const openapi = openApiResult.status === "fulfilled" ? analyzeOpenApi(openApiResult.value, request.openApiBudgetBytes) : failure(openApiResult.reason);
+  const mcp = !wantsMcp
+    ? { requested: false }
+    : mcpResult.status === "fulfilled"
+      ? analyzeMcp(mcpResult.value, request.mcpBudgetBytes)
+      : failure(mcpResult.reason);
+  const openapi = !wantsOpenApi
+    ? { requested: false }
+    : openApiResult.status === "fulfilled"
+      ? analyzeOpenApi(openApiResult.value, request.openApiBudgetBytes)
+      : failure(openApiResult.reason);
   const actions = [];
-  if (!mcp.available) actions.push(unavailableAction("mcp", mcp));
-  else {
+  if (wantsMcp && !mcp.available) actions.push(unavailableAction("mcp", mcp));
+  else if (wantsMcp) {
     if (!mcp.withinBudget) actions.push("Add progressive MCP tool discovery or split the server into task-focused tool sets so clients do not ingest the full catalog every turn.");
     if (mcp.heaviestTools.some((tool) => tool.bytes > 8_192)) actions.push("Reduce the heaviest tool definitions by moving examples and long guidance to linked resources while preserving selection-critical descriptions and schemas.");
     if (mcp.missingTitleCount || mcp.missingDescriptionCount || mcp.missingInputSchemaCount) actions.push("Give every tool a concise selection title, disambiguating description, and explicit input schema.");
     if (mcp.missingOutputSchemaCount) actions.push("Add truthful outputSchema declarations where the runtime can guarantee them; keep optional or dynamic fields explicit.");
   }
-  if (!openapi.available) actions.push(unavailableAction("openapi", openapi));
-  else {
+  if (wantsOpenApi && !openapi.available) actions.push(unavailableAction("openapi", openapi));
+  else if (wantsOpenApi) {
     if (!openapi.withinBudget) actions.push("Publish route-scoped or tag-scoped OpenAPI discovery views so agents can fetch only the operations relevant to their task.");
     if (openapi.heaviestOperations.some((operation) => operation.bytes > 32_768)) actions.push("Move long operation examples or prose to linked documentation while retaining request and response contracts in OpenAPI.");
     if (openapi.missingOperationIdCount) actions.push("Add stable operationId values so agents and generated clients can address operations without path heuristics.");
   }
-  const complete = mcp.available && openapi.available;
-  const withinBudget = complete && mcp.withinBudget && openapi.withinBudget;
+  const complete = (!wantsMcp || mcp.available) && (!wantsOpenApi || openapi.available);
+  const withinBudget = complete && (!wantsMcp || mcp.withinBudget) && (!wantsOpenApi || openapi.withinBudget);
   return {
     ok: complete,
     product: "samedaydesk-agent-surface-budget-audit",
-    version: "1.1.0",
+    version: "1.2.0",
     checkedAt: now().toISOString(),
     decision: !complete ? "surface_incomplete" : withinBudget ? "within_budget" : "optimize",
     request,
@@ -569,12 +595,12 @@ export async function agentSurfaceBudgetAudit(input, {
 export const AGENT_SURFACE_BUDGET_AUDIT_EXAMPLE = Object.freeze({
   ok: true,
   product: "samedaydesk-agent-surface-budget-audit",
-  version: "1.1.0",
+  version: "1.2.0",
   checkedAt: "2026-08-12T15:00:00.000Z",
   decision: "optimize",
-  request: { origin: "https://agents.samedaydesk.com", mcpPath: "/mcp", openApiPath: "/openapi.json", mcpBudgetBytes: 65536, openApiBudgetBytes: 524288 },
-  mcp: { available: true, bytes: 90000, byteDerivedTokenEstimate: 22500, budgetBytes: 65536, withinBudget: false, protocolVersion: "2025-11-25", server: { name: "example", version: "1.0.0" }, toolCount: 20, pageCount: 1, selectionBytes: 87000, missingTitleCount: 0, missingDescriptionCount: 0, missingInputSchemaCount: 0, missingOutputSchemaCount: 20, heaviestTools: [] },
-  openapi: { available: true, bytes: 300000, byteDerivedTokenEstimate: 75000, budgetBytes: 524288, withinBudget: true, operationCount: 25, missingOperationIdCount: 0, heaviestOperations: [] },
+  request: { origin: "https://agents.samedaydesk.com", surfaceMode: "both", mcpPath: "/mcp", openApiPath: "/openapi.json", mcpBudgetBytes: 65536, openApiBudgetBytes: 524288 },
+  mcp: { requested: true, available: true, bytes: 90000, byteDerivedTokenEstimate: 22500, budgetBytes: 65536, withinBudget: false, protocolVersion: "2025-11-25", server: { name: "example", version: "1.0.0" }, toolCount: 20, pageCount: 1, selectionBytes: 87000, missingTitleCount: 0, missingDescriptionCount: 0, missingInputSchemaCount: 0, missingOutputSchemaCount: 20, heaviestTools: [] },
+  openapi: { requested: true, available: true, bytes: 300000, byteDerivedTokenEstimate: 75000, budgetBytes: 524288, withinBudget: true, operationCount: 25, missingOperationIdCount: 0, heaviestOperations: [] },
   actions: ["Add progressive MCP tool discovery or split the server into task-focused tool sets so clients do not ingest the full catalog every turn."],
   boundary: { credentialsUsed: false, toolsCalled: false, targetPaymentSigned: false, targetPaymentSent: false, redirectsFollowed: false, responseBodiesReturned: false, schemasRetained: false, sessionIdentifiersReturned: false, tokenEstimateMethod: "ceil(UTF-8 bytes / 4); comparative estimate, not tokenizer billing" },
 });

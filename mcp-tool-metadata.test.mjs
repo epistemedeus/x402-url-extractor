@@ -54,7 +54,8 @@ test("makes each overlapping web and company tool chooseable without renaming it
   assert.match(contractQualified.description, /Search Agent402 and the official MPP catalog/);
   assert.match(contractQualified.description, /Use `agent_discoverability_audit`/);
   assert.match(contractQualified.description, /`seller_integrity_audit`/);
-  assert.match(surfaceBudget.description, /MCP tools\/list and OpenAPI/);
+  assert.match(surfaceBudget.description, /MCP tools\/list, OpenAPI, or both/);
+  assert.match(surfaceBudget.description, /Unselected surfaces are not fetched or judged/);
   assert.match(surfaceBudget.description, /calls no target tool/);
   assert.match(transactionReceipt.description, /Use `settlement_proof` instead/);
   assert.match(solanaTransactionReceipt.description, /use `transaction_receipt` for Base or Ethereum/);

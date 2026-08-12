@@ -13,6 +13,7 @@ const request = { origin: "https://example.com", mcpBudgetBytes: 8192, openApiBu
 test("normalizes only public exact discovery surfaces", () => {
   assert.deepEqual({ ...normalizeAgentSurfaceBudgetAuditInput(request) }, {
     origin: "https://example.com",
+    surfaceMode: "both",
     mcpPath: "/mcp",
     openApiPath: "/openapi.json",
     mcpBudgetBytes: 8192,
@@ -22,6 +23,7 @@ test("normalizes only public exact discovery surfaces", () => {
   assert.throws(() => normalizeAgentSurfaceBudgetAuditInput({ origin: "https://example.com/private" }), /must not contain/);
   assert.throws(() => normalizeAgentSurfaceBudgetAuditInput({ origin: "https://example.com", mcpPath: "//evil.test" }), /root-relative/);
   assert.throws(() => normalizeAgentSurfaceBudgetAuditInput({ origin: "https://example.com", token: "secret" }), /unsupported/);
+  assert.throws(() => normalizeAgentSurfaceBudgetAuditInput({ origin: "https://example.com", surfaceMode: "auto" }), /surfaceMode/);
 });
 
 test("uses validated public DNS when the desktop resolver synthesizes a benchmark address", async () => {
@@ -97,8 +99,8 @@ test("preserves decision-grade acquisition failures and recommends the matching 
     mcpAcquireImpl: async () => { throw auth; },
     openApiAcquireImpl: async () => { throw outage; },
   });
-  assert.deepEqual(result.mcp, { available: false, failureCode: "authentication_required", httpStatus: 401 });
-  assert.deepEqual(result.openapi, { available: false, failureCode: "upstream_unavailable", httpStatus: 503 });
+  assert.deepEqual(result.mcp, { requested: true, available: false, failureCode: "authentication_required", httpStatus: 401 });
+  assert.deepEqual(result.openapi, { requested: true, available: false, failureCode: "upstream_unavailable", httpStatus: 503 });
   assert.match(result.actions.join(" "), /authorization requirement/);
   assert.match(result.actions.join(" "), /readiness check/);
   assert.doesNotMatch(result.actions.join(" "), /Publish a bounded credential-free MCP initialize/);
@@ -122,6 +124,28 @@ test("returns within_budget only when both surfaces fit", async () => {
   assert.equal(result.ok, true);
   assert.equal(result.decision, "within_budget");
   assert.equal(result.actions.length, 0);
+});
+
+test("audits only the requested surface without inventing a failure for the other", async () => {
+  let mcpCalls = 0;
+  let openApiCalls = 0;
+  const mcpOnly = await agentSurfaceBudgetAudit({ ...request, surfaceMode: "mcp" }, {
+    mcpAcquireImpl: async () => { mcpCalls += 1; return { bytes: 100, protocolVersion: "2025-11-25", server: {}, tools: [] }; },
+    openApiAcquireImpl: async () => { openApiCalls += 1; throw new Error("must not run"); },
+  });
+  assert.equal(mcpOnly.decision, "within_budget");
+  assert.equal(mcpOnly.mcp.requested, true);
+  assert.deepEqual(mcpOnly.openapi, { requested: false });
+  assert.deepEqual([mcpCalls, openApiCalls], [1, 0]);
+
+  const openApiOnly = await agentSurfaceBudgetAudit({ ...request, surfaceMode: "openapi" }, {
+    mcpAcquireImpl: async () => { mcpCalls += 1; throw new Error("must not run"); },
+    openApiAcquireImpl: async () => { openApiCalls += 1; return { bytes: 100, document: { paths: {} } }; },
+  });
+  assert.equal(openApiOnly.decision, "within_budget");
+  assert.deepEqual(openApiOnly.mcp, { requested: false });
+  assert.equal(openApiOnly.openapi.requested, true);
+  assert.deepEqual([mcpCalls, openApiCalls], [1, 1]);
 });
 
 test("reports bounded MCP pagination without exposing a cursor", async () => {
