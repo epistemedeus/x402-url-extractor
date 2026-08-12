@@ -51,7 +51,7 @@ const TOOL_METADATA = Object.freeze({
   },
   payment_offer_preflight: {
     title: "Preflight x402 and MPP Offer",
-    description: "Compare x402 and MPP payment challenges and terms for one exact public HTTPS GET route before buyer authorization, including URL and realm binding, expiry, and cross-protocol economic parity. Use `agent_discoverability_audit` instead when you need to know whether catalogs rank or expose a service. This tool uses no target credential, signs and sends no target payment, follows no redirect, reads no response body, and does not establish seller trust or settlement reliability.",
+    description: "Compare x402 and MPP payment challenges, terms, and seller-declared JSON success-response readiness for one exact public HTTPS GET route before buyer authorization, including URL and realm binding, expiry, cross-protocol economic parity, and exact-route OpenAPI evidence. Use `agent_discoverability_audit` instead when you need to know whether catalogs rank or expose a service. This tool uses no target credential, signature, or target payment, follows no redirect, never reads the paid target body, and reads only the same-origin public OpenAPI document under a strict size cap. A seller declaration is advisory and does not establish runtime validity, seller trust, utility, or settlement reliability.",
   },
   settlement_proof: {
     title: "Verify Base USDC Settlement",

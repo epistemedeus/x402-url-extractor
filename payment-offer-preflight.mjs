@@ -3,10 +3,11 @@ import { request as httpsRequest } from "node:https";
 import { BlockList, isIP } from "node:net";
 
 import { Challenge } from "mppx";
-import { evaluateOfferCoherence } from "agent-payment-policy";
+import { SCHEMAS, evaluateOfferCoherence, evaluateResponseContract } from "agent-payment-policy";
 
 const MAX_URL_LENGTH = 2_048;
 const MAX_HEADER_VALUE_BYTES = 64 * 1024;
+const MAX_OPENAPI_BYTES = 1_000_000;
 const DEFAULT_TIMEOUT_MS = 8_000;
 const SENSITIVE_QUERY_KEY = /(?:^|[-_.])(api[-_.]?key|access[-_.]?token|auth|authorization|credential|password|secret|token)(?:$|[-_.])/i;
 const CATALOG_SOURCE = /^[\u0020-\u007e]{1,128}$/;
@@ -179,7 +180,7 @@ export function paymentOfferPreflightOutputSchema() {
     properties: {
       ok: { type: "boolean", const: true },
       product: { type: "string", const: "samedaydesk-payment-offer-preflight" },
-      version: { type: "string", const: "1.1.0" },
+      version: { type: "string", const: "1.2.0" },
       checkedAt: { type: "string", format: "date-time" },
       target: { type: "object" },
       decision: { type: "string", enum: ["parseable_offer", "review_required", "no_parseable_offer"] },
@@ -188,10 +189,12 @@ export function paymentOfferPreflightOutputSchema() {
       offers: { type: "array" },
       parity: { type: "object" },
       catalogCoherence: { type: "array" },
+      responseContract: { type: "object" },
+      responseContractAcquisition: { type: "object" },
       findings: { type: "array" },
       boundary: { type: "object" },
     },
-    required: ["ok", "product", "version", "checkedAt", "target", "decision", "protocols", "offerCount", "offers", "parity", "catalogCoherence", "findings", "boundary"],
+    required: ["ok", "product", "version", "checkedAt", "target", "decision", "protocols", "offerCount", "offers", "parity", "catalogCoherence", "responseContract", "responseContractAcquisition", "findings", "boundary"],
     additionalProperties: false,
   };
 }
@@ -267,6 +270,108 @@ export async function requestPaymentHeaders(target, {
     });
     request.end();
   });
+}
+
+export async function requestOpenApiDocument(target, {
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+  lookupImpl = dnsLookup,
+} = {}) {
+  const openapiUrl = new URL("/openapi.json", target.origin);
+  const resolved = await resolvePublicAddress(openapiUrl.hostname.replace(/^\[|\]$/g, ""), { lookupImpl });
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const request = httpsRequest(openapiUrl, {
+      method: "GET",
+      headers: {
+        accept: "application/json",
+        "user-agent": "SameDayDesk-Payment-Offer-Preflight/1.2 (+https://samedaydesk.com)",
+      },
+      lookup: createPinnedLookup(resolved),
+    }, (response) => {
+      const status = Number(response.statusCode || 0);
+      const mediaType = String(response.headers["content-type"] || "").toLowerCase().split(";", 1)[0].trim();
+      const declaredLength = Number(response.headers["content-length"]);
+      if (status !== 200 || mediaType !== "application/json" ||
+          (Number.isFinite(declaredLength) && declaredLength > MAX_OPENAPI_BYTES)) {
+        settled = true;
+        response.destroy();
+        resolve(null);
+        return;
+      }
+      const chunks = [];
+      let size = 0;
+      response.on("data", (chunk) => {
+        size += chunk.length;
+        if (size > MAX_OPENAPI_BYTES) {
+          settled = true;
+          response.destroy();
+          resolve(null);
+          return;
+        }
+        chunks.push(chunk);
+      });
+      response.on("end", () => {
+        if (settled) return;
+        settled = true;
+        try {
+          resolve(JSON.parse(Buffer.concat(chunks).toString("utf8")));
+        } catch {
+          resolve(null);
+        }
+      });
+    });
+    request.setTimeout(timeoutMs, () => request.destroy(new Error("OpenAPI request timed out")));
+    request.once("error", (error) => {
+      if (settled) return;
+      reject(new PaymentOfferPreflightError(String(error?.message || error), {
+        code: "openapi_fetch_failed",
+        statusCode: 502,
+      }));
+    });
+    request.end();
+  });
+}
+
+function record(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : null;
+}
+
+function responseDeclaration(document, target) {
+  const operation = record(record(record(document?.paths)?.[target.pathname])?.get);
+  const responses = record(operation?.responses);
+  const status = Object.keys(responses || {}).filter((key) => /^2\d\d$/.test(key)).sort()[0];
+  const content = record(record(responses?.[status])?.content);
+  const key = Object.keys(content || {}).find((item) => item.toLowerCase().split(";", 1)[0].trim() === "application/json");
+  const media = record(content?.[key]);
+  if (!status || !media) return { status: 200, mediaType: "application/json", schema: null };
+  const schema = record(media.schema);
+  let example = media.example;
+  if (example === undefined) {
+    const first = Object.values(record(media.examples) || {}).find((item) => record(item)?.value !== undefined);
+    example = record(first)?.value;
+  }
+  if (example === undefined && schema?.example !== undefined) example = schema.example;
+  return {
+    status: Number(status),
+    mediaType: "application/json",
+    schema: schema || null,
+    ...(example === undefined ? {} : { example }),
+  };
+}
+
+async function responseContractFor(target, openapiImpl, now) {
+  let document = null;
+  try {
+    document = await openapiImpl(target);
+  } catch {
+    document = null;
+  }
+  return evaluateResponseContract({
+    schemaVersion: SCHEMAS.responseContractObservation,
+    source: document ? "seller_openapi" : "seller_openapi_unavailable",
+    request: { method: "GET", url: target.toString() },
+    response: document ? responseDeclaration(document, target) : { status: 200, mediaType: "application/json", schema: null },
+  }, { now });
 }
 
 function headerValue(headers, name) {
@@ -402,10 +507,12 @@ function parity(validOffers) {
 export async function paymentOfferPreflight(input, {
   now = Date.now(),
   requestImpl = requestPaymentHeaders,
+  openapiImpl = requestOpenApiDocument,
 } = {}) {
   const normalizedInput = normalizePaymentOfferPreflightInput(input);
   const target = normalizePaymentTarget(normalizedInput.url);
   const response = await requestImpl(target);
+  const responseContract = await responseContractFor(target, openapiImpl, now);
   const status = Number(response?.status || 0);
   const findings = [];
   if (response?.finalUrl && normalizePaymentTarget(response.finalUrl).toString() !== target.toString()) {
@@ -454,17 +561,24 @@ export async function paymentOfferPreflight(input, {
   } else if (catalogCoherence.some((report) => report.decision === "partial")) {
     findings.push({ severity: "warning", code: "catalog_runtime_offer_partial", message: "The supplied catalog candidate omits terms needed to establish complete coherence." });
   }
+  if (responseContract.decision !== "admissible") {
+    findings.push({
+      severity: "warning",
+      code: `seller_response_contract_${responseContract.decision}`,
+      message: "The exact route lacks an admissible self-contained JSON success-response contract.",
+    });
+  }
   const hasError = findings.some((finding) => finding.severity === "error");
   const decision = status !== 402 || validOffers.length === 0
     ? "no_parseable_offer"
-    : hasError
+    : hasError || responseContract.decision !== "admissible"
       ? "review_required"
       : "parseable_offer";
 
   return {
     ok: true,
     product: "samedaydesk-payment-offer-preflight",
-    version: "1.1.0",
+    version: "1.2.0",
     checkedAt: new Date(now).toISOString(),
     target: { method: "GET", url: target.toString(), httpStatus: status },
     decision,
@@ -473,14 +587,26 @@ export async function paymentOfferPreflight(input, {
     offers,
     parity: economicParity,
     catalogCoherence,
+    responseContract,
+    responseContractAcquisition: {
+      attempted: true,
+      sameOrigin: true,
+      path: "/openapi.json",
+      maxBytes: MAX_OPENAPI_BYTES,
+      documentRead: responseContract.source === "seller_openapi",
+      targetResponseBodyRead: false,
+      credentialsUsed: false,
+      redirectsFollowed: false,
+    },
     findings,
     boundary: {
       credentialsUsed: false,
       paymentSigned: false,
       paymentSent: false,
-      responseBodyRead: false,
+      targetResponseBodyRead: false,
+      openApiDocumentRead: responseContract.source === "seller_openapi",
       redirectsFollowed: false,
-      claim: "Parseable payment terms are not proof that a service is trustworthy, solvent, useful, or guaranteed to settle.",
+      claim: "Seller-declared response contracts are advisory. Parseable terms and schemas do not prove trust, utility, runtime validity, or settlement.",
     },
   };
 }

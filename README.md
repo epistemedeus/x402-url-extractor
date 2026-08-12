@@ -311,7 +311,15 @@ ownership claims. This creates one shared, installable contract for the live
 seller and independent buyer tooling without adding credentials, wallet
 access, signing, payment, or retained settlement identities.
 
-Version 1.17.0 closes the catalog-alias ambiguity with an optional signed
+Version 1.18.0 keeps the signed catalog-alias identity control and adds a
+bounded seller response-contract check to payment-offer preflight. The route
+now reads the exact seller's same-origin public OpenAPI document under a strict
+size cap and reports whether the exact GET operation declares a self-contained
+JSON success schema with typed required fields. It never reads the paid target
+body, and the seller declaration remains advisory until a paid response passes
+the buyer's independently authorized output validator.
+
+Version 1.17.0 closed the catalog-alias ambiguity with an optional signed
 deployment statement from `agent-payment-policy@0.9.0`. The short-lived JWS at
 `/.well-known/agent-payment-policy-service-deployment.json` binds the canonical
 `agents.samedaydesk.com` origin to all twenty-one paid HTTP method and path pairs

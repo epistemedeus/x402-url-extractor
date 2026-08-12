@@ -54,6 +54,14 @@ function response({ status = 402, paymentRequired, authenticate, finalUrl = TARG
   return { status, headers, finalUrl };
 }
 
+function openapiDocument({ schema = {
+  type: "object",
+  required: ["risk", "evidence"],
+  properties: { risk: { type: "number" }, evidence: { type: "array", items: { type: "string" } } },
+} } = {}) {
+  return { paths: { "/paid": { get: { responses: { 200: { content: { "application/json": { schema } } } } } } } };
+}
+
 test("normalizes only credential-free public HTTPS targets", () => {
   assert.equal(normalizePaymentTarget("https://api.example.com/paid?b=2&a=1").toString(), TARGET);
   for (const value of [
@@ -86,6 +94,7 @@ test("pinned DNS lookup supports scalar and all-address Node callback contracts"
 test("normalizes matching x402 and MPP offers without credentials or payment", async () => {
   const result = await paymentOfferPreflight({ url: TARGET }, {
     now: NOW,
+    openapiImpl: async () => openapiDocument(),
     requestImpl: async () => response({
       paymentRequired: x402Header(),
       authenticate: mppHeader(),
@@ -98,13 +107,24 @@ test("normalizes matching x402 and MPP offers without credentials or payment", a
   assert.equal(result.offers.find((offer) => offer.protocol === "x402").expiresAt, "2026-08-10T20:05:00.000Z");
   assert.deepEqual(result.parity, { compared: true, consistent: true, driftFields: [] });
   assert.equal(result.offers.find((offer) => offer.protocol === "mpp").amountDisplay, "0.005");
+  assert.deepEqual(result.responseContractAcquisition, {
+    attempted: true,
+    sameOrigin: true,
+    path: "/openapi.json",
+    maxBytes: 1_000_000,
+    documentRead: true,
+    targetResponseBodyRead: false,
+    credentialsUsed: false,
+    redirectsFollowed: false,
+  });
   assert.deepEqual(result.boundary, {
     credentialsUsed: false,
     paymentSigned: false,
     paymentSent: false,
-    responseBodyRead: false,
+    targetResponseBodyRead: false,
+    openApiDocumentRead: true,
     redirectsFollowed: false,
-    claim: "Parseable payment terms are not proof that a service is trustworthy, solvent, useful, or guaranteed to settle.",
+    claim: "Seller-declared response contracts are advisory. Parseable terms and schemas do not prove trust, utility, runtime validity, or settlement.",
   });
   assert.equal(JSON.stringify(result).includes("opaque"), false);
   assert.equal(JSON.stringify(result).includes("test-payment-challenge"), false);
@@ -123,6 +143,7 @@ test("compares caller-supplied catalog metadata with each live unsigned offer", 
   };
   const result = await paymentOfferPreflight({ url: TARGET, catalog }, {
     now: NOW,
+    openapiImpl: async () => openapiDocument(),
     requestImpl: async () => response({ paymentRequired: x402Header() }),
   });
   assert.equal(result.decision, "parseable_offer");
@@ -147,6 +168,7 @@ test("compares a protocol-specific catalog candidate only with that live protoco
     },
   }, {
     now: NOW,
+    openapiImpl: async () => openapiDocument(),
     requestImpl: async () => response({ paymentRequired: x402Header(), authenticate: mppHeader() }),
   });
   assert.equal(result.decision, "parseable_offer");
@@ -170,6 +192,7 @@ test("turns explicit catalog to runtime drift into review-required before author
     },
   }, {
     now: NOW,
+    openapiImpl: async () => openapiDocument(),
     requestImpl: async () => response({ paymentRequired: x402Header({ amount: "5000" }) }),
   });
   assert.equal(result.decision, "review_required");
@@ -184,6 +207,7 @@ test("rejects malformed catalog metadata before any target request", async () =>
     catalog: { source: "registry", method: "POST", url: TARGET },
   }, {
     now: NOW,
+    openapiImpl: async () => openapiDocument(),
     requestImpl: async () => { called = true; return response(); },
   }), (error) => error instanceof PaymentOfferPreflightError && error.code === "invalid_catalog");
   assert.equal(called, false);
@@ -192,6 +216,7 @@ test("rejects malformed catalog metadata before any target request", async () =>
 test("flags economic drift across protocols", async () => {
   const result = await paymentOfferPreflight(TARGET, {
     now: NOW,
+    openapiImpl: async () => openapiDocument(),
     requestImpl: async () => response({
       paymentRequired: x402Header({ amount: "5000" }),
       authenticate: mppHeader({ amount: "7000" }),
@@ -205,6 +230,7 @@ test("flags economic drift across protocols", async () => {
 test("fails closed on resource binding, realm, and expiry errors", async () => {
   const result = await paymentOfferPreflight(TARGET, {
     now: NOW,
+    openapiImpl: async () => openapiDocument(),
     requestImpl: async () => response({
       paymentRequired: x402Header({ resource: "https://api.example.com/other" }),
       authenticate: mppHeader({ realm: "other.example.com", expires: "2026-08-10T19:59:59.000Z" }),
@@ -223,20 +249,35 @@ test("fails closed on resource binding, realm, and expiry errors", async () => {
 test("reports a non-402 target without reading a response body", async () => {
   const result = await paymentOfferPreflight(TARGET, {
     now: NOW,
+    openapiImpl: async () => openapiDocument(),
     requestImpl: async () => response({ status: 200 }),
   });
   assert.equal(result.decision, "no_parseable_offer");
   assert.equal(result.offerCount, 0);
   assert.deepEqual(result.findings.map((finding) => finding.code), ["expected_402_missing", "payment_offer_missing"]);
-  assert.equal(result.boundary.responseBodyRead, false);
+  assert.equal(result.boundary.targetResponseBodyRead, false);
 });
 
 test("rejects a changed final URL", async () => {
   await assert.rejects(
     paymentOfferPreflight(TARGET, {
       now: NOW,
+      openapiImpl: async () => openapiDocument(),
       requestImpl: async () => response({ finalUrl: "https://api.example.com/other" }),
     }),
     (error) => error instanceof PaymentOfferPreflightError && error.code === "redirect_rejected",
   );
+});
+
+test("marks a parseable payment offer review-required when the seller omits its success response schema", async () => {
+  const result = await paymentOfferPreflight(TARGET, {
+    now: NOW,
+    requestImpl: async () => response({ paymentRequired: x402Header() }),
+    openapiImpl: async () => ({ paths: { "/paid": { get: { responses: { 200: { description: "undocumented body" } } } } } }),
+  });
+  assert.equal(result.decision, "review_required");
+  assert.equal(result.responseContract.decision, "absent");
+  assert.equal(result.findings.some((finding) => finding.code === "seller_response_contract_absent"), true);
+  assert.equal(result.boundary.targetResponseBodyRead, false);
+  assert.equal(result.boundary.openApiDocumentRead, true);
 });
