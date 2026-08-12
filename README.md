@@ -226,6 +226,14 @@ also provides `wallet-policy-init`, `wallet-policy-check`, and
 `unsafe`. The hosted route, 0.01-USDC price, payment terms, and credential-free
 boundary remain unchanged.
 
+Version 1.14.3 advances the public standard dependency to
+`agent-payment-policy@0.5.1`. Provider-native control credit now requires every
+observed case for that control to pass. A denied optional shape case can no
+longer mask an allowed duplicate-approved-action case. The Privy Tempo and
+Solana adapters both classify exact execution shape as unverified and the
+overall native policies as unsafe, matching the first-person evidence. Route,
+price, payment, and credential boundaries remain unchanged.
+
 Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
 before startup. Six newer routes previously settled successfully while Coinbase
 rejected their discovery metadata because their output examples omitted fields

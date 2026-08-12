@@ -142,7 +142,7 @@ test("publishes one canonical free machine contract from the evaluator cases", (
   assert.equal(contract.schemaVersion, "samedaydesk.wallet-policy-conformance-contract.v1");
   assert.deepEqual(contract.standard, {
     package: "agent-payment-policy",
-    version: "0.5.0",
+    version: "0.5.1",
     inputSchemaVersion: "agent-payment-policy.wallet-policy-observation.v1",
     outputSchemaVersion: "agent-payment-policy.wallet-policy-observation-report.v1",
     repository: "https://github.com/epistemedeus/agent-payment-policy",

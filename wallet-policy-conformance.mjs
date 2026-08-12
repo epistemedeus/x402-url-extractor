@@ -103,7 +103,7 @@ export function walletPolicyConformanceContract({ endpoint, priceAtomicUsdc, pay
     schemaVersion: "samedaydesk.wallet-policy-conformance-contract.v1",
     standard: Object.freeze({
       package: "agent-payment-policy",
-      version: "0.5.0",
+      version: "0.5.1",
       inputSchemaVersion: STANDARD_INPUT_SCHEMA,
       outputSchemaVersion: STANDARD_OUTPUT_SCHEMA,
       repository: "https://github.com/epistemedeus/agent-payment-policy",
