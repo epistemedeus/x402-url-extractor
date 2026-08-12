@@ -311,6 +311,10 @@ ownership claims. This creates one shared, installable contract for the live
 seller and independent buyer tooling without adding credentials, wallet
 access, signing, payment, or retained settlement identities.
 
+Version 1.18.3 completes machine-constructible examples for the Base settlement
+proof and Solana receipt routes and gives the Circle Gateway alias the same
+authored success-response schema as the canonical payment-offer preflight.
+
 Version 1.18.2 publishes recursive response reports under their immutable v2
 schema identifier.
 
