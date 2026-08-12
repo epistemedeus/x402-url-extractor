@@ -334,6 +334,10 @@ JSON success schema with typed required fields. It never reads the paid target
 body, and the seller declaration remains advisory until a paid response passes
 the buyer's independently authorized output validator.
 
+Version 1.22.1 adds mandatory MCP selection metadata for the new search tool
+and strengthens the production startup smoke test so a release cannot pass
+merely because HTTP is listening while the asynchronous MCP mount failed.
+
 Version 1.22.0 adds a paid contract-qualified machine-service search. A buyer
 supplies a capability intent and recursively required JSON response paths. The
 route searches Agent402 and the official MPP catalog, excludes owned supply and

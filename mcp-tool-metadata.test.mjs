@@ -5,11 +5,11 @@ import { decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
 
 test("publishes unique action-oriented titles for every live MCP tool", () => {
   const metadata = listMcpToolMetadata();
-  assert.equal(metadata.length, 20);
-  assert.equal(new Set(metadata.map((entry) => entry.name)).size, 20);
-  assert.equal(new Set(metadata.map((entry) => entry.title)).size, 20);
+  assert.equal(metadata.length, 21);
+  assert.equal(new Set(metadata.map((entry) => entry.name)).size, 21);
+  assert.equal(new Set(metadata.map((entry) => entry.title)).size, 21);
   for (const entry of metadata) {
-    assert.match(entry.title, /^(?:Extract|Read|Scan|Generate|Enrich|Audit|Inspect|Plan|Underwrite|Replay|Preflight|Verify|Evaluate)\b/);
+    assert.match(entry.title, /^(?:Extract|Read|Scan|Generate|Enrich|Audit|Inspect|Plan|Underwrite|Replay|Preflight|Verify|Evaluate|Search)\b/);
   }
 });
 
@@ -27,6 +27,7 @@ test("makes each overlapping web and company tool chooseable without renaming it
   const morphoReplay = decorate("morpho_preliquidation_replay");
   const settlementProof = decorate("settlement_proof");
   const sellerIntegrity = decorate("seller_integrity_audit");
+  const contractQualified = decorate("contract_qualified_search");
   const transactionReceipt = decorate("transaction_receipt");
   const solanaTransactionReceipt = decorate("solana_transaction_receipt");
 
@@ -49,6 +50,9 @@ test("makes each overlapping web and company tool chooseable without renaming it
   assert.match(sellerIntegrity.description, /`agent_discoverability_audit` for catalog rank/);
   assert.match(sellerIntegrity.description, /GET or POST seller route/);
   assert.match(sellerIntegrity.description, /POST performs static-safe OpenAPI contract analysis and sends no target request/);
+  assert.match(contractQualified.description, /Search Agent402 and the official MPP catalog/);
+  assert.match(contractQualified.description, /Use `agent_discoverability_audit`/);
+  assert.match(contractQualified.description, /`seller_integrity_audit`/);
   assert.match(transactionReceipt.description, /Use `settlement_proof` instead/);
   assert.match(solanaTransactionReceipt.description, /use `transaction_receipt` for Base or Ethereum/);
 });
