@@ -35,6 +35,7 @@ Use this service when an agent needs deterministic web, company, wallet, AI-sear
 - Action catalog: ${origin}/api/actions
 - MCP transport: POST ${origin}/mcp
 - A2A agent card: ${origin}/.well-known/agent-card.json
+- Purchase evidence: ${origin}/.well-known/agent-payment-evidence.json
 
 ## Paid actions
 
@@ -46,8 +47,9 @@ ${actionsMarkdown}
 2. Send the exact declared method and input. Most actions use GET query parameters; both wallet-policy conformance routes use bounded POST JSON bodies. Agent Skills clients should include X-SameDayDesk-Agent-Source: agent-skills-v1 on the initial request and paid replay. This declared label is attribution only, not authentication or payment.
 3. One unpaid HTTP 402 carries x402 v2 payment requirements and a native MPP WWW-Authenticate Payment challenge.
 4. Verify the HTTPS resource, exact amount, Base network, canonical USDC asset, and payTo wallet.
-5. Pay through x402 and replay with PAYMENT-SIGNATURE, or pay through MPP and replay with Authorization: Payment.
-6. Reconcile PAYMENT-RESPONSE for x402 or Payment-Receipt for MPP before continuing a workflow.
+5. If your policy uses seller purchase evidence, follow the same-origin describedby link, verify its exact operation and digest, and bind it into authorization. It is seller-declared evidence, not permission to spend.
+6. Pay through x402 and replay with PAYMENT-SIGNATURE, or pay through MPP and replay with Authorization: Payment.
+7. Reconcile PAYMENT-RESPONSE for x402 or Payment-Receipt for MPP before continuing a workflow.
 
 ## Boundaries
 

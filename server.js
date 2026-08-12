@@ -766,7 +766,27 @@ if (!bazaarResourceMetadataValidation.valid) {
   throw new Error(`Invalid Bazaar resource metadata: ${bazaarResourceMetadataValidation.errors.join("; ")}`);
 }
 const paidResourceRoutes = new Set(RESOURCES.map((resource) => new URL(resource.url).pathname));
-const evidenceLinkedRoutes = new Set([...paidResourceRoutes, CIRCLE_GATEWAY_PATH]);
+const evidenceLinkedRoutes = new Set([
+  ...paidResourceRoutes,
+  CIRCLE_GATEWAY_PATH,
+  "/.well-known/x402",
+  "/.well-known/x402.json",
+  "/x402.json",
+  "/api/x402",
+  "/openapi.json",
+  "/openapi.yaml",
+  "/swagger.json",
+  "/mpp-openapi.json",
+  "/openapi.mpp.json",
+  "/skill.md",
+  "/SKILL.md",
+  "/api/actions",
+  "/mcp",
+  "/.well-known/agent-card.json",
+  "/.well-known/agent.json",
+  "/.well-known/agent-registration.json",
+  "/llms.txt",
+]);
 app.use(purchaseEvidenceHeaders({ origin: PUBLIC_URL, paidRoutes: evidenceLinkedRoutes }));
 const metadataRoutes = new Set(Object.keys(BAZAAR_RESOURCE_METADATA));
 const missingMetadataRoutes = [...paidResourceRoutes].filter((route) => !metadataRoutes.has(route));
@@ -1025,6 +1045,7 @@ app.get("/mcp", (_req, res) => {
     payment: "x402 USDC on Base per MCP tool call; HTTP actions also accept native MPP",
     manifest: `${PUBLIC_URL}/.well-known/x402`,
     openapi: `${PUBLIC_URL}/openapi.json`,
+    purchaseEvidence: `${PUBLIC_URL}${PURCHASE_EVIDENCE_MANIFEST_PATH}`,
   });
 });
 
@@ -1119,6 +1140,7 @@ ${circleGateway.enabled ? line(CIRCLE_GATEWAY_PATH, PAYMENT_OFFER_PREFLIGHT_PRIC
 - A2A agent card: ${PUBLIC_URL}/.well-known/agent-card.json
 - Solana Agent Registry metadata: ${PUBLIC_URL}/.well-known/agent-registration.json
 - Aggregate demand telemetry: ${PUBLIC_URL}/v0/commerce-demand.json
+- Purchase evidence: ${PUBLIC_URL}${PURCHASE_EVIDENCE_MANIFEST_PATH}
 - Buyer policy reference: ${BUYER_POLICY_REFERENCE.release}
 - Wallet-policy conformance contract: ${PUBLIC_URL}/schemas/wallet-policy-conformance-v1.json
 - Stateful wallet-policy conformance contract: ${PUBLIC_URL}/schemas/stateful-wallet-policy-conformance-v1.json
@@ -1224,6 +1246,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
         homepage: PUBLIC_URL,
         llms: `${PUBLIC_URL}/llms.txt`,
         buyerPolicyReference: BUYER_POLICY_REFERENCE.repository,
+        purchaseEvidence: `${PUBLIC_URL}${PURCHASE_EVIDENCE_MANIFEST_PATH}`,
       },
     },
     servers: [{ url: PUBLIC_URL }],

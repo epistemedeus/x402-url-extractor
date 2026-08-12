@@ -76,19 +76,23 @@ test("rejects missing response contracts, undeclared effects, and cross-origin r
   }), /effect is undeclared/);
 });
 
-test("advertises the manifest through one standard describedby link on paid routes only", () => {
+test("advertises the manifest through one standard describedby link on configured paid or discovery routes", () => {
   assert.equal(
     purchaseEvidenceLinkHeader({ origin: "https://agents.samedaydesk.com" }),
     '<https://agents.samedaydesk.com/.well-known/agent-payment-evidence.json>; rel="describedby"; type="application/json"',
   );
   const middleware = purchaseEvidenceHeaders({
     origin: "https://agents.samedaydesk.com",
-    paidRoutes: new Set(["/paid"]),
+    paidRoutes: new Set(["/paid", "/skill.md"]),
   });
   const appended = [];
   let nextRuns = 0;
   middleware({ path: "/paid" }, { append: (name, value) => appended.push([name, value]) }, () => { nextRuns += 1; });
+  middleware({ path: "/skill.md" }, { append: (name, value) => appended.push([name, value]) }, () => { nextRuns += 1; });
   middleware({ path: PURCHASE_EVIDENCE_MANIFEST_PATH }, { append: (name, value) => appended.push([name, value]) }, () => { nextRuns += 1; });
-  assert.equal(nextRuns, 2);
-  assert.deepEqual(appended, [["Link", purchaseEvidenceLinkHeader({ origin: "https://agents.samedaydesk.com" })]]);
+  assert.equal(nextRuns, 3);
+  assert.deepEqual(appended, [
+    ["Link", purchaseEvidenceLinkHeader({ origin: "https://agents.samedaydesk.com" })],
+    ["Link", purchaseEvidenceLinkHeader({ origin: "https://agents.samedaydesk.com" })],
+  ]);
 });
