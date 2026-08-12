@@ -192,6 +192,13 @@ reference has no wallet executor, payment signer, custody, or hosted paid
 verifier. It gives machine buyers a stable policy and evidence primitive without
 changing the merchant's routes, prices, payment requirements, or settlement.
 
+Version 1.13.1 advances that machine-facing buyer reference to public package
+0.4.0. The root, OpenAPI metadata, and `llms.txt` now advertise exact
+execution-shape authorization plus fourteen-dimension control-coverage schema
+v2. This follows first-person Tempo and Solana evidence that provider-native
+method and instruction allow rules can admit duplicated approved actions. No
+merchant route, price, handler, payment requirement, or settlement changes.
+
 Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
 before startup. Six newer routes previously settled successfully while Coinbase
 rejected their discovery metadata because their output examples omitted fields
