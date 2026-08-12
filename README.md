@@ -311,6 +311,9 @@ ownership claims. This creates one shared, installable contract for the live
 seller and independent buyer tooling without adding credentials, wallet
 access, signing, payment, or retained settlement identities.
 
+Version 1.18.2 publishes recursive response reports under their immutable v2
+schema identifier.
+
 Version 1.18.1 adds recursively guaranteed response paths to the bounded report,
 so a seller that requires only a top-level `data` envelope does not appear to
 promise a nested `data.attributes` decision payload.
