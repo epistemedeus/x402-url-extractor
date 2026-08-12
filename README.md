@@ -311,6 +311,10 @@ ownership claims. This creates one shared, installable contract for the live
 seller and independent buyer tooling without adding credentials, wallet
 access, signing, payment, or retained settlement identities.
 
+Version 1.18.1 adds recursively guaranteed response paths to the bounded report,
+so a seller that requires only a top-level `data` envelope does not appear to
+promise a nested `data.attributes` decision payload.
+
 Version 1.18.0 keeps the signed catalog-alias identity control and adds a
 bounded seller response-contract check to payment-offer preflight. The route
 now reads the exact seller's same-origin public OpenAPI document under a strict
