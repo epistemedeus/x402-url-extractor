@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -342,6 +342,34 @@ test("paid response classes separate challenge, validation, success, and failure
   assert.equal(classifyCommerceResult({ kind: "paid", matched: true, paymentPresent: true, status: 503 }), "service_failure");
   assert.equal(classifyCommerceResult({ kind: "unmatched", matched: false, paymentPresent: false, status: 404 }), "unmatched");
   assert.equal(classifyCommerceResult({ route: "/mcp", kind: "paid", matched: true, paymentPresent: false, status: 200 }), "protocol_discovery");
+});
+
+test("unpaid paid-POST requests do not persist application telemetry", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-unpaid-post-"));
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "test-secret" });
+  for (const statusCode of [400, 402]) {
+    const listeners = new Map();
+    telemetry.middleware({
+      path: "/commerce/payment-offer-preflight",
+      url: "/commerce/payment-offer-preflight",
+      method: "POST",
+      headers: {},
+      query: {},
+      ip: "203.0.113.91",
+      socket: {},
+    }, {
+      statusCode,
+      once(name, listener) { listeners.set(name, listener); },
+      getHeader() { return undefined; },
+    }, () => {});
+    listeners.get("finish")?.();
+  }
+  await telemetry.flush();
+  const contents = await readFile(telemetry.paths.currentPath, "utf8").catch((error) => (
+    error?.code === "ENOENT" ? "" : Promise.reject(error)
+  ));
+  assert.equal(contents, "");
+  await rm(dataDir, { recursive: true, force: true });
 });
 
 test("semantic unmatched classification is high precision and excludes technical misses", () => {

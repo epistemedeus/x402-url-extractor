@@ -128,6 +128,12 @@ import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
 import { createCommerceTelemetry } from "./commerce-events.mjs";
 import { createCommerceSettlementReconciler } from "./commerce-settlement-reconciler.mjs";
 import { createIdempotencyReplay } from "./idempotency-replay.mjs";
+import {
+  PAID_ACTION_EFFECT_PROFILE_PATH,
+  attachPaidActionEffectContracts,
+  buildPaidActionEffectProfile,
+  paidActionEffectHeaders,
+} from "./paid-action-effect-profile.mjs";
 import { createMppDualStack } from "./mpp-dual-stack.mjs";
 import { legacyCompatibleX402Body } from "./x402-legacy-body.mjs";
 import {
@@ -368,6 +374,7 @@ app.use(express.json({
 app.use(legacyCompatibleX402Body);
 
 const commerceTelemetry = createCommerceTelemetry();
+app.use(paidActionEffectHeaders);
 app.use(commerceTelemetry.middleware);
 const idempotencyReplay = createIdempotencyReplay();
 let commerceSettlementReconciler;
@@ -1165,6 +1172,11 @@ app.get("/v0/cards.json", (_req, res) => {
   return res.json(buildPlatformHealthResponse());
 });
 
+app.get(PAID_ACTION_EFFECT_PROFILE_PATH, (_req, res) => {
+  res.set("Cache-Control", "public, max-age=300");
+  return res.json(buildPaidActionEffectProfile({ origin: PUBLIC_URL, serviceVersion: SERVICE_VERSION }));
+});
+
 app.get("/schemas/platform-health-card-v0.json", (_req, res) => {
   setRadarCache(res);
   return res.json(PLATFORM_HEALTH_SCHEMA);
@@ -1211,6 +1223,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     paths: {
       "/v0/cards.json": { get: { summary: "Free incident-backed platform health cards. Categories are not calibrated scores.", responses: { "200": { description: "SameDayDesk platform health index v0" } } } },
       "/v0/commerce-demand.json": { get: { summary: "Privacy-safe aggregate external machine-commerce observations.", parameters: [{ name: "days", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 365, default: 90 } }], responses: { "200": { description: "Aggregate discovery, challenge, paid-success, unmatched-request, and high-precision semantic-candidate counts. Known internal and crawler traffic is excluded; unidentified automation can remain." } } } },
+      [PAID_ACTION_EFFECT_PROFILE_PATH]: { get: { summary: "Experimental read-only effect and retry contract for SameDayDesk paid POST operations.", responses: { "200": { description: "Exact method-route effect declarations and payment-response replay boundary" } } } },
       "/.well-known/agent-card.json": { get: { summary: "A2A v1.0 agent card for the free machine-commerce storefront.", responses: { "200": { description: "A2A AgentCard" } } } },
       "/.well-known/glama.json": { get: { summary: "Project-owned Glama connector maintainer verification.", responses: { "200": { description: "Glama connector verification" } } } },
       "/.well-known/x402-verification.json": { get: { summary: "Public server-ownership proof for the x402.jobs resource registry.", responses: { "200": { description: "x402.jobs ownership verification" } } } },
@@ -1398,6 +1411,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       ? mppPaymentInfoFor(RESOURCES[11])
       : agentCashPaymentInfoFor(RESOURCES[11]),
   };
+  attachPaidActionEffectContracts(document);
   if (profile === "agentcash" && circleGateway.enabled) {
     document.paths[CIRCLE_GATEWAY_PATH] = {
       get: {
@@ -1447,6 +1461,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
   const freeOperationMetadata = {
     "/v0/cards.json": { operationId: "listPlatformHealthCards", tags: ["Settlement Radar"] },
     "/v0/commerce-demand.json": { operationId: "getCommerceDemand", tags: ["Settlement Radar"] },
+    [PAID_ACTION_EFFECT_PROFILE_PATH]: { operationId: "getPaidActionEffectProfile", tags: ["Agent Operations"] },
     "/.well-known/agent-card.json": { operationId: "getA2aAgentCard", tags: ["A2A"] },
     "/.well-known/agent-registration.json": { operationId: "getSolanaAgentRegistration", tags: ["A2A"] },
     "/.well-known/glama.json": { operationId: "getGlamaVerification", tags: ["Distribution"] },

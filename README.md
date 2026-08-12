@@ -545,7 +545,13 @@ binds the replay fingerprint to both the exact previously settled payment
 credential and the exact raw request bytes. This lets a lost successful POST
 response be replayed without executing the handler or charging again, while a
 changed credential, body, input, payer, or payment term fails with an uncharged
-HTTP 409. Version 1.8 adds a deterministic paid opportunity preflight. The caller supplies
+HTTP 409. Version 1.23.7 publishes an experimental read-only effect contract at
+`/.well-known/paid-action-effects.json`, in each paid POST OpenAPI operation,
+and in response headers. It also keeps unpaid paid-POST requests out of
+application telemetry, while stating that protocol challenge state may still
+exist and that payment-response replay is not business-effect idempotency. No
+external standard adoption is claimed. Version 1.8 adds a deterministic paid
+opportunity preflight. The caller supplies
 reward, execution time, hourly opportunity cost, compute, mandatory spend,
 reusable value, competition, and an explicit selection probability. The result
 returns `attempt`, `verify_first`, or `abandon`, transparent break-even economics,

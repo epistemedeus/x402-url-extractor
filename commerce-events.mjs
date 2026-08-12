@@ -645,6 +645,10 @@ export function createCommerceTelemetry({
 
     res.once("finish", () => {
       const status = Number(res.statusCode || 0);
+      const method = String(req.method || "GET").toUpperCase();
+      if (route.kind === "paid" && !paymentPresent && !["GET", "HEAD", "OPTIONS"].includes(method)) {
+        return;
+      }
       const replayed = String(res.getHeader?.("x-payment-replay") || "").toLowerCase() === "hit";
       const protocolsOffered = offeredPaymentProtocols(res);
       const settlement = decodeResponseSettlement(res);
@@ -655,7 +659,7 @@ export function createCommerceTelemetry({
         actor,
         originClass,
         agentDiscoverySource,
-        method: String(req.method || "GET").toUpperCase(),
+        method,
         route: route.route,
         matched: route.matched,
         kind: route.kind,
