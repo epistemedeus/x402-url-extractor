@@ -314,7 +314,7 @@ access, signing, payment, or retained settlement identities.
 Version 1.17.0 closes the catalog-alias ambiguity with an optional signed
 deployment statement from `agent-payment-policy@0.9.0`. The short-lived JWS at
 `/.well-known/agent-payment-policy-service-deployment.json` binds the canonical
-`agents.samedaydesk.com` origin to all nineteen paid HTTP method and path pairs
+`agents.samedaydesk.com` origin to all twenty-one paid HTTP method and path pairs
 and to the exact Base USDC x402 and MPP settlement identities. Each deployment
 origin carries its own route and settlement scope, so a future alias cannot
 inherit another origin's authority.
