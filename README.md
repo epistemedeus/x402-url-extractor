@@ -27,7 +27,7 @@ settlement proof, and AI-search readiness audits.
 - Morpho market underwriting: `GET /defi/morpho-market-underwrite?marketId=0x...`
 - Morpho PreLiquidation replay: `GET /defi/morpho-preliquidation-replay?transactionHash=0x...`
 - Opportunity preflight: `GET /work/opportunity-preflight?rewardUsd=10&hours=0.25&hourlyCostUsd=4&selectionProbabilityPct=20`
-- Agent discoverability audit: `GET /distribution/agent-discoverability-audit?origin=https://example.com&intent=extract+a+public+website+into+structured+JSON&route=/extract&surfaceAudit=true`
+- Agent discoverability audit: `GET /distribution/agent-discoverability-audit?origin=https://example.com&intent=extract+a+public+website+into+structured+JSON&route=/extract&runtimeUrl=https%3A%2F%2Fexample.com%2Fextract%3Furl%3Dhttps%253A%252F%252Fexample.org&surfaceAudit=true`
 - Payment offer preflight: `GET /commerce/payment-offer-preflight?url=https://example.com/paid-route`
 - Base USDC settlement proof: `GET /commerce/settlement-proof?transactionHash=0x...&recipient=0x...&amountAtomic=5000`
 - Base or Ethereum transaction receipt: `GET /chain/transaction-receipt?transactionHash=0x...&network=base`
@@ -275,6 +275,17 @@ missing catalog fields remain a visible partial result. The x402 validity
 window is derived from `maxTimeoutSeconds`, malformed catalog input is rejected
 before payment, and the request still uses no target credential, wallet,
 signature, settlement, redirect, or response body.
+
+Version 1.16.1 upgrades the existing agent-discoverability audit without adding
+another product or changing its 0.05-USDC price. An optional `runtimeUrl` must
+use the audited origin and exact requested route. The audit makes one
+credential-free, DNS-pinned, headers-only request, accepts a price reference
+only when the live unsigned x402 and MPP terms are parseable and coherent, and
+then compares that canonical Base-USDC amount with every registry observation.
+Caller-supplied expectations remain supported and clearly labeled, while a
+disagreement with runtime truth becomes its own finding. The result still
+signs nothing, sends no target payment, follows no redirect, and reads no target
+response body.
 
 Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
 before startup. Six newer routes previously settled successfully while Coinbase

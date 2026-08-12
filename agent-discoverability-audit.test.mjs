@@ -59,6 +59,7 @@ test("requires a public origin and a brand-blind capability intent", () => {
     hostname: "api.example.com",
     intent: "extract a public website into structured JSON metadata",
     route: "/extract",
+    runtimeUrl: null,
     payTo: null,
     surfaceAudit: false,
     expectedPriceUsd: 0.005,
@@ -69,6 +70,18 @@ test("requires a public origin and a brand-blind capability intent", () => {
     intent: "extract a public website into structured JSON metadata",
     surfaceAudit: "yes",
   }), /surfaceAudit/);
+  assert.throws(() => normalizeDiscoverabilityAuditInput({
+    origin: "https://api.example.com",
+    intent: "extract a public website into structured JSON metadata",
+    route: "/extract",
+    runtimeUrl: "https://other.example/extract",
+  }), /audited origin/);
+  assert.throws(() => normalizeDiscoverabilityAuditInput({
+    origin: "https://api.example.com",
+    intent: "extract a public website into structured JSON metadata",
+    route: "/extract",
+    runtimeUrl: "https://api.example.com/read",
+  }), /match route exactly/);
 });
 
 test("audits three fixed target discovery documents only when explicitly requested", async () => {
@@ -284,6 +297,64 @@ test("contains one source failure while preserving the other observations", asyn
   assert.deepEqual(result.summary.unavailableSources, ["coinbase-bazaar"]);
   assert.equal(result.sources["coinbase-bazaar"].status, "error");
   assert.equal(JSON.stringify(result).includes("secret"), false);
+});
+
+test("uses one coherent live unsigned offer as the catalog price reference", async () => {
+  const fetchImpl = async (url, options = {}) => {
+    const target = String(url);
+    if (target.includes("coinbase.com")) return response({ resources: [{
+      serviceName: "Target",
+      resource: "https://api.example.com/extract",
+      accepts: [{ amount: "50000", payTo: `0x${"1".repeat(40)}` }],
+    }] });
+    if (target.includes("agent402.tools")) {
+      assert.equal(options.method, "POST");
+      return response({ results: [] });
+    }
+    if (target.includes("agentic.market")) return response({ services: [] });
+    if (target.includes("circle.com")) return response({ items: [] });
+    if (target.includes("agentictrade.io")) return response({ services: [] });
+    if (target.includes("mpp.dev")) return response({ services: [] });
+    if (target.includes("mppscan.com")) return response({ result: { data: { json: [] } } });
+    if (target.includes("payanagent.com")) return response({ offers: [] });
+    if (target.includes("x402.jobs")) return response({ resources: [] });
+    if (target.includes("8004market.io")) return market8004Response({ target: false });
+    throw new Error(`unexpected ${target}`);
+  };
+  const paymentPreflightImpl = async ({ url }) => ({
+    target: { method: "GET", url, httpStatus: 402 },
+    decision: "parseable_offer",
+    protocols: ["mpp", "x402"],
+    offerCount: 2,
+    offers: [
+      { protocol: "mpp", network: "eip155:8453", asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", amountAtomic: "5000", valid: true },
+      { protocol: "x402", network: "eip155:8453", asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", amountAtomic: "5000", valid: true },
+    ],
+    parity: { compared: true, consistent: true, driftFields: [] },
+    findings: [],
+    boundary: { credentialsUsed: false, paymentSigned: false, paymentSent: false, responseBodyRead: false },
+  });
+  const result = await agentDiscoverabilityAudit({
+    origin: "https://api.example.com",
+    intent: "extract a public website into structured JSON metadata",
+    route: "/extract",
+    runtimeUrl: "https://api.example.com/extract?url=https%3A%2F%2Fexample.org",
+    payTo: `0x${"1".repeat(40)}`,
+    expectedPriceUsd: "0.05",
+  }, { fetchImpl, paymentPreflightImpl, now: 0 });
+  assert.equal(result.version, "1.9.0");
+  assert.deepEqual(result.summary.priceReference, {
+    basis: "live_unsigned_offer",
+    amountAtomic: "5000",
+    amountUsd: 0.005,
+    protocols: ["mpp", "x402"],
+  });
+  assert.equal(result.sources["coinbase-bazaar"].priceObservation.status, "drift");
+  assert.ok(result.findings.some((finding) => finding.finding === "caller_expected_price_runtime_drift"));
+  assert.equal(result.safety.runtimeCredentialUsed, false);
+  assert.equal(result.safety.runtimePaymentSent, false);
+  assert.equal(result.safety.runtimeResponseBodyRead, false);
+  assert.match(result.method, /live offer/);
 });
 
 test("keeps dynamic or absent MPPScan prices unknown rather than free", async () => {

@@ -5,6 +5,7 @@ import {
   PaymentOfferPreflightError,
   createPinnedLookup,
   normalizePaymentTarget,
+  paymentOfferPreflight,
   resolvePublicAddress,
 } from "./payment-offer-preflight.mjs";
 import { searchMarket8004 } from "./market8004-discovery.mjs";
@@ -18,6 +19,7 @@ const MPP_CATALOG = "https://mpp.dev/api/services";
 const MPPSCAN_SEARCH = "https://www.mppscan.com/api/trpc/discover.search";
 const PAYANAGENT_SEARCH = "https://payanagent.com/api/v1/discover";
 const X402_JOBS_SEARCH = "https://api.x402.jobs/api/v1/resources";
+const CANONICAL_BASE_USDC = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
 const TARGET_SURFACES = Object.freeze({
   agentCard: "/.well-known/agent-card.json",
   agentRegistration: "/.well-known/agent-registration.json",
@@ -102,6 +104,14 @@ export function normalizeDiscoverabilityAuditInput(raw = {}) {
     ? null
     : String(raw.payTo).toLowerCase();
   if (payTo && !/^0x[0-9a-f]{40}$/.test(payTo)) throw new Error("payTo must be a 0x-prefixed EVM address");
+  let runtimeUrl = null;
+  if (raw.runtimeUrl !== undefined && raw.runtimeUrl !== null && raw.runtimeUrl !== "") {
+    if (!expectedRoute) throw new Error("runtimeUrl requires an exact route");
+    const runtimeTarget = normalizePaymentTarget(raw.runtimeUrl);
+    if (runtimeTarget.origin !== originUrl.origin) throw new Error("runtimeUrl must use the audited origin");
+    if (runtimeTarget.pathname !== expectedRoute) throw new Error("runtimeUrl pathname must match route exactly");
+    runtimeUrl = runtimeTarget.toString();
+  }
   let surfaceAudit = false;
   if (![undefined, null, "", false, "false", "0", true, "true", "1"].includes(raw.surfaceAudit)) {
     throw new Error("surfaceAudit must be true or false");
@@ -125,11 +135,57 @@ export function normalizeDiscoverabilityAuditInput(raw = {}) {
     hostname: originUrl.hostname.toLowerCase(),
     intent,
     route: expectedRoute,
+    runtimeUrl,
     payTo,
     surfaceAudit,
     expectedPriceUsd,
     expectedPriceAtomic,
   };
+}
+
+function runtimePriceReference(runtimeOfferAudit) {
+  if (runtimeOfferAudit?.status !== "ok" || runtimeOfferAudit.decision !== "parseable_offer") return null;
+  if (runtimeOfferAudit.parity?.compared && runtimeOfferAudit.parity.consistent !== true) return null;
+  const validOffers = Array.isArray(runtimeOfferAudit.offers)
+    ? runtimeOfferAudit.offers.filter((offer) => offer?.valid === true
+      && offer.network === "eip155:8453"
+      && String(offer.asset || "").toLowerCase() === CANONICAL_BASE_USDC
+      && /^\d+$/.test(String(offer.amountAtomic || "")))
+    : [];
+  const amounts = [...new Set(validOffers.map((offer) => String(offer.amountAtomic)))];
+  if (amounts.length !== 1) return null;
+  return {
+    basis: "live_unsigned_offer",
+    amountAtomic: amounts[0],
+    amountUsd: Number(amounts[0]) / 1_000_000,
+    protocols: [...new Set(validOffers.map((offer) => offer.protocol).filter(Boolean))].sort(),
+  };
+}
+
+async function inspectRuntimeOffer(input, { paymentPreflightImpl, now }) {
+  if (!input.runtimeUrl) return { requested: false };
+  try {
+    const result = await paymentPreflightImpl({ url: input.runtimeUrl }, { now });
+    return {
+      requested: true,
+      status: "ok",
+      target: result.target,
+      decision: result.decision,
+      protocols: result.protocols,
+      offerCount: result.offerCount,
+      offers: result.offers,
+      parity: result.parity,
+      findings: result.findings,
+      boundary: result.boundary,
+    };
+  } catch (error) {
+    return {
+      requested: true,
+      status: "error",
+      code: error?.code || "runtime_offer_unavailable",
+      error: cleanString(error?.message || "runtime offer unavailable", 200),
+    };
+  }
 }
 
 function targetSurfaceError(error) {
@@ -608,11 +664,23 @@ function summarizeSource(items, input) {
 export async function agentDiscoverabilityAudit(rawInput, {
   fetchImpl = fetch,
   surfaceFetchImpl = fetchPinnedTargetJson,
+  paymentPreflightImpl = paymentOfferPreflight,
   limit = 20,
   now = Date.now(),
 } = {}) {
   const input = normalizeDiscoverabilityAuditInput(rawInput);
   if (!Number.isInteger(limit) || limit < 1 || limit > 20) throw new Error("limit must be an integer from 1 through 20");
+  const runtimeOfferAudit = await inspectRuntimeOffer(input, { paymentPreflightImpl, now });
+  const livePriceReference = runtimePriceReference(runtimeOfferAudit);
+  const priceReference = livePriceReference || (input.expectedPriceAtomic === null ? null : {
+    basis: "caller_expected",
+    amountAtomic: input.expectedPriceAtomic,
+    amountUsd: input.expectedPriceUsd,
+    protocols: [],
+  });
+  const comparisonInput = priceReference
+    ? { ...input, expectedPriceAtomic: priceReference.amountAtomic, expectedPriceUsd: priceReference.amountUsd }
+    : input;
   const encoded = encodeURIComponent(input.intent);
   const x402JobsQuery = x402JobsLexicalQuery(input);
   const mppscanUrl = new URL(MPPSCAN_SEARCH);
@@ -638,7 +706,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
   SOURCE_ORDER.forEach((source, index) => {
     const result = settled[index];
     sources[source] = result.status === "fulfilled"
-      ? summarizeSource(result.value, input)
+      ? summarizeSource(result.value, comparisonInput)
       : { status: "error", error: cleanString(result.reason?.message || "catalog unavailable", 200) };
   });
   if (sources["x402jobs-public-search"].status === "ok") {
@@ -659,7 +727,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
     ? availableSourceFamilies.filter((family) => SOURCE_ORDER.some((source) =>
       SOURCE_FAMILIES[source] === family && sources[source].status === "ok" && sources[source].expectedRouteFound))
     : [];
-  const priceObservationSources = input.expectedPriceAtomic === null
+  const priceObservationSources = priceReference === null
     ? []
     : availableSources.filter((source) => sources[source].priceObservation !== null);
   const matchedPriceSources = priceObservationSources.filter((source) => sources[source].priceObservation.status === "matched");
@@ -669,6 +737,21 @@ export async function agentDiscoverabilityAudit(rawInput, {
   const independentSources = SOURCE_ORDER.filter((source) => !DEPENDENT_SOURCES[source]);
   const findings = [];
   const nextActions = [];
+  if (input.runtimeUrl && runtimeOfferAudit.status !== "ok") {
+    findings.push({ source: "target-runtime-offer", finding: "runtime_offer_unavailable", code: runtimeOfferAudit.code });
+    nextActions.push({ source: "target-runtime-offer", action: "repair_runtime_offer_surface", basis: "The exact target did not return a safely inspectable unsigned payment offer." });
+  } else if (input.runtimeUrl && !livePriceReference) {
+    findings.push({ source: "target-runtime-offer", finding: "runtime_price_reference_unavailable" });
+    nextActions.push({ source: "target-runtime-offer", action: "reconcile_runtime_protocol_terms", basis: "The exact target did not expose one coherent live amount suitable as a catalog comparison reference." });
+  }
+  if (livePriceReference && input.expectedPriceAtomic !== null && input.expectedPriceAtomic !== livePriceReference.amountAtomic) {
+    findings.push({
+      source: "target-runtime-offer",
+      finding: "caller_expected_price_runtime_drift",
+      callerExpectedPriceAtomic: input.expectedPriceAtomic,
+      runtimePriceAtomic: livePriceReference.amountAtomic,
+    });
+  }
   for (const source of SOURCE_ORDER) {
     const observation = sources[source];
     if (observation.status !== "ok") {
@@ -686,11 +769,11 @@ export async function agentDiscoverabilityAudit(rawInput, {
       nextActions.push({ source, action: "index_or_reconcile_expected_route", basis: "The seller appeared, but the requested route did not." });
       continue;
     }
-    if (input.expectedPriceAtomic !== null && observation.priceObservation.status === "drift") {
+    if (priceReference !== null && observation.priceObservation.status === "drift") {
       findings.push({
         source,
         finding: "expected_route_price_drift",
-        expectedPriceAtomic: input.expectedPriceAtomic,
+        expectedPriceAtomic: priceReference.amountAtomic,
         observedPricesAtomic: observation.priceObservation.observedPricesAtomic,
       });
       nextActions.push({
@@ -698,11 +781,11 @@ export async function agentDiscoverabilityAudit(rawInput, {
         action: "reconcile_stale_catalog_price",
         basis: "Verify the seller's live unsigned payment terms first. If owned x402, MPP, OpenAPI, and manifest terms agree and this catalog documents settlement-triggered materialization, use at most one bounded owner canary, then hand propagation to event-driven monitoring.",
       });
-    } else if (input.expectedPriceAtomic !== null && observation.priceObservation.status === "mixed") {
+    } else if (priceReference !== null && observation.priceObservation.status === "mixed") {
       findings.push({
         source,
         finding: "mixed_current_and_stale_route_prices",
-        expectedPriceAtomic: input.expectedPriceAtomic,
+        expectedPriceAtomic: priceReference.amountAtomic,
         observedPricesAtomic: observation.priceObservation.observedPricesAtomic,
       });
       nextActions.push({
@@ -710,7 +793,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
         action: "deduplicate_or_reconcile_route_price_records",
         basis: "The catalog exposes both the caller-expected price and at least one conflicting price for the same route. Preserve the current record and reconcile stale duplicates without repeated owner traffic.",
       });
-    } else if (input.expectedPriceAtomic !== null && observation.priceObservation.status === "price_unknown") {
+    } else if (priceReference !== null && observation.priceObservation.status === "price_unknown") {
       findings.push({ source, finding: "expected_route_price_unavailable" });
       nextActions.push({
         source,
@@ -750,12 +833,13 @@ export async function agentDiscoverabilityAudit(rawInput, {
   return {
     ok: true,
     product: "samedaydesk-agent-discoverability-audit",
-    version: "1.8.0",
+    version: "1.9.0",
     generatedAt: new Date(now).toISOString(),
     input: {
       origin: input.origin,
       intent: input.intent,
       route: input.route,
+      runtimeUrl: input.runtimeUrl,
       payTo: input.payTo,
       surfaceAudit: input.surfaceAudit,
       expectedPriceUsd: input.expectedPriceUsd,
@@ -776,13 +860,14 @@ export async function agentDiscoverabilityAudit(rawInput, {
       availableSourceFamilyCount: availableSourceFamilies.length,
       targetFoundSourceFamilyCount: foundSourceFamilies.length,
       expectedRouteFoundSourceFamilyCount: input.route ? routeFoundSourceFamilies.length : null,
-      priceObservationSourceCount: input.expectedPriceAtomic === null ? null : priceObservationSources.length,
-      matchedPriceSourceCount: input.expectedPriceAtomic === null ? null : matchedPriceSources.length,
-      driftedPriceSourceCount: input.expectedPriceAtomic === null ? null : driftedPriceSources.length,
-      unknownPriceSourceCount: input.expectedPriceAtomic === null ? null : unknownPriceSources.length,
-      matchedPriceSources: input.expectedPriceAtomic === null ? [] : matchedPriceSources,
-      driftedPriceSources: input.expectedPriceAtomic === null ? [] : driftedPriceSources,
-      unknownPriceSources: input.expectedPriceAtomic === null ? [] : unknownPriceSources,
+      priceReference,
+      priceObservationSourceCount: priceReference === null ? null : priceObservationSources.length,
+      matchedPriceSourceCount: priceReference === null ? null : matchedPriceSources.length,
+      driftedPriceSourceCount: priceReference === null ? null : driftedPriceSources.length,
+      unknownPriceSourceCount: priceReference === null ? null : unknownPriceSources.length,
+      matchedPriceSources: priceReference === null ? [] : matchedPriceSources,
+      driftedPriceSources: priceReference === null ? [] : driftedPriceSources,
+      unknownPriceSources: priceReference === null ? [] : unknownPriceSources,
       foundSourceFamilies,
       missingSourceFamilies: availableSourceFamilies.filter((family) => !foundSourceFamilies.includes(family)),
       unavailableSourceFamilies: sourceFamilies.filter((family) => !availableSourceFamilies.includes(family)),
@@ -790,20 +875,29 @@ export async function agentDiscoverabilityAudit(rawInput, {
       independentTargetFoundSourceCount: independentSources.filter((source) => sources[source].status === "ok" && sources[source].targetFound).length,
     },
     sources,
+    runtimeOfferAudit,
     targetSurfaces,
     findings,
     nextActions,
-    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata. A caller-supplied expected price is compared only with route-level prices exposed by each discovery view; it is not treated as runtime truth. When explicitly requested, the target-surface check reads only three fixed same-origin public JSON documents after payment.",
+    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata. When runtimeUrl is supplied, one same-origin, exact-route, credentials-free headers-only request derives the comparison amount only from a parseable coherent live offer. Otherwise an optional caller-supplied expected price remains clearly labeled as caller expected. When explicitly requested, the target-surface check reads only three fixed same-origin public JSON documents after payment.",
     sourceDependencies: DEPENDENT_SOURCES,
     safety: {
       credentialsUsed: false,
       paymentSignedToCatalogs: false,
       paymentSentToCatalogs: false,
+      runtimeCredentialUsed: runtimeOfferAudit?.boundary?.credentialsUsed ?? false,
+      runtimePaymentSigned: runtimeOfferAudit?.boundary?.paymentSigned ?? false,
+      runtimePaymentSent: runtimeOfferAudit?.boundary?.paymentSent ?? false,
+      runtimeResponseBodyRead: runtimeOfferAudit?.boundary?.responseBodyRead ?? false,
       targetOriginFetchAttempted: input.surfaceAudit,
       targetOriginFetched: input.surfaceAudit && targetSurfaces.availableSurfaceCount > 0,
       targetOriginFetchScope: input.surfaceAudit ? Object.values(TARGET_SURFACES) : [],
       redirectsFollowed: false,
     },
-    boundary: "This is a point-in-time discovery observation, not demand, conversion, reliability, or future-rank evidence. A price match or drift compares public catalog metadata with a caller-supplied expectation, not with live unsigned terms. Runtime payment terms must still be preflighted before purchase.",
+    boundary: livePriceReference
+      ? "This is a point-in-time discovery observation, not demand, conversion, reliability, or future-rank evidence. A runtime-derived price comparison uses one unsigned canonical Base-USDC headers-only offer and still does not establish seller trust, settlement reliability, or future terms. Every purchase must preflight again before authorization."
+      : input.expectedPriceAtomic !== null
+        ? "This is a point-in-time discovery observation, not demand, conversion, reliability, or future-rank evidence. Price comparisons use the caller-supplied expectation rather than runtime truth. Every purchase must preflight again before authorization."
+        : "This is a point-in-time discovery observation, not demand, conversion, reliability, or future-rank evidence. No exact price reference was supplied or safely derived. Every purchase must preflight again before authorization.",
   };
 }
