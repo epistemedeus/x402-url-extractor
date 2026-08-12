@@ -173,6 +173,7 @@ import {
 import { z } from "zod";
 import { SERVICE_VERSION } from "./service-version.mjs";
 import { loadServiceDeploymentPublication } from "./service-deployment-publication.mjs";
+import { validateOpenApiOperationIds } from "./openapi-operation-contract.mjs";
 
 // ---------------------------------------------------------------------------
 // 1. CONFIG (all via env so we change facilitator/network with zero code edits)
@@ -1446,7 +1447,12 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     "/v0/commerce-demand.json": { operationId: "getCommerceDemand", tags: ["Settlement Radar"] },
     "/.well-known/agent-card.json": { operationId: "getA2aAgentCard", tags: ["A2A"] },
     "/.well-known/agent-registration.json": { operationId: "getSolanaAgentRegistration", tags: ["A2A"] },
+    "/.well-known/glama.json": { operationId: "getGlamaVerification", tags: ["Distribution"] },
     "/.well-known/x402-verification.json": { operationId: "getX402JobsVerification", tags: ["Distribution"] },
+    "/.well-known/agent-payment-policy-service-deployment.json": { operationId: "getServiceDeploymentStatement", tags: ["Agent Operations"] },
+    "/.well-known/agent-payment-policy-service-deployment.pem": { operationId: "getServiceDeploymentPublicKey", tags: ["Agent Operations"] },
+    "/schemas/wallet-policy-conformance-v1.json": { operationId: "getWalletPolicyConformanceSchema", tags: ["Security"] },
+    "/schemas/stateful-wallet-policy-conformance-v1.json": { operationId: "getStatefulWalletPolicyConformanceSchema", tags: ["Security"] },
     "/a2a/message:send": { operationId: "sendA2aMessage", tags: ["A2A"] },
     "/platforms": { operationId: "viewSettlementRadar", tags: ["Settlement Radar"] },
   };
@@ -1461,8 +1467,13 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       if (!operation["x-payment-info"]) operation.security = [];
     }
   }
+  validateOpenApiOperationIds(document);
   return document;
 };
+
+// Fail startup before the listener opens when any public OpenAPI operation
+// lacks one unique stable operation ID.
+buildOpenApiDocument({ profile: "agentcash" });
 
 app.get(["/favicon.ico", "/favicon.svg"], (req, res) => {
   const filename = req.path.endsWith(".svg") ? "favicon.svg" : "favicon.ico";
