@@ -1,10 +1,14 @@
-import { createHash } from "node:crypto";
-
-import { evaluateResponseContract, SCHEMAS } from "agent-payment-policy";
+import {
+  PURCHASE_EVIDENCE_RELATION,
+  createPurchaseEvidenceManifest,
+  evaluateResponseContract,
+  purchaseEvidenceLink,
+  SCHEMAS,
+} from "agent-payment-policy";
 
 export const PURCHASE_EVIDENCE_MANIFEST_PATH = "/.well-known/agent-payment-evidence.json";
-export const PURCHASE_EVIDENCE_MANIFEST_VERSION = "0.1.0";
-export const PURCHASE_EVIDENCE_RELATION = "https://agents.samedaydesk.com/rels/agent-payment-evidence";
+export const PURCHASE_EVIDENCE_MANIFEST_VERSION = "1.0.0";
+export { PURCHASE_EVIDENCE_RELATION };
 
 function routeKey(method, path) {
   return `${String(method || "GET").toUpperCase()} ${String(path || "")}`;
@@ -16,18 +20,6 @@ function relativePath(value, label) {
     throw new Error(`${label} must be one root-relative path`);
   }
   return path;
-}
-
-function sha256(value) {
-  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
-}
-
-function canonical(value) {
-  if (Array.isArray(value)) return value.map(canonical);
-  if (value && typeof value === "object") {
-    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])]));
-  }
-  return value;
 }
 
 export function buildPurchaseEvidenceManifest({
@@ -95,10 +87,7 @@ export function buildPurchaseEvidenceManifest({
   }
   operations.sort((left, right) => routeKey(left.method, left.path).localeCompare(routeKey(right.method, right.path)));
 
-  const manifest = {
-    schemaVersion: "samedaydesk.agent-payment-evidence.v0",
-    status: "experimental",
-    version: PURCHASE_EVIDENCE_MANIFEST_VERSION,
+  return createPurchaseEvidenceManifest({
     service: { origin: normalizedOrigin, version: String(serviceVersion) },
     protocols: ["x402", "mpp"],
     evidence: {
@@ -115,14 +104,12 @@ export function buildPurchaseEvidenceManifest({
       runtime: "The buyer must still verify the exact live payment challenge, paid response, receipt, settlement, and required output.",
       adoption: "SameDayDesk dogfood only; no external standard or marketplace adoption is claimed.",
     },
-  };
-  const digestInput = JSON.stringify(canonical(manifest));
-  return Object.freeze({ ...manifest, manifestDigest: sha256(digestInput) });
+  });
 }
 
 export function purchaseEvidenceLinkHeader({ origin, path = PURCHASE_EVIDENCE_MANIFEST_PATH } = {}) {
   const target = new URL(relativePath(path, "purchase evidence manifest"), new URL(origin).origin).toString();
-  return `<${target}>; rel="describedby ${PURCHASE_EVIDENCE_RELATION}"; type="application/json"`;
+  return purchaseEvidenceLink(target);
 }
 
 export function purchaseEvidenceHeaders({ origin, paidRoutes, path = PURCHASE_EVIDENCE_MANIFEST_PATH } = {}) {

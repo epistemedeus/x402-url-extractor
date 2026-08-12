@@ -1,6 +1,6 @@
 {
   "name": "x402-merchant",
-  "version": "1.23.10",
+  "version": "1.23.11",
   "description": "Dual-stack x402 and MPP paid HTTP capabilities that settle USDC to our own Base wallet",
   "type": "module",
   "main": "server.js",
@@ -21,7 +21,7 @@
     "@x402/extensions": "2.16.0",
     "@x402/mcp": "2.16.0",
     "agent-payment-integrity": "https://github.com/epistemedeus/agent-payment-integrity/archive/9c347ba1635f512f7f7e3486963fdb90db4b561f.tar.gz",
-    "agent-payment-policy": "0.11.1",
+    "agent-payment-policy": "0.12.0",
     "express": "^4.21.2",
     "mppx": "^0.8.15",
     "viem": "2.55.11",
