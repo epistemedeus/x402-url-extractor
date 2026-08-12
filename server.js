@@ -76,6 +76,13 @@ import {
   sellerIntegrityAuditOutputSchema,
 } from "./seller-integrity-audit.mjs";
 import {
+  CONTRACT_QUALIFIED_SEARCH_EXAMPLE,
+  ContractQualifiedSearchError,
+  contractQualifiedSearch,
+  contractQualifiedSearchOutputSchema,
+  normalizeContractQualifiedSearchInput,
+} from "./contract-qualified-search.mjs";
+import {
   SettlementProofError,
   normalizeSettlementProofInput,
   settlementProof,
@@ -208,6 +215,7 @@ const AGENT_DISCOVERABILITY_AUDIT_PRICE = process.env.AGENT_DISCOVERABILITY_AUDI
 // The low price is deliberate: this is a pre-authorization safety primitive.
 const PAYMENT_OFFER_PREFLIGHT_PRICE = process.env.PAYMENT_OFFER_PREFLIGHT_PRICE || "$0.005";
 const SELLER_INTEGRITY_AUDIT_PRICE = process.env.SELLER_INTEGRITY_AUDIT_PRICE || "$0.01";
+const CONTRACT_QUALIFIED_SEARCH_PRICE = process.env.CONTRACT_QUALIFIED_SEARCH_PRICE || "$0.01";
 const PAYMENT_OFFER_CATALOG_SCHEMA = z.object({
   source: z.string().min(1).max(128).describe("Public catalog or registry name."),
   protocol: z.enum(["x402", "mpp"]).optional().describe("Optional advertised payment protocol."),
@@ -507,7 +515,7 @@ app.get("/healthz", async (_req, res) => {
     ok: true,
     payTo: PAY_TO,
     network: NETWORK,
-    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE, "morpho-protection": MORPHO_PROTECTION_PRICE, "morpho-market-underwrite": MORPHO_MARKET_UNDERWRITE_PRICE, "morpho-preliquidation-replay": MORPHO_PRELIQUIDATION_REPLAY_PRICE, "opportunity-preflight": OPPORTUNITY_PREFLIGHT_PRICE, "agent-discoverability-audit": AGENT_DISCOVERABILITY_AUDIT_PRICE, "payment-offer-preflight": PAYMENT_OFFER_PREFLIGHT_PRICE, "seller-integrity-audit": SELLER_INTEGRITY_AUDIT_PRICE, "settlement-proof": SETTLEMENT_PROOF_PRICE, "transaction-receipt": TRANSACTION_RECEIPT_PRICE, "solana-transaction-receipt": SOLANA_TRANSACTION_RECEIPT_PRICE, "wallet-policy-conformance": WALLET_POLICY_CONFORMANCE_PRICE, "stateful-wallet-policy-conformance": STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE },
+    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE, "morpho-protection": MORPHO_PROTECTION_PRICE, "morpho-market-underwrite": MORPHO_MARKET_UNDERWRITE_PRICE, "morpho-preliquidation-replay": MORPHO_PRELIQUIDATION_REPLAY_PRICE, "opportunity-preflight": OPPORTUNITY_PREFLIGHT_PRICE, "agent-discoverability-audit": AGENT_DISCOVERABILITY_AUDIT_PRICE, "payment-offer-preflight": PAYMENT_OFFER_PREFLIGHT_PRICE, "seller-integrity-audit": SELLER_INTEGRITY_AUDIT_PRICE, "contract-qualified-search": CONTRACT_QUALIFIED_SEARCH_PRICE, "settlement-proof": SETTLEMENT_PROOF_PRICE, "transaction-receipt": TRANSACTION_RECEIPT_PRICE, "solana-transaction-receipt": SOLANA_TRANSACTION_RECEIPT_PRICE, "wallet-policy-conformance": WALLET_POLICY_CONFORMANCE_PRICE, "stateful-wallet-policy-conformance": STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
     paymentProtocols: {
@@ -681,6 +689,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/security/wallet-policy-conformance`, method: "POST", amount: priceToAtomic(WALLET_POLICY_CONFORMANCE_PRICE), description: "Evaluate a credential-free standardized allow/deny matrix for an agent wallet or delegated signer. Distinguishes explicit provider policy denials from validation and generic provider failures, separates operation allowlisting from exact execution-shape control, and returns conformant, partial, or unsafe without an opaque score. Accepts no credentials, wallet IDs, signatures, transactions, or raw provider responses.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/security/stateful-wallet-policy-conformance`, method: "POST", amount: priceToAtomic(STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE), description: "Evaluate credential-free stateful wallet-policy observations for sequential cumulative limits, signed-but-unbroadcast accounting, ABI extraction integrity, concurrent oversubscription, counter-reference failure, and application serialization. Separates provider-policy enforcement from application guards and returns conformant, partial, or unsafe without an opaque score. Accepts no credentials, wallet or resource IDs, counter values, signatures, transactions, or raw provider responses.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/commerce/seller-integrity-audit`, amount: priceToAtomic(SELLER_INTEGRITY_AUDIT_PRICE), description: "Audit one exact paid GET or POST route before buyers spend: constructible non-secret input, live unpaid GET payment terms, optional Bazaar catalog contract, and recursively guaranteed buyer-required success paths. Returns machine_buyable for live-verified GET, contract_ready for static-safe POST, or repair_required. POST analysis sends no target request. Uses public pinned DNS, no credentials, no target payment, no redirect, no paid target body, and retains no seller schema, body, or query values.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/commerce/contract-qualified-search`, amount: priceToAtomic(CONTRACT_QUALIFIED_SEARCH_PRICE), description: "Search Agent402 and the official MPP catalog for paid machine services that both match a capability intent and guarantee buyer-required JSON output paths. Returns bounded machine-buyable or contract-ready candidates plus controlled rejection reasons. Rejects unresolved routes and owned supply before audit, uses no credentials or wallet, sends no seller POST or target payment, reads no paid response body, and retains only a query digest.", mimeType: "application/json" },
 ];
 
 const WALLET_POLICY_DISCOVERY_INPUT = Object.freeze({
@@ -754,6 +763,7 @@ const RESOURCE_DISCOVERY_METADATA = {
   "/distribution/agent-discoverability-audit": { operationId: "auditAgentDiscoverability", tags: ["Distribution"] },
   "/commerce/payment-offer-preflight": { operationId: "preflightPaymentOffer", tags: ["Agent Operations"] },
   "/commerce/seller-integrity-audit": { operationId: "auditSellerIntegrity", tags: ["Agent Operations"] },
+  "/commerce/contract-qualified-search": { operationId: "searchContractQualifiedServices", tags: ["Agent Operations"] },
   "/commerce/settlement-proof": { operationId: "verifyBaseUsdcSettlement", tags: ["Blockchain"] },
   "/chain/transaction-receipt": { operationId: "getTransactionReceipt", tags: ["Blockchain"] },
   "/chain/solana-transaction-receipt": { operationId: "getSolanaTransactionReceipt", tags: ["Blockchain"] },
@@ -1058,6 +1068,7 @@ ${line("/deep-audit", DEEP_AUDIT_PRICE, "domain -> bundled AI-search-readiness a
 ${line("/distribution/agent-discoverability-audit", AGENT_DISCOVERABILITY_AUDIT_PRICE, "public HTTPS service origin plus a brand-blind capability intent -> point-in-time rank, dependency-labeled coverage, canonical-vs-alias identity, duplicate records, expected-route presence, and price drift across ten public machine-service discovery views. Optional runtimeUrl derives the comparison price from a same-origin unsigned x402 or MPP offer; optional surfaceAudit checks the target's public Agent Card, ERC-8004 registration document, and action catalog. No catalog credential, signature, or payment.")}
 ${line("/commerce/payment-offer-preflight", PAYMENT_OFFER_PREFLIGHT_PRICE, "exact public HTTPS GET URL -> compare and normalize x402 and MPP payment challenges and terms before buyer authorization; check route and realm binding, expiry, and economic parity. Uses no target credential, signature, payment, redirect, or response body.")}
 ${line("/commerce/seller-integrity-audit", SELLER_INTEGRITY_AUDIT_PRICE, "public seller origin plus exact paid GET or POST path -> live machine-buyability audit for GET, static contract-readiness audit for POST, and recursively guaranteed buyer-required success paths. POST sends no target request. Returns controlled repair actions without target credentials or payment.")}
+${line("/commerce/contract-qualified-search", CONTRACT_QUALIFIED_SEARCH_PRICE, "capability intent plus buyer-required JSON paths -> bounded Agent402 and MPP search for services whose exact seller contracts guarantee those outputs. Rejects unresolved routes and owned supply before audit; uses no credential, wallet, seller POST, or target payment.")}
 ${line("/security/wallet-policy-conformance", WALLET_POLICY_CONFORMANCE_PRICE, "POST standardized wallet-policy observations -> explicit conformant, partial, or unsafe decision. Distinguishes provider policy denial from validation and generic provider failure, and tests exact execution shape separately from operation allowlisting. Accepts no wallet credentials or raw provider payloads.")}
 ${line("/security/stateful-wallet-policy-conformance", STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE, "POST standardized stateful wallet-policy observations -> explicit conformant, partial, or unsafe decision for sequential caps, signed-but-unbroadcast accounting, ABI extraction, concurrency, counter references, and application serialization. Accepts no counter values, resource IDs, credentials, or raw provider payloads.")}
 ${circleGateway.enabled ? line(CIRCLE_GATEWAY_PATH, PAYMENT_OFFER_PREFLIGHT_PRICE, "the same payment-offer preflight product through Circle Gateway x402 Nanopayments, with gasless buyer authorization and batched USDC settlement.") : ""}
@@ -1245,6 +1256,25 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
           "x-payment-info": profile === "mpp"
             ? mppPaymentInfoFor(RESOURCES[19])
             : agentCashPaymentInfoFor(RESOURCES[19]),
+        },
+      },
+      "/commerce/contract-qualified-search": {
+        get: {
+          summary: RESOURCES[20].description,
+          parameters: [
+            { name: "query", in: "query", required: true, description: "Capability intent sent to Agent402 search and used locally to rank MPP catalog metadata. Do not include secrets.", schema: { type: "string", minLength: 10, maxLength: 300, example: "service domain ownership code provenance" } },
+            { name: "requiredPaths", in: "query", required: true, description: "Comma-separated dotted JSON paths every returned seller contract must guarantee recursively.", schema: { type: "string", pattern: "^[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+){0,7}(?:,[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+){0,7}){0,15}$", example: "data.sourceRepository" } },
+            { name: "maxPriceDisplayUnits", in: "query", required: false, description: "Maximum advertised per-call price in each source's display currency.", schema: { type: "number", exclusiveMinimum: 0, maximum: 10, default: 0.1 } },
+            { name: "limit", in: "query", required: false, description: "Maximum total candidates audited and returned across both sources.", schema: { type: "integer", minimum: 1, maximum: 8, default: 5 } },
+          ],
+          responses: {
+            "200": { description: "bounded contract-qualified candidates and controlled gap reasons", content: { "application/json": { schema: contractQualifiedSearchOutputSchema() } } },
+            "400": { description: "invalid or secret-like search request, charged nothing" },
+            "402": { description: `payment required (x402 or MPP, ${CONTRACT_QUALIFIED_SEARCH_PRICE} USDC base)` },
+          },
+          "x-payment-info": profile === "mpp"
+            ? mppPaymentInfoFor(RESOURCES[20])
+            : agentCashPaymentInfoFor(RESOURCES[20]),
         },
       },
       "/commerce/settlement-proof": { get: { summary: RESOURCES[14].description, parameters: [{ name: "transactionHash", in: "query", required: true, description: "Base mainnet transaction hash whose canonical USDC Transfer logs should be checked.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$", example: "0xcfcbb367fecf27052db9ca855e5146e99cacbce1cab94f20f9f95a74170a8987" } }, { name: "recipient", in: "query", required: true, description: "Expected USDC recipient.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$", example: "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" } }, { name: "amountAtomic", in: "query", required: true, description: "Expected positive USDC amount in six-decimal atomic units.", schema: { type: "string", pattern: "^[1-9][0-9]{0,20}$", maxLength: 21, example: "5000" } }, { name: "payer", in: "query", required: false, description: "Optional expected USDC payer.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" } }], responses: { "200": { description: "deterministic canonical Base USDC settlement proof or mismatch findings" }, "400": { description: "invalid settlement claim, charged nothing" }, "402": { description: `payment required (x402 or MPP, ${SETTLEMENT_PROOF_PRICE} USDC base)` } } } },
@@ -1560,6 +1590,28 @@ app.get("/commerce/seller-integrity-audit", (req, res, next) => {
       error: message,
       charged: false,
       boundary: { credentialsUsed: false, targetPaymentSigned: false, targetPaymentSent: false },
+    });
+  }
+});
+
+// Validate the capability intent and buyer-required output paths before either
+// rail charges. Directory search and bounded seller audits happen only after
+// settlement.
+app.get("/commerce/contract-qualified-search", (req, res, next) => {
+  try {
+    res.locals.contractQualifiedSearchInput = normalizeContractQualifiedSearchInput(req.query);
+    return next();
+  } catch (error) {
+    const message = error instanceof ContractQualifiedSearchError
+      ? error.message
+      : "invalid contract-qualified search request";
+    res.set("Cache-Control", "no-store");
+    return res.status(400).json({
+      ok: false,
+      product: "samedaydesk-contract-qualified-search",
+      error: message,
+      charged: false,
+      boundary: { credentialsUsed: false, walletAccessed: false, targetPaymentSigned: false, targetPaymentSent: false },
     });
   }
 });
@@ -2419,6 +2471,37 @@ const x402Paywall = paymentMiddleware(
           }),
         },
       },
+      "GET /commerce/contract-qualified-search": {
+        ...bazaarResourceMetadataFor("/commerce/contract-qualified-search"),
+        accepts: [{ scheme: "exact", price: CONTRACT_QUALIFIED_SEARCH_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description: RESOURCES[20].description,
+        mimeType: "application/json",
+        extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
+          ...declareDiscoveryContract({
+            routeKey: "GET /commerce/contract-qualified-search",
+            input: {
+              query: "service domain ownership code provenance",
+              requiredPaths: "data.sourceRepository",
+              maxPriceDisplayUnits: 0.1,
+              limit: 5,
+            },
+            inputSchema: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                query: { type: "string", minLength: 10, maxLength: 300, description: "Capability intent sent to Agent402 search and used locally to rank MPP catalog metadata. Do not include secrets." },
+                requiredPaths: { type: "string", pattern: "^[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+){0,7}(?:,[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+){0,7}){0,15}$", description: "Buyer-required dotted JSON paths every returned seller schema must guarantee recursively." },
+                maxPriceDisplayUnits: { type: "number", exclusiveMinimum: 0, maximum: 10, default: 0.1, description: "Maximum advertised per-call price in each source's display currency." },
+                limit: { type: "integer", minimum: 1, maximum: 8, default: 5, description: "Maximum total candidates audited across Agent402 and MPP." },
+              },
+              required: ["query", "requiredPaths"],
+            },
+            output: { example: CONTRACT_QUALIFIED_SEARCH_EXAMPLE },
+            outputSchema: contractQualifiedSearchOutputSchema(),
+          }),
+        },
+      },
       "GET /commerce/settlement-proof": {
         ...bazaarResourceMetadataFor("/commerce/settlement-proof"),
         accepts: [{ scheme: "exact", price: SETTLEMENT_PROOF_PRICE, network: NETWORK, payTo: PAY_TO }],
@@ -2677,6 +2760,11 @@ const servePaymentOfferPreflight = async (req, res) => {
 const serveSellerIntegrityAudit = async (req, res) => {
   res.set("Cache-Control", "no-store");
   return res.json(await sellerIntegrityAudit(res.locals.sellerIntegrityAuditInput));
+};
+
+const serveContractQualifiedSearch = async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  return res.json(await contractQualifiedSearch(res.locals.contractQualifiedSearchInput));
 };
 
 const serveSettlementProof = async (req, res) => {
@@ -2956,6 +3044,7 @@ app.get("/distribution/agent-discoverability-audit", async (req, res) => {
 app.get("/commerce/payment-offer-preflight", servePaymentOfferPreflight);
 app.post("/commerce/payment-offer-preflight", servePaymentOfferPreflight);
 app.get("/commerce/seller-integrity-audit", serveSellerIntegrityAudit);
+app.get("/commerce/contract-qualified-search", serveContractQualifiedSearch);
 app.get("/commerce/settlement-proof", serveSettlementProof);
 app.get("/chain/transaction-receipt", serveTransactionReceipt);
 app.get("/chain/solana-transaction-receipt", serveSolanaTransactionReceipt);
@@ -3044,6 +3133,7 @@ app.get("/", (req, res) => {
       "GET /distribution/agent-discoverability-audit?origin=&intent=&route=&runtimeUrl=&payTo=&surfaceAudit=": `${AGENT_DISCOVERABILITY_AUDIT_PRICE} - brand-blind agent discovery rank, dependency-labeled coverage, canonical-vs-alias identity, duplicate records, expected-route presence, runtime-derived catalog-price coherence, optional seller-owned surface coverage, and competing results across ten machine-service views.`,
       "GET /commerce/payment-offer-preflight?url=": `${PAYMENT_OFFER_PREFLIGHT_PRICE} - compare and normalize x402 and MPP payment challenges and terms, binding checks, expiry, and economic parity before buyer authorization.`,
       "GET /commerce/seller-integrity-audit?origin=&route=&method=&requiredPaths=&requireBazaar=": `${SELLER_INTEGRITY_AUDIT_PRICE} - audit one paid GET or POST seller route for buyer-required response paths. GET verifies live unpaid terms; POST is static-safe and sends no target request.`,
+      "GET /commerce/contract-qualified-search?query=&requiredPaths=&maxPriceDisplayUnits=&limit=": `${CONTRACT_QUALIFIED_SEARCH_PRICE} - search Agent402 and MPP for services whose exact seller contract guarantees buyer-required output paths before authorization.`,
       "GET /commerce/settlement-proof?transactionHash=&recipient=&amountAtomic=&payer=": `${SETTLEMENT_PROOF_PRICE} - verify one claimed canonical Base USDC transfer against the successful on-chain receipt, with exact recipient, amount, and optional payer binding.`,
       "GET /chain/transaction-receipt?transactionHash=&network=": `${TRANSACTION_RECEIPT_PRICE} - normalized Base or Ethereum receipt status, block time, gas fee, decoded ERC-20 transfers, and canonical USDC transfer evidence.`,
       "GET /chain/solana-transaction-receipt?signature=&mint=&recipient=&amountAtomic=&payer=": `${SOLANA_TRANSACTION_RECEIPT_PRICE} - normalized finalized Solana receipt, SPL-token owner deltas, canonical USDC deltas, and optional exact settlement verification.`,
@@ -3106,6 +3196,7 @@ import("./mcp-server.mjs")
         { name: "agent_discoverability_audit", description: RESOURCES[12].description, price: AGENT_DISCOVERABILITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Public HTTPS service origin"), intent: z.string().min(20).max(500).describe("Brand-blind capability description"), route: z.string().regex(/^\/[^?#]*$/).optional().describe("Optional expected exact path"), runtimeUrl: z.string().url().max(2048).optional().describe("Optional exact same-origin HTTPS GET URL whose unpaid x402 or MPP offer supplies the runtime price reference. Requires route and an exactly matching pathname."), payTo: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional EVM payTo for alias matching"), expectedPriceUsd: z.union([z.number().min(0).max(1000000), z.string().regex(/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,6})?$/)]).optional().describe("Optional exact route price expected by the caller. A coherent runtimeUrl offer takes precedence and caller drift is reported."), surfaceAudit: z.boolean().optional().describe("When true, inspect the target's public Agent Card, ERC-8004 registration document, and action catalog for the expected route through bounded same-origin fetches.") }, run: (a) => agentDiscoverabilityAudit(a), tags: ["distribution", "discovery", "x402", "mpp", "agent402", "catalog-price", "runtime-coherence", "a2a", "erc-8004"] },
         { name: "payment_offer_preflight", description: RESOURCES[13].description, price: PAYMENT_OFFER_PREFLIGHT_PRICE, inputSchema: { url: z.string().url().max(2048).describe("Exact public HTTPS GET route whose unpaid x402 and MPP challenge headers and same-origin OpenAPI success-response declaration should be inspected before buyer authorization. Credential-like query keys, fragments, unresolved parameters, local hosts, redirects, and non-public IPs are rejected."), catalog: PAYMENT_OFFER_CATALOG_SCHEMA.optional().describe("Optional caller-supplied catalog candidate. When present, the tool compares it with every live unsigned offer across request, protocol, amount, network, asset, recipient, and expiry.") }, run: (a) => paymentOfferPreflight(a), tags: ["payments", "x402", "mpp", "buyer-safety", "preflight", "catalog-coherence", "response-contract"] },
         { name: "seller_integrity_audit", description: RESOURCES[19].description, price: SELLER_INTEGRITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Credential-free public HTTPS seller origin on port 443."), route: z.string().regex(/^\/(?!\/)[^?#{}]+$/).describe("Exact paid GET or POST path declared by the seller, without query or template parameters."), method: z.enum(["GET", "POST"]).default("GET").describe("POST receives static OpenAPI response-contract analysis without sending a target request."), requiredPaths: z.array(z.string().regex(/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+){0,7}$/)).max(16).default([]).describe("Buyer-required dotted success-response paths that the seller schema must guarantee recursively."), requireBazaar: z.boolean().default(false).describe("When true, missing Bazaar discovery metadata becomes a repair finding for live-probed GET routes.") }, run: (a) => sellerIntegrityAudit(a), tags: ["payments", "seller-ci", "x402", "mpp", "response-contract", "machine-buyability", "post-contract"] },
+        { name: "contract_qualified_search", description: RESOURCES[20].description, price: CONTRACT_QUALIFIED_SEARCH_PRICE, inputSchema: { query: z.string().min(10).max(300).describe("Capability intent sent to Agent402 and used locally to rank MPP catalog metadata. Do not include credentials or private values."), requiredPaths: z.array(z.string().regex(/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+){0,7}$/)).min(1).max(16).describe("Buyer-required dotted success-response paths that every returned seller schema must guarantee recursively."), maxPriceDisplayUnits: z.number().gt(0).max(10).default(0.1).describe("Maximum advertised per-call price in each source's display currency."), limit: z.number().int().min(1).max(8).default(5).describe("Maximum candidates audited and returned across Agent402 and MPP.") }, run: (a) => contractQualifiedSearch(a), tags: ["payments", "service-discovery", "agent402", "mpp", "response-contract", "buyer-safety"] },
         { name: "settlement_proof", description: RESOURCES[14].description, price: SETTLEMENT_PROOF_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Base mainnet transaction hash containing the claimed canonical USDC transfer."), recipient: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Expected canonical Base USDC recipient."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,20}$/).describe("Expected positive USDC amount in six-decimal atomic units."), payer: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional expected canonical Base USDC payer.") }, run: (a) => settlementProof(a), tags: ["payments", "x402", "settlement", "reconciliation", "base-usdc"] },
         { name: "transaction_receipt", description: RESOURCES[15].description, price: TRANSACTION_RECEIPT_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Mined Base or Ethereum transaction hash whose normalized receipt should be returned."), network: z.enum(["base", "ethereum"]).default("base").describe("Receipt network. Defaults to Base mainnet.") }, run: (a) => transactionReceipt(a), tags: ["blockchain", "receipt", "gas", "erc20", "usdc"] },
         { name: "solana_transaction_receipt", description: RESOURCES[16].description, price: SOLANA_TRANSACTION_RECEIPT_PRICE, inputSchema: { signature: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/).describe("Finalized Solana mainnet transaction signature."), mint: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional SPL-token mint; defaults to canonical Solana USDC."), recipient: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional expected token recipient owner."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,19}$/).optional().describe("Optional expected positive token amount in atomic units; requires recipient."), payer: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional expected token payer owner; requires recipient and amountAtomic.") }, run: (a) => solanaTransactionReceipt(a), tags: ["blockchain", "solana", "receipt", "spl-token", "usdc"] },

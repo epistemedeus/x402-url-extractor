@@ -99,6 +99,7 @@ const EXACT_ROUTES = new Map([
   ["/distribution/agent-discoverability-audit", { route: "/distribution/agent-discoverability-audit", kind: "paid" }],
   ["/commerce/payment-offer-preflight", { route: "/commerce/payment-offer-preflight", kind: "paid" }],
   ["/commerce/seller-integrity-audit", { route: "/commerce/seller-integrity-audit", kind: "paid" }],
+  ["/commerce/contract-qualified-search", { route: "/commerce/contract-qualified-search", kind: "paid" }],
   ["/commerce/settlement-proof", { route: "/commerce/settlement-proof", kind: "paid" }],
   ["/chain/transaction-receipt", { route: "/chain/transaction-receipt", kind: "paid" }],
   ["/chain/solana-transaction-receipt", { route: "/chain/solana-transaction-receipt", kind: "paid" }],

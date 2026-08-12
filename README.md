@@ -30,6 +30,7 @@ settlement proof, and AI-search readiness audits.
 - Agent discoverability audit: `GET /distribution/agent-discoverability-audit?origin=https://example.com&intent=extract+a+public+website+into+structured+JSON&route=/extract&runtimeUrl=https%3A%2F%2Fexample.com%2Fextract%3Furl%3Dhttps%253A%252F%252Fexample.org&surfaceAudit=true`
 - Payment offer preflight: `GET /commerce/payment-offer-preflight?url=https://example.com/paid-route`
 - Seller integrity audit: `GET /commerce/seller-integrity-audit?origin=https://seller.example&route=/paid-route&method=GET&requiredPaths=data.attributes`
+- Contract-qualified search: `GET /commerce/contract-qualified-search?query=service+domain+ownership+code+provenance&requiredPaths=data.sourceRepository`
   returns a bounded advisory OpenAPI repair plan for missing buyer-required
   paths without mutating seller files or inferring undeclared property types.
 - Base USDC settlement proof: `GET /commerce/settlement-proof?transactionHash=0x...&recipient=0x...&amountAtomic=5000`
@@ -333,10 +334,19 @@ JSON success schema with typed required fields. It never reads the paid target
 body, and the seller declaration remains advisory until a paid response passes
 the buyer's independently authorized output validator.
 
+Version 1.22.0 adds a paid contract-qualified machine-service search. A buyer
+supplies a capability intent and recursively required JSON response paths. The
+route searches Agent402 and the official MPP catalog, excludes owned supply and
+unresolved routes before audit, and returns bounded machine-buyable or
+contract-ready candidates plus controlled rejection codes. It uses no
+credential or wallet, sends no seller POST or target payment, reads no paid
+body, and returns only a query digest. The signed deployment statement now
+binds twenty-three exact HTTP method and path pairs.
+
 Version 1.17.0 closed the catalog-alias ambiguity with an optional signed
 deployment statement from `agent-payment-policy@0.9.0`. The short-lived JWS at
 `/.well-known/agent-payment-policy-service-deployment.json` binds the canonical
-`agents.samedaydesk.com` origin to all twenty-two paid HTTP method and path pairs
+`agents.samedaydesk.com` origin to the then-current paid HTTP method and path pairs
 and to the exact Base USDC x402 and MPP settlement identities. Each deployment
 origin carries its own route and settlement scope, so a future alias cannot
 inherit another origin's authority.
