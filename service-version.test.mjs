@@ -12,5 +12,6 @@ test("uses package.json as the single service version source", () => {
   assert.equal(packageLock.version, SERVICE_VERSION);
   assert.equal(packageLock.packages[""].version, SERVICE_VERSION);
   assert.equal(registryDescriptor.version, SERVICE_VERSION);
+  assert.ok(registryDescriptor.description.length <= 100);
   assert.match(SERVICE_VERSION, /^\d+\.\d+\.\d+$/);
 });
