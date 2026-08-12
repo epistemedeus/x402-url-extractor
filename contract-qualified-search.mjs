@@ -157,7 +157,7 @@ function normalizeMpp(payload, request, excludedOrigins) {
       const payment = endpoint?.payment;
       const amount = String(payment?.amount ?? "");
       const decimals = integer(payment?.decimals, NaN);
-      if (method !== "GET" || !SAFE_PATH.test(route || "") || UNRESOLVED_ROUTE.test(route) || !/^\d+$/.test(amount) || !(decimals >= 0 && decimals <= 30)) continue;
+      if (!new Set(["GET", "POST"]).has(method) || !SAFE_PATH.test(route || "") || UNRESOLVED_ROUTE.test(route) || !/^\d+$/.test(amount) || !(decimals >= 0 && decimals <= 30)) continue;
       const amountDisplayUnits = Number(amount) / (10 ** decimals);
       if (!(amountDisplayUnits > 0 && amountDisplayUnits <= request.maxPriceDisplayUnits)) continue;
       const score = semanticScore(request.query, service?.name, service?.description, endpoint?.description, ...(service?.tags || []), ...(service?.categories || []), route);
@@ -314,7 +314,7 @@ export async function contractQualifiedSearch(input, {
   return {
     ok: true,
     product: "samedaydesk-contract-qualified-search",
-    version: "1.0.0",
+    version: "1.1.0",
     checkedAt: now().toISOString(),
     decision: qualified.length ? "qualified_candidates_found" : "no_qualified_candidate",
     request: {
@@ -358,7 +358,7 @@ export function contractQualifiedSearchOutputSchema() {
   return {
     type: "object", additionalProperties: false,
     properties: {
-      ok: { type: "boolean", const: true }, product: { type: "string", const: "samedaydesk-contract-qualified-search" }, version: { type: "string", const: "1.0.0" }, checkedAt: { type: "string", format: "date-time" }, decision: { type: "string", enum: ["qualified_candidates_found", "no_qualified_candidate"] },
+      ok: { type: "boolean", const: true }, product: { type: "string", const: "samedaydesk-contract-qualified-search" }, version: { type: "string", const: "1.1.0" }, checkedAt: { type: "string", format: "date-time" }, decision: { type: "string", enum: ["qualified_candidates_found", "no_qualified_candidate"] },
       request: { type: "object", additionalProperties: false, properties: { queryDigest: { type: "string", pattern: "^sha256:[0-9a-f]{64}$" }, requiredPaths: { type: "array", minItems: 1, maxItems: 16, items: { type: "string" } }, maxPriceDisplayUnits: { type: "number" }, limit: { type: "integer" } }, required: ["queryDigest", "requiredPaths", "maxPriceDisplayUnits", "limit"] },
       sources: { type: "object", additionalProperties: false, properties: { agent402: source, mpp: source }, required: ["agent402", "mpp"] },
       qualified: { type: "array", maxItems: 8, items: { type: "object", additionalProperties: false, properties: { ...identity, description: { type: "string" }, decision: { type: "string", enum: ["machine_buyable", "contract_ready"] }, protocols: { type: "array", items: { type: "string" } }, runtimeChallengeVerified: { type: "boolean" }, guaranteedPaths: { type: "array", maxItems: 16, items: { type: "string" } } }, required: [...Object.keys(identity), "description", "decision", "protocols", "runtimeChallengeVerified", "guaranteedPaths"] } },
@@ -372,7 +372,7 @@ export function contractQualifiedSearchOutputSchema() {
 export const CONTRACT_QUALIFIED_SEARCH_EXAMPLE = Object.freeze({
   ok: true,
   product: "samedaydesk-contract-qualified-search",
-  version: "1.0.0",
+  version: "1.1.0",
   checkedAt: "2026-08-12T12:00:00.000Z",
   decision: "qualified_candidates_found",
   request: {

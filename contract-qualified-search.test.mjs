@@ -115,3 +115,42 @@ test("contract-ready POST candidates are labeled separately without seller POST"
   assert.equal(result.qualified[0].decision, "contract_ready");
   assert.equal(result.boundary.sellerPostRequestSent, false);
 });
+
+test("contract-ready MPP POST candidates are retained without sending a seller body", async () => {
+  const mppPost = { services: [{
+    status: "active",
+    name: "Graph analytics",
+    serviceUrl: "https://graph.example",
+    description: "onchain source repository analytics",
+    tags: ["source", "repository"],
+    docs: { apiReference: "https://graph.example/openapi.json" },
+    endpoints: [{
+      method: "POST",
+      path: "/graphql",
+      description: "source repository provenance query",
+      payment: { amount: "1000", decimals: 6, currency: "USD" },
+    }],
+  }] };
+  const audits = [];
+  const result = await contractQualifiedSearch({ ...request, limit: 1 }, {
+    fetchImpl: async (url, init) => {
+      assert.equal(String(url).includes("graph.example"), false);
+      return response(String(url).includes("agent402") ? { results: [] } : mppPost);
+    },
+    auditImpl: async (input) => {
+      audits.push(input);
+      return { ok: true, machineBuyable: false, routes: [{
+        protocols: ["mpp"],
+        runtimeChallengeVerified: false,
+        findings: [],
+        responseContract: { decision: "admissible", guaranteedPaths: ["data.sourceRepository"] },
+      }] };
+    },
+  });
+  assert.equal(result.qualified.length, 1);
+  assert.equal(result.qualified[0].source, "mpp");
+  assert.equal(result.qualified[0].method, "POST");
+  assert.equal(result.qualified[0].decision, "contract_ready");
+  assert.equal(result.boundary.sellerPostRequestSent, false);
+  assert.deepEqual(audits.map(({ method, route }) => ({ method, route })), [{ method: "POST", route: "/graphql" }]);
+});
