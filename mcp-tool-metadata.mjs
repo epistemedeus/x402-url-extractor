@@ -65,6 +65,10 @@ const TOOL_METADATA = Object.freeze({
     title: "Inspect Solana Transaction Receipt",
     description: "Inspect one finalized Solana mainnet transaction signature and return normalized success or failure status, slot, block time, fee, SPL-token owner deltas, and canonical USDC deltas. Supply recipient, amount, and optional payer when an exact settlement claim must be verified; use `transaction_receipt` for Base or Ethereum. Raw instructions and logs are excluded, and this tool performs no wallet, signing, broadcast, custody, or execution action.",
   },
+  wallet_policy_conformance: {
+    title: "Evaluate Agent Wallet Policy Conformance",
+    description: "Evaluate safe standardized allow, deny, and error observations from an agent wallet or delegated signer. Use this after running a bounded provider policy test matrix to distinguish explicit provider-policy enforcement from validation or generic provider failures and to test exact execution shape separately from operation allowlisting. Accepts no credentials, wallet IDs, signatures, transactions, or raw provider responses; it evaluates caller-supplied observations and does not run the provider tests itself.",
+  },
 });
 
 export function decorateMcpTool(tool) {

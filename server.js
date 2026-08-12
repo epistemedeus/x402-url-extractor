@@ -80,6 +80,12 @@ import {
   normalizeSolanaTransactionReceiptInput,
   solanaTransactionReceipt,
 } from "./solana-transaction-receipt.mjs";
+import {
+  WALLET_POLICY_CASES,
+  WalletPolicyConformanceError,
+  normalizeWalletPolicyConformanceInput,
+  walletPolicyConformance,
+} from "./wallet-policy-conformance.mjs";
 import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
 import { createCommerceTelemetry } from "./commerce-events.mjs";
@@ -182,6 +188,10 @@ const SETTLEMENT_PROOF_PRICE = process.env.SETTLEMENT_PROOF_PRICE || "$0.005";
 const TRANSACTION_RECEIPT_PRICE = process.env.TRANSACTION_RECEIPT_PRICE || "$0.002";
 // Finalized Solana transaction and SPL-token owner-delta evidence.
 const SOLANA_TRANSACTION_RECEIPT_PRICE = process.env.SOLANA_TRANSACTION_RECEIPT_PRICE || "$0.002";
+// Credential-free analysis of standardized delegated-signer policy observations.
+// Priced as a low-cost safety primitive while the first independent paid use is
+// still the economic acceptance gate.
+const WALLET_POLICY_CONFORMANCE_PRICE = process.env.WALLET_POLICY_CONFORMANCE_PRICE || "$0.01";
 
 // "$0.05" -> "50000" atomic USDC units (6 decimals) so the discovery docs
 // (/.well-known/x402, /openapi.json) always match the paywall price exactly.
@@ -458,7 +468,7 @@ app.get("/healthz", async (_req, res) => {
     ok: true,
     payTo: PAY_TO,
     network: NETWORK,
-    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE, "morpho-protection": MORPHO_PROTECTION_PRICE, "morpho-market-underwrite": MORPHO_MARKET_UNDERWRITE_PRICE, "morpho-preliquidation-replay": MORPHO_PRELIQUIDATION_REPLAY_PRICE, "opportunity-preflight": OPPORTUNITY_PREFLIGHT_PRICE, "agent-discoverability-audit": AGENT_DISCOVERABILITY_AUDIT_PRICE, "payment-offer-preflight": PAYMENT_OFFER_PREFLIGHT_PRICE, "settlement-proof": SETTLEMENT_PROOF_PRICE, "transaction-receipt": TRANSACTION_RECEIPT_PRICE, "solana-transaction-receipt": SOLANA_TRANSACTION_RECEIPT_PRICE },
+    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE, "morpho-protection": MORPHO_PROTECTION_PRICE, "morpho-market-underwrite": MORPHO_MARKET_UNDERWRITE_PRICE, "morpho-preliquidation-replay": MORPHO_PRELIQUIDATION_REPLAY_PRICE, "opportunity-preflight": OPPORTUNITY_PREFLIGHT_PRICE, "agent-discoverability-audit": AGENT_DISCOVERABILITY_AUDIT_PRICE, "payment-offer-preflight": PAYMENT_OFFER_PREFLIGHT_PRICE, "settlement-proof": SETTLEMENT_PROOF_PRICE, "transaction-receipt": TRANSACTION_RECEIPT_PRICE, "solana-transaction-receipt": SOLANA_TRANSACTION_RECEIPT_PRICE, "wallet-policy-conformance": WALLET_POLICY_CONFORMANCE_PRICE },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
     paymentProtocols: {
@@ -610,7 +620,65 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/commerce/settlement-proof`, amount: priceToAtomic(SETTLEMENT_PROOF_PRICE), description: "Verify one claimed canonical Base USDC settlement against the successful on-chain transaction receipt. Binds an exact transaction hash, recipient, atomic amount, and optional payer; returns a deterministic verified or not-verified result, block time, mismatch findings, and no private merchant-ledger data. Read-only and performs no wallet, signing, broadcast, custody, or execution action.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/chain/transaction-receipt`, amount: priceToAtomic(TRANSACTION_RECEIPT_PRICE), description: "Get a normalized Base or Ethereum transaction receipt from one hash: success or revert status, block time, gas used, effective gas price, total transaction fee, decoded ERC-20 Transfer events, and canonical USDC transfers. Returns explicit not-found or RPC-unavailable evidence, excludes raw logs, and performs no wallet, signing, broadcast, custody, or execution action.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/chain/solana-transaction-receipt`, amount: priceToAtomic(SOLANA_TRANSACTION_RECEIPT_PRICE), description: "Get a normalized finalized Solana transaction receipt from one signature: success or failure status, slot, block time, fee, SPL-token owner deltas, canonical USDC deltas, and optional exact mint, recipient, amount, and payer verification. Returns explicit not-found or RPC-unavailable evidence, excludes raw instructions and logs, and performs no wallet, signing, broadcast, custody, or execution action.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/security/wallet-policy-conformance`, method: "POST", amount: priceToAtomic(WALLET_POLICY_CONFORMANCE_PRICE), description: "Evaluate a credential-free standardized allow/deny matrix for an agent wallet or delegated signer. Distinguishes explicit provider policy denials from validation and generic provider failures, separates operation allowlisting from exact execution-shape control, and returns conformant, partial, or unsafe without an opaque score. Accepts no credentials, wallet IDs, signatures, transactions, or raw provider responses.", mimeType: "application/json" },
 ];
+
+const WALLET_POLICY_CASE_NAMES = Object.freeze(Object.keys(WALLET_POLICY_CASES));
+const walletPolicyObservationSchema = () => ({
+  type: "object",
+  properties: {
+    case: { type: "string", enum: WALLET_POLICY_CASE_NAMES },
+    actual: { type: "string", enum: ["allowed", "denied", "error"] },
+    denialClass: { type: "string", enum: ["none", "policy", "validation", "provider"] },
+    code: { type: "string", pattern: "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$" },
+  },
+  required: ["case", "actual", "denialClass"],
+  additionalProperties: false,
+});
+const walletPolicyConformanceInputSchema = () => ({
+  type: "object",
+  properties: {
+    profileId: { type: "string", minLength: 1, maxLength: 128 },
+    provider: { type: "string", minLength: 1, maxLength: 128 },
+    network: { type: "string", minLength: 1, maxLength: 128 },
+    protocol: { type: "string", minLength: 1, maxLength: 128 },
+    observations: { type: "array", minItems: 1, maxItems: 16, items: walletPolicyObservationSchema() },
+  },
+  required: ["profileId", "provider", "network", "protocol", "observations"],
+  additionalProperties: false,
+});
+const walletPolicyConformanceOutputSchema = () => ({
+  type: "object",
+  properties: {
+    schemaVersion: { type: "string", const: "samedaydesk.wallet-policy-conformance.v1" },
+    product: { type: "string", const: "samedaydesk-wallet-policy-conformance" },
+    evaluatedAt: { type: "string", format: "date-time" },
+    profile: { type: "object" },
+    decision: { type: "string", enum: ["conformant", "partial", "unsafe"] },
+    complete: { type: "boolean" },
+    exactShapePassed: { type: "boolean" },
+    results: { type: "array" },
+    providerNativeVerified: { type: "array", items: { type: "string" } },
+    providerNativeUnverified: { type: "array", items: { type: "string" } },
+    notEvaluatedByWalletPolicy: { type: "array", items: { type: "string" } },
+    missingRequiredCases: { type: "array", items: { type: "string" } },
+    unsafeCases: { type: "array", items: { type: "string" } },
+    inconclusiveCases: { type: "array", items: { type: "string" } },
+    boundary: { type: "object" },
+  },
+  required: ["schemaVersion", "product", "evaluatedAt", "profile", "decision", "complete", "exactShapePassed", "results", "providerNativeVerified", "providerNativeUnverified", "notEvaluatedByWalletPolicy", "missingRequiredCases", "unsafeCases", "inconclusiveCases", "boundary"],
+});
+const WALLET_POLICY_DISCOVERY_INPUT = Object.freeze({
+  profileId: "privy-solana-lab",
+  provider: "Privy",
+  network: "solana:mainnet",
+  protocol: "x402",
+  observations: Object.freeze([
+    Object.freeze({ case: "intended", actual: "allowed", denialClass: "none", code: "signed" }),
+    Object.freeze({ case: "wrong_operation", actual: "denied", denialClass: "policy", code: "policy_violation" }),
+    Object.freeze({ case: "duplicate_approved_action", actual: "allowed", denialClass: "none", code: "signed" }),
+  ]),
+});
 const circleGateway = buildCircleGatewayRoute({
   sellerAddress: PAY_TO,
   price: PAYMENT_OFFER_PREFLIGHT_PRICE,
@@ -653,6 +721,7 @@ const RESOURCE_DISCOVERY_METADATA = {
   "/commerce/settlement-proof": { operationId: "verifyBaseUsdcSettlement", tags: ["Blockchain"] },
   "/chain/transaction-receipt": { operationId: "getTransactionReceipt", tags: ["Blockchain"] },
   "/chain/solana-transaction-receipt": { operationId: "getSolanaTransactionReceipt", tags: ["Blockchain"] },
+  "/security/wallet-policy-conformance": { operationId: "evaluateWalletPolicyConformance", tags: ["Security"] },
 };
 
 const mppDualStack = createMppDualStack({
@@ -665,7 +734,7 @@ const mppDualStack = createMppDualStack({
     ...RESOURCES.map((resource) => ({
       amount: atomicUsdcToDisplay(resource.amount),
       description: resource.description,
-      method: "GET",
+      method: resource.method || "GET",
       path: new URL(resource.url).pathname,
     })),
     {
@@ -779,10 +848,11 @@ const machineActionCatalog = () => ({
   },
   actions: RESOURCES.map((resource) => {
     const route = new URL(resource.url).pathname;
-    const response = getDiscoveryOutputContract(`GET ${route}`);
+    const method = resource.method || "GET";
+    const response = getDiscoveryOutputContract(`${method} ${route}`);
     return {
       name: route.replace(/^\//, "").replaceAll("/", "_"),
-      method: "GET",
+      method,
       route,
       url: resource.url,
       description: resource.description,
@@ -933,6 +1003,7 @@ ${line("/schemaforge", SCHEMAFORGE_PRICE, "business site -> paste-ready JSON-LD 
 ${line("/deep-audit", DEEP_AUDIT_PRICE, "domain -> bundled AI-search-readiness audit with firmographics, technical signals, structured-data gaps, and a paste-ready fix list.")}
 ${line("/distribution/agent-discoverability-audit", AGENT_DISCOVERABILITY_AUDIT_PRICE, "public HTTPS service origin plus a brand-blind capability intent -> point-in-time rank, dependency-labeled source coverage, expected-route presence, and top competing results across Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, the official MPP catalog, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Optional surfaceAudit checks the target's public Agent Card, ERC-8004 registration document, and action catalog. Catalog queries use no credentials or payments.")}
 ${line("/commerce/payment-offer-preflight", PAYMENT_OFFER_PREFLIGHT_PRICE, "exact public HTTPS GET URL -> compare and normalize x402 and MPP payment challenges and terms before buyer authorization; check route and realm binding, expiry, and economic parity. Uses no target credential, signature, payment, redirect, or response body.")}
+${line("/security/wallet-policy-conformance", WALLET_POLICY_CONFORMANCE_PRICE, "POST standardized wallet-policy observations -> explicit conformant, partial, or unsafe decision. Distinguishes provider policy denial from validation and generic provider failure, and tests exact execution shape separately from operation allowlisting. Accepts no wallet credentials or raw provider payloads.")}
 ${circleGateway.enabled ? line(CIRCLE_GATEWAY_PATH, PAYMENT_OFFER_PREFLIGHT_PRICE, "the same payment-offer preflight product through Circle Gateway x402 Nanopayments, with gasless buyer authorization and batched USDC settlement.") : ""}
 
 ## How to pay
@@ -1089,6 +1160,22 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       "/commerce/settlement-proof": { get: { summary: RESOURCES[14].description, parameters: [{ name: "transactionHash", in: "query", required: true, description: "Base mainnet transaction hash whose canonical USDC Transfer logs should be checked.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" } }, { name: "recipient", in: "query", required: true, description: "Expected USDC recipient.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" } }, { name: "amountAtomic", in: "query", required: true, description: "Expected positive USDC amount in six-decimal atomic units.", schema: { type: "string", pattern: "^[1-9][0-9]{0,20}$", maxLength: 21 } }, { name: "payer", in: "query", required: false, description: "Optional expected USDC payer.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" } }], responses: { "200": { description: "deterministic canonical Base USDC settlement proof or mismatch findings" }, "400": { description: "invalid settlement claim, charged nothing" }, "402": { description: `payment required (x402 or MPP, ${SETTLEMENT_PROOF_PRICE} USDC base)` } } } },
       "/chain/transaction-receipt": { get: { summary: RESOURCES[15].description, parameters: [{ name: "transactionHash", in: "query", required: true, description: "Mined Base or Ethereum transaction hash whose normalized receipt should be returned.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" } }, { name: "network", in: "query", required: false, description: "Receipt network. Defaults to Base mainnet.", schema: { type: "string", enum: ["base", "ethereum"], default: "base" } }], responses: { "200": { description: "normalized transaction receipt with fee and decoded transfer evidence" }, "400": { description: "invalid hash or unsupported network, charged nothing" }, "402": { description: `payment required (x402 or MPP, ${TRANSACTION_RECEIPT_PRICE} USDC base)` } } } },
       "/chain/solana-transaction-receipt": { get: { summary: RESOURCES[16].description, parameters: [{ name: "signature", in: "query", required: true, description: "Finalized Solana mainnet transaction signature.", schema: { type: "string", pattern: "^[1-9A-HJ-NP-Za-km-z]{80,90}$" } }, { name: "mint", in: "query", required: false, description: "SPL-token mint to verify. Defaults to canonical Solana USDC.", schema: { type: "string", pattern: "^[1-9A-HJ-NP-Za-km-z]{32,44}$", default: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" } }, { name: "recipient", in: "query", required: false, description: "Optional expected token recipient owner.", schema: { type: "string", pattern: "^[1-9A-HJ-NP-Za-km-z]{32,44}$" } }, { name: "amountAtomic", in: "query", required: false, description: "Optional expected positive token amount in atomic units; requires recipient.", schema: { type: "string", pattern: "^[1-9][0-9]{0,19}$" } }, { name: "payer", in: "query", required: false, description: "Optional expected token payer owner; requires recipient and amountAtomic.", schema: { type: "string", pattern: "^[1-9A-HJ-NP-Za-km-z]{32,44}$" } }], responses: { "200": { description: "normalized finalized Solana receipt and optional exact SPL-token settlement verification" }, "400": { description: "invalid signature or settlement claim, charged nothing" }, "402": { description: `payment required (x402 or MPP, ${SOLANA_TRANSACTION_RECEIPT_PRICE} USDC base)` } } } },
+      "/security/wallet-policy-conformance": {
+        post: {
+          operationId: "evaluateWalletPolicyConformance",
+          tags: ["Security"],
+          summary: RESOURCES[17].description,
+          requestBody: { required: true, content: { "application/json": { schema: walletPolicyConformanceInputSchema() } } },
+          responses: {
+            "200": { description: "credential-free wallet-policy conformance evidence" },
+            "400": { description: "invalid standardized observation matrix, charged nothing" },
+            "402": { description: `payment required (x402 or MPP, ${WALLET_POLICY_CONFORMANCE_PRICE} USDC base)` },
+          },
+          "x-payment-info": profile === "mpp"
+            ? mppPaymentInfoFor(RESOURCES[17])
+            : agentCashPaymentInfoFor(RESOURCES[17]),
+        },
+      },
       "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "structured data" }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
       "/read": { get: { summary: RESOURCES[1].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "markdown" }, "402": { description: `payment required (x402, ${READ_PRICE} USDC base)` } } } },
       "/scan": { get: { summary: RESOURCES[2].description, parameters: [{ name: "repo", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "security risk report" }, "402": { description: `payment required (x402, ${SCAN_PRICE} USDC base)` } } } },
@@ -2397,6 +2484,24 @@ const x402Paywall = paymentMiddleware(
           }),
         },
       },
+      "POST /security/wallet-policy-conformance": {
+        ...bazaarResourceMetadataFor("/security/wallet-policy-conformance"),
+        accepts: [{ scheme: "exact", price: WALLET_POLICY_CONFORMANCE_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description: RESOURCES[17].description,
+        mimeType: "application/json",
+        extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
+          ...declareDiscoveryContract({
+            routeKey: "POST /security/wallet-policy-conformance",
+            method: "POST",
+            bodyType: "json",
+            input: WALLET_POLICY_DISCOVERY_INPUT,
+            inputSchema: walletPolicyConformanceInputSchema(),
+            output: { example: walletPolicyConformance(WALLET_POLICY_DISCOVERY_INPUT) },
+            outputSchema: walletPolicyConformanceOutputSchema(),
+          }),
+        },
+      },
     },
     resourceServer
   );
@@ -2447,6 +2552,28 @@ if (circleGateway.enabled) {
     return servePaymentOfferPreflight(req, res);
   });
 }
+
+// Reject malformed or secret-bearing matrices before either payment rail runs.
+// The normalized value is retained only in request-local memory for the paid
+// handler and is never written to telemetry or a credential store.
+app.post("/security/wallet-policy-conformance", (req, res, next) => {
+  try {
+    res.locals.walletPolicyConformanceInput = normalizeWalletPolicyConformanceInput(req.body);
+    return next();
+  } catch (error) {
+    const message = error instanceof WalletPolicyConformanceError
+      ? error.message
+      : "invalid wallet-policy conformance request";
+    res.set("Cache-Control", "no-store");
+    return res.status(400).json({
+      ok: false,
+      product: "samedaydesk-wallet-policy-conformance",
+      error: message,
+      charged: false,
+      boundary: { credentialsAccepted: false, walletAccessed: false, transactionBroadcast: false },
+    });
+  }
+});
 
 app.use(mppDualStack.middleware);
 app.use((req, res, next) => {
@@ -2664,6 +2791,10 @@ app.post("/commerce/payment-offer-preflight", servePaymentOfferPreflight);
 app.get("/commerce/settlement-proof", serveSettlementProof);
 app.get("/chain/transaction-receipt", serveTransactionReceipt);
 app.get("/chain/solana-transaction-receipt", serveSolanaTransactionReceipt);
+app.post("/security/wallet-policy-conformance", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  return res.json(walletPolicyConformance(res.locals.walletPolicyConformanceInput));
+});
 
 // One root, negotiated by audience. Browser navigation gets a fast human map;
 // API clients, curl, and agents retain the stable JSON descriptor.
@@ -2731,6 +2862,7 @@ app.get("/", (req, res) => {
       "GET /commerce/settlement-proof?transactionHash=&recipient=&amountAtomic=&payer=": `${SETTLEMENT_PROOF_PRICE} - verify one claimed canonical Base USDC transfer against the successful on-chain receipt, with exact recipient, amount, and optional payer binding.`,
       "GET /chain/transaction-receipt?transactionHash=&network=": `${TRANSACTION_RECEIPT_PRICE} - normalized Base or Ethereum receipt status, block time, gas fee, decoded ERC-20 transfers, and canonical USDC transfer evidence.`,
       "GET /chain/solana-transaction-receipt?signature=&mint=&recipient=&amountAtomic=&payer=": `${SOLANA_TRANSACTION_RECEIPT_PRICE} - normalized finalized Solana receipt, SPL-token owner deltas, canonical USDC deltas, and optional exact settlement verification.`,
+      "POST /security/wallet-policy-conformance": `${WALLET_POLICY_CONFORMANCE_PRICE} - evaluate safe standardized delegated-signer allow/deny observations, distinguish provider policy from validation failure, and test exact execution shape without accepting credentials.`,
       ...(circleGateway.enabled ? {
         [`GET ${CIRCLE_GATEWAY_PATH}?url=`]: `${PAYMENT_OFFER_PREFLIGHT_PRICE} - the same preflight through Circle Gateway gasless batched USDC Nanopayments.`,
       } : {}),
@@ -2790,6 +2922,7 @@ import("./mcp-server.mjs")
         { name: "settlement_proof", description: RESOURCES[14].description, price: SETTLEMENT_PROOF_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Base mainnet transaction hash containing the claimed canonical USDC transfer."), recipient: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Expected canonical Base USDC recipient."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,20}$/).describe("Expected positive USDC amount in six-decimal atomic units."), payer: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional expected canonical Base USDC payer.") }, run: (a) => settlementProof(a), tags: ["payments", "x402", "settlement", "reconciliation", "base-usdc"] },
         { name: "transaction_receipt", description: RESOURCES[15].description, price: TRANSACTION_RECEIPT_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Mined Base or Ethereum transaction hash whose normalized receipt should be returned."), network: z.enum(["base", "ethereum"]).default("base").describe("Receipt network. Defaults to Base mainnet.") }, run: (a) => transactionReceipt(a), tags: ["blockchain", "receipt", "gas", "erc20", "usdc"] },
         { name: "solana_transaction_receipt", description: RESOURCES[16].description, price: SOLANA_TRANSACTION_RECEIPT_PRICE, inputSchema: { signature: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/).describe("Finalized Solana mainnet transaction signature."), mint: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional SPL-token mint; defaults to canonical Solana USDC."), recipient: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional expected token recipient owner."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,19}$/).optional().describe("Optional expected positive token amount in atomic units; requires recipient."), payer: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional expected token payer owner; requires recipient and amountAtomic.") }, run: (a) => solanaTransactionReceipt(a), tags: ["blockchain", "solana", "receipt", "spl-token", "usdc"] },
+        { name: "wallet_policy_conformance", description: RESOURCES[17].description, price: WALLET_POLICY_CONFORMANCE_PRICE, inputSchema: { profileId: z.string().min(1).max(128).describe("Caller-defined policy profile identifier with no credential or wallet secret."), provider: z.string().min(1).max(128).describe("Wallet or delegated-signer provider name."), network: z.string().min(1).max(128).describe("Network identifier used by the tested profile."), protocol: z.string().min(1).max(128).describe("Payment or execution protocol bound by the tested profile."), observations: z.array(z.object({ case: z.enum(WALLET_POLICY_CASE_NAMES).describe("Standardized mutation or control case."), actual: z.enum(["allowed", "denied", "error"]).describe("Observed high-level outcome."), denialClass: z.enum(["none", "policy", "validation", "provider"]).describe("Where the denial or error occurred; only policy earns provider-native coverage."), code: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$/).optional().describe("Optional safe provider code only, never a raw message or payload.") }).strict()).min(1).max(16).describe("Unique standardized observations. Raw provider responses, signatures, transactions, credentials, and wallet IDs are rejected.") }, run: (a) => walletPolicyConformance(a), tags: ["security", "wallet-policy", "delegated-signer", "conformance", "execution-shape"] },
       ].map(decorateMcpTool),
     })
   )

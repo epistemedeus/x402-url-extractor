@@ -10,7 +10,7 @@ import {
 test("declares one valid provider identity and route-specific tags for all paid routes", () => {
   const validation = validateBazaarResourceMetadata();
   assert.deepEqual(validation, { valid: true, errors: [] });
-  assert.equal(Object.keys(BAZAAR_RESOURCE_METADATA).length, 17);
+  assert.equal(Object.keys(BAZAAR_RESOURCE_METADATA).length, 18);
   assert.deepEqual(new Set(Object.values(BAZAAR_RESOURCE_METADATA).map((entry) => entry.serviceName)), new Set(["SameDayDesk"]));
   assert.deepEqual(bazaarResourceMetadataFor("/extract"), {
     serviceName: "SameDayDesk",

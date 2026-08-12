@@ -2,12 +2,12 @@
 
 [![Smithery listing](https://smithery.ai/badge/epistemedeus/x402-data-gateway)](https://smithery.ai/servers/epistemedeus/x402-data-gateway)
 
-Sixteen pay-per-call tools for deterministic agent-work opportunity preflight,
+Eighteen pay-per-call tools for deterministic agent-work opportunity preflight,
 machine-service discoverability, payment-offer preflight, Morpho borrower and
 market decisions, protection plans, URL extraction, Markdown reading,
 repository security scans, company and wallet enrichment, structured data
-generation, transaction receipt evidence, settlement proof, and AI-search
-readiness audits.
+generation, transaction receipt evidence, delegated-signer policy conformance,
+settlement proof, and AI-search readiness audits.
 
 - Product page: https://samedaydesk.com/x402
 - Smithery: https://smithery.ai/servers/epistemedeus/x402-data-gateway
@@ -31,6 +31,7 @@ readiness audits.
 - Payment offer preflight: `GET /commerce/payment-offer-preflight?url=https://example.com/paid-route`
 - Base USDC settlement proof: `GET /commerce/settlement-proof?transactionHash=0x...&recipient=0x...&amountAtomic=5000`
 - Base or Ethereum transaction receipt: `GET /chain/transaction-receipt?transactionHash=0x...&network=base`
+- Wallet policy conformance: `POST /security/wallet-policy-conformance`
 - Material-change alert probe: https://agents.samedaydesk.com/alerts
 - Agoragentic seller callback: `POST /integrations/agoragentic/ai-readiness-audit`
 - the402 signed fulfillment webhook: `POST /integrations/the402/webhook`
@@ -198,6 +199,16 @@ execution-shape authorization plus fourteen-dimension control-coverage schema
 v2. This follows first-person Tempo and Solana evidence that provider-native
 method and instruction allow rules can admit duplicated approved actions. No
 merchant route, price, handler, payment requirement, or settlement changes.
+
+Version 1.14.0 turns the cross-chain delegated-signer failure we encountered
+into a credential-free paid product. `POST /security/wallet-policy-conformance`
+accepts only a bounded standardized allow, deny, and error matrix. It separates
+operation allowlisting from exact execution-shape control, credits only an
+explicit provider policy denial as provider-native enforcement, and returns
+`conformant`, `partial`, or `unsafe` with no opaque score. Invalid or
+secret-bearing shapes are rejected before payment. The evaluator accepts no
+wallet credential, signature, transaction body, wallet access, or broadcast
+authority and does not claim to have executed the caller's provider tests.
 
 Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
 before startup. Six newer routes previously settled successfully while Coinbase
