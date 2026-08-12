@@ -130,6 +130,7 @@ import { createCommerceSettlementReconciler } from "./commerce-settlement-reconc
 import { createIdempotencyReplay } from "./idempotency-replay.mjs";
 import {
   PURCHASE_EVIDENCE_MANIFEST_PATH,
+  PURCHASE_EVIDENCE_RELATION,
   buildPurchaseEvidenceManifest,
   purchaseEvidenceHeaders,
 } from "./purchase-evidence-manifest.mjs";
@@ -1215,6 +1216,17 @@ app.get(PURCHASE_EVIDENCE_MANIFEST_PATH, (_req, res) => {
   res.set("Cache-Control", "public, max-age=300, must-revalidate");
   res.set("X-Agent-Payment-Evidence-Digest", purchaseEvidenceManifest.manifestDigest);
   return res.json(purchaseEvidenceManifest);
+});
+
+app.get("/rels/agent-payment-evidence", (_req, res) => {
+  res.set("Cache-Control", "public, max-age=86400, immutable");
+  return res.json({
+    relation: PURCHASE_EVIDENCE_RELATION,
+    schemaVersion: "samedaydesk.agent-payment-evidence-relation.v0",
+    description: "Identifies a seller-declared exact-operation purchase-evidence manifest used as an input to a separate buyer authorization policy.",
+    manifest: `${PUBLIC_URL}${PURCHASE_EVIDENCE_MANIFEST_PATH}`,
+    boundary: "The linked manifest is not permission to spend and does not replace live payment, output, receipt, or settlement verification.",
+  });
 });
 
 app.get("/schemas/platform-health-card-v0.json", (_req, res) => {

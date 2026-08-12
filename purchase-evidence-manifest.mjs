@@ -4,6 +4,7 @@ import { evaluateResponseContract, SCHEMAS } from "agent-payment-policy";
 
 export const PURCHASE_EVIDENCE_MANIFEST_PATH = "/.well-known/agent-payment-evidence.json";
 export const PURCHASE_EVIDENCE_MANIFEST_VERSION = "0.1.0";
+export const PURCHASE_EVIDENCE_RELATION = "https://agents.samedaydesk.com/rels/agent-payment-evidence";
 
 function routeKey(method, path) {
   return `${String(method || "GET").toUpperCase()} ${String(path || "")}`;
@@ -121,7 +122,7 @@ export function buildPurchaseEvidenceManifest({
 
 export function purchaseEvidenceLinkHeader({ origin, path = PURCHASE_EVIDENCE_MANIFEST_PATH } = {}) {
   const target = new URL(relativePath(path, "purchase evidence manifest"), new URL(origin).origin).toString();
-  return `<${target}>; rel="describedby"; type="application/json"`;
+  return `<${target}>; rel="describedby ${PURCHASE_EVIDENCE_RELATION}"; type="application/json"`;
 }
 
 export function purchaseEvidenceHeaders({ origin, paidRoutes, path = PURCHASE_EVIDENCE_MANIFEST_PATH } = {}) {

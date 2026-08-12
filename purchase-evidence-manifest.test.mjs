@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   PURCHASE_EVIDENCE_MANIFEST_PATH,
+  PURCHASE_EVIDENCE_RELATION,
   buildPurchaseEvidenceManifest,
   purchaseEvidenceHeaders,
   purchaseEvidenceLinkHeader,
@@ -79,7 +80,7 @@ test("rejects missing response contracts, undeclared effects, and cross-origin r
 test("advertises the manifest through one standard describedby link on configured paid or discovery routes", () => {
   assert.equal(
     purchaseEvidenceLinkHeader({ origin: "https://agents.samedaydesk.com" }),
-    '<https://agents.samedaydesk.com/.well-known/agent-payment-evidence.json>; rel="describedby"; type="application/json"',
+    `<https://agents.samedaydesk.com/.well-known/agent-payment-evidence.json>; rel="describedby ${PURCHASE_EVIDENCE_RELATION}"; type="application/json"`,
   );
   const middleware = purchaseEvidenceHeaders({
     origin: "https://agents.samedaydesk.com",
