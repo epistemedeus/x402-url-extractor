@@ -1,5 +1,14 @@
 # SameDayDesk x402 and MPP Data Gateway
 
+Every paid HTTP response advertises
+`/.well-known/agent-payment-evidence.json` through the standard HTTP
+`describedby` link relation. The bounded free manifest joins each exact method
+and route to its seller-declared read-only effect, recursively guaranteed JSON
+paths, response-schema digest, exact replay binding, receipt behavior, and the
+existing signed deployment statement. It does not change x402 or MPP terms and
+is not authorization to spend; buyers must still verify the live challenge,
+paid output, receipt, and settlement.
+
 [![Smithery listing](https://smithery.ai/badge/epistemedeus/x402-data-gateway)](https://smithery.ai/servers/epistemedeus/x402-data-gateway)
 
 Twenty pay-per-call tools for deterministic agent-work opportunity preflight,

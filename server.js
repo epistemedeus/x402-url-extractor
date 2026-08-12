@@ -129,7 +129,13 @@ import { createCommerceTelemetry } from "./commerce-events.mjs";
 import { createCommerceSettlementReconciler } from "./commerce-settlement-reconciler.mjs";
 import { createIdempotencyReplay } from "./idempotency-replay.mjs";
 import {
+  PURCHASE_EVIDENCE_MANIFEST_PATH,
+  buildPurchaseEvidenceManifest,
+  purchaseEvidenceHeaders,
+} from "./purchase-evidence-manifest.mjs";
+import {
   PAID_ACTION_EFFECT_PROFILE_PATH,
+  READ_ONLY_PAID_POST_OPERATIONS,
   attachPaidActionEffectContracts,
   buildPaidActionEffectProfile,
   paidActionEffectHeaders,
@@ -180,6 +186,7 @@ import {
 import { z } from "zod";
 import { SERVICE_VERSION } from "./service-version.mjs";
 import { loadServiceDeploymentPublication } from "./service-deployment-publication.mjs";
+import { SERVICE_DEPLOYMENT_ROUTES } from "./service-deployment-routes.mjs";
 import { validateOpenApiOperationIds } from "./openapi-operation-contract.mjs";
 
 // ---------------------------------------------------------------------------
@@ -378,6 +385,7 @@ app.use(paidActionEffectHeaders);
 app.use(commerceTelemetry.middleware);
 const idempotencyReplay = createIdempotencyReplay();
 let commerceSettlementReconciler;
+let purchaseEvidenceManifest;
 
 // A pay.sh Solana gateway injects the existing internal token only after its
 // own payment gate succeeds. The exact public path then reaches the same
@@ -758,6 +766,8 @@ if (!bazaarResourceMetadataValidation.valid) {
   throw new Error(`Invalid Bazaar resource metadata: ${bazaarResourceMetadataValidation.errors.join("; ")}`);
 }
 const paidResourceRoutes = new Set(RESOURCES.map((resource) => new URL(resource.url).pathname));
+const evidenceLinkedRoutes = new Set([...paidResourceRoutes, CIRCLE_GATEWAY_PATH]);
+app.use(purchaseEvidenceHeaders({ origin: PUBLIC_URL, paidRoutes: evidenceLinkedRoutes }));
 const metadataRoutes = new Set(Object.keys(BAZAAR_RESOURCE_METADATA));
 const missingMetadataRoutes = [...paidResourceRoutes].filter((route) => !metadataRoutes.has(route));
 const unknownMetadataRoutes = [...metadataRoutes].filter((route) => !paidResourceRoutes.has(route));
@@ -939,6 +949,7 @@ const machineActionCatalog = () => ({
     a2aAgentCard: `${PUBLIC_URL}/.well-known/agent-card.json`,
     glamaVerification: `${PUBLIC_URL}/.well-known/glama.json`,
     solanaAgentRegistration: `${PUBLIC_URL}/.well-known/agent-registration.json`,
+    purchaseEvidenceManifest: `${PUBLIC_URL}${PURCHASE_EVIDENCE_MANIFEST_PATH}`,
   },
 });
 
@@ -1177,6 +1188,13 @@ app.get(PAID_ACTION_EFFECT_PROFILE_PATH, (_req, res) => {
   return res.json(buildPaidActionEffectProfile({ origin: PUBLIC_URL, serviceVersion: SERVICE_VERSION }));
 });
 
+app.get(PURCHASE_EVIDENCE_MANIFEST_PATH, (_req, res) => {
+  if (!purchaseEvidenceManifest) return res.status(503).json({ error: "purchase_evidence_not_ready" });
+  res.set("Cache-Control", "public, max-age=300, must-revalidate");
+  res.set("X-Agent-Payment-Evidence-Digest", purchaseEvidenceManifest.manifestDigest);
+  return res.json(purchaseEvidenceManifest);
+});
+
 app.get("/schemas/platform-health-card-v0.json", (_req, res) => {
   setRadarCache(res);
   return res.json(PLATFORM_HEALTH_SCHEMA);
@@ -1224,6 +1242,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       "/v0/cards.json": { get: { summary: "Free incident-backed platform health cards. Categories are not calibrated scores.", responses: { "200": { description: "SameDayDesk platform health index v0" } } } },
       "/v0/commerce-demand.json": { get: { summary: "Privacy-safe aggregate external machine-commerce observations.", parameters: [{ name: "days", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 365, default: 90 } }], responses: { "200": { description: "Aggregate discovery, challenge, paid-success, unmatched-request, and high-precision semantic-candidate counts. Known internal and crawler traffic is excluded; unidentified automation can remain." } } } },
       [PAID_ACTION_EFFECT_PROFILE_PATH]: { get: { summary: "Experimental read-only effect and retry contract for SameDayDesk paid POST operations.", responses: { "200": { description: "Exact method-route effect declarations and payment-response replay boundary" } } } },
+      [PURCHASE_EVIDENCE_MANIFEST_PATH]: { get: { summary: "Seller-declared purchase-authorization evidence for every exact paid operation.", responses: { "200": { description: "Bounded operation-level effect, response guarantee, replay, receipt, and signed-deployment pointers" } } } },
       "/.well-known/agent-card.json": { get: { summary: "A2A v1.0 agent card for the free machine-commerce storefront.", responses: { "200": { description: "A2A AgentCard" } } } },
       "/.well-known/glama.json": { get: { summary: "Project-owned Glama connector maintainer verification.", responses: { "200": { description: "Glama connector verification" } } } },
       "/.well-known/x402-verification.json": { get: { summary: "Public server-ownership proof for the x402.jobs resource registry.", responses: { "200": { description: "x402.jobs ownership verification" } } } },
@@ -1462,6 +1481,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     "/v0/cards.json": { operationId: "listPlatformHealthCards", tags: ["Settlement Radar"] },
     "/v0/commerce-demand.json": { operationId: "getCommerceDemand", tags: ["Settlement Radar"] },
     [PAID_ACTION_EFFECT_PROFILE_PATH]: { operationId: "getPaidActionEffectProfile", tags: ["Agent Operations"] },
+    [PURCHASE_EVIDENCE_MANIFEST_PATH]: { operationId: "getAgentPaymentEvidence", tags: ["Agent Operations"] },
     "/.well-known/agent-card.json": { operationId: "getA2aAgentCard", tags: ["A2A"] },
     "/.well-known/agent-registration.json": { operationId: "getSolanaAgentRegistration", tags: ["A2A"] },
     "/.well-known/glama.json": { operationId: "getGlamaVerification", tags: ["Distribution"] },
@@ -2841,6 +2861,29 @@ const x402Paywall = paymentMiddleware(
     resourceServer
   );
 
+const evidenceResources = [];
+for (const { method, path } of SERVICE_DEPLOYMENT_ROUTES) {
+  const resource = RESOURCES.find((entry) => (entry.method || "GET") === method && new URL(entry.url).pathname === path)
+    || RESOURCES.find((entry) => new URL(entry.url).pathname === path);
+  if (!resource) throw new Error(`Missing purchase evidence resource for ${method} ${path}`);
+  evidenceResources.push({ ...resource, method, url: `${PUBLIC_URL}${path}` });
+}
+purchaseEvidenceManifest = buildPurchaseEvidenceManifest({
+  origin: PUBLIC_URL,
+  serviceVersion: SERVICE_VERSION,
+  resources: evidenceResources,
+  responseContractFor: getDiscoveryOutputContract,
+  readOnlyPaidPosts: READ_ONLY_PAID_POST_OPERATIONS,
+  serviceDeployment: {
+    statement: serviceDeploymentPublication.paths.statement,
+    publicKey: serviceDeploymentPublication.paths.publicKey,
+    statementId: serviceDeploymentPublication.statementId,
+    expiresAt: serviceDeploymentPublication.expiresAt,
+    paidActionEffects: PAID_ACTION_EFFECT_PROFILE_PATH,
+  },
+  replay: idempotencyReplay.publicProfile,
+});
+
 const servePaymentOfferPreflight = async (req, res) => {
   try {
     res.set("Cache-Control", "no-store");
@@ -3208,6 +3251,7 @@ app.get("/", (req, res) => {
       solanaAgentRegistration: "/.well-known/agent-registration.json",
       serviceDeploymentStatement: serviceDeploymentPublication.paths.statement,
       serviceDeploymentPublicKey: serviceDeploymentPublication.paths.publicKey,
+      purchaseEvidenceManifest: PURCHASE_EVIDENCE_MANIFEST_PATH,
       aggregateDemand: "/v0/commerce-demand.json",
       declaredAgentSourceHeader: {
         header: "X-SameDayDesk-Agent-Source",

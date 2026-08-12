@@ -280,6 +280,19 @@ export function createIdempotencyReplay({
     }));
   }
 
+  const publicProfile = Object.freeze({
+    ttlSeconds: Math.floor(ttlMs / 1_000),
+    mismatchStatus: 409,
+    requestBinding: Object.freeze([
+      "method",
+      "canonical_url",
+      "exact_raw_body_sha256",
+      "payer",
+      "payment_terms",
+      "exact_settled_credential",
+    ]),
+  });
+
   async function middleware(req, res, next) {
     if (!routes.has(req.path)) return next();
     const binding = bindingFor({
@@ -360,6 +373,7 @@ export function createIdempotencyReplay({
     lookup,
     store,
     storageStatus,
+    publicProfile,
     flush: () => queue,
     storePath,
   };
