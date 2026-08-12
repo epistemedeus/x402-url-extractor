@@ -334,6 +334,10 @@ JSON success schema with typed required fields. It never reads the paid target
 body, and the seller declaration remains advisory until a paid response passes
 the buyer's independently authorized output validator.
 
+Version 1.22.3 turns seller declarations that exceed the bounded audit byte
+ceiling into the specific `openapi_too_large` gap instead of a generic bounded
+audit failure. The ceiling remains unchanged and no schema is inferred.
+
 Version 1.22.2 excludes both the canonical SameDayDesk origin and its known
 former Railway catalog alias from contract-qualified search. Agent402 ranked
 both records for the first live buyer-language query, proving that excluding

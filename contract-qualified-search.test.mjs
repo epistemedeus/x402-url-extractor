@@ -97,6 +97,15 @@ test("keeps one directory outage non-fatal and never audits template routes", as
   assert.equal(result.rejected[0].reason, "exact_route_not_declared");
 });
 
+test("turns an oversized seller declaration into a specific controlled gap", async () => {
+  const result = await contractQualifiedSearch({ ...request, limit: 1 }, {
+    fetchImpl: async (url) => response(String(url).includes("agent402") ? agent402 : { services: [] }),
+    auditImpl: async () => { throw new Error("response exceeded byte limit"); },
+  });
+  assert.equal(result.rejected[0].reason, "openapi_too_large");
+  assert.equal(result.boundary.targetPaymentSent, false);
+});
+
 test("contract-ready POST candidates are labeled separately without seller POST", async () => {
   const postPayload = { results: [{ seller: "https://post.example", sellerName: "Post", url: "https://post.example/analyze", route: "/analyze", method: "POST", priceUsd: 0.01, payable: "x402", description: "source repository provenance", score: 20 }] };
   const result = await contractQualifiedSearch({ ...request, limit: 1 }, {

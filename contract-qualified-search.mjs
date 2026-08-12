@@ -194,6 +194,7 @@ function safeFailure(error) {
   const message = String(error?.message || error);
   if (/not declared/.test(message)) return "exact_route_not_declared";
   if (/document returned HTTP|document did not return JSON/.test(message)) return "openapi_unavailable";
+  if (/response exceeded byte limit|document exceeds.*byte/i.test(message)) return "openapi_too_large";
   if (/route count exceeds/.test(message)) return "route_ceiling_exceeded";
   return "bounded_audit_failure";
 }
