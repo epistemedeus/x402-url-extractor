@@ -217,6 +217,15 @@ schema, output schema, method, protocols, and atomic price at the free canonical
 decision logic, payment gates, and settlement remain unchanged. Machine clients
 can now construct and validate the matrix without decoding a payment challenge.
 
+Version 1.14.2 moves the taxonomy, strict validator, offline evaluator, and JSON
+Schemas into public `agent-payment-policy@0.5.0`; the hosted product now imports
+that package instead of maintaining a private duplicate. The public package
+also provides `wallet-policy-init`, `wallet-policy-check`, and
+`wallet-policy-schema` CLI commands. An unrun intended case is correctly
+`partial`, while a proven blocked intended action or an allowed mutation remains
+`unsafe`. The hosted route, 0.01-USDC price, payment terms, and credential-free
+boundary remain unchanged.
+
 Version 1.11.15 validates every Bazaar declaration against its own JSON Schema
 before startup. Six newer routes previously settled successfully while Coinbase
 rejected their discovery metadata because their output examples omitted fields
