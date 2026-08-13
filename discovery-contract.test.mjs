@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { declareDiscoveryContract, getDiscoveryOutputContract } from "./discovery-contract.mjs";
+import {
+  declareDiscoveryContract,
+  getDiscoveryOutputContract,
+  getDiscoveryRequestContract,
+  projectDiscoveryRequest,
+} from "./discovery-contract.mjs";
 
 test("places the authored output schema in the Bazaar v2 response contract", () => {
   const extension = declareDiscoveryContract({
@@ -40,7 +45,32 @@ test("places the authored output schema in the Bazaar v2 response contract", () 
       required: ["ok", "title"],
     },
   });
+  const request = getDiscoveryRequestContract("GET /test-contract");
+  assert.deepEqual(request.example, { type: "http", method: "GET", queryParams: { url: "https://example.com" } });
+  assert.ok(request.schema.properties.method.enum.includes("GET"));
+  assert.deepEqual(request.schema.properties.queryParams.required, ["url"]);
+  assert.deepEqual(projectDiscoveryRequest("https://agents.example/extract", "GET", request), {
+    method: "GET",
+    url: "https://agents.example/extract",
+    example: request.example,
+    schema: request.schema,
+    exampleUrl: "https://agents.example/extract?url=https%3A%2F%2Fexample.com",
+  });
   assert.equal(getDiscoveryOutputContract("GET /missing"), null);
+  assert.equal(getDiscoveryRequestContract("GET /missing"), null);
+});
+
+test("projects only credential-free HTTPS examples with scalar query values", () => {
+  const contract = {
+    example: { type: "http", method: "GET", queryParams: { second: 2, first: true } },
+    schema: { type: "object" },
+  };
+  assert.equal(
+    projectDiscoveryRequest("https://agents.example/route", "GET", contract).exampleUrl,
+    "https://agents.example/route?first=true&second=2",
+  );
+  assert.throws(() => projectDiscoveryRequest("http://agents.example/route", "GET", contract), /credential-free HTTPS/);
+  assert.throws(() => projectDiscoveryRequest("https://agents.example/route", "GET", { ...contract, example: { queryParams: { nested: {} } } }), /non-scalar/);
 });
 
 test("requires a unique safe route key for projected contracts", () => {
@@ -79,6 +109,12 @@ test("declares and preserves a validated POST JSON-body contract", () => {
       properties: { ok: { type: "boolean" } },
       required: ["ok"],
     },
+  });
+  assert.deepEqual(getDiscoveryRequestContract("POST /body-contract").example, {
+    type: "http",
+    method: "POST",
+    bodyType: "json",
+    body: { url: "https://example.com" },
   });
 });
 

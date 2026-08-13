@@ -21,7 +21,12 @@ import express from "express";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
-import { declareDiscoveryContract, getDiscoveryOutputContract } from "./discovery-contract.mjs";
+import {
+  declareDiscoveryContract,
+  getDiscoveryOutputContract,
+  getDiscoveryRequestContract,
+  projectDiscoveryRequest,
+} from "./discovery-contract.mjs";
 import {
   BAZAAR_RESOURCE_METADATA,
   bazaarResourceMetadataFor,
@@ -921,7 +926,7 @@ const mppPaymentInfoFor = (resource) => ({
 });
 
 const machineActionCatalog = () => ({
-  schema: "samedaydesk.machine-actions.v1",
+  schema: "samedaydesk.machine-actions.v2",
   service: "SameDayDesk machine commerce gateway",
   network: NETWORK,
   settlement: "x402 exact or MPP evm/charge USDC on Base",
@@ -947,6 +952,7 @@ const machineActionCatalog = () => ({
     const route = new URL(resource.url).pathname;
     const method = resource.method || "GET";
     const response = getDiscoveryOutputContract(`${method} ${route}`);
+    const request = getDiscoveryRequestContract(`${method} ${route}`);
     return {
       name: route.replace(/^\//, "").replaceAll("/", "_"),
       method,
@@ -958,6 +964,7 @@ const machineActionCatalog = () => ({
       paymentProtocols: ["x402", "mpp"],
       mimeType: resource.mimeType,
       tags: BAZAAR_RESOURCE_METADATA[route]?.tags || [],
+      request: projectDiscoveryRequest(resource.url, method, request),
       response: response ? { mimeType: "application/json", ...response } : null,
     };
   }),
@@ -975,10 +982,10 @@ const machineActionCatalog = () => ({
 });
 
 const machineActions = machineActionCatalog().actions;
-const agentCard = buildAgentCard({
+const currentAgentCard = () => buildAgentCard({
   publicUrl: PUBLIC_URL,
   serviceVersion: SERVICE_VERSION,
-  actions: machineActions,
+  actions: machineActionCatalog().actions,
 });
 const solanaAgentRegistration = buildSolanaAgentRegistration({
   publicUrl: PUBLIC_URL,
@@ -1009,11 +1016,22 @@ app.get(serviceDeploymentPublication.paths.publicKey, (_req, res) => {
 });
 
 app.get(["/.well-known/x402", "/.well-known/x402.json", "/x402.json", "/api/x402"], (_req, res) => {
-  const items = RESOURCES.map((r) => ({
-    resource: { url: r.url, description: r.description, mimeType: r.mimeType },
-    type: "http",
-    accepts: acceptsFor(r.amount),
-  }));
+  const actionsByRoute = new Map(machineActionCatalog().actions.map((action) => [action.route, action]));
+  const items = RESOURCES.map((r) => {
+    const route = new URL(r.url).pathname;
+    const action = actionsByRoute.get(route);
+    return {
+      resource: {
+        url: action?.request?.exampleUrl || r.url,
+        routeTemplate: route,
+        description: r.description,
+        mimeType: r.mimeType,
+      },
+      type: "http",
+      request: action?.request || null,
+      accepts: acceptsFor(r.amount),
+    };
+  });
   if (circleGateway.enabled) {
     items.push({
       resource: {
@@ -1068,10 +1086,11 @@ app.get("/api/actions", (req, res) => {
 // and settle HTTP actions through x402 or MPP. MCP actions remain x402-gated.
 app.get(["/.well-known/agent-card.json", "/.well-known/agent.json"], (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
-  return res.json(agentCard);
+  return res.json(currentAgentCard());
 });
 
 app.get("/a2a", (_req, res) => {
+  const agentCard = currentAgentCard();
   res.set("Cache-Control", "public, max-age=300");
   return res.json({
     protocol: "A2A",

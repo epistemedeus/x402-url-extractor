@@ -20,12 +20,15 @@ export function buildPaidActionSkills(actions = []) {
     seen.add(id);
     const route = String(action.route || "");
     const price = String(action.priceAtomicUsdc || "");
+    const exampleUrl = typeof action?.request?.exampleUrl === "string" ? action.request.exampleUrl : null;
     return {
       id,
       name: `Discover paid action ${route || slug}`,
-      description: `Discover the direct ${route || slug} machine-paid action, its ${price || "current"} atomic USDC price, and x402/MPP invocation URL. Discovery only; invoke and pay the returned action URL directly.`,
+      description: `Discover the direct ${route || slug} machine-paid action, its ${price || "current"} atomic USDC price, and x402/MPP invocation contract. Discovery only; invoke the returned exact request directly.${exampleUrl ? ` Complete example: ${exampleUrl}` : ""}`,
       tags: [...new Set(["x402", "mpp", "paid-action", "discovery", ...(action.tags || [])])],
-      examples: [`Find the ${route || slug} paid action and its exact current price.`],
+      examples: [exampleUrl
+        ? `Find the ${route || slug} paid action, then call ${exampleUrl}`
+        : `Find the ${route || slug} paid action and its exact current price.`],
       inputModes: ["text/plain", "application/json"],
       outputModes: ["application/json"],
     };

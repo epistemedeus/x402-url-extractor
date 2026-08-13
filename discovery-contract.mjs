@@ -5,6 +5,7 @@ import {
 } from "@x402/extensions/bazaar";
 
 const outputContracts = new Map();
+const requestContracts = new Map();
 
 /**
  * Preserve the local explicit `outputSchema` authoring shape while adapting it
@@ -42,8 +43,43 @@ export function declareDiscoveryContract(config = {}) {
       outputContracts.delete(routeKey);
       throw new Error(`Invalid Bazaar discovery contract for ${routeKey}: ${errors.join("; ")}`);
     }
+    requestContracts.set(routeKey, structuredClone({
+      example: extension.info.input,
+      schema: extension.schema.properties.input,
+    }));
   }
   return declared;
+}
+
+export function getDiscoveryRequestContract(routeKey) {
+  const contract = requestContracts.get(routeKey);
+  return contract ? structuredClone(contract) : null;
+}
+
+export function projectDiscoveryRequest(resourceUrl, method, contract) {
+  if (!contract) return null;
+  const url = new URL(resourceUrl);
+  if (url.protocol !== "https:" || url.username || url.password || url.hash) {
+    throw new Error("Discovery resource URL must be credential-free HTTPS");
+  }
+  const normalizedMethod = String(method || "GET").toUpperCase();
+  const request = {
+    method: normalizedMethod,
+    url: url.href,
+    example: structuredClone(contract.example),
+    schema: structuredClone(contract.schema),
+  };
+  const queryParams = contract.example?.queryParams;
+  if (normalizedMethod === "GET" && queryParams && typeof queryParams === "object" && !Array.isArray(queryParams)) {
+    for (const [name, value] of Object.entries(queryParams).sort(([left], [right]) => left.localeCompare(right))) {
+      if (!["string", "number", "boolean"].includes(typeof value)) {
+        throw new Error(`Discovery query example for ${url.href} has non-scalar ${name}`);
+      }
+      url.searchParams.set(name, String(value));
+    }
+    request.exampleUrl = url.href;
+  }
+  return request;
 }
 
 export function getDiscoveryOutputContract(routeKey) {
