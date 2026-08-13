@@ -66,7 +66,7 @@ const SENSITIVE_INPUT_NAME_COLLAPSED = /(?:api|access|auth|authorization|bearer|
  * claims runtime validity, and leaves body, path, header, and cookie contracts
  * unmeasured until the telemetry layer can observe them safely.
  */
-export function classifyDiscoveryRequestConstruction(routeKey, queryKeys = []) {
+export function classifyDiscoveryRequestConstruction(routeKey, queryInput = []) {
   const contract = requestContracts.get(routeKey);
   if (!contract) return { status: "undeclared", requiredKeyCount: 0 };
   const method = String(contract.example?.method || "").toUpperCase();
@@ -83,10 +83,19 @@ export function classifyDiscoveryRequestConstruction(routeKey, queryKeys = []) {
   if (method !== "GET" || unsupportedExampleFields || required.length === 0 || !safeRequired) {
     return { status: "not_measured", requiredKeyCount: 0 };
   }
-  const present = new Set(Array.isArray(queryKeys)
-    ? queryKeys.filter((name) => typeof name === "string")
-    : []);
-  const complete = required.every((name) => present.has(name));
+  const query = queryInput && typeof queryInput === "object" && !Array.isArray(queryInput)
+    ? queryInput
+    : Object.fromEntries((Array.isArray(queryInput) ? queryInput : [])
+      .filter((name) => typeof name === "string")
+      .map((name) => [name, true]));
+  const scalarNonEmpty = (value) => {
+    if (typeof value === "string") return value.trim().length > 0;
+    if (typeof value === "number") return Number.isFinite(value);
+    if (typeof value === "boolean") return true;
+    if (Array.isArray(value)) return value.some(scalarNonEmpty);
+    return false;
+  };
+  const complete = required.every((name) => scalarNonEmpty(query[name]));
   return {
     status: complete ? "constructed" : "missing_required_input",
     requiredKeyCount: required.length,

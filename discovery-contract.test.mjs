@@ -67,6 +67,14 @@ test("places the authored output schema in the Bazaar v2 response contract", () 
     status: "missing_required_input",
     requiredKeyCount: 1,
   });
+  assert.deepEqual(classifyDiscoveryRequestConstruction("GET /test-contract", { url: "  " }), {
+    status: "missing_required_input",
+    requiredKeyCount: 1,
+  });
+  assert.deepEqual(classifyDiscoveryRequestConstruction("GET /test-contract", { url: ["", "https://example.com"] }), {
+    status: "constructed",
+    requiredKeyCount: 1,
+  });
   assert.deepEqual(classifyDiscoveryRequestConstruction("GET /missing", ["url"]), {
     status: "undeclared",
     requiredKeyCount: 0,

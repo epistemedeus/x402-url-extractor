@@ -752,7 +752,7 @@ export function createCommerceTelemetry({
       const protocolsOffered = offeredPaymentProtocols(res);
       const settlement = decodeResponseSettlement(res);
       const requestConstruction = route.kind === "paid" && method === "GET"
-        ? classifyDiscoveryRequestConstruction(`GET ${route.route}`, queryKeys)
+        ? classifyDiscoveryRequestConstruction(`GET ${route.route}`, req.query || {})
         : { status: "not_measured", requiredKeyCount: 0 };
       const paymentFailureCode = paymentPresent
         ? classifyPaymentFailureCode({
@@ -843,7 +843,6 @@ export function createCommerceTelemetry({
     ));
     const constructedRequestBySource = emptyCounts();
     const constructedRequestByRoute = emptyCounts();
-    const constructedRequestBySourceRoute = Object.create(null);
     const constructedRequestActors = new Map();
     const constructedRequestActorCountsBySource = new Map();
     for (const event of constructedRequestEvents) {
@@ -853,8 +852,6 @@ export function createCommerceTelemetry({
       );
       increment(constructedRequestBySource, source);
       increment(constructedRequestByRoute, event.route);
-      if (!constructedRequestBySourceRoute[source]) constructedRequestBySourceRoute[source] = emptyCounts();
-      increment(constructedRequestBySourceRoute[source], event.route);
       constructedRequestActors.set(event.actor, (constructedRequestActors.get(event.actor) || 0) + 1);
       incrementActorBySource(constructedRequestActorCountsBySource, source, event.actor);
     }
@@ -1136,7 +1133,6 @@ export function createCommerceTelemetry({
       constructedRequestActorsBySource,
       repeatConstructedRequestActorsBySource,
       constructedRequestByRoute,
-      constructedRequestBySourceRoute,
       agentChallengeConvertedPaidSuccesses,
       agentChallengeConvertedActors: agentChallengeConvertedActors.size,
       independentAgentChallengeConvertedActors: independentAgentChallengeConvertedActors.size,
@@ -1198,7 +1194,7 @@ export function createCommerceTelemetry({
       paymentClassPolicy: "Explicit known-payer rules classify internal, marketplace validation, incentivized, affiliated, or independently confirmed buyers. Unknown or missing payer identities remain unclassified and never become independent by inference.",
       discoveryConversionPolicy: "A submitted payment credential overrides crawler classification so paying agents remain in economic telemetry. Controlled user-agent source labels attribute the client channel but are self-declared and do not independently authenticate a registry referral. Challenge-to-paid conversion uses the same secret-keyed network-and-user-agent actor before and after the challenge and is therefore a conservative continuity lower bound, not an identity claim. SameDayDesk owner monitors remain excluded before this rule.",
       credentialAttemptPolicy: "After the declared credential-attempt baseline, a parseable attempt must carry a syntactically complete x402 v2 exact Base-style binding or MPP evm/charge credential. Signature validity and settlement are separate later outcomes. Controlled failure codes are derived from required query-key presence, x402 response error classes, or MPP Problem Details. Public output contains only aggregate protocol, result, route, source, payer class, and failure-code counts; raw credentials, errors, bodies, query values, actors, and payer addresses are not exposed.",
-      requestConstructionPolicy: "Prospective seller-declared GET measurement only. A constructed request must target an exact paid route, carry every required non-secret query key from that route's canonical Bazaar request contract, and receive an HTTP 402 challenge rather than validation failure. Only key presence is inspected; values are neither evaluated nor published. Header, cookie, path, body, unsafe unpaid POST, credential-like required names, and undeclared contracts remain unmeasured. Public output contains aggregate events, distinct secret-keyed actor counts, controlled source labels, and canonical routes only. Construction proves neither input validity, buyer intent, payment authorization, settlement, nor demand.",
+      requestConstructionPolicy: "Prospective seller-declared GET measurement only. A constructed request must target an exact paid route, carry a non-empty scalar for every required non-secret query key from that route's canonical Bazaar request contract, and receive an HTTP 402 challenge rather than validation failure. Values are inspected only for scalar non-emptiness and are neither retained nor published. Header, cookie, path, body, unsafe unpaid POST, credential-like required names, and undeclared contracts remain unmeasured. Public output contains aggregate events, distinct secret-keyed actor counts, controlled source labels, and canonical routes only. Construction proves neither input validity, buyer intent, payment authorization, settlement, nor demand.",
       settlementEvidencePolicy: "After the declared settlement-evidence baseline, a successful paid response should carry a valid Base transaction reference in PAYMENT-RESPONSE or Payment-Receipt. Raw response headers and transaction references remain private; public output exposes only coverage counts by evidence class.",
       boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, SameDayDesk-owned monitor, crawler, and exploit-probe traffic is excluded from demand, but unidentified automated fetchers can remain. Separately reported agent-discovery observations begin at their own declared baseline and are user-agent-declared crawler or indexer fetches of known discovery and paid routes; SameDayDesk-owned monitor user agents are excluded, and the remainder are neither authenticated catalog referrals nor buyer intent. Unmatched requests are acquisition misses, not intents. Known MCP transport probes and semantic-unmatched counts remain acquisition-friction evidence and do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Payment classes are applied against those pseudonyms at read time, so known marketplace verification can be reclassified without storing a raw address. Unknown payers remain unclassified. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Settlement-reference coverage begins only at its declared baseline; raw transaction references remain on the private volume and are not returned publicly. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
     };

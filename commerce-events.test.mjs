@@ -132,6 +132,7 @@ test("constructed request telemetry is prospective, contract-derived, aggregate,
   }
 
   run({ query: {}, ip: "203.0.113.91" });
+  run({ query: { url: "" }, ip: "203.0.113.94" });
   run({ query: { url: "https://private.example/path?secret=do-not-publish" }, ip: "203.0.113.92" });
   run({ query: { url: "https://private.example/other" }, ip: "203.0.113.93" });
   await telemetry.flush();
@@ -144,18 +145,12 @@ test("constructed request telemetry is prospective, contract-derived, aggregate,
   assert.deepEqual(snapshot.constructedRequestActorsBySource, { agent402: 2 });
   assert.deepEqual(snapshot.repeatConstructedRequestActorsBySource, { agent402: 0 });
   assert.deepEqual({ ...snapshot.constructedRequestByRoute }, { "/extract": 2 });
-  assert.deepEqual(
-    Object.fromEntries(Object.entries(snapshot.constructedRequestBySourceRoute).map(([source, routes]) => [
-      source,
-      { ...routes },
-    ])),
-    { agent402: { "/extract": 2 } },
-  );
+  assert.equal(Object.hasOwn(snapshot, "constructedRequestBySourceRoute"), false);
   const serialized = JSON.stringify(snapshot);
   assert.equal(serialized.includes("private.example"), false);
   assert.equal(serialized.includes("do-not-publish"), false);
   assert.equal(serialized.includes("203.0.113.92"), false);
-  assert.match(snapshot.requestConstructionPolicy, /key presence is inspected/);
+  assert.match(snapshot.requestConstructionPolicy, /non-empty scalar/);
   assert.match(snapshot.requestConstructionPolicy, /neither input validity, buyer intent, payment authorization, settlement, nor demand/);
   await rm(dataDir, { recursive: true, force: true });
 });
