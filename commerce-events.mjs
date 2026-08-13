@@ -2,6 +2,7 @@ import { createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypt
 import { appendFile, chmod, mkdir, readFile, rename, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 import { Credential } from "mppx";
+import { classifyDiscoveryRequestConstruction } from "./discovery-contract.mjs";
 
 const CRAWLER_PATTERN = /bot|crawler|spider|slurp|uptime|monitor|observer|probe|indexer|headless|preview|liveness|healthcheck|sentineloracle|mcpbeat|agentreeve|agent402|trust[- ]?oracle/i;
 const EXPLOIT_PROBE_PATH_PATTERN = /(?:^|\/)\.(?:env|git)(?:[./]|$)|^\/(?:wp-admin|wp-login\.php|wp-json|xmlrpc\.php)(?:\/|$)|^\/(?:api\/)?(?:config|env|settings)(?:[./]|$)|^\/js\/(?:config|env)\.js$/i;
@@ -629,6 +630,7 @@ export function createCommerceTelemetry({
   mcpTransportProbeSince = process.env.COMMERCE_MCP_TRANSPORT_PROBE_SINCE || "2026-08-09T18:56:00.000Z",
   credentialAttemptSince = process.env.COMMERCE_CREDENTIAL_ATTEMPT_SINCE || "",
   settlementEvidenceSince = process.env.COMMERCE_SETTLEMENT_EVIDENCE_SINCE || "",
+  requestConstructionSince = process.env.COMMERCE_REQUEST_CONSTRUCTION_SINCE || "2026-08-13T16:25:03.766Z",
   payerClasses = process.env.COMMERCE_PAYER_CLASSES || "",
   maxBytes = 5 * 1024 * 1024,
 } = {}) {
@@ -655,6 +657,10 @@ export function createCommerceTelemetry({
   const parsedSettlementEvidenceSince = Date.parse(settlementEvidenceSince);
   const settlementEvidenceSinceMs = Number.isFinite(parsedSettlementEvidenceSince)
     ? parsedSettlementEvidenceSince
+    : null;
+  const parsedRequestConstructionSince = Date.parse(requestConstructionSince);
+  const requestConstructionSinceMs = Number.isFinite(parsedRequestConstructionSince)
+    ? parsedRequestConstructionSince
     : null;
   const normalizedPayerClasses = normalizeCommercePayerClasses(payerClasses);
   const paymentClassByActor = new Map([...normalizedPayerClasses].map(([address, paymentClass]) => [
@@ -745,6 +751,9 @@ export function createCommerceTelemetry({
       const replayed = String(res.getHeader?.("x-payment-replay") || "").toLowerCase() === "hit";
       const protocolsOffered = offeredPaymentProtocols(res);
       const settlement = decodeResponseSettlement(res);
+      const requestConstruction = route.kind === "paid" && method === "GET"
+        ? classifyDiscoveryRequestConstruction(`GET ${route.route}`, queryKeys)
+        : { status: "not_measured", requiredKeyCount: 0 };
       const paymentFailureCode = paymentPresent
         ? classifyPaymentFailureCode({
             route: route.route,
@@ -755,7 +764,7 @@ export function createCommerceTelemetry({
           })
         : null;
       enqueue({
-        v: 2,
+        v: 3,
         id: randomUUID(),
         ts: new Date().toISOString(),
         actor,
@@ -766,6 +775,8 @@ export function createCommerceTelemetry({
         matched: route.matched,
         kind: route.kind,
         queryKeys,
+        requestConstruction: requestConstruction.status,
+        requestConstructionRequiredKeyCount: requestConstruction.requiredKeyCount,
         paymentPresent,
         paymentCredentialParsed: paymentMetadata.credentialParsed === true,
         paymentProtocol: protocol,
@@ -821,6 +832,44 @@ export function createCommerceTelemetry({
       && event.matched === true
       && (event.kind === "discovery" || event.kind === "paid")
     ));
+    const constructedRequestEvents = observedEvents.filter((event) => (
+      requestConstructionSinceMs !== null
+      && Date.parse(event.ts) >= requestConstructionSinceMs
+      && (event.originClass === "external" || event.originClass === "crawler")
+      && event.kind === "paid"
+      && event.matched === true
+      && event.requestConstruction === "constructed"
+      && eventResult(event) === "challenge"
+    ));
+    const constructedRequestBySource = emptyCounts();
+    const constructedRequestByRoute = emptyCounts();
+    const constructedRequestBySourceRoute = Object.create(null);
+    const constructedRequestActors = new Map();
+    const constructedRequestActorCountsBySource = new Map();
+    for (const event of constructedRequestEvents) {
+      const source = controlledEventSource(
+        event,
+        event.originClass === "crawler" ? "unattributed-crawler" : "direct-or-unattributed",
+      );
+      increment(constructedRequestBySource, source);
+      increment(constructedRequestByRoute, event.route);
+      if (!constructedRequestBySourceRoute[source]) constructedRequestBySourceRoute[source] = emptyCounts();
+      increment(constructedRequestBySourceRoute[source], event.route);
+      constructedRequestActors.set(event.actor, (constructedRequestActors.get(event.actor) || 0) + 1);
+      incrementActorBySource(constructedRequestActorCountsBySource, source, event.actor);
+    }
+    const constructedRequestActorsBySource = Object.fromEntries(
+      [...constructedRequestActorCountsBySource.keys()].sort().map((source) => [
+        source,
+        actorCount(constructedRequestActorCountsBySource, source),
+      ]),
+    );
+    const repeatConstructedRequestActorsBySource = Object.fromEntries(
+      [...constructedRequestActorCountsBySource.keys()].sort().map((source) => [
+        source,
+        repeatActorCount(constructedRequestActorCountsBySource, source),
+      ]),
+    );
 
     const agentDiscoveryBySource = emptyCounts();
     const agentDiscoveryByRoute = emptyCounts();
@@ -1077,6 +1126,17 @@ export function createCommerceTelemetry({
       agentChallengeBySource,
       agentChallengeByRoute,
       agentChallengeBySourceRoute,
+      requestConstructionSince: requestConstructionSinceMs === null
+        ? null
+        : new Date(requestConstructionSinceMs).toISOString(),
+      constructedRequestEvents: constructedRequestEvents.length,
+      constructedRequestActors: constructedRequestActors.size,
+      repeatConstructedRequestActors: [...constructedRequestActors.values()].filter((count) => count > 1).length,
+      constructedRequestBySource,
+      constructedRequestActorsBySource,
+      repeatConstructedRequestActorsBySource,
+      constructedRequestByRoute,
+      constructedRequestBySourceRoute,
       agentChallengeConvertedPaidSuccesses,
       agentChallengeConvertedActors: agentChallengeConvertedActors.size,
       independentAgentChallengeConvertedActors: independentAgentChallengeConvertedActors.size,
@@ -1138,6 +1198,7 @@ export function createCommerceTelemetry({
       paymentClassPolicy: "Explicit known-payer rules classify internal, marketplace validation, incentivized, affiliated, or independently confirmed buyers. Unknown or missing payer identities remain unclassified and never become independent by inference.",
       discoveryConversionPolicy: "A submitted payment credential overrides crawler classification so paying agents remain in economic telemetry. Controlled user-agent source labels attribute the client channel but are self-declared and do not independently authenticate a registry referral. Challenge-to-paid conversion uses the same secret-keyed network-and-user-agent actor before and after the challenge and is therefore a conservative continuity lower bound, not an identity claim. SameDayDesk owner monitors remain excluded before this rule.",
       credentialAttemptPolicy: "After the declared credential-attempt baseline, a parseable attempt must carry a syntactically complete x402 v2 exact Base-style binding or MPP evm/charge credential. Signature validity and settlement are separate later outcomes. Controlled failure codes are derived from required query-key presence, x402 response error classes, or MPP Problem Details. Public output contains only aggregate protocol, result, route, source, payer class, and failure-code counts; raw credentials, errors, bodies, query values, actors, and payer addresses are not exposed.",
+      requestConstructionPolicy: "Prospective seller-declared GET measurement only. A constructed request must target an exact paid route, carry every required non-secret query key from that route's canonical Bazaar request contract, and receive an HTTP 402 challenge rather than validation failure. Only key presence is inspected; values are neither evaluated nor published. Header, cookie, path, body, unsafe unpaid POST, credential-like required names, and undeclared contracts remain unmeasured. Public output contains aggregate events, distinct secret-keyed actor counts, controlled source labels, and canonical routes only. Construction proves neither input validity, buyer intent, payment authorization, settlement, nor demand.",
       settlementEvidencePolicy: "After the declared settlement-evidence baseline, a successful paid response should carry a valid Base transaction reference in PAYMENT-RESPONSE or Payment-Receipt. Raw response headers and transaction references remain private; public output exposes only coverage counts by evidence class.",
       boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, SameDayDesk-owned monitor, crawler, and exploit-probe traffic is excluded from demand, but unidentified automated fetchers can remain. Separately reported agent-discovery observations begin at their own declared baseline and are user-agent-declared crawler or indexer fetches of known discovery and paid routes; SameDayDesk-owned monitor user agents are excluded, and the remainder are neither authenticated catalog referrals nor buyer intent. Unmatched requests are acquisition misses, not intents. Known MCP transport probes and semantic-unmatched counts remain acquisition-friction evidence and do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Payment classes are applied against those pseudonyms at read time, so known marketplace verification can be reclassified without storing a raw address. Unknown payers remain unclassified. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Settlement-reference coverage begins only at its declared baseline; raw transaction references remain on the private volume and are not returned publicly. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
     };

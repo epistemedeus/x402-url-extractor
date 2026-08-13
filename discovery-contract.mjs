@@ -56,6 +56,43 @@ export function getDiscoveryRequestContract(routeKey) {
   return contract ? structuredClone(contract) : null;
 }
 
+const SENSITIVE_INPUT_NAME = /(?:^|[-_.])(auth|authorization|bearer|cookie|credential|jwt|key|otp|pass(?:word)?|secret|session|signature|token)(?:$|[-_.])/i;
+const SENSITIVE_INPUT_NAME_COLLAPSED = /(?:api|access|auth|authorization|bearer|client|cookie|credential|private|session)?(?:jwt|key|otp|pass|password|secret|signature|token)$/i;
+
+/**
+ * Classify whether a runtime GET request carries every required, non-secret
+ * query key from its canonical Bazaar request contract. This is intentionally
+ * narrower than general request validation: it never evaluates values, never
+ * claims runtime validity, and leaves body, path, header, and cookie contracts
+ * unmeasured until the telemetry layer can observe them safely.
+ */
+export function classifyDiscoveryRequestConstruction(routeKey, queryKeys = []) {
+  const contract = requestContracts.get(routeKey);
+  if (!contract) return { status: "undeclared", requiredKeyCount: 0 };
+  const method = String(contract.example?.method || "").toUpperCase();
+  const querySchema = contract.schema?.properties?.queryParams;
+  const required = Array.isArray(querySchema?.required) ? querySchema.required : [];
+  const unsupportedExampleFields = ["body", "pathParams", "headers", "cookies"]
+    .some((name) => contract.example?.[name] !== undefined);
+  const safeRequired = required.every((name) => (
+    typeof name === "string"
+    && /^[A-Za-z][A-Za-z0-9_.-]{0,63}$/.test(name)
+    && !SENSITIVE_INPUT_NAME.test(name)
+    && !SENSITIVE_INPUT_NAME_COLLAPSED.test(name.replaceAll(/[-_.]/g, ""))
+  ));
+  if (method !== "GET" || unsupportedExampleFields || required.length === 0 || !safeRequired) {
+    return { status: "not_measured", requiredKeyCount: 0 };
+  }
+  const present = new Set(Array.isArray(queryKeys)
+    ? queryKeys.filter((name) => typeof name === "string")
+    : []);
+  const complete = required.every((name) => present.has(name));
+  return {
+    status: complete ? "constructed" : "missing_required_input",
+    requiredKeyCount: required.length,
+  };
+}
+
 export function projectDiscoveryRequest(resourceUrl, method, contract) {
   if (!contract) return null;
   const url = new URL(resourceUrl);

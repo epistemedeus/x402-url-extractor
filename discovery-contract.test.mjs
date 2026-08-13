@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  classifyDiscoveryRequestConstruction,
   declareDiscoveryContract,
   getDiscoveryOutputContract,
   getDiscoveryRequestContract,
@@ -58,6 +59,18 @@ test("places the authored output schema in the Bazaar v2 response contract", () 
   });
   assert.equal(getDiscoveryOutputContract("GET /missing"), null);
   assert.equal(getDiscoveryRequestContract("GET /missing"), null);
+  assert.deepEqual(classifyDiscoveryRequestConstruction("GET /test-contract", ["url"]), {
+    status: "constructed",
+    requiredKeyCount: 1,
+  });
+  assert.deepEqual(classifyDiscoveryRequestConstruction("GET /test-contract", []), {
+    status: "missing_required_input",
+    requiredKeyCount: 1,
+  });
+  assert.deepEqual(classifyDiscoveryRequestConstruction("GET /missing", ["url"]), {
+    status: "undeclared",
+    requiredKeyCount: 0,
+  });
 });
 
 test("projects only credential-free HTTPS examples with scalar query values", () => {
@@ -115,6 +128,51 @@ test("declares and preserves a validated POST JSON-body contract", () => {
     method: "POST",
     bodyType: "json",
     body: { url: "https://example.com" },
+  });
+  assert.deepEqual(classifyDiscoveryRequestConstruction("POST /body-contract", ["url"]), {
+    status: "not_measured",
+    requiredKeyCount: 0,
+  });
+});
+
+test("does not measure credential-like required keys", () => {
+  declareDiscoveryContract({
+    routeKey: "GET /sensitive-contract",
+    input: { api_token: "not-a-real-secret" },
+    inputSchema: {
+      type: "object",
+      properties: { api_token: { type: "string" } },
+      required: ["api_token"],
+    },
+    output: { example: { ok: true } },
+    outputSchema: {
+      type: "object",
+      properties: { ok: { type: "boolean" } },
+      required: ["ok"],
+    },
+  });
+  assert.deepEqual(classifyDiscoveryRequestConstruction("GET /sensitive-contract", ["api_token"]), {
+    status: "not_measured",
+    requiredKeyCount: 0,
+  });
+  declareDiscoveryContract({
+    routeKey: "GET /camel-sensitive-contract",
+    input: { accessToken: "not-a-real-secret" },
+    inputSchema: {
+      type: "object",
+      properties: { accessToken: { type: "string" } },
+      required: ["accessToken"],
+    },
+    output: { example: { ok: true } },
+    outputSchema: {
+      type: "object",
+      properties: { ok: { type: "boolean" } },
+      required: ["ok"],
+    },
+  });
+  assert.deepEqual(classifyDiscoveryRequestConstruction("GET /camel-sensitive-contract", ["accessToken"]), {
+    status: "not_measured",
+    requiredKeyCount: 0,
   });
 });
 

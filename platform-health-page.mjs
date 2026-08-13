@@ -27,6 +27,39 @@ export function renderRobotsTxt(publicUrl) {
   return `User-agent: *\nAllow: /\n\n# Public evidence and machine-readable product surfaces\nSitemap: ${origin}/sitemap.xml\n`;
 }
 
+export function renderSitemapXml(publicUrl, platformIds = [], purchaseEvidencePath = "/.well-known/agent-payment-evidence.json") {
+  const parsed = new URL(publicUrl);
+  if (parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.search || parsed.hash) {
+    throw new Error("Sitemap origin must be credential-free HTTPS");
+  }
+  const origin = parsed.origin;
+  const paths = [
+    "/",
+    "/openapi.json",
+    "/mpp-openapi.json",
+    "/.well-known/x402.json",
+    "/.well-known/agent-card.json",
+    "/.well-known/agent-registration.json",
+    purchaseEvidencePath,
+    "/api/actions",
+    "/mcp",
+    "/skill.md",
+    "/llms.txt",
+    "/platforms",
+    "/platforms/methodology",
+    ...platformIds.map((platformId) => `/platforms/${encodeURIComponent(platformId)}`),
+    "/alerts",
+  ];
+  const uniquePaths = [...new Set(paths)];
+  if (uniquePaths.some((pathname) => !pathname.startsWith("/") || pathname.startsWith("//"))) {
+    throw new Error("Sitemap paths must be root-relative");
+  }
+  const urls = uniquePaths
+    .map((pathname) => `  <url><loc>${escapeHtml(`${origin}${pathname}`)}</loc></url>`)
+    .join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+}
+
 const css = `
 :root { color-scheme: dark; --bg:#07100d; --panel:#0d1914; --ink:#effff6; --muted:#9ab5a7; --line:#223d30; --lime:#b8ff68; --amber:#ffcb6b; --red:#ff7b72; --blue:#77c8ff; }
 * { box-sizing:border-box; }

@@ -3,6 +3,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { declareDiscoveryContract } from "./discovery-contract.mjs";
 
 import {
   classifyAgentDiscoverySource,
@@ -14,6 +15,22 @@ import {
   isSemanticUnmatched,
   normalizeCommercePayerClasses,
 } from "./commerce-events.mjs";
+
+declareDiscoveryContract({
+  routeKey: "GET /extract",
+  input: { url: "https://example.com" },
+  inputSchema: {
+    type: "object",
+    properties: { url: { type: "string" } },
+    required: ["url"],
+  },
+  output: { example: { ok: true } },
+  outputSchema: {
+    type: "object",
+    properties: { ok: { type: "boolean" } },
+    required: ["ok"],
+  },
+});
 
 test("agent discovery sources reduce user agents to controlled labels", () => {
   assert.equal(classifyAgentDiscoverySource("Agent402/1.0"), "agent402");
@@ -80,6 +97,66 @@ test("declared AgenticTrade handoff enters the paid-route funnel without exposin
   assert.equal(snapshot.agentChallengeBySource.agentictrade, 1);
   assert.equal(snapshot.agentSourceFunnel.agentictrade.challengeActors, 1);
   assert.equal(JSON.stringify(snapshot).includes("agentictrade-v1"), false);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("constructed request telemetry is prospective, contract-derived, aggregate, and value-free", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-constructed-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "test-secret",
+    agentDiscoverySince: "2020-01-01T00:00:00.000Z",
+    requestConstructionSince: "2020-01-01T00:00:00.000Z",
+  });
+
+  function run({ query, ip }) {
+    const listeners = new Map();
+    const req = {
+      path: "/extract",
+      url: "/extract",
+      method: "GET",
+      headers: {
+        "user-agent": "Agent402/1.0",
+      },
+      query,
+      ip,
+      socket: {},
+    };
+    const res = {
+      statusCode: 402,
+      once(name, listener) { listeners.set(name, listener); },
+      getHeader() { return undefined; },
+    };
+    telemetry.middleware(req, res, () => {});
+    listeners.get("finish")?.();
+  }
+
+  run({ query: {}, ip: "203.0.113.91" });
+  run({ query: { url: "https://private.example/path?secret=do-not-publish" }, ip: "203.0.113.92" });
+  run({ query: { url: "https://private.example/other" }, ip: "203.0.113.93" });
+  await telemetry.flush();
+
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.constructedRequestEvents, 2);
+  assert.equal(snapshot.constructedRequestActors, 2);
+  assert.equal(snapshot.repeatConstructedRequestActors, 0);
+  assert.deepEqual({ ...snapshot.constructedRequestBySource }, { agent402: 2 });
+  assert.deepEqual(snapshot.constructedRequestActorsBySource, { agent402: 2 });
+  assert.deepEqual(snapshot.repeatConstructedRequestActorsBySource, { agent402: 0 });
+  assert.deepEqual({ ...snapshot.constructedRequestByRoute }, { "/extract": 2 });
+  assert.deepEqual(
+    Object.fromEntries(Object.entries(snapshot.constructedRequestBySourceRoute).map(([source, routes]) => [
+      source,
+      { ...routes },
+    ])),
+    { agent402: { "/extract": 2 } },
+  );
+  const serialized = JSON.stringify(snapshot);
+  assert.equal(serialized.includes("private.example"), false);
+  assert.equal(serialized.includes("do-not-publish"), false);
+  assert.equal(serialized.includes("203.0.113.92"), false);
+  assert.match(snapshot.requestConstructionPolicy, /key presence is inspected/);
+  assert.match(snapshot.requestConstructionPolicy, /neither input validity, buyer intent, payment authorization, settlement, nor demand/);
   await rm(dataDir, { recursive: true, force: true });
 });
 

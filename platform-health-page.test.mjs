@@ -8,6 +8,7 @@ import {
   renderPlatformCard,
   renderPlatformIndex,
   renderRobotsTxt,
+  renderSitemapXml,
 } from "./platform-health-page.mjs";
 
 test("index renders five cards without numerical trust language", () => {
@@ -15,6 +16,31 @@ test("index renders five cards without numerical trust language", () => {
   assert.match(html, /Platform health from work we actually tried/);
   assert.equal((html.match(/class="card"/g) || []).length, 5);
   assert.doesNotMatch(html, /reliability score|chance you get paid/i);
+});
+
+test("sitemap exposes human pages and canonical machine contracts without duplicates", () => {
+  const xml = renderSitemapXml(
+    "https://agents.samedaydesk.com/",
+    ["frantic", "frantic"],
+    "/.well-known/agent-payment-evidence.json",
+  );
+  for (const pathname of [
+    "/openapi.json",
+    "/mpp-openapi.json",
+    "/.well-known/x402.json",
+    "/.well-known/agent-card.json",
+    "/.well-known/agent-registration.json",
+    "/.well-known/agent-payment-evidence.json",
+    "/api/actions",
+    "/mcp",
+    "/skill.md",
+    "/llms.txt",
+    "/platforms/frantic",
+  ]) {
+    assert.match(xml, new RegExp(`https://agents\\.samedaydesk\\.com${pathname.replaceAll(".", "\\.")}`));
+  }
+  assert.equal((xml.match(/\/platforms\/frantic/g) || []).length, 1);
+  assert.throws(() => renderSitemapXml("http://agents.samedaydesk.com"), /credential-free HTTPS/);
 });
 
 test("detail renders evidence, freshness, and unknowns", () => {

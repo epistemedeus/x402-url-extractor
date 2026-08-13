@@ -192,6 +192,7 @@ import {
   renderPlatformCard,
   renderPlatformIndex,
   renderRobotsTxt,
+  renderSitemapXml,
 } from "./platform-health-page.mjs";
 import { z } from "zod";
 import { SERVICE_VERSION } from "./service-version.mjs";
@@ -1208,18 +1209,12 @@ app.get("/robots.txt", (_req, res) => {
 });
 
 app.get("/sitemap.xml", (_req, res) => {
-  const locations = [
-    "/",
-    "/platforms",
-    "/platforms/methodology",
-    ...listPlatformHealthCards().map((card) => `/platforms/${card.platform_id}`),
-    "/alerts",
-  ];
-  const urls = locations
-    .map((pathname) => `  <url><loc>${PUBLIC_URL}${pathname}</loc></url>`)
-    .join("\n");
   res.set("Cache-Control", "public, max-age=3600");
-  return res.type("application/xml").send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
+  return res.type("application/xml").send(renderSitemapXml(
+    PUBLIC_URL,
+    listPlatformHealthCards().map((card) => card.platform_id),
+    PURCHASE_EVIDENCE_MANIFEST_PATH,
+  ));
 });
 
 // Free Settlement Radar v0. This is evidence-backed discovery, not a paid
@@ -1311,7 +1306,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     ],
     paths: {
       "/v0/cards.json": { get: { summary: "Free incident-backed platform health cards. Categories are not calibrated scores.", responses: { "200": { description: "SameDayDesk platform health index v0" } } } },
-      "/v0/commerce-demand.json": { get: { summary: "Privacy-safe aggregate external machine-commerce observations.", parameters: [{ name: "days", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 365, default: 90 } }], responses: { "200": { description: "Aggregate discovery, challenge, paid-success, unmatched-request, and high-precision semantic-candidate counts. Known internal and crawler traffic is excluded; unidentified automation can remain." } } } },
+      "/v0/commerce-demand.json": { get: { summary: "Privacy-safe aggregate external machine-commerce observations.", parameters: [{ name: "days", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 365, default: 90 } }], responses: { "200": { description: "Aggregate discovery, constructed-request, challenge, paid-success, unmatched-request, and high-precision semantic-candidate counts. Known internal and owner-monitor traffic stays outside demand; crawler construction remains separately source-labeled reach evidence." } } } },
       [PAID_ACTION_EFFECT_PROFILE_PATH]: { get: { summary: "Experimental read-only effect and retry contract for SameDayDesk paid POST operations.", responses: { "200": { description: "Exact method-route effect declarations and payment-response replay boundary" } } } },
       [PURCHASE_EVIDENCE_MANIFEST_PATH]: { get: { summary: "Seller-declared purchase-authorization evidence for every exact paid operation.", responses: { "200": { description: "Bounded operation-level effect, response guarantee, replay, receipt, and signed-deployment pointers" } } } },
       "/.well-known/agent-card.json": { get: { summary: "A2A v1.0 agent card for the free machine-commerce storefront.", responses: { "200": { description: "A2A AgentCard" } } } },
