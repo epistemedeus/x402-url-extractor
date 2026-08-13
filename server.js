@@ -28,6 +28,10 @@ import {
   projectDiscoveryRequest,
 } from "./discovery-contract.mjs";
 import {
+  buildX402ManifestItems,
+  validateConstructionSurfaceParity,
+} from "./construction-surface.mjs";
+import {
   BAZAAR_RESOURCE_METADATA,
   bazaarResourceMetadataFor,
   validateBazaarResourceMetadata,
@@ -933,10 +937,17 @@ const machineActionCatalog = () => ({
   paymentProtocols: ["x402", "mpp"],
   alternateAccess: circleGateway.enabled ? {
     product: "payment_offer_preflight",
+    method: "GET",
     route: CIRCLE_GATEWAY_PATH,
+    url: CIRCLE_GATEWAY_RESOURCE.url,
     paymentProtocol: "x402",
     settlement: "Circle Gateway gasless batched USDC Nanopayments",
     priceAtomicUsdc: CIRCLE_GATEWAY_RESOURCE.amount,
+    request: projectDiscoveryRequest(
+      CIRCLE_GATEWAY_RESOURCE.url,
+      "GET",
+      getDiscoveryRequestContract("GET /commerce/payment-offer-preflight"),
+    ),
   } : null,
   payTo: PAY_TO,
   acquisition: {
@@ -987,6 +998,30 @@ const currentAgentCard = () => buildAgentCard({
   serviceVersion: SERVICE_VERSION,
   actions: machineActionCatalog().actions,
 });
+const constructionParityReceipt = () => {
+  const catalog = machineActionCatalog();
+  const manifestItems = buildX402ManifestItems({
+    resources: RESOURCES,
+    actions: catalog.actions,
+    acceptsFor,
+    ...(catalog.alternateAccess ? {
+      alternate: {
+        route: catalog.alternateAccess.route,
+        url: catalog.alternateAccess.url,
+        description: CIRCLE_GATEWAY_RESOURCE.description,
+        mimeType: CIRCLE_GATEWAY_RESOURCE.mimeType,
+        accepts: CIRCLE_GATEWAY_RESOURCE.accepts,
+        request: catalog.alternateAccess.request,
+      },
+    } : {}),
+  });
+  return validateConstructionSurfaceParity({
+    actions: catalog.actions,
+    manifestItems,
+    agentCard: currentAgentCard(),
+    alternateAccess: catalog.alternateAccess,
+  });
+};
 const solanaAgentRegistration = buildSolanaAgentRegistration({
   publicUrl: PUBLIC_URL,
   actions: machineActions,
@@ -1016,33 +1051,22 @@ app.get(serviceDeploymentPublication.paths.publicKey, (_req, res) => {
 });
 
 app.get(["/.well-known/x402", "/.well-known/x402.json", "/x402.json", "/api/x402"], (_req, res) => {
-  const actionsByRoute = new Map(machineActionCatalog().actions.map((action) => [action.route, action]));
-  const items = RESOURCES.map((r) => {
-    const route = new URL(r.url).pathname;
-    const action = actionsByRoute.get(route);
-    return {
-      resource: {
-        url: action?.request?.exampleUrl || r.url,
-        routeTemplate: route,
-        description: r.description,
-        mimeType: r.mimeType,
-      },
-      type: "http",
-      request: action?.request || null,
-      accepts: acceptsFor(r.amount),
-    };
-  });
-  if (circleGateway.enabled) {
-    items.push({
-      resource: {
-        url: CIRCLE_GATEWAY_RESOURCE.url,
+  const catalog = machineActionCatalog();
+  const items = buildX402ManifestItems({
+    resources: RESOURCES,
+    actions: catalog.actions,
+    acceptsFor,
+    ...(catalog.alternateAccess ? {
+      alternate: {
+        route: catalog.alternateAccess.route,
+        url: catalog.alternateAccess.url,
         description: CIRCLE_GATEWAY_RESOURCE.description,
         mimeType: CIRCLE_GATEWAY_RESOURCE.mimeType,
+        accepts: CIRCLE_GATEWAY_RESOURCE.accepts,
+        request: catalog.alternateAccess.request,
       },
-      type: "http",
-      accepts: CIRCLE_GATEWAY_RESOURCE.accepts,
-    });
-  }
+    } : {}),
+  });
   res.json({
     x402Version: 2,
     lastUpdated: Math.floor(Date.now() / 1000),
@@ -3363,6 +3387,7 @@ app.get("/", (req, res) => {
   return res.json(gateway);
 });
 
+const constructionAcceptance = constructionParityReceipt();
 app.listen(PORT, () => {
   commerceSettlementReconciler.schedule(process.env.COMMERCE_RECONCILIATION_INTERVAL_MS || 60_000);
   console.log(`x402-merchant listening on :${PORT}`);
@@ -3372,6 +3397,7 @@ app.listen(PORT, () => {
   console.log(`  facilitator: ${FACILITATOR} (${facilitatorClient.url})`);
   console.log(`  protocols:   x402 + MPP (${mppDualStack.enabled ? "enabled" : "disabled"})`);
   console.log(`  paid route:  GET /extract`);
+  console.log(`  construction: ${constructionAcceptance.actionCount} actions (${constructionAcceptance.getExamples} GET examples, ${constructionAcceptance.postExamples} POST bodies, ${constructionAcceptance.alternateExamples} alternate)`);
 });
 
 // --- Paid MCP server at POST /mcp (streamable-HTTP), x402-gated ---------------
