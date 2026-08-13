@@ -9,6 +9,7 @@ import {
   classifyDeclaredAgentDiscoverySource,
   classifyCommerceResult,
   classifyCommerceRoute,
+  classifyPaymentFailureCode,
   createCommerceTelemetry,
   isSemanticUnmatched,
   normalizeCommercePayerClasses,
@@ -342,6 +343,15 @@ test("paid response classes separate challenge, validation, success, and failure
   assert.equal(classifyCommerceResult({ kind: "paid", matched: true, paymentPresent: true, status: 503 }), "service_failure");
   assert.equal(classifyCommerceResult({ kind: "unmatched", matched: false, paymentPresent: false, status: 404 }), "unmatched");
   assert.equal(classifyCommerceResult({ route: "/mcp", kind: "paid", matched: true, paymentPresent: false, status: 200 }), "protocol_discovery");
+});
+
+test("payment failure codes stay bounded and preserve required-input aliases", () => {
+  assert.equal(classifyPaymentFailureCode({ route: "/extract", status: 402, queryKeys: [] }), "missing_required_input");
+  assert.equal(classifyPaymentFailureCode({ route: "/enrich", status: 402, queryKeys: ["url"] }), "payment_verification_failed");
+  assert.equal(classifyPaymentFailureCode({ route: "/wallet-enrich", status: 402, queryKeys: ["wallet"], error: "authorization signature mismatch" }), "signature_invalid");
+  assert.equal(classifyPaymentFailureCode({ route: "/extract", status: 402, queryKeys: ["url"], error: "extension_echo_mismatch" }), "extension_mismatch");
+  assert.equal(classifyPaymentFailureCode({ route: "/extract", status: 503, queryKeys: ["url"] }), "payment_service_unavailable");
+  assert.equal(classifyPaymentFailureCode({ route: "/extract", status: 200, queryKeys: [] }), null);
 });
 
 test("unpaid paid-POST requests do not persist application telemetry", async () => {

@@ -23,6 +23,27 @@ const POLICY_CONTRACT_FUNNELS = Object.freeze({
 });
 const OWNER_MONITOR_USER_AGENT_PATTERN = /^SameDayDesk(?:[- /]|[A-Z])/i;
 const MCP_TRANSPORT_PROBE_ROUTES = new Set(["/mcp/sse", "/mcp/messages", "/mcp/tools", "/mcp/events"]);
+// Every nested array is one required group; any key in that group satisfies it.
+// Keep this map smaller than the route catalog and add only requirements proven
+// by the first-party request handlers. Unknown routes remain explicit unknowns.
+const REQUIRED_QUERY_KEY_GROUPS_BY_ROUTE = new Map([
+  ["/extract", [["url"]]],
+  ["/read", [["url"]]],
+  ["/scan", [["repo"]]],
+  ["/schemaforge", [["site"]]],
+  ["/enrich", [["domain", "url"]]],
+  ["/wallet-enrich", [["address", "wallet", "addr"]]],
+  ["/deep-audit", [["domain", "url"]]],
+  ["/defi/morpho-position", [["address", "wallet", "borrower"]]],
+  ["/defi/morpho-protection", [["address", "wallet", "borrower"]]],
+  ["/defi/morpho-market-underwrite", [["marketId", "market", "id"]]],
+  ["/defi/morpho-preliquidation-replay", [["transactionHash", "tx", "hash"]]],
+  ["/distribution/agent-discoverability-audit", [["origin"], ["intent"]]],
+  ["/commerce/payment-offer-preflight", [["url"]]],
+  ["/commerce/seller-integrity-audit", [["origin"], ["route"]]],
+  ["/commerce/contract-qualified-search", [["query"], ["requiredPaths"]]],
+  ["/distribution/agent-surface-budget-audit", [["origin"]]],
+]);
 const AI_PROVIDER_SOURCE_PATTERNS = [
   ["openai-search", /\bOAI-SearchBot\b/i],
   ["openai-user", /\bChatGPT-User\b/i],
@@ -328,6 +349,63 @@ function eventResult(event) {
     replayed: event.replayed,
     status: event.status,
   });
+}
+
+function boundedFailureText(value) {
+  if (typeof value !== "string") return "";
+  return value.slice(0, 1_000).toLowerCase();
+}
+
+export function classifyPaymentFailureCode({ route, status, queryKeys = [], error = "", problem = null } = {}) {
+  const code = Number(status);
+  if (!Number.isInteger(code) || code < 400) return null;
+  const presentKeys = new Set(Array.isArray(queryKeys) ? queryKeys.filter((key) => typeof key === "string") : []);
+  const requiredGroups = REQUIRED_QUERY_KEY_GROUPS_BY_ROUTE.get(String(route || "")) || [];
+  if (requiredGroups.some((group) => !group.some((key) => presentKeys.has(key)))) {
+    return "missing_required_input";
+  }
+
+  const problemRecord = problem && typeof problem === "object" && !Array.isArray(problem) ? problem : {};
+  const text = [error, problemRecord.type, problemRecord.title, problemRecord.detail]
+    .map(boundedFailureText)
+    .filter(Boolean)
+    .join(" ");
+  if (/extension.*(?:echo|mismatch)|extension_echo_mismatch/.test(text)) return "extension_mismatch";
+  if (/no matching payment requirements|requirements?.*mismatch|wrong (?:network|asset|amount|recipient|payto)/.test(text)) return "payment_terms_mismatch";
+  if (/signature|authorization.*(?:invalid|mismatch)|invalid.*authorization/.test(text)) return "signature_invalid";
+  if (/expired|not valid yet/.test(text)) return "payment_expired";
+  if (/already (?:used|processed)|replay|nonce/.test(text)) return "payment_replay_rejected";
+  if (/insufficient|balance|funds/.test(text)) return "insufficient_funds";
+  if (/facilitator|temporarily unavailable|timeout|upstream/.test(text) || code >= 500) return "payment_service_unavailable";
+  if (/verification|verify|invalid payment|invalid credential/.test(text) || code === 402) return "payment_verification_failed";
+  if (code === 409) return "request_binding_conflict";
+  if (code >= 400 && code < 500) return "application_validation_failed";
+  return "unknown_failure";
+}
+
+function x402FailureError(res) {
+  const encoded = res.getHeader?.("payment-required") || res.getHeader?.("x-payment-required");
+  const candidate = Array.isArray(encoded) ? encoded[0] : encoded;
+  if (typeof candidate !== "string" || !candidate || candidate.length > 131_072) return "";
+  try {
+    const decoded = JSON.parse(Buffer.from(candidate, "base64url").toString("utf8"));
+    return boundedFailureText(decoded?.error);
+  } catch {
+    return "";
+  }
+}
+
+function problemDetails(value) {
+  let candidate = value;
+  if (typeof value === "string" && value.length <= 16_384) {
+    try { candidate = JSON.parse(value); } catch { return null; }
+  }
+  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null;
+  return {
+    type: boundedFailureText(candidate.type),
+    title: boundedFailureText(candidate.title),
+    detail: boundedFailureText(candidate.detail),
+  };
 }
 
 export function isSemanticUnmatched(event) {
@@ -642,6 +720,21 @@ export function createCommerceTelemetry({
       ? createHmac("sha256", secret).update(`payment-id:${paymentMetadata.paymentId}`).digest("hex").slice(0, 24)
       : null;
     const queryKeys = Object.keys(req.query || {}).sort().slice(0, 20);
+    let responseProblem = null;
+    const originalJson = typeof res.json === "function" ? res.json.bind(res) : null;
+    const originalSend = typeof res.send === "function" ? res.send.bind(res) : null;
+    if (originalJson) {
+      res.json = function telemetryJson(body) {
+        responseProblem ||= problemDetails(body);
+        return originalJson(body);
+      };
+    }
+    if (originalSend) {
+      res.send = function telemetrySend(body) {
+        responseProblem ||= problemDetails(body);
+        return originalSend(body);
+      };
+    }
 
     res.once("finish", () => {
       const status = Number(res.statusCode || 0);
@@ -652,6 +745,15 @@ export function createCommerceTelemetry({
       const replayed = String(res.getHeader?.("x-payment-replay") || "").toLowerCase() === "hit";
       const protocolsOffered = offeredPaymentProtocols(res);
       const settlement = decodeResponseSettlement(res);
+      const paymentFailureCode = paymentPresent
+        ? classifyPaymentFailureCode({
+            route: route.route,
+            status,
+            queryKeys,
+            error: x402FailureError(res),
+            problem: responseProblem,
+          })
+        : null;
       enqueue({
         v: 2,
         id: randomUUID(),
@@ -667,6 +769,7 @@ export function createCommerceTelemetry({
         paymentPresent,
         paymentCredentialParsed: paymentMetadata.credentialParsed === true,
         paymentProtocol: protocol,
+        paymentFailureCode,
         protocolsOffered,
         replayed,
         paymentActor,
@@ -788,6 +891,7 @@ export function createCommerceTelemetry({
     const credentialAttemptByRoute = emptyCounts();
     const credentialAttemptBySource = emptyCounts();
     const credentialAttemptByClass = emptyCounts();
+    const credentialAttemptByFailureCode = emptyCounts();
     const credentialAttemptActors = new Map();
     for (const event of credentialAttemptEvents) {
       if (event.paymentProtocol) increment(credentialAttemptByProtocol, event.paymentProtocol);
@@ -802,6 +906,12 @@ export function createCommerceTelemetry({
         ? paymentClassByActor.get(event.paymentActor) || "unclassified"
         : "unclassified";
       increment(credentialAttemptByClass, paymentClass);
+      const failureCode = event.paymentFailureCode || classifyPaymentFailureCode({
+        route: event.route,
+        status: event.status,
+        queryKeys: event.queryKeys,
+      });
+      if (failureCode) increment(credentialAttemptByFailureCode, failureCode);
       const attemptActor = event.paymentActor || event.actor;
       credentialAttemptActors.set(attemptActor, (credentialAttemptActors.get(attemptActor) || 0) + 1);
     }
@@ -986,6 +1096,7 @@ export function createCommerceTelemetry({
       credentialAttemptByRoute,
       credentialAttemptBySource,
       credentialAttemptByClass,
+      credentialAttemptByFailureCode,
       paidSuccessByRoute,
       paidSuccessByProtocol,
       paidSuccessByDiscoverySource,
@@ -1026,7 +1137,7 @@ export function createCommerceTelemetry({
       unmatched: unmatchedRequests,
       paymentClassPolicy: "Explicit known-payer rules classify internal, marketplace validation, incentivized, affiliated, or independently confirmed buyers. Unknown or missing payer identities remain unclassified and never become independent by inference.",
       discoveryConversionPolicy: "A submitted payment credential overrides crawler classification so paying agents remain in economic telemetry. Controlled user-agent source labels attribute the client channel but are self-declared and do not independently authenticate a registry referral. Challenge-to-paid conversion uses the same secret-keyed network-and-user-agent actor before and after the challenge and is therefore a conservative continuity lower bound, not an identity claim. SameDayDesk owner monitors remain excluded before this rule.",
-      credentialAttemptPolicy: "After the declared credential-attempt baseline, a parseable attempt must carry a syntactically complete x402 v2 exact Base-style binding or MPP evm/charge credential. Signature validity and settlement are separate later outcomes. Public output contains only aggregate protocol, result, route, controlled source, and explicit payer-class counts; raw credentials, actors, and payer addresses are not exposed.",
+      credentialAttemptPolicy: "After the declared credential-attempt baseline, a parseable attempt must carry a syntactically complete x402 v2 exact Base-style binding or MPP evm/charge credential. Signature validity and settlement are separate later outcomes. Controlled failure codes are derived from required query-key presence, x402 response error classes, or MPP Problem Details. Public output contains only aggregate protocol, result, route, source, payer class, and failure-code counts; raw credentials, errors, bodies, query values, actors, and payer addresses are not exposed.",
       settlementEvidencePolicy: "After the declared settlement-evidence baseline, a successful paid response should carry a valid Base transaction reference in PAYMENT-RESPONSE or Payment-Receipt. Raw response headers and transaction references remain private; public output exposes only coverage counts by evidence class.",
       boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, SameDayDesk-owned monitor, crawler, and exploit-probe traffic is excluded from demand, but unidentified automated fetchers can remain. Separately reported agent-discovery observations begin at their own declared baseline and are user-agent-declared crawler or indexer fetches of known discovery and paid routes; SameDayDesk-owned monitor user agents are excluded, and the remainder are neither authenticated catalog referrals nor buyer intent. Unmatched requests are acquisition misses, not intents. Known MCP transport probes and semantic-unmatched counts remain acquisition-friction evidence and do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Payment classes are applied against those pseudonyms at read time, so known marketplace verification can be reclassified without storing a raw address. Unknown payers remain unclassified. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Settlement-reference coverage begins only at its declared baseline; raw transaction references remain on the private volume and are not returned publicly. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
     };
