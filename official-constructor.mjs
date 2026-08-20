@@ -9,7 +9,13 @@ export const REQUIRED_QUERY_KEY_GROUPS_BY_ROUTE = new Map([
   ["/commerce/payment-offer-preflight", [["url"]]],
   ["/enrich", [["domain", "url"]]],
 ]);
+// Identity set remains three families. apify-mcpc is initialize-shaped only
+// (MCP clientInfo.name === "mcpc"). This merchant has no GET-visible producer
+// signal for mcpc; do not invent a UA, header, or query heuristic.
 export const OFFICIAL_CONSTRUCTOR_SOURCES = Object.freeze(["apify-mcpc", "mppx", "solana-pay"]);
+// Public GET 402 constructed coverage. A zero for apify-mcpc here is expected.
+export const GET_OFFICIAL_CONSTRUCTOR_SOURCES = Object.freeze(["mppx", "solana-pay"]);
+const OWNER_MONITOR_VALUE_PATTERN = /^SameDayDesk(?:[- /]|[A-Z])/i;
 
 function scalarNonEmpty(value) {
   if (typeof value === "string") return value.trim().length > 0;
@@ -46,13 +52,38 @@ function hasRequiredQuery(route, query) {
   return groups.every((group) => group.some((key) => scalarNonEmpty(decoded[key])));
 }
 
-export function isOwnerMonitor({ userAgent = "", originClass = "", paymentClass = "" } = {}) {
-  const ua = String(userAgent || "");
-  return ua.startsWith("SameDayDesk-")
-    || ua.startsWith("Pilot-")
-    || originClass === "owner_monitor"
-    || paymentClass === "internal"
-    || paymentClass === "validation";
+function headerTexts(headers = {}) {
+  if (!headers || typeof headers !== "object" || Array.isArray(headers)) return [];
+  return Object.entries(headers).flatMap(([name, value]) => {
+    const joined = Array.isArray(value) ? value.join(",") : String(value || "");
+    return [String(name || ""), joined];
+  });
+}
+
+function hasOwnerPrefix(value) {
+  const text = String(value || "");
+  return text.startsWith("SameDayDesk-")
+    || text.startsWith("Pilot-")
+    || OWNER_MONITOR_VALUE_PATTERN.test(text);
+}
+
+export function isGetOfficialConstructorSource(source) {
+  return GET_OFFICIAL_CONSTRUCTOR_SOURCES.includes(source);
+}
+
+export function isOwnerMonitor({
+  userAgent = "",
+  originClass = "",
+  paymentClass = "",
+  declaredHeader = "",
+  headers = {},
+  internalAuthorized = false,
+} = {}) {
+  if (internalAuthorized === true) return true;
+  if (originClass === "owner_monitor" || originClass === "internal") return true;
+  if (paymentClass === "internal" || paymentClass === "validation") return true;
+  if (hasOwnerPrefix(userAgent) || hasOwnerPrefix(declaredHeader)) return true;
+  return headerTexts(headers).some((text) => hasOwnerPrefix(text));
 }
 
 export function classifyConstructor({
@@ -61,8 +92,17 @@ export function classifyConstructor({
   paymentClass = "",
   mcpClientInfoName = "",
   declaredHeader = "",
+  headers = {},
+  internalAuthorized = false,
 } = {}) {
-  if (isOwnerMonitor({ userAgent, originClass, paymentClass })) {
+  if (isOwnerMonitor({
+    userAgent,
+    originClass,
+    paymentClass,
+    declaredHeader,
+    headers,
+    internalAuthorized,
+  })) {
     return { source: null, officialConstructor: false, excludedFromPublic: true };
   }
 
@@ -121,8 +161,11 @@ export function classifyEvent(row = {}) {
     ? row.matchesPublishedExample
     : matchesPublishedExample({ ...row, constructed });
   const agentConstructed = constructed && !constructor.excludedFromPublic && row.originClass === "crawler";
+  // GET-constructed public join is only {mppx, solana-pay}. apify-mcpc may be
+  // official on initialize-shaped traffic and must not appear here.
   const externalOfficial = constructed
     && constructor.officialConstructor
+    && isGetOfficialConstructorSource(constructor.source)
     && !publishedExample
     && row.originClass === "external"
     && !constructor.excludedFromPublic;

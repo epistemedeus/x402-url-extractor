@@ -6,6 +6,7 @@ import test from "node:test";
 
 import { createCommerceTelemetry } from "./commerce-events.mjs";
 import {
+  GET_OFFICIAL_CONSTRUCTOR_SOURCES,
   classifyConstructor,
   classifyEvent,
   isConstructedChallenge,
@@ -120,6 +121,11 @@ test("FX-01 official constructor families stay exactly three", () => {
       classifyConstructor({ mcpClientInfoName: "mcpc" }).source,
     ]),
   ].sort(), ["apify-mcpc", "mppx", "solana-pay"], "exactly three families");
+  assert.deepEqual(
+    [...GET_OFFICIAL_CONSTRUCTOR_SOURCES].sort(),
+    ["mppx", "solana-pay"],
+    "GET-constructed official coverage is mppx and solana-pay; apify-mcpc zero is expected",
+  );
 });
 
 test("FX-02 constructed challenge and public deltas", () => {
@@ -238,6 +244,88 @@ test("FX-02 constructed challenge and public deltas", () => {
     route: "/extract",
     query: { url: "https://other.example/resource" },
   }).independentPaidSuccessActors, 0);
+  assert.deepEqual(classifyEvent({
+    ...constructed,
+    mcpClientInfoName: "mcpc",
+    originClass: "external",
+  }), {
+    source: "apify-mcpc",
+    officialConstructor: true,
+    excludedFromPublic: false,
+    constructed: true,
+    matchesPublishedExample: false,
+    independentPaidSuccessActors: 0,
+    agentConstructedObservations: 0,
+    agentConstructedActors: 0,
+    externalConstructedActors: 0,
+    officialConstructorCoverage: [],
+  });
+});
+
+test("owner provenance excludes spoofed mppx/ and GET coverage stays two families", () => {
+  const constructed = {
+    method: "GET",
+    kind: "paid",
+    matched: true,
+    status: 402,
+    protocolsOffered: ["x402"],
+    route: "/extract",
+    query: { url: "https://other.example/resource" },
+  };
+
+  assert.deepEqual(classifyConstructor({
+    userAgent: "mppx/0.8.15",
+    originClass: "internal",
+  }), { source: null, officialConstructor: false, excludedFromPublic: true });
+  assert.deepEqual(classifyConstructor({
+    userAgent: "mppx/0.8.15",
+    internalAuthorized: true,
+  }), { source: null, officialConstructor: false, excludedFromPublic: true });
+  assert.deepEqual(classifyConstructor({
+    userAgent: "mppx/0.8.15",
+    headers: { "x-samedaydesk-agent-source": "SameDayDesk-OwnerProbe/0.1" },
+  }), { source: null, officialConstructor: false, excludedFromPublic: true });
+  assert.deepEqual(classifyConstructor({
+    userAgent: "mppx/0.8.15",
+    headers: { "x-pilot-trace": "Pilot-Canary/0.1" },
+  }), { source: null, officialConstructor: false, excludedFromPublic: true });
+  assert.deepEqual(classifyConstructor({ userAgent: "SameDayDesk-Monitor/0.1" }), {
+    source: null,
+    officialConstructor: false,
+    excludedFromPublic: true,
+  });
+  assert.deepEqual(classifyEvent({
+    ...constructed,
+    userAgent: "mppx/0.8.15",
+    originClass: "internal",
+  }), {
+    source: null,
+    officialConstructor: false,
+    excludedFromPublic: true,
+    constructed: true,
+    matchesPublishedExample: false,
+    independentPaidSuccessActors: 0,
+    agentConstructedObservations: 0,
+    agentConstructedActors: 0,
+    externalConstructedActors: 0,
+    officialConstructorCoverage: [],
+  });
+  assert.deepEqual(classifyEvent({
+    ...constructed,
+    userAgent: "mppx/0.8.15",
+    originClass: "external",
+  }).officialConstructorCoverage, ["mppx"]);
+  assert.deepEqual(classifyEvent({
+    ...constructed,
+    userAgent: "mppx/0.8.15",
+    originClass: "external",
+    query: { url: "https://example.com" },
+  }).officialConstructorCoverage, []);
+  assert.equal(classifyEvent({
+    ...constructed,
+    mcpClientInfoName: "mcpc",
+    originClass: "external",
+  }).officialConstructorCoverage.includes("apify-mcpc"), false);
 });
 
 test("live demand snapshot emits official-constructor join without secrets", async () => {
@@ -245,6 +333,7 @@ test("live demand snapshot emits official-constructor join without secrets", asy
   const telemetry = createCommerceTelemetry({
     dataDir,
     secret: "test-secret",
+    internalToken: "owner-canary",
     officialConstructorSince: "2020-01-01T00:00:00.000Z",
     requestConstructionSince: "2020-01-01T00:00:00.000Z",
     agentDiscoverySince: "2020-01-01T00:00:00.000Z",
@@ -283,8 +372,27 @@ test("live demand snapshot emits official-constructor join without secrets", asy
     query: { url: "https://example.com" },
   });
   run({
+    userAgent: "mppx/0.8.15",
+    query: { url: "https://other.example/owner-spoof" },
+    headers: { "x-samedaydesk-internal": "owner-canary" },
+  });
+  run({
+    userAgent: "mppx/0.8.15",
+    query: { url: "https://other.example/header-spoof" },
+    headers: { "x-samedaydesk-agent-source": "SameDayDesk-OwnerProbe/0.1" },
+  });
+  run({
+    userAgent: "SameDayDesk-Monitor/0.1",
+    query: { url: "https://other.example/owner-ua" },
+  });
+  run({
     userAgent: "Agent402/1.0",
     query: { url: "https://other.example/crawler-resource" },
+  });
+  run({
+    userAgent: "curl/8.0",
+    query: { url: "https://other.example/mcpc-get" },
+    body: { method: "initialize", params: { clientInfo: { name: "mcpc", version: "do-not-publish" } } },
   });
   run({
     userAgent: "curl/8.0",
@@ -299,13 +407,16 @@ test("live demand snapshot emits official-constructor join without secrets", asy
   const snapshot = await telemetry.snapshot({ days: 1 });
   assert.equal(snapshot.externalConstructedActors, 1);
   assert.deepEqual(snapshot.officialConstructorCoverage, ["mppx"]);
+  assert.equal(snapshot.officialConstructorCoverage.includes("apify-mcpc"), false);
   assert.equal(snapshot.agentConstructedObservations, 1);
   assert.equal(snapshot.agentConstructedActors, 1);
   assert.equal(typeof snapshot.officialConstructorSince, "string");
   const serialized = JSON.stringify(snapshot);
   assert.equal(serialized.includes("other.example"), false);
   assert.equal(serialized.includes("private-resource"), false);
+  assert.equal(serialized.includes("owner-spoof"), false);
   assert.equal(serialized.includes("mppx/0.8.15"), false);
+  assert.equal(serialized.includes("SameDayDesk-Monitor/0.1"), false);
   assert.equal(serialized.includes("do-not-publish"), false);
   assert.equal(serialized.includes("constructedBySourceRoute"), false);
   assert.equal(Object.hasOwn(snapshot, "constructedBySourceRoute"), false);

@@ -7,6 +7,7 @@ import {
   classifyConstructor,
   classifyEvent,
   extractMcpClientInfoName,
+  isGetOfficialConstructorSource,
   labeledConstructorSource,
 } from "./official-constructor.mjs";
 
@@ -711,6 +712,8 @@ export function createCommerceTelemetry({
     const userAgent = headerValue(headers, "user-agent");
     const declaredHeader = headerValue(headers, "x-samedaydesk-agent-source");
     const declaredAgentDiscoverySource = classifyDeclaredAgentDiscoverySource(declaredHeader);
+    const suppliedInternal = headerValue(headers, "x-samedaydesk-internal");
+    const internalAuthorized = safeEqual(suppliedInternal, internalToken);
     const ownerByUserAgent = userAgent.startsWith("SameDayDesk-")
       || userAgent.startsWith("Pilot-")
       || OWNER_MONITOR_USER_AGENT_PATTERN.test(userAgent);
@@ -718,14 +721,15 @@ export function createCommerceTelemetry({
       userAgent,
       originClass: ownerByUserAgent ? "owner_monitor" : "",
       declaredHeader,
+      headers,
+      internalAuthorized,
     });
     const agentDiscoverySource = labeledConstructorSource(constructorHint)
       || declaredAgentDiscoverySource
       || classifyAgentDiscoverySource(userAgent);
-    const suppliedInternal = headerValue(headers, "x-samedaydesk-internal");
     const protocol = paymentProtocol(headers);
     const paymentPresent = Boolean(protocol);
-    const originClass = safeEqual(suppliedInternal, internalToken)
+    const originClass = internalAuthorized
       ? "internal"
       : EXPLOIT_PROBE_PATH_PATTERN.test(req.path || req.url || "")
         ? "scanner"
@@ -794,6 +798,8 @@ export function createCommerceTelemetry({
         paymentClass,
         mcpClientInfoName: extractMcpClientInfoName(req),
         declaredHeader,
+        headers,
+        internalAuthorized,
       });
       const resolvedSource = labeledConstructorSource(constructor) || agentDiscoverySource;
       const resolvedOrigin = constructor.officialConstructor && originClass === "crawler"
@@ -805,6 +811,8 @@ export function createCommerceTelemetry({
         paymentClass,
         mcpClientInfoName: extractMcpClientInfoName(req),
         declaredHeader,
+        headers,
+        internalAuthorized,
         method,
         kind: route.kind,
         matched: route.matched,
@@ -955,11 +963,13 @@ export function createCommerceTelemetry({
         && event.originClass === "external"
         && !excluded
       ) {
+        const source = controlledEventSource(event, "direct-or-unattributed");
+        // apify-mcpc is initialize-only; GET 402 coverage is {mppx, solana-pay}.
+        if (!isGetOfficialConstructorSource(source)) continue;
         externalConstructedActorCounts.set(
           event.actor,
           (externalConstructedActorCounts.get(event.actor) || 0) + 1,
         );
-        const source = controlledEventSource(event, "direct-or-unattributed");
         officialConstructorCoverage.add(source);
       }
     }
