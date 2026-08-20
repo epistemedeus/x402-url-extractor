@@ -1,0 +1,12 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "samedaydesk": {
+      "type": "streamable-http",
+      "url": "https://agents.samedaydesk.com/mcp",
+      "headers": {
+        "X-SameDayDesk-Agent-Source": "agent-plugins-v1"
+      }
+    }
+  }
+}
