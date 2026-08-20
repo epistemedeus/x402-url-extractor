@@ -59,6 +59,31 @@ export function getDiscoveryRequestContract(routeKey) {
 const SENSITIVE_INPUT_NAME = /(?:^|[-_.])(auth|authorization|bearer|cookie|credential|jwt|key|otp|pass(?:word)?|secret|session|signature|token)(?:$|[-_.])/i;
 const SENSITIVE_INPUT_NAME_COLLAPSED = /(?:api|access|auth|authorization|bearer|client|cookie|credential|private|session)?(?:jwt|key|otp|pass|password|secret|signature|token)$/i;
 
+export function isSensitiveInputName(name) {
+  if (typeof name !== "string") return false;
+  return SENSITIVE_INPUT_NAME.test(name)
+    || SENSITIVE_INPUT_NAME_COLLAPSED.test(name.replaceAll(/[-_.]/g, ""));
+}
+
+// Public chain identifiers that collide with the credential-name matcher.
+// A Solana transaction `signature` is a public receipt id, not a bearer secret.
+const PUBLIC_QUERY_IDENTIFIERS = new Set(["signature"]);
+
+export function isSafePublicationInputName(name) {
+  if (typeof name !== "string") return false;
+  if (!/^[A-Za-z][A-Za-z0-9_.-]{0,63}$/.test(name)) return false;
+  if (PUBLIC_QUERY_IDENTIFIERS.has(name)) return true;
+  return !isSensitiveInputName(name);
+}
+
+export function scalarNonEmpty(value) {
+  if (typeof value === "string") return value.trim().length > 0;
+  if (typeof value === "number") return Number.isFinite(value);
+  if (typeof value === "boolean") return true;
+  if (Array.isArray(value)) return value.some(scalarNonEmpty);
+  return false;
+}
+
 /**
  * Classify whether a runtime GET request carries every required, non-secret
  * query key from its canonical Bazaar request contract. This is intentionally
@@ -74,12 +99,7 @@ export function classifyDiscoveryRequestConstruction(routeKey, queryInput = []) 
   const required = Array.isArray(querySchema?.required) ? querySchema.required : [];
   const unsupportedExampleFields = ["body", "pathParams", "headers", "cookies"]
     .some((name) => contract.example?.[name] !== undefined);
-  const safeRequired = required.every((name) => (
-    typeof name === "string"
-    && /^[A-Za-z][A-Za-z0-9_.-]{0,63}$/.test(name)
-    && !SENSITIVE_INPUT_NAME.test(name)
-    && !SENSITIVE_INPUT_NAME_COLLAPSED.test(name.replaceAll(/[-_.]/g, ""))
-  ));
+  const safeRequired = required.every((name) => isSafePublicationInputName(name));
   if (method !== "GET" || unsupportedExampleFields || required.length === 0 || !safeRequired) {
     return { status: "not_measured", requiredKeyCount: 0 };
   }
@@ -88,13 +108,6 @@ export function classifyDiscoveryRequestConstruction(routeKey, queryInput = []) 
     : Object.fromEntries((Array.isArray(queryInput) ? queryInput : [])
       .filter((name) => typeof name === "string")
       .map((name) => [name, true]));
-  const scalarNonEmpty = (value) => {
-    if (typeof value === "string") return value.trim().length > 0;
-    if (typeof value === "number") return Number.isFinite(value);
-    if (typeof value === "boolean") return true;
-    if (Array.isArray(value)) return value.some(scalarNonEmpty);
-    return false;
-  };
   const complete = required.every((name) => scalarNonEmpty(query[name]));
   return {
     status: complete ? "constructed" : "missing_required_input",

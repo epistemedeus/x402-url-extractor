@@ -1,28 +1,26 @@
-function actionLines(actions) {
+import {
+  formatSkillActionLine,
+  formatSkillAlternateLine,
+} from "./publication-examples.mjs";
+
+function actionLines(actions, alternate = null) {
   if (!Array.isArray(actions) || actions.length === 0) {
     throw new TypeError("actions must be a non-empty array");
   }
   const seen = new Set();
-  return actions.map((action) => {
-    const method = String(action?.method || "").toUpperCase();
-    const route = String(action?.route || "");
-    const priceUsdc = Number(action?.priceUsdc);
-    const protocols = Array.isArray(action?.paymentProtocols)
-      ? action.paymentProtocols.map((protocol) => String(protocol)).join(" + ")
-      : "";
-    const key = `${method} ${route}`;
-    if (!/^[A-Z]+$/.test(method) || !route.startsWith("/") || !Number.isFinite(priceUsdc) || priceUsdc <= 0 || !protocols) {
-      throw new TypeError(`invalid action contract: ${key}`);
-    }
+  const lines = actions.map((action) => {
+    const key = `${String(action?.method || "").toUpperCase()} ${String(action?.route || "")}`;
     if (seen.has(key)) throw new TypeError(`duplicate action contract: ${key}`);
     seen.add(key);
-    return `- ${key}: ${priceUsdc} USDC through ${protocols}`;
-  }).join("\n");
+    return formatSkillActionLine(action);
+  });
+  if (alternate) lines.push(formatSkillAlternateLine(alternate));
+  return lines.join("\n");
 }
 
-export function buildSkillContract(publicUrl, actions) {
+export function buildSkillContract(publicUrl, actions, alternate = null) {
   const origin = new URL(publicUrl).origin;
-  const actionsMarkdown = actionLines(actions);
+  const actionsMarkdown = actionLines(actions, alternate);
   return `# SameDayDesk machine commerce gateway
 
 Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, exact-action or stateful delegated-signer policy conformance, work-opportunity economics, cross-registry discoverability, x402 and MPP offer preflight, Morpho borrower risk, market underwriting, historical PreLiquidation replay, or unsigned Morpho protection plans and can pay exact USDC on Base through x402 or native MPP Payment authentication.
@@ -44,7 +42,7 @@ ${actionsMarkdown}
 ## Call and pay
 
 1. Choose an action from the manifest or action catalog.
-2. Send the exact declared method and input. Most actions use GET query parameters; both wallet-policy conformance routes use bounded POST JSON bodies. Agent Skills clients should include X-SameDayDesk-Agent-Source: agent-skills-v1 on the initial request and paid replay. This declared label is attribution only, not authentication or payment.
+2. Send the exact declared method and input. GET lines above already include a bounded seller-authored callable example with every required non-secret query input. POST lines keep JSON schema/body examples and must not be transmitted from this document. Agent Skills clients should include X-SameDayDesk-Agent-Source: agent-skills-v1 on the initial request and paid replay. This declared label is attribution only, not authentication or payment. The Circle Gateway path is the same payment-offer preflight product, not a second catalog action.
 3. One unpaid HTTP 402 carries x402 v2 payment requirements and a native MPP WWW-Authenticate Payment challenge.
 4. Verify the HTTPS resource, exact amount, Base network, canonical USDC asset, and payTo wallet.
 5. If your policy uses seller purchase evidence, follow the same-origin describedby link, verify its exact operation and digest, and bind it into authorization. It is seller-declared evidence, not permission to spend.

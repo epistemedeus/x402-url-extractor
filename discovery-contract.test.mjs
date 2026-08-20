@@ -6,6 +6,8 @@ import {
   declareDiscoveryContract,
   getDiscoveryOutputContract,
   getDiscoveryRequestContract,
+  isSafePublicationInputName,
+  isSensitiveInputName,
   projectDiscoveryRequest,
 } from "./discovery-contract.mjs";
 
@@ -141,6 +143,17 @@ test("declares and preserves a validated POST JSON-body contract", () => {
     status: "not_measured",
     requiredKeyCount: 0,
   });
+});
+
+test("classifies secret-like input names as unsafe to publish", () => {
+  assert.equal(isSensitiveInputName("api_token"), true);
+  assert.equal(isSensitiveInputName("accessToken"), true);
+  assert.equal(isSensitiveInputName("signature"), true);
+  assert.equal(isSensitiveInputName("url"), false);
+  assert.equal(isSafePublicationInputName("rewardUsd"), true);
+  assert.equal(isSafePublicationInputName("api_token"), false);
+  assert.equal(isSafePublicationInputName("payment_signature"), false);
+  assert.equal(isSafePublicationInputName("signature"), true);
 });
 
 test("does not measure credential-like required keys", () => {

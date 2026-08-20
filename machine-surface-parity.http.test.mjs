@@ -11,6 +11,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 import { parseLlmsPaidRoutes, validateMachineSurfaceParity } from "./machine-surface-parity.mjs";
+import { renderGitHubMachineCommerceSkill } from "./github-machine-commerce-skill.mjs";
+import { validatePublicationExampleParity } from "./publication-examples.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const SNAPSHOT_MISSING_FROM_LLMS = [
@@ -96,8 +98,9 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
 
   assert.equal(await listening, true);
   const base = `http://127.0.0.1:${port}`;
-  const [llms, catalog, agentCard, openapi, mppOpenapi, manifest, mcpDescriptor] = await Promise.all([
+  const [llms, skillMd, catalog, agentCard, openapi, mppOpenapi, manifest, mcpDescriptor] = await Promise.all([
     readText(base, "/llms.txt"),
+    readText(base, "/skill.md"),
     readJson(base, "/api/actions"),
     readJson(base, "/.well-known/agent-card.json"),
     readJson(base, "/openapi.json"),
@@ -133,7 +136,8 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(receipt.mcpToolCount, 22);
   assert.equal(mcpDescriptor.toolCount, 22);
 
-  const llmsRoutes = parseLlmsPaidRoutes(llms).map((entry) => entry.route);
+  const listed = parseLlmsPaidRoutes(llms);
+  const llmsRoutes = listed.map((entry) => entry.route);
   for (const route of SNAPSHOT_MISSING_FROM_LLMS) {
     assert.ok(llmsRoutes.includes(route), `llms.txt still missing ${route}`);
     assert.ok(catalog.actions.some((action) => action.route === route), `catalog missing ${route}`);
@@ -145,4 +149,44 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(mcpToolNames.includes("circle_gateway"), false);
   assert.equal(openapi.paths[CIRCLE_ROUTE]?.get?.["x-payment-info"] != null, true);
   assert.equal(mppOpenapi.paths[CIRCLE_ROUTE], undefined);
+
+  const githubSkill = renderGitHubMachineCommerceSkill({
+    origin: "https://agents.samedaydesk.com",
+    actions: catalog.actions,
+    alternate: catalog.alternateAccess,
+  });
+  const publication = validatePublicationExampleParity({
+    actions: catalog.actions,
+    alternate: catalog.alternateAccess,
+    documents: { llms, skillMd, githubSkill },
+  });
+  assert.equal(publication.ok, true);
+  assert.equal(publication.getExamples, 20);
+  assert.equal(publication.postExamples, 2);
+  assert.equal(publication.alternateExamples, 1);
+  assert.match(skillMd, /X-SameDayDesk-Agent-Source: agent-skills-v1/);
+  assert.match(githubSkill, /X-SameDayDesk-Agent-Source: agent-skills-v1/);
+  assert.match(githubSkill, /^---\nname: samedaydesk-machine-commerce\n/);
+  assert.doesNotMatch(githubSkill, /0\.005 USDC|\$0\.005/);
+
+  for (const action of catalog.actions.filter((entry) => entry.method === "GET")) {
+    const row = listed.find((entry) => entry.route === action.route);
+    assert.equal(row.url, action.request.exampleUrl);
+    assert.ok(row.query.startsWith("?"));
+    assert.equal(row.transmissible, true);
+    assert.ok(skillMd.includes(action.request.exampleUrl));
+  }
+  for (const action of catalog.actions.filter((entry) => entry.method === "POST")) {
+    const row = listed.find((entry) => entry.route === action.route);
+    assert.equal(row.method, "POST");
+    assert.equal(row.transmissible, false);
+    assert.equal(row.url, null);
+    assert.equal(row.bodyExample, true);
+    assert.ok(skillMd.includes(JSON.stringify(action.request.example.body)));
+    assert.equal(skillMd.includes(`${action.route}?`), false);
+  }
+  assert.equal(
+    listed.find((entry) => entry.route === CIRCLE_ROUTE).url,
+    catalog.alternateAccess.request.exampleUrl,
+  );
 });

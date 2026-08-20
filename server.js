@@ -35,6 +35,8 @@ import {
   renderLlmsTxt,
   validateMachineSurfaceParity,
 } from "./machine-surface-parity.mjs";
+import { validatePublicationExampleParity } from "./publication-examples.mjs";
+import { renderGitHubMachineCommerceSkill } from "./github-machine-commerce-skill.mjs";
 import {
   BAZAAR_RESOURCE_METADATA,
   bazaarResourceMetadataFor,
@@ -1026,6 +1028,21 @@ const constructionParityReceipt = () => {
     agentCard: currentAgentCard(),
     alternateAccess: catalog.alternateAccess,
   });
+  const llms = renderLlmsTxt({
+    origin: PUBLIC_URL,
+    facilitator: FACILITATOR,
+    payTo: PAY_TO,
+    actions: catalog.actions,
+    alternate: catalog.alternateAccess,
+    buyerPolicyRelease: BUYER_POLICY_REFERENCE.release,
+    purchaseEvidencePath: PURCHASE_EVIDENCE_MANIFEST_PATH,
+  });
+  const skillMd = buildSkillContract(PUBLIC_URL, catalog.actions, catalog.alternateAccess);
+  const githubSkill = renderGitHubMachineCommerceSkill({
+    origin: PUBLIC_URL,
+    actions: catalog.actions,
+    alternate: catalog.alternateAccess,
+  });
   const surface = validateMachineSurfaceParity({
     actions: catalog.actions,
     alternate: catalog.alternateAccess,
@@ -1035,17 +1052,14 @@ const constructionParityReceipt = () => {
     mcpToolNames: listMcpToolMetadata().map((entry) => entry.name),
     agentCard: currentAgentCard(),
     catalog,
-    llms: renderLlmsTxt({
-      origin: PUBLIC_URL,
-      facilitator: FACILITATOR,
-      payTo: PAY_TO,
-      actions: catalog.actions,
-      alternate: catalog.alternateAccess,
-      buyerPolicyRelease: BUYER_POLICY_REFERENCE.release,
-      purchaseEvidencePath: PURCHASE_EVIDENCE_MANIFEST_PATH,
-    }),
+    llms,
   });
-  return { ...construction, ...surface };
+  const publication = validatePublicationExampleParity({
+    actions: catalog.actions,
+    alternate: catalog.alternateAccess,
+    documents: { llms, skillMd, githubSkill },
+  });
+  return { ...construction, ...surface, ...publication };
 };
 const solanaAgentRegistration = buildSolanaAgentRegistration({
   publicUrl: PUBLIC_URL,
@@ -1121,7 +1135,8 @@ app.get("/mcp", (_req, res) => {
 // instruction file before they parse OpenAPI or start an MCP session.
 app.get(["/skill.md", "/SKILL.md"], (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
-  return res.type("text/markdown").send(buildSkillContract(PUBLIC_URL, machineActionCatalog().actions));
+  const catalog = machineActionCatalog();
+  return res.type("text/markdown").send(buildSkillContract(PUBLIC_URL, catalog.actions, catalog.alternateAccess));
 });
 
 app.get("/api/actions", (req, res) => {

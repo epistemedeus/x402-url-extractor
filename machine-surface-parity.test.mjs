@@ -13,12 +13,36 @@ import {
 } from "./machine-surface-parity.mjs";
 
 const origin = "https://agents.samedaydesk.com";
+const policyBody = {
+  profileId: "privy-solana-lab",
+  provider: "Privy",
+  network: "solana:mainnet",
+  protocol: "x402",
+  observations: [{ case: "intended", actual: "allowed", denialClass: "none", code: "signed" }],
+};
+
+function getRequest(route, queryParams, required) {
+  const url = new URL(route, origin);
+  const exampleUrl = new URL(route, origin);
+  for (const [name, value] of Object.entries(queryParams).sort(([left], [right]) => left.localeCompare(right))) {
+    exampleUrl.searchParams.set(name, String(value));
+  }
+  return {
+    method: "GET",
+    url: url.href,
+    example: { type: "http", method: "GET", queryParams },
+    schema: { properties: { queryParams: { required } } },
+    exampleUrl: exampleUrl.href,
+  };
+}
+
 const extract = {
   name: "extract",
   method: "GET",
   route: "/extract",
   description: "URL -> structured JSON.",
   priceAtomicUsdc: "5000",
+  request: getRequest("/extract", { url: "https://example.com" }, ["url"]),
 };
 const protection = {
   name: "defi_morpho-protection",
@@ -26,6 +50,7 @@ const protection = {
   route: "/defi/morpho-protection",
   description: "Base Morpho borrower -> unsigned protection plans.",
   priceAtomicUsdc: "100000",
+  request: getRequest("/defi/morpho-protection", { address: "0x8ee9c15c3e5332cbc6ef39a2bb036c63c6549b6e" }, ["address"]),
 };
 const policy = {
   name: "security_wallet-policy-conformance",
@@ -33,12 +58,19 @@ const policy = {
   route: "/security/wallet-policy-conformance",
   description: "Evaluate standardized wallet-policy observations.",
   priceAtomicUsdc: "10000",
+  request: {
+    method: "POST",
+    url: `${origin}/security/wallet-policy-conformance`,
+    example: { type: "http", method: "POST", bodyType: "json", body: policyBody },
+    schema: { properties: { body: { required: ["profileId", "provider", "network", "protocol", "observations"] } } },
+  },
 };
 const alternate = {
   product: "payment_offer_preflight",
   method: "GET",
   route: "/gateway/commerce/payment-offer-preflight",
   priceAtomicUsdc: "5000",
+  request: getRequest("/gateway/commerce/payment-offer-preflight", { url: "https://example.com" }, ["url"]),
 };
 const actions = [extract, protection, policy];
 
@@ -139,9 +171,17 @@ test("renders every canonical paid route plus a labeled Circle alternate", () =>
   ]);
   assert.equal(listed[1].price, "0.10");
   assert.equal(listed[2].method, "POST");
+  assert.equal(listed[2].transmissible, false);
+  assert.equal(listed[2].bodyExample, true);
   assert.equal(listed[3].sameProduct, true);
-  assert.match(llms, /\[POST \/security\/wallet-policy-conformance\]/);
+  assert.equal(listed[3].notSecondCatalogAction, true);
+  assert.equal(listed[0].url, extract.request.exampleUrl);
+  assert.equal(listed[1].url, protection.request.exampleUrl);
+  assert.equal(listed[3].url, alternate.request.exampleUrl);
+  assert.match(llms, /POST \/security\/wallet-policy-conformance: \$0\.01 USDC - JSON body example \(do not transmit\):/);
   assert.match(llms, /same payment-offer preflight product/);
+  assert.match(llms, /not a second catalog action/);
+  assert.doesNotMatch(llms, /\[POST \/security\/wallet-policy-conformance\]\(https:/);
 });
 
 test("accepts exact OpenAPI, x402, MCP, A2A, catalog, llms, and Circle alternate parity", () => {
@@ -157,7 +197,7 @@ test("accepts exact OpenAPI, x402, MCP, A2A, catalog, llms, and Circle alternate
 
 test("fails when llms omits a canonical paid route, matching the 2026-08-20 snapshot", () => {
   const current = surfaces();
-  const omitted = current.llms.replace(/^- \[\/defi\/morpho-protection\].*\n/m, "");
+  const omitted = current.llms.replace(/^- \[\/defi\/morpho-protection[^\]]*\]\(https:[^)]+\).*\n/m, "");
   assert.throws(
     () => validateMachineSurfaceParity(surfaces({ llms: omitted })),
     /\/defi\/morpho-protection is missing from llms.txt/,

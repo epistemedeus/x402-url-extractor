@@ -1,3 +1,8 @@
+import {
+  callableGetExample,
+  postSchemaBodyExample,
+} from "./publication-examples.mjs";
+
 /**
  * Declarative inclusion policy for paid machine surfaces.
  *
@@ -67,32 +72,63 @@ export function formatLlmsPrice(priceAtomicUsdc) {
 export function parseLlmsPaidRoutes(text) {
   const routes = [];
   for (const line of String(text || "").split(/\r?\n/)) {
-    const match = /^\s*-\s*\[([^\]]+)\]\((https:[^)]+)\)/.exec(line);
-    if (!match) continue;
-    const url = new URL(match[2]);
-    const label = match[1].trim();
-    const method = /^POST\b/i.test(label) || /:\s*POST\b/i.test(line) || /\bPOST\b/.test(label)
-      ? "POST"
-      : "GET";
+    const link = /^\s*-\s*\[([^\]]+)\]\((https:[^)]+)\)/.exec(line);
+    if (link) {
+      const url = new URL(link[2]);
+      const label = link[1].trim();
+      const method = /^POST\b/i.test(label) || /:\s*POST\b/i.test(line) || /\bPOST\b/.test(label)
+        ? "POST"
+        : "GET";
+      const price = /\$([0-9]+(?:\.[0-9]+)?)\s*USDC/.exec(line)?.[1] || null;
+      routes.push({
+        method,
+        route: url.pathname,
+        url: url.href,
+        query: url.search,
+        transmissible: method === "GET",
+        price,
+        line,
+        sameProduct: /same (?:payment-offer )?preflight product/i.test(line),
+        notSecondCatalogAction: /not a second catalog action/i.test(line),
+      });
+      continue;
+    }
+    const post = /^\s*-\s*POST\s+(\/[^:\s]+)\s*:/.exec(line);
+    if (!post) continue;
     const price = /\$([0-9]+(?:\.[0-9]+)?)\s*USDC/.exec(line)?.[1] || null;
     routes.push({
-      method,
-      route: url.pathname,
-      url: url.href,
+      method: "POST",
+      route: post[1],
+      url: null,
+      query: "",
+      transmissible: false,
+      bodyExample: /JSON body example \(do not transmit\)/i.test(line),
       price,
       line,
-      sameProduct: /same (?:payment-offer )?preflight product/i.test(line),
+      sameProduct: false,
+      notSecondCatalogAction: /not a second catalog action/i.test(line),
     });
   }
   return routes;
 }
 
-function llmsLine({ origin, method, route, priceAtomicUsdc, description }) {
-  const pathLabel = method === "POST" ? `POST ${route}` : route;
+function llmsLine({ origin, method, route, priceAtomicUsdc, description, request = null }) {
   const body = method === "POST" && !/^POST\b/i.test(description)
     ? `POST ${description}`
     : description;
-  return `- [${pathLabel}](${origin}${route}): ${formatLlmsPrice(priceAtomicUsdc)} USDC - ${flatten(body)}`;
+  const price = formatLlmsPrice(priceAtomicUsdc);
+  const flat = flatten(body);
+  if (method === "GET") {
+    const example = callableGetExample({ method, route, request });
+    const parsed = new URL(example.exampleUrl);
+    const pathLabel = `${parsed.pathname}${parsed.search}`;
+    return `- [${pathLabel}](${example.exampleUrl}): ${price} USDC - ${flat}`;
+  }
+  if (method === "POST") {
+    const example = postSchemaBodyExample({ method, route, request });
+    return `- POST ${route}: ${price} USDC - JSON body example (do not transmit): ${example.bodyJson}. ${flat}`;
+  }
+  fail(`${method} ${route} uses an unsupported llms method`);
 }
 
 export function renderLlmsTxt({
@@ -113,6 +149,7 @@ export function renderLlmsTxt({
     route: action.route,
     priceAtomicUsdc: action.priceAtomicUsdc,
     description: action.description,
+    request: action.request,
   }));
   if (alternate) {
     lines.push(llmsLine({
@@ -120,7 +157,8 @@ export function renderLlmsTxt({
       method: "GET",
       route: alternate.route,
       priceAtomicUsdc: alternate.priceAtomicUsdc,
-      description: "the same payment-offer preflight product through Circle Gateway x402 Nanopayments, with gasless buyer authorization and batched USDC settlement.",
+      description: "the same payment-offer preflight product through Circle Gateway x402 Nanopayments, with gasless buyer authorization and batched USDC settlement. It is not a second catalog action.",
+      request: alternate.request,
     }));
   }
   return `# SameDayDesk machine commerce gateway
@@ -267,6 +305,8 @@ export function validateMachineSurfaceParity({
 
   const llmsRoutes = parseLlmsPaidRoutes(llms);
   const llmsByRoute = new Map(llmsRoutes.map((entry) => [entry.route, entry]));
+  const liveActions = Array.isArray(actions) ? actions : [];
+  const actionByRoute = new Map(liveActions.map((action) => [action.route, action]));
   for (const action of actionRoutes) {
     const listed = llmsByRoute.get(action.route);
     if (!listed) fail(`${action.method} ${action.route} is missing from llms.txt`);
@@ -277,11 +317,34 @@ export function validateMachineSurfaceParity({
     if (listed.price && listed.price !== expectedPrice) {
       fail(`${action.route} llms price drifted from $${expectedPrice}`);
     }
+    const live = actionByRoute.get(action.route);
+    if (action.method === "GET" && live?.request) {
+      const example = callableGetExample(live);
+      if (listed.url !== example.exampleUrl) {
+        fail(`GET ${action.route} llms href is not the callable example`);
+      }
+      if (!listed.query || listed.transmissible !== true) {
+        fail(`GET ${action.route} llms line is not a callable query example`);
+      }
+    }
+    if (action.method === "POST") {
+      if (listed.transmissible !== false || listed.url) {
+        fail(`POST ${action.route} must not be a transmissible llms URL`);
+      }
+      if (listed.bodyExample !== true) {
+        fail(`POST ${action.route} llms line must keep a schema/body example`);
+      }
+    }
   }
   if (alternate) {
     const listed = llmsByRoute.get(alternate.route);
     if (!listed) fail(`alternate ${alternate.route} is missing from llms.txt`);
     if (!listed.sameProduct) fail("Circle alternate llms line must say it is the same preflight product");
+    if (!listed.notSecondCatalogAction) fail("Circle alternate llms line must say it is not a second catalog action");
+    if (alternate.request) {
+      const example = callableGetExample({ method: "GET", route: alternate.route, request: alternate.request });
+      if (listed.url !== example.exampleUrl) fail("Circle alternate llms href is not the callable example");
+    }
   }
 
   return {
