@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   ContractQualifiedSearchError,
   contractQualifiedSearch,
+  contractQualifiedSearchMcpOutputSchema,
   normalizeContractQualifiedSearchInput,
 } from "./contract-qualified-search.mjs";
 
@@ -56,6 +57,7 @@ test("searches both directories and returns only contract-qualified candidates",
   assert.equal(result.boundary.sellerPostRequestSent, false);
   assert.equal(result.boundary.targetPaymentSent, false);
   assert.deepEqual(result.boundary.querySentTo, ["agent402"]);
+  assert.equal(contractQualifiedSearchMcpOutputSchema.safeParse(result).success, true);
 });
 
 test("discards colon-style unresolved routes and canonical or alias owned supply before auditing", async () => {
@@ -81,6 +83,7 @@ test("rejects underconstrained contracts with controlled evidence", async () => 
   assert.equal(result.decision, "no_qualified_candidate");
   assert.equal(result.rejected[0].reason, "response_contract_incomplete");
   assert.deepEqual(result.rejected[0].findings, ["seller_response_required_path_missing:data.sourceRepository"]);
+  assert.equal(contractQualifiedSearchMcpOutputSchema.safeParse(result).success, true);
 });
 
 test("keeps one directory outage non-fatal and never audits template routes", async () => {

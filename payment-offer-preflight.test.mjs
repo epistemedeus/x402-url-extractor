@@ -8,6 +8,7 @@ import {
   createPinnedLookup,
   normalizePaymentTarget,
   paymentOfferPreflight,
+  paymentOfferPreflightMcpOutputSchema,
   publicAddress,
 } from "./payment-offer-preflight.mjs";
 
@@ -128,6 +129,7 @@ test("normalizes matching x402 and MPP offers without credentials or payment", a
   });
   assert.equal(JSON.stringify(result).includes("opaque"), false);
   assert.equal(JSON.stringify(result).includes("test-payment-challenge"), false);
+  assert.equal(paymentOfferPreflightMcpOutputSchema.safeParse(result).success, true);
 });
 
 test("compares caller-supplied catalog metadata with each live unsigned offer", async () => {
