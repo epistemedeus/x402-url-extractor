@@ -32,6 +32,10 @@ import {
   validateConstructionSurfaceParity,
 } from "./construction-surface.mjs";
 import {
+  renderLlmsTxt,
+  validateMachineSurfaceParity,
+} from "./machine-surface-parity.mjs";
+import {
   BAZAAR_RESOURCE_METADATA,
   bazaarResourceMetadataFor,
   validateBazaarResourceMetadata,
@@ -162,7 +166,7 @@ import {
   x402JobsVerification,
 } from "./directory-verification.mjs";
 import { renderGatewayLanding, wantsGatewayHtml } from "./gateway-landing.mjs";
-import { decorateMcpTool } from "./mcp-tool-metadata.mjs";
+import { decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
 import { BUYER_POLICY_REFERENCE } from "./buyer-policy-reference.mjs";
 import {
   buildSolanaAgentRegistration,
@@ -1016,12 +1020,32 @@ const constructionParityReceipt = () => {
       },
     } : {}),
   });
-  return validateConstructionSurfaceParity({
+  const construction = validateConstructionSurfaceParity({
     actions: catalog.actions,
     manifestItems,
     agentCard: currentAgentCard(),
     alternateAccess: catalog.alternateAccess,
   });
+  const surface = validateMachineSurfaceParity({
+    actions: catalog.actions,
+    alternate: catalog.alternateAccess,
+    openapi: buildOpenApiDocument({ profile: "agentcash" }),
+    mppOpenapi: buildOpenApiDocument({ profile: "mpp" }),
+    manifestItems,
+    mcpToolNames: listMcpToolMetadata().map((entry) => entry.name),
+    agentCard: currentAgentCard(),
+    catalog,
+    llms: renderLlmsTxt({
+      origin: PUBLIC_URL,
+      facilitator: FACILITATOR,
+      payTo: PAY_TO,
+      actions: catalog.actions,
+      alternate: catalog.alternateAccess,
+      buyerPolicyRelease: BUYER_POLICY_REFERENCE.release,
+      purchaseEvidencePath: PURCHASE_EVIDENCE_MANIFEST_PATH,
+    }),
+  });
+  return { ...construction, ...surface };
 };
 const solanaAgentRegistration = buildSolanaAgentRegistration({
   publicUrl: PUBLIC_URL,
@@ -1142,55 +1166,18 @@ app.post("/a2a/message:send", (req, res) => {
   }));
 });
 // --- /llms.txt: agent/LLM-native discovery surface (llmstxt.org convention).
-// Free route. Tells crawling LLM agents what we sell and exactly how to pay (x402),
-// the same channel our category peers (Melvea, cryptojp, img402) use to be found.
+// Generated from the canonical paid-action catalog plus the Circle alternate.
 app.get("/llms.txt", (_req, res) => {
-  const line = (path, price, desc) => `- [${path}](${PUBLIC_URL}${path}): ${price} USDC - ${desc}`;
-  res.type("text/plain").send(`# SameDayDesk machine commerce gateway
-
-> Machine-discoverable HTTP capabilities settle USDC on Base through either x402 or native MPP Payment authentication. Payment-offer preflight also has a Circle Gateway x402 path for gasless batched USDC Nanopayments. MCP remains Base x402-gated. No account or subscription is required. Current standard facilitator: ${FACILITATOR}. payTo ${PAY_TO}.
-
-## Endpoints
-${line("/defi/morpho-position", MORPHO_POSITION_PRICE, "Base borrower address -> deterministic Morpho LTV, LLTV, health factor, liquidation headroom, direct-RPC cross-check, and collateral-price stress scenarios. Read-only; scenarios are not probabilities.")}
-${line("/defi/morpho-market-underwrite", MORPHO_MARKET_UNDERWRITE_PRICE, "Base market ID -> independently cross-checked parameters, liquidity, utilization, trailing APY, borrower concentration and health bands, bad debt, PreLiquidation supply, and explicit evidence flags. No opaque score.")}
-${line("/defi/morpho-preliquidation-replay", MORPHO_PRELIQUIDATION_REPLAY_PRICE, "Base transaction hash -> strict PreLiquidate event replay with block-time parameters and oracle, repaid debt, seized collateral, gross protocol incentive, and gas. Gross evidence is not net profit.")}
-${line("/enrich", ENRICH_PRICE, "domain -> agent-ready company intelligence: identity, industry keywords, tech stack, social profiles, contact surface, DNS + email infra (MX/SPF/DMARC), and an AI-readiness score. The frictionless, pay-per-call alternative to signup-gated Clearbit/Apollo.")}
-${line("/wallet-enrich", WALLET_ENRICH_PRICE, "Base/EVM 0x address -> agent-ready on-chain profile: EOA vs contract, native ETH + token holdings, token/NFT contract metadata, proxy + activity signals, and a derived profile label. Pure Base RPC, no keys. Size up a wallet/contract before sending funds, swapping, or calling it.")}
-${line("/extract", EXTRACT_PRICE, "URL -> clean structured data: title, description, text, all JSON-LD, OpenGraph/Twitter meta, headings, links, AI-readiness signals.")}
-${line("/read", READ_PRICE, "URL -> full page content as clean Markdown, ready for LLM context.")}
-${line("/scan", SCAN_PRICE, "static supply-chain security scan of a public GitHub repo before an agent installs/runs it; flags exfil sinks, credential reads, install-time curl|bash.")}
-${line("/schemaforge", SCHEMAFORGE_PRICE, "business site -> paste-ready JSON-LD structured-data bundle + a gap diff vs the live site.")}
-${line("/deep-audit", DEEP_AUDIT_PRICE, "domain -> bundled AI-search-readiness audit with firmographics, technical signals, structured-data gaps, and a paste-ready fix list.")}
-${line("/distribution/agent-discoverability-audit", AGENT_DISCOVERABILITY_AUDIT_PRICE, "public HTTPS service origin plus a brand-blind capability intent -> point-in-time rank, dependency-labeled coverage, canonical-vs-alias identity, duplicate records, expected-route presence, and price drift across ten public machine-service discovery views. Optional runtimeUrl derives the comparison price from a same-origin unsigned x402 or MPP offer; optional surfaceAudit checks the target's public Agent Card, ERC-8004 registration document, and action catalog. No catalog credential, signature, or payment.")}
-${line("/commerce/payment-offer-preflight", PAYMENT_OFFER_PREFLIGHT_PRICE, "exact public HTTPS GET URL -> compare and normalize x402 and MPP payment challenges and terms before buyer authorization; check route and realm binding, expiry, and economic parity. Uses no target credential, signature, payment, redirect, or response body.")}
-${line("/commerce/seller-integrity-audit", SELLER_INTEGRITY_AUDIT_PRICE, "public seller origin plus exact paid GET or POST path -> live machine-buyability audit for GET, static contract-readiness audit for POST, and recursively guaranteed buyer-required success paths. POST sends no target request. Returns controlled repair actions without target credentials or payment.")}
-${line("/commerce/contract-qualified-search", CONTRACT_QUALIFIED_SEARCH_PRICE, "capability intent plus buyer-required JSON paths -> bounded Agent402 and MPP search for services whose exact seller contracts guarantee those outputs. Rejects unresolved routes and owned supply before audit; uses no credential, wallet, seller POST, or target payment.")}
-${line("/distribution/agent-surface-budget-audit", AGENT_SURFACE_BUDGET_AUDIT_PRICE, "public service origin plus MCP, OpenAPI, or both mode -> bounded discovery byte budgets, comparative token estimates, heaviest definitions, missing selection contracts, and progressive-discovery fixes. Unselected surfaces are not fetched or judged; no target tool or payment is sent.")}
-${line("/security/wallet-policy-conformance", WALLET_POLICY_CONFORMANCE_PRICE, "POST standardized wallet-policy observations -> explicit conformant, partial, or unsafe decision. Distinguishes provider policy denial from validation and generic provider failure, and tests exact execution shape separately from operation allowlisting. Accepts no wallet credentials or raw provider payloads.")}
-${line("/security/stateful-wallet-policy-conformance", STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE, "POST standardized stateful wallet-policy observations -> explicit conformant, partial, or unsafe decision for sequential caps, signed-but-unbroadcast accounting, ABI extraction, concurrency, counter references, and application serialization. Accepts no counter values, resource IDs, credentials, or raw provider payloads.")}
-${circleGateway.enabled ? line(CIRCLE_GATEWAY_PATH, PAYMENT_OFFER_PREFLIGHT_PRICE, "the same payment-offer preflight product through Circle Gateway x402 Nanopayments, with gasless buyer authorization and batched USDC settlement.") : ""}
-
-## How to pay
-1. GET an endpoint such as ${PUBLIC_URL}/enrich?domain=stripe.com. One HTTP 402 advertises both protocols.
-2. For x402, use PAYMENT-REQUIRED with an x402 v2 client and replay with PAYMENT-SIGNATURE. A successful response carries PAYMENT-RESPONSE.
-3. For MPP, use WWW-Authenticate: Payment with an mppx EVM charge client and replay with Authorization: Payment. A successful response carries Payment-Receipt.
-4. The Circle Gateway route advertises GatewayWalletBatched x402 requirements and settles the same quoted amount into the seller's Gateway balance.
-5. Runtime payment challenges are authoritative. Enforce the chosen scheme, network, amount, and recipient before signing.
-
-## Discovery
-- x402 manifest: ${PUBLIC_URL}/.well-known/x402
-- OpenAPI: ${PUBLIC_URL}/openapi.json
-- Skill contract: ${PUBLIC_URL}/skill.md
-- Action catalog: ${PUBLIC_URL}/api/actions
-- A2A agent card: ${PUBLIC_URL}/.well-known/agent-card.json
-- Solana Agent Registry metadata: ${PUBLIC_URL}/.well-known/agent-registration.json
-- Aggregate demand telemetry: ${PUBLIC_URL}/v0/commerce-demand.json
-- Purchase evidence: ${PUBLIC_URL}${PURCHASE_EVIDENCE_MANIFEST_PATH}
-- Buyer policy reference: ${BUYER_POLICY_REFERENCE.release}
-- Wallet-policy conformance contract: ${PUBLIC_URL}/schemas/wallet-policy-conformance-v1.json
-- Stateful wallet-policy conformance contract: ${PUBLIC_URL}/schemas/stateful-wallet-policy-conformance-v1.json
-- Source: https://github.com/epistemedeus/x402-url-extractor
-`);
+  const catalog = machineActionCatalog();
+  res.type("text/plain").send(renderLlmsTxt({
+    origin: PUBLIC_URL,
+    facilitator: FACILITATOR,
+    payTo: PAY_TO,
+    actions: catalog.actions,
+    alternate: catalog.alternateAccess,
+    buyerPolicyRelease: BUYER_POLICY_REFERENCE.release,
+    purchaseEvidencePath: PURCHASE_EVIDENCE_MANIFEST_PATH,
+  }));
 });
 
 app.get("/schemas/wallet-policy-conformance-v1.json", (_req, res) => {
