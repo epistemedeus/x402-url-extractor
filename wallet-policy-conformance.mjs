@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   SCHEMAS,
   WALLET_POLICY_OBSERVATION_CASES,
@@ -7,6 +8,14 @@ import {
   walletPolicyObservationInputSchema,
   walletPolicyObservationOutputSchema,
 } from "agent-payment-policy";
+
+const WALLET_CASE_VALUES = /** @type {[string, ...string[]]} */ ([...WALLET_POLICY_OBSERVATION_CASE_NAMES]);
+const WALLET_RESULT_FINDINGS = /** @type {[string, ...string[]]} */ ([
+  "expected_behavior",
+  "unsafe_allowed",
+  "expected_behavior_not_proven",
+  "denied_outside_provider_policy",
+]);
 
 const PRODUCT_SCHEMA = "samedaydesk.wallet-policy-conformance.v1";
 const STANDARD_INPUT_SCHEMA = SCHEMAS.walletPolicyObservation;
@@ -72,6 +81,59 @@ export function walletPolicyConformanceOutputSchema() {
   schema.properties.schemaVersion = { type: "string", const: PRODUCT_SCHEMA };
   schema.properties.standardSchemaVersion = { type: "string", const: STANDARD_OUTPUT_SCHEMA };
   schema.properties.product = { type: "string", const: "samedaydesk-wallet-policy-conformance" };
+  schema.properties.profile = {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      profileId: { type: "string" },
+      provider: { type: "string" },
+      network: { type: "string" },
+      protocol: { type: "string" },
+    },
+    required: ["profileId", "provider", "network", "protocol"],
+  };
+  schema.properties.results = {
+    type: "array",
+    items: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        case: { type: "string", enum: WALLET_CASE_VALUES },
+        actual: { type: "string", enum: ["allowed", "denied", "error"] },
+        denialClass: { type: "string", enum: ["none", "policy", "validation", "provider"] },
+        code: { type: "string", pattern: "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$" },
+        expected: { type: "string", enum: ["allow", "deny"] },
+        control: { type: ["string", "null"] },
+        required: { type: "boolean" },
+        expectationMet: { type: "boolean" },
+        providerNativeVerified: { type: "boolean" },
+        finding: { type: "string", enum: WALLET_RESULT_FINDINGS },
+      },
+      required: [
+        "case",
+        "actual",
+        "denialClass",
+        "expected",
+        "control",
+        "required",
+        "expectationMet",
+        "providerNativeVerified",
+        "finding",
+      ],
+    },
+  };
+  schema.properties.boundary = {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      credentialsAccepted: { type: "boolean", const: false },
+      walletAccessed: { type: "boolean", const: false },
+      signatureVerified: { type: "boolean", const: false },
+      transactionBroadcast: { type: "boolean", const: false },
+      statement: { type: "string" },
+    },
+    required: ["credentialsAccepted", "walletAccessed", "signatureVerified", "transactionBroadcast", "statement"],
+  };
   schema.required = [
     "schemaVersion",
     "standardSchemaVersion",
@@ -80,6 +142,49 @@ export function walletPolicyConformanceOutputSchema() {
   ];
   return schema;
 }
+
+const walletResultMcpSchema = z.object({
+  case: z.enum(WALLET_CASE_VALUES),
+  actual: z.enum(["allowed", "denied", "error"]),
+  denialClass: z.enum(["none", "policy", "validation", "provider"]),
+  code: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$/).optional(),
+  expected: z.enum(["allow", "deny"]),
+  control: z.string().nullable(),
+  required: z.boolean(),
+  expectationMet: z.boolean(),
+  providerNativeVerified: z.boolean(),
+  finding: z.enum(WALLET_RESULT_FINDINGS),
+}).strict();
+
+export const walletPolicyConformanceMcpOutputSchema = z.object({
+  schemaVersion: z.literal(PRODUCT_SCHEMA),
+  standardSchemaVersion: z.literal(STANDARD_OUTPUT_SCHEMA),
+  product: z.literal("samedaydesk-wallet-policy-conformance"),
+  evaluatedAt: z.string().datetime(),
+  profile: z.object({
+    profileId: z.string(),
+    provider: z.string(),
+    network: z.string(),
+    protocol: z.string(),
+  }).strict(),
+  decision: z.enum(["conformant", "partial", "unsafe"]),
+  complete: z.boolean(),
+  exactShapePassed: z.boolean(),
+  results: z.array(walletResultMcpSchema),
+  providerNativeVerified: z.array(z.string()),
+  providerNativeUnverified: z.array(z.string()),
+  notEvaluatedByWalletPolicy: z.array(z.string()),
+  missingRequiredCases: z.array(z.string()),
+  unsafeCases: z.array(z.string()),
+  inconclusiveCases: z.array(z.string()),
+  boundary: z.object({
+    credentialsAccepted: z.literal(false),
+    walletAccessed: z.literal(false),
+    signatureVerified: z.literal(false),
+    transactionBroadcast: z.literal(false),
+    statement: z.string(),
+  }).strict(),
+}).strict();
 
 export function walletPolicyConformanceContract({ endpoint, priceAtomicUsdc, paymentProtocols = ["x402", "mpp"] } = {}) {
   let url;

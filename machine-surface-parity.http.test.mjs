@@ -7,10 +7,12 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import Ajv from "ajv";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 import { parseLlmsPaidRoutes, validateMachineSurfaceParity } from "./machine-surface-parity.mjs";
+import { opportunityPreflight } from "./opportunity-preflight.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const SNAPSHOT_MISSING_FROM_LLMS = [
@@ -109,8 +111,10 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   const client = new Client({ name: "surface-parity", version: "0" });
   await client.connect(new StreamableHTTPClientTransport(new URL(`${base}/mcp`)));
   let mcpToolNames;
+  let mcpTools;
   try {
-    mcpToolNames = (await client.listTools()).tools.map((tool) => tool.name);
+    mcpTools = (await client.listTools()).tools;
+    mcpToolNames = mcpTools.map((tool) => tool.name);
   } finally {
     await client.close();
   }
@@ -145,4 +149,130 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(mcpToolNames.includes("circle_gateway"), false);
   assert.equal(openapi.paths[CIRCLE_ROUTE]?.get?.["x-payment-info"] != null, true);
   assert.equal(mppOpenapi.paths[CIRCLE_ROUTE], undefined);
+
+  const PRIOR_TYPED_MCP = [
+    "scan",
+    "morpho_protection",
+    "morpho_preliquidation_replay",
+    "payment_offer_preflight",
+    "contract_qualified_search",
+    "agent_surface_budget_audit",
+    "settlement_proof",
+  ];
+  const NEW_TYPED_MCP = [
+    "opportunity_preflight",
+    "wallet_policy_conformance",
+    "stateful_wallet_policy_conformance",
+  ];
+  const typed = mcpTools.filter((tool) => tool.outputSchema);
+  assert.equal(typed.length, 10);
+  for (const name of PRIOR_TYPED_MCP.concat(NEW_TYPED_MCP)) {
+    const tool = mcpTools.find((entry) => entry.name === name);
+    assert.ok(tool, `missing MCP tool ${name}`);
+    assert.equal(tool.outputSchema?.type, "object");
+    assert.equal(tool.outputSchema.additionalProperties, false);
+  }
+
+  const paidPost200 = [
+    ["/work/opportunity-preflight", "ok", "economics"],
+    ["/security/wallet-policy-conformance", "schemaVersion", "exactShapePassed"],
+    ["/security/stateful-wallet-policy-conformance", "schemaVersion", "strictBudgetPassed"],
+  ];
+  for (const [path, ...required] of paidPost200) {
+    const schema = openapi.paths[path]?.post?.responses?.["200"]?.content?.["application/json"]?.schema;
+    assert.ok(schema, `OpenAPI POST ${path} 200 lacks application/json schema`);
+    assert.equal(schema.additionalProperties, false);
+    for (const field of required) {
+      assert.equal(schema.required.includes(field), true, `POST ${path} 200 omitted required ${field}`);
+    }
+    const mppSchema = mppOpenapi.paths[path]?.post?.responses?.["200"]?.content?.["application/json"]?.schema;
+    assert.deepEqual(mppSchema?.required, schema.required);
+  }
+
+  const bazaarRoutes = [
+    { route: "/work/opportunity-preflight", field: "economics" },
+    { route: "/security/wallet-policy-conformance", field: "exactShapePassed" },
+    { route: "/security/stateful-wallet-policy-conformance", field: "strictBudgetPassed" },
+  ];
+  for (const { route, field } of bazaarRoutes) {
+    const action = catalog.actions.find((entry) => entry.route === route);
+    assert.ok(action?.response?.schema, `catalog missing response schema for ${route}`);
+    assert.equal(action.response.schema.additionalProperties, false);
+    assert.equal(action.response.schema.required.includes(field), true, `catalog ${route} omitted ${field}`);
+  }
+
+  const opportunityGet = openapi.paths["/work/opportunity-preflight"]?.get;
+  const opportunityPost = openapi.paths["/work/opportunity-preflight"]?.post;
+  const getSchema = opportunityGet?.responses?.["200"]?.content?.["application/json"]?.schema;
+  const postSchema = opportunityPost?.responses?.["200"]?.content?.["application/json"]?.schema;
+  const catalogAction = catalog.actions.find((entry) => entry.route === "/work/opportunity-preflight");
+  const catalogSchema = catalogAction?.response?.schema;
+  const mppGetSchema = mppOpenapi.paths["/work/opportunity-preflight"]?.get?.responses?.["200"]?.content?.["application/json"]?.schema;
+  assert.equal(catalogAction?.method, "GET");
+  assert.equal(getSchema?.additionalProperties, false);
+  assert.equal(mppGetSchema?.additionalProperties, false);
+  assert.equal(catalogSchema?.additionalProperties, false);
+  assert.deepEqual(catalogSchema.required, postSchema.required);
+  assert.deepEqual(getSchema.required, postSchema.required);
+  assert.equal(postSchema.additionalProperties, false);
+  assert.equal(Object.hasOwn(postSchema.properties, "sample"), false);
+  assert.equal(Object.hasOwn(postSchema.properties, "charged"), false);
+  assert.equal(Object.hasOwn(postSchema.properties, "trial"), false);
+  assert.equal(Object.hasOwn(getSchema.properties, "sample"), true);
+  assert.equal(Object.hasOwn(getSchema.properties, "charged"), true);
+  assert.equal(Object.hasOwn(getSchema.properties, "trial"), true);
+  assert.equal(getSchema.required.includes("trial"), false);
+  assert.equal(catalogSchema.required.includes("trial"), false);
+  assert.equal(opportunityGet.parameters.some((parameter) => parameter.name === "trial"), false);
+  assert.deepEqual(
+    opportunityGet.parameters.map((parameter) => parameter.name),
+    [
+      "platform",
+      "rewardUsd",
+      "hours",
+      "hourlyCostUsd",
+      "computeUsd",
+      "mandatorySpendUsd",
+      "reusableValueUsd",
+      "selectionProbabilityPct",
+      "competition",
+      "slots",
+      "agentAccess",
+      "acceptance",
+      "settlement",
+    ],
+  );
+
+  const trialResponse = await fetch(`${base}/work/opportunity-preflight?trial=1`);
+  assert.equal(trialResponse.status, 200, `trial GET ${trialResponse.status}`);
+  const trialBody = await trialResponse.json();
+  const paidBody = opportunityPreflight({
+    rewardUsd: 10,
+    hours: 0.25,
+    hourlyCostUsd: 4,
+    computeUsd: 0.5,
+    mandatorySpendUsd: 0,
+    reusableValueUsd: 1,
+    selectionProbabilityPct: 80,
+    competition: 1,
+    slots: 1,
+    agentAccess: "agent_allowed",
+    acceptance: "deterministic",
+    settlement: "escrow",
+  });
+  const ajv = new Ajv({ allErrors: true, strict: false });
+  const validateGet = ajv.compile(structuredClone(getSchema));
+  const validateCatalog = ajv.compile(structuredClone(catalogSchema));
+  const validatePost = ajv.compile(structuredClone(postSchema));
+  assert.equal(validateGet(trialBody), true, JSON.stringify(validateGet.errors, null, 2));
+  assert.equal(validateCatalog(trialBody), true, JSON.stringify(validateCatalog.errors, null, 2));
+  assert.equal(validatePost(JSON.parse(JSON.stringify(paidBody))), true, JSON.stringify(validatePost.errors, null, 2));
+  assert.equal(validatePost(trialBody), false);
+  assert.ok((validatePost.errors || []).some((error) => (
+    error.keyword === "additionalProperties"
+    && ["sample", "charged", "trial"].includes(error.params?.additionalProperty)
+  )));
+  const opportunityMcp = mcpTools.find((tool) => tool.name === "opportunity_preflight");
+  assert.equal(opportunityMcp.outputSchema.additionalProperties, false);
+  assert.equal(opportunityMcp.outputSchema.required.includes("trial"), false);
 });
