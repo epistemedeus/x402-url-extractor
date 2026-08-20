@@ -3,6 +3,12 @@ import { appendFile, chmod, mkdir, readFile, rename, stat, unlink } from "node:f
 import path from "node:path";
 import { Credential } from "mppx";
 import { classifyDiscoveryRequestConstruction } from "./discovery-contract.mjs";
+import {
+  classifyConstructor,
+  classifyEvent,
+  extractMcpClientInfoName,
+  labeledConstructorSource,
+} from "./official-constructor.mjs";
 
 const CRAWLER_PATTERN = /bot|crawler|spider|slurp|uptime|monitor|observer|probe|indexer|headless|preview|liveness|healthcheck|sentineloracle|mcpbeat|agentreeve|agent402|trust[- ]?oracle/i;
 const EXPLOIT_PROBE_PATH_PATTERN = /(?:^|\/)\.(?:env|git)(?:[./]|$)|^\/(?:wp-admin|wp-login\.php|wp-json|xmlrpc\.php)(?:\/|$)|^\/(?:api\/)?(?:config|env|settings)(?:[./]|$)|^\/js\/(?:config|env)\.js$/i;
@@ -631,6 +637,7 @@ export function createCommerceTelemetry({
   credentialAttemptSince = process.env.COMMERCE_CREDENTIAL_ATTEMPT_SINCE || "",
   settlementEvidenceSince = process.env.COMMERCE_SETTLEMENT_EVIDENCE_SINCE || "",
   requestConstructionSince = process.env.COMMERCE_REQUEST_CONSTRUCTION_SINCE || "2026-08-13T16:25:03.766Z",
+  officialConstructorSince = process.env.COMMERCE_OFFICIAL_CONSTRUCTOR_SINCE || "2026-08-20T11:42:00.000Z",
   payerClasses = process.env.COMMERCE_PAYER_CLASSES || "",
   maxBytes = 5 * 1024 * 1024,
 } = {}) {
@@ -661,6 +668,10 @@ export function createCommerceTelemetry({
   const parsedRequestConstructionSince = Date.parse(requestConstructionSince);
   const requestConstructionSinceMs = Number.isFinite(parsedRequestConstructionSince)
     ? parsedRequestConstructionSince
+    : null;
+  const parsedOfficialConstructorSince = Date.parse(officialConstructorSince);
+  const officialConstructorSinceMs = Number.isFinite(parsedOfficialConstructorSince)
+    ? parsedOfficialConstructorSince
     : null;
   const normalizedPayerClasses = normalizeCommercePayerClasses(payerClasses);
   const paymentClassByActor = new Map([...normalizedPayerClasses].map(([address, paymentClass]) => [
@@ -698,10 +709,19 @@ export function createCommerceTelemetry({
     const startedAt = Date.now();
     const headers = req.headers || {};
     const userAgent = headerValue(headers, "user-agent");
-    const declaredAgentDiscoverySource = classifyDeclaredAgentDiscoverySource(
-      headerValue(headers, "x-samedaydesk-agent-source"),
-    );
-    const agentDiscoverySource = declaredAgentDiscoverySource || classifyAgentDiscoverySource(userAgent);
+    const declaredHeader = headerValue(headers, "x-samedaydesk-agent-source");
+    const declaredAgentDiscoverySource = classifyDeclaredAgentDiscoverySource(declaredHeader);
+    const ownerByUserAgent = userAgent.startsWith("SameDayDesk-")
+      || userAgent.startsWith("Pilot-")
+      || OWNER_MONITOR_USER_AGENT_PATTERN.test(userAgent);
+    const constructorHint = classifyConstructor({
+      userAgent,
+      originClass: ownerByUserAgent ? "owner_monitor" : "",
+      declaredHeader,
+    });
+    const agentDiscoverySource = labeledConstructorSource(constructorHint)
+      || declaredAgentDiscoverySource
+      || classifyAgentDiscoverySource(userAgent);
     const suppliedInternal = headerValue(headers, "x-samedaydesk-internal");
     const protocol = paymentProtocol(headers);
     const paymentPresent = Boolean(protocol);
@@ -709,9 +729,11 @@ export function createCommerceTelemetry({
       ? "internal"
       : EXPLOIT_PROBE_PATH_PATTERN.test(req.path || req.url || "")
         ? "scanner"
-      : OWNER_MONITOR_USER_AGENT_PATTERN.test(userAgent)
+      : ownerByUserAgent || constructorHint.excludedFromPublic
         ? "owner_monitor"
       : paymentPresent
+        ? "external"
+      : constructorHint.officialConstructor
         ? "external"
       : agentDiscoverySource
         ? "crawler"
@@ -763,13 +785,45 @@ export function createCommerceTelemetry({
             problem: responseProblem,
           })
         : null;
+      const paymentClass = paymentActor
+        ? paymentClassByActor.get(paymentActor) || ""
+        : "";
+      const constructor = classifyConstructor({
+        userAgent,
+        originClass,
+        paymentClass,
+        mcpClientInfoName: extractMcpClientInfoName(req),
+        declaredHeader,
+      });
+      const resolvedSource = labeledConstructorSource(constructor) || agentDiscoverySource;
+      const resolvedOrigin = constructor.officialConstructor && originClass === "crawler"
+        ? "external"
+        : originClass;
+      const classified = classifyEvent({
+        userAgent,
+        originClass: resolvedOrigin,
+        paymentClass,
+        mcpClientInfoName: extractMcpClientInfoName(req),
+        declaredHeader,
+        method,
+        kind: route.kind,
+        matched: route.matched,
+        status,
+        protocolsOffered,
+        route: route.route,
+        query: req.query || {},
+      });
       enqueue({
         v: 3,
         id: randomUUID(),
         ts: new Date().toISOString(),
         actor,
-        originClass,
-        agentDiscoverySource,
+        originClass: resolvedOrigin,
+        agentDiscoverySource: resolvedSource,
+        officialConstructor: classified.officialConstructor,
+        excludedFromPublic: classified.excludedFromPublic,
+        constructedChallenge: classified.constructed,
+        matchesPublishedExample: classified.matchesPublishedExample,
         method,
         route: route.route,
         matched: route.matched,
@@ -867,6 +921,48 @@ export function createCommerceTelemetry({
         repeatActorCount(constructedRequestActorCountsBySource, source),
       ]),
     );
+
+    const officialConstructorEvents = observedEvents.filter((event) => (
+      officialConstructorSinceMs !== null
+      && Date.parse(event.ts) >= officialConstructorSinceMs
+      && typeof event.officialConstructor === "boolean"
+    ));
+    let agentConstructedObservations = 0;
+    const agentConstructedActorCounts = new Map();
+    const externalConstructedActorCounts = new Map();
+    const officialConstructorCoverage = new Set();
+    for (const event of officialConstructorEvents) {
+      const paymentClass = event.paymentActor
+        ? paymentClassByActor.get(event.paymentActor) || ""
+        : "";
+      const excluded = event.excludedFromPublic === true
+        || paymentClass === "internal"
+        || paymentClass === "validation";
+      const constructed = event.constructedChallenge === true;
+      const publishedExample = event.matchesPublishedExample === true;
+      const official = event.officialConstructor === true;
+      if (constructed && !excluded && event.originClass === "crawler") {
+        agentConstructedObservations += 1;
+        agentConstructedActorCounts.set(
+          event.actor,
+          (agentConstructedActorCounts.get(event.actor) || 0) + 1,
+        );
+      }
+      if (
+        constructed
+        && official
+        && !publishedExample
+        && event.originClass === "external"
+        && !excluded
+      ) {
+        externalConstructedActorCounts.set(
+          event.actor,
+          (externalConstructedActorCounts.get(event.actor) || 0) + 1,
+        );
+        const source = controlledEventSource(event, "direct-or-unattributed");
+        officialConstructorCoverage.add(source);
+      }
+    }
 
     const agentDiscoveryBySource = emptyCounts();
     const agentDiscoveryByRoute = emptyCounts();
@@ -1133,6 +1229,13 @@ export function createCommerceTelemetry({
       constructedRequestActorsBySource,
       repeatConstructedRequestActorsBySource,
       constructedRequestByRoute,
+      officialConstructorSince: officialConstructorSinceMs === null
+        ? null
+        : new Date(officialConstructorSinceMs).toISOString(),
+      externalConstructedActors: externalConstructedActorCounts.size,
+      officialConstructorCoverage: [...officialConstructorCoverage].sort(),
+      agentConstructedObservations,
+      agentConstructedActors: agentConstructedActorCounts.size,
       agentChallengeConvertedPaidSuccesses,
       agentChallengeConvertedActors: agentChallengeConvertedActors.size,
       independentAgentChallengeConvertedActors: independentAgentChallengeConvertedActors.size,
