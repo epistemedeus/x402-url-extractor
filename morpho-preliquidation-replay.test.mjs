@@ -7,7 +7,7 @@ import {
   encodeFunctionData,
   encodeFunctionResult,
 } from "viem";
-import { morphoPreLiquidationReplay } from "./morpho-preliquidation-replay.mjs";
+import { morphoPreLiquidationReplay, morphoPreLiquidationReplayMcpOutputSchema } from "./morpho-preliquidation-replay.mjs";
 
 const TX_HASH = `0x${"a".repeat(64)}`;
 const MARKET_ID = `0x${"b".repeat(64)}`;
@@ -121,6 +121,10 @@ test("reconstructs gross PreLiquidation economics from direct block-state reads"
   assert.equal(result.events[0].grossEconomics.incentivePct, 4.166666);
   assert.equal(result.transaction.gasCostEth, "0.0002");
   assert.match(result.boundary, /not a profitability claim/);
+  assert.equal(morphoPreLiquidationReplayMcpOutputSchema.safeParse(result).success, true);
+  for (const field of ["ok", "product", "transaction", "eventCount", "events", "verification", "boundary"]) {
+    assert.equal(Object.hasOwn(result, field), true);
+  }
 });
 
 test("rejects transactions without a successful PreLiquidate event", async () => {

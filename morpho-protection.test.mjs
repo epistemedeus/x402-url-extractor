@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { encodeAbiParameters, keccak256 } from "viem";
-import { morphoProtection, MORPHO_PROTECTION_CONSTANTS } from "./morpho-protection.mjs";
+import { morphoProtection, morphoProtectionMcpOutputSchema, MORPHO_PROTECTION_CONSTANTS } from "./morpho-protection.mjs";
 
 const ADDRESS = "0x4352Cc849b33a936Ad93bB109aFDec1c89653b4f";
 
@@ -79,6 +79,10 @@ test("quotes deterministic repay and collateral plans that hit a stressed target
     assert.equal(plan.transactions[1].to, MORPHO_PROTECTION_CONSTANTS.MORPHO_BLUE);
   }
   assert.equal(result.invariants.signing, "none");
+  assert.equal(morphoProtectionMcpOutputSchema.safeParse(result).success, true);
+  for (const field of ["ok", "product", "quotes", "invariants", "boundary"]) {
+    assert.equal(Object.hasOwn(result, field), true);
+  }
 });
 
 test("returns no transaction plan when the requested stressed target is already met", async () => {
@@ -91,6 +95,7 @@ test("returns no transaction plan when the requested stressed target is already 
   assert.equal(result.actionableCount, 0);
   assert.equal(result.quotes[0].status, "target_met");
   assert.deepEqual(result.quotes[0].plans, []);
+  assert.equal(morphoProtectionMcpOutputSchema.safeParse(result).success, true);
 });
 
 test("fails closed when direct RPC cannot verify the position core", async () => {
@@ -105,6 +110,7 @@ test("fails closed when direct RPC cannot verify the position core", async () =>
   assert.equal(result.unverifiedCount, 1);
   assert.equal(result.quotes[0].status, "state_unverified");
   assert.deepEqual(result.quotes[0].plans, []);
+  assert.equal(morphoProtectionMcpOutputSchema.safeParse(result).success, true);
 });
 
 test("fails closed when upstream market parameters do not hash to the observed market ID", async () => {
