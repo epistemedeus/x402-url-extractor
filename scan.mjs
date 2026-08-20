@@ -2,6 +2,7 @@
 // public GitHub repo, for an AI agent deciding whether to install/run/use it (a dep,
 // a Claude/MCP skill, an MCP server). Zero deps. STATIC ONLY: reads files via the
 // GitHub API + raw CDN, NEVER clones or runs the target code.
+import { z } from "zod";
 //
 // Differentiated: no x402 competitor does pre-use supply-chain scanning. Plays to our
 // security domain. DANGER requires a genuine exfil destination (low false positives).
@@ -113,6 +114,22 @@ export async function scanRepo(input) {
     scannedAt: new Date().toISOString(),
   };
 }
+
+export const scanRepoMcpOutputSchema = z.object({
+  ok: z.literal(true),
+  repo: z.string(),
+  branch: z.string(),
+  filesScanned: z.number().int().nonnegative(),
+  risk: z.enum(["clean", "suspicious", "dangerous"]),
+  summary: z.string(),
+  findings: z.array(z.object({
+    file: z.string(),
+    severity: z.enum(["danger", "warn"]),
+    why: z.string(),
+  }).strict()).max(50),
+  disclaimer: z.string(),
+  scannedAt: z.string().datetime(),
+}).strict();
 
 // CLI: node scan.mjs owner/repo
 if (import.meta.url === `file://${process.argv[1]}`) {

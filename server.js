@@ -32,6 +32,10 @@ import {
   validateConstructionSurfaceParity,
 } from "./construction-surface.mjs";
 import {
+  renderLlmsTxt,
+  validateMachineSurfaceParity,
+} from "./machine-surface-parity.mjs";
+import {
   BAZAAR_RESOURCE_METADATA,
   bazaarResourceMetadataFor,
   validateBazaarResourceMetadata,
@@ -46,15 +50,15 @@ import { createCommerceTrust } from "./commerce-trust.mjs";
 import { buildSkillContract } from "./skill-contract.mjs";
 import { exposeAgenticTradeProxyDiagnostics } from "./agentictrade-proxy-diagnostics.mjs";
 import { extract, readMarkdown } from "./extract.mjs";
-import { scanRepo } from "./scan.mjs";
+import { scanRepo, scanRepoMcpOutputSchema } from "./scan.mjs";
 import { schemaforge } from "./schemaforge.mjs";
 import { enrich } from "./enrich.mjs";
 import { walletEnrich } from "./wallet-enrich.mjs";
 import { deepAudit } from "./deep-audit.mjs";
 import { morphoPosition } from "./morpho-position.mjs";
-import { morphoProtection } from "./morpho-protection.mjs";
+import { morphoProtection, morphoProtectionMcpOutputSchema } from "./morpho-protection.mjs";
 import { morphoMarketUnderwrite } from "./morpho-market-underwrite.mjs";
-import { morphoPreLiquidationReplay } from "./morpho-preliquidation-replay.mjs";
+import { morphoPreLiquidationReplay, morphoPreLiquidationReplayMcpOutputSchema } from "./morpho-preliquidation-replay.mjs";
 import {
   normalizeOpportunityPreflightRequest,
   opportunityPreflight,
@@ -74,6 +78,7 @@ import {
   normalizePaymentOfferPreflightInput,
   normalizePaymentTarget,
   paymentOfferPreflightInputSchema,
+  paymentOfferPreflightMcpOutputSchema,
   paymentOfferPreflightOutputSchema,
   paymentOfferPreflight,
 } from "./payment-offer-preflight.mjs";
@@ -88,6 +93,7 @@ import {
   CONTRACT_QUALIFIED_SEARCH_EXAMPLE,
   ContractQualifiedSearchError,
   contractQualifiedSearch,
+  contractQualifiedSearchMcpOutputSchema,
   contractQualifiedSearchOutputSchema,
   normalizeContractQualifiedSearchInput,
 } from "./contract-qualified-search.mjs";
@@ -103,6 +109,7 @@ import {
   SettlementProofError,
   normalizeSettlementProofInput,
   settlementProof,
+  settlementProofMcpOutputSchema,
 } from "./settlement-proof.mjs";
 import {
   TransactionReceiptError,
@@ -162,7 +169,7 @@ import {
   x402JobsVerification,
 } from "./directory-verification.mjs";
 import { renderGatewayLanding, wantsGatewayHtml } from "./gateway-landing.mjs";
-import { decorateMcpTool } from "./mcp-tool-metadata.mjs";
+import { decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
 import { BUYER_POLICY_REFERENCE } from "./buyer-policy-reference.mjs";
 import {
   buildSolanaAgentRegistration,
@@ -1016,12 +1023,32 @@ const constructionParityReceipt = () => {
       },
     } : {}),
   });
-  return validateConstructionSurfaceParity({
+  const construction = validateConstructionSurfaceParity({
     actions: catalog.actions,
     manifestItems,
     agentCard: currentAgentCard(),
     alternateAccess: catalog.alternateAccess,
   });
+  const surface = validateMachineSurfaceParity({
+    actions: catalog.actions,
+    alternate: catalog.alternateAccess,
+    openapi: buildOpenApiDocument({ profile: "agentcash" }),
+    mppOpenapi: buildOpenApiDocument({ profile: "mpp" }),
+    manifestItems,
+    mcpToolNames: listMcpToolMetadata().map((entry) => entry.name),
+    agentCard: currentAgentCard(),
+    catalog,
+    llms: renderLlmsTxt({
+      origin: PUBLIC_URL,
+      facilitator: FACILITATOR,
+      payTo: PAY_TO,
+      actions: catalog.actions,
+      alternate: catalog.alternateAccess,
+      buyerPolicyRelease: BUYER_POLICY_REFERENCE.release,
+      purchaseEvidencePath: PURCHASE_EVIDENCE_MANIFEST_PATH,
+    }),
+  });
+  return { ...construction, ...surface };
 };
 const solanaAgentRegistration = buildSolanaAgentRegistration({
   publicUrl: PUBLIC_URL,
@@ -1142,55 +1169,18 @@ app.post("/a2a/message:send", (req, res) => {
   }));
 });
 // --- /llms.txt: agent/LLM-native discovery surface (llmstxt.org convention).
-// Free route. Tells crawling LLM agents what we sell and exactly how to pay (x402),
-// the same channel our category peers (Melvea, cryptojp, img402) use to be found.
+// Generated from the canonical paid-action catalog plus the Circle alternate.
 app.get("/llms.txt", (_req, res) => {
-  const line = (path, price, desc) => `- [${path}](${PUBLIC_URL}${path}): ${price} USDC - ${desc}`;
-  res.type("text/plain").send(`# SameDayDesk machine commerce gateway
-
-> Machine-discoverable HTTP capabilities settle USDC on Base through either x402 or native MPP Payment authentication. Payment-offer preflight also has a Circle Gateway x402 path for gasless batched USDC Nanopayments. MCP remains Base x402-gated. No account or subscription is required. Current standard facilitator: ${FACILITATOR}. payTo ${PAY_TO}.
-
-## Endpoints
-${line("/defi/morpho-position", MORPHO_POSITION_PRICE, "Base borrower address -> deterministic Morpho LTV, LLTV, health factor, liquidation headroom, direct-RPC cross-check, and collateral-price stress scenarios. Read-only; scenarios are not probabilities.")}
-${line("/defi/morpho-market-underwrite", MORPHO_MARKET_UNDERWRITE_PRICE, "Base market ID -> independently cross-checked parameters, liquidity, utilization, trailing APY, borrower concentration and health bands, bad debt, PreLiquidation supply, and explicit evidence flags. No opaque score.")}
-${line("/defi/morpho-preliquidation-replay", MORPHO_PRELIQUIDATION_REPLAY_PRICE, "Base transaction hash -> strict PreLiquidate event replay with block-time parameters and oracle, repaid debt, seized collateral, gross protocol incentive, and gas. Gross evidence is not net profit.")}
-${line("/enrich", ENRICH_PRICE, "domain -> agent-ready company intelligence: identity, industry keywords, tech stack, social profiles, contact surface, DNS + email infra (MX/SPF/DMARC), and an AI-readiness score. The frictionless, pay-per-call alternative to signup-gated Clearbit/Apollo.")}
-${line("/wallet-enrich", WALLET_ENRICH_PRICE, "Base/EVM 0x address -> agent-ready on-chain profile: EOA vs contract, native ETH + token holdings, token/NFT contract metadata, proxy + activity signals, and a derived profile label. Pure Base RPC, no keys. Size up a wallet/contract before sending funds, swapping, or calling it.")}
-${line("/extract", EXTRACT_PRICE, "URL -> clean structured data: title, description, text, all JSON-LD, OpenGraph/Twitter meta, headings, links, AI-readiness signals.")}
-${line("/read", READ_PRICE, "URL -> full page content as clean Markdown, ready for LLM context.")}
-${line("/scan", SCAN_PRICE, "static supply-chain security scan of a public GitHub repo before an agent installs/runs it; flags exfil sinks, credential reads, install-time curl|bash.")}
-${line("/schemaforge", SCHEMAFORGE_PRICE, "business site -> paste-ready JSON-LD structured-data bundle + a gap diff vs the live site.")}
-${line("/deep-audit", DEEP_AUDIT_PRICE, "domain -> bundled AI-search-readiness audit with firmographics, technical signals, structured-data gaps, and a paste-ready fix list.")}
-${line("/distribution/agent-discoverability-audit", AGENT_DISCOVERABILITY_AUDIT_PRICE, "public HTTPS service origin plus a brand-blind capability intent -> point-in-time rank, dependency-labeled coverage, canonical-vs-alias identity, duplicate records, expected-route presence, and price drift across ten public machine-service discovery views. Optional runtimeUrl derives the comparison price from a same-origin unsigned x402 or MPP offer; optional surfaceAudit checks the target's public Agent Card, ERC-8004 registration document, and action catalog. No catalog credential, signature, or payment.")}
-${line("/commerce/payment-offer-preflight", PAYMENT_OFFER_PREFLIGHT_PRICE, "exact public HTTPS GET URL -> compare and normalize x402 and MPP payment challenges and terms before buyer authorization; check route and realm binding, expiry, and economic parity. Uses no target credential, signature, payment, redirect, or response body.")}
-${line("/commerce/seller-integrity-audit", SELLER_INTEGRITY_AUDIT_PRICE, "public seller origin plus exact paid GET or POST path -> live machine-buyability audit for GET, static contract-readiness audit for POST, and recursively guaranteed buyer-required success paths. POST sends no target request. Returns controlled repair actions without target credentials or payment.")}
-${line("/commerce/contract-qualified-search", CONTRACT_QUALIFIED_SEARCH_PRICE, "capability intent plus buyer-required JSON paths -> bounded Agent402 and MPP search for services whose exact seller contracts guarantee those outputs. Rejects unresolved routes and owned supply before audit; uses no credential, wallet, seller POST, or target payment.")}
-${line("/distribution/agent-surface-budget-audit", AGENT_SURFACE_BUDGET_AUDIT_PRICE, "public service origin plus MCP, OpenAPI, or both mode -> bounded discovery byte budgets, comparative token estimates, heaviest definitions, missing selection contracts, and progressive-discovery fixes. Unselected surfaces are not fetched or judged; no target tool or payment is sent.")}
-${line("/security/wallet-policy-conformance", WALLET_POLICY_CONFORMANCE_PRICE, "POST standardized wallet-policy observations -> explicit conformant, partial, or unsafe decision. Distinguishes provider policy denial from validation and generic provider failure, and tests exact execution shape separately from operation allowlisting. Accepts no wallet credentials or raw provider payloads.")}
-${line("/security/stateful-wallet-policy-conformance", STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE, "POST standardized stateful wallet-policy observations -> explicit conformant, partial, or unsafe decision for sequential caps, signed-but-unbroadcast accounting, ABI extraction, concurrency, counter references, and application serialization. Accepts no counter values, resource IDs, credentials, or raw provider payloads.")}
-${circleGateway.enabled ? line(CIRCLE_GATEWAY_PATH, PAYMENT_OFFER_PREFLIGHT_PRICE, "the same payment-offer preflight product through Circle Gateway x402 Nanopayments, with gasless buyer authorization and batched USDC settlement.") : ""}
-
-## How to pay
-1. GET an endpoint such as ${PUBLIC_URL}/enrich?domain=stripe.com. One HTTP 402 advertises both protocols.
-2. For x402, use PAYMENT-REQUIRED with an x402 v2 client and replay with PAYMENT-SIGNATURE. A successful response carries PAYMENT-RESPONSE.
-3. For MPP, use WWW-Authenticate: Payment with an mppx EVM charge client and replay with Authorization: Payment. A successful response carries Payment-Receipt.
-4. The Circle Gateway route advertises GatewayWalletBatched x402 requirements and settles the same quoted amount into the seller's Gateway balance.
-5. Runtime payment challenges are authoritative. Enforce the chosen scheme, network, amount, and recipient before signing.
-
-## Discovery
-- x402 manifest: ${PUBLIC_URL}/.well-known/x402
-- OpenAPI: ${PUBLIC_URL}/openapi.json
-- Skill contract: ${PUBLIC_URL}/skill.md
-- Action catalog: ${PUBLIC_URL}/api/actions
-- A2A agent card: ${PUBLIC_URL}/.well-known/agent-card.json
-- Solana Agent Registry metadata: ${PUBLIC_URL}/.well-known/agent-registration.json
-- Aggregate demand telemetry: ${PUBLIC_URL}/v0/commerce-demand.json
-- Purchase evidence: ${PUBLIC_URL}${PURCHASE_EVIDENCE_MANIFEST_PATH}
-- Buyer policy reference: ${BUYER_POLICY_REFERENCE.release}
-- Wallet-policy conformance contract: ${PUBLIC_URL}/schemas/wallet-policy-conformance-v1.json
-- Stateful wallet-policy conformance contract: ${PUBLIC_URL}/schemas/stateful-wallet-policy-conformance-v1.json
-- Source: https://github.com/epistemedeus/x402-url-extractor
-`);
+  const catalog = machineActionCatalog();
+  res.type("text/plain").send(renderLlmsTxt({
+    origin: PUBLIC_URL,
+    facilitator: FACILITATOR,
+    payTo: PAY_TO,
+    actions: catalog.actions,
+    alternate: catalog.alternateAccess,
+    buyerPolicyRelease: BUYER_POLICY_REFERENCE.release,
+    purchaseEvidencePath: PURCHASE_EVIDENCE_MANIFEST_PATH,
+  }));
 });
 
 app.get("/schemas/wallet-policy-conformance-v1.json", (_req, res) => {
@@ -3411,22 +3401,22 @@ import("./mcp-server.mjs")
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
-        { name: "scan", description: RESOURCES[2].description, price: SCAN_PRICE, inputSchema: { repo: z.string().describe("Public GitHub repo: owner/name or URL") }, run: (a) => scanRepo(a.repo), tags: ["security", "supply-chain", "github"] },
+        { name: "scan", description: RESOURCES[2].description, price: SCAN_PRICE, inputSchema: { repo: z.string().describe("Public GitHub repo: owner/name or URL") }, outputSchema: scanRepoMcpOutputSchema, run: (a) => scanRepo(a.repo), tags: ["security", "supply-chain", "github"] },
         { name: "schemaforge", description: RESOURCES[3].description, price: SCHEMAFORGE_PRICE, inputSchema: { site: z.string().describe("Public business homepage or representative landing-page URL. Live HTML must be directly fetchable; JavaScript is not executed."), vertical: z.string().optional().describe("Optional structured-data template profile. med-spas is currently the specialized profile; unsupported values fall back to it."), city: z.string().optional().describe("Optional city the business serves; used to contextualize the generated structured-data template.") }, run: (a) => schemaforge({ site: a.site, vertical: a.vertical, city: a.city }), tags: ["seo", "json-ld", "geo"] },
         { name: "enrich", description: RESOURCES[4].description, price: ENRICH_PRICE, inputSchema: { domain: z.string().describe("Public company domain or URL, for example stripe.com. Use enrich for company evidence; use wallet_enrich for an EVM address.") }, run: (a) => enrich(a.domain), tags: ["enrichment", "company-data", "firmographics"] },
         { name: "wallet_enrich", description: RESOURCES[5].description, price: WALLET_ENRICH_PRICE, inputSchema: { address: z.string().describe("Public Base or EVM 0x address. Use wallet_enrich for on-chain evidence; use enrich for a company domain.") }, run: (a) => walletEnrich(a.address), tags: ["enrichment", "onchain", "wallet"] },
         { name: "deep_audit", description: RESOURCES[6].description, price: DEEP_AUDIT_PRICE, inputSchema: { domain: z.string().describe("Public business domain or URL. The hostname is normalized and the audit starts at its HTTPS homepage; any supplied path or query is ignored."), vertical: z.string().optional().describe("Optional structured-data template profile. med-spas is currently specialized; unsupported values fall back to it."), city: z.string().optional().describe("Optional city the business serves; used only to contextualize the generated structured-data template.") }, run: (a) => deepAudit(a.domain, { vertical: a.vertical, city: a.city }), tags: ["audit", "ai-readiness", "geo", "enrichment"] },
         { name: "morpho_position", description: RESOURCES[7].description, price: MORPHO_POSITION_PRICE, inputSchema: { address: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Borrower EVM address on Base mainnet"), shocks: z.array(z.number().min(-99).max(100)).max(8).optional().describe("Collateral price shocks in percent") }, run: (a) => morphoPosition(a.address, { shocks: a.shocks }), tags: ["defi", "morpho", "risk", "borrower-protection"] },
-        { name: "morpho_protection", description: RESOURCES[8].description, price: MORPHO_PROTECTION_PRICE, inputSchema: { address: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Borrower EVM address on Base mainnet."), targetHealthFactor: z.number().gt(1).max(5).default(1.25).describe("Target Morpho health factor after the selected collateral-price shock; must be greater than 1 and at most 5."), protectAgainstShockPct: z.number().min(-99).max(0).default(-10).describe("Collateral-price shock percentage to withstand, from -99 through 0; for example -10 models a 10% price decline."), executionBufferBps: z.number().int().min(0).max(500).default(25).describe("Additional repayment or collateral amount buffer in basis points for debt accrual and integer rounding; 25 means 0.25%.") }, run: (a) => morphoProtection(a.address, a), tags: ["defi", "morpho", "protection", "unsigned-transaction-plan"] },
+        { name: "morpho_protection", description: RESOURCES[8].description, price: MORPHO_PROTECTION_PRICE, inputSchema: { address: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Borrower EVM address on Base mainnet."), targetHealthFactor: z.number().gt(1).max(5).default(1.25).describe("Target Morpho health factor after the selected collateral-price shock; must be greater than 1 and at most 5."), protectAgainstShockPct: z.number().min(-99).max(0).default(-10).describe("Collateral-price shock percentage to withstand, from -99 through 0; for example -10 models a 10% price decline."), executionBufferBps: z.number().int().min(0).max(500).default(25).describe("Additional repayment or collateral amount buffer in basis points for debt accrual and integer rounding; 25 means 0.25%.") }, outputSchema: morphoProtectionMcpOutputSchema, run: (a) => morphoProtection(a.address, a), tags: ["defi", "morpho", "protection", "unsigned-transaction-plan"] },
         { name: "morpho_market_underwrite", description: RESOURCES[9].description, price: MORPHO_MARKET_UNDERWRITE_PRICE, inputSchema: { marketId: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Morpho market ID on Base mainnet") }, run: (a) => morphoMarketUnderwrite(a.marketId), tags: ["defi", "morpho", "underwriting", "risk", "preliquidation"] },
-        { name: "morpho_preliquidation_replay", description: RESOURCES[10].description, price: MORPHO_PRELIQUIDATION_REPLAY_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Successful Base transaction containing a Morpho PreLiquidate event") }, run: (a) => morphoPreLiquidationReplay(a.transactionHash), tags: ["defi", "morpho", "preliquidation", "replay", "economics"] },
+        { name: "morpho_preliquidation_replay", description: RESOURCES[10].description, price: MORPHO_PRELIQUIDATION_REPLAY_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Successful Base transaction containing a Morpho PreLiquidate event") }, outputSchema: morphoPreLiquidationReplayMcpOutputSchema, run: (a) => morphoPreLiquidationReplay(a.transactionHash), tags: ["defi", "morpho", "preliquidation", "replay", "economics"] },
         { name: "opportunity_preflight", description: RESOURCES[11].description, price: OPPORTUNITY_PREFLIGHT_PRICE, inputSchema: { platform: z.string().max(100).optional().describe("Optional platform slug used to attach dated platform-health evidence when a matching card exists."), rewardUsd: z.number().positive().describe("Maximum gross reward in USD if the opportunity is selected and paid."), hours: z.number().min(0).max(10000).describe("Estimated human and agent work time in hours for one complete attempt."), hourlyCostUsd: z.number().min(0).max(100000).describe("Internal opportunity cost per hour in USD."), computeUsd: z.number().min(0).default(0).describe("Expected model, API, hosting, and compute spend in USD for one attempt."), mandatorySpendUsd: z.number().min(0).default(0).describe("Non-recoverable cash spend in USD required before the opportunity can settle."), reusableValueUsd: z.number().min(0).default(0).describe("Conservative USD value of reusable code, research, distribution, or other assets created by the attempt."), selectionProbabilityPct: z.number().min(0).max(100).optional().describe("Caller-supplied probability, from 0 to 100, of receiving the reward; omit to receive a verify-first decision."), competition: z.number().int().min(0).default(0).describe("Known number of competing submissions or workers; use 0 when unknown."), slots: z.number().int().min(1).default(1).describe("Number of independently paid winner or worker slots."), agentAccess: z.enum(["agent_allowed", "agent_only", "mixed", "human_only", "unknown"]).default("unknown").describe("Whether the platform explicitly allows agent participation, is agent-only, mixes agents and humans, is human-only, or remains unknown."), acceptance: z.enum(["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"]).default("unknown").describe("How completion is accepted: deterministic proof, machine score, review deadline, discretionary judgment, or unknown."), settlement: z.enum(["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"]).default("unknown").describe("How the reward is funded and paid: direct, escrow, platform balance, discretionary, unfunded, or unknown.") }, run: (a) => opportunityPreflight(a, { platformCard: a.platform ? getPlatformHealthCard(a.platform.toLowerCase()) : null }), tags: ["work", "bounty", "economics", "preflight", "settlement-evidence"] },
         { name: "agent_discoverability_audit", description: RESOURCES[12].description, price: AGENT_DISCOVERABILITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Public HTTPS service origin"), intent: z.string().min(20).max(500).describe("Brand-blind capability description"), route: z.string().regex(/^\/[^?#]*$/).optional().describe("Optional expected exact path"), runtimeUrl: z.string().url().max(2048).optional().describe("Optional exact same-origin HTTPS GET URL whose unpaid x402 or MPP offer supplies the runtime price reference. Requires route and an exactly matching pathname."), payTo: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional EVM payTo for alias matching"), expectedPriceUsd: z.union([z.number().min(0).max(1000000), z.string().regex(/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,6})?$/)]).optional().describe("Optional exact route price expected by the caller. A coherent runtimeUrl offer takes precedence and caller drift is reported."), surfaceAudit: z.boolean().optional().describe("When true, inspect the target's public Agent Card, ERC-8004 registration document, and action catalog for the expected route through bounded same-origin fetches.") }, run: (a) => agentDiscoverabilityAudit(a), tags: ["distribution", "discovery", "x402", "mpp", "agent402", "catalog-price", "runtime-coherence", "a2a", "erc-8004"] },
-        { name: "payment_offer_preflight", description: RESOURCES[13].description, price: PAYMENT_OFFER_PREFLIGHT_PRICE, inputSchema: { url: z.string().url().max(2048).describe("Exact public HTTPS GET route whose unpaid x402 and MPP challenge headers and same-origin OpenAPI success-response declaration should be inspected before buyer authorization. Credential-like query keys, fragments, unresolved parameters, local hosts, redirects, and non-public IPs are rejected."), catalog: PAYMENT_OFFER_CATALOG_SCHEMA.optional().describe("Optional caller-supplied catalog candidate. When present, the tool compares it with every live unsigned offer across request, protocol, amount, network, asset, recipient, and expiry.") }, run: (a) => paymentOfferPreflight(a), tags: ["payments", "x402", "mpp", "buyer-safety", "preflight", "catalog-coherence", "response-contract"] },
+        { name: "payment_offer_preflight", description: RESOURCES[13].description, price: PAYMENT_OFFER_PREFLIGHT_PRICE, inputSchema: { url: z.string().url().max(2048).describe("Exact public HTTPS GET route whose unpaid x402 and MPP challenge headers and same-origin OpenAPI success-response declaration should be inspected before buyer authorization. Credential-like query keys, fragments, unresolved parameters, local hosts, redirects, and non-public IPs are rejected."), catalog: PAYMENT_OFFER_CATALOG_SCHEMA.optional().describe("Optional caller-supplied catalog candidate. When present, the tool compares it with every live unsigned offer across request, protocol, amount, network, asset, recipient, and expiry.") }, outputSchema: paymentOfferPreflightMcpOutputSchema, run: (a) => paymentOfferPreflight(a), tags: ["payments", "x402", "mpp", "buyer-safety", "preflight", "catalog-coherence", "response-contract"] },
         { name: "seller_integrity_audit", description: RESOURCES[19].description, price: SELLER_INTEGRITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Credential-free public HTTPS seller origin on port 443."), route: z.string().regex(/^\/(?!\/)[^?#{}]+$/).describe("Exact paid GET or POST path declared by the seller, without query or template parameters."), method: z.enum(["GET", "POST"]).default("GET").describe("POST receives static OpenAPI response-contract analysis without sending a target request."), requiredPaths: z.array(z.string().regex(/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+){0,7}$/)).max(16).default([]).describe("Buyer-required dotted success-response paths that the seller schema must guarantee recursively."), requireBazaar: z.boolean().default(false).describe("When true, missing Bazaar discovery metadata becomes a repair finding for live-probed GET routes.") }, run: (a) => sellerIntegrityAudit(a), tags: ["payments", "seller-ci", "x402", "mpp", "response-contract", "machine-buyability", "post-contract"] },
-        { name: "contract_qualified_search", description: RESOURCES[20].description, price: CONTRACT_QUALIFIED_SEARCH_PRICE, inputSchema: { query: z.string().min(10).max(300).describe("Capability intent sent to Agent402 and used locally to rank MPP catalog metadata. Do not include credentials or private values."), requiredPaths: z.array(z.string().regex(/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+){0,7}$/)).min(1).max(16).describe("Buyer-required dotted success-response paths that every returned seller schema must guarantee recursively."), maxPriceDisplayUnits: z.number().gt(0).max(10).default(0.1).describe("Maximum advertised per-call price in each source's display currency."), limit: z.number().int().min(1).max(8).default(5).describe("Maximum candidates audited and returned across Agent402 and MPP.") }, run: (a) => contractQualifiedSearch(a), tags: ["payments", "service-discovery", "agent402", "mpp", "response-contract", "buyer-safety"] },
+        { name: "contract_qualified_search", description: RESOURCES[20].description, price: CONTRACT_QUALIFIED_SEARCH_PRICE, inputSchema: { query: z.string().min(10).max(300).describe("Capability intent sent to Agent402 and used locally to rank MPP catalog metadata. Do not include credentials or private values."), requiredPaths: z.array(z.string().regex(/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+){0,7}$/)).min(1).max(16).describe("Buyer-required dotted success-response paths that every returned seller schema must guarantee recursively."), maxPriceDisplayUnits: z.number().gt(0).max(10).default(0.1).describe("Maximum advertised per-call price in each source's display currency."), limit: z.number().int().min(1).max(8).default(5).describe("Maximum candidates audited and returned across Agent402 and MPP.") }, outputSchema: contractQualifiedSearchMcpOutputSchema, run: (a) => contractQualifiedSearch(a), tags: ["payments", "service-discovery", "agent402", "mpp", "response-contract", "buyer-safety"] },
         { name: "agent_surface_budget_audit", description: RESOURCES[21].description, price: AGENT_SURFACE_BUDGET_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Credential-free public HTTPS service origin on port 443, with no path or query."), surfaceMode: z.enum(["mcp", "openapi", "both"]).default("both").describe("Audit MCP only, OpenAPI only, or both. Unselected surfaces are not fetched or judged."), mcpPath: z.string().regex(/^\/(?!\/)[^?#{]+$/).default("/mcp").describe("Exact root-relative MCP streamable-HTTP path."), openApiPath: z.string().regex(/^\/(?!\/)[^?#{]+$/).default("/openapi.json").describe("Exact root-relative OpenAPI JSON path."), mcpBudgetBytes: z.number().int().min(8192).max(1000000).default(65536).describe("Maximum preferred raw MCP tools/list response size in bytes."), openApiBudgetBytes: z.number().int().min(32768).max(1000000).default(524288).describe("Maximum preferred raw OpenAPI document size in bytes.") }, outputSchema: agentSurfaceBudgetAuditMcpOutputSchema, run: (a) => agentSurfaceBudgetAudit(a), tags: ["distribution", "mcp", "openapi", "context-budget", "tool-discovery", "agent-finops"] },
-        { name: "settlement_proof", description: RESOURCES[14].description, price: SETTLEMENT_PROOF_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Base mainnet transaction hash containing the claimed canonical USDC transfer."), recipient: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Expected canonical Base USDC recipient."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,20}$/).describe("Expected positive USDC amount in six-decimal atomic units."), payer: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional expected canonical Base USDC payer.") }, run: (a) => settlementProof(a), tags: ["payments", "x402", "settlement", "reconciliation", "base-usdc"] },
+        { name: "settlement_proof", description: RESOURCES[14].description, price: SETTLEMENT_PROOF_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Base mainnet transaction hash containing the claimed canonical USDC transfer."), recipient: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Expected canonical Base USDC recipient."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,20}$/).describe("Expected positive USDC amount in six-decimal atomic units."), payer: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional expected canonical Base USDC payer.") }, outputSchema: settlementProofMcpOutputSchema, run: (a) => settlementProof(a), tags: ["payments", "x402", "settlement", "reconciliation", "base-usdc"] },
         { name: "transaction_receipt", description: RESOURCES[15].description, price: TRANSACTION_RECEIPT_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Mined Base or Ethereum transaction hash whose normalized receipt should be returned."), network: z.enum(["base", "ethereum"]).default("base").describe("Receipt network. Defaults to Base mainnet.") }, run: (a) => transactionReceipt(a), tags: ["blockchain", "receipt", "gas", "erc20", "usdc"] },
         { name: "solana_transaction_receipt", description: RESOURCES[16].description, price: SOLANA_TRANSACTION_RECEIPT_PRICE, inputSchema: { signature: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/).describe("Finalized Solana mainnet transaction signature."), mint: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional SPL-token mint; defaults to canonical Solana USDC."), recipient: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional expected token recipient owner."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,19}$/).optional().describe("Optional expected positive token amount in atomic units; requires recipient."), payer: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional expected token payer owner; requires recipient and amountAtomic.") }, run: (a) => solanaTransactionReceipt(a), tags: ["blockchain", "solana", "receipt", "spl-token", "usdc"] },
         { name: "wallet_policy_conformance", description: RESOURCES[17].description, price: WALLET_POLICY_CONFORMANCE_PRICE, inputSchema: { profileId: z.string().min(1).max(128).describe("Caller-defined policy profile identifier with no credential or wallet secret."), provider: z.string().min(1).max(128).describe("Wallet or delegated-signer provider name."), network: z.string().min(1).max(128).describe("Network identifier used by the tested profile."), protocol: z.string().min(1).max(128).describe("Payment or execution protocol bound by the tested profile."), observations: z.array(z.object({ case: z.enum(WALLET_POLICY_CASE_NAMES).describe("Standardized mutation or control case."), actual: z.enum(["allowed", "denied", "error"]).describe("Observed high-level outcome."), denialClass: z.enum(["none", "policy", "validation", "provider"]).describe("Where the denial or error occurred; only policy earns provider-native coverage."), code: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$/).optional().describe("Optional safe provider code only, never a raw message or payload.") }).strict()).min(1).max(16).describe("Unique standardized observations. Raw provider responses, signatures, transactions, credentials, and wallet IDs are rejected.") }, run: (a) => walletPolicyConformance(a), tags: ["security", "wallet-policy", "delegated-signer", "conformance", "execution-shape"] },

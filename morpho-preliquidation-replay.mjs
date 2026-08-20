@@ -3,6 +3,7 @@ import {
   decodeFunctionResult,
   encodeFunctionData,
 } from "viem";
+import { z } from "zod";
 
 const BASE_CHAIN_ID = 8453;
 const ORACLE_PRICE_SCALE = 10n ** 36n;
@@ -257,3 +258,76 @@ export const MORPHO_PRELIQUIDATION_REPLAY_CONSTANTS = {
   BASE_CHAIN_ID,
   ORACLE_PRICE_SCALE: ORACLE_PRICE_SCALE.toString(),
 };
+
+const replayAssetSchema = z.object({
+  token: z.string(),
+  symbol: z.string().nullable(),
+  decimals: z.number(),
+  raw: z.string(),
+  amount: z.string(),
+}).strict();
+
+export const morphoPreLiquidationReplayMcpOutputSchema = z.object({
+  ok: z.literal(true),
+  product: z.literal("morpho-preliquidation-replay"),
+  version: z.literal("1.0.0"),
+  chain: z.object({
+    id: z.literal(8453),
+    name: z.literal("Base mainnet"),
+  }).strict(),
+  transaction: z.object({
+    hash: z.string().regex(/^0x[0-9a-f]{64}$/),
+    blockNumber: z.number().int().nonnegative(),
+    blockTimestamp: z.string().datetime(),
+    from: z.string(),
+    to: z.string().nullish(),
+    status: z.literal("success"),
+    gasUsed: z.string(),
+    effectiveGasPriceWei: z.string(),
+    gasCostWei: z.string(),
+    gasCostEth: z.string(),
+  }).strict(),
+  eventCount: z.number().int().positive(),
+  events: z.array(z.object({
+    contract: z.string(),
+    marketId: z.string(),
+    liquidator: z.string(),
+    borrower: z.string(),
+    assets: z.object({
+      repaid: replayAssetSchema,
+      seized: replayAssetSchema,
+      repaidSharesRaw: z.string(),
+    }).strict(),
+    protocolOracle: z.object({
+      address: z.string(),
+      priceRaw: z.string(),
+      scale: z.string(),
+      collateralQuotedInLoanRaw: z.string(),
+      collateralQuotedInLoanAmount: z.string(),
+    }).strict(),
+    grossEconomics: z.object({
+      incentiveInLoanRaw: z.string(),
+      incentiveInLoanAmount: z.string(),
+      incentiveSign: z.enum(["negative", "positive"]),
+      incentivePct: z.number().nullable(),
+      boundary: z.string(),
+    }).strict(),
+    parameters: z.object({
+      marketLltvRaw: z.string(),
+      marketLltvPct: z.number().nullable(),
+      preLltvRaw: z.string(),
+      preLltvPct: z.number().nullable(),
+      closeFactorStartRaw: z.string(),
+      closeFactorEndRaw: z.string(),
+      incentiveStartRaw: z.string(),
+      incentiveEndRaw: z.string(),
+    }).strict(),
+  }).strict()).min(1),
+  verification: z.object({
+    receipt: z.literal("fresh direct Base RPC"),
+    event: z.literal("strict ABI decode of the official PreLiquidate signature"),
+    params: z.literal("PreLiquidation immutable contract reads at the execution block"),
+    price: z.literal("PreLiquidation oracle read at the execution block"),
+  }).strict(),
+  boundary: z.string(),
+}).strict();

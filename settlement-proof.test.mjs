@@ -7,6 +7,7 @@ import {
   BASE_USDC,
   normalizeSettlementProofInput,
   settlementProof,
+  settlementProofMcpOutputSchema,
 } from "./settlement-proof.mjs";
 
 const TRANSFER_EVENT = parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 value)");
@@ -63,6 +64,7 @@ test("verifies one exact successful canonical Base USDC transfer", async () => {
   assert.equal(result.settlement.observed.amountUsdc, "0.005");
   assert.deepEqual(result.findings, []);
   assert.equal(result.boundary.privateLedgerRead, false);
+  assert.equal(settlementProofMcpOutputSchema.safeParse(result).success, true);
 });
 
 test("fails closed on recipient, amount, payer, duplicate, status, and block mismatches", async () => {
@@ -93,4 +95,5 @@ test("returns a bounded diagnostic when the public receipt is unavailable", asyn
   assert.equal(result.decision, "receipt_unavailable");
   assert.equal(result.settlement.verified, false);
   assert.equal(result.findings[0].code, "receipt_unavailable");
+  assert.equal(settlementProofMcpOutputSchema.safeParse(result).success, true);
 });

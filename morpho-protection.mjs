@@ -1,4 +1,5 @@
 import { encodeAbiParameters, encodeFunctionData, keccak256 } from "viem";
+import { z } from "zod";
 import { morphoPosition, MORPHO_POSITION_CONSTANTS } from "./morpho-position.mjs";
 
 const WAD = 10n ** 18n;
@@ -310,3 +311,97 @@ export const MORPHO_PROTECTION_CONSTANTS = {
   WAD: WAD.toString(),
   ORACLE_PRICE_SCALE: ORACLE_PRICE_SCALE.toString(),
 };
+
+const protectionAssetSchema = z.object({
+  address: z.string().nullable(),
+  symbol: z.string().nullable(),
+  decimals: z.number(),
+}).strict();
+
+const protectionTransactionSchema = z.object({
+  to: z.string(),
+  value: z.literal("0"),
+  data: z.string().regex(/^0x[0-9a-fA-F]+$/),
+  purpose: z.string(),
+}).strict();
+
+const protectionPlanSchema = z.object({
+  id: z.enum(["partial_repay", "add_collateral"]),
+  asset: protectionAssetSchema,
+  amountRaw: z.string(),
+  amount: z.string(),
+  expectedHealthFactorAtShock: z.number().nullable(),
+  transactions: z.array(protectionTransactionSchema).length(2),
+}).strict();
+
+const protectionQuoteCommon = {
+  marketId: z.string(),
+  currentHealthFactor: z.number().nullable(),
+  healthFactorAtShockBeforeAction: z.number().nullable(),
+  targetHealthFactorAtShock: z.number().nullable(),
+  shock: z.object({
+    collateralPricePct: z.number(),
+    oraclePriceRaw: z.string(),
+  }).strict(),
+  stateBasis: z.object({
+    blockNumber: z.number().int().nullable(),
+    collateralAndBorrowShares: z.literal("direct_rpc_exact_match"),
+    oraclePrice: z.literal("direct_rpc_fresh_read"),
+    borrowAssets: z.literal("indexed amount with explicit execution buffer"),
+    marketParams: z.literal("keccak256 match to observed Morpho market ID"),
+  }).strict(),
+};
+
+export const morphoProtectionMcpOutputSchema = z.object({
+  ok: z.literal(true),
+  product: z.literal("morpho-protection-quote"),
+  version: z.literal("1.0.0"),
+  address: z.string(),
+  chain: z.object({
+    id: z.number().int(),
+    name: z.string(),
+  }).strict(),
+  fetchedAt: z.string().datetime(),
+  latestIndexedAt: z.string().datetime().nullable(),
+  inputs: z.object({
+    targetHealthFactor: z.number(),
+    protectAgainstShockPct: z.number(),
+    executionBufferBps: z.number().int(),
+  }).strict(),
+  positionCount: z.number().int().nonnegative(),
+  actionableCount: z.number().int().nonnegative(),
+  unverifiedCount: z.number().int().nonnegative(),
+  quotes: z.array(z.discriminatedUnion("status", [
+    z.object({
+      marketId: z.string(),
+      currentHealthFactor: z.number().nullable(),
+      status: z.literal("state_unverified"),
+      plans: z.array(protectionPlanSchema).max(0),
+      explanation: z.string(),
+    }).strict(),
+    z.object({
+      ...protectionQuoteCommon,
+      status: z.literal("target_met"),
+      plans: z.array(protectionPlanSchema).max(0),
+      explanation: z.string(),
+    }).strict(),
+    z.object({
+      ...protectionQuoteCommon,
+      status: z.literal("protection_available"),
+      plans: z.array(protectionPlanSchema).length(2),
+    }).strict(),
+  ])),
+  source: z.object({
+    provider: z.string(),
+  }).passthrough(),
+  invariants: z.object({
+    signing: z.literal("none"),
+    broadcasting: z.literal("none"),
+    custody: z.literal("none"),
+    value: z.literal("0 on every unsigned transaction template"),
+    revalidation: z.string(),
+    simulation: z.string(),
+    postconditions: z.array(z.string()).min(1),
+  }).strict(),
+  boundary: z.string(),
+}).strict();
