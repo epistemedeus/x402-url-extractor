@@ -4,6 +4,7 @@ import { BlockList, isIP } from "node:net";
 
 import { Challenge } from "mppx";
 import { SCHEMAS, evaluateOfferCoherence, evaluateResponseContract } from "agent-payment-policy";
+import { z } from "zod";
 
 const MAX_URL_LENGTH = 2_048;
 const MAX_HEADER_VALUE_BYTES = 64 * 1024;
@@ -610,5 +611,80 @@ export async function paymentOfferPreflight(input, {
     },
   };
 }
+
+const paymentOfferCommon = {
+  scheme: z.string().nullable(),
+  intent: z.string().nullable(),
+  network: z.string().nullable(),
+  asset: z.string().nullable(),
+  amountAtomic: z.string().nullable(),
+  decimals: z.number().int().nullable(),
+  amountDisplay: z.string().nullable(),
+  recipient: z.string().nullable(),
+  expiresAt: z.string().nullable(),
+  valid: z.boolean(),
+};
+
+export const paymentOfferPreflightMcpOutputSchema = z.object({
+  ok: z.literal(true),
+  product: z.literal("samedaydesk-payment-offer-preflight"),
+  version: z.literal("1.2.0"),
+  checkedAt: z.string().datetime(),
+  target: z.object({
+    method: z.literal("GET"),
+    url: z.string(),
+    httpStatus: z.number().int(),
+  }).strict(),
+  decision: z.enum(["parseable_offer", "review_required", "no_parseable_offer"]),
+  protocols: z.array(z.enum(["mpp", "x402"])),
+  offerCount: z.number().int().nonnegative(),
+  offers: z.array(z.discriminatedUnion("protocol", [
+    z.object({
+      protocol: z.literal("x402"),
+      ...paymentOfferCommon,
+    }).strict(),
+    z.object({
+      protocol: z.literal("mpp"),
+      ...paymentOfferCommon,
+      realm: z.string().nullable(),
+      credentialTypes: z.array(z.string()),
+    }).strict(),
+  ])),
+  parity: z.object({
+    compared: z.boolean(),
+    consistent: z.boolean().nullable(),
+    driftFields: z.array(z.string()),
+  }).strict(),
+  catalogCoherence: z.array(z.object({
+    decision: z.enum(["coherent", "partial", "drifted"]),
+  }).passthrough()),
+  responseContract: z.object({
+    decision: z.enum(["admissible", "partial", "absent", "invalid"]),
+  }).passthrough(),
+  responseContractAcquisition: z.object({
+    attempted: z.literal(true),
+    sameOrigin: z.literal(true),
+    path: z.literal("/openapi.json"),
+    maxBytes: z.number().int().positive(),
+    documentRead: z.boolean(),
+    targetResponseBodyRead: z.literal(false),
+    credentialsUsed: z.literal(false),
+    redirectsFollowed: z.literal(false),
+  }).strict(),
+  findings: z.array(z.object({
+    severity: z.enum(["error", "warning"]),
+    code: z.string(),
+    message: z.string(),
+  }).strict()),
+  boundary: z.object({
+    credentialsUsed: z.literal(false),
+    paymentSigned: z.literal(false),
+    paymentSent: z.literal(false),
+    targetResponseBodyRead: z.literal(false),
+    openApiDocumentRead: z.boolean(),
+    redirectsFollowed: z.literal(false),
+    claim: z.string(),
+  }).strict(),
+}).strict();
 
 export { publicAddress };

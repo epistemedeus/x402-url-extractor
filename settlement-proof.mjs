@@ -7,6 +7,7 @@ import {
   parseAbiItem,
 } from "viem";
 import { base } from "viem/chains";
+import { z } from "zod";
 
 const BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const TRANSACTION_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
@@ -200,5 +201,70 @@ export async function settlementProof(input, {
     },
   };
 }
+
+const settlementProofRequestSchema = z.object({
+  transactionHash: z.string(),
+  recipient: z.string(),
+  amountAtomic: z.string(),
+  payer: z.string().nullable(),
+}).strict();
+
+const settlementProofChainSchema = z.object({
+  id: z.literal(8453),
+  name: z.literal("Base mainnet"),
+  network: z.literal("eip155:8453"),
+}).strict();
+
+const settlementProofAssetSchema = z.object({
+  address: z.string(),
+  symbol: z.literal("USDC"),
+  decimals: z.literal(6),
+}).strict();
+
+const settlementProofFindingSchema = z.object({
+  severity: z.literal("error"),
+  code: z.string(),
+  message: z.string(),
+}).strict();
+
+const settlementProofBoundarySchema = z.object({
+  source: z.literal("public Base mainnet receipt and logs"),
+  privateLedgerRead: z.literal(false),
+  auditedTransactionModified: z.literal(false),
+  walletAccessed: z.literal(false),
+  executionAuthorized: z.literal(false),
+}).strict();
+
+const settlementProofObservedSchema = z.object({
+  payer: z.string(),
+  recipient: z.string(),
+  amountAtomic: z.string(),
+  amountUsdc: z.string(),
+}).strict();
+
+export const settlementProofMcpOutputSchema = z.object({
+  ok: z.boolean(),
+  product: z.literal("samedaydesk-base-usdc-settlement-proof"),
+  version: z.literal("1.0.0"),
+  checkedAt: z.string().datetime(),
+  decision: z.enum(["verified", "not_verified", "receipt_unavailable"]),
+  request: settlementProofRequestSchema,
+  chain: settlementProofChainSchema,
+  asset: settlementProofAssetSchema,
+  transaction: z.object({
+    hash: z.string(),
+    status: z.string(),
+    blockNumber: z.string().optional(),
+    blockTimestamp: z.string().datetime().nullable().optional(),
+  }).strict(),
+  settlement: z.object({
+    verified: z.boolean(),
+    exactTransferCount: z.number().int().nonnegative(),
+    recipientTransferCount: z.number().int().nonnegative(),
+    observed: settlementProofObservedSchema.nullable().optional(),
+  }).strict(),
+  findings: z.array(settlementProofFindingSchema),
+  boundary: settlementProofBoundarySchema,
+}).strict();
 
 export { BASE_USDC };

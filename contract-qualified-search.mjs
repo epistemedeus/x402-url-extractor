@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { auditOrigin } from "agent-payment-integrity";
+import { z } from "zod";
 
 const AGENT402_ROUTE_URL = "https://agent402.tools/api/route";
 const MPP_SERVICES_URL = "https://mpp.dev/api/services";
@@ -412,5 +413,70 @@ export const CONTRACT_QUALIFIED_SEARCH_EXAMPLE = Object.freeze({
     sellerAudits: 3,
   },
 });
+
+const contractQualifiedPriceSchema = z.object({
+  amountDisplayUnits: z.number(),
+  currency: z.string(),
+  decimals: z.number().int(),
+  amountAtomic: z.string(),
+}).strict();
+
+const contractQualifiedIdentity = {
+  source: z.enum(["agent402", "mpp"]),
+  serviceName: z.string(),
+  origin: z.string().url(),
+  method: z.enum(["GET", "POST"]),
+  route: z.string(),
+  price: contractQualifiedPriceSchema,
+};
+
+const contractQualifiedSourceSchema = z.object({
+  status: z.enum(["ok", "unavailable"]),
+  discovered: z.number().int().nonnegative(),
+  audited: z.number().int().nonnegative(),
+}).strict();
+
+export const contractQualifiedSearchMcpOutputSchema = z.object({
+  ok: z.literal(true),
+  product: z.literal("samedaydesk-contract-qualified-search"),
+  version: z.literal("1.1.0"),
+  checkedAt: z.string().datetime(),
+  decision: z.enum(["qualified_candidates_found", "no_qualified_candidate"]),
+  request: z.object({
+    queryDigest: z.string().regex(/^sha256:[0-9a-f]{64}$/),
+    requiredPaths: z.array(z.string()).min(1).max(16),
+    maxPriceDisplayUnits: z.number(),
+    limit: z.number().int(),
+  }).strict(),
+  sources: z.object({
+    agent402: contractQualifiedSourceSchema,
+    mpp: contractQualifiedSourceSchema,
+  }).strict(),
+  qualified: z.array(z.object({
+    ...contractQualifiedIdentity,
+    description: z.string(),
+    decision: z.enum(["machine_buyable", "contract_ready"]),
+    protocols: z.array(z.string()),
+    runtimeChallengeVerified: z.boolean(),
+    guaranteedPaths: z.array(z.string()).max(16),
+  }).strict()).max(8),
+  rejected: z.array(z.object({
+    ...contractQualifiedIdentity,
+    reason: z.string(),
+    findings: z.array(z.string()).max(12),
+  }).strict()).max(8),
+  boundary: z.object({
+    credentialsUsed: z.literal(false),
+    walletAccessed: z.literal(false),
+    targetPaymentSigned: z.literal(false),
+    targetPaymentSent: z.literal(false),
+    sellerPostRequestSent: z.literal(false),
+    paidResponseBodyRead: z.literal(false),
+    queryRetained: z.literal(false),
+    querySentTo: z.array(z.literal("agent402")),
+    directoryRequests: z.number().int(),
+    sellerAudits: z.number().int(),
+  }).strict(),
+}).strict();
 
 export { AGENT402_ROUTE_URL, MPP_SERVICES_URL };
