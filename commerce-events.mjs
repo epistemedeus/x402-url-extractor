@@ -42,6 +42,7 @@ const REQUIRED_QUERY_KEY_GROUPS_BY_ROUTE = new Map([
   ["/distribution/agent-discoverability-audit", [["origin"], ["intent"]]],
   ["/commerce/payment-offer-preflight", [["url"]]],
   ["/commerce/seller-integrity-audit", [["origin"], ["route"]]],
+  ["/commerce/seller-construction-diagnostic", [["origin"]]],
   ["/commerce/contract-qualified-search", [["query"], ["requiredPaths"]]],
   ["/distribution/agent-surface-budget-audit", [["origin"]]],
 ]);
@@ -121,6 +122,7 @@ const EXACT_ROUTES = new Map([
   ["/distribution/agent-discoverability-audit", { route: "/distribution/agent-discoverability-audit", kind: "paid" }],
   ["/commerce/payment-offer-preflight", { route: "/commerce/payment-offer-preflight", kind: "paid" }],
   ["/commerce/seller-integrity-audit", { route: "/commerce/seller-integrity-audit", kind: "paid" }],
+  ["/commerce/seller-construction-diagnostic", { route: "/commerce/seller-construction-diagnostic", kind: "discovery" }],
   ["/commerce/contract-qualified-search", { route: "/commerce/contract-qualified-search", kind: "paid" }],
   ["/commerce/settlement-proof", { route: "/commerce/settlement-proof", kind: "paid" }],
   ["/chain/transaction-receipt", { route: "/chain/transaction-receipt", kind: "paid" }],

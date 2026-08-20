@@ -24,6 +24,7 @@ test("compact skill contract advertises the payment-offer preflight boundary", (
   assert.match(contract, /signs and sends no target payment/);
   assert.match(contract, /A parseable offer is not permission to pay/);
   assert.match(contract, /https:\/\/agents\.samedaydesk\.com\/api\/actions/);
+  assert.match(contract, /https:\/\/agents\.samedaydesk\.com\/commerce\/seller-construction-diagnostic/);
   assert.match(contract, /https:\/\/agents\.samedaydesk\.com\/\.well-known\/agent-payment-evidence\.json/);
   assert.match(contract, /seller-declared evidence, not permission to spend/);
   assert.match(contract, /GET \/extract: 0\.05 USDC through x402 \+ mpp/);

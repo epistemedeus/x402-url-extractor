@@ -39,6 +39,9 @@ settlement proof, and AI-search readiness audits.
 - Agent discoverability audit: `GET /distribution/agent-discoverability-audit?origin=https://example.com&intent=extract+a+public+website+into+structured+JSON&route=/extract&runtimeUrl=https%3A%2F%2Fexample.com%2Fextract%3Furl%3Dhttps%253A%252F%252Fexample.org&surfaceAudit=true`
 - Payment offer preflight: `GET /commerce/payment-offer-preflight?url=https://example.com/paid-route`
 - Seller integrity audit: `GET /commerce/seller-integrity-audit?origin=https://seller.example&route=/paid-route&method=GET&requiredPaths=data.attributes`
+- Seller construction diagnostic (unpaid): `GET /commerce/seller-construction-diagnostic?origin=https://seller.example&route=/extract`
+  returns `pass` or `repair_required` across MCP, OpenAPI, x402, A2A, and catalog
+  without an HTTP 402, credentials, or wallet.
 - Contract-qualified search: `GET /commerce/contract-qualified-search?query=service+domain+ownership+code+provenance&requiredPaths=data.sourceRepository`
   returns a bounded advisory OpenAPI repair plan for missing buyer-required
   paths without mutating seller files or inferring undeclared property types.
@@ -549,6 +552,16 @@ fields. Stable operation IDs and capability tags make the public catalog easier
 for agents to search, rank, and invoke. Runtime 402 challenges remain
 authoritative for both views.
 
+Version 1.23.17 adds an unpaid seller construction diagnostic at
+`GET /commerce/seller-construction-diagnostic`. A seller with a live origin, and
+an optional method and route, receives `pass` or `repair_required` plus a
+concrete acceptance list for flattened MCP, OpenAPI, x402, A2A, and catalog
+URLs that drop required inputs, a missing Bazaar contract, a v1/v2 client
+split, or a catalog that did not refresh after settlement. The route is public,
+uses pinned public DNS, reads no paid target body, and never returns HTTP 402.
+Paid `/commerce/seller-integrity-audit` (0.01 USDC) and
+`/distribution/agent-discoverability-audit` (0.05 USDC) are unchanged.
+
 Version 1.23.6 extends request-bound replay to every paid JSON POST route and
 binds the replay fingerprint to both the exact previously settled payment
 credential and the exact raw request bytes. This lets a lost successful POST
@@ -909,6 +922,8 @@ The repo is a no-config Node app: `npm start` runs `node server.js` and binds
 4. **Verify:**
    ```bash
    curl https://<your-domain>/healthz          # -> {ok:true, network:eip155:8453, ...}
+   curl -i 'https://<your-domain>/commerce/seller-construction-diagnostic?origin=https://agents.samedaydesk.com&route=/extract'
+   # -> HTTP 200 JSON with decision pass or repair_required. Must not be HTTP 402.
    curl -i 'https://<your-domain>/defi/morpho-position?address=0x...' # -> HTTP 402 + WWW-Authenticate and PAYMENT-REQUIRED
    ```
 5. **Complete one bounded settlement per discoverable route**, then confirm the

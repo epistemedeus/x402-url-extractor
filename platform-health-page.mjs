@@ -42,6 +42,7 @@ export function renderSitemapXml(publicUrl, platformIds = [], purchaseEvidencePa
     "/.well-known/agent-registration.json",
     purchaseEvidencePath,
     "/api/actions",
+    "/commerce/seller-construction-diagnostic",
     "/mcp",
     "/skill.md",
     "/llms.txt",

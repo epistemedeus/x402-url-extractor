@@ -85,6 +85,11 @@ import {
   sellerIntegrityAuditOutputSchema,
 } from "./seller-integrity-audit.mjs";
 import {
+  SELLER_CONSTRUCTION_DIAGNOSTIC_EXAMPLE,
+  createSellerConstructionDiagnosticHandler,
+  sellerConstructionDiagnosticOutputSchema,
+} from "./seller-construction-diagnostic.mjs";
+import {
   CONTRACT_QUALIFIED_SEARCH_EXAMPLE,
   ContractQualifiedSearchError,
   contractQualifiedSearch,
@@ -1106,6 +1111,12 @@ app.get("/api/actions", (req, res) => {
   return res.json({ ...machineActionCatalog(), ...(proxyDiagnostics ? { proxyDiagnostics } : {}) });
 });
 
+// Unpaid seller construction tripwire. Operators already on x402 still fail
+// Bazaar or v1 clients when MCP and OpenAPI look correct but flattened
+// action, A2A, and x402 resource URLs drop required inputs. Keep this before
+// the paywall. It is not a SKU and must never return HTTP 402.
+app.get("/commerce/seller-construction-diagnostic", createSellerConstructionDiagnosticHandler());
+
 // A2A v1.0 machine-facing storefront. This is intentionally a bounded free
 // discovery agent: it returns the exact paid action catalog, then buyers call
 // and settle HTTP actions through x402 or MPP. MCP actions remain x402-gated.
@@ -1164,6 +1175,7 @@ ${line("/deep-audit", DEEP_AUDIT_PRICE, "domain -> bundled AI-search-readiness a
 ${line("/distribution/agent-discoverability-audit", AGENT_DISCOVERABILITY_AUDIT_PRICE, "public HTTPS service origin plus a brand-blind capability intent -> point-in-time rank, dependency-labeled coverage, canonical-vs-alias identity, duplicate records, expected-route presence, and price drift across ten public machine-service discovery views. Optional runtimeUrl derives the comparison price from a same-origin unsigned x402 or MPP offer; optional surfaceAudit checks the target's public Agent Card, ERC-8004 registration document, and action catalog. No catalog credential, signature, or payment.")}
 ${line("/commerce/payment-offer-preflight", PAYMENT_OFFER_PREFLIGHT_PRICE, "exact public HTTPS GET URL -> compare and normalize x402 and MPP payment challenges and terms before buyer authorization; check route and realm binding, expiry, and economic parity. Uses no target credential, signature, payment, redirect, or response body.")}
 ${line("/commerce/seller-integrity-audit", SELLER_INTEGRITY_AUDIT_PRICE, "public seller origin plus exact paid GET or POST path -> live machine-buyability audit for GET, static contract-readiness audit for POST, and recursively guaranteed buyer-required success paths. POST sends no target request. Returns controlled repair actions without target credentials or payment.")}
+- [/commerce/seller-construction-diagnostic](${PUBLIC_URL}/commerce/seller-construction-diagnostic): unpaid - public seller origin plus optional method and route -> construction diagnostic across MCP, OpenAPI, x402, A2A, and catalog. Returns pass or repair_required. No payment challenge, credentials, or wallet.
 ${line("/commerce/contract-qualified-search", CONTRACT_QUALIFIED_SEARCH_PRICE, "capability intent plus buyer-required JSON paths -> bounded Agent402 and MPP search for services whose exact seller contracts guarantee those outputs. Rejects unresolved routes and owned supply before audit; uses no credential, wallet, seller POST, or target payment.")}
 ${line("/distribution/agent-surface-budget-audit", AGENT_SURFACE_BUDGET_AUDIT_PRICE, "public service origin plus MCP, OpenAPI, or both mode -> bounded discovery byte budgets, comparative token estimates, heaviest definitions, missing selection contracts, and progressive-discovery fixes. Unselected surfaces are not fetched or judged; no target tool or payment is sent.")}
 ${line("/security/wallet-policy-conformance", WALLET_POLICY_CONFORMANCE_PRICE, "POST standardized wallet-policy observations -> explicit conformant, partial, or unsafe decision. Distinguishes provider policy denial from validation and generic provider failure, and tests exact execution shape separately from operation allowlisting. Accepts no wallet credentials or raw provider payloads.")}
@@ -1318,6 +1330,20 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       "/schemas/wallet-policy-conformance-v1.json": { get: { summary: "Free canonical case matrix and JSON Schemas for the wallet-policy conformance product.", responses: { "200": { description: "Versioned credential-free wallet-policy conformance contract" } } } },
       "/schemas/stateful-wallet-policy-conformance-v1.json": { get: { summary: "Free canonical stateful case matrix and JSON Schemas for cumulative wallet-policy conformance.", responses: { "200": { description: "Versioned credential-free stateful wallet-policy conformance contract" } } } },
       "/a2a/message:send": { post: { summary: "Return the exact-price x402 and MPP action catalog as an A2A direct message.", responses: { "200": { description: "A2A message containing the action catalog" }, "400": { description: "Invalid request or unsupported A2A version" } } } },
+      "/commerce/seller-construction-diagnostic": {
+        get: {
+          summary: "Unpaid seller construction diagnostic. A seller with a live origin receives pass or repair_required across MCP, OpenAPI, x402, A2A, and catalog. No payment challenge, credentials, or wallet.",
+          parameters: [
+            { name: "origin", in: "query", required: true, description: "Credential-free public HTTPS seller origin on port 443, with no path or query.", schema: { type: "string", format: "uri", example: "https://agents.samedaydesk.com" } },
+            { name: "route", in: "query", required: false, description: "Optional exact paid GET or POST path to scope the diagnostic.", schema: { type: "string", pattern: "^/(?!/)[^?#{}]+$", example: "/extract" } },
+            { name: "method", in: "query", required: false, description: "Optional method for the scoped route. Defaults to GET when route is present.", schema: { type: "string", enum: ["GET", "POST"], default: "GET" } },
+          ],
+          responses: {
+            "200": { description: "machine-verifiable construction report with pass or repair_required", content: { "application/json": { schema: sellerConstructionDiagnosticOutputSchema(), example: SELLER_CONSTRUCTION_DIAGNOSTIC_EXAMPLE } } },
+            "400": { description: "invalid origin or request, charged nothing" },
+          },
+        },
+      },
       "/platforms": { get: { summary: "Human-readable Settlement Radar health cards.", responses: { "200": { description: "HTML platform health index" } } } },
       "/work/opportunity-preflight": { get: { summary: RESOURCES[11].description, parameters: [{ name: "platform", in: "query", required: false, schema: { type: "string", example: "taskmarket" } }, { name: "rewardUsd", in: "query", required: true, schema: { type: "number", exclusiveMinimum: 0 } }, { name: "hours", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "hourlyCostUsd", in: "query", required: true, schema: { type: "number", minimum: 0 } }, { name: "computeUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "mandatorySpendUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "reusableValueUsd", in: "query", required: false, schema: { type: "number", minimum: 0, default: 0 } }, { name: "selectionProbabilityPct", in: "query", required: false, schema: { type: "number", minimum: 0, maximum: 100 } }, { name: "competition", in: "query", required: false, schema: { type: "integer", minimum: 0, default: 0 } }, { name: "slots", in: "query", required: false, schema: { type: "integer", minimum: 1, default: 1 } }, { name: "agentAccess", in: "query", required: false, schema: { type: "string", enum: ["agent_allowed", "agent_only", "mixed", "human_only", "unknown"], default: "unknown" } }, { name: "acceptance", in: "query", required: false, schema: { type: "string", enum: ["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"], default: "unknown" } }, { name: "settlement", in: "query", required: false, schema: { type: "string", enum: ["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"], default: "unknown" } }], responses: { "200": { description: "deterministic opportunity economics and evidence preflight" }, "400": { description: "invalid required input, charged nothing" }, "402": { description: `payment required (x402, ${OPPORTUNITY_PREFLIGHT_PRICE} USDC base)` } } } },
       "/distribution/agent-discoverability-audit": { get: { summary: RESOURCES[12].description, parameters: [{ name: "origin", in: "query", required: true, description: "Public HTTPS origin of the machine service, with no path or query.", schema: { type: "string", format: "uri", example: "https://agents.samedaydesk.com" } }, { name: "intent", in: "query", required: true, description: "Brand-blind capability description used as the registry query.", schema: { type: "string", minLength: 20, maxLength: 500, example: "extract a public web page into structured JSON metadata headings links and JSON-LD" } }, { name: "route", in: "query", required: false, description: "Expected exact path whose presence should be checked.", schema: { type: "string", pattern: "^/[^?#]*$", example: "/extract" } }, { name: "runtimeUrl", in: "query", required: false, description: "Optional exact same-origin HTTPS GET URL whose unpaid x402 or MPP offer supplies the runtime price reference. Requires route and an exactly matching pathname. Uses pinned public DNS, reads headers only, follows no redirect, and sends no credential or payment.", schema: { type: "string", format: "uri", maxLength: 2048, example: "https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com" } }, { name: "payTo", in: "query", required: false, description: "Optional EVM settlement address used to identify aliased service origins.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" } }, { name: "expectedPriceUsd", in: "query", required: false, description: "Optional exact route price expected by the caller, with at most six fractional digits. Requires route. A coherent runtimeUrl offer takes precedence and any caller-to-runtime drift is reported.", schema: { type: "number", minimum: 0, maximum: 1000000, multipleOf: 0.000001, example: 0.005 } }, { name: "surfaceAudit", in: "query", required: false, description: "Set true to inspect the target's public Agent Card, ERC-8004 registration document, and action catalog for the expected route after payment. Uses pinned public DNS, no redirects, a five-second timeout, and a 512-KiB cap per document.", schema: { type: "boolean", default: false } }], responses: { "200": { description: "brand-blind point-in-time discovery ranks, coverage, route presence, runtime-derived or caller-labeled catalog-price drift, optional owned-surface coverage, and method limits" }, "400": { description: "invalid or branded input, charged nothing" }, "402": { description: `payment required (x402, ${AGENT_DISCOVERABILITY_AUDIT_PRICE} USDC base)` } } } },
@@ -1557,6 +1583,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     "/schemas/wallet-policy-conformance-v1.json": { operationId: "getWalletPolicyConformanceSchema", tags: ["Security"] },
     "/schemas/stateful-wallet-policy-conformance-v1.json": { operationId: "getStatefulWalletPolicyConformanceSchema", tags: ["Security"] },
     "/a2a/message:send": { operationId: "sendA2aMessage", tags: ["A2A"] },
+    "/commerce/seller-construction-diagnostic": { operationId: "diagnoseSellerConstruction", tags: ["Agent Operations"] },
     "/platforms": { operationId: "viewSettlementRadar", tags: ["Settlement Radar"] },
   };
   for (const [pathname, metadata] of Object.entries(freeOperationMetadata)) {
@@ -3319,6 +3346,12 @@ app.get("/", (req, res) => {
       serviceDeploymentPublicKey: serviceDeploymentPublication.paths.publicKey,
       purchaseEvidenceManifest: PURCHASE_EVIDENCE_MANIFEST_PATH,
       aggregateDemand: "/v0/commerce-demand.json",
+      sellerConstructionDiagnostic: {
+        route: "GET /commerce/seller-construction-diagnostic",
+        price: "unpaid",
+        decision: ["pass", "repair_required"],
+        boundary: "Public tripwire only. It does not replace the paid seller-integrity or discoverability audits and never returns HTTP 402.",
+      },
       declaredAgentSourceHeader: {
         header: "X-SameDayDesk-Agent-Source",
         value: "agent-skills-v1",

@@ -35,6 +35,7 @@ Use this service when an agent needs deterministic web, company, wallet, AI-sear
 - Action catalog: ${origin}/api/actions
 - MCP transport: POST ${origin}/mcp
 - A2A agent card: ${origin}/.well-known/agent-card.json
+- Seller construction diagnostic: ${origin}/commerce/seller-construction-diagnostic
 - Purchase evidence: ${origin}/.well-known/agent-payment-evidence.json
 
 ## Paid actions

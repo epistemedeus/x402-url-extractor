@@ -32,6 +32,7 @@ test("sitemap exposes human pages and canonical machine contracts without duplic
     "/.well-known/agent-registration.json",
     "/.well-known/agent-payment-evidence.json",
     "/api/actions",
+    "/commerce/seller-construction-diagnostic",
     "/mcp",
     "/skill.md",
     "/llms.txt",
