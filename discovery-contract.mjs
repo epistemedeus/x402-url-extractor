@@ -99,7 +99,13 @@ export function classifyDiscoveryRequestConstruction(routeKey, queryInput = []) 
   const required = Array.isArray(querySchema?.required) ? querySchema.required : [];
   const unsupportedExampleFields = ["body", "pathParams", "headers", "cookies"]
     .some((name) => contract.example?.[name] !== undefined);
-  const safeRequired = required.every((name) => isSafePublicationInputName(name));
+  // Publication may allowlist public identifiers such as Solana `signature`.
+  // Construction telemetry still uses the credential-name matcher.
+  const safeRequired = required.every((name) => (
+    typeof name === "string"
+    && /^[A-Za-z][A-Za-z0-9_.-]{0,63}$/.test(name)
+    && !isSensitiveInputName(name)
+  ));
   if (method !== "GET" || unsupportedExampleFields || required.length === 0 || !safeRequired) {
     return { status: "not_measured", requiredKeyCount: 0 };
   }

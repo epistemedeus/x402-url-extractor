@@ -156,6 +156,34 @@ test("classifies secret-like input names as unsafe to publish", () => {
   assert.equal(isSafePublicationInputName("signature"), true);
 });
 
+test("public Solana signature stays not_measured in construction telemetry", () => {
+  declareDiscoveryContract({
+    routeKey: "GET /solana-signature-telemetry",
+    input: { signature: "3CjY38avdggKZbKfu2BmFYN4MUTiiNX27c8dHzPW79PrAx3huB9Pa6AfwW6sT4biax3y22z8toyLzmjtCc2QGNZn" },
+    inputSchema: {
+      type: "object",
+      properties: { signature: { type: "string" } },
+      required: ["signature"],
+    },
+    output: { example: { ok: true } },
+    outputSchema: {
+      type: "object",
+      properties: { ok: { type: "boolean" } },
+      required: ["ok"],
+    },
+  });
+  assert.equal(isSensitiveInputName("signature"), true);
+  assert.equal(isSafePublicationInputName("signature"), true);
+  assert.deepEqual(classifyDiscoveryRequestConstruction("GET /solana-signature-telemetry", ["signature"]), {
+    status: "not_measured",
+    requiredKeyCount: 0,
+  });
+  assert.deepEqual(classifyDiscoveryRequestConstruction("GET /solana-signature-telemetry", []), {
+    status: "not_measured",
+    requiredKeyCount: 0,
+  });
+});
+
 test("does not measure credential-like required keys", () => {
   declareDiscoveryContract({
     routeKey: "GET /sensitive-contract",
