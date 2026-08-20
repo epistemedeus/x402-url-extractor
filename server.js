@@ -62,6 +62,9 @@ import { morphoPreLiquidationReplay, morphoPreLiquidationReplayMcpOutputSchema }
 import {
   normalizeOpportunityPreflightRequest,
   opportunityPreflight,
+  opportunityPreflightGetOutputSchema,
+  opportunityPreflightMcpOutputSchema,
+  opportunityPreflightOutputSchema,
   opportunityPreflightTrial,
 } from "./opportunity-preflight.mjs";
 import {
@@ -128,6 +131,7 @@ import {
   walletPolicyConformance,
   walletPolicyConformanceContract,
   walletPolicyConformanceInputSchema,
+  walletPolicyConformanceMcpOutputSchema,
   walletPolicyConformanceOutputSchema,
 } from "./wallet-policy-conformance.mjs";
 import {
@@ -137,6 +141,7 @@ import {
   statefulWalletPolicyConformance,
   statefulWalletPolicyConformanceContract,
   statefulWalletPolicyConformanceInputSchema,
+  statefulWalletPolicyConformanceMcpOutputSchema,
   statefulWalletPolicyConformanceOutputSchema,
 } from "./stateful-wallet-policy-conformance.mjs";
 import { createReferralResolver } from "./referral.mjs";
@@ -1533,6 +1538,18 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       },
     };
   }
+  for (const [pathname, pathItem] of Object.entries(document.paths)) {
+    const operation = pathItem?.post;
+    if (!operation?.["x-payment-info"] || !operation.responses?.["200"]) continue;
+    const response = getDiscoveryOutputContract(`POST ${pathname}`);
+    if (!response?.schema) continue;
+    operation.responses["200"].content = {
+      "application/json": {
+        schema: response.schema,
+        ...(response.example ? { example: response.example } : {}),
+      },
+    };
+  }
   const freeOperationMetadata = {
     "/v0/cards.json": { operationId: "listPlatformHealthCards", tags: ["Settlement Radar"] },
     "/v0/commerce-demand.json": { operationId: "getCommerceDemand", tags: ["Settlement Radar"] },
@@ -1862,38 +1879,23 @@ function declareOpportunityPreflightContract(routeKey) {
       required: ["rewardUsd", "hours", "hourlyCostUsd"],
     },
     output: {
-      example: {
-        ok: true,
-        product: "samedaydesk-opportunity-preflight",
-        version: "1.0.0",
-        decision: "abandon",
-        input: { platform: "taskmarket", rewardUsd: 10, hours: 0.25, hourlyCostUsd: 4, selectionProbabilityPct: 2 },
-        economics: {
-          totalAtRiskUsd: 1.5,
-          expectedSurplusUsd: -0.3,
-          breakEvenSelectionProbabilityPct: 5,
-          equalEntryShareReferencePct: 1.25,
-        },
-        gates: { hardBlocks: [], requiredChecks: [], warnings: ["platform_has_observed_oversupply_or_selection_dilution"] },
-        platformEvidence: null,
-        boundary: "Deterministic preflight only; this call does not claim, bid, pay, or submit.",
-      },
+      example: opportunityPreflight({
+        platform: "taskmarket",
+        rewardUsd: 10,
+        hours: 0.25,
+        hourlyCostUsd: 4,
+        computeUsd: 0.5,
+        mandatorySpendUsd: 0,
+        reusableValueUsd: 1,
+        selectionProbabilityPct: 2,
+        competition: 80,
+        slots: 1,
+        agentAccess: "agent_allowed",
+        acceptance: "discretionary",
+        settlement: "escrow",
+      }),
     },
-    outputSchema: {
-      type: "object",
-      properties: {
-        ok: { type: "boolean" },
-        product: { type: "string", const: "samedaydesk-opportunity-preflight" },
-        version: { type: "string" },
-        decision: { type: "string", enum: ["attempt", "verify_first", "abandon"] },
-        input: { type: "object" },
-        economics: { type: "object" },
-        gates: { type: "object" },
-        platformEvidence: { type: ["object", "null"] },
-        boundary: { type: "string" },
-      },
-      required: ["ok", "product", "version", "decision", "input", "economics", "gates", "platformEvidence", "boundary"],
-    },
+    outputSchema: post ? opportunityPreflightOutputSchema() : opportunityPreflightGetOutputSchema(),
   });
 }
 
@@ -3410,7 +3412,7 @@ import("./mcp-server.mjs")
         { name: "morpho_protection", description: RESOURCES[8].description, price: MORPHO_PROTECTION_PRICE, inputSchema: { address: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Borrower EVM address on Base mainnet."), targetHealthFactor: z.number().gt(1).max(5).default(1.25).describe("Target Morpho health factor after the selected collateral-price shock; must be greater than 1 and at most 5."), protectAgainstShockPct: z.number().min(-99).max(0).default(-10).describe("Collateral-price shock percentage to withstand, from -99 through 0; for example -10 models a 10% price decline."), executionBufferBps: z.number().int().min(0).max(500).default(25).describe("Additional repayment or collateral amount buffer in basis points for debt accrual and integer rounding; 25 means 0.25%.") }, outputSchema: morphoProtectionMcpOutputSchema, run: (a) => morphoProtection(a.address, a), tags: ["defi", "morpho", "protection", "unsigned-transaction-plan"] },
         { name: "morpho_market_underwrite", description: RESOURCES[9].description, price: MORPHO_MARKET_UNDERWRITE_PRICE, inputSchema: { marketId: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Morpho market ID on Base mainnet") }, run: (a) => morphoMarketUnderwrite(a.marketId), tags: ["defi", "morpho", "underwriting", "risk", "preliquidation"] },
         { name: "morpho_preliquidation_replay", description: RESOURCES[10].description, price: MORPHO_PRELIQUIDATION_REPLAY_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Successful Base transaction containing a Morpho PreLiquidate event") }, outputSchema: morphoPreLiquidationReplayMcpOutputSchema, run: (a) => morphoPreLiquidationReplay(a.transactionHash), tags: ["defi", "morpho", "preliquidation", "replay", "economics"] },
-        { name: "opportunity_preflight", description: RESOURCES[11].description, price: OPPORTUNITY_PREFLIGHT_PRICE, inputSchema: { platform: z.string().max(100).optional().describe("Optional platform slug used to attach dated platform-health evidence when a matching card exists."), rewardUsd: z.number().positive().describe("Maximum gross reward in USD if the opportunity is selected and paid."), hours: z.number().min(0).max(10000).describe("Estimated human and agent work time in hours for one complete attempt."), hourlyCostUsd: z.number().min(0).max(100000).describe("Internal opportunity cost per hour in USD."), computeUsd: z.number().min(0).default(0).describe("Expected model, API, hosting, and compute spend in USD for one attempt."), mandatorySpendUsd: z.number().min(0).default(0).describe("Non-recoverable cash spend in USD required before the opportunity can settle."), reusableValueUsd: z.number().min(0).default(0).describe("Conservative USD value of reusable code, research, distribution, or other assets created by the attempt."), selectionProbabilityPct: z.number().min(0).max(100).optional().describe("Caller-supplied probability, from 0 to 100, of receiving the reward; omit to receive a verify-first decision."), competition: z.number().int().min(0).default(0).describe("Known number of competing submissions or workers; use 0 when unknown."), slots: z.number().int().min(1).default(1).describe("Number of independently paid winner or worker slots."), agentAccess: z.enum(["agent_allowed", "agent_only", "mixed", "human_only", "unknown"]).default("unknown").describe("Whether the platform explicitly allows agent participation, is agent-only, mixes agents and humans, is human-only, or remains unknown."), acceptance: z.enum(["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"]).default("unknown").describe("How completion is accepted: deterministic proof, machine score, review deadline, discretionary judgment, or unknown."), settlement: z.enum(["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"]).default("unknown").describe("How the reward is funded and paid: direct, escrow, platform balance, discretionary, unfunded, or unknown.") }, run: (a) => opportunityPreflight(a, { platformCard: a.platform ? getPlatformHealthCard(a.platform.toLowerCase()) : null }), tags: ["work", "bounty", "economics", "preflight", "settlement-evidence"] },
+        { name: "opportunity_preflight", description: RESOURCES[11].description, price: OPPORTUNITY_PREFLIGHT_PRICE, inputSchema: { platform: z.string().max(100).optional().describe("Optional platform slug used to attach dated platform-health evidence when a matching card exists."), rewardUsd: z.number().positive().describe("Maximum gross reward in USD if the opportunity is selected and paid."), hours: z.number().min(0).max(10000).describe("Estimated human and agent work time in hours for one complete attempt."), hourlyCostUsd: z.number().min(0).max(100000).describe("Internal opportunity cost per hour in USD."), computeUsd: z.number().min(0).default(0).describe("Expected model, API, hosting, and compute spend in USD for one attempt."), mandatorySpendUsd: z.number().min(0).default(0).describe("Non-recoverable cash spend in USD required before the opportunity can settle."), reusableValueUsd: z.number().min(0).default(0).describe("Conservative USD value of reusable code, research, distribution, or other assets created by the attempt."), selectionProbabilityPct: z.number().min(0).max(100).optional().describe("Caller-supplied probability, from 0 to 100, of receiving the reward; omit to receive a verify-first decision."), competition: z.number().int().min(0).default(0).describe("Known number of competing submissions or workers; use 0 when unknown."), slots: z.number().int().min(1).default(1).describe("Number of independently paid winner or worker slots."), agentAccess: z.enum(["agent_allowed", "agent_only", "mixed", "human_only", "unknown"]).default("unknown").describe("Whether the platform explicitly allows agent participation, is agent-only, mixes agents and humans, is human-only, or remains unknown."), acceptance: z.enum(["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"]).default("unknown").describe("How completion is accepted: deterministic proof, machine score, review deadline, discretionary judgment, or unknown."), settlement: z.enum(["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"]).default("unknown").describe("How the reward is funded and paid: direct, escrow, platform balance, discretionary, unfunded, or unknown.") }, outputSchema: opportunityPreflightMcpOutputSchema, run: (a) => opportunityPreflight(a, { platformCard: a.platform ? getPlatformHealthCard(a.platform.toLowerCase()) : null }), tags: ["work", "bounty", "economics", "preflight", "settlement-evidence"] },
         { name: "agent_discoverability_audit", description: RESOURCES[12].description, price: AGENT_DISCOVERABILITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Public HTTPS service origin"), intent: z.string().min(20).max(500).describe("Brand-blind capability description"), route: z.string().regex(/^\/[^?#]*$/).optional().describe("Optional expected exact path"), runtimeUrl: z.string().url().max(2048).optional().describe("Optional exact same-origin HTTPS GET URL whose unpaid x402 or MPP offer supplies the runtime price reference. Requires route and an exactly matching pathname."), payTo: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional EVM payTo for alias matching"), expectedPriceUsd: z.union([z.number().min(0).max(1000000), z.string().regex(/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,6})?$/)]).optional().describe("Optional exact route price expected by the caller. A coherent runtimeUrl offer takes precedence and caller drift is reported."), surfaceAudit: z.boolean().optional().describe("When true, inspect the target's public Agent Card, ERC-8004 registration document, and action catalog for the expected route through bounded same-origin fetches.") }, run: (a) => agentDiscoverabilityAudit(a), tags: ["distribution", "discovery", "x402", "mpp", "agent402", "catalog-price", "runtime-coherence", "a2a", "erc-8004"] },
         { name: "payment_offer_preflight", description: RESOURCES[13].description, price: PAYMENT_OFFER_PREFLIGHT_PRICE, inputSchema: { url: z.string().url().max(2048).describe("Exact public HTTPS GET route whose unpaid x402 and MPP challenge headers and same-origin OpenAPI success-response declaration should be inspected before buyer authorization. Credential-like query keys, fragments, unresolved parameters, local hosts, redirects, and non-public IPs are rejected."), catalog: PAYMENT_OFFER_CATALOG_SCHEMA.optional().describe("Optional caller-supplied catalog candidate. When present, the tool compares it with every live unsigned offer across request, protocol, amount, network, asset, recipient, and expiry.") }, outputSchema: paymentOfferPreflightMcpOutputSchema, run: (a) => paymentOfferPreflight(a), tags: ["payments", "x402", "mpp", "buyer-safety", "preflight", "catalog-coherence", "response-contract"] },
         { name: "seller_integrity_audit", description: RESOURCES[19].description, price: SELLER_INTEGRITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Credential-free public HTTPS seller origin on port 443."), route: z.string().regex(/^\/(?!\/)[^?#{}]+$/).describe("Exact paid GET or POST path declared by the seller, without query or template parameters."), method: z.enum(["GET", "POST"]).default("GET").describe("POST receives static OpenAPI response-contract analysis without sending a target request."), requiredPaths: z.array(z.string().regex(/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+){0,7}$/)).max(16).default([]).describe("Buyer-required dotted success-response paths that the seller schema must guarantee recursively."), requireBazaar: z.boolean().default(false).describe("When true, missing Bazaar discovery metadata becomes a repair finding for live-probed GET routes.") }, run: (a) => sellerIntegrityAudit(a), tags: ["payments", "seller-ci", "x402", "mpp", "response-contract", "machine-buyability", "post-contract"] },
@@ -3419,8 +3421,8 @@ import("./mcp-server.mjs")
         { name: "settlement_proof", description: RESOURCES[14].description, price: SETTLEMENT_PROOF_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Base mainnet transaction hash containing the claimed canonical USDC transfer."), recipient: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Expected canonical Base USDC recipient."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,20}$/).describe("Expected positive USDC amount in six-decimal atomic units."), payer: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional expected canonical Base USDC payer.") }, outputSchema: settlementProofMcpOutputSchema, run: (a) => settlementProof(a), tags: ["payments", "x402", "settlement", "reconciliation", "base-usdc"] },
         { name: "transaction_receipt", description: RESOURCES[15].description, price: TRANSACTION_RECEIPT_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Mined Base or Ethereum transaction hash whose normalized receipt should be returned."), network: z.enum(["base", "ethereum"]).default("base").describe("Receipt network. Defaults to Base mainnet.") }, run: (a) => transactionReceipt(a), tags: ["blockchain", "receipt", "gas", "erc20", "usdc"] },
         { name: "solana_transaction_receipt", description: RESOURCES[16].description, price: SOLANA_TRANSACTION_RECEIPT_PRICE, inputSchema: { signature: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/).describe("Finalized Solana mainnet transaction signature."), mint: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional SPL-token mint; defaults to canonical Solana USDC."), recipient: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional expected token recipient owner."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,19}$/).optional().describe("Optional expected positive token amount in atomic units; requires recipient."), payer: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional expected token payer owner; requires recipient and amountAtomic.") }, run: (a) => solanaTransactionReceipt(a), tags: ["blockchain", "solana", "receipt", "spl-token", "usdc"] },
-        { name: "wallet_policy_conformance", description: RESOURCES[17].description, price: WALLET_POLICY_CONFORMANCE_PRICE, inputSchema: { profileId: z.string().min(1).max(128).describe("Caller-defined policy profile identifier with no credential or wallet secret."), provider: z.string().min(1).max(128).describe("Wallet or delegated-signer provider name."), network: z.string().min(1).max(128).describe("Network identifier used by the tested profile."), protocol: z.string().min(1).max(128).describe("Payment or execution protocol bound by the tested profile."), observations: z.array(z.object({ case: z.enum(WALLET_POLICY_CASE_NAMES).describe("Standardized mutation or control case."), actual: z.enum(["allowed", "denied", "error"]).describe("Observed high-level outcome."), denialClass: z.enum(["none", "policy", "validation", "provider"]).describe("Where the denial or error occurred; only policy earns provider-native coverage."), code: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$/).optional().describe("Optional safe provider code only, never a raw message or payload.") }).strict()).min(1).max(16).describe("Unique standardized observations. Raw provider responses, signatures, transactions, credentials, and wallet IDs are rejected.") }, run: (a) => walletPolicyConformance(a), tags: ["security", "wallet-policy", "delegated-signer", "conformance", "execution-shape"] },
-        { name: "stateful_wallet_policy_conformance", description: RESOURCES[18].description, price: STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE, inputSchema: { profileId: z.string().min(1).max(128).describe("Caller-defined stateful policy profile identifier with no credential, wallet, or counter secret."), provider: z.string().min(1).max(128).describe("Wallet or delegated-signer provider name."), network: z.string().min(1).max(128).describe("Network identifier used by the tested stateful profile."), protocol: z.string().min(1).max(128).describe("Payment or execution protocol bound by the tested stateful profile."), observations: z.array(z.object({ case: z.enum(STATEFUL_WALLET_POLICY_CASE_NAMES).describe("Standardized cumulative, extraction, concurrency, reference, or application-serialization case."), actual: z.enum(["allowed", "denied", "error"]).describe("Observed high-level outcome."), enforcementClass: z.enum(["none", "policy", "application", "validation", "provider"]).describe("Where enforcement occurred. Provider policy and application guards remain separate."), code: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$/).optional().describe("Optional safe provider code only, never a raw message, counter value, or payload.") }).strict()).min(1).max(7).describe("Unique standardized stateful observations. Raw provider responses, signatures, transactions, counter values, credentials, wallet IDs, and resource IDs are rejected.") }, run: (a) => statefulWalletPolicyConformance(a), tags: ["security", "wallet-policy", "stateful-policy", "spend-cap", "concurrency"] },
+        { name: "wallet_policy_conformance", description: RESOURCES[17].description, price: WALLET_POLICY_CONFORMANCE_PRICE, inputSchema: { profileId: z.string().min(1).max(128).describe("Caller-defined policy profile identifier with no credential or wallet secret."), provider: z.string().min(1).max(128).describe("Wallet or delegated-signer provider name."), network: z.string().min(1).max(128).describe("Network identifier used by the tested profile."), protocol: z.string().min(1).max(128).describe("Payment or execution protocol bound by the tested profile."), observations: z.array(z.object({ case: z.enum(WALLET_POLICY_CASE_NAMES).describe("Standardized mutation or control case."), actual: z.enum(["allowed", "denied", "error"]).describe("Observed high-level outcome."), denialClass: z.enum(["none", "policy", "validation", "provider"]).describe("Where the denial or error occurred; only policy earns provider-native coverage."), code: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$/).optional().describe("Optional safe provider code only, never a raw message or payload.") }).strict()).min(1).max(16).describe("Unique standardized observations. Raw provider responses, signatures, transactions, credentials, and wallet IDs are rejected.") }, outputSchema: walletPolicyConformanceMcpOutputSchema, run: (a) => walletPolicyConformance(a), tags: ["security", "wallet-policy", "delegated-signer", "conformance", "execution-shape"] },
+        { name: "stateful_wallet_policy_conformance", description: RESOURCES[18].description, price: STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE, inputSchema: { profileId: z.string().min(1).max(128).describe("Caller-defined stateful policy profile identifier with no credential, wallet, or counter secret."), provider: z.string().min(1).max(128).describe("Wallet or delegated-signer provider name."), network: z.string().min(1).max(128).describe("Network identifier used by the tested stateful profile."), protocol: z.string().min(1).max(128).describe("Payment or execution protocol bound by the tested stateful profile."), observations: z.array(z.object({ case: z.enum(STATEFUL_WALLET_POLICY_CASE_NAMES).describe("Standardized cumulative, extraction, concurrency, reference, or application-serialization case."), actual: z.enum(["allowed", "denied", "error"]).describe("Observed high-level outcome."), enforcementClass: z.enum(["none", "policy", "application", "validation", "provider"]).describe("Where enforcement occurred. Provider policy and application guards remain separate."), code: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$/).optional().describe("Optional safe provider code only, never a raw message, counter value, or payload.") }).strict()).min(1).max(7).describe("Unique standardized stateful observations. Raw provider responses, signatures, transactions, counter values, credentials, wallet IDs, and resource IDs are rejected.") }, outputSchema: statefulWalletPolicyConformanceMcpOutputSchema, run: (a) => statefulWalletPolicyConformance(a), tags: ["security", "wallet-policy", "stateful-policy", "spend-cap", "concurrency"] },
       ].map(decorateMcpTool),
     })
   )

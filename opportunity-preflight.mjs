@@ -1,6 +1,11 @@
+import { z } from "zod";
+
 const AGENT_ACCESS = new Set(["agent_allowed", "agent_only", "mixed", "human_only", "unknown"]);
 const ACCEPTANCE = new Set(["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"]);
 const SETTLEMENT = new Set(["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"]);
+const AGENT_ACCESS_VALUES = /** @type {[string, ...string[]]} */ ([...AGENT_ACCESS]);
+const ACCEPTANCE_VALUES = /** @type {[string, ...string[]]} */ ([...ACCEPTANCE]);
+const SETTLEMENT_VALUES = /** @type {[string, ...string[]]} */ ([...SETTLEMENT]);
 
 function finiteNumber(value, name, { minimum = 0, maximum = 1_000_000, required = false } = {}) {
   if (value === undefined || value === null || value === "") {
@@ -197,6 +202,231 @@ export function opportunityPreflight(input, { platformCard = null } = {}) {
       "Deterministic arithmetic and dated categorical evidence only. The caller supplies cost and selection assumptions, must reverify the primary listing, and owns legal, policy, identity, spending, and execution decisions. No platform account, claim, bid, payment, or submission is made.",
   };
 }
+
+const opportunityEvidenceItemJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    factClass: { type: "string" },
+    summary: { type: "string" },
+    sourceUrl: { type: "string" },
+    observedAt: { type: "string" },
+    stageReached: { type: "string" },
+    failedAt: { type: ["string", "null"] },
+    confidence: { type: "string" },
+  },
+  required: ["factClass", "summary", "sourceUrl", "observedAt", "stageReached", "failedAt", "confidence"],
+};
+
+const opportunityEvidenceItemMcpSchema = z.object({
+  factClass: z.string(),
+  summary: z.string(),
+  sourceUrl: z.string(),
+  observedAt: z.string(),
+  stageReached: z.string(),
+  failedAt: z.string().nullable(),
+  confidence: z.string(),
+}).strict();
+
+export function opportunityPreflightOutputSchema() {
+  return {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      ok: { type: "boolean", const: true },
+      product: { type: "string", const: "samedaydesk-opportunity-preflight" },
+      version: { type: "string", const: "1.0.0" },
+      decision: { type: "string", enum: ["attempt", "verify_first", "abandon"] },
+      input: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          platform: { type: ["string", "null"] },
+          rewardUsd: { type: "number" },
+          hours: { type: "number" },
+          hourlyCostUsd: { type: "number" },
+          computeUsd: { type: "number" },
+          mandatorySpendUsd: { type: "number" },
+          reusableValueUsd: { type: "number" },
+          selectionProbabilityPct: { type: ["number", "null"] },
+          competition: { type: "integer" },
+          slots: { type: "integer" },
+          agentAccess: { type: "string", enum: AGENT_ACCESS_VALUES },
+          acceptance: { type: "string", enum: ACCEPTANCE_VALUES },
+          settlement: { type: "string", enum: SETTLEMENT_VALUES },
+        },
+        required: [
+          "platform",
+          "rewardUsd",
+          "hours",
+          "hourlyCostUsd",
+          "computeUsd",
+          "mandatorySpendUsd",
+          "reusableValueUsd",
+          "selectionProbabilityPct",
+          "competition",
+          "slots",
+          "agentAccess",
+          "acceptance",
+          "settlement",
+        ],
+      },
+      economics: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          executionCostUsd: { type: "number" },
+          mandatorySpendUsd: { type: "number" },
+          totalAtRiskUsd: { type: "number" },
+          reusableValueUsd: { type: "number" },
+          expectedRewardUsd: { type: ["number", "null"] },
+          expectedSurplusUsd: { type: ["number", "null"] },
+          breakEvenSelectionProbabilityPct: { type: "number" },
+          equalEntryShareReferencePct: { type: ["number", "null"] },
+          probabilitySource: { type: "string", enum: ["missing", "caller_supplied"] },
+          equalEntryShareBoundary: { type: "string" },
+        },
+        required: [
+          "executionCostUsd",
+          "mandatorySpendUsd",
+          "totalAtRiskUsd",
+          "reusableValueUsd",
+          "expectedRewardUsd",
+          "expectedSurplusUsd",
+          "breakEvenSelectionProbabilityPct",
+          "equalEntryShareReferencePct",
+          "probabilitySource",
+          "equalEntryShareBoundary",
+        ],
+      },
+      gates: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          hardBlocks: { type: "array", items: { type: "string" } },
+          requiredChecks: { type: "array", items: { type: "string" } },
+          warnings: { type: "array", items: { type: "string" } },
+        },
+        required: ["hardBlocks", "requiredChecks", "warnings"],
+      },
+      platformEvidence: {
+        type: ["object", "null"],
+        additionalProperties: false,
+        properties: {
+          platformId: { type: "string" },
+          platformName: { type: "string" },
+          healthCategory: { type: "string" },
+          confidence: { type: "string" },
+          freshness: { type: "string" },
+          observedAt: { type: "string" },
+          freshUntil: { type: "string" },
+          sampleCount: { type: "integer" },
+          settlementMechanism: { type: "array", items: { type: "string" } },
+          rightsClass: { type: "string" },
+          evidence: { type: "array", items: opportunityEvidenceItemJsonSchema },
+          unknowns: { type: "array", items: { type: "string" } },
+        },
+        required: [
+          "platformId",
+          "platformName",
+          "healthCategory",
+          "confidence",
+          "freshness",
+          "observedAt",
+          "freshUntil",
+          "sampleCount",
+          "settlementMechanism",
+          "rightsClass",
+          "evidence",
+          "unknowns",
+        ],
+      },
+      boundary: { type: "string" },
+    },
+    required: ["ok", "product", "version", "decision", "input", "economics", "gates", "platformEvidence", "boundary"],
+  };
+}
+
+export function opportunityPreflightTrialOutputSchema() {
+  const paid = structuredClone(opportunityPreflightOutputSchema());
+  paid.properties.sample = { type: "boolean", const: true };
+  paid.properties.charged = { type: "boolean", const: false };
+  paid.properties.trial = {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      contract: { type: "string", const: "fixed-non-authoritative-example" },
+      next: { type: "string" },
+    },
+    required: ["contract", "next"],
+  };
+  paid.required = [...paid.required, "sample", "charged", "trial"];
+  return paid;
+}
+
+// Public GET 200 is the paid custom result or the fixed uncharged trial wrapper.
+// Trial fields stay optional so both runtime 200s validate. oneOf is not used
+// because agent-payment-policy treats it as an unsupported keyword and would
+// drop this route from an admissible purchase-evidence contract.
+export function opportunityPreflightGetOutputSchema() {
+  const schema = opportunityPreflightTrialOutputSchema();
+  schema.required = [...opportunityPreflightOutputSchema().required];
+  return schema;
+}
+
+export const opportunityPreflightMcpOutputSchema = z.object({
+  ok: z.literal(true),
+  product: z.literal("samedaydesk-opportunity-preflight"),
+  version: z.literal("1.0.0"),
+  decision: z.enum(["attempt", "verify_first", "abandon"]),
+  input: z.object({
+    platform: z.string().nullable(),
+    rewardUsd: z.number(),
+    hours: z.number(),
+    hourlyCostUsd: z.number(),
+    computeUsd: z.number(),
+    mandatorySpendUsd: z.number(),
+    reusableValueUsd: z.number(),
+    selectionProbabilityPct: z.number().nullable(),
+    competition: z.number().int(),
+    slots: z.number().int(),
+    agentAccess: z.enum(AGENT_ACCESS_VALUES),
+    acceptance: z.enum(ACCEPTANCE_VALUES),
+    settlement: z.enum(SETTLEMENT_VALUES),
+  }).strict(),
+  economics: z.object({
+    executionCostUsd: z.number(),
+    mandatorySpendUsd: z.number(),
+    totalAtRiskUsd: z.number(),
+    reusableValueUsd: z.number(),
+    expectedRewardUsd: z.number().nullable(),
+    expectedSurplusUsd: z.number().nullable(),
+    breakEvenSelectionProbabilityPct: z.number(),
+    equalEntryShareReferencePct: z.number().nullable(),
+    probabilitySource: z.enum(["missing", "caller_supplied"]),
+    equalEntryShareBoundary: z.string(),
+  }).strict(),
+  gates: z.object({
+    hardBlocks: z.array(z.string()),
+    requiredChecks: z.array(z.string()),
+    warnings: z.array(z.string()),
+  }).strict(),
+  platformEvidence: z.object({
+    platformId: z.string(),
+    platformName: z.string(),
+    healthCategory: z.string(),
+    confidence: z.string(),
+    freshness: z.string(),
+    observedAt: z.string(),
+    freshUntil: z.string(),
+    sampleCount: z.number().int(),
+    settlementMechanism: z.array(z.string()),
+    rightsClass: z.string(),
+    evidence: z.array(opportunityEvidenceItemMcpSchema),
+    unknowns: z.array(z.string()),
+  }).strict().nullable(),
+  boundary: z.string(),
+}).strict();
 
 export function opportunityPreflightTrial() {
   const result = opportunityPreflight({
