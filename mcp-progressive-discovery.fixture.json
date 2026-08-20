@@ -1,0 +1,40 @@
+{
+  "capturedAt": "2026-08-20T17:01:31Z",
+  "origin": "https://agents.samedaydesk.com/mcp",
+  "protocolVersion": "2025-03-26",
+  "server": {
+    "name": "x402-data-gateway",
+    "version": "1.23.16"
+  },
+  "sseBytes": 44743,
+  "jsonrpcPayloadBytes": 44720,
+  "resultBytes": 44686,
+  "nextCursor": null,
+  "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+  "network": "eip155:8453",
+  "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "tools": [
+    { "name": "extract", "title": "Extract Web Page as Structured JSON", "amountAtomic": "5000", "hasOutputSchema": false, "bytes": 1201 },
+    { "name": "read", "title": "Read Web Page as Markdown", "amountAtomic": "5000", "hasOutputSchema": false, "bytes": 1114 },
+    { "name": "scan", "title": "Scan GitHub Repository Before Install", "amountAtomic": "200000", "hasOutputSchema": false, "bytes": 832 },
+    { "name": "schemaforge", "title": "Generate Business JSON-LD", "amountAtomic": "250000", "hasOutputSchema": false, "bytes": 1443 },
+    { "name": "enrich", "title": "Enrich Company Domain", "amountAtomic": "50000", "hasOutputSchema": false, "bytes": 1047 },
+    { "name": "wallet_enrich", "title": "Enrich Base Wallet or Contract", "amountAtomic": "50000", "hasOutputSchema": false, "bytes": 1087 },
+    { "name": "deep_audit", "title": "Audit Complete AI Search Readiness", "amountAtomic": "250000", "hasOutputSchema": false, "bytes": 1515 },
+    { "name": "morpho_position", "title": "Inspect Morpho Borrower Position", "amountAtomic": "20000", "hasOutputSchema": false, "bytes": 1304 },
+    { "name": "morpho_protection", "title": "Plan Morpho Borrower Protection", "amountAtomic": "100000", "hasOutputSchema": false, "bytes": 1875 },
+    { "name": "morpho_market_underwrite", "title": "Underwrite Morpho Market", "amountAtomic": "250000", "hasOutputSchema": false, "bytes": 1196 },
+    { "name": "morpho_preliquidation_replay", "title": "Replay Morpho PreLiquidation", "amountAtomic": "100000", "hasOutputSchema": false, "bytes": 1231 },
+    { "name": "opportunity_preflight", "title": "Preflight Agent Work Opportunity", "amountAtomic": "50000", "hasOutputSchema": false, "bytes": 3183 },
+    { "name": "agent_discoverability_audit", "title": "Audit Agent Service Discoverability", "amountAtomic": "50000", "hasOutputSchema": false, "bytes": 2509 },
+    { "name": "payment_offer_preflight", "title": "Preflight x402 and MPP Offer", "amountAtomic": "5000", "hasOutputSchema": false, "bytes": 3008 },
+    { "name": "seller_integrity_audit", "title": "Audit Seller Machine Buyability", "amountAtomic": "10000", "hasOutputSchema": false, "bytes": 2070 },
+    { "name": "contract_qualified_search", "title": "Search Contract-Qualified Services", "amountAtomic": "10000", "hasOutputSchema": false, "bytes": 2002 },
+    { "name": "agent_surface_budget_audit", "title": "Audit Agent Surface Budget", "amountAtomic": "10000", "hasOutputSchema": true, "bytes": 7591 },
+    { "name": "settlement_proof", "title": "Verify Base USDC Settlement", "amountAtomic": "5000", "hasOutputSchema": false, "bytes": 1570 },
+    { "name": "transaction_receipt", "title": "Inspect Transaction Receipt", "amountAtomic": "2000", "hasOutputSchema": false, "bytes": 1285 },
+    { "name": "solana_transaction_receipt", "title": "Inspect Solana Transaction Receipt", "amountAtomic": "2000", "hasOutputSchema": false, "bytes": 1747 },
+    { "name": "wallet_policy_conformance", "title": "Evaluate Agent Wallet Policy Conformance", "amountAtomic": "10000", "hasOutputSchema": false, "bytes": 2866 },
+    { "name": "stateful_wallet_policy_conformance", "title": "Evaluate Stateful Wallet Policy Conformance", "amountAtomic": "10000", "hasOutputSchema": false, "bytes": 2977 }
+  ]
+}

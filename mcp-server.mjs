@@ -163,6 +163,7 @@ export async function mountMcp(app, { facilitatorClient, network, payTo, serverI
         _meta: t.paymentMeta,
       }, t.handler);
     }
+    // Return every tool in one tools/list page. Current MCP clients ignore pagination cursors.
     return server;
   };
 
