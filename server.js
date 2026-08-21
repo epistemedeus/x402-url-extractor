@@ -211,6 +211,7 @@ import { SERVICE_VERSION } from "./service-version.mjs";
 import { loadServiceDeploymentPublication } from "./service-deployment-publication.mjs";
 import { SERVICE_DEPLOYMENT_ROUTES } from "./service-deployment-routes.mjs";
 import { validateOpenApiOperationIds } from "./openapi-operation-contract.mjs";
+import { createExactUsdcAcceptsFor, usdcTermsForNetwork } from "./x402-payment-terms.mjs";
 
 // ---------------------------------------------------------------------------
 // 1. CONFIG (all via env so we change facilitator/network with zero code edits)
@@ -693,12 +694,7 @@ app.get("/go/manychat", async (_req, res) => {
 // --- x402 discovery document (/.well-known/x402) so agents + indexes (x402scan,
 // domain crawlers) self-discover our paid resources. Free route, before the paywall.
 const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
-const USDC_BY_NETWORK = {
-  "eip155:8453": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-  "eip155:84532": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-};
-const USDC_ASSET = USDC_BY_NETWORK[NETWORK];
-if (!USDC_ASSET) throw new Error(`Unsupported USDC network: ${NETWORK}`);
+const USDC_ASSET = usdcTermsForNetwork(NETWORK).asset;
 const serviceDeploymentPublication = loadServiceDeploymentPublication({
   canonicalOrigin: PUBLIC_URL,
   network: NETWORK,
@@ -712,9 +708,7 @@ commerceSettlementReconciler = createCommerceSettlementReconciler({
   network: NETWORK,
   treasury: PAY_TO,
 });
-const acceptsFor = (amount) => [
-  { scheme: "exact", network: NETWORK, asset: USDC_ASSET, amount, payTo: PAY_TO, maxTimeoutSeconds: 300, extra: { name: "USD Coin", version: "2" } },
-];
+const acceptsFor = createExactUsdcAcceptsFor({ network: NETWORK, payTo: PAY_TO });
 const EXTRACT_DISCOVERY_DESCRIPTION = "Extract a public web page into clean structured JSON for agent workflows: title, description, main text, all JSON-LD, Open Graph and Twitter metadata, headings, links, and AI-crawler and structured-data signals. Follows redirects and enforces timeout, response-size, and SSRF safeguards.";
 const RESOURCES = [
   { url: `${PUBLIC_URL}/extract`, amount: priceToAtomic(EXTRACT_PRICE), description: EXTRACT_DISCOVERY_DESCRIPTION, mimeType: "application/json" },

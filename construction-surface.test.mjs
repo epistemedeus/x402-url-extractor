@@ -5,6 +5,10 @@ import {
   buildX402ManifestItems,
   validateConstructionSurfaceParity,
 } from "./construction-surface.mjs";
+import {
+  createExactUsdcAcceptsFor,
+  usdcTermsForNetwork,
+} from "./x402-payment-terms.mjs";
 
 const getAction = {
   name: "extract",
@@ -82,4 +86,36 @@ test("fails when a transform drops a contract or callable example", () => {
   assert.throws(() => validateConstructionSurfaceParity({ actions: [{ ...getAction, request: { ...getAction.request, exampleUrl: null } }, postAction], manifestItems, agentCard: card() }), /callable example URL/);
   assert.throws(() => validateConstructionSurfaceParity({ actions, manifestItems, agentCard: { skills: [] } }), /route-skill count/);
   assert.throws(() => validateConstructionSurfaceParity({ actions, manifestItems, agentCard: card(), alternateAccess: { route: alternate.route, request: null } }), /alternate.*callable/);
+});
+
+const exactNetworkTerms = [
+  ["eip155:8453", "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "USD Coin", "2"],
+  ["eip155:84532", "0x036CbD53842c5426634e7929541eC2318f3dCF7e", "USDC", "2"],
+];
+
+for (const [network, asset, name, version] of exactNetworkTerms) {
+  test(`generates mapped USDC construction terms for ${network}`, () => {
+    const payTo = "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee";
+    const acceptsFor = createExactUsdcAcceptsFor({ network, payTo });
+    const manifestItems = buildX402ManifestItems({ resources, actions: [getAction, postAction], acceptsFor });
+
+    assert.deepEqual(usdcTermsForNetwork(network), { asset, name, version });
+    for (const [index, item] of manifestItems.entries()) {
+      assert.deepEqual(item.accepts, [{
+        scheme: "exact",
+        network,
+        asset,
+        amount: resources[index].amount,
+        payTo,
+        maxTimeoutSeconds: 300,
+        extra: { name, version },
+      }]);
+    }
+  });
+}
+
+test("rejects an unsupported USDC construction network", () => {
+  assert.throws(() => usdcTermsForNetwork("eip155:1"), /Unsupported USDC network: eip155:1/);
+  assert.throws(() => usdcTermsForNetwork("constructor"), /Unsupported USDC network: constructor/);
+  assert.throws(() => createExactUsdcAcceptsFor({ network: "eip155:1", payTo: "0x0" }), /Unsupported USDC network: eip155:1/);
 });
