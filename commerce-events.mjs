@@ -74,6 +74,11 @@ const DECLARED_AGENT_DISCOVERY_SOURCES = new Map([
   ["agentictrade-v1", "agentictrade"],
   ["aws-agentcore-v1", "aws-agentcore"],
 ]);
+const CANONICAL_AGENT_DISCOVERY_SOURCES = new Set([
+  ...AGENT_DISCOVERY_SOURCE_PATTERNS.map(([source]) => source),
+  ...DECLARED_AGENT_DISCOVERY_SOURCES.values(),
+  "generic-agent-indexer",
+]);
 
 const EXACT_ROUTES = new Map([
   ["/", { route: "/", kind: "discovery" }],
@@ -130,6 +135,37 @@ const EXACT_ROUTES = new Map([
   ["/gateway/commerce/payment-offer-preflight", { route: "/gateway/commerce/payment-offer-preflight", kind: "paid" }],
   ["/mcp", { route: "/mcp", kind: "paid" }],
 ]);
+
+// Classifier-produced public route forms only. Unmatched traffic is stored as
+// `/${safePathSegment}/*` or `/:opaque`, never as an arbitrary private path.
+const CLASSIFIER_ROUTE_MAX_LENGTH = 64;
+const CLASSIFIER_UNMATCHED_ROUTE_FORM = /^\/(?:[a-z][a-z0-9_-]{0,39}|:opaque)\/\*$/;
+const CANONICAL_CLASSIFIER_ROUTES = new Set([
+  ...[...EXACT_ROUTES.values()].map((entry) => entry.route),
+  ...MCP_TRANSPORT_PROBE_ROUTES,
+  "/platforms/:platformId",
+  "/go/:offer",
+  "/integrations/:private",
+  "/:opaque",
+]);
+const CANONICAL_ROUTE_METADATA = new Map([
+  ...[...EXACT_ROUTES.values()].map((entry) => [entry.route, { kind: entry.kind, matched: true }]),
+  ...[...MCP_TRANSPORT_PROBE_ROUTES].map((route) => [route, { kind: "unmatched", matched: false }]),
+  ["/platforms/:platformId", { kind: "discovery", matched: true }],
+  ["/go/:offer", { kind: "referral", matched: true }],
+  ["/integrations/:private", { kind: "excluded", matched: true }],
+  ["/:opaque", { kind: "unmatched", matched: false }],
+]);
+const WRITER_QUERY_KEY_LIMIT = 20;
+const WRITER_QUERY_KEY_MAX_LENGTH = 64;
+const WRITER_EVENT_ID_MAX_LENGTH = 36;
+const WRITER_ACTOR_KEY_MAX_LENGTH = 24;
+const WRITER_ACTOR_KEY_PATTERN = /^[0-9a-f]{24}$/;
+const WRITER_EVENT_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+const WRITER_HTTP_METHOD_MAX_LENGTH = 16;
+const WRITER_SETTLEMENT_NETWORK_MAX_LENGTH = 100;
+const WRITER_SETTLEMENT_CURRENCY_MAX_LENGTH = 200;
+const WRITER_SETTLEMENT_AMOUNT_MAX_LENGTH = 78;
 
 function safePathSegment(value) {
   const segment = String(value || "").toLowerCase();
@@ -315,7 +351,7 @@ function decodeResponseSettlement(res) {
       return {
         protocol,
         reference: String(reference).toLowerCase(),
-        amountAtomic: /^\d+$/.test(String(amount ?? "")) ? String(amount) : null,
+        amountAtomic: boundedSettlementAmountAtomic(amount),
         network: typeof payload?.network === "string" ? payload.network.slice(0, 100) : null,
         currency: typeof currency === "string" ? currency.slice(0, 200) : null,
       };
@@ -357,13 +393,29 @@ function boundedFailureText(value) {
   return value.slice(0, 1_000).toLowerCase();
 }
 
+const PAYMENT_FAILURE_CODE = Object.freeze({
+  missingRequiredInput: "missing_required_input",
+  extensionMismatch: "extension_mismatch",
+  paymentTermsMismatch: "payment_terms_mismatch",
+  signatureInvalid: "signature_invalid",
+  paymentExpired: "payment_expired",
+  paymentReplayRejected: "payment_replay_rejected",
+  insufficientFunds: "insufficient_funds",
+  paymentServiceUnavailable: "payment_service_unavailable",
+  paymentVerificationFailed: "payment_verification_failed",
+  requestBindingConflict: "request_binding_conflict",
+  applicationValidationFailed: "application_validation_failed",
+  unknownFailure: "unknown_failure",
+});
+const CANONICAL_PAYMENT_FAILURE_CODES = new Set(Object.values(PAYMENT_FAILURE_CODE));
+
 export function classifyPaymentFailureCode({ route, status, queryKeys = [], error = "", problem = null } = {}) {
   const code = Number(status);
   if (!Number.isInteger(code) || code < 400) return null;
   const presentKeys = new Set(Array.isArray(queryKeys) ? queryKeys.filter((key) => typeof key === "string") : []);
   const requiredGroups = REQUIRED_QUERY_KEY_GROUPS_BY_ROUTE.get(String(route || "")) || [];
   if (requiredGroups.some((group) => !group.some((key) => presentKeys.has(key)))) {
-    return "missing_required_input";
+    return PAYMENT_FAILURE_CODE.missingRequiredInput;
   }
 
   const problemRecord = problem && typeof problem === "object" && !Array.isArray(problem) ? problem : {};
@@ -371,17 +423,25 @@ export function classifyPaymentFailureCode({ route, status, queryKeys = [], erro
     .map(boundedFailureText)
     .filter(Boolean)
     .join(" ");
-  if (/extension.*(?:echo|mismatch)|extension_echo_mismatch/.test(text)) return "extension_mismatch";
-  if (/no matching payment requirements|requirements?.*mismatch|wrong (?:network|asset|amount|recipient|payto)/.test(text)) return "payment_terms_mismatch";
-  if (/signature|authorization.*(?:invalid|mismatch)|invalid.*authorization/.test(text)) return "signature_invalid";
-  if (/expired|not valid yet/.test(text)) return "payment_expired";
-  if (/already (?:used|processed)|replay|nonce/.test(text)) return "payment_replay_rejected";
-  if (/insufficient|balance|funds/.test(text)) return "insufficient_funds";
-  if (/facilitator|temporarily unavailable|timeout|upstream/.test(text) || code >= 500) return "payment_service_unavailable";
-  if (/verification|verify|invalid payment|invalid credential/.test(text) || code === 402) return "payment_verification_failed";
-  if (code === 409) return "request_binding_conflict";
-  if (code >= 400 && code < 500) return "application_validation_failed";
-  return "unknown_failure";
+  if (/extension.*(?:echo|mismatch)|extension_echo_mismatch/.test(text)) return PAYMENT_FAILURE_CODE.extensionMismatch;
+  if (/no matching payment requirements|requirements?.*mismatch|wrong (?:network|asset|amount|recipient|payto)/.test(text)) {
+    return PAYMENT_FAILURE_CODE.paymentTermsMismatch;
+  }
+  if (/signature|authorization.*(?:invalid|mismatch)|invalid.*authorization/.test(text)) {
+    return PAYMENT_FAILURE_CODE.signatureInvalid;
+  }
+  if (/expired|not valid yet/.test(text)) return PAYMENT_FAILURE_CODE.paymentExpired;
+  if (/already (?:used|processed)|replay|nonce/.test(text)) return PAYMENT_FAILURE_CODE.paymentReplayRejected;
+  if (/insufficient|balance|funds/.test(text)) return PAYMENT_FAILURE_CODE.insufficientFunds;
+  if (/facilitator|temporarily unavailable|timeout|upstream/.test(text) || code >= 500) {
+    return PAYMENT_FAILURE_CODE.paymentServiceUnavailable;
+  }
+  if (/verification|verify|invalid payment|invalid credential/.test(text) || code === 402) {
+    return PAYMENT_FAILURE_CODE.paymentVerificationFailed;
+  }
+  if (code === 409) return PAYMENT_FAILURE_CODE.requestBindingConflict;
+  if (code >= 400 && code < 500) return PAYMENT_FAILURE_CODE.applicationValidationFailed;
+  return PAYMENT_FAILURE_CODE.unknownFailure;
 }
 
 function x402FailureError(res) {
@@ -604,20 +664,522 @@ function buildAgentSourceFunnel({
 async function readEvents(filePath) {
   try {
     const contents = await readFile(filePath, "utf8");
-    return contents
-      .split("\n")
-      .filter(Boolean)
-      .flatMap((line) => {
-        try {
-          return [JSON.parse(line)];
-        } catch {
-          return [];
+    const events = [];
+    let unusableRecordCount = 0;
+    for (const rawLine of contents.split("\n")) {
+      if (!rawLine.trim()) continue;
+      try {
+        const parsed = JSON.parse(rawLine);
+        if (!isCanonicalCommerceEvent(parsed)) {
+          unusableRecordCount += 1;
+          continue;
         }
-      });
+        events.push(parsed);
+      } catch {
+        unusableRecordCount += 1;
+      }
+    }
+    return {
+      events,
+      unusableRecordCount,
+      filePresent: true,
+    };
   } catch (error) {
-    if (error?.code === "ENOENT") return [];
+    if (error?.code === "ENOENT") {
+      return {
+        events: [],
+        unusableRecordCount: 0,
+        filePresent: false,
+      };
+    }
     throw error;
   }
+}
+
+export const COMMERCE_COVERAGE_COMPLETE = "complete";
+export const COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW = "unknown_for_full_window";
+export const COMMERCE_INTEGRITY_OK = "ok";
+export const COMMERCE_INTEGRITY_UNUSABLE_RECORDS = "unusable_records_present";
+const DAY_MS = 86_400_000;
+
+const ISO_UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+const CANONICAL_EVENT_ORIGIN_CLASSES = new Set([
+  "internal",
+  "scanner",
+  "owner_monitor",
+  "external",
+  "crawler",
+]);
+const CANONICAL_EVENT_KINDS = new Set(["discovery", "referral", "paid", "unmatched", "excluded"]);
+const CANONICAL_PAYMENT_PROTOCOLS = new Set(["x402", "mpp"]);
+const CANONICAL_REQUEST_CONSTRUCTION = new Set([
+  "undeclared",
+  "not_measured",
+  "constructed",
+  "missing_required_input",
+]);
+
+function canonicalIsoTimestampMs(value) {
+  if (typeof value !== "string" || value.length !== 24 || !ISO_UTC_TIMESTAMP.test(value)) return null;
+  const parsed = new Date(value);
+  const ms = parsed.getTime();
+  if (!Number.isFinite(ms)) return null;
+  if (parsed.toISOString() !== value) return null;
+  return ms;
+}
+
+function eventTimestampMs(event) {
+  return canonicalIsoTimestampMs(event?.ts);
+}
+
+function isBoundedString(value, maxLength) {
+  return typeof value === "string" && value.length > 0 && value.length <= maxLength;
+}
+
+function isBoundedNullableString(value, maxLength) {
+  return value === null || (typeof value === "string" && value.length <= maxLength);
+}
+
+function isCanonicalClassifierRoute(route, kind, matched) {
+  if (typeof route !== "string" || route.length === 0 || route.length > CLASSIFIER_ROUTE_MAX_LENGTH) {
+    return false;
+  }
+  if (CANONICAL_CLASSIFIER_ROUTES.has(route)) {
+    const meta = CANONICAL_ROUTE_METADATA.get(route);
+    return Boolean(meta) && meta.kind === kind && meta.matched === matched;
+  }
+  return CLASSIFIER_UNMATCHED_ROUTE_FORM.test(route)
+    && kind === "unmatched"
+    && matched === false;
+}
+
+function isCanonicalHttpMethod(value) {
+  return typeof value === "string"
+    && value.length > 0
+    && value.length <= WRITER_HTTP_METHOD_MAX_LENGTH
+    && /^[A-Z][A-Z0-9-]*$/.test(value);
+}
+
+function isCanonicalQueryKeyName(value) {
+  return typeof value === "string"
+    && value.length > 0
+    && value.length <= WRITER_QUERY_KEY_MAX_LENGTH;
+}
+
+function isCanonicalQueryKeys(value) {
+  if (!Array.isArray(value) || value.length > WRITER_QUERY_KEY_LIMIT) return false;
+  const seen = new Set();
+  for (const key of value) {
+    if (!isCanonicalQueryKeyName(key) || seen.has(key)) return false;
+    seen.add(key);
+  }
+  return true;
+}
+
+function normalizeQueryKeyNames(query) {
+  const accepted = [];
+  const seen = new Set();
+  for (const name of Object.keys(query || {})) {
+    if (!isCanonicalQueryKeyName(name)) {
+      continue;
+    }
+    if (seen.has(name)) continue;
+    seen.add(name);
+    accepted.push(name);
+  }
+  accepted.sort();
+  return accepted.slice(0, WRITER_QUERY_KEY_LIMIT);
+}
+
+function isCanonicalProtocolList(value) {
+  if (!Array.isArray(value) || value.length > CANONICAL_PAYMENT_PROTOCOLS.size) return false;
+  const seen = new Set();
+  for (const item of value) {
+    if (!CANONICAL_PAYMENT_PROTOCOLS.has(item) || seen.has(item)) return false;
+    seen.add(item);
+  }
+  return true;
+}
+
+function isCanonicalEventId(value) {
+  return typeof value === "string"
+    && value.length === WRITER_EVENT_ID_MAX_LENGTH
+    && WRITER_EVENT_ID_PATTERN.test(value);
+}
+
+function isCanonicalActorKey(value) {
+  return typeof value === "string"
+    && value.length === WRITER_ACTOR_KEY_MAX_LENGTH
+    && WRITER_ACTOR_KEY_PATTERN.test(value);
+}
+
+function isNullableCanonicalActorKey(value) {
+  return value === null || isCanonicalActorKey(value);
+}
+
+function isCanonicalSettlementReference(value) {
+  return value === null || TRANSACTION_HASH_PATTERN.test(value);
+}
+
+function isCanonicalSettlementAmount(value) {
+  return value === null || (
+    typeof value === "string"
+    && value.length > 0
+    && value.length <= WRITER_SETTLEMENT_AMOUNT_MAX_LENGTH
+    && /^\d+$/.test(value)
+  );
+}
+
+function boundedSettlementAmountAtomic(amount) {
+  const text = String(amount ?? "");
+  return /^\d+$/.test(text) && text.length <= WRITER_SETTLEMENT_AMOUNT_MAX_LENGTH
+    ? text
+    : null;
+}
+
+function isCanonicalPaymentFailureCode(value, { paymentPresent, status }) {
+  if (!paymentPresent) return value === null;
+  if (!Number.isInteger(status) || status < 400) return value === null;
+  return CANONICAL_PAYMENT_FAILURE_CODES.has(value);
+}
+
+function isWriterMeasuredPaidGet(value) {
+  return value.kind === "paid" && value.matched === true && value.method === "GET";
+}
+
+function isCanonicalRequestConstructionFields(value) {
+  if (!CANONICAL_REQUEST_CONSTRUCTION.has(value.requestConstruction)) return false;
+  const count = value.requestConstructionRequiredKeyCount;
+  if (
+    !Number.isInteger(count)
+    || count < 0
+    || count > WRITER_QUERY_KEY_LIMIT
+    || !Number.isSafeInteger(count)
+  ) {
+    return false;
+  }
+  if (value.requestConstruction === "not_measured") return count === 0;
+  if (!isWriterMeasuredPaidGet(value)) return false;
+  const derived = classifyDiscoveryRequestConstruction(
+    `GET ${value.route}`,
+    Object.fromEntries(value.queryKeys.map((key) => [key, true])),
+  );
+  if (value.requestConstruction === "constructed") {
+    return count === derived.requiredKeyCount
+      && (
+        derived.status === "constructed"
+        || (
+          derived.status === "missing_required_input"
+          && value.queryKeys.length === WRITER_QUERY_KEY_LIMIT
+        )
+      );
+  }
+  return value.requestConstruction === derived.status && count === derived.requiredKeyCount;
+}
+
+function isCanonicalOriginCrossFields(value) {
+  if (value.originClass === "crawler") {
+    return value.agentDiscoverySource !== null && value.paymentPresent === false;
+  }
+  if (value.originClass === "external") {
+    return value.paymentPresent === true || value.agentDiscoverySource === null;
+  }
+  return true;
+}
+
+function isCanonicalPaymentCrossFields(value) {
+  if (typeof value.paymentPresent !== "boolean" || typeof value.paymentCredentialParsed !== "boolean") {
+    return false;
+  }
+  if (value.paymentPresent) {
+    if (!CANONICAL_PAYMENT_PROTOCOLS.has(value.paymentProtocol)) return false;
+  } else if (
+    value.paymentProtocol !== null
+    || value.paymentCredentialParsed !== false
+    || value.paymentActor !== null
+    || value.paymentIdentifier !== null
+  ) {
+    return false;
+  }
+  if (!isNullableCanonicalActorKey(value.paymentActor) || !isNullableCanonicalActorKey(value.paymentIdentifier)) {
+    return false;
+  }
+  if (value.paymentCredentialParsed) {
+    if (value.paymentPresent !== true || !isCanonicalActorKey(value.paymentActor)) return false;
+  } else if (value.paymentActor !== null || value.paymentIdentifier !== null) {
+    return false;
+  }
+  if (value.paymentIdentifier !== null) {
+    return value.paymentPresent === true
+      && value.paymentProtocol === "x402"
+      && value.paymentCredentialParsed === true
+      && isCanonicalActorKey(value.paymentActor);
+  }
+  return true;
+}
+
+function isCanonicalCommerceEvent(value) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  if (value.v !== 3) return false;
+  if (eventTimestampMs(value) === null) return false;
+  if (!isCanonicalEventId(value.id) || !isCanonicalActorKey(value.actor)) return false;
+  if (!CANONICAL_EVENT_ORIGIN_CLASSES.has(value.originClass)) return false;
+  if (value.agentDiscoverySource !== null && !CANONICAL_AGENT_DISCOVERY_SOURCES.has(value.agentDiscoverySource)) {
+    return false;
+  }
+  if (!isCanonicalHttpMethod(value.method)) return false;
+  if (!CANONICAL_EVENT_KINDS.has(value.kind) || typeof value.matched !== "boolean") return false;
+  if (!isCanonicalClassifierRoute(value.route, value.kind, value.matched)) return false;
+  if (!isCanonicalQueryKeys(value.queryKeys)) return false;
+  if (!isCanonicalRequestConstructionFields(value)) return false;
+  if (!isCanonicalPaymentCrossFields(value)) return false;
+  if (!isCanonicalOriginCrossFields(value)) return false;
+  if (!Number.isInteger(value.status) || value.status < 100 || value.status > 999) return false;
+  if (!isCanonicalPaymentFailureCode(value.paymentFailureCode, {
+    paymentPresent: value.paymentPresent,
+    status: value.status,
+  })) {
+    return false;
+  }
+  if (!isCanonicalProtocolList(value.protocolsOffered)) return false;
+  if (typeof value.replayed !== "boolean") return false;
+  if (!isCanonicalSettlementReference(value.settlementReference)) return false;
+  if (!isCanonicalSettlementAmount(value.settlementAmountAtomic)) return false;
+  if (!isBoundedNullableString(value.settlementNetwork, WRITER_SETTLEMENT_NETWORK_MAX_LENGTH)) return false;
+  if (!isBoundedNullableString(value.settlementCurrency, WRITER_SETTLEMENT_CURRENCY_MAX_LENGTH)) return false;
+  if (
+    value.settlementReference === null
+    && (
+      value.settlementAmountAtomic !== null
+      || value.settlementNetwork !== null
+      || value.settlementCurrency !== null
+    )
+  ) {
+    return false;
+  }
+  if (!isBoundedString(value.result, 32)) return false;
+  if (!Number.isInteger(value.durationMs) || value.durationMs < 0) return false;
+  return value.result === eventResult(value);
+}
+
+function utcDayStartMs(ms) {
+  return Date.parse(`${new Date(ms).toISOString().slice(0, 10)}T00:00:00.000Z`);
+}
+
+function finiteMs(value) {
+  return value === null || value === undefined || !Number.isFinite(value) ? null : value;
+}
+
+function maxDefinedMs(...values) {
+  const numbers = values.map(finiteMs).filter((value) => value !== null);
+  return numbers.length ? Math.max(...numbers) : null;
+}
+
+function parseBaselineSpec(value) {
+  if (value === null || value === undefined) {
+    return { declaredMs: null, cutoffMs: null, components: null };
+  }
+  if (typeof value === "number") {
+    return { declaredMs: finiteMs(value), cutoffMs: null, components: null };
+  }
+  if (typeof value === "object") {
+    const components = value.components && typeof value.components === "object" && !Array.isArray(value.components)
+      ? value.components
+      : null;
+    return {
+      declaredMs: finiteMs(value.declaredMs ?? value.baselineMs),
+      cutoffMs: finiteMs(value.cutoffMs),
+      components,
+    };
+  }
+  return { declaredMs: null, cutoffMs: null, components: null };
+}
+
+function metricCoverageView(status, declaredMs, extra = {}) {
+  return {
+    baseline: declaredMs === null ? null : new Date(declaredMs).toISOString(),
+    observationStart: status.observationStart,
+    complete: status.complete,
+    coverage: status.coverage,
+    ...extra,
+  };
+}
+
+function componentCoverageViews(componentsSpec, context) {
+  if (!componentsSpec) return null;
+  const components = Object.create(null);
+  for (const [name, spec] of Object.entries(componentsSpec)) {
+    const parsed = parseBaselineSpec(spec);
+    components[name] = metricCoverageView(
+      metricCoverageStatus({
+        ...context,
+        baselineMs: parsed.declaredMs,
+        cutoffMs: parsed.cutoffMs,
+      }),
+      parsed.declaredMs,
+    );
+  }
+  return components;
+}
+
+function mixedMetricCoverageView({ status, declaredMs, components, integrityOk }) {
+  const view = metricCoverageView(status, declaredMs);
+  if (!components) return view;
+  const componentList = Object.values(components);
+  const observationStarts = new Set(componentList.map((component) => component.observationStart));
+  const allComplete = integrityOk === true
+    && componentList.every((component) => component.complete === true);
+  if (!allComplete || observationStarts.size !== 1) {
+    view.complete = false;
+    view.coverage = COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW;
+  }
+  view.components = components;
+  return view;
+}
+
+function fileIntegrityView({ filePresent, parseableRecordCount, unusableRecordCount }) {
+  return {
+    present: filePresent === true,
+    parseableRecordCount: Number(parseableRecordCount) || 0,
+    unusableRecordCount: Number(unusableRecordCount) || 0,
+  };
+}
+
+export function conservativeRetainedUtcBounds({
+  retainedObservationStartMs,
+  retainedObservationEndMs,
+} = {}) {
+  if (!Number.isFinite(retainedObservationStartMs) || !Number.isFinite(retainedObservationEndMs)) {
+    return {
+      retainedObservationStartUtcDay: null,
+      retainedObservationEndUtcDay: null,
+      retainedDurationWholeDays: null,
+    };
+  }
+  const startDayStartMs = utcDayStartMs(retainedObservationStartMs);
+  const firstCompleteDayStartMs = retainedObservationStartMs === startDayStartMs
+    ? startDayStartMs
+    : startDayStartMs + DAY_MS;
+  const endDayStartMs = utcDayStartMs(retainedObservationEndMs);
+  const lastCompleteDayStartMs = endDayStartMs - DAY_MS;
+  if (firstCompleteDayStartMs > lastCompleteDayStartMs) {
+    return {
+      retainedObservationStartUtcDay: null,
+      retainedObservationEndUtcDay: null,
+      retainedDurationWholeDays: 0,
+    };
+  }
+  return {
+    retainedObservationStartUtcDay: new Date(firstCompleteDayStartMs).toISOString().slice(0, 10),
+    retainedObservationEndUtcDay: new Date(lastCompleteDayStartMs).toISOString().slice(0, 10),
+    retainedDurationWholeDays: Math.floor((lastCompleteDayStartMs - firstCompleteDayStartMs) / DAY_MS) + 1,
+  };
+}
+
+export function metricCoverageStatus({
+  generatedAtMs,
+  requestedWindowStartMs,
+  retainedObservationStartMs,
+  baselineMs = null,
+  cutoffMs = null,
+  integrityOk = true,
+} = {}) {
+  const observationStartMs = maxDefinedMs(requestedWindowStartMs, baselineMs, cutoffMs);
+  const observationStart = new Date(observationStartMs).toISOString();
+  if (!integrityOk) {
+    return {
+      complete: false,
+      coverage: COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW,
+      observationStart,
+    };
+  }
+  if (observationStartMs > generatedAtMs) {
+    return {
+      complete: true,
+      coverage: COMMERCE_COVERAGE_COMPLETE,
+      observationStart,
+    };
+  }
+  if (retainedObservationStartMs === null || retainedObservationStartMs === undefined) {
+    return {
+      complete: false,
+      coverage: COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW,
+      observationStart,
+    };
+  }
+  const complete = retainedObservationStartMs <= observationStartMs;
+  return {
+    complete,
+    coverage: complete ? COMMERCE_COVERAGE_COMPLETE : COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW,
+    observationStart,
+  };
+}
+
+export function describeRetentionCoverage({
+  generatedAtMs,
+  requestedWindowDays,
+  retainedObservationStartMs,
+  retainedObservationEndMs,
+  retainedParseableEventCount = 0,
+  baselines = {},
+  integrity = {},
+} = {}) {
+  const safeDays = Math.max(1, Math.min(365, Number(requestedWindowDays) || 90));
+  const requestedWindowStartMs = generatedAtMs - safeDays * DAY_MS;
+  const currentFile = fileIntegrityView(integrity.currentFile || {});
+  const rotatedFile = fileIntegrityView(integrity.rotatedFile || {});
+  const integrityStatus = currentFile.unusableRecordCount > 0 || rotatedFile.unusableRecordCount > 0
+    ? COMMERCE_INTEGRITY_UNUSABLE_RECORDS
+    : COMMERCE_INTEGRITY_OK;
+  const integrityOk = integrityStatus === COMMERCE_INTEGRITY_OK;
+  const requested = metricCoverageStatus({
+    generatedAtMs,
+    requestedWindowStartMs,
+    retainedObservationStartMs,
+    baselineMs: null,
+    integrityOk,
+  });
+  const metrics = Object.create(null);
+  const metricContext = {
+    generatedAtMs,
+    requestedWindowStartMs,
+    retainedObservationStartMs,
+    integrityOk,
+  };
+  for (const [name, spec] of Object.entries(baselines)) {
+    const { declaredMs, cutoffMs, components: componentsSpec } = parseBaselineSpec(spec);
+    const status = metricCoverageStatus({
+      ...metricContext,
+      baselineMs: declaredMs,
+      cutoffMs,
+    });
+    metrics[name] = mixedMetricCoverageView({
+      status,
+      declaredMs,
+      components: componentCoverageViews(componentsSpec, metricContext),
+      integrityOk,
+    });
+  }
+  const coarse = conservativeRetainedUtcBounds({
+    retainedObservationStartMs,
+    retainedObservationEndMs,
+  });
+  return {
+    requestedWindowDays: safeDays,
+    requestedWindowStart: new Date(requestedWindowStartMs).toISOString(),
+    requestedWindowEnd: new Date(generatedAtMs).toISOString(),
+    requestedWindowComplete: requested.complete,
+    requestedWindowCoverage: requested.coverage,
+    retainedParseableEventCount,
+    integrityStatus,
+    integrity: {
+      status: integrityStatus,
+      currentFile,
+      rotatedFile,
+    },
+    ...coarse,
+    metrics,
+  };
 }
 
 export function createCommerceTelemetry({
@@ -669,6 +1231,12 @@ export function createCommerceTelemetry({
   ]));
   let queue = Promise.resolve();
 
+  function enqueueExclusive(work) {
+    const run = queue.then(work);
+    queue = run.then(() => undefined, () => undefined);
+    return run;
+  }
+
   async function appendEvent(event) {
     await mkdir(dataDir, { recursive: true, mode: 0o700 });
     await chmod(dataDir, 0o700).catch(() => {});
@@ -686,7 +1254,7 @@ export function createCommerceTelemetry({
   }
 
   function enqueue(event) {
-    queue = queue.then(() => appendEvent(event)).catch((error) => {
+    enqueueExclusive(() => appendEvent(event)).catch((error) => {
       console.error(`commerce telemetry write failed: ${error.message}`);
     });
   }
@@ -725,7 +1293,7 @@ export function createCommerceTelemetry({
     const paymentIdentifier = paymentMetadata.paymentId
       ? createHmac("sha256", secret).update(`payment-id:${paymentMetadata.paymentId}`).digest("hex").slice(0, 24)
       : null;
-    const queryKeys = Object.keys(req.query || {}).sort().slice(0, 20);
+    const queryKeys = normalizeQueryKeyNames(req.query);
     let responseProblem = null;
     const originalJson = typeof res.json === "function" ? res.json.bind(res) : null;
     const originalSend = typeof res.send === "function" ? res.send.bind(res) : null;
@@ -758,7 +1326,7 @@ export function createCommerceTelemetry({
         ? classifyPaymentFailureCode({
             route: route.route,
             status,
-            queryKeys,
+            queryKeys: Object.keys(req.query || {}),
             error: x402FailureError(res),
             problem: responseProblem,
           })
@@ -804,19 +1372,71 @@ export function createCommerceTelemetry({
     return next();
   }
 
-  async function snapshot({ days = 90 } = {}) {
-    await queue;
+  async function snapshot(options = {}) {
+    return enqueueExclusive(() => captureSnapshot(options));
+  }
+
+  async function captureSnapshot({ days = 90 } = {}) {
+    const generatedAtMs = Date.now();
+    const generatedAt = new Date(generatedAtMs).toISOString();
     const safeDays = Math.max(1, Math.min(365, Number(days) || 90));
-    const windowCutoff = Date.now() - safeDays * 86_400_000;
-    const cutoff = externalSinceMs === null
+    const windowCutoff = generatedAtMs - safeDays * DAY_MS;
+    const externalCutoffMs = externalSinceMs === null
       ? windowCutoff
       : Math.max(windowCutoff, externalSinceMs);
-    const observedEvents = [
-      ...(await readEvents(rotatedPath)),
-      ...(await readEvents(currentPath)),
-    ].filter((event) => Date.parse(event.ts) >= cutoff);
-    const events = observedEvents.filter((event) => event.originClass === "external");
-    const policyContractFunnel = summarizePolicyContractFunnels(observedEvents.filter((event) => (
+    const rotatedRead = await readEvents(rotatedPath);
+    const currentRead = await readEvents(currentPath);
+    const retainedEvents = [...rotatedRead.events, ...currentRead.events];
+    const retainedTimes = retainedEvents
+      .map(eventTimestampMs)
+      .filter((ms) => ms !== null);
+    const retainedObservationStartMs = retainedTimes.length ? Math.min(...retainedTimes) : null;
+    const retainedObservationEndMs = retainedTimes.length ? Math.max(...retainedTimes) : null;
+    const coverage = describeRetentionCoverage({
+      generatedAtMs,
+      requestedWindowDays: safeDays,
+      retainedObservationStartMs,
+      retainedObservationEndMs,
+      retainedParseableEventCount: retainedTimes.length,
+      integrity: {
+        currentFile: {
+          filePresent: currentRead.filePresent,
+          parseableRecordCount: currentRead.events.length,
+          unusableRecordCount: currentRead.unusableRecordCount,
+        },
+        rotatedFile: {
+          filePresent: rotatedRead.filePresent,
+          parseableRecordCount: rotatedRead.events.length,
+          unusableRecordCount: rotatedRead.unusableRecordCount,
+        },
+      },
+      baselines: {
+        external: { declaredMs: externalSinceMs, cutoffMs: externalSinceMs },
+        agentDiscovery: { declaredMs: agentDiscoverySinceMs, cutoffMs: null },
+        agentSourceDetail: {
+          declaredMs: agentSourceDetailSinceMs,
+          cutoffMs: null,
+          components: {
+            discovery: { declaredMs: agentSourceDetailSinceMs, cutoffMs: null },
+            credentialAttempt: { declaredMs: agentSourceDetailSinceMs, cutoffMs: externalSinceMs },
+            paidSuccess: { declaredMs: agentSourceDetailSinceMs, cutoffMs: externalSinceMs },
+          },
+        },
+        mcpTransportProbe: { declaredMs: mcpTransportProbeSinceMs, cutoffMs: externalSinceMs },
+        credentialAttempt: { declaredMs: credentialAttemptSinceMs, cutoffMs: externalSinceMs },
+        settlementEvidence: { declaredMs: settlementEvidenceSinceMs, cutoffMs: externalSinceMs },
+        requestConstruction: { declaredMs: requestConstructionSinceMs, cutoffMs: null },
+      },
+    });
+    const windowedEvents = retainedEvents.filter((event) => {
+      const ms = eventTimestampMs(event);
+      return ms !== null && ms >= windowCutoff;
+    });
+    const events = windowedEvents.filter((event) => (
+      event.originClass === "external"
+      && eventTimestampMs(event) >= externalCutoffMs
+    ));
+    const policyContractFunnel = summarizePolicyContractFunnels(windowedEvents.filter((event) => (
       event.originClass === "external" || event.originClass === "crawler"
     )));
     const credentialHeaderEvents = events.filter((event) => (
@@ -826,18 +1446,19 @@ export function createCommerceTelemetry({
       && (credentialAttemptSinceMs === null || Date.parse(event.ts) >= credentialAttemptSinceMs)
     ));
     const credentialAttemptEvents = credentialHeaderEvents.filter((event) => event.paymentCredentialParsed === true);
-    const agentDiscoveryEvents = observedEvents.filter((event) => (
+    const agentDiscoveryEvents = windowedEvents.filter((event) => (
       event.originClass === "crawler"
       && (agentDiscoverySinceMs === null || Date.parse(event.ts) >= agentDiscoverySinceMs)
       && event.matched === true
       && (event.kind === "discovery" || event.kind === "paid")
     ));
-    const constructedRequestEvents = observedEvents.filter((event) => (
+    const constructedRequestEvents = windowedEvents.filter((event) => (
       requestConstructionSinceMs !== null
       && Date.parse(event.ts) >= requestConstructionSinceMs
       && (event.originClass === "external" || event.originClass === "crawler")
       && event.kind === "paid"
       && event.matched === true
+      && event.method === "GET"
       && event.requestConstruction === "constructed"
       && eventResult(event) === "challenge"
     ));
@@ -1085,8 +1706,17 @@ export function createCommerceTelemetry({
     });
 
     return {
-      generatedAt: new Date().toISOString(),
+      generatedAt,
       windowDays: safeDays,
+      requestedWindowDays: safeDays,
+      requestedWindowStart: coverage.requestedWindowStart,
+      requestedWindowEnd: coverage.requestedWindowEnd,
+      requestedWindowComplete: coverage.requestedWindowComplete,
+      requestedWindowCoverage: coverage.requestedWindowCoverage,
+      requestConstructionCoverage: coverage.metrics.requestConstruction.coverage,
+      retainedParseableEventCount: coverage.retainedParseableEventCount,
+      integrityStatus: coverage.integrityStatus,
+      coverage,
       externalSince: externalSinceMs === null ? null : new Date(externalSinceMs).toISOString(),
       externalEvents: events.length,
       externalActors: actors.size,
@@ -1189,7 +1819,7 @@ export function createCommerceTelemetry({
       policyContractFunnelPolicy: "Prospective exact-route measurement only. It counts privacy-safe same-client progression from a successful free policy-contract read to the matching paid-route challenge, parseable credential, and paid delivery. Historical /schemas/* events are ambiguous and excluded. Counts include external and declared crawler clients, retain no actor identifiers, and are reach or funnel evidence rather than authenticated identity or demand.",
       mcpTransportProbePolicy: "After the declared MCP transport-probe baseline, only four common public client expectations are counted: /mcp/sse, /mcp/messages, /mcp/tools, and /mcp/events. Arbitrary MCP subpaths remain grouped as /mcp/*, and probe counts remain acquisition-friction evidence rather than demand until an independent actor repeats or converts.",
       agentDiscoveryPolicy: "After the declared machine-discovery baseline, recognized crawler and agent-indexer user-agent families are reduced to a controlled source label at ingestion. SameDayDesk-owned monitor user agents are excluded. Raw user-agent strings and network addresses are not retained in the public snapshot. Per-source observations, distinct and repeat secret-keyed actors, paid-route reach, HTTP 402 challenge delivery, credential attempts, and paid outcomes distinguish broad machine reach from repeated crawler volume and later payment conversion. Challenge-to-payment conversion is attributed to the source of the first observed same-actor challenge. These observations are not authenticated referrals, buyer intent, or demand.",
-      agentSourceDetailPolicy: "The ai-provider-purpose-v1 cohort begins only at agentSourceDetailSince and classifies exact provider-published HTTP user-agent tokens for OpenAI search, user fetch, and training; Anthropic search, user fetch, and training; Perplexity search and user fetch; and Google Cloud Vertex agent crawls. Google-Extended is intentionally absent because Google documents that it has no separate HTTP user-agent string. Labels are user-agent observations rather than IP-verified identities or referral proof. Historical generic events are not reclassified.",
+      agentSourceDetailPolicy: "The ai-provider-purpose-v1 cohort begins only at agentSourceDetailSince and classifies exact provider-published HTTP user-agent tokens for OpenAI search, user fetch, and training; Anthropic search, user fetch, and training; Perplexity search and user fetch; and Google Cloud Vertex agent crawls. Google-Extended is intentionally absent because Google documents that it has no separate HTTP user-agent string. Labels are user-agent observations rather than IP-verified identities or referral proof. Historical generic events are not reclassified. Discovery counts use that detail baseline. Credential and paid components stay clipped by externalSince when that cutoff is declared. Coverage reports those component observation starts separately, and the mixed metric is complete only when every component is complete over the same observation start.",
       unmatched: unmatchedRequests,
       paymentClassPolicy: "Explicit known-payer rules classify internal, marketplace validation, incentivized, affiliated, or independently confirmed buyers. Unknown or missing payer identities remain unclassified and never become independent by inference.",
       discoveryConversionPolicy: "A submitted payment credential overrides crawler classification so paying agents remain in economic telemetry. Controlled user-agent source labels attribute the client channel but are self-declared and do not independently authenticate a registry referral. Challenge-to-paid conversion uses the same secret-keyed network-and-user-agent actor before and after the challenge and is therefore a conservative continuity lower bound, not an identity claim. SameDayDesk owner monitors remain excluded before this rule.",
@@ -1202,18 +1832,19 @@ export function createCommerceTelemetry({
 
   async function storageStatus() {
     try {
-      await queue;
-      await mkdir(dataDir, { recursive: true, mode: 0o700 });
-      const [currentBytes, rotatedBytes] = await Promise.all([
-        stat(currentPath).then((entry) => entry.size).catch(() => 0),
-        stat(rotatedPath).then((entry) => entry.size).catch(() => 0),
-      ]);
-      return {
-        ready: true,
-        currentBytes,
-        rotatedBytes,
-        boundedBytes: maxBytes * 2,
-      };
+      return await enqueueExclusive(async () => {
+        await mkdir(dataDir, { recursive: true, mode: 0o700 });
+        const [currentBytes, rotatedBytes] = await Promise.all([
+          stat(currentPath).then((entry) => entry.size).catch(() => 0),
+          stat(rotatedPath).then((entry) => entry.size).catch(() => 0),
+        ]);
+        return {
+          ready: true,
+          currentBytes,
+          rotatedBytes,
+          boundedBytes: maxBytes * 2,
+        };
+      });
     } catch {
       return {
         ready: false,
