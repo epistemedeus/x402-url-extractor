@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "samedaydesk-x402",
+  "version": "1.23.19",
+  "description": "SameDayDesk machine commerce: remote MCP plus constructible extract skill.",
+  "homepage": "https://agents.samedaydesk.com/",
+  "repository": "https://github.com/epistemedeus/x402-url-extractor",
+  "license": "MIT"
+}

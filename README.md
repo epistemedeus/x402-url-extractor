@@ -21,6 +21,7 @@ settlement proof, and AI-search readiness audits.
 - Product page: https://samedaydesk.com/x402
 - Smithery: https://smithery.ai/servers/epistemedeus/x402-data-gateway
 - Remote MCP: https://agents.samedaydesk.com/mcp
+- Agent Plugins 1.0 local package: [`plugins/samedaydesk-x402`](plugins/samedaydesk-x402) (not marketplace-listed)
 - Live resource manifest: https://agents.samedaydesk.com/.well-known/x402
 - OpenAPI: https://agents.samedaydesk.com/openapi.json
 - Official MPP OpenAPI: https://agents.samedaydesk.com/mpp-openapi.json
