@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { appendFile, chmod, mkdir, readFile, rename, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 import { Credential } from "mppx";
@@ -977,6 +977,20 @@ function isCanonicalCommerceEvent(value) {
 const MCP_TYPED_COMMERCE_SOURCE = "mcp_typed_outcome";
 const MCP_TYPED_COMMERCE_AUTHORITY = "seller_declared";
 const MCP_TYPED_COMMERCE_EVIDENCE_CLASS = "seller_operational";
+const MCP_TYPED_ATTRIBUTION_SCHEMA = "samedaydesk.mcp-request-attribution.v1";
+const MCP_TYPED_ATTRIBUTION_MARKER_DOMAIN = "samedaydesk.mcp-request-attribution-marker.v1\0";
+const MCP_TYPED_ATTRIBUTION_PROOF_DOMAIN = "samedaydesk.mcp-request-attribution-proof.v1\0";
+const MCP_TYPED_ATTRIBUTION_MARKER_PATTERN = /^[A-Za-z0-9._~-]{16,128}$/u;
+const MCP_TYPED_ATTRIBUTION_KEYS = Object.freeze([
+  "classification",
+  "evidence",
+  "markerDigest",
+  "schemaVersion",
+]);
+const MCP_TYPED_ATTESTED_ATTRIBUTION_KEYS = Object.freeze([
+  ...MCP_TYPED_ATTRIBUTION_KEYS,
+  "proof",
+]);
 const MCP_TYPED_COMMERCE_KEYS = Object.freeze([
   "accounting",
   "action",
@@ -999,6 +1013,10 @@ const MCP_TYPED_COMMERCE_KEYS = Object.freeze([
   "sourceContract",
   "ts",
   "v",
+]);
+const MCP_TYPED_ATTRIBUTED_COMMERCE_KEYS = Object.freeze([
+  ...MCP_TYPED_COMMERCE_KEYS,
+  "requestAttribution",
 ]);
 const MCP_TYPED_HEX = /^[0-9a-f]{64}$/u;
 const MCP_TYPED_TOKEN = /^[a-z][a-z0-9_]{0,63}$/u;
@@ -1070,6 +1088,58 @@ function exactObjectKeys(value, keys) {
     && !Array.isArray(value)
     && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...keys].sort())
   );
+}
+
+export function digestMcpTypedAttributionMarker(marker) {
+  if (typeof marker !== "string" || !MCP_TYPED_ATTRIBUTION_MARKER_PATTERN.test(marker)) return null;
+  return createHash("sha256")
+    .update(MCP_TYPED_ATTRIBUTION_MARKER_DOMAIN)
+    .update(marker)
+    .digest("hex");
+}
+
+function canonicalMcpTypedAttribution(value) {
+  if (!exactObjectKeys(value, MCP_TYPED_ATTRIBUTION_KEYS)) return null;
+  if (value.schemaVersion !== MCP_TYPED_ATTRIBUTION_SCHEMA) return null;
+  if (value.classification !== "validation") return null;
+  if (value.evidence !== "internal_token") return null;
+  if (!MCP_TYPED_HEX.test(value.markerDigest)) return null;
+  return {
+    schemaVersion: MCP_TYPED_ATTRIBUTION_SCHEMA,
+    classification: "validation",
+    evidence: "internal_token",
+    markerDigest: value.markerDigest,
+  };
+}
+
+function mcpTypedAttributionProof(value, secret) {
+  return createHmac("sha256", secret)
+    .update(MCP_TYPED_ATTRIBUTION_PROOF_DOMAIN)
+    .update(value.schemaVersion)
+    .update("\0")
+    .update(value.classification)
+    .update("\0")
+    .update(value.evidence)
+    .update("\0")
+    .update(value.markerDigest)
+    .digest("hex");
+}
+
+function verifyMcpTypedAttribution(value, secret) {
+  if (!exactObjectKeys(value, MCP_TYPED_ATTESTED_ATTRIBUTION_KEYS)) return null;
+  const canonical = canonicalMcpTypedAttribution({
+    schemaVersion: value.schemaVersion,
+    classification: value.classification,
+    evidence: value.evidence,
+    markerDigest: value.markerDigest,
+  });
+  if (!canonical || !MCP_TYPED_HEX.test(value.proof)) return null;
+  if (!safeEqual(value.proof, mcpTypedAttributionProof(canonical, secret))) return null;
+  return canonical;
+}
+
+function isCanonicalMcpTypedAttribution(value) {
+  return canonicalMcpTypedAttribution(value) !== null;
 }
 
 function isClosedMcpTypedBinding(binding) {
@@ -1183,7 +1253,9 @@ function declaresMcpTypedSource(value) {
 }
 
 export function isCanonicalMcpTypedCommerceEvent(value) {
-  if (!exactObjectKeys(value, MCP_TYPED_COMMERCE_KEYS)) return false;
+  const legacy = exactObjectKeys(value, MCP_TYPED_COMMERCE_KEYS);
+  const attributed = exactObjectKeys(value, MCP_TYPED_ATTRIBUTED_COMMERCE_KEYS);
+  if (!legacy && !attributed) return false;
   if (value.v !== 4) return false;
   if (value.sourceContract !== MCP_TYPED_COMMERCE_SOURCE) return false;
   if (eventTimestampMs(value) === null) return false;
@@ -1196,6 +1268,7 @@ export function isCanonicalMcpTypedCommerceEvent(value) {
   if (value.independentUse !== false) return false;
   if (value.chainTruth !== false) return false;
   if (value.payerIdentity !== false) return false;
+  if (attributed && !isCanonicalMcpTypedAttribution(value.requestAttribution)) return false;
   return isStoredMcpTypedDecisionFields(value);
 }
 
@@ -1670,6 +1743,31 @@ export function createCommerceTelemetry({
   ]));
   let queue = Promise.resolve();
 
+  function mcpTypedAttributionForRequest(req) {
+    const headers = req?.headers || {};
+    const suppliedInternal = headerValue(headers, "x-samedaydesk-internal");
+    const marker = headerValue(headers, "x-samedaydesk-validation-marker");
+    if (
+      typeof internalToken !== "string"
+      || Buffer.byteLength(internalToken, "utf8") < 32
+      || !safeEqual(suppliedInternal, internalToken)
+    ) {
+      return null;
+    }
+    const markerDigest = digestMcpTypedAttributionMarker(marker);
+    if (!markerDigest) return null;
+    const attribution = {
+      schemaVersion: MCP_TYPED_ATTRIBUTION_SCHEMA,
+      classification: "validation",
+      evidence: "internal_token",
+      markerDigest,
+    };
+    return Object.freeze({
+      ...attribution,
+      proof: mcpTypedAttributionProof(attribution, secret),
+    });
+  }
+
   function enqueueExclusive(work) {
     const run = queue.then(work);
     queue = run.then(() => undefined, () => undefined);
@@ -1698,7 +1796,7 @@ export function createCommerceTelemetry({
     });
   }
 
-  function appendMcpTypedDecision(decision) {
+  function appendMcpTypedDecision(decision, attestedAttribution = null) {
     // Adapt, validate, and copy synchronously before any queue scheduling, so
     // the queued closure owns the canonical event and later caller mutation of
     // the original decision cannot alter, relabel, or add to the stored row.
@@ -1712,6 +1810,20 @@ export function createCommerceTelemetry({
       event = adaptMcpTypedDecisionToCommerceEvent(decision);
     } catch {
       event = null;
+    }
+    if (event) {
+      let requestAttribution = null;
+      try {
+        requestAttribution = verifyMcpTypedAttribution(attestedAttribution, secret);
+      } catch {
+        requestAttribution = null;
+      }
+      if (requestAttribution) {
+        event = {
+          ...event,
+          requestAttribution,
+        };
+      }
     }
     return enqueueExclusive(async () => {
       if (!event) return;
@@ -2346,6 +2458,7 @@ export function createCommerceTelemetry({
     snapshot,
     storageStatus,
     appendMcpTypedDecision,
+    mcpTypedAttributionForRequest,
     flush: () => queue,
     paths: { currentPath, rotatedPath },
   };

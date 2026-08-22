@@ -225,13 +225,13 @@ function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) 
     entry.resolve();
   }
 
-  function invokeUser(decision, entry) {
+  function invokeUser(decision, requestAttribution, entry) {
     let assimilated;
     try {
       // Assimilate without probing result.then first: a throwing `then` accessor
       // or Proxy trap is consumed by the resolving functions as a rejection and
       // stays inside this failure-safe terminal path.
-      assimilated = Promise.resolve(onAppend(decision));
+      assimilated = Promise.resolve(onAppend(decision, requestAttribution));
     } catch {
       failures += 1;
       finishEntry(entry);
@@ -246,7 +246,7 @@ function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) 
     );
   }
 
-  function schedule(decision) {
+  function schedule(decision, requestAttribution = null) {
     if (sealed || typeof onAppend !== "function") return;
     let resolve;
     const done = new Promise((next) => {
@@ -256,7 +256,7 @@ function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) 
     pending.add(entry);
     const launch = () => {
       entry.timer = null;
-      invokeUser(decision, entry);
+      invokeUser(decision, requestAttribution, entry);
     };
     if (jsonResponse && decision?.result !== "paid_success") {
       queueMicrotask(launch);
@@ -335,7 +335,7 @@ function decorateTransportSend(transport, attempt) {
   };
 }
 
-function createTypedAttemptForBody(body, catalog, onAppend) {
+function createTypedAttemptForBody(body, catalog, onAppend, requestAttribution = null) {
   if (!isJsonRpcObject(body) || body.jsonrpc !== "2.0" || body.method !== "tools/call") {
     return { attempt: null };
   }
@@ -351,7 +351,7 @@ function createTypedAttemptForBody(body, catalog, onAppend) {
       id: hasId ? body.id : null,
       method: "tools/call",
     },
-    onAppend,
+    onAppend: (decision) => onAppend(decision, requestAttribution),
   });
   if (!hasId) {
     attempt.finalize({ responseId: null, kind: "no_response" });
@@ -388,7 +388,7 @@ export async function mountMcp(app, {
     ? createTypedTelemetryLifecycle(typedTelemetry.onAppend, { jsonResponse })
     : null;
   const onAppend = typedLifecycle
-    ? (decision) => typedLifecycle.schedule(decision)
+    ? (decision, requestAttribution) => typedLifecycle.schedule(decision, requestAttribution)
     : undefined;
   const catalogByName = buildRegisteredCatalog(tools);
 
@@ -484,8 +484,16 @@ export async function mountMcp(app, {
   // Stateless streamable-HTTP transport. express.json() scoped to this route only.
   app.post("/mcp", express.json({ limit: "1mb" }), async (req, res) => {
     injectPaymentSignatureHeader(req);
+    let requestAttribution = null;
+    if (typedEnabled && typeof typedTelemetry?.attributionForRequest === "function") {
+      try {
+        requestAttribution = typedTelemetry.attributionForRequest(req);
+      } catch {
+        requestAttribution = null;
+      }
+    }
     const created = typedEnabled
-      ? createTypedAttemptForBody(req.body, catalogByName, onAppend)
+      ? createTypedAttemptForBody(req.body, catalogByName, onAppend, requestAttribution)
       : { attempt: null };
     const server = makeServer();
     const transport = new StreamableHTTPServerTransport(transportOptions);

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { appendFile, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -21,6 +22,7 @@ import {
   conservativeRetainedUtcBounds,
   createCommerceTelemetry,
   describeRetentionCoverage,
+  digestMcpTypedAttributionMarker,
   drainCommerceTelemetryForShutdown,
   isCanonicalMcpTypedCommerceEvent,
   isSemanticUnmatched,
@@ -2940,6 +2942,161 @@ test("canonical v4 ledger persists absent and rejected challenges without redefi
   const snapshot = await telemetry.snapshot({ days: 30 });
   assert.equal(snapshot.mcpTyped.byResult.challenge, 2);
   await rm(dataDir, { recursive: true, force: true });
+});
+
+test("authenticated MCP validation markers bind a privacy-safe exact digest to one typed row", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-typed-attribution-"));
+  const internalToken = "internal-token-for-attribution-review-0001";
+  const marker = "release-canary-amendment7-20260822";
+  try {
+    const telemetry = createCommerceTelemetry({
+      dataDir,
+      secret: "typed-attribution-secret",
+      internalToken,
+      writerProcessCount: 1,
+    });
+    const requestAttribution = telemetry.mcpTypedAttributionForRequest({
+      headers: {
+        "x-samedaydesk-internal": internalToken,
+        "x-samedaydesk-validation-marker": marker,
+      },
+    });
+    assert.ok(requestAttribution);
+    assert.equal(requestAttribution.classification, "validation");
+    assert.equal(requestAttribution.evidence, "internal_token");
+    assert.equal(requestAttribution.schemaVersion, "samedaydesk.mcp-request-attribution.v1");
+    assert.match(requestAttribution.proof, /^[0-9a-f]{64}$/);
+    const expectedDigest = createHash("sha256")
+      .update("samedaydesk.mcp-request-attribution-marker.v1\0")
+      .update(marker)
+      .digest("hex");
+    assert.equal(digestMcpTypedAttributionMarker(marker), expectedDigest);
+    assert.equal(requestAttribution.markerDigest, expectedDigest);
+
+    await telemetry.appendMcpTypedDecision(
+      typedChallengeDecision({ credentialState: "absent" }),
+      requestAttribution,
+    );
+    await telemetry.flush();
+    const raw = await readFile(telemetry.paths.currentPath, "utf8");
+    const row = JSON.parse(raw.trim());
+    assert.equal(isCanonicalMcpTypedCommerceEvent(row), true);
+    assert.deepEqual(row.requestAttribution, {
+      schemaVersion: "samedaydesk.mcp-request-attribution.v1",
+      classification: "validation",
+      evidence: "internal_token",
+      markerDigest: expectedDigest,
+    });
+    assert.equal(Object.hasOwn(row.requestAttribution, "proof"), false);
+    assert.equal(raw.includes(marker), false);
+    assert.equal(raw.includes(internalToken), false);
+    assert.equal(row.accounting, false);
+    assert.equal(row.revenue, false);
+    assert.equal(row.demand, false);
+    assert.equal(row.independentUse, false);
+    assert.equal(row.chainTruth, false);
+    assert.equal(row.payerIdentity, false);
+  } finally {
+    await rm(dataDir, { recursive: true, force: true });
+  }
+});
+
+test("forged, mismatched, missing, malformed, and hostile MCP markers fail to legacy-compatible rows", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-typed-attribution-hostile-"));
+  const internalToken = "internal-token-for-attribution-review-0002";
+  const marker = "release-canary-amendment7-hostile";
+  try {
+    const telemetry = createCommerceTelemetry({
+      dataDir,
+      secret: "typed-attribution-hostile-secret",
+      internalToken,
+      writerProcessCount: 1,
+    });
+    const attested = telemetry.mcpTypedAttributionForRequest({
+      headers: {
+        "x-samedaydesk-internal": internalToken,
+        "x-samedaydesk-validation-marker": marker,
+      },
+    });
+    assert.ok(attested);
+    assert.equal(telemetry.mcpTypedAttributionForRequest({
+      headers: { "x-samedaydesk-internal": internalToken },
+    }), null);
+    assert.equal(telemetry.mcpTypedAttributionForRequest({
+      headers: {
+        "x-samedaydesk-internal": "wrong-internal-token-for-review-0000",
+        "x-samedaydesk-validation-marker": marker,
+      },
+    }), null);
+    assert.equal(telemetry.mcpTypedAttributionForRequest({
+      headers: {
+        "x-samedaydesk-internal": internalToken,
+        "x-samedaydesk-validation-marker": "too-short",
+      },
+    }), null);
+
+    const forged = {
+      schemaVersion: "samedaydesk.mcp-request-attribution.v1",
+      classification: "validation",
+      evidence: "internal_token",
+      markerDigest: "b".repeat(64),
+      proof: "c".repeat(64),
+    };
+    const mismatched = { ...attested, markerDigest: "d".repeat(64) };
+    const hostile = new Proxy({}, {
+      ownKeys() { throw new Error("PRIVATE_ATTRIBUTION_MARKER_MUST_NOT_ESCAPE"); },
+    });
+    const cases = [null, forged, mismatched, hostile];
+    for (const attribution of cases) {
+      await telemetry.appendMcpTypedDecision(
+        typedChallengeDecision({ credentialState: "absent" }),
+        attribution,
+      );
+    }
+    await telemetry.flush();
+    const raw = await readFile(telemetry.paths.currentPath, "utf8");
+    const rows = raw.trim().split("\n").filter(Boolean).map(JSON.parse);
+    assert.equal(rows.length, cases.length);
+    for (const row of rows) {
+      assert.equal(isCanonicalMcpTypedCommerceEvent(row), true);
+      assert.equal(Object.hasOwn(row, "requestAttribution"), false);
+      assert.equal(row.result, "challenge");
+    }
+    assert.equal(raw.includes("PRIVATE_ATTRIBUTION_MARKER_MUST_NOT_ESCAPE"), false);
+
+    const legacy = adaptMcpTypedDecisionToCommerceEvent(
+      typedChallengeDecision({ credentialState: "absent" }),
+    );
+    assert.equal(isCanonicalMcpTypedCommerceEvent(legacy), true);
+    assert.equal(Object.hasOwn(legacy, "requestAttribution"), false);
+
+    const shortTokenTelemetry = createCommerceTelemetry({
+      dataDir: path.join(dataDir, "short-token"),
+      secret: "typed-attribution-short-token-secret",
+      internalToken: "short",
+      writerProcessCount: 1,
+    });
+    assert.equal(shortTokenTelemetry.mcpTypedAttributionForRequest({
+      headers: {
+        "x-samedaydesk-internal": "short",
+        "x-samedaydesk-validation-marker": marker,
+      },
+    }), null);
+    const nonStringTokenTelemetry = createCommerceTelemetry({
+      dataDir: path.join(dataDir, "non-string-token"),
+      secret: "typed-attribution-non-string-token-secret",
+      internalToken: { toString: () => { throw new Error("CONFIG_MUST_NOT_ESCAPE"); } },
+      writerProcessCount: 1,
+    });
+    assert.equal(nonStringTokenTelemetry.mcpTypedAttributionForRequest({
+      headers: {
+        "x-samedaydesk-internal": internalToken,
+        "x-samedaydesk-validation-marker": marker,
+      },
+    }), null);
+  } finally {
+    await rm(dataDir, { recursive: true, force: true });
+  }
 });
 
 test("appendMcpTypedDecision owns the canonical event at call time", async () => {

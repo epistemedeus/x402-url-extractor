@@ -270,10 +270,13 @@ async function startMounted(options = {}) {
     configureResourceServer: options.configureResourceServer,
     typedTelemetry: {
       enabled: options.typedEnabled === true,
-      onAppend: (decision) => {
+      onAppend: (decision, requestAttribution) => {
         events.push(decision);
-        if (typeof options.onAppend === "function") return options.onAppend(decision);
+        if (typeof options.onAppend === "function") {
+          return options.onAppend(decision, requestAttribution);
+        }
       },
+      attributionForRequest: options.attributionForRequest,
     },
   });
   const server = app.listen(0, "127.0.0.1");
@@ -312,11 +315,11 @@ async function startMounted(options = {}) {
   };
 }
 
-async function postMcp(origin, body) {
+async function postMcp(origin, body, extraHeaders = {}) {
   const started = Date.now();
   const response = await fetch(`${origin}/mcp`, {
     method: "POST",
-    headers: MCP_HEADERS,
+    headers: { ...MCP_HEADERS, ...extraHeaders },
     body: typeof body === "string" ? body : JSON.stringify(body),
     signal: AbortSignal.timeout(8_000),
   });
@@ -1075,6 +1078,7 @@ async function startCanonicalMounted(options = {}) {
   const telemetry = createCommerceTelemetry({
     dataDir,
     secret: "mounted-canonical-typed-secret",
+    internalToken: options.internalToken || "",
     writerProcessCount: 1,
     mcpTypedSince: "2026-01-01T00:00:00.000Z",
     mcpTypedFreshnessMaxAgeMs: 900_000,
@@ -1095,7 +1099,9 @@ async function startCanonicalMounted(options = {}) {
     }],
     typedTelemetry: {
       enabled: true,
-      onAppend: (decision) => telemetry.appendMcpTypedDecision(decision),
+      onAppend: (decision, requestAttribution) =>
+        telemetry.appendMcpTypedDecision(decision, requestAttribution),
+      attributionForRequest: (req) => telemetry.mcpTypedAttributionForRequest(req),
     },
   });
   const server = app.listen(0, "127.0.0.1");
@@ -1147,6 +1153,46 @@ test("M01 unpaid absent-credential challenge persists on the canonical ledger", 
     assert.equal(isCanonicalMcpTypedCommerceEvent(challenge), true);
     const snapshot = await instance.telemetry.snapshot({ days: 30 });
     assert.equal(snapshot.mcpTyped.byResult.challenge, 1);
+  } finally {
+    await instance.close();
+  }
+});
+
+test("M01a authenticated validation marker joins the exact mounted challenge without raw retention", { timeout: 20_000 }, async () => {
+  const internalToken = "mounted-internal-token-for-amendment7-0001";
+  const marker = "mounted-release-canary-amendment7-0001";
+  const instance = await startCanonicalMounted({ internalToken });
+  try {
+    const unpaid = await postMcp(instance.origin, {
+      jsonrpc: "2.0",
+      id: 12,
+      method: "tools/call",
+      params: { name: "enrich", arguments: { domain: "example.invalid" } },
+    }, {
+      "x-samedaydesk-internal": internalToken,
+      "x-samedaydesk-validation-marker": marker,
+    });
+    assert.equal(unpaid.status, 200);
+    await instance.drain();
+    const raw = await readFile(instance.telemetry.paths.currentPath, "utf8");
+    const rows = raw.trim().split("\n").filter(Boolean).map(JSON.parse);
+    assert.equal(rows.length, 1);
+    const challenge = rows[0];
+    assert.equal(challenge.result, "challenge");
+    assert.equal(isCanonicalMcpTypedCommerceEvent(challenge), true);
+    assert.equal(challenge.requestAttribution.schemaVersion, "samedaydesk.mcp-request-attribution.v1");
+    assert.equal(challenge.requestAttribution.classification, "validation");
+    assert.equal(challenge.requestAttribution.evidence, "internal_token");
+    assert.match(challenge.requestAttribution.markerDigest, /^[0-9a-f]{64}$/);
+    assert.equal(Object.hasOwn(challenge.requestAttribution, "proof"), false);
+    assert.equal(raw.includes(marker), false);
+    assert.equal(raw.includes(internalToken), false);
+    assert.equal(challenge.accounting, false);
+    assert.equal(challenge.revenue, false);
+    assert.equal(challenge.demand, false);
+    assert.equal(challenge.independentUse, false);
+    assert.equal(challenge.chainTruth, false);
+    assert.equal(challenge.payerIdentity, false);
   } finally {
     await instance.close();
   }
