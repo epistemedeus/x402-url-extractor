@@ -211,6 +211,7 @@ import { SERVICE_VERSION } from "./service-version.mjs";
 import { loadServiceDeploymentPublication } from "./service-deployment-publication.mjs";
 import { SERVICE_DEPLOYMENT_ROUTES } from "./service-deployment-routes.mjs";
 import { validateOpenApiOperationIds } from "./openapi-operation-contract.mjs";
+import { applyDiscoveryRequestExamples } from "./openapi-request-example-parity.mjs";
 import { createExactUsdcAcceptsFor, usdcTermsForNetwork } from "./x402-payment-terms.mjs";
 
 // ---------------------------------------------------------------------------
@@ -1599,6 +1600,12 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       if (!operation["x-payment-info"]) operation.security = [];
     }
   }
+  // Project the authoritative Bazaar discovery-contract request examples onto
+  // every paid operation so accepted GET query inputs and JSON bodies keep a
+  // standards-valid example in the generated surface. Contracts declare during
+  // payment-middleware registration, so the pre-listener startup build sees
+  // none yet; at request time a drifted declared contract fails loudly.
+  applyDiscoveryRequestExamples(document, (routeKey) => getDiscoveryRequestContract(routeKey));
   validateOpenApiOperationIds(document);
   return document;
 };
