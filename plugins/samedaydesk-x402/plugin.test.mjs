@@ -10,10 +10,17 @@ const REPO_ROOT = resolve(PLUGIN_ROOT, "../..");
 const PLUGIN_SCHEMA_ID = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json";
 const MCP_SCHEMA_ID = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json";
 const LIVE_MCP_URL = "https://agents.samedaydesk.com/mcp";
+const VERSION_PATTERN = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/;
+const PACKAGE_VERSION = JSON.parse(
+  readFileSync(join(REPO_ROOT, "package.json"), "utf8"),
+).version;
 const LOCAL_VERSION = JSON.parse(
   readFileSync(join(PLUGIN_ROOT, "plugin.json"), "utf8"),
 ).version;
-const EXPECTED_LIVE_VERSION = process.env.SAMEDAYDESK_EXPECTED_LIVE_VERSION || null;
+const EXPECTED_LIVE_VERSION = process.env.SAMEDAYDESK_EXPECTED_LIVE_VERSION ?? null;
+if (EXPECTED_LIVE_VERSION !== null && !VERSION_PATTERN.test(EXPECTED_LIVE_VERSION)) {
+  throw new Error("SAMEDAYDESK_EXPECTED_LIVE_VERSION must be a non-empty x.y.z version");
+}
 const liveTest = EXPECTED_LIVE_VERSION === null ? test.skip : test;
 const SOURCE_HEADER = "X-SameDayDesk-Agent-Source";
 const SOURCE_VALUE = "agent-plugins-v1";
@@ -183,7 +190,8 @@ test("plugin.json matches Agent Plugins 1.0 closed manifest", () => {
   assert.equal(manifest.name, "samedaydesk-x402");
   assert.ok(manifest.name.length >= 1 && manifest.name.length <= 64);
   assert.match(manifest.name, NAME_PATTERN);
-  assert.equal(manifest.version, LOCAL_VERSION);
+  assert.match(manifest.version, VERSION_PATTERN);
+  assert.equal(manifest.version, PACKAGE_VERSION);
   assert.equal(typeof manifest.description, "string");
   assert.ok(manifest.description.length > 0);
   assert.equal(manifest.homepage, "https://agents.samedaydesk.com/");
