@@ -211,7 +211,7 @@ import { SERVICE_VERSION } from "./service-version.mjs";
 import { loadServiceDeploymentPublication } from "./service-deployment-publication.mjs";
 import { SERVICE_DEPLOYMENT_ROUTES } from "./service-deployment-routes.mjs";
 import { validateOpenApiOperationIds } from "./openapi-operation-contract.mjs";
-import { applyDiscoveryRequestExamples } from "./openapi-request-example-parity.mjs";
+import { applyDiscoveryRequestExamples, assertGeneratedOpenApiSurfaceGate } from "./openapi-request-example-parity.mjs";
 import { createExactUsdcAcceptsFor, usdcTermsForNetwork } from "./x402-payment-terms.mjs";
 
 // ---------------------------------------------------------------------------
@@ -3404,6 +3404,19 @@ app.get("/", (req, res) => {
 });
 
 const constructionAcceptance = constructionParityReceipt();
+// Strict post-discovery-registration, pre-listen generation gate (amendment 1):
+// every discovery contract is declared above, so regenerate both public
+// documents here and fail startup on any missing/renamed/drifted canonical
+// request contract, lost request example, lost formal success schema, unsafe
+// example, or paid-inventory drift (25 AgentCash / 24 MPP method-routes).
+assertGeneratedOpenApiSurfaceGate({
+  documents: {
+    agentcash: buildOpenApiDocument({ profile: "agentcash" }),
+    mpp: buildOpenApiDocument({ profile: "mpp" }),
+  },
+  circleGatewayEnabled: circleGateway.enabled,
+  resolveRequestContract: (routeKey) => getDiscoveryRequestContract(routeKey),
+});
 app.listen(PORT, () => {
   commerceSettlementReconciler.schedule(process.env.COMMERCE_RECONCILIATION_INTERVAL_MS || 60_000);
   console.log(`x402-merchant listening on :${PORT}`);
