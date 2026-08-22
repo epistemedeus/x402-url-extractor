@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { declareDiscoveryContract } from "./discovery-contract.mjs";
 
+import { evaluateMcpTypedTelemetryOutcome } from "./mcp-typed-telemetry-producer.mjs";
 import {
+  adaptMcpTypedDecisionToCommerceEvent,
   classifyAgentDiscoverySource,
   classifyDeclaredAgentDiscoverySource,
   classifyCommerceResult,
@@ -14,10 +16,13 @@ import {
   COMMERCE_COVERAGE_COMPLETE,
   COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW,
   COMMERCE_INTEGRITY_OK,
+  COMMERCE_INTEGRITY_SOURCE_LOCAL_DRIFT,
   COMMERCE_INTEGRITY_UNUSABLE_RECORDS,
   conservativeRetainedUtcBounds,
   createCommerceTelemetry,
   describeRetentionCoverage,
+  drainCommerceTelemetryForShutdown,
+  isCanonicalMcpTypedCommerceEvent,
   isSemanticUnmatched,
   metricCoverageStatus,
   normalizeCommercePayerClasses,
@@ -2841,4 +2846,526 @@ test("middleware stores oversized settlement amounts as null without poisoning i
   assert.equal(serialized.includes(oversizedAmount), false);
   assert.ok(serialized.length < PUBLIC_SNAPSHOT_MAX_CHARS);
   await rm(dataDir, { recursive: true, force: true });
+});
+
+test("canonical v4 MCP typed rows are consumed separately and corrupt v4 is unusable", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-typed-v4-"));
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "typed-v4-secret" });
+  const digest = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  const decision = evaluateMcpTypedTelemetryOutcome({
+    schemaVersion: "samedaydesk.mcp-typed-telemetry-input.v1",
+    binding: {
+      tool: "enrich",
+      productSku: "samedaydesk-enrich",
+      resource: "mcp://tool/enrich",
+      issuedOfferDigest: digest,
+    },
+    request: { jsonrpc: "2.0", hasId: true, id: 7, method: "tools/call" },
+    response: { hasId: true, id: 7, kind: "tool_result" },
+    credential: { state: "verified", offerDigest: digest },
+    execution: { state: "handler_success", handlerInvoked: true, resultIsError: false },
+    settlement: { state: "succeeded", offerDigest: digest },
+  });
+  telemetry.appendMcpTypedDecision(decision);
+  await telemetry.flush();
+  const raw = await readFile(telemetry.paths.currentPath, "utf8");
+  assert.equal(raw.includes("mcp-typed-telemetry.ndjson"), false);
+  const row = JSON.parse(raw.trim());
+  assert.equal(row.v, 4);
+  assert.equal(row.sourceContract, "mcp_typed_outcome");
+  assert.equal(isCanonicalMcpTypedCommerceEvent(row), true);
+  const typedSnapshot = await telemetry.snapshot({ days: 90 });
+  assert.equal(typedSnapshot.mcpTyped.parseableRecordCount, 1);
+  assert.equal(typedSnapshot.mcpTyped.byResult.paid_success, 1);
+  assert.equal(typedSnapshot.mcpTyped.byTool.enrich, 1);
+  assert.equal(typedSnapshot.retainedParseableEventCount, 0);
+  assert.equal(typedSnapshot.byResult.paid_success || 0, 0);
+  assert.equal(typedSnapshot.coverage.integrity.currentFile.unusableRecordCount, 0);
+
+  await writeFile(telemetry.paths.currentPath, `${raw.trim()}\n{"v":4,"sourceContract":"mcp_typed_outcome"}\n`);
+  const broken = await telemetry.snapshot({ days: 90 });
+  assert.equal(broken.coverage.integrity.currentFile.unusableRecordCount, 1);
+  assert.equal(broken.mcpTyped.parseableRecordCount, 1);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+function typedChallengeDecision({ credentialState }) {
+  const digest = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  return evaluateMcpTypedTelemetryOutcome({
+    schemaVersion: "samedaydesk.mcp-typed-telemetry-input.v1",
+    binding: {
+      tool: "enrich",
+      productSku: "samedaydesk-enrich",
+      resource: "mcp://tool/enrich",
+      issuedOfferDigest: digest,
+    },
+    request: { jsonrpc: "2.0", hasId: true, id: 7, method: "tools/call" },
+    response: { hasId: true, id: 7, kind: "payment_required" },
+    credential: { state: credentialState, offerDigest: null },
+    execution: { state: "not_invoked", handlerInvoked: false, resultIsError: null },
+    settlement: { state: "not_attempted", offerDigest: null },
+  });
+}
+
+test("canonical v4 ledger persists absent and rejected challenges without redefining presence", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-typed-challenges-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "typed-challenge-secret",
+    writerProcessCount: 1,
+  });
+  const absent = typedChallengeDecision({ credentialState: "absent" });
+  const rejected = typedChallengeDecision({ credentialState: "rejected" });
+  assert.equal(absent.result, "challenge");
+  assert.equal(absent.paymentPresent, false);
+  assert.equal(rejected.result, "challenge");
+  assert.equal(rejected.paymentPresent, true);
+  const queued = telemetry.appendMcpTypedDecision(absent);
+  assert.equal(typeof queued?.then, "function");
+  await queued;
+  await telemetry.appendMcpTypedDecision(rejected);
+  await telemetry.flush();
+  const rows = (await readFile(telemetry.paths.currentPath, "utf8"))
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .map(JSON.parse);
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].paymentPresent, false);
+  assert.equal(rows[0].paymentCredentialParsed, false);
+  assert.equal(rows[1].paymentPresent, true);
+  assert.equal(rows[1].paymentCredentialParsed, false);
+  assert.equal(isCanonicalMcpTypedCommerceEvent(rows[0]), true);
+  assert.equal(isCanonicalMcpTypedCommerceEvent(rows[1]), true);
+  const snapshot = await telemetry.snapshot({ days: 30 });
+  assert.equal(snapshot.mcpTyped.byResult.challenge, 2);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("appendMcpTypedDecision owns the canonical event at call time", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-typed-call-time-"));
+  try {
+    const telemetry = createCommerceTelemetry({
+      dataDir,
+      secret: "typed-call-time-secret",
+      writerProcessCount: 1,
+    });
+    const digest = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const decision = evaluateMcpTypedTelemetryOutcome({
+      schemaVersion: "samedaydesk.mcp-typed-telemetry-input.v1",
+      binding: {
+        tool: "enrich",
+        productSku: "samedaydesk-enrich",
+        resource: "mcp://tool/enrich",
+        issuedOfferDigest: digest,
+      },
+      request: { jsonrpc: "2.0", hasId: true, id: 7, method: "tools/call" },
+      response: { hasId: true, id: 7, kind: "tool_result" },
+      credential: { state: "verified", offerDigest: digest },
+      execution: { state: "handler_success", handlerInvoked: true, resultIsError: false },
+      settlement: { state: "succeeded", offerDigest: digest },
+    });
+    assert.equal(decision.result, "paid_success");
+    assert.equal(decision.action, "emit");
+    const pending = telemetry.appendMcpTypedDecision(decision);
+    decision.action = "drop";
+    decision.result = "invalid";
+    decision.reason = "mutated_reason";
+    decision.paymentPresent = false;
+    decision.paymentCredentialParsed = false;
+    decision.handlerInvoked = false;
+    decision.applicationOutcome = "not_run";
+    decision.settlementState = "not_attempted";
+    decision.schemaVersion = "mutated.schema";
+    decision.binding.tool = "read";
+    decision.binding.productSku = "samedaydesk-read";
+    decision.binding.resource = "mcp://tool/read";
+    decision.binding.issuedOfferDigest = "b".repeat(64);
+    await pending;
+    await telemetry.flush();
+    let rows = (await readFile(telemetry.paths.currentPath, "utf8"))
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map(JSON.parse);
+    assert.equal(rows.length, 1);
+    assert.equal(isCanonicalMcpTypedCommerceEvent(rows[0]), true);
+    assert.equal(rows[0].action, "emit");
+    assert.equal(rows[0].result, "paid_success");
+    assert.equal(rows[0].reason, "typed_paid_success");
+    assert.equal(rows[0].paymentPresent, true);
+    assert.equal(rows[0].paymentCredentialParsed, true);
+    assert.equal(rows[0].handlerInvoked, true);
+    assert.equal(rows[0].applicationOutcome, "success");
+    assert.equal(rows[0].settlementState, "succeeded");
+    assert.equal(rows[0].binding.tool, "enrich");
+    assert.equal(rows[0].binding.productSku, "samedaydesk-enrich");
+    assert.equal(rows[0].binding.resource, "mcp://tool/enrich");
+    assert.equal(rows[0].binding.issuedOfferDigest, digest);
+
+    const replacedGraph = typedChallengeDecision({ credentialState: "absent" });
+    await telemetry.appendMcpTypedDecision(replacedGraph);
+    replacedGraph.binding = {
+      tool: "read",
+      productSku: "samedaydesk-read",
+      resource: "mcp://tool/read",
+      issuedOfferDigest: "c".repeat(64),
+    };
+    replacedGraph.result = "paid_success";
+    await telemetry.flush();
+
+    const invalidAtCallTime = { v: 4, sourceContract: "mcp_typed_outcome", action: "emit" };
+    const queuedInvalid = telemetry.appendMcpTypedDecision(invalidAtCallTime);
+    Object.assign(invalidAtCallTime, {
+      result: "challenge",
+      reason: "typed_payment_required",
+      paymentPresent: false,
+      paymentCredentialParsed: false,
+      handlerInvoked: false,
+      applicationOutcome: "not_run",
+      settlementState: "not_attempted",
+      binding: null,
+    });
+    await queuedInvalid;
+    await telemetry.flush();
+    rows = (await readFile(telemetry.paths.currentPath, "utf8"))
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map(JSON.parse);
+    assert.equal(rows.length, 2);
+    assert.equal(rows[1].result, "challenge");
+    assert.equal(rows[1].reason, "typed_payment_required");
+    assert.equal(rows[1].binding.tool, "enrich");
+    assert.equal(rows[1].binding.issuedOfferDigest, digest);
+    assert.equal(isCanonicalMcpTypedCommerceEvent(rows[1]), true);
+  } finally {
+    await rm(dataDir, { recursive: true, force: true });
+  }
+});
+
+test("appendMcpTypedDecision contains hostile adaptation failures without surfacing their text", async () => {
+  const PRIVATE_MARKER = "PRIVATE_REVIEW_MARKER_6a61d8";
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-typed-hostile-"));
+  const logged = [];
+  const originalError = console.error;
+  console.error = (message) => { logged.push(String(message)); };
+  try {
+    const telemetry = createCommerceTelemetry({
+      dataDir,
+      secret: "typed-hostile-secret",
+      writerProcessCount: 1,
+    });
+    const hostileInputs = [
+      ["root proxy with throwing get trap", () => new Proxy({}, {
+        get() { throw new Error(PRIVATE_MARKER); },
+      })],
+      ["throwing binding accessor", () => Object.defineProperty({
+        action: "emit",
+        result: "challenge",
+      }, "binding", {
+        enumerable: true,
+        get() { throw new Error(PRIVATE_MARKER); },
+      })],
+      ["revoked proxy", () => {
+        const pair = Proxy.revocable({}, {});
+        pair.revoke();
+        return pair.proxy;
+      }],
+    ];
+    for (const [, makeInput] of hostileInputs) {
+      let escaped = null;
+      let pending = null;
+      try {
+        pending = telemetry.appendMcpTypedDecision(makeInput());
+      } catch (error) {
+        escaped = error;
+      }
+      assert.equal(escaped, null);
+      assert.equal(typeof pending?.then, "function");
+      await assert.doesNotReject(pending);
+    }
+
+    const queuedAfterHostile = telemetry.appendMcpTypedDecision(
+      typedChallengeDecision({ credentialState: "absent" }),
+    );
+    assert.equal(typeof queuedAfterHostile?.then, "function");
+    await queuedAfterHostile;
+    await telemetry.flush();
+
+    const raw = await readFile(telemetry.paths.currentPath, "utf8").catch(() => "");
+    const rows = raw.trim() ? raw.trim().split("\n").filter(Boolean).map(JSON.parse) : [];
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].result, "challenge");
+    assert.equal(rows[0].binding.tool, "enrich");
+    assert.equal(isCanonicalMcpTypedCommerceEvent(rows[0]), true);
+    assert.ok(!raw.includes(PRIVATE_MARKER));
+    assert.ok(logged.every((line) => !line.includes(PRIVATE_MARKER)));
+  } finally {
+    console.error = originalError;
+    await rm(dataDir, { recursive: true, force: true });
+  }
+});
+
+test("appendMcpTypedDecision still stores nonthrowing accessor and plain object decisions", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-typed-accessor-"));
+  try {
+    const telemetry = createCommerceTelemetry({
+      dataDir,
+      secret: "typed-accessor-secret",
+      writerProcessCount: 1,
+    });
+
+    const accessorDecision = typedChallengeDecision({ credentialState: "absent" });
+    const accessorBinding = accessorDecision.binding;
+    Object.defineProperty(accessorDecision, "binding", {
+      enumerable: true,
+      get() { return accessorBinding; },
+    });
+    const accessorPending = telemetry.appendMcpTypedDecision(accessorDecision);
+    assert.equal(typeof accessorPending?.then, "function");
+    await accessorPending;
+
+    const plainDecision = typedChallengeDecision({ credentialState: "rejected" });
+    const plainPending = telemetry.appendMcpTypedDecision(plainDecision);
+    assert.equal(typeof plainPending?.then, "function");
+    await plainPending;
+
+    await telemetry.flush();
+    const rows = (await readFile(telemetry.paths.currentPath, "utf8"))
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map(JSON.parse);
+    assert.equal(rows.length, 2);
+    assert.equal(rows[0].result, "challenge");
+    assert.equal(rows[0].paymentPresent, false);
+    assert.equal(rows[0].binding.tool, "enrich");
+    assert.equal(rows[0].binding.issuedOfferDigest, "a".repeat(64));
+    assert.equal(rows[1].result, "challenge");
+    assert.equal(rows[1].paymentPresent, true);
+    assert.equal(rows[1].binding.tool, "enrich");
+    assert.equal(isCanonicalMcpTypedCommerceEvent(rows[0]), true);
+    assert.equal(isCanonicalMcpTypedCommerceEvent(rows[1]), true);
+  } finally {
+    await rm(dataDir, { recursive: true, force: true });
+  }
+});
+
+test("typed snapshot coverage freshness and source-local integrity are retained", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-typed-coverage-"));
+  const now = Date.now();
+  const oldTs = new Date(now - 31 * 86_400_000).toISOString();
+  const recentTs = new Date(now - 1_000).toISOString();
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "typed-coverage-secret",
+    writerProcessCount: 1,
+    mcpTypedSince: new Date(now - 90 * 86_400_000).toISOString(),
+    mcpTypedFreshnessMaxAgeMs: 900_000,
+  });
+  const digest = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  const decision = evaluateMcpTypedTelemetryOutcome({
+    schemaVersion: "samedaydesk.mcp-typed-telemetry-input.v1",
+    binding: {
+      tool: "enrich",
+      productSku: "samedaydesk-enrich",
+      resource: "mcp://tool/enrich",
+      issuedOfferDigest: digest,
+    },
+    request: { jsonrpc: "2.0", hasId: true, id: 7, method: "tools/call" },
+    response: { hasId: true, id: 7, kind: "tool_result" },
+    credential: { state: "verified", offerDigest: digest },
+    execution: { state: "handler_success", handlerInvoked: true, resultIsError: false },
+    settlement: { state: "succeeded", offerDigest: digest },
+  });
+  const oldEvent = adaptMcpTypedDecisionToCommerceEvent(decision, {
+    id: "11111111-1111-4111-8111-111111111111",
+    ts: oldTs,
+  });
+  const recentEvent = adaptMcpTypedDecisionToCommerceEvent(decision, {
+    id: "22222222-2222-4222-8222-222222222222",
+    ts: recentTs,
+  });
+  await writeFile(
+    telemetry.paths.currentPath,
+    `${JSON.stringify(oldEvent)}\n${JSON.stringify(recentEvent)}\n`,
+    { encoding: "utf8", mode: 0o600 },
+  );
+  const snapshot = await telemetry.snapshot({ days: 30 });
+  const coverage = snapshot.mcpTyped.coverage;
+  assert.equal(coverage.requestedWindowComplete, true);
+  assert.equal(coverage.requestedWindowCoverage, COMMERCE_COVERAGE_COMPLETE);
+  assert.equal(coverage.retainedObservationStart, oldTs);
+  assert.equal(coverage.retainedObservationEnd, recentTs);
+  assert.equal(coverage.freshness.latestObservationAt, recentTs);
+  assert.equal(coverage.freshness.status, "fresh");
+  assert.equal(coverage.freshness.maxAgeMs, 900_000);
+  assert.ok(Number.isFinite(coverage.freshness.ageMs) && coverage.freshness.ageMs >= 0);
+  assert.equal(coverage.integrity.status, COMMERCE_INTEGRITY_OK);
+  assert.equal(coverage.integrity.currentFile.parseableRecordCount, 2);
+  assert.equal(coverage.integrity.currentFile.unusableRecordCount, 0);
+  await appendFile(
+    telemetry.paths.currentPath,
+    `${JSON.stringify({ v: 4, sourceContract: "mcp_typed_outcome" })}\n`,
+    "utf8",
+  );
+  const corrupt = await telemetry.snapshot({ days: 30 });
+  assert.equal(corrupt.mcpTyped.coverage.integrity.status, COMMERCE_INTEGRITY_UNUSABLE_RECORDS);
+  assert.equal(corrupt.mcpTyped.coverage.integrity.currentFile.unusableRecordCount, 1);
+  assert.ok(corrupt.coverage.integrity.currentFile.unusableRecordCount >= 1);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("late baseline does not claim full requested window", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-typed-late-baseline-"));
+  try {
+    const now = Date.now();
+    const baseline = new Date(now - 86_400_000).toISOString();
+    const telemetry = createCommerceTelemetry({
+      dataDir,
+      secret: "typed-late-baseline-secret",
+      writerProcessCount: 1,
+      mcpTypedSince: baseline,
+    });
+    const digest = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const decision = evaluateMcpTypedTelemetryOutcome({
+      schemaVersion: "samedaydesk.mcp-typed-telemetry-input.v1",
+      binding: {
+        tool: "enrich",
+        productSku: "samedaydesk-enrich",
+        resource: "mcp://tool/enrich",
+        issuedOfferDigest: digest,
+      },
+      request: { jsonrpc: "2.0", hasId: true, id: 7, method: "tools/call" },
+      response: { hasId: true, id: 7, kind: "tool_result" },
+      credential: { state: "verified", offerDigest: digest },
+      execution: { state: "handler_success", handlerInvoked: true, resultIsError: false },
+      settlement: { state: "succeeded", offerDigest: digest },
+    });
+    const event = adaptMcpTypedDecisionToCommerceEvent(decision, {
+      id: "00000000-0000-4000-8000-000000000001",
+      ts: baseline,
+    });
+    await writeFile(telemetry.paths.currentPath, `${JSON.stringify(event)}\n`, { mode: 0o600 });
+    const snapshot = await telemetry.snapshot({ days: 30 });
+    assert.equal(snapshot.mcpTyped.coverage.requestedWindowComplete, false);
+    assert.equal(snapshot.mcpTyped.coverage.requestedWindowCoverage, COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW);
+  } finally {
+    await rm(dataDir, { recursive: true, force: true });
+  }
+});
+
+test("future rows do not enter window or freshness", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-typed-future-row-"));
+  try {
+    const now = Date.now();
+    const future = new Date(now + 86_400_000).toISOString();
+    const baseline = new Date(now - 60 * 86_400_000).toISOString();
+    const telemetry = createCommerceTelemetry({
+      dataDir,
+      secret: "typed-future-row-secret",
+      writerProcessCount: 1,
+      mcpTypedSince: baseline,
+    });
+    const digest = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const decision = evaluateMcpTypedTelemetryOutcome({
+      schemaVersion: "samedaydesk.mcp-typed-telemetry-input.v1",
+      binding: {
+        tool: "enrich",
+        productSku: "samedaydesk-enrich",
+        resource: "mcp://tool/enrich",
+        issuedOfferDigest: digest,
+      },
+      request: { jsonrpc: "2.0", hasId: true, id: 7, method: "tools/call" },
+      response: { hasId: true, id: 7, kind: "tool_result" },
+      credential: { state: "verified", offerDigest: digest },
+      execution: { state: "handler_success", handlerInvoked: true, resultIsError: false },
+      settlement: { state: "succeeded", offerDigest: digest },
+    });
+    const event = adaptMcpTypedDecisionToCommerceEvent(decision, {
+      id: "00000000-0000-4000-8000-000000000001",
+      ts: future,
+    });
+    await writeFile(telemetry.paths.currentPath, `${JSON.stringify(event)}\n`, { mode: 0o600 });
+    const snapshot = await telemetry.snapshot({ days: 30 });
+    assert.equal(snapshot.mcpTyped.parseableRecordCount, 0);
+    assert.equal(snapshot.mcpTyped.byResult.paid_success || 0, 0);
+    assert.equal(snapshot.mcpTyped.coverage.freshness.status, "no_observations");
+    assert.equal(snapshot.mcpTyped.coverage.freshness.latestObservationAt, null);
+    assert.equal(snapshot.mcpTyped.coverage.retainedObservationStart, null);
+    assert.equal(snapshot.mcpTyped.coverage.retainedObservationEnd, null);
+    assert.equal(snapshot.mcpTyped.coverage.requestedWindowComplete, false);
+    assert.equal(snapshot.mcpTyped.coverage.integrity.status, COMMERCE_INTEGRITY_SOURCE_LOCAL_DRIFT);
+  } finally {
+    await rm(dataDir, { recursive: true, force: true });
+  }
+});
+
+test("production shutdown helper rejects undrained or failed lifecycle visibly", async () => {
+  assert.equal(typeof drainCommerceTelemetryForShutdown, "function");
+  await assert.rejects(() => drainCommerceTelemetryForShutdown({
+    typedTelemetryLifecycle: {
+      async shutdown() { return { drained: false, pending: 1, failures: 0 }; },
+    },
+    commerceTelemetry: { async flush() {} },
+    timeoutMs: 5,
+  }));
+  await assert.rejects(() => drainCommerceTelemetryForShutdown({
+    typedTelemetryLifecycle: {
+      async shutdown() { throw new Error("reviewer-lifecycle-error"); },
+    },
+    commerceTelemetry: { async flush() {} },
+    timeoutMs: 5,
+  }));
+  const order = [];
+  await drainCommerceTelemetryForShutdown({
+    typedTelemetryLifecycle: {
+      async shutdown() {
+        order.push("typed");
+        return { drained: true, pending: 0, failures: 0 };
+      },
+    },
+    commerceTelemetry: { async flush() { order.push("writer"); } },
+    timeoutMs: 5,
+  });
+  assert.deepEqual(order, ["typed", "writer"]);
+  const writerOnly = [];
+  await drainCommerceTelemetryForShutdown({
+    typedTelemetryLifecycle: null,
+    commerceTelemetry: { async flush() { writerOnly.push("writer"); } },
+    timeoutMs: 5,
+  });
+  assert.deepEqual(writerOnly, ["writer"]);
+  await assert.rejects(() => drainCommerceTelemetryForShutdown({
+    typedTelemetryLifecycle: {
+      async shutdown() { return { drained: true, pending: 0, failures: 0 }; },
+    },
+    commerceTelemetry: { async flush() { throw new Error("reviewer-writer-error"); } },
+    timeoutMs: 5,
+  }));
+});
+
+test("writer process gate accepts only the safe integer 1", async () => {
+  const badDir = await mkdtemp(path.join(os.tmpdir(), "commerce-bad-writer-"));
+  const goodDir = await mkdtemp(path.join(os.tmpdir(), "commerce-good-writer-"));
+  try {
+    assert.throws(() => createCommerceTelemetry({
+      dataDir: badDir,
+      secret: "writer-gate-secret",
+      writerProcessCount: 2,
+    }));
+    const telemetry = createCommerceTelemetry({
+      dataDir: goodDir,
+      secret: "writer-gate-secret",
+      writerProcessCount: 1,
+    });
+    const status = await telemetry.storageStatus();
+    assert.equal(status.writerGate.mode, "single_process_only");
+    assert.equal(status.writerGate.configuredProcesses, 1);
+    assert.equal(status.writerGate.crossProcessSafe, false);
+  } finally {
+    await rm(badDir, { recursive: true, force: true });
+    await rm(goodDir, { recursive: true, force: true });
+  }
 });

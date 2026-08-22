@@ -1,0 +1,15 @@
+node_modules/
+.env
+data/
+.git/
+assignment/
+RESULT-TYPED-PRODUCER.md
+PROMPT.md
+RUN.json
+TRACE.ndjson
+TRANSCRIPT-GROK-TYPED.txt
+evidence/
+evidence-grok-typed-amendment-1/
+evidence-grok-typed-amendment-2/
+evidence-grok-typed-amendment-3/
+transcripts/

@@ -665,30 +665,41 @@ async function readEvents(filePath) {
   try {
     const contents = await readFile(filePath, "utf8");
     const events = [];
+    const mcpTypedEvents = [];
     let unusableRecordCount = 0;
-    for (const rawLine of contents.split("\n")) {
-      if (!rawLine.trim()) continue;
+    let mcpTypedUnusableRecordCount = 0;
+    for (const line of contents.split("\n")) {
+      if (!line.trim()) continue;
       try {
-        const parsed = JSON.parse(rawLine);
-        if (!isCanonicalCommerceEvent(parsed)) {
-          unusableRecordCount += 1;
+        const parsed = JSON.parse(line);
+        if (isCanonicalCommerceEvent(parsed)) {
+          events.push(parsed);
           continue;
         }
-        events.push(parsed);
+        if (isCanonicalMcpTypedCommerceEvent(parsed)) {
+          mcpTypedEvents.push(parsed);
+          continue;
+        }
+        unusableRecordCount += 1;
+        if (declaresMcpTypedSource(parsed)) mcpTypedUnusableRecordCount += 1;
       } catch {
         unusableRecordCount += 1;
       }
     }
     return {
       events,
+      mcpTypedEvents,
       unusableRecordCount,
+      mcpTypedUnusableRecordCount,
       filePresent: true,
     };
   } catch (error) {
     if (error?.code === "ENOENT") {
       return {
         events: [],
+        mcpTypedEvents: [],
         unusableRecordCount: 0,
+        mcpTypedUnusableRecordCount: 0,
         filePresent: false,
       };
     }
@@ -700,6 +711,7 @@ export const COMMERCE_COVERAGE_COMPLETE = "complete";
 export const COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW = "unknown_for_full_window";
 export const COMMERCE_INTEGRITY_OK = "ok";
 export const COMMERCE_INTEGRITY_UNUSABLE_RECORDS = "unusable_records_present";
+export const COMMERCE_INTEGRITY_SOURCE_LOCAL_DRIFT = "source_local_integrity_drift";
 const DAY_MS = 86_400_000;
 
 const ISO_UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
@@ -962,6 +974,397 @@ function isCanonicalCommerceEvent(value) {
   return value.result === eventResult(value);
 }
 
+const MCP_TYPED_COMMERCE_SOURCE = "mcp_typed_outcome";
+const MCP_TYPED_COMMERCE_AUTHORITY = "seller_declared";
+const MCP_TYPED_COMMERCE_EVIDENCE_CLASS = "seller_operational";
+const MCP_TYPED_COMMERCE_KEYS = Object.freeze([
+  "accounting",
+  "action",
+  "applicationOutcome",
+  "authority",
+  "binding",
+  "chainTruth",
+  "demand",
+  "evidenceClass",
+  "handlerInvoked",
+  "id",
+  "independentUse",
+  "payerIdentity",
+  "paymentCredentialParsed",
+  "paymentPresent",
+  "reason",
+  "result",
+  "revenue",
+  "settlementState",
+  "sourceContract",
+  "ts",
+  "v",
+]);
+const MCP_TYPED_HEX = /^[0-9a-f]{64}$/u;
+const MCP_TYPED_TOKEN = /^[a-z][a-z0-9_]{0,63}$/u;
+const MCP_TYPED_SKU = /^[a-z][a-z0-9-]{0,95}$/u;
+const MCP_TYPED_CLOSED_TOOLS = Object.freeze(new Set([
+  "agent_discoverability_audit",
+  "agent_surface_budget_audit",
+  "contract_qualified_search",
+  "deep_audit",
+  "enrich",
+  "extract",
+  "morpho_market_underwrite",
+  "morpho_position",
+  "morpho_preliquidation_replay",
+  "morpho_protection",
+  "opportunity_preflight",
+  "payment_offer_preflight",
+  "read",
+  "scan",
+  "schemaforge",
+  "seller_integrity_audit",
+  "settlement_proof",
+  "solana_transaction_receipt",
+  "stateful_wallet_policy_conformance",
+  "transaction_receipt",
+  "wallet_enrich",
+  "wallet_policy_conformance",
+]));
+const MCP_TYPED_ACTIONS = new Set(["drop", "emit"]);
+const MCP_TYPED_RESULTS = new Set([
+  "application_failure",
+  "challenge",
+  "invalid",
+  "paid_success",
+  "protocol_discovery",
+  "replay_success",
+  "settlement_failure",
+  "telemetry_incomplete",
+]);
+const MCP_TYPED_REASONS = new Set([
+  "invalid_catalog_binding",
+  "invalid_notification_state",
+  "invalid_typed_outcome",
+  "issued_offer_binding_mismatch",
+  "jsonrpc_notification",
+  "request_response_id_mismatch",
+  "settlement_outcome_unknown",
+  "typed_application_failure",
+  "typed_paid_success",
+  "typed_payment_required",
+  "typed_replay_success",
+  "typed_settlement_failure",
+  "verified_without_execution",
+]);
+const MCP_TYPED_APPLICATION = new Set(["error", "not_run", "replay", "success"]);
+const MCP_TYPED_SETTLEMENT = new Set(["failed", "not_attempted", "succeeded", "unknown"]);
+const MCP_TYPED_DROP_REASONS = new Set([
+  "invalid_catalog_binding",
+  "invalid_notification_state",
+  "invalid_typed_outcome",
+  "issued_offer_binding_mismatch",
+  "request_response_id_mismatch",
+]);
+
+function exactObjectKeys(value, keys) {
+  return (
+    value !== null
+    && typeof value === "object"
+    && !Array.isArray(value)
+    && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...keys].sort())
+  );
+}
+
+function isClosedMcpTypedBinding(binding) {
+  if (!exactObjectKeys(binding, ["issuedOfferDigest", "productSku", "resource", "tool"])) return false;
+  if (!MCP_TYPED_TOKEN.test(binding.tool) || !MCP_TYPED_CLOSED_TOOLS.has(binding.tool)) return false;
+  if (!MCP_TYPED_SKU.test(binding.productSku)) return false;
+  if (binding.productSku !== `samedaydesk-${binding.tool.replaceAll("_", "-")}`) return false;
+  if (binding.resource !== `mcp://tool/${binding.tool}`) return false;
+  return MCP_TYPED_HEX.test(binding.issuedOfferDigest);
+}
+
+function isNullMcpTypedBinding(binding) {
+  return exactObjectKeys(binding, ["issuedOfferDigest", "productSku", "resource", "tool"])
+    && binding.issuedOfferDigest === null
+    && binding.productSku === null
+    && binding.resource === null
+    && binding.tool === null;
+}
+
+function isStoredMcpTypedDecisionFields(value) {
+  if (!MCP_TYPED_ACTIONS.has(value.action)) return false;
+  if (!MCP_TYPED_RESULTS.has(value.result)) return false;
+  if (!MCP_TYPED_REASONS.has(value.reason)) return false;
+  if (!MCP_TYPED_APPLICATION.has(value.applicationOutcome)) return false;
+  if (!MCP_TYPED_SETTLEMENT.has(value.settlementState)) return false;
+  if (typeof value.paymentPresent !== "boolean") return false;
+  if (typeof value.paymentCredentialParsed !== "boolean") return false;
+  if (typeof value.handlerInvoked !== "boolean") return false;
+  if (value.action === "drop") {
+    return value.result === "invalid"
+      && MCP_TYPED_DROP_REASONS.has(value.reason)
+      && value.paymentPresent === false
+      && value.paymentCredentialParsed === false
+      && value.handlerInvoked === false
+      && value.applicationOutcome === "not_run"
+      && value.settlementState === "not_attempted"
+      && isNullMcpTypedBinding(value.binding);
+  }
+  if (value.action !== "emit" || value.result === "invalid") return false;
+  if (!isClosedMcpTypedBinding(value.binding)) return false;
+  if (value.result === "paid_success") {
+    return value.reason === "typed_paid_success"
+      && value.applicationOutcome === "success"
+      && value.handlerInvoked === true
+      && value.paymentPresent === true
+      && value.paymentCredentialParsed === true
+      && value.settlementState === "succeeded";
+  }
+  if (value.result === "challenge") {
+    return value.reason === "typed_payment_required"
+      && value.applicationOutcome === "not_run"
+      && value.handlerInvoked === false
+      && value.paymentCredentialParsed === false
+      && value.settlementState === "not_attempted"
+      && (value.paymentPresent === true || value.paymentPresent === false);
+  }
+  if (value.result === "application_failure") {
+    return value.reason === "typed_application_failure"
+      && value.applicationOutcome === "error"
+      && value.handlerInvoked === true
+      && value.paymentPresent === true
+      && value.paymentCredentialParsed === true;
+  }
+  if (value.result === "protocol_discovery") {
+    return value.reason === "jsonrpc_notification"
+      && value.applicationOutcome === "not_run"
+      && value.handlerInvoked === false
+      && value.paymentPresent === false
+      && value.paymentCredentialParsed === false
+      && value.settlementState === "not_attempted";
+  }
+  if (value.result === "replay_success") {
+    return value.reason === "typed_replay_success"
+      && value.applicationOutcome === "replay"
+      && value.handlerInvoked === false
+      && value.paymentPresent === true
+      && value.paymentCredentialParsed === true
+      && value.settlementState === "succeeded";
+  }
+  if (value.result === "settlement_failure") {
+    return value.reason === "typed_settlement_failure"
+      && value.applicationOutcome === "success"
+      && value.handlerInvoked === true
+      && value.paymentPresent === true
+      && value.paymentCredentialParsed === true
+      && value.settlementState === "failed";
+  }
+  if (value.result === "telemetry_incomplete") {
+    return (
+      (value.reason === "verified_without_execution"
+        && value.handlerInvoked === false
+        && value.applicationOutcome === "not_run"
+        && value.settlementState === "not_attempted")
+      || (value.reason === "settlement_outcome_unknown"
+        && value.handlerInvoked === true
+        && value.applicationOutcome === "success"
+        && value.settlementState === "unknown")
+    ) && value.paymentPresent === true && value.paymentCredentialParsed === true;
+  }
+  return false;
+}
+
+function declaresMcpTypedSource(value) {
+  return Boolean(
+    value
+    && typeof value === "object"
+    && !Array.isArray(value)
+    && value.v === 4
+    && value.sourceContract === MCP_TYPED_COMMERCE_SOURCE,
+  );
+}
+
+export function isCanonicalMcpTypedCommerceEvent(value) {
+  if (!exactObjectKeys(value, MCP_TYPED_COMMERCE_KEYS)) return false;
+  if (value.v !== 4) return false;
+  if (value.sourceContract !== MCP_TYPED_COMMERCE_SOURCE) return false;
+  if (eventTimestampMs(value) === null) return false;
+  if (!isCanonicalEventId(value.id)) return false;
+  if (value.authority !== MCP_TYPED_COMMERCE_AUTHORITY) return false;
+  if (value.evidenceClass !== MCP_TYPED_COMMERCE_EVIDENCE_CLASS) return false;
+  if (value.accounting !== false) return false;
+  if (value.revenue !== false) return false;
+  if (value.demand !== false) return false;
+  if (value.independentUse !== false) return false;
+  if (value.chainTruth !== false) return false;
+  if (value.payerIdentity !== false) return false;
+  return isStoredMcpTypedDecisionFields(value);
+}
+
+export function adaptMcpTypedDecisionToCommerceEvent(decision, { id, ts } = {}) {
+  if (!decision || typeof decision !== "object" || Array.isArray(decision)) return null;
+  const event = {
+    v: 4,
+    sourceContract: MCP_TYPED_COMMERCE_SOURCE,
+    id: id ?? randomUUID(),
+    ts: ts ?? new Date().toISOString(),
+    authority: MCP_TYPED_COMMERCE_AUTHORITY,
+    evidenceClass: MCP_TYPED_COMMERCE_EVIDENCE_CLASS,
+    accounting: false,
+    revenue: false,
+    demand: false,
+    independentUse: false,
+    chainTruth: false,
+    payerIdentity: false,
+    action: decision.action,
+    result: decision.result,
+    reason: decision.reason,
+    paymentPresent: decision.paymentPresent,
+    paymentCredentialParsed: decision.paymentCredentialParsed,
+    handlerInvoked: decision.handlerInvoked,
+    applicationOutcome: decision.applicationOutcome,
+    settlementState: decision.settlementState,
+    binding: decision.binding && typeof decision.binding === "object"
+      ? {
+        tool: decision.binding.tool,
+        productSku: decision.binding.productSku,
+        resource: decision.binding.resource,
+        issuedOfferDigest: decision.binding.issuedOfferDigest,
+      }
+      : null,
+  };
+  return isCanonicalMcpTypedCommerceEvent(event) ? event : null;
+}
+
+function summarizeMcpTypedView(events) {
+  const byResult = Object.create(null);
+  const byTool = Object.create(null);
+  const byReason = Object.create(null);
+  for (const event of events) {
+    const result = typeof event.result === "string" ? event.result : "invalid";
+    byResult[result] = (byResult[result] || 0) + 1;
+    const reason = typeof event.reason === "string" ? event.reason : "invalid_typed_outcome";
+    byReason[reason] = (byReason[reason] || 0) + 1;
+    const tool = event.binding?.tool;
+    if (typeof tool === "string" && tool.length > 0) {
+      byTool[tool] = (byTool[tool] || 0) + 1;
+    }
+  }
+  return {
+    sourceContract: MCP_TYPED_COMMERCE_SOURCE,
+    schemaVersion: 4,
+    parseableRecordCount: events.length,
+    byResult,
+    byTool,
+    byReason,
+    policy: "Seller-declared typed MCP outcomes from the mounted producer. Not payer identity, chain truth, accounting, revenue, demand, or independent use.",
+  };
+}
+
+function typedTimestampBounds(events) {
+  let startMs = null;
+  let startTs = null;
+  let endMs = null;
+  let endTs = null;
+  for (const event of events) {
+    const ms = eventTimestampMs(event);
+    if (ms === null) continue;
+    if (startMs === null || ms < startMs) {
+      startMs = ms;
+      startTs = event.ts;
+    }
+    if (endMs === null || ms > endMs) {
+      endMs = ms;
+      endTs = event.ts;
+    }
+  }
+  return { startMs, startTs, endMs, endTs };
+}
+
+function typedFreshnessView({ latestTs, latestMs, generatedAtMs, maxAgeMs }) {
+  if (latestTs === null || latestMs === null) {
+    return {
+      latestObservationAt: null,
+      ageMs: 0,
+      maxAgeMs,
+      status: "no_observations",
+    };
+  }
+  const ageMs = Math.max(0, generatedAtMs - latestMs);
+  return {
+    latestObservationAt: latestTs,
+    ageMs,
+    maxAgeMs,
+    status: ageMs <= maxAgeMs ? "fresh" : "stale",
+  };
+}
+
+function describeMcpTypedSourceCoverage({
+  generatedAtMs,
+  requestedWindowDays,
+  retainedTypedEvents,
+  currentRead,
+  rotatedRead,
+  mcpTypedSinceMs,
+  mcpTypedFreshnessMaxAgeMs,
+} = {}) {
+  const safeDays = Math.max(1, Math.min(365, Number(requestedWindowDays) || 90));
+  const requestedWindowStartMs = generatedAtMs - safeDays * DAY_MS;
+  const eligibleTypedEvents = [];
+  let futureTypedCount = 0;
+  for (const event of retainedTypedEvents || []) {
+    const ms = eventTimestampMs(event);
+    if (ms === null) continue;
+    if (ms > generatedAtMs) {
+      futureTypedCount += 1;
+      continue;
+    }
+    eligibleTypedEvents.push(event);
+  }
+  const bounds = typedTimestampBounds(eligibleTypedEvents);
+  const typedUnusable = (currentRead?.mcpTypedUnusableRecordCount || 0)
+    + (rotatedRead?.mcpTypedUnusableRecordCount || 0);
+  const integrityStatus = typedUnusable > 0
+    ? COMMERCE_INTEGRITY_UNUSABLE_RECORDS
+    : futureTypedCount > 0
+      ? COMMERCE_INTEGRITY_SOURCE_LOCAL_DRIFT
+      : COMMERCE_INTEGRITY_OK;
+  const baselineDeclaredAtOrBeforeStart = Number.isFinite(mcpTypedSinceMs)
+    && mcpTypedSinceMs <= requestedWindowStartMs;
+  const evidenceReachesRequestedStart = bounds.startMs !== null
+    && bounds.startMs <= requestedWindowStartMs;
+  const complete = integrityStatus === COMMERCE_INTEGRITY_OK
+    && baselineDeclaredAtOrBeforeStart
+    && evidenceReachesRequestedStart;
+  return {
+    requestedWindowStart: new Date(requestedWindowStartMs).toISOString(),
+    requestedWindowEnd: new Date(generatedAtMs).toISOString(),
+    retainedObservationStart: bounds.startTs,
+    retainedObservationEnd: bounds.endTs,
+    requestedWindowComplete: complete,
+    requestedWindowCoverage: complete
+      ? COMMERCE_COVERAGE_COMPLETE
+      : COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW,
+    freshness: typedFreshnessView({
+      latestTs: bounds.endTs,
+      latestMs: bounds.endMs,
+      generatedAtMs,
+      maxAgeMs: mcpTypedFreshnessMaxAgeMs,
+    }),
+    integrity: {
+      status: integrityStatus,
+      currentFile: {
+        filePresent: currentRead?.filePresent === true,
+        parseableRecordCount: currentRead?.mcpTypedEvents?.length || 0,
+        unusableRecordCount: currentRead?.mcpTypedUnusableRecordCount || 0,
+      },
+      rotatedFile: {
+        filePresent: rotatedRead?.filePresent === true,
+        parseableRecordCount: rotatedRead?.mcpTypedEvents?.length || 0,
+        unusableRecordCount: rotatedRead?.mcpTypedUnusableRecordCount || 0,
+      },
+    },
+  };
+}
+
 function utcDayStartMs(ms) {
   return Date.parse(`${new Date(ms).toISOString().slice(0, 10)}T00:00:00.000Z`);
 }
@@ -1182,6 +1585,26 @@ export function describeRetentionCoverage({
   };
 }
 
+export async function drainCommerceTelemetryForShutdown({
+  typedTelemetryLifecycle = null,
+  commerceTelemetry,
+  timeoutMs,
+} = {}) {
+  if (typedTelemetryLifecycle != null) {
+    if (typeof typedTelemetryLifecycle.shutdown !== "function") {
+      throw new Error("typed telemetry lifecycle shutdown is required");
+    }
+    const state = await typedTelemetryLifecycle.shutdown({ timeoutMs });
+    if (state?.drained !== true || state?.pending !== 0) {
+      throw new Error("typed telemetry lifecycle did not drain");
+    }
+  }
+  if (typeof commerceTelemetry?.flush !== "function") {
+    throw new Error("commerce telemetry writer flush is required");
+  }
+  await commerceTelemetry.flush();
+}
+
 export function createCommerceTelemetry({
   dataDir = process.env.COMMERCE_DATA_DIR || path.join(process.cwd(), "data"),
   secret = process.env.COMMERCE_ACTOR_SECRET || randomBytes(32).toString("hex"),
@@ -1195,7 +1618,21 @@ export function createCommerceTelemetry({
   requestConstructionSince = process.env.COMMERCE_REQUEST_CONSTRUCTION_SINCE || "2026-08-13T16:25:03.766Z",
   payerClasses = process.env.COMMERCE_PAYER_CLASSES || "",
   maxBytes = 5 * 1024 * 1024,
+  writerProcessCount = 1,
+  mcpTypedSince = process.env.COMMERCE_MCP_TYPED_SINCE || "",
+  mcpTypedFreshnessMaxAgeMs = 900_000,
 } = {}) {
+  if (!Number.isSafeInteger(writerProcessCount) || writerProcessCount !== 1) {
+    throw new Error("commerce telemetry supports exactly one writer process; writerProcessCount must be the safe integer 1 until cross-process coordination exists");
+  }
+  const typedFreshnessMaxAgeMs = Number.isSafeInteger(mcpTypedFreshnessMaxAgeMs) && mcpTypedFreshnessMaxAgeMs >= 0
+    ? mcpTypedFreshnessMaxAgeMs
+    : 900_000;
+  const writerGate = Object.freeze({
+    mode: "single_process_only",
+    configuredProcesses: 1,
+    crossProcessSafe: false,
+  });
   const currentPath = path.join(dataDir, "commerce-events.ndjson");
   const rotatedPath = path.join(dataDir, "commerce-events.1.ndjson");
   const parsedExternalSince = Date.parse(externalSince);
@@ -1224,6 +1661,8 @@ export function createCommerceTelemetry({
   const requestConstructionSinceMs = Number.isFinite(parsedRequestConstructionSince)
     ? parsedRequestConstructionSince
     : null;
+  const parsedMcpTypedSince = Date.parse(mcpTypedSince);
+  const mcpTypedSinceMs = Number.isFinite(parsedMcpTypedSince) ? parsedMcpTypedSince : null;
   const normalizedPayerClasses = normalizeCommercePayerClasses(payerClasses);
   const paymentClassByActor = new Map([...normalizedPayerClasses].map(([address, paymentClass]) => [
     createHmac("sha256", secret).update(`payer:${address}`).digest("hex").slice(0, 24),
@@ -1255,6 +1694,29 @@ export function createCommerceTelemetry({
 
   function enqueue(event) {
     enqueueExclusive(() => appendEvent(event)).catch((error) => {
+      console.error(`commerce telemetry write failed: ${error.message}`);
+    });
+  }
+
+  function appendMcpTypedDecision(decision) {
+    // Adapt, validate, and copy synchronously before any queue scheduling, so
+    // the queued closure owns the canonical event and later caller mutation of
+    // the original decision cannot alter, relabel, or add to the stored row.
+    // Adapting a hostile decision (root Proxy trap, throwing accessor,
+    // revoked Proxy) fails closed to the same owned null event as ordinary
+    // invalid input: the writer Promise is always returned, the failure and
+    // its text never escape, and the no-op still occupies its queue slot so
+    // writer ordering and flush semantics are unchanged.
+    let event = null;
+    try {
+      event = adaptMcpTypedDecisionToCommerceEvent(decision);
+    } catch {
+      event = null;
+    }
+    return enqueueExclusive(async () => {
+      if (!event) return;
+      await appendEvent(event);
+    }).catch((error) => {
       console.error(`commerce telemetry write failed: ${error.message}`);
     });
   }
@@ -1313,6 +1775,11 @@ export function createCommerceTelemetry({
     res.once("finish", () => {
       const status = Number(res.statusCode || 0);
       const method = String(req.method || "GET").toUpperCase();
+      // Typed MCP observation owns POST /mcp economic facts. HTTP-header
+      // credentials must not create a second MCP paid row.
+      if (route.route === "/mcp" && !["GET", "HEAD", "OPTIONS"].includes(method)) {
+        return;
+      }
       if (route.kind === "paid" && !paymentPresent && !["GET", "HEAD", "OPTIONS"].includes(method)) {
         return;
       }
@@ -1387,6 +1854,7 @@ export function createCommerceTelemetry({
     const rotatedRead = await readEvents(rotatedPath);
     const currentRead = await readEvents(currentPath);
     const retainedEvents = [...rotatedRead.events, ...currentRead.events];
+    const retainedTypedEvents = [...rotatedRead.mcpTypedEvents, ...currentRead.mcpTypedEvents];
     const retainedTimes = retainedEvents
       .map(eventTimestampMs)
       .filter((ms) => ms !== null);
@@ -1431,6 +1899,10 @@ export function createCommerceTelemetry({
     const windowedEvents = retainedEvents.filter((event) => {
       const ms = eventTimestampMs(event);
       return ms !== null && ms >= windowCutoff;
+    });
+    const windowedTypedEvents = retainedTypedEvents.filter((event) => {
+      const ms = eventTimestampMs(event);
+      return ms !== null && ms >= windowCutoff && ms <= generatedAtMs;
     });
     const events = windowedEvents.filter((event) => (
       event.originClass === "external"
@@ -1717,6 +2189,18 @@ export function createCommerceTelemetry({
       retainedParseableEventCount: coverage.retainedParseableEventCount,
       integrityStatus: coverage.integrityStatus,
       coverage,
+      mcpTyped: {
+        ...summarizeMcpTypedView(windowedTypedEvents),
+        coverage: describeMcpTypedSourceCoverage({
+          generatedAtMs,
+          requestedWindowDays: safeDays,
+          retainedTypedEvents,
+          currentRead,
+          rotatedRead,
+          mcpTypedSinceMs,
+          mcpTypedFreshnessMaxAgeMs: typedFreshnessMaxAgeMs,
+        }),
+      },
       externalSince: externalSinceMs === null ? null : new Date(externalSinceMs).toISOString(),
       externalEvents: events.length,
       externalActors: actors.size,
@@ -1843,6 +2327,7 @@ export function createCommerceTelemetry({
           currentBytes,
           rotatedBytes,
           boundedBytes: maxBytes * 2,
+          writerGate,
         };
       });
     } catch {
@@ -1851,6 +2336,7 @@ export function createCommerceTelemetry({
         currentBytes: null,
         rotatedBytes: null,
         boundedBytes: maxBytes * 2,
+        writerGate,
       };
     }
   }
@@ -1859,6 +2345,7 @@ export function createCommerceTelemetry({
     middleware,
     snapshot,
     storageStatus,
+    appendMcpTypedDecision,
     flush: () => queue,
     paths: { currentPath, rotatedPath },
   };

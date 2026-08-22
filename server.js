@@ -146,7 +146,7 @@ import {
 } from "./stateful-wallet-policy-conformance.mjs";
 import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
-import { createCommerceTelemetry } from "./commerce-events.mjs";
+import { createCommerceTelemetry, drainCommerceTelemetryForShutdown } from "./commerce-events.mjs";
 import { createCommerceSettlementReconciler } from "./commerce-settlement-reconciler.mjs";
 import { createIdempotencyReplay } from "./idempotency-replay.mjs";
 import {
@@ -404,7 +404,35 @@ app.use(express.json({
 }));
 app.use(legacyCompatibleX402Body);
 
-const commerceTelemetry = createCommerceTelemetry();
+function parseCommerceWriterProcessCount(raw = process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES) {
+  if (raw === undefined || raw === null || raw === "") return 1;
+  return Number(raw);
+}
+
+const commerceTelemetry = createCommerceTelemetry({
+  writerProcessCount: parseCommerceWriterProcessCount(process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES),
+});
+let mcpMountResult = null;
+let commerceWriterDrainStarted = false;
+
+async function requestCommerceWriterDrain() {
+  if (commerceWriterDrainStarted) return;
+  commerceWriterDrainStarted = true;
+  try {
+    await drainCommerceTelemetryForShutdown({
+      typedTelemetryLifecycle: mcpMountResult?.typedTelemetryLifecycle,
+      commerceTelemetry,
+      timeoutMs: 1_000,
+    });
+    process.exit(0);
+  } catch {
+    console.error("commerce_telemetry_shutdown_failed");
+    process.exit(1);
+  }
+}
+
+process.once("SIGTERM", requestCommerceWriterDrain);
+process.once("SIGINT", requestCommerceWriterDrain);
 app.use(paidActionEffectHeaders);
 app.use(commerceTelemetry.middleware);
 const idempotencyReplay = createIdempotencyReplay();
@@ -3394,6 +3422,10 @@ import("./mcp-server.mjs")
       network: NETWORK,
       payTo: PAY_TO,
       serverInfo: { name: "x402-data-gateway", version: SERVICE_VERSION },
+      typedTelemetry: {
+        enabled: true,
+        onAppend: (decision) => commerceTelemetry.appendMcpTypedDecision(decision),
+      },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
@@ -3420,5 +3452,8 @@ import("./mcp-server.mjs")
       ].map(decorateMcpTool),
     })
   )
-  .then((r) => console.log(`  MCP server:  POST /mcp (${r.toolCount} paid tools)`))
+  .then((r) => {
+    mcpMountResult = r;
+    console.log(`  MCP server:  POST /mcp (${r.toolCount} paid tools)`);
+  })
   .catch((e) => console.error(`  /mcp mount FAILED (HTTP routes unaffected): ${e.message}`));
