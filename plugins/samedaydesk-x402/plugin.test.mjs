@@ -10,7 +10,11 @@ const REPO_ROOT = resolve(PLUGIN_ROOT, "../..");
 const PLUGIN_SCHEMA_ID = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json";
 const MCP_SCHEMA_ID = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json";
 const LIVE_MCP_URL = "https://agents.samedaydesk.com/mcp";
-const LIVE_VERSION = "1.23.20";
+const LOCAL_VERSION = JSON.parse(
+  readFileSync(join(PLUGIN_ROOT, "plugin.json"), "utf8"),
+).version;
+const EXPECTED_LIVE_VERSION = process.env.SAMEDAYDESK_EXPECTED_LIVE_VERSION || null;
+const liveTest = EXPECTED_LIVE_VERSION === null ? test.skip : test;
 const SOURCE_HEADER = "X-SameDayDesk-Agent-Source";
 const SOURCE_VALUE = "agent-plugins-v1";
 const PRODUCT_SKILL_SHA256 = "594a745ae7442ce013fb0013e289247e583850ade75c56bce453e48e668a47a0";
@@ -159,7 +163,7 @@ async function postRpc(method, params, id) {
     headers: {
       accept: "application/json, text/event-stream",
       "content-type": "application/json",
-      "user-agent": "samedaydesk-x402-plugin-test/1.23.20",
+      "user-agent": `samedaydesk-x402-plugin-test/${LOCAL_VERSION}`,
       [SOURCE_HEADER]: SOURCE_VALUE,
     },
     body: JSON.stringify({ jsonrpc: "2.0", id, method, params }),
@@ -179,7 +183,7 @@ test("plugin.json matches Agent Plugins 1.0 closed manifest", () => {
   assert.equal(manifest.name, "samedaydesk-x402");
   assert.ok(manifest.name.length >= 1 && manifest.name.length <= 64);
   assert.match(manifest.name, NAME_PATTERN);
-  assert.equal(manifest.version, LIVE_VERSION);
+  assert.equal(manifest.version, LOCAL_VERSION);
   assert.equal(typeof manifest.description, "string");
   assert.ok(manifest.description.length > 0);
   assert.equal(manifest.homepage, "https://agents.samedaydesk.com/");
@@ -286,16 +290,16 @@ test("package files stay inside the plugin root and omit secrets or 2026-07-28 c
   assert.equal(statSync(join(PLUGIN_ROOT, "skills")).isDirectory(), true);
 });
 
-test("unpaid initialize-era initialize and tools/list return 22 live tools", async () => {
+liveTest("unpaid initialize-era initialize and tools/list return 22 live tools", async () => {
   const initialize = await postRpc("initialize", {
     protocolVersion: "2025-11-25",
     capabilities: {},
-    clientInfo: { name: "samedaydesk-x402-plugin-test", version: LIVE_VERSION },
+    clientInfo: { name: "samedaydesk-x402-plugin-test", version: EXPECTED_LIVE_VERSION },
   }, 1);
   const result = initialize.payload.result;
   assert.equal(result.protocolVersion, "2025-11-25");
   assert.equal(result.serverInfo.name, "x402-data-gateway");
-  assert.equal(result.serverInfo.version, LIVE_VERSION);
+  assert.equal(result.serverInfo.version, EXPECTED_LIVE_VERSION);
   assert.notEqual(result.protocolVersion, "2026-07-28");
 
   const listed = await postRpc("tools/list", {}, 2);
