@@ -14,6 +14,7 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@cfworker/json-schema": "4.1.1",
     "@circle-fin/x402-batching": "3.3.0",
     "@coinbase/x402": "2.1.0",
     "@modelcontextprotocol/sdk": "1.30.0",

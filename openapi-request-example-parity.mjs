@@ -23,6 +23,25 @@
  *   keys/values, embedded credential material) are rejected; ordinary public
  *   URLs stay valid.
  *
+ * Amendment 2 (request-example parity):
+ * - `@cfworker/json-schema` is declared as an exact direct production
+ *   dependency so a packed fresh consumer resolves every runtime import.
+ * - Expected paid-surface counts are derived from the actually enabled mounted
+ *   surfaces (AgentCash mounts its canonical routes plus the optional Circle
+ *   gateway alias only when the gateway is enabled), never an unconditional
+ *   default total, so `CIRCLE_GATEWAY_ENABLED=false` boots again.
+ * - Required machine-facing GET inputs with a missing schema or the JSON
+ *   Schema boolean schema `false` fail closed before listen; absence is never
+ *   turned into an empty valid example. Boolean `true` accepts every instance.
+ * - The supported keyword table is a bounded safe subset of JSON Schema
+ *   2020-12 that the locked validator actually evaluates. Obsolete
+ *   `additionalItems` is not part of 2020-12 assertion semantics and fails
+ *   closed instead of being silently applied to tuple schemas.
+ * - URL/example privacy inspection uses a bounded repeated-decode policy over
+ *   userinfo, host, path, query keys/values, and nested object values;
+ *   malformed percent encodings produce controlled findings instead of an
+ *   unclassified thrown URIError.
+ *
  * Single source of truth: examples are taken exclusively from
  * `getDiscoveryRequestContract` through the injected resolver. This module
  * never authors or stores a second example table.
@@ -101,6 +120,23 @@ export const EXPECTED_PAID_METHOD_ROUTE_COUNTS = Object.freeze({
   mpp: 24,
 });
 
+// Expected surface counts derived from the actually enabled mounted surfaces,
+// never the unconditional default total: AgentCash mounts its 24 canonical
+// method-routes plus the optional Circle gateway GET alias exactly when the
+// gateway is enabled; MPP always mounts 24.
+export const EXPECTED_ENABLED_SURFACE_COUNTS = Object.freeze({
+  agentcashCircleEnabled: 25,
+  agentcashCircleDisabled: 24,
+  mpp: 24,
+});
+
+function expectedEnabledSurfaceCount(profile, circleGatewayEnabled) {
+  if (profile === "mpp") return EXPECTED_ENABLED_SURFACE_COUNTS.mpp;
+  return circleGatewayEnabled
+    ? EXPECTED_ENABLED_SURFACE_COUNTS.agentcashCircleEnabled
+    : EXPECTED_ENABLED_SURFACE_COUNTS.agentcashCircleDisabled;
+}
+
 export function expectedPaidMethodRoutes({ profile, circleGatewayEnabled = false } = {}) {
   const routes = [
     ...CANONICAL_PAID_GET_ROUTES.map((route) => `GET ${route}`),
@@ -118,16 +154,20 @@ const ACCEPTED_SCHEMA_DIALECTS = new Set([
   "https://spec.openapis.org/oas/3.1/dialect/base",
 ]);
 
-// Assertion and applicator keywords the locked 2020-12 validator evaluates.
-// Anything outside this set (or the annotation set below) fails closed
-// instead of being silently ignored.
+// Bounded safe subset: assertion and applicator keywords the locked 2020-12
+// validator actually evaluates, plus the annotation set below. This is the
+// explicitly identified smaller projection subset; anything outside it fails
+// closed instead of being silently ignored. `additionalItems` is deliberately
+// absent: it is obsolete in JSON Schema 2020-12 and the validator does not
+// apply it to a `prefixItems`-only tuple, so honoring it here would claim
+// semantics the code does not implement.
 const SUPPORTED_SCHEMA_KEYWORDS = new Set([
   "$schema", "$ref", "$defs", "definitions",
   "type", "enum", "const",
   "multipleOf", "maximum", "exclusiveMaximum", "minimum", "exclusiveMinimum",
   "maxLength", "minLength", "pattern", "format",
   "maxItems", "minItems", "uniqueItems", "contains", "maxContains", "minContains",
-  "items", "prefixItems", "additionalItems",
+  "items", "prefixItems",
   "maxProperties", "minProperties", "required", "properties", "patternProperties",
   "additionalProperties", "propertyNames", "dependentRequired", "dependentSchemas",
   "if", "then", "else", "allOf", "anyOf", "oneOf", "not",
@@ -144,7 +184,7 @@ const SUBSCHEMA_MAP_KEYWORDS = new Set(["properties", "patternProperties", "$def
 const SUBSCHEMA_ARRAY_KEYWORDS = new Set(["allOf", "anyOf", "oneOf", "prefixItems"]);
 const SUBSCHEMA_KEYWORDS = new Set([
   "items", "additionalProperties", "unevaluatedItems", "unevaluatedProperties",
-  "contains", "propertyNames", "not", "if", "then", "else", "additionalItems",
+  "contains", "propertyNames", "not", "if", "then", "else",
 ]);
 
 function isPlainObject(value) {
@@ -230,15 +270,75 @@ export function isCredentialLikeValue(value) {
   return CREDENTIAL_VALUE_PATTERNS.some((pattern) => pattern.test(value));
 }
 
+function isCredentialLikeValueAfterDecode(value) {
+  if (typeof value !== "string") return isCredentialLikeValue(value);
+  return boundedDecodedVariants(value).variants.some((variant) => isCredentialLikeValue(variant));
+}
+
 export function hasUnresolvedTemplate(value) {
   return typeof value === "string" && UNRESOLVED_TEMPLATE.test(value);
+}
+
+// Bounded decode policy: inspect the raw value plus at most two further
+// percent-decoded stages (direct, once-encoded, twice-encoded). Deeper
+// nesting is not a URL transport reality, and unbounded decoding is itself a
+// DoS channel.
+const MAX_URL_DECODE_PASSES = 2;
+const MALFORMED_PERCENT_ENCODING = /%(?![0-9A-Fa-f]{2})/;
+
+/**
+ * Bounded repeated-decode policy. Returns every inspected stage plus whether a
+ * malformed percent encoding was encountered. Malformed encodings are a
+ * controlled result, never a thrown URIError.
+ */
+function boundedDecodedVariants(raw) {
+  if (typeof raw !== "string") return { variants: [], malformed: false };
+  const variants = [raw];
+  let current = raw;
+  for (let pass = 0; pass < MAX_URL_DECODE_PASSES; pass += 1) {
+    if (MALFORMED_PERCENT_ENCODING.test(current)) {
+      return { variants, malformed: true };
+    }
+    let next;
+    try {
+      next = decodeURIComponent(current);
+    } catch {
+      return { variants, malformed: true };
+    }
+    if (next === current || variants.includes(next)) return { variants, malformed: false };
+    variants.push(next);
+    current = next;
+  }
+  return { variants, malformed: false };
+}
+
+function decodedVariantList(decodedOrVariants) {
+  if (Array.isArray(decodedOrVariants)) return decodedOrVariants;
+  if (Array.isArray(decodedOrVariants?.variants)) return decodedOrVariants.variants;
+  return [];
+}
+
+function credentialLikeVariant(decodedOrVariants) {
+  return decodedVariantList(decodedOrVariants).some((variant) => {
+    const text = String(variant);
+    if (isCredentialLikeValue(text)) return true;
+    return text.split(/[/\\.?&=:@]/).some((segment) => segment.length > 0 && isCredentialLikeValue(segment));
+  });
+}
+
+function sensitiveNameVariant(decodedOrVariants, options) {
+  return decodedVariantList(decodedOrVariants).some((variant) => (
+    isSensitiveExampleName(variant, options) || isCredentialLikeValue(variant)
+  ));
 }
 
 /**
  * Reject credential-bearing URL examples while keeping ordinary public URLs
  * valid: URL userinfo, fragments, sensitive query keys, credential-like query
- * values, nested URL credential channels, and other hidden credential
- * channels are rejected.
+ * values, nested URL credential channels, credential-like host/path material,
+ * and other hidden credential channels are rejected at every bounded decode
+ * stage (direct, once-encoded, twice-encoded). Malformed percent encodings
+ * produce controlled findings instead of throwing.
  */
 export function credentialBearingUrlFindings(value, path = "$") {
   const findings = [];
@@ -250,29 +350,67 @@ export function credentialBearingUrlFindings(value, path = "$") {
     findings.push(`${path}: example looks like a URL but does not parse`);
     return findings;
   }
-  if (url.username || url.password) findings.push(`${path}: URL example embeds userinfo credentials`);
+  const reportMalformed = (channel) => findings.push(`${path}: URL example ${channel} carries malformed percent encoding`);
+
+  const rawValue = boundedDecodedVariants(value.trim());
+  if (rawValue.malformed) reportMalformed("value");
+  else if (credentialLikeVariant(rawValue)) findings.push(`${path}: URL example carries credential-like material`);
+
+  const host = boundedDecodedVariants(url.hostname);
+  if (host.malformed) reportMalformed("host");
+  else if (credentialLikeVariant(host)) findings.push(`${path}: URL example host carries credential-like material`);
+
+  for (const [channel, raw] of [["username", url.username], ["password", url.password]]) {
+    if (!raw) continue;
+    if (channel === "username" && (url.username || url.password)) {
+      findings.push(`${path}: URL example embeds userinfo credentials`);
+    }
+    const decoded = boundedDecodedVariants(raw);
+    if (decoded.malformed) reportMalformed(`userinfo ${channel}`);
+    else if (credentialLikeVariant(decoded)) findings.push(`${path}: URL example userinfo ${channel} is credential-like`);
+  }
+
   if (url.hash) findings.push(`${path}: URL example carries a fragment channel`);
+
+  const urlPath = boundedDecodedVariants(url.pathname);
+  if (urlPath.malformed) reportMalformed("path");
+  else if (credentialLikeVariant(urlPath)) findings.push(`${path}: URL example path carries credential-like material`);
+
+  const search = boundedDecodedVariants(url.search);
+  if (search.malformed) reportMalformed("query");
+  else if (credentialLikeVariant(search)) findings.push(`${path}: URL example query carries credential-like material`);
+
   for (const [key, entry] of url.searchParams.entries()) {
-    if (isSensitiveExampleName(key)) findings.push(`${path}: URL example query key ${key} is credential-like`);
-    if (isCredentialLikeValue(entry)) findings.push(`${path}: URL example query value for ${key} is credential-like`);
-    if (typeof entry === "string" && /^https?:\/\//i.test(entry)) {
+    const keyDecoded = boundedDecodedVariants(key);
+    if (keyDecoded.malformed) reportMalformed(`query key ${key}`);
+    else if (sensitiveNameVariant(keyDecoded)) findings.push(`${path}: URL example query key ${key} is credential-like`);
+    const valueDecoded = boundedDecodedVariants(entry);
+    if (valueDecoded.malformed) {
+      reportMalformed(`query value for ${key}`);
+      continue;
+    }
+    if (credentialLikeVariant(valueDecoded)) findings.push(`${path}: URL example query value for ${key} is credential-like`);
+    for (const variant of decodedVariantList(valueDecoded)) {
+      if (typeof variant !== "string" || !/^https?:\/\//i.test(variant.trim())) continue;
       let nested;
       try {
-        nested = new URL(entry);
+        nested = new URL(variant.trim());
       } catch {
-        nested = null;
+        continue;
       }
-      if (nested?.username || nested?.password) {
+      if (nested.username || nested.password) {
         findings.push(`${path}: URL example query value for ${key} embeds userinfo credentials`);
       }
-      if (nested?.hash) {
+      if (nested.hash) {
         findings.push(`${path}: URL example query value for ${key} carries a fragment channel`);
       }
+      const nestedHost = boundedDecodedVariants(nested.hostname);
+      if (nestedHost.malformed) reportMalformed(`nested URL host under query key ${key}`);
+      else if (credentialLikeVariant(nestedHost)) findings.push(`${path}: URL example query value for ${key} embeds credential-like nested URL host material`);
+      const nestedPath = boundedDecodedVariants(nested.pathname);
+      if (nestedPath.malformed) reportMalformed(`nested URL path under query key ${key}`);
+      else if (credentialLikeVariant(nestedPath)) findings.push(`${path}: URL example query value for ${key} embeds credential-like nested URL path material`);
     }
-  }
-  if (isCredentialLikeValue(url.search)) findings.push(`${path}: URL example query carries credential-like material`);
-  if (isCredentialLikeValue(decodeURIComponent(url.pathname))) {
-    findings.push(`${path}: URL example path carries credential-like material`);
   }
   return findings;
 }
@@ -292,13 +430,20 @@ export function unsafeExampleFindings(value, path = "$") {
   }
   if (!isPlainObject(value)) {
     if (hasUnresolvedTemplate(value)) findings.push(`${path}: unresolved template in example value`);
-    if (isCredentialLikeValue(value)) findings.push(`${path}: credential-like example value`);
+    if (typeof value === "string") {
+      const decoded = boundedDecodedVariants(value);
+      if (decoded.variants.some((variant) => isCredentialLikeValue(variant))) {
+        findings.push(`${path}: credential-like example value`);
+      }
+    } else if (isCredentialLikeValue(value)) {
+      findings.push(`${path}: credential-like example value`);
+    }
     findings.push(...credentialBearingUrlFindings(value, path));
     return findings;
   }
   for (const [name, entry] of Object.entries(value)) {
     if (PROTOTYPE_KEYS.has(name)) findings.push(`${path}.${name}: prototype name in example`);
-    else if (isSensitiveExampleName(name)) findings.push(`${path}.${name}: credential-like example key`);
+    else if (sensitiveNameVariant(boundedDecodedVariants(name))) findings.push(`${path}.${name}: credential-like example key`);
     findings.push(...unsafeExampleFindings(entry, `${path}.${name}`));
   }
   return findings;
@@ -338,8 +483,32 @@ function schemaIntegrityFindings(schema, path = "schema") {
  * credential-bearing URLs.
  */
 export function validateExampleAgainstSchema(value, schema, path = "$") {
+  const stringSafety = () => {
+    if (typeof value !== "string") return [];
+    const findings = [];
+    if (isCredentialLikeValueAfterDecode(value)) {
+      findings.push(`${path}: credential-like example value`);
+    }
+    for (const finding of credentialBearingUrlFindings(value)) {
+      findings.push(`${path}: ${finding.slice(finding.indexOf(": ") + 2)}`);
+    }
+    return findings;
+  };
+  // JSON Schema 2020-12 boolean schemas are valid schemas: `true` accepts
+  // every instance and `false` rejects every instance. A missing, null,
+  // array, or otherwise non-schema value is never turned into an empty valid
+  // example — it fails closed.
+  if (schema === undefined || schema === null) {
+    return [...stringSafety(), `${path}: request schema is missing (fail closed)`];
+  }
+  if (schema === false) {
+    return [`${path}: boolean schema false rejects every instance (fail closed)`];
+  }
+  if (schema === true) return stringSafety();
+  if (!isPlainObject(schema)) {
+    return [`${path}: request schema must be a boolean or object (fail closed)`];
+  }
   const errors = [];
-  if (!isPlainObject(schema)) return errors;
   for (const finding of schemaIntegrityFindings(schema)) errors.push(`${path}: ${finding}`);
   for (const finding of unsupportedKeywordFindings(schema)) errors.push(`${path}: ${finding}`);
   if (errors.length) return errors;
@@ -353,11 +522,7 @@ export function validateExampleAgainstSchema(value, schema, path = "$") {
     const at = entry.instanceLocation === "#" ? "" : String(entry.instanceLocation).replace(/^#/, "");
     errors.push(`${path}${at}: ${entry.error}`);
   }
-  if (typeof value === "string") {
-    for (const finding of credentialBearingUrlFindings(value)) {
-      errors.push(`${path}: ${finding.slice(finding.indexOf(": ") + 2)}`);
-    }
-  }
+  errors.push(...stringSafety());
   return errors;
 }
 
@@ -411,7 +576,7 @@ function enforceCanonicalQueryInputSafety(label, schema, name, value) {
   if (hasUnresolvedTemplate(value)) {
     throw new Error(`Discovery contract ${label} carries an unresolved template example for required query input ${name}`);
   }
-  if (isCredentialLikeValue(value)) {
+  if (isCredentialLikeValueAfterDecode(value)) {
     throw new Error(`Discovery contract ${label} carries a credential-like accepted example for required query input ${name}`);
   }
   for (const finding of credentialBearingUrlFindings(value)) {
@@ -561,15 +726,6 @@ function auditPaidOperation(findings, method, route, operation) {
     const parameters = Array.isArray(operation.parameters) ? operation.parameters : [];
     for (const parameter of parameters.filter((entry) => isPlainObject(entry) && entry.in === "query" && entry.required === true)) {
       const name = String(parameter.name);
-      const example = parameterExampleValue(parameter);
-      if (example === undefined) {
-        findings.push(`${label}: required query input ${name} lost its accepted request example`);
-        continue;
-      }
-      if (!isScalarQueryValue(example)) {
-        findings.push(`${label}: required query input ${name} example is not a non-empty scalar`);
-        continue;
-      }
       if (isSensitiveExampleName(name, { allowPublicSolanaSignatureField: exceptionApplies })) {
         findings.push(`${label}: required query input ${name} is credential-like`);
       }
@@ -578,9 +734,16 @@ function auditPaidOperation(findings, method, route, operation) {
           findings.push(`${label}: required query input ${name} must carry the canonical public Solana base58 schema (${PUBLIC_SOLANA_SIGNATURE_QUERY.schemaPattern})`);
         }
       }
-      if (hasUnresolvedTemplate(example)) findings.push(`${label}: required query input ${name} example contains an unresolved template`);
-      if (isCredentialLikeValue(example)) findings.push(`${label}: required query input ${name} example is credential-like`);
-      for (const finding of credentialBearingUrlFindings(example)) findings.push(`${label}: required query input ${name} ${finding.slice(finding.indexOf(": ") + 2)}`);
+      const example = parameterExampleValue(parameter);
+      if (example === undefined) {
+        findings.push(`${label}: required query input ${name} lost its accepted request example`);
+      } else if (!isScalarQueryValue(example)) {
+        findings.push(`${label}: required query input ${name} example is not a non-empty scalar`);
+      } else {
+        if (hasUnresolvedTemplate(example)) findings.push(`${label}: required query input ${name} example contains an unresolved template`);
+        if (isCredentialLikeValueAfterDecode(example)) findings.push(`${label}: required query input ${name} example is credential-like`);
+        for (const finding of credentialBearingUrlFindings(example)) findings.push(`${label}: required query input ${name} ${finding.slice(finding.indexOf(": ") + 2)}`);
+      }
       for (const error of validateExampleAgainstSchema(example, parameter.schema, `$.${name}`)) {
         findings.push(`${label}: required query input ${name}: ${error}`);
       }
@@ -667,10 +830,12 @@ export function collectOpenApiRequestExampleFindings({ document, actions, expect
 /**
  * Strict post-discovery-registration, pre-listen generation gate. Both public
  * documents are regenerated after every discovery contract is declared and
- * audited against the exact paid inventories (25 AgentCash and 24 MPP
- * method-routes). Any missing, renamed, or drifted canonical request contract
- * — any lost request example, lost formal success schema, unsafe example, or
- * inventory drift — fails startup instead of serving a drifted document.
+ * audited against the exact paid inventories derived from the actually
+ * enabled mounted surfaces (25 AgentCash method-routes with the Circle
+ * gateway enabled, 24 with it disabled; 24 MPP). Any missing, renamed, or
+ * drifted canonical request contract — any lost request example, lost formal
+ * success schema, unsafe example, or inventory drift — fails startup instead
+ * of serving a drifted document.
  */
 export function assertGeneratedOpenApiSurfaceGate({ documents, circleGatewayEnabled = false, resolveRequestContract } = {}) {
   if (!isPlainObject(documents)) throw new Error("generated OpenAPI documents are required");
@@ -683,8 +848,11 @@ export function assertGeneratedOpenApiSurfaceGate({ documents, circleGatewayEnab
       continue;
     }
     const expected = expectedPaidMethodRoutes({ profile, circleGatewayEnabled });
-    if (expected.length !== EXPECTED_PAID_METHOD_ROUTE_COUNTS[profile]) {
-      problems.push(`${profile}: canonical expected inventory is ${EXPECTED_PAID_METHOD_ROUTE_COUNTS[profile]} method-routes but resolved to ${expected.length}`);
+    // The expected count comes from the same enabled profile that mounted the
+    // surfaces, never the unconditional default total.
+    const expectedCount = expectedEnabledSurfaceCount(profile, circleGatewayEnabled);
+    if (expected.length !== expectedCount) {
+      problems.push(`${profile}: canonical expected inventory is ${expectedCount} method-routes but resolved to ${expected.length}`);
     }
     for (const label of expected) {
       if (!resolveCanonicalRequestContract(label, resolveRequestContract)) {
@@ -700,7 +868,8 @@ export function assertGeneratedOpenApiSurfaceGate({ documents, circleGatewayEnab
   }
   return {
     ok: true,
-    agentcash: EXPECTED_PAID_METHOD_ROUTE_COUNTS.agentcash,
-    mpp: EXPECTED_PAID_METHOD_ROUTE_COUNTS.mpp,
+    circleGatewayEnabled,
+    agentcash: expectedEnabledSurfaceCount("agentcash", circleGatewayEnabled),
+    mpp: expectedEnabledSurfaceCount("mpp", circleGatewayEnabled),
   };
 }

@@ -8,6 +8,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
+  EXPECTED_ENABLED_SURFACE_COUNTS,
   EXPECTED_PAID_METHOD_ROUTE_COUNTS,
   PUBLIC_SOLANA_SIGNATURE_QUERY,
   REQUEST_CONTRACT_ALIASES,
@@ -126,6 +127,96 @@ test("rejects credential-bearing URLs and keeps ordinary public URLs valid", () 
   assert.ok(credentialBearingUrlFindings("https://example.com/page?authorization=Bearer%20zzz").some((f) => f.includes("authorization")));
   assert.ok(credentialBearingUrlFindings("https://example.com/page?session=abc123").some((f) => f.includes("session")));
   assert.ok(credentialBearingUrlFindings("https://example.com/extract?url=https://user:pass@evil.example/").some((f) => f.includes("userinfo")));
+});
+
+const SECRET_MATERIAL_RE = /plain-secret-material|user:pass|sk-live-abc123|Bearer zzz/i;
+
+function assertFindingsFailClosedWithoutSecrets(findings, { mustInclude, mustNotThrowLabel }) {
+  assert.ok(Array.isArray(findings), `${mustNotThrowLabel} must return findings, not throw`);
+  assert.ok(findings.length > 0, `${mustNotThrowLabel} must fail closed`);
+  assert.ok(mustInclude.some((needle) => findings.some((finding) => finding.includes(needle))), `${mustNotThrowLabel} findings ${JSON.stringify(findings)}`);
+  assert.equal(SECRET_MATERIAL_RE.test(findings.join("\n")), false, `${mustNotThrowLabel} leaked secret material: ${JSON.stringify(findings)}`);
+}
+
+test("bounded multi-decode URL privacy fails closed without URIError or secret leakage", () => {
+  const probes = [
+    {
+      label: "twice-encoded sensitive query key",
+      value: "https://example.com/?%2574oken=plain-secret-material",
+      needles: ["query key", "credential-like"],
+    },
+    {
+      label: "twice-encoded nested userinfo URL",
+      value: "https://example.com/?next=https%253A%252F%252Fu%253Ap%2540evil.example%252F",
+      needles: ["userinfo"],
+    },
+    {
+      label: "twice-encoded credential-like path",
+      value: "https://example.com/%2573k-live-abc123",
+      needles: ["credential-like"],
+    },
+    {
+      label: "once-encoded credential-like path",
+      value: "https://example.com/%73k-live-abc123",
+      needles: ["credential-like"],
+    },
+    {
+      label: "credential-like host label",
+      value: "https://sk-live-abc123.example.com/page",
+      needles: ["host"],
+    },
+    {
+      label: "malformed percent encoding",
+      value: "https://example.com/%ZZ",
+      needles: ["malformed percent encoding"],
+    },
+    {
+      label: "truncated percent encoding",
+      value: "https://example.com/%2",
+      needles: ["malformed percent encoding"],
+    },
+    {
+      label: "invalid UTF-8 percent sequence",
+      value: "https://example.com/%80",
+      needles: ["malformed percent encoding"],
+    },
+  ];
+  for (const probe of probes) {
+    let findings;
+    try {
+      findings = credentialBearingUrlFindings(probe.value);
+    } catch (error) {
+      assert.notEqual(error?.name, "URIError", `${probe.label} threw URIError`);
+      throw error;
+    }
+    assertFindingsFailClosedWithoutSecrets(findings, { mustInclude: probe.needles, mustNotThrowLabel: probe.label });
+  }
+  assert.deepEqual(credentialBearingUrlFindings("https://example.com/extract?url=https%3A%2F%2Fexample.com"), []);
+  assert.deepEqual(credentialBearingUrlFindings("https://example.com/page"), []);
+});
+
+test("nested object example values fail closed on encoded secrets and encoded URLs", () => {
+  assertFindingsFailClosedWithoutSecrets(
+    unsafeExampleFindings({ nested: { target: "https://example.com/?%2574oken=plain-secret-material" } }),
+    { mustInclude: ["query key", "credential-like"], mustNotThrowLabel: "nested twice-encoded query key" },
+  );
+  assertFindingsFailClosedWithoutSecrets(
+    unsafeExampleFindings({ nested: { next: "https://example.com/?next=https%253A%252F%252Fu%253Ap%2540evil.example%252F" } }),
+    { mustInclude: ["userinfo"], mustNotThrowLabel: "nested twice-encoded userinfo" },
+  );
+  assertFindingsFailClosedWithoutSecrets(
+    unsafeExampleFindings({ header: "%73k-live-abc123" }),
+    { mustInclude: ["credential-like example value"], mustNotThrowLabel: "once-encoded nested secret value" },
+  );
+  assertFindingsFailClosedWithoutSecrets(
+    unsafeExampleFindings({ header: "%2573k-live-abc123" }),
+    { mustInclude: ["credential-like example value"], mustNotThrowLabel: "twice-encoded nested secret value" },
+  );
+  assertFindingsFailClosedWithoutSecrets(
+    unsafeExampleFindings({ "%2574oken": "public" }),
+    { mustInclude: ["credential-like example key"], mustNotThrowLabel: "twice-encoded nested secret key" },
+  );
+  assert.deepEqual(unsafeExampleFindings({ ok: true, url: "https://example.com" }), []);
 });
 
 test("walks example trees for credential-like keys, prototype names, templates, and URLs", () => {
@@ -255,6 +346,55 @@ test("validates examples with the standards-complete 2020-12 validator, fail-clo
   assert.ok(validateExampleAgainstSchema("x", { properties: { deep: { $ref: "http://x.example/y" } } }).some((e) => e.includes("non-local $ref")));
   assert.ok(validateExampleAgainstSchema("x", { $dynamicRef: "#foo" }).some((e) => e.includes("fail closed")));
   assert.ok(validateExampleAgainstSchema("x", { contentSchema: { type: "object" } }).some((e) => e.includes("unsupported schema keyword")));
+});
+
+test("required GET missing and boolean-false request schemas fail closed before listen", () => {
+  assert.ok(validateExampleAgainstSchema("x", false).some((error) => error.includes("boolean schema false")));
+  assert.ok(validateExampleAgainstSchema("x", undefined).some((error) => error.includes("request schema is missing")));
+  assert.ok(validateExampleAgainstSchema("x", null).some((error) => error.includes("request schema is missing")));
+  assert.ok(validateExampleAgainstSchema("x", []).some((error) => error.includes("must be a boolean or object")));
+  assert.deepEqual(validateExampleAgainstSchema("x", true), []);
+  assert.ok(validateExampleAgainstSchema("https://u:p@example.com", true).some((error) => error.includes("userinfo")));
+
+  const falseDocument = { paths: {
+    "/q": paidGetOperation([{ name: "q", in: "query", required: true, schema: false, example: "x" }]),
+  } };
+  const missingDocument = { paths: {
+    "/q": paidGetOperation([{ name: "q", in: "query", required: true, example: "x" }]),
+  } };
+  assert.ok(collectOpenApiRequestExampleFindings({ document: falseDocument })
+    .some((finding) => finding.includes("boolean schema false")));
+  assert.ok(collectOpenApiRequestExampleFindings({ document: missingDocument })
+    .some((finding) => finding.includes("request schema is missing")));
+
+  assert.throws(() => applyDiscoveryRequestExamples({
+    paths: { "/extract": paidGetOperation([{ name: "url", in: "query", required: true, schema: false }]) },
+  }, () => structuredClone(EXTRACT_CONTRACT)), /boolean schema false/);
+  assert.throws(() => applyDiscoveryRequestExamples({
+    paths: { "/extract": paidGetOperation([{ name: "url", in: "query", required: true }]) },
+  }, () => structuredClone(EXTRACT_CONTRACT)), /request schema is missing/);
+});
+
+test("2020-12 tuple projection fails closed on obsolete additionalItems and honors unevaluatedItems", () => {
+  const obsolete = { type: "array", prefixItems: [{ type: "number" }], additionalItems: false };
+  const findings = validateExampleAgainstSchema([1, "escape"], obsolete);
+  assert.ok(findings.some((error) => error.includes("additionalItems")), findings);
+  assert.ok(findings.some((error) => error.includes("unsupported schema keyword")), findings);
+  assert.ok(
+    validateExampleAgainstSchema([1, "escape"], {
+      type: "array",
+      prefixItems: [{ type: "number" }],
+      unevaluatedItems: false,
+    }).length > 0,
+  );
+  assert.deepEqual(
+    validateExampleAgainstSchema([1], {
+      type: "array",
+      prefixItems: [{ type: "number" }],
+      unevaluatedItems: false,
+    }),
+    [],
+  );
 });
 
 function paidGetOperation(parameters) {
@@ -486,9 +626,13 @@ test("startup generation gate fails closed on inventory drift and missing contra
   }), /missing canonical request contract|paid inventory drift/);
   assert.equal(EXPECTED_PAID_METHOD_ROUTE_COUNTS.agentcash, 25);
   assert.equal(EXPECTED_PAID_METHOD_ROUTE_COUNTS.mpp, 24);
-  assert.equal(expectedPaidMethodRoutes({ profile: "agentcash", circleGatewayEnabled: true }).length, 25);
-  assert.equal(expectedPaidMethodRoutes({ profile: "agentcash", circleGatewayEnabled: false }).length, 24);
-  assert.equal(expectedPaidMethodRoutes({ profile: "mpp", circleGatewayEnabled: true }).length, 24);
+  assert.equal(EXPECTED_ENABLED_SURFACE_COUNTS.agentcashCircleEnabled, 25);
+  assert.equal(EXPECTED_ENABLED_SURFACE_COUNTS.agentcashCircleDisabled, 24);
+  assert.equal(EXPECTED_ENABLED_SURFACE_COUNTS.mpp, 24);
+  assert.equal(expectedPaidMethodRoutes({ profile: "agentcash", circleGatewayEnabled: true }).length, EXPECTED_ENABLED_SURFACE_COUNTS.agentcashCircleEnabled);
+  assert.equal(expectedPaidMethodRoutes({ profile: "agentcash", circleGatewayEnabled: false }).length, EXPECTED_ENABLED_SURFACE_COUNTS.agentcashCircleDisabled);
+  assert.equal(expectedPaidMethodRoutes({ profile: "mpp", circleGatewayEnabled: true }).length, EXPECTED_ENABLED_SURFACE_COUNTS.mpp);
+  assert.equal(expectedPaidMethodRoutes({ profile: "mpp", circleGatewayEnabled: false }).length, EXPECTED_ENABLED_SURFACE_COUNTS.mpp);
 });
 
 function paidMethodRoutesOf(document) {
@@ -501,7 +645,7 @@ function paidMethodRoutesOf(document) {
   return routes.sort();
 }
 
-async function bootServer(t) {
+async function bootServer(t, extraEnv = {}) {
   const dataDir = await mkdtemp(path.join(tmpdir(), "samedaydesk-openapi-parity-"));
   const port = await unusedPort();
   const child = spawn(process.execPath, ["server.js"], {
@@ -513,6 +657,7 @@ async function bootServer(t) {
       COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
       MPP_SECRET_KEY: "",
       PUBLIC_URL: "https://agents.samedaydesk.com",
+      ...extraEnv,
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -596,7 +741,12 @@ test("live generated surface: exact 25/24 paid inventories, full parity, zero fi
   assert.ok(valuesCanonicallyEqual(parameterExampleValue(aliasParameter), parameterExampleValue(canonicalParameter)));
 });
 
-test("no-wallet loopback canary constructs all 25 AgentCash paid method-routes from generated examples and receives 402 with zero credentials or effects", { timeout: 90_000 }, async (t) => {
+test("credential-free unpaid 402 constructibility canary: all 25 AgentCash paid method-routes construct from generated examples and receive HTTP 402", { timeout: 90_000 }, async (t) => {
+  // Transport canary only: constructibility from generated examples, no
+  // credential/payment headers, HTTP 402, no top-level success envelope, no
+  // reported charge, and no Set-Cookie. This is not proof that a business
+  // handler, outbound request, persistent mutation, or other application
+  // effect did not run before the 402.
   const base = await bootServer(t);
   const document = await readJson(base, "/openapi.json");
   const routes = paidMethodRoutesOf(document);
@@ -645,8 +795,8 @@ test("no-wallet loopback canary constructs all 25 AgentCash paid method-routes f
     assert.match(challengeMaterial, /accepts|offers|payment|x402/i, `${route}: 402 carries no payment challenge`);
     // Application success is a 200 envelope (`ok: true` plus a product decision).
     // A 402 challenge may advertise those strings inside output-schema examples
-    // or carry the offer only in PAYMENT-REQUIRED; only the top-level unpaid
-    // envelope is the effect boundary.
+    // or carry the offer only in PAYMENT-REQUIRED. These assertions cover the
+    // unpaid transport envelope only; they do not prove handler non-execution.
     assert.notEqual(body.ok, true, `${route}: unpaid request produced application success output`);
     assert.equal(body.decision, undefined, `${route}: unpaid request produced an application decision`);
     assert.ok(!response.headers.get("set-cookie"), `${route}: unpaid challenge tried to set credential state`);
@@ -655,4 +805,28 @@ test("no-wallet loopback canary constructs all 25 AgentCash paid method-routes f
   }
   assert.equal(outcomes.length, 25);
   assert.equal(outcomes.filter((entry) => entry.status === 402).length, 25);
+});
+
+test("CIRCLE_GATEWAY_ENABLED=false boots and derives 24/24 inventories from enabled mounted surfaces", { timeout: 90_000 }, async (t) => {
+  const base = await bootServer(t, { CIRCLE_GATEWAY_ENABLED: "false" });
+  const catalog = await readJson(base, "/api/actions");
+  assert.equal(catalog.actions.length, 22);
+
+  for (const [profile, route, expectedCount] of [
+    ["agentcash", "/openapi.json", EXPECTED_ENABLED_SURFACE_COUNTS.agentcashCircleDisabled],
+    ["mpp", "/mpp-openapi.json", EXPECTED_ENABLED_SURFACE_COUNTS.mpp],
+  ]) {
+    const document = await readJson(base, route);
+    assert.equal(document.openapi, "3.1.0");
+    assert.equal(document.info.version, "1.23.20");
+    const expectedRoutes = expectedPaidMethodRoutes({ profile, circleGatewayEnabled: false });
+    assert.equal(expectedRoutes.length, expectedCount);
+    assert.deepEqual(paidMethodRoutesOf(document), expectedRoutes);
+    assert.equal(document.paths["/gateway/commerce/payment-offer-preflight"], undefined);
+    assert.deepEqual(collectOpenApiRequestExampleFindings({
+      document,
+      actions: catalog.actions,
+      expectedPaidMethodRoutes: expectedRoutes,
+    }), []);
+  }
 });
