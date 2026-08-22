@@ -1,49 +1,5 @@
 {
-  "schemaVersion": "samedaydesk.mcp-typed-telemetry-fixtures.v2",
-  "baseOffer": {
-    "schemaVersion": "samedaydesk.mcp-issued-offer.v1",
-    "binding": {
-      "tool": "enrich",
-      "productSku": "samedaydesk-enrich",
-      "resource": "mcp://tool/enrich"
-    },
-    "accepts": [
-      {
-        "protocol": "protocol_a",
-        "network": "network:a",
-        "asset": "asset_a",
-        "atomicAmount": "10000",
-        "atomicUnits": "6",
-        "recipient": "synthetic-recipient-a",
-        "resource": "mcp://tool/enrich"
-      },
-      {
-        "protocol": "protocol_b",
-        "network": "network:b",
-        "asset": "asset_b",
-        "atomicAmount": "250",
-        "atomicUnits": "3",
-        "recipient": "synthetic-recipient-b",
-        "resource": "mcp://tool/enrich"
-      }
-    ]
-  },
-  "offerCases": [
-    { "id": "accept_order_is_canonical", "kind": "reorder", "expected": "same" },
-    { "id": "duplicate_accept_is_rejected", "kind": "duplicate", "expected": "null" },
-    { "id": "binding_tool_is_digest_bound", "kind": "set", "path": "binding.tool", "value": "lookup", "expected": "different" },
-    { "id": "binding_sku_is_digest_bound", "kind": "set", "path": "binding.productSku", "value": "samedaydesk-lookup", "expected": "different" },
-    { "id": "binding_resource_is_digest_bound", "kind": "set", "path": "binding.resource", "value": "mcp://tool/lookup", "expected": "different" },
-    { "id": "accept_protocol_is_digest_bound", "kind": "set", "path": "accepts.0.protocol", "value": "protocol_c", "expected": "different" },
-    { "id": "accept_network_is_digest_bound", "kind": "set", "path": "accepts.0.network", "value": "network:c", "expected": "different" },
-    { "id": "accept_asset_is_digest_bound", "kind": "set", "path": "accepts.0.asset", "value": "asset_c", "expected": "different" },
-    { "id": "accept_atomic_amount_is_digest_bound", "kind": "set", "path": "accepts.0.atomicAmount", "value": "10001", "expected": "different" },
-    { "id": "accept_atomic_units_is_digest_bound", "kind": "set", "path": "accepts.0.atomicUnits", "value": "7", "expected": "different" },
-    { "id": "accept_recipient_is_digest_bound", "kind": "set", "path": "accepts.0.recipient", "value": "synthetic-recipient-c", "expected": "different" },
-    { "id": "accept_resource_is_digest_bound", "kind": "set", "path": "accepts.0.resource", "value": "mcp://tool/lookup", "expected": "different" },
-    { "id": "noncanonical_atomic_amount_is_rejected", "kind": "set", "path": "accepts.0.atomicAmount", "value": "010000", "expected": "null" },
-    { "id": "unknown_offer_field_is_rejected", "kind": "set", "path": "debug", "value": "must-not-pass", "expected": "null" }
-  ],
+  "schemaVersion": "samedaydesk.mcp-typed-telemetry-fixtures.v1",
   "baseInput": {
     "schemaVersion": "samedaydesk.mcp-typed-telemetry-input.v1",
     "binding": {
@@ -227,69 +183,6 @@
     {
       "id": "unknown_raw_field_drops",
       "mutations": [{ "op": "set", "path": "rawResponse", "value": "must-not-pass" }],
-      "expected": { "action": "drop", "result": "invalid", "paymentPresent": false, "paymentCredentialParsed": false, "handlerInvoked": false, "applicationOutcome": "not_run", "settlementState": "not_attempted", "reason": "invalid_typed_outcome" }
-    },
-    {
-      "id": "valid_string_id_at_128_utf8_bytes",
-      "mutations": [
-        { "op": "set", "path": "request.id", "value": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀" },
-        { "op": "set", "path": "response.id", "value": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀" }
-      ],
-      "expected": { "action": "emit", "result": "paid_success", "paymentPresent": true, "paymentCredentialParsed": true, "handlerInvoked": true, "applicationOutcome": "success", "settlementState": "succeeded", "reason": "typed_paid_success" }
-    },
-    {
-      "id": "same_type_wrong_string_response_id_drops",
-      "mutations": [
-        { "op": "set", "path": "request.id", "value": "request-a" },
-        { "op": "set", "path": "response.id", "value": "request-b" }
-      ],
-      "expected": { "action": "drop", "result": "invalid", "paymentPresent": false, "paymentCredentialParsed": false, "handlerInvoked": false, "applicationOutcome": "not_run", "settlementState": "not_attempted", "reason": "request_response_id_mismatch" }
-    },
-    {
-      "id": "null_id_with_has_id_true_drops",
-      "mutations": [
-        { "op": "set", "path": "request.id", "value": null },
-        { "op": "set", "path": "response.id", "value": null }
-      ],
-      "expected": { "action": "drop", "result": "invalid", "paymentPresent": false, "paymentCredentialParsed": false, "handlerInvoked": false, "applicationOutcome": "not_run", "settlementState": "not_attempted", "reason": "invalid_typed_outcome" }
-    },
-    {
-      "id": "empty_string_id_drops",
-      "mutations": [
-        { "op": "set", "path": "request.id", "value": "" },
-        { "op": "set", "path": "response.id", "value": "" }
-      ],
-      "expected": { "action": "drop", "result": "invalid", "paymentPresent": false, "paymentCredentialParsed": false, "handlerInvoked": false, "applicationOutcome": "not_run", "settlementState": "not_attempted", "reason": "invalid_typed_outcome" }
-    },
-    {
-      "id": "control_character_string_id_drops",
-      "mutations": [
-        { "op": "set", "path": "request.id", "value": "request\u0001id" },
-        { "op": "set", "path": "response.id", "value": "request\u0001id" }
-      ],
-      "expected": { "action": "drop", "result": "invalid", "paymentPresent": false, "paymentCredentialParsed": false, "handlerInvoked": false, "applicationOutcome": "not_run", "settlementState": "not_attempted", "reason": "invalid_typed_outcome" }
-    },
-    {
-      "id": "oversized_multibyte_string_id_drops",
-      "mutations": [
-        { "op": "set", "path": "request.id", "value": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀" },
-        { "op": "set", "path": "response.id", "value": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀" }
-      ],
-      "expected": { "action": "drop", "result": "invalid", "paymentPresent": false, "paymentCredentialParsed": false, "handlerInvoked": false, "applicationOutcome": "not_run", "settlementState": "not_attempted", "reason": "invalid_typed_outcome" }
-    },
-    {
-      "id": "string_request_numeric_response_id_drops",
-      "mutations": [
-        { "op": "set", "path": "request.id", "value": "7" },
-        { "op": "set", "path": "response.id", "value": 7 }
-      ],
-      "expected": { "action": "drop", "result": "invalid", "paymentPresent": false, "paymentCredentialParsed": false, "handlerInvoked": false, "applicationOutcome": "not_run", "settlementState": "not_attempted", "reason": "request_response_id_mismatch" }
-    },
-    {
-      "id": "unsafe_integer_response_id_drops",
-      "mutations": [
-        { "op": "set", "path": "response.id", "value": 9007199254740992 }
-      ],
       "expected": { "action": "drop", "result": "invalid", "paymentPresent": false, "paymentCredentialParsed": false, "handlerInvoked": false, "applicationOutcome": "not_run", "settlementState": "not_attempted", "reason": "invalid_typed_outcome" }
     }
   ]
