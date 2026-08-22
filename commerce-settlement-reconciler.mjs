@@ -1,11 +1,12 @@
-import { createHash, createHmac } from "node:crypto";
+import { createHash, createHmac, randomBytes } from "node:crypto";
+import { constants as fsConstants } from "node:fs";
 import {
   appendFile,
   chmod,
   mkdir,
   open as fsOpen,
   readFile,
-  stat as fsStat,
+  lstat as fsLstat,
 } from "node:fs/promises";
 import path from "node:path";
 
@@ -289,25 +290,27 @@ function issueCounts(issues) {
 // Settlement-plane stable cut (T4a settlement-only lane).
 //
 // Offline candidate: one coherent capture of the settlement ledger plane. A
-// capture binds, in a single generation: the ledger's regular-file identity
-// (dev/ino/mode), an exact byte cut taken through one file descriptor between
-// two fstat calls, its sha256 digest, enabled state, integrity evidence,
-// baseline, the in-memory run generation (lastRunAt / lastError / last issue
-// counts) captured atomically by reference, and the summary derived only from
-// those exact bytes plus its digest. Lifecycle is exactly
+// capture binds, in a single observation: the ledger descriptor identity, an
+// exact byte cut taken through one no-follow nonblocking descriptor between
+// two fstat generations (dev/ino/mode/size plus nanosecond mtime/ctime), its
+// sha256 digest, enabled state, integrity evidence, baseline, the in-memory
+// run generation captured before and after the cut, and the parent ledger
+// summary of those exact bytes. Lifecycle is exactly
 // never_run | running | ok | restart_pending | unstable | corrupt.
 //
-// Guarantees: no mixing of bytes/totals/lifecycle across generations; bounded
-// retry on torn cuts then an explicit `unstable` with null byte facts and no
-// summary (never fabricated health or zero); unrecognized and false-economic
-// rows are visible issue evidence and never revenue; money stays canonical
-// atomic-unit strings with bounded BigInt conversion — no float coercion.
+// Guarantees: no mixing of bytes/totals/lifecycle across run generations;
+// bounded retry on torn cuts then an explicit `unstable` with null byte facts
+// and no summary (never fabricated health or zero); descriptor acquisition
+// never follows symlinks or blocks on FIFO/device replacements; money is the
+// parent `summarizeCommerceSettlementLedger` authority on the captured bytes.
 
 export const SETTLEMENT_PLANE_CAPTURE_SCHEMA = "samedaydesk.commerce-settlement-plane-capture.v1";
 const SETTLEMENT_SUMMARY_SCHEMA = "samedaydesk.commerce-settlement-summary.v1";
 const ISO_UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u;
-const CANONICAL_ATOMIC_AMOUNT = /^[1-9][0-9]{0,77}$/u;
 const DIGIT_AMOUNT = /^\d+$/u;
+const PRODUCTION_MAX_CUT_BYTES = 8 * 1024 * 1024;
+const PRODUCTION_MAX_ATTEMPTS = 8;
+const PRODUCTION_MAX_RETRY_DELAY_MS = 1_000;
 
 export const SETTLEMENT_PLANE_LIFECYCLE_STATES = Object.freeze(new Set([
   "never_run",
@@ -318,17 +321,22 @@ export const SETTLEMENT_PLANE_LIFECYCLE_STATES = Object.freeze(new Set([
   "corrupt",
 ]));
 
-// Fixed capture bounds; injectable through `limits` for tests only.
+// Fixed capture bounds. Callers may lower maxCutBytes/attempts/delay; they
+// cannot raise them past these production maxima.
 export const DEFAULT_CUT_LIMITS = Object.freeze({
-  maxCutBytes: 8 * 1024 * 1024,
+  maxCutBytes: PRODUCTION_MAX_CUT_BYTES,
   attempts: 3,
   retryDelayMs: 25,
 });
 
+export const LEDGER_OPEN_FLAGS = fsConstants.O_RDONLY
+  | fsConstants.O_NONBLOCK
+  | fsConstants.O_NOFOLLOW;
+
 export const DEFAULT_LEDGER_IO = Object.freeze({
-  stat: fsStat,
-  open: fsOpen,
-  fstat: (handle) => handle.stat(),
+  stat: (file) => fsLstat(file, { bigint: true }),
+  open: (file, flags = LEDGER_OPEN_FLAGS) => fsOpen(file, flags),
+  fstat: (handle) => handle.stat({ bigint: true }),
   read: (handle, buffer, offset, length, position) => handle.read(buffer, offset, length, position),
   close: (handle) => handle.close(),
 });
@@ -342,33 +350,135 @@ function sha256Hex(value) {
   return createHash("sha256").update(value).digest("hex");
 }
 
+function ownValue(object, key) {
+  return inspectOwn(object, key).value;
+}
+
+function inspectOwn(object, key) {
+  try {
+    if (object == null || (typeof object !== "object" && typeof object !== "function")) {
+      return { threw: false, value: undefined };
+    }
+    if (!Object.hasOwn(object, key)) return { threw: false, value: undefined };
+    return { threw: false, value: object[key] };
+  } catch {
+    return { threw: true, value: undefined };
+  }
+}
+
+function errorCode(error) {
+  try {
+    const code = ownValue(error, "code");
+    return typeof code === "string" ? code : "";
+  } catch {
+    return "";
+  }
+}
+
+function toFiniteNumber(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "bigint") return Number(value);
+  return value;
+}
+
+function statScalar(value) {
+  if (typeof value === "bigint") return value.toString();
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  if (typeof value === "string" && value.length > 0) return value;
+  return null;
+}
+
+function millisToNs(ms) {
+  if (typeof ms === "bigint") return (ms * 1_000_000n).toString();
+  if (typeof ms === "number" && Number.isFinite(ms)) {
+    const ns = Math.round(ms * 1e6);
+    return Number.isFinite(ns) ? String(ns) : null;
+  }
+  return null;
+}
+
 function identityOf(stat) {
   if (!stat || typeof stat !== "object") return null;
-  return Object.freeze({ dev: stat.dev, ino: stat.ino, mode: stat.mode });
+  return Object.freeze({
+    dev: toFiniteNumber(stat.dev),
+    ino: toFiniteNumber(stat.ino),
+    mode: toFiniteNumber(stat.mode),
+  });
+}
+
+function generationOf(stat) {
+  if (!stat || typeof stat !== "object") return null;
+  return Object.freeze({
+    dev: statScalar(stat.dev),
+    ino: statScalar(stat.ino),
+    mode: statScalar(stat.mode),
+    size: statScalar(stat.size),
+    mtimeNs: statScalar(stat.mtimeNs) ?? millisToNs(stat.mtimeMs),
+    ctimeNs: statScalar(stat.ctimeNs) ?? millisToNs(stat.ctimeMs),
+  });
 }
 
 function sameFileGeneration(left, right) {
-  return Boolean(
-    left
-    && right
-    && left.dev === right.dev
-    && left.ino === right.ino
-    && left.mode === right.mode
-    && left.size === right.size,
-  );
+  if (!left || !right) return false;
+  for (const key of ["dev", "ino", "mode", "size", "mtimeNs", "ctimeNs"]) {
+    if (left[key] == null || right[key] == null || left[key] !== right[key]) return false;
+  }
+  return true;
+}
+
+function isRegularFileStat(stat) {
+  try {
+    if (!stat || typeof stat !== "object") return false;
+    if (typeof stat.isSymbolicLink === "function" && stat.isSymbolicLink()) return false;
+    return typeof stat.isFile === "function" && stat.isFile() === true;
+  } catch {
+    return false;
+  }
+}
+
+function isSymlinkStat(stat) {
+  try {
+    return Boolean(stat && typeof stat.isSymbolicLink === "function" && stat.isSymbolicLink());
+  } catch {
+    return false;
+  }
+}
+
+function safeByteSize(stat) {
+  const size = stat?.size;
+  if (typeof size === "bigint") {
+    if (size < 0n || size > BigInt(Number.MAX_SAFE_INTEGER)) return null;
+    return Number(size);
+  }
+  if (Number.isSafeInteger(size) && size >= 0) return size;
+  return null;
+}
+
+function clampLimit(value, fallback, min, max) {
+  if (!Number.isSafeInteger(value) || value < min) return fallback;
+  return Math.min(value, max);
 }
 
 function normalizeCutLimits(limits) {
   return {
-    maxCutBytes: Number.isSafeInteger(limits?.maxCutBytes) && limits.maxCutBytes > 0
-      ? limits.maxCutBytes
-      : DEFAULT_CUT_LIMITS.maxCutBytes,
-    attempts: Number.isSafeInteger(limits?.attempts) && limits.attempts > 0
-      ? limits.attempts
-      : DEFAULT_CUT_LIMITS.attempts,
-    retryDelayMs: Number.isSafeInteger(limits?.retryDelayMs) && limits.retryDelayMs >= 0
-      ? limits.retryDelayMs
-      : DEFAULT_CUT_LIMITS.retryDelayMs,
+    maxCutBytes: clampLimit(
+      limits?.maxCutBytes,
+      DEFAULT_CUT_LIMITS.maxCutBytes,
+      1,
+      PRODUCTION_MAX_CUT_BYTES,
+    ),
+    attempts: clampLimit(
+      limits?.attempts,
+      DEFAULT_CUT_LIMITS.attempts,
+      1,
+      PRODUCTION_MAX_ATTEMPTS,
+    ),
+    retryDelayMs: clampLimit(
+      limits?.retryDelayMs,
+      DEFAULT_CUT_LIMITS.retryDelayMs,
+      0,
+      PRODUCTION_MAX_RETRY_DELAY_MS,
+    ),
   };
 }
 
@@ -384,24 +494,30 @@ function canonicalIsoTimestampMs(value) {
   }
 }
 
-function canonicalAtomicAmountString(value) {
-  if (typeof value !== "string" || !CANONICAL_ATOMIC_AMOUNT.test(value)) return null;
-  return value;
+function canonicalBaselineIso(value) {
+  try {
+    if (typeof value !== "string" || value.length === 0) return null;
+    const ms = Date.parse(value);
+    if (!Number.isFinite(ms)) return null;
+    return new Date(ms).toISOString();
+  } catch {
+    return null;
+  }
 }
 
-function shortLabel(value, fallback, maxLen) {
-  if (typeof value !== "string") return fallback;
-  if (value.length === 0) return fallback;
-  return value.length > maxLen ? value.slice(0, maxLen) : value;
-}
-
-function addBucket(bucket, key, amount) {
-  addAmount(bucket, key, amount);
+function isNonRegularOpenError(code) {
+  return code === "ELOOP"
+    || code === "EISDIR"
+    || code === "ENOTDIR"
+    || code === "ENXIO"
+    || code === "EAGAIN"
+    || code === "EWOULDBLOCK";
 }
 
 function bytesFromCut(cut) {
-  if (Buffer.isBuffer(cut?.bytes)) return cut.bytes;
-  if (typeof cut?.bytes === "string") return Buffer.from(cut.bytes, "utf8");
+  const value = ownValue(cut, "bytes");
+  if (Buffer.isBuffer(value)) return value;
+  if (typeof value === "string") return Buffer.from(value, "utf8");
   return null;
 }
 
@@ -416,13 +532,16 @@ async function readExactBytes(io, handle, size) {
   return { bytes, byteCount: offset };
 }
 
-// Cut one stable snapshot of the ledger file: stat -> open -> fstat ->
-// sized pread -> fstat -> close. The cut only counts as coherent when the
-// path stat, the pre-read fd stat, and the post-read fd stat agree on
-// identity (dev/ino/mode) and size, and the number of bytes actually read
-// equals that size. Otherwise the attempt is torn; after `limits.attempts`
-// tries the cut is explicitly `unstable`. ENOENT is a plain absent ledger,
-// not instability, and does not fabricate a zero-byte digest.
+// Cut one stable snapshot of the ledger file: no-follow lstat ->
+// O_RDONLY|O_NONBLOCK|O_NOFOLLOW open -> fstat -> sized pread -> fstat ->
+// close. The cut only counts as coherent when the path generation, the
+// pre-read fd generation, and the post-read fd generation agree on
+// identity, size, and nanosecond mtime/ctime, the opened descriptor is a
+// regular file, and the number of bytes actually read equals that size.
+// Otherwise the attempt is torn; after `limits.attempts` tries the cut is
+// explicitly `unstable`. A path that disappears after it was observed is
+// instability, not clean absence. ENOENT on first observation is a plain
+// absent ledger and does not fabricate a zero-byte digest.
 export async function captureStableLedgerCut(ledgerPath, {
   limits = DEFAULT_CUT_LIMITS,
   io = DEFAULT_LEDGER_IO,
@@ -430,49 +549,77 @@ export async function captureStableLedgerCut(ledgerPath, {
 } = {}) {
   const bounds = normalizeCutLimits(limits);
   if (typeof ledgerPath !== "string" || ledgerPath.length === 0) {
-    return { present: false, unstable: true, reason: "ledger_path_invalid", attemptsUsed: 0 };
+    return {
+      present: false,
+      unstable: true,
+      regularFile: false,
+      reason: "ledger_path_invalid",
+      attemptsUsed: 0,
+    };
   }
 
   let lastReason = "torn_cut";
+  let observedPresent = false;
   for (let attempt = 1; attempt <= bounds.attempts; attempt += 1) {
     let beforeStat;
     try {
-      beforeStat = await io.stat(ledgerPath);
+      beforeStat = await io.stat(ledgerPath, { bigint: true });
     } catch (error) {
-      if (error?.code === "ENOENT") {
-        return { present: false, unstable: false, attemptsUsed: attempt };
+      if (errorCode(error) === "ENOENT") {
+        if (observedPresent) {
+          return {
+            present: false,
+            unstable: true,
+            regularFile: false,
+            reason: "ledger_disappeared",
+            attemptsUsed: attempt,
+          };
+        }
+        return { present: false, unstable: false, regularFile: false, attemptsUsed: attempt };
       }
-      return { present: true, unstable: true, reason: "ledger_unreadable", attemptsUsed: attempt };
+      return {
+        present: true,
+        unstable: true,
+        regularFile: false,
+        reason: "ledger_unreadable",
+        attemptsUsed: attempt,
+      };
     }
-    if (typeof beforeStat?.isFile !== "function" || !beforeStat.isFile()) {
+    if (isSymlinkStat(beforeStat) || !isRegularFileStat(beforeStat)) {
       return {
         present: true,
         unstable: true,
         irregular: true,
+        regularFile: false,
         reason: "ledger_not_regular_file",
         identity: identityOf(beforeStat),
         attemptsUsed: attempt,
       };
     }
-    if (!Number.isSafeInteger(beforeStat.size) || beforeStat.size < 0) {
+    const pathSize = safeByteSize(beforeStat);
+    if (pathSize === null) {
       return {
         present: true,
         unstable: true,
+        regularFile: false,
         reason: "ledger_size_unsafe",
         identity: identityOf(beforeStat),
         attemptsUsed: attempt,
       };
     }
-    if (beforeStat.size > bounds.maxCutBytes) {
+    if (pathSize > bounds.maxCutBytes) {
       return {
         present: true,
         unstable: true,
+        regularFile: false,
         reason: "ledger_too_large",
         identity: identityOf(beforeStat),
         attemptsUsed: attempt,
       };
     }
 
+    observedPresent = true;
+    const pathGeneration = generationOf(beforeStat);
     let handle = null;
     let torn = false;
     let reason = "torn_cut";
@@ -480,39 +627,127 @@ export async function captureStableLedgerCut(ledgerPath, {
     let after = null;
     let bytes = null;
     let byteCount = 0;
+    let descriptorProvedRegular = false;
     try {
-      handle = await io.open(ledgerPath, "r");
-      before = await io.fstat(handle);
-      if (!sameFileGeneration(beforeStat, before)) {
+      handle = await io.open(ledgerPath, LEDGER_OPEN_FLAGS);
+      before = await io.fstat(handle, { bigint: true });
+      if (isSymlinkStat(before) || !isRegularFileStat(before)) {
+        return {
+          present: true,
+          unstable: true,
+          irregular: true,
+          regularFile: false,
+          reason: "ledger_not_regular_file",
+          identity: identityOf(before),
+          attemptsUsed: attempt,
+        };
+      }
+      descriptorProvedRegular = true;
+      const fdSize = safeByteSize(before);
+      if (fdSize === null) {
+        return {
+          present: true,
+          unstable: true,
+          regularFile: false,
+          reason: "ledger_size_unsafe",
+          identity: identityOf(before),
+          attemptsUsed: attempt,
+        };
+      }
+      if (fdSize > bounds.maxCutBytes) {
+        return {
+          present: true,
+          unstable: true,
+          regularFile: false,
+          reason: "ledger_too_large",
+          identity: identityOf(before),
+          attemptsUsed: attempt,
+        };
+      }
+      if (!sameFileGeneration(pathGeneration, generationOf(before))) {
         torn = true;
-      } else if (before.size === 0) {
+      } else if (fdSize === 0) {
         bytes = Buffer.alloc(0);
         byteCount = 0;
-        after = await io.fstat(handle);
-        if (!sameFileGeneration(before, after) || after.size !== 0) torn = true;
+        after = await io.fstat(handle, { bigint: true });
+        if (
+          !isRegularFileStat(after)
+          || !sameFileGeneration(generationOf(before), generationOf(after))
+          || safeByteSize(after) !== 0
+        ) {
+          torn = true;
+        }
       } else {
-        const exact = await readExactBytes(io, handle, before.size);
+        const exact = await readExactBytes(io, handle, fdSize);
         bytes = exact.bytes;
         byteCount = exact.byteCount;
-        if (byteCount !== before.size) {
+        if (byteCount !== fdSize) {
           torn = true;
           reason = "byte_count_mismatch";
         } else {
-          after = await io.fstat(handle);
-          if (!sameFileGeneration(before, after) || after.size !== byteCount) torn = true;
+          after = await io.fstat(handle, { bigint: true });
+          if (
+            !isRegularFileStat(after)
+            || !sameFileGeneration(generationOf(before), generationOf(after))
+            || safeByteSize(after) !== byteCount
+          ) {
+            torn = true;
+          }
         }
       }
-    } catch {
+      if (!torn) {
+        let pathAfter;
+        try {
+          pathAfter = await io.stat(ledgerPath, { bigint: true });
+        } catch (error) {
+          if (errorCode(error) === "ENOENT") {
+            torn = true;
+            reason = "ledger_disappeared";
+          } else {
+            torn = true;
+            reason = "ledger_read_error";
+          }
+        }
+        if (!torn) {
+          if (isSymlinkStat(pathAfter) || !isRegularFileStat(pathAfter)) {
+            return {
+              present: true,
+              unstable: true,
+              irregular: true,
+              regularFile: false,
+              reason: "ledger_not_regular_file",
+              identity: identityOf(pathAfter),
+              attemptsUsed: attempt,
+            };
+          }
+          if (!sameFileGeneration(generationOf(before), generationOf(pathAfter))) {
+            torn = true;
+          }
+        }
+      }
+    } catch (error) {
+      const code = errorCode(error);
+      if (isNonRegularOpenError(code)) {
+        return {
+          present: true,
+          unstable: true,
+          irregular: true,
+          regularFile: false,
+          reason: "ledger_not_regular_file",
+          attemptsUsed: attempt,
+        };
+      }
       torn = true;
-      reason = "ledger_read_error";
+      reason = code === "ENOENT" && observedPresent ? "ledger_disappeared" : "ledger_read_error";
     } finally {
       if (handle) await io.close(handle).catch(() => {});
     }
 
-    if (!torn && bytes) {
+    if (!torn && bytes && descriptorProvedRegular) {
       return {
         present: true,
         unstable: false,
+        regularFile: true,
         attemptsUsed: attempt,
         identity: identityOf(after || before),
         bytes,
@@ -521,9 +756,24 @@ export async function captureStableLedgerCut(ledgerPath, {
       };
     }
     lastReason = reason;
+    if (reason === "ledger_disappeared") {
+      return {
+        present: false,
+        unstable: true,
+        regularFile: false,
+        reason: "ledger_disappeared",
+        attemptsUsed: attempt,
+      };
+    }
     if (attempt < bounds.attempts) await sleep(bounds.retryDelayMs);
   }
-  return { present: true, unstable: true, reason: lastReason, attemptsUsed: bounds.attempts };
+  return {
+    present: true,
+    unstable: true,
+    regularFile: false,
+    reason: lastReason,
+    attemptsUsed: bounds.attempts,
+  };
 }
 
 function normalizeRunState(runState) {
@@ -531,9 +781,17 @@ function normalizeRunState(runState) {
   if (typeof runState !== "object" || Array.isArray(runState)) return null;
   const lastIssueCounts = Object.create(null);
   try {
-    if (runState.lastIssueCounts && typeof runState.lastIssueCounts === "object") {
-      for (const [code, count] of Object.entries(runState.lastIssueCounts)) {
-        if (typeof code === "string" && Number.isSafeInteger(count) && count >= 0) lastIssueCounts[code] = count;
+    const counts = ownValue(runState, "lastIssueCounts");
+    if (counts && typeof counts === "object") {
+      for (const code of Object.keys(counts)) {
+        if (!Object.hasOwn(counts, code) || typeof code !== "string") continue;
+        let count;
+        try {
+          count = counts[code];
+        } catch {
+          continue;
+        }
+        if (Number.isSafeInteger(count) && count >= 0) lastIssueCounts[code] = count;
       }
     }
   } catch {
@@ -542,7 +800,7 @@ function normalizeRunState(runState) {
   let impossibleLastRunAt = false;
   let lastRunAt = null;
   try {
-    if (runState.lastRunAt != null) {
+    if (Object.hasOwn(runState, "lastRunAt") && runState.lastRunAt != null) {
       if (canonicalIsoTimestampMs(runState.lastRunAt) === null) impossibleLastRunAt = true;
       else lastRunAt = runState.lastRunAt;
     }
@@ -552,13 +810,15 @@ function normalizeRunState(runState) {
   }
   let lastError = null;
   try {
-    lastError = typeof runState.lastError === "string" ? runState.lastError : null;
+    lastError = typeof ownValue(runState, "lastError") === "string" ? ownValue(runState, "lastError") : null;
   } catch {
     lastError = null;
   }
   let runGenerationId = null;
   try {
-    runGenerationId = typeof runState.runGenerationId === "string" ? runState.runGenerationId : null;
+    runGenerationId = typeof ownValue(runState, "runGenerationId") === "string"
+      ? ownValue(runState, "runGenerationId")
+      : null;
   } catch {
     runGenerationId = null;
   }
@@ -588,37 +848,90 @@ function classifyLedgerRecord(record) {
     }
     const reference = String(own(record, "settlementReference") || "");
     if (!TRANSACTION_HASH_PATTERN.test(reference)) return "unrecognized_ledger_record";
-    const route = own(record, "route");
-    if (route !== undefined && typeof route !== "string") return "unrecognized_ledger_record";
-    const paymentClass = own(record, "paymentClass");
-    if (paymentClass !== undefined && typeof paymentClass !== "string") return "unrecognized_ledger_record";
-    for (const field of ["reconciledAt", "sourceEventTimestamp", "blockTimestamp"]) {
-      const value = own(record, field);
-      if (value !== undefined && canonicalIsoTimestampMs(value) === null) {
-        return "impossible_ledger_timestamp";
-      }
-    }
     const amountAtomic = own(record, "amountAtomic");
-    if (canonicalAtomicAmountString(amountAtomic) === null) {
-      if (typeof amountAtomic === "string" && DIGIT_AMOUNT.test(amountAtomic)) {
-        return "false_economic_ledger_record";
-      }
-      return "unsafe_amount_atomic";
-    }
+    if (!DIGIT_AMOUNT.test(String(amountAtomic ?? ""))) return "unsafe_amount_atomic";
     return "revenue";
   } catch {
     return "hostile_ledger_record";
   }
 }
 
-function resolveLifecycle({ cut, running, runState, corruptLines, withheld }) {
-  if (withheld || cut?.unstable) return "unstable";
+function resolveLifecycle({ cut, running, runState, corruptLines, withheld, byteCount }) {
+  if (withheld || ownValue(cut, "unstable")) return "unstable";
   if (running) return "running";
   if (corruptLines > 0) return "corrupt";
   if (runState?.lastError) return "restart_pending";
-  if (!runState) return "never_run";
-  if (!cut?.present) return "restart_pending";
+  if (!runState) {
+    return ownValue(cut, "present") === true && byteCount > 0 ? "restart_pending" : "never_run";
+  }
+  if (ownValue(cut, "present") !== true) return "restart_pending";
   return "ok";
+}
+
+function readCutIdentity(cut) {
+  try {
+    const identity = ownValue(cut, "identity");
+    if (!identity || typeof identity !== "object") return null;
+    return Object.freeze({
+      dev: identity.dev,
+      ino: identity.ino,
+      mode: identity.mode,
+    });
+  } catch {
+    return null;
+  }
+}
+
+function snapshotRunObservation(observeRun, runState, running) {
+  if (typeof observeRun !== "function") {
+    return { runState, running: Boolean(running) };
+  }
+  try {
+    const observed = observeRun();
+    return {
+      runState: observed && typeof observed === "object" ? observed.runState : null,
+      running: Boolean(observed?.running),
+    };
+  } catch {
+    return { runState: null, running: false };
+  }
+}
+
+function runObservationChanged(before, after) {
+  return before.runState !== after.runState || before.running !== after.running;
+}
+
+function unstableFallbackSnapshot(capturedAtDate, reason = "hostile_cut") {
+  const generationId = `setlcut_${sha256Hex(JSON.stringify([
+    SETTLEMENT_PLANE_CAPTURE_SCHEMA,
+    "unstable",
+    reason,
+  ])).slice(0, 32)}`;
+  return Object.freeze({
+    schemaVersion: SETTLEMENT_PLANE_CAPTURE_SCHEMA,
+    capturedAt: capturedAtDate,
+    generationId,
+    observationId: `setlobs_${sha256Hex(JSON.stringify([generationId, capturedAtDate])).slice(0, 32)}`,
+    lifecycle: "unstable",
+    enabled: false,
+    baseline: null,
+    attemptsUsed: 0,
+    ledger: Object.freeze({
+      present: false,
+      regularFile: false,
+      identity: null,
+      byteCount: null,
+      byteDigest: null,
+    }),
+    integrity: Object.freeze({
+      corruptLines: 0,
+      issues: Object.freeze(Object.create(null)),
+      reason,
+    }),
+    summary: null,
+    run: null,
+    runFromPreviousGeneration: false,
+  });
 }
 
 function freezeBuckets(bucket) {
@@ -640,7 +953,6 @@ export function buildCommerceSettlementPlaneSnapshot({
   running = false,
   now = () => new Date(),
 } = {}) {
-  const normalizedRun = normalizeRunState(runState);
   const capturedAtDate = (() => {
     try {
       const value = now();
@@ -652,177 +964,240 @@ export function buildCommerceSettlementPlaneSnapshot({
     }
   })();
 
-  let baselineIso = null;
   try {
-    if (canonicalIsoTimestampMs(baseline) !== null) baselineIso = baseline;
-  } catch {
-    baselineIso = null;
-  }
+    const normalizedRun = normalizeRunState(runState);
+    let baselineIso = null;
+    try {
+      baselineIso = canonicalBaselineIso(baseline);
+    } catch {
+      baselineIso = null;
+    }
 
-  const issues = Object.create(null);
-  let corruptLines = 0;
-  let summaryDigest = null;
-  let summary = null;
-  let withheld = false;
-  let withholdReason = null;
-  let byteCount = null;
-  let byteDigest = null;
-  const unstableCut = Boolean(cut?.unstable);
-
-  if (unstableCut) {
-    withheld = true;
-    withholdReason = String(cut?.reason || "torn_cut");
-  } else if (cut?.present === true) {
-    const bytes = bytesFromCut(cut);
-    if (bytes === null) {
+    const issues = Object.create(null);
+    let corruptLines = 0;
+    let summaryDigest = null;
+    let summary = null;
+    let withheld = false;
+    let withholdReason = null;
+    let byteCount = null;
+    let byteDigest = null;
+    let hostileCut = false;
+    for (const key of [
+      "unstable",
+      "present",
+      "reason",
+      "identity",
+      "byteDigest",
+      "byteCount",
+      "bytes",
+      "attemptsUsed",
+      "regularFile",
+      "irregular",
+    ]) {
+      if (inspectOwn(cut, key).threw) hostileCut = true;
+    }
+    let unstableCut = hostileCut || inspectOwn(cut, "unstable").value === true;
+    if (hostileCut) {
       withheld = true;
-      withholdReason = "ledger_bytes_missing";
-    } else {
-      const actualDigest = sha256Hex(bytes);
-      if (
-        (cut.byteCount != null && cut.byteCount !== bytes.length)
-        || (typeof cut.byteDigest === "string" && cut.byteDigest !== actualDigest)
-      ) {
-        withheld = true;
-        withholdReason = "byte_digest_mismatch";
-      } else {
-        byteCount = bytes.length;
-        byteDigest = actualDigest;
-        const text = bytes.toString("utf8");
-        const revenueRows = [];
-        for (const line of text.split("\n")) {
-          if (line.trim().length === 0) continue;
-          let parsed;
-          try {
-            parsed = JSON.parse(line);
-          } catch {
-            corruptLines += 1;
-            continue;
-          }
-          const classification = classifyLedgerRecord(parsed);
-          if (classification === "revenue") {
-            revenueRows.push(parsed);
-            continue;
-          }
-          if (classification === "corrupt_line") {
-            corruptLines += 1;
-            continue;
-          }
-          issues[classification] = (issues[classification] || 0) + 1;
-        }
+      withholdReason = "hostile_cut";
+    }
 
-        // Totals come only from this exact cut's canonical rows. Duplicate
-        // references keep their first occurrence; repeats are issue evidence.
-        summary = {
-          schemaVersion: SETTLEMENT_SUMMARY_SCHEMA,
-          reconciledSettlements: 0,
-          distinctSettlementReferences: 0,
-          amountAtomic: "0",
-          byClass: Object.create(null),
-          byRoute: Object.create(null),
-        };
-        const seenReferences = new Set();
-        for (const record of revenueRows) {
-          const reference = String(own(record, "settlementReference")).toLowerCase();
-          if (seenReferences.has(reference)) {
-            issues.duplicate_ledger_reference = (issues.duplicate_ledger_reference || 0) + 1;
-            continue;
+    if (unstableCut) {
+      withheld = true;
+      const reasonValue = inspectOwn(cut, "reason").value;
+      withholdReason = hostileCut
+        ? "hostile_cut"
+        : (typeof reasonValue === "string" && reasonValue.length > 0
+          ? reasonValue
+          : (withholdReason || "torn_cut"));
+    } else if (inspectOwn(cut, "present").value === true) {
+      const bytes = bytesFromCut(cut);
+      if (bytes === null) {
+        withheld = true;
+        withholdReason = "ledger_bytes_missing";
+      } else {
+        const actualDigest = sha256Hex(bytes);
+        const declaredCount = ownValue(cut, "byteCount");
+        const declaredDigest = ownValue(cut, "byteDigest");
+        if (
+          (declaredCount != null && declaredCount !== bytes.length)
+          || (typeof declaredDigest === "string" && declaredDigest !== actualDigest)
+        ) {
+          withheld = true;
+          withholdReason = "byte_digest_mismatch";
+        } else {
+          byteCount = bytes.length;
+          byteDigest = actualDigest;
+          const text = bytes.toString("utf8");
+          const parentSummary = summarizeCommerceSettlementLedger(text);
+          corruptLines = Number.isSafeInteger(parentSummary.invalidLines)
+            ? parentSummary.invalidLines
+            : 0;
+          const seenReferences = new Set();
+          for (const line of text.split("\n")) {
+            if (line.length === 0) continue;
+            let parsed;
+            try {
+              parsed = JSON.parse(line);
+            } catch {
+              continue;
+            }
+            const classification = classifyLedgerRecord(parsed);
+            if (classification === "revenue") {
+              const reference = String(own(parsed, "settlementReference") || "").toLowerCase();
+              if (seenReferences.has(reference)) {
+                issues.duplicate_ledger_reference = (issues.duplicate_ledger_reference || 0) + 1;
+                continue;
+              }
+              if (reference) seenReferences.add(reference);
+              continue;
+            }
+            if (classification === "corrupt_line") {
+              corruptLines += 1;
+              continue;
+            }
+            issues[classification] = (issues[classification] || 0) + 1;
           }
-          seenReferences.add(reference);
-          const amountText = canonicalAtomicAmountString(own(record, "amountAtomic"));
-          let amount;
-          try {
-            amount = BigInt(amountText);
-          } catch {
-            issues.unsafe_amount_atomic = (issues.unsafe_amount_atomic || 0) + 1;
-            continue;
-          }
-          summary.reconciledSettlements += 1;
-          summary.amountAtomic = (BigInt(summary.amountAtomic) + amount).toString();
-          addBucket(summary.byClass, shortLabel(own(record, "paymentClass"), "unclassified", 64), amount);
-          addBucket(summary.byRoute, shortLabel(own(record, "route"), "/:unknown", 128), amount);
+          summary = {
+            schemaVersion: parentSummary.schemaVersion || SETTLEMENT_SUMMARY_SCHEMA,
+            reconciledSettlements: parentSummary.reconciledSettlements,
+            distinctSettlementReferences: parentSummary.distinctSettlementReferences,
+            amountAtomic: parentSummary.amountAtomic,
+            byClass: parentSummary.byClass,
+            byRoute: parentSummary.byRoute,
+            invalidLines: parentSummary.invalidLines,
+          };
+          summaryDigest = sha256Hex(JSON.stringify(summary));
         }
-        summary.distinctSettlementReferences = seenReferences.size;
-        summaryDigest = sha256Hex(JSON.stringify(summary));
       }
     }
-  }
 
-  const lifecycle = resolveLifecycle({
-    cut,
-    running: Boolean(running),
-    runState: normalizedRun,
-    corruptLines,
-    withheld,
-  });
-  const generationSeed = JSON.stringify([
-    SETTLEMENT_PLANE_CAPTURE_SCHEMA,
-    capturedAtDate,
-    lifecycle,
-    withheld ? null : byteDigest,
-    summaryDigest,
-    normalizedRun ?? null,
-    Boolean(enabled),
-    baselineIso,
-  ]);
-  const generationId = `setlcut_${sha256Hex(generationSeed).slice(0, 32)}`;
-
-  return Object.freeze({
-    schemaVersion: SETTLEMENT_PLANE_CAPTURE_SCHEMA,
-    capturedAt: capturedAtDate,
-    generationId,
-    lifecycle,
-    enabled: Boolean(enabled),
-    baseline: baselineIso,
-    attemptsUsed: cut?.attemptsUsed ?? 0,
-    ledger: Object.freeze({
-      present: cut?.present === true,
-      regularFile: cut?.present === true && cut?.irregular !== true,
-      identity: cut?.identity
-        ? Object.freeze({ dev: cut.identity.dev, ino: cut.identity.ino, mode: cut.identity.mode })
-        : null,
-      // Byte facts are withheld entirely when no stable cut exists: absence of
-      // evidence is never reported as zero evidence.
-      byteCount,
-      byteDigest,
-    }),
-    integrity: Object.freeze({
+    const lifecycle = resolveLifecycle({
+      cut,
+      running: Boolean(running),
+      runState: normalizedRun,
       corruptLines,
-      issues: Object.freeze({ ...issues }),
-      reason: withheld ? withholdReason : null,
-    }),
-    summary: summary === null
-      ? null
-      : Object.freeze({
-        ...summary,
-        byClass: freezeBuckets(summary.byClass),
-        byRoute: freezeBuckets(summary.byRoute),
-        digest: summaryDigest,
+      withheld,
+      byteCount,
+    });
+    const generationSeed = JSON.stringify([
+      SETTLEMENT_PLANE_CAPTURE_SCHEMA,
+      lifecycle,
+      withheld ? null : byteDigest,
+      summaryDigest,
+      normalizedRun ?? null,
+      Boolean(enabled),
+      baselineIso,
+    ]);
+    const generationId = `setlcut_${sha256Hex(generationSeed).slice(0, 32)}`;
+    const observationId = `setlobs_${sha256Hex(JSON.stringify([generationId, capturedAtDate])).slice(0, 32)}`;
+    let attemptsUsed = 0;
+    try {
+      const rawAttempts = ownValue(cut, "attemptsUsed");
+      attemptsUsed = Number.isSafeInteger(rawAttempts) ? rawAttempts : 0;
+    } catch {
+      attemptsUsed = 0;
+    }
+    const descriptorRegular = ownValue(cut, "regularFile") === true;
+
+    return Object.freeze({
+      schemaVersion: SETTLEMENT_PLANE_CAPTURE_SCHEMA,
+      capturedAt: capturedAtDate,
+      generationId,
+      observationId,
+      lifecycle,
+      enabled: Boolean(enabled),
+      baseline: baselineIso,
+      attemptsUsed,
+      ledger: Object.freeze({
+        present: ownValue(cut, "present") === true,
+        regularFile: descriptorRegular,
+        identity: readCutIdentity(cut),
+        // Byte facts are withheld entirely when no stable cut exists: absence of
+        // evidence is never reported as zero evidence.
+        byteCount,
+        byteDigest,
       }),
-    run: normalizedRun,
-    // While a reconcile is in flight, run fields belong to the previous
-    // completed generation and are labelled as such instead of being mixed.
-    runFromPreviousGeneration: running === true,
-  });
+      integrity: Object.freeze({
+        corruptLines,
+        issues: Object.freeze({ ...issues }),
+        reason: withheld ? withholdReason : null,
+      }),
+      summary: summary === null
+        ? null
+        : Object.freeze({
+          ...summary,
+          byClass: freezeBuckets(summary.byClass),
+          byRoute: freezeBuckets(summary.byRoute),
+          digest: summaryDigest,
+        }),
+      run: normalizedRun,
+      // While a reconcile is in flight, run fields belong to the previous
+      // completed generation and are labelled as such instead of being mixed.
+      runFromPreviousGeneration: running === true,
+    });
+  } catch {
+    return unstableFallbackSnapshot(capturedAtDate);
+  }
 }
 
-// One coherent settlement-plane capture: stable cut + atomic run-state
-// reference, bound into a single generation. `io`, `sleep` and `limits` are
-// injectable so hostile tests can race appends/truncates/replaces between
-// stat/read/stat deterministically.
+// One coherent settlement-plane capture: stable cut + run observation bound
+// into a single generation. When `observeRun` is provided, the run/inflight
+// snapshot is taken before and after the cut and the whole capture retries
+// if either changed. `io`, `sleep` and `limits` are injectable so hostile
+// tests can race appends/truncates/replaces between stat/read/stat.
 export async function captureCommerceSettlementPlane({
   ledgerPath,
   enabled = true,
   baseline = "",
   runState = null,
   running = false,
+  observeRun = null,
   limits = DEFAULT_CUT_LIMITS,
   io = DEFAULT_LEDGER_IO,
   sleep = defaultSleep,
   now = () => new Date(),
 } = {}) {
-  const cut = await captureStableLedgerCut(ledgerPath, { limits, io, sleep });
-  return buildCommerceSettlementPlaneSnapshot({ cut, enabled, baseline, runState, running, now });
+  const bounds = normalizeCutLimits(limits);
+  if (typeof observeRun !== "function") {
+    const cut = await captureStableLedgerCut(ledgerPath, { limits: bounds, io, sleep });
+    return buildCommerceSettlementPlaneSnapshot({ cut, enabled, baseline, runState, running, now });
+  }
+
+  let lastCut = null;
+  let attemptsUsed = 0;
+  for (let attempt = 1; attempt <= bounds.attempts; attempt += 1) {
+    const before = snapshotRunObservation(observeRun, runState, running);
+    const cut = await captureStableLedgerCut(ledgerPath, { limits: bounds, io, sleep });
+    attemptsUsed += Number.isSafeInteger(cut.attemptsUsed) ? cut.attemptsUsed : 1;
+    const after = snapshotRunObservation(observeRun, runState, running);
+    lastCut = cut;
+    if (!runObservationChanged(before, after)) {
+      return buildCommerceSettlementPlaneSnapshot({
+        cut: { ...cut, attemptsUsed },
+        enabled,
+        baseline,
+        runState: before.runState,
+        running: before.running,
+        now,
+      });
+    }
+    if (attempt < bounds.attempts) await sleep(bounds.retryDelayMs);
+  }
+  return buildCommerceSettlementPlaneSnapshot({
+    cut: {
+      present: lastCut?.present === true,
+      unstable: true,
+      regularFile: false,
+      reason: "run_generation_raced",
+      attemptsUsed,
+    },
+    enabled,
+    baseline,
+    runState: null,
+    running: false,
+    now,
+  });
 }
 
 export function createCommerceSettlementReconciler({
@@ -854,7 +1229,9 @@ export function createCommerceSettlementReconciler({
   });
   // In-memory run state is one frozen generation object, replaced wholesale
   // after each reconcile so a capture can bind to it atomically by reference
-  // and never observe a torn mix of old and new run fields.
+  // and never observe a torn mix of old and new run fields. Instance entropy
+  // keeps error run IDs distinct across fresh processes with the same sequence.
+  const instanceEntropy = randomBytes(16).toString("hex");
   let lastRun = null;
   let runSequence = 0;
   let reconcileInFlight = 0;
@@ -867,14 +1244,14 @@ export function createCommerceSettlementReconciler({
   let running = Promise.resolve();
 
   function capturePlane(options = {}) {
-    const runRef = lastRun;
-    const wasInFlight = reconcileInFlight > 0;
     return captureCommerceSettlementPlane({
       ledgerPath,
       enabled,
       baseline: settlementEvidenceSince,
-      runState: runRef,
-      running: wasInFlight,
+      observeRun: () => ({
+        runState: lastRun,
+        running: reconcileInFlight > 0,
+      }),
       limits: options.limits,
       io: options.io,
       sleep: options.sleep,
@@ -952,9 +1329,10 @@ export function createCommerceSettlementReconciler({
       } catch (error) {
         console.error(`commerce settlement reconciliation failed: ${String(error?.message || error).slice(0, 200)}`);
         runSequence += 1;
+        const failedAt = new Date().toISOString();
         lastRun = Object.freeze({
-          runGenerationId: `setlrun_${sha256(`error|${runSequence}`).slice(0, 24)}`,
-          lastRunAt: new Date().toISOString(),
+          runGenerationId: `setlrun_${sha256(`error|${runSequence}|${failedAt}|${instanceEntropy}`).slice(0, 24)}`,
+          lastRunAt: failedAt,
           lastError: "reconciliation_failed",
           // Counts from the previous completed scan persist as visible issue
           // evidence; lastError marks that this generation did not scan.
