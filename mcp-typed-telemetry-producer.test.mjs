@@ -20,7 +20,7 @@ import {
 
 const FIXTURE_PATH = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
-  "assignment/reviewer/traffic-v4-typed-producer-fixtures.json",
+  "test-fixtures/mcp-typed-telemetry-producer-v1.json",
 );
 
 const OUTPUT_KEYS = [
