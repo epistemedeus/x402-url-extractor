@@ -10,7 +10,7 @@ const REPO_ROOT = resolve(PLUGIN_ROOT, "../..");
 const PLUGIN_SCHEMA_ID = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json";
 const MCP_SCHEMA_ID = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json";
 const LIVE_MCP_URL = "https://agents.samedaydesk.com/mcp";
-const LIVE_VERSION = "1.23.19";
+const LIVE_VERSION = "1.23.20";
 const SOURCE_HEADER = "X-SameDayDesk-Agent-Source";
 const SOURCE_VALUE = "agent-plugins-v1";
 const PRODUCT_SKILL_SHA256 = "594a745ae7442ce013fb0013e289247e583850ade75c56bce453e48e668a47a0";
@@ -159,7 +159,7 @@ async function postRpc(method, params, id) {
     headers: {
       accept: "application/json, text/event-stream",
       "content-type": "application/json",
-      "user-agent": "samedaydesk-x402-plugin-test/1.23.19",
+      "user-agent": "samedaydesk-x402-plugin-test/1.23.20",
       [SOURCE_HEADER]: SOURCE_VALUE,
     },
     body: JSON.stringify({ jsonrpc: "2.0", id, method, params }),

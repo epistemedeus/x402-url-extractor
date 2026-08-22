@@ -898,7 +898,8 @@ The repo is a no-config Node app: `npm start` runs `node server.js` and binds
    MPP_SECRET_KEY=<random secret of at least 32 bytes>
    COMMERCE_DATA_DIR=/data
    COMMERCE_ACTOR_SECRET=<random 32-byte secret>
-   COMMERCE_INTERNAL_TOKEN=<random owner-canary token>
+   COMMERCE_INTERNAL_TOKEN=<random owner-canary token of at least 32 UTF-8 bytes>
+   COMMERCE_MCP_TYPED_SINCE=<ISO timestamp for the accepted typed-MCP producer generation>
    COMMERCE_EXTERNAL_SINCE=<ISO timestamp after controlled launch canaries>
    COMMERCE_AGENT_SOURCE_DETAIL_SINCE=<ISO timestamp after provider taxonomy release>
    COMMERCE_SETTLEMENT_EVIDENCE_SINCE=<ISO timestamp after settlement-proof release>
@@ -906,6 +907,14 @@ The repo is a no-config Node app: `npm start` runs `node server.js` and binds
    ```
    Core payment settings have safe defaults. Production telemetry uses a Railway
    volume mounted at `/data` plus the two secret variables above.
+
+   A release-validation MCP request is attributed only when it supplies the
+   exact internal token and one unique
+   `x-samedaydesk-validation-marker` matching
+   `[A-Za-z0-9._~-]{16,128}`. The stored row contains only the marker's
+   domain-separated SHA-256 digest. Never reuse a marker, persist its raw value
+   with telemetry, or classify the resulting seller-operational validation row
+   as independent demand, settlement, accounting, or revenue.
 3. **Generate a public domain** for the service.
 4. **Verify:**
    ```bash
