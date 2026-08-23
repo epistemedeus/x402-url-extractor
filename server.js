@@ -17,6 +17,9 @@
 // seller's Gateway balance, which can later be withdrawn to a supported chain.
 // It does not change or intercept the standard Base exact or native MPP paths.
 
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { types as nodeTypes } from "node:util";
 import express from "express";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { HTTPFacilitatorClient } from "@x402/core/server";
@@ -26,6 +29,7 @@ import {
   getDiscoveryOutputContract,
   getDiscoveryRequestContract,
   projectDiscoveryRequest,
+  withReplacementDiscoveryRegistry,
 } from "./discovery-contract.mjs";
 import {
   buildX402ManifestItems,
@@ -367,7 +371,198 @@ function buildFacilitatorClient() {
   return new HTTPFacilitatorClient({ url });
 }
 
-const facilitatorClient = buildFacilitatorClient();
+
+export const MERCHANT_COMPOSITION_OPTION_KEYS = Object.freeze([
+  "sellerIntegrityAuditImpl",
+  "facilitatorClient",
+  "dataDir",
+  "publicUrl",
+]);
+
+export const FACILITATOR_CLIENT_METHOD_NAMES = Object.freeze([
+  "getSupported",
+  "verify",
+  "settle",
+]);
+
+export const MERCHANT_JSON_PARSER_OPTIONS = Object.freeze({
+  limit: "16kb",
+  type: Object.freeze(["application/json", "application/*+json"]),
+});
+
+export const MERCHANT_ROUTE_STACK_SEQUENCE = Object.freeze([
+  "jsonParser",
+  "legacyCompatibleX402Body",
+  "paidActionEffectHeaders",
+  "commerceTelemetry",
+  "purchaseEvidenceHeaders",
+  "idempotencyReplay",
+  "sellerIntegrityAuditValidator",
+  "mppDualStack",
+  "x402PaywallGate",
+  "serveSellerIntegrityAudit",
+]);
+
+export class MerchantCompositionError extends Error {
+  constructor(code, message = code) {
+    super(message);
+    this.name = "MerchantCompositionError";
+    this.code = code;
+  }
+}
+
+function compositionFail(code) {
+  throw new MerchantCompositionError(code);
+}
+
+function captureInjectedFacilitatorClient(client) {
+  if (client === null || typeof client !== "object") compositionFail("hostile_composition_options");
+  if (nodeTypes.isProxy(client)) compositionFail("hostile_composition_options");
+  if (Array.isArray(client)) compositionFail("hostile_composition_options");
+  const clientProto = Object.getPrototypeOf(client);
+  if (clientProto !== Object.prototype && clientProto !== null) compositionFail("hostile_composition_options");
+  const ownKeys = Reflect.ownKeys(client);
+  if (ownKeys.length !== FACILITATOR_CLIENT_METHOD_NAMES.length) compositionFail("hostile_composition_options");
+  const methods = {};
+  for (const key of ownKeys) {
+    if (typeof key === "symbol") compositionFail("hostile_composition_options");
+    if (!FACILITATOR_CLIENT_METHOD_NAMES.includes(key)) compositionFail("hostile_composition_options");
+    const descriptor = Object.getOwnPropertyDescriptor(client, key);
+    if (!descriptor || !descriptor.enumerable) compositionFail("hostile_composition_options");
+    if (descriptor.get || descriptor.set) compositionFail("hostile_composition_options");
+    if (typeof descriptor.value !== "function") compositionFail("hostile_composition_options");
+    methods[key] = descriptor.value;
+  }
+  for (const methodName of FACILITATOR_CLIENT_METHOD_NAMES) {
+    if (typeof methods[methodName] !== "function") compositionFail("hostile_composition_options");
+  }
+  const getSupported = methods.getSupported;
+  const verify = methods.verify;
+  const settle = methods.settle;
+  return Object.freeze({
+    getSupported: (...args) => getSupported(...args),
+    verify: (...args) => verify(...args),
+    settle: (...args) => settle(...args),
+  });
+}
+
+export function captureMerchantCompositionOptions(raw = {}) {
+  if (raw === undefined) raw = {};
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) compositionFail("hostile_composition_options");
+  if (nodeTypes.isProxy(raw)) compositionFail("hostile_composition_options");
+  const proto = Object.getPrototypeOf(raw);
+  if (proto !== Object.prototype && proto !== null) compositionFail("hostile_composition_options");
+  const out = {};
+  for (const key of Reflect.ownKeys(raw)) {
+    if (typeof key === "symbol") compositionFail("hostile_composition_options");
+    const descriptor = Object.getOwnPropertyDescriptor(raw, key);
+    if (!descriptor || !descriptor.enumerable) compositionFail("hostile_composition_options");
+    if (descriptor.get || descriptor.set) compositionFail("hostile_composition_options");
+    if (!MERCHANT_COMPOSITION_OPTION_KEYS.includes(key)) compositionFail("unknown_composition_option");
+    out[key] = descriptor.value;
+  }
+  if (Object.prototype.hasOwnProperty.call(out, "sellerIntegrityAuditImpl")) {
+    if (typeof out.sellerIntegrityAuditImpl !== "function") compositionFail("hostile_composition_options");
+  }
+  if (Object.prototype.hasOwnProperty.call(out, "facilitatorClient")) {
+    out.facilitatorClient = captureInjectedFacilitatorClient(out.facilitatorClient);
+  }
+  if (Object.prototype.hasOwnProperty.call(out, "dataDir")) {
+    if (typeof out.dataDir !== "string" || !out.dataDir) compositionFail("hostile_composition_options");
+  }
+  if (Object.prototype.hasOwnProperty.call(out, "publicUrl")) {
+    if (typeof out.publicUrl !== "string" || !/^https:\/\/[A-Za-z0-9.-]+$/.test(out.publicUrl)) {
+      compositionFail("hostile_composition_options");
+    }
+  }
+  return Object.freeze(out);
+}
+
+export function merchantHttpStackTrace(app, registered) {
+  if (!app?._router?.stack || !registered) compositionFail("route_stack_unavailable");
+  const byHandle = new Map(Object.entries(registered).map(([name, handle]) => [handle, name]));
+  const trace = [];
+  for (const layer of app._router.stack) {
+    if (layer.route) {
+      const handles = layer.route.stack.map((routeLayer) => (
+        byHandle.get(routeLayer.handle) || `fn:${routeLayer.handle?.name || "anonymous"}`
+      ));
+      const methods = Object.keys(layer.route.methods || {}).sort().join(",");
+      trace.push(`route:${methods}:${layer.route.path}:${handles.join(",")}`);
+    } else {
+      trace.push(byHandle.get(layer.handle) || `mw:${layer.name || layer.handle?.name || "anonymous"}`);
+    }
+  }
+  return Object.freeze(trace);
+}
+
+export function inspectMerchantRouteStack(app, registered) {
+  if (!app?._router?.stack || !registered) compositionFail("route_stack_unavailable");
+  const observed = [];
+  const seen = new Set();
+  const mark = (name, handle) => {
+    if (handle === registered[name] && !seen.has(name)) {
+      observed.push(name);
+      seen.add(name);
+    }
+  };
+  for (const layer of app._router.stack) {
+    mark("jsonParser", layer.handle);
+    mark("legacyCompatibleX402Body", layer.handle);
+    mark("paidActionEffectHeaders", layer.handle);
+    mark("commerceTelemetry", layer.handle);
+    mark("purchaseEvidenceHeaders", layer.handle);
+    mark("idempotencyReplay", layer.handle);
+    mark("mppDualStack", layer.handle);
+    mark("x402PaywallGate", layer.handle);
+    if (layer.route?.path === "/commerce/seller-integrity-audit") {
+      for (const routeLayer of layer.route.stack) {
+        mark("sellerIntegrityAuditValidator", routeLayer.handle);
+        mark("serveSellerIntegrityAudit", routeLayer.handle);
+      }
+    }
+  }
+  return Object.freeze(observed);
+}
+
+export function assertMerchantRouteStack(app, registered) {
+  const observed = inspectMerchantRouteStack(app, registered);
+  if (observed.length !== MERCHANT_ROUTE_STACK_SEQUENCE.length) compositionFail("middleware_order_drift");
+  for (let index = 0; index < MERCHANT_ROUTE_STACK_SEQUENCE.length; index += 1) {
+    if (observed[index] !== MERCHANT_ROUTE_STACK_SEQUENCE[index]) compositionFail("middleware_order_drift");
+  }
+  const registeredHandler = registered.serveSellerIntegrityAudit;
+  const matches = [];
+  for (const layer of app._router.stack) {
+    if (layer.route?.path !== "/commerce/seller-integrity-audit") continue;
+    for (const routeLayer of layer.route.stack) {
+      if (routeLayer.method === "get") matches.push(routeLayer.handle);
+    }
+  }
+  if (!matches.length || matches[matches.length - 1] !== registeredHandler) {
+    compositionFail("registered_wrapper_drift");
+  }
+  return observed;
+}
+
+function isDirectMerchantExecution() {
+  return Boolean(process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url));
+}
+
+let discoveryExampleProjectionArmed = false;
+
+// Request-example projection is armed by the bounded startup wiring defined
+// later in this module. Before the one awaited preparation transaction has
+// run, schema authority is unprepared, so projecting declared contract
+// examples would fail closed on every synchronous pre-listen caller
+// (including the hosting-harness factory seam, which composes the app without
+// a listener). Arming keeps current-main request-example parity for the served
+// surface while leaving the accepted synchronous createMerchantApp seam intact.
+
+export function createMerchantApp(rawOptions = {}) {
+  const options = captureMerchantCompositionOptions(rawOptions);
+  return withReplacementDiscoveryRegistry(() => {
+  const facilitatorClient = options.facilitatorClient ?? buildFacilitatorClient();
 
 // Register the EVM "exact" scheme for our network. This is what settles USDC.
 const resourceServer = new x402ResourceServer(facilitatorClient).register(
@@ -396,13 +591,14 @@ const app = express();
 // Railway terminates TLS before forwarding to Express. Trust exactly one proxy
 // hop so x402 payment requirements preserve the public https:// resource URL.
 app.set("trust proxy", 1);
-app.use(express.json({
-  limit: "16kb",
-  type: ["application/json", "application/*+json"],
+const jsonParser = express.json({
+  limit: MERCHANT_JSON_PARSER_OPTIONS.limit,
+  type: [...MERCHANT_JSON_PARSER_OPTIONS.type],
   verify(req, _res, buffer) {
     req.rawBody = Buffer.from(buffer);
   },
-}));
+});
+app.use(jsonParser);
 app.use(legacyCompatibleX402Body);
 
 function parseCommerceWriterProcessCount(raw = process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES) {
@@ -412,31 +608,11 @@ function parseCommerceWriterProcessCount(raw = process.env.COMMERCE_TELEMETRY_WR
 
 const commerceTelemetry = createCommerceTelemetry({
   writerProcessCount: parseCommerceWriterProcessCount(process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES),
+  ...(options.dataDir ? { dataDir: options.dataDir } : {}),
 });
-let mcpMountResult = null;
-let commerceWriterDrainStarted = false;
-
-async function requestCommerceWriterDrain() {
-  if (commerceWriterDrainStarted) return;
-  commerceWriterDrainStarted = true;
-  try {
-    await drainCommerceTelemetryForShutdown({
-      typedTelemetryLifecycle: mcpMountResult?.typedTelemetryLifecycle,
-      commerceTelemetry,
-      timeoutMs: 1_000,
-    });
-    process.exit(0);
-  } catch {
-    console.error("commerce_telemetry_shutdown_failed");
-    process.exit(1);
-  }
-}
-
-process.once("SIGTERM", requestCommerceWriterDrain);
-process.once("SIGINT", requestCommerceWriterDrain);
 app.use(paidActionEffectHeaders);
 app.use(commerceTelemetry.middleware);
-const idempotencyReplay = createIdempotencyReplay();
+const idempotencyReplay = createIdempotencyReplay(options.dataDir ? { dataDir: options.dataDir } : {});
 let commerceSettlementReconciler;
 let purchaseEvidenceManifest;
 
@@ -722,7 +898,7 @@ app.get("/go/manychat", async (_req, res) => {
 
 // --- x402 discovery document (/.well-known/x402) so agents + indexes (x402scan,
 // domain crawlers) self-discover our paid resources. Free route, before the paywall.
-const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
+const PUBLIC_URL = options.publicUrl || process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
 const USDC_ASSET = usdcTermsForNetwork(NETWORK).asset;
 const serviceDeploymentPublication = loadServiceDeploymentPublication({
   canonicalOrigin: PUBLIC_URL,
@@ -833,7 +1009,8 @@ const evidenceLinkedRoutes = new Set([
   "/.well-known/agent-registration.json",
   "/llms.txt",
 ]);
-app.use(purchaseEvidenceHeaders({ origin: PUBLIC_URL, paidRoutes: evidenceLinkedRoutes }));
+const purchaseEvidenceMiddleware = purchaseEvidenceHeaders({ origin: PUBLIC_URL, paidRoutes: evidenceLinkedRoutes });
+app.use(purchaseEvidenceMiddleware);
 const metadataRoutes = new Set(Object.keys(BAZAAR_RESOURCE_METADATA));
 const missingMetadataRoutes = [...paidResourceRoutes].filter((route) => !metadataRoutes.has(route));
 const unknownMetadataRoutes = [...metadataRoutes].filter((route) => !paidResourceRoutes.has(route));
@@ -1604,8 +1781,11 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
   // every paid operation so accepted GET query inputs and JSON bodies keep a
   // standards-valid example in the generated surface. Contracts declare during
   // payment-middleware registration, so the pre-listener startup build sees
-  // none yet; at request time a drifted declared contract fails loudly.
-  applyDiscoveryRequestExamples(document, (routeKey) => getDiscoveryRequestContract(routeKey));
+  // none yet; once the bounded startup wiring arms projection, a drifted
+  // declared contract fails loudly at build time.
+  if (discoveryExampleProjectionArmed) {
+    applyDiscoveryRequestExamples(document, (routeKey) => getDiscoveryRequestContract(routeKey));
+  }
   validateOpenApiOperationIds(document);
   return document;
 };
@@ -1756,7 +1936,7 @@ app.get(["/commerce/payment-offer-preflight", CIRCLE_GATEWAY_PATH], validatePaym
 app.post("/commerce/payment-offer-preflight", validatePaymentOfferPreflightRequest);
 
 // Reject malformed seller origins and paths before either payment rail runs.
-app.get("/commerce/seller-integrity-audit", (req, res, next) => {
+const sellerIntegrityAuditValidator = (req, res, next) => {
   try {
     res.locals.sellerIntegrityAuditInput = normalizeSellerIntegrityAuditInput(req.query);
     return next();
@@ -1773,7 +1953,8 @@ app.get("/commerce/seller-integrity-audit", (req, res, next) => {
       boundary: { credentialsUsed: false, targetPaymentSigned: false, targetPaymentSent: false },
     });
   }
-});
+};
+app.get("/commerce/seller-integrity-audit", sellerIntegrityAuditValidator);
 
 // Validate the capability intent and buyer-required output paths before either
 // rail charges. Directory search and bounded seller audits happen only after
@@ -2998,7 +3179,10 @@ const servePaymentOfferPreflight = async (req, res) => {
 
 const serveSellerIntegrityAudit = async (req, res) => {
   res.set("Cache-Control", "no-store");
-  return res.json(await sellerIntegrityAudit(res.locals.sellerIntegrityAuditInput));
+  return res.json(await sellerIntegrityAudit(
+    res.locals.sellerIntegrityAuditInput,
+    options.sellerIntegrityAuditImpl ? { auditImpl: options.sellerIntegrityAuditImpl } : undefined,
+  ));
 };
 
 const serveContractQualifiedSearch = async (req, res) => {
@@ -3075,10 +3259,11 @@ app.post("/security/stateful-wallet-policy-conformance", (req, res, next) => {
 });
 
 app.use(mppDualStack.middleware);
-app.use((req, res, next) => {
+const x402PaywallGate = (req, res, next) => {
   if (res.locals?.samedaydeskPayment?.protocol === "mpp") return next();
   return x402Paywall(req, res, next);
-});
+};
+app.use(x402PaywallGate);
 
 // Handler runs ONLY after payment is verified/settled by the middleware.
 app.get("/extract", async (req, res) => {
@@ -3403,43 +3588,121 @@ app.get("/", (req, res) => {
   return res.json(gateway);
 });
 
-// Bounded startup wiring (amendment 6-8 necessity gate): Hyperjump
-// compilation is asynchronous while buildOpenApiDocument and the generation
-// gate below are synchronous, and buildOpenApiDocument is also invoked
-// synchronously by constructionParityReceipt() here and by the request-time
-// /openapi.json handlers. The existing synchronous callsites therefore cannot
-// perform the required asynchronous pre-listen preparation: without this one
-// awaited call, every schema authority lookup in the rebuilt documents would
-// fail closed with no compiled validator. The awaited preparation runs the one
-// continuous MATERIALIZING -> ... -> PUBLISHED transaction (policy scan,
-// meta-validate, compile, projection, terminal audit, inventory,
-// operation-ID, cache-bind, one atomic in-memory publish) before the
-// construction receipt, the synchronous generation gate, and app.listen, so
-// no request can observe unprepared authority.
-const prepareReceipt = await prepareOpenApiParityStartup({
-  buildDocument: (profile) => buildOpenApiDocument({ profile }),
-  circleGatewayEnabled: circleGateway.enabled,
-  resolveRequestContract: (routeKey) => getDiscoveryRequestContract(routeKey),
-});
-if (prepareReceipt.ok !== true) {
-  // The aborted receipt carries independently measured rollback flags; it
-  // does not assert that restore succeeded.
-  throw new Error(`OpenAPI parity startup transaction aborted at ${prepareReceipt.stage} (${prepareReceipt.primaryCode}); rollback measurements: ${JSON.stringify(prepareReceipt.rollback)}`);
-}
+
+const runStartupGates = async () => {
+  discoveryExampleProjectionArmed = true;
+  // Bounded startup wiring (amendment 6-8 necessity gate): Hyperjump
+  // compilation is asynchronous while buildOpenApiDocument and the generation
+  // gate below are synchronous, and buildOpenApiDocument is also invoked
+  // synchronously by constructionParityReceipt() here and by the request-time
+  // /openapi.json handlers. The existing synchronous callsites therefore cannot
+  // perform the required asynchronous pre-listen preparation: without this one
+  // awaited call, every schema authority lookup in the rebuilt documents would
+  // fail closed with no compiled validator. The awaited preparation runs the one
+  // continuous MATERIALIZING -> ... -> PUBLISHED transaction (policy scan,
+  // meta-validate, compile, projection, terminal audit, inventory,
+  // operation-ID, cache-bind, one atomic in-memory publish) before the
+  // construction receipt, the synchronous generation gate, and app.listen, so
+  // no request can observe unprepared authority.
+  const prepareReceipt = await prepareOpenApiParityStartup({
+    buildDocument: (profile) => buildOpenApiDocument({ profile }),
+    circleGatewayEnabled: circleGateway.enabled,
+    resolveRequestContract: (routeKey) => getDiscoveryRequestContract(routeKey),
+  });
+  if (prepareReceipt.ok !== true) {
+    // The aborted receipt carries independently measured rollback flags; it
+    // does not assert that restore succeeded.
+    throw new Error(`OpenAPI parity startup transaction aborted at ${prepareReceipt.stage} (${prepareReceipt.primaryCode}); rollback measurements: ${JSON.stringify(prepareReceipt.rollback)}`);
+  }
+  // Strict post-discovery-registration, pre-listen generation gate (amendment 1):
+  // every discovery contract is declared above, so regenerate both public
+  // documents here and fail startup on any missing/renamed/drifted canonical
+  // request contract, lost request example, lost formal success schema, unsafe
+  // example, or paid-inventory drift (25 AgentCash / 24 MPP method-routes).
+  assertGeneratedOpenApiSurfaceGate({
+    documents: {
+      agentcash: buildOpenApiDocument({ profile: "agentcash" }),
+      mpp: buildOpenApiDocument({ profile: "mpp" }),
+    },
+    circleGatewayEnabled: circleGateway.enabled,
+    resolveRequestContract: (routeKey) => getDiscoveryRequestContract(routeKey),
+  });
+};
+
+
 const constructionAcceptance = constructionParityReceipt();
-// Strict post-discovery-registration, pre-listen generation gate (amendment 1):
-// every discovery contract is declared above, so regenerate both public
-// documents here and fail startup on any missing/renamed/drifted canonical
-// request contract, lost request example, lost formal success schema, unsafe
-// example, or paid-inventory drift (25 AgentCash / 24 MPP method-routes).
-assertGeneratedOpenApiSurfaceGate({
-  documents: {
-    agentcash: buildOpenApiDocument({ profile: "agentcash" }),
-    mpp: buildOpenApiDocument({ profile: "mpp" }),
-  },
-  circleGatewayEnabled: circleGateway.enabled,
-  resolveRequestContract: (routeKey) => getDiscoveryRequestContract(routeKey),
-});
+  const registered = Object.freeze({
+    jsonParser,
+    legacyCompatibleX402Body,
+    paidActionEffectHeaders,
+    commerceTelemetry: commerceTelemetry.middleware,
+    purchaseEvidenceHeaders: purchaseEvidenceMiddleware,
+    idempotencyReplay: idempotencyReplay.middleware,
+    sellerIntegrityAuditValidator,
+    mppDualStack: mppDualStack.middleware,
+    x402PaywallGate,
+    serveSellerIntegrityAudit,
+  });
+  assertMerchantRouteStack(app, registered);
+  return Object.freeze({
+    app,
+    serveSellerIntegrityAudit,
+    sellerIntegrityAuditValidator,
+    facilitatorClient,
+    commerceTelemetry,
+    commerceSettlementReconciler,
+    idempotencyReplay,
+    mppDualStack,
+    RESOURCES,
+    constructionAcceptance,
+    registered,
+    jsonParserOptions: MERCHANT_JSON_PARSER_OPTIONS,
+    network: NETWORK,
+    payTo: PAY_TO,
+    sellerIntegrityAuditPrice: SELLER_INTEGRITY_AUDIT_PRICE,
+    publicUrl: PUBLIC_URL,
+    stackTrace: merchantHttpStackTrace(app, registered),
+    runStartupGates,
+  });
+  });
+}
+
+
+
+let mcpMountResult = null;
+let commerceWriterDrainStarted = false;
+let productionRuntime = null;
+
+async function requestCommerceWriterDrain() {
+  if (commerceWriterDrainStarted) return;
+  commerceWriterDrainStarted = true;
+  try {
+    await drainCommerceTelemetryForShutdown({
+      typedTelemetryLifecycle: mcpMountResult?.typedTelemetryLifecycle,
+      commerceTelemetry: productionRuntime?.commerceTelemetry,
+      timeoutMs: 1_000,
+    });
+    process.exit(0);
+  } catch {
+    console.error("commerce_telemetry_shutdown_failed");
+    process.exit(1);
+  }
+}
+
+if (isDirectMerchantExecution()) {
+  productionRuntime = createMerchantApp();
+  const {
+    app,
+    facilitatorClient,
+    commerceTelemetry,
+    commerceSettlementReconciler,
+    mppDualStack,
+    RESOURCES,
+    constructionAcceptance,
+  } = productionRuntime;
+  process.once("SIGTERM", requestCommerceWriterDrain);
+  process.once("SIGINT", requestCommerceWriterDrain);
+  await productionRuntime.runStartupGates();
 app.listen(PORT, () => {
   commerceSettlementReconciler.schedule(process.env.COMMERCE_RECONCILIATION_INTERVAL_MS || 60_000);
   console.log(`x402-merchant listening on :${PORT}`);
@@ -3502,3 +3765,4 @@ import("./mcp-server.mjs")
     console.log(`  MCP server:  POST /mcp (${r.toolCount} paid tools)`);
   })
   .catch((e) => console.error(`  /mcp mount FAILED (HTTP routes unaffected): ${e.message}`));
+}

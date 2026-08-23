@@ -37,6 +37,16 @@ function decodePayload(envelope) {
   return payload;
 }
 
+export function readServiceDeploymentCanonicalOrigin(
+  envelope = JSON.parse(readFileSync(new URL("./service-deployment-statement.json", import.meta.url), "utf8")),
+) {
+  const origin = decodePayload(envelope).canonicalOrigin;
+  if (typeof origin !== "string" || !/^https:\/\/[A-Za-z0-9.-]+$/.test(origin)) {
+    throw new Error("service deployment canonical origin is invalid");
+  }
+  return origin;
+}
+
 export function loadServiceDeploymentPublication({
   canonicalOrigin,
   network,

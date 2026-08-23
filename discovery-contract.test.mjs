@@ -7,7 +7,9 @@ import {
   getDiscoveryOutputContract,
   getDiscoveryRequestContract,
   projectDiscoveryRequest,
+  withReplacementDiscoveryRegistry,
 } from "./discovery-contract.mjs";
+import * as discoveryContract from "./discovery-contract.mjs";
 
 test("places the authored output schema in the Bazaar v2 response contract", () => {
   const extension = declareDiscoveryContract({
@@ -98,6 +100,25 @@ test("requires a unique safe route key for projected contracts", () => {
   assert.throws(() => declareDiscoveryContract({ routeKey: "PUT /bad", output: { example: {} }, outputSchema: { type: "object" } }), /Invalid discovery route key/);
   assert.throws(() => declareDiscoveryContract({ routeKey: "GET /missing-shape" }), /requires an example and output schema/);
   assert.throws(() => declareDiscoveryContract({ routeKey: "GET /test-contract", output: { example: {} }, outputSchema: { type: "object" } }), /Duplicate discovery route key/);
+  const again = declareDiscoveryContract({
+    routeKey: "GET /test-contract",
+    input: { url: "https://example.com" },
+    inputSchema: {
+      type: "object",
+      properties: { url: { type: "string" } },
+      required: ["url"],
+    },
+    output: { example: { ok: true, title: "Example Domain" } },
+    outputSchema: {
+      type: "object",
+      properties: {
+        ok: { type: "boolean" },
+        title: { type: "string" },
+      },
+      required: ["ok", "title"],
+    },
+  });
+  assert.equal(again.bazaar.info.output.example.title, "Example Domain");
 });
 
 test("declares and preserves a validated POST JSON-body contract", () => {
@@ -201,4 +222,130 @@ test("rejects a Bazaar contract whose output example does not satisfy its schema
     },
   }), /Invalid Bazaar discovery contract.*title/);
   assert.equal(getDiscoveryOutputContract("GET /invalid-example"), null);
+});
+
+const REVIEW_PROBE_OUTPUT = {
+  example: { ok: true, title: "Review Probe" },
+  schema: {
+    type: "object",
+    properties: {
+      ok: { type: "boolean" },
+      title: { type: "string" },
+    },
+    required: ["ok", "title"],
+  },
+};
+
+test("rejects the same route with a different request contract and leaves both maps unchanged", () => {
+  declareDiscoveryContract({
+    routeKey: "GET /review-probe",
+    input: { url: "https://first.example" },
+    inputSchema: {
+      type: "object",
+      properties: { url: { type: "string" } },
+      required: ["url"],
+    },
+    output: { example: REVIEW_PROBE_OUTPUT.example },
+    outputSchema: REVIEW_PROBE_OUTPUT.schema,
+  });
+  const beforeRequest = getDiscoveryRequestContract("GET /review-probe");
+  const beforeOutput = getDiscoveryOutputContract("GET /review-probe");
+  assert.deepEqual(beforeRequest.example.queryParams, { url: "https://first.example" });
+  assert.deepEqual(beforeRequest.schema.properties.queryParams.required, ["url"]);
+  assert.throws(() => declareDiscoveryContract({
+    routeKey: "GET /review-probe",
+    input: { domain: "second.example" },
+    inputSchema: {
+      type: "object",
+      properties: { domain: { type: "string" } },
+      required: ["domain"],
+    },
+    output: { example: REVIEW_PROBE_OUTPUT.example },
+    outputSchema: REVIEW_PROBE_OUTPUT.schema,
+  }), /Duplicate discovery route key/);
+  assert.deepEqual(getDiscoveryRequestContract("GET /review-probe"), beforeRequest);
+  assert.deepEqual(getDiscoveryOutputContract("GET /review-probe"), beforeOutput);
+  assert.deepEqual(getDiscoveryRequestContract("GET /review-probe").schema.properties.queryParams.required, ["url"]);
+  assert.equal(Object.hasOwn(getDiscoveryRequestContract("GET /review-probe").example.queryParams, "domain"), false);
+});
+
+test("rejects the same route with a different output contract and leaves both maps unchanged", () => {
+  const beforeRequest = getDiscoveryRequestContract("GET /review-probe");
+  const beforeOutput = getDiscoveryOutputContract("GET /review-probe");
+  assert.throws(() => declareDiscoveryContract({
+    routeKey: "GET /review-probe",
+    input: { url: "https://first.example" },
+    inputSchema: {
+      type: "object",
+      properties: { url: { type: "string" } },
+      required: ["url"],
+    },
+    output: { example: { ok: true, title: "Changed" } },
+    outputSchema: REVIEW_PROBE_OUTPUT.schema,
+  }), /Duplicate discovery route key/);
+  assert.deepEqual(getDiscoveryRequestContract("GET /review-probe"), beforeRequest);
+  assert.deepEqual(getDiscoveryOutputContract("GET /review-probe"), beforeOutput);
+});
+
+test("invalid re-declaration of an existing route does not delete the original contracts", () => {
+  const beforeRequest = getDiscoveryRequestContract("GET /test-contract");
+  const beforeOutput = getDiscoveryOutputContract("GET /test-contract");
+  assert.ok(beforeRequest);
+  assert.ok(beforeOutput);
+  assert.throws(() => declareDiscoveryContract({
+    routeKey: "GET /test-contract",
+    input: { url: "https://example.com" },
+    inputSchema: {
+      type: "object",
+      properties: { url: { type: "string" } },
+      required: ["url"],
+    },
+    output: { example: { ok: true } },
+    outputSchema: {
+      type: "object",
+      properties: { ok: { type: "boolean" }, title: { type: "string" } },
+      required: ["ok", "title"],
+    },
+  }), /Invalid Bazaar discovery contract/);
+  assert.deepEqual(getDiscoveryRequestContract("GET /test-contract"), beforeRequest);
+  assert.deepEqual(getDiscoveryOutputContract("GET /test-contract"), beforeOutput);
+});
+
+test("does not export a process-global registry eraser", () => {
+  assert.equal(Object.hasOwn(discoveryContract, "resetDiscoveryContracts"), false);
+  assert.equal(typeof discoveryContract.resetDiscoveryContracts, "undefined");
+});
+
+test("a failed replacement transaction discards the partial staging registry", () => {
+  const beforeRequest = getDiscoveryRequestContract("GET /test-contract");
+  const beforeProbe = getDiscoveryRequestContract("GET /review-probe");
+  assert.throws(() => withReplacementDiscoveryRegistry(() => {
+    declareDiscoveryContract({
+      routeKey: "GET /partial-only",
+      input: { url: "https://partial.example" },
+      inputSchema: {
+        type: "object",
+        properties: { url: { type: "string" } },
+        required: ["url"],
+      },
+      output: { example: { ok: true } },
+      outputSchema: {
+        type: "object",
+        properties: { ok: { type: "boolean" } },
+        required: ["ok"],
+      },
+    });
+    assert.equal(getDiscoveryRequestContract("GET /partial-only") !== null, true);
+    assert.equal(getDiscoveryRequestContract("GET /test-contract"), null);
+    throw new Error("factory_failed");
+  }), /factory_failed/);
+  assert.equal(getDiscoveryRequestContract("GET /partial-only"), null);
+  assert.deepEqual(getDiscoveryRequestContract("GET /test-contract"), beforeRequest);
+  assert.deepEqual(getDiscoveryRequestContract("GET /review-probe"), beforeProbe);
+});
+
+test("refuses to commit an empty replacement registry", () => {
+  const beforeRequest = getDiscoveryRequestContract("GET /test-contract");
+  assert.throws(() => withReplacementDiscoveryRegistry(() => undefined), /empty discovery registry/);
+  assert.deepEqual(getDiscoveryRequestContract("GET /test-contract"), beforeRequest);
 });

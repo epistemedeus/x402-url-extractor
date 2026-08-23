@@ -4,8 +4,75 @@ import {
   validateDiscoveryExtensionSpec,
 } from "@x402/extensions/bazaar";
 
-const outputContracts = new Map();
-const requestContracts = new Map();
+function createDiscoveryRegistry() {
+  return {
+    outputContracts: new Map(),
+    requestContracts: new Map(),
+  };
+}
+
+let activeRegistry = createDiscoveryRegistry();
+let stagingRegistry = null;
+
+function currentRegistry() {
+  return stagingRegistry || activeRegistry;
+}
+
+function beginDiscoveryRegistryTransaction() {
+  if (stagingRegistry) {
+    throw new Error("Discovery registry transaction already open");
+  }
+  stagingRegistry = createDiscoveryRegistry();
+}
+
+function abortDiscoveryRegistryTransaction() {
+  stagingRegistry = null;
+}
+
+function commitDiscoveryRegistryTransaction() {
+  if (!stagingRegistry) {
+    throw new Error("Discovery registry transaction is not open");
+  }
+  if (stagingRegistry.outputContracts.size === 0) {
+    throw new Error("Refusing to commit an empty discovery registry");
+  }
+  if (stagingRegistry.outputContracts.size !== stagingRegistry.requestContracts.size) {
+    throw new Error("Incomplete discovery registry");
+  }
+  for (const routeKey of stagingRegistry.outputContracts.keys()) {
+    if (!stagingRegistry.requestContracts.has(routeKey)) {
+      throw new Error("Incomplete discovery registry");
+    }
+  }
+  for (const routeKey of stagingRegistry.requestContracts.keys()) {
+    if (!stagingRegistry.outputContracts.has(routeKey)) {
+      throw new Error("Incomplete discovery registry");
+    }
+  }
+  activeRegistry = stagingRegistry;
+  stagingRegistry = null;
+}
+
+/**
+ * Compose a complete replacement registry. The active maps stay visible to
+ * readers until `work` returns a complete pair of maps; a throw discards the
+ * staging maps and leaves the previous complete registry unchanged.
+ */
+export function withReplacementDiscoveryRegistry(work) {
+  beginDiscoveryRegistryTransaction();
+  try {
+    const result = work();
+    commitDiscoveryRegistryTransaction();
+    return result;
+  } catch (error) {
+    abortDiscoveryRegistryTransaction();
+    throw error;
+  }
+}
+
+function contractIdentityBytes(value) {
+  return JSON.stringify(value);
+}
 
 /**
  * Preserve the local explicit `outputSchema` authoring shape while adapting it
@@ -15,14 +82,15 @@ const requestContracts = new Map();
  */
 export function declareDiscoveryContract(config = {}) {
   const { output, outputSchema, routeKey, ...rest } = config;
+  const { outputContracts, requestContracts } = currentRegistry();
   let routeMethod;
+  let nextOutput;
   if (routeKey !== undefined) {
     const match = /^(GET|POST) \/[^?#]+$/.exec(routeKey);
     if (!match) throw new Error(`Invalid discovery route key: ${routeKey}`);
     routeMethod = match[1];
     if (!output?.example || !outputSchema) throw new Error(`Discovery route ${routeKey} requires an example and output schema`);
-    if (outputContracts.has(routeKey)) throw new Error(`Duplicate discovery route key: ${routeKey}`);
-    outputContracts.set(routeKey, structuredClone({ example: output.example, schema: outputSchema }));
+    nextOutput = structuredClone({ example: output.example, schema: outputSchema });
   }
   const declared = declareDiscoveryExtension({
     ...rest,
@@ -40,19 +108,33 @@ export function declareDiscoveryContract(config = {}) {
     const specResult = validateDiscoveryExtensionSpec(extension);
     const errors = [...(schemaResult.errors || []), ...(specResult.errors || [])];
     if (!schemaResult.valid || !specResult.valid) {
-      outputContracts.delete(routeKey);
       throw new Error(`Invalid Bazaar discovery contract for ${routeKey}: ${errors.join("; ")}`);
     }
-    requestContracts.set(routeKey, structuredClone({
+    const nextRequest = structuredClone({
       example: extension.info.input,
       schema: extension.schema.properties.input,
-    }));
+    });
+    const existingOutput = outputContracts.get(routeKey);
+    const existingRequest = requestContracts.get(routeKey);
+    if ((existingOutput && !existingRequest) || (!existingOutput && existingRequest)) {
+      throw new Error(`Duplicate discovery route key: ${routeKey}`);
+    }
+    if (existingOutput && existingRequest) {
+      const sameOutput = contractIdentityBytes(existingOutput) === contractIdentityBytes(nextOutput);
+      const sameRequest = contractIdentityBytes(existingRequest) === contractIdentityBytes(nextRequest);
+      if (!sameOutput || !sameRequest) {
+        throw new Error(`Duplicate discovery route key: ${routeKey}`);
+      }
+      return declared;
+    }
+    outputContracts.set(routeKey, nextOutput);
+    requestContracts.set(routeKey, nextRequest);
   }
   return declared;
 }
 
 export function getDiscoveryRequestContract(routeKey) {
-  const contract = requestContracts.get(routeKey);
+  const contract = currentRegistry().requestContracts.get(routeKey);
   return contract ? structuredClone(contract) : null;
 }
 
@@ -67,7 +149,7 @@ const SENSITIVE_INPUT_NAME_COLLAPSED = /(?:api|access|auth|authorization|bearer|
  * unmeasured until the telemetry layer can observe them safely.
  */
 export function classifyDiscoveryRequestConstruction(routeKey, queryInput = []) {
-  const contract = requestContracts.get(routeKey);
+  const contract = currentRegistry().requestContracts.get(routeKey);
   if (!contract) return { status: "undeclared", requiredKeyCount: 0 };
   const method = String(contract.example?.method || "").toUpperCase();
   const querySchema = contract.schema?.properties?.queryParams;
@@ -129,6 +211,6 @@ export function projectDiscoveryRequest(resourceUrl, method, contract) {
 }
 
 export function getDiscoveryOutputContract(routeKey) {
-  const contract = outputContracts.get(routeKey);
+  const contract = currentRegistry().outputContracts.get(routeKey);
   return contract ? structuredClone(contract) : null;
 }
