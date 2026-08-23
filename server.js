@@ -211,6 +211,7 @@ import { SERVICE_VERSION } from "./service-version.mjs";
 import { loadServiceDeploymentPublication } from "./service-deployment-publication.mjs";
 import { SERVICE_DEPLOYMENT_ROUTES } from "./service-deployment-routes.mjs";
 import { validateOpenApiOperationIds } from "./openapi-operation-contract.mjs";
+import { applyDiscoveryRequestExamples, assertGeneratedOpenApiSurfaceGate, prepareOpenApiParityStartup } from "./openapi-request-example-parity.mjs";
 import { createExactUsdcAcceptsFor, usdcTermsForNetwork } from "./x402-payment-terms.mjs";
 
 // ---------------------------------------------------------------------------
@@ -1599,6 +1600,12 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       if (!operation["x-payment-info"]) operation.security = [];
     }
   }
+  // Project the authoritative Bazaar discovery-contract request examples onto
+  // every paid operation so accepted GET query inputs and JSON bodies keep a
+  // standards-valid example in the generated surface. Contracts declare during
+  // payment-middleware registration, so the pre-listener startup build sees
+  // none yet; at request time a drifted declared contract fails loudly.
+  applyDiscoveryRequestExamples(document, (routeKey) => getDiscoveryRequestContract(routeKey));
   validateOpenApiOperationIds(document);
   return document;
 };
@@ -3396,7 +3403,43 @@ app.get("/", (req, res) => {
   return res.json(gateway);
 });
 
+// Bounded startup wiring (amendment 6-8 necessity gate): Hyperjump
+// compilation is asynchronous while buildOpenApiDocument and the generation
+// gate below are synchronous, and buildOpenApiDocument is also invoked
+// synchronously by constructionParityReceipt() here and by the request-time
+// /openapi.json handlers. The existing synchronous callsites therefore cannot
+// perform the required asynchronous pre-listen preparation: without this one
+// awaited call, every schema authority lookup in the rebuilt documents would
+// fail closed with no compiled validator. The awaited preparation runs the one
+// continuous MATERIALIZING -> ... -> PUBLISHED transaction (policy scan,
+// meta-validate, compile, projection, terminal audit, inventory,
+// operation-ID, cache-bind, one atomic in-memory publish) before the
+// construction receipt, the synchronous generation gate, and app.listen, so
+// no request can observe unprepared authority.
+const prepareReceipt = await prepareOpenApiParityStartup({
+  buildDocument: (profile) => buildOpenApiDocument({ profile }),
+  circleGatewayEnabled: circleGateway.enabled,
+  resolveRequestContract: (routeKey) => getDiscoveryRequestContract(routeKey),
+});
+if (prepareReceipt.ok !== true) {
+  // The aborted receipt carries independently measured rollback flags; it
+  // does not assert that restore succeeded.
+  throw new Error(`OpenAPI parity startup transaction aborted at ${prepareReceipt.stage} (${prepareReceipt.primaryCode}); rollback measurements: ${JSON.stringify(prepareReceipt.rollback)}`);
+}
 const constructionAcceptance = constructionParityReceipt();
+// Strict post-discovery-registration, pre-listen generation gate (amendment 1):
+// every discovery contract is declared above, so regenerate both public
+// documents here and fail startup on any missing/renamed/drifted canonical
+// request contract, lost request example, lost formal success schema, unsafe
+// example, or paid-inventory drift (25 AgentCash / 24 MPP method-routes).
+assertGeneratedOpenApiSurfaceGate({
+  documents: {
+    agentcash: buildOpenApiDocument({ profile: "agentcash" }),
+    mpp: buildOpenApiDocument({ profile: "mpp" }),
+  },
+  circleGatewayEnabled: circleGateway.enabled,
+  resolveRequestContract: (routeKey) => getDiscoveryRequestContract(routeKey),
+});
 app.listen(PORT, () => {
   commerceSettlementReconciler.schedule(process.env.COMMERCE_RECONCILIATION_INTERVAL_MS || 60_000);
   console.log(`x402-merchant listening on :${PORT}`);
