@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { execFileSync, spawn } from "node:child_process";
+import { readFileSync, writeFileSync } from "node:fs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -68,19 +68,117 @@ describe("route hosting harness", { concurrency: 1 }, () => {
 test("pins Node, base generation, candidate tree, and the registered wrapper seam", () => {
   assertPinnedRuntime();
   assert.equal(process.versions.node, PINNED_NODE);
-  assert.equal(readPinnedSourceGeneration(), PINNED_SOURCE_GENERATION);
+  const bound = assertCandidateManifest();
+  // Source generation = candidate-tree digest over exact manifest bytes;
+  // base generation stays predecessor provenance only.
+  assert.equal(readPinnedSourceGeneration(), bound.candidateTreeSha256);
+  assert.notEqual(readPinnedSourceGeneration(), PINNED_SOURCE_GENERATION);
+  assert.notEqual(readPinnedSourceGeneration(), readPinnedBaseGeneration());
   assert.equal(readPinnedBaseGeneration(), PINNED_BASE_GENERATION);
-  assertPinnedSourceBlobs();
+  // baseGeneration is predecessor provenance, not a commit identity: it must
+  // hold on any checkout (including a committed candidate whose HEAD differs
+  // from the predecessor base) and must never equal a deployed binding.
+  assert.notEqual(readPinnedBaseGeneration(), "c67a19828afaabbe38be2da2e227eb3bb2aa7912");
+  assert.notEqual(readPinnedBaseGeneration(), MISSING_BINDING);
+  assert.equal(bound.manifest.deployedGeneration, MISSING_BINDING);
+  assert.notEqual(bound.candidateTreeSha256, PINNED_BASE_GENERATION);
   assertProductionRouteSeam();
   const defaults = sourceDefaultsFromTree();
   assert.equal(defaults.network, "eip155:8453");
   assert.equal(defaults.price, "$0.01");
-  const bound = assertCandidateManifest();
-  assert.equal(bound.manifest.deployedGeneration, MISSING_BINDING);
-  assert.equal(bound.manifest.baseGeneration, PINNED_BASE_GENERATION);
+  const manifestBound = assertCandidateManifest();
+  assert.equal(manifestBound.manifest.deployedGeneration, MISSING_BINDING);
+  assert.equal(manifestBound.manifest.baseGeneration, PINNED_BASE_GENERATION);
   for (const relativePath of CANDIDATE_TREE_PATHS) {
-    assert.equal(bound.files[relativePath], sha256(readFileSync(path.join(cwd, relativePath))), relativePath);
+    assert.equal(manifestBound.files[relativePath], sha256(readFileSync(path.join(cwd, relativePath))), relativePath);
   }
+});
+
+test("candidate source binding survives a committed checkout whose HEAD is not the predecessor base", () => {
+  // The old implementation ran `git rev-parse HEAD` and demanded the
+  // predecessor base; this regression pins the new contract: no git query,
+  // and the source generation equals the manifest candidate tree digest.
+  const runGit = execFileSync;
+  let head = "";
+  try {
+    head = execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+  } catch {
+    head = "<no-git>";
+  }
+  if (head !== PINNED_BASE_GENERATION) {
+    assert.equal(readPinnedSourceGeneration(), sha256(canonicalize(assertCandidateManifest().files)));
+  }
+  const harnessSource = readFileSync(path.join(cwd, "route-hosting-harness.mjs"), "utf8");
+  assert.equal(harnessSource.includes("rev-parse"), false);
+  assert.match(harnessSource, /export function readPinnedBaseGeneration\(\)/);
+});
+
+function tamperedManifest(mutate) {
+  const original = readFileSync(path.join(cwd, CANDIDATE_MANIFEST_RELATIVE), "utf8");
+  const manifest = JSON.parse(original);
+  mutate(manifest);
+  return { original, text: `${canonicalize(manifest)}\n` };
+}
+
+test("predecessor-base drift in the manifest fails closed as provenance drift", () => {
+  const { original, text } = tamperedManifest((manifest) => {
+    manifest.baseGeneration = "0".repeat(40);
+  });
+  writeFileSync(path.join(cwd, CANDIDATE_MANIFEST_RELATIVE), text, "utf8");
+  try {
+    assert.throws(
+      () => assertCandidateManifest(),
+      (error) => error instanceof HarnessError && error.code === "source_generation_drift",
+    );
+  } finally {
+    writeFileSync(path.join(cwd, CANDIDATE_MANIFEST_RELATIVE), original, "utf8");
+  }
+  assert.equal(readFileSync(path.join(cwd, CANDIDATE_MANIFEST_RELATIVE), "utf8"), original);
+});
+
+test("candidate-byte drift and manifest digest drift fail closed", () => {
+  const { original } = tamperedManifest((manifest) => {
+    manifest.files["server.js"] = "0".repeat(64);
+  });
+  writeFileSync(path.join(cwd, CANDIDATE_MANIFEST_RELATIVE), `${canonicalize(JSON.parse(original))}\n`, "utf8");
+  const before = readFileSync(path.join(cwd, "server.js"));
+  try {
+    writeFileSync(path.join(cwd, "server.js"), `${readFileSync(path.join(cwd, "server.js"), "utf8")}\n// drift probe\n`, "utf8");
+    assert.throws(
+      () => assertCandidateManifest(),
+      (error) => error instanceof HarnessError && error.code === "source_blob_drift",
+    );
+  } finally {
+    writeFileSync(path.join(cwd, "server.js"), before, "utf8");
+    writeFileSync(path.join(cwd, CANDIDATE_MANIFEST_RELATIVE), original, "utf8");
+  }
+  assert.equal(readFileSync(path.join(cwd, "server.js"), "utf8"), before.toString("utf8"));
+  assert.equal(readFileSync(path.join(cwd, CANDIDATE_MANIFEST_RELATIVE), "utf8"), original);
+  assertCandidateManifest();
+});
+
+test("treating baseGeneration as the deployed or current source generation fails closed", () => {
+  const bound = assertCandidateManifest();
+  assert.equal(bound.manifest.baseGeneration, PINNED_BASE_GENERATION);
+  assert.equal(bound.manifest.deployedGeneration, MISSING_BINDING);
+  assert.notEqual(bound.manifest.baseGeneration, bound.manifest.deployedGeneration);
+  const { original, text } = tamperedManifest((manifest) => {
+    manifest.deployedGeneration = PINNED_BASE_GENERATION;
+  });
+  writeFileSync(path.join(cwd, CANDIDATE_MANIFEST_RELATIVE), text, "utf8");
+  try {
+    assert.throws(
+      () => assertCandidateManifest(),
+      (error) => error instanceof HarnessError && error.code === "deployed_generation_binding",
+    );
+  } finally {
+    writeFileSync(path.join(cwd, CANDIDATE_MANIFEST_RELATIVE), original, "utf8");
+  }
+  assert.equal(readFileSync(path.join(cwd, CANDIDATE_MANIFEST_RELATIVE), "utf8"), original);
 });
 
 test("source middleware order swaps fail closed", () => {

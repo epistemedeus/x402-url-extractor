@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
 import { createServer as createNetServer, connect as netConnect } from "node:net";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { readFileSync } from "node:fs";
@@ -242,24 +241,21 @@ export function captureHarnessRunOptions(raw = {}) {
   return Object.freeze(out);
 }
 
-export function readPinnedSourceGeneration({ cwd = ROOT } = {}) {
-  return readPinnedBaseGeneration({ cwd });
+export function readPinnedBaseGeneration() {
+  // Predecessor provenance only. This is the base the candidate tree was
+  // derived from; it is deliberately NOT the committed candidate checkout and
+  // must never be treated as the deployed or current source generation.
+  return PINNED_BASE_GENERATION;
 }
 
-export function readPinnedBaseGeneration({ cwd = ROOT } = {}) {
-  let generation;
-  try {
-    generation = execFileSync("git", ["rev-parse", "HEAD"], {
-      cwd,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
-    }).trim();
-  } catch {
-    fail("missing_source_generation");
-  }
-  if (!/^[0-9a-f]{40}$/.test(generation)) fail("missing_source_generation");
-  if (generation !== PINNED_BASE_GENERATION) fail("source_generation_drift");
-  return generation;
+export function readPinnedSourceGeneration({ cwd = ROOT } = {}) {
+  // The candidate source generation is bound through the exact candidate
+  // manifest file digests and candidate-tree algorithm over the bytes on
+  // disk — never through a self-referential current commit hash. The
+  // deployed generation stays `unbound`.
+  if (path.resolve(cwd) !== ROOT) fail("missing_source_generation");
+  const bound = assertCandidateManifest();
+  return bound.candidateTreeSha256;
 }
 
 export function assertPinnedRuntime() {
