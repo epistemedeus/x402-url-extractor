@@ -2205,11 +2205,16 @@ test("live generated surface: exact 25/24 paid inventories, full parity, zero fi
 
   // F-class package/runtime authority probes (Phase A harness reads).
   const rootManifest = JSON.parse(readFileSync(path.join(cwd, "package.json"), "utf8"));
+  assert.equal(rootManifest.dependencies["@hyperjump/browser"], "1.5.0");
   assert.equal(rootManifest.dependencies["@hyperjump/json-schema"], "1.17.8");
   assert.equal("@cfworker/json-schema" in rootManifest.dependencies, false);
   probe("R5.F.direct-dependency", null);
   const lock = JSON.parse(readFileSync(path.join(cwd, "package-lock.json"), "utf8"));
+  assert.equal(lock.packages[""].dependencies["@hyperjump/browser"], "1.5.0");
   assert.equal(lock.packages[""].dependencies["@hyperjump/json-schema"], "1.17.8");
+  assert.equal(lock.packages["node_modules/@hyperjump/browser"].version, "1.5.0");
+  assert.equal(lock.packages["node_modules/@hyperjump/browser"].peer, undefined);
+  assert.equal(lock.packages["node_modules/@hyperjump/json-schema"].peerDependencies["@hyperjump/browser"], "^1.1.0");
   assert.equal(lock.packages["node_modules/@hyperjump/json-schema"].integrity, "sha512-XOqbR9GRNHaH4JEXHdbsm7xfYwudZG7HVDq3qPZUb1gi+ZQPklgNvhMi6zf0Plf433qR61MK+xeeprUwUUvGPg==");
   probe("R5.F.lock-integrity", null);
   const paritySource = readFileSync(path.join(cwd, "openapi-request-example-parity.mjs"), "utf8");
