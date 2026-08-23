@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { verifyServiceDeploymentStatement } from "agent-payment-policy";
-import { loadServiceDeploymentPublication } from "./service-deployment-publication.mjs";
+import { loadServiceDeploymentPublication, readServiceDeploymentCanonicalOrigin } from "./service-deployment-publication.mjs";
 import { SERVICE_DEPLOYMENT_ROUTES } from "./service-deployment-routes.mjs";
 import { SOLANA_AGENT_REGISTRATION } from "./solana-agent-registration.mjs";
 
@@ -27,6 +27,11 @@ function publication(overrides = {}) {
     ...overrides,
   });
 }
+
+test("exposes the signed statement origin without requiring env", () => {
+  assert.equal(readServiceDeploymentCanonicalOrigin(), ORIGIN);
+  assert.equal(readServiceDeploymentCanonicalOrigin(STATIC_ENVELOPE), ORIGIN);
+});
 
 test("binds every production route to both exact Base settlement protocols", () => {
   const value = publication();

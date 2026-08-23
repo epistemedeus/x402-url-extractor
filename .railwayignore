@@ -4,3 +4,10 @@ node_modules/
 test-cdp.mjs
 test-mcp.mjs
 server.json
+route-hosting-harness.mjs
+route-hosting-harness.test.mjs
+reviewer-generate-route-hosting-fixture.mjs
+test-fixtures/route-hosting-harness/
+PROMPT-HOSTING-HARNESS-R2.md
+PROMPT-HOSTING-HARNESS-R3.md
+worker-output/

@@ -3,6 +3,13 @@ node_modules/
 data/
 .git/
 assignment/
+worker-output/
+route-hosting-harness.mjs
+route-hosting-harness.test.mjs
+reviewer-generate-route-hosting-fixture.mjs
+test-fixtures/route-hosting-harness/
+PROMPT-HOSTING-HARNESS-R2.md
+PROMPT-HOSTING-HARNESS-R3.md
 RESULT-TYPED-PRODUCER.md
 PROMPT.md
 RUN.json
