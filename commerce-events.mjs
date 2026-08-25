@@ -271,6 +271,7 @@ export function normalizeCommercePayerClasses(value) {
 
 function decodePaymentMetadata(headers) {
   const encoded = PAYMENT_HEADERS.map((name) => headerValue(headers, name)).find(Boolean);
+  let x402Metadata = null;
   if (encoded) {
     try {
       const payload = JSON.parse(Buffer.from(encoded.trim(), "base64").toString("utf8"));
@@ -288,20 +289,21 @@ function decodePaymentMetadata(headers) {
         && EVM_ADDRESS_PATTERN.test(String(accepted?.asset || ""))
         && EVM_ADDRESS_PATTERN.test(String(accepted?.payTo || ""))
         && Boolean(payer);
-      return {
+      x402Metadata = {
         credentialParsed,
         payer: credentialParsed ? payer : null,
         paymentId: credentialParsed && PAYMENT_ID_PATTERN.test(String(paymentIdCandidate || ""))
           ? String(paymentIdCandidate)
           : null,
       };
+      if (credentialParsed) return x402Metadata;
     } catch {
-      return { credentialParsed: false, payer: null, paymentId: null };
+      x402Metadata = { credentialParsed: false, payer: null, paymentId: null };
     }
   }
 
   const serialized = Credential.extractPaymentScheme(headerValue(headers, "authorization"));
-  if (!serialized) return { credentialParsed: false, payer: null, paymentId: null };
+  if (!serialized) return x402Metadata || { credentialParsed: false, payer: null, paymentId: null };
   try {
     const credential = Credential.deserialize(serialized);
     const request = credential?.challenge?.request;

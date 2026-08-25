@@ -2154,7 +2154,7 @@ test("live generated surface: exact 25/24 paid inventories, full parity, zero fi
   for (const [profile, route] of [["agentcash", "/openapi.json"], ["mpp", "/mpp-openapi.json"]]) {
     const document = await readJson(base, route);
     assert.equal(document.openapi, "3.1.0");
-    assert.equal(document.info.version, "1.23.20");
+    assert.equal(document.info.version, "1.23.21");
 
     // Exact paid inventory reconciliation over EVERY generated paid operation.
     const expectedRoutes = expectedPaidMethodRoutes({ profile, circleGatewayEnabled: true });
@@ -2324,7 +2324,7 @@ test("CIRCLE_GATEWAY_ENABLED=false boots and derives 24/24 inventories from enab
   ]) {
     const document = await readJson(base, route);
     assert.equal(document.openapi, "3.1.0");
-    assert.equal(document.info.version, "1.23.20");
+    assert.equal(document.info.version, "1.23.21");
     const expectedRoutes = expectedPaidMethodRoutes({ profile, circleGatewayEnabled: false });
     assert.equal(expectedRoutes.length, expectedCount);
     assert.deepEqual(paidMethodRoutesOf(document), expectedRoutes);
@@ -2449,7 +2449,7 @@ async function bootServer(t, extraEnv = {}) {
   });
 
   assert.equal(await listening, true);
-  assert.equal(SERVICE_VERSION, "1.23.20");
+  assert.equal(SERVICE_VERSION, "1.23.21");
   return `http://127.0.0.1:${port}`;
 }
 
