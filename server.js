@@ -49,6 +49,11 @@ import {
   declarePaymentIdentifierExtension,
   paymentIdentifierResourceServerExtension,
 } from "@x402/extensions/payment-identifier";
+import {
+  BUILDER_CODE,
+  builderCodeResourceServerExtension,
+  declareBuilderCodeExtension,
+} from "@x402/extensions/builder-code";
 import { createFacilitatorConfig } from "@coinbase/x402";
 import { assertCdpX402ResourceDescriptionCompatibility } from "./x402-resource-compat.mjs";
 import { createCommerceTrust } from "./commerce-trust.mjs";
@@ -228,6 +233,10 @@ const PAY_TO = process.env.PAY_TO || "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee
 
 // Network: "eip155:8453" = Base MAINNET (real USDC). "eip155:84532" = Base Sepolia (testnet).
 const NETWORK = process.env.NETWORK || "eip155:8453";
+const X402_BUILDER_CODE = process.env.X402_BUILDER_CODE?.trim() || "";
+const BUILDER_CODE_ROUTE_EXTENSIONS = X402_BUILDER_CODE
+  ? { [BUILDER_CODE]: declareBuilderCodeExtension(X402_BUILDER_CODE) }
+  : {};
 
 // Price per request (USDC). A 2026-08-11 brand-blind live-market screen found
 // directly competing extraction and Markdown routes concentrated around
@@ -380,6 +389,9 @@ const resourceServer = new x402ResourceServer(facilitatorClient).register(
   new ExactEvmScheme()
 );
 resourceServer.registerExtension(paymentIdentifierResourceServerExtension);
+if (X402_BUILDER_CODE) {
+  resourceServer.registerExtension(builderCodeResourceServerExtension);
+}
 const commerceTrust = createCommerceTrust({
   privateKey: process.env.RECEIPT_SIGNING_PRIVATE_KEY,
   network: NETWORK,
@@ -390,6 +402,7 @@ if (commerceTrust.enabled) {
 }
 const COMMON_COMMERCE_EXTENSIONS = {
   [PAYMENT_IDENTIFIER]: declarePaymentIdentifierExtension(false),
+  ...BUILDER_CODE_ROUTE_EXTENSIONS,
   ...commerceTrust.routeExtensions,
 };
 
