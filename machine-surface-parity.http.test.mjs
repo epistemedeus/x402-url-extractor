@@ -136,6 +136,12 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(receipt.llmsAlternateCount, 1);
   assert.equal(receipt.mcpToolCount, 22);
   assert.equal(mcpDescriptor.toolCount, 22);
+  assert.equal(manifest.items.length, 23);
+  for (const item of manifest.items) {
+    assert.equal(item.resource.serviceName, "SameDayDesk");
+    assert.equal(item.resource.iconUrl, "https://samedaydesk.com/favicon.svg");
+    assert.ok(Array.isArray(item.resource.tags) && item.resource.tags.length > 0);
+  }
 
   const llmsRoutes = parseLlmsPaidRoutes(llms).map((entry) => entry.route);
   for (const route of SNAPSHOT_MISSING_FROM_LLMS) {

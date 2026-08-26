@@ -971,6 +971,7 @@ const machineActionCatalog = () => ({
   settlement: "x402 exact or MPP evm/charge USDC on Base",
   paymentProtocols: ["x402", "mpp"],
   alternateAccess: circleGateway.enabled ? {
+    ...bazaarResourceMetadataFor("/commerce/payment-offer-preflight"),
     product: "payment_offer_preflight",
     method: "GET",
     route: CIRCLE_GATEWAY_PATH,
@@ -999,6 +1000,7 @@ const machineActionCatalog = () => ({
     const method = resource.method || "GET";
     const response = getDiscoveryOutputContract(`${method} ${route}`);
     const request = getDiscoveryRequestContract(`${method} ${route}`);
+    const serviceMetadata = bazaarResourceMetadataFor(route);
     return {
       name: route.replace(/^\//, "").replaceAll("/", "_"),
       method,
@@ -1009,7 +1011,7 @@ const machineActionCatalog = () => ({
       priceUsdc: Number(resource.amount) / 1e6,
       paymentProtocols: ["x402", "mpp"],
       mimeType: resource.mimeType,
-      tags: BAZAAR_RESOURCE_METADATA[route]?.tags || [],
+      ...serviceMetadata,
       request: projectDiscoveryRequest(resource.url, method, request),
       response: response ? { mimeType: "application/json", ...response } : null,
     };
@@ -1047,6 +1049,9 @@ const constructionParityReceipt = () => {
         mimeType: CIRCLE_GATEWAY_RESOURCE.mimeType,
         accepts: CIRCLE_GATEWAY_RESOURCE.accepts,
         request: catalog.alternateAccess.request,
+        serviceName: catalog.alternateAccess.serviceName,
+        tags: catalog.alternateAccess.tags,
+        iconUrl: catalog.alternateAccess.iconUrl,
       },
     } : {}),
   });
@@ -1119,6 +1124,9 @@ app.get(["/.well-known/x402", "/.well-known/x402.json", "/x402.json", "/api/x402
         mimeType: CIRCLE_GATEWAY_RESOURCE.mimeType,
         accepts: CIRCLE_GATEWAY_RESOURCE.accepts,
         request: catalog.alternateAccess.request,
+        serviceName: catalog.alternateAccess.serviceName,
+        tags: catalog.alternateAccess.tags,
+        iconUrl: catalog.alternateAccess.iconUrl,
       },
     } : {}),
   });
