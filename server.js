@@ -800,6 +800,7 @@ const circleGateway = buildCircleGatewayRoute({
   enabled: process.env.CIRCLE_GATEWAY_ENABLED !== "false",
   facilitatorUrl: process.env.CIRCLE_GATEWAY_FACILITATOR_URL,
   description: RESOURCES[13].description,
+  resourceMetadata: bazaarResourceMetadataFor("/commerce/payment-offer-preflight"),
 });
 const CIRCLE_GATEWAY_RESOURCE = {
   ...circleGateway.resource,
@@ -971,7 +972,9 @@ const machineActionCatalog = () => ({
   settlement: "x402 exact or MPP evm/charge USDC on Base",
   paymentProtocols: ["x402", "mpp"],
   alternateAccess: circleGateway.enabled ? {
-    ...bazaarResourceMetadataFor("/commerce/payment-offer-preflight"),
+    serviceName: CIRCLE_GATEWAY_RESOURCE.serviceName,
+    tags: CIRCLE_GATEWAY_RESOURCE.tags,
+    iconUrl: CIRCLE_GATEWAY_RESOURCE.iconUrl,
     product: "payment_offer_preflight",
     method: "GET",
     route: CIRCLE_GATEWAY_PATH,
