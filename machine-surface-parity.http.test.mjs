@@ -99,6 +99,7 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
       COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
       MPP_SECRET_KEY: "",
       PUBLIC_URL: "https://agents.samedaydesk.com",
+      X402_BUILDER_CODE: "bc_samedaydesk_test",
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -138,6 +139,13 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
 
   assert.equal(await listening, true);
   const base = `http://127.0.0.1:${port}`;
+  const challengeResponse = await fetch(`${base}/extract?url=https%3A%2F%2Fexample.com`);
+  assert.equal(challengeResponse.status, 402);
+  const encodedChallenge = challengeResponse.headers.get("payment-required");
+  assert.ok(encodedChallenge);
+  const challenge = JSON.parse(Buffer.from(encodedChallenge, "base64").toString("utf8"));
+  assert.equal(challenge.extensions?.["builder-code"]?.info?.a, "bc_samedaydesk_test");
+  assert.equal(challenge.extensions?.["builder-code"]?.schema?.additionalProperties, false);
   const [llms, catalog, agentCard, openapi, mppOpenapi, manifest, mcpDescriptor] = await Promise.all([
     readText(base, "/llms.txt"),
     readJson(base, "/api/actions"),
