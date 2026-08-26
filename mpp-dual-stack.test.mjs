@@ -5,6 +5,8 @@ import { evm as evmClient, Mppx as ClientMppx } from "mppx/client";
 import { privateKeyToAccount } from "viem/accounts";
 import {
   createMppDualStack,
+  hasMppPaymentAuthorizationForPreflight,
+  hasMppPaymentCredential,
   mppAssetForNetwork,
 } from "./mpp-dual-stack.mjs";
 import { decodeReplayPayment } from "./idempotency-replay.mjs";
@@ -73,6 +75,25 @@ test("stays explicitly disabled until a production secret is configured", async 
   assert.equal(dual.enabled, false);
   assert.match(dual.reason, /MPP_SECRET_KEY/);
   assert.deepEqual(await dual.authorize(new Request(`${PUBLIC_URL}/report`)), { kind: "disabled" });
+});
+
+test("detects MPP Payment credentials anywhere in a mixed Authorization list", () => {
+  assert.equal(hasMppPaymentCredential({ authorization: "Payment opaque" }), true);
+  assert.equal(hasMppPaymentCredential({ authorization: "Bearer opaque, Payment opaque" }), true);
+  assert.equal(hasMppPaymentCredential({ authorization: "Basic abc, pAyMeNt opaque" }), true);
+  assert.equal(hasMppPaymentCredential({ authorization: "Bearer opaque" }), false);
+  assert.equal(hasMppPaymentCredential({ authorization: "" }), false);
+});
+
+test("preflight detects syntactic Payment attempts without misclassifying other schemes", () => {
+  assert.equal(hasMppPaymentAuthorizationForPreflight({ authorization: "Payment" }), true);
+  assert.equal(hasMppPaymentAuthorizationForPreflight({ authorization: "Payment   " }), true);
+  assert.equal(hasMppPaymentAuthorizationForPreflight({ authorization: "Bearer opaque, Payment" }), true);
+  assert.equal(hasMppPaymentAuthorizationForPreflight({ authorization: "Basic abc, pAyMeNt" }), true);
+  assert.equal(hasMppPaymentAuthorizationForPreflight({ authorization: "Bearer opaque" }), false);
+  assert.equal(hasMppPaymentAuthorizationForPreflight({ authorization: "Basic abc" }), false);
+  assert.equal(hasMppPaymentAuthorizationForPreflight({ authorization: "Bearer Payment" }), false);
+  assert.equal(hasMppPaymentAuthorizationForPreflight({ authorization: "NotPayment opaque" }), false);
 });
 
 test("issues a route-bound native MPP challenge with matching economics", async () => {

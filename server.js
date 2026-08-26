@@ -18,7 +18,11 @@
 // It does not change or intercept the standard Base exact or native MPP paths.
 
 import express from "express";
-import { paymentMiddleware, x402ResourceServer } from "@x402/express";
+import {
+  paymentMiddlewareFromHTTPServer,
+  x402HTTPResourceServer,
+  x402ResourceServer,
+} from "@x402/express";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import {
@@ -46,11 +50,12 @@ import {
   paymentIdentifierResourceServerExtension,
 } from "@x402/extensions/payment-identifier";
 import { createFacilitatorConfig } from "@coinbase/x402";
+import { assertCdpX402ResourceDescriptionCompatibility } from "./x402-resource-compat.mjs";
 import { createCommerceTrust } from "./commerce-trust.mjs";
 import { buildSkillContract } from "./skill-contract.mjs";
 import { exposeAgenticTradeProxyDiagnostics } from "./agentictrade-proxy-diagnostics.mjs";
-import { extract, readMarkdown } from "./extract.mjs";
-import { scanRepo, scanRepoMcpOutputSchema } from "./scan.mjs";
+import { assertPublicHttpUrl, extract, readMarkdown } from "./extract.mjs";
+import { parseRepo, scanRepo, scanRepoMcpOutputSchema } from "./scan.mjs";
 import { schemaforge } from "./schemaforge.mjs";
 import { enrich } from "./enrich.mjs";
 import { walletEnrich } from "./wallet-enrich.mjs";
@@ -162,7 +167,7 @@ import {
   buildPaidActionEffectProfile,
   paidActionEffectHeaders,
 } from "./paid-action-effect-profile.mjs";
-import { createMppDualStack } from "./mpp-dual-stack.mjs";
+import { createMppDualStack, hasMppPaymentAuthorizationForPreflight } from "./mpp-dual-stack.mjs";
 import { legacyCompatibleX402Body } from "./x402-legacy-body.mjs";
 import {
   VIBES_DISCOVERABILITY_PATH,
@@ -739,7 +744,7 @@ commerceSettlementReconciler = createCommerceSettlementReconciler({
 });
 const acceptsFor = createExactUsdcAcceptsFor({ network: NETWORK, payTo: PAY_TO });
 const EXTRACT_DISCOVERY_DESCRIPTION = "Extract a public web page into clean structured JSON for agent workflows: title, description, main text, all JSON-LD, Open Graph and Twitter metadata, headings, links, and AI-crawler and structured-data signals. Follows redirects and enforces timeout, response-size, and SSRF safeguards.";
-const RESOURCES = [
+const RESOURCES = assertCdpX402ResourceDescriptionCompatibility([
   { url: `${PUBLIC_URL}/extract`, amount: priceToAtomic(EXTRACT_PRICE), description: EXTRACT_DISCOVERY_DESCRIPTION, mimeType: "application/json" },
   { url: `${PUBLIC_URL}/read`, amount: priceToAtomic(READ_PRICE), description: "URL -> full page content as clean Markdown, ready for LLM context. Strips nav/ads/scripts, preserves headings/links/lists.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/scan`, amount: priceToAtomic(SCAN_PRICE), description: "Static supply-chain security scan of a public GitHub repo before an agent installs/runs it. Flags exfil sinks, obfuscation, credential reads, install-time curl|bash. risk=clean|suspicious|dangerous.", mimeType: "application/json" },
@@ -752,17 +757,17 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/defi/morpho-market-underwrite`, amount: priceToAtomic(MORPHO_MARKET_UNDERWRITE_PRICE), description: "Base Morpho market -> deterministic underwriting facts: parameter integrity, direct-chain checks, liquidity, utilization, APY history, borrower concentration and health bands, bad debt, and PreLiquidation supply. Read-only evidence flags; no opaque score or capital action.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/defi/morpho-preliquidation-replay`, amount: priceToAtomic(MORPHO_PRELIQUIDATION_REPLAY_PRICE), description: "Base transaction -> deterministic Morpho PreLiquidation replay: strict event decode, block-time contract parameters and oracle price, repaid debt, seized collateral, gross incentive, and gas. Historical evidence only; no profitability claim or execution.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/work/opportunity-preflight`, amount: priceToAtomic(OPPORTUNITY_PREFLIGHT_PRICE), description: "Agent work opportunity -> deterministic attempt, verify-first, or abandon preflight using caller-supplied cost and selection assumptions plus dated platform evidence. Returns break-even probability, expected surplus, hard gates, and source-linked evidence. No claim, bid, payment, or submission.", mimeType: "application/json" },
-  { url: `${PUBLIC_URL}/distribution/agent-discoverability-audit`, amount: priceToAtomic(AGENT_DISCOVERABILITY_AUDIT_PRICE), description: "Buyer-intent rank, listing-identity, and catalog-to-runtime price-coherence audit for one x402 or MPP service across ten public machine-service discovery views. Returns registry-native position, dependency-labeled coverage, canonical and alias records, duplicates, competitors, expected-route presence, exact-price drift, evidence-based next actions, and source outages. Optional runtimeUrl derives the reference price from a same-origin unsigned headers-only offer; optional surfaceAudit checks the public Agent Card, ERC-8004 registration document, and action catalog. No catalog credentials, signatures, or payments.", mimeType: "application/json" },
-  { url: `${PUBLIC_URL}/commerce/payment-offer-preflight`, amount: priceToAtomic(PAYMENT_OFFER_PREFLIGHT_PRICE), description: "Compare x402 and MPP payment challenges and seller-declared success-response readiness before buyer authorization for one exact public HTTPS GET URL. Optionally compare caller-supplied catalog metadata with each live unsigned offer across request, protocol, amount, network, asset, recipient, and expiry. Returns normalized offers, binding and parity findings, catalog coherence, a bounded response-contract report, and an explicit parseable, review-required, or no-offer decision. Uses no target credential, signature, or target payment, follows no redirects, never reads the paid target body, and reads only the same-origin public OpenAPI document under a strict size cap.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/distribution/agent-discoverability-audit`, amount: priceToAtomic(AGENT_DISCOVERABILITY_AUDIT_PRICE), description: "Audit buyer-intent rank, listing identity, and catalog-to-runtime price coherence for one x402 or MPP service across ten machine-service discovery views. Returns native positions, dependency-labeled coverage, aliases, duplicates, competitors, route presence, exact price drift, and source outages. An optional same-origin runtime URL supplies unsigned rail terms; optional surface audit checks Agent Card, ERC-8004 registration, and action catalog. Uses no credentials, signatures, or payments.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/commerce/payment-offer-preflight`, amount: priceToAtomic(PAYMENT_OFFER_PREFLIGHT_PRICE), description: "Compare live x402 and MPP challenges and seller-declared success-response readiness for one exact public HTTPS GET URL before buyer authorization. Optionally compare caller-supplied catalog terms with each unsigned offer across request, protocol, amount, network, asset, recipient, and expiry. Returns normalized offers, binding and parity findings, catalog coherence, response-contract status, and a bounded decision. No credentials, signatures, target payments, redirects, or paid body reads.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/commerce/settlement-proof`, amount: priceToAtomic(SETTLEMENT_PROOF_PRICE), description: "Verify one claimed canonical Base USDC settlement against the successful on-chain transaction receipt. Binds an exact transaction hash, recipient, atomic amount, and optional payer; returns a deterministic verified or not-verified result, block time, mismatch findings, and no private merchant-ledger data. Read-only and performs no wallet, signing, broadcast, custody, or execution action.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/chain/transaction-receipt`, amount: priceToAtomic(TRANSACTION_RECEIPT_PRICE), description: "Get a normalized Base or Ethereum transaction receipt from one hash: success or revert status, block time, gas used, effective gas price, total transaction fee, decoded ERC-20 Transfer events, and canonical USDC transfers. Returns explicit not-found or RPC-unavailable evidence, excludes raw logs, and performs no wallet, signing, broadcast, custody, or execution action.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/chain/solana-transaction-receipt`, amount: priceToAtomic(SOLANA_TRANSACTION_RECEIPT_PRICE), description: "Get a normalized finalized Solana transaction receipt from one signature: success or failure status, slot, block time, fee, SPL-token owner deltas, canonical USDC deltas, and optional exact mint, recipient, amount, and payer verification. Returns explicit not-found or RPC-unavailable evidence, excludes raw instructions and logs, and performs no wallet, signing, broadcast, custody, or execution action.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/security/wallet-policy-conformance`, method: "POST", amount: priceToAtomic(WALLET_POLICY_CONFORMANCE_PRICE), description: "Evaluate a credential-free standardized allow/deny matrix for an agent wallet or delegated signer. Distinguishes explicit provider policy denials from validation and generic provider failures, separates operation allowlisting from exact execution-shape control, and returns conformant, partial, or unsafe without an opaque score. Accepts no credentials, wallet IDs, signatures, transactions, or raw provider responses.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/security/stateful-wallet-policy-conformance`, method: "POST", amount: priceToAtomic(STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE), description: "Evaluate credential-free stateful wallet-policy observations for sequential cumulative limits, signed-but-unbroadcast accounting, ABI extraction integrity, concurrent oversubscription, counter-reference failure, and application serialization. Separates provider-policy enforcement from application guards and returns conformant, partial, or unsafe without an opaque score. Accepts no credentials, wallet or resource IDs, counter values, signatures, transactions, or raw provider responses.", mimeType: "application/json" },
-  { url: `${PUBLIC_URL}/commerce/seller-integrity-audit`, amount: priceToAtomic(SELLER_INTEGRITY_AUDIT_PRICE), description: "Audit one exact paid GET or POST route before buyers spend: constructible non-secret input, live unpaid GET payment terms, optional Bazaar catalog contract, and recursively guaranteed buyer-required success paths. Returns machine_buyable for live-verified GET, contract_ready for static-safe POST, or repair_required. POST analysis sends no target request. Uses public pinned DNS, no credentials, no target payment, no redirect, no paid target body, and retains no seller schema, body, or query values.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/commerce/seller-integrity-audit`, amount: priceToAtomic(SELLER_INTEGRITY_AUDIT_PRICE), description: "Audit one exact paid GET or POST route before spend: constructible non-secret input, live unpaid GET terms, optional Bazaar contract, and recursively guaranteed buyer-required success paths. Returns machine_buyable for live-verified GET, contract_ready for static-safe POST, or repair_required. POST analysis sends no target request. Uses pinned public DNS, no credentials, target payment, redirect, paid target body, or retained seller schema, body, or query values.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/commerce/contract-qualified-search`, amount: priceToAtomic(CONTRACT_QUALIFIED_SEARCH_PRICE), description: "Search Agent402 and the official MPP catalog for paid machine services that both match a capability intent and guarantee buyer-required JSON output paths. Returns bounded machine-buyable or contract-ready candidates plus controlled rejection reasons. Rejects unresolved routes and owned supply before audit, uses no credentials or wallet, sends no seller POST or target payment, reads no paid response body, and retains only a query digest.", mimeType: "application/json" },
-  { url: `${PUBLIC_URL}/distribution/agent-surface-budget-audit`, amount: priceToAtomic(AGENT_SURFACE_BUDGET_AUDIT_PRICE), description: "Measure one public service's free MCP tools/list, OpenAPI, or both declared discovery surfaces before an agent calls or pays for anything. Returns byte counts, comparative byte-derived token estimates, missing selection contracts, heaviest tools and operations, budget decisions, and progressive-discovery fixes. Unselected surfaces are not fetched or judged. Uses pinned public DNS, follows no redirect, sends no credential or target payment, calls no target tool, and returns no target schema, session identifier, or response body.", mimeType: "application/json" },
-];
+  { url: `${PUBLIC_URL}/distribution/agent-surface-budget-audit`, amount: priceToAtomic(AGENT_SURFACE_BUDGET_AUDIT_PRICE), description: "Measure one public service's free MCP tools/list, OpenAPI, or both discovery surfaces before an agent calls or pays. Returns byte counts, token estimates, missing selection contracts, heaviest definitions, budget decisions, and progressive-discovery fixes. Unselected surfaces are not fetched or judged. Uses pinned public DNS, no redirects, credentials, target payments, or target calls, and returns no target schema, session ID, or body.", mimeType: "application/json" },
+]);
 
 const WALLET_POLICY_DISCOVERY_INPUT = Object.freeze({
   profileId: "privy-solana-lab",
@@ -1631,9 +1636,182 @@ app.get(["/mpp-openapi.json", "/openapi.mpp.json"], (_req, res) => {
 // settlement. Changed request bindings fail with an uncharged 409.
 app.use(idempotencyReplay.middleware);
 
+const PAYMENT_CREDENTIAL_HEADERS = Object.freeze([
+  "payment-signature",
+  "x-payment",
+  "x-payment-signature",
+]);
+
+const hasRawRequestHeader = (req, name) => Object.prototype.hasOwnProperty.call(
+  req.headers || {},
+  name.toLowerCase(),
+);
+
+// Recognize every credential surface accepted by the x402 and MPP middleware.
+// Raw x402 header presence counts even when a proxy presents an empty value.
+// MPP detection reuses the payment middleware's exact comma-list parser; an
+// explicitly present empty Authorization is also not credential-free.
+const hasPaymentCredential = (req) => {
+  if (PAYMENT_CREDENTIAL_HEADERS.some((name) => hasRawRequestHeader(req, name))) return true;
+  if (!hasRawRequestHeader(req, "authorization")) return false;
+  const authorization = req.get("authorization") || "";
+  if (authorization.trim() === "") return true;
+  return hasMppPaymentAuthorizationForPreflight(req.headers);
+};
+
+// Machine registries discover a paid GET by probing its bare canonical URL.
+// Permit only this exact empty, credential-free shape to reach the unsigned
+// challenge. Any query key or payment credential restores normal validation.
+const isUnsignedDiscoveryProbe = (req) => (
+  req.method === "GET"
+  && Object.keys(req.query || {}).length === 0
+  && !hasPaymentCredential(req)
+);
+
+function unchargedInvalidRequest(res, error) {
+  return res.status(400).json({ ok: false, error, charged: false });
+}
+
+// Derive the scalar-query boundary from the generated paid OpenAPI surface so
+// new paid GET parameters inherit the same fail-before-payment behavior. Only
+// an explicitly declared array permits repeated query keys.
+const PAID_GET_SCALAR_QUERY_PARAMETERS = (() => {
+  const document = buildOpenApiDocument({ profile: "agentcash" });
+  const result = new Map();
+  for (const [routePath, pathItem] of Object.entries(document.paths || {})) {
+    const operation = pathItem?.get;
+    if (!operation?.["x-payment-info"]) continue;
+    result.set(routePath, new Set(
+      (operation.parameters || [])
+        .filter((parameter) => parameter?.in === "query" && parameter?.schema?.type !== "array")
+        .map((parameter) => parameter.name),
+    ));
+  }
+  return result;
+})();
+
+app.use((req, res, next) => {
+  if (req.method !== "GET") return next();
+  // Use the very same matcher instance that owns x402 protection. Also replay
+  // WHATWG dot-segment normalization because the MPP adapter constructs a URL
+  // before matching. The x402 route pattern remains the sole canonical paid
+  // route identity across both rails.
+  const directRouteMatch = x402HttpServer.getRouteConfig(req.path, req.method);
+  let normalizedRouteMatch;
+  if (!directRouteMatch) {
+    try {
+      const normalizedPath = new URL(req.originalUrl, "http://samedaydesk.invalid").pathname;
+      if (normalizedPath !== req.path) {
+        normalizedRouteMatch = x402HttpServer.getRouteConfig(normalizedPath, req.method);
+      }
+    } catch {
+      normalizedRouteMatch = undefined;
+    }
+  }
+  const routeMatch = directRouteMatch || normalizedRouteMatch;
+  if (routeMatch && req.path !== routeMatch.pattern) {
+    res.set("Cache-Control", "no-store");
+    return unchargedInvalidRequest(res, `paid route path must be canonical: ${routeMatch.pattern}`);
+  }
+  const scalarParameters = PAID_GET_SCALAR_QUERY_PARAMETERS.get(routeMatch?.pattern);
+  if (!scalarParameters) return next();
+  const duplicate = [...scalarParameters].find((name) => Array.isArray(req.query?.[name]));
+  if (!duplicate) return next();
+  res.set("Cache-Control", "no-store");
+  return unchargedInvalidRequest(res, `query parameter ${duplicate} must be supplied exactly once`);
+});
+
+function requireStringQuery(req, res, next, {
+  aliases,
+  error,
+  optionalStrings = [],
+  validate = () => true,
+}) {
+  if (isUnsignedDiscoveryProbe(req)) return next();
+  const value = aliases.map((name) => req.query[name]).find(Boolean);
+  let valid = false;
+  try {
+    valid = typeof value === "string"
+      && optionalStrings.every((name) => req.query[name] === undefined || typeof req.query[name] === "string")
+      && Boolean(validate(value));
+  } catch {
+    valid = false;
+  }
+  if (!valid) {
+    return unchargedInvalidRequest(res, error);
+  }
+  return next();
+}
+
+const isPublicHttpUrl = (value) => Boolean(assertPublicHttpUrl(value));
+const isPublicDomainInput = (value) => Boolean(assertPublicHttpUrl(
+  /^https?:\/\//i.test(value) ? value : `https://${value}`,
+));
+const isPublicGitHubRepo = (value) => Boolean(parseRepo(value));
+
+// The first eight catalog-indexed GET products already exposed unsigned bare
+// challenges, but validated required input only in their paid handlers. Move
+// those gates before both payment rails so a credential cannot settle first.
+app.get("/extract", (req, res, next) => requireStringQuery(req, res, next, {
+  aliases: ["url"],
+  error: "url must be a public HTTP or HTTPS URL",
+  validate: isPublicHttpUrl,
+}));
+app.get("/read", (req, res, next) => requireStringQuery(req, res, next, {
+  aliases: ["url"],
+  error: "url must be a public HTTP or HTTPS URL",
+  validate: isPublicHttpUrl,
+}));
+app.get("/scan", (req, res, next) => requireStringQuery(req, res, next, {
+  aliases: ["repo"],
+  error: "repo must identify a public GitHub repository as owner/name or a GitHub URL",
+  validate: isPublicGitHubRepo,
+}));
+app.get("/schemaforge", (req, res, next) => requireStringQuery(req, res, next, {
+  aliases: ["site"],
+  error: "site must be a public HTTP or HTTPS URL",
+  optionalStrings: ["vertical", "city"],
+  validate: isPublicHttpUrl,
+}));
+app.get("/enrich", (req, res, next) => requireStringQuery(req, res, next, {
+  aliases: ["domain", "url"],
+  error: "domain must identify a public HTTP or HTTPS origin",
+  validate: isPublicDomainInput,
+}));
+app.get("/deep-audit", (req, res, next) => requireStringQuery(req, res, next, {
+  aliases: ["domain", "url"],
+  error: "domain must identify a public HTTP or HTTPS origin",
+  optionalStrings: ["vertical", "city"],
+  validate: isPublicDomainInput,
+}));
+app.get("/wallet-enrich", (req, res, next) => requireStringQuery(req, res, next, {
+  aliases: ["address", "wallet", "addr"],
+  error: "address must be a 0x-prefixed 40-hex EVM address",
+  validate: (value) => /^0x[0-9a-fA-F]{40}$/.test(value),
+}));
+app.get("/defi/morpho-position", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
+  const address = req.query.address || req.query.wallet || req.query.borrower;
+  const shocksTyped = req.query.shocks === undefined || typeof req.query.shocks === "string";
+  const shockValues = typeof req.query.shocks === "string"
+    ? req.query.shocks.split(",").map((value) => value.trim()).filter(Boolean)
+    : [];
+  const shocksValid = shockValues.every((value) => (
+    Number.isFinite(Number(value)) && Number(value) >= -99 && Number(value) <= 100
+  ));
+  if (typeof address !== "string" || !/^0x[0-9a-fA-F]{40}$/.test(address) || !shocksTyped || !shocksValid) {
+    return unchargedInvalidRequest(
+      res,
+      "address must be a 0x-prefixed 40-hex EVM address and shocks must be finite numbers from -99 through 100",
+    );
+  }
+  return next();
+});
+
 // Validate the higher-value quote before the x402 middleware so malformed calls
 // fail with HTTP 400 and are never challenged for payment.
 app.get("/defi/morpho-protection", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   const address = req.query.address || req.query.wallet || req.query.borrower;
   const target = req.query.targetHealthFactor ?? "1.25";
   const shock = req.query.protectAgainstShockPct ?? "-10";
@@ -1655,6 +1833,7 @@ app.get("/defi/morpho-protection", (req, res, next) => {
 
 // Validate the market identifier before payment so malformed calls are free.
 app.get("/defi/morpho-market-underwrite", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   const marketId = req.query.marketId || req.query.market || req.query.id;
   if (typeof marketId !== "string" || !/^0x[0-9a-fA-F]{64}$/.test(marketId)) {
     return res.status(400).json({ ok: false, error: "marketId must be a 0x-prefixed 32-byte hex value", charged: false });
@@ -1663,6 +1842,7 @@ app.get("/defi/morpho-market-underwrite", (req, res, next) => {
 });
 
 app.get("/defi/morpho-preliquidation-replay", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   const transactionHash = req.query.transactionHash || req.query.tx || req.query.hash;
   if (typeof transactionHash !== "string" || !/^0x[0-9a-fA-F]{64}$/.test(transactionHash)) {
     return res.status(400).json({ ok: false, error: "transactionHash must be a 0x-prefixed 32-byte hex value", charged: false });
@@ -1671,16 +1851,9 @@ app.get("/defi/morpho-preliquidation-replay", (req, res, next) => {
 });
 
 // Validate explicit opportunity economics before payment. Malformed or
-// incomplete required inputs return an uncharged 400. Empty credential-free
-// HEAD and POST requests may reach the payment challenge so machine registries
-// can inspect the route without manufacturing a paid attempt.
-const hasPaymentCredential = (req) => Boolean(
-  req.get("payment-signature") ||
-  req.get("x-payment") ||
-  req.get("x-payment-signature") ||
-  /^Payment\s+/i.test(req.get("authorization") || "")
-);
-
+// incomplete required inputs return an uncharged 400. The shared bare-GET gate,
+// plus the existing bounded HEAD and POST exceptions, lets machine registries
+// inspect payment terms without manufacturing a paid attempt.
 // Machine catalogs can exercise one fixed, cost-free example before buying a
 // custom result. This branch accepts exactly `trial=1`, performs no external
 // work, and cannot bypass a credential-bearing or caller-supplied paid call.
@@ -1694,6 +1867,7 @@ app.get("/work/opportunity-preflight", (req, res, next) => {
 });
 
 const validateOpportunityPreflightRequest = (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     normalizeOpportunityPreflightRequest({
       method: req.method,
@@ -1719,6 +1893,7 @@ app.post("/work/opportunity-preflight", validateOpportunityPreflightRequest);
 // credentials. An explicit surfaceAudit flag enables only three fixed public
 // same-origin JSON documents after settlement.
 app.get("/distribution/agent-discoverability-audit", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     normalizeDiscoverabilityAuditInput(req.query);
     return next();
@@ -1735,6 +1910,7 @@ app.get("/distribution/agent-discoverability-audit", (req, res, next) => {
 // payment challenge. DNS resolution and the headers-only target request happen
 // only after settlement because they are the work this route sells.
 const validatePaymentOfferPreflightRequest = (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     const input = req.method === "POST" ? req.body : { url: req.query.url };
     // Permit the empty unauthenticated POST used by registry discovery to
@@ -1757,6 +1933,7 @@ app.post("/commerce/payment-offer-preflight", validatePaymentOfferPreflightReque
 
 // Reject malformed seller origins and paths before either payment rail runs.
 app.get("/commerce/seller-integrity-audit", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     res.locals.sellerIntegrityAuditInput = normalizeSellerIntegrityAuditInput(req.query);
     return next();
@@ -1779,6 +1956,7 @@ app.get("/commerce/seller-integrity-audit", (req, res, next) => {
 // rail charges. Directory search and bounded seller audits happen only after
 // settlement.
 app.get("/commerce/contract-qualified-search", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     res.locals.contractQualifiedSearchInput = normalizeContractQualifiedSearchInput(req.query);
     return next();
@@ -1801,6 +1979,7 @@ app.get("/commerce/contract-qualified-search", (req, res, next) => {
 // charges. DNS, MCP initialize/tools-list, and OpenAPI acquisition happen only
 // after settlement.
 app.get("/distribution/agent-surface-budget-audit", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     res.locals.agentSurfaceBudgetAuditInput = normalizeAgentSurfaceBudgetAuditInput(req.query);
     return next();
@@ -1822,6 +2001,7 @@ app.get("/distribution/agent-surface-budget-audit", (req, res, next) => {
 // Reject malformed settlement claims before payment. Receipt and block reads
 // happen only after settlement because they are the work this route sells.
 app.get("/commerce/settlement-proof", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     normalizeSettlementProofInput(req.query);
     return next();
@@ -1839,6 +2019,7 @@ app.get("/commerce/settlement-proof", (req, res, next) => {
 // Reject malformed receipt requests before payment. Public RPC reads happen
 // only after settlement because the normalized receipt is the sold work.
 app.get("/chain/transaction-receipt", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     normalizeTransactionReceiptInput(req.query);
     return next();
@@ -1854,6 +2035,7 @@ app.get("/chain/transaction-receipt", (req, res, next) => {
 });
 
 app.get("/chain/solana-transaction-receipt", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     normalizeSolanaTransactionReceiptInput(req.query);
     return next();
@@ -1931,8 +2113,7 @@ function declareOpportunityPreflightContract(routeKey) {
 // The paid route. Native MPP challenges are merged into the same unpaid 402,
 // while the existing extension-rich x402 middleware remains authoritative for
 // x402 credentials. A settled MPP credential bypasses only the duplicate gate.
-const x402Paywall = paymentMiddleware(
-    {
+const X402_ROUTES = {
       "GET /extract": {
         ...bazaarResourceMetadataFor("/extract"),
         accepts: [
@@ -2944,9 +3125,9 @@ const x402Paywall = paymentMiddleware(
           }),
         },
       },
-    },
-    resourceServer
-  );
+};
+const x402HttpServer = new x402HTTPResourceServer(resourceServer, X402_ROUTES);
+const x402Paywall = paymentMiddlewareFromHTTPServer(x402HttpServer);
 
 const evidenceResources = [];
 for (const { method, path } of SERVICE_DEPLOYMENT_ROUTES) {
