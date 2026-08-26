@@ -304,6 +304,24 @@ test("all paid GET products expose unsigned bare offers without weakening pre-pa
   );
 
   const openapi = await fetch(`${merchant.base}/openapi.json`).then((response) => response.json());
+  const portableRoutePattern = "^/[^/?#{}][^?#{}]*$";
+  const openapiRoutePattern = openapi.paths["/commerce/seller-integrity-audit"].get.parameters
+    .find(({ name }) => name === "route").schema.pattern;
+  const sellerIntegrityChallenge = decodePaymentRequiredHeader((await fetch(
+    `${merchant.base}/commerce/seller-integrity-audit`,
+  )).headers.get("payment-required"));
+  const bazaarRoutePattern = sellerIntegrityChallenge.extensions.bazaar.schema.properties.input
+    .properties.queryParams.properties.route.pattern;
+  assert.equal(openapiRoutePattern, portableRoutePattern);
+  assert.equal(bazaarRoutePattern, portableRoutePattern);
+  assert.equal(portableRoutePattern.includes("(?"), false, "Bazaar patterns must avoid lookaround unsupported by CDP");
+  const routePattern = new RegExp(portableRoutePattern);
+  for (const route of ["/paid", "/commerce/payment-offer-preflight", "/a/b-c_1.2"]) {
+    assert.equal(routePattern.test(route), true, `${route} must remain schema-valid`);
+  }
+  for (const route of ["/", "//paid", "/paid?x=1", "/paid#fragment", "/paid/{id}"]) {
+    assert.equal(routePattern.test(route), false, `${route} must remain schema-invalid`);
+  }
   const duplicateScalarRequests = ROUTES.flatMap((route) => (
     (openapi.paths[route.path]?.get?.parameters || [])
       .filter((parameter) => parameter.in === "query" && parameter.schema?.type !== "array")

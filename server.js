@@ -1377,7 +1377,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
           summary: RESOURCES[19].description,
           parameters: [
             { name: "origin", in: "query", required: true, description: "Credential-free public HTTPS seller origin on port 443.", schema: { type: "string", format: "uri", example: "https://agents.samedaydesk.com" } },
-            { name: "route", in: "query", required: true, description: "Exact paid GET or POST path declared by the seller, without query or template parameters.", schema: { type: "string", pattern: "^/(?!/)[^?#{}]+$", example: "/commerce/payment-offer-preflight" } },
+            { name: "route", in: "query", required: true, description: "Exact paid GET or POST path declared by the seller, without query or template parameters.", schema: { type: "string", pattern: "^/[^/?#{}][^?#{}]*$", example: "/commerce/payment-offer-preflight" } },
             { name: "method", in: "query", required: false, description: "Paid operation method. POST receives static OpenAPI contract analysis without a target request.", schema: { type: "string", enum: ["GET", "POST"], default: "GET" } },
             { name: "requiredPaths", in: "query", required: false, description: "Comma-separated dotted JSON paths the buyer requires the success schema to guarantee recursively.", schema: { type: "string", example: "decision,offers" } },
             { name: "requireBazaar", in: "query", required: false, description: "When true, missing Bazaar discovery metadata becomes a repair finding.", schema: { type: "boolean", default: false } },
@@ -2828,7 +2828,7 @@ const X402_ROUTES = {
               additionalProperties: false,
               properties: {
                 origin: { type: "string", format: "uri", description: "Credential-free public HTTPS seller origin on port 443." },
-                route: { type: "string", pattern: "^/(?!/)[^?#{}]+$", description: "Exact paid GET or POST path declared by the seller." },
+                route: { type: "string", pattern: "^/[^/?#{}][^?#{}]*$", description: "Exact paid GET or POST path declared by the seller." },
                 method: { type: "string", enum: ["GET", "POST"], default: "GET", description: "POST is analyzed from OpenAPI without sending a target request." },
                 requiredPaths: { type: "string", pattern: "^[A-Za-z0-9_.-]+(?:,[A-Za-z0-9_.-]+){0,15}$", description: "Optional comma-separated buyer-required dotted success paths." },
                 requireBazaar: { type: "boolean", default: false, description: "Whether Bazaar catalog eligibility is a required gate." },
