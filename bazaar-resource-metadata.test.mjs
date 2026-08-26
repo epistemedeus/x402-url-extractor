@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   BAZAAR_RESOURCE_METADATA,
+  BAZAAR_SERVICE_ICON_URL,
   bazaarResourceMetadataFor,
   validateBazaarResourceMetadata,
 } from "./bazaar-resource-metadata.mjs";
@@ -12,9 +13,11 @@ test("declares one valid provider identity and route-specific tags for all paid 
   assert.deepEqual(validation, { valid: true, errors: [] });
   assert.equal(Object.keys(BAZAAR_RESOURCE_METADATA).length, 22);
   assert.deepEqual(new Set(Object.values(BAZAAR_RESOURCE_METADATA).map((entry) => entry.serviceName)), new Set(["SameDayDesk"]));
+  assert.equal(BAZAAR_SERVICE_ICON_URL, "https://samedaydesk.com/favicon.svg");
   assert.deepEqual(bazaarResourceMetadataFor("/extract"), {
     serviceName: "SameDayDesk",
     tags: ["web", "url-extraction", "clean-text", "structured-data", "json-ld"],
+    iconUrl: "https://samedaydesk.com/favicon.svg",
   });
   assert.throws(() => bazaarResourceMetadataFor("/missing"), /Missing Bazaar resource metadata/);
 });

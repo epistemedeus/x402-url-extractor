@@ -1,4 +1,7 @@
+import { isValidIconUrl } from "@x402/extensions";
+
 const PRINTABLE_ASCII = /^[\x20-\x7e]+$/;
+export const BAZAAR_SERVICE_ICON_URL = "https://samedaydesk.com/favicon.svg";
 
 export const BAZAAR_RESOURCE_METADATA = Object.freeze({
   "/extract": Object.freeze({
@@ -93,6 +96,7 @@ export const BAZAAR_RESOURCE_METADATA = Object.freeze({
 
 export function validateBazaarResourceMetadata(metadata = BAZAAR_RESOURCE_METADATA) {
   const errors = [];
+  if (!isValidIconUrl(BAZAAR_SERVICE_ICON_URL)) errors.push("invalid service iconUrl");
   for (const [route, entry] of Object.entries(metadata)) {
     if (!/^\/[^?#]+$/.test(route)) errors.push(`${route}: invalid route`);
     const serviceName = entry?.serviceName;
@@ -116,5 +120,9 @@ export function validateBazaarResourceMetadata(metadata = BAZAAR_RESOURCE_METADA
 export function bazaarResourceMetadataFor(route) {
   const entry = BAZAAR_RESOURCE_METADATA[route];
   if (!entry) throw new Error(`Missing Bazaar resource metadata for ${route}`);
-  return { serviceName: entry.serviceName, tags: [...entry.tags] };
+  return {
+    serviceName: entry.serviceName,
+    tags: [...entry.tags],
+    iconUrl: BAZAAR_SERVICE_ICON_URL,
+  };
 }
