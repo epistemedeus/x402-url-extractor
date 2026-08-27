@@ -16,7 +16,7 @@ test("declares one valid provider identity and route-specific tags for all paid 
   assert.equal(BAZAAR_SERVICE_ICON_URL, "https://samedaydesk.com/favicon.svg");
   assert.deepEqual(bazaarResourceMetadataFor("/extract"), {
     serviceName: "SameDayDesk",
-    tags: ["web", "url-extraction", "clean-text", "structured-data", "json-ld"],
+    tags: ["web", "web-extraction", "clean-text", "llm-ready", "structured-json"],
     iconUrl: "https://samedaydesk.com/favicon.svg",
   });
   assert.throws(() => bazaarResourceMetadataFor("/missing"), /Missing Bazaar resource metadata/);

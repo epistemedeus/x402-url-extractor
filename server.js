@@ -750,7 +750,7 @@ commerceSettlementReconciler = createCommerceSettlementReconciler({
   treasury: PAY_TO,
 });
 const acceptsFor = createExactUsdcAcceptsFor({ network: NETWORK, payTo: PAY_TO });
-const EXTRACT_DISCOVERY_DESCRIPTION = "Extract a public web page into clean structured JSON for agent workflows: title, description, main text, all JSON-LD, Open Graph and Twitter metadata, headings, links, and AI-crawler and structured-data signals. Follows redirects and enforces timeout, response-size, and SSRF safeguards.";
+const EXTRACT_DISCOVERY_DESCRIPTION = "Extract a public HTTP(S) web page into structured JSON with a clean text excerpt for LLM workflows: title, description, JSON-LD, Open Graph/Twitter metadata, headings, links, and AI-readiness signals. Fetches without JavaScript rendering, follows redirects, and applies a 12-second timeout and 3 MB read cap; use /read for longer cleaned Markdown.";
 const RESOURCES = [
   { url: `${PUBLIC_URL}/extract`, amount: priceToAtomic(EXTRACT_PRICE), description: EXTRACT_DISCOVERY_DESCRIPTION, mimeType: "application/json" },
   { url: `${PUBLIC_URL}/read`, amount: priceToAtomic(READ_PRICE), description: "URL -> full page content as clean Markdown, ready for LLM context. Strips nav/ads/scripts, preserves headings/links/lists.", mimeType: "application/json" },

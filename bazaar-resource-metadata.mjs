@@ -6,7 +6,7 @@ export const BAZAAR_SERVICE_ICON_URL = "https://samedaydesk.com/favicon.svg";
 export const BAZAAR_RESOURCE_METADATA = Object.freeze({
   "/extract": Object.freeze({
     serviceName: "SameDayDesk",
-    tags: Object.freeze(["web", "url-extraction", "clean-text", "structured-data", "json-ld"]),
+    tags: Object.freeze(["web", "web-extraction", "clean-text", "llm-ready", "structured-json"]),
   }),
   "/read": Object.freeze({
     serviceName: "SameDayDesk",
