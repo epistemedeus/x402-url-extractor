@@ -22,7 +22,7 @@ data, not a credential. Agent Plugins 1.0 forbids secrets in `headers`.
 - Not submitted to Awesome Copilot, the GitHub MCP gallery, the ChatGPT or
   Codex public plugin directory, or any other marketplace.
 - Not an MCP Registry publish. The live remote is already
-  `io.github.epistemedeus/x402-data-gateway@1.23.26`.
+  `io.github.epistemedeus/x402-data-gateway@1.23.27`.
 - Not a claim that Copilot, Cursor, VS Code, ChatGPT, Codex, or Grok loaded
   this folder in a host UI.
 - Not dual-stack MCP `2026-07-28`. Live `/mcp` JSON-RPC `initialize` with
