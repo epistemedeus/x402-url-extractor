@@ -57,3 +57,42 @@ test("production entry reaches the listening state without a startup exception",
     await rm(dataDir, { recursive: true, force: true });
   }
 });
+
+test("invalid x402 builder code fails closed before listening", async () => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "samedaydesk-builder-code-invalid-"));
+  const child = spawn(process.execPath, ["server.js"], {
+    cwd,
+    env: {
+      ...process.env,
+      PORT: "0",
+      COMMERCE_DATA_DIR: dataDir,
+      MPP_SECRET_KEY: "",
+      PUBLIC_URL: "https://agents.samedaydesk.com",
+      X402_BUILDER_CODE: "INVALID-CODE",
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let output = "";
+  child.stdout.on("data", (chunk) => {
+    output = `${output}${chunk}`.slice(-20_000);
+  });
+  child.stderr.on("data", (chunk) => {
+    output = `${output}${chunk}`.slice(-20_000);
+  });
+  try {
+    const exit = await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error(`invalid builder code did not fail: ${output.slice(-2000)}`)), 10_000);
+      child.once("exit", (code, signal) => {
+        clearTimeout(timer);
+        resolve({ code, signal });
+      });
+      child.once("error", reject);
+    });
+    assert.notEqual(exit.code, 0);
+    assert.equal(output.includes("Invalid builder code"), true);
+    assert.equal(output.includes("x402-merchant listening"), false);
+  } finally {
+    if (child.exitCode === null && child.signalCode === null) child.kill("SIGTERM");
+    await rm(dataDir, { recursive: true, force: true });
+  }
+});

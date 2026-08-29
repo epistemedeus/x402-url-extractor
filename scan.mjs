@@ -39,7 +39,7 @@ const INSTALL_EXEC = [/curl[^\n|]*\|\s*(sudo\s+)?(ba)?sh/i, /wget[^\n|]*\|\s*(ba
 const SCAN_EXT = /\.(js|mjs|cjs|ts|mts|cts|py|sh|bash|rb|ps1)$/i;
 const ALSO = /(^|\/)(package\.json|setup\.py|pyproject\.toml|install\.sh|postinstall\.js|\.npmrc|SKILL\.md)$/i;
 
-export function parseRepo(input) {
+function parseRepo(input) {
   let s = String(input || '').trim();
   s = s.replace(/^https?:\/\/(www\.)?github\.com\//i, '').replace(/\.git$/, '').replace(/\/$/, '');
   const m = s.match(/^([\w.-]+)\/([\w.-]+)(?:\/(?:tree|blob)\/([\w.\/-]+))?/);

@@ -1,4 +1,5 @@
 import { createGatewayMiddleware } from "@circle-fin/x402-batching/server";
+import { sanitizeResourceServiceMetadata } from "@x402/extensions";
 import {
   CHAIN_CONFIGS,
   GATEWAY_AUTH_VALIDITY_WINDOW_SECONDS,
@@ -26,17 +27,52 @@ function normalizeSellerAddress(value) {
   return address;
 }
 
+function normalizeResourceMetadata(value = {}) {
+  const normalized = sanitizeResourceServiceMetadata(value);
+  for (const field of ["serviceName", "tags", "iconUrl"]) {
+    if (value[field] !== undefined && JSON.stringify(normalized[field]) !== JSON.stringify(value[field])) {
+      throw new Error(`Circle Gateway ${field} is invalid`);
+    }
+  }
+  return normalized;
+}
+
+function withPaymentRequiredResourceMetadata(middleware, resourceMetadata) {
+  if (Object.keys(resourceMetadata).length === 0) return middleware;
+  return function paymentRequiredResourceMetadata(req, res, next) {
+    const setHeader = res.setHeader;
+    res.setHeader = function setHeaderWithResourceMetadata(name, value) {
+      if (String(name).toLowerCase() === "payment-required") {
+        if (typeof value !== "string") throw new Error("Circle Gateway PAYMENT-REQUIRED header is invalid");
+        const payload = JSON.parse(Buffer.from(value, "base64").toString("utf8"));
+        if (payload?.x402Version !== 2 || !payload.resource || typeof payload.resource !== "object") {
+          throw new Error("Circle Gateway PAYMENT-REQUIRED payload is invalid");
+        }
+        value = Buffer.from(JSON.stringify({
+          ...payload,
+          resource: { ...payload.resource, ...resourceMetadata },
+        })).toString("base64");
+      }
+      return setHeader.call(this, name, value);
+    };
+    return middleware(req, res, next);
+  };
+}
+
 export function buildCircleGatewayRoute({
   sellerAddress,
   price = "$0.005",
   enabled = true,
   facilitatorUrl = CIRCLE_GATEWAY_FACILITATOR,
   description = "Compare x402 and MPP payment offers before buyer authorization.",
+  resourceMetadata = {},
   middlewareFactory = createGatewayMiddleware,
 } = {}) {
   const seller = normalizeSellerAddress(sellerAddress);
   const normalizedPrice = normalizePrice(price);
   const base = CHAIN_CONFIGS.base;
+  const network = `eip155:${base.chain.id}`;
+  const normalizedResourceMetadata = normalizeResourceMetadata(resourceMetadata);
   const resource = {
     urlPath: CIRCLE_GATEWAY_PATH,
     amount: normalizedPrice.atomic,
@@ -44,7 +80,7 @@ export function buildCircleGatewayRoute({
     mimeType: "application/json",
     accepts: [{
       scheme: "exact",
-      network: `eip155:${base.chain.id}`,
+      network,
       asset: base.usdc,
       amount: normalizedPrice.atomic,
       payTo: seller,
@@ -55,12 +91,14 @@ export function buildCircleGatewayRoute({
         verifyingContract: base.gatewayWallet,
       },
     }],
+    ...normalizedResourceMetadata,
   };
 
   if (!enabled) return { enabled: false, middleware: null, resource, facilitatorUrl };
   if (typeof middlewareFactory !== "function") throw new Error("Circle Gateway middleware factory is required");
   const gateway = middlewareFactory({
     sellerAddress: seller,
+    networks: [network],
     facilitatorUrl,
     description,
   });
@@ -69,9 +107,11 @@ export function buildCircleGatewayRoute({
   }
   return {
     enabled: true,
-    middleware: gateway.require(normalizedPrice.display),
+    middleware: withPaymentRequiredResourceMetadata(
+      gateway.require(normalizedPrice.display),
+      normalizedResourceMetadata,
+    ),
     resource,
     facilitatorUrl,
   };
 }
-

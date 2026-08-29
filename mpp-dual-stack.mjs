@@ -31,30 +31,6 @@ function paymentAuthorization(headers) {
   return Credential.extractPaymentScheme(headerValue(headers, "authorization"));
 }
 
-// Keep all application-input gates aligned with the exact Authorization
-// grammar accepted by MPP, including mixed schemes and comma-separated values.
-export function hasMppPaymentCredential(headers) {
-  return Boolean(paymentAuthorization(headers));
-}
-
-function hasMppPaymentSchemeSyntax(headers) {
-  return headerValue(headers, "authorization")
-    .split(",")
-    .some((value) => /^\s*Payment(?:\s|$)/i.test(value));
-}
-
-// Pre-payment application validation must treat an explicitly attempted
-// Payment scheme as credential-bearing even when its bytes are missing and the
-// exact MPP credential extractor therefore returns null.
-export function hasMppPaymentAuthorizationForPreflight(headers) {
-  if (hasMppPaymentSchemeSyntax(headers)) return true;
-  try {
-    return hasMppPaymentCredential(headers);
-  } catch {
-    return false;
-  }
-}
-
 function normalizeAmount(value) {
   const amount = String(value || "").trim().replace(/^\$/, "");
   if (!/^(?:0|[1-9]\d*)(?:\.\d{1,6})?$/.test(amount) || Number(amount) <= 0) {
@@ -170,7 +146,7 @@ export function createMppDualStack({
     if (!route) return { kind: "not_protected" };
     if (hasX402Credential(request.headers)) return { kind: "x402" };
 
-    const hasMppCredential = hasMppPaymentCredential(request.headers);
+    const hasMppCredential = Boolean(paymentAuthorization(request.headers));
     const result = await mppx.evm.charge({
       amount: route.amount,
       description: route.description,
@@ -194,7 +170,7 @@ export function createMppDualStack({
   }
 
   async function middleware(req, res, next) {
-    const hasMppCredential = hasMppPaymentCredential(req.headers);
+    const hasMppCredential = Boolean(paymentAuthorization(req.headers));
     try {
       const result = await authorize(req);
       if (result.kind === "not_protected" || result.kind === "x402") return next();

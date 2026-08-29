@@ -15,6 +15,9 @@ const getAction = {
   method: "GET",
   route: "/extract",
   url: "https://agents.example/extract",
+  serviceName: "Example Service",
+  tags: ["extract", "web"],
+  iconUrl: "https://agents.example/icon.svg",
   request: {
     method: "GET",
     url: "https://agents.example/extract",
@@ -28,6 +31,9 @@ const postAction = {
   method: "POST",
   route: "/policy",
   url: "https://agents.example/policy",
+  serviceName: "Example Service",
+  tags: ["policy"],
+  iconUrl: "https://agents.example/icon.svg",
   request: {
     method: "POST",
     url: "https://agents.example/policy",
@@ -45,6 +51,9 @@ const alternate = {
   description: "Alternate extract",
   mimeType: "application/json",
   accepts: [{ amount: "5000" }],
+  serviceName: "Example Service",
+  tags: ["alternate"],
+  iconUrl: "https://agents.example/icon.svg",
   request: { ...getAction.request, url: "https://agents.example/gateway/extract", exampleUrl: "https://agents.example/gateway/extract?url=https%3A%2F%2Fexample.com" },
 };
 
@@ -75,6 +84,16 @@ test("accepts exact GET, POST, alternate, manifest, and A2A construction parity"
   assert.equal(manifestItems[0].resource.url, getAction.request.exampleUrl);
   assert.equal(manifestItems[1].resource.url, postAction.url);
   assert.equal(manifestItems[2].resource.url, alternate.request.exampleUrl);
+  assert.deepEqual(manifestItems[0].resource, {
+    url: getAction.request.exampleUrl,
+    routeTemplate: getAction.route,
+    description: "Extract",
+    mimeType: "application/json",
+    serviceName: getAction.serviceName,
+    tags: getAction.tags,
+    iconUrl: getAction.iconUrl,
+  });
+  assert.equal(manifestItems[2].resource.iconUrl, alternate.iconUrl);
 });
 
 test("fails when a transform drops a contract or callable example", () => {
@@ -83,6 +102,9 @@ test("fails when a transform drops a contract or callable example", () => {
   const drifted = structuredClone(manifestItems);
   drifted[0].request = null;
   assert.throws(() => validateConstructionSurfaceParity({ actions, manifestItems: drifted, agentCard: card() }), /request contract drifted/);
+  const metadataDrifted = structuredClone(manifestItems);
+  delete metadataDrifted[0].resource.iconUrl;
+  assert.throws(() => validateConstructionSurfaceParity({ actions, manifestItems: metadataDrifted, agentCard: card() }), /iconUrl drifted/);
   assert.throws(() => validateConstructionSurfaceParity({ actions: [{ ...getAction, request: { ...getAction.request, exampleUrl: null } }, postAction], manifestItems, agentCard: card() }), /callable example URL/);
   assert.throws(() => validateConstructionSurfaceParity({ actions, manifestItems, agentCard: { skills: [] } }), /route-skill count/);
   assert.throws(() => validateConstructionSurfaceParity({ actions, manifestItems, agentCard: card(), alternateAccess: { route: alternate.route, request: null } }), /alternate.*callable/);

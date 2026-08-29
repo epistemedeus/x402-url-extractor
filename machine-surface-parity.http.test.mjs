@@ -47,6 +47,46 @@ async function readText(base, route) {
   return response.text();
 }
 
+function canonicalAddress(value) {
+  return typeof value === "string" && /^0x[0-9a-fA-F]{40}$/.test(value)
+    ? value.toLowerCase()
+    : value;
+}
+
+function exactPaymentTerm(requirement) {
+  return {
+    scheme: requirement.scheme,
+    network: requirement.network,
+    asset: canonicalAddress(requirement.asset),
+    amount: requirement.amount,
+    payTo: canonicalAddress(requirement.payTo),
+    maxTimeoutSeconds: requirement.maxTimeoutSeconds,
+    extra: {
+      name: requirement.extra?.name,
+      version: requirement.extra?.version,
+      ...(requirement.extra?.verifyingContract !== undefined
+        ? { verifyingContract: canonicalAddress(requirement.extra.verifyingContract) }
+        : {}),
+    },
+  };
+}
+
+async function readUnpaidChallenge(base, item) {
+  const declared = new URL(item.resource.url);
+  const target = new URL(`${declared.pathname}${declared.search}`, base);
+  const method = item.request?.method || "GET";
+  const init = { method, headers: {} };
+  if (method === "POST") {
+    init.headers["content-type"] = "application/json";
+    init.body = JSON.stringify(item.request?.example?.body || {});
+  }
+  const response = await fetch(target, init);
+  assert.equal(response.status, 402, `${method} ${declared.pathname} ${response.status}`);
+  const encoded = response.headers.get("payment-required");
+  if (encoded) return JSON.parse(Buffer.from(encoded, "base64").toString("utf8"));
+  return response.json();
+}
+
 test("live free surfaces keep canonical paid routes and kill Circle as a 23rd action", { timeout: 60_000 }, async (t) => {
   const dataDir = await mkdtemp(path.join(tmpdir(), "samedaydesk-surface-parity-"));
   const port = await unusedPort();
@@ -59,6 +99,7 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
       COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
       MPP_SECRET_KEY: "",
       PUBLIC_URL: "https://agents.samedaydesk.com",
+      X402_BUILDER_CODE: "bc_samedaydesk_test",
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -98,6 +139,13 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
 
   assert.equal(await listening, true);
   const base = `http://127.0.0.1:${port}`;
+  const challengeResponse = await fetch(`${base}/extract?url=https%3A%2F%2Fexample.com`);
+  assert.equal(challengeResponse.status, 402);
+  const encodedChallenge = challengeResponse.headers.get("payment-required");
+  assert.ok(encodedChallenge);
+  const challenge = JSON.parse(Buffer.from(encodedChallenge, "base64").toString("utf8"));
+  assert.equal(challenge.extensions?.["builder-code"]?.info?.a, "bc_samedaydesk_test");
+  assert.equal(challenge.extensions?.["builder-code"]?.schema?.additionalProperties, false);
   const [llms, catalog, agentCard, openapi, mppOpenapi, manifest, mcpDescriptor] = await Promise.all([
     readText(base, "/llms.txt"),
     readJson(base, "/api/actions"),
@@ -136,6 +184,25 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(receipt.llmsAlternateCount, 1);
   assert.equal(receipt.mcpToolCount, 22);
   assert.equal(mcpDescriptor.toolCount, 22);
+  assert.equal(manifest.items.length, 23);
+  for (const item of manifest.items) {
+    assert.equal(item.resource.serviceName, "SameDayDesk");
+    assert.equal(item.resource.iconUrl, "https://samedaydesk.com/favicon.svg");
+    assert.ok(Array.isArray(item.resource.tags) && item.resource.tags.length > 0);
+    const challenge = await readUnpaidChallenge(base, item);
+    assert.equal(challenge.x402Version, 2);
+    const challengeUrl = new URL(challenge.resource.url, base);
+    const manifestUrl = new URL(item.resource.url);
+    assert.equal(`${challengeUrl.pathname}${challengeUrl.search}`, `${manifestUrl.pathname}${manifestUrl.search}`);
+    assert.equal(challenge.resource.mimeType, item.resource.mimeType);
+    assert.equal(challenge.resource.serviceName, item.resource.serviceName);
+    assert.deepEqual(challenge.resource.tags, item.resource.tags);
+    assert.equal(challenge.resource.iconUrl, item.resource.iconUrl);
+    assert.deepEqual(
+      challenge.accepts.map(exactPaymentTerm).sort((left, right) => left.network.localeCompare(right.network)),
+      item.accepts.map(exactPaymentTerm).sort((left, right) => left.network.localeCompare(right.network)),
+    );
+  }
 
   const llmsRoutes = parseLlmsPaidRoutes(llms).map((entry) => entry.route);
   for (const route of SNAPSHOT_MISSING_FROM_LLMS) {
