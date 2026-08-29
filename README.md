@@ -856,8 +856,11 @@ remain complete at fourteen.
 
 CDP rejected three older route payloads whose discovery descriptions were 535,
 581, and 629 characters even though local extension validation passed. Concise
-rewrites of 294, 258, and 301 characters passed. Keep new discovery descriptions
-under 400 characters and run live CDP verify before a funded canary.
+rewrites of 294, 258, and 301 characters passed. A stock x402 2.22.0 boundary
+test later isolated the exact compatibility edge: 501 characters was rejected,
+while 500 characters reached facilitator signature verification with all four
+extensions intact. Startup and surface tests now reject every resource above
+500 Unicode code points. Run live CDP verify before a funded canary.
 
 ### 4. Settlement verification
 After a paid call, confirm USDC landed at `payTo` on Base mainnet. The 402/200

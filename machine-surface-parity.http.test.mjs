@@ -13,6 +13,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 
 import { parseLlmsPaidRoutes, validateMachineSurfaceParity } from "./machine-surface-parity.mjs";
 import { opportunityPreflight } from "./opportunity-preflight.mjs";
+import { CDP_RESOURCE_DESCRIPTION_MAX_CODE_POINTS } from "./x402-resource-compat.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const SNAPSHOT_MISSING_FROM_LLMS = [
@@ -191,6 +192,10 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     assert.ok(Array.isArray(item.resource.tags) && item.resource.tags.length > 0);
     const challenge = await readUnpaidChallenge(base, item);
     assert.equal(challenge.x402Version, 2);
+    assert.ok(
+      Array.from(challenge.resource.description).length <= CDP_RESOURCE_DESCRIPTION_MAX_CODE_POINTS,
+      `${item.resource.routeTemplate} exceeds the live CDP resource-description boundary`,
+    );
     const challengeUrl = new URL(challenge.resource.url, base);
     const manifestUrl = new URL(item.resource.url);
     assert.equal(`${challengeUrl.pathname}${challengeUrl.search}`, `${manifestUrl.pathname}${manifestUrl.search}`);
