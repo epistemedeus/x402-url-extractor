@@ -584,12 +584,16 @@ export function classifyPaymentFailureCode({ route, status, queryKeys = [], erro
   if (/expired|not valid yet/.test(text)) return PAYMENT_FAILURE_CODE.paymentExpired;
   if (/already (?:used|processed)|replay|nonce/.test(text)) return PAYMENT_FAILURE_CODE.paymentReplayRejected;
   if (/insufficient|balance|funds/.test(text)) return PAYMENT_FAILURE_CODE.insufficientFunds;
-  if (/facilitator|temporarily unavailable|timeout|upstream/.test(text) || code >= 500) {
+  if (
+    code >= 500
+    || /temporarily unavailable|timed? out|timeout|connection (?:refused|reset)|(?:facilitator|upstream).*\b5\d\d\b/.test(text)
+  ) {
     return PAYMENT_FAILURE_CODE.paymentServiceUnavailable;
   }
-  if (/verification|verify|invalid payment|invalid credential/.test(text) || code === 402) {
+  if (/verification|verify|invalid payment|invalid credential|paymentpayload.*invalid/.test(text) || code === 402) {
     return PAYMENT_FAILURE_CODE.paymentVerificationFailed;
   }
+  if (/facilitator|upstream/.test(text)) return PAYMENT_FAILURE_CODE.paymentServiceUnavailable;
   if (code === 409) return PAYMENT_FAILURE_CODE.requestBindingConflict;
   if (code >= 400 && code < 500) return PAYMENT_FAILURE_CODE.applicationValidationFailed;
   return PAYMENT_FAILURE_CODE.unknownFailure;

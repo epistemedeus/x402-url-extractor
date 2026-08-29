@@ -453,6 +453,18 @@ test("payment failure codes stay bounded and preserve required-input aliases", (
   assert.equal(classifyPaymentFailureCode({ route: "/enrich", status: 402, queryKeys: ["url"] }), "payment_verification_failed");
   assert.equal(classifyPaymentFailureCode({ route: "/wallet-enrich", status: 402, queryKeys: ["wallet"], error: "authorization signature mismatch" }), "signature_invalid");
   assert.equal(classifyPaymentFailureCode({ route: "/extract", status: 402, queryKeys: ["url"], error: "extension_echo_mismatch" }), "extension_mismatch");
+  assert.equal(classifyPaymentFailureCode({
+    route: "/commerce/seller-integrity-audit",
+    status: 402,
+    queryKeys: ["origin", "route"],
+    error: "Facilitator verify failed (400): 'paymentPayload' is invalid: must match one of [x402V2Pay]",
+  }), "payment_verification_failed");
+  assert.equal(classifyPaymentFailureCode({
+    route: "/commerce/seller-integrity-audit",
+    status: 402,
+    queryKeys: ["origin", "route"],
+    error: "Facilitator verify failed (503): upstream temporarily unavailable",
+  }), "payment_service_unavailable");
   assert.equal(classifyPaymentFailureCode({ route: "/extract", status: 503, queryKeys: ["url"] }), "payment_service_unavailable");
   assert.equal(classifyPaymentFailureCode({ route: "/extract", status: 200, queryKeys: [] }), null);
 });
