@@ -100,6 +100,18 @@ test("turns controlled findings into seller repair actions", async () => {
   assert.equal(result.nextActions.length, 3);
 });
 
+test("turns invalid x402 protocol documents into one exact repair action", async () => {
+  const invalidProtocol = structuredClone(REPORT);
+  invalidProtocol.ok = false;
+  invalidProtocol.routes[0].valid = false;
+  invalidProtocol.routes[0].findings = ["x402_payment_required_schema_invalid", "x402_resource_schema_invalid"];
+  const result = await sellerIntegrityAudit({ origin: "https://seller.example", route: "/paid" }, { auditImpl: async () => invalidProtocol });
+  assert.equal(result.decision, "repair_required");
+  assert.deepEqual(result.nextActions, [
+    "Publish an x402 PaymentRequired document that passes the official protocol schemas, including bounded resource metadata.",
+  ]);
+});
+
 test("maps bounded seller-contract and transport failures", async () => {
   const absent = await sellerIntegrityAudit({ origin: "https://seller.example", route: "/paid" }, { auditImpl: async () => { throw new Error("exact paid GET route was not declared"); } });
   assert.equal(absent.decision, "repair_required");

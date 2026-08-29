@@ -212,6 +212,7 @@ function nextActionsFor(routeReport) {
     else if (finding === "seller_response_contract_invalid") actions.add("Repair the successful response declaration so it is structurally valid and self-contained.");
     else if (finding.startsWith("seller_response_required_path_missing:")) actions.add(`Require the buyer-needed response path ${finding.split(":", 2)[1]} in the successful JSON schema.`);
     else if (finding === "x402_full_request_binding_mismatch") actions.add("Bind the x402 resource URL to the complete exact request, including query values.");
+    else if (finding === "x402_payment_required_schema_invalid" || finding === "x402_resource_schema_invalid") actions.add("Publish an x402 PaymentRequired document that passes the official protocol schemas, including bounded resource metadata.");
     else if (finding === "x402_mpp_economics_mismatch" || finding.endsWith("_declaration_runtime_mismatch")) actions.add("Reconcile x402, MPP, OpenAPI, and live runtime economics.");
     else if (finding.startsWith("bazaar_")) actions.add("Publish and validate a complete Bazaar input and output contract for catalog eligibility.");
     else actions.add(`Repair seller contract finding: ${finding}.`);
