@@ -166,6 +166,14 @@ const WRITER_HTTP_METHOD_MAX_LENGTH = 16;
 const WRITER_SETTLEMENT_NETWORK_MAX_LENGTH = 100;
 const WRITER_SETTLEMENT_CURRENCY_MAX_LENGTH = 200;
 const WRITER_SETTLEMENT_AMOUNT_MAX_LENGTH = 78;
+const PAID_EVIDENCE_REQUEST_DOMAIN = "samedaydesk.commerce-paid-success-evidence.request.v1\0";
+const PAID_EVIDENCE_CREDENTIAL_DOMAIN = "samedaydesk.commerce-paid-success-evidence.credential.v1\0";
+const PAID_EVIDENCE_RESPONSE_DOMAIN = "samedaydesk.commerce-paid-success-evidence.response.v1\0";
+const PAID_EVIDENCE_DIGEST_PATTERN = /^[0-9a-f]{64}$/;
+const PAID_EVIDENCE_RUNTIME_ATTRIBUTION = "http";
+const PAID_EVIDENCE_VALIDATOR_VERDICT = "not_checked";
+const PAID_EVIDENCE_VALIDATOR_AUTHORITY = "none";
+const PAID_EVIDENCE_VALIDATOR_SOURCE = "http_runtime_not_checked";
 
 function safePathSegment(value) {
   const segment = String(value || "").toLowerCase();
@@ -198,8 +206,12 @@ export function classifyCommerceRoute(rawPath) {
 }
 
 function headerValue(headers, name) {
-  const value = headers?.[name];
-  return Array.isArray(value) ? value.join(",") : String(value || "");
+  try {
+    const value = headers?.[name];
+    return Array.isArray(value) ? value.join(",") : String(value || "");
+  } catch {
+    return "";
+  }
 }
 
 export function classifyAgentDiscoverySource(userAgent) {
@@ -222,6 +234,145 @@ function paymentProtocol(headers) {
   if (hasMppAuthorization(headers)) return "mpp";
   if (PAYMENT_HEADERS.some((name) => Boolean(headerValue(headers, name)))) return "x402";
   return null;
+}
+
+// The dual-stack runtime routes any present x402-family credential to the
+// x402 middleware before considering MPP. Evidence must mirror that routing
+// rule even though aggregate credential telemetry prefers a parseable MPP
+// header over an unrelated malformed x402-family header.
+function paidEvidencePaymentProtocol(headers) {
+  if (PAYMENT_HEADERS.some((name) => Boolean(headerValue(headers, name)))) return "x402";
+  if (hasMppAuthorization(headers)) return "mpp";
+  return null;
+}
+
+function exactPaymentCredential(headers, protocol) {
+  if (protocol === "mpp") {
+    return Credential.extractPaymentScheme(headerValue(headers, "authorization"));
+  }
+  if (protocol === "x402") {
+    return PAYMENT_HEADERS.map((name) => headerValue(headers, name)).find(Boolean) || null;
+  }
+  return null;
+}
+
+function runtimePaymentProtocol(res) {
+  const protocol = res?.locals?.samedaydeskPayment?.protocol;
+  return protocol === "x402" || protocol === "mpp" ? protocol : null;
+}
+
+function updateLengthFramed(hash, value) {
+  const bytes = Buffer.isBuffer(value) ? value : Buffer.from(value, "utf8");
+  const length = Buffer.alloc(8);
+  length.writeBigUInt64BE(BigInt(bytes.length));
+  hash.update(length);
+  hash.update(bytes);
+}
+
+function paidEvidenceRequestDigest(method, target, rawBody) {
+  const hash = createHash("sha256");
+  hash.update(PAID_EVIDENCE_REQUEST_DOMAIN, "utf8");
+  updateLengthFramed(hash, method);
+  updateLengthFramed(hash, target);
+  updateLengthFramed(hash, rawBody);
+  return hash.digest("hex");
+}
+
+function paidEvidenceCredentialFingerprint(secret, credential) {
+  const hmac = createHmac("sha256", secret);
+  hmac.update(PAID_EVIDENCE_CREDENTIAL_DOMAIN, "utf8");
+  updateLengthFramed(hmac, credential);
+  return hmac.digest("hex");
+}
+
+function responseChunkBytes(chunk, encoding) {
+  if (chunk === undefined || chunk === null) return null;
+  if (typeof chunk === "string") {
+    return Buffer.from(chunk, typeof encoding === "string" ? encoding : undefined);
+  }
+  if (Buffer.isBuffer(chunk)) return chunk;
+  if (chunk instanceof Uint8Array) {
+    return Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength);
+  }
+  return null;
+}
+
+function responseBodyIsTransferred(method, statusCode) {
+  const status = Number(statusCode);
+  return method !== "HEAD"
+    && !(status >= 100 && status < 200)
+    && status !== 204
+    && status !== 304;
+}
+
+function capturePaidEvidenceResponseDigest(res, method) {
+  const hash = createHash("sha256");
+  hash.update(PAID_EVIDENCE_RESPONSE_DOMAIN, "utf8");
+  let valid = true;
+  let finalized = false;
+  let endObserved = false;
+
+  const observe = (chunk, encoding) => {
+    if (chunk === undefined || chunk === null || typeof chunk === "function") return;
+    try {
+      const bytes = responseChunkBytes(chunk, encoding);
+      if (!bytes) {
+        valid = false;
+        return;
+      }
+      if (responseBodyIsTransferred(method, res.statusCode)) hash.update(bytes);
+    } catch {
+      valid = false;
+    }
+  };
+
+  let originalWrite = null;
+  let originalEnd = null;
+  try {
+    if (typeof res.write === "function") {
+      originalWrite = res.write;
+      res.write = function paidEvidenceWrite(chunk, encoding) {
+        observe(chunk, encoding);
+        try {
+          return Reflect.apply(originalWrite, this, arguments);
+        } catch (error) {
+          valid = false;
+          throw error;
+        }
+      };
+    }
+    if (typeof res.end === "function") {
+      originalEnd = res.end;
+      res.end = function paidEvidenceEnd(chunk, encoding) {
+        endObserved = true;
+        observe(chunk, encoding);
+        try {
+          return Reflect.apply(originalEnd, this, arguments);
+        } catch (error) {
+          valid = false;
+          throw error;
+        }
+      };
+    }
+  } catch {
+    valid = false;
+    try {
+      if (originalWrite) res.write = originalWrite;
+      if (originalEnd) res.end = originalEnd;
+    } catch {
+      // A hostile response object cannot produce paid evidence.
+    }
+  }
+
+  return () => {
+    if (finalized || !valid || !originalEnd || !endObserved) return null;
+    finalized = true;
+    try {
+      return hash.digest("hex");
+    } catch {
+      return null;
+    }
+  };
 }
 
 function offeredPaymentProtocols(res) {
@@ -974,6 +1125,89 @@ function isCanonicalCommerceEvent(value) {
   return value.result === eventResult(value);
 }
 
+const PAID_SUCCESS_EVIDENCE_KEYS = Object.freeze([
+  "credentialFingerprint",
+  "id",
+  "method",
+  "originClass",
+  "payerClass",
+  "paymentProtocol",
+  "requestDigest",
+  "requestStartedAt",
+  "responseDigest",
+  "responseFinishedAt",
+  "route",
+  "runtimeAttribution",
+  "settlementReference",
+  "source",
+  "v",
+  "validatorAuthority",
+  "validatorSource",
+  "validatorVerdict",
+]);
+
+function isCanonicalPaidSuccessEvidence(value) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const keys = Object.keys(value).sort();
+  if (
+    keys.length !== PAID_SUCCESS_EVIDENCE_KEYS.length
+    || keys.some((key, index) => key !== PAID_SUCCESS_EVIDENCE_KEYS[index])
+  ) {
+    return false;
+  }
+  if (value.v !== 1 || !isCanonicalEventId(value.id)) return false;
+  const startedAtMs = canonicalIsoTimestampMs(value.requestStartedAt);
+  const finishedAtMs = canonicalIsoTimestampMs(value.responseFinishedAt);
+  if (startedAtMs === null || finishedAtMs === null || finishedAtMs < startedAtMs) return false;
+  if (!isCanonicalHttpMethod(value.method)) return false;
+  if (!isCanonicalClassifierRoute(value.route, "paid", true)) return false;
+  if (!CANONICAL_EVENT_ORIGIN_CLASSES.has(value.originClass)) return false;
+  if (
+    value.source !== "direct-or-unattributed"
+    && !CANONICAL_AGENT_DISCOVERY_SOURCES.has(value.source)
+  ) {
+    return false;
+  }
+  if (value.payerClass !== "unclassified" && !PAYMENT_CLASSES.has(value.payerClass)) return false;
+  if (!PAID_EVIDENCE_DIGEST_PATTERN.test(value.requestDigest)) return false;
+  if (!PAID_EVIDENCE_DIGEST_PATTERN.test(value.credentialFingerprint)) return false;
+  if (!PAID_EVIDENCE_DIGEST_PATTERN.test(value.responseDigest)) return false;
+  if (!isCanonicalSettlementReference(value.settlementReference)) return false;
+  if (!CANONICAL_PAYMENT_PROTOCOLS.has(value.paymentProtocol)) return false;
+  return value.runtimeAttribution === PAID_EVIDENCE_RUNTIME_ATTRIBUTION
+    && value.validatorVerdict === PAID_EVIDENCE_VALIDATOR_VERDICT
+    && value.validatorAuthority === PAID_EVIDENCE_VALIDATOR_AUTHORITY
+    && value.validatorSource === PAID_EVIDENCE_VALIDATOR_SOURCE;
+}
+
+function canonicalPaidSuccessEvidence(value) {
+  try {
+    const canonical = {
+      v: value?.v,
+      id: value?.id,
+      requestStartedAt: value?.requestStartedAt,
+      responseFinishedAt: value?.responseFinishedAt,
+      method: value?.method,
+      route: value?.route,
+      originClass: value?.originClass,
+      source: value?.source,
+      payerClass: value?.payerClass,
+      requestDigest: value?.requestDigest,
+      credentialFingerprint: value?.credentialFingerprint,
+      responseDigest: value?.responseDigest,
+      settlementReference: value?.settlementReference,
+      paymentProtocol: value?.paymentProtocol,
+      runtimeAttribution: value?.runtimeAttribution,
+      validatorVerdict: value?.validatorVerdict,
+      validatorAuthority: value?.validatorAuthority,
+      validatorSource: value?.validatorSource,
+    };
+    return isCanonicalPaidSuccessEvidence(canonical) ? Object.freeze(canonical) : null;
+  } catch {
+    return null;
+  }
+}
+
 const MCP_TYPED_COMMERCE_SOURCE = "mcp_typed_outcome";
 const MCP_TYPED_COMMERCE_AUTHORITY = "seller_declared";
 const MCP_TYPED_COMMERCE_EVIDENCE_CLASS = "seller_operational";
@@ -1708,6 +1942,7 @@ export function createCommerceTelemetry({
   });
   const currentPath = path.join(dataDir, "commerce-events.ndjson");
   const rotatedPath = path.join(dataDir, "commerce-events.1.ndjson");
+  const paidEvidencePath = path.join(dataDir, "commerce-paid-success-evidence.ndjson");
   const parsedExternalSince = Date.parse(externalSince);
   const externalSinceMs = Number.isFinite(parsedExternalSince) ? parsedExternalSince : null;
   const parsedAgentDiscoverySince = Date.parse(agentDiscoverySince);
@@ -1742,6 +1977,7 @@ export function createCommerceTelemetry({
     paymentClass,
   ]));
   let queue = Promise.resolve();
+  let writerFailure = null;
 
   function mcpTypedAttributionForRequest(req) {
     const headers = req?.headers || {};
@@ -1770,8 +2006,18 @@ export function createCommerceTelemetry({
 
   function enqueueExclusive(work) {
     const run = queue.then(work);
-    queue = run.then(() => undefined, () => undefined);
+    queue = run.then(
+      () => undefined,
+      (error) => {
+        writerFailure ||= error instanceof Error ? error : new Error(String(error));
+      },
+    );
     return run;
+  }
+
+  async function flush() {
+    await queue;
+    if (writerFailure) throw writerFailure;
   }
 
   async function appendEvent(event) {
@@ -1790,8 +2036,20 @@ export function createCommerceTelemetry({
     await chmod(currentPath, 0o600).catch(() => {});
   }
 
-  function enqueue(event) {
-    enqueueExclusive(() => appendEvent(event)).catch((error) => {
+  async function appendPaidSuccessEvidence(evidence) {
+    if (!isCanonicalPaidSuccessEvidence(evidence)) return;
+    await mkdir(dataDir, { recursive: true, mode: 0o700 });
+    await chmod(dataDir, 0o700).catch(() => {});
+    await appendFile(paidEvidencePath, `${JSON.stringify(evidence)}\n`, { encoding: "utf8", mode: 0o600 });
+    await chmod(paidEvidencePath, 0o600).catch(() => {});
+  }
+
+  function enqueue(event, evidence = null) {
+    const ownedEvidence = evidence === null ? null : canonicalPaidSuccessEvidence(evidence);
+    enqueueExclusive(async () => {
+      await appendEvent(event);
+      if (ownedEvidence) await appendPaidSuccessEvidence(ownedEvidence);
+    }).catch((error) => {
       console.error(`commerce telemetry write failed: ${error.message}`);
     });
   }
@@ -1867,6 +2125,51 @@ export function createCommerceTelemetry({
     const paymentIdentifier = paymentMetadata.paymentId
       ? createHmac("sha256", secret).update(`payment-id:${paymentMetadata.paymentId}`).digest("hex").slice(0, 24)
       : null;
+    let paidEvidenceRequest = null;
+    if (route.kind === "paid" && paymentPresent) {
+      try {
+        const evidenceProtocol = paidEvidencePaymentProtocol(headers);
+        const exactMethod = req.method;
+        const exactTarget = typeof req.originalUrl === "string" ? req.originalUrl : req.url;
+        const suppliedRawBody = req.rawBody;
+        const contentEncoding = headerValue(headers, "content-encoding").trim().toLowerCase();
+        const declaredBodyLength = headerValue(headers, "content-length");
+        const transferEncoding = headerValue(headers, "transfer-encoding");
+        const rawBodyKnownEmpty = suppliedRawBody === undefined
+          && !transferEncoding
+          && (!declaredBodyLength || declaredBodyLength === "0");
+        const rawBody = Buffer.isBuffer(suppliedRawBody)
+          ? Buffer.from(suppliedRawBody)
+          : rawBodyKnownEmpty
+            ? Buffer.alloc(0)
+            : null;
+        const credential = exactPaymentCredential(headers, evidenceProtocol);
+        if (
+          isCanonicalHttpMethod(exactMethod)
+          && typeof exactTarget === "string"
+          && exactTarget.length > 0
+          && (!contentEncoding || contentEncoding === "identity")
+          && rawBody !== null
+          && typeof credential === "string"
+          && credential.length > 0
+        ) {
+          paidEvidenceRequest = Object.freeze({
+            requestStartedAt: new Date(startedAt).toISOString(),
+            method: exactMethod,
+            originClass,
+            source: agentDiscoverySource || "direct-or-unattributed",
+            payerClass: paymentMetadata.payer
+              ? normalizedPayerClasses.get(paymentMetadata.payer) || "unclassified"
+              : "unclassified",
+            paymentProtocol: evidenceProtocol,
+            requestDigest: paidEvidenceRequestDigest(exactMethod, exactTarget, rawBody),
+            credentialFingerprint: paidEvidenceCredentialFingerprint(secret, credential),
+          });
+        }
+      } catch {
+        paidEvidenceRequest = null;
+      }
+    }
     const queryKeys = normalizeQueryKeyNames(req.query);
     let responseProblem = null;
     const originalJson = typeof res.json === "function" ? res.json.bind(res) : null;
@@ -1883,9 +2186,13 @@ export function createCommerceTelemetry({
         return originalSend(body);
       };
     }
+    const finishPaidEvidenceResponseDigest = paidEvidenceRequest
+      ? capturePaidEvidenceResponseDigest(res, paidEvidenceRequest.method)
+      : null;
 
     res.once("finish", () => {
-      const status = Number(res.statusCode || 0);
+      try {
+        const status = Number(res.statusCode || 0);
       const method = String(req.method || "GET").toUpperCase();
       // Typed MCP observation owns POST /mcp economic facts. HTTP-header
       // credentials must not create a second MCP paid row.
@@ -1910,10 +2217,20 @@ export function createCommerceTelemetry({
             problem: responseProblem,
           })
         : null;
-      enqueue({
+      const result = classifyCommerceResult({
+        route: route.route,
+        kind: route.kind,
+        matched: route.matched,
+        paymentPresent,
+        replayed,
+        status,
+      });
+      const eventId = randomUUID();
+      const responseFinishedAt = new Date().toISOString();
+      const event = {
         v: 3,
-        id: randomUUID(),
-        ts: new Date().toISOString(),
+        id: eventId,
+        ts: responseFinishedAt,
         actor,
         originClass,
         agentDiscoverySource,
@@ -1937,16 +2254,40 @@ export function createCommerceTelemetry({
         settlementNetwork: settlement?.network || null,
         settlementCurrency: settlement?.currency || null,
         status,
-        result: classifyCommerceResult({
-          route: route.route,
-          kind: route.kind,
-          matched: route.matched,
-          paymentPresent,
-          replayed,
-          status,
-        }),
+        result,
         durationMs: Math.max(0, Date.now() - startedAt),
-      });
+      };
+      let paidEvidence = null;
+      if (result === "paid_success" && paidEvidenceRequest && finishPaidEvidenceResponseDigest) {
+        const responseDigest = finishPaidEvidenceResponseDigest();
+        const selectedProtocol = runtimePaymentProtocol(res);
+        if (responseDigest && selectedProtocol === paidEvidenceRequest.paymentProtocol) {
+          paidEvidence = {
+            v: 1,
+            id: eventId,
+            requestStartedAt: paidEvidenceRequest.requestStartedAt,
+            responseFinishedAt,
+            method: paidEvidenceRequest.method,
+            route: route.route,
+            originClass: paidEvidenceRequest.originClass,
+            source: paidEvidenceRequest.source,
+            payerClass: paidEvidenceRequest.payerClass,
+            requestDigest: paidEvidenceRequest.requestDigest,
+            credentialFingerprint: paidEvidenceRequest.credentialFingerprint,
+            responseDigest,
+            settlementReference: settlement?.reference || null,
+            paymentProtocol: selectedProtocol,
+            runtimeAttribution: PAID_EVIDENCE_RUNTIME_ATTRIBUTION,
+            validatorVerdict: PAID_EVIDENCE_VALIDATOR_VERDICT,
+            validatorAuthority: PAID_EVIDENCE_VALIDATOR_AUTHORITY,
+            validatorSource: PAID_EVIDENCE_VALIDATOR_SOURCE,
+          };
+        }
+      }
+        enqueue(event, paidEvidence);
+      } catch {
+        // Malformed or hostile runtime values cannot escape or produce evidence.
+      }
     });
     return next();
   }
@@ -2430,14 +2771,16 @@ export function createCommerceTelemetry({
     try {
       return await enqueueExclusive(async () => {
         await mkdir(dataDir, { recursive: true, mode: 0o700 });
-        const [currentBytes, rotatedBytes] = await Promise.all([
+        const [currentBytes, rotatedBytes, paidEvidenceBytes] = await Promise.all([
           stat(currentPath).then((entry) => entry.size).catch(() => 0),
           stat(rotatedPath).then((entry) => entry.size).catch(() => 0),
+          stat(paidEvidencePath).then((entry) => entry.size).catch(() => 0),
         ]);
         return {
           ready: true,
           currentBytes,
           rotatedBytes,
+          paidEvidenceBytes,
           boundedBytes: maxBytes * 2,
           writerGate,
         };
@@ -2447,6 +2790,7 @@ export function createCommerceTelemetry({
         ready: false,
         currentBytes: null,
         rotatedBytes: null,
+        paidEvidenceBytes: null,
         boundedBytes: maxBytes * 2,
         writerGate,
       };
@@ -2459,7 +2803,7 @@ export function createCommerceTelemetry({
     storageStatus,
     appendMcpTypedDecision,
     mcpTypedAttributionForRequest,
-    flush: () => queue,
-    paths: { currentPath, rotatedPath },
+    flush,
+    paths: { currentPath, rotatedPath, paidEvidencePath },
   };
 }

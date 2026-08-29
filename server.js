@@ -3094,7 +3094,12 @@ app.post("/security/stateful-wallet-policy-conformance", (req, res, next) => {
 app.use(mppDualStack.middleware);
 app.use((req, res, next) => {
   if (res.locals?.samedaydeskPayment?.protocol === "mpp") return next();
-  return x402Paywall(req, res, next);
+  return x402Paywall(req, res, (error) => {
+    if (error) return next(error);
+    res.locals = res.locals || {};
+    res.locals.samedaydeskPayment = Object.freeze({ protocol: "x402" });
+    return next();
+  });
 });
 
 // Handler runs ONLY after payment is verified/settled by the middleware.

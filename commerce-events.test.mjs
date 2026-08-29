@@ -4,6 +4,7 @@ import { appendFile, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { Challenge, Credential } from "mppx";
 import { declareDiscoveryContract } from "./discovery-contract.mjs";
 
 import { evaluateMcpTypedTelemetryOutcome } from "./mcp-typed-telemetry-producer.mjs";
@@ -454,6 +455,606 @@ test("payment failure codes stay bounded and preserve required-input aliases", (
   assert.equal(classifyPaymentFailureCode({ route: "/extract", status: 402, queryKeys: ["url"], error: "extension_echo_mismatch" }), "extension_mismatch");
   assert.equal(classifyPaymentFailureCode({ route: "/extract", status: 503, queryKeys: ["url"] }), "payment_service_unavailable");
   assert.equal(classifyPaymentFailureCode({ route: "/extract", status: 200, queryKeys: [] }), null);
+});
+
+function evidenceTestResponse({ statusCode = 200, headers = {}, locals = {} } = {}) {
+  const listeners = new Map();
+  const output = [];
+  const normalizedHeaders = Object.fromEntries(
+    Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]),
+  );
+  const append = (chunk, encoding) => {
+    if (chunk === undefined || chunk === null) return;
+    if (typeof chunk === "string") {
+      output.push(Buffer.from(chunk, typeof encoding === "string" ? encoding : undefined));
+    } else if (Buffer.isBuffer(chunk) || ArrayBuffer.isView(chunk)) {
+      output.push(Buffer.from(chunk));
+    }
+  };
+  return {
+    statusCode,
+    locals,
+    output,
+    once(name, listener) { listeners.set(name, listener); },
+    getHeader(name) { return normalizedHeaders[String(name).toLowerCase()]; },
+    write(chunk, encoding, callback) {
+      append(chunk, encoding);
+      const done = typeof encoding === "function" ? encoding : callback;
+      done?.();
+      return true;
+    },
+    end(chunk, encoding, callback) {
+      append(chunk, encoding);
+      const done = typeof encoding === "function" ? encoding : callback;
+      done?.();
+      return this;
+    },
+    finish() { listeners.get("finish")?.(); },
+  };
+}
+
+function emitEvidenceTestResponse(telemetry, {
+  requestPath = "/extract",
+  originalUrl = requestPath,
+  method = "GET",
+  headers = {},
+  query = {},
+  rawBody,
+  ip = "203.0.113.240",
+  statusCode = 200,
+  responseHeaders = {},
+  responseChunks = [Buffer.alloc(0)],
+  locals = null,
+} = {}) {
+  const runtimeLocals = locals || {
+    samedaydeskPayment: {
+      protocol: ["payment-signature", "x-payment", "x-payment-signature"]
+        .some((name) => Boolean(headers[name]))
+        ? "x402"
+        : "mpp",
+    },
+  };
+  const req = {
+    path: requestPath,
+    url: originalUrl,
+    originalUrl,
+    method,
+    headers,
+    query,
+    rawBody,
+    ip,
+    socket: {},
+  };
+  const res = evidenceTestResponse({ statusCode, headers: responseHeaders, locals: runtimeLocals });
+  let nextRuns = 0;
+  telemetry.middleware(req, res, () => { nextRuns += 1; });
+  for (const chunk of responseChunks.slice(0, -1)) res.write(chunk);
+  res.end(responseChunks.at(-1));
+  res.finish();
+  return { req, res, nextRuns, output: Buffer.concat(res.output) };
+}
+
+async function readPaidEvidenceRows(telemetry) {
+  const raw = await readFile(telemetry.paths.paidEvidencePath, "utf8").catch((error) => (
+    error?.code === "ENOENT" ? "" : Promise.reject(error)
+  ));
+  return raw.split("\n").filter(Boolean).map((line) => JSON.parse(line));
+}
+
+test("private paid-success evidence records exact x402 and MPP HTTP attribution", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-paid-evidence-protocols-"));
+  const x402Payer = "0x1111111111111111111111111111111111111111";
+  const mppPayer = "0x2222222222222222222222222222222222222222";
+  const x402Credential = Buffer.from(JSON.stringify({
+    x402Version: 2,
+    accepted: {
+      scheme: "exact",
+      network: "eip155:8453",
+      amount: "5000",
+      asset: "0x3333333333333333333333333333333333333333",
+      payTo: "0x4444444444444444444444444444444444444444",
+    },
+    payload: { authorization: { from: x402Payer } },
+  })).toString("base64");
+  const mppChallenge = Challenge.Schema.parse({
+    id: "ch_paid_evidence_012345",
+    realm: "agents.samedaydesk.com",
+    method: "evm",
+    intent: "charge",
+    opaque: "cGFpZC1ldmlkZW5jZS1vcGFxdWU",
+    request: {
+      methodDetails: { chainId: 8453 },
+      amount: "5000",
+      currency: "0x3333333333333333333333333333333333333333",
+      recipient: "0x4444444444444444444444444444444444444444",
+    },
+  });
+  const mppCredential = Credential.serialize({
+    challenge: mppChallenge,
+    payload: {
+      from: mppPayer,
+      to: "0x4444444444444444444444444444444444444444",
+      value: "5000",
+    },
+  });
+  const x402Reference = `0x${"a1".repeat(32)}`;
+  const mppReference = `0x${"b2".repeat(32)}`;
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "paid-evidence-protocol-secret",
+    payerClasses: [
+      { address: x402Payer, class: "independent" },
+      { address: mppPayer, class: "validation" },
+    ],
+  });
+
+  const x402Output = Buffer.from("x402-output-private");
+  const x402Call = emitEvidenceTestResponse(telemetry, {
+    originalUrl: "/extract?url=https%3A%2F%2Fprivate.example%2Fraw-query-secret",
+    headers: {
+      "payment-signature": x402Credential,
+      "user-agent": "private-x402-agent/1.0",
+      "x-samedaydesk-agent-source": "agentictrade-v1",
+    },
+    query: { url: "https://private.example/raw-query-secret" },
+    rawBody: Buffer.from('{"rawBodySecret":"x402-body-private"}'),
+    ip: "203.0.113.241",
+    responseHeaders: {
+      "payment-response": Buffer.from(JSON.stringify({
+        success: true,
+        transaction: x402Reference,
+      })).toString("base64url"),
+    },
+    responseChunks: [x402Output.subarray(0, 5), x402Output.subarray(5)],
+  });
+  assert.deepEqual(x402Call.output, x402Output);
+
+  const mppOutput = Buffer.from("mpp-output-private");
+  const mppCall = emitEvidenceTestResponse(telemetry, {
+    requestPath: "/read",
+    originalUrl: "/read?url=https%3A%2F%2Fmpp-private.example%2Fsecret",
+    headers: {
+      authorization: mppCredential,
+      "user-agent": "private-mpp-agent/1.0",
+    },
+    query: { url: "https://mpp-private.example/secret" },
+    rawBody: Buffer.alloc(0),
+    ip: "203.0.113.242",
+    responseHeaders: {
+      "payment-receipt": Buffer.from(JSON.stringify({
+        status: "success",
+        reference: mppReference,
+      })).toString("base64url"),
+    },
+    responseChunks: [mppOutput],
+    locals: { samedaydeskPayment: { protocol: "mpp" } },
+  });
+  assert.deepEqual(mppCall.output, mppOutput);
+
+  await telemetry.flush();
+  const rows = await readPaidEvidenceRows(telemetry);
+  assert.equal(rows.length, 2);
+  assert.deepEqual(rows.map((row) => row.paymentProtocol), ["x402", "mpp"]);
+  assert.deepEqual(rows.map((row) => row.runtimeAttribution), ["http", "http"]);
+  assert.deepEqual(rows.map((row) => row.route), ["/extract", "/read"]);
+  assert.deepEqual(rows.map((row) => row.source), ["agentictrade", "mpp-ecosystem"]);
+  assert.deepEqual(rows.map((row) => row.payerClass), ["independent", "validation"]);
+  assert.deepEqual(rows.map((row) => row.settlementReference), [x402Reference, mppReference]);
+  for (const row of rows) {
+    assert.equal(row.v, 1);
+    assert.match(row.id, /^[0-9a-f-]{36}$/);
+    assert.match(row.requestDigest, /^[0-9a-f]{64}$/);
+    assert.match(row.credentialFingerprint, /^[0-9a-f]{64}$/);
+    assert.match(row.responseDigest, /^[0-9a-f]{64}$/);
+    assert.equal(row.validatorVerdict, "not_checked");
+    assert.equal(row.validatorAuthority, "none");
+    assert.equal(row.validatorSource, "http_runtime_not_checked");
+  }
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(JSON.stringify(snapshot).includes(rows[0].requestDigest), false);
+  assert.equal(Object.hasOwn(snapshot, "paidEvidence"), false);
+  const storage = await telemetry.storageStatus();
+  assert.ok(storage.paidEvidenceBytes > 0);
+  assert.equal((await stat(dataDir)).mode & 0o777, 0o700);
+  assert.equal((await stat(telemetry.paths.paidEvidencePath)).mode & 0o777, 0o600);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("paid evidence follows the runtime-selected rail when both credential families are present", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-paid-evidence-dual-rail-"));
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "paid-evidence-dual-rail-secret" });
+  const common = {
+    headers: {
+      authorization: "Payment mpp-credential-that-must-not-win",
+      "payment-signature": "x402-selected-credential",
+    },
+    rawBody: Buffer.alloc(0),
+    responseChunks: [Buffer.from("dual-rail-output")],
+    locals: { samedaydeskPayment: { protocol: "x402" } },
+  };
+  emitEvidenceTestResponse(telemetry, common);
+  emitEvidenceTestResponse(telemetry, {
+    ...common,
+    headers: { ...common.headers, authorization: "Payment different-mpp-credential" },
+  });
+  emitEvidenceTestResponse(telemetry, {
+    ...common,
+    headers: { ...common.headers, "payment-signature": "different-x402-credential" },
+  });
+  await telemetry.flush();
+
+  const [baseline, mppChanged, x402Changed] = await readPaidEvidenceRows(telemetry);
+  assert.equal(baseline.paymentProtocol, "x402");
+  assert.equal(baseline.credentialFingerprint, mppChanged.credentialFingerprint);
+  assert.notEqual(baseline.credentialFingerprint, x402Changed.credentialFingerprint);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("paid evidence requires a matching runtime-selected rail", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-paid-evidence-runtime-rail-"));
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "paid-evidence-runtime-rail-secret" });
+  const common = {
+    headers: { "payment-signature": "runtime-rail-credential" },
+    rawBody: Buffer.alloc(0),
+    responseChunks: [Buffer.from("runtime-rail-output")],
+  };
+  emitEvidenceTestResponse(telemetry, { ...common, locals: {} });
+  emitEvidenceTestResponse(telemetry, {
+    ...common,
+    locals: { samedaydeskPayment: { protocol: "mpp" } },
+  });
+  await telemetry.flush();
+  assert.deepEqual(await readPaidEvidenceRows(telemetry), []);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("paid evidence hashes only body bytes that HTTP transfers", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-paid-evidence-bodyless-"));
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "paid-evidence-bodyless-secret" });
+  const common = {
+    headers: { "payment-signature": "bodyless-credential" },
+    rawBody: Buffer.alloc(0),
+  };
+  emitEvidenceTestResponse(telemetry, {
+    ...common,
+    method: "HEAD",
+    responseChunks: [Buffer.from("head-body-suppressed-by-node")],
+  });
+  emitEvidenceTestResponse(telemetry, {
+    ...common,
+    statusCode: 204,
+    responseChunks: [Buffer.from("status-body-suppressed-by-node")],
+  });
+  emitEvidenceTestResponse(telemetry, {
+    ...common,
+    responseChunks: [Buffer.alloc(0)],
+  });
+  await telemetry.flush();
+
+  const rows = await readPaidEvidenceRows(telemetry);
+  assert.equal(rows.length, 3);
+  assert.equal(rows[0].responseDigest, rows[2].responseDigest);
+  assert.equal(rows[1].responseDigest, rows[2].responseDigest);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("rejected response chunks invalidate private paid evidence", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-paid-evidence-rejected-chunk-"));
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "paid-evidence-rejected-chunk-secret" });
+  const req = {
+    path: "/extract",
+    url: "/extract",
+    originalUrl: "/extract",
+    method: "GET",
+    headers: { "payment-signature": "rejected-chunk-credential" },
+    query: {},
+    rawBody: Buffer.alloc(0),
+    ip: "203.0.113.215",
+    socket: {},
+  };
+  const res = evidenceTestResponse({ locals: { samedaydeskPayment: { protocol: "x402" } } });
+  const acceptedWrite = res.write;
+  res.write = function rejectNonByteViews(chunk) {
+    if (chunk instanceof Uint16Array) {
+      const error = new TypeError("invalid response chunk");
+      error.code = "ERR_INVALID_ARG_TYPE";
+      throw error;
+    }
+    return Reflect.apply(acceptedWrite, this, arguments);
+  };
+  telemetry.middleware(req, res, () => {});
+  assert.throws(
+    () => res.write(new Uint16Array([0x1234])),
+    (error) => error?.code === "ERR_INVALID_ARG_TYPE",
+  );
+  res.end(Buffer.from("accepted-after-rejection"));
+  res.finish();
+  await telemetry.flush();
+  assert.deepEqual(await readPaidEvidenceRows(telemetry), []);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("encoded request bodies fail closed because parser rawBody is post-inflation", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-paid-evidence-encoding-"));
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "paid-evidence-encoding-secret" });
+  const common = {
+    headers: {
+      "payment-signature": "encoded-body-credential",
+      "content-encoding": "gzip",
+    },
+    rawBody: Buffer.from('{"same":"decompressed-body"}'),
+    responseChunks: [Buffer.from("encoded-request-output")],
+  };
+  emitEvidenceTestResponse(telemetry, common);
+  emitEvidenceTestResponse(telemetry, common);
+  emitEvidenceTestResponse(telemetry, {
+    ...common,
+    headers: {
+      "payment-signature": "encoded-body-credential",
+      "content-encoding": "identity",
+    },
+  });
+  await telemetry.flush();
+  const rows = await readPaidEvidenceRows(telemetry);
+  assert.equal(rows.length, 1);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("paid-success evidence digests are deterministic and independently sensitive", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-paid-evidence-digests-"));
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "paid-evidence-digest-secret" });
+  const common = {
+    originalUrl: "/extract?url=request-value-alpha",
+    headers: { "payment-signature": "credential-value-alpha" },
+    rawBody: Buffer.from("body-value-alpha"),
+    responseChunks: [Buffer.from("response-"), Buffer.from("value-alpha")],
+  };
+  emitEvidenceTestResponse(telemetry, common);
+  emitEvidenceTestResponse(telemetry, {
+    ...common,
+    responseChunks: [Buffer.from("response-value-alpha")],
+  });
+  emitEvidenceTestResponse(telemetry, { ...common, originalUrl: "/extract?url=request-value-beta" });
+  emitEvidenceTestResponse(telemetry, { ...common, rawBody: Buffer.from("body-value-beta") });
+  emitEvidenceTestResponse(telemetry, { ...common, method: "POST" });
+  emitEvidenceTestResponse(telemetry, {
+    ...common,
+    headers: { "payment-signature": "credential-value-beta" },
+  });
+  emitEvidenceTestResponse(telemetry, {
+    ...common,
+    responseChunks: [Buffer.from("response-value-beta")],
+  });
+  await telemetry.flush();
+
+  const [baseline, repeated, targetChanged, bodyChanged, methodChanged, credentialChanged, responseChanged] =
+    await readPaidEvidenceRows(telemetry);
+  assert.equal(baseline.requestDigest, repeated.requestDigest);
+  assert.equal(baseline.credentialFingerprint, repeated.credentialFingerprint);
+  assert.equal(baseline.responseDigest, repeated.responseDigest);
+  assert.notEqual(baseline.requestDigest, targetChanged.requestDigest);
+  assert.notEqual(baseline.requestDigest, bodyChanged.requestDigest);
+  assert.notEqual(baseline.requestDigest, methodChanged.requestDigest);
+  assert.equal(baseline.credentialFingerprint, targetChanged.credentialFingerprint);
+  assert.equal(baseline.responseDigest, targetChanged.responseDigest);
+  assert.notEqual(baseline.credentialFingerprint, credentialChanged.credentialFingerprint);
+  assert.equal(baseline.requestDigest, credentialChanged.requestDigest);
+  assert.equal(baseline.responseDigest, credentialChanged.responseDigest);
+  assert.notEqual(baseline.responseDigest, responseChanged.responseDigest);
+  assert.equal(baseline.requestDigest, responseChanged.requestDigest);
+  assert.equal(baseline.credentialFingerprint, responseChanged.credentialFingerprint);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("paid-success evidence serialization contains no supplied raw private values", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-paid-evidence-privacy-"));
+  const payer = "0x5555555555555555555555555555555555555555";
+  const credential = Buffer.from(JSON.stringify({
+    x402Version: 2,
+    accepted: {
+      scheme: "exact",
+      network: "eip155:8453",
+      amount: "5000",
+      asset: "0x6666666666666666666666666666666666666666",
+      payTo: "0x7777777777777777777777777777777777777777",
+    },
+    payload: { authorization: { from: payer } },
+  })).toString("base64");
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "paid-evidence-privacy-secret" });
+  const forbidden = [
+    "raw-query-value-do-not-store",
+    "raw-body-value-do-not-store",
+    "raw-output-value-do-not-store",
+    "private-user-agent-do-not-store",
+    "203.0.113.249",
+    payer,
+    credential,
+    "arbitrary-source-do-not-store",
+  ];
+  emitEvidenceTestResponse(telemetry, {
+    originalUrl: "/extract?url=raw-query-value-do-not-store",
+    headers: {
+      "payment-signature": credential,
+      "user-agent": "private-user-agent-do-not-store",
+      "x-samedaydesk-agent-source": "arbitrary-source-do-not-store",
+    },
+    query: { url: "raw-query-value-do-not-store" },
+    rawBody: Buffer.from("raw-body-value-do-not-store"),
+    ip: "203.0.113.249",
+    responseChunks: [Buffer.from("raw-output-value-do-not-store")],
+  });
+  await telemetry.flush();
+  const serialized = await readFile(telemetry.paths.paidEvidencePath, "utf8");
+  for (const value of forbidden) assert.equal(serialized.includes(value), false, `stored ${value}`);
+  const [row] = await readPaidEvidenceRows(telemetry);
+  assert.equal(row.source, "direct-or-unattributed");
+  assert.equal(row.payerClass, "unclassified");
+  assert.deepEqual(Object.keys(row).sort(), [
+    "credentialFingerprint", "id", "method", "originClass", "payerClass", "paymentProtocol",
+    "requestDigest", "requestStartedAt", "responseDigest", "responseFinishedAt", "route",
+    "runtimeAttribution", "settlementReference", "source", "v", "validatorAuthority",
+    "validatorSource", "validatorVerdict",
+  ]);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("private evidence excludes unpaid, challenge, failure, replay, discovery, and MCP HTTP duplicate rows", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-paid-evidence-exclusions-"));
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "paid-evidence-exclusion-secret" });
+  emitEvidenceTestResponse(telemetry, { statusCode: 402 });
+  emitEvidenceTestResponse(telemetry, { statusCode: 200 });
+  emitEvidenceTestResponse(telemetry, {
+    statusCode: 400,
+    headers: { "payment-signature": "failure-credential" },
+  });
+  emitEvidenceTestResponse(telemetry, {
+    statusCode: 503,
+    headers: { "payment-signature": "service-failure-credential" },
+  });
+  emitEvidenceTestResponse(telemetry, {
+    headers: { "payment-signature": "replay-credential" },
+    responseHeaders: { "x-payment-replay": "hit" },
+  });
+  emitEvidenceTestResponse(telemetry, { requestPath: "/mcp", originalUrl: "/mcp" });
+  emitEvidenceTestResponse(telemetry, {
+    requestPath: "/mcp",
+    originalUrl: "/mcp",
+    method: "POST",
+    headers: { "payment-signature": "mcp-duplicate-credential" },
+    rawBody: Buffer.from('{"jsonrpc":"2.0"}'),
+  });
+  emitEvidenceTestResponse(telemetry, {
+    method: "POST",
+    statusCode: 200,
+    rawBody: Buffer.from("unpaid-post"),
+  });
+  await telemetry.flush();
+  assert.deepEqual(await readPaidEvidenceRows(telemetry), []);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("private paid evidence survives repeated ordinary traffic rotations", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-paid-evidence-rotation-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "paid-evidence-rotation-secret",
+    maxBytes: 1,
+  });
+  emitEvidenceTestResponse(telemetry, {
+    headers: { "payment-signature": "rotation-paid-credential" },
+    responseChunks: [Buffer.from("rotation-paid-output")],
+  });
+  await telemetry.flush();
+  const originalEvidence = await readFile(telemetry.paths.paidEvidencePath, "utf8");
+  for (let index = 0; index < 3; index += 1) {
+    emitEvidenceTestResponse(telemetry, {
+      requestPath: "/openapi.json",
+      originalUrl: "/openapi.json",
+      ip: `203.0.113.${250 + index}`,
+      responseChunks: [Buffer.from(`ordinary-${index}`)],
+    });
+    await telemetry.flush();
+  }
+  assert.equal(await readFile(telemetry.paths.paidEvidencePath, "utf8"), originalEvidence);
+  assert.equal((await readPaidEvidenceRows(telemetry)).length, 1);
+  const retainedTraffic = `${await readFile(telemetry.paths.rotatedPath, "utf8")}\n${await readFile(telemetry.paths.currentPath, "utf8")}`;
+  assert.equal(retainedTraffic.includes('"result":"paid_success"'), false);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("malformed and hostile paid evidence inputs fail closed without escaping middleware", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-paid-evidence-hostile-"));
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "paid-evidence-hostile-secret" });
+
+  for (const req of [
+    {
+      path: "/extract", url: "/extract", originalUrl: "/extract", method: "GET",
+      headers: { "payment-signature": "hostile-raw-body-credential" }, query: {}, ip: "203.0.113.210", socket: {},
+      get rawBody() { throw new Error("hostile-raw-body-secret"); },
+    },
+    {
+      path: "/extract", url: "/extract", originalUrl: "/extract", method: "GET",
+      headers: { "payment-signature": "malformed-body-credential" }, query: {}, rawBody: "not-exact-bytes",
+      ip: "203.0.113.211", socket: {},
+    },
+    {
+      path: "/extract", url: "/extract", method: "GET",
+      headers: { "payment-signature": "hostile-target-credential" }, query: {}, rawBody: Buffer.alloc(0),
+      ip: "203.0.113.212", socket: {},
+      get originalUrl() { throw new Error("hostile-target-secret"); },
+    },
+    {
+      path: "/extract", url: "/extract", originalUrl: "/extract", method: "GET",
+      headers: { "payment-signature": { toString() { throw new Error("hostile-credential-secret"); } } },
+      query: {}, rawBody: Buffer.alloc(0), ip: "203.0.113.213", socket: {},
+    },
+  ]) {
+    const res = evidenceTestResponse();
+    assert.doesNotThrow(() => telemetry.middleware(req, res, () => {}));
+    assert.doesNotThrow(() => res.end(Buffer.from("hostile-output-not-stored")));
+    assert.doesNotThrow(() => res.finish());
+  }
+  await telemetry.flush();
+  assert.deepEqual(await readPaidEvidenceRows(telemetry), []);
+  const rawTraffic = await readFile(telemetry.paths.currentPath, "utf8");
+  assert.equal(rawTraffic.includes("hostile-raw-body-secret"), false);
+  assert.equal(rawTraffic.includes("hostile-target-secret"), false);
+  assert.equal(rawTraffic.includes("hostile-credential-secret"), false);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("paid evidence requires observing the response end before finish", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-paid-evidence-no-end-"));
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "paid-evidence-no-end-secret" });
+  const req = {
+    path: "/extract",
+    url: "/extract",
+    originalUrl: "/extract",
+    method: "GET",
+    headers: { "payment-signature": "no-end-credential" },
+    query: {},
+    rawBody: Buffer.alloc(0),
+    ip: "203.0.113.214",
+    socket: {},
+  };
+  const res = evidenceTestResponse();
+  delete res.end;
+  telemetry.middleware(req, res, () => {});
+  res.finish();
+  await telemetry.flush();
+  assert.deepEqual(await readPaidEvidenceRows(telemetry), []);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("shutdown drain flushes the private paid evidence write", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-paid-evidence-shutdown-"));
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "paid-evidence-shutdown-secret" });
+  emitEvidenceTestResponse(telemetry, {
+    headers: { "payment-signature": "shutdown-paid-credential" },
+    responseChunks: [Buffer.from("shutdown-paid-output")],
+  });
+  await drainCommerceTelemetryForShutdown({ commerceTelemetry: telemetry });
+  const rows = await readPaidEvidenceRows(telemetry);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].paymentProtocol, "x402");
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("private paid evidence append failures remain visible to flush and shutdown", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-paid-evidence-write-failure-"));
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "paid-evidence-write-failure-secret" });
+  await mkdir(telemetry.paths.paidEvidencePath, { recursive: true });
+  emitEvidenceTestResponse(telemetry, {
+    headers: { "payment-signature": "write-failure-credential" },
+    rawBody: Buffer.alloc(0),
+    responseChunks: [Buffer.from("write-failure-output")],
+  });
+
+  await assert.rejects(() => telemetry.flush());
+  await assert.rejects(() => drainCommerceTelemetryForShutdown({ commerceTelemetry: telemetry }));
+  const traffic = await readFile(telemetry.paths.currentPath, "utf8");
+  assert.match(traffic, /"result":"paid_success"/);
+  await rm(dataDir, { recursive: true, force: true });
 });
 
 test("unpaid paid-POST requests do not persist application telemetry", async () => {
