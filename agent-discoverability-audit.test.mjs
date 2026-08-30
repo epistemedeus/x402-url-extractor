@@ -5,6 +5,7 @@ import test from "node:test";
 
 import {
   agentDiscoverabilityAudit,
+  auditCoinbaseMaterialization,
   auditTargetDiscoverySurfaces,
   fetchPinnedTargetJson,
   normalizeDiscoverabilityAuditInput,
@@ -38,6 +39,8 @@ test("requires a public origin and a brand-blind capability intent", () => {
   assert.throws(() => normalizeDiscoverabilityAuditInput({ origin: "https://api.example.com", intent: "extract a public website into structured JSON", route: "/extract?x=1" }), /route/);
   assert.throws(() => normalizeDiscoverabilityAuditInput({ origin: "https://api.example.com", intent: "extract a public website into structured JSON", expectedPriceUsd: "0.005" }), /requires an exact route/);
   assert.throws(() => normalizeDiscoverabilityAuditInput({ origin: "https://api.example.com", intent: "extract a public website into structured JSON", route: "/extract", expectedPriceUsd: "0.0000001" }), /at most six fractional digits/);
+  assert.throws(() => normalizeDiscoverabilityAuditInput({ origin: "https://api.example.com", intent: "extract a public website into structured JSON", materializationAudit: true }), /requires an exact route/);
+  assert.throws(() => normalizeDiscoverabilityAuditInput({ origin: "https://api.example.com", intent: "extract a public website into structured JSON", route: "/extract", method: "PUT" }), /GET or POST/);
   assert.equal(normalizeDiscoverabilityAuditInput({
     origin: "https://api.example.com",
     intent: "extract a public website into structured JSON metadata",
@@ -62,6 +65,8 @@ test("requires a public origin and a brand-blind capability intent", () => {
     runtimeUrl: null,
     payTo: null,
     surfaceAudit: false,
+    materializationAudit: false,
+    method: "GET",
     expectedPriceUsd: 0.005,
     expectedPriceAtomic: "5000",
   });
@@ -82,6 +87,97 @@ test("requires a public origin and a brand-blind capability intent", () => {
     route: "/extract",
     runtimeUrl: "https://api.example.com/read",
   }), /match route exactly/);
+  assert.throws(() => normalizeDiscoverabilityAuditInput({
+    origin: "https://api.example.com",
+    intent: "extract a public website into structured JSON metadata",
+    route: "/extract",
+    runtimeUrl: "https://api.example.com/extract",
+    method: "POST",
+  }), /only when method is GET/);
+});
+
+test("distinguishes Coinbase eligibility from exact catalog materialization", async () => {
+  const resource = "https://api.example.com/extract";
+  const input = normalizeDiscoverabilityAuditInput({
+    origin: "https://api.example.com",
+    intent: "extract a public website into structured JSON metadata",
+    route: "/extract",
+    method: "POST",
+    materializationAudit: true,
+  });
+  const run = (validation, resources, validationStatus = 200, catalogStatus = 200) => auditCoinbaseMaterialization(input, {
+    fetchImpl: async (url, options = {}) => {
+      const target = String(url);
+      if (target.endsWith("/x402/validate")) {
+        assert.equal(options.method, "POST");
+        assert.deepEqual(JSON.parse(options.body), { resource, method: "POST" });
+        return response(validation, validationStatus);
+      }
+      assert.match(target, /urlSubstring=https%3A%2F%2Fapi\.example\.com%2Fextract/);
+      return response({ resources }, catalogStatus);
+    },
+  });
+
+  const accepted = await run({ valid: true, simulation: { outcome: "accepted" }, index: null }, []);
+  assert.equal(accepted.state, "provider_accepted_not_materialized");
+  assert.equal(accepted.validator.indexReturned, false);
+  assert.equal(accepted.catalog.exactResourceFound, false);
+
+  const rejected = await run({ valid: false, simulation: { outcome: "rejected" }, index: null }, []);
+  assert.equal(rejected.state, "seller_not_provider_eligible");
+
+  const materialized = await run({ valid: false, simulation: { outcome: "rejected" } }, [{ resource }]);
+  assert.equal(materialized.state, "materialized");
+  assert.equal(materialized.catalog.exactMatchCount, 1);
+
+  const unresolved = await run({}, [], 503, 503);
+  assert.equal(unresolved.state, "unresolved");
+  assert.equal(unresolved.validator.status, "error");
+  assert.equal(unresolved.catalog.status, "error");
+});
+
+test("turns materialization evidence into a specific action without replacing the core audit", async () => {
+  const fetchImpl = async (url) => {
+    const target = String(url);
+    if (target.includes("coinbase.com")) return response({ resources: [] });
+    if (target.includes("agent402.tools")) return response({ results: [] });
+    if (target.includes("agentic.market")) return response({ services: [] });
+    if (target.includes("circle.com")) return response({ items: [] });
+    if (target.includes("agentictrade.io")) return response({ services: [] });
+    if (target.includes("mpp.dev")) return response({ services: [] });
+    if (target.includes("mppscan.com")) return response({ result: { data: { json: [] } } });
+    if (target.includes("payanagent.com")) return response({ offers: [] });
+    if (target.includes("x402.jobs")) return response({ resources: [] });
+    if (target.includes("8004market.io")) return market8004Response({ target: false });
+    throw new Error(`unexpected ${target}`);
+  };
+  const input = {
+    origin: "https://api.example.com",
+    intent: "extract a public website into structured JSON metadata",
+    route: "/extract",
+    materializationAudit: true,
+  };
+  const accepted = await agentDiscoverabilityAudit(input, {
+    fetchImpl,
+    now: 0,
+    coinbaseMaterializationImpl: async () => ({
+      requested: true,
+      state: "provider_accepted_not_materialized",
+      resource: "https://api.example.com/extract",
+    }),
+  });
+  assert.equal(accepted.summary.coinbaseMaterializationState, "provider_accepted_not_materialized");
+  assert.ok(accepted.findings.some((item) => item.finding === "provider_accepted_exact_route_not_materialized"));
+  assert.ok(accepted.nextActions.some((item) => item.action === "request_provider_ingestion_disposition_or_supported_reindex"));
+  assert.equal(accepted.findings.some((item) => item.source === "coinbase-bazaar" && item.finding === "target_absent_from_ranked_results"), false);
+
+  const unresolved = await agentDiscoverabilityAudit(input, {
+    fetchImpl,
+    now: 0,
+    coinbaseMaterializationImpl: async () => ({ requested: true, state: "unresolved" }),
+  });
+  assert.ok(unresolved.findings.some((item) => item.finding === "materialization_state_unresolved"));
+  assert.ok(unresolved.findings.some((item) => item.source === "coinbase-bazaar" && item.finding === "target_absent_from_ranked_results"));
 });
 
 test("audits three fixed target discovery documents only when explicitly requested", async () => {
@@ -342,7 +438,7 @@ test("uses one coherent live unsigned offer as the catalog price reference", asy
     payTo: `0x${"1".repeat(40)}`,
     expectedPriceUsd: "0.05",
   }, { fetchImpl, paymentPreflightImpl, now: 0 });
-  assert.equal(result.version, "1.10.0");
+  assert.equal(result.version, "1.11.0");
   assert.deepEqual(result.summary.priceReference, {
     basis: "live_unsigned_offer",
     amountAtomic: "5000",
