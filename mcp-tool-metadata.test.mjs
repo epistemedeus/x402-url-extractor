@@ -50,6 +50,8 @@ test("makes each overlapping web and company tool chooseable without renaming it
   assert.match(sellerIntegrity.description, /Use `payment_offer_preflight` instead/);
   assert.match(sellerIntegrity.description, /`agent_discoverability_audit` for catalog rank/);
   assert.match(sellerIntegrity.description, /GET or POST seller route/);
+  assert.match(sellerIntegrity.description, /after a buyer integration fails/);
+  assert.match(sellerIntegrity.description, /before the next paid retry or release/);
   assert.match(sellerIntegrity.description, /POST performs static-safe OpenAPI contract analysis and sends no target request/);
   assert.match(contractQualified.description, /Search Agent402 and the official MPP catalog/);
   assert.match(contractQualified.description, /Use `agent_discoverability_audit`/);
