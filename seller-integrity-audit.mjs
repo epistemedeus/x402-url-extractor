@@ -1,4 +1,9 @@
 import { auditOrigin, normalizeOrigin } from "agent-payment-integrity";
+import {
+  createReceiptReferralOffer,
+  normalizeReceiptReferralId,
+  receiptReferralOfferSchema,
+} from "./receipt-referral.mjs";
 
 const ROUTE = /^\/(?!\/)[A-Za-z0-9._~!$&'()*+,;=:@%/-]+$/;
 
@@ -15,7 +20,7 @@ export function normalizeSellerIntegrityAuditInput(input = {}) {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
     throw new SellerIntegrityAuditError("input must be an object");
   }
-  const allowed = new Set(["origin", "route", "method", "requiredPaths", "requireBazaar"]);
+  const allowed = new Set(["origin", "route", "method", "requiredPaths", "requireBazaar", "referral"]);
   const unknown = Object.keys(input).filter((key) => !allowed.has(key));
   if (unknown.length) throw new SellerIntegrityAuditError(`unsupported input field: ${unknown.sort()[0]}`);
 
@@ -47,6 +52,7 @@ export function normalizeSellerIntegrityAuditInput(input = {}) {
     method,
     requiredPaths: Object.freeze(requiredPaths),
     requireBazaar: input.requireBazaar === true || input.requireBazaar === "true",
+    referral: normalizeReceiptReferralId(input.referral),
   });
 }
 
@@ -57,7 +63,7 @@ export function sellerIntegrityAuditOutputSchema() {
     properties: {
       ok: { type: "boolean" },
       product: { type: "string", const: "samedaydesk-seller-integrity-audit" },
-      version: { type: "string", const: "1.2.0" },
+      version: { type: "string", const: "1.3.0" },
       checkedAt: { type: "string", format: "date-time" },
       decision: { type: "string", enum: ["machine_buyable", "contract_ready", "repair_required"] },
       request: {
@@ -69,8 +75,9 @@ export function sellerIntegrityAuditOutputSchema() {
           method: { type: "string", enum: ["GET", "POST"] },
           requiredPaths: { type: "array", maxItems: 16, items: { type: "string" } },
           requireBazaar: { type: "boolean" },
+          referral: { type: ["string", "null"], pattern: "^r1_[0-9a-f]{64}$" },
         },
-        required: ["origin", "route", "method", "requiredPaths", "requireBazaar"],
+        required: ["origin", "route", "method", "requiredPaths", "requireBazaar", "referral"],
       },
       report: {
         type: "object",
@@ -135,6 +142,7 @@ export function sellerIntegrityAuditOutputSchema() {
         required: ["auditCompleted", "failureCode", "schemaVersion", "sellerVersions", "status", "runtimeChallengeVerified", "probe", "protocols", "valid", "findings", "economics", "discovery", "responseContract", "repairPlan"],
       },
       nextActions: { type: "array", items: { type: "string" } },
+      referralOffer: receiptReferralOfferSchema(),
       boundary: {
         type: "object",
         additionalProperties: false,
@@ -151,17 +159,17 @@ export function sellerIntegrityAuditOutputSchema() {
         required: ["credentialsUsed", "targetPaymentSigned", "targetPaymentSent", "targetRequestSent", "redirectsFollowed", "responseBodyRead", "schemaRetained", "queryValuesRetained"],
       },
     },
-    required: ["ok", "product", "version", "checkedAt", "decision", "request", "report", "nextActions", "boundary"],
+    required: ["ok", "product", "version", "checkedAt", "decision", "request", "report", "nextActions", "referralOffer", "boundary"],
   };
 }
 
 export const SELLER_INTEGRITY_AUDIT_EXAMPLE = Object.freeze({
   ok: true,
   product: "samedaydesk-seller-integrity-audit",
-  version: "1.2.0",
+  version: "1.3.0",
   checkedAt: "2026-08-12T07:50:00.000Z",
   decision: "machine_buyable",
-  request: { origin: "https://agents.samedaydesk.com", route: "/commerce/payment-offer-preflight", method: "GET", requiredPaths: ["decision", "offers"], requireBazaar: true },
+  request: { origin: "https://agents.samedaydesk.com", route: "/commerce/payment-offer-preflight", method: "GET", requiredPaths: ["decision", "offers"], requireBazaar: true, referral: null },
   report: {
     auditCompleted: true,
     failureCode: null,
@@ -191,6 +199,7 @@ export const SELLER_INTEGRITY_AUDIT_EXAMPLE = Object.freeze({
     },
   },
   nextActions: [],
+  referralOffer: createReceiptReferralOffer({ decision: "machine_buyable" }),
   boundary: {
     credentialsUsed: false,
     targetPaymentSigned: false,
@@ -222,9 +231,10 @@ function nextActionsFor(routeReport) {
 
 export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = {}) {
   const request = normalizeSellerIntegrityAuditInput(input);
+  const { referral, ...auditRequest } = request;
   let report;
   try {
-    report = await auditImpl({ ...request, maxRoutes: 1, publicDns: true });
+    report = await auditImpl({ ...auditRequest, maxRoutes: 1, publicDns: true });
   } catch (error) {
     const message = String(error?.message || error);
     const failureCode = /not declared/.test(message)
@@ -239,7 +249,7 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
     return {
       ok: false,
       product: "samedaydesk-seller-integrity-audit",
-      version: "1.2.0",
+      version: "1.3.0",
       checkedAt: new Date().toISOString(),
       decision: "repair_required",
       request,
@@ -264,6 +274,7 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
         : failureCode.startsWith("openapi_")
           ? `Publish a valid same-origin /openapi.json document with the exact paid ${request.method} operation.`
           : "Restore the seller declaration and unpaid challenge surfaces, then rerun the bounded audit."],
+      referralOffer: createReceiptReferralOffer({ referralId: referral, decision: "repair_required" }),
       boundary: {
         credentialsUsed: false,
         targetPaymentSigned: false,
@@ -285,7 +296,7 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
   return {
     ok: decision !== "repair_required",
     product: "samedaydesk-seller-integrity-audit",
-    version: "1.2.0",
+    version: "1.3.0",
     checkedAt: report.checkedAt,
     decision,
     request,
@@ -306,6 +317,7 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
       repairPlan: routeReport.repairPlan,
     },
     nextActions: nextActionsFor(routeReport),
+    referralOffer: createReceiptReferralOffer({ referralId: referral, decision }),
     boundary: {
       credentialsUsed: false,
       targetPaymentSigned: false,

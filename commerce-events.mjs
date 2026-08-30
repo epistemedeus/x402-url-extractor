@@ -3,6 +3,7 @@ import { appendFile, chmod, mkdir, readFile, rename, stat, unlink } from "node:f
 import path from "node:path";
 import { Credential } from "mppx";
 import { classifyDiscoveryRequestConstruction } from "./discovery-contract.mjs";
+import { isReceiptReferralId } from "./receipt-referral.mjs";
 
 const CRAWLER_PATTERN = /bot|crawler|spider|slurp|uptime|monitor|observer|probe|indexer|headless|preview|liveness|healthcheck|sentineloracle|mcpbeat|agentreeve|agent402|trust[- ]?oracle/i;
 const EXPLOIT_PROBE_PATH_PATTERN = /(?:^|\/)\.(?:env|git)(?:[./]|$)|^\/(?:wp-admin|wp-login\.php|wp-json|xmlrpc\.php)(?:\/|$)|^\/(?:api\/)?(?:config|env|settings)(?:[./]|$)|^\/js\/(?:config|env)\.js$/i;
@@ -78,6 +79,7 @@ const CANONICAL_AGENT_DISCOVERY_SOURCES = new Set([
   ...AGENT_DISCOVERY_SOURCE_PATTERNS.map(([source]) => source),
   ...DECLARED_AGENT_DISCOVERY_SOURCES.values(),
   "generic-agent-indexer",
+  "declared-receipt-referral",
 ]);
 
 const EXACT_ROUTES = new Map([
@@ -2105,7 +2107,8 @@ export function createCommerceTelemetry({
     const declaredAgentDiscoverySource = classifyDeclaredAgentDiscoverySource(
       headerValue(headers, "x-samedaydesk-agent-source"),
     );
-    const agentDiscoverySource = declaredAgentDiscoverySource || classifyAgentDiscoverySource(userAgent);
+    const receiptReferralSource = isReceiptReferralId(req?.query?.referral) ? "declared-receipt-referral" : null;
+    const agentDiscoverySource = receiptReferralSource || declaredAgentDiscoverySource || classifyAgentDiscoverySource(userAgent);
     const suppliedInternal = headerValue(headers, "x-samedaydesk-internal");
     const protocol = paymentProtocol(headers);
     const paymentPresent = Boolean(protocol);
