@@ -2898,6 +2898,7 @@ const x402Paywall = paymentMiddleware(
             },
             output: { example: SELLER_INTEGRITY_AUDIT_EXAMPLE },
             outputSchema: sellerIntegrityAuditOutputSchema(),
+            publishOutputExample: false,
           }),
         },
       },

@@ -157,6 +157,14 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   const challenge = JSON.parse(Buffer.from(encodedChallenge, "base64").toString("utf8"));
   assert.equal(challenge.extensions?.["builder-code"]?.info?.a, "bc_samedaydesk_test");
   assert.equal(challenge.extensions?.["builder-code"]?.schema?.additionalProperties, false);
+  const sellerIntegrityChallenge = await fetch(`${base}/commerce/seller-integrity-audit`);
+  assert.equal(sellerIntegrityChallenge.status, 402);
+  const encodedSellerIntegrityChallenge = sellerIntegrityChallenge.headers.get("payment-required");
+  assert.ok(encodedSellerIntegrityChallenge);
+  assert.ok(
+    Buffer.byteLength(encodedSellerIntegrityChallenge) < 14_000,
+    `seller-integrity payment-required header exceeds the Node-compatible budget: ${Buffer.byteLength(encodedSellerIntegrityChallenge)} bytes`,
+  );
   const [llms, catalog, agentCard, openapi, mppOpenapi, manifest, mcpDescriptor, commerceDemand] = await Promise.all([
     readText(base, "/llms.txt"),
     readJson(base, "/api/actions"),
