@@ -53,6 +53,7 @@ import {
 } from "@x402/extensions/builder-code";
 import { createFacilitatorConfig } from "@coinbase/x402";
 import { createCommerceTrust } from "./commerce-trust.mjs";
+import { buildCommercePaymentEvidenceReadout } from "./commerce-payment-evidence.mjs";
 import { buildSkillContract } from "./skill-contract.mjs";
 import { exposeAgenticTradeProxyDiagnostics } from "./agentictrade-proxy-diagnostics.mjs";
 import { assertPublicHttpUrl, extract, readMarkdown } from "./extract.mjs";
@@ -665,8 +666,12 @@ app.get("/v0/commerce-demand.json", async (req, res) => {
       commerceTelemetry.snapshot({ days }),
       commerceSettlementReconciler?.status() || Promise.resolve({ enabled: false }),
     ]);
+    const paymentEvidence = buildCommercePaymentEvidenceReadout({
+      eventSnapshot: snapshot,
+      settlementReconciliation,
+    });
     res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
-    return res.json({ ...snapshot, settlementReconciliation });
+    return res.json({ ...snapshot, paymentEvidence, settlementReconciliation });
   } catch (error) {
     return res.status(503).json({ ok: false, error: "commerce_telemetry_unavailable" });
   }
@@ -1349,7 +1354,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     ],
     paths: {
       "/v0/cards.json": { get: { summary: "Free incident-backed platform health cards. Categories are not calibrated scores.", responses: { "200": { description: "SameDayDesk platform health index v0" } } } },
-      "/v0/commerce-demand.json": { get: { summary: "Privacy-safe aggregate external machine-commerce observations.", parameters: [{ name: "days", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 365, default: 90 } }], responses: { "200": { description: "Aggregate discovery, constructed-request, challenge, paid-success, unmatched-request, and high-precision semantic-candidate counts. Known internal and owner-monitor traffic stays outside demand; crawler construction remains separately source-labeled reach evidence." } } } },
+      "/v0/commerce-demand.json": { get: { summary: "Privacy-safe aggregate external machine-commerce observations.", parameters: [{ name: "days", in: "query", required: false, schema: { type: "integer", minimum: 1, maximum: 365, default: 90 } }], responses: { "200": { description: "Aggregate discovery, constructed-request, challenge, paid-success, unmatched-request, and high-precision semantic-candidate counts. A separate paymentEvidence readout distinguishes retained paid-event actors from durable reconciled settlements and leaves customer count and buyer-valid delivery unknown without separate authority. Known internal and owner-monitor traffic stays outside demand; crawler construction remains separately source-labeled reach evidence." } } } },
       [PAID_ACTION_EFFECT_PROFILE_PATH]: { get: { summary: "Experimental read-only effect and retry contract for SameDayDesk paid POST operations.", responses: { "200": { description: "Exact method-route effect declarations and payment-response replay boundary" } } } },
       [PURCHASE_EVIDENCE_MANIFEST_PATH]: { get: { summary: "Seller-declared purchase-authorization evidence for every exact paid operation.", responses: { "200": { description: "Bounded operation-level effect, response guarantee, replay, receipt, and signed-deployment pointers" } } } },
       "/.well-known/agent-card.json": { get: { summary: "A2A v1.0 agent card for the free machine-commerce storefront.", responses: { "200": { description: "A2A AgentCard" } } } },
