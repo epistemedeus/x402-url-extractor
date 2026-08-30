@@ -37,7 +37,7 @@ settlement proof, and AI-search readiness audits.
 - Morpho market underwriting: `GET /defi/morpho-market-underwrite?marketId=0x...`
 - Morpho PreLiquidation replay: `GET /defi/morpho-preliquidation-replay?transactionHash=0x...`
 - Opportunity preflight: `GET /work/opportunity-preflight?rewardUsd=10&hours=0.25&hourlyCostUsd=4&selectionProbabilityPct=20`
-- Agent discoverability audit: `GET /distribution/agent-discoverability-audit?origin=https://example.com&intent=extract+a+public+website+into+structured+JSON&route=/extract&runtimeUrl=https%3A%2F%2Fexample.com%2Fextract%3Furl%3Dhttps%253A%252F%252Fexample.org&surfaceAudit=true`
+- Agent discoverability audit: `GET /distribution/agent-discoverability-audit?origin=https://example.com&intent=extract+a+public+website+into+structured+JSON&route=/extract&method=GET&runtimeUrl=https%3A%2F%2Fexample.com%2Fextract%3Furl%3Dhttps%253A%252F%252Fexample.org&surfaceAudit=true&materializationAudit=true`
 - Payment offer preflight: `GET /commerce/payment-offer-preflight?url=https://example.com/paid-route`
 - Seller integrity audit: `GET /commerce/seller-integrity-audit?origin=https://seller.example&route=/paid-route&method=GET&requiredPaths=data.attributes`
   - A satisfied buyer may add `referral=r1_<sha256>` derived from its complete seller-signed x402 receipt. This creates a declared acquisition label, not verified proof. A free changed-state recheck activates only after the full signed receipt is verified, a distinct downstream payer settles, and the buyer reports valid delivery; posting is never required before purchase. See [`docs/agent-outcome-referral-experiment.md`](docs/agent-outcome-referral-experiment.md).
@@ -317,6 +317,17 @@ an alias candidate, not proof that the seller owns the hostname. Every source
 now returns `identityBasis`, `ownershipProven`, and a plain-language evidence
 boundary so an automated repair can preserve the canonical record without
 retiring a third-party endpoint on circumstantial evidence.
+
+Version 1.23.35 extends that existing audit without adding a route or changing
+its 0.05-USDC price. With `materializationAudit=true`, an exact GET or POST
+route is checked through Coinbase's current seller validator and exact-resource
+Bazaar readback. The result distinguishes `materialized`,
+`provider_accepted_not_materialized`, `seller_not_provider_eligible`, and
+`unresolved` instead of treating every missing ranked result alike. Validation
+acceptance remains provider-returned point-in-time evidence, not listing,
+demand, settlement, or reindex authority. The opt-in check uses no credential,
+signature, or payment; Coinbase may make one unpaid request to the seller using
+the requested method.
 
 Version 1.16.4 replaced the route-audit's private identity classifier with the
 public, provenance-bearing `agent-payment-policy@0.8.0` primitive. Catalogs

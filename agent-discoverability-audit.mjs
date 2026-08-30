@@ -12,6 +12,7 @@ import {
 import { searchMarket8004 } from "./market8004-discovery.mjs";
 
 const BAZAAR_SEARCH = "https://api.cdp.coinbase.com/platform/v2/x402/discovery/search";
+const BAZAAR_VALIDATE = "https://api.cdp.coinbase.com/platform/v2/x402/validate";
 const AGENT402_ROUTE = "https://agent402.tools/api/route";
 const CIRCLE_SEARCH = "https://api.circle.com/v2/x402/discovery/resources";
 const AGENTIC_MARKET_SEARCH = "https://api.agentic.market/v1/services/search";
@@ -118,6 +119,15 @@ export function normalizeDiscoverabilityAuditInput(raw = {}) {
     throw new Error("surfaceAudit must be true or false");
   }
   if ([true, "true", "1"].includes(raw.surfaceAudit)) surfaceAudit = true;
+  let materializationAudit = false;
+  if (![undefined, null, "", false, "false", "0", true, "true", "1"].includes(raw.materializationAudit)) {
+    throw new Error("materializationAudit must be true or false");
+  }
+  if ([true, "true", "1"].includes(raw.materializationAudit)) materializationAudit = true;
+  if (materializationAudit && !expectedRoute) throw new Error("materializationAudit requires an exact route");
+  const method = String(raw.method || "GET").toUpperCase();
+  if (!["GET", "POST"].includes(method)) throw new Error("method must be GET or POST");
+  if (runtimeUrl && method !== "GET") throw new Error("runtimeUrl is supported only when method is GET");
   let expectedPriceAtomic = null;
   let expectedPriceUsd = null;
   if (raw.expectedPriceUsd !== undefined && raw.expectedPriceUsd !== null && raw.expectedPriceUsd !== "") {
@@ -139,8 +149,67 @@ export function normalizeDiscoverabilityAuditInput(raw = {}) {
     runtimeUrl,
     payTo,
     surfaceAudit,
+    materializationAudit,
+    method,
     expectedPriceUsd,
     expectedPriceAtomic,
+  };
+}
+
+export async function auditCoinbaseMaterialization(input, { fetchImpl = fetch } = {}) {
+  if (!input.materializationAudit) return { requested: false };
+  const resource = `${input.origin}${input.route}`;
+  const searchUrl = new URL(BAZAAR_SEARCH);
+  searchUrl.searchParams.set("query", input.intent);
+  searchUrl.searchParams.set("urlSubstring", resource);
+  searchUrl.searchParams.set("curatedOnly", "false");
+  searchUrl.searchParams.set("limit", "20");
+  const [validationResult, catalogResult] = await Promise.allSettled([
+    fetchJson(BAZAAR_VALIDATE, {
+      fetchImpl,
+      method: "POST",
+      body: { resource, method: input.method },
+    }),
+    fetchJson(searchUrl, { fetchImpl }),
+  ]);
+  const validator = validationResult.status === "fulfilled"
+    ? {
+        status: "ok",
+        valid: validationResult.value?.valid === true,
+        simulationOutcome: cleanString(validationResult.value?.simulation?.outcome, 80),
+        indexReturned: validationResult.value?.index !== null && validationResult.value?.index !== undefined,
+      }
+    : { status: "error", error: cleanString(validationResult.reason?.message || "validator unavailable", 200) };
+  let exactMatchCount = null;
+  let catalog;
+  if (catalogResult.status === "fulfilled") {
+    const resources = catalogResult.value?.resources;
+    if (Array.isArray(resources)) {
+      exactMatchCount = resources.filter((item) => item?.resource === resource).length;
+      catalog = { status: "ok", exactResourceFound: exactMatchCount > 0, exactMatchCount };
+    } else {
+      catalog = { status: "error", error: "catalog response is missing resources" };
+    }
+  } else {
+    catalog = { status: "error", error: cleanString(catalogResult.reason?.message || "catalog unavailable", 200) };
+  }
+  let state = "unresolved";
+  if (catalog.exactResourceFound === true) state = "materialized";
+  else if (catalog.status === "ok" && validator.status === "ok" && validator.valid && validator.simulationOutcome === "accepted") {
+    state = "provider_accepted_not_materialized";
+  } else if (catalog.status === "ok" && validator.status === "ok" && (!validator.valid || validator.simulationOutcome !== "accepted")) {
+    state = "seller_not_provider_eligible";
+  }
+  return {
+    requested: true,
+    provider: "coinbase-cdp",
+    evidencePlane: "provider_returned",
+    resource,
+    method: input.method,
+    state,
+    validator,
+    catalog,
+    boundary: "This compares one current Coinbase validation result with one exact-resource Bazaar readback. Validation acceptance does not prove catalog materialization, demand, settlement, or a supported reindex action. Coinbase may make one unpaid request to the seller using the requested method; no credential, signature, or payment is supplied.",
   };
 }
 
@@ -722,6 +791,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
   fetchImpl = fetch,
   surfaceFetchImpl = fetchPinnedTargetJson,
   paymentPreflightImpl = paymentOfferPreflight,
+  coinbaseMaterializationImpl = auditCoinbaseMaterialization,
   limit = 20,
   now = Date.now(),
 } = {}) {
@@ -758,7 +828,13 @@ export async function agentDiscoverabilityAudit(rawInput, {
     "x402jobs-public-search": async () => normalizeX402Jobs(await fetchJson(`${X402_JOBS_SEARCH}?search=${encodeURIComponent(x402JobsQuery)}&limit=${limit}&sort=popular`, { fetchImpl })),
     "8004market-public-search": async () => normalizeMarket8004(await searchMarket8004(input.intent, { fetchImpl, limit })),
   };
-  const settled = await Promise.allSettled(SOURCE_ORDER.map((source) => calls[source]()));
+  const materializationPromise = input.materializationAudit
+    ? coinbaseMaterializationImpl(input, { fetchImpl })
+    : Promise.resolve({ requested: false });
+  const [settled, coinbaseMaterialization] = await Promise.all([
+    Promise.allSettled(SOURCE_ORDER.map((source) => calls[source]())),
+    materializationPromise,
+  ]);
   const sources = {};
   SOURCE_ORDER.forEach((source, index) => {
     const result = settled[index];
@@ -766,6 +842,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
       ? summarizeSource(source, result.value, comparisonInput)
       : { status: "error", error: cleanString(result.reason?.message || "catalog unavailable", 200) };
   });
+  sources["coinbase-bazaar"].materialization = coinbaseMaterialization;
   if (sources["x402jobs-public-search"].status === "ok") {
     sources["x402jobs-public-search"].queryUsed = x402JobsQuery;
     sources["x402jobs-public-search"].queryAdapted = x402JobsQuery !== input.intent.toLowerCase();
@@ -816,6 +893,38 @@ export async function agentDiscoverabilityAudit(rawInput, {
   }
   for (const source of SOURCE_ORDER) {
     const observation = sources[source];
+    if (source === "coinbase-bazaar" && coinbaseMaterialization.requested) {
+      if (coinbaseMaterialization.state === "provider_accepted_not_materialized") {
+        findings.push({ source, finding: "provider_accepted_exact_route_not_materialized", resource: coinbaseMaterialization.resource });
+        nextActions.push({
+          source,
+          action: "request_provider_ingestion_disposition_or_supported_reindex",
+          basis: "Coinbase currently accepts the exact seller route, but exact-resource Bazaar readback is absent. Preserve this distinction when requesting an ingestion disposition or supported reindex path.",
+        });
+        continue;
+      }
+      if (coinbaseMaterialization.state === "seller_not_provider_eligible") {
+        findings.push({ source, finding: "exact_route_not_provider_eligible", resource: coinbaseMaterialization.resource });
+        nextActions.push({
+          source,
+          action: "repair_seller_provider_eligibility",
+          basis: "The current Coinbase validator did not accept the exact seller route, so seller eligibility must be repaired before catalog materialization can be expected.",
+        });
+        continue;
+      }
+      if (coinbaseMaterialization.state === "materialized" && !observation.targetFound) {
+        findings.push({ source, finding: "exact_route_materialized_but_not_ranked_for_intent", resource: coinbaseMaterialization.resource });
+        nextActions.push({
+          source,
+          action: "compare_task_outcome_metadata_with_ranked_results",
+          basis: "Exact-resource Bazaar readback succeeded, but the service did not appear in the first ranked window for this brand-blind intent.",
+        });
+        continue;
+      }
+      if (coinbaseMaterialization.state === "unresolved") {
+        findings.push({ source, finding: "materialization_state_unresolved" });
+      }
+    }
     if (observation.status !== "ok") {
       findings.push({ source, finding: "source_unavailable" });
       nextActions.push({ source, action: "rerun_after_source_recovers", basis: "No rank conclusion is valid while the source is unavailable." });
@@ -910,7 +1019,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
   return {
     ok: true,
     product: "samedaydesk-agent-discoverability-audit",
-    version: "1.10.0",
+    version: "1.11.0",
     generatedAt: new Date(now).toISOString(),
     input: {
       origin: input.origin,
@@ -919,6 +1028,8 @@ export async function agentDiscoverabilityAudit(rawInput, {
       runtimeUrl: input.runtimeUrl,
       payTo: input.payTo,
       surfaceAudit: input.surfaceAudit,
+      materializationAudit: input.materializationAudit,
+      method: input.method,
       expectedPriceUsd: input.expectedPriceUsd,
       expectedPriceAtomic: input.expectedPriceAtomic,
       brandBlind: true,
@@ -953,13 +1064,14 @@ export async function agentDiscoverabilityAudit(rawInput, {
       unavailableSourceFamilies: sourceFamilies.filter((family) => !availableSourceFamilies.includes(family)),
       dependentSources,
       independentTargetFoundSourceCount: independentSources.filter((source) => sources[source].status === "ok" && sources[source].targetFound).length,
+      coinbaseMaterializationState: coinbaseMaterialization.requested ? coinbaseMaterialization.state : null,
     },
     sources,
     runtimeOfferAudit,
     targetSurfaces,
     findings,
     nextActions,
-    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata. For an exact route, every source also reports whether the matched records are canonical, duplicated, alias-only, or collide across canonical and non-canonical origins. A non-canonical record becomes an alias candidate only when it matches the caller-supplied payTo and exact route; that links advertised settlement identity but does not prove hostname ownership. When runtimeUrl is supplied, one same-origin, exact-route, credentials-free headers-only request derives the comparison amount only from a parseable coherent live offer. Otherwise an optional caller-supplied expected price remains clearly labeled as caller expected. When explicitly requested, the target-surface check reads only three fixed same-origin public JSON documents after payment.",
+    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata. For an exact route, every source also reports whether the matched records are canonical, duplicated, alias-only, or collide across canonical and non-canonical origins. A non-canonical record becomes an alias candidate only when it matches the caller-supplied payTo and exact route; that links advertised settlement identity but does not prove hostname ownership. When runtimeUrl is supplied, one same-origin, exact-route, credentials-free headers-only request derives the comparison amount only from a parseable coherent live offer. Otherwise an optional caller-supplied expected price remains clearly labeled as caller expected. When explicitly requested, the target-surface check reads only three fixed same-origin public JSON documents after payment. The separate opt-in Coinbase materialization check compares the provider's exact-route validator with exact-resource catalog readback; it never treats validation acceptance as proof of listing.",
     sourceDependencies: DEPENDENT_SOURCES,
     safety: {
       credentialsUsed: false,
@@ -972,6 +1084,11 @@ export async function agentDiscoverabilityAudit(rawInput, {
       targetOriginFetchAttempted: input.surfaceAudit,
       targetOriginFetched: input.surfaceAudit && targetSurfaces.availableSurfaceCount > 0,
       targetOriginFetchScope: input.surfaceAudit ? Object.values(TARGET_SURFACES) : [],
+      providerValidationRequested: input.materializationAudit,
+      providerCredentialUsed: false,
+      providerPaymentSigned: false,
+      providerPaymentSent: false,
+      providerMayRequestTarget: input.materializationAudit,
       redirectsFollowed: false,
     },
     boundary: livePriceReference
