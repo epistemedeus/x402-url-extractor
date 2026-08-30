@@ -3,6 +3,129 @@ export const COMMERCE_PAYMENT_EVIDENCE_SCHEMA =
 
 const COMPLETE = "complete";
 
+function nullableNonnegativeIntegerSchema() {
+  return { anyOf: [{ type: "integer", minimum: 0 }, { type: "null" }] };
+}
+
+function nullableAtomicStringSchema() {
+  return { anyOf: [{ type: "string", pattern: "^\\d+$" }, { type: "null" }] };
+}
+
+function settlementBreakdownSchema() {
+  return {
+    type: "object",
+    additionalProperties: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        settlements: { type: "integer", minimum: 0 },
+        amountAtomic: { type: "string", pattern: "^\\d+$" },
+      },
+      required: ["settlements", "amountAtomic"],
+    },
+  };
+}
+
+export function commercePaymentEvidenceOutputSchema() {
+  return {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      schemaVersion: { type: "string", const: COMMERCE_PAYMENT_EVIDENCE_SCHEMA },
+      relationship: {
+        type: "string",
+        enum: [
+          "durable_settlement_outlives_retained_paid_event",
+          "retained_paid_event_and_durable_settlement",
+          "retained_paid_event_pending_or_outside_settlement_ledger",
+          "complete_no_paid_evidence",
+          "unknown",
+        ],
+      },
+      eventPlane: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          coverage: { type: "string" },
+          retainedPaidSuccessActors: nullableNonnegativeIntegerSchema(),
+          retainedRepeatPaidSuccessActors: nullableNonnegativeIntegerSchema(),
+          requestedWindowPaidSuccessActors: nullableNonnegativeIntegerSchema(),
+          requestedWindowRepeatPaidSuccessActors: nullableNonnegativeIntegerSchema(),
+        },
+        required: [
+          "coverage",
+          "retainedPaidSuccessActors",
+          "retainedRepeatPaidSuccessActors",
+          "requestedWindowPaidSuccessActors",
+          "requestedWindowRepeatPaidSuccessActors",
+        ],
+      },
+      settlementPlane: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          enabled: { type: "boolean" },
+          baseline: { anyOf: [{ type: "string", format: "date-time" }, { type: "null" }] },
+          coverage: { type: "string", enum: ["complete", "unknown_for_full_window"] },
+          reconciledSettlements: nullableNonnegativeIntegerSchema(),
+          amountAtomic: nullableAtomicStringSchema(),
+          byClass: settlementBreakdownSchema(),
+          byRoute: settlementBreakdownSchema(),
+        },
+        required: [
+          "enabled",
+          "baseline",
+          "coverage",
+          "reconciledSettlements",
+          "amountAtomic",
+          "byClass",
+          "byRoute",
+        ],
+      },
+      customerPlane: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          attributableCustomerCount: { type: "null" },
+          buyerValidDeliveryCount: { type: "null" },
+          repeatIndependentCustomerCount: { type: "null" },
+        },
+        required: [
+          "attributableCustomerCount",
+          "buyerValidDeliveryCount",
+          "repeatIndependentCustomerCount",
+        ],
+      },
+      boundaries: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          retainedEventZeroNeverMeansHistoricalZeroWhenCoverageIncomplete: { type: "boolean", const: true },
+          settlementNeverBecomesCustomer: { type: "boolean", const: true },
+          paymentKeyNeverBecomesCustomer: { type: "boolean", const: true },
+          settlementNeverProvesBuyerValidDelivery: { type: "boolean", const: true },
+          customerAttributionRequiresSeparateEvidence: { type: "boolean", const: true },
+        },
+        required: [
+          "retainedEventZeroNeverMeansHistoricalZeroWhenCoverageIncomplete",
+          "settlementNeverBecomesCustomer",
+          "paymentKeyNeverBecomesCustomer",
+          "settlementNeverProvesBuyerValidDelivery",
+          "customerAttributionRequiresSeparateEvidence",
+        ],
+      },
+    },
+    required: [
+      "schemaVersion",
+      "relationship",
+      "eventPlane",
+      "settlementPlane",
+      "customerPlane",
+      "boundaries",
+    ],
+  };
+}
+
 function nonnegativeInteger(value) {
   return Number.isSafeInteger(value) && value >= 0 ? value : null;
 }

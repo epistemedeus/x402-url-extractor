@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import Ajv from "ajv";
+
 import {
   COMMERCE_PAYMENT_EVIDENCE_SCHEMA,
   buildCommercePaymentEvidenceReadout,
+  commercePaymentEvidenceOutputSchema,
 } from "./commerce-payment-evidence.mjs";
 
 function eventSnapshot(overrides = {}) {
@@ -139,4 +142,19 @@ test("missing planes stay unknown rather than fabricating zero", () => {
   assert.equal(result.eventPlane.requestedWindowPaidSuccessActors, null);
   assert.equal(result.settlementPlane.reconciledSettlements, null);
   assert.equal(result.settlementPlane.amountAtomic, null);
+});
+
+test("the exported schema accepts the readout and rejects invented customer authority", () => {
+  const validate = new Ajv({ allErrors: true, strict: false }).compile(
+    commercePaymentEvidenceOutputSchema(),
+  );
+  const result = buildCommercePaymentEvidenceReadout({
+    eventSnapshot: eventSnapshot(),
+    settlementReconciliation: settlementReconciliation(),
+  });
+  assert.equal(validate(result), true, JSON.stringify(validate.errors));
+
+  const promoted = structuredClone(result);
+  promoted.customerPlane.attributableCustomerCount = 1;
+  assert.equal(validate(promoted), false);
 });

@@ -157,7 +157,7 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   const challenge = JSON.parse(Buffer.from(encodedChallenge, "base64").toString("utf8"));
   assert.equal(challenge.extensions?.["builder-code"]?.info?.a, "bc_samedaydesk_test");
   assert.equal(challenge.extensions?.["builder-code"]?.schema?.additionalProperties, false);
-  const [llms, catalog, agentCard, openapi, mppOpenapi, manifest, mcpDescriptor] = await Promise.all([
+  const [llms, catalog, agentCard, openapi, mppOpenapi, manifest, mcpDescriptor, commerceDemand] = await Promise.all([
     readText(base, "/llms.txt"),
     readJson(base, "/api/actions"),
     readJson(base, "/.well-known/agent-card.json"),
@@ -165,6 +165,7 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     readJson(base, "/mpp-openapi.json"),
     readJson(base, "/.well-known/x402"),
     readJson(base, "/mcp"),
+    readJson(base, "/v0/commerce-demand.json?days=90"),
   ]);
 
   const client = new Client({ name: "surface-parity", version: "0" });
@@ -232,6 +233,14 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(mcpToolNames.includes("circle_gateway"), false);
   assert.equal(openapi.paths[CIRCLE_ROUTE]?.get?.["x-payment-info"] != null, true);
   assert.equal(mppOpenapi.paths[CIRCLE_ROUTE], undefined);
+
+  const commerceDemandSchema = openapi.paths["/v0/commerce-demand.json"]
+    ?.get?.responses?.["200"]?.content?.["application/json"]?.schema;
+  assert.ok(commerceDemandSchema, "commerce-demand 200 lacks application/json schema");
+  assert.equal(commerceDemandSchema.required.includes("paymentEvidence"), true);
+  const validateCommerceDemand = new Ajv({ allErrors: true, strict: false })
+    .compile(commerceDemandSchema);
+  assert.equal(validateCommerceDemand(commerceDemand), true, JSON.stringify(validateCommerceDemand.errors));
 
   const PRIOR_TYPED_MCP = [
     "scan",
