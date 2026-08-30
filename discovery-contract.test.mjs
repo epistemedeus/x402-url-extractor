@@ -81,6 +81,35 @@ test("places the authored output schema in the Bazaar v2 response contract", () 
   });
 });
 
+test("can omit a large wire example while retaining the controller-owned output contract", () => {
+  const extension = declareDiscoveryContract({
+    routeKey: "GET /compact-contract",
+    input: { url: "https://example.com" },
+    inputSchema: {
+      type: "object",
+      properties: { url: { type: "string" } },
+      required: ["url"],
+    },
+    output: { example: { ok: true, payload: "large example retained off wire" } },
+    outputSchema: {
+      type: "object",
+      properties: { ok: { type: "boolean" }, payload: { type: "string" } },
+      required: ["ok", "payload"],
+    },
+    publishOutputExample: false,
+  });
+
+  assert.equal(Object.hasOwn(extension.bazaar.info.output, "example"), false);
+  assert.deepEqual(getDiscoveryOutputContract("GET /compact-contract"), {
+    example: { ok: true, payload: "large example retained off wire" },
+    schema: {
+      type: "object",
+      properties: { ok: { type: "boolean" }, payload: { type: "string" } },
+      required: ["ok", "payload"],
+    },
+  });
+});
+
 test("projects only credential-free HTTPS examples with scalar query values", () => {
   const contract = {
     example: { type: "http", method: "GET", queryParams: { second: 2, first: true } },

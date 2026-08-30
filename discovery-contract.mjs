@@ -14,7 +14,7 @@ const requestContracts = new Map();
  * from silently degrading to an untyped example object.
  */
 export function declareDiscoveryContract(config = {}) {
-  const { output, outputSchema, routeKey, ...rest } = config;
+  const { output, outputSchema, routeKey, publishOutputExample = true, ...rest } = config;
   let routeMethod;
   if (routeKey !== undefined) {
     const match = /^(GET|POST) \/[^?#]+$/.exec(routeKey);
@@ -33,6 +33,9 @@ export function declareDiscoveryContract(config = {}) {
       },
     } : {}),
   });
+  if (!publishOutputExample && declared.bazaar?.info?.output) {
+    delete declared.bazaar.info.output.example;
+  }
   if (routeKey !== undefined) {
     const extension = structuredClone(declared.bazaar);
     extension.info.input.method = routeMethod;
