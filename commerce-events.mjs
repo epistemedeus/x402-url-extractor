@@ -106,6 +106,7 @@ const EXACT_ROUTES = new Map([
   ["/a2a", { route: "/a2a", kind: "discovery" }],
   ["/a2a/message:send", { route: "/a2a/message:send", kind: "discovery" }],
   ["/v0/commerce-demand.json", { route: "/v0/commerce-demand.json", kind: "excluded" }],
+  ["/commerce/referral-recheck", { route: "/commerce/referral-recheck", kind: "excluded" }],
   ["/schemas/platform-health-card-v0.json", { route: "/schemas/platform-health-card-v0.json", kind: "discovery" }],
   ["/schemas/wallet-policy-conformance-v1.json", { route: "/schemas/wallet-policy-conformance-v1.json", kind: "discovery" }],
   ["/schemas/stateful-wallet-policy-conformance-v1.json", { route: "/schemas/stateful-wallet-policy-conformance-v1.json", kind: "discovery" }],

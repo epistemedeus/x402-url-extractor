@@ -96,7 +96,7 @@ test("attributes a bounded receipt-derived referral without passing it to the ta
   assert.equal(result.referralOffer.status, "declared");
   assert.equal(result.referralOffer.id, referral);
   assert.equal(result.referralOffer.attributionOnly, true);
-  assert.equal(result.referralOffer.qualifiesOn, "distinct_payer_settlement_plus_buyer_valid_delivery");
+  assert.equal(result.referralOffer.qualifiesOn, "two_distinct_seller_signed_settlement_receipts");
 });
 
 test("separates static POST contract readiness from live machine buyability", async () => {

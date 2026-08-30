@@ -103,6 +103,14 @@ import {
   sellerIntegrityAuditOutputSchema,
 } from "./seller-integrity-audit.mjs";
 import {
+  RECEIPT_REFERRAL_RECHECK_ROUTE,
+  ReceiptReferralRecheckError,
+  createReceiptReferralClaimStore,
+  receiptReferralRecheck,
+  receiptReferralRecheckOutputSchema,
+  receiptReferralRecheckRequestSchema,
+} from "./receipt-referral-recheck.mjs";
+import {
   CONTRACT_QUALIFIED_SEARCH_EXAMPLE,
   ContractQualifiedSearchError,
   contractQualifiedSearch,
@@ -745,6 +753,7 @@ app.get("/go/manychat", async (_req, res) => {
 // domain crawlers) self-discover our paid resources. Free route, before the paywall.
 const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
 const USDC_ASSET = usdcTermsForNetwork(NETWORK).asset;
+const receiptReferralClaimStore = createReceiptReferralClaimStore();
 const serviceDeploymentPublication = loadServiceDeploymentPublication({
   canonicalOrigin: PUBLIC_URL,
   network: NETWORK,
@@ -1421,6 +1430,27 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
             : agentCashPaymentInfoFor(RESOURCES[19]),
         },
       },
+      [RECEIPT_REFERRAL_RECHECK_ROUTE]: {
+        post: {
+          summary: "Claim one free seller-integrity recheck with two distinct merchant-signed settlement receipts. The original signed URL alone supplies the audit target, with any prior referral stripped. Receipts do not prove an application HTTP 200 response or output delivery. This route is free and records no payment, settlement, revenue, payer, transaction, or raw receipt evidence.",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: receiptReferralRecheckRequestSchema(),
+              },
+            },
+          },
+          responses: {
+            "200": { description: "one completed free changed-state recheck; the atomic claim is consumed immediately before this response", content: { "application/json": { schema: receiptReferralRecheckOutputSchema() } } },
+            "400": { description: "malformed, mismatched, or ineligible signed receipt evidence; charged nothing" },
+            "403": { description: "one or both receipts use a signer other than the configured merchant receipt signer" },
+            "409": { description: "the referral already consumed its one free recheck" },
+            "502": { description: "the recheck failed before claim consumption" },
+            "503": { description: "receipt verification or durable claim storage is unavailable" },
+          },
+        },
+      },
       "/commerce/contract-qualified-search": {
         get: {
           summary: RESOURCES[20].description,
@@ -1622,6 +1652,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     "/schemas/stateful-wallet-policy-conformance-v1.json": { operationId: "getStatefulWalletPolicyConformanceSchema", tags: ["Security"] },
     "/a2a/message:send": { operationId: "sendA2aMessage", tags: ["A2A"] },
     "/platforms": { operationId: "viewSettlementRadar", tags: ["Settlement Radar"] },
+    [RECEIPT_REFERRAL_RECHECK_ROUTE]: { operationId: "claimReceiptReferralRecheck", tags: ["Agent Operations"] },
   };
   for (const [pathname, metadata] of Object.entries(freeOperationMetadata)) {
     const pathItem = document.paths[pathname];
@@ -1653,6 +1684,38 @@ app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
 
 app.get(["/mpp-openapi.json", "/openapi.mpp.json"], (_req, res) => {
   return res.json(buildOpenApiDocument({ profile: "mpp" }));
+});
+
+// Free receipt-bound referral reward. It is registered before idempotency and
+// both payment rails, and its telemetry classifier excludes it from demand,
+// payment, settlement, and revenue evidence.
+app.post(RECEIPT_REFERRAL_RECHECK_ROUTE, async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  try {
+    return res.json(await receiptReferralRecheck(req.body, {
+      merchantSigner: commerceTrust.signerAddress,
+      network: NETWORK,
+      publicUrl: PUBLIC_URL,
+      claimStore: receiptReferralClaimStore,
+    }));
+  } catch (error) {
+    const status = error instanceof ReceiptReferralRecheckError
+      ? Math.max(400, Math.min(599, Number(error.statusCode) || 400))
+      : 500;
+    return res.status(status).json({
+      ok: false,
+      product: "samedaydesk-referral-recheck",
+      code: error instanceof ReceiptReferralRecheckError ? error.code : "referral_recheck_failed",
+      error: error instanceof ReceiptReferralRecheckError ? error.message : "referral recheck failed",
+      charged: false,
+      boundary: {
+        paidDemandRecorded: false,
+        settlementRecorded: false,
+        revenueRecorded: false,
+        evidenceRetained: false,
+      },
+    });
+  }
 });
 
 // Return a short-lived response for an exact logical retry before validation or
@@ -3524,6 +3587,15 @@ app.get("/", (req, res) => {
       serviceDeploymentPublicKey: serviceDeploymentPublication.paths.publicKey,
       purchaseEvidenceManifest: PURCHASE_EVIDENCE_MANIFEST_PATH,
       aggregateDemand: "/v0/commerce-demand.json",
+      referralRecheck: {
+        route: `POST ${RECEIPT_REFERRAL_RECHECK_ROUTE}`,
+        price: "free",
+        reward: "one_free_changed_state_recheck",
+        proof: "two distinct seller-signed x402 settlement receipts",
+        buyerOutputValidated: false,
+        broadcastRequired: false,
+        boundary: "The original signed URL alone supplies the recheck target, with any prior referral stripped. Receipts do not prove application delivery. One empty mode-0600 marker is retained per successful referral; receipts, payers, transactions, and request bodies are not retained or classified as demand, settlement, or revenue.",
+      },
       declaredAgentSourceHeader: {
         header: "X-SameDayDesk-Agent-Source",
         value: "agent-skills-v1",
