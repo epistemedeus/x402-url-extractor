@@ -54,6 +54,16 @@ function canonicalAddress(value) {
     : value;
 }
 
+function assertPortableSchemaPatterns(value, path = "$") {
+  if (!value || typeof value !== "object") return;
+  if (typeof value.pattern === "string") {
+    assert.doesNotMatch(value.pattern, /\(\?(?:[=!]|<[=!])/, `${path}.pattern uses non-portable lookaround`);
+  }
+  for (const [key, child] of Object.entries(value)) {
+    assertPortableSchemaPatterns(child, `${path}.${key}`);
+  }
+}
+
 function exactPaymentTerm(requirement) {
   return {
     scheme: requirement.scheme,
@@ -203,6 +213,7 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     assert.equal(challenge.resource.serviceName, item.resource.serviceName);
     assert.deepEqual(challenge.resource.tags, item.resource.tags);
     assert.equal(challenge.resource.iconUrl, item.resource.iconUrl);
+    assertPortableSchemaPatterns(challenge.extensions?.bazaar?.schema, `${item.resource.routeTemplate}.bazaar.schema`);
     assert.deepEqual(
       challenge.accepts.map(exactPaymentTerm).sort((left, right) => left.network.localeCompare(right.network)),
       item.accepts.map(exactPaymentTerm).sort((left, right) => left.network.localeCompare(right.network)),
