@@ -61,7 +61,7 @@ agent_card = AgentCard(
     capabilities=AgentCapabilities(streaming=False),
     skills=[skill],
     provider=AgentProvider(
-        organization="Neomorphic LLC",
+        organization="samedaydesk.com",
         url="https://samedaydesk.com",
     ),
     documentation_url="https://agents.samedaydesk.com/skill.md",
