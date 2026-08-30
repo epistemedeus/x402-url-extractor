@@ -31,6 +31,10 @@ function paymentAuthorization(headers) {
   return Credential.extractPaymentScheme(headerValue(headers, "authorization"));
 }
 
+export function hasMppPaymentAuthorizationForPreflight(headers) {
+  return Boolean(paymentAuthorization(headers));
+}
+
 function normalizeAmount(value) {
   const amount = String(value || "").trim().replace(/^\$/, "");
   if (!/^(?:0|[1-9]\d*)(?:\.\d{1,6})?$/.test(amount) || Number(amount) <= 0) {

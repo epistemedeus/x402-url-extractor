@@ -55,8 +55,8 @@ import { createFacilitatorConfig } from "@coinbase/x402";
 import { createCommerceTrust } from "./commerce-trust.mjs";
 import { buildSkillContract } from "./skill-contract.mjs";
 import { exposeAgenticTradeProxyDiagnostics } from "./agentictrade-proxy-diagnostics.mjs";
-import { extract, readMarkdown } from "./extract.mjs";
-import { scanRepo, scanRepoMcpOutputSchema } from "./scan.mjs";
+import { assertPublicHttpUrl, extract, readMarkdown } from "./extract.mjs";
+import { parseRepo, scanRepo, scanRepoMcpOutputSchema } from "./scan.mjs";
 import { schemaforge } from "./schemaforge.mjs";
 import { enrich } from "./enrich.mjs";
 import { walletEnrich } from "./wallet-enrich.mjs";
@@ -168,7 +168,7 @@ import {
   buildPaidActionEffectProfile,
   paidActionEffectHeaders,
 } from "./paid-action-effect-profile.mjs";
-import { createMppDualStack } from "./mpp-dual-stack.mjs";
+import { createMppDualStack, hasMppPaymentAuthorizationForPreflight } from "./mpp-dual-stack.mjs";
 import { legacyCompatibleX402Body } from "./x402-legacy-body.mjs";
 import {
   VIBES_DISCOVERABILITY_PATH,
@@ -1650,9 +1650,158 @@ app.get(["/mpp-openapi.json", "/openapi.mpp.json"], (_req, res) => {
 // settlement. Changed request bindings fail with an uncharged 409.
 app.use(idempotencyReplay.middleware);
 
+const PAYMENT_CREDENTIAL_HEADERS = Object.freeze([
+  "payment-signature",
+  "x-payment",
+  "x-payment-signature",
+]);
+
+const hasRawRequestHeader = (req, name) => Object.prototype.hasOwnProperty.call(
+  req.headers || {},
+  name.toLowerCase(),
+);
+
+// A registry probe is unsigned only when every supported payment credential is
+// absent. Raw header presence counts even when a proxy exposes an empty value.
+// MPP detection reuses the payment adapter's parser instead of approximating its
+// comma-separated Authorization grammar here.
+const hasPaymentCredential = (req) => {
+  if (PAYMENT_CREDENTIAL_HEADERS.some((name) => hasRawRequestHeader(req, name))) return true;
+  if (!hasRawRequestHeader(req, "authorization")) return false;
+  const authorization = req.get("authorization") || "";
+  if (authorization.trim() === "") return true;
+  return hasMppPaymentAuthorizationForPreflight(req.headers);
+};
+
+// Machine registries discover a paid GET by probing its bare canonical URL.
+// Permit only the exact empty, credential-free request to reach the unsigned
+// challenge. Any query key or payment credential restores normal validation.
+const isUnsignedDiscoveryProbe = (req) => (
+  req.method === "GET"
+  && Object.keys(req.query || {}).length === 0
+  && !hasPaymentCredential(req)
+);
+
+function unchargedInvalidRequest(res, error) {
+  return res.status(400).json({ ok: false, error, charged: false });
+}
+
+// Repeated scalar query keys can otherwise be parsed as arrays after payment.
+// Derive the boundary from the generated paid OpenAPI surface so new paid GET
+// parameters inherit the same fail-before-payment behavior automatically.
+const PAID_GET_SCALAR_QUERY_PARAMETERS = (() => {
+  const document = buildOpenApiDocument({ profile: "agentcash" });
+  const result = new Map();
+  for (const [routePath, pathItem] of Object.entries(document.paths || {})) {
+    const operation = pathItem?.get;
+    if (!operation?.["x-payment-info"]) continue;
+    result.set(routePath, new Set(
+      (operation.parameters || [])
+        .filter((parameter) => parameter?.in === "query" && parameter?.schema?.type !== "array")
+        .map((parameter) => parameter.name),
+    ));
+  }
+  return result;
+})();
+
+app.use((req, res, next) => {
+  if (req.method !== "GET") return next();
+  const scalarParameters = PAID_GET_SCALAR_QUERY_PARAMETERS.get(req.path);
+  if (!scalarParameters) return next();
+  const duplicate = [...scalarParameters].find((name) => Array.isArray(req.query?.[name]));
+  if (!duplicate) return next();
+  res.set("Cache-Control", "no-store");
+  return unchargedInvalidRequest(res, `query parameter ${duplicate} must be supplied exactly once`);
+});
+
+function requireStringQuery(req, res, next, {
+  aliases,
+  error,
+  optionalStrings = [],
+  validate = () => true,
+}) {
+  if (isUnsignedDiscoveryProbe(req)) return next();
+  const value = aliases.map((name) => req.query[name]).find(Boolean);
+  let valid = false;
+  try {
+    valid = typeof value === "string"
+      && optionalStrings.every((name) => req.query[name] === undefined || typeof req.query[name] === "string")
+      && Boolean(validate(value));
+  } catch {
+    valid = false;
+  }
+  if (!valid) return unchargedInvalidRequest(res, error);
+  return next();
+}
+
+const isPublicHttpUrl = (value) => Boolean(assertPublicHttpUrl(value));
+const isPublicDomainInput = (value) => Boolean(assertPublicHttpUrl(
+  /^https?:\/\//i.test(value) ? value : `https://${value}`,
+));
+const isPublicGitHubRepo = (value) => Boolean(parseRepo(value));
+
+// Keep required-input validation ahead of both payment rails. The bare
+// credential-free exception exists only to expose machine-readable terms.
+app.get("/extract", (req, res, next) => requireStringQuery(req, res, next, {
+  aliases: ["url"],
+  error: "url must be a public HTTP or HTTPS URL",
+  validate: isPublicHttpUrl,
+}));
+app.get("/read", (req, res, next) => requireStringQuery(req, res, next, {
+  aliases: ["url"],
+  error: "url must be a public HTTP or HTTPS URL",
+  validate: isPublicHttpUrl,
+}));
+app.get("/scan", (req, res, next) => requireStringQuery(req, res, next, {
+  aliases: ["repo"],
+  error: "repo must identify a public GitHub repository as owner/name or a GitHub URL",
+  validate: isPublicGitHubRepo,
+}));
+app.get("/schemaforge", (req, res, next) => requireStringQuery(req, res, next, {
+  aliases: ["site"],
+  error: "site must be a public HTTP or HTTPS URL",
+  optionalStrings: ["vertical", "city"],
+  validate: isPublicHttpUrl,
+}));
+app.get("/enrich", (req, res, next) => requireStringQuery(req, res, next, {
+  aliases: ["domain", "url"],
+  error: "domain must identify a public HTTP or HTTPS origin",
+  validate: isPublicDomainInput,
+}));
+app.get("/wallet-enrich", (req, res, next) => requireStringQuery(req, res, next, {
+  aliases: ["address", "wallet", "addr"],
+  error: "address must be a 0x-prefixed 40-hex EVM address",
+  validate: (value) => /^0x[0-9a-fA-F]{40}$/.test(value),
+}));
+app.get("/deep-audit", (req, res, next) => requireStringQuery(req, res, next, {
+  aliases: ["domain", "url"],
+  error: "domain must identify a public HTTP or HTTPS origin",
+  optionalStrings: ["vertical", "city"],
+  validate: isPublicDomainInput,
+}));
+app.get("/defi/morpho-position", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
+  const address = req.query.address || req.query.wallet || req.query.borrower;
+  const shocksTyped = req.query.shocks === undefined || typeof req.query.shocks === "string";
+  const shockValues = typeof req.query.shocks === "string"
+    ? req.query.shocks.split(",").map((value) => value.trim()).filter(Boolean)
+    : [];
+  const shocksValid = shockValues.every((value) => (
+    Number.isFinite(Number(value)) && Number(value) >= -99 && Number(value) <= 100
+  ));
+  if (typeof address !== "string" || !/^0x[0-9a-fA-F]{40}$/.test(address) || !shocksTyped || !shocksValid) {
+    return unchargedInvalidRequest(
+      res,
+      "address must be a 0x-prefixed 40-hex EVM address and shocks must be finite numbers from -99 through 100",
+    );
+  }
+  return next();
+});
+
 // Validate the higher-value quote before the x402 middleware so malformed calls
 // fail with HTTP 400 and are never challenged for payment.
 app.get("/defi/morpho-protection", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   const address = req.query.address || req.query.wallet || req.query.borrower;
   const target = req.query.targetHealthFactor ?? "1.25";
   const shock = req.query.protectAgainstShockPct ?? "-10";
@@ -1674,6 +1823,7 @@ app.get("/defi/morpho-protection", (req, res, next) => {
 
 // Validate the market identifier before payment so malformed calls are free.
 app.get("/defi/morpho-market-underwrite", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   const marketId = req.query.marketId || req.query.market || req.query.id;
   if (typeof marketId !== "string" || !/^0x[0-9a-fA-F]{64}$/.test(marketId)) {
     return res.status(400).json({ ok: false, error: "marketId must be a 0x-prefixed 32-byte hex value", charged: false });
@@ -1682,23 +1832,13 @@ app.get("/defi/morpho-market-underwrite", (req, res, next) => {
 });
 
 app.get("/defi/morpho-preliquidation-replay", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   const transactionHash = req.query.transactionHash || req.query.tx || req.query.hash;
   if (typeof transactionHash !== "string" || !/^0x[0-9a-fA-F]{64}$/.test(transactionHash)) {
     return res.status(400).json({ ok: false, error: "transactionHash must be a 0x-prefixed 32-byte hex value", charged: false });
   }
   return next();
 });
-
-// Validate explicit opportunity economics before payment. Malformed or
-// incomplete required inputs return an uncharged 400. Empty credential-free
-// HEAD and POST requests may reach the payment challenge so machine registries
-// can inspect the route without manufacturing a paid attempt.
-const hasPaymentCredential = (req) => Boolean(
-  req.get("payment-signature") ||
-  req.get("x-payment") ||
-  req.get("x-payment-signature") ||
-  /^Payment\s+/i.test(req.get("authorization") || "")
-);
 
 // Machine catalogs can exercise one fixed, cost-free example before buying a
 // custom result. This branch accepts exactly `trial=1`, performs no external
@@ -1713,6 +1853,7 @@ app.get("/work/opportunity-preflight", (req, res, next) => {
 });
 
 const validateOpportunityPreflightRequest = (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     normalizeOpportunityPreflightRequest({
       method: req.method,
@@ -1738,6 +1879,7 @@ app.post("/work/opportunity-preflight", validateOpportunityPreflightRequest);
 // credentials. An explicit surfaceAudit flag enables only three fixed public
 // same-origin JSON documents after settlement.
 app.get("/distribution/agent-discoverability-audit", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     normalizeDiscoverabilityAuditInput(req.query);
     return next();
@@ -1754,6 +1896,7 @@ app.get("/distribution/agent-discoverability-audit", (req, res, next) => {
 // payment challenge. DNS resolution and the headers-only target request happen
 // only after settlement because they are the work this route sells.
 const validatePaymentOfferPreflightRequest = (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     const input = req.method === "POST" ? req.body : { url: req.query.url };
     // Permit the empty unauthenticated POST used by registry discovery to
@@ -1776,6 +1919,7 @@ app.post("/commerce/payment-offer-preflight", validatePaymentOfferPreflightReque
 
 // Reject malformed seller origins and paths before either payment rail runs.
 app.get("/commerce/seller-integrity-audit", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     res.locals.sellerIntegrityAuditInput = normalizeSellerIntegrityAuditInput(req.query);
     return next();
@@ -1798,6 +1942,7 @@ app.get("/commerce/seller-integrity-audit", (req, res, next) => {
 // rail charges. Directory search and bounded seller audits happen only after
 // settlement.
 app.get("/commerce/contract-qualified-search", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     res.locals.contractQualifiedSearchInput = normalizeContractQualifiedSearchInput(req.query);
     return next();
@@ -1820,6 +1965,7 @@ app.get("/commerce/contract-qualified-search", (req, res, next) => {
 // charges. DNS, MCP initialize/tools-list, and OpenAPI acquisition happen only
 // after settlement.
 app.get("/distribution/agent-surface-budget-audit", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     res.locals.agentSurfaceBudgetAuditInput = normalizeAgentSurfaceBudgetAuditInput(req.query);
     return next();
@@ -1841,6 +1987,7 @@ app.get("/distribution/agent-surface-budget-audit", (req, res, next) => {
 // Reject malformed settlement claims before payment. Receipt and block reads
 // happen only after settlement because they are the work this route sells.
 app.get("/commerce/settlement-proof", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     normalizeSettlementProofInput(req.query);
     return next();
@@ -1858,6 +2005,7 @@ app.get("/commerce/settlement-proof", (req, res, next) => {
 // Reject malformed receipt requests before payment. Public RPC reads happen
 // only after settlement because the normalized receipt is the sold work.
 app.get("/chain/transaction-receipt", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     normalizeTransactionReceiptInput(req.query);
     return next();
@@ -1873,6 +2021,7 @@ app.get("/chain/transaction-receipt", (req, res, next) => {
 });
 
 app.get("/chain/solana-transaction-receipt", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     normalizeSolanaTransactionReceiptInput(req.query);
     return next();
