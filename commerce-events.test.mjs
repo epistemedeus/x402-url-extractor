@@ -88,6 +88,8 @@ test("agent discovery sources reduce user agents to controlled labels", () => {
   assert.equal(classifyDeclaredAgentDiscoverySource(" AGENT-SKILLS-V1 "), "agent-skills");
   assert.equal(classifyDeclaredAgentDiscoverySource("agentictrade-v1"), "agentictrade");
   assert.equal(classifyDeclaredAgentDiscoverySource(" AGENTICTRADE-V1 "), "agentictrade");
+  assert.equal(classifyDeclaredAgentDiscoverySource("agentverse-a2a-v1"), "agentverse");
+  assert.equal(classifyDeclaredAgentDiscoverySource(" AGENTVERSE-A2A-V1 "), "agentverse");
   assert.equal(classifyDeclaredAgentDiscoverySource("aws-agentcore-v1"), "aws-agentcore");
   assert.equal(classifyDeclaredAgentDiscoverySource(" AWS-AGENTCORE-V1 "), "aws-agentcore");
   assert.equal(classifyDeclaredAgentDiscoverySource("unknown-client"), null);
@@ -2730,6 +2732,7 @@ const WRITER_AGENT_DISCOVERY_SOURCES = [
   "generic-agent-indexer",
   "agent-skills",
   "agentictrade",
+  "agentverse",
   "aws-agentcore",
 ];
 
@@ -3059,6 +3062,7 @@ test("classifier outputs are exactly the retained writer vocabularies", () => {
     classifyAgentDiscoverySource("ExampleBot/1.0"),
     classifyDeclaredAgentDiscoverySource("agent-skills-v1"),
     classifyDeclaredAgentDiscoverySource("agentictrade-v1"),
+    classifyDeclaredAgentDiscoverySource("agentverse-a2a-v1"),
     classifyDeclaredAgentDiscoverySource("aws-agentcore-v1"),
   ];
   for (const source of classifierSources) {

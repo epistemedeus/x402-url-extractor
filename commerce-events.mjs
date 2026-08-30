@@ -73,6 +73,7 @@ const AGENT_DISCOVERY_SOURCE_PATTERNS = [
 const DECLARED_AGENT_DISCOVERY_SOURCES = new Map([
   ["agent-skills-v1", "agent-skills"],
   ["agentictrade-v1", "agentictrade"],
+  ["agentverse-a2a-v1", "agentverse"],
   ["aws-agentcore-v1", "aws-agentcore"],
 ]);
 const CANONICAL_AGENT_DISCOVERY_SOURCES = new Set([

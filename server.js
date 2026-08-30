@@ -1026,7 +1026,7 @@ const machineActionCatalog = () => ({
     note: "This free catalog is discovery only. Call the selected action URL directly and satisfy its live x402 or MPP challenge; no marketplace proxy can stand in for the route-bound payment credential.",
     declaredSourceHeader: {
       header: "X-SameDayDesk-Agent-Source",
-      allowedValues: ["agent-skills-v1", "agentictrade-v1"],
+      allowedValues: ["agent-skills-v1", "agentictrade-v1", "agentverse-a2a-v1"],
       boundary: "Optional declared attribution only. It is not authenticated and cannot change price, payment, or access.",
     },
   },
@@ -3605,6 +3605,7 @@ app.get("/", (req, res) => {
       declaredAgentSources: [
         { value: "agent-skills-v1", source: "agent-skills" },
         { value: "agentictrade-v1", source: "agentictrade" },
+        { value: "agentverse-a2a-v1", source: "agentverse" },
       ],
       buyerPolicyReference: BUYER_POLICY_REFERENCE,
       walletPolicyConformance: {
