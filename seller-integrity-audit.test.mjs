@@ -41,18 +41,20 @@ test("normalizes one exact public seller route", () => {
     origin: "https://seller.example",
     route: "/paid/read",
     requireBazaar: "true",
-  }), { origin: "https://seller.example", route: "/paid/read", method: "GET", requiredPaths: [], requireBazaar: true });
+  }), { origin: "https://seller.example", route: "/paid/read", method: "GET", requiredPaths: [], requireBazaar: true, referral: null });
   assert.deepEqual(normalizeSellerIntegrityAuditInput({
     origin: "https://seller.example",
     route: "/simulate",
     method: "post",
     requiredPaths: "data.attributes,data.type,data.attributes",
-  }), { origin: "https://seller.example", route: "/simulate", method: "POST", requiredPaths: ["data.attributes", "data.type"], requireBazaar: false });
+    referral: `r1_${"a".repeat(64)}`,
+  }), { origin: "https://seller.example", route: "/simulate", method: "POST", requiredPaths: ["data.attributes", "data.type"], requireBazaar: false, referral: `r1_${"a".repeat(64)}` });
   assert.throws(() => normalizeSellerIntegrityAuditInput({ origin: "http://seller.example", route: "/paid" }), SellerIntegrityAuditError);
   assert.throws(() => normalizeSellerIntegrityAuditInput({ origin: "https://seller.example", route: "//other.example/paid" }), /exact absolute path/);
   assert.throws(() => normalizeSellerIntegrityAuditInput({ origin: "https://seller.example", route: "/paid", token: "secret" }), /unsupported input field/);
   assert.throws(() => normalizeSellerIntegrityAuditInput({ origin: "https://seller.example", route: "/paid", method: "PUT" }), /GET or POST/);
   assert.throws(() => normalizeSellerIntegrityAuditInput({ origin: "https://seller.example", route: "/paid", requiredPaths: "data..secret" }), /safe dotted/);
+  assert.throws(() => normalizeSellerIntegrityAuditInput({ origin: "https://seller.example", route: "/paid", referral: "r1_NOT_A_DIGEST" }), /lowercase SHA-256/);
 });
 
 test("returns bounded machine-buyable evidence without schemas or target payment", async () => {
@@ -67,10 +69,34 @@ test("returns bounded machine-buyable evidence without schemas or target payment
   assert.equal(result.boundary.targetRequestSent, false);
   assert.equal(JSON.stringify(result).includes("schema"), true);
   assert.equal(JSON.stringify(result).includes("properties"), false);
-  assert.deepEqual(sellerIntegrityAuditOutputSchema().required, ["ok", "product", "version", "checkedAt", "decision", "request", "report", "nextActions", "boundary"]);
+  assert.deepEqual(sellerIntegrityAuditOutputSchema().required, ["ok", "product", "version", "checkedAt", "decision", "request", "report", "nextActions", "referralOffer", "boundary"]);
+  assert.equal(result.version, "1.3.0");
+  assert.equal(result.request.referral, null);
+  assert.equal(result.referralOffer.status, "available");
+  assert.equal(result.referralOffer.broadcastRequired, false);
+  assert.equal(result.referralOffer.reward, "one_free_changed_state_recheck");
+  assert.equal(result.referralOffer.attributionOnly, true);
   assert.equal(result.report.auditCompleted, true);
   assert.equal(result.report.failureCode, null);
   assert.equal(result.report.repairPlan.complete, true);
+});
+
+test("attributes a bounded receipt-derived referral without passing it to the target audit", async () => {
+  const referral = `r1_${"b".repeat(64)}`;
+  let received;
+  const result = await sellerIntegrityAudit({
+    origin: "https://seller.example",
+    route: "/paid",
+    referral,
+  }, {
+    auditImpl: async (input) => { received = input; return REPORT; },
+  });
+  assert.equal("referral" in received, false);
+  assert.equal(result.request.referral, referral);
+  assert.equal(result.referralOffer.status, "declared");
+  assert.equal(result.referralOffer.id, referral);
+  assert.equal(result.referralOffer.attributionOnly, true);
+  assert.equal(result.referralOffer.qualifiesOn, "distinct_payer_settlement_plus_buyer_valid_delivery");
 });
 
 test("separates static POST contract readiness from live machine buyability", async () => {

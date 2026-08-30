@@ -370,6 +370,50 @@ test("declared Agent Skills traffic enters the measured challenge funnel without
   await rm(dataDir, { recursive: true, force: true });
 });
 
+test("receipt-derived referrals become a controlled acquisition source without retaining the digest", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-receipt-referral-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "test-secret",
+    agentDiscoverySince: "2020-01-01T00:00:00.000Z",
+    agentSourceDetailSince: "2020-01-01T00:00:00.000Z",
+  });
+  const referral = `r1_${"c".repeat(64)}`;
+  const listeners = new Map();
+  const req = {
+    path: "/commerce/seller-integrity-audit",
+    url: `/commerce/seller-integrity-audit?origin=https%3A%2F%2Fseller.example&route=%2Fpaid&referral=${referral}`,
+    originalUrl: `/commerce/seller-integrity-audit?origin=https%3A%2F%2Fseller.example&route=%2Fpaid&referral=${referral}`,
+    method: "GET",
+    headers: { "user-agent": "agent-runtime/1.0" },
+    query: { origin: "https://seller.example", route: "/paid", referral },
+    ip: "203.0.113.90",
+    socket: {},
+  };
+  const res = {
+    statusCode: 402,
+    once(name, listener) { listeners.set(name, listener); },
+    getHeader(name) {
+      if (String(name).toLowerCase() === "payment-required") return "present";
+      return undefined;
+    },
+  };
+  telemetry.middleware(req, res, () => {});
+  listeners.get("finish")?.();
+  await telemetry.flush();
+
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.agentDiscoveryBySource["declared-receipt-referral"], 1);
+  assert.equal(snapshot.agentChallengeBySource["declared-receipt-referral"], 1);
+  assert.equal(snapshot.agentSourceFunnel["declared-receipt-referral"].challengeActors, 1);
+  assert.equal(JSON.stringify(snapshot).includes(referral), false);
+
+  const raw = await readFile(path.join(dataDir, "commerce-events.ndjson"), "utf8");
+  assert.equal(raw.includes(referral), false);
+  assert.match(raw, /"queryKeys":\["origin","referral","route"\]/);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
 test("payer classification policy validates controlled explicit labels", () => {
   const classes = normalizeCommercePayerClasses([
     { address: "0x1111111111111111111111111111111111111111", class: "validation" },
