@@ -438,7 +438,7 @@ test("uses one coherent live unsigned offer as the catalog price reference", asy
     payTo: `0x${"1".repeat(40)}`,
     expectedPriceUsd: "0.05",
   }, { fetchImpl, paymentPreflightImpl, now: 0 });
-  assert.equal(result.version, "1.10.0");
+  assert.equal(result.version, "1.11.0");
   assert.deepEqual(result.summary.priceReference, {
     basis: "live_unsigned_offer",
     amountAtomic: "5000",
