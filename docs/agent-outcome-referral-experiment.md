@@ -74,6 +74,21 @@ recheck even if its response is interrupted.
 No automatic credit balance, payout, referral ledger, new identity protocol,
 or generic agent social network is admitted by this experiment.
 
+## Agent402 signed-receipt artifact compatibility
+
+Agent402 PR 1070 (merge `f6f2595d202b9224fd70bc090a3b0330f8b19852`; upstream
+`scripts/lib/smoke-receipt.js` SHA-256
+`90841bd10f4176eff8b838d953d56836d2c6b4bef6a0537c654314b86feba268`; AGPL-3.0)
+captures a complete bare seller-signed offer receipt as mode-0600 pretty JSON
+with a trailing newline and no outer wrapper. SameDayDesk already hashes that
+complete envelope with RFC 8785 JSON Canonicalization plus SHA-256
+(`r1_<digest>`) and accepts the parsed object on `POST /commerce/referral-recheck`.
+Ordinary `JSON.parse` of a file matching that observable contract is enough.
+This repository does not bundle Agent402 source or take an Agent402 runtime
+dependency; `fixtures/agent402-pr1070/` retains only factual provenance, and
+`agent402-receipt-interop.test.mjs` replays the contract with an independently
+authored helper.
+
 ## Scale and stop conditions
 
 Scale only after one independently controlled referral-attributed settlement,
