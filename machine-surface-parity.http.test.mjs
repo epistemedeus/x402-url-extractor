@@ -12,6 +12,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 import { parseLlmsPaidRoutes, validateMachineSurfaceParity } from "./machine-surface-parity.mjs";
+import { listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
 import { opportunityPreflight } from "./opportunity-preflight.mjs";
 import { CDP_RESOURCE_DESCRIPTION_MAX_CODE_POINTS } from "./x402-resource-compat.mjs";
 
@@ -165,9 +166,11 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     Buffer.byteLength(encodedSellerIntegrityChallenge) < 14_000,
     `seller-integrity payment-required header exceeds the Node-compatible budget: ${Buffer.byteLength(encodedSellerIntegrityChallenge)} bytes`,
   );
-  const [llms, catalog, agentCard, openapi, mppOpenapi, manifest, mcpDescriptor, commerceDemand] = await Promise.all([
+  const [llms, skill, catalog, gateway, agentCard, openapi, mppOpenapi, manifest, mcpDescriptor, commerceDemand] = await Promise.all([
     readText(base, "/llms.txt"),
+    readText(base, "/skill.md"),
     readJson(base, "/api/actions"),
+    readJson(base, "/"),
     readJson(base, "/.well-known/agent-card.json"),
     readJson(base, "/openapi.json"),
     readJson(base, "/mpp-openapi.json"),
@@ -205,6 +208,14 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(receipt.mcpToolCount, 22);
   assert.equal(mcpDescriptor.toolCount, 22);
   assert.equal(manifest.items.length, 23);
+  const declaredAgentSources = listDeclaredAgentDiscoverySources();
+  assert.deepEqual(
+    catalog.acquisition.declaredSourceHeader.allowedValues,
+    declaredAgentSources.map(({ value }) => value),
+  );
+  assert.deepEqual(gateway.machineCommerce.declaredAgentSources, declaredAgentSources);
+  assert.match(skill, /X-SameDayDesk-Agent-Source: agentcash-v1/);
+  assert.match(skill, /Optional|optional/);
   for (const item of manifest.items) {
     assert.equal(item.resource.serviceName, "SameDayDesk");
     assert.equal(item.resource.iconUrl, "https://samedaydesk.com/favicon.svg");

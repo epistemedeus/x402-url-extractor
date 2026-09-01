@@ -27,6 +27,7 @@ import {
   drainCommerceTelemetryForShutdown,
   isCanonicalMcpTypedCommerceEvent,
   isSemanticUnmatched,
+  listDeclaredAgentDiscoverySources,
   metricCoverageStatus,
   normalizeCommercePayerClasses,
 } from "./commerce-events.mjs";
@@ -92,7 +93,16 @@ test("agent discovery sources reduce user agents to controlled labels", () => {
   assert.equal(classifyDeclaredAgentDiscoverySource(" AGENTVERSE-A2A-V1 "), "agentverse");
   assert.equal(classifyDeclaredAgentDiscoverySource("aws-agentcore-v1"), "aws-agentcore");
   assert.equal(classifyDeclaredAgentDiscoverySource(" AWS-AGENTCORE-V1 "), "aws-agentcore");
+  assert.equal(classifyDeclaredAgentDiscoverySource("agentcash-v1"), "agentcash");
+  assert.equal(classifyDeclaredAgentDiscoverySource(" AGENTCASH-V1 "), "agentcash");
   assert.equal(classifyDeclaredAgentDiscoverySource("unknown-client"), null);
+  assert.deepEqual(listDeclaredAgentDiscoverySources(), [
+    { value: "agent-skills-v1", source: "agent-skills" },
+    { value: "agentictrade-v1", source: "agentictrade" },
+    { value: "agentverse-a2a-v1", source: "agentverse" },
+    { value: "aws-agentcore-v1", source: "aws-agentcore" },
+    { value: "agentcash-v1", source: "agentcash" },
+  ]);
 });
 
 test("declared AgenticTrade handoff enters the paid-route funnel without exposing the source token", async () => {
@@ -258,7 +268,7 @@ test("provider user fetchers enter the prospective source-quality cohort", async
   await rm(dataDir, { recursive: true, force: true });
 });
 
-test("declared Agent Skills traffic enters the measured challenge funnel without storing the raw header", async () => {
+test("allowlisted declared sources attribute acquisition without becoming demand or storing raw headers", async () => {
   const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-agent-skills-"));
   const telemetry = createCommerceTelemetry({
     dataDir,
@@ -299,16 +309,24 @@ test("declared Agent Skills traffic enters the measured challenge funnel without
     ip: "203.0.113.72",
     declaredSource: " AWS-AGENTCORE-V1 ",
   });
+  run({
+    requestPath: "/wallet-enrich",
+    status: 402,
+    ip: "203.0.113.73",
+    declaredSource: " AGENTCASH-V1 ",
+  });
   await telemetry.flush();
 
   const snapshot = await telemetry.snapshot({ days: 1 });
-  assert.equal(snapshot.agentDiscoveryObservations, 4);
+  assert.equal(snapshot.agentDiscoveryObservations, 5);
   assert.equal(snapshot.agentDiscoveryBySource["agent-skills"], 3);
   assert.equal(snapshot.agentDiscoveryBySource["aws-agentcore"], 1);
-  assert.equal(snapshot.agentPaidRouteObservations, 2);
-  assert.equal(snapshot.agentChallengeObservations, 2);
+  assert.equal(snapshot.agentDiscoveryBySource.agentcash, 1);
+  assert.equal(snapshot.agentPaidRouteObservations, 3);
+  assert.equal(snapshot.agentChallengeObservations, 3);
   assert.equal(snapshot.agentChallengeBySource["agent-skills"], 1);
   assert.equal(snapshot.agentChallengeBySource["aws-agentcore"], 1);
+  assert.equal(snapshot.agentChallengeBySource.agentcash, 1);
   assert.deepEqual(snapshot.agentSourceFunnel["agent-skills"], {
     discoveryObservations: 3,
     discoveryActors: 2,
@@ -335,8 +353,8 @@ test("declared Agent Skills traffic enters the measured challenge funnel without
   });
   assert.equal(snapshot.agentSourceTaxonomyVersion, "ai-provider-purpose-v1");
   assert.equal(snapshot.agentSourceTaxonomyLabels.length, 9);
-  assert.equal(snapshot.agentSourceDetailObservations, 4);
-  assert.equal(snapshot.agentSourceDetailActors, 3);
+  assert.equal(snapshot.agentSourceDetailObservations, 5);
+  assert.equal(snapshot.agentSourceDetailActors, 4);
   assert.deepEqual(
     snapshot.agentSourceDetailFunnel["agent-skills"],
     snapshot.agentSourceFunnel["agent-skills"],
@@ -366,8 +384,10 @@ test("declared Agent Skills traffic enters the measured challenge funnel without
     independentPaidSuccessActors: 0,
   });
   assert.equal(snapshot.externalEvents, 0);
+  assert.equal(snapshot.agentSourceFunnel.agentcash.challengeActors, 1);
   assert.equal(JSON.stringify(snapshot).includes("agent-skills-v1"), false);
   assert.equal(JSON.stringify(snapshot).includes("aws-agentcore-v1"), false);
+  assert.equal(JSON.stringify(snapshot).includes("agentcash-v1"), false);
 
   await rm(dataDir, { recursive: true, force: true });
 });
@@ -3064,6 +3084,7 @@ test("classifier outputs are exactly the retained writer vocabularies", () => {
     classifyDeclaredAgentDiscoverySource("agentictrade-v1"),
     classifyDeclaredAgentDiscoverySource("agentverse-a2a-v1"),
     classifyDeclaredAgentDiscoverySource("aws-agentcore-v1"),
+    classifyDeclaredAgentDiscoverySource("agentcash-v1"),
   ];
   for (const source of classifierSources) {
     assert.equal(WRITER_AGENT_DISCOVERY_SOURCES.includes(source), true, source);

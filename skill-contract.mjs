@@ -37,6 +37,13 @@ Use this service when an agent needs deterministic web, company, wallet, AI-sear
 - A2A agent card: ${origin}/.well-known/agent-card.json
 - Purchase evidence: ${origin}/.well-known/agent-payment-evidence.json
 
+## AgentCash
+
+- Discover: \`npx -y agentcash@latest discover ${origin}\`. AgentCash reads the canonical OpenAPI surface at ${origin}/openapi.json.
+- Fallback manifest: if OpenAPI discovery is unavailable, inspect \`npx -y agentcash@latest fetch ${origin}/.well-known/x402\` before calling the selected route.
+- Call: \`npx -y agentcash@latest fetch "${origin}/wallet-enrich?address=<0x-address>" --header "X-SameDayDesk-Agent-Source: agentcash-v1" --max-amount 0.05\`. \`fetch\` handles the ordinary HTTP 402 payment replay.
+- The source header is optional, unauthenticated attribution only. Omitting or changing it does not affect price, authorization, payment, access, demand, settlement, or revenue classification.
+
 ## Paid actions
 
 ${actionsMarkdown}
@@ -44,7 +51,7 @@ ${actionsMarkdown}
 ## Call and pay
 
 1. Choose an action from the manifest or action catalog.
-2. Send the exact declared method and input. Most actions use GET query parameters; both wallet-policy conformance routes use bounded POST JSON bodies. Agent Skills clients should include X-SameDayDesk-Agent-Source: agent-skills-v1 on the initial request and paid replay. This declared label is attribution only, not authentication or payment.
+2. Send the exact declared method and input. Most actions use GET query parameters; both wallet-policy conformance routes use bounded POST JSON bodies. Agent Skills clients may include X-SameDayDesk-Agent-Source: agent-skills-v1 on the initial request and paid replay under the same optional attribution-only boundary above.
 3. One unpaid HTTP 402 carries x402 v2 payment requirements and a native MPP WWW-Authenticate Payment challenge.
 4. Verify the HTTPS resource, exact amount, Base network, canonical USDC asset, and payTo wallet.
 5. If your policy uses seller purchase evidence, follow the same-origin describedby link, verify its exact operation and digest, and bind it into authorization. It is seller-declared evidence, not permission to spend.
