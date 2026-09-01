@@ -75,6 +75,7 @@ const DECLARED_AGENT_DISCOVERY_SOURCES = new Map([
   ["agentictrade-v1", "agentictrade"],
   ["agentverse-a2a-v1", "agentverse"],
   ["aws-agentcore-v1", "aws-agentcore"],
+  ["agentcash-v1", "agentcash"],
 ]);
 const CANONICAL_AGENT_DISCOVERY_SOURCES = new Set([
   ...AGENT_DISCOVERY_SOURCE_PATTERNS.map(([source]) => source),
@@ -228,6 +229,10 @@ export function classifyAgentDiscoverySource(userAgent) {
 
 export function classifyDeclaredAgentDiscoverySource(value) {
   return DECLARED_AGENT_DISCOVERY_SOURCES.get(String(value || "").trim().toLowerCase()) || null;
+}
+
+export function listDeclaredAgentDiscoverySources() {
+  return [...DECLARED_AGENT_DISCOVERY_SOURCES].map(([value, source]) => ({ value, source }));
 }
 
 function hasMppAuthorization(headers) {

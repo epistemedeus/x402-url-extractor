@@ -26,6 +26,12 @@ test("compact skill contract advertises the payment-offer preflight boundary", (
   assert.match(contract, /https:\/\/agents\.samedaydesk\.com\/api\/actions/);
   assert.match(contract, /https:\/\/agents\.samedaydesk\.com\/\.well-known\/agent-payment-evidence\.json/);
   assert.match(contract, /seller-declared evidence, not permission to spend/);
+  assert.match(contract, /npx -y agentcash@latest discover https:\/\/agents\.samedaydesk\.com/);
+  assert.match(contract, /npx -y agentcash@latest fetch https:\/\/agents\.samedaydesk\.com\/\.well-known\/x402/);
+  assert.match(contract, /npx -y agentcash@latest fetch "https:\/\/agents\.samedaydesk\.com\/wallet-enrich\?address=<0x-address>"/);
+  assert.match(contract, /X-SameDayDesk-Agent-Source: agentcash-v1/);
+  assert.match(contract, /source header is optional, unauthenticated attribution only/);
+  assert.match(contract, /does not affect price, authorization, payment, access, demand, settlement, or revenue classification/);
   assert.match(contract, /GET \/extract: 0\.05 USDC through x402 \+ mpp/);
   assert.match(contract, /GET \/commerce\/payment-offer-preflight: 0\.005 USDC through x402 \+ mpp/);
   assert.doesNotMatch(contract, /ignored\/path/);

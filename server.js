@@ -164,7 +164,11 @@ import {
 } from "./stateful-wallet-policy-conformance.mjs";
 import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
-import { createCommerceTelemetry, drainCommerceTelemetryForShutdown } from "./commerce-events.mjs";
+import {
+  createCommerceTelemetry,
+  drainCommerceTelemetryForShutdown,
+  listDeclaredAgentDiscoverySources,
+} from "./commerce-events.mjs";
 import { createCommerceSettlementReconciler } from "./commerce-settlement-reconciler.mjs";
 import { createIdempotencyReplay } from "./idempotency-replay.mjs";
 import {
@@ -997,6 +1001,13 @@ const mppPaymentInfoFor = (resource) => ({
   ],
 });
 
+const DECLARED_AGENT_SOURCES = Object.freeze(
+  listDeclaredAgentDiscoverySources().map((entry) => Object.freeze(entry)),
+);
+const DECLARED_AGENT_SOURCE_VALUES = Object.freeze(
+  DECLARED_AGENT_SOURCES.map(({ value }) => value),
+);
+
 const machineActionCatalog = () => ({
   schema: "samedaydesk.machine-actions.v2",
   service: "SameDayDesk machine commerce gateway",
@@ -1026,8 +1037,8 @@ const machineActionCatalog = () => ({
     note: "This free catalog is discovery only. Call the selected action URL directly and satisfy its live x402 or MPP challenge; no marketplace proxy can stand in for the route-bound payment credential.",
     declaredSourceHeader: {
       header: "X-SameDayDesk-Agent-Source",
-      allowedValues: ["agent-skills-v1", "agentictrade-v1", "agentverse-a2a-v1"],
-      boundary: "Optional declared attribution only. It is not authenticated and cannot change price, payment, or access.",
+      allowedValues: DECLARED_AGENT_SOURCE_VALUES,
+      boundary: "Optional unauthenticated declared attribution only. It does not affect price, authorization, payment, access, demand, settlement, or revenue classification.",
     },
   },
   actions: RESOURCES.map((resource) => {
@@ -3601,13 +3612,9 @@ app.get("/", (req, res) => {
         header: "X-SameDayDesk-Agent-Source",
         value: "agent-skills-v1",
         source: "agent-skills",
-        boundary: "Optional declared attribution only. It is not authenticated and does not affect price, payment, or access.",
+        boundary: "Optional unauthenticated declared attribution only. It does not affect price, authorization, payment, access, demand, settlement, or revenue classification.",
       },
-      declaredAgentSources: [
-        { value: "agent-skills-v1", source: "agent-skills" },
-        { value: "agentictrade-v1", source: "agentictrade" },
-        { value: "agentverse-a2a-v1", source: "agentverse" },
-      ],
+      declaredAgentSources: DECLARED_AGENT_SOURCES,
       buyerPolicyReference: BUYER_POLICY_REFERENCE,
       walletPolicyConformance: {
         route: "POST /security/wallet-policy-conformance",
