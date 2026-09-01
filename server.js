@@ -830,6 +830,50 @@ const STATEFUL_WALLET_POLICY_CONTRACT = statefulWalletPolicyConformanceContract(
   endpoint: `${PUBLIC_URL}/security/stateful-wallet-policy-conformance`,
   priceAtomicUsdc: priceToAtomic(STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE),
 });
+const PAYMENT_OFFER_PREFLIGHT_OUTPUT_EXAMPLE = {
+  ok: true,
+  product: "samedaydesk-payment-offer-preflight",
+  version: "1.2.0",
+  checkedAt: "2026-08-10T20:00:00.000Z",
+  target: { method: "GET", url: "https://agents.samedaydesk.com/defi/morpho-position?address=0x8ee9c15c3e5332cbc6ef39a2bb036c63c6549b6e", httpStatus: 402 },
+  decision: "parseable_offer",
+  protocols: ["mpp", "x402"],
+  offerCount: 2,
+  offers: [{ protocol: "x402", scheme: "exact", intent: "exact", network: "eip155:8453", amountAtomic: "20000", valid: true }],
+  parity: { compared: true, consistent: true, driftFields: [] },
+  catalogCoherence: [],
+  responseContract: { decision: "admissible", requiredFields: ["ok", "title", "url"], requiredPaths: ["ok", "title", "url"], exampleStatus: "structurally_consistent", runtimeResponseVerified: false },
+  responseContractAcquisition: { attempted: true, sameOrigin: true, path: "/openapi.json", maxBytes: 1000000, documentRead: true, targetResponseBodyRead: false, credentialsUsed: false, redirectsFollowed: false },
+  findings: [],
+  boundary: { credentialsUsed: false, paymentSigned: false, paymentSent: false, targetResponseBodyRead: false, openApiDocumentRead: true, redirectsFollowed: false },
+};
+function declarePaymentOfferPreflightGetContract(routeKey) {
+  return declareDiscoveryContract({
+    routeKey,
+    input: {
+      url: "https://agents.samedaydesk.com/defi/morpho-position?address=0x8ee9c15c3e5332cbc6ef39a2bb036c63c6549b6e",
+    },
+    inputSchema: {
+      type: "object",
+      properties: {
+        url: {
+          type: "string",
+          format: "uri",
+          maxLength: 2048,
+          description: "Exact public HTTPS GET URL to inspect. Credential-like query keys, fragments, unresolved parameters, local hosts, redirects, and non-public IPs are rejected.",
+        },
+      },
+      required: ["url"],
+      additionalProperties: false,
+    },
+    output: { example: PAYMENT_OFFER_PREFLIGHT_OUTPUT_EXAMPLE },
+    outputSchema: paymentOfferPreflightOutputSchema(),
+  });
+}
+const circleGatewayDiscoveryExtensions = {
+  ...COMMON_COMMERCE_EXTENSIONS,
+  ...declarePaymentOfferPreflightGetContract(`GET ${CIRCLE_GATEWAY_PATH}`),
+};
 const circleGateway = buildCircleGatewayRoute({
   sellerAddress: PAY_TO,
   price: PAYMENT_OFFER_PREFLIGHT_PRICE,
@@ -837,6 +881,7 @@ const circleGateway = buildCircleGatewayRoute({
   facilitatorUrl: process.env.CIRCLE_GATEWAY_FACILITATOR_URL,
   description: RESOURCES[13].description,
   resourceMetadata: bazaarResourceMetadataFor("/commerce/payment-offer-preflight"),
+  extensions: circleGatewayDiscoveryExtensions,
 });
 const CIRCLE_GATEWAY_RESOURCE = {
   ...circleGateway.resource,
@@ -1617,6 +1662,15 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
         "x-payment-info": circleGatewayPaymentInfo(),
       },
     };
+    const gatewayResponse = getDiscoveryOutputContract(`GET ${CIRCLE_GATEWAY_PATH}`);
+    if (gatewayResponse?.schema) {
+      document.paths[CIRCLE_GATEWAY_PATH].get.responses["200"].content = {
+        "application/json": {
+          schema: gatewayResponse.schema,
+          ...(gatewayResponse.example ? { example: gatewayResponse.example } : {}),
+        },
+      };
+    }
   }
   for (const resource of RESOURCES) {
     const pathname = new URL(resource.url).pathname;
@@ -2798,45 +2852,7 @@ const x402Paywall = paymentMiddleware(
         mimeType: "application/json",
         extensions: {
           ...COMMON_COMMERCE_EXTENSIONS,
-          ...declareDiscoveryContract({
-            routeKey: "GET /commerce/payment-offer-preflight",
-            input: {
-              url: "https://agents.samedaydesk.com/defi/morpho-position?address=0x8ee9c15c3e5332cbc6ef39a2bb036c63c6549b6e",
-            },
-            inputSchema: {
-              type: "object",
-              properties: {
-                url: {
-                  type: "string",
-                  format: "uri",
-                  maxLength: 2048,
-                  description: "Exact public HTTPS GET URL to inspect. Credential-like query keys, fragments, unresolved parameters, local hosts, redirects, and non-public IPs are rejected.",
-                },
-              },
-              required: ["url"],
-              additionalProperties: false,
-            },
-            output: {
-              example: {
-                ok: true,
-                product: "samedaydesk-payment-offer-preflight",
-                version: "1.2.0",
-                checkedAt: "2026-08-10T20:00:00.000Z",
-                target: { method: "GET", url: "https://agents.samedaydesk.com/defi/morpho-position?address=0x8ee9c15c3e5332cbc6ef39a2bb036c63c6549b6e", httpStatus: 402 },
-                decision: "parseable_offer",
-                protocols: ["mpp", "x402"],
-                offerCount: 2,
-                offers: [{ protocol: "x402", scheme: "exact", intent: "exact", network: "eip155:8453", amountAtomic: "20000", valid: true }],
-                parity: { compared: true, consistent: true, driftFields: [] },
-                catalogCoherence: [],
-                responseContract: { decision: "admissible", requiredFields: ["ok", "title", "url"], requiredPaths: ["ok", "title", "url"], exampleStatus: "structurally_consistent", runtimeResponseVerified: false },
-                responseContractAcquisition: { attempted: true, sameOrigin: true, path: "/openapi.json", maxBytes: 1000000, documentRead: true, targetResponseBodyRead: false, credentialsUsed: false, redirectsFollowed: false },
-                findings: [],
-                boundary: { credentialsUsed: false, paymentSigned: false, paymentSent: false, targetResponseBodyRead: false, openApiDocumentRead: true, redirectsFollowed: false },
-              },
-            },
-            outputSchema: paymentOfferPreflightOutputSchema(),
-          }),
+          ...declarePaymentOfferPreflightGetContract("GET /commerce/payment-offer-preflight"),
         },
       },
       "POST /commerce/payment-offer-preflight": {
@@ -2854,25 +2870,7 @@ const x402Paywall = paymentMiddleware(
               url: "https://agents.samedaydesk.com/defi/morpho-position?address=0x8ee9c15c3e5332cbc6ef39a2bb036c63c6549b6e",
             },
             inputSchema: paymentOfferPreflightInputSchema(),
-            output: {
-              example: {
-                ok: true,
-                product: "samedaydesk-payment-offer-preflight",
-                version: "1.2.0",
-                checkedAt: "2026-08-10T20:00:00.000Z",
-                target: { method: "GET", url: "https://agents.samedaydesk.com/defi/morpho-position?address=0x8ee9c15c3e5332cbc6ef39a2bb036c63c6549b6e", httpStatus: 402 },
-                decision: "parseable_offer",
-                protocols: ["mpp", "x402"],
-                offerCount: 2,
-                offers: [{ protocol: "x402", scheme: "exact", intent: "exact", network: "eip155:8453", amountAtomic: "20000", valid: true }],
-                parity: { compared: true, consistent: true, driftFields: [] },
-                catalogCoherence: [],
-                responseContract: { decision: "admissible", requiredFields: ["ok", "title", "url"], requiredPaths: ["ok", "title", "url"], exampleStatus: "structurally_consistent", runtimeResponseVerified: false },
-                responseContractAcquisition: { attempted: true, sameOrigin: true, path: "/openapi.json", maxBytes: 1000000, documentRead: true, targetResponseBodyRead: false, credentialsUsed: false, redirectsFollowed: false },
-                findings: [],
-                boundary: { credentialsUsed: false, paymentSigned: false, paymentSent: false, targetResponseBodyRead: false, openApiDocumentRead: true, redirectsFollowed: false },
-              },
-            },
+            output: { example: PAYMENT_OFFER_PREFLIGHT_OUTPUT_EXAMPLE },
             outputSchema: paymentOfferPreflightOutputSchema(),
           }),
         },

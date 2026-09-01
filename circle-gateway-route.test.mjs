@@ -74,6 +74,68 @@ test("projects exact service metadata into the direct payment-required resource"
   });
 });
 
+test("projects AgentCash-readable bazaar schemas into the payment-required payload", () => {
+  let challengeHeader;
+  const bazaarExtensions = {
+    bazaar: {
+      info: {
+        input: { type: "http", method: "GET", queryParams: { url: "https://example.com" } },
+        output: { type: "json", example: { ok: true } },
+      },
+      schema: {
+        type: "object",
+        properties: {
+          input: {
+            type: "object",
+            properties: {
+              queryParams: {
+                type: "object",
+                properties: { url: { type: "string" } },
+                required: ["url"],
+              },
+            },
+          },
+          output: {
+            type: "object",
+            properties: {
+              example: {
+                type: "object",
+                properties: { ok: { type: "boolean" } },
+                required: ["ok"],
+              },
+            },
+          },
+        },
+        required: ["input", "output"],
+      },
+    },
+  };
+  const integration = buildCircleGatewayRoute({
+    sellerAddress: SELLER,
+    resourceMetadata: RESOURCE_METADATA,
+    extensions: bazaarExtensions,
+    middlewareFactory() {
+      return {
+        require() {
+          return (_req, res) => res.setHeader("PAYMENT-REQUIRED", Buffer.from(JSON.stringify({
+            x402Version: 2,
+            resource: { url: CIRCLE_GATEWAY_PATH, description: "fixture", mimeType: "application/json" },
+            accepts: [{ scheme: "exact", network: "eip155:8453", asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", amount: "5000", payTo: SELLER }],
+          })).toString("base64"));
+        },
+      };
+    },
+  });
+  integration.middleware({}, {
+    setHeader(name, value) {
+      if (String(name).toLowerCase() === "payment-required") challengeHeader = value;
+    },
+  }, () => {});
+  const challenge = JSON.parse(Buffer.from(challengeHeader, "base64").toString("utf8"));
+  assert.deepEqual(challenge.extensions.bazaar.schema.properties.input.properties.queryParams.required, ["url"]);
+  assert.equal(challenge.extensions.bazaar.schema.properties.output.properties.example.properties.ok.type, "boolean");
+});
+
 test("kill switch preserves discovery metadata without constructing middleware", () => {
   const integration = buildCircleGatewayRoute({
     sellerAddress: SELLER,

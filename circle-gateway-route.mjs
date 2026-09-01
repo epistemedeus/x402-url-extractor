@@ -37,11 +37,11 @@ function normalizeResourceMetadata(value = {}) {
   return normalized;
 }
 
-function withPaymentRequiredResourceMetadata(middleware, resourceMetadata) {
-  if (Object.keys(resourceMetadata).length === 0) return middleware;
-  return function paymentRequiredResourceMetadata(req, res, next) {
+function withPaymentRequiredPayloadPatch(middleware, { resourceMetadata = {}, extensions = {} } = {}) {
+  if (Object.keys(resourceMetadata).length === 0 && Object.keys(extensions).length === 0) return middleware;
+  return function paymentRequiredPayloadPatch(req, res, next) {
     const setHeader = res.setHeader;
-    res.setHeader = function setHeaderWithResourceMetadata(name, value) {
+    res.setHeader = function setHeaderWithPayloadPatch(name, value) {
       if (String(name).toLowerCase() === "payment-required") {
         if (typeof value !== "string") throw new Error("Circle Gateway PAYMENT-REQUIRED header is invalid");
         const payload = JSON.parse(Buffer.from(value, "base64").toString("utf8"));
@@ -51,6 +51,9 @@ function withPaymentRequiredResourceMetadata(middleware, resourceMetadata) {
         value = Buffer.from(JSON.stringify({
           ...payload,
           resource: { ...payload.resource, ...resourceMetadata },
+          ...(Object.keys(extensions).length > 0 ? {
+            extensions: { ...(payload.extensions || {}), ...extensions },
+          } : {}),
         })).toString("base64");
       }
       return setHeader.call(this, name, value);
@@ -66,6 +69,7 @@ export function buildCircleGatewayRoute({
   facilitatorUrl = CIRCLE_GATEWAY_FACILITATOR,
   description = "Compare x402 and MPP payment offers before buyer authorization.",
   resourceMetadata = {},
+  extensions = {},
   middlewareFactory = createGatewayMiddleware,
 } = {}) {
   const seller = normalizeSellerAddress(sellerAddress);
@@ -107,9 +111,9 @@ export function buildCircleGatewayRoute({
   }
   return {
     enabled: true,
-    middleware: withPaymentRequiredResourceMetadata(
+    middleware: withPaymentRequiredPayloadPatch(
       gateway.require(normalizedPrice.display),
-      normalizedResourceMetadata,
+      { resourceMetadata: normalizedResourceMetadata, extensions },
     ),
     resource,
     facilitatorUrl,
