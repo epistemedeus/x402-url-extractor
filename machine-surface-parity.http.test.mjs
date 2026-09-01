@@ -25,6 +25,7 @@ const SNAPSHOT_MISSING_FROM_LLMS = [
   "/chain/solana-transaction-receipt",
 ];
 const CIRCLE_ROUTE = "/gateway/commerce/payment-offer-preflight";
+const SELLER_INTEGRITY_ROUTE = "/commerce/seller-integrity-audit";
 
 function unusedPort() {
   return new Promise((resolve, reject) => {
@@ -158,7 +159,7 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   const challenge = JSON.parse(Buffer.from(encodedChallenge, "base64").toString("utf8"));
   assert.equal(challenge.extensions?.["builder-code"]?.info?.a, "bc_samedaydesk_test");
   assert.equal(challenge.extensions?.["builder-code"]?.schema?.additionalProperties, false);
-  const sellerIntegrityChallenge = await fetch(`${base}/commerce/seller-integrity-audit`);
+  const sellerIntegrityChallenge = await fetch(`${base}${SELLER_INTEGRITY_ROUTE}`);
   assert.equal(sellerIntegrityChallenge.status, 402);
   const encodedSellerIntegrityChallenge = sellerIntegrityChallenge.headers.get("payment-required");
   assert.ok(encodedSellerIntegrityChallenge);
@@ -202,6 +203,14 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     llms,
   });
   assert.equal(receipt.ok, true);
+  const sellerIntegritySummary = openapi.paths[SELLER_INTEGRITY_ROUTE].get.summary;
+  assert.equal(sellerIntegritySummary.length, 469);
+  const sellerIntegrityManifest = manifest.items.find((item) => item.resource.routeTemplate === SELLER_INTEGRITY_ROUTE);
+  assert.equal(sellerIntegrityManifest.resource.description, sellerIntegritySummary);
+  assert.equal(
+    JSON.parse(Buffer.from(encodedSellerIntegrityChallenge, "base64").toString("utf8")).resource.description,
+    sellerIntegritySummary,
+  );
   assert.equal(receipt.actionCount, 22);
   assert.equal(receipt.llmsCanonicalCount, 22);
   assert.equal(receipt.llmsAlternateCount, 1);
