@@ -1,0 +1,17 @@
+{
+  "description": "Pinned externally observable Agent402 offer-receipt capture contract for SameDayDesk compatibility replay. No Agent402 source is bundled.",
+  "upstream": {
+    "repository": "MikeyPetrillo/Agent402",
+    "license": "AGPL-3.0",
+    "pullRequest": "https://github.com/MikeyPetrillo/Agent402/pull/1070",
+    "mergeCommit": "f6f2595d202b9224fd70bc090a3b0330f8b19852",
+    "sourcePath": "scripts/lib/smoke-receipt.js",
+    "sourceSha256": "90841bd10f4176eff8b838d953d56836d2c6b4bef6a0537c654314b86feba268"
+  },
+  "artifactContract": {
+    "contents": "complete bare signed offer-receipt object",
+    "serialization": "pretty JSON with trailing newline",
+    "fileMode": "0600",
+    "wrapper": "none"
+  }
+}
