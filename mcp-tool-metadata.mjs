@@ -57,6 +57,10 @@ const TOOL_METADATA = Object.freeze({
     title: "Audit Seller Machine Buyability",
     description: "Use this after a buyer integration fails, a seller changes a paid route, or before the next paid retry or release. Audit one exact paid GET or POST seller route against buyer-required JSON success paths. GET verifies constructible non-secret input, exact request binding, live x402 and MPP economics, and optional Bazaar eligibility; POST performs static-safe OpenAPI contract analysis and sends no target request. Use `payment_offer_preflight` instead when you already have one exact callable GET URL and only need its current unpaid offer before buyer authorization, or `agent_discoverability_audit` for catalog rank and identity. Uses no target credential, signature, or target payment and retains no seller schema, body, or query values.",
   },
+  monitor: {
+    title: "Audit One Monitored Seller Route",
+    description: "Run the hosted seller-integrity audit for one exact paid route supplied as `route` and return the bounded machine-buyability report. Origin defaults to this merchant when omitted. Use `seller_integrity_audit` when you already have a full origin and referral-labeled request, or `payment_offer_preflight` when you only need the current unpaid offer. Uses no target credential, signature, or target payment.",
+  },
   contract_qualified_search: {
     title: "Search Contract-Qualified Services",
     description: "Search Agent402 and the official MPP catalog for paid machine services that both match a capability intent and guarantee buyer-required JSON response paths. Use `agent_discoverability_audit` when you are measuring one known seller's catalog reach or rank, `seller_integrity_audit` when you already know the exact seller route to inspect, or `payment_offer_preflight` when you already have one exact callable GET URL. This search excludes SameDayDesk-owned supply and unresolved routes before audit, uses no credential or wallet, sends no seller POST or target payment, reads no paid response body, and returns only a query digest.",
