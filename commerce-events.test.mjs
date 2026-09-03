@@ -483,6 +483,7 @@ test("route classification preserves useful intent without recording opaque path
   assert.equal(classifyCommerceRoute("/distribution/agent-discoverability-audit").kind, "paid");
   assert.equal(classifyCommerceRoute("/commerce/payment-offer-preflight").kind, "paid");
   assert.equal(classifyCommerceRoute("/commerce/seller-integrity-audit").kind, "paid");
+  assert.equal(classifyCommerceRoute("/x402/monitor").kind, "paid");
   assert.deepEqual(classifyCommerceRoute("/commerce/referral-recheck"), {
     route: "/commerce/referral-recheck",
     kind: "excluded",
@@ -2817,6 +2818,7 @@ const WRITER_ROUTE_PATHS = [
   "/distribution/agent-discoverability-audit",
   "/commerce/payment-offer-preflight",
   "/commerce/seller-integrity-audit",
+  "/x402/monitor",
   "/commerce/referral-recheck",
   "/commerce/contract-qualified-search",
   "/commerce/settlement-proof",

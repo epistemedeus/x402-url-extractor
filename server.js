@@ -103,6 +103,17 @@ import {
   sellerIntegrityAuditOutputSchema,
 } from "./seller-integrity-audit.mjs";
 import {
+  attachSellerIntegritySummaryToPaymentRequired,
+  summarizeSellerIntegrityAudit,
+} from "./seller-integrity-audit-summary.mjs";
+import {
+  X402_MONITOR_EXAMPLE,
+  X402MonitorError,
+  normalizeX402MonitorInput,
+  x402Monitor,
+  x402MonitorOutputSchema,
+} from "./x402-monitor.mjs";
+import {
   RECEIPT_REFERRAL_RECHECK_ROUTE,
   ReceiptReferralRecheckError,
   createReceiptReferralClaimStore,
@@ -185,7 +196,7 @@ import {
   paidActionEffectHeaders,
 } from "./paid-action-effect-profile.mjs";
 import { createMppDualStack, hasMppPaymentAuthorizationForPreflight } from "./mpp-dual-stack.mjs";
-import { legacyCompatibleX402Body } from "./x402-legacy-body.mjs";
+import { buildLegacyCompatiblePaymentRequired, legacyCompatibleX402Body } from "./x402-legacy-body.mjs";
 import {
   VIBES_DISCOVERABILITY_PATH,
   VIBES_DISCOVERABILITY_SLUG,
@@ -286,7 +297,8 @@ const AGENT_DISCOVERABILITY_AUDIT_PRICE = process.env.AGENT_DISCOVERABILITY_AUDI
 // Credential-free x402/MPP offer normalization and parity checks for buyer agents.
 // The low price is deliberate: this is a pre-authorization safety primitive.
 const PAYMENT_OFFER_PREFLIGHT_PRICE = process.env.PAYMENT_OFFER_PREFLIGHT_PRICE || "$0.005";
-const SELLER_INTEGRITY_AUDIT_PRICE = process.env.SELLER_INTEGRITY_AUDIT_PRICE || "$0.01";
+const SELLER_INTEGRITY_AUDIT_PRICE = process.env.SELLER_INTEGRITY_AUDIT_PRICE || "$0.25";
+const X402_MONITOR_PRICE = process.env.X402_MONITOR_PRICE || "$0.50";
 const CONTRACT_QUALIFIED_SEARCH_PRICE = process.env.CONTRACT_QUALIFIED_SEARCH_PRICE || "$0.01";
 const AGENT_SURFACE_BUDGET_AUDIT_PRICE = process.env.AGENT_SURFACE_BUDGET_AUDIT_PRICE || "$0.01";
 const PAYMENT_OFFER_CATALOG_SCHEMA = z.object({
@@ -622,7 +634,7 @@ app.get("/healthz", async (_req, res) => {
     ok: true,
     payTo: PAY_TO,
     network: NETWORK,
-    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE, "morpho-protection": MORPHO_PROTECTION_PRICE, "morpho-market-underwrite": MORPHO_MARKET_UNDERWRITE_PRICE, "morpho-preliquidation-replay": MORPHO_PRELIQUIDATION_REPLAY_PRICE, "opportunity-preflight": OPPORTUNITY_PREFLIGHT_PRICE, "agent-discoverability-audit": AGENT_DISCOVERABILITY_AUDIT_PRICE, "payment-offer-preflight": PAYMENT_OFFER_PREFLIGHT_PRICE, "seller-integrity-audit": SELLER_INTEGRITY_AUDIT_PRICE, "contract-qualified-search": CONTRACT_QUALIFIED_SEARCH_PRICE, "agent-surface-budget-audit": AGENT_SURFACE_BUDGET_AUDIT_PRICE, "settlement-proof": SETTLEMENT_PROOF_PRICE, "transaction-receipt": TRANSACTION_RECEIPT_PRICE, "solana-transaction-receipt": SOLANA_TRANSACTION_RECEIPT_PRICE, "wallet-policy-conformance": WALLET_POLICY_CONFORMANCE_PRICE, "stateful-wallet-policy-conformance": STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE },
+    prices: { extract: EXTRACT_PRICE, read: READ_PRICE, scan: SCAN_PRICE, schemaforge: SCHEMAFORGE_PRICE, enrich: ENRICH_PRICE, "wallet-enrich": WALLET_ENRICH_PRICE, "deep-audit": DEEP_AUDIT_PRICE, "morpho-position": MORPHO_POSITION_PRICE, "morpho-protection": MORPHO_PROTECTION_PRICE, "morpho-market-underwrite": MORPHO_MARKET_UNDERWRITE_PRICE, "morpho-preliquidation-replay": MORPHO_PRELIQUIDATION_REPLAY_PRICE, "opportunity-preflight": OPPORTUNITY_PREFLIGHT_PRICE, "agent-discoverability-audit": AGENT_DISCOVERABILITY_AUDIT_PRICE, "payment-offer-preflight": PAYMENT_OFFER_PREFLIGHT_PRICE, "seller-integrity-audit": SELLER_INTEGRITY_AUDIT_PRICE, "x402-monitor": X402_MONITOR_PRICE, "contract-qualified-search": CONTRACT_QUALIFIED_SEARCH_PRICE, "agent-surface-budget-audit": AGENT_SURFACE_BUDGET_AUDIT_PRICE, "settlement-proof": SETTLEMENT_PROOF_PRICE, "transaction-receipt": TRANSACTION_RECEIPT_PRICE, "solana-transaction-receipt": SOLANA_TRANSACTION_RECEIPT_PRICE, "wallet-policy-conformance": WALLET_POLICY_CONFORMANCE_PRICE, "stateful-wallet-policy-conformance": STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
     paymentProtocols: {
@@ -796,6 +808,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/commerce/seller-integrity-audit`, amount: priceToAtomic(SELLER_INTEGRITY_AUDIT_PRICE), description: "x402 and MPP seller integrity audit for one exact paid GET or POST route after a buyer integration fails, a seller changes the route, or before the next paid retry or release. Returns machine_buyable, contract_ready, or repair_required with exact repair actions. Checks constructible non-secret input, live unpaid GET terms, optional Bazaar metadata, and buyer-required success paths. Uses no credential or target payment, follows no redirect, and sends no target POST.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/commerce/contract-qualified-search`, amount: priceToAtomic(CONTRACT_QUALIFIED_SEARCH_PRICE), description: "Search Agent402 and the official MPP catalog for paid machine services that both match a capability intent and guarantee buyer-required JSON output paths. Returns bounded machine-buyable or contract-ready candidates plus controlled rejection reasons. Rejects unresolved routes and owned supply before audit, uses no credentials or wallet, sends no seller POST or target payment, reads no paid response body, and retains only a query digest.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/distribution/agent-surface-budget-audit`, amount: priceToAtomic(AGENT_SURFACE_BUDGET_AUDIT_PRICE), description: "Measure one public service's free MCP tools/list, OpenAPI, or both before an agent calls or pays. Returns byte counts, byte-derived token estimates, missing selection contracts, heaviest definitions, budget decisions, and progressive-discovery fixes. Unselected surfaces are not fetched or judged. Uses public pinned DNS, follows no redirect, sends no credential or target payment, and calls no target tool.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/x402/monitor`, amount: priceToAtomic(X402_MONITOR_PRICE), description: "x402 monitor: run the hosted seller-integrity audit for one exact paid GET or POST route supplied as the route query parameter and return the bounded machine-buyability report. Optional origin, method, requiredPaths, and requireBazaar match the existing audit. Uses no credential or target payment, follows no redirect, and sends no target POST.", mimeType: "application/json" },
 ];
 assertCdpResourceDescriptionCompatibility(RESOURCES);
 
@@ -938,6 +951,7 @@ const RESOURCE_DISCOVERY_METADATA = {
   "/distribution/agent-discoverability-audit": { operationId: "auditAgentDiscoverability", tags: ["Distribution"] },
   "/commerce/payment-offer-preflight": { operationId: "preflightPaymentOffer", tags: ["Agent Operations"] },
   "/commerce/seller-integrity-audit": { operationId: "auditSellerIntegrity", tags: ["Agent Operations"] },
+  "/x402/monitor": { operationId: "monitorSellerIntegrity", tags: ["Agent Operations"] },
   "/commerce/contract-qualified-search": { operationId: "searchContractQualifiedServices", tags: ["Agent Operations"] },
   "/distribution/agent-surface-budget-audit": { operationId: "auditAgentSurfaceBudget", tags: ["Distribution"] },
   "/commerce/settlement-proof": { operationId: "verifyBaseUsdcSettlement", tags: ["Blockchain"] },
@@ -1479,11 +1493,28 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
           responses: {
             "200": { description: "bounded seller machine-buyability report and repair actions", content: { "application/json": { schema: sellerIntegrityAuditOutputSchema() } } },
             "400": { description: "invalid public origin or exact route, charged nothing" },
-            "402": { description: `payment required (x402 or MPP, ${SELLER_INTEGRITY_AUDIT_PRICE} USDC base)` },
+            "402": { description: `summary is free; field-level report requires payment (x402 or MPP, ${SELLER_INTEGRITY_AUDIT_PRICE} USDC base)` },
           },
           "x-payment-info": profile === "mpp"
             ? mppPaymentInfoFor(RESOURCES[19])
             : agentCashPaymentInfoFor(RESOURCES[19]),
+        },
+      },
+      "/x402/monitor": {
+        get: {
+          summary: RESOURCES[22].description,
+          parameters: [
+            { name: "route", in: "query", required: true, description: "Exact paid GET or POST path to audit, without query or template parameters.", schema: { type: "string", pattern: "^/[^/?#{}][^?#{}]*$", example: "/commerce/payment-offer-preflight" } },
+            { name: "origin", in: "query", required: false, description: "Credential-free public HTTPS seller origin on port 443. Defaults to the hosted SameDayDesk merchant.", schema: { type: "string", format: "uri", example: "https://agents.samedaydesk.com" } },
+            { name: "method", in: "query", required: false, description: "Paid operation method. POST receives static OpenAPI contract analysis without a target request.", schema: { type: "string", enum: ["GET", "POST"], default: "GET" } },
+            { name: "requiredPaths", in: "query", required: false, description: "Comma-separated dotted JSON paths the buyer requires the success schema to guarantee recursively.", schema: { type: "string", example: "decision,offers" } },
+            { name: "requireBazaar", in: "query", required: false, description: "When true, missing Bazaar discovery metadata becomes a repair finding.", schema: { type: "boolean", default: false } },
+          ],
+          responses: {
+            "200": { description: "bounded seller machine-buyability report for the requested route", content: { "application/json": { schema: x402MonitorOutputSchema() } } },
+            "400": { description: "invalid public origin or exact route, charged nothing" },
+            "402": { description: `payment required (x402 or MPP, ${X402_MONITOR_PRICE} USDC base)` },
+          },
         },
       },
       [RECEIPT_REFERRAL_RECHECK_ROUTE]: {
@@ -2055,11 +2086,10 @@ app.get(["/commerce/payment-offer-preflight", CIRCLE_GATEWAY_PATH], validatePaym
 app.post("/commerce/payment-offer-preflight", validatePaymentOfferPreflightRequest);
 
 // Reject malformed seller origins and paths before either payment rail runs.
-app.get("/commerce/seller-integrity-audit", (req, res, next) => {
+app.get("/commerce/seller-integrity-audit", async (req, res, next) => {
   if (isUnsignedDiscoveryProbe(req)) return next();
   try {
     res.locals.sellerIntegrityAuditInput = normalizeSellerIntegrityAuditInput(req.query);
-    return next();
   } catch (error) {
     const message = error instanceof SellerIntegrityAuditError
       ? error.message
@@ -2068,6 +2098,53 @@ app.get("/commerce/seller-integrity-audit", (req, res, next) => {
     return res.status(400).json({
       ok: false,
       product: "samedaydesk-seller-integrity-audit",
+      error: message,
+      charged: false,
+      boundary: { credentialsUsed: false, targetPaymentSigned: false, targetPaymentSent: false },
+    });
+  }
+  if (!hasPaymentCredential(req)) {
+    try {
+      const full = await sellerIntegrityAudit(res.locals.sellerIntegrityAuditInput);
+      const summary = summarizeSellerIntegrityAudit(full);
+      const originalJson = res.json.bind(res);
+      res.json = (body) => {
+        if (res.statusCode !== 402) return originalJson(body);
+        let paymentRequired = body;
+        if (
+          paymentRequired
+          && typeof paymentRequired === "object"
+          && !Array.isArray(paymentRequired)
+          && Object.keys(paymentRequired).length === 0
+        ) {
+          const header = res.getHeader("payment-required");
+          const compatible = buildLegacyCompatiblePaymentRequired(
+            Array.isArray(header) ? header[0] : header,
+          );
+          if (compatible) paymentRequired = compatible;
+        }
+        return originalJson(attachSellerIntegritySummaryToPaymentRequired(paymentRequired, summary));
+      };
+    } catch (error) {
+      req.log?.error?.(error);
+    }
+  }
+  return next();
+});
+
+app.get("/x402/monitor", (req, res, next) => {
+  if (isUnsignedDiscoveryProbe(req)) return next();
+  try {
+    res.locals.x402MonitorInput = normalizeX402MonitorInput(req.query, { defaultOrigin: PUBLIC_URL });
+    return next();
+  } catch (error) {
+    const message = error instanceof X402MonitorError || error instanceof SellerIntegrityAuditError
+      ? error.message
+      : "invalid x402 monitor request";
+    res.set("Cache-Control", "no-store");
+    return res.status(400).json({
+      ok: false,
+      product: "samedaydesk-x402-monitor",
       error: message,
       charged: false,
       boundary: { credentialsUsed: false, targetPaymentSigned: false, targetPaymentSent: false },
@@ -2911,6 +2988,40 @@ const x402Paywall = paymentMiddleware(
           }),
         },
       },
+      "GET /x402/monitor": {
+        ...bazaarResourceMetadataFor("/x402/monitor"),
+        accepts: [{ scheme: "exact", price: X402_MONITOR_PRICE, network: NETWORK, payTo: PAY_TO }],
+        description: RESOURCES[22].description,
+        mimeType: "application/json",
+        extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
+          ...declareDiscoveryContract({
+            routeKey: "GET /x402/monitor",
+            input: {
+              route: "/commerce/payment-offer-preflight",
+              origin: "https://agents.samedaydesk.com",
+              method: "GET",
+              requiredPaths: "decision,offers",
+              requireBazaar: true,
+            },
+            inputSchema: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                route: { type: "string", pattern: "^/[^/?#{}][^?#{}]*$", description: "Exact paid GET or POST path declared by the seller." },
+                origin: { type: "string", format: "uri", description: "Credential-free public HTTPS seller origin on port 443. Defaults to this merchant." },
+                method: { type: "string", enum: ["GET", "POST"], default: "GET", description: "POST is analyzed from OpenAPI without sending a target request." },
+                requiredPaths: { type: "string", pattern: "^[A-Za-z0-9_.-]+(?:,[A-Za-z0-9_.-]+){0,15}$", description: "Optional comma-separated buyer-required dotted success paths." },
+                requireBazaar: { type: "boolean", default: false, description: "Whether Bazaar catalog eligibility is a required gate." },
+              },
+              required: ["route"],
+            },
+            output: { example: X402_MONITOR_EXAMPLE },
+            outputSchema: x402MonitorOutputSchema(),
+            publishOutputExample: false,
+          }),
+        },
+      },
       "GET /commerce/contract-qualified-search": {
         ...bazaarResourceMetadataFor("/commerce/contract-qualified-search"),
         accepts: [{ scheme: "exact", price: CONTRACT_QUALIFIED_SEARCH_PRICE, network: NETWORK, payTo: PAY_TO }],
@@ -3253,6 +3364,24 @@ const serveSellerIntegrityAudit = async (req, res) => {
   return res.json(await sellerIntegrityAudit(res.locals.sellerIntegrityAuditInput));
 };
 
+const serveX402Monitor = async (req, res) => {
+  try {
+    res.set("Cache-Control", "no-store");
+    return res.json(await x402Monitor(res.locals.x402MonitorInput || req.query, { defaultOrigin: PUBLIC_URL }));
+  } catch (error) {
+    const status = error instanceof X402MonitorError || error instanceof SellerIntegrityAuditError
+      ? Math.max(400, Math.min(599, Number(error.statusCode) || 400))
+      : 502;
+    return res.status(status).json({
+      ok: false,
+      product: "samedaydesk-x402-monitor",
+      error: String(error?.message || error),
+      charged: false,
+      boundary: { credentialsUsed: false, targetPaymentSigned: false, targetPaymentSent: false },
+    });
+  }
+};
+
 const serveContractQualifiedSearch = async (req, res) => {
   res.set("Cache-Control", "no-store");
   return res.json(await contractQualifiedSearch(res.locals.contractQualifiedSearchInput));
@@ -3545,6 +3674,7 @@ app.get("/distribution/agent-discoverability-audit", async (req, res) => {
 app.get("/commerce/payment-offer-preflight", servePaymentOfferPreflight);
 app.post("/commerce/payment-offer-preflight", servePaymentOfferPreflight);
 app.get("/commerce/seller-integrity-audit", serveSellerIntegrityAudit);
+app.get("/x402/monitor", serveX402Monitor);
 app.get("/commerce/contract-qualified-search", serveContractQualifiedSearch);
 app.get("/distribution/agent-surface-budget-audit", serveAgentSurfaceBudgetAudit);
 app.get("/commerce/settlement-proof", serveSettlementProof);
@@ -3641,7 +3771,8 @@ app.get("/", (req, res) => {
       "GET /work/opportunity-preflight?rewardUsd=&hours=&hourlyCostUsd=": `${OPPORTUNITY_PREFLIGHT_PRICE} - deterministic attempt, verify-first, or abandon economics with optional dated platform evidence.`,
       "GET /distribution/agent-discoverability-audit?origin=&intent=&route=&method=&runtimeUrl=&payTo=&surfaceAudit=&materializationAudit=": `${AGENT_DISCOVERABILITY_AUDIT_PRICE} - brand-blind agent discovery rank, dependency-labeled coverage, canonical-vs-alias identity, duplicate records, expected-route presence, runtime-derived catalog-price coherence, optional seller-owned surface coverage, optional Coinbase validation-versus-materialization state, and competing results across ten machine-service views.`,
       "GET /commerce/payment-offer-preflight?url=": `${PAYMENT_OFFER_PREFLIGHT_PRICE} - compare and normalize x402 and MPP payment challenges and terms, binding checks, expiry, and economic parity before buyer authorization.`,
-      "GET /commerce/seller-integrity-audit?origin=&route=&method=&requiredPaths=&requireBazaar=&referral=": `${SELLER_INTEGRITY_AUDIT_PRICE} - audit one paid GET or POST seller route for buyer-required response paths. GET verifies live unpaid terms; POST is static-safe and sends no target request. Optional referral labels a receipt-derived acquisition path without changing price or authorization.`,
+      "GET /commerce/seller-integrity-audit?origin=&route=&method=&requiredPaths=&requireBazaar=&referral=": `${SELLER_INTEGRITY_AUDIT_PRICE} - audit one paid GET or POST seller route for buyer-required response paths. GET verifies live unpaid terms; POST is static-safe and sends no target request. Optional referral labels a receipt-derived acquisition path without changing price or authorization. The decision summary is free; the field-level report is paid.`,
+      "GET /x402/monitor?route=&origin=&method=&requiredPaths=&requireBazaar=": `${X402_MONITOR_PRICE} - run the hosted seller-integrity audit for one exact route query parameter and return the bounded report.`,
       "GET /commerce/contract-qualified-search?query=&requiredPaths=&maxPriceDisplayUnits=&limit=": `${CONTRACT_QUALIFIED_SEARCH_PRICE} - search Agent402 and MPP for services whose exact seller contract guarantees buyer-required output paths before authorization.`,
       "GET /distribution/agent-surface-budget-audit?origin=&surfaceMode=&mcpPath=&openApiPath=&mcpBudgetBytes=&openApiBudgetBytes=": `${AGENT_SURFACE_BUDGET_AUDIT_PRICE} - measure MCP, OpenAPI, or both agent-context surfaces, rank the heaviest definitions, and return fixes without calling a target tool.`,
       "GET /commerce/settlement-proof?transactionHash=&recipient=&amountAtomic=&payer=": `${SETTLEMENT_PROOF_PRICE} - verify one claimed canonical Base USDC transfer against the successful on-chain receipt, with exact recipient, amount, and optional payer binding.`,
@@ -3714,6 +3845,7 @@ import("./mcp-server.mjs")
         { name: "agent_discoverability_audit", description: RESOURCES[12].description, price: AGENT_DISCOVERABILITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Public HTTPS service origin"), intent: z.string().min(20).max(500).describe("Brand-blind capability description"), route: z.string().regex(/^\/[^?#]*$/).optional().describe("Optional expected exact path"), method: z.enum(["GET", "POST"]).optional().describe("Exact route method for the optional Coinbase materialization audit. Defaults to GET; runtimeUrl is GET-only."), runtimeUrl: z.string().url().max(2048).optional().describe("Optional exact same-origin HTTPS GET URL whose unpaid x402 or MPP offer supplies the runtime price reference. Requires route and an exactly matching pathname."), payTo: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional EVM payTo for alias matching"), expectedPriceUsd: z.union([z.number().min(0).max(1000000), z.string().regex(/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,6})?$/)]).optional().describe("Optional exact route price expected by the caller. A coherent runtimeUrl offer takes precedence and caller drift is reported."), surfaceAudit: z.boolean().optional().describe("When true, inspect the target's public Agent Card, ERC-8004 registration document, and action catalog for the expected route through bounded same-origin fetches."), materializationAudit: z.boolean().optional().describe("When true with route and method, distinguish Coinbase seller ineligibility from provider acceptance without exact-resource Bazaar materialization.") }, run: (a) => agentDiscoverabilityAudit(a), tags: ["distribution", "discovery", "x402", "mpp", "agent402", "catalog-price", "runtime-coherence", "catalog-materialization", "a2a", "erc-8004"] },
         { name: "payment_offer_preflight", description: RESOURCES[13].description, price: PAYMENT_OFFER_PREFLIGHT_PRICE, inputSchema: { url: z.string().url().max(2048).describe("Exact public HTTPS GET route whose unpaid x402 and MPP challenge headers and same-origin OpenAPI success-response declaration should be inspected before buyer authorization. Credential-like query keys, fragments, unresolved parameters, local hosts, redirects, and non-public IPs are rejected."), catalog: PAYMENT_OFFER_CATALOG_SCHEMA.optional().describe("Optional caller-supplied catalog candidate. When present, the tool compares it with every live unsigned offer across request, protocol, amount, network, asset, recipient, and expiry.") }, outputSchema: paymentOfferPreflightMcpOutputSchema, run: (a) => paymentOfferPreflight(a), tags: ["payments", "x402", "mpp", "buyer-safety", "preflight", "catalog-coherence", "response-contract"] },
         { name: "seller_integrity_audit", description: RESOURCES[19].description, price: SELLER_INTEGRITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Credential-free public HTTPS seller origin on port 443."), route: z.string().regex(/^\/[^/?#{}][^?#{}]*$/).describe("Exact paid GET or POST path declared by the seller, without query or template parameters."), method: z.enum(["GET", "POST"]).default("GET").describe("POST receives static OpenAPI response-contract analysis without sending a target request."), requiredPaths: z.array(z.string().regex(/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+){0,7}$/)).max(16).default([]).describe("Buyer-required dotted success-response paths that the seller schema must guarantee recursively."), requireBazaar: z.boolean().default(false).describe("When true, missing Bazaar discovery metadata becomes a repair finding for live-probed GET routes."), referral: z.string().regex(/^r1_[0-9a-f]{64}$/).optional().describe("Optional x402 receipt-derived acquisition label. It cannot change payment or delivery.") }, run: (a) => sellerIntegrityAudit(a), tags: ["payments", "seller-ci", "x402", "mpp", "response-contract", "machine-buyability", "post-contract", "receipt-referral"] },
+        { name: "monitor", description: RESOURCES[22].description, price: X402_MONITOR_PRICE, inputSchema: { route: z.string().regex(/^\/[^/?#{}][^?#{}]*$/).describe("Exact paid GET or POST path to audit, without query or template parameters."), origin: z.string().url().optional().describe("Credential-free public HTTPS seller origin on port 443. Defaults to this merchant."), method: z.enum(["GET", "POST"]).default("GET").describe("POST receives static OpenAPI response-contract analysis without sending a target request."), requiredPaths: z.array(z.string().regex(/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+){0,7}$/)).max(16).default([]).describe("Buyer-required dotted success-response paths that the seller schema must guarantee recursively."), requireBazaar: z.boolean().default(false).describe("When true, missing Bazaar discovery metadata becomes a repair finding for live-probed GET routes.") }, run: (a) => x402Monitor(a, { defaultOrigin: PUBLIC_URL }), tags: ["payments", "seller-ci", "x402", "monitor", "machine-buyability"] },
         { name: "contract_qualified_search", description: RESOURCES[20].description, price: CONTRACT_QUALIFIED_SEARCH_PRICE, inputSchema: { query: z.string().min(10).max(300).describe("Capability intent sent to Agent402 and used locally to rank MPP catalog metadata. Do not include credentials or private values."), requiredPaths: z.array(z.string().regex(/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+){0,7}$/)).min(1).max(16).describe("Buyer-required dotted success-response paths that every returned seller schema must guarantee recursively."), maxPriceDisplayUnits: z.number().gt(0).max(10).default(0.1).describe("Maximum advertised per-call price in each source's display currency."), limit: z.number().int().min(1).max(8).default(5).describe("Maximum candidates audited and returned across Agent402 and MPP.") }, outputSchema: contractQualifiedSearchMcpOutputSchema, run: (a) => contractQualifiedSearch(a), tags: ["payments", "service-discovery", "agent402", "mpp", "response-contract", "buyer-safety"] },
         { name: "agent_surface_budget_audit", description: RESOURCES[21].description, price: AGENT_SURFACE_BUDGET_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Credential-free public HTTPS service origin on port 443, with no path or query."), surfaceMode: z.enum(["mcp", "openapi", "both"]).default("both").describe("Audit MCP only, OpenAPI only, or both. Unselected surfaces are not fetched or judged."), mcpPath: z.string().regex(/^\/[^/?#{}][^?#{}]*$/).default("/mcp").describe("Exact root-relative MCP streamable-HTTP path."), openApiPath: z.string().regex(/^\/[^/?#{}][^?#{}]*$/).default("/openapi.json").describe("Exact root-relative OpenAPI JSON path."), mcpBudgetBytes: z.number().int().min(8192).max(1000000).default(65536).describe("Maximum preferred raw MCP tools/list response size in bytes."), openApiBudgetBytes: z.number().int().min(32768).max(1000000).default(524288).describe("Maximum preferred raw OpenAPI document size in bytes.") }, outputSchema: agentSurfaceBudgetAuditMcpOutputSchema, run: (a) => agentSurfaceBudgetAudit(a), tags: ["distribution", "mcp", "openapi", "context-budget", "tool-discovery", "agent-finops"] },
         { name: "settlement_proof", description: RESOURCES[14].description, price: SETTLEMENT_PROOF_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Base mainnet transaction hash containing the claimed canonical USDC transfer."), recipient: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Expected canonical Base USDC recipient."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,20}$/).describe("Expected positive USDC amount in six-decimal atomic units."), payer: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional expected canonical Base USDC payer.") }, outputSchema: settlementProofMcpOutputSchema, run: (a) => settlementProof(a), tags: ["payments", "x402", "settlement", "reconciliation", "base-usdc"] },
