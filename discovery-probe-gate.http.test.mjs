@@ -53,6 +53,11 @@ const ROUTES = [
     valid: "?origin=https%3A%2F%2Fexample.com&route=%2Fpaid&method=GET",
   },
   {
+    path: "/x402/monitor",
+    invalid: "?origin=https%3A%2F%2Fexample.com",
+    valid: "?route=%2Fcommerce%2Fpayment-offer-preflight",
+  },
+  {
     path: "/commerce/contract-qualified-search",
     invalid: "?query=short",
     valid: "?query=service%20domain%20ownership&requiredPaths=result.id",
@@ -115,6 +120,33 @@ async function startMerchant({ dataDir, facilitatorUrl }) {
       FACILITATOR_URL: facilitatorUrl,
       MPP_SECRET_KEY: "test-secret-key-test-secret-key-32",
       PUBLIC_URL: "https://agents.samedaydesk.com",
+      X402_TEST_AUDIT_REPORT: JSON.stringify({
+        schemaVersion: "agent-payment-integrity.audit.v4",
+        checkedAt: "2026-08-12T07:50:00.000Z",
+        versions: { x402: "1.0.0", mpp: "1.0.0" },
+        ok: true,
+        machineBuyable: true,
+        routes: [{
+          status: 402,
+          method: "GET",
+          runtimeChallengeVerified: true,
+          probe: { attempted: true, reason: null },
+          protocols: ["mpp", "x402"],
+          valid: true,
+          findings: [],
+          economics: { x402: { amountAtomic: "5000" }, mpp: { amountAtomic: "5000" } },
+          discovery: { bazaar: { present: true, valid: true } },
+          responseContract: { decision: "admissible", requiredPaths: [] },
+          repairPlan: {
+            mode: "advisory_openapi_repair",
+            requiredPaths: [],
+            guaranteedPaths: [],
+            actions: [],
+            complete: true,
+            boundary: { schemaMutationApplied: false, propertyTypesInferred: false, sellerRuntimeVerified: false, statement: "stub" },
+          },
+        }],
+      }),
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -179,7 +211,7 @@ test("all paid GET routes expose bare terms without letting malformed paid reque
   });
   merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
 
-  assert.equal(ROUTES.length, 20);
+  assert.equal(ROUTES.length, 21);
   const openapi = await fetch(`${merchant.base}/openapi.json`).then((response) => response.json());
   for (const route of ROUTES) {
     const bare = await expectStatus(merchant.base, route.path, 402);
