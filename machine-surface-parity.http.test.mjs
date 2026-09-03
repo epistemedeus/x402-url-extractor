@@ -121,7 +121,7 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     const timer = setTimeout(() => reject(new Error(`startup timed out: ${output.slice(-2000)}`)), 20_000);
     const onData = (chunk) => {
       output = `${output}${chunk}`.slice(-20_000);
-      if (!output.includes(`x402-merchant listening on :${port}`) || !output.includes("MCP server:  POST /mcp (22 paid tools)")) return;
+      if (!output.includes(`x402-merchant listening on :${port}`) || !output.includes("MCP server:  POST /mcp (23 paid tools)")) return;
       clearTimeout(timer);
       resolve(true);
     };
@@ -211,12 +211,12 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     JSON.parse(Buffer.from(encodedSellerIntegrityChallenge, "base64").toString("utf8")).resource.description,
     sellerIntegritySummary,
   );
-  assert.equal(receipt.actionCount, 22);
-  assert.equal(receipt.llmsCanonicalCount, 22);
+  assert.equal(receipt.actionCount, 23);
+  assert.equal(receipt.llmsCanonicalCount, 23);
   assert.equal(receipt.llmsAlternateCount, 1);
-  assert.equal(receipt.mcpToolCount, 22);
-  assert.equal(mcpDescriptor.toolCount, 22);
-  assert.equal(manifest.items.length, 23);
+  assert.equal(receipt.mcpToolCount, 23);
+  assert.equal(mcpDescriptor.toolCount, 23);
+  assert.equal(manifest.items.length, 24);
   const declaredAgentSources = listDeclaredAgentDiscoverySources();
   assert.deepEqual(
     catalog.acquisition.declaredSourceHeader.allowedValues,
