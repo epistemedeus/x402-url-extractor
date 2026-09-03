@@ -229,7 +229,13 @@ function nextActionsFor(routeReport) {
   return [...actions];
 }
 
-export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = {}) {
+function defaultAuditImpl(input) {
+  const raw = process.env.X402_TEST_AUDIT_REPORT;
+  if (raw) return JSON.parse(raw);
+  return auditOrigin(input);
+}
+
+export async function sellerIntegrityAudit(input, { auditImpl = defaultAuditImpl } = {}) {
   const request = normalizeSellerIntegrityAuditInput(input);
   const { referral, ...auditRequest } = request;
   let report;
