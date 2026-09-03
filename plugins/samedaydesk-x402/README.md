@@ -112,7 +112,7 @@ npx @modelcontextprotocol/inspector@2.3.0 --cli \
   https://agents.samedaydesk.com/mcp --transport http --method tools/list --format json
 ```
 
-Expect 22 tools. Do not call them.
+Expect 23 tools. Do not call them.
 
 ## Validate
 

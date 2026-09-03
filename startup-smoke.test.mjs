@@ -27,7 +27,7 @@ test("production entry reaches the listening state without a startup exception",
     const timer = setTimeout(() => reject(new Error(`startup timed out: ${output.slice(-2000)}`)), 10_000);
     const onData = (chunk) => {
       output = `${output}${chunk}`.slice(-20_000);
-      if (!output.includes("x402-merchant listening on :0") || !output.includes("MCP server:  POST /mcp (22 paid tools)")) return;
+      if (!output.includes("x402-merchant listening on :0") || !output.includes("MCP server:  POST /mcp (23 paid tools)")) return;
       clearTimeout(timer);
       resolve(true);
     };
