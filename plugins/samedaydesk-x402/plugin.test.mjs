@@ -57,6 +57,7 @@ const EXPECTED_TOOLS = [
   "agent_discoverability_audit",
   "payment_offer_preflight",
   "seller_integrity_audit",
+  "monitor",
   "contract_qualified_search",
   "agent_surface_budget_audit",
   "settlement_proof",
@@ -298,7 +299,7 @@ test("package files stay inside the plugin root and omit secrets or 2026-07-28 c
   assert.equal(statSync(join(PLUGIN_ROOT, "skills")).isDirectory(), true);
 });
 
-liveTest("unpaid initialize-era initialize and tools/list return 22 live tools", async () => {
+liveTest("unpaid initialize-era initialize and tools/list return 23 live tools", async () => {
   const initialize = await postRpc("initialize", {
     protocolVersion: "2025-11-25",
     capabilities: {},
@@ -314,7 +315,7 @@ liveTest("unpaid initialize-era initialize and tools/list return 22 live tools",
   const tools = listed.payload.result.tools;
   assert.equal(Array.isArray(tools), true);
   const names = tools.map((tool) => tool.name);
-  assert.equal(names.length, 22);
+  assert.equal(names.length, 23);
   assert.deepEqual(names, EXPECTED_TOOLS);
   assert.ok(names.includes("extract"));
 });
