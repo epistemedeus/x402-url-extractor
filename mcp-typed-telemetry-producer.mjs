@@ -213,6 +213,12 @@ const CLOSED_MCP_PRODUCTS = Object.freeze({
     resource: "mcp://tool/seller_integrity_audit",
     httpRoute: "/commerce/seller-integrity-audit",
   }),
+  monitor: Object.freeze({
+    tool: "monitor",
+    productSku: "samedaydesk-monitor",
+    resource: "mcp://tool/monitor",
+    httpRoute: "/x402/monitor",
+  }),
   contract_qualified_search: Object.freeze({
     tool: "contract_qualified_search",
     productSku: "samedaydesk-contract-qualified-search",
