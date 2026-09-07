@@ -31,6 +31,8 @@ data, not a credential. Agent Plugins 1.0 forbids secrets in `headers`.
 - Not OAuth. `/.well-known/oauth-authorization-server` is 404. Unpaid
   `initialize` and `tools/list` do not require a login.
 - Not a paid `tools/call`. Do not put payment headers in this package.
+- For a separate HTTP `@x402/fetch` customer example against `GET /extract`,
+  see the [public customer example](https://github.com/epistemedeus/x402-url-extractor/tree/master/examples/customer-x402).
 
 ## Layout
 

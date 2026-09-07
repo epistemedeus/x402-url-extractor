@@ -1,0 +1,48 @@
+/** Live SameDayDesk extract offer defaults observed on merchant 1.23.43. */
+export const LIVE_ORIGIN = "https://agents.samedaydesk.com";
+export const LIVE_EXTRACT_PATH = "/extract";
+export const LIVE_EXAMPLE_TARGET = "https://example.com";
+export const LIVE_EXTRACT_URL =
+  `${LIVE_ORIGIN}${LIVE_EXTRACT_PATH}?url=${encodeURIComponent(LIVE_EXAMPLE_TARGET)}`;
+
+export const LIVE_NETWORK = "eip155:8453";
+export const LIVE_ASSET = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+export const LIVE_RECIPIENT = "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee";
+export const LIVE_AMOUNT_ATOMIC = "5000";
+export const LIVE_METHOD = "GET";
+
+/** Buyer-required extract fields. Presence alone does not prove semantic quality. */
+export const DEFAULT_REQUIRED_OUTPUT = Object.freeze({
+  mediaType: "application/json",
+  requiredFields: Object.freeze([
+    "ok",
+    "url",
+    "title",
+    "text",
+    "fetchedAt",
+    "aiReadiness.hasTitle",
+  ]),
+  maxResponseBytes: 500_000,
+});
+
+export const DEFAULT_AUTHORIZATION = Object.freeze({
+  method: LIVE_METHOD,
+  url: LIVE_EXTRACT_URL,
+  network: LIVE_NETWORK,
+  asset: LIVE_ASSET,
+  recipient: LIVE_RECIPIENT,
+  amountCapAtomic: LIVE_AMOUNT_ATOMIC,
+  assetName: "USD Coin",
+  assetVersion: "2",
+  maxTimeoutSeconds: 300,
+  requiredOutput: DEFAULT_REQUIRED_OUTPUT,
+});
+
+export const OUTCOMES = Object.freeze({
+  PREFLIGHT_OK: "preflight_ok",
+  AUTHORIZATION_REFUSED: "authorization_refused",
+  VALID_DELIVERED: "valid_delivered",
+  PAID_INVALID_OUTPUT: "paid_invalid_output",
+  SETTLEMENT_FAILED: "settlement_failed",
+  UNKNOWN: "unknown",
+});
