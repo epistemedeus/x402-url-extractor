@@ -158,12 +158,19 @@ test("copyable npm commands run the real CLI with only fixture transport and wal
   assert.match(preflight.stdout, /"walletAccessed": false/);
   const key = generatePrivateKey();
   const purchase = spawnSync("npm", ["run", "purchase", "--", "--approve", "--authorization",
-    "./fixtures/authorization.json", "--private-key-env", "CUSTOMER_X402_PRIVATE_KEY"], {
+    "./fixtures/authorization-batch.json", "--private-key-env", "CUSTOMER_X402_PRIVATE_KEY"], {
     cwd, env: { ...env, CUSTOMER_X402_PRIVATE_KEY: key }, encoding: "utf8", timeout: 10000,
   });
   assert.equal(purchase.status, 0, purchase.stderr);
-  assert.match(purchase.stdout, /"outcome": "valid_delivered"/);
+  assert.match(purchase.stdout, /"outcome": "useful_delivered"/);
   assert.equal(purchase.stdout.includes(key), false);
+
+  const getEnv = { ...env, CUSTOMER_X402_FIXTURE_MODE: "get" };
+  const getPreflight = spawnSync("npm", ["run", "preflight:get"], {
+    cwd, env: getEnv, encoding: "utf8", timeout: 10000,
+  });
+  assert.equal(getPreflight.status, 0, getPreflight.stderr);
+  assert.match(getPreflight.stdout, /"outcome": "preflight_ok"/);
 });
 
 test("redirects are not followed before or after signing", async () => {

@@ -1,7 +1,8 @@
 # SameDayDesk customer x402 example
 
-Bounded HTTP example that makes SameDayDesk's public `GET /extract` offer usable
-with a maintained `@x402/fetch` client and a customer-owned wallet.
+Bounded HTTP example that makes SameDayDesk's public `POST /extract/batch`
+and backward-compatible `GET /extract` offers usable with a maintained
+`@x402/fetch` client and a customer-owned wallet.
 
 This is not a wallet framework, directory, MCP payment host, Claude/Goose paid
 runtime, generic proxy, or replacement for a private durable-state buyer.
@@ -14,15 +15,14 @@ runtime, generic proxy, or replacement for a private durable-state buyer.
 | `@x402/evm` | `2.16.0` |
 | `@x402/core` | `2.16.0` |
 | `viem` | `2.55.11` |
-| `agent-payment-policy` | `0.12.0` (output field check only) |
+| `agent-payment-policy` | `0.12.0` (single-page output field check only) |
 
 Licenses: `@x402/*` Apache-2.0; `viem` and `agent-payment-policy` MIT.
 
 Policy 0.15.0 was compared with this pin. Its additional schema-validation path
-and AJV dependencies are not used here: this example requires non-null named
-fields, not a general JSON Schema contract. The pinned validator checks field
-presence and serialized size; this example also checks wire bytes, media type,
-non-null required values, and `ok === true`. Neither checks semantic quality.
+and AJV dependencies are not used here: the single-page path requires non-null
+named fields, while batch validation follows the seller batch contract and buyer
+selected fields (explicit nulls allowed where the seller permits them).
 
 ## Install
 
@@ -35,27 +35,44 @@ npm ci
 Requires Node.js 22 or newer. From an existing repository checkout, start with
 `cd examples/customer-x402` instead of cloning again.
 
-## Credential-free unpaid preflight (default)
+## Credential-free unpaid batch preflight (default)
 
 Default commands never read wallet credentials, sign, send payment headers, or
-pay.
+pay. They run local batch admission for up to five public HTTPS URLs and caller-
+selected supported fields, then fetch the unpaid `POST /extract/batch` challenge.
 
 ```bash
 npm start
 npm run preflight
-npm run preflight -- --url 'https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com'
+npm run preflight -- --authorization ./fixtures/authorization-batch.json
+```
+
+## Credential-free unpaid GET preflight (backward compatible)
+
+```bash
+npm run preflight:get
+npm run preflight -- --get --url 'https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com'
 ```
 
 ## Explicit approved purchase
 
-Bind exact HTTPS origin/path/query, method, network, asset, recipient, amount
-cap, EIP-712 token name/version, signature validity (at most 300 seconds), and
-buyer-required output before wallet lookup or signing. Inject your own
-wallet; this package has no Pilot private buyer dependency.
+Bind exact HTTPS origin/path/query, method, serialized body bytes (batch),
+network, asset, recipient, amount cap, EIP-712 token name/version, signature
+validity (at most 300 seconds), and buyer-required output before wallet lookup
+or signing. Inject your own wallet; this package has no Pilot private buyer
+dependency.
 
 ```bash
 export CUSTOMER_X402_PRIVATE_KEY=0xYOUR_KEY
 npm run purchase -- --approve \
+  --authorization ./fixtures/authorization-batch.json \
+  --private-key-env CUSTOMER_X402_PRIVATE_KEY
+```
+
+GET remains available:
+
+```bash
+npm run purchase:get -- --approve \
   --authorization ./fixtures/authorization.json \
   --private-key-env CUSTOMER_X402_PRIVATE_KEY
 ```
@@ -64,10 +81,13 @@ Unset the key when finished. Never commit keys. Fixture keys exist only in
 local tests and are never printed.
 
 Inspect and edit the authorization file yourself first. A provided `--url` must
-match it exactly, including query order/encoding. This example supports only
-x402 v2 exact EIP-3009, not Permit2, approvals, sponsorship, RPC fallback, or MCP
-payments. The official wrapper consumes the already-inspected challenge and
-performs at most one signed request. There is no second discovery request.
+match it exactly, including query order/encoding. After approval, any changed
+body bytes (including mutation of input objects that alters serialization) are
+refused. Preflight and the paid attempt send the same body bytes. This example
+supports only x402 v2 exact EIP-3009, not Permit2, approvals, sponsorship, RPC
+fallback, or MCP payments. The official wrapper consumes the already-inspected
+challenge and performs at most one signed request. There is no second discovery
+request. `POST` does not authorize target browsing before merchant payment.
 
 ## Outcomes
 
@@ -75,30 +95,40 @@ performs at most one signed request. There is no second discovery request.
 | --- | --- |
 | `preflight_ok` | Unpaid 402 challenge parsed |
 | `authorization_refused` | Exact terms mismatch before signer |
-| `valid_delivered` | JSON media type, bounded body, `ok: true`, and non-null required fields |
-| `paid_invalid_output` | Paid response retained; output failed |
+| `valid_delivered` | GET: JSON media type, bounded body, `ok: true`, and non-null required fields |
+| `useful_delivered` | Batch: one ordered row per URL with requested fields and all-success intent |
+| `partial_delivered` | Batch: seller contract satisfied with explicit failed/partial rows; not a refund |
+| `paid_invalid_output` | Paid response retained; output failed contract/intent checks |
 | `settlement_failed` | Settlement header reports failure |
 | `unknown` | Ambiguous; no application retry |
 
 HTTP 200 or a settlement header alone does not prove required output validity.
 Settlement in this example is recorded as `unverified` unless the customer
 checks chain state separately. There is no automatic application retry, timeout
-retry, or fallback provider payment.
+retry, or fallback provider payment. Duplicate, omitted, wrong-order, or
+wrong-URL batch rows are never accepted as complete.
 
 Challenge bodies are capped at 64 KB; output wire bytes use the authorized limit
-(at most 1 MB). Each HTTP request/body read has a 15-second deadline; redirects
-are refused. A timeout or disconnect after dispatch keeps `paymentSent: true`,
-meaning possibly sent, not proved settled. A signer failure can leave
-`paymentSigned: null`. Do not rerun unknown or paid-invalid outcomes automatically.
-Signer responsiveness and wallet safety remain the customer's responsibility.
-There is no cross-process pending journal, cumulative budget, or crash-safe guard.
-Receipts retain redacted output and validation/payment-header observations, not
-raw payment headers or signatures; redaction can remove opaque output values.
+(at most 1 MB for GET, 128 KB for batch). Each HTTP request/body read has a
+15-second deadline; redirects are refused. A timeout or disconnect after
+dispatch keeps `paymentSent: true`, meaning possibly sent, not proved settled.
+A signer failure can leave `paymentSigned: null`. Do not rerun unknown or
+paid-invalid outcomes automatically. Signer responsiveness and wallet safety
+remain the customer's responsibility. There is no cross-process pending journal,
+cumulative budget, or crash-safe guard. Receipts retain redacted output,
+`bodyDigest`, and validation/payment-header observations, not raw payment
+headers or signatures; redaction can remove opaque output values.
 
 Do not transplant HTTP payment credentials into `mcp://` resources. Official
 `@x402/mcp` exists but is out of scope here. Native Claude/Goose marketplace
 install is already accepted; this example does not make those hosts
 payment-capable.
+
+## Future owned-homepage live trial (not executed here)
+
+`fixtures/authorization-batch-homepages.json` binds three owned public HTTPS
+homepages for a separately authorized future live trial. Default commands and
+tests do not call it.
 
 ## Tests
 
@@ -108,7 +138,7 @@ npm test
 
 Tests drive the real `@x402/fetch` client and the copyable CLI commands against
 local fixture transports. They make no production requests by default. To opt
-into only the bounded unpaid production preflight:
+into only the bounded unpaid production GET preflight:
 
 ```bash
 CUSTOMER_X402_LIVE_PREFLIGHT=1 node --test --test-name-pattern='bounded credential-free production preflight' test/customer-x402.test.mjs
