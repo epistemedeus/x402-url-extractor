@@ -1,7 +1,10 @@
 // extract.mjs — the paid service: URL -> clean structured data, in one reliable call.
-// Zero dependencies. Value sold to AI agents on x402: hand it a messy URL, get back
-// clean text + ALL structured data (JSON-LD/OG/meta/headings/links) + AI-crawler signals,
-// with redirects, timeouts, size caps and errors handled. Saves agents the fetch+parse+guard work.
+// Zero dependencies beyond Zod for the MCP success output contract. Value sold to AI
+// agents on x402: hand it a messy URL, get back clean text + ALL structured data
+// (JSON-LD/OG/meta/headings/links) + AI-crawler signals, with redirects, timeouts, size
+// caps and errors handled. Saves agents the fetch+parse+guard work.
+
+import { z } from "zod";
 
 const UA = 'Mozilla/5.0 (compatible; SameDayDeskExtractor/1.0; +https://samedaydesk.com)';
 const MAX_BYTES = 3_000_000; // 3MB cap
@@ -146,6 +149,40 @@ export async function extract(rawUrl) {
     fetchedAt: new Date().toISOString(),
   };
 }
+
+// MCP tools/call success body only. Errors and unpaid 402 challenges stay outside this
+// contract: handler throws become unstructured isError results, and payment wrappers
+// return payment-required challenges without claiming a typed extract success.
+export const extractMcpOutputSchema = z.object({
+  ok: z.literal(true),
+  url: z.string(),
+  status: z.number().int(),
+  contentType: z.string().nullable(),
+  title: z.string(),
+  description: z.string().nullable(),
+  canonical: z.string().nullable(),
+  lang: z.string().nullable(),
+  openGraph: z.record(z.string()),
+  twitter: z.record(z.string()),
+  jsonLd: z.array(z.unknown()),
+  headings: z.object({
+    h1: z.array(z.string()),
+    h2: z.array(z.string()),
+  }).strict(),
+  links: z.array(z.string()),
+  text: z.string(),
+  aiReadiness: z.object({
+    hasJsonLd: z.boolean(),
+    hasOpenGraph: z.boolean(),
+    hasTitle: z.boolean(),
+    hasDescription: z.boolean(),
+    hasCanonical: z.boolean(),
+    // @type may be a string or string[]; the extractor concat/flatMap can leave nested
+    // arrays, so do not overclaim a string-only list.
+    schemaTypes: z.array(z.unknown()),
+  }).strict(),
+  fetchedAt: z.string().datetime(),
+}).strict();
 
 // --- /read : full page content as clean Markdown (LLM-ready context) ---
 function htmlToMarkdown(html) {
