@@ -1,0 +1,83 @@
+# Isolated Goose home for SameDayDesk.
+# Transport streamable_http URI https://agents.samedaydesk.com/mcp method POST.
+# Bundled Goose platform extensions are disabled in this isolated home only.
+# The merge-safe user package file does not disable a user's other extensions.
+# No provider keys, wallet credentials, or wrapper paywall.
+extensions:
+  samedaydesk:
+    type: streamable_http
+    name: samedaydesk
+    display_name: SameDayDesk
+    description: "Canonical SameDayDesk machine-commerce MCP over Streamable HTTP. Payment stays on the merchant. This package does not wrap, proxy, or authorize spend."
+    enabled: true
+    bundled: false
+    uri: "https://agents.samedaydesk.com/mcp"
+    headers: {}
+    env_keys: []
+    envs: {}
+    timeout: 300
+  analyze:
+    type: platform
+    name: analyze
+    enabled: false
+    bundled: true
+  apps:
+    type: platform
+    name: apps
+    enabled: false
+    bundled: true
+  chatrecall:
+    type: platform
+    name: chatrecall
+    enabled: false
+    bundled: true
+  code_execution:
+    type: platform
+    name: code_execution
+    enabled: false
+    bundled: true
+  developer:
+    type: platform
+    name: developer
+    enabled: false
+    bundled: true
+  extensionmanager:
+    type: platform
+    name: extensionmanager
+    enabled: false
+    bundled: true
+  orchestrator:
+    type: platform
+    name: orchestrator
+    enabled: false
+    bundled: true
+  scheduler:
+    type: platform
+    name: scheduler
+    enabled: false
+    bundled: true
+  skills:
+    type: platform
+    name: skills
+    enabled: false
+    bundled: true
+  summarize:
+    type: platform
+    name: summarize
+    enabled: false
+    bundled: true
+  summon:
+    type: platform
+    name: summon
+    enabled: false
+    bundled: true
+  todo:
+    type: platform
+    name: todo
+    enabled: false
+    bundled: true
+  tom:
+    type: platform
+    name: tom
+    enabled: false
+    bundled: true

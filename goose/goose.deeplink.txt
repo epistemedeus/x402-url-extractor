@@ -1,0 +1,1 @@
+goose://extension?url=https%3A%2F%2Fagents.samedaydesk.com%2Fmcp&type=streamable_http&timeout=300&id=samedaydesk&name=SameDayDesk&description=Canonical+SameDayDesk+machine-commerce+MCP+over+Streamable+HTTP.+Payment+stays+on+the+merchant.+This+package+does+not+wrap%2C+proxy%2C+or+authorize+spend.

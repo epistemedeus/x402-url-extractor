@@ -1,0 +1,18 @@
+# Task-scoped Goose config for SameDayDesk.
+# Transport streamable_http URI https://agents.samedaydesk.com/mcp method POST.
+# No provider keys, wallet credentials, or wrapper paywall.
+# headers is empty because official deeplink/session-flag silent install cannot carry custom headers.
+# Payment remains on the merchant x402/MPP boundary. Tool metadata is not authorization.
+extensions:
+  samedaydesk:
+    type: streamable_http
+    name: samedaydesk
+    display_name: SameDayDesk
+    description: "Canonical SameDayDesk machine-commerce MCP over Streamable HTTP. Payment stays on the merchant. This package does not wrap, proxy, or authorize spend."
+    enabled: true
+    bundled: false
+    uri: "https://agents.samedaydesk.com/mcp"
+    headers: {}
+    env_keys: []
+    envs: {}
+    timeout: 300

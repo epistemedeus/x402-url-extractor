@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "samedaydesk-claude",
+  "version": "0.1.0",
+  "description": "Claude Code marketplace for the live SameDayDesk machine-commerce MCP, hosted in this public merchant repository. Not an Anthropic official directory listing.",
+  "owner": {
+    "name": "SameDayDesk",
+    "email": "contact@samedaydesk.com",
+    "url": "https://samedaydesk.com"
+  },
+  "plugins": [
+    {
+      "name": "samedaydesk-extract",
+      "source": "./plugins/samedaydesk-extract",
+      "description": "Points Claude Code at the live SameDayDesk MCP and one extract skill. Discovery is unpaid. Payment stays on the canonical merchant 402.",
+      "version": "0.1.0",
+      "author": {
+        "name": "SameDayDesk",
+        "email": "contact@samedaydesk.com",
+        "url": "https://samedaydesk.com"
+      },
+      "homepage": "https://agents.samedaydesk.com/",
+      "repository": "https://github.com/epistemedeus/x402-url-extractor",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": [
+        "samedaydesk",
+        "x402",
+        "mcp",
+        "extract",
+        "machine-commerce"
+      ],
+      "strict": true,
+      "mcpServers": "./.mcp.json"
+    }
+  ]
+}
