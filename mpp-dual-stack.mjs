@@ -1,4 +1,5 @@
 import { Credential } from "mppx";
+import { replaySettlementWasAttempted } from "./idempotency-replay.mjs";
 import { evm, Mppx } from "mppx/server";
 
 const X402_PAYMENT_HEADERS = ["payment-signature", "x-payment", "x-payment-signature"];
@@ -203,7 +204,7 @@ export function createMppDualStack({
       return res.status(503).json({
         ok: false,
         error: "mpp_payment_temporarily_unavailable",
-        charged: false,
+        charged: replaySettlementWasAttempted() ? null : false,
       });
     }
   }
