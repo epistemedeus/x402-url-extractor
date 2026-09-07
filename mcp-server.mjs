@@ -110,6 +110,45 @@ export function asToolResult(obj, { structured = false } = {}) {
   return result;
 }
 
+/**
+ * Modest, generic repair for clients that JSON-stringify array/object tool
+ * arguments. Only parses when the live Zod field expects an array/object and
+ * the supplied value is a JSON-encoded array/object string. Current scalar
+ * tools remain unchanged.
+ */
+export function reviveJsonStructuredArgs(args, inputSchema = {}) {
+  if (!args || typeof args !== "object" || Array.isArray(args)) return args;
+  if (!inputSchema || typeof inputSchema !== "object" || Array.isArray(inputSchema)) return args;
+  const next = { ...args };
+  for (const [key, schema] of Object.entries(inputSchema)) {
+    if (!(key in next)) continue;
+    const value = next[key];
+    if (typeof value !== "string") continue;
+    const trimmed = value.trim();
+    if (!(trimmed.startsWith("[") || trimmed.startsWith("{"))) continue;
+    const expectsArray = Boolean(schema?._def?.typeName === "ZodArray" || schema?.constructor?.name === "ZodArray");
+    const expectsObject = Boolean(schema?._def?.typeName === "ZodObject" || schema?.constructor?.name === "ZodObject");
+    const unwrap = schema?._def?.typeName === "ZodOptional" || schema?._def?.typeName === "ZodDefault"
+      ? schema._def.innerType
+      : schema;
+    const innerArray = Boolean(unwrap?._def?.typeName === "ZodArray" || unwrap?.constructor?.name === "ZodArray");
+    const innerObject = Boolean(unwrap?._def?.typeName === "ZodObject" || unwrap?.constructor?.name === "ZodObject");
+    if (!(expectsArray || expectsObject || innerArray || innerObject)) continue;
+    try {
+      const parsed = JSON.parse(trimmed);
+      if ((innerArray || expectsArray) && Array.isArray(parsed)) next[key] = parsed;
+      if ((innerObject || expectsObject) && parsed && typeof parsed === "object" && !Array.isArray(parsed)) next[key] = parsed;
+    } catch {
+      /* leave the original string for schema validation to reject */
+    }
+  }
+  return next;
+}
+
+function withRevivedArgs(handler, inputSchema) {
+  return async (args, extra) => handler(reviveJsonStructuredArgs(args, inputSchema), extra);
+}
+
 function isJsonRpcObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -435,6 +474,7 @@ export async function mountMcp(app, {
     // extra._meta), runs the handler, then settles. We catch handler errors and return
     // a structured ok:false so a paid call never yields an opaque failure.
     const inner = paid(typedEnabled ? observedPaidHandler(t) : baselinePaidHandler(t));
+    const revived = withRevivedArgs(inner, t.inputSchema);
     const handler = typedEnabled
       ? async (args, extra) => {
         const attempt = mcpTypedAttemptAls.getStore();
@@ -442,13 +482,13 @@ export async function mountMcp(app, {
         if (attempt && extra && Object.hasOwn(extra, "requestId")) {
           attempt.bindRequestId(extra.requestId);
         }
-        const result = await inner(args, extra);
+        const result = await revived(args, extra);
         if (attempt && !isTypedPaymentRequiredResult(result) && result?.isError !== true) {
           attempt.maybeReplayConfirmed();
         }
         return result;
       }
-      : inner;
+      : revived;
     prepared.push({
       name: t.name,
       title: t.title,

@@ -175,3 +175,64 @@ test("fails closed on short challenge-integrity keys", () => {
     secretKey: "short",
   }), /at least 32 bytes/);
 });
+
+test("optional POST body binding keeps a changed body from settling the original credential", async () => {
+  const calls = { settle: 0, verify: 0 };
+  const dual = createMppDualStack({
+    facilitatorClient: {
+      async verify() {
+        calls.verify += 1;
+        return { isValid: true };
+      },
+      async settle(_payload, requirements) {
+        calls.settle += 1;
+        return {
+          network: requirements.network,
+          payer: account.address,
+          success: true,
+          transaction: TRANSACTION,
+        };
+      },
+    },
+    network: NETWORK,
+    payTo: PAY_TO,
+    publicUrl: PUBLIC_URL,
+    realm: "agents.example.com",
+    routes: [{
+      amount: "0.01",
+      description: "Batch extract",
+      method: "POST",
+      path: "/extract/batch",
+      bindRequestBody: true,
+    }],
+    secretKey: SECRET,
+  });
+  const original = Buffer.from('{"urls":["https://example.com/"]}');
+  const changed = Buffer.from('{"urls":["https://other.example/"]}');
+  const unpaid = {
+    method: "POST",
+    url: `${PUBLIC_URL}/extract/batch`,
+    headers: { "content-type": "application/json" },
+    rawBody: original,
+  };
+  const challenge = await dual.authorize(unpaid);
+  assert.equal(challenge.kind, "challenge");
+  const authorization = await createTestMppCredential({
+    challenge: challenge.challenge,
+    maxAmount: "0.01",
+  });
+  const paid = await dual.authorize({
+    ...unpaid,
+    headers: { Authorization: authorization },
+  });
+  assert.equal(paid.kind, "paid");
+  assert.equal(calls.settle, 1);
+  const rejected = await dual.authorize({
+    method: "POST",
+    url: `${PUBLIC_URL}/extract/batch`,
+    headers: { Authorization: authorization, "content-type": "application/json" },
+    rawBody: changed,
+  });
+  assert.equal(rejected.kind, "rejected");
+  assert.equal(calls.settle, 1);
+});

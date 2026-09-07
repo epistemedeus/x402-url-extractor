@@ -32,6 +32,7 @@ import {
   validateConstructionSurfaceParity,
 } from "./construction-surface.mjs";
 import {
+  mcpToolNameForRoute,
   renderLlmsTxt,
   validateMachineSurfaceParity,
 } from "./machine-surface-parity.mjs";
@@ -170,7 +171,7 @@ import {
   listDeclaredAgentDiscoverySources,
 } from "./commerce-events.mjs";
 import { createCommerceSettlementReconciler } from "./commerce-settlement-reconciler.mjs";
-import { createIdempotencyReplay, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
+import { createIdempotencyReplay, DEFAULT_PAID_ROUTES, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
 import {
   PURCHASE_EVIDENCE_MANIFEST_PATH,
   PURCHASE_EVIDENCE_RELATION,
@@ -185,6 +186,23 @@ import {
   paidActionEffectHeaders,
 } from "./paid-action-effect-profile.mjs";
 import { createMppDualStack, hasMppPaymentAuthorizationForPreflight } from "./mpp-dual-stack.mjs";
+import {
+  EXTRACT_BATCH_AMOUNT_ATOMIC,
+  EXTRACT_BATCH_DESCRIPTION,
+  EXTRACT_BATCH_PATH,
+  EXTRACT_BATCH_PRICE_USD,
+  EXTRACT_BATCH_READ_ONLY_POST,
+  extractBatchOpenApiPath,
+  extractBatchMcpOutputSchema,
+  extractBatchResource,
+  extractBatchX402Route,
+  extractBatchCostParameters,
+  isExtractBatchEnabled,
+  runExtractBatchFromMcpArgs,
+  serveExtractBatch,
+  validateExtractBatchRequest,
+  ALL_FIELDS,
+} from "./extract-batch.mjs";
 import { legacyCompatibleX402Body } from "./x402-legacy-body.mjs";
 import {
   VIBES_DISCOVERABILITY_PATH,
@@ -312,6 +330,11 @@ const SOLANA_TRANSACTION_RECEIPT_PRICE = process.env.SOLANA_TRANSACTION_RECEIPT_
 // still the economic acceptance gate.
 const WALLET_POLICY_CONFORMANCE_PRICE = process.env.WALLET_POLICY_CONFORMANCE_PRICE || "$0.01";
 const STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE = process.env.STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE || "$0.01";
+const EXTRACT_BATCH_ENABLED = isExtractBatchEnabled();
+if (EXTRACT_BATCH_ENABLED) extractBatchCostParameters();
+const EXTRACT_BATCH_PAID_POSTS = EXTRACT_BATCH_ENABLED
+  ? Object.freeze([...READ_ONLY_PAID_POST_OPERATIONS, EXTRACT_BATCH_READ_ONLY_POST])
+  : READ_ONLY_PAID_POST_OPERATIONS;
 
 // "$0.05" -> "50000" atomic USDC units (6 decimals) so the discovery docs
 // (/.well-known/x402, /openapi.json) always match the paywall price exactly.
@@ -466,7 +489,13 @@ process.once("SIGINT", requestCommerceWriterDrain);
 app.use(paidActionEffectHeaders);
 app.use(commerceTelemetry.middleware);
 const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
-const idempotencyReplay = createIdempotencyReplay({ publicUrl: PUBLIC_URL });
+const idempotencyReplay = createIdempotencyReplay({
+  publicUrl: PUBLIC_URL,
+  requiredReplayPaths: EXTRACT_BATCH_ENABLED ? new Set([EXTRACT_BATCH_PATH]) : new Set(),
+  routes: EXTRACT_BATCH_ENABLED
+    ? new Set([...DEFAULT_PAID_ROUTES, EXTRACT_BATCH_PATH])
+    : DEFAULT_PAID_ROUTES,
+});
 let commerceSettlementReconciler;
 let purchaseEvidenceManifest;
 
@@ -796,6 +825,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/commerce/seller-integrity-audit`, amount: priceToAtomic(SELLER_INTEGRITY_AUDIT_PRICE), description: "x402 and MPP seller integrity audit for one exact paid GET or POST route after a buyer integration fails, a seller changes the route, or before the next paid retry or release. Returns machine_buyable, contract_ready, or repair_required with exact repair actions. Checks constructible non-secret input, live unpaid GET terms, optional Bazaar metadata, and buyer-required success paths. Uses no credential or target payment, follows no redirect, and sends no target POST.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/commerce/contract-qualified-search`, amount: priceToAtomic(CONTRACT_QUALIFIED_SEARCH_PRICE), description: "Search Agent402 and the official MPP catalog for paid machine services that both match a capability intent and guarantee buyer-required JSON output paths. Returns bounded machine-buyable or contract-ready candidates plus controlled rejection reasons. Rejects unresolved routes and owned supply before audit, uses no credentials or wallet, sends no seller POST or target payment, reads no paid response body, and retains only a query digest.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/distribution/agent-surface-budget-audit`, amount: priceToAtomic(AGENT_SURFACE_BUDGET_AUDIT_PRICE), description: "Measure one public service's free MCP tools/list, OpenAPI, or both before an agent calls or pays. Returns byte counts, byte-derived token estimates, missing selection contracts, heaviest definitions, budget decisions, and progressive-discovery fixes. Unselected surfaces are not fetched or judged. Uses public pinned DNS, follows no redirect, sends no credential or target payment, and calls no target tool.", mimeType: "application/json" },
+  ...(EXTRACT_BATCH_ENABLED ? [extractBatchResource({ publicUrl: PUBLIC_URL })] : []),
 ];
 assertCdpResourceDescriptionCompatibility(RESOURCES);
 
@@ -917,13 +947,15 @@ const evidenceLinkedRoutes = new Set([
 app.use(purchaseEvidenceHeaders({ origin: PUBLIC_URL, paidRoutes: evidenceLinkedRoutes }));
 const metadataRoutes = new Set(Object.keys(BAZAAR_RESOURCE_METADATA));
 const missingMetadataRoutes = [...paidResourceRoutes].filter((route) => !metadataRoutes.has(route));
-const unknownMetadataRoutes = [...metadataRoutes].filter((route) => !paidResourceRoutes.has(route));
+const optionalMetadataRoutes = new Set(EXTRACT_BATCH_ENABLED ? [] : [EXTRACT_BATCH_PATH]);
+const unknownMetadataRoutes = [...metadataRoutes].filter((route) => !paidResourceRoutes.has(route) && !optionalMetadataRoutes.has(route));
 if (missingMetadataRoutes.length || unknownMetadataRoutes.length) {
   throw new Error(`Bazaar resource metadata coverage mismatch: missing=${missingMetadataRoutes.join(",") || "none"}; unknown=${unknownMetadataRoutes.join(",") || "none"}`);
 }
 
 const RESOURCE_DISCOVERY_METADATA = {
   "/extract": { operationId: "extractUrl", tags: ["Web Data"] },
+  "/extract/batch": { operationId: "extractPublicUrlsBatch", tags: ["Web Data"] },
   "/read": { operationId: "readUrlAsMarkdown", tags: ["Web Data"] },
   "/scan": { operationId: "scanRepositoryRisk", tags: ["Security"] },
   "/schemaforge": { operationId: "generateStructuredData", tags: ["Company Intelligence"] },
@@ -954,12 +986,16 @@ const mppDualStack = createMppDualStack({
   publicUrl: PUBLIC_URL,
   realm: new URL(PUBLIC_URL).hostname,
   routes: [
-    ...RESOURCES.map((resource) => ({
-      amount: atomicUsdcToDisplay(resource.amount),
-      description: resource.description,
-      method: resource.method || "GET",
-      path: new URL(resource.url).pathname,
-    })),
+    ...RESOURCES.map((resource) => {
+      const path = new URL(resource.url).pathname;
+      return {
+        amount: atomicUsdcToDisplay(resource.amount),
+        description: resource.description,
+        method: resource.method || "GET",
+        path,
+        ...(path === EXTRACT_BATCH_PATH ? { bindRequestBody: true } : {}),
+      };
+    }),
     {
       amount: atomicUsdcToDisplay(RESOURCES[11].amount),
       description: RESOURCES[11].description,
@@ -1158,7 +1194,7 @@ const constructionParityReceipt = () => {
     openapi: buildOpenApiDocument({ profile: "agentcash" }),
     mppOpenapi: buildOpenApiDocument({ profile: "mpp" }),
     manifestItems,
-    mcpToolNames: listMcpToolMetadata().map((entry) => entry.name),
+    mcpToolNames: RESOURCES.map((resource) => mcpToolNameForRoute(new URL(resource.url).pathname)),
     agentCard: currentAgentCard(),
     catalog,
     llms: renderLlmsTxt({
@@ -1362,7 +1398,11 @@ app.get("/v0/cards.json", (_req, res) => {
 
 app.get(PAID_ACTION_EFFECT_PROFILE_PATH, (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
-  return res.json(buildPaidActionEffectProfile({ origin: PUBLIC_URL, serviceVersion: SERVICE_VERSION }));
+  return res.json(buildPaidActionEffectProfile({
+    origin: PUBLIC_URL,
+    serviceVersion: SERVICE_VERSION,
+    operations: EXTRACT_BATCH_PAID_POSTS,
+  }));
 });
 
 app.get(PURCHASE_EVIDENCE_MANIFEST_PATH, (_req, res) => {
@@ -1634,7 +1674,18 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       ? mppPaymentInfoFor(RESOURCES[11])
       : agentCashPaymentInfoFor(RESOURCES[11]),
   };
-  attachPaidActionEffectContracts(document);
+  if (EXTRACT_BATCH_ENABLED) {
+    const batchResource = {
+      amount: EXTRACT_BATCH_AMOUNT_ATOMIC,
+      method: "POST",
+    };
+    document.paths[EXTRACT_BATCH_PATH] = extractBatchOpenApiPath({
+      paymentInfo: profile === "mpp"
+        ? mppPaymentInfoFor(batchResource)
+        : agentCashPaymentInfoFor(batchResource),
+    });
+  }
+  attachPaidActionEffectContracts(document, EXTRACT_BATCH_PAID_POSTS);
   if (profile === "agentcash" && circleGateway.enabled) {
     document.paths[CIRCLE_GATEWAY_PATH] = {
       get: {
@@ -1785,6 +1836,7 @@ app.post(RECEIPT_REFERRAL_RECHECK_ROUTE, async (req, res) => {
 
 // Return a short-lived response for an exact logical retry before validation or
 // settlement. Changed request bindings fail with an uncharged 409.
+if (EXTRACT_BATCH_ENABLED) app.post(EXTRACT_BATCH_PATH, validateExtractBatchRequest);
 app.use((req, res, next) => idempotencyReplay.middleware(req, res, next).catch(next));
 
 const PAYMENT_CREDENTIAL_HEADERS = Object.freeze([
@@ -3196,6 +3248,11 @@ const x402Paywall = paymentMiddleware(
           }),
         },
       },
+      ...(EXTRACT_BATCH_ENABLED ? extractBatchX402Route({
+        network: NETWORK,
+        payTo: PAY_TO,
+        extensions: COMMON_COMMERCE_EXTENSIONS,
+      }) : {}),
     },
     resourceServer
   );
@@ -3207,12 +3264,17 @@ for (const { method, path } of SERVICE_DEPLOYMENT_ROUTES) {
   if (!resource) throw new Error(`Missing purchase evidence resource for ${method} ${path}`);
   evidenceResources.push({ ...resource, method, url: `${PUBLIC_URL}${path}` });
 }
+if (EXTRACT_BATCH_ENABLED) {
+  const batch = RESOURCES.find((entry) => (entry.method || "GET") === "POST" && new URL(entry.url).pathname === EXTRACT_BATCH_PATH);
+  if (!batch) throw new Error("Missing purchase evidence resource for POST /extract/batch");
+  evidenceResources.push({ ...batch, method: "POST", url: `${PUBLIC_URL}${EXTRACT_BATCH_PATH}` });
+}
 purchaseEvidenceManifest = buildPurchaseEvidenceManifest({
   origin: PUBLIC_URL,
   serviceVersion: SERVICE_VERSION,
   resources: evidenceResources,
   responseContractFor: getDiscoveryOutputContract,
-  readOnlyPaidPosts: READ_ONLY_PAID_POST_OPERATIONS,
+  readOnlyPaidPosts: EXTRACT_BATCH_PAID_POSTS,
   serviceDeployment: {
     statement: serviceDeploymentPublication.paths.statement,
     publicKey: serviceDeploymentPublication.paths.publicKey,
@@ -3558,6 +3620,9 @@ app.post("/security/stateful-wallet-policy-conformance", (req, res) => {
   res.set("Cache-Control", "no-store");
   return res.json(statefulWalletPolicyConformance(res.locals.statefulWalletPolicyConformanceInput));
 });
+if (EXTRACT_BATCH_ENABLED) {
+  app.post(EXTRACT_BATCH_PATH, serveExtractBatch);
+}
 
 // One root, negotiated by audience. Browser navigation gets a fast human map;
 // API clients, curl, and agents retain the stable JSON descriptor.
@@ -3628,6 +3693,9 @@ app.get("/", (req, res) => {
     },
     paidRoutes: {
       "GET /extract?url=": `${EXTRACT_PRICE} - ${EXTRACT_DISCOVERY_DESCRIPTION}`,
+      ...(EXTRACT_BATCH_ENABLED ? {
+        "POST /extract/batch": `${EXTRACT_BATCH_PRICE_USD} - ${EXTRACT_BATCH_DESCRIPTION}`,
+      } : {}),
       "GET /read?url=": `${READ_PRICE} - URL -> LLM-ready Markdown.`,
       "GET /scan?repo=": `${SCAN_PRICE} - static supply-chain security scan of a public GitHub repo before install.`,
       "GET /schemaforge?site=&vertical=&city=": `${SCHEMAFORGE_PRICE} - generate a paste-ready JSON-LD structured-data bundle + gap diff so a business page is eligible to be cited by AI assistants.`,
@@ -3700,6 +3768,18 @@ import("./mcp-server.mjs")
       },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
+        ...(EXTRACT_BATCH_ENABLED ? [{
+          name: "extract_batch",
+          description: EXTRACT_BATCH_DESCRIPTION,
+          price: EXTRACT_BATCH_PRICE_USD,
+          inputSchema: {
+            urls: z.array(z.string().url().max(2048)).min(1).max(5).describe("One to five public HTTPS URLs as a JSON array. Charge is one flat introductory attempt, not per-URL success."),
+            fields: z.array(z.enum(/** @type {[string, ...string[]]} */ ([...ALL_FIELDS]))).min(1).max(ALL_FIELDS.length).optional().describe("Optional unique bounded subset of structured extraction fields."),
+          },
+          outputSchema: extractBatchMcpOutputSchema,
+          run: (a) => runExtractBatchFromMcpArgs(a),
+          tags: ["web", "batch-extract", "structured-json", "multi-url"],
+        }] : []),
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
         { name: "scan", description: RESOURCES[2].description, price: SCAN_PRICE, inputSchema: { repo: z.string().describe("Public GitHub repo: owner/name or URL") }, outputSchema: scanRepoMcpOutputSchema, run: (a) => scanRepo(a.repo), tags: ["security", "supply-chain", "github"] },
         { name: "schemaforge", description: RESOURCES[3].description, price: SCHEMAFORGE_PRICE, inputSchema: { site: z.string().describe("Public business homepage or representative landing-page URL. Live HTML must be directly fetchable; JavaScript is not executed."), vertical: z.string().optional().describe("Optional structured-data template profile. med-spas is currently the specialized profile; unsupported values fall back to it."), city: z.string().optional().describe("Optional city the business serves; used to contextualize the generated structured-data template.") }, run: (a) => schemaforge({ site: a.site, vertical: a.vertical, city: a.city }), tags: ["seo", "json-ld", "geo"] },

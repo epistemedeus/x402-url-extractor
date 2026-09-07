@@ -49,6 +49,7 @@ function flatten(text) {
 }
 
 export function mcpToolNameForRoute(route) {
+  if (route === "/extract/batch") return "extract_batch";
   const segment = String(route || "").split("/").filter(Boolean).at(-1);
   if (!segment) throw new Error(`cannot derive MCP tool name from ${route || "empty route"}`);
   return segment.replaceAll("-", "_");
