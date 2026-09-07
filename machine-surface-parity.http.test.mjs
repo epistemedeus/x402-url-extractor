@@ -283,9 +283,10 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     "opportunity_preflight",
     "wallet_policy_conformance",
     "stateful_wallet_policy_conformance",
+    "extract",
   ];
   const typed = mcpTools.filter((tool) => tool.outputSchema);
-  assert.equal(typed.length, 10);
+  assert.equal(typed.length, 11);
   for (const name of PRIOR_TYPED_MCP.concat(NEW_TYPED_MCP)) {
     const tool = mcpTools.find((entry) => entry.name === name);
     assert.ok(tool, `missing MCP tool ${name}`);
