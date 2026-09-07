@@ -1003,7 +1003,8 @@ terms. Listing and install grant none. Unknown payment outcomes reconcile
 rather than retry. Installation is not proof of model invocation, payment,
 or demand. This is not a submission to Anthropic's official plugin
 directory. For a credential-free HTTP preflight and explicitly authorized
-`@x402/fetch` purchase path against `GET /extract`, see
+`@x402/fetch` purchase path against `POST /extract/batch` (default) and
+backward-compatible `GET /extract`, see
 [`examples/customer-x402`](examples/customer-x402). That example does not
 make Claude payment-capable.
 
@@ -1038,7 +1039,8 @@ using that profile. Temporary files are retained; no cleanup helper is provided.
 
 Companion Goose `streamable_http` files live in [`goose/`](goose/). They
 do not install Goose, mutate a default profile, or claim merchant
-attribution. Paying `GET /extract` with a maintained HTTP client stays in
+attribution. Paying `POST /extract/batch` or `GET /extract` with a
+maintained HTTP client stays in
 [`examples/customer-x402`](examples/customer-x402); Goose install alone is
 not payment capability.
 
@@ -1093,7 +1095,8 @@ curl -i 'http://localhost:3000/defi/morpho-position?address=0x...' # HTTP 402
 - `plugins/samedaydesk-extract/` — self-contained Claude Code plugin (not Agent Plugins 1.0).
 - `goose/` — native Goose streamable_http config, recipe, and workflow copy.
 - `examples/customer-x402/` — credential-free preflight plus explicitly
-  authorized `@x402/fetch` purchase example for `GET /extract`.
+  authorized `@x402/fetch` purchase example for `POST /extract/batch`
+  (default) and backward-compatible `GET /extract`.
 - `README.md` — this guide.
 - `extract.mjs` — pre-existing zero-dependency "URL → clean structured data"
   service. This is a natural **paid resource** to put behind `/premium`: in the

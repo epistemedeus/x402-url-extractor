@@ -51,5 +51,6 @@ Workflow copy: `extract.workflow.md`. Recipe: `extract.recipe.yaml` (report
 extract metadata only; do not call paid tools from this package).
 
 HTTP customer preflight and explicitly authorized `@x402/fetch` purchase for
-`GET /extract`: [public customer example](https://github.com/epistemedeus/x402-url-extractor/tree/master/examples/customer-x402). This
+`POST /extract/batch` (default) and `GET /extract`:
+[public customer example](https://github.com/epistemedeus/x402-url-extractor/tree/master/examples/customer-x402). This
 Goose package does not become payment-capable from that example.

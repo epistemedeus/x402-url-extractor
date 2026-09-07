@@ -1,38 +1,110 @@
 import { OUTCOMES } from "./constants.mjs";
 import { assertChallengeResource, decodeChallengeFromResponse, selectExactAccept } from "./challenge.mjs";
-import { assertAcceptMatchesAuthorization, assertRequestMatchesAuthorization } from "./authorization.mjs";
+import {
+  assertAcceptMatchesAuthorization,
+  assertRequestMatchesAuthorization,
+  normalizeAuthorization,
+} from "./authorization.mjs";
+import { BatchAdmissionError, admitExtractBatchBody } from "./batch-admission.mjs";
 import { safeJson } from "./redact.mjs";
 import { boundedFetch } from "./transport.mjs";
 
+function requestInitFor(auth) {
+  if (auth.method === "POST") {
+    return {
+      method: "POST",
+      redirect: "error",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+      },
+      body: auth.bodyRaw,
+    };
+  }
+  return {
+    method: "GET",
+    redirect: "error",
+    headers: { accept: "application/json" },
+  };
+}
+
 /**
  * Credential-free unpaid preflight. Never looks up wallet keys, signs, or
- * sends payment headers.
+ * sends payment headers. POST /extract/batch validates local admission first.
  */
 export async function runPreflight({
   url,
   authorization = null,
   fetchImpl = globalThis.fetch,
-  method = "GET",
+  method,
+  body = null,
 } = {}) {
-  if (!url) throw new Error("preflight url is required");
-  if (String(url).startsWith("mcp://")) {
+  if (!url && !authorization) throw new Error("preflight url is required");
+  if (String(url || authorization?.url || "").startsWith("mcp://")) {
     throw new Error("preflight refuses mcp:// resources; use HTTPS extract only");
   }
-  const target = new URL(url);
-  if (target.protocol !== "https:" || target.username || target.password || target.hash || method !== "GET") {
-    throw new Error("preflight requires credential-free HTTPS GET without a fragment");
+
+  let auth = null;
+  if (authorization) {
+    auth = normalizeAuthorization(authorization);
+  }
+  const resolvedMethod = String(method ?? auth?.method ?? "GET").toUpperCase();
+  const resolvedUrl = url ?? auth?.url;
+  if (!resolvedUrl) throw new Error("preflight url is required");
+
+  const target = new URL(resolvedUrl);
+  if (target.protocol !== "https:" || target.username || target.password || target.hash) {
+    throw new Error("preflight requires credential-free HTTPS without a fragment");
+  }
+  if (resolvedMethod !== "GET" && resolvedMethod !== "POST") {
+    throw new Error("preflight method must be GET or POST");
+  }
+
+  let bodyRaw = null;
+  if (resolvedMethod === "POST") {
+    if (auth) {
+      bodyRaw = body == null ? auth.bodyRaw : typeof body === "string" ? body : admitExtractBatchBody(body).bodyRaw;
+    } else if (body != null) {
+      try {
+        bodyRaw = typeof body === "string" ? admitExtractBatchBody(JSON.parse(body)).bodyRaw : admitExtractBatchBody(body).bodyRaw;
+      } catch (error) {
+        if (error instanceof BatchAdmissionError) throw error;
+        throw error;
+      }
+    } else {
+      throw new Error("POST preflight requires authorization body or body");
+    }
+  } else if (body != null && body !== "") {
+    throw new Error("GET preflight must not include a body");
   }
 
   let bound = null;
-  if (authorization) {
-    bound = assertRequestMatchesAuthorization(url, authorization, { method, body: null });
+  if (auth) {
+    bound = assertRequestMatchesAuthorization(resolvedUrl, auth, {
+      method: resolvedMethod,
+      body: resolvedMethod === "POST" ? bodyRaw : null,
+    });
+  } else if (resolvedMethod === "POST") {
+    // Local admission already ran; still no wallet access.
+    admitExtractBatchBody(JSON.parse(bodyRaw));
   }
 
-  const response = await boundedFetch(fetchImpl, url, {
-    method,
-    redirect: "error",
-    headers: { accept: "application/json" },
-  });
+  const init = bound
+    ? requestInitFor(bound)
+    : resolvedMethod === "POST"
+      ? {
+        method: "POST",
+        redirect: "error",
+        headers: { accept: "application/json", "content-type": "application/json" },
+        body: bodyRaw,
+      }
+      : {
+        method: "GET",
+        redirect: "error",
+        headers: { accept: "application/json" },
+      };
+
+  const response = await boundedFetch(fetchImpl, resolvedUrl, init);
 
   const bodyText = await response.text();
   if (response.status !== 402) {
@@ -41,6 +113,7 @@ export async function runPreflight({
       httpStatus: response.status,
       message: `expected HTTP 402 unpaid challenge, received ${response.status}`,
       bodyPreviewBytes: Buffer.byteLength(bodyText),
+      bodyDigest: bound?.bodyDigest ?? null,
       walletAccessed: false,
       paymentSigned: false,
       paymentSent: false,
@@ -58,8 +131,9 @@ export async function runPreflight({
   return {
     outcome: OUTCOMES.PREFLIGHT_OK,
     httpStatus: 402,
-    method,
-    url,
+    method: resolvedMethod,
+    url: resolvedUrl,
+    bodyDigest: bound?.bodyDigest ?? null,
     offer: {
       scheme: accept.scheme,
       network: accept.network,

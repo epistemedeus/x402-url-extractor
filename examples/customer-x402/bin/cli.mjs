@@ -2,8 +2,13 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { LIVE_EXTRACT_URL } from "../src/constants.mjs";
-import { AuthorizationRefusal } from "../src/authorization.mjs";
+import {
+  DEFAULT_BATCH_AUTHORIZATION,
+  LIVE_EXTRACT_BATCH_URL,
+  LIVE_EXTRACT_URL,
+} from "../src/constants.mjs";
+import { AuthorizationRefusal, normalizeAuthorization } from "../src/authorization.mjs";
+import { BatchAdmissionError } from "../src/batch-admission.mjs";
 import { printPreflight, runPreflight } from "../src/preflight.mjs";
 import { printPurchase, runAuthorizedPurchase } from "../src/purchase.mjs";
 import { safeJson } from "../src/redact.mjs";
@@ -12,20 +17,32 @@ import { resolveBuyerAccount } from "../src/wallet.mjs";
 function usage(exitCode = 0) {
   const text = `SameDayDesk customer x402 example
 
-Credential-free unpaid preflight (default; never touches a wallet):
+Credential-free unpaid batch preflight (default; never touches a wallet):
   npm start
-  npm run preflight -- --url '${LIVE_EXTRACT_URL}'
+  npm run preflight
+  npm run preflight -- --authorization ./fixtures/authorization-batch.json
+
+Credential-free unpaid single-page GET preflight (backward compatible):
+  npm run preflight:get
+  npm run preflight -- --get --url '${LIVE_EXTRACT_URL}'
 
 Explicit approved purchase (customer-owned wallet injection required):
-  npm run purchase -- --approve --authorization ./fixtures/authorization.json --private-key-env CUSTOMER_X402_PRIVATE_KEY
+  npm run purchase -- --approve --authorization ./fixtures/authorization-batch.json --private-key-env CUSTOMER_X402_PRIVATE_KEY
+  npm run purchase:get -- --approve --authorization ./fixtures/authorization.json --private-key-env CUSTOMER_X402_PRIVATE_KEY
 
 Notes:
   - Default commands never read wallet credentials, sign, send payment headers, or pay.
-  - --approve binds exact HTTPS origin/path/query, method, network, asset, recipient,
+  - Default route is POST ${LIVE_EXTRACT_BATCH_URL} with fixture public HTTPS URLs.
+  - Local batch admission runs before any fetch or wallet lookup.
+  - --approve binds exact HTTPS URL, method, body bytes, network, asset, recipient,
     amount cap, and buyer-required output before invoking @x402/fetch.
+  - Authorization rejects mutated body bytes after approval; preflight and paid
+    attempts send the same bytes.
   - HTTP payment credentials are never transplanted into mcp:// resources.
   - HTTP 200 / settlement headers alone do not prove required output validity.
+  - A paid batch may truthfully contain failed rows (partial_delivered).
   - No application retry, timeout retry, or fallback provider payment.
+  - fixtures/authorization-batch-homepages.json is a future live-trial template only.
 `;
   console.log(text);
   process.exit(exitCode);
@@ -39,6 +56,7 @@ function parseArgs(argv) {
   const args = {
     approve: false,
     help: false,
+    get: false,
     url: null,
     authorizationPath: null,
     privateKeyEnv: null,
@@ -47,6 +65,7 @@ function parseArgs(argv) {
     const arg = argv[i];
     if (arg === "--help" || arg === "-h") args.help = true;
     else if (arg === "--approve") args.approve = true;
+    else if (arg === "--get") args.get = true;
     else if (arg === "--url") args.url = argv[++i];
     else if (arg === "--authorization") args.authorizationPath = argv[++i];
     else if (arg === "--private-key-env") args.privateKeyEnv = argv[++i];
@@ -60,10 +79,23 @@ async function main() {
   if (args.help) usage(0);
 
   if (!args.approve) {
-    const authorization = args.authorizationPath ? readJson(args.authorizationPath) : null;
+    let authorization;
+    if (args.authorizationPath) {
+      authorization = readJson(args.authorizationPath);
+    } else if (args.get) {
+      authorization = null;
+    } else {
+      authorization = DEFAULT_BATCH_AUTHORIZATION;
+    }
+    if (args.get && authorization && String(authorization.method || "GET").toUpperCase() !== "GET") {
+      throw new Error("--get requires a GET authorization");
+    }
     const result = await runPreflight({
-      url: args.url ?? LIVE_EXTRACT_URL,
-      authorization,
+      url: args.url ?? (args.get ? LIVE_EXTRACT_URL : authorization?.url ?? LIVE_EXTRACT_BATCH_URL),
+      authorization: args.get && !args.authorizationPath
+        ? null
+        : authorization,
+      method: args.get ? "GET" : undefined,
     });
     printPreflight(result);
     process.exit(result.outcome === "preflight_ok" ? 0 : 2);
@@ -75,7 +107,10 @@ async function main() {
   if (!args.privateKeyEnv) {
     throw new Error("--approve requires --private-key-env <ENV_VAR> (value is never printed)");
   }
-  const authorization = readJson(args.authorizationPath);
+  const authorization = normalizeAuthorization(readJson(args.authorizationPath));
+  if (args.get && authorization.method !== "GET") {
+    throw new Error("--get requires a GET authorization");
+  }
   const result = await runAuthorizedPurchase({
     authorization,
     url: args.url ?? authorization.url,
@@ -83,11 +118,14 @@ async function main() {
     approve: true,
   });
   printPurchase(result);
-  process.exit(result.outcome === "valid_delivered" ? 0 : 2);
+  const ok = result.outcome === "valid_delivered" ||
+    result.outcome === "useful_delivered" ||
+    result.outcome === "partial_delivered";
+  process.exit(ok ? 0 : 2);
 }
 
 main().catch((error) => {
-  if (error instanceof AuthorizationRefusal) {
+  if (error instanceof AuthorizationRefusal || error instanceof BatchAdmissionError) {
     console.error(safeJson({
       outcome: "authorization_refused",
       message: error.message,

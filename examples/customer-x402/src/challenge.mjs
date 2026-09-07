@@ -3,7 +3,10 @@ import { AuthorizationRefusal, assertRequestMatchesAuthorization } from "./autho
 
 export function assertChallengeResource(challenge, authorization) {
   if (challenge?.x402Version !== 2) throw new AuthorizationRefusal("only x402 v2 is supported");
-  assertRequestMatchesAuthorization(challenge.resource?.url, authorization);
+  // Resource URL binding only; POST body bytes are checked on the actual request.
+  assertRequestMatchesAuthorization(challenge.resource?.url, authorization, {
+    method: authorization.method,
+  });
 }
 
 export function fail(message, code = "challenge_error") {

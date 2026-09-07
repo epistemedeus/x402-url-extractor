@@ -9,6 +9,25 @@ import { resolveBuyerAccount } from "./wallet.mjs";
 import { redactValue, safeJson } from "./redact.mjs";
 import { boundedFetch } from "./transport.mjs";
 
+function requestInitFor(auth) {
+  if (auth.method === "POST") {
+    return {
+      method: "POST",
+      redirect: "error",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+      },
+      body: auth.bodyRaw,
+    };
+  }
+  return {
+    method: "GET",
+    redirect: "error",
+    headers: { accept: "application/json" },
+  };
+}
+
 /** One EIP-3009 signature and at most one paid send, using the official client. */
 export async function runAuthorizedPurchase({ authorization, url, account = null, privateKey = null,
   loadAccount = null, fetchImpl = globalThis.fetch, approve = false, timeoutMs = 15_000 } = {}) {
@@ -18,13 +37,15 @@ export async function runAuthorizedPurchase({ authorization, url, account = null
   try {
     if (!approve) throw new AuthorizationRefusal("purchase requires explicit approve=true");
     const auth = normalizeAuthorization(authorization);
-    assertRequestMatchesAuthorization(url ?? auth.url, auth);
-    const unpaid = await boundedFetch(fetchImpl, auth.url, {
-      method: auth.method, headers: { accept: "application/json" },
-    }, 64_000, timeoutMs);
+    assertRequestMatchesAuthorization(url ?? auth.url, auth, {
+      method: auth.method,
+      body: auth.method === "POST" ? auth.bodyRaw : null,
+    });
+    const unpaidInit = requestInitFor(auth);
+    const unpaid = await boundedFetch(fetchImpl, auth.url, unpaidInit, 64_000, timeoutMs);
     if (unpaid.status !== 402) return {
       outcome: OUTCOMES.UNKNOWN, message: "expected unpaid HTTP 402 before purchase",
-      ...state, evidence: { httpStatus: unpaid.status },
+      ...state, evidence: { httpStatus: unpaid.status, bodyDigest: auth.bodyDigest },
     };
     const challenge = decodeChallengeFromResponse(unpaid, await unpaid.clone().text());
     assertChallengeResource(challenge, auth);
@@ -55,18 +76,22 @@ export async function runAuthorizedPurchase({ authorization, url, account = null
     // discovery, recovery hook, alternative scheme, or RPC helper.
     let challengeSupplied = false;
     const transport = async (input, init) => {
-      const request = new Request(input, init);
-      assertRequestMatchesAuthorization(request.url, auth, { method: request.method, body: request.body });
-      const paid = request.headers.has("payment-signature");
+      const request = input instanceof Request && init == null ? input : new Request(input, init);
+      const bodyText = auth.method === "POST"
+        ? await request.clone().text()
+        : null;
+      assertRequestMatchesAuthorization(request.url, auth, {
+        method: request.method,
+        body: auth.method === "POST" ? bodyText : request.body ? await request.clone().text() : null,
+      });
+      const paid = request.headers.has("payment-signature") || request.headers.has("PAYMENT-SIGNATURE");
       if (!challengeSupplied && !paid) { challengeSupplied = true; return unpaid; }
       if (!paid || !state.paymentSigned || state.paymentSent) throw new Error("unexpected_or_repeated_send");
       // Mark before transport: a rejection/timeout cannot prove nothing was sent.
       state.paymentSent = true;
       return boundedFetch(fetchImpl, request, {}, auth.requiredOutput.maxResponseBytes, timeoutMs);
     };
-    const response = await wrapFetchWithPayment(transport, client)(auth.url, {
-      method: auth.method, redirect: "error", headers: { accept: "application/json" },
-    });
+    const response = await wrapFetchWithPayment(transport, client)(auth.url, unpaidInit);
     let body = null;
     let bodyError = null;
     try { body = JSON.parse(await response.text()); }
@@ -87,7 +112,8 @@ export async function runAuthorizedPurchase({ authorization, url, account = null
       ...state, paymentSigned: signStarted && !state.paymentSigned ? null : state.paymentSigned,
       field: refused ? error.field : null,
       evidence: { settlementVerification: state.paymentSent ? "unknown" : "absent",
-        failureStage: state.paymentSent ? "paid_transport_or_body" : signStarted ? "signing" : "pre_payment" },
+        failureStage: state.paymentSent ? "paid_transport_or_body" : signStarted ? "signing" : "pre_payment",
+        bodyDigest: matched?.bodyDigest ?? null },
     };
   }
 }

@@ -1,6 +1,17 @@
 import { getAddress } from "viem";
 
-import { DEFAULT_REQUIRED_OUTPUT, LIVE_METHOD } from "./constants.mjs";
+import {
+  admitExtractBatchBody,
+  assertExactBodyBytes,
+  BatchAdmissionError,
+  bodyDigestFor,
+} from "./batch-admission.mjs";
+import {
+  DEFAULT_BATCH_REQUIRED_OUTPUT,
+  DEFAULT_REQUIRED_OUTPUT,
+  LIVE_BATCH_METHOD,
+  LIVE_METHOD,
+} from "./constants.mjs";
 
 export class AuthorizationRefusal extends Error {
   constructor(message, { field = null } = {}) {
@@ -45,14 +56,31 @@ function normalizeAtomic(value, label) {
   return BigInt(raw);
 }
 
-/**
- * Bind the exact customer-authorized purchase shape before any wallet access.
- * HTTP payment credentials must never be transplanted into mcp:// resources.
- */
-export function normalizeAuthorization(input) {
-  if (!input || typeof input !== "object" || Array.isArray(input)) {
-    fail("authorization must be an object");
+function normalizeRequiredOutput(requiredOutput, { batch }) {
+  if (!requiredOutput || typeof requiredOutput !== "object") fail("requiredOutput is required", "requiredOutput");
+  if (requiredOutput.mediaType !== "application/json") {
+    fail("requiredOutput.mediaType must be application/json", "requiredOutput");
   }
+  if (!Array.isArray(requiredOutput.requiredFields) || !requiredOutput.requiredFields.length) {
+    fail("requiredOutput.requiredFields must be a non-empty array", "requiredOutput");
+  }
+  if (requiredOutput.requiredFields.some(field => typeof field !== "string" ||
+      !/^[A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*$/.test(field))) {
+    fail("requiredFields must contain non-empty dotted field names", "requiredOutput");
+  }
+  const maxResponseBytes = requiredOutput.maxResponseBytes ?? (batch ? 128_000 : 500_000);
+  const ceiling = batch ? 128 * 1024 : 1_000_000;
+  if (!Number.isSafeInteger(maxResponseBytes) || maxResponseBytes < 1 || maxResponseBytes > ceiling) {
+    fail(`maxResponseBytes must be an integer from 1 to ${ceiling}`, "requiredOutput");
+  }
+  return Object.freeze({
+    mediaType: "application/json",
+    requiredFields: Object.freeze([...requiredOutput.requiredFields].map(String)),
+    maxResponseBytes,
+  });
+}
+
+function normalizeGetAuthorization(input) {
   const method = String(input.method || LIVE_METHOD).toUpperCase();
   if (method !== "GET") fail("authorization method must be GET", "method");
   if (input.body !== undefined && input.body !== null) {
@@ -61,6 +89,88 @@ export function normalizeAuthorization(input) {
   const url = normalizeHttpsUrl(input.url, "url");
   if (url.pathname !== "/extract") fail("authorization path must be /extract", "url");
   if (!url.searchParams.get("url")) fail("authorization query must include url=", "url");
+  return {
+    method,
+    url: url.toString(),
+    origin: url.origin,
+    path: url.pathname,
+    query: url.search,
+    bodyRaw: null,
+    bodyDigest: null,
+    bodyBytes: 0,
+    batch: null,
+    requiredOutput: normalizeRequiredOutput(input.requiredOutput || DEFAULT_REQUIRED_OUTPUT, { batch: false }),
+  };
+}
+
+function normalizePostBatchAuthorization(input) {
+  const method = String(input.method || LIVE_BATCH_METHOD).toUpperCase();
+  if (method !== "POST") fail("batch authorization method must be POST", "method");
+  const url = normalizeHttpsUrl(input.url, "url");
+  if (url.pathname !== "/extract/batch") fail("authorization path must be /extract/batch", "url");
+  if (url.search) fail("batch authorization URL must not include a query string", "url");
+  let admitted;
+  try {
+    if (typeof input.bodyRaw === "string") {
+      if (Buffer.byteLength(input.bodyRaw) > 16 * 1024) fail("bodyRaw exceeds request byte ceiling", "body");
+      let parsed;
+      try {
+        parsed = JSON.parse(input.bodyRaw);
+      } catch {
+        fail("bodyRaw must be valid JSON", "body");
+      }
+      admitted = admitExtractBatchBody(parsed);
+      if (admitted.bodyRaw !== input.bodyRaw) {
+        fail("bodyRaw must already be the exact admitted serialized bytes", "body");
+      }
+      if (input.body !== undefined && admitExtractBatchBody(input.body).bodyRaw !== admitted.bodyRaw) {
+        fail("body does not match authorized bodyRaw", "body");
+      }
+    } else {
+      admitted = admitExtractBatchBody(input.body);
+    }
+    if (input.bodyDigest !== undefined && input.bodyDigest !== admitted.bodyDigest) {
+      fail("body digest drifted after approval", "body");
+    }
+  } catch (error) {
+    if (error instanceof BatchAdmissionError || error instanceof AuthorizationRefusal) {
+      fail(error.message, error.field || "body");
+    }
+    throw error;
+  }
+  return {
+    method,
+    url: url.toString(),
+    origin: url.origin,
+    path: url.pathname,
+    query: "",
+    bodyRaw: admitted.bodyRaw,
+    bodyDigest: admitted.bodyDigest,
+    bodyBytes: admitted.bodyBytes,
+    batch: Object.freeze({
+      urls: admitted.urls,
+      fields: admitted.fields,
+    }),
+    requiredOutput: normalizeRequiredOutput(
+      input.requiredOutput || DEFAULT_BATCH_REQUIRED_OUTPUT,
+      { batch: true },
+    ),
+  };
+}
+
+/**
+ * Bind the exact customer-authorized purchase shape before any wallet access.
+ * HTTP payment credentials must never be transplanted into mcp:// resources.
+ * POST /extract/batch also binds exact request body bytes and selected fields.
+ */
+export function normalizeAuthorization(input) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    fail("authorization must be an object");
+  }
+  const method = String(input.method || LIVE_METHOD).toUpperCase();
+  if (method !== "GET" && method !== "POST") {
+    fail("authorization method must be GET or POST", "method");
+  }
   const network = String(input.network || "").trim();
   if (!/^eip155:\d+$/.test(network)) fail("authorization network must look like eip155:<id>", "network");
   const asset = normalizeAddress(input.asset, "asset");
@@ -76,52 +186,48 @@ export function normalizeAuthorization(input) {
   if (!Number.isSafeInteger(maxTimeoutSeconds) || maxTimeoutSeconds < 1 || maxTimeoutSeconds > 300) {
     fail("maxTimeoutSeconds must be an integer from 1 to 300", "maxTimeoutSeconds");
   }
-  const requiredOutput = input.requiredOutput || DEFAULT_REQUIRED_OUTPUT;
-  if (!requiredOutput || typeof requiredOutput !== "object") fail("requiredOutput is required", "requiredOutput");
-  if (requiredOutput.mediaType !== "application/json") {
-    fail("requiredOutput.mediaType must be application/json", "requiredOutput");
-  }
-  if (!Array.isArray(requiredOutput.requiredFields) || !requiredOutput.requiredFields.length) {
-    fail("requiredOutput.requiredFields must be a non-empty array", "requiredOutput");
-  }
-  if (requiredOutput.requiredFields.some(field => typeof field !== "string" ||
-      !/^[A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*$/.test(field))) {
-    fail("requiredFields must contain non-empty dotted field names", "requiredOutput");
-  }
-  const maxResponseBytes = requiredOutput.maxResponseBytes ?? 500_000;
-  if (!Number.isSafeInteger(maxResponseBytes) || maxResponseBytes < 1 || maxResponseBytes > 1_000_000) {
-    fail("maxResponseBytes must be an integer from 1 to 1000000", "requiredOutput");
-  }
+
+  const route = method === "POST"
+    ? normalizePostBatchAuthorization(input)
+    : normalizeGetAuthorization(input);
+
   return Object.freeze({
-    method,
-    url: url.toString(),
-    origin: url.origin,
-    path: url.pathname,
-    query: url.search,
+    ...route,
     network,
     asset,
     recipient,
     amountCapAtomic: amountCapAtomic.toString(),
-    assetName, assetVersion, maxTimeoutSeconds,
-    requiredOutput: Object.freeze({
-      mediaType: "application/json",
-      requiredFields: Object.freeze([...requiredOutput.requiredFields].map(String)),
-      maxResponseBytes,
-    }),
+    assetName,
+    assetVersion,
+    maxTimeoutSeconds,
   });
 }
 
-export function assertRequestMatchesAuthorization(requestUrl, authorization, { method = "GET", body } = {}) {
+export function assertRequestMatchesAuthorization(requestUrl, authorization, { method, body } = {}) {
   const auth = normalizeAuthorization(authorization);
-  if (String(method || "GET").toUpperCase() !== auth.method) {
-    fail(`request method ${method} does not match authorized ${auth.method}`, "method");
-  }
-  if (body !== undefined && body !== null && body !== "") {
-    fail("request body is not authorized for GET /extract", "body");
+  const actualMethod = String(method ?? auth.method).toUpperCase();
+  if (actualMethod !== auth.method) {
+    fail(`request method ${actualMethod} does not match authorized ${auth.method}`, "method");
   }
   const actual = normalizeHttpsUrl(requestUrl, "request url");
   if (actual.toString() !== auth.url) {
     fail("request URL does not match the exact authorized HTTPS origin/path/query", "url");
+  }
+  if (auth.method === "GET") {
+    if (body !== undefined && body !== null && body !== "") {
+      fail("request body is not authorized for GET /extract", "body");
+    }
+    return auth;
+  }
+  if (body !== undefined) {
+    try {
+      assertExactBodyBytes(auth.bodyRaw, body);
+    } catch (error) {
+      fail(error.message, "body");
+    }
+    if (bodyDigestFor(auth.bodyRaw) !== auth.bodyDigest) {
+      fail("authorized body digest drifted after approval", "body");
+    }
   }
   return auth;
 }
