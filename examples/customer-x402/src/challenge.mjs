@@ -1,4 +1,10 @@
 import { decodePaymentRequiredHeader, decodePaymentResponseHeader } from "@x402/core/http";
+import { AuthorizationRefusal, assertRequestMatchesAuthorization } from "./authorization.mjs";
+
+export function assertChallengeResource(challenge, authorization) {
+  if (challenge?.x402Version !== 2) throw new AuthorizationRefusal("only x402 v2 is supported");
+  assertRequestMatchesAuthorization(challenge.resource?.url, authorization);
+}
 
 export function fail(message, code = "challenge_error") {
   const error = new Error(message);

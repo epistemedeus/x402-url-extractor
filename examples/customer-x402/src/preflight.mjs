@@ -1,7 +1,8 @@
 import { OUTCOMES } from "./constants.mjs";
-import { decodeChallengeFromResponse, selectExactAccept } from "./challenge.mjs";
+import { assertChallengeResource, decodeChallengeFromResponse, selectExactAccept } from "./challenge.mjs";
 import { assertAcceptMatchesAuthorization, assertRequestMatchesAuthorization } from "./authorization.mjs";
 import { safeJson } from "./redact.mjs";
+import { boundedFetch } from "./transport.mjs";
 
 /**
  * Credential-free unpaid preflight. Never looks up wallet keys, signs, or
@@ -17,13 +18,17 @@ export async function runPreflight({
   if (String(url).startsWith("mcp://")) {
     throw new Error("preflight refuses mcp:// resources; use HTTPS extract only");
   }
+  const target = new URL(url);
+  if (target.protocol !== "https:" || target.username || target.password || target.hash || method !== "GET") {
+    throw new Error("preflight requires credential-free HTTPS GET without a fragment");
+  }
 
   let bound = null;
   if (authorization) {
     bound = assertRequestMatchesAuthorization(url, authorization, { method, body: null });
   }
 
-  const response = await fetchImpl(url, {
+  const response = await boundedFetch(fetchImpl, url, {
     method,
     redirect: "error",
     headers: { accept: "application/json" },
@@ -46,6 +51,7 @@ export async function runPreflight({
   const accept = selectExactAccept(challenge, { network: bound?.network });
   let matched = null;
   if (bound) {
+    assertChallengeResource(challenge, bound);
     matched = assertAcceptMatchesAuthorization(accept, bound);
   }
 

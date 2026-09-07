@@ -2,11 +2,12 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { DEFAULT_AUTHORIZATION, LIVE_EXTRACT_URL } from "../src/constants.mjs";
+import { LIVE_EXTRACT_URL } from "../src/constants.mjs";
 import { AuthorizationRefusal } from "../src/authorization.mjs";
 import { printPreflight, runPreflight } from "../src/preflight.mjs";
 import { printPurchase, runAuthorizedPurchase } from "../src/purchase.mjs";
 import { safeJson } from "../src/redact.mjs";
+import { resolveBuyerAccount } from "../src/wallet.mjs";
 
 function usage(exitCode = 0) {
   const text = `SameDayDesk customer x402 example
@@ -38,7 +39,7 @@ function parseArgs(argv) {
   const args = {
     approve: false,
     help: false,
-    url: LIVE_EXTRACT_URL,
+    url: null,
     authorizationPath: null,
     privateKeyEnv: null,
   };
@@ -61,7 +62,7 @@ async function main() {
   if (!args.approve) {
     const authorization = args.authorizationPath ? readJson(args.authorizationPath) : null;
     const result = await runPreflight({
-      url: args.url,
+      url: args.url ?? LIVE_EXTRACT_URL,
       authorization,
     });
     printPreflight(result);
@@ -74,15 +75,11 @@ async function main() {
   if (!args.privateKeyEnv) {
     throw new Error("--approve requires --private-key-env <ENV_VAR> (value is never printed)");
   }
-  const privateKey = process.env[args.privateKeyEnv];
-  if (!privateKey) {
-    throw new Error(`environment variable ${args.privateKeyEnv} is not set`);
-  }
-
   const authorization = readJson(args.authorizationPath);
   const result = await runAuthorizedPurchase({
     authorization,
-    privateKey,
+    url: args.url ?? authorization.url,
+    loadAccount: () => resolveBuyerAccount({ privateKey: process.env[args.privateKeyEnv] }),
     approve: true,
   });
   printPurchase(result);
@@ -103,7 +100,7 @@ main().catch((error) => {
   }
   console.error(safeJson({
     outcome: "unknown",
-    message: error.message,
+    message: "configuration or unpaid preflight failed",
     walletAccessed: false,
     paymentSigned: false,
     paymentSent: false,

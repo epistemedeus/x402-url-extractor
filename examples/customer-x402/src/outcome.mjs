@@ -1,6 +1,7 @@
 import { OUTCOMES } from "./constants.mjs";
 import { decodeSettlementHeader } from "./challenge.mjs";
 import { validateBuyerOutput } from "./output.mjs";
+import { redactValue } from "./redact.mjs";
 
 /**
  * Classify a paid HTTP response. HTTP 200 or a settlement header alone never
@@ -12,9 +13,13 @@ export function classifyPaidResponse({
   body,
   requiredOutput,
   authorization,
+  bodyError = null,
 } = {}) {
   const settlement = decodeSettlementHeader(response);
-  const output = validateBuyerOutput(body, requiredOutput);
+  const mediaType = response.headers.get("content-type")?.split(";")[0].trim().toLowerCase();
+  const output = bodyError || mediaType !== requiredOutput.mediaType
+    ? { valid: false, reason: bodyError || "response Content-Type is not application/json", report: null }
+    : validateBuyerOutput(body, requiredOutput);
   const evidence = {
     httpStatus: response.status,
     settlementPresent: settlement.present,
@@ -27,7 +32,7 @@ export function classifyPaidResponse({
     outputValid: output.valid,
     outputReason: output.reason ?? null,
     outputReport: output.report,
-    retainedBody: body,
+    retainedBody: redactValue(body),
     authorizedAmountCapAtomic: authorization.amountCapAtomic,
     selectedNetwork: authorization.network,
     selectedAsset: authorization.asset,

@@ -5,7 +5,7 @@
   "description": "Credential-free preflight and explicitly authorized @x402/fetch purchase example for SameDayDesk GET /extract",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "bin": {
     "samedaydesk-customer-x402": "./bin/cli.mjs"

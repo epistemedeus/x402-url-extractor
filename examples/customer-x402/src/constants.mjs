@@ -32,6 +32,9 @@ export const DEFAULT_AUTHORIZATION = Object.freeze({
   asset: LIVE_ASSET,
   recipient: LIVE_RECIPIENT,
   amountCapAtomic: LIVE_AMOUNT_ATOMIC,
+  assetName: "USD Coin",
+  assetVersion: "2",
+  maxTimeoutSeconds: 300,
   requiredOutput: DEFAULT_REQUIRED_OUTPUT,
 });
 

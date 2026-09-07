@@ -28,7 +28,6 @@ function normalizeHttpsUrl(raw, label) {
   }
   if (url.username || url.password) fail(`${label} must not contain credentials`, label);
   if (url.hash) fail(`${label} must not contain a fragment`, label);
-  url.searchParams.sort();
   return url;
 }
 
@@ -67,6 +66,16 @@ export function normalizeAuthorization(input) {
   const asset = normalizeAddress(input.asset, "asset");
   const recipient = normalizeAddress(input.recipient, "recipient");
   const amountCapAtomic = normalizeAtomic(input.amountCapAtomic, "amountCapAtomic");
+  if (amountCapAtomic <= 0n) fail("amount cap must be positive", "amountCapAtomic");
+  const assetName = input.assetName;
+  const assetVersion = input.assetVersion;
+  const maxTimeoutSeconds = input.maxTimeoutSeconds;
+  if (typeof assetName !== "string" || !assetName || typeof assetVersion !== "string" || !assetVersion) {
+    fail("explicit EIP-3009 assetName and assetVersion are required", "assetName");
+  }
+  if (!Number.isSafeInteger(maxTimeoutSeconds) || maxTimeoutSeconds < 1 || maxTimeoutSeconds > 300) {
+    fail("maxTimeoutSeconds must be an integer from 1 to 300", "maxTimeoutSeconds");
+  }
   const requiredOutput = input.requiredOutput || DEFAULT_REQUIRED_OUTPUT;
   if (!requiredOutput || typeof requiredOutput !== "object") fail("requiredOutput is required", "requiredOutput");
   if (requiredOutput.mediaType !== "application/json") {
@@ -74,6 +83,14 @@ export function normalizeAuthorization(input) {
   }
   if (!Array.isArray(requiredOutput.requiredFields) || !requiredOutput.requiredFields.length) {
     fail("requiredOutput.requiredFields must be a non-empty array", "requiredOutput");
+  }
+  if (requiredOutput.requiredFields.some(field => typeof field !== "string" ||
+      !/^[A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*$/.test(field))) {
+    fail("requiredFields must contain non-empty dotted field names", "requiredOutput");
+  }
+  const maxResponseBytes = requiredOutput.maxResponseBytes ?? 500_000;
+  if (!Number.isSafeInteger(maxResponseBytes) || maxResponseBytes < 1 || maxResponseBytes > 1_000_000) {
+    fail("maxResponseBytes must be an integer from 1 to 1000000", "requiredOutput");
   }
   return Object.freeze({
     method,
@@ -85,10 +102,11 @@ export function normalizeAuthorization(input) {
     asset,
     recipient,
     amountCapAtomic: amountCapAtomic.toString(),
+    assetName, assetVersion, maxTimeoutSeconds,
     requiredOutput: Object.freeze({
       mediaType: "application/json",
       requiredFields: Object.freeze([...requiredOutput.requiredFields].map(String)),
-      maxResponseBytes: Number(requiredOutput.maxResponseBytes ?? 500_000),
+      maxResponseBytes,
     }),
   });
 }
@@ -116,6 +134,16 @@ export function assertAcceptMatchesAuthorization(accept, authorization) {
   const auth = normalizeAuthorization(authorization);
   if (!accept || typeof accept !== "object") fail("accept option is required");
   if (accept.scheme !== "exact") fail("only the exact scheme is authorized", "scheme");
+  if ((accept.extra?.assetTransferMethod ?? "eip3009") !== "eip3009") {
+    fail("only EIP-3009 is authorized; Permit2 and approval extensions are not supported", "scheme");
+  }
+  if (accept.extra?.name !== auth.assetName || accept.extra?.version !== auth.assetVersion) {
+    fail("EIP-712 asset domain does not match authorization", "assetName");
+  }
+  if (!Number.isSafeInteger(accept.maxTimeoutSeconds) || accept.maxTimeoutSeconds < 1 ||
+      accept.maxTimeoutSeconds > auth.maxTimeoutSeconds) {
+    fail("payment validity exceeds authorized maxTimeoutSeconds", "maxTimeoutSeconds");
+  }
   if (accept.network !== auth.network) {
     fail(`network ${accept.network} does not match authorized ${auth.network}`, "network");
   }
@@ -132,6 +160,7 @@ export function assertAcceptMatchesAuthorization(accept, authorization) {
     fail(`recipient ${payTo} does not match authorized ${auth.recipient}`, "recipient");
   }
   const amount = normalizeAtomic(accept.amount ?? accept.maxAmountRequired, "accept.amount");
+  if (typeof accept.amount !== "string" || amount <= 0n) fail("v2 amount must be a positive integer string", "amount");
   const cap = BigInt(auth.amountCapAtomic);
   if (amount > cap) {
     fail(`amount ${amount} exceeds authorized amountCapAtomic ${cap}`, "amount");

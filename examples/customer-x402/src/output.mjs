@@ -14,6 +14,10 @@ export function validateBuyerOutput(body, requiredOutput) {
         report,
       };
     }
+    for (const field of requiredOutput.requiredFields) {
+      const value = field.split(".").reduce((current, key) => current?.[key], body);
+      if (value === null || value === undefined) throw new Error(`required field is null or missing: ${field}`);
+    }
     return { valid: true, report };
   } catch (error) {
     return {

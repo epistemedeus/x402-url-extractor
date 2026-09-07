@@ -212,7 +212,7 @@ test("unknown HTTP status does not retry", async () => {
     approve: true,
   });
   assert.equal(result.outcome, OUTCOMES.UNKNOWN);
-  assert.equal(calls, 3); // unpaid authorize + wrapFetch unpaid + one paid attempt
+  assert.equal(calls, 2); // inspected challenge is reused by official wrapper + one paid attempt
 });
 
 test("logs never include fixture private keys", async () => {
@@ -263,7 +263,7 @@ test("accept matcher binds exact terms", () => {
   );
 });
 
-test("bounded credential-free production preflight", async () => {
+test("bounded credential-free production preflight", { skip: process.env.CUSTOMER_X402_LIVE_PREFLIGHT !== "1" }, async () => {
   const result = await runPreflight({
     url: LIVE_EXTRACT_URL,
     authorization: DEFAULT_AUTHORIZATION,
