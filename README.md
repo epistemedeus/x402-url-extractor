@@ -980,7 +980,10 @@ scoped buyer authority may be used when it already covers the exact live
 terms. Listing and install grant none. Unknown payment outcomes reconcile
 rather than retry. Installation is not proof of model invocation, payment,
 or demand. This is not a submission to Anthropic's official plugin
-directory.
+directory. For a credential-free HTTP preflight and explicitly authorized
+`@x402/fetch` purchase path against `GET /extract`, see
+[`examples/customer-x402`](examples/customer-x402). That example does not
+make Claude payment-capable.
 
 Maintainer checks from the repository root:
 
@@ -1013,7 +1016,9 @@ using that profile. Temporary files are retained; no cleanup helper is provided.
 
 Companion Goose `streamable_http` files live in [`goose/`](goose/). They
 do not install Goose, mutate a default profile, or claim merchant
-attribution.
+attribution. Paying `GET /extract` with a maintained HTTP client stays in
+[`examples/customer-x402`](examples/customer-x402); Goose install alone is
+not payment capability.
 
 Copyable isolated profile, with Goose already installed:
 
@@ -1065,6 +1070,8 @@ curl -i 'http://localhost:3000/defi/morpho-position?address=0x...' # HTTP 402
 - `.claude-plugin/marketplace.json` — Claude Code marketplace catalog.
 - `plugins/samedaydesk-extract/` — self-contained Claude Code plugin (not Agent Plugins 1.0).
 - `goose/` — native Goose streamable_http config, recipe, and workflow copy.
+- `examples/customer-x402/` — credential-free preflight plus explicitly
+  authorized `@x402/fetch` purchase example for `GET /extract`.
 - `README.md` — this guide.
 - `extract.mjs` — pre-existing zero-dependency "URL → clean structured data"
   service. This is a natural **paid resource** to put behind `/premium`: in the

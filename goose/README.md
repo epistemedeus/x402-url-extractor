@@ -49,3 +49,7 @@ not the default.
 
 Workflow copy: `extract.workflow.md`. Recipe: `extract.recipe.yaml` (report
 extract metadata only; do not call paid tools from this package).
+
+HTTP customer preflight and explicitly authorized `@x402/fetch` purchase for
+`GET /extract`: [`examples/customer-x402`](../examples/customer-x402). This
+Goose package does not become payment-capable from that example.

@@ -1,0 +1,36 @@
+{
+  "schema": "samedaydesk.customer-x402.example-result.v1",
+  "merchant": {
+    "package": "x402-merchant",
+    "version": "1.23.43",
+    "route": "GET /extract"
+  },
+  "client": {
+    "@x402/fetch": "2.16.0",
+    "@x402/evm": "2.16.0",
+    "@x402/core": "2.16.0",
+    "viem": "2.55.11",
+    "agent-payment-policy": "0.12.0"
+  },
+  "mode": "fixture_authorized_purchase",
+  "outcome": "valid_delivered",
+  "request": {
+    "method": "GET",
+    "url": "https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com",
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "recipient": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "amountCapAtomic": "5000"
+  },
+  "output": {
+    "valid": true,
+    "requiredFieldsPresent": true
+  },
+  "settlement": {
+    "headerPresent": true,
+    "headerSuccess": true,
+    "verification": "unverified",
+    "note": "PAYMENT-RESPONSE was observed on the fixture transport. This example does not prove on-chain settlement."
+  },
+  "boundary": "Transparent bounded @x402/fetch integration example. Not crash-safe cross-process accounting, not durable wallet enforcement, and not native Claude/Goose payment capability."
+}

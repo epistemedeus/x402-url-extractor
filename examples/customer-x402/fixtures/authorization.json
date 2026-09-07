@@ -1,0 +1,20 @@
+{
+  "method": "GET",
+  "url": "https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com",
+  "network": "eip155:8453",
+  "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "recipient": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+  "amountCapAtomic": "5000",
+  "requiredOutput": {
+    "mediaType": "application/json",
+    "requiredFields": [
+      "ok",
+      "url",
+      "title",
+      "text",
+      "fetchedAt",
+      "aiReadiness.hasTitle"
+    ],
+    "maxResponseBytes": 500000
+  }
+}

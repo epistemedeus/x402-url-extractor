@@ -33,6 +33,9 @@ the merchant accepted, bucketed, or attributed an independent customer.
   arbitrary installer.
 - Not a hardcoded price. Read the live challenge.
 - Not proof of model invocation, payment, or demand after install.
+- For a separate HTTP `@x402/fetch` customer example against `GET /extract`,
+  see [`examples/customer-x402`](../../examples/customer-x402). This plugin
+  does not become payment-capable from that example.
 
 ## Layout
 
