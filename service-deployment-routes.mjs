@@ -1,5 +1,6 @@
 export const SERVICE_DEPLOYMENT_ROUTES = Object.freeze([
   ["GET", "/extract"],
+  ["POST", "/extract/batch"],
   ["GET", "/read"],
   ["GET", "/scan"],
   ["GET", "/schemaforge"],

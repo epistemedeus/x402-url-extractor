@@ -78,3 +78,29 @@ test("adds structured content only for a tool with a truthful output schema", ()
   });
   assert.equal("structuredContent" in asToolResult("not-an-object", { structured: true }), false);
 });
+
+test("revives JSON-stringified array args only for array-shaped schemas", async () => {
+  const { reviveJsonStructuredArgs } = await import("./mcp-server.mjs");
+  const { z } = await import("zod");
+  const schema = {
+    urls: z.array(z.string()),
+    fields: z.array(z.string()).optional(),
+    url: z.string(),
+  };
+  assert.deepEqual(
+    reviveJsonStructuredArgs({
+      urls: '["https://example.com/"]',
+      fields: '["title"]',
+      url: "https://example.com/",
+    }, schema),
+    {
+      urls: ["https://example.com/"],
+      fields: ["title"],
+      url: "https://example.com/",
+    },
+  );
+  assert.deepEqual(
+    reviveJsonStructuredArgs({ url: '["not-an-array-field"]' }, schema),
+    { url: '["not-an-array-field"]' },
+  );
+});

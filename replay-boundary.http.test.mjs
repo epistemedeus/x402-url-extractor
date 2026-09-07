@@ -55,7 +55,7 @@ async function setup(t, { unknown = false, verifyValid = true } = {}) {
     child = spawn(process.execPath, ["server.js"], { cwd, env: { ...process.env,
       PORT: String(port), PUBLIC_URL: `https://${host}`, COMMERCE_DATA_DIR: dataDir,
       FACILITATOR: "xpay", FACILITATOR_URL: `http://127.0.0.1:${facilitator.address().port}`,
-      EXTRACT_BATCH_STAGING: "0", IDEMPOTENCY_INFLIGHT_WAIT_MS: "50",
+      EXTRACT_BATCH_ENABLED: "0", IDEMPOTENCY_INFLIGHT_WAIT_MS: "50",
       MPP_SECRET_KEY: "test-secret-key-test-secret-key-32", COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
     }, stdio: ["ignore", "pipe", "pipe"] });
     let output = "";

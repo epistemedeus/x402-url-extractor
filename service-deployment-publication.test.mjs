@@ -28,11 +28,11 @@ function publication(overrides = {}) {
   });
 }
 
-test("binds every production route to both exact Base settlement protocols", () => {
+test("binds every declared standard route to both exact Base settlement protocols", () => {
   const value = publication();
   assert.equal(value.active, true);
   assert.equal(value.routeCount, SERVICE_DEPLOYMENT_ROUTES.length);
-  assert.equal(value.routeCount, 24);
+  assert.equal(value.routeCount, 25);
   assert.equal(value.settlementCount, 2);
   assert.equal(value.operationalWallet, SOLANA_AGENT_REGISTRATION.merchantWallet);
   assert.match(value.publicKeyFingerprint, /^sha256:[0-9a-f]{64}$/);
@@ -49,6 +49,28 @@ test("binds every production route to both exact Base settlement protocols", () 
       assert.equal(report.boundary.paymentAuthorized, false);
       assert.doesNotMatch(JSON.stringify(report), /private|value/);
     }
+  }
+});
+
+test("identity-binding declaration is stable across rollout flags and does not authorize payment", () => {
+  const saved = process.env.EXTRACT_BATCH_ENABLED;
+  try {
+    for (const flag of ["0", "1"]) {
+      process.env.EXTRACT_BATCH_ENABLED = flag;
+      const value = publication();
+      assert.equal(value.routeCount, 25);
+      const report = verifyServiceDeploymentStatement(value.envelope, {
+        publicKey: value.publicKeyPem,
+        request: { method: "POST", url: `${ORIGIN}/extract/batch` },
+        runtimeOffer: { protocol: "x402", network: NETWORK, asset: ASSET, recipient: RECIPIENT, decimals: 6 },
+        now: NOW,
+      });
+      assert.equal(report.decision, "verified_exact_binding");
+      assert.equal(report.boundary.paymentAuthorized, false);
+    }
+  } finally {
+    if (saved === undefined) delete process.env.EXTRACT_BATCH_ENABLED;
+    else process.env.EXTRACT_BATCH_ENABLED = saved;
   }
 });
 

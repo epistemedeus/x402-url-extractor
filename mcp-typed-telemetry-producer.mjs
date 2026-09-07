@@ -129,6 +129,12 @@ const CLOSED_MCP_PRODUCTS = Object.freeze({
     resource: "mcp://tool/extract",
     httpRoute: "/extract",
   }),
+  extract_batch: Object.freeze({
+    tool: "extract_batch",
+    productSku: "samedaydesk-extract-batch",
+    resource: "mcp://tool/extract_batch",
+    httpRoute: "/extract/batch",
+  }),
   read: Object.freeze({
     tool: "read",
     productSku: "samedaydesk-read",

@@ -1,5 +1,6 @@
-import { Credential } from "mppx";
+import { createHash } from "node:crypto";
 import { replaySettlementWasAttempted } from "./idempotency-replay.mjs";
+import { Credential } from "mppx";
 import { evm, Mppx } from "mppx/server";
 
 const X402_PAYMENT_HEADERS = ["payment-signature", "x-payment", "x-payment-signature"];
@@ -60,6 +61,7 @@ function normalizeRoutes(routes) {
       key,
       method,
       path,
+      bindRequestBody: Boolean(route.bindRequestBody),
     }));
   }
   return normalized;
@@ -79,9 +81,19 @@ function canonicalPublicRequest(input, publicUrl) {
   return new Request(url, { method, headers });
 }
 
-function routeScope(request) {
+function requestBodySha256(input) {
+  const raw = input?.rawBody;
+  const buffer = Buffer.isBuffer(raw)
+    ? raw
+    : Buffer.from(raw == null ? "" : String(raw));
+  return createHash("sha256").update(buffer).digest("hex");
+}
+
+function routeScope(request, route, input) {
   const url = new URL(request.url);
-  return `${request.method.toUpperCase()} ${url.pathname}${url.search}`;
+  const base = `${request.method.toUpperCase()} ${url.pathname}${url.search}`;
+  if (!route?.bindRequestBody) return base;
+  return `${base};body-sha256=${requestBodySha256(input)}`;
 }
 
 function routeKey(request) {
@@ -97,10 +109,11 @@ function copyHeaders(response, res, allow = null) {
 }
 
 /**
- * Adds native MPP Payment-auth to existing x402-protected GET routes without
+ * Adds native MPP Payment-auth to existing x402-protected routes without
  * replacing the existing x402 middleware. Initial requests receive an MPP
  * challenge here, then continue into the extension-rich x402 paywall. Native
  * MPP credentials settle here and bypass only the duplicate x402 gate.
+ * POST routes may opt into exact-raw-body scope binding via bindRequestBody.
  */
 export function createMppDualStack({
   facilitatorClient,
@@ -155,7 +168,7 @@ export function createMppDualStack({
     const result = await mppx.evm.charge({
       amount: route.amount,
       description: route.description,
-      scope: routeScope(request),
+      scope: routeScope(request, route, input),
     })(request);
 
     if (result.status === 402) {
