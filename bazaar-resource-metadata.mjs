@@ -8,6 +8,10 @@ export const BAZAAR_RESOURCE_METADATA = Object.freeze({
     serviceName: "SameDayDesk",
     tags: Object.freeze(["web", "web-extraction", "clean-text", "llm-ready", "structured-json"]),
   }),
+  "/extract/batch": Object.freeze({
+    serviceName: "SameDayDesk",
+    tags: Object.freeze(["web", "batch-extract", "structured-json", "multi-url", "bounded-attempt"]),
+  }),
   "/read": Object.freeze({
     serviceName: "SameDayDesk",
     tags: Object.freeze(["web", "webpage-to-markdown", "llm-context", "clean-text", "url-reader"]),

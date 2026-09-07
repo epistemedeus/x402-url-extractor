@@ -5,9 +5,9 @@ import { decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
 
 test("publishes unique action-oriented titles for every live MCP tool", () => {
   const metadata = listMcpToolMetadata();
-  assert.equal(metadata.length, 22);
-  assert.equal(new Set(metadata.map((entry) => entry.name)).size, 22);
-  assert.equal(new Set(metadata.map((entry) => entry.title)).size, 22);
+  assert.equal(metadata.length, 23);
+  assert.equal(new Set(metadata.map((entry) => entry.name)).size, 23);
+  assert.equal(new Set(metadata.map((entry) => entry.title)).size, 23);
   for (const entry of metadata) {
     assert.match(entry.title, /^(?:Extract|Read|Scan|Generate|Enrich|Audit|Inspect|Plan|Underwrite|Replay|Preflight|Verify|Evaluate|Search)\b/);
   }
@@ -16,6 +16,7 @@ test("publishes unique action-oriented titles for every live MCP tool", () => {
 test("makes each overlapping web and company tool chooseable without renaming it", () => {
   const decorate = (name) => decorateMcpTool({ name, description: `${name} base contract` });
   const extract = decorate("extract");
+  const extractBatch = decorate("extract_batch");
   const read = decorate("read");
   const schemaforge = decorate("schemaforge");
   const enrich = decorate("enrich");
@@ -34,6 +35,8 @@ test("makes each overlapping web and company tool chooseable without renaming it
 
   assert.equal(extract.name, "extract");
   assert.match(extract.description, /Use `read` instead/);
+  assert.match(extract.description, /Use `extract_batch`/);
+  assert.match(extractBatch.description, /Use `extract` for a single URL/);
   assert.match(read.description, /Use `extract` instead/);
   assert.match(schemaforge.description, /Use `deep_audit` instead/);
   assert.match(schemaforge.description, /does not guarantee AI citations/);

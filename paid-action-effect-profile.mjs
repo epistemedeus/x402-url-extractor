@@ -13,7 +13,11 @@ export const READ_ONLY_PAID_POST_OPERATIONS = Object.freeze([
 const OPERATION_KEYS = new Set(READ_ONLY_PAID_POST_OPERATIONS.map(({ method, path }) => `${method} ${path}`));
 
 export function isReadOnlyPaidPost(method, path) {
-  return OPERATION_KEYS.has(`${String(method || "").toUpperCase()} ${String(path || "")}`);
+  const key = `${String(method || "").toUpperCase()} ${String(path || "")}`;
+  if (OPERATION_KEYS.has(key)) return true;
+  const enabled = String(process.env.EXTRACT_BATCH_ENABLED || "").trim().toLowerCase();
+  const batchOn = enabled === "1" || enabled === "true" || enabled === "yes";
+  return batchOn && key === "POST /extract/batch";
 }
 
 export function paidActionEffectExtension() {
@@ -37,8 +41,8 @@ export function paidActionEffectExtension() {
   };
 }
 
-export function attachPaidActionEffectContracts(document) {
-  for (const { method, path } of READ_ONLY_PAID_POST_OPERATIONS) {
+export function attachPaidActionEffectContracts(document, operations = READ_ONLY_PAID_POST_OPERATIONS) {
+  for (const { method, path } of operations) {
     const operation = document?.paths?.[path]?.[method.toLowerCase()];
     if (!operation || typeof operation !== "object") {
       throw new Error(`Missing paid action operation for ${method} ${path}`);
@@ -48,7 +52,11 @@ export function attachPaidActionEffectContracts(document) {
   return document;
 }
 
-export function buildPaidActionEffectProfile({ origin, serviceVersion }) {
+export function buildPaidActionEffectProfile({
+  origin,
+  serviceVersion,
+  operations = READ_ONLY_PAID_POST_OPERATIONS,
+} = {}) {
   const normalizedOrigin = new URL(origin).origin;
   return {
     schemaVersion: "samedaydesk.paid-action-effects.v0",
@@ -63,7 +71,7 @@ export function buildPaidActionEffectProfile({ origin, serviceVersion }) {
       state_changing: "Reserved for a future profile that must bind a client-generated application idempotency key before the unpaid request.",
       boundary: "Payment replay, application-effect idempotency, and business-effect receipts are separate contracts.",
     },
-    operations: READ_ONLY_PAID_POST_OPERATIONS.map(({ method, path }) => ({
+    operations: operations.map(({ method, path }) => ({
       method,
       path,
       ...paidActionEffectExtension(),
