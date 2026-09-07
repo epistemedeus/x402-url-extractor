@@ -1,0 +1,34 @@
+{
+  "method": "POST",
+  "url": "https://agents.samedaydesk.com/extract/batch",
+  "network": "eip155:8453",
+  "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "recipient": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+  "amountCapAtomic": "10000",
+  "assetName": "USD Coin",
+  "assetVersion": "2",
+  "maxTimeoutSeconds": 300,
+  "body": {
+    "urls": [
+      "https://example.com/",
+      "https://example.org/"
+    ],
+    "fields": ["title", "description", "headings"]
+  },
+  "requiredOutput": {
+    "mediaType": "application/json",
+    "requiredFields": [
+      "ok",
+      "product",
+      "schemaVersion",
+      "jobId",
+      "jobStatus",
+      "partial",
+      "sources",
+      "charged",
+      "boundary",
+      "quote.amountAtomic"
+    ],
+    "maxResponseBytes": 131072
+  }
+}

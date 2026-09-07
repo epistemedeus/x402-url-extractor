@@ -240,7 +240,7 @@ test("mcp:// targets are refused", async () => {
 test("copyable README default command runs unpaid preflight against fixture via --help and package scripts", () => {
   const help = spawnSync(process.execPath, [CLI, "--help"], { encoding: "utf8" });
   assert.equal(help.status, 0);
-  assert.match(help.stdout, /Credential-free unpaid preflight/);
+  assert.match(help.stdout, /Credential-free unpaid batch preflight/);
   assert.match(help.stdout, /never touches a wallet/);
 
   const pkg = JSON.parse(readFileSync(join(PKG, "package.json"), "utf8"));

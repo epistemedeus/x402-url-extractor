@@ -1,4 +1,5 @@
 import { OUTCOMES } from "./constants.mjs";
+import { validateBatchBuyerOutput } from "./batch-output.mjs";
 import { decodeSettlementHeader } from "./challenge.mjs";
 import { validateBuyerOutput } from "./output.mjs";
 import { redactValue } from "./redact.mjs";
@@ -17,9 +18,16 @@ export function classifyPaidResponse({
 } = {}) {
   const settlement = decodeSettlementHeader(response);
   const mediaType = response.headers.get("content-type")?.split(";")[0].trim().toLowerCase();
-  const output = bodyError || mediaType !== requiredOutput.mediaType
-    ? { valid: false, reason: bodyError || "response Content-Type is not application/json", report: null }
-    : validateBuyerOutput(body, requiredOutput);
+  const batch = Boolean(authorization?.batch);
+  let output;
+  if (bodyError || mediaType !== requiredOutput.mediaType) {
+    output = { valid: false, delivery: "invalid", reason: bodyError || "response Content-Type is not application/json", report: null };
+  } else if (batch) {
+    output = validateBatchBuyerOutput(body, authorization);
+  } else {
+    const single = validateBuyerOutput(body, requiredOutput);
+    output = { ...single, delivery: single.valid ? "useful" : "invalid" };
+  }
   const evidence = {
     httpStatus: response.status,
     settlementPresent: settlement.present,
@@ -30,9 +38,11 @@ export function classifyPaidResponse({
       : "absent",
     settlementParseError: settlement.parseError ?? null,
     outputValid: output.valid,
+    outputDelivery: output.delivery ?? null,
     outputReason: output.reason ?? null,
     outputReport: output.report,
     retainedBody: redactValue(body),
+    bodyDigest: authorization.bodyDigest ?? null,
     authorizedAmountCapAtomic: authorization.amountCapAtomic,
     selectedNetwork: authorization.network,
     selectedAsset: authorization.asset,
@@ -56,11 +66,19 @@ export function classifyPaidResponse({
   }
 
   if (response.status >= 200 && response.status < 300) {
-    if (output.valid) {
+    if (output.valid && output.delivery === "useful") {
       return {
-        outcome: OUTCOMES.VALID_DELIVERED,
-        message:
-          "buyer-required output fields are present; settlement remains unverified unless the customer checks chain state separately",
+        outcome: batch ? OUTCOMES.USEFUL_DELIVERED : OUTCOMES.VALID_DELIVERED,
+        message: batch
+          ? "batch rows match buyer intent with per-URL success; settlement remains unverified unless the customer checks chain state separately"
+          : "buyer-required output fields are present; settlement remains unverified unless the customer checks chain state separately",
+        evidence,
+      };
+    }
+    if (output.valid && output.delivery === "partial") {
+      return {
+        outcome: OUTCOMES.PARTIAL_DELIVERED,
+        message: "paid bounded batch attempt is structurally valid with explicit failed or partial rows; not a refund or automatic retry",
         evidence,
       };
     }
