@@ -1,0 +1,28 @@
+SameDayDesk Goose native config 0.1.0
+Merchant https://agents.samedaydesk.com/mcp
+
+Goose must already be installed. This directory does not install Goose,
+mutate a default profile, or provide a cleanup command.
+
+Isolated profile (existing Goose profiles are unchanged):
+
+export GOOSE_PATH_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/samedaydesk-goose.XXXXXX")"
+mkdir "$GOOSE_PATH_ROOT/config"
+cp goose/goose.config.isolated.yaml "$GOOSE_PATH_ROOT/config/config.yaml"
+GOOSE_TELEMETRY_OFF=1 GOOSE_DISABLE_KEYRING=1 goose info -v
+
+`goose info -v` reads that isolated config. It does not open the MCP
+connection and is not live tool discovery.
+
+To stop using the profile: unset GOOSE_PATH_ROOT. The temporary directory
+is retained. No recursive cleanup command is provided.
+
+session:   goose session --with-streamable-http-extension "https://agents.samedaydesk.com/mcp"
+deeplink:  see goose.deeplink.txt
+
+Default YAML sends no source headers. goose.config.with-declared-source.yaml
+is optional, unauthenticated, not merchant-allowlisted, and does not claim
+merchant attribution. Do not use it as the default.
+
+Live unpaid discovery of the 22 tools is a separate initialize plus
+tools/list check. A Goose fixture MCP loader is not part of this repository.

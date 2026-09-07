@@ -1,0 +1,20 @@
+# Optional isolated Goose config with a declared source header.
+# This header is attribution-only, spoofable, and not payment authority.
+# X-SameDayDesk-Agent-Source: goose-native-v1 is not merchant-allowlisted.
+# Optional labels do not claim merchant attribution.
+# Do not use this file as the default install. Deeplink and session-flag paths cannot send it on silent install.
+# Merchant URI stays https://agents.samedaydesk.com/mcp. No wallet, API key, or wrapper paywall.
+extensions:
+  samedaydesk:
+    type: streamable_http
+    name: samedaydesk
+    display_name: SameDayDesk
+    description: "Canonical SameDayDesk machine-commerce MCP over Streamable HTTP. Payment stays on the merchant. This package does not wrap, proxy, or authorize spend."
+    enabled: true
+    bundled: false
+    uri: "https://agents.samedaydesk.com/mcp"
+    headers:
+      X-SameDayDesk-Agent-Source: goose-native-v1
+    env_keys: []
+    envs: {}
+    timeout: 300

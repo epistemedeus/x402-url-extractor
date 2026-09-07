@@ -1,0 +1,51 @@
+# SameDayDesk on Goose
+
+Native Goose `streamable_http` files for the live merchant at
+`https://agents.samedaydesk.com/mcp`. This is config and documentation, not
+an installer, wrapper, wallet, or directory listing.
+
+## Copyable isolated profile
+
+Goose must already be installed. Existing profiles stay unchanged.
+
+```bash
+export GOOSE_PATH_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/samedaydesk-goose.XXXXXX")"
+mkdir "$GOOSE_PATH_ROOT/config"
+cp goose/goose.config.isolated.yaml "$GOOSE_PATH_ROOT/config/config.yaml"
+GOOSE_TELEMETRY_OFF=1 GOOSE_DISABLE_KEYRING=1 goose info -v
+```
+
+`goose info -v` only reads config. It does not connect to the merchant.
+
+To stop: `unset GOOSE_PATH_ROOT`. Temporary profiles are retained. There is
+no cleanup command.
+
+Merge-safe add-only config: `goose.config.yaml`. Isolated home that also
+disables bundled Goose platform extensions: `goose.config.isolated.yaml`.
+
+## Three different checks
+
+Do not mix these:
+
+1. Goose info config read: the block above. Config YAML only.
+2. Fixture MCP loader: not in this repository. C13 kept that as experiment
+   test scaffolding. Public distribution does not ship it.
+3. Live unpaid 22-tool discovery: `POST` `initialize` then `tools/list` on
+   `https://agents.samedaydesk.com/mcp`, or `npm run test:goose-native:live`.
+   Expect 22 tools. Default Goose YAML sends no source header.
+
+## Session flag and deeplink
+
+```bash
+goose session --with-streamable-http-extension "https://agents.samedaydesk.com/mcp"
+```
+
+Public silent-install link: `goose.deeplink.txt`. Official silent install
+does not send custom headers. Default package headers stay empty.
+
+Optional `goose.config.with-declared-source.yaml` is labeled, spoofable,
+not merchant-allowlisted, and does not claim merchant attribution. It is
+not the default.
+
+Workflow copy: `extract.workflow.md`. Recipe: `extract.recipe.yaml` (report
+extract metadata only; do not call paid tools from this package).

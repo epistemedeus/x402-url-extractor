@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "samedaydesk-extract",
+  "displayName": "SameDayDesk Extract",
+  "version": "0.1.0",
+  "description": "Self-contained Claude Code plugin that binds the canonical SameDayDesk MCP and one web-extract skill. Unpaid discovery only. No wallet, no second paywall, no installer.",
+  "author": {
+    "name": "SameDayDesk",
+    "email": "contact@samedaydesk.com",
+    "url": "https://samedaydesk.com"
+  },
+  "homepage": "https://agents.samedaydesk.com/",
+  "repository": "https://github.com/epistemedeus/x402-url-extractor",
+  "license": "MIT",
+  "keywords": [
+    "samedaydesk",
+    "x402",
+    "mcp",
+    "extract"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "samedaydesk": {
+      "type": "http",
+      "url": "https://agents.samedaydesk.com/mcp",
+      "headers": {
+        "X-SameDayDesk-Agent-Source": "claude-code-marketplace-v1"
+      }
+    }
+  }
+}

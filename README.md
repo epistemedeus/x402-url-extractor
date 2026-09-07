@@ -22,6 +22,8 @@ settlement proof, and AI-search readiness audits.
 - Smithery: https://smithery.ai/servers/epistemedeus/x402-data-gateway
 - Remote MCP: https://agents.samedaydesk.com/mcp
 - Agent Plugins 1.0 local package: [`plugins/samedaydesk-x402`](plugins/samedaydesk-x402) (not marketplace-listed)
+- Claude Code marketplace: [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) plus [`plugins/samedaydesk-extract`](plugins/samedaydesk-extract) (`samedaydesk-extract@samedaydesk-claude`; not an Anthropic official directory listing)
+- Goose native config: [`goose/`](goose/) (YAML, session flag, and deeplink; not a Goose installer)
 - Live resource manifest: https://agents.samedaydesk.com/.well-known/x402
 - OpenAPI: https://agents.samedaydesk.com/openapi.json
 - Official MPP OpenAPI: https://agents.samedaydesk.com/mpp-openapi.json
@@ -958,6 +960,89 @@ before taking mainnet money.
 
 ---
 
+## Claude Code marketplace
+
+This repository root is a Claude Code marketplace. The catalog is
+`.claude-plugin/marketplace.json`. The self-contained plugin is
+`plugins/samedaydesk-extract`. That layout is a different format from the
+Agent Plugins 1.0 package in `plugins/samedaydesk-x402`. Keep both.
+
+Ordinary install after this catalog is on the public default branch:
+
+```text
+/plugin marketplace add epistemedeus/x402-url-extractor
+/plugin install samedaydesk-extract@samedaydesk-claude
+```
+
+Then invoke `/samedaydesk-extract:web-extract` with one public HTTPS URL.
+Discovery is unpaid. Payment stays on the live SameDayDesk 402. Existing
+scoped buyer authority may be used when it already covers the exact live
+terms. Listing and install grant none. Unknown payment outcomes reconcile
+rather than retry. Installation is not proof of model invocation, payment,
+or demand. This is not a submission to Anthropic's official plugin
+directory.
+
+Maintainer checks from the repository root:
+
+```bash
+npm run test:claude-marketplace
+npm run test:claude-marketplace:live
+claude plugin validate .
+claude plugin validate ./plugins/samedaydesk-extract --strict
+```
+
+Do not put Claude on the system PATH from this repository. Use an already
+present or task-local binary. The GitHub `owner/repo` add stays unverified
+until the catalog is on the public default branch. Until then, check a local
+git clone in a fresh isolated profile, without changing an existing installation:
+
+```bash
+export CLAUDE_CONFIG_DIR="$(mktemp -d "${TMPDIR:-/tmp}/samedaydesk-claude.XXXXXX")"
+export CLAUDE_CODE_PLUGIN_CACHE_DIR="$CLAUDE_CONFIG_DIR/plugins"
+export DISABLE_AUTOUPDATER=1 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN CLAUDE_CODE_OAUTH_TOKEN CLAUDE_API_KEY
+claude plugin marketplace add "$PWD" --scope user
+claude plugin install samedaydesk-extract@samedaydesk-claude --scope user --yes
+claude plugin list --json
+```
+
+After inspection, `unset CLAUDE_CONFIG_DIR CLAUDE_CODE_PLUGIN_CACHE_DIR` to stop
+using that profile. Temporary files are retained; no cleanup helper is provided.
+
+## Goose native config
+
+Companion Goose `streamable_http` files live in [`goose/`](goose/). They
+do not install Goose, mutate a default profile, or claim merchant
+attribution.
+
+Copyable isolated profile, with Goose already installed:
+
+```bash
+export GOOSE_PATH_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/samedaydesk-goose.XXXXXX")"
+mkdir "$GOOSE_PATH_ROOT/config"
+cp goose/goose.config.isolated.yaml "$GOOSE_PATH_ROOT/config/config.yaml"
+GOOSE_TELEMETRY_OFF=1 GOOSE_DISABLE_KEYRING=1 goose info -v
+```
+
+`goose info -v` reads that isolated config. It does not open the MCP
+session. Live unpaid discovery of the 22 tools is a separate initialize
+plus tools/list check (`npm run test:goose-native:live`). A Goose
+fixture MCP loader is not part of this repository.
+
+Default YAML sends no source headers. Optional
+`goose/goose.config.with-declared-source.yaml` is unauthenticated, not
+merchant-allowlisted, and does not claim merchant attribution.
+
+Session flag:
+
+```bash
+goose session --with-streamable-http-extension "https://agents.samedaydesk.com/mcp"
+```
+
+Deeplink: [`goose/goose.deeplink.txt`](goose/goose.deeplink.txt).
+
+Maintainer packaging check: `npm run test:goose-native`.
+
 ## Local run
 
 ```bash
@@ -977,6 +1062,9 @@ curl -i 'http://localhost:3000/defi/morpho-position?address=0x...' # HTTP 402
 - `morpho-preliquidation-replay.mjs` — historical PreLiquidate event economics from direct block-state reads.
 - `morpho-preliquidation-census.mjs` — repeatable Base supply, authorization, and execution census for internal market selection.
 - `package.json` — exact pinned deps (verified to install & boot).
+- `.claude-plugin/marketplace.json` — Claude Code marketplace catalog.
+- `plugins/samedaydesk-extract/` — self-contained Claude Code plugin (not Agent Plugins 1.0).
+- `goose/` — native Goose streamable_http config, recipe, and workflow copy.
 - `README.md` — this guide.
 - `extract.mjs` — pre-existing zero-dependency "URL → clean structured data"
   service. This is a natural **paid resource** to put behind `/premium`: in the
