@@ -1,0 +1,32 @@
+{
+  "schema": "samedaydesk.customer-x402.c22-receipt.v1",
+  "assignment": "C22 batch customer client",
+  "branch": "codex/batch-customer-client-20260907",
+  "head": "bed8a31b1d941751ed1d5981934d1764b78a8889",
+  "tree": "9de1e2b94f3356e6e1db758d2f5743d4a4f4d2f9",
+  "baseline": {
+    "commit": "6a30212a5a3e32c987cc575b356cd51c1b0bcd77",
+    "tree": "f537f692d73a8ee106e62c4311f9306c252086b8",
+    "composedOnto": "015aa4ecbbb50428c87cf2ec9b7b02649a1e0712"
+  },
+  "pr": "https://github.com/epistemedeus/x402-url-extractor/pull/32",
+  "node": "v22.23.2",
+  "umask": "0022",
+  "checks": {
+    "exampleTests": "50 pass / 1 skipped live",
+    "merchantTests": "585 pass / 1 skipped",
+    "extractBatch": "25 pass",
+    "claudeMarketplace": "9 pass",
+    "gooseNative": "7 pass",
+    "exampleAudit": "0 vulnerabilities",
+    "merchantAudit": "4 pre-existing (qs/fast-uri/express); unchanged lock",
+    "packDryRun": "merchant 1.23.44 + example 0.2.0"
+  },
+  "limits": [
+    "No production POST /extract/batch",
+    "No real wallet, faucet, login, or paid model spend",
+    "No merge, deploy, or merchant runtime/schema/price change",
+    "Owned-homepage fixture is future live-trial only"
+  ],
+  "outcome": "default credential-free POST /extract/batch preflight + authorized one-attempt @x402/fetch purchase with exact body-byte binding"
+}
