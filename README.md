@@ -1,5 +1,27 @@
 # SameDayDesk x402 and MPP Data Gateway
 
+## Optional bounded batch extraction
+
+`EXTRACT_BATCH_ENABLED=1` adds `POST /extract/batch` and MCP `extract_batch` at an
+introductory 0.01 USDC per admitted batch of 1–5 public HTTPS URLs. The default
+is off: 25 paid HTTP operations and 22 MCP tools; enabled: 26 and 23. This price
+is not a measured margin guarantee. Use one server process and persistent
+`COMMERCE_DATA_DIR`; unknown settlement is quarantined, not automatically charged
+again. Bounded partial output does not promise every source or requested field.
+
+The new MCP tool projects the existing HTTP payment and durable replay handler.
+Its challenge resource is `https://agents.samedaydesk.com/extract/batch`, not
+`mcp://`: first call without payment, then reuse the returned HTTP resource and
+exact arguments with `_meta["x402/payment"]`. MPP callers may use the unmodified
+`www-authenticate` challenge in result `_meta["samedaydesk/http"].headers` and
+send its credential as HTTP `Authorization`. That metadata also carries the
+HTTP status and receipt headers. Never translate an MCP-resource credential.
+Existing MCP tools retain their existing native MCP payment boundary.
+
+The signed statement declares 25 standard route capabilities in either flag
+state (Circle is separate); it does not claim that a disabled route is available
+or authorize payment. Live discovery excludes disabled batch extraction.
+
 Every paid HTTP response advertises
 `/.well-known/agent-payment-evidence.json` through the standard HTTP
 `describedby` link relation. The bounded free manifest joins each exact method

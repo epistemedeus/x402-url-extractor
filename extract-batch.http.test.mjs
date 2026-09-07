@@ -202,6 +202,7 @@ function testPayment(challenge, { id = "batch_order_1234567890ab" } = {}) {
   assert.ok(accepted, "challenge omitted Base exact payment terms");
   return Buffer.from(JSON.stringify({
     x402Version: 2,
+    resource: challenge.resource,
     accepted,
     payload: {
       signature: `0x${"4".repeat(130)}`,
@@ -272,6 +273,7 @@ test("flag off leaves live extract and catalogs unchanged", { timeout: 60_000 },
     fetch(`${merchant.base}/.well-known/x402`).then((r) => r.json()),
   ]);
   assert.equal(openapi.paths[EXTRACT_BATCH_PATH], undefined);
+  assert.equal(Object.values(openapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length, 25);
   assert.equal(catalog.actions.length, 22);
   assert.equal(catalog.actions.some((action) => action.route === EXTRACT_BATCH_PATH), false);
   assert.equal(manifest.items.some((item) => item.resource?.routeTemplate === EXTRACT_BATCH_PATH), false);
@@ -348,6 +350,7 @@ test("unpaid valid requests issue x402 and MPP challenges without fetching sourc
   const openapi = await fetch(`${merchant.base}/openapi.json`).then((r) => r.json());
   assert.equal(openapi.paths[EXTRACT_BATCH_PATH].post["x-payment-info"].price.amount, "0.01");
   assert.equal(openapi.paths[EXTRACT_BATCH_PATH].post.operationId, "extractPublicUrlsBatch");
+  assert.equal(Object.values(openapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length, 26);
   const mppOpenapi = await fetch(`${merchant.base}/mpp-openapi.json`).then((r) => r.json());
   assert.deepEqual(mppOpenapi.paths[EXTRACT_BATCH_PATH].post.requestBody, openapi.paths[EXTRACT_BATCH_PATH].post.requestBody);
   assert.deepEqual(mppOpenapi.paths[EXTRACT_BATCH_PATH].post.responses["200"], openapi.paths[EXTRACT_BATCH_PATH].post.responses["200"]);
@@ -392,6 +395,7 @@ test("flag on projects the batch offer across MCP tools/list with matching schem
   assert.equal(batch.inputSchema?.properties?.urls?.type, "array");
   assert.equal(batch.outputSchema?.properties?.product?.const, "samedaydesk-extract-batch");
   assert.equal(batch.outputSchema?.required?.includes("staging"), false);
+  assert.match(batch.description, /https:\/\/agents\.samedaydesk\.com\/extract\/batch, not mcp:\/\//);
   const catalog = await fetch(`${merchant.base}/api/actions`).then((r) => r.json());
   assert.equal(catalog.actions.length, 23);
   const effects = await fetch(`${merchant.base}/.well-known/paid-action-effects.json`).then((r) => r.json());
@@ -656,4 +660,106 @@ test("both real payment rails reject failed verification without any source read
       await rm(dataDir, { recursive: true, force: true });
     }
   }
+});
+
+async function mcpCall(base, body, payment, headers = {}) {
+  const response = await fetch(`${base}/mcp`, { method: "POST",
+    headers: { "content-type": "application/json", accept: "application/json, text/event-stream", ...headers },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 77, method: "tools/call",
+      params: { name: "extract_batch", arguments: body, ...(payment ? { _meta: { "x402/payment": payment } } : {}) } }),
+  });
+  const text = await response.text();
+  if (response.headers.get("content-type")?.includes("text/event-stream")) {
+    return JSON.parse(text.split("\n").find((line) => line.startsWith("data: ")).slice(6));
+  }
+  return JSON.parse(text);
+}
+
+test("mounted MCP same paid batch replays across restart without a second settlement", { timeout: 90_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "batch-mcp-replay-"));
+  const fetchLogPath = path.join(dataDir, "source-fetches.log");
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => { if (merchant) await stopChild(merchant.child); await facilitator.close(); await rm(dataDir, { recursive: true, force: true }); });
+  async function start() {
+    merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url, fetchLogPath });
+    const deadline = Date.now() + 20000;
+    while (!merchant.output().includes("MCP server:  POST /mcp (23 paid tools)")) {
+      if (Date.now() > deadline) throw new Error(`MCP startup timeout: ${merchant.output().slice(-3000)}`);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+  }
+  await start();
+  const body = { urls: ["https://alpha.example/"], fields: ["title"] };
+  const unpaid = await mcpCall(merchant.base, body, null, { "x-forwarded-host": "attacker.example", "x-forwarded-proto": "http" });
+  const challenge = unpaid.result?.structuredContent;
+  assert.equal(challenge?.resource?.url, "https://agents.samedaydesk.com/extract/batch", JSON.stringify(unpaid));
+  const payment = JSON.parse(Buffer.from(testPayment(challenge), "base64").toString());
+  for (const url of ["mcp://samedaydesk/extract_batch", "https://attacker.example/extract/batch", "https://agents.samedaydesk.com/extract"]) {
+    const denied = await mcpCall(merchant.base, body, { ...payment, resource: { ...payment.resource, url } });
+    assert.equal(denied.result?.isError, true);
+  }
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal((await readFetchLog(fetchLogPath)).length, 0);
+  const first = await mcpCall(merchant.base, body, payment);
+  assert.equal(first.result?.structuredContent?.sources?.[0]?.data?.title, "Alpha", JSON.stringify(first));
+  assertOutput(first.result.structuredContent);
+  await stopChild(merchant.child); await start();
+  const replay = await mcpCall(merchant.base, body, payment);
+  assert.equal(facilitator.calls.settle, 1, "MCP must reuse the existing POST replay boundary");
+  assert.deepEqual(replay.result?.structuredContent, first.result.structuredContent);
+  assert.equal((await readFetchLog(fetchLogPath)).length, 1);
+  const mppBody = { urls: ["https://beta.example/"], fields: ["title"] };
+  const mppChallenge = await mcpCall(merchant.base, mppBody);
+  const credential = await createMppCredential(new Response(JSON.stringify(mppChallenge.result.structuredContent), {
+    status: 402, headers: mppChallenge.result._meta["samedaydesk/http"].headers,
+  }));
+  const mppPaid = await mcpCall(merchant.base, mppBody, null, { authorization: credential });
+  assert.equal(mppPaid.result?.structuredContent?.sources?.[0]?.data?.title, "Beta", JSON.stringify(mppPaid));
+  await stopChild(merchant.child); await start();
+  const mppReplay = await mcpCall(merchant.base, mppBody, null, { authorization: credential });
+  assert.deepEqual(mppReplay.result.structuredContent, mppPaid.result.structuredContent);
+  assert.equal(facilitator.calls.settle, 2);
+  assert.equal((await readFetchLog(fetchLogPath)).length, 2);
+});
+
+for (const protocol of ["x402", "mpp"]) for (const mode of ["denied", "unknown"]) test(`mounted MCP ${protocol} ${mode} authorization does not repeat work or settlement`, { timeout: 90_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), `batch-mcp-${mode}-`));
+  const fetchLogPath = path.join(dataDir, "source-fetches.log");
+  const facilitator = await startFakeFacilitator({ verifyValid: mode !== "denied", settleSuccess: mode !== "unknown" });
+  let merchant;
+  t.after(async () => { if (merchant) await stopChild(merchant.child); await facilitator.close(); await rm(dataDir, { recursive: true, force: true }); });
+  async function start() {
+    merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url, fetchLogPath });
+    const deadline = Date.now() + 20000;
+    while (!merchant.output().includes("MCP server:  POST /mcp (23 paid tools)")) {
+      if (Date.now() > deadline) throw new Error("MCP startup timeout");
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+  }
+  await start();
+  const body = { urls: ["https://alpha.example/"], fields: ["title"] };
+  const unpaid = await mcpCall(merchant.base, body);
+  const payment = JSON.parse(Buffer.from(testPayment(unpaid.result.structuredContent), "base64").toString());
+  const credential = protocol === "mpp" ? await createMppCredential(new Response(JSON.stringify(unpaid.result.structuredContent), {
+    status: 402, headers: unpaid.result._meta["samedaydesk/http"].headers,
+  })) : null;
+  const callPaid = () => mcpCall(merchant.base, body, protocol === "x402" ? payment : null,
+    credential ? { authorization: credential } : {});
+  for (const invalid of [{ urls: ["https://127.0.0.1/"] }, { ...body, fields: ["unsupported"] }, { ...body, extra: true }]) {
+    const result = await mcpCall(merchant.base, invalid, payment);
+    assert.ok(result.error || result.result?.isError);
+  }
+  assert.equal(facilitator.calls.verify, 0);
+  const deniedMpp = await mcpCall(merchant.base, body, null, { authorization: "Payment invalid" });
+  assert.equal(deniedMpp.result?.isError, true);
+  assert.equal((await readFetchLog(fetchLogPath)).length, 0);
+  const first = await callPaid();
+  assert.equal(first.result?.isError, true);
+  await callPaid();
+  await stopChild(merchant.child); await start();
+  const resumed = await callPaid();
+  assert.equal(resumed.result?.isError, true);
+  assert.equal(facilitator.calls.settle, mode === "unknown" ? 1 : 0);
+  assert.equal((await readFetchLog(fetchLogPath)).length, mode === "unknown" && protocol === "x402" ? 1 : 0);
 });

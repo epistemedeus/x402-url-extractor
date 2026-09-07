@@ -20,6 +20,7 @@
 // Verified against @x402/mcp@2.16.0 + @modelcontextprotocol/sdk@1.29.0 (June 2026).
 
 import { AsyncLocalStorage } from "node:async_hooks";
+import { request as requestHttp } from "node:http";
 import express from "express";
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -36,6 +37,7 @@ import {
 } from "./mcp-typed-telemetry-producer.mjs";
 
 const mcpTypedAttemptAls = new AsyncLocalStorage();
+const mcpHttpRequestAls = new AsyncLocalStorage();
 
 const MCP_PAYMENT_META_KEY = "x402/payment";
 const MAX_PAYMENT_SIGNATURE_HEADER_BYTES = 32 * 1024;
@@ -147,6 +149,86 @@ export function reviveJsonStructuredArgs(args, inputSchema = {}) {
 
 function withRevivedArgs(handler, inputSchema) {
   return async (args, extra) => handler(reviveJsonStructuredArgs(args, inputSchema), extra);
+}
+
+// Project only explicitly configured tools onto an existing paid HTTP route.
+// The HTTP route owns admission, payment, replay and source work; do not also
+// enter the MCP payment wrapper. No caller-controlled target URL is accepted.
+function httpRouteToolHandler(tool, baseUrl) {
+  const base = new URL(baseUrl);
+  if (base.protocol !== "http:" || !["127.0.0.1", "[::1]"].includes(base.hostname)) {
+    throw new Error("MCP HTTP bridge requires a loopback HTTP origin");
+  }
+  const route = tool.paidHttp;
+  if (route.method !== "POST" || !/^\/(?!\/)[^?#]*$/.test(route.path)) throw new Error("invalid MCP HTTP route");
+  const target = new URL(route.path, base);
+  const resource = new URL(route.resourceUrl);
+  if (resource.protocol !== "https:" || resource.pathname !== route.path || resource.search || resource.hash || resource.username || resource.password) {
+    throw new Error("MCP HTTP bridge requires a fixed public HTTPS resource");
+  }
+  return async (_args, extra) => {
+    const request = mcpHttpRequestAls.getStore();
+    const body = JSON.stringify(request?.body?.params?.arguments ?? _args);
+    if (Buffer.byteLength(body) > route.maxRequestBytes) {
+      return { ...asToolResult({ ok: false, error: "request_body_too_large", charged: false }), isError: true };
+    }
+    const headers = { "content-type": "application/json", host: resource.host, "x-forwarded-proto": "https" };
+    for (const name of ["authorization", "payment-signature", "x-payment", "x-payment-signature"]) {
+      const value = request?.headers?.[name];
+      if (typeof value === "string") headers[name] = value;
+    }
+    const payment = extra?._meta?.[MCP_PAYMENT_META_KEY];
+    if (payment) headers["payment-signature"] = Buffer.from(JSON.stringify(payment)).toString("base64");
+    if (headers.authorization && (headers["payment-signature"] || headers["x-payment"] || headers["x-payment-signature"])) {
+      return { ...asToolResult({ ok: false, error: "choose_one_payment_rail", charged: false }), isError: true };
+    }
+    for (const name of ["payment-signature", "x-payment", "x-payment-signature"]) {
+      if (!headers[name]) continue;
+      try {
+        const credential = JSON.parse(Buffer.from(headers[name], "base64").toString("utf8"));
+        if (credential.resource?.url !== resource.href) throw new Error("wrong resource");
+      } catch {
+        return { ...asToolResult({ ok: false, error: "payment_resource_mismatch", charged: false,
+          resource: resource.href }), isError: true };
+      }
+    }
+    try {
+      const response = await new Promise((resolve, reject) => {
+        const req = requestHttp(target, { method: "POST", headers,
+          signal: AbortSignal.timeout(60_000) }, resolve);
+        req.on("error", reject);
+        req.end(body);
+      });
+      const chunks = [];
+      let bytes = 0;
+      for await (const part of response) {
+        bytes += part.length;
+        if (bytes > route.maxResponseBytes) { response.destroy(); throw new Error("HTTP bridge response exceeds ceiling"); }
+        chunks.push(part);
+      }
+      // Use the canonical v2 offer, not the legacy discovery body (which adds
+      // non-payment fields to accepts.extra and cannot be echoed as v2 terms).
+      const value = response.statusCode === 402 && response.headers["payment-required"]
+        ? JSON.parse(Buffer.from(response.headers["payment-required"], "base64").toString("utf8"))
+        : JSON.parse(Buffer.concat(chunks).toString("utf8"));
+      const publicHeaders = {};
+      for (const name of ["www-authenticate", "payment-receipt", "payment-required", "payment-response"]) {
+        if (typeof response.headers[name] === "string") publicHeaders[name] = response.headers[name];
+      }
+      const result = { ...asToolResult(value, { structured: true }),
+        ...(!(response.statusCode >= 200 && response.statusCode < 300) || value.error ? { isError: true } : {}),
+        _meta: { "samedaydesk/http": { resource: resource.href, status: response.statusCode, headers: publicHeaders } } };
+      const proof = response.headers["payment-response"];
+      if (proof) {
+        try { result._meta["x402/payment-response"] = JSON.parse(Buffer.from(proof, "base64").toString("utf8")); }
+        catch { /* never fabricate settlement evidence */ }
+      }
+      return result;
+    } catch {
+      return { ...asToolResult({ ok: false, error: "paid_http_outcome_unresolved", charged: null,
+        boundary: "Do not create a replacement payment automatically. Retry only the identical authorized request." }), isError: true };
+    }
+  };
 }
 
 function isJsonRpcObject(value) {
@@ -420,6 +502,7 @@ export async function mountMcp(app, {
   typedTelemetry = null,
   streamableHttpOptions = undefined,
   configureResourceServer = null,
+  httpBaseUrl = null,
 } = {}) {
   const typedEnabled = typedTelemetry?.enabled === true;
   const jsonResponse = streamableHttpOptions?.enableJsonResponse === true;
@@ -473,17 +556,18 @@ export async function mountMcp(app, {
     // paid(handler) -> MCP tool callback (args, extra) that verifies payment (from
     // extra._meta), runs the handler, then settles. We catch handler errors and return
     // a structured ok:false so a paid call never yields an opaque failure.
-    const inner = paid(typedEnabled ? observedPaidHandler(t) : baselinePaidHandler(t));
+    const inner = t.paidHttp ? httpRouteToolHandler(t, httpBaseUrl)
+      : paid(typedEnabled ? observedPaidHandler(t) : baselinePaidHandler(t));
     const revived = withRevivedArgs(inner, t.inputSchema);
     const handler = typedEnabled
       ? async (args, extra) => {
         const attempt = mcpTypedAttemptAls.getStore();
-        attempt?.markPaidWrapperEntered();
+        if (!t.paidHttp) attempt?.markPaidWrapperEntered();
         if (attempt && extra && Object.hasOwn(extra, "requestId")) {
           attempt.bindRequestId(extra.requestId);
         }
         const result = await revived(args, extra);
-        if (attempt && !isTypedPaymentRequiredResult(result) && result?.isError !== true) {
+        if (!t.paidHttp && attempt && !isTypedPaymentRequiredResult(result) && result?.isError !== true) {
           attempt.maybeReplayConfirmed();
         }
         return result;
@@ -492,7 +576,7 @@ export async function mountMcp(app, {
     prepared.push({
       name: t.name,
       title: t.title,
-      description: t.description,
+      description: t.paidHttp ? `${t.description} Payment challenge and credentials are bound to ${t.paidHttp.resourceUrl}, not mcp://. Retry the identical authorized arguments and credential.` : t.description,
       inputSchema: t.inputSchema,
       outputSchema: t.outputSchema,
       paymentMeta: createX402ToolMeta(accepts),
@@ -554,10 +638,10 @@ export async function mountMcp(app, {
       }
     };
     if (created.attempt) {
-      await mcpTypedAttemptAls.run(created.attempt, run);
+      await mcpHttpRequestAls.run(req, () => mcpTypedAttemptAls.run(created.attempt, run));
       return;
     }
-    await run();
+    await mcpHttpRequestAls.run(req, run);
   });
 
   // Stateless server: no standalone GET (SSE) or DELETE (session teardown) support.

@@ -35,7 +35,7 @@ test("makes each overlapping web and company tool chooseable without renaming it
 
   assert.equal(extract.name, "extract");
   assert.match(extract.description, /Use `read` instead/);
-  assert.match(extract.description, /Use `extract_batch`/);
+  assert.doesNotMatch(extract.description, /Use `extract_batch`/, "default-off selection copy must not recommend an unavailable tool");
   assert.match(extractBatch.description, /Use `extract` for a single URL/);
   assert.match(read.description, /Use `extract` instead/);
   assert.match(schemaforge.description, /Use `deep_audit` instead/);

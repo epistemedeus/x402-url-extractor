@@ -198,7 +198,6 @@ import {
   extractBatchX402Route,
   extractBatchCostParameters,
   isExtractBatchEnabled,
-  runExtractBatchFromMcpArgs,
   serveExtractBatch,
   validateExtractBatchRequest,
   ALL_FIELDS,
@@ -3259,15 +3258,11 @@ const x402Paywall = paymentMiddleware(
 
 const evidenceResources = [];
 for (const { method, path } of SERVICE_DEPLOYMENT_ROUTES) {
+  if (path === EXTRACT_BATCH_PATH && !EXTRACT_BATCH_ENABLED) continue;
   const resource = RESOURCES.find((entry) => (entry.method || "GET") === method && new URL(entry.url).pathname === path)
     || RESOURCES.find((entry) => new URL(entry.url).pathname === path);
   if (!resource) throw new Error(`Missing purchase evidence resource for ${method} ${path}`);
   evidenceResources.push({ ...resource, method, url: `${PUBLIC_URL}${path}` });
-}
-if (EXTRACT_BATCH_ENABLED) {
-  const batch = RESOURCES.find((entry) => (entry.method || "GET") === "POST" && new URL(entry.url).pathname === EXTRACT_BATCH_PATH);
-  if (!batch) throw new Error("Missing purchase evidence resource for POST /extract/batch");
-  evidenceResources.push({ ...batch, method: "POST", url: `${PUBLIC_URL}${EXTRACT_BATCH_PATH}` });
 }
 purchaseEvidenceManifest = buildPurchaseEvidenceManifest({
   origin: PUBLIC_URL,
@@ -3756,6 +3751,7 @@ app.listen(PORT, () => {
 import("./mcp-server.mjs")
   .then(({ mountMcp }) =>
     mountMcp(app, {
+      httpBaseUrl: `http://127.0.0.1:${PORT}`,
       facilitatorClient,
       network: NETWORK,
       payTo: PAY_TO,
@@ -3777,7 +3773,7 @@ import("./mcp-server.mjs")
             fields: z.array(z.enum(/** @type {[string, ...string[]]} */ ([...ALL_FIELDS]))).min(1).max(ALL_FIELDS.length).optional().describe("Optional unique bounded subset of structured extraction fields."),
           },
           outputSchema: extractBatchMcpOutputSchema,
-          run: (a) => runExtractBatchFromMcpArgs(a),
+          paidHttp: { method: "POST", path: EXTRACT_BATCH_PATH, resourceUrl: `${PUBLIC_URL}${EXTRACT_BATCH_PATH}`, maxRequestBytes: 16 * 1024, maxResponseBytes: 160 * 1024 },
           tags: ["web", "batch-extract", "structured-json", "multi-url"],
         }] : []),
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },

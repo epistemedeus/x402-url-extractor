@@ -543,27 +543,3 @@ export function extractBatchOpenApiPath({ paymentInfo }) {
     },
   };
 }
-
-/**
- * Run the same batch core used by POST /extract/batch from an MCP tools/call.
- * Arguments are normalized and re-serialized so array fields stay JSON arrays.
- */
-export async function runExtractBatchFromMcpArgs(args, {
-  headers = {},
-  dataDir = process.env.COMMERCE_DATA_DIR || path.join(process.cwd(), "data"),
-  fetchImpl,
-  now,
-  costParameters,
-} = {}) {
-  const input = normalizeExtractBatchInput(args);
-  const rawBody = extractBatchRawBody(input);
-  return executeExtractBatch({
-    input,
-    headers,
-    rawBody,
-    dataDir,
-    fetchImpl,
-    now,
-    costParameters,
-  });
-}
