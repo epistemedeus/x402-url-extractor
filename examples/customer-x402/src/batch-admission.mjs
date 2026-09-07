@@ -102,7 +102,7 @@ export function admitExtractBatchBody(body) {
       { field: "urls" },
     );
   }
-  const urls = Object.freeze(body.urls.map((value) => assertPublicHttpsUrl(value)));
+  const urls = Object.freeze(Array.from(body.urls, (value) => assertPublicHttpsUrl(value)));
   let fields;
   if (body.fields === undefined) {
     fields = Object.freeze([...BATCH_SUPPORTED_FIELDS]);
@@ -119,10 +119,6 @@ export function admitExtractBatchBody(body) {
     }
     fields = Object.freeze([...body.fields]);
   }
-  const canonical = Object.freeze({
-    urls,
-    fields,
-  });
   const bodyRaw = JSON.stringify({ urls: [...urls], fields: [...fields] });
   const bodyBytes = Buffer.byteLength(bodyRaw);
   if (bodyBytes > BATCH_MAX_REQUEST_JSON_BYTES) {

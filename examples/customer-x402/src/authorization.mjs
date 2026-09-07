@@ -112,6 +112,7 @@ function normalizePostBatchAuthorization(input) {
   let admitted;
   try {
     if (typeof input.bodyRaw === "string") {
+      if (Buffer.byteLength(input.bodyRaw) > 16 * 1024) fail("bodyRaw exceeds request byte ceiling", "body");
       let parsed;
       try {
         parsed = JSON.parse(input.bodyRaw);
@@ -122,8 +123,14 @@ function normalizePostBatchAuthorization(input) {
       if (admitted.bodyRaw !== input.bodyRaw) {
         fail("bodyRaw must already be the exact admitted serialized bytes", "body");
       }
+      if (input.body !== undefined && admitExtractBatchBody(input.body).bodyRaw !== admitted.bodyRaw) {
+        fail("body does not match authorized bodyRaw", "body");
+      }
     } else {
       admitted = admitExtractBatchBody(input.body);
+    }
+    if (input.bodyDigest !== undefined && input.bodyDigest !== admitted.bodyDigest) {
+      fail("body digest drifted after approval", "body");
     }
   } catch (error) {
     if (error instanceof BatchAdmissionError || error instanceof AuthorizationRefusal) {

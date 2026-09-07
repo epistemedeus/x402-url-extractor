@@ -32,8 +32,8 @@ export const DEFAULT_BATCH_FIELDS = Object.freeze(["title", "description", "head
  */
 export const OWNED_HOMEPAGE_BATCH_URLS = Object.freeze([
   "https://samedaydesk.com/",
-  "https://agents.samedaydesk.com/",
-  "https://solana.samedaydesk.com/",
+  "https://ein.llc/",
+  "https://neomorphic.io/",
 ]);
 
 /** Buyer-required extract fields. Presence alone does not prove semantic quality. */

@@ -63,7 +63,7 @@ export async function runPreflight({
   let bodyRaw = null;
   if (resolvedMethod === "POST") {
     if (auth) {
-      bodyRaw = auth.bodyRaw;
+      bodyRaw = body == null ? auth.bodyRaw : typeof body === "string" ? body : admitExtractBatchBody(body).bodyRaw;
     } else if (body != null) {
       try {
         bodyRaw = typeof body === "string" ? admitExtractBatchBody(JSON.parse(body)).bodyRaw : admitExtractBatchBody(body).bodyRaw;

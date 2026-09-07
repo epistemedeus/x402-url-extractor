@@ -11,8 +11,8 @@
   "body": {
     "urls": [
       "https://samedaydesk.com/",
-      "https://agents.samedaydesk.com/",
-      "https://solana.samedaydesk.com/"
+      "https://ein.llc/",
+      "https://neomorphic.io/"
     ],
     "fields": ["title", "description", "headings"]
   },

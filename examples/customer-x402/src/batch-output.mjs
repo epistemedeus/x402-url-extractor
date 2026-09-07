@@ -9,7 +9,40 @@ const SOURCE_STATUSES = new Set([
 ]);
 
 function fieldValue(object, path) {
-  return path.split(".").reduce((current, key) => current?.[key], object);
+  return path.split(".").reduce((current, key) =>
+    current != null && Object.hasOwn(current, key) ? current[key] : undefined, object);
+}
+
+const TOP_FIELDS = ["ok", "product", "schemaVersion", "quote", "jobId", "jobStatus",
+  "stopReason", "partial", "sources", "accounting", "costInputs", "charged", "boundary"];
+const JOB_STATUSES = new Set(["running", "completed", "completed_with_unknown", "stopped", "interrupted"]);
+const isObject = value => value !== null && typeof value === "object" && !Array.isArray(value);
+const nullableObject = value => value === null || isObject(value);
+const nullableString = value => value === null || typeof value === "string";
+
+// Narrow snapshot of the public batch v0 HTTP output contract, not a general
+// schema engine. Row identity and selected-field checks below add buyer intent.
+function assertSellerShape(body) {
+  const require = (condition, message) => { if (!condition) throw new Error(message); };
+  for (const key of TOP_FIELDS) require(Object.hasOwn(body, key), `seller field missing: ${key}`);
+  require(Object.keys(body).every(key => TOP_FIELDS.includes(key) || key === "error"), "unexpected batch response field");
+  require(isObject(body.quote) && body.quote.displayUsdc === "0.01" && typeof body.quote.meaning === "string", "invalid batch quote");
+  require(typeof body.jobId === "string" && /^[a-f0-9]{64}$/.test(body.jobId), "invalid batch jobId");
+  require(JOB_STATUSES.has(body.jobStatus), "invalid batch jobStatus");
+  require(nullableString(body.stopReason), "invalid batch stopReason");
+  for (const key of ["accounting", "costInputs", "boundary"]) require(isObject(body[key]), `invalid batch ${key}`);
+  require(!Object.hasOwn(body, "error") || typeof body.error === "string", "invalid batch error");
+  require(Array.isArray(body.sources) && body.sources.length >= 1 && body.sources.length <= 5, "invalid batch sources");
+  for (const [index, row] of body.sources.entries()) {
+    require(isObject(row), `sources[${index}] must be an object`);
+    for (const key of ["id", "source", "status", "data", "notes", "error", "provenance"]) {
+      require(Object.hasOwn(row, key), `sources[${index}] missing ${key}`);
+    }
+    require(nullableObject(row.data) && nullableObject(row.error) && nullableObject(row.provenance), `sources[${index}] invalid nullable object`);
+    require(Array.isArray(row.notes), `sources[${index}] notes must be an array`);
+    require(!Object.hasOwn(row, "finalUrl") || nullableString(row.finalUrl), `sources[${index}] invalid finalUrl`);
+    require(!Object.hasOwn(row, "httpStatus") || row.httpStatus === null || Number.isInteger(row.httpStatus), `sources[${index}] invalid httpStatus`);
+  }
 }
 
 /**
@@ -26,6 +59,7 @@ export function validateBatchBuyerOutput(body, authorization) {
     return { valid: false, delivery: "invalid", reason: "batch body must be a JSON object", report: null };
   }
   try {
+    assertSellerShape(body);
     const wire = Buffer.byteLength(JSON.stringify(body));
     if (wire > requiredOutput.maxResponseBytes) {
       return { valid: false, delivery: "invalid", reason: "response exceeds authorized maxResponseBytes", report: null };
@@ -68,8 +102,8 @@ export function validateBatchBuyerOutput(body, authorization) {
       if (!row || typeof row !== "object" || Array.isArray(row)) {
         return { valid: false, delivery: "invalid", reason: `sources[${index}] must be an object`, report: null };
       }
-      if (typeof row.id !== "string" || !row.id) {
-        return { valid: false, delivery: "invalid", reason: `sources[${index}].id is required`, report: null };
+      if (row.id !== `item-${String(index + 1).padStart(3, "0")}`) {
+        return { valid: false, delivery: "invalid", reason: `sources[${index}].id does not match submitted identity`, report: null };
       }
       if (seenIds.has(row.id)) {
         return { valid: false, delivery: "invalid", reason: `duplicate source id ${row.id}`, report: null };
@@ -119,7 +153,8 @@ export function validateBatchBuyerOutput(body, authorization) {
         }
       }
     }
-    if (usefulRows === batch.urls.length && failedOrPartialRows === 0 && body.ok === true && body.partial === false) {
+    if (usefulRows === batch.urls.length && failedOrPartialRows === 0 && body.ok === true && body.partial === false
+        && body.jobStatus === "completed" && body.stopReason === null && body.charged === true && !Object.hasOwn(body, "error")) {
       return {
         valid: true,
         delivery: "useful",
@@ -131,7 +166,7 @@ export function validateBatchBuyerOutput(body, authorization) {
       return {
         valid: true,
         delivery: "partial",
-        reason: "bounded attempt retained with one or more non-success rows; not a refund or retry signal",
+        reason: "bounded attempt retained with non-success rows or incomplete overall status; not a refund or retry signal",
         report: { usefulRows, failedOrPartialRows, rowCount: batch.urls.length },
       };
     }

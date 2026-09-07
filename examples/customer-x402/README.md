@@ -96,7 +96,7 @@ request. `POST` does not authorize target browsing before merchant payment.
 | `preflight_ok` | Unpaid 402 challenge parsed |
 | `authorization_refused` | Exact terms mismatch before signer |
 | `valid_delivered` | GET: JSON media type, bounded body, `ok: true`, and non-null required fields |
-| `useful_delivered` | Batch: one ordered row per URL with requested fields and all-success intent |
+| `useful_delivered` | Batch: seller contract, ordered row identities, requested fields, and completed all-success status |
 | `partial_delivered` | Batch: seller contract satisfied with explicit failed/partial rows; not a refund |
 | `paid_invalid_output` | Paid response retained; output failed contract/intent checks |
 | `settlement_failed` | Settlement header reports failure |

@@ -28,11 +28,6 @@ function requestInitFor(auth) {
   };
 }
 
-async function bodyBytesFromRequest(request, fallbackRaw) {
-  if (fallbackRaw != null) return String(fallbackRaw);
-  return request.clone().text();
-}
-
 /** One EIP-3009 signature and at most one paid send, using the official client. */
 export async function runAuthorizedPurchase({ authorization, url, account = null, privateKey = null,
   loadAccount = null, fetchImpl = globalThis.fetch, approve = false, timeoutMs = 15_000 } = {}) {
@@ -83,7 +78,7 @@ export async function runAuthorizedPurchase({ authorization, url, account = null
     const transport = async (input, init) => {
       const request = input instanceof Request && init == null ? input : new Request(input, init);
       const bodyText = auth.method === "POST"
-        ? await bodyBytesFromRequest(request, init?.body ?? auth.bodyRaw)
+        ? await request.clone().text()
         : null;
       assertRequestMatchesAuthorization(request.url, auth, {
         method: request.method,
