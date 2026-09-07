@@ -1,11 +1,12 @@
 {
   "name": "x402-merchant",
-  "version": "1.23.41",
+  "version": "1.23.42",
   "description": "Dual-stack x402 and MPP paid HTTP capabilities that settle USDC to our own Base wallet",
   "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "test:replay-boundary": "node --test idempotency-replay.test.mjs replay-boundary.http.test.mjs",
     "pretest": "node --test construction-surface.test.mjs machine-surface-parity.test.mjs",
     "test:agent-plugin": "node --test plugins/samedaydesk-x402/plugin.test.mjs",
     "test:claude-marketplace": "node --test claude-code-marketplace.test.mjs",

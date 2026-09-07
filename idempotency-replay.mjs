@@ -1,9 +1,41 @@
 import { createHash, createHmac, randomBytes } from "node:crypto";
+import { AsyncLocalStorage } from "node:async_hooks";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chmod, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Credential } from "mppx";
 
 const PAYMENT_HEADERS = ["payment-signature", "x-payment", "x-payment-signature"];
+const settlementContext = new AsyncLocalStorage();
+
+// Observe the existing facilitator call, without replacing either payment rail.
+// The possible-spend marker is durable BEFORE the external mutation begins.
+export function trackReplaySettlementAttempts(client) {
+  return new Proxy(client, {
+    get(target, key) {
+      if (key === "settle") return async (...args) => {
+        await settlementContext.getStore()?.();
+        return target.settle(...args);
+      };
+      const value = Reflect.get(target, key, target);
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  });
+}
+
+export function replaySettlementWasAttempted() {
+  return settlementContext.getStore()?.attempted === true;
+}
+
+function persistentReplaySecret(dataDir) {
+  mkdirSync(dataDir, { recursive: true, mode: 0o700 });
+  const file = path.join(dataDir, "idempotency-replay.key");
+  try { writeFileSync(file, randomBytes(32).toString("hex"), { flag: "wx", mode: 0o600 }); }
+  catch (error) { if (error.code !== "EEXIST") throw error; }
+  const key = readFileSync(file, "utf8").trim();
+  if (!/^[a-f0-9]{64}$/.test(key)) throw new Error("invalid persisted replay key");
+  return key;
+}
 const PAYMENT_ID_PATTERN = /^[A-Za-z0-9_-]{16,128}$/;
 const EVM_ADDRESS_PATTERN = /^0x[0-9a-fA-F]{40}$/;
 const SAFE_REPLAY_HEADERS = new Set([
@@ -14,7 +46,7 @@ const SAFE_REPLAY_HEADERS = new Set([
   "x-payment-receipt",
 ]);
 
-const DEFAULT_PAID_ROUTES = new Set([
+export const DEFAULT_PAID_ROUTES = new Set([
   "/extract",
   "/read",
   "/scan",
@@ -69,7 +101,8 @@ export function decodeReplayPayment(headers) {
   if (encoded) {
     try {
       const payment = JSON.parse(Buffer.from(encoded.trim(), "base64").toString("utf8"));
-      const id = payment?.extensions?.["payment-identifier"]?.info?.id;
+      const suppliedId = payment?.extensions?.["payment-identifier"]?.info?.id;
+      const id = suppliedId == null ? createHash("sha256").update(encoded.trim()).digest("hex") : suppliedId;
       const payer = normalizeAddress(payment?.payload?.authorization?.from || payment?.payload?.from);
       const accepted = payment?.accepted;
       if (!PAYMENT_ID_PATTERN.test(String(id || "")) || !payer || payment?.x402Version !== 2) return null;
@@ -86,9 +119,13 @@ export function decodeReplayPayment(headers) {
       }
       return {
         id: String(id),
+        hasPaymentIdentifier: suppliedId != null,
         payer,
         protocol: "x402",
         credentialBinding: createHash("sha256").update(encoded.trim()).digest("hex"),
+        validUntilMs: Number(payment?.payload?.authorization?.validBefore) * 1000,
+        authorizationIdentity: /^0x[a-fA-F0-9]{64}$/.test(String(payment?.payload?.authorization?.nonce || ""))
+          ? JSON.stringify([terms.network, terms.asset, payer, payment.payload.authorization.nonce.toLowerCase()]) : null,
         terms,
       };
     } catch {
@@ -119,6 +156,7 @@ export function decodeReplayPayment(headers) {
       payer,
       protocol: "mpp",
       credentialBinding: createHash("sha256").update(authorization).digest("hex"),
+      validUntilMs: Number(credential?.payload?.validBefore) * 1000,
       terms: {
         scheme: "evm-charge",
         network: `eip155:${chainId}`,
@@ -149,32 +187,45 @@ function boundedInteger(value, fallback, minimum, maximum) {
 async function readStore(filePath) {
   try {
     const parsed = JSON.parse(await readFile(filePath, "utf8"));
-    return parsed?.v === 1 && Array.isArray(parsed.records) ? parsed.records : [];
+    if (parsed?.v !== 1 || !Array.isArray(parsed.records)) throw new Error("invalid replay store");
+    return parsed.records;
   } catch (error) {
     if (error?.code === "ENOENT") return [];
-    return [];
+    throw error;
   }
 }
 
 export function createIdempotencyReplay({
   dataDir = process.env.COMMERCE_DATA_DIR || path.join(process.cwd(), "data"),
-  secret = process.env.COMMERCE_ACTOR_SECRET || randomBytes(32).toString("hex"),
+  secret = process.env.COMMERCE_ACTOR_SECRET,
   ttlMs = boundedInteger(process.env.IDEMPOTENCY_TTL_MS, 15 * 60_000, 60_000, 24 * 60 * 60_000),
   maxEntries = boundedInteger(process.env.IDEMPOTENCY_MAX_ENTRIES, 256, 1, 2_000),
   maxResponseBytes = boundedInteger(process.env.IDEMPOTENCY_MAX_RESPONSE_BYTES, 512 * 1024, 1_024, 2 * 1024 * 1024),
   routes = DEFAULT_PAID_ROUTES,
+  inFlightPaths = routes,
+  requiredReplayPaths = new Set(),
+  publicUrl,
+  inFlightWaitMs = boundedInteger(process.env.IDEMPOTENCY_INFLIGHT_WAIT_MS, 15_000, 50, 60_000),
   now = () => Date.now(),
 } = {}) {
   const storePath = path.join(dataDir, "idempotency-replay.json");
   const tempPath = path.join(dataDir, "idempotency-replay.tmp.json");
   let queue = Promise.resolve();
+  const replaySecret = secret || persistentReplaySecret(dataDir);
 
-  const digest = (label, value) => createHmac("sha256", secret).update(`${label}:${value}`).digest("hex");
+  const digest = (label, value) => createHmac("sha256", replaySecret).update(`${label}:${value}`).digest("hex");
 
   function bindingFor({ method, url, headers, bodyBytes }) {
     const payment = decodeReplayPayment(headers);
     if (!payment) return null;
-    const canonicalUrl = canonicalReplayUrl(url);
+    const requestUrl = new URL(url);
+    if (publicUrl) {
+      const origin = new URL(publicUrl);
+      requestUrl.protocol = origin.protocol;
+      requestUrl.host = origin.host;
+      requestUrl.port = origin.port;
+    }
+    const canonicalUrl = canonicalReplayUrl(requestUrl.href);
     const normalizedMethod = String(method || "GET").toUpperCase();
     const hasRequestBody = !["GET", "HEAD"].includes(normalizedMethod);
     const requestBody = Buffer.isBuffer(bodyBytes)
@@ -191,24 +242,30 @@ export function createIdempotencyReplay({
     });
     return {
       key: digest("payment-id", payment.id),
+      credentialKey: payment.authorizationIdentity ? digest("authorization", payment.authorizationIdentity) : null,
       fingerprint: digest("request", material),
       paymentId: payment.id,
       payer: payment.payer,
+      validUntilMs: payment.validUntilMs,
+      protected: inFlightPaths.has(new URL(canonicalUrl).pathname),
+      hasPaymentIdentifier: payment.protocol !== "x402" || payment.hasPaymentIdentifier,
     };
   }
 
   async function mutate(operation) {
     let result;
-    queue = queue.then(async () => {
+    queue = queue.catch(() => {}).then(async () => {
       await mkdir(dataDir, { recursive: true, mode: 0o700 });
       await chmod(dataDir, 0o700).catch(() => {});
       const currentTime = now();
       const records = (await readStore(storePath)).filter((record) => Number(record.expiresAt) > currentTime);
       const mutation = await operation(records, currentTime);
       result = mutation.result;
-      const bounded = mutation.records
+      const protectedRecords = mutation.records.filter((record) => record.protected);
+      if (protectedRecords.length > maxEntries) throw new Error("replay capacity exhausted");
+      const bounded = [...protectedRecords, ...mutation.records.filter((record) => !record.protected)
         .sort((left, right) => Number(right.createdAt) - Number(left.createdAt))
-        .slice(0, maxEntries);
+        .slice(0, maxEntries - protectedRecords.length)];
       await writeFile(tempPath, `${JSON.stringify({ v: 1, records: bounded })}\n`, { encoding: "utf8", mode: 0o600 });
       await chmod(tempPath, 0o600).catch(() => {});
       await rename(tempPath, storePath);
@@ -221,13 +278,53 @@ export function createIdempotencyReplay({
   async function lookup(binding) {
     if (!binding) return { kind: "miss" };
     return mutate(async (records) => {
-      const existing = records.find((record) => record.key === binding.key);
+      const existing = records.find((record) => record.key === binding.key || (binding.credentialKey && record.credentialKey === binding.credentialKey));
       if (!existing) return { records, result: { kind: "miss" } };
       if (existing.fingerprint !== binding.fingerprint) {
         return { records, result: { kind: "conflict" } };
       }
+      if (existing.pending) return { records, result: { kind: "pending" } };
       return { records, result: { kind: "hit", record: existing } };
     });
+  }
+
+  async function claim(binding) {
+    if (!binding) return { kind: "miss" };
+    return mutate(async (records, currentTime) => {
+      const existing = records.find((record) => record.key === binding.key || (binding.credentialKey && record.credentialKey === binding.credentialKey));
+      if (!existing) {
+        if (Number.isFinite(binding.validUntilMs) && binding.validUntilMs <= currentTime) return { records, result: { kind: "expired" } };
+        if (records.filter((record) => record.protected).length >= maxEntries) return { records, result: { kind: "capacity" } };
+        const record = {
+          v: 1,
+          key: binding.key,
+          credentialKey: binding.credentialKey,
+          fingerprint: binding.fingerprint,
+          pending: true,
+          protected: true,
+          createdAt: currentTime,
+          expiresAt: Math.max(currentTime + ttlMs, Number.isFinite(binding.validUntilMs) ? binding.validUntilMs + 60_000 : 0),
+        };
+        return { records: [record, ...records], result: { kind: "miss", reserved: true } };
+      }
+      if (existing.fingerprint !== binding.fingerprint) {
+        return { records, result: { kind: "conflict" } };
+      }
+      if (existing.pending) return { records, result: { kind: "pending" } };
+      return { records, result: { kind: "hit", record: existing } };
+    });
+  }
+
+  async function release(binding) {
+    if (!binding) return false;
+    return mutate(async (records) => ({
+      records: records.filter((record) => !(
+        record.key === binding.key
+        && record.pending
+        && record.fingerprint === binding.fingerprint
+      )),
+      result: true,
+    }));
   }
 
   async function store(binding, { status, headers, body }) {
@@ -246,9 +343,11 @@ export function createIdempotencyReplay({
     const record = {
       v: 1,
       key: binding.key,
+      credentialKey: binding.credentialKey,
       fingerprint: binding.fingerprint,
+      protected: binding.protected === true,
       createdAt,
-      expiresAt: createdAt + ttlMs,
+      expiresAt: Math.max(createdAt + ttlMs, Number.isFinite(binding.validUntilMs) ? binding.validUntilMs + 60_000 : 0),
       status,
       headers: safeHeaders,
       bodyBase64: payload.toString("base64"),
@@ -301,9 +400,40 @@ export function createIdempotencyReplay({
       headers: req.headers,
       bodyBytes: req.rawBody,
     });
-    if (!binding) return next();
+    if (!binding) {
+      if (requiredReplayPaths.has(req.path) && (x402PaymentHeader(req.headers) || mppPaymentHeader(req.headers))) {
+        return res.status(400).json({ ok: false, error: "replayable_payment_credential_required", charged: false });
+      }
+      return next();
+    }
 
-    const cached = await lookup(binding);
+    const useInFlight = inFlightPaths.has(req.path);
+    if (requiredReplayPaths.has(req.path) && (!binding.hasPaymentIdentifier || !Number.isFinite(binding.validUntilMs) || binding.validUntilMs > now() + ttlMs)) {
+      return res.status(400).json({ ok: false, error: "bounded_payment_validity_required", charged: false });
+    }
+    let cached = useInFlight ? await claim(binding) : await lookup(binding);
+    if (cached.kind === "expired" || cached.kind === "capacity") {
+      return res.status(cached.kind === "expired" ? 409 : 503).json({ ok: false, error: `payment_replay_${cached.kind}`, charged: false });
+    }
+    if (cached.kind === "pending") {
+      const deadline = Date.now() + inFlightWaitMs;
+      while (Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        cached = await lookup(binding);
+        if (cached.kind !== "pending") break;
+      }
+      if (cached.kind === "pending" || cached.kind === "miss") {
+        res.set("Cache-Control", "no-store");
+        res.set("X-Payment-Idempotency", "in_flight");
+        return res.status(503).json({
+          ok: false,
+          error: "payment_execution_in_flight_or_unknown",
+          charged: null,
+          newSettlementAttempt: false,
+          boundary: "Matching execution is active or unresolved. This request did not settle or fetch again. Reconcile the original attempt; do not create a replacement payment automatically.",
+        });
+      }
+    }
     if (cached.kind === "conflict") {
       res.set("Cache-Control", "no-store");
       res.set("X-Payment-Idempotency", "conflict");
@@ -323,6 +453,17 @@ export function createIdempotencyReplay({
     }
 
     const chunks = [];
+    let settlementAttempted = false;
+    const markSettlementAttempt = async () => {
+      if (!cached.reserved) return;
+      settlementAttempted = true;
+      markSettlementAttempt.attempted = true;
+      await mutate(async (records) => ({
+        records: records.map((record) => record.key === binding.key && record.fingerprint === binding.fingerprint
+          ? { ...record, settlementAttempted: true } : record),
+        result: true,
+      }));
+    };
     let capturedBytes = 0;
     let overflow = false;
     const originalWrite = res.write.bind(res);
@@ -352,7 +493,13 @@ export function createIdempotencyReplay({
         || responseHeaders["x-payment-response"],
       );
       if (endScheduled || overflow || res.statusCode < 200 || res.statusCode >= 300 || !hasSettlementProof) {
-        return originalEnd(chunk, encoding, callback);
+        const finish = () => originalEnd(chunk, encoding, callback);
+        if (cached.reserved && !settlementAttempted && !hasSettlementProof) {
+          endScheduled = true;
+          void release(binding).catch(() => {}).finally(finish);
+          return res;
+        }
+        return finish();
       }
       endScheduled = true;
       void store(binding, {
@@ -364,13 +511,15 @@ export function createIdempotencyReplay({
         .finally(() => originalEnd(chunk, encoding, callback));
       return res;
     };
-    return next();
+    return settlementContext.run(markSettlementAttempt, () => next());
   }
 
   return {
     middleware,
     bindingFor,
     lookup,
+    claim,
+    release,
     store,
     storageStatus,
     publicProfile,

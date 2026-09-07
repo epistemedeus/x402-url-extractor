@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -59,6 +59,24 @@ function fakeResponse() {
     headers,
   };
 }
+
+test("persistent identity and capacity preserve pending claims, corrupt state fails closed", async (t) => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "replay-durable-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  const options = { dataDir, maxEntries: 1, publicUrl: "https://agents.samedaydesk.com" };
+  const replay = createIdempotencyReplay(options);
+  const request = { method: "GET", url: "http://127.0.0.1:1234/extract", headers: { "payment-signature": encodedPayment() } };
+  const binding = replay.bindingFor(request);
+  assert.equal((await replay.claim(binding)).reserved, true);
+  const restarted = createIdempotencyReplay(options);
+  const rebound = restarted.bindingFor({ ...request, url: "http://127.0.0.1:9876/extract" });
+  assert.equal((await restarted.claim(rebound)).kind, "pending");
+  const another = restarted.bindingFor({ ...request, headers: { "payment-signature": encodedPayment({ id: "another_order_12345678" }) } });
+  assert.equal((await restarted.claim(another)).kind, "capacity");
+  await writeFile(restarted.storePath, "corrupt");
+  await assert.rejects(restarted.claim(rebound));
+  assert.equal(await readFile(restarted.storePath, "utf8"), "corrupt");
+});
 
 test("canonical replay URL binds sorted query keys and values", () => {
   assert.equal(
@@ -303,5 +321,93 @@ test("a newly settled response is durable before the network response ends", asy
     headers,
   });
   assert.equal((await replay.lookup(binding)).kind, "hit");
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("in-flight claim prevents a twin POST from running a second handler", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "idempotency-inflight-"));
+  const replay = createIdempotencyReplay({
+    dataDir,
+    secret: "test-secret",
+    ttlMs: 60_000,
+    routes: new Set(["/extract/batch"]),
+    inFlightPaths: new Set(["/extract/batch"]),
+    inFlightWaitMs: 200,
+  });
+  const headers = {
+    "payment-signature": encodedPayment(),
+    host: "agents.samedaydesk.com",
+    "x-forwarded-proto": "https",
+  };
+  const body = Buffer.from('{"urls":["https://example.com/"]}');
+  let handlerRuns = 0;
+  let releaseFirst;
+  const firstGate = new Promise((resolve) => { releaseFirst = resolve; });
+
+  function liveResponse() {
+    const responseHeaders = { "content-type": "application/json" };
+    let ended;
+    const endedPromise = new Promise((resolve) => { ended = resolve; });
+    const res = {
+      statusCode: 200,
+      body: null,
+      set(name, value) {
+        responseHeaders[String(name).toLowerCase()] = String(value);
+        return this;
+      },
+      status(value) {
+        this.statusCode = value;
+        return this;
+      },
+      json(value) {
+        this.body = Buffer.from(JSON.stringify(value));
+        this.end(this.body);
+        return this;
+      },
+      send(value) {
+        this.body = Buffer.isBuffer(value) ? value : Buffer.from(String(value));
+        return this;
+      },
+      getHeaders() {
+        return { ...responseHeaders };
+      },
+      write() { return true; },
+      end(chunk) {
+        if (chunk) this.send(chunk);
+        ended();
+        return this;
+      },
+      endedPromise,
+    };
+    return res;
+  }
+
+  const firstReq = {
+    method: "POST",
+    path: "/extract/batch",
+    originalUrl: "/extract/batch",
+    rawBody: body,
+    headers,
+    protocol: "http",
+  };
+  const firstRes = liveResponse();
+  const first = replay.middleware(firstReq, firstRes, async () => {
+    handlerRuns += 1;
+    await firstGate;
+    firstRes.set("payment-response", "signed-settlement");
+    firstRes.end('{"ok":true}');
+  });
+
+  const secondReq = { ...firstReq };
+  const secondRes = liveResponse();
+  const second = replay.middleware(secondReq, secondRes, () => { handlerRuns += 1; });
+  await second;
+  assert.equal(handlerRuns, 1);
+  assert.equal(secondRes.statusCode, 503);
+  assert.equal(JSON.parse(secondRes.body).charged, null);
+  releaseFirst();
+  await first;
+  await firstRes.endedPromise;
+  assert.equal(handlerRuns, 1);
   await rm(dataDir, { recursive: true, force: true });
 });

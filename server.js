@@ -170,7 +170,7 @@ import {
   listDeclaredAgentDiscoverySources,
 } from "./commerce-events.mjs";
 import { createCommerceSettlementReconciler } from "./commerce-settlement-reconciler.mjs";
-import { createIdempotencyReplay } from "./idempotency-replay.mjs";
+import { createIdempotencyReplay, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
 import {
   PURCHASE_EVIDENCE_MANIFEST_PATH,
   PURCHASE_EVIDENCE_RELATION,
@@ -392,7 +392,7 @@ function buildFacilitatorClient() {
   return new HTTPFacilitatorClient({ url });
 }
 
-const facilitatorClient = buildFacilitatorClient();
+const facilitatorClient = trackReplaySettlementAttempts(buildFacilitatorClient());
 
 // Register the EVM "exact" scheme for our network. This is what settles USDC.
 const resourceServer = new x402ResourceServer(facilitatorClient).register(
@@ -465,7 +465,8 @@ process.once("SIGTERM", requestCommerceWriterDrain);
 process.once("SIGINT", requestCommerceWriterDrain);
 app.use(paidActionEffectHeaders);
 app.use(commerceTelemetry.middleware);
-const idempotencyReplay = createIdempotencyReplay();
+const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
+const idempotencyReplay = createIdempotencyReplay({ publicUrl: PUBLIC_URL });
 let commerceSettlementReconciler;
 let purchaseEvidenceManifest;
 
@@ -755,7 +756,6 @@ app.get("/go/manychat", async (_req, res) => {
 
 // --- x402 discovery document (/.well-known/x402) so agents + indexes (x402scan,
 // domain crawlers) self-discover our paid resources. Free route, before the paywall.
-const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
 const USDC_ASSET = usdcTermsForNetwork(NETWORK).asset;
 const receiptReferralClaimStore = createReceiptReferralClaimStore();
 const serviceDeploymentPublication = loadServiceDeploymentPublication({
@@ -1785,7 +1785,7 @@ app.post(RECEIPT_REFERRAL_RECHECK_ROUTE, async (req, res) => {
 
 // Return a short-lived response for an exact logical retry before validation or
 // settlement. Changed request bindings fail with an uncharged 409.
-app.use(idempotencyReplay.middleware);
+app.use((req, res, next) => idempotencyReplay.middleware(req, res, next).catch(next));
 
 const PAYMENT_CREDENTIAL_HEADERS = Object.freeze([
   "payment-signature",
