@@ -20,7 +20,11 @@ import {
 } from "viem";
 import { base } from "viem/chains";
 
-import { normalizeCommercePayerClasses } from "./commerce-events.mjs";
+import {
+  normalizeCommercePayerClasses,
+  sanitizeSettlementSourceDeliveryAttribution,
+  summarizeSettlementSourceDelivery,
+} from "./commerce-events.mjs";
 import { isProxy } from "node:util/types";
 
 const SCHEMA_VERSION = "samedaydesk.commerce-settlement-reconciliation.v1";
@@ -120,6 +124,8 @@ export function summarizeCommerceSettlementLedger(contents, {
     invalidLines: parsed.invalidLines,
   };
 }
+
+export { summarizeSettlementSourceDelivery };
 
 function currentPaymentClassBySourceEventId(eventContents, {
   actorSecret,
@@ -241,7 +247,7 @@ export async function reconcileCommerceSettlementEvents(eventContents, ledgerCon
       continue;
     }
     const paymentClass = classesByActor.get(event.paymentActor || observedPaymentActor) || "unclassified";
-    newRecords.push({
+    const record = {
       schemaVersion: SCHEMA_VERSION,
       reconciliationId: `sddsr_${sha256(`${event.id}|${reference}|${transfer.amountAtomic}`).slice(0, 40)}`,
       reconciledAt: now().toISOString(),
@@ -259,7 +265,10 @@ export async function reconcileCommerceSettlementEvents(eventContents, ledgerCon
       blockNumber: String(receipt.blockNumber),
       blockTimestamp: new Date(Number(block.timestamp) * 1_000).toISOString(),
       payerContinuity: event.paymentActor ? "matched_request_pseudonym" : "onchain_only",
-    });
+    };
+    const sourceDeliveryAttribution = sanitizeSettlementSourceDeliveryAttribution(event);
+    if (sourceDeliveryAttribution) record.sourceDeliveryAttribution = sourceDeliveryAttribution;
+    newRecords.push(record);
   }
 
   return {

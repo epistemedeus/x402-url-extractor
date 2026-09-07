@@ -235,6 +235,51 @@ export function listDeclaredAgentDiscoverySources() {
   return [...DECLARED_AGENT_DISCOVERY_SOURCES].map(([value, source]) => ({ value, source }));
 }
 
+const DECLARED_DISCOVERY_SOURCE_LABELS = new Set([
+  ...DECLARED_AGENT_DISCOVERY_SOURCES.values(),
+  "declared-receipt-referral",
+]);
+const OBSERVED_DISCOVERY_SOURCE_LABELS = new Set([
+  ...AGENT_DISCOVERY_SOURCE_PATTERNS.map(([source]) => source),
+  "generic-agent-indexer",
+]);
+const WRITER_DISCOVERY_SOURCE_KINDS = new Set([
+  "declared_header",
+  "declared_receipt_referral",
+  "observed_user_agent",
+  "none",
+]);
+const LEDGER_DISCOVERY_SOURCE_KINDS = new Set([
+  ...WRITER_DISCOVERY_SOURCE_KINDS,
+  "unknown",
+]);
+const SOURCE_LABEL_MAX_LENGTH = 40;
+const SOURCE_LABEL_PATTERN = /^[a-z][a-z0-9-]{1,39}$/;
+
+export function classifyCommerceDiscoverySourceSplit({
+  declaredHeader = null,
+  receiptReferral = false,
+  observed = null,
+} = {}) {
+  const observedSource = typeof observed === "string" && observed.length > 0 ? observed : null;
+  const declaredSource = receiptReferral
+    ? "declared-receipt-referral"
+    : (typeof declaredHeader === "string" && declaredHeader.length > 0 ? declaredHeader : null);
+  const discoverySourceKind = receiptReferral
+    ? "declared_receipt_referral"
+    : declaredSource
+      ? "declared_header"
+      : observedSource
+        ? "observed_user_agent"
+        : "none";
+  return {
+    declaredAgentDiscoverySource: declaredSource,
+    observedAgentDiscoverySource: observedSource,
+    discoverySourceKind,
+    agentDiscoverySource: declaredSource || observedSource || null,
+  };
+}
+
 function hasMppAuthorization(headers) {
   return /(?:^|,)\s*Payment\s+[A-Za-z0-9_-]+/i.test(headerValue(headers, "authorization"));
 }
@@ -1135,7 +1180,363 @@ function isCanonicalCommerceEvent(value) {
   }
   if (!isBoundedString(value.result, 32)) return false;
   if (!Number.isInteger(value.durationMs) || value.durationMs < 0) return false;
+  // Optional learning metadata must not change core event validity or aggregates.
+  // Its own reader validates it before retaining any source attribution.
   return value.result === eventResult(value);
+}
+
+function hasOwn(value, key) {
+  return value != null && Object.prototype.hasOwnProperty.call(value, key);
+}
+
+function canonicalDiscoverySourceLabel(value, allowlist) {
+  if (value === null) return null;
+  if (typeof value !== "string") return undefined;
+  if (value.length < 2 || value.length > SOURCE_LABEL_MAX_LENGTH) return undefined;
+  if (!SOURCE_LABEL_PATTERN.test(value)) return undefined;
+  if (!allowlist.has(value)) return undefined;
+  return value;
+}
+
+const CANONICAL_COMMERCE_RESULTS = new Set([
+  "unmatched",
+  "discovery",
+  "request",
+  "challenge",
+  "service_failure",
+  "validation_failure",
+  "protocol_discovery",
+  "replay_success",
+  "paid_success",
+  "paid_route_response",
+]);
+const ORIGIN_VERIFICATION_BY_CLASS = Object.freeze({
+  internal: "verified_internal_token",
+  // The caller controls its UA. Only the writer's token match proves authority.
+  owner_monitor: "unverified",
+  scanner: "unverified",
+  crawler: "unverified",
+  external: "unverified",
+});
+
+export const SETTLEMENT_SOURCE_DELIVERY_ATTRIBUTION_SCHEMA =
+  "samedaydesk.settlement-source-delivery-attribution.v1";
+export const SETTLEMENT_SOURCE_DELIVERY_SUMMARY_SCHEMA =
+  "samedaydesk.settlement-source-delivery-summary.v1";
+export const SETTLEMENT_SOURCE_DELIVERY_MAX_BYTES = 2048;
+const SETTLEMENT_SOURCE_DELIVERY_KEYS = Object.freeze([
+  "buyerValidOutput",
+  "collapsedDiscoverySource",
+  "customerDemand",
+  "declaredDiscoverySource",
+  "deliveryValidation",
+  "deliveryValidationAuthority",
+  "discoverySourceKind",
+  "discoverySourceVerification",
+  "observedDiscoverySource",
+  "originClass",
+  "originVerification",
+  "repeatDemand",
+  "responseResult",
+  "responseStatus",
+  "schemaVersion",
+]);
+
+function freezeExactSourceDeliverySnapshot(snapshot) {
+  if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) return null;
+  const keys = Object.keys(snapshot).sort();
+  if (
+    keys.length !== SETTLEMENT_SOURCE_DELIVERY_KEYS.length
+    || keys.some((key, index) => key !== SETTLEMENT_SOURCE_DELIVERY_KEYS[index])
+  ) {
+    return null;
+  }
+  if (snapshot.schemaVersion !== SETTLEMENT_SOURCE_DELIVERY_ATTRIBUTION_SCHEMA) return null;
+  if (snapshot.buyerValidOutput !== "unknown") return null;
+  if (snapshot.customerDemand !== "unknown" || snapshot.repeatDemand !== "unknown") return null;
+  if (snapshot.deliveryValidation !== "not_checked" && snapshot.deliveryValidation !== "unknown") {
+    return null;
+  }
+  if (snapshot.deliveryValidationAuthority !== "none") return null;
+  const originClass = snapshot.originClass === "unknown"
+    || CANONICAL_EVENT_ORIGIN_CLASSES.has(snapshot.originClass)
+    ? snapshot.originClass
+    : null;
+  if (originClass === null) return null;
+  const expectedOriginVerification = originClass === "unknown"
+    ? "unknown"
+    : ORIGIN_VERIFICATION_BY_CLASS[originClass];
+  if (snapshot.originVerification !== expectedOriginVerification) return null;
+  if (!LEDGER_DISCOVERY_SOURCE_KINDS.has(snapshot.discoverySourceKind)) return null;
+  if (
+    snapshot.discoverySourceVerification !== "unverified"
+    && snapshot.discoverySourceVerification !== "unknown"
+  ) {
+    return null;
+  }
+  if (snapshot.declaredDiscoverySource !== null
+    && canonicalDiscoverySourceLabel(snapshot.declaredDiscoverySource, DECLARED_DISCOVERY_SOURCE_LABELS) !== snapshot.declaredDiscoverySource) {
+    return null;
+  }
+  if (snapshot.observedDiscoverySource !== null
+    && canonicalDiscoverySourceLabel(snapshot.observedDiscoverySource, OBSERVED_DISCOVERY_SOURCE_LABELS) !== snapshot.observedDiscoverySource) {
+    return null;
+  }
+  if (snapshot.collapsedDiscoverySource !== null
+    && canonicalDiscoverySourceLabel(snapshot.collapsedDiscoverySource, CANONICAL_AGENT_DISCOVERY_SOURCES) !== snapshot.collapsedDiscoverySource) {
+    return null;
+  }
+  // Reuse the source relationship validator instead of accepting individually
+  // allowlisted but contradictory fields from an optional stored snapshot.
+  if (snapshot.discoverySourceKind === "unknown") {
+    if (snapshot.declaredDiscoverySource !== null || snapshot.observedDiscoverySource !== null
+      || snapshot.discoverySourceVerification !== "unknown") return null;
+  } else {
+    const split = eventDiscoverySplitForSnapshot({
+      declaredAgentDiscoverySource: snapshot.declaredDiscoverySource,
+      observedAgentDiscoverySource: snapshot.observedDiscoverySource,
+      discoverySourceKind: snapshot.discoverySourceKind,
+      agentDiscoverySource: snapshot.collapsedDiscoverySource,
+    });
+    if (!split.ok || snapshot.discoverySourceVerification !== split.verification) return null;
+  }
+  if (snapshot.responseStatus !== null
+    && (!Number.isInteger(snapshot.responseStatus) || snapshot.responseStatus < 100 || snapshot.responseStatus > 999)) {
+    return null;
+  }
+  if (snapshot.responseResult !== null
+    && (
+      typeof snapshot.responseResult !== "string"
+      || snapshot.responseResult.length === 0
+      || snapshot.responseResult.length > 32
+      || !CANONICAL_COMMERCE_RESULTS.has(snapshot.responseResult)
+    )) {
+    return null;
+  }
+  try {
+    const encoded = JSON.stringify(snapshot);
+    if (typeof encoded !== "string" || encoded.length > SETTLEMENT_SOURCE_DELIVERY_MAX_BYTES) {
+      return null;
+    }
+  } catch {
+    return null;
+  }
+  return Object.freeze(snapshot);
+}
+
+function eventDiscoverySplitForSnapshot(event) {
+  const hasDeclared = hasOwn(event, "declaredAgentDiscoverySource");
+  const hasObserved = hasOwn(event, "observedAgentDiscoverySource");
+  const hasKind = hasOwn(event, "discoverySourceKind");
+  if (!hasDeclared && !hasObserved && !hasKind) {
+    const collapsed = event?.agentDiscoverySource == null
+      ? null
+      : canonicalDiscoverySourceLabel(event.agentDiscoverySource, CANONICAL_AGENT_DISCOVERY_SOURCES);
+    return {
+      ok: true,
+      declared: null,
+      observed: null,
+      kind: "unknown",
+      collapsed: collapsed === undefined ? null : collapsed,
+      verification: "unknown",
+    };
+  }
+  if (!hasDeclared || !hasObserved || !hasKind) return { ok: false };
+  const declared = canonicalDiscoverySourceLabel(
+    event.declaredAgentDiscoverySource,
+    DECLARED_DISCOVERY_SOURCE_LABELS,
+  );
+  const observed = canonicalDiscoverySourceLabel(
+    event.observedAgentDiscoverySource,
+    OBSERVED_DISCOVERY_SOURCE_LABELS,
+  );
+  if (declared === undefined || observed === undefined) return { ok: false };
+  if (!WRITER_DISCOVERY_SOURCE_KINDS.has(event.discoverySourceKind)) return { ok: false };
+  const kind = event.discoverySourceKind;
+  if (kind === "none" && (declared !== null || observed !== null)) return { ok: false };
+  if (kind === "observed_user_agent" && (declared !== null || observed === null)) return { ok: false };
+  if (kind === "declared_header" && (declared === null || declared === "declared-receipt-referral")) {
+    return { ok: false };
+  }
+  if (kind === "declared_receipt_referral" && declared !== "declared-receipt-referral") return { ok: false };
+  const collapsed = event.agentDiscoverySource == null
+    ? (kind === "none" ? null : undefined)
+    : canonicalDiscoverySourceLabel(event.agentDiscoverySource, CANONICAL_AGENT_DISCOVERY_SOURCES);
+  if (collapsed === undefined) return { ok: false };
+  if (kind === "none" && collapsed !== null) return { ok: false };
+  if (kind === "observed_user_agent" && collapsed !== observed) return { ok: false };
+  if ((kind === "declared_header" || kind === "declared_receipt_referral") && collapsed !== declared) {
+    return { ok: false };
+  }
+  return {
+    ok: true,
+    declared,
+    observed,
+    kind,
+    collapsed,
+    verification: "unverified",
+  };
+}
+
+export function sanitizeSettlementSourceDeliveryAttribution(event) {
+  if (event === null || typeof event !== "object" || Array.isArray(event)) return null;
+  const split = eventDiscoverySplitForSnapshot(event);
+  if (!split.ok) return null;
+  const originClass = CANONICAL_EVENT_ORIGIN_CLASSES.has(event.originClass)
+    ? event.originClass
+    : "unknown";
+  const originVerification = originClass === "unknown"
+    ? "unknown"
+    : ORIGIN_VERIFICATION_BY_CLASS[originClass];
+  let responseStatus = null;
+  if (event.status !== null && event.status !== undefined) {
+    if (!Number.isInteger(event.status) || event.status < 100 || event.status > 999) return null;
+    responseStatus = event.status;
+  }
+  let responseResult = null;
+  if (event.result !== null && event.result !== undefined) {
+    if (
+      typeof event.result !== "string"
+      || event.result.length === 0
+      || event.result.length > 32
+      || !CANONICAL_COMMERCE_RESULTS.has(event.result)
+    ) {
+      return null;
+    }
+    responseResult = event.result;
+  }
+  return freezeExactSourceDeliverySnapshot({
+    schemaVersion: SETTLEMENT_SOURCE_DELIVERY_ATTRIBUTION_SCHEMA,
+    originClass,
+    originVerification,
+    declaredDiscoverySource: split.declared,
+    observedDiscoverySource: split.observed,
+    collapsedDiscoverySource: split.collapsed,
+    discoverySourceKind: split.kind,
+    discoverySourceVerification: split.verification,
+    responseStatus,
+    responseResult,
+    buyerValidOutput: "unknown",
+    deliveryValidation: responseStatus === null ? "unknown" : "not_checked",
+    deliveryValidationAuthority: "none",
+    customerDemand: "unknown",
+    repeatDemand: "unknown",
+  });
+}
+
+export function isCanonicalSettlementSourceDeliveryAttribution(value) {
+  return freezeExactSourceDeliverySnapshot(value) !== null;
+}
+
+const PAYMENT_CLASS_SUMMARY_LABELS = new Set([
+  "internal",
+  "validation",
+  "incentivized",
+  "affiliated",
+  "independent",
+  "unclassified",
+]);
+const PAYER_CONTINUITY_SUMMARY_LABELS = new Set([
+  "matched_request_pseudonym",
+  "onchain_only",
+]);
+const PROTOCOL_SUMMARY_LABELS = new Set(["x402", "mpp", "unknown"]);
+const SOURCE_EVENT_ID_SUMMARY_PATTERN = /^[A-Za-z0-9._:-]{1,36}$/;
+
+function boundedSummaryId(value) {
+  if (typeof value !== "string" || !SOURCE_EVENT_ID_SUMMARY_PATTERN.test(value)) return null;
+  return value;
+}
+
+function boundedSummaryTimestamp(value) {
+  return canonicalIsoTimestampMs(value) === null ? null : value;
+}
+
+function boundedSummaryRoute(value) {
+  if (typeof value !== "string" || value.length === 0 || value.length > CLASSIFIER_ROUTE_MAX_LENGTH) {
+    return "/:unknown";
+  }
+  if (CANONICAL_CLASSIFIER_ROUTES.has(value)) return value;
+  if (CLASSIFIER_UNMATCHED_ROUTE_FORM.test(value)) return value;
+  return "/:unknown";
+}
+
+function boundedSummaryAmount(value) {
+  if (typeof value !== "string" || value.length === 0 || value.length > WRITER_SETTLEMENT_AMOUNT_MAX_LENGTH) {
+    return null;
+  }
+  return /^\d+$/.test(value) ? value : null;
+}
+
+export function unknownSettlementSourceDeliverySummary() {
+  return Object.freeze({
+    schemaVersion: SETTLEMENT_SOURCE_DELIVERY_SUMMARY_SCHEMA,
+    originClass: "unknown",
+    originVerification: "unknown",
+    declaredDiscoverySource: null,
+    observedDiscoverySource: null,
+    collapsedDiscoverySource: null,
+    discoverySourceKind: "unknown",
+    discoverySourceVerification: "unknown",
+    responseStatus: null,
+    responseResult: null,
+    buyerValidOutput: "unknown",
+    deliveryValidation: "unknown",
+    deliveryValidationAuthority: "none",
+    customerDemand: "unknown",
+    repeatDemand: "unknown",
+    settlementState: "unknown",
+    route: "/:unknown",
+    protocol: "unknown",
+    paymentClass: "unknown",
+    payerContinuity: "unknown",
+    amountAtomic: null,
+    sourceEventId: null,
+    sourceEventTimestamp: null,
+  });
+}
+
+export function summarizeSettlementSourceDelivery(record) {
+  if (record === null || typeof record !== "object" || Array.isArray(record)) {
+    return unknownSettlementSourceDeliverySummary();
+  }
+  const attribution = hasOwn(record, "sourceDeliveryAttribution")
+    ? freezeExactSourceDeliverySnapshot(record.sourceDeliveryAttribution)
+    : null;
+  const unknown = unknownSettlementSourceDeliverySummary();
+  const source = attribution || unknown;
+  const paymentClass = PAYMENT_CLASS_SUMMARY_LABELS.has(record.paymentClass)
+    ? record.paymentClass
+    : "unknown";
+  const payerContinuity = PAYER_CONTINUITY_SUMMARY_LABELS.has(record.payerContinuity)
+    ? record.payerContinuity
+    : "unknown";
+  const protocol = PROTOCOL_SUMMARY_LABELS.has(record.protocol) ? record.protocol : "unknown";
+  return Object.freeze({
+    schemaVersion: SETTLEMENT_SOURCE_DELIVERY_SUMMARY_SCHEMA,
+    originClass: source.originClass,
+    originVerification: source.originVerification,
+    declaredDiscoverySource: source.declaredDiscoverySource,
+    observedDiscoverySource: source.observedDiscoverySource,
+    collapsedDiscoverySource: source.collapsedDiscoverySource,
+    discoverySourceKind: source.discoverySourceKind,
+    discoverySourceVerification: source.discoverySourceVerification,
+    responseStatus: source.responseStatus,
+    responseResult: source.responseResult,
+    buyerValidOutput: "unknown",
+    deliveryValidation: source.deliveryValidation,
+    deliveryValidationAuthority: "none",
+    customerDemand: "unknown",
+    repeatDemand: "unknown",
+    settlementState: record.state === "reconciled" ? "reconciled" : "unknown",
+    route: boundedSummaryRoute(record.route),
+    protocol,
+    paymentClass,
+    payerContinuity,
+    amountAtomic: boundedSummaryAmount(record.amountAtomic),
+    sourceEventId: boundedSummaryId(record.sourceEventId),
+    sourceEventTimestamp: boundedSummaryTimestamp(record.sourceEventTimestamp),
+  });
 }
 
 const PAID_SUCCESS_EVIDENCE_KEYS = Object.freeze([
@@ -2111,11 +2512,14 @@ export function createCommerceTelemetry({
     const startedAt = Date.now();
     const headers = req.headers || {};
     const userAgent = headerValue(headers, "user-agent");
-    const declaredAgentDiscoverySource = classifyDeclaredAgentDiscoverySource(
-      headerValue(headers, "x-samedaydesk-agent-source"),
-    );
-    const receiptReferralSource = isReceiptReferralId(req?.query?.referral) ? "declared-receipt-referral" : null;
-    const agentDiscoverySource = receiptReferralSource || declaredAgentDiscoverySource || classifyAgentDiscoverySource(userAgent);
+    const sourceSplit = classifyCommerceDiscoverySourceSplit({
+      declaredHeader: classifyDeclaredAgentDiscoverySource(
+        headerValue(headers, "x-samedaydesk-agent-source"),
+      ),
+      receiptReferral: isReceiptReferralId(req?.query?.referral),
+      observed: classifyAgentDiscoverySource(userAgent),
+    });
+    const agentDiscoverySource = sourceSplit.agentDiscoverySource;
     const suppliedInternal = headerValue(headers, "x-samedaydesk-internal");
     const protocol = paymentProtocol(headers);
     const paymentPresent = Boolean(protocol);
@@ -2248,6 +2652,9 @@ export function createCommerceTelemetry({
         actor,
         originClass,
         agentDiscoverySource,
+        declaredAgentDiscoverySource: sourceSplit.declaredAgentDiscoverySource,
+        observedAgentDiscoverySource: sourceSplit.observedAgentDiscoverySource,
+        discoverySourceKind: sourceSplit.discoverySourceKind,
         method,
         route: route.route,
         matched: route.matched,

@@ -12,6 +12,7 @@ import {
   adaptMcpTypedDecisionToCommerceEvent,
   classifyAgentDiscoverySource,
   classifyDeclaredAgentDiscoverySource,
+  classifyCommerceDiscoverySourceSplit,
   classifyCommerceResult,
   classifyCommerceRoute,
   classifyPaymentFailureCode,
@@ -30,6 +31,7 @@ import {
   listDeclaredAgentDiscoverySources,
   metricCoverageStatus,
   normalizeCommercePayerClasses,
+  sanitizeSettlementSourceDeliveryAttribution,
 } from "./commerce-events.mjs";
 
 declareDiscoveryContract({
@@ -96,6 +98,15 @@ test("agent discovery sources reduce user agents to controlled labels", () => {
   assert.equal(classifyDeclaredAgentDiscoverySource("agentcash-v1"), "agentcash");
   assert.equal(classifyDeclaredAgentDiscoverySource(" AGENTCASH-V1 "), "agentcash");
   assert.equal(classifyDeclaredAgentDiscoverySource("unknown-client"), null);
+  assert.deepEqual(classifyCommerceDiscoverySourceSplit({
+    declaredHeader: "agent-skills",
+    observed: "agent402",
+  }), {
+    declaredAgentDiscoverySource: "agent-skills",
+    observedAgentDiscoverySource: "agent402",
+    discoverySourceKind: "declared_header",
+    agentDiscoverySource: "agent-skills",
+  });
   assert.deepEqual(listDeclaredAgentDiscoverySources(), [
     { value: "agent-skills-v1", source: "agent-skills" },
     { value: "agentictrade-v1", source: "agentictrade" },
@@ -433,8 +444,100 @@ test("receipt-derived referrals become a controlled acquisition source without r
   const raw = await readFile(path.join(dataDir, "commerce-events.ndjson"), "utf8");
   assert.equal(raw.includes(referral), false);
   assert.match(raw, /"queryKeys":\["origin","referral","route"\]/);
+  const stored = JSON.parse(raw.trim());
+  assert.equal(stored.declaredAgentDiscoverySource, "declared-receipt-referral");
+  assert.equal(stored.discoverySourceKind, "declared_receipt_referral");
+  assert.equal(stored.observedAgentDiscoverySource, null);
+  const attribution = sanitizeSettlementSourceDeliveryAttribution(stored);
+  assert.equal(attribution.originVerification, "unverified");
+  assert.equal(attribution.discoverySourceVerification, "unverified");
+  assert.equal(attribution.buyerValidOutput, "unknown");
+  assert.equal(attribution.customerDemand, "unknown");
   await rm(dataDir, { recursive: true, force: true });
 });
+
+test("writer stores declared source separately from observed UA and does not verify identity", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-source-split-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "test-secret",
+    agentDiscoverySince: "2020-01-01T00:00:00.000Z",
+  });
+  const listeners = new Map();
+  telemetry.middleware({
+    path: "/extract",
+    url: "/extract?url=https%3A%2F%2Fexample.com",
+    method: "GET",
+    headers: {
+      "user-agent": "agent402-runtime/1.0",
+      "x-samedaydesk-agent-source": "agent-skills-v1",
+    },
+    query: { url: "https://example.com" },
+    ip: "203.0.113.90",
+    socket: {},
+  }, {
+    statusCode: 402,
+    once(name, listener) { listeners.set(name, listener); },
+    getHeader() { return undefined; },
+  }, () => {});
+  listeners.get("finish")?.();
+  await telemetry.flush();
+
+  const stored = JSON.parse(await readFile(path.join(dataDir, "commerce-events.ndjson"), "utf8"));
+  assert.equal(stored.agentDiscoverySource, "agent-skills");
+  assert.equal(stored.declaredAgentDiscoverySource, "agent-skills");
+  assert.equal(stored.observedAgentDiscoverySource, "agent402");
+  assert.equal(stored.discoverySourceKind, "declared_header");
+  assert.equal(stored.originClass, "crawler");
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(JSON.stringify(snapshot).includes("agent-skills-v1"), false);
+  assert.equal(JSON.stringify(snapshot).includes("declaredAgentDiscoverySource"), false);
+  assert.equal(snapshot.agentDiscoveryBySource["agent-skills"], 1);
+  const attribution = sanitizeSettlementSourceDeliveryAttribution(stored);
+  assert.equal(attribution.originClass, "crawler");
+  assert.equal(attribution.originVerification, "unverified");
+  assert.equal(attribution.declaredDiscoverySource, "agent-skills");
+  assert.equal(attribution.observedDiscoverySource, "agent402");
+  assert.equal(attribution.discoverySourceKind, "declared_header");
+  assert.equal(attribution.discoverySourceVerification, "unverified");
+  assert.equal(attribution.buyerValidOutput, "unknown");
+  assert.equal(attribution.customerDemand, "unknown");
+  assert.equal(attribution.repeatDemand, "unknown");
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("optional invalid source split cannot invalidate core events or change public aggregates", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-source-split-legacy-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "test-secret",
+    externalSince: "2020-01-01T00:00:00.000Z",
+  });
+  const ts = "2026-09-07T00:00:00.000Z";
+  const legacy = paidSuccessEvent(ts);
+  const invalidSplit = {
+    ...legacy,
+    id: "00000000-0000-4000-8000-000000000002",
+    discoverySourceKind: "declared_header",
+    declaredAgentDiscoverySource: "independent-customer",
+    observedAgentDiscoverySource: null,
+  };
+  await writeFile(
+    path.join(dataDir, "commerce-events.ndjson"),
+    `${JSON.stringify(legacy)}\n${JSON.stringify(invalidSplit)}\n`,
+  );
+  const snapshot = await telemetry.snapshot({ days: 365 });
+  assert.equal(snapshot.byResult.paid_success, 2);
+  assert.equal(snapshot.integrityStatus, COMMERCE_INTEGRITY_OK);
+  assert.equal(snapshot.coverage.integrity.currentFile.unusableRecordCount, 0);
+  assert.equal(JSON.stringify(snapshot).includes("independent-customer"), false);
+  assert.equal(sanitizeSettlementSourceDeliveryAttribution(legacy).discoverySourceKind, "unknown");
+  assert.equal(sanitizeSettlementSourceDeliveryAttribution(legacy).collapsedDiscoverySource, "openai-user");
+  assert.equal(sanitizeSettlementSourceDeliveryAttribution(legacy).discoverySourceVerification, "unknown");
+  assert.equal(sanitizeSettlementSourceDeliveryAttribution(invalidSplit), null);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
 
 test("payer classification policy validates controlled explicit labels", () => {
   const classes = normalizeCommercePayerClasses([
