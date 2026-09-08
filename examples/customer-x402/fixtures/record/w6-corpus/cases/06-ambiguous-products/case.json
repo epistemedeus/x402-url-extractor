@@ -1,0 +1,57 @@
+{
+  "buyerSchema": {
+    "fields": {
+      "/product/name": {
+        "required": true,
+        "type": "string"
+      },
+      "/product/sku": {
+        "required": true,
+        "type": "string"
+      }
+    },
+    "schema": "pilot/buyer-record-fields/v1",
+    "semantics": "Exact types and pointers only; no coercion, synonym expansion, or inferred facts."
+  },
+  "desiredRecord": {},
+  "expected": {
+    "deliveryStatus": "success",
+    "mappingStatuses": {
+      "ambiguous-name": "ambiguous",
+      "ambiguous-sku": "ambiguous"
+    },
+    "noteCount": 0,
+    "rationale": "Two equally explicit Product entities prevent silent first-entity selection.",
+    "requiredMissing": [
+      "/product/name",
+      "/product/sku"
+    ]
+  },
+  "fields": [
+    "jsonLd"
+  ],
+  "id": "06-ambiguous-products",
+  "mappings": [
+    {
+      "expected": "ambiguous",
+      "id": "ambiguous-name",
+      "outputPointer": "/product/name",
+      "sourcePointers": [
+        "/data/jsonLd/0/name",
+        "/data/jsonLd/1/name"
+      ]
+    },
+    {
+      "expected": "ambiguous",
+      "id": "ambiguous-sku",
+      "outputPointer": "/product/sku",
+      "sourcePointers": [
+        "/data/jsonLd/0/sku",
+        "/data/jsonLd/1/sku"
+      ]
+    }
+  ],
+  "sourceFile": "source.html",
+  "sourceUrl": "https://w6-d553c4458a.example.invalid/06-ambiguous-products",
+  "title": "Multiple product entities"
+}

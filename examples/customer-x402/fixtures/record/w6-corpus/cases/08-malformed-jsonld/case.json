@@ -1,0 +1,57 @@
+{
+  "buyerSchema": {
+    "fields": {
+      "/page/title": {
+        "required": true,
+        "type": "string"
+      },
+      "/product/name": {
+        "required": false,
+        "type": "string"
+      }
+    },
+    "schema": "pilot/buyer-record-fields/v1",
+    "semantics": "Exact types and pointers only; no coercion, synonym expansion, or inferred facts."
+  },
+  "desiredRecord": {
+    "page": {
+      "title": "Broken Product Page"
+    }
+  },
+  "expected": {
+    "deliveryStatus": "partial",
+    "mappingStatuses": {
+      "malformed-product": "unmapped",
+      "malformed-title": "mapped"
+    },
+    "noteCount": 1,
+    "rationale": "The real parser records malformed JSON-LD and still delivers the independently observable title.",
+    "requiredMissing": []
+  },
+  "fields": [
+    "title",
+    "jsonLd"
+  ],
+  "id": "08-malformed-jsonld",
+  "mappings": [
+    {
+      "expected": "mapped",
+      "id": "malformed-title",
+      "outputPointer": "/page/title",
+      "sourcePointers": [
+        "/data/title"
+      ]
+    },
+    {
+      "expected": "unmapped",
+      "id": "malformed-product",
+      "outputPointer": "/product/name",
+      "sourcePointers": [
+        "/data/jsonLd/0/name"
+      ]
+    }
+  ],
+  "sourceFile": "source.html",
+  "sourceUrl": "https://w6-d553c4458a.example.invalid/08-malformed-jsonld",
+  "title": "Malformed JSON-LD with usable page title"
+}

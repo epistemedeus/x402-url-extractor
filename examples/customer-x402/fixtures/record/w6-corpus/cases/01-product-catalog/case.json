@@ -1,0 +1,90 @@
+{
+  "buyerSchema": {
+    "fields": {
+      "/offer/availability": {
+        "required": false,
+        "type": "string"
+      },
+      "/product/brand": {
+        "required": false,
+        "type": "object"
+      },
+      "/product/name": {
+        "required": true,
+        "type": "string"
+      },
+      "/product/sku": {
+        "required": true,
+        "type": "string"
+      }
+    },
+    "schema": "pilot/buyer-record-fields/v1",
+    "semantics": "Exact types and pointers only; no coercion, synonym expansion, or inferred facts."
+  },
+  "desiredRecord": {
+    "offer": {
+      "availability": "https://schema.org/InStock"
+    },
+    "product": {
+      "brand": {
+        "@type": "Brand",
+        "name": "Northstar Works"
+      },
+      "name": "Atlas Lamp",
+      "sku": "AL-100"
+    }
+  },
+  "expected": {
+    "deliveryStatus": "success",
+    "mappingStatuses": {
+      "offer-availability": "mapped",
+      "product-brand": "mapped",
+      "product-name": "mapped",
+      "product-sku": "mapped"
+    },
+    "noteCount": 0,
+    "rationale": "Product availability is copied as its exact declared string, not interpreted as a stock guarantee.",
+    "requiredMissing": []
+  },
+  "fields": [
+    "jsonLd"
+  ],
+  "id": "01-product-catalog",
+  "mappings": [
+    {
+      "expected": "mapped",
+      "id": "product-name",
+      "outputPointer": "/product/name",
+      "sourcePointers": [
+        "/data/jsonLd/0/name"
+      ]
+    },
+    {
+      "expected": "mapped",
+      "id": "product-sku",
+      "outputPointer": "/product/sku",
+      "sourcePointers": [
+        "/data/jsonLd/0/sku"
+      ]
+    },
+    {
+      "expected": "mapped",
+      "id": "product-brand",
+      "outputPointer": "/product/brand",
+      "sourcePointers": [
+        "/data/jsonLd/0/brand"
+      ]
+    },
+    {
+      "expected": "mapped",
+      "id": "offer-availability",
+      "outputPointer": "/offer/availability",
+      "sourcePointers": [
+        "/data/jsonLd/0/offers/availability"
+      ]
+    }
+  ],
+  "sourceFile": "source.html",
+  "sourceUrl": "https://w6-d553c4458a.example.invalid/01-product-catalog",
+  "title": "Catalog product and offer fields"
+}

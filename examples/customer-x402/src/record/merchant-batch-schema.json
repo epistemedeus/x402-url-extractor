@@ -1,0 +1,160 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ok",
+    "product",
+    "schemaVersion",
+    "quote",
+    "jobId",
+    "jobStatus",
+    "stopReason",
+    "partial",
+    "sources",
+    "accounting",
+    "costInputs",
+    "charged",
+    "boundary"
+  ],
+  "properties": {
+    "ok": {
+      "type": "boolean"
+    },
+    "product": {
+      "type": "string",
+      "const": "samedaydesk-extract-batch"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "const": "samedaydesk.extract-batch.v0"
+    },
+    "quote": {
+      "type": "object",
+      "required": [
+        "amountAtomic",
+        "displayUsdc",
+        "meaning"
+      ],
+      "properties": {
+        "amountAtomic": {
+          "type": "string",
+          "const": "10000"
+        },
+        "displayUsdc": {
+          "type": "string",
+          "const": "0.01"
+        },
+        "meaning": {
+          "type": "string"
+        }
+      }
+    },
+    "jobId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "jobStatus": {
+      "type": "string",
+      "enum": [
+        "running",
+        "completed",
+        "completed_with_unknown",
+        "stopped",
+        "interrupted"
+      ]
+    },
+    "stopReason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "partial": {
+      "type": "boolean"
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "status",
+          "data",
+          "notes",
+          "error",
+          "provenance"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "success",
+              "partial",
+              "failure",
+              "unknown",
+              "skipped_duplicate"
+            ]
+          },
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "notes": {
+            "type": "array"
+          },
+          "error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "provenance": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "finalUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "httpStatus": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "accounting": {
+      "type": "object"
+    },
+    "costInputs": {
+      "type": "object"
+    },
+    "charged": {
+      "type": "boolean"
+    },
+    "boundary": {
+      "type": "object"
+    },
+    "error": {
+      "type": "string"
+    }
+  }
+}

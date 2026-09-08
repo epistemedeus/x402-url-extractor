@@ -246,6 +246,62 @@ unknown outcome.
 HTTP 200, settlement headers, and `charged: true` do not prove useful
 selected-field output.
 
+## Offline buyer-record recipe (no key, no fetch)
+
+If you already have delivered `GET /extract` or `POST /extract/batch` JSON,
+project buyer-named fields with explicit JSON Pointers and a local JSON Schema.
+The recipe does not fetch URLs, schedule a second attempt, sign, retry, guess
+entities, or contact the merchant.
+
+Extraction is not identity or legal verification. Source JSON-LD remains a
+source statement. Multiple Product or `sameAs` candidates stay unsupported.
+
+Use the full public repository checkout, not a standalone npm tarball. Install
+this customer package with `npm ci`; root merchant helpers remain source inputs.
+Mapping targets are flat field names, with one explicit pointer per field.
+
+Pinned schema adapter: `ajv@8.20.0`. See `src/record/NOTICE.md`.
+
+### Fixture quickstart
+
+From `examples/customer-x402` after `npm ci`:
+
+```bash
+npm run record -- \
+  --input ./fixtures/record/product-jsonld/delivery/extract-batch.json \
+  --mapping ./fixtures/record/product-jsonld/mapping.json \
+  --schema ./fixtures/record/product-jsonld/schema.json \
+  --out /tmp/samedaydesk-record-product
+
+npm run record -- \
+  --input ./fixtures/record/org-contact/delivery/extract.json \
+  --mapping ./fixtures/record/org-contact/mapping.json \
+  --schema ./fixtures/record/org-contact/schema.json \
+  --out /tmp/samedaydesk-record-org
+```
+
+The product JSON-LD fixture emits one complete Product record and one partial
+record missing `sku`. The organization-contact fixture is partial because email
+is absent, not null. Failed source rows stay in accounting and are not turned
+into valid empty records. This is owner proof, not buyer demand.
+
+### Already delivered customer JSON
+
+```bash
+npm run record -- \
+  --input /path/to/extract-or-batch.json \
+  --mapping /path/to/mapping.json \
+  --schema /path/to/schema.json \
+  --out /tmp/samedaydesk-record
+```
+
+Exit 0 is all requested mapped fields present and schema-valid. Exit 1 is a
+useful partial. Exit 2 is usage, unsupported mapping/schema, or zero usable
+records. `--out` must be a fresh or empty directory.
+
+This recipe will not run `purchase`, send a payment header, or retry an
+unknown outcome.
+
 ## Machine-readable sample
 
 See [`results/example-result.json`](results/example-result.json) for a fixture

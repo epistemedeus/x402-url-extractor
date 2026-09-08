@@ -1,0 +1,40 @@
+{
+  "ok": true,
+  "url": "https://example.com/org",
+  "status": 200,
+  "contentType": "text/html; charset=utf-8",
+  "title": "Example Organization",
+  "description": "Public organization homepage fixture.",
+  "canonical": "https://example.com/org",
+  "lang": "en",
+  "openGraph": {
+    "og:title": "Example Organization"
+  },
+  "twitter": {},
+  "jsonLd": [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Example Organization",
+      "url": "https://example.com/org",
+      "telephone": "+1-555-0100",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "1 Example Way",
+        "addressLocality": "Example City"
+      }
+    }
+  ],
+  "headings": { "h1": ["Example Organization"], "h2": [] },
+  "links": ["https://example.com/contact"],
+  "text": "Example Organization contact page.",
+  "aiReadiness": {
+    "hasJsonLd": true,
+    "hasOpenGraph": true,
+    "hasTitle": true,
+    "hasDescription": true,
+    "hasCanonical": true,
+    "schemaTypes": ["Organization"]
+  },
+  "fetchedAt": "2026-09-08T00:00:00.000Z"
+}

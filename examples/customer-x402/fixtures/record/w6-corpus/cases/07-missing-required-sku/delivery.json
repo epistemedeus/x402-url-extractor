@@ -1,0 +1,21 @@
+{
+  "data": {
+    "jsonLd": [
+      {
+        "@type": "Product",
+        "name": "Plain Crate"
+      }
+    ]
+  },
+  "httpStatus": 200,
+  "id": "07-missing-required-sku",
+  "notes": [],
+  "requirement": {
+    "fields": [
+      "jsonLd"
+    ]
+  },
+  "source": "https://w6-d553c4458a.example.invalid/07-missing-required-sku",
+  "status": "success",
+  "url": "https://w6-d553c4458a.example.invalid/07-missing-required-sku"
+}

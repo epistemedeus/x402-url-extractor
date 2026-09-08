@@ -1,0 +1,30 @@
+{
+  "schema": "samedaydesk.customer-record.w6-corpus.v1",
+  "caseCount": 10,
+  "cases": [
+    "01-product-catalog",
+    "02-supplier-contact",
+    "03-nested-offers",
+    "04-contact-points",
+    "05-sameas-not-authority",
+    "06-ambiguous-products",
+    "07-missing-required-sku",
+    "08-malformed-jsonld",
+    "09-no-silent-coercion",
+    "10-fetch-failure"
+  ],
+  "fictional": true,
+  "networkContacted": false,
+  "merchantParser": {
+    "repository": "epistemedeus/x402-url-extractor",
+    "commit": "d7ceb857de7c25a0113e5b6914ff73a1c8afd760",
+    "path": "extract-batch-c1/extract.mjs"
+  },
+  "outcomes": {
+    "mapped": 18,
+    "unmapped": 2,
+    "invalid": 3,
+    "ambiguous": 3
+  },
+  "note": "Controlled fictional corpus. Extraction is not identity or legal verification. Multiple source pointers stay unsupported; this recipe does not choose the first Product or sameAs value."
+}

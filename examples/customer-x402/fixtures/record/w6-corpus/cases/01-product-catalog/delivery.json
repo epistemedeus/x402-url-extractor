@@ -1,0 +1,33 @@
+{
+  "data": {
+    "jsonLd": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "brand": {
+          "@type": "Brand",
+          "name": "Northstar Works"
+        },
+        "name": "Atlas Lamp",
+        "offers": {
+          "@type": "Offer",
+          "availability": "https://schema.org/InStock",
+          "price": "129.00",
+          "priceCurrency": "USD"
+        },
+        "sku": "AL-100"
+      }
+    ]
+  },
+  "httpStatus": 200,
+  "id": "01-product-catalog",
+  "notes": [],
+  "requirement": {
+    "fields": [
+      "jsonLd"
+    ]
+  },
+  "source": "https://w6-d553c4458a.example.invalid/01-product-catalog",
+  "status": "success",
+  "url": "https://w6-d553c4458a.example.invalid/01-product-catalog"
+}

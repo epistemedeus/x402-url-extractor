@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "pilot.c29.buyer-record-projection.mapping.v1",
+  "kind": "extract",
+  "artifact": "extract.json",
+  "rowsPointer": "",
+  "itemPointer": "/jsonLd",
+  "itemCardinality": "array",
+  "itemWhenMissing": "empty",
+  "requestedFields": ["/jsonLd", "/title", "/url"],
+  "unmappedIgnore": ["@context", "address"],
+  "merchantCompat": true,
+  "fields": {
+    "pageUrl": { "from": "/url", "base": "document", "required": true },
+    "type": { "from": "/@type", "base": "item", "required": true },
+    "name": { "from": "/name", "base": "item", "required": true },
+    "email": { "from": "/email", "base": "item", "required": false, "onMissing": "omit" },
+    "telephone": { "from": "/telephone", "base": "item", "required": false, "onMissing": "omit" },
+    "url": { "from": "/url", "base": "item", "required": false, "onMissing": "omit" },
+    "streetAddress": { "from": "/address/streetAddress", "base": "item", "required": false, "onMissing": "omit" }
+  }
+}

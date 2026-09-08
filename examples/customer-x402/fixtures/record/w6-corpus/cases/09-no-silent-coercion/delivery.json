@@ -1,0 +1,26 @@
+{
+  "data": {
+    "jsonLd": [
+      {
+        "@type": "Product",
+        "name": "Gauge",
+        "offers": {
+          "@type": "Offer",
+          "price": 19.95,
+          "priceCurrency": "USD"
+        }
+      }
+    ]
+  },
+  "httpStatus": 200,
+  "id": "09-no-silent-coercion",
+  "notes": [],
+  "requirement": {
+    "fields": [
+      "jsonLd"
+    ]
+  },
+  "source": "https://w6-d553c4458a.example.invalid/09-no-silent-coercion",
+  "status": "success",
+  "url": "https://w6-d553c4458a.example.invalid/09-no-silent-coercion"
+}

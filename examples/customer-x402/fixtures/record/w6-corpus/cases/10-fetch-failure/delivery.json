@@ -1,0 +1,19 @@
+{
+  "data": null,
+  "error": {
+    "code": "http_error",
+    "message": "synthetic fixture: source fetch failed"
+  },
+  "httpStatus": 503,
+  "id": "10-fetch-failure",
+  "notes": [],
+  "requirement": {
+    "fields": [
+      "title",
+      "jsonLd"
+    ]
+  },
+  "source": "https://w6-d553c4458a.example.invalid/10-fetch-failure",
+  "status": "failure",
+  "url": "https://w6-d553c4458a.example.invalid/10-fetch-failure"
+}

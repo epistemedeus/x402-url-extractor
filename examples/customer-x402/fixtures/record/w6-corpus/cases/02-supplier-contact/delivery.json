@@ -1,0 +1,30 @@
+{
+  "data": {
+    "jsonLd": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "US",
+          "addressLocality": "Port Azure"
+        },
+        "email": "orders@harbor-components.example.invalid",
+        "name": "Harbor Components",
+        "telephone": "+1-555-0100",
+        "url": "https://harbor-components.example.invalid/"
+      }
+    ]
+  },
+  "httpStatus": 200,
+  "id": "02-supplier-contact",
+  "notes": [],
+  "requirement": {
+    "fields": [
+      "jsonLd"
+    ]
+  },
+  "source": "https://w6-d553c4458a.example.invalid/02-supplier-contact",
+  "status": "success",
+  "url": "https://w6-d553c4458a.example.invalid/02-supplier-contact"
+}

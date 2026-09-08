@@ -1,0 +1,24 @@
+{
+  "data": {
+    "jsonLd": [],
+    "title": "Broken Product Page"
+  },
+  "httpStatus": 200,
+  "id": "08-malformed-jsonld",
+  "notes": [
+    {
+      "error": "Unexpected end of JSON input",
+      "field": "jsonLd",
+      "index": 1
+    }
+  ],
+  "requirement": {
+    "fields": [
+      "title",
+      "jsonLd"
+    ]
+  },
+  "source": "https://w6-d553c4458a.example.invalid/08-malformed-jsonld",
+  "status": "partial",
+  "url": "https://w6-d553c4458a.example.invalid/08-malformed-jsonld"
+}
