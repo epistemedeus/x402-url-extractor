@@ -1,5 +1,6 @@
 # Goose recipe for unpaid extract discovery only.
-# available_tools limits accidental paid calls to extract + extract_batch metadata.
+# available_tools exposes these callable tools, not a metadata-only sandbox.
+# The instruction below forbids calls; this config alone is not a payment guard.
 # The recipe must not be run against a live paid model in this experiment.
 # Merchant URI https://agents.samedaydesk.com/mcp. No wrapper, wallet, or API key.
 version: 1.0.0

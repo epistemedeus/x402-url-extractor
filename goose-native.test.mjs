@@ -4,11 +4,11 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
+import Ajv from "ajv";
 import {
-  assertExtractDiscoveryInventory,
-  constructExtractBatchBody,
-  selectExtractRoute,
-} from "./extract-discovery-inventory.mjs";
+  assertPublicHttpsUrl, extractBatchInputSchema, normalizeExtractBatchInput,
+  canonicalExtractBatchBody,
+} from "./extract-batch.mjs";
 
 const REPO_ROOT = dirname(fileURLToPath(import.meta.url));
 const GOOSE_ROOT = join(REPO_ROOT, "goose");
@@ -62,47 +62,6 @@ function walkFiles(root) {
     }
   }
   return files.sort();
-}
-
-function sampleBatchTool(overrides = {}) {
-  return {
-    name: "extract_batch",
-    inputSchema: {
-      type: "object",
-      additionalProperties: false,
-      required: ["urls"],
-      properties: {
-        urls: { type: "array", minItems: 1, maxItems: 5, items: { type: "string" } },
-        fields: {
-          type: "array",
-          items: {
-            type: "string",
-            enum: [
-              "title", "description", "canonical", "lang", "openGraph", "twitter",
-              "jsonLd", "headings", "links", "text", "aiReadiness",
-            ],
-          },
-        },
-      },
-    },
-    outputSchema: {
-      type: "object",
-      required: ["ok", "product", "partial", "sources", "charged", "boundary"],
-      properties: {},
-    },
-    ...overrides,
-  };
-}
-
-function sampleExtractTool() {
-  return {
-    name: "extract",
-    inputSchema: {
-      type: "object",
-      required: ["url"],
-      properties: { url: { type: "string" } },
-    },
-  };
 }
 
 test("goose companion directory ships only public config and docs", () => {
@@ -195,85 +154,62 @@ test("native profile instructions do not mutate existing Goose homes", () => {
   assert.doesNotMatch(install, /GOOSE_PATH_ROOT=\$HOME|~\/\.config\/goose/);
 });
 
-test("fixture tools/list accepts an unrelated extra tool when extract schemas are valid", () => {
-  const tools = [
-    sampleExtractTool(),
-    sampleBatchTool(),
-    { name: "unrelated_probe", inputSchema: { type: "object", properties: {} } },
-  ];
-  const found = assertExtractDiscoveryInventory(tools);
-  assert.equal(found.names.includes("unrelated_probe"), true);
-  assert.equal(found.names.includes("extract_batch"), true);
-});
-
-test("fixture tools/list rejects missing or invalid extract_batch", () => {
-  assert.throws(
-    () => assertExtractDiscoveryInventory([sampleExtractTool()]),
-    /missing extract_batch/,
-  );
-  assert.throws(
-    () => assertExtractDiscoveryInventory([
-      sampleExtractTool(),
-      sampleBatchTool({
-        inputSchema: {
-          type: "object",
-          additionalProperties: false,
-          required: ["urls"],
-          properties: {
-            urls: { type: "array", minItems: 1, maxItems: 99, items: { type: "string" } },
-            fields: sampleBatchTool().inputSchema.properties.fields,
-          },
-        },
-      }),
-    ]),
-    /urls\.maxItems must be 5/,
-  );
-  assert.throws(
-    () => assertExtractDiscoveryInventory([
-      sampleExtractTool(),
-      sampleBatchTool({
-        outputSchema: { type: "object", required: ["ok"], properties: {} },
-      }),
-    ]),
-    /outputSchema missing required (product|partial|sources|charged|boundary)/,
-  );
-});
-
-test("mechanical batch body construction matches canonical unpaid POST JSON", () => {
-  const urls = [
-    "https://example.com/",
-    "https://example.org/",
-    "https://www.rfc-editor.org/rfc/rfc3986",
-  ];
-  const fields = ["title", "description", "headings"];
-  const body = constructExtractBatchBody({ urls, fields });
-  assert.deepEqual(body, { urls, fields });
-  assert.equal(JSON.stringify(body).includes("PAYMENT"), false);
-  assert.equal(JSON.stringify(body).includes("private"), false);
-
-  const three = selectExtractRoute({ urls, fields, batchSupported: true });
-  assert.equal(three.reject, false);
-  assert.equal(three.method, "POST");
-  assert.equal(three.url, "https://agents.samedaydesk.com/extract/batch");
-  assert.deepEqual(three.body, body);
-
-  const one = selectExtractRoute({ urls: ["https://example.com/"], fields: [], batchSupported: true });
-  assert.equal(one.reject, false);
-  assert.equal(one.method, "GET");
-  assert.match(one.url, /^https:\/\/agents\.samedaydesk\.com\/extract\?url=/);
-
-  const six = selectExtractRoute({
-    urls: [
-      "https://example.com/1",
-      "https://example.com/2",
-      "https://example.com/3",
-      "https://example.com/4",
-      "https://example.com/5",
-      "https://example.com/6",
-    ],
-    fields,
-    batchSupported: true,
+// Mechanical construction only: these tests do not evaluate a model, prove
+// installation, choose a route on a buyer's behalf, or confer payment authority.
+test("three caller URLs and fields construct a schema-valid unpaid POST", async () => {
+  const input = {
+    urls: ["https://example.com/", "https://example.org/", "https://www.rfc-editor.org/rfc/rfc3986"],
+    fields: ["title", "description", "headings"],
+  };
+  const body = canonicalExtractBatchBody(normalizeExtractBatchInput(input));
+  const request = new Request("https://agents.samedaydesk.com/extract/batch", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
   });
-  assert.equal(six.reject, true);
-  assert.equal(six.reason, "too_many_urls_no_autosplit");
+  assert.equal(request.method, "POST");
+  assert.equal(request.url, "https://agents.samedaydesk.com/extract/batch");
+  assert.deepEqual([...request.headers], [["content-type", "application/json"]]);
+  const sent = await request.json();
+  assert.deepEqual(sent, input);
+  const validate = new Ajv({ strict: false, formats: { uri: true } }).compile(extractBatchInputSchema());
+  assert.equal(validate(sent), true, JSON.stringify(validate.errors));
+  assert.deepEqual(normalizeExtractBatchInput(sent), input);
+});
+
+test("single-page GET and explicitly requested one-item batch are constructible", async () => {
+  const target = assertPublicHttpsUrl("https://example.com/");
+  const endpoint = new URL("https://agents.samedaydesk.com/extract");
+  endpoint.searchParams.set("url", target);
+  const get = new Request(endpoint);
+  assert.equal(get.method, "GET");
+  assert.equal(get.body, null);
+  assert.deepEqual([...get.headers], []);
+  assert.equal(new URL(get.url).searchParams.get("url"), target);
+  const body = canonicalExtractBatchBody(normalizeExtractBatchInput({ urls: [target], fields: ["title"] }));
+  assert.deepEqual(body, { urls: [target], fields: ["title"] });
+});
+
+test("merchant input validation rejects six URLs without constructing split requests", () => {
+  assert.throws(() => normalizeExtractBatchInput({
+    urls: Array.from({ length: 6 }, (_, n) => `https://example.com/${n}`), fields: ["title"],
+  }), /1 to 5/);
+});
+
+test("mechanical single and batch requests reuse public HTTPS validation", () => {
+  for (const url of ["http://example.com/", "https://localhost/", "https://127.0.0.1/",
+    "https://192.168.1.1/", "https://[::1]/", "https://user:pass@example.com/", "not a url"]) {
+    assert.throws(() => assertPublicHttpsUrl(url), url);
+    assert.throws(() => normalizeExtractBatchInput({ urls: [url], fields: ["title"] }), url);
+  }
+  for (const fields of [[], ["unknown"], ["title", "title"]]) {
+    assert.throws(() => normalizeExtractBatchInput({ urls: ["https://example.com/"], fields }));
+  }
+});
+
+test("packaged Claude batch example passes the real merchant input validator", () => {
+  const skill = readUtf8(join(REPO_ROOT, "plugins/samedaydesk-extract/skills/web-extract/SKILL.md"));
+  const block = skill.match(/\x60\x60\x60http\n([\s\S]*?)\n\x60\x60\x60/)[1];
+  const [headers, body] = block.split("\n\n");
+  assert.equal(headers, "POST https://agents.samedaydesk.com/extract/batch\nContent-Type: application/json");
+  const parsed = JSON.parse(body);
+  assert.deepEqual(canonicalExtractBatchBody(normalizeExtractBatchInput(parsed)), parsed);
 });

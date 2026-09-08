@@ -1,6 +1,6 @@
 ---
 name: web-extract
-description: Extract public webpage(s) as structured JSON through SameDayDesk. Use when the caller supplies one public HTTPS URL, or a list of 1–5 public HTTPS URLs plus explicit desired fields. Prefer one bounded POST /extract/batch for 1–5 URLs; use GET /extract for a single page or when live batch is unsupported. Free discovery reads the live 402. Do not pay unless the buyer explicitly authorizes the live terms. Do not use for authenticated or private-network content.
+description: Extract public webpages as structured JSON through SameDayDesk. Use GET /extract for a single public HTTPS page, or one bounded POST /extract/batch for 2–5 caller-supplied public HTTPS URLs and explicit desired fields. A caller may explicitly request a one-item batch. Free discovery reads live schemas and 402 terms; payment requires buyer authority. Do not use for authenticated or private-network content.
 ---
 
 # Extract public webpage(s)
@@ -12,11 +12,11 @@ store credentials, or add a second price.
 
 Required (choose one shape):
 
-- Single page: `url` — one public `https://` page.
-- Batch: `urls` — a caller-supplied list of 1–5 public `https://` pages, plus
+- Single page: `url`, one public `https://` page.
+- Batch: `urls`, a caller-supplied list of 1–5 public `https://` pages, plus
   explicit desired `fields` from the live schema enum.
 
-Reject `http:`, `file:`, `javascript:`, authenticated apps, localhost, and
+Reject `http:`, `file:`, `javascript:`, URL credentials, authenticated apps, localhost, and
 private-network targets. Do not invent URLs or fields. If the caller did not
 give a usable URL list, stop and ask.
 
@@ -37,13 +37,15 @@ merchant allowlists or buckets this value. Unknown labels are ignored.
 1. Read live OpenAPI at `https://agents.samedaydesk.com/openapi.json` (and
    optionally unpaid MCP `tools/list`) before choosing a route. Use the current
    schema and terms, not remembered fields.
-2. When the caller gave 1–5 public HTTPS URLs and explicit desired fields, and
+2. For 2–5 public HTTPS URLs, or an explicitly requested one-item batch, require
+   caller-supplied desired fields. When
    live discovery shows `POST /extract/batch` (HTTP) or MCP `extract_batch`
    with matching input/output schemas, construct one bounded batch request.
-3. When the caller gave exactly one URL and does not need batch accounting, or
-   live batch is missing/unsupported, use
+3. For exactly one URL, including a request for particular fields, use
    `GET https://agents.samedaydesk.com/extract?url=<url-encoded-https-url>`
-   or MCP `extract` with the same `url`.
+   or MCP `extract` with the same `url`, unless the caller explicitly wants batch.
+   If live batch is unsupported, retain GET for a single page. For multiple
+   URLs stop and ask for a smaller scope; do not silently fan out paid GETs.
 4. MCP credential scopes and HTTP `@x402/fetch` scopes stay distinct. This
    plugin does not become payment-capable by documentation alone.
 

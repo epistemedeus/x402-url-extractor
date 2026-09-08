@@ -63,7 +63,8 @@ or exceeded. Listing metadata never grants authority. This directory does not
 implement payment parsing or a wallet.
 
 For reusable HTTP `@x402/fetch` payment details, optional before-send unsigned
-attempt receipt, and read-only reconcile, see the public customer example.
+attempt receipt, and read-only reconcile, see the
+[public customer example](https://github.com/epistemedeus/x402-url-extractor/tree/master/examples/customer-x402).
 Goose does not become payment-capable from that link alone. MCP and HTTP
 credential scopes remain distinct.
 

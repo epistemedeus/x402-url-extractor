@@ -26,7 +26,7 @@ if (EXPECTED_LIVE_VERSION !== null && !VERSION_PATTERN.test(EXPECTED_LIVE_VERSIO
 const liveTest = EXPECTED_LIVE_VERSION === null ? test.skip : test;
 const SOURCE_HEADER = "X-SameDayDesk-Agent-Source";
 const SOURCE_VALUE = "agent-plugins-v1";
-const PRODUCT_SKILL_SHA256 = "f1c16730671a223323c63bc652fcb31e9361ea04c50184c504c1781f4a1c28af";
+const PRODUCT_SKILL_SHA256 = "e183a1821a97a40d0aaffee4b68a70e9410b69476201cd792d8d9c9ce85438e1";
 const PLUGIN_SCHEMA_SHA256 = "0a4aad95ce337878ad38802ebf0daa3fde76abe3f65400c86bcbb1ec0b3ab883";
 const MCP_SCHEMA_SHA256 = "6539175bfcdf43085855183e86da40ea94b166547a72b47ae9a0a390516d3acb";
 const NAME_PATTERN = /^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
@@ -235,7 +235,7 @@ test("web-extract skill is the product skill and stays constructible", () => {
   assert.equal(fields.name, "web-extract");
   assert.match(fields.name, SKILL_NAME_PATTERN);
   assert.ok(fields.description.length <= 1024);
-  assert.match(fields.description, /1–5 public HTTPS URLs|1-5 public HTTPS URLs/);
+  assert.match(fields.description, /2–5 caller-supplied public HTTPS URLs/);
   assert.match(fields.description, /POST \/extract\/batch/);
   assert.match(body, /https:\/\/agents\.samedaydesk\.com\/extract\/batch/);
   assert.match(body, /https:\/\/agents\.samedaydesk\.com\/extract\?url=/);

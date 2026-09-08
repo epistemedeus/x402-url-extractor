@@ -11,7 +11,7 @@ plugin. Do not load the repository root as a plugin.
 - `plugin.json` targets Agent Plugins 1.0.0.
 - `mcp.json` declares one Streamable HTTP server at
   `https://agents.samedaydesk.com/mcp`.
-- `skills/web-extract/SKILL.md` is a copy of the GitHub product skill and
+- `skills/web-extract/SKILL.md` is the packaged extraction skill and
   constructs `POST /extract/batch` for 1–5 URLs plus fields, or
   `GET /extract?url=` / `GET /read?url=` when appropriate.
 
