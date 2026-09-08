@@ -47,8 +47,14 @@ Public silent-install link: `goose.deeplink.txt`. Official silent install
 does not send custom headers. Default package headers stay empty.
 
 Optional `goose.config.with-declared-source.yaml` is labeled, spoofable,
-not merchant-allowlisted, and does not claim merchant attribution. It is
-not the default.
+and caller-declared. The merchant may bucket `goose-native-v1` as unverified
+attribution. It is not identity, payment, or organic-acquisition proof, and it
+is not the default.
+
+Retention covers HTTP request records and observed direct MCP tool outcomes.
+MCP `extract_batch` retains source on its exact `/extract/batch` HTTP record
+only. Initialization and tools/list create no tool-outcome events. These
+observations do not establish identity, independent use, or demand.
 
 Workflow copy: `extract.workflow.md`. Recipe: `extract.recipe.yaml` (report
 extract and extract_batch metadata only; do not call paid tools from this

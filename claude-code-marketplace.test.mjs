@@ -248,7 +248,8 @@ test("web-extract skill keeps exact inputs, unpaid discovery, and separate payme
   assert.match(body, /attempt receipt|read-only reconcile/);
   assert.match(body, /truthful partial|partial rows|partials/i);
   assert.match(body, new RegExp(CLAIMED_SOURCE_VALUE));
-  assert.match(body, /Do not assert that the\s+merchant allowlists/);
+  assert.match(body, /merchant may bucket this exact allowlisted value/);
+  assert.match(body, /Unknown labels are ignored/);
   assert.doesNotMatch(markdown, /0\.005/);
   assert.doesNotMatch(markdown, /allowed-tools/);
   assert.doesNotMatch(markdown, /X-PAYMENT|PAYMENT-SIGNATURE|Bearer |wallet seed/);
@@ -304,7 +305,7 @@ test("copy forbids a second paywall, global installer, and official-directory su
   assert.doesNotMatch(pkg.scripts.test, /claude-code-marketplace\.live\.test\.mjs/);
 });
 
-test("claimed source is labeled claimed-only and is not an allowlist edit", () => {
+test("claimed source is labeled declared-only after merchant allowlist", () => {
   const catalog = readJson(join(REPO_ROOT, ".claude-plugin", "marketplace.json"));
   assert.equal(JSON.stringify(catalog).includes(CLAIMED_SOURCE_VALUE), false);
   const mcp = readJson(join(PLUGIN_ROOT, ".mcp.json"));
@@ -312,13 +313,13 @@ test("claimed source is labeled claimed-only and is not an allowlist edit", () =
   const skill = readUtf8(join(PLUGIN_ROOT, "skills/web-extract/SKILL.md"));
   const pluginReadme = readUtf8(join(PLUGIN_ROOT, "README.md"));
   for (const text of [skill, pluginReadme]) {
-    assert.match(text, /claimed source/);
+    assert.match(text, /declared source|claimed source/);
     assert.match(text, /not a credential|not authentication/i);
+    assert.match(text, /not (proof of |authentication, access)/i);
   }
   const telemetry = readUtf8(join(REPO_ROOT, "commerce-events.mjs"));
-  assert.equal(telemetry.includes(CLAIMED_SOURCE_VALUE), false);
+  assert.match(telemetry, /\["claude-code-marketplace-v1", "claude-code-marketplace"\]/);
   assert.match(telemetry, /\["agent-skills-v1", "agent-skills"\]/);
-  assert.doesNotMatch(telemetry, /claude-code-marketplace-v1/);
 });
 
 test("publication tree has no scratch, credentials, or extraKnownMarketplaces", () => {

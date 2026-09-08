@@ -223,6 +223,28 @@ test("source spoof and unknown identity stay unverified and never become custome
   assert.equal(collapsed.newRecords[0].sourceDeliveryAttribution.customerDemand, "unknown");
 });
 
+test("published runtime declared sources stay unverified through settlement composition", async () => {
+  for (const source of ["claude-code-marketplace", "goose-native"]) {
+    const result = await reconcile([event({
+      declaredAgentDiscoverySource: source,
+      observedAgentDiscoverySource: null,
+      discoverySourceKind: "declared_header",
+      agentDiscoverySource: source,
+    })]);
+    assert.equal(result.issues.length, 0);
+    assert.equal(result.newRecords.length, 1);
+    const attribution = result.newRecords[0].sourceDeliveryAttribution;
+    assert.equal(attribution.declaredDiscoverySource, source);
+    assert.equal(attribution.collapsedDiscoverySource, source);
+    assert.equal(attribution.discoverySourceKind, "declared_header");
+    assert.equal(attribution.discoverySourceVerification, "unverified");
+    assert.equal(attribution.originVerification, "unverified");
+    assert.equal(attribution.customerDemand, "unknown");
+    assert.equal(attribution.buyerValidOutput, "unknown");
+    assert.equal(JSON.stringify(result.newRecords[0]).includes(`${source}-v1`), false);
+  }
+});
+
 test("contradictory or invalid metadata is omitted without blocking valid settlement", async () => {
   const contradictory = event({
     declaredAgentDiscoverySource: null,

@@ -28,6 +28,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { x402ResourceServer } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { createPaymentWrapper } from "@x402/mcp";
+import { classifyDeclaredAgentDiscoverySource, listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
 import {
   buildRegisteredCatalog,
   createMcpTypedTelemetryAttempt,
@@ -173,6 +174,12 @@ function httpRouteToolHandler(tool, baseUrl) {
       return { ...asToolResult({ ok: false, error: "request_body_too_large", charged: false }), isError: true };
     }
     const headers = { "content-type": "application/json", host: resource.host, "x-forwarded-proto": "https" };
+    // Retain only a canonical, caller-declared source on the existing HTTP
+    // writer. Never forward owner tokens, identity headers or arbitrary labels.
+    const sourceHeader = request?.headers?.["x-samedaydesk-agent-source"];
+    const declaredSource = typeof sourceHeader === "string" ? classifyDeclaredAgentDiscoverySource(sourceHeader) : null;
+    const declaredHeader = listDeclaredAgentDiscoverySources().find(({ source }) => source === declaredSource);
+    if (declaredHeader) headers["x-samedaydesk-agent-source"] = declaredHeader.value;
     for (const name of ["authorization", "payment-signature", "x-payment", "x-payment-signature"]) {
       const value = request?.headers?.[name];
       if (typeof value === "string") headers[name] = value;
@@ -346,13 +353,13 @@ function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) 
     entry.resolve();
   }
 
-  function invokeUser(decision, requestAttribution, entry) {
+  function invokeUser(decision, requestAttribution, declaredSource, entry) {
     let assimilated;
     try {
       // Assimilate without probing result.then first: a throwing `then` accessor
       // or Proxy trap is consumed by the resolving functions as a rejection and
       // stays inside this failure-safe terminal path.
-      assimilated = Promise.resolve(onAppend(decision, requestAttribution));
+      assimilated = Promise.resolve(onAppend(decision, requestAttribution, declaredSource));
     } catch {
       failures += 1;
       finishEntry(entry);
@@ -367,7 +374,7 @@ function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) 
     );
   }
 
-  function schedule(decision, requestAttribution = null) {
+  function schedule(decision, requestAttribution = null, declaredSource = null) {
     if (sealed || typeof onAppend !== "function") return;
     let resolve;
     const done = new Promise((next) => {
@@ -377,7 +384,7 @@ function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) 
     pending.add(entry);
     const launch = () => {
       entry.timer = null;
-      invokeUser(decision, requestAttribution, entry);
+      invokeUser(decision, requestAttribution, declaredSource, entry);
     };
     if (jsonResponse && decision?.result !== "paid_success") {
       queueMicrotask(launch);
@@ -456,7 +463,7 @@ function decorateTransportSend(transport, attempt) {
   };
 }
 
-function createTypedAttemptForBody(body, catalog, onAppend, requestAttribution = null) {
+function createTypedAttemptForBody(body, catalog, onAppend, requestAttribution = null, declaredSource = null) {
   if (!isJsonRpcObject(body) || body.jsonrpc !== "2.0" || body.method !== "tools/call") {
     return { attempt: null };
   }
@@ -472,7 +479,9 @@ function createTypedAttemptForBody(body, catalog, onAppend, requestAttribution =
       id: hasId ? body.id : null,
       method: "tools/call",
     },
-    onAppend: (decision) => onAppend(decision, requestAttribution),
+    // The inner HTTP request owns paidHttp source attribution. Preserve typed
+    // diagnostics, but never attach a second source count to that same hop.
+    onAppend: (decision) => onAppend(decision, requestAttribution, registered?.httpOwned ? null : declaredSource),
   });
   if (!hasId) {
     attempt.finalize({ responseId: null, kind: "no_response" });
@@ -510,7 +519,7 @@ export async function mountMcp(app, {
     ? createTypedTelemetryLifecycle(typedTelemetry.onAppend, { jsonResponse })
     : null;
   const onAppend = typedLifecycle
-    ? (decision, requestAttribution) => typedLifecycle.schedule(decision, requestAttribution)
+    ? (decision, requestAttribution, declaredSource) => typedLifecycle.schedule(decision, requestAttribution, declaredSource)
     : undefined;
   const catalogByName = buildRegisteredCatalog(tools);
 
@@ -542,7 +551,7 @@ export async function mountMcp(app, {
       resource: registered.resource,
       issuedOfferDigest,
     });
-    catalogByName.set(t.name, { ...registered, binding, issuedOfferDigest });
+    catalogByName.set(t.name, { ...registered, binding, issuedOfferDigest, httpOwned: Boolean(t.paidHttp) });
     const paid = createPaymentWrapper(resourceServer, {
       accepts,
       resource: {
@@ -609,6 +618,7 @@ export async function mountMcp(app, {
   app.post("/mcp", express.json({ limit: "1mb" }), async (req, res) => {
     injectPaymentSignatureHeader(req);
     let requestAttribution = null;
+    let declaredSource = null;
     if (typedEnabled && typeof typedTelemetry?.attributionForRequest === "function") {
       try {
         requestAttribution = typedTelemetry.attributionForRequest(req);
@@ -616,8 +626,16 @@ export async function mountMcp(app, {
         requestAttribution = null;
       }
     }
+    if (typedEnabled && typeof typedTelemetry?.declaredSourceForRequest === "function") {
+      try {
+        const reduced = typedTelemetry.declaredSourceForRequest(req);
+        declaredSource = typeof reduced === "string" ? reduced : null;
+      } catch {
+        declaredSource = null;
+      }
+    }
     const created = typedEnabled
-      ? createTypedAttemptForBody(req.body, catalogByName, onAppend, requestAttribution)
+      ? createTypedAttemptForBody(req.body, catalogByName, onAppend, requestAttribution, declaredSource)
       : { attempt: null };
     const server = makeServer();
     const transport = new StreamableHTTPServerTransport(transportOptions);

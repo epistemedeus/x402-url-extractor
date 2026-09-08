@@ -29,8 +29,14 @@ Optional claimed source header, already set on the plugin MCP client:
 - `X-SameDayDesk-Agent-Source: claude-code-marketplace-v1`
 
 That header is a declared source label only. It is not authentication, access,
-payment, payer class, or independent-customer evidence. Do not assert that the
-merchant allowlists or buckets this value. Unknown labels are ignored.
+payment, payer class, organic acquisition, or independent-customer evidence.
+The merchant may bucket this exact allowlisted value as caller-declared
+attribution. Unknown labels are ignored.
+
+Retention covers HTTP request records and observed direct MCP tool outcomes.
+MCP `extract_batch` retains source on its exact `/extract/batch` HTTP record
+only. Initialization and tools/list create no tool-outcome events. Request
+construction, seller response, settlement and independent demand remain separate.
 
 ## Route selection
 

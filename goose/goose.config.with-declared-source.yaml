@@ -1,7 +1,10 @@
 # Optional isolated Goose config with a declared source header.
 # This header is attribution-only, spoofable, and not payment authority.
-# X-SameDayDesk-Agent-Source: goose-native-v1 is not merchant-allowlisted.
-# Optional labels do not claim merchant attribution.
+# X-SameDayDesk-Agent-Source: goose-native-v1 is caller-declared. The merchant
+# may bucket that exact label as unverified attribution. It is not proof of
+# independence, customer identity, organic acquisition, payment, or referral.
+# Retention covers HTTP and direct MCP tool outcomes. extract_batch uses its
+# /extract/batch HTTP record only. Initialization/tools/list create no tool event.
 # Do not use this file as the default install. Deeplink and session-flag paths cannot send it on silent install.
 # Merchant URI stays https://agents.samedaydesk.com/mcp. No wallet, API key, or wrapper paywall.
 extensions:

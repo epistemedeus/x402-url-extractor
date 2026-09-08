@@ -3758,9 +3758,10 @@ import("./mcp-server.mjs")
       serverInfo: { name: "x402-data-gateway", version: SERVICE_VERSION },
       typedTelemetry: {
         enabled: true,
-        onAppend: (decision, requestAttribution) =>
-          commerceTelemetry.appendMcpTypedDecision(decision, requestAttribution),
+        onAppend: (decision, requestAttribution, declaredSource) =>
+          commerceTelemetry.appendMcpTypedDecision(decision, requestAttribution, declaredSource),
         attributionForRequest: (req) => commerceTelemetry.mcpTypedAttributionForRequest(req),
+        declaredSourceForRequest: (req) => commerceTelemetry.mcpTypedDeclaredSourceForRequest(req),
       },
       tools: [
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, outputSchema: extractMcpOutputSchema, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
