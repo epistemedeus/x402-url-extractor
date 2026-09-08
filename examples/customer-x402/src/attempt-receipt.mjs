@@ -15,6 +15,7 @@ import { isEIP3009Payload } from "@x402/evm";
 import { extractPaymentIdentifier } from "@x402/extensions/payment-identifier";
 
 export const ATTEMPT_RECEIPT_SCHEMA = "samedaydesk.customer-x402.attempt-receipt.v1";
+export const MAX_RECEIPT_FILE_BYTES = 64_000;
 
 export const RECEIPT_STAGES = Object.freeze({
   READY_BEFORE_SEND: "ready_before_send",
@@ -27,6 +28,37 @@ export const SETTLEMENT_STATES = Object.freeze({
   UNKNOWN: "unknown",
   OBSERVED_HTTP: "observed_http_unverified",
 });
+
+const CANONICAL_BOUNDARY = Object.freeze({
+  purpose: "customer-owned unsigned EIP-3009 attempt identity for read-only reconciliation",
+  secrets: "never stores signature, payment credential/header, private key, typed-data envelope, raw response, or environment",
+  delivery: "chain usage is not delivered output and not permission to retry or respend",
+  settlement: "HTTP observations remain unverified until a separate reconcile reports on-chain evidence",
+});
+
+const PERSISTED_FIELDS = Object.freeze([
+  "schema",
+  "stage",
+  "settlementState",
+  "createdAt",
+  "updatedAt",
+  "scheme",
+  "assetTransferMethod",
+  "x402Version",
+  "network",
+  "asset",
+  "assetName",
+  "assetVersion",
+  "payer",
+  "payee",
+  "amountAtomic",
+  "nonce",
+  "validAfter",
+  "validBefore",
+  "paymentIdentifier",
+  "request",
+  "boundary",
+]);
 
 export class AttemptReceiptError extends Error {
   constructor(message, { code = "attempt_receipt_error", field = null } = {}) {
@@ -52,6 +84,7 @@ function normalizeAddress(value, label) {
 function normalizeAtomic(value, label) {
   const raw = String(value ?? "").trim();
   if (!/^\d+$/.test(raw)) fail(`${label} must be a non-negative integer string`, label);
+  if (raw.length > 78) fail(`${label} exceeds supported decimal length`, label);
   return raw;
 }
 
@@ -66,7 +99,18 @@ function normalizeNonce(value) {
 function normalizeUnixSeconds(value, label) {
   const raw = String(value ?? "").trim();
   if (!/^\d+$/.test(raw)) fail(`${label} must be a non-negative integer string`, label);
+  if (raw.length > 16) fail(`${label} exceeds supported unix-seconds length`, label);
   return raw;
+}
+
+function normalizeIsoTimestamp(value, label) {
+  const raw = String(value ?? "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(raw)) {
+    fail(`${label} must be an ISO-8601 UTC timestamp`, label);
+  }
+  const ms = Date.parse(raw);
+  if (!Number.isFinite(ms)) fail(`${label} must be an ISO-8601 UTC timestamp`, label);
+  return new Date(ms).toISOString();
 }
 
 function normalizePaymentIdentifier(value) {
@@ -76,6 +120,29 @@ function normalizePaymentIdentifier(value) {
     fail("paymentIdentifier format is unsupported", "paymentIdentifier");
   }
   return id;
+}
+
+function normalizeBodyDigest(value, label = "request.bodyDigest") {
+  if (value == null) return null;
+  const raw = String(value).trim().toLowerCase();
+  if (!/^sha256:[0-9a-f]{64}$/.test(raw)) {
+    fail("bodyDigest must be sha256:<64 lowercase hex chars>", label);
+  }
+  return raw;
+}
+
+function normalizeRequestUrl(value) {
+  let url;
+  try {
+    url = new URL(String(value || ""));
+  } catch {
+    fail("request.url must be an absolute HTTPS URL", "request.url");
+  }
+  if (url.protocol !== "https:") fail("request.url must be HTTPS", "request.url");
+  if (url.username || url.password) fail("request.url must not contain credentials", "request.url");
+  if (url.hash) fail("request.url must not contain a fragment", "request.url");
+  if (String(value).length > 2_048) fail("request.url exceeds supported length", "request.url");
+  return url.toString();
 }
 
 function assertNoSecrets(record) {
@@ -100,7 +167,7 @@ function assertNoSecrets(record) {
 
 /**
  * Extract unsigned EIP-3009 payment identity from an official payment payload.
- * Returns explicit unsupported when the provider shape cannot be safely read.
+ * Self-reported / unsigned identity only; not authenticated original-approval proof.
  */
 export function unsignedIdentityFromPaymentPayload(paymentPayload, { matchedAuthorization = null } = {}) {
   if (!paymentPayload || typeof paymentPayload !== "object") {
@@ -125,7 +192,6 @@ export function unsignedIdentityFromPaymentPayload(paymentPayload, { matchedAuth
   if (!auth || typeof auth !== "object") {
     return { ok: false, reason: "unsupported_payload", message: "authorization object is missing" };
   }
-  // payload.signature is expected on the wire object; never copy it into the receipt.
   let paymentIdentifier = null;
   try {
     paymentIdentifier = extractPaymentIdentifier(paymentPayload, true);
@@ -156,6 +222,9 @@ export function unsignedIdentityFromPaymentPayload(paymentPayload, { matchedAuth
     if (!identity.assetName || !identity.assetVersion) {
       return { ok: false, reason: "unsupported_asset_domain", message: "EIP-712 asset name/version are required" };
     }
+    if (BigInt(identity.validAfter) >= BigInt(identity.validBefore)) {
+      return { ok: false, reason: "unsupported_validity", message: "validAfter must be less than validBefore" };
+    }
     if (matchedAuthorization) {
       if (identity.network !== matchedAuthorization.network) {
         return { ok: false, reason: "identity_mismatch", message: "network does not match authorization" };
@@ -176,55 +245,6 @@ export function unsignedIdentityFromPaymentPayload(paymentPayload, { matchedAuth
       return { ok: false, reason: "unsupported_payload", message: error.message };
     }
     return { ok: false, reason: "unsupported_payload", message: "payment identity could not be safely understood" };
-  }
-}
-
-/** Extract unsigned identity from the ExactEvmScheme typed-data message (no signature). */
-export function unsignedIdentityFromTypedData(typedData, { network, matchedAuthorization = null } = {}) {
-  if (!typedData || typedData.primaryType !== "TransferWithAuthorization") {
-    return { ok: false, reason: "unsupported_typed_data", message: "expected TransferWithAuthorization" };
-  }
-  const message = typedData.message;
-  const domain = typedData.domain;
-  if (!message || !domain) {
-    return { ok: false, reason: "unsupported_typed_data", message: "typed data message/domain missing" };
-  }
-  try {
-    const chainId = Number(domain.chainId);
-    if (!Number.isSafeInteger(chainId) || chainId < 1) {
-      return { ok: false, reason: "unsupported_network", message: "typed data chainId is invalid" };
-    }
-    const inferredNetwork = network || `eip155:${chainId}`;
-    if (inferredNetwork !== `eip155:${chainId}`) {
-      return { ok: false, reason: "identity_mismatch", message: "typed data chainId does not match network" };
-    }
-    const identity = {
-      scheme: "exact",
-      assetTransferMethod: "eip3009",
-      x402Version: 2,
-      network: inferredNetwork,
-      asset: normalizeAddress(domain.verifyingContract, "asset"),
-      assetName: String(domain.name || ""),
-      assetVersion: String(domain.version || ""),
-      payer: normalizeAddress(message.from, "payer"),
-      payee: normalizeAddress(message.to, "payee"),
-      amountAtomic: normalizeAtomic(message.value, "amountAtomic"),
-      nonce: normalizeNonce(typeof message.nonce === "string" ? message.nonce : null),
-      validAfter: normalizeUnixSeconds(message.validAfter, "validAfter"),
-      validBefore: normalizeUnixSeconds(message.validBefore, "validBefore"),
-      paymentIdentifier: null,
-    };
-    if (matchedAuthorization) {
-      if (identity.asset !== matchedAuthorization.asset || identity.payee !== matchedAuthorization.recipient) {
-        return { ok: false, reason: "identity_mismatch", message: "typed data does not match authorization" };
-      }
-    }
-    return { ok: true, identity };
-  } catch (error) {
-    if (error instanceof AttemptReceiptError) {
-      return { ok: false, reason: "unsupported_typed_data", message: error.message };
-    }
-    return { ok: false, reason: "unsupported_typed_data", message: "typed data could not be safely understood" };
   }
 }
 
@@ -262,12 +282,7 @@ export function buildAttemptReceipt({
       url: String(request?.url || ""),
       bodyDigest: request?.bodyDigest == null ? null : String(request.bodyDigest),
     }),
-    boundary: Object.freeze({
-      purpose: "customer-owned unsigned EIP-3009 attempt identity for read-only reconciliation",
-      secrets: "never stores signature, payment credential/header, private key, typed-data envelope, raw response, or environment",
-      delivery: "chain usage is not delivered output and not permission to retry or respend",
-      settlement: "HTTP observations remain unverified until a separate reconcile reports on-chain evidence",
-    }),
+    boundary: CANONICAL_BOUNDARY,
   };
   return validateAttemptReceipt(receipt);
 }
@@ -277,6 +292,11 @@ export function validateAttemptReceipt(input) {
     fail("attempt receipt must be an object");
   }
   assertNoSecrets(input);
+  for (const key of Object.keys(input)) {
+    if (!PERSISTED_FIELDS.includes(key)) {
+      fail(`attempt receipt field ${key} is not allowlisted`, key);
+    }
+  }
   if (input.schema !== ATTEMPT_RECEIPT_SCHEMA) {
     fail(`schema must be ${ATTEMPT_RECEIPT_SCHEMA}`, "schema");
   }
@@ -295,29 +315,40 @@ export function validateAttemptReceipt(input) {
     fail("network must look like eip155:<id>", "network");
   }
   const request = input.request;
-  if (!request || typeof request !== "object") fail("request binding is required", "request");
+  if (!request || typeof request !== "object" || Array.isArray(request)) {
+    fail("request binding is required", "request");
+  }
+  for (const key of Object.keys(request)) {
+    if (!["method", "url", "bodyDigest"].includes(key)) {
+      fail(`request field ${key} is not allowlisted`, `request.${key}`);
+    }
+  }
   if (request.method !== "GET" && request.method !== "POST") {
     fail("request.method must be GET or POST", "request.method");
   }
-  try {
-    const url = new URL(String(request.url || ""));
-    if (url.protocol !== "https:") fail("request.url must be HTTPS", "request.url");
-  } catch {
-    fail("request.url must be an absolute HTTPS URL", "request.url");
-  }
+  const requestUrl = normalizeRequestUrl(request.url);
   if (request.method === "POST" && (request.bodyDigest == null || request.bodyDigest === "")) {
     fail("POST receipts require bodyDigest", "request.bodyDigest");
   }
   if (request.method === "GET" && request.bodyDigest != null) {
     fail("GET receipts must not include bodyDigest", "request.bodyDigest");
   }
+  const bodyDigest = request.method === "GET"
+    ? null
+    : normalizeBodyDigest(request.bodyDigest);
+
+  const validAfter = normalizeUnixSeconds(input.validAfter, "validAfter");
+  const validBefore = normalizeUnixSeconds(input.validBefore, "validBefore");
+  if (BigInt(validAfter) >= BigInt(validBefore)) {
+    fail("validAfter must be less than validBefore", "validAfter");
+  }
 
   const normalized = {
     schema: ATTEMPT_RECEIPT_SCHEMA,
     stage: input.stage,
     settlementState: input.settlementState,
-    createdAt: String(input.createdAt || ""),
-    updatedAt: String(input.updatedAt || ""),
+    createdAt: normalizeIsoTimestamp(input.createdAt, "createdAt"),
+    updatedAt: normalizeIsoTimestamp(input.updatedAt, "updatedAt"),
     scheme: "exact",
     assetTransferMethod: "eip3009",
     x402Version: 2,
@@ -329,28 +360,18 @@ export function validateAttemptReceipt(input) {
     payee: normalizeAddress(input.payee, "payee"),
     amountAtomic: normalizeAtomic(input.amountAtomic, "amountAtomic"),
     nonce: normalizeNonce(input.nonce),
-    validAfter: normalizeUnixSeconds(input.validAfter, "validAfter"),
-    validBefore: normalizeUnixSeconds(input.validBefore, "validBefore"),
+    validAfter,
+    validBefore,
     paymentIdentifier: normalizePaymentIdentifier(input.paymentIdentifier),
     request: {
       method: request.method,
-      url: String(request.url),
-      bodyDigest: request.bodyDigest == null ? null : String(request.bodyDigest),
+      url: requestUrl,
+      bodyDigest,
     },
-    boundary: input.boundary && typeof input.boundary === "object"
-      ? { ...input.boundary }
-      : {
-        purpose: "customer-owned unsigned EIP-3009 attempt identity for read-only reconciliation",
-        secrets: "never stores signature, payment credential/header, private key, typed-data envelope, raw response, or environment",
-        delivery: "chain usage is not delivered output and not permission to retry or respend",
-        settlement: "HTTP observations remain unverified until a separate reconcile reports on-chain evidence",
-      },
+    boundary: { ...CANONICAL_BOUNDARY },
   };
   if (!normalized.assetName || !normalized.assetVersion) {
     fail("assetName and assetVersion are required", "assetName");
-  }
-  if (!normalized.createdAt || !normalized.updatedAt) {
-    fail("createdAt and updatedAt are required", "createdAt");
   }
   assertNoSecrets(normalized);
   return Object.freeze({
@@ -418,7 +439,6 @@ export function writeAttemptReceipt(filePath, receipt, { replace = false } = {})
       { code: "receipt_write_failed" },
     );
   }
-  // Verify mode is not group/world readable when the platform reports mode.
   try {
     const mode = statSync(absolute).mode & 0o777;
     if ((mode & 0o077) !== 0) {
@@ -442,14 +462,46 @@ function existsRegularFile(filePath) {
 
 export function readAttemptReceipt(filePath) {
   const absolute = resolve(filePath);
-  let raw;
+  let st;
   try {
-    raw = readFileSync(absolute, "utf8");
+    st = statSync(absolute);
   } catch (error) {
     throw new AttemptReceiptError(
       `failed to read attempt receipt: ${error instanceof Error ? error.message : String(error)}`,
       { code: "receipt_read_failed" },
     );
+  }
+  if (!st.isFile()) {
+    throw new AttemptReceiptError("attempt receipt path must be a regular file", {
+      code: "receipt_read_failed",
+      field: "path",
+    });
+  }
+  if (st.size > MAX_RECEIPT_FILE_BYTES) {
+    throw new AttemptReceiptError("attempt receipt file exceeds bounded read size", {
+      code: "receipt_read_failed",
+      field: "path",
+    });
+  }
+  let raw;
+  try {
+    const fd = openSync(absolute, constants.O_RDONLY);
+    try {
+      raw = readFileSync(fd, "utf8");
+    } finally {
+      closeSync(fd);
+    }
+  } catch (error) {
+    throw new AttemptReceiptError(
+      `failed to read attempt receipt: ${error instanceof Error ? error.message : String(error)}`,
+      { code: "receipt_read_failed" },
+    );
+  }
+  if (Buffer.byteLength(raw, "utf8") > MAX_RECEIPT_FILE_BYTES) {
+    throw new AttemptReceiptError("attempt receipt file exceeds bounded read size", {
+      code: "receipt_read_failed",
+      field: "path",
+    });
   }
   let parsed;
   try {
@@ -462,13 +514,27 @@ export function readAttemptReceipt(filePath) {
 
 export function updateAttemptReceipt(filePath, patch, { now = () => new Date() } = {}) {
   const current = readAttemptReceipt(filePath);
+  if (patch && typeof patch === "object") {
+    if (Object.prototype.hasOwnProperty.call(patch, "request")) {
+      fail("request binding is immutable after write", "request");
+    }
+    for (const key of [
+      "scheme", "assetTransferMethod", "x402Version", "network", "asset", "assetName",
+      "assetVersion", "payer", "payee", "amountAtomic", "nonce", "validAfter", "validBefore",
+      "paymentIdentifier", "schema", "createdAt", "boundary",
+    ]) {
+      if (Object.prototype.hasOwnProperty.call(patch, key) && patch[key] !== current[key]) {
+        fail(`${key} is immutable after write`, key);
+      }
+    }
+  }
   const next = validateAttemptReceipt({
     ...current,
-    ...patch,
-    request: patch.request ? { ...current.request, ...patch.request } : current.request,
-    boundary: current.boundary,
+    stage: patch?.stage ?? current.stage,
+    settlementState: patch?.settlementState ?? current.settlementState,
+    request: current.request,
+    boundary: CANONICAL_BOUNDARY,
     schema: ATTEMPT_RECEIPT_SCHEMA,
-    // Identity fields are immutable once written.
     scheme: current.scheme,
     assetTransferMethod: current.assetTransferMethod,
     x402Version: current.x402Version,
@@ -496,12 +562,10 @@ export function safeAttemptJson(value) {
 
 function sanitizeAttemptValue(value, key = "") {
   if (value == null) return value;
-  if (/private.?key|secret|seed|mnemonic|password|credential|signature|payment.?header|typed.?data/i.test(key)) {
+  if (/^(private[_-]?key|secret|seed|mnemonic|password|credential|signature|payment[_-]?header|payment[_-]?signature|typed[_-]?data|PAYMENT-SIGNATURE|X-PAYMENT)$/i.test(key)) {
     return "[redacted]";
   }
   if (typeof value === "string") {
-    if (/private.?key|secret|seed|mnemonic|password/i.test(key)) return "[redacted]";
-    // Leave 32-byte nonces and addresses intact; redact longer hex blobs (signatures ~65 bytes).
     if (/^0x[0-9a-fA-F]{130,}$/.test(value)) return "[redacted]";
     if (/[A-Za-z0-9+/_=-]{100,}/.test(value) && !/^0x[0-9a-fA-F]{64}$/.test(value)) {
       return "[opaque-redacted]";

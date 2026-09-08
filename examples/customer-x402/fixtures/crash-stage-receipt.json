@@ -1,9 +1,9 @@
 {
   "schema": "samedaydesk.customer-x402.attempt-receipt.v1",
-  "stage": "paid_response_observed",
-  "settlementState": "observed_http_unverified",
+  "stage": "paid_send_dispatched",
+  "settlementState": "unknown",
   "createdAt": "2026-09-08T00:00:00.000Z",
-  "updatedAt": "2026-09-08T00:00:01.000Z",
+  "updatedAt": "2026-09-08T00:00:02.000Z",
   "scheme": "exact",
   "assetTransferMethod": "eip3009",
   "x402Version": 2,
@@ -14,14 +14,14 @@
   "payer": "0x1111111111111111111111111111111111111111",
   "payee": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
   "amountAtomic": "10000",
-  "nonce": "0xabababababababababababababababababababababababababababababababab",
+  "nonce": "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
   "validAfter": "0",
   "validBefore": "1788844800",
-  "paymentIdentifier": "pay_fixture_only_not_live_id",
+  "paymentIdentifier": "pay_crash_stage_fixture_01",
   "request": {
     "method": "POST",
     "url": "https://agents.samedaydesk.com/extract/batch",
-    "bodyDigest": "sha256:abababababababababababababababababababababababababababababababab"
+    "bodyDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
   },
   "boundary": {
     "purpose": "customer-owned unsigned EIP-3009 attempt identity for read-only reconciliation",

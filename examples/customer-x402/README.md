@@ -106,12 +106,14 @@ npm run reconcile -- --reconcile \
   --rpc-url https://YOUR_EXPLICIT_RPC
 ```
 
-Uses official USDC `authorizationState(authorizer, nonce)` plus bounded log
-evidence. No wallet load or signing. Reports used/unused, expiry, exact Transfer
-match when provable, and confirmation vs finality separately. A used
-authorization is not delivered output and not permission to retry. Absence of a
-settlement log inside a truncated non-final range is not final proof of
-no-settlement beyond `authorizationState`.
+Uses official `authorizationState(authorizer, nonce)` through a bounded viem
+JSON-RPC transport (byte limit, total timeout, finite requests, zero retries),
+pinned to an observed block. Chain-time expiry comes from that block timestamp;
+wall-clock expiry is reported separately. Cancellation is distinguished from an
+exact successful `AuthorizationUsed` + single matching `Transfer`. Confirmation
+and finality require a still-matching canonical block hash, not merely a past
+height under a finalized tag. A used authorization is not delivered output and
+not permission to retry. Truncated-range absence remains unknown.
 
 Unset the key when finished. Never commit keys. Fixture keys exist only in
 local tests and are never printed.

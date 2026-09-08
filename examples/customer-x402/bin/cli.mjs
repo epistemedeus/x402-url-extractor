@@ -51,7 +51,7 @@ Notes:
     amount cap, and buyer-required output before invoking @x402/fetch.
   - Without --attempt-receipt, unsigned EIP-3009 nonce/validBefore are not retained.
   - With --attempt-receipt, identity is persisted before paid send; write failure aborts send.
-  - --reconcile is read-only: authorizationState/finality only; never retry/unlock/respend.
+  - --reconcile is read-only: bounded RPC authorizationState/finality only; never retry/unlock/respend.
   - Authorization rejects mutated body bytes after approval; preflight and paid
     attempts send the same bytes.
   - HTTP payment credentials are never transplanted into mcp:// resources.
