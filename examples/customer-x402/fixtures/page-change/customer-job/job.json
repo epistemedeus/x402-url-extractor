@@ -1,0 +1,9 @@
+{
+  "id": "rfq-and-vendor-page-watch",
+  "title": "Compare two previously delivered extract-batch JSON artifacts for selected RFQ fields",
+  "clock": "2026-09-08T12:00:00.000Z",
+  "fields": ["title", "description", "headings"],
+  "limits": { "maxStaleMs": 86400000 },
+  "before": "./before.json",
+  "after": "./after.json"
+}

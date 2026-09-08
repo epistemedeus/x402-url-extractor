@@ -1,0 +1,116 @@
+{
+  "ok": true,
+  "product": "samedaydesk-extract-batch",
+  "schemaVersion": "samedaydesk.extract-batch.v0",
+  "quote": {
+    "amountAtomic": "10000",
+    "displayUsdc": "0.01",
+    "meaning": "Introductory flat 0.01 USDC batch quote for a bounded 1-5 URL attempt. Not a per-URL success promise."
+  },
+  "jobId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "jobStatus": "completed",
+  "stopReason": null,
+  "partial": false,
+  "sources": [
+    {
+      "id": "item-001",
+      "source": "https://rfq.example/widgets",
+      "status": "success",
+      "data": {
+        "title": "Q3 widget RFQ",
+        "description": "Offer due 2026-09-20. Unit price 12.40 USD.",
+        "headings": { "h1": ["Q3 widget RFQ"], "h2": ["Scope", "Dates"] }
+      },
+      "notes": [],
+      "error": null,
+      "finalUrl": "https://rfq.example/widgets",
+      "httpStatus": 200,
+      "provenance": {
+        "transport": "live",
+        "requestedAt": "2026-09-01T10:00:00.000Z",
+        "completedAt": "2026-09-01T10:00:01.200Z",
+        "fetchedAt": "2026-09-01T10:00:01.000Z",
+        "finalUrl": "https://rfq.example/widgets",
+        "httpStatus": 200
+      }
+    },
+    {
+      "id": "item-002",
+      "source": "https://rfq.example/fasteners",
+      "status": "success",
+      "data": {
+        "title": "Fastener catalog",
+        "description": "Grade 8 hex bolts remain listed.",
+        "headings": { "h1": ["Fasteners"], "h2": ["Hex", "Carriage"] }
+      },
+      "notes": [],
+      "error": null,
+      "finalUrl": "https://rfq.example/fasteners",
+      "httpStatus": 200,
+      "provenance": {
+        "transport": "live",
+        "requestedAt": "2026-09-01T10:00:02.000Z",
+        "completedAt": "2026-09-01T10:00:02.800Z",
+        "finalUrl": "https://rfq.example/fasteners",
+        "httpStatus": 200
+      }
+    },
+    {
+      "id": "item-003",
+      "source": "https://research.example/vendor-alpha",
+      "status": "success",
+      "data": {
+        "title": "Vendor Alpha homepage",
+        "description": "ISO 9001 certified. Lead time 14 days.",
+        "headings": { "h1": ["Vendor Alpha"], "h2": ["Quality"] }
+      },
+      "notes": [],
+      "error": null,
+      "finalUrl": "https://research.example/vendor-alpha",
+      "httpStatus": 200,
+      "provenance": {
+        "transport": "live",
+        "requestedAt": "2026-09-01T10:00:03.000Z",
+        "completedAt": "2026-09-01T10:00:03.400Z",
+        "finalUrl": "https://research.example/vendor-alpha",
+        "httpStatus": 200
+      }
+    },
+    {
+      "id": "item-004",
+      "source": "https://research.example/vendor-alpha",
+      "status": "skipped_duplicate",
+      "data": null,
+      "notes": [],
+      "error": null,
+      "provenance": null
+    }
+  ],
+  "accounting": {
+    "requests": 3,
+    "bytes": 4200,
+    "wallMs": 1400,
+    "retries": 0,
+    "succeeded": 3,
+    "partial": 0,
+    "failed": 0,
+    "unknown": 0,
+    "skippedDuplicate": 1
+  },
+  "costInputs": {
+    "admittedBodyBytes": 4200,
+    "requests": 3,
+    "wallMs": 1400,
+    "hostingCosts": "unknown",
+    "modelCosts": "none",
+    "monetaryMargin": null,
+    "note": "accounting.bytes is uncompressed admitted application body bytes, including unresolved reservations, not socket wire billing"
+  },
+  "charged": true,
+  "boundary": {
+    "guaranteedUrlSuccess": false,
+    "introductoryPrice": true,
+    "sourceFetchBeforeAuthorization": false,
+    "automaticRetries": false
+  }
+}

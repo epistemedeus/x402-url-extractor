@@ -1,0 +1,112 @@
+{
+  "ok": false,
+  "product": "samedaydesk-extract-batch",
+  "schemaVersion": "samedaydesk.extract-batch.v0",
+  "quote": {
+    "amountAtomic": "10000",
+    "displayUsdc": "0.01",
+    "meaning": "Introductory flat 0.01 USDC batch quote for a bounded 1-5 URL attempt. Not a per-URL success promise."
+  },
+  "jobId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "jobStatus": "completed_with_unknown",
+  "stopReason": null,
+  "partial": true,
+  "sources": [
+    {
+      "id": "item-001",
+      "source": "https://research.example/vendor-alpha",
+      "status": "success",
+      "data": {
+        "title": "Vendor Alpha homepage",
+        "headings": { "h1": ["Vendor Alpha"], "h2": ["Quality"] }
+      },
+      "notes": [],
+      "error": null,
+      "finalUrl": "https://research.example/vendor-alpha",
+      "httpStatus": 200,
+      "provenance": {
+        "transport": "live",
+        "requestedAt": "2026-09-08T10:00:00.000Z",
+        "completedAt": "2026-09-08T10:00:00.500Z",
+        "fetchedAt": "2026-09-08T10:00:00.400Z",
+        "finalUrl": "https://research.example/vendor-alpha",
+        "httpStatus": 200
+      }
+    },
+    {
+      "id": "item-002",
+      "source": "https://rfq.example/widgets",
+      "status": "success",
+      "data": {
+        "title": "Q3 widget RFQ (deadline moved)",
+        "description": "Offer due 2026-09-27. Unit price 12.40 USD.",
+        "headings": { "h1": ["Q3 widget RFQ"], "h2": ["Dates", "Scope"] }
+      },
+      "notes": [],
+      "error": null,
+      "finalUrl": "https://rfq.example/widgets",
+      "httpStatus": 200,
+      "provenance": {
+        "transport": "live",
+        "requestedAt": "2026-09-08T10:00:01.000Z",
+        "completedAt": "2026-09-08T10:00:01.700Z",
+        "finalUrl": "https://rfq.example/widgets",
+        "httpStatus": 200
+      }
+    },
+    {
+      "id": "item-003",
+      "source": "https://rfq.example/fasteners",
+      "status": "failure",
+      "data": null,
+      "notes": [],
+      "error": { "code": "http_error", "message": "upstream returned HTTP 503" },
+      "finalUrl": "https://rfq.example/fasteners",
+      "httpStatus": 503,
+      "provenance": {
+        "transport": "live",
+        "requestedAt": "2026-09-08T10:00:02.000Z",
+        "completedAt": "2026-09-08T10:00:02.200Z",
+        "fetchedAt": "2026-09-08T10:00:02.100Z",
+        "finalUrl": "https://rfq.example/fasteners",
+        "httpStatus": 503
+      }
+    },
+    {
+      "id": "item-004",
+      "source": "https://research.example/vendor-beta",
+      "status": "unknown",
+      "data": null,
+      "notes": [],
+      "error": { "code": "execution_interrupted", "message": "Execution measurements are unavailable; do not retry a new payment automatically." },
+      "provenance": null
+    }
+  ],
+  "accounting": {
+    "requests": 4,
+    "bytes": 3900,
+    "wallMs": 2100,
+    "retries": 0,
+    "succeeded": 2,
+    "partial": 0,
+    "failed": 1,
+    "unknown": 1,
+    "skippedDuplicate": 0
+  },
+  "costInputs": {
+    "admittedBodyBytes": 3900,
+    "requests": 4,
+    "wallMs": 2100,
+    "hostingCosts": "unknown",
+    "modelCosts": "none",
+    "monetaryMargin": null,
+    "note": "accounting.bytes is uncompressed admitted application body bytes, including unresolved reservations, not socket wire billing"
+  },
+  "charged": true,
+  "boundary": {
+    "guaranteedUrlSuccess": false,
+    "introductoryPrice": true,
+    "sourceFetchBeforeAuthorization": false,
+    "automaticRetries": false
+  }
+}

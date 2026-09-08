@@ -190,6 +190,62 @@ CUSTOMER_X402_LIVE_PREFLIGHT=1 node --test --test-name-pattern='bounded credenti
 
 This signs nothing and uses no wallet, payment, faucet, signup, or account secret.
 
+## Offline page-change recipe (no key, no fetch)
+
+If you already have two delivered `POST /extract/batch` JSON files, compare
+buyer-selected fields without paying again. The recipe does not fetch URLs,
+schedule a second attempt, sign, retry, or contact the merchant.
+
+Use this from the full public repository checkout, not a separately packed npm
+tarball. Source-identity helpers live at the repository root. The comparison
+covers selected values in the supplied artifacts; it does not validate the full
+seller output schema or prove downstream business utility. The existing
+purchase-time buyer validation remains a separate step.
+
+### Fixture quickstart
+
+From `examples/customer-x402` after `npm ci`:
+
+```bash
+npm run page-change -- job --job ./fixtures/page-change/customer-job/job.json
+npm run page-change -- compare \
+  --before ./fixtures/page-change/customer-job/before.json \
+  --after ./fixtures/page-change/customer-job/after.json \
+  --fields title,description,headings \
+  --format text
+```
+
+The fixture pair is owner proof that selected-field before/after, failed
+rows, missing rows, and coverage unknowns stay visible. It is not buyer
+demand. `charged: true` is not useful output. Reordered rows with the same
+source URL are order, not content change. An absent selected field is coverage
+unknown, not deletion.
+
+See `src/page-change/NOTICE.md` for ownership, license, and reviewed-source
+pins. UTF-8 shortening applies only to text display excerpts; JSON
+`changes[].before/after` keep exact admitted values.
+
+### Two existing public client deliveries
+
+Save each paid or unpaid batch JSON exactly as returned:
+
+```bash
+npm run page-change -- compare \
+  --before /path/to/first-delivery.json \
+  --after /path/to/second-delivery.json \
+  --fields title,description,headings \
+  --clock 2026-09-08T12:00:00.000Z \
+  --max-stale-ms 86400000
+```
+
+A later observation is a separately authorized second purchase of the same
+URL list and fields. Inspect and edit the authorization file yourself first.
+This recipe will not run `purchase`, send a payment header, or retry an
+unknown outcome.
+
+HTTP 200, settlement headers, and `charged: true` do not prove useful
+selected-field output.
+
 ## Machine-readable sample
 
 See [`results/example-result.json`](results/example-result.json) for a fixture

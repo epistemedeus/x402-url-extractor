@@ -1,0 +1,7 @@
+{
+  "id": "c1-fixture-watch",
+  "title": "Compare two alternate batch-result JSON artifacts",
+  "fields": ["title", "description"],
+  "before": "./before.json",
+  "after": "./after.json"
+}

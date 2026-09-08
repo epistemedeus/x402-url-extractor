@@ -1,0 +1,34 @@
+{
+  "ok": true,
+  "product": "samedaydesk-extract-batch",
+  "schemaVersion": "samedaydesk.extract-batch.v0",
+  "quote": { "amountAtomic": "10000", "displayUsdc": "0.01", "meaning": "Introductory flat 0.01 USDC batch quote for a bounded 1-5 URL attempt. Not a per-URL success promise." },
+  "jobId": "4444444444444444444444444444444444444444444444444444444444444444",
+  "jobStatus": "completed",
+  "stopReason": null,
+  "partial": false,
+  "sources": [
+    {
+      "id": "item-001",
+      "source": "https://rfq.example/widgets",
+      "status": "success",
+      "data": { "title": "Q3 widget RFQ", "description": "stable" },
+      "notes": [],
+      "error": null,
+      "provenance": { "transport": "live", "completedAt": "2026-09-08T10:00:01.000Z", "finalUrl": "https://rfq.example/widgets", "httpStatus": 200 }
+    },
+    {
+      "id": "item-002",
+      "source": "https://rfq.example/widgets",
+      "status": "success",
+      "data": { "title": "Q3 widget RFQ copy", "description": "other row" },
+      "notes": [],
+      "error": null,
+      "provenance": { "transport": "live", "completedAt": "2026-09-08T10:00:02.000Z", "finalUrl": "https://rfq.example/widgets", "httpStatus": 200 }
+    }
+  ],
+  "accounting": { "requests": 2, "bytes": 700, "wallMs": 18, "retries": 0, "succeeded": 2, "partial": 0, "failed": 0, "unknown": 0, "skippedDuplicate": 0 },
+  "costInputs": { "admittedBodyBytes": 700, "requests": 2, "wallMs": 18, "hostingCosts": "unknown", "modelCosts": "none", "monetaryMargin": null },
+  "charged": true,
+  "boundary": { "guaranteedUrlSuccess": false, "introductoryPrice": true, "sourceFetchBeforeAuthorization": false, "automaticRetries": false }
+}

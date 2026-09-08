@@ -1,0 +1,51 @@
+{
+  "jobId": "c1-before-001",
+  "status": "completed",
+  "stopReason": null,
+  "costParameters": {
+    "maxRequests": 10,
+    "maxBytesTotal": 2000000,
+    "maxWallTimeMs": 30000,
+    "maxRetriesPerItem": 1,
+    "maxBytesPerItem": 1000000,
+    "timeoutMs": 8000,
+    "maxRedirects": 3
+  },
+  "accounting": {
+    "requests": 2,
+    "bytes": 400,
+    "retries": 0,
+    "wallMs": 12,
+    "duplicatesCollapsed": 1,
+    "succeeded": 2,
+    "partial": 0,
+    "failed": 0,
+    "unknown": 0,
+    "skippedDuplicate": 1
+  },
+  "duplicates": [
+    { "id": "item-003", "source": "fixture:pages/alpha.html", "sourceKey": "fixture:pages/alpha.html", "duplicateOf": "item-001" }
+  ],
+  "items": [
+    {
+      "id": "item-001",
+      "source": "fixture:pages/alpha.html",
+      "status": "success",
+      "data": { "title": "Alpha", "description": "first" },
+      "provenance": { "transport": "fixture", "requestedAt": "2026-09-01T09:00:00.000Z", "completedAt": "2026-09-01T09:00:00.100Z" }
+    },
+    {
+      "id": "item-002",
+      "source": "fixture:pages/beta-malformed.html",
+      "status": "success",
+      "data": { "title": "Beta", "description": "ok" },
+      "provenance": { "transport": "fixture", "requestedAt": "2026-09-01T09:00:00.200Z", "completedAt": "2026-09-01T09:00:00.300Z" }
+    },
+    {
+      "id": "item-003",
+      "source": "fixture:pages/alpha.html",
+      "status": "skipped_duplicate",
+      "duplicateOf": "item-001"
+    }
+  ]
+}
