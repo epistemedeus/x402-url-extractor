@@ -15,6 +15,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { mppAssetForNetwork } from "./mpp-dual-stack.mjs";
 import { EXTRACT_BATCH_AMOUNT_ATOMIC, EXTRACT_BATCH_PATH } from "./extract-batch-config.mjs";
 import { extractBatchOutputSchema } from "./extract-batch.mjs";
+import { assertExtractDiscoveryInventory } from "./extract-discovery-inventory.mjs";
 const validateOutput = new Ajv2020({ strict: false, allErrors: true }).compile(extractBatchOutputSchema());
 function assertOutput(result) {
   assert.equal(validateOutput(result), true, JSON.stringify(validateOutput.errors));
@@ -389,7 +390,36 @@ test("flag on projects the batch offer across MCP tools/list with matching schem
   } finally {
     await client.close();
   }
-  assert.equal(tools.length, 23);
+  assertExtractDiscoveryInventory(tools);
+  assertExtractDiscoveryInventory([...tools, {
+    name: "unrelated_probe", inputSchema: { type: "object", properties: {} },
+  }]);
+  assert.throws(() => assertExtractDiscoveryInventory(tools.filter((tool) => tool.name !== "extract_batch")), /missing or duplicate extract_batch/);
+  for (const name of ["extract", "extract_batch"]) {
+    for (const key of ["inputSchema", "outputSchema"]) {
+      const malformed = structuredClone(tools);
+      delete malformed.find((tool) => tool.name === name)[key];
+      assert.throws(() => assertExtractDiscoveryInventory(malformed), /contract drift/);
+      const empty = structuredClone(tools);
+      empty.find((tool) => tool.name === name)[key].properties = {};
+      assert.throws(() => assertExtractDiscoveryInventory(empty), /contract drift/);
+    }
+  }
+  for (const mutate of [
+    (tool) => { tool.inputSchema.properties.urls.maxItems = 99; },
+    (tool) => { tool.inputSchema.properties.urls.items.type = "number"; },
+    (tool) => { tool.inputSchema.properties.fields.items.enum.push("invented"); },
+    (tool) => { tool.inputSchema.required.push("fields"); },
+    (tool) => { tool.outputSchema.properties.sources.items.properties.status = { type: "number" }; },
+    (tool) => { tool.outputSchema.properties.charged = { type: "string" }; },
+  ]) {
+    const malformed = structuredClone(tools);
+    mutate(malformed.find((tool) => tool.name === "extract_batch"));
+    assert.throws(() => assertExtractDiscoveryInventory(malformed), /contract drift/);
+  }
+  const missingDescription = structuredClone(tools);
+  delete missingDescription.find((tool) => tool.name === "extract").outputSchema.properties.description;
+  assert.throws(() => assertExtractDiscoveryInventory(missingDescription), /contract drift/);
   const batch = tools.find((tool) => tool.name === "extract_batch");
   assert.ok(batch);
   assert.equal(batch.inputSchema?.properties?.urls?.type, "array");

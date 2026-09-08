@@ -1,4 +1,4 @@
-SameDayDesk Goose native config 0.1.0
+SameDayDesk Goose native config 0.1.1
 Merchant https://agents.samedaydesk.com/mcp
 
 Goose must already be installed. This directory does not install Goose,
@@ -24,5 +24,6 @@ Default YAML sends no source headers. goose.config.with-declared-source.yaml
 is optional, unauthenticated, not merchant-allowlisted, and does not claim
 merchant attribution. Do not use it as the default.
 
-Live unpaid discovery of the 22 tools is a separate initialize plus
-tools/list check. A Goose fixture MCP loader is not part of this repository.
+Live unpaid discovery is a separate initialize plus tools/list check. Require
+extract and extract_batch with their live schemas; extra unrelated tools are
+accepted. A Goose fixture MCP loader is not part of this repository.

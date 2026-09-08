@@ -15,9 +15,10 @@ repository root as a plugin. This is not the Agent Plugins 1.0 package in
 - `.mcp.json` points at `https://agents.samedaydesk.com/mcp` with
   `"type": "http"` (Claude Code's name for Streamable HTTP;
   `streamable-http` is an accepted alias).
-- `skills/web-extract/SKILL.md` constructs `GET /extract?url=` and the MCP
-  `extract` tool from exact inputs, then stops at the live 402 unless the
-  buyer explicitly authorizes payment.
+- `skills/web-extract/SKILL.md` constructs one bounded `POST /extract/batch`
+  (1–5 public HTTPS URLs plus explicit fields) or `GET /extract?url=` / MCP
+  `extract` for a single page, then stops at the live 402 unless the buyer
+  explicitly authorizes payment.
 
 The header `X-SameDayDesk-Agent-Source: claude-code-marketplace-v1` is a
 claimed source label. It is not a credential. Do not treat it as proof that
@@ -34,9 +35,11 @@ the merchant accepted, bucketed, or attributed an independent customer.
 - Not a hardcoded price. Read the live challenge.
 - Not proof of model invocation, payment, or demand after install.
 - For a separate HTTP `@x402/fetch` customer example against
-  `POST /extract/batch` (default) and `GET /extract`, see the
-  [public customer example](https://github.com/epistemedeus/x402-url-extractor/tree/master/examples/customer-x402). This plugin
-  does not become payment-capable from that example.
+  `POST /extract/batch` (default) and `GET /extract`, including optional
+  before-send unsigned attempt receipt and read-only reconcile, see the
+  [public customer example](https://github.com/epistemedeus/x402-url-extractor/tree/master/examples/customer-x402).
+  This plugin does not become payment-capable from that example. MCP and HTTP
+  credential scopes remain distinct.
 
 ## Layout
 
@@ -68,10 +71,11 @@ claude plugin marketplace add epistemedeus/x402-url-extractor
 claude plugin install samedaydesk-extract@samedaydesk-claude
 ```
 
-Then invoke `/samedaydesk-extract:web-extract` with one public HTTPS URL.
-Stop at unpaid discovery unless current buyer authority already covers the
-exact live terms. Listing and install grant none. Unknown payment outcomes
-reconcile; do not retry from this plugin alone.
+Then invoke `/samedaydesk-extract:web-extract` with one public HTTPS URL, or
+1–5 URLs plus explicit desired fields for batch. Stop at unpaid discovery
+unless current buyer authority already covers the exact method, body, and live
+terms. Listing and install grant none. Unknown payment outcomes reconcile; do
+not retry from this plugin alone.
 
 Until the public branch exists, add a local git clone of this repository
 (the directory that contains `.git` and `.claude-plugin/marketplace.json`):
@@ -111,7 +115,8 @@ npx @modelcontextprotocol/inspector@2.3.0 --cli \
   https://agents.samedaydesk.com/mcp --transport http --method tools/list --format json
 ```
 
-Expect 22 tools. Do not call them.
+Require `extract` and, when live, `extract_batch` with their schemas. Extra
+unrelated tools are fine. Do not call them.
 
 ## License
 

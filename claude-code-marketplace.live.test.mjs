@@ -1,36 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { assertExtractDiscoveryInventory } from "./extract-discovery-inventory.mjs";
+
 const LIVE_MCP_URL = "https://agents.samedaydesk.com/mcp";
 const LIVE_EXTRACT_URL = "https://agents.samedaydesk.com/extract";
 const SOURCE_HEADER = "X-SameDayDesk-Agent-Source";
 const CLAIMED_SOURCE_VALUE = "claude-code-marketplace-v1";
-const TEST_USER_AGENT = "SameDayDesk-C16-claude-marketplace/0.1.0";
+const TEST_USER_AGENT = "SameDayDesk-C25-claude-marketplace/0.1.1";
 const MCP_PROTOCOL = "2025-11-25";
-const EXPECTED_TOOLS = [
-  "extract",
-  "read",
-  "scan",
-  "schemaforge",
-  "enrich",
-  "wallet_enrich",
-  "deep_audit",
-  "morpho_position",
-  "morpho_protection",
-  "morpho_market_underwrite",
-  "morpho_preliquidation_replay",
-  "opportunity_preflight",
-  "agent_discoverability_audit",
-  "payment_offer_preflight",
-  "seller_integrity_audit",
-  "contract_qualified_search",
-  "agent_surface_budget_audit",
-  "settlement_proof",
-  "transaction_receipt",
-  "solana_transaction_receipt",
-  "wallet_policy_conformance",
-  "stateful_wallet_policy_conformance",
-];
 
 const TIMEOUT_MS = 15_000;
 const MAX_BYTES = 1_000_000;
@@ -109,11 +87,11 @@ test("unpaid HTTP extract returns live 402; amount is read, not authorized", asy
   }));
 });
 
-test("unpaid initialize-era initialize and tools/list return 22 live tools", async () => {
+test("unpaid initialize-era initialize and tools/list require extract and extract_batch", async () => {
   const initialize = await postRpc("initialize", {
     protocolVersion: MCP_PROTOCOL,
     capabilities: {},
-    clientInfo: { name: "samedaydesk-c16-claude-marketplace", version: "0.1.0" },
+    clientInfo: { name: "samedaydesk-c25-claude-marketplace", version: "0.1.1" },
   }, 1);
   assert.equal(initialize.response.ok, true, `initialize HTTP ${initialize.response.status}`);
   const result = initialize.payload.result;
@@ -128,21 +106,16 @@ test("unpaid initialize-era initialize and tools/list return 22 live tools", asy
   assert.equal(listed.response.ok, true, `tools/list HTTP ${listed.response.status}`);
   const tools = listed.payload.result.tools;
   assert.equal(Array.isArray(tools), true);
-  const names = tools.map((tool) => tool.name);
-  assert.equal(names.length, EXPECTED_TOOLS.length);
-  assert.deepEqual(names, EXPECTED_TOOLS);
-  const extract = tools.find((tool) => tool.name === "extract");
-  assert.ok(extract);
-  const schema = extract.inputSchema || extract.input_schema || {};
-  assert.ok(schema.properties, `extract schema keys ${Object.keys(schema)}`);
-  assert.ok("url" in schema.properties);
+  const found = assertExtractDiscoveryInventory(tools);
+  assert.ok(found.names.includes("extract"));
+  assert.ok(found.names.includes("extract_batch"));
 });
 
 test("paid extract tools/call without credentials does not deliver paid content", async () => {
   const initialize = await postRpc("initialize", {
     protocolVersion: MCP_PROTOCOL,
     capabilities: {},
-    clientInfo: { name: "samedaydesk-c16-claude-marketplace", version: "0.1.0" },
+    clientInfo: { name: "samedaydesk-c25-claude-marketplace", version: "0.1.1" },
   }, 11);
   assert.equal(initialize.response.ok, true);
   const sessionId = initialize.response.headers.get("mcp-session-id");

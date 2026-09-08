@@ -1,14 +1,13 @@
 # SameDayDesk extract on Goose
 
-Version 0.1.0. Unpaid discovery workflow only.
+Version 0.1.1. Unpaid discovery workflow only.
 
 ## Merchant boundary
 
 - URL: `https://agents.samedaydesk.com/mcp`
 - Method: `POST`
 - Goose type: `streamable_http`
-- Advertised extract price: 0.005 USDC on eip155:8453
-- That price is tool metadata, not payment authority
+- Advertised tool metadata amounts are not payment authority
 - No wrapper, proxy, wallet, or API key in this package
 
 ## 1. Goose info config read
@@ -39,7 +38,7 @@ install. Official docs do not document headers on `goose://`. Default YAML
 sends no `X-SameDayDesk-Agent-Source`. Optional labels do not claim merchant
 attribution.
 
-## 2. Live unpaid 22-tool discovery
+## 2. Live unpaid discovery (follow returned inventory)
 
 This is a separate check from `goose info`. It is also separate from any
 Goose fixture MCP loader, which is not in this repository.
@@ -48,24 +47,35 @@ Goose fixture MCP loader, which is not in this repository.
 npm run test:goose-native:live
 ```
 
-Or any MCP client: `POST` `initialize`, then `tools/list`, then stop. Expect
-22 tools, `extract` present, required input `url`. Do not call `extract`.
+Or any MCP client: `POST` `initialize`, then `tools/list`, then stop. Require
+`extract` and `extract_batch` with their exact live input/output schemas. Do
+not fail solely because an unrelated valid tool was added. Do not call paid
+tools.
 
 ## 3. If a paid model is later used
 
 This package does not run model use. A later independent trial may load
 `extract.recipe.yaml` with a user-owned Goose provider and ask Goose to
-report extract metadata. A paid call requires existing buyer-approved scoped
-wallet/policy authority covering the exact live request and terms, or
-explicit new approval if that authority is absent or exceeded. Listing
-metadata never grants authority. This directory does not implement payment
-parsing or a wallet.
+report extract / extract_batch metadata. A paid call requires existing
+buyer-approved scoped wallet/policy authority covering the exact live request,
+method, body, and terms, or explicit new approval if that authority is absent
+or exceeded. Listing metadata never grants authority. This directory does not
+implement payment parsing or a wallet.
+
+For reusable HTTP `@x402/fetch` payment details, optional before-send unsigned
+attempt receipt, and read-only reconcile, see the
+[public customer example](https://github.com/epistemedeus/x402-url-extractor/tree/master/examples/customer-x402).
+Goose does not become payment-capable from that link alone. MCP and HTTP
+credential scopes remain distinct.
 
 ## 4. Errors
 
 - Unavailable: merchant or Goose cannot connect. Do not invent tools.
 - Reconnect: drop the MCP session and `initialize` again. Do not reuse a dead session.
-- Schema drift: tool count or extract shape changed. Stop; metadata is not a fillable payment.
+- Schema drift: `extract` / `extract_batch` missing or shape changed. Stop;
+  metadata is not a fillable payment. Extra unrelated tools are not drift.
 - RPC/HTTP error: surface the code and stop. Do not fall back to a wrapper.
 
 Goose source: https://github.com/block/goose (aaif-goose/goose v1.49.0).
+Official Goose discovers Streamable HTTP extension tools through MCP
+`tools/list`; follow the returned inventory rather than a hardcoded count.
