@@ -46,6 +46,7 @@ settlement proof, and AI-search readiness audits.
 - Agent Plugins 1.0 local package: [`plugins/samedaydesk-x402`](plugins/samedaydesk-x402) (not marketplace-listed)
 - Claude Code marketplace: [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) plus [`plugins/samedaydesk-extract`](plugins/samedaydesk-extract) (`samedaydesk-extract@samedaydesk-claude`; not an Anthropic official directory listing)
 - Goose native config: [`goose/`](goose/) (YAML, session flag, and deeplink; not a Goose installer)
+- Hermes Agent skills: [`hermes/`](hermes/) plus portable [`plugins/samedaydesk-x402/skills`](plugins/samedaydesk-x402/skills) (AgentSkills `SKILL.md` drop-in; not a Hermes plugin or installer)
 - Live resource manifest: https://agents.samedaydesk.com/.well-known/x402
 - OpenAPI: https://agents.samedaydesk.com/openapi.json
 - Official MPP OpenAPI: https://agents.samedaydesk.com/mpp-openapi.json
@@ -1075,6 +1076,52 @@ Deeplink: [`goose/goose.deeplink.txt`](goose/goose.deeplink.txt).
 
 Maintainer packaging check: `npm run test:goose-native`.
 
+## Hermes Agent skills
+
+Hermes Agent (Nous Research) already loads portable AgentSkills `SKILL.md`
+files. This repository does not add a Hermes plugin, MCP YAML, wallet, or
+second paywall. The existing extract skill is
+[`plugins/samedaydesk-x402/skills/web-extract/SKILL.md`](plugins/samedaydesk-x402/skills/web-extract/SKILL.md).
+The offline page-change recipe is
+[`plugins/samedaydesk-x402/skills/page-change/SKILL.md`](plugins/samedaydesk-x402/skills/page-change/SKILL.md).
+
+Copyable isolated discovery, without touching `~/.hermes` or calling a model:
+
+```bash
+export HERMES_HOME="$(mktemp -d "${TMPDIR:-/tmp}/samedaydesk-hermes.XXXXXX")"
+HERMES_HOME="$HERMES_HOME" HERMES_AGENT_SRC=/path/to/NousResearch/hermes-agent \
+  python3 hermes/check-isolated-loader.py
+```
+
+`check-isolated-loader.py` requires a fresh empty throwaway profile, copies
+the two skills, and uses the official Hermes `agent.skill_utils` discovery
+API. It does not install Hermes globally, log into a model provider, open a
+wallet, or execute a model. Discovery and payment execution are separate checks.
+
+Project-local `.hermes/skills` or `.agents/skills` inside a git checkout does
+not auto-load. Hermes requires `hermes skills trust` for that root. That is
+an operator approval gate. This package does not add those directories.
+
+After the skill paths exist on the public default branch, a user who already
+has Hermes can also run:
+
+```bash
+hermes skills install epistemedeus/x402-url-extractor/plugins/samedaydesk-x402/skills/web-extract
+hermes skills install epistemedeus/x402-url-extractor/plugins/samedaydesk-x402/skills/page-change
+```
+
+That hub path copies into that user's profile and runs the community security
+scan. Do not run it against an already-authenticated profile from this
+repository. Paying `POST /extract/batch` or `GET /extract` with a maintained
+HTTP client stays in
+[`examples/customer-x402`](examples/customer-x402). That example does not
+make Hermes payment-capable. MCP and HTTP credential scopes remain distinct.
+
+Copyable install notes: [`hermes/INSTALL.txt`](hermes/INSTALL.txt).
+Maintainer packaging check: `npm run test:hermes-native`.
+Official loader proof with `HERMES_AGENT_SRC` set:
+`npm run test:hermes-native:loader`.
+
 ## Local run
 
 ```bash
@@ -1097,6 +1144,7 @@ curl -i 'http://localhost:3000/defi/morpho-position?address=0x...' # HTTP 402
 - `.claude-plugin/marketplace.json` — Claude Code marketplace catalog.
 - `plugins/samedaydesk-extract/` — self-contained Claude Code plugin (not Agent Plugins 1.0).
 - `goose/` — native Goose streamable_http config, recipe, and workflow copy.
+- `hermes/` : isolated Hermes AgentSkills install notes and official loader checker.
 - `examples/customer-x402/` — credential-free preflight plus explicitly
   authorized `@x402/fetch` purchase example for `POST /extract/batch`
   (default) and backward-compatible `GET /extract`.

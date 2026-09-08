@@ -227,6 +227,21 @@ test("official 1.0.0 schemas are vendored with pinned hashes", () => {
   assert.match(sums, new RegExp(`${MCP_SCHEMA_SHA256}  mcp\\.schema\\.json`));
 });
 
+test("page-change skill is portable AgentSkills and stays offline", () => {
+  const skillPath = join(PLUGIN_ROOT, "skills/page-change/SKILL.md");
+  const markdown = readFileSync(skillPath, "utf8");
+  const { fields, body } = parseSkill(markdown);
+  assert.equal(fields.name, "page-change");
+  assert.match(fields.name, SKILL_NAME_PATTERN);
+  assert.ok(fields.description.length <= 1024);
+  assert.match(fields.description, /extract-batch JSON field snapshots/);
+  assert.match(body, /fixtures\/page-change\/customer-job\/job\.json/);
+  assert.match(body, /will not run `purchase`/);
+  assert.doesNotMatch(body, /Authorization:|X-PAYMENT|Bearer |api[_-]key/i);
+  assert.doesNotMatch(markdown, /allowed-tools/);
+  assert.doesNotMatch(markdown, /2026-07-28/);
+});
+
 test("web-extract skill is the product skill and stays constructible", () => {
   const skillPath = join(PLUGIN_ROOT, "skills/web-extract/SKILL.md");
   const markdown = readFileSync(skillPath, "utf8");
@@ -253,6 +268,7 @@ test("package files stay inside the plugin root and omit secrets or 2026-07-28 c
   assert.ok(relativeFiles.includes("plugin.json"));
   assert.ok(relativeFiles.includes("mcp.json"));
   assert.ok(relativeFiles.includes("skills/web-extract/SKILL.md"));
+  assert.ok(relativeFiles.includes("skills/page-change/SKILL.md"));
   assert.ok(relativeFiles.includes("README.md"));
   assert.ok(relativeFiles.includes("LICENSE"));
   const portable = ["plugin.json", "mcp.json", "skills/web-extract/SKILL.md", "LICENSE"];

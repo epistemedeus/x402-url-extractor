@@ -1,0 +1,51 @@
+SameDayDesk Hermes AgentSkills install
+Merchant https://agents.samedaydesk.com
+Public skills plugins/samedaydesk-x402/skills/{web-extract,page-change}/SKILL.md
+
+Hermes must already be installed if you want the hub CLI. This directory
+does not install Hermes, mutate ~/.hermes, log into a model provider, or
+start a runtime daemon.
+
+Official acquisition (AgentSkills SKILL.md, not a Hermes plugin or MCP wrap):
+
+1. Isolated profile drop-in (tested; no hub, no model, no trust prompt):
+
+export HERMES_HOME="$(mktemp -d "${TMPDIR:-/tmp}/samedaydesk-hermes.XXXXXX")"
+HERMES_HOME="$HERMES_HOME" HERMES_AGENT_SRC=/path/to/NousResearch/hermes-agent \
+  python3 hermes/check-isolated-loader.py
+
+The checker copies the two skills and uses the official agent.skill_utils
+discovery API. It requires a fresh empty HERMES_HOME and refuses existing
+profiles, symlinks, and ~/.hermes or its descendants. It does not call a model.
+
+2. Isolated external_dirs (skills stay in this checkout):
+
+export HERMES_HOME="$(mktemp -d "${TMPDIR:-/tmp}/samedaydesk-hermes.XXXXXX")"
+HERMES_HOME="$HERMES_HOME" HERMES_AGENT_SRC=/path/to/NousResearch/hermes-agent \
+  python3 hermes/check-isolated-loader.py --external-dirs
+
+3. User-facing hub install after these paths exist on the default branch
+   (community scan; confirm or --yes; not run by this package):
+
+hermes skills install epistemedeus/x402-url-extractor/plugins/samedaydesk-x402/skills/web-extract
+hermes skills install epistemedeus/x402-url-extractor/plugins/samedaydesk-x402/skills/page-change
+
+Or URL:
+
+hermes skills install https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/master/plugins/samedaydesk-x402/skills/web-extract/SKILL.md
+hermes skills install https://raw.githubusercontent.com/epistemedeus/x402-url-extractor/master/plugins/samedaydesk-x402/skills/page-change/SKILL.md
+
+Hub install copies into $HERMES_HOME/skills (default ~/.hermes/skills). Set a
+fresh throwaway HERMES_HOME before testing these commands. Do not run it against
+an already-authenticated profile from this repository.
+
+Project-local .hermes/skills or .agents/skills inside a git checkout does
+not auto-load. Hermes requires `hermes skills trust` for that root. That is
+an operator approval gate. This package does not add those directories.
+
+Signing stays on examples/customer-x402 with explicit --approve. Hermes
+discovery is not payment. Unknown payment outcomes reconcile; do not retry
+from these skills. Installation is not demand.
+
+To stop using an isolated profile: unset HERMES_HOME. The temporary
+directory is retained. No recursive cleanup command is provided.
