@@ -730,6 +730,13 @@ test("route classification preserves useful intent without recording opaque path
   assert.equal(classifyCommerceRoute("/openapi.yaml").route, "/openapi.json");
   assert.equal(classifyCommerceRoute("/swagger.json").route, "/openapi.json");
   assert.equal(classifyCommerceRoute("/SKILL.md").route, "/skill.md");
+  assert.deepEqual(classifyCommerceRoute("/.well-known/skills/index.json"), {
+    route: "/.well-known/skills/index.json",
+    kind: "discovery",
+    matched: true,
+  });
+  assert.equal(classifyCommerceRoute("/.well-known/skills/web-extract/SKILL.md").route, "/.well-known/skills/web-extract/SKILL.md");
+  assert.equal(classifyCommerceRoute("/.well-known/skills/unknown/SKILL.md").route, "/:opaque/*");
   assert.equal(classifyCommerceRoute("/api/actions").route, "/api/actions");
   assert.equal(classifyCommerceRoute("/.well-known/agent.json").route, "/.well-known/agent-card.json");
   assert.equal(classifyCommerceRoute("/.well-known/glama.json").route, "/.well-known/glama.json");
@@ -3217,6 +3224,15 @@ const WRITER_ROUTE_PATHS = [
   "/llms.txt",
   "/skill.md",
   "/SKILL.md",
+  "/.well-known/skills",
+  "/.well-known/skills/",
+  "/.well-known/skills/index.json",
+  "/.well-known/skills/web-extract",
+  "/.well-known/skills/web-extract/SKILL.md",
+  "/.well-known/skills/page-change",
+  "/.well-known/skills/page-change/SKILL.md",
+  "/.well-known/skills/explicit-record",
+  "/.well-known/skills/explicit-record/SKILL.md",
   "/robots.txt",
   "/sitemap.xml",
   "/openapi.json",

@@ -33,6 +33,7 @@ Use this service when an agent needs deterministic web, company, wallet, AI-sear
 - OpenAPI: ${origin}/openapi.json
 - MPP discovery: ${origin}/mpp-openapi.json (per-operation offers)
 - Action catalog: ${origin}/api/actions
+- Agent skills index: ${origin}/.well-known/skills/index.json
 - MCP transport: POST ${origin}/mcp
 - A2A agent card: ${origin}/.well-known/agent-card.json
 - Purchase evidence: ${origin}/.well-known/agent-payment-evidence.json

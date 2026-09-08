@@ -41,13 +41,25 @@ The tests create their own isolated profiles. That path is native loader/discove
 only. Model execution and payment execution are separate evidence boundaries;
 neither is performed here.
 
+Official well-known adapter replay (search/inspect/install, no `--force`, no
+private-URL bypass), also using a fresh empty throwaway `HERMES_HOME`:
+
+```bash
+export HERMES_HOME="$(mktemp -d "${TMPDIR:-/tmp}/samedaydesk-hermes.XXXXXX")"
+export HERMES_AGENT_SRC=/path/to/NousResearch/hermes-agent
+npm run test:hermes-native:well-known
+```
+
 Project-local `.hermes/skills` or `.agents/skills` inside a git checkout
 does not auto-load. Hermes requires `hermes skills trust` for that root.
+
+The merchant website index is `GET /.well-known/skills/index.json`. See
+`INSTALL.txt` for official Hermes `search` / `inspect` / `install` against
+that origin. Isolated adapter replay: `check-well-known-adapter.py`.
 
 ## Not this package
 
 - Not `hermes skills tap add` publication.
-- Not a well-known skills index on the merchant.
 - Not a Goose-style MCP YAML (that remains in `goose/`).
 - Not a Claude marketplace plugin (that remains in `plugins/samedaydesk-extract`).
 - Not an autonomous cron/blueprint. Do not attach these skills to a scheduler

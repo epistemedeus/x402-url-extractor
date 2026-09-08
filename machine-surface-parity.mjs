@@ -142,6 +142,7 @@ ${lines.join("\n")}
 - x402 manifest: ${publicOrigin}/.well-known/x402
 - OpenAPI: ${publicOrigin}/openapi.json
 - Skill contract: ${publicOrigin}/skill.md
+- Agent skills index: ${publicOrigin}/.well-known/skills/index.json
 - Action catalog: ${publicOrigin}/api/actions
 - A2A agent card: ${publicOrigin}/.well-known/agent-card.json
 - Solana Agent Registry metadata: ${publicOrigin}/.well-known/agent-registration.json

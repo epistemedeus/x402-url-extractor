@@ -44,6 +44,7 @@ export function renderSitemapXml(publicUrl, platformIds = [], purchaseEvidencePa
     "/api/actions",
     "/mcp",
     "/skill.md",
+    "/.well-known/skills/index.json",
     "/llms.txt",
     "/platforms",
     "/platforms/methodology",

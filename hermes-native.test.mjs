@@ -11,6 +11,7 @@ const HERMES_FILES = [
   "README.md",
   "INSTALL.txt",
   "check-isolated-loader.py",
+  "check-well-known-adapter.py",
 ];
 const FORBIDDEN_SUBSTRINGS = [
   "2026-07-28",
@@ -102,7 +103,9 @@ test("INSTALL.txt documents isolated HERMES_HOME drop-in and the project-skill t
     }
   }
   assert.match(install, /check-isolated-loader\.py/);
+  assert.match(install, /check-well-known-adapter\.py/);
   assert.match(install, /fresh empty HERMES_HOME/);
+  assert.match(install, /\.well-known\/skills\/index\.json/);
   assert.doesNotMatch(install, /cp -R plugins/);
   assert.match(install, /does not install Hermes/);
   assert.match(install, /mutate ~\/\.hermes/);

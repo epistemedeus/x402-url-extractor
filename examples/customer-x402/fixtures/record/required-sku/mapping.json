@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "pilot.c29.buyer-record-projection.mapping.v1",
+  "kind": "extract_batch",
+  "artifact": "extract-batch.json",
+  "rowsPointer": "/sources",
+  "itemPointer": "/data/jsonLd",
+  "itemCardinality": "array",
+  "itemWhenMissing": "empty",
+  "includeStatuses": ["success", "partial"],
+  "statusPointer": "/status",
+  "requestedFields": ["/data/jsonLd"],
+  "unmappedIgnore": ["@context"],
+  "merchantCompat": true,
+  "fields": {
+    "sourceId": { "from": "/id", "base": "row", "required": true },
+    "sourceUrl": { "from": "/source", "base": "row", "required": true },
+    "type": { "from": "/@type", "base": "item", "required": true },
+    "name": { "from": "/name", "base": "item", "required": true },
+    "sku": { "from": "/sku", "base": "item", "required": true },
+    "url": { "from": "/url", "base": "item", "required": false, "onMissing": "omit" }
+  }
+}

@@ -24,7 +24,26 @@ export HERMES_HOME="$(mktemp -d "${TMPDIR:-/tmp}/samedaydesk-hermes.XXXXXX")"
 HERMES_HOME="$HERMES_HOME" HERMES_AGENT_SRC=/path/to/NousResearch/hermes-agent \
   python3 hermes/check-isolated-loader.py --external-dirs
 
-3. User-facing hub install after these paths exist on the default branch
+3. Website well-known discovery after the merchant serves the index
+   (official Hermes well-known adapter; community scan; confirm or --yes;
+   not run against ~/.hermes from this package):
+
+hermes skills search https://agents.samedaydesk.com --source well-known
+hermes skills inspect well-known:https://agents.samedaydesk.com/.well-known/skills/web-extract
+hermes skills install well-known:https://agents.samedaydesk.com/.well-known/skills/web-extract --yes
+
+The live index is https://agents.samedaydesk.com/.well-known/skills/index.json .
+
+Official adapter replay against a candidate origin, isolated profile only:
+
+export HERMES_HOME="$(mktemp -d "${TMPDIR:-/tmp}/samedaydesk-hermes.XXXXXX")"
+HERMES_HOME="$HERMES_HOME" HERMES_AGENT_SRC=/path/to/NousResearch/hermes-agent \
+  python3 hermes/check-well-known-adapter.py --origin https://agents.samedaydesk.com
+
+The official client blocks loopback and private URLs. Do not set
+allow_private_urls or --force.
+
+4. User-facing hub install after these paths exist on the default branch
    (community scan; confirm or --yes; not run by this package):
 
 hermes skills install epistemedeus/x402-url-extractor/plugins/samedaydesk-x402/skills/web-extract

@@ -34,6 +34,7 @@ test("sitemap exposes human pages and canonical machine contracts without duplic
     "/api/actions",
     "/mcp",
     "/skill.md",
+    "/.well-known/skills/index.json",
     "/llms.txt",
     "/platforms/frantic",
   ]) {

@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sourceId", "sourceUrl", "type", "name", "sku"],
+  "properties": {
+    "sourceId": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "sourceUrl": { "type": "string", "minLength": 1, "maxLength": 2048 },
+    "type": { "type": "string", "enum": ["Product"] },
+    "name": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "sku": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "url": { "type": "string", "minLength": 1, "maxLength": 2048 }
+  }
+}
