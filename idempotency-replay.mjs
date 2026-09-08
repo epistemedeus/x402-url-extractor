@@ -408,7 +408,13 @@ export function createIdempotencyReplay({
     }
 
     const useInFlight = inFlightPaths.has(req.path);
-    if (requiredReplayPaths.has(req.path) && (!binding.hasPaymentIdentifier || !Number.isFinite(binding.validUntilMs) || binding.validUntilMs > now() + ttlMs)) {
+    // Batch (and any requiredReplayPaths route) needs an explicit x402 payment-identifier
+    // for durable replay. MPP bindings set hasPaymentIdentifier via non-x402 protocol.
+    // Keep expiry/TTL as a separate classification from a missing identifier.
+    if (requiredReplayPaths.has(req.path) && !binding.hasPaymentIdentifier) {
+      return res.status(400).json({ ok: false, error: "payment_identifier_required", charged: false });
+    }
+    if (requiredReplayPaths.has(req.path) && (!Number.isFinite(binding.validUntilMs) || binding.validUntilMs > now() + ttlMs)) {
       return res.status(400).json({ ok: false, error: "bounded_payment_validity_required", charged: false });
     }
     let cached = useInFlight ? await claim(binding) : await lookup(binding);
