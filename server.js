@@ -203,6 +203,10 @@ import {
   ALL_FIELDS,
 } from "./extract-batch.mjs";
 import { isPageChangeHttpPath, mountPageChangeHttp } from "./page-change-http.mjs";
+import {
+  WELL_KNOWN_SKILLS_INDEX_PATH,
+  mountWellKnownSkills,
+} from "./well-known-skills.mjs";
 import { legacyCompatibleX402Body } from "./x402-legacy-body.mjs";
 import {
   VIBES_DISCOVERABILITY_PATH,
@@ -1153,6 +1157,7 @@ const machineActionCatalog = () => ({
     openapi: `${PUBLIC_URL}/openapi.json`,
     mppOpenapi: `${PUBLIC_URL}/mpp-openapi.json`,
     skill: `${PUBLIC_URL}/skill.md`,
+    skillsIndex: `${PUBLIC_URL}${WELL_KNOWN_SKILLS_INDEX_PATH}`,
     mcp: `${PUBLIC_URL}/mcp`,
     a2aAgentCard: `${PUBLIC_URL}/.well-known/agent-card.json`,
     glamaVerification: `${PUBLIC_URL}/.well-known/glama.json`,
@@ -1289,6 +1294,8 @@ app.get("/mcp", (_req, res) => {
 
 // Compact skill contract for agents that probe a domain for a directly usable
 // instruction file before they parse OpenAPI or start an MCP session.
+mountWellKnownSkills(app, { publicUrl: PUBLIC_URL });
+
 app.get(["/skill.md", "/SKILL.md"], (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
   return res.type("text/markdown").send(buildSkillContract(PUBLIC_URL, machineActionCatalog().actions));
@@ -3651,6 +3658,7 @@ app.get("/", (req, res) => {
       openapi: "/openapi.json",
       openapiAliases: ["/openapi.yaml", "/swagger.json"],
       skill: "/skill.md",
+      skillsIndex: WELL_KNOWN_SKILLS_INDEX_PATH,
       actions: "/api/actions",
       llms: "/llms.txt",
       mcp: "POST /mcp",

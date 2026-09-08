@@ -42,6 +42,22 @@ npm run record -- \
   --out /tmp/samedaydesk-record-org
 ```
 
+In those two buyer mappings, missing product `sku` and organization `email`
+are optional. For an executable required-field example, reuse the product
+delivery with a separate buyer mapping and schema that require `sku`:
+
+```bash
+npm run record -- \
+  --input ./fixtures/record/product-jsonld/delivery/extract-batch.json \
+  --mapping ./fixtures/record/required-sku/mapping.json \
+  --schema ./fixtures/record/required-sku/schema.json \
+  --out /tmp/samedaydesk-record-required-sku
+```
+
+It exits 1 with useful partial output: one usable record, one invalid record
+whose required `sku` is missing, and one failed source row. Preserve all three
+output artifacts.
+
 Generic already-delivered JSON:
 
 ```bash

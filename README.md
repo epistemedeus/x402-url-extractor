@@ -1100,8 +1100,18 @@ HERMES_HOME="$HERMES_HOME" HERMES_AGENT_SRC=/path/to/NousResearch/hermes-agent \
   python3 hermes/check-isolated-loader.py
 ```
 
+The merchant also serves the three portable skills at the official
+well-known index `/.well-known/skills/index.json`. After deploy:
+
+```bash
+export HERMES_HOME="$(mktemp -d "${TMPDIR:-/tmp}/samedaydesk-hermes.XXXXXX")"
+hermes skills search https://agents.samedaydesk.com --source well-known
+hermes skills inspect well-known:https://agents.samedaydesk.com/.well-known/skills/web-extract
+hermes skills install well-known:https://agents.samedaydesk.com/.well-known/skills/web-extract --yes
+```
+
 `check-isolated-loader.py` requires a fresh empty throwaway profile, copies
-the two skills, and uses the official Hermes `agent.skill_utils` discovery
+the three skills, and uses the official Hermes `agent.skill_utils` discovery
 API. It does not install Hermes globally, log into a model provider, open a
 wallet, or execute a model. Discovery and payment execution are separate checks.
 
@@ -1127,7 +1137,9 @@ make Hermes payment-capable. MCP and HTTP credential scopes remain distinct.
 Copyable install notes: [`hermes/INSTALL.txt`](hermes/INSTALL.txt).
 Maintainer packaging check: `npm run test:hermes-native`.
 Official loader proof with `HERMES_AGENT_SRC` set:
-`npm run test:hermes-native:loader`.
+`npm run test:hermes-native:loader`. Website-index adapter replay, same isolated
+profile rules, never against `~/.hermes` and never with `--force` or
+`allow_private_urls`: `npm run test:hermes-native:well-known`.
 
 ## Local run
 

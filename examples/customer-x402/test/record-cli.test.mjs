@@ -59,6 +59,29 @@ test("org example CLI exits 1 for honest partial, not all-valid", () => {
   assert.equal(JSON.parse(readFileSync(join(out, "records.json"), "utf8")).length, 1);
 });
 
+test("required SKU example preserves a usable record and the invalid record", () => {
+  const out = outDir();
+  const result = runCli([
+    "--input", "fixtures/record/product-jsonld/delivery/extract-batch.json",
+    "--mapping", "fixtures/record/required-sku/mapping.json",
+    "--schema", "fixtures/record/required-sku/schema.json",
+    "--out", out,
+  ]);
+  assert.equal(result.status, 1, result.stderr || result.stdout);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.status, "partial");
+  assert.equal(report.records.length, 1);
+  assert.equal(report.invalidRecords.length, 1);
+  assert.deepEqual(report.invalidRecords[0].missing.required, [{
+    field: "sku",
+    pointer: "/sources/1/data/jsonLd/0/sku",
+    reason: "missing",
+  }]);
+  assert.equal(JSON.parse(readFileSync(join(out, "records.json"), "utf8")).length, 1);
+  const missing = JSON.parse(readFileSync(join(out, "missing-paths.json"), "utf8"));
+  assert.equal(missing.byPointer["/sources/1/data/jsonLd/0/sku"].reason, "missing");
+});
+
 test("CLI usage is flag-closed", () => {
   const result = runCli(["--help"]);
   assert.equal(result.status, 2);
