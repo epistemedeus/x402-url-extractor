@@ -37,7 +37,8 @@
     "zod": "3.25.76"
   },
   "overrides": {
-    "axios": "1.19.0"
+    "axios": "1.19.0",
+    "qs": "6.16.0"
   },
   "devDependencies": {
     "@agentcash/discovery": "1.7.5"
