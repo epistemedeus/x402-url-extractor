@@ -29,10 +29,13 @@ Do not mix these:
 
 1. Goose info config read: the block above. Config YAML only.
 2. Fixture MCP loader: not in this repository. C13 kept that as experiment
-   test scaffolding. Public distribution does not ship it.
-3. Live unpaid 22-tool discovery: `POST` `initialize` then `tools/list` on
+   test scaffolding. Public distribution does not ship it. Local package tests
+   may use an in-process fixture `tools/list` inventory only.
+3. Live unpaid discovery: `POST` `initialize` then `tools/list` on
    `https://agents.samedaydesk.com/mcp`, or `npm run test:goose-native:live`.
-   Expect 22 tools. Default Goose YAML sends no source header.
+   Require `extract` and `extract_batch` with their live input/output schemas.
+   Extra unrelated tools are accepted. Default Goose YAML sends no source
+   header.
 
 ## Session flag and deeplink
 
@@ -48,9 +51,12 @@ not merchant-allowlisted, and does not claim merchant attribution. It is
 not the default.
 
 Workflow copy: `extract.workflow.md`. Recipe: `extract.recipe.yaml` (report
-extract metadata only; do not call paid tools from this package).
+extract and extract_batch metadata only; do not call paid tools from this
+package).
 
 HTTP customer preflight and explicitly authorized `@x402/fetch` purchase for
-`POST /extract/batch` (default) and `GET /extract`:
-[public customer example](https://github.com/epistemedeus/x402-url-extractor/tree/master/examples/customer-x402). This
-Goose package does not become payment-capable from that example.
+`POST /extract/batch` (default) and `GET /extract`, including optional
+before-send unsigned attempt receipt and read-only reconcile:
+[public customer example](https://github.com/epistemedeus/x402-url-extractor/tree/master/examples/customer-x402).
+This Goose package does not become payment-capable from that example. MCP and
+HTTP credential scopes remain distinct.

@@ -996,17 +996,19 @@ Ordinary install after this catalog is on the public default branch:
 /plugin install samedaydesk-extract@samedaydesk-claude
 ```
 
-Then invoke `/samedaydesk-extract:web-extract` with one public HTTPS URL.
+Then invoke `/samedaydesk-extract:web-extract` with one public HTTPS URL, or
+1–5 URLs plus explicit desired fields for batch.
 Discovery is unpaid. Payment stays on the live SameDayDesk 402. Existing
 scoped buyer authority may be used when it already covers the exact live
-terms. Listing and install grant none. Unknown payment outcomes reconcile
+method, body, and terms. Listing and install grant none. Unknown payment outcomes reconcile
 rather than retry. Installation is not proof of model invocation, payment,
 or demand. This is not a submission to Anthropic's official plugin
 directory. For a credential-free HTTP preflight and explicitly authorized
 `@x402/fetch` purchase path against `POST /extract/batch` (default) and
-backward-compatible `GET /extract`, see
+backward-compatible `GET /extract`, including optional before-send unsigned
+attempt receipt and read-only reconcile, see
 [`examples/customer-x402`](examples/customer-x402). That example does not
-make Claude payment-capable.
+make Claude payment-capable. MCP and HTTP credential scopes remain distinct.
 
 Maintainer checks from the repository root:
 
@@ -1054,9 +1056,10 @@ GOOSE_TELEMETRY_OFF=1 GOOSE_DISABLE_KEYRING=1 goose info -v
 ```
 
 `goose info -v` reads that isolated config. It does not open the MCP
-session. Live unpaid discovery of the 22 tools is a separate initialize
-plus tools/list check (`npm run test:goose-native:live`). A Goose
-fixture MCP loader is not part of this repository.
+session. Live unpaid discovery is a separate initialize plus tools/list
+check (`npm run test:goose-native:live`). Require `extract` and
+`extract_batch` with their live input/output schemas; extra unrelated tools
+are accepted. A Goose fixture MCP loader is not part of this repository.
 
 Default YAML sends no source headers. Optional
 `goose/goose.config.with-declared-source.yaml` is unauthenticated, not

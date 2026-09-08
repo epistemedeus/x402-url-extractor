@@ -5,6 +5,8 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
+import { assertExtractDiscoveryInventory } from "../../extract-discovery-inventory.mjs";
+
 const PLUGIN_ROOT = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(PLUGIN_ROOT, "../..");
 const PLUGIN_SCHEMA_ID = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json";
@@ -24,7 +26,7 @@ if (EXPECTED_LIVE_VERSION !== null && !VERSION_PATTERN.test(EXPECTED_LIVE_VERSIO
 const liveTest = EXPECTED_LIVE_VERSION === null ? test.skip : test;
 const SOURCE_HEADER = "X-SameDayDesk-Agent-Source";
 const SOURCE_VALUE = "agent-plugins-v1";
-const PRODUCT_SKILL_SHA256 = "594a745ae7442ce013fb0013e289247e583850ade75c56bce453e48e668a47a0";
+const PRODUCT_SKILL_SHA256 = "f1c16730671a223323c63bc652fcb31e9361ea04c50184c504c1781f4a1c28af";
 const PLUGIN_SCHEMA_SHA256 = "0a4aad95ce337878ad38802ebf0daa3fde76abe3f65400c86bcbb1ec0b3ab883";
 const MCP_SCHEMA_SHA256 = "6539175bfcdf43085855183e86da40ea94b166547a72b47ae9a0a390516d3acb";
 const NAME_PATTERN = /^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
@@ -41,30 +43,6 @@ const PLUGIN_TOP_LEVEL = new Set([
   "keywords",
   "extensions",
 ]);
-const EXPECTED_TOOLS = [
-  "extract",
-  "read",
-  "scan",
-  "schemaforge",
-  "enrich",
-  "wallet_enrich",
-  "deep_audit",
-  "morpho_position",
-  "morpho_protection",
-  "morpho_market_underwrite",
-  "morpho_preliquidation_replay",
-  "opportunity_preflight",
-  "agent_discoverability_audit",
-  "payment_offer_preflight",
-  "seller_integrity_audit",
-  "contract_qualified_search",
-  "agent_surface_budget_audit",
-  "settlement_proof",
-  "transaction_receipt",
-  "solana_transaction_receipt",
-  "wallet_policy_conformance",
-  "stateful_wallet_policy_conformance",
-];
 const FORBIDDEN_SUBSTRINGS = [
   "2026-07-28",
   "Mcp-Method",
@@ -194,6 +172,7 @@ test("plugin.json matches Agent Plugins 1.0 closed manifest", () => {
   assert.equal(manifest.version, PACKAGE_VERSION);
   assert.equal(typeof manifest.description, "string");
   assert.ok(manifest.description.length > 0);
+  assert.match(manifest.description, /batch/i);
   assert.equal(manifest.homepage, "https://agents.samedaydesk.com/");
   assert.equal(manifest.repository, "https://github.com/epistemedeus/x402-url-extractor");
   assert.equal(manifest.license, "MIT");
@@ -256,9 +235,13 @@ test("web-extract skill is the product skill and stays constructible", () => {
   assert.equal(fields.name, "web-extract");
   assert.match(fields.name, SKILL_NAME_PATTERN);
   assert.ok(fields.description.length <= 1024);
-  assert.match(fields.description, /credential-free public webpage/);
+  assert.match(fields.description, /1–5 public HTTPS URLs|1-5 public HTTPS URLs/);
+  assert.match(fields.description, /POST \/extract\/batch/);
+  assert.match(body, /https:\/\/agents\.samedaydesk\.com\/extract\/batch/);
   assert.match(body, /https:\/\/agents\.samedaydesk\.com\/extract\?url=/);
   assert.match(body, /https:\/\/agents\.samedaydesk\.com\/read\?url=/);
+  assert.match(body, /extract_batch|customer-x402/);
+  assert.match(body, /Do not automatically split/);
   assert.doesNotMatch(body, /Authorization:|X-PAYMENT|Bearer |api[_-]key/i);
   assert.doesNotMatch(markdown, /allowed-tools/);
   assert.doesNotMatch(markdown, /2026-07-28/);
@@ -287,6 +270,8 @@ test("package files stay inside the plugin root and omit secrets or 2026-07-28 c
   assert.match(readme, /## Install from the default branch/);
   assert.match(readme, /git clone https:\/\/github\.com\/epistemedeus\/x402-url-extractor\.git/);
   assert.match(readme, /copilot plugin install epistemedeus\/x402-url-extractor:plugins\/samedaydesk-x402/);
+  assert.match(readme, /extract_batch/);
+  assert.doesNotMatch(readme, /\b22 tools\b/);
   for (const stale of ["recut/", "--branch", "Default master does not", "on this branch"]) {
     assert.equal(readme.includes(stale), false, `plugin README contains stale landing copy: ${stale}`);
     assert.equal(repositoryReadme.includes(stale), false, `repository README contains stale landing copy: ${stale}`);
@@ -298,7 +283,7 @@ test("package files stay inside the plugin root and omit secrets or 2026-07-28 c
   assert.equal(statSync(join(PLUGIN_ROOT, "skills")).isDirectory(), true);
 });
 
-liveTest("unpaid initialize-era initialize and tools/list return 22 live tools", async () => {
+liveTest("unpaid initialize-era initialize and tools/list require extract and extract_batch", async () => {
   const initialize = await postRpc("initialize", {
     protocolVersion: "2025-11-25",
     capabilities: {},
@@ -313,8 +298,7 @@ liveTest("unpaid initialize-era initialize and tools/list return 22 live tools",
   const listed = await postRpc("tools/list", {}, 2);
   const tools = listed.payload.result.tools;
   assert.equal(Array.isArray(tools), true);
-  const names = tools.map((tool) => tool.name);
-  assert.equal(names.length, 22);
-  assert.deepEqual(names, EXPECTED_TOOLS);
-  assert.ok(names.includes("extract"));
+  const found = assertExtractDiscoveryInventory(tools);
+  assert.ok(found.names.includes("extract"));
+  assert.ok(found.names.includes("extract_batch"));
 });

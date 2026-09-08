@@ -12,7 +12,8 @@ plugin. Do not load the repository root as a plugin.
 - `mcp.json` declares one Streamable HTTP server at
   `https://agents.samedaydesk.com/mcp`.
 - `skills/web-extract/SKILL.md` is a copy of the GitHub product skill and
-  already constructs `GET /extract?url=`.
+  constructs `POST /extract/batch` for 1–5 URLs plus fields, or
+  `GET /extract?url=` / `GET /read?url=` when appropriate.
 
 The `X-SameDayDesk-Agent-Source: agent-plugins-v1` header is public package
 data, not a credential. Agent Plugins 1.0 forbids secrets in `headers`.
@@ -32,8 +33,11 @@ data, not a credential. Agent Plugins 1.0 forbids secrets in `headers`.
   `initialize` and `tools/list` do not require a login.
 - Not a paid `tools/call`. Do not put payment headers in this package.
 - For a separate HTTP `@x402/fetch` customer example against
-  `POST /extract/batch` (default) and `GET /extract`, see the
+  `POST /extract/batch` (default) and `GET /extract`, including optional
+  before-send unsigned attempt receipt and read-only reconcile, see the
   [public customer example](https://github.com/epistemedeus/x402-url-extractor/tree/master/examples/customer-x402).
+  This package does not become payment-capable from that example. MCP and HTTP
+  credential scopes remain distinct.
 
 ## Layout
 
@@ -115,7 +119,8 @@ npx @modelcontextprotocol/inspector@2.3.0 --cli \
   https://agents.samedaydesk.com/mcp --transport http --method tools/list --format json
 ```
 
-Expect 22 tools. Do not call them.
+Require `extract` and, when live, `extract_batch` with their schemas. Extra
+unrelated tools are fine. Do not call them.
 
 ## Validate
 

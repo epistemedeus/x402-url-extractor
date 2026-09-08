@@ -4,6 +4,12 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
+import {
+  assertExtractDiscoveryInventory,
+  constructExtractBatchBody,
+  selectExtractRoute,
+} from "./extract-discovery-inventory.mjs";
+
 const REPO_ROOT = dirname(fileURLToPath(import.meta.url));
 const GOOSE_ROOT = join(REPO_ROOT, "goose");
 const LIVE_MCP_URL = "https://agents.samedaydesk.com/mcp";
@@ -58,6 +64,47 @@ function walkFiles(root) {
   return files.sort();
 }
 
+function sampleBatchTool(overrides = {}) {
+  return {
+    name: "extract_batch",
+    inputSchema: {
+      type: "object",
+      additionalProperties: false,
+      required: ["urls"],
+      properties: {
+        urls: { type: "array", minItems: 1, maxItems: 5, items: { type: "string" } },
+        fields: {
+          type: "array",
+          items: {
+            type: "string",
+            enum: [
+              "title", "description", "canonical", "lang", "openGraph", "twitter",
+              "jsonLd", "headings", "links", "text", "aiReadiness",
+            ],
+          },
+        },
+      },
+    },
+    outputSchema: {
+      type: "object",
+      required: ["ok", "product", "partial", "sources", "charged", "boundary"],
+      properties: {},
+    },
+    ...overrides,
+  };
+}
+
+function sampleExtractTool() {
+  return {
+    name: "extract",
+    inputSchema: {
+      type: "object",
+      required: ["url"],
+      properties: { url: { type: "string" } },
+    },
+  };
+}
+
 test("goose companion directory ships only public config and docs", () => {
   assert.equal(isDir(GOOSE_ROOT), true);
   const files = walkFiles(GOOSE_ROOT).map((file) => relative(GOOSE_ROOT, file).split(sep).join("/")).sort();
@@ -108,25 +155,26 @@ test("deeplink and session flag stay header-free silent install", () => {
   assert.equal(session, LIVE_MCP_URL);
 });
 
-test("recipe pins extract discovery without a wrapper paywall", () => {
+test("recipe pins extract and extract_batch discovery without a wrapper paywall", () => {
   const recipe = readUtf8(join(GOOSE_ROOT, "extract.recipe.yaml"));
-  assert.match(recipe, /available_tools:\n      - extract/);
+  assert.match(recipe, /available_tools:\n      - extract\n      - extract_batch/);
   assert.match(recipe, /not authorization/);
   assert.match(recipe, /uri: "https:\/\/agents\.samedaydesk\.com\/mcp"/);
 });
 
-test("docs distinguish goose info, omitted fixture loader, and live 22-tool discovery", () => {
+test("docs distinguish goose info, omitted fixture loader, and live inventory discovery", () => {
   const readme = readUtf8(join(GOOSE_ROOT, "README.md"));
   const install = readUtf8(join(GOOSE_ROOT, "INSTALL.txt"));
   const workflow = readUtf8(join(GOOSE_ROOT, "extract.workflow.md"));
   for (const text of [readme, install, workflow]) {
     assert.match(text, /goose info -v/);
     assert.match(text, /does not (open the MCP|connect)/i);
-    assert.match(text, /22-tool|22 tools/);
+    assert.match(text, /extract_batch/);
     assert.match(text, /fixture MCP loader.{0,40}not (part of this repository|in this repository)/i);
     assert.match(text, /mktemp -d/);
     assert.doesNotMatch(text, /\brm -rf|\brmSync|reinstall|~\/\.config\/goose/);
     assert.doesNotMatch(text, /bin\/c13|node bin\/c13/);
+    assert.doesNotMatch(text, /\b22 tools\b|\b22-tool\b/);
   }
   assert.match(readme, /npm run test:goose-native:live/);
   const rootReadme = readUtf8(join(REPO_ROOT, "README.md"));
@@ -136,6 +184,8 @@ test("docs distinguish goose info, omitted fixture loader, and live 22-tool disc
   assert.match(gooseSection, /goose info -v/);
   assert.match(gooseSection, /fixture MCP loader is not part of this repository/i);
   assert.match(gooseSection, /test:goose-native:live/);
+  assert.match(gooseSection, /extract_batch/);
+  assert.doesNotMatch(gooseSection, /\b22 tools\b/);
 });
 
 test("native profile instructions do not mutate existing Goose homes", () => {
@@ -143,4 +193,87 @@ test("native profile instructions do not mutate existing Goose homes", () => {
   assert.match(install, /Existing Goose profiles are unchanged|existing Goose profiles are unchanged/i);
   assert.match(install, /unset GOOSE_PATH_ROOT/);
   assert.doesNotMatch(install, /GOOSE_PATH_ROOT=\$HOME|~\/\.config\/goose/);
+});
+
+test("fixture tools/list accepts an unrelated extra tool when extract schemas are valid", () => {
+  const tools = [
+    sampleExtractTool(),
+    sampleBatchTool(),
+    { name: "unrelated_probe", inputSchema: { type: "object", properties: {} } },
+  ];
+  const found = assertExtractDiscoveryInventory(tools);
+  assert.equal(found.names.includes("unrelated_probe"), true);
+  assert.equal(found.names.includes("extract_batch"), true);
+});
+
+test("fixture tools/list rejects missing or invalid extract_batch", () => {
+  assert.throws(
+    () => assertExtractDiscoveryInventory([sampleExtractTool()]),
+    /missing extract_batch/,
+  );
+  assert.throws(
+    () => assertExtractDiscoveryInventory([
+      sampleExtractTool(),
+      sampleBatchTool({
+        inputSchema: {
+          type: "object",
+          additionalProperties: false,
+          required: ["urls"],
+          properties: {
+            urls: { type: "array", minItems: 1, maxItems: 99, items: { type: "string" } },
+            fields: sampleBatchTool().inputSchema.properties.fields,
+          },
+        },
+      }),
+    ]),
+    /urls\.maxItems must be 5/,
+  );
+  assert.throws(
+    () => assertExtractDiscoveryInventory([
+      sampleExtractTool(),
+      sampleBatchTool({
+        outputSchema: { type: "object", required: ["ok"], properties: {} },
+      }),
+    ]),
+    /outputSchema missing required (product|partial|sources|charged|boundary)/,
+  );
+});
+
+test("mechanical batch body construction matches canonical unpaid POST JSON", () => {
+  const urls = [
+    "https://example.com/",
+    "https://example.org/",
+    "https://www.rfc-editor.org/rfc/rfc3986",
+  ];
+  const fields = ["title", "description", "headings"];
+  const body = constructExtractBatchBody({ urls, fields });
+  assert.deepEqual(body, { urls, fields });
+  assert.equal(JSON.stringify(body).includes("PAYMENT"), false);
+  assert.equal(JSON.stringify(body).includes("private"), false);
+
+  const three = selectExtractRoute({ urls, fields, batchSupported: true });
+  assert.equal(three.reject, false);
+  assert.equal(three.method, "POST");
+  assert.equal(three.url, "https://agents.samedaydesk.com/extract/batch");
+  assert.deepEqual(three.body, body);
+
+  const one = selectExtractRoute({ urls: ["https://example.com/"], fields: [], batchSupported: true });
+  assert.equal(one.reject, false);
+  assert.equal(one.method, "GET");
+  assert.match(one.url, /^https:\/\/agents\.samedaydesk\.com\/extract\?url=/);
+
+  const six = selectExtractRoute({
+    urls: [
+      "https://example.com/1",
+      "https://example.com/2",
+      "https://example.com/3",
+      "https://example.com/4",
+      "https://example.com/5",
+      "https://example.com/6",
+    ],
+    fields,
+    batchSupported: true,
+  });
+  assert.equal(six.reject, true);
+  assert.equal(six.reason, "too_many_urls_no_autosplit");
 });
