@@ -1,0 +1,103 @@
+{
+  "buyerSchema": {
+    "fields": {
+      "/supplier/address": {
+        "required": false,
+        "type": "object"
+      },
+      "/supplier/email": {
+        "required": false,
+        "type": "string"
+      },
+      "/supplier/name": {
+        "required": true,
+        "type": "string"
+      },
+      "/supplier/telephone": {
+        "required": false,
+        "type": "string"
+      },
+      "/supplier/url": {
+        "required": true,
+        "type": "string"
+      }
+    },
+    "schema": "pilot/buyer-record-fields/v1",
+    "semantics": "Exact types and pointers only; no coercion, synonym expansion, or inferred facts."
+  },
+  "desiredRecord": {
+    "supplier": {
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "US",
+        "addressLocality": "Port Azure"
+      },
+      "email": "orders@harbor-components.example.invalid",
+      "name": "Harbor Components",
+      "telephone": "+1-555-0100",
+      "url": "https://harbor-components.example.invalid/"
+    }
+  },
+  "expected": {
+    "deliveryStatus": "success",
+    "mappingStatuses": {
+      "supplier-address": "mapped",
+      "supplier-email": "mapped",
+      "supplier-name": "mapped",
+      "supplier-phone": "mapped",
+      "supplier-url": "mapped"
+    },
+    "noteCount": 0,
+    "rationale": "Only explicit Organization contact fields are copied; no legal name, EIN, registration, or availability fact is inferred.",
+    "requiredMissing": []
+  },
+  "fields": [
+    "jsonLd"
+  ],
+  "id": "02-supplier-contact",
+  "mappings": [
+    {
+      "expected": "mapped",
+      "id": "supplier-name",
+      "outputPointer": "/supplier/name",
+      "sourcePointers": [
+        "/data/jsonLd/0/name"
+      ]
+    },
+    {
+      "expected": "mapped",
+      "id": "supplier-url",
+      "outputPointer": "/supplier/url",
+      "sourcePointers": [
+        "/data/jsonLd/0/url"
+      ]
+    },
+    {
+      "expected": "mapped",
+      "id": "supplier-email",
+      "outputPointer": "/supplier/email",
+      "sourcePointers": [
+        "/data/jsonLd/0/email"
+      ]
+    },
+    {
+      "expected": "mapped",
+      "id": "supplier-phone",
+      "outputPointer": "/supplier/telephone",
+      "sourcePointers": [
+        "/data/jsonLd/0/telephone"
+      ]
+    },
+    {
+      "expected": "mapped",
+      "id": "supplier-address",
+      "outputPointer": "/supplier/address",
+      "sourcePointers": [
+        "/data/jsonLd/0/address"
+      ]
+    }
+  ],
+  "sourceFile": "source.html",
+  "sourceUrl": "https://w6-d553c4458a.example.invalid/02-supplier-contact",
+  "title": "Supplier organization contact card"
+}

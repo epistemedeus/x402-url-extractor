@@ -1,0 +1,55 @@
+{
+  "buyerSchema": {
+    "fields": {
+      "/page/title": {
+        "required": true,
+        "type": "string"
+      },
+      "/product/name": {
+        "required": false,
+        "type": "string"
+      }
+    },
+    "schema": "pilot/buyer-record-fields/v1",
+    "semantics": "Exact types and pointers only; no coercion, synonym expansion, or inferred facts."
+  },
+  "desiredRecord": {},
+  "expected": {
+    "deliveryStatus": "failure",
+    "mappingStatuses": {
+      "failure-product": "invalid",
+      "failure-title": "invalid"
+    },
+    "noteCount": 0,
+    "rationale": "A failed fetch supplies no record facts; neither a blank title nor a guessed product is emitted.",
+    "requiredMissing": [
+      "/page/title"
+    ]
+  },
+  "fields": [
+    "title",
+    "jsonLd"
+  ],
+  "id": "10-fetch-failure",
+  "mappings": [
+    {
+      "expected": "invalid",
+      "id": "failure-title",
+      "outputPointer": "/page/title",
+      "sourcePointers": [
+        "/data/title"
+      ]
+    },
+    {
+      "expected": "invalid",
+      "id": "failure-product",
+      "outputPointer": "/product/name",
+      "sourcePointers": [
+        "/data/jsonLd/0/name"
+      ]
+    }
+  ],
+  "sourceFile": "source-unavailable.txt",
+  "sourceUrl": "https://w6-d553c4458a.example.invalid/10-fetch-failure",
+  "title": "Failed source delivery"
+}

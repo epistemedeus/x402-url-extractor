@@ -1,0 +1,27 @@
+{
+  "data": {
+    "jsonLd": [
+      {
+        "@type": "Product",
+        "name": "Red Widget",
+        "sku": "RW-1"
+      },
+      {
+        "@type": "Product",
+        "name": "Blue Widget",
+        "sku": "BW-2"
+      }
+    ]
+  },
+  "httpStatus": 200,
+  "id": "06-ambiguous-products",
+  "notes": [],
+  "requirement": {
+    "fields": [
+      "jsonLd"
+    ]
+  },
+  "source": "https://w6-d553c4458a.example.invalid/06-ambiguous-products",
+  "status": "success",
+  "url": "https://w6-d553c4458a.example.invalid/06-ambiguous-products"
+}

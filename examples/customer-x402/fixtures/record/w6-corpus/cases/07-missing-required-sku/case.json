@@ -1,0 +1,58 @@
+{
+  "buyerSchema": {
+    "fields": {
+      "/product/name": {
+        "required": true,
+        "type": "string"
+      },
+      "/product/sku": {
+        "required": true,
+        "type": "string"
+      }
+    },
+    "schema": "pilot/buyer-record-fields/v1",
+    "semantics": "Exact types and pointers only; no coercion, synonym expansion, or inferred facts."
+  },
+  "desiredRecord": {
+    "product": {
+      "name": "Plain Crate"
+    }
+  },
+  "expected": {
+    "deliveryStatus": "success",
+    "mappingStatuses": {
+      "missing-name": "mapped",
+      "missing-sku": "unmapped"
+    },
+    "noteCount": 0,
+    "rationale": "The absent SKU remains absent and the required-field report names it.",
+    "requiredMissing": [
+      "/product/sku"
+    ]
+  },
+  "fields": [
+    "jsonLd"
+  ],
+  "id": "07-missing-required-sku",
+  "mappings": [
+    {
+      "expected": "mapped",
+      "id": "missing-name",
+      "outputPointer": "/product/name",
+      "sourcePointers": [
+        "/data/jsonLd/0/name"
+      ]
+    },
+    {
+      "expected": "unmapped",
+      "id": "missing-sku",
+      "outputPointer": "/product/sku",
+      "sourcePointers": [
+        "/data/jsonLd/0/sku"
+      ]
+    }
+  ],
+  "sourceFile": "source.html",
+  "sourceUrl": "https://w6-d553c4458a.example.invalid/07-missing-required-sku",
+  "title": "Missing required buyer field"
+}

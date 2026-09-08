@@ -1,0 +1,58 @@
+{
+  "buyerSchema": {
+    "fields": {
+      "/offer/price": {
+        "required": true,
+        "type": "string"
+      },
+      "/product/name": {
+        "required": true,
+        "type": "string"
+      }
+    },
+    "schema": "pilot/buyer-record-fields/v1",
+    "semantics": "Exact types and pointers only; no coercion, synonym expansion, or inferred facts."
+  },
+  "desiredRecord": {
+    "product": {
+      "name": "Gauge"
+    }
+  },
+  "expected": {
+    "deliveryStatus": "success",
+    "mappingStatuses": {
+      "typed-name": "mapped",
+      "typed-price": "invalid"
+    },
+    "noteCount": 0,
+    "rationale": "The JSON number 19.95 is not converted to the buyer's required string.",
+    "requiredMissing": [
+      "/offer/price"
+    ]
+  },
+  "fields": [
+    "jsonLd"
+  ],
+  "id": "09-no-silent-coercion",
+  "mappings": [
+    {
+      "expected": "mapped",
+      "id": "typed-name",
+      "outputPointer": "/product/name",
+      "sourcePointers": [
+        "/data/jsonLd/0/name"
+      ]
+    },
+    {
+      "expected": "invalid",
+      "id": "typed-price",
+      "outputPointer": "/offer/price",
+      "sourcePointers": [
+        "/data/jsonLd/0/offers/price"
+      ]
+    }
+  ],
+  "sourceFile": "source.html",
+  "sourceUrl": "https://w6-d553c4458a.example.invalid/09-no-silent-coercion",
+  "title": "Numeric price cannot fill a string field"
+}

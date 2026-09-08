@@ -1,0 +1,34 @@
+{
+  "data": {
+    "jsonLd": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": "Signal Cable",
+        "offers": [
+          {
+            "@type": "Offer",
+            "price": "12.50",
+            "priceCurrency": "USD"
+          },
+          {
+            "@type": "Offer",
+            "price": "16.00",
+            "priceCurrency": "CAD"
+          }
+        ]
+      }
+    ]
+  },
+  "httpStatus": 200,
+  "id": "03-nested-offers",
+  "notes": [],
+  "requirement": {
+    "fields": [
+      "jsonLd"
+    ]
+  },
+  "source": "https://w6-d553c4458a.example.invalid/03-nested-offers",
+  "status": "success",
+  "url": "https://w6-d553c4458a.example.invalid/03-nested-offers"
+}

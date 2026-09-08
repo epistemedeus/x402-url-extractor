@@ -9,7 +9,8 @@
   },
   "bin": {
     "samedaydesk-customer-x402": "./bin/cli.mjs",
-    "samedaydesk-page-change": "./bin/page-change.mjs"
+    "samedaydesk-page-change": "./bin/page-change.mjs",
+    "samedaydesk-record": "./bin/record.mjs"
   },
   "scripts": {
     "start": "node bin/cli.mjs",
@@ -19,7 +20,8 @@
     "purchase": "node bin/cli.mjs --approve",
     "purchase:get": "node bin/cli.mjs --approve",
     "reconcile": "node bin/cli.mjs --reconcile",
-    "page-change": "node bin/page-change.mjs"
+    "page-change": "node bin/page-change.mjs",
+    "record": "node bin/record.mjs"
   },
   "dependencies": {
     "@x402/core": "2.16.0",
@@ -27,7 +29,8 @@
     "@x402/extensions": "2.16.0",
     "@x402/fetch": "2.16.0",
     "agent-payment-policy": "0.12.0",
-    "viem": "2.55.11"
+    "viem": "2.55.11",
+    "ajv": "8.20.0"
   },
   "license": "MIT"
 }

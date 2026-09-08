@@ -1,0 +1,68 @@
+{
+  "buyerSchema": {
+    "fields": {
+      "/product/name": {
+        "required": true,
+        "type": "string"
+      },
+      "/product/offers": {
+        "required": true,
+        "type": "array"
+      }
+    },
+    "schema": "pilot/buyer-record-fields/v1",
+    "semantics": "Exact types and pointers only; no coercion, synonym expansion, or inferred facts."
+  },
+  "desiredRecord": {
+    "product": {
+      "name": "Signal Cable",
+      "offers": [
+        {
+          "@type": "Offer",
+          "price": "12.50",
+          "priceCurrency": "USD"
+        },
+        {
+          "@type": "Offer",
+          "price": "16.00",
+          "priceCurrency": "CAD"
+        }
+      ]
+    }
+  },
+  "expected": {
+    "deliveryStatus": "success",
+    "mappingStatuses": {
+      "nested-name": "mapped",
+      "nested-offers": "mapped"
+    },
+    "noteCount": 0,
+    "rationale": "The nested offer array is retained whole, including string prices and order.",
+    "requiredMissing": []
+  },
+  "fields": [
+    "jsonLd"
+  ],
+  "id": "03-nested-offers",
+  "mappings": [
+    {
+      "expected": "mapped",
+      "id": "nested-name",
+      "outputPointer": "/product/name",
+      "sourcePointers": [
+        "/data/jsonLd/0/name"
+      ]
+    },
+    {
+      "expected": "mapped",
+      "id": "nested-offers",
+      "outputPointer": "/product/offers",
+      "sourcePointers": [
+        "/data/jsonLd/0/offers"
+      ]
+    }
+  ],
+  "sourceFile": "source.html",
+  "sourceUrl": "https://w6-d553c4458a.example.invalid/03-nested-offers",
+  "title": "Nested product offers"
+}

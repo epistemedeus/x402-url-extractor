@@ -1,0 +1,71 @@
+{
+  "buyerSchema": {
+    "fields": {
+      "/identity/authoritativeUrl": {
+        "required": false,
+        "type": "string"
+      },
+      "/identity/name": {
+        "required": true,
+        "type": "string"
+      },
+      "/identity/url": {
+        "required": true,
+        "type": "string"
+      }
+    },
+    "schema": "pilot/buyer-record-fields/v1",
+    "semantics": "Exact types and pointers only; no coercion, synonym expansion, or inferred facts."
+  },
+  "desiredRecord": {
+    "identity": {
+      "name": "Cedar Tools",
+      "url": "https://cedar.example.invalid/"
+    }
+  },
+  "expected": {
+    "deliveryStatus": "success",
+    "mappingStatuses": {
+      "identity-name": "mapped",
+      "identity-url": "mapped",
+      "sameas-authority": "ambiguous"
+    },
+    "noteCount": 0,
+    "rationale": "Two sameAs values are candidates, not proof that either is the buyer's authoritative identity URL.",
+    "requiredMissing": []
+  },
+  "fields": [
+    "jsonLd"
+  ],
+  "id": "05-sameas-not-authority",
+  "mappings": [
+    {
+      "expected": "mapped",
+      "id": "identity-name",
+      "outputPointer": "/identity/name",
+      "sourcePointers": [
+        "/data/jsonLd/0/name"
+      ]
+    },
+    {
+      "expected": "mapped",
+      "id": "identity-url",
+      "outputPointer": "/identity/url",
+      "sourcePointers": [
+        "/data/jsonLd/0/url"
+      ]
+    },
+    {
+      "expected": "ambiguous",
+      "id": "sameas-authority",
+      "outputPointer": "/identity/authoritativeUrl",
+      "sourcePointers": [
+        "/data/jsonLd/0/sameAs/0",
+        "/data/jsonLd/0/sameAs/1"
+      ]
+    }
+  ],
+  "sourceFile": "source.html",
+  "sourceUrl": "https://w6-d553c4458a.example.invalid/05-sameas-not-authority",
+  "title": "sameAs is not authoritative identity"
+}

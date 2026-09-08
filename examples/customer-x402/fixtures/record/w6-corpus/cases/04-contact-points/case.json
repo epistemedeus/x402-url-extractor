@@ -1,0 +1,68 @@
+{
+  "buyerSchema": {
+    "fields": {
+      "/organization/contactPoints": {
+        "required": true,
+        "type": "array"
+      },
+      "/organization/name": {
+        "required": true,
+        "type": "string"
+      }
+    },
+    "schema": "pilot/buyer-record-fields/v1",
+    "semantics": "Exact types and pointers only; no coercion, synonym expansion, or inferred facts."
+  },
+  "desiredRecord": {
+    "organization": {
+      "contactPoints": [
+        {
+          "@type": "ContactPoint",
+          "contactType": "sales",
+          "email": "sales@orchid.example.invalid"
+        },
+        {
+          "@type": "ContactPoint",
+          "contactType": "support",
+          "telephone": "+1-555-0111"
+        }
+      ],
+      "name": "Orchid Supply"
+    }
+  },
+  "expected": {
+    "deliveryStatus": "success",
+    "mappingStatuses": {
+      "contact-array": "mapped",
+      "contact-org": "mapped"
+    },
+    "noteCount": 0,
+    "rationale": "Contact points remain typed nested objects; the checker does not flatten or rename their internal fields.",
+    "requiredMissing": []
+  },
+  "fields": [
+    "jsonLd"
+  ],
+  "id": "04-contact-points",
+  "mappings": [
+    {
+      "expected": "mapped",
+      "id": "contact-org",
+      "outputPointer": "/organization/name",
+      "sourcePointers": [
+        "/data/jsonLd/0/name"
+      ]
+    },
+    {
+      "expected": "mapped",
+      "id": "contact-array",
+      "outputPointer": "/organization/contactPoints",
+      "sourcePointers": [
+        "/data/jsonLd/0/contactPoint"
+      ]
+    }
+  ],
+  "sourceFile": "source.html",
+  "sourceUrl": "https://w6-d553c4458a.example.invalid/04-contact-points",
+  "title": "Organization contact-point array"
+}

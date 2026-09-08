@@ -1,0 +1,113 @@
+{
+  "ok": true,
+  "product": "samedaydesk-extract-batch",
+  "schemaVersion": "samedaydesk.extract-batch.v0",
+  "quote": {
+    "amountAtomic": "10000",
+    "displayUsdc": "0.01",
+    "meaning": "Introductory flat 0.01 USDC batch quote for a bounded 1-5 URL attempt. Not a per-URL success promise."
+  },
+  "jobId": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "jobStatus": "completed",
+  "stopReason": null,
+  "partial": true,
+  "sources": [
+    {
+      "id": "item-001",
+      "source": "https://example.com/alpha",
+      "status": "success",
+      "data": {
+        "title": "Alpha Product Page",
+        "description": "Alpha is a sample public page for batch extraction.",
+        "jsonLd": [
+          {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": "Alpha",
+            "sku": "A-1",
+            "url": "https://example.com/alpha"
+          }
+        ]
+      },
+      "notes": [],
+      "error": null,
+      "finalUrl": "https://example.com/alpha",
+      "httpStatus": 200,
+      "provenance": {
+        "transport": "fixture",
+        "finalUrl": "https://example.com/alpha",
+        "httpStatus": 200,
+        "byteLength": 512
+      }
+    },
+    {
+      "id": "item-002",
+      "source": "https://example.com/beta",
+      "status": "success",
+      "data": {
+        "title": "Beta Product Page",
+        "description": "Beta omits sku in JSON-LD.",
+        "jsonLd": [
+          {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": "Beta",
+            "url": "https://example.com/beta"
+          }
+        ]
+      },
+      "notes": [],
+      "error": null,
+      "finalUrl": "https://example.com/beta",
+      "httpStatus": 200,
+      "provenance": {
+        "transport": "fixture",
+        "finalUrl": "https://example.com/beta",
+        "httpStatus": 200,
+        "byteLength": 480
+      }
+    },
+    {
+      "id": "item-003",
+      "source": "https://example.com/missing",
+      "status": "failure",
+      "data": null,
+      "notes": [],
+      "error": {
+        "code": "missing_source",
+        "message": "source was not delivered"
+      },
+      "finalUrl": null,
+      "httpStatus": null,
+      "provenance": {
+        "transport": "fixture",
+        "finalUrl": null,
+        "httpStatus": null
+      }
+    }
+  ],
+  "accounting": {
+    "requests": 3,
+    "bytes": 992,
+    "wallMs": 12,
+    "retries": 0,
+    "succeeded": 2,
+    "partial": 0,
+    "failed": 1,
+    "unknown": 0,
+    "skippedDuplicate": 0
+  },
+  "costInputs": {
+    "admittedBodyBytes": 992,
+    "requests": 3,
+    "wallMs": 12,
+    "hostingCosts": "unknown",
+    "modelCosts": "none",
+    "monetaryMargin": null,
+    "note": "accounting.bytes is uncompressed admitted application body bytes, including unresolved reservations, not socket wire billing"
+  },
+  "charged": true,
+  "boundary": {
+    "note": "Local merchant-shaped fixture copied from public extract_batch field names at d7ceb857. Not a live fetch and not a payment."
+  }
+}

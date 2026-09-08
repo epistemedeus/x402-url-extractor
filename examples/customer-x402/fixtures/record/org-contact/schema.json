@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pageUrl", "type", "name"],
+  "properties": {
+    "pageUrl": { "type": "string", "minLength": 1, "maxLength": 2048 },
+    "type": { "type": "string", "enum": ["Organization"] },
+    "name": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "email": { "type": "string", "minLength": 3, "maxLength": 256 },
+    "telephone": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "url": { "type": "string", "minLength": 1, "maxLength": 2048 },
+    "streetAddress": { "type": "string", "minLength": 1, "maxLength": 256 }
+  }
+}
