@@ -225,6 +225,50 @@ See `src/page-change/NOTICE.md` for ownership, license, and reviewed-source
 pins. UTF-8 shortening applies only to text display excerpts; JSON
 `changes[].before/after` keep exact admitted values.
 
+### Optional HTTP companion (disabled by default)
+
+The same `comparePageBatches` job can be called over unpaid
+`POST /recipes/page-change` when the merchant is started with
+`PAGE_CHANGE_HTTP_ENABLED=1`. Supply already delivered JSON artifacts in the
+request body. The companion does not fetch, pay, raise caller limits, or add a
+paid SKU, schedule observations, or retain request artifacts. It does not log
+raw inputs. For example, with two batch responses saved locally:
+
+```bash
+jq -n --slurpfile before before.json --slurpfile after after.json \
+  '{before:$before[0],after:$after[0],fields:["title","description"]}' \
+  | curl --fail-with-body -H 'Content-Type: application/json' \
+      --data-binary @- http://127.0.0.1:3000/recipes/page-change
+```
+
+No key, wallet, or payment header is needed. `clock`, `observedAt`, and
+`maxStaleMs` are caller-supplied metadata, not verified observations. This route
+always reports unknown freshness and makes no current/fresh claim;
+`allowFreshClaim: true` is rejected. Use the returned coverage and ambiguity
+fields as well as the verdict. A successful comparison does not prove useful
+paid delivery or authoritative observation time.
+
+Defaults are a 270,336-byte request, 131,072 bytes per artifact, JSON depth 16,
+4,096 JSON nodes, 32 sources, 11 fields, 512 sequence entries, 64 changes,
+200-byte excerpts, 32 action items, and a 262,144-byte worker/result ceiling.
+The request body and comparison share one 5-second deadline; timeout or
+disconnect cancels the owned worker (TERM, then KILL after at most 500 ms).
+At most two admitted requests run per process, including body upload time.
+Busy requests get 503; each IP is limited to 12 POST attempts per minute and
+rate bookkeeping is capped at 1,024 IPs. Operator `PAGE_CHANGE_HTTP_MAX_*`
+settings and `PAGE_CHANGE_HTTP_TIMEOUT_MS` can only tighten these ceilings.
+Static error and discovery documents are independently small, not comparison
+results. `GET /recipes/page-change/openapi.json` describes the route.
+
+`GET /recipes/page-change/health` exposes a syntactically valid configured
+`PAGE_CHANGE_SOURCE_COMMIT` (or `SOURCE_COMMIT`), not an independently verified
+deployment attestation. The deployer must bind it to the actual source revision.
+Optional `PAGE_CHANGE_XAGENT_SLUG` enables the exact-shape proof endpoint only
+when its commit matches health; mismatched `PAGE_CHANGE_XAGENT_COMMIT` is refused.
+The offline `scripts/page-change-xagent-sidecar.mjs` uses the clean pinned
+official validator. It does not create a contest package, rights attestation,
+live deployment, or submission. Product readiness is not submission readiness.
+
 ### Two existing public client deliveries
 
 Save each paid or unpaid batch JSON exactly as returned:
