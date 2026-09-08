@@ -109,7 +109,10 @@ npm run reconcile -- --reconcile \
 Uses official `authorizationState(authorizer, nonce)` through a bounded viem
 JSON-RPC transport (byte limit, total timeout, finite requests, zero retries),
 pinned to an observed block. Chain-time expiry comes from that block timestamp;
-wall-clock expiry is reported separately. Cancellation is distinguished from an
+wall-clock expiry is reported separately. The observed block hash is rechecked
+after the state read; a changed or unavailable block leaves state unknown.
+Cancellation requires its own canonical successful receipt with the exact
+`AuthorizationCanceled` event, not merely a filtered log. It is distinguished from an
 exact successful `AuthorizationUsed` + single matching `Transfer`. Confirmation
 and finality require a still-matching canonical block hash, not merely a past
 height under a finalized tag. A used authorization is not delivered output and

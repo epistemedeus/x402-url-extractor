@@ -85,6 +85,7 @@ function normalizeAtomic(value, label) {
   const raw = String(value ?? "").trim();
   if (!/^\d+$/.test(raw)) fail(`${label} must be a non-negative integer string`, label);
   if (raw.length > 78) fail(`${label} exceeds supported decimal length`, label);
+  if (BigInt(raw) >= 2n ** 256n) fail(`${label} exceeds uint256`, label);
   return raw;
 }
 
@@ -100,6 +101,7 @@ function normalizeUnixSeconds(value, label) {
   const raw = String(value ?? "").trim();
   if (!/^\d+$/.test(raw)) fail(`${label} must be a non-negative integer string`, label);
   if (raw.length > 16) fail(`${label} exceeds supported unix-seconds length`, label);
+  if (BigInt(raw) > BigInt(Number.MAX_SAFE_INTEGER)) fail(`${label} exceeds exact seconds range`, label);
   return raw;
 }
 

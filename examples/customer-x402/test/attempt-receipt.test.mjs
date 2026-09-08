@@ -394,6 +394,11 @@ test("reconcile reports used vs unused/expired/canceled and keeps confirmation s
         }
         return [];
       },
+      getTransactionReceipt: async () => ({
+        status: "success", transactionHash: TX_HASH, blockNumber: 90n, blockHash: BLOCK_HASH,
+        logs: [authorizationCanceledLog({ address: LIVE_ASSET, authorizer: identity.payer,
+          nonce: identity.nonce, transactionHash: TX_HASH, blockNumber: 90n, blockHash: BLOCK_HASH })],
+      }),
     }),
   });
   assert.equal(canceled.decision, "canceled_unsettled");

@@ -186,7 +186,7 @@ export function createBoundedRpcTransport(rpcUrl, {
   const started = now();
   let requests = 0;
   const fetchFn = async (input, init = {}) => {
-    if (now() - started > timeoutMs) {
+    if (now() - started >= timeoutMs) {
       throw new Error("rpc_timeout");
     }
     requests += 1;
@@ -196,9 +196,10 @@ export function createBoundedRpcTransport(rpcUrl, {
     const remaining = Math.max(1, timeoutMs - (now() - started));
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), remaining);
+    const abort = () => controller.abort();
     if (init.signal) {
       if (init.signal.aborted) controller.abort();
-      else init.signal.addEventListener("abort", () => controller.abort(), { once: true });
+      else init.signal.addEventListener("abort", abort, { once: true });
     }
     try {
       const response = await fetchImpl(input, {
@@ -206,7 +207,33 @@ export function createBoundedRpcTransport(rpcUrl, {
         redirect: "error",
         signal: controller.signal,
       });
-      return response;
+      // Keep the shared deadline alive through body consumption, not only headers.
+      const reader = response.body?.getReader();
+      if (!reader) return response;
+      const chunks = [];
+      let bytes = 0;
+      try {
+        if (Number(response.headers.get("content-length")) > maxResponseBytes) {
+          throw new Error("rpc_response_too_large");
+        }
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          bytes += value.byteLength;
+          if (bytes > maxResponseBytes) throw new Error("rpc_response_too_large");
+          chunks.push(value);
+        }
+      } finally {
+        await reader.cancel().catch(() => {});
+        reader.releaseLock();
+      }
+      if (controller.signal.aborted || now() - started >= timeoutMs) throw new Error("rpc_timeout");
+      const headers = new Headers(response.headers);
+      headers.delete("content-encoding");
+      headers.delete("content-length");
+      return new Response(Buffer.concat(chunks, bytes), {
+        status: response.status, statusText: response.statusText, headers,
+      });
     } catch (error) {
       if (controller.signal.aborted || (error instanceof Error && /abort/i.test(error.message))) {
         throw new Error("rpc_timeout");
@@ -214,6 +241,7 @@ export function createBoundedRpcTransport(rpcUrl, {
       throw error;
     } finally {
       clearTimeout(timer);
+      init.signal?.removeEventListener("abort", abort);
     }
   };
 
@@ -330,13 +358,13 @@ function decodeTransfer(log, expectedAsset) {
   }
 }
 
-function decodeAuthorizationUsed(log, receipt) {
+function decodeAuthorizationUsed(log, receipt, event = AUTHORIZATION_USED_EVENT) {
   if (String(log.address || "").toLowerCase() !== getAddress(receipt.asset).toLowerCase()) {
     return null;
   }
   try {
     const decoded = decodeEventLog({
-      abi: [AUTHORIZATION_USED_EVENT],
+      abi: [event],
       data: log.data,
       topics: log.topics,
       strict: true,
@@ -351,7 +379,7 @@ function decodeAuthorizationUsed(log, receipt) {
   }
 }
 
-async function matchExactSettlement(client, receipt, candidate, observedBlockNumber) {
+async function matchExactSettlement(client, receipt, candidate, observedBlockNumber, { cancellation = false } = {}) {
   const txHash = candidate.transactionHash;
   if (!txHash || !/^0x[0-9a-fA-F]{64}$/.test(txHash)) {
     return { matched: false, reason: "missing_or_invalid_transaction_hash" };
@@ -431,6 +459,7 @@ async function matchExactSettlement(client, receipt, candidate, observedBlockNum
   const expectedValue = BigInt(receipt.amountAtomic);
 
   const usedInReceipt = [];
+  const canceledInReceipt = [];
   const transfers = [];
   for (const log of txReceipt.logs || []) {
     if (log.removed) {
@@ -438,9 +467,19 @@ async function matchExactSettlement(client, receipt, candidate, observedBlockNum
     }
     const used = decodeAuthorizationUsed(log, receipt);
     if (used) usedInReceipt.push(used);
+    const canceled = decodeAuthorizationUsed(log, receipt, AUTHORIZATION_CANCELED_EVENT);
+    if (canceled) canceledInReceipt.push(canceled);
     const transfer = decodeTransfer(log, expectedAsset);
     if (transfer) transfers.push(transfer);
   }
+  if (cancellation) {
+    if (canceledInReceipt.length !== 1 || usedInReceipt.length !== 0) {
+      return { matched: false, reason: "cancellation_not_uniquely_proven_in_receipt" };
+    }
+    return { matched: true, transactionHash: txHash, blockNumber: txReceipt.blockNumber.toString(),
+      blockHash: txReceipt.blockHash, canonicalBlockHash: canonical.hash };
+  }
+  if (canceledInReceipt.length > 0) return { matched: false, reason: "conflicting_cancellation_in_receipt" };
   if (usedInReceipt.length !== 1) {
     return {
       matched: false,
@@ -551,7 +590,7 @@ export async function reconcileAttemptReceipt({
     chainId,
     timeoutMs,
     fetchImpl,
-    now: () => nowDate.getTime() + (Date.now() - nowDate.getTime()),
+    now: () => Date.now(),
   });
 
   const out = baseResult(validated, nowIso);
@@ -674,6 +713,22 @@ export async function reconcileAttemptReceipt({
     };
   }
 
+  // eth_call uses a block number. Recheck that height before assigning its hash
+  // to the returned state, including when later head-tag reads are unavailable.
+  try {
+    const canonical = await readCanonicalBlock(publicClient, { blockNumber: observedBlock.number });
+    if (canonical?.hash !== observedBlock.hash || canonical?.number !== observedBlock.number) {
+      return { ...out, decision: "observed_block_changed", authorization: { state: "unknown", used: null },
+        settlement: { matched: false, status: "unknown", reason: "observed block changed during state read" },
+        finality: null, uncertainty: ["reorg prevents binding state to the original snapshot"], boundary: reconcileBoundary() };
+    }
+  } catch (error) {
+    return { ...out, decision: "rpc_unavailable", authorization: { state: "unknown", used: null },
+      settlement: { matched: false, status: "unknown", reason: "observed block recheck unavailable" },
+      finality: null, uncertainty: ["state-to-block binding remains unproven"],
+      message: sanitizeTransportMessage(error), boundary: reconcileBoundary() };
+  }
+
   let headTags;
   try {
     headTags = await readHeadTags(publicClient);
@@ -775,21 +830,25 @@ export async function reconcileAttemptReceipt({
   const liveCanceled = (canceledLogs.matches || []).filter((entry) => !entry.removed);
 
   if (liveCanceled.length > 0 && liveUsed.length === 0) {
+    const cancellation = liveCanceled.length === 1 && usedLogs.found === false
+      ? await matchExactSettlement(publicClient, validated, liveCanceled[0], observedBlock.number, { cancellation: true })
+      : { matched: false, reason: "incomplete_or_ambiguous_authorization_logs" };
     return {
       ...out,
-      decision: liveCanceled.length === 1 ? "canceled_unsettled" : "canceled_ambiguous",
+      decision: cancellation.matched ? "canceled_unsettled" : "cancellation_unverified",
       authorization: {
-        state: "canceled",
+        state: cancellation.matched ? "canceled" : "consumed",
         used: true,
         observedBlockNumber: observedBlock.number.toString(),
         observedBlockHash: observedBlock.hash,
       },
       settlement: {
         matched: false,
-        status: "canceled",
-        reason: liveCanceled.length === 1
-          ? "nonce consumed via AuthorizationCanceled without AuthorizationUsed settlement"
-          : "multiple AuthorizationCanceled logs matched the identity in range",
+        status: cancellation.matched ? "canceled" : "unknown",
+        reason: cancellation.matched
+          ? "canonical successful receipt contains exact AuthorizationCanceled and no AuthorizationUsed"
+          : cancellation.reason,
+        cancellationEvidence: cancellation,
         authorizationCanceledLogs: canceledLogs,
         authorizationUsedLogs: usedLogs,
       },
@@ -897,7 +956,7 @@ export async function reconcileAttemptReceipt({
           : "used_settlement_matched_unfinalized")
       : "used_unmatched_settlement",
     authorization: {
-      state: "used",
+      state: settlement.matched ? "used" : "consumed",
       used: true,
       observedBlockNumber: observedBlock.number.toString(),
       observedBlockHash: observedBlock.hash,
@@ -909,6 +968,3 @@ export async function reconcileAttemptReceipt({
     boundary: reconcileBoundary(),
   };
 }
-
-/** Test/review helper. Prefer fixtures/fake-reconcile-client.mjs for new tests. */
-export { createFakeReconcileClient } from "../fixtures/fake-reconcile-client.mjs";
