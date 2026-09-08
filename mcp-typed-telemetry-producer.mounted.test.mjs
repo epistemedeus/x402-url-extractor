@@ -270,13 +270,14 @@ async function startMounted(options = {}) {
     configureResourceServer: options.configureResourceServer,
     typedTelemetry: {
       enabled: options.typedEnabled === true,
-      onAppend: (decision, requestAttribution) => {
+      onAppend: (decision, requestAttribution, declaredSource) => {
         events.push(decision);
         if (typeof options.onAppend === "function") {
-          return options.onAppend(decision, requestAttribution);
+          return options.onAppend(decision, requestAttribution, declaredSource);
         }
       },
       attributionForRequest: options.attributionForRequest,
+      declaredSourceForRequest: options.declaredSourceForRequest,
     },
   });
   const server = app.listen(0, "127.0.0.1");
@@ -873,6 +874,41 @@ test("M17 representative free and paid HTTP routes stay isolated", { timeout: 20
   }
 });
 
+test("MCP POST declared-source headers are not retained by typed events or the HTTP writer", { timeout: 20_000 }, async () => {
+  const enabled = await startMounted({ typedEnabled: true, commerce: true });
+  try {
+    const mcp = await postMcp(enabled.origin, {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: {
+        protocolVersion: "2025-11-25",
+        capabilities: {},
+        clientInfo: { name: "c26-runtime-source", version: "1" },
+      },
+    }, { "x-samedaydesk-agent-source": "claude-code-marketplace-v1" });
+    assert.ok(mcp.status === 200 || mcp.json);
+    await enabled.drain();
+    await enabled.commerce.flush();
+    let httpRows = [];
+    try {
+      const raw = await readFile(path.join(enabled.dataDir, "commerce-events.ndjson"), "utf8");
+      httpRows = raw.trim() ? raw.trim().split("\n").map((line) => JSON.parse(line)) : [];
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+    assert.equal(httpRows.every((row) => row.route !== "/mcp"), true);
+    assert.equal(httpRows.every((row) => row.declaredAgentDiscoverySource !== "claude-code-marketplace"), true);
+    for (const event of enabled.events) {
+      assert.equal(Object.hasOwn(event, "declaredAgentDiscoverySource"), false);
+      assert.equal(JSON.stringify(event).includes("claude-code-marketplace"), false);
+      assert.equal(JSON.stringify(event).includes("claude-code-marketplace-v1"), false);
+    }
+  } finally {
+    await enabled.close();
+  }
+});
+
 test("M18 package and privacy scan excludes assignment fixtures and raw markers", { timeout: 20_000 }, async () => {
   const source = await import("node:fs/promises").then(({ readFile }) => readFile(
     path.join(path.dirname(fileURLToPath(import.meta.url)), "mcp-typed-telemetry-producer.mjs"),
@@ -1099,9 +1135,10 @@ async function startCanonicalMounted(options = {}) {
     }],
     typedTelemetry: {
       enabled: true,
-      onAppend: (decision, requestAttribution) =>
-        telemetry.appendMcpTypedDecision(decision, requestAttribution),
+      onAppend: (decision, requestAttribution, declaredSource) =>
+        telemetry.appendMcpTypedDecision(decision, requestAttribution, declaredSource),
       attributionForRequest: (req) => telemetry.mcpTypedAttributionForRequest(req),
+      declaredSourceForRequest: (req) => telemetry.mcpTypedDeclaredSourceForRequest(req),
     },
   });
   const server = app.listen(0, "127.0.0.1");

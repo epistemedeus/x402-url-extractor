@@ -21,8 +21,13 @@ session:   goose session --with-streamable-http-extension "https://agents.sameda
 deeplink:  see goose.deeplink.txt
 
 Default YAML sends no source headers. goose.config.with-declared-source.yaml
-is optional, unauthenticated, not merchant-allowlisted, and does not claim
-merchant attribution. Do not use it as the default.
+is optional, unauthenticated, and caller-declared. The merchant may bucket
+`goose-native-v1` as unverified attribution. It is not identity, payment, or
+organic-acquisition proof. Do not use it as the default.
+
+Retention covers HTTP request records and observed direct MCP tool outcomes.
+MCP extract_batch retains source on its exact /extract/batch HTTP record only.
+Initialization and tools/list create no tool-outcome events. None proves demand.
 
 Live unpaid discovery is a separate initialize plus tools/list check. Require
 extract and extract_batch with their live schemas; extra unrelated tools are

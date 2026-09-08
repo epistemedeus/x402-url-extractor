@@ -21,8 +21,15 @@ repository root as a plugin. This is not the Agent Plugins 1.0 package in
   explicitly authorizes payment.
 
 The header `X-SameDayDesk-Agent-Source: claude-code-marketplace-v1` is a
-claimed source label. It is not a credential. Do not treat it as proof that
-the merchant accepted, bucketed, or attributed an independent customer.
+declared source label. It is not a credential. The merchant may bucket that
+exact value as caller-declared attribution. It is not proof of controller
+independence, customer identity, organic acquisition, payment, or causal
+referral.
+
+The label is retained on HTTP request records and observed direct MCP tool
+outcomes. MCP `extract_batch` uses the exact `/extract/batch` HTTP record only;
+it does not add a second typed source count. Initialization and tools/list do
+not create tool-outcome events. No label establishes identity or demand.
 
 ## What this plugin is not
 

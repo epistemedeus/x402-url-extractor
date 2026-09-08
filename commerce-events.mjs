@@ -3,6 +3,11 @@ import { appendFile, chmod, mkdir, readFile, rename, stat, unlink } from "node:f
 import path from "node:path";
 import { Credential } from "mppx";
 import { classifyDiscoveryRequestConstruction } from "./discovery-contract.mjs";
+import {
+  EXTRACT_BATCH_METHOD,
+  EXTRACT_BATCH_PATH,
+} from "./extract-batch-config.mjs";
+import { normalizeExtractBatchInput } from "./extract-batch.mjs";
 import { isReceiptReferralId } from "./receipt-referral.mjs";
 
 const CRAWLER_PATTERN = /bot|crawler|spider|slurp|uptime|monitor|observer|probe|indexer|headless|preview|liveness|healthcheck|sentineloracle|mcpbeat|agentreeve|agent402|trust[- ]?oracle/i;
@@ -76,6 +81,8 @@ const DECLARED_AGENT_DISCOVERY_SOURCES = new Map([
   ["agentverse-a2a-v1", "agentverse"],
   ["aws-agentcore-v1", "aws-agentcore"],
   ["agentcash-v1", "agentcash"],
+  ["claude-code-marketplace-v1", "claude-code-marketplace"],
+  ["goose-native-v1", "goose-native"],
 ]);
 const CANONICAL_AGENT_DISCOVERY_SOURCES = new Set([
   ...AGENT_DISCOVERY_SOURCE_PATTERNS.map(([source]) => source),
@@ -117,6 +124,7 @@ const EXACT_ROUTES = new Map([
   ["/platforms/methodology", { route: "/platforms/methodology", kind: "discovery" }],
   ["/alerts", { route: "/alerts", kind: "discovery" }],
   ["/extract", { route: "/extract", kind: "paid" }],
+  [EXTRACT_BATCH_PATH, { route: EXTRACT_BATCH_PATH, kind: "paid" }],
   ["/read", { route: "/read", kind: "paid" }],
   ["/scan", { route: "/scan", kind: "paid" }],
   ["/schemaforge", { route: "/schemaforge", kind: "paid" }],
@@ -179,6 +187,10 @@ const PAID_EVIDENCE_RUNTIME_ATTRIBUTION = "http";
 const PAID_EVIDENCE_VALIDATOR_VERDICT = "not_checked";
 const PAID_EVIDENCE_VALIDATOR_AUTHORITY = "none";
 const PAID_EVIDENCE_VALIDATOR_SOURCE = "http_runtime_not_checked";
+// Exact declared paid POST product whose unpaid 402/invalid-body/error rows
+// remain measurement, unlike wallet-policy and other unsafe unpaid POSTs.
+const MEASURED_UNPAID_PAID_POST_ROUTES = new Set([EXTRACT_BATCH_PATH]);
+const EXTRACT_BATCH_REQUIRED_BODY_KEY_COUNT = 1;
 
 function safePathSegment(value) {
   const segment = String(value || "").toLowerCase();
@@ -208,6 +220,50 @@ export function classifyCommerceRoute(rawPath) {
     kind: "unmatched",
     matched: false,
   };
+}
+
+/**
+ * Measure POST /extract/batch body construction without retaining URL values.
+ * Reuse the merchant's synchronous admission validator, including public HTTPS
+ * URLs, bounds, optional fields and extra-key rejection. No DNS or source fetch.
+ */
+export function classifyExtractBatchRequestConstruction(body) {
+  try {
+    normalizeExtractBatchInput(body);
+  } catch {
+    return { status: "missing_required_input", requiredKeyCount: EXTRACT_BATCH_REQUIRED_BODY_KEY_COUNT };
+  }
+  return { status: "constructed", requiredKeyCount: EXTRACT_BATCH_REQUIRED_BODY_KEY_COUNT };
+}
+
+function isWriterMeasuredPaidExtractBatchPost(value) {
+  return value.kind === "paid"
+    && value.matched === true
+    && value.method === EXTRACT_BATCH_METHOD
+    && value.route === EXTRACT_BATCH_PATH;
+}
+
+function omitsUnpaidPaidPost({ kind, route, method, paymentPresent }) {
+  if (kind !== "paid" || paymentPresent) return false;
+  if (["GET", "HEAD", "OPTIONS"].includes(method)) return false;
+  return !(method === EXTRACT_BATCH_METHOD && MEASURED_UNPAID_PAID_POST_ROUTES.has(route));
+}
+
+function classifyWriterRequestConstruction({ kind, matched, method, route, query, body }) {
+  if (kind === "paid" && method === "GET") {
+    return classifyDiscoveryRequestConstruction(`GET ${route}`, query || {});
+  }
+  if (isWriterMeasuredPaidExtractBatchPost({ kind, matched, method, route })) {
+    return classifyExtractBatchRequestConstruction(body);
+  }
+  return { status: "not_measured", requiredKeyCount: 0 };
+}
+
+function isConstructedRequestFunnelEvent(event) {
+  if (event.kind !== "paid" || event.matched !== true) return false;
+  if (event.requestConstruction !== "constructed") return false;
+  if (event.method === "GET") return true;
+  return isWriterMeasuredPaidExtractBatchPost(event);
 }
 
 function headerValue(headers, name) {
@@ -1080,6 +1136,13 @@ function isCanonicalRequestConstructionFields(value) {
     return false;
   }
   if (value.requestConstruction === "not_measured") return count === 0;
+  if (isWriterMeasuredPaidExtractBatchPost(value)) {
+    return count === EXTRACT_BATCH_REQUIRED_BODY_KEY_COUNT
+      && (
+        value.requestConstruction === "constructed"
+        || value.requestConstruction === "missing_required_input"
+      );
+  }
   if (!isWriterMeasuredPaidGet(value)) return false;
   const derived = classifyDiscoveryRequestConstruction(
     `GET ${value.route}`,
@@ -1666,6 +1729,16 @@ const MCP_TYPED_ATTRIBUTED_COMMERCE_KEYS = Object.freeze([
   ...MCP_TYPED_COMMERCE_KEYS,
   "requestAttribution",
 ]);
+const MCP_TYPED_DECLARED_SOURCE_KEY = "declaredAgentDiscoverySource";
+const MCP_TYPED_DECLARED_SOURCE_LABELS = new Set(DECLARED_AGENT_DISCOVERY_SOURCES.values());
+const MCP_TYPED_SOURCED_COMMERCE_KEYS = Object.freeze([
+  ...MCP_TYPED_COMMERCE_KEYS,
+  MCP_TYPED_DECLARED_SOURCE_KEY,
+]);
+const MCP_TYPED_ATTRIBUTED_SOURCED_COMMERCE_KEYS = Object.freeze([
+  ...MCP_TYPED_ATTRIBUTED_COMMERCE_KEYS,
+  MCP_TYPED_DECLARED_SOURCE_KEY,
+]);
 const MCP_TYPED_HEX = /^[0-9a-f]{64}$/u;
 const MCP_TYPED_TOKEN = /^[a-z][a-z0-9_]{0,63}$/u;
 const MCP_TYPED_SKU = /^[a-z][a-z0-9-]{0,95}$/u;
@@ -1790,6 +1863,17 @@ function isCanonicalMcpTypedAttribution(value) {
   return canonicalMcpTypedAttribution(value) !== null;
 }
 
+function canonicalMcpTypedDeclaredSource(value) {
+  try {
+    if (typeof value !== "string") return null;
+    const asLabel = canonicalDiscoverySourceLabel(value, MCP_TYPED_DECLARED_SOURCE_LABELS);
+    if (typeof asLabel === "string") return asLabel;
+    return classifyDeclaredAgentDiscoverySource(value);
+  } catch {
+    return null;
+  }
+}
+
 function isClosedMcpTypedBinding(binding) {
   if (!exactObjectKeys(binding, ["issuedOfferDigest", "productSku", "resource", "tool"])) return false;
   if (!MCP_TYPED_TOKEN.test(binding.tool) || !MCP_TYPED_CLOSED_TOOLS.has(binding.tool)) return false;
@@ -1903,7 +1987,9 @@ function declaresMcpTypedSource(value) {
 export function isCanonicalMcpTypedCommerceEvent(value) {
   const legacy = exactObjectKeys(value, MCP_TYPED_COMMERCE_KEYS);
   const attributed = exactObjectKeys(value, MCP_TYPED_ATTRIBUTED_COMMERCE_KEYS);
-  if (!legacy && !attributed) return false;
+  const sourced = exactObjectKeys(value, MCP_TYPED_SOURCED_COMMERCE_KEYS);
+  const attributedSourced = exactObjectKeys(value, MCP_TYPED_ATTRIBUTED_SOURCED_COMMERCE_KEYS);
+  if (!legacy && !attributed && !sourced && !attributedSourced) return false;
   if (value.v !== 4) return false;
   if (value.sourceContract !== MCP_TYPED_COMMERCE_SOURCE) return false;
   if (eventTimestampMs(value) === null) return false;
@@ -1916,7 +2002,17 @@ export function isCanonicalMcpTypedCommerceEvent(value) {
   if (value.independentUse !== false) return false;
   if (value.chainTruth !== false) return false;
   if (value.payerIdentity !== false) return false;
-  if (attributed && !isCanonicalMcpTypedAttribution(value.requestAttribution)) return false;
+  if ((attributed || attributedSourced) && !isCanonicalMcpTypedAttribution(value.requestAttribution)) {
+    return false;
+  }
+  if (
+    (sourced || attributedSourced)
+    && (typeof value.declaredAgentDiscoverySource !== "string"
+      || canonicalMcpTypedDeclaredSource(value.declaredAgentDiscoverySource)
+        !== value.declaredAgentDiscoverySource)
+  ) {
+    return false;
+  }
   return isStoredMcpTypedDecisionFields(value);
 }
 
@@ -1959,6 +2055,7 @@ function summarizeMcpTypedView(events) {
   const byResult = Object.create(null);
   const byTool = Object.create(null);
   const byReason = Object.create(null);
+  const byDeclaredSource = Object.create(null);
   for (const event of events) {
     const result = typeof event.result === "string" ? event.result : "invalid";
     byResult[result] = (byResult[result] || 0) + 1;
@@ -1968,6 +2065,10 @@ function summarizeMcpTypedView(events) {
     if (typeof tool === "string" && tool.length > 0) {
       byTool[tool] = (byTool[tool] || 0) + 1;
     }
+    const declared = event.declaredAgentDiscoverySource;
+    if (typeof declared === "string" && MCP_TYPED_DECLARED_SOURCE_LABELS.has(declared)) {
+      byDeclaredSource[declared] = (byDeclaredSource[declared] || 0) + 1;
+    }
   }
   return {
     sourceContract: MCP_TYPED_COMMERCE_SOURCE,
@@ -1976,7 +2077,8 @@ function summarizeMcpTypedView(events) {
     byResult,
     byTool,
     byReason,
-    policy: "Seller-declared typed MCP outcomes from the mounted producer. Not payer identity, chain truth, accounting, revenue, demand, or independent use.",
+    byDeclaredSource,
+    policy: "Seller-declared typed MCP outcomes from the mounted producer. Optional caller-declared source labels are untrusted metadata on observed typed tool events. Not payer identity, chain truth, accounting, revenue, demand, independent use, or authorization.",
   };
 }
 
@@ -2418,6 +2520,16 @@ export function createCommerceTelemetry({
     });
   }
 
+  function mcpTypedDeclaredSourceForRequest(req) {
+    try {
+      const raw = req?.headers?.["x-samedaydesk-agent-source"];
+      if (typeof raw !== "string") return null;
+      return classifyDeclaredAgentDiscoverySource(raw);
+    } catch {
+      return null;
+    }
+  }
+
   function enqueueExclusive(work) {
     const run = queue.then(work);
     queue = run.then(
@@ -2468,7 +2580,7 @@ export function createCommerceTelemetry({
     });
   }
 
-  function appendMcpTypedDecision(decision, attestedAttribution = null) {
+  function appendMcpTypedDecision(decision, attestedAttribution = null, declaredSource = null) {
     // Adapt, validate, and copy synchronously before any queue scheduling, so
     // the queued closure owns the canonical event and later caller mutation of
     // the original decision cannot alter, relabel, or add to the stored row.
@@ -2484,17 +2596,26 @@ export function createCommerceTelemetry({
       event = null;
     }
     if (event) {
+      const baseEvent = event;
       let requestAttribution = null;
+      let declaredAgentDiscoverySource = null;
       try {
         requestAttribution = verifyMcpTypedAttribution(attestedAttribution, secret);
       } catch {
         requestAttribution = null;
       }
-      if (requestAttribution) {
-        event = {
-          ...event,
-          requestAttribution,
+      try {
+        declaredAgentDiscoverySource = canonicalMcpTypedDeclaredSource(declaredSource);
+      } catch {
+        declaredAgentDiscoverySource = null;
+      }
+      if (requestAttribution || declaredAgentDiscoverySource) {
+        const merged = {
+          ...baseEvent,
+          ...(requestAttribution ? { requestAttribution } : {}),
+          ...(declaredAgentDiscoverySource ? { declaredAgentDiscoverySource } : {}),
         };
+        event = isCanonicalMcpTypedCommerceEvent(merged) ? merged : baseEvent;
       }
     }
     return enqueueExclusive(async () => {
@@ -2617,15 +2738,25 @@ export function createCommerceTelemetry({
       if (route.route === "/mcp" && !["GET", "HEAD", "OPTIONS"].includes(method)) {
         return;
       }
-      if (route.kind === "paid" && !paymentPresent && !["GET", "HEAD", "OPTIONS"].includes(method)) {
+      if (omitsUnpaidPaidPost({
+        kind: route.kind,
+        route: route.route,
+        method,
+        paymentPresent,
+      })) {
         return;
       }
       const replayed = String(res.getHeader?.("x-payment-replay") || "").toLowerCase() === "hit";
       const protocolsOffered = offeredPaymentProtocols(res);
       const settlement = decodeResponseSettlement(res);
-      const requestConstruction = route.kind === "paid" && method === "GET"
-        ? classifyDiscoveryRequestConstruction(`GET ${route.route}`, req.query || {})
-        : { status: "not_measured", requiredKeyCount: 0 };
+      const requestConstruction = classifyWriterRequestConstruction({
+        kind: route.kind,
+        matched: route.matched,
+        method,
+        route: route.route,
+        query: req.query || {},
+        body: req.body,
+      });
       const paymentFailureCode = paymentPresent
         ? classifyPaymentFailureCode({
             route: route.route,
@@ -2802,10 +2933,7 @@ export function createCommerceTelemetry({
       requestConstructionSinceMs !== null
       && Date.parse(event.ts) >= requestConstructionSinceMs
       && (event.originClass === "external" || event.originClass === "crawler")
-      && event.kind === "paid"
-      && event.matched === true
-      && event.method === "GET"
-      && event.requestConstruction === "constructed"
+      && isConstructedRequestFunnelEvent(event)
       && eventResult(event) === "challenge"
     ));
     const constructedRequestBySource = emptyCounts();
@@ -3182,7 +3310,7 @@ export function createCommerceTelemetry({
       paymentClassPolicy: "Explicit known-payer rules classify internal, marketplace validation, incentivized, affiliated, or independently confirmed buyers. Unknown or missing payer identities remain unclassified and never become independent by inference.",
       discoveryConversionPolicy: "A submitted payment credential overrides crawler classification so paying agents remain in economic telemetry. Controlled user-agent source labels attribute the client channel but are self-declared and do not independently authenticate a registry referral. Challenge-to-paid conversion uses the same secret-keyed network-and-user-agent actor before and after the challenge and is therefore a conservative continuity lower bound, not an identity claim. SameDayDesk owner monitors remain excluded before this rule.",
       credentialAttemptPolicy: "After the declared credential-attempt baseline, a parseable attempt must carry a syntactically complete x402 v2 exact Base-style binding or MPP evm/charge credential. Signature validity and settlement are separate later outcomes. Controlled failure codes are derived from required query-key presence, x402 response error classes, or MPP Problem Details. Public output contains only aggregate protocol, result, route, source, payer class, and failure-code counts; raw credentials, errors, bodies, query values, actors, and payer addresses are not exposed.",
-      requestConstructionPolicy: "Prospective seller-declared GET measurement only. A constructed request must target an exact paid route, carry a non-empty scalar for every required non-secret query key from that route's canonical Bazaar request contract, and receive an HTTP 402 challenge rather than validation failure. Values are inspected only for scalar non-emptiness and are neither retained nor published. Header, cookie, path, body, unsafe unpaid POST, credential-like required names, and undeclared contracts remain unmeasured. Public output contains aggregate events, distinct secret-keyed actor counts, controlled source labels, and canonical routes only. Construction proves neither input validity, buyer intent, payment authorization, settlement, nor demand.",
+      requestConstructionPolicy: "Prospective seller-declared GET measurement, plus the exact declared paid POST /extract/batch body. A constructed GET must target an exact paid route, carry a non-empty scalar for every required non-secret query key from that route's canonical Bazaar request contract, and receive an HTTP 402 challenge rather than validation failure. A constructed POST /extract/batch must pass the merchant's synchronous input validator (1 to 5 bounded public HTTPS URL strings, valid optional fields and no extra keys) and receive an HTTP 402 challenge. GET values are inspected for scalar non-emptiness; POST bodies use that validator without DNS lookup or source fetching. Invalid or incomplete POST input is classified missing_required_input. Values are neither retained nor published. Header, cookie, path, other POST bodies, unsafe unpaid POST, credential-like required names, and undeclared contracts remain unmeasured. Public output contains aggregate events, distinct secret-keyed actor counts, controlled source labels, and canonical routes only. Construction proves neither input validity, buyer intent, payment authorization, settlement, nor demand.",
       settlementEvidencePolicy: "After the declared settlement-evidence baseline, a successful paid response should carry a valid Base transaction reference in PAYMENT-RESPONSE or Payment-Receipt. Raw response headers and transaction references remain private; public output exposes only coverage counts by evidence class.",
       boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, SameDayDesk-owned monitor, crawler, and exploit-probe traffic is excluded from demand, but unidentified automated fetchers can remain. Separately reported agent-discovery observations begin at their own declared baseline and are user-agent-declared crawler or indexer fetches of known discovery and paid routes; SameDayDesk-owned monitor user agents are excluded, and the remainder are neither authenticated catalog referrals nor buyer intent. Unmatched requests are acquisition misses, not intents. Known MCP transport probes and semantic-unmatched counts remain acquisition-friction evidence and do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Payment classes are applied against those pseudonyms at read time, so known marketplace verification can be reclassified without storing a raw address. Unknown payers remain unclassified. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Settlement-reference coverage begins only at its declared baseline; raw transaction references remain on the private volume and are not returned publicly. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
     };
@@ -3224,6 +3352,7 @@ export function createCommerceTelemetry({
     storageStatus,
     appendMcpTypedDecision,
     mcpTypedAttributionForRequest,
+    mcpTypedDeclaredSourceForRequest,
     flush,
     paths: { currentPath, rotatedPath, paidEvidencePath },
   };

@@ -89,19 +89,21 @@ test("default Goose YAML keeps live merchant URL and empty headers", () => {
   assert.doesNotMatch(mergeSafe, /name: developer/);
 });
 
-test("optional declared-source YAML is not default and does not claim merchant attribution", () => {
+test("optional declared-source YAML is not default and does not claim identity", () => {
   const optional = readUtf8(join(GOOSE_ROOT, "goose.config.with-declared-source.yaml"));
   assert.match(optional, /X-SameDayDesk-Agent-Source: goose-native-v1/);
-  assert.match(optional, /not merchant-allowlisted/);
-  assert.match(optional, /do not claim merchant attribution/i);
+  assert.match(optional, /attribution-only|caller-declared/i);
+  assert.doesNotMatch(optional, /not merchant-allowlisted/);
   assert.match(optional, /Do not use this file as the default install/);
   const install = readUtf8(join(GOOSE_ROOT, "INSTALL.txt"));
   const readme = readUtf8(join(GOOSE_ROOT, "README.md"));
   for (const text of [install, readme]) {
     assert.match(text, /goose\.config\.isolated\.yaml/);
     assert.doesNotMatch(text, /cp goose\/goose\.config\.with-declared-source\.yaml/);
-    assert.match(text, /not\s+merchant-allowlisted/);
+    assert.doesNotMatch(text, /not\s+merchant-allowlisted/);
   }
+  const telemetry = readUtf8(join(REPO_ROOT, "commerce-events.mjs"));
+  assert.match(telemetry, /\["goose-native-v1", "goose-native"\]/);
 });
 
 test("deeplink and session flag stay header-free silent install", () => {

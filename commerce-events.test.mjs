@@ -15,6 +15,7 @@ import {
   classifyCommerceDiscoverySourceSplit,
   classifyCommerceResult,
   classifyCommerceRoute,
+  classifyExtractBatchRequestConstruction,
   classifyPaymentFailureCode,
   COMMERCE_COVERAGE_COMPLETE,
   COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW,
@@ -97,6 +98,10 @@ test("agent discovery sources reduce user agents to controlled labels", () => {
   assert.equal(classifyDeclaredAgentDiscoverySource(" AWS-AGENTCORE-V1 "), "aws-agentcore");
   assert.equal(classifyDeclaredAgentDiscoverySource("agentcash-v1"), "agentcash");
   assert.equal(classifyDeclaredAgentDiscoverySource(" AGENTCASH-V1 "), "agentcash");
+  assert.equal(classifyDeclaredAgentDiscoverySource("claude-code-marketplace-v1"), "claude-code-marketplace");
+  assert.equal(classifyDeclaredAgentDiscoverySource(" CLAUDE-CODE-MARKETPLACE-V1 "), "claude-code-marketplace");
+  assert.equal(classifyDeclaredAgentDiscoverySource("goose-native-v1"), "goose-native");
+  assert.equal(classifyDeclaredAgentDiscoverySource(" GOOSE-NATIVE-V1 "), "goose-native");
   assert.equal(classifyDeclaredAgentDiscoverySource("unknown-client"), null);
   assert.deepEqual(classifyCommerceDiscoverySourceSplit({
     declaredHeader: "agent-skills",
@@ -113,7 +118,164 @@ test("agent discovery sources reduce user agents to controlled labels", () => {
     { value: "agentverse-a2a-v1", source: "agentverse" },
     { value: "aws-agentcore-v1", source: "aws-agentcore" },
     { value: "agentcash-v1", source: "agentcash" },
+    { value: "claude-code-marketplace-v1", source: "claude-code-marketplace" },
+    { value: "goose-native-v1", source: "goose-native" },
   ]);
+});
+
+test("published Claude and Goose declared sources retain on HTTP without becoming demand", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-runtime-source-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "test-secret",
+    agentDiscoverySince: "2020-01-01T00:00:00.000Z",
+    agentSourceDetailSince: "2020-01-01T00:00:00.000Z",
+  });
+
+  function run({ declaredSource, ip, requestPath = "/extract", status = 402, userAgent = "curl/8.0" }) {
+    const listeners = new Map();
+    const req = {
+      path: requestPath,
+      url: requestPath === "/extract" ? "/extract?url=https%3A%2F%2Fexample.com" : requestPath,
+      method: "GET",
+      headers: {
+        "user-agent": userAgent,
+        "x-samedaydesk-agent-source": declaredSource,
+      },
+      query: requestPath === "/extract" ? { url: "https://example.com" } : {},
+      ip,
+      socket: {},
+    };
+    const res = {
+      statusCode: status,
+      once(name, listener) { listeners.set(name, listener); },
+      getHeader() { return undefined; },
+    };
+    telemetry.middleware(req, res, () => {});
+    listeners.get("finish")?.();
+  }
+
+  run({ declaredSource: "claude-code-marketplace-v1", ip: "203.0.113.21" });
+  run({ declaredSource: " CLAUDE-CODE-MARKETPLACE-V1 ", ip: "203.0.113.21" });
+  run({ declaredSource: "goose-native-v1", ip: "203.0.113.22" });
+  run({
+    declaredSource: "goose-native-v1",
+    ip: "203.0.113.23",
+    requestPath: "/openapi.json",
+    status: 200,
+  });
+  await telemetry.flush();
+
+  const stored = (await readFile(path.join(dataDir, "commerce-events.ndjson"), "utf8"))
+    .trim().split("\n").map((line) => JSON.parse(line));
+  assert.equal(stored.length, 4);
+  assert.equal(stored[0].declaredAgentDiscoverySource, "claude-code-marketplace");
+  assert.equal(stored[0].agentDiscoverySource, "claude-code-marketplace");
+  assert.equal(stored[0].discoverySourceKind, "declared_header");
+  assert.equal(stored[0].originClass, "crawler");
+  assert.equal(stored[2].declaredAgentDiscoverySource, "goose-native");
+  assert.equal(stored[2].discoverySourceKind, "declared_header");
+  for (const row of stored) {
+    assert.equal(JSON.stringify(row).includes("claude-code-marketplace-v1"), false);
+    assert.equal(JSON.stringify(row).includes("goose-native-v1"), false);
+  }
+
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.agentDiscoveryBySource["claude-code-marketplace"], 2);
+  assert.equal(snapshot.agentDiscoveryBySource["goose-native"], 2);
+  assert.equal(snapshot.agentChallengeBySource["claude-code-marketplace"], 2);
+  assert.equal(snapshot.agentChallengeBySource["goose-native"], 1);
+  assert.equal(snapshot.agentSourceFunnel["claude-code-marketplace"].paidSuccesses, 0);
+  assert.equal(snapshot.agentSourceFunnel["claude-code-marketplace"].independentPaidSuccesses, 0);
+  assert.equal(snapshot.agentSourceFunnel["goose-native"].independentPaidSuccessActors, 0);
+  assert.equal(JSON.stringify(snapshot).includes("claude-code-marketplace-v1"), false);
+  assert.equal(JSON.stringify(snapshot).includes("goose-native-v1"), false);
+  const coverage = describeRetentionCoverage({
+    generatedAtMs: Date.parse(snapshot.generatedAt),
+    requestedWindowDays: 1,
+    retainedObservationStartMs: Date.parse(stored[0].ts),
+    retainedObservationEndMs: Date.parse(stored.at(-1).ts),
+    retainedParseableEventCount: stored.length,
+    baselines: { requestConstruction: Date.parse("2020-01-01T00:00:00.000Z") },
+  });
+  assert.equal(coverage.retainedParseableEventCount, 4);
+  assert.equal(coverage.integrityStatus, COMMERCE_INTEGRITY_OK);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("unknown malformed and spoofed declared sources cannot mint ownership", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-runtime-source-hostile-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "test-secret",
+    internalToken: "test-owner-token-with-at-least-32-bytes",
+    agentDiscoverySince: "2020-01-01T00:00:00.000Z",
+  });
+
+  function run(headers, ip = "203.0.113.40") {
+    const listeners = new Map();
+    telemetry.middleware({
+      path: "/extract",
+      url: "/extract?url=https%3A%2F%2Fexample.com",
+      method: "GET",
+      headers: { "user-agent": "curl/8.0", ...headers },
+      query: { url: "https://example.com" },
+      ip,
+      socket: {},
+    }, {
+      statusCode: 402,
+      once(name, listener) { listeners.set(name, listener); },
+      getHeader() { return undefined; },
+    }, () => {});
+    listeners.get("finish")?.();
+  }
+
+  run({ "x-samedaydesk-agent-source": "unknown-runtime-v1" });
+  run({ "x-samedaydesk-agent-source": "" });
+  run({ "x-samedaydesk-agent-source": "   " });
+  run({ "x-samedaydesk-agent-source": "claude-code-marketplace-v1; owner=true" });
+  run({ "x-samedaydesk-agent-source": ["claude-code-marketplace-v1", "goose-native-v1"] });
+  run({ "x-samedaydesk-agent-source": { source: "claude-code-marketplace-v1" } });
+  run({ "x-samedaydesk-agent-source": "independent-customer" });
+  run({
+    "x-samedaydesk-agent-source": "claude-code-marketplace-v1",
+    "x-samedaydesk-internal": "spoofed-not-the-token",
+  });
+  run({
+    "user-agent": "SameDayDesk-Monitor/claimed-not-proven",
+    "x-samedaydesk-agent-source": "goose-native-v1",
+  });
+  await telemetry.flush();
+
+  const stored = (await readFile(path.join(dataDir, "commerce-events.ndjson"), "utf8"))
+    .trim().split("\n").map((line) => JSON.parse(line));
+  assert.equal(stored.length, 9);
+  for (const row of stored.slice(0, 7)) {
+    assert.equal(row.declaredAgentDiscoverySource, null);
+    assert.equal(row.discoverySourceKind, "none");
+    assert.equal(row.originClass, "external");
+  }
+  assert.equal(stored[7].declaredAgentDiscoverySource, "claude-code-marketplace");
+  assert.equal(stored[7].originClass, "crawler");
+  assert.equal(stored[8].declaredAgentDiscoverySource, "goose-native");
+  assert.equal(stored[8].originClass, "owner_monitor");
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.agentDiscoveryBySource["claude-code-marketplace"], 1);
+  assert.equal(snapshot.agentDiscoveryBySource["goose-native"], undefined);
+  assert.equal(snapshot.agentSourceFunnel["claude-code-marketplace"].independentPaidSuccesses, 0);
+  const encoded = JSON.stringify({ stored, snapshot });
+  assert.equal(encoded.includes("test-owner-token-with-at-least-32-bytes"), false);
+  assert.equal(encoded.includes("spoofed-not-the-token"), false);
+  assert.equal(encoded.includes("claimed-not-proven"), false);
+  assert.equal(encoded.includes("independent-customer"), false);
+  for (const row of stored) {
+    const attribution = sanitizeSettlementSourceDeliveryAttribution(row);
+    assert.equal(attribution.originVerification, "unverified");
+    assert.equal(attribution.discoverySourceVerification, "unverified");
+    assert.equal(attribution.customerDemand, "unknown");
+    assert.equal(attribution.buyerValidOutput, "unknown");
+  }
+  await rm(dataDir, { recursive: true, force: true });
 });
 
 test("declared AgenticTrade handoff enters the paid-route funnel without exposing the source token", async () => {
@@ -581,6 +743,17 @@ test("route classification preserves useful intent without recording opaque path
     route: "/schemas/stateful-wallet-policy-conformance-v1.json",
     kind: "discovery",
     matched: true,
+  });
+  assert.equal(classifyCommerceRoute("/extract").kind, "paid");
+  assert.deepEqual(classifyCommerceRoute("/extract/batch"), {
+    route: "/extract/batch",
+    kind: "paid",
+    matched: true,
+  });
+  assert.deepEqual(classifyCommerceRoute("/extract/other"), {
+    route: "/extract/*",
+    kind: "unmatched",
+    matched: false,
   });
   assert.equal(classifyCommerceRoute("/work/opportunity-preflight").kind, "paid");
   assert.equal(classifyCommerceRoute("/distribution/agent-discoverability-audit").kind, "paid");
@@ -1269,6 +1442,160 @@ test("unpaid paid-POST requests do not persist application telemetry", async () 
   ));
   assert.equal(contents, "");
   await rm(dataDir, { recursive: true, force: true });
+});
+
+test("unpaid POST /extract/batch still persists challenge and invalid-body rows", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-unpaid-extract-batch-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "test-secret",
+    requestConstructionSince: "2020-01-01T00:00:00.000Z",
+    agentDiscoverySince: "2020-01-01T00:00:00.000Z",
+  });
+  const secretUrl = "https://private.example/do-not-retain";
+  function run({ statusCode, body, headers = {} }) {
+    const listeners = new Map();
+    telemetry.middleware({
+      path: "/extract/batch",
+      url: "/extract/batch",
+      method: "POST",
+      headers: { "content-type": "application/json", ...headers },
+      query: {},
+      body,
+      ip: "203.0.113.94",
+      socket: {},
+    }, {
+      statusCode,
+      once(name, listener) { listeners.set(name, listener); },
+      getHeader() { return undefined; },
+    }, () => {});
+    listeners.get("finish")?.();
+  }
+  run({
+    statusCode: 402,
+    body: { urls: [secretUrl, "https://beta.example/"] },
+    headers: { "x-samedaydesk-agent-source": "agent-skills-v1" },
+  });
+  run({ statusCode: 400, body: { urls: "not-an-array" } });
+  run({ statusCode: 400, body: {} });
+  await telemetry.flush();
+  const rows = (await readFile(telemetry.paths.currentPath, "utf8"))
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line));
+  assert.equal(rows.length, 3);
+  assert.equal(rows.every((row) => row.route === "/extract/batch"), true);
+  assert.equal(rows.every((row) => row.kind === "paid"), true);
+  assert.equal(rows.every((row) => row.matched === true), true);
+  assert.equal(rows.every((row) => row.method === "POST"), true);
+  assert.equal(rows[0].status, 402);
+  assert.equal(rows[0].result, "challenge");
+  assert.equal(rows[0].requestConstruction, "constructed");
+  assert.equal(rows[0].requestConstructionRequiredKeyCount, 1);
+  assert.equal(rows[0].declaredAgentDiscoverySource, "agent-skills");
+  assert.equal(rows[0].paymentPresent, false);
+  assert.equal(rows[1].status, 400);
+  assert.equal(rows[1].result, "validation_failure");
+  assert.equal(rows[1].requestConstruction, "missing_required_input");
+  assert.equal(rows[2].requestConstruction, "missing_required_input");
+  const raw = await readFile(telemetry.paths.currentPath, "utf8");
+  assert.equal(raw.includes("private.example"), false);
+  assert.equal(raw.includes(secretUrl), false);
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.constructedRequestEvents, 1);
+  assert.deepEqual({ ...snapshot.constructedRequestByRoute }, { "/extract/batch": 1 });
+  assert.equal(snapshot.agentSourceFunnel["agent-skills"].challengeActors, 1);
+  assert.equal(JSON.stringify(snapshot).includes("declaredAgentDiscoverySource"), false);
+  assert.equal(JSON.stringify(snapshot).includes("private.example"), false);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("historical unmatched /extract/* rows stay unmatched and are not backfilled as batch", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-extract-star-legacy-"));
+  const start = new Date(Date.now() - 60_000).toISOString();
+  const legacy = privacySafeEvent({
+    ts: start,
+    actor: "bbbbbbbbbbbbbbbbbbbbbbbb",
+    originClass: "external",
+    agentDiscoverySource: null,
+    method: "POST",
+    route: "/extract/*",
+    kind: "unmatched",
+    matched: false,
+    queryKeys: [],
+    requestConstruction: "not_measured",
+    status: 402,
+    result: "unmatched",
+  });
+  await seedEventFiles(dataDir, { current: [legacy] });
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "test-secret",
+    requestConstructionSince: start,
+    agentDiscoverySince: start,
+  });
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.unmatchedRequests["/extract/*"], 1);
+  assert.equal(snapshot.byRoute["/extract/*"], 1);
+  assert.equal(snapshot.byRoute["/extract/batch"], undefined);
+  assert.equal(snapshot.constructedRequestEvents, 0);
+  assert.equal(snapshot.constructedRequestByRoute["/extract/batch"], undefined);
+  const stored = JSON.parse(await readFile(path.join(dataDir, "commerce-events.ndjson"), "utf8"));
+  assert.equal(stored.route, "/extract/*");
+  assert.equal(stored.kind, "unmatched");
+  assert.equal(stored.matched, false);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("extract-batch body construction inspects urls bounds without retaining values", () => {
+  for (const body of [
+    { urls: [42] }, { urls: [true] }, { urls: ["not-a-url"] },
+    { urls: ["http://example.com"] }, { urls: ["https://127.0.0.1"] },
+    { urls: ["https://u:p@example.com"] },
+    { urls: ["https://example.com"], fields: ["nonexistent"] },
+    { urls: ["https://example.com"], fields: [] },
+    { urls: ["https://example.com"], fields: ["title", "title"] },
+    { urls: ["https://example.com"], extra: true },
+    { urls: ["https://example.com/" + "x".repeat(3000)] },
+  ]) {
+    assert.deepEqual(classifyExtractBatchRequestConstruction(body), {
+      status: "missing_required_input", requiredKeyCount: 1,
+    }, JSON.stringify(body));
+  }
+  assert.deepEqual(classifyExtractBatchRequestConstruction({
+    urls: ["https://alpha.example/", "https://beta.example/"],
+  }), { status: "constructed", requiredKeyCount: 1 });
+  assert.deepEqual(classifyExtractBatchRequestConstruction({ urls: ["https://one.example/"] }), {
+    status: "constructed",
+    requiredKeyCount: 1,
+  });
+  assert.deepEqual(classifyExtractBatchRequestConstruction({
+    urls: ["https://a.example/", "https://b.example/", "https://c.example/", "https://d.example/", "https://e.example/"],
+  }), { status: "constructed", requiredKeyCount: 1 });
+  assert.deepEqual(classifyExtractBatchRequestConstruction({ urls: [] }), {
+    status: "missing_required_input",
+    requiredKeyCount: 1,
+  });
+  assert.deepEqual(classifyExtractBatchRequestConstruction({ urls: ["https://too-many.example/"].concat(Array.from({ length: 5 }, () => "https://x.example/")) }), {
+    status: "missing_required_input",
+    requiredKeyCount: 1,
+  });
+  assert.deepEqual(classifyExtractBatchRequestConstruction({ urls: ["  "] }), {
+    status: "missing_required_input",
+    requiredKeyCount: 1,
+  });
+  assert.deepEqual(classifyExtractBatchRequestConstruction({ urls: "https://example.com" }), {
+    status: "missing_required_input",
+    requiredKeyCount: 1,
+  });
+  assert.deepEqual(classifyExtractBatchRequestConstruction(null), {
+    status: "missing_required_input",
+    requiredKeyCount: 1,
+  });
+  assert.deepEqual(classifyExtractBatchRequestConstruction(["https://example.com"]), {
+    status: "missing_required_input",
+    requiredKeyCount: 1,
+  });
 });
 
 test("semantic unmatched classification is high precision and excludes technical misses", () => {
@@ -2857,6 +3184,8 @@ const WRITER_AGENT_DISCOVERY_SOURCES = [
   "agentictrade",
   "agentverse",
   "aws-agentcore",
+  "claude-code-marketplace",
+  "goose-native",
 ];
 
 const WRITER_PAYMENT_FAILURE_CODES = [
@@ -2906,6 +3235,7 @@ const WRITER_ROUTE_PATHS = [
   "/platforms/methodology",
   "/alerts",
   "/extract",
+  "/extract/batch",
   "/read",
   "/scan",
   "/schemaforge",
@@ -3188,6 +3518,8 @@ test("classifier outputs are exactly the retained writer vocabularies", () => {
     classifyDeclaredAgentDiscoverySource("agentverse-a2a-v1"),
     classifyDeclaredAgentDiscoverySource("aws-agentcore-v1"),
     classifyDeclaredAgentDiscoverySource("agentcash-v1"),
+    classifyDeclaredAgentDiscoverySource("claude-code-marketplace-v1"),
+    classifyDeclaredAgentDiscoverySource("goose-native-v1"),
   ];
   for (const source of classifierSources) {
     assert.equal(WRITER_AGENT_DISCOVERY_SOURCES.includes(source), true, source);
@@ -3400,6 +3732,14 @@ const CROSS_FIELD_MISMATCHES = [
   ["POST constructed request", (end) => ({
     ...constructedCrawlerEvent(end),
     method: "POST",
+  })],
+  ["constructed POST extract-batch with zero required keys", (end) => ({
+    ...constructedCrawlerEvent(end),
+    method: "POST",
+    route: "/extract/batch",
+    queryKeys: [],
+    requestConstruction: "constructed",
+    requestConstructionRequiredKeyCount: 0,
   })],
   ["parsed credential without paymentActor", (end) => ({
     ...sourcedPaidSuccessEvent(end),
@@ -4292,6 +4632,125 @@ test("production shutdown helper rejects undrained or failed lifecycle visibly",
     commerceTelemetry: { async flush() { throw new Error("reviewer-writer-error"); } },
     timeoutMs: 5,
   }));
+});
+
+test("typed MCP declared source is untrusted metadata separate from owner-validation proof", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-typed-declared-source-"));
+  const internalToken = "internal-token-for-declared-source-c30-0001";
+  const marker = "release-canary-declared-source-c30-01";
+  try {
+    const telemetry = createCommerceTelemetry({
+      dataDir,
+      secret: "typed-declared-source-secret",
+      internalToken,
+      writerProcessCount: 1,
+      mcpTypedSince: "2026-01-01T00:00:00.000Z",
+    });
+    assert.equal(telemetry.mcpTypedDeclaredSourceForRequest({
+      headers: { "x-samedaydesk-agent-source": "agent-skills-v1" },
+    }), "agent-skills");
+    assert.equal(telemetry.mcpTypedDeclaredSourceForRequest({
+      headers: { "x-samedaydesk-agent-source": "Agent-Skills-V1" },
+    }), "agent-skills");
+    assert.equal(telemetry.mcpTypedDeclaredSourceForRequest({
+      headers: { "x-samedaydesk-agent-source": "agentictrade-v1" },
+    }), "agentictrade");
+    assert.equal(telemetry.mcpTypedDeclaredSourceForRequest({
+      headers: { "x-samedaydesk-agent-source": "not-a-real-source" },
+    }), null);
+    assert.equal(telemetry.mcpTypedDeclaredSourceForRequest({
+      headers: { "x-samedaydesk-agent-source": ["agent-skills-v1"] },
+    }), null);
+    assert.equal(telemetry.mcpTypedDeclaredSourceForRequest({
+      headers: { "x-samedaydesk-agent-source": { value: "agent-skills-v1" } },
+    }), null);
+    assert.equal(telemetry.mcpTypedDeclaredSourceForRequest({
+      headers: {},
+    }), null);
+    assert.equal(telemetry.mcpTypedDeclaredSourceForRequest({
+      headers: { "x-samedaydesk-agent-source": "agent-skills-v1,agent-skills-v1" },
+    }), null);
+    const hostileHeaders = {
+      get "x-samedaydesk-agent-source"() { throw new Error("HEADER_MUST_NOT_ESCAPE"); },
+    };
+    assert.equal(telemetry.mcpTypedDeclaredSourceForRequest({ headers: hostileHeaders }), null);
+
+    const withHeader = telemetry.mcpTypedAttributionForRequest({
+      headers: {
+        "x-samedaydesk-internal": internalToken,
+        "x-samedaydesk-validation-marker": marker,
+        "x-samedaydesk-agent-source": "agent-skills-v1",
+      },
+    });
+    assert.equal(withHeader.classification, "validation");
+    assert.equal(withHeader.evidence, "internal_token");
+    assert.equal(Object.hasOwn(withHeader, "declaredAgentDiscoverySource"), false);
+
+    await telemetry.appendMcpTypedDecision(
+      typedChallengeDecision({ credentialState: "absent" }),
+      null,
+      "agent-skills-v1",
+    );
+    await telemetry.appendMcpTypedDecision(
+      typedChallengeDecision({ credentialState: "absent" }),
+      withHeader,
+      "agent-skills",
+    );
+    await telemetry.appendMcpTypedDecision(
+      typedChallengeDecision({ credentialState: "absent" }),
+      null,
+      "arbitrary-source-do-not-store",
+    );
+    await telemetry.appendMcpTypedDecision(
+      typedChallengeDecision({ credentialState: "absent" }),
+      null,
+      ["agent-skills-v1"],
+    );
+    await telemetry.appendMcpTypedDecision(
+      typedChallengeDecision({ credentialState: "absent" }),
+    );
+    const mutated = "agent-skills-v1";
+    const pending = telemetry.appendMcpTypedDecision(
+      typedChallengeDecision({ credentialState: "absent" }),
+      null,
+      mutated,
+    );
+    await pending;
+    await telemetry.flush();
+    const raw = await readFile(telemetry.paths.currentPath, "utf8");
+    const rows = raw.trim().split("\n").filter(Boolean).map(JSON.parse);
+    assert.equal(rows.length, 6);
+    assert.equal(isCanonicalMcpTypedCommerceEvent(rows[0]), true);
+    assert.equal(rows[0].declaredAgentDiscoverySource, "agent-skills");
+    assert.equal(Object.hasOwn(rows[0], "requestAttribution"), false);
+    assert.equal(rows[1].declaredAgentDiscoverySource, "agent-skills");
+    assert.equal(rows[1].requestAttribution.evidence, "internal_token");
+    assert.equal(Object.hasOwn(rows[1].requestAttribution, "proof"), false);
+    assert.equal(Object.hasOwn(rows[2], "declaredAgentDiscoverySource"), false);
+    assert.equal(Object.hasOwn(rows[3], "declaredAgentDiscoverySource"), false);
+    assert.equal(Object.hasOwn(rows[4], "declaredAgentDiscoverySource"), false);
+    assert.equal(rows[5].declaredAgentDiscoverySource, "agent-skills");
+    assert.equal(raw.includes("agent-skills-v1"), false);
+    assert.equal(raw.includes(marker), false);
+    assert.equal(raw.includes(internalToken), false);
+    assert.equal(rows.every((row) => row.demand === false && row.revenue === false && row.accounting === false), true);
+
+    const snapshot = await telemetry.snapshot({ days: 30 });
+    assert.equal(snapshot.mcpTyped.byDeclaredSource["agent-skills"], 3);
+    assert.equal(snapshot.agentSourceFunnel?.["agent-skills"], undefined);
+    assert.equal(JSON.stringify(snapshot).includes("agent-skills-v1"), false);
+
+    const legacy = adaptMcpTypedDecisionToCommerceEvent(
+      typedChallengeDecision({ credentialState: "absent" }),
+    );
+    assert.equal(isCanonicalMcpTypedCommerceEvent(legacy), true);
+    assert.equal(Object.hasOwn(legacy, "declaredAgentDiscoverySource"), false);
+    for (const invalid of [null, undefined, "", "agent-skills-v1", [], {}, 1]) {
+      assert.equal(isCanonicalMcpTypedCommerceEvent({ ...legacy, declaredAgentDiscoverySource: invalid }), false);
+    }
+  } finally {
+    await rm(dataDir, { recursive: true, force: true });
+  }
 });
 
 test("writer process gate accepts only the safe integer 1", async () => {

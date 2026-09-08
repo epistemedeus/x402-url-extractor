@@ -53,6 +53,21 @@ const TYPED_COMMERCE_KEYS = Object.freeze([
   "v",
 ]);
 const ATTRIBUTED_COMMERCE_KEYS = Object.freeze([...TYPED_COMMERCE_KEYS, "requestAttribution"]);
+const DECLARED_SOURCE_KEY = "declaredAgentDiscoverySource";
+const DECLARED_SOURCE_LABELS = new Set([
+  "agent-skills",
+  "agentictrade",
+  "agentverse",
+  "aws-agentcore",
+  "agentcash",
+  "claude-code-marketplace",
+  "goose-native",
+]);
+const SOURCED_COMMERCE_KEYS = Object.freeze([...TYPED_COMMERCE_KEYS, DECLARED_SOURCE_KEY]);
+const ATTRIBUTED_SOURCED_COMMERCE_KEYS = Object.freeze([
+  ...ATTRIBUTED_COMMERCE_KEYS,
+  DECLARED_SOURCE_KEY,
+]);
 
 const CLOSED_TOOLS = Object.freeze(new Set([
   "agent_discoverability_audit",
@@ -316,11 +331,25 @@ function canonicalAttribution(attribution) {
   };
 }
 
+function declaredSourceHolds(record) {
+  return typeof record.declaredAgentDiscoverySource === "string"
+    && DECLARED_SOURCE_LABELS.has(record.declaredAgentDiscoverySource);
+}
+
 // Classifies one already-parsed ledger record. Returns "match" for a row
 // carrying this reconciliation's digest, "skip" for well-formed unrelated
 // rows, or throws a Rejection. Fail-closed on hostile property access.
 function classifyRecord(record, digest) {
   try {
+    if (exactKeys(record, ATTRIBUTED_SOURCED_COMMERCE_KEYS)) {
+      if (!declaredSourceHolds(record)) reject("non_canonical_typed_row");
+      const attribution = canonicalAttribution(record.requestAttribution);
+      if (attribution === null) reject("invalid_request_attribution");
+      if (attribution.markerDigest !== digest) return "skip";
+      const rowError = typedRowRejection(record);
+      if (rowError !== null) reject(rowError);
+      return "match";
+    }
     if (exactKeys(record, ATTRIBUTED_COMMERCE_KEYS)) {
       const attribution = canonicalAttribution(record.requestAttribution);
       if (attribution === null) reject("invalid_request_attribution");
@@ -328,6 +357,12 @@ function classifyRecord(record, digest) {
       const rowError = typedRowRejection(record);
       if (rowError !== null) reject(rowError);
       return "match";
+    }
+    if (exactKeys(record, SOURCED_COMMERCE_KEYS)) {
+      if (!declaredSourceHolds(record)) reject("non_canonical_typed_row");
+      const rowError = typedRowRejection(record);
+      if (rowError !== null) reject(rowError);
+      return "skip";
     }
     if (exactKeys(record, TYPED_COMMERCE_KEYS)) {
       const rowError = typedRowRejection(record);

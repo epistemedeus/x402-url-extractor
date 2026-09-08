@@ -83,6 +83,15 @@ test("derives the repository's domain-separated release-canary digest exactly", 
   assert.match(digest, /^[0-9a-f]{64}$/);
 });
 
+test("offline marker source vocabulary matches every runtime declared label", async () => {
+  const { listDeclaredAgentDiscoverySources } = await import("./commerce-events.mjs");
+  for (const { source } of listDeclaredAgentDiscoverySources()) {
+    const row = canonicalRow({ declaredAgentDiscoverySource: source });
+    const result = reconcileMcpTypedMarker({ marker: MARKER, events: jsonl(row) });
+    assert.equal(result.matchedRows, 1, source);
+  }
+});
+
 test("rejects markers outside the repository's marker grammar", () => {
   assert.equal(digestMcpTypedValidationMarker("short-marker"), null);
   assert.equal(digestMcpTypedValidationMarker("has spaces and is long enough for pattern"), null);
@@ -122,6 +131,28 @@ test("skips well-formed unrelated rows (legacy typed rows and other markers) in 
   });
   assert.equal(result.ok, true);
   assert.equal(result.matchedRows, 1);
+});
+
+test("sourced typed rows remain readable and attributed sourced rows still match", () => {
+  const sourcedLegacy = { ...legacyTypedRow(), declaredAgentDiscoverySource: "agent-skills" };
+  const sourcedMatch = canonicalRow({
+    id: randomUUID(),
+    declaredAgentDiscoverySource: "agent-skills",
+  });
+  const skipSourced = reconcileMcpTypedMarker({
+    marker: MARKER,
+    events: jsonl(sourcedLegacy, sourcedMatch),
+  });
+  assert.equal(skipSourced.ok, true);
+  assert.equal(skipSourced.matchedRows, 1);
+  assert.equal(skipSourced.row.result, "challenge");
+  assertRejected(
+    () => reconcileMcpTypedMarker({
+      marker: MARKER,
+      events: jsonl({ ...legacyTypedRow(), declaredAgentDiscoverySource: "not-allowlisted" }),
+    }),
+    "non_canonical_typed_row",
+  );
 });
 
 test("rejects zero matches and empty input", () => {
