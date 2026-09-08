@@ -1,6 +1,6 @@
 {
   "name": "samedaydesk-customer-x402-example",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "Credential-free preflight and explicitly authorized @x402/fetch purchase example for SameDayDesk POST /extract/batch and GET /extract",
   "type": "module",
@@ -21,6 +21,7 @@
   "dependencies": {
     "@x402/core": "2.16.0",
     "@x402/evm": "2.16.0",
+    "@x402/extensions": "2.16.0",
     "@x402/fetch": "2.16.0",
     "agent-payment-policy": "0.12.0",
     "viem": "2.55.11"

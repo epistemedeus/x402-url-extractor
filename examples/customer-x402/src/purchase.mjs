@@ -1,4 +1,8 @@
 import { ExactEvmScheme } from "@x402/evm";
+import {
+  PAYMENT_IDENTIFIER,
+  appendPaymentIdentifierToExtensions,
+} from "@x402/extensions/payment-identifier";
 import { wrapFetchWithPayment, x402Client } from "@x402/fetch";
 import { OUTCOMES } from "./constants.mjs";
 import { AuthorizationRefusal, assertAcceptMatchesAuthorization, assertRequestMatchesAuthorization,
@@ -8,6 +12,37 @@ import { classifyPaidResponse } from "./outcome.mjs";
 import { resolveBuyerAccount } from "./wallet.mjs";
 import { redactValue, safeJson } from "./redact.mjs";
 import { boundedFetch } from "./transport.mjs";
+
+/** Official 2.16.0 client enrichment: echo seller payment-identifier with a generated id. */
+export function paymentIdentifierClientExtension() {
+  return {
+    key: PAYMENT_IDENTIFIER,
+    async enrichPaymentPayload(paymentPayload) {
+      const extensions = paymentPayload.extensions
+        ? structuredClone(paymentPayload.extensions)
+        : {};
+      appendPaymentIdentifierToExtensions(extensions);
+      return { ...paymentPayload, extensions };
+    },
+  };
+}
+
+/** Compose the stock ExactEvmScheme client used by the example purchase path. */
+export function createCustomerX402Client({ network, signer, authorizationFilter = null } = {}) {
+  const client = new x402Client()
+    .register(network, new ExactEvmScheme(signer))
+    .registerExtension(paymentIdentifierClientExtension());
+  if (authorizationFilter) client.registerPolicy(authorizationFilter);
+  return client;
+}
+
+/**
+ * Intentionally incomplete composition that reproduces the C22 live failure:
+ * ExactEvmScheme without official payment-identifier enrichment.
+ */
+export function createBaselineExactClientWithoutPaymentIdentifier({ network, signer } = {}) {
+  return new x402Client().register(network, new ExactEvmScheme(signer));
+}
 
 function requestInitFor(auth) {
   if (auth.method === "POST") {
@@ -67,10 +102,13 @@ export async function runAuthorizedPurchase({ authorization, url, account = null
         return signature;
       },
     };
-    const client = new x402Client().register(matched.network, new ExactEvmScheme(signer))
-      .registerPolicy((version, requirements) => version === 2 ? requirements.filter(entry => {
+    const client = createCustomerX402Client({
+      network: matched.network,
+      signer,
+      authorizationFilter: (version, requirements) => version === 2 ? requirements.filter(entry => {
         try { assertAcceptMatchesAuthorization(entry, matched); return true; } catch { return false; }
-      }) : []);
+      }) : [],
+    });
 
     // Supply the inspected challenge to the official wrapper. No second unpaid
     // discovery, recovery hook, alternative scheme, or RPC helper.

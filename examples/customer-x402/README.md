@@ -14,6 +14,7 @@ runtime, generic proxy, or replacement for a private durable-state buyer.
 | `@x402/fetch` | `2.16.0` |
 | `@x402/evm` | `2.16.0` |
 | `@x402/core` | `2.16.0` |
+| `@x402/extensions` | `2.16.0` (payment-identifier client enrichment) |
 | `viem` | `2.55.11` |
 | `agent-payment-policy` | `0.12.0` (single-page output field check only) |
 

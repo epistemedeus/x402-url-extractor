@@ -1,4 +1,4 @@
-/** Live SameDayDesk extract offer defaults observed on merchant 1.23.44. */
+/** Live SameDayDesk extract offer defaults observed on merchant 1.23.45. */
 export const LIVE_ORIGIN = "https://agents.samedaydesk.com";
 export const LIVE_EXTRACT_PATH = "/extract";
 export const LIVE_EXTRACT_BATCH_PATH = "/extract/batch";

@@ -394,6 +394,30 @@ test("copyable batch CLI paths use fixture transport without auto-loading wallet
   assert.match(help.stdout, /never touches a wallet/);
 });
 
+test("official purchase attaches payment-identifier when seller declares it", async () => {
+  const auth = normalizeAuthorization(DEFAULT_BATCH_AUTHORIZATION);
+  let paymentHeader = null;
+  const base = createBatchFixtureFetch({ authorization: auth });
+  const fetchImpl = async (input, init) => {
+    const request = input instanceof Request ? input : new Request(input, init);
+    if (request.headers.has("payment-signature")) {
+      paymentHeader = request.headers.get("payment-signature");
+    }
+    return base.fetchImpl(input, init);
+  };
+  const result = await runAuthorizedPurchase({
+    authorization: auth,
+    privateKey: FIXTURE_PRIVATE_KEY,
+    fetchImpl,
+    approve: true,
+  });
+  assert.equal(result.outcome, OUTCOMES.USEFUL_DELIVERED);
+  assert.ok(paymentHeader);
+  const payload = JSON.parse(Buffer.from(paymentHeader, "base64").toString("utf8"));
+  assert.match(payload.extensions?.["payment-identifier"]?.info?.id || "", /^[A-Za-z0-9_-]{16,128}$/);
+  assert.equal(payload.extensions["payment-identifier"].info.required, true);
+});
+
 test("owned homepage fixture exists for future live trial and is not auto-executed", () => {
   const fixture = JSON.parse(readFileSync(join(PKG, "fixtures/authorization-batch-homepages.json"), "utf8"));
   const auth = normalizeAuthorization(fixture);

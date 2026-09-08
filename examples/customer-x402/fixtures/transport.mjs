@@ -1,4 +1,5 @@
 import { encodePaymentRequiredHeader, encodePaymentResponseHeader } from "@x402/core/http";
+import { declarePaymentIdentifierExtension } from "@x402/extensions/payment-identifier";
 
 import {
   LIVE_AMOUNT_ATOMIC,
@@ -10,7 +11,6 @@ import {
   LIVE_RECIPIENT,
 } from "../src/constants.mjs";
 import { normalizeAuthorization } from "../src/authorization.mjs";
-
 export const FIXTURE_VALID_BODY = Object.freeze({
   ok: true,
   url: "https://example.com/",
@@ -113,6 +113,9 @@ export function buildChallenge({
   asset = LIVE_ASSET,
   payTo = LIVE_RECIPIENT,
   amount = LIVE_AMOUNT_ATOMIC,
+  // Match seller free discovery: GET declares optional payment-identifier.
+  paymentIdentifierRequired = false,
+  extensions,
 } = {}) {
   return {
     x402Version: 2,
@@ -133,14 +136,20 @@ export function buildChallenge({
         extra: { name: "USD Coin", version: "2" },
       },
     ],
+    extensions: extensions ?? {
+      "payment-identifier": declarePaymentIdentifierExtension(paymentIdentifierRequired),
+    },
   };
 }
 
 export function buildBatchChallenge(overrides = {}) {
+  // Match seller free discovery: POST /extract/batch requires payment-identifier.
+  const { paymentIdentifierRequired = true, ...rest } = overrides;
   return buildChallenge({
     url: LIVE_EXTRACT_BATCH_URL,
     amount: LIVE_BATCH_AMOUNT_ATOMIC,
-    ...overrides,
+    paymentIdentifierRequired,
+    ...rest,
   });
 }
 

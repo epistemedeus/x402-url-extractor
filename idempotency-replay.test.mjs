@@ -411,3 +411,92 @@ test("in-flight claim prevents a twin POST from running a second handler", async
   assert.equal(handlerRuns, 1);
   await rm(dataDir, { recursive: true, force: true });
 });
+
+test("required replay paths classify missing identifier separately from unbounded validity", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "idempotency-classify-"));
+  const ttlMs = 60_000;
+  const nowMs = 1_700_000_000_000;
+  const replay = createIdempotencyReplay({
+    dataDir,
+    secret: "test-secret",
+    ttlMs,
+    now: () => nowMs,
+    routes: new Set(["/extract/batch"]),
+    requiredReplayPaths: new Set(["/extract/batch"]),
+    publicUrl: "https://agents.samedaydesk.com",
+  });
+
+  function response() {
+    return fakeResponse();
+  }
+
+  const missingIdPayment = Buffer.from(JSON.stringify({
+    x402Version: 2,
+    accepted: {
+      scheme: "exact",
+      network: "eip155:8453",
+      asset,
+      amount: "10000",
+      payTo,
+      maxTimeoutSeconds: 300,
+    },
+    payload: {
+      authorization: {
+        from: payer,
+        validBefore: String(Math.floor(nowMs / 1000) + 30),
+      },
+      signature: "0xsigned",
+    },
+    extensions: { "payment-identifier": { info: { required: true } } },
+  })).toString("base64");
+
+  const missingRes = response();
+  let next = false;
+  await replay.middleware({
+    method: "POST",
+    path: "/extract/batch",
+    originalUrl: "/extract/batch",
+    rawBody: Buffer.from("{}"),
+    headers: {
+      "payment-signature": missingIdPayment,
+      host: "agents.samedaydesk.com",
+      "x-forwarded-proto": "https",
+    },
+    protocol: "http",
+  }, missingRes, () => { next = true; });
+  assert.equal(next, false);
+  assert.equal(missingRes.statusCode, 400);
+  assert.deepEqual(JSON.parse(missingRes.body), {
+    ok: false,
+    error: "payment_identifier_required",
+    charged: false,
+  });
+
+  const unboundedPayment = encodedPayment({ id: "bounded_order_1234567890" });
+  const decoded = JSON.parse(Buffer.from(unboundedPayment, "base64").toString("utf8"));
+  decoded.payload.authorization.validBefore = String(Math.floor(nowMs / 1000) + Math.floor(ttlMs / 1000) + 120);
+  const unboundedHeader = Buffer.from(JSON.stringify(decoded)).toString("base64");
+  const unboundedRes = response();
+  next = false;
+  await replay.middleware({
+    method: "POST",
+    path: "/extract/batch",
+    originalUrl: "/extract/batch",
+    rawBody: Buffer.from("{}"),
+    headers: {
+      "payment-signature": unboundedHeader,
+      host: "agents.samedaydesk.com",
+      "x-forwarded-proto": "https",
+    },
+    protocol: "http",
+  }, unboundedRes, () => { next = true; });
+  assert.equal(next, false);
+  assert.equal(unboundedRes.statusCode, 400);
+  assert.deepEqual(JSON.parse(unboundedRes.body), {
+    ok: false,
+    error: "bounded_payment_validity_required",
+    charged: false,
+  });
+
+  await rm(dataDir, { recursive: true, force: true });
+});
