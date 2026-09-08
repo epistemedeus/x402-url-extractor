@@ -1,6 +1,6 @@
 {
   "name": "samedaydesk-customer-x402-example",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "description": "Credential-free preflight and explicitly authorized @x402/fetch purchase example for SameDayDesk POST /extract/batch and GET /extract",
   "type": "module",
@@ -16,7 +16,8 @@
     "preflight:get": "node bin/cli.mjs --get --authorization ./fixtures/authorization.json",
     "test": "node --test test/*.test.mjs",
     "purchase": "node bin/cli.mjs --approve",
-    "purchase:get": "node bin/cli.mjs --approve"
+    "purchase:get": "node bin/cli.mjs --approve",
+    "reconcile": "node bin/cli.mjs --reconcile"
   },
   "dependencies": {
     "@x402/core": "2.16.0",

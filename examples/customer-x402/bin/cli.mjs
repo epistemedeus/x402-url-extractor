@@ -7,10 +7,16 @@ import {
   LIVE_EXTRACT_BATCH_URL,
   LIVE_EXTRACT_URL,
 } from "../src/constants.mjs";
+import {
+  AttemptReceiptError,
+  readAttemptReceipt,
+  safeAttemptJson,
+} from "../src/attempt-receipt.mjs";
 import { AuthorizationRefusal, normalizeAuthorization } from "../src/authorization.mjs";
 import { BatchAdmissionError } from "../src/batch-admission.mjs";
 import { printPreflight, runPreflight } from "../src/preflight.mjs";
-import { printPurchase, runAuthorizedPurchase } from "../src/purchase.mjs";
+import { printAttemptArtifact, printPurchase, runAuthorizedPurchase } from "../src/purchase.mjs";
+import { ReconcileError, reconcileAttemptReceipt } from "../src/reconcile.mjs";
 import { safeJson } from "../src/redact.mjs";
 import { resolveBuyerAccount } from "../src/wallet.mjs";
 
@@ -30,12 +36,22 @@ Explicit approved purchase (customer-owned wallet injection required):
   npm run purchase -- --approve --authorization ./fixtures/authorization-batch.json --private-key-env CUSTOMER_X402_PRIVATE_KEY
   npm run purchase:get -- --approve --authorization ./fixtures/authorization.json --private-key-env CUSTOMER_X402_PRIVATE_KEY
 
+Safer purchase with customer-owned unsigned attempt receipt (opt-in):
+  npm run purchase -- --approve --authorization ./fixtures/authorization-batch.json \\
+    --private-key-env CUSTOMER_X402_PRIVATE_KEY --attempt-receipt ./attempt-receipt.json
+
+Read-only reconcile of a preserved attempt receipt (no wallet; explicit RPC required):
+  npm run reconcile -- --reconcile --attempt-receipt ./attempt-receipt.json --rpc-url https://example-rpc.invalid
+
 Notes:
   - Default commands never read wallet credentials, sign, send payment headers, or pay.
   - Default route is POST ${LIVE_EXTRACT_BATCH_URL} with fixture public HTTPS URLs.
   - Local batch admission runs before any fetch or wallet lookup.
   - --approve binds exact HTTPS URL, method, body bytes, network, asset, recipient,
     amount cap, and buyer-required output before invoking @x402/fetch.
+  - Without --attempt-receipt, unsigned EIP-3009 nonce/validBefore are not retained.
+  - With --attempt-receipt, identity is persisted before paid send; write failure aborts send.
+  - --reconcile is read-only: authorizationState/finality only; never retry/unlock/respend.
   - Authorization rejects mutated body bytes after approval; preflight and paid
     attempts send the same bytes.
   - HTTP payment credentials are never transplanted into mcp:// resources.
@@ -57,18 +73,24 @@ function parseArgs(argv) {
     approve: false,
     help: false,
     get: false,
+    reconcile: false,
     url: null,
     authorizationPath: null,
     privateKeyEnv: null,
+    attemptReceiptPath: null,
+    rpcUrl: null,
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "--help" || arg === "-h") args.help = true;
     else if (arg === "--approve") args.approve = true;
+    else if (arg === "--reconcile") args.reconcile = true;
     else if (arg === "--get") args.get = true;
     else if (arg === "--url") args.url = argv[++i];
     else if (arg === "--authorization") args.authorizationPath = argv[++i];
     else if (arg === "--private-key-env") args.privateKeyEnv = argv[++i];
+    else if (arg === "--attempt-receipt") args.attemptReceiptPath = argv[++i];
+    else if (arg === "--rpc-url") args.rpcUrl = argv[++i];
     else throw new Error(`unknown argument: ${arg}`);
   }
   return args;
@@ -77,6 +99,31 @@ function parseArgs(argv) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) usage(0);
+
+  if (args.reconcile) {
+    if (!args.attemptReceiptPath) {
+      throw new Error("--reconcile requires --attempt-receipt <file>");
+    }
+    if (!args.rpcUrl) {
+      throw new Error("--reconcile requires --rpc-url <url>");
+    }
+    if (args.approve || args.privateKeyEnv) {
+      throw new Error("--reconcile refuses wallet/approve flags");
+    }
+    const receipt = readAttemptReceipt(args.attemptReceiptPath);
+    const result = await reconcileAttemptReceipt({
+      receipt,
+      rpcUrl: args.rpcUrl,
+    });
+    printAttemptArtifact(result);
+    const ok = result.decision === "unused_expired" ||
+      result.decision === "unused_within_window" ||
+      result.decision === "used_settlement_matched_unfinalized" ||
+      result.decision === "used_settlement_confirmed" ||
+      result.decision === "used_settlement_finalized" ||
+      result.decision === "used_unmatched_settlement";
+    process.exit(ok ? 0 : 2);
+  }
 
   if (!args.approve) {
     let authorization;
@@ -116,6 +163,7 @@ async function main() {
     url: args.url ?? authorization.url,
     loadAccount: () => resolveBuyerAccount({ privateKey: process.env[args.privateKeyEnv] }),
     approve: true,
+    attemptReceiptPath: args.attemptReceiptPath ? resolve(args.attemptReceiptPath) : null,
   });
   printPurchase(result);
   const ok = result.outcome === "valid_delivered" ||
@@ -129,6 +177,18 @@ main().catch((error) => {
     console.error(safeJson({
       outcome: "authorization_refused",
       message: error.message,
+      field: error.field,
+      walletAccessed: false,
+      paymentSigned: false,
+      paymentSent: false,
+    }));
+    process.exit(2);
+  }
+  if (error instanceof AttemptReceiptError || error instanceof ReconcileError) {
+    console.error(safeAttemptJson({
+      outcome: "unknown",
+      message: error.message,
+      code: error.code,
       field: error.field,
       walletAccessed: false,
       paymentSigned: false,

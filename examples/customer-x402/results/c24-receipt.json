@@ -1,0 +1,36 @@
+{
+  "schema": "samedaydesk.customer-x402.c24-receipt.v1",
+  "assignment": "C24 public attempt receipt + read-only reconcile",
+  "branch": "codex/public-attempt-receipt-20260907",
+  "baseline": {
+    "commit": "eb70f396cb283347ec7a885d1c0838c160555206"
+  },
+  "example": {
+    "package": "samedaydesk-customer-x402-example",
+    "version": "0.2.2",
+    "priorVersion": "0.2.1"
+  },
+  "merchant": {
+    "package": "x402-merchant",
+    "version": "1.23.45",
+    "runtimeChange": false
+  },
+  "node": "v22.23.2",
+  "umask": "0022",
+  "checks": {
+    "exampleTests": "67 pass / 1 skipped live",
+    "merchantPretest": "13 pass",
+    "merchantTests": "592 pass / 1 skipped",
+    "exampleAudit": "0 vulnerabilities",
+    "merchantAudit": "0 vulnerabilities",
+    "packDryRun": "merchant 1.23.45 + example 0.2.2",
+    "diffCheck": "clean"
+  },
+  "limits": [
+    "No live merchant purchase or funded-wallet RPC experimentation",
+    "No retry/unlock/respend mutation, funding, or private buyer port",
+    "No merchant runtime/schema change",
+    "No default-branch push, merge, deploy, or npm publication"
+  ],
+  "outcome": "opt-in secret-free EIP-3009 attempt receipt before paid send + read-only authorizationState reconcile"
+}
