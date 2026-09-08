@@ -23,6 +23,8 @@ const GOOSE_FILES = [
   "session-flag.txt",
   "extract.recipe.yaml",
   "extract.workflow.md",
+  "record.recipe.yaml",
+  "record.workflow.md",
 ];
 
 function readUtf8(path) {
@@ -121,6 +123,26 @@ test("recipe pins extract and extract_batch discovery without a wrapper paywall"
   assert.match(recipe, /available_tools:\n      - extract\n      - extract_batch/);
   assert.match(recipe, /not authorization/);
   assert.match(recipe, /uri: "https:\/\/agents\.samedaydesk\.com\/mcp"/);
+});
+
+test("record recipe is offline CLI mapping and does not attach paid extract tools", () => {
+  const recipe = readUtf8(join(GOOSE_ROOT, "record.recipe.yaml"));
+  const workflow = readUtf8(join(GOOSE_ROOT, "record.workflow.md"));
+  assert.match(recipe, /title: SameDayDesk explicit record mapping/);
+  assert.match(recipe, /Do not fetch, pay, infer entities/);
+  assert.match(recipe, /npm run record/);
+  assert.match(recipe, /node bin\/record\.mjs/);
+  assert.doesNotMatch(recipe, /available_tools:/);
+  assert.doesNotMatch(recipe, /type: streamable_http/);
+  assert.doesNotMatch(recipe, /uri: "https:\/\/agents\.samedaydesk\.com\/mcp"/);
+  assert.match(recipe, /Do not call extract, extract_batch, or purchase/);
+  assert.match(recipe, /charged true is not useful-output proof/);
+  assert.match(workflow, /goose recipe validate goose\/record\.recipe\.yaml/);
+  assert.match(workflow, /mktemp -d/);
+  assert.match(workflow, /fixtures\/record\/product-jsonld/);
+  assert.match(workflow, /fixtures\/record\/org-contact/);
+  assert.match(workflow, /If `goose` is not installed, record that exact limit/);
+  assert.doesNotMatch(workflow, /\brm -rf|\brmSync|reinstall|~\/\.config\/goose/);
 });
 
 test("docs distinguish goose info, omitted fixture loader, and live inventory discovery", () => {

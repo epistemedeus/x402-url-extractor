@@ -1,0 +1,9 @@
+# Goose recipe for offline explicit-record mapping only.
+# No merchant MCP extension: this recipe must not call extract or extract_batch.
+# Do not run it against a live paid model in this packaging check.
+# Mapping uses the public customer CLI. No wrapper, wallet, or API key.
+version: 1.0.0
+title: SameDayDesk explicit record mapping
+description: "Offline Goose workflow: map already-held extract JSON into buyer records with explicit JSON Pointers and a local schema. Do not fetch, pay, infer entities, or treat payment as useful output."
+instructions: "Use the public customer record CLI from a full repository checkout after npm ci in examples/customer-x402. Required flags are --input, --mapping, --schema, and --out. --out must be a fresh or empty directory. Run node bin/record.mjs or npm run record with those four flags only. Copied fixture commands use fixtures/record/product-jsonld and fixtures/record/org-contact. Copy exit 0 as all-valid, exit 1 as useful partial, and exit 2 as usage, unsupported mapping or schema, or zero usable records. Preserve records.json, report.json, missing-paths.json, provenance pointers, missing paths, unmapped keys, invalidRecords, and unknown or failed source accounting. JSON-LD is a source statement, not identity or product truth. Implicit selection among Product or sameAs candidates is unsupported; follow the buyer's explicit pointer and item cardinality. Do not invent pointers, entities, or schema properties. Do not fetch URLs. Do not call extract, extract_batch, or purchase. Do not send payment headers. charged true is not useful-output proof. Copy the actual networkUsed, credentialsUsed, evalUsed, and llmUsed report flags; they describe the CLI transform, not any host model execution."
+prompt: "Map the caller-supplied already-held extract JSON with the public npm run record CLI. Do not fetch, pay, or infer missing fields."

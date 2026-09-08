@@ -27,7 +27,7 @@ function runChecker(home, extraArgs = []) {
   return result;
 }
 
-test("official Hermes skill_utils discovers both portable skills from an isolated drop-in", () => {
+test("official Hermes skill_utils discovers all three portable skills from an isolated drop-in", () => {
   const home = mkdtempSync(join(tmpdir(), "samedaydesk-hermes-dropin-"));
   try {
     const result = runChecker(home);
@@ -37,11 +37,13 @@ test("official Hermes skill_utils discovers both portable skills from an isolate
     assert.equal(receipt.mode, "drop_in");
     assert.equal(receipt.hermes_home, home);
     assert.notEqual(receipt.hermes_home, REAL_HERMES);
-    assert.deepEqual(Object.keys(receipt.skills).sort(), ["page-change", "web-extract"]);
+    assert.deepEqual(Object.keys(receipt.skills).sort(), ["explicit-record", "page-change", "web-extract"]);
     assert.equal(receipt.payment_executed, false);
     assert.equal(receipt.model_execution, false);
     assert.equal(receipt.skills["page-change"].scan_verdict, "safe");
     assert.equal(receipt.skills["page-change"].community_install_allowed_without_force, true);
+    assert.equal(receipt.skills["explicit-record"].scan_verdict, "safe");
+    assert.equal(receipt.skills["explicit-record"].community_install_allowed_without_force, true);
     assert.equal(receipt.skills["web-extract"].scan_verdict, "safe");
     assert.equal(receipt.skills["web-extract"].community_install_allowed_without_force, true);
     assert.equal(receipt.skills["web-extract"].prompt_truncated, true);
@@ -59,7 +61,8 @@ test("official Hermes external_dirs loads the same skills without copying into H
     const receipt = JSON.parse(result.stdout);
     assert.equal(receipt.mode, "external_dirs");
     assert.match(receipt.index_root, /plugins\/samedaydesk-x402\/skills$/);
-    assert.deepEqual(Object.keys(receipt.skills).sort(), ["page-change", "web-extract"]);
+    assert.deepEqual(Object.keys(receipt.skills).sort(), ["explicit-record", "page-change", "web-extract"]);
+    assert.equal(receipt.skills["explicit-record"].scan_verdict, "safe");
     const config = readFileSync(join(home, "config.yaml"), "utf8");
     assert.match(config, /external_dirs:/);
     assert.equal(receipt.project_skills_dirs.length, 0);

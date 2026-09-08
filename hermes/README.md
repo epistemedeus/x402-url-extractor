@@ -14,6 +14,7 @@ Hermes-specific format is required.
 | --- | --- | --- |
 | `web-extract` | Construct one unpaid bounded `POST /extract/batch` or `GET /extract` | No. Stop at live 402 unless a separate customer-owned signer is explicitly approved. |
 | `page-change` | Compare two already delivered batch JSON files | No. Offline. Fixtures first. |
+| `explicit-record` | Project held extract JSON using buyer-supplied pointers and schema | No. Offline CLI; preserve partial and invalid outcomes. |
 
 These skills do not implement an x402 or MPP signer. This package verifies
 discovery, not Hermes-wide payment capability. User-owned signing stays in

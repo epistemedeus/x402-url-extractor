@@ -1,4 +1,4 @@
-SameDayDesk Goose native config 0.1.1
+SameDayDesk Goose native config 0.1.2
 Merchant https://agents.samedaydesk.com/mcp
 
 Goose must already be installed. This directory does not install Goose,
@@ -13,6 +13,13 @@ GOOSE_TELEMETRY_OFF=1 GOOSE_DISABLE_KEYRING=1 goose info -v
 
 `goose info -v` reads that isolated config. It does not open the MCP
 connection and is not live tool discovery.
+
+Offline record recipe (same isolated profile, no model, no fetch):
+
+GOOSE_TELEMETRY_OFF=1 GOOSE_DISABLE_KEYRING=1 goose recipe validate goose/record.recipe.yaml
+
+If goose is not installed, record that exact limit. Do not install Goose
+from this directory.
 
 To stop using the profile: unset GOOSE_PATH_ROOT. The temporary directory
 is retained. No recursive cleanup command is provided.

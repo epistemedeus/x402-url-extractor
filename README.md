@@ -1003,7 +1003,10 @@ Discovery is unpaid. Payment stays on the live SameDayDesk 402. Existing
 scoped buyer authority may be used when it already covers the exact live
 method, body, and terms. Listing and install grant none. Unknown payment outcomes reconcile
 rather than retry. Installation is not proof of model invocation, payment,
-or demand. This is not a submission to Anthropic's official plugin
+or demand. For already-held extract JSON, invoke
+`/samedaydesk-extract:explicit-record` with `--input`, `--mapping`,
+`--schema`, and a fresh `--out` directory. That skill does not fetch or pay.
+This is not a submission to Anthropic's official plugin
 directory. For a credential-free HTTP preflight and explicitly authorized
 `@x402/fetch` purchase path against `POST /extract/batch` (default) and
 backward-compatible `GET /extract`, including optional before-send unsigned
@@ -1075,6 +1078,10 @@ goose session --with-streamable-http-extension "https://agents.samedaydesk.com/m
 Deeplink: [`goose/goose.deeplink.txt`](goose/goose.deeplink.txt).
 
 Maintainer packaging check: `npm run test:goose-native`.
+Offline record recipe: `goose/record.recipe.yaml` plus
+`goose/record.workflow.md`. When Goose is already installed, validate in a
+fresh isolated profile with `goose recipe validate goose/record.recipe.yaml`.
+That check is not model execution and does not fetch or pay.
 
 ## Hermes Agent skills
 
@@ -1143,7 +1150,7 @@ curl -i 'http://localhost:3000/defi/morpho-position?address=0x...' # HTTP 402
 - `package.json` — exact pinned deps (verified to install & boot).
 - `.claude-plugin/marketplace.json` — Claude Code marketplace catalog.
 - `plugins/samedaydesk-extract/` — self-contained Claude Code plugin (not Agent Plugins 1.0).
-- `goose/` — native Goose streamable_http config, recipe, and workflow copy.
+- `goose/`: native Goose streamable_http config, extract and record recipes, and workflow copy.
 - `hermes/` : isolated Hermes AgentSkills install notes and official loader checker.
 - `examples/customer-x402/` — credential-free preflight plus explicitly
   authorized `@x402/fetch` purchase example for `POST /extract/batch`
