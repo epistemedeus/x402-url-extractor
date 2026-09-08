@@ -1,6 +1,6 @@
 SameDayDesk Hermes AgentSkills install
 Merchant https://agents.samedaydesk.com
-Public skills plugins/samedaydesk-x402/skills/{web-extract,page-change}/SKILL.md
+Public skills plugins/samedaydesk-x402/skills/{web-extract,page-change,explicit-record}/SKILL.md
 
 Hermes must already be installed if you want the hub CLI. This directory
 does not install Hermes, mutate ~/.hermes, log into a model provider, or
@@ -14,7 +14,7 @@ export HERMES_HOME="$(mktemp -d "${TMPDIR:-/tmp}/samedaydesk-hermes.XXXXXX")"
 HERMES_HOME="$HERMES_HOME" HERMES_AGENT_SRC=/path/to/NousResearch/hermes-agent \
   python3 hermes/check-isolated-loader.py
 
-The checker copies the two skills and uses the official agent.skill_utils
+The checker copies all three skills and uses the official agent.skill_utils
 discovery API. It requires a fresh empty HERMES_HOME and refuses existing
 profiles, symlinks, and ~/.hermes or its descendants. It does not call a model.
 

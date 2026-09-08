@@ -150,13 +150,13 @@ def main(argv: list[str] | None = None) -> int:
             found.update(_discover(api, directory))
         index_root = plugin_skills
     else:
-        for name in ("web-extract", "page-change"):
+        for name in ("web-extract", "page-change", "explicit-record"):
             dest = skills_dir / name
             shutil.copytree(plugin_skills / name, dest)
         found = _discover(api, skills_dir)
         index_root = skills_dir
 
-    required = {"web-extract", "page-change"}
+    required = {"web-extract", "page-change", "explicit-record"}
     missing = sorted(required - set(found))
     if missing:
         _die(f"official discovery missed {missing} under {index_root}")

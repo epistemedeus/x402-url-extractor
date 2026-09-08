@@ -16,6 +16,8 @@ plugin. Do not load the repository root as a plugin.
   `GET /extract?url=` / `GET /read?url=` when appropriate.
 - `skills/page-change/SKILL.md` compares two already delivered batch JSON
   files offline. It does not fetch, pay, retry, or schedule.
+- `skills/explicit-record/SKILL.md` maps already-held extract JSON with the
+  public record CLI. It does not fetch or pay.
 
 The `X-SameDayDesk-Agent-Source: agent-plugins-v1` header is public package
 data, not a credential. Agent Plugins 1.0 forbids secrets in `headers`.
@@ -52,7 +54,9 @@ plugins/samedaydesk-x402/
 ├── skills/
 │   ├── web-extract/
 │   │   └── SKILL.md
-│   └── page-change/
+│   ├── page-change/
+│   │   └── SKILL.md
+│   └── explicit-record/
 │       └── SKILL.md
 └── test/
     └── official-schemas/

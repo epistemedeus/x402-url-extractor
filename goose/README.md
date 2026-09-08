@@ -58,7 +58,21 @@ observations do not establish identity, independent use, or demand.
 
 Workflow copy: `extract.workflow.md`. Recipe: `extract.recipe.yaml` (report
 extract and extract_batch metadata only; do not call paid tools from this
-package).
+package). Offline record mapping: `record.workflow.md` and
+`record.recipe.yaml` (public `npm run record` CLI; do not fetch or pay).
+
+Validate the record recipe in a fresh isolated profile when Goose is already
+installed:
+
+```bash
+export GOOSE_PATH_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/samedaydesk-goose.XXXXXX")"
+mkdir "$GOOSE_PATH_ROOT/config"
+cp goose/goose.config.isolated.yaml "$GOOSE_PATH_ROOT/config/config.yaml"
+GOOSE_TELEMETRY_OFF=1 GOOSE_DISABLE_KEYRING=1 goose recipe validate goose/record.recipe.yaml
+```
+
+If `goose` is absent, record that exact limit. Do not install Goose from this
+directory. `goose recipe validate` is not model execution.
 
 HTTP customer preflight and explicitly authorized `@x402/fetch` purchase for
 `POST /extract/batch` (default) and `GET /extract`, including optional

@@ -262,6 +262,29 @@ test("web-extract skill is the product skill and stays constructible", () => {
   assert.doesNotMatch(markdown, /2026-07-28/);
 });
 
+test("explicit-record skill is portable offline mapping and keeps unknowns explicit", () => {
+  const skillPath = join(PLUGIN_ROOT, "skills/explicit-record/SKILL.md");
+  const markdown = readFileSync(skillPath, "utf8");
+  const { fields, body } = parseSkill(markdown);
+  assert.equal(fields.name, "explicit-record");
+  assert.match(fields.name, SKILL_NAME_PATTERN);
+  assert.ok(fields.description.length <= 1024);
+  assert.match(fields.description, /JSON Pointers/);
+  assert.match(fields.description, /Do not fetch, pay/);
+  assert.match(body, /npm run record --/);
+  assert.match(body, /fixtures\/record\/product-jsonld\/delivery\/extract-batch\.json/);
+  assert.match(body, /fixtures\/record\/org-contact\/delivery\/extract\.json/);
+  assert.match(body, /provenance\.fields/);
+  assert.match(body, /Not proof of legal existence/);
+  assert.match(body, /sameAs/);
+  assert.match(body, /networkUsed/);
+  assert.match(body, /customer-x402/);
+  assert.doesNotMatch(body, /Authorization:|X-PAYMENT|Bearer |api[_-]key/i);
+  assert.doesNotMatch(markdown, /allowed-tools/);
+  assert.doesNotMatch(markdown, /2026-07-28/);
+  assert.equal(markdown.includes("../"), false);
+});
+
 test("package files stay inside the plugin root and omit secrets or 2026-07-28 claims", () => {
   const files = walkFiles(PLUGIN_ROOT);
   const relativeFiles = files.map((file) => relative(PLUGIN_ROOT, file).split(sep).join("/")).sort();
@@ -269,9 +292,17 @@ test("package files stay inside the plugin root and omit secrets or 2026-07-28 c
   assert.ok(relativeFiles.includes("mcp.json"));
   assert.ok(relativeFiles.includes("skills/web-extract/SKILL.md"));
   assert.ok(relativeFiles.includes("skills/page-change/SKILL.md"));
+  assert.ok(relativeFiles.includes("skills/explicit-record/SKILL.md"));
   assert.ok(relativeFiles.includes("README.md"));
   assert.ok(relativeFiles.includes("LICENSE"));
-  const portable = ["plugin.json", "mcp.json", "skills/web-extract/SKILL.md", "LICENSE"];
+  const portable = [
+    "plugin.json",
+    "mcp.json",
+    "skills/web-extract/SKILL.md",
+    "skills/page-change/SKILL.md",
+    "skills/explicit-record/SKILL.md",
+    "LICENSE",
+  ];
   for (const name of portable) {
     const text = readFileSync(join(PLUGIN_ROOT, name), "utf8");
     for (const needle of FORBIDDEN_SUBSTRINGS) {

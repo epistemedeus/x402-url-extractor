@@ -1,8 +1,9 @@
 # samedaydesk-extract
 
 Self-contained Claude Code plugin. It binds the canonical SameDayDesk
-Streamable HTTP MCP and one extract skill. Discovery is unpaid. Payment stays
-on the live merchant 402.
+Streamable HTTP MCP, one extract skill, and one offline explicit-record skill.
+Discovery is unpaid. Mapping does not fetch or pay. Payment stays on the live
+merchant 402.
 
 This folder is the plugin root. The marketplace catalog lives at the merchant
 repository root in `.claude-plugin/marketplace.json`. Do not load the
@@ -19,6 +20,9 @@ repository root as a plugin. This is not the Agent Plugins 1.0 package in
   (1–5 public HTTPS URLs plus explicit fields) or `GET /extract?url=` / MCP
   `extract` for a single page, then stops at the live 402 unless the buyer
   explicitly authorizes payment.
+- `skills/explicit-record/SKILL.md` maps already-held extract JSON with the
+  public record CLI, explicit JSON Pointers, and a local schema. It does not
+  fetch or pay.
 
 The header `X-SameDayDesk-Agent-Source: claude-code-marketplace-v1` is a
 declared source label. It is not a credential. The merchant may bucket that
@@ -56,7 +60,9 @@ plugins/samedaydesk-extract/
 ├── .mcp.json
 ├── LICENSE
 ├── README.md
-└── skills/web-extract/SKILL.md
+└── skills/
+    ├── web-extract/SKILL.md
+    └── explicit-record/SKILL.md
 ```
 
 Claude Code copies this directory into its plugin cache. The plugin does not
@@ -83,6 +89,10 @@ Then invoke `/samedaydesk-extract:web-extract` with one public HTTPS URL, or
 unless current buyer authority already covers the exact method, body, and live
 terms. Listing and install grant none. Unknown payment outcomes reconcile; do
 not retry from this plugin alone.
+
+For already-held extract JSON, invoke `/samedaydesk-extract:explicit-record`
+with `--input`, `--mapping`, `--schema`, and a fresh `--out` directory. That
+skill does not fetch or pay.
 
 Until the public branch exists, add a local git clone of this repository
 (the directory that contains `.git` and `.claude-plugin/marketplace.json`):

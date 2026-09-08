@@ -9,7 +9,7 @@ const PLUGIN_ROOT = join(REPO_ROOT, "plugins", "samedaydesk-extract");
 const AGENT_PLUGIN_ROOT = join(REPO_ROOT, "plugins", "samedaydesk-x402");
 const MARKETPLACE_NAME = "samedaydesk-claude";
 const PLUGIN_NAME = "samedaydesk-extract";
-const PLUGIN_VERSION = "0.1.1";
+const PLUGIN_VERSION = "0.1.2";
 const LIVE_MCP_URL = "https://agents.samedaydesk.com/mcp";
 const LIVE_EXTRACT_URL = "https://agents.samedaydesk.com/extract";
 const LIVE_HOMEPAGE = "https://agents.samedaydesk.com/";
@@ -20,6 +20,7 @@ const PORTABLE_PLUGIN_FILES = [
   ".claude-plugin/plugin.json",
   ".mcp.json",
   "skills/web-extract/SKILL.md",
+  "skills/explicit-record/SKILL.md",
   "README.md",
   "LICENSE",
 ];
@@ -255,7 +256,37 @@ test("web-extract skill keeps exact inputs, unpaid discovery, and separate payme
   assert.doesNotMatch(markdown, /X-PAYMENT|PAYMENT-SIGNATURE|Bearer |wallet seed/);
 });
 
-test("plugin is self-contained: five portable files and no extra components", () => {
+test("explicit-record skill maps held observations with the public CLI and keeps unknowns explicit", () => {
+  const markdown = readUtf8(join(PLUGIN_ROOT, "skills", "explicit-record", "SKILL.md"));
+  const { fields, body } = parseSkill(markdown);
+  assert.equal(fields.name, "explicit-record");
+  assert.ok(fields.description.length > 0);
+  assert.ok(fields.description.length <= 1024);
+  assert.match(fields.description, /JSON Pointers/);
+  assert.match(fields.description, /Do not fetch, pay/);
+  assert.match(body, /npm run record --/);
+  assert.match(body, /fixtures\/record\/product-jsonld\/delivery\/extract-batch\.json/);
+  assert.match(body, /fixtures\/record\/org-contact\/delivery\/extract\.json/);
+  assert.match(body, /node bin\/record\.mjs --input <json> --mapping <json> --schema <json> --out <dir>/);
+  assert.match(body, /Exit 0/);
+  assert.match(body, /Exit 1/);
+  assert.match(body, /Exit 2/);
+  assert.match(body, /provenance\.fields/);
+  assert.match(body, /missing-paths\.json/);
+  assert.match(body, /Not proof of legal existence/);
+  assert.match(body, /sameAs/);
+  assert.match(body, /networkUsed/);
+  assert.match(body, /charged: true/);
+  assert.match(body, /customer-x402/);
+  assert.match(body, /web-extract/);
+  assert.doesNotMatch(body, /purchase --/);
+  assert.doesNotMatch(markdown, /allowed-tools/);
+  assert.doesNotMatch(markdown, /X-PAYMENT|PAYMENT-SIGNATURE|Bearer |wallet seed/);
+  assert.doesNotMatch(markdown, /\.\.\//);
+  assert.equal(markdown.includes("../"), false);
+});
+
+test("plugin is self-contained: portable files and no extra components", () => {
   assert.equal(isDir(join(PLUGIN_ROOT, "hooks")), false);
   assert.equal(isDir(join(PLUGIN_ROOT, "agents")), false);
   assert.equal(isDir(join(PLUGIN_ROOT, "bin")), false);
@@ -269,6 +300,8 @@ test("plugin is self-contained: five portable files and no extra components", ()
   }
   const skillText = readUtf8(join(PLUGIN_ROOT, "skills/web-extract/SKILL.md"));
   assert.equal(skillText.includes("../"), false);
+  const recordSkill = readUtf8(join(PLUGIN_ROOT, "skills/explicit-record/SKILL.md"));
+  assert.equal(recordSkill.includes("../"), false);
   const mcp = readUtf8(join(PLUGIN_ROOT, ".mcp.json"));
   assert.equal(mcp.includes("${CLAUDE_PLUGIN_ROOT}"), false);
 });
