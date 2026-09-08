@@ -14,6 +14,8 @@ plugin. Do not load the repository root as a plugin.
 - `skills/web-extract/SKILL.md` is the packaged extraction skill and
   constructs `POST /extract/batch` for 1–5 URLs plus fields, or
   `GET /extract?url=` / `GET /read?url=` when appropriate.
+- `skills/page-change/SKILL.md` compares two already delivered batch JSON
+  files offline. It does not fetch, pay, retry, or schedule.
 
 The `X-SameDayDesk-Agent-Source: agent-plugins-v1` header is public package
 data, not a credential. Agent Plugins 1.0 forbids secrets in `headers`.
@@ -48,11 +50,17 @@ plugins/samedaydesk-x402/
 ├── LICENSE
 ├── README.md
 ├── skills/
-│   └── web-extract/
+│   ├── web-extract/
+│   │   └── SKILL.md
+│   └── page-change/
 │       └── SKILL.md
 └── test/
     └── official-schemas/
 ```
+
+Hermes Agent loads these same `SKILL.md` files as portable AgentSkills. Isolated
+install notes live in [`hermes/`](../../hermes/). Hermes discovery is not a
+second plugin format and is not payment-capable.
 
 Official schemas under `test/official-schemas/` are copies of
 `https://agent-plugins.org/schemas/1.0.0/` for offline validation. They are
