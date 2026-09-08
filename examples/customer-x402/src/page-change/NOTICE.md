@@ -15,3 +15,7 @@ NOTICE and SHA-256 pins. Source URL identity uses the in-repo public helper
 
 This directory does not contain private Pilot receipts, credentials, research
 notes, or operating policy.
+
+An optional unpaid HTTP companion may mount `POST /recipes/page-change` on the
+existing merchant. It is disabled until `PAGE_CHANGE_HTTP_ENABLED` is set and
+reuses this recipe without a second repository or paid catalog entry.

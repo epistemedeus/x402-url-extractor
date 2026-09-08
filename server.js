@@ -202,6 +202,7 @@ import {
   validateExtractBatchRequest,
   ALL_FIELDS,
 } from "./extract-batch.mjs";
+import { isPageChangeHttpPath, mountPageChangeHttp } from "./page-change-http.mjs";
 import { legacyCompatibleX402Body } from "./x402-legacy-body.mjs";
 import {
   VIBES_DISCOVERABILITY_PATH,
@@ -447,14 +448,19 @@ const app = express();
 // Railway terminates TLS before forwarding to Express. Trust exactly one proxy
 // hop so x402 payment requirements preserve the public https:// resource URL.
 app.set("trust proxy", 1);
-app.use(express.json({
+const jsonParser = express.json({
   limit: "16kb",
   type: ["application/json", "application/*+json"],
   verify(req, _res, buffer) {
     req.rawBody = Buffer.from(buffer);
   },
-}));
+});
+app.use((req, res, next) => {
+  if (isPageChangeHttpPath(req.path)) return next();
+  return jsonParser(req, res, next);
+});
 app.use(legacyCompatibleX402Body);
+mountPageChangeHttp(app);
 
 function parseCommerceWriterProcessCount(raw = process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES) {
   if (raw === undefined || raw === null || raw === "") return 1;
