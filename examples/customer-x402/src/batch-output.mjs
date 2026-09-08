@@ -4,17 +4,24 @@ import {
   LIVE_BATCH_AMOUNT_ATOMIC,
 } from "./constants.mjs";
 
-const SOURCE_STATUSES = new Set([
+export const EXTRACT_BATCH_SOURCE_STATUSES = Object.freeze([
   "pending", "success", "partial", "failure", "unknown", "skipped_duplicate",
 ]);
+const SOURCE_STATUSES = new Set(EXTRACT_BATCH_SOURCE_STATUSES);
 
 function fieldValue(object, path) {
   return path.split(".").reduce((current, key) =>
     current != null && Object.hasOwn(current, key) ? current[key] : undefined, object);
 }
 
-const TOP_FIELDS = ["ok", "product", "schemaVersion", "quote", "jobId", "jobStatus",
-  "stopReason", "partial", "sources", "accounting", "costInputs", "charged", "boundary"];
+export const EXTRACT_BATCH_TOP_FIELDS = Object.freeze([
+  "ok", "product", "schemaVersion", "quote", "jobId", "jobStatus",
+  "stopReason", "partial", "sources", "accounting", "costInputs", "charged", "boundary",
+]);
+export const EXTRACT_BATCH_SOURCE_REQUIRED_KEYS = Object.freeze([
+  "id", "source", "status", "data", "notes", "error", "provenance",
+]);
+const TOP_FIELDS = EXTRACT_BATCH_TOP_FIELDS;
 const JOB_STATUSES = new Set(["running", "completed", "completed_with_unknown", "stopped", "interrupted"]);
 const isObject = value => value !== null && typeof value === "object" && !Array.isArray(value);
 const nullableObject = value => value === null || isObject(value);
@@ -22,6 +29,10 @@ const nullableString = value => value === null || typeof value === "string";
 
 // Narrow snapshot of the public batch v0 HTTP output contract, not a general
 // schema engine. Row identity and selected-field checks below add buyer intent.
+export function assertExtractBatchSellerShape(body) {
+  assertSellerShape(body);
+}
+
 function assertSellerShape(body) {
   const require = (condition, message) => { if (!condition) throw new Error(message); };
   for (const key of TOP_FIELDS) require(Object.hasOwn(body, key), `seller field missing: ${key}`);
@@ -35,7 +46,7 @@ function assertSellerShape(body) {
   require(Array.isArray(body.sources) && body.sources.length >= 1 && body.sources.length <= 5, "invalid batch sources");
   for (const [index, row] of body.sources.entries()) {
     require(isObject(row), `sources[${index}] must be an object`);
-    for (const key of ["id", "source", "status", "data", "notes", "error", "provenance"]) {
+    for (const key of EXTRACT_BATCH_SOURCE_REQUIRED_KEYS) {
       require(Object.hasOwn(row, key), `sources[${index}] missing ${key}`);
     }
     require(nullableObject(row.data) && nullableObject(row.error) && nullableObject(row.provenance), `sources[${index}] invalid nullable object`);

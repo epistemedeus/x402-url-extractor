@@ -8,7 +8,8 @@
     "node": ">=22"
   },
   "bin": {
-    "samedaydesk-customer-x402": "./bin/cli.mjs"
+    "samedaydesk-customer-x402": "./bin/cli.mjs",
+    "samedaydesk-page-change": "./bin/page-change.mjs"
   },
   "scripts": {
     "start": "node bin/cli.mjs",
@@ -17,7 +18,8 @@
     "test": "node --test test/*.test.mjs",
     "purchase": "node bin/cli.mjs --approve",
     "purchase:get": "node bin/cli.mjs --approve",
-    "reconcile": "node bin/cli.mjs --reconcile"
+    "reconcile": "node bin/cli.mjs --reconcile",
+    "page-change": "node bin/page-change.mjs"
   },
   "dependencies": {
     "@x402/core": "2.16.0",
