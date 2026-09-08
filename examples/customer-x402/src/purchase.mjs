@@ -36,14 +36,6 @@ export function createCustomerX402Client({ network, signer, authorizationFilter 
   return client;
 }
 
-/**
- * Intentionally incomplete composition that reproduces the C22 live failure:
- * ExactEvmScheme without official payment-identifier enrichment.
- */
-export function createBaselineExactClientWithoutPaymentIdentifier({ network, signer } = {}) {
-  return new x402Client().register(network, new ExactEvmScheme(signer));
-}
-
 function requestInitFor(auth) {
   if (auth.method === "POST") {
     return {

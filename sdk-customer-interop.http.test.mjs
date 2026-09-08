@@ -8,13 +8,14 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { PAYMENT_IDENTIFIER } from "@x402/extensions/payment-identifier";
+import { ExactEvmScheme } from "@x402/evm";
+import { x402Client } from "@x402/fetch";
 import { evm as evmClient, Mppx as ClientMppx } from "mppx/client";
 import { privateKeyToAccount } from "viem/accounts";
 
 import { EXTRACT_BATCH_AMOUNT_ATOMIC, EXTRACT_BATCH_PATH } from "./extract-batch-config.mjs";
 import { mppAssetForNetwork } from "./mpp-dual-stack.mjs";
 import {
-  createBaselineExactClientWithoutPaymentIdentifier,
   runAuthorizedPurchase,
 } from "./examples/customer-x402/src/purchase.mjs";
 import {
@@ -32,6 +33,10 @@ const NETWORK = "eip155:8453";
 const MPP_SECRET = "test-secret-key-test-secret-key-32";
 const BUYER_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 const buyer = privateKeyToAccount(BUYER_KEY);
+// Negative control belongs only in the test, not the copyable customer client.
+function createBaselineExactClientWithoutPaymentIdentifier({ network, signer }) {
+  return new x402Client().register(network, new ExactEvmScheme(signer));
+}
 const mppAccount = privateKeyToAccount(
   "0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
 );
@@ -98,6 +103,17 @@ const pages = {
   "https://example.org/": { status: 200, body: "<!doctype html><title>Example Org</title><h1>Example Org</h1>" },
   "https://alpha.example/": { status: 200, body: "<!doctype html><title>Alpha</title><h1>Alpha</h1>" },
 };
+const nativeFetch = globalThis.fetch;
+globalThis.fetch = async (input, init) => {
+  const url = new URL(input instanceof Request ? input.url : String(input));
+  const page = pages[url.href];
+  if (page) {
+    writeFileSync(logPath, url.href + "\\n", { flag: "a" });
+    return new Response(page.body, { status: page.status, headers: { "content-type": "text/html" } });
+  }
+  if (url.origin === ${JSON.stringify(facilitatorUrl)}) return nativeFetch(input, init);
+  throw new Error("unexpected SDK integration outbound request: " + url.origin);
+};
 globalThis.__SAMEDAYDESK_EXTRACT_BATCH_FETCH__ = async (url) => {
   writeFileSync(logPath, url + "\\n", { flag: "a" });
   const page = pages[url];
@@ -147,7 +163,7 @@ globalThis.__SAMEDAYDESK_EXTRACT_BATCH_FETCH__ = async (url) => {
     stdio: ["ignore", "pipe", "pipe"],
   });
   let output = "";
-  await new Promise((resolve, reject) => {
+  try { await new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`startup timed out: ${output.slice(-2000)}`)), 20_000);
     const onData = (chunk) => {
       output = `${output}${chunk}`.slice(-40_000);
@@ -161,8 +177,11 @@ globalThis.__SAMEDAYDESK_EXTRACT_BATCH_FETCH__ = async (url) => {
       clearTimeout(timer);
       reject(new Error(`startup exited before listening: code=${code} signal=${signal}\n${output.slice(-4000)}`));
     });
-    child.once("error", reject);
-  });
+    child.once("error", (error) => { clearTimeout(timer); reject(error); });
+  }); } catch (error) {
+    await stopChild(child);
+    throw error;
+  }
   return { base: `http://127.0.0.1:${port}`, child, output: () => output };
 }
 
@@ -184,7 +203,7 @@ function proxyToMerchant(merchantBase) {
     const request = input instanceof Request && init == null ? input : new Request(input, init);
     const publicUrl = new URL(request.url);
     if (publicUrl.hostname !== "agents.samedaydesk.com") {
-      return fetch(request);
+      throw new Error("unexpected public client target: " + publicUrl.origin);
     }
     const body = ["GET", "HEAD"].includes(request.method) ? null : Buffer.from(await request.arrayBuffer());
     const headers = Object.fromEntries(request.headers.entries());
@@ -216,6 +235,7 @@ function proxyToMerchant(merchantBase) {
         });
       });
       req.on("error", reject);
+      req.setTimeout(15_000, () => req.destroy(new Error("local merchant request timed out")));
       if (body) req.write(body);
       req.end();
     });
@@ -481,11 +501,10 @@ test("stock x402 GET still pays with optional payment-identifier enrichment", { 
     fetchImpl,
     approve: true,
   });
-  // GET extract may return useful or valid depending on live page shape; require paid success path.
-  assert.ok(
-    [OUTCOMES.USEFUL_DELIVERED, OUTCOMES.VALID_DELIVERED, OUTCOMES.PAID_INVALID_OUTPUT].includes(result.outcome),
-    JSON.stringify(result),
-  );
+  assert.equal(result.outcome, OUTCOMES.VALID_DELIVERED, JSON.stringify(result));
+  assert.equal(result.evidence.outputValid, true);
+  assert.equal(result.evidence.outputDelivery, "useful");
+  assert.equal(result.evidence.retainedBody.title, "Example Domain");
   assert.equal(result.paymentSent, true);
   assert.equal(sawIdentifier, true);
   assert.equal(facilitator.calls.settle, 1);

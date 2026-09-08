@@ -41,6 +41,7 @@
     "qs": "6.16.0"
   },
   "devDependencies": {
-    "@agentcash/discovery": "1.7.5"
+    "@agentcash/discovery": "1.7.5",
+    "@x402/fetch": "2.16.0"
   }
 }
