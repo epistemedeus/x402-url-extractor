@@ -78,6 +78,46 @@ npm run purchase:get -- --approve \
   --private-key-env CUSTOMER_X402_PRIVATE_KEY
 ```
 
+### Optional unsigned attempt receipt (recommended for ambiguous transport)
+
+Without `--attempt-receipt`, this example does not retain the unsigned EIP-3009
+`nonce` or exact `validBefore`, so an ambiguous HTTP 400/`charged:false`
+outcome cannot be reconciled precisely against `authorizationState`. Opt in to
+persist only the secret-free payment identity **before** the paid send:
+
+```bash
+npm run purchase -- --approve \
+  --authorization ./fixtures/authorization-batch.json \
+  --private-key-env CUSTOMER_X402_PRIVATE_KEY \
+  --attempt-receipt ./attempt-receipt.json
+```
+
+Receipt write failure aborts the paid send. A later transport timeout or crash
+keeps the receipt stage (`ready_before_send` / `paid_send_dispatched`) and
+`settlementState: unknown` instead of erasing identity. The file never stores a
+signature, payment header, private key, typed-data envelope, raw response, or
+environment.
+
+### Read-only reconcile
+
+```bash
+npm run reconcile -- --reconcile \
+  --attempt-receipt ./attempt-receipt.json \
+  --rpc-url https://YOUR_EXPLICIT_RPC
+```
+
+Uses official `authorizationState(authorizer, nonce)` through a bounded viem
+JSON-RPC transport (byte limit, total timeout, finite requests, zero retries),
+pinned to an observed block. Chain-time expiry comes from that block timestamp;
+wall-clock expiry is reported separately. The observed block hash is rechecked
+after the state read; a changed or unavailable block leaves state unknown.
+Cancellation requires its own canonical successful receipt with the exact
+`AuthorizationCanceled` event, not merely a filtered log. It is distinguished from an
+exact successful `AuthorizationUsed` + single matching `Transfer`. Confirmation
+and finality require a still-matching canonical block hash, not merely a past
+height under a finalized tag. A used authorization is not delivered output and
+not permission to retry. Truncated-range absence remains unknown.
+
 Unset the key when finished. Never commit keys. Fixture keys exist only in
 local tests and are never printed.
 
@@ -115,10 +155,13 @@ Challenge bodies are capped at 64 KB; output wire bytes use the authorized limit
 dispatch keeps `paymentSent: true`, meaning possibly sent, not proved settled.
 A signer failure can leave `paymentSigned: null`. Do not rerun unknown or
 paid-invalid outcomes automatically. Signer responsiveness and wallet safety
-remain the customer's responsibility. There is no cross-process pending journal,
-cumulative budget, or crash-safe guard. Receipts retain redacted output,
-`bodyDigest`, and validation/payment-header observations, not raw payment
-headers or signatures; redaction can remove opaque output values.
+remain the customer's responsibility. Without `--attempt-receipt` there is no
+cross-process identity journal for EIP-3009 nonce/`validBefore` reconciliation.
+With `--attempt-receipt`, only the unsigned payment identity is retained for a
+separate read-only reconcile; this is not a durable budget buyer or automatic
+retry system. Receipts retain redacted output, `bodyDigest`, and
+validation/payment-header observations, not raw payment headers or signatures;
+redaction can remove opaque output values.
 
 Do not transplant HTTP payment credentials into `mcp://` resources. Official
 `@x402/mcp` exists but is out of scope here. Native Claude/Goose marketplace
@@ -150,4 +193,6 @@ This signs nothing and uses no wallet, payment, faucet, signup, or account secre
 ## Machine-readable sample
 
 See [`results/example-result.json`](results/example-result.json) for a fixture
-purchase result with truthful unverified settlement.
+purchase result with truthful unverified settlement, and
+[`results/attempt-receipt.sample.json`](results/attempt-receipt.sample.json) for
+the safer unsigned attempt-receipt shape (no secrets).

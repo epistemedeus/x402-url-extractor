@@ -1,0 +1,32 @@
+{
+  "schema": "samedaydesk.customer-x402.attempt-receipt.v1",
+  "stage": "paid_response_observed",
+  "settlementState": "observed_http_unverified",
+  "createdAt": "2026-09-08T00:00:00.000Z",
+  "updatedAt": "2026-09-08T00:00:01.000Z",
+  "scheme": "exact",
+  "assetTransferMethod": "eip3009",
+  "x402Version": 2,
+  "network": "eip155:8453",
+  "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "assetName": "USD Coin",
+  "assetVersion": "2",
+  "payer": "0x1111111111111111111111111111111111111111",
+  "payee": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+  "amountAtomic": "10000",
+  "nonce": "0xabababababababababababababababababababababababababababababababab",
+  "validAfter": "0",
+  "validBefore": "1788844800",
+  "paymentIdentifier": "pay_fixture_only_not_live_id",
+  "request": {
+    "method": "POST",
+    "url": "https://agents.samedaydesk.com/extract/batch",
+    "bodyDigest": "sha256:abababababababababababababababababababababababababababababababab"
+  },
+  "boundary": {
+    "purpose": "customer-owned unsigned EIP-3009 attempt identity for read-only reconciliation",
+    "secrets": "never stores signature, payment credential/header, private key, typed-data envelope, raw response, or environment",
+    "delivery": "chain usage is not delivered output and not permission to retry or respend",
+    "settlement": "HTTP observations remain unverified until a separate reconcile reports on-chain evidence"
+  }
+}

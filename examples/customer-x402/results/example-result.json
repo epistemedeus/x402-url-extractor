@@ -22,7 +22,7 @@
     "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
     "recipient": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
     "amountCapAtomic": "10000",
-    "bodyDigest": "sha256:fixture-only-not-a-live-digest"
+    "bodyDigest": "sha256:abababababababababababababababababababababababababababababababab"
   },
   "output": {
     "valid": true,
@@ -35,5 +35,10 @@
     "verification": "unverified",
     "note": "PAYMENT-RESPONSE was observed on the fixture transport. This example does not prove on-chain settlement."
   },
-  "boundary": "Transparent bounded @x402/fetch integration example. Not crash-safe cross-process accounting, not durable wallet enforcement, and not native Claude/Goose payment capability."
+  "attemptReceipt": {
+    "optIn": true,
+    "schema": "samedaydesk.customer-x402.attempt-receipt.v1",
+    "note": "When --attempt-receipt is set, unsigned nonce/validBefore/paymentIdentifier are persisted before paid send for a separate read-only reconcile. Chain usage still does not imply delivered output or retry permission."
+  },
+  "boundary": "Transparent bounded @x402/fetch integration example with optional unsigned attempt receipt. Not a durable-budget buyer, not automatic retry, and not native Claude/Goose payment capability."
 }
