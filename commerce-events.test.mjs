@@ -1400,6 +1400,12 @@ test("durable rare funnel evidence survives ordinary traffic rotations and strea
   assert.equal(snapshot.durableRareFunnel.boundaries.actorHashNotIndependentIdentity, true);
   const serialized = JSON.stringify(snapshot);
   assert.equal(serialized.includes(rarePaidCredential), false);
+  assert.equal(serialized.includes(rareRows[0].id), false);
+  assert.equal(serialized.includes(rareRows[0].actor), false);
+  assert.equal(serialized.includes(rareRows[0].paymentActor), false);
+  assert.equal(snapshot.durableRareFunnel.coverage.retainedObservationStart, undefined);
+  assert.equal(snapshot.durableRareFunnel.coverage.retainedObservationEnd, undefined);
+  assert.equal(snapshot.durableRareFunnel.coverage.retainedDurationWholeDays, 0);
   await rm(dataDir, { recursive: true, force: true });
 });
 
@@ -1477,6 +1483,78 @@ test("durable rare funnel captures MCP typed paid outcomes separately from strea
   assert.equal(snapshot.durableRareFunnel.paidSuccessEvents, 1);
   assert.equal(snapshot.durableRareFunnel.byCaptureProvenance.mcp_typed_adapter, 1);
   assert.equal(snapshot.parseableCredentialAttemptEvents, 0);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("durable rare funnel reloads after restart without claiming continuous history", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-rare-funnel-restart-"));
+  const options = {
+    dataDir,
+    secret: "rare-funnel-restart-secret",
+    credentialAttemptSince: "2020-01-01T00:00:00.000Z",
+  };
+  const writer = createCommerceTelemetry(options);
+  emitEvidenceTestResponse(writer, {
+    headers: { "payment-signature": "restart-unparseable-credential" },
+    statusCode: 402,
+  });
+  await writer.flush();
+
+  const restarted = createCommerceTelemetry(options);
+  const snapshot = await restarted.snapshot({ days: 90 });
+  assert.equal(snapshot.durableRareFunnel.paymentHeaderEvents, 1);
+  assert.equal(snapshot.durableRareFunnel.coverage.requestedWindowComplete, false);
+  assert.equal(snapshot.durableRareFunnel.coverage.requestedWindowCoverage, COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("an old retained rare row is not proof of uninterrupted requested-window capture", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-rare-funnel-coverage-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "rare-funnel-coverage-secret",
+    credentialAttemptSince: "2020-01-01T00:00:00.000Z",
+  });
+  emitEvidenceTestResponse(telemetry, {
+    headers: { "payment-signature": "coverage-unparseable-credential" },
+    statusCode: 402,
+  });
+  await telemetry.flush();
+  const [row] = await readRareFunnelRows(telemetry);
+  row.ts = "2020-01-01T00:00:00.000Z";
+  await writeFile(telemetry.paths.rareFunnelPath, `${JSON.stringify(row)}\n`);
+
+  const snapshot = await telemetry.snapshot({ days: 90 });
+  assert.equal(snapshot.durableRareFunnel.coverage.retainedObservationStartsBeforeRequestedWindow, true);
+  assert.equal(snapshot.durableRareFunnel.coverage.captureContinuityProven, false);
+  assert.equal(snapshot.durableRareFunnel.coverage.requestedWindowComplete, false);
+  assert.equal(snapshot.durableRareFunnel.boundaries.actorCountsAreNotOperatorCounts, true);
+  assert.equal(snapshot.durableRareFunnel.independentOperatorCount, null);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("single-writer concurrent rare appends stay parseable across bounded rotation", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-rare-funnel-concurrent-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "rare-funnel-concurrent-secret",
+    rareMaxBytes: 1,
+    credentialAttemptSince: "2020-01-01T00:00:00.000Z",
+  });
+  for (let index = 0; index < 4; index += 1) {
+    emitEvidenceTestResponse(telemetry, {
+      headers: { "payment-signature": `concurrent-unparseable-${index}` },
+      ip: `203.0.113.${120 + index}`,
+      statusCode: 402,
+    });
+  }
+  await telemetry.flush();
+  const rows = await readRareFunnelRows(telemetry);
+  assert.equal(rows.length, 2, "one current and one rotated bounded record remain");
+  const snapshot = await telemetry.snapshot({ days: 90 });
+  assert.equal(snapshot.durableRareFunnel.coverage.integrityStatus, COMMERCE_INTEGRITY_OK);
+  assert.equal(snapshot.durableRareFunnel.coverage.requestedWindowComplete, false);
+  assert.equal((await telemetry.storageStatus()).writerGate.crossProcessSafe, false);
   await rm(dataDir, { recursive: true, force: true });
 });
 
