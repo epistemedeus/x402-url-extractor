@@ -81,6 +81,7 @@ test("mounted /v0/commerce-demand.json exposes durableRareFunnel after rare capt
       COMMERCE_DATA_DIR: dataDir,
       COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
       COMMERCE_CREDENTIAL_ATTEMPT_SINCE: "2020-01-01T00:00:00.000Z",
+      NETWORK: "eip155:8453",
       MPP_SECRET_KEY: "",
       PUBLIC_URL: "https://agents.samedaydesk.com",
     },
