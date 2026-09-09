@@ -1842,8 +1842,8 @@ function rareFunnelEvidenceFromMcpTypedEvent(event) {
   if (event.paymentPresent !== true) return null;
   const tool = event.binding?.tool;
   if (typeof tool !== "string" || !MCP_TYPED_CLOSED_TOOLS.has(tool)) return null;
-  // Map closed MCP tools onto the paid /mcp classifier route. Actor remains a
-  // synthetic process-local hash key for continuity only — not an identity.
+  // Map closed MCP tools onto the paid /mcp classifier route. Actor remains an
+  // opaque per-event hash key for grouping only — not continuity or identity.
   const actor = createHash("sha256")
     .update(`mcp-typed-rare:${event.id}`)
     .digest("hex")
@@ -1952,8 +1952,14 @@ function summarizeDurableRareFunnel({
     .filter((ms) => ms !== null);
   const retainedObservationStartMs = times.length ? Math.min(...times) : null;
   const retainedObservationEndMs = times.length ? Math.max(...times) : null;
-  const complete = retainedObservationStartMs !== null
+  const retainedObservationStartsBeforeRequestedWindow = retainedObservationStartMs !== null
     && retainedObservationStartMs <= requestedWindowStartMs;
+  // A retained row predating the requested window does not prove the writer
+  // observed every moment since then. v1 has no durable continuity marker, so
+  // the full-window claim must remain unknown even when its bounded tail is old.
+  const captureContinuityProven = false;
+  const complete = captureContinuityProven
+    && retainedObservationStartsBeforeRequestedWindow;
   const windowed = retainedRecords.filter((record) => {
     const ms = eventTimestampMs(record);
     return ms !== null && ms >= requestedWindowStartMs && ms <= generatedAtMs;
@@ -1993,6 +1999,10 @@ function summarizeDurableRareFunnel({
   const integrityStatus = (currentRead.unusableRecordCount > 0 || rotatedRead.unusableRecordCount > 0)
     ? COMMERCE_INTEGRITY_UNUSABLE_RECORDS
     : COMMERCE_INTEGRITY_OK;
+  const retainedUtcBounds = conservativeRetainedUtcBounds({
+    retainedObservationStartMs,
+    retainedObservationEndMs,
+  });
   return {
     schemaVersion: RARE_FUNNEL_EVIDENCE_SCHEMA,
     captureVersion: RARE_FUNNEL_CAPTURE_VERSION,
@@ -2006,12 +2016,9 @@ function summarizeDurableRareFunnel({
       requestedWindowCoverage: complete
         ? COMMERCE_COVERAGE_COMPLETE
         : COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW,
-      retainedObservationStart: retainedObservationStartMs === null
-        ? null
-        : new Date(retainedObservationStartMs).toISOString(),
-      retainedObservationEnd: retainedObservationEndMs === null
-        ? null
-        : new Date(retainedObservationEndMs).toISOString(),
+      retainedObservationStartsBeforeRequestedWindow,
+      captureContinuityProven,
+      ...retainedUtcBounds,
       retainedParseableRecordCount: retainedRecords.length,
       integrityStatus,
       integrity: {
@@ -2030,6 +2037,7 @@ function summarizeDurableRareFunnel({
     boundaries: {
       noHistoricalBackfill: true,
       actorHashNotIndependentIdentity: true,
+      actorCountsAreNotOperatorCounts: true,
       zeroNeverMeansHistoricalZeroWhenCoverageIncomplete: true,
       rawCredentialsNeverRetained: true,
       usefulnessRemainsUnknownWithoutSeparateAuthority: true,
@@ -2043,6 +2051,8 @@ function summarizeDurableRareFunnel({
     repeatParseableCredentialAttemptActors: [...actors.values()].filter((count) => count > 1).length,
     paidSuccessEvents,
     paidSuccessActors: paidActors.size,
+    independentOperatorCount: null,
+    independentUsefulDemand: "unknown",
     paymentErrorEvents,
     paymentUnknownOrPartialEvents,
     byResult,
