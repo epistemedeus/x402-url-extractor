@@ -17,6 +17,21 @@ test("fails closed on malformed receipt keys and networks", () => {
   assert.throws(() => createCommerceTrust({ privateKey: PRIVATE_KEY, network: "base" }), /CAIP-2/);
 });
 
+test("includeTxHash only changes route extensions, not the signer identity", () => {
+  const withHash = createCommerceTrust({ privateKey: PRIVATE_KEY, network: "eip155:8453" });
+  const withoutHash = createCommerceTrust({
+    privateKey: PRIVATE_KEY,
+    network: "eip155:8453",
+    includeTxHash: false,
+  });
+  assert.equal(withHash.enabled, true);
+  assert.equal(withoutHash.enabled, true);
+  assert.equal(withoutHash.signerAddress, withHash.signerAddress);
+  assert.equal(withoutHash.keyId, withHash.keyId);
+  assert.match(withHash.keyId, /^did:pkh:eip155:8453:0x/i);
+  assert.notDeepEqual(withoutHash.routeExtensions, withHash.routeExtensions);
+});
+
 test("signs independently verifiable EIP-712 offers and receipts", async () => {
   const trust = createCommerceTrust({ privateKey: PRIVATE_KEY, network: "eip155:8453" });
   const offer = await trust.issuer.issueOffer("https://service.example/data?q=1", {
