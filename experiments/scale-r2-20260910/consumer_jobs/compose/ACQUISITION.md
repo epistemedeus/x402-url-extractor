@@ -109,3 +109,16 @@ Schema: `x402.r2.consumer.first_result_offer.v1` · `packageNote=partial_first_r
 Executed offline green bundle (spawn Heavy 01/02/06 + sibling 07; defer 03/04/05):
 see **`GREEN-BUNDLE.md`** / `node src/cli.mjs green-bundle`.
 
+## Deferred Heavy cell recheck
+
+To re-run **only** deferred Heavy cells (table-reconcile / link-index /
+replay-pack) against positive fixtures and record **actual** CLI decisions
+(without inventing pass), see **`RECHECK.md`** and:
+
+```sh
+node src/cli.mjs recheck-deferred --json
+```
+
+Schema: `x402.r2.consumer.deferred_recheck.v1`. Today expect `still_deferred`.
+Green bundle remains the buyer path until deferred clear. This status tool
+does not invent cleared cells.

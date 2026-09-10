@@ -38,6 +38,10 @@ These are **not** `unavailable_pending_heavy`. Do **not** invent Heavy pass.
 Do **not** run-as-pass on this lane. Do **not** ask this surface to “fix”
 03/04/05. Deferred to Heavy parent.
 
+**Green bundle remains the buyer path until deferred cells clear.** To
+recheck deferred cells later (record actual CLI; never invent cleared),
+use `RECHECK.md` / `recheck-deferred`.
+
 Also documented (still offered for positive path): some release-brief
 **conflict** fixtures via CLI return pass instead of conflict — external
 defect deferred to Heavy; positive release-brief remains green. This lane
@@ -120,5 +124,6 @@ release-brief conflict outcomes.
 
 - Dry first-result offer: `FIRST-RESULT.md`
 - Acquisition status (full matrix): `ACQUISITION.md`
+- Deferred Heavy cell recheck (03/04/05 truth recording): `RECHECK.md`
 - Fresh consumer wiring: `CONSUMER.md`
 - Frozen evidence: `FROZEN-E2E-PACKET-S152.md`
