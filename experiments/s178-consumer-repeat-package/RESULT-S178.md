@@ -4,7 +4,7 @@
 
 - Branch: `codex/s178-consumer-repeat-package-20260910`
 - Base: `origin/master` @ `a20c6e2d8cd716498dfe1c8d0f34985039df64cc`
-- Tip: see `git rev-parse HEAD` on this branch after push
+- Tip: `123e2730aacac2f847c4c3ea065d0a9002d362cf`
 
 ## Preserved frozen S174 tip (S179 / 6Pro review)
 
@@ -30,8 +30,11 @@
 - Product examples: positive / material partial-or-negative / repeat-input per job
 - S174 release-brief `conflict-sha-mismatch` regression preserved (CLI + import → `conflict`, not pass)
 - Clean kit: `dist/s178-consumer-repeat-kit.tgz` (Node >=22, no private receipts/logs)
+- Kit sha256: `311566fb7ee357aa7d27d1ecf0454717e78e5fd96845b8e1fcf29a11c435466f`
 
 ## First-use (cold agent)
+
+See `FIRST-USE.md`.
 
 ```bash
 cd experiments/s178-consumer-repeat-package
@@ -41,41 +44,32 @@ node bin/s178-cli.mjs run release-brief \
   --in ../s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/conflict-sha-mismatch.json \
   --clock 2026-09-10T18:00:00.000Z
 # decision=conflict
-
-node scripts/build-kit.mjs
-mkdir -p /tmp/s178-kit && tar -xzf dist/s178-consumer-repeat-kit.tgz -C /tmp/s178-kit
-cd /tmp/s178-kit/s178-consumer-repeat-kit
-node bin/s178-cli.mjs run 07 --clock 2026-09-10T18:00:00.000Z
-node bin/s178-cli.mjs run acquire --clock 2026-09-10T18:00:00.000Z
-# decision=partial, ok=true (honest; 03/04/05 remain failed slots)
 ```
 
-`ok:true` means honest completion, not business pass. See `FIRST-USE.md`.
+`ok:true` means honest completion, not business pass.
 
 ## Verification
 
 - Acceptance: `node test/acceptance.test.mjs` → OK 0 failures (Node v22)
-- Clean unpack kit: list / release-brief pass / conflict / 07 pass / acquire partial
-- Kit sha256: see `dist/SHA256.txt` after build
+- Clean unpack kit: release-brief pass / conflict / 07 pass / acquire partial
 
 ## Small owner fixes
 
-- `08` exports `DEFAULT_OPERATOR_CLOCK`, `HEAVY_RECIPE_IDS`, extended `RECIPE_STATUS`, `SIBLING_S137_*`, `runHeavyAnalyzeRecipe` compatibility shims for compose
-- Compose CLI JSON slice fix in S178 runner; kit path mirrors for `vendor/07|08` and root `s137-consumer-evidence-jobs`
+- `08` compatibility exports for compose + S137 wiring
+- Compose CLI JSON slice fix; kit path mirrors for relative imports
 
 ## Unresolved true gates
 
-- Jobs 03/04/05 still return `fail` on some synthetic positives via Heavy CLI (recorded honestly in acquire `partial`; not greenwashed)
-- Compose green-bundle / deferred-recheck remain larger API surface than thin Bot-08; status/acquire is the supported buyer entry
+- Jobs 03/04/05 still `fail` on some synthetic positives (honest acquire `partial`)
+- Compose green-bundle / deferred-recheck remain larger than thin Bot-08; acquire is supported buyer entry
 - SameDayDesk site integration remains S176-owned (untouched)
 - No default merge/deploy; draft feature PR only
 
 ## Concurrency / Heavy
 
 - Cursor = control transport + implementation owner for this outcome-complete branch
-- Same Heavy parent after S174 not resumed as interactive TUI (S174 tip frozen for 6Pro); no quota-filler sessions; no overage/reset
-- Useful concurrency evidence this wave: sequential owned compose (distinct module scopes planned; Heavy capacity reserved rather than parallel filler children)
-- Historical capacity sample from S153 preserved elsewhere: peak ~49 OS `grok --cwd`; native-child canary remains S137=2
+- S174 tip frozen for 6Pro; no Heavy quota-filler / overage / reset
+- Useful concurrency this wave: sequential owned compose (distinct scopes planned; Heavy capacity reserved)
 
 ## Non-claims
 
