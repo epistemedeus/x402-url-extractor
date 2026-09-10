@@ -1,0 +1,14 @@
+{
+  "schema": "x402.r2.record.bundle_request.v1",
+  "requestId": "bundle-partial-sibling-20260910",
+  "jobs": [
+    {
+      "id": "route-regression",
+      "inputPath": "fixtures/jobs/05-route-regression-positive.json"
+    },
+    {
+      "id": "heavy-01-not-bundled"
+    }
+  ],
+  "note": "Partial path: demo forces missing siblings for native job + includes owned_by_heavy stub. Never invent outputs."
+}

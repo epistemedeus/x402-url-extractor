@@ -1,0 +1,19 @@
+{
+  "schema": "x402.r2.record.bundle_request.v1",
+  "requestId": "bundle-positive-20260910",
+  "jobs": [
+    {
+      "id": "route-regression",
+      "inputPath": "fixtures/jobs/05-route-regression-positive.json"
+    },
+    {
+      "id": "deadline-calendar",
+      "inputPath": "fixtures/jobs/06-deadline-calendar-positive.json"
+    },
+    {
+      "id": "dependency-footprint",
+      "inputPath": "fixtures/jobs/07-dependency-footprint-positive.json"
+    }
+  ],
+  "note": "Positive path: run native 05+06+07 against embedded public/synthetic fixture pairs when siblings are present."
+}

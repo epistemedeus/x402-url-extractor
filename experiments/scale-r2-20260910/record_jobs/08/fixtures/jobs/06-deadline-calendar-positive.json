@@ -1,0 +1,56 @@
+{
+  "schema": "x402.r2.record.deadline_calendar_input.v1",
+  "calendarId": "demo-deadline-calendar-positive",
+  "title": "Deadline evidence calendar (synthetic public notices)",
+  "demo": true,
+  "sourceLabel": "synthetic-fixture",
+  "notices": [
+    {
+      "sourceId": "notice-rfp-2026",
+      "sourceRef": "https://example.test/notices/rfp-2026",
+      "title": "City RFP for civic data services",
+      "jurisdiction": "Example City, CA",
+      "publishedAt": "2026-01-10",
+      "text": "Applications are due no later than March 15, 2026. Award decision is estimated for Q2 2026. A public hearing is scheduled on or about mid-April 2026. Contract start is tentatively 2026-07-01.",
+      "statedDates": [
+        {
+          "dateRaw": "March 15, 2026",
+          "qualification": "no later than",
+          "label": "applications due"
+        },
+        {
+          "dateRaw": "Q2 2026",
+          "qualification": "estimated",
+          "label": "award decision",
+          "ambiguous": true
+        },
+        {
+          "dateRaw": "mid-April 2026",
+          "qualification": "on or about",
+          "label": "public hearing",
+          "ambiguous": true
+        },
+        {
+          "dateRaw": "2026-07-01",
+          "qualification": "tentatively",
+          "label": "contract start"
+        }
+      ]
+    },
+    {
+      "sourceId": "notice-grant-2026",
+      "sourceRef": "https://example.test/notices/grant-2026",
+      "title": "Open data grant window",
+      "jurisdiction": "State of Example",
+      "publishedAt": "2026-02-01",
+      "text": "Proposals close on 15 May 2026. Final reports are due by December 2026. Kickoff date is TBD."
+    },
+    {
+      "sourceId": "notice-comment",
+      "sourceRef": "https://example.test/notices/comment-period",
+      "title": "Public comment period",
+      "jurisdiction": "Federal example agency",
+      "text": "Comments must be received subject to agency rules by 2026-04-30. An informational webinar is expected early March 2026."
+    }
+  ]
+}

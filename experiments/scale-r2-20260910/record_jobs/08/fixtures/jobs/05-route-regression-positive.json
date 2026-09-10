@@ -1,0 +1,115 @@
+{
+  "schema": "x402.r2.record.route_regression_input.v1",
+  "reportId": "demo-route-regression-positive",
+  "title": "Public route regression (synthetic snapshot pair)",
+  "demo": true,
+  "sourceLabel": "synthetic-fixture",
+  "baseline": {
+    "label": "baseline-2026-09-01",
+    "capturedAt": "2026-09-01T00:00:00.000Z",
+    "routes": [
+      {
+        "path": "/",
+        "url": "https://example.test/",
+        "status": 200,
+        "finalUrl": "https://example.test/",
+        "accessibility": "ok",
+        "title": "Home",
+        "etag": "\"home-v1\""
+      },
+      {
+        "path": "/docs",
+        "url": "https://example.test/docs",
+        "status": 200,
+        "finalUrl": "https://example.test/docs",
+        "accessibility": "ok",
+        "title": "Docs"
+      },
+      {
+        "path": "/old-blog",
+        "url": "https://example.test/old-blog",
+        "status": 200,
+        "finalUrl": "https://example.test/old-blog",
+        "accessibility": "ok",
+        "title": "Old Blog"
+      },
+      {
+        "path": "/pricing",
+        "url": "https://example.test/pricing",
+        "status": 200,
+        "finalUrl": "https://example.test/pricing",
+        "accessibility": "ok",
+        "title": "Pricing"
+      },
+      {
+        "path": "/legacy",
+        "url": "https://example.test/legacy",
+        "status": 200,
+        "finalUrl": "https://example.test/legacy",
+        "accessibility": "ok",
+        "title": "Legacy"
+      },
+      {
+        "path": "/maintenance",
+        "url": "https://example.test/maintenance",
+        "status": 503,
+        "accessibility": "error",
+        "title": "Down"
+      }
+    ]
+  },
+  "current": {
+    "label": "current-2026-09-10",
+    "capturedAt": "2026-09-10T00:00:00.000Z",
+    "routes": [
+      {
+        "path": "/",
+        "url": "https://example.test/",
+        "status": 200,
+        "finalUrl": "https://example.test/",
+        "accessibility": "ok",
+        "title": "Home",
+        "etag": "\"home-v1\""
+      },
+      {
+        "path": "/docs",
+        "url": "https://example.test/docs",
+        "status": 301,
+        "finalUrl": "https://example.test/documentation",
+        "redirectLocation": "https://example.test/documentation",
+        "accessibility": "ok",
+        "title": "Docs Redirect"
+      },
+      {
+        "path": "/pricing",
+        "url": "https://example.test/pricing",
+        "status": 404,
+        "accessibility": "ok",
+        "title": "Missing Pricing"
+      },
+      {
+        "path": "/legacy",
+        "url": "https://example.test/legacy",
+        "statusCode": 410,
+        "accessibility": "forbidden",
+        "title": "Gone"
+      },
+      {
+        "path": "/maintenance",
+        "url": "https://example.test/maintenance",
+        "status": 200,
+        "finalUrl": "https://example.test/maintenance",
+        "accessibility": "ok",
+        "title": "Back"
+      },
+      {
+        "path": "/changelog",
+        "url": "https://example.test/changelog",
+        "status": 200,
+        "finalUrl": "https://example.test/changelog",
+        "accessibility": "ok",
+        "title": "Changelog"
+      }
+    ]
+  }
+}

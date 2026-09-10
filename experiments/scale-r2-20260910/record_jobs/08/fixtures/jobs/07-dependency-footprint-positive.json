@@ -1,0 +1,77 @@
+{
+  "schema": "x402.r2.record.dependency_footprint_input.v1",
+  "reportId": "demo-dep-footprint-positive",
+  "title": "Dependency footprint overlap (synthetic lock inventories)",
+  "demo": true,
+  "sourceLabel": "synthetic-fixture",
+  "trees": [
+    {
+      "id": "service-a",
+      "label": "service-a lock summary",
+      "lockfileFormat": "normalized-list",
+      "dependencies": [
+        {
+          "name": "lodash",
+          "version": "4.17.21",
+          "license": "MIT",
+          "dev": false
+        },
+        {
+          "name": "express",
+          "version": "4.18.2",
+          "license": "MIT",
+          "dev": false
+        },
+        {
+          "name": "semver",
+          "version": "7.5.4",
+          "license": "ISC",
+          "dev": false
+        },
+        {
+          "name": "typescript",
+          "version": "5.3.3",
+          "license": "Apache-2.0",
+          "dev": true
+        },
+        {
+          "name": "left-pad",
+          "version": "1.3.0",
+          "license": "WTFPL",
+          "dev": false
+        }
+      ]
+    },
+    {
+      "id": "service-b",
+      "label": "service-b package-lock summary",
+      "lockfileFormat": "npm-package-lock-summary",
+      "packages": {
+        "": {
+          "name": "service-b",
+          "version": "1.0.0"
+        },
+        "node_modules/lodash": {
+          "version": "4.17.20",
+          "license": "MIT"
+        },
+        "node_modules/express": {
+          "version": "4.18.2",
+          "license": "MIT"
+        },
+        "node_modules/uuid": {
+          "version": "9.0.0",
+          "license": "MIT"
+        },
+        "node_modules/debug": {
+          "version": "4.3.4"
+        },
+        "node_modules/eslint": {
+          "version": "8.56.0",
+          "license": "MIT",
+          "dev": true
+        }
+      }
+    }
+  ]
+}

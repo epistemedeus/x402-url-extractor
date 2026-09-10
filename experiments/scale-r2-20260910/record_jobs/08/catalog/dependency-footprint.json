@@ -1,0 +1,13 @@
+{
+  "id": "dependency-footprint",
+  "title": "Dependency footprint overlap",
+  "status": "ready",
+  "jobRef": "R2-RECORD-JOBS-07",
+  "packageSlot": "07",
+  "ownedBy": "pilot_source_record",
+  "schema": "x402.r2.record.dependency_footprint_overlap.v1",
+  "inputSchema": "x402.r2.record.dependency_footprint_input.v1",
+  "buildExport": "buildDependencyFootprintOverlap",
+  "defaultFixture": "jobs/07-dependency-footprint-positive.json",
+  "note": "Native-owned slot 07. Prefer sibling worktree absolute path; else relative ../07; else embedded fixture + unavailable_sibling."
+}

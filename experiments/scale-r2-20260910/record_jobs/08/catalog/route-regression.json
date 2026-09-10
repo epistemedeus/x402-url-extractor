@@ -1,0 +1,13 @@
+{
+  "id": "route-regression",
+  "title": "Public route regression report",
+  "status": "ready",
+  "jobRef": "R2-RECORD-JOBS-05",
+  "packageSlot": "05",
+  "ownedBy": "pilot_source_record",
+  "schema": "x402.r2.record.route_regression_report.v1",
+  "inputSchema": "x402.r2.record.route_regression_input.v1",
+  "buildExport": "buildRouteRegressionReport",
+  "defaultFixture": "jobs/05-route-regression-positive.json",
+  "note": "Native-owned slot 05. Prefer sibling worktree absolute path; else relative ../05; else embedded fixture + unavailable_sibling."
+}

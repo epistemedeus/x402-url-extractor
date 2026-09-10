@@ -1,0 +1,16 @@
+{
+  "name": "r2-record-jobs-08-recurring-job-bundle",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "R2-RECORD-JOBS-08 recurring job bundle over native 05..07 record jobs (fixtures only)",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "demo": "node src/cli.mjs demo",
+    "bundle": "node src/cli.mjs bundle",
+    "run": "node src/cli.mjs run"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

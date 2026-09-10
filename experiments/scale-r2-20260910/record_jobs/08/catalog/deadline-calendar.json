@@ -1,0 +1,13 @@
+{
+  "id": "deadline-calendar",
+  "title": "Deadline evidence calendar",
+  "status": "ready",
+  "jobRef": "R2-RECORD-JOBS-06",
+  "packageSlot": "06",
+  "ownedBy": "pilot_source_record",
+  "schema": "x402.r2.record.deadline_calendar.v1",
+  "inputSchema": "x402.r2.record.deadline_calendar_input.v1",
+  "buildExport": "buildDeadlineCalendar",
+  "defaultFixture": "jobs/06-deadline-calendar-positive.json",
+  "note": "Native-owned slot 06. Prefer sibling worktree absolute path; else relative ../06; else embedded fixture + unavailable_sibling."
+}

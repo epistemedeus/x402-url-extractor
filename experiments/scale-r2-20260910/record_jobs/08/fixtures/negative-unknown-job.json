@@ -1,0 +1,10 @@
+{
+  "schema": "x402.r2.record.bundle_request.v1",
+  "requestId": "bundle-negative-unknown",
+  "jobs": [
+    {
+      "id": "not-a-real-record-job"
+    }
+  ],
+  "note": "Negative: unknown job id."
+}

@@ -1,0 +1,13 @@
+{
+  "id": "heavy-02-not-bundled",
+  "title": "Record job 02 (Heavy-owned)",
+  "status": "owned_by_heavy",
+  "jobRef": "R2-RECORD-JOBS-02",
+  "packageSlot": "02",
+  "ownedBy": "heavy",
+  "schema": null,
+  "inputSchema": null,
+  "buildExport": null,
+  "defaultFixture": null,
+  "note": "owned_by_heavy / not_bundled_here. Pilot Source must not copy or rebuild Heavy 01..04 artifacts in this package."
+}
