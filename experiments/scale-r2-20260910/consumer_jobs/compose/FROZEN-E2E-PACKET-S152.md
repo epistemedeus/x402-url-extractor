@@ -90,3 +90,8 @@ URL / path-escape / missing clock / missing `--in` → wrapper **rejected** (`un
 - No publication, payment, live fetch, or investment recommendation.
 - Fixture URLs kept as data (not auto-executed).
 - No CloudAgent used.
+
+## Push tip
+
+Branch tip after freeze commits: `ed30757fdbb47ce65ae0f59e99a6159a1854ccb9`
+
