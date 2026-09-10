@@ -7,9 +7,10 @@
  * paid-endpoint / account-signup / spend-authorization can never be satisfied.
  */
 
-import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
+import { isIsoClock } from "../common/clock.mjs";
+import { isSha256Hex, sha256Hex as sha256Bytes } from "../common/hash.mjs";
 import {
   PACKET_SCHEMA,
   EVIDENCE_CLASSES,
@@ -128,9 +129,6 @@ const SECRET_HEADER_SET = new Set(SECRET_HEADER_NAMES);
 const FINDING_KIND_SET = new Set(FINDING_KINDS);
 const FORBIDDEN_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
-const CLOCK_ISO =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
-const SHA256_HEX = /^[a-f0-9]{64}$/;
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 const REFUSED_NOW = new Set(["now", "NOW", "Date.now()", "new Date()"]);
 
@@ -199,11 +197,8 @@ function hasForbiddenKey(value) {
 }
 
 export function sha256Hex(value) {
-  const input =
-    typeof value === "string" || Buffer.isBuffer(value)
-      ? value
-      : Buffer.from(canonicalJson(value));
-  return createHash("sha256").update(input).digest("hex");
+  if (typeof value === "string" || Buffer.isBuffer(value)) return sha256Bytes(value);
+  return sha256Bytes(Buffer.from(canonicalJson(value)));
 }
 
 export function canonicalJson(value) {
@@ -221,13 +216,7 @@ function sortValue(value) {
   return out;
 }
 
-export function isIsoClock(value) {
-  return typeof value === "string" && CLOCK_ISO.test(value);
-}
-
-export function isSha256Hex(value) {
-  return typeof value === "string" && SHA256_HEX.test(value);
-}
+export { isIsoClock, isSha256Hex };
 
 export function isId(value) {
   return typeof value === "string" && ID_PATTERN.test(value);

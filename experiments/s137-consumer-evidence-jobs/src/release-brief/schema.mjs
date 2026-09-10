@@ -7,10 +7,11 @@
  */
 
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { resolve as resolvePath } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { CLOCK_ISO } from "../common/clock.mjs";
+import { sha256Hex as sha256Bytes } from "../common/hash.mjs";
 import {
   DECISIONS,
   EVIDENCE_CLASSES,
@@ -139,8 +140,6 @@ export const SCHEMA_LIMITATIONS = Object.freeze([
   "Announced body text such as 'All tests passed' is not a tested-plane conclusion.",
 ]);
 
-const CLOCK_ISO =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 const SHA256_HEX = /^[a-f0-9]{64}$/;
 const HOSTILE_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 const MAX_SOURCES = 256;
@@ -148,8 +147,8 @@ const MAX_FINDINGS = 256;
 const MAX_ID = 256;
 
 export function sha256Hex(value) {
-  const input = typeof value === "string" || Buffer.isBuffer(value) ? value : JSON.stringify(value);
-  return createHash("sha256").update(input).digest("hex");
+  if (typeof value === "string" || Buffer.isBuffer(value)) return sha256Bytes(value);
+  return sha256Bytes(JSON.stringify(value));
 }
 
 export function makeIssue({ kind, code, instancePath, message, params = {} }) {

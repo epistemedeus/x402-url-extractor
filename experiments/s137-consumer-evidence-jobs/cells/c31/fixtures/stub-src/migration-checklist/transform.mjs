@@ -1,13 +1,17 @@
 /** Isolation stub for c31 CLI wiring. Copies only fields present on the fixture. */
 
 export function transform(ctx) {
-  const input = ctx.input && typeof ctx.input === "object" ? ctx.input : {};
-  const cite = ctx.sources?.[0]?.id || "in:0";
+  const bag = ctx && typeof ctx === "object" && !Array.isArray(ctx) ? ctx : {};
+  const input =
+    bag.input && typeof bag.input === "object" && !Array.isArray(bag.input) && bag.oldDoc == null
+      ? bag.input
+      : bag;
+  const cite = bag.sources?.[0]?.id || "in:0";
   const citations = [
     {
       id: cite,
-      path: ctx.inputPath || null,
-      sha256: ctx.sources?.[0]?.sha256 || null,
+      path: bag.inputPath || bag.path || null,
+      sha256: bag.sources?.[0]?.sha256 || null,
       note: "operator --in bytes; synthetic isolation fixture",
     },
   ];

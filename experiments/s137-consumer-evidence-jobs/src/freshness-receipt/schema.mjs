@@ -6,7 +6,8 @@
  * Deterministic validation only; no fetch, no invented timestamps.
  */
 
-import { createHash } from "node:crypto";
+import { CLOCK_ISO as ISO_INSTANT } from "../common/clock.mjs";
+import { sha256Text } from "../common/hash.mjs";
 import {
   PACKET_SCHEMA,
   EVIDENCE_CLASSES,
@@ -52,8 +53,6 @@ export const DECISION_PRECEDENCE = Object.freeze([
   "pass",
 ]);
 
-const ISO_INSTANT =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 const SHA256_HEX = /^[0-9a-f]{64}$/;
 const NPM_TIME_VERSION = /^time\.(v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/;
 
@@ -184,9 +183,7 @@ const SLOT_KIND = Object.freeze({
   sourceUpdatedAt: "source-update",
 });
 
-export function sha256Text(text) {
-  return createHash("sha256").update(String(text), "utf8").digest("hex");
-}
+export { sha256Text };
 
 export function makeIssue({
   kind,

@@ -4,11 +4,12 @@
  * Offline default. Wires sibling src/<artifact>/{schema,transform}.mjs when present.
  * Does not invent facts, fetch, pay, publish, or merge.
  */
-import { createHash } from "node:crypto";
 import { existsSync, lstatSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
+import { isIsoClock } from "../src/common/clock.mjs";
+import { sha256Hex } from "../src/common/hash.mjs";
 import {
   createEnvelope,
   DECISIONS,
@@ -53,7 +54,7 @@ export const SCHEMA_VALIDATE_EXPORTS = Object.freeze([
   "validateLinkIndexInput",
   "validateTableReconcileInput",
 ]);
-const CLOCK_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+
 const MAX_SOURCE_BYTES = 1_048_576;
 const MAX_DIR_SOURCES = 32;
 const OWNED_JOBS_REL = "docs/OWNED-JOBS-01-06.json";
@@ -297,7 +298,7 @@ export function parseCli(argv = process.argv.slice(2)) {
       error: "analyze requires --clock (operator-supplied ISO-8601; do not invent)",
     };
   }
-  if (!CLOCK_RE.test(clock)) {
+  if (!isIsoClock(clock)) {
     return {
       ok: false,
       help: true,
@@ -690,12 +691,37 @@ async function runAnalyze(artifact, input) {
       const transformArg = prepareTransformArgument(artifact, loadedInput, ctx);
       const caseId = fixtureCaseId(transformArg, loadedInput);
       const mod = loaded.transform.mod || {};
+      const inputRoot = loadedInput?.path
+        ? (loadedInput.kind === "directory" ? loadedInput.path : dirname(loadedInput.path))
+        : null;
+      const transformOpts = {
+        clock: ctx.clock,
+        evidenceClass: ctx.evidenceClass,
+        ...(inputRoot ? { root: inputRoot } : {}),
+      };
       if (typeof mod.transformFixtureCase === "function" && caseId) {
-        transformResult = await mod.transformFixtureCase(caseId, { clock: ctx.clock, evidenceClass: ctx.evidenceClass });
+        try {
+          transformResult = await mod.transformFixtureCase(caseId, {
+            clock: ctx.clock,
+            evidenceClass: ctx.evidenceClass,
+          });
+        } catch (fixtureErr) {
+          // Operator documents may carry caseId metadata without a synthetic case file
+          // (kit examples). Fall back to the document transform instead of failing closed.
+          const fixtureMsg = fixtureErr instanceof Error ? fixtureErr.message : String(fixtureErr);
+          limitations.push(
+            `transformFixtureCase(${caseId}) unavailable; using document transform (${fixtureMsg})`,
+          );
+          if (typeof mod.coerceToSchemaInput === "function" && transformArg && transformArg.datasets) {
+            transformResult = await loaded.transform.fn(mod.coerceToSchemaInput(transformArg), transformOpts);
+          } else {
+            transformResult = await loaded.transform.fn(transformArg, transformOpts);
+          }
+        }
       } else if (typeof mod.coerceToSchemaInput === "function" && transformArg && transformArg.datasets) {
-        transformResult = await loaded.transform.fn(mod.coerceToSchemaInput(transformArg));
+        transformResult = await loaded.transform.fn(mod.coerceToSchemaInput(transformArg), transformOpts);
       } else {
-        transformResult = await loaded.transform.fn(transformArg);
+        transformResult = await loaded.transform.fn(transformArg, transformOpts);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -931,13 +957,24 @@ function prepareTransformArgument(artifact, loadedInput, ctx) {
 
 function fixtureCaseId(value, loadedInput) {
   if (value && typeof value === "object") {
-    for (const key of ["caseId", "id", "name"]) {
-      if (typeof value[key] === "string" && value[key].trim()) return value[key].trim();
+    // Schema-shaped operator docs (kit examples) often include caseId metadata.
+    // Only treat as a synthetic fixture when the payload is wrapper-shaped.
+    const schemaId = value.schema || value.$schema || value.schemaId;
+    const wrapperShaped =
+      value.expect != null ||
+      (value.input && typeof value.input === "object" && !schemaId);
+    if (wrapperShaped) {
+      for (const key of ["caseId", "id", "name"]) {
+        if (typeof value[key] === "string" && value[key].trim()) return value[key].trim();
+      }
     }
   }
   const path = String(loadedInput?.path || "");
-  const base = path.split(/[\/]/).pop() || "";
-  if (base.endsWith(".json")) return base.replace(/\.json$/i, "");
+  // Directory loads of cases/<id>.json retain fixture identity via filename.
+  if (/\/cases\/[^/]+\.json$/i.test(path) || /\/fixtures\/(synthetic|real)\//i.test(path)) {
+    const base = path.split(/[\/]/).pop() || "";
+    if (base.endsWith(".json") && base !== "input.json") return base.replace(/\.json$/i, "");
+  }
   return null;
 }
 
@@ -1256,9 +1293,7 @@ function hashFileIfPresent(path) {
   }
 }
 
-export function sha256Hex(buf) {
-  return createHash("sha256").update(buf).digest("hex");
-}
+export { sha256Hex };
 
 function isRemoteUrl(value) {
   return /^https?:\/\//i.test(String(value).trim());

@@ -5,11 +5,12 @@
  * Field names are cited from pack contracts and in-repo parsers (see CITATIONS).
  */
 
-import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { CLOCK_ISO } from "../common/clock.mjs";
+import { sha256Hex as sha256Bytes } from "../common/hash.mjs";
 import {
   PACKET_SCHEMA,
   EVIDENCE_CLASSES,
@@ -25,6 +26,7 @@ export {
   createEnvelope,
   requireCitedFinding,
 };
+export { CLOCK_ISO, isIsoClock } from "../common/clock.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PACK_ROOT = join(HERE, "..", "..");
@@ -34,10 +36,6 @@ export const JOB_ID = "R2-CONSUMER-JOBS-01";
 export const ARTIFACT_KIND = "docs-migration-checklist";
 export const INPUT_SCHEMA = "s137.migration-checklist.input.v1";
 export const OUTPUT_SCHEMA = "s137.migration-checklist.output.v1";
-
-/** ISO-8601 with Z or numeric offset. Cited from S127 normalize.mjs CLOCK_ISO. */
-export const CLOCK_ISO =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 /** OpenAPI methods from openapi-operation-contract.mjs METHODS, stored uppercase. */
 export const HTTP_METHODS = Object.freeze([
@@ -145,7 +143,7 @@ const S122_RECIPE =
 
 export function sha256Hex(value) {
   const buffer = Buffer.isBuffer(value) ? value : Buffer.from(String(value));
-  return createHash("sha256").update(buffer).digest("hex");
+  return sha256Bytes(buffer);
 }
 
 function digestPath(absPath) {
