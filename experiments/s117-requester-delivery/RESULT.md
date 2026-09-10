@@ -3,7 +3,8 @@
 - **Branch:** `codex/s117-requester-delivery-20260910`
 - **Base:** `1a23b648e3c5f90bc009accb85972e2db6e22051`
 - **Code commit:** `7febe94790f5e1697f38f58f83df56dd16a67bdf`
-- **Tree tip:** recorded in the docs commit that updates this file
+- **Docs/tip commit:** `d78b93d92f6b0d9565842869413c12c6691c5242`
+- **Docs/tip commit:** 
 - **Tree:** `experiments/s117-requester-delivery/`
 - **Live payment routes:** not edited
 
