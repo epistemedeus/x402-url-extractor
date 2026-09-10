@@ -72,7 +72,8 @@ function textExcerpt(html, max = 1200) {
     .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
     .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/<[^>]+>/g, " ");
-  return clean(body).slice(0, max);
+  const text = clean(body);
+  return { text: text.slice(0, max), truncated: text.length > max };
 }
 
 function links(html, base) {
@@ -140,6 +141,7 @@ export function extractStructured(html, opts = {}) {
       /<link\b[^>]*rel\s*=\s*["']canonical["'][^>]*href\s*=\s*["']([^"']+)["']/i,
     ) || [])[1] || null;
 
+  const excerpt = textExcerpt(html || "");
   const full = {
     title,
     description: meta.description || og["og:description"] || tw["twitter:description"] || null,
@@ -150,7 +152,7 @@ export function extractStructured(html, opts = {}) {
     jsonLd: ld,
     headings: headings(html || ""),
     links: links(html || "", base),
-    text: textExcerpt(html || ""),
+    text: excerpt.text,
     aiReadiness: {
       hasJsonLd: ld.length > 0,
       hasOpenGraph: Object.keys(og).length > 0,
@@ -170,6 +172,7 @@ export function extractStructured(html, opts = {}) {
 
   const partial = notes.length > 0;
   return {
+    textTruncated: requirement.fields.includes("text") && excerpt.truncated,
     status: partial ? "partial" : "success",
     data,
     notes,

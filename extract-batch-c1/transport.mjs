@@ -3,12 +3,12 @@ import { constants } from "node:fs";
 import path from "node:path";
 import { assertPublicHttpUrl } from "./url-guard.mjs";
 import { publicFetch } from "./public-fetch.mjs";
-import { decodeHttpBody } from "../extract-capture.mjs";
+import { decodeHttpBody, abortableRead } from "../extract-capture.mjs";
 
 export async function loadSource(source, options = {}) {
   const { fixtureRoot, allowLive = false, maxBytes = 1_000_000, timeoutMs = 8000,
     maxRedirects = 3, fetchImpl = publicFetch, beforeRequest = async () => {} } = options;
-  const provenance = { transport: "none", requestedAt: new Date().toISOString() };
+  const provenance = { transport: "none", maxBodyBytes: maxBytes, requestedAt: new Date().toISOString() };
   const fail = (code, error, status = "failure", bytes = 0) => ({
     ok: false, status, code, error, bytes,
     provenance: { ...provenance, byteLength: bytes, completedAt: new Date().toISOString() },
@@ -65,12 +65,12 @@ export async function loadSource(source, options = {}) {
       await beforeRequest();
       ctrl.signal.throwIfAborted();
       sent = true;
-      const res = await fetchImpl(current.href, { method: "GET", redirect: "manual",
+      const res = await abortableRead(fetchImpl(current.href, { method: "GET", redirect: "manual",
         headers: { "user-agent": "PilotBatchExtract/C1", accept: "text/html,*/*", "accept-encoding": "identity" },
-        signal: ctrl.signal });
+        signal: ctrl.signal }), ctrl.signal);
       provenance.httpStatus = res.status;
       if ([301, 302, 303, 307, 308].includes(res.status)) {
-        await res.body?.cancel?.();
+        await abortableRead(Promise.resolve(res.body?.cancel?.()), ctrl.signal);
         const loc = res.headers.get("location");
         if (!loc) return fail("redirect_missing_location", "redirect without Location");
         if (hop === maxRedirects) return fail("redirect_limit", "redirect ceiling exhausted");
@@ -82,26 +82,26 @@ export async function loadSource(source, options = {}) {
       provenance.contentType = res.headers.get("content-type");
       const encoding = res.headers.get("content-encoding");
       if (encoding && encoding !== "identity") {
-        await res.body?.cancel?.();
+        await abortableRead(Promise.resolve(res.body?.cancel?.()), ctrl.signal);
         return fail("unsupported_encoding", "compressed responses unsupported");
       }
       if (Number(res.headers.get("content-length")) > maxBytes) {
-        await res.body?.cancel?.();
+        await abortableRead(Promise.resolve(res.body?.cancel?.()), ctrl.signal);
         return fail("oversized_body", "declared body exceeds byte limit");
       }
       const reader = res.body?.getReader?.();
-      if (!reader) return fail("invalid_response", "streaming response body required");
+      if (!reader && ![204, 205, 304].includes(res.status)) return fail("invalid_response", "streaming response body required");
       const chunks = [];
       let bodyTruncated = false;
-      for (;;) {
-        const { done, value } = await reader.read();
+      while (reader) {
+        const { done, value } = await abortableRead(reader.read(), ctrl.signal);
         if (done) break;
         const remaining = maxBytes - bytes;
         if (value.byteLength > remaining) {
           if (remaining > 0) chunks.push(value.subarray(0, remaining));
           bytes += Math.max(0, remaining);
           bodyTruncated = true;
-          await reader.cancel().catch(() => {});
+          await abortableRead(Promise.resolve(reader.cancel?.()), ctrl.signal);
           break;
         }
         chunks.push(value);
@@ -140,3 +140,4 @@ export async function loadSource(source, options = {}) {
     ctrl.abort();
   }
 }
+

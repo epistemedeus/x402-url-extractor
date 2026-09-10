@@ -1,3 +1,5 @@
+import { publicFetch } from "./extract-batch-c1/public-fetch.mjs";
+
 /**
  * Shared capture/decode helpers for single-URL extract/read and batch transport.
  * Labels the actual no-JS HTTP capture. Does not claim discussion completeness.
@@ -12,9 +14,6 @@ export const READ_MARKDOWN_MAX_CHARS = 40_000;
 const CHARSET_ALIASES = Object.freeze({
   utf8: "utf-8",
   "utf-8": "utf-8",
-  unicode: "utf-8",
-  "us-ascii": "utf-8",
-  ascii: "utf-8",
   latin1: "iso-8859-1",
   "latin-1": "iso-8859-1",
   "iso-8859-1": "iso-8859-1",
@@ -59,7 +58,7 @@ export function parseCharsetFromHtmlBytes(bytes) {
 
 function decoderLabel(charset) {
   try {
-    return new TextDecoder(charset).encoding ? charset : charset;
+    return new TextDecoder(charset).encoding;
   } catch {
     return null;
   }
@@ -82,6 +81,7 @@ export function decodeHttpBody(bytes, { contentType, allowHtmlMeta = true } = {}
     charset = "utf-8";
     charsetSource = "invalid-charset-fallback";
   }
+  charset = supported || "utf-8";
   const html = new TextDecoder(charset, { fatal: false }).decode(buffer);
   return { html, charset, charsetSource, bytes: buffer.byteLength };
 }
@@ -140,7 +140,8 @@ export function concatBytes(chunks) {
 }
 
 export function resolveExtractFetch() {
-  return globalThis.__SAMEDAYDESK_EXTRACT_FETCH__ || globalThis.fetch;
+  // In-process test injection only; no HTTP/query/env binding. Production uses pinned DNS.
+  return globalThis.__SAMEDAYDESK_EXTRACT_FETCH__ || publicFetch;
 }
 
 export function resolveExtractTimeoutMs(fallback = EXTRACT_TIMEOUT_MS) {
@@ -152,4 +153,17 @@ export function resolveExtractTimeoutMs(fallback = EXTRACT_TIMEOUT_MS) {
 export function fetchFailureCode(error) {
   if (error?.name === "AbortError" || error?.code === "ABORT_ERR") return "timeout";
   return typeof error?.code === "string" && error.code ? error.code : "fetch_error";
+}
+
+
+// Enforce the deadline even if an injected response reader ignores AbortSignal.
+export async function abortableRead(promise, signal) {
+  signal.throwIfAborted();
+  let listener;
+  try {
+    return await Promise.race([promise, new Promise((_, reject) => {
+      listener = () => reject(signal.reason);
+      signal.addEventListener("abort", listener, { once: true });
+    })]);
+  } finally { signal.removeEventListener("abort", listener); }
 }

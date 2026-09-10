@@ -85,6 +85,7 @@ for (const [name, makePaid, expected] of [
   ["wrong media type", () => new Response(JSON.stringify(FIXTURE_VALID_BODY), { headers: { "content-type": "text/plain" } }), "paid_invalid_output"],
   ["null required value", () => Response.json({ ...FIXTURE_VALID_BODY, title: null }), "paid_invalid_output"],
   ["omitted required value", () => { const data = { ...FIXTURE_VALID_BODY }; delete data.title; return Response.json(data); }, "paid_invalid_output"],
+  ["source HTTP 403 with block text", () => Response.json({ ...FIXTURE_VALID_BODY, status: 403, sourceOk: false, error: { code: "http_403", message: "source refused: HTTP 403" }, text: "Access denied" }), "partial_delivered"],
   ["source HTTP 404 with typed body", () => Response.json({
     ...FIXTURE_VALID_BODY,
     status: 404,

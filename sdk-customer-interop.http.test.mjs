@@ -114,6 +114,7 @@ globalThis.fetch = async (input, init) => {
   if (url.origin === ${JSON.stringify(facilitatorUrl)}) return nativeFetch(input, init);
   throw new Error("unexpected SDK integration outbound request: " + url.origin);
 };
+globalThis.__SAMEDAYDESK_EXTRACT_FETCH__ = globalThis.fetch;
 globalThis.__SAMEDAYDESK_EXTRACT_BATCH_FETCH__ = async (url) => {
   writeFileSync(logPath, url + "\\n", { flag: "a" });
   const page = pages[url];
