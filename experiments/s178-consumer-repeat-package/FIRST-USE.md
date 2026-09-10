@@ -71,3 +71,18 @@ The portable boundary regression is included in the archive:
 ```bash
 node --test vendor/s137-consumer-evidence-jobs/test/release-brief-input-boundary.test.mjs
 ```
+
+## Installed package tests
+
+```bash
+npm test
+```
+
+This runs the installed manifest/provenance checks and the complete portable S137
+consumer suite, including all 148 input-boundary cases. `CONSUMER-PROVENANCE.json`
+records this kit's package name/version, source pin and runtime file digests. It is
+local integrity metadata, not a signature or a merchant/server version claim.
+Historical `SOURCE-PINS.json` excerpts informed synthetic fixtures. Their assertion
+against merchant checkout files remains in the repository-only
+`release-brief-repository.test.mjs`, which is not packaged. Consumer source/fixture
+provenance and runtime identity checks remain in the installed suite.

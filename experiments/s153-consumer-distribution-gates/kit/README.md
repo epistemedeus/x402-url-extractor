@@ -93,3 +93,14 @@ Expect `decision=conflict` (not `pass`). Positive/partial controls:
 node bin/cli.mjs analyze release-brief --in examples/release-brief/positive-aligned.json --clock 2026-09-10T18:00:00.000Z
 node bin/cli.mjs analyze release-brief --in examples/release-brief/partial-announced-only.json --clock 2026-09-10T18:00:00.000Z
 ```
+
+## Installed package tests
+
+```bash
+npm test
+```
+
+Runs all 148 portable input-boundary tests and checks the actual package manifest,
+source pin and runtime file digests in `CONSUMER-PROVENANCE.json`. These local
+integrity checks do not attest to a live server version or an external release.
+Archive building is a repository command; the installed package has no build script.

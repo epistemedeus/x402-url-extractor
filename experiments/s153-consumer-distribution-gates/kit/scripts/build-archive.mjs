@@ -18,6 +18,8 @@ import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
+import { writeConsumerProvenance } from "../../../s137-consumer-evidence-jobs/scripts/consumer-provenance.mjs";
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const KIT = join(HERE, "..");
 const S153 = join(KIT, "..");
@@ -70,6 +72,7 @@ function copyTree(src, dest, { fromRoot = src } = {}) {
 function writeArchivePackageJson() {
   const pkg = JSON.parse(readFileSync(join(KIT, "package.json"), "utf8"));
   pkg.pin = PIN;
+  pkg.scripts = { test: "node --test test/*.test.mjs" };
   pkg.exports = {
     ".": "./src/index.mjs",
     "./packet": "./src/packet.mjs",
@@ -164,6 +167,11 @@ writeArchiveShims();
 writeArchiveCli();
 mkdirSync(join(STAGE, "test"), { recursive: true });
 copyFileSync(join(S137, "test/release-brief-input-boundary.test.mjs"), join(STAGE, "test/release-brief-input-boundary.test.mjs"));
+
+writeConsumerProvenance(STAGE, {
+  sourceRevision: PIN,
+  files: ["src/release-brief/schema.mjs", "src/release-brief/transform.mjs", "src/packet.mjs", "bin/cli.mjs"],
+});
 
 const tar = spawnSync(
   "tar",

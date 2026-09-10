@@ -36,7 +36,6 @@ import {
   LANES,
   clock as syntheticClock,
   loadManifest,
-  loadSourcePins,
   observeCase,
 } from "../fixtures/synthetic/release-brief/load.mjs";
 
@@ -450,14 +449,6 @@ test("fixture-derived schema inputs validate; implied decisions match catalog", 
   }
 });
 
-test("source pins still appear in cited repo paths", () => {
-  const pins = loadSourcePins();
-  const repo = join(PACK, "../..");
-  for (const pin of pins.pins) {
-    const body = readFileSync(join(repo, pin.repoPath), "utf8");
-    assert.equal(body.includes(pin.excerpt), true, pin.id);
-  }
-});
 
 test("real express v5.2.1 snapshot: provenance, hash, announced vs shipped vs untested", () => {
   const provenance = JSON.parse(readFileSync(REAL_PROVENANCE, "utf8"));

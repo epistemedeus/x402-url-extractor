@@ -18,6 +18,8 @@ import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
+import { writeConsumerProvenance } from "../../s137-consumer-evidence-jobs/scripts/consumer-provenance.mjs";
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PKG = join(HERE, "..");
 const REPO = join(PKG, "..", "..");
@@ -46,6 +48,8 @@ function shouldSkip(relPosix) {
     return true;
   }
   if (/\.log$/i.test(relPosix)) return true;
+  // Retained in source tests: it asserts merchant checkout metadata, not kit metadata.
+  if (parts.at(-1) === "release-brief-repository.test.mjs") return true;
   return false;
 }
 
@@ -74,6 +78,7 @@ function writeKitPackageJson() {
     description:
       "Offline consumer-repeat kit for R2-CONSUMER-JOBS-01..08. No publish, payment, or network I/O.",
     engines: { node: ">=22" },
+    scripts: { test: "node --test test/*.test.mjs vendor/s137-consumer-evidence-jobs/test/*.test.mjs vendor/s137-consumer-evidence-jobs/src/release-brief/schema.mjs" },
     bin: { "s178-consumer-repeat": "./bin/s178-cli.mjs" },
     exports: {
       ".": "./src/index.mjs",
@@ -150,6 +155,14 @@ delete packedPins.kit.sha256;
 writeFileSync(join(STAGE, "PINS.json"), `${JSON.stringify(packedPins, null, 2)}\n`);
 writeKitPackageJson();
 writeKitIndex();
+writeConsumerProvenance(STAGE, {
+  sourceRevision: packedPins.reviewedSource.sha,
+  files: ["vendor/s137-consumer-evidence-jobs/src/release-brief/schema.mjs",
+    "vendor/s137-consumer-evidence-jobs/src/release-brief/transform.mjs",
+    "vendor/s137-consumer-evidence-jobs/src/packet.mjs",
+    "vendor/s137-consumer-evidence-jobs/scripts/cli.mjs",
+    "src/adapters/s137-release-brief.mjs", "src/run-job.mjs", "bin/s178-cli.mjs"],
+});
 
 mkdirSync(DIST, { recursive: true });
 const tar = spawnSync("tar", ["--sort=name", "--mtime=@0", "--owner=0", "--group=0", "--numeric-owner", "--mode=u+rwX,go+rX,go-w", "-czf", TARBALL, "-C", DIST, STAGE_NAME], { encoding: "utf8" });
