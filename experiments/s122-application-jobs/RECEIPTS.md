@@ -7,6 +7,7 @@ Not buyers. Not willingness-to-pay. Stage-1 experiment receipts.
 | Tree | Pin | Role |
 | --- | --- | --- |
 | Merchant `x402-url-extractor` | `1a23b648e3c5f90bc009accb85972e2db6e22051` | public product; this pack lives under `experiments/s122-application-jobs` |
+| Pack commit | `b30e4f7` | recipes, fixtures, tests, and experiment docs on this branch |
 | Branch | `codex/s122-useful-application-jobs-20260910` | already checked out; no default-branch merge |
 | SameDayDesk | `40da1745f73df5e66752ec761b9755921c35febd` | read-only reference (`/tmp/s122/samedaydesk`) |
 | agent-task-kit | 0.1.2 at `/tmp/s122/task-kit/package` | continue capture/validate/compare/prepare/consume |
