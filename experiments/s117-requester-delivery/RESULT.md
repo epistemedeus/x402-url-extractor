@@ -2,8 +2,8 @@
 
 - **Branch:** `codex/s117-requester-delivery-20260910`
 - **Base:** `1a23b648e3c5f90bc009accb85972e2db6e22051`
-- **Code commit:** 
-- **Docs commit:** `7febe94790f5e1697f38f58f83df56dd16a67bdf`
+- **Code commit:** `7febe94790f5e1697f38f58f83df56dd16a67bdf`
+- **Tree tip:** recorded in the docs commit that updates this file
 - **Tree:** `experiments/s117-requester-delivery/`
 - **Live payment routes:** not edited
 
@@ -11,7 +11,7 @@
 
 ```bash
 export PATH="/home/ubuntu/.nvm/versions/node/v22.23.2/bin:$PATH"
-cd /tmp/s117/x402-url-extractor/experiments/s117-requester-delivery
+cd experiments/s117-requester-delivery
 npm test
 ```
 
