@@ -80,8 +80,23 @@ No investment recommendation, revenue projection, ranking, escrow, custody, or
 “full package ready for paid acquisition” language. Fixture URLs remain data.
 Do not re-run Heavy 03/04/05 to force a pass on this lane.
 
+## Executed green bundle
+
+To **run** the four green recipes offline and package packets + `bundle.json`
+under `demo-out/green-bundle/`, see **`GREEN-BUNDLE.md`**:
+
+```sh
+node src/cli.mjs green-bundle --json
+node src/cli.mjs first-result --execute --json
+```
+
+Schema: `x402.r2.consumer.green_first_result_bundle.v1` · still
+`packageNote=partial_first_result` · `fullPackageReady=false`. Deferred
+03/04/05 remain refused (never invent pass).
+
 ## Related
 
+- Executed green bundle: `GREEN-BUNDLE.md`
 - Acquisition status (full matrix): `ACQUISITION.md`
 - Fresh consumer wiring: `CONSUMER.md`
 - Frozen evidence: `FROZEN-E2E-PACKET-S152.md`

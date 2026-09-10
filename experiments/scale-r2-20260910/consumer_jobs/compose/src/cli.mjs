@@ -3,12 +3,13 @@
  * Compose / acquisition CLI (S159).
  *
  *   node src/cli.mjs status [--journey <path>] [--package <path>] [--json|--table|--both]
- *   node src/cli.mjs first-result [--recipe <id>]... [--clock <ISO>] [--plan] [--json|--table|--both]
+ *   node src/cli.mjs first-result [--recipe <id>]... [--clock <ISO>] [--plan|--execute] [--out <dir>] [--json|--table|--both]
+ *   node src/cli.mjs green-bundle [--recipe <id>]... [--clock <ISO>] [--out <dir>] [--json|--table|--both]
  *
  * Partial packageStatus → exit 0 (acquisition-ok, eyes open).
  * Rejected / missing / invalid → exit non-zero.
  * first-result offers only green S152 slots; deferred 03/04/05 → refused.
- * Does not spawn Heavy analyze by default; --plan emits offline command data only.
+ * --plan dry-assembles offline command data; --execute / green-bundle spawn green CLIs only.
  */
 
 import {
@@ -25,20 +26,29 @@ import {
   firstResultExitCode,
   formatFirstResultOfferTable,
 } from "./first-result.mjs";
+import {
+  GREEN_FIRST_RESULT_BUNDLE_SCHEMA,
+  executeGreenFirstResultBundle,
+  formatGreenBundleTable,
+  greenBundleExitCode,
+} from "./green-bundle.mjs";
 
 function usage() {
   console.error(`Usage:
   node src/cli.mjs status [--journey <path>] [--package <path>] [--json|--table|--both] [--step <name>]
-  node src/cli.mjs first-result [--recipe <id>]... [--clock <ISO>] [--plan] [--json|--table|--both]
+  node src/cli.mjs first-result [--recipe <id>]... [--clock <ISO>] [--plan|--execute] [--out <dir>] [--json|--table|--both]
+  node src/cli.mjs green-bundle [--recipe <id>]... [--clock <ISO>] [--out <dir>] [--json|--table|--both]
 
 Notes:
   - status: default journey ../08/demo-out/s152/journey.json; partial → exit 0
   - first-result: offers only green S152 slots (01/02/06/07); packageNote=partial_first_result
   - Deferred recipe ids (table-reconcile / link-index / replay-pack) → refused (exit 1)
   - --plan dry-assembles offline command steps (data only; does not spawn Heavy)
+  - --execute / green-bundle: spawn green CLIs against default fixtures; write demo-out/green-bundle/
   - Schema status: ${ACQUISITION_STATUS_SCHEMA}
   - Schema first-result: ${FIRST_RESULT_OFFER_SCHEMA}
-  - Does not re-run Heavy CLI to invent pass; fixture URLs stay data`);
+  - Schema green-bundle: ${GREEN_FIRST_RESULT_BUNDLE_SCHEMA}
+  - Does not re-run Heavy 03/04/05 to invent pass; fixture URLs stay data`);
   process.exit(2);
 }
 
@@ -52,6 +62,8 @@ function parseArgs(argv) {
     recipeIds: [],
     clock: null,
     plan: false,
+    execute: false,
+    outDir: null,
   };
   if (!argv.length) return out;
   out.cmd = argv[0];
@@ -80,6 +92,10 @@ function parseArgs(argv) {
       out.clock = argv[++i];
     } else if (a === "--plan") {
       out.plan = true;
+    } else if (a === "--execute") {
+      out.execute = true;
+    } else if (a === "--out") {
+      out.outDir = argv[++i];
     } else if (a === "-h" || a === "--help") {
       usage();
     } else {
@@ -127,10 +143,20 @@ if (args.cmd === "status") {
 
 if (args.cmd === "first-result") {
   try {
+    if (args.plan && args.execute) {
+      console.error("Use either --plan or --execute, not both");
+      usage();
+    }
     const opts = {
       recipeIds: args.recipeIds.length ? args.recipeIds : undefined,
       clock: args.clock || undefined,
+      outDir: args.outDir || undefined,
     };
+    if (args.execute) {
+      const bundle = executeGreenFirstResultBundle(opts);
+      emit(args.format, bundle, formatGreenBundleTable);
+      process.exit(greenBundleExitCode(bundle));
+    }
     const offer = args.plan
       ? buildFirstResultRunPlan(opts)
       : buildFirstResultOffer(opts);
@@ -139,7 +165,34 @@ if (args.cmd === "first-result") {
   } catch (err) {
     console.error(
       JSON.stringify({
-        schema: FIRST_RESULT_OFFER_SCHEMA,
+        schema: args.execute
+          ? GREEN_FIRST_RESULT_BUNDLE_SCHEMA
+          : FIRST_RESULT_OFFER_SCHEMA,
+        error: err.code || "error",
+        message: err.message,
+        acquisitionOk: false,
+        refusedIds: err.refusedIds || null,
+        offeredIds: err.offeredIds || null,
+      }),
+    );
+    process.exit(1);
+  }
+}
+
+if (args.cmd === "green-bundle") {
+  try {
+    const opts = {
+      recipeIds: args.recipeIds.length ? args.recipeIds : undefined,
+      clock: args.clock || undefined,
+      outDir: args.outDir || undefined,
+    };
+    const bundle = executeGreenFirstResultBundle(opts);
+    emit(args.format, bundle, formatGreenBundleTable);
+    process.exit(greenBundleExitCode(bundle));
+  } catch (err) {
+    console.error(
+      JSON.stringify({
+        schema: GREEN_FIRST_RESULT_BUNDLE_SCHEMA,
         error: err.code || "error",
         message: err.message,
         acquisitionOk: false,

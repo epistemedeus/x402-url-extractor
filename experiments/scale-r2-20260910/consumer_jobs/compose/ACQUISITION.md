@@ -106,3 +106,6 @@ node src/cli.mjs first-result --json
 
 Schema: `x402.r2.consumer.first_result_offer.v1` · `packageNote=partial_first_result`.
 
+Executed offline green bundle (spawn Heavy 01/02/06 + sibling 07; defer 03/04/05):
+see **`GREEN-BUNDLE.md`** / `node src/cli.mjs green-bundle`.
+

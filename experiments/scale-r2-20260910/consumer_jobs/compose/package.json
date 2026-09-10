@@ -1,9 +1,9 @@
 {
   "name": "r2-consumer-s152-compose",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "type": "module",
-  "description": "S152 compose + S159 acquisition/first-result: exact partial matrix; green-only first-result offer",
+  "description": "S152 compose + S159 acquisition/first-result/green-bundle: exact partial matrix; green-only first-result offer + offline executed bundle",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "test:08": "npm --prefix ../08 test",
@@ -12,7 +12,9 @@
     "demo": "node ../08/src/cli.mjs demo",
     "status": "node src/cli.mjs status",
     "test:first-result": "node --test tests/first-result.test.mjs",
-    "first-result": "node src/cli.mjs first-result"
+    "first-result": "node src/cli.mjs first-result",
+    "green-bundle": "node src/cli.mjs green-bundle",
+    "test:green-bundle": "node --test tests/green-bundle.test.mjs"
   },
   "engines": {
     "node": ">=20"

@@ -221,7 +221,7 @@ export function buildFirstResultRunPlan(options = {}) {
     if (row.id === "procurement-brief") {
       const fixture =
         options.procurementFixture ||
-        join(EIGHT_ROOT, "fixtures", "positive.json");
+        join(EIGHT_ROOT, "..", "07", "fixtures", "positive.json");
       return {
         id: row.id,
         jobRef: row.jobRef,
