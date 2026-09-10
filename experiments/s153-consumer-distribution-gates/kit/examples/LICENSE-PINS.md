@@ -2,7 +2,7 @@
 
 Sourced from `experiments/s137-consumer-evidence-jobs/fixtures/real/*/PROVENANCE.json`. Snapshots are stored for offline replay. These notes are not a license grant, legal attestation, or redistribution advice.
 
-Kit pin: `fa6878de125cfdcfd77f4b47037c88667090d293`.
+Kit pin: `d998f11c173ac719043d6351f46e56f48d0f1bb6`.
 
 | Example | Source | SPDX / note | Content sha256 | retrievedAt |
 | --- | --- | --- | --- | --- |

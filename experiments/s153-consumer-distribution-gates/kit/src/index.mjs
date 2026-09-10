@@ -21,4 +21,4 @@ export const EXCLUDED_JOBS = Object.freeze([
   "R2-CONSUMER-JOBS-08",
 ]);
 
-export const PIN = "fa6878de125cfdcfd77f4b47037c88667090d293";
+export const PIN = "d998f11c173ac719043d6351f46e56f48d0f1bb6";

@@ -41,8 +41,7 @@
   ],
   "kit": {
     "tarball": "dist/s178-consumer-repeat-kit.tgz",
-    "sha256": "f8d99bcbb36de1d7619a6b28f0bbebd6a4078980e64fdefc44b958bc89e87eaf",
-    "rebuiltOn": "S194"
+    "rebuiltOn": "S211"
   },
   "nonClaims": [
     "No fabricated live sources or customers",
@@ -50,5 +49,11 @@
     "No release claims or new payments engine",
     "Existing paid endpoint semantics and prices unchanged",
     "SameDayDesk site pages remain S176-owned (separate repo)"
-  ]
+  ],
+  "reviewedSource": {
+    "sha": "d998f11c173ac719043d6351f46e56f48d0f1bb6",
+    "input": "d9553e2fd81ff62e7a30d23a3c5166ca2d923ed9",
+    "branch": "codex/s211-consumer-validation-final-20260910",
+    "scope": "release-brief schema, transform, runners and boundary regression; archive pins and bytes recorded separately"
+  }
 }
