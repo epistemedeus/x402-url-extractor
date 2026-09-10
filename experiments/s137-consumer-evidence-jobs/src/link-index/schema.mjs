@@ -7,10 +7,11 @@
  * is against a caller-supplied inventory, never a network fetch.
  */
 
-import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { isIsoClock } from "../common/clock.mjs";
+import { isSha256Hex, sha256Hex } from "../common/hash.mjs";
 import {
   PACKET_SCHEMA,
   EVIDENCE_CLASSES,
@@ -101,9 +102,6 @@ export const BOUNDS = Object.freeze({
   maxMessageChars: 1024,
 });
 
-const CLOCK_ISO =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
-const SHA256_HEX = /^[a-f0-9]{64}$/;
 const ID_RE = /^[A-Za-z][A-Za-z0-9._:-]{0,127}$/;
 const HOSTILE_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 
@@ -120,9 +118,7 @@ export const LIMITATIONS = Object.freeze([
 
 const PACK_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
-export function sha256Hex(value) {
-  return createHash("sha256").update(value).digest("hex");
-}
+export { sha256Hex, isSha256Hex, isIsoClock };
 
 function citePackFile(relPath, note) {
   const abs = join(PACK_ROOT, relPath);
@@ -212,13 +208,7 @@ export function makeIssue({
   };
 }
 
-export function isIsoClock(value) {
-  return typeof value === "string" && CLOCK_ISO.test(value);
-}
 
-export function isSha256Hex(value) {
-  return typeof value === "string" && SHA256_HEX.test(value);
-}
 
 export function isSchemaId(value) {
   return typeof value === "string" && value.length > 0 && value.length <= BOUNDS.maxIdChars && ID_RE.test(value);

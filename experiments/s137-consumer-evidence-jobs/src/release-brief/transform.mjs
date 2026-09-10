@@ -845,6 +845,11 @@ export function buildReleaseBrief(input = {}) {
   };
 }
 
+export const transform = buildReleaseBrief;
+export const run = buildReleaseBrief;
+export const analyze = buildReleaseBrief;
+export const transformReleaseBrief = buildReleaseBrief;
+
 function isDirectEntry() {
   const entry = process.argv[1];
   if (!entry) return false;

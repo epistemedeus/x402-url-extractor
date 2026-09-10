@@ -1,0 +1,33 @@
+{
+  "schema": "s137.consumer-jobs.http-headers.v1",
+  "statusLine": "HTTP/1.1 200 OK",
+  "status": 200,
+  "headers": {
+    "Server": "nginx",
+    "Date": "Thu, 10 Sep 2026 11:24:14 GMT",
+    "Content-Type": "application/json; charset=utf-8",
+    "Transfer-Encoding": "chunked",
+    "Connection": "keep-alive",
+    "Access-Control-Allow-Origin": "*",
+    "Vary": "Accept-Encoding",
+    "X-Socrata-Region": "aws-us-east-1-fedramp-prod",
+    "X-Socrata-RequestId": "cf2a4cd9c17b85fed5346fa4d85b64f5",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains"
+  },
+  "headerNamesPresent": [
+    "Server",
+    "Date",
+    "Content-Type",
+    "Transfer-Encoding",
+    "Connection",
+    "Access-Control-Allow-Origin",
+    "Vary",
+    "X-Socrata-Region",
+    "X-Socrata-RequestId",
+    "Strict-Transport-Security"
+  ],
+  "lastModifiedPresent": false,
+  "etagPresent": false,
+  "setCookiePresent": false,
+  "transferNote": "curl decoded Transfer-Encoding: chunked; stored view JSON is the decoded entity."
+}

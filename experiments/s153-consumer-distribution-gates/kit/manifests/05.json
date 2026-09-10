@@ -1,0 +1,45 @@
+{
+  "id": "05",
+  "jobId": "R2-CONSUMER-JOBS-05",
+  "artifact": "replay-pack",
+  "title": "API example replay pack",
+  "export": "./replay-pack",
+  "cliToken": "replay-pack",
+  "inputSchema": "s137.replay-pack.input.v1",
+  "outputSchema": "s137.replay-pack.output.v1",
+  "packetSchema": "s137.consumer-evidence.packet.v1",
+  "src": {
+    "schema": "src/replay-pack/schema.mjs",
+    "transform": "src/replay-pack/transform.mjs"
+  },
+  "inputs": {
+    "required": ["schema", "clock", "evidenceClass", "examples", "citations"],
+    "optional": ["online"]
+  },
+  "outputs": {
+    "required": [
+      "schema",
+      "packetSchema",
+      "jobId",
+      "artifactKind",
+      "clock",
+      "evidenceClass",
+      "offline",
+      "payment",
+      "cost",
+      "examples",
+      "citations",
+      "findings",
+      "online",
+      "decision",
+      "limitations",
+      "claims",
+      "summary"
+    ]
+  },
+  "example": "examples/replay-pack",
+  "decisions": ["pass", "fail", "partial", "conflict", "unknown"],
+  "offline": true,
+  "neverFakeProviderExecution": true,
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"]
+}

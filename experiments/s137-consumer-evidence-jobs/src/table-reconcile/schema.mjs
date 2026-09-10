@@ -8,9 +8,10 @@
  * Evidence: synthetic | fixture | live-capture. Offline. No network.
  */
 
-import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
 
+import { isIsoClock, isIsoDate } from "../common/clock.mjs";
+import { canonicalJson, sha256Hex as sha256Bytes } from "../common/hash.mjs";
 import {
   PACKET_SCHEMA,
   EVIDENCE_CLASSES,
@@ -18,6 +19,8 @@ import {
   createEnvelope,
   requireCitedFinding,
 } from "../packet.mjs";
+
+export { isIsoDate };
 
 export const JOB_ID = "R2-CONSUMER-JOBS-03";
 export const ARTIFACT_KIND = "table-reconcile";
@@ -108,9 +111,6 @@ export const LIMITATIONS = Object.freeze([
 ]);
 
 const HOSTILE_KEYS = new Set(["__proto__", "constructor", "prototype"]);
-const CLOCK_ISO =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
-const DATE_ISO = /^\d{4}-\d{2}-\d{2}$/;
 const SHA256_HEX = /^[0-9a-f]{64}$/;
 
 /**
@@ -179,25 +179,12 @@ export function makeIssue({
 }
 
 export function sha256Hex(value) {
-  const input =
-    typeof value === "string" || Buffer.isBuffer(value)
-      ? value
-      : stableStringify(value);
-  return createHash("sha256").update(input).digest("hex");
+  if (typeof value === "string" || Buffer.isBuffer(value)) return sha256Bytes(value);
+  return sha256Bytes(canonicalJson(value));
 }
 
 export function stableStringify(value) {
-  return JSON.stringify(sortKeys(value));
-}
-
-function sortKeys(value) {
-  if (Array.isArray(value)) return value.map(sortKeys);
-  if (value && typeof value === "object") {
-    const out = {};
-    for (const key of Object.keys(value).sort()) out[key] = sortKeys(value[key]);
-    return out;
-  }
-  return value;
+  return canonicalJson(value);
 }
 
 function isPlainObject(value) {
@@ -317,11 +304,7 @@ export function grainsCompatible(leftRaw, rightRaw) {
 }
 
 export function isIsoDateTime(text) {
-  return typeof text === "string" && CLOCK_ISO.test(text) && Number.isFinite(Date.parse(text));
-}
-
-export function isIsoDate(text) {
-  return typeof text === "string" && DATE_ISO.test(text);
+  return isIsoClock(text) && Number.isFinite(Date.parse(text));
 }
 
 export function parseInstant(raw, instancePath = "/instant") {

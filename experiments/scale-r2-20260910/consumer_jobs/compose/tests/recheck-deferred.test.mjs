@@ -12,12 +12,19 @@ import {
 import {
   DEFERRED_RECHECK_SCHEMA,
   RECHECK_CELL_STATUS,
+  RECHECK_INPUT_MODES,
+  RESOLVED_S153_COMMIT,
+  S153_KIT_CLI,
+  S153_KIT_DEFAULT_INS,
+  S137_SYNTHETIC_DEFAULT_INS,
   assertClearedRequiresPass,
   assertDeferredInclude,
   classifyRecheckCell,
+  defaultInPathForDeferred,
   deferredRecheckExitCode,
   knownDeferredIds,
   recheckDeferredCell,
+  resolveRecheckInputMode,
   runDeferredRecheck,
 } from "../src/recheck-deferred.mjs";
 
@@ -87,9 +94,10 @@ test("schema shape + known deferred ids match matrix / defects", () => {
   assert.deepEqual(matrixFail, DEFERRED);
 });
 
-test("classify: fail→still_deferred; pass→cleared; other→unexpected", () => {
+test("classify: fail→still_deferred; pass→cleared; partial/conflict/other→unexpected", () => {
   assert.equal(classifyRecheckCell("fail"), RECHECK_CELL_STATUS.STILL_DEFERRED);
   assert.equal(classifyRecheckCell("pass"), RECHECK_CELL_STATUS.CLEARED);
+  assert.equal(classifyRecheckCell("partial"), RECHECK_CELL_STATUS.UNEXPECTED);
   assert.equal(classifyRecheckCell("conflict"), RECHECK_CELL_STATUS.UNEXPECTED);
   assert.equal(classifyRecheckCell(null), RECHECK_CELL_STATUS.UNEXPECTED);
   assert.equal(classifyRecheckCell(undefined), RECHECK_CELL_STATUS.UNEXPECTED);
@@ -247,45 +255,94 @@ test("unexpected decision recorded (not invented as cleared)", () => {
   });
 });
 
-test("real Heavy CLI: deferred positives still_deferred (expect fail)", () => {
+test("S153 defaults: kit CLI + kit example paths; pin recorded", () => {
+  assert.equal(resolveRecheckInputMode({}), RECHECK_INPUT_MODES.S153_KIT);
+  assert.equal(resolveRecheckInputMode({ inputs: "s137-synthetic" }), RECHECK_INPUT_MODES.S137_SYNTHETIC);
+  assert.ok(existsSync(S153_KIT_CLI), `missing S153 kit CLI ${S153_KIT_CLI}`);
+  for (const id of DEFERRED) {
+    const p = defaultInPathForDeferred(id);
+    assert.equal(p, S153_KIT_DEFAULT_INS[id]);
+    assert.ok(existsSync(p), `missing kit example ${p}`);
+    const legacy = defaultInPathForDeferred(id, { inputs: "s137-synthetic" });
+    assert.equal(legacy, S137_SYNTHETIC_DEFAULT_INS[id]);
+    assert.ok(existsSync(legacy), `missing synthetic ${legacy}`);
+  }
+  assert.equal(RESOLVED_S153_COMMIT, "d520699802622a715cde1d894cc5547c42b2dca7");
+});
+
+test("real S153 kit CLI: record decision (not ok); classify without inventing", () => {
   withTempOut((outDir) => {
     const doc = runDeferredRecheck({ outDir });
     assert.equal(doc.schema, DEFERRED_RECHECK_SCHEMA);
+    assert.equal(doc.inputMode, RECHECK_INPUT_MODES.S153_KIT);
     assert.equal(doc.cells.length, 3);
-    assert.equal(doc.overallStillDeferred, true);
-    assert.equal(doc.packageNote, "partial_deferred_recheck");
     assert.equal(doc.fullPackageReady, false);
+    assert.equal(doc.resolvedCommits.resolvedS153Commit, RESOLVED_S153_COMMIT);
+    assert.deepEqual(doc.kitExcludesJobs, ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"]);
+
+    const byId = Object.fromEntries(doc.cells.map((c) => [c.id, c]));
+    // Observed on d520699 kit examples @ 2026-09-10T12:00:00.000Z (re-run, not hardcoded invent):
+    // table-reconcile→partial, link-index→fail, replay-pack→pass
+    assert.equal(byId["table-reconcile"].actualDecision, "partial");
+    assert.equal(byId["table-reconcile"].status, RECHECK_CELL_STATUS.UNEXPECTED);
+    assert.equal(byId["link-index"].actualDecision, "fail");
+    assert.equal(byId["link-index"].status, RECHECK_CELL_STATUS.STILL_DEFERRED);
+    assert.equal(byId["replay-pack"].actualDecision, "pass");
+    assert.equal(byId["replay-pack"].status, RECHECK_CELL_STATUS.CLEARED);
+
     for (const c of doc.cells) {
-      assert.ok(DEFERRED.includes(c.id));
-      assert.equal(c.actualDecision, "fail", `${c.id} expected fail, got ${c.actualDecision}`);
-      assert.equal(c.status, RECHECK_CELL_STATUS.STILL_DEFERRED);
-      assert.equal(c.spawnSource, "heavy_cli");
+      assert.equal(c.spawnSource, "s153_kit");
       assert.ok(c.fixture);
       assert.ok(c.packetPath);
       assert.ok(existsSync(c.packetPath), `missing packet ${c.packetPath}`);
-      // Must not invent cleared today
-      assert.notEqual(c.status, RECHECK_CELL_STATUS.CLEARED);
+      // cleared iff decision===pass
+      if (c.status === RECHECK_CELL_STATUS.CLEARED) {
+        assert.equal(c.actualDecision, "pass");
+      }
+      // never invent from ok
+      assert.ok("okFieldIgnored" in c);
     }
-    assert.deepEqual(doc.summary.clearedIds, []);
-    assert.deepEqual(doc.summary.stillDeferredIds, DEFERRED);
+    assert.equal(doc.overallStillDeferred, true); // link-index still fail
+    assert.equal(doc.packageNote, "partial_deferred_recheck");
+    assert.deepEqual(doc.summary.clearedIds, ["replay-pack"]);
+    assert.deepEqual(doc.summary.stillDeferredIds, ["link-index"]);
+    assert.deepEqual(doc.summary.unexpectedIds, ["table-reconcile"]);
     assert.match(JSON.stringify(doc.notes), /Does not invent pass/);
-    assert.match(JSON.stringify(doc.notes), /Green bundle remains/);
+    assert.match(JSON.stringify(doc.notes), /[Nn]ever treat packet ok/);
   });
 });
 
-test("cli recheck-deferred: still_deferred exits 0; require-cleared → 1", () => {
+test("legacy s137-synthetic positives: still decision=fail (defect signature)", () => {
+  withTempOut((outDir) => {
+    const doc = runDeferredRecheck({ outDir, inputs: "s137-synthetic" });
+    assert.equal(doc.inputMode, RECHECK_INPUT_MODES.S137_SYNTHETIC);
+    assert.equal(doc.cells.length, 3);
+    for (const c of doc.cells) {
+      assert.equal(c.actualDecision, "fail", `${c.id} expected fail, got ${c.actualDecision}`);
+      assert.equal(c.status, RECHECK_CELL_STATUS.STILL_DEFERRED);
+      assert.equal(c.spawnSource, "s153_kit");
+      assert.ok(String(c.fixture).includes("fixtures/synthetic"));
+    }
+    assert.equal(doc.overallStillDeferred, true);
+    assert.deepEqual(doc.summary.clearedIds, []);
+    assert.deepEqual(doc.summary.stillDeferredIds, DEFERRED);
+  });
+});
+
+test("cli recheck-deferred: records S153 kit decisions; require-cleared → 1 while any deferred", () => {
   withTempOut((outDir) => {
     const r = runCli(["recheck-deferred", "--out", outDir, "--json"]);
     assert.equal(r.status, 0, r.stderr || r.stdout);
     const out = JSON.parse(r.stdout);
     assert.equal(out.schema, DEFERRED_RECHECK_SCHEMA);
+    assert.equal(out.inputMode, "s153-kit");
     assert.equal(out.overallStillDeferred, true);
     assert.deepEqual(
-      out.cells.map((c) => c.status),
+      out.cells.map((c) => [c.id, c.actualDecision, c.status]),
       [
-        RECHECK_CELL_STATUS.STILL_DEFERRED,
-        RECHECK_CELL_STATUS.STILL_DEFERRED,
-        RECHECK_CELL_STATUS.STILL_DEFERRED,
+        ["table-reconcile", "partial", RECHECK_CELL_STATUS.UNEXPECTED],
+        ["link-index", "fail", RECHECK_CELL_STATUS.STILL_DEFERRED],
+        ["replay-pack", "pass", RECHECK_CELL_STATUS.CLEARED],
       ],
     );
     assert.ok(existsSync(join(outDir, "recheck.json")));
@@ -328,6 +385,27 @@ test("cli recheck-deferred: --include subset of deferred", () => {
     const out = JSON.parse(r.stdout);
     assert.equal(out.cells.length, 1);
     assert.equal(out.cells[0].id, "table-reconcile");
-    assert.equal(out.cells[0].status, RECHECK_CELL_STATUS.STILL_DEFERRED);
+    assert.equal(out.cells[0].actualDecision, "partial");
+    assert.equal(out.cells[0].status, RECHECK_CELL_STATUS.UNEXPECTED);
+  });
+});
+
+test("cli recheck-deferred: --inputs s137-synthetic keeps fail signature", () => {
+  withTempOut((outDir) => {
+    const r = runCli([
+      "recheck-deferred",
+      "--inputs",
+      "s137-synthetic",
+      "--out",
+      outDir,
+      "--json",
+    ]);
+    assert.equal(r.status, 0, r.stderr || r.stdout);
+    const out = JSON.parse(r.stdout);
+    assert.equal(out.inputMode, "s137-synthetic");
+    assert.deepEqual(
+      out.cells.map((c) => c.actualDecision),
+      ["fail", "fail", "fail"],
+    );
   });
 });

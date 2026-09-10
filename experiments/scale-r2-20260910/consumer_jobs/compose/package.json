@@ -1,9 +1,9 @@
 {
   "name": "r2-consumer-s152-compose",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "type": "module",
-  "description": "S152 compose + S159 acquisition/first-result/green-bundle/deferred-recheck: exact partial matrix; green-only first-result; deferred Heavy cell recheck harness",
+  "description": "S152 compose + S159 acquisition/green/recheck + S170 S153 kit-default deferred recheck (decision field; no invent)",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "test:08": "npm --prefix ../08 test",

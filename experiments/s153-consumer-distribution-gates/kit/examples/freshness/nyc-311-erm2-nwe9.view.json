@@ -1,0 +1,789 @@
+{
+  "id" : "erm2-nwe9",
+  "name" : "311 Service Requests from 2020 to Present",
+  "assetType" : "dataset",
+  "attribution" : "311",
+  "averageRating" : 0,
+  "category" : "Social Services",
+  "createdAt" : 1318225937,
+  "description" : "<b>NOTE:</b> Learn more about the latest changes to this dataset: https://opendata.cityofnewyork.us/311-service-requests-from-2010-to-present-updates/\n\n311 responds to thousands of inquiries, comments and requests from customers every single day. This dataset represents only service requests that can be directed to specific agencies.\n\nThis dataset is updated daily and expected values for many fields will change over time. The lists of expected values associated with each column are not exhaustive.\n\nEach row of data contains information about the service request, including complaint type, responding agency, and geographic location. However the data does not reveal any personally identifying information about the customer who made the request.\n\nFor data from 2010-2019 see: https://data.cityofnewyork.us/Social-Services/311-Service-Requests-from-2010-to-2019/76ig-c548/about_data",
+  "diciBackend" : false,
+  "displayType" : "table",
+  "downloadCount" : 606050,
+  "hideFromCatalog" : false,
+  "hideFromDataJson" : false,
+  "locked" : false,
+  "newBackend" : true,
+  "numberOfComments" : 19,
+  "oid" : 41839424,
+  "provenance" : "official",
+  "publicationAppendEnabled" : false,
+  "publicationDate" : 1766530877,
+  "publicationGroup" : 244403,
+  "publicationStage" : "published",
+  "rowClass" : "",
+  "rowIdentifierColumnId" : 623546861,
+  "rowsUpdatedAt" : 1789004288,
+  "rowsUpdatedBy" : "5fuc-pqz2",
+  "tableId" : 20219299,
+  "totalTimesRated" : 0,
+  "viewCount" : 1297958,
+  "viewLastModified" : 1767021900,
+  "viewType" : "tabular",
+  "approvals" : [ {
+    "reviewedAt" : 1524193398,
+    "reviewedAutomatically" : true,
+    "state" : "approved",
+    "submissionId" : 7287032,
+    "submissionObject" : "public_audience_request",
+    "submissionOutcome" : "change_audience",
+    "submittedAt" : 1524193398,
+    "targetAudience" : "public",
+    "workflowId" : 2285,
+    "submissionDetails" : {
+      "permissionType" : "READ"
+    },
+    "submissionOutcomeApplication" : {
+      "failureCount" : 0,
+      "status" : "success"
+    },
+    "submitter" : {
+      "id" : "5fuc-pqz2",
+      "displayName" : "NYC OpenData"
+    }
+  } ],
+  "clientContext" : {
+    "clientContextVariables" : [ ],
+    "inheritedVariables" : { }
+  },
+  "columns" : [ {
+    "id" : 623546861,
+    "name" : "Unique Key",
+    "dataTypeName" : "text",
+    "description" : "Unique identifier of a Service Request (SR) in the open data set\n",
+    "fieldName" : "unique_key",
+    "position" : 1,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567787,
+    "width" : 220,
+    "format" : { }
+  }, {
+    "id" : 623546862,
+    "name" : "Created Date",
+    "dataTypeName" : "calendar_date",
+    "description" : "Date SR  was created\n",
+    "fieldName" : "created_date",
+    "position" : 2,
+    "renderTypeName" : "calendar_date",
+    "tableColumnId" : 1567788,
+    "width" : 244,
+    "format" : {
+      "view" : "date_time",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546863,
+    "name" : "Closed Date",
+    "dataTypeName" : "calendar_date",
+    "description" : "Date SR was closed by responding agency\n",
+    "fieldName" : "closed_date",
+    "position" : 3,
+    "renderTypeName" : "calendar_date",
+    "tableColumnId" : 1567789,
+    "width" : 232,
+    "format" : {
+      "view" : "date_time",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546864,
+    "name" : "Agency",
+    "dataTypeName" : "text",
+    "description" : "Acronym of responding City Government Agency\n",
+    "fieldName" : "agency",
+    "position" : 4,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567790,
+    "width" : 172,
+    "format" : { }
+  }, {
+    "id" : 623546865,
+    "name" : "Agency Name",
+    "dataTypeName" : "text",
+    "description" : "Full Agency name of responding City Government Agency",
+    "fieldName" : "agency_name",
+    "position" : 5,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567791,
+    "width" : 232,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546866,
+    "name" : "Problem (formerly Complaint Type)",
+    "dataTypeName" : "text",
+    "description" : "This is the first level of a hierarchy identifying the topic of the incident or condition.  Problem (formerly Complaint Type) broadly describes the topic of the incident or condition and are defined by the responding agencies. New Problems may be added in response to changes in customer demand.",
+    "fieldName" : "complaint_type",
+    "position" : 6,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567792,
+    "width" : 268,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546867,
+    "name" : "Problem Detail (formerly Descriptor)",
+    "dataTypeName" : "text",
+    "description" : "This is associated to the Problem (formerly Complaint Type), and provides further detail on the incident or condition. Problem Detail (formerly Descriptor) values are dependent on the Problem, and are not always required in the service request.",
+    "fieldName" : "descriptor",
+    "position" : 7,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567793,
+    "width" : 220,
+    "format" : { }
+  }, {
+    "id" : 623546868,
+    "name" : "Additional Details",
+    "dataTypeName" : "text",
+    "description" : "A third level of detail about the Problem (formerly Complaint Type) beyond the Problem Detail (formerly Descriptor). This is not used by every category of issue.",
+    "fieldName" : "descriptor_2",
+    "position" : 8,
+    "renderTypeName" : "text",
+    "tableColumnId" : 164146338,
+    "format" : { }
+  }, {
+    "id" : 623546869,
+    "name" : "Location Type",
+    "dataTypeName" : "text",
+    "description" : "Describes the type of location used in the address information \n",
+    "fieldName" : "location_type",
+    "position" : 9,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567794,
+    "width" : 256,
+    "format" : { }
+  }, {
+    "id" : 623546870,
+    "name" : "Incident Zip",
+    "dataTypeName" : "text",
+    "description" : "Incident location zip code, provided by geo validation.\n",
+    "fieldName" : "incident_zip",
+    "position" : 10,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567795,
+    "width" : 244,
+    "format" : { }
+  }, {
+    "id" : 623546871,
+    "name" : "Incident Address",
+    "dataTypeName" : "text",
+    "description" : "House number of incident address provided by submitter.\n",
+    "fieldName" : "incident_address",
+    "position" : 11,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567796,
+    "width" : 292,
+    "format" : { }
+  }, {
+    "id" : 623546872,
+    "name" : "Street Name",
+    "dataTypeName" : "text",
+    "description" : "Street name of incident address provided by the submitter\n",
+    "fieldName" : "street_name",
+    "position" : 12,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567797,
+    "width" : 232,
+    "format" : { }
+  }, {
+    "id" : 623546873,
+    "name" : "Cross Street 1",
+    "dataTypeName" : "text",
+    "description" : "First Cross street based on the geo validated incident location\n",
+    "fieldName" : "cross_street_1",
+    "position" : 13,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567798,
+    "width" : 268,
+    "format" : { }
+  }, {
+    "id" : 623546874,
+    "name" : "Cross Street 2",
+    "dataTypeName" : "text",
+    "description" : "Second Cross Street based on the geo validated incident location\n",
+    "fieldName" : "cross_street_2",
+    "position" : 14,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567799,
+    "width" : 268,
+    "format" : { }
+  }, {
+    "id" : 623546875,
+    "name" : "Intersection Street 1",
+    "dataTypeName" : "text",
+    "description" : "First intersecting street based on geo validated incident location\n",
+    "fieldName" : "intersection_street_1",
+    "position" : 15,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567800,
+    "width" : 352,
+    "format" : { }
+  }, {
+    "id" : 623546876,
+    "name" : "Intersection Street 2",
+    "dataTypeName" : "text",
+    "description" : "Second intersecting street based on geo validated incident location\n",
+    "fieldName" : "intersection_street_2",
+    "position" : 16,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567801,
+    "width" : 352,
+    "format" : { }
+  }, {
+    "id" : 623546877,
+    "name" : "Address Type",
+    "dataTypeName" : "text",
+    "description" : "Type of incident location information available.\n",
+    "fieldName" : "address_type",
+    "position" : 17,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567802,
+    "width" : 244,
+    "format" : { }
+  }, {
+    "id" : 623546878,
+    "name" : "City",
+    "dataTypeName" : "text",
+    "description" : "City of the incident location provided by geovalidation.\n",
+    "fieldName" : "city",
+    "position" : 18,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567803,
+    "width" : 148,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546879,
+    "name" : "Landmark",
+    "dataTypeName" : "text",
+    "description" : "If the incident location is identified as a Landmark the name of the landmark will display here\n",
+    "fieldName" : "landmark",
+    "position" : 19,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567804,
+    "width" : 196,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546880,
+    "name" : "Facility Type",
+    "dataTypeName" : "text",
+    "description" : "If available, this field describes the type of city facility associated to the SR\n",
+    "fieldName" : "facility_type",
+    "position" : 20,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567805,
+    "width" : 256,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546881,
+    "name" : "Status",
+    "dataTypeName" : "text",
+    "description" : "Status of SR submitted \n",
+    "fieldName" : "status",
+    "position" : 21,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567806,
+    "width" : 172,
+    "format" : { }
+  }, {
+    "id" : 623546882,
+    "name" : "Due Date",
+    "dataTypeName" : "calendar_date",
+    "description" : "Date when responding agency is expected to update the SR.  This is based on the Complaint Type and internal Service Level Agreements (SLAs).\n",
+    "fieldName" : "due_date",
+    "position" : 22,
+    "renderTypeName" : "calendar_date",
+    "tableColumnId" : 1567807,
+    "width" : 196,
+    "format" : {
+      "view" : "date_time",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546883,
+    "name" : "Resolution Description",
+    "dataTypeName" : "text",
+    "description" : "Describes the last action taken on the SR by the responding agency.  May describe next or future steps. \n",
+    "fieldName" : "resolution_description",
+    "position" : 23,
+    "renderTypeName" : "text",
+    "tableColumnId" : 27922513,
+    "width" : 186,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546884,
+    "name" : "Resolution Action Updated Date",
+    "dataTypeName" : "calendar_date",
+    "description" : "Date when responding agency last updated the SR.\n",
+    "fieldName" : "resolution_action_updated_date",
+    "position" : 24,
+    "renderTypeName" : "calendar_date",
+    "tableColumnId" : 1567808,
+    "width" : 460,
+    "format" : {
+      "view" : "date_time",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546885,
+    "name" : "Community Board",
+    "dataTypeName" : "text",
+    "description" : "Provided by geovalidation.\n",
+    "fieldName" : "community_board",
+    "position" : 25,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567809,
+    "width" : 280,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546886,
+    "name" : "Council District",
+    "dataTypeName" : "text",
+    "description" : "The City Council district where the service request is located.",
+    "fieldName" : "council_district",
+    "position" : 26,
+    "renderTypeName" : "text",
+    "tableColumnId" : 164146337,
+    "format" : { }
+  }, {
+    "id" : 623546887,
+    "name" : "Police Precinct",
+    "dataTypeName" : "text",
+    "description" : "The NYPD precinct where the service request is located.",
+    "fieldName" : "police_precinct",
+    "position" : 27,
+    "renderTypeName" : "text",
+    "tableColumnId" : 164146336,
+    "format" : { }
+  }, {
+    "id" : 623546888,
+    "name" : "BBL",
+    "dataTypeName" : "text",
+    "description" : "Borough Block and Lot, provided by geovalidation. Parcel number to identify the location of location of buildings and properties in NYC.",
+    "fieldName" : "bbl",
+    "position" : 28,
+    "renderTypeName" : "text",
+    "tableColumnId" : 63788374,
+    "width" : 100,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546889,
+    "name" : "Borough",
+    "dataTypeName" : "text",
+    "description" : "Provided by the submitter and confirmed by geovalidation.\n",
+    "fieldName" : "borough",
+    "position" : 29,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567810,
+    "width" : 184,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546890,
+    "name" : "X Coordinate (State Plane)",
+    "dataTypeName" : "number",
+    "description" : "Geo validated, X coordinate of the incident location. \n",
+    "fieldName" : "x_coordinate_state_plane",
+    "position" : 30,
+    "renderTypeName" : "number",
+    "tableColumnId" : 1567811,
+    "width" : 412,
+    "format" : {
+      "precisionStyle" : "standard",
+      "noCommas" : "false",
+      "align" : "right"
+    }
+  }, {
+    "id" : 623546891,
+    "name" : "Y Coordinate (State Plane)",
+    "dataTypeName" : "number",
+    "description" : "Geo validated,  Y coordinate of the incident location. \n",
+    "fieldName" : "y_coordinate_state_plane",
+    "position" : 31,
+    "renderTypeName" : "number",
+    "tableColumnId" : 1567812,
+    "width" : 412,
+    "format" : {
+      "precisionStyle" : "standard",
+      "noCommas" : "false",
+      "align" : "right"
+    }
+  }, {
+    "id" : 623546892,
+    "name" : "Open Data Channel Type",
+    "dataTypeName" : "text",
+    "description" : "Indicates how the SR was submitted to 311.  i.e. By Phone, Online, Mobile, Other or Unknown.",
+    "fieldName" : "open_data_channel_type",
+    "position" : 32,
+    "renderTypeName" : "text",
+    "tableColumnId" : 63788381,
+    "width" : 100,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546893,
+    "name" : "Park Facility Name",
+    "dataTypeName" : "text",
+    "description" : "If the incident location is a Parks Dept facility, the Name of the facility will appear here\n",
+    "fieldName" : "park_facility_name",
+    "position" : 33,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567813,
+    "width" : 316,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546894,
+    "name" : "Park Borough",
+    "dataTypeName" : "text",
+    "description" : "The borough of incident if it is a Parks Dept facility\n",
+    "fieldName" : "park_borough",
+    "position" : 34,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567814,
+    "width" : 244,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546895,
+    "name" : "Vehicle Type",
+    "dataTypeName" : "text",
+    "description" : "If the incident is a taxi, this field describes the type of TLC vehicle. \n",
+    "fieldName" : "vehicle_type",
+    "position" : 35,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567826,
+    "width" : 244,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546896,
+    "name" : "Taxi Company Borough",
+    "dataTypeName" : "text",
+    "description" : "If the incident is identified as a taxi, this field will display the borough of the taxi company. \n",
+    "fieldName" : "taxi_company_borough",
+    "position" : 36,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567827,
+    "width" : 340,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546897,
+    "name" : "Taxi Pick Up Location",
+    "dataTypeName" : "text",
+    "description" : "If the incident is identified as a taxi, this field displays the taxi pick up location\n",
+    "fieldName" : "taxi_pick_up_location",
+    "position" : 37,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567828,
+    "width" : 352,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546898,
+    "name" : "Bridge Highway Name",
+    "dataTypeName" : "text",
+    "description" : "If the incident is identified as a Bridge/Highway, the name will be displayed here.\n",
+    "fieldName" : "bridge_highway_name",
+    "position" : 38,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567829,
+    "width" : 328,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546899,
+    "name" : "Bridge Highway Direction",
+    "dataTypeName" : "text",
+    "description" : "If the incident is identified as a Bridge/Highway, the direction where the issue took place would be displayed here.\n",
+    "fieldName" : "bridge_highway_direction",
+    "position" : 39,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567830,
+    "width" : 388,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546900,
+    "name" : "Road Ramp",
+    "dataTypeName" : "text",
+    "description" : "If the incident location was Bridge/Highway this column differentiates if the issue was on the Road or the Ramp.\n",
+    "fieldName" : "road_ramp",
+    "position" : 40,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567831,
+    "width" : 208,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546901,
+    "name" : "Bridge Highway Segment",
+    "dataTypeName" : "text",
+    "description" : "Additional information on the section of the Bridge/Highway were the incident took place.\n",
+    "fieldName" : "bridge_highway_segment",
+    "position" : 41,
+    "renderTypeName" : "text",
+    "tableColumnId" : 1567832,
+    "width" : 364,
+    "format" : {
+      "displayStyle" : "plain",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546902,
+    "name" : "Latitude",
+    "dataTypeName" : "number",
+    "description" : "Geo based Lat of the incident location\n",
+    "fieldName" : "latitude",
+    "position" : 42,
+    "renderTypeName" : "number",
+    "tableColumnId" : 1567836,
+    "width" : 196,
+    "format" : {
+      "precisionStyle" : "standard",
+      "noCommas" : "false",
+      "align" : "right"
+    }
+  }, {
+    "id" : 623546903,
+    "name" : "Longitude",
+    "dataTypeName" : "number",
+    "description" : "Geo based Long of the incident location\n",
+    "fieldName" : "longitude",
+    "position" : 43,
+    "renderTypeName" : "number",
+    "tableColumnId" : 1567837,
+    "width" : 208,
+    "format" : {
+      "precisionStyle" : "standard",
+      "noCommas" : "false",
+      "align" : "right"
+    }
+  }, {
+    "id" : 623546905,
+    "name" : "Location",
+    "dataTypeName" : "point",
+    "description" : "Combination of the geo based lat & long of the incident location\n",
+    "fieldName" : "location",
+    "position" : 44,
+    "renderTypeName" : "point",
+    "tableColumnId" : 164200965,
+    "width" : 196,
+    "format" : {
+      "view" : "coords",
+      "align" : "left"
+    }
+  }, {
+    "id" : 623546906,
+    "name" : "Community Districts",
+    "dataTypeName" : "number",
+    "description" : "This column was automatically created in order to record in what polygon from the dataset 'Community Districts' (f5dn-yrer) the point in column 'location' is located.  This enables the creation of region maps (choropleths) in the visualization canvas and data lens.",
+    "fieldName" : ":@computed_region_f5dn_yrer",
+    "position" : 45,
+    "renderTypeName" : "number",
+    "tableColumnId" : 164200966,
+    "computationStrategy" : {
+      "source_columns" : [ "location" ],
+      "type" : "georegion_match_on_point",
+      "parameters" : {
+        "region" : "_f5dn-yrer",
+        "primary_key" : "_feature_id"
+      }
+    },
+    "format" : { }
+  }, {
+    "id" : 623546907,
+    "name" : "Borough Boundaries",
+    "dataTypeName" : "number",
+    "description" : "This column was automatically created in order to record in what polygon from the dataset 'Borough Boundaries' (yeji-bk3q) the point in column 'location' is located.  This enables the creation of region maps (choropleths) in the visualization canvas and data lens.",
+    "fieldName" : ":@computed_region_yeji_bk3q",
+    "position" : 46,
+    "renderTypeName" : "number",
+    "tableColumnId" : 164200967,
+    "computationStrategy" : {
+      "source_columns" : [ "location" ],
+      "type" : "georegion_match_on_point",
+      "parameters" : {
+        "region" : "_yeji-bk3q",
+        "primary_key" : "_feature_id"
+      }
+    },
+    "format" : { }
+  }, {
+    "id" : 623546908,
+    "name" : "Police Precincts",
+    "dataTypeName" : "number",
+    "description" : "This column was automatically created in order to record in what polygon from the dataset 'Police Precincts' (sbqj-enih) the point in column 'location' is located.  This enables the creation of region maps (choropleths) in the visualization canvas and data lens.",
+    "fieldName" : ":@computed_region_sbqj_enih",
+    "position" : 47,
+    "renderTypeName" : "number",
+    "tableColumnId" : 164200968,
+    "computationStrategy" : {
+      "source_columns" : [ "location" ],
+      "type" : "georegion_match_on_point",
+      "parameters" : {
+        "region" : "_sbqj-enih",
+        "primary_key" : "_feature_id"
+      }
+    },
+    "format" : { }
+  }, {
+    "id" : 623546909,
+    "name" : "City Council Districts",
+    "dataTypeName" : "number",
+    "description" : "This column was automatically created in order to record in what polygon from the dataset 'City Council Districts' (92fq-4b7q) the point in column 'location' is located.  This enables the creation of region maps (choropleths) in the visualization canvas and data lens.",
+    "fieldName" : ":@computed_region_92fq_4b7q",
+    "position" : 48,
+    "renderTypeName" : "number",
+    "tableColumnId" : 164200969,
+    "computationStrategy" : {
+      "source_columns" : [ "location" ],
+      "type" : "georegion_match_on_point",
+      "parameters" : {
+        "region" : "_92fq-4b7q",
+        "primary_key" : "_feature_id"
+      }
+    },
+    "format" : { }
+  } ],
+  "grants" : [ {
+    "inherited" : false,
+    "type" : "viewer",
+    "flags" : [ "public" ]
+  } ],
+  "metadata" : {
+    "rdfSubject" : "0",
+    "rdfClass" : "",
+    "jsonQuery" : {
+      "order" : [ {
+        "columnFieldName" : "created_date",
+        "ascending" : false
+      } ]
+    },
+    "attachments" : [ {
+      "filename" : "311_ServiceRequest_2020-present_DataDictionary_Updated_2025.xlsx",
+      "assetId" : "c5cc6926-45bb-4af3-8aab-0ee6a29bcf4d",
+      "name" : "311_ServiceRequest_2020-present_DataDictionary_Updated_2025.xlsx"
+    } ],
+    "custom_fields" : {
+      "Update" : {
+        "Automation" : "Yes",
+        "Date Made Public" : "10/18/2011",
+        "Update Frequency" : "Daily"
+      },
+      "Dataset Information" : {
+        "Agency" : "Office of Technology and Innovation (OTI)"
+      }
+    },
+    "filterCondition" : {
+      "metadata" : {
+        "advanced" : true,
+        "unifiedVersion" : 2
+      },
+      "children" : [ {
+        "metadata" : {
+          "tableColumnId" : {
+            "244403" : 1567787
+          },
+          "operator" : "EQUALS"
+        },
+        "type" : "operator",
+        "value" : "OR"
+      } ],
+      "type" : "operator",
+      "value" : "AND"
+    },
+    "rowIdentifier" : 623546861,
+    "rowLabel" : "311 Service Request",
+    "availableDisplayTypes" : [ "table", "fatrow", "page" ],
+    "renderTypeConfig" : {
+      "visible" : {
+        "table" : true
+      }
+    }
+  },
+  "owner" : {
+    "id" : "5fuc-pqz2",
+    "displayName" : "NYC OpenData",
+    "profileImageUrlLarge" : "/api/users/5fuc-pqz2/profile_images/LARGE",
+    "profileImageUrlMedium" : "/api/users/5fuc-pqz2/profile_images/THUMB",
+    "profileImageUrlSmall" : "/api/users/5fuc-pqz2/profile_images/TINY",
+    "screenName" : "NYC OpenData",
+    "type" : "interactive",
+    "flags" : [ "acceptedEula", "mayBeStoriesCoOwner" ]
+  },
+  "query" : {
+    "orderBys" : [ {
+      "ascending" : false,
+      "expression" : {
+        "columnId" : 623546862,
+        "type" : "column"
+      }
+    } ]
+  },
+  "rights" : [ "read" ],
+  "tableAuthor" : {
+    "id" : "5fuc-pqz2",
+    "displayName" : "NYC OpenData",
+    "profileImageUrlLarge" : "/api/users/5fuc-pqz2/profile_images/LARGE",
+    "profileImageUrlMedium" : "/api/users/5fuc-pqz2/profile_images/THUMB",
+    "profileImageUrlSmall" : "/api/users/5fuc-pqz2/profile_images/TINY",
+    "screenName" : "NYC OpenData",
+    "type" : "interactive",
+    "flags" : [ "acceptedEula", "mayBeStoriesCoOwner" ]
+  },
+  "tags" : [ "311", "311 service requests", "city government", "socialservices", "service request status", "all service requests", "rodent", "rat", "bike", "pothole", "complaints" ],
+  "flags" : [ "default", "ownerMayBeContacted", "restorable", "restorePossibleForType" ]
+}
