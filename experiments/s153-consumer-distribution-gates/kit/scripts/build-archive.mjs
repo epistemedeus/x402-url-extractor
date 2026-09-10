@@ -219,6 +219,7 @@ writeFileSync(
   join(DIST, "SHA256.txt"),
   `${sha256}  ${STAGE_NAME}.tgz\n`,
 );
+rmSync(STAGE, { recursive: true, force: true });
 
 process.stdout.write(
   JSON.stringify(
