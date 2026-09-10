@@ -97,15 +97,49 @@ function readLocalSource(sourceDir, artifact) {
   throw new AcquireError(`missing ${artifact.remotePath} in source dir ${sourceDir}`);
 }
 
-async function downloadRaw(url) {
-  const response = await fetch(url, {
-    headers: { "user-agent": ACQUIRE_USER_AGENT },
-    redirect: "follow",
-  });
-  if (!response.ok) {
-    throw new AcquireError(`download failed ${response.status} for ${url}`);
+export const DOWNLOAD_TIMEOUT_MS = 15_000;
+
+export async function downloadRaw(url, expected, { timeoutMs = DOWNLOAD_TIMEOUT_MS } = {}) {
+  if (!Number.isSafeInteger(expected?.bytes) || expected.bytes <= 0
+      || !Number.isSafeInteger(timeoutMs) || timeoutMs <= 0) {
+    throw new AcquireError("download requires a positive byte pin and deadline");
   }
-  return Buffer.from(await response.arrayBuffer());
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let reader;
+  try {
+    const response = await fetch(url, {
+      headers: { "user-agent": ACQUIRE_USER_AGENT },
+      redirect: "error",
+      signal: controller.signal,
+    });
+    if (response.status !== 200) throw new AcquireError(`download failed HTTP ${response.status}`);
+    const length = response.headers.get("content-length");
+    if (length !== null && (!/^\d+$/.test(length) || Number(length) > expected.bytes)) {
+      throw new AcquireError("download exceeds pinned size or has invalid content-length");
+    }
+    if (!response.body) throw new AcquireError("download has no response body");
+    reader = response.body.getReader();
+    const chunks = [];
+    let size = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > expected.bytes) throw new AcquireError("download exceeds pinned size");
+      chunks.push(Buffer.from(value));
+    }
+    if (size !== expected.bytes) throw new AcquireError("download size does not match pin");
+    return Buffer.concat(chunks, size);
+  } catch (error) {
+    if (controller.signal.aborted) throw new AcquireError("download deadline exceeded");
+    if (error instanceof AcquireError) throw error;
+    throw new AcquireError(`download failed: ${error.message}`);
+  } finally {
+    clearTimeout(timer);
+    controller.abort();
+    if (reader) await reader.cancel().catch(() => {});
+  }
 }
 
 function writeVerifiedFile(destPath, bytes) {
@@ -130,7 +164,7 @@ export async function acquireUpstream({
       bytes = local.bytes;
       source = local.sourcePath;
     } else {
-      bytes = await fetchBytes(url);
+      bytes = await fetchBytes(url, artifact);
       source = url;
     }
     const digest = verifyPinnedBytes(bytes, artifact, artifact.remotePath);

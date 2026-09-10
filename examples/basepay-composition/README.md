@@ -92,6 +92,11 @@ verifies `sha1("blob " + len + "\\0" + bytes)` and sha256 against
 `fixtures/basepay/DIGESTS.json`, writes `RECEIPT.json`, and **never executes**
 the files.
 
+The default HTTPS download refuses redirects and non-200 responses, limits
+each streamed response to its pinned byte count, and applies a 15-second
+deadline through headers and body reads. Size and both digests must match
+before that artifact is written. These bounds do not certify harness execution.
+
 ```bash
 npm run acquire-upstream
 node bin/cli.mjs --use-acquired
@@ -159,7 +164,7 @@ Three evidence classes stay distinct:
 
 1. **Caller / layer-1 observation assertions** — `caller_supplied_observation_assertions`
 2. **Provided report** — acquired pinned upstream JSON or other caller-supplied result/mapping bytes; `provided_report` / `caller_supplied_unverified_report`; not independently executed here
-3. **Independently executed harness result** — only the pinned worker-replay artifact (`pinned_worker_replay_artifact`) or an explicit `--harness-result` path (`separately_labelled_harness_input`). Never auto-promoted from provided-report.
+3. **Independently executed harness result** — only the exact pinned historical worker-replay artifact (`pinned_worker_replay_artifact`) retains its bounded known replay receipt. An explicit `--harness-result` path is only `separately_labelled_harness_input`: its execution is unverified. Neither a flag nor a provided report certifies execution; this helper does not run the harness.
 
 The default replay-shape file is the synthetic offline fixture, not a replay
 executed by this command. An external report remains

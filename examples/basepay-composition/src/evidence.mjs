@@ -126,6 +126,6 @@ export function independentTipReplayConfirmed({ gitBlobSha, commit, replayPass }
 }
 
 export function isIndependentlyExecutedHarnessOrigin(origin) {
-  return origin === EVIDENCE_ORIGIN.PINNED_WORKER_REPLAY
-    || origin === EVIDENCE_ORIGIN.SEPARATELY_LABELLED_HARNESS;
+  // A caller-selected label describes input, never certifies execution.
+  return origin === EVIDENCE_ORIGIN.PINNED_WORKER_REPLAY;
 }

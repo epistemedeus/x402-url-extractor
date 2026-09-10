@@ -60,7 +60,7 @@ Adversarial observation matrices (layer 1 rejected or partial; layer 2 unchanged
   node bin/cli.mjs --observations ./fixtures/observations/unknown-case.json
   node bin/cli.mjs --observations ./fixtures/observations/version-skew.json
 
-Separately labelled harness input (not auto-promoted from provided-report):
+Separately labelled harness input (label only; execution is not verified):
   node bin/cli.mjs --harness-result /path/to/harness/conformance-result.json
 
 Pins:
