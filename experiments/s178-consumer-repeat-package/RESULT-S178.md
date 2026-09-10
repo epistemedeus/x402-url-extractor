@@ -4,7 +4,7 @@
 
 - Branch: `codex/s178-consumer-repeat-package-20260910`
 - Base: `origin/master` @ `a20c6e2d8cd716498dfe1c8d0f34985039df64cc`
-- Tip: `8a1206627302d8b5a3c0c6346be27f92ba4e29a3`
+- Tip: `4bd42d9cab16115862d41df42f9f2e68f683dbf9`
 
 ## Preserved frozen S174 tip (S179 / 6Pro review)
 
