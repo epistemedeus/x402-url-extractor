@@ -1,0 +1,7 @@
+{
+  "schema": "x402.r2.consumer.customer_result_request.v1",
+  "requestId": "journey-positive-20260910",
+  "recipeIds": ["procurement-brief"],
+  "procurementInputPath": "../07/fixtures/positive.json",
+  "note": "Clean-install positive path: only the ready 07 recipe."
+}

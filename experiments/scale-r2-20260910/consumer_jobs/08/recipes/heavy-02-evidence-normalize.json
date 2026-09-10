@@ -1,0 +1,9 @@
+{
+  "id": "heavy-02-evidence-normalize",
+  "title": "Evidence normalize",
+  "status": "unavailable_pending_heavy",
+  "jobRef": "R2-CONSUMER-JOBS-02",
+  "schema": null,
+  "cli": null,
+  "note": "Heavy branch artifact not ready on this thin package. Slot remains unavailable_pending_heavy (distinct from empty/no-users). Compose exact Heavy returned artifacts later; do not invent demo outputs."
+}

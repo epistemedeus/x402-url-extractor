@@ -1,0 +1,13 @@
+{
+  "id": "procurement-brief",
+  "title": "Evidence-based procurement brief",
+  "status": "ready",
+  "jobRef": "R2-CONSUMER-JOBS-07",
+  "schema": "x402.r2.consumer.procurement_brief.v1",
+  "cli": {
+    "siblingPath": "../07/src/cli.mjs",
+    "command": ["node", "src/cli.mjs", "brief", "<input.json>"],
+    "fallbackEmbeddedDir": "recipes/procurement-brief/"
+  },
+  "note": "Assembles Cap04-aligned dry-run brief from caller-supplied fixtures via consumer_jobs/07. No live paid calls."
+}
