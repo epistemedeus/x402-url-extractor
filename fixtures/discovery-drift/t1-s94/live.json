@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "samedaydesk.discovery-drift-snapshot.v1",
+  "observedAt": "2026-09-10T07:21:39.018Z",
+  "source": "live-unpaid-402",
+  "resource": "https://agent-economy-signal-x402-mainnet.bronzetti-andrea.workers.dev/premium/agent-brief",
+  "lastUpdated": null,
+  "offers": [
+    {
+      "protocol": "x402",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "20000",
+      "recipient": "0xbda48b29607b9dc66ef7e38b68ad53f2b17efb23"
+    }
+  ],
+  "unknowns": ["lastUpdated"],
+  "raw": {
+    "httpStatus": 402,
+    "decision": "review_required",
+    "offerCount": 1,
+    "protocols": ["x402"],
+    "credentialsUsed": false,
+    "paymentSent": false,
+    "redirectsFollowed": false
+  },
+  "boundary": {
+    "credentialsUsed": false,
+    "paymentSigned": false,
+    "paymentSent": false,
+    "redirectsFollowed": false,
+    "unitsConverted": false
+  }
+}
