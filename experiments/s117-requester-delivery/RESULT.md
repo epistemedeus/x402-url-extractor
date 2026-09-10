@@ -3,7 +3,7 @@
 - **Branch:** `codex/s117-requester-delivery-20260910`
 - **Base:** `1a23b648e3c5f90bc009accb85972e2db6e22051`
 - **Code commit:** `7febe94790f5e1697f38f58f83df56dd16a67bdf`
-- **Docs/tip commit:** 
+- **Docs/tip commit:** `PENDING`
 - **Tree:** `experiments/s117-requester-delivery/`
 - **Live payment routes:** not edited
 
