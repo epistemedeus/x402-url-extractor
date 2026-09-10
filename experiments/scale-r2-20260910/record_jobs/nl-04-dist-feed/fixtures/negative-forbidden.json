@@ -1,0 +1,31 @@
+{
+  "schema": "x402.r2.record.route_regression_input.v1",
+  "reportId": "nl-04-dist-feed-negative",
+  "feedId": "nl-04-feed-negative",
+  "title": "Forbidden SEO/traffic claim must refuse",
+  "demo": true,
+  "seoRank": 12,
+  "trafficProjection": 10000,
+  "baseline": {
+    "label": "baseline",
+    "routes": [
+      {
+        "path": "/",
+        "url": "https://example.test/",
+        "status": 200,
+        "accessibility": "ok"
+      }
+    ]
+  },
+  "current": {
+    "label": "current",
+    "routes": [
+      {
+        "path": "/",
+        "url": "https://example.test/",
+        "status": 200,
+        "accessibility": "ok"
+      }
+    ]
+  }
+}

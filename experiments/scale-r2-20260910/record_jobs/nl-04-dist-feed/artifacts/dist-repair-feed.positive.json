@@ -1,0 +1,152 @@
+{
+  "schema": "pilot.nl.record.dist_repair_feed.v1",
+  "generatedAt": "2026-09-10T12:00:00.000Z",
+  "status": "ready",
+  "feedId": "nl-04-feed-positive",
+  "demo": true,
+  "currentCaptureIncomplete": false,
+  "partialReasons": [],
+  "routeReportSummary": {
+    "schema": "x402.r2.record.route_regression_report.v1",
+    "status": "ready",
+    "reportId": "nl-04-dist-feed-positive",
+    "baselineMeta": {
+      "label": "baseline-2026-09-01",
+      "capturedAt": "2026-09-01T00:00:00.000Z",
+      "routeCount": 6
+    },
+    "currentMeta": {
+      "label": "current-2026-09-10",
+      "capturedAt": "2026-09-10T00:00:00.000Z",
+      "routeCount": 6
+    },
+    "summary": {
+      "routeCount": 7,
+      "deltaCounts": {
+        "unchanged": 1,
+        "removed": 1,
+        "redirected": 1,
+        "inaccessible": 2,
+        "restored": 1,
+        "status_changed": 0,
+        "added": 1
+      },
+      "note": "Factual delta counts only. No SEO rank, traffic projection, invest advice, or site health score."
+    },
+    "partialReasons": [],
+    "scopeNote": "Report covers only the supplied baseline+current route snapshot pair. This is not a claim about the entire internet.",
+    "diffCount": 7
+  },
+  "repairRecommendations": [
+    {
+      "routeKey": "/",
+      "delta": "unchanged",
+      "notes": [
+        "No material route delta in supplied pair."
+      ],
+      "recommendation": "no_action_unchanged",
+      "confidence": "high",
+      "coveragePreserved": true
+    },
+    {
+      "routeKey": "/changelog",
+      "delta": "added",
+      "notes": [
+        "Present in current only (within supplied pair)."
+      ],
+      "recommendation": "consider_listing_new_route",
+      "confidence": "medium",
+      "coveragePreserved": true
+    },
+    {
+      "routeKey": "/docs",
+      "delta": "redirected",
+      "notes": [
+        "finalUrl / redirect location changed between snapshots."
+      ],
+      "recommendation": "update_listed_route_or_redirect_target",
+      "confidence": "high",
+      "coveragePreserved": true
+    },
+    {
+      "routeKey": "/legacy",
+      "delta": "inaccessible",
+      "notes": [
+        "Was reachable in baseline; now inaccessible in current."
+      ],
+      "recommendation": "diagnose_access_or_listing_path",
+      "confidence": "high",
+      "coveragePreserved": true
+    },
+    {
+      "routeKey": "/maintenance",
+      "delta": "restored",
+      "notes": [
+        "Was inaccessible in baseline; now reachable."
+      ],
+      "recommendation": "confirm_restored_route_in_listing",
+      "confidence": "medium",
+      "coveragePreserved": true
+    },
+    {
+      "routeKey": "/old-blog",
+      "delta": "removed",
+      "notes": [
+        "surface_broken_or_removed_route",
+        "Present in baseline, absent in complete current capture."
+      ],
+      "recommendation": "recommend_distribution_recheck",
+      "confidence": "high",
+      "coveragePreserved": false,
+      "secondaryRecommendation": "surface_broken_or_removed_route"
+    },
+    {
+      "routeKey": "/pricing",
+      "delta": "inaccessible",
+      "notes": [
+        "Was reachable in baseline; now inaccessible in current."
+      ],
+      "recommendation": "diagnose_access_or_listing_path",
+      "confidence": "high",
+      "coveragePreserved": true
+    }
+  ],
+  "recommendationSummary": {
+    "recommendationCount": 7,
+    "byRecommendation": {
+      "no_action_unchanged": 1,
+      "consider_listing_new_route": 1,
+      "update_listed_route_or_redirect_target": 1,
+      "diagnose_access_or_listing_path": 2,
+      "confirm_restored_route_in_listing": 1,
+      "recommend_distribution_recheck": 1
+    },
+    "coveragePreservedCount": 6,
+    "note": "Deterministic actions only. No SEO/traffic/ranking/crawler invention."
+  },
+  "usableBy": [
+    "NL-DISTRIBUTION-06",
+    "distribution/08"
+  ],
+  "pins": {
+    "merchantRecord05": "a7e2cd7a2223e2aa7e7e09eebf3695aba4731205",
+    "samedaydeskDist08": "ea000772cdbd6d5df7174369dcef9aa2270e5723",
+    "recordJobs05Path": "experiments/scale-r2-20260910/record_jobs/05",
+    "distribution08Path": "experiments/scale-r2-20260910/distribution/08",
+    "routeRegressionSchema": "x402.r2.record.route_regression_report.v1",
+    "routeRegressionInputSchema": "x402.r2.record.route_regression_input.v1",
+    "diagnosisSchemaCite": "pilot.r2.distribution.conversion_diagnosis.v1"
+  },
+  "distributionCite": {
+    "cite": "distribution/08 conversion diagnosis export shape",
+    "diagnosisSchema": "pilot.r2.distribution.conversion_diagnosis.v1",
+    "pin": "ea000772cdbd6d5df7174369dcef9aa2270e5723",
+    "note": "Feed does not call diagnoseConversion; Dist-06 consumes recommendations."
+  },
+  "scopeNote": "Feed maps only the supplied baseline+current route snapshot pair into repair recommendations. Absence under incomplete current capture cannot prove global removal. Not a crawl, SEO, traffic, or ranking claim.",
+  "coverageNote": "coveragePreserved: when current capture is incomplete/partial, removed deltas become cannot_prove_global_removal / recheck_with_complete_capture — never a global-removal claim.",
+  "reuseFrom": "NL-RECORD-04",
+  "mutationBoundary": "Isolated feature-branch source/tests only. Root owns merge, publication, and paid actions.",
+  "dryRun": "Fixture/snapshot feed only: never crawl live sites; never invent crawler/traffic/ranking results.",
+  "consumerInstructions": "NL-DISTRIBUTION-06 (and distribution/08 consumers) should read repairRecommendations[]. Honor coveragePreserved / cannot_prove_global_removal when currentCaptureIncomplete. Do not invent SEO, traffic, ranking, crawler, or revenue claims from this feed."
+}
