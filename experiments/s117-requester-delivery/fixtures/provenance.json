@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "s117.provenance.v1",
+  "observedAt": "2026-09-10T09:14:12Z",
+  "session": "codex/s117-requester-delivery-20260910",
+  "baseCommit": "1a23b648e3c5f90bc009accb85972e2db6e22051",
+  "payments": "none",
+  "outboundPrsOrComments": "none",
+  "sources": [
+    {
+      "id": "aibtc666",
+      "url": "https://github.com/aibtcdev/aibtc-mcp-server/issues/666",
+      "date": "2026-09-09",
+      "stateOnCheck": "OPEN",
+      "licenseIfKnown": "unknown",
+      "relatedPr": "https://github.com/aibtcdev/aibtc-mcp-server/pull/667"
+    },
+    {
+      "id": "aibtc667",
+      "url": "https://github.com/aibtcdev/aibtc-mcp-server/pull/667",
+      "date": "2026-09-09",
+      "stateOnCheck": "OPEN not merged"
+    },
+    {
+      "id": "merit922",
+      "url": "https://github.com/Merit-Systems/x402scan/issues/922",
+      "date": "2026-05-23",
+      "stateOnCheck": "OPEN no linked PR",
+      "note": "Older than the 2026-09-07 cutoff; kept because it is the inverse v1-only header miss and still unresolved."
+    },
+    {
+      "id": "x402-3439",
+      "url": "https://github.com/x402-foundation/x402/issues/3439",
+      "date": "2026-09-10",
+      "stateOnCheck": "OPEN",
+      "related": [
+        "https://github.com/x402-foundation/x402/pull/3213",
+        "https://github.com/x402-foundation/x402/pull/3440",
+        "https://github.com/x402-foundation/x402/pull/3441",
+        "https://github.com/x402-foundation/x402/pull/3442",
+        "https://github.com/x402-foundation/x402/pull/3443"
+      ]
+    },
+    {
+      "id": "clawhub3621",
+      "url": "https://github.com/openclaw/clawhub/pull/3621",
+      "date": "2026-09-07",
+      "stateOnCheck": "OPEN needs real transport proof"
+    },
+    {
+      "id": "jaw319",
+      "url": "https://github.com/JustaName-id/jaw-mono/pull/319",
+      "date": "2026-09-07",
+      "stateOnCheck": "OPEN owner PR in review"
+    },
+    {
+      "id": "cdp806",
+      "url": "https://github.com/coinbase/cdp-sdk/issues/806",
+      "date": "2026-09-05",
+      "stateOnCheck": "OPEN",
+      "note": "Opened two days before the cutoff; independently re-observed 2026-09-10."
+    },
+    {
+      "id": "hyperxosist32",
+      "url": "https://github.com/KG-NINJA/HyperXosist-Agent/pull/32",
+      "date": "2026-09-07",
+      "stateOnCheck": "DRAFT; production 402 later reported repaired"
+    },
+    {
+      "id": "jrcrypto-timeout",
+      "url": "https://x.com/jrcrypto_dev/status/2097948157153869918",
+      "date": "2026-09-10"
+    }
+  ]
+}

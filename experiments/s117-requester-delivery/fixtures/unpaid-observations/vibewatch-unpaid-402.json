@@ -1,0 +1,28 @@
+{
+  "evidenceClass": "independently_observed",
+  "observedAt": "2026-09-10T09:14:12Z",
+  "resource": "https://api.vibewatch.io/api/v1/public/stacks-index/pro/projects/bitflow-finance-af3b",
+  "method": "GET",
+  "status": 402,
+  "hasPaymentRequiredHeader": true,
+  "x402Version": 2,
+  "accepts": [
+    {
+      "scheme": "exact",
+      "network": "stacks:1",
+      "maxTimeoutSeconds": 45,
+      "amount": "100",
+      "asset": "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token"
+    },
+    {
+      "scheme": "exact",
+      "network": "stacks:1",
+      "maxTimeoutSeconds": 45,
+      "amount": "300000",
+      "asset": "STX"
+    }
+  ],
+  "wellKnown": "https://api.vibewatch.io/.well-known/x402.json",
+  "settlementObserved": false,
+  "notes": "Unpaid probe only. CDP /validate rejects stacks:1 / sBTC and missing Bazaar; that is expected for a non-CDP rail and is not the aibtc #666 failure mode."
+}

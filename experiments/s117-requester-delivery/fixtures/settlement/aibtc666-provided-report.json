@@ -1,0 +1,23 @@
+{
+  "id": "aibtc666-provided-report",
+  "evidenceClass": "provided_report",
+  "source": {
+    "url": "https://github.com/aibtcdev/aibtc-mcp-server/issues/666",
+    "date": "2026-09-09",
+    "note": "Requester-reported settlement locations from a paid Vibewatch call. This session did not pay that endpoint. The txid is the public report value, not an independently observed settlement."
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "payment-response": "eyJzdWNjZXNzIjp0cnVlLCJwYXllciI6IlNQVEVTVF9SRURBQ1RFRCIsInRyYW5zYWN0aW9uIjoiNWQ2NTk4MzU4ZTc2ZmQzMGQzOTQ2YzZhNmI3NzZmNDAwZGRkZmNmY2Q4ODRiNmFlZDVjZmFmZWFiZTc0Y2ZiNiIsIm5ldHdvcmsiOiJzdGFja3M6MSJ9"
+    },
+    "body": {
+      "payment": {
+        "txid": "5d6598358e76fd30d3946c6a6b776f400dddfcfcd884b6aed5cfafeabe74cfb6",
+        "amount": "100",
+        "asset": "sBTC",
+        "network": "stacks:1"
+      }
+    }
+  }
+}

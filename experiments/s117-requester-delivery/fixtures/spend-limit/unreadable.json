@@ -1,0 +1,7 @@
+{
+  "id": "unreadable-binds",
+  "limits": [
+    { "id": "unreadable-period", "remaining": "not-a-number" },
+    { "id": "healthy-period", "remaining": "1000000" }
+  ]
+}

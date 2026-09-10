@@ -1,0 +1,16 @@
+{
+  "evidenceClass": "independently_observed",
+  "observedAt": "2026-09-10T09:14:12Z",
+  "resource": "https://api.kgninja.dev/hyperxosist-query",
+  "method": "POST",
+  "sourcePr": "https://github.com/KG-NINJA/HyperXosist-Agent/pull/32",
+  "cdpValidate": {
+    "valid": true,
+    "index": null,
+    "simulationOutcome": "accepted",
+    "bazaarPresent": true,
+    "preflightFailed": [],
+    "x402Version": 2
+  },
+  "notes": "Unsigned POST returned HTTP 402 with a Bazaar extension. Official /validate accepted. Index remains null. This does not prove a paid delivery."
+}
