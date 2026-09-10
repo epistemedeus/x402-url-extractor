@@ -5,6 +5,7 @@ import httpx
 from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events.event_queue_v2 import EventQueue
 from a2a.types import Message, Part, Role
+from a2a.utils.constants import PROTOCOL_VERSION_1_0, VERSION_HEADER
 
 
 MAX_UPSTREAM_BYTES = 128 * 1024
@@ -116,7 +117,7 @@ class CatalogProxyExecutor(AgentExecutor):
         try:
             response = await client.post(
                 self._upstream_url,
-                headers={"A2A-Version": "1.0"},
+                headers={VERSION_HEADER: PROTOCOL_VERSION_1_0},
                 json=build_upstream_request(context.get_user_input(), context.context_id),
             )
             response.raise_for_status()
