@@ -173,6 +173,7 @@ import {
 } from "./commerce-events.mjs";
 import { createCommerceSettlementReconciler } from "./commerce-settlement-reconciler.mjs";
 import { createIdempotencyReplay, DEFAULT_PAID_ROUTES, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
+import { installIndexingPayloadContinuity } from "./indexing-payload-continuity.mjs";
 import {
   PURCHASE_EVIDENCE_MANIFEST_PATH,
   PURCHASE_EVIDENCE_RELATION,
@@ -439,6 +440,29 @@ const commerceTrust = createCommerceTrust({
 if (commerceTrust.enabled) {
   resourceServer.registerExtension(commerceTrust.resourceServerExtension);
 }
+// CDP Bazaar indexes paymentPayload.resource + extensions.bazaar only (not
+// paymentRequirements). Exact EIP-3009 does not sign those fields. Append
+// route-owned declared metadata when a valid client omits them; reject
+// mismatched or wrong-typed values. Shared verify+settle boundary.
+installIndexingPayloadContinuity(resourceServer, {
+  resolveDeclaredResource(transportContext) {
+    const adapter = transportContext?.request?.adapter;
+    if (!adapter?.getUrl || !adapter?.getPath) return null;
+    const path = adapter.getPath();
+    const url = adapter.getUrl();
+    if (typeof url !== "string" || !url) return null;
+    const row = RESOURCES.find((entry) => new URL(entry.url).pathname === path);
+    const meta = Object.prototype.hasOwnProperty.call(BAZAAR_RESOURCE_METADATA, path)
+      ? bazaarResourceMetadataFor(path)
+      : {};
+    return {
+      url,
+      description: row?.description || "",
+      mimeType: row?.mimeType || "application/json",
+      ...meta,
+    };
+  },
+});
 const COMMON_COMMERCE_EXTENSIONS = {
   [PAYMENT_IDENTIFIER]: declarePaymentIdentifierExtension(false),
   ...BUILDER_CODE_ROUTE_EXTENSIONS,
