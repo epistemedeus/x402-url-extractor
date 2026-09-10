@@ -27,6 +27,9 @@ import {
   describeRetentionCoverage,
   digestMcpTypedAttributionMarker,
   drainCommerceTelemetryForShutdown,
+  RARE_FUNNEL_CAPTURE_VERSION,
+  RARE_FUNNEL_EVIDENCE_SCHEMA,
+  RARE_FUNNEL_RESET_POLICY,
   isCanonicalMcpTypedCommerceEvent,
   isSemanticUnmatched,
   listDeclaredAgentDiscoverySources,
@@ -907,6 +910,22 @@ async function readPaidEvidenceRows(telemetry) {
   return raw.split("\n").filter(Boolean).map((line) => JSON.parse(line));
 }
 
+async function readRareFunnelRows(telemetry) {
+  const rawCurrent = await readFile(telemetry.paths.rareFunnelPath, "utf8").catch((error) => (
+    error?.code === "ENOENT" ? "" : Promise.reject(error)
+  ));
+  const rawRotated = await readFile(telemetry.paths.rareFunnelRotatedPath, "utf8").catch((error) => (
+    error?.code === "ENOENT" ? "" : Promise.reject(error)
+  ));
+  const byId = new Map();
+  for (const line of `${rawRotated}\n${rawCurrent}`.split("\n")) {
+    if (!line.trim()) continue;
+    const parsed = JSON.parse(line);
+    if (!byId.has(parsed.id)) byId.set(parsed.id, parsed);
+  }
+  return [...byId.values()];
+}
+
 test("private paid-success evidence records exact x402 and MPP HTTP attribution", async () => {
   const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-paid-evidence-protocols-"));
   const x402Payer = "0x1111111111111111111111111111111111111111";
@@ -1325,6 +1344,233 @@ test("private paid evidence survives repeated ordinary traffic rotations", async
   assert.equal((await readPaidEvidenceRows(telemetry)).length, 1);
   const retainedTraffic = `${await readFile(telemetry.paths.rotatedPath, "utf8")}\n${await readFile(telemetry.paths.currentPath, "utf8")}`;
   assert.equal(retainedTraffic.includes('"result":"paid_success"'), false);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("durable rare funnel evidence survives ordinary traffic rotations and stream loss", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-rare-funnel-rotation-"));
+  const rarePaidCredential = Buffer.from(JSON.stringify({
+    x402Version: 2,
+    accepted: {
+      scheme: "exact",
+      network: "eip155:8453",
+      amount: "5000",
+      asset: "0x3333333333333333333333333333333333333333",
+      payTo: "0x4444444444444444444444444444444444444444",
+    },
+    payload: { authorization: { from: "0x1111111111111111111111111111111111111111" } },
+  })).toString("base64");
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "rare-funnel-rotation-secret",
+    maxBytes: 1,
+    rareMaxBytes: 1,
+    credentialAttemptSince: "2020-01-01T00:00:00.000Z",
+  });
+  emitEvidenceTestResponse(telemetry, {
+    headers: { "payment-signature": rarePaidCredential },
+    responseChunks: [Buffer.from("rare-paid-output")],
+  });
+  await telemetry.flush();
+  const originalRare = await readFile(telemetry.paths.rareFunnelPath, "utf8");
+  for (let index = 0; index < 3; index += 1) {
+    emitEvidenceTestResponse(telemetry, {
+      requestPath: "/openapi.json",
+      originalUrl: "/openapi.json",
+      ip: `203.0.113.${240 + index}`,
+      responseChunks: [Buffer.from(`ordinary-${index}`)],
+    });
+    await telemetry.flush();
+  }
+  assert.equal(await readFile(telemetry.paths.rareFunnelPath, "utf8"), originalRare);
+  const rareRows = await readRareFunnelRows(telemetry);
+  assert.equal(rareRows.length, 1);
+  assert.equal(rareRows[0].captureProvenance, "http_middleware");
+  assert.equal(rareRows[0].schemaVersion, RARE_FUNNEL_EVIDENCE_SCHEMA);
+  assert.equal(rareRows[0].captureVersion, RARE_FUNNEL_CAPTURE_VERSION);
+  assert.equal(rareRows[0].usefulness, "unknown");
+  const retainedTraffic = `${await readFile(telemetry.paths.rotatedPath, "utf8")}\n${await readFile(telemetry.paths.currentPath, "utf8")}`;
+  assert.equal(retainedTraffic.includes('"paymentPresent":true'), false);
+  const snapshot = await telemetry.snapshot({ days: 90 });
+  assert.equal(snapshot.parseableCredentialAttemptEvents, 0);
+  assert.equal(snapshot.durableRareFunnel.parseableCredentialAttemptEvents, 1);
+  assert.equal(snapshot.durableRareFunnel.paidSuccessEvents, 1);
+  assert.equal(snapshot.durableRareFunnel.resetPolicy, RARE_FUNNEL_RESET_POLICY);
+  assert.equal(snapshot.durableRareFunnel.boundaries.noHistoricalBackfill, true);
+  assert.equal(snapshot.durableRareFunnel.boundaries.actorHashNotIndependentIdentity, true);
+  const serialized = JSON.stringify(snapshot);
+  assert.equal(serialized.includes(rarePaidCredential), false);
+  assert.equal(serialized.includes(rareRows[0].id), false);
+  assert.equal(serialized.includes(rareRows[0].actor), false);
+  assert.equal(serialized.includes(rareRows[0].paymentActor), false);
+  assert.equal(snapshot.durableRareFunnel.coverage.retainedObservationStart, undefined);
+  assert.equal(snapshot.durableRareFunnel.coverage.retainedObservationEnd, undefined);
+  assert.equal(snapshot.durableRareFunnel.coverage.retainedDurationWholeDays, 0);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("durable rare funnel deduplicates duplicate ids and retains parseable credential errors", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-rare-funnel-dedup-"));
+  const failingCredential = Buffer.from(JSON.stringify({
+    x402Version: 2,
+    accepted: {
+      scheme: "exact",
+      network: "eip155:8453",
+      amount: "5000",
+      asset: "0x5555555555555555555555555555555555555555",
+      payTo: "0x6666666666666666666666666666666666666666",
+    },
+    payload: { authorization: { from: "0x7777777777777777777777777777777777777777" } },
+  })).toString("base64");
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "rare-funnel-dedup-secret",
+    credentialAttemptSince: "2020-01-01T00:00:00.000Z",
+  });
+  emitEvidenceTestResponse(telemetry, {
+    originalUrl: "/extract?url=https%3A%2F%2Fexample.com",
+    query: { url: "https://example.com" },
+    headers: { "payment-signature": failingCredential },
+    statusCode: 402,
+    responseHeaders: { "x402-error": "authorization signature mismatch" },
+    responseChunks: [Buffer.from("payment-failure-output")],
+  });
+  await telemetry.flush();
+  const rows = await readRareFunnelRows(telemetry);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].paymentCredentialParsed, true);
+  assert.equal(rows[0].result, "challenge");
+  assert.equal(rows[0].paymentFailureCode, "payment_verification_failed");
+  await appendFile(telemetry.paths.rareFunnelPath, `${JSON.stringify(rows[0])}\n`);
+  const snapshot = await telemetry.snapshot({ days: 90 });
+  assert.equal(snapshot.durableRareFunnel.parseableCredentialAttemptEvents, 1);
+  assert.equal(snapshot.durableRareFunnel.paymentErrorEvents, 1);
+  assert.equal(snapshot.durableRareFunnel.paymentUnknownOrPartialEvents, 0);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("durable rare funnel captures MCP typed paid outcomes separately from stream counters", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-rare-funnel-mcp-typed-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "rare-funnel-mcp-secret",
+    credentialAttemptSince: "2020-01-01T00:00:00.000Z",
+  });
+  const digest = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  const decision = evaluateMcpTypedTelemetryOutcome({
+    schemaVersion: "samedaydesk.mcp-typed-telemetry-input.v1",
+    binding: {
+      tool: "extract",
+      productSku: "samedaydesk-extract",
+      resource: "mcp://tool/extract",
+      issuedOfferDigest: digest,
+    },
+    request: { jsonrpc: "2.0", hasId: true, id: 9, method: "tools/call" },
+    response: { hasId: true, id: 9, kind: "tool_result" },
+    credential: { state: "verified", offerDigest: digest },
+    execution: { state: "handler_success", handlerInvoked: true, resultIsError: false },
+    settlement: { state: "succeeded", offerDigest: digest },
+  });
+  telemetry.appendMcpTypedDecision(decision, null, "claude-code-marketplace-v1");
+  await telemetry.flush();
+  const rareRows = await readRareFunnelRows(telemetry);
+  assert.equal(rareRows.length, 1);
+  assert.equal(rareRows[0].captureProvenance, "mcp_typed_adapter");
+  assert.equal(rareRows[0].route, "/mcp");
+  assert.equal(rareRows[0].agentDiscoverySource, "claude-code-marketplace");
+  assert.equal(rareRows[0].result, "paid_success");
+  const snapshot = await telemetry.snapshot({ days: 90 });
+  assert.equal(snapshot.durableRareFunnel.paidSuccessEvents, 1);
+  assert.equal(snapshot.durableRareFunnel.byCaptureProvenance.mcp_typed_adapter, 1);
+  assert.equal(snapshot.parseableCredentialAttemptEvents, 0);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("durable rare funnel reloads after restart without claiming continuous history", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-rare-funnel-restart-"));
+  const options = {
+    dataDir,
+    secret: "rare-funnel-restart-secret",
+    credentialAttemptSince: "2020-01-01T00:00:00.000Z",
+  };
+  const writer = createCommerceTelemetry(options);
+  emitEvidenceTestResponse(writer, {
+    headers: { "payment-signature": "restart-unparseable-credential" },
+    statusCode: 402,
+  });
+  await writer.flush();
+
+  const restarted = createCommerceTelemetry(options);
+  const snapshot = await restarted.snapshot({ days: 90 });
+  assert.equal(snapshot.durableRareFunnel.paymentHeaderEvents, 1);
+  assert.equal(snapshot.durableRareFunnel.coverage.requestedWindowComplete, false);
+  assert.equal(snapshot.durableRareFunnel.coverage.requestedWindowCoverage, COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("an old retained rare row is not proof of uninterrupted requested-window capture", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-rare-funnel-coverage-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "rare-funnel-coverage-secret",
+    credentialAttemptSince: "2020-01-01T00:00:00.000Z",
+  });
+  emitEvidenceTestResponse(telemetry, {
+    headers: { "payment-signature": "coverage-unparseable-credential" },
+    statusCode: 402,
+  });
+  await telemetry.flush();
+  const [row] = await readRareFunnelRows(telemetry);
+  row.ts = "2020-01-01T00:00:00.000Z";
+  await writeFile(telemetry.paths.rareFunnelPath, `${JSON.stringify(row)}\n`);
+
+  const snapshot = await telemetry.snapshot({ days: 90 });
+  assert.equal(snapshot.durableRareFunnel.coverage.retainedObservationStartsBeforeRequestedWindow, true);
+  assert.equal(snapshot.durableRareFunnel.coverage.captureContinuityProven, false);
+  assert.equal(snapshot.durableRareFunnel.coverage.requestedWindowComplete, false);
+  assert.equal(snapshot.durableRareFunnel.boundaries.actorCountsAreNotOperatorCounts, true);
+  assert.equal(snapshot.durableRareFunnel.independentOperatorCount, null);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("single-writer concurrent rare appends stay parseable across bounded rotation", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-rare-funnel-concurrent-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "rare-funnel-concurrent-secret",
+    rareMaxBytes: 1,
+    credentialAttemptSince: "2020-01-01T00:00:00.000Z",
+  });
+  for (let index = 0; index < 4; index += 1) {
+    emitEvidenceTestResponse(telemetry, {
+      headers: { "payment-signature": `concurrent-unparseable-${index}` },
+      ip: `203.0.113.${120 + index}`,
+      statusCode: 402,
+    });
+  }
+  await telemetry.flush();
+  const rows = await readRareFunnelRows(telemetry);
+  assert.equal(rows.length, 2, "one current and one rotated bounded record remain");
+  const snapshot = await telemetry.snapshot({ days: 90 });
+  assert.equal(snapshot.durableRareFunnel.coverage.integrityStatus, COMMERCE_INTEGRITY_OK);
+  assert.equal(snapshot.durableRareFunnel.coverage.requestedWindowComplete, false);
+  assert.equal((await telemetry.storageStatus()).writerGate.crossProcessSafe, false);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("durable rare funnel write failures remain visible to flush without leaking credentials", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-rare-funnel-write-failure-"));
+  const telemetry = createCommerceTelemetry({ dataDir, secret: "rare-funnel-write-failure-secret" });
+  await mkdir(telemetry.paths.rareFunnelPath, { recursive: true });
+  emitEvidenceTestResponse(telemetry, {
+    headers: { "payment-signature": "write-failure-rare-credential" },
+    rawBody: Buffer.alloc(0),
+    responseChunks: [Buffer.from("write-failure-rare-output")],
+  });
+  await assert.rejects(() => telemetry.flush());
+  const traffic = await readFile(telemetry.paths.currentPath, "utf8");
+  assert.match(traffic, /"result":"paid_success"/);
+  assert.equal(traffic.includes("write-failure-rare-credential"), false);
   await rm(dataDir, { recursive: true, force: true });
 });
 

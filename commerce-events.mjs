@@ -196,6 +196,40 @@ const PAID_EVIDENCE_RUNTIME_ATTRIBUTION = "http";
 const PAID_EVIDENCE_VALIDATOR_VERDICT = "not_checked";
 const PAID_EVIDENCE_VALIDATOR_AUTHORITY = "none";
 const PAID_EVIDENCE_VALIDATOR_SOURCE = "http_runtime_not_checked";
+export const RARE_FUNNEL_EVIDENCE_SCHEMA = "samedaydesk.commerce-rare-funnel-evidence.v1";
+export const RARE_FUNNEL_CAPTURE_VERSION = "rare_funnel_capture_v1";
+export const RARE_FUNNEL_RESET_POLICY =
+  "append_until_rare_byte_rotation; no_historical_backfill; stream_rotation_independent";
+const RARE_FUNNEL_CAPTURE_PROVENANCE = Object.freeze({
+  httpMiddleware: "http_middleware",
+  mcpTypedAdapter: "mcp_typed_adapter",
+});
+const RARE_FUNNEL_USEFULNESS_UNKNOWN = "unknown";
+const RARE_FUNNEL_EVIDENCE_KEYS = Object.freeze([
+  "actor",
+  "agentDiscoverySource",
+  "captureProvenance",
+  "captureVersion",
+  "id",
+  "kind",
+  "matched",
+  "method",
+  "originClass",
+  "paymentActor",
+  "paymentCredentialParsed",
+  "paymentFailureCode",
+  "paymentPresent",
+  "paymentProtocol",
+  "replayed",
+  "result",
+  "route",
+  "schemaVersion",
+  "status",
+  "ts",
+  "usefulness",
+  "v",
+]);
+const DEFAULT_RARE_FUNNEL_MAX_BYTES = 1 * 1024 * 1024;
 // Exact declared paid POST product whose unpaid 402/invalid-body/error rows
 // remain measurement, unlike wallet-policy and other unsafe unpaid POSTs.
 const MEASURED_UNPAID_PAID_POST_ROUTES = new Set([EXTRACT_BATCH_PATH]);
@@ -1694,6 +1728,341 @@ function canonicalPaidSuccessEvidence(value) {
   }
 }
 
+function isCanonicalRareFunnelEvidence(value) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const keys = Object.keys(value).sort();
+  if (
+    keys.length !== RARE_FUNNEL_EVIDENCE_KEYS.length
+    || keys.some((key, index) => key !== RARE_FUNNEL_EVIDENCE_KEYS[index])
+  ) {
+    return false;
+  }
+  if (value.v !== 1 || value.schemaVersion !== RARE_FUNNEL_EVIDENCE_SCHEMA) return false;
+  if (value.captureVersion !== RARE_FUNNEL_CAPTURE_VERSION) return false;
+  if (
+    value.captureProvenance !== RARE_FUNNEL_CAPTURE_PROVENANCE.httpMiddleware
+    && value.captureProvenance !== RARE_FUNNEL_CAPTURE_PROVENANCE.mcpTypedAdapter
+  ) {
+    return false;
+  }
+  if (eventTimestampMs(value) === null) return false;
+  if (!isCanonicalEventId(value.id) || !isCanonicalActorKey(value.actor)) return false;
+  if (!CANONICAL_EVENT_ORIGIN_CLASSES.has(value.originClass)) return false;
+  if (value.agentDiscoverySource !== null && !CANONICAL_AGENT_DISCOVERY_SOURCES.has(value.agentDiscoverySource)) {
+    return false;
+  }
+  if (!isCanonicalHttpMethod(value.method)) return false;
+  if (value.kind !== "paid" || value.matched !== true) return false;
+  if (!isCanonicalClassifierRoute(value.route, value.kind, value.matched)) return false;
+  if (value.paymentPresent !== true) return false;
+  if (typeof value.paymentCredentialParsed !== "boolean") return false;
+  if (!CANONICAL_PAYMENT_PROTOCOLS.has(value.paymentProtocol)) return false;
+  if (!isNullableCanonicalActorKey(value.paymentActor)) return false;
+  if (value.paymentCredentialParsed) {
+    if (!isCanonicalActorKey(value.paymentActor)) return false;
+  } else if (value.paymentActor !== null) {
+    return false;
+  }
+  if (!Number.isInteger(value.status) || value.status < 100 || value.status > 999) return false;
+  if (!isCanonicalPaymentFailureCode(value.paymentFailureCode, {
+    paymentPresent: true,
+    status: value.status,
+  })) {
+    return false;
+  }
+  if (typeof value.replayed !== "boolean") return false;
+  if (!isBoundedString(value.result, 32)) return false;
+  if (value.usefulness !== RARE_FUNNEL_USEFULNESS_UNKNOWN) return false;
+  return true;
+}
+
+function canonicalRareFunnelEvidence(value) {
+  try {
+    const canonical = {
+      v: value?.v,
+      schemaVersion: value?.schemaVersion,
+      captureVersion: value?.captureVersion,
+      captureProvenance: value?.captureProvenance,
+      id: value?.id,
+      ts: value?.ts,
+      originClass: value?.originClass,
+      actor: value?.actor,
+      paymentActor: value?.paymentActor ?? null,
+      agentDiscoverySource: value?.agentDiscoverySource ?? null,
+      method: value?.method,
+      route: value?.route,
+      kind: value?.kind,
+      matched: value?.matched,
+      paymentPresent: value?.paymentPresent,
+      paymentCredentialParsed: value?.paymentCredentialParsed,
+      paymentProtocol: value?.paymentProtocol,
+      paymentFailureCode: value?.paymentFailureCode ?? null,
+      result: value?.result,
+      status: value?.status,
+      replayed: value?.replayed,
+      usefulness: value?.usefulness,
+    };
+    return isCanonicalRareFunnelEvidence(canonical) ? Object.freeze(canonical) : null;
+  } catch {
+    return null;
+  }
+}
+
+function rareFunnelEvidenceFromHttpEvent(event, { captureProvenance = RARE_FUNNEL_CAPTURE_PROVENANCE.httpMiddleware } = {}) {
+  if (!event || typeof event !== "object" || Array.isArray(event)) return null;
+  if (event.kind !== "paid" || event.matched !== true || event.paymentPresent !== true) return null;
+  return canonicalRareFunnelEvidence({
+    v: 1,
+    schemaVersion: RARE_FUNNEL_EVIDENCE_SCHEMA,
+    captureVersion: RARE_FUNNEL_CAPTURE_VERSION,
+    captureProvenance,
+    id: event.id,
+    ts: event.ts,
+    originClass: event.originClass,
+    actor: event.actor,
+    paymentActor: event.paymentActor,
+    agentDiscoverySource: event.agentDiscoverySource,
+    method: event.method,
+    route: event.route,
+    kind: event.kind,
+    matched: event.matched,
+    paymentPresent: true,
+    paymentCredentialParsed: event.paymentCredentialParsed === true,
+    paymentProtocol: event.paymentProtocol,
+    paymentFailureCode: event.paymentFailureCode,
+    result: event.result,
+    status: event.status,
+    replayed: event.replayed === true,
+    usefulness: RARE_FUNNEL_USEFULNESS_UNKNOWN,
+  });
+}
+
+function rareFunnelEvidenceFromMcpTypedEvent(event) {
+  if (!isCanonicalMcpTypedCommerceEvent(event)) return null;
+  if (event.paymentPresent !== true) return null;
+  const tool = event.binding?.tool;
+  if (typeof tool !== "string" || !MCP_TYPED_CLOSED_TOOLS.has(tool)) return null;
+  // Map closed MCP tools onto the paid /mcp classifier route. Actor remains an
+  // opaque per-event hash key for grouping only — not continuity or identity.
+  const actor = createHash("sha256")
+    .update(`mcp-typed-rare:${event.id}`)
+    .digest("hex")
+    .slice(0, 24);
+  const paymentActor = event.paymentCredentialParsed === true
+    ? createHash("sha256")
+      .update(`mcp-typed-payer:${event.id}`)
+      .digest("hex")
+      .slice(0, 24)
+    : null;
+  const status = event.result === "challenge"
+    ? 402
+    : event.result === "application_failure" || event.result === "settlement_failure"
+      ? 502
+      : event.result === "paid_success" || event.result === "replay_success"
+        ? 200
+        : event.result === "telemetry_incomplete"
+          ? 200
+          : 400;
+  const result = event.result === "paid_success"
+    ? "paid_success"
+    : event.result === "replay_success"
+      ? "replay_success"
+      : event.result === "challenge"
+        ? "challenge"
+        : event.result === "application_failure" || event.result === "settlement_failure"
+          ? "service_failure"
+          : "paid_route_response";
+  return canonicalRareFunnelEvidence({
+    v: 1,
+    schemaVersion: RARE_FUNNEL_EVIDENCE_SCHEMA,
+    captureVersion: RARE_FUNNEL_CAPTURE_VERSION,
+    captureProvenance: RARE_FUNNEL_CAPTURE_PROVENANCE.mcpTypedAdapter,
+    id: event.id,
+    ts: event.ts,
+    originClass: "external",
+    actor,
+    paymentActor,
+    agentDiscoverySource: typeof event.declaredAgentDiscoverySource === "string"
+      ? event.declaredAgentDiscoverySource
+      : null,
+    method: "POST",
+    route: "/mcp",
+    kind: "paid",
+    matched: true,
+    paymentPresent: true,
+    paymentCredentialParsed: event.paymentCredentialParsed === true,
+    paymentProtocol: "x402",
+    paymentFailureCode: status >= 400
+      ? (event.result === "application_failure"
+        ? PAYMENT_FAILURE_CODE.applicationValidationFailed
+        : PAYMENT_FAILURE_CODE.unknownFailure)
+      : null,
+    result,
+    status,
+    replayed: event.result === "replay_success",
+    usefulness: RARE_FUNNEL_USEFULNESS_UNKNOWN,
+  });
+}
+
+async function readRareFunnelEvidence(filePath) {
+  try {
+    const contents = await readFile(filePath, "utf8");
+    const byId = new Map();
+    let unusableRecordCount = 0;
+    for (const line of contents.split("\n")) {
+      if (!line.trim()) continue;
+      try {
+        const parsed = JSON.parse(line);
+        const canonical = canonicalRareFunnelEvidence(parsed);
+        if (!canonical) {
+          unusableRecordCount += 1;
+          continue;
+        }
+        if (!byId.has(canonical.id)) byId.set(canonical.id, canonical);
+      } catch {
+        unusableRecordCount += 1;
+      }
+    }
+    return {
+      records: [...byId.values()],
+      unusableRecordCount,
+      filePresent: true,
+    };
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      return { records: [], unusableRecordCount: 0, filePresent: false };
+    }
+    throw error;
+  }
+}
+
+function summarizeDurableRareFunnel({
+  generatedAtMs,
+  requestedWindowDays,
+  retainedRecords,
+  currentRead,
+  rotatedRead,
+  rareMaxBytes,
+  credentialAttemptSinceMs,
+}) {
+  const safeDays = Math.max(1, Math.min(365, Number(requestedWindowDays) || 90));
+  const requestedWindowStartMs = generatedAtMs - safeDays * DAY_MS;
+  const times = retainedRecords
+    .map((record) => eventTimestampMs(record))
+    .filter((ms) => ms !== null);
+  const retainedObservationStartMs = times.length ? Math.min(...times) : null;
+  const retainedObservationEndMs = times.length ? Math.max(...times) : null;
+  const retainedObservationStartsBeforeRequestedWindow = retainedObservationStartMs !== null
+    && retainedObservationStartMs <= requestedWindowStartMs;
+  // A retained row predating the requested window does not prove the writer
+  // observed every moment since then. v1 has no durable continuity marker, so
+  // the full-window claim must remain unknown even when its bounded tail is old.
+  const captureContinuityProven = false;
+  const complete = captureContinuityProven
+    && retainedObservationStartsBeforeRequestedWindow;
+  const windowed = retainedRecords.filter((record) => {
+    const ms = eventTimestampMs(record);
+    return ms !== null && ms >= requestedWindowStartMs && ms <= generatedAtMs;
+  });
+  const sinceFiltered = windowed.filter((record) => (
+    credentialAttemptSinceMs === null || eventTimestampMs(record) >= credentialAttemptSinceMs
+  ));
+  const paymentHeaderEvents = sinceFiltered;
+  const parseable = paymentHeaderEvents.filter((record) => record.paymentCredentialParsed === true);
+  const actors = new Map();
+  const paidActors = new Map();
+  const byResult = emptyCounts();
+  const byRoute = emptyCounts();
+  const byProtocol = emptyCounts();
+  const byCaptureProvenance = emptyCounts();
+  let paidSuccessEvents = 0;
+  let paymentErrorEvents = 0;
+  let paymentUnknownOrPartialEvents = 0;
+  for (const record of paymentHeaderEvents) {
+    increment(byResult, record.result);
+    increment(byRoute, record.route);
+    if (record.paymentProtocol) increment(byProtocol, record.paymentProtocol);
+    increment(byCaptureProvenance, record.captureProvenance);
+    const attemptActor = record.paymentActor || record.actor;
+    if (record.paymentCredentialParsed) {
+      actors.set(attemptActor, (actors.get(attemptActor) || 0) + 1);
+    }
+    if (record.result === "paid_success") {
+      paidSuccessEvents += 1;
+      paidActors.set(attemptActor, (paidActors.get(attemptActor) || 0) + 1);
+    } else if (record.status >= 400) {
+      paymentErrorEvents += 1;
+    } else if (record.result !== "replay_success") {
+      paymentUnknownOrPartialEvents += 1;
+    }
+  }
+  const integrityStatus = (currentRead.unusableRecordCount > 0 || rotatedRead.unusableRecordCount > 0)
+    ? COMMERCE_INTEGRITY_UNUSABLE_RECORDS
+    : COMMERCE_INTEGRITY_OK;
+  const retainedUtcBounds = conservativeRetainedUtcBounds({
+    retainedObservationStartMs,
+    retainedObservationEndMs,
+  });
+  return {
+    schemaVersion: RARE_FUNNEL_EVIDENCE_SCHEMA,
+    captureVersion: RARE_FUNNEL_CAPTURE_VERSION,
+    resetPolicy: RARE_FUNNEL_RESET_POLICY,
+    captureProvenanceAllowed: Object.values(RARE_FUNNEL_CAPTURE_PROVENANCE),
+    coverage: {
+      requestedWindowDays: safeDays,
+      requestedWindowStart: new Date(requestedWindowStartMs).toISOString(),
+      requestedWindowEnd: new Date(generatedAtMs).toISOString(),
+      requestedWindowComplete: complete,
+      requestedWindowCoverage: complete
+        ? COMMERCE_COVERAGE_COMPLETE
+        : COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW,
+      retainedObservationStartsBeforeRequestedWindow,
+      captureContinuityProven,
+      ...retainedUtcBounds,
+      retainedParseableRecordCount: retainedRecords.length,
+      integrityStatus,
+      integrity: {
+        currentFile: {
+          filePresent: currentRead.filePresent,
+          parseableRecordCount: currentRead.records.length,
+          unusableRecordCount: currentRead.unusableRecordCount,
+        },
+        rotatedFile: {
+          filePresent: rotatedRead.filePresent,
+          parseableRecordCount: rotatedRead.records.length,
+          unusableRecordCount: rotatedRead.unusableRecordCount,
+        },
+      },
+    },
+    boundaries: {
+      noHistoricalBackfill: true,
+      actorHashNotIndependentIdentity: true,
+      actorCountsAreNotOperatorCounts: true,
+      zeroNeverMeansHistoricalZeroWhenCoverageIncomplete: true,
+      rawCredentialsNeverRetained: true,
+      usefulnessRemainsUnknownWithoutSeparateAuthority: true,
+      doesNotClassifyRevenue: true,
+      streamCountersRemainStreamLocal: true,
+    },
+    paymentHeaderEvents: paymentHeaderEvents.length,
+    parseableCredentialAttemptEvents: parseable.length,
+    unparseablePaymentHeaderEvents: paymentHeaderEvents.length - parseable.length,
+    parseableCredentialAttemptActors: actors.size,
+    repeatParseableCredentialAttemptActors: [...actors.values()].filter((count) => count > 1).length,
+    paidSuccessEvents,
+    paidSuccessActors: paidActors.size,
+    independentOperatorCount: null,
+    independentUsefulDemand: "unknown",
+    paymentErrorEvents,
+    paymentUnknownOrPartialEvents,
+    byResult,
+    byRoute,
+    byProtocol,
+    byCaptureProvenance,
+    boundedBytes: rareMaxBytes * 2,
+  };
+}
+
 const MCP_TYPED_COMMERCE_SOURCE = "mcp_typed_outcome";
 const MCP_TYPED_COMMERCE_AUTHORITY = "seller_declared";
 const MCP_TYPED_COMMERCE_EVIDENCE_CLASS = "seller_operational";
@@ -2450,6 +2819,7 @@ export function createCommerceTelemetry({
   requestConstructionSince = process.env.COMMERCE_REQUEST_CONSTRUCTION_SINCE || "2026-08-13T16:25:03.766Z",
   payerClasses = process.env.COMMERCE_PAYER_CLASSES || "",
   maxBytes = 5 * 1024 * 1024,
+  rareMaxBytes = DEFAULT_RARE_FUNNEL_MAX_BYTES,
   writerProcessCount = 1,
   mcpTypedSince = process.env.COMMERCE_MCP_TYPED_SINCE || "",
   mcpTypedFreshnessMaxAgeMs = 900_000,
@@ -2460,6 +2830,9 @@ export function createCommerceTelemetry({
   const typedFreshnessMaxAgeMs = Number.isSafeInteger(mcpTypedFreshnessMaxAgeMs) && mcpTypedFreshnessMaxAgeMs >= 0
     ? mcpTypedFreshnessMaxAgeMs
     : 900_000;
+  const boundedRareMaxBytes = Number.isSafeInteger(rareMaxBytes) && rareMaxBytes > 0
+    ? rareMaxBytes
+    : DEFAULT_RARE_FUNNEL_MAX_BYTES;
   const writerGate = Object.freeze({
     mode: "single_process_only",
     configuredProcesses: 1,
@@ -2468,6 +2841,8 @@ export function createCommerceTelemetry({
   const currentPath = path.join(dataDir, "commerce-events.ndjson");
   const rotatedPath = path.join(dataDir, "commerce-events.1.ndjson");
   const paidEvidencePath = path.join(dataDir, "commerce-paid-success-evidence.ndjson");
+  const rareFunnelPath = path.join(dataDir, "commerce-rare-funnel-evidence.ndjson");
+  const rareFunnelRotatedPath = path.join(dataDir, "commerce-rare-funnel-evidence.1.ndjson");
   const parsedExternalSince = Date.parse(externalSince);
   const externalSinceMs = Number.isFinite(parsedExternalSince) ? parsedExternalSince : null;
   const parsedAgentDiscoverySince = Date.parse(agentDiscoverySince);
@@ -2579,11 +2954,30 @@ export function createCommerceTelemetry({
     await chmod(paidEvidencePath, 0o600).catch(() => {});
   }
 
+  async function appendRareFunnelEvidence(evidence) {
+    if (!isCanonicalRareFunnelEvidence(evidence)) return;
+    await mkdir(dataDir, { recursive: true, mode: 0o700 });
+    await chmod(dataDir, 0o700).catch(() => {});
+    const size = await stat(rareFunnelPath).then((entry) => entry.size).catch(() => 0);
+    if (size >= boundedRareMaxBytes) {
+      await unlink(rareFunnelRotatedPath).catch((error) => {
+        if (error?.code !== "ENOENT") throw error;
+      });
+      await rename(rareFunnelPath, rareFunnelRotatedPath).catch((error) => {
+        if (error?.code !== "ENOENT") throw error;
+      });
+    }
+    await appendFile(rareFunnelPath, `${JSON.stringify(evidence)}\n`, { encoding: "utf8", mode: 0o600 });
+    await chmod(rareFunnelPath, 0o600).catch(() => {});
+  }
+
   function enqueue(event, evidence = null) {
     const ownedEvidence = evidence === null ? null : canonicalPaidSuccessEvidence(evidence);
+    const rareEvidence = rareFunnelEvidenceFromHttpEvent(event);
     enqueueExclusive(async () => {
       await appendEvent(event);
       if (ownedEvidence) await appendPaidSuccessEvidence(ownedEvidence);
+      if (rareEvidence) await appendRareFunnelEvidence(rareEvidence);
     }).catch((error) => {
       console.error(`commerce telemetry write failed: ${error.message}`);
     });
@@ -2630,6 +3024,8 @@ export function createCommerceTelemetry({
     return enqueueExclusive(async () => {
       if (!event) return;
       await appendEvent(event);
+      const rareEvidence = rareFunnelEvidenceFromMcpTypedEvent(event);
+      if (rareEvidence) await appendRareFunnelEvidence(rareEvidence);
     }).catch((error) => {
       console.error(`commerce telemetry write failed: ${error.message}`);
     });
@@ -2867,6 +3263,13 @@ export function createCommerceTelemetry({
       : Math.max(windowCutoff, externalSinceMs);
     const rotatedRead = await readEvents(rotatedPath);
     const currentRead = await readEvents(currentPath);
+    const rareRotatedRead = await readRareFunnelEvidence(rareFunnelRotatedPath);
+    const rareCurrentRead = await readRareFunnelEvidence(rareFunnelPath);
+    const rareById = new Map();
+    for (const record of [...rareRotatedRead.records, ...rareCurrentRead.records]) {
+      if (!rareById.has(record.id)) rareById.set(record.id, record);
+    }
+    const retainedRareRecords = [...rareById.values()];
     const retainedEvents = [...rotatedRead.events, ...currentRead.events];
     const retainedTypedEvents = [...rotatedRead.mcpTypedEvents, ...currentRead.mcpTypedEvents];
     const retainedTimes = retainedEvents
@@ -3200,6 +3603,15 @@ export function createCommerceTelemetry({
       retainedParseableEventCount: coverage.retainedParseableEventCount,
       integrityStatus: coverage.integrityStatus,
       coverage,
+      durableRareFunnel: summarizeDurableRareFunnel({
+        generatedAtMs,
+        requestedWindowDays: safeDays,
+        retainedRecords: retainedRareRecords,
+        currentRead: rareCurrentRead,
+        rotatedRead: rareRotatedRead,
+        rareMaxBytes: boundedRareMaxBytes,
+        credentialAttemptSinceMs,
+      }),
       mcpTyped: {
         ...summarizeMcpTypedView(windowedTypedEvents),
         coverage: describeMcpTypedSourceCoverage({
@@ -3321,6 +3733,7 @@ export function createCommerceTelemetry({
       credentialAttemptPolicy: "After the declared credential-attempt baseline, a parseable attempt must carry a syntactically complete x402 v2 exact Base-style binding or MPP evm/charge credential. Signature validity and settlement are separate later outcomes. Controlled failure codes are derived from required query-key presence, x402 response error classes, or MPP Problem Details. Public output contains only aggregate protocol, result, route, source, payer class, and failure-code counts; raw credentials, errors, bodies, query values, actors, and payer addresses are not exposed.",
       requestConstructionPolicy: "Prospective seller-declared GET measurement, plus the exact declared paid POST /extract/batch body. A constructed GET must target an exact paid route, carry a non-empty scalar for every required non-secret query key from that route's canonical Bazaar request contract, and receive an HTTP 402 challenge rather than validation failure. A constructed POST /extract/batch must pass the merchant's synchronous input validator (1 to 5 bounded public HTTPS URL strings, valid optional fields and no extra keys) and receive an HTTP 402 challenge. GET values are inspected for scalar non-emptiness; POST bodies use that validator without DNS lookup or source fetching. Invalid or incomplete POST input is classified missing_required_input. Values are neither retained nor published. Header, cookie, path, other POST bodies, unsafe unpaid POST, credential-like required names, and undeclared contracts remain unmeasured. Public output contains aggregate events, distinct secret-keyed actor counts, controlled source labels, and canonical routes only. Construction proves neither input validity, buyer intent, payment authorization, settlement, nor demand.",
       settlementEvidencePolicy: "After the declared settlement-evidence baseline, a successful paid response should carry a valid Base transaction reference in PAYMENT-RESPONSE or Payment-Receipt. Raw response headers and transaction references remain private; public output exposes only coverage counts by evidence class.",
+      durableRareFunnelPolicy: "Credential-attempt and rare payment-outcome rows are mirrored into a separately rotated rare-funnel store so ordinary /mcp probe volume cannot erase them from the shared event stream. The durableRareFunnel plane reports its own window coverage, capture version, reset policy, and provenance. It never backfills pre-capture history, never stores raw credentials or addresses, treats actor hashes as continuity keys rather than identity, leaves usefulness unknown without separate authority, and does not invent revenue classification. Stream-local counters remain stream-local; settlement ledger and private paid-success evidence stay separate accepted planes.",
       boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, SameDayDesk-owned monitor, crawler, and exploit-probe traffic is excluded from demand, but unidentified automated fetchers can remain. Separately reported agent-discovery observations begin at their own declared baseline and are user-agent-declared crawler or indexer fetches of known discovery and paid routes; SameDayDesk-owned monitor user agents are excluded, and the remainder are neither authenticated catalog referrals nor buyer intent. Unmatched requests are acquisition misses, not intents. Known MCP transport probes and semantic-unmatched counts remain acquisition-friction evidence and do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Payment classes are applied against those pseudonyms at read time, so known marketplace verification can be reclassified without storing a raw address. Unknown payers remain unclassified. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Settlement-reference coverage begins only at its declared baseline; raw transaction references remain on the private volume and are not returned publicly. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
     };
   }
@@ -3329,17 +3742,22 @@ export function createCommerceTelemetry({
     try {
       return await enqueueExclusive(async () => {
         await mkdir(dataDir, { recursive: true, mode: 0o700 });
-        const [currentBytes, rotatedBytes, paidEvidenceBytes] = await Promise.all([
+        const [currentBytes, rotatedBytes, paidEvidenceBytes, rareFunnelBytes, rareFunnelRotatedBytes] = await Promise.all([
           stat(currentPath).then((entry) => entry.size).catch(() => 0),
           stat(rotatedPath).then((entry) => entry.size).catch(() => 0),
           stat(paidEvidencePath).then((entry) => entry.size).catch(() => 0),
+          stat(rareFunnelPath).then((entry) => entry.size).catch(() => 0),
+          stat(rareFunnelRotatedPath).then((entry) => entry.size).catch(() => 0),
         ]);
         return {
           ready: true,
           currentBytes,
           rotatedBytes,
           paidEvidenceBytes,
+          rareFunnelBytes,
+          rareFunnelRotatedBytes,
           boundedBytes: maxBytes * 2,
+          rareBoundedBytes: boundedRareMaxBytes * 2,
           writerGate,
         };
       });
@@ -3349,7 +3767,10 @@ export function createCommerceTelemetry({
         currentBytes: null,
         rotatedBytes: null,
         paidEvidenceBytes: null,
+        rareFunnelBytes: null,
+        rareFunnelRotatedBytes: null,
         boundedBytes: maxBytes * 2,
+        rareBoundedBytes: boundedRareMaxBytes * 2,
         writerGate,
       };
     }
@@ -3363,6 +3784,12 @@ export function createCommerceTelemetry({
     mcpTypedAttributionForRequest,
     mcpTypedDeclaredSourceForRequest,
     flush,
-    paths: { currentPath, rotatedPath, paidEvidencePath },
+    paths: {
+      currentPath,
+      rotatedPath,
+      paidEvidencePath,
+      rareFunnelPath,
+      rareFunnelRotatedPath,
+    },
   };
 }
