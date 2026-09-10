@@ -59,5 +59,5 @@ node src/cli.mjs run fixtures/positive-bundle.json
 ## Commit / push
 
 - Pin base: `1a23b648e3c5f90bc009accb85972e2db6e22051`
-- Feature commit: _pending local commit_
-- Push: _pending_
+- Feature commit: `8da9285a03edc1f5d4f3f4015d5778d110764c41`
+- Push: _pending push_
