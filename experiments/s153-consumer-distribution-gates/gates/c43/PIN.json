@@ -1,0 +1,105 @@
+{
+  "schema": "s153.distribution-gate.pin.v1",
+  "cell": "c43",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "freshness-receipt",
+  "jobId": "R2-CONSUMER-JOBS-06",
+  "moduleId": "06",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/freshness-receipt",
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/freshness-receipt/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/freshness-receipt/transform.mjs"
+  },
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "situationId": "S3",
+  "situation": "conflict-identity",
+  "expectedDecisionClass": "conflict",
+  "clock": "2026-09-10T09:54:59Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "caseIds": [
+    "conflict-retrieved-before-source",
+    "conflict-two-source-updates"
+  ],
+  "fixtureRoot": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness",
+  "primaryFixtures": [
+    {
+      "role": "case",
+      "id": "conflict-retrieved-before-source",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/conflict-retrieved-before-source.json",
+      "sha256": "4d68b353e3da03d80201c02502ecf61c08a6a83b2128684db7f63e6701e85d6a"
+    },
+    {
+      "role": "case",
+      "id": "conflict-two-source-updates",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/conflict-two-source-updates.json",
+      "sha256": "d7e90d5912e09512a8628d6152c9fc410205de39a578eaaaca32d486524051b5"
+    },
+    {
+      "role": "clock",
+      "id": "CLOCK",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/CLOCK.txt",
+      "sha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a"
+    },
+    {
+      "role": "source-slim",
+      "id": "npm-vercel-stale-current",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-vercel-stale-current.slim.json",
+      "sha256": "b20fcd25cc1e6598428cb94ca74b49fa8a7a434414b88951565f4f69db16960d"
+    },
+    {
+      "role": "source-slim",
+      "id": "npm-vercel-current",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-vercel-current.slim.json",
+      "sha256": "04651c194f32cd93af3afdcb300976e63ab8d3dc1d577f1058479ab815670938"
+    },
+    {
+      "role": "source-slim",
+      "id": "npm-vercel-unchanged",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-vercel-unchanged.slim.json",
+      "sha256": "cacc14283619c076f249a45c707af1d40586ae52032c44c81612519526287aad"
+    }
+  ],
+  "expect": {
+    "decision": "conflict",
+    "silentMergeForbidden": true,
+    "winnerForbidden": true,
+    "cases": {
+      "conflict-retrieved-before-source": {
+        "issueCode": "source_update_after_download",
+        "datasetId": "npm:vercel",
+        "retrievedAt": "2026-08-01T00:00:00.000Z",
+        "sourceUpdatedAt": "2026-09-10T01:12:17.696Z",
+        "downloadAgeMs": 3491699000,
+        "sourceAgeMs": 31361304,
+        "lagAtDownloadMs": -3460337696,
+        "keepBothSlots": true
+      },
+      "conflict-two-source-updates": {
+        "issueCode": "conflicting_timestamps",
+        "datasetId": "npm:vercel",
+        "sourceUpdatedAtSlot": null,
+        "publishedAtValues": [
+          "2026-09-10T01:12:17.696Z",
+          "2026-08-27T19:00:26.541Z"
+        ]
+      }
+    }
+  },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "notes": [
+    "Reuse S137 synthetic conflict fixtures only; do not recreate S137 implementation cells.",
+    "conflict-retrieved-before-source: captured_at is before published_at; do not reorder or drop either instant.",
+    "conflict-two-source-updates: two published_at values for npm:vercel; do not take max/first as last-modified."
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c24",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "table-reconcile",
+  "moduleId": "03",
+  "jobId": "R2-CONSUMER-JOBS-03",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/table-reconcile",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "situationId": "S8",
+  "situation": "distributable-archive",
+  "brief": "Kit archive contains manifests/README/examples; excludes receipts/logs",
+  "oneWriter": "experiments/s153-consumer-distribution-gates/gates/c24/",
+  "caseIds": ["positive-agree"],
+  "expectedDecisionClass": "pass",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "paymentAttempted": false,
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "kitRoot": "experiments/s153-consumer-distribution-gates/kit",
+  "kitSourceRoot": "experiments/s137-consumer-evidence-jobs",
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile",
+  "primaryFixtures": [
+    {
+      "id": "positive-agree",
+      "role": "case",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/positive-agree.json",
+      "sha256": "4ba0339d048fa56fd26dba0726ee930eaea42f7c78aba255d7b3b6f3ab7ba959",
+      "expectedDecisionClass": "pass"
+    },
+    {
+      "id": "manifest",
+      "role": "manifest",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/MANIFEST.json",
+      "sha256": "1a1cc0a4feedb9053c74e9988c8b02ec9c76224f548d6246a733b9018b9255cd"
+    },
+    {
+      "id": "readme",
+      "role": "readme",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/README.md",
+      "sha256": "366a60105c51effe439fa2a0e8e98299bd2caecc2d04b5e29080a6c4ae6c87f0"
+    },
+    {
+      "id": "example-lab-a",
+      "role": "example",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/positive-agree/lab-a.json",
+      "sha256": "6829a621305c740eeb265e4a783be724a1ac7c15f88981445e9cae519044b61d"
+    },
+    {
+      "id": "example-lab-b",
+      "role": "example",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/positive-agree/lab-b.json",
+      "sha256": "b58d66dc68c81b3c32c1410f3d1b319b14f926eaed401992145873f6bddaaa68"
+    },
+    {
+      "id": "clock",
+      "role": "clock",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/CLOCK.txt",
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a"
+    },
+    {
+      "id": "real-pair",
+      "role": "example",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/table-reconcile/pair.json",
+      "sha256": "8962ff0cd57f96e9a4544ed7f10d405cb0ca33e1e117bd7f29d4782a7fa4553b",
+      "evidenceClass": "fixture",
+      "note": "Real public npm download pair. Membership example only; this gate does not re-run the live GET."
+    }
+  ],
+  "membership": {
+    "mustIncludeClasses": ["manifests", "README", "examples"],
+    "mustExcludeClasses": ["receipts", "logs"],
+    "sourceRequiredRel": [
+      "fixtures/synthetic/table-reconcile/MANIFEST.json",
+      "fixtures/synthetic/table-reconcile/README.md",
+      "fixtures/synthetic/table-reconcile/cases/positive-agree.json",
+      "fixtures/synthetic/table-reconcile/sources/positive-agree/lab-a.json",
+      "fixtures/synthetic/table-reconcile/sources/positive-agree/lab-b.json"
+    ],
+    "sourceExcludedRel": [
+      "receipts/smoke/03-table-reconcile.json",
+      "receipts/concurrency/admission-log.jsonl"
+    ]
+  },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "limitations": [
+    "Wave-3 kit/ may be unpopulated; include-class members are proven on the S137 source pack.",
+    "Packed kit/ must not contain receipts/ or logs; empty kit satisfies exclusion only.",
+    "Jobs 07/08 stay out of scope."
+  ]
+}

@@ -1,0 +1,194 @@
+{
+  "schema": "s137.migration-checklist.input.v1",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "artifactKind": "docs-migration-checklist",
+  "evidenceClass": "fixture",
+  "clock": "2026-09-10T11:24:43Z",
+  "offline": true,
+  "payment": { "attempted": false },
+  "caseId": "x402-spec-v1-to-v2-http",
+  "sourcePin": {
+    "repository": "epistemedeus/x402-url-extractor",
+    "ref": "1a23b648e3c5f90bc009accb85972e2db6e22051"
+  },
+  "specPin": {
+    "repository": "x402-foundation/x402",
+    "ref": "3c2ddfb922893c91ef8f281b64f8045d1f5e0d75",
+    "citationIds": ["cite-old-spec", "cite-new-spec"]
+  },
+  "oldDocs": [
+    {
+      "id": "old-spec",
+      "side": "old",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "retrievedAt": "2026-09-10T11:24:43Z",
+      "license": "Apache-2.0",
+      "mediaType": "text/markdown"
+    },
+    {
+      "id": "old-http",
+      "side": "old",
+      "path": "source/old/http-transport.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/transports-v1/http.md",
+      "sha256": "fee8f063334da8729ce7270f441b4311f34183d5613ee201d0dbd1b8b0b7fc12",
+      "retrievedAt": "2026-09-10T11:24:43Z",
+      "license": "Apache-2.0",
+      "mediaType": "text/markdown"
+    }
+  ],
+  "newDocs": [
+    {
+      "id": "new-spec",
+      "side": "new",
+      "path": "source/new/x402-specification-v2.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v2.md",
+      "sha256": "cb66bdef710298233316b02d48fce4a9417ec5449ed9cab7f5d9fe6a454920cd",
+      "retrievedAt": "2026-09-10T11:24:43Z",
+      "license": "Apache-2.0",
+      "mediaType": "text/markdown"
+    },
+    {
+      "id": "new-http",
+      "side": "new",
+      "path": "source/new/http-transport.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/transports-v2/http.md",
+      "sha256": "4f0298aaa23ac75de0eb49b1e96e6e67a5b910d7527b3a71c63e426b3bf5bdfb",
+      "retrievedAt": "2026-09-10T11:24:43Z",
+      "license": "Apache-2.0",
+      "mediaType": "text/markdown"
+    }
+  ],
+  "operations": [
+    {
+      "id": "op-verify",
+      "method": "POST",
+      "route": "/verify",
+      "operationId": "postVerify",
+      "observedIn": "old",
+      "citationIds": ["cite-old-spec-verify"]
+    },
+    {
+      "id": "op-settle",
+      "method": "POST",
+      "route": "/settle",
+      "operationId": "postSettle",
+      "observedIn": "old",
+      "citationIds": ["cite-old-spec-settle"]
+    },
+    {
+      "id": "op-supported",
+      "method": "GET",
+      "route": "/supported",
+      "operationId": "getSupported",
+      "observedIn": "old",
+      "citationIds": ["cite-old-spec-supported"]
+    },
+    {
+      "id": "op-discovery-resources",
+      "method": "GET",
+      "route": "/discovery/resources",
+      "operationId": "getDiscoveryResources",
+      "observedIn": "old",
+      "citationIds": ["cite-old-spec-discovery"]
+    }
+  ],
+  "citations": [
+    {
+      "id": "cite-old-spec",
+      "source": "source/old/x402-specification-v1.md",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "retrievedAt": "2026-09-10T11:24:43Z",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "cite-old-http",
+      "source": "source/old/http-transport.md",
+      "path": "source/old/http-transport.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/transports-v1/http.md",
+      "sha256": "fee8f063334da8729ce7270f441b4311f34183d5613ee201d0dbd1b8b0b7fc12",
+      "retrievedAt": "2026-09-10T11:24:43Z",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "cite-new-spec",
+      "source": "source/new/x402-specification-v2.md",
+      "path": "source/new/x402-specification-v2.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v2.md",
+      "sha256": "cb66bdef710298233316b02d48fce4a9417ec5449ed9cab7f5d9fe6a454920cd",
+      "retrievedAt": "2026-09-10T11:24:43Z",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "cite-new-http",
+      "source": "source/new/http-transport.md",
+      "path": "source/new/http-transport.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/transports-v2/http.md",
+      "sha256": "4f0298aaa23ac75de0eb49b1e96e6e67a5b910d7527b3a71c63e426b3bf5bdfb",
+      "retrievedAt": "2026-09-10T11:24:43Z",
+      "license": "Apache-2.0"
+    },
+    {
+      "id": "cite-old-spec-verify",
+      "source": "source/old/x402-specification-v1.md",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "retrievedAt": "2026-09-10T11:24:43Z",
+      "license": "Apache-2.0",
+      "locator": "line 275",
+      "quote": "**7.1 POST /verify**"
+    },
+    {
+      "id": "cite-old-spec-settle",
+      "source": "source/old/x402-specification-v1.md",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "retrievedAt": "2026-09-10T11:24:43Z",
+      "license": "Apache-2.0",
+      "locator": "line 351",
+      "quote": "**7.2 POST /settle**"
+    },
+    {
+      "id": "cite-old-spec-supported",
+      "source": "source/old/x402-specification-v1.md",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "retrievedAt": "2026-09-10T11:24:43Z",
+      "license": "Apache-2.0",
+      "locator": "line 380",
+      "quote": "**7.3 GET /supported**"
+    },
+    {
+      "id": "cite-old-spec-discovery",
+      "source": "source/old/x402-specification-v1.md",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "retrievedAt": "2026-09-10T11:24:43Z",
+      "license": "Apache-2.0",
+      "locator": "line 424",
+      "quote": "8.1 GET /discovery/resources"
+    }
+  ],
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "limitations": [
+    "STATE inventory omitted; not invented (schema coverage stays partial).",
+    "Caller inventory lists facilitator/discovery routes from the v1 spec. HTTP header names (X-PAYMENT) are not OpenAPI routes; see observations.json.",
+    "MCP and A2A transports were not retrieved.",
+    "v2 scheme files under specs/schemes/ were not retrieved.",
+    "No field is treated as renamed unless a captured document states the rename.",
+    "retrievedAt is not sourceCommitDate."
+  ]
+}

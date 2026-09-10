@@ -1,0 +1,86 @@
+{
+  "cell": "c38",
+  "s137Pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "replay-pack",
+  "jobId": "R2-CONSUMER-JOBS-05",
+  "moduleId": "05",
+  "situationId": "S6",
+  "situation": "import-roundtrip",
+  "brief": "Programmatic import of transform/schema; roundtrip packet fields",
+  "expectedDecisionClass": "pass",
+  "offline": true,
+  "paymentAttempted": false,
+  "assignmentSpendUsd": 0,
+  "excludedJobs": [
+    "R2-CONSUMER-JOBS-07",
+    "R2-CONSUMER-JOBS-08"
+  ],
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/replay-pack/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/replay-pack/transform.mjs"
+  },
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack",
+  "loader": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/load.mjs",
+  "cases": [
+    {
+      "id": "positive-unpaid-complete",
+      "kind": "positive",
+      "expectedDecision": "pass",
+      "role": "primary",
+      "coverage": "full"
+    }
+  ],
+  "files": [
+    {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/case.json",
+      "sha256": "29212a09e5c9cd1637693b1c1cabd84f6f9b5106b1859017e55ea05764c3efd8",
+      "role": "primary-case",
+      "expectedDecision": "pass"
+    },
+    {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/openapi.json",
+      "sha256": "a5240ee024a74b7a72782ecdc7235fdd2514d054d3ca04b2acbca9a2d03ccd99",
+      "role": "primary-openapi"
+    },
+    {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/examples/getStatus.response.json",
+      "sha256": "87e4ad06ac0aad04560107bf1329c4d906a4a3503336ded21ccef64d5bd969cc",
+      "role": "primary-companion"
+    },
+    {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/CLOCK.txt",
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a",
+      "role": "operator-clock"
+    },
+    {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/MANIFEST.json",
+      "sha256": "1f2be64ac5811ef06d327d9730444f6c71c9d7f9202d27bd73875cda23123be8",
+      "role": "catalog"
+    }
+  ],
+  "observedVsClaimed": {
+    "primaryCaseFilesMatchProvenanceFilesEntries": true,
+    "provenanceDocumentSelfHash": {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/PROVENANCE.json",
+      "observedSha256": "eb3d18292c1c0b6ddd0e054903f58605f39f98a5e81696dc06c11fc9e57ff58b",
+      "claimedInProvenanceFiles": null,
+      "note": "PROVENANCE.json is not a primary S6 fixture. Its own bytes were hashed at gate time; the document does not list a self hash under files['PROVENANCE.json'] in the copy on this pin. Primary case/openapi/companion/CLOCK/MANIFEST hashes match both disk and PROVENANCE.files entries."
+    }
+  },
+  "roundtrip": {
+    "mode": "programmatic-import",
+    "cliOutOfScope": "S5",
+    "inputSchema": "s137.replay-pack.input.v1",
+    "outputSchema": "s137.replay-pack.output.v1",
+    "packetSchema": "s137.consumer-evidence.packet.v1",
+    "transformAliases": [
+      "transform",
+      "build",
+      "run",
+      "analyze",
+      "packageReplayPack",
+      "buildReplayPack"
+    ]
+  }
+}

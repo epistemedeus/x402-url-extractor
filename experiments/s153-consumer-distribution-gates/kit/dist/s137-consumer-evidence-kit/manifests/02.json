@@ -1,0 +1,46 @@
+{
+  "id": "02",
+  "jobId": "R2-CONSUMER-JOBS-02",
+  "artifact": "release-brief",
+  "title": "Release evidence brief",
+  "export": "./release-brief",
+  "cliToken": "release-brief",
+  "inputSchema": "s137.release-brief.input.v1",
+  "outputSchema": "s137.release-brief.brief.v1",
+  "packetSchema": "s137.consumer-evidence.packet.v1",
+  "src": {
+    "schema": "src/release-brief/schema.mjs",
+    "transform": "src/release-brief/transform.mjs"
+  },
+  "inputs": {
+    "required": ["schema", "clock", "evidenceClass", "sources"],
+    "optional": ["subject", "lanes", "githubRelease", "notice"],
+    "planes": ["announced", "shipped", "tested"]
+  },
+  "outputs": {
+    "required": [
+      "schema",
+      "packetSchema",
+      "jobId",
+      "artifactKind",
+      "clock",
+      "evidenceClass",
+      "offline",
+      "payment",
+      "cost",
+      "findings",
+      "citations",
+      "decision",
+      "limitations",
+      "claims",
+      "announced",
+      "shipped",
+      "tested",
+      "alignment"
+    ]
+  },
+  "example": "examples/release-brief",
+  "decisions": ["pass", "fail", "partial", "conflict", "unknown"],
+  "offline": true,
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"]
+}

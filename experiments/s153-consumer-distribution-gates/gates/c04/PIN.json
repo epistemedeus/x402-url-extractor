@@ -1,0 +1,69 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c04",
+  "s137Pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "migration-checklist",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "srcDir": "migration-checklist",
+  "situationId": "S4",
+  "situation": "malformed-input",
+  "expectedDecisionClass": "fail",
+  "allowedDecisions": ["fail"],
+  "schemaRejectStatus": "invalid",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/migration-checklist/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/migration-checklist/transform.mjs",
+    "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs"
+  },
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration",
+  "cases": [
+    {
+      "id": "negative-malformed-inventory",
+      "kind": "negative",
+      "primary": true,
+      "expectedDecision": "fail",
+      "expectedFindingId": "malformed-inventory",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/negative-malformed-inventory.json",
+      "sha256": "95858fbe84e8055906b5e531280f6d0254364472f9f31bc0a60be397d0afbbeb"
+    },
+    {
+      "id": "negative-missing-new-docs",
+      "kind": "negative",
+      "primary": false,
+      "expectedDecision": "fail",
+      "expectedFindingId": "missing-new-docs",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/negative-missing-new-docs.json",
+      "sha256": "64638fb82dbc324d66d4bff78b7dc805dddcf12be150244aa0d455e82bf593f1"
+    }
+  ],
+  "primaryFixtures": [
+    {
+      "role": "case",
+      "id": "negative-malformed-inventory",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/negative-malformed-inventory.json",
+      "sha256": "95858fbe84e8055906b5e531280f6d0254364472f9f31bc0a60be397d0afbbeb"
+    },
+    {
+      "role": "malformed-inventory-bytes",
+      "id": "negative-malformed-inventory",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/negative-malformed-inventory/inventory.json",
+      "sha256": "f81558a0435d7320c82d786ec5632605390993fb0effc7b0ac56357de7e26286"
+    },
+    {
+      "role": "missing-new-docs-case",
+      "id": "negative-missing-new-docs",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/negative-missing-new-docs.json",
+      "sha256": "64638fb82dbc324d66d4bff78b7dc805dddcf12be150244aa0d455e82bf593f1"
+    }
+  ],
+  "cliExits": {
+    "analyzeFailPacket": 0,
+    "inputReject": 1,
+    "usageReject": 2
+  }
+}

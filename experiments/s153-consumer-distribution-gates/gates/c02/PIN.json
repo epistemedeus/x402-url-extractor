@@ -1,0 +1,84 @@
+{
+  "cell": "c02",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "migration-checklist",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "moduleId": "01",
+  "situationId": "S2",
+  "situation": "partial-prereq",
+  "brief": "Reuse partial fixture; assert partial/unknown not invented pass",
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "caseIds": ["partial-batch-undocumented"],
+  "expectedDecisionClass": "partial",
+  "allowedDecisions": ["partial", "unknown"],
+  "forbiddenDecisions": ["pass"],
+  "expectedCoverage": "partial",
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/migration-checklist/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/migration-checklist/transform.mjs",
+    "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs"
+  },
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration",
+  "provenance": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/PROVENANCE.json",
+  "fixtures": [
+    {
+      "role": "case",
+      "id": "partial-batch-undocumented",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/partial-batch-undocumented.json",
+      "provenanceKey": "cases/partial-batch-undocumented.json",
+      "sha256": "54be64f6a5373cbbe746b99c788fc293020883d4f419c649386c806366c66285"
+    },
+    {
+      "role": "old-doc",
+      "id": "old",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/partial-batch-undocumented/old.md",
+      "provenanceKey": "docs/partial-batch-undocumented/old.md",
+      "sha256": "e86c05292ac82aa4e7d29ab909cb5c23a3d14f28d36917e14567f44b25d05a05"
+    },
+    {
+      "role": "new-doc",
+      "id": "new",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/partial-batch-undocumented/new.md",
+      "provenanceKey": "docs/partial-batch-undocumented/new.md",
+      "sha256": "fca9fe10cef5b924b74d12a5cbbcdb8c1eef0c376c7d538f2aa6c4a508d318df"
+    },
+    {
+      "role": "inventory",
+      "id": "inventory",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/partial-batch-undocumented/inventory.json",
+      "provenanceKey": "docs/partial-batch-undocumented/inventory.json",
+      "sha256": "172c5ba8171efba624e5707fd2aa29270a29b8139612a1df68000a2852b09e47"
+    }
+  ],
+  "expect": {
+    "decision": "partial",
+    "coverage": "partial",
+    "findingIds": ["extract-unchanged", "read-unchanged", "batch-missing-in-new"],
+    "missingInNew": {
+      "id": "batch-missing-in-new",
+      "method": "POST",
+      "route": "/extract/batch",
+      "mcpTool": "extract_batch",
+      "change": "missing-in-new",
+      "inInventory": true,
+      "citationIds": ["inventory"]
+    }
+  },
+  "programmaticUnknown": {
+    "reason": "old/new docs supplied as text without path or url, so no citations are recorded",
+    "expectedDecisionClass": "unknown"
+  },
+  "claimsMustBeFalse": [
+    "inventsFacts",
+    "paidEndpoint",
+    "legalAttestation",
+    "modelAsOracle",
+    "assertsCustomerDemand"
+  ]
+}

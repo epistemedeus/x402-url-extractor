@@ -1,0 +1,117 @@
+{
+  "cell": "c13",
+  "situationId": "S5",
+  "situation": "cli-stdout-batch",
+  "artifact": "release-brief",
+  "jobId": "R2-CONSUMER-JOBS-02",
+  "moduleId": "02",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "liveCapture": false,
+  "payment": { "attempted": false },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/release-brief/",
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief",
+  "cliInputShape": "nested case.input (s137.release-brief.input.v1). The synthetic-case wrapper is not validateReleaseBriefInput.",
+  "stdoutSchema": {
+    "single": "s137.consumer-evidence.packet.v1",
+    "batchAll": "s137.consumer-evidence.family.v1",
+    "brief": "s137.release-brief.brief.v1"
+  },
+  "exitCodes": {
+    "analyzeReadableInput": 0,
+    "inputError": 1,
+    "usage": 2
+  },
+  "primary": {
+    "caseId": "positive-aligned",
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/positive-aligned.json",
+    "sha256": "11c92a56650739ba11b0143f43ef9934b22273e2922df52d408acc2847827bb4",
+    "expectedDecision": "pass",
+    "expectedDecisionClass": "pass"
+  },
+  "primaryLaneSources": [
+    {
+      "lane": "announced",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/positive-aligned/announced.json",
+      "sha256": "e139c42d3a6c2baa3b498248d06f62fccbf3857b1244afb4adc1d270920e8a7b"
+    },
+    {
+      "lane": "shipped",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/positive-aligned/shipped.json",
+      "sha256": "b228936ce19bcb0eacdf877c8f4a0523b9da5e919d2eece3ddb0def0d17ceaf6"
+    },
+    {
+      "lane": "tested",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/positive-aligned/tested.json",
+      "sha256": "9ff0419f183df7e9508f519df4d1107516fbf8e2a13debb01e4c7264fb741fe8"
+    }
+  ],
+  "batch": [
+    {
+      "caseId": "positive-aligned",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/positive-aligned.json",
+      "sha256": "11c92a56650739ba11b0143f43ef9934b22273e2922df52d408acc2847827bb4",
+      "expectedDecision": "pass"
+    },
+    {
+      "caseId": "partial-missing-tested",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/partial-missing-tested.json",
+      "sha256": "137294c16c7ca9fe03beb478e61f8d3fa884ed27d5d1c43596a8b509788eb2b0",
+      "expectedDecision": "partial"
+    },
+    {
+      "caseId": "partial-announced-only",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/partial-announced-only.json",
+      "sha256": "f48d7ec26be7b16fe60b327275fedd01f6121642a185b1113ca7f2d6aec8cac9",
+      "expectedDecision": "partial"
+    },
+    {
+      "caseId": "partial-shipped-no-announce",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/partial-shipped-no-announce.json",
+      "sha256": "e00bc62783e6153a9244b2c72e68818c701af589d5b9af2c3a5e613fb6f2e008",
+      "expectedDecision": "partial"
+    },
+    {
+      "caseId": "conflict-tag-mismatch",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/conflict-tag-mismatch.json",
+      "sha256": "a0a4ed5ac9e8a9452fb15e576758f65dd079291ffbdf3bb7f028c527abb4914c",
+      "expectedDecision": "conflict"
+    },
+    {
+      "caseId": "conflict-sha-mismatch",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/conflict-sha-mismatch.json",
+      "sha256": "e66cffe65ae6b7cac14289012651954d87d5e18456c6fd355a518733d71be17e",
+      "expectedDecision": "conflict"
+    },
+    {
+      "caseId": "conflict-ci-vs-announce",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/conflict-ci-vs-announce.json",
+      "sha256": "5f0ed80196b7d600f4442094ee82170631a4a906cb3e24f467dfbbf4eca0f9b1",
+      "expectedDecision": "conflict"
+    },
+    {
+      "caseId": "negative-draft-only",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/negative-draft-only.json",
+      "sha256": "777a639490e2b84bdc770cfba58618895074aa66983ab8434cfa96c3960c849f",
+      "expectedDecision": "fail"
+    },
+    {
+      "caseId": "negative-empty",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/negative-empty.json",
+      "sha256": "ed294ef6ec283813531a17f3cd633828de9a75845ad52fefc9346c1df1ccc507",
+      "expectedDecision": "unknown"
+    }
+  ],
+  "realFixture": {
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief/github-express-v5.2.1.json",
+    "sha256": "0edb4d411bd1cfbafacffe1c690e1467deb5f3f2ed3b7a05541af3034d27fe5f",
+    "evidenceClass": "fixture",
+    "note": "Raw GitHub REST body is not INPUT_SCHEMA. CLI schema-rejects it. c07/c10 wrap it as kind github-release and observe announced-only partial; this S5 cell does not re-wrap."
+  },
+  "expectedDecisionClass": "pass"
+}

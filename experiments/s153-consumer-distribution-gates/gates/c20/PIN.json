@@ -1,0 +1,82 @@
+{
+  "schema": "s153.gate-pin.v1",
+  "cell": "c20",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "table-reconcile",
+  "jobId": "R2-CONSUMER-JOBS-03",
+  "moduleId": "03",
+  "situationId": "S4",
+  "situation": "malformed-input",
+  "expectedDecisionClass": "fail",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "offline": true,
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "srcModule": "experiments/s137-consumer-evidence-jobs/src/table-reconcile",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "fixtureRoot": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile",
+  "notes": "Reuse S137 synthetic negative cases. Empty rows and unkeyed raw arrays fail; absence is not zero-fill; keys are not inferred; path-only tables are not fetched. CLI URL/missing/oversize inputs reject with a stable non-zero exit. Analyze of a fail packet is exit 0 (process ok, decision fail).",
+  "cases": [
+    {
+      "id": "negative-empty",
+      "kind": "negative",
+      "expectedDecision": "fail",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/negative-empty.json",
+      "sha256": "7e318717633afbbaa6c9f1f660238cdd827325a0925b90a210061370fde2a1cf",
+      "expectFinding": {
+        "id": "invalid:empty-rows:lab-a",
+        "kind": "invalid-input",
+        "code": "empty-rows",
+        "citationIds": ["src:negative-empty/lab-a"]
+      },
+      "primaryFixtures": [
+        {
+          "id": "lab-a",
+          "role": "empty-rows",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/negative-empty/lab-a.json",
+          "sha256": "6073fa96e3a4ed3d156dcceb5eabcc56d59a9a4bf103da732c15fda13cd4f3a3"
+        },
+        {
+          "id": "lab-b",
+          "role": "populated-peer",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/negative-empty/lab-b.json",
+          "sha256": "fe154312fe59ad281b8b512ed86113bd3701a6fa5b5ef25d3283e8fdd7569f71"
+        }
+      ]
+    },
+    {
+      "id": "negative-missing-keys",
+      "kind": "negative",
+      "expectedDecision": "fail",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/negative-missing-keys.json",
+      "sha256": "0abc26e619469dda890663837e24400bedb26fd5b7f2fac0df64a1faf1f554ae",
+      "expectFinding": {
+        "id": "invalid:missing-keys:lab-a",
+        "kind": "invalid-input",
+        "code": "missing-keys",
+        "citationIds": ["src:negative-missing-keys/lab-a"]
+      },
+      "primaryFixtures": [
+        {
+          "id": "lab-a",
+          "role": "bare-array",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/negative-missing-keys/lab-a.json",
+          "sha256": "57d1c7c46c8c5479dba6b346a3fce95fb770a5f0ea8ae33cc879d591c059eef8"
+        },
+        {
+          "id": "lab-b",
+          "role": "keyed-peer",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/negative-missing-keys/lab-b.json",
+          "sha256": "0f39ed5f180f784d897ecccec6d5bf8999d80e935293c1f8c15380af32350425"
+        }
+      ]
+    }
+  ],
+  "cliRejects": {
+    "url": { "exitCode": 1, "stderrIncludes": "local path" },
+    "missingPath": { "exitCode": 1, "decision": "fail", "ok": false },
+    "oversize": { "exitCode": 1, "decision": "fail", "ok": false },
+    "analyzeFailPacket": { "exitCode": 0, "decision": "fail", "ok": true }
+  }
+}

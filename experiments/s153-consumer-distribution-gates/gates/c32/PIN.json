@@ -1,0 +1,87 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c32",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "link-index",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "moduleId": "04",
+  "situationId": "S8",
+  "situation": "distributable-archive",
+  "brief": "Kit archive contains manifests/README/examples; excludes receipts/logs",
+  "expectedDecisionClass": "pass",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "kitRoot": "experiments/s153-consumer-distribution-gates/kit",
+  "receiptsRoot": "experiments/s153-consumer-distribution-gates/receipts",
+  "packRoot": "experiments/s137-consumer-evidence-jobs",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/link-index",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "caseIds": ["positive-md", "positive-html"],
+  "primaryFixtures": [
+    {
+      "role": "manifest",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/MANIFEST.json",
+      "sha256": "bc3d957431cc9640695a6fe1843c13af05a91d96548f64ef7086a427c76424d1",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "role": "readme",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/README.md",
+      "sha256": "1455da775ef04575d163a65d61a743bf028358ce88285ed1c0c5264a8eb2d386",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "role": "clock",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/CLOCK.txt",
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "role": "example-positive-md",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-md/source.md",
+      "sha256": "5cb5a4f0e149fe0aa6da680bd432ad7d724dcb24bd703c4d57494623f071bfad",
+      "evidenceClass": "synthetic",
+      "expectedDecision": "pass"
+    },
+    {
+      "role": "example-positive-html",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-html/source.html",
+      "sha256": "3225b0864b74a726775065d64a97c9dcc72c2a7b54bf42fa94b8fbeb5033b8a1",
+      "evidenceClass": "synthetic",
+      "expectedDecision": "pass"
+    }
+  ],
+  "kitMustInclude": [
+    "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/MANIFEST.json",
+    "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/README.md",
+    "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/CLOCK.txt",
+    "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-md/source.md",
+    "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-md/expected.json",
+    "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-html/source.html",
+    "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-html/expected.json",
+    "experiments/s137-consumer-evidence-jobs/fixtures/real/link-index/README.md",
+    "experiments/s137-consumer-evidence-jobs/fixtures/real/link-index/PROVENANCE.json",
+    "experiments/s137-consumer-evidence-jobs/skills/consumer-evidence-jobs/SKILL.md",
+    "experiments/s137-consumer-evidence-jobs/src/link-index/schema.mjs",
+    "experiments/s137-consumer-evidence-jobs/src/link-index/transform.mjs",
+    "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs"
+  ],
+  "kitMustExclude": [
+    "**/receipts/**",
+    "**/logs/**",
+    "**/*.log",
+    "**/*.jsonl",
+    "**/admission-log*",
+    "**/cell-done*",
+    "**/overlap-peak.json",
+    "**/progress.tsv"
+  ],
+  "observedReceiptsOutsideKit": [
+    "experiments/s137-consumer-evidence-jobs/receipts/smoke/04-link-index.json",
+    "experiments/s137-consumer-evidence-jobs/receipts/concurrency/admission-log.jsonl"
+  ],
+  "membershipNote": "kit/ is the S153 distribution root. Include members are reused S137 pack files (manifests, README, examples, skill, src, CLI). Receipts and logs are observed in S137 receipts/ and must not appear under kit/."
+}

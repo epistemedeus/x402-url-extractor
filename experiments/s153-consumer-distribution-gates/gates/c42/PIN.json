@@ -1,0 +1,119 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c42",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "s137Tip": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "freshness-receipt",
+  "jobId": "R2-CONSUMER-JOBS-06",
+  "moduleId": "06",
+  "srcDir": "freshness-receipt",
+  "situationId": "S2",
+  "situation": "partial-prereq",
+  "brief": "Reuse partial fixture; assert partial/unknown not invented pass",
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "clock": "2026-09-10T09:54:59Z",
+  "horizonMs": 86400000,
+  "evidenceClass": "synthetic",
+  "caseIds": ["partial-missing-source-update"],
+  "expectedDecisionClass": "partial",
+  "allowedDecisions": ["partial", "unknown"],
+  "forbiddenDecisions": ["pass"],
+  "expectedCoverage": "partial",
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/freshness-receipt/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/freshness-receipt/transform.mjs"
+  },
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "fixtureRoot": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness",
+  "provenance": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/PROVENANCE.json",
+  "manifest": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/MANIFEST.json",
+  "primaryFixtures": [
+    {
+      "role": "case",
+      "id": "partial-missing-source-update",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/partial-missing-source-update.json",
+      "provenanceKey": "cases/partial-missing-source-update.json",
+      "sha256": "fac3b569e95609cbac4eba7868cae82572cf54b17365f0955aa05fa08bd5618c"
+    },
+    {
+      "role": "clock",
+      "id": "CLOCK",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/CLOCK.txt",
+      "provenanceKey": "CLOCK.txt",
+      "sha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a"
+    },
+    {
+      "role": "version-doc-slim",
+      "id": "npm:vercel",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-vercel-version-doc.slim.json",
+      "provenanceKey": "sources/npm-vercel-version-doc.slim.json",
+      "sha256": "53de8d48ef5f1b6e91bebc6cb404f76596c4d84ffaef63cdd51d3c1b9fe1c38e"
+    },
+    {
+      "role": "eol-slim",
+      "id": "endoflife:nodejs",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/eol-nodejs-watch.slim.json",
+      "provenanceKey": "sources/eol-nodejs-watch.slim.json",
+      "sha256": "beb0515df9b53d3229702fe019cfcbb098377fc7d4b01c2446a2f81d14b7b779"
+    }
+  ],
+  "expect": {
+    "decision": "partial",
+    "coverage": "partial",
+    "findingPolarity": "partial",
+    "findingCode": "partial_time_coverage",
+    "findingIds": [
+      "dataset-npm:vercel-partial-coverage",
+      "dataset-endoflife:nodejs-partial-coverage"
+    ],
+    "datasets": [
+      {
+        "id": "npm:vercel",
+        "downloadField": "capturedAtUtc",
+        "downloadedAt": "2026-09-10T09:54:59Z",
+        "sourceUpdatedAt": null,
+        "downloadAgeMs": 0,
+        "sourceAgeMs": null,
+        "lagAtDownloadMs": null,
+        "timesDistinct": false,
+        "coverageTime": "partial",
+        "coverageDownload": "present",
+        "coverageSourceUpdate": "absent",
+        "disposition": "unknown",
+        "decision": "partial"
+      },
+      {
+        "id": "endoflife:nodejs",
+        "downloadField": "retrievedAt",
+        "downloadedAt": "2026-09-10T09:54:59Z",
+        "sourceUpdatedAt": null,
+        "downloadAgeMs": 0,
+        "sourceAgeMs": null,
+        "lagAtDownloadMs": null,
+        "timesDistinct": false,
+        "coverageTime": "partial",
+        "coverageDownload": "present",
+        "coverageSourceUpdate": "absent",
+        "disposition": "unknown",
+        "decision": "partial",
+        "expectedRecords": 26,
+        "observedRecords": 3
+      }
+    ]
+  },
+  "programmaticUnknown": {
+    "reason": "operator-clock field is not download or source-update; both slots absent stay unknown",
+    "expectedDecisionClass": "unknown"
+  },
+  "claimsMustBeFalse": [
+    "inventsFacts",
+    "paidEndpoint",
+    "legalAttestation",
+    "modelAsOracle",
+    "assertsCustomerDemand"
+  ]
+}

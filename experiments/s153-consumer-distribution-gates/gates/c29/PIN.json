@@ -1,0 +1,140 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c29",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "link-index",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "moduleId": "04",
+  "situationId": "S5",
+  "situation": "cli-stdout-batch",
+  "brief": "CLI analyze single+batch: exit codes, stdout JSON schema, no network",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "network": {
+    "allowed": false,
+    "urlsRefused": true,
+    "paymentAttempted": false
+  },
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/link-index/",
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index",
+  "realReuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/real/link-index",
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "expectedStdoutSchema": {
+    "single": "s137.consumer-evidence.packet.v1",
+    "batch": "s137.consumer-evidence.family.v1"
+  },
+  "expectedExitCodes": {
+    "analyzeOk": 0,
+    "usage": 2,
+    "input": 1
+  },
+  "expectedDecisionClass": {
+    "singlePositiveHtml": "pass",
+    "batchFamilyLinkIndex": "pass",
+    "realReadmeReplay": "fail"
+  },
+  "inputNote": "CLI --in is schema-shaped JSON derived from each case entry body plus citation artifacts. expected.json is the fixture pin, not the CLI input document. The CLI does not auto-load fixtures when --in is omitted.",
+  "primaryFixtures": [
+    {
+      "caseId": "positive-html",
+      "role": "single-positive",
+      "kind": "positive",
+      "expectedDecision": "pass",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-html/source.html",
+      "sha256": "3225b0864b74a726775065d64a97c9dcc72c2a7b54bf42fa94b8fbeb5033b8a1",
+      "expectedPath": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-html/expected.json",
+      "expectedSha256": "2adc2f3a12d39c8a4ab48833e9a3601d20feaac109afac86b724db868b16b51d"
+    },
+    {
+      "caseId": "positive-md",
+      "role": "single-positive-md",
+      "kind": "positive",
+      "expectedDecision": "pass",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-md/source.md",
+      "sha256": "5cb5a4f0e149fe0aa6da680bd432ad7d724dcb24bd703c4d57494623f071bfad",
+      "expectedPath": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-md/expected.json",
+      "expectedSha256": "8d813b2bdfb98c9692bbb46835a648d420d1b13f0db7a73a65bdca83f6a815ed"
+    },
+    {
+      "caseId": "partial-mixed",
+      "role": "batch-partial",
+      "kind": "partial",
+      "expectedDecision": "partial",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/partial-mixed/source.md",
+      "sha256": "e59edf3ac65642d5c08baf5a7b7fb2517b234e419e7ef59c25a9ee2d5522c5bc",
+      "expectedPath": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/partial-mixed/expected.json",
+      "expectedSha256": "d83720e37f25c0c46b5862802274c6a82f2bce38a71451a30fabcaecdcdab327"
+    },
+    {
+      "caseId": "conflict-duplicates",
+      "role": "batch-conflict",
+      "kind": "conflict",
+      "expectedDecision": "conflict",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/conflict-duplicates/source.html",
+      "sha256": "3ecbbb282d02084e702d75be3b57e7befb0a4b496fe331452012ac36b2206191",
+      "expectedPath": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/conflict-duplicates/expected.json",
+      "expectedSha256": "e14877e6ed3935cba18af5b766dccdd8ac6666429242e2e907a100c9467c6fea"
+    },
+    {
+      "caseId": "conflict-duplicate-ids",
+      "role": "batch-conflict-ids",
+      "kind": "conflict",
+      "expectedDecision": "conflict",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/conflict-duplicate-ids/source.html",
+      "sha256": "f6f03fd2f666ecb6eaee4f5e1efb4e2ed50d580f01becabf9477df6cee0e3a6d",
+      "expectedPath": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/conflict-duplicate-ids/expected.json",
+      "expectedSha256": "302383ab79b47c12cb9873853c9c611bb05aa7af7686fd8f0b4a97a31c824562"
+    },
+    {
+      "caseId": "negative-empty",
+      "role": "batch-negative-empty",
+      "kind": "negative",
+      "expectedDecision": "fail",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/negative-empty/source.html",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "expectedPath": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/negative-empty/expected.json",
+      "expectedSha256": "edd415490edb3e738a526fdd3f08382b1a9c1cb787de13bb23c300e3799ac503"
+    },
+    {
+      "caseId": "negative-no-links",
+      "role": "batch-negative-no-links",
+      "kind": "negative",
+      "expectedDecision": "fail",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/negative-no-links/source.md",
+      "sha256": "8ba854c062d43b950d490a4cb67f80dae68f0b86be726bd9e1e644c0c41bee9d",
+      "expectedPath": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/negative-no-links/expected.json",
+      "expectedSha256": "ec897b642e523f6d14d38ca7d7b673ca8472a731c3fc36db4fc6417cc3192573"
+    },
+    {
+      "caseId": "negative-malformed",
+      "role": "batch-negative-malformed",
+      "kind": "negative",
+      "expectedDecision": "fail",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/negative-malformed/source.html",
+      "sha256": "3f2b61f7c5b69b918b2c2bd5847d239cb0f8625a811c7ca0ddd10c982ac7cf85",
+      "expectedPath": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/negative-malformed/expected.json",
+      "expectedSha256": "0d5356579fd4568e2547b152b8f48bb394b7ce4c0b26c9bb5d6ee4973fe2615b"
+    }
+  ],
+  "clockFixture": {
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/CLOCK.txt",
+    "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a"
+  },
+  "manifestFixture": {
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/MANIFEST.json",
+    "sha256": "bc3d957431cc9640695a6fe1843c13af05a91d96548f64ef7086a427c76424d1"
+  },
+  "realFixture": {
+    "caseId": "x402-foundation-x402-README",
+    "kind": "real-replay",
+    "expectedDecision": "fail",
+    "evidenceClass": "fixture",
+    "clock": "2026-09-10T11:23:12Z",
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/link-index/x402-foundation-x402-README.md",
+    "sha256": "edc83ee946abfa11f069077737e12f07cc3119c6d9ec5e01e3417f72be014a86",
+    "note": "Offline replay of a stored public snapshot. Relative hrefs stay unreachable; http(s) stay unknown. CLI performs no GET."
+  }
+}

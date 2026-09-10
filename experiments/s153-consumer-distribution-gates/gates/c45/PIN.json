@@ -1,0 +1,94 @@
+{
+  "cell": "c45",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "situationId": "S5",
+  "situation": "cli-stdout-batch",
+  "artifact": "freshness-receipt",
+  "jobId": "R2-CONSUMER-JOBS-06",
+  "moduleId": "06",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/freshness-receipt/",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "clock": "2026-09-10T09:54:59Z",
+  "clockPath": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/CLOCK.txt",
+  "clockSha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+  "packetSchema": "s137.consumer-evidence.packet.v1",
+  "familySchema": "s137.consumer-evidence.family.v1",
+  "inputSchema": "s137.freshness-receipt.input.v1",
+  "expectedDecisionClass": "pass",
+  "exitCodes": {
+    "analyzeOk": 0,
+    "input": 1,
+    "usage": 2
+  },
+  "primary": {
+    "caseId": "positive-complete",
+    "caseKind": "positive",
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/positive-complete.json",
+    "sha256": "46e928cd0d3b8f897c2dfc79c632677d236ff8686f0c59c2d8ecddda89d9b4be",
+    "expectedDecision": "pass",
+    "evidenceClass": "synthetic"
+  },
+  "cases": [
+    {
+      "caseId": "positive-complete",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/positive-complete.json",
+      "sha256": "46e928cd0d3b8f897c2dfc79c632677d236ff8686f0c59c2d8ecddda89d9b4be",
+      "expectedDecision": "pass"
+    },
+    {
+      "caseId": "partial-missing-source-update",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/partial-missing-source-update.json",
+      "sha256": "fac3b569e95609cbac4eba7868cae82572cf54b17365f0955aa05fa08bd5618c",
+      "expectedDecision": "partial"
+    },
+    {
+      "caseId": "negative-missing-times",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/negative-missing-times.json",
+      "sha256": "cf35dd1f86fa36622548ddc14a979ab6d932938b062ffb23f4bff3fa07cbf8dd",
+      "expectedDecision": "unknown"
+    },
+    {
+      "caseId": "negative-future-source-update",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/negative-future-source-update.json",
+      "sha256": "db23132d2eb1644653df0e401cc9371061bb4f0f9510e6e8546e76ee550d605a",
+      "expectedDecision": "unknown"
+    },
+    {
+      "caseId": "conflict-retrieved-before-source",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/conflict-retrieved-before-source.json",
+      "sha256": "4d68b353e3da03d80201c02502ecf61c08a6a83b2128684db7f63e6701e85d6a",
+      "expectedDecision": "conflict"
+    },
+    {
+      "caseId": "conflict-two-source-updates",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/conflict-two-source-updates.json",
+      "sha256": "d7e90d5912e09512a8628d6152c9fc410205de39a578eaaaca32d486524051b5",
+      "expectedDecision": "conflict"
+    }
+  ],
+  "real": {
+    "caseId": "nyc-311-erm2-nwe9",
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/freshness/input.json",
+    "sha256": "ffeed0516a2d965409d71ce6d433417aafddc47ad772ae3ef2a1b9de4dbed302",
+    "expectedDecision": "pass",
+    "evidenceClass": "fixture",
+    "clock": "2026-09-10T11:24:14Z"
+  },
+  "batch": {
+    "casesDir": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases",
+    "casesDirSelects": "positive-complete",
+    "casesDirExpectedDecision": "pass",
+    "analyzeAll": {
+      "inRoot": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic",
+      "expectedPacketCount": 6,
+      "freshnessArtifactKind": "freshness-receipt",
+      "freshnessDecision": "fail",
+      "freshnessUnknownReason": "transform_threw",
+      "note": "analyze --all maps freshness-receipt to fixtures/synthetic/freshness (directory). Top-level files are not input.v1 case JSON, so the freshness child is fail/transform_threw. Family still emits six packets, exit 0, offline."
+    }
+  },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "offline": true,
+  "network": false
+}

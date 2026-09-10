@@ -1,0 +1,163 @@
+{
+  "schema": "s153.distribution-gate.pin.v1",
+  "cell": "c15",
+  "artifact": "release-brief",
+  "moduleId": "02",
+  "jobId": "R2-CONSUMER-JOBS-02",
+  "situationId": "S7",
+  "situation": "coverage-integrity",
+  "immutablePin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "offline": true,
+  "expectedDecisionClass": "pass",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/release-brief",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief",
+  "realFixtureDir": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief",
+  "kitDir": "experiments/s153-consumer-distribution-gates/kit",
+  "excludedJobs": [
+    "R2-CONSUMER-JOBS-07",
+    "R2-CONSUMER-JOBS-08"
+  ],
+  "clock": {
+    "synthetic": "2026-09-10T12:00:00.000Z",
+    "real": "2026-09-10T11:23:59Z"
+  },
+  "identityRoles": {
+    "announced": "claimed",
+    "shipped": "observed",
+    "tested": "observed"
+  },
+  "notes": "S7 coverage integrity for release-brief. PROVENANCE/hash/license pins must match observed bytes. Announced identities stay claimed; shipped/tested stay observed. Disagreement is conflict, not a merge. Private receipts/logs are not inputs or citations.",
+  "cases": [
+    {
+      "id": "positive-aligned",
+      "caseClass": "positive",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/positive-aligned.json",
+      "sha256": "11c92a56650739ba11b0143f43ef9934b22273e2922df52d408acc2847827bb4",
+      "expectedDecision": "pass",
+      "why": "Claimed announced tag/SHA matches observed shipped tag/SHA and observed CI success."
+    },
+    {
+      "id": "conflict-sha-mismatch",
+      "caseClass": "conflict",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/conflict-sha-mismatch.json",
+      "sha256": "e66cffe65ae6b7cac14289012651954d87d5e18456c6fd355a518733d71be17e",
+      "expectedDecision": "conflict",
+      "why": "Same claimed tag; announced target_commitish disagrees with observed shipped object.sha."
+    },
+    {
+      "id": "conflict-ci-vs-announce",
+      "caseClass": "conflict",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/conflict-ci-vs-announce.json",
+      "sha256": "5f0ed80196b7d600f4442094ee82170631a4a906cb3e24f467dfbbf4eca0f9b1",
+      "expectedDecision": "conflict",
+      "why": "Announced body claims All tests passed; observed tested conclusion is failure."
+    },
+    {
+      "id": "github-express-v5.2.1",
+      "caseClass": "partial",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief/github-express-v5.2.1.json",
+      "sha256": "0edb4d411bd1cfbafacffe1c690e1467deb5f3f2ed3b7a05541af3034d27fe5f",
+      "expectedDecision": "partial",
+      "evidenceClass": "fixture",
+      "why": "Public GitHub release JSON is announced notes. Branch target_commitish and tarball_url are not a ship; tested lane is absent."
+    }
+  ],
+  "primaryFixtures": [
+    {
+      "id": "synthetic-provenance",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/PROVENANCE.json",
+      "sha256": "118c5cd9318f634902a7e22b8fb5cdc2019b7d86e92b04f9081654fb7c580fb1",
+      "role": "synthetic-provenance-envelope"
+    },
+    {
+      "id": "synthetic-source-pins",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/SOURCE-PINS.json",
+      "sha256": "86d97f3d828a49a66c0c04ffc159df2200ed7c24903a61b634b6f4b3f721c84e",
+      "role": "source-pin-excerpts"
+    },
+    {
+      "id": "synthetic-manifest",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/MANIFEST.json",
+      "sha256": "ce8a31764bc1ff5b1c318056aa90b771ebfd04d0f06be5e5b617e1aa5ab68e54",
+      "role": "synthetic-manifest"
+    },
+    {
+      "id": "positive-aligned-announced",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/positive-aligned/announced.json",
+      "sha256": "e139c42d3a6c2baa3b498248d06f62fccbf3857b1244afb4adc1d270920e8a7b",
+      "role": "claimed-announced-source"
+    },
+    {
+      "id": "positive-aligned-shipped",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/positive-aligned/shipped.json",
+      "sha256": "b228936ce19bcb0eacdf877c8f4a0523b9da5e919d2eece3ddb0def0d17ceaf6",
+      "role": "observed-shipped-source"
+    },
+    {
+      "id": "positive-aligned-tested",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/positive-aligned/tested.json",
+      "sha256": "9ff0419f183df7e9508f519df4d1107516fbf8e2a13debb01e4c7264fb741fe8",
+      "role": "observed-tested-source"
+    },
+    {
+      "id": "conflict-sha-announced",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/conflict-sha-mismatch/announced.json",
+      "sha256": "244c1e6a94bd05e744c469c26e73603d4adef21a04530708d292abea987c48b7",
+      "role": "claimed-sha"
+    },
+    {
+      "id": "conflict-sha-shipped",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/conflict-sha-mismatch/shipped.json",
+      "sha256": "7c21cb66edf9a0e9c9656f1f0ff71a0c87fc6685f876be8a9342c8bb216a817e",
+      "role": "observed-sha"
+    },
+    {
+      "id": "real-express-release",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief/github-express-v5.2.1.json",
+      "sha256": "0edb4d411bd1cfbafacffe1c690e1467deb5f3f2ed3b7a05541af3034d27fe5f",
+      "role": "real-github-release-bytes"
+    },
+    {
+      "id": "real-express-headers",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief/github-express-v5.2.1.headers.txt",
+      "sha256": "d6e35f0ca7169b88b249052e8ba2f66cf4215716b1c9de0b78a8df42a4a9f04b",
+      "role": "real-response-headers"
+    },
+    {
+      "id": "real-express-provenance",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief/PROVENANCE.json",
+      "sha256": "80a95ee6eac9adacc4c0edf48c2e86d8f65ec2216198ca4dbbcc118a895a211b",
+      "role": "real-provenance-envelope"
+    }
+  ],
+  "licensePins": [
+    {
+      "id": "synthetic-pack",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/PROVENANCE.json",
+      "field": "licenseNote",
+      "excerpt": "Authored synthetic fixtures in this pack. Not third-party content. Not a live GitHub or npm capture."
+    },
+    {
+      "id": "real-express-mit",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief/PROVENANCE.json",
+      "field": "license.note",
+      "spdxId": "MIT",
+      "excerpt": "expressjs/express LICENSE is MIT (SPDX MIT)"
+    }
+  ],
+  "privateReceiptPaths": [
+    "experiments/s137-consumer-evidence-jobs/receipts/concurrency",
+    "experiments/s137-consumer-evidence-jobs/receipts/smoke",
+    "experiments/s153-consumer-distribution-gates/receipts"
+  ],
+  "privateReceiptNeedles": [
+    "receipts/concurrency",
+    "receipts/smoke",
+    "admission-log",
+    "overlap-peak",
+    "cell-done.jsonl",
+    "native-child-capability"
+  ]
+}

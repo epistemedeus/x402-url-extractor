@@ -1,0 +1,47 @@
+{
+  "id": "06",
+  "jobId": "R2-CONSUMER-JOBS-06",
+  "artifact": "freshness-receipt",
+  "title": "Dataset freshness receipt",
+  "export": "./freshness-receipt",
+  "cliToken": "freshness-receipt",
+  "inputSchema": "s137.freshness-receipt.input.v1",
+  "outputSchema": "s137.freshness-receipt.v1",
+  "packetSchema": "s137.consumer-evidence.packet.v1",
+  "src": {
+    "schema": "src/freshness-receipt/schema.mjs",
+    "transform": "src/freshness-receipt/transform.mjs"
+  },
+  "inputs": {
+    "required": ["schema", "clock", "evidenceClass", "datasets"],
+    "optional": ["horizonMs", "citations"],
+    "timeSlots": {
+      "download": ["retrievedAt", "downloadedAt", "capturedAt"],
+      "sourceUpdate": ["sourceUpdatedAt", "published_at", "time.modified"]
+    }
+  },
+  "outputs": {
+    "required": [
+      "schema",
+      "packetSchema",
+      "jobId",
+      "artifactKind",
+      "clock",
+      "evidenceClass",
+      "offline",
+      "payment",
+      "cost",
+      "findings",
+      "citations",
+      "decision",
+      "limitations",
+      "claims",
+      "datasets"
+    ]
+  },
+  "example": "examples/freshness",
+  "decisions": ["pass", "fail", "partial", "conflict", "unknown"],
+  "offline": true,
+  "downloadTimeIsNotSourceUpdate": true,
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"]
+}

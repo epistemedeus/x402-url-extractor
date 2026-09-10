@@ -1,0 +1,41 @@
+{
+  "id": "04",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "artifact": "link-index",
+  "title": "Link-to-artifact index",
+  "export": "./link-index",
+  "cliToken": "link-index",
+  "inputSchema": "s137.link-index.input.v1",
+  "outputSchema": "s137.link-index.output.v1",
+  "packetSchema": "s137.consumer-evidence.packet.v1",
+  "src": {
+    "schema": "src/link-index/schema.mjs",
+    "transform": "src/link-index/transform.mjs"
+  },
+  "inputs": {
+    "required": ["clock", "evidenceClass", "documents"],
+    "optional": ["artifacts", "citations", "bounds", "root"]
+  },
+  "outputs": {
+    "required": [
+      "schema",
+      "jobId",
+      "artifactKind",
+      "clock",
+      "evidenceClass",
+      "offline",
+      "payment",
+      "cost",
+      "findings",
+      "citations",
+      "decision",
+      "limitations",
+      "claims"
+    ],
+    "index": ["links", "anchors", "targets", "duplicates", "unreachable", "conflicts"]
+  },
+  "example": "examples/link-index",
+  "decisions": ["pass", "fail", "partial", "conflict", "unknown"],
+  "offline": true,
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"]
+}

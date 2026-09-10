@@ -1,0 +1,217 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c39",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "replay-pack",
+  "jobId": "R2-CONSUMER-JOBS-05",
+  "moduleId": "05",
+  "situationId": "S7",
+  "situation": "coverage-integrity",
+  "brief": "PROVENANCE/hash/license pins; observed-vs-claimed; no private receipts",
+  "offline": true,
+  "expectedDecisionClass": "pass",
+  "mismatchDecisionClass": "conflict",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "payment": { "attempted": false },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "oneWriter": "experiments/s153-consumer-distribution-gates/gates/c39/",
+  "srcModuleDir": "experiments/s137-consumer-evidence-jobs/src/replay-pack/",
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/replay-pack/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/replay-pack/transform.mjs"
+  },
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack",
+  "realReuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/real/replay-pack",
+  "kitRoot": "experiments/s153-consumer-distribution-gates/kit",
+  "caseIds": ["positive-unpaid-complete", "conflict-example-mismatch"],
+  "cases": [
+    {
+      "id": "positive-unpaid-complete",
+      "kind": "positive",
+      "role": "primary",
+      "evidenceClass": "synthetic",
+      "expectedDecisionClass": "pass",
+      "coverage": "full",
+      "clock": "2026-09-10T12:00:00.000Z",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/case.json",
+      "sha256": "29212a09e5c9cd1637693b1c1cabd84f6f9b5106b1859017e55ea05764c3efd8",
+      "bytes": 3908
+    },
+    {
+      "id": "conflict-example-mismatch",
+      "kind": "conflict",
+      "role": "observed-vs-claimed",
+      "evidenceClass": "synthetic",
+      "expectedDecisionClass": "conflict",
+      "coverage": "disagreement",
+      "clock": "2026-09-10T12:00:00.000Z",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/conflict-example-mismatch/case.json",
+      "sha256": "f9875e8439592c76ddf11196fbc1ff580450cde158be7796016ddb09b23a09dc",
+      "bytes": 3943
+    }
+  ],
+  "primaryFixtures": [
+    {
+      "id": "positive-unpaid-complete-case",
+      "role": "case",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/case.json",
+      "sha256": "29212a09e5c9cd1637693b1c1cabd84f6f9b5106b1859017e55ea05764c3efd8",
+      "bytes": 3908
+    },
+    {
+      "id": "positive-unpaid-complete-openapi",
+      "role": "openapi",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/openapi.json",
+      "sha256": "a5240ee024a74b7a72782ecdc7235fdd2514d054d3ca04b2acbca9a2d03ccd99",
+      "bytes": 1603
+    },
+    {
+      "id": "positive-unpaid-complete-companion",
+      "role": "companion-example",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/examples/getStatus.response.json",
+      "sha256": "87e4ad06ac0aad04560107bf1329c4d906a4a3503336ded21ccef64d5bd969cc",
+      "bytes": 264
+    },
+    {
+      "id": "conflict-example-mismatch-case",
+      "role": "case",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/conflict-example-mismatch/case.json",
+      "sha256": "f9875e8439592c76ddf11196fbc1ff580450cde158be7796016ddb09b23a09dc",
+      "bytes": 3943
+    },
+    {
+      "id": "conflict-example-mismatch-openapi",
+      "role": "openapi",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/conflict-example-mismatch/openapi.json",
+      "sha256": "5f8e15469b5e514afc819f0af2e8f56385f7d48c1d20c8ac15ded4027f4109c9",
+      "bytes": 1598
+    },
+    {
+      "id": "conflict-example-mismatch-companion",
+      "role": "companion-example",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/conflict-example-mismatch/examples/getStatus.response.json",
+      "sha256": "a6f4a529d5d7519c1e9572d976f07cfa7605d7c4e0e0c9fcf7e23c6a69b84a29",
+      "bytes": 349
+    },
+    {
+      "id": "synthetic-clock",
+      "role": "operator-clock",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/CLOCK.txt",
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a",
+      "bytes": 25
+    },
+    {
+      "id": "synthetic-manifest",
+      "role": "catalog",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/MANIFEST.json",
+      "sha256": "1f2be64ac5811ef06d327d9730444f6c71c9d7f9202d27bd73875cda23123be8",
+      "bytes": 3810
+    },
+    {
+      "id": "github-rest-get-a-repository-operation",
+      "role": "real-operation",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/replay-pack/github-rest-get-a-repository.operation.json",
+      "sha256": "611afa11d38f21d1cc63e70de18e9ee080917f8f1c91cf9c1790006f42cdb2b7",
+      "bytes": 135148
+    },
+    {
+      "id": "github-rest-get-a-repository-curl",
+      "role": "real-html-curl",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/replay-pack/github-rest-get-a-repository.html-curl.txt",
+      "sha256": "933abf9b7a5884735a9cb0311e8f81b82234474335fe6759f93517b9031dc7b8",
+      "bytes": 183
+    },
+    {
+      "id": "github-rest-get-a-repository-headers",
+      "role": "real-headers",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/replay-pack/github-rest-get-a-repository.headers.txt",
+      "sha256": "1738450718f8e5f5c37dd62eeb84858485783c096c4a8bd688a743f425d25f1d",
+      "bytes": 1794
+    }
+  ],
+  "realFixture": {
+    "id": "github-rest-get-a-repository",
+    "kind": "fixture",
+    "evidenceClass": "fixture",
+    "expectedIntegrityDecision": "pass",
+    "clock": "2026-09-10T11:23:06Z",
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/replay-pack/github-rest-get-a-repository.operation.json",
+    "sha256": "611afa11d38f21d1cc63e70de18e9ee080917f8f1c91cf9c1790006f42cdb2b7",
+    "bytes": 135148,
+    "provenancePath": "experiments/s137-consumer-evidence-jobs/fixtures/real/replay-pack/PROVENANCE.json",
+    "note": "Stored docs example is packed offline. Schema-required language omitted from example; API version and Accept headers disagree across sources. Do not merge or invent a winner."
+  },
+  "provenancePins": [
+    {
+      "id": "synthetic-replay-pack-provenance",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/PROVENANCE.json",
+      "sha256": "eb3d18292c1c0b6ddd0e054903f58605f39f98a5e81696dc06c11fc9e57ff58b",
+      "bytes": 6533,
+      "role": "file-hash inventory; liveCapture false; skip self-entry when checking listed artifacts"
+    },
+    {
+      "id": "real-replay-pack-provenance",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/replay-pack/PROVENANCE.json",
+      "sha256": "74e694a959a3fff90cd7eb7c54333461e603a79743016f04909e4b72a2c65ef6",
+      "bytes": 8713,
+      "role": "retrievedAt/url/sha256/license pins for GitHub REST Get a repository docs snapshot"
+    }
+  ],
+  "licensePins": [
+    {
+      "id": "repo-license",
+      "path": "LICENSE",
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
+      "bytes": 1068,
+      "note": "MIT License; pack distribution license, not a dataset grant"
+    },
+    {
+      "id": "synthetic-license-note",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/PROVENANCE.json",
+      "legalAttestation": false,
+      "mustMatch": "Not a license grant",
+      "note": "Authored synthetic lab fixtures. Not upstream content. Not a license grant."
+    },
+    {
+      "id": "github-docs-cc-by-4.0",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/replay-pack/PROVENANCE.json",
+      "spdx": "CC-BY-4.0",
+      "licenseSha256": "12d3a82a7d1378e6f597ec23d63a081aeb6ec4bc8de2a76ee9dc96c34c6d7a1b",
+      "licenseBytes": 18620,
+      "licenseBodyStored": false,
+      "legalAttestation": false,
+      "mustMatch": "not a license grant",
+      "note": "LICENSE body hashed, not stored. Not a legal attestation."
+    }
+  ],
+  "patternSources": [
+    {
+      "id": "packetEnvelope",
+      "path": "experiments/s137-consumer-evidence-jobs/src/packet.mjs",
+      "sha256": "6f6f4116ba2b91adb43a19108d6e2f1609bae8f722594158ccac0abf16abe012",
+      "bytes": 1929
+    },
+    {
+      "id": "unpaidOpenApiCompanion",
+      "path": "page-change-http.mjs",
+      "sha256": "2d3cebc8162739d6ffc2a97f3d2193f14d3d1600dfb3fc45bb51933733189f20",
+      "bytes": 30383
+    }
+  ],
+  "oas31ExampleObject": {
+    "url": "https://spec.openapis.org/oas/v3.1.0.html#example-object",
+    "retrieved": false,
+    "sha256": null,
+    "note": "Field names taken from in-repo openapi: 3.1.0 documents. Spec URL was not fetched."
+  },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}

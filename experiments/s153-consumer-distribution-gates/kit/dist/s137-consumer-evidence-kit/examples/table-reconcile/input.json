@@ -1,0 +1,228 @@
+{
+  "schema": "s137.table-reconcile.input.v1",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "fixture",
+  "join": {
+    "keys": [
+      "package",
+      "day"
+    ],
+    "units": {
+      "downloads": "count"
+    },
+    "timeWindow": null,
+    "conversions": []
+  },
+  "tables": [
+    {
+      "id": "range-a",
+      "evidenceClass": "fixture",
+      "source": {
+        "path": "examples/table-reconcile/tables/express-downloads-2026-08-01-2026-08-14.csv"
+      },
+      "columns": [
+        {
+          "name": "package",
+          "role": "key",
+          "type": "string"
+        },
+        {
+          "name": "day",
+          "role": "key",
+          "type": "date",
+          "unit": "calendar_day"
+        },
+        {
+          "name": "downloads",
+          "role": "measure",
+          "type": "number",
+          "unit": "count"
+        }
+      ],
+      "timeWindow": {
+        "start": "2026-08-01T00:00:00.000Z",
+        "end": "2026-08-14T00:00:00.000Z",
+        "inclusiveStart": true,
+        "inclusiveEnd": true
+      },
+      "rows": [
+        {
+          "package": "express",
+          "day": "2026-08-01",
+          "downloads": 10836680
+        },
+        {
+          "package": "express",
+          "day": "2026-08-02",
+          "downloads": 10368617
+        },
+        {
+          "package": "express",
+          "day": "2026-08-03",
+          "downloads": 21441612
+        },
+        {
+          "package": "express",
+          "day": "2026-08-04",
+          "downloads": 22925745
+        },
+        {
+          "package": "express",
+          "day": "2026-08-05",
+          "downloads": 22608064
+        },
+        {
+          "package": "express",
+          "day": "2026-08-06",
+          "downloads": 18910480
+        },
+        {
+          "package": "express",
+          "day": "2026-08-07",
+          "downloads": 20778399
+        },
+        {
+          "package": "express",
+          "day": "2026-08-08",
+          "downloads": 10250815
+        },
+        {
+          "package": "express",
+          "day": "2026-08-09",
+          "downloads": 10381833
+        },
+        {
+          "package": "express",
+          "day": "2026-08-10",
+          "downloads": 21636840
+        },
+        {
+          "package": "express",
+          "day": "2026-08-11",
+          "downloads": 22374016
+        },
+        {
+          "package": "express",
+          "day": "2026-08-12",
+          "downloads": 22379938
+        },
+        {
+          "package": "express",
+          "day": "2026-08-13",
+          "downloads": 22614070
+        },
+        {
+          "package": "express",
+          "day": "2026-08-14",
+          "downloads": 0
+        }
+      ],
+      "citationId": "src:range-a"
+    },
+    {
+      "id": "range-b",
+      "evidenceClass": "fixture",
+      "source": {
+        "path": "examples/table-reconcile/tables/express-downloads-2026-08-08-2026-08-21.csv"
+      },
+      "columns": [
+        {
+          "name": "package",
+          "role": "key",
+          "type": "string"
+        },
+        {
+          "name": "day",
+          "role": "key",
+          "type": "date",
+          "unit": "calendar_day"
+        },
+        {
+          "name": "downloads",
+          "role": "measure",
+          "type": "number",
+          "unit": "count"
+        }
+      ],
+      "timeWindow": {
+        "start": "2026-08-08T00:00:00.000Z",
+        "end": "2026-08-21T00:00:00.000Z",
+        "inclusiveStart": true,
+        "inclusiveEnd": true
+      },
+      "rows": [
+        {
+          "package": "express",
+          "day": "2026-08-08",
+          "downloads": 10250815
+        },
+        {
+          "package": "express",
+          "day": "2026-08-09",
+          "downloads": 10381833
+        },
+        {
+          "package": "express",
+          "day": "2026-08-10",
+          "downloads": 21636840
+        },
+        {
+          "package": "express",
+          "day": "2026-08-11",
+          "downloads": 22374016
+        },
+        {
+          "package": "express",
+          "day": "2026-08-12",
+          "downloads": 22379938
+        },
+        {
+          "package": "express",
+          "day": "2026-08-13",
+          "downloads": 22614070
+        },
+        {
+          "package": "express",
+          "day": "2026-08-14",
+          "downloads": 0
+        },
+        {
+          "package": "express",
+          "day": "2026-08-15",
+          "downloads": 10495044
+        },
+        {
+          "package": "express",
+          "day": "2026-08-16",
+          "downloads": 10381658
+        },
+        {
+          "package": "express",
+          "day": "2026-08-17",
+          "downloads": 20190678
+        },
+        {
+          "package": "express",
+          "day": "2026-08-18",
+          "downloads": 23005265
+        },
+        {
+          "package": "express",
+          "day": "2026-08-19",
+          "downloads": 22625133
+        },
+        {
+          "package": "express",
+          "day": "2026-08-20",
+          "downloads": 22415006
+        },
+        {
+          "package": "express",
+          "day": "2026-08-21",
+          "downloads": 20294364
+        }
+      ],
+      "citationId": "src:range-b"
+    }
+  ]
+}

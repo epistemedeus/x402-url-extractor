@@ -1,0 +1,124 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c07",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "migration-checklist",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/migration-checklist",
+  "situationId": "S7",
+  "situation": "coverage-integrity",
+  "brief": "PROVENANCE/hash/license pins; observed-vs-claimed; no private receipts",
+  "expectedDecisionClass": "pass",
+  "offline": true,
+  "payment": { "attempted": false },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "cases": [
+    {
+      "id": "positive-complete",
+      "kind": "synthetic",
+      "evidenceClass": "synthetic",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/positive-complete.json",
+      "sha256": "5ed28b8f1dd1736101035ae6ca93d4ec3b8f77f0396b67d6b410dd61bafcc44b",
+      "expectedDecision": "pass",
+      "role": "primary-synthetic"
+    },
+    {
+      "id": "x402-spec-v1-to-v2-http",
+      "kind": "fixture",
+      "evidenceClass": "fixture",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/migration/input.json",
+      "sha256": "8c420c1878e3c04dad12a878c9a677ad025024affa7d72912128dcf9529ba47f",
+      "expectedDecision": "pass",
+      "schemaCoverage": "partial",
+      "observationsDecision": "partial",
+      "role": "real-replay",
+      "note": "Transform checklist is pass on supplied HTTP ops. Schema coverage is partial because STATE inventory is omitted, not invented. observations.json decision is partial for uncaptured schemes/extensions. Those three labels are not merged."
+    }
+  ],
+  "primaryFixtures": [
+    {
+      "id": "synthetic-case-positive-complete",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/positive-complete.json",
+      "sha256": "5ed28b8f1dd1736101035ae6ca93d4ec3b8f77f0396b67d6b410dd61bafcc44b"
+    },
+    {
+      "id": "synthetic-provenance",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/PROVENANCE.json",
+      "sha256": "fc8d44ed5597c4f8241573a49cbebc513dccab6c2b355040a9a9b4105e224c50"
+    },
+    {
+      "id": "synthetic-source-pins",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/SOURCE-PINS.json",
+      "sha256": "286c5dc040ff208a9ff91dd9764659d8a193fba3a5e568378f0d5a0edb0d0e51"
+    },
+    {
+      "id": "real-input",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/migration/input.json",
+      "sha256": "8c420c1878e3c04dad12a878c9a677ad025024affa7d72912128dcf9529ba47f"
+    },
+    {
+      "id": "real-provenance",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/migration/PROVENANCE.json",
+      "sha256": "00c5c8acca965022b0381bdd30cee0a9163255a5ab9ea29dbb8d2f559c883da2"
+    },
+    {
+      "id": "real-observations",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/migration/observations.json",
+      "sha256": "beedb8a7edd09e8ec2f6ea6a079f815f390f1bdf3e8426ef356fc20889871c76"
+    }
+  ],
+  "licensePins": [
+    {
+      "id": "repo-mit",
+      "path": "LICENSE",
+      "spdx": "MIT",
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
+      "note": "In-repo LICENSE for synthetic excerpts. Not a legal attestation."
+    },
+    {
+      "id": "real-apache-license",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/migration/source/license/LICENSE",
+      "spdx": "Apache-2.0",
+      "sha256": "50e6751797c50dedd75ef1b8a0d9e42f5f8472e9fbce91f34718e9f97b0c780a",
+      "note": "Offline copy of x402-foundation/x402 LICENSE. Not a license opinion or grant."
+    },
+    {
+      "id": "real-apache-notice",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/migration/source/license/NOTICE",
+      "spdx": "Apache-2.0",
+      "sha256": "0b8a03260dc87d976ea6f24d7ff1fb3f8f361cff317f9dd0da0b8d96936eabf6",
+      "quote": "Copyright 2026 x402 Foundation"
+    }
+  ],
+  "observedVsClaimed": {
+    "realClocks": {
+      "retrievedAt": "2026-09-10T11:24:43Z",
+      "sourceCommitDate": "2026-09-09T15:17:16Z",
+      "note": "retrievedAt is this fixture's HTTPS GET clock. sourceCommitDate is the Git committer date of the pinned commit. They are not the same instant."
+    },
+    "realLabels": {
+      "captureLabel": "live-capture",
+      "replayLabel": "fixture",
+      "evidenceClass": "fixture",
+      "note": "Capture was live HTTPS GET; replay is fixture. Do not relabel replay as live-capture."
+    },
+    "hashMismatch": {
+      "issueCode": "conflicting_source",
+      "bytesOverwritten": false,
+      "claimedHashEchoed": true,
+      "transformDecisionClass": "pass",
+      "limitation": "A supplied sha256 disagreed with bytes read from path; bytes were not overwritten."
+    }
+  },
+  "privateReceipts": {
+    "forbiddenPathSubstrings": [
+      "experiments/s137-consumer-evidence-jobs/receipts/",
+      "receipts/concurrency",
+      "admission-log.jsonl",
+      "cell-done.jsonl",
+      "overlap-peak.json",
+      "native-child-capability.json"
+    ]
+  }
+}

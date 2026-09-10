@@ -1,0 +1,77 @@
+{
+  "cell": "c34",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "replay-pack",
+  "jobId": "R2-CONSUMER-JOBS-05",
+  "moduleId": "05",
+  "situationId": "S2",
+  "situation": "partial-prereq",
+  "brief": "Reuse partial fixture; assert partial/unknown not invented pass",
+  "expectedDecisionClass": "partial",
+  "allowedDecisions": ["partial", "unknown"],
+  "forbiddenDecisions": ["pass"],
+  "clock": "2026-09-10T12:00:00.000Z",
+  "offline": true,
+  "paymentAttempted": false,
+  "assignmentSpendUsd": 0,
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack",
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/replay-pack/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/replay-pack/transform.mjs"
+  },
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "cases": [
+    {
+      "id": "partial-mixed-operations",
+      "kind": "partial",
+      "expectedDecision": "partial",
+      "coverage": "partial",
+      "primary": true,
+      "reason": "POST /v0/compare has a request example and no 200 body. GET /v0/health is complete. Do not invent the missing response.",
+      "paths": {
+        "case": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/partial-mixed-operations/case.json",
+        "openapi": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/partial-mixed-operations/openapi.json",
+        "postCompareRequest": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/partial-mixed-operations/examples/postCompare.request.json",
+        "getHealthResponse": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/partial-mixed-operations/examples/getHealth.response.json"
+      },
+      "sha256": {
+        "case": "0e7752b168c66a79d8c8df58bf766fb26a9f973e0e430d0a623f53d1d56651cb",
+        "openapi": "3ae160c7f5f43e10612c12acc21eedabc01a9337959d7fc78d17ba72c6a83408",
+        "postCompareRequest": "42b61a5b8e2e228b7c6ceb9bdf0f82c1e3b4735a2ac3d99803640392c969a32a",
+        "getHealthResponse": "050f64317838d11cbf8482d6eee989fafa2b24baa98a2682e676567a81ade48c"
+      }
+    },
+    {
+      "id": "partial-external-value",
+      "kind": "partial",
+      "expectedDecision": "partial",
+      "coverage": "external-unfetched",
+      "primary": true,
+      "reason": "OpenAPI Example Object uses externalValue; bytes were not retrieved. Online prerequisite stays explicit. Do not fetch or invent value.",
+      "paths": {
+        "case": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/partial-external-value/case.json",
+        "openapi": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/partial-external-value/openapi.json"
+      },
+      "sha256": {
+        "case": "d3c6e3c044fd8f5bdc8737c78052256a7c55a796870118ab089f5fff2a538658",
+        "openapi": "c41c431a1292358e55a29c556c0130db55ef4a98884243463d280a879e252876"
+      }
+    }
+  ],
+  "catalog": {
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/MANIFEST.json",
+    "sha256": "1f2be64ac5811ef06d327d9730444f6c71c9d7f9202d27bd73875cda23123be8"
+  },
+  "provenance": {
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/PROVENANCE.json",
+    "licenseNote": "Authored synthetic lab fixtures. Not upstream content. Not a license grant. OAS 3.1 field names are used as already present in in-repo OpenAPI 3.1.0 documents; the spec URL was not fetched.",
+    "liveCapture": false,
+    "paidDemand": false
+  },
+  "clockFile": {
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/CLOCK.txt",
+    "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a"
+  }
+}

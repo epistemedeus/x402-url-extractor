@@ -1,0 +1,89 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c08",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "migration-checklist",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/migration-checklist",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "situationId": "S8",
+  "situation": "distributable-archive",
+  "brief": "Kit archive contains manifests/README/examples; excludes receipts/logs",
+  "caseIds": ["positive-complete"],
+  "expectedDecisionClass": "pass",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "paymentAttempted": false,
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "kitRoot": "experiments/s153-consumer-distribution-gates/kit",
+  "kitSourceRoot": "experiments/s137-consumer-evidence-jobs",
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration",
+  "primaryFixtures": [
+    {
+      "id": "positive-complete",
+      "role": "case",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/positive-complete.json",
+      "sha256": "5ed28b8f1dd1736101035ae6ca93d4ec3b8f77f0396b67d6b410dd61bafcc44b"
+    },
+    {
+      "id": "manifest",
+      "role": "manifest",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/MANIFEST.json",
+      "sha256": "8392c96db314a7a826a1141adadf62effe31ab9ff1c9f06b83673ba60fd3bc32"
+    },
+    {
+      "id": "readme",
+      "role": "readme",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/README.md",
+      "sha256": "5c9a5bbc977a7121894655b44e5a90d310c49a09bef217f10d6d322d07c824eb"
+    },
+    {
+      "id": "example-old",
+      "role": "example",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/positive-complete/old.md",
+      "sha256": "0be077983920576e0a31818d495d44889665c61313174359a599a2ec0789b736"
+    },
+    {
+      "id": "example-new",
+      "role": "example",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/positive-complete/new.md",
+      "sha256": "23cc466ea7572bed50daa15f4b22b157d5c723b2a5f34ca4849a5c08a993a09c"
+    },
+    {
+      "id": "example-inventory",
+      "role": "example",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/positive-complete/inventory.json",
+      "sha256": "5363531bcc3280846c5e00080499454677e87e120e3ee8e0474803d3e88df46c"
+    }
+  ],
+  "membership": {
+    "mustIncludeClasses": ["manifests", "README", "examples"],
+    "mustExcludeClasses": ["receipts", "logs"],
+    "sourceRequiredRel": [
+      "fixtures/synthetic/migration/MANIFEST.json",
+      "fixtures/synthetic/migration/README.md",
+      "fixtures/synthetic/migration/cases/positive-complete.json",
+      "fixtures/synthetic/migration/docs/positive-complete/old.md",
+      "fixtures/synthetic/migration/docs/positive-complete/new.md",
+      "fixtures/synthetic/migration/docs/positive-complete/inventory.json"
+    ],
+    "sourceExcludedRel": [
+      "receipts/smoke/01-migration-checklist.json",
+      "receipts/concurrency/admission-log.jsonl"
+    ]
+  },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "limitations": [
+    "Wave-1 kit/ may be unpopulated; include-class members are proven on the S137 source pack.",
+    "Packed kit/ must not contain receipts/ or logs; empty kit satisfies exclusion only.",
+    "Jobs 07/08 stay out of scope."
+  ]
+}
