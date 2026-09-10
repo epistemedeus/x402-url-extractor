@@ -1,7 +1,7 @@
 # S174 consumer final CLI fix
 
 Base: S153 export `d520699802622a715cde1d894cc5547c42b2dca7` (kit pin lineage `fa6878de125cfdcfd77f4b47037c88667090d293`).
-Branch: `codex/s174-consumer-final-cli-fix-20260910` @ `c110bc7b3e51d79d8b6a3780b10ccf34f2b05df8`.
+Branch: `codex/s174-consumer-final-cli-fix-20260910` @ `051ca6c32b50d63ac088b76307d72ae97a80a0b2`.
 Writable: `experiments/s137-consumer-evidence-jobs/**`, `experiments/s153-consumer-distribution-gates/**`.
 
 ## Defect (Bot Useful recheck evidence)
@@ -38,8 +38,7 @@ node experiments/s137-consumer-evidence-jobs/scripts/cli.mjs analyze release-bri
 Controls: `positive-aligned`→pass; `partial-announced-only`/`partial-missing-tested`→partial;
 other conflicts→conflict; `negative-draft-only`→fail; `negative-empty`→unknown.
 
-Clean unpack of regenerated `kit/dist/s137-consumer-evidence-kit.tgz`
-(sha256 `da703119d1814c38f026a4fb469a04864fb6149d7c42ba892dd9627b76730c09`):
+Clean unpack of regenerated `kit/dist/s137-consumer-evidence-kit.tgz`:
 
 ```
 node bin/cli.mjs analyze release-brief --in examples/release-brief/conflict-sha-mismatch.json --clock 2026-09-10T18:00:00.000Z
