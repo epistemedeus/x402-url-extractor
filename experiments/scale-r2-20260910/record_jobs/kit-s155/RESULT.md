@@ -86,4 +86,6 @@ node src/cli.mjs run fixtures/positive-journey.json
 ## Commit / push
 
 - Pin base: `1a23b648e3c5f90bc009accb85972e2db6e22051`
-- Feature commit / tip / push: filled after git commit + push below
+- Feature commit: 
+- Tip SHA:  (pre-push; push line updated next)
+- Push: pending
