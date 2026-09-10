@@ -37,6 +37,8 @@ import {
   codesOf,
   impliedDecision,
   isCompoundKind,
+  isKnownSourceKind,
+  isStrictInputReject,
   kindPlane,
   linkingIdentity,
   makeIssue,
@@ -409,6 +411,17 @@ export function normalizeReleaseBriefInput(input = {}) {
       continue;
     }
     const doc = loadDoc(source) || {};
+    const declaredKind = typeof source.kind === "string" ? source.kind.trim() : "";
+    if (declaredKind && !isKnownSourceKind(declaredKind)) {
+      issues.push(makeIssue({
+        kind: "invalid",
+        code: "unknown_source_kind",
+        instancePath: `/sources/${index}/kind`,
+        message: `unknown source kind ${declaredKind}`,
+        params: { kind: declaredKind },
+      }));
+      continue;
+    }
     const kind = detectSourceKind(doc, source) || detectSourceKind(source, source);
     const id = firstString(source.id, doc.id, `src-${index}`) || `src-${index}`;
 
@@ -511,10 +524,16 @@ export function normalizeReleaseBriefInput(input = {}) {
       continue;
     }
 
-    const rawIdentity = source.identity && isPlainObject(source.identity)
-      ? { role: IDENTITY_ROLES[plane], ...source.identity, role: IDENTITY_ROLES[plane] }
-      : identityFor(plane, { ...doc, ...(source.identity || {}) });
-    const identity = { role: IDENTITY_ROLES[plane], ...linkingIdentity(rawIdentity) };
+    const expectedRole = IDENTITY_ROLES[plane];
+    let rawIdentity;
+    if (source.identity && isPlainObject(source.identity)) {
+      const givenRole = typeof source.identity.role === "string" ? source.identity.role.trim() : "";
+      const role = givenRole && givenRole !== expectedRole ? givenRole : expectedRole;
+      rawIdentity = { ...source.identity, role };
+    } else {
+      rawIdentity = identityFor(plane, { ...doc, ...(source.identity || {}) });
+    }
+    const identity = { role: rawIdentity.role || expectedRole, ...linkingIdentity(rawIdentity) };
 
     const citation = citationFrom(id, plane, kind, source, doc);
     citations.push(citation);
@@ -591,29 +610,17 @@ function decide({
     }
   }
 
-  const identityInvalid = inputIssues.filter((row) =>
-    row && (row.code === "invalid_identity_field" || row.code === "invalid_identity"),
-  );
-  const unexpectedSchema = inputIssues.find((row) => row && row.code === "unexpected_schema");
-
-  if (identityInvalid.length) {
+  const strictRejects = (inputIssues || []).filter(isStrictInputReject);
+  if (strictRejects.length) {
+    const primary = strictRejects.find((row) => row.code === "unexpected_schema")
+      || strictRejects.find((row) => row.code === "invalid_identity_field" || row.code === "invalid_identity")
+      || strictRejects[0];
     addFinding(findings, {
-      id: "f-invalid-identity",
+      id: `f-${primary.code}`,
       plane: "alignment",
       status: "fail",
-      code: "invalid_identity_field",
-      message: "identity fields must be strings; rejected input cannot pass",
-      citationIds: cite(citations.map((c) => c.id)),
-    });
-    return { decision: "fail", findings, conflict: false, linked: false };
-  }
-  if (unexpectedSchema) {
-    addFinding(findings, {
-      id: "f-unexpected-schema",
-      plane: "alignment",
-      status: "fail",
-      code: "unexpected_schema",
-      message: unexpectedSchema.message || "input schema id is not the release-brief contract",
+      code: primary.code,
+      message: primary.message || "strict source fields were rejected; cannot pass",
       citationIds: cite(citations.map((c) => c.id)),
     });
     return { decision: "fail", findings, conflict: false, linked: false };
@@ -869,12 +876,7 @@ export function buildReleaseBrief(input = {}) {
     alignment,
   };
 
-  const malformedCodes = new Set([
-    "invalid_identity_field",
-    "invalid_identity",
-    "unexpected_schema",
-  ]);
-  const malformed = (inputCheck.issues || []).some((row) => row && malformedCodes.has(row.code));
+  const malformed = (inputCheck.issues || []).some(isStrictInputReject);
   const checked = validateReleaseBrief(brief);
   let decision = decided.decision;
   if (malformed && decision === "pass") decision = "fail";

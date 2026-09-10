@@ -1,7 +1,7 @@
 /**
  * S184: release-brief identity linkage + rejected-ok/pass.
- * Assertions fail on S182 head for B1/B2; pass after the shared-path fix.
- * API (buildReleaseBrief) and CLI (scripts/cli.mjs) must agree.
+ * S194: strict-source rejects cannot launder into pass; item-level linkage
+ * (no plane-union false bridge). API and CLI must agree.
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -174,6 +174,131 @@ function announcedOnly() {
   };
 }
 
+function roleMismatchAnnounced() {
+  const input = linkedThreePlanes();
+  input.sources[0].identity.role = "observed";
+  return input;
+}
+
+function missingAnnouncedLocator() {
+  const input = linkedThreePlanes();
+  delete input.sources[0].path;
+  delete input.sources[0].url;
+  return input;
+}
+
+function unknownFourthKind() {
+  const input = linkedThreePlanes();
+  input.sources.push({
+    id: "m",
+    plane: "announced",
+    kind: "mystery-doc",
+    path: "m.json",
+    identity: { role: "claimed", tag: "v1.2.0" },
+    payload: { title: "mystery" },
+  });
+  return input;
+}
+
+function falsePlaneUnionBridge() {
+  return {
+    schema: INPUT_SCHEMA,
+    clock: CLOCK,
+    evidenceClass: "synthetic",
+    sources: [
+      {
+        id: "a-tag",
+        plane: "announced",
+        kind: "release-notes",
+        path: "a-tag.json",
+        identity: { role: "claimed", tag: "v1.2.0" },
+        payload: { title: "v1.2.0" },
+      },
+      {
+        id: "a-sha",
+        plane: "announced",
+        kind: "changelog",
+        path: "a-sha.json",
+        identity: { role: "claimed", commitSha: SHA },
+        payload: { title: "unrelated sha note" },
+      },
+      {
+        id: "s",
+        plane: "shipped",
+        kind: "git-tag",
+        path: "s.json",
+        identity: { role: "observed", tag: "v1.2.0" },
+        payload: { ref: "refs/tags/v1.2.0" },
+      },
+      {
+        id: "t",
+        plane: "tested",
+        kind: "test-receipt",
+        path: "t.json",
+        identity: { role: "observed", commitSha: SHA },
+        payload: { exitCode: 0 },
+      },
+    ],
+  };
+}
+
+function genuineItemBridge() {
+  return {
+    schema: INPUT_SCHEMA,
+    clock: CLOCK,
+    evidenceClass: "synthetic",
+    sources: [
+      {
+        id: "a",
+        plane: "announced",
+        kind: "release-notes",
+        path: "a.json",
+        identity: { role: "claimed", tag: "v1.2.0" },
+        payload: { title: "v1.2.0" },
+      },
+      {
+        id: "s",
+        plane: "shipped",
+        kind: "git-tag",
+        path: "s.json",
+        identity: { role: "observed", tag: "v1.2.0", commitSha: SHA },
+        payload: { targetCommitish: SHA },
+      },
+      {
+        id: "t",
+        plane: "tested",
+        kind: "test-receipt",
+        path: "t.json",
+        identity: { role: "observed", commitSha: SHA },
+        payload: { exitCode: 0 },
+      },
+    ],
+  };
+}
+
+function missingKindConvenience() {
+  const input = linkedThreePlanes();
+  for (const source of input.sources) delete source.kind;
+  return input;
+}
+
+function rawLaneDocuments() {
+  return {
+    schema: INPUT_SCHEMA,
+    clock: CLOCK,
+    evidenceClass: "synthetic",
+    announced: { title: "v1.2.0", tag_name: "v1.2.0", body: "notes" },
+    shipped: { ref: "refs/tags/v1.2.0", object: { sha: SHA }, tag: "v1.2.0" },
+    tested: { command: "node --test", exitCode: 0, head_sha: SHA },
+  };
+}
+
+function missingRoleConvenience() {
+  const input = linkedThreePlanes();
+  delete input.sources[0].identity.role;
+  return input;
+}
+
 function runCli(input) {
   const dir = mkdtempSync(join(tmpdir(), "s184-rb-"));
   const path = join(dir, "in.json");
@@ -290,4 +415,134 @@ test("impliedDecision: three empty planes are not pass", () => {
   const got = buildReleaseBrief(emptyThreePlanes());
   assert.notEqual(impliedDecision(got.brief), "pass");
   assert.equal(validateReleaseBrief({ ...got.brief, decision: "pass" }).ok, false);
+});
+
+function assertStrictRejectNotPass(got, code) {
+  assert.equal(got.ok, false, JSON.stringify({ ok: got.ok, issues: got.issues }));
+  assert.notEqual(got.decision, "pass");
+  assert.notEqual(got.brief?.decision, "pass");
+  assert.equal(got.decision, "fail");
+  assert.equal(got.brief?.decision, "fail");
+  assert.equal(got.brief?.decision, got.decision);
+  assert.ok((got.issues || []).some((issue) => issue.code === code), JSON.stringify(got.issues));
+  assert.equal(
+    (got.brief?.findings || []).some((finding) => finding.code === "three_planes_aligned"),
+    false,
+  );
+  assert.ok((got.brief?.findings || []).some((finding) => finding.code === code));
+}
+
+test("S194 R1 API: announced identity.role observed cannot pass", () => {
+  const input = roleMismatchAnnounced();
+  const checked = validateReleaseBriefInput(input);
+  assert.equal(checked.ok, false);
+  assert.ok(checked.issues.some((issue) => issue.code === "identity_role_mismatch"));
+  const got = buildReleaseBrief(input);
+  assertStrictRejectNotPass(got, "identity_role_mismatch");
+});
+
+test("S194 R1 CLI: announced identity.role observed cannot pass", () => {
+  const got = buildReleaseBrief(roleMismatchAnnounced());
+  const { packet } = runCli(roleMismatchAnnounced());
+  assert.notEqual(packet.decision, "pass");
+  assert.equal(packet.decision, got.decision);
+  assert.equal(packet.decision, "fail");
+});
+
+test("S194 R1 API: missing locator on explicit-kind source cannot pass", () => {
+  const input = missingAnnouncedLocator();
+  const checked = validateReleaseBriefInput(input);
+  assert.equal(checked.ok, false);
+  assert.ok(checked.issues.some((issue) => issue.code === "missing_locator"));
+  const got = buildReleaseBrief(input);
+  assertStrictRejectNotPass(got, "missing_locator");
+});
+
+test("S194 R1 CLI: missing locator on explicit-kind source cannot pass", () => {
+  const got = buildReleaseBrief(missingAnnouncedLocator());
+  const { packet } = runCli(missingAnnouncedLocator());
+  assert.notEqual(packet.decision, "pass");
+  assert.equal(packet.decision, got.decision);
+  assert.equal(packet.decision, "fail");
+});
+
+test("S194 R1 API: unknown fourth source kind cannot pass", () => {
+  const input = unknownFourthKind();
+  const checked = validateReleaseBriefInput(input);
+  assert.equal(checked.ok, false);
+  assert.ok(checked.issues.some((issue) => issue.code === "unknown_source_kind"));
+  const got = buildReleaseBrief(input);
+  assertStrictRejectNotPass(got, "unknown_source_kind");
+});
+
+test("S194 R1 CLI: unknown fourth source kind cannot pass", () => {
+  const got = buildReleaseBrief(unknownFourthKind());
+  const { packet } = runCli(unknownFourthKind());
+  assert.notEqual(packet.decision, "pass");
+  assert.equal(packet.decision, got.decision);
+  assert.equal(packet.decision, "fail");
+});
+
+test("S194 R2 API+CLI: plane-union false bridge is not linked/pass", () => {
+  const input = falsePlaneUnionBridge();
+  assert.equal(validateReleaseBriefInput(input).ok, true);
+  const got = buildReleaseBrief(input);
+  assert.notEqual(got.decision, "pass");
+  assert.notEqual(got.brief?.decision, "pass");
+  assert.equal(got.brief?.decision, got.decision);
+  assert.equal(got.brief?.alignment?.linked, false);
+  assert.ok(["unknown", "partial"].includes(got.decision), got.decision);
+  assert.equal(
+    (got.brief?.findings || []).some((finding) => finding.code === "three_planes_aligned"),
+    false,
+  );
+  assert.notEqual(impliedDecision(got.brief), "pass");
+  const { packet } = runCli(input);
+  assert.notEqual(packet.decision, "pass");
+  assert.equal(packet.decision, got.decision);
+});
+
+test("S194 R2 API+CLI: genuine item bridge still passes", () => {
+  const input = genuineItemBridge();
+  const got = buildReleaseBrief(input);
+  assert.equal(got.ok, true);
+  assert.equal(got.decision, "pass");
+  assert.equal(got.brief.decision, "pass");
+  assert.equal(got.brief.alignment.linked, true);
+  assert.equal(got.brief.findings.some((finding) => finding.code === "three_planes_aligned"), true);
+  const { packet } = runCli(input);
+  assert.equal(packet.decision, "pass");
+});
+
+test("S194 convenience: missing source.kind still infers and may pass", () => {
+  const input = missingKindConvenience();
+  const checked = validateReleaseBriefInput(input);
+  assert.equal(checked.ok, false);
+  assert.ok(checked.issues.every((issue) => issue.code === "unknown_source_kind"));
+  assert.ok(checked.issues.every((issue) => !issue.params?.kind));
+  const got = buildReleaseBrief(input);
+  assert.equal(got.ok, true);
+  assert.equal(got.decision, "pass");
+  assert.equal(got.brief.decision, "pass");
+});
+
+test("S194 convenience: missing identity.role is filled and may pass", () => {
+  const input = missingRoleConvenience();
+  assert.equal(validateReleaseBriefInput(input).ok, true);
+  const got = buildReleaseBrief(input);
+  assert.equal(got.ok, true);
+  assert.equal(got.decision, "pass");
+  assert.equal(got.brief.decision, "pass");
+  assert.equal(got.brief.announced.items[0].identity.role, "claimed");
+});
+
+test("S194 convenience: raw lane documents without sources[] may still pass", () => {
+  const input = rawLaneDocuments();
+  const checked = validateReleaseBriefInput(input);
+  assert.equal(checked.ok, false);
+  assert.ok(checked.issues.some((issue) => issue.code === "missing_sources"));
+  const got = buildReleaseBrief(input);
+  assert.equal(got.decision, "pass");
+  assert.equal(got.brief.decision, "pass");
+  assert.equal(got.ok, true);
 });

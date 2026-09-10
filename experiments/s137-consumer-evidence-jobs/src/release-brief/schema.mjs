@@ -130,6 +130,9 @@ export const FAIL_FINDING_CODES = Object.freeze([
   "invalid_identity_field",
   "invalid_identity",
   "unexpected_schema",
+  "identity_role_mismatch",
+  "missing_locator",
+  "unknown_source_kind",
 ]);
 
 export const SCHEMA_LIMITATIONS = Object.freeze([
@@ -239,7 +242,7 @@ function requireEvidenceClass(evidenceClass, issues, instancePath = "/evidenceCl
   }
 }
 
-function requireLocator(record, issues, instancePath) {
+function requireLocator(record, issues, instancePath, extraParams = {}) {
   const path = typeof record.path === "string" ? record.path.trim() : "";
   const url = typeof record.url === "string" ? record.url.trim() : "";
   if (!path && !url) {
@@ -248,6 +251,7 @@ function requireLocator(record, issues, instancePath) {
       code: "missing_locator",
       instancePath,
       message: "citation/source needs path or url",
+      params: extraParams,
     }));
   }
 }
@@ -451,6 +455,37 @@ export function hasLinkingIdentity(identity) {
   return IDENTITY_LINK_FIELDS.some((key) => Boolean(fields[key]));
 }
 
+export function isExplicitSourceKind(kind) {
+  return typeof kind === "string" && kind.trim().length > 0;
+}
+
+export function isKnownSourceKind(kind) {
+  if (!isExplicitSourceKind(kind)) return false;
+  const trimmed = kind.trim();
+  return Boolean(SOURCE_KINDS[trimmed]) || isCompoundKind(trimmed) || trimmed === "notice";
+}
+
+/**
+ * Strict source-field rejects that must not launder into pass / ok:true.
+ * Missing kind/role/locator on convenience raw docs is not strict.
+ */
+export function isStrictInputReject(issue) {
+  if (!issue || typeof issue !== "object") return false;
+  switch (issue.code) {
+    case "identity_role_mismatch":
+    case "invalid_identity_field":
+    case "invalid_identity":
+    case "unexpected_schema":
+      return true;
+    case "unknown_source_kind":
+      return isExplicitSourceKind(issue.params?.kind) && !isKnownSourceKind(issue.params.kind);
+    case "missing_locator":
+      return isExplicitSourceKind(issue.params?.kind);
+    default:
+      return false;
+  }
+}
+
 function hasIdentity(identity) {
   return hasLinkingIdentity(identity);
 }
@@ -473,7 +508,9 @@ function planeLinkUnion(items) {
 
 /**
  * Identity linkage across announced/shipped/tested.
- * Pass requires all three planes plus a connected graph of agreeing string fields.
+ * Graph nodes are items (not plane unions): a tag on announced A and a SHA on
+ * unrelated announced B must not bridge shipped(tag) to tested(SHA).
+ * Pass requires a connected item component covering announced+shipped+tested.
  * Empty identities → missing (partial). Disjoint/noncomparable → unknown.
  */
 export function assessIdentityAlignment(briefOrPlanes) {
@@ -485,6 +522,7 @@ export function assessIdentityAlignment(briefOrPlanes) {
   const unions = {};
   const disagreements = [];
   let missing = false;
+  const nodes = [];
   for (const plane of present) {
     const { union, internalConflicts, hasLink } = planeLinkUnion(blocks[plane]);
     unions[plane] = union;
@@ -497,6 +535,11 @@ export function assessIdentityAlignment(briefOrPlanes) {
         values: row.values,
       });
     }
+    (blocks[plane] || []).forEach((item, index) => {
+      const fields = linkingIdentity(item?.identity);
+      if (!Object.keys(fields).length) return;
+      nodes.push({ id: `${plane}:${index}`, plane, fields });
+    });
   }
   for (let i = 0; i < present.length; i += 1) {
     for (let j = i + 1; j < present.length; j += 1) {
@@ -514,37 +557,45 @@ export function assessIdentityAlignment(briefOrPlanes) {
       }
     }
   }
-  const linkedPlanes = present.filter((plane) => Object.keys(unions[plane] || {}).length > 0);
-  const adj = new Map(linkedPlanes.map((plane) => [plane, new Set()]));
-  for (let i = 0; i < linkedPlanes.length; i += 1) {
-    for (let j = i + 1; j < linkedPlanes.length; j += 1) {
-      const a = linkedPlanes[i];
-      const b = linkedPlanes[j];
+  const adj = new Map(nodes.map((node) => [node.id, new Set()]));
+  const byId = new Map(nodes.map((node) => [node.id, node]));
+  for (let i = 0; i < nodes.length; i += 1) {
+    for (let j = i + 1; j < nodes.length; j += 1) {
+      const a = nodes[i];
+      const b = nodes[j];
       const share = IDENTITY_LINK_FIELDS.some(
-        (key) => unions[a][key] && unions[b][key] && unions[a][key] === unions[b][key],
+        (key) => a.fields[key] && b.fields[key] && a.fields[key] === b.fields[key],
       );
       if (share) {
-        adj.get(a).add(b);
-        adj.get(b).add(a);
+        adj.get(a.id).add(b.id);
+        adj.get(b.id).add(a.id);
       }
     }
   }
-  let connected = false;
-  if (linkedPlanes.length) {
+  let coversThree = false;
+  const seenGlobal = new Set();
+  for (const node of nodes) {
+    if (seenGlobal.has(node.id)) continue;
     const seen = new Set();
-    const stack = [linkedPlanes[0]];
+    const stack = [node.id];
+    const planesIn = new Set();
     while (stack.length) {
-      const node = stack.pop();
-      if (seen.has(node)) continue;
-      seen.add(node);
-      for (const next of adj.get(node) || []) stack.push(next);
+      const id = stack.pop();
+      if (seen.has(id)) continue;
+      seen.add(id);
+      seenGlobal.add(id);
+      const current = byId.get(id);
+      if (current) planesIn.add(current.plane);
+      for (const next of adj.get(id) || []) stack.push(next);
     }
-    connected = seen.size === linkedPlanes.length;
+    if (planesIn.has("announced") && planesIn.has("shipped") && planesIn.has("tested")) {
+      coversThree = true;
+    }
   }
   const conflict = disagreements.length > 0;
   const allThree = present.length === 3;
-  const linked = allThree && !missing && !conflict && connected;
-  const disjoint = allThree && !missing && !conflict && !connected;
+  const linked = allThree && !missing && !conflict && coversThree;
+  const disjoint = allThree && !missing && !conflict && !coversThree;
   return {
     present,
     missing,
@@ -602,7 +653,8 @@ function validateSource(source, index, issues, evidenceClass) {
       validateAtomicSource(source, issues, instancePath);
     }
   }
-  requireLocator(source, issues, instancePath);
+  const explicitKind = typeof source.kind === "string" ? source.kind.trim() : "";
+  requireLocator(source, issues, instancePath, explicitKind ? { kind: explicitKind } : {});
   const shaRequired = evidenceClass === "fixture" || evidenceClass === "live-capture";
   requireSha256(source.contentSha256 ?? source.sha256, issues, `${instancePath}/contentSha256`, { required: shaRequired });
   if (source.retrievedAt != null) requireClock(source.retrievedAt, issues, `${instancePath}/retrievedAt`);
