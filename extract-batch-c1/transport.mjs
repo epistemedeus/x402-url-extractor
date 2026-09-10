@@ -3,6 +3,7 @@ import { constants } from "node:fs";
 import path from "node:path";
 import { assertPublicHttpUrl } from "./url-guard.mjs";
 import { publicFetch } from "./public-fetch.mjs";
+import { decodeHttpBody } from "../extract-capture.mjs";
 
 export async function loadSource(source, options = {}) {
   const { fixtureRoot, allowLive = false, maxBytes = 1_000_000, timeoutMs = 8000,
@@ -91,21 +92,43 @@ export async function loadSource(source, options = {}) {
       const reader = res.body?.getReader?.();
       if (!reader) return fail("invalid_response", "streaming response body required");
       const chunks = [];
+      let bodyTruncated = false;
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
         const remaining = maxBytes - bytes;
-        bytes += Math.min(value.byteLength, remaining);
         if (value.byteLength > remaining) {
+          if (remaining > 0) chunks.push(value.subarray(0, remaining));
+          bytes += Math.max(0, remaining);
+          bodyTruncated = true;
           await reader.cancel().catch(() => {});
-          return fail("oversized_body", "body exceeds byte limit", "failure", bytes);
+          break;
         }
         chunks.push(value);
+        bytes += value.byteLength;
       }
-      if (res.status < 200 || res.status >= 300) return fail("http_error", `HTTP ${res.status}`, "failure", bytes);
-      return { ok: true, status: "ok", body: Buffer.concat(chunks).toString("utf8"), bytes,
+      const decoded = decodeHttpBody(Buffer.concat(chunks), {
+        contentType: provenance.contentType,
+        allowHtmlMeta: true,
+      });
+      const provenanceOut = {
+        ...provenance,
+        byteLength: bytes,
+        charset: decoded.charset,
+        charsetSource: decoded.charsetSource,
+        bodyTruncated,
+        completedAt: new Date().toISOString(),
+      };
+      if (bodyTruncated) {
+        return {
+          ok: true, status: "ok", body: decoded.html, bytes, bodyTruncated: true,
+          finalUrl: current.href, httpStatus: res.status, redirects: provenance.redirects,
+          provenance: provenanceOut,
+        };
+      }
+      return { ok: true, status: "ok", body: decoded.html, bytes, bodyTruncated: false,
         finalUrl: current.href, httpStatus: res.status, redirects: provenance.redirects,
-        provenance: { ...provenance, byteLength: bytes, completedAt: new Date().toISOString() } };
+        provenance: provenanceOut };
     }
   } catch (err) {
     const code = typeof err.code === "string" ? err.code : "fetch_error";

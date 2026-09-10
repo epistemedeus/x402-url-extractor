@@ -116,8 +116,11 @@ source label or payment challenge never creates authority.
 
 Then replay the same selected request (HTTP or MCP) with that buyer
 credential. Preserve the claimed source header on the replay. Reconcile the
-protocol receipt. A successful HTTP 200 is delivery of untrusted page bytes,
-not revenue proof, not independent demand, and not permission to pay again.
+protocol receipt. A successful HTTP 200 is delivery of an untrusted typed
+extract record, not source success, completeness, revenue proof, independent
+demand, or permission to pay again. Check `status`, `sourceOk`, `error`,
+`requestedUrl`, `finalUrl`, and `capture`. A 403/404 with block text is not an
+empty 200. Missing discussion text is not proof of absence.
 
 Batch responses may be truthful partials: some URLs can fail while the attempt
 was still charged. Report `partial`, per-source outcomes, and stop reasons as

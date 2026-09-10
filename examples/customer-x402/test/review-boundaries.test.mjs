@@ -85,6 +85,13 @@ for (const [name, makePaid, expected] of [
   ["wrong media type", () => new Response(JSON.stringify(FIXTURE_VALID_BODY), { headers: { "content-type": "text/plain" } }), "paid_invalid_output"],
   ["null required value", () => Response.json({ ...FIXTURE_VALID_BODY, title: null }), "paid_invalid_output"],
   ["omitted required value", () => { const data = { ...FIXTURE_VALID_BODY }; delete data.title; return Response.json(data); }, "paid_invalid_output"],
+  ["source HTTP 404 with typed body", () => Response.json({
+    ...FIXTURE_VALID_BODY,
+    status: 404,
+    sourceOk: false,
+    error: { code: "http_404", message: "source refused: HTTP 404" },
+    text: "helpful looking missing page",
+  }), "partial_delivered"],
   ["non-JSON success", () => new Response("not-json", { headers: { "content-type": "application/json",
     "payment-response": encodePaymentResponseHeader({ success: true, transaction: `0x${"ab".repeat(32)}`, network: "eip155:8453" }) } }), "paid_invalid_output"],
 ]) test(`${name}: truthful evidence with no paid retry`, async () => {

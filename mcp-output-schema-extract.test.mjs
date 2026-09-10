@@ -396,9 +396,19 @@ test("mounted MCP lists extract outputSchema and serves typed structuredContent 
       if (url.includes("empty")) {
         assert.equal(structured.title, "");
         assert.equal(structured.url, url);
+        assert.equal(structured.requestedUrl, url);
+        assert.equal(structured.finalUrl, url);
+        assert.equal(structured.sourceOk, true);
+        assert.equal(structured.error, null);
         for (const field of ["contentType", "description", "canonical", "lang"]) assert.equal(structured[field], null);
       }
-      if (url.includes("upstream-error")) assert.equal(structured.status, 404);
+      if (url.includes("upstream-error")) {
+        assert.equal(structured.status, 404);
+        assert.equal(structured.sourceOk, false);
+        assert.equal(structured.error?.code, "http_404");
+        assert.match(structured.text, /Not found/i);
+        assert.equal(structured.ok, true);
+      }
       if (url.includes("graph")) {
         assert.deepEqual(structured.aiReadiness.schemaTypes, [["Thing", "Product"], { unusual: true }]);
         assert.equal(structured.jsonLd[1], 42);
@@ -477,8 +487,12 @@ test("application errors and malformed success stay untyped", async () => {
 test("InMemory transport projects extract structuredContent only with outputSchema", async () => {
   const sparse = {
     ok: true,
+    requestedUrl: "https://sparse.example/",
+    finalUrl: "https://sparse.example/",
     url: "https://sparse.example/",
     status: 200,
+    sourceOk: true,
+    error: null,
     contentType: "text/html",
     title: "Example Domain",
     description: null,
@@ -497,6 +511,18 @@ test("InMemory transport projects extract structuredContent only with outputSche
       hasDescription: false,
       hasCanonical: false,
       schemaTypes: [],
+    },
+    capture: {
+      method: "http-get-no-javascript",
+      javascriptExecuted: false,
+      maxBodyBytes: 3_000_000,
+      textExcerptLimitChars: 1200,
+      markdownLimitChars: null,
+      bodyBytes: 128,
+      bodyTruncated: false,
+      textTruncated: false,
+      charset: "utf-8",
+      charsetSource: "content-type",
     },
     fetchedAt: "2026-09-07T21:00:00.000Z",
   };

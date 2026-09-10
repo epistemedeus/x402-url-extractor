@@ -13,8 +13,12 @@ import {
 import { normalizeAuthorization } from "../src/authorization.mjs";
 export const FIXTURE_VALID_BODY = Object.freeze({
   ok: true,
+  requestedUrl: "https://example.com/",
+  finalUrl: "https://example.com/",
   url: "https://example.com/",
   status: 200,
+  sourceOk: true,
+  error: null,
   contentType: "text/html; charset=utf-8",
   title: "Example Domain",
   description: null,

@@ -26,7 +26,7 @@ export function classifyPaidResponse({
     output = validateBatchBuyerOutput(body, authorization);
   } else {
     const single = validateBuyerOutput(body, requiredOutput);
-    output = { ...single, delivery: single.valid ? "useful" : "invalid" };
+    output = { ...single, delivery: single.delivery || (single.valid ? "useful" : "invalid") };
   }
   const evidence = {
     httpStatus: response.status,
@@ -79,6 +79,13 @@ export function classifyPaidResponse({
       return {
         outcome: OUTCOMES.PARTIAL_DELIVERED,
         message: "paid bounded batch attempt is structurally valid with explicit failed or partial rows; not a refund or automatic retry",
+        evidence,
+      };
+    }
+    if (output.valid && output.delivery === "source_refused") {
+      return {
+        outcome: OUTCOMES.PARTIAL_DELIVERED,
+        message: "typed extract record with source HTTP refusal; not empty success and not an automatic retry",
         evidence,
       };
     }
