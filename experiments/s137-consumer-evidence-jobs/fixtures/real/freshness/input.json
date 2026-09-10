@@ -1,0 +1,129 @@
+{
+  "schema": "s137.freshness-receipt.input.v1",
+  "caseId": "nyc-311-erm2-nwe9",
+  "caseKind": "positive",
+  "evidenceClass": "fixture",
+  "jobId": "R2-CONSUMER-JOBS-06",
+  "artifactKind": "dataset-freshness-receipt",
+  "clock": "2026-09-10T11:24:14Z",
+  "offline": true,
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline replay of stored metadata; no purchase"
+  },
+  "notes": "One official Socrata view-metadata GET. retrievedAt is HTTP Date. sourceUpdatedAt is native rowsUpdatedAt converted from unix seconds. viewLastModified is kept as a separate catalog clock and is not copied into retrievedAt.",
+  "datasets": [
+    {
+      "id": "nyc-open-data:erm2-nwe9",
+      "locator": {
+        "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/freshness/nyc-311-erm2-nwe9.view.json",
+        "url": "https://data.cityofnewyork.us/api/views/erm2-nwe9.json"
+      },
+      "contentSha256": "5f33c26dba3c08d0fa00fd7ae6ca875da50e83b086dcd94a3c21be2dc1c792c8",
+      "retrievedAt": "2026-09-10T11:24:14Z",
+      "sourceUpdatedAt": "2026-09-10T01:38:08Z",
+      "sourceUpdatedAtNativeField": "rowsUpdatedAt",
+      "viewLastModified": "2025-12-29T15:25:00Z",
+      "payloadRef": "nyc-311-erm2-nwe9.view.json",
+      "coverage": {
+        "expectedRecords": 1,
+        "observedRecords": 1,
+        "fieldsPresent": [
+          "retrievedAt",
+          "sourceUpdatedAt",
+          "viewLastModified"
+        ],
+        "fieldsMissing": [
+          "Last-Modified",
+          "license",
+          "rowCount",
+          "data"
+        ]
+      },
+      "times": [
+        {
+          "field": "retrievedAt",
+          "value": "2026-09-10T11:24:14Z",
+          "citationId": "cit-http-headers-raw"
+        },
+        {
+          "field": "sourceUpdatedAt",
+          "value": "2026-09-10T01:38:08Z",
+          "citationId": "cit-view-json",
+          "nativeField": "rowsUpdatedAt"
+        }
+      ]
+    }
+  ],
+  "citations": [
+    {
+      "id": "cit-view-json",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/freshness/nyc-311-erm2-nwe9.view.json",
+      "url": "https://data.cityofnewyork.us/api/views/erm2-nwe9.json",
+      "sha256": "5f33c26dba3c08d0fa00fd7ae6ca875da50e83b086dcd94a3c21be2dc1c792c8",
+      "contentSha256": "5f33c26dba3c08d0fa00fd7ae6ca875da50e83b086dcd94a3c21be2dc1c792c8",
+      "bytes": 25591
+    },
+    {
+      "id": "cit-http-headers-raw",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/freshness/http-headers.raw.txt",
+      "url": "https://data.cityofnewyork.us/api/views/erm2-nwe9.json",
+      "sha256": "deb2dfcc9b1c06280d38a3f1fec4d13b01360c1c6774e2fbef8d41ccac8d5e5d",
+      "contentSha256": "deb2dfcc9b1c06280d38a3f1fec4d13b01360c1c6774e2fbef8d41ccac8d5e5d",
+      "bytes": 390
+    },
+    {
+      "id": "cit-http-headers-json",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/freshness/http-headers.json",
+      "url": "https://data.cityofnewyork.us/api/views/erm2-nwe9.json",
+      "sha256": "fc2fc6e09a1d6c612079c75d264028e63146f5a52ae256d48581f63c732b8109",
+      "contentSha256": "fc2fc6e09a1d6c612079c75d264028e63146f5a52ae256d48581f63c732b8109",
+      "bytes": 1012
+    },
+    {
+      "id": "cit-slim",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/freshness/slim.json",
+      "url": "https://data.cityofnewyork.us/api/views/erm2-nwe9.json",
+      "sha256": "6909b838ab09998e6e57440c9741e0e2e715aebad8381457b2c7485df9e5a61a",
+      "contentSha256": "6909b838ab09998e6e57440c9741e0e2e715aebad8381457b2c7485df9e5a61a",
+      "bytes": 4002
+    }
+  ],
+  "expect": {
+    "decision": "pass",
+    "coverageComplete": true,
+    "timesDistinct": true,
+    "findings": [
+      {
+        "id": "retrieval-age",
+        "kind": "retrieval_age",
+        "datasetId": "nyc-open-data:erm2-nwe9",
+        "retrievedAt": "2026-09-10T11:24:14Z",
+        "citationIds": [
+          "cit-http-headers-raw"
+        ]
+      },
+      {
+        "id": "source-update-age",
+        "kind": "source_update_age",
+        "datasetId": "nyc-open-data:erm2-nwe9",
+        "sourceUpdatedAt": "2026-09-10T01:38:08Z",
+        "citationIds": [
+          "cit-view-json"
+        ]
+      },
+      {
+        "id": "times-distinct",
+        "kind": "times_distinct",
+        "datasetId": "nyc-open-data:erm2-nwe9",
+        "citationIds": [
+          "cit-view-json",
+          "cit-http-headers-raw"
+        ]
+      }
+    ]
+  }
+}

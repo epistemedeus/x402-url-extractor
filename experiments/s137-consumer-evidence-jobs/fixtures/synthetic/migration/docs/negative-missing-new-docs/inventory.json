@@ -1,0 +1,13 @@
+{
+  "schema": "s137.migration.inventory.v1",
+  "caller": "synthetic-skill-single-page",
+  "notes": "Inventory is well-formed; the fail is the missing new-docs file listed by the case.",
+  "operations": [
+    {
+      "id": "inv-extract",
+      "method": "GET",
+      "route": "/extract",
+      "mcpTool": "extract"
+    }
+  ]
+}

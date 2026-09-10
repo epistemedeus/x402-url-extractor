@@ -1,0 +1,47 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "S137 synthetic status without examples",
+    "version": "0.0.0-synthetic",
+    "description": "Valid OpenAPI 3.1 paths and schema. No Media Type example or examples. Cannot package an official-example replay."
+  },
+  "servers": [
+    {
+      "url": "https://api.example.test"
+    }
+  ],
+  "paths": {
+    "/v0/status": {
+      "get": {
+        "operationId": "getStatus",
+        "summary": "Unpaid status schema only.",
+        "responses": {
+          "200": {
+            "description": "Enabled. Unpaid. No example bytes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ok",
+                    "paid"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "paid": {
+                      "type": "boolean",
+                      "const": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

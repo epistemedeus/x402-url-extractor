@@ -1,0 +1,5 @@
+{
+  "case": "negative",
+  "evidenceClass": "synthetic",
+  "note": "intentionally missing oldDoc so stub schema validateInput fails"
+}

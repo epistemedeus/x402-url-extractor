@@ -1,0 +1,13 @@
+{
+  "schema": "s137.release-brief.source.notice.v1",
+  "evidenceClass": "synthetic",
+  "lane": null,
+  "notice": "Intentional empty input: no announced, shipped, or tested documents.",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "subject": "demo-release-kit",
+  "lanesPresent": {
+    "announced": false,
+    "shipped": false,
+    "tested": false
+  }
+}

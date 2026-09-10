@@ -1,0 +1,51 @@
+{
+  "id": "negative-missing-new-docs",
+  "kind": "negative",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "artifactKind": "migration-checklist",
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "title": "New-docs path listed but file is absent",
+  "sourcePinIds": ["pin-readme-extract-read"],
+  "input": {
+    "oldDocs": [
+      { "id": "old", "path": "docs/negative-missing-new-docs/old.md" }
+    ],
+    "newDocs": [
+      { "id": "new", "path": "docs/negative-missing-new-docs/new.md" }
+    ],
+    "operationsInventory": {
+      "id": "inventory",
+      "path": "docs/negative-missing-new-docs/inventory.json"
+    }
+  },
+  "missingPaths": ["docs/negative-missing-new-docs/new.md"],
+  "citations": [
+    { "id": "old", "path": "docs/negative-missing-new-docs/old.md" },
+    { "id": "inventory", "path": "docs/negative-missing-new-docs/inventory.json" }
+  ],
+  "expect": {
+    "decision": "fail",
+    "findings": [
+      {
+        "id": "missing-new-docs",
+        "change": "invalid-input",
+        "reason": "newDocs path docs/negative-missing-new-docs/new.md is not present",
+        "citationIds": ["old"]
+      }
+    ]
+  },
+  "limitations": [
+    "Fail is for missing required new docs, not for a documented operation change."
+  ],
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}

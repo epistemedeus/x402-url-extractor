@@ -1,0 +1,127 @@
+{
+  "schema": "s137.link-index.synthetic-case.v1",
+  "caseId": "partial-mixed",
+  "kind": "partial",
+  "expectedDecision": "partial",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "entry": "source.md",
+  "format": "md",
+  "offline": true,
+  "payment": { "attempted": false },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "links": [
+    {
+      "linkId": "L1",
+      "href": "artifacts/present.md",
+      "text": "Present",
+      "syntax": "md-inline",
+      "markup": "[Present](artifacts/present.md)",
+      "index": 11,
+      "targetStatus": "reachable",
+      "targetPath": "artifacts/present.md",
+      "fragment": null
+    },
+    {
+      "linkId": "L2",
+      "href": "artifacts/missing.md",
+      "text": "Missing",
+      "syntax": "md-inline",
+      "markup": "[Missing](artifacts/missing.md)",
+      "index": 45,
+      "targetStatus": "unreachable-missing-file",
+      "targetPath": "artifacts/missing.md",
+      "fragment": null
+    },
+    {
+      "linkId": "L3",
+      "href": "artifacts/present.md#no-such-anchor",
+      "text": "Dead fragment",
+      "syntax": "md-inline",
+      "markup": "[Dead fragment](artifacts/present.md#no-such-anchor)",
+      "index": 79,
+      "targetStatus": "unreachable-missing-fragment",
+      "targetPath": "artifacts/present.md",
+      "fragment": "no-such-anchor"
+    },
+    {
+      "linkId": "L4",
+      "href": "https://example.invalid/never-fetched",
+      "text": "External",
+      "syntax": "md-inline",
+      "markup": "[External](https://example.invalid/never-fetched)",
+      "index": 134,
+      "targetStatus": "unresolved-external"
+    },
+    {
+      "linkId": "L5",
+      "href": "../outside.md",
+      "text": "Escaped",
+      "syntax": "md-inline",
+      "markup": "[Escaped](../outside.md)",
+      "index": 186,
+      "targetStatus": "unreachable-out-of-bound"
+    }
+  ],
+  "anchors": [
+    { "id": "mixed", "text": "Mixed", "level": 1, "index": 0, "kind": "md-heading" }
+  ],
+  "findings": [
+    {
+      "findingId": "F1",
+      "code": "reachable-relative",
+      "linkId": "L1",
+      "citationIds": ["source.md", "artifacts/present.md"]
+    },
+    {
+      "findingId": "F2",
+      "code": "unreachable-missing-file",
+      "linkId": "L2",
+      "citationIds": ["source.md"]
+    },
+    {
+      "findingId": "F3",
+      "code": "unreachable-missing-fragment",
+      "linkId": "L3",
+      "citationIds": ["source.md", "artifacts/present.md"]
+    },
+    {
+      "findingId": "F4",
+      "code": "unresolved-external",
+      "linkId": "L4",
+      "citationIds": ["source.md"]
+    },
+    {
+      "findingId": "F5",
+      "code": "unreachable-out-of-bound",
+      "linkId": "L5",
+      "citationIds": ["source.md"]
+    }
+  ],
+  "citations": [
+    {
+      "citationId": "source.md",
+      "path": "source.md",
+      "sha256": "e59edf3ac65642d5c08baf5a7b7fb2517b234e419e7ef59c25a9ee2d5522c5bc",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "citationId": "artifacts/present.md",
+      "path": "artifacts/present.md",
+      "sha256": "5e825f4ed6e7122d4b7ae417afbd2d30cdd67d65da57f52ec2105df5479fb31c",
+      "evidenceClass": "synthetic"
+    }
+  ],
+  "limitations": [
+    "artifacts/missing.md is intentionally absent. Do not invent that file.",
+    "https://example.invalid/never-fetched is not fetched (reserved invalid TLD; offline).",
+    "../outside.md is outside the case directory and is not opened."
+  ]
+}

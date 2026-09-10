@@ -1,0 +1,155 @@
+{
+  "schema": "s137.release-brief.synthetic-case.v1",
+  "id": "partial-missing-tested",
+  "jobId": "R2-CONSUMER-JOBS-02",
+  "artifactKind": "release-brief",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "caseClass": "partial",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "Announced and shipped agree; tested lane absent",
+  "notes": "Coverage hole on the tested lane. Do not invent a CI conclusion.",
+  "subject": {
+    "name": "demo-release-kit",
+    "repository": "synthetic.lab/demo-release-kit"
+  },
+  "lanes": {
+    "announced": "sources/partial-missing-tested/announced.json",
+    "shipped": "sources/partial-missing-tested/shipped.json",
+    "tested": null
+  },
+  "input": {
+    "schema": "s137.release-brief.input.v1",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "evidenceClass": "synthetic",
+    "jobId": "R2-CONSUMER-JOBS-02",
+    "artifactKind": "release-brief",
+    "subject": {
+      "name": "demo-release-kit",
+      "repository": "synthetic.lab/demo-release-kit"
+    },
+    "sources": [
+      {
+        "id": "cit-announced",
+        "plane": "announced",
+        "lane": "announced",
+        "kind": "github-release-notes",
+        "path": "sources/partial-missing-tested/announced.json",
+        "sha256": "4b1adaa1a1f1b379dc9a0a0729b3edf96118e5cbbc954d27bf8adf76bddfcb0c",
+        "contentSha256": "4b1adaa1a1f1b379dc9a0a0729b3edf96118e5cbbc954d27bf8adf76bddfcb0c",
+        "evidenceClass": "synthetic",
+        "identity": {
+          "role": "claimed",
+          "tag": "v1.2.0",
+          "version": "1.2.0",
+          "commitSha": "bb0a119da5edfaf92cbe3bfbbc5197e83ff6a627"
+        },
+        "payload": {
+          "name": "v1.2.0",
+          "body": "Release notes for demo-release-kit v1.2.0. No tested-lane document is supplied with this case.",
+          "draft": false,
+          "prerelease": false,
+          "published_at": "2026-09-09T18:00:00.000Z",
+          "created_at": "2026-09-09T17:58:00.000Z",
+          "target_commitish": "bb0a119da5edfaf92cbe3bfbbc5197e83ff6a627"
+        }
+      },
+      {
+        "id": "cit-shipped",
+        "plane": "shipped",
+        "lane": "shipped",
+        "kind": "git-tag",
+        "path": "sources/partial-missing-tested/shipped.json",
+        "sha256": "3b209235c79cf9a6582352aaf10fde341c48565a3cfa046ac16cd31538f6cf1c",
+        "contentSha256": "3b209235c79cf9a6582352aaf10fde341c48565a3cfa046ac16cd31538f6cf1c",
+        "evidenceClass": "synthetic",
+        "identity": {
+          "role": "observed",
+          "tag": "v1.2.0",
+          "version": "1.2.0",
+          "commitSha": "bb0a119da5edfaf92cbe3bfbbc5197e83ff6a627"
+        },
+        "payload": {
+          "ref": "refs/tags/v1.2.0",
+          "object": {
+            "type": "commit",
+            "sha": "bb0a119da5edfaf92cbe3bfbbc5197e83ff6a627"
+          },
+          "tagged_at": "2026-09-09T17:55:00.000Z"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "decision": "partial",
+    "laneCoverage": {
+      "announced": true,
+      "shipped": true,
+      "tested": false
+    },
+    "tagAgreement": true,
+    "shaAgreement": true,
+    "disagreementCodes": []
+  },
+  "findings": [
+    {
+      "id": "announced-shipped-aligned",
+      "kind": "alignment",
+      "summary": "announced and shipped agree on tag v1.2.0 and SHA",
+      "citationIds": [
+        "cit-announced",
+        "cit-shipped"
+      ]
+    },
+    {
+      "id": "tested-absent",
+      "kind": "coverage",
+      "summary": "tested lane is absent; CI conclusion is unknown",
+      "citationIds": [
+        "cit-announced",
+        "cit-shipped"
+      ]
+    }
+  ],
+  "citations": [
+    {
+      "id": "cit-announced",
+      "lane": "announced",
+      "plane": "announced",
+      "kind": "github-release-notes",
+      "path": "sources/partial-missing-tested/announced.json",
+      "sha256": "4b1adaa1a1f1b379dc9a0a0729b3edf96118e5cbbc954d27bf8adf76bddfcb0c",
+      "contentSha256": "4b1adaa1a1f1b379dc9a0a0729b3edf96118e5cbbc954d27bf8adf76bddfcb0c",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-shipped",
+      "lane": "shipped",
+      "plane": "shipped",
+      "kind": "git-tag",
+      "path": "sources/partial-missing-tested/shipped.json",
+      "sha256": "3b209235c79cf9a6582352aaf10fde341c48565a3cfa046ac16cd31538f6cf1c",
+      "contentSha256": "3b209235c79cf9a6582352aaf10fde341c48565a3cfa046ac16cd31538f6cf1c",
+      "evidenceClass": "synthetic"
+    }
+  ],
+  "limitations": [
+    "Synthetic authored sources. Not a live GitHub or npm capture.",
+    "Does not execute tests, publish, spend, or merge.",
+    "expect.decision is a catalog contract for c07/c10, not a model judgment."
+  ],
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline fixtures; no purchase"
+  },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "schema": "s137.migration.inventory.v1",
+  "caller": "synthetic-goose-unpaid-discovery",
+  "notes": "goose/extract.workflow.md requires extract and extract_batch on unpaid tools/list. New docs in this case omit extract_batch.",
+  "operations": [
+    {
+      "id": "inv-extract",
+      "method": "GET",
+      "route": "/extract",
+      "mcpTool": "extract"
+    },
+    {
+      "id": "inv-read",
+      "method": "GET",
+      "route": "/read",
+      "mcpTool": "read"
+    },
+    {
+      "id": "inv-extract-batch",
+      "method": "POST",
+      "route": "/extract/batch",
+      "mcpTool": "extract_batch"
+    }
+  ]
+}

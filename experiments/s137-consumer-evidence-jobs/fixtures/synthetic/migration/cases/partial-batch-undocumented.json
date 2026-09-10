@@ -1,0 +1,73 @@
+{
+  "id": "partial-batch-undocumented",
+  "kind": "partial",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "artifactKind": "migration-checklist",
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "title": "Inventory extract_batch has no new-docs table row",
+  "sourcePinIds": [
+    "pin-readme-extract-read",
+    "pin-readme-batch-flag",
+    "pin-goose-require-batch",
+    "pin-skill-get-extract",
+    "pin-skill-get-read"
+  ],
+  "input": {
+    "oldDocs": [
+      { "id": "old", "path": "docs/partial-batch-undocumented/old.md" }
+    ],
+    "newDocs": [
+      { "id": "new", "path": "docs/partial-batch-undocumented/new.md" }
+    ],
+    "operationsInventory": {
+      "id": "inventory",
+      "path": "docs/partial-batch-undocumented/inventory.json"
+    }
+  },
+  "citations": [
+    { "id": "old", "path": "docs/partial-batch-undocumented/old.md" },
+    { "id": "new", "path": "docs/partial-batch-undocumented/new.md" },
+    { "id": "inventory", "path": "docs/partial-batch-undocumented/inventory.json" }
+  ],
+  "expect": {
+    "decision": "partial",
+    "findings": [
+      {
+        "id": "extract-unchanged",
+        "operation": { "method": "GET", "route": "/extract", "mcpTool": "extract" },
+        "change": "unchanged",
+        "inInventory": true,
+        "citationIds": ["old", "new", "inventory"]
+      },
+      {
+        "id": "read-unchanged",
+        "operation": { "method": "GET", "route": "/read", "mcpTool": "read" },
+        "change": "unchanged",
+        "inInventory": true,
+        "citationIds": ["old", "new", "inventory"]
+      },
+      {
+        "id": "batch-missing-in-new",
+        "operation": { "method": "POST", "route": "/extract/batch", "mcpTool": "extract_batch" },
+        "change": "missing-in-new",
+        "inInventory": true,
+        "citationIds": ["inventory"]
+      }
+    ]
+  },
+  "limitations": [
+    "Unknown for extract_batch because this new excerpt omits the table row; do not infer it from README outside the supplied new docs.",
+    "Does not claim Goose live discovery ran."
+  ],
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}

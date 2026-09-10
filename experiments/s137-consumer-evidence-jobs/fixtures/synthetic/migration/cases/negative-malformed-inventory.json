@@ -1,0 +1,51 @@
+{
+  "id": "negative-malformed-inventory",
+  "kind": "negative",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "artifactKind": "migration-checklist",
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "title": "Inventory operations is an object, not an array",
+  "sourcePinIds": ["pin-readme-extract-read"],
+  "input": {
+    "oldDocs": [
+      { "id": "old", "path": "docs/negative-malformed-inventory/old.md" }
+    ],
+    "newDocs": [
+      { "id": "new", "path": "docs/negative-malformed-inventory/new.md" }
+    ],
+    "operationsInventory": {
+      "id": "inventory",
+      "path": "docs/negative-malformed-inventory/inventory.json"
+    }
+  },
+  "citations": [
+    { "id": "old", "path": "docs/negative-malformed-inventory/old.md" },
+    { "id": "new", "path": "docs/negative-malformed-inventory/new.md" },
+    { "id": "inventory", "path": "docs/negative-malformed-inventory/inventory.json" }
+  ],
+  "expect": {
+    "decision": "fail",
+    "findings": [
+      {
+        "id": "malformed-inventory",
+        "change": "invalid-input",
+        "reason": "operations is not an array of {method,route}",
+        "citationIds": ["inventory"]
+      }
+    ]
+  },
+  "limitations": [
+    "Docs parse; the fail is the inventory shape, not a silent empty inventory."
+  ],
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}

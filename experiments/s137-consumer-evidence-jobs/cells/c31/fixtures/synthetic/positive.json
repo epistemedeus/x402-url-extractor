@@ -1,0 +1,7 @@
+{
+  "case": "positive",
+  "evidenceClass": "synthetic",
+  "oldDoc": { "path": "docs/old.md", "title": "Install", "sha256": "aaa111" },
+  "newDoc": { "path": "docs/new.md", "title": "Install", "sha256": "bbb222" },
+  "operations": [{ "id": "op-extract", "path": "/extract" }]
+}

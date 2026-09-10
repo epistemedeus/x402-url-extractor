@@ -1,0 +1,14 @@
+{
+  "operationId": "getStatus",
+  "method": "GET",
+  "path": "/v0/status",
+  "httpStatus": 200,
+  "mediaType": "application/json",
+  "body": {
+    "ok": true,
+    "paid": false,
+    "source": "synthetic-example"
+  },
+  "paid": false,
+  "providerExecuted": false
+}

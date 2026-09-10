@@ -1,0 +1,123 @@
+{
+  "schema": "s137.release-brief.synthetic-case.v1",
+  "id": "negative-draft-only",
+  "jobId": "R2-CONSUMER-JOBS-02",
+  "artifactKind": "release-brief",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "caseClass": "negative",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "Unpublished draft announcement only",
+  "notes": "draft: true and published_at: null. No shipped tag. No CI receipt.",
+  "subject": {
+    "name": "demo-release-kit",
+    "repository": "synthetic.lab/demo-release-kit"
+  },
+  "lanes": {
+    "announced": "sources/negative-draft-only/announced.json",
+    "shipped": null,
+    "tested": null
+  },
+  "input": {
+    "schema": "s137.release-brief.input.v1",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "evidenceClass": "synthetic",
+    "jobId": "R2-CONSUMER-JOBS-02",
+    "artifactKind": "release-brief",
+    "subject": {
+      "name": "demo-release-kit",
+      "repository": "synthetic.lab/demo-release-kit"
+    },
+    "sources": [
+      {
+        "id": "cit-announced",
+        "plane": "announced",
+        "lane": "announced",
+        "kind": "github-release-notes",
+        "path": "sources/negative-draft-only/announced.json",
+        "sha256": "e2440ffcd2cc32cf5efbd145aeff85e1c38a2d15a2aa4f0e4c08b1e0807bfaf7",
+        "contentSha256": "e2440ffcd2cc32cf5efbd145aeff85e1c38a2d15a2aa4f0e4c08b1e0807bfaf7",
+        "evidenceClass": "synthetic",
+        "identity": {
+          "role": "claimed",
+          "tag": "v1.2.0",
+          "version": "1.2.0",
+          "commitSha": "8e842cee75c2110a8c3e2ec1e6cb4971c5762b25"
+        },
+        "payload": {
+          "name": "v1.2.0 (draft)",
+          "body": "Draft notes. This announcement is unpublished (draft: true).",
+          "draft": true,
+          "prerelease": false,
+          "published_at": null,
+          "created_at": "2026-09-09T16:00:00.000Z",
+          "target_commitish": "8e842cee75c2110a8c3e2ec1e6cb4971c5762b25"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "decision": "fail",
+    "laneCoverage": {
+      "announced": true,
+      "shipped": false,
+      "tested": false
+    },
+    "tagAgreement": null,
+    "shaAgreement": null,
+    "disagreementCodes": [
+      "unpublished_draft"
+    ]
+  },
+  "findings": [
+    {
+      "id": "unpublished-draft",
+      "kind": "announced",
+      "summary": "announced.draft is true and published_at is null; not a published release",
+      "citationIds": [
+        "cit-announced"
+      ],
+      "code": "draft_not_shipped",
+      "plane": "announced"
+    },
+    {
+      "id": "no-shipped-tested",
+      "kind": "coverage",
+      "summary": "shipped and tested lanes are absent",
+      "citationIds": [
+        "cit-announced"
+      ]
+    }
+  ],
+  "citations": [
+    {
+      "id": "cit-announced",
+      "lane": "announced",
+      "plane": "announced",
+      "kind": "github-release-notes",
+      "path": "sources/negative-draft-only/announced.json",
+      "sha256": "e2440ffcd2cc32cf5efbd145aeff85e1c38a2d15a2aa4f0e4c08b1e0807bfaf7",
+      "contentSha256": "e2440ffcd2cc32cf5efbd145aeff85e1c38a2d15a2aa4f0e4c08b1e0807bfaf7",
+      "evidenceClass": "synthetic"
+    }
+  ],
+  "limitations": [
+    "Synthetic authored sources. Not a live GitHub or npm capture.",
+    "Does not execute tests, publish, spend, or merge.",
+    "expect.decision is a catalog contract for c07/c10, not a model judgment."
+  ],
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline fixtures; no purchase"
+  },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}

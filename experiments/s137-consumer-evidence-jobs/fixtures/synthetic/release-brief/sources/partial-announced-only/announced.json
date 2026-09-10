@@ -1,0 +1,18 @@
+{
+  "schema": "s137.release-brief.source.announced.v1",
+  "evidenceClass": "synthetic",
+  "lane": "announced",
+  "plane": "announced",
+  "kind": "github-release-notes",
+  "notice": "Authored synthetic GitHub-release-shaped document. Not fetched. Not a live-capture.",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "subject": "demo-release-kit",
+  "tag_name": "v1.2.0",
+  "name": "v1.2.0",
+  "draft": false,
+  "prerelease": false,
+  "published_at": "2026-09-09T18:00:00.000Z",
+  "created_at": "2026-09-09T17:58:00.000Z",
+  "target_commitish": "0ed33471d59416027c0be2701592e1ba54b4f90c",
+  "body": "Announcement only. No git tag document and no CI receipt are supplied."
+}

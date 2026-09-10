@@ -1,0 +1,29 @@
+{
+  "operationId": "postCompare",
+  "method": "POST",
+  "path": "/v0/compare",
+  "mediaType": "application/json",
+  "body": {
+    "before": {
+      "mediaType": "application/json",
+      "body": {
+        "product": "synthetic-replay-pack",
+        "sources": []
+      }
+    },
+    "after": {
+      "mediaType": "application/json",
+      "body": {
+        "product": "synthetic-replay-pack",
+        "sources": []
+      }
+    },
+    "fields": [
+      "title",
+      "description"
+    ]
+  },
+  "paid": false,
+  "providerExecuted": false,
+  "note": "Request example only. No 200 response example in OpenAPI or companion."
+}

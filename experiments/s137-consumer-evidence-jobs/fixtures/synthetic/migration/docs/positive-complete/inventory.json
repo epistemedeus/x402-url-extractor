@@ -1,0 +1,19 @@
+{
+  "schema": "s137.migration.inventory.v1",
+  "caller": "synthetic-skill-single-page",
+  "notes": "Caller uses the two always-on HTTP routes from the skill docs. Does not call extract_batch.",
+  "operations": [
+    {
+      "id": "inv-extract",
+      "method": "GET",
+      "route": "/extract",
+      "mcpTool": "extract"
+    },
+    {
+      "id": "inv-read",
+      "method": "GET",
+      "route": "/read",
+      "mcpTool": "read"
+    }
+  ]
+}

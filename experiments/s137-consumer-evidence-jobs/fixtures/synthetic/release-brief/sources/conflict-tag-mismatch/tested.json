@@ -1,0 +1,15 @@
+{
+  "schema": "s137.release-brief.source.tested.v1",
+  "evidenceClass": "synthetic",
+  "lane": "tested",
+  "plane": "tested",
+  "kind": "ci-log",
+  "notice": "Authored synthetic CI receipt. Not an executed workflow. Offline fixture.",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "subject": "demo-release-kit",
+  "name": "ci",
+  "head_sha": "8dbde09720bc49b32df4d1503e4a98bcaed4fb34",
+  "status": "completed",
+  "conclusion": "success",
+  "completed_at": "2026-09-09T17:50:00.000Z"
+}

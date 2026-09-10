@@ -1,0 +1,166 @@
+{
+  "schema": "s137.freshness-receipt.input.v1",
+  "caseId": "partial-missing-source-update",
+  "caseKind": "partial",
+  "evidenceClass": "synthetic",
+  "jobId": "R2-CONSUMER-JOBS-06",
+  "artifactKind": "dataset-freshness-receipt",
+  "clock": "2026-09-10T09:54:59Z",
+  "horizonMs": 86400000,
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "notes": "Retrieval age is computable from CAPTURED_AT_UTC. Source update time is absent on the version document. EOL watch slim covers 3 of 26 cycles and has as_of_clock, which is not sourceUpdatedAt.",
+  "datasets": [
+    {
+      "id": "npm:vercel",
+      "locator": {
+        "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-vercel-version-doc.slim.json",
+        "url": "https://registry.npmjs.org/vercel"
+      },
+      "contentSha256": "53de8d48ef5f1b6e91bebc6cb404f76596c4d84ffaef63cdd51d3c1b9fe1c38e",
+      "retrievedAt": "2026-09-10T09:54:59Z",
+      "sourceUpdatedAt": null,
+      "payloadRef": "sources/npm-vercel-version-doc.slim.json",
+      "times": [
+        {
+          "field": "capturedAtUtc",
+          "value": "2026-09-10T09:54:59Z",
+          "citationId": "cit-s122-capture-clock"
+        }
+      ],
+      "coverage": {
+        "expectedRecords": 1,
+        "observedRecords": 1,
+        "fieldsPresent": ["retrievedAt", "version"],
+        "fieldsMissing": ["sourceUpdatedAt", "published_at"]
+      }
+    },
+    {
+      "id": "endoflife:nodejs",
+      "locator": {
+        "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/eol-nodejs-watch.slim.json",
+        "url": "https://endoflife.date/api/nodejs.json"
+      },
+      "contentSha256": "beb0515df9b53d3229702fe019cfcbb098377fc7d4b01c2446a2f81d14b7b779",
+      "retrievedAt": "2026-09-10T09:54:59Z",
+      "sourceUpdatedAt": null,
+      "payloadRef": "sources/eol-nodejs-watch.slim.json",
+      "times": [
+        {
+          "field": "retrievedAt",
+          "value": "2026-09-10T09:54:59Z",
+          "citationId": "cit-clock"
+        }
+      ],
+      "coverage": {
+        "expectedRecords": 26,
+        "observedRecords": 3,
+        "fieldsPresent": ["retrievedAt", "watchCycles"],
+        "fieldsMissing": ["sourceUpdatedAt"]
+      }
+    }
+  ],
+  "citations": [
+    {
+      "id": "cit-clock",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/CLOCK.txt",
+      "contentSha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "sha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-s122-capture-clock",
+      "path": "experiments/s122-application-jobs/evidence/snapshots/CAPTURED_AT_UTC.txt",
+      "contentSha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "sha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "evidenceClass": "fixture",
+      "host": "/tmp/s127/x402-url-extractor"
+    },
+    {
+      "id": "cit-version-doc-slim",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-vercel-version-doc.slim.json",
+      "url": "https://registry.npmjs.org/vercel",
+      "contentSha256": "53de8d48ef5f1b6e91bebc6cb404f76596c4d84ffaef63cdd51d3c1b9fe1c38e",
+      "sha256": "53de8d48ef5f1b6e91bebc6cb404f76596c4d84ffaef63cdd51d3c1b9fe1c38e",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-s122-version-doc",
+      "path": "experiments/s122-application-jobs/fixtures/npm-vercel/second-snapshot-version-doc.json",
+      "url": "https://registry.npmjs.org/vercel",
+      "contentSha256": "55b8af1dcae8a13ac579300df00e426f0a8b5cf375821ef884e87c425ca02eac",
+      "sha256": "55b8af1dcae8a13ac579300df00e426f0a8b5cf375821ef884e87c425ca02eac",
+      "evidenceClass": "fixture",
+      "host": "/tmp/s127/x402-url-extractor"
+    },
+    {
+      "id": "cit-eol-slim",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/eol-nodejs-watch.slim.json",
+      "url": "https://endoflife.date/api/nodejs.json",
+      "contentSha256": "beb0515df9b53d3229702fe019cfcbb098377fc7d4b01c2446a2f81d14b7b779",
+      "sha256": "beb0515df9b53d3229702fe019cfcbb098377fc7d4b01c2446a2f81d14b7b779",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-s122-eol-current",
+      "path": "experiments/s122-application-jobs/fixtures/eol-nodejs/current.json",
+      "url": "https://endoflife.date/api/nodejs.json",
+      "contentSha256": "7fe8b0806dee04bcc7a925262ff269936a6ebd6fd3198720ebb12dc727445d60",
+      "sha256": "7fe8b0806dee04bcc7a925262ff269936a6ebd6fd3198720ebb12dc727445d60",
+      "evidenceClass": "fixture",
+      "host": "/tmp/s127/x402-url-extractor"
+    },
+    {
+      "id": "cit-s122-provenance-eol-count",
+      "path": "experiments/s122-application-jobs/fixtures/PROVENANCE.json",
+      "contentSha256": "3d7212a24314c2f31ac0dd0647f89f460a2c40b658ea13a77d0f312717d6c453",
+      "sha256": "3d7212a24314c2f31ac0dd0647f89f460a2c40b658ea13a77d0f312717d6c453",
+      "evidenceClass": "fixture",
+      "host": "/tmp/s127/x402-url-extractor",
+      "note": "eolFullCycleCount=26"
+    }
+  ],
+  "expect": {
+    "decision": "partial",
+    "coverageComplete": false,
+    "unknownReasons": ["missing_sourceUpdatedAt", "incomplete_record_coverage"],
+    "findings": [
+      {
+        "id": "vercel-retrieval-age",
+        "kind": "retrieval_age",
+        "datasetId": "npm:vercel",
+        "retrievedAt": "2026-09-10T09:54:59Z",
+        "ageMs": 0,
+        "citationIds": ["cit-clock", "cit-s122-capture-clock"]
+      },
+      {
+        "id": "vercel-source-update-unknown",
+        "kind": "source_update_age",
+        "datasetId": "npm:vercel",
+        "sourceUpdatedAt": null,
+        "ageMs": null,
+        "citationIds": ["cit-version-doc-slim", "cit-s122-version-doc"]
+      },
+      {
+        "id": "eol-coverage",
+        "kind": "coverage",
+        "datasetId": "endoflife:nodejs",
+        "expectedRecords": 26,
+        "observedRecords": 3,
+        "citationIds": ["cit-eol-slim", "cit-s122-eol-current", "cit-s122-provenance-eol-count"]
+      },
+      {
+        "id": "eol-as-of-clock-is-not-source-update",
+        "kind": "times_distinct",
+        "datasetId": "endoflife:nodejs",
+        "note": "as_of_clock/retrievedAt must not be copied into sourceUpdatedAt",
+        "citationIds": ["cit-eol-slim"]
+      }
+    ]
+  },
+  "limitations": [
+    "Partial coverage is not completed by guessing the other 23 EOL cycles.",
+    "as_of_clock is retrieval/operator time, not source last-modified."
+  ]
+}

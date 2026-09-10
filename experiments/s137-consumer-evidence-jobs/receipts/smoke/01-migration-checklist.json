@@ -1,0 +1,215 @@
+{
+  "schema": "s137.migration-checklist.output.v1",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "artifactKind": "docs-migration-checklist",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline transform; no purchase; do not invent demand"
+  },
+  "sources": [
+    {
+      "id": "old",
+      "side": "old",
+      "path": "docs/positive-complete/old.md",
+      "url": null,
+      "sha256": "0be077983920576e0a31818d495d44889665c61313174359a599a2ec0789b736"
+    },
+    {
+      "id": "new",
+      "side": "new",
+      "path": "docs/positive-complete/new.md",
+      "url": null,
+      "sha256": "23cc466ea7572bed50daa15f4b22b157d5c723b2a5f34ca4849a5c08a993a09c"
+    },
+    {
+      "id": "inventory",
+      "path": "docs/positive-complete/inventory.json",
+      "sha256": "5363531bcc3280846c5e00080499454677e87e120e3ee8e0474803d3e88df46c"
+    }
+  ],
+  "findings": [
+    {
+      "id": "extract-unchanged",
+      "code": null,
+      "message": "GET /extract is cited in old and new docs with the same documented fields",
+      "citationIds": [
+        "old",
+        "new",
+        "inventory"
+      ],
+      "operation": {
+        "method": "GET",
+        "route": "/extract",
+        "mcpTool": "extract"
+      },
+      "change": "unchanged",
+      "inInventory": true
+    },
+    {
+      "id": "read-unchanged",
+      "code": null,
+      "message": "GET /read is cited in old and new docs with the same documented fields",
+      "citationIds": [
+        "old",
+        "new",
+        "inventory"
+      ],
+      "operation": {
+        "method": "GET",
+        "route": "/read",
+        "mcpTool": "read"
+      },
+      "change": "unchanged",
+      "inInventory": true
+    },
+    {
+      "id": "batch-added-unused",
+      "code": null,
+      "message": "POST /extract/batch is documented in new docs but is not in the caller inventory",
+      "citationIds": [
+        "new"
+      ],
+      "operation": {
+        "method": "POST",
+        "route": "/extract/batch",
+        "mcpTool": "extract_batch"
+      },
+      "change": "added",
+      "inInventory": false
+    }
+  ],
+  "citations": [
+    {
+      "id": "old",
+      "source": "docs/positive-complete/old.md",
+      "path": "docs/positive-complete/old.md",
+      "url": null,
+      "sha256": "0be077983920576e0a31818d495d44889665c61313174359a599a2ec0789b736",
+      "retrievedAt": null,
+      "license": null
+    },
+    {
+      "id": "new",
+      "source": "docs/positive-complete/new.md",
+      "path": "docs/positive-complete/new.md",
+      "url": null,
+      "sha256": "23cc466ea7572bed50daa15f4b22b157d5c723b2a5f34ca4849a5c08a993a09c",
+      "retrievedAt": null,
+      "license": null
+    },
+    {
+      "id": "inventory",
+      "source": "docs/positive-complete/inventory.json",
+      "path": "docs/positive-complete/inventory.json",
+      "url": null,
+      "sha256": "5363531bcc3280846c5e00080499454677e87e120e3ee8e0474803d3e88df46c",
+      "retrievedAt": null,
+      "license": null
+    }
+  ],
+  "decision": "pass",
+  "limitations": [
+    "Schema cell does not parse old/new documentation bodies (c02 transform).",
+    "Schema cell does not load fixtures/synthetic/migration or fixtures/real/migration.",
+    "Omitted STATE inventory is not invented; coverage is partial or missing.",
+    "Operator clock is required; magic value \"now\" is refused.",
+    "No network, no paid endpoint, no legal attestation, no customer-demand claim.",
+    "Complete coverage here means required collections are present, not that every operation has a parsed doc hit.",
+    "Parses GFM operation tables, METHOD /path headings, and exact inventory literals only.",
+    "Does not treat parallel wording as a rename unless a supplied document states the rename.",
+    "Does not fetch URLs, run paid endpoints, or invent operator clock.",
+    "Empty table cells and omitted inventory ops are unknown/partial, not filled from sibling files.",
+    "Conflicting new-doc field values are reported together; no winner is chosen.",
+    "STATE inventory is echoed when supplied; it is not invented."
+  ],
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "packetSchema": "s137.consumer-evidence.packet.v1",
+  "checklist": [
+    {
+      "id": "extract-unchanged",
+      "kind": "unchanged",
+      "subject": "GET /extract",
+      "operation": {
+        "method": "GET",
+        "route": "/extract",
+        "mcpTool": "extract"
+      },
+      "citationIds": [
+        "old",
+        "new",
+        "inventory"
+      ],
+      "coverage": "complete",
+      "reasonCode": null,
+      "oldRef": {
+        "docId": "old"
+      },
+      "newRef": {
+        "docId": "new"
+      },
+      "change": "unchanged",
+      "inInventory": true
+    },
+    {
+      "id": "read-unchanged",
+      "kind": "unchanged",
+      "subject": "GET /read",
+      "operation": {
+        "method": "GET",
+        "route": "/read",
+        "mcpTool": "read"
+      },
+      "citationIds": [
+        "old",
+        "new",
+        "inventory"
+      ],
+      "coverage": "complete",
+      "reasonCode": null,
+      "oldRef": {
+        "docId": "old"
+      },
+      "newRef": {
+        "docId": "new"
+      },
+      "change": "unchanged",
+      "inInventory": true
+    },
+    {
+      "id": "batch-added-unused",
+      "kind": "added",
+      "subject": "POST /extract/batch",
+      "operation": {
+        "method": "POST",
+        "route": "/extract/batch",
+        "mcpTool": "extract_batch"
+      },
+      "citationIds": [
+        "new"
+      ],
+      "coverage": "complete",
+      "reasonCode": null,
+      "oldRef": null,
+      "newRef": {
+        "docId": "new"
+      },
+      "change": "added",
+      "inInventory": false
+    }
+  ],
+  "coverage": "complete",
+  "sourcePin": null,
+  "issues": []
+}

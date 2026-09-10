@@ -1,0 +1,52 @@
+{
+  "schema": "s137.link-index.synthetic-case.v1",
+  "caseId": "negative-malformed",
+  "kind": "negative",
+  "expectedDecision": "fail",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "entry": "source.html",
+  "format": "html",
+  "offline": true,
+  "payment": { "attempted": false },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "links": [
+    {
+      "linkId": "L1",
+      "href": "",
+      "text": "empty quoted",
+      "syntax": "html-a",
+      "markup": "<a href=\"\">empty quoted</a>",
+      "index": 42,
+      "targetStatus": "invalid-empty"
+    }
+  ],
+  "anchors": [],
+  "findings": [
+    {
+      "findingId": "F1",
+      "code": "invalid-empty-href",
+      "linkId": "L1",
+      "citationIds": ["source.html"]
+    }
+  ],
+  "citations": [
+    {
+      "citationId": "source.html",
+      "path": "source.html",
+      "sha256": "3f2b61f7c5b69b918b2c2bd5847d239cb0f8625a811c7ca0ddd10c982ac7cf85",
+      "evidenceClass": "synthetic"
+    }
+  ],
+  "limitations": [
+    "Unterminated href=\"... without a closing quote and tag is not extracted as a complete quoted href.",
+    "<a> without an href attribute is not a citation link."
+  ]
+}
