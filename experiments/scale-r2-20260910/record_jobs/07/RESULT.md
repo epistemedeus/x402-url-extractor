@@ -53,6 +53,6 @@ node src/cli.mjs report fixtures/positive.json
 
 ## Commit
 
-- Feature commit: `PENDING`
+- Feature commit: `560a42a29cf67306d571c6fabbb40693f6087939`
 - Pin base: `1a23b648e3c5f90bc009accb85972e2db6e22051`
 - Local only (Root owns publication/push)
