@@ -1,25 +1,37 @@
 /**
- * Merchant-side indexing metadata continuity for x402 v2 PaymentPayload.
+ * Merchant-side indexing metadata continuity for x402 v2 exact-EVM payloads.
  *
- * CDP Bazaar indexes `paymentPayload.resource` + `paymentPayload.extensions.bazaar`.
- * It does not ingest sibling `paymentRequirements`. Exact EVM EIP-3009 signs only
- * the authorization inside `paymentPayload.payload`; resource/extensions are not
- * EIP-712-bound, so appending route-owned declared metadata for incomplete-but-valid
- * clients does not change signed payment authority.
+ * CDP Bazaar indexes `paymentPayload.resource` + `paymentPayload.extensions.bazaar`
+ * and does not ingest sibling `paymentRequirements`. For Exact EVM EIP-3009,
+ * `@x402/evm` signs only `payload` (authorization + signature); resource and
+ * extensions are attached by `@x402/core` outside that typed data. Filling
+ * omitted route-owned indexing hints therefore does not change signed authority.
  *
- * Rules:
- * - Preserve a complete caller payload (no overwrite when fields already match).
- * - Fill only when resource and/or extensions.bazaar are absent.
- * - Reject wrong-typed or mismatched resource / contradictory bazaar.
- * - Never mutate amount/network/payTo/nonce/signature/validity or `payload`.
+ * Scope (everything else retains the prior forward-as-received path):
+ * - `paymentPayload.x402Version === 2`
+ * - `requirements.scheme === "exact"`
+ * - `requirements.network` is an EVM CAIP-2 id (`eip155:*`)
+ *
+ * Behavior:
+ * - Fill only absent `resource` / `extensions.bazaar` from route-owned declared
+ *   metadata (canonical PUBLIC origin + path; never request Host).
+ * - Never abort verify/settle for discovery-hint shape or mismatch; SDK
+ *   `validateExtensions` already owns echo checks, and buyers with enriched or
+ *   dynamic bazaar fields must not be declined here.
+ * - Apply fills atomically after planning; never partially mutate then fail.
+ * - Preserve `payload`, accepted payment terms, and unrelated extensions.
+ *
+ * Installed via supported ResourceServer `onBeforeVerify` / `onBeforeSettle`
+ * hooks (no `verifyPayment` / `settlePayment` reassignment).
  */
 
-import { isDeepStrictEqual } from "node:util";
-
 const BAZAAR_KEY = "bazaar";
+const EXACT_SCHEME = "exact";
+const EVM_NETWORK_PREFIX = "eip155:";
 
 /** @typedef {{ url?: unknown, description?: unknown, mimeType?: unknown, serviceName?: unknown, tags?: unknown, iconUrl?: unknown }} DeclaredResource */
 /** @typedef {{ resource?: DeclaredResource | null, extensions?: Record<string, unknown> | null }} DeclaredIndexing */
+/** @typedef {{ resource?: Record<string, unknown>, extensions?: Record<string, unknown> }} ContinuityPatches */
 
 /**
  * @param {unknown} value
@@ -30,15 +42,6 @@ function isPlainObject(value) {
 }
 
 /**
- * @param {unknown} a
- * @param {unknown} b
- */
-function deepEqual(a, b) {
-  return isDeepStrictEqual(a, b);
-}
-
-/**
- * Clone JSON-compatible declared metadata only (no functions / prototypes).
  * @template T
  * @param {T} value
  * @returns {T}
@@ -48,185 +51,206 @@ function cloneJson(value) {
 }
 
 /**
- * Resolve the request URL the HTTP resource server would advertise.
- * Mirrors `@x402/core` resourceInfo.url = routeConfig.resource || adapter.getUrl().
- *
- * @param {unknown} transportContext
- * @returns {string | null}
+ * True when continuity is justified for this verify/settle pair.
+ * @param {unknown} paymentPayload
+ * @param {unknown} requirements
  */
-export function resolveTransportResourceUrl(transportContext) {
-  const request = transportContext && typeof transportContext === "object"
-    ? /** @type {{ request?: { adapter?: { getUrl?: () => string }, routeConfig?: { resource?: string } } }} */ (
-        transportContext
-      ).request
-    : null;
-  const routeResource = request?.routeConfig?.resource;
-  if (typeof routeResource === "string" && routeResource.length > 0) return routeResource;
-  const url = request?.adapter?.getUrl?.();
-  return typeof url === "string" && url.length > 0 ? url : null;
+export function isExactEvmV2IndexingContinuitySupported(paymentPayload, requirements) {
+  if (!isPlainObject(paymentPayload) || !isPlainObject(requirements)) return false;
+  if (paymentPayload.x402Version !== 2) return false;
+  if (requirements.scheme !== EXACT_SCHEME) return false;
+  const network = requirements.network;
+  return typeof network === "string" && network.startsWith(EVM_NETWORK_PREFIX);
 }
 
 /**
- * Apply indexing continuity to one PaymentPayload.
+ * Build a Host-independent canonical resource URL from a fixed public origin
+ * and the request path (pathname only). Never reads `Host` / forwarded host.
+ *
+ * @param {string} publicOrigin
+ * @param {string} path
+ * @returns {string | null}
+ */
+export function canonicalResourceUrlFromOriginAndPath(publicOrigin, path) {
+  if (typeof publicOrigin !== "string" || !publicOrigin) return null;
+  if (typeof path !== "string" || !path.startsWith("/")) return null;
+  try {
+    const origin = new URL(publicOrigin);
+    if (origin.protocol !== "https:" && origin.protocol !== "http:") return null;
+    return `${origin.origin}${path}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Resolve declared resource URL for fill: optional route override, else
+ * PUBLIC origin + adapter path. Ignores adapter.getUrl() (Host-poisonable).
+ *
+ * @param {unknown} transportContext
+ * @param {{ publicOrigin?: string, routeResourceUrl?: string | null }} [options]
+ * @returns {string | null}
+ */
+export function resolveDeclaredResourceUrl(transportContext, options = {}) {
+  if (typeof options.routeResourceUrl === "string" && options.routeResourceUrl) {
+    return options.routeResourceUrl;
+  }
+  const request = isPlainObject(transportContext) && isPlainObject(transportContext.request)
+    ? transportContext.request
+    : null;
+  const routeResource = request && isPlainObject(request.routeConfig)
+    ? request.routeConfig.resource
+    : null;
+  if (typeof routeResource === "string" && routeResource) return routeResource;
+
+  const path = request?.adapter && typeof request.adapter.getPath === "function"
+    ? request.adapter.getPath()
+    : null;
+  return canonicalResourceUrlFromOriginAndPath(options.publicOrigin || "", path || "");
+}
+
+/**
+ * Plan indexing fills without mutating the payload. Never declines a payment.
  *
  * @param {Record<string, unknown>} paymentPayload
  * @param {DeclaredIndexing} declared
  * @returns {{
- *   ok: true,
- *   paymentPayload: Record<string, unknown>,
+ *   supported: boolean,
+ *   patches: ContinuityPatches,
  *   provenance: {
- *     resource: "present" | "filled" | "absent_no_declared",
- *     bazaar: "present" | "filled" | "absent_no_declared" | "absent_no_extensions_object",
+ *     resource: string,
+ *     bazaar: string,
  *     untouchedAuthority: true,
+ *     declinedPayment: false,
  *   },
- * } | {
- *   ok: false,
- *   reason: string,
- *   message: string,
- *   provenance: Record<string, string>,
  * }}
  */
-export function applyIndexingPayloadContinuity(paymentPayload, declared = {}) {
+export function planIndexingPayloadContinuity(paymentPayload, declared = {}) {
+  /** @type {ContinuityPatches} */
+  const patches = {};
+  const provenance = {
+    resource: "skipped",
+    bazaar: "skipped",
+    untouchedAuthority: true,
+    declinedPayment: false,
+  };
+
   if (!isPlainObject(paymentPayload)) {
     return {
-      ok: false,
-      reason: "invalid_payment_payload",
-      message: "paymentPayload must be a plain object",
-      provenance: { resource: "reject", bazaar: "reject" },
+      supported: false,
+      patches,
+      provenance: { ...provenance, resource: "skipped_invalid_payload", bazaar: "skipped_invalid_payload" },
     };
   }
 
-  // Never touch signed authority fields.
-  const next = paymentPayload;
   const declaredResource = declared?.resource;
   const declaredExtensions = isPlainObject(declared?.extensions) ? declared.extensions : null;
-  const declaredBazaar = declaredExtensions && BAZAAR_KEY in declaredExtensions
+  const declaredBazaar = declaredExtensions && Object.prototype.hasOwnProperty.call(declaredExtensions, BAZAAR_KEY)
     ? declaredExtensions[BAZAAR_KEY]
     : undefined;
 
-  /** @type {{ resource: string, bazaar: string, untouchedAuthority: true }} */
-  const provenance = {
-    resource: "absent_no_declared",
-    bazaar: "absent_no_declared",
-    untouchedAuthority: true,
-  };
-
-  // --- resource ---
-  if (!("resource" in next) || next.resource === undefined || next.resource === null) {
+  // --- resource: fill only when absent ---
+  if (!("resource" in paymentPayload) || paymentPayload.resource === undefined || paymentPayload.resource === null) {
     if (isPlainObject(declaredResource) && typeof declaredResource.url === "string" && declaredResource.url) {
-      next.resource = cloneJson(declaredResource);
+      patches.resource = cloneJson(declaredResource);
       provenance.resource = "filled";
     } else {
       provenance.resource = "absent_no_declared";
     }
-  } else if (!isPlainObject(next.resource)) {
-    return {
-      ok: false,
-      reason: "indexing_resource_wrong_type",
-      message: "paymentPayload.resource must be an object when present",
-      provenance: { resource: "reject_wrong_type", bazaar: "unchecked", untouchedAuthority: "true" },
-    };
+  } else if (!isPlainObject(paymentPayload.resource)) {
+    // Wrong type: retain prior path; do not decline.
+    provenance.resource = "present_wrong_type_retained";
   } else {
-    const callerUrl = next.resource.url;
-    if (typeof callerUrl !== "string" || !callerUrl) {
-      return {
-        ok: false,
-        reason: "indexing_resource_url_invalid",
-        message: "paymentPayload.resource.url must be a non-empty string when resource is present",
-        provenance: { resource: "reject_url", bazaar: "unchecked", untouchedAuthority: "true" },
-      };
-    }
-    if (
-      isPlainObject(declaredResource) &&
-      typeof declaredResource.url === "string" &&
-      declaredResource.url &&
-      callerUrl !== declaredResource.url
-    ) {
-      return {
-        ok: false,
-        reason: "indexing_resource_mismatch",
-        message: "paymentPayload.resource.url does not match the route-declared resource URL",
-        provenance: { resource: "reject_mismatch", bazaar: "unchecked", untouchedAuthority: "true" },
-      };
-    }
     provenance.resource = "present";
   }
 
-  // --- extensions.bazaar ---
-  if (!("extensions" in next) || next.extensions === undefined || next.extensions === null) {
-    if (declaredBazaar !== undefined) {
-      if (!isPlainObject(declaredBazaar)) {
-        return {
-          ok: false,
-          reason: "indexing_declared_bazaar_wrong_type",
-          message: "declared extensions.bazaar must be an object",
-          provenance: { ...provenance, bazaar: "reject_declared_type" },
-        };
-      }
-      next.extensions = { [BAZAAR_KEY]: cloneJson(declaredBazaar) };
+  // --- extensions.bazaar: fill only when absent; never deep-equal reject ---
+  if (!("extensions" in paymentPayload) || paymentPayload.extensions === undefined || paymentPayload.extensions === null) {
+    if (declaredBazaar !== undefined && isPlainObject(declaredBazaar)) {
+      patches.extensions = { [BAZAAR_KEY]: cloneJson(declaredBazaar) };
       provenance.bazaar = "filled";
+    } else if (declaredBazaar !== undefined) {
+      provenance.bazaar = "absent_declared_unusable";
     } else {
       provenance.bazaar = "absent_no_declared";
     }
-  } else if (!isPlainObject(next.extensions)) {
-    return {
-      ok: false,
-      reason: "indexing_extensions_wrong_type",
-      message: "paymentPayload.extensions must be an object when present",
-      provenance: { ...provenance, bazaar: "reject_wrong_type" },
-    };
-  } else if (!Object.prototype.hasOwnProperty.call(next.extensions, BAZAAR_KEY) ||
-    next.extensions[BAZAAR_KEY] === undefined ||
-    next.extensions[BAZAAR_KEY] === null) {
-    if (declaredBazaar !== undefined) {
-      if (!isPlainObject(declaredBazaar)) {
-        return {
-          ok: false,
-          reason: "indexing_declared_bazaar_wrong_type",
-          message: "declared extensions.bazaar must be an object",
-          provenance: { ...provenance, bazaar: "reject_declared_type" },
-        };
-      }
-      next.extensions[BAZAAR_KEY] = cloneJson(declaredBazaar);
+  } else if (!isPlainObject(paymentPayload.extensions)) {
+    provenance.bazaar = "present_extensions_wrong_type_retained";
+  } else if (
+    !Object.prototype.hasOwnProperty.call(paymentPayload.extensions, BAZAAR_KEY) ||
+    paymentPayload.extensions[BAZAAR_KEY] === undefined ||
+    paymentPayload.extensions[BAZAAR_KEY] === null
+  ) {
+    if (declaredBazaar !== undefined && isPlainObject(declaredBazaar)) {
+      patches.extensions = {
+        ...paymentPayload.extensions,
+        [BAZAAR_KEY]: cloneJson(declaredBazaar),
+      };
       provenance.bazaar = "filled";
+    } else if (declaredBazaar !== undefined) {
+      provenance.bazaar = "absent_declared_unusable";
     } else {
       provenance.bazaar = "absent_no_declared";
     }
-  } else if (!isPlainObject(next.extensions[BAZAAR_KEY])) {
-    return {
-      ok: false,
-      reason: "indexing_bazaar_wrong_type",
-      message: "paymentPayload.extensions.bazaar must be an object when present",
-      provenance: { ...provenance, bazaar: "reject_wrong_type" },
-    };
-  } else if (declaredBazaar !== undefined) {
-    if (!isPlainObject(declaredBazaar)) {
-      return {
-        ok: false,
-        reason: "indexing_declared_bazaar_wrong_type",
-        message: "declared extensions.bazaar must be an object",
-        provenance: { ...provenance, bazaar: "reject_declared_type" },
-      };
-    }
-    if (!deepEqual(next.extensions[BAZAAR_KEY], declaredBazaar)) {
-      return {
-        ok: false,
-        reason: "indexing_bazaar_mismatch",
-        message: "paymentPayload.extensions.bazaar contradicts the route-declared bazaar extension",
-        provenance: { ...provenance, bazaar: "reject_mismatch" },
-      };
-    }
-    provenance.bazaar = "present";
+  } else if (!isPlainObject(paymentPayload.extensions[BAZAAR_KEY])) {
+    provenance.bazaar = "present_wrong_type_retained";
   } else {
+    // Present object may include SDK enrichment / dynamic fields. Keep it.
     provenance.bazaar = "present";
   }
 
-  return { ok: true, paymentPayload: next, provenance };
+  return { supported: true, patches, provenance };
 }
 
 /**
- * Build declared indexing metadata for the active HTTP verify/settle call.
+ * Apply planned patches atomically. Does not touch payload authority fields.
  *
+ * @param {Record<string, unknown>} paymentPayload
+ * @param {ContinuityPatches} patches
+ */
+export function applyIndexingContinuityPatches(paymentPayload, patches) {
+  if (!isPlainObject(paymentPayload) || !isPlainObject(patches)) return paymentPayload;
+  if (patches.resource) {
+    paymentPayload.resource = patches.resource;
+  }
+  if (patches.extensions) {
+    paymentPayload.extensions = patches.extensions;
+  }
+  return paymentPayload;
+}
+
+/**
+ * Plan + apply for a supported exact-EVM v2 context. No-op otherwise.
+ *
+ * @param {Record<string, unknown>} paymentPayload
+ * @param {unknown} requirements
+ * @param {DeclaredIndexing} declared
+ */
+export function applyIndexingPayloadContinuity(paymentPayload, declared = {}, requirements = null) {
+  if (requirements != null && !isExactEvmV2IndexingContinuitySupported(paymentPayload, requirements)) {
+    return {
+      ok: true,
+      skipped: true,
+      paymentPayload,
+      provenance: {
+        resource: "skipped_unsupported_scheme_or_version",
+        bazaar: "skipped_unsupported_scheme_or_version",
+        untouchedAuthority: true,
+        declinedPayment: false,
+      },
+    };
+  }
+  const planned = planIndexingPayloadContinuity(paymentPayload, declared);
+  applyIndexingContinuityPatches(paymentPayload, planned.patches);
+  return {
+    ok: true,
+    skipped: false,
+    paymentPayload,
+    provenance: planned.provenance,
+  };
+}
+
+/**
  * @param {unknown} transportContext
  * @param {Record<string, unknown> | null | undefined} declaredExtensions
  * @param {(ctx: unknown) => DeclaredResource | null | undefined} [resolveDeclaredResource]
@@ -236,10 +260,6 @@ export function buildDeclaredIndexing(transportContext, declaredExtensions, reso
   let resource = null;
   if (typeof resolveDeclaredResource === "function") {
     resource = resolveDeclaredResource(transportContext) || null;
-  }
-  if (!resource) {
-    const url = resolveTransportResourceUrl(transportContext);
-    resource = url ? { url } : null;
   }
   return {
     resource,
@@ -252,77 +272,69 @@ let lastContinuityDiagnostic = null;
 
 /**
  * Presence-only diagnostic from the last continuity application (no raw payload).
- * @returns {null | { at: string, phase: string, provenance: Record<string, unknown> }}
  */
 export function getLastIndexingContinuityDiagnostic() {
-  return lastContinuityDiagnostic ? { ...lastContinuityDiagnostic, provenance: { ...lastContinuityDiagnostic.provenance } } : null;
+  return lastContinuityDiagnostic
+    ? { ...lastContinuityDiagnostic, provenance: { ...lastContinuityDiagnostic.provenance } }
+    : null;
 }
 
 /**
- * Install continuity at the ResourceServer verify/settle boundary so both
- * HTTPFacilitatorClient posts receive coherent paymentPayload fields.
+ * Register continuity on supported ResourceServer lifecycle hooks.
+ * Does not reassign `verifyPayment` or `settlePayment`.
  *
- * Uses property assignment inside this module only (not in server.js source) so
- * existing source-shape guards that forbid `verifyPayment =` in server.js remain valid.
- *
- * @param {import("@x402/core/server").x402ResourceServer | { verifyPayment: Function, settlePayment: Function }} resourceServer
- * @param {{ resolveDeclaredResource?: (ctx: unknown) => DeclaredResource | null | undefined }} [options]
+ * @param {{ onBeforeVerify: Function, onBeforeSettle: Function }} resourceServer
+ * @param {{
+ *   resolveDeclaredResource?: (ctx: unknown) => DeclaredResource | null | undefined,
+ *   publicOrigin?: string,
+ * }} [options]
  */
-export function installIndexingPayloadContinuity(resourceServer, options = {}) {
-  const resolveDeclaredResource = options.resolveDeclaredResource;
-  const originalVerify = resourceServer.verifyPayment.bind(resourceServer);
-  const originalSettle = resourceServer.settlePayment.bind(resourceServer);
+export function registerIndexingPayloadContinuity(resourceServer, options = {}) {
+  const resolveDeclaredResource = options.resolveDeclaredResource || ((transportContext) => {
+    const url = resolveDeclaredResourceUrl(transportContext, { publicOrigin: options.publicOrigin });
+    return url ? { url } : null;
+  });
 
-  resourceServer.verifyPayment = async function indexingContinuityVerifyPayment(
-    paymentPayload,
-    requirements,
-    declaredExtensions,
-    transportContext,
-  ) {
-    const declared = buildDeclaredIndexing(transportContext, declaredExtensions, resolveDeclaredResource);
-    const result = applyIndexingPayloadContinuity(paymentPayload, declared);
-    lastContinuityDiagnostic = {
-      at: new Date().toISOString(),
-      phase: "verify",
-      provenance: result.provenance,
-    };
-    if (!result.ok) {
-      return {
-        isValid: false,
-        invalidReason: result.reason,
-        invalidMessage: result.message,
+  const run = (phase, context) => {
+    const paymentPayload = context?.paymentPayload;
+    const requirements = context?.requirements;
+    if (!isExactEvmV2IndexingContinuitySupported(paymentPayload, requirements)) {
+      lastContinuityDiagnostic = {
+        at: new Date().toISOString(),
+        phase,
+        provenance: {
+          resource: "skipped_unsupported_scheme_or_version",
+          bazaar: "skipped_unsupported_scheme_or_version",
+          untouchedAuthority: true,
+          declinedPayment: false,
+        },
       };
+      return;
     }
-    return originalVerify(paymentPayload, requirements, declaredExtensions, transportContext);
-  };
-
-  resourceServer.settlePayment = async function indexingContinuitySettlePayment(
-    paymentPayload,
-    requirements,
-    declaredExtensions,
-    transportContext,
-    settlementOverrides,
-  ) {
-    const declared = buildDeclaredIndexing(transportContext, declaredExtensions, resolveDeclaredResource);
-    const result = applyIndexingPayloadContinuity(paymentPayload, declared);
+    const declared = buildDeclaredIndexing(
+      context.transportContext,
+      context.declaredExtensions,
+      resolveDeclaredResource,
+    );
+    const result = applyIndexingPayloadContinuity(paymentPayload, declared, requirements);
     lastContinuityDiagnostic = {
       at: new Date().toISOString(),
-      phase: "settle",
+      phase,
       provenance: result.provenance,
     };
-    if (!result.ok) {
-      const error = new Error(result.message || result.reason);
-      error.code = result.reason;
-      throw error;
-    }
-    return originalSettle(
-      paymentPayload,
-      requirements,
-      declaredExtensions,
-      transportContext,
-      settlementOverrides,
-    );
   };
+
+  resourceServer.onBeforeVerify(async (context) => {
+    run("verify", context);
+  });
+  resourceServer.onBeforeSettle(async (context) => {
+    run("settle", context);
+  });
 
   return resourceServer;
+}
+
+/** @deprecated Use registerIndexingPayloadContinuity (hook-based). */
+export function installIndexingPayloadContinuity(resourceServer, options = {}) {
+  return registerIndexingPayloadContinuity(resourceServer, options);
 }

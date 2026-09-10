@@ -275,6 +275,8 @@ function summarizeCase(name, paid, facilitator) {
       ? {
           resource: verify.paymentPayload.resource,
           "resource.url": verify.paymentPayload["resource.url"],
+          "resource.urlValue": verify.paymentPayload["resource.urlValue"],
+          resourceUrlValue: verify.paymentPayload["resource.urlValue"],
           "extensions.bazaar": verify.paymentPayload["extensions.bazaar"],
           "extensions.unrelated": verify.paymentPayload["extensions.unrelated"],
           extensionKeys: verify.paymentPayload.extensionKeys,
@@ -287,6 +289,8 @@ function summarizeCase(name, paid, facilitator) {
       ? {
           resource: settle.paymentPayload.resource,
           "resource.url": settle.paymentPayload["resource.url"],
+          "resource.urlValue": settle.paymentPayload["resource.urlValue"],
+          resourceUrlValue: settle.paymentPayload["resource.urlValue"],
           "extensions.bazaar": settle.paymentPayload["extensions.bazaar"],
           "extensions.unrelated": settle.paymentPayload["extensions.unrelated"],
           extensionKeys: settle.paymentPayload.extensionKeys,
@@ -324,7 +328,6 @@ export async function runIndexingContinuityCapture({ outDir = OUT_DIR } = {}) {
     const client = new x402Client().register(NETWORK, new UnsignedExactScheme());
     const paymentRequired = challenge.fromHeader || challenge.body;
     const completePayload = await client.createPaymentPayload(paymentRequired);
-    const declaredResourceUrl = completePayload.resource?.url;
 
     async function runCase(name, mutate) {
       resetFacilitator(facilitator);
@@ -334,6 +337,8 @@ export async function runIndexingContinuityCapture({ outDir = OUT_DIR } = {}) {
       report.cases[name] = summarizeCase(name, paid, facilitator);
       return report.cases[name];
     }
+
+    const isPlainObject = (value) => Boolean(value) && typeof value === "object" && !Array.isArray(value);
 
     await runCase("completeOfficialEcho", null);
     await runCase("callerOmitsResource", (p) => {
@@ -348,19 +353,35 @@ export async function runIndexingContinuityCapture({ outDir = OUT_DIR } = {}) {
     await runCase("callerOmitsBazaarKeepsUnrelated", (p) => {
       p.extensions = { unrelated: { keep: true } };
     });
-    await runCase("wrongTypedResource", (p) => {
-      p.resource = declaredResourceUrl;
+    await runCase("enrichedBazaarRetained", (p) => {
+      p.extensions = {
+        ...(p.extensions || {}),
+        bazaar: {
+          ...(p.extensions?.bazaar || {}),
+          info: {
+            ...(p.extensions?.bazaar?.info || {}),
+            input: {
+              ...(p.extensions?.bazaar?.info?.input || {}),
+              headers: { "x-client-extra": { type: "string" } },
+            },
+          },
+          routeTemplate: "/commerce/seller-integrity-audit",
+        },
+      };
     });
-    await runCase("wrongTypedBazaar", (p) => {
-      p.extensions = { ...(p.extensions || {}), bazaar: "not-an-object" };
+    await runCase("wrongTypedResourceRetained", (p) => {
+      p.resource = "https://agents.samedaydesk.com/commerce/seller-integrity-audit";
     });
-    await runCase("mismatchedResource", (p) => {
+    await runCase("mismatchedResourceRetained", (p) => {
       p.resource = {
-        ...(p.resource || {}),
+        ...(isPlainObject(p.resource) ? p.resource : {}),
         url: "https://evil.example/commerce/seller-integrity-audit",
       };
     });
-    await runCase("mismatchedBazaar", (p) => {
+    await runCase("wrongTypedBazaarSdkPath", (p) => {
+      p.extensions = { ...(p.extensions || {}), bazaar: "not-an-object" };
+    });
+    await runCase("mismatchedBazaarSdkEcho", (p) => {
       p.extensions = {
         ...(p.extensions || {}),
         bazaar: {
@@ -370,22 +391,22 @@ export async function runIndexingContinuityCapture({ outDir = OUT_DIR } = {}) {
       };
     });
 
-    const successCases = [
+    const fillCases = [
       "completeOfficialEcho",
       "callerOmitsResource",
       "callerOmitsBazaar",
       "callerOmitsAllExtensions",
       "callerOmitsBazaarKeepsUnrelated",
-    ];
-    const rejectCases = [
-      "wrongTypedResource",
-      "wrongTypedBazaar",
-      "mismatchedResource",
-      "mismatchedBazaar",
+      "enrichedBazaarRetained",
     ];
 
+    const omitFilledCanonical = report.cases.callerOmitsResource;
+    const omitUrl = omitFilledCanonical.verify?.resourceUrlValue
+      || omitFilledCanonical.verify?.["resource.urlValue"]
+      || null;
+
     report.assertions = {
-      successCasesFillOrPreserveResourceAndBazaar: successCases.every((name) => {
+      fillOrPreserveCasesReachFacilitatorWithIndexingFields: fillCases.every((name) => {
         const c = report.cases[name];
         return (
           c.merchantResponseStatus === 200 &&
@@ -396,23 +417,36 @@ export async function runIndexingContinuityCapture({ outDir = OUT_DIR } = {}) {
           c.verifySettleParity === true
         );
       }),
-      rejectCasesDoNotReachFacilitatorOrFailClosed: rejectCases.every((name) => {
-        const c = report.cases[name];
-        const noFacilitator = c.facilitatorCalls.verify === 0 && c.facilitatorCalls.settle === 0;
-        const failed = c.merchantResponseStatus >= 400;
-        return failed && noFacilitator;
-      }),
+      omittedResourceFilledWithPublicOriginNotHost: Boolean(
+        omitFilledCanonical.merchantResponseStatus === 200 &&
+          typeof omitUrl === "string" &&
+          omitUrl.startsWith("https://agents.samedaydesk.com/commerce/seller-integrity-audit"),
+      ),
+      continuityDoesNotDeclineWrongTypedOrMismatchedResource: Boolean(
+        report.cases.wrongTypedResourceRetained.facilitatorCalls.verify >= 1 &&
+          report.cases.mismatchedResourceRetained.facilitatorCalls.verify >= 1,
+      ),
+      mismatchedResourceNotRebound: Boolean(
+        report.cases.mismatchedResourceRetained.verify?.resourceUrlValue ===
+          "https://evil.example/commerce/seller-integrity-audit" ||
+          report.cases.mismatchedResourceRetained.verify?.["resource.urlValue"] ===
+            "https://evil.example/commerce/seller-integrity-audit",
+      ),
       unrelatedExtensionPreservedOnFill: Boolean(
         report.cases.callerOmitsBazaarKeepsUnrelated.verify?.["extensions.unrelated"] === true &&
           report.cases.callerOmitsBazaarKeepsUnrelated.settle?.["extensions.unrelated"] === true,
       ),
-      paymentRequirementsNeverCarriesIndexingFields: successCases.every((name) => {
+      paymentRequirementsNeverCarriesIndexingFields: fillCases.every((name) => {
         const c = report.cases[name];
         return (
           c.verify?.paymentRequirementsHasResource === false &&
           c.verify?.paymentRequirementsHasExtensions === false
         );
       }),
+      sdkEchoMismatchStillOwnedByValidateExtensions: Boolean(
+        report.cases.mismatchedBazaarSdkEcho.facilitatorCalls.verify === 0 &&
+          report.cases.mismatchedBazaarSdkEcho.merchantResponseStatus >= 400,
+      ),
     };
     report.ok = Object.values(report.assertions).every(Boolean);
   } finally {
