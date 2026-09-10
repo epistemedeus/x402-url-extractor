@@ -91,6 +91,11 @@ async function startMerchant({ extraEnv = {}, startupTimeout = 20_000 } = {}) {
       FACILITATOR_URL: facilitator.url,
       MPP_SECRET_KEY: "test-secret-key-test-secret-key-32",
       PUBLIC_URL: "https://agents.samedaydesk.com",
+      PAGE_CHANGE_SOURCE_COMMIT: "",
+      SOURCE_COMMIT: "",
+      RAILWAY_GIT_COMMIT_SHA: "",
+      PAGE_CHANGE_XAGENT_SLUG: "",
+      PAGE_CHANGE_XAGENT_COMMIT: "",
       ...extraEnv,
     },
     stdio: ["ignore", "pipe", "pipe"],
@@ -273,7 +278,9 @@ async function startEnabledMerchant(t, extraEnv = {}) {
 test("enabled no-key HTTP matches C31 customer and merchant compare semantics", { timeout: 60_000 }, async (t) => {
   const merchant = await startEnabledMerchant(t);
 
-  const health = await fetch(`${merchant.base}/recipes/page-change/health`).then((r) => r.json());
+  const healthResponse = await fetch(`${merchant.base}/recipes/page-change/health`);
+  assert.equal(healthResponse.headers.get("x-source-commit"), PIN);
+  const health = await healthResponse.json();
   assert.equal(health.status, "ok");
   assert.equal(health.commit, PIN);
   const proof = await fetch(`${merchant.base}/.well-known/xagent-verification.json`).then((r) => r.json());
@@ -335,6 +342,30 @@ test("enabled no-key HTTP matches W5 composition verdicts", { timeout: 60_000 },
     assert.equal(result.response.status, 200, entry.kind);
     assert.equal(result.json.report.verdict, expectedVerdicts[entry.kind], entry.kind);
   }
+});
+
+test("host-injected Railway commit binds health without a manual page-change pin", { timeout: 60_000 }, async (t) => {
+  const host = "d".repeat(40);
+  const merchant = await startMerchant({
+    extraEnv: {
+      PAGE_CHANGE_HTTP_ENABLED: "1",
+      RAILWAY_GIT_COMMIT_SHA: host,
+      PAGE_CHANGE_XAGENT_SLUG: "samedaydesk-page-change",
+    },
+  });
+  t.after(() => merchant.close());
+  const healthResponse = await fetch(`${merchant.base}/recipes/page-change/health`);
+  assert.equal(healthResponse.headers.get("x-source-commit"), host);
+  const health = await healthResponse.json();
+  assert.equal(health.commit, host);
+  assert.equal(health.commitSource, "railway_git_commit_sha");
+  const proof = await fetch(`${merchant.base}/.well-known/xagent-verification.json`);
+  assert.equal(proof.headers.get("x-source-commit"), host);
+  assert.deepEqual(await proof.json(), {
+    schemaVersion: 1,
+    slug: "samedaydesk-page-change",
+    commit: host,
+  });
 });
 
 test("enabled companion rejects method, content-type, paths, limit raises, and oversize", { timeout: 60_000 }, async (t) => {

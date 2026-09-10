@@ -260,14 +260,18 @@ settings and `PAGE_CHANGE_HTTP_TIMEOUT_MS` can only tighten these ceilings.
 Static error and discovery documents are independently small, not comparison
 results. `GET /recipes/page-change/openapi.json` describes the route.
 
-`GET /recipes/page-change/health` exposes a syntactically valid configured
-`PAGE_CHANGE_SOURCE_COMMIT` (or `SOURCE_COMMIT`), not an independently verified
-deployment attestation. The deployer must bind it to the actual source revision.
-Optional `PAGE_CHANGE_XAGENT_SLUG` enables the exact-shape proof endpoint only
-when its commit matches health; mismatched `PAGE_CHANGE_XAGENT_COMMIT` is refused.
-The offline `scripts/page-change-xagent-sidecar.mjs` uses the clean pinned
-official validator. It does not create a contest package, rights attestation,
-live deployment, or submission. Product readiness is not submission readiness.
+`GET /recipes/page-change/health` reports a 40-character commit only when the
+host supplies one (`RAILWAY_GIT_COMMIT_SHA` on Railway git deploys, or
+`SOURCE_COMMIT`). `PAGE_CHANGE_SOURCE_COMMIT` is a local/test pin used only when
+those host values are absent. Disagreeing pins are not emitted. This is the
+host-injected revision, not an independently verified attestation. When a commit
+is available, health also sets `x-source-commit`. Optional
+`PAGE_CHANGE_XAGENT_SLUG` enables `/.well-known/xagent-verification.json` only
+when the slug is valid and the commit matches health; mismatched
+`PAGE_CHANGE_XAGENT_COMMIT` is refused. The offline
+`scripts/page-change-xagent-sidecar.mjs` uses the clean official validator pin
+`422f0aeb5520a3506b08b05cfefcb76c6cb786c0`. It does not sign rights, open a
+contest PR, or claim live proof. Product readiness is not submission readiness.
 
 ### Two existing public client deliveries
 
