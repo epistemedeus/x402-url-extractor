@@ -1,0 +1,53 @@
+{
+  "schema": "s178.consumer-repeat.pins.v1",
+  "branch": "codex/s178-consumer-repeat-package-20260910",
+  "base": {
+    "ref": "origin/master",
+    "sha": "a20c6e2d8cd716498dfe1c8d0f34985039df64cc"
+  },
+  "preservedFrozen": {
+    "label": "S174 consumer final CLI fix (for 6Pro / S179 review)",
+    "branch": "codex/s174-consumer-final-cli-fix-20260910",
+    "sha": "3876fced28e9c9fc4411695eee2f0f275edc63f7",
+    "note": "Do not rewrite this tip; S178 is a fresh branch off current default."
+  },
+  "composedFrom": [
+    {
+      "id": "S174-01-06-kit",
+      "sha": "3876fced28e9c9fc4411695eee2f0f275edc63f7",
+      "paths": [
+        "experiments/s137-consumer-evidence-jobs",
+        "experiments/s153-consumer-distribution-gates"
+      ]
+    },
+    {
+      "id": "R2-CONSUMER-JOBS-07",
+      "branch": "codex/r2-consumer-jobs-07-20260910",
+      "sha": "b1b0db112985ee06b625ef1bef8c8770e336ce25",
+      "path": "experiments/scale-r2-20260910/consumer_jobs/07"
+    },
+    {
+      "id": "R2-CONSUMER-JOBS-08",
+      "branch": "codex/r2-consumer-jobs-08-20260910",
+      "sha": "6d1376c8f1561114bf632bd437d54343b7d1894c",
+      "path": "experiments/scale-r2-20260910/consumer_jobs/08"
+    },
+    {
+      "id": "S170-recheck-compose",
+      "branch": "codex/r2-consumer-s170-s153-recheck-20260910",
+      "sha": "c36eff932c983d9ad06cd6d6e5ea8466f457c1e4",
+      "path": "experiments/scale-r2-20260910/consumer_jobs/compose"
+    }
+  ],
+  "kit": {
+    "tarball": "dist/s178-consumer-repeat-kit.tgz",
+    "sha256": "311566fb7ee357aa7d27d1ecf0454717e78e5fd96845b8e1fcf29a11c435466f"
+  },
+  "nonClaims": [
+    "No fabricated live sources or customers",
+    "No implicit network or paid execution",
+    "No release claims or new payments engine",
+    "Existing paid endpoint semantics and prices unchanged",
+    "SameDayDesk site pages remain S176-owned (separate repo)"
+  ]
+}

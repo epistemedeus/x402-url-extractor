@@ -1,0 +1,22 @@
+{
+  "name": "s178-consumer-repeat-package",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline consumer-repeat package composing R2-CONSUMER-JOBS-01..08 for cold-agent reuse.",
+  "engines": { "node": ">=22" },
+  "bin": { "s178-consumer-repeat": "./bin/s178-cli.mjs" },
+  "scripts": {
+    "test": "node --test test/acceptance.test.mjs",
+    "acceptance": "node test/acceptance.test.mjs",
+    "build-kit": "node scripts/build-kit.mjs",
+    "list": "node bin/s178-cli.mjs list"
+  },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./catalog": "./src/catalog.mjs",
+    "./contract": "./src/contract.mjs",
+    "./run-job": "./src/run-job.mjs",
+    "./cli": "./bin/s178-cli.mjs"
+  }
+}
