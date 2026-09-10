@@ -1,0 +1,30 @@
+{
+  "schema": "x402.r2.record.deadline_calendar_input.v1",
+  "calendarId": "demo-deadline-calendar-partial",
+  "title": "Partial notices (missing text/statedDates)",
+  "demo": true,
+  "sourceLabel": "synthetic-fixture",
+  "notices": [
+    {
+      "sourceId": "notice-complete",
+      "sourceRef": "https://example.test/notices/complete",
+      "title": "Complete notice with one explicit date",
+      "text": "Filing deadline is June 1, 2026."
+    },
+    {
+      "sourceId": "notice-empty",
+      "sourceRef": "https://example.test/notices/empty",
+      "title": "Incomplete — no text and no statedDates"
+    },
+    {
+      "sourceId": "notice-stated-incomplete",
+      "title": "Stated date missing dateRaw",
+      "statedDates": [
+        {
+          "qualification": "estimated",
+          "label": "mystery deadline"
+        }
+      ]
+    }
+  ]
+}

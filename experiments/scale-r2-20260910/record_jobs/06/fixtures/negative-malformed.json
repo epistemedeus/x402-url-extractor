@@ -1,0 +1,20 @@
+{
+  "schema": "x402.r2.record.deadline_calendar_input.v1",
+  "calendarId": "bad-input",
+  "title": "Malformed — forbidden invest / compliance / SEO fields",
+  "demo": true,
+  "sourceLabel": "synthetic-fixture",
+  "complianceScore": 99,
+  "seoRank": 3,
+  "notices": [
+    {
+      "sourceId": "notice-bad",
+      "sourceRef": "https://example.test/notices/bad",
+      "title": "Bad notice",
+      "text": "Deadline March 1, 2026.",
+      "investmentRecommendation": "buy",
+      "legalCertification": "fully compliant",
+      "trafficProjection": 50000
+    }
+  ]
+}

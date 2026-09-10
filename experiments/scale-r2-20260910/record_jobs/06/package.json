@@ -1,0 +1,16 @@
+{
+  "name": "r2-record-jobs-06-deadline-calendar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "R2-RECORD-JOBS-06 deadline evidence calendar (caller-supplied public notices only)",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "demo": "node src/cli.mjs demo",
+    "calendar": "node src/cli.mjs calendar",
+    "report": "node src/cli.mjs calendar"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
