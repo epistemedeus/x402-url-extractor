@@ -1,0 +1,23 @@
+{
+  "label": "unchanged-replay",
+  "source": "https://registry.npmjs.org/vercel",
+  "license_note": "npm registry metadata; follow npm terms; package license separately",
+  "captured_from_live_registry": true,
+  "package": "vercel",
+  "version": "59.9.1",
+  "published_at": "2026-08-27T19:00:26.541Z",
+  "dist_tags_at_capture_hint": {
+    "canary": "51.7.0",
+    "latest": "59.15.1"
+  },
+  "deprecated": null,
+  "engines": {
+    "node": ">= 18"
+  },
+  "homepage": "https://vercel.com",
+  "repository": {
+    "url": "git+https://github.com/vercel/vercel.git",
+    "type": "git",
+    "directory": "packages/cli"
+  }
+}

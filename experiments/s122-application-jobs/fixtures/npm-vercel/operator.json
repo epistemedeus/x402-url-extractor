@@ -1,0 +1,17 @@
+{
+  "pin": {
+    "package": "vercel",
+    "version": "59.9.1"
+  },
+  "agentToolNotes": {
+    "lastReviewedVersion": "59.9.1",
+    "flagSensitive": false,
+    "note": "Agent tool notes still describe vercel 59.9 CLI flags."
+  },
+  "policy": {
+    "changelogOnMinorOrMajor": true,
+    "ignorePatch": false,
+    "preferNotesRefreshOnPatch": false
+  },
+  "evidenceClass": "fixture"
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "samedaydesk.recurring-job-prior.v1",
+  "recipeId": "runtime-eol-watch",
+  "createdAt": "2026-03-01T00:00:00Z",
+  "sequence": 1,
+  "immutable": true,
+  "sha256": "7569f722999e2ab393baa8fbe6666774478b7628f19c8a8b31eda141f5065a10",
+  "payload": {
+    "source": "https://endoflife.date/api/nodejs.json",
+    "label": "prior",
+    "asOfClock": "2026-03-01T00:00:00Z",
+    "as_of_clock": "2026-03-01T00:00:00Z",
+    "watchCycles": [
+      "20",
+      "22",
+      "24"
+    ],
+    "watch_cycles": [
+      "20",
+      "22",
+      "24"
+    ],
+    "cycles": [
+      {
+        "cycle": "24",
+        "releaseDate": "2025-05-06",
+        "lts": "2025-10-28",
+        "eol": "2028-04-30",
+        "latest": "24.21.0",
+        "support": "2026-10-20"
+      },
+      {
+        "cycle": "22",
+        "releaseDate": "2024-04-24",
+        "lts": "2024-10-29",
+        "eol": "2027-04-30",
+        "latest": "22.23.2",
+        "support": "2025-10-21"
+      },
+      {
+        "cycle": "20",
+        "releaseDate": "2023-04-18",
+        "lts": "2023-10-24",
+        "eol": "2026-04-30",
+        "latest": "20.20.2",
+        "support": "2024-10-22"
+      }
+    ],
+    "captured_from_live_api": true,
+    "capturedAt": "2026-09-10T09:54:59Z",
+    "evidenceClass": "fixture",
+    "pinnedRuntime": "20"
+  },
+  "payment": {
+    "attempted": false
+  }
+}

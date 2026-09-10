@@ -1,0 +1,17 @@
+{
+  "pin": {
+    "package": "vercel",
+    "version": "59.15.1"
+  },
+  "agentToolNotes": {
+    "lastReviewedVersion": "59.15.1",
+    "flagSensitive": false,
+    "note": "Notes refreshed after changelog review of 59.15.1."
+  },
+  "policy": {
+    "changelogOnMinorOrMajor": true,
+    "ignorePatch": false,
+    "preferNotesRefreshOnPatch": false
+  },
+  "evidenceClass": "owner-qa"
+}

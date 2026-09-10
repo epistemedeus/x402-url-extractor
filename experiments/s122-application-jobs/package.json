@@ -1,0 +1,14 @@
+{
+  "name": "s122-application-jobs",
+  "private": true,
+  "type": "module",
+  "description": "Stage-1 experiment: buyer-facing application job recipes. Not a product, daemon, marketplace, or payment engine.",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "cli": "node scripts/cli.mjs",
+    "fixtures": "node scripts/materialize-fixtures.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "label": "partial-missing-version",
+  "source": "https://registry.npmjs.org/vercel",
+  "license_note": "npm registry metadata; follow npm terms; package license separately",
+  "captured_from_live_registry": true,
+  "package": "vercel",
+  "version": null,
+  "published_at": "2026-09-10T01:12:17.696Z",
+  "dist_tags_at_capture_hint": {
+    "canary": "51.7.0",
+    "latest": "59.15.1"
+  },
+  "deprecated": null,
+  "engines": {
+    "node": ">= 18"
+  },
+  "homepage": "https://vercel.com",
+  "repository": {
+    "url": "git+https://github.com/vercel/vercel.git",
+    "type": "git",
+    "directory": "packages/cli"
+  }
+}

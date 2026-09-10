@@ -1,0 +1,62 @@
+{
+  "capturedAtUtc": "2026-09-10T09:54:59Z",
+  "evidenceClassDefault": "fixture",
+  "originalUrls": {
+    "vercel": "https://registry.npmjs.org/vercel",
+    "claudeCode": "https://registry.npmjs.org/@anthropic-ai/claude-code",
+    "nodejsEol": "https://endoflife.date/api/nodejs.json"
+  },
+  "snapshots": {
+    "npm-vercel/current.json": {
+      "evidenceClass": "fixture",
+      "capturedFromLive": true,
+      "source": "https://registry.npmjs.org/vercel",
+      "notes": "Slim extract of vercel 59.15.1 published 2026-09-10T01:12:17.696Z"
+    },
+    "npm-vercel/second-snapshot-version-doc.json": {
+      "evidenceClass": "fixture",
+      "capturedFromLive": true,
+      "source": "npm version document for vercel@59.15.1",
+      "notes": "Independently sourced second snapshot: version document without published_at (partial coverage)."
+    },
+    "npm-vercel/unchanged.json": {
+      "evidenceClass": "fixture",
+      "notes": "Unchanged replay: prior slim used as current."
+    },
+    "npm-claude-code/current.json": {
+      "evidenceClass": "fixture",
+      "capturedFromLive": true,
+      "source": "https://registry.npmjs.org/@anthropic-ai/claude-code",
+      "notes": "Slim extract of 2.1.267 published 2026-09-09T18:25:42.820Z"
+    },
+    "eol-nodejs/current.json": {
+      "evidenceClass": "fixture",
+      "capturedFromLive": true,
+      "source": "https://endoflife.date/api/nodejs.json",
+      "notes": "Slim watch cycles 20/22/24 at operator clock 2026-09-10T09:54:59Z"
+    },
+    "eol-nodejs/second-snapshot-full-api.json": {
+      "evidenceClass": "fixture",
+      "capturedFromLive": true,
+      "source": "https://endoflife.date/api/nodejs.json",
+      "notes": "Independently sourced second snapshot: full API array including unwatched cycles."
+    }
+  },
+  "rejectedRawSnapshots": {
+    "evidence/snapshots/crates-serde.json": "generic crate version dump; duplicate of npm follow-up without a distinct next-action policy",
+    "evidence/snapshots/pypi-httpx.json": "generic PyPI version dump; duplicate of npm follow-up",
+    "evidence/snapshots/github-vercel-releases.json": "monorepo GitHub releases do not identify npm latest CLI 59.15.1",
+    "evidence/snapshots/github-x402-releases.json": "empty array; no independently checkable change"
+  },
+  "latestVersionDocuments": {
+    "vercel": {
+      "name": "vercel",
+      "version": "59.15.1"
+    },
+    "claudeCode": {
+      "name": "@anthropic-ai/claude-code",
+      "version": "2.1.267"
+    }
+  },
+  "eolFullCycleCount": 26
+}

@@ -1,0 +1,9 @@
+{
+  "watchCycles": [
+    "24"
+  ],
+  "horizonDays": 90,
+  "urgentDays": 14,
+  "pinnedRuntime": "24",
+  "evidenceClass": "fixture"
+}

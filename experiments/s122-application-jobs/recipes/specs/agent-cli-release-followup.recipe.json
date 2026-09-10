@@ -1,0 +1,13 @@
+{
+  "schema": "s122.application-job-spec.v1",
+  "recipeId": "agent-cli-release-followup",
+  "scheduleNeutral": true,
+  "installsCron": false,
+  "officialSource": "https://registry.npmjs.org/@anthropic-ai/claude-code",
+  "requiredFields": ["prior", "schedule", "clock", "current-fixture-or-live-official"],
+  "optionalFields": ["operator", "horizon", "out-dir", "write-artifact", "continue-out"],
+  "outcomes": ["unchanged", "changed", "partial", "stale_baseline", "error", "timed_out"],
+  "nextActions": ["refresh_agent_tool_notes", "bump_pin", "review_changelog", "no_action"],
+  "samedaydeskSeam": "same npm adapter as npm-cli-release-followup with agent-CLI patch policy",
+  "notes": "Default policy preferNotesRefreshOnPatch=true. Operator ignorePatch yields no_action on patch."
+}

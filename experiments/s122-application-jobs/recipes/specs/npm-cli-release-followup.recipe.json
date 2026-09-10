@@ -1,0 +1,13 @@
+{
+  "schema": "s122.application-job-spec.v1",
+  "recipeId": "npm-cli-release-followup",
+  "scheduleNeutral": true,
+  "installsCron": false,
+  "officialSource": "https://registry.npmjs.org/vercel",
+  "requiredFields": ["prior", "schedule", "clock", "current-fixture-or-live-official"],
+  "optionalFields": ["operator", "horizon", "out-dir", "write-artifact", "continue-out"],
+  "outcomes": ["unchanged", "changed", "partial", "stale_baseline", "error", "timed_out"],
+  "nextActions": ["review_changelog", "bump_pin", "refresh_agent_tool_notes", "no_action"],
+  "samedaydeskSeam": "source-change-alert field compare on version,publishedAt plus decision policy",
+  "notes": "Operator supplies CLOCK and schedule. This pack does not install periodic jobs."
+}

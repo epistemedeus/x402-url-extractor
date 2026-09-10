@@ -1,0 +1,13 @@
+{
+  "schema": "s122.application-job-spec.v1",
+  "recipeId": "runtime-eol-watch",
+  "scheduleNeutral": true,
+  "installsCron": false,
+  "officialSource": "https://endoflife.date/api/nodejs.json",
+  "requiredFields": ["prior", "schedule", "clock", "horizon-days", "watch-cycles", "current-fixture-or-live-official"],
+  "optionalFields": ["urgent-days", "operator", "out-dir", "write-artifact"],
+  "outcomes": ["unchanged", "changed", "partial", "error", "timed_out"],
+  "nextActions": ["upgrade_now", "schedule_upgrade", "monitor", "no_action"],
+  "samedaydeskSeam": "source-change-alert cannot see clock-crossing deadlines; this recipe adds days-to-eol policy",
+  "notes": "Operator supplies CLOCK, horizonDays, and watchCycles. Default urgentDays=14 is a documented recipe constant."
+}

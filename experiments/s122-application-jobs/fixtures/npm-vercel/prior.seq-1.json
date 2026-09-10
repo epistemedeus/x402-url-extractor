@@ -1,0 +1,26 @@
+{
+  "schema": "samedaydesk.recurring-job-prior.v1",
+  "recipeId": "npm-cli-release-followup",
+  "createdAt": "2026-08-27T19:00:26.541Z",
+  "sequence": 1,
+  "immutable": true,
+  "sha256": "4f6bd2686b19c94082b212843c40a5537a0873106ab30fda15094bd7731bfffe",
+  "payload": {
+    "package": "vercel",
+    "version": "59.9.1",
+    "publishedAt": "2026-08-27T19:00:26.541Z",
+    "published_at": "2026-08-27T19:00:26.541Z",
+    "deprecated": null,
+    "engines": {
+      "node": ">= 18"
+    },
+    "source": "https://registry.npmjs.org/vercel",
+    "label": "prior",
+    "captured_from_live_registry": true,
+    "capturedAt": "2026-09-10T09:54:59Z",
+    "evidenceClass": "fixture"
+  },
+  "payment": {
+    "attempted": false
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "label": "unchanged-replay",
+  "source": "https://endoflife.date/api/nodejs.json",
+  "license_note": "endoflife.date API; check site terms; data for operational planning",
+  "captured_from_live_api": true,
+  "as_of_clock": "2026-03-01T00:00:00Z",
+  "watch_cycles": [
+    "20",
+    "22",
+    "24"
+  ],
+  "cycles": [
+    {
+      "cycle": "24",
+      "releaseDate": "2025-05-06",
+      "lts": "2025-10-28",
+      "eol": "2028-04-30",
+      "latest": "24.21.0",
+      "support": "2026-10-20"
+    },
+    {
+      "cycle": "22",
+      "releaseDate": "2024-04-24",
+      "lts": "2024-10-29",
+      "eol": "2027-04-30",
+      "latest": "22.23.2",
+      "support": "2025-10-21"
+    },
+    {
+      "cycle": "20",
+      "releaseDate": "2023-04-18",
+      "lts": "2023-10-24",
+      "eol": "2026-04-30",
+      "latest": "20.20.2",
+      "support": "2024-10-22"
+    }
+  ]
+}

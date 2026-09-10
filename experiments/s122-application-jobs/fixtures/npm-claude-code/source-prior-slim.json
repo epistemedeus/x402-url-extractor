@@ -1,0 +1,13 @@
+{
+  "label": "prior",
+  "source": "https://registry.npmjs.org/@anthropic-ai/claude-code",
+  "license_note": "npm registry metadata; follow npm terms; package license separately",
+  "captured_from_live_registry": true,
+  "package": "@anthropic-ai/claude-code",
+  "version": "2.1.260",
+  "published_at": "2026-09-03T22:32:02.087Z",
+  "deprecated": null,
+  "bin": [
+    "claude"
+  ]
+}

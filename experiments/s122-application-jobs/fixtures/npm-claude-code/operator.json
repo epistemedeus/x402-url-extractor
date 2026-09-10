@@ -1,0 +1,17 @@
+{
+  "pin": {
+    "package": "@anthropic-ai/claude-code",
+    "version": "2.1.260"
+  },
+  "agentToolNotes": {
+    "lastReviewedVersion": "2.1.260",
+    "flagSensitive": true,
+    "note": "Runbook lists claude CLI flags from 2.1.260."
+  },
+  "policy": {
+    "changelogOnMinorOrMajor": true,
+    "ignorePatch": false,
+    "preferNotesRefreshOnPatch": true
+  },
+  "evidenceClass": "fixture"
+}

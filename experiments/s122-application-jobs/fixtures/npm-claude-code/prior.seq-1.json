@@ -1,0 +1,26 @@
+{
+  "schema": "samedaydesk.recurring-job-prior.v1",
+  "recipeId": "agent-cli-release-followup",
+  "createdAt": "2026-09-03T22:32:02.087Z",
+  "sequence": 1,
+  "immutable": true,
+  "sha256": "4ad0a6a12b9348aa050a871ac3207f1d52d29cd6759f829265e6551106670e81",
+  "payload": {
+    "package": "@anthropic-ai/claude-code",
+    "version": "2.1.260",
+    "publishedAt": "2026-09-03T22:32:02.087Z",
+    "published_at": "2026-09-03T22:32:02.087Z",
+    "deprecated": null,
+    "bin": [
+      "claude"
+    ],
+    "source": "https://registry.npmjs.org/@anthropic-ai/claude-code",
+    "label": "prior",
+    "captured_from_live_registry": true,
+    "capturedAt": "2026-09-10T09:54:59Z",
+    "evidenceClass": "fixture"
+  },
+  "payment": {
+    "attempted": false
+  }
+}
