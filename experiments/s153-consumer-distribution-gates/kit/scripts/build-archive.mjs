@@ -28,7 +28,7 @@ const DIST = join(KIT, "dist");
 const STAGE_NAME = "s137-consumer-evidence-kit";
 const STAGE = join(DIST, STAGE_NAME);
 const TARBALL = join(DIST, `${STAGE_NAME}.tgz`);
-const PIN = "d998f11c173ac719043d6351f46e56f48d0f1bb6";
+const PIN = "361460288e96d43da2f215e158fad96745507fde";
 
 const EXCLUDE_DIR_NAMES = new Set([
   "receipts",

@@ -1,6 +1,6 @@
 # S137 consumer-evidence kit (jobs 01–06)
 
-Offline kit for six cited consumer-evidence artifacts. Pin: `d998f11c173ac719043d6351f46e56f48d0f1bb6`. Node 20+. No `npm install` of runtime dependencies. This CLI never fetches, pays, or publishes.
+Offline kit for six cited consumer-evidence artifacts. Pin: `361460288e96d43da2f215e158fad96745507fde`. Node 20+. No `npm install` of runtime dependencies. This CLI never fetches, pays, or publishes.
 
 Jobs **07/08** are out of scope. See `COMPAT-07-08.md`.
 

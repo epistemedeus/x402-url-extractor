@@ -1,6 +1,6 @@
 # Compatibility: R2-CONSUMER-JOBS-07/08
 
-Pin: `d998f11c173ac719043d6351f46e56f48d0f1bb6`.
+Pin: `361460288e96d43da2f215e158fad96745507fde`.
 
 Jobs **07** and **08** are owned elsewhere (Bot Useful Agent Work). This kit does not implement, export, or CLI-wire them.
 

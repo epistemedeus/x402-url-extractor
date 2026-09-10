@@ -51,14 +51,20 @@
     "SameDayDesk site pages remain S176-owned (separate repo)"
   ],
   "reviewedSource": {
+    "sha": "361460288e96d43da2f215e158fad96745507fde",
+    "input": "778d8ef5c6694b21e71a52b78e9181adeb88cfa4",
+    "branch": "codex/s220-consumer-package-final-20260910",
+    "scope": "S211 normalization preserved; installed provenance checks, explicit fixture split and complete CLI output"
+  },
+  "packagingSource": {
+    "sha": "361460288e96d43da2f215e158fad96745507fde",
+    "input": "778d8ef5c6694b21e71a52b78e9181adeb88cfa4",
+    "scope": "consumer package/test and first-use repairs"
+  },
+  "priorReviewedSource": {
     "sha": "d998f11c173ac719043d6351f46e56f48d0f1bb6",
     "input": "d9553e2fd81ff62e7a30d23a3c5166ca2d923ed9",
     "branch": "codex/s211-consumer-validation-final-20260910",
     "scope": "release-brief schema, transform, runners and boundary regression; archive pins and bytes recorded separately"
-  },
-  "packagingSource": {
-    "sha": "05a10282454e5fac864729a1d307932929acc17f",
-    "input": "778d8ef5c6694b21e71a52b78e9181adeb88cfa4",
-    "scope": "consumer package/test contract; runtime reviewedSource remains unchanged"
   }
 }
