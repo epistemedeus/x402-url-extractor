@@ -2,6 +2,16 @@
 
 ## Optional bounded batch extraction
 
+Paid `GET /extract` and `GET /read` (and MCP `extract` / `read`) return a typed
+record after settlement. Merchant HTTP 200 is delivery of that record, not proof
+that the source succeeded or that the page is complete. The JSON keeps
+`requestedUrl`, observed `finalUrl` (also copied to `url` for compatibility),
+source HTTP `status`, `sourceOk`, a nullable `error`, and a `capture` object
+that labels the no-JavaScript GET, body/excerpt limits, charset, and truncation.
+A 403/404 with block text is not an empty 200. The extract `text` field is a
+bounded excerpt; use `/read` for longer Markdown. Neither route executes
+JavaScript, so missing discussion text is not proof of absence.
+
 `EXTRACT_BATCH_ENABLED=1` adds `POST /extract/batch` and MCP `extract_batch` at an
 introductory 0.01 USDC per admitted batch of 1–5 public HTTPS URLs. The default
 is off: 25 paid HTTP operations and 22 MCP tools; enabled: 26 and 23. This price
