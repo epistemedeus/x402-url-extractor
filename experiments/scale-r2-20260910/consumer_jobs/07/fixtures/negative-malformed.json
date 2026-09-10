@@ -1,0 +1,26 @@
+{
+  "schema": "x402.r2.consumer.procurement_input.v1",
+  "taskId": "bad-input",
+  "title": "Malformed — forbidden investment field",
+  "demo": true,
+  "sourceLabel": "synthetic-fixture",
+  "taskNeeds": {
+    "musts": ["anything"]
+  },
+  "serviceContracts": [
+    {
+      "contractId": "svc-bad",
+      "title": "Should reject",
+      "capabilityIds": ["anything"],
+      "price": { "amountAtomic": "1", "currency": "USDC" },
+      "priceSource": "caller.supplied.quote",
+      "investmentRecommendation": "buy",
+      "freeBaseline": {
+        "freeAlternativeState": "unavailable",
+        "freeAlternativeBasisId": "none_checked_v1"
+      },
+      "evidenceRefs": ["fixture:negative-malformed.json"]
+    }
+  ],
+  "revenue": 999
+}

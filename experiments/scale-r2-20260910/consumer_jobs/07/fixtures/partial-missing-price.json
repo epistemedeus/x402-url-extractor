@@ -1,0 +1,38 @@
+{
+  "schema": "x402.r2.consumer.procurement_input.v1",
+  "taskId": "demo-missing-price",
+  "title": "Partial — one contract missing price",
+  "demo": true,
+  "sourceLabel": "synthetic-fixture",
+  "taskNeeds": {
+    "musts": ["page_diff_note", "sha256_evidence"],
+    "capabilityIds": ["page_diff_note"]
+  },
+  "serviceContracts": [
+    {
+      "contractId": "svc-priced",
+      "title": "Has quote",
+      "capabilityIds": ["page_diff_note", "sha256_evidence"],
+      "coveredMusts": ["page_diff_note", "sha256_evidence"],
+      "price": { "amountAtomic": "5000", "currency": "USDC" },
+      "priceSource": "caller.supplied.quote",
+      "freeBaseline": {
+        "freeAlternativeState": "not_equivalent",
+        "freeAlternativeBasisId": "free_curl_diff_v1"
+      },
+      "evidenceRefs": ["fixture:partial-missing-price.json#svc-priced"]
+    },
+    {
+      "contractId": "svc-unpriced",
+      "title": "Missing price",
+      "capabilityIds": ["page_diff_note"],
+      "coveredMusts": ["page_diff_note"],
+      "price": null,
+      "freeBaseline": {
+        "freeAlternativeState": "unavailable",
+        "freeAlternativeBasisId": "no_free_baseline_checked_v1"
+      },
+      "evidenceRefs": ["fixture:partial-missing-price.json#svc-unpriced"]
+    }
+  ]
+}

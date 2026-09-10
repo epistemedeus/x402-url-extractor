@@ -1,0 +1,47 @@
+{
+  "schema": "x402.r2.consumer.procurement_input.v1",
+  "taskId": "demo-external-cost",
+  "title": "Quoted amount excludes network/settlement external cost",
+  "demo": true,
+  "sourceLabel": "synthetic-fixture",
+  "taskNeeds": {
+    "musts": ["paid_resource_fetch"],
+    "capabilityIds": ["paid_resource_fetch"]
+  },
+  "serviceContracts": [
+    {
+      "contractId": "svc-external",
+      "title": "Quote with external settlement cost",
+      "capabilityIds": ["paid_resource_fetch"],
+      "coveredMusts": ["paid_resource_fetch"],
+      "price": { "amountAtomic": "15000", "currency": "USDC" },
+      "priceSource": "caller.supplied.quote",
+      "externalCosts": [
+        {
+          "label": "network_gas_estimate",
+          "amountAtomic": "1200",
+          "note": "Outside quoted amount; not included in price.amountAtomic"
+        }
+      ],
+      "freeBaseline": {
+        "freeAlternativeState": "not_equivalent",
+        "freeAlternativeBasisId": "free_public_mirror_checked_v1"
+      },
+      "evidenceRefs": ["fixture:external-cost.json#svc-external"]
+    },
+    {
+      "contractId": "svc-stale-fixture",
+      "title": "Fixture-labelled stale source",
+      "capabilityIds": ["paid_resource_fetch"],
+      "coveredMusts": ["paid_resource_fetch"],
+      "price": { "amountAtomic": "9000", "currency": "USDC" },
+      "priceSource": "fixture.demo.not-a-live-offer",
+      "stale": true,
+      "freeBaseline": {
+        "freeAlternativeState": "equivalent",
+        "freeAlternativeBasisId": "local_replay_fixture_v1"
+      },
+      "evidenceRefs": ["fixture:external-cost.json#svc-stale-fixture"]
+    }
+  ]
+}
