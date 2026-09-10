@@ -92,3 +92,9 @@ URL / path-escape / missing clock / missing `--in` → wrapper **rejected** (`un
 - No CloudAgent used.
 
 Pushed branch tip (authoritative): `4642a3cef913625f4b8302dc34c61b969a70c589`
+
+## S159 acquisition interface
+
+Buyer acquisition status CLI (exact partial, no Heavy fix):
+`compose/src/cli.mjs status` · schema `x402.r2.consumer.acquisition_status.v1` · docs `ACQUISITION.md` / `CONSUMER.md`.
+Partial packageStatus → status tool exit 0. Fail slots remain external Heavy defects.
