@@ -1,0 +1,169 @@
+{
+  "schema": "s127.upgrade-impact.provenance.v1",
+  "caseId": "c23-real-c-ms",
+  "package": "ms",
+  "license": "MIT",
+  "oldVersion": "2.1.3",
+  "newVersion": "3.0.0-beta.2",
+  "clock": "2026-09-10T10:57:17Z",
+  "capturedAtUtc": "2026-09-10T10:57:17Z",
+  "userAgent": "s127-upgrade-impact-c23-real-c-ms/0.1 (tarball-download-only; no npm install; no lifecycle)",
+  "evidenceClassDefault": "fixture",
+  "captureMethod": "HTTPS GET of official npm registry version documents and tarballs. Redirects refused. Tar extract only (--no-same-owner --no-same-permissions). No npm install. No lifecycle scripts. dist.integrity (sha512) verified before extract.",
+  "paidDemand": false,
+  "priceInvoked": false,
+  "notes": [
+    "Label live-capture = bytes retrieved from the official URL this session.",
+    "Label fixture = frozen analysis input derived from that capture (slim JSON, extracted trees, synthetic caller).",
+    "3.0.0-beta.2 is the registry dist-tag beta, not latest (latest remains 2.1.3). Pre-release is official source, not a fabricated version.",
+    "A dated canary 3.0.0-canary.202508261828 was probed during selection and not stored (nested exports map plus named parse/format/ms/parseStrict; not this pair).",
+    "No paid demand. No price invoked."
+  ],
+  "fullPackumentNotStored": {
+    "url": "https://registry.npmjs.org/ms",
+    "retrievedAt": "2026-09-10T10:54:25Z",
+    "contentSha256": "a594a3e5b5e1adc7c4453ea84815f1d2c275de380ac24303000c439f55aabb60",
+    "bytes": 92208,
+    "label": "live-capture",
+    "coverage": "full packument used to slice dist-tags/time/two version dist records; bytes not retained in fixtures",
+    "storedAs": "fixtures/real-c/registry/packument.slim.json"
+  },
+  "fullVersionDocumentsNotStored": [
+    {
+      "url": "https://registry.npmjs.org/ms/2.1.3",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "9f31c78548e84f877cedb1e0f0652419777d0c036fbb72985da187e2a962b45d",
+      "bytes": 5200,
+      "label": "live-capture",
+      "coverage": "full npm version document; maintainers emails and npm-signature stripped from stored slim",
+      "storedAs": "fixtures/real-c/registry/ms-2.1.3.slim.json"
+    },
+    {
+      "url": "https://registry.npmjs.org/ms/3.0.0-beta.2",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "90d061155653da8debf5bd8b34372cd89f30d9f1e7743f919668923adf180dfc",
+      "bytes": 7258,
+      "label": "live-capture",
+      "coverage": "full npm version document; maintainers emails and npm-signature stripped from stored slim",
+      "storedAs": "fixtures/real-c/registry/ms-3.0.0-beta.2.slim.json"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "tarball-old",
+      "url": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+      "path": "fixtures/real-c/tarballs/ms-2.1.3.tgz",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "f6616e15e530ed552f9daa2d3ce71963947c6bc7c98c9b64fd3e673fd02622c6",
+      "bytes": 2967,
+      "coverage": "full-npm-tarball",
+      "label": "live-capture",
+      "replayLabel": "fixture",
+      "npmIntegrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==",
+      "npmShasum": "574c8138ce1d2b5861f0b44579dbadd60c6615b2"
+    },
+    {
+      "id": "tarball-new",
+      "url": "https://registry.npmjs.org/ms/-/ms-3.0.0-beta.2.tgz",
+      "path": "fixtures/real-c/tarballs/ms-3.0.0-beta.2.tgz",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "a17b5300f0959394cdfbfe0fc23521770b3d6715fe69e6617eea66e0954400b4",
+      "bytes": 4581,
+      "coverage": "full-npm-tarball",
+      "label": "live-capture",
+      "replayLabel": "fixture",
+      "npmIntegrity": "sha512-G/4X0GjOFFpeGVj0D/yxd7plnMjizeLa2mBu2yNRPQlDlvmERfqZ2alTIijo9QNH91b9g1IlJAYsVV1g6GbWvg==",
+      "npmShasum": "c1a586879b489759c44be2ac402ff1df7c314ed9"
+    },
+    {
+      "id": "packument-slim",
+      "url": "https://registry.npmjs.org/ms",
+      "path": "fixtures/real-c/registry/packument.slim.json",
+      "retrievedAt": "2026-09-10T10:54:25Z",
+      "contentSha256": "1498c8041515377366f8193df310bc66cd9a180c6786d3fc7ac04b076a12ac75",
+      "bytes": 2290,
+      "coverage": "slim name/license/dist-tags latest+beta/time subset/versions 2.1.3 and 3.0.0-beta.2",
+      "label": "fixture"
+    },
+    {
+      "id": "version-old-slim",
+      "url": "https://registry.npmjs.org/ms/2.1.3",
+      "path": "fixtures/real-c/registry/ms-2.1.3.slim.json",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "e7412d68e3a8931a6e059d6af53a252259db429a6b483e9257afd12369c07ef3",
+      "bytes": 986,
+      "coverage": "slim identity/license/entry/exports/script-names/dist",
+      "label": "fixture"
+    },
+    {
+      "id": "version-new-slim",
+      "url": "https://registry.npmjs.org/ms/3.0.0-beta.2",
+      "path": "fixtures/real-c/registry/ms-3.0.0-beta.2.slim.json",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "b700e52e8e4b5e93efe7694c7bc816d6524482860c185632bed80caa806fbf93",
+      "bytes": 1236,
+      "coverage": "slim identity/license/entry/exports/script-names/dist",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-old-js",
+      "url": null,
+      "path": "fixtures/real-c/extracted/ms-2.1.3/package/index.js",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "e5f0b6a946a9b2b356a28557728410717df54ea2f599edb619f9839df6b7b0e9",
+      "bytes": 3024,
+      "coverage": "tarball package/index.js (package.json main)",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-old-manifest",
+      "url": null,
+      "path": "fixtures/real-c/extracted/ms-2.1.3/package/package.json",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "1a6b4d9739790c0b94ab96c8cc0507e281c164c311ff4fbf5e57fb8d26290b40",
+      "bytes": 732,
+      "coverage": "tarball package/package.json",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-new-esm",
+      "url": null,
+      "path": "fixtures/real-c/extracted/ms-3.0.0-beta.2/package/lib/index.mjs",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "6499fec11abf8faa59e48fa5c893e3e7b793fcd55e3d6234823861b42fa8b33d",
+      "bytes": 3339,
+      "coverage": "tarball package/lib/index.mjs (exports.import)",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-new-cjs",
+      "url": null,
+      "path": "fixtures/real-c/extracted/ms-3.0.0-beta.2/package/lib/index.cjs",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "07f1a2f3bd4568af3e201aa73bf6f1c67c253e269e22ec9bf7a2ed40db4abdbe",
+      "bytes": 3495,
+      "coverage": "tarball package/lib/index.cjs (exports.require)",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-new-dts",
+      "url": null,
+      "path": "fixtures/real-c/extracted/ms-3.0.0-beta.2/package/lib/index.d.ts",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "306b8fd7aadbb13750492b3d2407995016b1c603e72edca24b64d37b6fae36c5",
+      "bytes": 958,
+      "coverage": "tarball package/lib/index.d.ts; TypeScript overloads not machine-checked",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-new-manifest",
+      "url": null,
+      "path": "fixtures/real-c/extracted/ms-3.0.0-beta.2/package/package.json",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "24d0959c4a93504741378684457189268766c4df4561bcda652d6643b7f8637e",
+      "bytes": 1545,
+      "coverage": "tarball package/package.json",
+      "label": "fixture"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "s127.upgrade-impact.kill-suite.v1",
+  "id": "synthetic-kill",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "required": ["case-a", "case-b"],
+  "notes": "Both required cases keep the same coarse bucket (review_changelog vs action). Product kill: binding never changes the decision vs skim.",
+  "cases": [
+    {
+      "id": "case-a",
+      "role": "case-a",
+      "label": "synthetic",
+      "methodA": "../cases/kill-both-action/case-a/registry-skim-decision.json",
+      "methodB": "../cases/kill-both-action/case-a/binding-packet.json"
+    },
+    {
+      "id": "case-b",
+      "role": "case-b",
+      "label": "synthetic",
+      "methodA": "../cases/kill-both-action/case-b/registry-skim-decision.json",
+      "methodB": "../cases/kill-both-action/case-b/binding-packet.json"
+    }
+  ],
+  "expect": { "verdict": "kill" }
+}

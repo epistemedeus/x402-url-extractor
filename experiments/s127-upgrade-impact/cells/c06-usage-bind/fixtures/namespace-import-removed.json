@@ -1,0 +1,23 @@
+{
+  "id": "namespace-import-removed",
+  "label": "synthetic",
+  "title": "import * as ns treats removed exports as used",
+  "input": {
+    "dependency": { "name": "demo-pkg", "oldVersion": "1.0.0", "newVersion": "2.0.0" },
+    "usage": {
+      "coverage": "complete",
+      "references": [{ "symbol": "*", "kind": "namespace", "file": "src/ns.js" }]
+    },
+    "exportDiff": {
+      "coverage": "complete",
+      "removed": ["hidden"],
+      "signatureChanged": ["tweaked"]
+    }
+  },
+  "expect": {
+    "nextAction": "review_breakages",
+    "actionableSymbols": ["hidden", "tweaked"],
+    "unusedSymbols": [],
+    "decisions": { "hidden": "action", "tweaked": "action" }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "hostile-binary-source",
+  "version": "0.0.0-synthetic",
+  "private": true,
+  "description": "main points at a PNG+NUL blob named index.js. Fixture, not live-capture.",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "c19-disagreement-alias",
+  "private": true,
+  "description": "Synthetic disagreement: npm: alias target bar vs lockfile baz. Label: fixture.",
+  "dependencies": {
+    "foo": "npm:bar@1.0.0"
+  }
+}

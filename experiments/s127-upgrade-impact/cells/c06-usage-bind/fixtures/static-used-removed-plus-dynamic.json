@@ -1,0 +1,23 @@
+{
+  "id": "static-used-removed-plus-dynamic",
+  "label": "synthetic",
+  "title": "static used+removed still action when a dynamic import also exists",
+  "input": {
+    "dependency": { "name": "demo-pkg", "oldVersion": "1.0.0", "newVersion": "2.0.0" },
+    "usage": {
+      "coverage": "complete",
+      "dynamicImport": true,
+      "references": [{ "symbol": "foo", "kind": "named", "dynamicImport": false, "used": true }]
+    },
+    "exportDiff": {
+      "coverage": "complete",
+      "removed": ["foo", "maybeDynamic"]
+    }
+  },
+  "expect": {
+    "nextAction": "review_breakages",
+    "actionableSymbols": ["foo"],
+    "unusedSymbols": [],
+    "decisions": { "foo": "action", "maybeDynamic": "unknown" }
+  }
+}

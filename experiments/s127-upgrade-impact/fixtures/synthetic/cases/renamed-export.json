@@ -1,0 +1,39 @@
+{
+  "id": "renamed-export",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "title": "Used export renamed formatName -> formatLabel",
+  "notes": "1:1 removed+added with matching arity is recorded as renamed. Caller still imports the old name.",
+  "caller": {
+    "root": "callers/renamed-export",
+    "manifestPath": "callers/renamed-export/package.json",
+    "lockfilePath": "callers/renamed-export/package-lock.json",
+    "sourceRoots": ["callers/renamed-export/src"]
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "oldTree": "packages/demo-widget/1.0.0",
+    "newTree": "packages/demo-widget/2.0.0-renamed"
+  },
+  "expect": {
+    "summary.nextAction": "action",
+    "exportDiff.renamed": [
+      {
+        "from": "formatName",
+        "to": "formatLabel"
+      }
+    ],
+    "actionableSymbols": ["formatName"],
+    "bindings": [
+      {
+        "symbol": "formatName",
+        "used": true,
+        "changeKind": "renamed",
+        "decision": "action"
+      }
+    ]
+  }
+}

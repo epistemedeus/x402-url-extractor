@@ -1,0 +1,10 @@
+{
+  "name": "@c24/web",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Manifest rewritten to registry ^2.1.0; lockfile still links workspace shared-kit. Label: fixture.",
+  "dependencies": {
+    "shared-kit": "^2.1.0"
+  }
+}

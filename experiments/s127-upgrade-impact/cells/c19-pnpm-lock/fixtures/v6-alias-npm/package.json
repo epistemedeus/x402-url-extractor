@@ -1,0 +1,8 @@
+{
+  "name": "c19-v6-alias-npm",
+  "private": true,
+  "description": "Synthetic fixture with npm: alias (lockfile v6). Label: fixture. Not live-capture.",
+  "dependencies": {
+    "widget": "npm:demo-widget@1.0.0"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "id": "v-prefix-same",
+  "label": "synthetic",
+  "title": "v-prefix only is the same version",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "oldVersion": "v1.2.3",
+    "newVersion": "1.2.3"
+  },
+  "expect": {
+    "decision": "no_action",
+    "ruleId": "same_version_noop",
+    "delta": "none"
+  },
+  "binderWould": {
+    "coarse": "no_action",
+    "decisionChangedRelativeToChangelog": false
+  }
+}

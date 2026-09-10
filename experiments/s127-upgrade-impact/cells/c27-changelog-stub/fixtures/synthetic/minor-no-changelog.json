@@ -1,0 +1,21 @@
+{
+  "id": "minor-no-changelog",
+  "label": "synthetic",
+  "title": "minor bump with no changelog text ⇒ action (S122 review_changelog mapped coarse)",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "dependency": { "name": "demo-widget", "oldVersion": "1.0.0", "newVersion": "1.1.0" }
+  },
+  "expect": {
+    "decision": "action",
+    "ruleId": "registry_bump_no_changelog",
+    "delta": "minor"
+  },
+  "binderWould": {
+    "coarse": "no_action",
+    "decisionChangedRelativeToChangelog": true,
+    "note": "Added-only minor is no_action for the usage binder (newer version ≠ break)."
+  }
+}

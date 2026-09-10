@@ -1,0 +1,1051 @@
+[
+  {
+    "name": "acorn-walk",
+    "version": "8.3.5",
+    "license": "MIT",
+    "description": "ECMAScript (ESTree) AST walker",
+    "homepage": "https://github.com/acornjs/acorn",
+    "repository": {
+      "url": "git+https://github.com/acornjs/acorn.git",
+      "type": "git"
+    },
+    "dependencies": [
+      "acorn"
+    ],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/acorn-walk/-/acorn-walk-8.3.5.tgz",
+      "integrity": "sha512-HEHNfbars9v4pgpW6SO1KSPkfoS0xVOM/9UzkJltjlsHZmJasxg8aXkuZa7SMf8vKGIBhpUsPluQSqhJFCqebw==",
+      "shasum": "8a6b8ca8fc5b34685af15dabb44118663c296496",
+      "unpackedSize": 53765,
+      "fileCount": 8
+    },
+    "engines": {
+      "node": ">=0.4.0"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/acorn-walk/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "a5883276056f5c6636bc6a1e7afdeedfdbe34738ada05242f7226e9381b978cd",
+      "bytes": 1621,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "acorn",
+    "version": "8.18.0",
+    "license": "MIT",
+    "description": "ECMAScript parser",
+    "homepage": "https://github.com/acornjs/acorn",
+    "repository": {
+      "url": "git+https://github.com/acornjs/acorn.git",
+      "type": "git"
+    },
+    "dependencies": [],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/acorn/-/acorn-8.18.0.tgz",
+      "integrity": "sha512-lGq+9yr1/GuAWaVYIHRjvvySG5/4VfKIvC8EWxStPdcDh/Ka7FG3twP6v4d5BkravUilhIAsG4Qj83t02LWUPQ==",
+      "shasum": "4faf01b2d6d326bfeed97aea1f52220b5f4c1940",
+      "unpackedSize": 565327,
+      "fileCount": 10
+    },
+    "engines": {
+      "node": ">=0.4.0"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/acorn/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "2c1a496478ffce47483887d731d05c627705ae27cbbab52786ae2916717232ae",
+      "bytes": 1758,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "@babel/parser",
+    "version": "8.0.4",
+    "license": "MIT",
+    "description": "A JavaScript parser",
+    "homepage": "https://babel.dev/docs/en/next/babel-parser",
+    "repository": {
+      "url": "https://github.com/babel/babel.git",
+      "type": "git",
+      "directory": "packages/babel-parser"
+    },
+    "dependencies": [
+      "@babel/types"
+    ],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/@babel/parser/-/parser-8.0.4.tgz",
+      "integrity": "sha512-srpptsAkEbbNIC/q8nT7o+m6CQe8CJUTV/t7MYc9NnWlgYVtHOb7JH6SorxMhN0kuRJjVqXbKClG6xSbPtzz+g==",
+      "shasum": "244e21ca23ab54c6f5373af2122cb3a618f9dd39",
+      "unpackedSize": 1858305,
+      "fileCount": 9
+    },
+    "engines": {
+      "node": "^22.18.0 || >=24.11.0"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/@babel/parser/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "9747bd08b940a906271d692aebefbba74db0f427671dbf0a57a30e856b103e1f",
+      "bytes": 2406,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "cjs-module-lexer",
+    "version": "2.2.1",
+    "license": "MIT",
+    "description": "Lexes CommonJS modules, returning their named exports metadata",
+    "homepage": "https://github.com/nodejs/cjs-module-lexer#readme",
+    "repository": {
+      "url": "git+https://github.com/nodejs/cjs-module-lexer.git",
+      "type": "git"
+    },
+    "dependencies": [],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/cjs-module-lexer/-/cjs-module-lexer-2.2.1.tgz",
+      "integrity": "sha512-Ca8swihM+/4yKecYHY52kgJd300hi2lADU/a1RxNTRe+RJ9jvqQlESpbz9DnG9mowez8qwXHB8qYdIUw9e+F5Q==",
+      "shasum": "ab35b03c56ade05fe170c70e67ae89f60666847c",
+      "unpackedSize": 140293,
+      "fileCount": 8
+    },
+    "engines": null,
+    "source": {
+      "url": "https://registry.npmjs.org/cjs-module-lexer/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "649a45e567bbfe509edc6e9a1c9b4bc48f29ebcc672f568a7b1e0bf439fc354c",
+      "bytes": 2639,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "ckeditor4",
+    "version": "4.25.2",
+    "license": "SEE LICENSE IN LICENSE.md",
+    "description": "JavaScript WYSIWYG web text editor.",
+    "homepage": "https://ckeditor.com/ckeditor-4/",
+    "repository": {
+      "url": "git+https://github.com/ckeditor/ckeditor4-releases.git",
+      "type": "git"
+    },
+    "dependencies": [],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/ckeditor4/-/ckeditor4-4.25.2.tgz",
+      "integrity": "sha512-Xt80BRzYE/2OzZicEHTw5m20vwFX7in4DAjC9lox0cLefgV1zzQIuVFIV/bvVn9HluYPYnIuebYwUUVlXq7xjg==",
+      "shasum": "6c816f6947c5182e4ae862d5145fced37b526f49",
+      "unpackedSize": 6880319,
+      "fileCount": 2901
+    },
+    "engines": null,
+    "source": {
+      "url": "https://registry.npmjs.org/ckeditor4/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "6e8e56fcd3d89308ab482722de41d091c531a81e20e7ae482e235d22d159dbb4",
+      "bytes": 1455,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "comment-json",
+    "version": "5.0.0",
+    "license": "MIT",
+    "description": "Parse and stringify JSON with comments. It will retain comments even after saved!",
+    "homepage": "https://github.com/kaelzhang/node-comment-json#readme",
+    "repository": {
+      "url": "git://github.com/kaelzhang/node-comment-json.git",
+      "type": "git"
+    },
+    "dependencies": [
+      "esprima",
+      "array-timsort"
+    ],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/comment-json/-/comment-json-5.0.0.tgz",
+      "integrity": "sha512-uiqLcOiVDJtBP8WGkZHEP+FZIhTzP1dxvn59EfoYUi9gqupjrBWVQkO2atDrbnKPwLeotFYDsuNb26uBMqB+hw==",
+      "shasum": "3b0cba63da30b31f8b3ea8d75f4d79bfa8346896",
+      "unpackedSize": 72700,
+      "fileCount": 9
+    },
+    "engines": {
+      "node": ">= 6"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/comment-json/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "8ac3328b580ca56338fd5b4f2c91eec82f42d4ecaab1a4e7854e4e9a16bb740c",
+      "bytes": 2334,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "es-module-lexer",
+    "version": "3.0.2",
+    "license": "MIT",
+    "description": "Lexes ES modules returning their import/export metadata",
+    "homepage": "https://github.com/guybedford/es-module-lexer#readme",
+    "repository": {
+      "url": "git+https://github.com/guybedford/es-module-lexer.git",
+      "type": "git"
+    },
+    "dependencies": [],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-3.0.2.tgz",
+      "integrity": "sha512-BuIB67FngDSyQ/dpQNOZybwdEBDUGJQvOqwWr4ha/ufYiqzuEwPkKO2zLhRAgay28tStRIHUeWmszZAJo3GCOg==",
+      "shasum": "8cc09097dd80a9cbb79437fd405b935cac76cda3",
+      "unpackedSize": 241695,
+      "fileCount": 11
+    },
+    "engines": null,
+    "source": {
+      "url": "https://registry.npmjs.org/es-module-lexer/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "373c7708617e231ea162ca76acde2d3455ed6ad33d20acc6607672ed714a25c4",
+      "bytes": 2448,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "espree",
+    "version": "11.2.0",
+    "license": "BSD-2-Clause",
+    "description": "An Esprima-compatible JavaScript parser built on Acorn",
+    "homepage": "https://github.com/eslint/js/blob/main/packages/espree/README.md",
+    "repository": {
+      "url": "git+https://github.com/eslint/js.git",
+      "type": "git",
+      "directory": "packages/espree"
+    },
+    "dependencies": [
+      "acorn",
+      "acorn-jsx",
+      "eslint-visitor-keys"
+    ],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/espree/-/espree-11.2.0.tgz",
+      "integrity": "sha512-7p3DrVEIopW1B1avAGLuCSh1jubc01H2JHc8B4qqGblmg5gI9yumBgACjWo4JlIc04ufug4xJ3SQI8HkS/Rgzw==",
+      "shasum": "01d5e47dc332aaba3059008362454a8cc34ccaa5",
+      "unpackedSize": 95658,
+      "fileCount": 13
+    },
+    "engines": {
+      "node": "^20.19.0 || ^22.13.0 || >=24"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/espree/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "7f00deb0251b68fbcc970d7324758411b24383634efc94f0e530d86d4933be56",
+      "bytes": 2848,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "gifsicle",
+    "version": "7.0.1",
+    "license": "MIT",
+    "description": "gifsicle wrapper that makes it seamlessly available as a local dependency",
+    "homepage": "https://github.com/imagemin/gifsicle-bin#readme",
+    "repository": {
+      "url": "git+https://github.com/imagemin/gifsicle-bin.git",
+      "type": "git"
+    },
+    "dependencies": [
+      "execa",
+      "bin-build",
+      "bin-wrapper"
+    ],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": true,
+    "lifecycleScripts": [
+      "postinstall"
+    ],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/gifsicle/-/gifsicle-7.0.1.tgz",
+      "integrity": "sha512-Mwg4tDc7dUUWYNan/NAf4pKcrCwDSUAXRqBNtqXjtwzMyGJ6LVFz5pwMC/SEj2rsw1VILrhr+kk/2wG3+GMXfg==",
+      "shasum": "52dab0677063505f6735410bfaf81efc3d3be1d5",
+      "unpackedSize": 484317,
+      "fileCount": 8
+    },
+    "engines": {
+      "node": "^14.13.1 || >=16.0.0"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/gifsicle/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "98ea2619c69481a8219454b3df0bc51a8f57e7c3e8e4ee1cbd16f1a79b11d20b",
+      "bytes": 2996,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "js-yaml",
+    "version": "5.4.1",
+    "license": "MIT",
+    "description": "YAML 1.2 parser and serializer",
+    "homepage": "https://github.com/nodeca/js-yaml#readme",
+    "repository": {
+      "url": "git+https://github.com/nodeca/js-yaml.git",
+      "type": "git"
+    },
+    "dependencies": [
+      "argparse"
+    ],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/js-yaml/-/js-yaml-5.4.1.tgz",
+      "integrity": "sha512-28R/k+NAjeuf7+CKlTxWZVExJGwVVLwY06DgEnOMz2gEpfNkDcD7QvyiVPT0xy0XXhU8vHsd4Ot42OOPdJG7dQ==",
+      "shasum": "4629d91d4b4551f300435f0e4127899710f816fb",
+      "unpackedSize": 1570301,
+      "fileCount": 13
+    },
+    "engines": null,
+    "source": {
+      "url": "https://registry.npmjs.org/js-yaml/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "e6adca9d12ef71149e7955581b735da7c46803e857acbd621ecc0dda6a4e53b6",
+      "bytes": 3733,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "jsonc-parser",
+    "version": "3.3.1",
+    "license": "MIT",
+    "description": "Scanner and parser for JSON with comments.",
+    "homepage": "https://github.com/microsoft/node-jsonc-parser#readme",
+    "repository": {
+      "url": "git+https://github.com/microsoft/node-jsonc-parser.git",
+      "type": "git"
+    },
+    "dependencies": [],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/jsonc-parser/-/jsonc-parser-3.3.1.tgz",
+      "integrity": "sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==",
+      "shasum": "f2a524b4f7fd11e3d791e559977ad60b98b798b4",
+      "unpackedSize": 212821,
+      "fileCount": 19
+    },
+    "engines": null,
+    "source": {
+      "url": "https://registry.npmjs.org/jsonc-parser/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "b73b02ce15124e51def30735854a0507761de822f238e1bb14af4bbbcd70aaaa",
+      "bytes": 2088,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "jszip",
+    "version": "3.10.2",
+    "license": "(MIT OR GPL-3.0-or-later)",
+    "description": "Create, read and edit .zip files with JavaScript http://stuartk.com/jszip",
+    "homepage": "https://github.com/Stuk/jszip#readme",
+    "repository": {
+      "url": "git+https://github.com/Stuk/jszip.git",
+      "type": "git"
+    },
+    "dependencies": [
+      "lie",
+      "pako",
+      "setimmediate",
+      "readable-stream"
+    ],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/jszip/-/jszip-3.10.2.tgz",
+      "integrity": "sha512-3l+rb15IOWtUhU0H5MFqES/T6Kh7abYwjosBey/vD6hDt8zoEffkSC5Ws5SGtgVw3gBx2NEbhTeSW1+kWkpyTQ==",
+      "shasum": "9fee8cfaaffb601f6c8796ecc522e4f81cbe88bf",
+      "unpackedSize": 693061,
+      "fileCount": 53
+    },
+    "engines": null,
+    "source": {
+      "url": "https://registry.npmjs.org/jszip/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "9042fb77e205b431157ece8ad7e0f81e341966df6987061d8e6b24ec6b66ee6d",
+      "bytes": 2666,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "meriyah",
+    "version": "7.3.3",
+    "license": "ISC",
+    "description": "A 100% compliant, self-hosted javascript parser with high focus on both performance and stability",
+    "homepage": "https://github.com/meriyah/meriyah",
+    "repository": {
+      "url": "git+https://github.com/meriyah/meriyah.git",
+      "type": "git"
+    },
+    "dependencies": [],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/meriyah/-/meriyah-7.3.3.tgz",
+      "integrity": "sha512-uE5cnoNj+UYhoMdZDuymCzr5TzEuE3ZF2C4kn6Z76rLhkwnvZ/+6dUZnM41T3fifyuhW0+n8vK7eq6DKJxUfPA==",
+      "shasum": "00470443e2fbbcc6835796174388c5a1ae000fde",
+      "unpackedSize": 1316691,
+      "fileCount": 34
+    },
+    "engines": {
+      "node": ">=20.0.0"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/meriyah/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "b0bb1b8932805a0ecca4a3c801e6a50c58c99c6b43026593f7b528192f2b98ee",
+      "bytes": 2488,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "oxc-parser",
+    "version": "0.149.0",
+    "license": "MIT",
+    "description": "Oxc Parser Node API",
+    "homepage": "https://oxc.rs/docs/guide/usage/parser",
+    "repository": {
+      "url": "git+https://github.com/oxc-project/oxc.git",
+      "type": "git",
+      "directory": "napi/parser"
+    },
+    "dependencies": [
+      "@oxc-project/types"
+    ],
+    "optionalDependencies": [
+      "@oxc-parser/binding-darwin-x64",
+      "@oxc-parser/binding-freebsd-x64",
+      "@oxc-parser/binding-darwin-arm64",
+      "@oxc-parser/binding-android-arm64",
+      "@oxc-parser/binding-linux-x64-gnu",
+      "@oxc-parser/binding-linux-x64-musl",
+      "@oxc-parser/binding-win32-x64-msvc",
+      "@oxc-parser/binding-linux-arm64-gnu",
+      "@oxc-parser/binding-linux-ppc64-gnu",
+      "@oxc-parser/binding-linux-s390x-gnu",
+      "@oxc-parser/binding-win32-ia32-msvc",
+      "@oxc-parser/binding-android-arm-eabi",
+      "@oxc-parser/binding-linux-arm64-musl",
+      "@oxc-parser/binding-win32-arm64-msvc",
+      "@oxc-parser/binding-linux-riscv64-gnu",
+      "@oxc-parser/binding-openharmony-arm64",
+      "@oxc-parser/binding-linux-riscv64-musl",
+      "@oxc-parser/binding-linux-arm-gnueabihf",
+      "@oxc-parser/binding-linux-arm-musleabihf"
+    ],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/oxc-parser/-/oxc-parser-0.149.0.tgz",
+      "integrity": "sha512-iuirONeHJBp6dFuuZKvkCfFvBiF0uFmojIQooGtazR9+GvcwoayGMtal1+cvDUnEw2k435GBish01HOn5iyVqQ==",
+      "shasum": "1cd01c75931c7ccde4c9929a5fadcf1456dbe463",
+      "unpackedSize": 1424249,
+      "fileCount": 31
+    },
+    "engines": {
+      "node": "^20.19.0 || >=22.12.0"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/oxc-parser/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "0428c1bef27d57151c828aeb66992f1f36621f487d0a1fbfb612ab6392c94b47",
+      "bytes": 4978,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "parse5",
+    "version": "8.0.1",
+    "license": "MIT",
+    "description": "HTML parser and serializer.",
+    "homepage": "https://parse5.js.org",
+    "repository": {
+      "url": "git://github.com/inikulin/parse5.git",
+      "type": "git"
+    },
+    "dependencies": [
+      "entities"
+    ],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/parse5/-/parse5-8.0.1.tgz",
+      "integrity": "sha512-z1e/HMG90obSGeidlli3hj7cbocou0/wa5HacvI3ASx34PecNjNQeaHNo5WIZpWofN9kgkqV1q5YvXe3F0FoPw==",
+      "shasum": "f43bcd2cd683efe084075333e9ce0da7d06da31e",
+      "unpackedSize": 337099,
+      "fileCount": 33
+    },
+    "engines": null,
+    "source": {
+      "url": "https://registry.npmjs.org/parse5/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "84d53f636c6da77153f63907b05763dde0fa9b4476d18198ee539de5b345785a",
+      "bytes": 2095,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "@pnpm/lockfile-file",
+    "version": "9.1.3",
+    "license": "MIT",
+    "description": "Read/write pnpm-lock.yaml files",
+    "homepage": "https://github.com/pnpm/pnpm/blob/main/lockfile/lockfile-file#readme",
+    "repository": {
+      "url": "https://github.com/pnpm/pnpm/blob/main/lockfile/lockfile-file",
+      "type": "git"
+    },
+    "dependencies": [
+      "ramda",
+      "semver",
+      "js-yaml",
+      "sort-keys",
+      "strip-bom",
+      "@pnpm/error",
+      "@pnpm/types",
+      "normalize-path",
+      "@pnpm/constants",
+      "@pnpm/git-utils",
+      "@zkochan/rimraf",
+      "comver-to-semver",
+      "write-file-atomic",
+      "@pnpm/git-resolver",
+      "@pnpm/lockfile-types",
+      "@pnpm/lockfile-utils",
+      "@pnpm/dependency-path",
+      "@pnpm/util.lex-comparator",
+      "@pnpm/merge-lockfile-changes"
+    ],
+    "optionalDependencies": [],
+    "peerDependencies": [
+      "@pnpm/logger"
+    ],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/@pnpm/lockfile-file/-/lockfile-file-9.1.3.tgz",
+      "integrity": "sha512-+WaLikC86jJyA23xzU8SnHcxeuxs8TcFCMoP2HCSU/0ckk9bjjW4CttEcHzQoCMdDlm7eZKTRoDuU5iJ5Wie3Q==",
+      "shasum": "df2bf7cf85855ab7a059cd456c3248feaea930ba",
+      "unpackedSize": 78085,
+      "fileCount": 42
+    },
+    "engines": {
+      "node": ">=18.12"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/@pnpm/lockfile-file/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "989feaec62b2dd38a6d6638263bf92dac122bc5440fe67fe8e5cd0e84903f457",
+      "bytes": 2726,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "semver",
+    "version": "7.8.5",
+    "license": "ISC",
+    "description": "The semantic version parser used by npm.",
+    "homepage": "https://github.com/npm/node-semver#readme",
+    "repository": {
+      "url": "git+https://github.com/npm/node-semver.git",
+      "type": "git"
+    },
+    "dependencies": [],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/semver/-/semver-7.8.5.tgz",
+      "integrity": "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==",
+      "shasum": "39b646037dd50c14fb451e7e4cac58ed8b863f69",
+      "unpackedSize": 101065,
+      "fileCount": 53
+    },
+    "engines": {
+      "node": ">=10"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/semver/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "595600ec8060055e4582121441e8227bc6ab12ff63b42030686e18ec46226ff2",
+      "bytes": 2569,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "ssri",
+    "version": "14.0.0",
+    "license": "ISC",
+    "description": "Standard Subresource Integrity library -- parses, serializes, generates, and verifies integrity metadata according to the SRI spec.",
+    "homepage": "https://github.com/npm/ssri#readme",
+    "repository": {
+      "url": "git+https://github.com/npm/ssri.git",
+      "type": "git"
+    },
+    "dependencies": [
+      "minipass"
+    ],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/ssri/-/ssri-14.0.0.tgz",
+      "integrity": "sha512-jQxKI0yx0ZnTKrqjKkLDV2DXkBQn3k49JVmVqDGcDwKDtGDbImD/GXsq04KD0VVzCQQ9wZJYal3RwR1GzWTSow==",
+      "shasum": "15bbac0d3cc6beafd21e28ef4059c3f5d40e6a7a",
+      "unpackedSize": 38519,
+      "fileCount": 4
+    },
+    "engines": {
+      "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/ssri/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "81f1d99758c441156881bdaba06c2b489ee6097bd74488cfc34d270b4386ab28",
+      "bytes": 2902,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "sucrase",
+    "version": "3.35.1",
+    "license": "MIT",
+    "description": "Super-fast alternative to Babel for when you can target modern JS runtimes",
+    "homepage": "https://github.com/alangpierce/sucrase#readme",
+    "repository": {
+      "url": "git+https://github.com/alangpierce/sucrase.git",
+      "type": "git"
+    },
+    "dependencies": [
+      "mz",
+      "pirates",
+      "commander",
+      "tinyglobby",
+      "lines-and-columns",
+      "ts-interface-checker",
+      "@jridgewell/gen-mapping"
+    ],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/sucrase/-/sucrase-3.35.1.tgz",
+      "integrity": "sha512-DhuTmvZWux4H1UOnWMB3sk0sbaCVOoQZjv8u1rDoTV0HTdGem9hkAZtl4JZy8P2z4Bg0nT+YMeOFyVr4zcG5Tw==",
+      "shasum": "4619ea50393fe8bd0ae5071c26abd9b2e346bfe1",
+      "unpackedSize": 1137073,
+      "fileCount": 190
+    },
+    "engines": {
+      "node": ">=16 || 14 >=14.17"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/sucrase/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "194a01e6b0905458de47d03be98153e4bffa71e7fc725ff35f6a70eda21e4352",
+      "bytes": 5178,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "tar-stream",
+    "version": "3.2.1",
+    "license": "MIT",
+    "description": "tar-stream is a streaming tar parser and generator and nothing else. It operates purely using streams which means you can easily extract/parse tarballs without ever hitting the file system.",
+    "homepage": "https://github.com/mafintosh/tar-stream",
+    "repository": {
+      "url": "git+https://github.com/mafintosh/tar-stream.git",
+      "type": "git"
+    },
+    "dependencies": [
+      "b4a",
+      "bare-fs",
+      "streamx",
+      "fast-fifo"
+    ],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/tar-stream/-/tar-stream-3.2.1.tgz",
+      "integrity": "sha512-nqsEO8zLZJvrOMdEwkA0QdCLFbetHMn95Zqu4fKwX+hkaTWJPZZOrxx/PwtxoK0MMGQmBQNRW3CPs8IFYQz4cQ==",
+      "shasum": "952d72f7aba68ce5cb802ef2e0b19f1bd989140d",
+      "unpackedSize": 33998,
+      "fileCount": 9
+    },
+    "engines": null,
+    "source": {
+      "url": "https://registry.npmjs.org/tar-stream/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "07b11300d8ef2d3860d97d466c09a2a9e803920a57067f79b1b9bae3352a422b",
+      "bytes": 2035,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "tar",
+    "version": "7.5.22",
+    "license": "BlueOak-1.0.0",
+    "description": "tar for node",
+    "homepage": "https://github.com/isaacs/node-tar#readme",
+    "repository": {
+      "url": "git+https://github.com/isaacs/node-tar.git",
+      "type": "git"
+    },
+    "dependencies": [
+      "chownr",
+      "yallist",
+      "minipass",
+      "minizlib",
+      "@isaacs/fs-minipass"
+    ],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/tar/-/tar-7.5.22.tgz",
+      "integrity": "sha512-MFO/QzvtAOmJbkhOaCTvbGcFN9L9b+JunIsDwaKljSOdcLMea3NJ1k9Usz/rjdfSXTq4dfzfeS7W4p4YOAAHeA==",
+      "shasum": "a696f998136e71487dc3f869a85bba2c67971ba9",
+      "unpackedSize": 2298662,
+      "fileCount": 249
+    },
+    "engines": {
+      "node": ">=18"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/tar/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "0eed316af7dc3e651e8f02d086ddfee4f7dc913d18ef528dfd0a5f75d5a8aafd",
+      "bytes": 6747,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "tinymce",
+    "version": "8.9.1",
+    "license": "SEE LICENSE IN license.md",
+    "description": "Web based JavaScript HTML WYSIWYG editor control.",
+    "homepage": "https://www.tiny.cloud/",
+    "repository": {
+      "url": "git+https://github.com/tinymce/tinymce.git",
+      "type": "git",
+      "directory": "modules/tinymce"
+    },
+    "dependencies": [],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/tinymce/-/tinymce-8.9.1.tgz",
+      "integrity": "sha512-5KrFiuKri2sPQW3ERWodsx3R0RZiw0cJJDr61qaMQiXO1ir3ZYaf6gVVaao+T29spZ9L9waaeE/co8Ov2Rn3vQ==",
+      "shasum": "c27021aebcafde3a841d9e8b8f1c375c3fa65a33",
+      "unpackedSize": 12048012,
+      "fileCount": 272
+    },
+    "engines": null,
+    "source": {
+      "url": "https://registry.npmjs.org/tinymce/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "82000daf8a3112147c0a915c0d30af95779b07661bcb3f7bb6efce2835caaec2",
+      "bytes": 1964,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "@typescript-eslint/parser",
+    "version": "8.70.0",
+    "license": "MIT",
+    "description": "An ESLint custom parser which leverages TypeScript ESTree",
+    "homepage": "https://typescript-eslint.io/packages/parser",
+    "repository": {
+      "url": "https://github.com/typescript-eslint/typescript-eslint.git",
+      "type": "git",
+      "directory": "packages/parser"
+    },
+    "dependencies": [
+      "debug",
+      "@typescript-eslint/types",
+      "@typescript-eslint/visitor-keys",
+      "@typescript-eslint/scope-manager",
+      "@typescript-eslint/typescript-estree"
+    ],
+    "optionalDependencies": [],
+    "peerDependencies": [
+      "eslint",
+      "typescript"
+    ],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/@typescript-eslint/parser/-/parser-8.70.0.tgz",
+      "integrity": "sha512-zYvrmj9Yxd63UGaXw+kdt6A0F0s0qveJyuatIM77bYC2DE4pgmg7a50u8LR7PRtXd0x+h+Tl3eXabGm06SWd3Q==",
+      "shasum": "96ce2de96c06c8442fea1a8f7b07855a56b3c5e3",
+      "unpackedSize": 16172,
+      "fileCount": 7
+    },
+    "engines": {
+      "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/@typescript-eslint/parser/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "60d02fe55d73ea308c05dbb1b92c82606433d2f7bcdd744d74078fd3f2d701b8",
+      "bytes": 3001,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "typescript",
+    "version": "7.0.2",
+    "license": "Apache-2.0",
+    "description": "TypeScript is a language for application scale JavaScript development",
+    "homepage": "https://www.typescriptlang.org/",
+    "repository": {
+      "url": "git+https://github.com/microsoft/TypeScript.git",
+      "type": "git"
+    },
+    "dependencies": [
+      "@typescript/typescript-aix-ppc64",
+      "@typescript/typescript-linux-arm",
+      "@typescript/typescript-linux-x64",
+      "@typescript/typescript-sunos-x64",
+      "@typescript/typescript-win32-x64",
+      "@typescript/typescript-darwin-x64",
+      "@typescript/typescript-netbsd-x64",
+      "@typescript/typescript-freebsd-x64",
+      "@typescript/typescript-linux-arm64",
+      "@typescript/typescript-linux-ppc64",
+      "@typescript/typescript-linux-s390x",
+      "@typescript/typescript-openbsd-x64",
+      "@typescript/typescript-win32-arm64",
+      "@typescript/typescript-darwin-arm64",
+      "@typescript/typescript-netbsd-arm64",
+      "@typescript/typescript-freebsd-arm64",
+      "@typescript/typescript-linux-loong64",
+      "@typescript/typescript-linux-riscv64",
+      "@typescript/typescript-openbsd-arm64",
+      "@typescript/typescript-linux-mips64el"
+    ],
+    "optionalDependencies": [
+      "@typescript/typescript-aix-ppc64",
+      "@typescript/typescript-linux-arm",
+      "@typescript/typescript-linux-x64",
+      "@typescript/typescript-sunos-x64",
+      "@typescript/typescript-win32-x64",
+      "@typescript/typescript-darwin-x64",
+      "@typescript/typescript-netbsd-x64",
+      "@typescript/typescript-freebsd-x64",
+      "@typescript/typescript-linux-arm64",
+      "@typescript/typescript-linux-ppc64",
+      "@typescript/typescript-linux-s390x",
+      "@typescript/typescript-openbsd-x64",
+      "@typescript/typescript-win32-arm64",
+      "@typescript/typescript-darwin-arm64",
+      "@typescript/typescript-netbsd-arm64",
+      "@typescript/typescript-freebsd-arm64",
+      "@typescript/typescript-linux-loong64",
+      "@typescript/typescript-linux-riscv64",
+      "@typescript/typescript-openbsd-arm64",
+      "@typescript/typescript-linux-mips64el"
+    ],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/typescript/-/typescript-7.0.2.tgz",
+      "integrity": "sha512-8FYau96o3NKOhbjKi/qNvG/W5jhzxkbdm5sj9AbZ/5T5sWqn3hJgLfGx27sRKZWTvyzCP8dLRBTf5tBTSRVUNA==",
+      "shasum": "9ec773d7954a8c182c17cc5bbd575aa28bc51582",
+      "unpackedSize": 2497498,
+      "fileCount": 416
+    },
+    "engines": {
+      "node": ">=16.20.0"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/typescript/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "28a8ef314c6bbc3fddb831088f80eb2fcac6351cb618c8ac029f7229f587b8aa",
+      "bytes": 4833,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "yaml",
+    "version": "2.9.0",
+    "license": "ISC",
+    "description": "JavaScript parser and stringifier for YAML",
+    "homepage": "https://eemeli.org/yaml/",
+    "repository": {
+      "url": "git+https://github.com/eemeli/yaml.git",
+      "type": "git"
+    },
+    "dependencies": [],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/yaml/-/yaml-2.9.0.tgz",
+      "integrity": "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==",
+      "shasum": "78274afd93598a1dfdd6130df6a566defcbf9aa4",
+      "unpackedSize": 685953,
+      "fileCount": 233
+    },
+    "engines": {
+      "node": ">= 14.6"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/yaml/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "ed36bc66e2b2e87aff5274e3cb197d106add7afb1a7d680444dad667f0d3f103",
+      "bytes": 3716,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "@yarnpkg/lockfile",
+    "version": "1.1.0",
+    "license": "BSD-2-Clause",
+    "description": "The parser/stringifier for Yarn lockfiles.",
+    "homepage": null,
+    "repository": {
+      "url": "https://github.com/yarnpkg/yarn/blob/master/packages/lockfile",
+      "type": "git"
+    },
+    "dependencies": [],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/@yarnpkg/lockfile/-/lockfile-1.1.0.tgz",
+      "integrity": "sha512-GpSwvyXOcOOlV70vbnzjj4fW5xW/FdUF6nQEt1ENy7m4ZCczi1+/buVUPAqmGfqznsORNFzUMjctTIp8a9tuCQ==",
+      "shasum": "e77a97fbd345b76d83245edcd17d393b1b41fb31",
+      "unpackedSize": 279773,
+      "fileCount": 4
+    },
+    "engines": null,
+    "source": {
+      "url": "https://registry.npmjs.org/@yarnpkg/lockfile/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "944d67ae9a26624d5e595eef34fa1b37cbfdbd19e690535ec910286be07c2e22",
+      "bytes": 2200,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  },
+  {
+    "name": "@yarnpkg/parsers",
+    "version": "3.1.0",
+    "license": "BSD-2-Clause",
+    "description": null,
+    "homepage": null,
+    "repository": {
+      "url": "git+https://github.com/yarnpkg/berry.git",
+      "type": "git",
+      "directory": "packages/yarnpkg-parsers"
+    },
+    "dependencies": [
+      "tslib",
+      "js-yaml"
+    ],
+    "optionalDependencies": [],
+    "peerDependencies": [],
+    "hasInstallScript": false,
+    "lifecycleScripts": [],
+    "dist": {
+      "tarball": "https://registry.npmjs.org/@yarnpkg/parsers/-/parsers-3.1.0.tgz",
+      "integrity": "sha512-WoxUM/Be4hfsX06FxsvpGgfYqwgivMV7/Ol7aFuSfSmY6rRaiju4QxOEe9RUS0iYcSHWl5i9AhB1cMoE0p+XiA==",
+      "shasum": "86352bdc9cc1b5f5218fe9962b3cd34215fec3d0",
+      "unpackedSize": 196884,
+      "fileCount": 18
+    },
+    "engines": {
+      "node": ">=18.12.0"
+    },
+    "source": {
+      "url": "https://registry.npmjs.org/@yarnpkg/parsers/latest",
+      "retrievedAt": "2026-09-10T10:45:04Z",
+      "label": "live-capture",
+      "contentSha256": "6750a345730f18430a6ec970e6f9fb08383f9edcb3b95d3903dac0a532b44f82",
+      "bytes": 2212,
+      "coverage": "npm-latest-packument-license-dist-deps-scripts"
+    }
+  }
+]

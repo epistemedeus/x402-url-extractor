@@ -1,0 +1,15 @@
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    dependencies:
+      foo:
+        specifier: npm:baz@1.0.0
+        version: baz@1.0.0
+
+packages:
+  baz@1.0.0:
+    resolution: {integrity: sha512-fixture-alias-mismatch}
+
+snapshots:
+  baz@1.0.0: {}

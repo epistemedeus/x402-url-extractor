@@ -1,0 +1,54 @@
+{
+  "schema": "s127.upgrade-impact.provenance.v1",
+  "cell": "c27-changelog-stub",
+  "baseline": "A",
+  "capturedFromLive": false,
+  "paidDemand": false,
+  "clock": "2026-09-10T12:00:00.000Z",
+  "notes": [
+    "This cell did not fetch the network. Changelog keyword skim only.",
+    "synthetic = hand-written versions and notes.",
+    "fixture = excerpts copied from sibling c11/c12 captures already on disk.",
+    "live-capture is not produced here."
+  ],
+  "files": {
+    "from-sibling/real-a-path-to-regexp.json": {
+      "label": "fixture",
+      "bytes": 1906,
+      "contentSha256": "581422d00e6ed8e15c30ec1f73969f7060281b236bf4fc86b81fdc8315fe3930",
+      "retrievedAt": "2026-09-10T10:48:00Z",
+      "coverage": "versions only; no changelog body (path-to-regexp 8.4.2 README is usage docs)",
+      "sourceCell": "c11-real-a",
+      "urls": [
+        "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-6.3.0.tgz",
+        "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-8.4.2.tgz"
+      ]
+    },
+    "from-sibling/real-b-cookie.json": {
+      "label": "fixture",
+      "bytes": 3122,
+      "contentSha256": "2fb19c086be9e79da25d8007dd75cf058d8eec826d2db98912aedbfa226eab15",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "coverage": "v2.0.0 and v2.0.1 release bodies copied from sibling slim",
+      "sourceCell": "c12-real-b",
+      "url": "https://api.github.com/repos/jshttp/cookie/releases?per_page=10",
+      "siblingSlimSha256": "69f65d12c5a0df6e0d6c8c741c2bc89c9e1b8b783b711ae37c42eb433ee39b24",
+      "skimmedChangelogSha256": "f856fdc3685645b5b95c505e2dfd7bda9c0b095235f0005b687488583d900c85"
+    },
+    "from-sibling/real-b-cookie-patch-notes.json": {
+      "label": "fixture",
+      "bytes": 1526,
+      "contentSha256": "f859c1cc780c49c0fdedca503b7f626eb7fda1829bdc8c2e44c559fd6363427f",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "coverage": "v1.1.1 release body copied from sibling slim",
+      "sourceCell": "c12-real-b",
+      "url": "https://api.github.com/repos/jshttp/cookie/releases?per_page=10",
+      "skimmedChangelogSha256": "4f83abd5062d47ad56f522d3544ad87c675c1996b6e8c195febcf10009834a74"
+    }
+  },
+  "syntheticDir": {
+    "label": "synthetic",
+    "retrievedAt": "2026-09-10T12:00:00.000Z",
+    "coverage": "hand-written oldVersion/newVersion and optional notes; not registry bytes"
+  }
+}

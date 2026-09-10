@@ -1,0 +1,14 @@
+lockfileVersion: '9.0'
+
+# Synthetic fixture. Not live-capture. hostile-dep was never fetched.
+
+importers:
+  .:
+    dependencies:
+      hostile-dep:
+        specifier: 2.0.0
+        version: 2.1.0
+
+packages:
+  hostile-dep@2.1.0:
+    resolution: {integrity: sha512-synthetic, tarball: https://registry.npmjs.org/hostile-dep/-/hostile-dep-2.1.0.tgz}

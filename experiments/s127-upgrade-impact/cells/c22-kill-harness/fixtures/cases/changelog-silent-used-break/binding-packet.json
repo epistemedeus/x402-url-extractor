@@ -1,0 +1,60 @@
+{
+  "schema": "s127.upgrade-impact.packet.v1",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "caller": {
+    "manifestPath": "fixtures/synthetic/callers/signature-changed/package.json",
+    "lockfilePath": "fixtures/synthetic/callers/signature-changed/package-lock.json",
+    "sourceRoots": ["fixtures/synthetic/callers/signature-changed/src"],
+    "evidenceClass": "synthetic"
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "1.0.1",
+    "resolvedOld": "1.0.0",
+    "resolvedNew": "1.0.1"
+  },
+  "provenance": [
+    {
+      "path": "cells/c22-kill-harness/fixtures/cases/changelog-silent-used-break/changelog.md",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "85bc7239ea96bb89811fba612030e7c500da1356d9d2b4cefe347f253928d079",
+      "coverage": "complete",
+      "label": "synthetic"
+    }
+  ],
+  "usage": {
+    "items": [{ "symbol": "beta", "kind": "named", "dynamicImport": false, "used": true }],
+    "dynamicImport": false,
+    "coverage": "complete"
+  },
+  "exportDiff": {
+    "added": [],
+    "removed": [],
+    "renamed": [],
+    "signatureChanged": ["beta"],
+    "coverage": "complete"
+  },
+  "bindings": [
+    {
+      "symbol": "beta",
+      "used": true,
+      "changeKind": "signatureChanged",
+      "decision": "action",
+      "rationale": "used export beta has a signature change",
+      "ruleId": "used_signature_changed"
+    }
+  ],
+  "summary": {
+    "nextAction": "action",
+    "unknownReasons": [],
+    "unusedChanges": [],
+    "actionableChanges": ["beta"]
+  },
+  "prior": null,
+  "limitations": [
+    "synthetic; not live-capture",
+    "arity/signature is coarse; full TypeScript types stay unknown"
+  ]
+}

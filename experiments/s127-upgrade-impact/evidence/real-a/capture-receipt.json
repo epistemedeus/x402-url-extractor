@@ -1,0 +1,14 @@
+{
+  "caseId": "c11-real-a",
+  "capturedAtUtc": "2026-09-10T10:48:00Z",
+  "packumentGetAtUtc": "2026-09-10T10:46:44Z",
+  "extractedAtUtc": "2026-09-10T10:52:00Z",
+  "method": "curl HTTPS GET official npm registry; tar -xzf only",
+  "npmInstall": false,
+  "lifecycleScripts": false,
+  "hosts": ["registry.npmjs.org"],
+  "package": "path-to-regexp",
+  "versions": ["6.3.0", "8.4.2"],
+  "osSession": "grok-heavy-c11-real-a",
+  "modelNativeChild": false
+}

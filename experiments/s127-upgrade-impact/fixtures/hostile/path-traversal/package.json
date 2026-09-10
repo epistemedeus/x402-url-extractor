@@ -1,0 +1,34 @@
+{
+  "name": "hostile-path-traversal",
+  "version": "0.0.0-synthetic",
+  "private": true,
+  "description": "Synthetic path-traversal manifest. Fixture, not live-capture.",
+  "main": "../../../../../../etc/passwd",
+  "module": "../../../../../../etc/shadow",
+  "types": "../../../../../../etc/hosts",
+  "browser": "/etc/passwd",
+  "bin": {
+    "evil": "../../../../usr/bin/id"
+  },
+  "files": [
+    "../../secret",
+    "ok.js"
+  ],
+  "exports": {
+    ".": "../../outside.js",
+    "./secret": "/etc/passwd",
+    "./windows": "C:\\Windows\\System32\\config\\SAM",
+    "./unc": "\\\\evil\\share\\payload",
+    "./url": "file:///etc/passwd",
+    "./encoded": "..%2F..%2Fetc%2Fpasswd",
+    "../escape": "./still-bad.js"
+  },
+  "imports": {
+    "#root": "../../../../../../etc/passwd"
+  },
+  "typesVersions": {
+    "*": {
+      "*": ["../../../../etc/passwd"]
+    }
+  }
+}

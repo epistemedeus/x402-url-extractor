@@ -1,0 +1,10 @@
+{
+  "name": "@c24/admin",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Synthetic pnpm app depending on shared-kit via workspace:^. Label: fixture.",
+  "dependencies": {
+    "shared-kit": "workspace:^"
+  }
+}

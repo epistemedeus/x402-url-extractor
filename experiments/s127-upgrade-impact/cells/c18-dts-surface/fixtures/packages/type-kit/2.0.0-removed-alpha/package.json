@@ -1,0 +1,19 @@
+{
+  "name": "type-kit",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Synthetic S127 types package (new): Alpha type export removed. Label: synthetic.",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./umd": {
+      "types": "./umd.d.ts"
+    }
+  },
+  "scripts": {
+    "postinstall": "node -e \"require('fs').writeFileSync('SCRIPT_RAN.marker','c18-must-not-run')\""
+  }
+}

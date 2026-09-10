@@ -1,0 +1,22 @@
+{
+  "id": "added-only-newer-version",
+  "label": "synthetic",
+  "title": "newer version with only unused added exports ⇒ no_action",
+  "input": {
+    "dependency": { "name": "demo-pkg", "oldVersion": "1.0.0", "newVersion": "1.1.0" },
+    "usage": {
+      "coverage": "complete",
+      "references": [{ "symbol": "stable", "kind": "named" }]
+    },
+    "exportDiff": {
+      "coverage": "complete",
+      "added": ["shinyNew"]
+    }
+  },
+  "expect": {
+    "nextAction": "no_action",
+    "actionableSymbols": [],
+    "unusedSymbols": ["shinyNew"],
+    "decisions": { "stable": "no_action", "shinyNew": "no_action" }
+  }
+}

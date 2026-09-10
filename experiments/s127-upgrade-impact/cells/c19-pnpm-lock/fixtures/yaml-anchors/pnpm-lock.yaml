@@ -1,0 +1,14 @@
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    dependencies:
+      lodash: &shared
+        specifier: 4.17.21
+        version: 4.17.21
+      also:
+        <<: *shared
+
+packages:
+  lodash@4.17.21:
+    resolution: {integrity: sha512-fixture-anchors}

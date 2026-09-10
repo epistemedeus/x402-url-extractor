@@ -1,0 +1,25 @@
+{
+  "id": "empty-usage-complete",
+  "label": "synthetic",
+  "title": "complete scan with zero references: all export changes unused ⇒ no_action",
+  "input": {
+    "dependency": { "name": "demo-pkg", "oldVersion": "1.0.0", "newVersion": "2.0.0" },
+    "usage": {
+      "coverage": "complete",
+      "dynamicImport": false,
+      "references": []
+    },
+    "exportDiff": {
+      "coverage": "complete",
+      "removed": ["alpha"],
+      "signatureChanged": ["beta"],
+      "added": ["gamma"]
+    }
+  },
+  "expect": {
+    "nextAction": "no_action",
+    "actionableSymbols": [],
+    "unusedSymbols": ["alpha", "beta", "gamma"],
+    "decisions": { "alpha": "no_action", "beta": "no_action", "gamma": "no_action" }
+  }
+}

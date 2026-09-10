@@ -1,0 +1,9 @@
+{
+  "name": "caller-version-range-prerelease",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic caller: manifest range ^1.0.0 vs lockfile 2.0.0-beta.1. Label: synthetic.",
+  "dependencies": {
+    "demo-widget": "^1.0.0"
+  }
+}

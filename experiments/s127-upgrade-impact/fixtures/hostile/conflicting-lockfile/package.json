@@ -1,0 +1,9 @@
+{
+  "name": "hostile-conflicting-lockfile",
+  "version": "0.0.0-synthetic",
+  "private": true,
+  "description": "Synthetic lockfile disagreement on hostile-dep. Fixture, not live-capture. Never fetched.",
+  "dependencies": {
+    "hostile-dep": "2.0.0"
+  }
+}

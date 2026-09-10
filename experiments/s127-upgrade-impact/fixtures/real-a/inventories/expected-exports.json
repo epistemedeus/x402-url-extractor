@@ -1,0 +1,44 @@
+{
+  "oldVersion": "6.3.0",
+  "newVersion": "8.4.2",
+  "oldNames": [
+    "compile",
+    "match",
+    "parse",
+    "pathToRegexp",
+    "regexpToFunction",
+    "tokensToFunction",
+    "tokensToRegexp"
+  ],
+  "newNames": [
+    "PathError",
+    "TokenData",
+    "compile",
+    "match",
+    "parse",
+    "pathToRegexp",
+    "stringify"
+  ],
+  "removed": [
+    "regexpToFunction",
+    "tokensToFunction",
+    "tokensToRegexp"
+  ],
+  "added": [
+    "PathError",
+    "TokenData",
+    "stringify"
+  ],
+  "signatureChangedJsEvident": [
+    "parse",
+    "pathToRegexp"
+  ],
+  "notRenames": [
+    {
+      "from": "tokensToFunction",
+      "to": "stringify",
+      "reason": "stringify rebuilds a path string from TokenData; tokensToFunction built a PathFunction from a v6 token array. Not claimed as a rename."
+    }
+  ],
+  "coverage": "cjs-exports-dot-assignment on package.json main/exports entry; official dist/index.js"
+}

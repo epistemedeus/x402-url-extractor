@@ -1,0 +1,23 @@
+{
+  "id": "unparseable-with-breaking-notes",
+  "label": "synthetic",
+  "title": "unparseable versions plus breaking notes still over-fire action",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "oldVersion": "not-a-version",
+    "newVersion": "also-not",
+    "changelogText": "BREAKING CHANGE: removed the default export."
+  },
+  "expect": {
+    "decision": "action",
+    "ruleId": "changelog_breaking_keyword",
+    "delta": "unknown"
+  },
+  "binderWould": {
+    "coarse": "unknown",
+    "decisionChangedRelativeToChangelog": true,
+    "note": "Binder would refuse action without parseable versions and usage. Stub over-fires from keywords."
+  }
+}

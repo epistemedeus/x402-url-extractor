@@ -1,0 +1,71 @@
+{
+  "id": "contrast-workspace-internal-bump",
+  "label": "fixture",
+  "kind": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "fixture",
+  "role": "contrast-same-identity",
+  "title": "Contrast: same workspace path 0.4.0 → 0.5.0 is not an identity conflict",
+  "notes": "Control so integrators do not treat every workspace:* as unknown. resolvedOld and resolvedNew are both workspace:packages/shared-kit. Identity is the in-repo package. Then usage-bind applies: caller uses localOnly and 0.5.0 removes it ⇒ action. A newer version alone would still not be a break if the used export were unchanged.",
+  "caller": {
+    "root": "fixtures/callers/npm-workspaces",
+    "workspaceRoot": "fixtures/callers/npm-workspaces",
+    "manifestPath": "fixtures/callers/npm-workspaces/apps/web/package.json",
+    "lockfilePath": "fixtures/callers/npm-workspaces/package-lock.json",
+    "lockfileKind": "npm",
+    "sourceRoots": ["fixtures/callers/npm-workspaces/apps/web/src"]
+  },
+  "dependency": {
+    "name": "shared-kit",
+    "oldVersion": "0.4.0",
+    "newVersion": "0.5.0",
+    "resolvedOld": "workspace:packages/shared-kit",
+    "resolvedNew": "workspace:packages/shared-kit"
+  },
+  "trees": {
+    "old": "fixtures/callers/npm-workspaces/packages/shared-kit",
+    "new": "fixtures/trees/workspace-shared-kit-0.5.0"
+  },
+  "expect": {
+    "identityConflict": false,
+    "kind": "workspace_internal_same_identity",
+    "summary.nextAction": "action",
+    "actionableChanges": ["localOnly"],
+    "unusedChanges": ["extra"],
+    "exportDiff.coverage": "complete",
+    "exportDiff.removed": ["localOnly"],
+    "exportDiff.added": ["extra"],
+    "unknownReasonsInclude": [],
+    "bindings": [
+      {
+        "symbol": "format",
+        "used": true,
+        "changeKind": "unchanged",
+        "decision": "no_action"
+      },
+      {
+        "symbol": "localOnly",
+        "used": true,
+        "changeKind": "removed",
+        "decision": "action"
+      },
+      {
+        "symbol": "extra",
+        "used": false,
+        "changeKind": "added",
+        "decision": "no_action"
+      }
+    ],
+    "packetPath": "fixtures/expected/packets/contrast-workspace-internal-bump.packet.json",
+    "decisionNotes": [
+      "Both locators are workspace:packages/shared-kit. Same identity. c24 must not flag identity conflict.",
+      "Do not treat workspace:* itself as unknown; only workspace-vs-registry (or path mismatch) is identity conflict.",
+      "Caller statically imports localOnly; 0.5.0 removes it ⇒ action for that symbol (used + removed).",
+      "Unused added extra is not a caller defect ⇒ no_action for extra (packet rule 2).",
+      "format is used and unchanged; a newer workspace version is not itself a break (packet rule 1).",
+      "JS named-export coverage only. No full TypeScript. Nested shared-kit-core is unchanged and not the upgrade target."
+    ]
+  }
+}

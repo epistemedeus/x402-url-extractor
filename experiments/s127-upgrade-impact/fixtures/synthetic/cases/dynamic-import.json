@@ -1,0 +1,27 @@
+{
+  "id": "dynamic-import",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "title": "Caller loads the package only via import()",
+  "notes": "Dynamic import of a package is unknown for that surface even if alpha is removed.",
+  "caller": {
+    "root": "callers/dynamic-import",
+    "manifestPath": "callers/dynamic-import/package.json",
+    "lockfilePath": "callers/dynamic-import/package-lock.json",
+    "sourceRoots": ["callers/dynamic-import/src"]
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "oldTree": "packages/demo-widget/1.0.0",
+    "newTree": "packages/demo-widget/2.0.0-removed-alpha"
+  },
+  "expect": {
+    "summary.nextAction": "unknown",
+    "usageDynamicImport": true,
+    "actionableSymbols": [],
+    "unknownReasonsInclude": ["dynamic_import"]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "s127-c23-real-c-ms",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "S127 cell c23: real-source case C (ms 2.1.3 → 3.0.0-beta.2 dual CJS/ESM). Isolated; not the pack CLI. Not a product.",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "packet": "node scripts/build-packet.mjs",
+    "isolation": "node scripts/isolation-self-check.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

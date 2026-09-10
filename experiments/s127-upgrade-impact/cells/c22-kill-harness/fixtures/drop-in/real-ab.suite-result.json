@@ -1,0 +1,185 @@
+{
+  "schema": "s127.upgrade-impact.kill-suite-result.v1",
+  "id": "real-ab",
+  "scope": "suite",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "label": "fixture",
+  "mode": "coarse",
+  "verdict": "kill",
+  "changed": false,
+  "changedIds": [],
+  "requiredIds": [
+    "real-a",
+    "real-b"
+  ],
+  "allRequiredReadable": true,
+  "rationale": "B never changed the coarse decision vs A on required cases real-a, real-b. Negative evidence: usage-binding added no different operator move than registry+changelog skim. Stop packaging as a paid job.",
+  "killCondition": "If usage-binding (method B) never changes the coarse nextAction bucket relative to a registry version + changelog skim (method A) on required cases A and B, record negative evidence and stop packaging as a paid job.",
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline suite; no purchase; do not invent paid demand"
+  },
+  "expect": null,
+  "cases": [
+    {
+      "schema": "s127.upgrade-impact.kill-pair.v1",
+      "scope": "pair",
+      "caseId": "real-a",
+      "role": "case-a",
+      "clock": "2026-09-10T12:00:00.000Z",
+      "label": "fixture",
+      "mode": "coarse",
+      "verdict": "kill",
+      "changed": false,
+      "rationale": "binding did not change the coarse decision vs registry+changelog skim (both action [raw=review_changelog]). Kill-signal for this pair: mapping added no different operator move.",
+      "killCondition": "If usage-binding (method B) never changes the coarse nextAction bucket relative to a registry version + changelog skim (method A) on required cases A and B, record negative evidence and stop packaging as a paid job.",
+      "payment": {
+        "attempted": false
+      },
+      "cost": {
+        "assignmentSpendUsd": 0,
+        "note": "offline compare; no purchase; do not invent paid demand"
+      },
+      "a": {
+        "letter": "A",
+        "ok": true,
+        "method": "registry_version_changelog_skim",
+        "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/cells/c22-kill-harness/fixtures/drop-in/real-a/method-a.json",
+        "schema": "s127.upgrade-impact.registry-skim.decision.v1",
+        "label": "fixture",
+        "raw": "review_changelog",
+        "coarse": "action",
+        "source": "summary.nextAction",
+        "clock": "2026-09-10T10:48:00.000Z",
+        "ruleId": "major_requires_changelog",
+        "rationale": "semver major 6.3.0 -> 8.4.2; registry/changelog skim says review before bumping a pin. Does not bind caller usage.",
+        "dependency": {
+          "name": "path-to-regexp",
+          "oldVersion": "6.3.0",
+          "newVersion": "8.4.2"
+        },
+        "code": null,
+        "message": null
+      },
+      "b": {
+        "letter": "B",
+        "ok": true,
+        "method": "usage_binding_packet",
+        "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/cells/c22-kill-harness/fixtures/drop-in/real-a/method-b.json",
+        "schema": "s127.upgrade-impact.packet.v1",
+        "label": "fixture",
+        "raw": "action",
+        "coarse": "action",
+        "source": "summary.nextAction",
+        "clock": "2026-09-10T10:48:00.000Z",
+        "ruleId": null,
+        "rationale": null,
+        "dependency": {
+          "name": "path-to-regexp",
+          "oldVersion": "6.3.0",
+          "newVersion": "8.4.2"
+        },
+        "code": null,
+        "message": null
+      },
+      "unknownReasons": [],
+      "limitations": [
+        "Method A is a registry version + changelog skim stub, not a maintainer-intent parser.",
+        "Keyword scan is not full changelog understanding and is not TypeScript analysis.",
+        "A newer version alone is not a break; skim review_changelog is not a caller-defect claim.",
+        "Unused export change is not a caller defect.",
+        "Missing, conflicting, or partial source stays unknown, not action.",
+        "No runtime execution of untrusted packages or lifecycle scripts.",
+        "Offline default. No payment attempted. A new version is not paid demand."
+      ]
+    },
+    {
+      "schema": "s127.upgrade-impact.kill-pair.v1",
+      "scope": "pair",
+      "caseId": "real-b",
+      "role": "case-b",
+      "clock": "2026-09-10T12:00:00.000Z",
+      "label": "fixture",
+      "mode": "coarse",
+      "verdict": "kill",
+      "changed": false,
+      "rationale": "binding did not change the coarse decision vs registry+changelog skim (both action [raw=review_changelog]). Kill-signal for this pair: mapping added no different operator move.",
+      "killCondition": "If usage-binding (method B) never changes the coarse nextAction bucket relative to a registry version + changelog skim (method A) on required cases A and B, record negative evidence and stop packaging as a paid job.",
+      "payment": {
+        "attempted": false
+      },
+      "cost": {
+        "assignmentSpendUsd": 0,
+        "note": "offline compare; no purchase; do not invent paid demand"
+      },
+      "a": {
+        "letter": "A",
+        "ok": true,
+        "method": "registry_version_changelog_skim",
+        "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/cells/c22-kill-harness/fixtures/drop-in/real-b/method-a.json",
+        "schema": "s127.upgrade-impact.registry-skim.decision.v1",
+        "label": "fixture",
+        "raw": "review_changelog",
+        "coarse": "action",
+        "source": "summary.nextAction",
+        "clock": "2026-09-10T10:48:00.000Z",
+        "ruleId": "major_requires_changelog",
+        "rationale": "semver major 1.1.1 -> 2.0.1; registry/changelog skim says review before bumping a pin. Does not bind caller usage.",
+        "dependency": {
+          "name": "cookie",
+          "oldVersion": "1.1.1",
+          "newVersion": "2.0.1"
+        },
+        "code": null,
+        "message": null
+      },
+      "b": {
+        "letter": "B",
+        "ok": true,
+        "method": "usage_binding_packet",
+        "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/cells/c22-kill-harness/fixtures/drop-in/real-b/method-b.json",
+        "schema": "s127.upgrade-impact.packet.v1",
+        "label": "fixture",
+        "raw": "action",
+        "coarse": "action",
+        "source": "summary.nextAction",
+        "clock": "2026-09-10T10:48:00.000Z",
+        "ruleId": null,
+        "rationale": null,
+        "dependency": {
+          "name": "cookie",
+          "oldVersion": "1.1.1",
+          "newVersion": "2.0.1"
+        },
+        "code": null,
+        "message": null
+      },
+      "unknownReasons": [],
+      "limitations": [
+        "Method A is a registry version + changelog skim stub, not a maintainer-intent parser.",
+        "Keyword scan is not full changelog understanding and is not TypeScript analysis.",
+        "A newer version alone is not a break; skim review_changelog is not a caller-defect claim.",
+        "Unused export change is not a caller defect.",
+        "Missing, conflicting, or partial source stays unknown, not action.",
+        "No runtime execution of untrusted packages or lifecycle scripts.",
+        "Offline default. No payment attempted. A new version is not paid demand."
+      ]
+    }
+  ],
+  "unknownReasons": [],
+  "limitations": [
+    "Method A is a registry version + changelog skim stub, not a maintainer-intent parser.",
+    "Keyword scan is not full changelog understanding and is not TypeScript analysis.",
+    "A newer version alone is not a break; skim review_changelog is not a caller-defect claim.",
+    "Unused export change is not a caller defect.",
+    "Missing, conflicting, or partial source stays unknown, not action.",
+    "No runtime execution of untrusted packages or lifecycle scripts.",
+    "Offline default. No payment attempted. A new version is not paid demand.",
+    "Product kill requires every required case to be present and readable.",
+    "Synthetic stand-ins are not real-source cases A/B (c11/c12)."
+  ],
+  "manifestPath": "fixtures/suites/real-ab.json"
+}

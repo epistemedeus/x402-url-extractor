@@ -1,0 +1,9 @@
+{
+  "name": "@acme/lib",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Synthetic workspace package. Parser does not need this file; path comes from lockfile link:.",
+  "dependencies": {
+    "lodash": "^4.17.21"
+  }
+}

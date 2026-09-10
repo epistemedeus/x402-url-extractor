@@ -1,0 +1,135 @@
+{
+  "schema": "s127.upgrade-impact.packet.v1",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "caller": {
+    "manifestPath": "fixtures/synthetic/callers/removed-export-unused/package.json",
+    "lockfilePath": "fixtures/synthetic/callers/removed-export-unused/package-lock.json",
+    "sourceRoots": [
+      "fixtures/synthetic/callers/removed-export-unused/src"
+    ],
+    "evidenceClass": "synthetic"
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "resolvedOld": "1.0.0",
+    "resolvedNew": "2.0.0",
+    "requestedRange": "^1.0.0"
+  },
+  "provenance": [
+    {
+      "path": "fixtures/synthetic/packages/demo-widget/1.0.0/README.md",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "42a748afe4b402e2cc5b4bf20264cff5cd49051782cd797860606159d8da760e",
+      "coverage": "full",
+      "label": "synthetic"
+    },
+    {
+      "path": "fixtures/synthetic/packages/demo-widget/1.0.0/index.js",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "c945dc4166e32955a6f2cdadba57353ce2af1932798929a03a7d98e550e74daf",
+      "coverage": "full",
+      "label": "synthetic"
+    },
+    {
+      "path": "fixtures/synthetic/packages/demo-widget/1.0.0/package.json",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "c1a049ae8cd3fd86dd15ea1fc26bcf3a8ec15b97fa052669dd56b5b236ed16a8",
+      "coverage": "full",
+      "label": "synthetic"
+    },
+    {
+      "path": "fixtures/synthetic/packages/demo-widget/2.0.0-removed-alpha/index.js",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "9c76ad7a3375e4d340e7970f448519558f06b07b7c82af04eff2a503ef3dfde7",
+      "coverage": "full",
+      "label": "synthetic"
+    },
+    {
+      "path": "fixtures/synthetic/packages/demo-widget/2.0.0-removed-alpha/package.json",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "fbeee499fa86c45dafc817f593a8e35b3375be7f096d99ec79b8d4e1cfdc4dff",
+      "coverage": "full",
+      "label": "synthetic"
+    }
+  ],
+  "usage": [
+    {
+      "specifier": "demo-widget",
+      "symbol": "beta",
+      "kind": "named",
+      "file": "src/app.js",
+      "dynamicImport": false,
+      "typeOnly": false
+    },
+    {
+      "specifier": "demo-widget",
+      "symbol": "gamma",
+      "kind": "named",
+      "file": "src/app.js",
+      "dynamicImport": false,
+      "typeOnly": false
+    }
+  ],
+  "exportDiff": {
+    "added": [],
+    "removed": [
+      "alpha"
+    ],
+    "renamed": [],
+    "signatureChanged": [],
+    "coverage": "full"
+  },
+  "bindings": [
+    {
+      "symbol": "alpha",
+      "used": false,
+      "changeKind": "removed",
+      "decision": "no_action",
+      "rationale": "unused export change is not a caller defect",
+      "dynamicImport": false
+    },
+    {
+      "symbol": "beta",
+      "used": true,
+      "changeKind": "unchanged",
+      "decision": "no_action",
+      "rationale": "caller imports beta; export is unchanged",
+      "dynamicImport": false
+    },
+    {
+      "symbol": "gamma",
+      "used": true,
+      "changeKind": "unchanged",
+      "decision": "no_action",
+      "rationale": "caller imports gamma; export is unchanged",
+      "dynamicImport": false
+    }
+  ],
+  "summary": {
+    "nextAction": "no_action",
+    "unknownReasons": [],
+    "unusedChanges": [
+      {
+        "symbol": "alpha",
+        "changeKind": "removed"
+      }
+    ],
+    "actionableChanges": []
+  },
+  "prior": {
+    "ref": null,
+    "sequence": 0,
+    "immutable": true,
+    "correction": null
+  },
+  "limitations": [
+    "no full TypeScript program analysis",
+    "no runtime execution of caller or package code",
+    "export scan covers static ESM named/default/namespace and CJS exports.X; re-export graphs and computed specifiers are unknown",
+    "arity is a coarse signature; TypeScript types are unknown"
+  ],
+  "ok": true
+}

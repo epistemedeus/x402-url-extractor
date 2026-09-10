@@ -1,0 +1,10 @@
+{
+  "name": "evil-types",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Hostile types path; extractor must refuse and not read. Label: synthetic.",
+  "types": "../../../../../etc/passwd",
+  "scripts": {
+    "preinstall": "node -e \"require('fs').writeFileSync('SCRIPT_RAN.marker','hostile')\""
+  }
+}

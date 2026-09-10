@@ -1,0 +1,9 @@
+{
+  "name": "caller-same-version-noop",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic caller compared against the same demo-widget@1.0.0 tree. Label: synthetic.",
+  "dependencies": {
+    "demo-widget": "1.0.0"
+  }
+}

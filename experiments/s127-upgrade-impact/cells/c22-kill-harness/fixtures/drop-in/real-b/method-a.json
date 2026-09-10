@@ -1,0 +1,33 @@
+{
+  "schema": "s127.upgrade-impact.registry-skim.decision.v1",
+  "method": "registry_version_changelog_skim",
+  "createdAt": "2026-09-10T10:48:00.000Z",
+  "clock": "2026-09-10T10:48:00.000Z",
+  "label": "fixture",
+  "evidenceClass": "fixture",
+  "offline": true,
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline skim stub; no purchase"
+  },
+  "dependency": {
+    "name": "cookie",
+    "oldVersion": "1.1.1",
+    "newVersion": "2.0.1"
+  },
+  "observation": {
+    "versionChanged": true,
+    "semverDelta": "major",
+    "changelogCoverage": "not_fetched_offline",
+    "keywordScan": "stub_regex"
+  },
+  "summary": {
+    "nextAction": "review_changelog",
+    "ruleId": "major_requires_changelog",
+    "rationale": "semver major 1.1.1 -> 2.0.1; registry/changelog skim says review before bumping a pin. Does not bind caller usage.",
+    "unknownReasons": []
+  }
+}

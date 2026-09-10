@@ -1,0 +1,9 @@
+{
+  "name": "caller-removed-export-unused",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic caller that does not import the removed export alpha. Label: synthetic.",
+  "dependencies": {
+    "demo-widget": "^1.0.0"
+  }
+}

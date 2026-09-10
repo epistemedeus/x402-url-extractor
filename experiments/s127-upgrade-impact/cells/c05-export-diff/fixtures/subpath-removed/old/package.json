@@ -1,0 +1,9 @@
+{
+  "name": "demo-subpath",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./legacy": "./legacy.js"
+  }
+}

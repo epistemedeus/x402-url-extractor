@@ -1,0 +1,39 @@
+{
+  "package": "cookie",
+  "oldVersion": "1.1.1",
+  "newVersion": "2.0.1",
+  "source": "compiled JS named exports in extracted dist/index.js; d.ts overload counts from export declare function",
+  "runtimeNamed": {
+    "1.1.1": [
+      "parse",
+      "parseCookie",
+      "parseSetCookie",
+      "serialize",
+      "stringifyCookie",
+      "stringifySetCookie"
+    ],
+    "2.0.1": [
+      "parseCookie",
+      "parseSetCookie",
+      "stringifyCookie",
+      "stringifySetCookie"
+    ]
+  },
+  "dtsDeclareFunctionOverloads": {
+    "1.1.1": {
+      "parseCookie": 1,
+      "parseSetCookie": 1,
+      "stringifyCookie": 1,
+      "stringifySetCookie": 2
+    },
+    "2.0.1": {
+      "parseCookie": 1,
+      "parseSetCookie": 1,
+      "stringifyCookie": 1,
+      "stringifySetCookie": 1
+    }
+  },
+  "removedRuntime": ["parse", "serialize"],
+  "addedRuntime": [],
+  "coverage": "compiled-js-named-exports; dts-overload-count-partial; no-full-ts"
+}

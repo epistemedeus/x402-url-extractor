@@ -1,0 +1,9 @@
+{
+  "name": "caller-yarn-classic-conflict",
+  "private": true,
+  "description": "Synthetic nested-range conflict: lodash resolves to two versions. Label: synthetic. Not live-capture.",
+  "dependencies": {
+    "demo-widget": "^1.0.0",
+    "left-pad": "^1.0.0"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "peak": {
+    "ts": "2026-09-10T10:55:16Z",
+    "grok_related_procs": 29,
+    "os_s127_sessions": 28,
+    "other_grok_procs": 1,
+    "rss_mb_sum": 2811
+  },
+  "peak_os_s127_sessions": 28,
+  "peak_grok_related_procs": 29
+}

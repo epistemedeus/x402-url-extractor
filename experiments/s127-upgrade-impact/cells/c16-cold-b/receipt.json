@@ -1,0 +1,10 @@
+{
+  "cell": "c16-cold-b",
+  "ok": true,
+  "nextAction": "action",
+  "actionableChanges": [
+    "parse"
+  ],
+  "unusedIncludesSerialize": true,
+  "packetPath": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/cells/c16-cold-b/packet.json"
+}

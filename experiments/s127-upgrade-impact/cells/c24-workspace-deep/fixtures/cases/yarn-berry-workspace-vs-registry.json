@@ -1,0 +1,49 @@
+{
+  "id": "yarn-berry-workspace-vs-registry",
+  "label": "fixture",
+  "kind": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "fixture",
+  "role": "identity-conflict",
+  "title": "Yarn Berry resolution shared-kit@workspace:packages/shared-kit vs registry tarball",
+  "notes": "Berry lockfile descriptors include shared-kit@workspace:* and resolution shared-kit@workspace:packages/shared-kit with linkType soft. That is a workspace identity. Registry 2.1.0 of the same name is not.",
+  "caller": {
+    "root": "fixtures/callers/yarn-berry-workspaces",
+    "workspaceRoot": "fixtures/callers/yarn-berry-workspaces",
+    "manifestPath": "fixtures/callers/yarn-berry-workspaces/apps/web/package.json",
+    "lockfilePath": "fixtures/callers/yarn-berry-workspaces/yarn.lock",
+    "lockfileKind": "yarn-berry",
+    "sourceRoots": ["fixtures/callers/yarn-berry-workspaces/apps/web/src"]
+  },
+  "dependency": {
+    "name": "shared-kit",
+    "oldVersion": "0.4.0",
+    "newVersion": "2.1.0",
+    "resolvedOld": "workspace:packages/shared-kit",
+    "resolvedNew": "https://example.invalid/registry/shared-kit/-/shared-kit-2.1.0.tgz"
+  },
+  "trees": {
+    "old": "fixtures/callers/yarn-berry-workspaces/packages/shared-kit",
+    "new": "fixtures/trees/registry-shared-kit-2.1.0"
+  },
+  "expect": {
+    "identityConflict": true,
+    "kind": "workspace_vs_registry_identity_conflict",
+    "summary.nextAction": "unknown",
+    "actionableChanges": [],
+    "exportDiff.coverage": "conflict",
+    "unknownReasonsInclude": [
+      "workspace_vs_registry_identity_conflict",
+      "lockfile_alias_or_workspace_disagreement"
+    ],
+    "bindingsDecision": "unknown",
+    "decisionNotes": [
+      "Yarn Berry resolution is shared-kit@workspace:packages/shared-kit (linkType soft).",
+      "workspace: in the descriptor is the identity, not npm registry shared-kit@2.1.0.",
+      "Yarn lockfile parsed heuristically (no @yarnpkg/lockfile). Unparseable ⇒ unknown.",
+      "Identity conflict ⇒ unknown (rules 3 and 5). A newer version is not itself a break."
+    ]
+  }
+}

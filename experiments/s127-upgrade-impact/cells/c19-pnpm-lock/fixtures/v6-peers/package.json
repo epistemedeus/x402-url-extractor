@@ -1,0 +1,8 @@
+{
+  "name": "c19-v6-peers",
+  "private": true,
+  "description": "Synthetic v6 lockfile with peer-suffixed package key. Label: fixture.",
+  "dependencies": {
+    "foo": "1.0.0"
+  }
+}

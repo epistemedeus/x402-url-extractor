@@ -1,0 +1,15 @@
+{
+  "name": "s127-c01-fixture-caller",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Synthetic fixture caller. Label: fixture. Not live-capture. No paid demand.",
+  "dependencies": {
+    "s127-example-dep": "1.0.0"
+  },
+  "scripts": {
+    "preinstall": "node -e \"require('fs').writeFileSync('SENTINEL_SHOULD_NOT_EXIST','executed')\"",
+    "install": "node -e \"require('fs').writeFileSync('SENTINEL_SHOULD_NOT_EXIST','executed')\"",
+    "postinstall": "node -e \"require('fs').writeFileSync('SENTINEL_SHOULD_NOT_EXIST','executed')\"",
+    "prepare": "node -e \"require('fs').writeFileSync('SENTINEL_SHOULD_NOT_EXIST','executed')\""
+  }
+}

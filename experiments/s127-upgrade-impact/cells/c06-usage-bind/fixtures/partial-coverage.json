@@ -1,0 +1,22 @@
+{
+  "id": "partial-coverage",
+  "label": "synthetic",
+  "title": "partial exportDiff coverage never yields decision=action",
+  "input": {
+    "dependency": { "name": "demo-pkg", "oldVersion": "1.0.0", "newVersion": "2.0.0" },
+    "usage": {
+      "coverage": "complete",
+      "references": [{ "symbol": "foo", "kind": "named" }]
+    },
+    "exportDiff": {
+      "coverage": "partial",
+      "removed": ["foo"]
+    }
+  },
+  "expect": {
+    "nextAction": "unknown",
+    "actionableSymbols": [],
+    "unusedSymbols": [],
+    "decisions": { "foo": "unknown" }
+  }
+}

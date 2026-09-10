@@ -1,0 +1,27 @@
+{
+  "id": "used-removed",
+  "label": "synthetic",
+  "title": "used + removed ⇒ action, nextAction review_breakages",
+  "input": {
+    "dependency": { "name": "demo-pkg", "oldVersion": "1.0.0", "newVersion": "2.0.0" },
+    "usage": {
+      "coverage": "complete",
+      "dynamicImport": false,
+      "references": [{ "symbol": "foo", "kind": "named", "file": "src/app.js" }]
+    },
+    "exportDiff": {
+      "coverage": "complete",
+      "added": [],
+      "removed": ["foo"],
+      "renamed": [],
+      "signatureChanged": []
+    }
+  },
+  "expect": {
+    "nextAction": "review_breakages",
+    "actionableSymbols": ["foo"],
+    "unusedSymbols": [],
+    "decisions": { "foo": "action" },
+    "changeKinds": { "foo": "removed" }
+  }
+}

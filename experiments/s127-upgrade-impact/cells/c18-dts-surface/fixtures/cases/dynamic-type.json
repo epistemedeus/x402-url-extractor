@@ -1,0 +1,23 @@
+{
+  "id": "dynamic-type",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "fixture",
+  "title": "Dynamic import of the package makes the type surface unknown",
+  "caller": {
+    "root": "callers/dynamic-type",
+    "manifestPath": "callers/dynamic-type/package.json",
+    "sourceRoots": ["callers/dynamic-type/src"]
+  },
+  "dependency": {
+    "name": "type-kit",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "oldTree": "packages/type-kit/1.0.0",
+    "newTree": "packages/type-kit/2.0.0-removed-alpha"
+  },
+  "expect": {
+    "summary.nextAction": "unknown",
+    "exportDiff.removed": ["Alpha"]
+  }
+}

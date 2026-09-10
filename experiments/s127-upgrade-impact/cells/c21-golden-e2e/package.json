@@ -1,0 +1,12 @@
+{
+  "name": "c21-golden-e2e",
+  "private": true,
+  "type": "module",
+  "description": "S127 cell: golden expected packet for mixed used-removal / unused-removal / dynamic-import. Synthetic. Not a paid job.",
+  "scripts": {
+    "self-check": "node scripts/self-check.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

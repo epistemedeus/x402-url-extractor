@@ -1,0 +1,21 @@
+{
+  "name": "c02-shrinkwrap-alias",
+  "version": "0.0.0",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "c02-shrinkwrap-alias",
+      "version": "0.0.0",
+      "dependencies": {
+        "my-lodash": "npm:lodash@^4.17.0"
+      }
+    },
+    "node_modules/my-lodash": {
+      "name": "lodash",
+      "version": "4.17.21",
+      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz",
+      "integrity": "sha512-SYNTHETIC-SHRINKWRAP-NOT-A-REGISTRY-HASH"
+    }
+  }
+}

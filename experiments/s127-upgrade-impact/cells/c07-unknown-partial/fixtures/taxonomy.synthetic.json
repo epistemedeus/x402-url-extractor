@@ -1,0 +1,64 @@
+{
+  "label": "synthetic",
+  "schema": "s127.upgrade-impact.unknown.v1",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "note": "Catalog snapshot for c07 isolation tests. Not live-capture. Not paid demand.",
+  "reasonCodes": [
+    "missing_source",
+    "partial_coverage",
+    "lockfile_conflict",
+    "dynamic_import",
+    "unsupported_language",
+    "parser_limit",
+    "prerelease_range_ambiguous",
+    "hostile_input"
+  ],
+  "catalogPolicy": {
+    "missing_source": "force_unknown",
+    "partial_coverage": "allow_partial",
+    "lockfile_conflict": "force_unknown",
+    "dynamic_import": "allow_partial",
+    "unsupported_language": "allow_partial",
+    "parser_limit": "allow_partial",
+    "prerelease_range_ambiguous": "force_unknown",
+    "hostile_input": "force_unknown"
+  },
+  "scenarios": {
+    "missing_source": {
+      "oldArtifact": null,
+      "newArtifact": { "path": "synthetic://demo-widget/2.0.0-removed-alpha/index.js" }
+    },
+    "partial_coverage": {
+      "coverage": 0.5,
+      "coveredSymbols": ["alpha"],
+      "filesAnalyzed": 1,
+      "filesTotal": 2
+    },
+    "lockfile_conflict": {
+      "disagreement": true,
+      "requestedName": "demo-widget",
+      "resolvedName": "demo-widget-fork"
+    },
+    "dynamic_import": {
+      "dynamicImport": true,
+      "specifier": "demo-widget",
+      "file": "src/app.js"
+    },
+    "unsupported_language": {
+      "file": "src/main.py",
+      "language": "python"
+    },
+    "parser_limit": {
+      "file": "src/types.ts",
+      "construct": "import_type"
+    },
+    "prerelease_range_ambiguous": {
+      "oldVersion": "^1.0.0",
+      "newVersion": "^2.0.0-beta.1"
+    },
+    "hostile_input": {
+      "hostile": true,
+      "signals": ["path_escape"]
+    }
+  }
+}

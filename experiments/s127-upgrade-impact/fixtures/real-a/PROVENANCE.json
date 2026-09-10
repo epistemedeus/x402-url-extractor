@@ -1,0 +1,95 @@
+{
+  "schema": "s127.upgrade-impact.provenance.v1",
+  "caseId": "c11-real-a",
+  "package": "path-to-regexp",
+  "license": "MIT",
+  "oldVersion": "6.3.0",
+  "newVersion": "8.4.2",
+  "clock": "2026-09-10T10:48:00Z",
+  "extractedAt": "2026-09-10T10:52:00Z",
+  "evidenceClassDefault": "fixture",
+  "captureMethod": "HTTPS GET of official npm registry tarballs and version documents. Tar extract only. No npm install. No lifecycle scripts.",
+  "fullPackumentNotStored": {
+    "url": "https://registry.npmjs.org/path-to-regexp",
+    "retrievedAt": "2026-09-10T10:46:44Z",
+    "contentSha256": "7d3eabbf863e85281427c917e584e2785bedc1a735957f0277924df60832972c",
+    "bytes": 216334,
+    "label": "live-capture",
+    "coverage": "full packument used to slice dist-tags/time/two version dist records; bytes not retained in fixtures",
+    "storedAs": "fixtures/real-a/registry/packument.slim.json"
+  },
+  "artifacts": {
+    "packumentSlim": {
+      "path": "fixtures/real-a/registry/packument.slim.json",
+      "url": "https://registry.npmjs.org/path-to-regexp",
+      "retrievedAt": "2026-09-10T10:46:44Z",
+      "contentSha256": "6d2991ed04ad6eb497efbda99feb2e6fe5cfd80b9dd448ef5eec8e8f340180c8",
+      "bytes": 2187,
+      "label": "live-capture",
+      "replayLabel": "fixture",
+      "coverage": "slim packument: name, license, dist-tags, time for 6.3.0 and 8.4.2, dist records, script names. Not the full packument."
+    },
+    "oldVersionDoc": {
+      "path": "fixtures/real-a/registry/path-to-regexp-6.3.0.json",
+      "url": "https://registry.npmjs.org/path-to-regexp/6.3.0",
+      "retrievedAt": "2026-09-10T10:48:00Z",
+      "contentSha256": "c0518b24b26c5f9b4d720f6dcb640925fc1947599001cc38bce655de3bf1dcfc",
+      "bytes": 2341,
+      "label": "live-capture",
+      "replayLabel": "fixture",
+      "coverage": "npm version document"
+    },
+    "newVersionDoc": {
+      "path": "fixtures/real-a/registry/path-to-regexp-8.4.2.json",
+      "url": "https://registry.npmjs.org/path-to-regexp/8.4.2",
+      "retrievedAt": "2026-09-10T10:48:00Z",
+      "contentSha256": "f8217c862e73f2312afd0013b60b24419f33d60689d0824f4d18c1b2b605c173",
+      "bytes": 2417,
+      "label": "live-capture",
+      "replayLabel": "fixture",
+      "coverage": "npm version document"
+    },
+    "oldTarball": {
+      "path": "fixtures/real-a/tarballs/path-to-regexp-6.3.0.tgz",
+      "url": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-6.3.0.tgz",
+      "retrievedAt": "2026-09-10T10:48:00Z",
+      "contentSha256": "da302284390341278d3dad1014f2043cf844f6a2163aa8dc5686d321d82742e6",
+      "distShasum": "2b6a26a337737a8e1416f9272ed0766b1c0389f4",
+      "bytes": 17334,
+      "label": "live-capture",
+      "replayLabel": "fixture",
+      "coverage": "full official npm pack tarball bytes"
+    },
+    "newTarball": {
+      "path": "fixtures/real-a/tarballs/path-to-regexp-8.4.2.tgz",
+      "url": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-8.4.2.tgz",
+      "retrievedAt": "2026-09-10T10:48:00Z",
+      "contentSha256": "e8712a9c53b0a2a27cfecc7b80c54df92afb4643c01351e2b2ebb7784bcabd78",
+      "distShasum": "795c420c4f7ca45c5b887366f622ee0c9852cccd",
+      "bytes": 14900,
+      "label": "live-capture",
+      "replayLabel": "fixture",
+      "coverage": "full official npm pack tarball bytes"
+    },
+    "extractedOldJs": {
+      "path": "fixtures/real-a/extracted/6.3.0/package/dist/index.js",
+      "contentSha256": "890a1832ab3d692c0ddbdcbe54fbdeaa5ff60ac85be91c427a4819dcc0eaef2f",
+      "bytes": 15883,
+      "label": "fixture",
+      "coverage": "tar extract of package/dist/index.js (package.json main). No scripts executed."
+    },
+    "extractedNewJs": {
+      "path": "fixtures/real-a/extracted/8.4.2/package/dist/index.js",
+      "contentSha256": "f8e7946ca3a4dcc2ed1ea46e3bcffaef014e4abc359a7469a16817f1f79df62f",
+      "bytes": 14528,
+      "label": "fixture",
+      "coverage": "tar extract of package/dist/index.js (package.json exports/main). No scripts executed."
+    }
+  },
+  "lifecycleScriptsPresentButNotRun": ["prepare"],
+  "caller": {
+    "label": "synthetic",
+    "path": "fixtures/real-a/caller/",
+    "note": "Hand-written tiny caller. Not an upstream project and not paid demand."
+  }
+}

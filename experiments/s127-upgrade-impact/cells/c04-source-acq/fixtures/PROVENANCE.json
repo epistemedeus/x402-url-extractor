@@ -1,0 +1,49 @@
+{
+  "capturedAtUtc": "2026-09-10T12:00:00.000Z",
+  "evidenceClassDefault": "fixture",
+  "labelDefault": "fixture",
+  "originalUrls": {},
+  "notes": "No live registry capture in this cell. Stub packs are synthetic. Optional live mode uses https://registry.npmjs.org only when the caller passes mode:\"live\".",
+  "artifacts": {
+    "tarballs/s127-demo-lib-1.0.0.tgz": {
+      "evidenceClass": "fixture",
+      "capturedFromLive": false,
+      "label": "fixture",
+      "coverage": "full tarball",
+      "sha256": "ea174e40bd3d0074a2ebe54a1ce78817ef62ed20acb3ac16c5b0bb93a8a65cde",
+      "bytes": 1266,
+      "package": "s127-demo-lib",
+      "version": "1.0.0"
+    },
+    "tarballs/s127-demo-lib-2.0.0.tgz": {
+      "evidenceClass": "fixture",
+      "capturedFromLive": false,
+      "label": "fixture",
+      "coverage": "full tarball",
+      "sha256": "2d240dcf0a5ffd8bb0763b1df13cc3db9ea0987dfbd1e523d16c371b468ee6ed",
+      "bytes": 1228,
+      "package": "s127-demo-lib",
+      "version": "2.0.0"
+    },
+    "tarballs/s127-tiny-1.0.0.tgz": {
+      "evidenceClass": "fixture",
+      "capturedFromLive": false,
+      "label": "fixture",
+      "coverage": "full tarball",
+      "sha256": "ece08b43116afd960eafa79aa133077fe89d040dd9a0a113d38db403c98d00f4",
+      "bytes": 363,
+      "package": "@s127/tiny",
+      "version": "1.0.0"
+    },
+    "packs/s127-demo-lib/0.9.0/version-document.json": {
+      "evidenceClass": "fixture",
+      "capturedFromLive": false,
+      "label": "fixture",
+      "coverage": "partial page",
+      "sha256": "074e7f3ee1351bf0610f43f8a70bbbdcad7839421e8e8ec4211eb97f9d84bc72",
+      "bytes": 292,
+      "package": "s127-demo-lib",
+      "version": "0.9.0"
+    }
+  }
+}

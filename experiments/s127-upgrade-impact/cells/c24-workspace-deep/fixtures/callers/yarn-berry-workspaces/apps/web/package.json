@@ -1,0 +1,10 @@
+{
+  "name": "@c24/web",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Synthetic Yarn Berry app depending on shared-kit via workspace:*. Label: fixture.",
+  "dependencies": {
+    "shared-kit": "workspace:*"
+  }
+}

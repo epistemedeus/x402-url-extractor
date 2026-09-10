@@ -1,0 +1,23 @@
+{
+  "id": "symlink-bomb",
+  "label": "fixture",
+  "synthetic": true,
+  "liveCapture": false,
+  "paidDemand": false,
+  "created": {
+    "escape-link": "symlink to /etc/passwd (lstat + readlink only; do not read target)",
+    "in-tree-link": "symlink to ./package.json (internal, allowed to detect)"
+  },
+  "notCreated": [
+    "recursive ln -s $PWD $PWD/self",
+    "zip bomb (42.zip)",
+    "hundreds of thousands of nested symlink nodes",
+    "tar entry ../../../../etc/cron.d/evil"
+  ],
+  "expect": {
+    "decision": "invalid",
+    "nextAction": "unknown",
+    "findingKinds": ["symlink_escape"],
+    "scriptsExecuted": false
+  }
+}

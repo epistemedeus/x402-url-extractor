@@ -1,0 +1,11 @@
+{
+  "name": "invalid-mixed",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Synthetic S127 c17 invalid mixed exports keys. Label: synthetic.",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "import": "./esm.js"
+  }
+}

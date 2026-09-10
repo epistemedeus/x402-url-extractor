@@ -1,0 +1,24 @@
+{
+  "id": "used-renamed",
+  "label": "synthetic",
+  "title": "used + renamed ⇒ action, nextAction upgrade_with_edits",
+  "input": {
+    "dependency": { "name": "demo-pkg", "oldVersion": "1.0.0", "newVersion": "2.0.0" },
+    "usage": {
+      "coverage": "complete",
+      "references": [{ "symbol": "oldName", "kind": "named" }]
+    },
+    "exportDiff": {
+      "coverage": "complete",
+      "renamed": [{ "from": "oldName", "to": "newName" }],
+      "added": ["newName"]
+    }
+  },
+  "expect": {
+    "nextAction": "upgrade_with_edits",
+    "actionableSymbols": ["oldName"],
+    "unusedSymbols": [],
+    "decisions": { "oldName": "action" },
+    "changeKinds": { "oldName": "renamed" }
+  }
+}

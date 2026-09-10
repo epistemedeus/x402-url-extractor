@@ -1,0 +1,9 @@
+{
+  "label": "fixture",
+  "kind": "synthetic",
+  "paidDemand": false,
+  "liveCapture": false,
+  "capturedAtUtc": null,
+  "url": null,
+  "notes": "Synthetic caller workspace for c01 path-jail and no-exec tests. Not live-capture. No registry fetch. package.json lifecycle scripts exist only to prove normalize never runs them."
+}

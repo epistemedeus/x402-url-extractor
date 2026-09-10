@@ -1,0 +1,14 @@
+{
+  "id": "install-scripts",
+  "label": "fixture",
+  "synthetic": true,
+  "liveCapture": false,
+  "paidDemand": false,
+  "expect": {
+    "decision": "unknown",
+    "nextAction": "unknown",
+    "findingKinds": ["lifecycle_scripts_present"],
+    "scriptsExecuted": false,
+    "markerRelative": "SCRIPT_RAN.marker"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "ms",
+  "version": "2.1.3",
+  "license": "MIT",
+  "description": "Tiny millisecond conversion utility",
+  "type": null,
+  "main": "./index",
+  "module": null,
+  "types": null,
+  "exports": null,
+  "engines": null,
+  "files": null,
+  "sideEffects": null,
+  "scripts": [
+    "lint",
+    "precommit",
+    "test"
+  ],
+  "repository": {
+    "url": "git+https://github.com/vercel/ms.git",
+    "type": "git"
+  },
+  "published_at": "2020-12-08T13:54:35.223Z",
+  "dist": {
+    "tarball": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+    "integrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==",
+    "shasum": "574c8138ce1d2b5861f0b44579dbadd60c6615b2",
+    "fileCount": 4,
+    "unpackedSize": 6721
+  },
+  "coverage": "slim: identity/license/entry/exports/script-names/dist; maintainers emails npm-signature stripped",
+  "source": "https://registry.npmjs.org/ms/2.1.3",
+  "label": "fixture",
+  "derivedFromLiveCapture": true
+}

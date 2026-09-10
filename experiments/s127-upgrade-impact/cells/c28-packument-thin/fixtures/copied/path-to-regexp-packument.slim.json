@@ -1,0 +1,72 @@
+{
+  "name": "path-to-regexp",
+  "license": "MIT",
+  "description": "Express style path to RegExp utility",
+  "dist-tags": {
+    "old": "6.3.0",
+    "express": "0.1.13",
+    "latest": "8.4.2"
+  },
+  "time": {
+    "created": "2012-08-01T22:49:08.434Z",
+    "modified": "2026-04-01T21:17:05.330Z",
+    "6.3.0": "2024-09-12T01:09:36.065Z",
+    "8.4.2": "2026-04-01T21:17:05.201Z"
+  },
+  "versions": {
+    "6.3.0": {
+      "name": "path-to-regexp",
+      "version": "6.3.0",
+      "license": "MIT",
+      "main": "dist/index.js",
+      "module": "dist.es2015/index.js",
+      "typings": "dist/index.d.ts",
+      "gitHead": "75a92c3d7c42159f459ab42f346899152906ea8c",
+      "scripts": [
+        "lint",
+        "size",
+        "test",
+        "build",
+        "specs",
+        "format",
+        "prepare"
+      ],
+      "dependencies": null,
+      "dist": {
+        "tarball": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-6.3.0.tgz",
+        "shasum": "2b6a26a337737a8e1416f9272ed0766b1c0389f4",
+        "integrity": "sha512-Yhpw4T9C6hPpgPeA28us07OJeqZ5EzQTkbfwuhsUg0c237RomFoETJgmp2sa3F/41gfLE6G5cqcYwznmeEeOlQ==",
+        "fileCount": 8,
+        "unpackedSize": 112042
+      }
+    },
+    "8.4.2": {
+      "name": "path-to-regexp",
+      "version": "8.4.2",
+      "license": "MIT",
+      "main": "dist/index.js",
+      "exports": "./dist/index.js",
+      "typings": "dist/index.d.ts",
+      "gitHead": "cbf30259e6d34d6135f9e7dbaa3371e7188f9936",
+      "scripts": [
+        "bench",
+        "build",
+        "format",
+        "lint",
+        "prepare",
+        "size",
+        "specs",
+        "test"
+      ],
+      "dependencies": null,
+      "dist": {
+        "tarball": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-8.4.2.tgz",
+        "shasum": "795c420c4f7ca45c5b887366f622ee0c9852cccd",
+        "integrity": "sha512-qRcuIdP69NPm4qbACK+aDogI5CBDMi1jKe0ry5rSQJz8JVLsC7jV8XpiJjGRLLol3N+R5ihGYcrPLTno6pAdBA==",
+        "fileCount": 6,
+        "unpackedSize": 59680
+      }
+    }
+  },
+  "_note": "Slim extract of https://registry.npmjs.org/path-to-regexp. Not the full packument. Lifecycle script names recorded so they can be avoided; they were not executed."
+}

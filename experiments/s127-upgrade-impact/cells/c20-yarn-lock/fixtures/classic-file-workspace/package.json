@@ -1,0 +1,8 @@
+{
+  "name": "caller-yarn-file-workspace",
+  "private": true,
+  "description": "Synthetic classic file: locator (not berry workspace:). Label: synthetic.",
+  "dependencies": {
+    "local-widget": "file:packages/local-widget"
+  }
+}

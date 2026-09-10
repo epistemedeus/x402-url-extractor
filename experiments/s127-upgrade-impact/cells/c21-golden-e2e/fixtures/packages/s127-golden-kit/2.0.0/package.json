@@ -1,0 +1,12 @@
+{
+  "name": "s127-golden-kit",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic S127 c21 golden package tree (new). Label: synthetic. Not published. Not live-capture. Removes usedRemoved, unusedRemoved, and plugin dynamicRemoved.",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./plugin": "./plugin.js"
+  }
+}

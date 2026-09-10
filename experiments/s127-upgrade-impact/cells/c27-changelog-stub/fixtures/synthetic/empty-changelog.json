@@ -1,0 +1,23 @@
+{
+  "id": "empty-changelog",
+  "label": "synthetic",
+  "title": "empty changelog string is treated as missing notes",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "oldVersion": "2.0.0",
+    "newVersion": "3.0.0",
+    "changelogText": "   \n\t  "
+  },
+  "expect": {
+    "decision": "action",
+    "ruleId": "registry_bump_no_changelog",
+    "delta": "major"
+  },
+  "binderWould": {
+    "coarse": "unknown",
+    "decisionChangedRelativeToChangelog": true,
+    "note": "Binder without exportDiff/usage evidence stays unknown; stub still actions a major bump."
+  }
+}

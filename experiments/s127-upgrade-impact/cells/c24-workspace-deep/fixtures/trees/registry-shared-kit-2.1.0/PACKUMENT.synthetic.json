@@ -1,0 +1,21 @@
+{
+  "name": "shared-kit",
+  "label": "fixture",
+  "kind": "synthetic-packument",
+  "liveCapture": false,
+  "paidDemand": false,
+  "note": "Stand-in packument for a same-name registry package. Not fetched from npm. The tarball URL is example.invalid and must not be requested. Integrity is unknown because no tarball was retrieved.",
+  "dist-tags": {
+    "latest": "2.1.0"
+  },
+  "versions": {
+    "2.1.0": {
+      "name": "shared-kit",
+      "version": "2.1.0",
+      "dist": {
+        "tarball": "https://example.invalid/registry/shared-kit/-/shared-kit-2.1.0.tgz",
+        "integrity": null
+      }
+    }
+  }
+}

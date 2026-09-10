@@ -1,0 +1,1216 @@
+{
+  "schema": "s127.upgrade-impact.packet.v1",
+  "createdAt": "2026-09-10T10:48:00.000Z",
+  "clock": "2026-09-10T10:48:00.000Z",
+  "command": "analyze",
+  "ok": true,
+  "offline": true,
+  "execute": false,
+  "posted": false,
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline compare; no purchase; do not invent paid demand"
+  },
+  "caller": {
+    "manifestPath": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/fixtures/real-a/caller/package.json",
+    "lockfilePath": null,
+    "sourceRoots": [
+      "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/fixtures/real-a/caller/src"
+    ],
+    "evidenceClass": "fixture",
+    "workspaceRoot": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact",
+    "manifestPathRelative": "fixtures/real-a/caller/package.json",
+    "lockfilePathRelative": null,
+    "sourceRootsRelative": [
+      "fixtures/real-a/caller/src"
+    ],
+    "fs": {
+      "manifest": "file",
+      "lockfile": "omitted",
+      "sourceRoots": [
+        "directory"
+      ]
+    }
+  },
+  "dependency": {
+    "name": "path-to-regexp",
+    "oldVersion": "6.3.0",
+    "newVersion": "8.4.2",
+    "resolvedOld": "6.3.0",
+    "resolvedNew": "8.4.2",
+    "range": null,
+    "oldKind": "exact",
+    "newKind": "exact",
+    "rangeKind": "missing",
+    "resolution": {
+      "old": "operator-exact",
+      "new": "operator-exact",
+      "lockfileConsulted": false,
+      "registryConsulted": false
+    },
+    "coverage": {
+      "name": true,
+      "oldVersion": true,
+      "newVersion": true,
+      "range": false,
+      "resolvedOld": true,
+      "resolvedNew": true
+    },
+    "lockfileDisagreement": false
+  },
+  "provenance": [
+    {
+      "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/fixtures/real-a/caller/package.json",
+      "role": "caller-manifest",
+      "retrievedAt": "2026-09-10T10:48:00.000Z",
+      "contentSha256": "2a2a2f09371f7137ba3cb4544f032344244934170d051202778eab835bbbcda8",
+      "coverage": "unknown",
+      "label": "fixture"
+    },
+    {
+      "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/fixtures/real-a/extracted/6.3.0/package",
+      "role": "dep-old",
+      "retrievedAt": "2026-09-10T10:48:00.000Z",
+      "contentSha256": "8d858476cc93dd0af859fcd3d84cf780ae0bd9930a7459623f483d897d7dacd4",
+      "coverage": "extracted-root",
+      "label": "fixture",
+      "note": "contentSha256 is package.json only; full tree hash lives in acquire/export-diff stages"
+    },
+    {
+      "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/fixtures/real-a/extracted/8.4.2/package",
+      "role": "dep-new",
+      "retrievedAt": "2026-09-10T10:48:00.000Z",
+      "contentSha256": "3c37dce1e0587231f7c9f63e137dd0ed4d6f25552c89b5b5939c6a3d36113634",
+      "coverage": "extracted-root",
+      "label": "fixture",
+      "note": "contentSha256 is package.json only; full tree hash lives in acquire/export-diff stages"
+    },
+    {
+      "url": "https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-3.0.2.tgz",
+      "path": "vendor/es-module-lexer/lexer.asm.js",
+      "retrievedAt": "2026-09-10T10:51:51Z",
+      "contentSha256": "d1bbfa8b42e0a7261abb701b84a0d9a7f7121b68408898cbb2200f5024dcfd4f",
+      "coverage": "npm-tarball-subset-runtime+license",
+      "label": "live-capture",
+      "role": "parser-vendor"
+    },
+    {
+      "url": "https://registry.npmjs.org/meriyah/-/meriyah-7.3.3.tgz",
+      "path": "vendor/meriyah/meriyah.mjs",
+      "retrievedAt": "2026-09-10T10:51:51Z",
+      "contentSha256": "77035f779cd56bc04fc1244c30263974af386c57068946dd1d180d5b64ed43db",
+      "coverage": "npm-tarball-subset-runtime+license",
+      "label": "live-capture",
+      "role": "parser-vendor"
+    }
+  ],
+  "usage": {
+    "items": [
+      {
+        "file": "reverse-route.mjs",
+        "specifier": "path-to-regexp",
+        "names": [
+          "pathToRegexp",
+          "tokensToFunction",
+          "regexpToFunction"
+        ],
+        "dynamic": false,
+        "dynamicImport": false,
+        "kind": "import",
+        "typeOnly": false,
+        "typeNames": [],
+        "coverage": "static",
+        "language": "js",
+        "defaultImport": false,
+        "namespaceImport": false,
+        "line": 13,
+        "glob": false,
+        "sourceRoot": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/fixtures/real-a/caller/src"
+      }
+    ],
+    "dynamicImport": false,
+    "coverage": "complete",
+    "usage": [
+      {
+        "file": "reverse-route.mjs",
+        "specifier": "path-to-regexp",
+        "names": [
+          "pathToRegexp",
+          "tokensToFunction",
+          "regexpToFunction"
+        ],
+        "dynamic": false,
+        "dynamicImport": false,
+        "kind": "import",
+        "typeOnly": false,
+        "typeNames": [],
+        "coverage": "static",
+        "language": "js",
+        "defaultImport": false,
+        "namespaceImport": false,
+        "line": 13,
+        "glob": false,
+        "sourceRoot": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/fixtures/real-a/caller/src"
+      }
+    ],
+    "references": [
+      {
+        "file": "reverse-route.mjs",
+        "specifier": "path-to-regexp",
+        "names": [
+          "pathToRegexp",
+          "tokensToFunction",
+          "regexpToFunction"
+        ],
+        "dynamic": false,
+        "dynamicImport": false,
+        "kind": "import",
+        "typeOnly": false,
+        "typeNames": [],
+        "coverage": "static",
+        "language": "js",
+        "defaultImport": false,
+        "namespaceImport": false,
+        "line": 13,
+        "glob": false,
+        "sourceRoot": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/fixtures/real-a/caller/src"
+      }
+    ],
+    "filesScanned": 1,
+    "filesSkipped": [],
+    "filesPartial": [],
+    "filesUnknown": [],
+    "unresolvedDynamics": [],
+    "limitations": [
+      "No TypeScript type-aware analysis (no checker, no path mapping, no typesVersions).",
+      "Dynamic import() is recorded when the specifier is a string/static template or a glob that still matches the package; contribution is unknown.",
+      "import(expr) / require(expr) with a non-literal specifier cannot be attributed to a package; listed under unresolvedDynamics.",
+      "Aliased require (const r = require; r('pkg')) and require.resolve are not treated as module-export usage.",
+      "Member use after `const x = require('pkg')` / namespace import is not followed.",
+      "node_modules and .git under a source root are not scanned.",
+      "Enums, namespaces, and angle-bracket assertions can block Node type-strip; require() in those files may be missed.",
+      "JSX/TSX often fails es-module-lexer; meriyah jsx mode is the fallback. TSX that also uses type-only syntax may stay unknown."
+    ],
+    "ok": true
+  },
+  "exportDiff": {
+    "added": [
+      {
+        "entry": ".",
+        "name": "CompileOptions",
+        "symbol": "CompileOptions",
+        "kind": "named",
+        "typeOnly": true,
+        "signature": "interface CompileOptions{ encode?: Encode | false; delimiter?: string; }",
+        "shape": "interface|$|{ encode?: Encode | false; delimiter?: string; }",
+        "signatureCoverage": "bounded",
+        "source": "dts",
+        "file": "dist/index.d.ts",
+        "changeKind": "added"
+      },
+      {
+        "entry": ".",
+        "name": "Decode",
+        "symbol": "Decode",
+        "kind": "named",
+        "typeOnly": true,
+        "signature": "type Decode = (value: string)",
+        "shape": "type|$|(value: string)",
+        "signatureCoverage": "bounded",
+        "source": "dts",
+        "file": "dist/index.d.ts",
+        "changeKind": "added"
+      },
+      {
+        "entry": ".",
+        "name": "Encode",
+        "symbol": "Encode",
+        "kind": "named",
+        "typeOnly": true,
+        "signature": "type Encode = (value: string)",
+        "shape": "type|$|(value: string)",
+        "signatureCoverage": "bounded",
+        "source": "dts",
+        "file": "dist/index.d.ts",
+        "changeKind": "added"
+      },
+      {
+        "entry": ".",
+        "name": "Group",
+        "symbol": "Group",
+        "kind": "named",
+        "typeOnly": true,
+        "signature": "interface Group{ type: \"group\"; tokens: Token[]; }",
+        "shape": "interface|$|{ type: \"group\"; tokens: Token[]; }",
+        "signatureCoverage": "bounded",
+        "source": "dts",
+        "file": "dist/index.d.ts",
+        "changeKind": "added"
+      },
+      {
+        "entry": ".",
+        "name": "Keys",
+        "symbol": "Keys",
+        "kind": "named",
+        "typeOnly": true,
+        "signature": "type Keys = Array<Key>",
+        "shape": "type|$|Array<Key>",
+        "signatureCoverage": "bounded",
+        "source": "dts",
+        "file": "dist/index.d.ts",
+        "changeKind": "added"
+      },
+      {
+        "entry": ".",
+        "name": "MatchOptions",
+        "symbol": "MatchOptions",
+        "kind": "named",
+        "typeOnly": true,
+        "signature": "interface MatchOptionsextends PathToRegexpOptions { decode?: Decode | false",
+        "shape": "interface|$|extends PathToRegexpOptions { decode?: Decode | false",
+        "signatureCoverage": "bounded",
+        "source": "dts",
+        "file": "dist/index.d.ts",
+        "changeKind": "added"
+      },
+      {
+        "entry": ".",
+        "name": "ParamData",
+        "symbol": "ParamData",
+        "kind": "named",
+        "typeOnly": true,
+        "signature": "type ParamData = Partial<Record<string, string | string[]>>",
+        "shape": "type|$|Partial<Record<string, string | string[]>>",
+        "signatureCoverage": "bounded",
+        "source": "dts",
+        "file": "dist/index.d.ts",
+        "changeKind": "added"
+      },
+      {
+        "entry": ".",
+        "name": "Parameter",
+        "symbol": "Parameter",
+        "kind": "named",
+        "typeOnly": true,
+        "signature": "interface Parameter{ type: \"param\"; name: string; }",
+        "shape": "interface|$|{ type: \"param\"; name: string; }",
+        "signatureCoverage": "bounded",
+        "source": "dts",
+        "file": "dist/index.d.ts",
+        "changeKind": "added"
+      },
+      {
+        "entry": ".",
+        "name": "PathError",
+        "symbol": "PathError",
+        "kind": "named",
+        "typeOnly": false,
+        "signature": "class PathError(message: string, originalPath: string | undefined) extends TypeError",
+        "shape": "class|$|(message: string, originalPath: string | undefined)|extends TypeError",
+        "signatureCoverage": "bounded",
+        "source": "cjs",
+        "file": "dist/index.d.ts",
+        "changeKind": "added"
+      },
+      {
+        "entry": ".",
+        "name": "PathToRegexpOptions",
+        "symbol": "PathToRegexpOptions",
+        "kind": "named",
+        "typeOnly": true,
+        "signature": "interface PathToRegexpOptions{ end?: boolean; trailing?: boolean; sensitive?: boolean; delimiter?: string; }",
+        "shape": "interface|$|{ end?: boolean; trailing?: boolean; sensitive?: boolean; delimiter?: string; }",
+        "signatureCoverage": "bounded",
+        "source": "dts",
+        "file": "dist/index.d.ts",
+        "changeKind": "added"
+      },
+      {
+        "entry": ".",
+        "name": "Text",
+        "symbol": "Text",
+        "kind": "named",
+        "typeOnly": true,
+        "signature": "interface Text{ type: \"text\"; value: string; }",
+        "shape": "interface|$|{ type: \"text\"; value: string; }",
+        "signatureCoverage": "bounded",
+        "source": "dts",
+        "file": "dist/index.d.ts",
+        "changeKind": "added"
+      },
+      {
+        "entry": ".",
+        "name": "TokenData",
+        "symbol": "TokenData",
+        "kind": "named",
+        "typeOnly": false,
+        "signature": "class TokenData(tokens: Token[], originalPath?: string | undefined)",
+        "shape": "class|$|(tokens: Token[], originalPath?: string | undefined)|",
+        "signatureCoverage": "bounded",
+        "source": "cjs",
+        "file": "dist/index.d.ts",
+        "changeKind": "added"
+      },
+      {
+        "entry": ".",
+        "name": "Wildcard",
+        "symbol": "Wildcard",
+        "kind": "named",
+        "typeOnly": true,
+        "signature": "interface Wildcard{ type: \"wildcard\"; name: string; }",
+        "shape": "interface|$|{ type: \"wildcard\"; name: string; }",
+        "signatureCoverage": "bounded",
+        "source": "dts",
+        "file": "dist/index.d.ts",
+        "changeKind": "added"
+      },
+      {
+        "entry": ".",
+        "name": "stringify",
+        "symbol": "stringify",
+        "kind": "named",
+        "typeOnly": false,
+        "signature": "function stringify(data: TokenData): string",
+        "shape": "function|$|data: TokenData|string",
+        "signatureCoverage": "bounded",
+        "source": "cjs",
+        "file": "dist/index.d.ts",
+        "changeKind": "added"
+      }
+    ],
+    "removed": [
+      {
+        "entry": ".",
+        "name": "RegexpToFunctionOptions",
+        "symbol": "RegexpToFunctionOptions",
+        "kind": "named",
+        "typeOnly": true,
+        "signature": "interface RegexpToFunctionOptions{ decode?: (value: string, token: Key) => string; }",
+        "shape": "interface|$|{ decode?: (value: string, token: Key) => string; }",
+        "signatureCoverage": "bounded",
+        "source": "dts",
+        "file": "dist/index.d.ts",
+        "changeKind": "removed"
+      },
+      {
+        "entry": ".",
+        "name": "TokensToFunctionOptions",
+        "symbol": "TokensToFunctionOptions",
+        "kind": "named",
+        "typeOnly": true,
+        "signature": "interface TokensToFunctionOptions{ sensitive?: boolean; encode?: (value: string, token: Key) => string; validate?: boolean; }",
+        "shape": "interface|$|{ sensitive?: boolean; encode?: (value: string, token: Key) => string; validate?: boolean; }",
+        "signatureCoverage": "bounded",
+        "source": "dts",
+        "file": "dist/index.d.ts",
+        "changeKind": "removed"
+      },
+      {
+        "entry": ".",
+        "name": "TokensToRegexpOptions",
+        "symbol": "TokensToRegexpOptions",
+        "kind": "named",
+        "typeOnly": true,
+        "signature": "interface TokensToRegexpOptions{ sensitive?: boolean; strict?: boolean; end?: boolean; /** * When `tru",
+        "shape": "interface|$|{ sensitive?: boolean; strict?: boolean; end?: boolean; /** * When `tru",
+        "signatureCoverage": "bounded",
+        "source": "dts",
+        "file": "dist/index.d.ts",
+        "changeKind": "removed"
+      },
+      {
+        "entry": ".",
+        "name": "regexpToFunction",
+        "symbol": "regexpToFunction",
+        "kind": "named",
+        "typeOnly": false,
+        "signature": "function regexpToFunction(re: RegExp, keys: Key[], options?: RegexpToFunctionOptions): MatchFunction<P>",
+        "shape": "function|$|re: RegExp, keys: Key[], options?: RegexpToFunctionOptions|MatchFunction<P>",
+        "signatureCoverage": "bounded",
+        "source": "esm",
+        "file": "dist/index.d.ts",
+        "changeKind": "removed"
+      },
+      {
+        "entry": ".",
+        "name": "tokensToFunction",
+        "symbol": "tokensToFunction",
+        "kind": "named",
+        "typeOnly": false,
+        "signature": "function tokensToFunction(tokens: Token[], options?: TokensToFunctionOptions): PathFunction<P>",
+        "shape": "function|$|tokens: Token[], options?: TokensToFunctionOptions|PathFunction<P>",
+        "signatureCoverage": "bounded",
+        "source": "esm",
+        "file": "dist/index.d.ts",
+        "changeKind": "removed"
+      },
+      {
+        "entry": ".",
+        "name": "tokensToRegexp",
+        "symbol": "tokensToRegexp",
+        "kind": "named",
+        "typeOnly": false,
+        "signature": "function tokensToRegexp(tokens: Token[], keys?: Key[], options?: TokensToRegexpOptions): RegExp",
+        "shape": "function|$|tokens: Token[], keys?: Key[], options?: TokensToRegexpOptions|RegExp",
+        "signatureCoverage": "bounded",
+        "source": "esm",
+        "file": "dist/index.d.ts",
+        "changeKind": "removed"
+      }
+    ],
+    "renamed": [],
+    "signatureChanged": [
+      {
+        "entry": ".",
+        "name": "Key",
+        "symbol": "Key",
+        "kind": "named",
+        "typeOnly": true,
+        "before": "interface Key{ name: string | number; prefix: string; suffix: string; pattern: string; modifier: string; }",
+        "after": "type Key = Parameter | Wildcard",
+        "coverage": "bounded",
+        "evidence": {
+          "oldShape": "interface|$|{ name: string | number; prefix: string; suffix: string; pattern: string; modifier: string; }",
+          "newShape": "type|$|Parameter | Wildcard",
+          "typeOnlyChanged": false,
+          "oldFile": "dist/index.d.ts",
+          "newFile": "dist/index.d.ts"
+        }
+      },
+      {
+        "entry": ".",
+        "name": "MatchResult",
+        "symbol": "MatchResult",
+        "kind": "named",
+        "typeOnly": true,
+        "before": "interface MatchResult{ path: string; index: number; params: P; }",
+        "after": "interface MatchResult{ path: string; params: P; }",
+        "coverage": "bounded",
+        "evidence": {
+          "oldShape": "interface|$|{ path: string; index: number; params: P; }",
+          "newShape": "interface|$|{ path: string; params: P; }",
+          "typeOnlyChanged": false,
+          "oldFile": "dist/index.d.ts",
+          "newFile": "dist/index.d.ts"
+        }
+      },
+      {
+        "entry": ".",
+        "name": "ParseOptions",
+        "symbol": "ParseOptions",
+        "kind": "named",
+        "typeOnly": true,
+        "before": "interface ParseOptions{ delimiter?: string; prefixes?: string; }",
+        "after": "interface ParseOptions{ encodePath?: Encode; }",
+        "coverage": "bounded",
+        "evidence": {
+          "oldShape": "interface|$|{ delimiter?: string; prefixes?: string; }",
+          "newShape": "interface|$|{ encodePath?: Encode; }",
+          "typeOnlyChanged": false,
+          "oldFile": "dist/index.d.ts",
+          "newFile": "dist/index.d.ts"
+        }
+      },
+      {
+        "entry": ".",
+        "name": "Path",
+        "symbol": "Path",
+        "kind": "named",
+        "typeOnly": true,
+        "before": "type Path = string | RegExp | Array<string | RegExp>",
+        "after": "type Path = string | TokenData",
+        "coverage": "bounded",
+        "evidence": {
+          "oldShape": "type|$|string | RegExp | Array<string | RegExp>",
+          "newShape": "type|$|string | TokenData",
+          "typeOnlyChanged": false,
+          "oldFile": "dist/index.d.ts",
+          "newFile": "dist/index.d.ts"
+        }
+      },
+      {
+        "entry": ".",
+        "name": "Token",
+        "symbol": "Token",
+        "kind": "named",
+        "typeOnly": true,
+        "before": "type Token = string | Key",
+        "after": "type Token = Text | Parameter | Wildcard | Group",
+        "coverage": "bounded",
+        "evidence": {
+          "oldShape": "type|$|string | Key",
+          "newShape": "type|$|Text | Parameter | Wildcard | Group",
+          "typeOnlyChanged": false,
+          "oldFile": "dist/index.d.ts",
+          "newFile": "dist/index.d.ts"
+        }
+      },
+      {
+        "entry": ".",
+        "name": "compile",
+        "symbol": "compile",
+        "kind": "named",
+        "typeOnly": false,
+        "before": "function compile(str: string, options?: ParseOptions & TokensToFunctionOptions): PathFunction<P>",
+        "after": "function compile(path: Path, options?: CompileOptions & ParseOptions): (params?: P)",
+        "coverage": "bounded",
+        "evidence": {
+          "oldShape": "function|$|str: string, options?: ParseOptions & TokensToFunctionOptions|PathFunction<P>",
+          "newShape": "function|$|path: Path, options?: CompileOptions & ParseOptions|(params?: P)",
+          "typeOnlyChanged": false,
+          "oldFile": "dist/index.d.ts",
+          "newFile": "dist/index.d.ts"
+        }
+      },
+      {
+        "entry": ".",
+        "name": "match",
+        "symbol": "match",
+        "kind": "named",
+        "typeOnly": false,
+        "before": "function match(str: Path, options?: ParseOptions & TokensToRegexpOptions & RegexpToFunctionOptions): MatchFunction<P>",
+        "after": "function match(path: Path | Path[], options?: MatchOptions & ParseOptions): MatchFunction<P>",
+        "coverage": "bounded",
+        "evidence": {
+          "oldShape": "function|$|str: Path, options?: ParseOptions & TokensToRegexpOptions & RegexpToFunctionOptions|MatchFunction<P>",
+          "newShape": "function|$|path: Path | Path[], options?: MatchOptions & ParseOptions|MatchFunction<P>",
+          "typeOnlyChanged": false,
+          "oldFile": "dist/index.d.ts",
+          "newFile": "dist/index.d.ts"
+        }
+      },
+      {
+        "entry": ".",
+        "name": "parse",
+        "symbol": "parse",
+        "kind": "named",
+        "typeOnly": false,
+        "before": "function parse(str: string, options?: ParseOptions): Token[]",
+        "after": "function parse(str: string, options?: ParseOptions): TokenData",
+        "coverage": "bounded",
+        "evidence": {
+          "oldShape": "function|$|str: string, options?: ParseOptions|Token[]",
+          "newShape": "function|$|str: string, options?: ParseOptions|TokenData",
+          "typeOnlyChanged": false,
+          "oldFile": "dist/index.d.ts",
+          "newFile": "dist/index.d.ts"
+        }
+      },
+      {
+        "entry": ".",
+        "name": "pathToRegexp",
+        "symbol": "pathToRegexp",
+        "kind": "named",
+        "typeOnly": false,
+        "before": "function pathToRegexp(path: Path, keys?: Key[], options?: TokensToRegexpOptions & ParseOptions): RegExp",
+        "after": "function pathToRegexp(path: Path | Path[], options?: PathToRegexpOptions & ParseOptions): { regexp: RegExp; keys: Keys; }",
+        "coverage": "bounded",
+        "evidence": {
+          "oldShape": "function|$|path: Path, keys?: Key[], options?: TokensToRegexpOptions & ParseOptions|RegExp",
+          "newShape": "function|$|path: Path | Path[], options?: PathToRegexpOptions & ParseOptions|{ regexp: RegExp; keys: Keys; }",
+          "typeOnlyChanged": false,
+          "oldFile": "dist/index.d.ts",
+          "newFile": "dist/index.d.ts"
+        }
+      }
+    ],
+    "coverage": "full"
+  },
+  "bindings": [
+    {
+      "symbol": "pathToRegexp",
+      "used": true,
+      "changeKind": "signatureChanged",
+      "decision": "action",
+      "rationale": "used export 'pathToRegexp' has a signature change",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "regexpToFunction",
+      "used": true,
+      "changeKind": "removed",
+      "decision": "action",
+      "rationale": "used export 'regexpToFunction' was removed",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "tokensToFunction",
+      "used": true,
+      "changeKind": "removed",
+      "decision": "action",
+      "rationale": "used export 'tokensToFunction' was removed",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "compile",
+      "used": false,
+      "changeKind": "signatureChanged",
+      "decision": "no_action",
+      "rationale": "export 'compile' has a signature change but is not statically used; unused change is not a caller defect",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "CompileOptions",
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "added export 'CompileOptions' is unused; newer version alone is not a break",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "Decode",
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "added export 'Decode' is unused; newer version alone is not a break",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "Encode",
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "added export 'Encode' is unused; newer version alone is not a break",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "Group",
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "added export 'Group' is unused; newer version alone is not a break",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "Key",
+      "used": false,
+      "changeKind": "signatureChanged",
+      "decision": "no_action",
+      "rationale": "export 'Key' has a signature change but is not statically used; unused change is not a caller defect",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "Keys",
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "added export 'Keys' is unused; newer version alone is not a break",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "match",
+      "used": false,
+      "changeKind": "signatureChanged",
+      "decision": "no_action",
+      "rationale": "export 'match' has a signature change but is not statically used; unused change is not a caller defect",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "MatchOptions",
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "added export 'MatchOptions' is unused; newer version alone is not a break",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "MatchResult",
+      "used": false,
+      "changeKind": "signatureChanged",
+      "decision": "no_action",
+      "rationale": "export 'MatchResult' has a signature change but is not statically used; unused change is not a caller defect",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "ParamData",
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "added export 'ParamData' is unused; newer version alone is not a break",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "Parameter",
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "added export 'Parameter' is unused; newer version alone is not a break",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "parse",
+      "used": false,
+      "changeKind": "signatureChanged",
+      "decision": "no_action",
+      "rationale": "export 'parse' has a signature change but is not statically used; unused change is not a caller defect",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "ParseOptions",
+      "used": false,
+      "changeKind": "signatureChanged",
+      "decision": "no_action",
+      "rationale": "export 'ParseOptions' has a signature change but is not statically used; unused change is not a caller defect",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "Path",
+      "used": false,
+      "changeKind": "signatureChanged",
+      "decision": "no_action",
+      "rationale": "export 'Path' has a signature change but is not statically used; unused change is not a caller defect",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "PathError",
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "added export 'PathError' is unused; newer version alone is not a break",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "PathToRegexpOptions",
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "added export 'PathToRegexpOptions' is unused; newer version alone is not a break",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "RegexpToFunctionOptions",
+      "used": false,
+      "changeKind": "removed",
+      "decision": "no_action",
+      "rationale": "export 'RegexpToFunctionOptions' was removed but is not statically used; unused change is not a caller defect",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "stringify",
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "added export 'stringify' is unused; newer version alone is not a break",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "Text",
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "added export 'Text' is unused; newer version alone is not a break",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "Token",
+      "used": false,
+      "changeKind": "signatureChanged",
+      "decision": "no_action",
+      "rationale": "export 'Token' has a signature change but is not statically used; unused change is not a caller defect",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "TokenData",
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "added export 'TokenData' is unused; newer version alone is not a break",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "TokensToFunctionOptions",
+      "used": false,
+      "changeKind": "removed",
+      "decision": "no_action",
+      "rationale": "export 'TokensToFunctionOptions' was removed but is not statically used; unused change is not a caller defect",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "tokensToRegexp",
+      "used": false,
+      "changeKind": "removed",
+      "decision": "no_action",
+      "rationale": "export 'tokensToRegexp' was removed but is not statically used; unused change is not a caller defect",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "TokensToRegexpOptions",
+      "used": false,
+      "changeKind": "removed",
+      "decision": "no_action",
+      "rationale": "export 'TokensToRegexpOptions' was removed but is not statically used; unused change is not a caller defect",
+      "unknownReasons": [],
+      "flags": {}
+    },
+    {
+      "symbol": "Wildcard",
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "added export 'Wildcard' is unused; newer version alone is not a break",
+      "unknownReasons": [],
+      "flags": {}
+    }
+  ],
+  "summary": {
+    "nextAction": "action",
+    "unknownReasons": [
+      "lockfile_missing",
+      "lockfile_missing_unconfirmed"
+    ],
+    "unusedChanges": [
+      "compile",
+      "CompileOptions",
+      "Decode",
+      "Encode",
+      "Group",
+      "Key",
+      "Keys",
+      "match",
+      "MatchOptions",
+      "MatchResult",
+      "ParamData",
+      "Parameter",
+      "parse",
+      "ParseOptions",
+      "Path",
+      "PathError",
+      "PathToRegexpOptions",
+      "RegexpToFunctionOptions",
+      "stringify",
+      "Text",
+      "Token",
+      "TokenData",
+      "TokensToFunctionOptions",
+      "tokensToRegexp",
+      "TokensToRegexpOptions",
+      "Wildcard"
+    ],
+    "actionableChanges": [
+      "pathToRegexp",
+      "regexpToFunction",
+      "tokensToFunction"
+    ]
+  },
+  "prior": {
+    "path": null,
+    "sha256": null,
+    "sequence": 0,
+    "immutable": true,
+    "correction": null
+  },
+  "limitations": [
+    "no full TypeScript analysis; TS and type-only surfaces stay unknown",
+    "no runtime execution of untrusted packages or lifecycle scripts",
+    "offline default: registry/network not contacted by this CLI",
+    "a newer version alone is not a break",
+    "unused export change is not a caller defect",
+    "Does not execute files, package scripts, or module loaders.",
+    "Does not parse lockfile contents (c02) or static imports (c03).",
+    "Does not resolve dist-tags or ranges against a registry.",
+    "Does not follow symlinks.",
+    "Does not invent operator clock.",
+    "TypeScript and dynamic import surfaces are unknown (not analyzed here).",
+    "A newer version alone is not classified as a break at this layer.",
+    "using --fixture-old/--fixture-new directories as package roots (not registry tarballs)",
+    "No TypeScript type-aware analysis (no checker, no path mapping, no typesVersions).",
+    "Dynamic import() is recorded when the specifier is a string/static template or a glob that still matches the package; contribution is unknown.",
+    "import(expr) / require(expr) with a non-literal specifier cannot be attributed to a package; listed under unresolvedDynamics.",
+    "Aliased require (const r = require; r('pkg')) and require.resolve are not treated as module-export usage.",
+    "Member use after `const x = require('pkg')` / namespace import is not followed.",
+    "node_modules and .git under a source root are not scanned.",
+    "Enums, namespaces, and angle-bracket assertions can block Node type-strip; require() in those files may be missed.",
+    "JSX/TSX often fails es-module-lexer; meriyah jsx mode is the fallback. TSX that also uses type-only syntax may stay unknown.",
+    "Not a full TypeScript checker; .d.ts uses es-module-lexer plus bounded head extract.",
+    "Dynamic import and unexpanded exports globs stay unknown/partial.",
+    "Rename is heuristic; emitted only with same comparable signature and name proximity.",
+    "No runtime execution of package code.",
+    "static bind only; no runtime execution of dependency code",
+    "no full TypeScript program analysis in this cell; TS/dynamic limits stay unknown if the producer labeled them",
+    "bind consumes c03/c05 output shapes and does not import their parsers",
+    "No full TypeScript program analysis (TS/TSX constructs are parser_limit / unknown).",
+    "No runtime execution of package modules or lifecycle scripts.",
+    "A new version is not itself a break.",
+    "An unused export change is not a caller defect."
+  ],
+  "pipeline": {
+    "command": "analyze",
+    "srcRoot": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/src",
+    "offline": true,
+    "liveCaptureRequested": false,
+    "modules": {
+      "normalize": {
+        "present": true,
+        "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/src/normalize.mjs",
+        "exportName": "normalizeCallerInput",
+        "exportNames": [
+          "classifyVersionToken",
+          "confinePath",
+          "isNpmPackageName",
+          "makeIssue",
+          "normalizeCallerInput"
+        ],
+        "error": null,
+        "code": null
+      },
+      "lockfile": {
+        "present": true,
+        "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/src/lockfile.mjs",
+        "exportName": "resolveCallerDependency",
+        "exportNames": [
+          "classifySemverDelta",
+          "detectLockfileKind",
+          "detectLockfiles",
+          "listDeclaredDependencies",
+          "listDisagreements",
+          "loadCallerLock",
+          "lockfileFormatSupport",
+          "packageNameFromResolvedUrl",
+          "parseDependencySpec",
+          "parseLockfileText",
+          "parseManifestText",
+          "parsePnpmPackageKey",
+          "parseSemver",
+          "parseYamlSubset",
+          "rangeSatisfaction",
+          "readBoundedFile",
+          "resolveCallerDependency",
+          "resolveDependency",
+          "sha256Hex",
+          "splitNameAtSpec",
+          "stripPeerSuffix",
+          "toPacketDependencyOld"
+        ],
+        "error": null,
+        "code": null
+      },
+      "acquire": {
+        "present": true,
+        "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/src/acquire.mjs",
+        "exportName": "acquirePair",
+        "exportNames": [
+          "AcquireError",
+          "acquire",
+          "acquirePair",
+          "assertExactVersion",
+          "assertNoSymlinks",
+          "assertSafePackageName",
+          "catalogKey",
+          "defaultFixtureRoot",
+          "encodePackageNameForRegistryPath",
+          "extractTarball",
+          "fixtureTarballFileName",
+          "hashUnpackedTree",
+          "isAllowedSourceUrl",
+          "listTarballMembers",
+          "parseRegistryOrigin",
+          "readCatalog",
+          "registryTarballUrl",
+          "resolvePackageRoot",
+          "sha256Hex",
+          "stripTrailingSlash",
+          "unscopedName",
+          "versionDocumentUrl"
+        ],
+        "error": null,
+        "code": null
+      },
+      "imports": {
+        "present": true,
+        "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/src/imports.mjs",
+        "exportName": "analyzeStaticImports",
+        "exportNames": [
+          "analyzeFileSource",
+          "analyzeStaticImports",
+          "inferLanguage",
+          "matchesPackageSpecifier",
+          "runCli"
+        ],
+        "error": null,
+        "code": null
+      },
+      "exportDiff": {
+        "present": true,
+        "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/src/export-diff.mjs",
+        "exportName": "diffExports",
+        "exportNames": [
+          "computeTreeHash",
+          "computeTreeHashIgnoringPackageVersion",
+          "diffExports",
+          "initLexers",
+          "scanExportSurface"
+        ],
+        "error": null,
+        "code": null
+      },
+      "bind": {
+        "present": true,
+        "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/src/bind.mjs",
+        "exportName": "bind",
+        "exportNames": [
+          "applyBindToPacket",
+          "bind",
+          "bindUsageToExportDiff",
+          "normalizeExportDiff",
+          "normalizeUsage",
+          "selectBindNextAction"
+        ],
+        "error": null,
+        "code": null
+      },
+      "unknown": {
+        "present": true,
+        "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/src/unknown.mjs",
+        "exportName": "applyUnknownPolicy",
+        "exportNames": [
+          "UnknownReasonCodeError",
+          "allowsPartialBindings",
+          "appliesToBinding",
+          "applyUnknownPolicy",
+          "catalogPolicy",
+          "classifyDynamicImport",
+          "classifyHostileInput",
+          "classifyLanguage",
+          "classifyLockfileConflict",
+          "classifyMissingSource",
+          "classifyParserLimit",
+          "classifyPartialCoverage",
+          "classifyPrereleaseRange",
+          "classifyUnsupportedLanguage",
+          "collectReasonsFromDraft",
+          "constrainDecision",
+          "coverageIsComplete",
+          "createReason",
+          "effectivePolicy",
+          "evaluateUnknown",
+          "hasNamedScope",
+          "isForceUnknownCode",
+          "isReasonCode",
+          "languageKindFromPath",
+          "limitationsFromReasons",
+          "summarizeUnknown",
+          "versionIdentityKind"
+        ],
+        "error": null,
+        "code": null
+      },
+      "prior": {
+        "present": true,
+        "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/src/prior.mjs",
+        "exportName": "run",
+        "exportNames": [
+          "assertImmutable",
+          "attachPrior",
+          "canonicalPayload",
+          "correct",
+          "correctPrior",
+          "createPrior",
+          "documentBytes",
+          "loadPrior",
+          "overlayFromCtx",
+          "priorDirOf",
+          "priorRef",
+          "replay",
+          "run",
+          "sha256Hex",
+          "stableStringify",
+          "summarizePrior",
+          "unwrapPrior",
+          "verifyPriorHash",
+          "writeSequencedPrior"
+        ],
+        "error": null,
+        "code": null
+      }
+    },
+    "acquired": {
+      "oldRoot": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/fixtures/real-a/extracted/6.3.0/package",
+      "newRoot": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/fixtures/real-a/extracted/8.4.2/package",
+      "mode": "fixture-dir"
+    },
+    "stagesInvoked": {
+      "normalize": {
+        "skipped": false,
+        "error": null,
+        "exportName": "normalizeCallerInput"
+      },
+      "lockfile": {
+        "skipped": false,
+        "error": null,
+        "exportName": "resolveCallerDependency"
+      },
+      "acquire": {
+        "skipped": false,
+        "error": null,
+        "exportName": "acquirePair"
+      },
+      "imports": {
+        "skipped": false,
+        "error": null,
+        "exportName": "analyzeStaticImports"
+      },
+      "exportDiff": {
+        "skipped": false,
+        "error": null,
+        "exportName": "diffExports"
+      },
+      "bind": {
+        "skipped": false,
+        "error": null,
+        "exportName": "bind"
+      },
+      "unknown": {
+        "skipped": false,
+        "error": null,
+        "exportName": "applyUnknownPolicy"
+      },
+      "prior": {
+        "skipped": false,
+        "error": null,
+        "exportName": "run"
+      }
+    }
+  },
+  "lockfile": {
+    "disagreement": false,
+    "agreement": "lockfile_missing",
+    "identityStatus": "unknown",
+    "conflicts": [],
+    "kind": null
+  },
+  "persisted": {
+    "ok": true,
+    "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/cells/c15-cold-a/packet.json",
+    "bytes": null
+  }
+}

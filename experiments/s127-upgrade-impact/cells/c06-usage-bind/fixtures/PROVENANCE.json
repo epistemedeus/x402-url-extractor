@@ -1,0 +1,8 @@
+{
+  "label": "synthetic",
+  "note": "Hand-written bind cases for c06. Not live-capture. Not paid demand. No registry fetch.",
+  "retrievedAt": null,
+  "contentSha256": null,
+  "coverage": "synthetic-only",
+  "url": null
+}

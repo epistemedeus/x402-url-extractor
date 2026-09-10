@@ -1,0 +1,7 @@
+{
+  "name": "meriyah",
+  "version": "7.3.3",
+  "license": "ISC",
+  "type": "module",
+  "description": "Vendored dist/meriyah.mjs for S127 c03 require/import-clause AST. Upstream https://github.com/meriyah/meriyah"
+}

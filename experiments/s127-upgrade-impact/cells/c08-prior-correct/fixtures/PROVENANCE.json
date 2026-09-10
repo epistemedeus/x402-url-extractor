@@ -1,0 +1,41 @@
+{
+  "label": "synthetic",
+  "evidenceClass": "fixture",
+  "capturedFromLive": false,
+  "paidDemand": false,
+  "capturedAtUtc": "2026-09-10T09:54:59.000Z",
+  "notes": "Cell c08 synthetic packets. Not live-capture. Not a marketplace job. contentSha256 values are sha256 of small synthetic source strings, not registry tarballs.",
+  "files": {
+    "packet-seq-1.json": {
+      "label": "synthetic",
+      "role": "first observation packet (bound no_action: unused added export)",
+      "retrievedAt": "2026-09-10T09:54:59.000Z"
+    },
+    "second-snapshot-matching.json": {
+      "label": "synthetic",
+      "role": "second snapshot, same canonical payload, later retrievedAt (expect correction kind=return)",
+      "retrievedAt": "2026-09-10T12:00:00.000Z"
+    },
+    "second-snapshot-export-change.json": {
+      "label": "synthetic",
+      "role": "second snapshot, used export signatureChanged (expect correction kind=update, new sequenced prior)",
+      "retrievedAt": "2026-09-10T12:00:00.000Z"
+    },
+    "second-snapshot-partial.json": {
+      "label": "synthetic",
+      "role": "second snapshot, partial provenance and unknown exportDiff coverage (expect correction kind=unknown, no nextPrior)",
+      "retrievedAt": "2026-09-10T12:00:00.000Z"
+    },
+    "prior.seq-1.json": {
+      "label": "synthetic",
+      "role": "immutable prior materialized from packet-seq-1.json via createPrior",
+      "payloadSha256": "63128fd28691fba4d29d286b702b839cd2dee18cde3e5f1c6016044413d19a2b"
+    }
+  },
+  "syntheticContentSha256": {
+    "synthetic-dep/v1.0.0.js": "db62d0e3025bbc4b44aa9e48affbc5f2bccae8d7cb25b36546835c02ee31b425",
+    "synthetic-dep/v1.1.0.js": "3ce9f6450b3f16c04fb33b0c151c5f847632b3d2f1d21b94af376aeed104a7ee",
+    "synthetic-dep/v1.1.0-signature.js": "d842c9fc26d89a21654ab304e889fc2eba01df795d209555caba14373a122f4b",
+    "synthetic-dep/v1.1.0-partial.js": "713bdcfb88ce9585412580b6cd13f22fe29974516c971dd7b12e90cd986b18fc"
+  }
+}

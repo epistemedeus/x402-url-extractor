@@ -1,0 +1,22 @@
+{
+  "schema": "s127.upgrade-impact.synthetic-manifest.v1",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "packageName": "demo-widget",
+  "notes": "All trees and callers are authored fixtures. Not live-capture. Not paid demand.",
+  "requiredCaseIds": [
+    "removed-export-used",
+    "removed-export-unused",
+    "same-version-noop",
+    "partial-missing-source",
+    "dynamic-import",
+    "renamed-export",
+    "version-range-prerelease"
+  ],
+  "extraCaseIds": [
+    "signature-changed",
+    "workspace-alias"
+  ],
+  "goldenPacket": "goldens/removed-export-used.packet.json",
+  "sharedOldTree": "packages/demo-widget/1.0.0"
+}

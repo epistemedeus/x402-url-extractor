@@ -1,0 +1,12 @@
+{
+  "name": "s127-c11-real-a",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "S127 real-source case A: path-to-regexp 6.3.0 → 8.4.2. Not a product.",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test test/case-a.test.mjs",
+    "packet": "node build-packet.mjs"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "schema": "s127.upgrade-impact.packet.v1",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "caller": {
+    "manifestPath": null,
+    "lockfilePath": null,
+    "sourceRoots": [],
+    "evidenceClass": "synthetic"
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "resolvedOld": "1.0.0",
+    "resolvedNew": "2.0.0"
+  },
+  "provenance": [],
+  "usage": {
+    "items": [{ "symbol": "formatName", "kind": "named", "dynamicImport": false, "used": true }],
+    "dynamicImport": false,
+    "coverage": "complete"
+  },
+  "exportDiff": {
+    "added": [],
+    "removed": [],
+    "renamed": [{ "from": "formatName", "to": "formatLabel" }],
+    "signatureChanged": [],
+    "coverage": "complete"
+  },
+  "bindings": [
+    {
+      "symbol": "formatName",
+      "used": true,
+      "changeKind": "renamed",
+      "decision": "action",
+      "rationale": "used export formatName was renamed to formatLabel",
+      "ruleId": "used_renamed",
+      "renamedTo": "formatLabel"
+    }
+  ],
+  "summary": {
+    "nextAction": "action",
+    "unknownReasons": [],
+    "unusedChanges": [],
+    "actionableChanges": ["formatName"]
+  },
+  "prior": null,
+  "limitations": [
+    "synthetic kill-suite fixture; coarse bucket matches review_changelog"
+  ]
+}

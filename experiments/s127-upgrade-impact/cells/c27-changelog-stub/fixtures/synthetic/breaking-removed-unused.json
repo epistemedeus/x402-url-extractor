@@ -1,0 +1,33 @@
+{
+  "id": "breaking-removed-unused",
+  "label": "synthetic",
+  "title": "breaking 'removed export' notes ⇒ action even if the caller does not use that export",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "dependency": { "name": "demo-widget", "oldVersion": "1.0.0", "newVersion": "2.0.0" },
+    "changelogText": "## 2.0.0\n\nBREAKING CHANGE: removed export `alpha`. `beta` is unchanged.\n",
+    "usage": {
+      "coverage": "complete",
+      "references": [{ "symbol": "beta", "kind": "named", "file": "src/app.js" }]
+    },
+    "exportDiff": {
+      "coverage": "complete",
+      "removed": ["alpha"],
+      "added": []
+    }
+  },
+  "expect": {
+    "decision": "action",
+    "ruleId": "changelog_breaking_keyword",
+    "delta": "major",
+    "ignoredCallerSurfaces": true,
+    "bindingsEmpty": true
+  },
+  "binderWould": {
+    "coarse": "no_action",
+    "decisionChangedRelativeToChangelog": true,
+    "note": "c06 unused-removed: gone/alpha unused ⇒ no_action. Stub cannot see unused vs used."
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "id": "patch-docs-only",
+  "label": "synthetic",
+  "title": "patch + fix/docs changelog ⇒ no_action",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "oldVersion": "1.1.0",
+    "newVersion": "1.1.1",
+    "changelogText": "Fixed a documentation typo in the README. Docs only."
+  },
+  "expect": {
+    "decision": "no_action",
+    "ruleId": "changelog_nonbreaking_patch",
+    "delta": "patch"
+  },
+  "binderWould": {
+    "coarse": "no_action",
+    "decisionChangedRelativeToChangelog": false,
+    "note": "Agree on docs-only patch when binder also sees no used export change."
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "type-kit",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Synthetic partial types tree: unresolved export * from. Label: synthetic.",
+  "types": "./index.d.ts"
+}

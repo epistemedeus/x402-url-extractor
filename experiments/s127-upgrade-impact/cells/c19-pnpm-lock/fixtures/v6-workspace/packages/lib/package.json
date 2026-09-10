@@ -1,0 +1,6 @@
+{
+  "name": "@acme/lib",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Synthetic workspace package. Label: fixture."
+}

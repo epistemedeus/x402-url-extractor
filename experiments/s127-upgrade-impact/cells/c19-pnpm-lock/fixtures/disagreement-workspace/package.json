@@ -1,0 +1,8 @@
+{
+  "name": "c19-disagreement-workspace",
+  "private": true,
+  "description": "Synthetic disagreement: workspace:* in package.json but registry resolution in lockfile. Label: fixture.",
+  "dependencies": {
+    "@acme/lib": "workspace:*"
+  }
+}

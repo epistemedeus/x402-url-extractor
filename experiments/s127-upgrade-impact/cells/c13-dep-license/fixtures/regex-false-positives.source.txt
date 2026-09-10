@@ -1,0 +1,6 @@
+// import { leaked } from "secret-dep";
+const quoted = "import { hidden } from 'quoted-dep'";
+import { used } from "real-dep";
+import type { T } from "types-dep";
+const dyn = import(variableName);
+export { used };

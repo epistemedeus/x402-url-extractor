@@ -1,0 +1,109 @@
+{
+  "schema": "s127.upgrade-impact.prior.v1",
+  "recipeId": "s127-upgrade-impact",
+  "createdAt": "2026-09-10T09:54:59.000Z",
+  "clock": "2026-09-10T09:54:59.000Z",
+  "sequence": 1,
+  "immutable": true,
+  "sha256": "63128fd28691fba4d29d286b702b839cd2dee18cde3e5f1c6016044413d19a2b",
+  "payload": {
+    "bindings": [
+      {
+        "changeKind": "unchanged",
+        "decision": "no_action",
+        "rationale": "used export is unchanged; a newer version is not itself a break",
+        "symbol": "format",
+        "used": true
+      },
+      {
+        "changeKind": "added",
+        "decision": "no_action",
+        "rationale": "unused export change is not a caller defect",
+        "symbol": "formatExtra",
+        "used": false
+      }
+    ],
+    "caller": {
+      "evidenceClass": "fixture",
+      "lockfilePath": "cells/c08-prior-correct/fixtures/synthetic-caller/package-lock.json",
+      "manifestPath": "cells/c08-prior-correct/fixtures/synthetic-caller/package.json",
+      "sourceRoots": [
+        "cells/c08-prior-correct/fixtures/synthetic-caller/src"
+      ]
+    },
+    "dependency": {
+      "name": "s127-synthetic-dep",
+      "newVersion": "1.1.0",
+      "oldVersion": "1.0.0",
+      "resolvedNew": "1.1.0",
+      "resolvedOld": "1.0.0"
+    },
+    "exportDiff": {
+      "added": [
+        "formatExtra"
+      ],
+      "coverage": "complete",
+      "removed": [],
+      "renamed": [],
+      "signatureChanged": []
+    },
+    "provenance": [
+      {
+        "contentSha256": "db62d0e3025bbc4b44aa9e48affbc5f2bccae8d7cb25b36546835c02ee31b425",
+        "coverage": "complete",
+        "label": "synthetic",
+        "locator": "cells/c08-prior-correct/fixtures/synthetic-dep/v1.0.0.js",
+        "path": "cells/c08-prior-correct/fixtures/synthetic-dep/v1.0.0.js",
+        "url": null
+      },
+      {
+        "contentSha256": "3ce9f6450b3f16c04fb33b0c151c5f847632b3d2f1d21b94af376aeed104a7ee",
+        "coverage": "complete",
+        "label": "synthetic",
+        "locator": "cells/c08-prior-correct/fixtures/synthetic-dep/v1.1.0.js",
+        "path": "cells/c08-prior-correct/fixtures/synthetic-dep/v1.1.0.js",
+        "url": null
+      }
+    ],
+    "summary": {
+      "actionableChanges": [],
+      "nextAction": "no_action",
+      "unknownReasons": [],
+      "unusedChanges": [
+        "formatExtra"
+      ]
+    },
+    "usage": {
+      "dynamicImport": false,
+      "imports": [
+        {
+          "dynamicImport": false,
+          "from": "s127-synthetic-dep",
+          "names": [
+            "format"
+          ]
+        }
+      ]
+    }
+  },
+  "payment": {
+    "attempted": false
+  },
+  "evidenceClass": "fixture",
+  "label": "synthetic",
+  "caller": {
+    "evidenceClass": "fixture",
+    "lockfilePath": "cells/c08-prior-correct/fixtures/synthetic-caller/package-lock.json",
+    "manifestPath": "cells/c08-prior-correct/fixtures/synthetic-caller/package.json",
+    "sourceRoots": [
+      "cells/c08-prior-correct/fixtures/synthetic-caller/src"
+    ]
+  },
+  "dependency": {
+    "name": "s127-synthetic-dep",
+    "newVersion": "1.1.0",
+    "oldVersion": "1.0.0",
+    "resolvedNew": "1.1.0",
+    "resolvedOld": "1.0.0"
+  }
+}

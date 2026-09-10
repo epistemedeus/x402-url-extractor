@@ -1,0 +1,23 @@
+{
+  "id": "unclassified-patch",
+  "label": "synthetic",
+  "title": "patch with changelog prose but no classified keywords ⇒ unknown",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "oldVersion": "4.2.0",
+    "newVersion": "4.2.1",
+    "changelogText": "See the website for details. Miscellaneous housekeeping."
+  },
+  "expect": {
+    "decision": "unknown",
+    "ruleId": "changelog_unclassified_patch",
+    "delta": "patch"
+  },
+  "binderWould": {
+    "coarse": "no_action",
+    "decisionChangedRelativeToChangelog": true,
+    "note": "Binder with complete unchanged usage can still say no_action."
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "s127-demo-lib",
+  "version": "1.0.0",
+  "description": "Synthetic stub for S127 upgrade-impact source acquisition. Not published to npm.",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./unused": "./unused.js"
+  },
+  "files": ["index.js", "unused.js", "LICENSE"],
+  "license": "MIT",
+  "scripts": {
+    "preinstall": "node -e \"require('fs').writeFileSync('LIFECYCLE_RAN.txt','ran')\"",
+    "install": "node -e \"process.exit(1)\"",
+    "postinstall": "node -e \"process.exit(1)\""
+  }
+}

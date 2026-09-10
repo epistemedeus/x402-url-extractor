@@ -1,0 +1,73 @@
+{
+  "limitations": [
+    "synthetic fixture; not live-capture",
+    "no full TS analysis; no runtime exec",
+    "retrievedAt later than seq-1; canonical payload must still match"
+  ],
+  "schema": "s127.upgrade-impact.packet.v1",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "summary": {
+    "actionableChanges": [],
+    "nextAction": "no_action",
+    "unknownReasons": [],
+    "unusedChanges": ["formatExtra"]
+  },
+  "bindings": [
+    {
+      "rationale": "used export is unchanged; a newer version is not itself a break",
+      "decision": "no_action",
+      "changeKind": "unchanged",
+      "used": true,
+      "symbol": "format"
+    },
+    {
+      "symbol": "formatExtra",
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "unused export change is not a caller defect"
+    }
+  ],
+  "exportDiff": {
+    "coverage": "complete",
+    "signatureChanged": [],
+    "renamed": [],
+    "removed": [],
+    "added": ["formatExtra"]
+  },
+  "usage": {
+    "dynamicImport": false,
+    "imports": [{ "dynamicImport": false, "names": ["format"], "from": "s127-synthetic-dep" }]
+  },
+  "provenance": [
+    {
+      "label": "synthetic",
+      "coverage": "complete",
+      "contentSha256": "db62d0e3025bbc4b44aa9e48affbc5f2bccae8d7cb25b36546835c02ee31b425",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "path": "cells/c08-prior-correct/fixtures/synthetic-dep/v1.0.0.js"
+    },
+    {
+      "path": "cells/c08-prior-correct/fixtures/synthetic-dep/v1.1.0.js",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "3ce9f6450b3f16c04fb33b0c151c5f847632b3d2f1d21b94af376aeed104a7ee",
+      "coverage": "complete",
+      "label": "synthetic"
+    }
+  ],
+  "dependency": {
+    "resolvedNew": "1.1.0",
+    "resolvedOld": "1.0.0",
+    "newVersion": "1.1.0",
+    "oldVersion": "1.0.0",
+    "name": "s127-synthetic-dep"
+  },
+  "caller": {
+    "evidenceClass": "fixture",
+    "sourceRoots": ["cells/c08-prior-correct/fixtures/synthetic-caller/src"],
+    "lockfilePath": "cells/c08-prior-correct/fixtures/synthetic-caller/package-lock.json",
+    "manifestPath": "cells/c08-prior-correct/fixtures/synthetic-caller/package.json"
+  },
+  "prior": null
+}

@@ -1,0 +1,13 @@
+lockfileVersion: '6.0'
+
+importers:
+  .:
+    dependencies:
+      widget:
+        specifier: npm:demo-widget@1.0.0
+        version: 1.0.0
+
+packages:
+  /demo-widget@1.0.0:
+    resolution: {integrity: sha512-fixture-alias-v6}
+    dev: false

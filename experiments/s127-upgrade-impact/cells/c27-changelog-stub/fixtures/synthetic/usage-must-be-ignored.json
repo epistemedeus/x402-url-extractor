@@ -1,0 +1,31 @@
+{
+  "id": "usage-must-be-ignored",
+  "label": "synthetic",
+  "title": "used+removed on the input must not drive the stub; patch without notes stays unknown",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "dependency": { "name": "demo-pkg", "oldVersion": "1.0.0", "newVersion": "1.0.1" },
+    "usage": {
+      "coverage": "complete",
+      "references": [{ "symbol": "foo", "kind": "named", "file": "src/app.js" }]
+    },
+    "exportDiff": {
+      "coverage": "complete",
+      "removed": ["foo"]
+    }
+  },
+  "expect": {
+    "decision": "unknown",
+    "ruleId": "patch_without_changelog",
+    "delta": "patch",
+    "ignoredCallerSurfaces": true,
+    "bindingsEmpty": true
+  },
+  "binderWould": {
+    "coarse": "action",
+    "decisionChangedRelativeToChangelog": true,
+    "note": "c06 used-removed is action/review_breakages. Stub cannot see usage, so patch-without-notes is unknown. Binder is stronger."
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "c02-alias-yarn-v1",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "my-lodash": "npm:lodash@^4.17.0"
+  }
+}

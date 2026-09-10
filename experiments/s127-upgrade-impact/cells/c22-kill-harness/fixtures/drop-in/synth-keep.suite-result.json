@@ -1,0 +1,190 @@
+{
+  "schema": "s127.upgrade-impact.kill-suite-result.v1",
+  "id": "synthetic-keep",
+  "scope": "suite",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "label": "synthetic",
+  "mode": "coarse",
+  "verdict": "keep",
+  "changed": true,
+  "changedIds": [
+    "synthetic-standin-a"
+  ],
+  "requiredIds": [
+    "synthetic-standin-a",
+    "synthetic-standin-b"
+  ],
+  "allRequiredReadable": true,
+  "rationale": "B changed the coarse decision vs A on synthetic-standin-a (1/2 required cases). Keep: mapping added a different operator move than registry+changelog skim.",
+  "killCondition": "If usage-binding (method B) never changes the coarse nextAction bucket relative to a registry version + changelog skim (method A) on required cases A and B, record negative evidence and stop packaging as a paid job.",
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline suite; no purchase; do not invent paid demand"
+  },
+  "expect": {
+    "verdict": "keep",
+    "matched": true
+  },
+  "cases": [
+    {
+      "schema": "s127.upgrade-impact.kill-pair.v1",
+      "scope": "pair",
+      "caseId": "synthetic-standin-a",
+      "role": "case-a-standin",
+      "clock": "2026-09-10T12:00:00.000Z",
+      "label": "synthetic",
+      "mode": "coarse",
+      "verdict": "keep",
+      "changed": true,
+      "rationale": "binding changed the coarse decision vs registry+changelog skim (action [raw=review_changelog] -> no_action [raw=no_action]). Keep: mapping added a different operator move.",
+      "killCondition": "If usage-binding (method B) never changes the coarse nextAction bucket relative to a registry version + changelog skim (method A) on required cases A and B, record negative evidence and stop packaging as a paid job.",
+      "payment": {
+        "attempted": false
+      },
+      "cost": {
+        "assignmentSpendUsd": 0,
+        "note": "offline compare; no purchase; do not invent paid demand"
+      },
+      "a": {
+        "letter": "A",
+        "ok": true,
+        "method": "registry_version_changelog_skim",
+        "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/cells/c22-kill-harness/fixtures/cases/synthetic-standin-a/registry-skim-decision.json",
+        "schema": "s127.upgrade-impact.registry-skim.decision.v1",
+        "label": "synthetic",
+        "raw": "review_changelog",
+        "coarse": "action",
+        "source": "summary.nextAction",
+        "clock": "2026-09-10T12:00:00.000Z",
+        "ruleId": "minor_or_major_requires_changelog",
+        "rationale": "semver delta major (1.0.0 -> 2.0.0); changelog review is required before bumping a pin. This is not a caller-defect claim and does not bind usage. Stub keywords: BREAKING CHANGE, breaking-change, removed export.",
+        "dependency": {
+          "name": "demo-widget",
+          "oldVersion": "1.0.0",
+          "newVersion": "2.0.0"
+        },
+        "code": null,
+        "message": null
+      },
+      "b": {
+        "letter": "B",
+        "ok": true,
+        "method": "usage_binding_packet",
+        "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/cells/c22-kill-harness/fixtures/cases/synthetic-standin-a/binding-packet.json",
+        "schema": "s127.upgrade-impact.packet.v1",
+        "label": "synthetic",
+        "raw": "no_action",
+        "coarse": "no_action",
+        "source": "summary.nextAction",
+        "clock": "2026-09-10T12:00:00.000Z",
+        "ruleId": null,
+        "rationale": null,
+        "dependency": {
+          "name": "demo-widget",
+          "oldVersion": "1.0.0",
+          "newVersion": "2.0.0"
+        },
+        "code": null,
+        "message": null
+      },
+      "unknownReasons": [],
+      "limitations": [
+        "Method A is a registry version + changelog skim stub, not a maintainer-intent parser.",
+        "Keyword scan is not full changelog understanding and is not TypeScript analysis.",
+        "A newer version alone is not a break; skim review_changelog is not a caller-defect claim.",
+        "Unused export change is not a caller defect.",
+        "Missing, conflicting, or partial source stays unknown, not action.",
+        "No runtime execution of untrusted packages or lifecycle scripts.",
+        "Offline default. No payment attempted. A new version is not paid demand."
+      ]
+    },
+    {
+      "schema": "s127.upgrade-impact.kill-pair.v1",
+      "scope": "pair",
+      "caseId": "synthetic-standin-b",
+      "role": "case-b-standin",
+      "clock": "2026-09-10T12:00:00.000Z",
+      "label": "synthetic",
+      "mode": "coarse",
+      "verdict": "kill",
+      "changed": false,
+      "rationale": "binding did not change the coarse decision vs registry+changelog skim (both action [raw=review_changelog]). Kill-signal for this pair: mapping added no different operator move.",
+      "killCondition": "If usage-binding (method B) never changes the coarse nextAction bucket relative to a registry version + changelog skim (method A) on required cases A and B, record negative evidence and stop packaging as a paid job.",
+      "payment": {
+        "attempted": false
+      },
+      "cost": {
+        "assignmentSpendUsd": 0,
+        "note": "offline compare; no purchase; do not invent paid demand"
+      },
+      "a": {
+        "letter": "A",
+        "ok": true,
+        "method": "registry_version_changelog_skim",
+        "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/cells/c22-kill-harness/fixtures/cases/synthetic-standin-b/registry-skim-decision.json",
+        "schema": "s127.upgrade-impact.registry-skim.decision.v1",
+        "label": "synthetic",
+        "raw": "review_changelog",
+        "coarse": "action",
+        "source": "summary.nextAction",
+        "clock": "2026-09-10T12:00:00.000Z",
+        "ruleId": "minor_or_major_requires_changelog",
+        "rationale": "semver delta major (1.0.0 -> 2.0.0); changelog review is required before bumping a pin. This is not a caller-defect claim and does not bind usage. Stub keywords: BREAKING CHANGE, breaking-change, removed export.",
+        "dependency": {
+          "name": "demo-widget",
+          "oldVersion": "1.0.0",
+          "newVersion": "2.0.0"
+        },
+        "code": null,
+        "message": null
+      },
+      "b": {
+        "letter": "B",
+        "ok": true,
+        "method": "usage_binding_packet",
+        "path": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact/cells/c22-kill-harness/fixtures/cases/synthetic-standin-b/binding-packet.json",
+        "schema": "s127.upgrade-impact.packet.v1",
+        "label": "synthetic",
+        "raw": "action",
+        "coarse": "action",
+        "source": "summary.nextAction",
+        "clock": "2026-09-10T12:00:00.000Z",
+        "ruleId": null,
+        "rationale": null,
+        "dependency": {
+          "name": "demo-widget",
+          "oldVersion": "1.0.0",
+          "newVersion": "2.0.0"
+        },
+        "code": null,
+        "message": null
+      },
+      "unknownReasons": [],
+      "limitations": [
+        "Method A is a registry version + changelog skim stub, not a maintainer-intent parser.",
+        "Keyword scan is not full changelog understanding and is not TypeScript analysis.",
+        "A newer version alone is not a break; skim review_changelog is not a caller-defect claim.",
+        "Unused export change is not a caller defect.",
+        "Missing, conflicting, or partial source stays unknown, not action.",
+        "No runtime execution of untrusted packages or lifecycle scripts.",
+        "Offline default. No payment attempted. A new version is not paid demand."
+      ]
+    }
+  ],
+  "unknownReasons": [],
+  "limitations": [
+    "Method A is a registry version + changelog skim stub, not a maintainer-intent parser.",
+    "Keyword scan is not full changelog understanding and is not TypeScript analysis.",
+    "A newer version alone is not a break; skim review_changelog is not a caller-defect claim.",
+    "Unused export change is not a caller defect.",
+    "Missing, conflicting, or partial source stays unknown, not action.",
+    "No runtime execution of untrusted packages or lifecycle scripts.",
+    "Offline default. No payment attempted. A new version is not paid demand.",
+    "Product kill requires every required case to be present and readable.",
+    "Synthetic stand-ins are not real-source cases A/B (c11/c12)."
+  ],
+  "manifestPath": "fixtures/suites/synthetic-keep.json"
+}

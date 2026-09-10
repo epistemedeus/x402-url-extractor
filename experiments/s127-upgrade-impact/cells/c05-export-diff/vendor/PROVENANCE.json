@@ -1,0 +1,27 @@
+{
+  "label": "live-capture",
+  "note": "Parser sources captured from the public npm registry. Extracted with tar only. No npm lifecycle scripts ran. MIT licensed. Used as JS/asm builds (es-module-lexer/js asm.js; cjs-module-lexer lexer.js), not as a dependency install.",
+  "retrievedAt": "2026-09-10T10:49:11Z",
+  "items": [
+    {
+      "name": "es-module-lexer",
+      "version": "3.0.2",
+      "license": "MIT",
+      "url": "https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-3.0.2.tgz",
+      "retrievedAt": "2026-09-10T10:49:11Z",
+      "contentSha256": "d1bbfa8b42e0a7261abb701b84a0d9a7f7121b68408898cbb2200f5024dcfd4f",
+      "coverage": "tarball; vendored dist/lexer.asm.js + LICENSE + package.json",
+      "label": "live-capture"
+    },
+    {
+      "name": "cjs-module-lexer",
+      "version": "2.2.1",
+      "license": "MIT",
+      "url": "https://registry.npmjs.org/cjs-module-lexer/-/cjs-module-lexer-2.2.1.tgz",
+      "retrievedAt": "2026-09-10T10:49:11Z",
+      "contentSha256": "a78b97a027b0236d501ccbbfeae8bb2d08b3cf1f726bbf92bb9d1dd2a3aa6458",
+      "coverage": "tarball; vendored lexer.js (JS, no Wasm) + LICENSE + package.json",
+      "label": "live-capture"
+    }
+  ]
+}

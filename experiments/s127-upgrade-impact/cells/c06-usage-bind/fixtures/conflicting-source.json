@@ -1,0 +1,23 @@
+{
+  "id": "conflicting-source",
+  "label": "synthetic",
+  "title": "conflicting exportDiff source ⇒ unknown, not action",
+  "input": {
+    "dependency": { "name": "demo-pkg", "oldVersion": "1.0.0", "newVersion": "2.0.0" },
+    "usage": {
+      "coverage": "complete",
+      "references": [{ "symbol": "foo", "kind": "named" }]
+    },
+    "exportDiff": {
+      "coverage": "conflict",
+      "conflicting": true,
+      "removed": ["foo"]
+    }
+  },
+  "expect": {
+    "nextAction": "unknown",
+    "actionableSymbols": [],
+    "unusedSymbols": [],
+    "decisions": { "foo": "unknown" }
+  }
+}

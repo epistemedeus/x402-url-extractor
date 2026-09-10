@@ -1,0 +1,144 @@
+[
+  {
+    "file": "acorn.LICENSE",
+    "sha256": "76a876cf886ff9be2a8b5e2e86514fed06223c8c9f0c1e9ee9606e93841e00b7",
+    "bytes": 1099,
+    "copiedIntoPack": true,
+    "sourceUrlGuess": "https://unpkg.com/<pkg>/<filename>",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "label": "live-capture",
+    "coverage": "full-license-file"
+  },
+  {
+    "file": "cjs-module-lexer.LICENSE",
+    "sha256": "6b0c1f98ec71a46b44276c4e5095822f33efaba2dfac61c17c24fe5d666ccaee",
+    "bytes": 1085,
+    "copiedIntoPack": true,
+    "sourceUrlGuess": "https://unpkg.com/<pkg>/<filename>",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "label": "live-capture",
+    "coverage": "full-license-file"
+  },
+  {
+    "file": "ckeditor4.LICENSE.md",
+    "sha256": "af6fc9f74a50fc5ed3d622d07260cc0508ffbe7c7dc84efecaddaf5aedc4a084",
+    "bytes": 76878,
+    "copiedIntoPack": false,
+    "sourceUrlGuess": "https://unpkg.com/<pkg>/<filename>",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "label": "live-capture",
+    "coverage": "full-file-hashed-not-copied; header excerpt stored separately",
+    "headerExcerptFile": "ckeditor4.LICENSE.header.md",
+    "headerExcerptSha256": "7c04fb78c3fd6e7115543bd7fb8308cdea873b76d9c46974bbe8ffbf80f8affa"
+  },
+  {
+    "file": "es-module-lexer.LICENSE",
+    "sha256": "8a4b6c44eebfb026d23719a348145a661a555568dbfdc11618ff2d0dd9306b00",
+    "bytes": 1085,
+    "copiedIntoPack": true,
+    "sourceUrlGuess": "https://unpkg.com/<pkg>/<filename>",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "label": "live-capture",
+    "coverage": "full-license-file"
+  },
+  {
+    "file": "jsonc-parser.LICENSE.md",
+    "sha256": "c3a24c02d678e5f0711623dcf3ab3f243b273c2633f638a1fa8e35fb7c7f8e4d",
+    "bytes": 1092,
+    "copiedIntoPack": true,
+    "sourceUrlGuess": "https://unpkg.com/<pkg>/<filename>",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "label": "live-capture",
+    "coverage": "full-license-file"
+  },
+  {
+    "file": "meriyah.LICENSE.md",
+    "sha256": "e9a5df5a6ae5cd51ca430715f4c62fb5424946e8da07b7caa058a1ba0582a848",
+    "bytes": 760,
+    "copiedIntoPack": true,
+    "sourceUrlGuess": "https://unpkg.com/<pkg>/<filename>",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "label": "live-capture",
+    "coverage": "full-license-file"
+  },
+  {
+    "file": "oxc-parser.LICENSE",
+    "sha256": "95ced5ecf1133fbf41d409b5555c86c344f83f3b019926057ddbc07cfdcc27b3",
+    "bytes": 1119,
+    "copiedIntoPack": false,
+    "sourceUrlGuess": "https://unpkg.com/<pkg>/<filename>",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "label": "live-capture",
+    "coverage": "full-file-hashed-not-copied"
+  },
+  {
+    "file": "semver.LICENSE",
+    "sha256": "4ec3d4c66cd87f5c8d8ad911b10f99bf27cb00cdfcff82621956e379186b016b",
+    "bytes": 765,
+    "copiedIntoPack": true,
+    "sourceUrlGuess": "https://unpkg.com/<pkg>/<filename>",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "label": "live-capture",
+    "coverage": "full-license-file"
+  },
+  {
+    "file": "sucrase.LICENSE",
+    "sha256": "c43b99fc682391ced47fee2bf964bc387ab5e65ba7b626b39cd6d1facd24e6a5",
+    "bytes": 1106,
+    "copiedIntoPack": false,
+    "sourceUrlGuess": "https://unpkg.com/<pkg>/<filename>",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "label": "live-capture",
+    "coverage": "full-file-hashed-not-copied"
+  },
+  {
+    "file": "tar-stream.LICENSE",
+    "sha256": "3fe8d55a98dbf260eace67c00cf9bc53edb46234e840098a0b93df3096b97fb6",
+    "bytes": 1078,
+    "copiedIntoPack": false,
+    "sourceUrlGuess": "https://unpkg.com/<pkg>/<filename>",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "label": "live-capture",
+    "coverage": "full-file-hashed-not-copied"
+  },
+  {
+    "file": "tar.LICENSE.md",
+    "sha256": "8a1af140fdfbf5afd3df27f7e662f989c5b963a300020dfafce42033cae9e004",
+    "bytes": 1552,
+    "copiedIntoPack": true,
+    "sourceUrlGuess": "https://unpkg.com/<pkg>/<filename>",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "label": "live-capture",
+    "coverage": "full-license-file"
+  },
+  {
+    "file": "tinymce.LICENSE.md",
+    "sha256": "b51d1c5ec53358d4d8745d1f6fcce764ce1bfaf82b254f6d501f42760678d4e0",
+    "bytes": 779,
+    "copiedIntoPack": true,
+    "sourceUrlGuess": "https://unpkg.com/<pkg>/<filename>",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "label": "live-capture",
+    "coverage": "full-license-file"
+  },
+  {
+    "file": "typescript.LICENSE",
+    "sha256": "a7d00bfd54525bc694b6e32f64c7ebcf5e6b7ae3657be5cc12767bce74654a47",
+    "bytes": 9197,
+    "copiedIntoPack": false,
+    "sourceUrlGuess": "https://unpkg.com/<pkg>/<filename>",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "label": "live-capture",
+    "coverage": "full-file-hashed-not-copied"
+  },
+  {
+    "file": "yaml.LICENSE",
+    "sha256": "5bba27375d93e9119f76c1015f7672cf9ad5f70952296e0842fb2243d6376869",
+    "bytes": 738,
+    "copiedIntoPack": true,
+    "sourceUrlGuess": "https://unpkg.com/<pkg>/<filename>",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "label": "live-capture",
+    "coverage": "full-license-file"
+  }
+]

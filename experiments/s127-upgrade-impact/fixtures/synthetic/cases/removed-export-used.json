@@ -1,0 +1,42 @@
+{
+  "id": "removed-export-used",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "title": "Removed export is imported by the caller",
+  "notes": "Newer version is not itself a break; action is justified only because alpha is used and removed.",
+  "caller": {
+    "root": "callers/removed-export-used",
+    "manifestPath": "callers/removed-export-used/package.json",
+    "lockfilePath": "callers/removed-export-used/package-lock.json",
+    "sourceRoots": ["callers/removed-export-used/src"]
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "oldTree": "packages/demo-widget/1.0.0",
+    "newTree": "packages/demo-widget/2.0.0-removed-alpha"
+  },
+  "priorPath": "priors/removed-export-used.seq-1.json",
+  "expect": {
+    "summary.nextAction": "action",
+    "exportDiff.removed": ["alpha"],
+    "exportDiff.coverage": "full",
+    "actionableSymbols": ["alpha"],
+    "bindings": [
+      {
+        "symbol": "alpha",
+        "used": true,
+        "changeKind": "removed",
+        "decision": "action"
+      },
+      {
+        "symbol": "beta",
+        "used": true,
+        "changeKind": "unchanged",
+        "decision": "no_action"
+      }
+    ]
+  }
+}

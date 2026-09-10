@@ -1,0 +1,56 @@
+{
+  "schema": "s127.upgrade-impact.provenance.v1",
+  "label": "fixture",
+  "synthetic": true,
+  "liveCapture": false,
+  "capturedFromLive": false,
+  "paidDemand": false,
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "retrievedAt": "2026-09-10T12:00:00.000Z",
+  "coverage": "synthetic hostile inputs only; no registry, changelog, or network fetch",
+  "note": "All cases are fixture/synthetic. Not live-capture. Do not npm install. Do not treat as paid demand.",
+  "artifacts": [
+    {
+      "path": "path-traversal/package.json",
+      "contentSha256": "56a6962b768ba1a0dc7cf08749a392ec3df96aee97b9a5f119cc50232d06a568",
+      "label": "fixture",
+      "coverage": "hostile manifest fields"
+    },
+    {
+      "path": "install-scripts/package.json",
+      "contentSha256": "28807d6f4a4acde55c231d6d1d43f7abd590c3774eb9bac48529b916fb5c52b0",
+      "label": "fixture",
+      "coverage": "lifecycle scripts present, not executed"
+    },
+    {
+      "path": "install-scripts/untrusted.tgz",
+      "contentSha256": "278925f6939924d63299e128382d269435e27086e033538a21aafb257dcf4b36",
+      "label": "fixture",
+      "coverage": "tar-only listing; never npm install"
+    },
+    {
+      "path": "enormous-exports/package.json",
+      "contentSha256": "1be401f67752d0e90da9cb24c2835f6351cee9795bfc8e3d18694e6656dee80a",
+      "label": "fixture",
+      "coverage": "5001 top-level exports keys"
+    },
+    {
+      "path": "binary-source/index.js",
+      "contentSha256": "2cbbd0ef38294afcc84fc36ff1bbe1abbcea6b426c489a07e147b962d3e864b1",
+      "label": "fixture",
+      "coverage": "PNG+NUL bytes declared as main"
+    },
+    {
+      "path": "conflicting-lockfile/yarn.lock",
+      "contentSha256": "d152359841e0f79f26ca3571d26ab1087e43f178cf4c2eb5eac135e194de1c15",
+      "label": "fixture",
+      "coverage": "yarn resolved 1.5.0 vs lock 2.0.0 / pnpm 2.1.0"
+    },
+    {
+      "path": "symlink-bomb/escape-link",
+      "label": "fixture",
+      "coverage": "symlink to /etc/passwd; contentSha256 not taken (do not read target)"
+    }
+  ]
+}

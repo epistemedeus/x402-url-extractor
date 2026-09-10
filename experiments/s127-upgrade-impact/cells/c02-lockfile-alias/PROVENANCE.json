@@ -1,0 +1,10 @@
+{
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "createdAt": "2026-09-10T00:00:00.000Z",
+  "clock": "2026-09-10T00:00:00.000Z",
+  "notes": "Hand-written package.json + lockfile excerpts for parser coverage. Not live-capture. No registry fetch, no npm install, no paid demand.",
+  "coverage": "alias (npm:/pnpm/yarn), workspace:, lockfile-vs-manifest range disagreement, alias target mismatch, missing lockfile, unsupported Cargo.lock, multiple lockfiles, npm-shrinkwrap, npm lockfileVersion 1",
+  "originalUrls": null,
+  "liveCapture": false
+}

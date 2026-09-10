@@ -1,0 +1,41 @@
+{
+  "id": "removed-export-unused",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "title": "Removed export is not imported by the caller",
+  "notes": "Unused export change is not a caller defect. A newer version alone is not a break.",
+  "caller": {
+    "root": "callers/removed-export-unused",
+    "manifestPath": "callers/removed-export-unused/package.json",
+    "lockfilePath": "callers/removed-export-unused/package-lock.json",
+    "sourceRoots": ["callers/removed-export-unused/src"]
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "oldTree": "packages/demo-widget/1.0.0",
+    "newTree": "packages/demo-widget/2.0.0-removed-alpha"
+  },
+  "expect": {
+    "summary.nextAction": "no_action",
+    "exportDiff.removed": ["alpha"],
+    "unusedSymbols": ["alpha"],
+    "actionableSymbols": [],
+    "bindings": [
+      {
+        "symbol": "alpha",
+        "used": false,
+        "changeKind": "removed",
+        "decision": "no_action"
+      },
+      {
+        "symbol": "beta",
+        "used": true,
+        "changeKind": "unchanged",
+        "decision": "no_action"
+      }
+    ]
+  }
+}

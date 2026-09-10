@@ -1,0 +1,58 @@
+{
+  "schema": "s127.upgrade-impact.registry-skim.decision.v1",
+  "inputSchema": "s127.upgrade-impact.registry-skim.input.v1",
+  "method": "registry_version_changelog_skim",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline skim stub; no purchase; do not invent paid demand"
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "1.0.0"
+  },
+  "observation": {
+    "versionChanged": false,
+    "semverDelta": "same",
+    "changelogCoverage": "complete",
+    "changelogPath": null,
+    "breakingKeywords": [],
+    "keywordScan": "stub_regex",
+    "changelogBytes": 9,
+    "changelogSha256": "aaa8d3c8d74ad3e8f6b1772aa9c7e0eaa528cb42fc93599ce2f125b00d4c424c"
+  },
+  "summary": {
+    "nextAction": "no_action",
+    "ruleId": "same_version_noop",
+    "rationale": "same registry version 1.0.0; same-version/no-op is not an upgrade impact",
+    "unknownReasons": [],
+    "unusedChanges": [],
+    "actionableChanges": []
+  },
+  "limitations": [
+    "Method A is a registry version + changelog skim stub, not a maintainer-intent parser.",
+    "Keyword scan is not full changelog understanding and is not TypeScript analysis.",
+    "A newer version alone is not a break; skim review_changelog is not a caller-defect claim.",
+    "Unused export change is not a caller defect.",
+    "Missing, conflicting, or partial source stays unknown, not action.",
+    "No runtime execution of untrusted packages or lifecycle scripts.",
+    "Offline default. No payment attempted. A new version is not paid demand."
+  ],
+  "provenance": [
+    {
+      "path": null,
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "aaa8d3c8d74ad3e8f6b1772aa9c7e0eaa528cb42fc93599ce2f125b00d4c424c",
+      "coverage": "complete",
+      "label": "synthetic"
+    }
+  ]
+}

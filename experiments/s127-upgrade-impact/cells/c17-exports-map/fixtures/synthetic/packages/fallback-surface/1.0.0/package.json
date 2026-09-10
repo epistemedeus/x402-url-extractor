@@ -1,0 +1,17 @@
+{
+  "name": "fallback-surface",
+  "private": true,
+  "description": "Synthetic S127 c17 fallback-array fixture. Label: synthetic.",
+  "version": "1.0.0",
+  "main": "./cjs.js",
+  "exports": {
+    ".": [
+      {
+        "import": "./esm.js",
+        "require": "./cjs.js",
+        "default": "./cjs.js"
+      },
+      "./cjs.js"
+    ]
+  }
+}

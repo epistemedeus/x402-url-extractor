@@ -1,0 +1,23 @@
+{
+  "id": "same-version-breaking-text",
+  "label": "synthetic",
+  "title": "same version wins over breaking changelog keywords",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "oldVersion": "1.0.0",
+    "newVersion": "1.0.0",
+    "changelogText": "BREAKING CHANGE: removed export alpha and renamed beta to gamma."
+  },
+  "expect": {
+    "decision": "no_action",
+    "ruleId": "same_version_noop",
+    "delta": "none"
+  },
+  "binderWould": {
+    "coarse": "no_action",
+    "decisionChangedRelativeToChangelog": false,
+    "note": "Version identity is not usage binding."
+  }
+}

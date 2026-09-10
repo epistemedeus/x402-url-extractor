@@ -1,0 +1,9 @@
+{
+  "name": "c02-workspace-root",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "dependencies": {
+    "@acme/lib": "workspace:*"
+  }
+}

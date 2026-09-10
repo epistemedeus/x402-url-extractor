@@ -1,0 +1,7 @@
+{
+  "name": "legacy-main",
+  "private": true,
+  "description": "Synthetic S127 c17 main-only fixture. Label: synthetic.",
+  "version": "1.0.0",
+  "main": "./index.js"
+}

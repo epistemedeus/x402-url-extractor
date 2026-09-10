@@ -1,0 +1,19 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+  .:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+  lodash@4.17.21:
+    resolution: {integrity: sha512-fixture-not-a-real-hash, tarball: https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz}
+
+snapshots:
+  lodash@4.17.21: {}

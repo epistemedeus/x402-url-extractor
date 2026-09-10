@@ -1,0 +1,49 @@
+{
+  "id": "real-a-path-to-regexp-major-no-changelog",
+  "label": "fixture",
+  "title": "path-to-regexp 6.3.0 → 8.4.2 with no changelog body (README is usage docs)",
+  "clock": "2026-09-10T10:48:00Z",
+  "note": "Derived from sibling c11 live-capture. This cell did not fetch. Label is fixture, not live-capture.",
+  "input": {
+    "evidenceClass": "fixture",
+    "clock": "2026-09-10T10:48:00Z",
+    "dependency": {
+      "name": "path-to-regexp",
+      "oldVersion": "6.3.0",
+      "newVersion": "8.4.2"
+    },
+    "changelog": {
+      "present": false,
+      "text": "",
+      "label": "fixture",
+      "coverage": "missing",
+      "url": null,
+      "path": "fixtures/real-a/extracted/8.4.2/package/Readme.md",
+      "retrievedAt": "2026-09-10T10:48:00Z",
+      "note": "8.4.2 README is usage documentation; it is not a release changelog and is not fed as changelog text."
+    }
+  },
+  "expect": {
+    "decision": "action",
+    "ruleId": "registry_bump_no_changelog",
+    "delta": "major"
+  },
+  "binderWould": {
+    "coarse": "no_action",
+    "decisionChangedRelativeToChangelog": true,
+    "note": "A caller that only uses match() with no JS-evident signature change on match would be no_action for unused removals (tokensToFunction, regexpToFunction, tokensToRegexp). Stub actions the major bump. A caller of tokensToFunction is binder action — same coarse word as the stub, so kill harness must use both caller shapes."
+  },
+  "siblingProvenance": {
+    "package": "path-to-regexp",
+    "license": "MIT",
+    "oldVersion": "6.3.0",
+    "newVersion": "8.4.2",
+    "sourceCell": "c11-real-a",
+    "clock": "2026-09-10T10:48:00Z",
+    "urls": {
+      "oldTarball": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-6.3.0.tgz",
+      "newTarball": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-8.4.2.tgz"
+    },
+    "coverage": "no changelog body copied; versions only"
+  }
+}

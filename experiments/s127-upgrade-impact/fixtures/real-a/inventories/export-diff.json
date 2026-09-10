@@ -1,0 +1,105 @@
+{
+  "oldNames": [
+    "compile",
+    "match",
+    "parse",
+    "pathToRegexp",
+    "regexpToFunction",
+    "tokensToFunction",
+    "tokensToRegexp"
+  ],
+  "newNames": [
+    "PathError",
+    "TokenData",
+    "compile",
+    "match",
+    "parse",
+    "pathToRegexp",
+    "stringify"
+  ],
+  "added": [
+    "PathError",
+    "TokenData",
+    "stringify"
+  ],
+  "removed": [
+    "regexpToFunction",
+    "tokensToFunction",
+    "tokensToRegexp"
+  ],
+  "renamed": [],
+  "signatureChanged": [
+    "parse",
+    "pathToRegexp"
+  ],
+  "coverage": "named-export-presence; signatureChanged only when JS function-head/return evidence is supplied; no rename inference",
+  "oldHeads": {
+    "pathToRegexp": {
+      "name": "pathToRegexp",
+      "head": "function pathToRegexp(path, keys, options)",
+      "paramCount": 3,
+      "params": [
+        "path",
+        "keys",
+        "options"
+      ]
+    },
+    "parse": {
+      "name": "parse",
+      "head": "function parse(str, options)",
+      "paramCount": 2,
+      "params": [
+        "str",
+        "options"
+      ]
+    },
+    "tokensToFunction": {
+      "name": "tokensToFunction",
+      "head": "function tokensToFunction(tokens, options)",
+      "paramCount": 2,
+      "params": [
+        "tokens",
+        "options"
+      ]
+    },
+    "regexpToFunction": {
+      "name": "regexpToFunction",
+      "head": "function regexpToFunction(re, keys, options)",
+      "paramCount": 3,
+      "params": [
+        "re",
+        "keys",
+        "options"
+      ]
+    }
+  },
+  "newHeads": {
+    "pathToRegexp": {
+      "name": "pathToRegexp",
+      "head": "function pathToRegexp(path, options = {})",
+      "paramCount": 2,
+      "params": [
+        "path",
+        "options = {}"
+      ]
+    },
+    "parse": {
+      "name": "parse",
+      "head": "function parse(str, options = {})",
+      "paramCount": 2,
+      "params": [
+        "str",
+        "options = {}"
+      ]
+    },
+    "stringify": {
+      "name": "stringify",
+      "head": "function stringify(data)",
+      "paramCount": 1,
+      "params": [
+        "data"
+      ]
+    },
+    "tokensToFunctionInternalParamCount": 3
+  }
+}

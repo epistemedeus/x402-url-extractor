@@ -1,0 +1,8 @@
+da302284390341278d3dad1014f2043cf844f6a2163aa8dc5686d321d82742e6  fixtures/real-a/tarballs/path-to-regexp-6.3.0.tgz
+e8712a9c53b0a2a27cfecc7b80c54df92afb4643c01351e2b2ebb7784bcabd78  fixtures/real-a/tarballs/path-to-regexp-8.4.2.tgz
+c0518b24b26c5f9b4d720f6dcb640925fc1947599001cc38bce655de3bf1dcfc  fixtures/real-a/registry/path-to-regexp-6.3.0.json
+f8217c862e73f2312afd0013b60b24419f33d60689d0824f4d18c1b2b605c173  fixtures/real-a/registry/path-to-regexp-8.4.2.json
+6d2991ed04ad6eb497efbda99feb2e6fe5cfd80b9dd448ef5eec8e8f340180c8  fixtures/real-a/registry/packument.slim.json
+890a1832ab3d692c0ddbdcbe54fbdeaa5ff60ac85be91c427a4819dcc0eaef2f  fixtures/real-a/extracted/6.3.0/package/dist/index.js
+f8e7946ca3a4dcc2ed1ea46e3bcffaef014e4abc359a7469a16817f1f79df62f  fixtures/real-a/extracted/8.4.2/package/dist/index.js
+7d3eabbf863e85281427c917e584e2785bedc1a735957f0277924df60832972c  live-capture-not-stored  registry.npmjs.org/path-to-regexp packument 216334 bytes

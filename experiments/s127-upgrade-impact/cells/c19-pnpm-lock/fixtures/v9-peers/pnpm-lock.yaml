@@ -1,0 +1,20 @@
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    dependencies:
+      foo:
+        specifier: 1.0.0
+        version: 1.0.0(@types/node@18.0.0)
+
+packages:
+  '@types/node@18.0.0':
+    resolution: {integrity: sha512-fixture-types-node}
+  foo@1.0.0:
+    resolution: {integrity: sha512-fixture-foo}
+
+snapshots:
+  '@types/node@18.0.0': {}
+  foo@1.0.0(@types/node@18.0.0):
+    dependencies:
+      '@types/node': 18.0.0

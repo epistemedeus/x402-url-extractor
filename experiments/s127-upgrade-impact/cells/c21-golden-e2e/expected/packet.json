@@ -1,0 +1,283 @@
+{
+  "schema": "s127.upgrade-impact.packet.v1",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "label": "synthetic",
+  "offline": true,
+  "execute": false,
+  "posted": false,
+  "payment": { "attempted": false },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "synthetic fixture; no purchase; do not invent paid demand"
+  },
+  "caller": {
+    "manifestPath": "cells/c21-golden-e2e/fixtures/caller/package.json",
+    "lockfilePath": "cells/c21-golden-e2e/fixtures/caller/package-lock.json",
+    "sourceRoots": ["cells/c21-golden-e2e/fixtures/caller/src"],
+    "evidenceClass": "synthetic"
+  },
+  "dependency": {
+    "name": "s127-golden-kit",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "resolvedOld": "1.0.0",
+    "resolvedNew": "2.0.0"
+  },
+  "provenance": [
+    {
+      "path": "cells/c21-golden-e2e/fixtures/caller/package.json",
+      "url": null,
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "b449d607ebd6656b5248a24ac32fc29fdacb1f72e0e7e7a63d5b7332f1249463",
+      "coverage": "full",
+      "label": "synthetic",
+      "role": "caller-manifest"
+    },
+    {
+      "path": "cells/c21-golden-e2e/fixtures/caller/package-lock.json",
+      "url": null,
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "bf806bc75e0ccc0242fc2adbe38ae9b4efa969512e30dca73a7cbf4de60c33eb",
+      "coverage": "full",
+      "label": "synthetic",
+      "role": "caller-lockfile"
+    },
+    {
+      "path": "cells/c21-golden-e2e/fixtures/caller/src/app.js",
+      "url": null,
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "a24b60e34c0369f6e79fcaa7f5f97dfaab6c9c7941d340fabc75536a9c1badf0",
+      "coverage": "full",
+      "label": "synthetic",
+      "role": "caller-js"
+    },
+    {
+      "path": "cells/c21-golden-e2e/fixtures/caller/src/types.ts",
+      "url": null,
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "a08c22b909689957d4b2fe750fb4619a9701e78338ee95374e93a48091d3d854",
+      "coverage": "unknown",
+      "label": "synthetic",
+      "role": "caller-ts-type-only",
+      "note": "type-only import; no full TS analysis; not runtime usage"
+    },
+    {
+      "path": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/1.0.0/package.json",
+      "url": null,
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "fcccbd74ac55f9893f2d271b2e5fd224cb853e16495079b77be0258e5111a121",
+      "coverage": "full",
+      "label": "synthetic",
+      "role": "dep-old-manifest"
+    },
+    {
+      "path": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/1.0.0/index.js",
+      "url": null,
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "a938f723d4bd44a21c971274a811ba2316ebb73875349e6c7e6381552856389f",
+      "coverage": "full",
+      "label": "synthetic",
+      "role": "dep-old-main"
+    },
+    {
+      "path": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/1.0.0/plugin.js",
+      "url": null,
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "57c78293f80f6c14db24a21a003b249375432fabc21c4d5a2cfbca6f3222044e",
+      "coverage": "full",
+      "label": "synthetic",
+      "role": "dep-old-plugin"
+    },
+    {
+      "path": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/2.0.0/package.json",
+      "url": null,
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "7d09f464287d6ca59f9d87b2fed97f1412637b0ce2b55e59704e9f2a28c3f944",
+      "coverage": "full",
+      "label": "synthetic",
+      "role": "dep-new-manifest"
+    },
+    {
+      "path": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/2.0.0/index.js",
+      "url": null,
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "f2e9dbff32be06a31fd9a1becd4613e0e93beca22bbecd56b9a7942cb793545a",
+      "coverage": "full",
+      "label": "synthetic",
+      "role": "dep-new-main"
+    },
+    {
+      "path": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/2.0.0/plugin.js",
+      "url": null,
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "5eea8578ae07c1c2f52016bfac2bf39d52130777ba364cc1138e1384689f2327",
+      "coverage": "full",
+      "label": "synthetic",
+      "role": "dep-new-plugin"
+    }
+  ],
+  "usage": {
+    "coverage": "full",
+    "dynamicImport": false,
+    "note": "Package-level dynamicImport is false because the main specifier s127-golden-kit is statically imported. The ./plugin specifier is a different surface and is marked dynamicImport on its usage row. PACKET-CONTRACT rule 4 is per-surface.",
+    "items": [
+      {
+        "specifier": "s127-golden-kit",
+        "from": "s127-golden-kit",
+        "symbol": "format",
+        "kind": "named",
+        "file": "cells/c21-golden-e2e/fixtures/caller/src/app.js",
+        "dynamicImport": false,
+        "typeOnly": false
+      },
+      {
+        "specifier": "s127-golden-kit",
+        "from": "s127-golden-kit",
+        "symbol": "usedRemoved",
+        "kind": "named",
+        "file": "cells/c21-golden-e2e/fixtures/caller/src/app.js",
+        "dynamicImport": false,
+        "typeOnly": false
+      },
+      {
+        "specifier": "s127-golden-kit/plugin",
+        "from": "s127-golden-kit/plugin",
+        "symbol": "*",
+        "kind": "dynamic",
+        "file": "cells/c21-golden-e2e/fixtures/caller/src/app.js",
+        "dynamicImport": true,
+        "typeOnly": false
+      }
+    ],
+    "imports": [
+      {
+        "specifier": "s127-golden-kit",
+        "from": "s127-golden-kit",
+        "symbol": "format",
+        "names": ["format"],
+        "kind": "named",
+        "file": "cells/c21-golden-e2e/fixtures/caller/src/app.js",
+        "dynamicImport": false,
+        "typeOnly": false
+      },
+      {
+        "specifier": "s127-golden-kit",
+        "from": "s127-golden-kit",
+        "symbol": "usedRemoved",
+        "names": ["usedRemoved"],
+        "kind": "named",
+        "file": "cells/c21-golden-e2e/fixtures/caller/src/app.js",
+        "dynamicImport": false,
+        "typeOnly": false
+      },
+      {
+        "specifier": "s127-golden-kit/plugin",
+        "from": "s127-golden-kit/plugin",
+        "symbol": "*",
+        "names": [],
+        "kind": "dynamic",
+        "file": "cells/c21-golden-e2e/fixtures/caller/src/app.js",
+        "dynamicImport": true,
+        "typeOnly": false
+      }
+    ],
+    "typeOnly": [
+      {
+        "specifier": "s127-golden-kit",
+        "from": "s127-golden-kit",
+        "symbol": "FormatOptions",
+        "kind": "named",
+        "file": "cells/c21-golden-e2e/fixtures/caller/src/types.ts",
+        "dynamicImport": false,
+        "typeOnly": true
+      }
+    ]
+  },
+  "exportDiff": {
+    "added": [],
+    "removed": ["dynamicRemoved", "unusedRemoved", "usedRemoved"],
+    "renamed": [],
+    "signatureChanged": [],
+    "coverage": "full",
+    "bySurface": {
+      ".": {
+        "added": [],
+        "removed": ["unusedRemoved", "usedRemoved"],
+        "kept": ["format", "keep"]
+      },
+      "./plugin": {
+        "added": [],
+        "removed": ["dynamicRemoved"],
+        "kept": ["pluginKeep"]
+      }
+    }
+  },
+  "bindings": [
+    {
+      "symbol": "usedRemoved",
+      "used": true,
+      "changeKind": "removed",
+      "decision": "action",
+      "rationale": "used export 'usedRemoved' was removed from the static main surface; this is an actionable caller break, not a version bump by itself",
+      "ruleId": "used_removed",
+      "surface": ".",
+      "dynamicImport": false
+    },
+    {
+      "symbol": "dynamicRemoved",
+      "used": false,
+      "changeKind": "removed",
+      "decision": "unknown",
+      "rationale": "s127-golden-kit/plugin is loaded only via import(); member usage of 'dynamicRemoved' is unknown. Dynamic import of a package surface is unknown, not action",
+      "ruleId": "dynamic_import",
+      "surface": "./plugin",
+      "dynamicImport": true
+    },
+    {
+      "symbol": "format",
+      "used": true,
+      "changeKind": "unchanged",
+      "decision": "no_action",
+      "rationale": "used export 'format' is unchanged; a newer version alone is not a break",
+      "ruleId": "used_unchanged",
+      "surface": ".",
+      "dynamicImport": false
+    },
+    {
+      "symbol": "unusedRemoved",
+      "used": false,
+      "changeKind": "removed",
+      "decision": "no_action",
+      "rationale": "export 'unusedRemoved' was removed but is not statically imported; unused export change is not a caller defect",
+      "ruleId": "unused_change_not_caller_defect",
+      "surface": ".",
+      "dynamicImport": false
+    }
+  ],
+  "summary": {
+    "nextAction": "action",
+    "unknownReasons": ["dynamic_import"],
+    "unusedChanges": ["unusedRemoved"],
+    "actionableChanges": ["usedRemoved"]
+  },
+  "prior": {
+    "ref": null,
+    "correction": null,
+    "path": null,
+    "sha256": null,
+    "sequence": 0,
+    "immutable": true
+  },
+  "limitations": [
+    "synthetic fixture; not live-capture; not paid demand",
+    "no full TypeScript program analysis; type-only imports are not runtime use",
+    "no runtime execution of caller or package code; no package lifecycle scripts",
+    "dynamic import() of s127-golden-kit/plugin ⇒ unknown contribution for that surface",
+    "export scan covers static ESM named exports in these fixture files only",
+    "a newer version alone is not a break",
+    "unused export change is not a caller defect",
+    "lockfile has no registry resolved URL; resolvedOld/resolvedNew taken from the synthetic lock version field",
+    "computed specifiers, re-export graphs, and CJS interop are not present in this fixture and stay unknown if a producer claims them"
+  ]
+}

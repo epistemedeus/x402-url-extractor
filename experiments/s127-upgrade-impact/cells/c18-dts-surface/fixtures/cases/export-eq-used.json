@@ -1,0 +1,31 @@
+{
+  "id": "export-eq-used",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "fixture",
+  "title": "Removed export= used by import = require in caller .ts",
+  "caller": {
+    "root": "callers/export-eq-used",
+    "manifestPath": "callers/export-eq-used/package.json",
+    "sourceRoots": ["callers/export-eq-used/src"]
+  },
+  "dependency": {
+    "name": "type-kit",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "oldTree": "packages/type-kit/1.0.0",
+    "newTree": "packages/type-kit/2.0.0-removed-export-eq"
+  },
+  "expect": {
+    "summary.nextAction": "action",
+    "exportDiff.removed": ["export="],
+    "bindings": [
+      {
+        "symbol": "export=",
+        "used": true,
+        "changeKind": "removed",
+        "decision": "action"
+      }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "demo-sig",
+  "version": "1.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "default": "./index.js"
+    }
+  },
+  "types": "./index.d.ts"
+}

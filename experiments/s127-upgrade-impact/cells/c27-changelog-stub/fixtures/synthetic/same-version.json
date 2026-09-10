@@ -1,0 +1,22 @@
+{
+  "id": "same-version",
+  "label": "synthetic",
+  "title": "same old/new version ⇒ no_action even with empty changelog",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "dependency": { "name": "demo-widget", "oldVersion": "1.4.2", "newVersion": "1.4.2" }
+  },
+  "expect": {
+    "decision": "no_action",
+    "ruleId": "same_version_noop",
+    "delta": "none",
+    "usageBinding": false
+  },
+  "binderWould": {
+    "coarse": "no_action",
+    "decisionChangedRelativeToChangelog": false,
+    "note": "Same-version no-op is shared with the usage binder (packet rule 6)."
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "schema": "s127.upgrade-impact.packet.v1",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "caller": {
+    "manifestPath": "cells/c08-prior-correct/fixtures/synthetic-caller/package.json",
+    "lockfilePath": "cells/c08-prior-correct/fixtures/synthetic-caller/package-lock.json",
+    "sourceRoots": ["cells/c08-prior-correct/fixtures/synthetic-caller/src"],
+    "evidenceClass": "fixture"
+  },
+  "dependency": {
+    "name": "s127-synthetic-dep",
+    "oldVersion": "1.0.0",
+    "newVersion": "1.1.0",
+    "resolvedOld": "1.0.0",
+    "resolvedNew": "1.1.0"
+  },
+  "provenance": [
+    {
+      "path": "cells/c08-prior-correct/fixtures/synthetic-dep/v1.0.0.js",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "db62d0e3025bbc4b44aa9e48affbc5f2bccae8d7cb25b36546835c02ee31b425",
+      "coverage": "complete",
+      "label": "synthetic"
+    },
+    {
+      "path": "cells/c08-prior-correct/fixtures/synthetic-dep/v1.1.0-signature.js",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "d842c9fc26d89a21654ab304e889fc2eba01df795d209555caba14373a122f4b",
+      "coverage": "complete",
+      "label": "synthetic"
+    }
+  ],
+  "usage": {
+    "imports": [{ "from": "s127-synthetic-dep", "names": ["format"], "dynamicImport": false }],
+    "dynamicImport": false
+  },
+  "exportDiff": {
+    "added": ["formatExtra"],
+    "removed": [],
+    "renamed": [],
+    "signatureChanged": ["format"],
+    "coverage": "complete"
+  },
+  "bindings": [
+    {
+      "symbol": "format",
+      "used": true,
+      "changeKind": "signatureChanged",
+      "decision": "action",
+      "rationale": "used export signature changed between resolvedOld and resolvedNew"
+    },
+    {
+      "symbol": "formatExtra",
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "unused export change is not a caller defect"
+    }
+  ],
+  "summary": {
+    "nextAction": "action",
+    "unknownReasons": [],
+    "unusedChanges": ["formatExtra"],
+    "actionableChanges": ["format"]
+  },
+  "prior": null,
+  "limitations": [
+    "synthetic fixture; not live-capture",
+    "no full TS analysis; no runtime exec",
+    "bindings are fixture-declared for prior hashing; not computed by this cell"
+  ]
+}

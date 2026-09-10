@@ -1,0 +1,26 @@
+{
+  "name": "s127-partial-lib",
+  "license": "MIT",
+  "description": "Synthetic slim packument: one version lacks dist.tarball.",
+  "coverage": "slim: versions 1.0.0 (complete) and 2.0.0 (no tarball)",
+  "dist-tags": {
+    "latest": "2.0.0"
+  },
+  "versions": {
+    "1.0.0": {
+      "name": "s127-partial-lib",
+      "version": "1.0.0",
+      "dist": {
+        "tarball": "https://registry.npmjs.org/s127-partial-lib/-/s127-partial-lib-1.0.0.tgz",
+        "shasum": "dddddddddddddddddddddddddddddddddddddddd"
+      }
+    },
+    "2.0.0": {
+      "name": "s127-partial-lib",
+      "version": "2.0.0",
+      "dist": {
+        "integrity": "sha512-no-tarball-url"
+      }
+    }
+  }
+}

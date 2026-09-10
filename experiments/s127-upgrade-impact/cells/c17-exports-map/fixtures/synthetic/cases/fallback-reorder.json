@@ -1,0 +1,15 @@
+{
+  "id": "fallback-reorder",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "fallback array reorder; main stable",
+  "notes": "Node tries fallbacks in order. Moving a string target before the import condition changes node-import resolution.",
+  "old": "packages/fallback-surface/1.0.0",
+  "new": "packages/fallback-surface/2.0.0-reorder",
+  "expect": {
+    "mainStableExportsChanged": true,
+    "runtimeResolutionChanged": true,
+    "decisionHint": "unknown",
+    "coverage": "full"
+  }
+}

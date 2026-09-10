@@ -1,0 +1,145 @@
+{
+  "schema": "s127.upgrade-impact.provenance.v1",
+  "capturedAtUtc": "2026-09-10T10:50:00Z",
+  "captureWindowUtc": "2026-09-10T10:46:00Z/2026-09-10T10:50:00Z",
+  "clock": "2026-09-10T10:50:00Z",
+  "userAgent": "s127-upgrade-impact-c12-real-b/0.1 (download-only; no execute)",
+  "package": "cookie",
+  "license": "MIT",
+  "oldVersion": "1.1.1",
+  "newVersion": "2.0.1",
+  "paidDemand": false,
+  "priceInvoked": false,
+  "notes": [
+    "Official npm registry tarballs and version documents; tar extract only; no npm install; no package scripts.",
+    "GitHub releases used only as changelog corroboration; compiled JS named exports are the export-diff source of truth.",
+    "Extracted fixtures omit source maps; full tarball remains in evidence.",
+    "Label live-capture = bytes retrieved from the official URL this session. Label fixture = frozen analysis input derived from that capture."
+  ],
+  "artifacts": [
+    {
+      "id": "tarball-old",
+      "url": "https://registry.npmjs.org/cookie/-/cookie-1.1.1.tgz",
+      "path": "evidence/real-b/cookie-1.1.1.tgz",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "0e9342b066986722098d9b108b238033862eae90b3d53ff90581538264d91b60",
+      "bytes": 13358,
+      "coverage": "full-npm-tarball",
+      "label": "live-capture",
+      "npmIntegrity": "sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==",
+      "npmShasum": "3bb9bdfc82369db9c2f69c93c9c3ceb310c88b3c"
+    },
+    {
+      "id": "tarball-new",
+      "url": "https://registry.npmjs.org/cookie/-/cookie-2.0.1.tgz",
+      "path": "evidence/real-b/cookie-2.0.1.tgz",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "8516126668fc55128916561047c055db77d0401dee1db108adce7267b4b06ff0",
+      "bytes": 13277,
+      "coverage": "full-npm-tarball",
+      "label": "live-capture",
+      "npmIntegrity": "sha512-yuToqVvRrj6pfDXREyQAAv8SkAEk/8GS3jQRTiUMm66TVtBYmqQeoEjL2Lmq8Rpo6271vH76InTChTitEAm65w==",
+      "npmShasum": "1fc7e9bddf38fa9567cd4d750820087cdb5d6e98"
+    },
+    {
+      "id": "version-old",
+      "url": "https://registry.npmjs.org/cookie/1.1.1",
+      "path": "evidence/real-b/npm/cookie-1.1.1-version.json",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "8380401007e1478749d700253ea91d88b1474b2a732d33660973228e7cca59ec",
+      "bytes": 2064,
+      "coverage": "npm-version-document-as-returned",
+      "label": "live-capture"
+    },
+    {
+      "id": "version-new",
+      "url": "https://registry.npmjs.org/cookie/2.0.1",
+      "path": "evidence/real-b/npm/cookie-2.0.1-version.json",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "f3a293fe9a32e366424438cbb9aa6e202c2f0f143aec4f364169862bd8864b07",
+      "bytes": 2561,
+      "coverage": "npm-version-document-as-returned",
+      "label": "live-capture"
+    },
+    {
+      "id": "packument-slim",
+      "url": "https://registry.npmjs.org/cookie",
+      "path": "evidence/real-b/npm/cookie-packument.slim.json",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "bdddc87359d8b3067385f1a98e73279e6dec547a923d8daf6c337e4122335e2f",
+      "bytes": 1404,
+      "coverage": "slim name/license/dist-tags.latest/time subset/versions 1.1.1 and 2.0.1",
+      "label": "fixture"
+    },
+    {
+      "id": "github-releases-slim",
+      "url": "https://api.github.com/repos/jshttp/cookie/releases?per_page=10",
+      "path": "evidence/real-b/github/releases-slim.json",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "69f65d12c5a0df6e0d6c8c741c2bc89c9e1b8b783b711ae37c42eb433ee39b24",
+      "bytes": 2065,
+      "coverage": "tag/body for v1.1.1 v2.0.0 v2.0.1; author objects stripped",
+      "label": "live-capture"
+    },
+    {
+      "id": "extracted-old-js",
+      "url": null,
+      "path": "fixtures/real-b/extracted/cookie-1.1.1/dist/index.js",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "b67c70355a2b0dbd2e78b479b94107f34d5340e54f1479dc0974224a2a5d69dd",
+      "bytes": 12004,
+      "coverage": "tarball package/dist/index.js; source-map omitted",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-old-dts",
+      "url": null,
+      "path": "fixtures/real-b/extracted/cookie-1.1.1/dist/index.d.ts",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "79c164aa4f8a8418df7717206ea52508f72743224a6b9c705f10724c6dbb5548",
+      "bytes": 7053,
+      "coverage": "tarball package/dist/index.d.ts",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-old-manifest",
+      "url": null,
+      "path": "fixtures/real-b/extracted/cookie-1.1.1/package.json",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "e13337a4eb106b201e0502361f3214af9cc22ae88b2bfac2368996bb949a102f",
+      "bytes": 1095,
+      "coverage": "tarball package/package.json",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-new-js",
+      "url": null,
+      "path": "fixtures/real-b/extracted/cookie-2.0.1/dist/index.js",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "b728aa01f45e9115920e2a92e2f3d71c1b5acfbb8bc1d702b87397860c4ba925",
+      "bytes": 12046,
+      "coverage": "tarball package/dist/index.js; source-map omitted",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-new-dts",
+      "url": null,
+      "path": "fixtures/real-b/extracted/cookie-2.0.1/dist/index.d.ts",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "d0c80866b3a63107db0659fa609f23e8a80e53117e7b0146ae1cfd3d3aa33b27",
+      "bytes": 7084,
+      "coverage": "tarball package/dist/index.d.ts",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-new-manifest",
+      "url": null,
+      "path": "fixtures/real-b/extracted/cookie-2.0.1/package.json",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "75cd16a27d7d0018a08dcbe46eef242f5cbaae4c47efd95979c77ddad59e5fac",
+      "bytes": 1328,
+      "coverage": "tarball package/package.json",
+      "label": "fixture"
+    }
+  ]
+}

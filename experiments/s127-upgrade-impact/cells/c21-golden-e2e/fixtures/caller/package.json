@@ -1,0 +1,10 @@
+{
+  "name": "s127-c21-golden-caller",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Synthetic S127 c21 golden caller. Label: synthetic. Not live-capture. Not published. No paid demand.",
+  "dependencies": {
+    "s127-golden-kit": "1.0.0"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "staticImports": [
+    {
+      "imported": "pathToRegexp",
+      "local": "pathToRegexp",
+      "specifier": "path-to-regexp",
+      "used": true
+    },
+    {
+      "imported": "tokensToFunction",
+      "local": "tokensToFunction",
+      "specifier": "path-to-regexp",
+      "used": true
+    },
+    {
+      "imported": "regexpToFunction",
+      "local": "regexpToFunction",
+      "specifier": "path-to-regexp",
+      "used": false
+    }
+  ],
+  "dynamicImport": false,
+  "coverage": "esm-static-named-import"
+}

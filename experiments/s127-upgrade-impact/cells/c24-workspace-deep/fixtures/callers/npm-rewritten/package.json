@@ -1,0 +1,10 @@
+{
+  "name": "c24-monorepo-npm-rewritten",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Synthetic npm workspaces monorepo where apps/web package.json was rewritten to a registry range while the lockfile still links the workspace path. Label: fixture.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}

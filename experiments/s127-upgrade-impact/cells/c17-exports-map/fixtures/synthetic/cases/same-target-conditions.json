@@ -1,0 +1,16 @@
+{
+  "id": "same-target-conditions",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "conditional wrap of the same target; main and runtime resolution stable",
+  "notes": "Map structure changed; node-import and node-require still resolve to ./index.js. Still unknown without usage (structure change / old Node vs new).",
+  "old": "packages/dual-surface/1.0.0",
+  "new": "packages/dual-surface/2.0.0-same-target-conditions",
+  "expect": {
+    "mainStableExportsChanged": true,
+    "runtimeResolutionChanged": false,
+    "mapStructureChanged": true,
+    "decisionHint": "unknown",
+    "coverage": "full"
+  }
+}

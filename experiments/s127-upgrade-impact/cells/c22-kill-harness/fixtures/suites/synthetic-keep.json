@@ -1,0 +1,26 @@
+{
+  "schema": "s127.upgrade-impact.kill-suite.v1",
+  "id": "synthetic-keep",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "required": ["synthetic-standin-a", "synthetic-standin-b"],
+  "notes": "Stand-ins for cases A/B. Case A withholds action on an unused removal that changelog skim would review. Case B matches action-like. Suite keep because at least one required case changed.",
+  "cases": [
+    {
+      "id": "synthetic-standin-a",
+      "role": "case-a-standin",
+      "label": "synthetic",
+      "methodA": "../cases/synthetic-standin-a/registry-skim-decision.json",
+      "methodB": "../cases/synthetic-standin-a/binding-packet.json"
+    },
+    {
+      "id": "synthetic-standin-b",
+      "role": "case-b-standin",
+      "label": "synthetic",
+      "methodA": "../cases/synthetic-standin-b/registry-skim-decision.json",
+      "methodB": "../cases/synthetic-standin-b/binding-packet.json"
+    }
+  ],
+  "expect": { "verdict": "keep" }
+}

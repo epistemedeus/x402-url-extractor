@@ -1,0 +1,39 @@
+{
+  "id": "removed-type-unused",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "fixture",
+  "title": "Removed type export is not imported by the caller",
+  "notes": "Unused export change is not a caller defect.",
+  "caller": {
+    "root": "callers/removed-type-unused",
+    "manifestPath": "callers/removed-type-unused/package.json",
+    "sourceRoots": ["callers/removed-type-unused/src"]
+  },
+  "dependency": {
+    "name": "type-kit",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "oldTree": "packages/type-kit/1.0.0",
+    "newTree": "packages/type-kit/2.0.0-removed-delta"
+  },
+  "expect": {
+    "summary.nextAction": "no_action",
+    "exportDiff.removed": ["Delta"],
+    "exportDiff.coverage": "full",
+    "bindings": [
+      {
+        "symbol": "Delta",
+        "used": false,
+        "changeKind": "removed",
+        "decision": "no_action"
+      },
+      {
+        "symbol": "Alpha",
+        "used": true,
+        "changeKind": "unchanged",
+        "decision": "no_action"
+      }
+    ]
+  }
+}

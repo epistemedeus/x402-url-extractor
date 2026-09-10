@@ -1,0 +1,14 @@
+{
+  "schema": "s127.upgrade-impact.registry-skim.input.v1",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0"
+  },
+  "changelogCoverage": "partial",
+  "changelogText": "…truncated…",
+  "notes": "Partial changelog stays unknown, not action."
+}

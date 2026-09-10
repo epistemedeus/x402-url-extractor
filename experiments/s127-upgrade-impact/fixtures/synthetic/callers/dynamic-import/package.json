@@ -1,0 +1,9 @@
+{
+  "name": "caller-dynamic-import",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic caller that only loads demo-widget via import(). Label: synthetic.",
+  "dependencies": {
+    "demo-widget": "^1.0.0"
+  }
+}

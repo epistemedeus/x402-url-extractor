@@ -1,0 +1,40 @@
+{
+  "schema": "s127.upgrade-impact.hostile-manifest.v1",
+  "label": "fixture",
+  "synthetic": true,
+  "liveCapture": false,
+  "paidDemand": false,
+  "clock": "2026-09-10T12:00:00.000Z",
+  "cases": [
+    {
+      "id": "path-traversal",
+      "dir": "path-traversal",
+      "what": "package.json path-bearing fields escape the package root"
+    },
+    {
+      "id": "install-scripts",
+      "dir": "install-scripts",
+      "what": "lifecycle scripts that write SCRIPT_RAN.marker if executed; must never run"
+    },
+    {
+      "id": "enormous-exports",
+      "dir": "enormous-exports",
+      "what": "5000+ top-level exports keys; analyzer must cap and return unknown"
+    },
+    {
+      "id": "symlink-bomb",
+      "dir": "symlink-bomb",
+      "what": "one out-of-tree symlink plus DESCRIPTION of bombs not created"
+    },
+    {
+      "id": "conflicting-lockfile",
+      "dir": "conflicting-lockfile",
+      "what": "package.json / package-lock.json / yarn.lock / pnpm-lock.yaml disagree on hostile-dep"
+    },
+    {
+      "id": "binary-source",
+      "dir": "binary-source",
+      "what": "PNG+NUL bytes declared as main/index.js"
+    }
+  ]
+}

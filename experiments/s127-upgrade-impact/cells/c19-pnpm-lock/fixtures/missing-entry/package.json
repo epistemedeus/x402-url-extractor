@@ -1,0 +1,9 @@
+{
+  "name": "c19-missing-entry",
+  "private": true,
+  "description": "Synthetic: package.json has a dep the lockfile importer does not. Label: fixture.",
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "left-pad": "1.3.0"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "clock": "2026-09-10T12:00:00.000Z",
+  "packRoot": "/tmp/s127/x402-url-extractor/experiments/s127-upgrade-impact",
+  "priorPath": "fixtures/synthetic/priors/removed-export-used.seq-1.json",
+  "priorSha256": "cb9049396534daf8f11fa98379cc9976ce1df96dd899ec6ef0e1f31d12e07175",
+  "goldens": [
+    {
+      "id": "dynamic-import",
+      "path": "fixtures/synthetic/goldens/dynamic-import.packet.json",
+      "nextAction": "unknown"
+    },
+    {
+      "id": "partial-missing-source",
+      "path": "fixtures/synthetic/goldens/partial-missing-source.packet.json",
+      "nextAction": "unknown"
+    },
+    {
+      "id": "removed-export-unused",
+      "path": "fixtures/synthetic/goldens/removed-export-unused.packet.json",
+      "nextAction": "no_action"
+    },
+    {
+      "id": "removed-export-used",
+      "path": "fixtures/synthetic/goldens/removed-export-used.packet.json",
+      "nextAction": "action"
+    },
+    {
+      "id": "renamed-export",
+      "path": "fixtures/synthetic/goldens/renamed-export.packet.json",
+      "nextAction": "action"
+    },
+    {
+      "id": "same-version-noop",
+      "path": "fixtures/synthetic/goldens/same-version-noop.packet.json",
+      "nextAction": "no_action"
+    },
+    {
+      "id": "signature-changed",
+      "path": "fixtures/synthetic/goldens/signature-changed.packet.json",
+      "nextAction": "action"
+    },
+    {
+      "id": "version-range-prerelease",
+      "path": "fixtures/synthetic/goldens/version-range-prerelease.packet.json",
+      "nextAction": "unknown"
+    },
+    {
+      "id": "workspace-alias",
+      "path": "fixtures/synthetic/goldens/workspace-alias.packet.json",
+      "nextAction": "unknown"
+    }
+  ]
+}

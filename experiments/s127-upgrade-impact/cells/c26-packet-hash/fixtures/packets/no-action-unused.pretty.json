@@ -1,0 +1,87 @@
+{
+  "schema": "s127.upgrade-impact.packet.v1",
+  "createdAt": "2026-09-10T09:54:59.000Z",
+  "clock": "2026-09-10T09:54:59.000Z",
+  "caller": {
+    "manifestPath": "cells/c26-packet-hash/fixtures/callers/unused-removed/package.json",
+    "lockfilePath": "cells/c26-packet-hash/fixtures/callers/unused-removed/package-lock.json",
+    "sourceRoots": [
+      "cells/c26-packet-hash/fixtures/callers/unused-removed/src"
+    ],
+    "evidenceClass": "fixture"
+  },
+  "dependency": {
+    "name": "s127-hash-demo",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "resolvedOld": "1.0.0",
+    "resolvedNew": "2.0.0"
+  },
+  "provenance": [
+    {
+      "path": "cells/c26-packet-hash/fixtures/synthetic-dep/v1.0.0.js",
+      "retrievedAt": "2026-09-10T09:54:59.000Z",
+      "contentSha256": "286bbc69083347a5e10e205bf490bd97b99b6124448034e0ba1392361a862e15",
+      "coverage": "complete",
+      "label": "synthetic"
+    },
+    {
+      "path": "cells/c26-packet-hash/fixtures/synthetic-dep/v2.0.0-extra-removed.js",
+      "retrievedAt": "2026-09-10T09:54:59.000Z",
+      "contentSha256": "69bc7275a0605fa3b7755abf620350e7b3c0d430c352b6c357182bf3061d7748",
+      "coverage": "complete",
+      "label": "synthetic"
+    }
+  ],
+  "usage": {
+    "imports": [
+      {
+        "from": "s127-hash-demo",
+        "names": [
+          "parse"
+        ],
+        "dynamicImport": false
+      }
+    ],
+    "dynamicImport": false,
+    "coverage": "complete"
+  },
+  "exportDiff": {
+    "added": [],
+    "removed": [
+      "extra"
+    ],
+    "renamed": [],
+    "signatureChanged": [],
+    "coverage": "complete"
+  },
+  "bindings": [
+    {
+      "symbol": "parse",
+      "used": true,
+      "changeKind": "unchanged",
+      "decision": "no_action",
+      "rationale": "used export is unchanged; a newer version is not itself a break"
+    },
+    {
+      "symbol": "extra",
+      "used": false,
+      "changeKind": "removed",
+      "decision": "no_action",
+      "rationale": "unused export change is not a caller defect"
+    }
+  ],
+  "summary": {
+    "nextAction": "no_action",
+    "unknownReasons": [],
+    "unusedChanges": [
+      "extra"
+    ],
+    "actionableChanges": []
+  },
+  "prior": null,
+  "limitations": [
+    "synthetic fixture; not live-capture",
+    "no full TS analysis; no runtime exec"
+  ]
+}

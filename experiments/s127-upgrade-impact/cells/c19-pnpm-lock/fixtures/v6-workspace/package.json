@@ -1,0 +1,8 @@
+{
+  "name": "c19-v6-workspace",
+  "private": true,
+  "description": "Synthetic workspace fixture (lockfile v6). Label: fixture. Not live-capture.",
+  "dependencies": {
+    "@acme/lib": "workspace:^"
+  }
+}

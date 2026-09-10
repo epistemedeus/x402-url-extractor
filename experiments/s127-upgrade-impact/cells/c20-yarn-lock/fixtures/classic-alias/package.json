@@ -1,0 +1,8 @@
+{
+  "name": "caller-yarn-classic-alias",
+  "private": true,
+  "description": "Synthetic npm alias (widget → demo-widget). Label: synthetic. Not live-capture.",
+  "dependencies": {
+    "widget": "npm:demo-widget@^1.0.0"
+  }
+}

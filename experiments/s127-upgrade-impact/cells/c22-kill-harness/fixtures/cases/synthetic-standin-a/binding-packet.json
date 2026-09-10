@@ -1,0 +1,88 @@
+{
+  "schema": "s127.upgrade-impact.packet.v1",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "caller": {
+    "manifestPath": "fixtures/synthetic/callers/removed-export-unused/package.json",
+    "lockfilePath": "fixtures/synthetic/callers/removed-export-unused/package-lock.json",
+    "sourceRoots": ["fixtures/synthetic/callers/removed-export-unused/src"],
+    "evidenceClass": "synthetic"
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "resolvedOld": "1.0.0",
+    "resolvedNew": "2.0.0"
+  },
+  "provenance": [
+    {
+      "path": "cells/c22-kill-harness/fixtures/cases/synthetic-standin-a/changelog.md",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "58202552052ee65bc05c3e4ebac9319da31a3b4a876ecc4f4b6e1235ec331413",
+      "coverage": "complete",
+      "label": "synthetic"
+    }
+  ],
+  "usage": {
+    "items": [
+      { "symbol": "beta", "kind": "named", "dynamicImport": false, "used": true },
+      { "symbol": "gamma", "kind": "named", "dynamicImport": false, "used": true }
+    ],
+    "dynamicImport": false,
+    "coverage": "complete"
+  },
+  "exportDiff": {
+    "added": [],
+    "removed": ["alpha"],
+    "renamed": [],
+    "signatureChanged": [],
+    "coverage": "complete"
+  },
+  "bindings": [
+    {
+      "symbol": "alpha",
+      "used": false,
+      "changeKind": "removed",
+      "decision": "no_action",
+      "rationale": "export alpha was removed but is not statically used; unused change is not a caller defect",
+      "ruleId": "unused_change_not_caller_defect"
+    },
+    {
+      "symbol": "beta",
+      "used": true,
+      "changeKind": "unchanged",
+      "decision": "no_action",
+      "rationale": "used export beta is unchanged; a newer version is not itself a break",
+      "ruleId": "used_unchanged"
+    },
+    {
+      "symbol": "gamma",
+      "used": true,
+      "changeKind": "unchanged",
+      "decision": "no_action",
+      "rationale": "used export gamma is unchanged; a newer version is not itself a break",
+      "ruleId": "used_unchanged"
+    }
+  ],
+  "summary": {
+    "nextAction": "no_action",
+    "unknownReasons": [],
+    "unusedChanges": ["alpha"],
+    "actionableChanges": []
+  },
+  "prior": {
+    "path": null,
+    "sha256": null,
+    "sequence": 0,
+    "immutable": true,
+    "correction": null
+  },
+  "limitations": [
+    "synthetic stand-in for real-source case A; not live-capture",
+    "no full TypeScript analysis; TS and type-only surfaces stay unknown",
+    "no runtime execution of untrusted packages or lifecycle scripts",
+    "a newer version alone is not a break",
+    "unused export change is not a caller defect"
+  ]
+}

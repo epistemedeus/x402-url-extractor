@@ -1,0 +1,22 @@
+{
+  "id": "prerelease-unknown",
+  "label": "synthetic",
+  "title": "same core with prerelease change ⇒ unknown (stub does not order prereleases)",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "oldVersion": "2.0.0-beta.1",
+    "newVersion": "2.0.0"
+  },
+  "expect": {
+    "decision": "unknown",
+    "ruleId": "prerelease_identity_unknown",
+    "delta": "unknown"
+  },
+  "binderWould": {
+    "coarse": "unknown",
+    "decisionChangedRelativeToChangelog": false,
+    "note": "c07 prerelease_range_ambiguous is force_unknown. Stub is also unknown here, but for a coarser reason."
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "s127-demo-lib",
+  "version": "0.9.0",
+  "description": "Synthetic registry version document without tarball bytes (partial page).",
+  "dist": {
+    "tarball": "https://registry.npmjs.org/s127-demo-lib/-/s127-demo-lib-0.9.0.tgz",
+    "integrity": "sha512-not-a-real-digest"
+  }
+}

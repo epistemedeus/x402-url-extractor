@@ -1,0 +1,16 @@
+{
+  "id": "invalid-mixed-keys",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "mixed subpath and condition keys at exports root",
+  "notes": "Node throws ERR_INVALID_PACKAGE_CONFIG. Coverage unknown. Not action.",
+  "old": "packages/dual-surface/1.0.0",
+  "new": "packages/invalid-mixed/1.0.0",
+  "expect": {
+    "coverage": "unknown",
+    "decisionHint": "unknown",
+    "unknownReasonsIncludes": [
+      "invalid_exports_map"
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "caller-partial-missing-source",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic caller whose new package tree is missing the entry module. Label: synthetic.",
+  "dependencies": {
+    "demo-widget": "^1.0.0"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "@c24/web-unused",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Synthetic workspace app that imports only format from shared-kit. Label: fixture.",
+  "dependencies": {
+    "shared-kit": "workspace:*"
+  }
+}

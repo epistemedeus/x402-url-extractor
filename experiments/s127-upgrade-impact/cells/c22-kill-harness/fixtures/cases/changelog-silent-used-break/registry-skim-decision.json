@@ -1,0 +1,58 @@
+{
+  "schema": "s127.upgrade-impact.registry-skim.decision.v1",
+  "inputSchema": "s127.upgrade-impact.registry-skim.input.v1",
+  "method": "registry_version_changelog_skim",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline skim stub; no purchase; do not invent paid demand"
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "1.0.1"
+  },
+  "observation": {
+    "versionChanged": true,
+    "semverDelta": "patch",
+    "changelogCoverage": "complete",
+    "changelogPath": "fixtures/cases/changelog-silent-used-break/changelog.md",
+    "breakingKeywords": [],
+    "keywordScan": "stub_regex",
+    "changelogBytes": 156,
+    "changelogSha256": "85bc7239ea96bb89811fba612030e7c500da1356d9d2b4cefe347f253928d079"
+  },
+  "summary": {
+    "nextAction": "no_action",
+    "ruleId": "patch_changelog_silent",
+    "rationale": "patch 1.0.0 -> 1.0.1; complete changelog skim found no stub breaking keywords. Newer version alone is not a break.",
+    "unknownReasons": [],
+    "unusedChanges": [],
+    "actionableChanges": []
+  },
+  "limitations": [
+    "Method A is a registry version + changelog skim stub, not a maintainer-intent parser.",
+    "Keyword scan is not full changelog understanding and is not TypeScript analysis.",
+    "A newer version alone is not a break; skim review_changelog is not a caller-defect claim.",
+    "Unused export change is not a caller defect.",
+    "Missing, conflicting, or partial source stays unknown, not action.",
+    "No runtime execution of untrusted packages or lifecycle scripts.",
+    "Offline default. No payment attempted. A new version is not paid demand."
+  ],
+  "provenance": [
+    {
+      "path": "fixtures/cases/changelog-silent-used-break/changelog.md",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "85bc7239ea96bb89811fba612030e7c500da1356d9d2b4cefe347f253928d079",
+      "coverage": "complete",
+      "label": "synthetic"
+    }
+  ]
+}

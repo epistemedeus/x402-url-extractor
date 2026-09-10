@@ -1,0 +1,13 @@
+{
+  "name": "c27-changelog-stub",
+  "private": true,
+  "type": "module",
+  "description": "S127 kill-harness baseline A: changelog/registry skim without usage binding. Not a paid job.",
+  "scripts": {
+    "test": "node --test test/changelog.test.mjs",
+    "fixtures": "node run-fixtures.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

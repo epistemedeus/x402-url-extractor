@@ -1,0 +1,15 @@
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    dependencies:
+      widget:
+        specifier: npm:demo-widget@1.0.0
+        version: demo-widget@1.0.0
+
+packages:
+  demo-widget@1.0.0:
+    resolution: {integrity: sha512-fixture-alias}
+
+snapshots:
+  demo-widget@1.0.0: {}

@@ -1,0 +1,21 @@
+{
+  "name": "shared-kit",
+  "version": "2.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic stand-in for a same-name registry package. Label: fixture. Not live-capture. Not fetched from npm. Not a real registry tarball.",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://example.invalid/unrelated-shared-kit.git"
+  },
+  "scripts": {
+    "preinstall": "node -e \"require('fs').writeFileSync('SENTINEL_SHOULD_NOT_EXIST','executed')\"",
+    "install": "node -e \"require('fs').writeFileSync('SENTINEL_SHOULD_NOT_EXIST','executed')\"",
+    "postinstall": "node -e \"require('fs').writeFileSync('SENTINEL_SHOULD_NOT_EXIST','executed')\"",
+    "prepare": "node -e \"require('fs').writeFileSync('SENTINEL_SHOULD_NOT_EXIST','executed')\""
+  }
+}

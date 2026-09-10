@@ -1,0 +1,62 @@
+{
+  "id": "npm-workspace-link-vs-registry",
+  "label": "fixture",
+  "kind": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "fixture",
+  "role": "identity-conflict",
+  "title": "npm workspaces: lockfile link to packages/shared-kit vs registry shared-kit@2.1.0",
+  "notes": "Caller apps/web depends on shared-kit via workspace:* and statically imports format + localOnly. Lockfile v3 records link:true resolved to packages/shared-kit (version 0.4.0). Upgrade target is a synthetic registry tarball of the same name. Naive exportDiff looks like a used-export removal; expected nextAction is still unknown.",
+  "caller": {
+    "root": "fixtures/callers/npm-workspaces",
+    "workspaceRoot": "fixtures/callers/npm-workspaces",
+    "manifestPath": "fixtures/callers/npm-workspaces/apps/web/package.json",
+    "lockfilePath": "fixtures/callers/npm-workspaces/package-lock.json",
+    "lockfileKind": "npm",
+    "sourceRoots": ["fixtures/callers/npm-workspaces/apps/web/src"]
+  },
+  "dependency": {
+    "name": "shared-kit",
+    "oldVersion": "0.4.0",
+    "newVersion": "2.1.0",
+    "resolvedOld": "workspace:packages/shared-kit",
+    "resolvedNew": "https://example.invalid/registry/shared-kit/-/shared-kit-2.1.0.tgz"
+  },
+  "trees": {
+    "old": "fixtures/callers/npm-workspaces/packages/shared-kit",
+    "new": "fixtures/trees/registry-shared-kit-2.1.0"
+  },
+  "naiveExportDiffIfIdentitiesWereSame": {
+    "added": ["parse"],
+    "removed": ["localOnly"],
+    "renamed": [],
+    "signatureChanged": [],
+    "note": "Do not bind this as action. Trees are different identities; exportDiff coverage is conflict."
+  },
+  "expect": {
+    "identityConflict": true,
+    "kind": "workspace_vs_registry_identity_conflict",
+    "summary.nextAction": "unknown",
+    "actionableChanges": [],
+    "exportDiff.coverage": "conflict",
+    "unknownReasonsInclude": [
+      "workspace_vs_registry_identity_conflict",
+      "lockfile_alias_or_workspace_disagreement",
+      "workspace_disagreement"
+    ],
+    "bindingsDecision": "unknown",
+    "packetPath": "fixtures/expected/packets/npm-workspace-link-vs-registry.packet.json",
+    "decisionNotes": [
+      "Lockfile identity is npm packages{node_modules/shared-kit}.link=true resolved=packages/shared-kit (workspace path, version 0.4.0).",
+      "Upgrade target is a registry locator of the same name (synthetic 2.1.0 tarball at example.invalid). Same name is not same identity.",
+      "Alias/workspace/lockfile disagreement ⇒ unknown until resolved (packet rule 5).",
+      "Conflicting source ⇒ unknown, not action (packet rule 3).",
+      "A newer registry version is not itself a break (packet rule 1).",
+      "Caller uses localOnly, which is absent from the registry stand-in. That must not become action: the removal is not an upgrade of the workspace package.",
+      "workspace:* is not a semver range that includes registry 2.1.0; swapping protocol is an identity change.",
+      "Nested workspace dep shared-kit-core is part of the local identity and is absent from the registry stand-in; that still does not justify action."
+    ]
+  }
+}

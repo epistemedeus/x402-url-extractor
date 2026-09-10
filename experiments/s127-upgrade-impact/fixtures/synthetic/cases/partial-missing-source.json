@@ -1,0 +1,27 @@
+{
+  "id": "partial-missing-source",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "title": "New package entry is missing",
+  "notes": "Conflicting/missing/partial source yields unknown, not action. Caller does import alpha.",
+  "caller": {
+    "root": "callers/partial-missing-source",
+    "manifestPath": "callers/partial-missing-source/package.json",
+    "lockfilePath": "callers/partial-missing-source/package-lock.json",
+    "sourceRoots": ["callers/partial-missing-source/src"]
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "oldTree": "packages/demo-widget/1.0.0",
+    "newTree": "packages/demo-widget/2.0.0-partial"
+  },
+  "expect": {
+    "summary.nextAction": "unknown",
+    "exportDiff.coverage": "partial",
+    "actionableSymbols": [],
+    "unknownReasonsInclude": ["partial_source"]
+  }
+}

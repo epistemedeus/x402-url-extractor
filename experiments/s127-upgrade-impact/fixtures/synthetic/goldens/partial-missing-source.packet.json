@@ -1,0 +1,150 @@
+{
+  "schema": "s127.upgrade-impact.packet.v1",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "caller": {
+    "manifestPath": "fixtures/synthetic/callers/partial-missing-source/package.json",
+    "lockfilePath": "fixtures/synthetic/callers/partial-missing-source/package-lock.json",
+    "sourceRoots": [
+      "fixtures/synthetic/callers/partial-missing-source/src"
+    ],
+    "evidenceClass": "synthetic"
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "resolvedOld": "1.0.0",
+    "resolvedNew": "2.0.0",
+    "requestedRange": "^1.0.0"
+  },
+  "provenance": [
+    {
+      "path": "fixtures/synthetic/packages/demo-widget/1.0.0/README.md",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "42a748afe4b402e2cc5b4bf20264cff5cd49051782cd797860606159d8da760e",
+      "coverage": "full",
+      "label": "synthetic"
+    },
+    {
+      "path": "fixtures/synthetic/packages/demo-widget/1.0.0/index.js",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "c945dc4166e32955a6f2cdadba57353ce2af1932798929a03a7d98e550e74daf",
+      "coverage": "full",
+      "label": "synthetic"
+    },
+    {
+      "path": "fixtures/synthetic/packages/demo-widget/1.0.0/package.json",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "c1a049ae8cd3fd86dd15ea1fc26bcf3a8ec15b97fa052669dd56b5b236ed16a8",
+      "coverage": "full",
+      "label": "synthetic"
+    },
+    {
+      "path": "fixtures/synthetic/packages/demo-widget/2.0.0-partial/README.md",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "001fe33c62d92b5763f790fc5dfa616591c85a540aff2995d808ea32a7372bf8",
+      "coverage": "full",
+      "label": "synthetic"
+    },
+    {
+      "path": "fixtures/synthetic/packages/demo-widget/2.0.0-partial/package.json",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "ea6d37b3696b01a359e7692d759f2acb652e32596b29997bf1f25dcf25d4e109",
+      "coverage": "full",
+      "label": "synthetic"
+    }
+  ],
+  "usage": [
+    {
+      "specifier": "demo-widget",
+      "symbol": "alpha",
+      "kind": "named",
+      "file": "src/app.js",
+      "dynamicImport": false,
+      "typeOnly": false
+    }
+  ],
+  "exportDiff": {
+    "added": [],
+    "removed": [
+      "alpha",
+      "beta",
+      "formatName",
+      "gamma"
+    ],
+    "renamed": [],
+    "signatureChanged": [],
+    "coverage": "partial"
+  },
+  "bindings": [
+    {
+      "symbol": "alpha",
+      "used": true,
+      "changeKind": "removed",
+      "decision": "unknown",
+      "rationale": "missing/partial source; cannot claim action",
+      "dynamicImport": false
+    },
+    {
+      "symbol": "beta",
+      "used": false,
+      "changeKind": "removed",
+      "decision": "no_action",
+      "rationale": "unused export change is not a caller defect",
+      "dynamicImport": false
+    },
+    {
+      "symbol": "formatName",
+      "used": false,
+      "changeKind": "removed",
+      "decision": "no_action",
+      "rationale": "unused export change is not a caller defect",
+      "dynamicImport": false
+    },
+    {
+      "symbol": "gamma",
+      "used": false,
+      "changeKind": "removed",
+      "decision": "no_action",
+      "rationale": "unused export change is not a caller defect",
+      "dynamicImport": false
+    }
+  ],
+  "summary": {
+    "nextAction": "unknown",
+    "unknownReasons": [
+      "partial_source"
+    ],
+    "unusedChanges": [
+      {
+        "symbol": "beta",
+        "changeKind": "removed"
+      },
+      {
+        "symbol": "formatName",
+        "changeKind": "removed"
+      },
+      {
+        "symbol": "gamma",
+        "changeKind": "removed"
+      }
+    ],
+    "actionableChanges": []
+  },
+  "prior": {
+    "ref": null,
+    "sequence": 0,
+    "immutable": true,
+    "correction": null
+  },
+  "limitations": [
+    "no full TypeScript program analysis",
+    "no runtime execution of caller or package code",
+    "export scan covers static ESM named/default/namespace and CJS exports.X; re-export graphs and computed specifiers are unknown",
+    "package_entry_missing",
+    "partial or missing package source; export diff coverage is not full",
+    "arity is a coarse signature; TypeScript types are unknown"
+  ],
+  "ok": true
+}

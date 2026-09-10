@@ -1,0 +1,50 @@
+{
+  "id": "c03-c05-used-removed",
+  "label": "synthetic",
+  "title": "Real c03 usage.v1 + nested c05 export-diff.v1 used+removed",
+  "input": {
+    "dependency": { "name": "example-dep", "oldVersion": "1.0.0", "newVersion": "2.0.0" },
+    "usage": {
+      "ok": true,
+      "schema": "s127.upgrade-impact.usage.v1",
+      "packageName": "example-dep",
+      "filesScanned": 1,
+      "filesSkipped": [],
+      "filesPartial": [],
+      "filesUnknown": [],
+      "unresolvedDynamics": [],
+      "usage": [
+        {
+          "file": "src/app.js",
+          "specifier": "example-dep",
+          "names": ["foo"],
+          "dynamic": false,
+          "dynamicImport": false,
+          "kind": "import",
+          "coverage": "static",
+          "language": "js",
+          "defaultImport": false,
+          "namespaceImport": false
+        }
+      ]
+    },
+    "exportDiff": {
+      "ok": true,
+      "schema": "s127.upgrade-impact.export-diff.v1",
+      "exportDiff": {
+        "added": [],
+        "removed": [{ "name": "foo", "symbol": "foo", "kind": "named", "entry": ".", "changeKind": "removed" }],
+        "renamed": [],
+        "signatureChanged": [],
+        "coverage": "full"
+      }
+    }
+  },
+  "expect": {
+    "nextAction": "review_breakages",
+    "actionableSymbols": ["foo"],
+    "unusedSymbols": [],
+    "decisions": { "foo": "action" },
+    "changeKinds": { "foo": "removed" }
+  }
+}

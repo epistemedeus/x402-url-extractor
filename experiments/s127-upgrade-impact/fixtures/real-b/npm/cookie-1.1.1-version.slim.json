@@ -1,0 +1,25 @@
+{
+  "name": "cookie",
+  "version": "1.1.1",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": null,
+  "exports": null,
+  "engines": {
+    "node": ">=18"
+  },
+  "published_at": "2025-11-26T17:50:20.759Z",
+  "dist": {
+    "tarball": "https://registry.npmjs.org/cookie/-/cookie-1.1.1.tgz",
+    "integrity": "sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==",
+    "shasum": "3bb9bdfc82369db9c2f69c93c9c3ceb310c88b3c",
+    "unpackedSize": 60539
+  },
+  "repository": {
+    "url": "git+https://github.com/jshttp/cookie.git",
+    "type": "git"
+  },
+  "homepage": "https://github.com/jshttp/cookie#readme",
+  "source": "https://registry.npmjs.org/cookie/1.1.1"
+}

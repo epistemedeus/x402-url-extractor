@@ -1,0 +1,8 @@
+{
+  "name": "c19-catalog-ok",
+  "private": true,
+  "description": "Synthetic catalog: specifier with catalogs section. Label: fixture.",
+  "dependencies": {
+    "react": "catalog:"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "main-changed-exports-stable",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "main field changes; exports map is unchanged",
+  "notes": "Modern Node ignores main when exports is present, so runtime entry via exports stays ./index.js. Older Node / some bundlers follow main. Environment-dependent unknown. A new version is not itself a break; this is a field disagreement, not action.",
+  "old": "packages/dual-surface/1.0.0",
+  "new": "packages/dual-surface/2.0.0-main-changed-exports-stable",
+  "expect": {
+    "mainStableExportsChanged": false,
+    "exportsStableMainChanged": true,
+    "mapStructureChanged": false,
+    "runtimeResolutionChanged": false,
+    "environmentDependent": true,
+    "decisionHint": "unknown",
+    "coverage": "full",
+    "unknownReasonsIncludes": [
+      "main_changed_exports_stable",
+      "legacy_entry_environment_dependent"
+    ]
+  }
+}

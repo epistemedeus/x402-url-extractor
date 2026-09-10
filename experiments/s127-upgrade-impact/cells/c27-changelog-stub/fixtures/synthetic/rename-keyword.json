@@ -1,0 +1,23 @@
+{
+  "id": "rename-keyword",
+  "label": "synthetic",
+  "title": "changelog says renamed ⇒ action without checking the caller import",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "changelogText": "The old parse method has been renamed to parseCookie."
+  },
+  "expect": {
+    "decision": "action",
+    "ruleId": "changelog_breaking_keyword",
+    "delta": "major"
+  },
+  "binderWould": {
+    "coarse": "no_action",
+    "decisionChangedRelativeToChangelog": true,
+    "note": "A caller that already imports parseCookie is no_action for the binder; stub still action."
+  }
+}

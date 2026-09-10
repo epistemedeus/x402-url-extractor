@@ -1,0 +1,21 @@
+{
+  "id": "patch-no-changelog",
+  "label": "synthetic",
+  "title": "patch bump with no changelog text ⇒ unknown",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "dependency": { "name": "demo-widget", "oldVersion": "1.0.0", "newVersion": "1.0.1" }
+  },
+  "expect": {
+    "decision": "unknown",
+    "ruleId": "patch_without_changelog",
+    "delta": "patch"
+  },
+  "binderWould": {
+    "coarse": "no_action",
+    "decisionChangedRelativeToChangelog": true,
+    "note": "Binder with complete unused-or-unchanged evidence can still say no_action; stub cannot."
+  }
+}

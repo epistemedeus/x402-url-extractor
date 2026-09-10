@@ -1,0 +1,23 @@
+{
+  "id": "lockfile-disagreement",
+  "label": "synthetic",
+  "title": "lockfile/alias disagreement ⇒ unknown, never action",
+  "input": {
+    "dependency": { "name": "demo-pkg", "oldVersion": "1.0.0", "newVersion": "2.0.0" },
+    "lockfile": { "disagreement": true, "aliasUnresolved": true },
+    "usage": {
+      "coverage": "complete",
+      "references": [{ "symbol": "foo", "kind": "named" }]
+    },
+    "exportDiff": {
+      "coverage": "complete",
+      "removed": ["foo"]
+    }
+  },
+  "expect": {
+    "nextAction": "unknown",
+    "actionableSymbols": [],
+    "unusedSymbols": [],
+    "decisions": { "foo": "unknown" }
+  }
+}

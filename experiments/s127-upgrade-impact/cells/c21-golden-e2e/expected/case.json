@@ -1,0 +1,29 @@
+{
+  "id": "c21-golden-mixed-surfaces",
+  "schema": "s127.upgrade-impact.synthetic-manifest.v1",
+  "label": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "title": "One caller + one old/new pair: used removal action, unused removal no_action, dynamic import unknown",
+  "notes": "Newer version is not itself a break. Unused export change is not a caller defect. Dynamic import of s127-golden-kit/plugin is unknown for that surface. Type-only import in types.ts is not runtime usage.",
+  "caller": {
+    "root": "cells/c21-golden-e2e/fixtures/caller",
+    "manifestPath": "cells/c21-golden-e2e/fixtures/caller/package.json",
+    "lockfilePath": "cells/c21-golden-e2e/fixtures/caller/package-lock.json",
+    "sourceRoots": ["cells/c21-golden-e2e/fixtures/caller/src"],
+    "evidenceClass": "synthetic"
+  },
+  "dependency": {
+    "name": "s127-golden-kit",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "resolvedOld": "1.0.0",
+    "resolvedNew": "2.0.0",
+    "oldTree": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/1.0.0",
+    "newTree": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/2.0.0"
+  },
+  "expectPacket": "cells/c21-golden-e2e/expected/packet.json",
+  "expectAssertions": "cells/c21-golden-e2e/expected/assertions.json"
+}

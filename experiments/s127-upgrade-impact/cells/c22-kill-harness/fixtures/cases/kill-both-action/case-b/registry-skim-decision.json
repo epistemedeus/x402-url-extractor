@@ -1,0 +1,33 @@
+{
+  "schema": "s127.upgrade-impact.registry-skim.decision.v1",
+  "method": "registry_version_changelog_skim",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "payment": { "attempted": false },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0"
+  },
+  "observation": {
+    "versionChanged": true,
+    "semverDelta": "major",
+    "changelogCoverage": "complete",
+    "breakingKeywords": ["BREAKING CHANGE"],
+    "keywordScan": "stub_regex"
+  },
+  "summary": {
+    "nextAction": "review_changelog",
+    "ruleId": "minor_or_major_requires_changelog",
+    "rationale": "semver delta major (1.0.0 -> 2.0.0); changelog review is required before bumping a pin. This is not a caller-defect claim and does not bind usage.",
+    "unknownReasons": [],
+    "unusedChanges": [],
+    "actionableChanges": []
+  },
+  "limitations": [
+    "synthetic kill-suite fixture: both methods are action-like on cases A and B"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "id": "enormous-exports",
+  "label": "fixture",
+  "synthetic": true,
+  "liveCapture": false,
+  "paidDemand": false,
+  "exportEntryCap": 1024,
+  "generatedTopLevelKeys": 5001,
+  "expect": {
+    "decision": "unknown",
+    "nextAction": "unknown",
+    "findingKinds": [
+      "exports_map_oversize"
+    ],
+    "scriptsExecuted": false
+  }
+}

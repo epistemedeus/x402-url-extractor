@@ -1,0 +1,8 @@
+{
+  "name": "c19-workspace-alias-name",
+  "private": true,
+  "description": "Synthetic workspace:foo@* alias form. Path comes from link:. Label: fixture.",
+  "dependencies": {
+    "bar": "workspace:foo@*"
+  }
+}

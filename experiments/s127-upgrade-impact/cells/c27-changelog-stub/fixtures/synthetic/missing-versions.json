@@ -1,0 +1,21 @@
+{
+  "id": "missing-versions",
+  "label": "synthetic",
+  "title": "missing old/new version ⇒ unknown, not action",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "changelogText": "BREAKING CHANGE: removed everything."
+  },
+  "expect": {
+    "decision": "unknown",
+    "ruleId": "missing_version",
+    "delta": "unknown"
+  },
+  "binderWould": {
+    "coarse": "unknown",
+    "decisionChangedRelativeToChangelog": false,
+    "note": "Missing versions are unknown on both sides."
+  }
+}

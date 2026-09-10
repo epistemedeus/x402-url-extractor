@@ -1,0 +1,6 @@
+{
+  "name": "c24-monorepo-pnpm",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Synthetic pnpm workspaces monorepo for c24. Label: fixture. Not live-capture. No paid demand."
+}

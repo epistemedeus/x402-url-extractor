@@ -1,0 +1,45 @@
+{
+  "id": "removed-type-used",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "fixture",
+  "title": "Removed type export is imported by the caller .ts file",
+  "notes": "Newer version is not itself a break; action is justified only because Alpha is used and removed. Type-only import still counts for the .d.ts surface.",
+  "caller": {
+    "root": "callers/removed-type-used",
+    "manifestPath": "callers/removed-type-used/package.json",
+    "sourceRoots": ["callers/removed-type-used/src"]
+  },
+  "dependency": {
+    "name": "type-kit",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "oldTree": "packages/type-kit/1.0.0",
+    "newTree": "packages/type-kit/2.0.0-removed-alpha"
+  },
+  "expect": {
+    "summary.nextAction": "action",
+    "exportDiff.removed": ["Alpha"],
+    "exportDiff.coverage": "full",
+    "bindings": [
+      {
+        "symbol": "Alpha",
+        "used": true,
+        "changeKind": "removed",
+        "decision": "action"
+      },
+      {
+        "symbol": "Beta",
+        "used": true,
+        "changeKind": "unchanged",
+        "decision": "no_action"
+      },
+      {
+        "symbol": "gamma",
+        "used": true,
+        "changeKind": "unchanged",
+        "decision": "no_action"
+      }
+    ]
+  }
+}

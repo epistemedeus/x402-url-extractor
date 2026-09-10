@@ -1,0 +1,20 @@
+{
+  "id": "version-only-noop",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "version bump with identical main and exports",
+  "notes": "A new version is not itself a break. Same-version/no-op surface => no_action.",
+  "old": "packages/dual-surface/1.0.0",
+  "new": "packages/dual-surface/1.0.1-version-only",
+  "expect": {
+    "mainStableExportsChanged": false,
+    "exportsStableMainChanged": false,
+    "mapStructureChanged": false,
+    "runtimeResolutionChanged": false,
+    "decisionHint": "no_action",
+    "coverage": "full",
+    "addedCount": 0,
+    "removedCount": 0,
+    "signatureChangedCount": 0
+  }
+}

@@ -1,0 +1,22 @@
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const here = dirname(fileURLToPath(import.meta.url));
+export const CELL_ROOT = join(here, "..");
+export const PACK_ROOT = join(CELL_ROOT, "..", "..");
+export const FIXTURES = join(PACK_ROOT, "fixtures", "real-c");
+
+export const REQUIRED_PACKET_FIELDS = [
+  "schema",
+  "createdAt",
+  "clock",
+  "caller",
+  "dependency",
+  "provenance",
+  "usage",
+  "exportDiff",
+  "bindings",
+  "summary",
+  "prior",
+  "limitations",
+];

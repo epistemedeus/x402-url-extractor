@@ -1,0 +1,47 @@
+{
+  "schema": "s127.upgrade-impact.fixture-catalog.v1",
+  "capturedAt": "2026-09-10T12:00:00.000Z",
+  "evidenceClassDefault": "fixture",
+  "notes": "Synthetic stub packs. Not npm publications. Default tests use fixture mode. Live mode is optional and not invoked here.",
+  "packs": {
+    "s127-demo-lib@1.0.0": {
+      "unpacked": "packs/s127-demo-lib/1.0.0/package",
+      "tarball": "tarballs/s127-demo-lib-1.0.0.tgz",
+      "tarballSha256": "ea174e40bd3d0074a2ebe54a1ce78817ef62ed20acb3ac16c5b0bb93a8a65cde",
+      "tarballBytes": 1266,
+      "label": "fixture",
+      "coverage": "full tarball",
+      "notes": "synthetic old version; lifecycle scripts present in package.json but must not run"
+    },
+    "s127-demo-lib@2.0.0": {
+      "unpacked": "packs/s127-demo-lib/2.0.0/package",
+      "tarball": "tarballs/s127-demo-lib-2.0.0.tgz",
+      "tarballSha256": "2d240dcf0a5ffd8bb0763b1df13cc3db9ea0987dfbd1e523d16c371b468ee6ed",
+      "tarballBytes": 1228,
+      "label": "fixture",
+      "coverage": "full tarball",
+      "notes": "synthetic new version: unused export path removed, greet signature changed, farewell added"
+    },
+    "s127-demo-lib@0.9.0": {
+      "versionDocument": "packs/s127-demo-lib/0.9.0/version-document.json",
+      "versionDocumentSha256": "074e7f3ee1351bf0610f43f8a70bbbdcad7839421e8e8ec4211eb97f9d84bc72",
+      "label": "fixture",
+      "coverage": "partial page",
+      "notes": "registry version document only; no tarball bytes"
+    },
+    "s127-demo-lib@9.9.9": {
+      "label": "fixture",
+      "coverage": "missing",
+      "notes": "intentionally absent source"
+    },
+    "@s127/tiny@1.0.0": {
+      "unpacked": "packs/@s127/tiny/1.0.0/package",
+      "tarball": "tarballs/s127-tiny-1.0.0.tgz",
+      "tarballSha256": "ece08b43116afd960eafa79aa133077fe89d040dd9a0a113d38db403c98d00f4",
+      "tarballBytes": 363,
+      "label": "fixture",
+      "coverage": "full tarball",
+      "notes": "synthetic scoped package to prove @scope/name fixture paths"
+    }
+  }
+}

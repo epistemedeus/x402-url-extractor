@@ -1,0 +1,8 @@
+{
+  "name": "c19-v9-peers",
+  "private": true,
+  "description": "Synthetic v9 lockfile with peer-suffixed snapshot id. Label: fixture.",
+  "dependencies": {
+    "foo": "1.0.0"
+  }
+}

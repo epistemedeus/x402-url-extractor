@@ -1,0 +1,25 @@
+{
+  "id": "exports-changed-main-stable",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "exports map changes; main field is unchanged",
+  "notes": "Node 12.7+ reads exports, so import/require targets and a new subpath are a declared-surface change even though main is stable. Environment-dependent (import vs require). Not action without usage.",
+  "old": "packages/dual-surface/1.0.0",
+  "new": "packages/dual-surface/2.0.0-exports-changed-main-stable",
+  "expect": {
+    "mainStableExportsChanged": true,
+    "exportsStableMainChanged": false,
+    "mapStructureChanged": true,
+    "runtimeResolutionChanged": true,
+    "environmentDependent": true,
+    "decisionHint": "unknown",
+    "coverage": "full",
+    "subpaths.added": [
+      "./extra"
+    ],
+    "unknownReasonsIncludes": [
+      "exports_changed_main_stable",
+      "caller_module_system_unknown"
+    ]
+  }
+}

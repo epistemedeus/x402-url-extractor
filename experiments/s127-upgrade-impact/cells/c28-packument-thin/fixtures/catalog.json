@@ -1,0 +1,58 @@
+{
+  "schema": "s127.upgrade-impact.packument-catalog.v1",
+  "capturedAt": "2026-09-10T12:00:00.000Z",
+  "labelDefault": "fixture",
+  "notes": "Offline fixture catalog. Live GET is opt-in via mode:\"live\" or live:true. No tarball extract. No npm install.",
+  "packs": {
+    "s127-demo-lib": {
+      "path": "synthetic/s127-demo-lib.packument.json",
+      "label": "synthetic",
+      "coverage": "full packument",
+      "notes": "authored in-cell; not an npm publication"
+    },
+    "@s127/tiny": {
+      "path": "synthetic/s127-tiny.packument.json",
+      "label": "synthetic",
+      "coverage": "full packument",
+      "notes": "scoped name for registry-path encoding tests"
+    },
+    "s127-partial-lib": {
+      "path": "synthetic/missing-tarball.packument.json",
+      "label": "synthetic",
+      "coverage": "slim packument",
+      "notes": "2.0.0 lacks dist.tarball"
+    },
+    "s127-abbrev": {
+      "path": "synthetic/abbreviated-install-v1.json",
+      "label": "synthetic",
+      "coverage": "full packument",
+      "notes": "abbreviated-style version entry with hasInstallScript"
+    },
+    "s127-empty": {
+      "path": "synthetic/empty-versions.packument.json",
+      "label": "synthetic",
+      "coverage": "partial page",
+      "notes": "dist-tags without versions"
+    },
+    "cookie": {
+      "path": "copied/cookie-packument.slim.json",
+      "label": "fixture",
+      "coverage": "slim packument",
+      "originalUrl": "https://registry.npmjs.org/cookie",
+      "originalRetrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "bdddc87359d8b3067385f1a98e73279e6dec547a923d8daf6c337e4122335e2f",
+      "bytes": 1404,
+      "notes": "byte-identical copy of pack fixtures/real-b/npm/cookie-packument.slim.json. This cell did not live-fetch. Replay label is fixture."
+    },
+    "path-to-regexp": {
+      "path": "copied/path-to-regexp-packument.slim.json",
+      "label": "fixture",
+      "coverage": "slim packument",
+      "originalUrl": "https://registry.npmjs.org/path-to-regexp",
+      "originalRetrievedAt": "2026-09-10T10:46:44Z",
+      "contentSha256": "6d2991ed04ad6eb497efbda99feb2e6fe5cfd80b9dd448ef5eec8e8f340180c8",
+      "bytes": 2187,
+      "notes": "byte-identical copy of pack fixtures/real-a/registry/packument.slim.json. Original capture was live; this cell reads it as fixture."
+    }
+  }
+}

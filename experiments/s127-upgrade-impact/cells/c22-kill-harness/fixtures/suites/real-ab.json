@@ -1,0 +1,25 @@
+{
+  "schema": "s127.upgrade-impact.kill-suite.v1",
+  "id": "real-ab",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "label": "fixture",
+  "evidenceClass": "fixture",
+  "required": ["real-a", "real-b"],
+  "notes": "Product kill/keep on real-source cases A/B. Drop method-a.json (registry skim decision) and method-b.json (usage-binding packet) into fixtures/drop-in/real-a and real-b when c11/c12 produce them. Missing files stay unknown; do not invent a kill.",
+  "cases": [
+    {
+      "id": "real-a",
+      "role": "case-a",
+      "label": "fixture",
+      "methodA": "../drop-in/real-a/method-a.json",
+      "methodB": "../drop-in/real-a/method-b.json"
+    },
+    {
+      "id": "real-b",
+      "role": "case-b",
+      "label": "fixture",
+      "methodA": "../drop-in/real-b/method-a.json",
+      "methodB": "../drop-in/real-b/method-b.json"
+    }
+  ]
+}

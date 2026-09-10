@@ -1,0 +1,53 @@
+{
+  "id": "npm-manifest-semver-lockfile-workspace",
+  "label": "fixture",
+  "kind": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "fixture",
+  "role": "identity-conflict",
+  "title": "package.json rewritten to ^2.1.0 while lockfile still links packages/shared-kit",
+  "notes": "Double disagreement: manifest claims a registry semver range; lockfile still has link:true to the workspace path; upgrade target is the registry tarball. All three locators do not agree on identity.",
+  "caller": {
+    "root": "fixtures/callers/npm-rewritten",
+    "workspaceRoot": "fixtures/callers/npm-rewritten",
+    "manifestPath": "fixtures/callers/npm-rewritten/apps/web/package.json",
+    "lockfilePath": "fixtures/callers/npm-rewritten/package-lock.json",
+    "lockfileKind": "npm",
+    "sourceRoots": ["fixtures/callers/npm-rewritten/apps/web/src"]
+  },
+  "dependency": {
+    "name": "shared-kit",
+    "oldVersion": "0.4.0",
+    "newVersion": "2.1.0",
+    "resolvedOld": "packages/shared-kit",
+    "resolvedNew": "https://example.invalid/registry/shared-kit/-/shared-kit-2.1.0.tgz"
+  },
+  "trees": {
+    "old": "fixtures/callers/npm-rewritten/packages/shared-kit",
+    "new": "fixtures/trees/registry-shared-kit-2.1.0"
+  },
+  "expect": {
+    "identityConflict": true,
+    "kind": "workspace_vs_registry_identity_conflict",
+    "summary.nextAction": "unknown",
+    "actionableChanges": [],
+    "exportDiff.coverage": "conflict",
+    "unknownReasonsInclude": [
+      "workspace_vs_registry_identity_conflict",
+      "lockfile_alias_or_workspace_disagreement",
+      "manifest_registry_range_vs_workspace_lockfile"
+    ],
+    "bindingsDecision": "unknown",
+    "packetPath": "fixtures/expected/packets/npm-manifest-semver-lockfile-workspace.packet.json",
+    "decisionNotes": [
+      "apps/web/package.json now pins shared-kit to ^2.1.0 (registry/semver).",
+      "package-lock.json still has node_modules/shared-kit link:true resolved=packages/shared-kit version 0.4.0.",
+      "Manifest vs lockfile disagreement ⇒ unknown (packet rule 5).",
+      "Lockfile workspace path vs registry upgrade target ⇒ identity conflict ⇒ unknown (packet rule 3).",
+      "Do not claim the caller already moved to registry 2.1.0; the lockfile still installs the workspace package.",
+      "A newer version is not itself a break."
+    ]
+  }
+}

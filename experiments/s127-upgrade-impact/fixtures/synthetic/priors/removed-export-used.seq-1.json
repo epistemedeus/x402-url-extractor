@@ -1,0 +1,20 @@
+{
+  "schema": "s127.upgrade-impact.prior.v1",
+  "createdAt": "2026-08-01T00:00:00.000Z",
+  "sequence": 1,
+  "immutable": true,
+  "sha256": "cb9049396534daf8f11fa98379cc9976ce1df96dd899ec6ef0e1f31d12e07175",
+  "payload": {
+    "dependency": {
+      "name": "demo-widget",
+      "oldVersion": "1.0.0",
+      "newVersion": "1.0.0"
+    },
+    "summary": {
+      "nextAction": "no_action"
+    },
+    "label": "synthetic",
+    "notes": "Immutable synthetic prior before the 1.0.0 -> 2.0.0 comparison. Not live-capture."
+  },
+  "correction": null
+}

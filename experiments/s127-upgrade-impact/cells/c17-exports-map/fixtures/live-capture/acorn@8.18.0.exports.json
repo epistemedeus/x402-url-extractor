@@ -1,0 +1,31 @@
+{
+  "name": "acorn",
+  "version": "8.18.0",
+  "license": "MIT",
+  "main": "dist/acorn.js",
+  "module": "dist/acorn.mjs",
+  "types": "dist/acorn.d.ts",
+  "type": null,
+  "browser": null,
+  "exports": {
+    ".": [
+      {
+        "import": "./dist/acorn.mjs",
+        "default": "./dist/acorn.js",
+        "require": "./dist/acorn.js"
+      },
+      "./dist/acorn.js"
+    ],
+    "./package.json": "./package.json"
+  },
+  "provenance": {
+    "label": "live-capture",
+    "url": "https://registry.npmjs.org/acorn/latest",
+    "tarball": "https://registry.npmjs.org/acorn/-/acorn-8.18.0.tgz",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "packumentContentSha256": "2c1a496478ffce47483887d731d05c627705ae27cbbab52786ae2916717232ae",
+    "coverage": "packument-fields:name,version,license,main,module,types,type,browser,exports",
+    "derivedFrom": "cells/c13-dep-license/fixtures/live-capture/packuments",
+    "paidDemand": false
+  }
+}

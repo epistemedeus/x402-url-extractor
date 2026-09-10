@@ -1,0 +1,15 @@
+{
+  "schema": "s127.upgrade-impact.registry-skim.input.v1",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "1.0.1"
+  },
+  "changelogPath": "fixtures/cases/changelog-silent-used-break/changelog.md",
+  "changelogCoverage": "complete",
+  "changelogText": "# demo-widget 1.0.1 (synthetic changelog)\n\nBugfix release. Internal cleanup. No documented API notes.\n\nThis file is a synthetic stand-in. Not live-capture.\n",
+  "notes": "Patch bump. Complete changelog has no stub breaking keywords, so skim says no_action. Binding still finds a used signature change and says action. Keep-direction opposite of unused-major-withhold."
+}

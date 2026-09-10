@@ -1,0 +1,17 @@
+{
+  "name": "typed-surface",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic S127 c17 types-condition fixture. Label: synthetic.",
+  "version": "2.0.0",
+  "main": "./index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./index.js",
+      "require": "./index.js",
+      "default": "./index.js"
+    }
+  }
+}

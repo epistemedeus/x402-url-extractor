@@ -1,0 +1,12 @@
+{
+  "label": "synthetic",
+  "name": "widget",
+  "status": "resolved",
+  "version": "1.2.3",
+  "alias": {
+    "requestedName": "widget",
+    "targetName": "demo-widget"
+  },
+  "disagreement": false,
+  "notes": "Unique npm alias is reported, not forced unknown. Alias disagreement is a different fixture."
+}

@@ -1,0 +1,19 @@
+{
+  "name": "hostile-install-scripts",
+  "version": "0.0.0-synthetic",
+  "private": true,
+  "type": "module",
+  "description": "Lifecycle scripts write SCRIPT_RAN.marker if executed. Fixture. Never npm install.",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "preinstall": "node ./write-marker.mjs",
+    "install": "node ./write-marker.mjs",
+    "postinstall": "node ./write-marker.mjs",
+    "prepare": "node ./write-marker.mjs",
+    "prepublish": "node ./write-marker.mjs",
+    "prepublishOnly": "node ./write-marker.mjs"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "id": "dynamic-import",
+  "label": "synthetic",
+  "title": "dynamic import of package taints unused changes ⇒ unknown",
+  "input": {
+    "dependency": { "name": "demo-pkg", "oldVersion": "1.0.0", "newVersion": "2.0.0" },
+    "usage": {
+      "coverage": "complete",
+      "dynamicImport": true,
+      "references": []
+    },
+    "exportDiff": {
+      "coverage": "complete",
+      "removed": ["maybeUsed"]
+    }
+  },
+  "expect": {
+    "nextAction": "unknown",
+    "actionableSymbols": [],
+    "unusedSymbols": [],
+    "decisions": { "maybeUsed": "unknown" }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "s127-real-a-caller",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Tiny synthetic caller pinned to path-to-regexp@6.3.0 for S127 real-source case A. Not a product.",
+  "license": "MIT",
+  "dependencies": {
+    "path-to-regexp": "6.3.0"
+  }
+}

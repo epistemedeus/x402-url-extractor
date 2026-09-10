@@ -1,0 +1,10 @@
+{
+  "name": "caller-workspace-alias",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic caller using an npm alias plus a workspace-style range. Label: synthetic.",
+  "dependencies": {
+    "widget": "npm:demo-widget@1.0.0",
+    "local-widget": "workspace:*"
+  }
+}

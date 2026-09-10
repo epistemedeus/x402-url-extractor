@@ -1,0 +1,296 @@
+{
+  "caller": {
+    "evidenceClass": "synthetic",
+    "lockfilePath": "cells/c21-golden-e2e/fixtures/caller/package-lock.json",
+    "manifestPath": "cells/c21-golden-e2e/fixtures/caller/package.json",
+    "sourceRoots": [
+      "cells/c21-golden-e2e/fixtures/caller/src"
+    ]
+  },
+  "clock": "2026-09-10T12:00:00.000Z",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "dependency": {
+    "name": "s127-golden-kit",
+    "newVersion": "2.0.0",
+    "oldVersion": "1.0.0",
+    "resolvedNew": "2.0.0",
+    "resolvedOld": "1.0.0"
+  },
+  "evidenceClass": "synthetic",
+  "immutable": true,
+  "label": "synthetic",
+  "payload": {
+    "bindings": [
+      {
+        "changeKind": "removed",
+        "decision": "action",
+        "dynamicImport": false,
+        "rationale": "used export 'usedRemoved' was removed from the static main surface; this is an actionable caller break, not a version bump by itself",
+        "ruleId": "used_removed",
+        "surface": ".",
+        "symbol": "usedRemoved",
+        "used": true
+      },
+      {
+        "changeKind": "removed",
+        "decision": "unknown",
+        "dynamicImport": true,
+        "rationale": "s127-golden-kit/plugin is loaded only via import(); member usage of 'dynamicRemoved' is unknown. Dynamic import of a package surface is unknown, not action",
+        "ruleId": "dynamic_import",
+        "surface": "./plugin",
+        "symbol": "dynamicRemoved",
+        "used": false
+      },
+      {
+        "changeKind": "unchanged",
+        "decision": "no_action",
+        "dynamicImport": false,
+        "rationale": "used export 'format' is unchanged; a newer version alone is not a break",
+        "ruleId": "used_unchanged",
+        "surface": ".",
+        "symbol": "format",
+        "used": true
+      },
+      {
+        "changeKind": "removed",
+        "decision": "no_action",
+        "dynamicImport": false,
+        "rationale": "export 'unusedRemoved' was removed but is not statically imported; unused export change is not a caller defect",
+        "ruleId": "unused_change_not_caller_defect",
+        "surface": ".",
+        "symbol": "unusedRemoved",
+        "used": false
+      }
+    ],
+    "caller": {
+      "evidenceClass": "synthetic",
+      "lockfilePath": "cells/c21-golden-e2e/fixtures/caller/package-lock.json",
+      "manifestPath": "cells/c21-golden-e2e/fixtures/caller/package.json",
+      "sourceRoots": [
+        "cells/c21-golden-e2e/fixtures/caller/src"
+      ]
+    },
+    "dependency": {
+      "name": "s127-golden-kit",
+      "newVersion": "2.0.0",
+      "oldVersion": "1.0.0",
+      "resolvedNew": "2.0.0",
+      "resolvedOld": "1.0.0"
+    },
+    "exportDiff": {
+      "added": [],
+      "bySurface": {
+        ".": {
+          "added": [],
+          "kept": [
+            "format",
+            "keep"
+          ],
+          "removed": [
+            "unusedRemoved",
+            "usedRemoved"
+          ]
+        },
+        "./plugin": {
+          "added": [],
+          "kept": [
+            "pluginKeep"
+          ],
+          "removed": [
+            "dynamicRemoved"
+          ]
+        }
+      },
+      "coverage": "full",
+      "removed": [
+        "dynamicRemoved",
+        "unusedRemoved",
+        "usedRemoved"
+      ],
+      "renamed": [],
+      "signatureChanged": []
+    },
+    "provenance": [
+      {
+        "contentSha256": "b449d607ebd6656b5248a24ac32fc29fdacb1f72e0e7e7a63d5b7332f1249463",
+        "coverage": "full",
+        "label": "synthetic",
+        "locator": "cells/c21-golden-e2e/fixtures/caller/package.json",
+        "path": "cells/c21-golden-e2e/fixtures/caller/package.json",
+        "url": null
+      },
+      {
+        "contentSha256": "bf806bc75e0ccc0242fc2adbe38ae9b4efa969512e30dca73a7cbf4de60c33eb",
+        "coverage": "full",
+        "label": "synthetic",
+        "locator": "cells/c21-golden-e2e/fixtures/caller/package-lock.json",
+        "path": "cells/c21-golden-e2e/fixtures/caller/package-lock.json",
+        "url": null
+      },
+      {
+        "contentSha256": "a24b60e34c0369f6e79fcaa7f5f97dfaab6c9c7941d340fabc75536a9c1badf0",
+        "coverage": "full",
+        "label": "synthetic",
+        "locator": "cells/c21-golden-e2e/fixtures/caller/src/app.js",
+        "path": "cells/c21-golden-e2e/fixtures/caller/src/app.js",
+        "url": null
+      },
+      {
+        "contentSha256": "a08c22b909689957d4b2fe750fb4619a9701e78338ee95374e93a48091d3d854",
+        "coverage": "unknown",
+        "label": "synthetic",
+        "locator": "cells/c21-golden-e2e/fixtures/caller/src/types.ts",
+        "path": "cells/c21-golden-e2e/fixtures/caller/src/types.ts",
+        "url": null
+      },
+      {
+        "contentSha256": "fcccbd74ac55f9893f2d271b2e5fd224cb853e16495079b77be0258e5111a121",
+        "coverage": "full",
+        "label": "synthetic",
+        "locator": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/1.0.0/package.json",
+        "path": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/1.0.0/package.json",
+        "url": null
+      },
+      {
+        "contentSha256": "a938f723d4bd44a21c971274a811ba2316ebb73875349e6c7e6381552856389f",
+        "coverage": "full",
+        "label": "synthetic",
+        "locator": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/1.0.0/index.js",
+        "path": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/1.0.0/index.js",
+        "url": null
+      },
+      {
+        "contentSha256": "57c78293f80f6c14db24a21a003b249375432fabc21c4d5a2cfbca6f3222044e",
+        "coverage": "full",
+        "label": "synthetic",
+        "locator": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/1.0.0/plugin.js",
+        "path": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/1.0.0/plugin.js",
+        "url": null
+      },
+      {
+        "contentSha256": "7d09f464287d6ca59f9d87b2fed97f1412637b0ce2b55e59704e9f2a28c3f944",
+        "coverage": "full",
+        "label": "synthetic",
+        "locator": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/2.0.0/package.json",
+        "path": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/2.0.0/package.json",
+        "url": null
+      },
+      {
+        "contentSha256": "f2e9dbff32be06a31fd9a1becd4613e0e93beca22bbecd56b9a7942cb793545a",
+        "coverage": "full",
+        "label": "synthetic",
+        "locator": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/2.0.0/index.js",
+        "path": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/2.0.0/index.js",
+        "url": null
+      },
+      {
+        "contentSha256": "5eea8578ae07c1c2f52016bfac2bf39d52130777ba364cc1138e1384689f2327",
+        "coverage": "full",
+        "label": "synthetic",
+        "locator": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/2.0.0/plugin.js",
+        "path": "cells/c21-golden-e2e/fixtures/packages/s127-golden-kit/2.0.0/plugin.js",
+        "url": null
+      }
+    ],
+    "summary": {
+      "actionableChanges": [
+        "usedRemoved"
+      ],
+      "nextAction": "action",
+      "unknownReasons": [
+        "dynamic_import"
+      ],
+      "unusedChanges": [
+        "unusedRemoved"
+      ]
+    },
+    "usage": {
+      "coverage": "full",
+      "dynamicImport": false,
+      "imports": [
+        {
+          "dynamicImport": false,
+          "file": "cells/c21-golden-e2e/fixtures/caller/src/app.js",
+          "from": "s127-golden-kit",
+          "kind": "named",
+          "names": [
+            "format"
+          ],
+          "specifier": "s127-golden-kit",
+          "symbol": "format",
+          "typeOnly": false
+        },
+        {
+          "dynamicImport": false,
+          "file": "cells/c21-golden-e2e/fixtures/caller/src/app.js",
+          "from": "s127-golden-kit",
+          "kind": "named",
+          "names": [
+            "usedRemoved"
+          ],
+          "specifier": "s127-golden-kit",
+          "symbol": "usedRemoved",
+          "typeOnly": false
+        },
+        {
+          "dynamicImport": true,
+          "file": "cells/c21-golden-e2e/fixtures/caller/src/app.js",
+          "from": "s127-golden-kit/plugin",
+          "kind": "dynamic",
+          "names": [],
+          "specifier": "s127-golden-kit/plugin",
+          "symbol": "*",
+          "typeOnly": false
+        }
+      ],
+      "items": [
+        {
+          "dynamicImport": false,
+          "file": "cells/c21-golden-e2e/fixtures/caller/src/app.js",
+          "from": "s127-golden-kit",
+          "kind": "named",
+          "specifier": "s127-golden-kit",
+          "symbol": "format",
+          "typeOnly": false
+        },
+        {
+          "dynamicImport": false,
+          "file": "cells/c21-golden-e2e/fixtures/caller/src/app.js",
+          "from": "s127-golden-kit",
+          "kind": "named",
+          "specifier": "s127-golden-kit",
+          "symbol": "usedRemoved",
+          "typeOnly": false
+        },
+        {
+          "dynamicImport": true,
+          "file": "cells/c21-golden-e2e/fixtures/caller/src/app.js",
+          "from": "s127-golden-kit/plugin",
+          "kind": "dynamic",
+          "specifier": "s127-golden-kit/plugin",
+          "symbol": "*",
+          "typeOnly": false
+        }
+      ],
+      "note": "Package-level dynamicImport is false because the main specifier s127-golden-kit is statically imported. The ./plugin specifier is a different surface and is marked dynamicImport on its usage row. PACKET-CONTRACT rule 4 is per-surface.",
+      "typeOnly": [
+        {
+          "dynamicImport": false,
+          "file": "cells/c21-golden-e2e/fixtures/caller/src/types.ts",
+          "from": "s127-golden-kit",
+          "kind": "named",
+          "specifier": "s127-golden-kit",
+          "symbol": "FormatOptions",
+          "typeOnly": true
+        }
+      ]
+    }
+  },
+  "payment": {
+    "attempted": false
+  },
+  "recipeId": "s127-upgrade-impact",
+  "schema": "s127.upgrade-impact.prior.v1",
+  "sequence": 1,
+  "sha256": "46328ad32237f65be81bcd78dbd2992476a93f1f1389dff444ac72258ee9d23b"
+}

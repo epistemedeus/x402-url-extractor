@@ -1,0 +1,23 @@
+{
+  "name": "type-kit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Synthetic S127 types package (old). Label: synthetic. Not published. Not live-capture.",
+  "types": "./index.d.ts",
+  "typings": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./umd": {
+      "types": "./umd.d.ts"
+    }
+  },
+  "scripts": {
+    "preinstall": "node -e \"require('fs').writeFileSync('SCRIPT_RAN.marker','c18-must-not-run')\"",
+    "install": "node -e \"require('fs').writeFileSync('SCRIPT_RAN.marker','c18-must-not-run')\"",
+    "postinstall": "node -e \"require('fs').writeFileSync('SCRIPT_RAN.marker','c18-must-not-run')\"",
+    "prepare": "node -e \"require('fs').writeFileSync('SCRIPT_RAN.marker','c18-must-not-run')\""
+  }
+}

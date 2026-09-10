@@ -1,0 +1,22 @@
+{
+  "id": "same-version-noop",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "fixture",
+  "title": "Same declared version is no_action even if the caller uses Alpha",
+  "caller": {
+    "root": "callers/removed-type-used",
+    "manifestPath": "callers/removed-type-used/package.json",
+    "sourceRoots": ["callers/removed-type-used/src"]
+  },
+  "dependency": {
+    "name": "type-kit",
+    "oldVersion": "1.0.0",
+    "newVersion": "1.0.0",
+    "oldTree": "packages/type-kit/1.0.0",
+    "newTree": "packages/type-kit/2.0.0-same"
+  },
+  "expect": {
+    "summary.nextAction": "no_action"
+  }
+}

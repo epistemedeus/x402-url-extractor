@@ -1,0 +1,11 @@
+{
+  "name": "shared-kit-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Nested synthetic workspace dependency of shared-kit. Label: fixture. Not published.",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  }
+}

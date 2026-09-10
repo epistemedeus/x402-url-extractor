@@ -1,0 +1,15 @@
+{
+  "schema": "s127.upgrade-impact.registry-skim.input.v1",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0"
+  },
+  "changelogPath": "fixtures/cases/synthetic-standin-a/changelog.md",
+  "changelogCoverage": "complete",
+  "changelogText": "# demo-widget 2.0.0 (synthetic changelog)\n\nBREAKING CHANGE: removed export `alpha`.\n\nThis file is a synthetic stand-in for a registry changelog skim. Not live-capture. Not a published package.\n",
+  "notes": "Stand-in for real-source case A. Caller does not import alpha. Registry+changelog skim still asks to review because the version is a major bump. Binding should withhold action (unused export change is not a caller defect)."
+}

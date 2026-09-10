@@ -1,0 +1,26 @@
+{
+  "schema": "s127.upgrade-impact.kill-suite.v1",
+  "id": "incomplete",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "required": ["case-a", "case-b"],
+  "notes": "Case B method B is intentionally missing. Suite must be unknown, not kill.",
+  "cases": [
+    {
+      "id": "case-a",
+      "role": "case-a",
+      "label": "synthetic",
+      "methodA": "../cases/kill-both-action/case-a/registry-skim-decision.json",
+      "methodB": "../cases/kill-both-action/case-a/binding-packet.json"
+    },
+    {
+      "id": "case-b",
+      "role": "case-b",
+      "label": "synthetic",
+      "methodA": "../cases/kill-both-action/case-b/registry-skim-decision.json",
+      "methodB": "../cases/does-not-exist/binding-packet.json"
+    }
+  ],
+  "expect": { "verdict": "unknown" }
+}

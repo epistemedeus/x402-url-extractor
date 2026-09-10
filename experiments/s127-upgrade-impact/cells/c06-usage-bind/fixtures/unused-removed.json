@@ -1,0 +1,24 @@
+{
+  "id": "unused-removed",
+  "label": "synthetic",
+  "title": "unused removed export ⇒ no_action (not a caller defect)",
+  "input": {
+    "dependency": { "name": "demo-pkg", "oldVersion": "1.0.0", "newVersion": "2.0.0" },
+    "usage": {
+      "coverage": "complete",
+      "dynamicImport": false,
+      "references": [{ "symbol": "keep", "kind": "named" }]
+    },
+    "exportDiff": {
+      "coverage": "complete",
+      "removed": ["gone"],
+      "signatureChanged": []
+    }
+  },
+  "expect": {
+    "nextAction": "no_action",
+    "actionableSymbols": [],
+    "unusedSymbols": ["gone"],
+    "decisions": { "keep": "no_action", "gone": "no_action" }
+  }
+}

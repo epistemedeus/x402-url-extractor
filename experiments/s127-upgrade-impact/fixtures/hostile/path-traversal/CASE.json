@@ -1,0 +1,13 @@
+{
+  "id": "path-traversal",
+  "label": "fixture",
+  "synthetic": true,
+  "liveCapture": false,
+  "paidDemand": false,
+  "expect": {
+    "decision": "invalid",
+    "nextAction": "unknown",
+    "findingKinds": ["path_traversal"],
+    "scriptsExecuted": false
+  }
+}

@@ -1,0 +1,144 @@
+{
+  "schema": "s127.c21.self-check.v1",
+  "ok": true,
+  "clock": "2026-09-10T12:00:00.000Z",
+  "label": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "packetSchema": "s127.upgrade-impact.packet.v1",
+  "goldenBindings": [
+    {
+      "symbol": "usedRemoved",
+      "used": true,
+      "changeKind": "removed",
+      "decision": "action",
+      "ruleId": "used_removed",
+      "surface": ".",
+      "dynamicImport": false
+    },
+    {
+      "symbol": "unusedRemoved",
+      "used": false,
+      "changeKind": "removed",
+      "decision": "no_action",
+      "ruleId": "unused_change_not_caller_defect",
+      "surface": ".",
+      "dynamicImport": false
+    },
+    {
+      "symbol": "dynamicRemoved",
+      "used": false,
+      "changeKind": "removed",
+      "decision": "unknown",
+      "ruleId": "dynamic_import",
+      "surface": "./plugin",
+      "dynamicImport": true
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "notes": [
+    "fixture-grammar scan agrees with packet exportDiff.removed and usage named/dynamic rows",
+    "types.ts is type-only; labeled unknown; not treated as runtime use",
+    "negative mutations of the three golden triples are rejected"
+  ],
+  "isolation": {
+    "ownedWritePath": "cells/c21-golden-e2e",
+    "packRel": "cells/c21-golden-e2e",
+    "filesWrittenUnderCell": [
+      "CLOCK.txt",
+      "DONE.md",
+      "PROVENANCE.json",
+      "README.md",
+      "expected/assertions.json",
+      "expected/case.json",
+      "expected/packet.json",
+      "expected/prior.seq-1.json",
+      "fixtures/caller/package-lock.json",
+      "fixtures/caller/package.json",
+      "fixtures/caller/src/app.js",
+      "fixtures/caller/src/types.ts",
+      "fixtures/packages/s127-golden-kit/1.0.0/README.md",
+      "fixtures/packages/s127-golden-kit/1.0.0/index.js",
+      "fixtures/packages/s127-golden-kit/1.0.0/package.json",
+      "fixtures/packages/s127-golden-kit/1.0.0/plugin.js",
+      "fixtures/packages/s127-golden-kit/2.0.0/README.md",
+      "fixtures/packages/s127-golden-kit/2.0.0/index.js",
+      "fixtures/packages/s127-golden-kit/2.0.0/package.json",
+      "fixtures/packages/s127-golden-kit/2.0.0/plugin.js",
+      "lib/assert.mjs",
+      "lib/contract.mjs",
+      "lib/hash.mjs",
+      "lib/paths.mjs",
+      "lib/scan-fixture.mjs",
+      "package.json",
+      "receipts/self-check.json",
+      "scripts/self-check.mjs"
+    ],
+    "nodeModulesAbsent": true,
+    "hostileMarkersAbsent": true,
+    "cliNotImported": true,
+    "gitStatusOwnedPath": "?? experiments/s127-upgrade-impact/cells/c21-golden-e2e/",
+    "label": "synthetic",
+    "liveCapture": false,
+    "paidDemand": false
+  },
+  "scan": {
+    "oldMain": [
+      "format",
+      "keep",
+      "unusedRemoved",
+      "usedRemoved"
+    ],
+    "newMain": [
+      "format",
+      "keep"
+    ],
+    "oldPlugin": [
+      "dynamicRemoved",
+      "pluginKeep"
+    ],
+    "newPlugin": [
+      "pluginKeep"
+    ],
+    "mainRemoved": [
+      "unusedRemoved",
+      "usedRemoved"
+    ],
+    "pluginRemoved": [
+      "dynamicRemoved"
+    ],
+    "staticNamed": [
+      {
+        "specifier": "s127-golden-kit",
+        "symbol": "format",
+        "dynamicImport": false,
+        "typeOnly": false
+      },
+      {
+        "specifier": "s127-golden-kit",
+        "symbol": "usedRemoved",
+        "dynamicImport": false,
+        "typeOnly": false
+      }
+    ],
+    "dynamicSpecifiers": [
+      {
+        "specifier": "s127-golden-kit/plugin",
+        "symbol": "*",
+        "dynamicImport": true,
+        "typeOnly": false
+      }
+    ],
+    "typeOnly": [
+      {
+        "specifier": "s127-golden-kit",
+        "symbol": "FormatOptions",
+        "dynamicImport": false,
+        "typeOnly": true
+      }
+    ]
+  },
+  "packetSha256": "84295b18fc8ef24ef392ebd0e7fdbd6cfed905e841deda20d8ca5264afd79761",
+  "cellFileCount": 28
+}

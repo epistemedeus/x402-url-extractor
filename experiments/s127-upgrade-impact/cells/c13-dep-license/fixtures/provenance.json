@@ -1,0 +1,19 @@
+{
+  "schema": "s127.c13.dep-license.provenance.v1",
+  "batchRetrievedAt": "2026-09-10T10:45:04Z",
+  "clock": "2026-09-10T10:45:04Z",
+  "userAgent": "s127-c13-dep-license-audit/0.1 (offline-first experiment; license metadata only)",
+  "method": "GET registry.npmjs.org/<name>/latest and unpkg.com/<name>/LICENSE*",
+  "installScriptsRun": false,
+  "tarballsExtracted": false,
+  "npmInstall": false,
+  "paid": false,
+  "label": "live-capture",
+  "coverage": "license field, dist integrity/unpackedSize, dependency names, lifecycle script keys; LICENSE file body for a subset",
+  "notCovered": [
+    "full tarball contents",
+    "transitive dependency licenses beyond direct dependency names",
+    "license of optional native bindings for oxc-parser and typescript",
+    "ckeditor4 LICENSE.md appendices (hashed, header excerpt only)"
+  ]
+}

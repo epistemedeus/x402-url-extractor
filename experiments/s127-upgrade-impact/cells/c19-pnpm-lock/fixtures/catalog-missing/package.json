@@ -1,0 +1,8 @@
+{
+  "name": "c19-catalog-missing",
+  "private": true,
+  "description": "Synthetic catalog: specifier without catalogs section. Label: fixture.",
+  "dependencies": {
+    "react": "catalog:"
+  }
+}

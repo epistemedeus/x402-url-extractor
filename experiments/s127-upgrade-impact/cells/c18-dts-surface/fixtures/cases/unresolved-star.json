@@ -1,0 +1,22 @@
+{
+  "id": "unresolved-star",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "fixture",
+  "title": "Unresolved export * from keeps coverage partial/unknown; no action claim",
+  "caller": {
+    "root": "callers/removed-type-used",
+    "manifestPath": "callers/removed-type-used/package.json",
+    "sourceRoots": ["callers/removed-type-used/src"]
+  },
+  "dependency": {
+    "name": "type-kit",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "oldTree": "packages/type-kit/1.0.0",
+    "newTree": "packages/type-kit/2.0.0-unresolved-star"
+  },
+  "expect": {
+    "summary.nextAction": "unknown"
+  }
+}

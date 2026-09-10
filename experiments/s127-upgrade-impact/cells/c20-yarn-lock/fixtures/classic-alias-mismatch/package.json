@@ -1,0 +1,8 @@
+{
+  "name": "caller-yarn-alias-mismatch",
+  "private": true,
+  "description": "Synthetic: package.json alias target disagrees with yarn.lock resolved name. Label: synthetic.",
+  "dependencies": {
+    "widget": "npm:demo-widget@^1.0.0"
+  }
+}

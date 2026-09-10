@@ -1,0 +1,36 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+  .: {}
+
+  apps/admin:
+    dependencies:
+      shared-kit:
+        specifier: workspace:^
+        version: link:../../packages/shared-kit
+
+  apps/web:
+    dependencies:
+      shared-kit:
+        specifier: workspace:*
+        version: link:../../packages/shared-kit
+
+  apps/web-unused:
+    dependencies:
+      shared-kit:
+        specifier: workspace:*
+        version: link:../../packages/shared-kit
+
+  packages/shared-kit:
+    dependencies:
+      shared-kit-core:
+        specifier: workspace:*
+        version: link:../shared-kit-core
+
+  packages/shared-kit-core: {}
+
+packages: {}

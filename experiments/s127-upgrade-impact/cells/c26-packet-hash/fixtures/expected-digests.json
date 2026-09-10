@@ -1,0 +1,310 @@
+{
+  "schema": "s127.upgrade-impact.packet-hash.expected.v1",
+  "label": "synthetic",
+  "capturedFromLive": false,
+  "clock": "2026-09-10T09:54:59.000Z",
+  "algo": "sha256",
+  "canonicalization": "JSON.stringify(sortKeys(value))",
+  "syntheticContentSha256": {
+    "synthetic-dep/v1.0.0.js": "286bbc69083347a5e10e205bf490bd97b99b6124448034e0ba1392361a862e15",
+    "synthetic-dep/v2.0.0-parse-removed.js": "afab4695fb177343ced80d89d731951b948dbf10e3c20e7dd63e52ef0d0114ee",
+    "synthetic-dep/v2.0.0-extra-removed.js": "69bc7275a0605fa3b7755abf620350e7b3c0d430c352b6c357182bf3061d7748"
+  },
+  "families": {
+    "action-used-removed": {
+      "base": "packets/action-used-removed.json",
+      "reordered": "packets/action-used-removed.reordered.json",
+      "pretty": "packets/action-used-removed.pretty.json",
+      "clockDiff": "packets/action-used-removed.clock-diff.json",
+      "bindingsReordered": "packets/action-used-removed.bindings-reordered.json",
+      "rationaleDiff": "packets/action-used-removed.rationale-diff.json",
+      "arrayOrderChanged": "packets/action-used-removed.array-order-changed.json"
+    },
+    "no-action-unused": {
+      "base": "packets/no-action-unused.json",
+      "reordered": "packets/no-action-unused.reordered.json",
+      "pretty": "packets/no-action-unused.pretty.json"
+    },
+    "unknown-dynamic": {
+      "base": "packets/unknown-dynamic.json",
+      "reordered": "packets/unknown-dynamic.reordered.json",
+      "pretty": "packets/unknown-dynamic.pretty.json"
+    },
+    "same-version-noop": {
+      "base": "packets/same-version-noop.json",
+      "reordered": "packets/same-version-noop.reordered.json",
+      "pretty": "packets/same-version-noop.pretty.json"
+    }
+  },
+  "packets": [
+    {
+      "file": "packets/action-used-removed.array-order-changed.json",
+      "label": "synthetic",
+      "evidenceClass": "fixture",
+      "nextAction": "action",
+      "packetHash": "f6d6ffbc7c3ac8cfe03a90ce6e7240d339d25f6e42b702aea117d9bfc811a085",
+      "payloadHash": "752757bed3788c660d0de25fcaa5100a01809f3645f6144ca436363ebff10bbe",
+      "decisionHash": "d03461f3905ad43e072c285bf4ef6571d3fe36a5d13e314754a5a2e8087f9682",
+      "sourceSha256": "aa412a50013dc52c08e8e1e8472696bab37ae6342f96e5509b2d21d648a4609b",
+      "sourceBytes": 1745
+    },
+    {
+      "file": "packets/action-used-removed.bindings-reordered.json",
+      "label": "synthetic",
+      "evidenceClass": "fixture",
+      "nextAction": "action",
+      "packetHash": "e9498a9867861e2a6a45b6acbc9c9612bf61a0995605e7bb88f7f5e6ec3b4500",
+      "payloadHash": "79221aca3f13c056d55a8b7d56e7fa36778e19a984f151229c2c5846974b8279",
+      "decisionHash": "d03461f3905ad43e072c285bf4ef6571d3fe36a5d13e314754a5a2e8087f9682",
+      "sourceSha256": "668b9d87882044d33525cd03b7940ad9b4f5e5f69500c441c2c238714e8ccf2a",
+      "sourceBytes": 1735
+    },
+    {
+      "file": "packets/action-used-removed.clock-diff.json",
+      "label": "synthetic",
+      "evidenceClass": "fixture",
+      "nextAction": "action",
+      "packetHash": "fa070b950d6111cf609c7effe0372d1bfc132a7fd5e905e4d7c41d9d21aaefd4",
+      "payloadHash": "86c4d0bbd019e824ee519de86cd90f178d4519dfa70bd6989689ae09c8a9fd04",
+      "decisionHash": "d03461f3905ad43e072c285bf4ef6571d3fe36a5d13e314754a5a2e8087f9682",
+      "sourceSha256": "0cd20cd35e7286b9521ae25d52fb9c16d3f5757a4df1d57d4e623a6464a80663",
+      "sourceBytes": 1811
+    },
+    {
+      "file": "packets/action-used-removed.json",
+      "label": "synthetic",
+      "evidenceClass": "fixture",
+      "nextAction": "action",
+      "packetHash": "b1519cb74b3668a2d26178e18495eafe77bd1d88877c839aa6e7d2809fd90bcd",
+      "payloadHash": "86c4d0bbd019e824ee519de86cd90f178d4519dfa70bd6989689ae09c8a9fd04",
+      "decisionHash": "d03461f3905ad43e072c285bf4ef6571d3fe36a5d13e314754a5a2e8087f9682",
+      "sourceSha256": "8f6a9d07dbb6a8c888ab88e78a191955943b6e596b7359c2628086060619a781",
+      "sourceBytes": 1735
+    },
+    {
+      "file": "packets/action-used-removed.pretty.json",
+      "label": "synthetic",
+      "evidenceClass": "fixture",
+      "nextAction": "action",
+      "packetHash": "b1519cb74b3668a2d26178e18495eafe77bd1d88877c839aa6e7d2809fd90bcd",
+      "payloadHash": "86c4d0bbd019e824ee519de86cd90f178d4519dfa70bd6989689ae09c8a9fd04",
+      "decisionHash": "d03461f3905ad43e072c285bf4ef6571d3fe36a5d13e314754a5a2e8087f9682",
+      "sourceSha256": "27a4faee157ca7c4a406596437ffa73d42ce5f29c713962e4d88e6638429ce22",
+      "sourceBytes": 2273
+    },
+    {
+      "file": "packets/action-used-removed.rationale-diff.json",
+      "label": "synthetic",
+      "evidenceClass": "fixture",
+      "nextAction": "action",
+      "packetHash": "dbdcb485154b51daf939fc8b4cae8e75843023cfa64987f5f6fa9ff5dd939966",
+      "payloadHash": "391953ab3894d786a9a60f96be6c3d90be311e07cb6261371b5dab225e8a5efc",
+      "decisionHash": "d03461f3905ad43e072c285bf4ef6571d3fe36a5d13e314754a5a2e8087f9682",
+      "sourceSha256": "f7018052848094351ceda0bea8f6ca383b3abe9c028d084055f24b739c6bbc77",
+      "sourceBytes": 1762
+    },
+    {
+      "file": "packets/action-used-removed.reordered.json",
+      "label": "synthetic",
+      "evidenceClass": "fixture",
+      "nextAction": "action",
+      "packetHash": "b1519cb74b3668a2d26178e18495eafe77bd1d88877c839aa6e7d2809fd90bcd",
+      "payloadHash": "86c4d0bbd019e824ee519de86cd90f178d4519dfa70bd6989689ae09c8a9fd04",
+      "decisionHash": "d03461f3905ad43e072c285bf4ef6571d3fe36a5d13e314754a5a2e8087f9682",
+      "sourceSha256": "e9e91fb8792723fa16849d787046de190502048da0a98386d6bad211b2f75341",
+      "sourceBytes": 1735
+    },
+    {
+      "file": "packets/no-action-unused.json",
+      "label": "synthetic",
+      "evidenceClass": "fixture",
+      "nextAction": "no_action",
+      "packetHash": "e6c792419ea0e5ca819fff079aca93f64d8ead86f1c59200b4ee2cab8c2e52dd",
+      "payloadHash": "ad632f574317280283c3f5568ec4f5f2f1436b0744d617603c91caf9dd64b5c3",
+      "decisionHash": "d9d4f3fbb0c780ba9c0702af650504a04255a6097a25e6a1ecb71dfb718b80e4",
+      "sourceSha256": "022ed6a432a0e9bfc3778b6e2439a01a0ce218c8df799eceb826bc3220c145ac",
+      "sourceBytes": 1774
+    },
+    {
+      "file": "packets/no-action-unused.pretty.json",
+      "label": "synthetic",
+      "evidenceClass": "fixture",
+      "nextAction": "no_action",
+      "packetHash": "e6c792419ea0e5ca819fff079aca93f64d8ead86f1c59200b4ee2cab8c2e52dd",
+      "payloadHash": "ad632f574317280283c3f5568ec4f5f2f1436b0744d617603c91caf9dd64b5c3",
+      "decisionHash": "d9d4f3fbb0c780ba9c0702af650504a04255a6097a25e6a1ecb71dfb718b80e4",
+      "sourceSha256": "e417b165d93051eabb759c6754d9e97622b2ea011b7408a6b1b4871ec2be172b",
+      "sourceBytes": 2288
+    },
+    {
+      "file": "packets/no-action-unused.reordered.json",
+      "label": "synthetic",
+      "evidenceClass": "fixture",
+      "nextAction": "no_action",
+      "packetHash": "e6c792419ea0e5ca819fff079aca93f64d8ead86f1c59200b4ee2cab8c2e52dd",
+      "payloadHash": "ad632f574317280283c3f5568ec4f5f2f1436b0744d617603c91caf9dd64b5c3",
+      "decisionHash": "d9d4f3fbb0c780ba9c0702af650504a04255a6097a25e6a1ecb71dfb718b80e4",
+      "sourceSha256": "f6a2ba143e0ec046a07fe4c7d8c10ce87858ad3cf6dab04cff87acafa5f97a26",
+      "sourceBytes": 1774
+    },
+    {
+      "file": "packets/same-version-noop.json",
+      "label": "synthetic",
+      "evidenceClass": "fixture",
+      "nextAction": "no_action",
+      "packetHash": "4f824773a132a8b4653d5a0963068302e3f5fad9110afb41b85e5ecc8f92ee18",
+      "payloadHash": "311b7d4eeb03599ce2f8431d3da623c81c257ffe51697d2c244d0c73c402cd5c",
+      "decisionHash": "aa01a536316fc849b4d3c103f8a26f6ac5251c876d378af8ce388a52677d5800",
+      "sourceSha256": "936bd1cc6d80c19abe9b955f1b49bc045ad275a39c8781562a6f2d9140b97197",
+      "sourceBytes": 1619
+    },
+    {
+      "file": "packets/same-version-noop.pretty.json",
+      "label": "synthetic",
+      "evidenceClass": "fixture",
+      "nextAction": "no_action",
+      "packetHash": "4f824773a132a8b4653d5a0963068302e3f5fad9110afb41b85e5ecc8f92ee18",
+      "payloadHash": "311b7d4eeb03599ce2f8431d3da623c81c257ffe51697d2c244d0c73c402cd5c",
+      "decisionHash": "aa01a536316fc849b4d3c103f8a26f6ac5251c876d378af8ce388a52677d5800",
+      "sourceSha256": "c1998560377035e50898a93a16a5abf38893c10e75617e592d5512e4a1ab40ef",
+      "sourceBytes": 2064
+    },
+    {
+      "file": "packets/same-version-noop.reordered.json",
+      "label": "synthetic",
+      "evidenceClass": "fixture",
+      "nextAction": "no_action",
+      "packetHash": "4f824773a132a8b4653d5a0963068302e3f5fad9110afb41b85e5ecc8f92ee18",
+      "payloadHash": "311b7d4eeb03599ce2f8431d3da623c81c257ffe51697d2c244d0c73c402cd5c",
+      "decisionHash": "aa01a536316fc849b4d3c103f8a26f6ac5251c876d378af8ce388a52677d5800",
+      "sourceSha256": "06df11d666287b9aacaf62976e33c3a036853a99df4b308aa73f603e59ea4fb9",
+      "sourceBytes": 1619
+    },
+    {
+      "file": "packets/unknown-dynamic.json",
+      "label": "synthetic",
+      "evidenceClass": "fixture",
+      "nextAction": "unknown",
+      "packetHash": "bfe786bf0c8691e7b39df2a7afe872a58a0088e734dbaabb428624308bc47c16",
+      "payloadHash": "947dfed0596a52133c93a77f507edb7e158c0c94ab5741e37266b2787d4ef4f1",
+      "decisionHash": "7f1bb709439acc930c70701bc8184e345e5abb6549c57ce70783e71c4f40b5bd",
+      "sourceSha256": "760d5061be5d4e953f221e01ccec2c4af03902f163528bebab99d07db3b005d8",
+      "sourceBytes": 1714
+    },
+    {
+      "file": "packets/unknown-dynamic.pretty.json",
+      "label": "synthetic",
+      "evidenceClass": "fixture",
+      "nextAction": "unknown",
+      "packetHash": "bfe786bf0c8691e7b39df2a7afe872a58a0088e734dbaabb428624308bc47c16",
+      "payloadHash": "947dfed0596a52133c93a77f507edb7e158c0c94ab5741e37266b2787d4ef4f1",
+      "decisionHash": "7f1bb709439acc930c70701bc8184e345e5abb6549c57ce70783e71c4f40b5bd",
+      "sourceSha256": "a4c84b3a078a9e213ea59a2b551a8184b677006a9b2bc7ac0f5a0f4b436f6919",
+      "sourceBytes": 2191
+    },
+    {
+      "file": "packets/unknown-dynamic.reordered.json",
+      "label": "synthetic",
+      "evidenceClass": "fixture",
+      "nextAction": "unknown",
+      "packetHash": "bfe786bf0c8691e7b39df2a7afe872a58a0088e734dbaabb428624308bc47c16",
+      "payloadHash": "947dfed0596a52133c93a77f507edb7e158c0c94ab5741e37266b2787d4ef4f1",
+      "decisionHash": "7f1bb709439acc930c70701bc8184e345e5abb6549c57ce70783e71c4f40b5bd",
+      "sourceSha256": "cdb65ca21f822c6fea3e0e9782f71f66822dc3a4df03841f0c9bdf68dd26ddc1",
+      "sourceBytes": 1714
+    }
+  ],
+  "keyOrder": [
+    {
+      "file": "key-order/array-order-a.json",
+      "canonicalJson": "{\"k\":{\"a\":2,\"b\":1},\"m\":[1,2]}",
+      "sha256": "c09aaf0d6277f29dd4d36eb0a4ae9c2d09cf5126789b3aac1a0b1ede7d78fd4b",
+      "sourceSha256": "a416625a08243a4cd15abc5171500a0cd510158a4dd6746fb10ecb5674360c48"
+    },
+    {
+      "file": "key-order/array-order-b.json",
+      "canonicalJson": "{\"k\":{\"a\":2,\"b\":1},\"m\":[2,1]}",
+      "sha256": "0b3a410c9de9b73c3388ac650db83d379f0dccfb0126d59364212deacabbc0af",
+      "sourceSha256": "134d6c622530010f132b80d8cf406e353cdc7ac0bc32da072b7208e837fe4bd7"
+    },
+    {
+      "file": "key-order/nested-objects-reordered.json",
+      "canonicalJson": "{\"items\":[{\"a\":2,\"z\":1},{\"a\":4,\"b\":3}]}",
+      "sha256": "0d927e2704f3c7823e163ce6526f8e340c2f70df21c86a92844ce86f20910946",
+      "sourceSha256": "6d86550e9ec909107c22733062252981f3ef571dd38caa5dcb10915ae7345aee"
+    },
+    {
+      "file": "key-order/nested-objects.json",
+      "canonicalJson": "{\"items\":[{\"a\":2,\"z\":1},{\"a\":4,\"b\":3}]}",
+      "sha256": "0d927e2704f3c7823e163ce6526f8e340c2f70df21c86a92844ce86f20910946",
+      "sourceSha256": "c30607dc0733de61dd2d01e65904ec1ea193a8ff233086624fc65ad9521b4c5f"
+    },
+    {
+      "file": "key-order/proto-keys-reordered.json",
+      "canonicalJson": "{\"__proto__\":{\"x\":1},\"a\":2,\"z\":1}",
+      "sha256": "fe9bb79853edb2b9c39f399313dea858603114e7cf84737e2f2a13b960fd0afe",
+      "sourceSha256": "b398c79196fd2182c8c57b2ce3f70662f7287ff55aa498ffe72294ecd4fb5558"
+    },
+    {
+      "file": "key-order/proto-keys.json",
+      "canonicalJson": "{\"__proto__\":{\"x\":1},\"a\":2,\"z\":1}",
+      "sha256": "fe9bb79853edb2b9c39f399313dea858603114e7cf84737e2f2a13b960fd0afe",
+      "sourceSha256": "6a7067b670fda97a684539b421d2a4d899f978478886024b30ef392c81551bd3"
+    },
+    {
+      "file": "key-order/simple-forward.json",
+      "canonicalJson": "{\"a\":1,\"b\":2,\"nested\":{\"m\":8,\"z\":9}}",
+      "sha256": "a8974cf94dcf1d7ba73135b7046afc2c9e8484d4af94fda719422d0f399b73ea",
+      "sourceSha256": "32e4d4751db01b5d9d55e94da90ace79570f70af9b51d4f1da0ffb67795df4a8"
+    },
+    {
+      "file": "key-order/simple-pretty.json",
+      "canonicalJson": "{\"a\":1,\"b\":2,\"nested\":{\"m\":8,\"z\":9}}",
+      "sha256": "a8974cf94dcf1d7ba73135b7046afc2c9e8484d4af94fda719422d0f399b73ea",
+      "sourceSha256": "664ae09af5ed89a29a4083af7e0e1326b40638326227e9f0e82b4250e507b157"
+    },
+    {
+      "file": "key-order/simple-reversed.json",
+      "canonicalJson": "{\"a\":1,\"b\":2,\"nested\":{\"m\":8,\"z\":9}}",
+      "sha256": "a8974cf94dcf1d7ba73135b7046afc2c9e8484d4af94fda719422d0f399b73ea",
+      "sourceSha256": "0310aa94b719520a8f4abbf5906cf357e7328d05c877d377a71529c2ca8bab70"
+    }
+  ],
+  "replayChecks": {
+    "actionKeyOrder": {
+      "identicalPacket": true,
+      "identicalPayload": true,
+      "identicalDecision": true
+    },
+    "actionPretty": {
+      "identicalPacket": true,
+      "identicalPayload": true,
+      "identicalDecision": true
+    },
+    "actionClock": {
+      "identicalPacket": false,
+      "identicalPayload": true,
+      "identicalDecision": true
+    },
+    "actionBindings": {
+      "identicalPacket": false,
+      "identicalPayload": false,
+      "identicalDecision": true
+    },
+    "actionRationale": {
+      "identicalPacket": false,
+      "identicalPayload": false,
+      "identicalDecision": true
+    },
+    "actionVsUnused": {
+      "identicalPacket": false,
+      "identicalPayload": false,
+      "identicalDecision": false
+    },
+    "actionVsUnknown": {
+      "identicalPacket": false,
+      "identicalPayload": false,
+      "identicalDecision": false
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "type-kit",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Synthetic S127 types package (new): export= removed from umd. Label: synthetic.",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": { "types": "./index.d.ts" },
+    "./umd": { "types": "./umd.d.ts" }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "type-kit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Synthetic same-version no-op types tree. Label: synthetic.",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": { "types": "./index.d.ts" },
+    "./umd": { "types": "./umd.d.ts" }
+  }
+}

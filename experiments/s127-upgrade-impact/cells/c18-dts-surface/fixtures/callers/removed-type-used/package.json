@@ -1,0 +1,9 @@
+{
+  "name": "caller-removed-type-used",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic caller that import-type Alpha from type-kit. Label: synthetic.",
+  "dependencies": {
+    "type-kit": "^1.0.0"
+  }
+}

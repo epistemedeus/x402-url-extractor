@@ -1,0 +1,15 @@
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    dependencies:
+      '@acme/lib':
+        specifier: ^1.0.0
+        version: 1.0.0
+
+packages:
+  '@acme/lib@1.0.0':
+    resolution: {integrity: sha512-fixture-ws-mismatch}
+
+snapshots:
+  '@acme/lib@1.0.0': {}

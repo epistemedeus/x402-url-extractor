@@ -1,0 +1,18 @@
+{
+  "name": "dual-surface",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic S127 c17 fixture. Label: synthetic. Not published.",
+  "version": "2.0.0",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./esm.js",
+      "require": "./cjs.cjs",
+      "default": "./index.js"
+    },
+    "./extra": "./extra.js"
+  }
+}

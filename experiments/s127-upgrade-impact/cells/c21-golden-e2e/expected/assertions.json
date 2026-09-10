@@ -1,0 +1,84 @@
+{
+  "schema": "s127.upgrade-impact.golden-assertions.v1",
+  "id": "c21-golden-mixed-surfaces",
+  "label": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "clock": "2026-09-10T12:00:00.000Z",
+  "packetPath": "cells/c21-golden-e2e/expected/packet.json",
+  "compare": {
+    "byteIdenticalJson": false,
+    "ignoreClockByDefault": true,
+    "requiredFieldsFrom": "docs/PACKET-CONTRACT.md",
+    "nextActionAliases": {
+      "action": ["action", "review_breakages"]
+    }
+  },
+  "mustHold": {
+    "schema": "s127.upgrade-impact.packet.v1",
+    "caller.evidenceClass": "synthetic",
+    "dependency.name": "s127-golden-kit",
+    "dependency.oldVersion": "1.0.0",
+    "dependency.newVersion": "2.0.0",
+    "summary.nextAction": { "oneOf": ["action", "review_breakages"] },
+    "summary.actionableChangesIncludes": ["usedRemoved"],
+    "summary.actionableChangesExcludes": ["unusedRemoved", "dynamicRemoved", "format"],
+    "summary.unusedChangesIncludes": ["unusedRemoved"],
+    "summary.unusedChangesExcludes": ["usedRemoved"],
+    "summary.unknownReasonsIncludesAny": [
+      "dynamic_import",
+      "dynamic_import:dynamicRemoved",
+      "dynamic_import_unknown_surface",
+      "dynamic import"
+    ],
+    "exportDiff.removedIncludes": ["usedRemoved", "unusedRemoved", "dynamicRemoved"],
+    "bindings": [
+      {
+        "symbol": "usedRemoved",
+        "used": true,
+        "changeKind": "removed",
+        "decision": "action",
+        "why": "actionable used removal on the static main surface"
+      },
+      {
+        "symbol": "unusedRemoved",
+        "used": false,
+        "changeKind": "removed",
+        "decision": "no_action",
+        "why": "unused removal is not a caller defect"
+      },
+      {
+        "symbol": "dynamicRemoved",
+        "used": false,
+        "changeKind": "removed",
+        "decision": "unknown",
+        "dynamicImport": true,
+        "why": "dynamic import of ./plugin is unknown for that surface even though the export was removed"
+      }
+    ]
+  },
+  "mustNotHold": {
+    "newerVersionAloneIsBreak": false,
+    "unusedExportChangeIsCallerDefect": false,
+    "dynamicImportIsAction": false,
+    "paidDemand": false,
+    "liveCapture": false
+  },
+  "producerPitfalls": [
+    {
+      "id": "package-wide-dynamic-taint",
+      "severity": "fail-if-present",
+      "note": "PACKET-CONTRACT rule 4 is per-surface. A binder that sets unusedRemoved to unknown because s127-golden-kit/plugin is dynamically imported does not match this golden. Do not OR usage.dynamicImport from a different specifier onto the static main surface."
+    },
+    {
+      "id": "nextAction-review_breakages",
+      "severity": "accepted-alias",
+      "note": "src/bind.mjs may emit summary.nextAction=review_breakages for a used removal. Treat that as matching golden nextAction=action."
+    },
+    {
+      "id": "do-not-call-unfinished-cli",
+      "severity": "process",
+      "note": "This cell does not spawn scripts/cli.mjs. Assert against expected/packet.json using lib/assert.mjs."
+    }
+  ]
+}

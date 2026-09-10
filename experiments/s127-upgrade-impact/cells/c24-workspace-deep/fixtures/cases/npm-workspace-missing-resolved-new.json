@@ -1,0 +1,50 @@
+{
+  "id": "npm-workspace-missing-resolved-new",
+  "label": "fixture",
+  "kind": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "fixture",
+  "role": "identity-conflict",
+  "title": "workspace lockfile identity with missing resolvedNew",
+  "notes": "Old identity is the workspace path. Upgrade newVersion is 2.1.0 but resolvedNew is omitted. Cannot tell whether 2.1.0 is the next workspace version or a registry package of the same name ⇒ unknown.",
+  "caller": {
+    "root": "fixtures/callers/npm-workspaces",
+    "workspaceRoot": "fixtures/callers/npm-workspaces",
+    "manifestPath": "fixtures/callers/npm-workspaces/apps/web/package.json",
+    "lockfilePath": "fixtures/callers/npm-workspaces/package-lock.json",
+    "lockfileKind": "npm",
+    "sourceRoots": ["fixtures/callers/npm-workspaces/apps/web/src"]
+  },
+  "dependency": {
+    "name": "shared-kit",
+    "oldVersion": "0.4.0",
+    "newVersion": "2.1.0",
+    "resolvedOld": "workspace:packages/shared-kit",
+    "resolvedNew": null
+  },
+  "trees": {
+    "old": "fixtures/callers/npm-workspaces/packages/shared-kit",
+    "new": null
+  },
+  "expect": {
+    "identityConflict": true,
+    "kind": "workspace_vs_registry_identity_conflict",
+    "summary.nextAction": "unknown",
+    "actionableChanges": [],
+    "exportDiff.coverage": "unknown",
+    "unknownReasonsInclude": [
+      "workspace_vs_registry_identity_conflict",
+      "upgrade_target_resolved_missing"
+    ],
+    "bindingsDecision": "unknown",
+    "omitResolvedNew": true,
+    "decisionNotes": [
+      "resolvedNew is missing. Missing source ⇒ unknown, not action (packet rule 3).",
+      "Do not infer a registry identity from newVersion 2.1.0 alone.",
+      "Do not infer a workspace-internal bump from newVersion alone either.",
+      "A newer version is not itself a break."
+    ]
+  }
+}

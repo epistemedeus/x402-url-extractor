@@ -1,0 +1,8 @@
+{
+  "name": "demo-subpath",
+  "version": "2.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  }
+}

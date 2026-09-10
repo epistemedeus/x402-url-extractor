@@ -1,0 +1,8 @@
+{
+  "name": "c19-yaml-anchors",
+  "private": true,
+  "description": "Synthetic lockfile using YAML anchors (unsupported). Label: fixture.",
+  "dependencies": {
+    "lodash": "4.17.21"
+  }
+}

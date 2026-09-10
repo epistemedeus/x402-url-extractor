@@ -1,0 +1,22 @@
+{
+  "id": "unparseable-version",
+  "label": "synthetic",
+  "title": "non-semver versions without breaking notes ⇒ unknown",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "oldVersion": "workspace:*",
+    "newVersion": "latest"
+  },
+  "expect": {
+    "decision": "unknown",
+    "ruleId": "unparseable_version",
+    "delta": "unknown"
+  },
+  "binderWould": {
+    "coarse": "unknown",
+    "decisionChangedRelativeToChangelog": false,
+    "note": "Alias/workspace tokens stay unknown until resolved (packet rule 5)."
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "yaml",
+  "version": "2.9.0",
+  "license": "ISC",
+  "main": "./dist/index.js",
+  "module": null,
+  "types": "./dist/index.d.ts",
+  "type": "commonjs",
+  "browser": {
+    "./util.js": "./browser/dist/util.js",
+    "./dist/util.js": "./browser/dist/util.js",
+    "./dist/index.js": "./browser/index.js"
+  },
+  "exports": {
+    ".": {
+      "node": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "default": "./browser/index.js"
+    },
+    "./util": {
+      "node": "./dist/util.js",
+      "types": "./dist/util.d.ts",
+      "default": "./browser/dist/util.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "provenance": {
+    "label": "live-capture",
+    "url": "https://registry.npmjs.org/yaml/latest",
+    "tarball": "https://registry.npmjs.org/yaml/-/yaml-2.9.0.tgz",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "packumentContentSha256": "ed36bc66e2b2e87aff5274e3cb197d106add7afb1a7d680444dad667f0d3f103",
+    "coverage": "packument-fields:name,version,license,main,module,types,type,browser,exports",
+    "derivedFrom": "cells/c13-dep-license/fixtures/live-capture/packuments",
+    "paidDemand": false
+  }
+}

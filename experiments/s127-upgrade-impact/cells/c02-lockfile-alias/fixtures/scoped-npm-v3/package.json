@@ -1,0 +1,8 @@
+{
+  "name": "c02-scoped-npm-v3",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@scope/pkg": "^1.2.0"
+  }
+}

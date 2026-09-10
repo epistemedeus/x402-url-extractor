@@ -1,0 +1,9 @@
+{
+  "name": "demo-version-bump",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  },
+  "main": "./index.js"
+}

@@ -1,0 +1,32 @@
+{
+  "name": "espree",
+  "version": "11.2.0",
+  "license": "BSD-2-Clause",
+  "main": "dist/espree.cjs",
+  "module": null,
+  "types": "./dist/espree.d.cts",
+  "type": "module",
+  "browser": null,
+  "exports": {
+    ".": {
+      "types": {
+        "import": "./dist/espree.d.ts",
+        "require": "./dist/espree.d.cts"
+      },
+      "import": "./espree.js",
+      "default": "./dist/espree.cjs",
+      "require": "./dist/espree.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "provenance": {
+    "label": "live-capture",
+    "url": "https://registry.npmjs.org/espree/latest",
+    "tarball": "https://registry.npmjs.org/espree/-/espree-11.2.0.tgz",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "packumentContentSha256": "7f00deb0251b68fbcc970d7324758411b24383634efc94f0e530d86d4933be56",
+    "coverage": "packument-fields:name,version,license,main,module,types,type,browser,exports",
+    "derivedFrom": "cells/c13-dep-license/fixtures/live-capture/packuments",
+    "paidDemand": false
+  }
+}

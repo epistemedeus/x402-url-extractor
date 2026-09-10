@@ -1,0 +1,15 @@
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    dependencies:
+      '@scope/pkg':
+        specifier: ^1.2.3
+        version: 1.2.3
+
+packages:
+  '@scope/pkg@1.2.3':
+    resolution: {integrity: sha512-fixture-scoped}
+
+snapshots:
+  '@scope/pkg@1.2.3': {}

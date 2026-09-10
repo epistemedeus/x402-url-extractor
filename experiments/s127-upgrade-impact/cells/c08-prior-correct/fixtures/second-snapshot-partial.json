@@ -1,0 +1,57 @@
+{
+  "schema": "s127.upgrade-impact.packet.v1",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "caller": {
+    "manifestPath": "cells/c08-prior-correct/fixtures/synthetic-caller/package.json",
+    "lockfilePath": "cells/c08-prior-correct/fixtures/synthetic-caller/package-lock.json",
+    "sourceRoots": ["cells/c08-prior-correct/fixtures/synthetic-caller/src"],
+    "evidenceClass": "fixture"
+  },
+  "dependency": {
+    "name": "s127-synthetic-dep",
+    "oldVersion": "1.0.0",
+    "newVersion": "1.1.0",
+    "resolvedOld": "1.0.0",
+    "resolvedNew": "1.1.0"
+  },
+  "provenance": [
+    {
+      "path": "cells/c08-prior-correct/fixtures/synthetic-dep/v1.1.0-partial.js",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "coverage": "partial",
+      "label": "synthetic"
+    }
+  ],
+  "usage": {
+    "imports": [{ "from": "s127-synthetic-dep", "names": ["format"], "dynamicImport": false }],
+    "dynamicImport": false
+  },
+  "exportDiff": {
+    "added": [],
+    "removed": [],
+    "renamed": [],
+    "signatureChanged": [],
+    "coverage": "unknown"
+  },
+  "bindings": [
+    {
+      "symbol": "format",
+      "used": true,
+      "changeKind": "unknown",
+      "decision": "unknown",
+      "rationale": "partial source; missing contentSha256; exportDiff coverage unknown"
+    }
+  ],
+  "summary": {
+    "nextAction": "unknown",
+    "unknownReasons": ["partial_source", "missing_content_sha256"],
+    "unusedChanges": [],
+    "actionableChanges": []
+  },
+  "prior": null,
+  "limitations": [
+    "synthetic fixture; not live-capture",
+    "conflicting/missing/partial source stays unknown, not action"
+  ]
+}

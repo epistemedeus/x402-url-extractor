@@ -1,0 +1,9 @@
+{
+  "name": "caller-removed-type-unused",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic caller that does not import Delta. Label: synthetic.",
+  "dependencies": {
+    "type-kit": "^1.0.0"
+  }
+}

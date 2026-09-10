@@ -1,0 +1,13 @@
+{
+  "name": "real-b-cookie-caller",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Synthetic ESM caller for S127 case B. Pins cookie@1.1.1. Not a product and not paid demand.",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "cookie": "1.1.1"
+  }
+}

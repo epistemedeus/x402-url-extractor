@@ -1,0 +1,13 @@
+{
+  "name": "s127-c12-real-b",
+  "private": true,
+  "type": "module",
+  "description": "S127 cell c12: real-source case B (cookie 1.1.1 → 2.0.1). Isolated; not the pack CLI.",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "packet": "node scripts/build-packet.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

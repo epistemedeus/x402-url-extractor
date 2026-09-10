@@ -1,0 +1,8 @@
+{
+  "name": "c19-disagreement-exact-pin",
+  "private": true,
+  "description": "Synthetic disagreement: package.json exact pin 2.0.0 vs lockfile resolved 2.1.0. Label: fixture. Not live-capture.",
+  "dependencies": {
+    "hostile-dep": "2.0.0"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "c19-unparseable",
+  "private": true,
+  "description": "Synthetic unparseable lockfile. Label: fixture.",
+  "dependencies": {
+    "lodash": "4.17.21"
+  }
+}

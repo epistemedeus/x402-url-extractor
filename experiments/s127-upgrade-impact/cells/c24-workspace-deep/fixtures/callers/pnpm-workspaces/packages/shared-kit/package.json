@@ -1,0 +1,24 @@
+{
+  "name": "shared-kit",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic in-repo workspace package (pnpm tree). Label: fixture. Not published.",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+file:///synthetic/c24-monorepo.git"
+  },
+  "dependencies": {
+    "shared-kit-core": "workspace:*"
+  },
+  "scripts": {
+    "preinstall": "node -e \"require('fs').writeFileSync('SENTINEL_SHOULD_NOT_EXIST','executed')\"",
+    "install": "node -e \"require('fs').writeFileSync('SENTINEL_SHOULD_NOT_EXIST','executed')\"",
+    "postinstall": "node -e \"require('fs').writeFileSync('SENTINEL_SHOULD_NOT_EXIST','executed')\"",
+    "prepare": "node -e \"require('fs').writeFileSync('SENTINEL_SHOULD_NOT_EXIST','executed')\""
+  }
+}

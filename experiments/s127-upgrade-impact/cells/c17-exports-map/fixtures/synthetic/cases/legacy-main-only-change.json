@@ -1,0 +1,18 @@
+{
+  "id": "legacy-main-only-change",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "main changes; still no exports field",
+  "notes": "Legacy entry path changed. Named JS exports inside the new file are unknown here (c05). Bundler module/browser fields absent.",
+  "old": "packages/legacy-main/1.0.0",
+  "new": "packages/legacy-main/2.0.0-main-only-change",
+  "expect": {
+    "exportsStableMainChanged": false,
+    "mapStructureChanged": false,
+    "decisionHint": "unknown",
+    "coverage": "partial",
+    "unknownReasonsIncludes": [
+      "no_exports_field_legacy_entry_unknown"
+    ]
+  }
+}

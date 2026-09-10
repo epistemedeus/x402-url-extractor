@@ -1,0 +1,27 @@
+{
+  "name": "cjs-module-lexer",
+  "version": "2.2.1",
+  "license": "MIT",
+  "main": "lexer.js",
+  "module": null,
+  "types": "lexer.d.ts",
+  "type": null,
+  "browser": null,
+  "exports": {
+    "import": {
+      "types": "./lexer.d.mts",
+      "default": "./dist/lexer.mjs"
+    },
+    "default": "./lexer.js"
+  },
+  "provenance": {
+    "label": "live-capture",
+    "url": "https://registry.npmjs.org/cjs-module-lexer/latest",
+    "tarball": "https://registry.npmjs.org/cjs-module-lexer/-/cjs-module-lexer-2.2.1.tgz",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "packumentContentSha256": "649a45e567bbfe509edc6e9a1c9b4bc48f29ebcc672f568a7b1e0bf439fc354c",
+    "coverage": "packument-fields:name,version,license,main,module,types,type,browser,exports",
+    "derivedFrom": "cells/c13-dep-license/fixtures/live-capture/packuments",
+    "paidDemand": false
+  }
+}

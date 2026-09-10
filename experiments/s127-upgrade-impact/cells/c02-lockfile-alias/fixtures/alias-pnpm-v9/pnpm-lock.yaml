@@ -1,0 +1,15 @@
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    dependencies:
+      my-lodash:
+        specifier: npm:lodash@^4.17.0
+        version: 4.17.21
+
+packages:
+  lodash@4.17.21:
+    resolution: {integrity: sha512-SYNTHETIC-PNPM-ALIAS, tarball: https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz}
+
+snapshots:
+  lodash@4.17.21: {}

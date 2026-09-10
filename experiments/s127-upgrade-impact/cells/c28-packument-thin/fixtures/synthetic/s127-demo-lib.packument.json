@@ -1,0 +1,82 @@
+{
+  "name": "s127-demo-lib",
+  "license": "MIT",
+  "description": "Synthetic packument for c28. Not published to npm.",
+  "dist-tags": {
+    "latest": "3.0.0",
+    "old": "1.0.0"
+  },
+  "time": {
+    "created": "2026-01-01T00:00:00.000Z",
+    "modified": "2026-09-01T00:00:00.000Z",
+    "0.8.0": "2026-02-01T00:00:00.000Z",
+    "0.9.0": "2026-03-01T00:00:00.000Z",
+    "1.0.0": "2026-04-01T00:00:00.000Z",
+    "2.0.0": "2026-05-01T00:00:00.000Z",
+    "3.0.0": "2026-09-01T00:00:00.000Z"
+  },
+  "versions": {
+    "0.8.0": {
+      "name": "s127-demo-lib",
+      "version": "0.8.0",
+      "deprecated": "use 1.x; this line is metadata only",
+      "dist": {
+        "tarball": "https://registry.npmjs.org/s127-demo-lib/-/s127-demo-lib-0.8.0.tgz",
+        "integrity": "sha512-synthetic-0-8-0-not-a-real-digestAAAAAAAAAAAAAA==",
+        "shasum": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    "0.9.0": {
+      "name": "s127-demo-lib",
+      "version": "0.9.0",
+      "deprecated": true,
+      "dist": {
+        "tarball": "https://registry.npmjs.org/s127-demo-lib/-/s127-demo-lib-0.9.0.tgz",
+        "integrity": "sha512-synthetic-0-9-0-not-a-real-digestAAAAAAAAAAAAAA==",
+        "shasum": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    },
+    "1.0.0": {
+      "name": "s127-demo-lib",
+      "version": "1.0.0",
+      "scripts": {
+        "preinstall": "node -e \"require('fs').writeFileSync('SCRIPT_RAN.marker','ran')\"",
+        "install": "node -e \"process.exit(1)\"",
+        "postinstall": "node -e \"process.exit(1)\"",
+        "test": "node --test"
+      },
+      "dist": {
+        "tarball": "https://registry.npmjs.org/s127-demo-lib/-/s127-demo-lib-1.0.0.tgz",
+        "integrity": "sha512-synthetic-1-0-0-not-a-real-digestAAAAAAAAAAAAAA==",
+        "shasum": "1111111111111111111111111111111111111111",
+        "unpackedSize": 1266,
+        "fileCount": 4
+      }
+    },
+    "2.0.0": {
+      "name": "s127-demo-lib",
+      "version": "2.0.0",
+      "scripts": {
+        "preinstall": "node -e \"require('fs').writeFileSync('SCRIPT_RAN.marker','ran')\"",
+        "install": "node -e \"process.exit(1)\"",
+        "postinstall": "node -e \"process.exit(1)\""
+      },
+      "dist": {
+        "tarball": "https://registry.npmjs.org/s127-demo-lib/-/s127-demo-lib-2.0.0.tgz",
+        "integrity": "sha512-synthetic-2-0-0-not-a-real-digestAAAAAAAAAAAAAA==",
+        "shasum": "2222222222222222222222222222222222222222",
+        "unpackedSize": 1228,
+        "fileCount": 3
+      }
+    },
+    "3.0.0": {
+      "name": "s127-demo-lib",
+      "version": "3.0.0",
+      "dist": {
+        "tarball": "https://registry.npmjs.org/s127-demo-lib/-/s127-demo-lib-3.0.0.tgz",
+        "integrity": "sha512-synthetic-3-0-0-not-a-real-digestAAAAAAAAAAAAAA==",
+        "shasum": "3333333333333333333333333333333333333333"
+      }
+    }
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "schema": "s127.c20.yarn-lock.provenance.v1",
+  "label": "synthetic",
+  "evidenceClass": "fixture",
+  "capturedFromLive": false,
+  "liveCapture": false,
+  "paidDemand": false,
+  "url": null,
+  "retrievedAt": null,
+  "capturedAtUtc": "2026-09-10T12:00:00.000Z",
+  "notes": "Hand-written classic yarn.lock v1 and berry-shaped lockfiles for cell c20. Not registry tarballs. Not live-capture. Integrity/resolved hashes inside lockfiles are synthetic. No package manager ran. No paid job.",
+  "coverage": "synthetic classic-v1 entries, npm aliases, version conflicts, berry detection, hostile parse failures",
+  "files": {
+    "classic-simple/yarn.lock": {
+      "label": "synthetic",
+      "role": "unique resolved version + multi-key same version (not a conflict)",
+      "contentSha256": "8ecbf0a677989d4749eb3b6e492cc81a6ca0df7947035f5d802f23e17210a3b0",
+      "bytes": 654
+    },
+    "classic-simple/package.json": {
+      "label": "synthetic",
+      "role": "manifest pins for classic-simple",
+      "contentSha256": "8b7f4db10af4cb6dd53be30db08545b1a80d3ca4e97b75ddb8e3823d140e0b17",
+      "bytes": 215
+    },
+    "classic-alias/yarn.lock": {
+      "label": "synthetic",
+      "role": "npm alias widget → demo-widget@1.2.3 unique resolve",
+      "contentSha256": "41954b00484b0d11e9588da4f2dccccdc149f6ed5af1d7ffc148ab18a633f486",
+      "bytes": 364
+    },
+    "classic-alias/package.json": {
+      "label": "synthetic",
+      "role": "manifest alias spec npm:demo-widget@^1.0.0",
+      "contentSha256": "957d8b7478b5451d4b3affac7280af7cbe3db1c509389719e8f6ac236f69f526",
+      "bytes": 227
+    },
+    "classic-alias/expect.json": {
+      "label": "synthetic",
+      "role": "expected unique alias resolution",
+      "contentSha256": "f6e39abb4cfff1daa0cd977586aca6f24af8e72e84bab0367b48ab1aa5833549",
+      "bytes": 306
+    },
+    "classic-conflict/yarn.lock": {
+      "label": "synthetic",
+      "role": "lodash resolves to 3.10.1 and 4.17.21 — must stay unknown, not first-wins",
+      "contentSha256": "74b8109d1aeb6aafaa7ea39b78a9c0de4c14b5161a62824c4e314cef7af1106d",
+      "bytes": 1124
+    },
+    "classic-conflict/package.json": {
+      "label": "synthetic",
+      "role": "manifest that pulls lodash via two nested ranges",
+      "contentSha256": "7dc416e30e318db52b4479670a7b2ff2c551769da9cda5c99e5a348fc44e8438",
+      "bytes": 265
+    },
+    "classic-conflict/expect.json": {
+      "label": "synthetic",
+      "role": "expected version-conflict unknown",
+      "contentSha256": "dfd770f20edbd58fab1a93a84053f86258c9693db753fde72578805d373d3622",
+      "bytes": 312
+    },
+    "classic-alias-mismatch/yarn.lock": {
+      "label": "synthetic",
+      "role": "alias target demo-widget but resolved URL is lodash — alias disagreement",
+      "contentSha256": "de358a1e6326f93687231025b23d1407de01b4448eeff1ed2bd21355396d7f16",
+      "bytes": 358
+    },
+    "classic-alias-mismatch/package.json": {
+      "label": "synthetic",
+      "role": "manifest alias that disagrees with lockfile resolved name",
+      "contentSha256": "bcb315db6b9484d0f85dea7d08af8f2242879cfa734941d68a0eb2192f80b45b",
+      "bytes": 241
+    },
+    "classic-scoped-alias/yarn.lock": {
+      "label": "synthetic",
+      "role": "scoped npm alias @team/ui → @company/ui",
+      "contentSha256": "4a69c6ef97fd37166d78567f06f9b814aabe37d30718b0fb557e92db8a8757ad",
+      "bytes": 357
+    },
+    "classic-scoped-multikey/yarn.lock": {
+      "label": "synthetic",
+      "role": "scoped multi-key same version is not a conflict",
+      "contentSha256": "c7bfa38144ec0a4bdebb16402733b5bf39f66caa275ac7e269d7cf627b59ddfe",
+      "bytes": 678
+    },
+    "classic-file-workspace/yarn.lock": {
+      "label": "synthetic",
+      "role": "classic file: locator (not berry workspace:)",
+      "contentSha256": "e47b4067bdc94da99daef3820e853c2c8f5920f639780df11cf99a1662fc8ac1",
+      "bytes": 187
+    },
+    "classic-file-workspace/package.json": {
+      "label": "synthetic",
+      "role": "file: pin",
+      "contentSha256": "d4b9bbd658c014dc74e6f36bfca93b1f0e36e32d83e481ffd2c9a077f228622c",
+      "bytes": 230
+    },
+    "classic-bom-crlf/yarn.lock": {
+      "label": "synthetic",
+      "role": "UTF-8 BOM + CRLF copy of classic-simple",
+      "contentSha256": "0b4df03b81ff4315e98b493363cf933b70d6363ff0cf35c88f91a2ddefb5c03d",
+      "bytes": 672
+    },
+    "berry-v6/yarn.lock": {
+      "label": "synthetic",
+      "role": "Yarn Berry v6 shape — parser must return unknown, no invented versions",
+      "contentSha256": "922f73435b0ebd9ea722b3226a1e7e7926c14617a46713a94f50f2b7dc431930",
+      "bytes": 684
+    },
+    "berry-workspace/yarn.lock": {
+      "label": "synthetic",
+      "role": "Berry workspace: protocol — unsupported, unknown",
+      "contentSha256": "05669f88e31d60b1d07df6b05074013c8da4f19bb167af63a8a9be75e41e3c80",
+      "bytes": 364
+    },
+    "hostile-conflict-markers/yarn.lock": {
+      "label": "synthetic",
+      "role": "git merge conflict markers → unknown",
+      "contentSha256": "abeca6eb126307284895a80469a628a3b5241751de81e296c3f0819a901e5fac",
+      "bytes": 416
+    },
+    "hostile-unclosed-quote/yarn.lock": {
+      "label": "synthetic",
+      "role": "unclosed quote → unknown",
+      "contentSha256": "e0f94919771df9403d1fa54ad53224afbeec6f7930a112a5b7cf7cc86621f3d7",
+      "bytes": 202
+    },
+    "empty/yarn.lock": {
+      "label": "synthetic",
+      "role": "empty file → unknown",
+      "contentSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  }
+}

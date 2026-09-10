@@ -1,0 +1,16 @@
+{
+  "id": "wildcard-subpath",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "wildcard subpath added; coverage partial",
+  "notes": "Wildcard keys are not expanded. Request-path matching stays unknown.",
+  "old": "packages/subpath-surface/1.0.0",
+  "new": "packages/subpath-surface/2.0.0-wildcard",
+  "expect": {
+    "coverage": "partial",
+    "decisionHint": "unknown",
+    "unknownReasonsIncludes": [
+      "exports_wildcard_subpath"
+    ]
+  }
+}

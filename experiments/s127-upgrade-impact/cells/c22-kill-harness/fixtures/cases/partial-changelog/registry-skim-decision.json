@@ -1,0 +1,61 @@
+{
+  "schema": "s127.upgrade-impact.registry-skim.decision.v1",
+  "inputSchema": "s127.upgrade-impact.registry-skim.input.v1",
+  "method": "registry_version_changelog_skim",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline skim stub; no purchase; do not invent paid demand"
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0"
+  },
+  "observation": {
+    "versionChanged": true,
+    "semverDelta": "major",
+    "changelogCoverage": "partial",
+    "changelogPath": null,
+    "breakingKeywords": [],
+    "keywordScan": "not_scanned",
+    "changelogBytes": 15,
+    "changelogSha256": "60aaedd8c3d6695c1eac52ab97306db932bed152e8dde748156d7448fdaf18d0"
+  },
+  "summary": {
+    "nextAction": "unknown",
+    "ruleId": "partial_changelog",
+    "rationale": "registry 1.0.0 -> 2.0.0 (major) but changelog coverage is partial; skim stays unknown, not action",
+    "unknownReasons": [
+      "partial_changelog"
+    ],
+    "unusedChanges": [],
+    "actionableChanges": []
+  },
+  "limitations": [
+    "Method A is a registry version + changelog skim stub, not a maintainer-intent parser.",
+    "Keyword scan is not full changelog understanding and is not TypeScript analysis.",
+    "A newer version alone is not a break; skim review_changelog is not a caller-defect claim.",
+    "Unused export change is not a caller defect.",
+    "Missing, conflicting, or partial source stays unknown, not action.",
+    "No runtime execution of untrusted packages or lifecycle scripts.",
+    "Offline default. No payment attempted. A new version is not paid demand.",
+    "changelog coverage is not complete; keyword claim is withheld"
+  ],
+  "provenance": [
+    {
+      "path": null,
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "60aaedd8c3d6695c1eac52ab97306db932bed152e8dde748156d7448fdaf18d0",
+      "coverage": "partial",
+      "label": "synthetic"
+    }
+  ]
+}

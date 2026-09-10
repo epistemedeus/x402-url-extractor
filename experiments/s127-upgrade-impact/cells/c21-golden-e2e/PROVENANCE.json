@@ -1,0 +1,43 @@
+{
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "kind": "synthetic",
+  "liveCapture": false,
+  "capturedFromLive": false,
+  "paidDemand": false,
+  "url": null,
+  "retrievedAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "coverage": "synthetic-only",
+  "notes": "Cell c21 golden end-to-end packet. Hand-written synthetic caller + s127-golden-kit@1.0.0/2.0.0 trees. Not live-capture. Not a marketplace job. No registry fetch. contentSha256 values are sha256 of local fixture bytes. Do not run package lifecycle scripts; these trees have none.",
+  "files": {
+    "expected/packet.json": {
+      "label": "synthetic",
+      "role": "golden expected packet (PACKET-CONTRACT v1)"
+    },
+    "expected/prior.seq-1.json": {
+      "label": "synthetic",
+      "role": "immutable prior materialized from packet.json via src/prior.mjs createPrior; payload sha256 is prior.sha256"
+    },
+    "expected/assertions.json": {
+      "label": "synthetic",
+      "role": "must-hold integrator assertions"
+    },
+    "expected/case.json": {
+      "label": "synthetic",
+      "role": "composePacket input descriptor; not a CLI invocation"
+    },
+    "fixtures/caller/": {
+      "label": "synthetic",
+      "role": "caller workspace"
+    },
+    "fixtures/packages/s127-golden-kit/1.0.0/": {
+      "label": "synthetic",
+      "role": "old dependency tree"
+    },
+    "fixtures/packages/s127-golden-kit/2.0.0/": {
+      "label": "synthetic",
+      "role": "new dependency tree"
+    }
+  }
+}

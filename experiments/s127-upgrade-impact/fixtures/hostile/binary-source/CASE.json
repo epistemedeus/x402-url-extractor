@@ -1,0 +1,13 @@
+{
+  "id": "binary-source",
+  "label": "fixture",
+  "synthetic": true,
+  "liveCapture": false,
+  "paidDemand": false,
+  "expect": {
+    "decision": "unknown",
+    "nextAction": "unknown",
+    "findingKinds": ["binary_source"],
+    "scriptsExecuted": false
+  }
+}

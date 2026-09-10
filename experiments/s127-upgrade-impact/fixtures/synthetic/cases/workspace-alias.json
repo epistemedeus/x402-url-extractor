@@ -1,0 +1,25 @@
+{
+  "id": "workspace-alias",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "title": "npm alias and workspace range",
+  "notes": "Alias/workspace/lockfile disagreement stays unknown until resolved. Not a required catalog case; lockfile cell coverage.",
+  "caller": {
+    "root": "callers/workspace-alias",
+    "manifestPath": "callers/workspace-alias/package.json",
+    "lockfilePath": "callers/workspace-alias/package-lock.json",
+    "sourceRoots": ["callers/workspace-alias/src"]
+  },
+  "dependency": {
+    "name": "widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "oldTree": "packages/demo-widget/1.0.0",
+    "newTree": "packages/demo-widget/2.0.0-removed-alpha"
+  },
+  "expect": {
+    "summary.nextAction": "unknown",
+    "unknownReasonsInclude": ["alias_or_workspace"]
+  }
+}

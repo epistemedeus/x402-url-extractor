@@ -1,0 +1,34 @@
+{
+  "id": "signature-changed",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "title": "Used export beta changes arity",
+  "notes": "Arity is a coarse signature. Full TypeScript types are unknown.",
+  "caller": {
+    "root": "callers/signature-changed",
+    "manifestPath": "callers/signature-changed/package.json",
+    "lockfilePath": "callers/signature-changed/package-lock.json",
+    "sourceRoots": ["callers/signature-changed/src"]
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "oldTree": "packages/demo-widget/1.0.0",
+    "newTree": "packages/demo-widget/2.0.0-sigchange"
+  },
+  "expect": {
+    "summary.nextAction": "action",
+    "exportDiff.signatureChanged": ["beta"],
+    "actionableSymbols": ["beta"],
+    "bindings": [
+      {
+        "symbol": "beta",
+        "used": true,
+        "changeKind": "signatureChanged",
+        "decision": "action"
+      }
+    ]
+  }
+}

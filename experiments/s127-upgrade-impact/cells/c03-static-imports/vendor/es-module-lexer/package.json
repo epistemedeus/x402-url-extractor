@@ -1,0 +1,7 @@
+{
+  "name": "es-module-lexer",
+  "version": "3.0.2",
+  "license": "MIT",
+  "type": "module",
+  "description": "Vendored asm.js CSP build (package export ./js) for S127 c03. No WASM. Upstream https://github.com/guybedford/es-module-lexer"
+}

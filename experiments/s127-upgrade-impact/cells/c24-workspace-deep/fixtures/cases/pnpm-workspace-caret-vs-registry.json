@@ -1,0 +1,48 @@
+{
+  "id": "pnpm-workspace-caret-vs-registry",
+  "label": "fixture",
+  "kind": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "fixture",
+  "role": "identity-conflict",
+  "title": "pnpm workspace:^ still links the workspace path; registry 2.1.0 is not that identity",
+  "notes": "workspace:^ means 'the workspace package's current version as a caret range' while still linking the local package. It is not a registry range that includes shared-kit@2.1.0 from npm.",
+  "caller": {
+    "root": "fixtures/callers/pnpm-workspaces",
+    "workspaceRoot": "fixtures/callers/pnpm-workspaces",
+    "manifestPath": "fixtures/callers/pnpm-workspaces/apps/admin/package.json",
+    "lockfilePath": "fixtures/callers/pnpm-workspaces/pnpm-lock.yaml",
+    "lockfileKind": "pnpm",
+    "sourceRoots": ["fixtures/callers/pnpm-workspaces/apps/admin/src"]
+  },
+  "dependency": {
+    "name": "shared-kit",
+    "oldVersion": "0.4.0",
+    "newVersion": "2.1.0",
+    "resolvedOld": "link:../../packages/shared-kit",
+    "resolvedNew": "https://example.invalid/registry/shared-kit/-/shared-kit-2.1.0.tgz"
+  },
+  "trees": {
+    "old": "fixtures/callers/pnpm-workspaces/packages/shared-kit",
+    "new": "fixtures/trees/registry-shared-kit-2.1.0"
+  },
+  "expect": {
+    "identityConflict": true,
+    "kind": "workspace_vs_registry_identity_conflict",
+    "summary.nextAction": "unknown",
+    "actionableChanges": [],
+    "exportDiff.coverage": "conflict",
+    "unknownReasonsInclude": [
+      "workspace_vs_registry_identity_conflict",
+      "lockfile_alias_or_workspace_disagreement"
+    ],
+    "bindingsDecision": "unknown",
+    "decisionNotes": [
+      "workspace:^ is still the workspace protocol. Lockfile version remains link:../../packages/shared-kit.",
+      "A caret against the workspace package version does not select a registry tarball of the same name.",
+      "Identity conflict ⇒ unknown. Do not treat 0.4.0 → 2.1.0 as a semver major of the local package."
+    ]
+  }
+}

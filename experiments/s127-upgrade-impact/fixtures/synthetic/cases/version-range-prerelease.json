@@ -1,0 +1,28 @@
+{
+  "id": "version-range-prerelease",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "title": "Manifest range ^1.0.0 vs lockfile prerelease 2.0.0-beta.1",
+  "notes": "Lockfile/range disagreement yields unknown until resolved. Prerelease is a limitation note. Named exports are unchanged, so a version bump alone is not a break.",
+  "caller": {
+    "root": "callers/version-range-prerelease",
+    "manifestPath": "callers/version-range-prerelease/package.json",
+    "lockfilePath": "callers/version-range-prerelease/package-lock.json",
+    "sourceRoots": ["callers/version-range-prerelease/src"]
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0-beta.1",
+    "oldTree": "packages/demo-widget/1.0.0",
+    "newTree": "packages/demo-widget/2.0.0-beta.1"
+  },
+  "expect": {
+    "summary.nextAction": "unknown",
+    "exportDiff.removed": [],
+    "actionableSymbols": [],
+    "unknownReasonsInclude": ["lockfile_range_disagreement"],
+    "limitationsInclude": ["prerelease"]
+  }
+}

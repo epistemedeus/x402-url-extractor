@@ -1,0 +1,51 @@
+{
+  "schema": "s127.upgrade-impact.packet.v1",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "caller": {
+    "manifestPath": null,
+    "lockfilePath": null,
+    "sourceRoots": [],
+    "evidenceClass": "synthetic"
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0",
+    "resolvedOld": "1.0.0",
+    "resolvedNew": "2.0.0"
+  },
+  "provenance": [],
+  "usage": {
+    "items": [{ "symbol": "alpha", "kind": "named", "dynamicImport": false, "used": true }],
+    "dynamicImport": false,
+    "coverage": "complete"
+  },
+  "exportDiff": {
+    "added": [],
+    "removed": ["alpha"],
+    "renamed": [],
+    "signatureChanged": [],
+    "coverage": "complete"
+  },
+  "bindings": [
+    {
+      "symbol": "alpha",
+      "used": true,
+      "changeKind": "removed",
+      "decision": "action",
+      "rationale": "used export alpha was removed",
+      "ruleId": "used_removed"
+    }
+  ],
+  "summary": {
+    "nextAction": "action",
+    "unknownReasons": [],
+    "unusedChanges": [],
+    "actionableChanges": ["alpha"]
+  },
+  "prior": null,
+  "limitations": [
+    "synthetic kill-suite fixture; coarse bucket matches review_changelog"
+  ]
+}

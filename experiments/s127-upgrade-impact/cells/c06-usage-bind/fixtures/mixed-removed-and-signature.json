@@ -1,0 +1,26 @@
+{
+  "id": "mixed-removed-and-signature",
+  "label": "synthetic",
+  "title": "used removed + used signatureChanged ⇒ review_breakages (more severe)",
+  "input": {
+    "dependency": { "name": "demo-pkg", "oldVersion": "1.0.0", "newVersion": "2.0.0" },
+    "usage": {
+      "coverage": "complete",
+      "references": [
+        { "symbol": "alpha", "kind": "named" },
+        { "symbol": "beta", "kind": "named" }
+      ]
+    },
+    "exportDiff": {
+      "coverage": "complete",
+      "removed": ["alpha"],
+      "signatureChanged": ["beta"]
+    }
+  },
+  "expect": {
+    "nextAction": "review_breakages",
+    "actionableSymbols": ["alpha", "beta"],
+    "unusedSymbols": [],
+    "decisions": { "alpha": "action", "beta": "action" }
+  }
+}

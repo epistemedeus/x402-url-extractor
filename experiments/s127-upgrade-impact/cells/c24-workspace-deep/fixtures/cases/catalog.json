@@ -1,0 +1,21 @@
+{
+  "cell": "c24-workspace-deep",
+  "schema": "s127.upgrade-impact.c24-catalog.v1",
+  "label": "fixture",
+  "kind": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "workspace:* lockfile path vs same-name registry upgrade (identity conflict)",
+  "notes": "Deeper than fixtures/synthetic/callers/workspace-alias. Lockfile identity is a workspace package path; the upgrade target is a synthetic registry locator of the same name. Same name is not same identity ⇒ unknown.",
+  "cases": [
+    "npm-workspace-link-vs-registry",
+    "npm-workspace-unused-vs-registry",
+    "pnpm-workspace-star-vs-registry",
+    "pnpm-workspace-caret-vs-registry",
+    "yarn-berry-workspace-vs-registry",
+    "npm-manifest-semver-lockfile-workspace",
+    "npm-workspace-missing-resolved-new",
+    "contrast-workspace-internal-bump"
+  ]
+}

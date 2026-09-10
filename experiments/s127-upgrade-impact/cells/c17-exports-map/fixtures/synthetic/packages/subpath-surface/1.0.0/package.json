@@ -1,0 +1,13 @@
+{
+  "name": "subpath-surface",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic S127 c17 subpath fixture. Label: synthetic.",
+  "version": "1.0.0",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./secret": "./secret.js",
+    "./package.json": "./package.json"
+  }
+}

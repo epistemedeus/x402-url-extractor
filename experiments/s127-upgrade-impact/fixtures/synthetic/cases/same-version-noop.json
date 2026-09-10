@@ -1,0 +1,27 @@
+{
+  "id": "same-version-noop",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "title": "Same version, identical trees",
+  "notes": "Same-version / no-op yields no_action.",
+  "caller": {
+    "root": "callers/same-version-noop",
+    "manifestPath": "callers/same-version-noop/package.json",
+    "lockfilePath": "callers/same-version-noop/package-lock.json",
+    "sourceRoots": ["callers/same-version-noop/src"]
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "1.0.0",
+    "oldTree": "packages/demo-widget/1.0.0",
+    "newTree": "packages/demo-widget/1.0.0"
+  },
+  "expect": {
+    "summary.nextAction": "no_action",
+    "exportDiff.removed": [],
+    "exportDiff.added": [],
+    "actionableSymbols": []
+  }
+}

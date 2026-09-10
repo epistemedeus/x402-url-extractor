@@ -1,0 +1,9 @@
+{
+  "name": "c09-isolation-caller",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic isolation caller for c09 CLI tests. Not live-capture.",
+  "dependencies": {
+    "demo-dep": "1.0.0"
+  }
+}

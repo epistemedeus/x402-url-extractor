@@ -1,0 +1,6 @@
+{
+  "label": "synthetic",
+  "name": "demo-dep",
+  "version": "2.0.0",
+  "exports": ["beta", "gamma"]
+}

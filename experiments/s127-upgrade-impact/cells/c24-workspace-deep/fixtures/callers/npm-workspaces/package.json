@@ -1,0 +1,10 @@
+{
+  "name": "c24-monorepo-npm",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Synthetic npm workspaces monorepo for c24. Label: fixture. Not live-capture. No paid demand.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "ids": [
+    "exports-changed-main-stable",
+    "main-changed-exports-stable",
+    "version-only-noop",
+    "env-conditions",
+    "types-only",
+    "fallback-reorder",
+    "null-block-subpath",
+    "wildcard-subpath",
+    "legacy-adds-exports",
+    "legacy-main-only-change",
+    "invalid-mixed-keys",
+    "same-target-conditions"
+  ]
+}

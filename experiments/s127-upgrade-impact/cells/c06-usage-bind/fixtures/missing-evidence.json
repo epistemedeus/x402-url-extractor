@@ -1,0 +1,14 @@
+{
+  "id": "missing-evidence",
+  "label": "synthetic",
+  "title": "missing usage and exportDiff ⇒ unknown, never action",
+  "input": {
+    "dependency": { "name": "demo-pkg", "oldVersion": "1.0.0", "newVersion": "2.0.0" }
+  },
+  "expect": {
+    "nextAction": "unknown",
+    "actionableSymbols": [],
+    "unusedSymbols": [],
+    "decisions": {}
+  }
+}

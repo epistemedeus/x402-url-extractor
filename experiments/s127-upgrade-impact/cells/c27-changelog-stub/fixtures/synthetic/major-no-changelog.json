@@ -1,0 +1,21 @@
+{
+  "id": "major-no-changelog",
+  "label": "synthetic",
+  "title": "major bump with no changelog text ⇒ action (naive registry skim)",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "dependency": { "name": "demo-widget", "oldVersion": "1.0.0", "newVersion": "2.0.0" }
+  },
+  "expect": {
+    "decision": "action",
+    "ruleId": "registry_bump_no_changelog",
+    "delta": "major"
+  },
+  "binderWould": {
+    "coarse": "no_action",
+    "decisionChangedRelativeToChangelog": true,
+    "note": "Usage binder on unused-removed or added-only would be no_action. Stub over-fires action because a newer version exists."
+  }
+}

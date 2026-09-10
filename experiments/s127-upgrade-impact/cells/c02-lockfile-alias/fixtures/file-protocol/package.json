@@ -1,0 +1,8 @@
+{
+  "name": "c02-file-protocol",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "local-lib": "file:../local-lib"
+  }
+}

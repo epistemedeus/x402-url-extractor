@@ -1,0 +1,317 @@
+{
+  "schema": "s127.upgrade-impact.packet.v1",
+  "createdAt": "2026-09-10T10:50:00Z",
+  "clock": "2026-09-10T10:50:00Z",
+  "caller": {
+    "manifestPath": "fixtures/real-b/caller/package.json",
+    "lockfilePath": null,
+    "sourceRoots": [
+      "fixtures/real-b/caller/src"
+    ],
+    "entry": "fixtures/real-b/caller/src/read-session-cookie.mjs",
+    "evidenceClass": "fixture"
+  },
+  "dependency": {
+    "name": "cookie",
+    "oldVersion": "1.1.1",
+    "newVersion": "2.0.1",
+    "resolvedOld": {
+      "registry": "https://registry.npmjs.org/cookie/1.1.1",
+      "tarball": "https://registry.npmjs.org/cookie/-/cookie-1.1.1.tgz",
+      "integrity": "sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==",
+      "shasum": "3bb9bdfc82369db9c2f69c93c9c3ceb310c88b3c",
+      "publishedAt": "2025-11-26T17:50:20.759Z",
+      "contentSha256": "0e9342b066986722098d9b108b238033862eae90b3d53ff90581538264d91b60"
+    },
+    "resolvedNew": {
+      "registry": "https://registry.npmjs.org/cookie/2.0.1",
+      "tarball": "https://registry.npmjs.org/cookie/-/cookie-2.0.1.tgz",
+      "integrity": "sha512-yuToqVvRrj6pfDXREyQAAv8SkAEk/8GS3jQRTiUMm66TVtBYmqQeoEjL2Lmq8Rpo6271vH76InTChTitEAm65w==",
+      "shasum": "1fc7e9bddf38fa9567cd4d750820087cdb5d6e98",
+      "publishedAt": "2026-06-30T22:15:13.965Z",
+      "contentSha256": "8516126668fc55128916561047c055db77d0401dee1db108adce7267b4b06ff0"
+    }
+  },
+  "provenance": [
+    {
+      "id": "tarball-old",
+      "url": "https://registry.npmjs.org/cookie/-/cookie-1.1.1.tgz",
+      "path": "evidence/real-b/cookie-1.1.1.tgz",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "0e9342b066986722098d9b108b238033862eae90b3d53ff90581538264d91b60",
+      "bytes": 13358,
+      "coverage": "full-npm-tarball",
+      "label": "live-capture",
+      "npmIntegrity": "sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==",
+      "npmShasum": "3bb9bdfc82369db9c2f69c93c9c3ceb310c88b3c"
+    },
+    {
+      "id": "tarball-new",
+      "url": "https://registry.npmjs.org/cookie/-/cookie-2.0.1.tgz",
+      "path": "evidence/real-b/cookie-2.0.1.tgz",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "8516126668fc55128916561047c055db77d0401dee1db108adce7267b4b06ff0",
+      "bytes": 13277,
+      "coverage": "full-npm-tarball",
+      "label": "live-capture",
+      "npmIntegrity": "sha512-yuToqVvRrj6pfDXREyQAAv8SkAEk/8GS3jQRTiUMm66TVtBYmqQeoEjL2Lmq8Rpo6271vH76InTChTitEAm65w==",
+      "npmShasum": "1fc7e9bddf38fa9567cd4d750820087cdb5d6e98"
+    },
+    {
+      "id": "version-old",
+      "url": "https://registry.npmjs.org/cookie/1.1.1",
+      "path": "evidence/real-b/npm/cookie-1.1.1-version.json",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "8380401007e1478749d700253ea91d88b1474b2a732d33660973228e7cca59ec",
+      "bytes": 2064,
+      "coverage": "npm-version-document-as-returned",
+      "label": "live-capture"
+    },
+    {
+      "id": "version-new",
+      "url": "https://registry.npmjs.org/cookie/2.0.1",
+      "path": "evidence/real-b/npm/cookie-2.0.1-version.json",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "f3a293fe9a32e366424438cbb9aa6e202c2f0f143aec4f364169862bd8864b07",
+      "bytes": 2561,
+      "coverage": "npm-version-document-as-returned",
+      "label": "live-capture"
+    },
+    {
+      "id": "packument-slim",
+      "url": "https://registry.npmjs.org/cookie",
+      "path": "evidence/real-b/npm/cookie-packument.slim.json",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "bdddc87359d8b3067385f1a98e73279e6dec547a923d8daf6c337e4122335e2f",
+      "bytes": 1404,
+      "coverage": "slim name/license/dist-tags.latest/time subset/versions 1.1.1 and 2.0.1",
+      "label": "fixture"
+    },
+    {
+      "id": "github-releases-slim",
+      "url": "https://api.github.com/repos/jshttp/cookie/releases?per_page=10",
+      "path": "evidence/real-b/github/releases-slim.json",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "69f65d12c5a0df6e0d6c8c741c2bc89c9e1b8b783b711ae37c42eb433ee39b24",
+      "bytes": 2065,
+      "coverage": "tag/body for v1.1.1 v2.0.0 v2.0.1; author objects stripped",
+      "label": "live-capture"
+    },
+    {
+      "id": "extracted-old-js",
+      "url": null,
+      "path": "fixtures/real-b/extracted/cookie-1.1.1/dist/index.js",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "b67c70355a2b0dbd2e78b479b94107f34d5340e54f1479dc0974224a2a5d69dd",
+      "bytes": 12004,
+      "coverage": "tarball package/dist/index.js; source-map omitted",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-old-dts",
+      "url": null,
+      "path": "fixtures/real-b/extracted/cookie-1.1.1/dist/index.d.ts",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "79c164aa4f8a8418df7717206ea52508f72743224a6b9c705f10724c6dbb5548",
+      "bytes": 7053,
+      "coverage": "tarball package/dist/index.d.ts",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-old-manifest",
+      "url": null,
+      "path": "fixtures/real-b/extracted/cookie-1.1.1/package.json",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "e13337a4eb106b201e0502361f3214af9cc22ae88b2bfac2368996bb949a102f",
+      "bytes": 1095,
+      "coverage": "tarball package/package.json",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-new-js",
+      "url": null,
+      "path": "fixtures/real-b/extracted/cookie-2.0.1/dist/index.js",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "b728aa01f45e9115920e2a92e2f3d71c1b5acfbb8bc1d702b87397860c4ba925",
+      "bytes": 12046,
+      "coverage": "tarball package/dist/index.js; source-map omitted",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-new-dts",
+      "url": null,
+      "path": "fixtures/real-b/extracted/cookie-2.0.1/dist/index.d.ts",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "d0c80866b3a63107db0659fa609f23e8a80e53117e7b0146ae1cfd3d3aa33b27",
+      "bytes": 7084,
+      "coverage": "tarball package/dist/index.d.ts",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-new-manifest",
+      "url": null,
+      "path": "fixtures/real-b/extracted/cookie-2.0.1/package.json",
+      "retrievedAt": "2026-09-10T10:50:00Z",
+      "contentSha256": "75cd16a27d7d0018a08dcbe46eef242f5cbaae4c47efd95979c77ddad59e5fac",
+      "bytes": 1328,
+      "coverage": "tarball package/package.json",
+      "label": "fixture"
+    }
+  ],
+  "usage": {
+    "packageName": "cookie",
+    "dynamicImport": false,
+    "symbols": [
+      {
+        "symbol": "parse",
+        "local": "parse",
+        "typeOnly": false,
+        "importKind": "named",
+        "specifier": "cookie",
+        "dynamicImport": false
+      }
+    ],
+    "runtimeNamed": [
+      "parse"
+    ],
+    "coverage": "static named/default/namespace import specifiers; import() flagged; no-full-ts; no-member-tracking on namespace"
+  },
+  "exportDiff": {
+    "added": [],
+    "removed": [
+      "parse",
+      "serialize"
+    ],
+    "renamed": [
+      {
+        "from": "parse",
+        "to": "parseCookie",
+        "coverage": "github-release-v2.0.0-body plus 1.1.1 alias parse → parseCookie; not AST-proven",
+        "alreadyPresentOnOld": true,
+        "changelogUrl": "https://github.com/jshttp/cookie/releases/tag/v2.0.0"
+      },
+      {
+        "from": "serialize",
+        "to": "stringifySetCookie",
+        "coverage": "1.1.1 compiled alias serialize → stringifySetCookie; GitHub body names stringify which is not a 1.1.1 export",
+        "changelogName": "stringify",
+        "alreadyPresentOnOld": true,
+        "changelogUrl": "https://github.com/jshttp/cookie/releases/tag/v2.0.0"
+      }
+    ],
+    "signatureChanged": [
+      {
+        "symbol": "stringifySetCookie",
+        "kind": "dts-overload-count",
+        "oldOverloads": 2,
+        "newOverloads": 1,
+        "coverage": "dts-declare-function-overloads; not a type checker"
+      }
+    ],
+    "coverage": "compiled-js-named-exports; dts-overload-count-partial; changelog-renames-optional; no-full-ts; no-runtime-exec"
+  },
+  "packaging": {
+    "old": {
+      "name": "cookie",
+      "version": "1.1.1",
+      "moduleType": "cjs-or-unspecified",
+      "hasExports": false,
+      "exportsShape": "absent",
+      "exports": null,
+      "hasMain": true,
+      "main": "dist/index.js",
+      "hasTypesField": true,
+      "types": "dist/index.d.ts",
+      "engines": {
+        "node": ">=18"
+      }
+    },
+    "new": {
+      "name": "cookie",
+      "version": "2.0.1",
+      "moduleType": "esm",
+      "hasExports": true,
+      "exportsShape": "string",
+      "exports": "./dist/index.js",
+      "hasMain": false,
+      "main": null,
+      "hasTypesField": false,
+      "types": null,
+      "engines": {
+        "node": ">=22"
+      }
+    },
+    "contrast": "old: CJS main+types without exports; new: ESM-only string exports without main/types field",
+    "differsFromSingleMainCjs": true
+  },
+  "bindings": [
+    {
+      "symbol": "parse",
+      "used": true,
+      "changeKind": "removed",
+      "decision": "action",
+      "rationale": "Caller statically imports this symbol; compiled named export is absent on the new side."
+    },
+    {
+      "symbol": "serialize",
+      "used": false,
+      "changeKind": "removed",
+      "decision": "no_action",
+      "rationale": "Unused export change is not a caller defect."
+    },
+    {
+      "symbol": "stringifySetCookie",
+      "used": false,
+      "changeKind": "signatureChanged",
+      "decision": "no_action",
+      "rationale": "Unused export change is not a caller defect."
+    }
+  ],
+  "summary": {
+    "nextAction": "action",
+    "unknownReasons": [
+      "no_lockfile",
+      "no_full_typescript",
+      "engines_node_not_export_bound",
+      "types_field_missing_on_new_package_json"
+    ],
+    "unusedChanges": [
+      {
+        "symbol": "serialize",
+        "changeKind": "removed",
+        "decision": "no_action"
+      },
+      {
+        "symbol": "stringifySetCookie",
+        "changeKind": "signatureChanged",
+        "decision": "no_action"
+      }
+    ],
+    "actionableChanges": [
+      "parse"
+    ]
+  },
+  "prior": {
+    "ref": null,
+    "seq": 0,
+    "correction": null,
+    "note": "first observation; no immutable prior"
+  },
+  "limitations": [
+    "No full TypeScript checker; .d.ts used only for named-export corroboration and declare-function overload counts.",
+    "No runtime execution of cookie tarball code.",
+    "CJS/ESM scan is a conservative compiled-JS named-export walk, not a full module graph.",
+    "Caller has no lockfile; lockfile/alias/workspace disagreement was not observed.",
+    "cookie@2.0.1 omits package.json types; adjacent dist/index.d.ts is not a types-resolution proof.",
+    "engines.node >=18 → >=22 is not an export binding; impact on a Node 20 caller is unknown.",
+    "CJS require() callers of cookie@2.0.1 are outside this ESM caller.",
+    "GitHub v2.0.0 body says stringify was renamed; 1.1.1 compiled JS exports serialize, not stringify. Compiled JS is the export source of truth.",
+    "Source maps omitted from fixtures; full tarball is in evidence.",
+    "No paid demand; no price invoked."
+  ],
+  "commercial": {
+    "paidDemand": false,
+    "priceInvoked": false,
+    "note": "owner-qa real-source case; not a customer job"
+  }
+}

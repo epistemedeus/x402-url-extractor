@@ -1,0 +1,19 @@
+{
+  "id": "types-only",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "types condition and types field change; runtime import/require/default stable",
+  "notes": "No full TS analysis. types-condition stays unknown (c18). Runtime Node entry is unchanged. Unused types change is not a caller defect.",
+  "old": "packages/typed-surface/1.0.0",
+  "new": "packages/typed-surface/2.0.0-types-only",
+  "expect": {
+    "runtimeResolutionChanged": false,
+    "mapStructureChanged": true,
+    "environmentDependent": true,
+    "decisionHint": "unknown",
+    "coverage": "full",
+    "unknownReasonsIncludes": [
+      "typescript_types_condition"
+    ]
+  }
+}

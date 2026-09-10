@@ -1,0 +1,8 @@
+{
+  "name": "c19-v9-scoped",
+  "private": true,
+  "description": "Synthetic scoped package keys. Label: fixture.",
+  "dependencies": {
+    "@scope/pkg": "^1.2.3"
+  }
+}

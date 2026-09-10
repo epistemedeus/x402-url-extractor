@@ -1,0 +1,90 @@
+{
+  "schema": "s127.upgrade-impact.packet.v1",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "caller": {
+    "manifestPath": "fixtures/synthetic/callers/same-version-noop/package.json",
+    "lockfilePath": "fixtures/synthetic/callers/same-version-noop/package-lock.json",
+    "sourceRoots": [
+      "fixtures/synthetic/callers/same-version-noop/src"
+    ],
+    "evidenceClass": "synthetic"
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "1.0.0",
+    "resolvedOld": "1.0.0",
+    "resolvedNew": "1.0.0",
+    "requestedRange": "1.0.0"
+  },
+  "provenance": [
+    {
+      "path": "fixtures/synthetic/packages/demo-widget/1.0.0/README.md",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "42a748afe4b402e2cc5b4bf20264cff5cd49051782cd797860606159d8da760e",
+      "coverage": "full",
+      "label": "synthetic"
+    },
+    {
+      "path": "fixtures/synthetic/packages/demo-widget/1.0.0/index.js",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "c945dc4166e32955a6f2cdadba57353ce2af1932798929a03a7d98e550e74daf",
+      "coverage": "full",
+      "label": "synthetic"
+    },
+    {
+      "path": "fixtures/synthetic/packages/demo-widget/1.0.0/package.json",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "c1a049ae8cd3fd86dd15ea1fc26bcf3a8ec15b97fa052669dd56b5b236ed16a8",
+      "coverage": "full",
+      "label": "synthetic"
+    }
+  ],
+  "usage": [
+    {
+      "specifier": "demo-widget",
+      "symbol": "alpha",
+      "kind": "named",
+      "file": "src/app.js",
+      "dynamicImport": false,
+      "typeOnly": false
+    }
+  ],
+  "exportDiff": {
+    "added": [],
+    "removed": [],
+    "renamed": [],
+    "signatureChanged": [],
+    "coverage": "full"
+  },
+  "bindings": [
+    {
+      "symbol": "alpha",
+      "used": true,
+      "changeKind": "unchanged",
+      "decision": "no_action",
+      "rationale": "same-version no-op",
+      "dynamicImport": false
+    }
+  ],
+  "summary": {
+    "nextAction": "no_action",
+    "unknownReasons": [],
+    "unusedChanges": [],
+    "actionableChanges": []
+  },
+  "prior": {
+    "ref": null,
+    "sequence": 0,
+    "immutable": true,
+    "correction": null
+  },
+  "limitations": [
+    "no full TypeScript program analysis",
+    "no runtime execution of caller or package code",
+    "export scan covers static ESM named/default/namespace and CJS exports.X; re-export graphs and computed specifiers are unknown",
+    "arity is a coarse signature; TypeScript types are unknown"
+  ],
+  "ok": true
+}

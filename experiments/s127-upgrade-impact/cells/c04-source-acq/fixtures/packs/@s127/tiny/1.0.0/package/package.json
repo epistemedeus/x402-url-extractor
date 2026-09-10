@@ -1,0 +1,10 @@
+{
+  "name": "@s127/tiny",
+  "version": "1.0.0",
+  "description": "Synthetic scoped stub for S127 source acquisition. Not published to npm.",
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  },
+  "license": "MIT"
+}

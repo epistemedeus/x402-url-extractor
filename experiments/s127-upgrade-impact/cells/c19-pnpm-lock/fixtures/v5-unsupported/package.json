@@ -1,0 +1,8 @@
+{
+  "name": "c19-v5-unsupported",
+  "private": true,
+  "description": "Synthetic lockfile v5.4. Family is unknown for this cell. Label: fixture.",
+  "dependencies": {
+    "lodash": "^4.17.21"
+  }
+}

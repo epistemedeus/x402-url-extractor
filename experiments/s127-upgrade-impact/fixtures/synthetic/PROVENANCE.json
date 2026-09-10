@@ -1,0 +1,373 @@
+{
+  "label": "synthetic",
+  "capturedAtUtc": "2026-09-10T12:00:00.000Z",
+  "evidenceClassDefault": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "notes": "Authored synthetic fixtures and goldens. Not live-capture. Not paid demand. Assignment spend $0.",
+  "originalUrls": {},
+  "files": {
+    "fixtures/synthetic/CLOCK.txt": {
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/MANIFEST.json": {
+      "sha256": "9953e8186fdfc3c5ba0de96872f2e6af865b0681811d3b1993195e4f7b17d8b9",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/README.md": {
+      "sha256": "ac6326920c35114cda738980abfafdf06237ee8b8cdd2f4cb25169f68b1729ac",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/dynamic-import/package-lock.json": {
+      "sha256": "df91de4ca7352aef592e9b14e14df09f9b821ae0ca9a62b0554c680a5005c408",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/dynamic-import/package.json": {
+      "sha256": "b3a37d4e2a39d3b2075d3b02d5c69c8e76062e6418fd883412afc17083d8e00a",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/dynamic-import/src/app.js": {
+      "sha256": "6f7855dde42bdcd99cce7ba4f2f0e30e1faf3b3bbd09e89ebba88a843835f596",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/partial-missing-source/package-lock.json": {
+      "sha256": "30728f6ef4de2124799ff1e71d6f14f25669d957bf987cae46ae7056935a7f68",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/partial-missing-source/package.json": {
+      "sha256": "e757c848f44fef19b144f87306c3a7fa4b20e02bfca24e1ccec5747b067a7a07",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/partial-missing-source/src/app.js": {
+      "sha256": "330b7a1d04a7c38953fa5c8722bb4c8e3af3c67f6898cc129f8619287477a809",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/removed-export-unused/package-lock.json": {
+      "sha256": "f562733f6f3cb96c098fe307be36418a0148c8b722df5ef1688f21dd3ea1332a",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/removed-export-unused/package.json": {
+      "sha256": "bbee75f5d631afede5c2b4ae8030613ad19f2bbddceb1b3ec4fa981c5d2f3c6f",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/removed-export-unused/src/app.js": {
+      "sha256": "769a66be5d39f747407ad6e8241353ff4982ba09099f983051cac5484045af51",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/removed-export-used/package-lock.json": {
+      "sha256": "023fc0d436bbf70c66f298ab98e66c4c8b185af9589266ce42c13cb2f7d87bba",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/removed-export-used/package.json": {
+      "sha256": "a6e774120a0683deeeb3ea6f06efc9c403ba8dd352b7998613e208750f048d5d",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/removed-export-used/src/app.js": {
+      "sha256": "49f86325a4e3ebf39b554cf070d79ba525234be0fd5e2a17a90672519b7afd07",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/removed-export-used/src/types.ts": {
+      "sha256": "462c0cde00dd6a78613eba9747bd939cad85b66eadb45994b78e2c7de00e5c48",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/renamed-export/package-lock.json": {
+      "sha256": "2a4fbbd002adf539b80ed766d09c69d911fc73c1c33283b449429cb1d3426c26",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/renamed-export/package.json": {
+      "sha256": "ad50871f57fba0356dcb2fdb64c0540fc1baf619709af379d9b4c48badcb100d",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/renamed-export/src/app.js": {
+      "sha256": "c4ffbb352c5c603fd9636f96af7235b954105a84588da0a32a6170ff5efb76c5",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/same-version-noop/package-lock.json": {
+      "sha256": "1c57402b64faae58863f63dc525a25296fcd62953db32a4d16a8e0b9f066aef3",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/same-version-noop/package.json": {
+      "sha256": "dea68da6ff5d13cec051f92e547d2c6e09ad5c6b41af2836912e6771d011c750",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/same-version-noop/src/app.js": {
+      "sha256": "330b7a1d04a7c38953fa5c8722bb4c8e3af3c67f6898cc129f8619287477a809",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/signature-changed/package-lock.json": {
+      "sha256": "fcb9427f021dac599c444c033d659f272741e2554a97e84c89584d40194970b5",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/signature-changed/package.json": {
+      "sha256": "61318ca4016d99052f47d67d52a3380f96b449c35968d6b384fef5b41552722b",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/signature-changed/src/app.js": {
+      "sha256": "730529ea1d3495faeb383c16910aca8aeb12cb6716c1d1a156225e25a96cce3a",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/version-range-prerelease/package-lock.json": {
+      "sha256": "6458271807124fcbe6b2f46b19dec13db02468b1d9ba1699ffbdd52d851b2c52",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/version-range-prerelease/package.json": {
+      "sha256": "7d4bac362b2c174868ed4d4fe713e2e84e3a1d0c3486c228f30edea158dd274d",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/version-range-prerelease/src/app.js": {
+      "sha256": "730529ea1d3495faeb383c16910aca8aeb12cb6716c1d1a156225e25a96cce3a",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/workspace-alias/package-lock.json": {
+      "sha256": "4e89eb5c9a92769152c06ef2dcf840272d7da2dd77fa39d8667352205ce4dc2e",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/workspace-alias/package.json": {
+      "sha256": "791125bdcb7e861158ff46e084773f8ecbc391966e43a5e6644682af8257b511",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/callers/workspace-alias/src/app.js": {
+      "sha256": "d8517c077914c2558577c23b990a01681b439f26a6970f5a337d69439af0519c",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/cases/dynamic-import.json": {
+      "sha256": "fdfa4fb0ce46ab3c7b683a160b4bf4d082f160ef642af14f8509cd4c2038d3d2",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/cases/partial-missing-source.json": {
+      "sha256": "1f1cff905c60739fb2f7d4554978c7fdef7663d6dfd9d288a0721f4cea3f1c6e",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/cases/removed-export-unused.json": {
+      "sha256": "50c588233fd429b99bbcdf8ec158480258d27688f08bede0b3b41aed8bb90b67",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/cases/removed-export-used.json": {
+      "sha256": "e19c66eaba77f28986a74bfbc700418c76e107e0806bbc4feefa4057a1a396c1",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/cases/renamed-export.json": {
+      "sha256": "a1d5d0cf8bdc3135601fcb46dfc5079e06c3da81c77801e9daf8d073a98974f2",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/cases/same-version-noop.json": {
+      "sha256": "ec40e4eb84ed2e19000f511a21eef8d212faa31bd6ef2783ee7192925044bd66",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/cases/signature-changed.json": {
+      "sha256": "c2c8100f15b04221b134cead5fda54dd03c9340192df4b0ca35b687e5c74da2f",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/cases/version-range-prerelease.json": {
+      "sha256": "772e71b119704cad78301b643661b3ada1fada4d96f9df72d0c9816443b964be",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/cases/workspace-alias.json": {
+      "sha256": "57aeb936aa5bc837957ce5de06e2171f9d4ccd57605105aec9a70817663831bc",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/goldens/dynamic-import.packet.json": {
+      "sha256": "46bd4b3fff1b55eea0b7e0922aa9a04025d54d12cf15cfa9db100f32a44b052d",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/goldens/partial-missing-source.packet.json": {
+      "sha256": "54101d4d5172e2d5c1e38e03f24b7dd65c04ca22a8518a9c9a9d03609a999572",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/goldens/removed-export-unused.packet.json": {
+      "sha256": "8bfb526a73e5ad8719a0062f0d7c6b0f07bae6df6e2beaae328d69d3b2a47c8c",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/goldens/removed-export-used.packet.json": {
+      "sha256": "d067db79e7f61a8d2e0b8e1028ac04ea0e3a48c71940952e3976ab952b9c1b1a",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/goldens/renamed-export.packet.json": {
+      "sha256": "f2354df7920f2511a69bab7e5c83c0468e8502a2a2c5dea2b6ce98f08cd95fe5",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/goldens/same-version-noop.packet.json": {
+      "sha256": "ee62750df4b5909c0090912c1b29c459399899a604d61d15bc43d1b1d1ea9c00",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/goldens/signature-changed.packet.json": {
+      "sha256": "bf0bf0071588b7ace6c1c0bd2e5f672f4bd27518a7d641a5b057459d86d6262d",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/goldens/version-range-prerelease.packet.json": {
+      "sha256": "a71483e31af0e207765a28d530301712bf78cecd09abec2435014f25083b96a2",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/goldens/workspace-alias.packet.json": {
+      "sha256": "8f5d1e1f92e8a0a3fb8ff9076366cfecb0c957614999fd102baadc86cc0c1c83",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/packages/demo-widget/1.0.0/README.md": {
+      "sha256": "42a748afe4b402e2cc5b4bf20264cff5cd49051782cd797860606159d8da760e",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/packages/demo-widget/1.0.0/index.js": {
+      "sha256": "c945dc4166e32955a6f2cdadba57353ce2af1932798929a03a7d98e550e74daf",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/packages/demo-widget/1.0.0/package.json": {
+      "sha256": "c1a049ae8cd3fd86dd15ea1fc26bcf3a8ec15b97fa052669dd56b5b236ed16a8",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/packages/demo-widget/2.0.0-beta.1/index.js": {
+      "sha256": "c945dc4166e32955a6f2cdadba57353ce2af1932798929a03a7d98e550e74daf",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/packages/demo-widget/2.0.0-beta.1/package.json": {
+      "sha256": "114197ebe85d6a440cf6935c769a59a244e6cf8e339432de166122f36363553c",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/packages/demo-widget/2.0.0-partial/README.md": {
+      "sha256": "001fe33c62d92b5763f790fc5dfa616591c85a540aff2995d808ea32a7372bf8",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/packages/demo-widget/2.0.0-partial/package.json": {
+      "sha256": "ea6d37b3696b01a359e7692d759f2acb652e32596b29997bf1f25dcf25d4e109",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/packages/demo-widget/2.0.0-removed-alpha/index.js": {
+      "sha256": "9c76ad7a3375e4d340e7970f448519558f06b07b7c82af04eff2a503ef3dfde7",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/packages/demo-widget/2.0.0-removed-alpha/package.json": {
+      "sha256": "fbeee499fa86c45dafc817f593a8e35b3375be7f096d99ec79b8d4e1cfdc4dff",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/packages/demo-widget/2.0.0-renamed/index.js": {
+      "sha256": "dd8b36dae4a9411caff32f1bc74b087a5565a9037714cf7546fcce03322b0297",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/packages/demo-widget/2.0.0-renamed/package.json": {
+      "sha256": "ae724499c08520fb7bca5d2e17f08e8535dd4b02bda1358f1b7dba62a36f49c0",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/packages/demo-widget/2.0.0-sigchange/index.js": {
+      "sha256": "276e75dc3fdd66c52e5d2af356aa4741efa63f8e56ef3a3815cca305dc81e4f2",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/packages/demo-widget/2.0.0-sigchange/package.json": {
+      "sha256": "1b86adfa46b62bae9afb1f326ba3121799caf860c861627c45d33ca05506adc4",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "fixtures/synthetic/priors/removed-export-used.seq-1.json": {
+      "sha256": "dd2a32ace0dca8ef3071d4d228bd823b040031d98afdb115c0d3c596585d9ebc",
+      "label": "synthetic",
+      "coverage": "full"
+    }
+  },
+  "goldens": [
+    {
+      "id": "dynamic-import",
+      "path": "fixtures/synthetic/goldens/dynamic-import.packet.json",
+      "nextAction": "unknown"
+    },
+    {
+      "id": "partial-missing-source",
+      "path": "fixtures/synthetic/goldens/partial-missing-source.packet.json",
+      "nextAction": "unknown"
+    },
+    {
+      "id": "removed-export-unused",
+      "path": "fixtures/synthetic/goldens/removed-export-unused.packet.json",
+      "nextAction": "no_action"
+    },
+    {
+      "id": "removed-export-used",
+      "path": "fixtures/synthetic/goldens/removed-export-used.packet.json",
+      "nextAction": "action"
+    },
+    {
+      "id": "renamed-export",
+      "path": "fixtures/synthetic/goldens/renamed-export.packet.json",
+      "nextAction": "action"
+    },
+    {
+      "id": "same-version-noop",
+      "path": "fixtures/synthetic/goldens/same-version-noop.packet.json",
+      "nextAction": "no_action"
+    },
+    {
+      "id": "signature-changed",
+      "path": "fixtures/synthetic/goldens/signature-changed.packet.json",
+      "nextAction": "action"
+    },
+    {
+      "id": "version-range-prerelease",
+      "path": "fixtures/synthetic/goldens/version-range-prerelease.packet.json",
+      "nextAction": "unknown"
+    },
+    {
+      "id": "workspace-alias",
+      "path": "fixtures/synthetic/goldens/workspace-alias.packet.json",
+      "nextAction": "unknown"
+    }
+  ]
+}

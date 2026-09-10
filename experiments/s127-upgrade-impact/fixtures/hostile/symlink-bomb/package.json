@@ -1,0 +1,7 @@
+{
+  "name": "hostile-symlink-bomb",
+  "version": "0.0.0-synthetic",
+  "private": true,
+  "description": "main points at an out-of-tree symlink. Fixture. Recursive bombs are described, not created.",
+  "main": "./escape-link"
+}

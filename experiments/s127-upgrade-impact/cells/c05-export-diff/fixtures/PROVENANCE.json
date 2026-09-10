@@ -1,0 +1,14 @@
+{
+  "label": "fixture",
+  "note": "Synthetic extracted package trees. Not live-capture. Not paid demand.",
+  "items": [
+    { "id": "noop-identical", "label": "fixture", "coverage": "identical copies of a tiny ESM package" },
+    { "id": "noop-version-bump", "label": "fixture", "coverage": "same export surface; package.json version 1.0.0 → 2.0.0" },
+    { "id": "removed", "label": "fixture", "coverage": "named export gone() removed" },
+    { "id": "renamed", "label": "fixture", "coverage": "parseQuery → parseQueryString, same params" },
+    { "id": "signature-changed", "label": "fixture", "coverage": "parse(input) → parse(input, options)" },
+    { "id": "subpath-removed", "label": "fixture", "coverage": "exports map drops ./legacy" },
+    { "id": "dts-partial", "label": "fixture", "coverage": "index.d.ts with ambient declare module" },
+    { "id": "reexport-star", "label": "fixture", "coverage": "export * from relative file is expanded" }
+  ]
+}

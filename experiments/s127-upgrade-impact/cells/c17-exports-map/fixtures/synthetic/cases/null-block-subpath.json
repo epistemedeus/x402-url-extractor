@@ -1,0 +1,15 @@
+{
+  "id": "null-block-subpath",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "subpath ./secret blocked with null; main and . export stable",
+  "notes": "Declared surface removed the subpath. Unused subpath change is not a caller defect; without usage this cell stays unknown, never action.",
+  "old": "packages/subpath-surface/1.0.0",
+  "new": "packages/subpath-surface/2.0.0-null-block",
+  "expect": {
+    "mainStableExportsChanged": true,
+    "runtimeResolutionChanged": false,
+    "decisionHint": "unknown",
+    "coverage": "full"
+  }
+}

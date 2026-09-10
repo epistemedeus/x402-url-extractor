@@ -1,0 +1,9 @@
+{
+  "name": "caller-signature-changed",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic caller that imports beta whose arity changes in 2.0.0-sigchange. Label: synthetic.",
+  "dependencies": {
+    "demo-widget": "^1.0.0"
+  }
+}

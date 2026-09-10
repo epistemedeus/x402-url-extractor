@@ -1,0 +1,11 @@
+{
+  "name": "c02-override-npm-v3",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "left-pad": "^1.3.0"
+  },
+  "overrides": {
+    "left-pad": "2.0.0"
+  }
+}

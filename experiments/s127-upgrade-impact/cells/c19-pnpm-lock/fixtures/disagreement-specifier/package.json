@@ -1,0 +1,8 @@
+{
+  "name": "c19-disagreement-specifier",
+  "private": true,
+  "description": "Synthetic disagreement: package.json range vs lockfile specifier. Label: fixture.",
+  "dependencies": {
+    "lodash": "^4.17.21"
+  }
+}

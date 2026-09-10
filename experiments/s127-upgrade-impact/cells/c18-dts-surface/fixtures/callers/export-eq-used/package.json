@@ -1,0 +1,8 @@
+{
+  "name": "caller-export-eq-used",
+  "private": true,
+  "description": "Synthetic caller using export= via import = require. Label: synthetic.",
+  "dependencies": {
+    "type-kit": "^1.0.0"
+  }
+}

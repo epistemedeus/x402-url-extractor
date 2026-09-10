@@ -1,0 +1,300 @@
+{
+  "schema": "s127.upgrade-impact.packet.v1",
+  "createdAt": "2026-09-10T10:57:17Z",
+  "clock": "2026-09-10T10:57:17Z",
+  "caseId": "c23-real-c-ms",
+  "structure": {
+    "package": "ms",
+    "license": "MIT",
+    "domain": "millisecond-conversion",
+    "moduleFormat": "cjs-default-function → dual-cjs-esm-default-function",
+    "changeKinds": [
+      "packaging-dual-cjs-esm"
+    ],
+    "distinctFromCaseA": "Default-export function with dual import/require conditions; not a CJS named-function bag (path-to-regexp).",
+    "distinctFromCaseB": "Dual CJS/ESM exports map, not ESM-only string exports; used default kept (cookie removes used parse)."
+  },
+  "caller": {
+    "manifestPath": "fixtures/real-c/caller/package.json",
+    "lockfilePath": null,
+    "sourceRoots": [
+      "fixtures/real-c/caller/src"
+    ],
+    "entry": "fixtures/real-c/caller/src/delay.mjs",
+    "evidenceClass": "fixture",
+    "pin": "2.1.3"
+  },
+  "dependency": {
+    "name": "ms",
+    "oldVersion": "2.1.3",
+    "newVersion": "3.0.0-beta.2",
+    "resolvedOld": {
+      "registry": "https://registry.npmjs.org/ms/2.1.3",
+      "tarball": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+      "integrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==",
+      "shasum": "574c8138ce1d2b5861f0b44579dbadd60c6615b2",
+      "publishedAt": "2020-12-08T13:54:35.223Z",
+      "distTag": "latest",
+      "contentSha256": "f6616e15e530ed552f9daa2d3ce71963947c6bc7c98c9b64fd3e673fd02622c6"
+    },
+    "resolvedNew": {
+      "registry": "https://registry.npmjs.org/ms/3.0.0-beta.2",
+      "tarball": "https://registry.npmjs.org/ms/-/ms-3.0.0-beta.2.tgz",
+      "integrity": "sha512-G/4X0GjOFFpeGVj0D/yxd7plnMjizeLa2mBu2yNRPQlDlvmERfqZ2alTIijo9QNH91b9g1IlJAYsVV1g6GbWvg==",
+      "shasum": "c1a586879b489759c44be2ac402ff1df7c314ed9",
+      "publishedAt": "2021-08-25T16:55:32.842Z",
+      "distTag": "beta",
+      "prerelease": true,
+      "contentSha256": "a17b5300f0959394cdfbfe0fc23521770b3d6715fe69e6617eea66e0954400b4"
+    }
+  },
+  "provenance": [
+    {
+      "id": "tarball-old",
+      "url": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+      "path": "fixtures/real-c/tarballs/ms-2.1.3.tgz",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "f6616e15e530ed552f9daa2d3ce71963947c6bc7c98c9b64fd3e673fd02622c6",
+      "bytes": 2967,
+      "coverage": "full-npm-tarball",
+      "label": "live-capture",
+      "replayLabel": "fixture",
+      "npmIntegrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==",
+      "npmShasum": "574c8138ce1d2b5861f0b44579dbadd60c6615b2"
+    },
+    {
+      "id": "tarball-new",
+      "url": "https://registry.npmjs.org/ms/-/ms-3.0.0-beta.2.tgz",
+      "path": "fixtures/real-c/tarballs/ms-3.0.0-beta.2.tgz",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "a17b5300f0959394cdfbfe0fc23521770b3d6715fe69e6617eea66e0954400b4",
+      "bytes": 4581,
+      "coverage": "full-npm-tarball",
+      "label": "live-capture",
+      "replayLabel": "fixture",
+      "npmIntegrity": "sha512-G/4X0GjOFFpeGVj0D/yxd7plnMjizeLa2mBu2yNRPQlDlvmERfqZ2alTIijo9QNH91b9g1IlJAYsVV1g6GbWvg==",
+      "npmShasum": "c1a586879b489759c44be2ac402ff1df7c314ed9"
+    },
+    {
+      "id": "packument-slim",
+      "url": "https://registry.npmjs.org/ms",
+      "path": "fixtures/real-c/registry/packument.slim.json",
+      "retrievedAt": "2026-09-10T10:54:25Z",
+      "contentSha256": "1498c8041515377366f8193df310bc66cd9a180c6786d3fc7ac04b076a12ac75",
+      "bytes": 2290,
+      "coverage": "slim name/license/dist-tags latest+beta/time subset/versions 2.1.3 and 3.0.0-beta.2",
+      "label": "fixture"
+    },
+    {
+      "id": "version-old-slim",
+      "url": "https://registry.npmjs.org/ms/2.1.3",
+      "path": "fixtures/real-c/registry/ms-2.1.3.slim.json",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "e7412d68e3a8931a6e059d6af53a252259db429a6b483e9257afd12369c07ef3",
+      "bytes": 986,
+      "coverage": "slim identity/license/entry/exports/script-names/dist",
+      "label": "fixture"
+    },
+    {
+      "id": "version-new-slim",
+      "url": "https://registry.npmjs.org/ms/3.0.0-beta.2",
+      "path": "fixtures/real-c/registry/ms-3.0.0-beta.2.slim.json",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "b700e52e8e4b5e93efe7694c7bc816d6524482860c185632bed80caa806fbf93",
+      "bytes": 1236,
+      "coverage": "slim identity/license/entry/exports/script-names/dist",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-old-js",
+      "url": null,
+      "path": "fixtures/real-c/extracted/ms-2.1.3/package/index.js",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "e5f0b6a946a9b2b356a28557728410717df54ea2f599edb619f9839df6b7b0e9",
+      "bytes": 3024,
+      "coverage": "tarball package/index.js (package.json main)",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-old-manifest",
+      "url": null,
+      "path": "fixtures/real-c/extracted/ms-2.1.3/package/package.json",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "1a6b4d9739790c0b94ab96c8cc0507e281c164c311ff4fbf5e57fb8d26290b40",
+      "bytes": 732,
+      "coverage": "tarball package/package.json",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-new-esm",
+      "url": null,
+      "path": "fixtures/real-c/extracted/ms-3.0.0-beta.2/package/lib/index.mjs",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "6499fec11abf8faa59e48fa5c893e3e7b793fcd55e3d6234823861b42fa8b33d",
+      "bytes": 3339,
+      "coverage": "tarball package/lib/index.mjs (exports.import)",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-new-cjs",
+      "url": null,
+      "path": "fixtures/real-c/extracted/ms-3.0.0-beta.2/package/lib/index.cjs",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "07f1a2f3bd4568af3e201aa73bf6f1c67c253e269e22ec9bf7a2ed40db4abdbe",
+      "bytes": 3495,
+      "coverage": "tarball package/lib/index.cjs (exports.require)",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-new-dts",
+      "url": null,
+      "path": "fixtures/real-c/extracted/ms-3.0.0-beta.2/package/lib/index.d.ts",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "306b8fd7aadbb13750492b3d2407995016b1c603e72edca24b64d37b6fae36c5",
+      "bytes": 958,
+      "coverage": "tarball package/lib/index.d.ts; TypeScript overloads not machine-checked",
+      "label": "fixture"
+    },
+    {
+      "id": "extracted-new-manifest",
+      "url": null,
+      "path": "fixtures/real-c/extracted/ms-3.0.0-beta.2/package/package.json",
+      "retrievedAt": "2026-09-10T10:57:17Z",
+      "contentSha256": "24d0959c4a93504741378684457189268766c4df4561bcda652d6643b7f8637e",
+      "bytes": 1545,
+      "coverage": "tarball package/package.json",
+      "label": "fixture"
+    }
+  ],
+  "usage": {
+    "packageName": "ms",
+    "dynamicImport": false,
+    "symbols": [
+      {
+        "symbol": "default",
+        "local": "ms",
+        "typeOnly": false,
+        "importKind": "default",
+        "specifier": "ms",
+        "dynamicImport": false,
+        "used": true
+      }
+    ],
+    "runtimeNamed": [],
+    "runtimeDefault": true,
+    "coverage": "static default/named/namespace/side-effect import specifiers; require(); import() flagged; used=local call heuristic; no-full-ts"
+  },
+  "exportDiff": {
+    "added": [],
+    "removed": [],
+    "renamed": [],
+    "signatureChanged": [],
+    "kept": [
+      "default"
+    ],
+    "coverage": "js-default-and-named-static; dual-entry unioned on new side; no-full-ts; no-rename-inference"
+  },
+  "packaging": {
+    "old": {
+      "name": "ms",
+      "version": "2.1.3",
+      "moduleType": "cjs-or-unspecified",
+      "hasExports": false,
+      "exportsShape": "absent",
+      "exports": null,
+      "hasMain": true,
+      "main": "./index",
+      "hasModule": false,
+      "module": null,
+      "hasTypesField": false,
+      "types": null,
+      "dualCjsEsm": false,
+      "importCondition": null,
+      "requireCondition": null,
+      "subpaths": [],
+      "engines": null,
+      "scripts": [
+        "lint",
+        "precommit",
+        "test"
+      ]
+    },
+    "new": {
+      "name": "ms",
+      "version": "3.0.0-beta.2",
+      "moduleType": "esm",
+      "hasExports": true,
+      "exportsShape": "top-level-import-require",
+      "exports": {
+        "import": "./lib/index.mjs",
+        "require": "./lib/index.cjs"
+      },
+      "hasMain": true,
+      "main": "./lib/index.cjs",
+      "hasModule": true,
+      "module": "./lib/index.mjs",
+      "hasTypesField": true,
+      "types": "./lib/index.d.ts",
+      "dualCjsEsm": true,
+      "importCondition": "./lib/index.mjs",
+      "requireCondition": "./lib/index.cjs",
+      "subpaths": [],
+      "engines": {
+        "node": ">=12.13"
+      },
+      "scripts": [
+        "build",
+        "eslint-check",
+        "precommit",
+        "prepare",
+        "prepublishOnly",
+        "prettier-check",
+        "test",
+        "type-check"
+      ]
+    },
+    "contrast": "old: CJS main only, no exports map; new: type=module plus dual CJS/ESM exports.import + exports.require",
+    "dualCjsEsmGained": true,
+    "distinctFromCaseA": "default-export function with dual import/require conditions, not a CJS named-function bag",
+    "distinctFromCaseB": "dual CJS/ESM map, not ESM-only string exports; used default is kept"
+  },
+  "bindings": [
+    {
+      "symbol": "default",
+      "used": true,
+      "changeKind": "unchanged",
+      "decision": "no_action",
+      "rationale": "Used export is present on both sides; a newer version alone is not a break."
+    }
+  ],
+  "summary": {
+    "nextAction": "no_action",
+    "unknownReasons": [],
+    "unusedChanges": [],
+    "actionableChanges": []
+  },
+  "prior": {
+    "path": null,
+    "sha256": null,
+    "sequence": 0,
+    "immutable": true,
+    "correction": null,
+    "note": "first observation; no immutable prior"
+  },
+  "limitations": [
+    "No full TypeScript checker; 3.0.0-beta.2 .d.ts overloads are corroboration of export default only.",
+    "No runtime execution of ms tarball code and no npm lifecycle scripts (prepare/prepublishOnly exist on the beta and were not run).",
+    "Default/named scan is a conservative compiled-JS walk, not acorn/meriyah/es-module-lexer.",
+    "Caller has no lockfile; that is not lockfile disagreement.",
+    "3.0.0-beta.2 is an official pre-release dist-tag; latest at capture remains 2.1.3. Range ^2.1.3 does not include this beta.",
+    "Invalid-input throw vs undefined / NaN of the used default is not classified as signatureChanged (no runtime, no full TS).",
+    "Bundler CJS-default interop for import ms from \"ms\" on 2.1.3 is unknown; Node ESM-CJS interop is not simulated.",
+    "No deep subpath exports on this pair; dual CJS/ESM is the structural variant.",
+    "No paid demand; no price invoked."
+  ],
+  "commercial": {
+    "paidDemand": false,
+    "priceInvoked": false,
+    "note": "owner-qa real-source case; not a customer job"
+  }
+}

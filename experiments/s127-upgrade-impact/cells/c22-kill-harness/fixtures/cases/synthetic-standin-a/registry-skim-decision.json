@@ -1,0 +1,62 @@
+{
+  "schema": "s127.upgrade-impact.registry-skim.decision.v1",
+  "inputSchema": "s127.upgrade-impact.registry-skim.input.v1",
+  "method": "registry_version_changelog_skim",
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline skim stub; no purchase; do not invent paid demand"
+  },
+  "dependency": {
+    "name": "demo-widget",
+    "oldVersion": "1.0.0",
+    "newVersion": "2.0.0"
+  },
+  "observation": {
+    "versionChanged": true,
+    "semverDelta": "major",
+    "changelogCoverage": "complete",
+    "changelogPath": "fixtures/cases/synthetic-standin-a/changelog.md",
+    "breakingKeywords": [
+      "BREAKING CHANGE",
+      "breaking-change",
+      "removed export"
+    ],
+    "keywordScan": "stub_regex",
+    "changelogBytes": 193,
+    "changelogSha256": "58202552052ee65bc05c3e4ebac9319da31a3b4a876ecc4f4b6e1235ec331413"
+  },
+  "summary": {
+    "nextAction": "review_changelog",
+    "ruleId": "minor_or_major_requires_changelog",
+    "rationale": "semver delta major (1.0.0 -> 2.0.0); changelog review is required before bumping a pin. This is not a caller-defect claim and does not bind usage. Stub keywords: BREAKING CHANGE, breaking-change, removed export.",
+    "unknownReasons": [],
+    "unusedChanges": [],
+    "actionableChanges": []
+  },
+  "limitations": [
+    "Method A is a registry version + changelog skim stub, not a maintainer-intent parser.",
+    "Keyword scan is not full changelog understanding and is not TypeScript analysis.",
+    "A newer version alone is not a break; skim review_changelog is not a caller-defect claim.",
+    "Unused export change is not a caller defect.",
+    "Missing, conflicting, or partial source stays unknown, not action.",
+    "No runtime execution of untrusted packages or lifecycle scripts.",
+    "Offline default. No payment attempted. A new version is not paid demand."
+  ],
+  "provenance": [
+    {
+      "path": "fixtures/cases/synthetic-standin-a/changelog.md",
+      "retrievedAt": "2026-09-10T12:00:00.000Z",
+      "contentSha256": "58202552052ee65bc05c3e4ebac9319da31a3b4a876ecc4f4b6e1235ec331413",
+      "coverage": "complete",
+      "label": "synthetic"
+    }
+  ]
+}

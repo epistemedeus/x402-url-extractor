@@ -1,0 +1,9 @@
+{
+  "name": "caller-removed-export-used",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic caller that imports demo-widget.alpha which 2.0.0 removes. Label: synthetic.",
+  "dependencies": {
+    "demo-widget": "^1.0.0"
+  }
+}

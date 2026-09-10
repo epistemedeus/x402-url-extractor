@@ -1,0 +1,16 @@
+{
+  "id": "legacy-adds-exports",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "exports map introduced; main stable",
+  "notes": "Adding exports (even pointing at the same main file) hides unlisted files from Node. Deep imports become unknown without usage.",
+  "old": "packages/legacy-main/1.0.0",
+  "new": "packages/legacy-main/2.0.0-adds-exports",
+  "expect": {
+    "mainStableExportsChanged": true,
+    "decisionHint": "unknown",
+    "unknownReasonsIncludes": [
+      "exports_field_presence_changed"
+    ]
+  }
+}

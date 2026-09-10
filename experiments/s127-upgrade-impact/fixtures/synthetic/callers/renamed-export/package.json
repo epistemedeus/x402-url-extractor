@@ -1,0 +1,9 @@
+{
+  "name": "caller-renamed-export",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic caller that imports formatName which 2.0.0 renames to formatLabel. Label: synthetic.",
+  "dependencies": {
+    "demo-widget": "^1.0.0"
+  }
+}

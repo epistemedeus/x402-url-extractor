@@ -1,0 +1,27 @@
+{
+  "source": "https://api.github.com/repos/jshttp/cookie/releases?per_page=10",
+  "coverage": "tag_name/published_at/html_url/body for v1.1.1,v2.0.0,v2.0.1; author objects stripped",
+  "releases": [
+    {
+      "tag_name": "v1.1.1",
+      "name": "",
+      "published_at": "2025-11-26T17:51:11Z",
+      "html_url": "https://github.com/jshttp/cookie/releases/tag/v1.1.1",
+      "body": "**Fixed**\r\n\r\n- Overwrite value in passed in options (#253)  c66147c\r\n  - When `value` was provided in `serialize(key, value, { value })` the value in `options` was used instead of the value passed as an argument\r\n\r\n---\r\n\r\nhttps://github.com/jshttp/cookie/compare/v1.1.0...v1.1.1"
+    },
+    {
+      "tag_name": "v2.0.0",
+      "name": "",
+      "published_at": "2026-06-24T23:04:10Z",
+      "html_url": "https://github.com/jshttp/cookie/releases/tag/v2.0.0",
+      "body": "**Important:** This release moves the package to ESM only. In node 22+ you can `require(esm)`, and older node versions are not supported.\r\n\r\n**Changed**\r\n\r\n* Switch to ESM (https://github.com/jshttp/cookie/pull/273)\r\n* Remove deprecated code paths (https://github.com/jshttp/cookie/pull/272)\r\n  * The old `parse` and `stringify` methods have been renamed: `parseCookie` and `stringifySetCookie`\r\n  * `stringifySetCookie` only supports object mode (e.g. `{ name: \"\", value: \"\" }`)\r\n\r\n**Improvements**\r\n\r\n* Faster stringify cookie (#262)\r\n* Optimize encode performance (https://github.com/jshttp/cookie/pull/269)\r\n* Apply `encode` to empty cookie values (https://github.com/jshttp/cookie/pull/277)\r\n\r\n**Fixed**\r\n\r\n* Omit leading semicolon when stringifying cookies with skipped values (#267)\r\n"
+    },
+    {
+      "tag_name": "v2.0.1",
+      "name": "",
+      "published_at": "2026-06-30T22:06:26Z",
+      "html_url": "https://github.com/jshttp/cookie/releases/tag/v2.0.1",
+      "body": "**Improved:**\r\n\r\n* Small performance improvement by incrementing `=` index while parsing `set-cookie` (https://github.com/jshttp/cookie/pull/280)"
+    }
+  ]
+}

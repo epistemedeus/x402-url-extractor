@@ -1,0 +1,334 @@
+{
+  "schema": "s127.upgrade-impact.packet.v1",
+  "createdAt": "2026-09-10T10:48:00Z",
+  "clock": "2026-09-10T10:48:00Z",
+  "caseId": "c11-real-a",
+  "structure": {
+    "package": "path-to-regexp",
+    "license": "MIT",
+    "domain": "express-style-path-compiler",
+    "moduleFormat": "cjs-esmodule-interop-named-bag",
+    "entry": "dist/index.js",
+    "changeKinds": [
+      "removed-named-functions",
+      "arity-and-return-shape"
+    ],
+    "distinctFromCaseB": "CJS `exports.<name> =` named-function bag for a path compiler; not a default-export function, not ESM-only, not YAML, not UUID, not a class-first API (TokenData is added in the new major, not the old surface)."
+  },
+  "caller": {
+    "manifestPath": "fixtures/real-a/caller/package.json",
+    "lockfilePath": null,
+    "sourceRoots": [
+      "fixtures/real-a/caller/src"
+    ],
+    "evidenceClass": "synthetic",
+    "pin": "6.3.0"
+  },
+  "dependency": {
+    "name": "path-to-regexp",
+    "oldVersion": "6.3.0",
+    "newVersion": "8.4.2",
+    "resolvedOld": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-6.3.0.tgz",
+    "resolvedNew": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-8.4.2.tgz",
+    "license": "MIT",
+    "gitHeadOld": "75a92c3d7c42159f459ab42f346899152906ea8c",
+    "gitHeadNew": "cbf30259e6d34d6135f9e7dbaa3371e7188f9936",
+    "publishedOld": "2024-09-12T01:09:36.065Z",
+    "publishedNew": "2026-04-01T21:17:05.201Z"
+  },
+  "provenance": {
+    "packumentSlim": {
+      "url": "https://registry.npmjs.org/path-to-regexp",
+      "retrievedAt": "2026-09-10T10:46:44Z",
+      "contentSha256": "6d2991ed04ad6eb497efbda99feb2e6fe5cfd80b9dd448ef5eec8e8f340180c8",
+      "coverage": "slim packument: name, license, dist-tags, time for 6.3.0 and 8.4.2, dist records, script names. Not the full packument.",
+      "label": "fixture",
+      "path": "fixtures/real-a/registry/packument.slim.json",
+      "capturedFromLive": true,
+      "liveCaptureLabel": "live-capture"
+    },
+    "oldTarball": {
+      "url": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-6.3.0.tgz",
+      "retrievedAt": "2026-09-10T10:48:00Z",
+      "contentSha256": "da302284390341278d3dad1014f2043cf844f6a2163aa8dc5686d321d82742e6",
+      "coverage": "full official npm pack tarball bytes",
+      "label": "fixture",
+      "path": "fixtures/real-a/tarballs/path-to-regexp-6.3.0.tgz",
+      "capturedFromLive": true,
+      "liveCaptureLabel": "live-capture",
+      "distShasum": "2b6a26a337737a8e1416f9272ed0766b1c0389f4"
+    },
+    "newTarball": {
+      "url": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-8.4.2.tgz",
+      "retrievedAt": "2026-09-10T10:48:00Z",
+      "contentSha256": "e8712a9c53b0a2a27cfecc7b80c54df92afb4643c01351e2b2ebb7784bcabd78",
+      "coverage": "full official npm pack tarball bytes",
+      "label": "fixture",
+      "path": "fixtures/real-a/tarballs/path-to-regexp-8.4.2.tgz",
+      "capturedFromLive": true,
+      "liveCaptureLabel": "live-capture",
+      "distShasum": "795c420c4f7ca45c5b887366f622ee0c9852cccd"
+    },
+    "oldVersionDoc": {
+      "url": "https://registry.npmjs.org/path-to-regexp/6.3.0",
+      "retrievedAt": "2026-09-10T10:48:00Z",
+      "contentSha256": "c0518b24b26c5f9b4d720f6dcb640925fc1947599001cc38bce655de3bf1dcfc",
+      "coverage": "npm version document",
+      "label": "fixture",
+      "path": "fixtures/real-a/registry/path-to-regexp-6.3.0.json",
+      "capturedFromLive": true,
+      "liveCaptureLabel": "live-capture"
+    },
+    "newVersionDoc": {
+      "url": "https://registry.npmjs.org/path-to-regexp/8.4.2",
+      "retrievedAt": "2026-09-10T10:48:00Z",
+      "contentSha256": "f8217c862e73f2312afd0013b60b24419f33d60689d0824f4d18c1b2b605c173",
+      "coverage": "npm version document",
+      "label": "fixture",
+      "path": "fixtures/real-a/registry/path-to-regexp-8.4.2.json",
+      "capturedFromLive": true,
+      "liveCaptureLabel": "live-capture"
+    },
+    "extractedOldJs": {
+      "path": "fixtures/real-a/extracted/6.3.0/package/dist/index.js",
+      "contentSha256": "890a1832ab3d692c0ddbdcbe54fbdeaa5ff60ac85be91c427a4819dcc0eaef2f",
+      "retrievedAt": "2026-09-10T10:52:00Z",
+      "coverage": "tar-extract-of-published-main-entry; no lifecycle scripts",
+      "label": "fixture"
+    },
+    "extractedNewJs": {
+      "path": "fixtures/real-a/extracted/8.4.2/package/dist/index.js",
+      "contentSha256": "f8e7946ca3a4dcc2ed1ea46e3bcffaef014e4abc359a7469a16817f1f79df62f",
+      "retrievedAt": "2026-09-10T10:52:00Z",
+      "coverage": "tar-extract-of-published-main-entry; no lifecycle scripts",
+      "label": "fixture"
+    }
+  },
+  "usage": {
+    "staticImports": [
+      {
+        "imported": "pathToRegexp",
+        "local": "pathToRegexp",
+        "specifier": "path-to-regexp",
+        "used": true
+      },
+      {
+        "imported": "tokensToFunction",
+        "local": "tokensToFunction",
+        "specifier": "path-to-regexp",
+        "used": true
+      },
+      {
+        "imported": "regexpToFunction",
+        "local": "regexpToFunction",
+        "specifier": "path-to-regexp",
+        "used": false
+      }
+    ],
+    "dynamicImport": false,
+    "coverage": "esm-static-named-import",
+    "notes": "tokensToFunction and pathToRegexp are referenced in value position. regexpToFunction is imported but never referenced (unused changed symbol)."
+  },
+  "exportDiff": {
+    "added": [
+      "PathError",
+      "TokenData",
+      "stringify"
+    ],
+    "removed": [
+      "regexpToFunction",
+      "tokensToFunction",
+      "tokensToRegexp"
+    ],
+    "renamed": [],
+    "signatureChanged": [
+      "parse",
+      "pathToRegexp"
+    ],
+    "coverage": "named-export-presence; signatureChanged only when JS function-head/return evidence is supplied; no rename inference",
+    "oldNames": [
+      "compile",
+      "match",
+      "parse",
+      "pathToRegexp",
+      "regexpToFunction",
+      "tokensToFunction",
+      "tokensToRegexp"
+    ],
+    "newNames": [
+      "PathError",
+      "TokenData",
+      "compile",
+      "match",
+      "parse",
+      "pathToRegexp",
+      "stringify"
+    ],
+    "signatureEvidence": [
+      {
+        "symbol": "pathToRegexp",
+        "oldHead": "function pathToRegexp(path, keys, options)",
+        "newHead": "function pathToRegexp(path, options = {})",
+        "oldReturnQuote": "return stringToRegexp(path, keys, options);",
+        "newReturnQuote": "return { regexp: new RegExp(pattern, sensitive ? \"\" : \"i\"), keys };",
+        "kind": "arity-and-return-shape"
+      },
+      {
+        "symbol": "parse",
+        "oldHead": "function parse(str, options)",
+        "newHead": "function parse(str, options = {})",
+        "oldReturnQuote": "return result;",
+        "newReturnQuote": "return new TokenData(consumeUntil(\"\"), str);",
+        "kind": "return-shape"
+      }
+    ],
+    "quoteFailures": [],
+    "dtsCorroboration": {
+      "oldHasTokensToFunction": true,
+      "newHasTokensToFunction": false,
+      "oldHasRegexpToFunction": true,
+      "newHasRegexpToFunction": false,
+      "newHasStringify": true,
+      "coverage": "substring corroboration of official dist/index.d.ts; not a TS checker"
+    },
+    "internalNotExported": {
+      "newHasInternalTokensToFunction": true,
+      "newExportsTokensToFunction": false,
+      "note": "v8 still defines tokensToFunction internally; it is not assigned to exports."
+    }
+  },
+  "bindings": [
+    {
+      "symbol": "PathError",
+      "imported": false,
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "unused export change (PathError added) is not a caller defect",
+      "unknownReasons": []
+    },
+    {
+      "symbol": "TokenData",
+      "imported": false,
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "unused export change (TokenData added) is not a caller defect",
+      "unknownReasons": []
+    },
+    {
+      "symbol": "compile",
+      "imported": false,
+      "used": false,
+      "changeKind": "unchanged",
+      "decision": "no_action",
+      "rationale": "compile is present in both versions at this coverage; a newer version alone is not a break",
+      "unknownReasons": []
+    },
+    {
+      "symbol": "match",
+      "imported": false,
+      "used": false,
+      "changeKind": "unchanged",
+      "decision": "no_action",
+      "rationale": "match is present in both versions at this coverage; a newer version alone is not a break",
+      "unknownReasons": []
+    },
+    {
+      "symbol": "parse",
+      "imported": false,
+      "used": false,
+      "changeKind": "signatureChanged",
+      "decision": "no_action",
+      "rationale": "unused export change (parse signatureChanged) is not a caller defect",
+      "unknownReasons": []
+    },
+    {
+      "symbol": "pathToRegexp",
+      "imported": true,
+      "used": true,
+      "changeKind": "signatureChanged",
+      "decision": "action",
+      "rationale": "caller uses pathToRegexp with the old JS arity/return shape; official new JS changes that shape",
+      "unknownReasons": []
+    },
+    {
+      "symbol": "regexpToFunction",
+      "imported": true,
+      "used": false,
+      "changeKind": "removed",
+      "decision": "no_action",
+      "rationale": "unused export change (regexpToFunction removed) is not a caller defect",
+      "unknownReasons": []
+    },
+    {
+      "symbol": "stringify",
+      "imported": false,
+      "used": false,
+      "changeKind": "added",
+      "decision": "no_action",
+      "rationale": "unused export change (stringify added) is not a caller defect",
+      "unknownReasons": []
+    },
+    {
+      "symbol": "tokensToFunction",
+      "imported": true,
+      "used": true,
+      "changeKind": "removed",
+      "decision": "action",
+      "rationale": "caller uses tokensToFunction, which is a public export in the old entry and is not exported from the new entry",
+      "unknownReasons": []
+    },
+    {
+      "symbol": "tokensToRegexp",
+      "imported": false,
+      "used": false,
+      "changeKind": "removed",
+      "decision": "no_action",
+      "rationale": "unused export change (tokensToRegexp removed) is not a caller defect",
+      "unknownReasons": []
+    }
+  ],
+  "summary": {
+    "nextAction": "action",
+    "unknownReasons": [],
+    "unusedChanges": [
+      "PathError",
+      "TokenData",
+      "parse",
+      "regexpToFunction",
+      "stringify",
+      "tokensToRegexp"
+    ],
+    "actionableChanges": [
+      "pathToRegexp",
+      "tokensToFunction"
+    ],
+    "s122Contrast": {
+      "registryChangelogStyle": "review_changelog",
+      "because": "semver major 6.3.0 → 8.4.2 would be review_changelog in S122 npm-cli-release-followup; this packet instead names the used removed/signature-changed exports",
+      "packetNextAction": "action",
+      "decisionChangedRelativeToChangelog": true
+    }
+  },
+  "prior": {
+    "ref": null,
+    "correction": null,
+    "note": "first observation for this caller+pair; no immutable prior packet"
+  },
+  "limitations": [
+    "CJS named-export inventory is `exports.<Ident> =` assignment scanning, not acorn/meriyah/es-module-lexer and not a TypeScript checker.",
+    "TypeScript option-bag / type-only changes for compile and match are unknown; they are not treated as action.",
+    "No runtime execution of tarball JavaScript and no npm lifecycle scripts (prepare exists on both versions and was not run).",
+    "No lockfile; resolved versions are the caller pin plus the chosen new version from official registry metadata, not `npm ls`.",
+    "Rename inference is not attempted (tokensToFunction is not claimed to be stringify).",
+    "v8 still contains an unexported internal function named tokensToFunction; absence from `exports.*` is the public-API fact.",
+    "Dynamic import is absent in this caller; if present it would force unknown for that surface.",
+    "compile and match remain exported; TypeScript option/return types were not machine-checked and are not treated as action."
+  ],
+  "paidDemand": {
+    "invented": false,
+    "invoked": false,
+    "note": "No payment, listing, or buyer. Case is a fixture for the upgrade-impact hypothesis."
+  }
+}

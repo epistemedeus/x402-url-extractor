@@ -1,0 +1,11 @@
+{
+  "name": "demo-widget",
+  "version": "2.0.0-beta.1",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic S127 package tree (new): prerelease, same named exports as 1.0.0. Label: synthetic.",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  }
+}

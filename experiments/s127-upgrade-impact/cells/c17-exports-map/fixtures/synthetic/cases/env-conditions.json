@@ -1,0 +1,19 @@
+{
+  "id": "env-conditions",
+  "label": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "node vs browser vs default conditions added; main stable",
+  "notes": "Which file loads depends on the host. Document unknown. Do not claim action.",
+  "old": "packages/dual-surface/1.0.0",
+  "new": "packages/dual-surface/2.0.0-env-conditions",
+  "expect": {
+    "mainStableExportsChanged": true,
+    "environmentDependent": true,
+    "decisionHint": "unknown",
+    "coverage": "full",
+    "unknownReasonsIncludes": [
+      "runtime_environment_dependent",
+      "exports_conditions_environment_dependent"
+    ]
+  }
+}

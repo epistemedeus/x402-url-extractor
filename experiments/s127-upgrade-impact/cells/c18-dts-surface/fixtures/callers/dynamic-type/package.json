@@ -1,0 +1,9 @@
+{
+  "name": "caller-dynamic-type",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic caller that dynamically imports type-kit. Label: synthetic.",
+  "dependencies": {
+    "type-kit": "^1.0.0"
+  }
+}

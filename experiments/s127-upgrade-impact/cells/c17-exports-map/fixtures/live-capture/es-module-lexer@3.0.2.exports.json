@@ -1,0 +1,42 @@
+{
+  "name": "es-module-lexer",
+  "version": "3.0.2",
+  "license": "MIT",
+  "main": "dist/lexer.cjs",
+  "module": "dist/lexer.js",
+  "types": "types/lexer.d.ts",
+  "type": "module",
+  "browser": null,
+  "exports": {
+    ".": {
+      "types": "./types/lexer.d.ts",
+      "import": "./dist/lexer.js",
+      "module": "./dist/lexer.js",
+      "require": "./dist/lexer.cjs"
+    },
+    "./js": {
+      "types": "./types/lexer.d.ts",
+      "default": "./dist/lexer.asm.js"
+    },
+    "./minimal": {
+      "types": "./types/lexer.minimal.d.ts",
+      "import": "./dist/lexer.minimal.js",
+      "module": "./dist/lexer.minimal.js",
+      "require": "./dist/lexer.minimal.cjs"
+    },
+    "./minimal/js": {
+      "types": "./types/lexer.minimal.d.ts",
+      "default": "./dist/lexer.minimal.asm.js"
+    }
+  },
+  "provenance": {
+    "label": "live-capture",
+    "url": "https://registry.npmjs.org/es-module-lexer/latest",
+    "tarball": "https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-3.0.2.tgz",
+    "retrievedAt": "2026-09-10T10:45:04Z",
+    "packumentContentSha256": "373c7708617e231ea162ca76acde2d3455ed6ad33d20acc6607672ed714a25c4",
+    "coverage": "packument-fields:name,version,license,main,module,types,type,browser,exports",
+    "derivedFrom": "cells/c13-dep-license/fixtures/live-capture/packuments",
+    "paidDemand": false
+  }
+}

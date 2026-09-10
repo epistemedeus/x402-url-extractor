@@ -1,0 +1,14 @@
+{
+  "id": "same-version",
+  "label": "synthetic",
+  "title": "same old/new version ⇒ no_action even without usage lists",
+  "input": {
+    "dependency": { "name": "demo-pkg", "oldVersion": "1.4.2", "newVersion": "1.4.2" }
+  },
+  "expect": {
+    "nextAction": "no_action",
+    "actionableSymbols": [],
+    "unusedSymbols": [],
+    "decisions": {}
+  }
+}

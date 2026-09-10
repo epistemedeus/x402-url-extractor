@@ -1,0 +1,31 @@
+{
+  "id": "added-only-minor",
+  "label": "synthetic",
+  "title": "minor + 'added' notes ⇒ action (cannot prove unused add is not a break)",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "input": {
+    "evidenceClass": "synthetic",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "dependency": { "name": "demo-pkg", "oldVersion": "1.0.0", "newVersion": "1.1.0" },
+    "changelogText": "Added export shinyNew. No other changes.",
+    "usage": {
+      "coverage": "complete",
+      "references": [{ "symbol": "stable", "kind": "named" }]
+    },
+    "exportDiff": {
+      "coverage": "complete",
+      "added": ["shinyNew"]
+    }
+  },
+  "expect": {
+    "decision": "action",
+    "ruleId": "semver_minor_or_major_requires_review",
+    "delta": "minor",
+    "ignoredCallerSurfaces": true
+  },
+  "binderWould": {
+    "coarse": "no_action",
+    "decisionChangedRelativeToChangelog": true,
+    "note": "c06 added-only-newer-version is no_action. Stub maps minor to action."
+  }
+}

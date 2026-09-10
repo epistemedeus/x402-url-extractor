@@ -1,0 +1,19 @@
+{
+  "id": "conflicting-lockfile",
+  "label": "fixture",
+  "synthetic": true,
+  "liveCapture": false,
+  "paidDemand": false,
+  "versions": {
+    "package.json": "2.0.0",
+    "package-lock.json": "2.0.0",
+    "yarn.lock": "1.5.0",
+    "pnpm-lock.yaml": "2.1.0"
+  },
+  "expect": {
+    "decision": "unknown",
+    "nextAction": "unknown",
+    "findingKinds": ["lockfile_disagreement"],
+    "scriptsExecuted": false
+  }
+}

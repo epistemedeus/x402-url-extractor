@@ -1,0 +1,9 @@
+{
+  "label": "synthetic",
+  "name": "lodash",
+  "status": "unknown",
+  "uniqueVersions": ["3.10.1", "4.17.21"],
+  "disagreement": true,
+  "unknownReasonsInclude": ["lockfile_version_conflict", "lockfile_disagreement"],
+  "notes": "Must not first-version-win. Packet rule 5: lockfile disagreement ⇒ unknown."
+}

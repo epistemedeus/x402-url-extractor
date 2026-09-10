@@ -1,0 +1,13 @@
+{
+  "name": "c06-usage-bind",
+  "private": true,
+  "type": "module",
+  "description": "S127 cell: bind c03 usage to c05 exportDiff. Synthetic fixtures only. Not a paid job.",
+  "scripts": {
+    "test": "node --test test/bind.test.mjs",
+    "fixtures": "node run-fixtures.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

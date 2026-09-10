@@ -1,0 +1,14 @@
+{
+  "name": "c19-lifecycle-sentinel",
+  "private": true,
+  "description": "Lifecycle scripts must never run. Marker SCRIPT_RAN.marker is a test sentinel. Label: fixture.",
+  "dependencies": {
+    "lodash": "4.17.21"
+  },
+  "scripts": {
+    "preinstall": "node -e \"require('fs').writeFileSync('SCRIPT_RAN.marker','executed')\"",
+    "install": "node -e \"require('fs').writeFileSync('SCRIPT_RAN.marker','executed')\"",
+    "postinstall": "node -e \"require('fs').writeFileSync('SCRIPT_RAN.marker','executed')\"",
+    "prepare": "node -e \"require('fs').writeFileSync('SCRIPT_RAN.marker','executed')\""
+  }
+}

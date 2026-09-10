@@ -1,0 +1,19 @@
+lockfileVersion: '9.0'
+
+catalogs:
+  default:
+    react: 18.2.0
+
+importers:
+  .:
+    dependencies:
+      react:
+        specifier: 'catalog:'
+        version: 18.2.0
+
+packages:
+  react@18.2.0:
+    resolution: {integrity: sha512-fixture-catalog}
+
+snapshots:
+  react@18.2.0: {}

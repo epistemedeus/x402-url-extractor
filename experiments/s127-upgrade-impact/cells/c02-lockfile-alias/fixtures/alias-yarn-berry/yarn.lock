@@ -1,0 +1,10 @@
+__metadata:
+  version: 6
+  cacheKey: 8
+
+"my-lodash@npm:lodash@^4.17.0":
+  version: 4.17.21
+  resolution: "lodash@npm:4.17.21"
+  checksum: 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+  languageName: node
+  linkType: hard

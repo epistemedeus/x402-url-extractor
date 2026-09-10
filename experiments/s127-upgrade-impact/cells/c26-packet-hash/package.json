@@ -1,0 +1,13 @@
+{
+  "name": "c26-packet-hash",
+  "private": true,
+  "type": "module",
+  "description": "S127 cell: canonical JSON packet hash / replay identity. Synthetic fixtures only. Not a paid job.",
+  "scripts": {
+    "test": "node --test test/packet-hash.test.mjs",
+    "fixtures": "node scripts/materialize-fixtures.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
