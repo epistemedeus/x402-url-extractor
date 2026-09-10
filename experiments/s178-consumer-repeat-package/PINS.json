@@ -41,7 +41,7 @@
   ],
   "kit": {
     "tarball": "dist/s178-consumer-repeat-kit.tgz",
-    "rebuiltOn": "S211"
+    "rebuiltOn": "S220"
   },
   "nonClaims": [
     "No fabricated live sources or customers",
@@ -55,5 +55,10 @@
     "input": "d9553e2fd81ff62e7a30d23a3c5166ca2d923ed9",
     "branch": "codex/s211-consumer-validation-final-20260910",
     "scope": "release-brief schema, transform, runners and boundary regression; archive pins and bytes recorded separately"
+  },
+  "packagingSource": {
+    "sha": "05a10282454e5fac864729a1d307932929acc17f",
+    "input": "778d8ef5c6694b21e71a52b78e9181adeb88cfa4",
+    "scope": "consumer package/test contract; runtime reviewedSource remains unchanged"
   }
 }
