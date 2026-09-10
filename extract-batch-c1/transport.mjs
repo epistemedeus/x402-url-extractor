@@ -140,4 +140,3 @@ export async function loadSource(source, options = {}) {
     ctrl.abort();
   }
 }
-

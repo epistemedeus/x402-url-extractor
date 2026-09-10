@@ -1206,4 +1206,3 @@ curl -i 'http://localhost:3000/defi/morpho-position?address=0x...' # HTTP 402
 - x402 monorepo: https://github.com/coinbase/x402
 - npm: `@x402/express`, `@x402/core`, `@x402/evm`, `@x402/extensions`, `@coinbase/x402`
 - xpay public facilitator live `/supported` (Base mainnet, no key): https://facilitator.xpay.sh/supported
-

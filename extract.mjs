@@ -372,4 +372,3 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const url = process.argv[2] || 'https://example.com';
   extract(url).then(r => console.log(JSON.stringify(r, null, 2))).catch(e => { console.error('ERR', e.message); process.exit(1); });
 }
-

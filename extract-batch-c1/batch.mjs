@@ -399,4 +399,3 @@ function finalize(state, job) {
 }
 
 export { DEFAULT_COST, isRetryableFailure };
-
