@@ -1,0 +1,23 @@
+{
+  "name": "samedaydesk-basepay-composition-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Credential-free two-layer composition of SameDayDesk stateful wallet-policy observations and a labelled BasePay conformance report (synthetic default; optional pinned upstream download). Does not upgrade providerNativeVerified from imported JSON.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "samedaydesk-basepay-composition": "./bin/cli.mjs"
+  },
+  "scripts": {
+    "start": "node bin/cli.mjs",
+    "compose": "node bin/cli.mjs",
+    "acquire-upstream": "node bin/acquire-upstream.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "agent-payment-policy": "0.12.0"
+  },
+  "license": "MIT"
+}

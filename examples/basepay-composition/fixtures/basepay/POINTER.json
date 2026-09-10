@@ -1,0 +1,45 @@
+{
+  "schema": "samedaydesk.basepay-composition.pointer.v1",
+  "note": "Exact upstream identities without shipping upstream bytes. Default tests use synthetic fixtures. Optional acquire downloads the two pinned reports into gitignored runtime/upstream/.",
+  "published_result": {
+    "repo": "https://github.com/LumenFromTheFuture/basepay-conformance",
+    "path": "reports/conformance-result.json",
+    "tree": "94fa65d65c204c02f4af5a9bc9fd27225c688994",
+    "gitBlobSha": "719cca62633f659ce2306b98c3be84652bcd9140",
+    "sha256": "7575ceb160c6e15992f6950cf2b02cb3736a0d14dd7f3c82a98266d3cd04e11f",
+    "fixtureCommitField": "8a46910ede4830de8481a3ae7f095e120a312d62",
+    "shipped": false,
+    "runtimePath": "runtime/upstream/conformance-result.json",
+    "evidenceOrigin": "provided_report"
+  },
+  "mapping": {
+    "repo": "https://github.com/LumenFromTheFuture/basepay-conformance",
+    "path": "reports/stateful-taxonomy-mapping-2026-09-05.json",
+    "tree": "94fa65d65c204c02f4af5a9bc9fd27225c688994",
+    "gitBlobSha": "b6b288603676f597b208d765876d3efda8939cae",
+    "sha256": "c2116337fb8972fab75d7e21acecf381d0deeb1b3b6e0b1e98f7538ed1bbe568",
+    "shipped": false,
+    "runtimePath": "runtime/upstream/stateful-taxonomy-mapping-2026-09-05.json",
+    "evidenceOrigin": "provided_report"
+  },
+  "independent_replay": {
+    "commit": "94fa65d65c204c02f4af5a9bc9fd27225c688994",
+    "command": "npm run conformance",
+    "fresh_result": "/tmp/s89/basepay-replay/dist/conformance-result.json",
+    "log": "/tmp/s89-replay-run2.txt",
+    "in_tree_copy": null,
+    "gitBlobSha": "f455ae744deec6a73f23816d9c5937f3131c5934",
+    "sha256": "632720dc1a7ec83b0f88296cbca103d83c73e64e7e59206853dc7673fa7efbc3",
+    "checks_passed": 19,
+    "checks_total": 19,
+    "node": "v22.14.0",
+    "evidenceOrigin": "pinned_worker_replay_artifact",
+    "note": "Inherited S89 evidence. Not re-executed on the default offline path. Not vendored."
+  },
+  "synthetic_defaults": {
+    "published": "fixtures/basepay/synthetic-published-conformance-result.json",
+    "mapping": "fixtures/basepay/synthetic-stateful-taxonomy-mapping.json",
+    "replay_shape": "fixtures/basepay/synthetic-replay-conformance-result.json",
+    "evidenceOrigin": "synthetic_offline_fixture"
+  }
+}

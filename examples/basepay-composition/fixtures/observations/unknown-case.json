@@ -1,0 +1,14 @@
+{
+  "profileId": "basepay-composition-lab",
+  "provider": "BasePay recording mock",
+  "network": "eip155:8453",
+  "protocol": "x402",
+  "observations": [
+    {
+      "case": "unknown_wallet_control",
+      "actual": "denied",
+      "enforcementClass": "policy",
+      "code": "policy_violation"
+    }
+  ]
+}

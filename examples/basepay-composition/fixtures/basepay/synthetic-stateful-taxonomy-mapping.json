@@ -1,0 +1,108 @@
+{
+  "schema": "lumen.composition-contract.taxonomy-mapping.v1",
+  "evidence_label": "synthetic_offline_fixture",
+  "synthetic": true,
+  "notice": "SameDayDesk synthetic offline mapping fixture. Same 4 covered / 1 partial / 2 gap case assignment the loader tests, with original lab rationales. Different bytes from LumenFromTheFuture/basepay-conformance. Not a license grant.",
+  "generated_at": "2026-09-10T00:00:00.000Z",
+  "layer1": {
+    "operator": "SameDayDesk",
+    "product": "samedaydesk-stateful-wallet-policy-conformance",
+    "endpoint": "POST /security/stateful-wallet-policy-conformance",
+    "credential_boundary": "Accepts no credentials, wallet or resource IDs, counter values, signatures, transactions, or raw provider responses",
+    "taxonomy_reference": "samedaydesk.stateful-wallet-policy-conformance.v1"
+  },
+  "layer2": {
+    "operator": "SameDayDesk synthetic fixture",
+    "repo": "https://github.com/LumenFromTheFuture/basepay-conformance",
+    "tested_target": "shape-only; not independently executed here",
+    "execution_model": "synthetic offline fixture; no harness execution",
+    "result_shape": "basepay-conformance/result 1.0.0"
+  },
+  "mapping": [
+    {
+      "samedaydesk_case": "first_within_cap",
+      "expected": "allow",
+      "control": null,
+      "coverage": "covered",
+      "lumen_cases": [
+        "F1",
+        "F12"
+      ],
+      "rationale": "Synthetic covered row for allow-path binding shape (F1, F12)."
+    },
+    {
+      "samedaydesk_case": "sequential_exceeds_cap",
+      "expected": "deny",
+      "control": "cumulative_limit",
+      "coverage": "partial",
+      "lumen_cases": [
+        "F2",
+        "F10",
+        "F13"
+      ],
+      "rationale": "Synthetic partial row for cumulative-limit shape. Not a verified policy object."
+    },
+    {
+      "samedaydesk_case": "signed_unbroadcast_counts",
+      "expected": "deny",
+      "control": "post_sign_accounting",
+      "coverage": "covered",
+      "lumen_cases": [
+        "F12",
+        "F14"
+      ],
+      "rationale": "Synthetic covered row for post-sign accounting shape (F12, F14)."
+    },
+    {
+      "samedaydesk_case": "unrecognized_calldata",
+      "expected": "deny",
+      "control": "extraction_integrity",
+      "coverage": "gap",
+      "lumen_cases": [],
+      "rationale": "Synthetic gap row: no extraction-integrity evidence in this lab fixture."
+    },
+    {
+      "samedaydesk_case": "concurrent_exceeds_cap",
+      "expected": "deny",
+      "control": "concurrency",
+      "coverage": "covered",
+      "lumen_cases": [
+        "F11"
+      ],
+      "rationale": "Synthetic covered row for concurrency shape (F11)."
+    },
+    {
+      "samedaydesk_case": "missing_counter_reference",
+      "expected": "deny",
+      "control": "reference_integrity",
+      "coverage": "covered",
+      "lumen_cases": [
+        "F3",
+        "F6",
+        "F16b"
+      ],
+      "rationale": "Synthetic covered row for reference-integrity shape (F3, F6, F16b)."
+    },
+    {
+      "samedaydesk_case": "application_serialized_concurrent_exceeds_cap",
+      "expected": "deny",
+      "control": "application_serialization",
+      "coverage": "gap",
+      "lumen_cases": [],
+      "rationale": "Synthetic gap row: no application-serialization evidence in this lab fixture."
+    }
+  ],
+  "summary": {
+    "covered": 4,
+    "partial": 1,
+    "gap": 2,
+    "falsifiable_claim": "Synthetic 4/1/2 coverage shape for offline loader tests. Not an independently executed confirmation of the upstream mapping."
+  },
+  "provenance": {
+    "sources": [
+      "samedaydesk synthetic offline fixture",
+      "https://github.com/LumenFromTheFuture/basepay-conformance (pinned metadata only; bytes not shipped)"
+    ],
+    "note": "Property-level 4/1/2 shape for tests. Layer 1 is caller-supplied observations. Layer 2 origin is labelled per loaded bytes."
+  }
+}
