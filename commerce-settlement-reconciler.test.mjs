@@ -522,6 +522,7 @@ test("H28-temp: wrong-mode temp is publication_temp_untrusted", async () => {
   const dir = await contractFixture();
   try {
     await writeFile(path.join(dir, TEMP_NAME), "", { mode: 0o644 });
+    await chmod(path.join(dir, TEMP_NAME), 0o644); // Deliberately unsafe fixture, independent of umask.
     const snapshot = await captureCommerceSettlementPlane(captureContractOptions(dir));
     assert.equal(snapshot.integrity.reason, "publication_temp_untrusted");
   } finally {
@@ -667,6 +668,7 @@ test("H10/H28: oversized and non-regular manifests are terminal with exact reaso
     assert.equal(tooLarge.integrity.reason, "generation_manifest_too_large");
 
     await writeFile(path.join(dir2, MANIFEST_NAME), "content\n", { mode: 0o644 });
+    await chmod(path.join(dir2, MANIFEST_NAME), 0o644); // Deliberately unsafe fixture, independent of umask.
     const wrongMode = await captureCommerceSettlementPlane(captureContractOptions(dir2));
     assert.equal(wrongMode.integrity.reason, "generation_manifest_wrong_mode");
   } finally {
@@ -825,6 +827,7 @@ test("H17-public: private publication failure leaves public parent output unchan
     // Pre-create an untrusted temp in faulted so publication cannot proceed,
     // while parent operation continues unchanged.
     await writeFile(path.join(faulted, TEMP_NAME), "", { mode: 0o644 });
+    await chmod(path.join(faulted, TEMP_NAME), 0o644); // Deliberately unsafe fixture, independent of umask.
     const make = (dataDir) => createCommerceSettlementReconciler({
       actorSecret: SECRET,
       client: clientFor(receipt()),
@@ -1242,6 +1245,7 @@ test("MISSING_DIRECTORY: wrong-mode data directory blocks T4a as untrusted while
   const child = path.join(parent, "data");
   try {
     await mkdir(child, { mode: 0o755 }); // wrong mode for T4a
+    await chmod(child, 0o755);
     const snapshot = await captureCommerceSettlementPlane(captureContractOptions(child));
     assert.equal(snapshot.integrity.reason, "data_directory_untrusted");
 
@@ -1404,6 +1408,7 @@ test("H28-temp: mode 000/0400/0644/0660 temps are publication_temp_untrusted", a
     const dir = await contractFixture();
     try {
       await writeFile(path.join(dir, TEMP_NAME), "", { mode });
+      await chmod(path.join(dir, TEMP_NAME), mode);
       const snapshot = await captureCommerceSettlementPlane(captureContractOptions(dir));
       assert.equal(snapshot.integrity.reason, "publication_temp_untrusted", mode.toString(8));
     } finally {

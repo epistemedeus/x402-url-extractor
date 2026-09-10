@@ -60,7 +60,8 @@ import {
 } from "./commerce-payment-evidence.mjs";
 import { buildSkillContract } from "./skill-contract.mjs";
 import { exposeAgenticTradeProxyDiagnostics } from "./agentictrade-proxy-diagnostics.mjs";
-import { assertPublicHttpUrl, extract, extractMcpOutputSchema, readMarkdown } from "./extract.mjs";
+import { assertPublicHttpUrl, extract, extractMcpOutputSchema, readMarkdown, readMcpOutputSchema } from "./extract.mjs";
+import { buildCapture, fetchFailureCode } from "./extract-capture.mjs";
 import { parseRepo, scanRepo, scanRepoMcpOutputSchema } from "./scan.mjs";
 import { schemaforge } from "./schemaforge.mjs";
 import { enrich } from "./enrich.mjs";
@@ -810,10 +811,10 @@ commerceSettlementReconciler = createCommerceSettlementReconciler({
   treasury: PAY_TO,
 });
 const acceptsFor = createExactUsdcAcceptsFor({ network: NETWORK, payTo: PAY_TO });
-const EXTRACT_DISCOVERY_DESCRIPTION = "Extract a public HTTP(S) web page into structured JSON with a clean text excerpt for LLM workflows: title, description, JSON-LD, Open Graph/Twitter metadata, headings, links, and AI-readiness signals. Fetches without JavaScript rendering, follows redirects, and applies a 12-second timeout and 3 MB read cap; use /read for longer cleaned Markdown.";
+const EXTRACT_DISCOVERY_DESCRIPTION = "Extract a public HTTP(S) web page into structured JSON with a clean text excerpt for LLM workflows: title, description, JSON-LD, Open Graph/Twitter metadata, headings, links, and AI-readiness signals. Fetches without JavaScript rendering, follows redirects, and applies a 12-second timeout and 3 MB read cap. The paid JSON keeps requestedUrl, finalUrl, source HTTP status, sourceOk, a nullable error, and capture limits; the excerpt is not the full page. Use /read for longer cleaned Markdown.";
 const RESOURCES = [
   { url: `${PUBLIC_URL}/extract`, amount: priceToAtomic(EXTRACT_PRICE), description: EXTRACT_DISCOVERY_DESCRIPTION, mimeType: "application/json" },
-  { url: `${PUBLIC_URL}/read`, amount: priceToAtomic(READ_PRICE), description: "URL -> full page content as clean Markdown, ready for LLM context. Strips nav/ads/scripts, preserves headings/links/lists.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}/read`, amount: priceToAtomic(READ_PRICE), description: "URL -> bounded Markdown from a no-JavaScript HTTP capture. Inspect source status and truncation; missing discussion text is not proof of absence.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/scan`, amount: priceToAtomic(SCAN_PRICE), description: "Static supply-chain security scan of a public GitHub repo before an agent installs/runs it. Flags exfil sinks, obfuscation, credential reads, install-time curl|bash. risk=clean|suspicious|dangerous.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/schemaforge`, amount: priceToAtomic(SCHEMAFORGE_PRICE), description: "Generate a complete, paste-ready JSON-LD structured-data bundle (LocalBusiness/MedicalBusiness + Service/OfferCatalog + FAQPage + Review/AggregateRating + geo/hours) for a business site, tuned to the fields the pages that surface for high-intent vertical queries carry, plus a gap diff vs the live site and a ranked fix list. Makes a page eligible to be cited by AI assistants.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/enrich`, amount: priceToAtomic(ENRICH_PRICE), description: "Domain -> agent-ready company intelligence in one call: identity (name/legal name/description/logo), industry keywords, tech stack (CMS/framework/analytics), social profiles, contact surface (emails/phone/address), DNS + email infrastructure (MX/SPF/DMARC), and AI-search-readiness signals. No auth, no API keys, no subscription. Pay per request in USDC.", mimeType: "application/json" },
@@ -1634,8 +1635,8 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
             : agentCashPaymentInfoFor(RESOURCES[18]),
         },
       },
-      "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "structured data" }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
-      "/read": { get: { summary: RESOURCES[1].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "markdown" }, "402": { description: `payment required (x402, ${READ_PRICE} USDC base)` } } } },
+      "/extract": { get: { summary: RESOURCES[0].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "typed extract record after payment. HTTP 200 is merchant delivery, not source success. Source HTTP status is status; requestedUrl is the caller URL; finalUrl is the observed URL after redirects. sourceOk false plus error marks 4xx/5xx. capture labels the no-JS method and size/excerpt limits; text is not a completeness proof." }, "402": { description: `payment required (x402, ${EXTRACT_PRICE} USDC base)` } } } },
+      "/read": { get: { summary: RESOURCES[1].description, parameters: [{ name: "url", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "typed Markdown record after payment. HTTP 200 is merchant delivery. status is source HTTP status; truncated and capture label the 40,000-character and 3 MB no-JS limits. Missing discussion text is not proof of absence." }, "402": { description: `payment required (x402, ${READ_PRICE} USDC base)` } } } },
       "/scan": { get: { summary: RESOURCES[2].description, parameters: [{ name: "repo", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "security risk report" }, "402": { description: `payment required (x402, ${SCAN_PRICE} USDC base)` } } } },
       "/schemaforge": { get: { summary: RESOURCES[3].description, parameters: [{ name: "site", in: "query", required: true, schema: { type: "string" } }, { name: "vertical", in: "query", required: false, schema: { type: "string" } }, { name: "city", in: "query", required: false, schema: { type: "string" } }], responses: { "200": { description: "paste-ready JSON-LD bundle + gap diff + fix list" }, "402": { description: `payment required (x402, ${SCHEMAFORGE_PRICE} USDC base)` } } } },
       "/enrich": { get: { summary: RESOURCES[4].description, parameters: [{ name: "domain", in: "query", required: true, schema: { type: "string" } }], responses: { "200": { description: "agent-ready company intelligence (identity, tech, social, contact, DNS, AI-readiness)" }, "402": { description: `payment required (x402, ${ENRICH_PRICE} USDC base)` } } } },
@@ -2330,18 +2331,29 @@ const x402Paywall = paymentMiddleware(
             output: {
               example: {
                 ok: true,
+                requestedUrl: "https://example.com",
+                finalUrl: "https://example.com",
                 url: "https://example.com",
+                status: 200,
+                sourceOk: true,
+                error: null,
                 title: "Example Domain",
                 description: null,
                 jsonLd: [],
                 aiReadiness: { hasJsonLd: false, schemaTypes: [] },
+                capture: { method: "http-get-no-javascript", javascriptExecuted: false, textTruncated: false, bodyTruncated: false },
               },
             },
             outputSchema: {
               type: "object",
               properties: {
                 ok: { type: "boolean" },
+                requestedUrl: { type: "string" },
+                finalUrl: { type: "string" },
                 url: { type: "string" },
+                status: { type: "integer" },
+                sourceOk: { type: "boolean" },
+                error: { type: ["object", "null"] },
                 title: { type: "string" },
                 description: { type: ["string", "null"] },
                 jsonLd: { type: "array" },
@@ -2350,8 +2362,9 @@ const x402Paywall = paymentMiddleware(
                 links: { type: "array" },
                 text: { type: "string" },
                 aiReadiness: { type: "object" },
+                capture: { type: "object" },
               },
-              required: ["ok", "url", "title"],
+              required: ["ok", "url", "title", "status", "sourceOk", "requestedUrl", "finalUrl"],
             },
           }),
         },
@@ -2360,7 +2373,7 @@ const x402Paywall = paymentMiddleware(
         ...bazaarResourceMetadataFor("/read"),
         accepts: [{ scheme: "exact", price: READ_PRICE, network: NETWORK, payTo: PAY_TO }],
         description:
-          "URL -> full page content as clean Markdown, ready for LLM context. Strips nav/ads/scripts, preserves headings/links/lists. Handles redirects, timeouts, size caps, SSRF. The reliable web-reader agents need before feeding a page to a model.",
+          "URL -> bounded Markdown from a no-JavaScript HTTP capture. Strips navigation and scripts; preserves headings, links and lists. Inspect sourceOk/status/error and capture/truncated. Missing discussion text is not proof of absence.",
         mimeType: "application/json",
         extensions: {
           ...COMMON_COMMERCE_EXTENSIONS,
@@ -2373,19 +2386,37 @@ const x402Paywall = paymentMiddleware(
               required: ["url"],
             },
             output: {
-              example: { ok: true, url: "https://example.com", title: "Example Domain", markdown: "# Example Domain\n\n...", wordCount: 28 },
+              example: {
+                ok: true,
+                requestedUrl: "https://example.com",
+                finalUrl: "https://example.com",
+                url: "https://example.com",
+                status: 200,
+                sourceOk: true,
+                error: null,
+                title: "Example Domain",
+                markdown: "# Example Domain\n\n...",
+                wordCount: 28,
+                truncated: false,
+              },
             },
             outputSchema: {
               type: "object",
               properties: {
                 ok: { type: "boolean" },
+                requestedUrl: { type: "string" },
+                finalUrl: { type: "string" },
                 url: { type: "string" },
+                status: { type: "integer" },
+                sourceOk: { type: "boolean" },
+                error: { type: ["object", "null"] },
                 title: { type: "string" },
                 markdown: { type: "string" },
                 wordCount: { type: "number" },
                 truncated: { type: "boolean" },
+                capture: { type: "object" },
               },
-              required: ["ok", "url", "markdown"],
+              required: ["ok", "url", "markdown", "status", "sourceOk", "truncated"],
             },
           }),
         },
@@ -3417,12 +3448,21 @@ app.get("/extract", async (req, res) => {
     const data = await extract(url);
     res.json(data);
   } catch (e) {
-    // Paid but extraction failed (bad/unreachable URL): return a clean, useful error.
-    res.status(200).json({ ok: false, url, error: String(e.message || e) });
+    // Paid but extraction failed (timeout/unreachable). Merchant HTTP 200 is not source success.
+    res.status(200).json({
+      ok: false,
+      url,
+      requestedUrl: url,
+      finalUrl: null,
+      status: null,
+      sourceOk: false,
+      error: { code: fetchFailureCode(e), message: String(e.message || e) },
+      capture: buildCapture({ bodyBytes: 0, charset: null, charsetSource: "default-utf-8" }),
+    });
   }
 });
 
-// Paid: full page content as clean Markdown (LLM-ready).
+// Paid: bounded Markdown from the captured source body.
 app.get("/read", async (req, res) => {
   const url = req.query.url;
   if (!url || typeof url !== "string") {
@@ -3431,7 +3471,22 @@ app.get("/read", async (req, res) => {
   try {
     res.json(await readMarkdown(url));
   } catch (e) {
-    res.status(200).json({ ok: false, url, error: String(e.message || e) });
+    res.status(200).json({
+      ok: false,
+      url,
+      requestedUrl: url,
+      finalUrl: null,
+      status: null,
+      sourceOk: false,
+      error: { code: fetchFailureCode(e), message: String(e.message || e) },
+      capture: buildCapture({
+        textExcerptLimitChars: null,
+        markdownLimitChars: 40000,
+        bodyBytes: 0,
+        charset: null,
+        charsetSource: "default-utf-8",
+      }),
+    });
   }
 });
 
@@ -3778,7 +3833,7 @@ import("./mcp-server.mjs")
         declaredSourceForRequest: (req) => commerceTelemetry.mcpTypedDeclaredSourceForRequest(req),
       },
       tools: [
-        { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a text excerpt; use read for cleaned full-body Markdown. Content is fetched without JavaScript rendering.") }, outputSchema: extractMcpOutputSchema, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
+        { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a bounded text excerpt; use read for longer bounded Markdown. Content is fetched without JavaScript rendering. Check status/sourceOk/error/capture; ok means a typed extract record, not source completeness.") }, outputSchema: extractMcpOutputSchema, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         ...(EXTRACT_BATCH_ENABLED ? [{
           name: "extract_batch",
           description: EXTRACT_BATCH_DESCRIPTION,
@@ -3791,7 +3846,7 @@ import("./mcp-server.mjs")
           paidHttp: { method: "POST", path: EXTRACT_BATCH_PATH, resourceUrl: `${PUBLIC_URL}${EXTRACT_BATCH_PATH}`, maxRequestBytes: 16 * 1024, maxResponseBytes: 160 * 1024 },
           tags: ["web", "batch-extract", "structured-json", "multi-url"],
         }] : []),
-        { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters.") }, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
+        { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters. Check status/sourceOk/error/truncated/capture; missing discussion text is not proof of absence.") }, outputSchema: readMcpOutputSchema, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
         { name: "scan", description: RESOURCES[2].description, price: SCAN_PRICE, inputSchema: { repo: z.string().describe("Public GitHub repo: owner/name or URL") }, outputSchema: scanRepoMcpOutputSchema, run: (a) => scanRepo(a.repo), tags: ["security", "supply-chain", "github"] },
         { name: "schemaforge", description: RESOURCES[3].description, price: SCHEMAFORGE_PRICE, inputSchema: { site: z.string().describe("Public business homepage or representative landing-page URL. Live HTML must be directly fetchable; JavaScript is not executed."), vertical: z.string().optional().describe("Optional structured-data template profile. med-spas is currently the specialized profile; unsupported values fall back to it."), city: z.string().optional().describe("Optional city the business serves; used to contextualize the generated structured-data template.") }, run: (a) => schemaforge({ site: a.site, vertical: a.vertical, city: a.city }), tags: ["seo", "json-ld", "geo"] },
         { name: "enrich", description: RESOURCES[4].description, price: ENRICH_PRICE, inputSchema: { domain: z.string().describe("Public company domain or URL, for example stripe.com. Use enrich for company evidence; use wallet_enrich for an EVM address.") }, run: (a) => enrich(a.domain), tags: ["enrichment", "company-data", "firmographics"] },

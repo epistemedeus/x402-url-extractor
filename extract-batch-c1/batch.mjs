@@ -3,6 +3,7 @@ import { extractStructured, normalizeRequirement } from "./extract.mjs";
 import { loadSource } from "./transport.mjs";
 import { normalizeSourceKey } from "./url-guard.mjs";
 import { publicFetch } from "./public-fetch.mjs";
+import { classifyHttpStatus, buildCapture } from "../extract-capture.mjs";
 
 const DEFAULT_COST = Object.freeze({
   maxRequests: 20,
@@ -219,20 +220,7 @@ export async function runBatch(job, options = {}) {
       continue;
     }
 
-    const extracted = extractStructured(loaded.body, {
-      finalUrl: loaded.finalUrl,
-      httpStatus: loaded.httpStatus,
-      requirement: job.config.requirement,
-    });
-
-    item.status = extracted.status;
-    item.data = extracted.data;
-    item.notes = extracted.notes;
-    item.requirement = extracted.requirement;
-    item.httpStatus = extracted.httpStatus;
-    item.finalUrl = extracted.url;
-    delete item.error;
-    item.finishedAt = new Date().toISOString();
+    applyExtractedItem(item, loaded, job);
     recount(state);
     state.updatedAt = new Date().toISOString();
     state.accounting.wallMs = elapsed();
@@ -299,19 +287,7 @@ async function retryKnownFailures(job, state, { fetchImpl, now, elapsed }) {
       item.error = { code: loaded.code, message: loaded.error };
       item.finishedAt = new Date().toISOString();
     } else {
-      const extracted = extractStructured(loaded.body, {
-        finalUrl: loaded.finalUrl,
-        httpStatus: loaded.httpStatus,
-        requirement: job.config.requirement,
-      });
-      item.status = extracted.status;
-      item.data = extracted.data;
-      item.notes = extracted.notes;
-      item.requirement = extracted.requirement;
-      item.httpStatus = extracted.httpStatus;
-      item.finalUrl = extracted.url;
-      delete item.error;
-      item.finishedAt = new Date().toISOString();
+      applyExtractedItem(item, loaded, job);
     }
     recount(state);
     state.updatedAt = new Date().toISOString();
@@ -320,9 +296,46 @@ async function retryKnownFailures(job, state, { fetchImpl, now, elapsed }) {
   }
 }
 
-/** Known transient failures may retry; unknown outcomes never retry silently. */
+function applyExtractedItem(item, loaded, job) {
+  const extracted = extractStructured(loaded.body, {
+    finalUrl: loaded.finalUrl,
+    httpStatus: loaded.httpStatus,
+    requirement: job.config.requirement,
+  });
+  item.data = extracted.data;
+  item.notes = extracted.notes || [];
+  item.requirement = extracted.requirement;
+  item.httpStatus = extracted.httpStatus ?? loaded.httpStatus ?? null;
+  item.finalUrl = extracted.url || loaded.finalUrl || null;
+  item.provenance = { ...item.provenance, capture: buildCapture({
+    maxBodyBytes: loaded.provenance?.maxBodyBytes ?? job.costParameters.maxBytesPerItem,
+    textExcerptLimitChars: job.config.requirement.fields.includes("text") ? 1200 : null,
+    bodyBytes: loaded.bytes, bodyTruncated: loaded.bodyTruncated,
+    textTruncated: extracted.textTruncated || loaded.bodyTruncated,
+    charset: loaded.provenance?.charset || "utf-8",
+    charsetSource: loaded.provenance?.charsetSource || "default-utf-8",
+  }) };
+  const classified = classifyHttpStatus(loaded.httpStatus);
+  if (!classified.sourceOk) {
+    item.status = "failure";
+    item.error = classified.error;
+  } else if (loaded.bodyTruncated || extracted.textTruncated) {
+    item.status = "partial";
+    const code = loaded.bodyTruncated ? "body_truncated" : "text_truncated";
+    const message = loaded.bodyTruncated ? "source body truncated at capture byte limit" : "text excerpt truncated at 1200 characters";
+    item.notes = [...item.notes, { field: loaded.bodyTruncated ? "body" : "text", error: message }];
+    item.error = { code, message };
+  } else {
+    item.status = extracted.status;
+    if (item.status === "success") delete item.error;
+    else item.error = null;
+  }
+  item.finishedAt = new Date().toISOString();
+}
+
+/** Known transient transport failures may retry; HTTP 4xx/5xx with a captured body do not. */
 function isRetryableFailure(code) {
-  return code === "http_error";
+  return code === "timeout_or_abort";
 }
 
 async function boundedLoad(source, job, state, fetchImpl, elapsed) {

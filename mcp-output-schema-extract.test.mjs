@@ -8,7 +8,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import { asToolResult, mountMcp } from "./mcp-server.mjs";
-import { extract, extractMcpOutputSchema } from "./extract.mjs";
+import { extract, extractMcpOutputSchema, readMarkdown, readMcpOutputSchema } from "./extract.mjs";
 import {
   agentSurfaceBudgetAuditMcpOutputSchema,
 } from "./agent-surface-budget-audit.mjs";
@@ -227,8 +227,8 @@ function htmlResponse(html, { status = 200, url = "https://fixture.example/", co
 }
 
 function installExtractFetch(fixtures) {
-  const original = globalThis.fetch;
-  globalThis.fetch = async (input, init) => {
+  const original = globalThis.__SAMEDAYDESK_EXTRACT_FETCH__;
+  globalThis.__SAMEDAYDESK_EXTRACT_FETCH__ = async (input, init) => {
     const target = String(typeof input === "string" || input instanceof URL ? input : input.url);
     if (target.startsWith("http://127.0.0.1")) return original(input, init);
     const hit = fixtures[target] || fixtures["*"];
@@ -236,7 +236,7 @@ function installExtractFetch(fixtures) {
     return typeof hit === "function" ? hit(target, init) : hit;
   };
   return () => {
-    globalThis.fetch = original;
+    globalThis.__SAMEDAYDESK_EXTRACT_FETCH__ = original;
   };
 }
 
@@ -396,9 +396,19 @@ test("mounted MCP lists extract outputSchema and serves typed structuredContent 
       if (url.includes("empty")) {
         assert.equal(structured.title, "");
         assert.equal(structured.url, url);
+        assert.equal(structured.requestedUrl, url);
+        assert.equal(structured.finalUrl, url);
+        assert.equal(structured.sourceOk, true);
+        assert.equal(structured.error, null);
         for (const field of ["contentType", "description", "canonical", "lang"]) assert.equal(structured[field], null);
       }
-      if (url.includes("upstream-error")) assert.equal(structured.status, 404);
+      if (url.includes("upstream-error")) {
+        assert.equal(structured.status, 404);
+        assert.equal(structured.sourceOk, false);
+        assert.equal(structured.error?.code, "http_404");
+        assert.match(structured.text, /Not found/i);
+        assert.equal(structured.ok, true);
+      }
       if (url.includes("graph")) {
         assert.deepEqual(structured.aiReadiness.schemaTypes, [["Thing", "Product"], { unusual: true }]);
         assert.equal(structured.jsonLd[1], 42);
@@ -477,8 +487,12 @@ test("application errors and malformed success stay untyped", async () => {
 test("InMemory transport projects extract structuredContent only with outputSchema", async () => {
   const sparse = {
     ok: true,
+    requestedUrl: "https://sparse.example/",
+    finalUrl: "https://sparse.example/",
     url: "https://sparse.example/",
     status: 200,
+    sourceOk: true,
+    error: null,
     contentType: "text/html",
     title: "Example Domain",
     description: null,
@@ -497,6 +511,18 @@ test("InMemory transport projects extract structuredContent only with outputSche
       hasDescription: false,
       hasCanonical: false,
       schemaTypes: [],
+    },
+    capture: {
+      method: "http-get-no-javascript",
+      javascriptExecuted: false,
+      maxBodyBytes: 3_000_000,
+      textExcerptLimitChars: 1200,
+      markdownLimitChars: null,
+      bodyBytes: 128,
+      bodyTruncated: false,
+      textTruncated: false,
+      charset: "utf-8",
+      charsetSource: "content-type",
     },
     fetchedAt: "2026-09-07T21:00:00.000Z",
   };
@@ -536,4 +562,27 @@ test("InMemory transport projects extract structuredContent only with outputSche
 
   await client.close();
   await server.close();
+});
+
+
+
+test("mounted read exports its actual schema and typed source refusal without granting useful-content status", async () => {
+  const restore = installExtractFetch({ "https://denied.example/": htmlResponse("<p>Access denied</p>", { status: 403, url: "https://denied.example/" }) });
+  const mounted = await startMountedExtract({ tools: [{ name: "read", description: "local read fixture", price: "$0.005", inputSchema: { url: z.string() }, outputSchema: readMcpOutputSchema, run: args => readMarkdown(args.url) }] });
+  try {
+    const listed = await mounted.post({ jsonrpc: "2.0", id: 50, method: "tools/list", params: {} });
+    const schema = listed.json.result.tools.find(t => t.name === "read").outputSchema;
+    assert.ok(schema.required.includes("markdown"));
+    assert.ok(schema.required.includes("sourceOk"));
+    const call = { jsonrpc: "2.0", id: 51, method: "tools/call", params: { name: "read", arguments: { url: "https://denied.example/" } } };
+    const unpaid = await mounted.post(call);
+    const raw = unpaid.json.result;
+    const challenge = raw.structuredContent || JSON.parse(raw.content[0].text);
+    assert.equal(raw.isError, true);
+    const paid = await mounted.post({ ...call, id: 52, params: { ...call.params, _meta: { "x402/payment": payment(challenge.accepts[0]) } } });
+    const output = paid.json.result.structuredContent;
+    assert.equal(readMcpOutputSchema.safeParse(output).success, true);
+    assert.equal(output.sourceOk, false); assert.equal(output.status, 403);
+    assert.equal(output.error.code, "http_403");
+  } finally { await mounted.close(); restore(); }
 });

@@ -10,6 +10,7 @@ export function validateBuyerOutput(body, requiredOutput) {
     if (body?.ok !== true) {
       return {
         valid: false,
+        delivery: "invalid",
         reason: "buyer-required ok literal is not true",
         report,
       };
@@ -18,7 +19,18 @@ export function validateBuyerOutput(body, requiredOutput) {
       const value = field.split(".").reduce((current, key) => current?.[key], body);
       if (value === null || value === undefined) throw new Error(`required field is null or missing: ${field}`);
     }
-    return { valid: true, report };
+    const sourceStatus = Number(body.status);
+    const sourceRefused = body.sourceOk === false
+      || (Number.isInteger(sourceStatus) && (sourceStatus < 200 || sourceStatus >= 300));
+    if (sourceRefused) {
+      return {
+        valid: true,
+        delivery: "source_refused",
+        reason: body.error?.message || `source HTTP ${sourceStatus}`,
+        report,
+      };
+    }
+    return { valid: true, delivery: "useful", report };
   } catch (error) {
     return {
       valid: false,

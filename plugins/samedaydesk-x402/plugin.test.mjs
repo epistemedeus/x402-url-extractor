@@ -26,7 +26,7 @@ if (EXPECTED_LIVE_VERSION !== null && !VERSION_PATTERN.test(EXPECTED_LIVE_VERSIO
 const liveTest = EXPECTED_LIVE_VERSION === null ? test.skip : test;
 const SOURCE_HEADER = "X-SameDayDesk-Agent-Source";
 const SOURCE_VALUE = "agent-plugins-v1";
-const PRODUCT_SKILL_SHA256 = "e183a1821a97a40d0aaffee4b68a70e9410b69476201cd792d8d9c9ce85438e1";
+const PRODUCT_SKILL_SHA256 = "382e45d33e95b81dd27c2ab38c576118159a37af2d776bc0620ecf9b472d3551";
 const PLUGIN_SCHEMA_SHA256 = "0a4aad95ce337878ad38802ebf0daa3fde76abe3f65400c86bcbb1ec0b3ab883";
 const MCP_SCHEMA_SHA256 = "6539175bfcdf43085855183e86da40ea94b166547a72b47ae9a0a390516d3acb";
 const NAME_PATTERN = /^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
