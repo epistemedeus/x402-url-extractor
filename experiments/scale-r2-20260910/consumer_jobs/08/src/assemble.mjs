@@ -32,6 +32,10 @@ export const DEMO_OUT_DIR = join(PACKAGE_ROOT, "demo-out");
 
 /** Sibling 07 package (preferred when both trees are present on the branch). */
 export const SIBLING_07_ROOT = resolve(PACKAGE_ROOT, "..", "07");
+/** Sibling S137 evidence pack (composed on S178; optional on thin Bot-08 branch). */
+export const SIBLING_S137_ROOT = resolve(PACKAGE_ROOT, "..", "..", "..", "s137-consumer-evidence-jobs");
+export const SIBLING_S137_CLI = join(SIBLING_S137_ROOT, "scripts", "cli.mjs");
+
 
 function isPlainObject(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
@@ -476,6 +480,94 @@ export function runCleanInstallJourney(options = {}) {
   return journey;
 }
 
+
+
+/**
+ * S178/compose compatibility: spawn S137 analyze when the sibling pack is present.
+ * Does not invent pass. Missing sibling → unavailable_pending_heavy style result.
+ */
+const HEAVY_ARTIFACT_BY_RECIPE = Object.freeze({
+  "heavy-01-evidence-capture": "migration-checklist",
+  "heavy-02-evidence-normalize": "release-brief",
+  "heavy-03-evidence-link": "table-reconcile",
+  "heavy-04-evidence-score-gate": "link-index",
+  "heavy-05-evidence-package": "replay-pack",
+  "heavy-06-evidence-publish-prep": "freshness-receipt",
+  "migration-checklist": "migration-checklist",
+  "release-brief": "release-brief",
+  "table-reconcile": "table-reconcile",
+  "link-index": "link-index",
+  "replay-pack": "replay-pack",
+  "freshness-receipt": "freshness-receipt",
+});
+
+export function runHeavyAnalyzeRecipe(recipeId, options = {}) {
+  const artifactId = HEAVY_ARTIFACT_BY_RECIPE[recipeId] || recipeId;
+  const s137Root = options.s137Root || SIBLING_S137_ROOT;
+  const cliPath = options.cliPath || join(s137Root, "scripts", "cli.mjs");
+  const clock = options.clock || "2026-09-10T12:00:00.000Z";
+  const inputPath = options.inputPath || options.inPath || null;
+  if (!existsSync(cliPath)) {
+    return {
+      recipeId,
+      artifactId,
+      status: RECIPE_STATUS.UNAVAILABLE_PENDING_HEAVY,
+      decision: null,
+      ok: false,
+      error: {
+        code: ERROR_CODES.MISSING_DEPENDENCY,
+        message: `S137 CLI missing at ${cliPath}`,
+      },
+      output: null,
+    };
+  }
+  if (!inputPath || !existsSync(inputPath)) {
+    return {
+      recipeId,
+      artifactId,
+      status: RECIPE_STATUS.FAILED,
+      decision: "invalid",
+      ok: false,
+      error: {
+        code: ERROR_CODES.INVALID_INPUT,
+        message: "runHeavyAnalyzeRecipe requires a local inputPath",
+      },
+      output: null,
+    };
+  }
+  const result = spawnSync(
+    process.execPath,
+    [cliPath, "analyze", artifactId, "--in", inputPath, "--clock", clock],
+    { encoding: "utf8", cwd: s137Root, maxBuffer: 8 * 1024 * 1024 },
+  );
+  let output = null;
+  try {
+    output = JSON.parse(result.stdout || "");
+  } catch (e) {
+    return {
+      recipeId,
+      artifactId,
+      status: RECIPE_STATUS.FAILED,
+      decision: "fail",
+      ok: false,
+      error: { code: "cli_parse_failed", message: e.message, stderr: result.stderr },
+      exitCode: result.status,
+      output: null,
+    };
+  }
+  const decision = output?.decision || "unknown";
+  return {
+    recipeId,
+    artifactId,
+    status: RECIPE_STATUS.READY,
+    decision,
+    ok: true,
+    exitCode: result.status,
+    output,
+  };
+}
+
+
 export {
   isPlainObject,
   hasForbiddenField,
@@ -483,3 +575,9 @@ export {
   loadJsonFile,
   resolve07Cli,
 };
+
+export function assertSafeLocalPath(p) {
+  if (typeof p !== "string" || !p) throw Object.assign(new Error("path required"), { code: ERROR_CODES.INVALID_INPUT });
+  if (/^https?:/i.test(p)) throw Object.assign(new Error("remote URLs refused"), { code: ERROR_CODES.INVALID_INPUT });
+  return p;
+}

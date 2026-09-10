@@ -12,6 +12,9 @@ export const SCHEMA = "x402.r2.consumer.customer_result_package.v1";
 export const INPUT_SCHEMA = "x402.r2.consumer.customer_result_request.v1";
 export const MANIFEST_SCHEMA = "x402.r2.consumer.recipe_manifest.v1";
 
+/** Operator-supplied default only for offline demos; callers should pass --clock. */
+export const DEFAULT_OPERATOR_CLOCK = "2026-09-10T12:00:00.000Z";
+
 export const PACKAGE_STATUS = Object.freeze({
   READY: "ready",
   PARTIAL: "partial",
@@ -23,6 +26,10 @@ export const RECIPE_STATUS = Object.freeze({
   READY: "ready",
   UNAVAILABLE_PENDING_HEAVY: "unavailable_pending_heavy",
   UNKNOWN: "unknown",
+  // Compose compatibility (acquisition matrix / deferred recheck)
+  FAILED: "failed",
+  CONFLICT: "conflict",
+  PARTIAL: "partial",
 });
 
 export const ERROR_CODES = Object.freeze({
@@ -67,6 +74,11 @@ export const BUILTIN_RECIPE_IDS = Object.freeze([
   "heavy-05-evidence-package",
   "heavy-06-evidence-publish-prep",
 ]);
+
+/** Heavy 01–06 recipe ids (compose compatibility). */
+export const HEAVY_RECIPE_IDS = Object.freeze(
+  BUILTIN_RECIPE_IDS.filter((id) => id.startsWith("heavy-")),
+);
 
 export const MUTATION_BOUNDARY =
   "Isolated feature-branch source/tests only. Root owns merge, publication, and paid actions.";
