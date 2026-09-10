@@ -60,4 +60,5 @@ node src/cli.mjs run fixtures/positive-bundle.json
 
 - Pin base: `1a23b648e3c5f90bc009accb85972e2db6e22051`
 - Feature commit: `8da9285a03edc1f5d4f3f4015d5778d110764c41`
-- Push: _pending push_
+- Tip SHA (RESULT update): `583cf6d59decbdfdcb1b6c4cead7b40c72e98e47`
+- Push: **succeeded** — `origin/codex/r2-record-jobs-08-20260910` @ `583cf6d59decbdfdcb1b6c4cead7b40c72e98e47` (feature-branch only; ≠ Root publication)
