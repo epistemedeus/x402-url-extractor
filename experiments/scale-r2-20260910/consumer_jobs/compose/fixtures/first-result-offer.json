@@ -1,0 +1,72 @@
+{
+  "schema": "x402.r2.consumer.first_result_offer.v1",
+  "packageNote": "partial_first_result",
+  "packageStatusHint": "partial",
+  "firstResultReady": true,
+  "acquisitionOk": true,
+  "clock": "2026-09-10T18:00:00.000Z",
+  "offered": [
+    {
+      "id": "migration-checklist",
+      "jobRef": "R2-CONSUMER-JOBS-01",
+      "slotStatus": "ready",
+      "heavyDecision": "pass",
+      "offered": true
+    },
+    {
+      "id": "release-brief",
+      "jobRef": "R2-CONSUMER-JOBS-02",
+      "slotStatus": "ready",
+      "heavyDecision": "pass",
+      "offered": true
+    },
+    {
+      "id": "freshness-receipt",
+      "jobRef": "R2-CONSUMER-JOBS-06",
+      "slotStatus": "ready",
+      "heavyDecision": "pass",
+      "offered": true
+    },
+    {
+      "id": "procurement-brief",
+      "jobRef": "R2-CONSUMER-JOBS-07",
+      "slotStatus": "ready",
+      "heavyDecision": null,
+      "offered": true
+    }
+  ],
+  "deferredExternalDefects": [
+    {
+      "id": "table-reconcile",
+      "jobRef": "R2-CONSUMER-JOBS-03",
+      "slotStatus": "failed",
+      "heavyDecision": "fail",
+      "offered": false,
+      "kind": "heavy_cli_analyze_fail",
+      "note": "Heavy CLI analyze on synthetic positive cases returns fail (external defect). Compose records real fail — not unavailable_pending_heavy."
+    },
+    {
+      "id": "link-index",
+      "jobRef": "R2-CONSUMER-JOBS-04",
+      "slotStatus": "failed",
+      "heavyDecision": "fail",
+      "offered": false,
+      "kind": "heavy_cli_analyze_fail",
+      "note": "Heavy CLI analyze on synthetic positive cases returns fail (external defect). Compose records real fail — not unavailable_pending_heavy."
+    },
+    {
+      "id": "replay-pack",
+      "jobRef": "R2-CONSUMER-JOBS-05",
+      "slotStatus": "failed",
+      "heavyDecision": "fail",
+      "offered": false,
+      "kind": "heavy_cli_analyze_fail",
+      "note": "Heavy CLI analyze on synthetic positive cases returns fail (external defect). Compose records real fail — not unavailable_pending_heavy."
+    }
+  ],
+  "resolvedCommits": {
+    "expectedHeavyResolvedCommit": "fa6878de125cfdcfd77f4b47037c88667090d293"
+  },
+  "mode": "dry_offer",
+  "note": "Synthetic fixture for first-result offer shape tests. Exact green/deferred split from S152 matrix; no invented Heavy pass."
+}

@@ -94,3 +94,15 @@ Known external Heavy limitations (documented, not fixed here):
 
 No investment recommendation, revenue projection, ranking, escrow, custody, or
 “package ready for paid acquisition” language. Fixture URLs remain data.
+
+## First useful result (green slots only)
+
+For a buyer path that **only offers confirmed-pass recipes** (01/02/06/07) and
+defers 03/04/05 as external Heavy defects, see **`FIRST-RESULT.md`** and:
+
+```sh
+node src/cli.mjs first-result --json
+```
+
+Schema: `x402.r2.consumer.first_result_offer.v1` · `packageNote=partial_first_result`.
+

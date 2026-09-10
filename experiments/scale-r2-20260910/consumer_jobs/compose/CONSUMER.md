@@ -63,3 +63,13 @@ package. No investment / revenue / ranking / escrow / custody claims.
 
 Operator-facing acquisition steps: `ACQUISITION.md`.  
 Frozen evidence packet: `FROZEN-E2E-PACKET-S152.md`.
+
+## First useful result
+
+Green-only acquisition offer (no deferred Heavy fail slots): **`FIRST-RESULT.md`**.
+
+```sh
+node src/cli.mjs first-result
+node src/cli.mjs first-result --plan --json
+```
+
