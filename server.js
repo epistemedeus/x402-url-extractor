@@ -173,6 +173,7 @@ import {
 } from "./commerce-events.mjs";
 import { createCommerceSettlementReconciler } from "./commerce-settlement-reconciler.mjs";
 import { createIdempotencyReplay, DEFAULT_PAID_ROUTES, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
+import { registerIndexingPayloadContinuity } from "./indexing-payload-continuity.mjs";
 import {
   PURCHASE_EVIDENCE_MANIFEST_PATH,
   PURCHASE_EVIDENCE_RELATION,
@@ -439,6 +440,34 @@ const commerceTrust = createCommerceTrust({
 if (commerceTrust.enabled) {
   resourceServer.registerExtension(commerceTrust.resourceServerExtension);
 }
+// CDP Bazaar indexes paymentPayload.resource + extensions.bazaar only (not
+// paymentRequirements). For exact-EVM EIP-3009 those fields are unsigned.
+// Fill omissions via supported onBeforeVerify/onBeforeSettle hooks only
+// (v2 exact eip155:*); never reassign verifyPayment/settlePayment, never
+// decline a supported payment over discovery-hint shape, never trust Host.
+registerIndexingPayloadContinuity(resourceServer, {
+  resolveDeclaredResource(transportContext) {
+    const adapter = transportContext?.request?.adapter;
+    const path = typeof adapter?.getPath === "function" ? adapter.getPath() : null;
+    if (typeof path !== "string" || !path.startsWith("/")) return null;
+    let url;
+    try {
+      url = `${new URL(PUBLIC_URL).origin}${path}`;
+    } catch {
+      return null;
+    }
+    const row = RESOURCES.find((entry) => new URL(entry.url).pathname === path);
+    const meta = Object.prototype.hasOwnProperty.call(BAZAAR_RESOURCE_METADATA, path)
+      ? bazaarResourceMetadataFor(path)
+      : {};
+    return {
+      url,
+      description: row?.description || "",
+      mimeType: row?.mimeType || "application/json",
+      ...meta,
+    };
+  },
+});
 const COMMON_COMMERCE_EXTENSIONS = {
   [PAYMENT_IDENTIFIER]: declarePaymentIdentifierExtension(false),
   ...BUILDER_CODE_ROUTE_EXTENSIONS,
