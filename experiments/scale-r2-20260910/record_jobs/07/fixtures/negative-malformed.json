@@ -1,0 +1,23 @@
+{
+  "schema": "x402.r2.record.dependency_footprint_input.v1",
+  "reportId": "bad-input",
+  "title": "Malformed \u2014 forbidden CVE / certification fields",
+  "demo": true,
+  "sourceLabel": "synthetic-fixture",
+  "cveScore": 9.8,
+  "securityCertification": "ISO-fake",
+  "trees": [
+    {
+      "id": "bad-tree",
+      "dependencies": [
+        {
+          "name": "lodash",
+          "version": "4.17.21",
+          "license": "MIT",
+          "complianceScore": 100,
+          "legalAdvice": "safe to ship"
+        }
+      ]
+    }
+  ]
+}

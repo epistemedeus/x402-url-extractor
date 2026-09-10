@@ -1,0 +1,32 @@
+{
+  "schema": "x402.r2.record.dependency_footprint_input.v1",
+  "reportId": "demo-dep-footprint-partial",
+  "title": "Partial lock entries (missing version / license)",
+  "demo": true,
+  "sourceLabel": "synthetic-fixture",
+  "trees": [
+    {
+      "id": "partial-tree",
+      "label": "incomplete inventory",
+      "lockfileFormat": "normalized-list",
+      "dependencies": [
+        {
+          "name": "lodash",
+          "version": "4.17.21",
+          "license": "MIT"
+        },
+        {
+          "name": "mystery-pkg"
+        },
+        {
+          "name": "also-partial",
+          "license": "MIT"
+        },
+        {
+          "version": "1.0.0",
+          "license": "BSD-3-Clause"
+        }
+      ]
+    }
+  ]
+}

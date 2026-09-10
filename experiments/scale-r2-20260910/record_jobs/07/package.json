@@ -1,0 +1,16 @@
+{
+  "name": "r2-record-jobs-07-dependency-footprint-overlap",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "R2-RECORD-JOBS-07 dependency footprint overlap (caller-supplied lockfile snapshots only)",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "demo": "node src/cli.mjs demo",
+    "report": "node src/cli.mjs report",
+    "overlap": "node src/cli.mjs overlap"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
