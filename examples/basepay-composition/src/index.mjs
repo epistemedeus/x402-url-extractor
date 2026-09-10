@@ -1,0 +1,15 @@
+export {
+  compose,
+  providerNativeVerifiedFromComposition,
+  evaluateLayer1,
+  loadLayer2,
+  buildObservationMatrix,
+  BasePayCompositionError,
+  LAYER1_NAME,
+  LAYER1_TITLE,
+  LAYER2_NAME,
+  LAYER2_TITLE,
+  COMPOSITION_SCHEMA,
+  BASEPAY_CHECK_IDS,
+  BASEPAY_CHECK_COUNT,
+} from "./compose.mjs";

@@ -1,0 +1,30 @@
+{
+  "schema": "samedaydesk.basepay-composition.digests.v1",
+  "published_conformance_result": {
+    "path": "fixtures/basepay/published-conformance-result.json",
+    "source": "https://github.com/LumenFromTheFuture/basepay-conformance/blob/94fa65d65c204c02f4af5a9bc9fd27225c688994/reports/conformance-result.json",
+    "gitBlobSha": "719cca62633f659ce2306b98c3be84652bcd9140",
+    "sha256": "7575ceb160c6e15992f6950cf2b02cb3736a0d14dd7f3c82a98266d3cd04e11f",
+    "bytes": 10230,
+    "fixtureCommitField": "8a46910ede4830de8481a3ae7f095e120a312d62"
+  },
+  "mapping": {
+    "path": "fixtures/basepay/stateful-taxonomy-mapping-2026-09-05.json",
+    "source": "https://github.com/LumenFromTheFuture/basepay-conformance/blob/94fa65d65c204c02f4af5a9bc9fd27225c688994/reports/stateful-taxonomy-mapping-2026-09-05.json",
+    "gitBlobSha": "b6b288603676f597b208d765876d3efda8939cae",
+    "sha256": "c2116337fb8972fab75d7e21acecf381d0deeb1b3b6e0b1e98f7538ed1bbe568",
+    "bytes": 6033
+  },
+  "replay_conformance_result": {
+    "path": "fixtures/basepay/replay-conformance-result.json",
+    "source": "/tmp/s89/basepay-replay/dist/conformance-result.json",
+    "log": "/tmp/s89-replay-run2.txt",
+    "gitBlobSha": "f455ae744deec6a73f23816d9c5937f3131c5934",
+    "sha256": "632720dc1a7ec83b0f88296cbca103d83c73e64e7e59206853dc7673fa7efbc3",
+    "bytes": 10230,
+    "fixtureCommitField": "94fa65d65c204c02f4af5a9bc9fd27225c688994",
+    "command": "npm run conformance",
+    "checks_passed": 19,
+    "checks_total": 19
+  }
+}

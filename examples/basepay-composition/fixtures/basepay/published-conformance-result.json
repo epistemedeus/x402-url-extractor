@@ -1,0 +1,237 @@
+{
+  "schema": "basepay-conformance/result",
+  "schema_version": "1.0.0",
+  "fixture": {
+    "name": "basepay-conformance",
+    "version": "0.1.0",
+    "repo": "https://github.com/LumenFromTheFuture/basepay-conformance",
+    "commit": "8a46910ede4830de8481a3ae7f095e120a312d62"
+  },
+  "target": {
+    "repository": "LumenFromTheFuture/agentkit",
+    "upstream_pr": "https://github.com/coinbase/agentkit/pull/1349",
+    "head_sha": "8380c34b9769cc255ff50d78b4ad2bafdd3de354",
+    "acceptance_shape": "issue #1141, maintainer-agreed three pre-spend checks + two-set consumption"
+  },
+  "provenance": {
+    "blob_identities": [
+      {
+        "githubPath": "typescript/agentkit/src/action-providers/basepay/basepayActionProvider.ts",
+        "fixturePath": "src/action-providers/basepay/basepayActionProvider.ts",
+        "gitBlobSha": "9fdb7263d25a48d2366f4e4e8bb5d527a7beef62",
+        "bytes": 24770
+      },
+      {
+        "githubPath": "typescript/agentkit/src/action-providers/basepay/schemas.ts",
+        "fixturePath": "src/action-providers/basepay/schemas.ts",
+        "gitBlobSha": "fb8eddce438201b9724ccd7991f499d3b639664c",
+        "bytes": 2397
+      },
+      {
+        "githubPath": "typescript/agentkit/src/action-providers/basepay/index.ts",
+        "fixturePath": "src/action-providers/basepay/index.ts",
+        "gitBlobSha": "6fd268e3c8a7e05a59576212b9e41f44c09e3bfe",
+        "bytes": 285
+      },
+      {
+        "githubPath": "typescript/agentkit/src/policy/interfaces.ts",
+        "fixturePath": "src/policy/interfaces.ts",
+        "gitBlobSha": "b6f7ec9c781f7779c854f269fbd1a212ee875cbb",
+        "bytes": 1079
+      },
+      {
+        "githubPath": "typescript/agentkit/src/policy/utils.ts",
+        "fixturePath": "src/policy/utils.ts",
+        "gitBlobSha": "480845eec76f2a96038169e893094ce11e71dc52",
+        "bytes": 1300
+      },
+      {
+        "githubPath": "typescript/agentkit/src/policy/index.ts",
+        "fixturePath": "src/policy/index.ts",
+        "gitBlobSha": "795622a6e29c77a63fba743b3f1c049be969b768",
+        "bytes": 55
+      }
+    ],
+    "substitutions": [
+      {
+        "fixturePath": "src/wallet-providers/index.ts",
+        "upstreamBehavior": "re-exports CDP/privy/zeroDev providers (heavy SDKs)",
+        "substitution": "re-exports only walletProvider + evmWalletProvider"
+      },
+      {
+        "fixturePath": "src/network/index.ts",
+        "upstreamBehavior": "re-exports ./svm (Solana types)",
+        "substitution": "re-exports ./network + ./types"
+      },
+      {
+        "fixturePath": "src/analytics/sendAnalyticsEvent.ts",
+        "upstreamBehavior": "POSTs to cca-lite.coinbase.com on every action",
+        "substitution": "no-op (same signature)"
+      }
+    ]
+  },
+  "runner": {
+    "name": "basepay-conformance harness",
+    "version": "0.1.0",
+    "node": "v24.19.0",
+    "platform": "linux",
+    "offline": true
+  },
+  "checks": {
+    "total": 19,
+    "passed": 19,
+    "failed": 0,
+    "cases": [
+      {
+        "id": "P0",
+        "name": "baseline: no policy provider, behavior unchanged",
+        "pass": true,
+        "detail": "transfer executed; calldata decodes to exactly (ALICE, 10.5 USDC atomic)"
+      },
+      {
+        "id": "F1",
+        "name": "allow: executes, receipt outcome=executed, executed allocation == evaluated allocation",
+        "pass": true,
+        "detail": "1 send; calldata == (ALICE, 100 USDC)"
+      },
+      {
+        "id": "F2",
+        "name": "deny: policy_denied before read/sign/send",
+        "pass": true,
+        "detail": "wallet untouched (0 reads, 0 sends, 0 signs)"
+      },
+      {
+        "id": "F3",
+        "name": "unbound_execution: missing decision_ref fails before wallet contact",
+        "pass": true,
+        "detail": "wallet untouched; receipt=unauditable_outcome"
+      },
+      {
+        "id": "F4",
+        "name": "policy_unverifiable: expired TTL fails before wallet contact",
+        "pass": true,
+        "detail": "wallet untouched; receipt=expired"
+      },
+      {
+        "id": "F5",
+        "name": "context_drift: decision for (BOB,5) cannot execute (ALICE,100)",
+        "pass": true,
+        "detail": "wallet untouched; receipt=context_drift"
+      },
+      {
+        "id": "F6",
+        "name": "batch allow: executed (recipients,amounts) == evaluated; hash join holds",
+        "pass": true,
+        "detail": "calldata recipients/amounts match evaluated allocation; recomputed exec hash == evaluated hash"
+      },
+      {
+        "id": "F7",
+        "name": "batch context_drift: approved [[\"0x2222\",\"10\"]] != executed [[\"0x1111\",\"10\"]]",
+        "pass": true,
+        "detail": "context_drift before ensureAllowance: 0 allowance reads, 0 sends"
+      },
+      {
+        "id": "F8",
+        "name": "batch context_drift: approved [[\"0x1111\",\"20\"]] != executed [[\"0x1111\",\"10\"]]",
+        "pass": true,
+        "detail": "context_drift before ensureAllowance: 0 allowance reads, 0 sends"
+      },
+      {
+        "id": "F9",
+        "name": "batch context_drift: approved [[\"0x1111\",\"10\"],[\"0x2222\",\"20\"]] != executed [[\"0x1111\",\"20\"],[\"0x2222\",\"10\"]]",
+        "pass": true,
+        "detail": "context_drift before ensureAllowance: 0 allowance reads, 0 sends"
+      },
+      {
+        "id": "F10",
+        "name": "sequential replay: second use of same decision_ref denied; exactly one spend",
+        "pass": true,
+        "detail": "1 send total; receipts=executed,denied"
+      },
+      {
+        "id": "F11",
+        "name": "concurrent duplicates: pending-set blocks second submission; exactly one spend",
+        "pass": true,
+        "detail": "1 send; receipts=denied,executed"
+      },
+      {
+        "id": "F12",
+        "name": "gasless allow: signed EIP-3009 message == evaluated (ALICE, 5 USDC); relay_confirmed",
+        "pass": true,
+        "detail": "signTypedData message matches evaluated allocation; 1 relay call; receipt=relay_confirmed"
+      },
+      {
+        "id": "F13",
+        "name": "gasless deny: policy_denied before signature and relay",
+        "pass": true,
+        "detail": "no signature produced, no relay call, receipt=denied [manifested as rejection — FINDING-1]"
+      },
+      {
+        "id": "F14",
+        "name": "gasless replay: decision_ref consumed before signing; no second signature",
+        "pass": true,
+        "detail": "1 signature, 1 relay call; second submission denied [manifested as rejection — FINDING-1]"
+      },
+      {
+        "id": "F15",
+        "name": "revert classification: on-chain revert → [failed], not [executed]",
+        "pass": true,
+        "detail": "receipt_outcome=failed"
+      },
+      {
+        "id": "F16",
+        "name": "hash properties: deterministic, order-canonical, amount/address-sensitive, JCS key-order-independent",
+        "pass": true,
+        "detail": "all six properties hold"
+      },
+      {
+        "id": "F16b",
+        "name": "recomputable join: action_context_hash and decision_ref re-derived from stored fields alone",
+        "pass": true,
+        "detail": "both keys recompute from the receipt fields"
+      },
+      {
+        "id": "F17",
+        "name": "escrow/subscribe carry creates_commitment / creates_recurring_obligation risk signals",
+        "pass": true,
+        "detail": "both signals present on evaluated ctx; both actions executed"
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "FINDING-1",
+      "severity": "defect",
+      "status": "fixed",
+      "fixCommit": "15bdc2e31750874c6c618ea31b0dcfa87abbf8f3",
+      "summary": "sendUsdcGasless is the only action without an outer catch: policy failures (deny/expired/context-drift/duplicate ref) reject the invoke() promise instead of returning a structured failure string. Enforced on the tested head; fixed and maintainer-confirmed on the PR (outer-catch repair shipped in 15bdc2e)."
+    },
+    {
+      "id": "OBS-1",
+      "severity": "observation",
+      "status": "by-design",
+      "summary": "The batch execution-boundary re-derivation (Fix 3) compares against a hash derived from the same args object, so it is not externally triggerable; the externally triggerable drift checks are the action_context_hash check (F5) and batch recipient_allocation_hash binding (F7-F9)."
+    },
+    {
+      "id": "OBS-2",
+      "severity": "observation",
+      "status": "by-design",
+      "summary": "recipientAllocationHash is order-canonical (sorted), so pure reordering of identical pairs is invisible by design while address/amount/redistribution drift is caught; the verbatim docstring's 'silent reordering' claim overstates the check."
+    },
+    {
+      "id": "OBS-3",
+      "severity": "observation",
+      "status": "by-design",
+      "summary": "The fixture runs offline (no RPC/relay/telemetry) on zod, viem, canonicalize, md5, reflect-metadata, Node >= 20; the blob-SHA check makes silent drift of the tested code detectable on re-runs."
+    }
+  ],
+  "limits": [
+    "This result covers the exact tested revision (PR #1349 head 8380c34…). It does not cover later PR heads (15bdc2e…, 1c2330e…, 1d16d0a…, 9d28b41…, 746975e…, e5cbc7a…) or any merged main revision; FINDING-1 records where the tested head diverges from the fixed head.",
+    "The fixture executes the verbatim implementation against a recording mock wallet and configurable policy fakes. It does not touch a chain, sign a real transaction, contact the relay, or send analytics.",
+    "Blob identities are git blob SHAs (sha1('blob <len>\\0' + content)) matching the GitHub blobs at the tested head tree; re-verifiable with the script in PROVENANCE.md.",
+    "The fixture is a supplementary, offline-rerunnable conformance asset. Native verification (tsc + full Jest) is the canonical gate for the PR; fixture results are author-reported, as acknowledged in-thread.",
+    "The fixture accepts no credentials, wallet IDs, signatures, transactions, or raw provider responses as input, and it makes no claim about any other provider, revision, or fork.",
+    "Three harness-side substitutions (wallet-providers/network indexes, analytics no-op) are documented in PROVENANCE.md and are not part of the conformance target."
+  ],
+  "generated_at": "2026-09-04T00:09:20.284Z"
+}

@@ -1,0 +1,91 @@
+{
+  "schema": "lumen.composition-contract.taxonomy-mapping.v1",
+  "generated_at": "2026-09-05T00:00:00Z",
+  "layer1": {
+    "operator": "SameDayDesk",
+    "product": "samedaydesk-stateful-wallet-policy-conformance",
+    "endpoint": "POST https://agents.samedaydesk.com/security/stateful-wallet-policy-conformance",
+    "price": "0.01 USD fixed (x402 exact / mpp charge, Base USDC)",
+    "credential_boundary": "Accepts no credentials, wallet or resource IDs, counter values, signatures, transactions, or raw provider responses",
+    "taxonomy_reference": "https://agents.samedaydesk.com/schemas/stateful-wallet-policy-conformance-v1.json"
+  },
+  "layer2": {
+    "operator": "Lumen (basepay-conformance fixture)",
+    "repo": "https://github.com/LumenFromTheFuture/basepay-conformance",
+    "tested_target": "LumenFromTheFuture/agentkit @ 8380c34 (upstream PR coinbase/agentkit#1349)",
+    "execution_model": "independent execution of the verbatim source revision against a recording mock wallet + policy fakes; blob-hash provenance; offline",
+    "result_shape": "reports/conformance-result.json (schema basepay-conformance/result 1.0.0)"
+  },
+  "mapping": [
+    {
+      "samedaydesk_case": "first_within_cap",
+      "expected": "allow",
+      "control": null,
+      "coverage": "covered",
+      "lumen_cases": ["F1", "F12"],
+      "rationale": "Allow-path execution with exact allocation binding: a single decision executes exactly the evaluated recipient+amount (F1); gasless allow binds the EIP-3009 signature to exactly the evaluated message (F12)."
+    },
+    {
+      "samedaydesk_case": "sequential_exceeds_cap",
+      "expected": "deny",
+      "control": "cumulative_limit",
+      "coverage": "partial",
+      "lumen_cases": ["F2", "F10", "F13"],
+      "rationale": "Deny mechanism proven by independent execution (policy denial fails before any wallet contact, F2/F13; second use of a consumed decision_ref denied with exactly one spend, F10). The specific cumulative-limit control is policy configuration, not a fixture-verified policy object: the fixture's policy provider is a fake. A stateful pass would add an explicit cumulative-limit policy case."
+    },
+    {
+      "samedaydesk_case": "signed_unbroadcast_counts",
+      "expected": "deny",
+      "control": "post_sign_accounting",
+      "coverage": "covered",
+      "lumen_cases": ["F12", "F14"],
+      "rationale": "Authority-bound consumption immediately before requesting the EIP-3009 signature: the decision_ref is consumed before signing, so a signature that is produced but not yet relayed still counts against the decision (F14: no second signature). A rejected signTypedData proves signing was attempted; the ref is conservatively retained. This is post-sign accounting at the authority level, verified against the verbatim implementation and re-confirmed by the maintainer at the diff level (osr21, 2026-08-26/27)."
+    },
+    {
+      "samedaydesk_case": "unrecognized_calldata",
+      "expected": "deny",
+      "control": "extraction_integrity",
+      "coverage": "gap",
+      "lumen_cases": [],
+      "rationale": "The fixture tests the action-provider surface (schemas, hashing, consumption, classification), not calldata/ABI extraction integrity. No independent-execution evidence exists for this control. Explicit gap: a stateful conformance pass for a wallet provider would need to add extraction-integrity cases."
+    },
+    {
+      "samedaydesk_case": "concurrent_exceeds_cap",
+      "expected": "deny",
+      "control": "concurrency",
+      "coverage": "covered",
+      "lumen_cases": ["F11"],
+      "rationale": "Concurrent duplicate submissions are blocked by the pending-set before any wallet contact; exactly one spend (F11). Sequential replay also denied (F10). Maintainer-confirmed at the diff level (osr21: 'pending continues to guard concurrent reuse until finally releases it')."
+    },
+    {
+      "samedaydesk_case": "missing_counter_reference",
+      "expected": "deny",
+      "control": "reference_integrity",
+      "coverage": "covered",
+      "lumen_cases": ["F3", "F6", "F16b"],
+      "rationale": "At the decision-ref level: a missing decision_ref fails before wallet contact (F3); action_context_hash and decision_ref recompute from stored fields alone and the join holds (F6, F16b). Caveat: the fixture's reference is a decision-ref join key, not a spend-counter; counters live in the policy fake. The reference-integrity property is proven at the authority-boundary level."
+    },
+    {
+      "samedaydesk_case": "application_serialized_concurrent_exceeds_cap",
+      "expected": "deny",
+      "control": "application_serialization",
+      "coverage": "gap",
+      "lumen_cases": [],
+      "rationale": "The fixture's pending-set is provider-level, process-local, in-memory (per osr21's packaging note: no cross-instance semantics). No application-level serialization layer is tested. Explicit gap and consistent with the fixture's own limits."
+    }
+  ],
+  "summary": {
+    "covered": 4,
+    "partial": 1,
+    "gap": 2,
+    "falsifiable_claim": "Lumen's layer-2 independent execution speaks the layer-1 stateful taxonomy for 4 of 7 controls (allow-path binding, post-sign accounting, concurrency, reference integrity), partially for cumulative limits, and not at all for extraction integrity and application serialization. A fixed-price stateful-conformance pass would scope to the 2 gaps plus the partial."
+  },
+  "provenance": {
+    "sources": [
+      "https://agents.samedaydesk.com/schemas/stateful-wallet-policy-conformance-v1.json",
+      "https://agents.samedaydesk.com/openapi.json",
+      "https://github.com/LumenFromTheFuture/basepay-conformance (dist/conformance-report.json, 19 cases)"
+    ],
+    "note": "Mapping is a property-level correspondence, not an endorsement that the two products test identical artifacts: layer 1 scores operator-supplied observations; layer 2 executes the verbatim implementation. The mapping makes the two-layer composition contract explicit so both authorities stay separate."
+  }
+}

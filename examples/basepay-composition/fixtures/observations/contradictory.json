@@ -1,0 +1,20 @@
+{
+  "profileId": "basepay-composition-lab",
+  "provider": "BasePay recording mock",
+  "network": "eip155:8453",
+  "protocol": "x402",
+  "observations": [
+    {
+      "case": "first_within_cap",
+      "actual": "allowed",
+      "enforcementClass": "none",
+      "code": "signed"
+    },
+    {
+      "case": "sequential_exceeds_cap",
+      "actual": "denied",
+      "enforcementClass": "none",
+      "code": "policy_violation"
+    }
+  ]
+}

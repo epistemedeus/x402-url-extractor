@@ -1,0 +1,50 @@
+{
+  "profileId": "basepay-composition-lab",
+  "provider": "BasePay recording mock",
+  "network": "eip155:8453",
+  "protocol": "x402",
+  "observations": [
+    {
+      "case": "first_within_cap",
+      "actual": "allowed",
+      "enforcementClass": "none",
+      "code": "signed"
+    },
+    {
+      "case": "sequential_exceeds_cap",
+      "actual": "denied",
+      "enforcementClass": "policy",
+      "code": "policy_violation"
+    },
+    {
+      "case": "signed_unbroadcast_counts",
+      "actual": "denied",
+      "enforcementClass": "policy",
+      "code": "policy_violation"
+    },
+    {
+      "case": "unrecognized_calldata",
+      "actual": "denied",
+      "enforcementClass": "policy",
+      "code": "policy_violation"
+    },
+    {
+      "case": "concurrent_exceeds_cap",
+      "actual": "denied",
+      "enforcementClass": "policy",
+      "code": "policy_violation"
+    },
+    {
+      "case": "missing_counter_reference",
+      "actual": "denied",
+      "enforcementClass": "policy",
+      "code": "policy_violation"
+    },
+    {
+      "case": "application_serialized_concurrent_exceeds_cap",
+      "actual": "denied",
+      "enforcementClass": "application",
+      "code": "application_guard"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "samedaydesk.basepay-composition.pointer.v1",
+  "published_result": {
+    "repo": "https://github.com/LumenFromTheFuture/basepay-conformance",
+    "path": "reports/conformance-result.json",
+    "tree": "94fa65d65c204c02f4af5a9bc9fd27225c688994",
+    "gitBlobSha": "719cca62633f659ce2306b98c3be84652bcd9140",
+    "fixtureCommitField": "8a46910ede4830de8481a3ae7f095e120a312d62"
+  },
+  "mapping": {
+    "repo": "https://github.com/LumenFromTheFuture/basepay-conformance",
+    "path": "reports/stateful-taxonomy-mapping-2026-09-05.json",
+    "tree": "94fa65d65c204c02f4af5a9bc9fd27225c688994",
+    "gitBlobSha": "b6b288603676f597b208d765876d3efda8939cae"
+  },
+  "independent_replay": {
+    "commit": "94fa65d65c204c02f4af5a9bc9fd27225c688994",
+    "command": "npm run conformance",
+    "fresh_result": "/tmp/s89/basepay-replay/dist/conformance-result.json",
+    "log": "/tmp/s89-replay-run2.txt",
+    "in_tree_copy": "fixtures/basepay/replay-conformance-result.json",
+    "checks_passed": 19,
+    "checks_total": 19,
+    "node": "v22.14.0"
+  }
+}
