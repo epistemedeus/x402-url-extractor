@@ -1,5 +1,4 @@
 import os
-import sys
 
 from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.routes import create_agent_card_routes, create_jsonrpc_routes
@@ -25,7 +24,7 @@ skill = AgentSkill(
     name="Discover SameDayDesk payment integrity",
     description=(
         "Returns the canonical SameDayDesk x402 and MPP action catalog, including "
-        "the one-cent seller-integrity audit and its exact invocation contract."
+        "the current-price seller-integrity audit and its exact invocation contract."
     ),
     tags=["x402", "payment integrity", "machine commerce"],
     examples=[
@@ -121,7 +120,7 @@ def load_production_app() -> Starlette:
     )
 
 
-if os.environ.get("AGENTVERSE_A2A_SKIP_PRODUCTION_APP") == "1" or "pytest" in sys.modules:
+if os.environ.get("AGENTVERSE_A2A_SKIP_PRODUCTION_APP") == "1":
     app = None
 else:
     app = load_production_app()
