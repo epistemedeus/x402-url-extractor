@@ -260,14 +260,18 @@ settings and `PAGE_CHANGE_HTTP_TIMEOUT_MS` can only tighten these ceilings.
 Static error and discovery documents are independently small, not comparison
 results. `GET /recipes/page-change/openapi.json` describes the route.
 
-`GET /recipes/page-change/health` exposes a syntactically valid configured
-`PAGE_CHANGE_SOURCE_COMMIT` (or `SOURCE_COMMIT`), not an independently verified
-deployment attestation. The deployer must bind it to the actual source revision.
-Optional `PAGE_CHANGE_XAGENT_SLUG` enables the exact-shape proof endpoint only
-when its commit matches health; mismatched `PAGE_CHANGE_XAGENT_COMMIT` is refused.
-The offline `scripts/page-change-xagent-sidecar.mjs` uses the clean pinned
-official validator. It does not create a contest package, rights attestation,
-live deployment, or submission. Product readiness is not submission readiness.
+`GET /recipes/page-change/health` reports a 40-character commit only when the
+host supplies one (`RAILWAY_GIT_COMMIT_SHA` on Railway git deploys, or
+`SOURCE_COMMIT`). `PAGE_CHANGE_SOURCE_COMMIT` is a local/test pin used only when
+those host values are absent. Disagreeing pins are not emitted. This is the
+host-injected revision, not an independently verified attestation. When a commit
+is available, health also sets `x-source-commit`. Optional
+`PAGE_CHANGE_XAGENT_SLUG` enables `/.well-known/xagent-verification.json` only
+when the slug is valid and the commit matches health; mismatched
+`PAGE_CHANGE_XAGENT_COMMIT` is refused. The offline
+`scripts/page-change-xagent-sidecar.mjs` uses the clean official validator pin
+`422f0aeb5520a3506b08b05cfefcb76c6cb786c0`. It does not sign rights, open a
+contest PR, or claim live proof. Product readiness is not submission readiness.
 
 ### Two existing public client deliveries
 
@@ -352,3 +356,50 @@ See [`results/example-result.json`](results/example-result.json) for a fixture
 purchase result with truthful unverified settlement, and
 [`results/attempt-receipt.sample.json`](results/attempt-receipt.sample.json) for
 the safer unsigned attempt-receipt shape (no secrets).
+
+
+### Exact source package and deployment binding
+
+Build only committed source, from the complete merchant checkout. The destination's
+parent must exist, its final directory must be fresh, and its basename must equal
+the slug. Substitute the exact reviewed or composed commit for `<commit>`:
+
+```sh
+node scripts/page-change-xagent-package.mjs --commit <commit> --out /tmp/samedaydesk-page-change
+XAGT_PLUGIN_ROOT=/path/to/clean/xagt-plugin node scripts/page-change-xagent-sidecar.mjs /tmp/samedaydesk-page-change
+```
+
+The official checkout must be clean at `422f0aeb5520a3506b08b05cfefcb76c6cb786c0`.
+The sidecar verifies the validator file bytes as well as its Git revision and
+runs offline only. A pass establishes baseline package structure, not rights,
+completeness, public Git availability, live deployment or acceptance. RIGHTS.md
+remains an unsigned template. Mutable worktree mode and a different review-commit
+label are rejected. SOURCE_MANIFEST.json records exact source hashes and omissions.
+
+The packet contains the offline page-change source and fixtures, including
+`vendor/change-digest`; run `node --test page-change-http.test.mjs` inside `source`.
+It deliberately excludes a public PEM key and a test containing a synthetic
+secret pattern under the official filters. Thus it is not a complete bootable
+merchant checkout and its full root test script is not the packet gate.
+`extract-batch-page-change.test.mjs` additionally needs installed dependencies
+(including zod); it is not a standard-library-only test. Deploy from the complete
+owning Git checkout, with its existing lockfile and public-key asset, rather than
+from the filtered packet. No generated packet is included in this feature branch.
+
+For a later operator deployment, preserve existing merchant configuration and
+prices. Set `PAGE_CHANGE_HTTP_ENABLED=1` and
+`PAGE_CHANGE_XAGENT_SLUG=samedaydesk-page-change`. Railway Git deployment should
+inject `RAILWAY_GIT_COMMIT_SHA`; other pipelines may inject `SOURCE_COMMIT` from
+the actual deployed Git revision. Those are host/deployer assertions, not signed
+attestations. Leave `PAGE_CHANGE_SOURCE_COMMIT` and `PAGE_CHANGE_XAGENT_COMMIT`
+unset unless needed for local tests; every supplied pin must agree. If root
+composes a new commit, rebuild the packet for that new exact commit before
+comparing metadata. Never paste an older review pin to make a check pass.
+
+After the operator's deployment, read `/recipes/page-change/health` and
+`/.well-known/xagent-verification.json` on the intended origin. Both must report
+the exact deployed commit, health must have status `ok`, proof must have exactly
+`schemaVersion: 1`, the chosen slug and that commit, and both `x-source-commit`
+headers must match their bodies. A missing, invalid or conflicting pin is a
+failed binding, not authorization to overwrite it. These are verification
+instructions only; this source review performs no deployment or online sidecar.

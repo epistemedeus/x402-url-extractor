@@ -16,6 +16,7 @@ import {
   pageChangeHttpLimits,
   pageChangeHttpOpenApiExample,
   reapPageChangeWorker,
+  resolveSourceCommit,
   runPageChangeCompare,
   xagentVerification,
   PageChangeHttpError,
@@ -77,6 +78,43 @@ test("health omits commit when disabled or provenance is missing/invalid", () =>
   });
   assert.equal(ok.commit, pin);
   assert.equal(ok.commitStatus, "available");
+  assert.equal(ok.commitSource, "page_change_source_commit");
+});
+
+test("health prefers host-supplied Railway commit over a local pin and refuses mismatches", () => {
+  const host = "b".repeat(40);
+  const local = "c".repeat(40);
+  const railway = resolveSourceCommit({
+    PAGE_CHANGE_HTTP_ENABLED: "1",
+    RAILWAY_GIT_COMMIT_SHA: host,
+  });
+  assert.equal(railway.commit, host);
+  assert.equal(railway.commitSource, "railway_git_commit_sha");
+  const sourceCommit = resolveSourceCommit({ SOURCE_COMMIT: host });
+  assert.equal(sourceCommit.commit, host);
+  assert.equal(sourceCommit.commitSource, "source_commit");
+  const agreed = pageChangeHttpHealth({
+    PAGE_CHANGE_HTTP_ENABLED: "1",
+    RAILWAY_GIT_COMMIT_SHA: host,
+    PAGE_CHANGE_SOURCE_COMMIT: host,
+  });
+  assert.equal(agreed.commit, host);
+  assert.equal(agreed.commitSource, "railway_git_commit_sha");
+  const mismatch = pageChangeHttpHealth({
+    PAGE_CHANGE_HTTP_ENABLED: "1",
+    RAILWAY_GIT_COMMIT_SHA: host,
+    PAGE_CHANGE_SOURCE_COMMIT: local,
+  });
+  assert.equal(mismatch.commit, null);
+  assert.equal(mismatch.commitStatus, "unavailable");
+  assert.equal(mismatch.reason, "source_commit_mismatch");
+  const hostClash = resolveSourceCommit({
+    RAILWAY_GIT_COMMIT_SHA: host,
+    SOURCE_COMMIT: local,
+  });
+  assert.equal(hostClash.reason, "source_commit_mismatch");
+  const invalidHost = resolveSourceCommit({ RAILWAY_GIT_COMMIT_SHA: "not-a-commit" });
+  assert.equal(invalidHost.reason, "invalid_source_commit");
 });
 
 test("xagent proof is unavailable unless slug and exact commit are configured", () => {
@@ -291,6 +329,12 @@ test("sidecar refuses to run without the official validator pin", () => {
   });
   assert.equal(result.status, 2);
   assert.match(result.stderr, /XAGT_PLUGIN_ROOT/);
+});
+
+test("sidecar pin matches the official PR45 validator gate", () => {
+  const text = readFileSync(join(root, "scripts/page-change-xagent-sidecar.mjs"), "utf8");
+  assert.match(text, /422f0aeb5520a3506b08b05cfefcb76c6cb786c0/);
+  assert.equal(text.includes("a9f5526f89ca67138174ff8f2f8aa63812683dd5"), false);
 });
 
 test("compact OpenAPI example is unpaid and not a catalog expansion", () => {
