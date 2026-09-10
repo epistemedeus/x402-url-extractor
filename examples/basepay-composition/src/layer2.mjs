@@ -246,7 +246,8 @@ export function loadLayer2({
       fail(`replay fixture.commit ${replayCommit} is not a pinned revision`, { kind: "version_change", layer: LAYER2_NAME });
     }
     const replayPass = replayChecks.passed === BASEPAY_CHECK_COUNT && replayChecks.failed === 0;
-    const independentTipReplay = replayCommit === BASEPAY_TIP_COMMIT && replayPass;
+    const pinnedReplayBytes = replayDigest.gitBlobSha === REPLAY_RESULT_GIT_BLOB;
+    const independentTipReplay = pinnedReplayBytes && replayCommit === BASEPAY_TIP_COMMIT && replayPass;
     replay = Object.freeze({
       loaded: true,
       path: replayResultPath,
@@ -254,11 +255,13 @@ export function loadLayer2({
       ...resultView(replayJson, replayDigest, replayChecks, replayCommit),
       replayPass,
       independentTipReplay,
+      evidenceOrigin: pinnedReplayBytes ? "pinned_worker_replay_artifact" : "caller_supplied_unverified_report",
+      executedByThisHelper: false,
       officialCommand: OFFICIAL_COMMAND,
-      log: REPLAY.log,
+      log: null,
     });
   } else if (requireReplay) {
-    fail("layer2 requires an independently executed replay result", { kind: "missing_replay", layer: LAYER2_NAME });
+    fail("layer2 requires a replay report", { kind: "missing_replay", layer: LAYER2_NAME });
   }
 
   const replayConfirms =

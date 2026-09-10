@@ -35,16 +35,18 @@ controls.
 ## Install
 
 ```bash
-git clone https://github.com/epistemedeus/x402-url-extractor.git
-cd x402-url-extractor/examples/basepay-composition
+git clone --branch codex/s93-basepay-final-20260910 https://github.com/epistemedeus/x402-url-extractor.git
+cd x402-url-extractor
+npm ci --ignore-scripts
+cd examples/basepay-composition
 ```
 
 Requires Node.js 22 or newer. From an existing repository checkout, start with
 `cd examples/basepay-composition` instead of cloning again.
 
-`agent-payment-policy@0.12.0` is declared for standalone installs. Running
-inside this merchant checkout uses the already-present parent
-`statefulWalletPolicyConformance` evaluator (which depends on that package).
+This example requires the merchant checkout and its root dependencies, including
+`agent-payment-policy@0.12.0` and Zod. It is not a standalone package: the evaluator
+is imported from the repository root.
 
 ## Copyable CLI
 
@@ -82,7 +84,7 @@ Optional independently executed result from a fresh `npm run conformance` run:
 
 ```bash
 node bin/cli.mjs --observations ./fixtures/observations/complete-safe.json \
-  --replay-result /tmp/s89/basepay-replay/dist/conformance-result.json
+  --replay-result /path/to/basepay-conformance/dist/conformance-result.json
 ```
 
 ## Tests
@@ -114,3 +116,19 @@ npm run test:basepay-composition
 - `src/canonical-checks.mjs` — 19 BasePay check IDs (harness identity, not unit-test count)
 - `fixtures/observations/` — complete-safe, missing, partial, contradictory, unknown, version-skew
 - `fixtures/basepay/` — pinned copies, blob digests, and pointers
+
+## Evidence origin and third-party material
+
+The default replay is the pinned S89 worker artifact, not a replay executed by
+this command. An external report remains `caller_supplied_unverified_report`
+unless its bytes match that pinned artifact; self-declared commit IDs and pass
+counts cannot authenticate execution. `--no-replay` yields author-only coverage.
+Layer-1 `providerNativeVerified` names observation-derived classifications, not
+signed or independently observed provider execution.
+
+The BasePay result and taxonomy JSON copies are attributed to
+LumenFromTheFuture/basepay-conformance at the pins above. Its pinned tree has no
+LICENSE file and its package declares no license. The author invited this
+composition in the linked comment, but this example does not relicense those
+third-party artifacts under MIT. General redistribution permission remains an
+explicit publication gate for the repository owner.

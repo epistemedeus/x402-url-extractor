@@ -27,6 +27,9 @@ export const LAYER1_AUTHORITY = Object.freeze({
     "providerNativeVerified is derived only from caller-supplied observations (deny + enforcementClass policy).",
 });
 
+const evaluatedOutputs = new WeakSet();
+export function isEvaluatedLayer1(value) { return evaluatedOutputs.has(value); }
+
 function looksLikeBasePayResult(value) {
   return Boolean(
     value
@@ -118,7 +121,7 @@ export function evaluateLayer1(input) {
 
   try {
     const evaluation = statefulWalletPolicyConformance(input);
-    return Object.freeze({
+    const output = Object.freeze({
       name: LAYER1_NAME,
       title: LAYER1_TITLE,
       authority: LAYER1_AUTHORITY,
@@ -130,6 +133,8 @@ export function evaluateLayer1(input) {
       providerNativeUnverified: Object.freeze([...(evaluation.providerNativeUnverified || [])]),
       applicationVerified: Object.freeze([...(evaluation.applicationVerified || [])]),
     });
+    evaluatedOutputs.add(output);
+    return output;
   } catch (error) {
     const message = String(error?.message || error);
     const kind = classifyLayer1Error(message);

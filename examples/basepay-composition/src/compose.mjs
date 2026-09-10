@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import { BasePayCompositionError, fail } from "./errors.mjs";
-import { evaluateLayer1 } from "./layer1.mjs";
+import { evaluateLayer1, isEvaluatedLayer1 } from "./layer1.mjs";
 import { loadLayer2 } from "./layer2.mjs";
 import {
   COMPOSITION_SCHEMA,
@@ -30,7 +30,7 @@ function emptyControls() {
  * replay 19/19 cannot add, copy, or upgrade those controls.
  */
 export function providerNativeVerifiedFromComposition(layer1, _layer2, { promoteFromLayer2 = false } = {}) {
-  const fromLayer1 = layer1?.status === "evaluated"
+  const fromLayer1 = isEvaluatedLayer1(layer1)
     ? Object.freeze([...(layer1.providerNativeVerified || [])])
     : emptyControls();
   if (promoteFromLayer2) {
@@ -96,7 +96,7 @@ export function compose({
     }),
     fullStatefulCoverage: false,
     statement:
-      "Mapping coverage 4 covered / 1 partial / 2 gaps is author+replay-confirmed at the pinned BasePay revision only. It is not full stateful coverage and is not live-wallet assurance.",
+      `Mapping coverage 4 covered / 1 partial / 2 gaps: ${layer2.mapping.confirmation} (${layer2.mapping.confirmationScope}). It is not full stateful coverage and is not live-wallet assurance.`,
   });
 
   if (
@@ -135,7 +135,7 @@ export function compose({
       liveWalletAssurance: false,
       recordingMockOnly: true,
       statement:
-        "Credential-free composition only. Layer 1 evaluates caller-supplied standardized stateful observations through SameDayDesk statefulWalletPolicyConformance. Layer 2 loads an independently executed exact-revision BasePay conformance result (recording mock, no chain, no paid provider API). The layers stay named and separate.",
+        "Credential-free composition only. Layer 1 evaluates caller-supplied standardized stateful observations through SameDayDesk statefulWalletPolicyConformance. Layer 2 loads a BasePay conformance report with explicit evidence origin; loading does not execute or authenticate a replay (recording mock, no chain, no paid provider API). The layers stay named and separate.",
     }),
   });
 }
