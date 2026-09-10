@@ -35,7 +35,7 @@ controls.
 ## Install
 
 ```bash
-git clone --branch codex/s98-basepay-delivery-20260910 https://github.com/epistemedeus/x402-url-extractor.git
+git clone https://github.com/epistemedeus/x402-url-extractor.git
 cd x402-url-extractor
 npm ci --ignore-scripts
 cd examples/basepay-composition
