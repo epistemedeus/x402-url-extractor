@@ -87,5 +87,5 @@ node src/cli.mjs run fixtures/positive-journey.json
 
 - Pin base: `1a23b648e3c5f90bc009accb85972e2db6e22051`
 - Feature commit: `3e9e91a51a3643a1acf29faaa494d438e79a6f16`
-- Tip SHA: `4debb1c7746088a9a6222f47b58a962c17b48243` (RESULT-note parent; frozen tip commit follows)
+- Tip SHA: `4a398ae8b5b32c02d6a0293a493743276e42e2c4`
 - Push: **succeeded** — `origin/codex/r2-record-kit-s155-20260910` (feature-branch only; ≠ Root publication)
