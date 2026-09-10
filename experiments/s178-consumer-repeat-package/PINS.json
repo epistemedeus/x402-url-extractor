@@ -41,7 +41,8 @@
   ],
   "kit": {
     "tarball": "dist/s178-consumer-repeat-kit.tgz",
-    "sha256": "311566fb7ee357aa7d27d1ecf0454717e78e5fd96845b8e1fcf29a11c435466f"
+    "sha256": "bdd693ab38e5d5b8092cd4333cec6bd2872207f6d8c64ccd6e4fb1b5a155cb70",
+    "rebuiltOn": "S182"
   },
   "nonClaims": [
     "No fabricated live sources or customers",

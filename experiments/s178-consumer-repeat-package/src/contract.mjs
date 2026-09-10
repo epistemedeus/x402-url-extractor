@@ -18,19 +18,23 @@ export const DECISIONS = Object.freeze([
 ]);
 
 export function normalizeDecision(raw, { schemaRejected = false } = {}) {
-  if (schemaRejected) return "invalid";
-  if (raw == null || raw === "") return "unknown";
-  const s = String(raw).toLowerCase().replace(/-/g, "_");
-  if (["pass", "ready", "ok", "matched", "agree", "aligned", "complete"].includes(s)) return "pass";
-  if (["partial", "partial_input", "partialinput"].includes(s)) return "partial";
-  if (["conflict", "conflicted", "disagree", "mismatch"].includes(s)) return "conflict";
-  if (["fail", "failed", "reject", "rejected", "negative"].includes(s)) return "fail";
-  if (["invalid", "invalid_input", "malformed", "schema_rejected"].includes(s)) return "invalid";
-  if (["unsupported", "unavailable", "unavailable_pending_heavy", "missing_dependency", "out_of_scope"].includes(s)) {
-    return "unsupported";
+  if (raw == null || raw === "") {
+    return schemaRejected ? "invalid" : "unknown";
   }
-  if (["unknown", "empty"].includes(s)) return "unknown";
-  return "unknown";
+  const s = String(raw).toLowerCase().replace(/-/g, "_");
+  let mapped = "unknown";
+  if (["pass", "ready", "ok", "matched", "agree", "aligned", "complete"].includes(s)) mapped = "pass";
+  else if (["partial", "partial_input", "partialinput"].includes(s)) mapped = "partial";
+  else if (["conflict", "conflicted", "disagree", "mismatch"].includes(s)) mapped = "conflict";
+  else if (["fail", "failed", "reject", "rejected", "negative"].includes(s)) mapped = "fail";
+  else if (["invalid", "invalid_input", "malformed", "schema_rejected"].includes(s)) mapped = "invalid";
+  else if (["unsupported", "unavailable", "unavailable_pending_heavy", "missing_dependency", "out_of_scope"].includes(s)) {
+    mapped = "unsupported";
+  } else if (["unknown", "empty"].includes(s)) mapped = "unknown";
+  // Schema rejection must never promote a false pass (S174). Preserve
+  // conflict/partial/fail/invalid as the business outcome.
+  if (schemaRejected && (mapped === "pass" || mapped === "unknown")) return "invalid";
+  return mapped;
 }
 
 export function createResult(fields = {}) {
@@ -53,6 +57,8 @@ export function createResult(fields = {}) {
     freshness: fields.freshness ?? null,
     repeatInput: fields.repeatInput ?? null,
     native: fields.native ?? null,
+    artifact: fields.artifact ?? null,
+    schemaRejected: Boolean(fields.schemaRejected),
     error: fields.error ?? null,
     claims: {
       inventsFacts: false,

@@ -125,6 +125,10 @@ copyTree(
 cpSync(join(PKG, "bin/s178-cli.mjs"), join(STAGE, "bin/s178-cli.mjs"));
 cpSync(join(PKG, "src/contract.mjs"), join(STAGE, "src/contract.mjs"));
 cpSync(join(PKG, "src/run-job.mjs"), join(STAGE, "src/run-job.mjs"));
+copyTree(join(PKG, "src/adapters"), join(STAGE, "src/adapters"));
+if (existsSync(join(PKG, "examples"))) {
+  copyTree(join(PKG, "examples"), join(STAGE, "examples"));
+}
 
 const catalogSrc = readFileSync(join(PKG, "src/catalog.mjs"), "utf8");
 const needle = "export function resolveLayout(options = {}) {\n  if (options.layout === \"kit\" || options.kitRoot) {";

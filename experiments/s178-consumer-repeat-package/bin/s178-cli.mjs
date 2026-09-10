@@ -15,7 +15,7 @@ function usage() {
 
 Commands:
   list
-  run <job> --in <path> --clock <ISO-8601> [--mode cli|import] [--json]
+  run <job> --in <path> --clock <ISO-8601> [--mode cli|import] [--type journey|package] [--json]
   example <job> [--kind positive|partial|negative|conflict]
   help
 
@@ -36,6 +36,7 @@ function parseArgs(argv) {
     clock: null,
     mode: "cli",
     kind: "positive",
+    type: null,
     json: true,
   };
   if (!argv.length) return out;
@@ -50,6 +51,7 @@ function parseArgs(argv) {
     else if (a === "--clock") out.clock = argv[++i];
     else if (a === "--mode") out.mode = argv[++i];
     else if (a === "--kind") out.kind = argv[++i];
+    else if (a === "--type") out.type = argv[++i];
     else if (a === "--json") out.json = true;
     else if (a === "--help" || a === "-h") out.cmd = "help";
     else throw new Error(`Unknown arg: ${a}`);
@@ -111,6 +113,7 @@ async function main(argv = process.argv.slice(2)) {
       inputPath: args.inPath,
       clock: args.clock,
       mode: args.mode === "import" ? "import" : "cli",
+      type: args.type,
     });
     console.log(JSON.stringify(result, null, 2));
     // Exit 0 for honest completed runs (including conflict/fail/partial).

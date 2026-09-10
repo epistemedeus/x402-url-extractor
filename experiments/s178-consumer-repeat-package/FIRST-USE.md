@@ -23,6 +23,8 @@ mkdir -p /tmp/s178-kit && tar -xzf dist/s178-consumer-repeat-kit.tgz -C /tmp/s17
 cd /tmp/s178-kit/s178-consumer-repeat-kit
 node bin/s178-cli.mjs list
 node bin/s178-cli.mjs run 07 --clock 2026-09-10T18:00:00.000Z
+node bin/s178-cli.mjs run 03 --clock 2026-09-10T18:00:00.000Z --mode import
+# decision=pass (table groups present; not an accepted-fail gate)
 ```
 
 ## Interpreting decisions
