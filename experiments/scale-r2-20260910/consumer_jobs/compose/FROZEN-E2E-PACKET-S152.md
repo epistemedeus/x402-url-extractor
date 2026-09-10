@@ -10,7 +10,7 @@ Frozen: 2026-09-10 (PT) · Schema package `x402.r2.consumer.customer_result_pack
 | Native 07 tip | `b1b0db112985ee06b625ef1bef8c8770e336ce25` (`codex/r2-consumer-jobs-07-20260910`) |
 | Native 08 base | `6d1376c8f1561114bf632bd437d54343b7d1894c` (`codex/r2-consumer-jobs-08-20260910`) |
 | Heavy S137 | `fa6878de125cfdcfd77f4b47037c88667090d293` (`resolvedInputCommit`) |
-| Compose HEAD | `1000ba71522502e68b0689fde9dcc4e1a700816e` (`codex/r2-consumer-s152-compose-20260910`) |
+| Compose HEAD | `da4650b7f75a63526da72fc227aad2eb2e779534` (`codex/r2-consumer-s152-compose-20260910`) |
 
 ## Inputs (fixture paths + clock)
 
