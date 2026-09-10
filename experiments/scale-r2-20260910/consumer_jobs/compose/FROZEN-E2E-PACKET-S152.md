@@ -11,7 +11,7 @@ Frozen: 2026-09-10 (PT) · Schema package `x402.r2.consumer.customer_result_pack
 | Native 08 base | `6d1376c8f1561114bf632bd437d54343b7d1894c` (`codex/r2-consumer-jobs-08-20260910`) |
 | Heavy S137 | `fa6878de125cfdcfd77f4b47037c88667090d293` (`resolvedInputCommit`) |
 | Compose feature (code) | `da4650b7f75a63526da72fc227aad2eb2e779534` |
-| Compose branch | `codex/r2-consumer-s152-compose-20260910` (tip recorded at push in report) |
+| Compose HEAD | `017f4b8bd961774f28127141f9c647916724532c` (`codex/r2-consumer-s152-compose-20260910`, pushed) |
 
 ## Inputs (fixture paths + clock)
 
