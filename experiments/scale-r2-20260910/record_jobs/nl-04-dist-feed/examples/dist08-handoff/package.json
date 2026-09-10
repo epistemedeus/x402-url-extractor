@@ -1,0 +1,9 @@
+{
+  "name": "nl-04-dist08-handoff-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "handoff": "node src/cli.mjs handoff",
+    "test": "node --test tests/*.test.mjs"
+  }
+}
