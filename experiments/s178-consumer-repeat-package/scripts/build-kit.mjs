@@ -144,11 +144,15 @@ for (const name of ["FIRST-USE.md", "README.md", "PINS.json"]) {
   if (existsSync(from)) cpSync(from, join(STAGE, name));
 }
 
+// The archive cannot contain its own digest. External SHA256.txt records its bytes.
+const packedPins = JSON.parse(readFileSync(join(STAGE, "PINS.json"), "utf8"));
+delete packedPins.kit.sha256;
+writeFileSync(join(STAGE, "PINS.json"), `${JSON.stringify(packedPins, null, 2)}\n`);
 writeKitPackageJson();
 writeKitIndex();
 
 mkdirSync(DIST, { recursive: true });
-const tar = spawnSync("tar", ["-czf", TARBALL, "-C", DIST, STAGE_NAME], { encoding: "utf8" });
+const tar = spawnSync("tar", ["--sort=name", "--mtime=@0", "--owner=0", "--group=0", "--numeric-owner", "--mode=u+rwX,go+rX,go-w", "-czf", TARBALL, "-C", DIST, STAGE_NAME], { encoding: "utf8" });
 if (tar.status !== 0) {
   process.stderr.write(tar.stderr || "tar failed\n");
   process.exit(tar.status ?? 1);

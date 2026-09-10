@@ -389,9 +389,10 @@ function addFinding(findings, finding) {
  * GitHub release object) into plane items + citations + repair codes.
  */
 export function normalizeReleaseBriefInput(input = {}) {
-  const issues = [];
+  const inputCheck=validateReleaseBriefInput(input);
+  const issues = [...inputCheck.issues];
   const repairs = [];
-  const sources = wrapRawSources(input);
+  const sources = inputCheck.ok ? wrapRawSources(input) : [];
   const planes = emptyPlanes();
   const citations = [];
   const citationIds = [];
@@ -400,7 +401,8 @@ export function normalizeReleaseBriefInput(input = {}) {
   let yanked = false;
 
   for (let index = 0; index < sources.length; index += 1) {
-    const source = sources[index];
+    const original = sources[index];
+    const source = isPlainObject(original) ? {...original,...(!Object.hasOwn(original,'identity') && original.fields?.identity ? {identity:original.fields.identity}:{}),...(!Object.hasOwn(original,'payload') && original.fields?.payload ? {payload:original.fields.payload}:{})} : original;
     if (!isPlainObject(source) || hasHostileKey(source)) {
       issues.push(makeIssue({
         kind: "invalid",
@@ -561,7 +563,9 @@ export function normalizeReleaseBriefInput(input = {}) {
   }
 
   return {
+    ok: !issues.some(isStrictInputReject),
     issues,
+    normalization: inputCheck.normalization || [],
     repairs,
     planes,
     citations,
@@ -764,36 +768,13 @@ export function buildReleaseBrief(input = {}) {
     };
   }
 
+  const inputCheck = validateReleaseBriefInput(input);
   const clock = input.clock;
   const evidenceClass = input.evidenceClass;
-  if (clock == null || clock === "" || clock === "now") {
-    return {
-      ok: false,
-      decision: "fail",
-      issues: [makeIssue({
-        kind: "invalid",
-        code: clock === "now" ? "invalid_clock" : "missing_clock",
-        instancePath: "/clock",
-        message: "operator clock is required; do not invent it",
-      })],
-      brief: null,
-    };
-  }
-  if (!EVIDENCE_CLASSES.includes(evidenceClass)) {
-    return {
-      ok: false,
-      decision: "fail",
-      issues: [makeIssue({
-        kind: "invalid",
-        code: "invalid_evidence_class",
-        instancePath: "/evidenceClass",
-        message: `evidenceClass must be one of ${EVIDENCE_CLASSES.join("|")}`,
-      })],
-      brief: null,
-    };
+  if (inputCheck.issues.some(issue => ["/clock", "/evidenceClass"].includes(issue.instancePath))) {
+    return {ok: false, decision: "fail", issues: inputCheck.issues, brief: null};
   }
 
-  const inputCheck = validateReleaseBriefInput(input);
   const normalized = normalizeReleaseBriefInput(input);
   const decided = decide({
     planes: normalized.planes,
@@ -803,7 +784,7 @@ export function buildReleaseBrief(input = {}) {
     testedConclusions: normalized.testedConclusions,
     sourceCount: normalized.sourceCount,
     citations: normalized.citations,
-    inputIssues: inputCheck.issues || [],
+    inputIssues: normalized.issues || [],
   });
 
   for (const finding of decided.findings) {
@@ -811,8 +792,8 @@ export function buildReleaseBrief(input = {}) {
       if (!normalized.citations.some((row) => row.id === id)) {
         normalized.citations.push({
           id,
-          path: null,
-          note: "operator-supplied input",
+          path: "synthetic://operator-input",
+          note: "operator-supplied input; local diagnostic reference, not fetched evidence",
         });
       }
     }
@@ -825,7 +806,7 @@ export function buildReleaseBrief(input = {}) {
       artifactKind: input.artifactKind || ARTIFACT_KIND,
       clock,
       evidenceClass,
-      sources: wrapRawSources(input).map((source) => ({
+      sources: wrapRawSources(input).filter(isPlainObject).map((source) => ({
         id: source.id ?? null,
         kind: source.kind ?? null,
         plane: source.plane ?? source.lane ?? null,
@@ -840,7 +821,7 @@ export function buildReleaseBrief(input = {}) {
     return {
       ok: false,
       decision: "fail",
-      issues: [makeIssue({
+      issues: [...inputCheck.issues, makeIssue({
         kind: "invalid",
         code: "envelope_error",
         instancePath: "",
@@ -876,7 +857,7 @@ export function buildReleaseBrief(input = {}) {
     alignment,
   };
 
-  const malformed = (inputCheck.issues || []).some(isStrictInputReject);
+  const malformed = normalized.issues.some(isStrictInputReject);
   const checked = validateReleaseBrief(brief);
   let decision = decided.decision;
   if (malformed && decision === "pass") decision = "fail";
@@ -886,7 +867,8 @@ export function buildReleaseBrief(input = {}) {
     ok: !malformed && checked.ok,
     decision,
     impliedDecision: checked.impliedDecision,
-    issues: [...(inputCheck.issues || []), ...normalized.issues, ...checked.issues],
+    issues: [...normalized.issues, ...checked.issues],
+    normalization: normalized.normalization,
     brief,
     repairs: normalized.repairs,
   };

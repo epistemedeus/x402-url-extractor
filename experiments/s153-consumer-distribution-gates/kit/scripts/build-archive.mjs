@@ -162,10 +162,13 @@ copyTree(join(S137, "src"), join(STAGE, "src"));
 writeArchivePackageJson();
 writeArchiveShims();
 writeArchiveCli();
+mkdirSync(join(STAGE, "test"), { recursive: true });
+copyFileSync(join(S137, "test/release-brief-input-boundary.test.mjs"), join(STAGE, "test/release-brief-input-boundary.test.mjs"));
 
 const tar = spawnSync(
   "tar",
   [
+    "--sort=name", "--mtime=@0", "--owner=0", "--group=0", "--numeric-owner", "--mode=u+rwX,go+rX,go-w",
     "-czf",
     TARBALL,
     "-C",

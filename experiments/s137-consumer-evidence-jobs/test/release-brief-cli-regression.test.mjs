@@ -139,9 +139,10 @@ test("schema rejection must not promote to pass (pickDecision contract)", async 
     }),
   );
   try {
-    const packet = parseStdout(
-      runCli(["analyze", "release-brief", "--in", bad, "--clock", CLOCK]),
-    );
+    const proc = runCli(["analyze", "release-brief", "--in", bad, "--clock", CLOCK]);
+    assert.equal(proc.status, 1);
+    const packet = JSON.parse(proc.stdout);
+    assert.equal(packet.ok, false);
     assert.notEqual(packet.decision, "pass");
     assert.ok(["fail", "unknown", "partial", "conflict"].includes(packet.decision));
   } finally {

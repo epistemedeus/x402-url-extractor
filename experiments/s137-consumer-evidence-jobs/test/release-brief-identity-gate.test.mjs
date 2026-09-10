@@ -517,9 +517,8 @@ test("S194 R2 API+CLI: genuine item bridge still passes", () => {
 test("S194 convenience: missing source.kind still infers and may pass", () => {
   const input = missingKindConvenience();
   const checked = validateReleaseBriefInput(input);
-  assert.equal(checked.ok, false);
-  assert.ok(checked.issues.every((issue) => issue.code === "unknown_source_kind"));
-  assert.ok(checked.issues.every((issue) => !issue.params?.kind));
+  assert.equal(checked.ok, true);
+  assert.ok(checked.normalization.some((issue) => issue.code === "unknown_source_kind"));
   const got = buildReleaseBrief(input);
   assert.equal(got.ok, true);
   assert.equal(got.decision, "pass");
@@ -539,8 +538,8 @@ test("S194 convenience: missing identity.role is filled and may pass", () => {
 test("S194 convenience: raw lane documents without sources[] may still pass", () => {
   const input = rawLaneDocuments();
   const checked = validateReleaseBriefInput(input);
-  assert.equal(checked.ok, false);
-  assert.ok(checked.issues.some((issue) => issue.code === "missing_sources"));
+  assert.equal(checked.ok, true);
+  assert.ok(checked.normalization.some((issue) => issue.code === "missing_sources"));
   const got = buildReleaseBrief(input);
   assert.equal(got.decision, "pass");
   assert.equal(got.brief.decision, "pass");

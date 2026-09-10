@@ -674,7 +674,7 @@ async function runAnalyze(artifact, input) {
 
   if (schemaResult && schemaIsRejected(schemaResult)) {
     const issueText = Array.isArray(schemaResult.issues)
-      ? schemaResult.issues.map(String).join("; ")
+      ? schemaResult.issues.map(issue => typeof issue === "string" ? issue : `${issue.code} at ${issue.instancePath}: ${issue.message}`).join("; ")
       : "validateInput returned ok:false";
     const citeId = sources[0]?.id || "cli:packet-schema";
     findings.push({
@@ -699,7 +699,7 @@ async function runAnalyze(artifact, input) {
         evidenceClass: ctx.evidenceClass,
         ...(inputRoot ? { root: inputRoot } : {}),
       };
-      if (typeof mod.transformFixtureCase === "function" && caseId) {
+      if (artifact.id !== "release-brief" && typeof mod.transformFixtureCase === "function" && caseId) {
         try {
           transformResult = await mod.transformFixtureCase(caseId, {
             clock: ctx.clock,
@@ -787,6 +787,14 @@ async function runAnalyze(artifact, input) {
   });
 
   if (error) packet.ok = false;
+  if (artifact.id === "release-brief") {
+    packet.validation = schemaResult;
+    packet.issues = transformResult?.issues ?? schemaResult?.issues ?? [];
+    if (schemaIsRejected(schemaResult) || transformResult?.ok === false) {
+      packet.ok = false;
+      packet.decision = "fail";
+    }
+  }
   return packet;
 }
 
@@ -950,17 +958,25 @@ function isSyntheticCaseWrapper(value) {
     nested.newDocs != null;
   // Only unwrap when the outer object is a case envelope, not a schema input that
   // happens to contain an `input` field.
-  if (Array.isArray(value.sources)) return false;
+  if (Object.hasOwn(value, "sources")) return false;
   return wrapperMarked && nestedLooksLikeInput;
 }
 
 function unwrapSyntheticCaseInput(value, ctx) {
   const nested = { ...value.input };
-  if (ctx?.clock) nested.clock = ctx.clock;
-  if (ctx?.evidenceClass && nested.evidenceClass == null) {
+  if (ctx?.clock && !Object.hasOwn(nested, "clock")) nested.clock = ctx.clock;
+  if (ctx?.evidenceClass && !Object.hasOwn(nested, "evidenceClass")) {
     nested.evidenceClass = ctx.evidenceClass;
   }
   return nested;
+}
+
+function withReleaseClock(value, artifact, ctx) {
+  if (artifact.id === "release-brief" && value && typeof value === "object" &&
+      !Array.isArray(value) && !Object.hasOwn(value, "clock")) {
+    return { ...value, clock: ctx.clock };
+  }
+  return value;
 }
 
 function prepareTransformArgument(artifact, loadedInput, ctx) {
@@ -977,15 +993,16 @@ function prepareTransformArgument(artifact, loadedInput, ctx) {
       if (preferred?.json) {
         return isSyntheticCaseWrapper(preferred.json)
           ? unwrapSyntheticCaseInput(preferred.json, ctx)
-          : preferred.json;
+          : withReleaseClock(preferred.json, artifact, ctx);
       }
     }
     // Synthetic case envelopes nest schema-shaped `.input`. Passing the envelope to
     // release-brief previously treated lane path strings as empty agreeing identities
     // and emitted decision=pass beside cli.schema-rejected. Unwrap to the real input.
     if (isSyntheticCaseWrapper(value)) return unwrapSyntheticCaseInput(value, ctx);
-    return value;
+    return withReleaseClock(value, artifact, ctx);
   }
+  if (artifact.id === "release-brief") return value;
   if (typeof loadedInput?.text === "string" && loadedInput.text.length > 0) {
     return {
       clock: ctx.clock,

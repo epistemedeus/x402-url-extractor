@@ -292,7 +292,7 @@ function validateIdentity(identity, plane, issues, instancePath) {
     return;
   }
   const expectedRole = IDENTITY_ROLES[plane];
-  if (identity.role && identity.role !== expectedRole) {
+  if (owns(identity,"role") && (expectedRole ? identity.role !== expectedRole : !Object.values(IDENTITY_ROLES).includes(identity.role))) {
     issues.push(makeIssue({
       kind: "invalid",
       code: "identity_role_mismatch",
@@ -302,7 +302,7 @@ function validateIdentity(identity, plane, issues, instancePath) {
     }));
   }
   for (const key of ["version", "tag", "commitSha"]) {
-    if (identity[key] != null && typeof identity[key] !== "string") {
+    if (owns(identity,key) && typeof identity[key] !== "string") {
       issues.push(makeIssue({
         kind: "invalid",
         code: "invalid_identity_field",
@@ -326,7 +326,7 @@ function validatePayload(payload, plane, issues, instancePath) {
     }
     return;
   }
-  const forbidden = CROSS_PLANE_PAYLOAD[plane];
+  const forbidden = CROSS_PLANE_PAYLOAD[plane] || new Set();
   for (const key of Object.keys(payload)) {
     if (forbidden.has(key)) {
       issues.push(makeIssue({
@@ -356,7 +356,7 @@ function sourcePlane(source) {
 
 function validateAtomicSource(source, issues, instancePath) {
   const spec = SOURCE_KINDS[source.kind];
-  const plane = sourcePlane(source);
+  const plane = sourcePlane(source) ?? spec?.plane;
   if (!spec) {
     issues.push(makeIssue({
       kind: "invalid",
@@ -367,7 +367,7 @@ function validateAtomicSource(source, issues, instancePath) {
     }));
     return;
   }
-  if (plane !== spec.plane) {
+  if (plane != null && plane !== spec.plane) {
     issues.push(makeIssue({
       kind: "invalid",
       code: "kind_plane_mismatch",
@@ -409,7 +409,7 @@ function validateCompoundSource(source, issues, instancePath) {
       message: "github-release.split.announced is required",
     }));
   } else {
-    validateIdentity(announced.identity, "announced", issues, `${instancePath}/split/announced/identity`);
+    validateDeclarations(announced, "announced", issues, `${instancePath}/split/announced`);
     validatePayload(announced.payload, "announced", issues, `${instancePath}/split/announced/payload`);
   }
   const shipped = split.shipped;
@@ -422,7 +422,7 @@ function validateCompoundSource(source, issues, instancePath) {
         message: "github-release.split.shipped must be a plain object when present",
       }));
     } else {
-      validateIdentity(shipped.identity, "shipped", issues, `${instancePath}/split/shipped/identity`);
+      validateDeclarations(shipped, "shipped", issues, `${instancePath}/split/shipped`);
       validatePayload(shipped.payload, "shipped", issues, `${instancePath}/split/shipped/payload`);
     }
   }
@@ -462,28 +462,42 @@ export function isExplicitSourceKind(kind) {
 export function isKnownSourceKind(kind) {
   if (!isExplicitSourceKind(kind)) return false;
   const trimmed = kind.trim();
-  return Boolean(SOURCE_KINDS[trimmed]) || isCompoundKind(trimmed) || trimmed === "notice";
+  return Object.hasOwn(SOURCE_KINDS, trimmed) || isCompoundKind(trimmed) || trimmed === "notice";
 }
 
-/**
- * Strict source-field rejects that must not launder into pass / ok:true.
- * Missing kind/role/locator on convenience raw docs is not strict.
+/** Only explicitly documented omissions are normalization notices.
+ * Every validation error rejects; new error codes cannot silently become repairs.
  */
 export function isStrictInputReject(issue) {
-  if (!issue || typeof issue !== "object") return false;
-  switch (issue.code) {
-    case "identity_role_mismatch":
-    case "invalid_identity_field":
-    case "invalid_identity":
-    case "unexpected_schema":
-      return true;
-    case "unknown_source_kind":
-      return isExplicitSourceKind(issue.params?.kind) && !isKnownSourceKind(issue.params.kind);
-    case "missing_locator":
-      return isExplicitSourceKind(issue.params?.kind);
-    default:
-      return false;
+  return Boolean(issue && issue.kind === "invalid");
+}
+
+function normalization(issues, code, instancePath, message) {
+  issues.push(makeIssue({kind:"normalization",code,instancePath,message}));
+}
+
+const owns = (record,key) => Object.prototype.hasOwnProperty.call(record,key);
+
+function validateDeclarations(record, plane, issues, at) {
+  for(const key of ['identity','payload','fields','doc']) {
+    if(!owns(record,key)) continue;
+    const value=record[key];
+    if(!isPlainObject(value)) {
+      issues.push(makeIssue({kind:'invalid',code:`invalid_${key}`,instancePath:`${at}/${key}`,message:`${key} must be a plain object when supplied`}));
+    } else {
+      hasHostileKey(value,issues,`${at}/${key}`);
+      if(key==='fields'||key==='doc') validateDeclarations(value,plane,issues,`${at}/${key}`);
+    }
   }
+  for(const key of ['plane','lane']) {
+    if(owns(record,key) && !PLANES.includes(record[key])) issues.push(makeIssue({kind:'invalid',code:'invalid_plane',instancePath:`${at}/${key}`,message:`${key} must be one of ${PLANES.join('|')}`,params:{plane:record[key],explicit:true}}));
+  }
+  if(owns(record,'plane') && owns(record,'lane') && record.plane!==record.lane) issues.push(makeIssue({kind:'invalid',code:'kind_plane_mismatch',instancePath:`${at}/lane`,message:'plane and lane declarations disagree'}));
+  if(owns(record,'kind') && !isKnownSourceKind(record.kind)) issues.push(makeIssue({kind:'invalid',code:'unknown_source_kind',instancePath:`${at}/kind`,message:'unknown source kind',params:{kind:record.kind}}));
+  for(const key of ['path','url']) if(owns(record,key) && record[key]!==null && (typeof record[key]!=='string'||!record[key].trim())) issues.push(makeIssue({kind:'invalid',code:'invalid_locator',instancePath:`${at}/${key}`,message:`${key} must be a nonempty string or null`}));
+  if (kindPlane(record.kind) && plane && kindPlane(record.kind) !== plane) issues.push(makeIssue({kind:'invalid',code:'kind_plane_mismatch',instancePath:`${at}/kind`,message:'kind and containing plane disagree'}));
+  if(owns(record,'identity')) validateIdentity(record.identity,plane,issues,`${at}/identity`);
+  if(owns(record,'payload') && isPlainObject(record.payload) && PLANES.includes(plane)) validatePayload(record.payload,plane,issues,`${at}/payload`);
 }
 
 function hasIdentity(identity) {
@@ -607,8 +621,25 @@ export function assessIdentityAlignment(briefOrPlanes) {
   };
 }
 
+function validateProvenance(source, issues, instancePath, evidenceClass) {
+  const shaRequired = evidenceClass === "fixture" || evidenceClass === "live-capture";
+  for(const key of ['contentSha256','sha256']) if(owns(source,key)) requireSha256(source[key],issues,`${instancePath}/${key}`,{required:true});
+  if(!owns(source,'contentSha256') && !owns(source,'sha256')) {
+    if(shaRequired) requireSha256(undefined,issues,`${instancePath}/contentSha256`,{required:true});
+  }
+  if (source.retrievedAt != null) requireClock(source.retrievedAt, issues, `${instancePath}/retrievedAt`);
+  if (source.licenseNote != null && typeof source.licenseNote !== "string") {
+    issues.push(makeIssue({
+      kind: "invalid",
+      code: "invalid_license_note",
+      instancePath: `${instancePath}/licenseNote`,
+      message: "licenseNote must be a string",
+    }));
+  }
+}
+
 function validateSource(source, index, issues, evidenceClass) {
-  const instancePath = `/sources/${index}`;
+  const instancePath = typeof index === "string" ? index : `/sources/${index}`;
   if (!isPlainObject(source) || hasHostileKey(source, issues, instancePath)) {
     if (!isPlainObject(source)) {
       issues.push(makeIssue({
@@ -620,7 +651,9 @@ function validateSource(source, index, issues, evidenceClass) {
     }
     return;
   }
-  if (typeof source.id !== "string" || !source.id || source.id.length > MAX_ID) {
+  validateDeclarations(source, sourcePlane(source) ?? kindPlane(source.kind), issues, instancePath);
+  if(!owns(source,'id')) normalization(issues,'invalid_source_id',`${instancePath}/id`,'absent id receives a deterministic local id');
+  else if (typeof source.id !== "string" || !source.id.trim() || source.id.length > MAX_ID) {
     issues.push(makeIssue({
       kind: "invalid",
       code: "invalid_source_id",
@@ -639,33 +672,19 @@ function validateSource(source, index, issues, evidenceClass) {
       }));
     }
     validateCompoundSource(source, issues, instancePath);
-  } else {
-    const plane = sourcePlane(source);
+  } else if(source.kind !== 'notice') {
+    const plane = sourcePlane(source) ?? kindPlane(source.kind);
     if (!PLANES.includes(plane)) {
-      issues.push(makeIssue({
-        kind: "invalid",
-        code: "invalid_plane",
-        instancePath: `${instancePath}/plane`,
-        message: `plane must be one of ${PLANES.join("|")} (lane is an alias)`,
-        params: { plane },
-      }));
+      if(!owns(source,'plane') && !owns(source,'lane')) normalization(issues,'invalid_plane',`${instancePath}/plane`,'absent plane may be inferred from document kind');
     } else {
-      validateAtomicSource(source, issues, instancePath);
+      if(!owns(source,'kind')) normalization(issues,'unknown_source_kind',`${instancePath}/kind`,'absent kind may be inferred from the document');
+      else validateAtomicSource(source, issues, instancePath);
     }
   }
   const explicitKind = typeof source.kind === "string" ? source.kind.trim() : "";
-  requireLocator(source, issues, instancePath, explicitKind ? { kind: explicitKind } : {});
-  const shaRequired = evidenceClass === "fixture" || evidenceClass === "live-capture";
-  requireSha256(source.contentSha256 ?? source.sha256, issues, `${instancePath}/contentSha256`, { required: shaRequired });
-  if (source.retrievedAt != null) requireClock(source.retrievedAt, issues, `${instancePath}/retrievedAt`);
-  if (source.licenseNote != null && typeof source.licenseNote !== "string") {
-    issues.push(makeIssue({
-      kind: "invalid",
-      code: "invalid_license_note",
-      instancePath: `${instancePath}/licenseNote`,
-      message: "licenseNote must be a string",
-    }));
-  }
+  if(!source.path && !source.url && !owns(source,'kind')) normalization(issues,'missing_locator',instancePath,'absent convenience locator receives a synthetic local citation');
+  else requireLocator(source, issues, instancePath, explicitKind ? {kind:explicitKind}:{});
+  validateProvenance(source, issues, instancePath, evidenceClass);
 }
 
 /**
@@ -685,7 +704,7 @@ export function validateReleaseBriefInput(input) {
     }
     return finishValidation(issues);
   }
-  if (input.schema != null && input.schema !== INPUT_SCHEMA) {
+  if (owns(input,"schema") && input.schema !== INPUT_SCHEMA) {
     issues.push(makeIssue({
       kind: "invalid",
       code: "unexpected_schema",
@@ -708,13 +727,24 @@ export function validateReleaseBriefInput(input) {
       hasHostileKey(input.subject, issues, "/subject");
     }
   }
-  if (!Array.isArray(input.sources)) {
-    issues.push(makeIssue({
-      kind: "invalid",
-      code: "missing_sources",
-      instancePath: "/sources",
-      message: "sources array is required",
-    }));
+  if (!owns(input,'sources')) {
+    normalization(issues,'missing_sources','/sources','absent sources[] may use raw lane documents');
+    if(owns(input,'lanes') && !isPlainObject(input.lanes)) issues.push(makeIssue({kind:'invalid',code:'invalid_sources',instancePath:'/lanes',message:'lanes must be an object'}));
+    for(const plane of PLANES) for(const [record,at] of [[input,`/${plane}`],[input.lanes,`/lanes/${plane}`]]) {
+      if(!isPlainObject(record)||!owns(record,plane))continue;
+      const doc=record[plane];
+      if(!isPlainObject(doc)){issues.push(makeIssue({kind:'invalid',code:'invalid_source',instancePath:at,message:'raw lane must be an object'}));continue;}
+      validateDeclarations(doc,plane,issues,at);
+      validateProvenance(doc,issues,at,input.evidenceClass);
+      if(owns(doc,'id') && (typeof doc.id!=='string'||!doc.id.trim()))issues.push(makeIssue({kind:'invalid',code:'invalid_source_id',instancePath:`${at}/id`,message:'source.id must be a nonempty string'}));
+    }
+    for (const key of ['githubRelease','notice']) if (owns(input,key)) {
+      if (!isPlainObject(input[key])) issues.push(makeIssue({kind:'invalid',code:'invalid_source',instancePath:`/${key}`,message:`${key} must be an object`}));
+      else validateDeclarations(input[key], key === 'githubRelease' ? 'announced' : null, issues, `/${key}`);
+    }
+    if (owns(input,'githubRelease')) validateProvenance(input,issues,'',input.evidenceClass);
+  } else if (!Array.isArray(input.sources)) {
+    issues.push(makeIssue({kind:'invalid',code:'missing_sources',instancePath:'/sources',message:'supplied sources must be an array'}));
   } else if (input.sources.length > MAX_SOURCES) {
     issues.push(makeIssue({
       kind: "invalid",
@@ -741,7 +771,8 @@ export function validateReleaseBriefInput(input) {
       }
     }
   }
-  return finishValidation(issues);
+  const errors=issues.filter(isStrictInputReject);
+  return {...finishValidation(errors), normalization:issues.filter(i=>i.kind==='normalization')};
 }
 
 function finishValidation(issues, extra = {}) {
@@ -861,6 +892,7 @@ function identityToken(identity) {
 }
 
 export function impliedDecision(brief) {
+  if (brief?.findings?.some(f=>f?.status === "fail")) return "fail";
   if (!brief || typeof brief !== "object") return "unknown";
   const assessment = assessIdentityAlignment(brief);
   if (assessment.conflict) return "conflict";
@@ -1090,13 +1122,13 @@ export function validateReleaseBrief(brief) {
   }
   if (brief.decision === "fail") {
     const hasFail = Array.isArray(brief.findings)
-      && brief.findings.some((finding) => finding && FAIL_FINDING_CODES.includes(finding.code));
+      && brief.findings.some((finding) => finding && finding.status === "fail");
     if (!hasFail) {
       issues.push(makeIssue({
         kind: "invalid",
         code: "decision_mismatch",
         instancePath: "/decision",
-        message: `decision fail requires a finding code in ${FAIL_FINDING_CODES.join("|")}`,
+        message: "decision fail requires a fail finding",
       }));
     }
   }

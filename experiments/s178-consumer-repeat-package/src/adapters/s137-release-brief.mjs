@@ -11,6 +11,7 @@ function unwrap(raw, clock) {
   if (
     raw &&
     typeof raw === "object" &&
+    !Object.hasOwn(raw, "sources") &&
     raw.input &&
     typeof raw.input === "object" &&
     (raw.schema === "s137.release-brief.synthetic-case.v1" ||
@@ -21,7 +22,7 @@ function unwrap(raw, clock) {
     input = { ...raw.input };
   }
   if (clock && input && typeof input === "object" && !Array.isArray(input)) {
-    input = { ...input, clock: input.clock || clock };
+    input = { ...input, clock: Object.hasOwn(input, "clock") ? input.clock : clock };
   }
   return input;
 }
@@ -86,6 +87,10 @@ export async function execute({ job, inputPath, clock, mode }) {
     mode,
     inputPath,
     native,
+    ok: !schemaRejected && native?.ok !== false,
+    error: schemaRejected || native?.ok === false
+      ? { code: "invalid_input", issues: schemaError?.issues ?? native?.issues ?? [] }
+      : null,
     decision: schemaRejected && decision === "pass" ? "invalid" : decision,
     schemaRejected,
     schemaError,
