@@ -1,7 +1,7 @@
 # S174 consumer final CLI fix
 
 Base: S153 export `d520699802622a715cde1d894cc5547c42b2dca7` (kit pin lineage `fa6878de125cfdcfd77f4b47037c88667090d293`).
-Branch: `codex/s174-consumer-final-cli-fix-20260910` @ `051ca6c32b50d63ac088b76307d72ae97a80a0b2`.
+Branch:  @ .
 Writable: `experiments/s137-consumer-evidence-jobs/**`, `experiments/s153-consumer-distribution-gates/**`.
 
 ## Defect (Bot Useful recheck evidence)
