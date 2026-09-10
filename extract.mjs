@@ -17,7 +17,10 @@ import {
   concatBytes,
   resolveExtractFetch,
   resolveExtractTimeoutMs,
+  abortableRead,
 } from "./extract-capture.mjs";
+
+import { assertPublicHttpUrl } from "./extract-batch-c1/url-guard.mjs";
 
 const UA = EXTRACT_UA;
 const MAX_BYTES = EXTRACT_MAX_BODY_BYTES;
@@ -97,14 +100,33 @@ async function fetchWithGuards(url) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const res = await fetchImpl(url, { headers: { 'user-agent': UA, accept: 'text/html,*/*' }, redirect: 'follow', signal: ctrl.signal });
+    let current = assertPublicHttpUrl(url);
+    let res;
+    for (let hop = 0; hop <= 3; hop++) {
+      res = await abortableRead(fetchImpl(current.href, {
+        headers: { 'user-agent': UA, accept: 'text/html,*/*', 'accept-encoding': 'identity' },
+        redirect: 'manual', signal: ctrl.signal,
+      }), ctrl.signal);
+      if (![301, 302, 303, 307, 308].includes(res.status)) break;
+      // Never let a redirect reach an unchecked address; DNS is pinned by publicFetch.
+      await abortableRead(Promise.resolve(res.body?.cancel?.()), ctrl.signal);
+      const location = res.headers.get('location');
+      if (!location || hop === 3) throw Object.assign(new Error('source redirect limit or missing Location'), { code: 'redirect_error' });
+      current = assertPublicHttpUrl(new URL(location, current).href);
+    }
+    if (res.url) assertPublicHttpUrl(res.url);
+    res = { status: res.status, headers: res.headers, body: res.body, url: res.url || current.href };
+    const encoding = res.headers.get('content-encoding');
+    if (encoding && encoding.toLowerCase() !== 'identity') {
+      throw Object.assign(new Error('source ignored identity encoding; compressed body unsupported'), { code: 'unsupported_encoding' });
+    }
     const reader = res.body?.getReader?.();
     const chunks = [];
     let bytes = 0;
     let bodyTruncated = false;
     if (reader) {
       for (;;) {
-        const { done, value } = await reader.read();
+        const { done, value } = await abortableRead(reader.read(), ctrl.signal);
         if (done) break;
         if (!value) continue;
         const remaining = MAX_BYTES - bytes;
@@ -112,27 +134,16 @@ async function fetchWithGuards(url) {
           if (remaining > 0) chunks.push(value.subarray(0, remaining));
           bytes += Math.max(0, remaining);
           bodyTruncated = true;
-          await reader.cancel().catch(() => {});
+          await abortableRead(Promise.resolve(reader.cancel?.()), ctrl.signal);
           break;
         }
         chunks.push(value);
         bytes += value.byteLength;
-        if (bytes >= MAX_BYTES) {
-          bodyTruncated = true;
-          await reader.cancel().catch(() => {});
-          break;
-        }
+
       }
     } else {
-      const htmlFallback = await res.text();
-      const encoded = new TextEncoder().encode(htmlFallback);
-      if (encoded.byteLength > MAX_BYTES) {
-        chunks.push(encoded.subarray(0, MAX_BYTES));
-        bytes = MAX_BYTES;
-        bodyTruncated = true;
-      } else {
-        chunks.push(encoded);
-        bytes = encoded.byteLength;
+      if (res.status !== 204 && res.status !== 205 && res.status !== 304) {
+        throw Object.assign(new Error('streaming source response required'), { code: 'invalid_response' });
       }
     }
     const raw = concatBytes(chunks);
@@ -147,19 +158,7 @@ async function fetchWithGuards(url) {
       charsetSource: decoded.charsetSource,
       contentType,
     };
-  } finally { clearTimeout(t); }
-}
-
-// SSRF guard: block localhost / private ranges / non-http(s)
-function assertPublicHttpUrl(raw) {
-  let u;
-  try { u = new URL(raw); } catch { throw new Error('invalid url'); }
-  if (!/^https?:$/.test(u.protocol)) throw new Error('only http/https supported');
-  const h = u.hostname.toLowerCase();
-  if (h === 'localhost' || h.endsWith('.local') || h === '0.0.0.0' ||
-      /^(10\.|127\.|169\.254\.|192\.168\.|::1|fc00:|fe80:)/.test(h) ||
-      /^172\.(1[6-9]|2\d|3[01])\./.test(h)) throw new Error('private/loopback host blocked');
-  return u;
+  } finally { clearTimeout(t); ctrl.abort(); }
 }
 
 const extractErrorSchema = z.object({
@@ -226,7 +225,7 @@ export async function extract(rawUrl) {
       hasTitle: !!title,
       hasDescription: !!(meta.description || og['og:description']),
       hasCanonical: !!canonical,
-      schemaTypes: ld.flatMap(b => [].concat(b['@type'] || b?.['@graph']?.map(g => g['@type']) || [])).filter(Boolean),
+      schemaTypes: ld.flatMap(b => [].concat(b?.['@type'] || (Array.isArray(b?.['@graph']) ? b['@graph'].map(g => g?.['@type']) : []) || [])).filter(Boolean),
     },
     capture: buildCapture({
       textExcerptLimitChars: EXTRACT_TEXT_EXCERPT_CHARS,
@@ -373,3 +372,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const url = process.argv[2] || 'https://example.com';
   extract(url).then(r => console.log(JSON.stringify(r, null, 2))).catch(e => { console.error('ERR', e.message); process.exit(1); });
 }
+

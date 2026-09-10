@@ -10,7 +10,21 @@ source HTTP `status`, `sourceOk`, a nullable `error`, and a `capture` object
 that labels the no-JavaScript GET, body/excerpt limits, charset, and truncation.
 A 403/404 with block text is not an empty 200. The extract `text` field is a
 bounded excerpt; use `/read` for longer Markdown. Neither route executes
-JavaScript, so missing discussion text is not proof of absence.
+JavaScript, so missing discussion text is not proof of absence. Script data islands
+and comments are stripped; this is not a full-discussion reader. Production source
+connections validate and pin public IPv4 DNS answers, revalidate up to three
+redirects, and reject URL credentials, private addresses, IPv6 and compressed
+responses that ignore the requested identity encoding. Header/meta charset labels
+select a decoder; capture.charset names the decoder actually used. Unknown labels
+fall back to UTF-8 with an explicit fallback marker.
+
+Batch rows retain requested source slots, including duplicates and failures.
+Each captured row's provenance.capture records the no-JavaScript method, actual
+byte allowance and 1,200-character text limit when text is requested. A known body
+or text cutoff is partial, not complete. This does not detect undisclosed missing
+content. Source refusal remains a failed row even when its error page has text.
+The in-process fetch/timeout test hooks have no HTTP, MCP or environment input
+binding and do not change settlement or authorization middleware.
 
 `EXTRACT_BATCH_ENABLED=1` adds `POST /extract/batch` and MCP `extract_batch` at an
 introductory 0.01 USDC per admitted batch of 1–5 public HTTPS URLs. The default
@@ -1192,3 +1206,4 @@ curl -i 'http://localhost:3000/defi/morpho-position?address=0x...' # HTTP 402
 - x402 monorepo: https://github.com/coinbase/x402
 - npm: `@x402/express`, `@x402/core`, `@x402/evm`, `@x402/extensions`, `@coinbase/x402`
 - xpay public facilitator live `/supported` (Base mainnet, no key): https://facilitator.xpay.sh/supported
+
