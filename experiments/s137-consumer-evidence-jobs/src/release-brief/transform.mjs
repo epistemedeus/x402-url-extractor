@@ -33,10 +33,12 @@ import {
   SHIPPED_PAYLOAD_FIELDS,
   SOURCE_KINDS,
   TESTED_PAYLOAD_FIELDS,
+  assessIdentityAlignment,
   codesOf,
   impliedDecision,
   isCompoundKind,
   kindPlane,
+  linkingIdentity,
   makeIssue,
   provenanceFields,
   requireCitedFinding,
@@ -211,8 +213,7 @@ function identityFor(plane, record = {}) {
 }
 
 function hasIdentity(identity) {
-  if (!identity || typeof identity !== "object") return false;
-  return Boolean(identity.version || identity.tag || identity.commitSha);
+  return Object.keys(linkingIdentity(identity)).length > 0;
 }
 
 /**
@@ -296,69 +297,19 @@ function pushItem(planes, plane, item) {
   planes[plane].items.push(item);
 }
 
-function alignmentStatus({ conflict, announced, shipped, tested }) {
+function alignmentStatus({ conflict, announced, shipped, tested, linked = false }) {
   if (conflict) return "conflict";
   const a = announced > 0;
   const s = shipped > 0;
   const t = tested > 0;
-  if (a && s && t) return "aligned";
+  if (a && s && t && linked) return "aligned";
+  if (a && s && t && !linked) return "partial";
   if (a && !s && !t) return "announced-only";
   if (s && !a) return "shipped-unannounced";
   if (a && s && !t) return "untested";
   if (t && !s) return "tested-without-ship";
   if (a || s || t) return "partial";
   return "partial";
-}
-
-function identityTokens(planes) {
-  const tokens = [];
-  for (const plane of PLANES) {
-    for (const item of planes[plane].items) {
-      const identity = item.identity || {};
-      tokens.push({
-        plane,
-        version: identity.version || "",
-        tag: identity.tag || "",
-        commitSha: identity.commitSha || "",
-      });
-    }
-  }
-  return tokens;
-}
-
-function identityDisagreements(tokens) {
-  const disagreements = [];
-  for (let i = 0; i < tokens.length; i += 1) {
-    for (let j = i + 1; j < tokens.length; j += 1) {
-      const a = tokens[i];
-      const b = tokens[j];
-      if (a.version && b.version && a.version !== b.version) {
-        disagreements.push({
-          code: "identity_disagreement",
-          field: "version",
-          planes: [a.plane, b.plane],
-          values: [a.version, b.version],
-        });
-      }
-      if (a.tag && b.tag && a.tag !== b.tag) {
-        disagreements.push({
-          code: "identity_disagreement",
-          field: "tag",
-          planes: [a.plane, b.plane],
-          values: [a.tag, b.tag],
-        });
-      }
-      if (a.commitSha && b.commitSha && a.commitSha !== b.commitSha) {
-        disagreements.push({
-          code: "identity_disagreement",
-          field: "commitSha",
-          planes: [a.plane, b.plane],
-          values: [a.commitSha, b.commitSha],
-        });
-      }
-    }
-  }
-  return disagreements;
 }
 
 function testsPassedClaim(text) {
@@ -560,9 +511,10 @@ export function normalizeReleaseBriefInput(input = {}) {
       continue;
     }
 
-    const identity = source.identity && isPlainObject(source.identity)
+    const rawIdentity = source.identity && isPlainObject(source.identity)
       ? { role: IDENTITY_ROLES[plane], ...source.identity, role: IDENTITY_ROLES[plane] }
       : identityFor(plane, { ...doc, ...(source.identity || {}) });
+    const identity = { role: IDENTITY_ROLES[plane], ...linkingIdentity(rawIdentity) };
 
     const citation = citationFrom(id, plane, kind, source, doc);
     citations.push(citation);
@@ -602,13 +554,27 @@ export function normalizeReleaseBriefInput(input = {}) {
   };
 }
 
-function decide({ planes, repairs, disagreements, announcedBodies, testedConclusions, sourceCount, citations }) {
+function decide({
+  planes,
+  repairs,
+  disagreements,
+  announcedBodies,
+  testedConclusions,
+  sourceCount,
+  citations,
+  inputIssues = [],
+}) {
   const announced = planes.announced.items.length;
   const shipped = planes.shipped.items.length;
   const tested = planes.tested.items.length;
   const findings = [];
   const failRepair = repairs.find((row) => FAIL_FINDING_CODES.includes(row.code));
-  const cite = (ids) => (ids && ids.length ? ids : citations.slice(0, 1).map((c) => c.id)).filter(Boolean);
+  const cite = (ids) => {
+    const list = (ids && ids.length ? ids : citations.slice(0, 1).map((c) => c.id)).filter(Boolean);
+    return list.length ? list : ["operator-input"];
+  };
+  const assessment = assessIdentityAlignment(planes);
+  const disagreementsAll = disagreements.length ? disagreements : assessment.disagreements;
 
   const ciConflicts = [];
   for (const body of announcedBodies) {
@@ -625,7 +591,35 @@ function decide({ planes, repairs, disagreements, announcedBodies, testedConclus
     }
   }
 
-  const conflict = disagreements.length > 0 || ciConflicts.length > 0;
+  const identityInvalid = inputIssues.filter((row) =>
+    row && (row.code === "invalid_identity_field" || row.code === "invalid_identity"),
+  );
+  const unexpectedSchema = inputIssues.find((row) => row && row.code === "unexpected_schema");
+
+  if (identityInvalid.length) {
+    addFinding(findings, {
+      id: "f-invalid-identity",
+      plane: "alignment",
+      status: "fail",
+      code: "invalid_identity_field",
+      message: "identity fields must be strings; rejected input cannot pass",
+      citationIds: cite(citations.map((c) => c.id)),
+    });
+    return { decision: "fail", findings, conflict: false, linked: false };
+  }
+  if (unexpectedSchema) {
+    addFinding(findings, {
+      id: "f-unexpected-schema",
+      plane: "alignment",
+      status: "fail",
+      code: "unexpected_schema",
+      message: unexpectedSchema.message || "input schema id is not the release-brief contract",
+      citationIds: cite(citations.map((c) => c.id)),
+    });
+    return { decision: "fail", findings, conflict: false, linked: false };
+  }
+
+  const conflict = disagreementsAll.length > 0 || ciConflicts.length > 0;
   const draftOnly = announcedBodies.some((row) => row.draft) && shipped === 0;
 
   if (failRepair) {
@@ -641,7 +635,7 @@ function decide({ planes, repairs, disagreements, announcedBodies, testedConclus
           : "source fields crossed announced/shipped/tested planes",
       citationIds: cite(failRepair.citationIds),
     });
-    return { decision: "fail", findings, conflict: false };
+    return { decision: "fail", findings, conflict: false, linked: false };
   }
 
   if (draftOnly) {
@@ -654,11 +648,11 @@ function decide({ planes, repairs, disagreements, announcedBodies, testedConclus
       message: "draft announcement has published_at null and no shipped-plane source",
       citationIds: cite(citationIds),
     });
-    return { decision: "fail", findings, conflict: false };
+    return { decision: "fail", findings, conflict: false, linked: false };
   }
 
   if (conflict) {
-    for (const row of disagreements) {
+    for (const row of disagreementsAll) {
       addFinding(findings, {
         id: `f-${row.field}-conflict`,
         plane: "alignment",
@@ -678,7 +672,7 @@ function decide({ planes, repairs, disagreements, announcedBodies, testedConclus
         citationIds: cite([row.announcedCitationId, row.testedCitationId]),
       });
     }
-    return { decision: "conflict", findings, conflict: true };
+    return { decision: "conflict", findings, conflict: true, linked: false };
   }
 
   if (announced === 0 && shipped === 0 && tested === 0) {
@@ -692,22 +686,46 @@ function decide({ planes, repairs, disagreements, announcedBodies, testedConclus
         citationIds: cite(citations.map((c) => c.id)),
       });
     }
-    return { decision: "unknown", findings, conflict: false };
+    return { decision: "unknown", findings, conflict: false, linked: false };
   }
 
-  if (announced && shipped && tested) {
+  if (announced && shipped && tested && assessment.missing) {
+    addFinding(findings, {
+      id: "f-missing-identity-link",
+      plane: "alignment",
+      status: "partial",
+      code: "missing_identity_link",
+      message: "three planes are present but identities have no comparable version/tag/commitSha linkage",
+      citationIds: cite(citations.map((c) => c.id)),
+    });
+    return { decision: "partial", findings, conflict: false, linked: false };
+  }
+
+  if (announced && shipped && tested && assessment.disjoint) {
+    addFinding(findings, {
+      id: "f-noncomparable-identity",
+      plane: "alignment",
+      status: "unknown",
+      code: "noncomparable_identity",
+      message: "plane identities are disjoint; no overlapping field links announced, shipped, and tested",
+      citationIds: cite(citations.map((c) => c.id)),
+    });
+    return { decision: "unknown", findings, conflict: false, linked: false };
+  }
+
+  if (announced && shipped && tested && assessment.linked) {
     addFinding(findings, {
       id: "f-aligned",
       plane: "alignment",
       status: "positive",
       code: "three_planes_aligned",
-      message: "announced, shipped, and tested identities agree",
+      message: "announced, shipped, and tested identities agree on linked version/tag/commitSha evidence",
       citationIds: cite(citations.map((c) => c.id)),
     });
-    return { decision: "pass", findings, conflict: false };
+    return { decision: "pass", findings, conflict: false, linked: true };
   }
 
-  const status = alignmentStatus({ conflict: false, announced, shipped, tested });
+  const status = alignmentStatus({ conflict: false, announced, shipped, tested, linked: false });
   addFinding(findings, {
     id: `f-${status}`,
     plane: "alignment",
@@ -717,7 +735,7 @@ function decide({ planes, repairs, disagreements, announcedBodies, testedConclus
     citationIds: cite(citations.map((c) => c.id)),
     params: { announced, shipped, tested, sourceCount },
   });
-  return { decision: "partial", findings, conflict: false };
+  return { decision: "partial", findings, conflict: false, linked: false };
 }
 
 /**
@@ -768,17 +786,30 @@ export function buildReleaseBrief(input = {}) {
     };
   }
 
+  const inputCheck = validateReleaseBriefInput(input);
   const normalized = normalizeReleaseBriefInput(input);
-  const disagreements = identityDisagreements(identityTokens(normalized.planes));
   const decided = decide({
     planes: normalized.planes,
     repairs: normalized.repairs,
-    disagreements,
+    disagreements: assessIdentityAlignment(normalized.planes).disagreements,
     announcedBodies: normalized.announcedBodies,
     testedConclusions: normalized.testedConclusions,
     sourceCount: normalized.sourceCount,
     citations: normalized.citations,
+    inputIssues: inputCheck.issues || [],
   });
+
+  for (const finding of decided.findings) {
+    for (const id of finding.citationIds || []) {
+      if (!normalized.citations.some((row) => row.id === id)) {
+        normalized.citations.push({
+          id,
+          path: null,
+          note: "operator-supplied input",
+        });
+      }
+    }
+  }
 
   let envelope;
   try {
@@ -818,10 +849,12 @@ export function buildReleaseBrief(input = {}) {
       announced: normalized.planes.announced.items.length,
       shipped: normalized.planes.shipped.items.length,
       tested: normalized.planes.tested.items.length,
+      linked: Boolean(decided.linked),
     }),
     announcedCount: normalized.planes.announced.items.length,
     shippedCount: normalized.planes.shipped.items.length,
     testedCount: normalized.planes.tested.items.length,
+    linked: Boolean(decided.linked),
   };
 
   const brief = {
@@ -836,12 +869,22 @@ export function buildReleaseBrief(input = {}) {
     alignment,
   };
 
+  const malformedCodes = new Set([
+    "invalid_identity_field",
+    "invalid_identity",
+    "unexpected_schema",
+  ]);
+  const malformed = (inputCheck.issues || []).some((row) => row && malformedCodes.has(row.code));
   const checked = validateReleaseBrief(brief);
+  let decision = decided.decision;
+  if (malformed && decision === "pass") decision = "fail";
+  if (!checked.ok && decision === "pass") decision = "fail";
+  brief.decision = decision;
   return {
-    ok: checked.ok,
-    decision: brief.decision,
+    ok: !malformed && checked.ok,
+    decision,
     impliedDecision: checked.impliedDecision,
-    issues: [...normalized.issues, ...checked.issues],
+    issues: [...(inputCheck.issues || []), ...normalized.issues, ...checked.issues],
     brief,
     repairs: normalized.repairs,
   };

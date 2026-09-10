@@ -127,6 +127,9 @@ export const FAIL_FINDING_CODES = Object.freeze([
   "draft_not_shipped",
   "yanked_not_shipped",
   "plane_conflation",
+  "invalid_identity_field",
+  "invalid_identity",
+  "unexpected_schema",
 ]);
 
 export const SCHEMA_LIMITATIONS = Object.freeze([
@@ -430,9 +433,127 @@ function validateCompoundSource(source, issues, instancePath) {
   }
 }
 
+export const IDENTITY_LINK_FIELDS = Object.freeze(["version", "tag", "commitSha"]);
+
+/** Only non-empty strings count as linking evidence. Numbers/objects are not identities. */
+export function linkingIdentity(identity) {
+  const out = {};
+  if (!identity || typeof identity !== "object") return out;
+  for (const key of IDENTITY_LINK_FIELDS) {
+    const value = identity[key];
+    if (typeof value === "string" && value.trim()) out[key] = value.trim();
+  }
+  return out;
+}
+
+export function hasLinkingIdentity(identity) {
+  const fields = linkingIdentity(identity);
+  return IDENTITY_LINK_FIELDS.some((key) => Boolean(fields[key]));
+}
+
 function hasIdentity(identity) {
-  if (!identity || typeof identity !== "object") return false;
-  return Boolean(identity.version || identity.tag || identity.commitSha);
+  return hasLinkingIdentity(identity);
+}
+
+function planeLinkUnion(items) {
+  const union = {};
+  const internalConflicts = [];
+  for (const item of items || []) {
+    const fields = linkingIdentity(item?.identity);
+    for (const [key, value] of Object.entries(fields)) {
+      if (union[key] && union[key] !== value) {
+        internalConflicts.push({ field: key, values: [union[key], value] });
+      } else {
+        union[key] = value;
+      }
+    }
+  }
+  return { union, internalConflicts, hasLink: Object.keys(union).length > 0 };
+}
+
+/**
+ * Identity linkage across announced/shipped/tested.
+ * Pass requires all three planes plus a connected graph of agreeing string fields.
+ * Empty identities → missing (partial). Disjoint/noncomparable → unknown.
+ */
+export function assessIdentityAlignment(briefOrPlanes) {
+  const blocks = {};
+  for (const plane of PLANES) {
+    blocks[plane] = briefOrPlanes?.[plane]?.items || [];
+  }
+  const present = PLANES.filter((plane) => blocks[plane].length > 0);
+  const unions = {};
+  const disagreements = [];
+  let missing = false;
+  for (const plane of present) {
+    const { union, internalConflicts, hasLink } = planeLinkUnion(blocks[plane]);
+    unions[plane] = union;
+    if (!hasLink) missing = true;
+    for (const row of internalConflicts) {
+      disagreements.push({
+        code: "identity_disagreement",
+        field: row.field,
+        planes: [plane, plane],
+        values: row.values,
+      });
+    }
+  }
+  for (let i = 0; i < present.length; i += 1) {
+    for (let j = i + 1; j < present.length; j += 1) {
+      const a = present[i];
+      const b = present[j];
+      for (const key of IDENTITY_LINK_FIELDS) {
+        if (unions[a][key] && unions[b][key] && unions[a][key] !== unions[b][key]) {
+          disagreements.push({
+            code: "identity_disagreement",
+            field: key,
+            planes: [a, b],
+            values: [unions[a][key], unions[b][key]],
+          });
+        }
+      }
+    }
+  }
+  const linkedPlanes = present.filter((plane) => Object.keys(unions[plane] || {}).length > 0);
+  const adj = new Map(linkedPlanes.map((plane) => [plane, new Set()]));
+  for (let i = 0; i < linkedPlanes.length; i += 1) {
+    for (let j = i + 1; j < linkedPlanes.length; j += 1) {
+      const a = linkedPlanes[i];
+      const b = linkedPlanes[j];
+      const share = IDENTITY_LINK_FIELDS.some(
+        (key) => unions[a][key] && unions[b][key] && unions[a][key] === unions[b][key],
+      );
+      if (share) {
+        adj.get(a).add(b);
+        adj.get(b).add(a);
+      }
+    }
+  }
+  let connected = false;
+  if (linkedPlanes.length) {
+    const seen = new Set();
+    const stack = [linkedPlanes[0]];
+    while (stack.length) {
+      const node = stack.pop();
+      if (seen.has(node)) continue;
+      seen.add(node);
+      for (const next of adj.get(node) || []) stack.push(next);
+    }
+    connected = seen.size === linkedPlanes.length;
+  }
+  const conflict = disagreements.length > 0;
+  const allThree = present.length === 3;
+  const linked = allThree && !missing && !conflict && connected;
+  const disjoint = allThree && !missing && !conflict && !connected;
+  return {
+    present,
+    missing,
+    conflict,
+    linked,
+    disjoint,
+    disagreements,
+    unions,
+  };
 }
 
 function validateSource(source, index, issues, evidenceClass) {
@@ -687,32 +808,13 @@ function identityToken(identity) {
   return { version, tag, commitSha };
 }
 
-function identitiesConflict(brief) {
-  const tokens = [];
-  for (const plane of PLANES) {
-    for (const item of planeItems(brief, plane)) {
-      const token = identityToken(itemIdentity(item));
-      if (token.version || token.tag || token.commitSha) tokens.push({ plane, ...token });
-    }
-  }
-  for (let i = 0; i < tokens.length; i += 1) {
-    for (let j = i + 1; j < tokens.length; j += 1) {
-      const a = tokens[i];
-      const b = tokens[j];
-      if (a.version && b.version && a.version !== b.version) return true;
-      if (a.tag && b.tag && a.tag !== b.tag) return true;
-      if (a.commitSha && b.commitSha && a.commitSha !== b.commitSha) return true;
-    }
-  }
-  return false;
-}
-
 export function impliedDecision(brief) {
   if (!brief || typeof brief !== "object") return "unknown";
-  if (identitiesConflict(brief)) return "conflict";
-  const present = PLANES.filter((plane) => planeItems(brief, plane).length > 0);
-  if (present.length === 3) return "pass";
-  if (present.length === 0) return "unknown";
+  const assessment = assessIdentityAlignment(brief);
+  if (assessment.conflict) return "conflict";
+  if (assessment.linked) return "pass";
+  if (assessment.present.length === 0) return "unknown";
+  if (assessment.disjoint) return "unknown";
   return "partial";
 }
 
