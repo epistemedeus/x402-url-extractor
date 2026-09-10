@@ -1,0 +1,6 @@
+{
+  "schema": "x402.r2.record.kit_request.v1",
+  "requestId": "fixture-partial",
+  "jobIds": ["openapi-impact", "route-regression"],
+  "note": "Partial when native root forced missing by journey options"
+}

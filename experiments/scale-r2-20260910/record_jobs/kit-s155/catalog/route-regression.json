@@ -1,0 +1,11 @@
+{
+  "id": "route-regression",
+  "title": "Public route regression report",
+  "status": "ready",
+  "jobRef": "R2-RECORD-JOBS-05",
+  "packageSlot": "05",
+  "ownedBy": "pilot_source_record",
+  "module": "route-regression",
+  "buildExport": "buildRouteRegressionReport",
+  "note": "Native RECORD 05. Absolute worktree import; unavailable_native if missing."
+}

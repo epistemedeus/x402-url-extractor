@@ -1,0 +1,11 @@
+{
+  "id": "dependency-footprint",
+  "title": "Dependency footprint overlap",
+  "status": "ready",
+  "jobRef": "R2-RECORD-JOBS-07",
+  "packageSlot": "07",
+  "ownedBy": "pilot_source_record",
+  "module": "dependency-footprint",
+  "buildExport": "buildDependencyFootprintOverlap",
+  "note": "Native RECORD 07. Absolute worktree import; unavailable_native if missing."
+}

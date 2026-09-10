@@ -1,0 +1,11 @@
+{
+  "id": "pricing-table-change",
+  "title": "Extracted pricing-table field/unit change",
+  "status": "ready",
+  "jobRef": "R2-RECORD-JOBS-02",
+  "packageSlot": "02",
+  "ownedBy": "heavy",
+  "module": "pricing-table-change",
+  "cli": "s134-pricing-table-change",
+  "note": "Heavy S154 module. Invoked via HEAVY_S134_ROOT; never reimplemented in this kit."
+}

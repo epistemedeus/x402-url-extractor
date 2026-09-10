@@ -1,0 +1,11 @@
+{
+  "id": "csv-drift",
+  "title": "CSV schema/row drift with uncertainty",
+  "status": "ready",
+  "jobRef": "R2-RECORD-JOBS-03",
+  "packageSlot": "03",
+  "ownedBy": "heavy",
+  "module": "csv-drift",
+  "cli": "s134-csv-drift",
+  "note": "Heavy S154 included. Kit csv-wrapper preserves null-prototype cells, separate meta, __status/__extraFields/__proto__, empty vs missing, columns:false, relax:false. No Heavy tree edits."
+}

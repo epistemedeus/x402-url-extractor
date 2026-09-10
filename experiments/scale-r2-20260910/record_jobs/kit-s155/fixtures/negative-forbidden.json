@@ -1,0 +1,6 @@
+{
+  "schema": "x402.r2.record.kit_request.v1",
+  "requestId": "fixture-forbidden",
+  "jobIds": ["openapi-impact"],
+  "investmentRecommendation": "buy"
+}

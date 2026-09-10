@@ -1,0 +1,5 @@
+{
+  "schema": "x402.r2.record.kit_request.v1",
+  "requestId": "fixture-unknown",
+  "jobIds": ["not-a-real-job"]
+}

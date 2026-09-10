@@ -1,0 +1,11 @@
+{
+  "id": "openapi-impact",
+  "title": "Used-operation OpenAPI before/after impact",
+  "status": "ready",
+  "jobRef": "R2-RECORD-JOBS-01",
+  "packageSlot": "01",
+  "ownedBy": "heavy",
+  "module": "openapi-impact",
+  "cli": "s134-openapi-impact",
+  "note": "Heavy S154 module. Invoked via HEAVY_S134_ROOT; never reimplemented in this kit."
+}

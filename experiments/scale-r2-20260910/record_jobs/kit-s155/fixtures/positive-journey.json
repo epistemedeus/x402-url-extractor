@@ -1,0 +1,13 @@
+{
+  "schema": "x402.r2.record.kit_request.v1",
+  "requestId": "fixture-positive",
+  "jobIds": [
+    "openapi-impact",
+    "pricing-table-change",
+    "csv-drift",
+    "rss-atom-brief",
+    "route-regression",
+    "source-record-kit"
+  ],
+  "note": "Positive kit request over Heavy + native + meta"
+}

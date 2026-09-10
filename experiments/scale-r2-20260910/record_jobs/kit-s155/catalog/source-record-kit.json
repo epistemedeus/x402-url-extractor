@@ -1,0 +1,10 @@
+{
+  "id": "source-record-kit",
+  "title": "Source-record job kit packaging layer (08)",
+  "status": "meta",
+  "jobRef": "R2-RECORD-JOBS-08",
+  "packageSlot": "08",
+  "ownedBy": "pilot_source_record",
+  "module": "kit-s155",
+  "note": "This kit package is the 08 packaging / journey layer over Heavy 01..04 + native 05..07. Not a fourth parser module."
+}

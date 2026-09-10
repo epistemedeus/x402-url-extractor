@@ -1,0 +1,17 @@
+{
+  "name": "r2-record-kit-s155-source-record-job-kit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "S155 one usable source-record job kit: Heavy 01..04 (S154 pin) + native RECORD 05..08 journey (fixtures only)",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "journey": "node src/cli.mjs journey",
+    "demo": "node src/cli.mjs demo",
+    "validate": "node src/cli.mjs validate",
+    "manifest": "node src/cli.mjs manifest"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

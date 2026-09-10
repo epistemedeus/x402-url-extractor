@@ -1,0 +1,11 @@
+{
+  "id": "rss-atom-brief",
+  "title": "RSS/Atom correction + dedup brief",
+  "status": "ready",
+  "jobRef": "R2-RECORD-JOBS-04",
+  "packageSlot": "04",
+  "ownedBy": "heavy",
+  "module": "rss-atom-brief",
+  "cli": "s134-rss-atom-brief",
+  "note": "Heavy S154 feed module. Invoked via HEAVY_S134_ROOT; never reimplemented in this kit."
+}
