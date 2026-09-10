@@ -1,0 +1,45 @@
+{
+  "ok": true,
+  "product": "samedaydesk-payment-offer-preflight",
+  "version": "1.2.0",
+  "checkedAt": "2026-09-10T07:21:39.018Z",
+  "target": {
+    "method": "GET",
+    "url": "https://agent-economy-signal-x402-mainnet.bronzetti-andrea.workers.dev/premium/agent-brief",
+    "httpStatus": 402
+  },
+  "decision": "review_required",
+  "protocols": ["x402"],
+  "offerCount": 1,
+  "offers": [
+    {
+      "protocol": "x402",
+      "scheme": "exact",
+      "intent": "exact",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "20000",
+      "decimals": null,
+      "amountDisplay": null,
+      "recipient": "0xbda48b29607b9dc66ef7e38b68ad53f2b17efb23",
+      "expiresAt": "2026-09-10T07:26:39.018Z",
+      "valid": true
+    }
+  ],
+  "parity": {
+    "compared": false,
+    "consistent": null,
+    "driftFields": []
+  },
+  "catalogCoherence": [],
+  "findings": [],
+  "boundary": {
+    "credentialsUsed": false,
+    "paymentSigned": false,
+    "paymentSent": false,
+    "targetResponseBodyRead": false,
+    "openApiDocumentRead": true,
+    "redirectsFollowed": false,
+    "claim": "Seller-declared response contracts are advisory. Parseable terms and schemas do not prove trust, utility, runtime validity, or settlement."
+  }
+}

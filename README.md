@@ -90,6 +90,7 @@ settlement proof, and AI-search readiness audits.
 - Payment offer preflight: `GET /commerce/payment-offer-preflight?url=https://example.com/paid-route`
 - Seller integrity audit: `GET /commerce/seller-integrity-audit?origin=https://seller.example&route=/paid-route&method=GET&requiredPaths=data.attributes`
   - A buyer may add `referral=r1_<sha256>` derived from its complete seller-signed x402 settlement receipt. This creates a declared acquisition label, not verified proof. `POST /commerce/referral-recheck` accepts that receipt plus one downstream seller-signed settlement receipt from a distinct payer and transaction, then atomically grants at most one free changed-state recheck. The receipts prove neither an application HTTP 200 response nor output delivery or validity, and public posting or broadcasting is optional. A file matching Agent402 PR 1070's observable capture contract (bare pretty JSON receipt, no bundled Agent402 source) is already a drop-in input after ordinary `JSON.parse`; see [`docs/agent-outcome-referral-experiment.md`](docs/agent-outcome-referral-experiment.md) and `agent402-receipt-interop.test.mjs`.
+- Discovery↔live payment drift (library/CLI only; not a hosted or paid route): `node discovery-drift.mjs observe --url 'https://agent-economy-signal-x402-mainnet.bronzetti-andrea.workers.dev/premium/agent-brief' --bazaar-pay-to '0xbda48b29607b9dc66ef7e38b68ad53f2b17efb23'`
 - Contract-qualified search: `GET /commerce/contract-qualified-search?query=service+domain+ownership+code+provenance&requiredPaths=data.sourceRepository`
   returns a bounded advisory OpenAPI repair plan for missing buyer-required
   paths without mutating seller files or inferring undeclared property types.
@@ -454,6 +455,15 @@ marked required by the same schemas. The examples now conform, and
 through credential-free HTTP 402 probes without retaining headers or query
 values. Alternate x402 settlement rails are reported as explicit exclusions
 instead of being misclassified as failed Bazaar declarations.
+
+`discovery-drift.mjs` is a credential-free library and CLI that compares
+registry/catalog discovery with live unpaid payment requirements for resource,
+network, asset, amountAtomic, and observation freshness. It is not a default
+mounted paid route. Copy-paste:
+
+```bash
+node discovery-drift.mjs observe --url 'https://agent-economy-signal-x402-mainnet.bronzetti-andrea.workers.dev/premium/agent-brief' --bazaar-pay-to '0xbda48b29607b9dc66ef7e38b68ad53f2b17efb23'
+```
 
 Version 1.11.18 adds a source-quality funnel to the public aggregate. Each
 controlled discovery source now reports observations alongside distinct and

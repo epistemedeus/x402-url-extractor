@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "samedaydesk.discovery-drift-snapshot.v1",
+  "observedAt": "2026-09-10T07:21:38.000Z",
+  "source": "coinbase-bazaar-merchant-discovery",
+  "resource": "https://agent-economy-signal-x402-mainnet.bronzetti-andrea.workers.dev/premium/agent-brief",
+  "lastUpdated": "2026-09-09T18:21:18.178Z",
+  "offers": [
+    {
+      "protocol": "x402",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "20000",
+      "recipient": "0xbda48b29607b9dc66ef7e38b68ad53f2b17efb23"
+    }
+  ],
+  "unknowns": [],
+  "raw": {
+    "provider": "coinbase-bazaar",
+    "payTo": "0xbda48b29607b9dc66ef7e38b68ad53f2b17efb23",
+    "itemCount": 1,
+    "exactResourceMatch": true,
+    "lastUpdated": "2026-09-09T18:21:18.178Z"
+  },
+  "boundary": {
+    "credentialsUsed": false,
+    "paymentSigned": false,
+    "paymentSent": false,
+    "redirectsFollowed": false,
+    "unitsConverted": false
+  }
+}

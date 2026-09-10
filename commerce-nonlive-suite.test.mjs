@@ -16,6 +16,7 @@ const REQUIRED_NONLIVE_FILES = Object.freeze([
   "settlement-proof.test.mjs",
   "purchase-evidence-manifest.test.mjs",
   "payment-offer-preflight.test.mjs",
+  "discovery-drift.test.mjs",
   "transaction-receipt.test.mjs",
   "circle-gateway-route.test.mjs",
   "commerce-rare-funnel.mounted.test.mjs",
