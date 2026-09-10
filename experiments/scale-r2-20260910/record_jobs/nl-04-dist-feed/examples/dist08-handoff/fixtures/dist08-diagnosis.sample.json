@@ -1,0 +1,162 @@
+{
+  "schema": "pilot.r2.distribution.conversion_diagnosis.v1",
+  "generatedAt": "2026-09-10T12:00:00.000Z",
+  "cite": "S173 handoff: NL-RECORD-04 feed → Dist08 diagnosis; no invented captures/revenue",
+  "joined": [
+    {
+      "acquisitionId": "acq-nl04-catalog-presented",
+      "usefulOutputId": "out-nl04-route-repair-run",
+      "compatibilityKeys": [
+        "sharedEvidenceId",
+        "jobRef",
+        "provider"
+      ],
+      "sharedEvidenceId": "nl-record-04:nl-04-feed-positive:/docs",
+      "causationKnown": true,
+      "customerIndependenceKnown": false,
+      "unknowns": [
+        "customerIndependence: no independentCustomerRef proving a distinct customer actor",
+        "conversion: linkPresented/linkActivated is not conversion (click ≠ conversion)",
+        "revenue: no customer earnings/payout evidence joined — do not invent revenue from clicks or list price"
+      ],
+      "acquisition": {
+        "id": "acq-nl04-catalog-presented",
+        "kind": "linkPresented",
+        "sourceTag": "catalog",
+        "provider": "grexal",
+        "linkId": "route:/docs",
+        "jobRef": "nl-record-04:nl-04-feed-positive:/docs",
+        "sharedEvidenceId": "nl-record-04:nl-04-feed-positive:/docs",
+        "independentCustomerRef": null,
+        "at": "2026-09-10T12:00:00.000Z",
+        "evidenceRef": "experiments/scale-r2-20260910/record_jobs/nl-04-dist-feed/artifacts/dist-repair-feed.positive.json"
+      },
+      "usefulOutput": {
+        "id": "out-nl04-route-repair-run",
+        "kind": "run",
+        "provider": "grexal",
+        "jobRef": "nl-record-04:nl-04-feed-positive:/docs",
+        "sharedEvidenceId": "nl-record-04:nl-04-feed-positive:/docs",
+        "independentCustomerRef": null,
+        "at": "2026-09-10T12:00:00.000Z",
+        "evidenceRef": "experiments/scale-r2-20260910/record_jobs/nl-04-dist-feed/artifacts/dist-repair-feed.positive.json",
+        "earningsStatus": null,
+        "pricingObserved": null,
+        "amount": null
+      },
+      "claims": {
+        "conversionFromClick": false,
+        "revenueFromListPrice": false,
+        "buyerIntentFromActivation": false,
+        "causationProven": true,
+        "customerIndependenceProven": false
+      }
+    },
+    {
+      "acquisitionId": "acq-nl04-catalog-activated",
+      "usefulOutputId": "out-nl04-route-repair-run",
+      "compatibilityKeys": [
+        "sharedEvidenceId",
+        "jobRef",
+        "provider"
+      ],
+      "sharedEvidenceId": "nl-record-04:nl-04-feed-positive:/docs",
+      "causationKnown": true,
+      "customerIndependenceKnown": false,
+      "unknowns": [
+        "customerIndependence: no independentCustomerRef proving a distinct customer actor",
+        "conversion: linkPresented/linkActivated is not conversion (click ≠ conversion)",
+        "revenue: no customer earnings/payout evidence joined — do not invent revenue from clicks or list price",
+        "intent: linkActivated does not imply buyerIntent or purchaseIntent"
+      ],
+      "acquisition": {
+        "id": "acq-nl04-catalog-activated",
+        "kind": "linkActivated",
+        "sourceTag": "catalog",
+        "provider": "grexal",
+        "linkId": "route:/docs",
+        "jobRef": "nl-record-04:nl-04-feed-positive:/docs",
+        "sharedEvidenceId": "nl-record-04:nl-04-feed-positive:/docs",
+        "independentCustomerRef": null,
+        "at": "2026-09-10T12:00:00.000Z",
+        "evidenceRef": "experiments/scale-r2-20260910/record_jobs/nl-04-dist-feed/artifacts/dist-repair-feed.positive.json"
+      },
+      "usefulOutput": {
+        "id": "out-nl04-route-repair-run",
+        "kind": "run",
+        "provider": "grexal",
+        "jobRef": "nl-record-04:nl-04-feed-positive:/docs",
+        "sharedEvidenceId": "nl-record-04:nl-04-feed-positive:/docs",
+        "independentCustomerRef": null,
+        "at": "2026-09-10T12:00:00.000Z",
+        "evidenceRef": "experiments/scale-r2-20260910/record_jobs/nl-04-dist-feed/artifacts/dist-repair-feed.positive.json",
+        "earningsStatus": null,
+        "pricingObserved": null,
+        "amount": null
+      },
+      "claims": {
+        "conversionFromClick": false,
+        "revenueFromListPrice": false,
+        "buyerIntentFromActivation": false,
+        "causationProven": true,
+        "customerIndependenceProven": false
+      }
+    }
+  ],
+  "unjoined": [],
+  "missingInputs": [],
+  "privacyNotes": [
+    "Joins only source-compatible acquisition ↔ useful-output pairs.",
+    "causationKnown defaults false unless sharedEvidenceId matches on both sides.",
+    "customerIndependenceKnown defaults false unless independentCustomerRef matches.",
+    "click/activation ≠ conversion; list pricing ≠ revenue.",
+    "unavailable omits activationCount/usefulOutputActionableCount; no_users sets zeros."
+  ],
+  "truthNotes": [
+    "DEMO fixtures extend DIST-04 acquisition + DIST-05 useful-output shapes; no fake buyers/revenue.",
+    "Grexal S149: PUBLIC_ACTIVE agentId j970cajvv6wbrmy64s2f4ajzw18e5j2q; pricing run_completed 0.02 USD (estimate reserve 0.025 is NOT a charge).",
+    "Grexal: customerExecutionRevenuePayout=false — earnings unavailable (pricing ≠ earnings).",
+    "Agensi: Free PendingReview; 0 installs — do not invent installs/revenue.",
+    "unavailable ≠ no_users; causation/independence unknown by default."
+  ],
+  "mutationBoundary": {
+    "executesProviderMutations": false,
+    "forbids": [
+      "grexal login",
+      "agensi Bot login",
+      "price / publish / review-submit",
+      "invent buyers or revenue",
+      "equate click/activation with conversion",
+      "treat list pricing as earnings/payout",
+      "claim causation without sharedEvidenceId",
+      "claim customerIndependence without independentCustomerRef",
+      "collapse unavailable into no_users",
+      "join incompatible sourceTag/provider/jobRef pairs as converted"
+    ],
+    "ownerOfPublicationAndPrice": "Root",
+    "ownerOfPendingReviewOutcome": "Root"
+  },
+  "evidenceIndex": "evidence/INDEX.md",
+  "grexalS149": {
+    "listingStatus": "PUBLIC_ACTIVE",
+    "agentId": "j970cajvv6wbrmy64s2f4ajzw18e5j2q",
+    "pricingRunCompletedUsd": 0.02,
+    "estimateReserveIsCharge": false,
+    "customerExecutionRevenuePayout": false,
+    "receiptRef": "/workspace/pilot/receipts/scale-bot-0909/r2-team/receipts-grexal-s149.json",
+    "note": "List price ≠ revenue; no customer payout claimed"
+  },
+  "summary": {
+    "acquisitionEvents": 2,
+    "usefulOutputEvents": 1,
+    "joinedCount": 2,
+    "unjoinedCount": 0,
+    "causationKnownCount": 2,
+    "independenceKnownCount": 0
+  },
+  "status": "available",
+  "label": "source_compatible_joins_diagnosed",
+  "reason": "Route repair feed join for /docs (redirected)",
+  "activationCount": 1,
+  "usefulOutputActionableCount": 1
+}

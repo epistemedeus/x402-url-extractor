@@ -1,0 +1,47 @@
+{
+  "schema": "pilot.nl.record.route_repair_before_after.v1",
+  "sourceFeed": {
+    "schema": "pilot.nl.record.dist_repair_feed.v1",
+    "feedId": "nl-04-feed-positive",
+    "status": "ready",
+    "merchantPin": "a7e2cd7a2223e2aa7e7e09eebf3695aba4731205",
+    "dist08Cite": "ea000772cdbd6d5df7174369dcef9aa2270e5723"
+  },
+  "routeKey": "/docs",
+  "before": {
+    "deltaObserved": "redirected",
+    "notes": [
+      "finalUrl / redirect location changed between snapshots."
+    ],
+    "listingImplication": "listed_path_may_point_at_stale_target"
+  },
+  "after": {
+    "recommendation": "update_listed_route_or_redirect_target",
+    "confidence": "high",
+    "coveragePreserved": true,
+    "actionableStep": "Update distribution listing URL/redirect to match current finalUrl from supplied pair."
+  },
+  "scopeNote": "Fixture derived from NL-RECORD-04 supplied-pair feed only. Not a crawl; not traffic/ranking.",
+  "routeReportSummary": {
+    "status": "ready",
+    "baselineMeta": {
+      "label": "baseline-2026-09-01",
+      "capturedAt": "2026-09-01T00:00:00.000Z",
+      "routeCount": 6
+    },
+    "currentMeta": {
+      "label": "current-2026-09-10",
+      "capturedAt": "2026-09-10T00:00:00.000Z",
+      "routeCount": 6
+    },
+    "deltaCounts": {
+      "unchanged": 1,
+      "removed": 1,
+      "redirected": 1,
+      "inaccessible": 2,
+      "restored": 1,
+      "status_changed": 0,
+      "added": 1
+    }
+  }
+}
