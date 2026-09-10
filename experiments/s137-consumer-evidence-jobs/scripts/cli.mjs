@@ -801,10 +801,14 @@ function pickDecision({
 }) {
   if (flagConflict) return "conflict";
   if (inputError) return "fail";
-  // Prefer a concrete transform decision. Schema rejection alone is advisory because
-  // several job modules accept richer fixture wrappers than their validateInput() shape.
-  if (transformDecision && DECISIONS.includes(transformDecision)) return transformDecision;
-  if (schemaResult && schemaIsRejected(schemaResult)) return "fail";
+  const schemaRejected = Boolean(schemaResult && schemaIsRejected(schemaResult));
+  // Prefer concrete transform outcomes, but schema rejection / missing-required input
+  // must never promote to pass. Preserve conflict/partial/fail/unknown as-is.
+  if (transformDecision && DECISIONS.includes(transformDecision)) {
+    if (schemaRejected && transformDecision === "pass") return "fail";
+    return transformDecision;
+  }
+  if (schemaRejected) return "fail";
   if (!hasTransform && hasInput) return "partial";
   if (!hasTransform && !hasInput) return "unknown";
   if (unknownReasons.length > 0) return "partial";
@@ -927,6 +931,38 @@ function citationIdsOf(finding) {
   return [];
 }
 
+function isSyntheticCaseWrapper(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const nested = value.input;
+  if (!nested || typeof nested !== "object" || Array.isArray(nested)) return false;
+  const schemaId = String(value.schema || value.$schema || value.schemaId || "");
+  const nestedSchema = String(nested.schema || nested.$schema || nested.schemaId || "");
+  const wrapperMarked =
+    /synthetic-case\.v1$/i.test(schemaId) ||
+    /(^|\.)case\.v1$/i.test(schemaId) ||
+    value.expect != null ||
+    value.caseClass != null ||
+    (value.lanes && typeof value.lanes === "object");
+  const nestedLooksLikeInput =
+    /\.input\.v1$/i.test(nestedSchema) ||
+    Array.isArray(nested.sources) ||
+    nested.oldDocs != null ||
+    nested.newDocs != null;
+  // Only unwrap when the outer object is a case envelope, not a schema input that
+  // happens to contain an `input` field.
+  if (Array.isArray(value.sources)) return false;
+  return wrapperMarked && nestedLooksLikeInput;
+}
+
+function unwrapSyntheticCaseInput(value, ctx) {
+  const nested = { ...value.input };
+  if (ctx?.clock) nested.clock = ctx.clock;
+  if (ctx?.evidenceClass && nested.evidenceClass == null) {
+    nested.evidenceClass = ctx.evidenceClass;
+  }
+  return nested;
+}
+
 function prepareTransformArgument(artifact, loadedInput, ctx) {
   // Prefer the operator document. Transforms expect the evidence input, not the CLI ctx bag.
   if (loadedInput && loadedInput.ok === false) return ctx;
@@ -938,10 +974,16 @@ function prepareTransformArgument(artifact, loadedInput, ctx) {
         const path = String(row.path || "");
         return row.json && /(^|\/)(input|case|positive-[^/]+)\.json$/.test(path);
       });
-      if (preferred?.json) return preferred.json;
+      if (preferred?.json) {
+        return isSyntheticCaseWrapper(preferred.json)
+          ? unwrapSyntheticCaseInput(preferred.json, ctx)
+          : preferred.json;
+      }
     }
-    // Keep fixture wrappers intact; several transforms (release-brief, migration fixtureCase)
-    // understand the wrapper better than a naive `.input` unwrap.
+    // Synthetic case envelopes nest schema-shaped `.input`. Passing the envelope to
+    // release-brief previously treated lane path strings as empty agreeing identities
+    // and emitted decision=pass beside cli.schema-rejected. Unwrap to the real input.
+    if (isSyntheticCaseWrapper(value)) return unwrapSyntheticCaseInput(value, ctx);
     return value;
   }
   if (typeof loadedInput?.text === "string" && loadedInput.text.length > 0) {

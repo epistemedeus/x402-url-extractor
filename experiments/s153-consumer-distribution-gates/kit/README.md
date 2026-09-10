@@ -78,3 +78,18 @@ I/O contracts: `manifests/01.json` … `manifests/06.json`. License pins for `ex
 - Offline deterministic transforms only.
 - No paid endpoints, legal attestation, model-as-oracle, or customer-demand claims.
 - Missing or conflicting sources stay `unknown` / `partial` / `conflict`, not invented `pass`.
+
+## Release-brief conflict regression (S174)
+
+Synthetic case envelopes must unwrap to schema input. SHA mismatch must not become `pass`:
+
+```
+node bin/cli.mjs analyze release-brief --in examples/release-brief/conflict-sha-mismatch.json --clock 2026-09-10T18:00:00.000Z
+```
+
+Expect `decision=conflict` (not `pass`). Positive/partial controls:
+
+```
+node bin/cli.mjs analyze release-brief --in examples/release-brief/positive-aligned.json --clock 2026-09-10T18:00:00.000Z
+node bin/cli.mjs analyze release-brief --in examples/release-brief/partial-announced-only.json --clock 2026-09-10T18:00:00.000Z
+```

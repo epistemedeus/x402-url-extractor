@@ -56,3 +56,7 @@ Parent capacity sample (`receipts/capacity-sample.json`, `receipts/overlap-peak.
 ## Non-claims
 
 Offline only. No invented demand. No paid endpoints. No legal attestation.
+
+## S174 follow-up
+
+CLI conflict-sha-mismatch false-pass fixed on `codex/s174-consumer-final-cli-fix-20260910`. See `RESULT-S174.md`.

@@ -382,7 +382,9 @@ function wrapRawSources(input) {
   }
   for (const plane of PLANES) {
     const doc = input[plane] ?? input.lanes?.[plane];
-    if (!doc) continue;
+    // Fixture case wrappers store lane *paths* as strings. Those are not inlined
+    // documents — treating them as empty agreeing identities yields a false pass.
+    if (!isPlainObject(doc)) continue;
     sources.push({
       id: doc.id || plane,
       plane,

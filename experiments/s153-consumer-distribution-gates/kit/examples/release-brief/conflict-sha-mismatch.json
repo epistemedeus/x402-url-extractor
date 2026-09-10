@@ -1,0 +1,190 @@
+{
+  "schema": "s137.release-brief.synthetic-case.v1",
+  "id": "conflict-sha-mismatch",
+  "jobId": "R2-CONSUMER-JOBS-02",
+  "artifactKind": "release-brief",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "caseClass": "conflict",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "Same tag v1.2.0; announced SHA differs from shipped SHA",
+  "notes": "Tag strings match. Commit identity does not. Do not merge the SHAs.",
+  "subject": {
+    "name": "demo-release-kit",
+    "repository": "synthetic.lab/demo-release-kit"
+  },
+  "lanes": {
+    "announced": "sources/conflict-sha-mismatch/announced.json",
+    "shipped": "sources/conflict-sha-mismatch/shipped.json",
+    "tested": "sources/conflict-sha-mismatch/tested.json"
+  },
+  "input": {
+    "schema": "s137.release-brief.input.v1",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "evidenceClass": "synthetic",
+    "jobId": "R2-CONSUMER-JOBS-02",
+    "artifactKind": "release-brief",
+    "subject": {
+      "name": "demo-release-kit",
+      "repository": "synthetic.lab/demo-release-kit"
+    },
+    "sources": [
+      {
+        "id": "cit-announced",
+        "plane": "announced",
+        "lane": "announced",
+        "kind": "github-release-notes",
+        "path": "sources/conflict-sha-mismatch/announced.json",
+        "sha256": "244c1e6a94bd05e744c469c26e73603d4adef21a04530708d292abea987c48b7",
+        "contentSha256": "244c1e6a94bd05e744c469c26e73603d4adef21a04530708d292abea987c48b7",
+        "evidenceClass": "synthetic",
+        "identity": {
+          "role": "claimed",
+          "tag": "v1.2.0",
+          "version": "1.2.0",
+          "commitSha": "b70a4adb6387148753969b92792617ebce4d9d95"
+        },
+        "payload": {
+          "name": "v1.2.0",
+          "body": "Announcement names tag v1.2.0 on target_commitish recorded in this file. Compare to the shipped object sha.",
+          "draft": false,
+          "prerelease": false,
+          "published_at": "2026-09-09T18:00:00.000Z",
+          "created_at": "2026-09-09T17:58:00.000Z",
+          "target_commitish": "b70a4adb6387148753969b92792617ebce4d9d95"
+        }
+      },
+      {
+        "id": "cit-shipped",
+        "plane": "shipped",
+        "lane": "shipped",
+        "kind": "git-tag",
+        "path": "sources/conflict-sha-mismatch/shipped.json",
+        "sha256": "7c21cb66edf9a0e9c9656f1f0ff71a0c87fc6685f876be8a9342c8bb216a817e",
+        "contentSha256": "7c21cb66edf9a0e9c9656f1f0ff71a0c87fc6685f876be8a9342c8bb216a817e",
+        "evidenceClass": "synthetic",
+        "identity": {
+          "role": "observed",
+          "tag": "v1.2.0",
+          "version": "1.2.0",
+          "commitSha": "4e7e21846effc2ec4533839d0c90ae5864471a86"
+        },
+        "payload": {
+          "ref": "refs/tags/v1.2.0",
+          "object": {
+            "type": "commit",
+            "sha": "4e7e21846effc2ec4533839d0c90ae5864471a86"
+          },
+          "tagged_at": "2026-09-09T17:55:00.000Z"
+        }
+      },
+      {
+        "id": "cit-tested",
+        "plane": "tested",
+        "lane": "tested",
+        "kind": "ci-log",
+        "path": "sources/conflict-sha-mismatch/tested.json",
+        "sha256": "6d74b291a1048a3c18c759a124b0d512cc2118b09881f2f2b860ad378b1ae9fc",
+        "contentSha256": "6d74b291a1048a3c18c759a124b0d512cc2118b09881f2f2b860ad378b1ae9fc",
+        "evidenceClass": "synthetic",
+        "identity": {
+          "role": "observed",
+          "commitSha": "4e7e21846effc2ec4533839d0c90ae5864471a86"
+        },
+        "payload": {
+          "name": "ci",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-09-09T17:50:00.000Z",
+          "head_sha": "4e7e21846effc2ec4533839d0c90ae5864471a86"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "decision": "conflict",
+    "laneCoverage": {
+      "announced": true,
+      "shipped": true,
+      "tested": true
+    },
+    "tagAgreement": true,
+    "shaAgreement": false,
+    "disagreementCodes": [
+      "sha_mismatch"
+    ]
+  },
+  "findings": [
+    {
+      "id": "tag-aligned",
+      "kind": "alignment",
+      "summary": "announced.tag_name and shipped.tag_name are both v1.2.0",
+      "citationIds": [
+        "cit-announced",
+        "cit-shipped"
+      ]
+    },
+    {
+      "id": "sha-mismatch",
+      "kind": "conflict",
+      "summary": "announced.target_commitish differs from shipped.object.sha",
+      "citationIds": [
+        "cit-announced",
+        "cit-shipped"
+      ],
+      "status": "conflict",
+      "code": "sha_mismatch"
+    }
+  ],
+  "citations": [
+    {
+      "id": "cit-announced",
+      "lane": "announced",
+      "plane": "announced",
+      "kind": "github-release-notes",
+      "path": "sources/conflict-sha-mismatch/announced.json",
+      "sha256": "244c1e6a94bd05e744c469c26e73603d4adef21a04530708d292abea987c48b7",
+      "contentSha256": "244c1e6a94bd05e744c469c26e73603d4adef21a04530708d292abea987c48b7",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-shipped",
+      "lane": "shipped",
+      "plane": "shipped",
+      "kind": "git-tag",
+      "path": "sources/conflict-sha-mismatch/shipped.json",
+      "sha256": "7c21cb66edf9a0e9c9656f1f0ff71a0c87fc6685f876be8a9342c8bb216a817e",
+      "contentSha256": "7c21cb66edf9a0e9c9656f1f0ff71a0c87fc6685f876be8a9342c8bb216a817e",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-tested",
+      "lane": "tested",
+      "plane": "tested",
+      "kind": "ci-log",
+      "path": "sources/conflict-sha-mismatch/tested.json",
+      "sha256": "6d74b291a1048a3c18c759a124b0d512cc2118b09881f2f2b860ad378b1ae9fc",
+      "contentSha256": "6d74b291a1048a3c18c759a124b0d512cc2118b09881f2f2b860ad378b1ae9fc",
+      "evidenceClass": "synthetic"
+    }
+  ],
+  "limitations": [
+    "Synthetic authored sources. Not a live GitHub or npm capture.",
+    "Does not execute tests, publish, spend, or merge.",
+    "expect.decision is a catalog contract for c07/c10, not a model judgment."
+  ],
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline fixtures; no purchase"
+  },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}
