@@ -1,0 +1,44 @@
+{
+  "schema": "x402.r2.record.route_regression_input.v1",
+  "reportId": "demo-route-regression-partial",
+  "title": "Partial observations (missing status/accessibility)",
+  "demo": true,
+  "sourceLabel": "synthetic-fixture",
+  "baseline": {
+    "label": "baseline-partial",
+    "capturedAt": "2026-09-01T00:00:00.000Z",
+    "routes": [
+      {
+        "path": "/a",
+        "url": "https://example.test/a",
+        "status": 200,
+        "accessibility": "ok"
+      },
+      {
+        "path": "/b",
+        "url": "https://example.test/b"
+      }
+    ]
+  },
+  "current": {
+    "label": "current-partial",
+    "capturedAt": "2026-09-10T00:00:00.000Z",
+    "routes": [
+      {
+        "path": "/a",
+        "url": "https://example.test/a",
+        "status": 200,
+        "accessibility": "ok"
+      },
+      {
+        "path": "/b",
+        "url": "https://example.test/b",
+        "title": "Still incomplete"
+      },
+      {
+        "path": "/c",
+        "url": "https://example.test/c"
+      }
+    ]
+  }
+}

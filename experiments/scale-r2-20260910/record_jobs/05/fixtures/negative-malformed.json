@@ -1,0 +1,33 @@
+{
+  "schema": "x402.r2.record.route_regression_input.v1",
+  "reportId": "bad-input",
+  "title": "Malformed — forbidden SEO / health fields",
+  "demo": true,
+  "sourceLabel": "synthetic-fixture",
+  "siteHealthScore": 97,
+  "seoRank": 12,
+  "baseline": {
+    "label": "baseline-bad",
+    "routes": [
+      {
+        "path": "/",
+        "url": "https://example.test/",
+        "status": 200,
+        "accessibility": "ok",
+        "trafficProjection": 1000000
+      }
+    ]
+  },
+  "current": {
+    "label": "current-bad",
+    "routes": [
+      {
+        "path": "/",
+        "url": "https://example.test/",
+        "status": 200,
+        "accessibility": "ok",
+        "investmentRecommendation": "buy"
+      }
+    ]
+  }
+}
