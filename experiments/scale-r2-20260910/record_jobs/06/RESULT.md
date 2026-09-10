@@ -53,6 +53,6 @@ node src/cli.mjs calendar fixtures/positive.json
 
 ## Commit
 
-- Feature commit: `FEATURE_SHA_PLACEHOLDER`
+- Feature commit: `f73cae68755f60bd0310d6d6dcc15c2585027e20`
 - Pin base: `1a23b648e3c5f90bc009accb85972e2db6e22051`
 - Local only (Root owns publication/push)
