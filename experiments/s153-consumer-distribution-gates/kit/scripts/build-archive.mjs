@@ -168,6 +168,9 @@ writeArchiveCli();
 mkdirSync(join(STAGE, "test"), { recursive: true });
 copyFileSync(join(S137, "test/release-brief-input-boundary.test.mjs"), join(STAGE, "test/release-brief-input-boundary.test.mjs"));
 
+copyFileSync(join(S137, "test/cli-output.test.mjs"), join(STAGE, "test/cli-output.test.mjs"));
+copyFileSync(join(KIT, "scripts/first-use-check.mjs"), join(STAGE, "test/first-use.test.mjs"));
+
 writeConsumerProvenance(STAGE, {
   sourceRevision: PIN,
   files: ["src/release-brief/schema.mjs", "src/release-brief/transform.mjs", "src/packet.mjs", "bin/cli.mjs"],

@@ -69,6 +69,30 @@
           "eyes": 0
         },
         "mentions_count": 1
+      },
+      "split": {
+        "announced": {
+          "identity": {
+            "role": "claimed",
+            "version": "5.2.1",
+            "tag": "v5.2.1"
+          },
+          "payload": {
+            "name": "v5.2.1",
+            "body": "## What's Changed\r\n\r\n> [!IMPORTANT]  \r\n> The prior release (5.2.0) included an erroneous breaking change related to the extended query parser. There is no actual security vulnerability associated with this behavior (CVE-2024-51999 has been rejected). The change has been fully reverted in this release.\r\n\r\n* Release: 5.2.1 by @UlisesGascon in https://github.com/expressjs/express/pull/6933\r\n\r\n**Full Changelog**: https://github.com/expressjs/express/compare/v5.2.0...v5.2.1",
+            "publishedAt": "2025-12-01T20:54:44Z",
+            "published_at": "2025-12-01T20:54:44Z",
+            "createdAt": "2025-12-01T20:27:35Z",
+            "created_at": "2025-12-01T20:27:35Z",
+            "draft": false,
+            "prerelease": false,
+            "htmlUrl": "https://github.com/expressjs/express/releases/tag/v5.2.1",
+            "targetCommitish": "master",
+            "target_commitish": "master"
+          }
+        },
+        "shipped": null,
+        "tested": null
       }
     }
   ]

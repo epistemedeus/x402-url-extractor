@@ -1389,5 +1389,6 @@ function isMain() {
 
 if (isMain()) {
   const code = await main();
-  process.exit(code);
+  // Allow piped JSON to drain before exit, including large family packets.
+  process.exitCode = code;
 }

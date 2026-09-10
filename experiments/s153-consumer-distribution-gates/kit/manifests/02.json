@@ -13,8 +13,8 @@
     "transform": "src/release-brief/transform.mjs"
   },
   "inputs": {
-    "required": ["schema", "clock", "evidenceClass", "sources"],
-    "optional": ["subject", "lanes", "githubRelease", "notice"],
+    "required": ["clock", "evidenceClass"],
+    "optional": ["schema", "sources", "subject", "lanes", "githubRelease", "notice"],
     "planes": ["announced", "shipped", "tested"]
   },
   "outputs": {
