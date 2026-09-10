@@ -110,13 +110,68 @@ export function pageChangeHttpLimits(env = process.env) {
   });
 }
 
+function parseCommitValue(raw) {
+  const value = String(raw || "").trim().toLowerCase();
+  if (!value) return { present: false, valid: false, value: null };
+  return { present: true, valid: COMMIT_PATTERN.test(value), value };
+}
+
+// Host-injected provenance first. PAGE_CHANGE_SOURCE_COMMIT is a local/test pin
+// only when the host did not supply a commit. Disagreeing pins are not emitted.
+const HOST_COMMIT_KEYS = Object.freeze([
+  ["RAILWAY_GIT_COMMIT_SHA", "railway_git_commit_sha"],
+  ["SOURCE_COMMIT", "source_commit"],
+]);
+
 export function resolveSourceCommit(env = process.env) {
-  const raw = String(env.PAGE_CHANGE_SOURCE_COMMIT || env.SOURCE_COMMIT || "").trim().toLowerCase();
-  if (!raw) return { commit: null, commitStatus: "unavailable", reason: "missing_source_commit" };
-  if (!COMMIT_PATTERN.test(raw)) {
-    return { commit: null, commitStatus: "unavailable", reason: "invalid_source_commit" };
+  const hostPins = [];
+  for (const [key, commitSource] of HOST_COMMIT_KEYS) {
+    const parsed = parseCommitValue(env[key]);
+    if (!parsed.present) continue;
+    if (!parsed.valid) {
+      return { commit: null, commitStatus: "unavailable", reason: "invalid_source_commit", commitSource: null };
+    }
+    hostPins.push({ commit: parsed.value, commitSource });
   }
-  return { commit: raw, commitStatus: "available", reason: null };
+  const uniqueHost = [...new Set(hostPins.map((pin) => pin.commit))];
+  if (uniqueHost.length > 1) {
+    return { commit: null, commitStatus: "unavailable", reason: "source_commit_mismatch", commitSource: null };
+  }
+
+  const explicit = parseCommitValue(env.PAGE_CHANGE_SOURCE_COMMIT);
+  if (hostPins.length) {
+    const host = hostPins[0];
+    if (explicit.present) {
+      if (!explicit.valid) {
+        return { commit: null, commitStatus: "unavailable", reason: "invalid_source_commit", commitSource: null };
+      }
+      if (explicit.value !== host.commit) {
+        return { commit: null, commitStatus: "unavailable", reason: "source_commit_mismatch", commitSource: null };
+      }
+    }
+    return { commit: host.commit, commitStatus: "available", reason: null, commitSource: host.commitSource };
+  }
+
+  if (!explicit.present) {
+    return { commit: null, commitStatus: "unavailable", reason: "missing_source_commit", commitSource: null };
+  }
+  if (!explicit.valid) {
+    return { commit: null, commitStatus: "unavailable", reason: "invalid_source_commit", commitSource: null };
+  }
+  return {
+    commit: explicit.value,
+    commitStatus: "available",
+    reason: null,
+    commitSource: "page_change_source_commit",
+  };
+}
+
+export function applySourceCommitHeader(res, body) {
+  const commit = body?.commit;
+  if (typeof commit === "string" && COMMIT_PATTERN.test(commit)) {
+    res.set("x-source-commit", commit);
+  }
+  return res;
 }
 
 export function pageChangeHttpHealth(env = process.env) {
@@ -139,8 +194,10 @@ export function pageChangeHttpHealth(env = process.env) {
     schemaVersion: PAGE_CHANGE_HTTP_SCHEMA,
     commitStatus: provenance.commitStatus,
   };
-  if (provenance.commitStatus === "available") body.commit = provenance.commit;
-  else {
+  if (provenance.commitStatus === "available") {
+    body.commit = provenance.commit;
+    body.commitSource = provenance.commitSource;
+  } else {
     body.commit = null;
     body.reason = provenance.reason;
   }
@@ -216,7 +273,7 @@ export function pageChangeHttpOpenApiExample() {
       [PAGE_CHANGE_HTTP_HEALTH_PATH]: {
         get: {
           operationId: "getRecipesPageChangeHealth",
-          summary: "Companion status. Source commit only when configured and valid.",
+          summary: "Companion status. Source commit only when a host-supplied or local pin is present, valid, and unambiguous.",
           responses: { "200": { description: "Enabled health." }, "404": { description: "Disabled." } },
         },
       },
@@ -672,6 +729,7 @@ export function mountPageChangeHttp(app, { env = process.env } = {}) {
     const body = pageChangeHttpHealth(env);
     if (!body.enabled) return disabledJson(res);
     res.set("Cache-Control", "no-store");
+    applySourceCommitHeader(res, body);
     return res.status(200).json(body);
   });
   app.all(PAGE_CHANGE_HTTP_HEALTH_PATH, methodNotAllowed("GET"));
@@ -694,6 +752,7 @@ export function mountPageChangeHttp(app, { env = process.env } = {}) {
       });
     }
     res.set("Cache-Control", "no-store");
+    applySourceCommitHeader(res, proof);
     return res.status(200).json(proof);
   });
   app.all(XAGENT_VERIFICATION_PATH, methodNotAllowed("GET"));
