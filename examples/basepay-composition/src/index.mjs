@@ -13,3 +13,10 @@ export {
   BASEPAY_CHECK_IDS,
   BASEPAY_CHECK_COUNT,
 } from "./compose.mjs";
+export {
+  EVIDENCE_ORIGIN,
+  EVIDENCE_ORIGIN_LAYER1,
+  classifyLayer2EvidenceOrigin,
+  independentTipReplayConfirmed,
+} from "./evidence.mjs";
+export { acquireUpstream, verifyPinnedBytes, AcquireError } from "./acquire.mjs";

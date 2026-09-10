@@ -1,0 +1,171 @@
+{
+  "schema": "basepay-conformance/result",
+  "schema_version": "1.0.0",
+  "evidence_label": "synthetic_offline_fixture",
+  "synthetic": true,
+  "notice": "SameDayDesk synthetic offline fixture. Same structural shape as a basepay-conformance/result 1.0.0 report (schema, 19 check IDs, six limits). Different bytes from LumenFromTheFuture/basepay-conformance. Not upstream JSON, not a license grant, and not an independently executed harness result.",
+  "fixture": {
+    "name": "samedaydesk-synthetic-offline-fixture",
+    "version": "0.1.0",
+    "repo": "https://github.com/LumenFromTheFuture/basepay-conformance",
+    "commit": "8a46910ede4830de8481a3ae7f095e120a312d62",
+    "role": "synthetic_published_shape"
+  },
+  "target": {
+    "repository": "LumenFromTheFuture/agentkit",
+    "upstream_pr": "https://github.com/coinbase/agentkit/pull/1349",
+    "head_sha": "8380c34b9769cc255ff50d78b4ad2bafdd3de354",
+    "acceptance_shape": "synthetic lab shape only; not an executed harness result"
+  },
+  "provenance": {
+    "blob_identities": [],
+    "substitutions": [],
+    "note": "Synthetic lab fixture. Provenance blobs are intentionally empty so this file cannot be mistaken for a vendored upstream report."
+  },
+  "runner": {
+    "name": "samedaydesk synthetic shape fixture",
+    "version": "0.1.0",
+    "node": "v22.23.2",
+    "platform": "lab",
+    "offline": true,
+    "executed": false
+  },
+  "checks": {
+    "total": 19,
+    "passed": 19,
+    "failed": 0,
+    "cases": [
+      {
+        "id": "P0",
+        "name": "synthetic P0 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check P0; not executed"
+      },
+      {
+        "id": "F1",
+        "name": "synthetic F1 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F1; not executed"
+      },
+      {
+        "id": "F2",
+        "name": "synthetic F2 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F2; not executed"
+      },
+      {
+        "id": "F3",
+        "name": "synthetic F3 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F3; not executed"
+      },
+      {
+        "id": "F4",
+        "name": "synthetic F4 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F4; not executed"
+      },
+      {
+        "id": "F5",
+        "name": "synthetic F5 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F5; not executed"
+      },
+      {
+        "id": "F6",
+        "name": "synthetic F6 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F6; not executed"
+      },
+      {
+        "id": "F7",
+        "name": "synthetic F7 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F7; not executed"
+      },
+      {
+        "id": "F8",
+        "name": "synthetic F8 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F8; not executed"
+      },
+      {
+        "id": "F9",
+        "name": "synthetic F9 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F9; not executed"
+      },
+      {
+        "id": "F10",
+        "name": "synthetic F10 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F10; not executed"
+      },
+      {
+        "id": "F11",
+        "name": "synthetic F11 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F11; not executed"
+      },
+      {
+        "id": "F12",
+        "name": "synthetic F12 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F12; not executed"
+      },
+      {
+        "id": "F13",
+        "name": "synthetic F13 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F13; not executed"
+      },
+      {
+        "id": "F14",
+        "name": "synthetic F14 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F14; not executed"
+      },
+      {
+        "id": "F15",
+        "name": "synthetic F15 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F15; not executed"
+      },
+      {
+        "id": "F16",
+        "name": "synthetic F16 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F16; not executed"
+      },
+      {
+        "id": "F16b",
+        "name": "synthetic F16b shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F16b; not executed"
+      },
+      {
+        "id": "F17",
+        "name": "synthetic F17 shape row",
+        "pass": true,
+        "detail": "offline lab placeholder for harness check F17; not executed"
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "SYN-1",
+      "severity": "observation",
+      "status": "lab-only",
+      "summary": "Synthetic fixture finding. This file is a shape stand-in for offline tests and does not report an executed BasePay harness."
+    }
+  ],
+  "limits": [
+    "Synthetic offline fixture only. It is not a live-wallet result and not an independently executed BasePay harness replay.",
+    "The 19 check IDs are harness identity labels for loader tests. Pass rows here are synthetic and must not be read as executed PASS.",
+    "Six limits are present to match the result shape. They do not become providerNativeVerified or full stateful coverage.",
+    "Default composition uses this file without network and without upstream JSON present.",
+    "Optional acquire downloads pinned upstream JSON into a gitignored runtime directory and never executes those bytes.",
+    "This example does not relicense third-party JSON and does not claim MIT covers upstream reports."
+  ],
+  "generated_at": "2026-09-10T00:00:00.000Z"
+}

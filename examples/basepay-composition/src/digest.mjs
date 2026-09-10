@@ -27,10 +27,16 @@ export function digestFile(path) {
   });
 }
 
-export function assertDigest(digest, expectedGitBlob, label) {
+export function assertDigest(digest, expectedGitBlob, label, expectedSha256) {
   if (digest.gitBlobSha !== expectedGitBlob) {
     fail(
       `${label} git blob ${digest.gitBlobSha} does not match pin ${expectedGitBlob}`,
+      { kind: "blob_mismatch", layer: LAYER2_NAME },
+    );
+  }
+  if (expectedSha256 && digest.sha256 !== expectedSha256) {
+    fail(
+      `${label} sha256 ${digest.sha256} does not match pin ${expectedSha256}`,
       { kind: "blob_mismatch", layer: LAYER2_NAME },
     );
   }

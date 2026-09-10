@@ -19,6 +19,20 @@ export const REPLAY_RESULT_GIT_BLOB = "f455ae744deec6a73f23816d9c5937f3131c5934"
 export const RESULT_SHA256 = "7575ceb160c6e15992f6950cf2b02cb3736a0d14dd7f3c82a98266d3cd04e11f";
 export const MAPPING_SHA256 = "c2116337fb8972fab75d7e21acecf381d0deeb1b3b6e0b1e98f7538ed1bbe568";
 export const REPLAY_RESULT_SHA256 = "632720dc1a7ec83b0f88296cbca103d83c73e64e7e59206853dc7673fa7efbc3";
+export const RESULT_BYTES = 10230;
+export const MAPPING_BYTES = 6033;
+export const REPLAY_RESULT_BYTES = 10230;
+
+/** In-tree synthetic fixtures. Different bytes from the upstream pins above. */
+export const SYNTHETIC_PUBLISHED_GIT_BLOB = "1be27c7f479b5d61663bb7f3f787658789eb41cd";
+export const SYNTHETIC_PUBLISHED_SHA256 = "d91e220d91deeb3c4407bbb0b475dc9d68f02763d7a16c83c2930de4b2bacc8c";
+export const SYNTHETIC_PUBLISHED_BYTES = 5976;
+export const SYNTHETIC_MAPPING_GIT_BLOB = "92570637f3ade0f36b899a05882e0de76609174b";
+export const SYNTHETIC_MAPPING_SHA256 = "ad5d6e44d8e1d54fff1812cf5b6a558f1cfb0d5f615b79e8b2ac18da6b09851d";
+export const SYNTHETIC_MAPPING_BYTES = 3857;
+export const SYNTHETIC_REPLAY_GIT_BLOB = "3a26569de89e6912df357b73743dd3f83b71436b";
+export const SYNTHETIC_REPLAY_SHA256 = "a879383b4479d4bb080a87d123c9a010bdd3f190de629fa95f6896fdf54c18da";
+export const SYNTHETIC_REPLAY_BYTES = 5973;
 
 export const OFFICIAL_COMMAND = "npm run conformance";
 export const RESULT_SCHEMA = "basepay-conformance/result";

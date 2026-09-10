@@ -3,3 +3,7 @@ node_modules/
 data/
 .scratch/
 .claude/
+
+# BasePay composition: optional pinned upstream JSON (no license grant)
+examples/basepay-composition/runtime/upstream/
+

@@ -9,6 +9,12 @@ import {
   CHECK_COUNT_SOURCE,
 } from "./canonical-checks.mjs";
 import { assertDigest, digestFile } from "./digest.mjs";
+import {
+  assertPinIntegrity,
+  classifyLayer2EvidenceOrigin,
+  independentTipReplayConfirmed,
+  isIndependentlyExecutedHarnessOrigin,
+} from "./evidence.mjs";
 import { fail } from "./errors.mjs";
 import { LAYER2_NAME, LAYER2_TITLE } from "./layers.mjs";
 import {
@@ -27,12 +33,17 @@ import {
   MERCHANT_CASE_NAMES,
   OFFICIAL_COMMAND,
   PUBLISHED_RESULT_FIXTURE_COMMIT,
-  REPLAY,
   REPLAY_RESULT_GIT_BLOB,
   RESULT_GIT_BLOB,
   RESULT_PATH,
   RESULT_SCHEMA,
   RESULT_SCHEMA_VERSION,
+  SYNTHETIC_MAPPING_GIT_BLOB,
+  SYNTHETIC_MAPPING_SHA256,
+  SYNTHETIC_PUBLISHED_GIT_BLOB,
+  SYNTHETIC_PUBLISHED_SHA256,
+  SYNTHETIC_REPLAY_GIT_BLOB,
+  SYNTHETIC_REPLAY_SHA256,
   TARGET_HEAD_SHA,
   TARGET_REPOSITORY,
   TARGET_UPSTREAM_PR,
@@ -210,14 +221,35 @@ function resultView(result, digest, checks, commit) {
   });
 }
 
+function loadClassifiedFile(path, {
+  defaultPath,
+  expectedSyntheticGitBlob,
+  expectedSyntheticSha256,
+  label,
+  separatelyLabelled = false,
+}) {
+  const digest = digestFile(path);
+  if (resolve(path) === resolve(defaultPath)) {
+    assertDigest(digest, expectedSyntheticGitBlob, label, expectedSyntheticSha256);
+  }
+  assertPinIntegrity(digest, label);
+  const evidenceOrigin = classifyLayer2EvidenceOrigin(digest.gitBlobSha, { separatelyLabelled });
+  return { digest, evidenceOrigin };
+}
+
 export function loadLayer2({
   publishedResultPath = PUBLISHED_RESULT_FIXTURE,
   mappingPath = MAPPING_FIXTURE,
   replayResultPath = REPLAY_RESULT_FIXTURE,
   requireReplay = true,
+  separatelyLabelledHarness = false,
 } = {}) {
-  const publishedDigest = digestFile(publishedResultPath);
-  assertDigest(publishedDigest, RESULT_GIT_BLOB, "published BasePay result");
+  const publishedMeta = loadClassifiedFile(publishedResultPath, {
+    defaultPath: PUBLISHED_RESULT_FIXTURE,
+    expectedSyntheticGitBlob: SYNTHETIC_PUBLISHED_GIT_BLOB,
+    expectedSyntheticSha256: SYNTHETIC_PUBLISHED_SHA256,
+    label: "published BasePay result",
+  });
   const published = readJson(publishedResultPath);
   const publishedCommit = verifyResultShape(published, "published BasePay result");
   if (publishedCommit !== PUBLISHED_RESULT_FIXTURE_COMMIT) {
@@ -228,34 +260,44 @@ export function loadLayer2({
   }
   const publishedChecks = verifyCheckIds(published, "published BasePay result");
 
-  const mappingDigest = digestFile(mappingPath);
-  assertDigest(mappingDigest, MAPPING_GIT_BLOB, "taxonomy mapping");
+  const mappingMeta = loadClassifiedFile(mappingPath, {
+    defaultPath: MAPPING_FIXTURE,
+    expectedSyntheticGitBlob: SYNTHETIC_MAPPING_GIT_BLOB,
+    expectedSyntheticSha256: SYNTHETIC_MAPPING_SHA256,
+    label: "taxonomy mapping",
+  });
   const mapping = summarizeMapping(readJson(mappingPath));
 
   let replay = null;
   if (replayResultPath) {
-    const replayDigest = digestFile(replayResultPath);
+    const replayMeta = loadClassifiedFile(replayResultPath, {
+      defaultPath: REPLAY_RESULT_FIXTURE,
+      expectedSyntheticGitBlob: SYNTHETIC_REPLAY_GIT_BLOB,
+      expectedSyntheticSha256: SYNTHETIC_REPLAY_SHA256,
+      label: "replay BasePay result",
+      separatelyLabelled: separatelyLabelledHarness,
+    });
     const replayJson = readJson(replayResultPath);
     const replayCommit = verifyResultShape(replayJson, "replay BasePay result");
     const replayChecks = verifyCheckIds(replayJson, "replay BasePay result");
-    const inTreeReplay = resolve(replayResultPath) === resolve(REPLAY_RESULT_FIXTURE);
-    if (inTreeReplay) {
-      assertDigest(replayDigest, REPLAY_RESULT_GIT_BLOB, "in-tree replay BasePay result");
-    }
     if (replayCommit !== BASEPAY_TIP_COMMIT && replayCommit !== PUBLISHED_RESULT_FIXTURE_COMMIT) {
       fail(`replay fixture.commit ${replayCommit} is not a pinned revision`, { kind: "version_change", layer: LAYER2_NAME });
     }
     const replayPass = replayChecks.passed === BASEPAY_CHECK_COUNT && replayChecks.failed === 0;
-    const pinnedReplayBytes = replayDigest.gitBlobSha === REPLAY_RESULT_GIT_BLOB;
-    const independentTipReplay = pinnedReplayBytes && replayCommit === BASEPAY_TIP_COMMIT && replayPass;
+    const independentTipReplay = independentTipReplayConfirmed({
+      gitBlobSha: replayMeta.digest.gitBlobSha,
+      commit: replayCommit,
+      replayPass,
+    });
     replay = Object.freeze({
       loaded: true,
       path: replayResultPath,
-      digest: replayDigest,
-      ...resultView(replayJson, replayDigest, replayChecks, replayCommit),
+      digest: replayMeta.digest,
+      ...resultView(replayJson, replayMeta.digest, replayChecks, replayCommit),
       replayPass,
       independentTipReplay,
-      evidenceOrigin: pinnedReplayBytes ? "pinned_worker_replay_artifact" : "caller_supplied_unverified_report",
+      evidenceOrigin: replayMeta.evidenceOrigin,
+      independentlyExecutedHarnessResult: isIndependentlyExecutedHarnessOrigin(replayMeta.evidenceOrigin),
       executedByThisHelper: false,
       officialCommand: OFFICIAL_COMMAND,
       log: null,
@@ -288,22 +330,32 @@ export function loadLayer2({
       mappingPath: MAPPING_PATH,
       resultGitBlob: RESULT_GIT_BLOB,
       mappingGitBlob: MAPPING_GIT_BLOB,
+      replayGitBlob: REPLAY_RESULT_GIT_BLOB,
       officialCommand: OFFICIAL_COMMAND,
       runner: "basepay-conformance harness",
       fixture: "basepay-conformance",
     }),
     published: Object.freeze({
       path: publishedResultPath,
-      ...resultView(published, publishedDigest, publishedChecks, publishedCommit),
+      evidenceOrigin: publishedMeta.evidenceOrigin,
+      executedByThisHelper: false,
+      ...resultView(published, publishedMeta.digest, publishedChecks, publishedCommit),
     }),
     replay,
     mapping: Object.freeze({
       path: mappingPath,
-      digest: mappingDigest,
+      digest: mappingMeta.digest,
+      evidenceOrigin: mappingMeta.evidenceOrigin,
+      executedByThisHelper: false,
       ...mapping,
       confirmation,
       confirmationScope: confirmation === "author+replay-confirmed" ? "pinned revision only" : "not replay-confirmed",
       fullStatefulCoverage: false,
+    }),
+    evidenceOrigins: Object.freeze({
+      published: publishedMeta.evidenceOrigin,
+      mapping: mappingMeta.evidenceOrigin,
+      replay: replay?.evidenceOrigin || null,
     }),
     checks: Object.freeze({
       source: CHECK_COUNT_SOURCE,
@@ -318,6 +370,7 @@ export function loadLayer2({
       liveWalletAssurance: true,
       fullStatefulCoverage: true,
       paidProviderApi: true,
+      providedReportAsIndependentReplay: true,
     }),
   });
 }

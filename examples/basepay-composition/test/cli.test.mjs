@@ -23,6 +23,8 @@ test("default CLI compose prints both named layers and refuses live-wallet assur
   const report = JSON.parse(result.stdout);
   assert.equal(report.layers[LAYER1_NAME].status, "evaluated");
   assert.equal(report.layers[LAYER2_NAME].replay.checks.passed, 19);
+  assert.equal(report.layers[LAYER2_NAME].replay.evidenceOrigin, "synthetic_offline_fixture");
+  assert.equal(report.layers[LAYER2_NAME].replay.independentTipReplay, false);
   assert.equal(report.mappingCoverage.covered, 4);
   assert.equal(report.mappingCoverage.partial, 1);
   assert.equal(report.mappingCoverage.gap, 2);
@@ -39,6 +41,8 @@ test("CLI help lists pins and copyable commands", () => {
   assert.match(result.stdout, /8a46910ede4830de8481a3ae7f095e120a312d62/);
   assert.match(result.stdout, /npm run compose/);
   assert.match(result.stdout, /providerNativeVerified is layer-1 only/);
+  assert.match(result.stdout, /acquire-upstream/);
+  assert.match(result.stdout, /synthetic/);
 });
 
 test("contradictory observations still emit a two-layer report", () => {

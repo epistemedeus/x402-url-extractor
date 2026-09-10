@@ -3,10 +3,11 @@ import test from "node:test";
 
 import { BASEPAY_CHECK_COUNT, BASEPAY_CHECK_IDS, compose } from "../src/compose.mjs";
 import { CHECK_COUNT_NOT_DERIVED_FROM, CHECK_COUNT_SOURCE } from "../src/canonical-checks.mjs";
+import { independentTipReplayConfirmed } from "../src/evidence.mjs";
 import { BasePayCompositionError } from "../src/errors.mjs";
 import { loadLayer2 } from "../src/layer2.mjs";
 import { STATEFUL_WALLET_POLICY_CASE_NAMES } from "../../../stateful-wallet-policy-conformance.mjs";
-import { MERCHANT_CASE_NAMES } from "../src/pins.mjs";
+import { BASEPAY_TIP_COMMIT, MERCHANT_CASE_NAMES, RESULT_GIT_BLOB, REPLAY_RESULT_GIT_BLOB } from "../src/pins.mjs";
 import { OBSERVATION_FIXTURE_FILES } from "../src/paths.mjs";
 import { clonePublished, cloneReplay, writeTempJson } from "./helpers.mjs";
 
@@ -34,7 +35,25 @@ test("published and replay results independently carry the same 19 check IDs", (
   assert.equal(layer2.checks.notDerivedFrom.includes("example_unit_tests"), true);
   assert.equal(layer2.published.checks.passed, 19);
   assert.equal(layer2.replay.checks.passed, 19);
-  assert.equal(layer2.replay.independentTipReplay, true);
+  assert.equal(layer2.published.evidenceOrigin, "synthetic_offline_fixture");
+  assert.equal(layer2.replay.evidenceOrigin, "synthetic_offline_fixture");
+  assert.equal(layer2.replay.independentTipReplay, false);
+  assert.equal(
+    independentTipReplayConfirmed({
+      gitBlobSha: REPLAY_RESULT_GIT_BLOB,
+      commit: BASEPAY_TIP_COMMIT,
+      replayPass: true,
+    }),
+    true,
+  );
+  assert.equal(
+    independentTipReplayConfirmed({
+      gitBlobSha: RESULT_GIT_BLOB,
+      commit: BASEPAY_TIP_COMMIT,
+      replayPass: true,
+    }),
+    false,
+  );
 });
 
 test("layer-2 check count is read from the result fixture, not from this suite", () => {

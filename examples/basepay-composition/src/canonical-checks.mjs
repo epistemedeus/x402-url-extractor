@@ -1,9 +1,9 @@
 /**
  * BasePay harness check identity at the pinned revision.
  *
- * This list is the layer-2 source of truth for check IDs. It is copied from
- * the independently executed `basepay-conformance/result` fixture, not from
- * this example's `node --test` count, merchant case count, or mapping rows.
+ * This list is the layer-2 source of truth for check IDs. It is the harness
+ * identity at the pinned BasePay revision, not this example's `node --test`
+ * count, merchant case count, mapping rows, or a vendored upstream JSON copy.
  */
 export const BASEPAY_CHECK_IDS = Object.freeze([
   "P0",

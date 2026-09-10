@@ -24,7 +24,11 @@ test("composition report names both evidence layers and keeps them separate", ()
   assert.equal(result.layers[LAYER2_NAME].name, LAYER2_NAME);
   assert.notEqual(result.layers[LAYER1_NAME], result.layers[LAYER2_NAME]);
   assert.equal(result.layers[LAYER1_NAME].authority.evaluator, "statefulWalletPolicyConformance");
+  assert.equal(result.layers[LAYER1_NAME].evidenceOrigin, "caller_supplied_observation_assertions");
   assert.equal(result.layers[LAYER2_NAME].authority.officialCommand, "npm run conformance");
+  assert.equal(result.layers[LAYER2_NAME].published.evidenceOrigin, "synthetic_offline_fixture");
+  assert.equal(result.evidenceClasses.caller_layer1_observation_assertions, "caller_supplied_observation_assertions");
+  assert.equal(result.evidenceClasses.independently_executed_harness_result, null);
   assert.equal(result.boundary.credentialsAccepted, false);
   assert.equal(result.boundary.walletAccessed, false);
   assert.equal(result.boundary.liveWalletAssurance, false);

@@ -1,5 +1,10 @@
 import { readFileSync } from "node:fs";
 
+import {
+  EVIDENCE_ORIGIN,
+  EVIDENCE_ORIGIN_LAYER1,
+  isIndependentlyExecutedHarnessOrigin,
+} from "./evidence.mjs";
 import { BasePayCompositionError, fail } from "./errors.mjs";
 import { evaluateLayer1, isEvaluatedLayer1 } from "./layer1.mjs";
 import { loadLayer2 } from "./layer2.mjs";
@@ -40,7 +45,7 @@ export function providerNativeVerifiedFromComposition(layer1, _layer2, { promote
       upgradedFromLayer2: false,
       refused: true,
       reason:
-        "providerNativeVerified is derived only from caller-supplied observations (deny + enforcementClass policy). Independently executed BasePay JSON cannot upgrade it.",
+        "providerNativeVerified is derived only from caller-supplied observations (deny + enforcementClass policy). Layer-2 BasePay JSON cannot upgrade it.",
     });
   }
   return Object.freeze({
@@ -60,6 +65,7 @@ export function compose({
   mappingPath,
   replayResultPath,
   requireReplay = true,
+  separatelyLabelledHarness = false,
   promoteFromLayer2 = false,
 } = {}) {
   const observationInput = observationsPath ? readJson(observationsPath) : observations;
@@ -73,6 +79,7 @@ export function compose({
     mappingPath,
     replayResultPath,
     requireReplay,
+    separatelyLabelledHarness,
   });
 
   const providerNativeVerified = providerNativeVerifiedFromComposition(layer1, layer2, { promoteFromLayer2 });
@@ -124,7 +131,20 @@ export function compose({
       fromLayer2ToFullStatefulCoverage: true,
       requestedPromoteFromLayer2: promoteFromLayer2 === true,
       reason:
-        "Imported or independently executed BasePay JSON is a named layer-2 result. It does not become providerNativeVerified, live-wallet assurance, or full stateful coverage.",
+        "A labelled BasePay JSON report is a named layer-2 result. It does not become providerNativeVerified, live-wallet assurance, or full stateful coverage.",
+    }),
+    evidenceClasses: Object.freeze({
+      caller_layer1_observation_assertions: layer1.evidenceOrigin || EVIDENCE_ORIGIN_LAYER1,
+      provided_report: [
+        layer2.published.evidenceOrigin,
+        layer2.mapping.evidenceOrigin,
+        layer2.replay?.evidenceOrigin,
+      ].includes(EVIDENCE_ORIGIN.PROVIDED_REPORT)
+        ? EVIDENCE_ORIGIN.PROVIDED_REPORT
+        : null,
+      independently_executed_harness_result: isIndependentlyExecutedHarnessOrigin(layer2.replay?.evidenceOrigin)
+        ? layer2.replay.evidenceOrigin
+        : null,
     }),
     boundary: Object.freeze({
       credentialsAccepted: false,

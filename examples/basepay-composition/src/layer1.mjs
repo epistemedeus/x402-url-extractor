@@ -5,6 +5,7 @@ import {
   statefulWalletPolicyConformance,
 } from "../../../stateful-wallet-policy-conformance.mjs";
 
+import { EVIDENCE_ORIGIN_LAYER1 } from "./evidence.mjs";
 import { fail } from "./errors.mjs";
 import { LAYER1_NAME, LAYER1_TITLE } from "./layers.mjs";
 import {
@@ -103,6 +104,7 @@ export function evaluateLayer1(input) {
       name: LAYER1_NAME,
       title: LAYER1_TITLE,
       authority: LAYER1_AUTHORITY,
+      evidenceOrigin: EVIDENCE_ORIGIN_LAYER1,
       status: "rejected",
       kind: "wrong_layer",
       rejection: Object.freeze({
@@ -125,6 +127,7 @@ export function evaluateLayer1(input) {
       name: LAYER1_NAME,
       title: LAYER1_TITLE,
       authority: LAYER1_AUTHORITY,
+      evidenceOrigin: EVIDENCE_ORIGIN_LAYER1,
       status: "evaluated",
       kind: evaluation.decision,
       rejection: null,
@@ -145,6 +148,7 @@ export function evaluateLayer1(input) {
       name: LAYER1_NAME,
       title: LAYER1_TITLE,
       authority: LAYER1_AUTHORITY,
+      evidenceOrigin: EVIDENCE_ORIGIN_LAYER1,
       status: "rejected",
       kind,
       rejection: Object.freeze({ kind, message }),

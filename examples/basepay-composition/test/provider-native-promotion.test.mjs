@@ -19,7 +19,7 @@ test("missing required observations plus layer-2 19/19 does not invent providerN
   assert.deepEqual(result.providerNativeVerified.controls, []);
   assert.equal(result.providerNativeVerified.upgradedFromLayer2, false);
   assert.equal(result.layers.layer2_independent_basepay_conformance.replay.checks.passed, 19);
-  assert.equal(result.mappingCoverage.confirmation, "author+replay-confirmed");
+  assert.equal(result.mappingCoverage.confirmation, "author_claim_only");
   for (const control of result.mappingCoverage.cases.covered) {
     assert.equal(result.providerNativeVerified.controls.includes(control), false);
   }
