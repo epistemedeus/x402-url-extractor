@@ -50,4 +50,6 @@ node src/cli.mjs report fixtures/positive.json
 
 ## Commit
 
-See git log on `codex/r2-record-jobs-05-20260910` after commit (SHA filled in commit message / Lead summary).
+- Feature commit: `22209a69e4d998387658c3f2ff082161b0b53b95`
+- Pin base: `1a23b648e3c5f90bc009accb85972e2db6e22051`
+- Local only (Root owns publication/push)
