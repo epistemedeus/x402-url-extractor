@@ -1,0 +1,59 @@
+=== NL-RECORD-04 terminal head 2026-09-10T12:45:46Z ===
+branch: codex/nl-record-04-dist-feed-20260910
+tip: 5c2cc3db44544298d3cd964e4468a369ee57d754
+merchant pin: a7e2cd7a2223e2aa7e7e09eebf3695aba4731205
+dist08 pin: ea000772cdbd6d5df7174369dcef9aa2270e5723
+push: OK origin/codex/nl-record-04-dist-feed-20260910
+tests: 8 pass / 0 fail
+quota target: 2026-09-10T12:48:15.801Z (finished before)
+ok 7 - accepts { routeRegressionInput } wrapper shape
+  ---
+  duration_ms: 0.856238
+  type: 'test'
+  ...
+# Subtest: schema validateDistRepairFeed accepts positive feed
+ok 8 - schema validateDistRepairFeed accepts positive feed
+  ---
+  duration_ms: 0.745522
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 203.002658
+--- demo summary ---
+{
+  "export": "/workspace/pilot/worktrees/nl-record-04-dist-feed-20260910/experiments/scale-r2-20260910/record_jobs/nl-04-dist-feed/artifacts/dist-repair-feed.positive.json",
+  "results": {
+    "positive.json": {
+      "status": "ready",
+      "byRecommendation": {
+        "no_action_unchanged": 1,
+        "consider_listing_new_route": 1,
+        "update_listed_route_or_redirect_target": 1,
+        "diagnose_access_or_listing_path": 2,
+        "confirm_restored_route_in_listing": 1,
+        "recommend_distribution_recheck": 1
+      },
+      "currentCaptureIncomplete": false
+    },
+    "partial-incomplete-current.json": {
+      "status": "partial_input",
+      "byRecommendation": {
+        "no_action_unchanged": 2,
+        "cannot_prove_global_removal": 2
+      },
+      "currentCaptureIncomplete": true
+    },
+    "negative-forbidden.json": {
+      "status": "rejected",
+      "byRecommendation": null,
+      "currentCaptureIncomplete": null
+    }
+  }
+}

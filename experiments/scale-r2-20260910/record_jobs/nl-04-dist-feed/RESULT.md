@@ -45,4 +45,5 @@ Export artifact for Dist-06: `artifacts/dist-repair-feed.positive.json`
 ## Commit / push
 
 - Feature tip: `0816ddf83d81ff00d902bdbf2e8f72d387804c9d`
-- Push: origin `codex/nl-record-04-dist-feed-20260910`
+- Feature tip (RESULT amend): `5c2cc3db44544298d3cd964e4468a369ee57d754`
+- Push: OK → `origin/codex/nl-record-04-dist-feed-20260910`
