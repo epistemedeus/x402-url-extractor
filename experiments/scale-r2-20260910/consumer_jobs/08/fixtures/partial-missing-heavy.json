@@ -1,0 +1,11 @@
+{
+  "schema": "x402.r2.consumer.customer_result_request.v1",
+  "requestId": "journey-partial-heavy-20260910",
+  "recipeIds": [
+    "procurement-brief",
+    "heavy-01-evidence-capture",
+    "heavy-03-evidence-link"
+  ],
+  "procurementInputPath": "../07/fixtures/positive.json",
+  "note": "Partial: ready recipe plus Heavy slots that must stay unavailable_pending_heavy."
+}

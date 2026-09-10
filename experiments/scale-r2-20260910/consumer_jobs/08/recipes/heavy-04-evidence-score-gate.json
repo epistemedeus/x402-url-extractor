@@ -1,0 +1,9 @@
+{
+  "id": "heavy-04-evidence-score-gate",
+  "title": "Evidence score gate",
+  "status": "unavailable_pending_heavy",
+  "jobRef": "R2-CONSUMER-JOBS-04",
+  "schema": null,
+  "cli": null,
+  "note": "Heavy branch artifact not ready on this thin package. Slot remains unavailable_pending_heavy (distinct from empty/no-users). Compose exact Heavy returned artifacts later; do not invent demo outputs."
+}

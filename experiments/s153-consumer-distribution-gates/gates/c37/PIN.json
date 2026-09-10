@@ -1,0 +1,133 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c37",
+  "s137Pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "replay-pack",
+  "jobId": "R2-CONSUMER-JOBS-05",
+  "moduleId": "05",
+  "situationId": "S5",
+  "situation": "cli-stdout-batch",
+  "brief": "CLI analyze single+batch: exit codes, stdout JSON schema, no network",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "expectedDecisionClass": "pass",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/replay-pack",
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack",
+  "realReuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/real/replay-pack",
+  "stdoutSchemas": {
+    "single": "s137.consumer-evidence.packet.v1",
+    "batch": "s137.consumer-evidence.family.v1",
+    "catalog": "s137.consumer-evidence.catalog.v1",
+    "input": "s137.replay-pack.input.v1",
+    "artifact": "s137.replay-pack.output.v1"
+  },
+  "exitCodes": {
+    "analyzeEmittedPacket": 0,
+    "usage": 2,
+    "inputRefused": 1
+  },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "primary": {
+    "caseId": "positive-unpaid-complete",
+    "kind": "positive",
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/case.json",
+    "sha256": "29212a09e5c9cd1637693b1c1cabd84f6f9b5106b1859017e55ea05764c3efd8",
+    "expectedDecision": "pass",
+    "cliInput": "schema-input-from-case",
+    "expectedFindingIds": []
+  },
+  "primaryLaneSources": [
+    {
+      "id": "openapi",
+      "role": "primary-openapi",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/openapi.json",
+      "sha256": "a5240ee024a74b7a72782ecdc7235fdd2514d054d3ca04b2acbca9a2d03ccd99"
+    },
+    {
+      "id": "getStatus.response",
+      "role": "primary-example",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/examples/getStatus.response.json",
+      "sha256": "87e4ad06ac0aad04560107bf1329c4d906a4a3503336ded21ccef64d5bd969cc"
+    },
+    {
+      "id": "CLOCK",
+      "role": "operator-clock",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/CLOCK.txt",
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a"
+    },
+    {
+      "id": "MANIFEST",
+      "role": "catalog",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/MANIFEST.json",
+      "sha256": "1f2be64ac5811ef06d327d9730444f6c71c9d7f9202d27bd73875cda23123be8"
+    }
+  ],
+  "cases": [
+    {
+      "caseId": "positive-unpaid-complete",
+      "kind": "positive",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/case.json",
+      "sha256": "29212a09e5c9cd1637693b1c1cabd84f6f9b5106b1859017e55ea05764c3efd8",
+      "expectedDecision": "pass",
+      "cliInput": "schema-input-from-case",
+      "expectedFindingIds": []
+    },
+    {
+      "caseId": "negative-missing-examples",
+      "kind": "negative",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/negative-missing-examples/case.json",
+      "sha256": "528353fc11d61fd1ceaa68b9666ad76cd981d5842200799540386587a1f166e9",
+      "expectedDecision": "fail",
+      "cliInput": "schema-input-from-case",
+      "expectedFindingIds": ["f-input-invalid", "f-no-examples"]
+    },
+    {
+      "caseId": "negative-paid-marker",
+      "kind": "negative",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/negative-paid-marker/case.json",
+      "sha256": "c00528e30de1c8c169d8e7c731b6b964dede321e6cc3136bd15f8985b4d2641b",
+      "expectedDecision": "fail",
+      "cliInput": "schema-input-from-case",
+      "expectedFindingIds": ["f-paid-policy"]
+    },
+    {
+      "caseId": "partial-mixed-operations",
+      "kind": "partial",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/partial-mixed-operations/case.json",
+      "sha256": "0e7752b168c66a79d8c8df58bf766fb26a9f973e0e430d0a623f53d1d56651cb",
+      "expectedDecision": "partial",
+      "cliInput": "schema-input-from-case",
+      "expectedFindingIds": []
+    },
+    {
+      "caseId": "conflict-example-mismatch",
+      "kind": "conflict",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/conflict-example-mismatch/case.json",
+      "sha256": "f9875e8439592c76ddf11196fbc1ff580450cde158be7796016ddb09b23a09dc",
+      "expectedDecision": "conflict",
+      "cliInput": "schema-input-from-case",
+      "expectedFindingIds": ["f-input-invalid"]
+    },
+    {
+      "caseId": "partial-external-value",
+      "kind": "partial",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/partial-external-value/case.json",
+      "sha256": "d3c6e3c044fd8f5bdc8737c78052256a7c55a796870118ab089f5fff2a538658",
+      "expectedDecision": "partial",
+      "cliInput": "schema-input-from-case",
+      "expectedFindingIds": []
+    }
+  ],
+  "observedCliNotes": [
+    "CLI envelope schema is s137.consumer-evidence.packet.v1; transform overlay schema is s137.replay-pack.output.v1.",
+    "replay-pack has no transformFixtureCase export. CLI calls transform() on --in JSON.",
+    "Case wrappers (s137.consumer-evidence.replay-pack.case.v1) are not INPUT_SCHEMA; CLI --in case.json is decision fail (f-input-invalid, f-no-examples). That is observed, not an invented pass.",
+    "Hydrated schema-input-from-case for positive-unpaid-complete is decision pass, exit 0. Transform findings[] is empty on that pass path.",
+    "Analyze that emits a packet exits 0 even when decision is fail|partial|conflict. Exit 1 is unreadable/URL --in. Exit 2 is usage.",
+    "analyze --all --in-root fixtures/synthetic emits family.v1 with six packets. The replay-pack child sees the fixture directory (not a hydrated case) and is partial (transform threw: clock required). Family decision is fail because sibling jobs reject their dirs. Do not invent pass.",
+    "CLI packet.artifact is null for replay-pack overlays (transform returns examples[], not pack/artifact). Decision still comes from the transform overlay."
+  ]
+}

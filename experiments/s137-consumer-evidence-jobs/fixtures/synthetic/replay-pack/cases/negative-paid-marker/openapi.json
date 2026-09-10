@@ -1,0 +1,40 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "S137 synthetic paid-marker lab",
+    "version": "0.0.0-synthetic",
+    "description": "Lab document whose operation lists HTTP 402. Marker for no-spend refusal. Not a live offer and not payment code."
+  },
+  "servers": [
+    {
+      "url": "https://api.example.test"
+    }
+  ],
+  "paths": {
+    "/v0/paid-marker": {
+      "get": {
+        "operationId": "getPaidMarker",
+        "summary": "Synthetic paid marker. Do not execute. Do not spend.",
+        "responses": {
+          "402": {
+            "description": "payment required (synthetic marker; not a live offer)",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "challenge": {
+                    "summary": "HTTP 402 present; do not treat as executed purchase",
+                    "value": {
+                      "error": "payment_required",
+                      "executed": false,
+                      "spendUsd": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

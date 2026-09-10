@@ -1,0 +1,61 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "S137 synthetic unpaid status",
+    "version": "0.0.0-synthetic",
+    "description": "Lab OpenAPI. Not a live provider. Unpaid. Offline example replay only."
+  },
+  "servers": [
+    {
+      "url": "https://api.example.test"
+    }
+  ],
+  "paths": {
+    "/v0/status": {
+      "get": {
+        "operationId": "getStatus",
+        "summary": "Unpaid status. No credential.",
+        "responses": {
+          "200": {
+            "description": "Enabled. Unpaid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ok",
+                    "paid",
+                    "source"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "paid": {
+                      "type": "boolean",
+                      "const": false
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "examples": {
+                  "enabled": {
+                    "summary": "Unpaid enabled",
+                    "value": {
+                      "ok": true,
+                      "paid": false,
+                      "source": "synthetic-example"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

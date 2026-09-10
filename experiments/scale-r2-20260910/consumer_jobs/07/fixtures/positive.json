@@ -1,0 +1,43 @@
+{
+  "schema": "x402.r2.consumer.procurement_input.v1",
+  "taskId": "demo-extract-batch-note",
+  "title": "Public extract-batch observation (synthetic)",
+  "demo": true,
+  "sourceLabel": "synthetic-fixture",
+  "taskNeeds": {
+    "musts": ["extract_batch_json", "https_source_url", "bounded_summary"],
+    "capabilityIds": ["extract_batch_json"],
+    "outcomes": ["bounded_summary"],
+    "notes": "Synthetic needs only — no private customer material."
+  },
+  "serviceContracts": [
+    {
+      "contractId": "svc-extract-a",
+      "title": "Caller-supplied extract fixture A",
+      "capabilityIds": ["extract_batch_json", "https_source_url"],
+      "outcomes": ["bounded_summary"],
+      "coveredMusts": ["extract_batch_json", "https_source_url", "bounded_summary"],
+      "price": { "amountAtomic": "25000", "currency": "USDC" },
+      "priceSource": "caller.supplied.quote",
+      "freeBaseline": {
+        "freeAlternativeState": "not_equivalent",
+        "freeAlternativeBasisId": "free_public_docs_checked_v1"
+      },
+      "evidenceRefs": ["fixture:positive.json#svc-extract-a"]
+    },
+    {
+      "contractId": "svc-extract-b",
+      "title": "Caller-supplied extract fixture B (partial cover)",
+      "capabilityIds": ["extract_batch_json"],
+      "outcomes": [],
+      "coveredMusts": ["extract_batch_json"],
+      "price": { "amountAtomic": "10000", "currency": "USDC" },
+      "priceSource": "caller.supplied.quote",
+      "freeBaseline": {
+        "freeAlternativeState": "equivalent",
+        "freeAlternativeBasisId": "free_local_script_v1"
+      },
+      "evidenceRefs": ["fixture:positive.json#svc-extract-b"]
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "S137 synthetic externalValue example",
+    "version": "0.0.0-synthetic",
+    "description": "Example Object uses externalValue. Bytes are not in this pack. Online prerequisite is explicit and not fetched."
+  },
+  "servers": [
+    {
+      "url": "https://api.example.test"
+    }
+  ],
+  "paths": {
+    "/v0/status": {
+      "get": {
+        "operationId": "getStatus",
+        "summary": "Unpaid status whose example bytes live behind externalValue.",
+        "responses": {
+          "200": {
+            "description": "Enabled. Unpaid. Example not inlined.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ok",
+                    "paid"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "paid": {
+                      "type": "boolean",
+                      "const": false
+                    }
+                  }
+                },
+                "examples": {
+                  "remote": {
+                    "summary": "Bytes not retrieved",
+                    "externalValue": "https://api.example.test/examples/status-200.json"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

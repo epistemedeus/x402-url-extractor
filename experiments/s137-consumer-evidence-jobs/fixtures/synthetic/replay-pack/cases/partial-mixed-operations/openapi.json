@@ -1,0 +1,134 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "S137 synthetic mixed-example companion",
+    "version": "0.0.0-synthetic",
+    "description": "Pattern reuse from the in-repo unpaid page-change OpenAPI: POST has a request example and no 200 response example; GET health is complete. Lab paths only."
+  },
+  "servers": [
+    {
+      "url": "https://api.example.test"
+    }
+  ],
+  "paths": {
+    "/v0/compare": {
+      "post": {
+        "operationId": "postCompare",
+        "summary": "Compare two already supplied JSON objects. Unpaid. Does not fetch.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "before",
+                  "after",
+                  "fields"
+                ],
+                "properties": {
+                  "before": {
+                    "type": "object"
+                  },
+                  "after": {
+                    "type": "object"
+                  },
+                  "fields": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "before": {
+                  "mediaType": "application/json",
+                  "body": {
+                    "product": "synthetic-replay-pack",
+                    "sources": []
+                  }
+                },
+                "after": {
+                  "mediaType": "application/json",
+                  "body": {
+                    "product": "synthetic-replay-pack",
+                    "sources": []
+                  }
+                },
+                "fields": [
+                  "title",
+                  "description"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Compare brief. Schema present; no Media Type example.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "verdict": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v0/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Unpaid health.",
+        "responses": {
+          "200": {
+            "description": "Enabled health.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ok",
+                    "paid",
+                    "enabled"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "paid": {
+                      "type": "boolean",
+                      "const": false
+                    },
+                    "enabled": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "examples": {
+                  "enabled": {
+                    "summary": "Unpaid enabled health",
+                    "value": {
+                      "ok": true,
+                      "paid": false,
+                      "enabled": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

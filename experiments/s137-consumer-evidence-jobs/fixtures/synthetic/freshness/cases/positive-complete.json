@@ -1,0 +1,174 @@
+{
+  "schema": "s137.freshness-receipt.input.v1",
+  "caseId": "positive-complete",
+  "caseKind": "positive",
+  "evidenceClass": "synthetic",
+  "jobId": "R2-CONSUMER-JOBS-06",
+  "artifactKind": "dataset-freshness-receipt",
+  "clock": "2026-09-10T09:54:59Z",
+  "horizonMs": 86400000,
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "notes": "Both datasets carry retrievedAt from S122 capture clock and published_at as source-update. The two times differ. Coverage is complete for the supplied slims.",
+  "datasets": [
+    {
+      "id": "npm:vercel",
+      "locator": {
+        "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-vercel-current.slim.json",
+        "url": "https://registry.npmjs.org/vercel"
+      },
+      "contentSha256": "04651c194f32cd93af3afdcb300976e63ab8d3dc1d577f1058479ab815670938",
+      "retrievedAt": "2026-09-10T09:54:59Z",
+      "sourceUpdatedAt": "2026-09-10T01:12:17.696Z",
+      "payloadRef": "sources/npm-vercel-current.slim.json",
+      "times": [
+        {
+          "field": "retrievedAt",
+          "value": "2026-09-10T09:54:59Z",
+          "citationId": "cit-clock"
+        },
+        {
+          "field": "published_at",
+          "value": "2026-09-10T01:12:17.696Z",
+          "citationId": "cit-vercel-slim"
+        }
+      ],
+      "coverage": {
+        "expectedRecords": 1,
+        "observedRecords": 1,
+        "fieldsPresent": ["retrievedAt", "published_at", "version"],
+        "fieldsMissing": []
+      }
+    },
+    {
+      "id": "npm:@anthropic-ai/claude-code",
+      "locator": {
+        "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-claude-code-current.slim.json",
+        "url": "https://registry.npmjs.org/@anthropic-ai/claude-code"
+      },
+      "contentSha256": "ad0e84e21e88919ba434a127d1b442b58b108239551469ec06740a6573224b95",
+      "retrievedAt": "2026-09-10T09:54:59Z",
+      "sourceUpdatedAt": "2026-09-09T18:25:42.820Z",
+      "payloadRef": "sources/npm-claude-code-current.slim.json",
+      "times": [
+        {
+          "field": "retrievedAt",
+          "value": "2026-09-10T09:54:59Z",
+          "citationId": "cit-clock"
+        },
+        {
+          "field": "published_at",
+          "value": "2026-09-09T18:25:42.820Z",
+          "citationId": "cit-claude-slim"
+        }
+      ],
+      "coverage": {
+        "expectedRecords": 1,
+        "observedRecords": 1,
+        "fieldsPresent": ["retrievedAt", "published_at", "version"],
+        "fieldsMissing": []
+      }
+    }
+  ],
+  "citations": [
+    {
+      "id": "cit-clock",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/CLOCK.txt",
+      "contentSha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "sha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-s122-capture-clock",
+      "path": "experiments/s122-application-jobs/evidence/snapshots/CAPTURED_AT_UTC.txt",
+      "contentSha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "sha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "evidenceClass": "fixture",
+      "host": "/tmp/s127/x402-url-extractor"
+    },
+    {
+      "id": "cit-vercel-slim",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-vercel-current.slim.json",
+      "url": "https://registry.npmjs.org/vercel",
+      "contentSha256": "04651c194f32cd93af3afdcb300976e63ab8d3dc1d577f1058479ab815670938",
+      "sha256": "04651c194f32cd93af3afdcb300976e63ab8d3dc1d577f1058479ab815670938",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-claude-slim",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-claude-code-current.slim.json",
+      "url": "https://registry.npmjs.org/@anthropic-ai/claude-code",
+      "contentSha256": "ad0e84e21e88919ba434a127d1b442b58b108239551469ec06740a6573224b95",
+      "sha256": "ad0e84e21e88919ba434a127d1b442b58b108239551469ec06740a6573224b95",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-s122-vercel-current",
+      "path": "experiments/s122-application-jobs/fixtures/npm-vercel/current.json",
+      "url": "https://registry.npmjs.org/vercel",
+      "contentSha256": "0d8fae00bbba86cdaca5c380281430d7a620c11e7c3119e4e4ead5026583381f",
+      "sha256": "0d8fae00bbba86cdaca5c380281430d7a620c11e7c3119e4e4ead5026583381f",
+      "evidenceClass": "fixture",
+      "host": "/tmp/s127/x402-url-extractor"
+    },
+    {
+      "id": "cit-s122-claude-current",
+      "path": "experiments/s122-application-jobs/fixtures/npm-claude-code/current.json",
+      "url": "https://registry.npmjs.org/@anthropic-ai/claude-code",
+      "contentSha256": "29d04af93bc9f2ab188e3e922c7c314a735fd18b34b213928d377ecd9e924ac4",
+      "sha256": "29d04af93bc9f2ab188e3e922c7c314a735fd18b34b213928d377ecd9e924ac4",
+      "evidenceClass": "fixture",
+      "host": "/tmp/s127/x402-url-extractor"
+    }
+  ],
+  "expect": {
+    "decision": "pass",
+    "coverageComplete": true,
+    "unknownReasons": [],
+    "findings": [
+      {
+        "id": "vercel-retrieval-age",
+        "kind": "retrieval_age",
+        "datasetId": "npm:vercel",
+        "retrievedAt": "2026-09-10T09:54:59Z",
+        "ageMs": 0,
+        "citationIds": ["cit-clock", "cit-s122-capture-clock"]
+      },
+      {
+        "id": "vercel-source-update-age",
+        "kind": "source_update_age",
+        "datasetId": "npm:vercel",
+        "sourceUpdatedAt": "2026-09-10T01:12:17.696Z",
+        "ageMs": 31361304,
+        "citationIds": ["cit-vercel-slim", "cit-s122-vercel-current"]
+      },
+      {
+        "id": "vercel-times-distinct",
+        "kind": "times_distinct",
+        "datasetId": "npm:vercel",
+        "citationIds": ["cit-clock", "cit-vercel-slim"]
+      },
+      {
+        "id": "claude-retrieval-age",
+        "kind": "retrieval_age",
+        "datasetId": "npm:@anthropic-ai/claude-code",
+        "retrievedAt": "2026-09-10T09:54:59Z",
+        "ageMs": 0,
+        "citationIds": ["cit-clock", "cit-s122-capture-clock"]
+      },
+      {
+        "id": "claude-source-update-age",
+        "kind": "source_update_age",
+        "datasetId": "npm:@anthropic-ai/claude-code",
+        "sourceUpdatedAt": "2026-09-09T18:25:42.820Z",
+        "ageMs": 55756180,
+        "citationIds": ["cit-claude-slim", "cit-s122-claude-current"]
+      }
+    ]
+  },
+  "limitations": [
+    "Ages are observations against the operator clock, not a proof the registry is current.",
+    "S122 current slims do not carry captured_at on the body; retrievedAt is taken from CAPTURED_AT_UTC.txt / PROVENANCE.capturedAtUtc."
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c01",
+  "s137Tip": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "migration-checklist",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "moduleId": "01",
+  "situationId": "S1",
+  "situation": "positive-workflow",
+  "brief": "Reuse positive synthetic + assert pass decision and cited findings",
+  "caseIds": ["positive-complete"],
+  "expectedDecisionClass": "pass",
+  "expectedCoverage": "complete",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/migration-checklist/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/migration-checklist/transform.mjs"
+  },
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "fixtureRoot": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration",
+  "primaryFixtures": [
+    {
+      "id": "positive-complete",
+      "role": "case",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/positive-complete.json",
+      "sha256": "5ed28b8f1dd1736101035ae6ca93d4ec3b8f77f0396b67d6b410dd61bafcc44b"
+    },
+    {
+      "id": "old",
+      "role": "oldDoc",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/positive-complete/old.md",
+      "sha256": "0be077983920576e0a31818d495d44889665c61313174359a599a2ec0789b736"
+    },
+    {
+      "id": "new",
+      "role": "newDoc",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/positive-complete/new.md",
+      "sha256": "23cc466ea7572bed50daa15f4b22b157d5c723b2a5f34ca4849a5c08a993a09c"
+    },
+    {
+      "id": "inventory",
+      "role": "operationsInventory",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/positive-complete/inventory.json",
+      "sha256": "5363531bcc3280846c5e00080499454677e87e120e3ee8e0474803d3e88df46c"
+    }
+  ],
+  "expectedFindings": [
+    {
+      "id": "extract-unchanged",
+      "change": "unchanged",
+      "inInventory": true,
+      "citationIds": ["old", "new", "inventory"]
+    },
+    {
+      "id": "read-unchanged",
+      "change": "unchanged",
+      "inInventory": true,
+      "citationIds": ["old", "new", "inventory"]
+    },
+    {
+      "id": "batch-added-unused",
+      "change": "added",
+      "inInventory": false,
+      "citationIds": ["new"]
+    }
+  ]
+}

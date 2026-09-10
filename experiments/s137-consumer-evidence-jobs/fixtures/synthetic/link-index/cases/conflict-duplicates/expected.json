@@ -1,0 +1,108 @@
+{
+  "schema": "s137.link-index.synthetic-case.v1",
+  "caseId": "conflict-duplicates",
+  "kind": "conflict",
+  "expectedDecision": "conflict",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "entry": "source.html",
+  "format": "html",
+  "offline": true,
+  "payment": { "attempted": false },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "links": [
+    {
+      "linkId": "L1",
+      "href": "artifacts/alpha.md",
+      "text": "Guide",
+      "syntax": "html-a",
+      "markup": "<a href=\"artifacts/alpha.md\">Guide</a>",
+      "index": 45,
+      "targetStatus": "reachable",
+      "targetPath": "artifacts/alpha.md",
+      "fragment": null
+    },
+    {
+      "linkId": "L2",
+      "href": "artifacts/beta.md",
+      "text": "Guide",
+      "syntax": "html-a",
+      "markup": "<a href=\"artifacts/beta.md\">Guide</a>",
+      "index": 93,
+      "targetStatus": "reachable",
+      "targetPath": "artifacts/beta.md",
+      "fragment": null
+    },
+    {
+      "linkId": "L3",
+      "href": "artifacts/alpha.md",
+      "text": "Guide",
+      "syntax": "html-a",
+      "markup": "<a href=\"artifacts/alpha.md\">Guide</a>",
+      "index": 140,
+      "targetStatus": "reachable",
+      "targetPath": "artifacts/alpha.md",
+      "fragment": null
+    },
+    {
+      "linkId": "L4",
+      "href": "artifacts/alpha.md",
+      "text": "Also alpha",
+      "syntax": "html-a",
+      "markup": "<a href=\"artifacts/alpha.md\">Also alpha</a>",
+      "index": 188,
+      "targetStatus": "reachable",
+      "targetPath": "artifacts/alpha.md",
+      "fragment": null
+    }
+  ],
+  "anchors": [],
+  "findings": [
+    {
+      "findingId": "F1",
+      "code": "conflicting-text-targets",
+      "text": "Guide",
+      "hrefs": ["artifacts/alpha.md", "artifacts/beta.md"],
+      "linkIds": ["L1", "L2", "L3"],
+      "citationIds": ["source.html", "artifacts/alpha.md", "artifacts/beta.md"]
+    },
+    {
+      "findingId": "F2",
+      "code": "duplicate-href",
+      "href": "artifacts/alpha.md",
+      "count": 3,
+      "linkIds": ["L1", "L3", "L4"],
+      "citationIds": ["source.html", "artifacts/alpha.md"]
+    }
+  ],
+  "citations": [
+    {
+      "citationId": "source.html",
+      "path": "source.html",
+      "sha256": "3ecbbb282d02084e702d75be3b57e7befb0a4b496fe331452012ac36b2206191",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "citationId": "artifacts/alpha.md",
+      "path": "artifacts/alpha.md",
+      "sha256": "017b70af1737a855266fc9eb9b3f88917dc972f20d2a1c7d6baa03b85260e8b8",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "citationId": "artifacts/beta.md",
+      "path": "artifacts/beta.md",
+      "sha256": "1a26417491f915994a558d790278bf0a7dde56e16dbb87effde011215c2fe713",
+      "evidenceClass": "synthetic"
+    }
+  ],
+  "limitations": [
+    "Targets exist; conflict is same link text bound to different hrefs, plus duplicate href rows."
+  ]
+}

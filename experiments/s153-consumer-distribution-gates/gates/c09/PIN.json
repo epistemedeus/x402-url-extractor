@@ -1,0 +1,70 @@
+{
+  "schema": "s153.gate-pin.v1",
+  "cell": "c09",
+  "s137Pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "release-brief",
+  "jobId": "R2-CONSUMER-JOBS-02",
+  "moduleId": "02",
+  "situationId": "S1",
+  "situation": "positive-workflow",
+  "expectedDecision": "pass",
+  "expectedDecisionClass": "pass",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "offline": true,
+  "excludedJobs": [
+    "R2-CONSUMER-JOBS-07",
+    "R2-CONSUMER-JOBS-08"
+  ],
+  "caseIds": [
+    "positive-aligned"
+  ],
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/release-brief/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/release-brief/transform.mjs"
+  },
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief",
+  "primaryFixtures": [
+    {
+      "id": "positive-aligned",
+      "role": "case",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/positive-aligned.json",
+      "sha256": "11c92a56650739ba11b0143f43ef9934b22273e2922df52d408acc2847827bb4"
+    },
+    {
+      "id": "positive-aligned-announced",
+      "role": "announced",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/positive-aligned/announced.json",
+      "sha256": "e139c42d3a6c2baa3b498248d06f62fccbf3857b1244afb4adc1d270920e8a7b"
+    },
+    {
+      "id": "positive-aligned-shipped",
+      "role": "shipped",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/positive-aligned/shipped.json",
+      "sha256": "b228936ce19bcb0eacdf877c8f4a0523b9da5e919d2eece3ddb0def0d17ceaf6"
+    },
+    {
+      "id": "positive-aligned-tested",
+      "role": "tested",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/positive-aligned/tested.json",
+      "sha256": "9ff0419f183df7e9508f519df4d1107516fbf8e2a13debb01e4c7264fb741fe8"
+    }
+  ],
+  "expect": {
+    "decision": "pass",
+    "decisionClass": "pass",
+    "alignmentStatus": "aligned",
+    "findingId": "f-aligned",
+    "findingCode": "three_planes_aligned",
+    "tag": "v1.2.0",
+    "version": "1.2.0",
+    "commitSha": "ccdead08cda773fe7ca3abc54e8b1a5bc94151f7",
+    "citationIds": [
+      "cit-announced",
+      "cit-shipped",
+      "cit-tested"
+    ]
+  }
+}

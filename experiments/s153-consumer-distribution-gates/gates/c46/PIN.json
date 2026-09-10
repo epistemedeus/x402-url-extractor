@@ -1,0 +1,104 @@
+{
+  "schema": "s153.gate-pin.v1",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "cell": "c46",
+  "moduleId": "06",
+  "jobId": "R2-CONSUMER-JOBS-06",
+  "artifact": "freshness-receipt",
+  "situationId": "S6",
+  "situation": "import-roundtrip",
+  "expectedDecisionClass": "pass",
+  "src": {
+    "dir": "experiments/s137-consumer-evidence-jobs/src/freshness-receipt",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/freshness-receipt/transform.mjs",
+    "schema": "experiments/s137-consumer-evidence-jobs/src/freshness-receipt/schema.mjs"
+  },
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness",
+  "packetFields": [
+    "schema",
+    "packetSchema",
+    "inputSchema",
+    "jobId",
+    "artifactKind",
+    "clock",
+    "evidenceClass",
+    "offline",
+    "payment",
+    "cost",
+    "sources",
+    "findings",
+    "citations",
+    "decision",
+    "limitations",
+    "claims",
+    "horizonMs",
+    "datasets",
+    "issues",
+    "inputOk"
+  ],
+  "transformExports": [
+    "buildFreshnessReceipt",
+    "transform",
+    "analyze",
+    "run",
+    "build",
+    "coerceToSchemaInput"
+  ],
+  "schemaExports": [
+    "validateInput",
+    "validateReceipt",
+    "PACKET_SCHEMA",
+    "RECEIPT_SCHEMA_ID",
+    "INPUT_SCHEMA_ID",
+    "JOB_ID",
+    "ARTIFACT_KIND",
+    "classifyTimeField"
+  ],
+  "primary": {
+    "id": "positive-complete",
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/positive-complete.json",
+    "sha256": "46e928cd0d3b8f897c2dfc79c632677d236ff8686f0c59c2d8ecddda89d9b4be",
+    "bytes": 6789,
+    "expectedDecision": "pass",
+    "evidenceClass": "synthetic"
+  },
+  "cases": [
+    {
+      "id": "positive-complete",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/positive-complete.json",
+      "sha256": "46e928cd0d3b8f897c2dfc79c632677d236ff8686f0c59c2d8ecddda89d9b4be",
+      "expectedDecision": "pass",
+      "evidenceClass": "synthetic",
+      "primary": true
+    },
+    {
+      "id": "partial-missing-source-update",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/partial-missing-source-update.json",
+      "sha256": "fac3b569e95609cbac4eba7868cae82572cf54b17365f0955aa05fa08bd5618c",
+      "expectedDecision": "partial",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "conflict-retrieved-before-source",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/conflict-retrieved-before-source.json",
+      "sha256": "4d68b353e3da03d80201c02502ecf61c08a6a83b2128684db7f63e6701e85d6a",
+      "expectedDecision": "conflict",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "negative-missing-times",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/negative-missing-times.json",
+      "sha256": "cf35dd1f86fa36622548ddc14a979ab6d932938b062ffb23f4bff3fa07cbf8dd",
+      "expectedDecision": "unknown",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "nyc-311-erm2-nwe9",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/freshness/input.json",
+      "sha256": "ffeed0516a2d965409d71ce6d433417aafddc47ad772ae3ef2a1b9de4dbed302",
+      "expectedDecision": "pass",
+      "evidenceClass": "fixture"
+    }
+  ]
+}

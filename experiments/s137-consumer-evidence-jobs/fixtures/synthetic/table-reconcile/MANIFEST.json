@@ -1,0 +1,66 @@
+{
+  "schema": "s137.table-reconcile.synthetic-manifest.v1",
+  "jobId": "R2-CONSUMER-JOBS-03",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "liveCapture": false,
+  "paidDemand": false,
+  "offline": true,
+  "notes": "Authored synthetic tables for source-table reconciliation. Not live-capture. Not paid demand. Assignment spend $0. Values are not production observations.",
+  "sourceTableFields": [
+    "schema",
+    "id",
+    "evidenceClass",
+    "keys",
+    "unit",
+    "timeWindow",
+    "columns",
+    "rows"
+  ],
+  "requiredKinds": ["positive", "negative", "partial", "conflict"],
+  "cases": [
+    {
+      "id": "positive-agree",
+      "kind": "positive",
+      "path": "cases/positive-agree.json",
+      "expectDecision": "pass"
+    },
+    {
+      "id": "negative-empty",
+      "kind": "negative",
+      "path": "cases/negative-empty.json",
+      "expectDecision": "fail"
+    },
+    {
+      "id": "negative-missing-keys",
+      "kind": "negative",
+      "path": "cases/negative-missing-keys.json",
+      "expectDecision": "fail"
+    },
+    {
+      "id": "partial-row-coverage",
+      "kind": "partial",
+      "path": "cases/partial-row-coverage.json",
+      "expectDecision": "partial"
+    },
+    {
+      "id": "conflict-value",
+      "kind": "conflict",
+      "path": "cases/conflict-value.json",
+      "expectDecision": "conflict"
+    },
+    {
+      "id": "conflict-units",
+      "kind": "conflict",
+      "path": "cases/conflict-units.json",
+      "expectDecision": "conflict"
+    },
+    {
+      "id": "conflict-time-window",
+      "kind": "conflict",
+      "path": "cases/conflict-time-window.json",
+      "expectDecision": "conflict"
+    }
+  ]
+}

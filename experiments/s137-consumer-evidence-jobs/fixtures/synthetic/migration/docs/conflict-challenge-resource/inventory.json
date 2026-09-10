@@ -1,0 +1,13 @@
+{
+  "schema": "s137.migration.inventory.v1",
+  "caller": "synthetic-mcp-extract-batch",
+  "notes": "Caller calls extract_batch. Two new docs disagree on challengeResource; do not pick a winner.",
+  "operations": [
+    {
+      "id": "inv-extract-batch",
+      "method": "POST",
+      "route": "/extract/batch",
+      "mcpTool": "extract_batch"
+    }
+  ]
+}

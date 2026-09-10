@@ -1,0 +1,16 @@
+{
+  "peak_os_s137_sessions": 32,
+  "peak_grok_related_procs": 32,
+  "peak": {
+    "ts": "2026-09-10T11:21:36Z",
+    "os_s137_sessions": 32,
+    "grok_related_procs": 32,
+    "rss_mb_sum": 3498,
+    "mem_available_pct": 52.82,
+    "mem_available_mb": 8458,
+    "note": "manual peak sample during wave1+2+3 overlap",
+    "s127_lower_bound_os": 28,
+    "s127_lower_bound_rss_mb": 2811
+  },
+  "exceeds_s127_lower_bound": true
+}

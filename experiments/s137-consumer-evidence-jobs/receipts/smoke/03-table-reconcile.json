@@ -1,0 +1,215 @@
+{
+  "schema": "s137.table-reconcile.output.v1",
+  "jobId": "R2-CONSUMER-JOBS-03",
+  "artifactKind": "table-reconcile",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline transform; no purchase; do not invent demand"
+  },
+  "sources": [
+    {
+      "id": "src:lab-a",
+      "path": "sources/positive-agree/lab-a.json",
+      "url": null,
+      "contentSha256": "12efa2c6292bea597548d592aed0228f089e63b6cb228343f67e613f58017d4c",
+      "retrievedAt": null,
+      "evidenceClass": "synthetic",
+      "licenseNote": null
+    },
+    {
+      "id": "src:lab-b",
+      "path": "sources/positive-agree/lab-b.json",
+      "url": null,
+      "contentSha256": "6b7f095469dc324725547faf228daa3c9a5b458d4a10b4786a353abdedef3e98",
+      "retrievedAt": null,
+      "evidenceClass": "synthetic",
+      "licenseNote": null
+    }
+  ],
+  "findings": [
+    {
+      "id": "agree:synthetic.link_index_hits:2026-08-03",
+      "kind": "agree",
+      "code": "agree",
+      "message": "Keys, unit, grain, and measure agree across supplied tables.",
+      "citationIds": [
+        "src:lab-a",
+        "src:lab-b"
+      ],
+      "key": {
+        "metric": "synthetic.link_index_hits",
+        "windowStart": "2026-08-03T00:00:00.000Z"
+      },
+      "timeWindow": null,
+      "unit": "count",
+      "outcome": "agree",
+      "keys": {
+        "metric": "synthetic.link_index_hits",
+        "windowStart": "2026-08-03T00:00:00.000Z"
+      },
+      "surfaceKind": "agree",
+      "value": 2
+    },
+    {
+      "id": "agree:synthetic.page_extracts:2026-08-03",
+      "kind": "agree",
+      "code": "agree",
+      "message": "Keys, unit, grain, and measure agree across supplied tables.",
+      "citationIds": [
+        "src:lab-a",
+        "src:lab-b"
+      ],
+      "key": {
+        "metric": "synthetic.page_extracts",
+        "windowStart": "2026-08-03T00:00:00.000Z"
+      },
+      "timeWindow": null,
+      "unit": "count",
+      "outcome": "agree",
+      "keys": {
+        "metric": "synthetic.page_extracts",
+        "windowStart": "2026-08-03T00:00:00.000Z"
+      },
+      "surfaceKind": "agree",
+      "value": 4
+    },
+    {
+      "id": "agree:synthetic.page_extracts:2026-08-10",
+      "kind": "agree",
+      "code": "agree",
+      "message": "Keys, unit, grain, and measure agree across supplied tables.",
+      "citationIds": [
+        "src:lab-a",
+        "src:lab-b"
+      ],
+      "key": {
+        "metric": "synthetic.page_extracts",
+        "windowStart": "2026-08-10T00:00:00.000Z"
+      },
+      "timeWindow": null,
+      "unit": "count",
+      "outcome": "agree",
+      "keys": {
+        "metric": "synthetic.page_extracts",
+        "windowStart": "2026-08-10T00:00:00.000Z"
+      },
+      "surfaceKind": "agree",
+      "value": 7
+    }
+  ],
+  "citations": [
+    {
+      "id": "src:lab-a",
+      "path": "sources/positive-agree/lab-a.json",
+      "url": null,
+      "contentSha256": "12efa2c6292bea597548d592aed0228f089e63b6cb228343f67e613f58017d4c",
+      "retrievedAt": null,
+      "evidenceClass": "synthetic",
+      "licenseNote": null
+    },
+    {
+      "id": "src:lab-b",
+      "path": "sources/positive-agree/lab-b.json",
+      "url": null,
+      "contentSha256": "6b7f095469dc324725547faf228daa3c9a5b458d4a10b4786a353abdedef3e98",
+      "retrievedAt": null,
+      "evidenceClass": "synthetic",
+      "licenseNote": null
+    }
+  ],
+  "decision": "pass",
+  "limitations": [
+    "Does not invent totals, averages, majority votes, or zero-fills.",
+    "Does not convert units unless join.conversions declares an explicit factor.",
+    "Does not roll up or split time grains (P7D is not the sum of P1D rows).",
+    "Does not infer join keys, units, or windows from raw arrays.",
+    "Does not pick a winning source on disagreement (no default merge).",
+    "Does not fetch network, pay endpoints, or attest legal/customer-demand claims."
+  ],
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "packetSchema": "s137.consumer-evidence.packet.v1",
+  "join": {
+    "keys": [
+      "metric",
+      "windowStart"
+    ],
+    "units": {
+      "value": "count"
+    },
+    "unit": null,
+    "timeWindow": {
+      "start": "2026-08-03T00:00:00.000Z",
+      "end": "2026-08-17T00:00:00.000Z",
+      "inclusiveStart": true,
+      "inclusiveEnd": false
+    },
+    "conversions": []
+  },
+  "groups": [
+    {
+      "key": {
+        "metric": "synthetic.link_index_hits",
+        "windowStart": "2026-08-03T00:00:00.000Z"
+      },
+      "outcome": "agree",
+      "unit": "count",
+      "values": [
+        2,
+        2
+      ]
+    },
+    {
+      "key": {
+        "metric": "synthetic.page_extracts",
+        "windowStart": "2026-08-03T00:00:00.000Z"
+      },
+      "outcome": "agree",
+      "unit": "count",
+      "values": [
+        4,
+        4
+      ]
+    },
+    {
+      "key": {
+        "metric": "synthetic.page_extracts",
+        "windowStart": "2026-08-10T00:00:00.000Z"
+      },
+      "outcome": "agree",
+      "unit": "count",
+      "values": [
+        7,
+        7
+      ]
+    }
+  ],
+  "caseKind": "positive",
+  "totals": {
+    "computed": false,
+    "invented": false,
+    "policy": "never_invent",
+    "note": "Disagreement is listed per key; no summed or averaged total is emitted."
+  },
+  "policies": {
+    "neverInventTotals": true,
+    "neverCoalesceUnitMismatch": true,
+    "surfaceDisagreement": true,
+    "requireCitations": true,
+    "operatorClockRequired": true,
+    "conversionsMustBeDeclared": true
+  },
+  "inventTotals": false,
+  "defaultMerge": false
+}

@@ -1,0 +1,94 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c25",
+  "s137Tip": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "link-index",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "moduleId": "04",
+  "situationId": "S1",
+  "situation": "positive-workflow",
+  "brief": "Reuse positive synthetic + assert pass decision and cited findings",
+  "expectedDecision": "pass",
+  "expectedDecisionClass": "pass",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "offline": true,
+  "payment": { "attempted": false },
+  "networkFetched": false,
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "caseIds": ["positive-md", "positive-html"],
+  "primaryCaseId": "positive-md",
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/link-index",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "primaryFixtures": [
+    {
+      "caseId": "positive-md",
+      "role": "entry",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-md/source.md",
+      "sha256": "5cb5a4f0e149fe0aa6da680bd432ad7d724dcb24bd703c4d57494623f071bfad"
+    },
+    {
+      "caseId": "positive-html",
+      "role": "entry",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-html/source.html",
+      "sha256": "3225b0864b74a726775065d64a97c9dcc72c2a7b54bf42fa94b8fbeb5033b8a1"
+    }
+  ],
+  "files": [
+    {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/CLOCK.txt",
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a",
+      "role": "clock"
+    },
+    {
+      "caseId": "positive-md",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-md/expected.json",
+      "sha256": "8d813b2bdfb98c9692bbb46835a648d420d1b13f0db7a73a65bdca83f6a815ed",
+      "role": "expected"
+    },
+    {
+      "caseId": "positive-md",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-md/source.md",
+      "sha256": "5cb5a4f0e149fe0aa6da680bd432ad7d724dcb24bd703c4d57494623f071bfad",
+      "role": "entry"
+    },
+    {
+      "caseId": "positive-md",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-md/artifacts/notes.md",
+      "sha256": "aac56eebe51776729a3d316b72731dcaa02e3469f37d574f374456e11728fda6",
+      "role": "inventory"
+    },
+    {
+      "caseId": "positive-md",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-md/artifacts/schema.json",
+      "sha256": "8f18b67729e101695b1bcfcbbb9b4a9eb841e8f731e8bc9b25882991c7d8546a",
+      "role": "inventory"
+    },
+    {
+      "caseId": "positive-html",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-html/expected.json",
+      "sha256": "2adc2f3a12d39c8a4ab48833e9a3601d20feaac109afac86b724db868b16b51d",
+      "role": "expected"
+    },
+    {
+      "caseId": "positive-html",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-html/source.html",
+      "sha256": "3225b0864b74a726775065d64a97c9dcc72c2a7b54bf42fa94b8fbeb5033b8a1",
+      "role": "entry"
+    },
+    {
+      "caseId": "positive-html",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-html/artifacts/api.md",
+      "sha256": "da2f76c26732cfc6f35912695d5c03a093d540d2ff225bfe680c40cb1f1ae5c0",
+      "role": "inventory"
+    },
+    {
+      "caseId": "positive-html",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-html/artifacts/guide.md",
+      "sha256": "bcb53aa419a21fcf6e66c2d1f0d2883cf8962fdd750821802f856de15a60f4a9",
+      "role": "inventory"
+    }
+  ]
+}

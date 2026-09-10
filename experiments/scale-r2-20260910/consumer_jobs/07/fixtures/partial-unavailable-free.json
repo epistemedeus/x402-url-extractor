@@ -1,0 +1,33 @@
+{
+  "schema": "x402.r2.consumer.procurement_input.v1",
+  "taskId": "demo-unavailable-free",
+  "title": "Free baseline explicitly unavailable (not empty/no-users)",
+  "demo": true,
+  "sourceLabel": "synthetic-fixture",
+  "taskNeeds": {
+    "musts": ["settlement_receipt_parse"],
+    "capabilityIds": ["settlement_receipt_parse"]
+  },
+  "serviceContracts": [
+    {
+      "contractId": "svc-receipt",
+      "title": "Receipt parse fixture",
+      "capabilityIds": ["settlement_receipt_parse"],
+      "coveredMusts": ["settlement_receipt_parse"],
+      "price": { "amountAtomic": "8000", "currency": "USDC" },
+      "priceSource": "caller.supplied.quote",
+      "freeBaseline": {
+        "freeAlternativeState": "unavailable",
+        "freeAlternativeBasisId": "free_sources_checked_none_equivalent_v1"
+      },
+      "evidenceRefs": ["fixture:partial-unavailable-free.json#svc-receipt"]
+    }
+  ],
+  "freeBaselines": [
+    {
+      "freeAlternativeState": "unavailable",
+      "freeAlternativeBasisId": "free_sources_checked_none_equivalent_v1",
+      "appliesToContractId": "svc-receipt"
+    }
+  ]
+}

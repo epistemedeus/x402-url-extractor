@@ -1,0 +1,150 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c44",
+  "s137Tip": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "freshness-receipt",
+  "jobId": "R2-CONSUMER-JOBS-06",
+  "moduleId": "06",
+  "srcDir": "freshness-receipt",
+  "situationId": "S4",
+  "situation": "malformed-input",
+  "brief": "Reuse negative/malformed; assert fail/reject + stable exit",
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "clock": "2026-09-10T09:54:59Z",
+  "evidenceClass": "synthetic",
+  "expectedDecisionClass": "fail",
+  "allowedDecisions": ["fail"],
+  "forbiddenDecisions": ["pass"],
+  "caseIds": [
+    "schema-example-negative-now-refused",
+    "negative-missing-times",
+    "negative-future-source-update"
+  ],
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/freshness-receipt/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/freshness-receipt/transform.mjs"
+  },
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "fixtureRoot": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness",
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness",
+  "provenance": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/PROVENANCE.json",
+  "primaryFixtures": [
+    {
+      "id": "negative-missing-times",
+      "role": "reused-negative-case",
+      "catalogDecision": "unknown",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/negative-missing-times.json",
+      "provenanceKey": "cases/negative-missing-times.json",
+      "sha256": "cf35dd1f86fa36622548ddc14a979ab6d932938b062ffb23f4bff3fa07cbf8dd"
+    },
+    {
+      "id": "negative-future-source-update",
+      "role": "reused-negative-case",
+      "catalogDecision": "unknown",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/negative-future-source-update.json",
+      "provenanceKey": "cases/negative-future-source-update.json",
+      "sha256": "db23132d2eb1644653df0e401cc9371061bb4f0f9510e6e8546e76ee550d605a"
+    },
+    {
+      "id": "clock",
+      "role": "operator-clock",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/CLOCK.txt",
+      "provenanceKey": "CLOCK.txt",
+      "sha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a"
+    },
+    {
+      "id": "npm-vercel-version-doc-slim",
+      "role": "payload",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-vercel-version-doc.slim.json",
+      "provenanceKey": "sources/npm-vercel-version-doc.slim.json",
+      "sha256": "53de8d48ef5f1b6e91bebc6cb404f76596c4d84ffaef63cdd51d3c1b9fe1c38e"
+    }
+  ],
+  "malformedCases": [
+    {
+      "id": "schema-example-negative-now-refused",
+      "kind": "malformed-clock",
+      "source": "EXAMPLE_CASES.negative",
+      "expectedDecisionClass": "fail",
+      "issueCode": "now_refused",
+      "note": "Operator clock literal 'now' is refused; download time is not substituted."
+    },
+    {
+      "id": "mutated-missing-times-clock-now",
+      "kind": "malformed-clock",
+      "derivedFrom": "negative-missing-times",
+      "expectedDecisionClass": "fail",
+      "issueCode": "now_refused"
+    },
+    {
+      "id": "mutated-missing-times-invalid-iso",
+      "kind": "malformed-type",
+      "derivedFrom": "negative-missing-times",
+      "expectedDecisionClass": "fail",
+      "issueCode": "invalid_iso"
+    },
+    {
+      "id": "non-object-input",
+      "kind": "malformed-type",
+      "expected": "throw",
+      "message": "input must be an object"
+    }
+  ],
+  "cliRejects": [
+    {
+      "id": "url-in",
+      "kind": "path",
+      "exitCode": 1,
+      "stderrIncludes": "local path"
+    },
+    {
+      "id": "missing-in",
+      "kind": "path",
+      "exitCode": 1,
+      "packetDecision": "fail",
+      "packetOk": false
+    },
+    {
+      "id": "oversize-in",
+      "kind": "oversize",
+      "exitCode": 1,
+      "packetDecision": "fail",
+      "errorCode": "too_large"
+    },
+    {
+      "id": "clock-now",
+      "kind": "malformed-clock",
+      "exitCode": 2,
+      "stderrIncludes": "ISO-8601"
+    },
+    {
+      "id": "job-07",
+      "kind": "out-of-scope",
+      "exitCode": 2,
+      "stderrIncludes": "out of scope"
+    },
+    {
+      "id": "job-08",
+      "kind": "out-of-scope",
+      "exitCode": 2,
+      "stderrIncludes": "out of scope"
+    }
+  ],
+  "stableExit": {
+    "analyzedFailPacket": 0,
+    "unreadableOrRemote": 1,
+    "usageOrOutOfScope": 2
+  },
+  "claimsMustBeFalse": [
+    "inventsFacts",
+    "paidEndpoint",
+    "legalAttestation",
+    "modelAsOracle",
+    "assertsCustomerDemand"
+  ]
+}

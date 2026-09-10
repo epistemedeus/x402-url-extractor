@@ -1,0 +1,16 @@
+{
+  "evidenceClass": "synthetic",
+  "transform": "field-rename-only",
+  "datasetId": "npm:vercel",
+  "sourceUrl": "https://registry.npmjs.org/vercel",
+  "licenseNote": "npm registry metadata; follow npm terms; package license separately",
+  "package": "vercel",
+  "version": "59.9.1",
+  "sourceUpdatedAt": "2026-08-27T19:00:26.541Z",
+  "sourceUpdatedAtField": "published_at",
+  "derivedFrom": {
+    "host": "/tmp/s127/x402-url-extractor",
+    "path": "experiments/s122-application-jobs/fixtures/npm-vercel/unchanged.json",
+    "sha256": "da9a5820120120bc22a92b6576d07f9110e46f4005c6d45d7238e535a2b3cf18"
+  }
+}

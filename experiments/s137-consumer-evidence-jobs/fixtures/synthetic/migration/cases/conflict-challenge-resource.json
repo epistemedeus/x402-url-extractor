@@ -1,0 +1,64 @@
+{
+  "id": "conflict-challenge-resource",
+  "kind": "conflict",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "artifactKind": "migration-checklist",
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "title": "Two new docs disagree on extract_batch challengeResource",
+  "sourcePinIds": [
+    "pin-readme-challenge-http",
+    "pin-mcp-server-not-mcp",
+    "pin-telemetry-mcp-resource",
+    "pin-telemetry-http-route"
+  ],
+  "input": {
+    "oldDocs": [
+      { "id": "old", "path": "docs/conflict-challenge-resource/old.md" }
+    ],
+    "newDocs": [
+      { "id": "new-http", "path": "docs/conflict-challenge-resource/new-http.md" },
+      { "id": "new-mcp", "path": "docs/conflict-challenge-resource/new-mcp.md" }
+    ],
+    "operationsInventory": {
+      "id": "inventory",
+      "path": "docs/conflict-challenge-resource/inventory.json"
+    }
+  },
+  "citations": [
+    { "id": "old", "path": "docs/conflict-challenge-resource/old.md" },
+    { "id": "new-http", "path": "docs/conflict-challenge-resource/new-http.md" },
+    { "id": "new-mcp", "path": "docs/conflict-challenge-resource/new-mcp.md" },
+    { "id": "inventory", "path": "docs/conflict-challenge-resource/inventory.json" }
+  ],
+  "expect": {
+    "decision": "conflict",
+    "findings": [
+      {
+        "id": "batch-challenge-conflict",
+        "operation": { "method": "POST", "route": "/extract/batch", "mcpTool": "extract_batch" },
+        "change": "conflict",
+        "inInventory": true,
+        "values": [
+          "https://agents.samedaydesk.com/extract/batch",
+          "mcp://tool/extract_batch"
+        ],
+        "citationIds": ["new-http", "new-mcp", "inventory"]
+      }
+    ]
+  },
+  "limitations": [
+    "Conflict is on the supplied challengeResource column, not a legal finding that telemetry resource equals payment resource.",
+    "Do not resolve the disagreement by preferring README over telemetry or the reverse."
+  ],
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}

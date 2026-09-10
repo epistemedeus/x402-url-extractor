@@ -1,0 +1,112 @@
+{
+  "schema": "s153.gate-pin.v1",
+  "cell": "c28",
+  "s137Pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "link-index",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "moduleId": "04",
+  "srcDir": "link-index",
+  "situationId": "S4",
+  "situation": "malformed-input",
+  "brief": "Reuse negative/malformed; assert fail/reject + stable exit",
+  "expectedDecisionClass": "fail",
+  "allowedDecisionClasses": ["fail"],
+  "forbiddenDecisionClasses": ["pass"],
+  "schemaRejectStatus": "invalid",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "payment": { "attempted": false },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index",
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/link-index/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/link-index/transform.mjs",
+    "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs"
+  },
+  "caseIds": ["negative-malformed", "negative-empty", "negative-no-links"],
+  "cases": [
+    {
+      "id": "negative-malformed",
+      "kind": "negative",
+      "primary": true,
+      "expectedDecision": "fail",
+      "expectedFindingKind": "empty_href",
+      "expectedHref": "",
+      "expectedTargetStatus": "unreachable",
+      "expectedUnreachableReason": "empty_href",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/negative-malformed/expected.json",
+      "sha256": "0d5356579fd4568e2547b152b8f48bb394b7ce4c0b26c9bb5d6ee4973fe2615b",
+      "notes": "Empty quoted href is indexed as unreachable; unterminated href and <a> without href are not extracted."
+    },
+    {
+      "id": "negative-empty",
+      "kind": "negative",
+      "primary": false,
+      "expectedDecision": "fail",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/negative-empty/expected.json",
+      "sha256": "edd415490edb3e738a526fdd3f08382b1a9c1cb787de13bb23c300e3799ac503",
+      "notes": "Zero-byte entry. Absence of links is observed; hrefs are not invented."
+    },
+    {
+      "id": "negative-no-links",
+      "kind": "negative",
+      "primary": false,
+      "expectedDecision": "fail",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/negative-no-links/expected.json",
+      "sha256": "ec897b642e523f6d14d38ca7d7b673ca8472a731c3fc36db4fc6417cc3192573",
+      "notes": "Bare https://example.invalid URL in prose is not markdown link syntax and is not indexed."
+    }
+  ],
+  "primaryFixtures": [
+    {
+      "role": "entry-source",
+      "caseId": "negative-malformed",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/negative-malformed/source.html",
+      "sha256": "3f2b61f7c5b69b918b2c2bd5847d239cb0f8625a811c7ca0ddd10c982ac7cf85"
+    },
+    {
+      "role": "expected-decision",
+      "caseId": "negative-malformed",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/negative-malformed/expected.json",
+      "sha256": "0d5356579fd4568e2547b152b8f48bb394b7ce4c0b26c9bb5d6ee4973fe2615b"
+    },
+    {
+      "role": "entry-source",
+      "caseId": "negative-empty",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/negative-empty/source.html",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "role": "expected-decision",
+      "caseId": "negative-empty",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/negative-empty/expected.json",
+      "sha256": "edd415490edb3e738a526fdd3f08382b1a9c1cb787de13bb23c300e3799ac503"
+    },
+    {
+      "role": "entry-source",
+      "caseId": "negative-no-links",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/negative-no-links/source.md",
+      "sha256": "8ba854c062d43b950d490a4cb67f80dae68f0b86be726bd9e1e644c0c41bee9d"
+    },
+    {
+      "role": "expected-decision",
+      "caseId": "negative-no-links",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/negative-no-links/expected.json",
+      "sha256": "ec897b642e523f6d14d38ca7d7b673ca8472a731c3fc36db4fc6417cc3192573"
+    }
+  ],
+  "supportingFixtures": [
+    {
+      "role": "operator-clock",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/CLOCK.txt",
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a"
+    }
+  ],
+  "cliExits": {
+    "analyzeFailPacket": 0,
+    "inputReject": 1,
+    "usageReject": 2
+  }
+}

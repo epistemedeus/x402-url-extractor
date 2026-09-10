@@ -1,0 +1,43 @@
+{
+  "schema": "s137.link-index.synthetic-case.v1",
+  "caseId": "negative-no-links",
+  "kind": "negative",
+  "expectedDecision": "fail",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "entry": "source.md",
+  "format": "md",
+  "offline": true,
+  "payment": { "attempted": false },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "links": [],
+  "anchors": [
+    { "id": "status", "text": "Status", "level": 1, "index": 0, "kind": "md-heading" }
+  ],
+  "findings": [
+    {
+      "findingId": "F1",
+      "code": "no-links",
+      "citationIds": ["source.md"]
+    }
+  ],
+  "citations": [
+    {
+      "citationId": "source.md",
+      "path": "source.md",
+      "sha256": "8ba854c062d43b950d490a4cb67f80dae68f0b86be726bd9e1e644c0c41bee9d",
+      "evidenceClass": "synthetic"
+    }
+  ],
+  "limitations": [
+    "A bare https://example.invalid URL in prose is not markdown link syntax and is not indexed as a citation.",
+    "example.invalid is not fetched."
+  ]
+}

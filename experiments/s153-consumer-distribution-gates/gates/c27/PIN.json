@@ -1,0 +1,101 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c27",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "link-index",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "moduleId": "04",
+  "situationId": "S3",
+  "situation": "conflict-identity",
+  "expectedDecision": "conflict",
+  "expectedDecisionClass": "conflict",
+  "offline": true,
+  "paymentAttempted": false,
+  "clock": "2026-09-10T12:00:00.000Z",
+  "srcModuleDir": "experiments/s137-consumer-evidence-jobs/src/link-index/",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "fixtureRoot": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index",
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index",
+  "caseIds": [
+    "conflict-duplicate-ids",
+    "conflict-duplicates"
+  ],
+  "schemaExampleCaseId": "exampleCases.conflict",
+  "excludedJobs": [
+    "R2-CONSUMER-JOBS-07",
+    "R2-CONSUMER-JOBS-08"
+  ],
+  "brief": "Reuse conflict fixture; assert conflict preserved, no silent merge",
+  "primaryFixtures": [
+    {
+      "caseId": "conflict-duplicate-ids",
+      "role": "entry",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/conflict-duplicate-ids/source.html",
+      "sha256": "f6f03fd2f666ecb6eaee4f5e1efb4e2ed50d580f01becabf9477df6cee0e3a6d"
+    },
+    {
+      "caseId": "conflict-duplicates",
+      "role": "entry",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/conflict-duplicates/source.html",
+      "sha256": "3ecbbb282d02084e702d75be3b57e7befb0a4b496fe331452012ac36b2206191"
+    }
+  ],
+  "supportingFixtures": [
+    {
+      "caseId": "conflict-duplicate-ids",
+      "role": "expected",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/conflict-duplicate-ids/expected.json",
+      "sha256": "302383ab79b47c12cb9873853c9c611bb05aa7af7686fd8f0b4a97a31c824562"
+    },
+    {
+      "caseId": "conflict-duplicates",
+      "role": "expected",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/conflict-duplicates/expected.json",
+      "sha256": "e14877e6ed3935cba18af5b766dccdd8ac6666429242e2e907a100c9467c6fea"
+    },
+    {
+      "caseId": "conflict-duplicates",
+      "role": "artifact",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/conflict-duplicates/artifacts/alpha.md",
+      "sha256": "017b70af1737a855266fc9eb9b3f88917dc972f20d2a1c7d6baa03b85260e8b8"
+    },
+    {
+      "caseId": "conflict-duplicates",
+      "role": "artifact",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/conflict-duplicates/artifacts/beta.md",
+      "sha256": "1a26417491f915994a558d790278bf0a7dde56e16dbb87effde011215c2fe713"
+    }
+  ],
+  "cases": [
+    {
+      "caseId": "conflict-duplicate-ids",
+      "kind": "conflict",
+      "expectedDecision": "conflict",
+      "conflictKind": "duplicate-html-id",
+      "noSilentMerge": "fragment #install stays conflict; both id=install rows remain; transform does not pick a winner"
+    },
+    {
+      "caseId": "conflict-duplicates",
+      "kind": "conflict",
+      "expectedDecision": "conflict",
+      "conflictKind": "same-text-different-hashed-targets",
+      "noSilentMerge": "Guide stays bound to both artifacts/alpha.md and artifacts/beta.md with disagreeing contentSha256s; duplicate href rows are kept"
+    },
+    {
+      "caseId": "exampleCases.conflict",
+      "kind": "conflict",
+      "expectedDecision": "conflict",
+      "source": "experiments/s137-consumer-evidence-jobs/src/link-index/schema.mjs exampleCases().conflict",
+      "clock": "2026-09-10T00:00:00.000Z",
+      "conflictKind": "artifact-hash-conflict",
+      "locator": "synthetic/spec.md",
+      "artifactIds": ["art-a", "art-b"],
+      "contentSha256s": [
+        "e2b0ec568e1c55c1fd0430bc4854df7d13a9c7bff4739581a274df5aa6ad3460",
+        "62bebc4699c25c779bdea66e0497a0c1577b36857aa4647c99cec8d0078151e3"
+      ],
+      "noSilentMerge": "same locator supplied with two disagreeing contentSha256 values; both hashes remain"
+    }
+  ]
+}

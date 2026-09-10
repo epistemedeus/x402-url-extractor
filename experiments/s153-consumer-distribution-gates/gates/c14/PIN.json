@@ -1,0 +1,100 @@
+{
+  "schema": "s153.distribution-gate.pin.v1",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "cell": "c14",
+  "moduleId": "02",
+  "artifact": "release-brief",
+  "jobId": "R2-CONSUMER-JOBS-02",
+  "situationId": "S6",
+  "situation": "import-roundtrip",
+  "brief": "Programmatic import of transform/schema; roundtrip packet fields",
+  "offline": true,
+  "payment": { "attempted": false },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "oneWriter": "experiments/s153-consumer-distribution-gates/gates/c14/",
+  "srcModuleDir": "experiments/s137-consumer-evidence-jobs/src/release-brief/",
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/release-brief/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/release-brief/transform.mjs"
+  },
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief",
+  "realReuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief",
+  "primaryCaseId": "positive-aligned",
+  "expectedDecisionClass": "pass",
+  "cases": [
+    {
+      "id": "positive-aligned",
+      "kind": "positive",
+      "role": "primary",
+      "expectedDecisionClass": "pass",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/positive-aligned.json",
+      "sha256": "11c92a56650739ba11b0143f43ef9934b22273e2922df52d408acc2847827bb4"
+    },
+    {
+      "id": "partial-missing-tested",
+      "kind": "partial",
+      "role": "roundtrip-nonpass",
+      "expectedDecisionClass": "partial",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/partial-missing-tested.json",
+      "sha256": "137294c16c7ca9fe03beb478e61f8d3fa884ed27d5d1c43596a8b509788eb2b0"
+    },
+    {
+      "id": "conflict-tag-mismatch",
+      "kind": "conflict",
+      "role": "roundtrip-nonpass",
+      "expectedDecisionClass": "conflict",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/conflict-tag-mismatch.json",
+      "sha256": "a0a4ed5ac9e8a9452fb15e576758f65dd079291ffbdf3bb7f028c527abb4914c"
+    }
+  ],
+  "primaryFixtures": [
+    {
+      "id": "positive-aligned-case",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/positive-aligned.json",
+      "sha256": "11c92a56650739ba11b0143f43ef9934b22273e2922df52d408acc2847827bb4",
+      "role": "case-descriptor"
+    },
+    {
+      "id": "positive-aligned-announced",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/positive-aligned/announced.json",
+      "sha256": "e139c42d3a6c2baa3b498248d06f62fccbf3857b1244afb4adc1d270920e8a7b",
+      "role": "announced-lane"
+    },
+    {
+      "id": "positive-aligned-shipped",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/positive-aligned/shipped.json",
+      "sha256": "b228936ce19bcb0eacdf877c8f4a0523b9da5e919d2eece3ddb0def0d17ceaf6",
+      "role": "shipped-lane"
+    },
+    {
+      "id": "positive-aligned-tested",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/positive-aligned/tested.json",
+      "sha256": "9ff0419f183df7e9508f519df4d1107516fbf8e2a13debb01e4c7264fb741fe8",
+      "role": "tested-lane"
+    },
+    {
+      "id": "synthetic-clock",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/CLOCK.txt",
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a",
+      "role": "operator-clock"
+    }
+  ],
+  "realFixture": {
+    "id": "github-express-v5.2.1",
+    "kind": "fixture",
+    "expectedDecisionClass": "partial",
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief/github-express-v5.2.1.json",
+    "sha256": "0edb4d411bd1cfbafacffe1c690e1467deb5f3f2ed3b7a05541af3034d27fe5f",
+    "provenancePath": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief/PROVENANCE.json",
+    "note": "GitHub release JSON is announced notes; tested lane is absent, not failed. Do not invent a commit SHA from branch name master."
+  },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}

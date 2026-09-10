@@ -1,0 +1,7 @@
+{
+  "case": "conflict",
+  "evidenceClass": "synthetic",
+  "oldDoc": { "path": "docs/old.md", "title": "Install", "sha256": "aaa111" },
+  "newDoc": { "path": "docs/new.md", "title": "Install", "sha256": "bbb222" },
+  "alternateOldDoc": { "path": "docs/old.md", "title": "Setup", "sha256": "ccc333" }
+}

@@ -1,0 +1,60 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "S137 synthetic conflicting examples",
+    "version": "0.0.0-synthetic",
+    "description": "OpenAPI named example disagrees with the companion example file. Do not merge."
+  },
+  "servers": [
+    {
+      "url": "https://api.example.test"
+    }
+  ],
+  "paths": {
+    "/v0/status": {
+      "get": {
+        "operationId": "getStatus",
+        "summary": "Unpaid status with a disagreeing companion.",
+        "responses": {
+          "200": {
+            "description": "Enabled. Unpaid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ok",
+                    "paid",
+                    "source"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "paid": {
+                      "type": "boolean"
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "examples": {
+                  "enabled": {
+                    "summary": "OpenAPI says ok true",
+                    "value": {
+                      "ok": true,
+                      "paid": false,
+                      "source": "openapi-example"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

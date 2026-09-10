@@ -1,0 +1,95 @@
+{
+  "cell": "c30",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "moduleId": "04",
+  "artifact": "link-index",
+  "situationId": "S6",
+  "situation": "import-roundtrip",
+  "brief": "Programmatic import of transform/schema; roundtrip packet fields",
+  "expectedDecisionClass": "pass",
+  "offline": true,
+  "excludedJobs": [
+    "R2-CONSUMER-JOBS-07",
+    "R2-CONSUMER-JOBS-08"
+  ],
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/link-index/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/link-index/transform.mjs"
+  },
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "primary": {
+    "caseId": "positive-html",
+    "expectedDecision": "pass",
+    "expectedDecisionClass": "pass",
+    "files": [
+      {
+        "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-html/source.html",
+        "sha256": "3225b0864b74a726775065d64a97c9dcc72c2a7b54bf42fa94b8fbeb5033b8a1",
+        "role": "entry"
+      },
+      {
+        "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-html/expected.json",
+        "sha256": "2adc2f3a12d39c8a4ab48833e9a3601d20feaac109afac86b724db868b16b51d",
+        "role": "expected"
+      },
+      {
+        "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-html/artifacts/guide.md",
+        "sha256": "bcb53aa419a21fcf6e66c2d1f0d2883cf8962fdd750821802f856de15a60f4a9",
+        "role": "inventory"
+      },
+      {
+        "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-html/artifacts/api.md",
+        "sha256": "da2f76c26732cfc6f35912695d5c03a093d540d2ff225bfe680c40cb1f1ae5c0",
+        "role": "inventory"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "caseId": "positive-html",
+      "expectedDecision": "pass",
+      "expectedDecisionClass": "pass",
+      "role": "primary"
+    },
+    {
+      "caseId": "positive-md",
+      "expectedDecision": "pass",
+      "expectedDecisionClass": "pass",
+      "role": "roundtrip-markdown"
+    },
+    {
+      "caseId": "negative-empty",
+      "expectedDecision": "fail",
+      "expectedDecisionClass": "fail",
+      "role": "roundtrip-empty"
+    },
+    {
+      "caseId": "partial-mixed",
+      "expectedDecision": "partial",
+      "expectedDecisionClass": "partial",
+      "role": "roundtrip-partial"
+    },
+    {
+      "caseId": "conflict-duplicates",
+      "expectedDecision": "conflict",
+      "expectedDecisionClass": "conflict",
+      "role": "roundtrip-conflict"
+    }
+  ],
+  "supportingFiles": [
+    {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/CLOCK.txt",
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a",
+      "role": "operator-clock"
+    },
+    {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/MANIFEST.json",
+      "sha256": "bc3d957431cc9640695a6fe1843c13af05a91d96548f64ef7086a427c76424d1",
+      "role": "manifest"
+    }
+  ]
+}

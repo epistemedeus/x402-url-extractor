@@ -1,0 +1,214 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c11",
+  "s137Pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "release-brief",
+  "jobId": "R2-CONSUMER-JOBS-02",
+  "moduleId": "02",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/release-brief",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "situationId": "S3",
+  "situation": "conflict-identity",
+  "expectedDecisionClass": "conflict",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "excludedJobs": [
+    "R2-CONSUMER-JOBS-07",
+    "R2-CONSUMER-JOBS-08"
+  ],
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief",
+  "kitRoot": "experiments/s153-consumer-distribution-gates/kit",
+  "kitExcludes": [
+    "receipts",
+    "logs",
+    "*.log"
+  ],
+  "notes": "S3 reuses authored synthetic conflict cases. Catalog does not pick a winner across announced/shipped/tested. Real GitHub express v5.2.1 snapshot is a partial (untested) fixture, not a conflict identity case, and is not a primary pin here.",
+  "integrity": {
+    "provenance": {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/PROVENANCE.json",
+      "sha256": "118c5cd9318f634902a7e22b8fb5cdc2019b7d86e92b04f9081654fb7c580fb1"
+    },
+    "manifest": {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/MANIFEST.json",
+      "sha256": "ce8a31764bc1ff5b1c318056aa90b771ebfd04d0f06be5e5b617e1aa5ab68e54"
+    },
+    "sourcePins": {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/SOURCE-PINS.json",
+      "sha256": "86d97f3d828a49a66c0c04ffc159df2200ed7c24903a61b634b6f4b3f721c84e"
+    },
+    "clock": {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/CLOCK.txt",
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a"
+    },
+    "license": {
+      "path": "LICENSE",
+      "spdxId": "MIT",
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
+      "note": "Repo MIT license. Synthetic fixtures are authored in-pack, not third-party content, and are not a legal attestation."
+    }
+  },
+  "cases": [
+    {
+      "id": "conflict-tag-mismatch",
+      "primary": true,
+      "caseClass": "conflict",
+      "expectedDecision": "conflict",
+      "expectedDecisionClass": "conflict",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/conflict-tag-mismatch.json",
+      "sha256": "a0a4ed5ac9e8a9452fb15e576758f65dd079291ffbdf3bb7f028c527abb4914c",
+      "disagreementCodes": [
+        "tag_mismatch",
+        "sha_mismatch"
+      ],
+      "findingCodes": [
+        "identity_disagreement"
+      ],
+      "tagAgreement": false,
+      "shaAgreement": false,
+      "identities": {
+        "announced": {
+          "role": "claimed",
+          "tag": "v1.2.0",
+          "version": "1.2.0",
+          "commitSha": "cf6b96f749ba83b5bd93e5c40c1b808198c2f42c"
+        },
+        "shipped": {
+          "role": "observed",
+          "tag": "v1.1.9",
+          "version": "1.1.9",
+          "commitSha": "8dbde09720bc49b32df4d1503e4a98bcaed4fb34"
+        },
+        "tested": {
+          "role": "observed",
+          "commitSha": "8dbde09720bc49b32df4d1503e4a98bcaed4fb34"
+        }
+      },
+      "sources": [
+        {
+          "lane": "announced",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/conflict-tag-mismatch/announced.json",
+          "sha256": "556834f1844df7eb14b8ea2e474ed9c7d532b4c8486602d10fba7bf8762f3a00"
+        },
+        {
+          "lane": "shipped",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/conflict-tag-mismatch/shipped.json",
+          "sha256": "54d080f383fe59ee58be34a5c2169805bce0835f9bc72c893c3fde0f5413a900"
+        },
+        {
+          "lane": "tested",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/conflict-tag-mismatch/tested.json",
+          "sha256": "fb4e37465b32409be9d5c943db51da90002353af55f8f0861fde31f540a65932"
+        }
+      ]
+    },
+    {
+      "id": "conflict-sha-mismatch",
+      "primary": true,
+      "caseClass": "conflict",
+      "expectedDecision": "conflict",
+      "expectedDecisionClass": "conflict",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/conflict-sha-mismatch.json",
+      "sha256": "e66cffe65ae6b7cac14289012651954d87d5e18456c6fd355a518733d71be17e",
+      "disagreementCodes": [
+        "sha_mismatch"
+      ],
+      "findingCodes": [
+        "identity_disagreement"
+      ],
+      "tagAgreement": true,
+      "shaAgreement": false,
+      "identities": {
+        "announced": {
+          "role": "claimed",
+          "tag": "v1.2.0",
+          "version": "1.2.0",
+          "commitSha": "b70a4adb6387148753969b92792617ebce4d9d95"
+        },
+        "shipped": {
+          "role": "observed",
+          "tag": "v1.2.0",
+          "version": "1.2.0",
+          "commitSha": "4e7e21846effc2ec4533839d0c90ae5864471a86"
+        },
+        "tested": {
+          "role": "observed",
+          "commitSha": "4e7e21846effc2ec4533839d0c90ae5864471a86"
+        }
+      },
+      "sources": [
+        {
+          "lane": "announced",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/conflict-sha-mismatch/announced.json",
+          "sha256": "244c1e6a94bd05e744c469c26e73603d4adef21a04530708d292abea987c48b7"
+        },
+        {
+          "lane": "shipped",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/conflict-sha-mismatch/shipped.json",
+          "sha256": "7c21cb66edf9a0e9c9656f1f0ff71a0c87fc6685f876be8a9342c8bb216a817e"
+        },
+        {
+          "lane": "tested",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/conflict-sha-mismatch/tested.json",
+          "sha256": "6d74b291a1048a3c18c759a124b0d512cc2118b09881f2f2b860ad378b1ae9fc"
+        }
+      ]
+    },
+    {
+      "id": "conflict-ci-vs-announce",
+      "primary": true,
+      "caseClass": "conflict",
+      "expectedDecision": "conflict",
+      "expectedDecisionClass": "conflict",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/conflict-ci-vs-announce.json",
+      "sha256": "5f0ed80196b7d600f4442094ee82170631a4a906cb3e24f467dfbbf4eca0f9b1",
+      "disagreementCodes": [
+        "ci_vs_announce"
+      ],
+      "findingCodes": [
+        "ci_vs_announce"
+      ],
+      "tagAgreement": true,
+      "shaAgreement": true,
+      "identities": {
+        "announced": {
+          "role": "claimed",
+          "tag": "v1.2.0",
+          "version": "1.2.0",
+          "commitSha": "3f9f5ca67f3cdb85de63fe773f0c6f3382e5716b"
+        },
+        "shipped": {
+          "role": "observed",
+          "tag": "v1.2.0",
+          "version": "1.2.0",
+          "commitSha": "3f9f5ca67f3cdb85de63fe773f0c6f3382e5716b"
+        },
+        "tested": {
+          "role": "observed",
+          "commitSha": "3f9f5ca67f3cdb85de63fe773f0c6f3382e5716b"
+        }
+      },
+      "announcedClaim": "All tests passed",
+      "testedConclusion": "failure",
+      "sources": [
+        {
+          "lane": "announced",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/conflict-ci-vs-announce/announced.json",
+          "sha256": "8c7dd2006779546030075f6e26e1ad72a3dcbbe9f20c4ebacf39590edf9568e1"
+        },
+        {
+          "lane": "shipped",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/conflict-ci-vs-announce/shipped.json",
+          "sha256": "aa342f6d790ccab93de8de2086b747107fe909cf99dcf2b92f7de050dd662628"
+        },
+        {
+          "lane": "tested",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/conflict-ci-vs-announce/tested.json",
+          "sha256": "9719b8a3006969adfa3474beca5e9563a2230ccb4e1c7bfc90b25147e071f91e"
+        }
+      ]
+    }
+  ]
+}

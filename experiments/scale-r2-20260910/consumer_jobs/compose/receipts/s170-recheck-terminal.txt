@@ -1,0 +1,62 @@
+=== S170/S169 S153 recheck terminal head ===
+utc=2026-09-10T12:46:29.311Z
+resolved_s153=d520699802622a715cde1d894cc5547c42b2dca7
+quota_reset_exact=2026-09-10T12:48:15.801Z
+
+=== Unpacked kit smoke (tar -xzf kit/dist/s137-consumer-evidence-kit.tgz) ===
+unpacked table-reconcile decision=partial ok=true (verdict=decision NOT ok)
+unpacked link-index decision=fail ok=true (verdict=decision NOT ok)
+unpacked replay-pack decision=pass ok=true (verdict=decision NOT ok)
+unpacked migration-checklist decision=pass ok=true (verdict=decision NOT ok)
+unpacked release-brief decision=partial ok=true (verdict=decision NOT ok)
+unpacked freshness-receipt decision=pass ok=true (verdict=decision NOT ok)
+
+=== In-repo kit/bin CLI deferred 03/04/05 ===
+kit table-reconcile decision=partial
+kit link-index decision=fail
+kit replay-pack decision=pass
+
+=== Legacy synthetic regressions (must remain fail for 03/04/05) ===
+CMD: node experiments/s137-consumer-evidence-jobs/scripts/cli.mjs analyze <art> --in <path> --clock 2026-09-10T12:00:00.000Z
+table-reconcile positive-agree decision=fail
+link-index positive-md decision=fail
+replay-pack positive-unpaid-complete decision=fail
+
+=== release-brief conflict-sha-mismatch (expected fail/conflict; OBSERVED DEFECT) ===
+{
+  "decision": "pass",
+  "ok": true,
+  "finding0": {
+    "id": "cli.schema-rejected"
+  }
+}
+
+=== compose recheck-deferred (default s153-kit) ===
+id                         jobRef                   expected  actual   status
+-------------------------  -----------------------  --------  -------  --------------
+table-reconcile            R2-CONSUMER-JOBS-03      fail      partial  unexpected
+link-index                 R2-CONSUMER-JOBS-04      fail      fail     still_deferred
+replay-pack                R2-CONSUMER-JOBS-05      fail      pass     cleared
+
+packageNote: partial_deferred_recheck   overallStillDeferred: true   schema: x402.r2.consumer.deferred_recheck.v1
+inputMode: s153-kit   cliDefault: /workspace/pilot/worktrees/r2-consumer-s170-s153-recheck-20260910/experiments/s153-consumer-distribution-gates/kit/bin/cli.mjs
+still_deferred: link-index
+cleared: replay-pack
+unexpected: table-reconcile
+outDir: /workspace/pilot/worktrees/r2-consumer-s170-s153-recheck-20260910/experiments/scale-r2-20260910/consumer_jobs/compose/demo-out/deferred-recheck
+Note: green bundle remains buyer path until deferred clear; this tool records truth only.
+
+=== compose recheck-deferred --inputs s137-synthetic (table) ===
+id                         jobRef                   expected  actual   status
+-------------------------  -----------------------  --------  -------  --------------
+table-reconcile            R2-CONSUMER-JOBS-03      fail      fail     still_deferred
+link-index                 R2-CONSUMER-JOBS-04      fail      fail     still_deferred
+replay-pack                R2-CONSUMER-JOBS-05      fail      fail     still_deferred
+
+packageNote: partial_deferred_recheck   overallStillDeferred: true   schema: x402.r2.consumer.deferred_recheck.v1
+inputMode: s137-synthetic   cliDefault: /workspace/pilot/worktrees/r2-consumer-s170-s153-recheck-20260910/experiments/s153-consumer-distribution-gates/kit/bin/cli.mjs
+still_deferred: table-reconcile, link-index, replay-pack
+cleared: —
+unexpected: —
+outDir: /tmp/s170-legacy-recheck
+Note: green bundle remains buyer path until deferred clear; this tool records truth only.

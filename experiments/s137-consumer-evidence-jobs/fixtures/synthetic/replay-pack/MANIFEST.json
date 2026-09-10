@@ -1,0 +1,105 @@
+{
+  "schema": "s137.consumer-evidence.replay-pack.catalog.v1",
+  "jobId": "R2-CONSUMER-JOBS-05",
+  "artifactKind": "replay-pack",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline synthetic fixture; no purchase"
+  },
+  "labServer": "https://api.example.test",
+  "requiredKinds": [
+    "positive",
+    "negative",
+    "partial",
+    "conflict"
+  ],
+  "cases": [
+    {
+      "id": "positive-unpaid-complete",
+      "kind": "positive",
+      "expectedDecision": "pass",
+      "coverage": "full",
+      "path": "cases/positive-unpaid-complete/case.json",
+      "openapiPath": "cases/positive-unpaid-complete/openapi.json"
+    },
+    {
+      "id": "negative-missing-examples",
+      "kind": "negative",
+      "expectedDecision": "fail",
+      "coverage": "none",
+      "path": "cases/negative-missing-examples/case.json",
+      "openapiPath": "cases/negative-missing-examples/openapi.json"
+    },
+    {
+      "id": "negative-paid-marker",
+      "kind": "negative",
+      "expectedDecision": "fail",
+      "coverage": "refused",
+      "path": "cases/negative-paid-marker/case.json",
+      "openapiPath": "cases/negative-paid-marker/openapi.json"
+    },
+    {
+      "id": "partial-mixed-operations",
+      "kind": "partial",
+      "expectedDecision": "partial",
+      "coverage": "partial",
+      "path": "cases/partial-mixed-operations/case.json",
+      "openapiPath": "cases/partial-mixed-operations/openapi.json"
+    },
+    {
+      "id": "conflict-example-mismatch",
+      "kind": "conflict",
+      "expectedDecision": "conflict",
+      "coverage": "disagreement",
+      "path": "cases/conflict-example-mismatch/case.json",
+      "openapiPath": "cases/conflict-example-mismatch/openapi.json"
+    },
+    {
+      "id": "partial-external-value",
+      "kind": "partial",
+      "expectedDecision": "partial",
+      "coverage": "external-unfetched",
+      "path": "cases/partial-external-value/case.json",
+      "openapiPath": "cases/partial-external-value/openapi.json"
+    }
+  ],
+  "patternSources": {
+    "packetEnvelope": {
+      "path": "experiments/s137-consumer-evidence-jobs/src/packet.mjs",
+      "sha256": "6f6f4116ba2b91adb43a19108d6e2f1609bae8f722594158ccac0abf16abe012",
+      "evidenceClass": "fixture",
+      "note": "Shared packet envelope: evidenceClass, citations[], payment.attempted=false, operator clock."
+    },
+    "unpaidOpenApiCompanion": {
+      "path": "page-change-http.mjs",
+      "sha256": "2d3cebc8162739d6ffc2a97f3d2193f14d3d1600dfb3fc45bb51933733189f20",
+      "evidenceClass": "fixture",
+      "note": "In-repo unpaid OpenAPI 3.1.0 companion: requestBody example present; 200 response has schema/description and no Media Type example. Partial-example pattern only. Not copied as a live SKU."
+    }
+  },
+  "oas31ExampleObject": {
+    "url": "https://spec.openapis.org/oas/v3.1.0.html#example-object",
+    "retrieved": false,
+    "sha256": null,
+    "note": "Field names value and externalValue taken from OAS 3.1 Example Object as already used by in-repo openapi: 3.1.0 documents. This cell did not fetch the spec URL."
+  },
+  "limitations": [
+    "Authored synthetic OpenAPI and companion examples. Not live-capture and not a real provider snapshot (c24 owns one real official example).",
+    "Offline default. Do not fetch servers[].url or Example Object externalValue.",
+    "HTTP 402 in a document is a paid-marker for refusal, not an executable offer or spend authority.",
+    "c21/c22 schema and transform are out of this cell; cases pin expectedDecision only."
+  ],
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}

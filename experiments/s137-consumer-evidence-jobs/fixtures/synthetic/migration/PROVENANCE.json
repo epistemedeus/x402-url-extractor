@@ -1,0 +1,132 @@
+{
+  "label": "synthetic",
+  "retrievedAt": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "licenseNote": "Authored synthetic excerpts derived from this MIT-licensed repository (LICENSE). Offline fixtures only. Not a live-capture and not a third-party republication.",
+  "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/",
+  "originalUrls": {},
+  "files": {
+    "CLOCK.txt": {
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "MANIFEST.json": {
+      "sha256": "8392c96db314a7a826a1141adadf62effe31ab9ff1c9f06b83673ba60fd3bc32",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "README.md": {
+      "sha256": "5c9a5bbc977a7121894655b44e5a90d310c49a09bef217f10d6d322d07c824eb",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "SOURCE-PINS.json": {
+      "sha256": "286c5dc040ff208a9ff91dd9764659d8a193fba3a5e568378f0d5a0edb0d0e51",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/conflict-challenge-resource.json": {
+      "sha256": "da5ee0ddd53cfdf87931f9f85423e5b75e54e56f52dec19d9f957ecb5ddf235e",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/negative-malformed-inventory.json": {
+      "sha256": "95858fbe84e8055906b5e531280f6d0254364472f9f31bc0a60be397d0afbbeb",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/negative-missing-new-docs.json": {
+      "sha256": "64638fb82dbc324d66d4bff78b7dc805dddcf12be150244aa0d455e82bf593f1",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/partial-batch-undocumented.json": {
+      "sha256": "54be64f6a5373cbbe746b99c788fc293020883d4f419c649386c806366c66285",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/positive-complete.json": {
+      "sha256": "5ed28b8f1dd1736101035ae6ca93d4ec3b8f77f0396b67d6b410dd61bafcc44b",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "docs/conflict-challenge-resource/inventory.json": {
+      "sha256": "38ca3635d53de4a70203b783ca0bc552f58c487148adaf3a59954a377295f1e0",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "docs/conflict-challenge-resource/new-http.md": {
+      "sha256": "e22e7b47bef644cc8c182c0798884ee0df37a2da081484bc6c647878a07ab22b",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "docs/conflict-challenge-resource/new-mcp.md": {
+      "sha256": "0d76740d3447968ec6464d07cfc1206b45fb73fca6df17b45ecb58726e9784bc",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "docs/conflict-challenge-resource/old.md": {
+      "sha256": "0200f3147c5c0c5d6804969fdced05a65d333158e1372fb024081495fd610448",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "docs/negative-malformed-inventory/inventory.json": {
+      "sha256": "f81558a0435d7320c82d786ec5632605390993fb0effc7b0ac56357de7e26286",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "docs/negative-malformed-inventory/new.md": {
+      "sha256": "ce204bfccb666c1cd55c15cd4c55e55a586141ec9da6cc43100fe23ba70608b0",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "docs/negative-malformed-inventory/old.md": {
+      "sha256": "e6e28c094f2cc2262154c98a9dcd6ad03f6afd3cb6a92b6e05c43466b82a42a5",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "docs/negative-missing-new-docs/inventory.json": {
+      "sha256": "553648b860e51be14f3b55b966cdef59d1fba30cf2330ba4d0d1dcda215a040d",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "docs/negative-missing-new-docs/old.md": {
+      "sha256": "45ec67183699ffbb3f92084908df502f126369e41e57b80b51d8f8ac70b2af4a",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "docs/partial-batch-undocumented/inventory.json": {
+      "sha256": "172c5ba8171efba624e5707fd2aa29270a29b8139612a1df68000a2852b09e47",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "docs/partial-batch-undocumented/new.md": {
+      "sha256": "fca9fe10cef5b924b74d12a5cbbcdb8c1eef0c376c7d538f2aa6c4a508d318df",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "docs/partial-batch-undocumented/old.md": {
+      "sha256": "e86c05292ac82aa4e7d29ab909cb5c23a3d14f28d36917e14567f44b25d05a05",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "docs/positive-complete/inventory.json": {
+      "sha256": "5363531bcc3280846c5e00080499454677e87e120e3ee8e0474803d3e88df46c",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "docs/positive-complete/new.md": {
+      "sha256": "23cc466ea7572bed50daa15f4b22b157d5c723b2a5f34ca4849a5c08a993a09c",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "docs/positive-complete/old.md": {
+      "sha256": "0be077983920576e0a31818d495d44889665c61313174359a599a2ec0789b736",
+      "label": "synthetic",
+      "coverage": "full"
+    }
+  }
+}

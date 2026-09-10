@@ -1,0 +1,83 @@
+{
+  "schema": "s153.distribution-gate.pin.v1",
+  "cell": "c03",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "migration-checklist",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/migration-checklist",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "situationId": "S3",
+  "situation": "conflict-identity",
+  "expectedDecisionClass": "conflict",
+  "expectedCoverage": "conflict",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "caseIds": ["conflict-challenge-resource"],
+  "fixtureRoot": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration",
+  "primaryFixtures": [
+    {
+      "role": "case",
+      "id": "conflict-challenge-resource",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/conflict-challenge-resource.json",
+      "sha256": "da5ee0ddd53cfdf87931f9f85423e5b75e54e56f52dec19d9f957ecb5ddf235e"
+    },
+    {
+      "role": "new-http",
+      "id": "new-http",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/conflict-challenge-resource/new-http.md",
+      "sha256": "e22e7b47bef644cc8c182c0798884ee0df37a2da081484bc6c647878a07ab22b"
+    },
+    {
+      "role": "new-mcp",
+      "id": "new-mcp",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/conflict-challenge-resource/new-mcp.md",
+      "sha256": "0d76740d3447968ec6464d07cfc1206b45fb73fca6df17b45ecb58726e9784bc"
+    },
+    {
+      "role": "old",
+      "id": "old",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/conflict-challenge-resource/old.md",
+      "sha256": "0200f3147c5c0c5d6804969fdced05a65d333158e1372fb024081495fd610448"
+    },
+    {
+      "role": "inventory",
+      "id": "inventory",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/conflict-challenge-resource/inventory.json",
+      "sha256": "38ca3635d53de4a70203b783ca0bc552f58c487148adaf3a59954a377295f1e0"
+    }
+  ],
+  "expect": {
+    "decision": "conflict",
+    "coverage": "conflict",
+    "findingId": "batch-challenge-conflict",
+    "change": "conflict",
+    "kind": "conflict",
+    "operation": { "method": "POST", "route": "/extract/batch", "mcpTool": "extract_batch" },
+    "inInventory": true,
+    "values": [
+      "https://agents.samedaydesk.com/extract/batch",
+      "mcp://tool/extract_batch"
+    ],
+    "citationIds": ["new-http", "new-mcp", "inventory"],
+    "reasonCode": "conflicting_source",
+    "silentMergeForbidden": true,
+    "winnerForbidden": true
+  },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "notes": [
+    "Reuse S137 synthetic conflict fixture only; do not recreate S137 implementation cells.",
+    "Two new docs disagree on challengeResource for POST /extract/batch; both values must be reported together.",
+    "Do not resolve the disagreement by preferring README/HTTP over telemetry mcp:// or the reverse."
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "name": "s137-consumer-evidence-kit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline consumer-evidence kit for R2-CONSUMER-JOBS-01..06. No publication, payment, or network I/O.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "consumer-evidence": "./bin/cli.mjs"
+  },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./packet": "./src/packet.mjs",
+    "./common": "./src/common.mjs",
+    "./migration-checklist": "./src/migration-checklist.mjs",
+    "./release-brief": "./src/release-brief.mjs",
+    "./table-reconcile": "./src/table-reconcile.mjs",
+    "./link-index": "./src/link-index.mjs",
+    "./replay-pack": "./src/replay-pack.mjs",
+    "./freshness-receipt": "./src/freshness-receipt.mjs",
+    "./cli": "./bin/cli.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "manifests",
+    "examples",
+    "docs",
+    "README.md",
+    "COMPAT-07-08.md",
+    "LICENSE-PINS.md"
+  ],
+  "scripts": {
+    "build-archive": "node scripts/build-archive.mjs"
+  }
+}

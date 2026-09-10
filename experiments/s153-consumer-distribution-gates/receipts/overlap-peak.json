@@ -1,0 +1,23 @@
+{
+  "ts": "2026-09-10T12:02:17+00:00",
+  "os_s153_sessions": 49,
+  "mem_available_pct_at_peak_admission": 51.46,
+  "mem_available_mb_at_peak_admission": 8240,
+  "disk_free_pct_at_peak_admission": 83.27,
+  "s137_lower_bound_os": 32,
+  "s137_lower_bound_rss_mb": 3498,
+  "native_child_canary_s137": 2,
+  "note": "Peak reconstructed from session-events.jsonl start/end timestamps. Continuous RSS sampler only captured pre-wave baseline; do not equate OS grok CLI sessions with native Heavy children.",
+  "session_ids_sample": [
+    "01a08b31-28e7-7ea3-9d56-997963b2b51c",
+    "01a08b31-28fb-7722-9a3c-c06a6aa776e3",
+    "01a08b31-290d-7c83-8c91-a189d0cb030c",
+    "01a08b31-2952-7a32-9b3e-11434d0b4d55",
+    "01a08b31-2960-7780-9016-6ad49b05d7c8",
+    "01a08b31-2971-7cd3-8509-dfce60d178f4",
+    "01a08b31-29bb-7492-95c4-1785ed36971a",
+    "01a08b31-29d2-7870-91e2-88bf43da6ff5"
+  ],
+  "unique_session_ids": 48,
+  "integrator_session_id": null
+}

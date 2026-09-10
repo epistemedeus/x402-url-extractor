@@ -1,0 +1,106 @@
+{
+  "schema": "s153.distribution-gate.pin.v1",
+  "cell": "c10",
+  "s137Pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "release-brief",
+  "jobId": "R2-CONSUMER-JOBS-02",
+  "moduleId": "02",
+  "situationId": "S2",
+  "situation": "partial-prereq",
+  "brief": "Reuse partial fixture; assert partial/unknown not invented pass",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "expectedDecisionClass": "partial",
+  "allowedDecisionClasses": ["partial", "unknown"],
+  "forbiddenDecisionClasses": ["pass"],
+  "offline": true,
+  "payment": { "attempted": false },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "src": {
+    "transform": "experiments/s137-consumer-evidence-jobs/src/release-brief/transform.mjs",
+    "schema": "experiments/s137-consumer-evidence-jobs/src/release-brief/schema.mjs",
+    "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs"
+  },
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief",
+  "realReuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief",
+  "primary": {
+    "caseId": "partial-missing-tested",
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/partial-missing-tested.json",
+    "sha256": "137294c16c7ca9fe03beb478e61f8d3fa884ed27d5d1c43596a8b509788eb2b0",
+    "expectedDecisionClass": "partial",
+    "missingPlanes": ["tested"]
+  },
+  "cases": [
+    {
+      "caseId": "partial-missing-tested",
+      "kind": "partial",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/partial-missing-tested.json",
+      "sha256": "137294c16c7ca9fe03beb478e61f8d3fa884ed27d5d1c43596a8b509788eb2b0",
+      "expectedDecisionClass": "partial",
+      "presentPlanes": ["announced", "shipped"],
+      "missingPlanes": ["tested"],
+      "sources": [
+        {
+          "plane": "announced",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/partial-missing-tested/announced.json",
+          "sha256": "4b1adaa1a1f1b379dc9a0a0729b3edf96118e5cbbc954d27bf8adf76bddfcb0c"
+        },
+        {
+          "plane": "shipped",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/partial-missing-tested/shipped.json",
+          "sha256": "3b209235c79cf9a6582352aaf10fde341c48565a3cfa046ac16cd31538f6cf1c"
+        }
+      ]
+    },
+    {
+      "caseId": "partial-announced-only",
+      "kind": "partial",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/partial-announced-only.json",
+      "sha256": "f48d7ec26be7b16fe60b327275fedd01f6121642a185b1113ca7f2d6aec8cac9",
+      "expectedDecisionClass": "partial",
+      "presentPlanes": ["announced"],
+      "missingPlanes": ["shipped", "tested"],
+      "sources": [
+        {
+          "plane": "announced",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/partial-announced-only/announced.json",
+          "sha256": "16d668bd112401bb73d94d5cbd57c75e58472a4ec9717c16da1ea6d6da69d81c"
+        }
+      ]
+    },
+    {
+      "caseId": "partial-shipped-no-announce",
+      "kind": "partial",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/partial-shipped-no-announce.json",
+      "sha256": "e00bc62783e6153a9244b2c72e68818c701af589d5b9af2c3a5e613fb6f2e008",
+      "expectedDecisionClass": "partial",
+      "presentPlanes": ["shipped", "tested"],
+      "missingPlanes": ["announced"],
+      "sources": [
+        {
+          "plane": "shipped",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/partial-shipped-no-announce/shipped.json",
+          "sha256": "a0e8666db0dac80a6ffbd36765ee10fe961580bbb6e0d5db091610d676e398fc"
+        },
+        {
+          "plane": "tested",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/partial-shipped-no-announce/tested.json",
+          "sha256": "330c509c09454d42992da726737fa1ce36a10df8335de5ef5e35933a8399e518"
+        }
+      ]
+    }
+  ],
+  "real": {
+    "caseId": "real-express-v5.2.1",
+    "kind": "partial",
+    "evidenceClass": "fixture",
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief/github-express-v5.2.1.json",
+    "sha256": "0edb4d411bd1cfbafacffe1c690e1467deb5f3f2ed3b7a05541af3034d27fe5f",
+    "provenancePath": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief/PROVENANCE.json",
+    "expectedDecisionClass": "partial",
+    "presentPlanes": ["announced"],
+    "missingPlanes": ["shipped", "tested"],
+    "note": "GitHub Releases JSON is announced notes; tarball_url and branch target_commitish are not a ship; tested lane is absent."
+  }
+}

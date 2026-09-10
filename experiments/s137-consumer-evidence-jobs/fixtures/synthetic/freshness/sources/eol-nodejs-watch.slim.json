@@ -1,0 +1,45 @@
+{
+  "evidenceClass": "synthetic",
+  "transform": "copy-watch-cycles-only",
+  "datasetId": "endoflife:nodejs",
+  "sourceUrl": "https://endoflife.date/api/nodejs.json",
+  "licenseNote": "endoflife.date API; check site terms; data for operational planning",
+  "watchCycles": ["20", "22", "24"],
+  "observedRecords": 3,
+  "expectedRecords": 26,
+  "expectedRecordsField": "S122 fixtures/PROVENANCE.json eolFullCycleCount",
+  "sourceUpdatedAt": null,
+  "sourceUpdatedAtField": null,
+  "note": "Slim watch extract has as_of_clock (operator/download clock), not a dataset last-modified. Full API cycle count is 26; this body covers 3.",
+  "asOfClock": "2026-09-10T09:54:59Z",
+  "cycles": [
+    {
+      "cycle": "24",
+      "releaseDate": "2025-05-06",
+      "eol": "2028-04-30",
+      "latest": "24.21.0"
+    },
+    {
+      "cycle": "22",
+      "releaseDate": "2024-04-24",
+      "eol": "2027-04-30",
+      "latest": "22.23.2"
+    },
+    {
+      "cycle": "20",
+      "releaseDate": "2023-04-18",
+      "eol": "2026-04-30",
+      "latest": "20.20.2"
+    }
+  ],
+  "derivedFrom": {
+    "host": "/tmp/s127/x402-url-extractor",
+    "path": "experiments/s122-application-jobs/fixtures/eol-nodejs/current.json",
+    "sha256": "7fe8b0806dee04bcc7a925262ff269936a6ebd6fd3198720ebb12dc727445d60",
+    "also": {
+      "path": "experiments/s122-application-jobs/fixtures/PROVENANCE.json",
+      "sha256": "3d7212a24314c2f31ac0dd0647f89f460a2c40b658ea13a77d0f312717d6c453",
+      "field": "eolFullCycleCount"
+    }
+  }
+}

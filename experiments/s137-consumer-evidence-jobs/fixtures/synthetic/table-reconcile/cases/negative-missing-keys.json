@@ -1,0 +1,73 @@
+{
+  "schema": "s137.table-reconcile.case.v1",
+  "id": "negative-missing-keys",
+  "jobId": "R2-CONSUMER-JOBS-03",
+  "kind": "negative",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "Raw array without keys/unit/timeWindow is invalid input",
+  "notes": "Authored synthetic. lab-a is a bare JSON array. Join keys cannot be inferred.",
+  "join": {
+    "keys": [
+      "metric",
+      "windowStart"
+    ],
+    "unit": "count",
+    "timeWindow": {
+      "start": "2026-08-03T00:00:00.000Z",
+      "end": "2026-08-10T00:00:00.000Z",
+      "grain": "P7D",
+      "inclusiveStart": true,
+      "inclusiveEnd": false
+    },
+    "units": {
+      "value": "count"
+    }
+  },
+  "doNotInvent": [
+    "sum",
+    "convert-units",
+    "interpolate-window",
+    "fill-missing",
+    "infer-keys"
+  ],
+  "tables": [
+    {
+      "id": "lab-a",
+      "path": "sources/negative-missing-keys/lab-a.json"
+    },
+    {
+      "id": "lab-b",
+      "path": "sources/negative-missing-keys/lab-b.json"
+    }
+  ],
+  "expect": {
+    "decision": "fail",
+    "inventTotals": false,
+    "findings": [
+      {
+        "id": "invalid:missing-keys:lab-a",
+        "kind": "invalid-input",
+        "code": "missing-keys",
+        "citationIds": [
+          "src:negative-missing-keys/lab-a"
+        ]
+      }
+    ]
+  },
+  "citations": [
+    {
+      "id": "src:negative-missing-keys/lab-a",
+      "path": "sources/negative-missing-keys/lab-a.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/negative-missing-keys/lab-a.json",
+      "sha256": "57d1c7c46c8c5479dba6b346a3fce95fb770a5f0ea8ae33cc879d591c059eef8"
+    },
+    {
+      "id": "src:negative-missing-keys/lab-b",
+      "path": "sources/negative-missing-keys/lab-b.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/negative-missing-keys/lab-b.json",
+      "sha256": "0f39ed5f180f784d897ecccec6d5bf8999d80e935293c1f8c15380af32350425"
+    }
+  ]
+}

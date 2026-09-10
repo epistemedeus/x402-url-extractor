@@ -1,0 +1,43 @@
+{
+  "offline": true,
+  "paymentAttempted": false,
+  "assertsCustomerDemand": false,
+  "rows": [
+    {
+      "job": "R2-CONSUMER-JOBS-01",
+      "artifact": "migration-checklist",
+      "decision": "pass",
+      "findings": 3
+    },
+    {
+      "job": "R2-CONSUMER-JOBS-02",
+      "artifact": "release-brief",
+      "decision": "pass",
+      "findings": 1
+    },
+    {
+      "job": "R2-CONSUMER-JOBS-03",
+      "artifact": "table-reconcile",
+      "decision": "pass",
+      "findings": 3
+    },
+    {
+      "job": "R2-CONSUMER-JOBS-04",
+      "artifact": "link-index",
+      "decision": "pass",
+      "findings": 3
+    },
+    {
+      "job": "R2-CONSUMER-JOBS-05",
+      "artifact": "replay-pack",
+      "decision": "pass",
+      "findings": 0
+    },
+    {
+      "job": "R2-CONSUMER-JOBS-06",
+      "artifact": "freshness-receipt",
+      "decision": "pass",
+      "findings": 2
+    }
+  ]
+}

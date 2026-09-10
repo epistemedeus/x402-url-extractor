@@ -1,0 +1,9 @@
+{
+  "id": "heavy-05-evidence-package",
+  "title": "Evidence package",
+  "status": "unavailable_pending_heavy",
+  "jobRef": "R2-CONSUMER-JOBS-05",
+  "schema": null,
+  "cli": null,
+  "note": "Heavy branch artifact not ready on this thin package. Slot remains unavailable_pending_heavy (distinct from empty/no-users). Compose exact Heavy returned artifacts later; do not invent demo outputs."
+}

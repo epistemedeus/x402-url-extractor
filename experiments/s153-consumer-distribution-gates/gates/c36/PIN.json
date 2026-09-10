@@ -1,0 +1,139 @@
+{
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "cell": "c36",
+  "artifact": "replay-pack",
+  "jobId": "R2-CONSUMER-JOBS-05",
+  "moduleId": "05",
+  "situationId": "S4",
+  "situation": "malformed-input",
+  "brief": "Reuse negative/malformed; assert fail/reject + stable exit",
+  "expectedDecisionClass": "fail",
+  "allowedRejectExits": [1, 2],
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "srcModuleDir": "experiments/s137-consumer-evidence-jobs/src/replay-pack/",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack",
+  "inputSchema": "s137.replay-pack.input.v1",
+  "cases": [
+    {
+      "id": "negative-missing-examples",
+      "kind": "negative",
+      "expectedDecision": "fail",
+      "coverage": "none",
+      "why": "Valid OpenAPI with no example/examples. Pack must not invent bytes.",
+      "primary": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/negative-missing-examples/case.json",
+      "sha256": "528353fc11d61fd1ceaa68b9666ad76cd981d5842200799540386587a1f166e9",
+      "files": [
+        {
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/negative-missing-examples/case.json",
+          "sha256": "528353fc11d61fd1ceaa68b9666ad76cd981d5842200799540386587a1f166e9",
+          "role": "case"
+        },
+        {
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/negative-missing-examples/openapi.json",
+          "sha256": "fe2e7d6d12f4920b5fa0d02b1a08045bb8da572f13ad568aad11778f78b1bd9f",
+          "role": "openapi"
+        }
+      ]
+    },
+    {
+      "id": "negative-paid-marker",
+      "kind": "negative",
+      "expectedDecision": "fail",
+      "coverage": "refused",
+      "why": "HTTP 402 listed. Not an executed provider result. Spend forbidden.",
+      "primary": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/negative-paid-marker/case.json",
+      "sha256": "c00528e30de1c8c169d8e7c731b6b964dede321e6cc3136bd15f8985b4d2641b",
+      "files": [
+        {
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/negative-paid-marker/case.json",
+          "sha256": "c00528e30de1c8c169d8e7c731b6b964dede321e6cc3136bd15f8985b4d2641b",
+          "role": "case"
+        },
+        {
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/negative-paid-marker/openapi.json",
+          "sha256": "f4a8e46b240a528b06e6d3bf51a152760ff9581514fd8b735e19258dda8b2433",
+          "role": "openapi"
+        },
+        {
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/negative-paid-marker/examples/getPaidMarker.response.json",
+          "sha256": "9ee6857ff0dc1e346254983ffde1f98a93dd7d567caf7788f02a7d1cb1fbe4a1",
+          "role": "companion-example"
+        }
+      ]
+    }
+  ],
+  "schemaMalformed": {
+    "source": "experiments/s137-consumer-evidence-jobs/src/replay-pack/schema.mjs selfCheckFixtures().negativeInputs",
+    "ids": [
+      "missingClock",
+      "inventedClock",
+      "emptyExamples",
+      "uncitedFindingExample",
+      "secretHeader",
+      "synthesized",
+      "paidSatisfied"
+    ],
+    "expectedStatus": "invalid",
+    "expectedDecisionClass": "fail"
+  },
+  "supporting": [
+    {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/CLOCK.txt",
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a",
+      "role": "operator-clock"
+    },
+    {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/MANIFEST.json",
+      "sha256": "1f2be64ac5811ef06d327d9730444f6c71c9d7f9202d27bd73875cda23123be8",
+      "role": "catalog"
+    }
+  ],
+  "cliRejects": {
+    "remoteUrl": {
+      "in": "https://example.invalid/replay-pack.json",
+      "exitCode": 1,
+      "packet": false,
+      "note": "parseCli refuses http(s) --in before analyze; offline default."
+    },
+    "missingPath": {
+      "exitCode": 1,
+      "decision": "fail",
+      "packetOk": false
+    },
+    "oversize": {
+      "exitCode": 1,
+      "decision": "fail",
+      "packetOk": false,
+      "code": "too_large",
+      "limitBytes": 1048576
+    },
+    "inventedClock": {
+      "clock": "now",
+      "exitCode": 2,
+      "packet": false,
+      "note": "CLI usage reject; operator clock is not invented."
+    }
+  },
+  "observedVsClaimed": {
+    "unparseableJsonObjectText": {
+      "observedDecision": "partial",
+      "claimedDecision": null,
+      "note": "CLI loadInput keeps `{`-prefixed unparseable text as kind=text; transform throws (empty citationIds). pickDecision maps transform_threw to partial, exit 0. Do not claim fail for this path."
+    },
+    "caseJsonIsNotInputSchema": {
+      "note": "Synthetic case.json uses s137.consumer-evidence.replay-pack.case.v1, not s137.replay-pack.input.v1. Transform still fail-closes (no examples array / schema.const). Schema-shaped negatives are built via fixtures/synthetic/replay-pack/load.mjs, matching S137 test/replay-pack.test.mjs."
+    }
+  },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"]
+}

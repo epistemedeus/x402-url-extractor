@@ -1,0 +1,67 @@
+{
+  "evidenceClass": "synthetic",
+  "note": "Read-only S122/S137 sources. Timestamps copied, not invented. No live fetch. No payment.",
+  "operatorClock": "2026-09-10T09:54:59Z",
+  "operatorClockSource": {
+    "host": "/tmp/s127/x402-url-extractor",
+    "path": "experiments/s122-application-jobs/evidence/snapshots/CAPTURED_AT_UTC.txt",
+    "sha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+    "bytes": "2026-09-10T09:54:59Z\\n"
+  },
+  "entries": [
+    {
+      "id": "s122-npm-vercel-current",
+      "url": "https://registry.npmjs.org/vercel",
+      "path": "experiments/s122-application-jobs/fixtures/npm-vercel/current.json",
+      "sha256": "0d8fae00bbba86cdaca5c380281430d7a620c11e7c3119e4e4ead5026583381f",
+      "role": "sourceUpdatedAt via published_at"
+    },
+    {
+      "id": "s122-npm-claude-code-current",
+      "url": "https://registry.npmjs.org/@anthropic-ai/claude-code",
+      "path": "experiments/s122-application-jobs/fixtures/npm-claude-code/current.json",
+      "sha256": "29d04af93bc9f2ab188e3e922c7c314a735fd18b34b213928d377ecd9e924ac4",
+      "role": "sourceUpdatedAt via published_at"
+    },
+    {
+      "id": "s122-npm-vercel-stale-current",
+      "url": "https://registry.npmjs.org/vercel",
+      "path": "experiments/s122-application-jobs/fixtures/npm-vercel/stale-current.json",
+      "sha256": "354227542bc0dd4e38932b8d3c4aa216f380f3647486c8f3a50ee2bb84f0c604",
+      "role": "retrievedAt via captured_at and sourceUpdatedAt via published_at; ordering conflict"
+    },
+    {
+      "id": "s122-npm-vercel-version-doc",
+      "url": "https://registry.npmjs.org/vercel",
+      "path": "experiments/s122-application-jobs/fixtures/npm-vercel/second-snapshot-version-doc.json",
+      "sha256": "55b8af1dcae8a13ac579300df00e426f0a8b5cf375821ef884e87c425ca02eac",
+      "role": "version document without published_at"
+    },
+    {
+      "id": "s122-npm-vercel-unchanged",
+      "url": "https://registry.npmjs.org/vercel",
+      "path": "experiments/s122-application-jobs/fixtures/npm-vercel/unchanged.json",
+      "sha256": "da9a5820120120bc22a92b6576d07f9110e46f4005c6d45d7238e535a2b3cf18",
+      "role": "second sourceUpdatedAt for npm:vercel (59.9.1 published_at)"
+    },
+    {
+      "id": "s122-eol-nodejs-current",
+      "url": "https://endoflife.date/api/nodejs.json",
+      "path": "experiments/s122-application-jobs/fixtures/eol-nodejs/current.json",
+      "sha256": "7fe8b0806dee04bcc7a925262ff269936a6ebd6fd3198720ebb12dc727445d60",
+      "role": "watch-cycle coverage 3 of 26; as_of_clock is not sourceUpdatedAt"
+    },
+    {
+      "id": "s122-fixtures-provenance",
+      "path": "experiments/s122-application-jobs/fixtures/PROVENANCE.json",
+      "sha256": "3d7212a24314c2f31ac0dd0647f89f460a2c40b658ea13a77d0f312717d6c453",
+      "role": "eolFullCycleCount=26; capturedAtUtc for current slims"
+    },
+    {
+      "id": "s137-discovery-drift-future-date",
+      "path": "discovery-drift.test.mjs",
+      "sha256": "95b83c48779d6b16dd0d31e426e6c05293a1e33a1db64cb7e7d794644357c431",
+      "role": "repo test uses lastUpdated 2099-01-01T00:00:00Z as future-dated freshness unknown"
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "schema": "s137.table-reconcile.case.v1",
+  "id": "negative-empty",
+  "jobId": "R2-CONSUMER-JOBS-03",
+  "kind": "negative",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "Empty rows cannot reconcile against a populated table",
+  "notes": "Authored synthetic. lab-a has schema but zero rows. Do not treat absence as zero totals.",
+  "join": {
+    "keys": [
+      "metric",
+      "windowStart"
+    ],
+    "unit": "count",
+    "timeWindow": {
+      "start": "2026-08-03T00:00:00.000Z",
+      "end": "2026-08-17T00:00:00.000Z",
+      "grain": "P7D",
+      "inclusiveStart": true,
+      "inclusiveEnd": false
+    },
+    "units": {
+      "value": "count"
+    }
+  },
+  "doNotInvent": [
+    "sum",
+    "convert-units",
+    "interpolate-window",
+    "fill-missing",
+    "zero-fill-empty"
+  ],
+  "tables": [
+    {
+      "id": "lab-a",
+      "path": "sources/negative-empty/lab-a.json"
+    },
+    {
+      "id": "lab-b",
+      "path": "sources/negative-empty/lab-b.json"
+    }
+  ],
+  "expect": {
+    "decision": "fail",
+    "inventTotals": false,
+    "findings": [
+      {
+        "id": "invalid:empty-rows:lab-a",
+        "kind": "invalid-input",
+        "code": "empty-rows",
+        "citationIds": [
+          "src:negative-empty/lab-a"
+        ]
+      }
+    ]
+  },
+  "citations": [
+    {
+      "id": "src:negative-empty/lab-a",
+      "path": "sources/negative-empty/lab-a.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/negative-empty/lab-a.json",
+      "sha256": "6073fa96e3a4ed3d156dcceb5eabcc56d59a9a4bf103da732c15fda13cd4f3a3"
+    },
+    {
+      "id": "src:negative-empty/lab-b",
+      "path": "sources/negative-empty/lab-b.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/negative-empty/lab-b.json",
+      "sha256": "fe154312fe59ad281b8b512ed86113bd3701a6fa5b5ef25d3283e8fdd7569f71"
+    }
+  ]
+}

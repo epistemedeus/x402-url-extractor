@@ -1,0 +1,134 @@
+{
+  "label": "synthetic",
+  "evidenceClassDefault": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline authored fixtures; no purchase"
+  },
+  "sourceCaptureClock": "2026-09-10T09:54:59Z",
+  "sourceCaptureClockNote": "Clock copied from S122 CAPTURED_AT_UTC.txt. Not a live retrieval of these synthetic files.",
+  "notes": "Authored synthetic freshness cases. Timestamps copied from S122 fixture fields and one in-repo future-date control. Download time (retrievedAt) is not source update time (sourceUpdatedAt).",
+  "files": {
+    "CLOCK.txt": {
+      "sha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "bytes": 21
+    },
+    "MANIFEST.json": {
+      "sha256": "114a3fc76667effb250547dd0d248e5d72203f7170f39eb830cddaa9425c0f21",
+      "bytes": 1193
+    },
+    "README.md": {
+      "sha256": "384d548f49723cb57b3f9ecf7207257e647623ec4352e04a9985417485efccfb",
+      "bytes": 2208
+    },
+    "cases/conflict-retrieved-before-source.json": {
+      "sha256": "4d68b353e3da03d80201c02502ecf61c08a6a83b2128684db7f63e6701e85d6a",
+      "bytes": 3788
+    },
+    "cases/conflict-two-source-updates.json": {
+      "sha256": "d7e90d5912e09512a8628d6152c9fc410205de39a578eaaaca32d486524051b5",
+      "bytes": 4861
+    },
+    "cases/negative-future-source-update.json": {
+      "sha256": "db23132d2eb1644653df0e401cc9371061bb4f0f9510e6e8546e76ee550d605a",
+      "bytes": 3485
+    },
+    "cases/negative-missing-times.json": {
+      "sha256": "cf35dd1f86fa36622548ddc14a979ab6d932938b062ffb23f4bff3fa07cbf8dd",
+      "bytes": 3455
+    },
+    "cases/partial-missing-source-update.json": {
+      "sha256": "fac3b569e95609cbac4eba7868cae82572cf54b17365f0955aa05fa08bd5618c",
+      "bytes": 6657
+    },
+    "cases/positive-complete.json": {
+      "sha256": "46e928cd0d3b8f897c2dfc79c632677d236ff8686f0c59c2d8ecddda89d9b4be",
+      "bytes": 6789
+    },
+    "catalog.mjs": {
+      "sha256": "69d7b12fcdd9351a0b9baf1f6571f7f98ee1c0566bf05258b225132e8c86f35c",
+      "bytes": 7126
+    },
+    "freshness.fixtures.test.mjs": {
+      "sha256": "94f81f8043514354b11fa276414a4cda171a1d1e27f2499cb12a3dcb43b4f9e6",
+      "bytes": 11836
+    },
+    "sources/derived-from.json": {
+      "sha256": "310b18c1d6c35c11b8e90c74685b4b2b9e69bc66f6c74ae74cb494d2044573a1",
+      "bytes": 3155
+    },
+    "sources/eol-nodejs-watch.slim.json": {
+      "sha256": "beb0515df9b53d3229702fe019cfcbb098377fc7d4b01c2446a2f81d14b7b779",
+      "bytes": 1500
+    },
+    "sources/npm-claude-code-current.slim.json": {
+      "sha256": "ad0e84e21e88919ba434a127d1b442b58b108239551469ec06740a6573224b95",
+      "bytes": 671
+    },
+    "sources/npm-vercel-current.slim.json": {
+      "sha256": "04651c194f32cd93af3afdcb300976e63ab8d3dc1d577f1058479ab815670938",
+      "bytes": 609
+    },
+    "sources/npm-vercel-stale-current.slim.json": {
+      "sha256": "b20fcd25cc1e6598428cb94ca74b49fa8a7a434414b88951565f4f69db16960d",
+      "bytes": 823
+    },
+    "sources/npm-vercel-unchanged.slim.json": {
+      "sha256": "cacc14283619c076f249a45c707af1d40586ae52032c44c81612519526287aad",
+      "bytes": 610
+    },
+    "sources/npm-vercel-version-doc.slim.json": {
+      "sha256": "53de8d48ef5f1b6e91bebc6cb404f76596c4d84ffaef63cdd51d3c1b9fe1c38e",
+      "bytes": 791
+    }
+  },
+  "cases": [
+    {
+      "id": "conflict-retrieved-before-source",
+      "caseKind": "conflict",
+      "decision": "conflict",
+      "path": "cases/conflict-retrieved-before-source.json",
+      "sha256": "4d68b353e3da03d80201c02502ecf61c08a6a83b2128684db7f63e6701e85d6a"
+    },
+    {
+      "id": "conflict-two-source-updates",
+      "caseKind": "conflict",
+      "decision": "conflict",
+      "path": "cases/conflict-two-source-updates.json",
+      "sha256": "d7e90d5912e09512a8628d6152c9fc410205de39a578eaaaca32d486524051b5"
+    },
+    {
+      "id": "negative-future-source-update",
+      "caseKind": "negative",
+      "decision": "unknown",
+      "path": "cases/negative-future-source-update.json",
+      "sha256": "db23132d2eb1644653df0e401cc9371061bb4f0f9510e6e8546e76ee550d605a"
+    },
+    {
+      "id": "negative-missing-times",
+      "caseKind": "negative",
+      "decision": "unknown",
+      "path": "cases/negative-missing-times.json",
+      "sha256": "cf35dd1f86fa36622548ddc14a979ab6d932938b062ffb23f4bff3fa07cbf8dd"
+    },
+    {
+      "id": "partial-missing-source-update",
+      "caseKind": "partial",
+      "decision": "partial",
+      "path": "cases/partial-missing-source-update.json",
+      "sha256": "fac3b569e95609cbac4eba7868cae82572cf54b17365f0955aa05fa08bd5618c"
+    },
+    {
+      "id": "positive-complete",
+      "caseKind": "positive",
+      "decision": "pass",
+      "path": "cases/positive-complete.json",
+      "sha256": "46e928cd0d3b8f897c2dfc79c632677d236ff8686f0c59c2d8ecddda89d9b4be"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+11:32:02 active=17 dones=16 src=8 tests=0
+11:32:32 active=14 dones=16 src=9 tests=0
+11:33:02 active=14 dones=16 src=9 tests=0
+11:33:32 active=14 dones=16 src=9 tests=1
+11:34:02 active=12 dones=16 src=10 tests=1
+11:34:32 active=12 dones=17 src=10 tests=1
+11:35:02 active=12 dones=20 src=10 tests=1
+11:35:32 active=9 dones=20 src=11 tests=1
+11:36:02 active=7 dones=21 src=11 tests=1
+11:36:32 active=4 dones=22 src=11 tests=1
+11:37:02 active=3 dones=22 src=12 tests=1
+11:37:32 active=2 dones=22 src=12 tests=2
+11:38:02 active=2 dones=22 src=12 tests=2
+11:38:32 active=2 dones=23 src=12 tests=2
+11:39:02 active=0 dones=23 src=12 tests=2

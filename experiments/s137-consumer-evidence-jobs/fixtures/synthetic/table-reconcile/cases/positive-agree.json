@@ -1,0 +1,106 @@
+{
+  "schema": "s137.table-reconcile.case.v1",
+  "id": "positive-agree",
+  "jobId": "R2-CONSUMER-JOBS-03",
+  "kind": "positive",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "Two tables agree on keys, units, and weekly windows",
+  "notes": "Authored synthetic. Join by metric+windowStart. Values match; do not invent extra rows.",
+  "join": {
+    "keys": [
+      "metric",
+      "windowStart"
+    ],
+    "unit": "count",
+    "timeWindow": {
+      "start": "2026-08-03T00:00:00.000Z",
+      "end": "2026-08-17T00:00:00.000Z",
+      "grain": "P7D",
+      "inclusiveStart": true,
+      "inclusiveEnd": false
+    },
+    "units": {
+      "value": "count"
+    }
+  },
+  "doNotInvent": [
+    "sum",
+    "convert-units",
+    "interpolate-window",
+    "fill-missing"
+  ],
+  "tables": [
+    {
+      "id": "lab-a",
+      "path": "sources/positive-agree/lab-a.json"
+    },
+    {
+      "id": "lab-b",
+      "path": "sources/positive-agree/lab-b.json"
+    }
+  ],
+  "expect": {
+    "decision": "pass",
+    "inventTotals": false,
+    "findings": [
+      {
+        "id": "agree:synthetic.page_extracts:2026-08-03",
+        "kind": "agree",
+        "keys": {
+          "metric": "synthetic.page_extracts",
+          "windowStart": "2026-08-03T00:00:00.000Z"
+        },
+        "unit": "count",
+        "value": 4,
+        "citationIds": [
+          "src:positive-agree/lab-a",
+          "src:positive-agree/lab-b"
+        ]
+      },
+      {
+        "id": "agree:synthetic.page_extracts:2026-08-10",
+        "kind": "agree",
+        "keys": {
+          "metric": "synthetic.page_extracts",
+          "windowStart": "2026-08-10T00:00:00.000Z"
+        },
+        "unit": "count",
+        "value": 7,
+        "citationIds": [
+          "src:positive-agree/lab-a",
+          "src:positive-agree/lab-b"
+        ]
+      },
+      {
+        "id": "agree:synthetic.link_index_hits:2026-08-03",
+        "kind": "agree",
+        "keys": {
+          "metric": "synthetic.link_index_hits",
+          "windowStart": "2026-08-03T00:00:00.000Z"
+        },
+        "unit": "count",
+        "value": 2,
+        "citationIds": [
+          "src:positive-agree/lab-a",
+          "src:positive-agree/lab-b"
+        ]
+      }
+    ]
+  },
+  "citations": [
+    {
+      "id": "src:positive-agree/lab-a",
+      "path": "sources/positive-agree/lab-a.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/positive-agree/lab-a.json",
+      "sha256": "6829a621305c740eeb265e4a783be724a1ac7c15f88981445e9cae519044b61d"
+    },
+    {
+      "id": "src:positive-agree/lab-b",
+      "path": "sources/positive-agree/lab-b.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/positive-agree/lab-b.json",
+      "sha256": "b58d66dc68c81b3c32c1410f3d1b319b14f926eaed401992145873f6bddaaa68"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "schema": "s137.table-reconcile.source-table.v1",
+  "id": "conflict-time-window/lab-a",
+  "evidenceClass": "synthetic",
+  "authoredAt": "2026-09-10T12:00:00.000Z",
+  "license": "authored-synthetic; not third-party content; no SPDX license claimed",
+  "notes": "Authored weekly cell. Do not treat lab-b daily rows as a rollup of this value. Not a production observation.",
+  "keys": [
+    "metric",
+    "windowStart"
+  ],
+  "unit": "count",
+  "timeWindow": {
+    "start": "2026-08-03T00:00:00.000Z",
+    "end": "2026-08-10T00:00:00.000Z",
+    "grain": "P7D",
+    "inclusiveStart": true,
+    "inclusiveEnd": false
+  },
+  "columns": [
+    {
+      "name": "metric",
+      "role": "key",
+      "type": "string"
+    },
+    {
+      "name": "windowStart",
+      "role": "key",
+      "type": "iso-datetime",
+      "unit": "iso_datetime"
+    },
+    {
+      "name": "windowEnd",
+      "role": "time",
+      "type": "iso-datetime",
+      "unit": "iso_datetime"
+    },
+    {
+      "name": "value",
+      "role": "measure",
+      "type": "number",
+      "unit": "count"
+    }
+  ],
+  "rows": [
+    {
+      "metric": "synthetic.page_extracts",
+      "windowStart": "2026-08-03T00:00:00.000Z",
+      "windowEnd": "2026-08-10T00:00:00.000Z",
+      "value": 11
+    }
+  ]
+}

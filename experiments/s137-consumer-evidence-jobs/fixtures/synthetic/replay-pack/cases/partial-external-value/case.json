@@ -1,0 +1,95 @@
+{
+  "schema": "s137.consumer-evidence.replay-pack.case.v1",
+  "jobId": "R2-CONSUMER-JOBS-05",
+  "artifactKind": "replay-pack",
+  "caseId": "partial-external-value",
+  "kind": "partial",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline synthetic fixture; no purchase"
+  },
+  "expectedDecision": "partial",
+  "coverage": "external-unfetched",
+  "replay": {
+    "mode": "offline-example-only",
+    "providerExecuted": false,
+    "fakeProviderExecution": false
+  },
+  "onlinePrerequisites": {
+    "required": true,
+    "fetched": false,
+    "items": [
+      "HTTPS GET https://api.example.test/examples/status-200.json (Example Object externalValue). No payment. Not performed."
+    ],
+    "note": "Online prerequisite is explicit. Default pack stays offline with missing example bytes."
+  },
+  "files": {
+    "openapi.json": {
+      "path": "cases/partial-external-value/openapi.json",
+      "sha256": "c41c431a1292358e55a29c556c0130db55ef4a98884243463d280a879e252876"
+    }
+  },
+  "sources": [
+    {
+      "id": "openapi",
+      "path": "cases/partial-external-value/openapi.json"
+    }
+  ],
+  "findings": [
+    {
+      "id": "f-external-unfetched",
+      "message": "getStatus example remote uses externalValue and has no inline value. Bytes were not retrieved. Do not fetch by default.",
+      "citationIds": [
+        "c-openapi",
+        "c-oas31-example-object"
+      ],
+      "operationId": "getStatus",
+      "exampleName": "remote",
+      "retrieved": false
+    }
+  ],
+  "citations": [
+    {
+      "id": "c-openapi",
+      "evidenceClass": "synthetic",
+      "path": "cases/partial-external-value/openapi.json",
+      "mediaType": "application/json",
+      "note": "Synthetic OpenAPI 3.1.0 document",
+      "sha256": "c41c431a1292358e55a29c556c0130db55ef4a98884243463d280a879e252876"
+    },
+    {
+      "id": "c-oas31-example-object",
+      "evidenceClass": "synthetic",
+      "url": "https://spec.openapis.org/oas/v3.1.0.html#example-object",
+      "sha256": null,
+      "retrieved": false,
+      "note": "Field names value and externalValue taken from OAS 3.1 Example Object as already used by in-repo openapi: 3.1.0 documents. This cell did not fetch the spec URL."
+    },
+    {
+      "id": "c-unpaid-companion-pattern",
+      "evidenceClass": "fixture",
+      "path": "page-change-http.mjs",
+      "sha256": "2d3cebc8162739d6ffc2a97f3d2193f14d3d1600dfb3fc45bb51933733189f20",
+      "note": "In-repo unpaid OpenAPI 3.1.0 companion: requestBody example present; 200 response has schema/description and no Media Type example. Partial-example pattern only. Not copied as a live SKU."
+    }
+  ],
+  "limitations": [
+    "Authored synthetic OpenAPI and companion examples. Not live-capture and not a real provider snapshot (c24 owns one real official example).",
+    "Offline default. Do not fetch servers[].url or Example Object externalValue.",
+    "HTTP 402 in a document is a paid-marker for refusal, not an executable offer or spend authority.",
+    "c21/c22 schema and transform are out of this cell; cases pin expectedDecision only."
+  ],
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}

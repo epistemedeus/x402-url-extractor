@@ -1,0 +1,154 @@
+{
+  "cell": "c12",
+  "immutablePin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "release-brief",
+  "jobId": "R2-CONSUMER-JOBS-02",
+  "moduleId": "02",
+  "situationId": "S4",
+  "situation": "malformed-input",
+  "brief": "Reuse negative/malformed; assert fail/reject + stable exit",
+  "expectedDecisionClass": "fail",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "offline": true,
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/release-brief/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/release-brief/transform.mjs",
+    "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs"
+  },
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief",
+  "notes": [
+    "Use each synthetic case's `.input` field (s137.release-brief.input.v1). The case wrapper's `lanes` are path strings; buildReleaseBrief on the wrapper is not the catalog contract.",
+    "negative-empty is catalog unknown, not fail and not pass. Empty sources are incomplete evidence, not a caller defect matching FAIL_FINDING_CODES.",
+    "negative.github-release-unsplit: schema rejects (compound_split_required); transform repairs to announced-only partial. Not pass.",
+    "Malformed JSON text on CLI is loaded as kind=text (not INPUT_EXIT); packet decision is unknown, not pass. Missing path / oversize / URL still reject with stable non-zero exit."
+  ],
+  "primaryFixtures": [
+    {
+      "id": "negative-draft-only",
+      "role": "primary",
+      "kind": "negative",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/negative-draft-only.json",
+      "sha256": "777a639490e2b84bdc770cfba58618895074aa66983ab8434cfa96c3960c849f",
+      "bytes": 3646,
+      "useField": "input",
+      "expectedDecision": "fail",
+      "expectedDecisionClass": "fail",
+      "expectedFindingCode": "draft_not_shipped"
+    },
+    {
+      "id": "negative-draft-only-announced",
+      "role": "primary-source",
+      "kind": "negative",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/negative-draft-only/announced.json",
+      "sha256": "e2440ffcd2cc32cf5efbd145aeff85e1c38a2d15a2aa4f0e4c08b1e0807bfaf7",
+      "bytes": 641,
+      "expectedDecisionClass": "fail"
+    },
+    {
+      "id": "negative-empty",
+      "role": "negative-coverage",
+      "kind": "negative",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/negative-empty.json",
+      "sha256": "ed294ef6ec283813531a17f3cd633828de9a75845ad52fefc9346c1df1ccc507",
+      "bytes": 2261,
+      "useField": "input",
+      "expectedDecision": "unknown",
+      "expectedDecisionClass": "unknown"
+    },
+    {
+      "id": "negative-empty-notice",
+      "role": "negative-coverage-source",
+      "kind": "negative",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/sources/negative-empty/NOTICE.json",
+      "sha256": "0947b4bb918c7b3c7cbcc87cbd4b91a98312bab3525a00843262670bcde6bee0",
+      "bytes": 349,
+      "expectedDecisionClass": "unknown"
+    }
+  ],
+  "schemaMalformed": [
+    {
+      "id": "negative.changelog-as-shipped",
+      "expectInputOk": false,
+      "issueCodes": ["kind_plane_mismatch"],
+      "transformOk": true,
+      "transformDecision": "fail"
+    },
+    {
+      "id": "negative.missing-clock",
+      "expectInputOk": false,
+      "issueCodes": ["missing_clock"],
+      "transformOk": false,
+      "transformDecision": "fail"
+    },
+    {
+      "id": "negative.notes-body-on-shipped",
+      "expectInputOk": false,
+      "issueCodes": ["plane_conflation"],
+      "transformOk": true,
+      "transformDecision": "fail"
+    },
+    {
+      "id": "negative.github-release-unsplit",
+      "expectInputOk": false,
+      "issueCodes": ["compound_split_required"],
+      "transformOk": true,
+      "transformDecision": "partial",
+      "note": "schema reject; transform repair; not pass"
+    },
+    {
+      "id": "negative.draft-as-shipped",
+      "expectInputOk": false,
+      "issueCodes": ["draft_not_shipped"],
+      "transformOk": true,
+      "transformDecision": "fail"
+    },
+    {
+      "id": "negative.test-receipt-as-announced",
+      "expectInputOk": false,
+      "issueCodes": ["kind_plane_mismatch"],
+      "transformOk": true,
+      "transformDecision": "fail"
+    },
+    {
+      "id": "negative.now-clock",
+      "expectInputOk": false,
+      "issueCodes": ["invalid_clock"],
+      "transformOk": false,
+      "transformDecision": "fail"
+    }
+  ],
+  "cliRejects": [
+    {
+      "id": "missing-path",
+      "exitCode": 1,
+      "decisionClass": "fail",
+      "emitsPacket": true
+    },
+    {
+      "id": "remote-url",
+      "exitCode": 1,
+      "decisionClass": "reject",
+      "emitsPacket": false
+    },
+    {
+      "id": "clock-now",
+      "exitCode": 2,
+      "decisionClass": "reject",
+      "emitsPacket": false
+    },
+    {
+      "id": "oversize",
+      "exitCode": 1,
+      "decisionClass": "fail",
+      "emitsPacket": true
+    },
+    {
+      "id": "jobs-07-08",
+      "exitCode": 2,
+      "decisionClass": "reject",
+      "emitsPacket": false
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "schema": "x402.r2.consumer.customer_result_package.v1",
+  "journey": true,
+  "generatedAt": 1757433600000,
+  "operatorClock": "2026-09-10T18:00:00.000Z",
+  "note": "Synthetic S152-shaped partial journey fixture for acquisition-status tests. Exact Heavy CLI fail slots recorded; not invented pass.",
+  "steps": [
+    {
+      "name": "manifest",
+      "result": {
+        "schema": "x402.r2.consumer.recipe_manifest.v1",
+        "summary": { "readyCount": 7, "pendingHeavyCount": 0, "unknownCount": 0 }
+      }
+    },
+    {
+      "name": "positive-journey",
+      "result": {
+        "schema": "x402.r2.consumer.customer_result_package.v1",
+        "status": "partial",
+        "requestId": "s152-positive-journey-fixture",
+        "recipes": [
+          {
+            "recipeId": "migration-checklist",
+            "jobRef": "R2-CONSUMER-JOBS-01",
+            "status": "ready",
+            "decision": "pass",
+            "output": { "schema": "s137.consumer-evidence.packet.v1", "decision": "pass" }
+          },
+          {
+            "recipeId": "release-brief",
+            "jobRef": "R2-CONSUMER-JOBS-02",
+            "status": "ready",
+            "decision": "pass",
+            "output": { "schema": "s137.consumer-evidence.packet.v1", "decision": "pass" }
+          },
+          {
+            "recipeId": "table-reconcile",
+            "jobRef": "R2-CONSUMER-JOBS-03",
+            "status": "failed",
+            "decision": "fail",
+            "output": { "schema": "s137.consumer-evidence.packet.v1", "decision": "fail" }
+          },
+          {
+            "recipeId": "link-index",
+            "jobRef": "R2-CONSUMER-JOBS-04",
+            "status": "failed",
+            "decision": "fail",
+            "output": { "schema": "s137.consumer-evidence.packet.v1", "decision": "fail" }
+          },
+          {
+            "recipeId": "replay-pack",
+            "jobRef": "R2-CONSUMER-JOBS-05",
+            "status": "failed",
+            "decision": "fail",
+            "output": { "schema": "s137.consumer-evidence.packet.v1", "decision": "fail" }
+          },
+          {
+            "recipeId": "freshness-receipt",
+            "jobRef": "R2-CONSUMER-JOBS-06",
+            "status": "ready",
+            "decision": "pass",
+            "output": { "schema": "s137.consumer-evidence.packet.v1", "decision": "pass" }
+          },
+          {
+            "recipeId": "procurement-brief",
+            "jobRef": "R2-CONSUMER-JOBS-07",
+            "status": "ready",
+            "output": { "schema": "x402.r2.consumer.procurement_brief.v1", "status": "ready" }
+          }
+        ],
+        "hasInvestmentRecommendation": false
+      }
+    },
+    {
+      "name": "negative-unknown-recipe",
+      "result": {
+        "schema": "x402.r2.consumer.customer_result_package.v1",
+        "status": "rejected",
+        "recipes": [
+          {
+            "recipeId": "not-a-real-recipe-zzz",
+            "status": "unknown"
+          }
+        ],
+        "hasInvestmentRecommendation": false
+      }
+    }
+  ],
+  "hasInvestmentRecommendation": false
+}

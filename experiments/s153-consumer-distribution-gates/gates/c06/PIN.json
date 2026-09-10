@@ -1,0 +1,132 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c06",
+  "s137Tip": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "migration-checklist",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "moduleId": "01",
+  "situationId": "S6",
+  "situation": "import-roundtrip",
+  "brief": "Programmatic import of transform/schema; roundtrip packet fields",
+  "oneWriter": "experiments/s153-consumer-distribution-gates/gates/c06/",
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "caseIds": [
+    "positive-complete",
+    "partial-batch-undocumented",
+    "conflict-challenge-resource",
+    "negative-malformed-inventory",
+    "negative-missing-new-docs"
+  ],
+  "primaryCaseId": "positive-complete",
+  "expectedDecisionClass": "pass",
+  "expectedCoverage": "complete",
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/migration-checklist/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/migration-checklist/transform.mjs"
+  },
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration",
+  "fixtureRoot": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration",
+  "primaryFixtures": [
+    {
+      "id": "positive-complete",
+      "role": "case",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/positive-complete.json",
+      "sha256": "5ed28b8f1dd1736101035ae6ca93d4ec3b8f77f0396b67d6b410dd61bafcc44b"
+    },
+    {
+      "id": "old",
+      "role": "oldDoc",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/positive-complete/old.md",
+      "sha256": "0be077983920576e0a31818d495d44889665c61313174359a599a2ec0789b736"
+    },
+    {
+      "id": "new",
+      "role": "newDoc",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/positive-complete/new.md",
+      "sha256": "23cc466ea7572bed50daa15f4b22b157d5c723b2a5f34ca4849a5c08a993a09c"
+    },
+    {
+      "id": "inventory",
+      "role": "operationsInventory",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/docs/positive-complete/inventory.json",
+      "sha256": "5363531bcc3280846c5e00080499454677e87e120e3ee8e0474803d3e88df46c"
+    }
+  ],
+  "cases": [
+    {
+      "id": "positive-complete",
+      "kind": "positive",
+      "role": "primary",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/positive-complete.json",
+      "sha256": "5ed28b8f1dd1736101035ae6ca93d4ec3b8f77f0396b67d6b410dd61bafcc44b",
+      "expectedDecisionClass": "pass"
+    },
+    {
+      "id": "partial-batch-undocumented",
+      "kind": "partial",
+      "role": "roundtrip-nonpass",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/partial-batch-undocumented.json",
+      "sha256": "54be64f6a5373cbbe746b99c788fc293020883d4f419c649386c806366c66285",
+      "expectedDecisionClass": "partial"
+    },
+    {
+      "id": "conflict-challenge-resource",
+      "kind": "conflict",
+      "role": "roundtrip-nonpass",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/conflict-challenge-resource.json",
+      "sha256": "da5ee0ddd53cfdf87931f9f85423e5b75e54e56f52dec19d9f957ecb5ddf235e",
+      "expectedDecisionClass": "conflict"
+    },
+    {
+      "id": "negative-malformed-inventory",
+      "kind": "negative",
+      "role": "roundtrip-nonpass",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/negative-malformed-inventory.json",
+      "sha256": "95858fbe84e8055906b5e531280f6d0254364472f9f31bc0a60be397d0afbbeb",
+      "expectedDecisionClass": "fail"
+    },
+    {
+      "id": "negative-missing-new-docs",
+      "kind": "negative",
+      "role": "roundtrip-nonpass",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/negative-missing-new-docs.json",
+      "sha256": "64638fb82dbc324d66d4bff78b7dc805dddcf12be150244aa0d455e82bf593f1",
+      "expectedDecisionClass": "fail"
+    }
+  ],
+  "expectFindingIds": ["extract-unchanged", "read-unchanged", "batch-added-unused"],
+  "real": {
+    "id": "x402-spec-v1-to-v2-http",
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/migration/input.json",
+    "sha256": "8c420c1878e3c04dad12a878c9a677ad025024affa7d72912128dcf9529ba47f",
+    "root": "experiments/s137-consumer-evidence-jobs/fixtures/real/migration",
+    "note": "Packet-field JSON roundtrip only. observations.json records decision partial; this cell does not re-claim transform decision."
+  },
+  "packetRoundtripKeys": [
+    "schema",
+    "packetSchema",
+    "jobId",
+    "artifactKind",
+    "clock",
+    "evidenceClass",
+    "offline",
+    "payment",
+    "cost",
+    "sources",
+    "findings",
+    "citations",
+    "decision",
+    "limitations",
+    "claims",
+    "checklist",
+    "coverage",
+    "sourcePin"
+  ]
+}

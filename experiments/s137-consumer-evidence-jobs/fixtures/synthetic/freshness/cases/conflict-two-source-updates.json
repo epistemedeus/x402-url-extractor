@@ -1,0 +1,124 @@
+{
+  "schema": "s137.freshness-receipt.input.v1",
+  "caseId": "conflict-two-source-updates",
+  "caseKind": "conflict",
+  "evidenceClass": "synthetic",
+  "jobId": "R2-CONSUMER-JOBS-06",
+  "artifactKind": "dataset-freshness-receipt",
+  "clock": "2026-09-10T09:54:59Z",
+  "horizonMs": 86400000,
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "notes": "Two S122 slims keyed npm:vercel at the same retrievedAt disagree on published_at (59.15.1 vs 59.9.1). Both source-update observations are on one dataset so collapseKind reports conflict. Do not invent a merged last-modified.",
+  "datasets": [
+    {
+      "id": "npm:vercel",
+      "locator": {
+        "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-vercel-current.slim.json",
+        "url": "https://registry.npmjs.org/vercel"
+      },
+      "contentSha256": "04651c194f32cd93af3afdcb300976e63ab8d3dc1d577f1058479ab815670938",
+      "retrievedAt": "2026-09-10T09:54:59Z",
+      "sourceUpdatedAt": "2026-09-10T01:12:17.696Z",
+      "payloadRef": "sources/npm-vercel-current.slim.json",
+      "times": [
+        {
+          "field": "retrievedAt",
+          "value": "2026-09-10T09:54:59Z",
+          "citationId": "cit-clock"
+        },
+        {
+          "field": "published_at",
+          "value": "2026-09-10T01:12:17.696Z",
+          "citationId": "cit-vercel-current-slim"
+        },
+        {
+          "field": "published_at",
+          "value": "2026-08-27T19:00:26.541Z",
+          "citationId": "cit-vercel-unchanged-slim"
+        }
+      ],
+      "coverage": {
+        "expectedRecords": 1,
+        "observedRecords": 1,
+        "fieldsPresent": ["retrievedAt", "published_at"],
+        "fieldsMissing": []
+      }
+    }
+  ],
+  "citations": [
+    {
+      "id": "cit-clock",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/CLOCK.txt",
+      "contentSha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "sha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-vercel-current-slim",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-vercel-current.slim.json",
+      "url": "https://registry.npmjs.org/vercel",
+      "contentSha256": "04651c194f32cd93af3afdcb300976e63ab8d3dc1d577f1058479ab815670938",
+      "sha256": "04651c194f32cd93af3afdcb300976e63ab8d3dc1d577f1058479ab815670938",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-vercel-unchanged-slim",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-vercel-unchanged.slim.json",
+      "url": "https://registry.npmjs.org/vercel",
+      "contentSha256": "cacc14283619c076f249a45c707af1d40586ae52032c44c81612519526287aad",
+      "sha256": "cacc14283619c076f249a45c707af1d40586ae52032c44c81612519526287aad",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-s122-vercel-current",
+      "path": "experiments/s122-application-jobs/fixtures/npm-vercel/current.json",
+      "url": "https://registry.npmjs.org/vercel",
+      "contentSha256": "0d8fae00bbba86cdaca5c380281430d7a620c11e7c3119e4e4ead5026583381f",
+      "sha256": "0d8fae00bbba86cdaca5c380281430d7a620c11e7c3119e4e4ead5026583381f",
+      "evidenceClass": "fixture",
+      "host": "/tmp/s127/x402-url-extractor"
+    },
+    {
+      "id": "cit-s122-vercel-unchanged",
+      "path": "experiments/s122-application-jobs/fixtures/npm-vercel/unchanged.json",
+      "url": "https://registry.npmjs.org/vercel",
+      "contentSha256": "da9a5820120120bc22a92b6576d07f9110e46f4005c6d45d7238e535a2b3cf18",
+      "sha256": "da9a5820120120bc22a92b6576d07f9110e46f4005c6d45d7238e535a2b3cf18",
+      "evidenceClass": "fixture",
+      "host": "/tmp/s127/x402-url-extractor"
+    }
+  ],
+  "expect": {
+    "decision": "conflict",
+    "coverageComplete": true,
+    "unknownReasons": ["disagreeing_sourceUpdatedAt"],
+    "findings": [
+      {
+        "id": "source-update-disagreement",
+        "kind": "source_update_conflict",
+        "datasetId": "npm:vercel",
+        "values": ["2026-09-10T01:12:17.696Z", "2026-08-27T19:00:26.541Z"],
+        "citationIds": [
+          "cit-vercel-current-slim",
+          "cit-vercel-unchanged-slim",
+          "cit-s122-vercel-current",
+          "cit-s122-vercel-unchanged"
+        ]
+      },
+      {
+        "id": "same-retrieval-time",
+        "kind": "retrieval_age",
+        "datasetId": "npm:vercel",
+        "retrievedAt": "2026-09-10T09:54:59Z",
+        "ageMs": 0,
+        "citationIds": ["cit-clock"]
+      }
+    ]
+  },
+  "limitations": [
+    "Disagreement is not resolved by taking max(published_at) or latest version.",
+    "Same retrievedAt does not imply the two bodies were one capture."
+  ]
+}

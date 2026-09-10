@@ -1,0 +1,149 @@
+{
+  "schema": "s137.consumer-evidence.real-fixture.v1",
+  "cell": "c24",
+  "jobId": "R2-CONSUMER-JOBS-05",
+  "artifactKind": "official-api-example-replay-pack",
+  "evidenceClass": "fixture",
+  "captureLabel": "live-capture",
+  "replayLabel": "fixture",
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0, "note": "public docs.github.com GET; no purchase; live api.github.com not called" },
+  "retrievedAt": "2026-09-10T11:23:06Z",
+  "clock": "2026-09-10T11:23:06Z",
+  "url": "https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28",
+  "fragment": "#get-a-repository",
+  "htmlUrl": "https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#get-a-repository",
+  "sha256": "611afa11d38f21d1cc63e70de18e9ee080917f8f1c91cf9c1790006f42cdb2b7",
+  "bytes": 135148,
+  "httpStatus": 200,
+  "contentType": "text/html; charset=utf-8",
+  "sourceHtmlSha256": "d21c3d123220406e93f34d336a0a9e908d459dde91c7069eff528e96eca40f0e",
+  "sourceHtmlBytes": 1416675,
+  "sourceHtmlStored": false,
+  "snapshotPath": "github-rest-get-a-repository.operation.json",
+  "extract": {
+    "kind": "next-data-restOperation",
+    "title": "Get a repository",
+    "verb": "get",
+    "requestPath": "/repos/{owner}/{repo}",
+    "selector": "script#__NEXT_DATA__ props.pageProps.restOperations[title=Get a repository][verb=get]",
+    "note": "Full HTML was 1416675 bytes. Only the Get a repository restOperation object is stored. Transform is JSON.parse of the published __NEXT_DATA__ blob; no fields invented."
+  },
+  "license": {
+    "spdx": "CC-BY-4.0",
+    "note": "github/docs LICENSE at https://github.com/github/docs/blob/main/LICENSE is Creative Commons Attribution 4.0 International. Snapshot stored for offline replay of a published API example. This is not a license grant, legal attestation, or redistribution advice.",
+    "licenseUrl": "https://raw.githubusercontent.com/github/docs/main/LICENSE",
+    "licenseSha256": "12d3a82a7d1378e6f597ec23d63a081aeb6ec4bc8de2a76ee9dc96c34c6d7a1b",
+    "licenseBytes": 18620,
+    "licenseBodyStored": false,
+    "attribution": "GitHub, Inc. REST API documentation, Get a repository, retrieved 2026-09-10T11:23:06Z from docs.github.com."
+  },
+  "headersPath": "github-rest-get-a-repository.headers.txt",
+  "headersSha256": "1738450718f8e5f5c37dd62eeb84858485783c096c4a8bd688a743f425d25f1d",
+  "headersBytes": 1794,
+  "htmlCurlPath": "github-rest-get-a-repository.html-curl.txt",
+  "htmlCurlSha256": "933abf9b7a5884735a9cb0311e8f81b82234474335fe6759f93517b9031dc7b8",
+  "htmlCurlBytes": 183,
+  "captureMethod": "HTTPS GET of official GitHub REST docs HTML. Extracted script#__NEXT_DATA__ restOperation titled Get a repository plus the visible curl sample in that section. Live https://api.github.com/repos/OWNER/REPO was not requested. No npm install. No paid endpoint.",
+  "userAgent": "s137-c24-offline-fixture-capture/1.0 (research; one-shot snapshot; no spend)",
+  "xGitHubRequestId": "A390:4E8E3:2D5049:3705DB:6AA292FA",
+  "onlinePrerequisites": {
+    "executed": false,
+    "liveProviderCall": false,
+    "note": "Replay is offline against stored docs bytes. Do not treat this fixture as a live GitHub API execution. Token header is a docs placeholder, not a secret and not used.",
+    "fromHtmlCurl": {
+      "method": "GET",
+      "url": "https://api.github.com/repos/OWNER/REPO",
+      "headers": [
+        "Accept: application/vnd.github+json",
+        "Authorization: Bearer <YOUR-TOKEN>",
+        "X-GitHub-Api-Version: 2026-03-10"
+      ]
+    },
+    "fromCodeExamples": {
+      "acceptHeader": "application/vnd.github.v3+json",
+      "parameters": { "owner": "OWNER", "repo": "REPO" },
+      "serverUrl": "https://api.github.com",
+      "requestPath": "/repos/{owner}/{repo}"
+    }
+  },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "citations": [
+    {
+      "id": "src-operation",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/replay-pack/github-rest-get-a-repository.operation.json",
+      "url": "https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#get-a-repository",
+      "sha256": "611afa11d38f21d1cc63e70de18e9ee080917f8f1c91cf9c1790006f42cdb2b7",
+      "retrievedAt": "2026-09-10T11:23:06Z",
+      "mediaType": "application/json",
+      "note": "Extracted restOperation for Get a repository from the docs page __NEXT_DATA__ JSON."
+    },
+    {
+      "id": "src-html-curl",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/replay-pack/github-rest-get-a-repository.html-curl.txt",
+      "url": "https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#get-a-repository",
+      "sha256": "933abf9b7a5884735a9cb0311e8f81b82234474335fe6759f93517b9031dc7b8",
+      "retrievedAt": "2026-09-10T11:23:06Z",
+      "mediaType": "text/plain",
+      "note": "Visible curl sample in the Get a repository section of the same HTML GET."
+    },
+    {
+      "id": "src-headers",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/replay-pack/github-rest-get-a-repository.headers.txt",
+      "url": "https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28",
+      "sha256": "1738450718f8e5f5c37dd62eeb84858485783c096c4a8bd688a743f425d25f1d",
+      "retrievedAt": "2026-09-10T11:23:06Z",
+      "mediaType": "message/http; msgtype=response",
+      "note": "Response headers from the same GET. Date: Thu, 10 Sep 2026 11:23:06 GMT. content-length: 1416675."
+    },
+    {
+      "id": "src-docs-license",
+      "url": "https://raw.githubusercontent.com/github/docs/main/LICENSE",
+      "sha256": "12d3a82a7d1378e6f597ec23d63a081aeb6ec4bc8de2a76ee9dc96c34c6d7a1b",
+      "retrievedAt": "2026-09-10T11:23:06Z",
+      "bytes": 18620,
+      "note": "CC-BY-4.0 text for github/docs. Bytes not stored in this cell. Hash recorded from the GET. Not a legal attestation."
+    }
+  ],
+  "observedCases": [
+    {
+      "id": "positive-official-200-example",
+      "kind": "positive",
+      "citationIds": ["src-operation"],
+      "detail": "Published example is GET /repos/{owner}/{repo} against serverUrl https://api.github.com with statusCode 200, contentType application/json, and example.full_name octocat/Hello-World. progAccess.allowsPublicRead is true. Replay uses this stored example; the live API was not called."
+    },
+    {
+      "id": "negative-error-statuses-without-example-bodies",
+      "kind": "negative",
+      "citationIds": ["src-operation"],
+      "detail": "statusCodes lists 301 Moved permanently, 403 Forbidden, and 404 Resource not found. codeExamples has a single entry and that entry's response.statusCode is 200. No example response body is published for 301, 403, or 404. This cell does not invent error payloads."
+    },
+    {
+      "id": "partial-required-language-omitted-from-example",
+      "kind": "partial",
+      "citationIds": ["src-operation"],
+      "detail": "response.schema.required includes language, and schema.properties.language is [string, null]. The 200 example object has no language key. descriptionHTML also says security_and_analysis is visible only with admin/owner/security-manager permissions; that key is absent from the example. Request parameters are placeholders OWNER/REPO, not octocat/Hello-World."
+    },
+    {
+      "id": "conflicting-headers-version-and-fork-parent",
+      "kind": "conflicting",
+      "citationIds": ["src-operation", "src-html-curl"],
+      "detail": "Docs URL query apiVersion=2022-11-28 disagrees with the visible curl header X-GitHub-Api-Version: 2026-03-10. codeExamples.request.acceptHeader is application/vnd.github.v3+json; the visible curl Accept is application/vnd.github+json. descriptionHTML says parent and source are present when the repository is a fork, but the example has fork false while still including parent and source objects (both full_name octocat/Hello-World). This cell does not pick a winner and does not execute the live endpoint to resolve the disagreement."
+    }
+  ],
+  "limitations": [
+    "One official example (Get a repository) from one docs HTML GET. Other operations on the same page were not stored.",
+    "Full HTML (1416675 bytes, sha256 d21c3d123220406e93f34d336a0a9e908d459dde91c7069eff528e96eca40f0e) is not stored; only the extracted restOperation, visible curl, and response headers are.",
+    "HTTP Date is retrieval time, not the last edit of the GitHub REST description.",
+    "LICENSE body is hashed, not stored.",
+    "Live api.github.com was not called. Example JSON is the docs example, not a live repository document.",
+    "Not a legal attestation, license opinion, or customer-demand claim."
+  ]
+}

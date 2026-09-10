@@ -1,0 +1,76 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c18",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "table-reconcile",
+  "jobId": "R2-CONSUMER-JOBS-03",
+  "moduleId": "03",
+  "situationId": "S2",
+  "situation": "partial-prereq",
+  "brief": "Reuse partial fixture; assert partial/unknown not invented pass",
+  "offline": true,
+  "liveCapture": false,
+  "paidDemand": false,
+  "excludedJobs": [
+    "R2-CONSUMER-JOBS-07",
+    "R2-CONSUMER-JOBS-08"
+  ],
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/table-reconcile/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/table-reconcile/transform.mjs",
+    "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+    "loadCase": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/load-case.mjs"
+  },
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile",
+  "cases": [
+    {
+      "id": "partial-row-coverage",
+      "kind": "partial",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/partial-row-coverage.json",
+      "sha256": "5b571691df9eeb0ca53078ad0f17ed2be1647ae2e711d6be30912966d1b5bfbd",
+      "expectedDecision": "partial",
+      "expectedDecisionClass": "partial"
+    }
+  ],
+  "primaryFixtures": [
+    {
+      "id": "partial-row-coverage",
+      "role": "case",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/partial-row-coverage.json",
+      "sha256": "5b571691df9eeb0ca53078ad0f17ed2be1647ae2e711d6be30912966d1b5bfbd"
+    },
+    {
+      "id": "lab-a",
+      "role": "source-table",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/partial-row-coverage/lab-a.json",
+      "sha256": "251eca57b0533214dc0763d300201e1d35b04d11f8286f36fc5f8737b6c42aaa"
+    },
+    {
+      "id": "lab-b",
+      "role": "source-table",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/partial-row-coverage/lab-b.json",
+      "sha256": "38383d0f3395b2f8f82322c684eb04f6988c0274ccfff3d1a6031f031d41798a"
+    }
+  ],
+  "expectedDecisionClass": "partial",
+  "allowedDecisions": ["partial"],
+  "forbiddenDecisions": ["pass"],
+  "missingPrereqAllowedDecisions": ["partial", "unknown", "fail"],
+  "doNotInvent": [
+    "sum",
+    "convert-units",
+    "interpolate-window",
+    "fill-missing"
+  ],
+  "expectedFindings": [
+    "agree:synthetic.page_extracts:2026-08-03",
+    "agree:synthetic.page_extracts:2026-08-10",
+    "missing:synthetic.link_index_hits:2026-08-03:lab-b"
+  ],
+  "absentFindings": [
+    "agree:synthetic.link_index_hits:2026-08-03"
+  ]
+}

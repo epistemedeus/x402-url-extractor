@@ -1,0 +1,67 @@
+{
+  "schema": "s153.distribution-gate.pin.v1",
+  "cell": "c35",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "replay-pack",
+  "jobId": "R2-CONSUMER-JOBS-05",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/replay-pack",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "situationId": "S3",
+  "situation": "conflict-identity",
+  "expectedDecisionClass": "conflict",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "caseIds": ["conflict-example-mismatch"],
+  "fixtureRoot": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack",
+  "primaryFixtures": [
+    {
+      "role": "case",
+      "id": "conflict-example-mismatch",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/conflict-example-mismatch/case.json",
+      "sha256": "f9875e8439592c76ddf11196fbc1ff580450cde158be7796016ddb09b23a09dc"
+    },
+    {
+      "role": "openapi",
+      "id": "c-openapi",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/conflict-example-mismatch/openapi.json",
+      "sha256": "5f8e15469b5e514afc819f0af2e8f56385f7d48c1d20c8ac15ded4027f4109c9"
+    },
+    {
+      "role": "companion",
+      "id": "c-examples-getStatus-response-json",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/conflict-example-mismatch/examples/getStatus.response.json",
+      "sha256": "a6f4a529d5d7519c1e9572d976f07cfa7605d7c4e0e0c9fcf7e23c6a69b84a29"
+    }
+  ],
+  "expect": {
+    "decision": "conflict",
+    "issueCode": "examples.conflict",
+    "exampleId": "getStatus-enabled",
+    "exampleCount": 2,
+    "operationId": "getStatus",
+    "openapiOk": true,
+    "companionOk": false,
+    "openapiSource": "openapi-example",
+    "companionSource": "companion-example",
+    "citationIds": ["c-openapi", "c-examples-getStatus-response-json"],
+    "silentMergeForbidden": true,
+    "winnerForbidden": true
+  },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "notes": [
+    "Reuse S137 synthetic conflict fixture only; do not recreate S137 implementation cells.",
+    "OpenAPI examples.enabled.value.ok is true; companion examples/getStatus.response.json body.ok is false.",
+    "Duplicate example.id with differing request/response must stay conflict; do not merge bodies or pick a winner."
+  ]
+}

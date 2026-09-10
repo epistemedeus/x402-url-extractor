@@ -1,0 +1,341 @@
+{
+  "schema": "s137.consumer-jobs.real-migration-observations.v1",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "caseId": "x402-spec-v1-to-v2-http",
+  "evidenceClass": "fixture",
+  "clock": "2026-09-10T11:24:43Z",
+  "decision": "partial",
+  "note": "Observations quote or locate captured text only. Parallel wording is not treated as a stated rename.",
+  "findings": [
+    {
+      "id": "pos-http-402",
+      "kind": "positive",
+      "citationIds": ["cite-old-http-402-status", "cite-new-http-402-status"],
+      "text": "Both HTTP transports say the server indicates payment is required using the HTTP 402 \"Payment Required\" status code."
+    },
+    {
+      "id": "pos-post-verify",
+      "kind": "positive",
+      "citationIds": ["cite-old-spec-verify", "cite-new-spec-verify"],
+      "text": "Both core specs include a heading \"7.1 POST /verify\"."
+    },
+    {
+      "id": "pos-post-settle",
+      "kind": "positive",
+      "citationIds": ["cite-old-spec-settle", "cite-new-spec-settle"],
+      "text": "Both core specs include a heading \"7.2 POST /settle\"."
+    },
+    {
+      "id": "pos-get-supported",
+      "kind": "positive",
+      "citationIds": ["cite-old-spec-supported", "cite-new-spec-supported"],
+      "text": "Both core specs include a heading \"7.3 GET /supported\"."
+    },
+    {
+      "id": "pos-discovery-resources",
+      "kind": "positive",
+      "citationIds": ["cite-old-spec-discovery", "cite-new-spec-discovery"],
+      "text": "Both core specs include \"8.1 GET /discovery/resources\"."
+    },
+    {
+      "id": "neg-outputSchema",
+      "kind": "negative",
+      "citationIds": ["cite-old-spec-outputSchema", "cite-new-spec-accepts-table"],
+      "text": "v1 PaymentRequirements table lists optional `outputSchema`. The v2 accepts-field table in section 5.1.2 does not list `outputSchema`. Captured v2 text does not state a replacement field."
+    },
+    {
+      "id": "neg-x-payment-header",
+      "kind": "negative",
+      "citationIds": ["cite-old-http-x-payment", "cite-new-http-header-summary"],
+      "text": "v1 HTTP transport names client payment header `X-PAYMENT`. v2 HTTP header summary lists `PAYMENT-REQUIRED`, `PAYMENT-SIGNATURE`, and `PAYMENT-RESPONSE` and does not mention `X-PAYMENT`. No captured document states that one name replaces the other."
+    },
+    {
+      "id": "neg-maxAmountRequired",
+      "kind": "negative",
+      "citationIds": ["cite-old-spec-maxAmountRequired", "cite-new-spec-amount"],
+      "text": "v1 lists required `maxAmountRequired`. v2 lists required `amount`. v2 version history says \"restructured PaymentPayload/Required\" without naming `maxAmountRequired`. Mapping those two field names is unknown on these captures."
+    },
+    {
+      "id": "neg-discovered-metadata",
+      "kind": "negative",
+      "citationIds": ["cite-old-spec-discovered-metadata", "cite-new-spec-discovered-fields"],
+      "text": "v1 discovered-resource table includes optional `metadata`. v2 discovered-resource table includes optional `extensions` and does not list `metadata`."
+    },
+    {
+      "id": "partial-schemes-dir",
+      "kind": "partial",
+      "citationIds": ["cite-new-spec-schemes-dir"],
+      "text": "v2 says individual schemes including exact, upto, batch-settlement, and auth-capture are specified under specs/schemes/. Those files are not in this fixture."
+    },
+    {
+      "id": "partial-discovery-search",
+      "kind": "partial",
+      "citationIds": ["cite-new-spec-discovery-search"],
+      "text": "v2 section 8.2 GET /discovery/search says search semantics live in specs/extensions/bazaar.md. That file is not in this fixture. v1 has no GET /discovery/search heading."
+    },
+    {
+      "id": "partial-version-history",
+      "kind": "partial",
+      "citationIds": ["cite-new-spec-version-history"],
+      "text": "v2 version history row v2.0 dated 2025-12-9 states \"Protocol v2: CAIP-2 networks, restructured PaymentPayload/Required, ResourceInfo separation, extensions support\". That is the only captured migration summary. It does not enumerate header or field renames."
+    },
+    {
+      "id": "conflict-v1-payment-required-location",
+      "kind": "conflict",
+      "citationIds": ["cite-old-spec-x-payment-error", "cite-old-http-402-body"],
+      "text": "v1 core spec example PaymentRequirementsResponse.error is the string \"X-PAYMENT header is required\". v1 HTTP transport Payment Required Signaling uses a JSON response body (PaymentRequirementsResponse schema in response body) and does not define a payment-required header."
+    },
+    {
+      "id": "conflict-lastUpdated-type",
+      "kind": "conflict",
+      "citationIds": ["cite-old-spec-lastUpdated", "cite-new-spec-lastUpdated"],
+      "text": "Same field name `lastUpdated` is a Unix timestamp number (required) in v1 section 8.2 and an ISO 8601 timestamp string (required) in v2 section 8.3. Neither document maps the two representations."
+    },
+    {
+      "id": "conflict-payer-required",
+      "kind": "conflict",
+      "citationIds": ["cite-old-spec-payer-required", "cite-new-spec-payer-optional"],
+      "text": "v1 SettlementResponse table marks `payer` Required. v2 SettleResponse table marks `payer` Optional."
+    },
+    {
+      "id": "conflict-error-value-token",
+      "kind": "conflict",
+      "citationIds": ["cite-old-spec-error-value", "cite-new-spec-error-value-mismatch"],
+      "text": "v1 error list includes `invalid_exact_evm_payload_authorization_value` (\"Payment amount is insufficient for the required payment\"). v2 error list includes `invalid_exact_evm_payload_authorization_value_mismatch` (\"Payment amount does not exactly match the required amount\") and does not list the v1 token. No captured mapping between the tokens."
+    }
+  ],
+  "citations": [
+    {
+      "id": "cite-old-http-402-status",
+      "path": "source/old/http-transport.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/transports-v1/http.md",
+      "sha256": "fee8f063334da8729ce7270f441b4311f34183d5613ee201d0dbd1b8b0b7fc12",
+      "locator": "line 9",
+      "quote": "The server indicates payment is required using the HTTP 402 \"Payment Required\" status code."
+    },
+    {
+      "id": "cite-new-http-402-status",
+      "path": "source/new/http-transport.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/transports-v2/http.md",
+      "sha256": "4f0298aaa23ac75de0eb49b1e96e6e67a5b910d7527b3a71c63e426b3bf5bdfb",
+      "locator": "line 9",
+      "quote": "The server indicates payment is required using the HTTP 402 \"Payment Required\" status code."
+    },
+    {
+      "id": "cite-old-spec-verify",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "locator": "line 275",
+      "quote": "**7.1 POST /verify**"
+    },
+    {
+      "id": "cite-new-spec-verify",
+      "path": "source/new/x402-specification-v2.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v2.md",
+      "sha256": "cb66bdef710298233316b02d48fce4a9417ec5449ed9cab7f5d9fe6a454920cd",
+      "locator": "line 305",
+      "quote": "**7.1 POST /verify**"
+    },
+    {
+      "id": "cite-old-spec-settle",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "locator": "line 351",
+      "quote": "**7.2 POST /settle**"
+    },
+    {
+      "id": "cite-new-spec-settle",
+      "path": "source/new/x402-specification-v2.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v2.md",
+      "sha256": "cb66bdef710298233316b02d48fce4a9417ec5449ed9cab7f5d9fe6a454920cd",
+      "locator": "line 393",
+      "quote": "**7.2 POST /settle**"
+    },
+    {
+      "id": "cite-old-spec-supported",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "locator": "line 380",
+      "quote": "**7.3 GET /supported**"
+    },
+    {
+      "id": "cite-new-spec-supported",
+      "path": "source/new/x402-specification-v2.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v2.md",
+      "sha256": "cb66bdef710298233316b02d48fce4a9417ec5449ed9cab7f5d9fe6a454920cd",
+      "locator": "line 439",
+      "quote": "**7.3 GET /supported**"
+    },
+    {
+      "id": "cite-old-spec-discovery",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "locator": "line 424",
+      "quote": "8.1 GET /discovery/resources"
+    },
+    {
+      "id": "cite-new-spec-discovery",
+      "path": "source/new/x402-specification-v2.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v2.md",
+      "sha256": "cb66bdef710298233316b02d48fce4a9417ec5449ed9cab7f5d9fe6a454920cd",
+      "locator": "line 500",
+      "quote": "8.1 GET /discovery/resources"
+    },
+    {
+      "id": "cite-old-spec-outputSchema",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "locator": "line 122",
+      "quote": "`outputSchema`      | `object` | Optional | JSON schema describing the response format"
+    },
+    {
+      "id": "cite-new-spec-accepts-table",
+      "path": "source/new/x402-specification-v2.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v2.md",
+      "sha256": "cb66bdef710298233316b02d48fce4a9417ec5449ed9cab7f5d9fe6a454920cd",
+      "locator": "lines 120-130",
+      "quote": "Each `PaymentRequirements` object in the `accepts` array contains:"
+    },
+    {
+      "id": "cite-old-http-x-payment",
+      "path": "source/old/http-transport.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/transports-v1/http.md",
+      "sha256": "fee8f063334da8729ce7270f441b4311f34183d5613ee201d0dbd1b8b0b7fc12",
+      "locator": "line 46",
+      "quote": "Clients send payment data using the `X-PAYMENT` HTTP header."
+    },
+    {
+      "id": "cite-new-http-header-summary",
+      "path": "source/new/http-transport.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/transports-v2/http.md",
+      "sha256": "4f0298aaa23ac75de0eb49b1e96e6e67a5b910d7527b3a71c63e426b3bf5bdfb",
+      "locator": "lines 166-170",
+      "quote": "`PAYMENT-REQUIRED` | Server → Client | Base64-encoded `PaymentRequired` object |"
+    },
+    {
+      "id": "cite-old-spec-maxAmountRequired",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "locator": "line 116",
+      "quote": "`maxAmountRequired` | `string` | Required | Required payment amount in atomic token units"
+    },
+    {
+      "id": "cite-new-spec-amount",
+      "path": "source/new/x402-specification-v2.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v2.md",
+      "sha256": "cb66bdef710298233316b02d48fce4a9417ec5449ed9cab7f5d9fe6a454920cd",
+      "locator": "line 127",
+      "quote": "`amount`            | `string` | Required | Required payment amount in atomic token units"
+    },
+    {
+      "id": "cite-old-spec-discovered-metadata",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "locator": "line 487",
+      "quote": "`metadata`    | `object` | Optional | Additional metadata (category, provider, etc.)"
+    },
+    {
+      "id": "cite-new-spec-discovered-fields",
+      "path": "source/new/x402-specification-v2.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v2.md",
+      "sha256": "cb66bdef710298233316b02d48fce4a9417ec5449ed9cab7f5d9fe6a454920cd",
+      "locator": "lines 560-565",
+      "quote": "`extensions`  | `object` | Optional | Additional extension payloads associated with this discovered resource"
+    },
+    {
+      "id": "cite-new-spec-schemes-dir",
+      "path": "source/new/x402-specification-v2.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v2.md",
+      "sha256": "cb66bdef710298233316b02d48fce4a9417ec5449ed9cab7f5d9fe6a454920cd",
+      "locator": "line 281",
+      "quote": "Individual schemes and their per-network bindings — including `exact`, `upto`, `batch-settlement`, and `auth-capture` — are specified under [`specs/schemes/`](./schemes/)."
+    },
+    {
+      "id": "cite-new-spec-discovery-search",
+      "path": "source/new/x402-specification-v2.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v2.md",
+      "sha256": "cb66bdef710298233316b02d48fce4a9417ec5449ed9cab7f5d9fe6a454920cd",
+      "locator": "lines 551-554",
+      "quote": "Search semantics and response shape are defined in the Bazaar extension specification at `specs/extensions/bazaar.md`"
+    },
+    {
+      "id": "cite-new-spec-version-history",
+      "path": "source/new/x402-specification-v2.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v2.md",
+      "sha256": "cb66bdef710298233316b02d48fce4a9417ec5449ed9cab7f5d9fe6a454920cd",
+      "locator": "line 727",
+      "quote": "v2.0 | 2025-12-9 | Protocol v2: CAIP-2 networks, restructured PaymentPayload/Required, ResourceInfo separation, extensions support"
+    },
+    {
+      "id": "cite-old-spec-x-payment-error",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "locator": "line 77",
+      "quote": "\"error\": \"X-PAYMENT header is required\""
+    },
+    {
+      "id": "cite-old-http-402-body",
+      "path": "source/old/http-transport.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/transports-v1/http.md",
+      "sha256": "fee8f063334da8729ce7270f441b4311f34183d5613ee201d0dbd1b8b0b7fc12",
+      "locator": "lines 11-12",
+      "quote": "HTTP 402 status code with JSON response body"
+    },
+    {
+      "id": "cite-old-spec-lastUpdated",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "locator": "line 486",
+      "quote": "`lastUpdated` | `number` | Required | Unix timestamp of when the resource was last updated"
+    },
+    {
+      "id": "cite-new-spec-lastUpdated",
+      "path": "source/new/x402-specification-v2.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v2.md",
+      "sha256": "cb66bdef710298233316b02d48fce4a9417ec5449ed9cab7f5d9fe6a454920cd",
+      "locator": "line 564",
+      "quote": "`lastUpdated` | `string` | Required | ISO 8601 timestamp of when the resource was last updated"
+    },
+    {
+      "id": "cite-old-spec-payer-required",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "locator": "line 211",
+      "quote": "`payer`       | `string`  | Required | Address of the payer's wallet"
+    },
+    {
+      "id": "cite-new-spec-payer-optional",
+      "path": "source/new/x402-specification-v2.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v2.md",
+      "sha256": "cb66bdef710298233316b02d48fce4a9417ec5449ed9cab7f5d9fe6a454920cd",
+      "locator": "line 248",
+      "quote": "`payer`       | `string`  | Optional | Address of the payer's wallet"
+    },
+    {
+      "id": "cite-old-spec-error-value",
+      "path": "source/old/x402-specification-v1.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v1.md",
+      "sha256": "4484cd856f3add013ba64485b5234364429fe46dc8f846e9bcc72f50eb80b7b6",
+      "locator": "line 515",
+      "quote": "`invalid_exact_evm_payload_authorization_value`**: Payment amount is insufficient for the required payment"
+    },
+    {
+      "id": "cite-new-spec-error-value-mismatch",
+      "path": "source/new/x402-specification-v2.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/specs/x402-specification-v2.md",
+      "sha256": "cb66bdef710298233316b02d48fce4a9417ec5449ed9cab7f5d9fe6a454920cd",
+      "locator": "line 596",
+      "quote": "`invalid_exact_evm_payload_authorization_value_mismatch`**: Payment amount does not exactly match the required amount"
+    }
+  ]
+}

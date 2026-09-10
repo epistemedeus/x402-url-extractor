@@ -1,0 +1,10 @@
+{
+  "schema": "s137.provenance.v1",
+  "retrievedAt": "2026-09-10T12:00:00.000Z",
+  "url": "overview/research/collective-intelligence-msgboard-research-20260909/READY-PORTFOLIO-R2.json",
+  "sourceCommit": "4892421348329946476bb16bc17e2c82ef87a1a3",
+  "localPath": "experiments/s137-consumer-evidence-jobs/docs/OWNED-JOBS-01-06.json",
+  "sha256": "240c9640f12d8212b5f6574cf2c5c5f0de6272fe675e7d916f0cf99e404a7bc3",
+  "licenseNote": "Local pack file under the repository MIT License. Hash is of the local bytes. This cell performed no network GET. retrievedAt is the operator clock used when hashing, not a source-update time and not a live download time.",
+  "evidenceClass": "fixture"
+}

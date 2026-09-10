@@ -1,0 +1,115 @@
+{
+  "schema": "s137.consumer-jobs.provenance.v1",
+  "cell": "c29",
+  "jobId": "R2-CONSUMER-JOBS-06",
+  "caseId": "nyc-311-erm2-nwe9",
+  "title": "NYC 311 Service Requests from 2020 to Present (Socrata view metadata)",
+  "evidenceClass": "fixture",
+  "evidenceClassDefault": "fixture",
+  "captureLabel": "live-capture",
+  "replayLabel": "fixture",
+  "offline": true,
+  "paidEndpoint": false,
+  "legalAttestation": false,
+  "assertsCustomerDemand": false,
+  "clock": "2026-09-10T11:24:14Z",
+  "retrievedAt": "2026-09-10T11:24:14Z",
+  "url": "https://data.cityofnewyork.us/api/views/erm2-nwe9.json",
+  "sha256": "5f33c26dba3c08d0fa00fd7ae6ca875da50e83b086dcd94a3c21be2dc1c792c8",
+  "bytes": 25591,
+  "sourceUpdatedAt": "2026-09-10T01:38:08Z",
+  "noteRetrievedVsSource": "retrievedAt is this cell's HTTPS GET clock (HTTP Date). sourceUpdatedAt is Socrata rowsUpdatedAt (unix 1789004288 → 2026-09-10T01:38:08Z). viewLastModified is a third publisher clock (unix 1767021900 → 2025-12-29T15:25:00Z). They are not the same instant.",
+  "licenseNote": "View JSON has no license or licenseId keys. NYC Open Data portal publishes city terms of use; those terms were not fetched in this cell and this snapshot is not a license grant or legal attestation.",
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "free official catalog metadata GET; no purchase"
+  },
+  "captureMethod": "HTTPS GET of https://data.cityofnewyork.us/api/views/erm2-nwe9.json. Metadata JSON entity stored as-is. Row pages not fetched. No SODA $limit query. No npm install. No paid endpoints.",
+  "httpStatus": 200,
+  "dataset": {
+    "id": "erm2-nwe9",
+    "name": "311 Service Requests from 2020 to Present",
+    "attribution": "311",
+    "category": "Social Services",
+    "assetType": "dataset",
+    "provenance": "official",
+    "publicationStage": "published",
+    "tableId": 20219299
+  },
+  "artifacts": [
+    {
+      "id": "view-json",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/freshness/nyc-311-erm2-nwe9.view.json",
+      "url": "https://data.cityofnewyork.us/api/views/erm2-nwe9.json",
+      "retrievedAt": "2026-09-10T11:24:14Z",
+      "httpStatus": 200,
+      "bytes": 25591,
+      "sha256": "5f33c26dba3c08d0fa00fd7ae6ca875da50e83b086dcd94a3c21be2dc1c792c8",
+      "contentType": "application/json; charset=utf-8",
+      "label": "live-capture",
+      "replayLabel": "fixture",
+      "coverage": "full official Socrata view metadata JSON entity; no row payload"
+    },
+    {
+      "id": "http-headers-raw",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/freshness/http-headers.raw.txt",
+      "url": "https://data.cityofnewyork.us/api/views/erm2-nwe9.json",
+      "retrievedAt": "2026-09-10T11:24:14Z",
+      "httpStatus": 200,
+      "bytes": 390,
+      "sha256": "deb2dfcc9b1c06280d38a3f1fec4d13b01360c1c6774e2fbef8d41ccac8d5e5d",
+      "contentType": "message/http; curl -D CRLF bytes",
+      "label": "live-capture",
+      "replayLabel": "fixture",
+      "coverage": "response headers including HTTP Date; Last-Modified absent; no Set-Cookie"
+    },
+    {
+      "id": "http-headers-json",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/freshness/http-headers.json",
+      "url": "https://data.cityofnewyork.us/api/views/erm2-nwe9.json",
+      "retrievedAt": "2026-09-10T11:24:14Z",
+      "httpStatus": 200,
+      "bytes": 1012,
+      "sha256": "fc2fc6e09a1d6c612079c75d264028e63146f5a52ae256d48581f63c732b8109",
+      "label": "fixture",
+      "replayLabel": "fixture",
+      "coverage": "structured parse of captured headers"
+    },
+    {
+      "id": "slim",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/freshness/slim.json",
+      "url": "https://data.cityofnewyork.us/api/views/erm2-nwe9.json",
+      "retrievedAt": "2026-09-10T11:24:14Z",
+      "httpStatus": 200,
+      "bytes": 4002,
+      "sha256": "6909b838ab09998e6e57440c9741e0e2e715aebad8381457b2c7485df9e5a61a",
+      "label": "fixture",
+      "replayLabel": "fixture",
+      "coverage": "deterministic clocks + coverage extract; unix-to-ISO only"
+    }
+  ],
+  "derived": {
+    "input": {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/freshness/input.json",
+      "sha256": "ffeed0516a2d965409d71ce6d433417aafddc47ad772ae3ef2a1b9de4dbed302",
+      "bytes": 4477
+    },
+    "observations": {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/freshness/observations.json",
+      "sha256": "b7cc7e538a81f08cdda8b7dd3acfc1b48e85eb73cd35d90455d3da5992b5fe61",
+      "bytes": 3752
+    }
+  },
+  "limitations": [
+    "One dataset (NYC 311 view erm2-nwe9). Not a catalog-wide freshness census.",
+    "Metadata only; SODA row pages were not fetched.",
+    "HTTP Date is the server Date header at capture, not a publisher last-modified field.",
+    "Native field rowsUpdatedAt is mapped to sourceUpdatedAt in input.json; original name is preserved on sourceUpdatedAtNativeField.",
+    "License cannot be read from this JSON; no legal attestation.",
+    "Portal usage counters remain in the raw view JSON and are not interpreted as customer demand.",
+    "Default tests are offline against these bytes; do not re-fetch as part of the test command."
+  ]
+}

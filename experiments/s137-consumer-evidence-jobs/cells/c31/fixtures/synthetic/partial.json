@@ -1,0 +1,5 @@
+{
+  "case": "partial",
+  "evidenceClass": "synthetic",
+  "oldDoc": { "path": "docs/old.md", "title": "Install", "sha256": "aaa111" }
+}

@@ -1,0 +1,99 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c40",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "replay-pack",
+  "moduleId": "05",
+  "jobId": "R2-CONSUMER-JOBS-05",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/replay-pack",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "situationId": "S8",
+  "situation": "distributable-archive",
+  "brief": "Kit archive contains manifests/README/examples; excludes receipts/logs",
+  "oneWriter": "experiments/s153-consumer-distribution-gates/gates/c40/",
+  "kitRoot": "experiments/s153-consumer-distribution-gates/kit",
+  "kitSourceRoot": "experiments/s137-consumer-evidence-jobs",
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack",
+  "caseIds": ["positive-unpaid-complete"],
+  "expectedDecisionClass": "pass",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "primaryFixtures": [
+    {
+      "id": "positive-unpaid-complete",
+      "role": "case",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/case.json",
+      "sha256": "29212a09e5c9cd1637693b1c1cabd84f6f9b5106b1859017e55ea05764c3efd8"
+    },
+    {
+      "id": "manifest",
+      "role": "manifest",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/MANIFEST.json",
+      "sha256": "1f2be64ac5811ef06d327d9730444f6c71c9d7f9202d27bd73875cda23123be8"
+    },
+    {
+      "id": "readme",
+      "role": "readme",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/README.md",
+      "sha256": "fe73efc53a10379d1dac8cf43cab8fc7741e122a571efc06cfdf8d136d5a85d6"
+    },
+    {
+      "id": "example-openapi",
+      "role": "example",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/openapi.json",
+      "sha256": "a5240ee024a74b7a72782ecdc7235fdd2514d054d3ca04b2acbca9a2d03ccd99"
+    },
+    {
+      "id": "example-getStatus-response",
+      "role": "example",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/examples/getStatus.response.json",
+      "sha256": "87e4ad06ac0aad04560107bf1329c4d906a4a3503336ded21ccef64d5bd969cc"
+    },
+    {
+      "id": "real-readme",
+      "role": "readme",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/replay-pack/README.md",
+      "sha256": "b02ac379bada3176d40258b6a65ca23b9d6a13dafd3a647e39b4ba75f7bf410f"
+    },
+    {
+      "id": "real-operation",
+      "role": "example",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/replay-pack/github-rest-get-a-repository.operation.json",
+      "sha256": "611afa11d38f21d1cc63e70de18e9ee080917f8f1c91cf9c1790006f42cdb2b7"
+    }
+  ],
+  "membership": {
+    "mustIncludeClasses": ["manifests", "README", "examples"],
+    "mustExcludeClasses": ["receipts", "logs"],
+    "sourceRequiredRel": [
+      "fixtures/synthetic/replay-pack/MANIFEST.json",
+      "fixtures/synthetic/replay-pack/README.md",
+      "fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/case.json",
+      "fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/openapi.json",
+      "fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/examples/getStatus.response.json",
+      "fixtures/real/replay-pack/README.md",
+      "fixtures/real/replay-pack/github-rest-get-a-repository.operation.json"
+    ],
+    "sourceExcludedRel": [
+      "receipts/smoke/05-replay-pack.json",
+      "receipts/concurrency/admission-log.jsonl"
+    ]
+  },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "limitations": [
+    "Wave-4 kit/ may be unpopulated; include-class members are proven on the S137 source pack.",
+    "Packed kit/ must not contain receipts/ or logs; empty kit satisfies exclusion only.",
+    "Jobs 07/08 stay out of scope."
+  ]
+}

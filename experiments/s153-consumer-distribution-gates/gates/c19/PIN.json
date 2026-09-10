@@ -1,0 +1,161 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c19",
+  "pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "table-reconcile",
+  "jobId": "R2-CONSUMER-JOBS-03",
+  "moduleId": "03",
+  "situationId": "S3",
+  "situation": "conflict-identity",
+  "brief": "Reuse conflict fixture; assert conflict preserved, no silent merge",
+  "expectedDecisionClass": "conflict",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "liveCapture": false,
+  "paidDemand": false,
+  "excludedJobs": [
+    "R2-CONSUMER-JOBS-07",
+    "R2-CONSUMER-JOBS-08"
+  ],
+  "srcModule": "experiments/s137-consumer-evidence-jobs/src/table-reconcile/",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "kitRoot": "experiments/s153-consumer-distribution-gates/kit",
+  "fixtureRoot": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile",
+  "realFixtureRoot": "experiments/s137-consumer-evidence-jobs/fixtures/real/table-reconcile",
+  "primaryCaseId": "conflict-value",
+  "caseIds": [
+    "conflict-value",
+    "conflict-units",
+    "conflict-time-window"
+  ],
+  "primaryFixtures": [
+    {
+      "id": "conflict-value",
+      "role": "case",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/conflict-value.json",
+      "sha256": "5c2fb4a109496e296e3566e75b4cb8c3080c7c85e07a6a47435484a061e54dc6"
+    },
+    {
+      "id": "lab-a",
+      "role": "source-table",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-value/lab-a.json",
+      "sha256": "d2c077d88cf64bbdaa65ad8cadd44a7c5c69c3ab7af5948e8269027d16fbca3c"
+    },
+    {
+      "id": "lab-b",
+      "role": "source-table",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-value/lab-b.json",
+      "sha256": "9a26c61262c96ab8265660e85ecbab95dddd29aca92ae4e552834d525fa72068"
+    }
+  ],
+  "cases": [
+    {
+      "id": "conflict-value",
+      "kind": "conflict",
+      "expectedDecision": "conflict",
+      "expectedFindingKind": "value-conflict",
+      "expectedFindingId": "conflict:synthetic.page_extracts:2026-08-03",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/conflict-value.json",
+      "sha256": "5c2fb4a109496e296e3566e75b4cb8c3080c7c85e07a6a47435484a061e54dc6",
+      "doNotInvent": [
+        "average",
+        "sum",
+        "silent-merge"
+      ],
+      "valuesBySource": {
+        "lab-a": 4,
+        "lab-b": 9
+      },
+      "sources": [
+        {
+          "id": "lab-a",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-value/lab-a.json",
+          "sha256": "d2c077d88cf64bbdaa65ad8cadd44a7c5c69c3ab7af5948e8269027d16fbca3c"
+        },
+        {
+          "id": "lab-b",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-value/lab-b.json",
+          "sha256": "9a26c61262c96ab8265660e85ecbab95dddd29aca92ae4e552834d525fa72068"
+        }
+      ]
+    },
+    {
+      "id": "conflict-units",
+      "kind": "conflict",
+      "expectedDecision": "conflict",
+      "expectedFindingKind": "unit-conflict",
+      "expectedFindingId": "conflict-units:synthetic.page_extracts:2026-08-03",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/conflict-units.json",
+      "sha256": "c59dd5fee5d51ed48846d97c723bdf4c2c30b1395f700857a5068625c4c58842",
+      "doNotInvent": [
+        "convert-units",
+        "treat-numeric-equality-as-agreement"
+      ],
+      "unitsBySource": {
+        "lab-a": "count",
+        "lab-b": "count_per_day"
+      },
+      "sources": [
+        {
+          "id": "lab-a",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-units/lab-a.json",
+          "sha256": "977e12fd709c4f142ba0b7e56592faa08c631f9c649f75b0effb2ff70a1312d7"
+        },
+        {
+          "id": "lab-b",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-units/lab-b.json",
+          "sha256": "38598c6208b2b7caecc7a9be165d847d33ded91867190d74a53f256165c0160f"
+        }
+      ]
+    },
+    {
+      "id": "conflict-time-window",
+      "kind": "conflict",
+      "expectedDecision": "conflict",
+      "expectedFindingKind": "time-window-mismatch",
+      "expectedFindingId": "conflict-window:synthetic.page_extracts:span-2026-08-03",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/conflict-time-window.json",
+      "sha256": "c0843a13ce7053e5641fce97989ac67bfc6351d1acc1f0cf71a2787bc82010bd",
+      "doNotInvent": [
+        "rollup-grain",
+        "sum-daily-rows"
+      ],
+      "grainBySource": {
+        "lab-a": "P7D",
+        "lab-b": "P1D"
+      },
+      "sources": [
+        {
+          "id": "lab-a",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-time-window/lab-a.json",
+          "sha256": "95de15dfffe81e46901191c76ea7ba5a455352c5641151762f6032a112947290"
+        },
+        {
+          "id": "lab-b",
+          "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-time-window/lab-b.json",
+          "sha256": "8c5bcc41b53d89615c05b49a1dcd912272ba8de0ba3b83d4fecb8acac9e11ae8"
+        }
+      ]
+    }
+  ],
+  "realCatalog": {
+    "id": "npm-express-downloads-2026-08-overlap",
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/table-reconcile/pair.json",
+    "sha256": "8962ff0cd57f96e9a4544ed7f10d405cb0ca33e1e117bd7f29d4782a7fa4553b",
+    "conflictFindingId": "conflict-overlap-double-count-hazard",
+    "sameKeyValueDisagreements": [],
+    "note": "Observed catalog: concatenating overlapping windows would double-count 7 days. Not a same-key value clash. Do not invent disagreement or a union total."
+  },
+  "provenance": {
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/PROVENANCE.json",
+    "license": "authored-synthetic; not third-party content; no SPDX license claimed; assignment spend $0"
+  },
+  "policies": {
+    "neverInventTotals": true,
+    "neverSilentMerge": true,
+    "surfaceDisagreement": true,
+    "requireCitations": true
+  }
+}

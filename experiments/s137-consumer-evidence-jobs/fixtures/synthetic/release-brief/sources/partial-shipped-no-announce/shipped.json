@@ -1,0 +1,17 @@
+{
+  "schema": "s137.release-brief.source.shipped.v1",
+  "evidenceClass": "synthetic",
+  "lane": "shipped",
+  "plane": "shipped",
+  "kind": "git-tag",
+  "notice": "Authored synthetic git-tag/commit document. Not fetched from a remote.",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "subject": "demo-release-kit",
+  "ref": "refs/tags/v1.2.0",
+  "tag_name": "v1.2.0",
+  "object": {
+    "type": "commit",
+    "sha": "2b6927687100d9ecb81642d16d1af7b752813478"
+  },
+  "tagged_at": "2026-09-09T17:55:00.000Z"
+}

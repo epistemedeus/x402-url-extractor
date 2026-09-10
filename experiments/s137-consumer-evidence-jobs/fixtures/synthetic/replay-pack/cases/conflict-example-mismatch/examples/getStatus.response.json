@@ -1,0 +1,15 @@
+{
+  "operationId": "getStatus",
+  "method": "GET",
+  "path": "/v0/status",
+  "httpStatus": 200,
+  "mediaType": "application/json",
+  "body": {
+    "ok": false,
+    "paid": false,
+    "source": "companion-example"
+  },
+  "paid": false,
+  "providerExecuted": false,
+  "note": "Companion body.ok is false. OpenAPI examples.enabled.value.ok is true."
+}

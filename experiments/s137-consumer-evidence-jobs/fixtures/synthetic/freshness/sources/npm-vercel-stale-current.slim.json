@@ -1,0 +1,19 @@
+{
+  "evidenceClass": "synthetic",
+  "transform": "field-rename-only",
+  "datasetId": "npm:vercel",
+  "sourceUrl": "https://registry.npmjs.org/vercel",
+  "licenseNote": "npm registry metadata; follow npm terms; package license separately",
+  "package": "vercel",
+  "version": "59.15.1",
+  "sourceUpdatedAt": "2026-09-10T01:12:17.696Z",
+  "sourceUpdatedAtField": "published_at",
+  "retrievedAt": "2026-08-01T00:00:00.000Z",
+  "retrievedAtField": "captured_at",
+  "note": "S122 stale-current.json stores capture time on the body. Capture is before published_at of the version it names.",
+  "derivedFrom": {
+    "host": "/tmp/s127/x402-url-extractor",
+    "path": "experiments/s122-application-jobs/fixtures/npm-vercel/stale-current.json",
+    "sha256": "354227542bc0dd4e38932b8d3c4aa216f380f3647486c8f3a50ee2bb84f0c604"
+  }
+}

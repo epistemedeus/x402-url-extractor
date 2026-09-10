@@ -1,0 +1,88 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c05",
+  "s137Pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "migration-checklist",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "situationId": "S5",
+  "situation": "cli-stdout-batch",
+  "brief": "CLI analyze single+batch: exit codes, stdout JSON schema, no network",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "expectedDecisionClass": "pass",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/migration-checklist",
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration",
+  "realReuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/real/migration",
+  "stdoutSchemas": {
+    "single": "s137.consumer-evidence.packet.v1",
+    "batch": "s137.consumer-evidence.family.v1",
+    "catalog": "s137.consumer-evidence.catalog.v1",
+    "artifact": "s137.migration-checklist.output.v1"
+  },
+  "exitCodes": {
+    "analyzeEmittedPacket": 0,
+    "usage": 2,
+    "inputRefused": 1
+  },
+  "excludedJobs": ["R2-CONSUMER-JOBS-07", "R2-CONSUMER-JOBS-08"],
+  "primary": {
+    "caseId": "positive-complete",
+    "kind": "positive",
+    "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/positive-complete.json",
+    "sha256": "5ed28b8f1dd1736101035ae6ca93d4ec3b8f77f0396b67d6b410dd61bafcc44b",
+    "expectedDecision": "pass",
+    "expectedFindingIds": ["extract-unchanged", "read-unchanged", "batch-added-unused"]
+  },
+  "cases": [
+    {
+      "caseId": "positive-complete",
+      "kind": "positive",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/positive-complete.json",
+      "sha256": "5ed28b8f1dd1736101035ae6ca93d4ec3b8f77f0396b67d6b410dd61bafcc44b",
+      "expectedDecision": "pass",
+      "expectedFindingIds": ["extract-unchanged", "read-unchanged", "batch-added-unused"]
+    },
+    {
+      "caseId": "partial-batch-undocumented",
+      "kind": "partial",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/partial-batch-undocumented.json",
+      "sha256": "54be64f6a5373cbbe746b99c788fc293020883d4f419c649386c806366c66285",
+      "expectedDecision": "partial",
+      "expectedFindingIds": ["extract-unchanged", "read-unchanged", "batch-missing-in-new"]
+    },
+    {
+      "caseId": "conflict-challenge-resource",
+      "kind": "conflict",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/conflict-challenge-resource.json",
+      "sha256": "da5ee0ddd53cfdf87931f9f85423e5b75e54e56f52dec19d9f957ecb5ddf235e",
+      "expectedDecision": "conflict",
+      "expectedFindingIds": ["batch-challenge-conflict"]
+    },
+    {
+      "caseId": "negative-malformed-inventory",
+      "kind": "negative",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/negative-malformed-inventory.json",
+      "sha256": "95858fbe84e8055906b5e531280f6d0254364472f9f31bc0a60be397d0afbbeb",
+      "expectedDecision": "fail",
+      "expectedFindingIds": ["malformed-inventory"]
+    },
+    {
+      "caseId": "negative-missing-new-docs",
+      "kind": "negative",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/negative-missing-new-docs.json",
+      "sha256": "64638fb82dbc324d66d4bff78b7dc805dddcf12be150244aa0d455e82bf593f1",
+      "expectedDecision": "fail",
+      "expectedFindingIds": ["missing-new-docs"]
+    }
+  ],
+  "observedCliNotes": [
+    "CLI envelope schema is s137.consumer-evidence.packet.v1; transform overlay schema is s137.migration-checklist.output.v1.",
+    "CLI artifactKind is catalog id migration-checklist; transform artifactKind is docs-migration-checklist.",
+    "Fixture case wrappers are rejected by validateInput (cli.schema-rejected) but transformFixtureCase still runs; envelope decision is the transform decision.",
+    "Analyze that emits a packet exits 0 even when decision is fail|partial|conflict. Exit 1 is unreadable/URL --in. Exit 2 is usage.",
+    "analyze --all with the primary case as --in yields family decision fail because sibling artifacts reject the migration fixture; the migration-checklist packet stays pass."
+  ]
+}

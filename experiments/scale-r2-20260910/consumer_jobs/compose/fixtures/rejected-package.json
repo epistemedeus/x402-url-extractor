@@ -1,0 +1,14 @@
+{
+  "schema": "x402.r2.consumer.customer_result_package.v1",
+  "status": "rejected",
+  "requestId": "s159-rejected-fixture",
+  "recipes": [
+    {
+      "recipeId": "not-a-real-recipe-zzz",
+      "status": "unknown",
+      "error": { "code": "unknown_recipe", "message": "Unknown recipe id: not-a-real-recipe-zzz" },
+      "output": null
+    }
+  ],
+  "hasInvestmentRecommendation": false
+}

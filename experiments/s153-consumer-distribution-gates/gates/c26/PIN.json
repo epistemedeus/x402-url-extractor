@@ -1,0 +1,73 @@
+{
+  "schema": "s153.gate-pin.v1",
+  "cell": "c26",
+  "s137Pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "link-index",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "moduleId": "04",
+  "situationId": "S2",
+  "situation": "partial-prereq",
+  "brief": "Reuse partial fixture; assert partial/unknown not invented pass",
+  "expectedDecisionClass": "partial",
+  "allowedDecisionClasses": ["partial"],
+  "forbiddenDecisionClasses": ["pass"],
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "payment": { "attempted": false },
+  "caseIds": ["partial-mixed"],
+  "secondaryCaseIds": ["schema-example-partial"],
+  "reuseFrom": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index",
+  "srcDir": "experiments/s137-consumer-evidence-jobs/src/link-index",
+  "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs",
+  "primaryFixtures": [
+    {
+      "role": "entry-source",
+      "caseId": "partial-mixed",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/partial-mixed/source.md",
+      "sha256": "e59edf3ac65642d5c08baf5a7b7fb2517b234e419e7ef59c25a9ee2d5522c5bc"
+    },
+    {
+      "role": "expected-decision",
+      "caseId": "partial-mixed",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/partial-mixed/expected.json",
+      "sha256": "d83720e37f25c0c46b5862802274c6a82f2bce38a71451a30fabcaecdcdab327"
+    },
+    {
+      "role": "present-artifact",
+      "caseId": "partial-mixed",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/partial-mixed/artifacts/present.md",
+      "sha256": "5e825f4ed6e7122d4b7ae417afbd2d30cdd67d65da57f52ec2105df5479fb31c"
+    }
+  ],
+  "supportingFixtures": [
+    {
+      "role": "operator-clock",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/CLOCK.txt",
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a"
+    }
+  ],
+  "absentByDesign": [
+    {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/partial-mixed/artifacts/missing.md",
+      "reason": "intentionally absent missing-file prereq; do not invent the artifact or a pass"
+    },
+    {
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/partial-mixed/outside.md",
+      "reason": "path escape ../outside.md stays out of corpus; not opened"
+    }
+  ],
+  "expectedLinkStatuses": {
+    "artifacts/present.md": "reachable",
+    "artifacts/missing.md": "unreachable",
+    "artifacts/present.md#no-such-anchor": "unreachable",
+    "https://example.invalid/never-fetched": "unknown",
+    "../outside.md": "unreachable"
+  },
+  "notes": [
+    "Pass is forbidden when unreachable, unknown, conflict, or truncated coverage is present.",
+    "https://example.invalid/never-fetched is not fetched (offline; reserved invalid TLD).",
+    "Jobs 07/08 are out of scope."
+  ]
+}

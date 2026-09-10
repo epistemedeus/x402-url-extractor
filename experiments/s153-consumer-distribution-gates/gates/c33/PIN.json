@@ -1,0 +1,52 @@
+{
+  "schema": "s153.gate.pin.v1",
+  "cell": "c33",
+  "s137Pin": "fa6878de125cfdcfd77f4b47037c88667090d293",
+  "branch": "codex/s153-consumer-distribution-gates-20260910",
+  "artifact": "replay-pack",
+  "jobId": "R2-CONSUMER-JOBS-05",
+  "moduleId": "05",
+  "situationId": "S1",
+  "situation": "positive-workflow",
+  "expectedDecision": "pass",
+  "expectedDecisionClass": "pass",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "clock": "2026-09-10T12:00:00.000Z",
+  "caseIds": [
+    "positive-unpaid-complete"
+  ],
+  "src": {
+    "schema": "experiments/s137-consumer-evidence-jobs/src/replay-pack/schema.mjs",
+    "transform": "experiments/s137-consumer-evidence-jobs/src/replay-pack/transform.mjs",
+    "cli": "experiments/s137-consumer-evidence-jobs/scripts/cli.mjs"
+  },
+  "fixtureRoot": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack",
+  "files": [
+    {
+      "role": "primary-case",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/case.json",
+      "sha256": "29212a09e5c9cd1637693b1c1cabd84f6f9b5106b1859017e55ea05764c3efd8"
+    },
+    {
+      "role": "primary-openapi",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/openapi.json",
+      "sha256": "a5240ee024a74b7a72782ecdc7235fdd2514d054d3ca04b2acbca9a2d03ccd99"
+    },
+    {
+      "role": "primary-example",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete/examples/getStatus.response.json",
+      "sha256": "87e4ad06ac0aad04560107bf1329c4d906a4a3503336ded21ccef64d5bd969cc"
+    },
+    {
+      "role": "clock",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/CLOCK.txt",
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a"
+    },
+    {
+      "role": "catalog",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/MANIFEST.json",
+      "sha256": "1f2be64ac5811ef06d327d9730444f6c71c9d7f9202d27bd73875cda23123be8"
+    }
+  ]
+}

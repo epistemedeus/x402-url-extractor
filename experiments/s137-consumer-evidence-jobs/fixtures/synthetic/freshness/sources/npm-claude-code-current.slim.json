@@ -1,0 +1,16 @@
+{
+  "evidenceClass": "synthetic",
+  "transform": "field-rename-only",
+  "datasetId": "npm:@anthropic-ai/claude-code",
+  "sourceUrl": "https://registry.npmjs.org/@anthropic-ai/claude-code",
+  "licenseNote": "npm registry metadata; follow npm terms; package license separately",
+  "package": "@anthropic-ai/claude-code",
+  "version": "2.1.267",
+  "sourceUpdatedAt": "2026-09-09T18:25:42.820Z",
+  "sourceUpdatedAtField": "published_at",
+  "derivedFrom": {
+    "host": "/tmp/s127/x402-url-extractor",
+    "path": "experiments/s122-application-jobs/fixtures/npm-claude-code/current.json",
+    "sha256": "29d04af93bc9f2ab188e3e922c7c314a735fd18b34b213928d377ecd9e924ac4"
+  }
+}
