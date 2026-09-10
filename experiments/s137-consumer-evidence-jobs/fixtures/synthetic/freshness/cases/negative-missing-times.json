@@ -1,0 +1,87 @@
+{
+  "schema": "s137.freshness-receipt.input.v1",
+  "caseId": "negative-missing-times",
+  "caseKind": "negative",
+  "evidenceClass": "synthetic",
+  "jobId": "R2-CONSUMER-JOBS-06",
+  "artifactKind": "dataset-freshness-receipt",
+  "clock": "2026-09-10T09:54:59Z",
+  "horizonMs": 86400000,
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "notes": "npm version document body has name/version and neither published_at nor captured_at. times[] is empty. Neither retrieval age nor source-update age is computable. Missing times stay unknown; they are not filled from the clock.",
+  "datasets": [
+    {
+      "id": "npm:vercel",
+      "locator": {
+        "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-vercel-version-doc.slim.json",
+        "url": "https://registry.npmjs.org/vercel"
+      },
+      "contentSha256": "53de8d48ef5f1b6e91bebc6cb404f76596c4d84ffaef63cdd51d3c1b9fe1c38e",
+      "retrievedAt": null,
+      "sourceUpdatedAt": null,
+      "payloadRef": "sources/npm-vercel-version-doc.slim.json",
+      "times": [],
+      "coverage": {
+        "expectedRecords": 1,
+        "observedRecords": 1,
+        "fieldsPresent": ["version"],
+        "fieldsMissing": ["retrievedAt", "sourceUpdatedAt", "published_at"]
+      }
+    }
+  ],
+  "citations": [
+    {
+      "id": "cit-clock",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/CLOCK.txt",
+      "contentSha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "sha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-version-doc-slim",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-vercel-version-doc.slim.json",
+      "url": "https://registry.npmjs.org/vercel",
+      "contentSha256": "53de8d48ef5f1b6e91bebc6cb404f76596c4d84ffaef63cdd51d3c1b9fe1c38e",
+      "sha256": "53de8d48ef5f1b6e91bebc6cb404f76596c4d84ffaef63cdd51d3c1b9fe1c38e",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-s122-version-doc",
+      "path": "experiments/s122-application-jobs/fixtures/npm-vercel/second-snapshot-version-doc.json",
+      "url": "https://registry.npmjs.org/vercel",
+      "contentSha256": "55b8af1dcae8a13ac579300df00e426f0a8b5cf375821ef884e87c425ca02eac",
+      "sha256": "55b8af1dcae8a13ac579300df00e426f0a8b5cf375821ef884e87c425ca02eac",
+      "evidenceClass": "fixture",
+      "host": "/tmp/s127/x402-url-extractor"
+    }
+  ],
+  "expect": {
+    "decision": "unknown",
+    "coverageComplete": false,
+    "unknownReasons": ["missing_retrievedAt", "missing_sourceUpdatedAt"],
+    "findings": [
+      {
+        "id": "missing-retrievedAt",
+        "kind": "retrieval_age",
+        "datasetId": "npm:vercel",
+        "retrievedAt": null,
+        "ageMs": null,
+        "citationIds": ["cit-version-doc-slim", "cit-s122-version-doc"]
+      },
+      {
+        "id": "missing-sourceUpdatedAt",
+        "kind": "source_update_age",
+        "datasetId": "npm:vercel",
+        "sourceUpdatedAt": null,
+        "ageMs": null,
+        "citationIds": ["cit-version-doc-slim", "cit-s122-version-doc"]
+      }
+    ]
+  },
+  "limitations": [
+    "Clock is present but must not be substituted for missing retrievedAt or sourceUpdatedAt.",
+    "Absence of timestamps is unknown, not a stale or fresh determination."
+  ]
+}

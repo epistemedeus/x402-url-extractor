@@ -1,0 +1,101 @@
+{
+  "schema": "s137.link-index.synthetic-case.v1",
+  "caseId": "positive-html",
+  "kind": "positive",
+  "expectedDecision": "pass",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "entry": "source.html",
+  "format": "html",
+  "offline": true,
+  "payment": { "attempted": false },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "links": [
+    {
+      "linkId": "L1",
+      "href": "artifacts/guide.md",
+      "text": "Guide",
+      "syntax": "html-a",
+      "markup": "<a href=\"artifacts/guide.md\">Guide</a>",
+      "index": 232,
+      "targetStatus": "reachable",
+      "targetPath": "artifacts/guide.md",
+      "fragment": null
+    },
+    {
+      "linkId": "L2",
+      "href": "artifacts/api.md#auth",
+      "text": "API auth",
+      "syntax": "html-a",
+      "markup": "<a href=\"artifacts/api.md#auth\">API auth</a>",
+      "index": 275,
+      "targetStatus": "reachable",
+      "targetPath": "artifacts/api.md",
+      "fragment": "auth"
+    },
+    {
+      "linkId": "L3",
+      "href": "#overview",
+      "text": "Overview",
+      "syntax": "html-a",
+      "markup": "<a href=\"#overview\">Overview</a>",
+      "index": 324,
+      "targetStatus": "reachable",
+      "fragment": "overview"
+    }
+  ],
+  "anchors": [
+    { "id": "overview", "index": 138, "kind": "html-id" }
+  ],
+  "findings": [
+    {
+      "findingId": "F1",
+      "code": "reachable-relative",
+      "linkId": "L1",
+      "citationIds": ["source.html", "artifacts/guide.md"]
+    },
+    {
+      "findingId": "F2",
+      "code": "reachable-fragment",
+      "linkId": "L2",
+      "citationIds": ["source.html", "artifacts/api.md"]
+    },
+    {
+      "findingId": "F3",
+      "code": "reachable-fragment",
+      "linkId": "L3",
+      "citationIds": ["source.html"]
+    }
+  ],
+  "citations": [
+    {
+      "citationId": "source.html",
+      "path": "source.html",
+      "sha256": "3225b0864b74a726775065d64a97c9dcc72c2a7b54bf42fa94b8fbeb5033b8a1",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "citationId": "artifacts/guide.md",
+      "path": "artifacts/guide.md",
+      "sha256": "bcb53aa419a21fcf6e66c2d1f0d2883cf8962fdd750821802f856de15a60f4a9",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "citationId": "artifacts/api.md",
+      "path": "artifacts/api.md",
+      "sha256": "da2f76c26732cfc6f35912695d5c03a093d540d2ff225bfe680c40cb1f1ae5c0",
+      "evidenceClass": "synthetic"
+    }
+  ],
+  "limitations": [
+    "Quoted href attributes only; single-quoted or unquoted hrefs are not in this case.",
+    "Does not fetch network URLs."
+  ]
+}

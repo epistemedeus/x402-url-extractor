@@ -1,0 +1,16 @@
+{
+  "name": "r2-consumer-s152-compose",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "S152 compose surface: Heavy 01-06 CLI + native 07/08 journey and refusal tests",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:08": "npm --prefix ../08 test",
+    "journey": "node ../08/src/cli.mjs journey",
+    "demo": "node ../08/src/cli.mjs demo"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

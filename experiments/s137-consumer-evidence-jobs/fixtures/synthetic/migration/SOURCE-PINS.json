@@ -1,0 +1,74 @@
+{
+  "schema": "s137.migration.source-pins.v1",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "notes": "Each excerpt must still appear in repoPath. Fixtures copy these phrases; they do not invent routes or counts.",
+  "pins": [
+    {
+      "id": "pin-readme-batch-flag",
+      "repoPath": "README.md",
+      "excerpt": "`EXTRACT_BATCH_ENABLED=1` adds `POST /extract/batch` and MCP `extract_batch`",
+      "usedBy": ["positive-complete", "partial-batch-undocumented"]
+    },
+    {
+      "id": "pin-readme-op-counts",
+      "repoPath": "README.md",
+      "excerpt": "The default\nis off: 25 paid HTTP operations and 22 MCP tools; enabled: 26 and 23.",
+      "usedBy": ["positive-complete"]
+    },
+    {
+      "id": "pin-readme-challenge-http",
+      "repoPath": "README.md",
+      "excerpt": "Its challenge resource is `https://agents.samedaydesk.com/extract/batch`, not\n`mcp://`",
+      "usedBy": ["positive-complete", "conflict-challenge-resource"]
+    },
+    {
+      "id": "pin-readme-extract-read",
+      "repoPath": "README.md",
+      "excerpt": "Paid `GET /extract` and `GET /read`",
+      "usedBy": ["positive-complete", "negative-missing-new-docs", "partial-batch-undocumented"]
+    },
+    {
+      "id": "pin-mcp-server-not-mcp",
+      "repoPath": "mcp-server.mjs",
+      "excerpt": "Payment challenge and credentials are bound to ${t.paidHttp.resourceUrl}, not mcp://.",
+      "usedBy": ["conflict-challenge-resource"]
+    },
+    {
+      "id": "pin-telemetry-mcp-resource",
+      "repoPath": "mcp-typed-telemetry-producer.mjs",
+      "excerpt": "resource: \"mcp://tool/extract_batch\"",
+      "usedBy": ["conflict-challenge-resource"]
+    },
+    {
+      "id": "pin-telemetry-http-route",
+      "repoPath": "mcp-typed-telemetry-producer.mjs",
+      "excerpt": "httpRoute: \"/extract/batch\"",
+      "usedBy": ["conflict-challenge-resource", "positive-complete"]
+    },
+    {
+      "id": "pin-goose-require-batch",
+      "repoPath": "goose/extract.workflow.md",
+      "excerpt": "Require\n`extract` and `extract_batch`",
+      "usedBy": ["partial-batch-undocumented"]
+    },
+    {
+      "id": "pin-skill-batch-url",
+      "repoPath": "plugins/samedaydesk-x402/skills/web-extract/SKILL.md",
+      "excerpt": "`POST https://agents.samedaydesk.com/extract/batch`",
+      "usedBy": ["positive-complete"]
+    },
+    {
+      "id": "pin-skill-get-extract",
+      "repoPath": "plugins/samedaydesk-x402/skills/web-extract/SKILL.md",
+      "excerpt": "`GET https://agents.samedaydesk.com/extract?url=<https-url>`",
+      "usedBy": ["positive-complete", "partial-batch-undocumented"]
+    },
+    {
+      "id": "pin-skill-get-read",
+      "repoPath": "plugins/samedaydesk-x402/skills/web-extract/SKILL.md",
+      "excerpt": "`GET https://agents.samedaydesk.com/read?url=<https-url>`",
+      "usedBy": ["positive-complete", "partial-batch-undocumented"]
+    }
+  ]
+}

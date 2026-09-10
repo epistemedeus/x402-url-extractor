@@ -1,0 +1,63 @@
+{
+  "schema": "s137.link-index.synthetic-case.v1",
+  "caseId": "conflict-duplicate-ids",
+  "kind": "conflict",
+  "expectedDecision": "conflict",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "entry": "source.html",
+  "format": "html",
+  "offline": true,
+  "payment": { "attempted": false },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "links": [
+    {
+      "linkId": "L1",
+      "href": "#install",
+      "text": "Install",
+      "syntax": "html-a",
+      "markup": "<a href=\"#install\">Install</a>",
+      "index": 128,
+      "targetStatus": "ambiguous-fragment",
+      "fragment": "install",
+      "idCount": 2
+    }
+  ],
+  "anchors": [
+    { "id": "install", "index": 46, "kind": "html-id" },
+    { "id": "install", "index": 87, "kind": "html-id" }
+  ],
+  "findings": [
+    {
+      "findingId": "F1",
+      "code": "duplicate-id",
+      "id": "install",
+      "count": 2,
+      "citationIds": ["source.html"]
+    },
+    {
+      "findingId": "F2",
+      "code": "ambiguous-fragment",
+      "linkId": "L1",
+      "citationIds": ["source.html"]
+    }
+  ],
+  "citations": [
+    {
+      "citationId": "source.html",
+      "path": "source.html",
+      "sha256": "f6f03fd2f666ecb6eaee4f5e1efb4e2ed50d580f01becabf9477df6cee0e3a6d",
+      "evidenceClass": "synthetic"
+    }
+  ],
+  "limitations": [
+    "Two elements share id=install. The fragment is observed as ambiguous; this cell does not pick a winner."
+  ]
+}

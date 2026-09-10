@@ -1,0 +1,32 @@
+{
+  "schema": "s137.link-index.synthetic-manifest.v1",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "cell": "c18",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "liveCapture": false,
+  "paidDemand": false,
+  "networkContacted": false,
+  "offline": true,
+  "payment": { "attempted": false },
+  "requiredCaseIds": [
+    "positive-html",
+    "positive-md",
+    "negative-empty",
+    "negative-no-links",
+    "negative-malformed",
+    "partial-mixed",
+    "conflict-duplicates",
+    "conflict-duplicate-ids"
+  ],
+  "kindsRequired": ["positive", "negative", "partial", "conflict"],
+  "inventoryNote": "catalog.mjs inventories quoted HTML hrefs, markdown inline/reference links, HTML ids, and ATX heading slugs. It is not src/link-index/transform.mjs.",
+  "citations": [
+    {
+      "citationId": "CLOCK.txt",
+      "path": "CLOCK.txt",
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a",
+      "evidenceClass": "synthetic"
+    }
+  ]
+}

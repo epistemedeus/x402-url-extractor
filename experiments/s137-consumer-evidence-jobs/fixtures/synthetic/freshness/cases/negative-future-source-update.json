@@ -1,0 +1,95 @@
+{
+  "schema": "s137.freshness-receipt.input.v1",
+  "caseId": "negative-future-source-update",
+  "caseKind": "negative",
+  "evidenceClass": "synthetic",
+  "jobId": "R2-CONSUMER-JOBS-06",
+  "artifactKind": "dataset-freshness-receipt",
+  "clock": "2026-09-10T09:54:59Z",
+  "horizonMs": 86400000,
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "notes": "Future-dated lastUpdated is copied from discovery-drift.test.mjs (2099-01-01T00:00:00Z). This is a negative control, not a claim that any registry published in 2099. Future dates stay unknown; ageMs is null, not negative.",
+  "datasets": [
+    {
+      "id": "synthetic:future-dated-control",
+      "locator": {
+        "path": "discovery-drift.test.mjs"
+      },
+      "contentSha256": "95b83c48779d6b16dd0d31e426e6c05293a1e33a1db64cb7e7d794644357c431",
+      "retrievedAt": "2026-09-10T09:54:59Z",
+      "sourceUpdatedAt": "2099-01-01T00:00:00Z",
+      "payloadRef": null,
+      "times": [
+        {
+          "field": "retrievedAt",
+          "value": "2026-09-10T09:54:59Z",
+          "citationId": "cit-clock"
+        },
+        {
+          "field": "lastUpdated",
+          "value": "2099-01-01T00:00:00Z",
+          "citationId": "cit-discovery-drift-future"
+        }
+      ],
+      "coverage": {
+        "expectedRecords": 1,
+        "observedRecords": 1,
+        "fieldsPresent": ["retrievedAt", "lastUpdated"],
+        "fieldsMissing": []
+      }
+    }
+  ],
+  "citations": [
+    {
+      "id": "cit-clock",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/CLOCK.txt",
+      "contentSha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "sha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-discovery-drift-future",
+      "path": "discovery-drift.test.mjs",
+      "contentSha256": "95b83c48779d6b16dd0d31e426e6c05293a1e33a1db64cb7e7d794644357c431",
+      "sha256": "95b83c48779d6b16dd0d31e426e6c05293a1e33a1db64cb7e7d794644357c431",
+      "evidenceClass": "fixture",
+      "note": "compareDiscoveryLive future lastUpdated 2099-01-01T00:00:00Z yields freshness unknown"
+    },
+    {
+      "id": "cit-derived-from",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/derived-from.json",
+      "contentSha256": "310b18c1d6c35c11b8e90c74685b4b2b9e69bc66f6c74ae74cb494d2044573a1",
+      "sha256": "310b18c1d6c35c11b8e90c74685b4b2b9e69bc66f6c74ae74cb494d2044573a1",
+      "evidenceClass": "synthetic"
+    }
+  ],
+  "expect": {
+    "decision": "unknown",
+    "coverageComplete": true,
+    "unknownReasons": ["future_sourceUpdatedAt"],
+    "findings": [
+      {
+        "id": "future-source-update",
+        "kind": "source_update_age",
+        "datasetId": "synthetic:future-dated-control",
+        "sourceUpdatedAt": "2099-01-01T00:00:00Z",
+        "ageMs": null,
+        "citationIds": ["cit-clock", "cit-discovery-drift-future"]
+      },
+      {
+        "id": "retrieval-age-ok",
+        "kind": "retrieval_age",
+        "datasetId": "synthetic:future-dated-control",
+        "retrievedAt": "2026-09-10T09:54:59Z",
+        "ageMs": 0,
+        "citationIds": ["cit-clock"]
+      }
+    ]
+  },
+  "limitations": [
+    "A future source-update instant yields unknown age (null), not a current claim and not a negative age.",
+    "This control is not attached to a real package identity."
+  ]
+}

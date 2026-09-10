@@ -1,21 +1,26 @@
 /**
  * Assemble a thin customer result package from independent CLI recipes.
  *
- * Ready recipe: procurement-brief → shells out to sibling consumer_jobs/07
- * (or uses an embedded fixture path documented in the recipe JSON).
- * Heavy 01–06: return explicit unavailable_pending_heavy slots — never fake demos.
+ * Ready recipes:
+ *   - procurement-brief → sibling consumer_jobs/07
+ *   - Heavy 01–06 (migration-checklist … freshness-receipt) → S137 scripts/cli.mjs
+ *
+ * Never invents Heavy packet bodies. URLs in fixtures stay data (no fetch).
  */
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
+import { dirname, join, normalize, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   BUILTIN_RECIPE_IDS,
+  DEFAULT_OPERATOR_CLOCK,
   DRY_RUN_NOTE,
   ERROR_CODES,
   FORBIDDEN_FIELDS,
+  HEAVY_PACKET_SCHEMA,
   HEAVY_PENDING_NOTE,
+  HEAVY_RECIPE_IDS,
   INPUT_SCHEMA,
   MANIFEST_SCHEMA,
   MUTATION_BOUNDARY,
@@ -32,6 +37,11 @@ export const DEMO_OUT_DIR = join(PACKAGE_ROOT, "demo-out");
 
 /** Sibling 07 package (preferred when both trees are present on the branch). */
 export const SIBLING_07_ROOT = resolve(PACKAGE_ROOT, "..", "07");
+
+/** Heavy S137 pack at experiments/s137-consumer-evidence-jobs (from 08). */
+export const SIBLING_S137_ROOT = resolve(PACKAGE_ROOT, "..", "..", "..", "s137-consumer-evidence-jobs");
+
+const CLOCK_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 function isPlainObject(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
@@ -67,6 +77,48 @@ function loadJsonFile(path) {
   return JSON.parse(readFileSync(path, "utf8"));
 }
 
+function looksLikeUrl(value) {
+  return /^https?:\/\//i.test(String(value || "").trim());
+}
+
+/**
+ * Resolve a path relative to base and refuse URLs / escapes outside allowRoots.
+ */
+export function assertSafeLocalPath(rawPath, options = {}) {
+  if (rawPath == null || typeof rawPath !== "string" || !rawPath.trim()) {
+    throw packageError(ERROR_CODES.UNSAFE_PATH, "Path must be a non-empty local string", {
+      path: rawPath,
+    });
+  }
+  if (looksLikeUrl(rawPath)) {
+    throw packageError(ERROR_CODES.UNSAFE_PATH, "URLs refused as paths (stay data; no fetch)", {
+      path: rawPath,
+    });
+  }
+  const base = options.base || PACKAGE_ROOT;
+  const resolved = resolve(base, rawPath);
+  const normalized = normalize(resolved);
+  // Soft refuse obvious traversal payloads that still resolve oddly
+  if (String(rawPath).includes("\0")) {
+    throw packageError(ERROR_CODES.UNSAFE_PATH, "NUL byte in path refused", { path: rawPath });
+  }
+  const allowRoots = (options.allowRoots || [PACKAGE_ROOT, SIBLING_07_ROOT, SIBLING_S137_ROOT]).map((r) =>
+    normalize(resolve(r)),
+  );
+  const ok = allowRoots.some((root) => {
+    const rel = relative(root, normalized);
+    return rel === "" || (!rel.startsWith(`..${sep}`) && rel !== ".." && !rel.startsWith(".."));
+  });
+  if (!ok) {
+    throw packageError(ERROR_CODES.UNSAFE_PATH, "Path escapes allowed package roots", {
+      path: rawPath,
+      resolved: normalized,
+      allowRoots,
+    });
+  }
+  return normalized;
+}
+
 /**
  * Load all recipe JSON files from recipes/.
  * @returns {Map<string, object>}
@@ -90,7 +142,7 @@ export function loadRecipeCatalog(recipesDir = RECIPES_DIR) {
 }
 
 /**
- * Build the recipe manifest (independent CLI recipes + Heavy placeholders).
+ * Build the recipe manifest (independent CLI recipes).
  */
 export function buildRecipeManifest(options = {}) {
   const catalog = options.catalog || loadRecipeCatalog(options.recipesDir || RECIPES_DIR);
@@ -111,11 +163,11 @@ export function buildRecipeManifest(options = {}) {
       status: r.status,
       jobRef: r.jobRef || null,
       schema: r.schema || null,
+      artifact: r.artifact || null,
       cli: r.cli || null,
       note: r.note || null,
     });
   }
-  // Any extra recipes beyond builtins
   for (const [id, r] of catalog) {
     if (BUILTIN_RECIPE_IDS.includes(id)) continue;
     recipes.push({
@@ -124,6 +176,7 @@ export function buildRecipeManifest(options = {}) {
       status: r.status,
       jobRef: r.jobRef || null,
       schema: r.schema || null,
+      artifact: r.artifact || null,
       cli: r.cli || null,
       note: r.note || null,
     });
@@ -150,7 +203,6 @@ function resolve07Cli(recipe, options = {}) {
   if (existsSync(siblingCli)) {
     return { mode: "sibling", cliPath: siblingCli, cwd: siblingRoot };
   }
-  // Thin fallback: embedded recipe documents fixture-demo path under recipes/procurement-brief/
   const embeddedDir = join(
     options.packageRoot || PACKAGE_ROOT,
     "recipes",
@@ -166,6 +218,64 @@ function resolve07Cli(recipe, options = {}) {
     cwd: null,
     searched: [siblingCli, embeddedCli],
     recipeCliHint: recipe?.cli || null,
+  };
+}
+
+/**
+ * Resolve Heavy S137 CLI path from recipe; refuse unsafe / non-cli paths.
+ */
+export function resolveHeavyCli(recipe, options = {}) {
+  const packageRoot = options.packageRoot || PACKAGE_ROOT;
+  const s137Root = options.s137Root || SIBLING_S137_ROOT;
+  const hint = recipe?.cli?.path || "../../../s137-consumer-evidence-jobs/scripts/cli.mjs";
+  let cliPath;
+  try {
+    cliPath = assertSafeLocalPath(hint, {
+      base: packageRoot,
+      allowRoots: [packageRoot, s137Root, resolve(packageRoot, "..", "..", "..")],
+    });
+  } catch (err) {
+    return {
+      mode: "refused",
+      cliPath: null,
+      cwd: null,
+      error: { code: err.code || ERROR_CODES.UNSAFE_PATH, message: err.message, details: err.details },
+    };
+  }
+  if (!cliPath.endsWith(`${sep}scripts${sep}cli.mjs`) && !cliPath.endsWith("/scripts/cli.mjs")) {
+    return {
+      mode: "refused",
+      cliPath: null,
+      cwd: null,
+      error: {
+        code: ERROR_CODES.UNSAFE_PATH,
+        message: "Heavy CLI path must resolve to scripts/cli.mjs",
+        details: { cliPath },
+      },
+    };
+  }
+  if (!existsSync(cliPath)) {
+    return {
+      mode: "missing",
+      cliPath,
+      cwd: dirname(dirname(cliPath)),
+      error: {
+        code: ERROR_CODES.MISSING_DEPENDENCY,
+        message: `Heavy S137 CLI not found at ${cliPath}`,
+      },
+    };
+  }
+  // Prefer realpath so we can compare against known pack
+  let realCli = cliPath;
+  try {
+    realCli = realpathSync(cliPath);
+  } catch {
+    /* keep */
+  }
+  return {
+    mode: "s137",
+    cliPath: realCli,
+    cwd: dirname(dirname(realCli)),
   };
 }
 
@@ -228,15 +338,212 @@ export function runProcurementBriefRecipe(inputPath, options = {}) {
     status: ok
       ? RECIPE_STATUS.READY
       : output?.status === "rejected"
-        ? "rejected"
+        ? RECIPE_STATUS.REJECTED
         : result.status === 0
           ? RECIPE_STATUS.READY
-          : "failed",
+          : RECIPE_STATUS.FAILED,
     dependencyMode: resolved.mode,
     exitCode: result.status,
     stderr: (result.stderr || "").trim() || null,
     parseError,
     output,
+  };
+}
+
+function mapHeavyDecisionToSlotStatus(decision) {
+  if (decision === "pass") return RECIPE_STATUS.READY;
+  if (decision === "conflict") return RECIPE_STATUS.CONFLICT;
+  if (decision === "partial") return RECIPE_STATUS.PARTIAL;
+  if (decision === "fail" || decision === "unknown") return RECIPE_STATUS.FAILED;
+  return RECIPE_STATUS.FAILED;
+}
+
+/**
+ * Spawn S137 Heavy CLI analyze for one ready Heavy recipe.
+ * Requires operator clock + local --in. Does not invent packet bodies.
+ */
+export function runHeavyAnalyzeRecipe(recipeId, options = {}) {
+  const catalog = options.catalog || loadRecipeCatalog(options.recipesDir || RECIPES_DIR);
+  const recipe = catalog.get(recipeId);
+  if (!recipe) {
+    throw packageError(ERROR_CODES.UNKNOWN_RECIPE, `Unknown Heavy recipe: ${recipeId}`);
+  }
+  if (recipe.status !== RECIPE_STATUS.READY) {
+    throw packageError(
+      ERROR_CODES.RECIPE_UNAVAILABLE,
+      `${recipeId} status is ${recipe.status}, expected ready`,
+    );
+  }
+
+  const clock = options.clockIso || options.operatorClock || null;
+  if (!clock || typeof clock !== "string" || !CLOCK_RE.test(clock)) {
+    return {
+      recipeId,
+      status: RECIPE_STATUS.REJECTED,
+      error: {
+        code: ERROR_CODES.MISSING_CLOCK,
+        message: "Heavy analyze requires operator --clock (ISO-8601); do not invent",
+        details: { clock },
+      },
+      output: null,
+    };
+  }
+
+  const packageRoot = options.packageRoot || PACKAGE_ROOT;
+  const s137Root = options.s137Root || SIBLING_S137_ROOT;
+  const resolvedCli = resolveHeavyCli(recipe, { packageRoot, s137Root });
+  if (resolvedCli.mode === "refused") {
+    return {
+      recipeId,
+      status: RECIPE_STATUS.REJECTED,
+      error: resolvedCli.error,
+      output: null,
+    };
+  }
+  if (resolvedCli.mode === "missing") {
+    return {
+      recipeId,
+      status: RECIPE_STATUS.UNAVAILABLE_PENDING_HEAVY,
+      error: resolvedCli.error,
+      output: null,
+    };
+  }
+
+  const inHint =
+    options.inPath ||
+    recipe.cli?.defaultIn ||
+    null;
+  if (!inHint || typeof inHint !== "string") {
+    return {
+      recipeId,
+      status: RECIPE_STATUS.REJECTED,
+      error: {
+        code: ERROR_CODES.MISSING_IN,
+        message: "Heavy analyze requires --in (local fixture path)",
+      },
+      output: null,
+    };
+  }
+
+  let absIn;
+  try {
+    absIn = assertSafeLocalPath(inHint, {
+      base: packageRoot,
+      allowRoots: [packageRoot, s137Root, SIBLING_07_ROOT],
+    });
+  } catch (err) {
+    return {
+      recipeId,
+      status: RECIPE_STATUS.REJECTED,
+      error: {
+        code: err.code || ERROR_CODES.UNSAFE_PATH,
+        message: err.message,
+        details: err.details || null,
+      },
+      output: null,
+    };
+  }
+  if (!existsSync(absIn)) {
+    return {
+      recipeId,
+      status: RECIPE_STATUS.REJECTED,
+      error: {
+        code: ERROR_CODES.INVALID_INPUT,
+        message: `Heavy --in fixture not found: ${absIn}`,
+      },
+      output: null,
+    };
+  }
+
+  const artifact = recipe.artifact || recipeId;
+  const args = [resolvedCli.cliPath, "analyze", artifact, "--in", absIn, "--clock", clock];
+  if (options.outPath) {
+    let absOut;
+    try {
+      const outAllow = [packageRoot, s137Root];
+      if (options.heavyOutDir) outAllow.push(resolve(options.heavyOutDir));
+      // Allow writing packet dumps under an explicit out path parent (compose demo-out).
+      outAllow.push(dirname(resolve(packageRoot, options.outPath)));
+      absOut = assertSafeLocalPath(options.outPath, {
+        base: packageRoot,
+        allowRoots: outAllow,
+      });
+    } catch (err) {
+      return {
+        recipeId,
+        status: RECIPE_STATUS.REJECTED,
+        error: {
+          code: err.code || ERROR_CODES.UNSAFE_PATH,
+          message: err.message,
+          details: err.details || null,
+        },
+        output: null,
+      };
+    }
+    mkdirSync(dirname(absOut), { recursive: true });
+    args.push("--out", absOut);
+  }
+
+  const result = spawnSync(process.execPath, args, {
+    encoding: "utf8",
+    cwd: resolvedCli.cwd,
+    env: { ...process.env },
+    maxBuffer: 8 * 1024 * 1024,
+  });
+
+  // Heavy CLI: usage/input refusals go to stderr with non-zero exit and often no JSON stdout.
+  const stderr = (result.stderr || "").trim();
+  const stdout = (result.stdout || "").trim();
+  let output = null;
+  let parseError = null;
+  if (stdout) {
+    try {
+      output = JSON.parse(stdout);
+    } catch (e) {
+      parseError = e.message;
+    }
+  }
+
+  if (result.status !== 0 && !output) {
+    const refused =
+      /requires --clock|requires --in|URLs refused|must be a local path|unknown artifact|unknown subcommand/i.test(
+        stderr,
+      );
+    return {
+      recipeId,
+      status: RECIPE_STATUS.REJECTED,
+      dependencyMode: resolvedCli.mode,
+      exitCode: result.status,
+      stderr: stderr || null,
+      parseError,
+      error: {
+        code: refused ? ERROR_CODES.HEAVY_REFUSED : ERROR_CODES.INVALID_INPUT,
+        message: stderr.split("\n")[0] || `Heavy CLI exited ${result.status}`,
+      },
+      output: null,
+      argv: args.slice(1),
+      inPath: absIn,
+      clock,
+    };
+  }
+
+  const decision = output?.decision || null;
+  const slotStatus = mapHeavyDecisionToSlotStatus(decision);
+  // pass → ready slot; non-pass decisions stay as conflict/partial/failed — never invent pass
+  return {
+    recipeId,
+    status: slotStatus,
+    dependencyMode: resolvedCli.mode,
+    exitCode: result.status,
+    stderr: stderr || null,
+    parseError,
+    error: null,
+    output,
+    decision,
+    packetSchema: output?.schema || null,
+    argv: ["analyze", artifact, "--in", absIn, "--clock", clock],
+    inPath: absIn,
+    clock,
   };
 }
 
@@ -267,14 +574,37 @@ export function validateResultRequest(raw) {
       throw packageError(ERROR_CODES.INVALID_INPUT, "Each recipeId must be a non-empty string");
     }
   }
+  const heavyInputs = isPlainObject(raw.heavyInputs) ? raw.heavyInputs : {};
   return {
     schema: raw.schema || INPUT_SCHEMA,
     requestId: typeof raw.requestId === "string" ? raw.requestId : "anonymous",
     recipeIds: [...recipeIds],
     procurementInputPath:
       typeof raw.procurementInputPath === "string" ? raw.procurementInputPath : null,
+    operatorClock: typeof raw.clock === "string" ? raw.clock : null,
+    heavyInputs,
     note: typeof raw.note === "string" ? raw.note : null,
   };
+}
+
+function resolveProcurementInput(request, options) {
+  let resolvedInput = request.procurementInputPath
+    ? resolve(options.packageRoot || PACKAGE_ROOT, request.procurementInputPath)
+    : null;
+  if (!resolvedInput || !existsSync(resolvedInput)) {
+    const siblingPositive = join(SIBLING_07_ROOT, "fixtures", "positive.json");
+    const localPositive = join(
+      options.packageRoot || PACKAGE_ROOT,
+      "fixtures",
+      "procurement-brief-positive.json",
+    );
+    if (existsSync(siblingPositive)) resolvedInput = siblingPositive;
+    else if (existsSync(localPositive)) resolvedInput = localPositive;
+    else if (request.procurementInputPath) {
+      resolvedInput = resolve(options.packageRoot || PACKAGE_ROOT, request.procurementInputPath);
+    }
+  }
+  return resolvedInput;
 }
 
 /**
@@ -306,11 +636,18 @@ export function assembleCustomerResultPackage(rawRequest, options = {}) {
     };
   }
 
+  const operatorClockIso =
+    request.operatorClock ||
+    options.operatorClock ||
+    (typeof options.clockIso === "string" ? options.clockIso : null) ||
+    DEFAULT_OPERATOR_CLOCK;
+
   const slots = [];
   let readyCount = 0;
   let pendingCount = 0;
   let unknownCount = 0;
   let rejectedRecipe = false;
+  let nonPassHeavy = 0;
 
   for (const id of request.recipeIds) {
     const recipe = catalog.get(id);
@@ -342,35 +679,10 @@ export function assembleCustomerResultPackage(rawRequest, options = {}) {
     }
 
     if (recipe.status === RECIPE_STATUS.READY && id === "procurement-brief") {
-      const inputPath =
-        request.procurementInputPath ||
-        join(
-          options.fixturesDir || FIXTURES_DIR,
-          "..",
-          "..",
-          "07",
-          "fixtures",
-          "positive.json",
-        );
-      // Prefer explicit path; fall back to sibling 07 positive fixture.
-      let resolvedInput = request.procurementInputPath
-        ? resolve(options.packageRoot || PACKAGE_ROOT, request.procurementInputPath)
-        : null;
-      if (!resolvedInput || !existsSync(resolvedInput)) {
-        const siblingPositive = join(SIBLING_07_ROOT, "fixtures", "positive.json");
-        const localPositive = join(
-          options.packageRoot || PACKAGE_ROOT,
-          "fixtures",
-          "procurement-brief-positive.json",
-        );
-        if (existsSync(siblingPositive)) resolvedInput = siblingPositive;
-        else if (existsSync(localPositive)) resolvedInput = localPositive;
-        else resolvedInput = inputPath;
-      }
-
+      const resolvedInput = resolveProcurementInput(request, options);
       const run = runProcurementBriefRecipe(resolvedInput, { ...options, catalog });
       if (run.status === RECIPE_STATUS.READY) readyCount += 1;
-      else if (run.status === "rejected") rejectedRecipe = true;
+      else if (run.status === RECIPE_STATUS.REJECTED) rejectedRecipe = true;
       else if (run.status === RECIPE_STATUS.UNAVAILABLE_PENDING_HEAVY) pendingCount += 1;
       slots.push({
         recipeId: id,
@@ -385,7 +697,51 @@ export function assembleCustomerResultPackage(rawRequest, options = {}) {
       continue;
     }
 
-    // Ready but no runner wired yet
+    if (recipe.status === RECIPE_STATUS.READY && HEAVY_RECIPE_IDS.includes(id)) {
+      const heavySpec = request.heavyInputs[id] || {};
+      const inPath =
+        (typeof heavySpec.in === "string" && heavySpec.in) ||
+        (typeof heavySpec.inPath === "string" && heavySpec.inPath) ||
+        (options.heavyFixtureOverride && options.heavyFixtureOverride[id]) ||
+        recipe.cli?.defaultIn ||
+        null;
+      const clockIso =
+        (typeof heavySpec.clock === "string" && heavySpec.clock) || operatorClockIso;
+      const outPath =
+        (typeof heavySpec.out === "string" && heavySpec.out) ||
+        (options.heavyOutDir ? join(options.heavyOutDir, `${id}.packet.json`) : null);
+
+      const run = runHeavyAnalyzeRecipe(id, {
+        ...options,
+        catalog,
+        inPath,
+        clockIso,
+        outPath,
+        heavyOutDir: options.heavyOutDir || null,
+      });
+
+      if (run.status === RECIPE_STATUS.READY) readyCount += 1;
+      else if (run.status === RECIPE_STATUS.REJECTED) rejectedRecipe = true;
+      else if (run.status === RECIPE_STATUS.UNAVAILABLE_PENDING_HEAVY) pendingCount += 1;
+      else nonPassHeavy += 1;
+
+      slots.push({
+        recipeId: id,
+        title: recipe.title || id,
+        status: run.status,
+        dependencyMode: run.dependencyMode || null,
+        jobRef: recipe.jobRef || null,
+        schema: recipe.schema || HEAVY_PACKET_SCHEMA,
+        decision: run.decision || run.output?.decision || null,
+        exitCode: run.exitCode ?? null,
+        error: run.error || null,
+        inPath: run.inPath || inPath,
+        clock: run.clock || clockIso,
+        output: run.output,
+      });
+      continue;
+    }
+
     slots.push({
       recipeId: id,
       title: recipe.title || id,
@@ -396,11 +752,11 @@ export function assembleCustomerResultPackage(rawRequest, options = {}) {
   }
 
   let status = PACKAGE_STATUS.READY;
-  if (unknownCount > 0 && readyCount === 0 && pendingCount === 0) {
+  if (unknownCount > 0 && readyCount === 0 && pendingCount === 0 && nonPassHeavy === 0) {
     status = PACKAGE_STATUS.REJECTED;
-  } else if (rejectedRecipe && readyCount === 0 && pendingCount === 0) {
+  } else if (rejectedRecipe && readyCount === 0 && pendingCount === 0 && nonPassHeavy === 0) {
     status = PACKAGE_STATUS.REJECTED;
-  } else if (pendingCount > 0 || unknownCount > 0 || rejectedRecipe) {
+  } else if (pendingCount > 0 || unknownCount > 0 || rejectedRecipe || nonPassHeavy > 0) {
     status = PACKAGE_STATUS.PARTIAL;
   } else if (readyCount === 0) {
     status = PACKAGE_STATUS.PARTIAL;
@@ -418,7 +774,8 @@ export function assembleCustomerResultPackage(rawRequest, options = {}) {
       readyCount,
       pendingHeavyCount: pendingCount,
       unknownCount,
-      note: "Factual recipe slot counts only. No investment recommendation.",
+      nonPassHeavyCount: nonPassHeavy,
+      note: "Factual recipe slot counts only. No investment recommendation. Heavy decisions recorded as returned.",
     },
     dryRunNote: DRY_RUN_NOTE,
     heavyPendingNote: HEAVY_PENDING_NOTE,
@@ -428,40 +785,47 @@ export function assembleCustomerResultPackage(rawRequest, options = {}) {
 }
 
 /**
- * Clean-install journey: run positive fixture, write demo-out artifacts.
+ * Clean-install journey: run fixtures, write demo-out artifacts.
+ * S152: positive path exercises all seven ready recipes when Heavy pack is present.
  */
 export function runCleanInstallJourney(options = {}) {
   const outDir = options.demoOutDir || DEMO_OUT_DIR;
   mkdirSync(outDir, { recursive: true });
-  const clock = options.clock || (() => Date.parse("2026-09-10T18:00:00.000Z"));
+  const clockMs = options.clock || (() => Date.parse(DEFAULT_OPERATOR_CLOCK));
+  const operatorClock = options.operatorClock || DEFAULT_OPERATOR_CLOCK;
+  const fixturesDir = options.fixturesDir || FIXTURES_DIR;
 
-  const positivePath = join(options.fixturesDir || FIXTURES_DIR, "positive-journey.json");
-  const partialPath = join(options.fixturesDir || FIXTURES_DIR, "partial-missing-heavy.json");
-  const negativePath = join(options.fixturesDir || FIXTURES_DIR, "negative-unknown-recipe.json");
+  const positivePath = join(fixturesDir, "positive-journey.json");
+  const partialPath = join(fixturesDir, "partial-conflict-heavy.json");
+  const partialLegacyPath = join(fixturesDir, "partial-missing-heavy.json");
+  const negativePath = join(fixturesDir, "negative-unknown-recipe.json");
 
-  const positive = assembleCustomerResultPackage(loadJsonFile(positivePath), {
+  const heavyOutDir = join(outDir, "s152", "packets");
+  mkdirSync(heavyOutDir, { recursive: true });
+
+  const assembleOpts = {
     ...options,
-    clock,
-  });
-  const partial = assembleCustomerResultPackage(loadJsonFile(partialPath), {
-    ...options,
-    clock,
-  });
-  const negative = assembleCustomerResultPackage(loadJsonFile(negativePath), {
-    ...options,
-    clock,
-  });
-  const manifest = buildRecipeManifest({ ...options, clock });
+    clock: clockMs,
+    operatorClock,
+    heavyOutDir,
+  };
+
+  const positive = assembleCustomerResultPackage(loadJsonFile(positivePath), assembleOpts);
+  const partialFixture = existsSync(partialPath) ? partialPath : partialLegacyPath;
+  const partial = assembleCustomerResultPackage(loadJsonFile(partialFixture), assembleOpts);
+  const negative = assembleCustomerResultPackage(loadJsonFile(negativePath), assembleOpts);
+  const manifest = buildRecipeManifest({ ...options, clock: clockMs });
 
   const journey = {
     schema: SCHEMA,
     journey: true,
-    generatedAt: clock(),
-    note: "Clean-install offline journey. Synthetic fixtures only; Heavy 01–06 pending.",
+    generatedAt: clockMs(),
+    operatorClock,
+    note: "Clean-install offline journey. Real Heavy CLI packets + 07 brief; no invented pass; URLs not fetched.",
     steps: [
       { name: "manifest", result: manifest },
       { name: "positive-journey", result: positive },
-      { name: "partial-missing-heavy", result: partial },
+      { name: "partial-conflict-heavy", result: partial },
       { name: "negative-unknown-recipe", result: negative },
     ],
     hasInvestmentRecommendation: false,
@@ -472,6 +836,10 @@ export function runCleanInstallJourney(options = {}) {
   writeFileSync(join(outDir, "positive.json"), JSON.stringify(positive, null, 2) + "\n");
   writeFileSync(join(outDir, "partial.json"), JSON.stringify(partial, null, 2) + "\n");
   writeFileSync(join(outDir, "negative.json"), JSON.stringify(negative, null, 2) + "\n");
+  mkdirSync(join(outDir, "s152"), { recursive: true });
+  writeFileSync(join(outDir, "s152", "journey.json"), JSON.stringify(journey, null, 2) + "\n");
+  writeFileSync(join(outDir, "s152", "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
+  writeFileSync(join(outDir, "s152", "positive.json"), JSON.stringify(positive, null, 2) + "\n");
 
   return journey;
 }
@@ -482,4 +850,6 @@ export {
   packageError,
   loadJsonFile,
   resolve07Cli,
+  looksLikeUrl,
+  mapHeavyDecisionToSlotStatus,
 };

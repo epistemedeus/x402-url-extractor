@@ -1,0 +1,14 @@
+{
+  "operationId": "getHealth",
+  "method": "GET",
+  "path": "/v0/health",
+  "httpStatus": 200,
+  "mediaType": "application/json",
+  "body": {
+    "ok": true,
+    "paid": false,
+    "enabled": true
+  },
+  "paid": false,
+  "providerExecuted": false
+}

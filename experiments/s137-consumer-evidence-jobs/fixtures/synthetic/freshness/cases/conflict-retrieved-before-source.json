@@ -1,0 +1,98 @@
+{
+  "schema": "s137.freshness-receipt.input.v1",
+  "caseId": "conflict-retrieved-before-source",
+  "caseKind": "conflict",
+  "evidenceClass": "synthetic",
+  "jobId": "R2-CONSUMER-JOBS-06",
+  "artifactKind": "dataset-freshness-receipt",
+  "clock": "2026-09-10T09:54:59Z",
+  "horizonMs": 86400000,
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "notes": "S122 stale-current.json names vercel 59.15.1 published 2026-09-10T01:12:17.696Z but captured_at is 2026-08-01T00:00:00.000Z. Download time is before source update time (lagAtDownloadMs < 0). Do not pick a winner.",
+  "datasets": [
+    {
+      "id": "npm:vercel",
+      "locator": {
+        "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-vercel-stale-current.slim.json",
+        "url": "https://registry.npmjs.org/vercel"
+      },
+      "contentSha256": "b20fcd25cc1e6598428cb94ca74b49fa8a7a434414b88951565f4f69db16960d",
+      "retrievedAt": "2026-08-01T00:00:00.000Z",
+      "sourceUpdatedAt": "2026-09-10T01:12:17.696Z",
+      "payloadRef": "sources/npm-vercel-stale-current.slim.json",
+      "times": [
+        {
+          "field": "captured_at",
+          "value": "2026-08-01T00:00:00.000Z",
+          "citationId": "cit-stale-slim"
+        },
+        {
+          "field": "published_at",
+          "value": "2026-09-10T01:12:17.696Z",
+          "citationId": "cit-s122-stale-current"
+        }
+      ],
+      "coverage": {
+        "expectedRecords": 1,
+        "observedRecords": 1,
+        "fieldsPresent": ["captured_at", "published_at", "version"],
+        "fieldsMissing": []
+      }
+    }
+  ],
+  "citations": [
+    {
+      "id": "cit-clock",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/CLOCK.txt",
+      "contentSha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "sha256": "9a0fa8df21420695fee46efa232cf66b06f2602c86ade3bb5967779a90948c2a",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-stale-slim",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/freshness/sources/npm-vercel-stale-current.slim.json",
+      "url": "https://registry.npmjs.org/vercel",
+      "contentSha256": "b20fcd25cc1e6598428cb94ca74b49fa8a7a434414b88951565f4f69db16960d",
+      "sha256": "b20fcd25cc1e6598428cb94ca74b49fa8a7a434414b88951565f4f69db16960d",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-s122-stale-current",
+      "path": "experiments/s122-application-jobs/fixtures/npm-vercel/stale-current.json",
+      "url": "https://registry.npmjs.org/vercel",
+      "contentSha256": "354227542bc0dd4e38932b8d3c4aa216f380f3647486c8f3a50ee2bb84f0c604",
+      "sha256": "354227542bc0dd4e38932b8d3c4aa216f380f3647486c8f3a50ee2bb84f0c604",
+      "evidenceClass": "fixture",
+      "host": "/tmp/s127/x402-url-extractor"
+    }
+  ],
+  "expect": {
+    "decision": "conflict",
+    "coverageComplete": true,
+    "unknownReasons": ["retrievedAt_before_sourceUpdatedAt"],
+    "findings": [
+      {
+        "id": "ordering-conflict",
+        "kind": "time_order_conflict",
+        "datasetId": "npm:vercel",
+        "retrievedAt": "2026-08-01T00:00:00.000Z",
+        "sourceUpdatedAt": "2026-09-10T01:12:17.696Z",
+        "retrievalAgeMs": 3491699000,
+        "sourceUpdateAgeMs": 31361304,
+        "citationIds": ["cit-stale-slim", "cit-s122-stale-current", "cit-clock"]
+      },
+      {
+        "id": "times-distinct",
+        "kind": "times_distinct",
+        "datasetId": "npm:vercel",
+        "citationIds": ["cit-stale-slim"]
+      }
+    ]
+  },
+  "limitations": [
+    "Conflict is reported, not resolved by dropping either timestamp.",
+    "retrievedAt before sourceUpdatedAt is not rewritten as retrieval-after-publish."
+  ]
+}

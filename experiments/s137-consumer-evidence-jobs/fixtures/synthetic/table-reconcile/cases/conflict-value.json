@@ -1,0 +1,96 @@
+{
+  "schema": "s137.table-reconcile.case.v1",
+  "id": "conflict-value",
+  "jobId": "R2-CONSUMER-JOBS-03",
+  "kind": "conflict",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "Same keys/units/window, disagreeing measure",
+  "notes": "Authored synthetic. 4 vs 9 on page_extracts@2026-08-03. Surface both values. Do not average or total.",
+  "join": {
+    "keys": [
+      "metric",
+      "windowStart"
+    ],
+    "unit": "count",
+    "timeWindow": {
+      "start": "2026-08-03T00:00:00.000Z",
+      "end": "2026-08-17T00:00:00.000Z",
+      "grain": "P7D",
+      "inclusiveStart": true,
+      "inclusiveEnd": false
+    },
+    "units": {
+      "value": "count"
+    }
+  },
+  "doNotInvent": [
+    "sum",
+    "average",
+    "convert-units",
+    "interpolate-window",
+    "fill-missing"
+  ],
+  "tables": [
+    {
+      "id": "lab-a",
+      "path": "sources/conflict-value/lab-a.json"
+    },
+    {
+      "id": "lab-b",
+      "path": "sources/conflict-value/lab-b.json"
+    }
+  ],
+  "expect": {
+    "decision": "conflict",
+    "inventTotals": false,
+    "findings": [
+      {
+        "id": "conflict:synthetic.page_extracts:2026-08-03",
+        "kind": "value-conflict",
+        "keys": {
+          "metric": "synthetic.page_extracts",
+          "windowStart": "2026-08-03T00:00:00.000Z"
+        },
+        "unit": "count",
+        "valuesBySource": {
+          "lab-a": 4,
+          "lab-b": 9
+        },
+        "citationIds": [
+          "src:conflict-value/lab-a",
+          "src:conflict-value/lab-b"
+        ]
+      },
+      {
+        "id": "agree:synthetic.page_extracts:2026-08-10",
+        "kind": "agree",
+        "keys": {
+          "metric": "synthetic.page_extracts",
+          "windowStart": "2026-08-10T00:00:00.000Z"
+        },
+        "unit": "count",
+        "value": 7,
+        "citationIds": [
+          "src:conflict-value/lab-a",
+          "src:conflict-value/lab-b"
+        ]
+      }
+    ]
+  },
+  "citations": [
+    {
+      "id": "src:conflict-value/lab-a",
+      "path": "sources/conflict-value/lab-a.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-value/lab-a.json",
+      "sha256": "d2c077d88cf64bbdaa65ad8cadd44a7c5c69c3ab7af5948e8269027d16fbca3c"
+    },
+    {
+      "id": "src:conflict-value/lab-b",
+      "path": "sources/conflict-value/lab-b.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-value/lab-b.json",
+      "sha256": "9a26c61262c96ab8265660e85ecbab95dddd29aca92ae4e552834d525fa72068"
+    }
+  ]
+}

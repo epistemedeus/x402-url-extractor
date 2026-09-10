@@ -1,0 +1,136 @@
+{
+  "schema": "s137.consumer-evidence.real-fixture.v1",
+  "cell": "c19",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "artifactKind": "link-index-page-snapshot",
+  "evidenceClass": "fixture",
+  "captureLabel": "live-capture",
+  "replayLabel": "fixture",
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0, "note": "public GitHub raw GET; no purchase" },
+  "retrievedAt": "2026-09-10T11:23:12Z",
+  "clock": "2026-09-10T11:23:12Z",
+  "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/README.md",
+  "htmlUrl": "https://github.com/x402-foundation/x402/blob/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/README.md",
+  "sha256": "edc83ee946abfa11f069077737e12f07cc3119c6d9ec5e01e3417f72be014a86",
+  "bytes": 9517,
+  "httpStatus": 200,
+  "contentType": "text/plain; charset=utf-8",
+  "etag": "e4f314f0bc6a08f0a40daa8f5c512b1eec4452e0b9df752c9b3117b5109df6c8",
+  "pin": {
+    "host": "raw.githubusercontent.com",
+    "owner": "x402-foundation",
+    "repo": "x402",
+    "ref": "3c2ddfb922893c91ef8f281b64f8045d1f5e0d75",
+    "path": "README.md",
+    "commitHtmlUrl": "https://github.com/x402-foundation/x402/commit/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75",
+    "commitDate": "2026-09-09T15:17:16Z"
+  },
+  "license": {
+    "spdx": "Apache-2.0",
+    "note": "NOTICE at the same commit states Apache-2.0, Copyright 2026 x402 Foundation. LICENSE is the Apache License Version 2.0 text. Snapshot stored for offline citation indexing; this is not a license grant, legal attestation, or redistribution advice.",
+    "licenseUrl": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/LICENSE",
+    "licenseSha256": "50e6751797c50dedd75ef1b8a0d9e42f5f8472e9fbce91f34718e9f97b0c780a",
+    "licenseBytes": 11324,
+    "noticeUrl": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/NOTICE",
+    "noticeSha256": "0b8a03260dc87d976ea6f24d7ff1fb3f8f361cff317f9dd0da0b8d96936eabf6",
+    "noticeBytes": 574,
+    "licenseBodyStored": false
+  },
+  "headersPath": "x402-foundation-x402-README.headers.txt",
+  "headersSha256": "4aceb482bec9116d271ede3322a7a7d4aa00867241e9f0ffdb71a39f2023fd77",
+  "headersBytes": 891,
+  "snapshotPath": "x402-foundation-x402-README.md",
+  "captureMethod": "HTTPS GET of GitHub raw README at a pinned commit. No npm install. No paid endpoint. Relative targets were not fetched.",
+  "userAgent": "s137-c19-offline-fixture-capture",
+  "coverage": {
+    "markdownLinkRecords": 19,
+    "markdownImageRecords": 2,
+    "absoluteHttpOrHttpsLinkHrefs": 13,
+    "relativeDotSlashLinkHrefs": 6,
+    "duplicateLinkHref": "http://slack.x402.org/",
+    "unlinkedPathMention": "`specs/`",
+    "goModulePathNotAMarkdownHref": "github.com/x402-foundation/x402/go/v2",
+    "floatingMainBlobHrefs": 2
+  },
+  "citations": [
+    {
+      "id": "src-readme",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/link-index/x402-foundation-x402-README.md",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/README.md",
+      "sha256": "edc83ee946abfa11f069077737e12f07cc3119c6d9ec5e01e3417f72be014a86",
+      "retrievedAt": "2026-09-10T11:23:12Z",
+      "mediaType": "text/plain; charset=utf-8"
+    },
+    {
+      "id": "src-readme-headers",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/link-index/x402-foundation-x402-README.headers.txt",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/README.md",
+      "sha256": "4aceb482bec9116d271ede3322a7a7d4aa00867241e9f0ffdb71a39f2023fd77",
+      "retrievedAt": "2026-09-10T11:23:12Z",
+      "mediaType": "message/http; msgtype=response",
+      "note": "Response headers from the same GET as src-readme. Date: Thu, 10 Sep 2026 11:23:12 GMT."
+    },
+    {
+      "id": "src-license",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/LICENSE",
+      "sha256": "50e6751797c50dedd75ef1b8a0d9e42f5f8472e9fbce91f34718e9f97b0c780a",
+      "retrievedAt": "2026-09-10T11:23:12Z",
+      "bytes": 11324,
+      "note": "Apache License Version 2.0 text. Bytes not stored in this cell (one page snapshot). Hash recorded from the same-commit GET."
+    },
+    {
+      "id": "src-notice",
+      "url": "https://raw.githubusercontent.com/x402-foundation/x402/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75/NOTICE",
+      "sha256": "0b8a03260dc87d976ea6f24d7ff1fb3f8f361cff317f9dd0da0b8d96936eabf6",
+      "retrievedAt": "2026-09-10T11:22:12Z",
+      "bytes": 574,
+      "note": "NOTICE: Apache-2.0 License / Copyright 2026 x402 Foundation. Bytes not stored."
+    },
+    {
+      "id": "src-commit",
+      "url": "https://api.github.com/repos/x402-foundation/x402/commits/main",
+      "htmlUrl": "https://github.com/x402-foundation/x402/commit/3c2ddfb922893c91ef8f281b64f8045d1f5e0d75",
+      "sha": "3c2ddfb922893c91ef8f281b64f8045d1f5e0d75",
+      "commitDate": "2026-09-09T15:17:16Z",
+      "retrievedAt": "2026-09-10T11:22:06Z",
+      "note": "Used only to pin README to a commit. Commit JSON not stored."
+    }
+  ],
+  "observedCases": [
+    {
+      "id": "positive-absolute-https",
+      "kind": "positive",
+      "citationIds": ["src-readme"],
+      "detail": "Markdown link destinations include absolute https URLs such as https://github.com/x402-foundation/x402/blob/main/CONTRIBUTING.md and https://docs.x402.org/dev-tools/overview."
+    },
+    {
+      "id": "negative-unlinked-path-mention",
+      "kind": "negative",
+      "citationIds": ["src-readme"],
+      "detail": "The sentence \"See `specs/` for full documentation of the x402 standard/\" mentions specs/ in a code span; that occurrence is not a markdown link href. The go get line github.com/x402-foundation/x402/go/v2 is a module path in a fenced shell block, not a markdown href."
+    },
+    {
+      "id": "partial-relative-hrefs",
+      "kind": "partial",
+      "citationIds": ["src-readme"],
+      "detail": "Six markdown link hrefs and one image href are root-relative to the repo (./typescript/, ./python/, ./go/, ./docs/, ./specs/schemes/, ./examples/typescript/servers/self-facilitation/README.md, ./static/flow.png). They are not fetchable from this isolated snapshot without applying a base URL. Relative targets were not retrieved."
+    },
+    {
+      "id": "conflicting-duplicate-and-floating-main",
+      "kind": "conflicting",
+      "citationIds": ["src-readme", "src-commit"],
+      "detail": "http://slack.x402.org/ appears twice as a markdown link href with different surrounding text (badge wrap vs \"x402 Slack\"). CONTRIBUTING.md and ROADMAP.md hrefs use /blob/main/ while this snapshot is pinned to commit 3c2ddfb922893c91ef8f281b64f8045d1f5e0d75. `specs/` is an unlinked mention; ./specs/schemes/ is a linked relative path. This cell does not pick a winner."
+    }
+  ],
+  "limitations": [
+    "One page only. Relative hrefs were not followed.",
+    "LICENSE and NOTICE hashes are recorded; those bodies are not stored here.",
+    "Commit JSON used for the pin is not stored.",
+    "HTTP Date is retrieval time, not the README's last content change (commitDate is 2026-09-09T15:17:16Z).",
+    "Markdown extraction in provenance.test.mjs is a bounded inline-link scanner for this file, not a CommonMark implementation.",
+    "No claim that listed third-party directories are official, complete, or reachable now.",
+    "Not a legal attestation, license opinion, or customer-demand claim."
+  ]
+}

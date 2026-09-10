@@ -1,0 +1,84 @@
+{
+  "schema": "s137.release-brief.synthetic-case.v1",
+  "id": "negative-empty",
+  "jobId": "R2-CONSUMER-JOBS-02",
+  "artifactKind": "release-brief",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "caseClass": "negative",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "No announced, shipped, or tested inputs",
+  "notes": "Empty input. NOTICE.json records that all three lanes are absent.",
+  "subject": {
+    "name": "demo-release-kit",
+    "repository": "synthetic.lab/demo-release-kit"
+  },
+  "lanes": {
+    "announced": null,
+    "shipped": null,
+    "tested": null
+  },
+  "input": {
+    "schema": "s137.release-brief.input.v1",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "evidenceClass": "synthetic",
+    "jobId": "R2-CONSUMER-JOBS-02",
+    "artifactKind": "release-brief",
+    "subject": {
+      "name": "demo-release-kit",
+      "repository": "synthetic.lab/demo-release-kit"
+    },
+    "sources": []
+  },
+  "expect": {
+    "decision": "unknown",
+    "laneCoverage": {
+      "announced": false,
+      "shipped": false,
+      "tested": false
+    },
+    "tagAgreement": null,
+    "shaAgreement": null,
+    "disagreementCodes": []
+  },
+  "findings": [
+    {
+      "id": "no-lanes",
+      "kind": "coverage",
+      "summary": "no announced, shipped, or tested documents were supplied",
+      "citationIds": [
+        "cit-notice"
+      ]
+    }
+  ],
+  "citations": [
+    {
+      "id": "cit-notice",
+      "lane": null,
+      "plane": null,
+      "path": "sources/negative-empty/NOTICE.json",
+      "sha256": "0947b4bb918c7b3c7cbcc87cbd4b91a98312bab3525a00843262670bcde6bee0",
+      "contentSha256": "0947b4bb918c7b3c7cbcc87cbd4b91a98312bab3525a00843262670bcde6bee0",
+      "evidenceClass": "synthetic"
+    }
+  ],
+  "limitations": [
+    "Synthetic authored sources. Not a live GitHub or npm capture.",
+    "Does not execute tests, publish, spend, or merge.",
+    "expect.decision is a catalog contract for c07/c10, not a model judgment."
+  ],
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline fixtures; no purchase"
+  },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}

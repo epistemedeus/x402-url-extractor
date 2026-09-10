@@ -1,0 +1,159 @@
+{
+  "schema": "s137.consumer-evidence.replay-pack.provenance.v1",
+  "evidenceClass": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "retrievedAt": "2026-09-10T12:00:00.000Z",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "url": null,
+  "licenseNote": "Authored synthetic lab fixtures. Not upstream content. Not a license grant. OAS 3.1 field names are used as already present in in-repo OpenAPI 3.1.0 documents; the spec URL was not fetched.",
+  "labServer": "https://api.example.test",
+  "patternSources": {
+    "packetEnvelope": {
+      "path": "experiments/s137-consumer-evidence-jobs/src/packet.mjs",
+      "sha256": "6f6f4116ba2b91adb43a19108d6e2f1609bae8f722594158ccac0abf16abe012",
+      "evidenceClass": "fixture",
+      "note": "Shared packet envelope: evidenceClass, citations[], payment.attempted=false, operator clock."
+    },
+    "unpaidOpenApiCompanion": {
+      "path": "page-change-http.mjs",
+      "sha256": "2d3cebc8162739d6ffc2a97f3d2193f14d3d1600dfb3fc45bb51933733189f20",
+      "evidenceClass": "fixture",
+      "note": "In-repo unpaid OpenAPI 3.1.0 companion: requestBody example present; 200 response has schema/description and no Media Type example. Partial-example pattern only. Not copied as a live SKU."
+    }
+  },
+  "oas31ExampleObject": {
+    "url": "https://spec.openapis.org/oas/v3.1.0.html#example-object",
+    "retrieved": false,
+    "sha256": null,
+    "note": "Field names value and externalValue taken from OAS 3.1 Example Object as already used by in-repo openapi: 3.1.0 documents. This cell did not fetch the spec URL."
+  },
+  "files": {
+    "CLOCK.txt": {
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a",
+      "bytes": 25,
+      "evidenceClass": "synthetic"
+    },
+    "MANIFEST.json": {
+      "sha256": "1f2be64ac5811ef06d327d9730444f6c71c9d7f9202d27bd73875cda23123be8",
+      "bytes": 3810,
+      "evidenceClass": "synthetic"
+    },
+    "README.md": {
+      "sha256": "fe73efc53a10379d1dac8cf43cab8fc7741e122a571efc06cfdf8d136d5a85d6",
+      "bytes": 1936,
+      "evidenceClass": "synthetic"
+    },
+    "hash.mjs": {
+      "sha256": "f9ffab0c75b8b05f18431ab52e11ceb0a1b76351f6c550251f002a6db9228a3e",
+      "bytes": 441,
+      "evidenceClass": "synthetic"
+    },
+    "load.mjs": {
+      "sha256": "46ef469b13159bd494dddc2d1d4208ddad26e4d727a1f50fe2f0a5e5b7a2a5e7",
+      "bytes": 3671,
+      "evidenceClass": "synthetic"
+    },
+    "materialize.mjs": {
+      "sha256": "0f7896eeac1b85b07363ec7f4c32fbdd2f8c8e23b1f3845411e5a05ac2e03bd3",
+      "bytes": 25219,
+      "evidenceClass": "synthetic"
+    },
+    "self-test.mjs": {
+      "sha256": "4fdcea87f187df71b1e40bcace23c35464c85ec6ca3e541ebe9deecac2b86754",
+      "bytes": 10737,
+      "evidenceClass": "synthetic"
+    },
+    "cases/positive-unpaid-complete/openapi.json": {
+      "sha256": "a5240ee024a74b7a72782ecdc7235fdd2514d054d3ca04b2acbca9a2d03ccd99",
+      "bytes": 1603,
+      "evidenceClass": "synthetic"
+    },
+    "cases/positive-unpaid-complete/examples/getStatus.response.json": {
+      "sha256": "87e4ad06ac0aad04560107bf1329c4d906a4a3503336ded21ccef64d5bd969cc",
+      "bytes": 264,
+      "evidenceClass": "synthetic"
+    },
+    "cases/positive-unpaid-complete/case.json": {
+      "sha256": "29212a09e5c9cd1637693b1c1cabd84f6f9b5106b1859017e55ea05764c3efd8",
+      "bytes": 3908,
+      "evidenceClass": "synthetic"
+    },
+    "cases/negative-missing-examples/openapi.json": {
+      "sha256": "fe2e7d6d12f4920b5fa0d02b1a08045bb8da572f13ad568aad11778f78b1bd9f",
+      "bytes": 1222,
+      "evidenceClass": "synthetic"
+    },
+    "cases/negative-missing-examples/case.json": {
+      "sha256": "528353fc11d61fd1ceaa68b9666ad76cd981d5842200799540386587a1f166e9",
+      "bytes": 3161,
+      "evidenceClass": "synthetic"
+    },
+    "cases/negative-paid-marker/openapi.json": {
+      "sha256": "f4a8e46b240a528b06e6d3bf51a152760ff9581514fd8b735e19258dda8b2433",
+      "bytes": 1123,
+      "evidenceClass": "synthetic"
+    },
+    "cases/negative-paid-marker/examples/getPaidMarker.response.json": {
+      "sha256": "9ee6857ff0dc1e346254983ffde1f98a93dd7d567caf7788f02a7d1cb1fbe4a1",
+      "bytes": 354,
+      "evidenceClass": "synthetic"
+    },
+    "cases/negative-paid-marker/case.json": {
+      "sha256": "c00528e30de1c8c169d8e7c731b6b964dede321e6cc3136bd15f8985b4d2641b",
+      "bytes": 4086,
+      "evidenceClass": "synthetic"
+    },
+    "cases/partial-mixed-operations/openapi.json": {
+      "sha256": "3ae160c7f5f43e10612c12acc21eedabc01a9337959d7fc78d17ba72c6a83408",
+      "bytes": 3750,
+      "evidenceClass": "synthetic"
+    },
+    "cases/partial-mixed-operations/examples/postCompare.request.json": {
+      "sha256": "42b61a5b8e2e228b7c6ceb9bdf0f82c1e3b4735a2ac3d99803640392c969a32a",
+      "bytes": 622,
+      "evidenceClass": "synthetic"
+    },
+    "cases/partial-mixed-operations/examples/getHealth.response.json": {
+      "sha256": "050f64317838d11cbf8482d6eee989fafa2b24baa98a2682e676567a81ade48c",
+      "bytes": 250,
+      "evidenceClass": "synthetic"
+    },
+    "cases/partial-mixed-operations/case.json": {
+      "sha256": "0e7752b168c66a79d8c8df58bf766fb26a9f973e0e430d0a623f53d1d56651cb",
+      "bytes": 5008,
+      "evidenceClass": "synthetic"
+    },
+    "cases/conflict-example-mismatch/openapi.json": {
+      "sha256": "5f8e15469b5e514afc819f0af2e8f56385f7d48c1d20c8ac15ded4027f4109c9",
+      "bytes": 1598,
+      "evidenceClass": "synthetic"
+    },
+    "cases/conflict-example-mismatch/examples/getStatus.response.json": {
+      "sha256": "a6f4a529d5d7519c1e9572d976f07cfa7605d7c4e0e0c9fcf7e23c6a69b84a29",
+      "bytes": 349,
+      "evidenceClass": "synthetic"
+    },
+    "cases/conflict-example-mismatch/case.json": {
+      "sha256": "f9875e8439592c76ddf11196fbc1ff580450cde158be7796016ddb09b23a09dc",
+      "bytes": 3943,
+      "evidenceClass": "synthetic"
+    },
+    "cases/partial-external-value/openapi.json": {
+      "sha256": "c41c431a1292358e55a29c556c0130db55ef4a98884243463d280a879e252876",
+      "bytes": 1497,
+      "evidenceClass": "synthetic"
+    },
+    "cases/partial-external-value/case.json": {
+      "sha256": "d3c6e3c044fd8f5bdc8737c78052256a7c55a796870118ab089f5fff2a538658",
+      "bytes": 3363,
+      "evidenceClass": "synthetic"
+    },
+    "PROVENANCE.json": {
+      "sha256": "e41b85dc103969901217535036a0769dfb25622e3f4826d802cded0c974038da",
+      "bytes": null,
+      "evidenceClass": "synthetic",
+      "note": "Hash of PROVENANCE.json excluding this self entry. Integrity tests hash listed artifacts, not this envelope."
+    }
+  }
+}

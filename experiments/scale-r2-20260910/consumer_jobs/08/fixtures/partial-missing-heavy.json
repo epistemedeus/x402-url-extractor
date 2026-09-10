@@ -1,11 +1,16 @@
 {
   "schema": "x402.r2.consumer.customer_result_request.v1",
-  "requestId": "journey-partial-heavy-20260910",
+  "requestId": "journey-partial-heavy-legacy-20260910",
+  "clock": "2026-09-10T18:00:00.000Z",
   "recipeIds": [
     "procurement-brief",
-    "heavy-01-evidence-capture",
-    "heavy-03-evidence-link"
+    "migration-checklist"
   ],
   "procurementInputPath": "../07/fixtures/positive.json",
-  "note": "Partial: ready recipe plus Heavy slots that must stay unavailable_pending_heavy."
+  "heavyInputs": {
+    "migration-checklist": {
+      "in": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/negative-missing-new-docs.json"
+    }
+  },
+  "note": "Legacy partial fixture reused as negative Heavy + ready 07."
 }

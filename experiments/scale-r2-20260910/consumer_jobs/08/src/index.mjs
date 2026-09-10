@@ -2,14 +2,17 @@ export {
   SCHEMA,
   INPUT_SCHEMA,
   MANIFEST_SCHEMA,
+  HEAVY_PACKET_SCHEMA,
   PACKAGE_STATUS,
   RECIPE_STATUS,
   ERROR_CODES,
   FORBIDDEN_FIELDS,
   BUILTIN_RECIPE_IDS,
+  HEAVY_RECIPE_IDS,
   MUTATION_BOUNDARY,
   DRY_RUN_NOTE,
   HEAVY_PENDING_NOTE,
+  DEFAULT_OPERATOR_CLOCK,
 } from "./constants.mjs";
 
 export {
@@ -18,11 +21,15 @@ export {
   FIXTURES_DIR,
   DEMO_OUT_DIR,
   SIBLING_07_ROOT,
+  SIBLING_S137_ROOT,
   loadRecipeCatalog,
   buildRecipeManifest,
   runProcurementBriefRecipe,
+  runHeavyAnalyzeRecipe,
   validateResultRequest,
   assembleCustomerResultPackage,
   runCleanInstallJourney,
   resolve07Cli,
+  resolveHeavyCli,
+  assertSafeLocalPath,
 } from "./assemble.mjs";

@@ -1,0 +1,15 @@
+{
+  "operationId": "getPaidMarker",
+  "method": "GET",
+  "path": "/v0/paid-marker",
+  "httpStatus": 402,
+  "mediaType": "application/json",
+  "body": {
+    "error": "payment_required",
+    "executed": false,
+    "spendUsd": 0
+  },
+  "paid": false,
+  "providerExecuted": false,
+  "note": "402 example is a refusal marker. Not a purchase. Not executed."
+}

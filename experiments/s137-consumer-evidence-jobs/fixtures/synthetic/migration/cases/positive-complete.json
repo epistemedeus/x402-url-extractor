@@ -1,0 +1,76 @@
+{
+  "id": "positive-complete",
+  "kind": "positive",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "artifactKind": "migration-checklist",
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0 },
+  "title": "Inventory extract/read remain cited; batch added unused",
+  "sourcePinIds": [
+    "pin-readme-extract-read",
+    "pin-readme-batch-flag",
+    "pin-readme-op-counts",
+    "pin-readme-challenge-http",
+    "pin-skill-get-extract",
+    "pin-skill-get-read",
+    "pin-skill-batch-url",
+    "pin-telemetry-http-route"
+  ],
+  "input": {
+    "oldDocs": [
+      { "id": "old", "path": "docs/positive-complete/old.md" }
+    ],
+    "newDocs": [
+      { "id": "new", "path": "docs/positive-complete/new.md" }
+    ],
+    "operationsInventory": {
+      "id": "inventory",
+      "path": "docs/positive-complete/inventory.json"
+    }
+  },
+  "citations": [
+    { "id": "old", "path": "docs/positive-complete/old.md" },
+    { "id": "new", "path": "docs/positive-complete/new.md" },
+    { "id": "inventory", "path": "docs/positive-complete/inventory.json" }
+  ],
+  "expect": {
+    "decision": "pass",
+    "findings": [
+      {
+        "id": "extract-unchanged",
+        "operation": { "method": "GET", "route": "/extract", "mcpTool": "extract" },
+        "change": "unchanged",
+        "inInventory": true,
+        "citationIds": ["old", "new", "inventory"]
+      },
+      {
+        "id": "read-unchanged",
+        "operation": { "method": "GET", "route": "/read", "mcpTool": "read" },
+        "change": "unchanged",
+        "inInventory": true,
+        "citationIds": ["old", "new", "inventory"]
+      },
+      {
+        "id": "batch-added-unused",
+        "operation": { "method": "POST", "route": "/extract/batch", "mcpTool": "extract_batch" },
+        "change": "added",
+        "inInventory": false,
+        "citationIds": ["new"]
+      }
+    ]
+  },
+  "limitations": [
+    "Synthetic excerpts, not the full README or OpenAPI surface.",
+    "Does not assert live discovery, payment, or demand."
+  ],
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}

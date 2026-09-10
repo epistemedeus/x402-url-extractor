@@ -1,0 +1,237 @@
+{
+  "schema": "s137.link-index.output.v1",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "artifactKind": "link-index",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline transform; no purchase; do not invent demand"
+  },
+  "sources": [
+    {
+      "id": "cite-source.md",
+      "path": "source.md",
+      "contentSha256": "5cb5a4f0e149fe0aa6da680bd432ad7d724dcb24bd703c4d57494623f071bfad",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cite-artifacts-schema.json",
+      "path": "artifacts/schema.json",
+      "contentSha256": "8f18b67729e101695b1bcfcbbb9b4a9eb841e8f731e8bc9b25882991c7d8546a",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cite-artifacts-notes.md",
+      "path": "artifacts/notes.md",
+      "contentSha256": "aac56eebe51776729a3d316b72731dcaa02e3469f37d574f374456e11728fda6",
+      "evidenceClass": "synthetic"
+    }
+  ],
+  "findings": [
+    {
+      "id": "find-reachable",
+      "kind": "reachable",
+      "message": "href resolved to inventory artifact artifacts/schema.json",
+      "citationIds": [
+        "cite-source.md",
+        "cite-artifacts-schema.json"
+      ],
+      "linkIds": [
+        "link-entry-17"
+      ],
+      "documentId": "entry"
+    },
+    {
+      "id": "find-reachable-2",
+      "kind": "reachable",
+      "message": "href resolved to inventory artifact artifacts/notes.md#limits",
+      "citationIds": [
+        "cite-source.md",
+        "cite-artifacts-notes.md"
+      ],
+      "linkIds": [
+        "link-entry-42"
+      ],
+      "documentId": "entry"
+    },
+    {
+      "id": "find-reachable-3",
+      "kind": "reachable",
+      "message": "href resolved to inventory artifact art-source.md#intro",
+      "citationIds": [
+        "cite-source.md"
+      ],
+      "linkIds": [
+        "link-entry-88"
+      ],
+      "documentId": "entry"
+    }
+  ],
+  "citations": [
+    {
+      "id": "cite-source.md",
+      "path": "source.md",
+      "contentSha256": "5cb5a4f0e149fe0aa6da680bd432ad7d724dcb24bd703c4d57494623f071bfad",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cite-artifacts-schema.json",
+      "path": "artifacts/schema.json",
+      "contentSha256": "8f18b67729e101695b1bcfcbbb9b4a9eb841e8f731e8bc9b25882991c7d8546a",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cite-artifacts-notes.md",
+      "path": "artifacts/notes.md",
+      "contentSha256": "aac56eebe51776729a3d316b72731dcaa02e3469f37d574f374456e11728fda6",
+      "evidenceClass": "synthetic"
+    }
+  ],
+  "decision": "pass",
+  "limitations": [
+    "Does not parse HTML or Markdown; c17 owns the transform.",
+    "Does not fetch URLs, follow redirects, or resolve DNS.",
+    "Reachability is only against caller-supplied artifacts[] / documents[].",
+    "Does not invent operator clock, retrievedAt, license, or content hashes.",
+    "Does not read the filesystem; missing body is unknown, not a probe.",
+    "javascript: hrefs are hostile and invalid; data: hrefs stay unknown.",
+    "Href identity is the exact written string unless a duplicate record names a match kind.",
+    "Pass is forbidden when unreachable, conflict, unknown, or truncated coverage is present.",
+    "HTML scan is quoted href/id attributes and <a> pairs; not a DOM parser.",
+    "Markdown scan is inline, wrapped image-link, and reference uses. Not CommonMark.",
+    "Heading slugs are lowercase, punctuation stripped, whitespace to hyphen.",
+    "Fenced code and <script>/<style> regions are masked; offsets stay on the original body.",
+    "javascript: is never reachable. http(s) is unknown unless the URL is in the inventory.",
+    "Path `..` that leaves the corpus root is missing_artifact (not opened).",
+    "Duplicate HTML/heading ids make a fragment conflict; this transform does not pick a winner."
+  ],
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "packetSchema": "s137.consumer-evidence.packet.v1",
+  "documents": [
+    {
+      "id": "entry",
+      "kind": "markdown",
+      "path": "source.md",
+      "contentSha256": "5cb5a4f0e149fe0aa6da680bd432ad7d724dcb24bd703c4d57494623f071bfad",
+      "linkCount": 3,
+      "headingIds": [
+        "intro"
+      ]
+    }
+  ],
+  "links": [
+    {
+      "id": "link-entry-17",
+      "documentId": "entry",
+      "kind": "markdown_reference",
+      "href": "artifacts/schema.json",
+      "text": "schema",
+      "scheme": "relative",
+      "targetStatus": "reachable",
+      "targetId": "tgt-artifacts-schema.json",
+      "anchorId": "anc-entry-17"
+    },
+    {
+      "id": "link-entry-42",
+      "documentId": "entry",
+      "kind": "markdown_inline",
+      "href": "artifacts/notes.md#limits",
+      "text": "notes",
+      "scheme": "relative",
+      "targetStatus": "reachable",
+      "targetId": "tgt-artifacts-notes.md-limits",
+      "anchorId": "anc-entry-42"
+    },
+    {
+      "id": "link-entry-88",
+      "documentId": "entry",
+      "kind": "markdown_inline",
+      "href": "#intro",
+      "text": "Intro",
+      "scheme": "fragment",
+      "targetStatus": "reachable",
+      "targetId": "tgt-intro",
+      "anchorId": "anc-entry-88"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "anc-entry-17",
+      "documentId": "entry",
+      "startOffset": 17,
+      "endOffset": 37,
+      "line": 3,
+      "column": 9,
+      "hrefExact": "artifacts/schema.json"
+    },
+    {
+      "id": "anc-entry-42",
+      "documentId": "entry",
+      "startOffset": 42,
+      "endOffset": 76,
+      "line": 3,
+      "column": 34,
+      "hrefExact": "artifacts/notes.md#limits"
+    },
+    {
+      "id": "anc-entry-88",
+      "documentId": "entry",
+      "startOffset": 88,
+      "endOffset": 103,
+      "line": 4,
+      "column": 11,
+      "hrefExact": "#intro"
+    }
+  ],
+  "targets": [
+    {
+      "id": "tgt-artifacts-schema.json",
+      "hrefExact": "artifacts/schema.json",
+      "scheme": "relative",
+      "status": "reachable",
+      "artifactId": "artifacts/schema.json"
+    },
+    {
+      "id": "tgt-artifacts-notes.md-limits",
+      "hrefExact": "artifacts/notes.md#limits",
+      "scheme": "relative",
+      "status": "reachable",
+      "artifactId": "artifacts/notes.md"
+    },
+    {
+      "id": "tgt-intro",
+      "hrefExact": "#intro",
+      "scheme": "fragment",
+      "status": "reachable",
+      "artifactId": "art-source.md"
+    }
+  ],
+  "duplicates": [],
+  "unreachable": [],
+  "conflicts": [],
+  "bounds": {
+    "maxDocuments": 32,
+    "maxLinks": 512,
+    "maxBodyBytes": 262144,
+    "truncated": false
+  },
+  "coverage": {
+    "documentsIndexed": 1,
+    "documentsUnknown": 0,
+    "linksObserved": 3,
+    "linksUnknown": 0,
+    "inventoryConsulted": true,
+    "networkFetched": false
+  }
+}

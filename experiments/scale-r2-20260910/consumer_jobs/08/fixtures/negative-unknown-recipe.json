@@ -1,6 +1,6 @@
 {
   "schema": "x402.r2.consumer.customer_result_request.v1",
   "requestId": "journey-negative-unknown-20260910",
-  "recipeIds": ["not-a-real-recipe-zzz"],
-  "note": "Negative: unknown recipe id must reject or surface unknown status."
+  "recipeIds": ["not-a-real-recipe"],
+  "note": "Unknown recipe must reject."
 }

@@ -1,0 +1,119 @@
+{
+  "schema": "s137.release-brief.synthetic-case.v1",
+  "id": "partial-announced-only",
+  "jobId": "R2-CONSUMER-JOBS-02",
+  "artifactKind": "release-brief",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "caseClass": "partial",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "Published announcement without shipped tag or CI",
+  "notes": "Informed by the fact that a version string can exist without a git tag. Do not invent a tag.",
+  "subject": {
+    "name": "demo-release-kit",
+    "repository": "synthetic.lab/demo-release-kit"
+  },
+  "lanes": {
+    "announced": "sources/partial-announced-only/announced.json",
+    "shipped": null,
+    "tested": null
+  },
+  "input": {
+    "schema": "s137.release-brief.input.v1",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "evidenceClass": "synthetic",
+    "jobId": "R2-CONSUMER-JOBS-02",
+    "artifactKind": "release-brief",
+    "subject": {
+      "name": "demo-release-kit",
+      "repository": "synthetic.lab/demo-release-kit"
+    },
+    "sources": [
+      {
+        "id": "cit-announced",
+        "plane": "announced",
+        "lane": "announced",
+        "kind": "github-release-notes",
+        "path": "sources/partial-announced-only/announced.json",
+        "sha256": "16d668bd112401bb73d94d5cbd57c75e58472a4ec9717c16da1ea6d6da69d81c",
+        "contentSha256": "16d668bd112401bb73d94d5cbd57c75e58472a4ec9717c16da1ea6d6da69d81c",
+        "evidenceClass": "synthetic",
+        "identity": {
+          "role": "claimed",
+          "tag": "v1.2.0",
+          "version": "1.2.0",
+          "commitSha": "0ed33471d59416027c0be2701592e1ba54b4f90c"
+        },
+        "payload": {
+          "name": "v1.2.0",
+          "body": "Announcement only. No git tag document and no CI receipt are supplied.",
+          "draft": false,
+          "prerelease": false,
+          "published_at": "2026-09-09T18:00:00.000Z",
+          "created_at": "2026-09-09T17:58:00.000Z",
+          "target_commitish": "0ed33471d59416027c0be2701592e1ba54b4f90c"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "decision": "partial",
+    "laneCoverage": {
+      "announced": true,
+      "shipped": false,
+      "tested": false
+    },
+    "tagAgreement": null,
+    "shaAgreement": null,
+    "disagreementCodes": []
+  },
+  "findings": [
+    {
+      "id": "announced-published",
+      "kind": "announced",
+      "summary": "announced.draft is false and published_at is set for tag v1.2.0",
+      "citationIds": [
+        "cit-announced"
+      ]
+    },
+    {
+      "id": "shipped-tested-absent",
+      "kind": "coverage",
+      "summary": "shipped tag and tested receipt are absent",
+      "citationIds": [
+        "cit-announced"
+      ]
+    }
+  ],
+  "citations": [
+    {
+      "id": "cit-announced",
+      "lane": "announced",
+      "plane": "announced",
+      "kind": "github-release-notes",
+      "path": "sources/partial-announced-only/announced.json",
+      "sha256": "16d668bd112401bb73d94d5cbd57c75e58472a4ec9717c16da1ea6d6da69d81c",
+      "contentSha256": "16d668bd112401bb73d94d5cbd57c75e58472a4ec9717c16da1ea6d6da69d81c",
+      "evidenceClass": "synthetic"
+    }
+  ],
+  "limitations": [
+    "Synthetic authored sources. Not a live GitHub or npm capture.",
+    "Does not execute tests, publish, spend, or merge.",
+    "expect.decision is a catalog contract for c07/c10, not a model judgment."
+  ],
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline fixtures; no purchase"
+  },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "schema": "s137.link-index.synthetic-case.v1",
+  "caseId": "positive-md",
+  "kind": "positive",
+  "expectedDecision": "pass",
+  "jobId": "R2-CONSUMER-JOBS-04",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "entry": "source.md",
+  "format": "md",
+  "offline": true,
+  "payment": { "attempted": false },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  },
+  "links": [
+    {
+      "linkId": "L1",
+      "href": "artifacts/notes.md#limits",
+      "text": "notes",
+      "syntax": "md-inline",
+      "markup": "[notes](artifacts/notes.md#limits)",
+      "index": 42,
+      "targetStatus": "reachable",
+      "targetPath": "artifacts/notes.md",
+      "fragment": "limits"
+    },
+    {
+      "linkId": "L2",
+      "href": "#intro",
+      "text": "Intro",
+      "syntax": "md-inline",
+      "markup": "[Intro](#intro)",
+      "index": 88,
+      "targetStatus": "reachable",
+      "fragment": "intro"
+    },
+    {
+      "linkId": "L3",
+      "href": "artifacts/schema.json",
+      "text": "schema",
+      "syntax": "md-reference",
+      "markup": "[schema][schema-ref]",
+      "index": 17,
+      "targetStatus": "reachable",
+      "targetPath": "artifacts/schema.json",
+      "fragment": null,
+      "refId": "schema-ref",
+      "resolved": true
+    }
+  ],
+  "anchors": [
+    { "id": "intro", "text": "Intro", "level": 1, "index": 0, "kind": "md-heading" }
+  ],
+  "findings": [
+    {
+      "findingId": "F1",
+      "code": "reachable-fragment",
+      "linkId": "L1",
+      "citationIds": ["source.md", "artifacts/notes.md"]
+    },
+    {
+      "findingId": "F2",
+      "code": "reachable-fragment",
+      "linkId": "L2",
+      "citationIds": ["source.md"]
+    },
+    {
+      "findingId": "F3",
+      "code": "reachable-relative",
+      "linkId": "L3",
+      "citationIds": ["source.md", "artifacts/schema.json"]
+    }
+  ],
+  "citations": [
+    {
+      "citationId": "source.md",
+      "path": "source.md",
+      "sha256": "5cb5a4f0e149fe0aa6da680bd432ad7d724dcb24bd703c4d57494623f071bfad",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "citationId": "artifacts/schema.json",
+      "path": "artifacts/schema.json",
+      "sha256": "8f18b67729e101695b1bcfcbbb9b4a9eb841e8f731e8bc9b25882991c7d8546a",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "citationId": "artifacts/notes.md",
+      "path": "artifacts/notes.md",
+      "sha256": "aac56eebe51776729a3d316b72731dcaa02e3469f37d574f374456e11728fda6",
+      "evidenceClass": "synthetic"
+    }
+  ],
+  "limitations": [
+    "Heading slugs are lowercase, punctuation stripped, whitespace to hyphen. Not a full GitHub slugger.",
+    "Reference definitions are supporting markup; the citation index row is the use site."
+  ]
+}

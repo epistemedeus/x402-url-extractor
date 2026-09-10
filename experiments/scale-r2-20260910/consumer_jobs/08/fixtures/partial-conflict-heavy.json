@@ -1,0 +1,20 @@
+{
+  "schema": "x402.r2.consumer.customer_result_request.v1",
+  "requestId": "s152-partial-conflict-20260910",
+  "clock": "2026-09-10T18:00:00.000Z",
+  "recipeIds": [
+    "procurement-brief",
+    "migration-checklist",
+    "freshness-receipt"
+  ],
+  "procurementInputPath": "../07/fixtures/positive.json",
+  "heavyInputs": {
+    "migration-checklist": {
+      "in": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/conflict-challenge-resource.json"
+    },
+    "freshness-receipt": {
+      "in": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/conflict-retrieved-before-source.json"
+    }
+  },
+  "note": "Partial: 07 ready + Heavy conflict fixtures; journey continues without inventing pass."
+}

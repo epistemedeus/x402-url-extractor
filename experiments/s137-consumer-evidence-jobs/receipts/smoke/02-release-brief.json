@@ -1,0 +1,172 @@
+{
+  "ok": true,
+  "decision": "pass",
+  "impliedDecision": "pass",
+  "issues": [],
+  "brief": {
+    "schema": "s137.release-brief.brief.v1",
+    "jobId": "R2-CONSUMER-JOBS-02",
+    "artifactKind": "release-brief",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "evidenceClass": "synthetic",
+    "offline": true,
+    "payment": {
+      "attempted": false
+    },
+    "cost": {
+      "assignmentSpendUsd": 0,
+      "note": "offline transform; no purchase; do not invent demand"
+    },
+    "sources": [
+      {
+        "id": "announced",
+        "kind": null,
+        "plane": "announced",
+        "retrievedAt": null,
+        "url": null,
+        "path": null,
+        "sha256": null,
+        "licenseNote": null
+      },
+      {
+        "id": "shipped",
+        "kind": null,
+        "plane": "shipped",
+        "retrievedAt": null,
+        "url": null,
+        "path": null,
+        "sha256": null,
+        "licenseNote": null
+      },
+      {
+        "id": "tested",
+        "kind": null,
+        "plane": "tested",
+        "retrievedAt": null,
+        "url": null,
+        "path": null,
+        "sha256": null,
+        "licenseNote": null
+      }
+    ],
+    "findings": [
+      {
+        "id": "f-aligned",
+        "plane": "alignment",
+        "status": "positive",
+        "code": "three_planes_aligned",
+        "message": "announced, shipped, and tested identities agree",
+        "citationIds": [
+          "announced",
+          "shipped",
+          "tested"
+        ]
+      }
+    ],
+    "citations": [
+      {
+        "id": "announced",
+        "plane": "announced",
+        "kind": "github-release-notes",
+        "path": "synthetic://announced",
+        "url": null,
+        "contentSha256": "3febecaebb982e4b96fa6f6dd06d0773486b0aedbb1d5423554477b813d17b37",
+        "licenseNote": null
+      },
+      {
+        "id": "shipped",
+        "plane": "shipped",
+        "kind": "git-tag",
+        "path": "synthetic://shipped",
+        "url": null,
+        "contentSha256": "23ddc7fa8ed3f2ace4dfcd1c9a57f684b3a6457f26041b813273fc423004d48e",
+        "licenseNote": null
+      },
+      {
+        "id": "tested",
+        "plane": "tested",
+        "kind": "ci-log",
+        "path": "synthetic://tested",
+        "url": null,
+        "contentSha256": "2babc10ba5d48bcf4b01748de51a914097e089ac3b9e97822ff989fd3d5a2f50",
+        "licenseNote": null
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Does not fetch GitHub, npm, or CI. Bytes are operator-supplied.",
+      "GitHub Releases JSON is announced notes; tarball_url / zipball_url / assets[] are not a ship.",
+      "target_commitish that is a branch name is not a shipped commit SHA.",
+      "Changelog or release-body wording such as 'shipped' or 'All tests passed' stays announced.",
+      "Draft GitHub releases are announced-only (draft_not_shipped).",
+      "Does not invent operator clock, spend, customer demand, or legal attestation.",
+      "Validates input/brief shapes and announced/shipped/tested plane separation only.",
+      "Does not parse git, npm registry, CI systems, or changelog prose.",
+      "Wording such as 'shipped' or 'tested' inside release notes is announced-only.",
+      "Does not invent operator clock, spend, demand, or legal attestation.",
+      "Does not fetch network sources; bytes are operator-supplied (fixtures in c08/c09).",
+      "Real GitHub/npm captures and PROVENANCE.json belong to c09, not this cell.",
+      "Announced target_commitish is a claim (may be a branch name, not a SHA); it is not shipped evidence.",
+      "Announced body text such as 'All tests passed' is not a tested-plane conclusion."
+    ],
+    "claims": {
+      "inventsFacts": false,
+      "paidEndpoint": false,
+      "legalAttestation": false,
+      "modelAsOracle": false,
+      "assertsCustomerDemand": false
+    },
+    "packetSchema": "s137.consumer-evidence.packet.v1",
+    "inputSchema": "s137.release-brief.input.v1",
+    "subject": {
+      "name": "demo-release-kit",
+      "repository": "synthetic.lab/demo-release-kit"
+    },
+    "announced": {
+      "items": [
+        {
+          "identity": {
+            "role": "claimed"
+          },
+          "payload": {},
+          "citationIds": [
+            "announced"
+          ]
+        }
+      ]
+    },
+    "shipped": {
+      "items": [
+        {
+          "identity": {
+            "role": "observed"
+          },
+          "payload": {},
+          "citationIds": [
+            "shipped"
+          ]
+        }
+      ]
+    },
+    "tested": {
+      "items": [
+        {
+          "identity": {
+            "role": "observed"
+          },
+          "payload": {},
+          "citationIds": [
+            "tested"
+          ]
+        }
+      ]
+    },
+    "alignment": {
+      "status": "aligned",
+      "announcedCount": 1,
+      "shippedCount": 1,
+      "testedCount": 1
+    }
+  },
+  "repairs": []
+}

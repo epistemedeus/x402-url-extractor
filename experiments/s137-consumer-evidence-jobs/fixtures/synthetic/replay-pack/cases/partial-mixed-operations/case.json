@@ -1,0 +1,135 @@
+{
+  "schema": "s137.consumer-evidence.replay-pack.case.v1",
+  "jobId": "R2-CONSUMER-JOBS-05",
+  "artifactKind": "replay-pack",
+  "caseId": "partial-mixed-operations",
+  "kind": "partial",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "offline": true,
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline synthetic fixture; no purchase"
+  },
+  "expectedDecision": "partial",
+  "coverage": "partial",
+  "replay": {
+    "mode": "offline-example-only",
+    "providerExecuted": false,
+    "fakeProviderExecution": false
+  },
+  "onlinePrerequisites": {
+    "required": false,
+    "fetched": false,
+    "items": [],
+    "note": "Do not invent a postCompare 200 body. Leave that operation partial."
+  },
+  "files": {
+    "openapi.json": {
+      "path": "cases/partial-mixed-operations/openapi.json",
+      "sha256": "3ae160c7f5f43e10612c12acc21eedabc01a9337959d7fc78d17ba72c6a83408"
+    },
+    "examples/postCompare.request.json": {
+      "path": "cases/partial-mixed-operations/examples/postCompare.request.json",
+      "sha256": "42b61a5b8e2e228b7c6ceb9bdf0f82c1e3b4735a2ac3d99803640392c969a32a"
+    },
+    "examples/getHealth.response.json": {
+      "path": "cases/partial-mixed-operations/examples/getHealth.response.json",
+      "sha256": "050f64317838d11cbf8482d6eee989fafa2b24baa98a2682e676567a81ade48c"
+    }
+  },
+  "sources": [
+    {
+      "id": "openapi",
+      "path": "cases/partial-mixed-operations/openapi.json"
+    },
+    {
+      "id": "examples/postCompare.request.json",
+      "path": "cases/partial-mixed-operations/examples/postCompare.request.json"
+    },
+    {
+      "id": "examples/getHealth.response.json",
+      "path": "cases/partial-mixed-operations/examples/getHealth.response.json"
+    }
+  ],
+  "findings": [
+    {
+      "id": "f-post-request-only",
+      "message": "postCompare has a request example and no 200 Media Type example. Pattern taken from the in-repo unpaid page-change OpenAPI companion.",
+      "citationIds": [
+        "c-openapi",
+        "c-examples-postCompare-request-json",
+        "c-unpaid-companion-pattern"
+      ],
+      "operationId": "postCompare",
+      "coverage": "request-only"
+    },
+    {
+      "id": "f-health-complete",
+      "message": "getHealth 200 named example enabled matches companion examples/getHealth.response.json body.",
+      "citationIds": [
+        "c-openapi",
+        "c-examples-getHealth-response-json"
+      ],
+      "operationId": "getHealth",
+      "coverage": "full"
+    }
+  ],
+  "citations": [
+    {
+      "id": "c-openapi",
+      "evidenceClass": "synthetic",
+      "path": "cases/partial-mixed-operations/openapi.json",
+      "mediaType": "application/json",
+      "note": "Synthetic OpenAPI 3.1.0 document",
+      "sha256": "3ae160c7f5f43e10612c12acc21eedabc01a9337959d7fc78d17ba72c6a83408"
+    },
+    {
+      "id": "c-examples-postCompare-request-json",
+      "evidenceClass": "synthetic",
+      "path": "cases/partial-mixed-operations/examples/postCompare.request.json",
+      "mediaType": "application/json",
+      "note": "Companion official-example file (synthetic)",
+      "sha256": "42b61a5b8e2e228b7c6ceb9bdf0f82c1e3b4735a2ac3d99803640392c969a32a"
+    },
+    {
+      "id": "c-examples-getHealth-response-json",
+      "evidenceClass": "synthetic",
+      "path": "cases/partial-mixed-operations/examples/getHealth.response.json",
+      "mediaType": "application/json",
+      "note": "Companion official-example file (synthetic)",
+      "sha256": "050f64317838d11cbf8482d6eee989fafa2b24baa98a2682e676567a81ade48c"
+    },
+    {
+      "id": "c-oas31-example-object",
+      "evidenceClass": "synthetic",
+      "url": "https://spec.openapis.org/oas/v3.1.0.html#example-object",
+      "sha256": null,
+      "retrieved": false,
+      "note": "Field names value and externalValue taken from OAS 3.1 Example Object as already used by in-repo openapi: 3.1.0 documents. This cell did not fetch the spec URL."
+    },
+    {
+      "id": "c-unpaid-companion-pattern",
+      "evidenceClass": "fixture",
+      "path": "page-change-http.mjs",
+      "sha256": "2d3cebc8162739d6ffc2a97f3d2193f14d3d1600dfb3fc45bb51933733189f20",
+      "note": "In-repo unpaid OpenAPI 3.1.0 companion: requestBody example present; 200 response has schema/description and no Media Type example. Partial-example pattern only. Not copied as a live SKU."
+    }
+  ],
+  "limitations": [
+    "Authored synthetic OpenAPI and companion examples. Not live-capture and not a real provider snapshot (c24 owns one real official example).",
+    "Offline default. Do not fetch servers[].url or Example Object externalValue.",
+    "HTTP 402 in a document is a paid-marker for refusal, not an executable offer or spend authority.",
+    "c21/c22 schema and transform are out of this cell; cases pin expectedDecision only."
+  ],
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}

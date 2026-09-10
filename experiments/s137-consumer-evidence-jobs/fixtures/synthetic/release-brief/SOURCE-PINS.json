@@ -1,0 +1,44 @@
+{
+  "schema": "s137.release-brief.source-pins.v1",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "evidenceClass": "synthetic",
+  "notes": "Repo excerpts that informed fixture shapes. Synthetic lane documents do not claim these pins are a GitHub release of this repository.",
+  "pins": [
+    {
+      "id": "pin-package-version",
+      "repoPath": "package.json",
+      "excerpt": "\"version\": \"1.23.46\"",
+      "informs": "An announced version can live in a manifest independently of a git tag."
+    },
+    {
+      "id": "pin-service-version",
+      "repoPath": "service-version.mjs",
+      "excerpt": "export const SERVICE_VERSION = packageJson.version;",
+      "informs": "Manifest version is a distinct announced-style fact from a shipped git tag."
+    },
+    {
+      "id": "pin-starting-ref",
+      "repoPath": "experiments/s137-consumer-evidence-jobs/docs/OWNED-JOBS-01-06.json",
+      "excerpt": "\"startingRef\": \"1a23b648e3c5f90bc009accb85972e2db6e22051\"",
+      "informs": "Job 02 starts from a commit pin, not from an invented tag."
+    },
+    {
+      "id": "pin-job-02-outcome",
+      "repoPath": "experiments/s137-consumer-evidence-jobs/docs/OWNED-JOBS-01-06.json",
+      "excerpt": "Produce an auditable release brief from supplied commit/release inputs, keeping announced, shipped and tested facts separate.",
+      "informs": "Fixture lanes are announced, shipped, and tested."
+    },
+    {
+      "id": "pin-packet-decisions",
+      "repoPath": "experiments/s137-consumer-evidence-jobs/src/packet.mjs",
+      "excerpt": "[\"pass\", \"fail\", \"partial\", \"conflict\", \"unknown\"]",
+      "informs": "expect.decision vocabulary for catalog cases."
+    },
+    {
+      "id": "pin-packet-evidence-classes",
+      "repoPath": "experiments/s137-consumer-evidence-jobs/src/packet.mjs",
+      "excerpt": "[\"synthetic\", \"fixture\", \"live-capture\"]",
+      "informs": "These fixtures are labelled synthetic."
+    }
+  ]
+}

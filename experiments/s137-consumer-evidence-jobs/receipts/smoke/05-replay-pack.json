@@ -1,0 +1,153 @@
+{
+  "packet": {
+    "schema": "s137.replay-pack.output.v1",
+    "jobId": "R2-CONSUMER-JOBS-05",
+    "artifactKind": "replay-pack",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "evidenceClass": "synthetic",
+    "offline": true,
+    "payment": {
+      "attempted": false
+    },
+    "cost": {
+      "assignmentSpendUsd": 0,
+      "note": "offline replay packaging; no purchase"
+    },
+    "sources": [],
+    "findings": [],
+    "citations": [
+      {
+        "id": "c-openapi",
+        "path": "cases/positive-unpaid-complete/openapi.json",
+        "url": null,
+        "sha256": "a5240ee024a74b7a72782ecdc7235fdd2514d054d3ca04b2acbca9a2d03ccd99",
+        "retrievedAt": null,
+        "licenseNote": "Synthetic OpenAPI 3.1.0 document",
+        "evidenceClass": "synthetic"
+      },
+      {
+        "id": "c-examples-getStatus-response-json",
+        "path": "cases/positive-unpaid-complete/examples/getStatus.response.json",
+        "url": null,
+        "sha256": "87e4ad06ac0aad04560107bf1329c4d906a4a3503336ded21ccef64d5bd969cc",
+        "retrievedAt": null,
+        "licenseNote": "Companion official-example file (synthetic)",
+        "evidenceClass": "synthetic"
+      },
+      {
+        "id": "c-unpaid-companion-pattern",
+        "path": "page-change-http.mjs",
+        "url": null,
+        "sha256": "2d3cebc8162739d6ffc2a97f3d2193f14d3d1600dfb3fc45bb51933733189f20",
+        "retrievedAt": null,
+        "licenseNote": "In-repo unpaid OpenAPI 3.1.0 companion: requestBody example present; 200 response has schema/description and no Media Type example. Partial-example pattern only. Not copied as a live SKU.",
+        "evidenceClass": "fixture"
+      }
+    ],
+    "decision": "pass",
+    "limitations": [
+      "Schema validation only; does not fetch, sign, pay, or execute providers.",
+      "Missing recorded responses stay partial; responses are not synthesized.",
+      "Online replay is blocked unless every prerequisite is explicit and satisfied.",
+      "paid-endpoint, account-signup, and spend-authorization cannot be satisfied in this pack.",
+      "Operator clock is required; 'now' and wall-clock invention are refused.",
+      "Secret header values must be REDACTED; this pack does not store credentials.",
+      "This cell does not transform examples (c22) or own pack fixtures (c23/c24).",
+      "Transform never invokes providers, never spends, never synthesizes response bodies.",
+      "Online replay remains disallowed in this offline pack builder."
+    ],
+    "claims": {
+      "inventsFacts": false,
+      "paidEndpoint": false,
+      "legalAttestation": false,
+      "modelAsOracle": false,
+      "assertsCustomerDemand": false
+    },
+    "packetSchema": "s137.consumer-evidence.packet.v1",
+    "examples": [
+      {
+        "id": "getStatus-enabled",
+        "kind": "http-exchange",
+        "citationIds": [
+          "c-openapi",
+          "c-examples-getStatus-response-json"
+        ],
+        "request": {
+          "method": "GET",
+          "url": "https://api.example.test/v0/status"
+        },
+        "response": {
+          "status": 200,
+          "body": {
+            "ok": true,
+            "paid": false,
+            "source": "synthetic-example"
+          }
+        },
+        "openapi": {
+          "value": {
+            "ok": true,
+            "paid": false,
+            "source": "synthetic-example"
+          }
+        },
+        "coverage": "full",
+        "replayMode": "offline-fixture",
+        "execution": {
+          "status": "not-executed",
+          "fakedProviderExecution": false,
+          "providerInvoked": false,
+          "providerExecuted": false,
+          "synthesizedResponse": false,
+          "liveProviderCall": false,
+          "assignmentSpendUsd": 0,
+          "fakeProviderExecution": false
+        },
+        "synthesizedResponse": false
+      }
+    ],
+    "online": {
+      "requested": false,
+      "consent": false,
+      "prereqs": [
+        {
+          "id": "operator-consent",
+          "kind": "operator-consent",
+          "required": true,
+          "satisfied": false,
+          "blocking": false,
+          "citationIds": [],
+          "note": "Online replay requires explicit operator consent; default is offline."
+        },
+        {
+          "id": "network-https-get",
+          "kind": "network-https-get",
+          "required": true,
+          "satisfied": false,
+          "blocking": false,
+          "citationIds": [],
+          "note": "Live capture is GET-only over HTTPS; redirects refused."
+        },
+        {
+          "id": "redirect-policy",
+          "kind": "redirect-policy",
+          "required": true,
+          "satisfied": false,
+          "blocking": false,
+          "citationIds": [],
+          "note": "redirect: manual/error; 3xx is not followed."
+        }
+      ],
+      "allowlistedUrls": []
+    },
+    "summary": {
+      "exampleCount": 1,
+      "fullCount": 1,
+      "partialCount": 0,
+      "missingCount": 0,
+      "onlineReplayAllowed": false
+    }
+  },
+  "caseId": "positive-unpaid-complete",
+  "fixtureRoot": "fixtures/synthetic/replay-pack"
+}

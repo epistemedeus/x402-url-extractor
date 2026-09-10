@@ -1,0 +1,7 @@
+{
+  "schema": "x402.r2.consumer.customer_result_request.v1",
+  "requestId": "journey-negative-forbidden-20260910",
+  "recipeIds": ["procurement-brief"],
+  "investmentRecommendation": "buy",
+  "note": "Forbidden investment field must reject."
+}

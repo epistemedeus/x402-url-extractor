@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Fresh-consumer CLI for R2-CONSUMER-JOBS-08 (thin customer result package).
+ * Fresh-consumer CLI for R2-CONSUMER-JOBS-08 (thin customer result package + S152 Heavy compose).
  *
  *   node src/cli.mjs manifest
  *   node src/cli.mjs assemble <request.json|->
@@ -41,17 +41,18 @@ const [cmd, a] = process.argv.slice(2);
 if (!cmd) usage();
 
 const clock = () => Date.parse("2026-09-10T18:00:00.000Z");
+const operatorClock = "2026-09-10T18:00:00.000Z";
 
 try {
   if (cmd === "manifest") {
     console.log(JSON.stringify(buildRecipeManifest({ clock }), null, 2));
   } else if (cmd === "assemble") {
     if (!a) usage();
-    const pkg = assembleCustomerResultPackage(loadJson(a), { clock });
+    const pkg = assembleCustomerResultPackage(loadJson(a), { clock, operatorClock });
     console.log(JSON.stringify(pkg, null, 2));
     if (pkg.status === PACKAGE_STATUS.REJECTED) process.exit(1);
   } else if (cmd === "journey") {
-    const journey = runCleanInstallJourney({ clock });
+    const journey = runCleanInstallJourney({ clock, operatorClock });
     console.log(
       JSON.stringify(
         {
@@ -63,11 +64,12 @@ try {
             "demo-out/positive.json",
             "demo-out/partial.json",
             "demo-out/negative.json",
+            "demo-out/s152/",
           ],
           summary: {
             positiveStatus: journey.steps.find((s) => s.name === "positive-journey")?.result
               ?.status,
-            partialStatus: journey.steps.find((s) => s.name === "partial-missing-heavy")?.result
+            partialStatus: journey.steps.find((s) => s.name === "partial-conflict-heavy")?.result
               ?.status,
             negativeStatus: journey.steps.find((s) => s.name === "negative-unknown-recipe")
               ?.result?.status,
@@ -84,17 +86,17 @@ try {
       ),
     );
   } else if (cmd === "demo") {
-    const journey = runCleanInstallJourney({ clock });
+    const journey = runCleanInstallJourney({ clock, operatorClock });
     const manifest = journey.steps.find((s) => s.name === "manifest").result;
     const positive = journey.steps.find((s) => s.name === "positive-journey").result;
-    const partial = journey.steps.find((s) => s.name === "partial-missing-heavy").result;
+    const partial = journey.steps.find((s) => s.name === "partial-conflict-heavy").result;
     const negative = journey.steps.find((s) => s.name === "negative-unknown-recipe").result;
     console.log(
       JSON.stringify(
         {
           schema: SCHEMA,
           demo: true,
-          note: "Synthetic fixtures only; no live paid calls; Heavy 01–06 unavailable_pending_heavy.",
+          note: "Synthetic fixtures only; no live paid calls; Heavy 01–06 spawned via S137 CLI when ready.",
           results: {
             "manifest.readyCount": manifest.summary.readyCount,
             "manifest.pendingHeavyCount": manifest.summary.pendingHeavyCount,
@@ -103,14 +105,16 @@ try {
               recipeStatuses: positive.recipes.map((r) => ({
                 id: r.recipeId,
                 status: r.status,
+                decision: r.decision || null,
               })),
               hasInvestmentRecommendation: positive.hasInvestmentRecommendation,
             },
-            "partial-missing-heavy.json": {
+            "partial-conflict-heavy.json": {
               status: partial.status,
               recipeStatuses: partial.recipes.map((r) => ({
                 id: r.recipeId,
                 status: r.status,
+                decision: r.decision || null,
               })),
               hasInvestmentRecommendation: partial.hasInvestmentRecommendation,
             },

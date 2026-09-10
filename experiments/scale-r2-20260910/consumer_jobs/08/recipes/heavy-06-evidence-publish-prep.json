@@ -1,9 +1,0 @@
-{
-  "id": "heavy-06-evidence-publish-prep",
-  "title": "Evidence publish prep",
-  "status": "unavailable_pending_heavy",
-  "jobRef": "R2-CONSUMER-JOBS-06",
-  "schema": null,
-  "cli": null,
-  "note": "Heavy branch artifact not ready on this thin package. Slot remains unavailable_pending_heavy (distinct from empty/no-users). Compose exact Heavy returned artifacts later; do not invent demo outputs."
-}

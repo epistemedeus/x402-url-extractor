@@ -1,0 +1,8 @@
+{
+  "toolPresent": true,
+  "childrenStarted": 2,
+  "grandchildAttempt": true,
+  "grandchildAllowed": false,
+  "statedMax": null,
+  "notes": "spawn_subagent present on parent. Started 2 parallel general-purpose children (ids 01a08b0b-dcda-7b70-8276-a4a8de15ce36, 01a08b0b-dcda-7b70-8276-a4b03fd0a22b). Child A: no nested spawn tool in tool list (implicit block). Child B: use_tool('spawn_subagent') refused: not a valid MCP tool name; names must be server__tool. No native-child max stated on spawn_subagent (workflow host cap 32 is a different tool)."
+}

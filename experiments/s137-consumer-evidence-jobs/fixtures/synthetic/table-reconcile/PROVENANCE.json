@@ -1,0 +1,177 @@
+{
+  "schema": "s137.table-reconcile.synthetic-provenance.v1",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "offline": true,
+  "retrievedAt": "2026-09-10T12:00:00.000Z",
+  "authoredAt": "2026-09-10T12:00:00.000Z",
+  "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/",
+  "license": "authored-synthetic; not third-party content; no SPDX license claimed; assignment spend $0",
+  "notes": "Authored synthetic tables for R2-CONSUMER-JOBS-03. Not live-capture. Hashes cover fixture files except this PROVENANCE.json.",
+  "files": {
+    "CLOCK.txt": {
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a",
+      "label": "synthetic",
+      "path": "CLOCK.txt",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/CLOCK.txt"
+    },
+    "MANIFEST.json": {
+      "sha256": "1a1cc0a4feedb9053c74e9988c8b02ec9c76224f548d6246a733b9018b9255cd",
+      "label": "synthetic",
+      "path": "MANIFEST.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/MANIFEST.json"
+    },
+    "README.md": {
+      "sha256": "366a60105c51effe439fa2a0e8e98299bd2caecc2d04b5e29080a6c4ae6c87f0",
+      "label": "synthetic",
+      "path": "README.md",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/README.md"
+    },
+    "cases/conflict-time-window.json": {
+      "sha256": "c0843a13ce7053e5641fce97989ac67bfc6351d1acc1f0cf71a2787bc82010bd",
+      "label": "synthetic",
+      "path": "cases/conflict-time-window.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/conflict-time-window.json"
+    },
+    "cases/conflict-units.json": {
+      "sha256": "c59dd5fee5d51ed48846d97c723bdf4c2c30b1395f700857a5068625c4c58842",
+      "label": "synthetic",
+      "path": "cases/conflict-units.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/conflict-units.json"
+    },
+    "cases/conflict-value.json": {
+      "sha256": "5c2fb4a109496e296e3566e75b4cb8c3080c7c85e07a6a47435484a061e54dc6",
+      "label": "synthetic",
+      "path": "cases/conflict-value.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/conflict-value.json"
+    },
+    "cases/negative-empty.json": {
+      "sha256": "7e318717633afbbaa6c9f1f660238cdd827325a0925b90a210061370fde2a1cf",
+      "label": "synthetic",
+      "path": "cases/negative-empty.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/negative-empty.json"
+    },
+    "cases/negative-missing-keys.json": {
+      "sha256": "0abc26e619469dda890663837e24400bedb26fd5b7f2fac0df64a1faf1f554ae",
+      "label": "synthetic",
+      "path": "cases/negative-missing-keys.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/negative-missing-keys.json"
+    },
+    "cases/partial-row-coverage.json": {
+      "sha256": "5b571691df9eeb0ca53078ad0f17ed2be1647ae2e711d6be30912966d1b5bfbd",
+      "label": "synthetic",
+      "path": "cases/partial-row-coverage.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/partial-row-coverage.json"
+    },
+    "cases/positive-agree.json": {
+      "sha256": "4ba0339d048fa56fd26dba0726ee930eaea42f7c78aba255d7b3b6f3ab7ba959",
+      "label": "synthetic",
+      "path": "cases/positive-agree.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/positive-agree.json"
+    },
+    "catalog.test.mjs": {
+      "sha256": "bee3478492b8e3e7d2d265932f8689e1d8e07eca008108c112473c6d212b49f2",
+      "label": "synthetic",
+      "path": "catalog.test.mjs",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/catalog.test.mjs"
+    },
+    "hash.mjs": {
+      "sha256": "9c756d72afa24fe896ed281544efc1f94f32ed03f14246c823ee95b67b36a320",
+      "label": "synthetic",
+      "path": "hash.mjs",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/hash.mjs"
+    },
+    "load-case.mjs": {
+      "sha256": "ae828ba8ae201d61c15c2b1836db181e3527b482906de8f3267e29f78bea43fd",
+      "label": "synthetic",
+      "path": "load-case.mjs",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/load-case.mjs"
+    },
+    "sources/conflict-time-window/lab-a.json": {
+      "sha256": "95de15dfffe81e46901191c76ea7ba5a455352c5641151762f6032a112947290",
+      "label": "synthetic",
+      "path": "sources/conflict-time-window/lab-a.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-time-window/lab-a.json"
+    },
+    "sources/conflict-time-window/lab-b.json": {
+      "sha256": "8c5bcc41b53d89615c05b49a1dcd912272ba8de0ba3b83d4fecb8acac9e11ae8",
+      "label": "synthetic",
+      "path": "sources/conflict-time-window/lab-b.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-time-window/lab-b.json"
+    },
+    "sources/conflict-units/lab-a.json": {
+      "sha256": "977e12fd709c4f142ba0b7e56592faa08c631f9c649f75b0effb2ff70a1312d7",
+      "label": "synthetic",
+      "path": "sources/conflict-units/lab-a.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-units/lab-a.json"
+    },
+    "sources/conflict-units/lab-b.json": {
+      "sha256": "38598c6208b2b7caecc7a9be165d847d33ded91867190d74a53f256165c0160f",
+      "label": "synthetic",
+      "path": "sources/conflict-units/lab-b.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-units/lab-b.json"
+    },
+    "sources/conflict-value/lab-a.json": {
+      "sha256": "d2c077d88cf64bbdaa65ad8cadd44a7c5c69c3ab7af5948e8269027d16fbca3c",
+      "label": "synthetic",
+      "path": "sources/conflict-value/lab-a.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-value/lab-a.json"
+    },
+    "sources/conflict-value/lab-b.json": {
+      "sha256": "9a26c61262c96ab8265660e85ecbab95dddd29aca92ae4e552834d525fa72068",
+      "label": "synthetic",
+      "path": "sources/conflict-value/lab-b.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-value/lab-b.json"
+    },
+    "sources/negative-empty/lab-a.json": {
+      "sha256": "6073fa96e3a4ed3d156dcceb5eabcc56d59a9a4bf103da732c15fda13cd4f3a3",
+      "label": "synthetic",
+      "path": "sources/negative-empty/lab-a.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/negative-empty/lab-a.json"
+    },
+    "sources/negative-empty/lab-b.json": {
+      "sha256": "fe154312fe59ad281b8b512ed86113bd3701a6fa5b5ef25d3283e8fdd7569f71",
+      "label": "synthetic",
+      "path": "sources/negative-empty/lab-b.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/negative-empty/lab-b.json"
+    },
+    "sources/negative-missing-keys/lab-a.json": {
+      "sha256": "57d1c7c46c8c5479dba6b346a3fce95fb770a5f0ea8ae33cc879d591c059eef8",
+      "label": "synthetic",
+      "path": "sources/negative-missing-keys/lab-a.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/negative-missing-keys/lab-a.json"
+    },
+    "sources/negative-missing-keys/lab-b.json": {
+      "sha256": "0f39ed5f180f784d897ecccec6d5bf8999d80e935293c1f8c15380af32350425",
+      "label": "synthetic",
+      "path": "sources/negative-missing-keys/lab-b.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/negative-missing-keys/lab-b.json"
+    },
+    "sources/partial-row-coverage/lab-a.json": {
+      "sha256": "251eca57b0533214dc0763d300201e1d35b04d11f8286f36fc5f8737b6c42aaa",
+      "label": "synthetic",
+      "path": "sources/partial-row-coverage/lab-a.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/partial-row-coverage/lab-a.json"
+    },
+    "sources/partial-row-coverage/lab-b.json": {
+      "sha256": "38383d0f3395b2f8f82322c684eb04f6988c0274ccfff3d1a6031f031d41798a",
+      "label": "synthetic",
+      "path": "sources/partial-row-coverage/lab-b.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/partial-row-coverage/lab-b.json"
+    },
+    "sources/positive-agree/lab-a.json": {
+      "sha256": "6829a621305c740eeb265e4a783be724a1ac7c15f88981445e9cae519044b61d",
+      "label": "synthetic",
+      "path": "sources/positive-agree/lab-a.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/positive-agree/lab-a.json"
+    },
+    "sources/positive-agree/lab-b.json": {
+      "sha256": "b58d66dc68c81b3c32c1410f3d1b319b14f926eaed401992145873f6bddaaa68",
+      "label": "synthetic",
+      "path": "sources/positive-agree/lab-b.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/positive-agree/lab-b.json"
+    }
+  }
+}

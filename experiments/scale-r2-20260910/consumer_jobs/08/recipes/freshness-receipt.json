@@ -1,0 +1,16 @@
+{
+  "id": "freshness-receipt",
+  "title": "Dataset freshness receipt",
+  "status": "ready",
+  "jobRef": "R2-CONSUMER-JOBS-06",
+  "schema": "s137.consumer-evidence.packet.v1",
+  "artifact": "freshness-receipt",
+  "cli": {
+    "path": "../../../s137-consumer-evidence-jobs/scripts/cli.mjs",
+    "commandShape": "node <cli> analyze freshness-receipt --in <fixture> --clock <ISO> [--out <path>]",
+    "defaultIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/positive-complete.json",
+    "conflictIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/conflict-retrieved-before-source.json",
+    "negativeIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/freshness/cases/negative-missing-times.json"
+  },
+  "note": "Spawns S137 Heavy CLI analyze on operator-supplied fixtures. URLs stay data; no fetch/pay/publish."
+}

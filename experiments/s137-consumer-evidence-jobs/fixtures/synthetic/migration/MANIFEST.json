@@ -1,0 +1,22 @@
+{
+  "schema": "s137.migration.synthetic-manifest.v1",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "jobId": "R2-CONSUMER-JOBS-01",
+  "artifactKind": "migration-checklist",
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0, "note": "offline fixtures; no purchase" },
+  "notes": "Authored synthetic old/new docs and inventories. Not live-capture. Not paid demand.",
+  "tableHeader": ["method", "route", "mcpTool", "challengeResource", "availability"],
+  "inventorySchema": "s137.migration.inventory.v1",
+  "requiredCaseIds": [
+    "positive-complete",
+    "negative-missing-new-docs",
+    "negative-malformed-inventory",
+    "partial-batch-undocumented",
+    "conflict-challenge-resource"
+  ],
+  "requiredKinds": ["positive", "negative", "partial", "conflict"]
+}

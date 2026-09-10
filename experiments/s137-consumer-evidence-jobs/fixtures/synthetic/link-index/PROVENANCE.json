@@ -1,0 +1,152 @@
+{
+  "evidenceClass": "synthetic",
+  "label": "synthetic",
+  "retrievedAt": "2026-09-10T12:00:00.000Z",
+  "url": null,
+  "liveCapture": false,
+  "paidDemand": false,
+  "networkContacted": false,
+  "license": "Authored synthetic test fixture for S137 R2-CONSUMER-JOBS-04. Not retrieved from a network URL. No third-party page is reproduced. Assignment spend $0.",
+  "files": {
+    "CLOCK.txt": {
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "MANIFEST.json": {
+      "sha256": "bc3d957431cc9640695a6fe1843c13af05a91d96548f64ef7086a427c76424d1",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "README.md": {
+      "sha256": "1455da775ef04575d163a65d61a743bf028358ce88285ed1c0c5264a8eb2d386",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/conflict-duplicate-ids/expected.json": {
+      "sha256": "302383ab79b47c12cb9873853c9c611bb05aa7af7686fd8f0b4a97a31c824562",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/conflict-duplicate-ids/source.html": {
+      "sha256": "f6f03fd2f666ecb6eaee4f5e1efb4e2ed50d580f01becabf9477df6cee0e3a6d",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/conflict-duplicates/artifacts/alpha.md": {
+      "sha256": "017b70af1737a855266fc9eb9b3f88917dc972f20d2a1c7d6baa03b85260e8b8",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/conflict-duplicates/artifacts/beta.md": {
+      "sha256": "1a26417491f915994a558d790278bf0a7dde56e16dbb87effde011215c2fe713",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/conflict-duplicates/expected.json": {
+      "sha256": "e14877e6ed3935cba18af5b766dccdd8ac6666429242e2e907a100c9467c6fea",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/conflict-duplicates/source.html": {
+      "sha256": "3ecbbb282d02084e702d75be3b57e7befb0a4b496fe331452012ac36b2206191",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/negative-empty/expected.json": {
+      "sha256": "edd415490edb3e738a526fdd3f08382b1a9c1cb787de13bb23c300e3799ac503",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/negative-empty/source.html": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/negative-malformed/expected.json": {
+      "sha256": "0d5356579fd4568e2547b152b8f48bb394b7ce4c0b26c9bb5d6ee4973fe2615b",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/negative-malformed/source.html": {
+      "sha256": "3f2b61f7c5b69b918b2c2bd5847d239cb0f8625a811c7ca0ddd10c982ac7cf85",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/negative-no-links/expected.json": {
+      "sha256": "ec897b642e523f6d14d38ca7d7b673ca8472a731c3fc36db4fc6417cc3192573",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/negative-no-links/source.md": {
+      "sha256": "8ba854c062d43b950d490a4cb67f80dae68f0b86be726bd9e1e644c0c41bee9d",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/partial-mixed/artifacts/present.md": {
+      "sha256": "5e825f4ed6e7122d4b7ae417afbd2d30cdd67d65da57f52ec2105df5479fb31c",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/partial-mixed/expected.json": {
+      "sha256": "d83720e37f25c0c46b5862802274c6a82f2bce38a71451a30fabcaecdcdab327",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/partial-mixed/source.md": {
+      "sha256": "e59edf3ac65642d5c08baf5a7b7fb2517b234e419e7ef59c25a9ee2d5522c5bc",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/positive-html/artifacts/api.md": {
+      "sha256": "da2f76c26732cfc6f35912695d5c03a093d540d2ff225bfe680c40cb1f1ae5c0",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/positive-html/artifacts/guide.md": {
+      "sha256": "bcb53aa419a21fcf6e66c2d1f0d2883cf8962fdd750821802f856de15a60f4a9",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/positive-html/expected.json": {
+      "sha256": "2adc2f3a12d39c8a4ab48833e9a3601d20feaac109afac86b724db868b16b51d",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/positive-html/source.html": {
+      "sha256": "3225b0864b74a726775065d64a97c9dcc72c2a7b54bf42fa94b8fbeb5033b8a1",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/positive-md/artifacts/notes.md": {
+      "sha256": "aac56eebe51776729a3d316b72731dcaa02e3469f37d574f374456e11728fda6",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/positive-md/artifacts/schema.json": {
+      "sha256": "8f18b67729e101695b1bcfcbbb9b4a9eb841e8f731e8bc9b25882991c7d8546a",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/positive-md/expected.json": {
+      "sha256": "8d813b2bdfb98c9692bbb46835a648d420d1b13f0db7a73a65bdca83f6a815ed",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/positive-md/source.md": {
+      "sha256": "5cb5a4f0e149fe0aa6da680bd432ad7d724dcb24bd703c4d57494623f071bfad",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "catalog.mjs": {
+      "sha256": "f92688a8ac7f08636145bfa2ba5f4c0fe09e8f26226d93507414583b825615e9",
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "self-test.mjs": {
+      "sha256": "3c9d76cad51eb0444e6c8632198cf81ef53335e159c0b6155098a835f431c93e",
+      "label": "synthetic",
+      "coverage": "full"
+    }
+  }
+}

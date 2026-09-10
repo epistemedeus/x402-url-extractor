@@ -1,0 +1,16 @@
+{
+  "id": "link-index",
+  "title": "Link-to-artifact index",
+  "status": "ready",
+  "jobRef": "R2-CONSUMER-JOBS-04",
+  "schema": "s137.consumer-evidence.packet.v1",
+  "artifact": "link-index",
+  "cli": {
+    "path": "../../../s137-consumer-evidence-jobs/scripts/cli.mjs",
+    "commandShape": "node <cli> analyze link-index --in <fixture> --clock <ISO> [--out <path>]",
+    "defaultIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/positive-md",
+    "conflictIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/conflict-duplicates",
+    "negativeIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/link-index/cases/negative-empty"
+  },
+  "note": "Spawns S137 Heavy CLI analyze on operator-supplied fixtures. URLs stay data; no fetch/pay/publish."
+}

@@ -1,6 +1,7 @@
-# Fresh-consumer instructions — R2-CONSUMER-JOBS-08
+# Fresh-consumer instructions — R2-CONSUMER-JOBS-08 (S152 compose)
 
 Literal steps for a new consumer. No paid network calls. Synthetic fixtures only.
+Fixture URLs stay **data** (never auto-fetched).
 
 ## 1. Enter the package
 
@@ -9,80 +10,34 @@ cd experiments/scale-r2-20260910/consumer_jobs/08
 ```
 
 Requires Node ≥ 20. No `npm install` needed (pure Node ESM, zero dependencies).
-Optional: `npm install` is a no-op for deps and is safe if your habit is always
-to install first.
 
-```sh
-npm install
-```
-
-## 2. Confirm sibling 07 (ready recipe dependency)
-
-This thin package prefers the sibling tree:
+## 2. Confirm siblings
 
 ```sh
 ls ../07/src/cli.mjs
+ls ../../../s137-consumer-evidence-jobs/scripts/cli.mjs
 ```
 
-On branch `codex/r2-consumer-jobs-08-20260910` both `consumer_jobs/07` and
-`consumer_jobs/08` are present (07 merged in). If `../07` is missing, the
-assembler reports `missing_dependency` rather than inventing a brief.
+Heavy pack pin: `resolvedInputCommit=fa6878de125cfdcfd77f4b47037c88667090d293`.
 
-## 3. Run the focused test suite
+## 3. Run focused tests
 
 ```sh
 npm test
-# equivalent: node --test tests/*.test.mjs
+# compose surface:
+npm --prefix ../compose test
 ```
 
-Expect positive / partial / negative cases to pass.
-
-## 4. List the recipe manifest
+## 4. Manifest / journey / demo
 
 ```sh
-node src/cli.mjs manifest
-```
-
-Expect `readyCount: 1` (procurement-brief) and `pendingHeavyCount: 6`.
-
-## 5. Run the clean-install journey
-
-```sh
-npm run journey
-# equivalent: node src/cli.mjs journey
-```
-
-Writes under `demo-out/` (gitignored except `.gitkeep`):
-
-- `journey.json`
-- `manifest.json`
-- `positive.json`
-- `partial.json`
-- `negative.json`
-
-## 6. Run the truthful demo
-
-```sh
+node src/cli.mjs manifest   # readyCount: 7
+npm run journey             # writes demo-out/ and demo-out/s152/
 npm run demo
-# equivalent: node src/cli.mjs demo
-```
-
-## 7. Assemble a single request
-
-```sh
-node src/cli.mjs assemble fixtures/positive-journey.json
-node src/cli.mjs assemble fixtures/partial-missing-heavy.json
-node src/cli.mjs assemble fixtures/negative-unknown-recipe.json
-```
-
-Or pipe JSON on stdin:
-
-```sh
-cat fixtures/positive-journey.json | node src/cli.mjs assemble -
 ```
 
 ## What you get
 
-A package with `recipes[]` slots. Ready recipes may include nested 07 brief
-output. Heavy slots remain `unavailable_pending_heavy`. **No**
-`investmentRecommendation` field (and `hasInvestmentRecommendation: false`).
+Seven ready recipes: Heavy 01–06 (`s137.consumer-evidence.packet.v1` via S137 CLI)
+plus `procurement-brief` (07). Non-pass Heavy decisions are recorded as returned —
+never invented as pass. **No** `investmentRecommendation`. No publication/payment.

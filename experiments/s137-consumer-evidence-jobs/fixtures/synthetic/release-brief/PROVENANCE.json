@@ -1,0 +1,234 @@
+{
+  "label": "synthetic",
+  "evidenceClassDefault": "synthetic",
+  "evidenceClass": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "capturedAtUtc": "2026-09-10T12:00:00.000Z",
+  "retrievedAt": "2026-09-10T12:00:00.000Z",
+  "url": null,
+  "originalUrls": {},
+  "licenseNote": "Authored synthetic fixtures in this pack. Not third-party content. Not a live GitHub or npm capture.",
+  "notes": "sha256 over authored bytes. Assignment spend $0. No paid endpoint.",
+  "payment": {
+    "attempted": false
+  },
+  "files": {
+    "CLOCK.txt": {
+      "sha256": "b43c70f999964e9c22e5cfd0554e0f9c3909e766c298e7a7dba362c7c5211d5a",
+      "bytes": 25,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "MANIFEST.json": {
+      "sha256": "ce8a31764bc1ff5b1c318056aa90b771ebfd04d0f06be5e5b617e1aa5ab68e54",
+      "bytes": 1211,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "README.md": {
+      "sha256": "08e2999dddd3cda6e6cd760da8da0980de24debccbcabacebf5f5b26e7ed1d75",
+      "bytes": 3016,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "SOURCE-PINS.json": {
+      "sha256": "86d97f3d828a49a66c0c04ffc159df2200ed7c24903a61b634b6f4b3f721c84e",
+      "bytes": 1932,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/conflict-ci-vs-announce.json": {
+      "sha256": "5f0ed80196b7d600f4442094ee82170631a4a906cb3e24f467dfbbf4eca0f9b1",
+      "bytes": 6264,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/conflict-sha-mismatch.json": {
+      "sha256": "e66cffe65ae6b7cac14289012651954d87d5e18456c6fd355a518733d71be17e",
+      "bytes": 6227,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/conflict-tag-mismatch.json": {
+      "sha256": "a0a4ed5ac9e8a9452fb15e576758f65dd079291ffbdf3bb7f028c527abb4914c",
+      "bytes": 6465,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/negative-draft-only.json": {
+      "sha256": "777a639490e2b84bdc770cfba58618895074aa66983ab8434cfa96c3960c849f",
+      "bytes": 3646,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/negative-empty.json": {
+      "sha256": "ed294ef6ec283813531a17f3cd633828de9a75845ad52fefc9346c1df1ccc507",
+      "bytes": 2261,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/partial-announced-only.json": {
+      "sha256": "f48d7ec26be7b16fe60b327275fedd01f6121642a185b1113ca7f2d6aec8cac9",
+      "bytes": 3632,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/partial-missing-tested.json": {
+      "sha256": "137294c16c7ca9fe03beb478e61f8d3fa884ed27d5d1c43596a8b509788eb2b0",
+      "bytes": 4929,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/partial-shipped-no-announce.json": {
+      "sha256": "e00bc62783e6153a9244b2c72e68818c701af589d5b9af2c3a5e613fb6f2e008",
+      "bytes": 4661,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "cases/positive-aligned.json": {
+      "sha256": "11c92a56650739ba11b0143f43ef9934b22273e2922df52d408acc2847827bb4",
+      "bytes": 6569,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "catalog.test.mjs": {
+      "sha256": "bddbba54c9f4484ea5ab6f881e99ef71e2da8d025f40605baf73f5300e6ae8d8",
+      "bytes": 13147,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "hash.mjs": {
+      "sha256": "f9ffab0c75b8b05f18431ab52e11ceb0a1b76351f6c550251f002a6db9228a3e",
+      "bytes": 441,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "load.mjs": {
+      "sha256": "0af4299e1ec8efb395303ee7eeafe79cb93de98721ea9cf21dd121a5809d4c1e",
+      "bytes": 4166,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/conflict-ci-vs-announce/announced.json": {
+      "sha256": "8c7dd2006779546030075f6e26e1ad72a3dcbbe9f20c4ebacf39590edf9568e1",
+      "bytes": 625,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/conflict-ci-vs-announce/shipped.json": {
+      "sha256": "aa342f6d790ccab93de8de2086b747107fe909cf99dcf2b92f7de050dd662628",
+      "bytes": 500,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/conflict-ci-vs-announce/tested.json": {
+      "sha256": "9719b8a3006969adfa3474beca5e9563a2230ccb4e1c7bfc90b25147e071f91e",
+      "bytes": 480,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/conflict-sha-mismatch/announced.json": {
+      "sha256": "244c1e6a94bd05e744c469c26e73603d4adef21a04530708d292abea987c48b7",
+      "bytes": 703,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/conflict-sha-mismatch/shipped.json": {
+      "sha256": "7c21cb66edf9a0e9c9656f1f0ff71a0c87fc6685f876be8a9342c8bb216a817e",
+      "bytes": 500,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/conflict-sha-mismatch/tested.json": {
+      "sha256": "6d74b291a1048a3c18c759a124b0d512cc2118b09881f2f2b860ad378b1ae9fc",
+      "bytes": 480,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/conflict-tag-mismatch/announced.json": {
+      "sha256": "556834f1844df7eb14b8ea2e474ed9c7d532b4c8486602d10fba7bf8762f3a00",
+      "bytes": 676,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/conflict-tag-mismatch/shipped.json": {
+      "sha256": "54d080f383fe59ee58be34a5c2169805bce0835f9bc72c893c3fde0f5413a900",
+      "bytes": 500,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/conflict-tag-mismatch/tested.json": {
+      "sha256": "fb4e37465b32409be9d5c943db51da90002353af55f8f0861fde31f540a65932",
+      "bytes": 480,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/negative-draft-only/announced.json": {
+      "sha256": "e2440ffcd2cc32cf5efbd145aeff85e1c38a2d15a2aa4f0e4c08b1e0807bfaf7",
+      "bytes": 641,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/negative-empty/NOTICE.json": {
+      "sha256": "0947b4bb918c7b3c7cbcc87cbd4b91a98312bab3525a00843262670bcde6bee0",
+      "bytes": 349,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/partial-announced-only/announced.json": {
+      "sha256": "16d668bd112401bb73d94d5cbd57c75e58472a4ec9717c16da1ea6d6da69d81c",
+      "bytes": 666,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/partial-missing-tested/announced.json": {
+      "sha256": "4b1adaa1a1f1b379dc9a0a0729b3edf96118e5cbbc954d27bf8adf76bddfcb0c",
+      "bytes": 690,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/partial-missing-tested/shipped.json": {
+      "sha256": "3b209235c79cf9a6582352aaf10fde341c48565a3cfa046ac16cd31538f6cf1c",
+      "bytes": 500,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/partial-shipped-no-announce/shipped.json": {
+      "sha256": "a0e8666db0dac80a6ffbd36765ee10fe961580bbb6e0d5db091610d676e398fc",
+      "bytes": 500,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/partial-shipped-no-announce/tested.json": {
+      "sha256": "330c509c09454d42992da726737fa1ce36a10df8335de5ef5e35933a8399e518",
+      "bytes": 480,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/positive-aligned/announced.json": {
+      "sha256": "e139c42d3a6c2baa3b498248d06f62fccbf3857b1244afb4adc1d270920e8a7b",
+      "bytes": 679,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/positive-aligned/shipped.json": {
+      "sha256": "b228936ce19bcb0eacdf877c8f4a0523b9da5e919d2eece3ddb0def0d17ceaf6",
+      "bytes": 500,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "sources/positive-aligned/tested.json": {
+      "sha256": "9ff0419f183df7e9508f519df4d1107516fbf8e2a13debb01e4c7264fb741fe8",
+      "bytes": 480,
+      "label": "synthetic",
+      "coverage": "full"
+    },
+    "write-cases.mjs": {
+      "sha256": "cad6c1e836ae724eb88ff20e256a6f2b9cbccdd67d0152159d6d800a17d31b6e",
+      "bytes": 16046,
+      "label": "synthetic",
+      "coverage": "full"
+    }
+  }
+}

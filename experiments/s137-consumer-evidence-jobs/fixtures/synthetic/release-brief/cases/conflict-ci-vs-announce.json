@@ -1,0 +1,191 @@
+{
+  "schema": "s137.release-brief.synthetic-case.v1",
+  "id": "conflict-ci-vs-announce",
+  "jobId": "R2-CONSUMER-JOBS-02",
+  "artifactKind": "release-brief",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "caseClass": "conflict",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "Announced 'All tests passed' vs tested conclusion failure",
+  "notes": "The announced body is a claim. tested.conclusion is the tested fact. Do not treat the body as CI evidence.",
+  "subject": {
+    "name": "demo-release-kit",
+    "repository": "synthetic.lab/demo-release-kit"
+  },
+  "lanes": {
+    "announced": "sources/conflict-ci-vs-announce/announced.json",
+    "shipped": "sources/conflict-ci-vs-announce/shipped.json",
+    "tested": "sources/conflict-ci-vs-announce/tested.json"
+  },
+  "input": {
+    "schema": "s137.release-brief.input.v1",
+    "clock": "2026-09-10T12:00:00.000Z",
+    "evidenceClass": "synthetic",
+    "jobId": "R2-CONSUMER-JOBS-02",
+    "artifactKind": "release-brief",
+    "subject": {
+      "name": "demo-release-kit",
+      "repository": "synthetic.lab/demo-release-kit"
+    },
+    "sources": [
+      {
+        "id": "cit-announced",
+        "plane": "announced",
+        "lane": "announced",
+        "kind": "github-release-notes",
+        "path": "sources/conflict-ci-vs-announce/announced.json",
+        "sha256": "8c7dd2006779546030075f6e26e1ad72a3dcbbe9f20c4ebacf39590edf9568e1",
+        "contentSha256": "8c7dd2006779546030075f6e26e1ad72a3dcbbe9f20c4ebacf39590edf9568e1",
+        "evidenceClass": "synthetic",
+        "identity": {
+          "role": "claimed",
+          "tag": "v1.2.0",
+          "version": "1.2.0",
+          "commitSha": "3f9f5ca67f3cdb85de63fe773f0c6f3382e5716b"
+        },
+        "payload": {
+          "name": "v1.2.0",
+          "body": "All tests passed. Tag v1.2.0.",
+          "draft": false,
+          "prerelease": false,
+          "published_at": "2026-09-09T18:00:00.000Z",
+          "created_at": "2026-09-09T17:58:00.000Z",
+          "target_commitish": "3f9f5ca67f3cdb85de63fe773f0c6f3382e5716b"
+        }
+      },
+      {
+        "id": "cit-shipped",
+        "plane": "shipped",
+        "lane": "shipped",
+        "kind": "git-tag",
+        "path": "sources/conflict-ci-vs-announce/shipped.json",
+        "sha256": "aa342f6d790ccab93de8de2086b747107fe909cf99dcf2b92f7de050dd662628",
+        "contentSha256": "aa342f6d790ccab93de8de2086b747107fe909cf99dcf2b92f7de050dd662628",
+        "evidenceClass": "synthetic",
+        "identity": {
+          "role": "observed",
+          "tag": "v1.2.0",
+          "version": "1.2.0",
+          "commitSha": "3f9f5ca67f3cdb85de63fe773f0c6f3382e5716b"
+        },
+        "payload": {
+          "ref": "refs/tags/v1.2.0",
+          "object": {
+            "type": "commit",
+            "sha": "3f9f5ca67f3cdb85de63fe773f0c6f3382e5716b"
+          },
+          "tagged_at": "2026-09-09T17:55:00.000Z"
+        }
+      },
+      {
+        "id": "cit-tested",
+        "plane": "tested",
+        "lane": "tested",
+        "kind": "ci-log",
+        "path": "sources/conflict-ci-vs-announce/tested.json",
+        "sha256": "9719b8a3006969adfa3474beca5e9563a2230ccb4e1c7bfc90b25147e071f91e",
+        "contentSha256": "9719b8a3006969adfa3474beca5e9563a2230ccb4e1c7bfc90b25147e071f91e",
+        "evidenceClass": "synthetic",
+        "identity": {
+          "role": "observed",
+          "commitSha": "3f9f5ca67f3cdb85de63fe773f0c6f3382e5716b"
+        },
+        "payload": {
+          "name": "ci",
+          "status": "completed",
+          "conclusion": "failure",
+          "completed_at": "2026-09-09T17:50:00.000Z",
+          "head_sha": "3f9f5ca67f3cdb85de63fe773f0c6f3382e5716b"
+        }
+      }
+    ]
+  },
+  "expect": {
+    "decision": "conflict",
+    "laneCoverage": {
+      "announced": true,
+      "shipped": true,
+      "tested": true
+    },
+    "tagAgreement": true,
+    "shaAgreement": true,
+    "disagreementCodes": [
+      "ci_vs_announce"
+    ]
+  },
+  "findings": [
+    {
+      "id": "tag-sha-aligned",
+      "kind": "alignment",
+      "summary": "tag v1.2.0 and commit SHA agree across announced, shipped, and tested",
+      "citationIds": [
+        "cit-announced",
+        "cit-shipped",
+        "cit-tested"
+      ]
+    },
+    {
+      "id": "ci-vs-announce",
+      "kind": "conflict",
+      "summary": "announced.body claims All tests passed; tested.conclusion is failure",
+      "citationIds": [
+        "cit-announced",
+        "cit-tested"
+      ],
+      "status": "conflict",
+      "code": "ci_vs_announce"
+    }
+  ],
+  "citations": [
+    {
+      "id": "cit-announced",
+      "lane": "announced",
+      "plane": "announced",
+      "kind": "github-release-notes",
+      "path": "sources/conflict-ci-vs-announce/announced.json",
+      "sha256": "8c7dd2006779546030075f6e26e1ad72a3dcbbe9f20c4ebacf39590edf9568e1",
+      "contentSha256": "8c7dd2006779546030075f6e26e1ad72a3dcbbe9f20c4ebacf39590edf9568e1",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-shipped",
+      "lane": "shipped",
+      "plane": "shipped",
+      "kind": "git-tag",
+      "path": "sources/conflict-ci-vs-announce/shipped.json",
+      "sha256": "aa342f6d790ccab93de8de2086b747107fe909cf99dcf2b92f7de050dd662628",
+      "contentSha256": "aa342f6d790ccab93de8de2086b747107fe909cf99dcf2b92f7de050dd662628",
+      "evidenceClass": "synthetic"
+    },
+    {
+      "id": "cit-tested",
+      "lane": "tested",
+      "plane": "tested",
+      "kind": "ci-log",
+      "path": "sources/conflict-ci-vs-announce/tested.json",
+      "sha256": "9719b8a3006969adfa3474beca5e9563a2230ccb4e1c7bfc90b25147e071f91e",
+      "contentSha256": "9719b8a3006969adfa3474beca5e9563a2230ccb4e1c7bfc90b25147e071f91e",
+      "evidenceClass": "synthetic"
+    }
+  ],
+  "limitations": [
+    "Synthetic authored sources. Not a live GitHub or npm capture.",
+    "Does not execute tests, publish, spend, or merge.",
+    "expect.decision is a catalog contract for c07/c10, not a model judgment."
+  ],
+  "payment": {
+    "attempted": false
+  },
+  "cost": {
+    "assignmentSpendUsd": 0,
+    "note": "offline fixtures; no purchase"
+  },
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}

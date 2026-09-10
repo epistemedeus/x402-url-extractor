@@ -1,0 +1,32 @@
+{
+  "schema": "s137.freshness-receipt.synthetic-manifest.v1",
+  "label": "synthetic",
+  "jobId": "R2-CONSUMER-JOBS-06",
+  "artifactKind": "dataset-freshness-receipt",
+  "clock": "2026-09-10T09:54:59Z",
+  "horizonMs": 86400000,
+  "evidenceClass": "synthetic",
+  "liveCapture": false,
+  "paidDemand": false,
+  "notes": "Operator-authored cases. retrievedAt is download/capture time. sourceUpdatedAt is the source last-modified/published_at. They are never the same field. Clock copied from S122 CAPTURED_AT_UTC.txt.",
+  "requiredCaseKinds": ["positive", "negative", "partial", "conflict"],
+  "requiredCaseIds": [
+    "positive-complete",
+    "negative-missing-times",
+    "partial-missing-source-update",
+    "conflict-retrieved-before-source"
+  ],
+  "extraCaseIds": [
+    "negative-future-source-update",
+    "conflict-two-source-updates"
+  ],
+  "timeFields": ["retrievedAt", "sourceUpdatedAt"],
+  "decisionByCaseId": {
+    "positive-complete": "pass",
+    "negative-missing-times": "unknown",
+    "negative-future-source-update": "unknown",
+    "partial-missing-source-update": "partial",
+    "conflict-retrieved-before-source": "conflict",
+    "conflict-two-source-updates": "conflict"
+  }
+}

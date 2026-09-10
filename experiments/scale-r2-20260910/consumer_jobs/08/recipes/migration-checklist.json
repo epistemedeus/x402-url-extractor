@@ -1,0 +1,16 @@
+{
+  "id": "migration-checklist",
+  "title": "Documentation migration checklist",
+  "status": "ready",
+  "jobRef": "R2-CONSUMER-JOBS-01",
+  "schema": "s137.consumer-evidence.packet.v1",
+  "artifact": "migration-checklist",
+  "cli": {
+    "path": "../../../s137-consumer-evidence-jobs/scripts/cli.mjs",
+    "commandShape": "node <cli> analyze migration-checklist --in <fixture> --clock <ISO> [--out <path>]",
+    "defaultIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/positive-complete.json",
+    "conflictIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/conflict-challenge-resource.json",
+    "negativeIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/migration/cases/negative-missing-new-docs.json"
+  },
+  "note": "Spawns S137 Heavy CLI analyze on operator-supplied fixtures. URLs stay data; no fetch/pay/publish."
+}

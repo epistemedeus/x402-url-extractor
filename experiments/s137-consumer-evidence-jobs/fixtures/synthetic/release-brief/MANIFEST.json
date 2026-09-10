@@ -1,0 +1,34 @@
+{
+  "schema": "s137.release-brief.synthetic-manifest.v1",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "jobId": "R2-CONSUMER-JOBS-02",
+  "artifactKind": "release-brief",
+  "subject": "demo-release-kit",
+  "offline": true,
+  "liveCapture": false,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0, "note": "offline fixtures; no purchase" },
+  "notes": "Authored synthetic announced/shipped/tested lane documents. Not live-capture. Not paid demand. Lanes stay separate; the catalog does not merge them.",
+  "requiredCaseIds": [
+    "positive-aligned",
+    "negative-empty",
+    "negative-draft-only",
+    "partial-missing-tested",
+    "partial-announced-only",
+    "partial-shipped-no-announce",
+    "conflict-tag-mismatch",
+    "conflict-sha-mismatch",
+    "conflict-ci-vs-announce"
+  ],
+  "requiredKinds": ["positive", "negative", "partial", "conflict"],
+  "lanes": ["announced", "shipped", "tested"],
+  "sourceKinds": {
+    "announced": "github-release-notes",
+    "shipped": "git-tag",
+    "tested": "ci-log"
+  },
+  "inputSchema": "s137.release-brief.input.v1",
+  "decisionVocab": ["pass", "fail", "partial", "conflict", "unknown"]
+}

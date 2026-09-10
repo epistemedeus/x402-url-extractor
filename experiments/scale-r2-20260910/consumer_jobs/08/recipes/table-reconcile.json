@@ -1,0 +1,16 @@
+{
+  "id": "table-reconcile",
+  "title": "Research table reconciliation",
+  "status": "ready",
+  "jobRef": "R2-CONSUMER-JOBS-03",
+  "schema": "s137.consumer-evidence.packet.v1",
+  "artifact": "table-reconcile",
+  "cli": {
+    "path": "../../../s137-consumer-evidence-jobs/scripts/cli.mjs",
+    "commandShape": "node <cli> analyze table-reconcile --in <fixture> --clock <ISO> [--out <path>]",
+    "defaultIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/positive-agree.json",
+    "conflictIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/conflict-value.json",
+    "negativeIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/cases/negative-empty.json"
+  },
+  "note": "Spawns S137 Heavy CLI analyze on operator-supplied fixtures. URLs stay data; no fetch/pay/publish."
+}

@@ -1,0 +1,16 @@
+{
+  "id": "replay-pack",
+  "title": "API example replay pack",
+  "status": "ready",
+  "jobRef": "R2-CONSUMER-JOBS-05",
+  "schema": "s137.consumer-evidence.packet.v1",
+  "artifact": "replay-pack",
+  "cli": {
+    "path": "../../../s137-consumer-evidence-jobs/scripts/cli.mjs",
+    "commandShape": "node <cli> analyze replay-pack --in <fixture> --clock <ISO> [--out <path>]",
+    "defaultIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/positive-unpaid-complete",
+    "conflictIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/conflict-example-mismatch",
+    "negativeIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/replay-pack/cases/negative-missing-examples"
+  },
+  "note": "Spawns S137 Heavy CLI analyze on operator-supplied fixtures. URLs stay data; no fetch/pay/publish."
+}

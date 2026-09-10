@@ -1,0 +1,84 @@
+{
+  "schema": "s137.table-reconcile.case.v1",
+  "id": "conflict-time-window",
+  "jobId": "R2-CONSUMER-JOBS-03",
+  "kind": "conflict",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "Overlapping calendar span, different grain",
+  "notes": "Authored synthetic. P7D cell vs P1D rows. Do not sum daily rows (2+0+1+3+0+1+0) into the weekly 11. Finding kind is time-window-mismatch, not a rolled-up value-conflict.",
+  "join": {
+    "keys": [
+      "metric",
+      "windowStart"
+    ],
+    "unit": "count",
+    "timeWindow": {
+      "start": "2026-08-03T00:00:00.000Z",
+      "end": "2026-08-10T00:00:00.000Z",
+      "grain": null,
+      "inclusiveStart": true,
+      "inclusiveEnd": false
+    },
+    "units": {
+      "value": "count"
+    }
+  },
+  "doNotInvent": [
+    "sum",
+    "convert-units",
+    "interpolate-window",
+    "fill-missing",
+    "rollup-grain"
+  ],
+  "tables": [
+    {
+      "id": "lab-a",
+      "path": "sources/conflict-time-window/lab-a.json"
+    },
+    {
+      "id": "lab-b",
+      "path": "sources/conflict-time-window/lab-b.json"
+    }
+  ],
+  "expect": {
+    "decision": "conflict",
+    "inventTotals": false,
+    "findings": [
+      {
+        "id": "conflict-window:synthetic.page_extracts:span-2026-08-03",
+        "kind": "time-window-mismatch",
+        "keys": {
+          "metric": "synthetic.page_extracts"
+        },
+        "grainBySource": {
+          "lab-a": "P7D",
+          "lab-b": "P1D"
+        },
+        "span": {
+          "start": "2026-08-03T00:00:00.000Z",
+          "end": "2026-08-10T00:00:00.000Z"
+        },
+        "citationIds": [
+          "src:conflict-time-window/lab-a",
+          "src:conflict-time-window/lab-b"
+        ]
+      }
+    ]
+  },
+  "citations": [
+    {
+      "id": "src:conflict-time-window/lab-a",
+      "path": "sources/conflict-time-window/lab-a.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-time-window/lab-a.json",
+      "sha256": "95de15dfffe81e46901191c76ea7ba5a455352c5641151762f6032a112947290"
+    },
+    {
+      "id": "src:conflict-time-window/lab-b",
+      "path": "sources/conflict-time-window/lab-b.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/conflict-time-window/lab-b.json",
+      "sha256": "8c5bcc41b53d89615c05b49a1dcd912272ba8de0ba3b83d4fecb8acac9e11ae8"
+    }
+  ]
+}

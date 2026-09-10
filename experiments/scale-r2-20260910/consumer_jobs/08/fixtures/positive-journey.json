@@ -1,7 +1,16 @@
 {
   "schema": "x402.r2.consumer.customer_result_request.v1",
-  "requestId": "journey-positive-20260910",
-  "recipeIds": ["procurement-brief"],
+  "requestId": "s152-positive-journey-20260910",
+  "clock": "2026-09-10T18:00:00.000Z",
+  "recipeIds": [
+    "migration-checklist",
+    "release-brief",
+    "table-reconcile",
+    "link-index",
+    "replay-pack",
+    "freshness-receipt",
+    "procurement-brief"
+  ],
   "procurementInputPath": "../07/fixtures/positive.json",
-  "note": "Clean-install positive path: only the ready 07 recipe."
+  "note": "S152 positive buyer journey: Heavy 01–06 synthetic positives + 07 procurement-brief. URLs in fixtures stay data."
 }

@@ -1,0 +1,17 @@
+{
+  "evidenceClass": "synthetic",
+  "transform": "keep-name-version-drop-unpublished-fields",
+  "datasetId": "npm:vercel",
+  "sourceUrl": "https://registry.npmjs.org/vercel",
+  "licenseNote": "npm registry metadata; follow npm terms; package license separately",
+  "package": "vercel",
+  "version": "59.15.1",
+  "sourceUpdatedAt": null,
+  "sourceUpdatedAtField": "published_at",
+  "note": "S122 second snapshot is the npm version document. It has name/version and no published_at, so source update time is not observable from this body.",
+  "derivedFrom": {
+    "host": "/tmp/s127/x402-url-extractor",
+    "path": "experiments/s122-application-jobs/fixtures/npm-vercel/second-snapshot-version-doc.json",
+    "sha256": "55b8af1dcae8a13ac579300df00e426f0a8b5cf375821ef884e87c425ca02eac"
+  }
+}

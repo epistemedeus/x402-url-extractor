@@ -1,0 +1,99 @@
+{
+  "schema": "s137.consumer-evidence.real-fixture.v1",
+  "cell": "c09",
+  "jobId": "R2-CONSUMER-JOBS-02",
+  "artifactKind": "github-release-json",
+  "evidenceClass": "fixture",
+  "captureLabel": "live-capture",
+  "replayLabel": "fixture",
+  "offline": true,
+  "payment": { "attempted": false },
+  "cost": { "assignmentSpendUsd": 0, "note": "public GitHub REST GET; no purchase" },
+  "clock": "2026-09-10T11:23:59Z",
+  "retrievedAt": "2026-09-10T11:23:59Z",
+  "url": "https://api.github.com/repos/expressjs/express/releases/tags/v5.2.1",
+  "sha256": "0edb4d411bd1cfbafacffe1c690e1467deb5f3f2ed3b7a05541af3034d27fe5f",
+  "capture": {
+    "method": "live-capture",
+    "replayLabel": "fixture",
+    "offline": true,
+    "paidEndpoint": false,
+    "note": "Unauthenticated HTTPS GET of public GitHub REST release JSON. Stored snapshot is the HTTP body as received (compact JSON, no pretty-print, no trailing newline). Headers file is the HTTP response header block as received. No GitHub token. No npm install. No spend."
+  },
+  "artifacts": [
+    {
+      "id": "github-release-express-v5.2.1",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief/github-express-v5.2.1.json",
+      "url": "https://api.github.com/repos/expressjs/express/releases/tags/v5.2.1",
+      "canonicalReleaseUrl": "https://api.github.com/repos/expressjs/express/releases/266525532",
+      "htmlUrl": "https://github.com/expressjs/express/releases/tag/v5.2.1",
+      "retrievedAt": "2026-09-10T11:23:59Z",
+      "httpStatus": 200,
+      "httpDate": "Thu, 10 Sep 2026 11:23:59 GMT",
+      "lastModified": "Tue, 02 Dec 2025 21:02:42 GMT",
+      "etag": "W/\"94f806fc7018633e4fdceb10de1bcc30ce4ae407894d1d2db25d69e9acb5dd1a\"",
+      "sha256": "0edb4d411bd1cfbafacffe1c690e1467deb5f3f2ed3b7a05541af3034d27fe5f",
+      "bytes": 2442,
+      "mediaType": "application/json",
+      "accept": "application/vnd.github+json",
+      "apiVersion": "2022-11-28",
+      "label": "live-capture",
+      "replayLabel": "fixture"
+    },
+    {
+      "id": "github-release-express-v5.2.1-headers",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief/github-express-v5.2.1.headers.txt",
+      "url": "https://api.github.com/repos/expressjs/express/releases/tags/v5.2.1",
+      "retrievedAt": "2026-09-10T11:23:59Z",
+      "sha256": "d6e35f0ca7169b88b249052e8ba2f66cf4215716b1c9de0b78a8df42a4a9f04b",
+      "bytes": 1322,
+      "mediaType": "message/http; msgtype=response-headers",
+      "label": "live-capture",
+      "replayLabel": "fixture",
+      "note": "Supporting capture metadata for retrievedAt; not a second release."
+    }
+  ],
+  "license": {
+    "note": "expressjs/express LICENSE is MIT (SPDX MIT) per GitHub license API at retrieve time. The snapshot is a GitHub REST JSON payload; GitHub API terms apply to the envelope. This pack does not re-license Express, does not attest legal compliance, and does not publish or merge.",
+    "spdxId": "MIT",
+    "licenseName": "MIT License",
+    "url": "https://api.github.com/repos/expressjs/express/license",
+    "htmlUrl": "https://github.com/expressjs/express/blob/master/LICENSE",
+    "retrievedAt": "2026-09-10T11:23:59Z",
+    "responseSha256": "f24775d86515e35346df693e7302b545aa4241a5437e3f1b6f4d2f0b7fb6e7dd",
+    "bytes": 2615,
+    "bytesRetained": false
+  },
+  "citations": [
+    {
+      "id": "github-release-express-v5.2.1",
+      "url": "https://api.github.com/repos/expressjs/express/releases/tags/v5.2.1",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief/github-express-v5.2.1.json",
+      "sha256": "0edb4d411bd1cfbafacffe1c690e1467deb5f3f2ed3b7a05541af3034d27fe5f",
+      "retrievedAt": "2026-09-10T11:23:59Z"
+    },
+    {
+      "id": "github-release-express-v5.2.1-headers",
+      "url": "https://api.github.com/repos/expressjs/express/releases/tags/v5.2.1",
+      "path": "experiments/s137-consumer-evidence-jobs/fixtures/real/release-brief/github-express-v5.2.1.headers.txt",
+      "sha256": "d6e35f0ca7169b88b249052e8ba2f66cf4215716b1c9de0b78a8df42a4a9f04b",
+      "retrievedAt": "2026-09-10T11:23:59Z"
+    }
+  ],
+  "limitations": [
+    "GitHub assets[] is empty in this snapshot; that does not prove binaries do not exist elsewhere (npm dist is not in this JSON).",
+    "target_commitish is the branch name master, not a 40-char git SHA; shipped commit is not identified by this snapshot alone.",
+    "No CI, coverage, or test-run fields in GitHub release JSON; tested lane is absent, not failed.",
+    "Release body is announced prose (including claims about v5.2.0 and a rejected CVE); those claims are not independently verified here.",
+    "created_at, published_at, and updated_at differ; do not collapse them into one event time.",
+    "License API body was hashed at retrieve time and not retained (bytesRetained false).",
+    "No paid endpoint, no legal attestation, no customer demand, no spend, no publish."
+  ],
+  "claims": {
+    "inventsFacts": false,
+    "paidEndpoint": false,
+    "legalAttestation": false,
+    "modelAsOracle": false,
+    "assertsCustomerDemand": false
+  }
+}

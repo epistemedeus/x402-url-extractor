@@ -1,0 +1,104 @@
+{
+  "schema": "s137.table-reconcile.case.v1",
+  "id": "partial-row-coverage",
+  "jobId": "R2-CONSUMER-JOBS-03",
+  "kind": "partial",
+  "label": "synthetic",
+  "evidenceClass": "synthetic",
+  "clock": "2026-09-10T12:00:00.000Z",
+  "title": "Overlapping keys agree; one key exists only in lab-a",
+  "notes": "Authored synthetic. Do not fill lab-b's missing link_index_hits row. Overlap stays cited agreement.",
+  "join": {
+    "keys": [
+      "metric",
+      "windowStart"
+    ],
+    "unit": "count",
+    "timeWindow": {
+      "start": "2026-08-03T00:00:00.000Z",
+      "end": "2026-08-17T00:00:00.000Z",
+      "grain": "P7D",
+      "inclusiveStart": true,
+      "inclusiveEnd": false
+    },
+    "units": {
+      "value": "count"
+    }
+  },
+  "doNotInvent": [
+    "sum",
+    "convert-units",
+    "interpolate-window",
+    "fill-missing"
+  ],
+  "tables": [
+    {
+      "id": "lab-a",
+      "path": "sources/partial-row-coverage/lab-a.json"
+    },
+    {
+      "id": "lab-b",
+      "path": "sources/partial-row-coverage/lab-b.json"
+    }
+  ],
+  "expect": {
+    "decision": "partial",
+    "inventTotals": false,
+    "findings": [
+      {
+        "id": "agree:synthetic.page_extracts:2026-08-03",
+        "kind": "agree",
+        "keys": {
+          "metric": "synthetic.page_extracts",
+          "windowStart": "2026-08-03T00:00:00.000Z"
+        },
+        "unit": "count",
+        "value": 4,
+        "citationIds": [
+          "src:partial-row-coverage/lab-a",
+          "src:partial-row-coverage/lab-b"
+        ]
+      },
+      {
+        "id": "agree:synthetic.page_extracts:2026-08-10",
+        "kind": "agree",
+        "keys": {
+          "metric": "synthetic.page_extracts",
+          "windowStart": "2026-08-10T00:00:00.000Z"
+        },
+        "unit": "count",
+        "value": 7,
+        "citationIds": [
+          "src:partial-row-coverage/lab-a",
+          "src:partial-row-coverage/lab-b"
+        ]
+      },
+      {
+        "id": "missing:synthetic.link_index_hits:2026-08-03:lab-b",
+        "kind": "missing-in-source",
+        "sourceId": "lab-b",
+        "keys": {
+          "metric": "synthetic.link_index_hits",
+          "windowStart": "2026-08-03T00:00:00.000Z"
+        },
+        "citationIds": [
+          "src:partial-row-coverage/lab-a"
+        ]
+      }
+    ]
+  },
+  "citations": [
+    {
+      "id": "src:partial-row-coverage/lab-a",
+      "path": "sources/partial-row-coverage/lab-a.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/partial-row-coverage/lab-a.json",
+      "sha256": "251eca57b0533214dc0763d300201e1d35b04d11f8286f36fc5f8737b6c42aaa"
+    },
+    {
+      "id": "src:partial-row-coverage/lab-b",
+      "path": "sources/partial-row-coverage/lab-b.json",
+      "url": "experiments/s137-consumer-evidence-jobs/fixtures/synthetic/table-reconcile/sources/partial-row-coverage/lab-b.json",
+      "sha256": "38383d0f3395b2f8f82322c684eb04f6988c0274ccfff3d1a6031f031d41798a"
+    }
+  ]
+}

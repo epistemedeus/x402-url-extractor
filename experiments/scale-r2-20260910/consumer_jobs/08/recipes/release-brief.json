@@ -1,0 +1,16 @@
+{
+  "id": "release-brief",
+  "title": "Release evidence brief",
+  "status": "ready",
+  "jobRef": "R2-CONSUMER-JOBS-02",
+  "schema": "s137.consumer-evidence.packet.v1",
+  "artifact": "release-brief",
+  "cli": {
+    "path": "../../../s137-consumer-evidence-jobs/scripts/cli.mjs",
+    "commandShape": "node <cli> analyze release-brief --in <fixture> --clock <ISO> [--out <path>]",
+    "defaultIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/positive-aligned.json",
+    "conflictIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/conflict-sha-mismatch.json",
+    "negativeIn": "../../../s137-consumer-evidence-jobs/fixtures/synthetic/release-brief/cases/negative-empty.json"
+  },
+  "note": "Spawns S137 Heavy CLI analyze on operator-supplied fixtures. URLs stay data; no fetch/pay/publish."
+}
