@@ -135,6 +135,12 @@ const CLOSED_MCP_PRODUCTS = Object.freeze({
     resource: "mcp://tool/extract_batch",
     httpRoute: "/extract/batch",
   }),
+  lockfile_pin_delta: Object.freeze({
+    tool: "lockfile_pin_delta",
+    productSku: "samedaydesk-lockfile-pin-delta",
+    resource: "mcp://tool/lockfile_pin_delta",
+    httpRoute: "/lockfile-pin-delta",
+  }),
   read: Object.freeze({
     tool: "read",
     productSku: "samedaydesk-read",

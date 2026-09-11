@@ -5,9 +5,9 @@ import { decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
 
 test("publishes unique action-oriented titles for every live MCP tool", () => {
   const metadata = listMcpToolMetadata();
-  assert.equal(metadata.length, 23);
-  assert.equal(new Set(metadata.map((entry) => entry.name)).size, 23);
-  assert.equal(new Set(metadata.map((entry) => entry.title)).size, 23);
+  assert.equal(metadata.length, 24);
+  assert.equal(new Set(metadata.map((entry) => entry.name)).size, 24);
+  assert.equal(new Set(metadata.map((entry) => entry.title)).size, 24);
   for (const entry of metadata) {
     assert.match(entry.title, /^(?:Extract|Read|Scan|Generate|Enrich|Audit|Inspect|Plan|Underwrite|Replay|Preflight|Verify|Evaluate|Search)\b/);
   }
@@ -36,6 +36,10 @@ test("makes each overlapping web and company tool chooseable without renaming it
   assert.equal(extract.name, "extract");
   assert.match(extract.description, /Use `read` instead/);
   assert.doesNotMatch(extract.description, /Use `extract_batch`/, "default-off selection copy must not recommend an unavailable tool");
+  assert.doesNotMatch(extract.description, /lockfile_pin_delta/, "default-off selection copy must not recommend an unavailable tool");
+  const lockfilePinDelta = decorate("lockfile_pin_delta");
+  assert.match(lockfilePinDelta.description, /package-lock\.json/);
+  assert.match(lockfilePinDelta.description, /informational/);
   assert.match(extractBatch.description, /Use `extract` for a single URL/);
   assert.match(read.description, /Use `extract` instead/);
   assert.match(schemaforge.description, /Use `deep_audit` instead/);

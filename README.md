@@ -33,6 +33,15 @@ is not a measured margin guarantee. Use one server process and persistent
 `COMMERCE_DATA_DIR`; unknown settlement is quarantined, not automatically charged
 again. Bounded partial output does not promise every source or requested field.
 
+`LOCKFILE_PIN_DELTA_ENABLED=1` adds `POST /lockfile-pin-delta` and MCP
+`lockfile_pin_delta` for two caller-supplied npm `package-lock.json` objects.
+The default is off, so current 25/22 discovery is unchanged. Default price is
+`$0.005` (`LOCKFILE_PIN_DELTA_PRICE`), matching live `GET /extract`; it is
+configurable and is not D26's assumed 0.003 floor or a Railway bill. HTTP JSON
+only: no filesystem paths, arbitrary commands, or network fetch. Identical pins
+are informational, not engine failure. The signed deployment statement is not
+rewritten here.
+
 The new MCP tool projects the existing HTTP payment and durable replay handler.
 Its challenge resource is `https://agents.samedaydesk.com/extract/batch`, not
 `mcp://`: first call without payment, then reuse the returned HTTP resource and

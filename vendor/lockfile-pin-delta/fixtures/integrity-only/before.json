@@ -1,0 +1,17 @@
+{
+  "name": "integrity-only-app",
+  "version": "1.0.0",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "integrity-only-app",
+      "version": "1.0.0"
+    },
+    "node_modules/fixture-alpha": {
+      "version": "1.0.0",
+      "resolved": "https://example.invalid/fixture-alpha-1.0.0.tgz",
+      "integrity": "sha512-l/0QZeYH6WYJLVF9qn9Rymjnrjn7Oi0ExEDpGIQ337qIpPWJQhd5TSVlE2YOET42IWoCns7YnU02SuLR7aduBA=="
+    }
+  }
+}

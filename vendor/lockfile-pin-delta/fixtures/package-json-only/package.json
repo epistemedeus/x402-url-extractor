@@ -1,0 +1,8 @@
+{
+  "name": "package-json-only-app",
+  "version": "1.0.0",
+  "dependencies": {
+    "fixture-alpha": "^1.0.0",
+    "fixture-beta": "^2.0.0"
+  }
+}

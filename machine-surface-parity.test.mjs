@@ -187,8 +187,9 @@ test("fails when Circle is promoted onto a killed surface", () => {
 
 test("live MCP metadata still matches one tool per canonical route shape", () => {
   const names = listMcpToolMetadata().map((entry) => entry.name).sort();
-  assert.equal(names.length, 23);
+  assert.equal(names.length, 24);
   assert.ok(names.includes("extract_batch"));
+  assert.ok(names.includes("lockfile_pin_delta"));
   assert.ok(names.includes("morpho_protection"));
   assert.ok(names.includes("opportunity_preflight"));
   assert.ok(names.includes("settlement_proof"));
@@ -200,6 +201,7 @@ test("live MCP metadata still matches one tool per canonical route shape", () =>
 
 test("maps extract/batch to extract_batch for MCP parity", () => {
   assert.equal(mcpToolNameForRoute("/extract/batch"), "extract_batch");
+  assert.equal(mcpToolNameForRoute("/lockfile-pin-delta"), "lockfile_pin_delta");
   assert.equal(mcpToolNameForRoute("/extract"), "extract");
   assert.equal(mcpToolNameForRoute("/security/wallet-policy-conformance"), "wallet_policy_conformance");
 });

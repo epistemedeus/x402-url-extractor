@@ -17,7 +17,10 @@ export function isReadOnlyPaidPost(method, path) {
   if (OPERATION_KEYS.has(key)) return true;
   const enabled = String(process.env.EXTRACT_BATCH_ENABLED || "").trim().toLowerCase();
   const batchOn = enabled === "1" || enabled === "true" || enabled === "yes";
-  return batchOn && key === "POST /extract/batch";
+  if (batchOn && key === "POST /extract/batch") return true;
+  const lockfileEnabled = String(process.env.LOCKFILE_PIN_DELTA_ENABLED || "").trim().toLowerCase();
+  const lockfileOn = lockfileEnabled === "1" || lockfileEnabled === "true" || lockfileEnabled === "yes";
+  return lockfileOn && key === "POST /lockfile-pin-delta";
 }
 
 export function paidActionEffectExtension() {

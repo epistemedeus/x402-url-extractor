@@ -1,0 +1,24 @@
+{
+  "name": "missing-integrity-app",
+  "version": "1.0.0",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "missing-integrity-app",
+      "version": "1.0.0",
+      "dependencies": {
+        "fixture-alpha": "1.0.1",
+        "fixture-beta": "2.0.0"
+      }
+    },
+    "node_modules/fixture-alpha": {
+      "version": "1.0.1",
+      "resolved": "https://example.invalid/fixture-alpha-1.0.1.tgz"
+    },
+    "node_modules/fixture-beta": {
+      "version": "2.0.0",
+      "resolved": "https://example.invalid/fixture-beta-2.0.0.tgz"
+    }
+  }
+}
