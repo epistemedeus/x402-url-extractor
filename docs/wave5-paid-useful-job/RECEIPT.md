@@ -17,7 +17,7 @@ credential through the existing idempotency store.
 | --- | --- |
 | Merchant base | `a143898dd1ec35c097ca7eb0b472f30dad1ee319` |
 | Engine | `fba9d14872bc4c04214e527b9edfb30c2123c9e7` `tools/lockfile-pin-delta/` |
-| M01 catalog | `958361610cf1e2b62062040bf4e91f1371fe2f3e` |
+| M01 catalog | `a20232b0f777b0f737cdffefb64a9ca9d9c9ba0e` |
 | D01 contract (semantics only) | `6bed72dd22a396134aa5c957933b42c3a5746698` |
 
 ## Owned paths

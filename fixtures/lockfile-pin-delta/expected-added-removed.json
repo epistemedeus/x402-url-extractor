@@ -1,0 +1,12 @@
+{
+  "note": "Handwritten expected names for vendor added-removed fixtures. Not copied from engine output.",
+  "removedNames": ["fixture-beta"],
+  "addedNames": ["fixture-gamma"],
+  "unchangedNames": ["fixture-alpha", "@scope/pkg"],
+  "counts": {
+    "added": 1,
+    "removed": 1,
+    "changed": 0,
+    "unchanged": 2
+  }
+}

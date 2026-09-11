@@ -35,12 +35,13 @@ again. Bounded partial output does not promise every source or requested field.
 
 `LOCKFILE_PIN_DELTA_ENABLED=1` adds `POST /lockfile-pin-delta` and MCP
 `lockfile_pin_delta` for two caller-supplied npm `package-lock.json` objects.
-The default is off, so current 25/22 discovery is unchanged. Default price is
-`$0.005` (`LOCKFILE_PIN_DELTA_PRICE`), matching live `GET /extract`; it is
-configurable and is not D26's assumed 0.003 floor or a Railway bill. HTTP JSON
-only: no filesystem paths, arbitrary commands, or network fetch. Identical pins
-are informational, not engine failure. The signed deployment statement is not
-rewritten here.
+The default is off. Production already has `EXTRACT_BATCH_ENABLED=1` (26 paid
+HTTP / 23 MCP tools). Enabling lockfile beside that envelope is 27 / 24.
+Default-off catalogs remain 25 / 22. Default price is `$0.005`
+(`LOCKFILE_PIN_DELTA_PRICE`), matching live `GET /extract`. Margin is not
+proven. HTTP JSON only: no filesystem paths, arbitrary commands, or network
+fetch. Identical pins are informational, not engine failure. The signed
+deployment statement is not rewritten here.
 
 The new MCP tool projects the existing HTTP payment and durable replay handler.
 Its challenge resource is `https://agents.samedaydesk.com/extract/batch`, not

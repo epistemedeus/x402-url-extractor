@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
@@ -12,7 +13,6 @@ import { CliRefuse } from "./vendor/lockfile-pin-delta/lib/errors.mjs";
 import { toMarkdown } from "./vendor/lockfile-pin-delta/lib/format.mjs";
 import { looksLikeHtml, parseLockfileText } from "./vendor/lockfile-pin-delta/lib/parse-lockfile.mjs";
 import {
-  D26_PROPOSED_PRICE_USDC,
   DEFAULT_LOCKFILE_PIN_DELTA_PRICE_USD,
   LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC,
   LOCKFILE_PIN_DELTA_CATALOG_SHA,
@@ -40,7 +40,6 @@ import {
 } from "./lockfile-pin-delta-config.mjs";
 
 export {
-  D26_PROPOSED_PRICE_USDC,
   DEFAULT_LOCKFILE_PIN_DELTA_PRICE_USD,
   LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC,
   LOCKFILE_PIN_DELTA_DESCRIPTION,
@@ -74,44 +73,11 @@ const merchantRoot = dirname(fileURLToPath(import.meta.url));
 const defaultWorkerPath = join(merchantRoot, "lockfile-pin-delta-worker.mjs");
 const ownedWorkers = new Set();
 
-const JOURNEY_BEFORE = Object.freeze({
-  name: "fixture-lock-app",
-  version: "1.0.0",
-  lockfileVersion: 3,
-  requires: true,
-  packages: {
-    "": { name: "fixture-lock-app", version: "1.0.0", dependencies: { "fixture-alpha": "1.0.0", "fixture-beta": "2.0.0" } },
-    "node_modules/fixture-alpha": {
-      version: "1.0.0",
-      resolved: "https://example.invalid/fixture-alpha-1.0.0.tgz",
-      integrity: "sha512-l/0QZeYH6WYJLVF9qn9Rymjnrjn7Oi0ExEDpGIQ337qIpPWJQhd5TSVlE2YOET42IWoCns7YnU02SuLR7aduBA==",
-    },
-    "node_modules/fixture-beta": {
-      version: "2.0.0",
-      resolved: "https://example.invalid/fixture-beta-2.0.0.tgz",
-      integrity: "sha512-0QtRlD/POcdQv6b4iFPabhFBByI/c9FaLvfssINXg0Tms8JIij5lcTGvIEJTQ5netWtguTSeYn7a+wH5XmwHXg==",
-    },
-  },
-});
-const JOURNEY_AFTER = Object.freeze({
-  name: "fixture-lock-app",
-  version: "1.0.0",
-  lockfileVersion: 3,
-  requires: true,
-  packages: {
-    "": { name: "fixture-lock-app", version: "1.0.0", dependencies: { "fixture-alpha": "1.0.1", "fixture-beta": "2.0.0" } },
-    "node_modules/fixture-alpha": {
-      version: "1.0.1",
-      resolved: "https://example.invalid/fixture-alpha-1.0.1.tgz",
-      integrity: "sha512-wVVmY4V8n45/SbnRdhRHz/Ug91u4hs7gEBP5Yd72r7o7mg5C2TOxvLSeMKRgw14M/WfRYzHIQr63JaNtAVJntA==",
-    },
-    "node_modules/fixture-beta": {
-      version: "2.0.0",
-      resolved: "https://example.invalid/fixture-beta-2.0.0.tgz",
-      integrity: "sha512-0QtRlD/POcdQv6b4iFPabhFBByI/c9FaLvfssINXg0Tms8JIij5lcTGvIEJTQ5netWtguTSeYn7a+wH5XmwHXg==",
-    },
-  },
-});
+function readVendorLockfileFixture(rel) {
+  return Object.freeze(JSON.parse(readFileSync(join(merchantRoot, "vendor/lockfile-pin-delta/fixtures", rel), "utf8")));
+}
+const JOURNEY_BEFORE = readVendorLockfileFixture("journey/before.json");
+const JOURNEY_AFTER = readVendorLockfileFixture("journey/after.json");
 
 export const LOCKFILE_PIN_DELTA_DISCOVERY_INPUT = Object.freeze({
   before: JOURNEY_BEFORE,
@@ -267,7 +233,7 @@ export function lockfilePinDeltaBoundary() {
     registryFetch: false,
     soldFlag: false,
     purchaseAuthority: false,
-    d26PriceUsed: false,
+    npmAudit: false,
   });
 }
 
@@ -345,14 +311,11 @@ export function formatLockfilePinDeltaResult(report, {
       admittedBodyBytes,
       wallMs,
       hostingCosts: "unknown",
-      railwayBill: "unknown",
       facilitatorFees: "unknown",
       modelCosts: "none",
-      d26ProposedUsdc: D26_PROPOSED_PRICE_USDC,
-      d26ProposedUsdcStatus: "assumption-not-used",
       liveExtractPriceUsd: "0.005",
       monetaryMargin: null,
-      note: "Default price matches live GET /extract $0.005. D26 0.003 USDC and EC2 CPU-credit estimates are assumptions, not this merchant's Railway bill or a proven non-lossmaking floor.",
+      note: "Default price matches live GET /extract $0.005. Margin is not proven.",
     },
     boundary: lockfilePinDeltaBoundary(),
     limits: {

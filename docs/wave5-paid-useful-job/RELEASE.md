@@ -2,27 +2,27 @@
 
 Deployment remains Root's next gate. This branch does not flip production.
 
-## What is already true on master
+## Catalog counts (do not mix these)
 
-25 paid HTTP operations and 22 MCP tools. Signed deployment statement still
-lists those standard routes, including disabled `POST /extract/batch`. This
-branch does not rewrite that statement.
+| Envelope | Paid HTTP | MCP tools | How |
+| --- | ---: | ---: | --- |
+| Signed deployment statement / default-off flags | 25 | 22 | `EXTRACT_BATCH_ENABLED` unset, `LOCKFILE_PIN_DELTA_ENABLED` unset. Includes disabled `POST /extract/batch` as a statement row, not a live path. |
+| Current production (`agents.samedaydesk.com`, GET 2026-09-11) | 26 | 23 | `EXTRACT_BATCH_ENABLED=1`. Live `/extract/batch`. No lockfile route. |
+| This branch, lockfile on, batch off (local tests) | 26 | 23 | `LOCKFILE_PIN_DELTA_ENABLED=1` only. |
+| This branch, lockfile on, production batch kept | 27 | 24 | Both flags on. This is the intended hosted enable. |
+
+This branch does not rewrite the signed 25-route statement.
 
 ## Enable the hosted lockfile compare
 
 1. Ship this branch to the existing Railway service (Root).
 2. Set `LOCKFILE_PIN_DELTA_ENABLED=1`.
-3. Optional: `LOCKFILE_PIN_DELTA_PRICE=$0.005` (default). Do not copy D26's
-   `0.003` as a proven floor.
-4. Keep one process and persistent `COMMERCE_DATA_DIR`.
-5. Do not set production CDP/xpay credentials in tests. Do not redeem overage.
-6. After enable, free discovery must show `POST /lockfile-pin-delta` on
-   `/openapi.json`, `/.well-known/x402`, `/api/actions`, MCP `tools/list`
-   (`lockfile_pin_delta`), and paid-action-effects. A missing path means the
-   flag is off; do not advertise a fixture as live.
-7. Re-sign the service deployment statement only when Root wants the new
-   route in the signed 25-route envelope. Until then, live evidence can
-   describe the hosted POST without claiming the old statement listed it.
+3. Keep `EXTRACT_BATCH_ENABLED=1` if production already has batch (it does). Do not unset it to “match 25/22”.
+4. Optional: `LOCKFILE_PIN_DELTA_PRICE=$0.005` (default). Margin is not proven.
+5. Keep one process and persistent `COMMERCE_DATA_DIR`.
+6. Do not set production CDP/xpay credentials in tests. Do not redeem overage.
+7. After enable, free discovery must show `POST /lockfile-pin-delta` on `/openapi.json`, `/.well-known/x402`, `/api/actions`, MCP `tools/list` (`lockfile_pin_delta`), and paid-action-effects. A missing path means the lockfile flag is off; do not advertise a fixture as live.
+8. Re-sign the service deployment statement only when Root wants the new route in the signed envelope. Until then, live evidence can describe the hosted POST without claiming the old statement listed it.
 
 ## Buyer check
 
@@ -34,5 +34,4 @@ Expect `enabled: true` and unpaid `402`. That is not a sale.
 
 ## Rollback
 
-Unset `LOCKFILE_PIN_DELTA_ENABLED` or set it to `0`. Default catalogs return
-to 25/22. Existing extract and batch prices stay as they were.
+Unset `LOCKFILE_PIN_DELTA_ENABLED` or set it to `0`. Production returns to the 26/23 extract_batch envelope if that flag stays on. Default-off catalogs are 25/22. Existing extract and batch prices stay as they were.

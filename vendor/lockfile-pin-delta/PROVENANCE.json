@@ -7,7 +7,7 @@
     "path": "tools/lockfile-pin-delta/",
     "ownerAssignment": "W5-M03",
     "catalogAssignment": "W5-M01",
-    "catalogSha": "958361610cf1e2b62062040bf4e91f1371fe2f3e"
+    "catalogSha": "a20232b0f777b0f737cdffefb64a9ca9d9c9ba0e"
   },
   "not": [
     "full-samedaydesk-checkout",

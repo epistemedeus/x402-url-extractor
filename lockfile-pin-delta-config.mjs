@@ -7,10 +7,9 @@ export const LOCKFILE_PIN_DELTA_ENGINE_SCHEMA = "samedaydesk.lockfile-pin-delta.
 export const LOCKFILE_PIN_DELTA_ENGINE_REPO = "epistemedeus/samedaydesk";
 export const LOCKFILE_PIN_DELTA_ENGINE_SHA = "fba9d14872bc4c04214e527b9edfb30c2123c9e7";
 export const LOCKFILE_PIN_DELTA_ENGINE_PATH = "tools/lockfile-pin-delta/";
-export const LOCKFILE_PIN_DELTA_CATALOG_SHA = "958361610cf1e2b62062040bf4e91f1371fe2f3e";
+export const LOCKFILE_PIN_DELTA_CATALOG_SHA = "a20232b0f777b0f737cdffefb64a9ca9d9c9ba0e";
 
 export const DEFAULT_LOCKFILE_PIN_DELTA_PRICE_USD = "$0.005";
-export const D26_PROPOSED_PRICE_USDC = "0.003";
 
 export const LOCKFILE_PIN_DELTA_MAX_REQUEST_BYTES = 256 * 1024;
 export const LOCKFILE_PIN_DELTA_MAX_LOCKFILE_BYTES = 128 * 1024;
@@ -26,7 +25,7 @@ export const LOCKFILE_PIN_DELTA_DESCRIPTION =
   "Compare two caller-supplied npm package-lock.json objects (lockfileVersion 2 or 3) and return added, removed, and changed name+version+integrity+resolved pins. HTTP JSON only: no filesystem paths, commands, or network fetch. Identical pins are informational, not failure. Charge is the bounded compare, not an install, audit, or purchase.";
 
 export const LOCKFILE_PIN_DELTA_QUOTE_MEANING =
-  "Configurable flat USDC quote for one bounded lockfile pin compare. Default $0.005 matches live GET /extract. D26's 0.003 USDC and EC2 CPU model are unused assumptions, not this merchant's Railway bill.";
+  "Flat USDC quote for one bounded compare of two caller-supplied npm package-lock.json objects. Default $0.005 matches live GET /extract. Charge is the compare, not an install, audit, or proven margin.";
 
 /**
  * Explicit production feature flag. Default off. Never inferred from

@@ -13,4 +13,5 @@ incumbent merchant payment, receipt, replay, OpenAPI, and MCP stack.
 Not built: a second payment rail, job platform, SDS52 runner, or a copy of the
 SameDayDesk repository. The engine is a source projection at
 `vendor/lockfile-pin-delta/` from `epistemedeus/samedaydesk`
-`fba9d14872bc4c04214e527b9edfb30c2123c9e7`.
+`fba9d14872bc4c04214e527b9edfb30c2123c9e7` (M03). Customer-facing catalog
+provenance is M01 `a20232b0f777b0f737cdffefb64a9ca9d9c9ba0e`.

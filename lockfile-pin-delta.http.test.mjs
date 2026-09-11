@@ -12,7 +12,8 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-import { LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC, LOCKFILE_PIN_DELTA_PATH } from "./lockfile-pin-delta-config.mjs";
+import { EXTRACT_BATCH_PATH } from "./extract-batch-config.mjs";
+import { LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC, LOCKFILE_PIN_DELTA_PATH, LOCKFILE_PIN_DELTA_QUOTE_MEANING } from "./lockfile-pin-delta-config.mjs";
 import { lockfilePinDeltaOutputSchema } from "./lockfile-pin-delta.mjs";
 
 const validateOutput = new Ajv2020({ strict: false, allErrors: true }).compile(lockfilePinDeltaOutputSchema());
@@ -255,6 +256,16 @@ test("mounted success, no-change, malformed, oversize, and wrong-replay-input", 
   assert.equal((await drifted.json()).charged, false);
   assert.equal(facilitator.calls.settle, 1);
 
+  const otherPayload = JSON.parse(Buffer.from(payment, "base64").toString("utf8"));
+  otherPayload.payload.authorization.from = `0x${"a".repeat(40)}`;
+  const driftedPayer = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(
+    deltaBody,
+    { "payment-signature": Buffer.from(JSON.stringify(otherPayload)).toString("base64") },
+  ));
+  assert.equal(driftedPayer.status, 409);
+  assert.equal((await driftedPayer.json()).charged, false);
+  assert.equal(facilitator.calls.settle, 1);
+
   const sameChallenge = decodePaymentRequired(
     await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost({ before: journeyBefore, after: journeyBefore })),
   );
@@ -335,6 +346,51 @@ test("simulated facilitator verify failure does not settle", { timeout: 60_000 }
   await rejected.text();
   assert.equal(facilitator.calls.verify, 1);
   assert.equal(facilitator.calls.settle, 0);
+});
+
+test("lockfile flag does not disable production extract_batch", { timeout: 60_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "lockfile-batch-"));
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => {
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({
+    dataDir,
+    facilitatorUrl: facilitator.url,
+    extraEnv: { EXTRACT_BATCH_ENABLED: "1" },
+  });
+  const deadline = Date.now() + 20_000;
+  while (!merchant.output().includes("MCP server:  POST /mcp (24 paid tools)")) {
+    if (Date.now() > deadline) throw new Error(`MCP mount timed out:\n${merchant.output().slice(-2000)}`);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  const [openapi, catalog, batch, lockfile] = await Promise.all([
+    fetch(`${merchant.base}/openapi.json`).then((r) => r.json()),
+    fetch(`${merchant.base}/api/actions`).then((r) => r.json()),
+    fetch(`${merchant.base}${EXTRACT_BATCH_PATH}`, jsonPost({ urls: ["https://example.com/"] })),
+    fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost({ before: journeyBefore, after: journeyAfter })),
+  ]);
+  assert.equal(openapi.paths[EXTRACT_BATCH_PATH].post.operationId, "extractPublicUrlsBatch");
+  assert.equal(openapi.paths[LOCKFILE_PIN_DELTA_PATH].post.operationId, "compareLockfilePinDelta");
+  assert.equal(Object.values(openapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length, 27);
+  assert.equal(catalog.actions.some((action) => action.route === EXTRACT_BATCH_PATH), true);
+  assert.equal(catalog.actions.some((action) => action.route === LOCKFILE_PIN_DELTA_PATH), true);
+  assert.equal(batch.status, 402);
+  assert.equal(lockfile.status, 402);
+  assert.doesNotMatch(LOCKFILE_PIN_DELTA_QUOTE_MEANING, /D26|EC2/i);
+  const client = new Client({ name: "lockfile-batch", version: "0" });
+  await client.connect(new StreamableHTTPClientTransport(new URL(`${merchant.base}/mcp`)));
+  try {
+    const tools = (await client.listTools()).tools;
+    assert.equal(tools.length, 24);
+    assert.ok(tools.some((tool) => tool.name === "extract_batch"));
+    assert.ok(tools.some((tool) => tool.name === "lockfile_pin_delta"));
+  } finally {
+    await client.close();
+  }
 });
 
 test("unknown settlement is not retried", { timeout: 60_000 }, async (t) => {
