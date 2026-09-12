@@ -20,7 +20,7 @@ if (String(process.env.VENDOR_BUDGET_IMPACT_WORKER_CRASH || "").trim() === "1") 
   emit({ ok: false, code: "engine-crash", error: "injected worker crash" }, 1);
 }
 if (String(process.env.VENDOR_BUDGET_IMPACT_WORKER_HUGE_STDOUT || "").trim() === "1") {
-  process.stdout.write(`${"x".repeat(8_192)}\n`);
+  process.stdout.write(`${"x".repeat(70_000)}\n`);
   process.exit(0);
 }
 

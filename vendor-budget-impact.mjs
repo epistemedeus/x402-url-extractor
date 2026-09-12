@@ -340,12 +340,50 @@ function sha256Json(value) {
   return createHash("sha256").update(`${JSON.stringify(value)}\n`).digest("hex");
 }
 
+const FORBIDDEN_ENGINE_KEYS = Object.freeze([
+  "payer", "wallet", "paymentSignature", "roi", "totalCost", "purchaseAdvice",
+  "sold", "soldFlag", "demand", "liveQuote",
+]);
+
+function fieldKeyOf(row) {
+  return String(row.field || "").trim().toLowerCase().replace(/\s+/g, "_");
+}
+
+export function workerPayloadClaimsPurchaseAuthority(computed) {
+  return computed?.impact?.purchaseAuthority === true
+    || computed?.report?.purchaseAuthority === true
+    || computed?.impact?.paidValueClaim === true
+    || computed?.report?.paidValueClaim === true
+    || computed?.impact?.sold === true
+    || computed?.report?.sold === true;
+}
+
+export function reportsAgree(expected, computed) {
+  if (!expected?.report || !computed?.report || !expected?.impact || !computed?.impact) return false;
+  if (expected.impact.status !== computed.impact.status) return false;
+  const left = publicEngineReport(expected.report, expected.impact);
+  const right = publicEngineReport(computed.report, computed.impact);
+  if (JSON.stringify(left.counts) !== JSON.stringify(right.counts)) return false;
+  for (const key of ["fieldChanges", "unitChanges", "added", "removed", "conflicting", "unknown"]) {
+    if (JSON.stringify(left[key] || []) !== JSON.stringify(right[key] || [])) return false;
+  }
+  return true;
+}
+
 export function validateComputedVendorBudgetImpact(engine, admitted) {
   if (!engine || engine.ok !== true) {
     return { ok: false, code: "output-schema-mismatch", error: "computed impact is not a successful report" };
   }
   if (engine.purchaseAuthority === true || engine.paidValueClaim === true) {
     return { ok: false, code: "output-authority-rejected", error: "computed impact claimed purchase authority" };
+  }
+  if (engine.appId && engine.appId !== "vendor-budget-impact") {
+    return { ok: false, code: "output-schema-mismatch", error: "computed impact is not a vendor-budget report" };
+  }
+  for (const key of FORBIDDEN_ENGINE_KEYS) {
+    if (Object.hasOwn(engine, key) && engine[key] !== false && engine[key] != null) {
+      return { ok: false, code: "output-counterparty-leaked", error: `computed impact included ${key}` };
+    }
   }
   const status = engine.status;
   if (!["actionable", "informational", "partial"].includes(status)) {
@@ -366,10 +404,23 @@ export function validateComputedVendorBudgetImpact(engine, admitted) {
   if ((engine.unitChanges || []).length !== counts.unitChanges) {
     return { ok: false, code: "output-counts-invalid", error: "unitChanges length does not match counts" };
   }
-  const beforeKeys = new Set(admitted.before.snapshot.rows.map((row) => row.field.trim().toLowerCase().replace(/\s+/g, "_")));
-  const afterByKey = new Map(admitted.after.snapshot.rows.map((row) => [row.field.trim().toLowerCase().replace(/\s+/g, "_"), row]));
-  const beforeByKey = new Map(admitted.before.snapshot.rows.map((row) => [row.field.trim().toLowerCase().replace(/\s+/g, "_"), row]));
+  const beforeKeys = new Set(admitted.before.snapshot.rows.map(fieldKeyOf));
+  const afterByKey = new Map(admitted.after.snapshot.rows.map((row) => [fieldKeyOf(row), row]));
+  const beforeByKey = new Map(admitted.before.snapshot.rows.map((row) => [fieldKeyOf(row), row]));
+  const unitChangedKeys = new Set();
+  for (const change of engine.unitChanges || []) {
+    if (change.beforeUnit === change.afterUnit) {
+      return { ok: false, code: "output-delta-incoherent", error: `unitChange ${change.fieldKey} has identical units` };
+    }
+    if (change.numericComparison && change.numericComparison !== "not-applicable-across-units") {
+      return { ok: false, code: "output-unit-economics", error: `unitChange ${change.fieldKey} fabricated numeric economics` };
+    }
+    unitChangedKeys.add(change.fieldKey);
+  }
   for (const change of engine.fieldChanges || []) {
+    if (unitChangedKeys.has(change.fieldKey)) {
+      return { ok: false, code: "output-unit-economics", error: `fieldChange ${change.fieldKey} compared numbers across units` };
+    }
     if (JSON.stringify(change.beforeValue) === JSON.stringify(change.afterValue)) {
       return { ok: false, code: "output-delta-incoherent", error: `fieldChange ${change.fieldKey} has identical values` };
     }
@@ -381,10 +432,8 @@ export function validateComputedVendorBudgetImpact(engine, admitted) {
     if (beforeRow.value !== change.beforeValue || afterRow.value !== change.afterValue) {
       return { ok: false, code: "output-delta-unbound", error: `fieldChange ${change.fieldKey} does not match admitted values` };
     }
-  }
-  for (const change of engine.unitChanges || []) {
-    if (change.beforeUnit === change.afterUnit) {
-      return { ok: false, code: "output-delta-incoherent", error: `unitChange ${change.fieldKey} has identical units` };
+    if (beforeRow.unit !== afterRow.unit) {
+      return { ok: false, code: "output-unit-economics", error: `fieldChange ${change.fieldKey} spans mismatched units` };
     }
   }
   for (const added of engine.added || []) {
@@ -399,8 +448,11 @@ export function validateComputedVendorBudgetImpact(engine, admitted) {
   if (status === "actionable" && !hasDelta) {
     return { ok: false, code: "output-status-invalid", error: "actionable report has no field/unit/membership delta" };
   }
-  if (Object.hasOwn(engine, "payer") || Object.hasOwn(engine, "wallet") || Object.hasOwn(engine, "paymentSignature")) {
-    return { ok: false, code: "output-counterparty-leaked", error: "computed impact included counterparty fields" };
+  if (status === "actionable" && (counts.conflicting > 0 || counts.unknown > 0)) {
+    return { ok: false, code: "output-status-invalid", error: "actionable report cannot include conflicting or unknown rows" };
+  }
+  if (status === "partial" && counts.conflicting === 0 && counts.unknown === 0) {
+    return { ok: false, code: "output-status-invalid", error: "partial report requires conflicting or unknown rows" };
   }
   return { ok: true };
 }
@@ -623,16 +675,27 @@ export async function executeVendorBudgetImpact({
     after: admitted.after.snapshot,
   }));
   try {
+    const expected = compareAdmittedSnapshots(admitted.before.snapshot, admitted.after.snapshot);
     const computed = inProcess
-      ? compareAdmittedSnapshots(admitted.before.snapshot, admitted.after.snapshot)
+      ? expected
       : await runVendorBudgetCompareWorker({
         before: admitted.before.snapshot,
         after: admitted.after.snapshot,
         env,
         timeoutMs: limits.timeoutMs,
       });
+    if (workerPayloadClaimsPurchaseAuthority(computed) || (!inProcess && !reportsAgree(expected, computed))) {
+      return formatVendorBudgetImpactResult(null, null, {
+        charged: false,
+        transport: "engine-crash",
+        wallMs: Date.now() - started,
+        admittedBodyBytes,
+        limits,
+        env,
+      });
+    }
     const semantic = validateComputedVendorBudgetImpact(
-      publicEngineReport(computed.report, computed.impact),
+      publicEngineReport(expected.report, expected.impact),
       admitted,
     );
     if (!semantic.ok) {
@@ -645,7 +708,7 @@ export async function executeVendorBudgetImpact({
         env,
       });
     }
-    return formatVendorBudgetImpactResult(computed.report, computed.impact, {
+    return formatVendorBudgetImpactResult(expected.report, expected.impact, {
       charged: true,
       transport: "ok",
       wallMs: Date.now() - started,

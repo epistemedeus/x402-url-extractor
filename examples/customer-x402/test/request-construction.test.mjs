@@ -14,9 +14,11 @@ import {
 import {
   DEFAULT_AUTHORIZATION,
   DEFAULT_LOCKFILE_AUTHORIZATION,
+  DEFAULT_VENDOR_BUDGET_AUTHORIZATION,
   LIVE_EXTRACT_URL,
   LIVE_LOCKFILE_URL,
   LIVE_ORIGIN,
+  LIVE_VENDOR_BUDGET_URL,
 } from "../src/constants.mjs";
 import { runAuthorizedPurchase } from "../src/purchase.mjs";
 import { runPreflight } from "../src/preflight.mjs";
@@ -247,6 +249,42 @@ test("CLI --approve refuses lockfile missing after without opening a wallet", ()
   assert.equal(receipt.outcome, "authorization_refused");
   assert.equal(receipt.walletAccessed, false);
   assert.match(receipt.message, /after/);
+});
+
+test("vendor-budget empty POST is unsigned discovery and missing after is refused before wallet", async () => {
+  const empty = classifyRequestConstruction(LIVE_VENDOR_BUDGET_URL, { method: "POST", body: "{}" });
+  assert.equal(empty.kind, "unsigned_discovery");
+  assert.equal(empty.purchaseReady, false);
+  assert.deepEqual(empty.missing, ["before", "after"]);
+  let fetched = 0;
+  const fetchImpl = async () => {
+    fetched += 1;
+    throw new Error("must not fetch incomplete vendor-budget");
+  };
+  const loader = throwingLoader();
+  const incomplete = {
+    ...DEFAULT_VENDOR_BUDGET_AUTHORIZATION,
+    body: { before: { rows: [{ field: "desk-chat-input", value: 1, unit: "USD/1M-tokens" }] } },
+  };
+  assert.equal(
+    classifyRequestConstruction(LIVE_VENDOR_BUDGET_URL, { method: "POST", body: JSON.stringify(incomplete.body) }).kind,
+    "invalid_input",
+  );
+  assert.throws(() => normalizeAuthorization(incomplete), /after/);
+  const paid = await runAuthorizedPurchase({
+    authorization: incomplete,
+    approve: true,
+    fetchImpl,
+    loadAccount: loader.loadAccount,
+  });
+  assert.equal(paid.outcome, "authorization_refused");
+  assert.equal(paid.walletAccessed, false);
+  assert.equal(loader.state.loaded, false);
+  assert.equal(fetched, 0);
+  const cli = cliApprove(incomplete);
+  const receipt = JSON.parse(cli.stdout || cli.stderr);
+  assert.equal(receipt.outcome, "authorization_refused");
+  assert.equal(receipt.walletAccessed, false);
 });
 
 test("fixture paid GET still signs only after a bound request", async () => {

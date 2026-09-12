@@ -551,6 +551,59 @@ test("simulated facilitator verify failure does not settle", { timeout: 60_000 }
   assert.equal(facilitator.calls.settle, 0);
 });
 
+test("unrelated worker report and oversized stdout do not settle", { timeout: 90_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "vendor-budget-unrelated-"));
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => {
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({
+    dataDir,
+    facilitatorUrl: facilitator.url,
+    extraEnv: {
+      VENDOR_BUDGET_IMPACT_WORKER_PATH: path.join(cwd, "vendor-budget-impact-unrelated-worker.mjs"),
+    },
+  });
+  const body = { before: callerBefore, after: callerAfter };
+  const challenge = decodePaymentRequired(await fetch(`${merchant.base}${VENDOR_BUDGET_IMPACT_PATH}`, jsonPost(body)));
+  const payment = testPayment(challenge, { id: "vendor_unrelated_123456789" });
+  const paid = await fetch(`${merchant.base}${VENDOR_BUDGET_IMPACT_PATH}`, jsonPost(body, { "payment-signature": payment }));
+  const result = await paid.json();
+  assert.equal(paid.status, 503, JSON.stringify(result));
+  assert.equal(result.charged, false);
+  assert.equal(result.analysis, "not-run");
+  assert.equal(result.transport, "engine-crash");
+  assert.equal(facilitator.calls.settle, 0);
+});
+
+test("oversized worker stdout is HTTP 503 and does not settle", { timeout: 60_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "vendor-budget-huge-"));
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => {
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({
+    dataDir,
+    facilitatorUrl: facilitator.url,
+    extraEnv: { VENDOR_BUDGET_IMPACT_WORKER_HUGE_STDOUT: "1" },
+  });
+  const body = { before: callerBefore, after: callerAfter };
+  const challenge = decodePaymentRequired(await fetch(`${merchant.base}${VENDOR_BUDGET_IMPACT_PATH}`, jsonPost(body)));
+  const payment = testPayment(challenge, { id: "vendor_huge_1234567890abcd" });
+  const paid = await fetch(`${merchant.base}${VENDOR_BUDGET_IMPACT_PATH}`, jsonPost(body, { "payment-signature": payment }));
+  const result = await paid.json();
+  assert.equal(paid.status, 503, JSON.stringify(result));
+  assert.equal(result.charged, false);
+  assert.equal(result.transport, "engine-crash");
+  assert.equal(facilitator.calls.settle, 0);
+});
+
 test("x402 worker crash is HTTP 503 and does not settle", { timeout: 60_000 }, async (t) => {
   const dataDir = await mkdtemp(path.join(tmpdir(), "vendor-budget-crash-"));
   const facilitator = await startFakeFacilitator();

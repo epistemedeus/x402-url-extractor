@@ -12,6 +12,7 @@ import {
   isVendorBudgetImpactEnabled,
   isVendorBudgetUnsignedDiscoveryProbe,
   ownedVendorBudgetWorkerCount,
+  validateComputedVendorBudgetImpact,
   vendorBudgetImpactFailureDelivery,
   vendorBudgetImpactOutputExample,
   vendorBudgetImpactOutputSchema,
@@ -172,6 +173,61 @@ test("useful delta, informational no-change, and unit change stay distinct from 
   assert.equal(units.engine.counts.unitChanges, 1);
   assert.equal(units.engine.unitChanges[0].fieldKey, "grok-4.6-input");
   assert.equal(units.engine.unitChanges[0].numericComparison, "not-applicable-across-units");
+  assert.equal(units.engine.fieldChanges.some((row) => row.fieldKey === "grok-4.6-input"), false);
+  assert.equal(units.engine.purchaseAuthority, false);
+  assert.equal(Object.hasOwn(units.engine, "roi"), false);
+  assert.equal(Object.hasOwn(units.engine, "totalCost"), false);
+});
+
+test("syntactically shaped unrelated reports are not paid successes", async () => {
+  const admitted = admitVendorBudgetImpactRequest({ before: callerBefore, after: callerAfter });
+  const unrelated = {
+    ok: true,
+    appId: "vendor-budget-impact",
+    status: "actionable",
+    purchaseAuthority: false,
+    paidValueClaim: false,
+    counts: {
+      fieldChanges: 1, unitChanges: 0, added: 0, removed: 0, conflicting: 0, unknown: 0,
+    },
+    fieldChanges: [{ fieldKey: "unrelated-sku", beforeValue: 9, afterValue: 99, unit: "USD" }],
+    unitChanges: [],
+    added: [],
+    removed: [],
+  };
+  const semantic = validateComputedVendorBudgetImpact(unrelated, admitted);
+  assert.equal(semantic.ok, false);
+  assert.equal(semantic.code, "output-delta-unbound");
+
+  const acrossUnits = {
+    ...unrelated,
+    fieldChanges: [{
+      fieldKey: "desk-chat-input",
+      beforeValue: 1,
+      afterValue: 1.5,
+      unit: "USD/1M-tokens",
+    }],
+    unitChanges: [{
+      fieldKey: "desk-chat-input",
+      beforeUnit: "USD/1M-tokens",
+      afterUnit: "USD/1M-Tokens",
+      numericComparison: "converted",
+    }],
+    counts: { fieldChanges: 1, unitChanges: 1, added: 0, removed: 0, conflicting: 0, unknown: 0 },
+  };
+  assert.equal(validateComputedVendorBudgetImpact(acrossUnits, admitted).code, "output-unit-economics");
+
+  const injected = await executeVendorBudgetImpact({
+    input: { before: callerBefore, after: callerAfter },
+    env: {
+      ...process.env,
+      VENDOR_BUDGET_IMPACT_WORKER_PATH: join(here, "vendor-budget-impact-unrelated-worker.mjs"),
+    },
+  });
+  assert.equal(injected.charged, false);
+  assert.equal(injected.analysis, "not-run");
+  assert.equal(injected.transport, "engine-crash");
+  assert.equal(ownedVendorBudgetWorkerCount(), 0);
 });
 
 test("timeout and crash envelopes are not informational no-change", () => {

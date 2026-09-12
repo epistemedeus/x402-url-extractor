@@ -1,0 +1,41 @@
+{
+  "method": "POST",
+  "url": "https://agents.samedaydesk.com/vendor-budget-impact",
+  "network": "eip155:8453",
+  "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "recipient": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+  "amountCapAtomic": "5000",
+  "assetName": "USD Coin",
+  "assetVersion": "2",
+  "maxTimeoutSeconds": 300,
+  "requiredOutput": {
+    "mediaType": "application/json",
+    "requiredFields": [
+      "ok",
+      "product",
+      "schemaVersion",
+      "charged",
+      "analysis",
+      "quote.amountAtomic"
+    ],
+    "maxResponseBytes": 65536
+  },
+  "body": {
+    "before": {
+      "label": "caller",
+      "note": "Caller-supplied pricing rows. Not a SAMPLE kit fixture and not a live quote.",
+      "rows": [
+        { "field": "desk-chat-input", "value": 1.0, "unit": "USD/1M-tokens" },
+        { "field": "desk-chat-output", "value": 4.0, "unit": "USD/1M-tokens" }
+      ]
+    },
+    "after": {
+      "label": "caller",
+      "note": "Return-job no-delta pair. Same rows as SDS52 before.json. Not a SAMPLE kit fixture.",
+      "rows": [
+        { "field": "desk-chat-input", "value": 1.0, "unit": "USD/1M-tokens" },
+        { "field": "desk-chat-output", "value": 4.0, "unit": "USD/1M-tokens" }
+      ]
+    }
+  }
+}

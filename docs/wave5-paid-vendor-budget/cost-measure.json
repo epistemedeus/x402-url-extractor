@@ -1,0 +1,83 @@
+{
+  "measuredAt": "2026-09-12T05:12:05.462Z",
+  "inProcessOrdinary": {
+    "name": "in-process-ordinary",
+    "inProcess": true,
+    "repeats": 20,
+    "wallMs": 0.271,
+    "cpuUserMs": 0.26,
+    "requestBytes": 553,
+    "responseBytes": 3309
+  },
+  "workerOrdinary": {
+    "name": "worker-ordinary",
+    "inProcess": false,
+    "repeats": 8,
+    "wallMs": 34.362,
+    "cpuUserMs": 2.022,
+    "requestBytes": 553,
+    "responseBytes": 3310
+  },
+  "workerMax": {
+    "name": "worker-max-256",
+    "inProcess": false,
+    "repeats": 4,
+    "wallMs": 36.918,
+    "cpuUserMs": 3.731,
+    "requestBytes": 30028,
+    "responseBytes": 2757
+  },
+  "http": {
+    "idleRssKb": 201708,
+    "one": {
+      "wallMs": 66.73,
+      "rssKb": 214812,
+      "responseBytes": 3310
+    },
+    "maxInput": {
+      "wallMs": 54.08,
+      "responseBytes": 2757
+    },
+    "cohort1": {
+      "n": 1,
+      "totalWallMs": 61.88,
+      "meanWallMs": 56.06,
+      "maxWallMs": 56.06,
+      "peakRssKb": 247964,
+      "settle": 2
+    },
+    "cohort6": {
+      "n": 6,
+      "totalWallMs": 104.6,
+      "meanWallMs": 77.86,
+      "maxWallMs": 86.8,
+      "peakRssKb": 392812,
+      "settle": 8
+    },
+    "cohort12": {
+      "n": 12,
+      "totalWallMs": 161.13,
+      "meanWallMs": 130.8,
+      "maxWallMs": 145.76,
+      "peakRssKb": 422080,
+      "settle": 20
+    }
+  },
+  "rates": {
+    "source": "https://docs.railway.com/pricing.md and https://railway.com/pricing.md (2026-09-12); https://docs.cdp.coinbase.com/x402/seller/facilitator.md",
+    "railwayCpuPerVcpuS": 0.00000772,
+    "railwayRamPerGbS": 0.00000386,
+    "railwayEgressPerGb": 0.05,
+    "cdpVerifyUsd": 0,
+    "cdpSettleUsdAfter1000": 0.001
+  },
+  "estimate": {
+    "railwayCpuUsd": 0.0000011253,
+    "railwayRamUsdForCallWindow": 2.265e-7,
+    "railwayEgressUsd": 0.0000015267,
+    "cdpSettleUsdAfterFreeTier": 0.001,
+    "note": "Estimates only. Idle shared RAM is billed while the merchant runs, not per call. First 1000 CDP settles/month are $0."
+  },
+  "keepPriceUsd": "0.005",
+  "provenProfit": false
+}

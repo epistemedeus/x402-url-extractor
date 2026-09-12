@@ -1,7 +1,7 @@
 # Cost and price
 
-Existing route prices are unchanged. Customer-facing quote text does not
-name internal research models.
+Existing extract, lockfile, and homepage prices are unchanged. Customer-facing
+quote text does not name internal research models.
 
 | Component | Status |
 | --- | --- |
@@ -9,31 +9,54 @@ name internal research models.
 | Railway hosting | Official public rates below. No invoice was read. |
 | Facilitator fees | CDP public rates below. Tests stub the injectable facilitator. |
 | Model / LLM cost | None. Deterministic CPU JSON compare. |
-| Margin | Unknown. Not claimed non-lossmaking. Local in-process measure below. |
+| Margin | Unknown. Estimate only. Not a proven-profit claim. |
 
-## Official public rates (not an invoice)
+## Official public rates (2026-09-12, not an invoice)
 
-Railway resource pricing from docs.railway.com/pricing: RAM `$10` / GB / month,
-CPU `$20` / vCPU / month, network egress `$0.05` / GB. Per-second meters:
+Railway from [docs.railway.com/pricing.md](https://docs.railway.com/pricing.md)
+and [railway.com/pricing.md](https://railway.com/pricing.md): RAM `$10` / GB /
+month, CPU `$20` / vCPU / month, egress `$0.05` / GB. Per-second meters:
 `$0.00000386` per GB-second RAM and `$0.00000772` per vCPU-second.
 
-CDP x402 Facilitator: verify is free. First 1,000 onchain facilitator
-transactions per month are `$0.00`, then `$0.001` per onchain settle for `exact`.
+CDP x402 Facilitator from
+[docs.cdp.coinbase.com/x402/seller/facilitator.md](https://docs.cdp.coinbase.com/x402/seller/facilitator.md):
+verify is free. First 1,000 onchain facilitator transactions per month are
+`$0.00`, then `$0.001` per onchain settle for `exact`.
 
-## Local in-process measure (this host, 2026-09-12)
+## Measured on this host (2026-09-12)
 
-| Input | Request bytes | Response bytes | Wall | CPU user |
-| --- | ---: | ---: | ---: | ---: |
-| Ordinary caller delta (2 then 3 rows) | 553 | 3309 | 0.121 ms | 0.117 ms |
-| Unit-case (4 rows) | 522 | 3239 | 0.052 ms | 0.052 ms |
-| Maximal admitted (256 rows) | 30028 | 2756 | 1.15 ms | 2.573 ms |
+Pure-function in-process compare is not the live path. Live calls spawn an
+isolated Node worker. Receipt: `cost-measure.json`.
 
-If the max compare used one vCPU for 0.0026 s, public Railway CPU is about
-`$0.00000002`. 30 KB request plus 3 KB response egress is far below `$0.005`.
-After the CDP free tier, `$0.001` settle is 20% of list price. Idle RAM of the
-shared merchant process is billed while the service runs, not per call. No
-Railway or CDP invoice was read. `$0.005` is not an obviously loss-making
-compute price.
+| Path | Request | Response | Wall |
+| --- | ---: | ---: | ---: |
+| In-process ordinary | 553 B | 3309 B | 0.31 ms |
+| Worker ordinary | 553 B | 3310 B | 41.3 ms |
+| Worker max 256 rows | 30028 B | 2757 B | 38.8 ms |
+| Mounted HTTP ordinary | 553 B | 3310 B | 71 ms |
+| Mounted HTTP max 256 | 30028 B | 2757 B | 53 ms |
+| Cohort 1 / 6 / 12 max | ordinary | 3310 B | 49 / 92 / 166 ms |
+
+Process footprint (Linux VmRSS of merchant plus descendants):
+
+| State | RSS |
+| --- | ---: |
+| Idle merchant | 194 MiB |
+| After one paid call | 207 MiB |
+| Peak during 12 concurrent | 349 MiB |
+
+Worker spawn (~40 ms) dominates the compare. 12 concurrent paid POSTs peaked
+about 155 MiB above idle. Children were reaped; `ownedVendorBudgetWorkerCount`
+returned to 0.
+
+Variable-cost estimate for the worst observed call window (~0.17 s, ~0.34 GB
+RSS, ~33 KB on the wire): Railway CPU about `$0.0000013`, RAM-during-window
+about `$0.0000002`, egress about `$0.0000015`. After the CDP free tier,
+`$0.001` settle is 20% of `$0.005`. Idle merchant RAM is billed while the
+shared process runs, not per vendor-budget call.
+
+`$0.005` is not an obviously loss-making compute price on these measurements.
+That is an estimate, not proven margin. Keep the provisional price.
 
 `sold` is not set. Engine `purchaseAuthority` stays false.
 This route settles x402 exact only. Existing MPP routes are unchanged.
