@@ -8,6 +8,15 @@ import {
   EXTRACT_BATCH_PATH,
 } from "./extract-batch-config.mjs";
 import { normalizeExtractBatchInput } from "./extract-batch.mjs";
+import { bindMerchantHttpDeliveryContracts } from "./http-delivery-evidence/bind-merchant-contracts.mjs";
+import {
+  isSupportedTarget,
+  MAX_RESPONSE_BYTES,
+  openStore,
+  recordFromObservedResponse,
+  SETTLEMENT_CLASS,
+  VALIDATION_FILENAME,
+} from "./http-delivery-evidence/index.mjs";
 import { isReceiptReferralId } from "./receipt-referral.mjs";
 
 const CRAWLER_PATTERN = /bot|crawler|spider|slurp|uptime|monitor|observer|probe|indexer|headless|preview|liveness|healthcheck|sentineloracle|mcpbeat|agentreeve|agent402|trust[- ]?oracle/i;
@@ -450,6 +459,43 @@ function responseChunkBytes(chunk, encoding) {
   return null;
 }
 
+function httpDeliverySettlementClass() {
+  return process.env.HTTP_DELIVERY_EVIDENCE_SETTLEMENT_CLASS === "simulated"
+    ? SETTLEMENT_CLASS.SIMULATED
+    : SETTLEMENT_CLASS.REAL_UNVERIFIED;
+}
+
+function buildHttpDeliveryValidationRecord({
+  method,
+  resource,
+  responseBytes,
+  responseDigest,
+  responseByteLength,
+  merchantHttpStatus,
+  settlementReference,
+  payerClass,
+  paidEvidenceId,
+}) {
+  try {
+    if (!isSupportedTarget(method, resource)) return null;
+    bindMerchantHttpDeliveryContracts();
+    return recordFromObservedResponse({
+      method,
+      resource,
+      responseBytes,
+      responseDigest,
+      responseByteLength,
+      merchantHttpStatus,
+      settlementClass: httpDeliverySettlementClass(),
+      settlementReference,
+      payerClass: payerClass || "unclassified",
+      paidEvidenceId,
+    });
+  } catch {
+    return null;
+  }
+}
+
 function responseBodyIsTransferred(method, statusCode) {
   const status = Number(statusCode);
   return method !== "HEAD"
@@ -458,22 +504,32 @@ function responseBodyIsTransferred(method, statusCode) {
     && status !== 304;
 }
 
-function capturePaidEvidenceResponseDigest(res, method) {
+export function capturePaidEvidenceResponseDigest(res, method, resource = "") {
   const hash = createHash("sha256");
   hash.update(PAID_EVIDENCE_RESPONSE_DOMAIN, "utf8");
+  const observed = [];
+  let retainedLength = 0;
+  let actualLength = 0;
   let valid = true;
   let finalized = false;
   let endObserved = false;
+  const retainBodies = isSupportedTarget(String(method || "GET").toUpperCase(), resource);
 
   const observe = (chunk, encoding) => {
     if (chunk === undefined || chunk === null || typeof chunk === "function") return;
     try {
-      const bytes = responseChunkBytes(chunk, encoding);
-      if (!bytes) {
+      const view = responseChunkBytes(chunk, encoding);
+      if (!view) {
         valid = false;
         return;
       }
-      if (responseBodyIsTransferred(method, res.statusCode)) hash.update(bytes);
+      if (!responseBodyIsTransferred(method, res.statusCode)) return;
+      hash.update(view);
+      actualLength += view.length;
+      if (!retainBodies || retainedLength >= MAX_RESPONSE_BYTES) return;
+      const take = Math.min(view.length, MAX_RESPONSE_BYTES - retainedLength);
+      observed.push(Buffer.from(view.subarray(0, take)));
+      retainedLength += take;
     } catch {
       valid = false;
     }
@@ -521,7 +577,12 @@ function capturePaidEvidenceResponseDigest(res, method) {
     if (finalized || !valid || !originalEnd || !endObserved) return null;
     finalized = true;
     try {
-      return hash.digest("hex");
+      return {
+        digest: hash.digest("hex"),
+        bytes: observed.length ? Buffer.concat(observed, retainedLength) : Buffer.alloc(0),
+        byteLength: actualLength,
+        retainedByteLength: retainedLength,
+      };
     } catch {
       return null;
     }
@@ -2827,6 +2888,11 @@ export function createCommerceTelemetry({
   if (!Number.isSafeInteger(writerProcessCount) || writerProcessCount !== 1) {
     throw new Error("commerce telemetry supports exactly one writer process; writerProcessCount must be the safe integer 1 until cross-process coordination exists");
   }
+  try {
+    bindMerchantHttpDeliveryContracts();
+  } catch {
+    // Observational bind must not block commerce telemetry.
+  }
   const typedFreshnessMaxAgeMs = Number.isSafeInteger(mcpTypedFreshnessMaxAgeMs) && mcpTypedFreshnessMaxAgeMs >= 0
     ? mcpTypedFreshnessMaxAgeMs
     : 900_000;
@@ -2841,6 +2907,7 @@ export function createCommerceTelemetry({
   const currentPath = path.join(dataDir, "commerce-events.ndjson");
   const rotatedPath = path.join(dataDir, "commerce-events.1.ndjson");
   const paidEvidencePath = path.join(dataDir, "commerce-paid-success-evidence.ndjson");
+  const httpDeliveryEvidencePath = path.join(dataDir, VALIDATION_FILENAME);
   const rareFunnelPath = path.join(dataDir, "commerce-rare-funnel-evidence.ndjson");
   const rareFunnelRotatedPath = path.join(dataDir, "commerce-rare-funnel-evidence.1.ndjson");
   const parsedExternalSince = Date.parse(externalSince);
@@ -2971,13 +3038,20 @@ export function createCommerceTelemetry({
     await chmod(rareFunnelPath, 0o600).catch(() => {});
   }
 
-  function enqueue(event, evidence = null) {
+  function enqueue(event, evidence = null, httpDeliveryRecord = null) {
     const ownedEvidence = evidence === null ? null : canonicalPaidSuccessEvidence(evidence);
     const rareEvidence = rareFunnelEvidenceFromHttpEvent(event);
     enqueueExclusive(async () => {
       await appendEvent(event);
       if (ownedEvidence) await appendPaidSuccessEvidence(ownedEvidence);
       if (rareEvidence) await appendRareFunnelEvidence(rareEvidence);
+      if (httpDeliveryRecord) {
+        try {
+          await openStore(dataDir).appendValidation(httpDeliveryRecord);
+        } catch {
+          // Observational HTTP delivery rows must not fail paid-success writes.
+        }
+      }
     }).catch((error) => {
       console.error(`commerce telemetry write failed: ${error.message}`);
     });
@@ -3131,7 +3205,7 @@ export function createCommerceTelemetry({
       };
     }
     const finishPaidEvidenceResponseDigest = paidEvidenceRequest
-      ? capturePaidEvidenceResponseDigest(res, paidEvidenceRequest.method)
+      ? capturePaidEvidenceResponseDigest(res, paidEvidenceRequest.method, route.route)
       : null;
 
     res.once("finish", () => {
@@ -3215,8 +3289,10 @@ export function createCommerceTelemetry({
         durationMs: Math.max(0, Date.now() - startedAt),
       };
       let paidEvidence = null;
+      let httpDeliveryRecord = null;
       if (result === "paid_success" && paidEvidenceRequest && finishPaidEvidenceResponseDigest) {
-        const responseDigest = finishPaidEvidenceResponseDigest();
+        const captured = finishPaidEvidenceResponseDigest();
+        const responseDigest = captured?.digest || null;
         const selectedProtocol = runtimePaymentProtocol(res);
         if (responseDigest && selectedProtocol === paidEvidenceRequest.paymentProtocol) {
           paidEvidence = {
@@ -3239,9 +3315,20 @@ export function createCommerceTelemetry({
             validatorAuthority: PAID_EVIDENCE_VALIDATOR_AUTHORITY,
             validatorSource: PAID_EVIDENCE_VALIDATOR_SOURCE,
           };
+          httpDeliveryRecord = buildHttpDeliveryValidationRecord({
+            method: paidEvidenceRequest.method,
+            resource: route.route,
+            responseBytes: captured.bytes,
+            responseDigest: captured.digest,
+            responseByteLength: captured.byteLength,
+            merchantHttpStatus: status,
+            settlementReference: settlement?.reference || null,
+            payerClass: paidEvidenceRequest.payerClass,
+            paidEvidenceId: eventId,
+          });
         }
       }
-        enqueue(event, paidEvidence);
+        enqueue(event, paidEvidence, httpDeliveryRecord);
       } catch {
         // Malformed or hostile runtime values cannot escape or produce evidence.
       }
@@ -3788,6 +3875,7 @@ export function createCommerceTelemetry({
       currentPath,
       rotatedPath,
       paidEvidencePath,
+      httpDeliveryEvidencePath,
       rareFunnelPath,
       rareFunnelRotatedPath,
     },

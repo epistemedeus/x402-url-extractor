@@ -1,0 +1,11 @@
+W5-D17 HTTP response-contract evidence (merchant copy)
+====================================================
+
+Adapted into epistemedeus/x402-url-extractor. Production binds live
+same-repo extract/read/batch/lockfile contracts. Historical v1
+`not_checked` paid-success rows stay readable. This is not a second
+revenue ledger and is not buyer-attested usefulness.
+
+Source: epistemedeus/samedaydesk `32c9b0d28f3c4f1d01ab59435cf9a8e09a993965`
+`experiments/wave5/d17/http-delivery-evidence/`. MIT (see LICENSE).
+
