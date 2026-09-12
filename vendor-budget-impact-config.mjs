@@ -28,7 +28,7 @@ export const VENDOR_BUDGET_IMPACT_MAX_WORKERS = 4;
 export const VENDOR_BUDGET_IMPACT_PAYMENT_PROTOCOLS = Object.freeze(["x402"]);
 
 export const VENDOR_BUDGET_IMPACT_DESCRIPTION =
-  "Compare two caller-supplied vendor pricing-row JSON objects (rows of field, finite numeric value, and unit) and return field, unit, added, and removed budget-impact deltas. HTTP JSON only: no filesystem paths, commands, URLs, or writable caches. Identical rows are informational, not failure. Charge is the bounded compare, not a live quote, purchase, or ROI. Ordinary wallets sign through examples/customer-x402, not a precomputed signature. Initial live release accepts x402 only.";
+  "Compare two supplied pricing-row JSON objects (field, value, unit). Return field/unit/add/remove deltas; unchanged rows are informational. Raw numeric values must equal their Number canonical decimal value; rounding aliases are refused before payment. No paths, URLs, commands, or writable caches. Charge buys a bounded compare, not a live quote or ROI. x402 only; ordinary buyers use examples/customer-x402.";
 
 export const VENDOR_BUDGET_IMPACT_QUOTE_MEANING =
   "Flat USDC quote for one bounded compare of two caller-supplied pricing-row JSON objects. Default $0.005 matches live GET /extract. Charge is the compare, not a live quote, purchase, or proven margin. Pay with x402; MPP is not accepted on this route. Ordinary buyers inspect and approve through examples/customer-x402, not a precomputed signature.";
@@ -75,7 +75,9 @@ export function vendorBudgetImpactPrice(env = process.env) {
   });
 }
 
-export const VENDOR_BUDGET_IMPACT_PRICE = vendorBudgetImpactPrice();
+export const VENDOR_BUDGET_IMPACT_PRICE = isVendorBudgetImpactEnabled()
+  ? vendorBudgetImpactPrice()
+  : Object.freeze({ priceUsd: "$0.005", amountAtomic: "5000", displayUsdc: "0.005" });
 export const VENDOR_BUDGET_IMPACT_PRICE_USD = VENDOR_BUDGET_IMPACT_PRICE.priceUsd;
 export const VENDOR_BUDGET_IMPACT_AMOUNT_ATOMIC = VENDOR_BUDGET_IMPACT_PRICE.amountAtomic;
 export const VENDOR_BUDGET_IMPACT_PRICE_DISPLAY = VENDOR_BUDGET_IMPACT_PRICE.displayUsdc;

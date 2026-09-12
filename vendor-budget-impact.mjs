@@ -1,3 +1,4 @@
+import { parseLosslessNumericJson } from "./examples/customer-x402/src/numeric-json.mjs";
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -199,7 +200,7 @@ function admitSnapshot(value, role, limits) {
     }
     let parsed;
     try {
-      parsed = JSON.parse(value);
+      parsed = parseLosslessNumericJson(value);
     } catch (error) {
       inputError(`${role} is not JSON: ${error.message}`, 400, "parse-error");
     }
@@ -827,7 +828,7 @@ export function mountVendorBudgetImpactParser(app, { env = process.env } = {}) {
         return unchargedError(res, new VendorBudgetImpactInputError("Content-Type must be application/json", { status: 415, code: "unsupported_media_type" }));
       }
       try {
-        req.body = JSON.parse(raw.toString("utf8"));
+        req.body = parseLosslessNumericJson(raw.toString("utf8"));
       } catch (error) {
         return unchargedError(res, new VendorBudgetImpactInputError(`request is not JSON: ${error.message}`, { status: 400, code: "parse-error" }));
       }
@@ -900,6 +901,7 @@ export function vendorBudgetImpactResource({ publicUrl, env = process.env } = {}
   return {
     url: `${publicUrl}${VENDOR_BUDGET_IMPACT_PATH}`,
     method: VENDOR_BUDGET_IMPACT_METHOD,
+    paymentProtocols: ["x402"],
     amount: price.amountAtomic,
     description: VENDOR_BUDGET_IMPACT_DESCRIPTION,
     mimeType: "application/json",
@@ -928,7 +930,7 @@ export function vendorBudgetImpactInputSchema() {
               required: ["field", "value", "unit"],
               properties: {
                 field: { type: "string", minLength: 1, maxLength: 256 },
-                value: { type: "number" },
+                value: { type: "number", description: "Finite canonical-decimal Number domain: raw JSON numeric values must equal the exact decimal value of Number canonical serialization; lossy tokens are refused before payment." },
                 unit: { type: "string", minLength: 1, maxLength: 256 },
               },
             },
@@ -953,7 +955,7 @@ export function vendorBudgetImpactInputSchema() {
               required: ["field", "value", "unit"],
               properties: {
                 field: { type: "string", minLength: 1, maxLength: 256 },
-                value: { type: "number" },
+                value: { type: "number", description: "Finite canonical-decimal Number domain: raw JSON numeric values must equal the exact decimal value of Number canonical serialization; lossy tokens are refused before payment." },
                 unit: { type: "string", minLength: 1, maxLength: 256 },
               },
             },
@@ -1003,6 +1005,12 @@ export function vendorBudgetImpactOutputSchema() {
     },
   };
 }
+
+const pricingSnapshotMcpSchema = z.object({
+  rows: z.array(z.object({ field: z.string().min(1).max(256), value: z.number().finite(), unit: z.string().min(1).max(256) }).strict()).min(1).max(VENDOR_BUDGET_IMPACT_MAX_ROWS),
+  label: z.string().max(256).optional(), note: z.string().max(256).optional(),
+}).strict();
+export const vendorBudgetImpactMcpInputSchema = { before: pricingSnapshotMcpSchema, after: pricingSnapshotMcpSchema };
 
 export const vendorBudgetImpactMcpOutputSchema = z.object({
   ok: z.boolean(),

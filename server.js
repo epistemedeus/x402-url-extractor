@@ -1,3 +1,4 @@
+import { parseLosslessNumericJson } from "./examples/customer-x402/src/numeric-json.mjs";
 // x402-merchant — a paid HTTP endpoint that charges AI agents in USDC and
 // settles directly to OUR OWN Base wallet.
 //
@@ -223,23 +224,22 @@ import {
   serveLockfilePinDelta,
   validateLockfilePinDeltaRequest,
 } from "./lockfile-pin-delta.mjs";
-import {
+import { VENDOR_BUDGET_IMPACT_PATH, isVendorBudgetImpactEnabled, isVendorBudgetImpactPath } from "./vendor-budget-impact-config.mjs";
+const {
   VENDOR_BUDGET_IMPACT_AMOUNT_ATOMIC,
   VENDOR_BUDGET_IMPACT_DESCRIPTION,
-  VENDOR_BUDGET_IMPACT_PATH,
   VENDOR_BUDGET_IMPACT_PRICE_USD,
   VENDOR_BUDGET_IMPACT_READ_ONLY_POST,
-  isVendorBudgetImpactEnabled,
-  isVendorBudgetImpactPath,
   vendorBudgetImpactCostParameters,
   vendorBudgetImpactMcpOutputSchema,
+  vendorBudgetImpactMcpInputSchema,
   vendorBudgetImpactOpenApiPath,
   vendorBudgetImpactResource,
   vendorBudgetImpactX402Route,
   mountVendorBudgetImpactParser,
   serveVendorBudgetImpact,
   validateVendorBudgetImpactRequest,
-} from "./vendor-budget-impact.mjs";
+} = isVendorBudgetImpactEnabled() ? await import("./vendor-budget-impact.mjs") : {};
 import {
   WELL_KNOWN_SKILLS_INDEX_PATH,
   mountWellKnownSkills,
@@ -289,7 +289,7 @@ import {
 } from "./platform-health-page.mjs";
 import { z } from "zod";
 import { SERVICE_VERSION } from "./service-version.mjs";
-import { loadServiceDeploymentPublication } from "./service-deployment-publication.mjs";
+import { loadServiceDeploymentPublication, assertServiceDeploymentCoverage } from "./service-deployment-publication.mjs";
 import { SERVICE_DEPLOYMENT_ROUTES } from "./service-deployment-routes.mjs";
 import { validateOpenApiOperationIds } from "./openapi-operation-contract.mjs";
 import { createExactUsdcAcceptsFor, usdcTermsForNetwork } from "./x402-payment-terms.mjs";
@@ -529,6 +529,12 @@ const jsonParser = express.json({
   type: ["application/json", "application/*+json"],
   verify(req, _res, buffer) {
     req.rawBody = Buffer.from(buffer);
+    if (req.path === "/mcp") {
+      const rpc = JSON.parse(buffer.toString("utf8"));
+      if (rpc?.method === "tools/call" && rpc?.params?.name === "vendor_budget_impact") {
+        parseLosslessNumericJson(buffer.toString("utf8"));
+      }
+    }
   },
 });
 app.use((req, res, next) => {
@@ -538,7 +544,7 @@ app.use((req, res, next) => {
 app.use(legacyCompatibleX402Body);
 mountPageChangeHttp(app);
 mountLockfilePinDeltaParser(app);
-mountVendorBudgetImpactParser(app);
+if (VENDOR_BUDGET_IMPACT_ENABLED) mountVendorBudgetImpactParser(app);
 
 function parseCommerceWriterProcessCount(raw = process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES) {
   if (raw === undefined || raw === null || raw === "") return 1;
@@ -909,6 +915,9 @@ const serviceDeploymentPublication = loadServiceDeploymentPublication({
   recipient: PAY_TO,
   operationalWallet: SOLANA_AGENT_REGISTRATION.merchantWallet,
 });
+if (VENDOR_BUDGET_IMPACT_ENABLED && process.env.NODE_ENV === "production") {
+  assertServiceDeploymentCoverage(serviceDeploymentPublication, [{ method: "POST", path: VENDOR_BUDGET_IMPACT_PATH, paymentProtocols: ["x402"] }]);
+}
 commerceSettlementReconciler = createCommerceSettlementReconciler({
   asset: USDC_ASSET,
   eventPaths: [commerceTelemetry.paths.rotatedPath, commerceTelemetry.paths.currentPath],
@@ -1255,6 +1264,8 @@ const machineActionCatalog = () => ({
       route,
       url: resource.url,
       description: resource.description,
+      deploymentAttestation: serviceDeploymentPublication.coverageFor({ method, path: route,
+        paymentProtocols: (route === LOCKFILE_PIN_DELTA_PATH || route === VENDOR_BUDGET_IMPACT_PATH) ? ["x402"] : ["x402", "mpp"] }),
       priceAtomicUsdc: resource.amount,
       priceUsdc: Number(resource.amount) / 1e6,
       paymentProtocols: (route === LOCKFILE_PIN_DELTA_PATH || route === VENDOR_BUDGET_IMPACT_PATH) ? ["x402"] : ["x402", "mpp"],
@@ -3495,6 +3506,7 @@ purchaseEvidenceManifest = buildPurchaseEvidenceManifest({
   responseContractFor: getDiscoveryOutputContract,
   readOnlyPaidPosts: EXTRACT_BATCH_PAID_POSTS,
   serviceDeployment: {
+    coverageFor: serviceDeploymentPublication.coverageFor,
     statement: serviceDeploymentPublication.paths.statement,
     publicKey: serviceDeploymentPublication.paths.publicKey,
     statementId: serviceDeploymentPublication.statementId,
@@ -4054,10 +4066,7 @@ import("./mcp-server.mjs")
           name: "vendor_budget_impact",
           description: VENDOR_BUDGET_IMPACT_DESCRIPTION,
           price: VENDOR_BUDGET_IMPACT_PRICE_USD,
-          inputSchema: {
-            before: z.record(z.any()).describe("Pricing-row JSON object with a rows array of {field, value, unit}. Not a filesystem path, URL, or command."),
-            after: z.record(z.any()).describe("Pricing-row JSON object with a rows array of {field, value, unit}. Not a filesystem path, URL, or command."),
-          },
+          inputSchema: vendorBudgetImpactMcpInputSchema,
           outputSchema: vendorBudgetImpactMcpOutputSchema,
           paidHttp: { method: "POST", path: VENDOR_BUDGET_IMPACT_PATH, resourceUrl: `${PUBLIC_URL}${VENDOR_BUDGET_IMPACT_PATH}`, maxRequestBytes: 64 * 1024, maxResponseBytes: 64 * 1024 },
           tags: ["pricing", "budget-impact", "vendor-cost", "row-delta"],

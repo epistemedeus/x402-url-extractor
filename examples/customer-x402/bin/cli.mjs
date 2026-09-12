@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { parseLosslessNumericJson } from "../src/numeric-json.mjs";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -87,7 +88,9 @@ Notes:
 }
 
 function readJson(path) {
-  return JSON.parse(readFileSync(resolve(path), "utf8"));
+  const raw = readFileSync(resolve(path), "utf8");
+  const value = JSON.parse(raw);
+  return new URL(value.url || "https://invalid.example").pathname === "/vendor-budget-impact" ? parseLosslessNumericJson(raw) : value;
 }
 
 function parseArgs(argv) {

@@ -29,7 +29,7 @@ import {
   validReadBody,
 } from "./helpers.mjs";
 
-bindMerchantHttpDeliveryContracts();
+bindMerchantHttpDeliveryContracts({ vendorBudgetSchema: vendorBudgetImpactOutputSchema });
 
 function evaluateExtract(body, extra = {}) {
   return evaluateResponseBytes({

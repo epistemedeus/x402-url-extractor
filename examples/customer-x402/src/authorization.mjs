@@ -1,3 +1,4 @@
+import { parseLosslessNumericJson } from "./numeric-json.mjs";
 import { getAddress } from "viem";
 
 import {
@@ -299,7 +300,7 @@ export function admitVendorBudgetBody(input) {
       fail("bodyRaw exceeds request byte ceiling", "body");
     }
     try {
-      parsed = JSON.parse(input.bodyRaw);
+      parsed = parseLosslessNumericJson(input.bodyRaw);
     } catch {
       fail("bodyRaw must be valid JSON", "body");
     }
