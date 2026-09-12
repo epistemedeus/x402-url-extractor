@@ -1,0 +1,25 @@
+{
+  "name": "@pilot/cw02-repeat-lockfile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Thin scheduled-job input binder for SameDayDesk's maintained customer-x402 lockfile workflow",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "examples/",
+    "fixtures/",
+    "README.md"
+  ],
+  "bin": {
+    "cw02-repeat-lockfile": "./bin/repeat-lockfile.mjs"
+  },
+  "scripts": {
+    "example": "node bin/repeat-lockfile.mjs prepare --job examples/npm-change.job.json --state-dir .state",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs"
+  },
+  "license": "MIT"
+}
