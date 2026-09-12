@@ -139,6 +139,16 @@ test("pinned block chain-time expiry and unused authorization over local RPC", a
   });
 });
 
+test("RPC timeout is not a 413 body limit because of endpoint port or URL", async () => {
+  const result = await reconcileAttemptReceipt({
+    receipt: sampleReceipt(), rpcUrl: "http://127.0.0.1:41327",
+    fetchImpl: async () => { throw new Error("rpc_timeout at http://127.0.0.1:41327"); },
+  });
+  assert.equal(result.decision, "rpc_unavailable");
+  assert.equal(result.message, "rpc_timeout");
+  assert.equal(result.claims.retryAuthorized, false);
+});
+
 test("oversized chunked and malformed RPC responses stay bounded and secret-free", async () => {
   await withJsonRpcServer(async (_req, body) => {
     if (body.method === "eth_chainId") {
