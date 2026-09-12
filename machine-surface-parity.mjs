@@ -2,7 +2,8 @@
  * Declarative inclusion policy for paid machine surfaces.
  *
  * Canonical paid actions (RESOURCES / action catalog) belong on OpenAPI,
- * x402, MCP, A2A, the free action catalog, and llms.txt.
+ * x402, MCP, A2A, the free action catalog, and llms.txt. A route whose
+ * catalog paymentProtocols are x402-only is killed from MPP OpenAPI.
  *
  * The Circle Gateway path is an alternate settlement rail for the same
  * payment-offer-preflight product. It belongs on OpenAPI, the x402 manifest
@@ -196,7 +197,10 @@ export function validateMachineSurfaceParity({
     if (!/^\/[^?#]+$/.test(route)) fail(`invalid action route ${route}`);
     if (!action.priceAtomicUsdc) fail(`${method} ${route} lacks a price`);
     if (!action.description) fail(`${method} ${route} lacks a description`);
-    return { method, route, priceAtomicUsdc: action.priceAtomicUsdc };
+    const paymentProtocols = Array.isArray(action.paymentProtocols) && action.paymentProtocols.length
+      ? action.paymentProtocols.map((protocol) => String(protocol))
+      : ["x402", "mpp"];
+    return { method, route, priceAtomicUsdc: action.priceAtomicUsdc, paymentProtocols };
   });
   const canonicalKeys = actionRoutes.map((entry) => operationKey(entry.method, entry.route));
   if (new Set(canonicalKeys).size !== canonicalKeys.length) fail("canonical action keys must be unique");
@@ -252,7 +256,13 @@ export function validateMachineSurfaceParity({
   if (mppOpenapi) {
     const mppKeys = new Set(paidOpenApiOperations(mppOpenapi).map((entry) => operationKey(entry.method, entry.route)));
     for (const action of actionRoutes) {
-      if (!mppKeys.has(operationKey(action.method, action.route))) {
+      const key = operationKey(action.method, action.route);
+      const x402Only = action.paymentProtocols.length === 1 && action.paymentProtocols[0] === "x402";
+      if (x402Only) {
+        if (mppKeys.has(key)) fail(`${action.method} ${action.route} must not appear on MPP OpenAPI`);
+        continue;
+      }
+      if (!mppKeys.has(key)) {
         fail(`${action.method} ${action.route} is missing from MPP OpenAPI`);
       }
     }

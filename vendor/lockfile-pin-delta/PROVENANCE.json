@@ -1,0 +1,20 @@
+{
+  "kind": "source-projection",
+  "package": "@samedaydesk/lockfile-pin-delta",
+  "source": {
+    "repo": "epistemedeus/samedaydesk",
+    "sha": "fba9d14872bc4c04214e527b9edfb30c2123c9e7",
+    "path": "tools/lockfile-pin-delta/",
+    "ownerAssignment": "W5-M03",
+    "catalogAssignment": "W5-M01",
+    "catalogSha": "a20232b0f777b0f737cdffefb64a9ca9d9c9ba0e"
+  },
+  "not": [
+    "full-samedaydesk-checkout",
+    "second-payment-stack",
+    "second-job-platform",
+    "live-settlement",
+    "npm-install-or-audit"
+  ],
+  "httpAdapter": "merchant lockfile-pin-delta.mjs accepts JSON lockfile objects only"
+}

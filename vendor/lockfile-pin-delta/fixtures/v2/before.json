@@ -1,0 +1,38 @@
+{
+  "name": "v2-lock-app",
+  "version": "1.0.0",
+  "lockfileVersion": 2,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "v2-lock-app",
+      "version": "1.0.0",
+      "dependencies": {
+        "v2-a": "1.0.0",
+        "v2-b": "4.0.0"
+      }
+    },
+    "node_modules/v2-a": {
+      "version": "1.0.0",
+      "resolved": "https://example.invalid/v2-a-1.0.0.tgz",
+      "integrity": "sha512-gWgPForHPK2KLYqZaYpE72OFKJMXp7N5Xv70gnKI5Wv2ZDKORGTytTFvKHshcl5RAVCaYonGGAwJ+ZqBblU4Bg=="
+    },
+    "node_modules/v2-b": {
+      "version": "4.0.0",
+      "resolved": "https://example.invalid/v2-b-4.0.0.tgz",
+      "integrity": "sha512-XvycS8nZiA7LhcW+K40FqizMgfxXTB4b2LKrjIVEqQ1ubUf1v2UZMqIVMu7oYbZ11eFErcb/2QkN/xdTS8uKzw=="
+    }
+  },
+  "dependencies": {
+    "v2-a": {
+      "version": "1.0.0",
+      "resolved": "https://example.invalid/v2-a-1.0.0.tgz",
+      "integrity": "sha512-gWgPForHPK2KLYqZaYpE72OFKJMXp7N5Xv70gnKI5Wv2ZDKORGTytTFvKHshcl5RAVCaYonGGAwJ+ZqBblU4Bg=="
+    },
+    "v2-b": {
+      "version": "4.0.0",
+      "resolved": "https://example.invalid/v2-b-4.0.0.tgz",
+      "integrity": "sha512-XvycS8nZiA7LhcW+K40FqizMgfxXTB4b2LKrjIVEqQ1ubUf1v2UZMqIVMu7oYbZ11eFErcb/2QkN/xdTS8uKzw=="
+    }
+  }
+}

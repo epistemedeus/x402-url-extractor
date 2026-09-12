@@ -12,6 +12,10 @@ export const BAZAAR_RESOURCE_METADATA = Object.freeze({
     serviceName: "SameDayDesk",
     tags: Object.freeze(["web", "batch-extract", "structured-json", "multi-url", "bounded-attempt"]),
   }),
+  "/lockfile-pin-delta": Object.freeze({
+    serviceName: "SameDayDesk",
+    tags: Object.freeze(["lockfile", "npm", "pin-delta", "dependency-diff", "sbom"]),
+  }),
   "/read": Object.freeze({
     serviceName: "SameDayDesk",
     tags: Object.freeze(["web", "webpage-to-markdown", "llm-context", "clean-text", "url-reader"]),

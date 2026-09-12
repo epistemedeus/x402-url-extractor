@@ -33,12 +33,26 @@ is not a measured margin guarantee. Use one server process and persistent
 `COMMERCE_DATA_DIR`; unknown settlement is quarantined, not automatically charged
 again. Bounded partial output does not promise every source or requested field.
 
-The new MCP tool projects the existing HTTP payment and durable replay handler.
-Its challenge resource is `https://agents.samedaydesk.com/extract/batch`, not
-`mcp://`: first call without payment, then reuse the returned HTTP resource and
-exact arguments with `_meta["x402/payment"]`. MPP callers may use the unmodified
-`www-authenticate` challenge in result `_meta["samedaydesk/http"].headers` and
-send its credential as HTTP `Authorization`. That metadata also carries the
+`LOCKFILE_PIN_DELTA_ENABLED=1` adds `POST /lockfile-pin-delta` and MCP
+`lockfile_pin_delta` for two caller-supplied npm `package-lock.json` objects.
+The default is off. Production already has `EXTRACT_BATCH_ENABLED=1` (26 paid
+HTTP / 23 MCP tools). Enabling lockfile beside that envelope is 27 / 24.
+Default-off catalogs remain 25 / 22. Default price is `$0.005`
+(`LOCKFILE_PIN_DELTA_PRICE`), matching live `GET /extract`. Margin is not
+proven. Initial live release accepts x402 only; existing MPP routes including
+`extract_batch` are unchanged. HTTP JSON only: no filesystem paths, arbitrary
+commands, or network fetch. Identical pins are informational, not engine
+failure. The signed deployment statement is not rewritten here. The lockfile
+MCP tool's challenge resource is
+`https://agents.samedaydesk.com/lockfile-pin-delta`, not `mcp://`
+and not `/extract/batch`.
+
+The extract_batch MCP tool projects the existing HTTP payment and durable replay
+handler. Its challenge resource is `https://agents.samedaydesk.com/extract/batch`,
+not `mcp://`: first call without payment, then reuse the returned HTTP resource
+and exact arguments with `_meta["x402/payment"]`. MPP callers may use the
+unmodified `www-authenticate` challenge in result `_meta["samedaydesk/http"].headers`
+and send its credential as HTTP `Authorization`. That metadata also carries the
 HTTP status and receipt headers. Never translate an MCP-resource credential.
 Existing MCP tools retain their existing native MCP payment boundary.
 

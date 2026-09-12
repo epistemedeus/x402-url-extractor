@@ -1,0 +1,16 @@
+{
+  "name": "@samedaydesk/lockfile-pin-delta",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline before/after npm package-lock pin-delta (name, version, integrity, resolved). No npm install, audit network, or purchase.",
+  "bin": {
+    "lockfile-delta": "./bin/lockfile-delta.mjs"
+  },
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

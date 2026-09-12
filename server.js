@@ -206,6 +206,23 @@ import {
 } from "./extract-batch.mjs";
 import { isPageChangeHttpPath, mountPageChangeHttp } from "./page-change-http.mjs";
 import {
+  LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC,
+  LOCKFILE_PIN_DELTA_DESCRIPTION,
+  LOCKFILE_PIN_DELTA_PATH,
+  LOCKFILE_PIN_DELTA_PRICE_USD,
+  LOCKFILE_PIN_DELTA_READ_ONLY_POST,
+  isLockfilePinDeltaEnabled,
+  isLockfilePinDeltaPath,
+  lockfilePinDeltaCostParameters,
+  lockfilePinDeltaMcpOutputSchema,
+  lockfilePinDeltaOpenApiPath,
+  lockfilePinDeltaResource,
+  lockfilePinDeltaX402Route,
+  mountLockfilePinDeltaParser,
+  serveLockfilePinDelta,
+  validateLockfilePinDeltaRequest,
+} from "./lockfile-pin-delta.mjs";
+import {
   WELL_KNOWN_SKILLS_INDEX_PATH,
   mountWellKnownSkills,
 } from "./well-known-skills.mjs";
@@ -338,9 +355,13 @@ const WALLET_POLICY_CONFORMANCE_PRICE = process.env.WALLET_POLICY_CONFORMANCE_PR
 const STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE = process.env.STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE || "$0.01";
 const EXTRACT_BATCH_ENABLED = isExtractBatchEnabled();
 if (EXTRACT_BATCH_ENABLED) extractBatchCostParameters();
-const EXTRACT_BATCH_PAID_POSTS = EXTRACT_BATCH_ENABLED
-  ? Object.freeze([...READ_ONLY_PAID_POST_OPERATIONS, EXTRACT_BATCH_READ_ONLY_POST])
-  : READ_ONLY_PAID_POST_OPERATIONS;
+const LOCKFILE_PIN_DELTA_ENABLED = isLockfilePinDeltaEnabled();
+if (LOCKFILE_PIN_DELTA_ENABLED) lockfilePinDeltaCostParameters();
+const EXTRACT_BATCH_PAID_POSTS = Object.freeze([
+  ...READ_ONLY_PAID_POST_OPERATIONS,
+  ...(EXTRACT_BATCH_ENABLED ? [EXTRACT_BATCH_READ_ONLY_POST] : []),
+  ...(LOCKFILE_PIN_DELTA_ENABLED ? [LOCKFILE_PIN_DELTA_READ_ONLY_POST] : []),
+]);
 
 // "$0.05" -> "50000" atomic USDC units (6 decimals) so the discovery docs
 // (/.well-known/x402, /openapi.json) always match the paywall price exactly.
@@ -490,11 +511,12 @@ const jsonParser = express.json({
   },
 });
 app.use((req, res, next) => {
-  if (isPageChangeHttpPath(req.path)) return next();
+  if (isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
   return jsonParser(req, res, next);
 });
 app.use(legacyCompatibleX402Body);
 mountPageChangeHttp(app);
+mountLockfilePinDeltaParser(app);
 
 function parseCommerceWriterProcessCount(raw = process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES) {
   if (raw === undefined || raw === null || raw === "") return 1;
@@ -530,10 +552,15 @@ app.use(commerceTelemetry.middleware);
 const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
 const idempotencyReplay = createIdempotencyReplay({
   publicUrl: PUBLIC_URL,
-  requiredReplayPaths: EXTRACT_BATCH_ENABLED ? new Set([EXTRACT_BATCH_PATH]) : new Set(),
-  routes: EXTRACT_BATCH_ENABLED
-    ? new Set([...DEFAULT_PAID_ROUTES, EXTRACT_BATCH_PATH])
-    : DEFAULT_PAID_ROUTES,
+  requiredReplayPaths: new Set([
+    ...(EXTRACT_BATCH_ENABLED ? [EXTRACT_BATCH_PATH] : []),
+    ...(LOCKFILE_PIN_DELTA_ENABLED ? [LOCKFILE_PIN_DELTA_PATH] : []),
+  ]),
+  routes: new Set([
+    ...DEFAULT_PAID_ROUTES,
+    ...(EXTRACT_BATCH_ENABLED ? [EXTRACT_BATCH_PATH] : []),
+    ...(LOCKFILE_PIN_DELTA_ENABLED ? [LOCKFILE_PIN_DELTA_PATH] : []),
+  ]),
 });
 let commerceSettlementReconciler;
 let purchaseEvidenceManifest;
@@ -865,6 +892,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/commerce/contract-qualified-search`, amount: priceToAtomic(CONTRACT_QUALIFIED_SEARCH_PRICE), description: "Search Agent402 and the official MPP catalog for paid machine services that both match a capability intent and guarantee buyer-required JSON output paths. Returns bounded machine-buyable or contract-ready candidates plus controlled rejection reasons. Rejects unresolved routes and owned supply before audit, uses no credentials or wallet, sends no seller POST or target payment, reads no paid response body, and retains only a query digest.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/distribution/agent-surface-budget-audit`, amount: priceToAtomic(AGENT_SURFACE_BUDGET_AUDIT_PRICE), description: "Measure one public service's free MCP tools/list, OpenAPI, or both before an agent calls or pays. Returns byte counts, byte-derived token estimates, missing selection contracts, heaviest definitions, budget decisions, and progressive-discovery fixes. Unselected surfaces are not fetched or judged. Uses public pinned DNS, follows no redirect, sends no credential or target payment, and calls no target tool.", mimeType: "application/json" },
   ...(EXTRACT_BATCH_ENABLED ? [extractBatchResource({ publicUrl: PUBLIC_URL })] : []),
+  ...(LOCKFILE_PIN_DELTA_ENABLED ? [lockfilePinDeltaResource({ publicUrl: PUBLIC_URL })] : []),
 ];
 assertCdpResourceDescriptionCompatibility(RESOURCES);
 
@@ -986,7 +1014,10 @@ const evidenceLinkedRoutes = new Set([
 app.use(purchaseEvidenceHeaders({ origin: PUBLIC_URL, paidRoutes: evidenceLinkedRoutes }));
 const metadataRoutes = new Set(Object.keys(BAZAAR_RESOURCE_METADATA));
 const missingMetadataRoutes = [...paidResourceRoutes].filter((route) => !metadataRoutes.has(route));
-const optionalMetadataRoutes = new Set(EXTRACT_BATCH_ENABLED ? [] : [EXTRACT_BATCH_PATH]);
+const optionalMetadataRoutes = new Set([
+  ...(EXTRACT_BATCH_ENABLED ? [] : [EXTRACT_BATCH_PATH]),
+  ...(LOCKFILE_PIN_DELTA_ENABLED ? [] : [LOCKFILE_PIN_DELTA_PATH]),
+]);
 const unknownMetadataRoutes = [...metadataRoutes].filter((route) => !paidResourceRoutes.has(route) && !optionalMetadataRoutes.has(route));
 if (missingMetadataRoutes.length || unknownMetadataRoutes.length) {
   throw new Error(`Bazaar resource metadata coverage mismatch: missing=${missingMetadataRoutes.join(",") || "none"}; unknown=${unknownMetadataRoutes.join(",") || "none"}`);
@@ -1034,7 +1065,7 @@ const mppDualStack = createMppDualStack({
         path,
         ...(path === EXTRACT_BATCH_PATH ? { bindRequestBody: true } : {}),
       };
-    }),
+    }).filter((route) => route.path !== LOCKFILE_PIN_DELTA_PATH),
     {
       amount: atomicUsdcToDisplay(RESOURCES[11].amount),
       description: RESOURCES[11].description,
@@ -1175,7 +1206,7 @@ const machineActionCatalog = () => ({
       description: resource.description,
       priceAtomicUsdc: resource.amount,
       priceUsdc: Number(resource.amount) / 1e6,
-      paymentProtocols: ["x402", "mpp"],
+      paymentProtocols: route === LOCKFILE_PIN_DELTA_PATH ? ["x402"] : ["x402", "mpp"],
       mimeType: resource.mimeType,
       ...serviceMetadata,
       request: projectDiscoveryRequest(resource.url, method, request),
@@ -1727,7 +1758,32 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
         : agentCashPaymentInfoFor(batchResource),
     });
   }
-  attachPaidActionEffectContracts(document, EXTRACT_BATCH_PAID_POSTS);
+  if (LOCKFILE_PIN_DELTA_ENABLED && profile !== "mpp") {
+    const lockfileResource = {
+      amount: LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC,
+      method: "POST",
+    };
+    document.paths[LOCKFILE_PIN_DELTA_PATH] = lockfilePinDeltaOpenApiPath({
+      paymentInfo: {
+        price: {
+          amount: atomicUsdcToDisplay(lockfileResource.amount),
+          currency: "USD",
+          mode: "fixed",
+        },
+        protocols: [{
+          x402: {
+            asset: USDC_ASSET,
+            network: NETWORK,
+            scheme: "exact",
+          },
+        }],
+      },
+    });
+  }
+  attachPaidActionEffectContracts(
+    document,
+    EXTRACT_BATCH_PAID_POSTS.filter((op) => document.paths?.[op.path]?.[op.method.toLowerCase()]),
+  );
   if (profile === "agentcash" && circleGateway.enabled) {
     document.paths[CIRCLE_GATEWAY_PATH] = {
       get: {
@@ -1879,6 +1935,7 @@ app.post(RECEIPT_REFERRAL_RECHECK_ROUTE, async (req, res) => {
 // Return a short-lived response for an exact logical retry before validation or
 // settlement. Changed request bindings fail with an uncharged 409.
 if (EXTRACT_BATCH_ENABLED) app.post(EXTRACT_BATCH_PATH, validateExtractBatchRequest);
+if (LOCKFILE_PIN_DELTA_ENABLED) app.post(LOCKFILE_PIN_DELTA_PATH, validateLockfilePinDeltaRequest);
 app.use((req, res, next) => idempotencyReplay.middleware(req, res, next).catch(next));
 
 const PAYMENT_CREDENTIAL_HEADERS = Object.freeze([
@@ -3325,6 +3382,11 @@ const x402Paywall = paymentMiddleware(
         payTo: PAY_TO,
         extensions: COMMON_COMMERCE_EXTENSIONS,
       }) : {}),
+      ...(LOCKFILE_PIN_DELTA_ENABLED ? lockfilePinDeltaX402Route({
+        network: NETWORK,
+        payTo: PAY_TO,
+        extensions: COMMON_COMMERCE_EXTENSIONS,
+      }) : {}),
     },
     resourceServer
   );
@@ -3336,6 +3398,11 @@ for (const { method, path } of SERVICE_DEPLOYMENT_ROUTES) {
     || RESOURCES.find((entry) => new URL(entry.url).pathname === path);
   if (!resource) throw new Error(`Missing purchase evidence resource for ${method} ${path}`);
   evidenceResources.push({ ...resource, method, url: `${PUBLIC_URL}${path}` });
+}
+if (LOCKFILE_PIN_DELTA_ENABLED) {
+  const resource = RESOURCES.find((entry) => (entry.method || "GET") === "POST" && new URL(entry.url).pathname === LOCKFILE_PIN_DELTA_PATH);
+  if (!resource) throw new Error("Missing purchase evidence resource for POST /lockfile-pin-delta");
+  evidenceResources.push({ ...resource, method: "POST", url: `${PUBLIC_URL}${LOCKFILE_PIN_DELTA_PATH}` });
 }
 purchaseEvidenceManifest = buildPurchaseEvidenceManifest({
   origin: PUBLIC_URL,
@@ -3715,6 +3782,9 @@ app.post("/security/stateful-wallet-policy-conformance", (req, res) => {
 if (EXTRACT_BATCH_ENABLED) {
   app.post(EXTRACT_BATCH_PATH, serveExtractBatch);
 }
+if (LOCKFILE_PIN_DELTA_ENABLED) {
+  app.post(LOCKFILE_PIN_DELTA_PATH, serveLockfilePinDelta);
+}
 
 // One root, negotiated by audience. Browser navigation gets a fast human map;
 // API clients, curl, and agents retain the stable JSON descriptor.
@@ -3788,6 +3858,9 @@ app.get("/", (req, res) => {
       "GET /extract?url=": `${EXTRACT_PRICE} - ${EXTRACT_DISCOVERY_DESCRIPTION}`,
       ...(EXTRACT_BATCH_ENABLED ? {
         "POST /extract/batch": `${EXTRACT_BATCH_PRICE_USD} - ${EXTRACT_BATCH_DESCRIPTION}`,
+      } : {}),
+      ...(LOCKFILE_PIN_DELTA_ENABLED ? {
+        "POST /lockfile-pin-delta": `${LOCKFILE_PIN_DELTA_PRICE_USD} - ${LOCKFILE_PIN_DELTA_DESCRIPTION}`,
       } : {}),
       "GET /read?url=": `${READ_PRICE} - URL -> LLM-ready Markdown.`,
       "GET /scan?repo=": `${SCAN_PRICE} - static supply-chain security scan of a public GitHub repo before install.`,
@@ -3874,6 +3947,18 @@ import("./mcp-server.mjs")
           outputSchema: extractBatchMcpOutputSchema,
           paidHttp: { method: "POST", path: EXTRACT_BATCH_PATH, resourceUrl: `${PUBLIC_URL}${EXTRACT_BATCH_PATH}`, maxRequestBytes: 16 * 1024, maxResponseBytes: 160 * 1024 },
           tags: ["web", "batch-extract", "structured-json", "multi-url"],
+        }] : []),
+        ...(LOCKFILE_PIN_DELTA_ENABLED ? [{
+          name: "lockfile_pin_delta",
+          description: LOCKFILE_PIN_DELTA_DESCRIPTION,
+          price: LOCKFILE_PIN_DELTA_PRICE_USD,
+          inputSchema: {
+            before: z.record(z.any()).describe("npm package-lock.json object (lockfileVersion 2 or 3). Not a filesystem path, URL, or command."),
+            after: z.record(z.any()).describe("npm package-lock.json object (lockfileVersion 2 or 3). Not a filesystem path, URL, or command."),
+          },
+          outputSchema: lockfilePinDeltaMcpOutputSchema,
+          paidHttp: { method: "POST", path: LOCKFILE_PIN_DELTA_PATH, resourceUrl: `${PUBLIC_URL}${LOCKFILE_PIN_DELTA_PATH}`, maxRequestBytes: 256 * 1024, maxResponseBytes: 160 * 1024 },
+          tags: ["lockfile", "npm", "pin-delta", "dependency-diff", "sbom"],
         }] : []),
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters. Check status/sourceOk/error/truncated/capture; missing discussion text is not proof of absence.") }, outputSchema: readMcpOutputSchema, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
         { name: "scan", description: RESOURCES[2].description, price: SCAN_PRICE, inputSchema: { repo: z.string().describe("Public GitHub repo: owner/name or URL") }, outputSchema: scanRepoMcpOutputSchema, run: (a) => scanRepo(a.repo), tags: ["security", "supply-chain", "github"] },

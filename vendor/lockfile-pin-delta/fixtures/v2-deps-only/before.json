@@ -1,0 +1,25 @@
+{
+  "name": "v2-deps-only-app",
+  "version": "1.0.0",
+  "lockfileVersion": 2,
+  "requires": true,
+  "dependencies": {
+    "v2-a": {
+      "version": "1.0.0",
+      "resolved": "https://example.invalid/v2-a-1.0.0.tgz",
+      "integrity": "sha512-gWgPForHPK2KLYqZaYpE72OFKJMXp7N5Xv70gnKI5Wv2ZDKORGTytTFvKHshcl5RAVCaYonGGAwJ+ZqBblU4Bg==",
+      "dependencies": {
+        "nested": {
+          "version": "9.0.0",
+          "resolved": "https://example.invalid/nested-9.0.0.tgz",
+          "integrity": "sha512-gROtC//J/2SrE4maL5sZSSKqIoesvYn/wKXB10irbS6yIJQADdVE2K9wjxc3uDDux2DAVZLkkj+Hg+PgyFcRMg=="
+        }
+      }
+    },
+    "v2-b": {
+      "version": "4.0.0",
+      "resolved": "https://example.invalid/v2-b-4.0.0.tgz",
+      "integrity": "sha512-XvycS8nZiA7LhcW+K40FqizMgfxXTB4b2LKrjIVEqQ1ubUf1v2UZMqIVMu7oYbZ11eFErcb/2QkN/xdTS8uKzw=="
+    }
+  }
+}

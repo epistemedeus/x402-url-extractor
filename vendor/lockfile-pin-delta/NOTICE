@@ -1,0 +1,24 @@
+Lockfile pin-delta engine projection
+====================================
+
+This directory is a bounded source projection of
+
+  epistemedeus/samedaydesk
+  tools/lockfile-pin-delta/
+  git SHA fba9d14872bc4c04214e527b9edfb30c2123c9e7
+
+selected by W5-M01 as the first supplied-input offer and implemented at
+that SHA by W5-M03. It is not a copy of the SameDayDesk repository, not a
+second payment stack, and not a live settlement engine.
+
+Pin equality uses lockfile name, version, integrity, and resolved. An
+injected hasher must not be treated as pin equality. `purchaseAuthority`
+and `paidValueClaim` stay false. `settlement` stays
+`nonsettling-prototype`. Do not flip a `sold` flag to manufacture a sale.
+
+The public CLI remains `bin/lockfile-delta.mjs` (local files only). The
+merchant HTTP adapter must not accept caller filesystem paths, arbitrary
+commands, or arbitrary network fetch.
+
+See FEATURE-MAP.md in this directory for the engine contract.
+The merchant repository LICENSE (MIT, SameDayDesk) covers this projection.

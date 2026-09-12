@@ -1,0 +1,24 @@
+{
+  "name": "added-removed-app",
+  "version": "1.0.0",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "added-removed-app",
+      "version": "1.0.0"
+    },
+    "node_modules/fixture-alpha": {
+      "version": "1.0.0",
+      "integrity": "sha512-l/0QZeYH6WYJLVF9qn9Rymjnrjn7Oi0ExEDpGIQ337qIpPWJQhd5TSVlE2YOET42IWoCns7YnU02SuLR7aduBA=="
+    },
+    "node_modules/fixture-beta": {
+      "version": "2.0.0",
+      "integrity": "sha512-0QtRlD/POcdQv6b4iFPabhFBByI/c9FaLvfssINXg0Tms8JIij5lcTGvIEJTQ5netWtguTSeYn7a+wH5XmwHXg=="
+    },
+    "node_modules/@scope/pkg": {
+      "version": "1.0.0",
+      "integrity": "sha512-HyQkaSjTcpxTJHAWvLoVVcEF8fw8sRTD+9kca+S8cW2p1FGOGh9EV6o/nT54ePmHKsMdeMUv+RrXZ4ZLs/tDzQ=="
+    }
+  }
+}

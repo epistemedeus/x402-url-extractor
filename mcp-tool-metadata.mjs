@@ -7,6 +7,10 @@ const TOOL_METADATA = Object.freeze({
     title: "Extract Public URLs in Batch",
     description: "Fetch one to five public HTTPS URLs and return bounded structured fields for each source in one paid attempt. Supply `urls` as a JSON array and optional unique `fields`. Use `extract` for a single URL when you do not need batch accounting. Charge is one flat introductory 0.01 USDC quote for the bounded attempt, not a guarantee that every URL succeeds. Automatic retries are disabled; unknown outcomes must not be re-paid automatically.",
   },
+  lockfile_pin_delta: {
+    title: "Inspect Lockfile Pin Delta",
+    description: "Inspect two caller-supplied npm package-lock.json objects and return added, removed, and changed name+version+integrity+resolved pins. Supply JSON `before` and `after` lockfile objects, not filesystem paths, URLs, or commands. An identical pin set is informational, not a failure. HTML, package.json, and unsupported lockfileVersion values are refused before payment. This is not an npm install, audit, or purchase. Initial live release accepts x402 only.",
+  },
   read: {
     title: "Read Web Page as Markdown",
     description: "Fetch a public HTTP(S) page and return its readable body as cleaned Markdown for LLM context, preserving headings, links, and lists while dropping navigation, ads, scripts, headers, footers, asides, and forms. Use `extract` instead when you need metadata, JSON-LD, Open Graph/Twitter tags, or a link inventory. Markdown is capped at 40,000 characters and no JavaScript is executed.",
