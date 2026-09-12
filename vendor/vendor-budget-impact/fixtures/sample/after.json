@@ -1,0 +1,22 @@
+{
+  "label": "SAMPLE",
+  "sampleId": "caller-alpha",
+  "note": "SAMPLE fixture - not a customer, not a live quote, not demand",
+  "rows": [
+    {
+      "field": "alpha-chat-input",
+      "value": 1.75,
+      "unit": "USD/1M-tokens"
+    },
+    {
+      "field": "alpha-chat-output",
+      "value": 5.0,
+      "unit": "USD/1M-tokens"
+    },
+    {
+      "field": "alpha-embed",
+      "value": 0.1,
+      "unit": "USD/1M-tokens"
+    }
+  ]
+}

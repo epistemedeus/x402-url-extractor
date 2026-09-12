@@ -1,6 +1,7 @@
 import { extractBatchOutputSchema } from "../extract-batch.mjs";
 import { extractMcpOutputSchema, readMcpOutputSchema } from "../extract.mjs";
 import { lockfilePinDeltaOutputSchema } from "../lockfile-pin-delta.mjs";
+import { vendorBudgetImpactOutputSchema } from "../vendor-budget-impact.mjs";
 import { bindOwningContracts, resetOwningContracts } from "./contract.mjs";
 
 let bound = false;
@@ -13,6 +14,7 @@ export function bindMerchantHttpDeliveryContracts() {
     readSuccessParse: (value) => readMcpOutputSchema.safeParse(value),
     batchHttpParse: () => extractBatchOutputSchema(),
     lockfileHttpParse: () => lockfilePinDeltaOutputSchema(),
+    vendorBudgetHttpParse: () => vendorBudgetImpactOutputSchema(),
   });
   bound = true;
 }

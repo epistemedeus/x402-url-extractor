@@ -5,6 +5,7 @@ import {
   assertRequestMatchesAuthorization,
   AuthorizationRefusal,
   normalizeAuthorization,
+  admitVendorBudgetBody,
 } from "./authorization.mjs";
 import { BatchAdmissionError, admitExtractBatchBody } from "./batch-admission.mjs";
 import { classifyRequestConstruction } from "./request-construction.mjs";
@@ -62,13 +63,16 @@ export async function runPreflight({
     throw new Error("preflight method must be GET or POST");
   }
 
+  const admitPostBody = value => target.pathname === "/vendor-budget-impact"
+    ? admitVendorBudgetBody(typeof value === "string" ? {bodyRaw:value} : {body:value}).bodyRaw
+    : admitExtractBatchBody(typeof value === "string" ? JSON.parse(value) : value).bodyRaw;
   let bodyRaw = null;
   if (resolvedMethod === "POST") {
     if (auth) {
-      bodyRaw = body == null ? auth.bodyRaw : typeof body === "string" ? body : admitExtractBatchBody(body).bodyRaw;
+      bodyRaw = body == null ? auth.bodyRaw : typeof body === "string" ? body : admitPostBody(body);
     } else if (body != null) {
       try {
-        bodyRaw = typeof body === "string" ? admitExtractBatchBody(JSON.parse(body)).bodyRaw : admitExtractBatchBody(body).bodyRaw;
+        bodyRaw = admitPostBody(body);
       } catch (error) {
         if (error instanceof BatchAdmissionError) throw error;
         throw error;
@@ -96,7 +100,7 @@ export async function runPreflight({
     });
   } else if (resolvedMethod === "POST") {
     // Local admission already ran; still no wallet access.
-    admitExtractBatchBody(JSON.parse(bodyRaw));
+    admitPostBody(bodyRaw);
   }
 
   const init = bound

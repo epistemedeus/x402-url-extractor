@@ -1,0 +1,24 @@
+{
+  "rows": [
+    {
+      "field": "gpt-4.1-input",
+      "value": 2.0,
+      "unit": "USD/1M-tokens"
+    },
+    {
+      "field": "gpt-4.1-output",
+      "value": 8.0,
+      "unit": "USD/1M-tokens"
+    },
+    {
+      "field": "grok-4.6-input",
+      "value": 3.0,
+      "unit": "USD/1M-Tokens"
+    },
+    {
+      "field": "grok-4.6-output",
+      "value": 15.0,
+      "unit": "USD/1M-tokens"
+    }
+  ]
+}

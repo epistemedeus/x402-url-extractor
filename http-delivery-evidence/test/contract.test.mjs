@@ -4,6 +4,7 @@ import test from "node:test";
 import { extractBatchOutputSchema } from "../../extract-batch.mjs";
 import { extractMcpOutputSchema, readMcpOutputSchema } from "../../extract.mjs";
 import { lockfilePinDeltaOutputExample, lockfilePinDeltaOutputSchema } from "../../lockfile-pin-delta.mjs";
+import { vendorBudgetImpactOutputExample, vendorBudgetImpactOutputSchema } from "../../vendor-budget-impact.mjs";
 import { bindMerchantHttpDeliveryContracts } from "../bind-merchant-contracts.mjs";
 import {
   DELIVERY,
@@ -166,7 +167,7 @@ test("timeout and unsupported encoding stay distinct from source refusal", () =>
   assert.equal(evaluateExtract(merchantCatchEnvelope({ code: "fetch_error" })).deliveryClass, DELIVERY.ENGINE_FAILURE);
 });
 
-test("read, batch, and lockfile no-change hold as completed capture", () => {
+test("read, batch, lockfile, and vendor-budget no-change hold as completed capture", () => {
   assert.equal(readMcpOutputSchema.safeParse(validReadBody()).success, true);
   const readEval = evaluateResponseBytes({
     method: "GET",
@@ -197,6 +198,18 @@ test("read, batch, and lockfile no-change hold as completed capture", () => {
   });
   assert.equal(lockParse.ok, true);
   assert.equal(lockEval.deliveryClass, DELIVERY.FULL_BOUNDED_CAPTURE);
+
+  const vendorBudget = { ...vendorBudgetImpactOutputExample(), analysis: "informational" };
+  const vendorParse = jsonSchemaSafeParse(vendorBudgetImpactOutputSchema(), vendorBudget);
+  const vendorEval = evaluateResponseBytes({
+    method: "POST",
+    resource: RESOURCES.VENDOR_BUDGET,
+    responseBytes: Buffer.from(JSON.stringify(vendorBudget)),
+    merchantHttpStatus: 200,
+    settlementClass: SETTLEMENT_CLASS.SIMULATED,
+  });
+  assert.equal(vendorParse.ok, true);
+  assert.equal(vendorEval.deliveryClass, DELIVERY.FULL_BOUNDED_CAPTURE);
 });
 
 test("bounded oversized capture is never full_bounded_capture", () => {

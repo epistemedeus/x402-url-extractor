@@ -11,9 +11,11 @@ import {
   DEFAULT_BATCH_REQUIRED_OUTPUT,
   DEFAULT_LOCKFILE_REQUIRED_OUTPUT,
   DEFAULT_REQUIRED_OUTPUT,
+  DEFAULT_VENDOR_BUDGET_REQUIRED_OUTPUT,
   LIVE_BATCH_METHOD,
   LIVE_LOCKFILE_METHOD,
   LIVE_METHOD,
+  LIVE_VENDOR_BUDGET_METHOD,
 } from "./constants.mjs";
 
 export class AuthorizationRefusal extends Error {
@@ -247,6 +249,117 @@ function normalizePostLockfileAuthorization(input) {
   };
 }
 
+const VENDOR_BUDGET_MAX_REQUEST_JSON_BYTES = 64 * 1024;
+const VENDOR_BUDGET_ALLOWED_BODY_KEYS = Object.freeze(["before", "after"]);
+const VENDOR_BUDGET_ALLOWED_SNAPSHOT_KEYS = Object.freeze(["rows", "label", "note"]);
+const VENDOR_BUDGET_ALLOWED_ROW_KEYS = Object.freeze(["field", "value", "unit"]);
+
+function admitVendorBudgetSnapshot(value, label) {
+  if (value == null || typeof value !== "object" || Array.isArray(value)) {
+    fail(`${label} must be a JSON object with a rows array (not a path or string)`, label);
+  }
+  const extra = Object.keys(value).filter((key) => !VENDOR_BUDGET_ALLOWED_SNAPSHOT_KEYS.includes(key));
+  if (extra.length) fail(`${label} unexpected field: ${extra[0]}`, label);
+  if (!Array.isArray(value.rows) || value.rows.length === 0) {
+    fail(`${label} must include a non-empty rows array`, label);
+  }
+  if (value.rows.length > 256) fail(`${label} exceeds 256 rows`, label);
+  if (Buffer.byteLength(JSON.stringify(value) + "\n") > 32 * 1024) fail(`${label} exceeds snapshot byte ceiling`, label);
+  for (const key of ["label", "note"]) {
+    if (value[key] !== undefined && (typeof value[key] !== "string" || value[key].length > 256)) {
+      fail(`${label}.${key} must be a string of at most 256 characters`, label);
+    }
+  }
+  if (value.label?.trim().toUpperCase() === "SAMPLE") fail("SAMPLE snapshot is not customer pricing", label);
+  value.rows.forEach((row, index) => {
+    if (!row || typeof row !== "object" || Array.isArray(row)) {
+      fail(`${label} row ${index} must be an object`, label);
+    }
+    const rowExtra = Object.keys(row).filter((key) => !VENDOR_BUDGET_ALLOWED_ROW_KEYS.includes(key));
+    if (rowExtra.length) fail(`${label} row ${index} unexpected field: ${rowExtra[0]}`, label);
+    if (typeof row.field !== "string" || !row.field.trim()) {
+      fail(`${label} row ${index} field must be a non-empty string`, label);
+    }
+    if (typeof row.value !== "number" || !Number.isFinite(row.value)) {
+      fail(`${label} row ${index} value must be a finite number`, label);
+    }
+    if (typeof row.unit !== "string" || !row.unit.trim()) {
+      fail(`${label} row ${index} unit must be a non-empty string`, label);
+    }
+    if (row.field.length > 256 || row.unit.length > 256) fail(`${label} row ${index} field/unit exceeds 256 characters`, label);
+  });
+  return value;
+}
+
+export function admitVendorBudgetBody(input) {
+  let bodyRaw;
+  let parsed;
+  if (typeof input.bodyRaw === "string") {
+    if (Buffer.byteLength(input.bodyRaw) > VENDOR_BUDGET_MAX_REQUEST_JSON_BYTES) {
+      fail("bodyRaw exceeds request byte ceiling", "body");
+    }
+    try {
+      parsed = JSON.parse(input.bodyRaw);
+    } catch {
+      fail("bodyRaw must be valid JSON", "body");
+    }
+    bodyRaw = input.bodyRaw;
+    if (input.body !== undefined) {
+      const fromBody = JSON.stringify({ before: input.body.before, after: input.body.after });
+      if (fromBody !== bodyRaw) fail("body does not match authorized bodyRaw", "body");
+    }
+  } else if (input.body && typeof input.body === "object" && !Array.isArray(input.body)) {
+    parsed = input.body;
+    bodyRaw = JSON.stringify({ before: parsed.before, after: parsed.after });
+    if (Buffer.byteLength(bodyRaw) > VENDOR_BUDGET_MAX_REQUEST_JSON_BYTES) {
+      fail("vendor-budget body exceeds request byte ceiling", "body");
+    }
+  } else {
+    fail("vendor-budget authorization requires body {before, after} or bodyRaw", "body");
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    fail("body must be a JSON object", "body");
+  }
+  const extra = Object.keys(parsed).filter((key) => !VENDOR_BUDGET_ALLOWED_BODY_KEYS.includes(key));
+  if (extra.length) fail(`unexpected field: ${extra[0]}`, extra[0]);
+  admitVendorBudgetSnapshot(parsed.before, "before");
+  admitVendorBudgetSnapshot(parsed.after, "after");
+  const digest = bodyDigestFor(bodyRaw);
+  if (input.bodyDigest !== undefined && input.bodyDigest !== digest) {
+    fail("body digest drifted after approval", "body");
+  }
+  return Object.freeze({
+    bodyRaw,
+    bodyDigest: digest,
+    bodyBytes: Buffer.byteLength(bodyRaw),
+  });
+}
+
+function normalizePostVendorBudgetAuthorization(input) {
+  const method = String(input.method || LIVE_VENDOR_BUDGET_METHOD).toUpperCase();
+  if (method !== "POST") fail("vendor-budget authorization method must be POST", "method");
+  const url = normalizeHttpsUrl(input.url, "url");
+  if (url.pathname !== "/vendor-budget-impact") fail("authorization path must be /vendor-budget-impact", "url");
+  if (url.search) fail("vendor-budget authorization URL must not include a query string", "url");
+  const admitted = admitVendorBudgetBody(input);
+  return {
+    method,
+    url: url.toString(),
+    origin: url.origin,
+    path: url.pathname,
+    query: "",
+    bodyRaw: admitted.bodyRaw,
+    bodyDigest: admitted.bodyDigest,
+    bodyBytes: admitted.bodyBytes,
+    batch: null,
+    vendorBudget: true,
+    requiredOutput: normalizeRequiredOutput(
+      input.requiredOutput || DEFAULT_VENDOR_BUDGET_REQUIRED_OUTPUT,
+      { batch: false },
+    ),
+  };
+}
+
 function postRouteFor(input) {
   let preview;
   try {
@@ -254,6 +367,7 @@ function postRouteFor(input) {
   } catch {
     fail("url must be an absolute HTTPS URL", "url");
   }
+  if (preview.pathname === "/vendor-budget-impact") return normalizePostVendorBudgetAuthorization(input);
   if (preview.pathname === "/lockfile-pin-delta") return normalizePostLockfileAuthorization(input);
   return normalizePostBatchAuthorization(input);
 }
@@ -263,6 +377,7 @@ function postRouteFor(input) {
  * HTTP payment credentials must never be transplanted into mcp:// resources.
  * POST /extract/batch also binds exact request body bytes and selected fields.
  * POST /lockfile-pin-delta binds exact {before, after} body bytes the same way.
+ * POST /vendor-budget-impact binds exact pricing-row {before, after} body bytes.
  */
 export function normalizeAuthorization(input) {
   if (!input || typeof input !== "object" || Array.isArray(input)) {

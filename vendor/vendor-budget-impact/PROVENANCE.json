@@ -1,0 +1,28 @@
+{
+  "kind": "source-projection",
+  "package": "@samedaydesk/vendor-budget-impact",
+  "source": {
+    "repo": "epistemedeus/samedaydesk",
+    "sha": "b23260e6a2b74452075f73da1631da24d8ae6906",
+    "comparePath": "experiments/s134-record-jobs/modules/pricing-table-change/",
+    "impactPath": "server/paid-useful-jobs/release/apps/vendor-budget-impact/cli.mjs",
+    "impactSha": "485a5023843f27bb920ad2a26ad0631fa1bbb4bd",
+    "impactProjection": "candidate useful-jobs 1.4.1 membership, raw-value, scope and finite-delta mapping; no CLI filesystem wrapper",
+    "publicPr115": "dacb9950ef3e1ffcf9151c30324fe1f1cb209e19",
+    "usefulJobsArchive": {
+      "name": "useful-jobs-1.4.0.tar.gz",
+      "sha256": "2b1949189f0ad2e3c1bd5f7a43f7eda800fd5f0dc3a395415689feee0419ff4f",
+      "bytes": 2575215
+    }
+  },
+  "not": [
+    "full-samedaydesk-checkout",
+    "second-payment-stack",
+    "second-job-platform",
+    "runtime-github-download",
+    "live-settlement",
+    "purchase-authority",
+    "live-market-quote"
+  ],
+  "httpAdapter": "merchant vendor-budget-impact.mjs accepts JSON pricing-row objects only"
+}

@@ -12,12 +12,14 @@ export const RESOURCES = Object.freeze({
   READ: "/read",
   EXTRACT_BATCH: "/extract/batch",
   LOCKFILE: "/lockfile-pin-delta",
+  VENDOR_BUDGET: "/vendor-budget-impact",
 });
 
 export const EXTRACT_CONTRACT = "x402-url-extractor.extractMcpOutputSchema";
 export const READ_CONTRACT = "x402-url-extractor.readMcpOutputSchema";
 export const EXTRACT_BATCH_CONTRACT = "x402-url-extractor.extractBatchOutputSchema";
 export const LOCKFILE_CONTRACT = "x402-url-extractor.lockfilePinDeltaOutputSchema";
+export const VENDOR_BUDGET_CONTRACT = "x402-url-extractor.vendorBudgetImpactOutputSchema";
 
 export const CANONICAL_PIN = Object.freeze({
   merchantSha: GENERATED.merchantSha,
@@ -44,12 +46,14 @@ export function bindOwningContracts({
   readSuccessParse,
   batchHttpParse,
   lockfileHttpParse,
+  vendorBudgetHttpParse,
 } = {}) {
   owningParsers = {
     [RESOURCES.EXTRACT]: wrapOwningParse(extractSuccessParse),
     [RESOURCES.READ]: wrapOwningParse(readSuccessParse),
     [RESOURCES.EXTRACT_BATCH]: wrapOwningParse(batchHttpParse),
     [RESOURCES.LOCKFILE]: wrapOwningParse(lockfileHttpParse),
+    [RESOURCES.VENDOR_BUDGET]: wrapOwningParse(vendorBudgetHttpParse),
   };
 }
 
@@ -62,12 +66,13 @@ export function contractNameForResource(resource) {
   if (resource === RESOURCES.READ) return READ_CONTRACT;
   if (resource === RESOURCES.EXTRACT_BATCH) return EXTRACT_BATCH_CONTRACT;
   if (resource === RESOURCES.LOCKFILE) return LOCKFILE_CONTRACT;
+  if (resource === RESOURCES.VENDOR_BUDGET) return VENDOR_BUDGET_CONTRACT;
   return null;
 }
 
 export function isSupportedTarget(method, resource) {
   if (resource === RESOURCES.EXTRACT || resource === RESOURCES.READ) return method === "GET";
-  if (resource === RESOURCES.EXTRACT_BATCH || resource === RESOURCES.LOCKFILE) return method === "POST";
+  if (resource === RESOURCES.EXTRACT_BATCH || resource === RESOURCES.LOCKFILE || resource === RESOURCES.VENDOR_BUDGET) return method === "POST";
   return false;
 }
 

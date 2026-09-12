@@ -1,8 +1,8 @@
 {
   "name": "samedaydesk-customer-x402-example",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "private": true,
-  "description": "Credential-free preflight and explicitly authorized @x402/fetch purchase example for SameDayDesk POST /extract/batch, GET /extract, and POST /lockfile-pin-delta",
+  "description": "Credential-free preflight and explicitly authorized @x402/fetch purchase example for SameDayDesk POST /extract/batch, GET /extract, POST /lockfile-pin-delta, and POST /vendor-budget-impact",
   "type": "module",
   "engines": {
     "node": ">=22"

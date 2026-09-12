@@ -141,6 +141,12 @@ const CLOSED_MCP_PRODUCTS = Object.freeze({
     resource: "mcp://tool/lockfile_pin_delta",
     httpRoute: "/lockfile-pin-delta",
   }),
+  vendor_budget_impact: Object.freeze({
+    tool: "vendor_budget_impact",
+    productSku: "samedaydesk-vendor-budget-impact",
+    resource: "mcp://tool/vendor_budget_impact",
+    httpRoute: "/vendor-budget-impact",
+  }),
   read: Object.freeze({
     tool: "read",
     productSku: "samedaydesk-read",
