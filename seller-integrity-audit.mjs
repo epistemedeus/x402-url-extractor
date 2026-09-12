@@ -1,4 +1,5 @@
 import { auditOrigin, normalizeOrigin } from "agent-payment-integrity";
+import { z } from "zod";
 import {
   createReceiptReferralOffer,
   normalizeReceiptReferralId,
@@ -65,7 +66,7 @@ export function sellerIntegrityAuditOutputSchema() {
       product: { type: "string", const: "samedaydesk-seller-integrity-audit" },
       version: { type: "string", const: "1.3.0" },
       checkedAt: { type: "string", format: "date-time" },
-      decision: { type: "string", enum: ["machine_buyable", "contract_ready", "repair_required"] },
+      decision: { type: "string", enum: ["machine_buyable", "contract_ready", "repair_required", "unverified"] },
       request: {
         type: "object",
         additionalProperties: false,
@@ -85,6 +86,19 @@ export function sellerIntegrityAuditOutputSchema() {
         properties: {
           auditCompleted: { type: "boolean" },
           failureCode: { type: ["string", "null"] },
+          observedHttpStatus: { type: ["integer", "null"], minimum: 100, maximum: 599 },
+          evidenceClass: {
+            type: ["string", "null"],
+            enum: [
+              "missing_declared_operation",
+              "invalid_declaration",
+              "declared_url_unavailable",
+              "local_acquisition_limit",
+              "transport_unknown",
+              "seller_contract",
+              null,
+            ],
+          },
           schemaVersion: { type: ["string", "null"] },
           sellerVersions: {
             type: ["object", "null"],
@@ -139,7 +153,7 @@ export function sellerIntegrityAuditOutputSchema() {
             required: ["mode", "requiredPaths", "guaranteedPaths", "actions", "complete", "boundary"],
           },
         },
-        required: ["auditCompleted", "failureCode", "schemaVersion", "sellerVersions", "status", "runtimeChallengeVerified", "probe", "protocols", "valid", "findings", "economics", "discovery", "responseContract", "repairPlan"],
+        required: ["auditCompleted", "failureCode", "observedHttpStatus", "evidenceClass", "schemaVersion", "sellerVersions", "status", "runtimeChallengeVerified", "probe", "protocols", "valid", "findings", "economics", "discovery", "responseContract", "repairPlan"],
       },
       nextActions: { type: "array", items: { type: "string" } },
       referralOffer: receiptReferralOfferSchema(),
@@ -163,6 +177,92 @@ export function sellerIntegrityAuditOutputSchema() {
   };
 }
 
+const nullableObject = z.object({}).passthrough().nullable();
+const sellerIntegrityEvidenceClass = z.enum([
+  "missing_declared_operation",
+  "invalid_declaration",
+  "declared_url_unavailable",
+  "local_acquisition_limit",
+  "transport_unknown",
+  "seller_contract",
+]).nullable();
+const sellerIntegrityReferralOfferMcpSchema = z.object({
+  v: z.literal("1"),
+  status: z.enum(["available", "declared", "unavailable"]),
+  id: z.string().regex(/^r1_[0-9a-f]{64}$/).nullable(),
+  proof: z.literal("x402-offer-receipt-jcs-sha256-v1"),
+  reward: z.enum(["one_free_changed_state_recheck", "none"]),
+  qualifiesOn: z.enum(["two_distinct_seller_signed_settlement_receipts", "none"]),
+  broadcastRequired: z.literal(false),
+  attributionOnly: z.literal(true),
+  instructions: z.string(),
+}).strict();
+
+export const sellerIntegrityAuditMcpOutputSchema = z.object({
+  ok: z.boolean(),
+  product: z.literal("samedaydesk-seller-integrity-audit"),
+  version: z.literal("1.3.0"),
+  checkedAt: z.string().datetime(),
+  decision: z.enum(["machine_buyable", "contract_ready", "repair_required", "unverified"]),
+  request: z.object({
+    origin: z.string().url(),
+    route: z.string(),
+    method: z.enum(["GET", "POST"]),
+    requiredPaths: z.array(z.string()).max(16),
+    requireBazaar: z.boolean(),
+    referral: z.string().regex(/^r1_[0-9a-f]{64}$/).nullable(),
+  }).strict(),
+  report: z.object({
+    auditCompleted: z.boolean(),
+    failureCode: z.string().nullable(),
+    observedHttpStatus: z.number().int().min(100).max(599).nullable(),
+    evidenceClass: sellerIntegrityEvidenceClass,
+    schemaVersion: z.string().nullable(),
+    sellerVersions: z.object({ x402: z.string().nullable(), mpp: z.string().nullable() }).passthrough().nullable(),
+    status: z.number().int().nullable(),
+    runtimeChallengeVerified: z.boolean(),
+    probe: nullableObject,
+    protocols: z.array(z.string()),
+    valid: z.boolean(),
+    findings: z.array(z.string()),
+    economics: nullableObject,
+    discovery: nullableObject,
+    responseContract: nullableObject,
+    repairPlan: z.object({
+      mode: z.literal("advisory_openapi_repair"),
+      requiredPaths: z.array(z.string()).max(16),
+      guaranteedPaths: z.array(z.string()).max(16),
+      actions: z.array(z.object({
+        requiredPath: z.string(),
+        action: z.enum(["add_property_to_required", "define_and_require_property", "define_nested_property_path"]),
+        parentPath: z.string(),
+        property: z.string(),
+        propertyDeclared: z.boolean(),
+        propertyType: z.string().nullable(),
+      }).strict()).max(16),
+      complete: z.boolean(),
+      boundary: z.object({
+        schemaMutationApplied: z.literal(false),
+        propertyTypesInferred: z.literal(false),
+        sellerRuntimeVerified: z.literal(false),
+        statement: z.string(),
+      }).strict(),
+    }).strict().nullable(),
+  }).strict(),
+  nextActions: z.array(z.string()),
+  referralOffer: sellerIntegrityReferralOfferMcpSchema,
+  boundary: z.object({
+    credentialsUsed: z.literal(false),
+    targetPaymentSigned: z.literal(false),
+    targetPaymentSent: z.literal(false),
+    targetRequestSent: z.literal(false),
+    redirectsFollowed: z.literal(false),
+    responseBodyRead: z.literal(false),
+    schemaRetained: z.literal(false),
+    queryValuesRetained: z.literal(false),
+  }).strict(),
+}).strict();
+
 export const SELLER_INTEGRITY_AUDIT_EXAMPLE = Object.freeze({
   ok: true,
   product: "samedaydesk-seller-integrity-audit",
@@ -173,6 +273,8 @@ export const SELLER_INTEGRITY_AUDIT_EXAMPLE = Object.freeze({
   report: {
     auditCompleted: true,
     failureCode: null,
+    observedHttpStatus: null,
+    evidenceClass: null,
     schemaVersion: "agent-payment-integrity.audit.v4",
     sellerVersions: { x402: "1.18.3", mpp: "1.18.3" },
     status: 402,
@@ -212,6 +314,91 @@ export const SELLER_INTEGRITY_AUDIT_EXAMPLE = Object.freeze({
   },
 });
 
+export function classifySellerIntegrityAcquisition(message) {
+  const text = String(message || "");
+  if (/^exact paid (?:GET|POST) route was not declared$/.test(text)) {
+    return {
+      failureCode: "exact_route_not_declared",
+      observedHttpStatus: null,
+      evidenceClass: "missing_declared_operation",
+      decision: "repair_required",
+    };
+  }
+  if (text === "document did not return JSON") {
+    return {
+      failureCode: "openapi_invalid",
+      observedHttpStatus: null,
+      evidenceClass: "invalid_declaration",
+      decision: "repair_required",
+    };
+  }
+  const httpFailure = /^document returned HTTP ([1-5][0-9]{2})$/.exec(text);
+  if (httpFailure) {
+    return {
+      failureCode: "openapi_unavailable",
+      observedHttpStatus: Number(httpFailure[1]),
+      evidenceClass: "declared_url_unavailable",
+      decision: "repair_required",
+    };
+  }
+  if (text === "response exceeded byte limit" || text === "DoH response exceeded byte limit") {
+    return {
+      failureCode: "openapi_exceeds_byte_limit",
+      observedHttpStatus: null,
+      evidenceClass: "local_acquisition_limit",
+      decision: "unverified",
+    };
+  }
+  if (/^paid (?:GET|POST) route count exceeds [1-9][0-9]*$/.test(text)) {
+    return {
+      failureCode: "route_ceiling_exceeded",
+      observedHttpStatus: null,
+      evidenceClass: "local_acquisition_limit",
+      decision: "unverified",
+    };
+  }
+  if (text === "redirects are not allowed") {
+    return {
+      failureCode: "redirect_not_followed",
+      observedHttpStatus: null,
+      evidenceClass: "transport_unknown",
+      decision: "unverified",
+    };
+  }
+  return {
+    failureCode: "bounded_transport_failure",
+    observedHttpStatus: null,
+    evidenceClass: "transport_unknown",
+    decision: "unverified",
+  };
+}
+
+function nextActionsForAcquisition(classified, request) {
+  const { failureCode, observedHttpStatus } = classified;
+  if (failureCode === "exact_route_not_declared") {
+    return [`Declare the exact paid ${request.method} route in the seller OpenAPI document.`];
+  }
+  if (failureCode === "openapi_invalid") {
+    return [`The declared same-origin /openapi.json did not return JSON. Publish a valid OpenAPI document with the exact paid ${request.method} operation.`];
+  }
+  if (failureCode === "openapi_unavailable") {
+    const transient = observedHttpStatus === 429 || observedHttpStatus >= 500;
+    return [transient
+      ? `A same-origin seller declaration endpoint returned HTTP ${observedHttpStatus} during this point-in-time check. Restore its availability or retry; this observation does not establish a permanent missing contract.`
+      : `A same-origin seller declaration endpoint returned HTTP ${observedHttpStatus} during this point-in-time check. Publish or restore the declared document at that URL.`];
+  }
+  if (failureCode === "openapi_exceeds_byte_limit") {
+    return ["Local OpenAPI byte limit prevented a complete audit. This is not seller-repair evidence. Probe one exact advertised URL with payment-offer-preflight."];
+  }
+  if (failureCode === "route_ceiling_exceeded") {
+    return ["Local route ceiling prevented a complete audit. Select one exact route. This is not seller-repair evidence."];
+  }
+  if (failureCode === "redirect_not_followed") {
+    return ["The declared URL responded with a redirect that this checker does not follow. This is not by itself a catalog or seller-repair finding."];
+  }
+  return ["The unpaid probe did not complete because of timeout, TLS, or network transport. This is not seller-repair evidence. Retry the bounded check."];
+}
+
 function nextActionsFor(routeReport) {
   const actions = new Set();
   for (const finding of routeReport.findings || []) {
@@ -236,26 +423,19 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
   try {
     report = await auditImpl({ ...auditRequest, maxRoutes: 1, publicDns: true });
   } catch (error) {
-    const message = String(error?.message || error);
-    const failureCode = /not declared/.test(message)
-      ? "exact_route_not_declared"
-      : /document returned HTTP/.test(message)
-        ? "openapi_unavailable"
-        : /document did not return JSON/.test(message)
-          ? "openapi_invalid"
-          : /route count exceeds/.test(message)
-            ? "route_ceiling_exceeded"
-            : "bounded_transport_failure";
+    const classified = classifySellerIntegrityAcquisition(error?.message || error);
     return {
       ok: false,
       product: "samedaydesk-seller-integrity-audit",
       version: "1.3.0",
       checkedAt: new Date().toISOString(),
-      decision: "repair_required",
+      decision: classified.decision,
       request,
       report: {
         auditCompleted: false,
-        failureCode,
+        failureCode: classified.failureCode,
+        observedHttpStatus: classified.observedHttpStatus,
+        evidenceClass: classified.evidenceClass,
         schemaVersion: null,
         sellerVersions: null,
         status: null,
@@ -263,18 +443,17 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
         probe: null,
         protocols: [],
         valid: false,
-        findings: [failureCode],
+        findings: [classified.failureCode],
         economics: null,
         discovery: null,
         responseContract: null,
         repairPlan: null,
       },
-      nextActions: [failureCode === "exact_route_not_declared"
-        ? `Declare the exact paid ${request.method} route in the seller OpenAPI document.`
-        : failureCode.startsWith("openapi_")
-          ? `Publish a valid same-origin /openapi.json document with the exact paid ${request.method} operation.`
-          : "Restore the seller declaration and unpaid challenge surfaces, then rerun the bounded audit."],
-      referralOffer: createReceiptReferralOffer({ referralId: referral, decision: "repair_required" }),
+      nextActions: nextActionsForAcquisition(classified, request),
+      referralOffer: createReceiptReferralOffer({
+        referralId: classified.decision === "repair_required" ? referral : null,
+        decision: classified.decision,
+      }),
       boundary: {
         credentialsUsed: false,
         targetPaymentSigned: false,
@@ -303,6 +482,8 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
     report: {
       auditCompleted: true,
       failureCode: null,
+      observedHttpStatus: null,
+      evidenceClass: decision === "repair_required" ? "seller_contract" : null,
       schemaVersion: report.schemaVersion,
       sellerVersions: report.versions,
       status: routeReport.status,
