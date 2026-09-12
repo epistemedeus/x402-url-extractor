@@ -8,8 +8,10 @@ import {
 } from "./batch-admission.mjs";
 import {
   DEFAULT_BATCH_REQUIRED_OUTPUT,
+  DEFAULT_LOCKFILE_REQUIRED_OUTPUT,
   DEFAULT_REQUIRED_OUTPUT,
   LIVE_BATCH_METHOD,
+  LIVE_LOCKFILE_METHOD,
   LIVE_METHOD,
 } from "./constants.mjs";
 
@@ -158,10 +160,101 @@ function normalizePostBatchAuthorization(input) {
   };
 }
 
+const LOCKFILE_MAX_REQUEST_JSON_BYTES = 256 * 1024;
+const LOCKFILE_ALLOWED_BODY_KEYS = Object.freeze(["before", "after"]);
+
+function admitLockfilePair(value, label) {
+  if (value == null || typeof value !== "object" || Array.isArray(value)) {
+    fail(`${label} must be a JSON object (not a path or string)`, label);
+  }
+  return value;
+}
+
+function admitLockfileBody(input) {
+  let bodyRaw;
+  let parsed;
+  if (typeof input.bodyRaw === "string") {
+    if (Buffer.byteLength(input.bodyRaw) > LOCKFILE_MAX_REQUEST_JSON_BYTES) {
+      fail("bodyRaw exceeds request byte ceiling", "body");
+    }
+    try {
+      parsed = JSON.parse(input.bodyRaw);
+    } catch {
+      fail("bodyRaw must be valid JSON", "body");
+    }
+    bodyRaw = input.bodyRaw;
+    if (input.body !== undefined) {
+      const fromBody = JSON.stringify({ before: input.body.before, after: input.body.after });
+      if (fromBody !== bodyRaw) fail("body does not match authorized bodyRaw", "body");
+    }
+  } else if (input.body && typeof input.body === "object" && !Array.isArray(input.body)) {
+    parsed = input.body;
+    bodyRaw = JSON.stringify({ before: parsed.before, after: parsed.after });
+    if (Buffer.byteLength(bodyRaw) > LOCKFILE_MAX_REQUEST_JSON_BYTES) {
+      fail("lockfile body exceeds request byte ceiling", "body");
+    }
+  } else {
+    fail("lockfile authorization requires body {before, after} or bodyRaw", "body");
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    fail("body must be a JSON object", "body");
+  }
+  const extra = Object.keys(parsed).filter((key) => !LOCKFILE_ALLOWED_BODY_KEYS.includes(key));
+  if (extra.length) fail(`unexpected field: ${extra[0]}`, extra[0]);
+  admitLockfilePair(parsed.before, "before");
+  admitLockfilePair(parsed.after, "after");
+  const digest = bodyDigestFor(bodyRaw);
+  if (input.bodyDigest !== undefined && input.bodyDigest !== digest) {
+    fail("body digest drifted after approval", "body");
+  }
+  return Object.freeze({
+    bodyRaw,
+    bodyDigest: digest,
+    bodyBytes: Buffer.byteLength(bodyRaw),
+  });
+}
+
+function normalizePostLockfileAuthorization(input) {
+  const method = String(input.method || LIVE_LOCKFILE_METHOD).toUpperCase();
+  if (method !== "POST") fail("lockfile authorization method must be POST", "method");
+  const url = normalizeHttpsUrl(input.url, "url");
+  if (url.pathname !== "/lockfile-pin-delta") fail("authorization path must be /lockfile-pin-delta", "url");
+  if (url.search) fail("lockfile authorization URL must not include a query string", "url");
+  const admitted = admitLockfileBody(input);
+  return {
+    method,
+    url: url.toString(),
+    origin: url.origin,
+    path: url.pathname,
+    query: "",
+    bodyRaw: admitted.bodyRaw,
+    bodyDigest: admitted.bodyDigest,
+    bodyBytes: admitted.bodyBytes,
+    batch: null,
+    lockfile: true,
+    requiredOutput: normalizeRequiredOutput(
+      input.requiredOutput || DEFAULT_LOCKFILE_REQUIRED_OUTPUT,
+      { batch: false },
+    ),
+  };
+}
+
+function postRouteFor(input) {
+  let preview;
+  try {
+    preview = new URL(String(input.url || ""));
+  } catch {
+    fail("url must be an absolute HTTPS URL", "url");
+  }
+  if (preview.pathname === "/lockfile-pin-delta") return normalizePostLockfileAuthorization(input);
+  return normalizePostBatchAuthorization(input);
+}
+
 /**
  * Bind the exact customer-authorized purchase shape before any wallet access.
  * HTTP payment credentials must never be transplanted into mcp:// resources.
  * POST /extract/batch also binds exact request body bytes and selected fields.
+ * POST /lockfile-pin-delta binds exact {before, after} body bytes the same way.
  */
 export function normalizeAuthorization(input) {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
@@ -188,7 +281,7 @@ export function normalizeAuthorization(input) {
   }
 
   const route = method === "POST"
-    ? normalizePostBatchAuthorization(input)
+    ? postRouteFor(input)
     : normalizeGetAuthorization(input);
 
   return Object.freeze({
