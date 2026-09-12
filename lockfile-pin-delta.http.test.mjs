@@ -16,7 +16,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { mppAssetForNetwork } from "./mpp-dual-stack.mjs";
 
 import { EXTRACT_BATCH_PATH } from "./extract-batch-config.mjs";
-import { LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC, LOCKFILE_PIN_DELTA_PATH, LOCKFILE_PIN_DELTA_QUOTE_MEANING } from "./lockfile-pin-delta-config.mjs";
+import { LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC, LOCKFILE_PIN_DELTA_PATH, LOCKFILE_PIN_DELTA_PRICE_USD, LOCKFILE_PIN_DELTA_QUOTE_MEANING } from "./lockfile-pin-delta-config.mjs";
 import { lockfilePinDeltaOutputSchema } from "./lockfile-pin-delta.mjs";
 
 const validateOutput = new Ajv2020({ strict: false, allErrors: true }).compile(lockfilePinDeltaOutputSchema());
@@ -198,6 +198,101 @@ test("flag off leaves live extract and catalogs unchanged", { timeout: 60_000 },
   assert.equal(extract.status, 402);
   const missing = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost({ before: journeyBefore, after: journeyAfter }));
   assert.equal(missing.status, 404);
+  const healthz = await fetch(`${merchant.base}/healthz`).then((r) => r.json());
+  assert.equal(Object.hasOwn(healthz.prices, "lockfile-pin-delta"), false);
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+});
+
+test("unsigned empty POSTs return 402; nonempty invalid probes refuse without facilitator calls", { timeout: 90_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "lockfile-probe-"));
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => {
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
+
+  const empty = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, { method: "POST" });
+  assert.equal(empty.status, 402);
+  assert.equal(empty.headers.get("payment-required") != null, true);
+  const emptyChallenge = decodePaymentRequired(empty);
+  assert.equal(emptyChallenge.x402Version, 2);
+  const emptyAccepted = emptyChallenge.accepts.find((entry) => entry.network === NETWORK && entry.scheme === "exact");
+  assert.equal(emptyAccepted.scheme, "exact");
+  assert.equal(emptyAccepted.amount, LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC);
+  assert.equal(emptyAccepted.payTo, PAY_TO);
+  const emptyInput = emptyAccepted.outputSchema?.input || emptyChallenge.extensions?.bazaar?.info?.input;
+  assert.equal(emptyInput?.method, "POST");
+  assert.ok(emptyInput?.body?.before && emptyInput?.body?.after);
+  assert.ok(emptyChallenge.extensions?.bazaar || emptyAccepted.outputSchema);
+  assert.doesNotMatch(empty.headers.get("www-authenticate") || "", /^Payment /);
+
+  const blank = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost({}));
+  assert.equal(blank.status, 402);
+  const blankChallenge = decodePaymentRequired(blank);
+  assert.equal(blankChallenge.accepts.find((entry) => entry.network === NETWORK && entry.scheme === "exact").amount, LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC);
+
+  const crawler = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost({
+    resource: "https://agents.samedaydesk.com/lockfile-pin-delta",
+    method: "POST",
+  }));
+  assert.equal(crawler.status, 400);
+  assert.equal((await crawler.json()).charged, false);
+  for (const invalid of [null, [], { url: "https://example.test" }, { command: "npm install" }]) {
+    const refused = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(invalid));
+    assert.equal(refused.status, 400);
+    assert.equal((await refused.json()).charged, false);
+  }
+
+  const validUnpaid = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost({
+    before: journeyBefore,
+    after: journeyAfter,
+  }));
+  assert.equal(validUnpaid.status, 402);
+  const validChallenge = decodePaymentRequired(validUnpaid);
+  const validAccepted = validChallenge.accepts.find((entry) => entry.network === NETWORK && entry.scheme === "exact");
+  assert.equal(validAccepted.amount, emptyAccepted.amount);
+  assert.equal(validAccepted.payTo, emptyAccepted.payTo);
+  const validInput = validAccepted.outputSchema?.input || validChallenge.extensions?.bazaar?.info?.input;
+  assert.equal(validInput?.method, emptyInput?.method);
+  assert.deepEqual(validInput?.body?.before, emptyInput?.body?.before);
+  assert.deepEqual(validInput?.body?.after, emptyInput?.body?.after);
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+
+  const healthz = await fetch(`${merchant.base}/healthz`).then((r) => r.json());
+  assert.equal(healthz.prices["lockfile-pin-delta"], LOCKFILE_PIN_DELTA_PRICE_USD);
+  const manifest = await fetch(`${merchant.base}/.well-known/x402`).then((r) => r.json());
+  const item = manifest.items.find((entry) => entry.resource?.routeTemplate === LOCKFILE_PIN_DELTA_PATH);
+  assert.ok(item);
+  assert.equal(item.request?.method, "POST");
+  assert.equal(item.accepts?.[0]?.amount, LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC);
+
+  const paidEmpty = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(
+    {},
+    { "payment-signature": testPayment(blankChallenge, { id: "lockfile_empty_paid_1234" }) },
+  ));
+  assert.equal(paidEmpty.status, 400);
+  assert.equal((await paidEmpty.json()).charged, false);
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+
+  const html = await readFile(path.join(cwd, "fixtures/lockfile-pin-delta/not-a-lock.html"), "utf8");
+  const paidInvalid = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(
+    { before: html, after: journeyAfter },
+    { "payment-signature": testPayment(validChallenge, { id: "lockfile_html_paid_123456" }) },
+  ));
+  assert.equal(paidInvalid.status, 400);
+  assert.equal((await paidInvalid.json()).charged, false);
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+
+  const missingAfter = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost({ before: journeyBefore }));
+  assert.equal(missingAfter.status, 400);
+  assert.equal((await missingAfter.json()).charged, false);
   assert.equal(facilitator.calls.verify, 0);
   assert.equal(facilitator.calls.settle, 0);
 });

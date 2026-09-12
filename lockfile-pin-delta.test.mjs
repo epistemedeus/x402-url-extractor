@@ -16,10 +16,12 @@ import {
   ownedLockfileWorkerCount,
   runLockfileCompareWorker,
   lockfilePinDeltaFailureDelivery,
+  isLockfileUnsignedDiscoveryProbe,
   LockfilePinDeltaInputError,
 } from "./lockfile-pin-delta.mjs";
 import {
   LOCKFILE_PIN_DELTA_CATALOG_SHA,
+  LOCKFILE_PIN_DELTA_DESCRIPTION,
   LOCKFILE_PIN_DELTA_ENGINE_SHA,
   LOCKFILE_PIN_DELTA_PATH,
   LOCKFILE_PIN_DELTA_PAYMENT_PROTOCOLS,
@@ -47,7 +49,12 @@ test("flag stays off unless explicitly enabled", () => {
   assert.equal(LOCKFILE_PIN_DELTA_PRICE_USD, "$0.005");
   assert.deepEqual([...LOCKFILE_PIN_DELTA_PAYMENT_PROTOCOLS], ["x402"]);
   assert.match(LOCKFILE_PIN_DELTA_QUOTE_MEANING, /x402/i);
+  assert.match(LOCKFILE_PIN_DELTA_QUOTE_MEANING, /customer-x402/);
   assert.doesNotMatch(LOCKFILE_PIN_DELTA_QUOTE_MEANING, /owed/i);
+  assert.doesNotMatch(LOCKFILE_PIN_DELTA_QUOTE_MEANING, /kit 1\.1\.0/);
+  assert.match(LOCKFILE_PIN_DELTA_DESCRIPTION, /customer-x402/);
+  assert.doesNotMatch(LOCKFILE_PIN_DELTA_DESCRIPTION, /kit 1\.1\.0/);
+  assert.ok([...LOCKFILE_PIN_DELTA_DESCRIPTION].length <= 500);
   assert.equal(LOCKFILE_PIN_DELTA_ENGINE_SHA, "fba9d14872bc4c04214e527b9edfb30c2123c9e7");
   assert.equal(LOCKFILE_PIN_DELTA_CATALOG_SHA, "a20232b0f777b0f737cdffefb64a9ca9d9c9ba0e");
   assert.doesNotMatch(LOCKFILE_PIN_DELTA_QUOTE_MEANING, /D26|EC2/i);
@@ -66,6 +73,38 @@ test("flag stays off unless explicitly enabled", () => {
   const adapter = readFileSync(join(here, "lockfile-pin-delta.mjs"), "utf8");
   assert.match(adapter, /HTTP 200 is not used for timeout/);
   assert.match(adapter, /x402 execute-before-settle/);
+});
+
+test("only unsigned absent or empty-object bodies are discovery probes", () => {
+  assert.equal(isLockfileUnsignedDiscoveryProbe({ headers: {}, body: {} }), true);
+  assert.equal(isLockfileUnsignedDiscoveryProbe({ headers: {} }), true);
+  assert.equal(isLockfileUnsignedDiscoveryProbe({ headers: {}, body: null }), false);
+  assert.equal(isLockfileUnsignedDiscoveryProbe({ headers: {}, body: { url: "https://example.test" } }), false);
+  assert.equal(isLockfileUnsignedDiscoveryProbe({ headers: {}, body: { command: "npm install" } }), false);
+  assert.equal(isLockfileUnsignedDiscoveryProbe({
+    headers: {},
+    body: { resource: "https://agents.samedaydesk.com/lockfile-pin-delta", method: "POST" },
+  }), false);
+  assert.equal(isLockfileUnsignedDiscoveryProbe({
+    headers: {},
+    body: { before: journeyBefore, after: journeyAfter },
+  }), false);
+  assert.equal(isLockfileUnsignedDiscoveryProbe({
+    headers: { "payment-signature": "x" },
+    body: {},
+  }), false);
+  assert.equal(isLockfileUnsignedDiscoveryProbe({
+    headers: {},
+    body: "<html>",
+  }), false);
+  assert.equal(isLockfileUnsignedDiscoveryProbe({
+    headers: {},
+    body: { before: journeyBefore },
+  }), false);
+  assert.equal(isLockfileUnsignedDiscoveryProbe({
+    headers: {},
+    body: [],
+  }), false);
 });
 
 test("admits JSON lockfile objects and refuses paths, URLs, commands, and extra fields", () => {

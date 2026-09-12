@@ -9,7 +9,7 @@ const TOOL_METADATA = Object.freeze({
   },
   lockfile_pin_delta: {
     title: "Inspect Lockfile Pin Delta",
-    description: "Inspect two caller-supplied npm package-lock.json objects and return added, removed, and changed name+version+integrity+resolved pins. Supply JSON `before` and `after` lockfile objects, not filesystem paths, URLs, or commands. An identical pin set is informational, not a failure. HTML, package.json, and unsupported lockfileVersion values are refused before payment. This is not an npm install, audit, or purchase. Initial live release accepts x402 only.",
+    description: "Inspect two caller-supplied npm package-lock.json objects and return added, removed, and changed name+version+integrity+resolved pins. Supply JSON `before` and `after` lockfile objects, not filesystem paths, URLs, or commands. An identical pin set is informational, not a failure. HTML, package.json, and unsupported lockfileVersion values are refused before payment. This is not an npm install, audit, or purchase. Ordinary wallets sign through examples/customer-x402 (inspect, explicit approve, attempt-receipt, read-only reconcile), not a precomputed signature. Initial live release accepts x402 only.",
   },
   read: {
     title: "Read Web Page as Markdown",
