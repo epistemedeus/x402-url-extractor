@@ -20,16 +20,18 @@ Official CDP docs (2026-09-11/12):
 An empty 402 is therefore **not** automatic index entry. This change does not
 claim a Bazaar row, does not fabricate sales, and does not require funds for
 unpaid discovery. Stock Agent402 `validateOne` posts `{resource, method}` to
-the public CDP validate API, which then crawls a live HTTPS URL; local tests
-emulate that crawler POST shape against a mounted merchant instead of calling
-CDP.
+the public CDP validate API, which then crawls a live HTTPS URL. Those fields
+are the validator API input, not evidence of the body it sends to a merchant.
+Local tests exercise empty merchant POSTs and refuse that unrelated nonempty
+object; a later live validator result is recorded separately.
 
 ## Empty-probe semantics
 
-Unsigned POST with no body, `{}`, or an object that omits both `before` and
-`after` (the Agent402/CDP crawler shape) skips lockfile admission and uses the
-existing x402 paywall. The compare engine does not run. Sample lockfiles in the
-402 example are catalog metadata, not a submitted purchase.
+Unsigned POST with no body or `{}` skips lockfile admission and uses the
+existing x402 paywall. Other JSON, including null, arrays and unrelated
+nonempty objects, still undergoes normal validation and refuses when invalid.
+The compare engine does not run for probes. Sample lockfiles in the402 example
+are catalog metadata, not a submitted purchase.
 
 Malformed nonempty bodies (HTML, paths, invalid JSON, present-but-invalid
 before/after) still return 400/413/415 with `charged: false` and no facilitator

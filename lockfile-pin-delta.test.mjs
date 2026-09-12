@@ -75,13 +75,16 @@ test("flag stays off unless explicitly enabled", () => {
   assert.match(adapter, /x402 execute-before-settle/);
 });
 
-test("unsigned missing before/after is a discovery probe, paid or malformed bodies are not", () => {
+test("only unsigned absent or empty-object bodies are discovery probes", () => {
   assert.equal(isLockfileUnsignedDiscoveryProbe({ headers: {}, body: {} }), true);
-  assert.equal(isLockfileUnsignedDiscoveryProbe({ headers: {}, body: null }), true);
+  assert.equal(isLockfileUnsignedDiscoveryProbe({ headers: {} }), true);
+  assert.equal(isLockfileUnsignedDiscoveryProbe({ headers: {}, body: null }), false);
+  assert.equal(isLockfileUnsignedDiscoveryProbe({ headers: {}, body: { url: "https://example.test" } }), false);
+  assert.equal(isLockfileUnsignedDiscoveryProbe({ headers: {}, body: { command: "npm install" } }), false);
   assert.equal(isLockfileUnsignedDiscoveryProbe({
     headers: {},
     body: { resource: "https://agents.samedaydesk.com/lockfile-pin-delta", method: "POST" },
-  }), true);
+  }), false);
   assert.equal(isLockfileUnsignedDiscoveryProbe({
     headers: {},
     body: { before: journeyBefore, after: journeyAfter },

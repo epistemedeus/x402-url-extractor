@@ -222,9 +222,9 @@ function requestHasPaymentCredential(req) {
 export function isLockfileUnsignedDiscoveryProbe(req) {
   if (requestHasPaymentCredential(req)) return false;
   const body = req?.body;
-  if (body == null) return true;
-  if (typeof body !== "object" || Array.isArray(body)) return false;
-  return !Object.hasOwn(body, "before") && !Object.hasOwn(body, "after");
+  if (body === undefined) return true;
+  if (body === null || typeof body !== "object" || Array.isArray(body)) return false;
+  return Object.keys(body).length === 0;
 }
 
 export function admitLockfilePinDeltaRequest(body, limits = lockfilePinDeltaLimits()) {

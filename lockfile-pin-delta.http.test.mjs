@@ -204,7 +204,7 @@ test("flag off leaves live extract and catalogs unchanged", { timeout: 60_000 },
   assert.equal(facilitator.calls.settle, 0);
 });
 
-test("unsigned empty and crawler POSTs return the existing 402 without facilitator calls", { timeout: 90_000 }, async (t) => {
+test("unsigned empty POSTs return 402; nonempty invalid probes refuse without facilitator calls", { timeout: 90_000 }, async (t) => {
   const dataDir = await mkdtemp(path.join(tmpdir(), "lockfile-probe-"));
   const facilitator = await startFakeFacilitator();
   let merchant;
@@ -239,13 +239,13 @@ test("unsigned empty and crawler POSTs return the existing 402 without facilitat
     resource: "https://agents.samedaydesk.com/lockfile-pin-delta",
     method: "POST",
   }));
-  assert.equal(crawler.status, 402);
-  const crawlerChallenge = decodePaymentRequired(crawler);
-  const crawlerAccepted = crawlerChallenge.accepts.find((entry) => entry.network === NETWORK && entry.scheme === "exact");
-  assert.equal(crawlerAccepted.amount, LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC);
-  const bazaarInput = crawlerAccepted.outputSchema?.input || crawlerChallenge.extensions?.bazaar?.info?.input;
-  assert.equal(bazaarInput?.method, "POST");
-  assert.ok(bazaarInput?.body?.before && bazaarInput?.body?.after);
+  assert.equal(crawler.status, 400);
+  assert.equal((await crawler.json()).charged, false);
+  for (const invalid of [null, [], { url: "https://example.test" }, { command: "npm install" }]) {
+    const refused = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(invalid));
+    assert.equal(refused.status, 400);
+    assert.equal((await refused.json()).charged, false);
+  }
 
   const validUnpaid = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost({
     before: journeyBefore,
