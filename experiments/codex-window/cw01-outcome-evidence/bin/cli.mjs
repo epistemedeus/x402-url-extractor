@@ -11,10 +11,11 @@ function args(argv) {
   const out = { runs: [], catalog: null, output: null };
   for (let i = 0; i < argv.length; i += 1) {
     const flag = argv[i];
-    if (flag === "--run" && argv[i + 1]) out.runs.push(argv[++i]);
-    else if (flag === "--catalog" && argv[i + 1]) out.catalog = argv[++i];
-    else if (flag === "--output" && argv[i + 1]) out.output = argv[++i];
-    else throw new Error(`${usage()}\nUnknown or incomplete option: ${flag}`);
+    if (!argv[i + 1] || argv[i + 1].startsWith("--")) throw new Error("usage");
+    if (flag === "--run" && out.runs.length < 100) out.runs.push(argv[++i]);
+    else if (flag === "--catalog" && out.catalog === null) out.catalog = argv[++i];
+    else if (flag === "--output" && out.output === null) out.output = argv[++i];
+    else throw new Error("usage");
   }
   if (out.runs.length === 0) throw new Error(usage());
   return out;
@@ -28,6 +29,10 @@ try {
   if (options.output) writeFileSync(resolve(options.output), json, { encoding: "utf8", mode: 0o600, flag: "wx" });
   else process.stdout.write(json);
 } catch (error) {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+  // Parser, validator and filesystem errors can contain private input fields,
+  // URLs or paths. Emit only a fixed diagnostic vocabulary on this surface.
+  const codes = new Set(["ENOENT", "EEXIST", "EACCES", "ELOOP", "ENOTDIR", "unsafe_input", "oversized_input", "malformed_json"]);
+  const code = codes.has(error?.code) ? error.code : "invalid_evidence_or_arguments";
+  process.stderr.write(`${code}\n${usage()}\n`);
   process.exitCode = 2;
 }

@@ -1,21 +1,127 @@
 {
   "schema": "samedaydesk.customer-x402.attempt-reconcile.v1",
-  "checkedAt": "2026-09-12T01:01:00.000Z",
+  "checkedAt": "2026-09-12T06:36:15.997Z",
   "receipt": {
     "schema": "samedaydesk.customer-x402.attempt-receipt.v1",
     "stage": "paid_response_observed",
     "network": "eip155:8453",
     "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-    "payer": "0x1111111111111111111111111111111111111111",
+    "payer": "0x49AdfD26FcC8c117b1eCceF1BC1D18571912763d",
     "payee": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
     "amountAtomic": "10000",
-    "nonce": "0xabababababababababababababababababababababababababababababababab",
-    "validAfter": "1789174500",
-    "validBefore": "1789174800",
-    "paymentIdentifier": "pay_synthetic_cw01_sample_01",
-    "request": {"method": "POST", "url": "https://agents.samedaydesk.com/extract/batch", "bodyDigest": "sha256:ad902ff2b89eb4d52774eea14faf10e6de37d7e271b857d514fb06e00aa8db7b"}
+    "nonce": "0x70bbfb914d19862aaefa69f45b25e9c9d39b1f4cbcb57f65d38fa940d4afe87e",
+    "validAfter": "0",
+    "validBefore": "1789195275",
+    "paymentIdentifier": "pay_7d18681c9bad4ace837e742edc7ac036",
+    "request": {
+      "method": "POST",
+      "url": "https://agents.samedaydesk.com/extract/batch",
+      "bodyDigest": "sha256:ad902ff2b89eb4d52774eea14faf10e6de37d7e271b857d514fb06e00aa8db7b"
+    }
+  },
+  "claims": {
+    "deliveredOutput": false,
+    "retryAuthorized": false,
+    "respendAuthorized": false,
+    "note": "authorizationState/chain usage never implies successful delivery or permission for another purchase"
+  },
+  "expiry": {
+    "wallClock": {
+      "status": "within_window",
+      "expired": false,
+      "activeWindow": true,
+      "observedAtSec": "1789194975"
+    },
+    "chainTime": {
+      "status": "within_window",
+      "expired": false,
+      "activeWindow": true,
+      "observedAtSec": "1789194975"
+    },
+    "note": "wall-clock expiry is separate from chain-time expiry derived from the observed block timestamp"
+  },
+  "rpc": {
+    "endpoint": null,
+    "timeoutMs": 10000,
+    "maxResponseBytes": 1000000,
+    "maxRequests": 24,
+    "retryCount": 0
+  },
+  "observedBlock": {
+    "number": "130",
+    "hash": "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+    "timestamp": "1789194975"
   },
   "decision": "used_settlement_confirmed",
-  "settlement": {"matched": true, "status": "exact_transfer_matched", "transactionHash": "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd", "blockNumber": "100"},
-  "finality": {"confirmed": true, "finalized": false}
+  "authorization": {
+    "state": "used",
+    "used": true,
+    "observedBlockNumber": "130",
+    "observedBlockHash": "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+  },
+  "settlement": {
+    "matched": true,
+    "status": "exact_transfer_matched",
+    "transactionHash": "0xabababababababababababababababababababababababababababababababab",
+    "blockNumber": "100",
+    "blockHash": "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+    "transfer": {
+      "from": "0x49AdfD26FcC8c117b1eCceF1BC1D18571912763d",
+      "to": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "value": "10000"
+    },
+    "authorizationUsedLogs": {
+      "found": true,
+      "truncatedRange": false,
+      "fromBlock": "0",
+      "toBlock": "130",
+      "matches": [
+        {
+          "transactionHash": "0xabababababababababababababababababababababababababababababababab",
+          "blockNumber": "100",
+          "blockHash": "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+          "logIndex": "0",
+          "removed": false
+        }
+      ],
+      "error": null
+    },
+    "authorizationCanceledLogs": {
+      "found": false,
+      "truncatedRange": false,
+      "fromBlock": "0",
+      "toBlock": "130",
+      "matches": [],
+      "error": null
+    }
+  },
+  "finality": {
+    "observedBlock": "100",
+    "observedBlockHash": "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+    "canonicalBlockHash": "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+    "hashMatched": true,
+    "headBlock": "130",
+    "confirmations": "30",
+    "confirmationDepthRequired": "12",
+    "confirmed": true,
+    "safeBlock": "95",
+    "finalizedBlock": "90",
+    "safe": false,
+    "finalized": false,
+    "note": "finality tags apply only after the observed block hash still matches the canonical hash at that height"
+  },
+  "uncertainty": [
+    "authorizationState true alone is not payment, delivered output, or permission to retry or respend"
+  ],
+  "boundary": {
+    "walletAccessed": false,
+    "signatureCreated": false,
+    "paymentSent": false,
+    "retry": false,
+    "unlock": false,
+    "respend": false,
+    "funding": false,
+    "balanceMoved": false,
+    "note": "read-only authorizationState/log evidence only; confirmation and finality are reported separately"
+  }
 }

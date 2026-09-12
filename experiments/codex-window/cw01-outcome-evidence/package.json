@@ -1,12 +1,12 @@
 {
   "name": "cw01-outcome-evidence",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "engines": { "node": ">=22" },
   "bin": { "cw01-outcome-evidence": "./bin/cli.mjs" },
   "scripts": {
-    "test": "node --test test/*.test.mjs",
+    "test": "node --max-old-space-size=768 --test --test-concurrency=1 test/*.test.mjs",
     "sample": "node bin/cli.mjs --run fixtures/sample --catalog fixtures/published-examples.json"
   }
 }

@@ -1,9 +1,9 @@
-# CW01 result
+# CW18 review and repair result
 
-- Execution surface: native ChatGPT Work Linux VM; Node.js test runner; no nested model CLI.
-- Exact input: `epistemedeus/x402-url-extractor` master `0153295c5851bf8f93fb27c77070a31417a59f69`.
-- Owned paths only: `experiments/codex-window/cw01-outcome-evidence/`.
-- Focused adapter tests: 10 passed, 0 failed.
-- Owning `examples/customer-x402` regression suite: 204 tests, 197 passed, 7 skipped, 0 failed. Skips are the pre-existing opt-in production preflight and mounted merchant-runtime cases whose dependencies are not installed.
-- External effects: public repository read and dependency download only during validation; no production request, payment, deploy, default-branch mutation, or private production-data read.
-- Sample inputs and portable output are synthetic and explicitly labeled. They are not customer, demand, revenue, organic-use, or return-on-investment evidence.
+- Source: `82a521a8b8778b2224cf5fd5ade2f14d7618d139`; branch `codex/cw18-astra-outcome-evidence-20260912`. Full source preserved; changes only in this experiment.
+- Original worker tests: 10/10 passed. Independent hostile CLI replay: 42 failures / 45 cases before; all 45 pass after repair. Complete adapter suite: 61/61 pass.
+- Fixed real serializer transaction redaction, purchase/reconcile joins and contradictions, transaction/authorization replay, GET source identity and source-refusal classification, unknown historical output, caller-feedback binding, and portable-export/file boundaries.
+- Customer regression: 197 pass, 7 skipped, 0 failed. Skips: one live preflight and six mounted merchant-runtime cases with unavailable dependencies.
+- Adapter/CLI coverage: 99.17% lines, 86.55% branches, 100% functions. Sequential Node tests; heap capped at 768 MB. No production acceptance or live payment/RPC.
+- Export v2 is explicitly unsigned local-file evidence. Fixture purchases and arbitrary feedback cannot establish independent use, organic demand or revenue. See [README](README.md) for compatibility and trust limits.
+- Before/after matrix, exact input and tested-file hashes: [review-evidence.json](results/review-evidence.json). Final candidate head and PR are recorded in the task workspace `RESULT.md` after publication.

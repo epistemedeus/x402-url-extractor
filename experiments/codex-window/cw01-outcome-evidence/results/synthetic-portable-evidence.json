@@ -1,24 +1,31 @@
 {
-  "schema": "samedaydesk.outcome-evidence-export.v1",
-  "generatedAt": "2026-09-12T02:00:00.000Z",
+  "schema": "samedaydesk.outcome-evidence-export.v2",
+  "generatedAt": "2026-09-12T06:36:16.007Z",
   "summary": {
     "total": 1,
     "eligible": 1,
     "duplicateSettlement": 0,
     "conflictingReceipt": 0,
     "reusedExample": 1,
-    "unattributedReturn": 1,
-    "usefulness": {"useful": 1, "not_useful": 0, "unknown": 0}
+    "boundCallerAttestations": 0,
+    "unboundCallerAttestations": 1,
+    "conflictingCallerAttestations": 0,
+    "callerAttestedUsefulness": {
+      "useful": 1,
+      "not_useful": 0,
+      "unknown": 0
+    }
   },
   "records": [
     {
-      "evidenceId": "sha256:d6f798cf0851fed93615403a1bca515bde3a8d6005bfbc8a43798853afb58337",
-      "sourceLabel": "sample",
+      "evidenceId": "sha256:1940665f063aa153f536376df50df182a1d461fddec6486abfc6cf039ecb889d",
+      "sourceLabelDigest": "sha256:af2bdbe1aa9b6ec1e2ade1d694f41fc71a831d0268e9891562113d8a62add1bf",
+      "authority": "local_files_unverified",
       "receiptConsistency": "consistent",
       "conflicts": [],
       "request": {
         "method": "POST",
-        "url": "https://agents.samedaydesk.com/extract/batch",
+        "urlDigest": "sha256:0fc8484fa4c8725f09374c9b468a53f932f378d924c417feead279ed61e9dfeb",
         "bodyDigest": "sha256:ad902ff2b89eb4d52774eea14faf10e6de37d7e271b857d514fb06e00aa8db7b"
       },
       "payment": {
@@ -31,29 +38,45 @@
         "validated": true,
         "delivery": "useful",
         "reason": null,
-        "report": {"usefulRows": 2, "failedOrPartialRows": 0, "rowCount": 2},
-        "validator": "customer-x402.validateBatchBuyerOutput"
+        "report": {
+          "usefulRows": 2,
+          "failedOrPartialRows": 0,
+          "rowCount": 2
+        },
+        "validator": "customer-x402.classifyPaidResponse",
+        "scope": "retained_body_revalidation",
+        "originalWireVerified": false,
+        "redactionPresent": true
       },
       "buyerAttestation": {
         "attested": true,
         "authority": "caller",
-        "recordedAt": "2026-09-12T01:02:00.000Z",
+        "authenticated": false,
+        "binding": "unbound",
+        "recordedAt": "2026-09-12T06:36:16.002Z",
         "usefulness": "useful",
         "returnAttribution": "unattributed",
-        "intendedUse": "evaluation",
-        "statement": "Synthetic example: the fields were sufficient for the caller's fixture evaluation. This is not a real customer statement."
+        "intendedUse": "benchmark",
+        "statementDigest": "sha256:ff3ad3a0b1529ba453f08a0c664bd2bd631ff0782f96cd4a889a7a98dc942f85"
       },
       "exampleReuse": {
         "reused": true,
-        "label": "customer-x402 published example.com/example.org batch fixture"
+        "labelDigest": "sha256:c97f892d771a294657254c2fee94a99e94999f97e60778edcf4f62f0992c2bcd",
+        "authority": "caller_catalog"
       },
       "settlement": {
         "status": "exact_transfer_matched",
         "exactMatched": true,
-        "transactionHash": "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+        "authority": "caller_saved_reconciliation",
+        "chainVerifiedByAdapter": false,
+        "transactionHash": "0xabababababababababababababababababababababababababababababababab",
+        "httpTransaction": "redacted",
         "httpHeaderPresent": true,
         "httpHeaderSuccess": true,
-        "finality": {"confirmed": true, "finalized": false}
+        "finality": {
+          "confirmed": true,
+          "finalized": false
+        }
       },
       "duplicateSettlement": false,
       "eligibleEvidence": true
@@ -62,8 +85,9 @@
   "claims": {
     "revenue": false,
     "organicUse": false,
+    "independentUse": false,
     "customerIdentity": false,
     "roi": false,
-    "note": "Settlement, contract validation, buyer usefulness, attribution, example reuse, and deduplication are independent evidence dimensions."
+    "note": "Local file consistency only. Unsigned saved artifacts and caller feedback do not authenticate payment, original output, a customer, or independent use. Fixture and owner QA can satisfy these checks. No RPC is performed."
   }
 }

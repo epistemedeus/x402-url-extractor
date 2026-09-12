@@ -9,12 +9,30 @@
   "assetVersion": "2",
   "maxTimeoutSeconds": 300,
   "body": {
-    "urls": ["https://example.com/", "https://example.org/"],
-    "fields": ["title", "description", "headings"]
+    "urls": [
+      "https://example.com/",
+      "https://example.org/"
+    ],
+    "fields": [
+      "title",
+      "description",
+      "headings"
+    ]
   },
   "requiredOutput": {
     "mediaType": "application/json",
-    "requiredFields": ["ok", "product", "schemaVersion", "jobId", "jobStatus", "partial", "sources", "charged", "boundary", "quote.amountAtomic"],
+    "requiredFields": [
+      "ok",
+      "product",
+      "schemaVersion",
+      "jobId",
+      "jobStatus",
+      "partial",
+      "sources",
+      "charged",
+      "boundary",
+      "quote.amountAtomic"
+    ],
     "maxResponseBytes": 131072
   }
 }

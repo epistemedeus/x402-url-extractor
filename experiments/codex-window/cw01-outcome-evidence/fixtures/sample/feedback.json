@@ -1,8 +1,8 @@
 {
   "schema": "samedaydesk.buyer-feedback.v1",
-  "recordedAt": "2026-09-12T01:02:00.000Z",
+  "recordedAt": "2026-09-12T06:36:16.002Z",
   "usefulness": "useful",
   "returnAttribution": "unattributed",
-  "intendedUse": "evaluation",
-  "statement": "Synthetic example: the fields were sufficient for the caller's fixture evaluation. This is not a real customer statement."
+  "intendedUse": "benchmark",
+  "statement": "Synthetic owner fixture control. No independent customer or payment."
 }

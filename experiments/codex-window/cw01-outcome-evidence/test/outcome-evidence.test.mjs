@@ -29,7 +29,7 @@ test("positive join reuses current receipt and response validators without mergi
   const joined = joinOutcomeEvidence(raw());
   assert.equal(joined.receiptConsistency, "consistent");
   assert.equal(joined.serverContract.validated, true);
-  assert.equal(joined.serverContract.validator, "customer-x402.validateBatchBuyerOutput");
+  assert.equal(joined.serverContract.validator, "customer-x402.classifyPaidResponse");
   assert.equal(joined.buyerAttestation.usefulness, "useful");
   assert.equal(joined.buyerAttestation.returnAttribution, "unattributed");
   assert.equal(joined.exampleReuse.reused, true);
@@ -83,7 +83,7 @@ test("hostile output cannot borrow a useful outcome string", () => {
   input.purchase.evidence.retainedBody.sources[0].source = "https://attacker.example/";
   const joined = joinOutcomeEvidence(input);
   assert.equal(joined.serverContract.validated, false);
-  assert.match(joined.serverContract.reason, /conflicts|submitted URL/);
+  assert.equal(joined.serverContract.reason, "retained_output_or_outcome_inconsistent");
   assert.equal(joined.eligibleEvidence, false);
 });
 
@@ -92,7 +92,10 @@ test("buyer feedback is explicit and inferred business claims are refused", () =
   const dir = mkdtempSync(join(tmpdir(), "cw01-hostile-"));
   const path = join(dir, "claims.json");
   writeFileSync(path, JSON.stringify({ revenue: 42 }));
-  assert.throws(() => readBoundedJson(path), error => error.code === "unsupported_claim");
+  // Content is data. Claims are rejected at the attestation boundary, rather
+  // than blocking legitimate seller JSON containing a business field.
+  assert.deepEqual(readBoundedJson(path), { revenue: 42 });
+  assert.throws(() => validateFeedback({ ...raw().feedback, revenue: 42 }), EvidenceError);
 });
 
 test("missing reconcile stays unverified rather than becoming settlement proof", () => {
@@ -108,7 +111,7 @@ test("CLI emits the redacted portable schema and supports an exclusive output fi
   const direct = spawnSync(process.execPath, [join(ROOT, "bin/cli.mjs"), "--run", SAMPLE, "--catalog", join(ROOT, "fixtures/published-examples.json")], { encoding: "utf8" });
   assert.equal(direct.status, 0, direct.stderr);
   const parsed = JSON.parse(direct.stdout);
-  assert.equal(parsed.schema, "samedaydesk.outcome-evidence-export.v1");
+  assert.equal(parsed.schema, "samedaydesk.outcome-evidence-export.v2");
   assert.equal(parsed.summary.eligible, 1);
   assert.equal(direct.stdout.includes('"payer"'), false);
   assert.equal(direct.stdout.includes('"nonce"'), false);
@@ -124,8 +127,9 @@ test("CLI emits the redacted portable schema and supports an exclusive output fi
 
 test("actual directory reader consumes the synthetic labeled sample", () => {
   const joined = readRunDirectory(SAMPLE, { catalog: CATALOG });
-  assert.equal(joined.sourceLabel, "sample");
-  assert.match(joined.buyerAttestation.statement, /Synthetic example/);
+  assert.match(joined.sourceLabelDigest, /^sha256:/);
+  assert.equal(joined.buyerAttestation.statement, undefined);
+  assert.match(joined.buyerAttestation.statementDigest, /^sha256:/);
   const expected = JSON.parse(readFileSync(join(ROOT, "results/synthetic-portable-evidence.json"), "utf8"));
   const actual = compilePortableEvidence([joined], { generatedAt: expected.generatedAt });
   assert.deepEqual(actual, expected);
