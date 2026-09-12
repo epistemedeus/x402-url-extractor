@@ -19,6 +19,10 @@ if (Number.isFinite(holdMs) && holdMs > 0) {
 if (String(process.env.LOCKFILE_PIN_DELTA_WORKER_CRASH || "").trim() === "1") {
   emit({ ok: false, code: "engine-crash", error: "injected worker crash" }, 1);
 }
+if (String(process.env.LOCKFILE_PIN_DELTA_WORKER_HUGE_STDOUT || "").trim() === "1") {
+  process.stdout.write(`${"x".repeat(8_192)}\n`);
+  process.exit(0);
+}
 
 let message;
 try {

@@ -401,7 +401,9 @@ export function runLockfileCompareWorker({ beforeText, afterText, env = process.
       stdio: ["pipe", "pipe", "pipe"],
     }));
     const stdout = [];
+    let stdoutBytes = 0;
     let timeoutHandle;
+    const maxStdoutBytes = limits.maxResponseBytes;
     const settle = (fn) => (value) => {
       if (settled) return;
       settled = true;
@@ -414,7 +416,18 @@ export function runLockfileCompareWorker({ beforeText, afterText, env = process.
     });
     child.stdin?.on("error", () => {});
     child.stderr?.resume();
-    child.stdout.on("data", (chunk) => stdout.push(chunk));
+    child.stdout.on("data", (chunk) => {
+      if (settled) return;
+      stdoutBytes += chunk.length;
+      if (stdoutBytes > maxStdoutBytes) {
+        fail(Object.assign(new Error("lockfile worker output exceeded bound"), {
+          code: "engine-crash",
+          transport: "engine-crash",
+        }));
+        return;
+      }
+      stdout.push(chunk);
+    });
     child.once("error", (error) => fail(error));
     child.once("close", (code, signal) => {
       if (settled) {
@@ -783,7 +796,7 @@ export function lockfilePinDeltaOpenApiPath({ paymentInfo, env = process.env } =
         },
         "400": { description: "unsupported or malformed input, charged nothing" },
         "402": { description: `payment required (x402 or MPP, ${price.priceUsd} bounded compare)` },
-        "409": { description: "payment identifier already bound to a different request body" },
+        "409": { description: "payment identifier already bound to a different request body, payer, credential, or payment terms" },
         "413": { description: "JSON request or lockfile exceeds the server byte ceiling; no authorization" },
         "415": { description: "Content-Type must be JSON" },
         "503": { description: "matching execution is active or settlement is unresolved; no new settlement on this response" },

@@ -53,6 +53,11 @@ test("flag stays off unless explicitly enabled", () => {
   assert.match(release, /25/);
   assert.match(release, /22/);
   assert.doesNotMatch(release, /\bD26\b/);
+  const readme = readFileSync(join(here, "README.md"), "utf8");
+  assert.match(readme, /https:\/\/agents\.samedaydesk\.com\/lockfile-pin-delta/);
+  assert.match(readme, /challenge resource is `https:\/\/agents\.samedaydesk\.com\/extract\/batch`/);
+  assert.doesNotMatch(readme, /lockfile MCP tool's challenge\s+resource is `https:\/\/agents\.samedaydesk\.com\/extract\/batch`/);
+  assert.doesNotMatch(readme, /95836161/);
 });
 
 test("admits JSON lockfile objects and refuses paths, URLs, commands, and extra fields", () => {
@@ -212,6 +217,23 @@ test("worker timeout reaps the child", async () => {
       timeoutMs: 80,
     }),
     /timeout/i,
+  );
+  await new Promise((resolve) => setTimeout(resolve, 900));
+  assert.equal(ownedLockfileWorkerCount(), 0);
+});
+
+test("worker stdout over the response bound is reaped and not parsed", async () => {
+  await assert.rejects(
+    () => runLockfileCompareWorker({
+      beforeText: `${JSON.stringify(journeyBefore)}\n`,
+      afterText: `${JSON.stringify(journeyAfter)}\n`,
+      env: {
+        ...process.env,
+        LOCKFILE_PIN_DELTA_WORKER_HUGE_STDOUT: "1",
+        LOCKFILE_PIN_DELTA_MAX_RESPONSE_BYTES: "1024",
+      },
+    }),
+    /output exceeded bound/i,
   );
   await new Promise((resolve) => setTimeout(resolve, 900));
   assert.equal(ownedLockfileWorkerCount(), 0);

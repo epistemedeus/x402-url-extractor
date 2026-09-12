@@ -11,6 +11,9 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { evm as evmClient, Mppx as ClientMppx } from "mppx/client";
+import { privateKeyToAccount } from "viem/accounts";
+import { mppAssetForNetwork } from "./mpp-dual-stack.mjs";
 
 import { EXTRACT_BATCH_PATH } from "./extract-batch-config.mjs";
 import { LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC, LOCKFILE_PIN_DELTA_PATH, LOCKFILE_PIN_DELTA_QUOTE_MEANING } from "./lockfile-pin-delta-config.mjs";
@@ -26,6 +29,7 @@ const PAYER = `0x${"2".repeat(40)}`;
 const PAY_TO = "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee";
 const NETWORK = "eip155:8453";
 const MPP_SECRET = "test-secret-key-test-secret-key-32";
+const account = privateKeyToAccount("0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef");
 const journeyBefore = JSON.parse(readFileSync(path.join(cwd, "fixtures/lockfile-pin-delta/journey-before.json"), "utf8"));
 const journeyAfter = JSON.parse(readFileSync(path.join(cwd, "fixtures/lockfile-pin-delta/journey-after.json"), "utf8"));
 
@@ -150,6 +154,18 @@ function testPayment(challenge, { id = "lockfile_order_1234567890" } = {}) {
   })).toString("base64");
 }
 
+async function createMppCredential(response) {
+  const client = ClientMppx.create({
+    methods: [evmClient({
+      account,
+      currencies: [mppAssetForNetwork(NETWORK)],
+      maxAmount: "0.01",
+    })],
+    polyfill: false,
+  });
+  return client.createCredential(response);
+}
+
 function jsonPost(body, headers = {}) {
   return { method: "POST", headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) };
 }
@@ -266,6 +282,44 @@ test("mounted success, no-change, malformed, oversize, and wrong-replay-input", 
   assert.equal((await driftedPayer.json()).charged, false);
   assert.equal(facilitator.calls.settle, 1);
 
+  const keyPayload = JSON.parse(Buffer.from(payment, "base64").toString("utf8"));
+  keyPayload.payload.signature = `0x${"5".repeat(130)}`;
+  const driftedKey = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(
+    deltaBody,
+    { "payment-signature": Buffer.from(JSON.stringify(keyPayload)).toString("base64") },
+  ));
+  assert.equal(driftedKey.status, 409);
+  assert.equal((await driftedKey.json()).charged, false);
+  assert.equal(facilitator.calls.settle, 1);
+
+  const protocolPayload = JSON.parse(Buffer.from(payment, "base64").toString("utf8"));
+  protocolPayload.accepted = { ...protocolPayload.accepted, network: "eip155:84532" };
+  const driftedProtocol = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(
+    deltaBody,
+    { "payment-signature": Buffer.from(JSON.stringify(protocolPayload)).toString("base64") },
+  ));
+  assert.equal(driftedProtocol.status, 409);
+  assert.equal((await driftedProtocol.json()).charged, false);
+  assert.equal(facilitator.calls.settle, 1);
+
+  const idPayload = JSON.parse(Buffer.from(payment, "base64").toString("utf8"));
+  idPayload.extensions["payment-identifier"].info.id = "lockfile_other_1234567890";
+  const driftedIdentifier = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(
+    deltaBody,
+    { "payment-signature": Buffer.from(JSON.stringify(idPayload)).toString("base64") },
+  ));
+  assert.equal(driftedIdentifier.status, 409);
+  assert.equal((await driftedIdentifier.json()).charged, false);
+  assert.equal(facilitator.calls.settle, 1);
+
+  const asMpp = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(
+    deltaBody,
+    { authorization: payment },
+  ));
+  assert.notEqual(asMpp.status, 200);
+  assert.equal(facilitator.calls.settle, 1);
+  await asMpp.text();
+
   const sameChallenge = decodePaymentRequired(
     await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost({ before: journeyBefore, after: journeyBefore })),
   );
@@ -346,6 +400,43 @@ test("simulated facilitator verify failure does not settle", { timeout: 60_000 }
   await rejected.text();
   assert.equal(facilitator.calls.verify, 1);
   assert.equal(facilitator.calls.settle, 0);
+});
+
+test("MPP unpaid challenge binds POST body and refuses a changed body", { timeout: 90_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "lockfile-mpp-"));
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => {
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
+  const body = { before: journeyBefore, after: journeyAfter };
+  const unpaid = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(body));
+  assert.equal(unpaid.status, 402);
+  const authorization = await createMppCredential(unpaid);
+  const paid = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(body, { authorization }));
+  const result = await paid.json();
+  assert.equal(paid.status, 200, JSON.stringify(result));
+  assertOutput(result);
+  assert.equal(result.analysis, "actionable");
+  assert.equal(result.charged, true);
+  assert.equal(facilitator.calls.settle, 1);
+
+  const replay = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(body, { authorization }));
+  assert.equal(replay.status, 200);
+  assert.equal(replay.headers.get("x-payment-replay"), "hit");
+  assert.equal(facilitator.calls.settle, 1);
+
+  const otherBody = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(
+    { before: journeyBefore, after: journeyBefore },
+    { authorization },
+  ));
+  const otherText = await otherBody.text();
+  assert.ok([402, 409].includes(otherBody.status), `changed MPP body returned ${otherBody.status} ${otherText.slice(0, 300)}`);
+  assert.doesNotMatch(otherText, /"charged"\s*:\s*true/);
+  assert.equal(facilitator.calls.settle, 1);
 });
 
 test("lockfile flag does not disable production extract_batch", { timeout: 60_000 }, async (t) => {

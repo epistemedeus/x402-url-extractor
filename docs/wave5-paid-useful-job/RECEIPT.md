@@ -1,6 +1,8 @@
 # W5-H05 merchant lockfile pin-delta
 
 Native Grok Heavy implementation. One feature branch, no production deploy.
+H01 exclusive review and current ready/not-ready verdict: [FINAL-REVIEW.md](FINAL-REVIEW.md).
+This H05 receipt keeps historical test counts; do not treat them as the H01 rerun.
 
 ## Outcome
 

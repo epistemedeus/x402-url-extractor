@@ -41,14 +41,16 @@ Default-off catalogs remain 25 / 22. Default price is `$0.005`
 (`LOCKFILE_PIN_DELTA_PRICE`), matching live `GET /extract`. Margin is not
 proven. HTTP JSON only: no filesystem paths, arbitrary commands, or network
 fetch. Identical pins are informational, not engine failure. The signed
-deployment statement is not rewritten here.
+deployment statement is not rewritten here. The lockfile MCP tool's challenge
+resource is `https://agents.samedaydesk.com/lockfile-pin-delta`, not `mcp://`
+and not `/extract/batch`.
 
-The new MCP tool projects the existing HTTP payment and durable replay handler.
-Its challenge resource is `https://agents.samedaydesk.com/extract/batch`, not
-`mcp://`: first call without payment, then reuse the returned HTTP resource and
-exact arguments with `_meta["x402/payment"]`. MPP callers may use the unmodified
-`www-authenticate` challenge in result `_meta["samedaydesk/http"].headers` and
-send its credential as HTTP `Authorization`. That metadata also carries the
+The extract_batch MCP tool projects the existing HTTP payment and durable replay
+handler. Its challenge resource is `https://agents.samedaydesk.com/extract/batch`,
+not `mcp://`: first call without payment, then reuse the returned HTTP resource
+and exact arguments with `_meta["x402/payment"]`. MPP callers may use the
+unmodified `www-authenticate` challenge in result `_meta["samedaydesk/http"].headers`
+and send its credential as HTTP `Authorization`. That metadata also carries the
 HTTP status and receipt headers. Never translate an MCP-resource credential.
 Existing MCP tools retain their existing native MCP payment boundary.
 
