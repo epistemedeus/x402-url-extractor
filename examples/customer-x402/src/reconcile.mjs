@@ -105,7 +105,7 @@ export function safeRpcEndpoint(rpcUrl) {
 function sanitizeTransportMessage(error) {
   const raw = error instanceof Error ? error.message : String(error);
   if (
-    /response.?too.?large|ResponseBodyTooLarge|maxResponseBodySize|payload too large|413|size limit|exceeded the size/i
+    /response.?too.?large|ResponseBodyTooLarge|maxResponseBodySize|payload too large|(?:status(?: code)?[:= ]+|HTTP(?:\/\d(?:\.\d)?)?\s+)413\b|size limit|exceeded the size/i
       .test(raw)
   ) {
     return "rpc_response_too_large";

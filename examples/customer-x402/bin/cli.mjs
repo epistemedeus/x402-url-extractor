@@ -6,6 +6,7 @@ import {
   DEFAULT_BATCH_AUTHORIZATION,
   LIVE_EXTRACT_BATCH_URL,
   LIVE_EXTRACT_URL,
+  LIVE_LOCKFILE_URL,
 } from "../src/constants.mjs";
 import {
   AttemptReceiptError,
@@ -47,6 +48,11 @@ Notes:
   - Default commands never read wallet credentials, sign, send payment headers, or pay.
   - Default route is POST ${LIVE_EXTRACT_BATCH_URL} with fixture public HTTPS URLs.
   - Local batch admission runs before any fetch or wallet lookup.
+  - POST ${LIVE_LOCKFILE_URL} (live 5000 atomic USDC, x402-only) uses the same
+    inspect/--approve/reconcile path once --authorization binds that HTTPS URL
+    and exact {before, after} body bytes. Default commands still do not pay
+    lockfile; there is no auto-approve and no PAYMENT_SIGNATURE prerequisite.
+    See fixtures/authorization-lockfile.json.
   - --approve binds exact HTTPS URL, method, body bytes, network, asset, recipient,
     amount cap, and buyer-required output before invoking @x402/fetch.
   - Without --attempt-receipt, unsigned EIP-3009 nonce/validBefore are not retained.

@@ -55,6 +55,58 @@ npm run preflight:get
 npm run preflight -- --get --url 'https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com'
 ```
 
+## Lockfile pin-delta (same client; not the default command)
+
+`POST https://agents.samedaydesk.com/lockfile-pin-delta` is the live x402-only
+compare of two caller-supplied npm `package-lock.json` objects at **5000 atomic
+USDC**. It is paid convenience, not a second payment stack. Default commands
+still do **not** pay this route. There is no auto-approve and no precomputed
+`PAYMENT_SIGNATURE` prerequisite: inspect unpaid, then `--approve` with the
+caller's **already configured** wallet (environment variable name only).
+
+Distinguish:
+
+- **Offline local compare:** `vendor/lockfile-pin-delta` in this checkout
+  (`node vendor/lockfile-pin-delta/bin/lockfile-delta.mjs --before <lock>
+  --after <lock>`). No wallet.
+- **Kit 1.1.0:** a candidate / not publicly deployed. This README does not
+  advertise a live public kit URL.
+- **Analysis scope:** added / removed / changed name+version+integrity+resolved
+  pins. Identical pins are informational, not failure. Not an install, audit,
+  or npm registry fetch.
+- **No vulnerability guarantee:** a pin-delta is not a CVE proof. This client
+  does not join advisories.
+- **Paid HTTP:** one bounded compare after an inspected 402 and explicit
+  `--approve`.
+
+`examples/lockfile-pin-delta-buyer/cli.mjs` only forwards an already-made
+payment header if the caller supplies one. Ordinary agents should use this
+customer-x402 client instead of inventing signatures.
+
+Credential-free inspect (never touches a wallet):
+
+```bash
+npm run preflight -- --authorization ./fixtures/authorization-lockfile.json
+```
+
+Explicit approved purchase (existing wallet / expenditure authority only):
+
+```bash
+npm run purchase -- --approve \
+  --authorization ./fixtures/authorization-lockfile.json \
+  --private-key-env CUSTOMER_X402_PRIVATE_KEY \
+  --attempt-receipt ./attempt-receipt.json
+```
+
+Unknown transport after a signed send is **not** permission to pay again.
+Reconcile the attempt receipt; do not mint a new authorization.
+
+```bash
+npm run reconcile -- --reconcile \
+  --attempt-receipt ./attempt-receipt.json \
+  --rpc-url https://YOUR_EXPLICIT_RPC
+```
+
 ## Explicit approved purchase
 
 Bind exact HTTPS origin/path/query, method, serialized body bytes (batch),

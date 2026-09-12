@@ -1,0 +1,109 @@
+{
+  "method": "POST",
+  "url": "https://agents.samedaydesk.com/lockfile-pin-delta",
+  "network": "eip155:8453",
+  "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "recipient": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+  "amountCapAtomic": "5000",
+  "assetName": "USD Coin",
+  "assetVersion": "2",
+  "maxTimeoutSeconds": 300,
+  "requiredOutput": {
+    "mediaType": "application/json",
+    "requiredFields": [
+      "ok",
+      "product",
+      "schemaVersion",
+      "charged",
+      "analysis",
+      "quote.amountAtomic"
+    ],
+    "maxResponseBytes": 163840
+  },
+  "body": {
+    "before": {
+      "name": "mocha",
+      "version": "10.2.0",
+      "lockfileVersion": 3,
+      "requires": true,
+      "packages": {
+        "": {
+          "name": "mocha",
+          "version": "10.2.0"
+        },
+        "node_modules/archy": {
+          "version": "1.0.0",
+          "resolved": "https://registry.npmjs.org/archy/-/archy-1.0.0.tgz",
+          "integrity": "sha1-+cjBN1fMHde8N5rHeyxipcKGjEA=",
+          "dev": true
+        },
+        "node_modules/ansi-wrap": {
+          "version": "0.1.0",
+          "resolved": "https://registry.npmjs.org/ansi-wrap/-/ansi-wrap-0.1.0.tgz",
+          "integrity": "sha1-qCJQ3bABXponyoLoLqYDu/pF768=",
+          "dev": true
+        },
+        "node_modules/array-uniq": {
+          "version": "1.0.3",
+          "resolved": "https://registry.npmjs.org/array-uniq/-/array-uniq-1.0.3.tgz",
+          "integrity": "sha1-r2rId6Jcx/dOBYiUdThY39sk/bY=",
+          "dev": true
+        },
+        "node_modules/@colors/colors": {
+          "version": "1.5.0",
+          "resolved": "https://registry.npmjs.org/@colors/colors/-/colors-1.5.0.tgz",
+          "integrity": "sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==",
+          "dev": true
+        },
+        "node_modules/@hapi/hoek": {
+          "version": "8.5.1",
+          "resolved": "https://registry.npmjs.org/@hapi/hoek/-/hoek-8.5.1.tgz",
+          "integrity": "sha512-yN7kbciD87WzLGc5539Tn0sApjyiGHAJgKvG9W8C7O+6c7qmoQMfVs0W4bX17eqz6C78QJqqFrtgdK5EWf6Qow==",
+          "dev": true
+        }
+      }
+    },
+    "after": {
+      "name": "mocha",
+      "version": "10.2.0",
+      "lockfileVersion": 3,
+      "requires": true,
+      "packages": {
+        "": {
+          "name": "mocha",
+          "version": "10.2.0"
+        },
+        "node_modules/archy": {
+          "version": "1.0.0",
+          "resolved": "https://registry.npmjs.org/archy/-/archy-1.0.0.tgz",
+          "integrity": "sha1-+cjBN1fMHde8N5rHeyxipcKGjEA=",
+          "dev": true
+        },
+        "node_modules/ansi-wrap": {
+          "version": "0.1.0",
+          "resolved": "https://registry.npmjs.org/ansi-wrap/-/ansi-wrap-0.1.0.tgz",
+          "integrity": "sha1-qCJQ3bABXponyoLoLqYDu/pF768=",
+          "dev": true
+        },
+        "node_modules/array-uniq": {
+          "version": "1.0.3",
+          "resolved": "https://registry.npmjs.org/array-uniq/-/array-uniq-1.0.3.tgz",
+          "integrity": "sha1-r2rId6Jcx/dOBYiUdThY39sk/bY=",
+          "dev": true
+        },
+        "node_modules/@colors/colors": {
+          "version": "1.5.0",
+          "resolved": "https://registry.npmjs.org/@colors/colors/-/colors-1.5.0.tgz",
+          "integrity": "sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==",
+          "dev": true
+        },
+        "node_modules/@hapi/hoek": {
+          "version": "8.5.1",
+          "resolved": "https://registry.npmjs.org/@hapi/hoek/-/hoek-8.5.1.tgz",
+          "integrity": "sha512-yN7kbciD87WzLGc5539Tn0sApjyiGHAJgKvG9W8C7O+6c7qmoQMfVs0W4bX17eqz6C78QJqqFrtgdK5EWf6Qow==",
+          "dev": true
+        }
+      }
+    }
+  }
+}
