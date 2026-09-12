@@ -1,0 +1,32 @@
+{
+  "schema": "samedaydesk.customer-x402.attempt-receipt.v1",
+  "stage": "paid_response_observed",
+  "settlementState": "observed_http_unverified",
+  "createdAt": "2026-09-12T06:36:15.967Z",
+  "updatedAt": "2026-09-12T06:36:15.991Z",
+  "scheme": "exact",
+  "assetTransferMethod": "eip3009",
+  "x402Version": 2,
+  "network": "eip155:8453",
+  "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "assetName": "USD Coin",
+  "assetVersion": "2",
+  "payer": "0x49AdfD26FcC8c117b1eCceF1BC1D18571912763d",
+  "payee": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+  "amountAtomic": "10000",
+  "nonce": "0x70bbfb914d19862aaefa69f45b25e9c9d39b1f4cbcb57f65d38fa940d4afe87e",
+  "validAfter": "0",
+  "validBefore": "1789195275",
+  "paymentIdentifier": "pay_7d18681c9bad4ace837e742edc7ac036",
+  "request": {
+    "method": "POST",
+    "url": "https://agents.samedaydesk.com/extract/batch",
+    "bodyDigest": "sha256:ad902ff2b89eb4d52774eea14faf10e6de37d7e271b857d514fb06e00aa8db7b"
+  },
+  "boundary": {
+    "purpose": "customer-owned unsigned EIP-3009 attempt identity for read-only reconciliation",
+    "secrets": "never stores signature, payment credential/header, private key, typed-data envelope, raw response, or environment",
+    "delivery": "chain usage is not delivered output and not permission to retry or respend",
+    "settlement": "HTTP observations remain unverified until a separate reconcile reports on-chain evidence"
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "schema": "samedaydesk.outcome-evidence-export.v2",
+  "generatedAt": "2026-09-12T06:36:16.007Z",
+  "summary": {
+    "total": 1,
+    "eligible": 1,
+    "duplicateSettlement": 0,
+    "conflictingReceipt": 0,
+    "reusedExample": 1,
+    "boundCallerAttestations": 0,
+    "unboundCallerAttestations": 1,
+    "conflictingCallerAttestations": 0,
+    "callerAttestedUsefulness": {
+      "useful": 1,
+      "not_useful": 0,
+      "unknown": 0
+    }
+  },
+  "records": [
+    {
+      "evidenceId": "sha256:1940665f063aa153f536376df50df182a1d461fddec6486abfc6cf039ecb889d",
+      "sourceLabelDigest": "sha256:af2bdbe1aa9b6ec1e2ade1d694f41fc71a831d0268e9891562113d8a62add1bf",
+      "authority": "local_files_unverified",
+      "receiptConsistency": "consistent",
+      "conflicts": [],
+      "request": {
+        "method": "POST",
+        "urlDigest": "sha256:0fc8484fa4c8725f09374c9b468a53f932f378d924c417feead279ed61e9dfeb",
+        "bodyDigest": "sha256:ad902ff2b89eb4d52774eea14faf10e6de37d7e271b857d514fb06e00aa8db7b"
+      },
+      "payment": {
+        "network": "eip155:8453",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payee": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+        "amountAtomic": "10000"
+      },
+      "serverContract": {
+        "validated": true,
+        "delivery": "useful",
+        "reason": null,
+        "report": {
+          "usefulRows": 2,
+          "failedOrPartialRows": 0,
+          "rowCount": 2
+        },
+        "validator": "customer-x402.classifyPaidResponse",
+        "scope": "retained_body_revalidation",
+        "originalWireVerified": false,
+        "redactionPresent": true
+      },
+      "buyerAttestation": {
+        "attested": true,
+        "authority": "caller",
+        "authenticated": false,
+        "binding": "unbound",
+        "recordedAt": "2026-09-12T06:36:16.002Z",
+        "usefulness": "useful",
+        "returnAttribution": "unattributed",
+        "intendedUse": "benchmark",
+        "statementDigest": "sha256:ff3ad3a0b1529ba453f08a0c664bd2bd631ff0782f96cd4a889a7a98dc942f85"
+      },
+      "exampleReuse": {
+        "reused": true,
+        "labelDigest": "sha256:c97f892d771a294657254c2fee94a99e94999f97e60778edcf4f62f0992c2bcd",
+        "authority": "caller_catalog"
+      },
+      "settlement": {
+        "status": "exact_transfer_matched",
+        "exactMatched": true,
+        "authority": "caller_saved_reconciliation",
+        "chainVerifiedByAdapter": false,
+        "transactionHash": "0xabababababababababababababababababababababababababababababababab",
+        "httpTransaction": "redacted",
+        "httpHeaderPresent": true,
+        "httpHeaderSuccess": true,
+        "finality": {
+          "confirmed": true,
+          "finalized": false
+        }
+      },
+      "duplicateSettlement": false,
+      "eligibleEvidence": true
+    }
+  ],
+  "claims": {
+    "revenue": false,
+    "organicUse": false,
+    "independentUse": false,
+    "customerIdentity": false,
+    "roi": false,
+    "note": "Local file consistency only. Unsigned saved artifacts and caller feedback do not authenticate payment, original output, a customer, or independent use. Fixture and owner QA can satisfy these checks. No RPC is performed."
+  }
+}
