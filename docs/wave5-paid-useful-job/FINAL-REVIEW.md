@@ -5,6 +5,7 @@ Parent session `729e76bf-ea1d-49e7-8a31-4cc569fb1320`.
 Start HEAD: `d758f85f36ec913c186e9f61581374768d000fff`.
 Base: `a143898dd1ec35c097ca7eb0b472f30dad1ee319`.
 Branch: `codex/w5-h01-merchant-review-20260911`.
+H01 commits: `fe8f854268a3805b467fa75b556c349668f9304a` (catalog/docs gates), `c2be1f26fe0d842a9eaf1d61987752e49c92b040` (replay key/protocol/MPP, worker stdout bound, MCP resource copy). This file may sit on a later receipt commit of the same branch.
 
 ## Verdict
 
