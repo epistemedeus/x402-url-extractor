@@ -60,6 +60,16 @@ export function classifyPaidResponse({
     };
   }
 
+  if (authorization?.vendorBudget && response.status === 503
+    && body?.charged === null && body?.settlementConfirmed === false
+    && ["payment_settlement_unknown", "payment_execution_in_flight_or_unknown"].includes(body?.error)) {
+    return {
+      outcome: OUTCOMES.UNKNOWN,
+      message: "vendor settlement is unconfirmed; retain the comparison and reconcile the original attempt without a replacement payment",
+      evidence,
+    };
+  }
+
   if (settlement.present && settlement.decoded && settlement.decoded.success === false) {
     return {
       outcome: OUTCOMES.SETTLEMENT_FAILED,

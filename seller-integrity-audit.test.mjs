@@ -284,6 +284,9 @@ test("MCP clients receive the full unverified seller-audit contract", async () =
     assert.equal(advertised?.properties?.decision?.enum.includes("unverified"), true);
     assert.equal(Object.hasOwn(advertised?.properties?.report?.properties || {}, "observedHttpStatus"), true);
     assert.equal(advertised?.properties?.referralOffer?.properties?.status?.enum.includes("unavailable"), true);
+    const result = await client.callTool({ name: "seller_integrity_audit", arguments: { origin: "https://seller.example", route: "/paid" } });
+    assert.deepEqual(result.structuredContent, unverified);
+    assert.equal(result.structuredContent.referralOffer.status, "unavailable");
   } finally {
     await client.close();
     await server.close();

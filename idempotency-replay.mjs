@@ -527,6 +527,11 @@ export function createIdempotencyReplay({
               delivery: { ...res.locals.replayPrecomputedDelivery, charged: null },
               boundary: "Precomputed comparison only. Settlement is unconfirmed; do not create a replacement payment automatically.",
             });
+            // An attempted settlement is not a new unpaid challenge. Returning
+            // 402 here invites clients to authorize a replacement payment.
+            res.statusCode = 503;
+            res.removeHeader("Payment-Required");
+            res.removeHeader("WWW-Authenticate");
             res.removeHeader("Content-Length");
             res.setHeader("Content-Type", "application/json; charset=utf-8");
             return originalEnd(body, "utf8", callback);

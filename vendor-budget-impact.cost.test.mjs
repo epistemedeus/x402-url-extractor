@@ -95,7 +95,7 @@ async function startFakeFacilitator() {
 }
 
 async function startMerchant({ dataDir, facilitatorUrl }) {
-  const port = await unusedPort();
+  const port = Number(process.env.TEST_MERCHANT_PORT) || await unusedPort();
   const child = spawn(process.execPath, ["server.js"], {
     cwd,
     env: {

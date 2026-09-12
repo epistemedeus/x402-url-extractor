@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { wrapFetchWithPayment } from "@x402/fetch";
+import { wrapMCPClientWithPayment } from "@x402/mcp";
 import { evm as evmClient, Mppx as ClientMppx } from "mppx/client";
 import { privateKeyToAccount } from "viem/accounts";
 
@@ -31,6 +32,27 @@ const validateOutput = new Ajv2020({ strict: false, allErrors: true }).compile(v
 function assertOutput(result) {
   assert.equal(validateOutput(result), true, JSON.stringify(validateOutput.errors));
 }
+
+// Validate actual mounted HTTP responses against the document clients fetch.
+const nativeFetch = globalThis.fetch;
+const httpValidators = new Map();
+const observedHttpStatuses = new Set();
+async function validateHttpResponse(response, url) {
+  const target = new URL(url);
+  const validators = httpValidators.get(target.origin);
+  if (validators && target.pathname.toLowerCase().replace(/\/+$/, "") === VENDOR_BUDGET_IMPACT_PATH && response.status !== 404) {
+    const validate = validators.get(String(response.status));
+    assert.ok(validate, `HTTP ${response.status} has no advertised JSON schema`);
+    assert.equal(validate(await response.clone().json()), true, `HTTP ${response.status}: ${JSON.stringify(validate.errors)}`);
+    observedHttpStatuses.add(response.status);
+  }
+  return response;
+}
+async function fetch(input, init) {
+  const response = await nativeFetch(input, init);
+  return validateHttpResponse(response, input instanceof Request ? input.url : String(input));
+}
+process.on("exit", () => console.log(`# validated mounted vendor HTTP statuses: ${[...observedHttpStatuses].sort().join(", ")}`));
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const SYNTH_PAYER = `0x${"2".repeat(40)}`;
@@ -90,7 +112,7 @@ async function startFakeFacilitator({ settleSuccess = true, verifyValid = true, 
 }
 
 async function startMerchant({ dataDir, facilitatorUrl, enabled = true, extraEnv = {} } = {}) {
-  const port = await unusedPort();
+  const port = Number(process.env.TEST_MERCHANT_PORT) || await unusedPort();
   const child = spawn(process.execPath, ["server.js"], {
     cwd,
     env: {
@@ -127,7 +149,17 @@ async function startMerchant({ dataDir, facilitatorUrl, enabled = true, extraEnv
     });
     child.once("error", reject);
   });
-  return { base: `http://127.0.0.1:${port}`, child, output: () => output };
+  const base = `http://127.0.0.1:${port}`;
+  const openapi = await nativeFetch(`${base}/openapi.json`).then(r => r.json());
+  const responses = openapi.paths[VENDOR_BUDGET_IMPACT_PATH]?.post.responses;
+  if (responses) {
+    const ajv = new Ajv2020({ strict: false, allErrors: true });
+    httpValidators.set(base, new Map(Object.entries(responses).flatMap(([status, contract]) => {
+      const schema = contract.content?.["application/json"]?.schema;
+      return schema ? [[status, ajv.compile(schema)]] : [];
+    })));
+  } else httpValidators.delete(base);
+  return { base, child, output: () => output };
 }
 
 async function stopChild(child) {
@@ -229,12 +261,13 @@ async function paidWithOfficialFetch(merchantBase, body) {
     },
   });
   const transport = wrapFetchWithPayment(proxyToMerchant(merchantBase), client);
-  return transport(`https://agents.samedaydesk.com${VENDOR_BUDGET_IMPACT_PATH}`, {
+  const response = await transport(`https://agents.samedaydesk.com${VENDOR_BUDGET_IMPACT_PATH}`, {
     method: "POST",
     redirect: "error",
     headers: { accept: "application/json", "content-type": "application/json" },
     body: JSON.stringify(body),
   });
+  return validateHttpResponse(response, `${merchantBase}${VENDOR_BUDGET_IMPACT_PATH}`);
 }
 
 async function waitForPaidEvidence(dataDir, { timeoutMs = 8_000 } = {}) {
@@ -461,6 +494,18 @@ test("official @x402/fetch buys a useful delta; no-change and unit-change stay d
     const tool = tools.find((entry) => entry.name === "vendor_budget_impact");
     assert.ok(tool);
     assert.match(tool.description, /https:\/\/agents\.samedaydesk\.com\/vendor-budget-impact, not mcp:\/\//);
+    const paidMcp = wrapMCPClientWithPayment(client, createCustomerX402Client({
+      network: NETWORK,
+      signer: { address: buyer.address, signTypedData: value => buyer.signTypedData(value) },
+    }));
+    const beforeMcpSettlement = facilitator.calls.settle;
+    const mcpResult = await paidMcp.callTool("vendor_budget_impact", { before: callerBefore, after: callerAfter });
+    assert.equal(mcpResult.paymentMade, true);
+    assert.notEqual(mcpResult.isError, true);
+    const mcpBody = JSON.parse(mcpResult.content[0].text);
+    assertOutput(mcpBody);
+    assert.equal(mcpBody.analysis, "actionable");
+    assert.equal(facilitator.calls.settle, beforeMcpSettlement + 1);
   } finally {
     await client.close();
   }
@@ -708,7 +753,8 @@ test("unknown settlement is not retried", { timeout: 60_000 }, async (t) => {
   const challenge = decodePaymentRequired(await fetch(`${merchant.base}${VENDOR_BUDGET_IMPACT_PATH}`, jsonPost(body)));
   const payment = testPayment(challenge, { id: "vendor_settle_1234567890" });
   const paid = await fetch(`${merchant.base}${VENDOR_BUDGET_IMPACT_PATH}`, jsonPost(body, { "payment-signature": payment }));
-  assert.notEqual(paid.status, 500);
+  assert.equal(paid.status, 503, "unconfirmed settlement must not invite a fresh payment as HTTP 402");
+  assert.equal(paid.headers.get("payment-required"), null);
   const initial = await paid.json();
   assert.equal(initial.charged, null);
   assert.equal(initial.settlementConfirmed, false);
@@ -837,4 +883,133 @@ test("precomputed delivery survives a hard crash after facilitator mutation star
   assert.equal(result.delivery.charged,null);
   assert.ok(result.delivery.engine.fieldChanges.length>0);
   assert.equal(facilitator.calls.settle,1);
+});
+
+
+test("combined server advertises seller diagnostic schema and unpaid MCP calls remain gated", { timeout: 60_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "merchant-integration-mcp-"));
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  const client = new Client({ name: "merchant-integration-regression", version: "1.0.0" });
+  t.after(async () => {
+    await client.close();
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
+  const deadline = Date.now() + 20_000;
+  while (!merchant.output().includes("MCP server:  POST /mcp (23 paid tools)")) {
+    if (Date.now() > deadline) throw new Error(`MCP mount timed out: ${merchant.output().slice(-2000)}`);
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  await client.connect(new StreamableHTTPClientTransport(new URL(`${merchant.base}/mcp`)));
+  const { tools } = await client.listTools();
+  const seller = tools.find(tool => tool.name === "seller_integrity_audit");
+  assert.equal(seller?.outputSchema?.type, "object");
+  assert.ok(seller.outputSchema.properties.decision.enum.includes("unverified"));
+  assert.ok(seller.outputSchema.properties.report.required.includes("evidenceClass"));
+  const openapi = await fetch(`${merchant.base}/openapi.json`).then(r => r.json());
+  const httpSchema = openapi.paths["/commerce/seller-integrity-audit"].get.responses["200"].content["application/json"].schema;
+  assert.deepEqual(seller.outputSchema.required.toSorted(), httpSchema.required.toSorted());
+  assert.deepEqual(seller.outputSchema.properties.decision.enum, httpSchema.properties.decision.enum);
+  for (const [name, args] of [
+    ["seller_integrity_audit", { origin: "https://seller.example", route: "/paid", method: "POST" }],
+    ["vendor_budget_impact", { before: callerBefore, after: callerAfter }],
+  ]) {
+    const result = await client.callTool({ name, arguments: args });
+    assert.equal(result.isError, true, JSON.stringify(result));
+    assert.match(JSON.stringify(result), /[Pp]ayment|402/);
+    assert.equal(result.structuredContent, undefined);
+  }
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+});
+
+
+test("vendor HTTP documents JSON contracts for every owned response status", { timeout: 60_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "merchant-integration-http-schema-"));
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => {
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
+  const openapi = await fetch(`${merchant.base}/openapi.json`).then(r => r.json());
+  const responses = openapi.paths[VENDOR_BUDGET_IMPACT_PATH].post.responses;
+  for (const status of [200, 400, 402, 408, 409, 413, 415, 503]) {
+    const schema = responses[status]?.content?.["application/json"]?.schema;
+    assert.ok(schema, `HTTP ${status} omitted its JSON response contract`);
+    new Ajv2020({ strict: false }).compile(schema);
+  }
+});
+
+
+test("bounded HTTP body refusals match the declared 408, 413 and 415 contracts", { timeout: 60_000 }, async t => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "merchant-integration-body-"));
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => {
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url, extraEnv: { VENDOR_BUDGET_IMPACT_TIMEOUT_MS: "200" } });
+  const url = `${merchant.base}${VENDOR_BUDGET_IMPACT_PATH}`;
+  const media = await fetch(url, { method: "POST", headers: { "content-type": "text/plain" }, body: "{}" });
+  assert.equal(media.status, 415);
+  const large = await fetch(url, jsonPost({ padding: "x".repeat(70_000) }));
+  assert.equal(large.status, 413);
+  const slow = await new Promise((resolve, reject) => {
+    const req = httpRequest(url, { method: "POST", headers: { "content-type": "application/json", "content-length": "100" } }, res => {
+      const chunks = [];
+      res.on("data", chunk => chunks.push(chunk));
+      res.on("end", () => { resolve(new Response(Buffer.concat(chunks), { status: res.statusCode })); req.destroy(); });
+    });
+    req.on("error", reject);
+    req.setTimeout(5000, () => req.destroy(new Error("slow-body fixture timed out")));
+    req.write("{");
+  });
+  assert.equal(slow.status, 408);
+  await validateHttpResponse(slow, url);
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+});
+
+test("official MCP payment client retains unknown vendor output without another settlement", { timeout: 60_000 }, async t => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "merchant-integration-mcp-unknown-"));
+  const facilitator = await startFakeFacilitator({ payer: buyer.address, settleSuccess: false });
+  let merchant;
+  const client = new Client({ name: "merchant-mcp-unknown", version: "1.0.0" });
+  t.after(async () => {
+    await client.close();
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
+  const deadline = Date.now() + 20_000;
+  while (!merchant.output().includes("MCP server:  POST /mcp (23 paid tools)")) {
+    if (Date.now() > deadline) throw new Error("MCP mount timed out");
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  await client.connect(new StreamableHTTPClientTransport(new URL(`${merchant.base}/mcp`)));
+  await client.listTools();
+  let signs = 0;
+  const paidMcp = wrapMCPClientWithPayment(client, createCustomerX402Client({
+    network: NETWORK,
+    signer: { address: buyer.address, signTypedData: value => { signs += 1; return buyer.signTypedData(value); } },
+  }));
+  const result = await paidMcp.callTool("vendor_budget_impact", { before: callerBefore, after: callerAfter });
+  assert.equal(result.isError, true);
+  const body = JSON.parse(result.content[0].text);
+  assert.equal(body.error, "payment_settlement_unknown");
+  assert.equal(body.charged, null);
+  assert.equal(body.settlementConfirmed, false);
+  assert.equal(body.delivery.charged, null);
+  assert.ok(body.delivery.engine.fieldChanges.length > 0);
+  assert.equal(signs, 1);
+  assert.equal(facilitator.calls.settle, 1);
 });

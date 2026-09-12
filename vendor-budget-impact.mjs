@@ -1066,8 +1066,68 @@ export function vendorBudgetImpactX402Route({ network, payTo, extensions, env = 
   };
 }
 
+export function vendorBudgetImpactHttpResponseSchemas() {
+  const result = vendorBudgetImpactOutputSchema();
+  const refusal = {
+    type: "object", additionalProperties: false,
+    required: ["ok", "error", "charged"],
+    properties: {
+      ok: { const: false }, error: { type: "string" }, charged: { const: false },
+      code: { type: "string" }, product: { const: VENDOR_BUDGET_IMPACT_PRODUCT },
+      schemaVersion: { const: VENDOR_BUDGET_IMPACT_SCHEMA_VERSION },
+      analysis: { const: "not-run" }, transport: { const: "rejected" },
+      boundary: { type: ["string", "object"] },
+    },
+  };
+  const unconfirmedDelivery = {
+    ...result, properties: { ...result.properties, charged: { type: "null" } },
+  };
+  const unresolved = {
+    type: "object", additionalProperties: false,
+    required: ["ok", "error", "charged", "newSettlementAttempt", "boundary"],
+    properties: {
+      ok: { const: false }, charged: { type: "null" },
+      error: { enum: ["payment_settlement_unknown", "payment_execution_in_flight_or_unknown"] },
+      newSettlementAttempt: { type: "boolean" }, settlementConfirmed: { const: false },
+      delivery: unconfirmedDelivery, boundary: { type: "string" },
+    },
+    dependentRequired: { delivery: ["settlementConfirmed"] },
+  };
+  return {
+    200: { ...result, properties: { ...result.properties, ok: { const: true }, charged: { const: true }, transport: { const: "ok" } } },
+    400: refusal,
+    // The HTTP body also includes legacy discovery aliases; the canonical v2
+    // document remains in Payment-Required. Both share these protocol fields.
+    402: {
+      type: "object", required: ["x402Version", "resource", "accepts"],
+      properties: {
+        x402Version: { const: 2 }, error: { type: "string" },
+        resource: { type: "object", required: ["url"], properties: { url: { type: "string" } } },
+        accepts: {
+          type: "array", minItems: 1,
+          items: {
+            type: "object", required: ["scheme", "network", "amount", "asset", "payTo", "maxTimeoutSeconds", "extra"],
+            properties: {
+              scheme: { const: "exact" }, network: { type: "string" }, amount: { type: "string", pattern: "^[0-9]+$" },
+              asset: { type: "string" }, payTo: { type: "string" }, maxTimeoutSeconds: { type: "integer", minimum: 1 },
+              extra: { type: "object" },
+            },
+          },
+        },
+        extensions: { type: "object" },
+      },
+    },
+    408: refusal, 409: refusal, 413: refusal, 415: refusal,
+    503: { anyOf: [
+      { ...result, properties: { ...result.properties, ok: { const: false }, charged: { const: false } } },
+      refusal, unresolved,
+    ] },
+  };
+}
+
 export function vendorBudgetImpactOpenApiPath({ paymentInfo, env = process.env } = {}) {
   const price = vendorBudgetImpactPrice(env);
+  const schemas = vendorBudgetImpactHttpResponseSchemas();
   return {
     post: {
       operationId: "compareVendorBudgetImpact",
@@ -1080,14 +1140,15 @@ export function vendorBudgetImpactOpenApiPath({ paymentInfo, env = process.env }
       responses: {
         "200": {
           description: "bounded budget-impact report after a completed compare. analysis is actionable, informational (identical rows), or partial. HTTP 200 is not used for timeout, crash, oversized worker output, or nonzero worker exit.",
-          content: { "application/json": { schema: vendorBudgetImpactOutputSchema() } },
+          content: { "application/json": { schema: schemas[200] } },
         },
-        "400": { description: "unsupported or malformed input, or an MPP credential on this x402-only route; charged nothing" },
-        "402": { description: `payment required (x402 ${price.priceUsd} bounded compare). Initial live release does not accept MPP.` },
-        "409": { description: "payment identifier already bound to a different request body, payer, credential, or payment terms" },
-        "413": { description: "JSON request or snapshot exceeds the server byte ceiling; no authorization" },
-        "415": { description: "Content-Type must be JSON" },
-        "503": { description: "engine timeout, crash, capacity, oversized worker output, or unresolved settlement. x402 execute-before-settle: engine failures prevent settlement (charged false). An attempted but unconfirmed settlement remains charged null and may carry a retained comparison, not confirmed paid fulfillment. Exact-credential recovery never settles again. MPP is not accepted." },
+        "400": { description: "unsupported or malformed input, or an MPP credential on this x402-only route; charged nothing", content: { "application/json": { schema: schemas[400] } } },
+        "402": { description: `payment required (x402 ${price.priceUsd} bounded compare). Initial live release does not accept MPP.`, content: { "application/json": { schema: schemas[402] } } },
+        "408": { description: "request body acquisition timed out before authorization", content: { "application/json": { schema: schemas[408] } } },
+        "409": { description: "payment identifier already bound to a different request body, payer, credential, or payment terms", content: { "application/json": { schema: schemas[409] } } },
+        "413": { description: "JSON request or snapshot exceeds the server byte ceiling; no authorization", content: { "application/json": { schema: schemas[413] } } },
+        "415": { description: "Content-Type must be JSON", content: { "application/json": { schema: schemas[415] } } },
+        "503": { description: "engine timeout, crash, capacity, oversized worker output, or unresolved settlement. x402 execute-before-settle: engine failures prevent settlement (charged false). An attempted but unconfirmed settlement remains charged null and may carry a retained comparison, not confirmed paid fulfillment. Exact-credential recovery never settles again. MPP is not accepted.", content: { "application/json": { schema: schemas[503] } } },
       },
       "x-payment-info": paymentInfo,
     },

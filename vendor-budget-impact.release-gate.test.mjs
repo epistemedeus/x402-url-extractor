@@ -96,3 +96,22 @@ test("finite input subtraction overflow remains partial with no non-finite numer
   assert.ok(result.engine.gaps.some(value=>/finite/.test(value)));
   assert.equal(validateVendorBudgetBuyerOutput(result,authorization).delivery,"partial");
 });
+
+test("vendor settlement ambiguity outranks an unconfirmed success=false header", () => {
+  const response = () => new Response("{}", {
+    status: 503,
+    headers: {
+      "content-type": "application/json",
+      "payment-response": Buffer.from(JSON.stringify({ success: false, errorReason: "unknown_settlement", transaction: "", network: "eip155:8453" })).toString("base64"),
+    },
+  });
+  for (const error of ["payment_settlement_unknown", "payment_execution_in_flight_or_unknown"]) {
+    const body = { ok: false, error, charged: null, settlementConfirmed: false };
+    const result = classifyPaidResponse({ response: response(), body, requiredOutput: auth.requiredOutput, authorization: auth });
+    assert.equal(result.outcome, "unknown");
+    assert.equal(result.evidence.outputValid, false);
+    assert.equal(result.evidence.retainedBody.charged, null);
+  }
+  const failed = classifyPaidResponse({ response: response(), body: { ok: false, charged: false }, requiredOutput: auth.requiredOutput, authorization: auth });
+  assert.equal(failed.outcome, "settlement_failed");
+});
