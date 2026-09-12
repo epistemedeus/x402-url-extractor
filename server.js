@@ -223,6 +223,23 @@ import {
   validateLockfilePinDeltaRequest,
 } from "./lockfile-pin-delta.mjs";
 import {
+  VENDOR_BUDGET_IMPACT_AMOUNT_ATOMIC,
+  VENDOR_BUDGET_IMPACT_DESCRIPTION,
+  VENDOR_BUDGET_IMPACT_PATH,
+  VENDOR_BUDGET_IMPACT_PRICE_USD,
+  VENDOR_BUDGET_IMPACT_READ_ONLY_POST,
+  isVendorBudgetImpactEnabled,
+  isVendorBudgetImpactPath,
+  vendorBudgetImpactCostParameters,
+  vendorBudgetImpactMcpOutputSchema,
+  vendorBudgetImpactOpenApiPath,
+  vendorBudgetImpactResource,
+  vendorBudgetImpactX402Route,
+  mountVendorBudgetImpactParser,
+  serveVendorBudgetImpact,
+  validateVendorBudgetImpactRequest,
+} from "./vendor-budget-impact.mjs";
+import {
   WELL_KNOWN_SKILLS_INDEX_PATH,
   mountWellKnownSkills,
 } from "./well-known-skills.mjs";
@@ -357,10 +374,13 @@ const EXTRACT_BATCH_ENABLED = isExtractBatchEnabled();
 if (EXTRACT_BATCH_ENABLED) extractBatchCostParameters();
 const LOCKFILE_PIN_DELTA_ENABLED = isLockfilePinDeltaEnabled();
 if (LOCKFILE_PIN_DELTA_ENABLED) lockfilePinDeltaCostParameters();
+const VENDOR_BUDGET_IMPACT_ENABLED = isVendorBudgetImpactEnabled();
+if (VENDOR_BUDGET_IMPACT_ENABLED) vendorBudgetImpactCostParameters();
 const EXTRACT_BATCH_PAID_POSTS = Object.freeze([
   ...READ_ONLY_PAID_POST_OPERATIONS,
   ...(EXTRACT_BATCH_ENABLED ? [EXTRACT_BATCH_READ_ONLY_POST] : []),
   ...(LOCKFILE_PIN_DELTA_ENABLED ? [LOCKFILE_PIN_DELTA_READ_ONLY_POST] : []),
+  ...(VENDOR_BUDGET_IMPACT_ENABLED ? [VENDOR_BUDGET_IMPACT_READ_ONLY_POST] : []),
 ]);
 
 // "$0.05" -> "50000" atomic USDC units (6 decimals) so the discovery docs
@@ -511,12 +531,13 @@ const jsonParser = express.json({
   },
 });
 app.use((req, res, next) => {
-  if (isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
+  if (isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path) || isVendorBudgetImpactPath(req.path)) return next();
   return jsonParser(req, res, next);
 });
 app.use(legacyCompatibleX402Body);
 mountPageChangeHttp(app);
 mountLockfilePinDeltaParser(app);
+mountVendorBudgetImpactParser(app);
 
 function parseCommerceWriterProcessCount(raw = process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES) {
   if (raw === undefined || raw === null || raw === "") return 1;
@@ -555,11 +576,13 @@ const idempotencyReplay = createIdempotencyReplay({
   requiredReplayPaths: new Set([
     ...(EXTRACT_BATCH_ENABLED ? [EXTRACT_BATCH_PATH] : []),
     ...(LOCKFILE_PIN_DELTA_ENABLED ? [LOCKFILE_PIN_DELTA_PATH] : []),
+    ...(VENDOR_BUDGET_IMPACT_ENABLED ? [VENDOR_BUDGET_IMPACT_PATH] : []),
   ]),
   routes: new Set([
     ...DEFAULT_PAID_ROUTES,
     ...(EXTRACT_BATCH_ENABLED ? [EXTRACT_BATCH_PATH] : []),
     ...(LOCKFILE_PIN_DELTA_ENABLED ? [LOCKFILE_PIN_DELTA_PATH] : []),
+    ...(VENDOR_BUDGET_IMPACT_ENABLED ? [VENDOR_BUDGET_IMPACT_PATH] : []),
   ]),
 });
 let commerceSettlementReconciler;
@@ -742,6 +765,7 @@ app.get("/healthz", async (_req, res) => {
       "wallet-policy-conformance": WALLET_POLICY_CONFORMANCE_PRICE,
       "stateful-wallet-policy-conformance": STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE,
       ...(LOCKFILE_PIN_DELTA_ENABLED ? { "lockfile-pin-delta": LOCKFILE_PIN_DELTA_PRICE_USD } : {}),
+      ...(VENDOR_BUDGET_IMPACT_ENABLED ? { "vendor-budget-impact": VENDOR_BUDGET_IMPACT_PRICE_USD } : {}),
     },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
@@ -917,6 +941,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/distribution/agent-surface-budget-audit`, amount: priceToAtomic(AGENT_SURFACE_BUDGET_AUDIT_PRICE), description: "Measure one public service's free MCP tools/list, OpenAPI, or both before an agent calls or pays. Returns byte counts, byte-derived token estimates, missing selection contracts, heaviest definitions, budget decisions, and progressive-discovery fixes. Unselected surfaces are not fetched or judged. Uses public pinned DNS, follows no redirect, sends no credential or target payment, and calls no target tool.", mimeType: "application/json" },
   ...(EXTRACT_BATCH_ENABLED ? [extractBatchResource({ publicUrl: PUBLIC_URL })] : []),
   ...(LOCKFILE_PIN_DELTA_ENABLED ? [lockfilePinDeltaResource({ publicUrl: PUBLIC_URL })] : []),
+  ...(VENDOR_BUDGET_IMPACT_ENABLED ? [vendorBudgetImpactResource({ publicUrl: PUBLIC_URL })] : []),
 ];
 assertCdpResourceDescriptionCompatibility(RESOURCES);
 
@@ -1041,6 +1066,7 @@ const missingMetadataRoutes = [...paidResourceRoutes].filter((route) => !metadat
 const optionalMetadataRoutes = new Set([
   ...(EXTRACT_BATCH_ENABLED ? [] : [EXTRACT_BATCH_PATH]),
   ...(LOCKFILE_PIN_DELTA_ENABLED ? [] : [LOCKFILE_PIN_DELTA_PATH]),
+  ...(VENDOR_BUDGET_IMPACT_ENABLED ? [] : [VENDOR_BUDGET_IMPACT_PATH]),
 ]);
 const unknownMetadataRoutes = [...metadataRoutes].filter((route) => !paidResourceRoutes.has(route) && !optionalMetadataRoutes.has(route));
 if (missingMetadataRoutes.length || unknownMetadataRoutes.length) {
@@ -1089,7 +1115,7 @@ const mppDualStack = createMppDualStack({
         path,
         ...(path === EXTRACT_BATCH_PATH ? { bindRequestBody: true } : {}),
       };
-    }).filter((route) => route.path !== LOCKFILE_PIN_DELTA_PATH),
+    }).filter((route) => route.path !== LOCKFILE_PIN_DELTA_PATH && route.path !== VENDOR_BUDGET_IMPACT_PATH),
     {
       amount: atomicUsdcToDisplay(RESOURCES[11].amount),
       description: RESOURCES[11].description,
@@ -1230,7 +1256,7 @@ const machineActionCatalog = () => ({
       description: resource.description,
       priceAtomicUsdc: resource.amount,
       priceUsdc: Number(resource.amount) / 1e6,
-      paymentProtocols: route === LOCKFILE_PIN_DELTA_PATH ? ["x402"] : ["x402", "mpp"],
+      paymentProtocols: (route === LOCKFILE_PIN_DELTA_PATH || route === VENDOR_BUDGET_IMPACT_PATH) ? ["x402"] : ["x402", "mpp"],
       mimeType: resource.mimeType,
       ...serviceMetadata,
       request: projectDiscoveryRequest(resource.url, method, request),
@@ -1804,6 +1830,28 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       },
     });
   }
+  if (VENDOR_BUDGET_IMPACT_ENABLED && profile !== "mpp") {
+    const vendorBudgetResource = {
+      amount: VENDOR_BUDGET_IMPACT_AMOUNT_ATOMIC,
+      method: "POST",
+    };
+    document.paths[VENDOR_BUDGET_IMPACT_PATH] = vendorBudgetImpactOpenApiPath({
+      paymentInfo: {
+        price: {
+          amount: atomicUsdcToDisplay(vendorBudgetResource.amount),
+          currency: "USD",
+          mode: "fixed",
+        },
+        protocols: [{
+          x402: {
+            asset: USDC_ASSET,
+            network: NETWORK,
+            scheme: "exact",
+          },
+        }],
+      },
+    });
+  }
   attachPaidActionEffectContracts(
     document,
     EXTRACT_BATCH_PAID_POSTS.filter((op) => document.paths?.[op.path]?.[op.method.toLowerCase()]),
@@ -1960,6 +2008,7 @@ app.post(RECEIPT_REFERRAL_RECHECK_ROUTE, async (req, res) => {
 // settlement. Changed request bindings fail with an uncharged 409.
 if (EXTRACT_BATCH_ENABLED) app.post(EXTRACT_BATCH_PATH, validateExtractBatchRequest);
 if (LOCKFILE_PIN_DELTA_ENABLED) app.post(LOCKFILE_PIN_DELTA_PATH, validateLockfilePinDeltaRequest);
+if (VENDOR_BUDGET_IMPACT_ENABLED) app.post(VENDOR_BUDGET_IMPACT_PATH, validateVendorBudgetImpactRequest);
 app.use((req, res, next) => idempotencyReplay.middleware(req, res, next).catch(next));
 
 const PAYMENT_CREDENTIAL_HEADERS = Object.freeze([
@@ -3411,6 +3460,11 @@ const x402Paywall = paymentMiddleware(
         payTo: PAY_TO,
         extensions: COMMON_COMMERCE_EXTENSIONS,
       }) : {}),
+      ...(VENDOR_BUDGET_IMPACT_ENABLED ? vendorBudgetImpactX402Route({
+        network: NETWORK,
+        payTo: PAY_TO,
+        extensions: COMMON_COMMERCE_EXTENSIONS,
+      }) : {}),
     },
     resourceServer
   );
@@ -3427,6 +3481,11 @@ if (LOCKFILE_PIN_DELTA_ENABLED) {
   const resource = RESOURCES.find((entry) => (entry.method || "GET") === "POST" && new URL(entry.url).pathname === LOCKFILE_PIN_DELTA_PATH);
   if (!resource) throw new Error("Missing purchase evidence resource for POST /lockfile-pin-delta");
   evidenceResources.push({ ...resource, method: "POST", url: `${PUBLIC_URL}${LOCKFILE_PIN_DELTA_PATH}` });
+}
+if (VENDOR_BUDGET_IMPACT_ENABLED) {
+  const resource = RESOURCES.find((entry) => (entry.method || "GET") === "POST" && new URL(entry.url).pathname === VENDOR_BUDGET_IMPACT_PATH);
+  if (!resource) throw new Error("Missing purchase evidence resource for POST /vendor-budget-impact");
+  evidenceResources.push({ ...resource, method: "POST", url: `${PUBLIC_URL}${VENDOR_BUDGET_IMPACT_PATH}` });
 }
 purchaseEvidenceManifest = buildPurchaseEvidenceManifest({
   origin: PUBLIC_URL,
@@ -3809,6 +3868,9 @@ if (EXTRACT_BATCH_ENABLED) {
 if (LOCKFILE_PIN_DELTA_ENABLED) {
   app.post(LOCKFILE_PIN_DELTA_PATH, serveLockfilePinDelta);
 }
+if (VENDOR_BUDGET_IMPACT_ENABLED) {
+  app.post(VENDOR_BUDGET_IMPACT_PATH, serveVendorBudgetImpact);
+}
 
 // One root, negotiated by audience. Browser navigation gets a fast human map;
 // API clients, curl, and agents retain the stable JSON descriptor.
@@ -3885,6 +3947,9 @@ app.get("/", (req, res) => {
       } : {}),
       ...(LOCKFILE_PIN_DELTA_ENABLED ? {
         "POST /lockfile-pin-delta": `${LOCKFILE_PIN_DELTA_PRICE_USD} - ${LOCKFILE_PIN_DELTA_DESCRIPTION}`,
+      } : {}),
+      ...(VENDOR_BUDGET_IMPACT_ENABLED ? {
+        "POST /vendor-budget-impact": `${VENDOR_BUDGET_IMPACT_PRICE_USD} - ${VENDOR_BUDGET_IMPACT_DESCRIPTION}`,
       } : {}),
       "GET /read?url=": `${READ_PRICE} - URL -> LLM-ready Markdown.`,
       "GET /scan?repo=": `${SCAN_PRICE} - static supply-chain security scan of a public GitHub repo before install.`,
@@ -3983,6 +4048,18 @@ import("./mcp-server.mjs")
           outputSchema: lockfilePinDeltaMcpOutputSchema,
           paidHttp: { method: "POST", path: LOCKFILE_PIN_DELTA_PATH, resourceUrl: `${PUBLIC_URL}${LOCKFILE_PIN_DELTA_PATH}`, maxRequestBytes: 256 * 1024, maxResponseBytes: 160 * 1024 },
           tags: ["lockfile", "npm", "pin-delta", "dependency-diff", "sbom"],
+        }] : []),
+        ...(VENDOR_BUDGET_IMPACT_ENABLED ? [{
+          name: "vendor_budget_impact",
+          description: VENDOR_BUDGET_IMPACT_DESCRIPTION,
+          price: VENDOR_BUDGET_IMPACT_PRICE_USD,
+          inputSchema: {
+            before: z.record(z.any()).describe("Pricing-row JSON object with a rows array of {field, value, unit}. Not a filesystem path, URL, or command."),
+            after: z.record(z.any()).describe("Pricing-row JSON object with a rows array of {field, value, unit}. Not a filesystem path, URL, or command."),
+          },
+          outputSchema: vendorBudgetImpactMcpOutputSchema,
+          paidHttp: { method: "POST", path: VENDOR_BUDGET_IMPACT_PATH, resourceUrl: `${PUBLIC_URL}${VENDOR_BUDGET_IMPACT_PATH}`, maxRequestBytes: 64 * 1024, maxResponseBytes: 64 * 1024 },
+          tags: ["pricing", "budget-impact", "vendor-cost", "row-delta"],
         }] : []),
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters. Check status/sourceOk/error/truncated/capture; missing discussion text is not proof of absence.") }, outputSchema: readMcpOutputSchema, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
         { name: "scan", description: RESOURCES[2].description, price: SCAN_PRICE, inputSchema: { repo: z.string().describe("Public GitHub repo: owner/name or URL") }, outputSchema: scanRepoMcpOutputSchema, run: (a) => scanRepo(a.repo), tags: ["security", "supply-chain", "github"] },

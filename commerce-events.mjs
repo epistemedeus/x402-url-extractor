@@ -143,6 +143,8 @@ const EXACT_ROUTES = new Map([
   ["/alerts", { route: "/alerts", kind: "discovery" }],
   ["/extract", { route: "/extract", kind: "paid" }],
   [EXTRACT_BATCH_PATH, { route: EXTRACT_BATCH_PATH, kind: "paid" }],
+  ["/lockfile-pin-delta", { route: "/lockfile-pin-delta", kind: "paid" }],
+  ["/vendor-budget-impact", { route: "/vendor-budget-impact", kind: "paid" }],
   ["/read", { route: "/read", kind: "paid" }],
   ["/scan", { route: "/scan", kind: "paid" }],
   ["/schemaforge", { route: "/schemaforge", kind: "paid" }],

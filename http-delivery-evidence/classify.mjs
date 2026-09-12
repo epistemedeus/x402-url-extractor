@@ -79,7 +79,7 @@ export function classifyParsedBody({
   oversized = false,
 } = {}) {
   return classifyLayers({
-    method: (resource === RESOURCES.EXTRACT_BATCH || resource === RESOURCES.LOCKFILE) ? "POST" : "GET",
+    method: (resource === RESOURCES.EXTRACT_BATCH || resource === RESOURCES.LOCKFILE || resource === RESOURCES.VENDOR_BUDGET) ? "POST" : "GET",
     resource,
     parsed,
     contract,
@@ -262,7 +262,7 @@ function classifyLayers({
     });
   }
 
-  if (resource === RESOURCES.LOCKFILE) {
+  if (resource === RESOURCES.LOCKFILE || resource === RESOURCES.VENDOR_BUDGET) {
     if (body.transport === "timeout") {
       return wrap({
         verdict: VERDICT.INVALID,

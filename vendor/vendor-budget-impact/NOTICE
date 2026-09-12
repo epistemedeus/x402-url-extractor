@@ -1,0 +1,26 @@
+Vendor budget impact engine projection
+======================================
+
+This directory is a bounded source projection of
+
+  epistemedeus/samedaydesk
+  git SHA b23260e6a2b74452075f73da1631da24d8ae6906
+  (SDS PR74 / useful-jobs 1.4.0 overlay)
+
+  compare: experiments/s134-record-jobs/modules/pricing-table-change/
+  impact mapping: useful-jobs 1.4.0 apps/vendor-budget-impact/cli.mjs
+  public kit pin: dacb9950ef3e1ffcf9151c30324fe1f1cb209e19
+  useful-jobs-1.4.0.tar.gz sha256
+    2b1949189f0ad2e3c1bd5f7a43f7eda800fd5f0dc3a395415689feee0419ff4f
+
+It is not a copy of the SameDayDesk repository, not a second payment stack,
+not a job queue or ledger, and not a live settlement engine. The merchant
+HTTP adapter does not extract vendor archives at runtime and does not
+download GitHub URLs.
+
+Accepted customer input is JSON objects with a `rows` array of
+`{field, value, unit}`. Filesystem paths, commands, URLs, and writable
+caches are not accepted. `purchaseAuthority` and `paidValueClaim` stay
+false. Curated row compares are not live market prices, ROI, or demand.
+
+The merchant repository LICENSE (MIT, SameDayDesk) covers this projection.

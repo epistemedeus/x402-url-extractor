@@ -1,0 +1,9 @@
+{
+  "label": "caller",
+  "note": "Caller-supplied pricing rows. Not a SAMPLE kit fixture and not a live quote.",
+  "rows": [
+    { "field": "desk-chat-input", "value": 1.5, "unit": "USD/1M-tokens" },
+    { "field": "desk-chat-output", "value": 6.0, "unit": "USD/1M-tokens" },
+    { "field": "desk-embed", "value": 0.12, "unit": "USD/1M-tokens" }
+  ]
+}
