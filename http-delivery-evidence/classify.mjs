@@ -98,12 +98,14 @@ export function evaluateResponseBytes({
   payerClass = "unclassified",
   capturedAt = new Date().toISOString(),
   recordId,
+  responseByteLength,
 } = {}) {
   const bytes = Buffer.isBuffer(responseBytes) || responseBytes instanceof Uint8Array
     ? Buffer.from(responseBytes)
     : Buffer.alloc(0);
-  const oversized = bytes.length > MAX_RESPONSE_BYTES;
-  const parsed = parseJsonBytes(bytes);
+  const actualLength = Number.isInteger(responseByteLength) ? responseByteLength : bytes.length;
+  const oversized = actualLength > MAX_RESPONSE_BYTES;
+  const parsed = parseJsonBytes(bytes.length > MAX_RESPONSE_BYTES ? bytes.subarray(0, MAX_RESPONSE_BYTES) : bytes);
   const contract = contractFor({ method, resource, parsed });
   const classified = classifyLayers({
     method,
@@ -124,7 +126,7 @@ export function evaluateResponseBytes({
     payerClass,
     capturedAt,
     recordId,
-    bytesLength: bytes.length,
+    bytesLength: actualLength,
     storedByteLength: Math.min(bytes.length, MAX_RESPONSE_BYTES),
     parsed,
     contract,

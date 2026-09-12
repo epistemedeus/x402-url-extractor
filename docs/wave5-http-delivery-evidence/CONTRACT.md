@@ -18,5 +18,8 @@ Principal `deliveryClass` is `source_refusal` when `sourceOk === false` on a
 completed 2xx success envelope even if truncation marks are also set.
 
 Historical v1 `not_checked` rows remain readable. Extra keys on those rows do
-not drop them. New validation is a sibling file joined by method + resource +
-responseDigest.
+not drop them. Historical paid-success bytes are never rewritten.
+
+Join identity is the v1 `id` UUID (`paidEvidenceId` on validation records).
+Attachment also requires an exact `responseDigest` match. Body-digest maps
+must not collapse distinct purchases.

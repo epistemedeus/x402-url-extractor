@@ -15,8 +15,8 @@ import {
 import {
   HISTORICAL_VALIDATOR_VERDICT,
   PAID_EVIDENCE_FILENAME,
+  PAID_EVIDENCE_ID_PATTERN,
   isHistoricalV1PaidSuccess,
-  joinKey,
   parseNdjson,
 } from "./historical.mjs";
 import { MAX_RESPONSE_BYTES, contractNameForResource } from "./contract.mjs";
@@ -30,12 +30,14 @@ export const VALIDATION_KEYS = Object.freeze([
   "deliveryClass",
   "merchantHttpStatus",
   "method",
+  "paidEvidenceId",
   "payerClass",
   "prohibitedInferences",
   "recordId",
   "resource",
   "responseByteLength",
   "responseDigest",
+  "retainedByteLength",
   "schemaVersion",
   "settlementClass",
   "settlementReference",
@@ -102,29 +104,36 @@ export function openStore(dir) {
       const text = await readFile(validationPath, "utf8").catch((error) => (
         error?.code === "ENOENT" ? "" : Promise.reject(error)
       ));
-      return parseNdjson(text)
-        .filter((row) => !row?._unparseable)
-        .map((row) => canonicalizeValidationRecord(row));
+      const rows = [];
+      for (const row of parseNdjson(text)) {
+        if (row?._unparseable) continue;
+        try {
+          rows.push(canonicalizeValidationRecord(row));
+        } catch {
+          // Incomplete or pre-identity rows never attach to a purchase.
+        }
+      }
+      return rows;
     },
     async join({ currentValidatorVerdict } = {}) {
       const historical = await this.readHistorical({ currentValidatorVerdict });
       const validations = await this.readValidations();
-      const byKey = new Map();
+      const byId = new Map();
       for (const item of historical) {
         if (item.kind !== "historical_v1_not_checked") continue;
-        byKey.set(joinKey(item.row), { historical: item.row, validations: [] });
+        const id = item.row.id;
+        if (byId.has(id)) continue;
+        byId.set(id, { historical: item.row, validations: [] });
       }
       for (const validation of validations) {
-        const key = joinKey({
-          method: validation.method,
-          resource: validation.resource,
-          responseDigest: validation.responseDigest,
-        });
-        const existing = byKey.get(key) || { historical: null, validations: [] };
+        const id = validation.paidEvidenceId;
+        if (!id || !PAID_EVIDENCE_ID_PATTERN.test(id)) continue;
+        const existing = byId.get(id);
+        if (!existing) continue;
+        if (validation.responseDigest !== existing.historical.responseDigest) continue;
         existing.validations.push(validation);
-        byKey.set(key, existing);
       }
-      return [...byKey.values()];
+      return [...byId.values()];
     },
   };
 }
@@ -139,19 +148,30 @@ export function recordFromObservedResponse({
   payerClass = "unclassified",
   capturedAt,
   recordId,
+  paidEvidenceId,
+  responseDigest,
+  responseByteLength,
 } = {}) {
   const bytes = Buffer.from(responseBytes || []);
-  const digest = digestResponseBytes(bytes);
+  const actualLength = Number.isInteger(responseByteLength) ? responseByteLength : bytes.length;
+  if (actualLength !== bytes.length && (typeof responseDigest !== "string" || !DIGEST_RE.test(responseDigest))) {
+    throw new Error("full response digest required when retained bytes are a prefix");
+  }
+  const retained = bytes.length > MAX_RESPONSE_BYTES ? bytes.subarray(0, MAX_RESPONSE_BYTES) : bytes;
+  const digest = typeof responseDigest === "string" && DIGEST_RE.test(responseDigest)
+    ? responseDigest
+    : digestResponseBytes(bytes);
   const evaluated = evaluateResponseBytes({
     method,
     resource,
-    responseBytes: bytes,
+    responseBytes: retained,
     merchantHttpStatus,
     settlementClass,
     settlementReference,
     payerClass,
     capturedAt,
     recordId,
+    responseByteLength: actualLength,
   });
   return canonicalizeValidationRecord({
     schemaVersion: SCHEMA,
@@ -159,9 +179,11 @@ export function recordFromObservedResponse({
     capturedAt: capturedAt || new Date().toISOString(),
     method,
     resource,
+    paidEvidenceId,
     contractName: evaluated.contractName || contractNameForResource(resource),
     responseDigest: digest,
-    responseByteLength: Math.min(bytes.length, MAX_RESPONSE_BYTES),
+    responseByteLength: actualLength,
+    retainedByteLength: retained.length,
     merchantHttpStatus: evaluated.merchantHttpStatus,
     settlementClass,
     settlementReference,
@@ -184,9 +206,11 @@ export function canonicalizeValidationRecord(value) {
     capturedAt: value.capturedAt,
     method: value.method,
     resource: value.resource,
+    paidEvidenceId: value.paidEvidenceId,
     contractName: value.contractName,
     responseDigest: value.responseDigest,
     responseByteLength: value.responseByteLength,
+    retainedByteLength: value.retainedByteLength,
     merchantHttpStatus: value.merchantHttpStatus,
     settlementClass: value.settlementClass,
     settlementReference: value.settlementReference ?? null,
@@ -224,7 +248,12 @@ export function assertValidationRecord(value) {
     throw new Error("invalid contractName");
   }
   if (!DIGEST_RE.test(value.responseDigest)) throw new Error("invalid responseDigest");
-  requireFiniteInteger(value.responseByteLength, "responseByteLength", 0, MAX_RESPONSE_BYTES);
+  if (!PAID_EVIDENCE_ID_PATTERN.test(value.paidEvidenceId)) throw new Error("invalid paidEvidenceId");
+  requireFiniteInteger(value.responseByteLength, "responseByteLength", 0, Number.MAX_SAFE_INTEGER);
+  requireFiniteInteger(value.retainedByteLength, "retainedByteLength", 0, MAX_RESPONSE_BYTES);
+  if (value.retainedByteLength > value.responseByteLength) {
+    throw new Error("retainedByteLength cannot exceed responseByteLength");
+  }
   if (value.merchantHttpStatus !== null) {
     requireFiniteInteger(value.merchantHttpStatus, "merchantHttpStatus", 100, 599);
   }

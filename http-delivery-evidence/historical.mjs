@@ -36,7 +36,8 @@ const PAYMENT_CLASSES = new Set([
   "independent",
 ]);
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+export const PAID_EVIDENCE_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+const UUID_RE = PAID_EVIDENCE_ID_PATTERN;
 const METHOD_RE = /^[A-Z][A-Z0-9-]{0,15}$/;
 const TX_RE = /^0x[0-9a-fA-F]{64}$/;
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
@@ -70,6 +71,7 @@ export function isHistoricalV1PaidSuccess(value, options = {}) {
   return true;
 }
 
+/** Diagnostic helper only. Must not be used as join Map identity. */
 export function joinKey({ method, resource, route, responseDigest }) {
   const path = resource || route;
   return `${String(method)}\0${String(path)}\0${String(responseDigest)}`;

@@ -304,10 +304,24 @@ test("mounted extract captures HTTP delivery evidence without changing v1 paid-s
   assert.equal(okValidation.responseDigest, digestResponseBytes(ok.bytes));
   const liveOk = liveV1.find((row) => row.responseDigest === okValidation.responseDigest);
   assert.ok(liveOk);
+  assert.equal(okValidation.paidEvidenceId, liveOk.id);
   assert.equal(joinKey(liveOk), joinKey({ method: "GET", resource: RESOURCES.EXTRACT, responseDigest: okValidation.responseDigest }));
 
+  const secondOk = await paidGet(merchant.base, "/extract", "https://ok.example/");
+  assert.equal(secondOk.paid.status, 200);
+  const v1After = await waitForRows(path.join(dataDir, PAID_EVIDENCE_FILENAME), liveV1.length + 2);
+  assert.equal(new Set(v1After.map((row) => row.id)).size, v1After.length);
+
   const joined = await openStore(dataDir).join({ currentValidatorVerdict: "validated" });
+  assert.equal(joined.length, v1After.length);
   const historical = joined.find((row) => row.historical?.id === prior.id);
   assert.equal(historical.historical.validatorVerdict, "not_checked");
   assert.equal(historical.validations.length, 0);
+  const firstJoined = joined.find((row) => row.historical.id === liveOk.id);
+  const secondJoined = joined.find((row) => row.historical.id !== liveOk.id && row.historical.id !== prior.id && row.historical.route === "/extract");
+  assert.ok(firstJoined);
+  assert.ok(secondJoined);
+  assert.notEqual(firstJoined.historical.id, secondJoined.historical.id);
+  assert.ok(firstJoined.validations.every((item) => item.paidEvidenceId === firstJoined.historical.id));
+  assert.ok(secondJoined.validations.every((item) => item.paidEvidenceId === secondJoined.historical.id));
 });

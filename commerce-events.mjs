@@ -11,6 +11,7 @@ import { normalizeExtractBatchInput } from "./extract-batch.mjs";
 import { bindMerchantHttpDeliveryContracts } from "./http-delivery-evidence/bind-merchant-contracts.mjs";
 import {
   isSupportedTarget,
+  MAX_RESPONSE_BYTES,
   openStore,
   recordFromObservedResponse,
   SETTLEMENT_CLASS,
@@ -468,9 +469,12 @@ function buildHttpDeliveryValidationRecord({
   method,
   resource,
   responseBytes,
+  responseDigest,
+  responseByteLength,
   merchantHttpStatus,
   settlementReference,
   payerClass,
+  paidEvidenceId,
 }) {
   try {
     if (!isSupportedTarget(method, resource)) return null;
@@ -479,10 +483,13 @@ function buildHttpDeliveryValidationRecord({
       method,
       resource,
       responseBytes,
+      responseDigest,
+      responseByteLength,
       merchantHttpStatus,
       settlementClass: httpDeliverySettlementClass(),
       settlementReference,
       payerClass: payerClass || "unclassified",
+      paidEvidenceId,
     });
   } catch {
     return null;
@@ -497,26 +504,32 @@ function responseBodyIsTransferred(method, statusCode) {
     && status !== 304;
 }
 
-function capturePaidEvidenceResponseDigest(res, method) {
+export function capturePaidEvidenceResponseDigest(res, method, resource = "") {
   const hash = createHash("sha256");
   hash.update(PAID_EVIDENCE_RESPONSE_DOMAIN, "utf8");
   const observed = [];
+  let retainedLength = 0;
+  let actualLength = 0;
   let valid = true;
   let finalized = false;
   let endObserved = false;
+  const retainBodies = isSupportedTarget(String(method || "GET").toUpperCase(), resource);
 
   const observe = (chunk, encoding) => {
     if (chunk === undefined || chunk === null || typeof chunk === "function") return;
     try {
-      const bytes = responseChunkBytes(chunk, encoding);
-      if (!bytes) {
+      const view = responseChunkBytes(chunk, encoding);
+      if (!view) {
         valid = false;
         return;
       }
-      if (responseBodyIsTransferred(method, res.statusCode)) {
-        hash.update(bytes);
-        observed.push(bytes);
-      }
+      if (!responseBodyIsTransferred(method, res.statusCode)) return;
+      hash.update(view);
+      actualLength += view.length;
+      if (!retainBodies || retainedLength >= MAX_RESPONSE_BYTES) return;
+      const take = Math.min(view.length, MAX_RESPONSE_BYTES - retainedLength);
+      observed.push(Buffer.from(view.subarray(0, take)));
+      retainedLength += take;
     } catch {
       valid = false;
     }
@@ -566,7 +579,9 @@ function capturePaidEvidenceResponseDigest(res, method) {
     try {
       return {
         digest: hash.digest("hex"),
-        bytes: Buffer.concat(observed),
+        bytes: observed.length ? Buffer.concat(observed, retainedLength) : Buffer.alloc(0),
+        byteLength: actualLength,
+        retainedByteLength: retainedLength,
       };
     } catch {
       return null;
@@ -3190,7 +3205,7 @@ export function createCommerceTelemetry({
       };
     }
     const finishPaidEvidenceResponseDigest = paidEvidenceRequest
-      ? capturePaidEvidenceResponseDigest(res, paidEvidenceRequest.method)
+      ? capturePaidEvidenceResponseDigest(res, paidEvidenceRequest.method, route.route)
       : null;
 
     res.once("finish", () => {
@@ -3304,9 +3319,12 @@ export function createCommerceTelemetry({
             method: paidEvidenceRequest.method,
             resource: route.route,
             responseBytes: captured.bytes,
+            responseDigest: captured.digest,
+            responseByteLength: captured.byteLength,
             merchantHttpStatus: status,
             settlementReference: settlement?.reference || null,
             payerClass: paidEvidenceRequest.payerClass,
+            paidEvidenceId: eventId,
           });
         }
       }

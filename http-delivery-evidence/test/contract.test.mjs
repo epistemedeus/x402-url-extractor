@@ -215,6 +215,9 @@ test("bounded oversized capture is never full_bounded_capture", () => {
     responseBytes: huge,
     merchantHttpStatus: 200,
     settlementClass: SETTLEMENT_CLASS.SIMULATED,
+    paidEvidenceId: "11111111-1111-4111-8111-111111111111",
   });
-  assert.equal(record.responseByteLength, MAX_RESPONSE_BYTES);
+  assert.equal(record.responseByteLength, MAX_RESPONSE_BYTES + 1);
+  assert.equal(record.retainedByteLength, MAX_RESPONSE_BYTES);
+  assert.notEqual(record.deliveryClass, DELIVERY.FULL_BOUNDED_CAPTURE);
 });

@@ -21,18 +21,36 @@ is a pin-time snapshot for equivalence tests. Production binds the live exports.
 
 ## Capture
 
-After a `paid_success` v1 row is written, the merchant hashes the same
-`res.write`/`end` bytes already used for `responseDigest` and appends
-`http-response-validation.v1.ndjson`. Measurement failure never starts payment,
-changes amount, turns an error into success, or retries unknown settlement.
+After a `paid_success` v1 row is written, the merchant hashes every transferred
+byte into the same `responseDigest` and may retain a **copied** prefix of at
+most 10 MiB for supported routes only (`GET /extract`, `GET /read`,
+`POST /extract/batch`, `POST /lockfile-pin-delta`). Unsupported paid routes
+hash without retaining body bytes.
 
-Join: `method` + `route`/`resource` + `responseDigest`.
+Fields:
 
-Old records without a sibling row remain `not_checked` / unknown. No backfill
-of private bodies.
+- `responseByteLength` — actual transferred length
+- `retainedByteLength` — stored prefix length (`<= 10 MiB`)
+- `responseDigest` — digest of the **full** transferred body, never of a prefix
+- `paidEvidenceId` — the v1 paid-success `id` (UUID)
+
+Measurement failure never starts payment, changes amount, turns an error into
+success, or retries unknown settlement.
+
+## Identity and join
+
+Each historical v1 row is identified by its durable event `id`. `join()` emits
+**one row per historical `id`**. `joinKey(method, route, responseDigest)` is
+diagnostic only and must not drop purchases that share a body digest.
+
+A validation attaches only when `paidEvidenceId === historical.id` **and**
+`responseDigest === historical.responseDigest`. Body-only matches, missing ids,
+or conflicting ids never borrow another purchase's validation. Same-id replay
+may accumulate observations for that id. Different ids with identical bodies
+stay separate. Unmatched historical rows remain `not_checked` / unknown.
 
 ## Migration
 
-- v1 paid-success file is unchanged (`commerce-paid-success-evidence.ndjson`).
+- v1 paid-success file is never rewritten (`commerce-paid-success-evidence.ndjson`).
 - New optional file: `http-response-validation.v1.ndjson`.
 - Do not add validator fields to v1 rows (that would drop historical records).
