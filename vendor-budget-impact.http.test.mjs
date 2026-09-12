@@ -59,7 +59,7 @@ function unusedPort() {
   });
 }
 
-async function startFakeFacilitator({ settleSuccess = true, verifyValid = true, payer = SYNTH_PAYER } = {}) {
+async function startFakeFacilitator({ settleSuccess = true, verifyValid = true, payer = SYNTH_PAYER, onSettle = null } = {}) {
   const calls = { settle: 0, supported: 0, verify: 0 };
   const server = createHttpServer((req, res) => {
     const send = (status, body) => {
@@ -76,6 +76,7 @@ async function startFakeFacilitator({ settleSuccess = true, verifyValid = true, 
     }
     if (req.method === "POST" && req.url === "/settle") {
       calls.settle += 1;
+      if (onSettle) return onSettle({ send, calls });
       if (!settleSuccess) return send(200, { success: false, errorReason: "unknown_settlement", transaction: "", network: NETWORK });
       return send(200, { success: true, payer, transaction: `0x${"3".repeat(64)}`, network: NETWORK });
     }
@@ -708,10 +709,132 @@ test("unknown settlement is not retried", { timeout: 60_000 }, async (t) => {
   const payment = testPayment(challenge, { id: "vendor_settle_1234567890" });
   const paid = await fetch(`${merchant.base}${VENDOR_BUDGET_IMPACT_PATH}`, jsonPost(body, { "payment-signature": payment }));
   assert.notEqual(paid.status, 500);
-  await paid.text();
+  const initial = await paid.json();
+  assert.equal(initial.charged, null);
+  assert.equal(initial.settlementConfirmed, false);
+  assert.equal(initial.delivery.charged, null);
+  assert.ok(initial.delivery.engine.fieldChanges.length > 0);
   assert.equal(facilitator.calls.settle, 1);
+  const store = JSON.parse(await readFile(path.join(dataDir, "idempotency-replay.json"), "utf8"));
+  assert.ok(store.records[0].precomputedBodyBase64);
+  await stopChild(merchant.child);
+  merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
   const second = await fetch(`${merchant.base}${VENDOR_BUDGET_IMPACT_PATH}`, jsonPost(body, { "payment-signature": payment }));
   assert.equal(facilitator.calls.settle, 1);
   assert.equal(second.status, 503);
-  await second.text();
+  const recovered = await second.json();
+  assert.equal(recovered.charged, null);
+  assert.equal(recovered.newSettlementAttempt, false);
+  assert.equal(recovered.settlementConfirmed, false);
+  assert.deepEqual(recovered.delivery, initial.delivery);
+  const changed = await fetch(`${merchant.base}${VENDOR_BUDGET_IMPACT_PATH}`, jsonPost(
+    { before: callerBefore, after: callerPrice }, { "payment-signature": payment }));
+  assert.equal(changed.status, 409);
+  assert.equal((await changed.json()).delivery, undefined);
+  assert.equal(facilitator.calls.settle, 1);
+});
+test("response expansion preserves full evidence or refuses without a settlement", { timeout: 60_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "vendor-budget-expansion-"));
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => {
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
+  const before = { rows: Array.from({length:250},(_,i)=>({field:`field-${i}`,value:1,unit:"USD"})) };
+  const body = {before,after:{rows:before.rows.map(row=>({...row,value:2}))}};
+  const challenge = decodePaymentRequired(await fetch(`${merchant.base}${VENDOR_BUDGET_IMPACT_PATH}`, jsonPost(body)));
+  const payment = testPayment(challenge, {id:"vendor_expansion_123456789"});
+  const response = await fetch(`${merchant.base}${VENDOR_BUDGET_IMPACT_PATH}`, jsonPost(body, {"payment-signature":payment}));
+  const result = await response.json();
+  assert.ok([413,503].includes(response.status),JSON.stringify(result));
+  assert.equal(result.charged,false);
+  assert.ok(result.engine == null);
+  assert.equal(facilitator.calls.settle,0);
+  assert.ok(Buffer.byteLength(JSON.stringify(result))<=65536);
+});
+test("canonical vendor path is required before verification and settlement", {timeout:60000}, async (t) => {
+  const dataDir=await mkdtemp(path.join(tmpdir(),"vendor-budget-alias-"));
+  const facilitator=await startFakeFacilitator();
+  let merchant;
+  t.after(async()=>{if(merchant)await stopChild(merchant.child);await facilitator.close();await rm(dataDir,{recursive:true,force:true});});
+  merchant=await startMerchant({dataDir,facilitatorUrl:facilitator.url});
+  const body={before:callerBefore,after:callerAfter};
+  const challenge=decodePaymentRequired(await fetch(merchant.base+VENDOR_BUDGET_IMPACT_PATH,jsonPost(body)));
+  const payment=testPayment(challenge,{id:"vendor_alias_1234567890"});
+  for(const alias of ["/vendor-budget-impact/","/VENDOR-BUDGET-IMPACT"]) {
+    for(const headers of [{},{"payment-signature":payment}]) {
+      const response=await fetch(merchant.base+alias,jsonPost(body,headers));
+      assert.equal(response.status,400);
+      assert.equal((await response.json()).code,"noncanonical_vendor_budget_path");
+    }
+  }
+  assert.equal(facilitator.calls.verify,0);
+  assert.equal(facilitator.calls.settle,0);
+});
+test("unbound and explicitly rebound vendor preflight use pricing admission without a wallet", {timeout:60000}, async (t) => {
+  const dataDir=await mkdtemp(path.join(tmpdir(),"vendor-budget-preflight-"));
+  const facilitator=await startFakeFacilitator();
+  let merchant;
+  t.after(async()=>{if(merchant)await stopChild(merchant.child);await facilitator.close();await rm(dataDir,{recursive:true,force:true});});
+  merchant=await startMerchant({dataDir,facilitatorUrl:facilitator.url});
+  const {runPreflight}=await import("./examples/customer-x402/src/preflight.mjs");
+  const authorization=JSON.parse(await readFile(path.join(cwd,"examples/customer-x402/fixtures/authorization-vendor-budget.json"),"utf8"));
+  for(const options of [
+    {method:"POST",body:authorization.body},
+    {method:"POST",body:JSON.stringify(authorization.body)},
+    {authorization,body:authorization.body},
+  ]) {
+    const result=await runPreflight({url:"https://agents.samedaydesk.com/vendor-budget-impact",
+      fetchImpl:proxyToMerchant(merchant.base),...options});
+    assert.equal(result.outcome,"preflight_ok");
+    assert.equal(result.walletAccessed,false);
+    assert.equal(result.paymentSigned,false);
+  }
+  assert.equal(facilitator.calls.verify,0);
+  assert.equal(facilitator.calls.settle,0);
+});
+test("HTTP overload refuses excess workers without settling those requests", {timeout:60000}, async (t) => {
+  const dataDir=await mkdtemp(path.join(tmpdir(),"vendor-budget-capacity-"));
+  const facilitator=await startFakeFacilitator({payer:buyer.address});
+  let merchant;
+  t.after(async()=>{if(merchant)await stopChild(merchant.child);await facilitator.close();await rm(dataDir,{recursive:true,force:true});});
+  merchant=await startMerchant({dataDir,facilitatorUrl:facilitator.url,
+    extraEnv:{VENDOR_BUDGET_IMPACT_MAX_WORKERS:"2",VENDOR_BUDGET_IMPACT_WORKER_HOLD_MS:"1000"}});
+  const responses=await Promise.all(Array.from({length:6},()=>paidWithOfficialFetch(merchant.base,{before:callerBefore,after:callerAfter})));
+  const values=await Promise.all(responses.map(response=>response.json()));
+  assert.equal(responses.filter(response=>response.status===200).length,2);
+  assert.equal(values.filter(value=>value.transport==="busy" && value.charged===false).length,4);
+  assert.equal(facilitator.calls.settle,2);
+});
+test("precomputed delivery survives a hard crash after facilitator mutation starts", {timeout:60000}, async (t) => {
+  const dataDir=await mkdtemp(path.join(tmpdir(),"vendor-budget-crash-window-"));
+  let merchant;
+  let preMutationDurable = false;
+  const facilitator=await startFakeFacilitator({onSettle:({send})=>{
+    const store=JSON.parse(readFileSync(path.join(dataDir,"idempotency-replay.json"),"utf8"));
+    preMutationDurable = store.records[0].settlementAttempted === true && Boolean(store.records[0].precomputedBodyBase64);
+    merchant.child.kill("SIGKILL");
+    return send(200,{success:true,payer:SYNTH_PAYER,transaction:`0x${"3".repeat(64)}`,network:NETWORK});
+  }});
+  t.after(async()=>{if(merchant)await stopChild(merchant.child);await facilitator.close();await rm(dataDir,{recursive:true,force:true});});
+  merchant=await startMerchant({dataDir,facilitatorUrl:facilitator.url});
+  const body={before:callerBefore,after:callerAfter};
+  const challenge=decodePaymentRequired(await fetch(merchant.base+VENDOR_BUDGET_IMPACT_PATH,jsonPost(body)));
+  const payment=testPayment(challenge,{id:"vendor_hard_crash_123456789"});
+  await assert.rejects(fetch(merchant.base+VENDOR_BUDGET_IMPACT_PATH,jsonPost(body,{"payment-signature":payment})));
+  assert.equal(preMutationDurable,true);
+  await stopChild(merchant.child);
+  merchant=await startMerchant({dataDir,facilitatorUrl:facilitator.url});
+  const retry=await fetch(merchant.base+VENDOR_BUDGET_IMPACT_PATH,jsonPost(body,{"payment-signature":payment}));
+  assert.equal(retry.status,503);
+  const result=await retry.json();
+  assert.equal(result.charged,null);
+  assert.equal(result.settlementConfirmed,false);
+  assert.equal(result.newSettlementAttempt,false);
+  assert.equal(result.delivery.charged,null);
+  assert.ok(result.delivery.engine.fieldChanges.length>0);
+  assert.equal(facilitator.calls.settle,1);
 });

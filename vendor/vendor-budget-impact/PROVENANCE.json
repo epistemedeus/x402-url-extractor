@@ -5,7 +5,9 @@
     "repo": "epistemedeus/samedaydesk",
     "sha": "b23260e6a2b74452075f73da1631da24d8ae6906",
     "comparePath": "experiments/s134-record-jobs/modules/pricing-table-change/",
-    "impactPath": "useful-jobs 1.4.0 apps/vendor-budget-impact/",
+    "impactPath": "server/paid-useful-jobs/release/apps/vendor-budget-impact/cli.mjs",
+    "impactSha": "485a5023843f27bb920ad2a26ad0631fa1bbb4bd",
+    "impactProjection": "candidate useful-jobs 1.4.1 membership, raw-value, scope and finite-delta mapping; no CLI filesystem wrapper",
     "publicPr115": "dacb9950ef3e1ffcf9151c30324fe1f1cb209e19",
     "usefulJobsArchive": {
       "name": "useful-jobs-1.4.0.tar.gz",

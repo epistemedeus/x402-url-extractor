@@ -7,7 +7,8 @@ compares npm lockfiles. Neither is vendor-budget impact.
 W5 selected `vendor-budget-impact` as the second useful supplied-input offer.
 The SDS kit engine is a local CLI over `record-repeat`. This change vendors
 only the deterministic `pricing-table-change` compare plus the useful-jobs
-1.4.0 impact mapping, then adds a flag-gated HTTP adapter on the incumbent
+1.4.0 impact mapping, with the candidate 1.4.1 membership/finite-delta repair
+from SDS `485a5023843f27bb920ad2a26ad0631fa1bbb4bd`, then adds a flag-gated HTTP adapter on the incumbent
 merchant payment, receipt, replay, OpenAPI, and MCP stack. Initial live
 release accepts x402 only; existing MPP routes stay registered.
 

@@ -191,7 +191,7 @@ async function paidOnce(base, body, id) {
   return { status: paid.status, wallMs, bytes: Buffer.byteLength(text), body: JSON.parse(text) };
 }
 
-test("full worker execute and mounted HTTP cost stay far below $0.005", { timeout: 120_000 }, async (t) => {
+test("bounded worker execution and mounted HTTP produce measured cost inputs", { timeout: 120_000 }, async (t) => {
   const ordinary = { before: callerBefore, after: callerAfter };
   const maximal = { before: maxSnapshot(256), after: { rows: maxSnapshot(256).rows.map((row, i) => (i === 0 ? { ...row, value: row.value + 1 } : row)) } };
 
@@ -241,15 +241,23 @@ test("full worker execute and mounted HTTP cost stay far below $0.005", { timeou
       peakRssKb = Math.max(peakRssKb, treeRssKb(merchant.child.pid));
     }, 10);
     const started = performance.now();
+    const settledBefore = facilitator.calls.settle;
     const results = await Promise.all(Array.from({ length: n }, (_, i) => (
       paidOnce(merchant.base, ordinary, `${label}_${String(i).padStart(2, "0")}_1234567890`)
     )));
     const wallMs = performance.now() - started;
     clearInterval(sampler);
     peakRssKb = Math.max(peakRssKb, treeRssKb(merchant.child.pid));
-    assert.equal(results.every((row) => row.status === 200), true, label);
+    const successful = results.filter(row => row.status === 200 && row.body.charged === true).length;
+    const busy = results.filter(row => row.status === 503 && row.body.transport === "busy" && row.body.charged === false).length;
+    assert.equal(successful + busy, n, label);
+    assert.ok(successful > 0, label);
+    assert.equal(facilitator.calls.settle - settledBefore, successful, "busy requests never settle");
     return {
       n,
+      successful,
+      busy,
+      maxWorkersPerProcess: 4,
       totalWallMs: Number(wallMs.toFixed(2)),
       meanWallMs: Number((results.reduce((sum, row) => sum + row.wallMs, 0) / n).toFixed(2)),
       maxWallMs: Number(Math.max(...results.map((row) => row.wallMs)).toFixed(2)),
@@ -304,7 +312,10 @@ test("full worker execute and mounted HTTP cost stay far below $0.005", { timeou
     keepPriceUsd: "0.005",
     provenProfit: false,
   };
-  await writeFile(path.join(cwd, "docs/wave5-paid-vendor-budget/cost-measure.json"), `${JSON.stringify(report, null, 2)}\n`);
+  // Tests must not overwrite the retained baseline/Root measurement.
+  if (process.env.VENDOR_BUDGET_COST_RECEIPT) {
+    await writeFile(process.env.VENDOR_BUDGET_COST_RECEIPT, `${JSON.stringify(report, null, 2)}\n`, { flag: "wx" });
+  }
   assert.equal(workerOrdinary.wallMs < 250, true, "worker ordinary should stay well under a second");
   assert.equal(cohort12.maxWallMs < 5_000, true);
   assert.equal(estimate.railwayCpuUsd + estimate.railwayEgressUsd < 0.005, true);

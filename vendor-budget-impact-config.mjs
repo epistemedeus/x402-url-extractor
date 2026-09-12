@@ -8,6 +8,7 @@ export const VENDOR_BUDGET_IMPACT_ENGINE_REPO = "epistemedeus/samedaydesk";
 export const VENDOR_BUDGET_IMPACT_ENGINE_SHA = "b23260e6a2b74452075f73da1631da24d8ae6906";
 export const VENDOR_BUDGET_IMPACT_ENGINE_PATH = "experiments/s134-record-jobs/modules/pricing-table-change/";
 export const VENDOR_BUDGET_IMPACT_CATALOG_SHA = "dacb9950ef3e1ffcf9151c30324fe1f1cb209e19";
+export const VENDOR_BUDGET_IMPACT_MAPPING_SHA = "485a5023843f27bb920ad2a26ad0631fa1bbb4bd";
 export const VENDOR_BUDGET_IMPACT_ARCHIVE_SHA256 = "2b1949189f0ad2e3c1bd5f7a43f7eda800fd5f0dc3a395415689feee0419ff4f";
 
 export const DEFAULT_VENDOR_BUDGET_IMPACT_PRICE_USD = "$0.005";
@@ -22,6 +23,7 @@ export const VENDOR_BUDGET_IMPACT_MAX_JSON_NODES = 8_000;
 export const VENDOR_BUDGET_IMPACT_MAX_STRING_CHARS = 256;
 export const VENDOR_BUDGET_IMPACT_TIMEOUT_MS = 5_000;
 export const VENDOR_BUDGET_IMPACT_WORKER_KILL_GRACE_MS = 500;
+export const VENDOR_BUDGET_IMPACT_MAX_WORKERS = 4;
 
 export const VENDOR_BUDGET_IMPACT_PAYMENT_PROTOCOLS = Object.freeze(["x402"]);
 
@@ -99,6 +101,7 @@ export function vendorBudgetImpactLimits(env = process.env) {
     maxJsonNodes: boundedCeiling(env, "VENDOR_BUDGET_IMPACT_MAX_JSON_NODES", VENDOR_BUDGET_IMPACT_MAX_JSON_NODES),
     maxStringChars: boundedCeiling(env, "VENDOR_BUDGET_IMPACT_MAX_STRING_CHARS", VENDOR_BUDGET_IMPACT_MAX_STRING_CHARS),
     timeoutMs: boundedCeiling(env, "VENDOR_BUDGET_IMPACT_TIMEOUT_MS", VENDOR_BUDGET_IMPACT_TIMEOUT_MS),
+    maxWorkers: boundedCeiling(env, "VENDOR_BUDGET_IMPACT_MAX_WORKERS", VENDOR_BUDGET_IMPACT_MAX_WORKERS),
   });
 }
 

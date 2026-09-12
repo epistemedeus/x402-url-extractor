@@ -8,7 +8,8 @@ This directory is a bounded source projection of
   (SDS PR74 / useful-jobs 1.4.0 overlay)
 
   compare: experiments/s134-record-jobs/modules/pricing-table-change/
-  impact mapping: useful-jobs 1.4.0 apps/vendor-budget-impact/cli.mjs
+  impact mapping: server/paid-useful-jobs/release/apps/vendor-budget-impact/cli.mjs
+  mapping SHA 485a5023843f27bb920ad2a26ad0631fa1bbb4bd (candidate useful-jobs 1.4.1)
   public kit pin: dacb9950ef3e1ffcf9151c30324fe1f1cb209e19
   useful-jobs-1.4.0.tar.gz sha256
     2b1949189f0ad2e3c1bd5f7a43f7eda800fd5f0dc3a395415689feee0419ff4f

@@ -263,6 +263,14 @@ function admitVendorBudgetSnapshot(value, label) {
   if (!Array.isArray(value.rows) || value.rows.length === 0) {
     fail(`${label} must include a non-empty rows array`, label);
   }
+  if (value.rows.length > 256) fail(`${label} exceeds 256 rows`, label);
+  if (Buffer.byteLength(JSON.stringify(value) + "\n") > 32 * 1024) fail(`${label} exceeds snapshot byte ceiling`, label);
+  for (const key of ["label", "note"]) {
+    if (value[key] !== undefined && (typeof value[key] !== "string" || value[key].length > 256)) {
+      fail(`${label}.${key} must be a string of at most 256 characters`, label);
+    }
+  }
+  if (value.label?.trim().toUpperCase() === "SAMPLE") fail("SAMPLE snapshot is not customer pricing", label);
   value.rows.forEach((row, index) => {
     if (!row || typeof row !== "object" || Array.isArray(row)) {
       fail(`${label} row ${index} must be an object`, label);
@@ -278,11 +286,12 @@ function admitVendorBudgetSnapshot(value, label) {
     if (typeof row.unit !== "string" || !row.unit.trim()) {
       fail(`${label} row ${index} unit must be a non-empty string`, label);
     }
+    if (row.field.length > 256 || row.unit.length > 256) fail(`${label} row ${index} field/unit exceeds 256 characters`, label);
   });
   return value;
 }
 
-function admitVendorBudgetBody(input) {
+export function admitVendorBudgetBody(input) {
   let bodyRaw;
   let parsed;
   if (typeof input.bodyRaw === "string") {

@@ -22,6 +22,7 @@ import {
   VENDOR_BUDGET_IMPACT_ENGINE_SCHEMA,
   VENDOR_BUDGET_IMPACT_ENGINE_SHA,
   VENDOR_BUDGET_IMPACT_MAX_ROWS,
+  VENDOR_BUDGET_IMPACT_MAPPING_SHA,
   VENDOR_BUDGET_IMPACT_METHOD,
   VENDOR_BUDGET_IMPACT_PATH,
   VENDOR_BUDGET_IMPACT_PAYMENT_PROTOCOLS,
@@ -164,7 +165,7 @@ function admitBoundedString(value, role, limits) {
   return value;
 }
 
-function admitPricingRow(row, role, index) {
+function admitPricingRow(row, role, index, limits) {
   if (!row || typeof row !== "object" || Array.isArray(row)) {
     inputError(`${role} row ${index} must be an object`);
   }
@@ -178,6 +179,9 @@ function admitPricingRow(row, role, index) {
   }
   if (typeof row.unit !== "string" || !row.unit.trim()) {
     inputError(`${role} row ${index} unit must be a non-empty string`, 400, "input-schema-mismatch");
+  }
+  if (row.field.length > limits.maxStringChars || row.unit.length > limits.maxStringChars) {
+    inputError(`${role} row ${index} field/unit exceeds ${limits.maxStringChars} characters`, 400, "string_limit");
   }
   return Object.freeze({
     field: row.field.trim(),
@@ -222,7 +226,7 @@ function admitSnapshot(value, role, limits) {
   if (value.rows.length > limits.maxRows) {
     inputError(`${role} exceeds server row ceiling ${limits.maxRows}`, 413, "row_limit");
   }
-  const rows = value.rows.map((row, index) => admitPricingRow(row, role, index));
+  const rows = value.rows.map((row, index) => admitPricingRow(row, role, index, limits));
   const snapshot = Object.freeze({
     ...(value.label !== undefined ? { label: value.label } : {}),
     ...(value.note !== undefined ? { note: value.note } : {}),
@@ -310,6 +314,8 @@ export function engineProvenance() {
     sha: VENDOR_BUDGET_IMPACT_ENGINE_SHA,
     path: VENDOR_BUDGET_IMPACT_ENGINE_PATH,
     catalogSha: VENDOR_BUDGET_IMPACT_CATALOG_SHA,
+    mappingSha: VENDOR_BUDGET_IMPACT_MAPPING_SHA,
+    mappingPath: "server/paid-useful-jobs/release/apps/vendor-budget-impact/cli.mjs",
     archiveSha256: VENDOR_BUDGET_IMPACT_ARCHIVE_SHA256,
   });
 }
@@ -326,6 +332,7 @@ function publicEngineReport(report, impact) {
     summary: impact.summary,
     actions: impact.actions,
     gaps: impact.gaps,
+    scope: impact.scope,
     counts: report.counts,
     added: report.added,
     removed: report.removed,
@@ -451,7 +458,11 @@ export function validateComputedVendorBudgetImpact(engine, admitted) {
   if (status === "actionable" && (counts.conflicting > 0 || counts.unknown > 0)) {
     return { ok: false, code: "output-status-invalid", error: "actionable report cannot include conflicting or unknown rows" };
   }
-  if (status === "partial" && counts.conflicting === 0 && counts.unknown === 0) {
+  const numericDeltaOverflow = (engine.fieldChanges || []).some(row => !Number.isFinite(row.afterValue - row.beforeValue));
+  if (status === "actionable" && numericDeltaOverflow) {
+    return { ok: false, code: "output-unit-economics", error: "non-finite price delta must remain partial" };
+  }
+  if (status === "partial" && counts.conflicting === 0 && counts.unknown === 0 && !numericDeltaOverflow) {
     return { ok: false, code: "output-status-invalid", error: "partial report requires conflicting or unknown rows" };
   }
   return { ok: true };
@@ -503,22 +514,16 @@ export function formatVendorBudgetImpactResult(report, impact, {
       maxRows: limits.maxRows,
     },
   };
-  if (Buffer.byteLength(JSON.stringify(result), "utf8") > limits.maxResponseBytes) {
-    if (result.engine) {
-      result.engine = {
-        ...result.engine,
-        added: [],
-        removed: [],
-        fieldChanges: [],
-        unitChanges: [],
-        conflicting: [],
-        unknown: [],
-        gaps: [...(result.engine.gaps || []), "response truncated to replay ceiling"],
-      };
-    }
+  // Reserve room for the settlement-unknown recovery envelope around this result.
+  const deliveryCeiling = Math.max(0, limits.maxResponseBytes - 1024);
+  if (Buffer.byteLength(JSON.stringify(result), "utf8") > deliveryCeiling) {
+    // Markdown is redundant. Evidence arrays are the product and must never
+    // be erased while counts, ok and charged still claim a complete report.
     result.markdown = null;
     result.markdownOmitted = true;
-    result.digest = result.engine ? sha256Json(result.engine) : null;
+  }
+  if (engine && Buffer.byteLength(JSON.stringify(result), "utf8") > deliveryCeiling) {
+    inputError("complete comparison exceeds response ceiling; reduce rows", 413, "output_size_limit");
   }
   return result;
 }
@@ -578,6 +583,9 @@ export function runVendorBudgetCompareWorker({ before, after, env = process.env,
   const limits = vendorBudgetImpactLimits(env);
   const budget = Math.min(timeoutMs ?? limits.timeoutMs, limits.timeoutMs);
   const workerPath = resolveVendorBudgetWorkerPath(env);
+  if (ownedWorkers.size >= limits.maxWorkers) {
+    return Promise.reject(Object.assign(new Error("vendor-budget workers at capacity"), { code: "busy", transport: "busy" }));
+  }
   return new Promise((resolvePromise, reject) => {
     let settled = false;
     const child = trackWorker(spawn(process.execPath, [workerPath], {
@@ -674,6 +682,7 @@ export async function executeVendorBudgetImpact({
     before: admitted.before.snapshot,
     after: admitted.after.snapshot,
   }));
+  if (admittedBodyBytes > limits.maxRequestBytes) inputError("request exceeds server byte ceiling", 413, "payload_too_large");
   try {
     const expected = compareAdmittedSnapshots(admitted.before.snapshot, admitted.after.snapshot);
     const computed = inProcess
@@ -804,6 +813,9 @@ export function mountVendorBudgetImpactParser(app, { env = process.env } = {}) {
   if (!isVendorBudgetImpactEnabled(env)) return app;
   const limits = vendorBudgetImpactLimits(env);
   app.post(VENDOR_BUDGET_IMPACT_PATH, async (req, res, next) => {
+    if (req.path !== VENDOR_BUDGET_IMPACT_PATH) {
+      return unchargedError(res, new VendorBudgetImpactInputError("use the exact canonical /vendor-budget-impact path", { code: "noncanonical_vendor_budget_path" }));
+    }
     try {
       const raw = await readBoundedJsonBody(req, { maxBytes: limits.maxRequestBytes, timeoutMs: limits.timeoutMs });
       req.rawBody = raw;
@@ -868,6 +880,9 @@ export async function serveVendorBudgetImpact(req, res) {
       rawBody: req.rawBody,
     });
     if (result.transport !== "ok") return failHttp(result, result.transport);
+    // Replay persists this opt-in candidate before the facilitator mutation.
+    // It is not a settled success until the existing paywall supplies proof.
+    res.locals.replayPrecomputedDelivery = result;
     return res.status(200).json(result);
   } catch (error) {
     if (error instanceof VendorBudgetImpactInputError) return unchargedError(res, error);
@@ -912,9 +927,9 @@ export function vendorBudgetImpactInputSchema() {
               additionalProperties: false,
               required: ["field", "value", "unit"],
               properties: {
-                field: { type: "string", minLength: 1 },
+                field: { type: "string", minLength: 1, maxLength: 256 },
                 value: { type: "number" },
-                unit: { type: "string", minLength: 1 },
+                unit: { type: "string", minLength: 1, maxLength: 256 },
               },
             },
           },
@@ -937,9 +952,9 @@ export function vendorBudgetImpactInputSchema() {
               additionalProperties: false,
               required: ["field", "value", "unit"],
               properties: {
-                field: { type: "string", minLength: 1 },
+                field: { type: "string", minLength: 1, maxLength: 256 },
                 value: { type: "number" },
-                unit: { type: "string", minLength: 1 },
+                unit: { type: "string", minLength: 1, maxLength: 256 },
               },
             },
           },
@@ -974,7 +989,7 @@ export function vendorBudgetImpactOutputSchema() {
       },
       charged: { type: "boolean" },
       analysis: { type: "string", enum: ["actionable", "informational", "partial", "not-run"] },
-      transport: { type: "string", enum: ["ok", "timeout", "engine-crash", "internal-error", "rejected"] },
+      transport: { type: "string", enum: ["ok", "timeout", "engine-crash", "internal-error", "rejected", "busy"] },
       engine: { type: ["object", "null"] },
       markdown: { type: ["string", "null"] },
       markdownOmitted: { type: "boolean" },
@@ -1000,7 +1015,7 @@ export const vendorBudgetImpactMcpOutputSchema = z.object({
   }).strict(),
   charged: z.boolean(),
   analysis: z.enum(["actionable", "informational", "partial", "not-run"]),
-  transport: z.enum(["ok", "timeout", "engine-crash", "internal-error", "rejected"]),
+  transport: z.enum(["ok", "timeout", "engine-crash", "internal-error", "rejected", "busy"]),
   engine: z.record(z.any()).nullable(),
   markdown: z.string().nullable().optional(),
   markdownOmitted: z.boolean().optional(),
@@ -1072,7 +1087,7 @@ export function vendorBudgetImpactOpenApiPath({ paymentInfo, env = process.env }
         "409": { description: "payment identifier already bound to a different request body, payer, credential, or payment terms" },
         "413": { description: "JSON request or snapshot exceeds the server byte ceiling; no authorization" },
         "415": { description: "Content-Type must be JSON" },
-        "503": { description: "engine timeout, crash, oversized worker output, nonzero worker exit, or unresolved settlement. Not a successful compare. x402 execute-before-settle: HTTP >=400 cancels settlement (charged false). This route does not accept MPP and does not sell an owed-retry." },
+        "503": { description: "engine timeout, crash, capacity, oversized worker output, or unresolved settlement. x402 execute-before-settle: engine failures prevent settlement (charged false). An attempted but unconfirmed settlement remains charged null and may carry a retained comparison, not confirmed paid fulfillment. Exact-credential recovery never settles again. MPP is not accepted." },
       },
       "x-payment-info": paymentInfo,
     },

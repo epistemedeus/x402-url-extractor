@@ -23,7 +23,14 @@ CDP x402 Facilitator from
 verify is free. First 1,000 onchain facilitator transactions per month are
 `$0.00`, then `$0.001` per onchain settle for `exact`.
 
-## Measured on this host (2026-09-12)
+## Pre-fix measurement on this host (2026-09-12)
+
+The table below is historical evidence from the admitted PR61 implementation,
+not a measurement of the corrected concurrency and output contract. The Root
+replay `cost-measure.json` is preserved unchanged. The current implementation
+admits at most four workers per merchant process and rejects excess requests
+without settlement. Final release-gate measurements, when explicitly requested,
+write a separate `cost-measure-codex.json`; tests no longer overwrite evidence.
 
 Pure-function in-process compare is not the live path. Live calls spawn an
 isolated Node worker. Receipt: `cost-measure.json`.

@@ -51,6 +51,7 @@ async function startFakeFacilitator({ payer }) {
     }
     if (req.method === "POST" && req.url === "/settle") {
       calls.settle += 1;
+      if (calls.failSettlement) return send(200, { success: false, errorReason: "unknown_settlement", transaction: "", network: NETWORK });
       return send(200, {
         success: true,
         payer,
@@ -209,7 +210,13 @@ globalThis.fetch = async (input, init) => {
           if (Array.isArray(value)) value.forEach((entry) => responseHeaders.append(name, entry));
           else responseHeaders.set(name, value);
         }
-        resolve(new Response(Buffer.concat(chunks), { status: res.statusCode || 500, headers: responseHeaders }));
+        let bytes = Buffer.concat(chunks);
+        if (pay && res.statusCode === 200 && process.env.CUSTOMER_X402_TEST_RESPONSE_MODE === "unrelated") {
+          bytes = Buffer.from(JSON.stringify({ok:true,product:"other",schemaVersion:"other",charged:false,
+            analysis:"not-run",quote:{amountAtomic:"5000"}}));
+          responseHeaders.delete("content-length");
+        }
+        resolve(new Response(bytes, { status: res.statusCode || 500, headers: responseHeaders }));
       });
     });
     req.on("error", reject);
@@ -394,4 +401,23 @@ test("CLI inspect then --approve against mounted merchant; refuse, replay, concu
   assert.deepEqual(analyses, ["actionable", "informational"]);
   assert.notEqual(firstJson.evidence.bodyDigest, secondJson.evidence.bodyDigest);
   assert.equal(facilitator.calls.settle, 3);
+
+  const unrelated = await runCli(["--approve", "--authorization", changePath, "--private-key-env", KEY_ENV],
+    {env:{...cliEnv,CUSTOMER_X402_TEST_RESPONSE_MODE:"unrelated"}});
+  const unrelatedJson = parseCliJson(unrelated);
+  assert.notEqual(unrelated.code, 0);
+  assert.equal(unrelatedJson.outcome, "paid_invalid_output");
+  assert.equal(unrelatedJson.evidence.outputValid, false);
+  assert.equal(facilitator.calls.settle, 4);
+
+  facilitator.calls.failSettlement = true;
+  const uncertain = await runCli(["--approve", "--authorization", changePath, "--private-key-env", KEY_ENV], {env:cliEnv});
+  const uncertainJson = parseCliJson(uncertain);
+  assert.notEqual(uncertain.code, 0);
+  assert.equal(uncertainJson.outcome, "unknown");
+  assert.equal(uncertainJson.evidence.retainedBody.charged, null);
+  assert.equal(uncertainJson.evidence.retainedBody.settlementConfirmed, false);
+  assert.equal(uncertainJson.evidence.retainedBody.delivery.charged, null);
+  assert.ok(uncertainJson.evidence.retainedBody.delivery.engine.fieldChanges.length > 0);
+  assert.equal(facilitator.calls.settle, 5);
 });
