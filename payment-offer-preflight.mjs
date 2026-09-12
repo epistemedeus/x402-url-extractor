@@ -12,6 +12,7 @@ const MAX_LOCATION_BYTES = 2_048;
 const MAX_OPENAPI_BYTES = 1_000_000;
 const DEFAULT_TIMEOUT_MS = 8_000;
 const SENSITIVE_QUERY_KEY = /(?:^|[-_.])(api[-_.]?key|access[-_.]?token|auth|authorization|credential|password|secret|token)(?:$|[-_.])/i;
+const SENSITIVE_DIAGNOSTIC_NAME = /(?:^|[-_.])(?:api[-_.]?key|access[-_.]?token|auth(?:orization)?|bearer|credential|jwt|key|nonce|pass(?:word)?|secret|session[-_.]?token|signature|token)(?:$|[-_.])|^(?:apiKey|accessToken|authorizationCode|sessionToken)$/i;
 const CATALOG_SOURCE = /^[\u0020-\u007e]{1,128}$/;
 
 const blockedAddresses = new BlockList();
@@ -32,8 +33,13 @@ for (const [address, prefix, family] of [
   ["240.0.0.0", 4, "ipv4"],
   ["::", 128, "ipv6"],
   ["::1", 128, "ipv6"],
+  ["::", 96, "ipv6"],
   ["100::", 64, "ipv6"],
   ["2001:db8::", 32, "ipv6"],
+  ["64:ff9b::", 96, "ipv6"],
+  ["64:ff9b:1::", 48, "ipv6"],
+  ["2001::", 32, "ipv6"],
+  ["2002::", 16, "ipv6"],
   ["fc00::", 7, "ipv6"],
   ["fe80::", 10, "ipv6"],
   ["ff00::", 8, "ipv6"],
@@ -119,27 +125,45 @@ export function sanitizeLocationDiagnostic(location, requestUrl) {
   if (resolved.protocol !== "https:" && resolved.protocol !== "http:") {
     return { location: null, locationClass: "omitted" };
   }
-  resolved.username = "";
-  resolved.password = "";
-  const safeQuery = new URLSearchParams();
-  for (const [key, value] of resolved.searchParams) {
-    if (SENSITIVE_QUERY_KEY.test(key)) continue;
-    safeQuery.append(key, value);
-  }
-  safeQuery.sort();
-  const search = safeQuery.toString();
-  const path = `${resolved.pathname}${search ? `?${search}` : ""}`;
   let request;
   try {
     request = new URL(requestUrl);
   } catch {
     return { location: null, locationClass: "opaque" };
   }
-  const sameOrigin = resolved.protocol === request.protocol && resolved.host === request.host;
-  if (sameOrigin) {
-    return { location: path, locationClass: "same_origin" };
+  resolved.username = "";
+  resolved.password = "";
+  let decodedPath;
+  try {
+    decodedPath = decodeURIComponent(resolved.pathname);
+  } catch {
+    return { location: null, locationClass: "omitted" };
   }
-  return { location: `${resolved.origin}${path}`, locationClass: "cross_origin" };
+  const pathSegments = decodedPath.split("/").filter(Boolean);
+  const secretLikePath = /[A-Za-z0-9_-]{32,}/;
+  if (
+    /[\u0000-\u001f\u007f\\]/.test(decodedPath)
+    || pathSegments.some((segment) => SENSITIVE_DIAGNOSTIC_NAME.test(segment) || secretLikePath.test(segment))
+  ) {
+    return {
+      location: null,
+      locationClass: resolved.origin === request.origin ? "same_origin" : "cross_origin",
+    };
+  }
+  const safeQuery = new URLSearchParams();
+  for (const [key, value] of resolved.searchParams) {
+    if (SENSITIVE_QUERY_KEY.test(key) || SENSITIVE_DIAGNOSTIC_NAME.test(key) || secretLikePath.test(value)) continue;
+    safeQuery.append(key, value);
+  }
+  safeQuery.sort();
+  const search = safeQuery.toString();
+  const path = `${resolved.pathname}${search ? `?${search}` : ""}`;
+  const sameOrigin = resolved.protocol === request.protocol && resolved.host === request.host;
+  const sanitized = sameOrigin ? path : `${resolved.origin}${path}`;
+  if (Buffer.byteLength(sanitized, "utf8") > MAX_LOCATION_BYTES) {
+    return { location: null, locationClass: "omitted" };
+  }
+  return { location: sanitized, locationClass: sameOrigin ? "same_origin" : "cross_origin" };
 }
 
 function strictRecord(value, label, allowed) {

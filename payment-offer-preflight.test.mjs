@@ -85,7 +85,21 @@ test("normalizes only credential-free public HTTPS targets", () => {
 test("public address policy rejects private, reserved, and documentation ranges", () => {
   assert.equal(publicAddress("8.8.8.8"), true);
   assert.equal(publicAddress("2606:4700:4700::1111"), true);
-  for (const address of ["10.0.0.1", "127.0.0.1", "169.254.1.1", "192.168.1.1", "203.0.113.4", "::1", "fe80::1", "2001:db8::1"]) {
+  for (const address of [
+    "10.0.0.1",
+    "127.0.0.1",
+    "169.254.1.1",
+    "192.168.1.1",
+    "203.0.113.4",
+    "::1",
+    "::7f00:1",
+    "fe80::1",
+    "2001:db8::1",
+    "64:ff9b::7f00:1",
+    "64:ff9b:1::a00:1",
+    "2001:0:4136:e378:8000:63bf:3fff:fdd2",
+    "2002:7f00:1::",
+  ]) {
     assert.equal(publicAddress(address), false, address);
   }
 });
@@ -302,6 +316,31 @@ test("sanitizes hostile, credentialed, secret, and oversized Location values wit
   assert.equal(credentialed.location.includes("pass"), false);
   assert.equal(credentialed.location.includes("token="), false);
   assert.equal(credentialed.location.includes("q=ok"), true);
+  for (const secretBearing of [
+    "/reset/token/s3cr3t-value",
+    "/session/eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.signature",
+    "https://evil.example/%74oken/s3cr3t-value",
+  ]) {
+    const diagnostic = sanitizeLocationDiagnostic(secretBearing, request);
+    assert.equal(diagnostic.location, null, secretBearing);
+    assert.notEqual(diagnostic.locationClass, "absent", secretBearing);
+  }
+  for (const secretQuery of [
+    "https://evil.example/callback?sessionToken=sekret&q=ok",
+    "https://evil.example/callback?q=0123456789abcdef0123456789abcdef&safe=ok",
+  ]) {
+    const diagnostic = sanitizeLocationDiagnostic(secretQuery, request);
+    assert.equal(diagnostic.location.includes("sekret"), false, secretQuery);
+    assert.equal(diagnostic.location.includes("0123456789abcdef"), false, secretQuery);
+  }
+  assert.deepEqual(sanitizeLocationDiagnostic("../v1/other?q=ok", request), {
+    location: "/v1/other?q=ok",
+    locationClass: "same_origin",
+  });
+  assert.deepEqual(sanitizeLocationDiagnostic("/v1/monkey?q=ok", request), {
+    location: "/v1/monkey?q=ok",
+    locationClass: "same_origin",
+  });
   assert.equal(sanitizeLocationDiagnostic("javascript:alert(1)", request).locationClass, "omitted");
   assert.equal(sanitizeLocationDiagnostic(`https://api.example.com/${"a".repeat(3000)}`, request).locationClass, "omitted");
   assert.equal(sanitizeLocationDiagnostic("https://api.example.com/ok\0", request).locationClass, "omitted");

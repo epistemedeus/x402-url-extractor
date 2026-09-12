@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import Ajv2020 from "ajv/dist/2020.js";
+import addFormats from "ajv-formats";
 
 import {
   SellerIntegrityAuditError,
@@ -79,6 +81,7 @@ test("returns bounded machine-buyable evidence without schemas or target payment
   assert.equal(result.referralOffer.attributionOnly, true);
   assert.equal(result.report.auditCompleted, true);
   assert.equal(result.report.failureCode, null);
+  assert.equal(result.report.observedHttpStatus, null);
   assert.equal(result.report.evidenceClass, null);
   assert.equal(result.report.repairPlan.complete, true);
   assert.equal(sellerIntegrityAuditOutputSchema().properties.decision.enum.includes("unverified"), true);
@@ -161,6 +164,8 @@ test("maps bounded seller-contract and transport failures", async () => {
   const unavailable = await sellerIntegrityAudit({ origin: "https://seller.example", route: "/paid" }, { auditImpl: async () => { throw new Error("document returned HTTP 404"); } });
   assert.equal(unavailable.decision, "repair_required");
   assert.equal(unavailable.report.evidenceClass, "declared_url_unavailable");
+  assert.equal(unavailable.report.observedHttpStatus, 404);
+  assert.match(unavailable.nextActions[0], /HTTP 404/);
 
   const transport = await sellerIntegrityAudit({ origin: "https://seller.example", route: "/paid" }, { auditImpl: async () => { throw new Error("request timed out"); } });
   assert.equal(transport.report.failureCode, "bounded_transport_failure");
@@ -212,4 +217,42 @@ test("classifies acquisition failures without inventing seller blame", () => {
   assert.equal(classifySellerIntegrityAcquisition("exact paid GET route was not declared").decision, "repair_required");
   assert.equal(classifySellerIntegrityAcquisition("request timed out").decision, "unverified");
   assert.equal(classifySellerIntegrityAcquisition("response exceeded byte limit").evidenceClass, "local_acquisition_limit");
+  assert.equal(classifySellerIntegrityAcquisition("TLS peer not declared available").decision, "unverified");
+  assert.equal(classifySellerIntegrityAcquisition("upstream said document returned HTTP 404").decision, "unverified");
+  assert.equal(classifySellerIntegrityAcquisition("document did not return JSON after timeout").decision, "unverified");
+});
+
+test("preserves transient declared-URL HTTP evidence without asserting permanence", async () => {
+  const unavailable = await sellerIntegrityAudit({ origin: "https://seller.example", route: "/paid" }, {
+    auditImpl: async () => { throw new Error("document returned HTTP 503"); },
+  });
+  assert.equal(unavailable.decision, "repair_required");
+  assert.equal(unavailable.report.evidenceClass, "declared_url_unavailable");
+  assert.equal(unavailable.report.observedHttpStatus, 503);
+  assert.match(unavailable.nextActions[0], /point-in-time/);
+  assert.match(unavailable.nextActions[0], /does not establish a permanent missing contract/);
+  assert.equal(unavailable.referralOffer.status, "available");
+
+  const reportSchema = sellerIntegrityAuditOutputSchema().properties.report;
+  assert.equal(reportSchema.required.includes("observedHttpStatus"), true);
+  assert.deepEqual(reportSchema.properties.observedHttpStatus, {
+    type: ["integer", "null"],
+    minimum: 100,
+    maximum: 599,
+  });
+});
+
+test("unverified output validates against the complete advertised schema", async () => {
+  const result = await sellerIntegrityAudit({ origin: "https://seller.example", route: "/paid" }, {
+    auditImpl: async () => { throw new Error("request timed out"); },
+  });
+  const ajv = new Ajv2020({ allErrors: true, strict: false });
+  addFormats(ajv);
+  const validate = ajv.compile(sellerIntegrityAuditOutputSchema());
+
+  assert.equal(validate(result), true, ajv.errorsText(validate.errors));
+  assert.equal(result.referralOffer.status, "unavailable");
+  assert.equal(result.referralOffer.reward, "none");
+  assert.equal(result.referralOffer.qualifiesOn, "none");
+  assert.equal(result.referralOffer.id, null);
 });

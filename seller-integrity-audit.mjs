@@ -85,6 +85,7 @@ export function sellerIntegrityAuditOutputSchema() {
         properties: {
           auditCompleted: { type: "boolean" },
           failureCode: { type: ["string", "null"] },
+          observedHttpStatus: { type: ["integer", "null"], minimum: 100, maximum: 599 },
           evidenceClass: {
             type: ["string", "null"],
             enum: [
@@ -151,7 +152,7 @@ export function sellerIntegrityAuditOutputSchema() {
             required: ["mode", "requiredPaths", "guaranteedPaths", "actions", "complete", "boundary"],
           },
         },
-        required: ["auditCompleted", "failureCode", "evidenceClass", "schemaVersion", "sellerVersions", "status", "runtimeChallengeVerified", "probe", "protocols", "valid", "findings", "economics", "discovery", "responseContract", "repairPlan"],
+        required: ["auditCompleted", "failureCode", "observedHttpStatus", "evidenceClass", "schemaVersion", "sellerVersions", "status", "runtimeChallengeVerified", "probe", "protocols", "valid", "findings", "economics", "discovery", "responseContract", "repairPlan"],
       },
       nextActions: { type: "array", items: { type: "string" } },
       referralOffer: receiptReferralOfferSchema(),
@@ -185,6 +186,7 @@ export const SELLER_INTEGRITY_AUDIT_EXAMPLE = Object.freeze({
   report: {
     auditCompleted: true,
     failureCode: null,
+    observedHttpStatus: null,
     evidenceClass: null,
     schemaVersion: "agent-payment-integrity.audit.v4",
     sellerVersions: { x402: "1.18.3", mpp: "1.18.3" },
@@ -227,56 +229,65 @@ export const SELLER_INTEGRITY_AUDIT_EXAMPLE = Object.freeze({
 
 export function classifySellerIntegrityAcquisition(message) {
   const text = String(message || "");
-  if (/not declared/.test(text)) {
+  if (/^exact paid (?:GET|POST) route was not declared$/.test(text)) {
     return {
       failureCode: "exact_route_not_declared",
+      observedHttpStatus: null,
       evidenceClass: "missing_declared_operation",
       decision: "repair_required",
     };
   }
-  if (/document did not return JSON/.test(text)) {
+  if (text === "document did not return JSON") {
     return {
       failureCode: "openapi_invalid",
+      observedHttpStatus: null,
       evidenceClass: "invalid_declaration",
       decision: "repair_required",
     };
   }
-  if (/document returned HTTP/.test(text)) {
+  const httpFailure = /^document returned HTTP ([1-5][0-9]{2})$/.exec(text);
+  if (httpFailure) {
     return {
       failureCode: "openapi_unavailable",
+      observedHttpStatus: Number(httpFailure[1]),
       evidenceClass: "declared_url_unavailable",
       decision: "repair_required",
     };
   }
-  if (/response exceeded byte limit/.test(text)) {
+  if (text === "response exceeded byte limit" || text === "DoH response exceeded byte limit") {
     return {
       failureCode: "openapi_exceeds_byte_limit",
+      observedHttpStatus: null,
       evidenceClass: "local_acquisition_limit",
       decision: "unverified",
     };
   }
-  if (/route count exceeds/.test(text)) {
+  if (/^paid (?:GET|POST) route count exceeds [1-9][0-9]*$/.test(text)) {
     return {
       failureCode: "route_ceiling_exceeded",
+      observedHttpStatus: null,
       evidenceClass: "local_acquisition_limit",
       decision: "unverified",
     };
   }
-  if (/redirects are not allowed/.test(text)) {
+  if (text === "redirects are not allowed") {
     return {
       failureCode: "redirect_not_followed",
+      observedHttpStatus: null,
       evidenceClass: "transport_unknown",
       decision: "unverified",
     };
   }
   return {
     failureCode: "bounded_transport_failure",
+    observedHttpStatus: null,
     evidenceClass: "transport_unknown",
     decision: "unverified",
   };
 }
 
-function nextActionsForAcquisition(failureCode, request) {
+function nextActionsForAcquisition(classified, request) {
+  const { failureCode, observedHttpStatus } = classified;
   if (failureCode === "exact_route_not_declared") {
     return [`Declare the exact paid ${request.method} route in the seller OpenAPI document.`];
   }
@@ -284,7 +295,10 @@ function nextActionsForAcquisition(failureCode, request) {
     return [`The declared same-origin /openapi.json did not return JSON. Publish a valid OpenAPI document with the exact paid ${request.method} operation.`];
   }
   if (failureCode === "openapi_unavailable") {
-    return ["The declared same-origin /openapi.json was observed unavailable. Publish that document at the declared URL."];
+    const transient = observedHttpStatus === 429 || observedHttpStatus >= 500;
+    return [transient
+      ? `A same-origin seller declaration endpoint returned HTTP ${observedHttpStatus} during this point-in-time check. Restore its availability or retry; this observation does not establish a permanent missing contract.`
+      : `A same-origin seller declaration endpoint returned HTTP ${observedHttpStatus} during this point-in-time check. Publish or restore the declared document at that URL.`];
   }
   if (failureCode === "openapi_exceeds_byte_limit") {
     return ["Local OpenAPI byte limit prevented a complete audit. This is not seller-repair evidence. Probe one exact advertised URL with payment-offer-preflight."];
@@ -333,6 +347,7 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
       report: {
         auditCompleted: false,
         failureCode: classified.failureCode,
+        observedHttpStatus: classified.observedHttpStatus,
         evidenceClass: classified.evidenceClass,
         schemaVersion: null,
         sellerVersions: null,
@@ -347,7 +362,7 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
         responseContract: null,
         repairPlan: null,
       },
-      nextActions: nextActionsForAcquisition(classified.failureCode, request),
+      nextActions: nextActionsForAcquisition(classified, request),
       referralOffer: createReceiptReferralOffer({
         referralId: classified.decision === "repair_required" ? referral : null,
         decision: classified.decision,
@@ -380,6 +395,7 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
     report: {
       auditCompleted: true,
       failureCode: null,
+      observedHttpStatus: null,
       evidenceClass: decision === "repair_required" ? "seller_contract" : null,
       schemaVersion: report.schemaVersion,
       sellerVersions: report.versions,
