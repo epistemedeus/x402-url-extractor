@@ -34,5 +34,5 @@ service runs, not per lockfile call. After the CDP free tier, `$0.001` settle is
 list price. No Railway or CDP invoice was read. No guaranteed-profit claim.
 
 `sold` is not set. Engine `purchaseAuthority` stays false.
-Settlement remains the existing x402 exact / MPP rails when the flag is on.
+This route settles x402 exact only. Existing MPP routes are unchanged.
 No production deploy or money movement in this assignment.

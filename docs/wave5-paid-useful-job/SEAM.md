@@ -8,7 +8,8 @@ None of those is lockfile pin-delta.
 
 W5-M01 selected `lockfile-pin-delta` as the first useful supplied-input offer.
 The engine is a local CLI. This change adds a flag-gated HTTP adapter on the
-incumbent merchant payment, receipt, replay, OpenAPI, and MCP stack.
+incumbent merchant payment, receipt, replay, OpenAPI, and MCP stack. Initial
+live release accepts x402 only; existing MPP routes stay registered.
 
 Not built: a second payment rail, job platform, SDS52 runner, or a copy of the
 SameDayDesk repository. The engine is a source projection at

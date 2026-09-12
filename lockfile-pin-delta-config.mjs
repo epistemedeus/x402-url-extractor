@@ -21,11 +21,13 @@ export const LOCKFILE_PIN_DELTA_MAX_JSON_NODES = 50_000;
 export const LOCKFILE_PIN_DELTA_TIMEOUT_MS = 5_000;
 export const LOCKFILE_PIN_DELTA_WORKER_KILL_GRACE_MS = 500;
 
+export const LOCKFILE_PIN_DELTA_PAYMENT_PROTOCOLS = Object.freeze(["x402"]);
+
 export const LOCKFILE_PIN_DELTA_DESCRIPTION =
-  "Compare two caller-supplied npm package-lock.json objects (lockfileVersion 2 or 3) and return added, removed, and changed name+version+integrity+resolved pins. HTTP JSON only: no filesystem paths, commands, or network fetch. Identical pins are informational, not failure. Charge is the bounded compare, not an install, audit, or purchase.";
+  "Compare two caller-supplied npm package-lock.json objects (lockfileVersion 2 or 3) and return added, removed, and changed name+version+integrity+resolved pins. HTTP JSON only: no filesystem paths, commands, or network fetch. Identical pins are informational, not failure. Charge is the bounded compare, not an install, audit, or purchase. Initial live release accepts x402 only.";
 
 export const LOCKFILE_PIN_DELTA_QUOTE_MEANING =
-  "Flat USDC quote for one bounded compare of two caller-supplied npm package-lock.json objects. Default $0.005 matches live GET /extract. Charge is the compare, not an install, audit, or proven margin.";
+  "Flat USDC quote for one bounded compare of two caller-supplied npm package-lock.json objects. Default $0.005 matches live GET /extract. Charge is the compare, not an install, audit, or proven margin. Pay with x402; MPP is not accepted on this route.";
 
 /**
  * Explicit production feature flag. Default off. Never inferred from

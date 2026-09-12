@@ -22,6 +22,7 @@ import {
   LOCKFILE_PIN_DELTA_CATALOG_SHA,
   LOCKFILE_PIN_DELTA_ENGINE_SHA,
   LOCKFILE_PIN_DELTA_PATH,
+  LOCKFILE_PIN_DELTA_PAYMENT_PROTOCOLS,
   LOCKFILE_PIN_DELTA_PRICE_USD,
   LOCKFILE_PIN_DELTA_QUOTE_MEANING,
 } from "./lockfile-pin-delta-config.mjs";
@@ -44,6 +45,9 @@ test("flag stays off unless explicitly enabled", () => {
   assert.equal(isLockfilePinDeltaEnabled({ LOCKFILE_PIN_DELTA_ENABLED: "1" }), true);
   assert.equal(LOCKFILE_PIN_DELTA_PATH, "/lockfile-pin-delta");
   assert.equal(LOCKFILE_PIN_DELTA_PRICE_USD, "$0.005");
+  assert.deepEqual([...LOCKFILE_PIN_DELTA_PAYMENT_PROTOCOLS], ["x402"]);
+  assert.match(LOCKFILE_PIN_DELTA_QUOTE_MEANING, /x402/i);
+  assert.doesNotMatch(LOCKFILE_PIN_DELTA_QUOTE_MEANING, /owed/i);
   assert.equal(LOCKFILE_PIN_DELTA_ENGINE_SHA, "fba9d14872bc4c04214e527b9edfb30c2123c9e7");
   assert.equal(LOCKFILE_PIN_DELTA_CATALOG_SHA, "a20232b0f777b0f737cdffefb64a9ca9d9c9ba0e");
   assert.doesNotMatch(LOCKFILE_PIN_DELTA_QUOTE_MEANING, /D26|EC2/i);
@@ -143,11 +147,9 @@ test("timeout and crash envelopes are not informational no-change", () => {
   assert.equal(crashed.transport, "engine-crash");
   assert.notEqual(crashed.analysis, "informational");
 
-  assert.equal(lockfilePinDeltaFailureDelivery("x402").status, 503);
-  assert.equal(lockfilePinDeltaFailureDelivery("x402").charged, false);
-  assert.equal(lockfilePinDeltaFailureDelivery("mpp").status, 503);
-  assert.equal(lockfilePinDeltaFailureDelivery("mpp").charged, true);
-  assert.equal(lockfilePinDeltaFailureDelivery("mpp").owedDelivery, true);
+  assert.equal(lockfilePinDeltaFailureDelivery().status, 503);
+  assert.equal(lockfilePinDeltaFailureDelivery().charged, false);
+  assert.equal(lockfilePinDeltaFailureDelivery().owedDelivery, false);
 });
 
 test("discovery example is a real engine delta with a frozen sold boundary", () => {

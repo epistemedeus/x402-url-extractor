@@ -108,6 +108,49 @@ function surfaces(overrides = {}) {
   };
 }
 
+test("x402-only catalog actions are killed from MPP OpenAPI and kept on default OpenAPI", () => {
+  const lockfile = {
+    name: "lockfile_pin_delta",
+    method: "POST",
+    route: "/lockfile-pin-delta",
+    description: "Compare lockfiles.",
+    priceAtomicUsdc: "5000",
+    paymentProtocols: ["x402"],
+  };
+  const withLockfile = surfaces({
+    actions: [...actions, lockfile],
+    catalog: { actions: [...actions, lockfile], alternateAccess: alternate },
+    agentCard: {
+      skills: [
+        { id: "discover-x402-paid-actions", description: "catalog" },
+        ...[...actions, lockfile].map((action) => ({
+          id: `discover-paid-action-${action.name}`,
+          description: `Discover the direct ${action.route} machine-paid action.`,
+        })),
+      ],
+    },
+    mcpToolNames: [...actions, lockfile].map((action) => mcpToolNameForRoute(action.route)),
+  });
+  withLockfile.openapi.paths["/lockfile-pin-delta"] = paidOp("POST", "/lockfile-pin-delta", "compareLockfilePinDelta");
+  withLockfile.manifestItems.push({ resource: { routeTemplate: "/lockfile-pin-delta" } });
+  withLockfile.llms = renderLlmsTxt({
+    origin,
+    facilitator: "cdp",
+    payTo: "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    actions: [...actions, lockfile],
+    alternate,
+    buyerPolicyRelease: "https://github.com/epistemedeus/agent-payment-policy/releases/tag/v0.4.0",
+    purchaseEvidencePath: "/.well-known/agent-payment-evidence.json",
+  });
+  assert.equal(validateMachineSurfaceParity(withLockfile).ok, true);
+
+  withLockfile.mppOpenapi.paths["/lockfile-pin-delta"] = paidOp("POST", "/lockfile-pin-delta", "compareLockfilePinDelta");
+  assert.throws(
+    () => validateMachineSurfaceParity(withLockfile),
+    /must not appear on MPP OpenAPI/,
+  );
+});
+
 test("kills Circle Gateway on MCP, A2A, catalog actions, and MPP OpenAPI", () => {
   assert.deepEqual(SURFACE_POLICY["circle-alternate"].mcp, "kill");
   assert.deepEqual(SURFACE_POLICY["circle-alternate"].a2a, "kill");

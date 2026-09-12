@@ -23,7 +23,8 @@ export function isReadOnlyPaidPost(method, path) {
   return lockfileOn && key === "POST /lockfile-pin-delta";
 }
 
-export function paidActionEffectExtension() {
+export function paidActionEffectExtension({ paymentProtocols = ["x402", "mpp"] } = {}) {
+  const protocols = [...paymentProtocols];
   return {
     version: PAID_ACTION_EFFECT_PROFILE_VERSION,
     classification: "read_only",
@@ -37,20 +38,21 @@ export function paidActionEffectExtension() {
       responseReplay: "conditional",
       requestBinding: ["method", "canonical_url", "exact_raw_body_sha256", "payer", "payment_terms", "exact_settled_credential"],
       x402Requirement: "payment-identifier extension",
-      mppRequirement: "exact settled credential",
+      ...(protocols.includes("mpp") ? { mppRequirement: "exact settled credential" } : {}),
       mismatchStatus: 409,
     },
+    paymentProtocols: protocols,
     profile: PAID_ACTION_EFFECT_PROFILE_PATH,
   };
 }
 
 export function attachPaidActionEffectContracts(document, operations = READ_ONLY_PAID_POST_OPERATIONS) {
-  for (const { method, path } of operations) {
+  for (const { method, path, paymentProtocols } of operations) {
     const operation = document?.paths?.[path]?.[method.toLowerCase()];
     if (!operation || typeof operation !== "object") {
       throw new Error(`Missing paid action operation for ${method} ${path}`);
     }
-    operation["x-paid-effect"] = paidActionEffectExtension();
+    operation["x-paid-effect"] = paidActionEffectExtension({ paymentProtocols });
   }
   return document;
 }
@@ -74,10 +76,10 @@ export function buildPaidActionEffectProfile({
       state_changing: "Reserved for a future profile that must bind a client-generated application idempotency key before the unpaid request.",
       boundary: "Payment replay, application-effect idempotency, and business-effect receipts are separate contracts.",
     },
-    operations: operations.map(({ method, path }) => ({
+    operations: operations.map(({ method, path, paymentProtocols }) => ({
       method,
       path,
-      ...paidActionEffectExtension(),
+      ...paidActionEffectExtension({ paymentProtocols }),
     })),
     interoperability: {
       paymentProtocols: ["x402", "mpp"],

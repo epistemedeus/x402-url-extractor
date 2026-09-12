@@ -21,7 +21,7 @@ This branch does not rewrite the signed 25-route statement.
 4. Optional: `LOCKFILE_PIN_DELTA_PRICE=$0.005` (default). Margin is not proven.
 5. Keep one process and persistent `COMMERCE_DATA_DIR`.
 6. Do not set production CDP/xpay credentials in tests. Do not redeem overage.
-7. After enable, free discovery must show `POST /lockfile-pin-delta` on `/openapi.json`, `/.well-known/x402`, `/api/actions`, MCP `tools/list` (`lockfile_pin_delta`), and paid-action-effects. A missing path means the lockfile flag is off; do not advertise a fixture as live.
+7. After enable, free discovery must show `POST /lockfile-pin-delta` on `/openapi.json`, `/.well-known/x402`, `/api/actions`, MCP `tools/list` (`lockfile_pin_delta`), and paid-action-effects as **x402-only**. It must be absent from `/mpp-openapi.json` and must not send MPP `WWW-Authenticate`. A missing default-OpenAPI path means the lockfile flag is off; do not advertise a fixture as live.
 8. Re-sign the service deployment statement only when Root wants the new route in the signed envelope. Until then, live evidence can describe the hosted POST without claiming the old statement listed it.
 
 ## Buyer check

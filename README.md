@@ -39,10 +39,12 @@ The default is off. Production already has `EXTRACT_BATCH_ENABLED=1` (26 paid
 HTTP / 23 MCP tools). Enabling lockfile beside that envelope is 27 / 24.
 Default-off catalogs remain 25 / 22. Default price is `$0.005`
 (`LOCKFILE_PIN_DELTA_PRICE`), matching live `GET /extract`. Margin is not
-proven. HTTP JSON only: no filesystem paths, arbitrary commands, or network
-fetch. Identical pins are informational, not engine failure. The signed
-deployment statement is not rewritten here. The lockfile MCP tool's challenge
-resource is `https://agents.samedaydesk.com/lockfile-pin-delta`, not `mcp://`
+proven. Initial live release accepts x402 only; existing MPP routes including
+`extract_batch` are unchanged. HTTP JSON only: no filesystem paths, arbitrary
+commands, or network fetch. Identical pins are informational, not engine
+failure. The signed deployment statement is not rewritten here. The lockfile
+MCP tool's challenge resource is
+`https://agents.samedaydesk.com/lockfile-pin-delta`, not `mcp://`
 and not `/extract/batch`.
 
 The extract_batch MCP tool projects the existing HTTP payment and durable replay

@@ -8,6 +8,7 @@ import { PAYMENT_IDENTIFIER, declarePaymentIdentifierExtension } from "@x402/ext
 
 import { BAZAAR_SERVICE_ICON_URL } from "./bazaar-resource-metadata.mjs";
 import { declareDiscoveryContract } from "./discovery-contract.mjs";
+import { hasMppPaymentAuthorizationForPreflight } from "./mpp-dual-stack.mjs";
 import { compareLockfileTexts } from "./vendor/lockfile-pin-delta/lib/compare.mjs";
 import { CliRefuse } from "./vendor/lockfile-pin-delta/lib/errors.mjs";
 import { toMarkdown } from "./vendor/lockfile-pin-delta/lib/format.mjs";
@@ -26,6 +27,7 @@ import {
   LOCKFILE_PIN_DELTA_MAX_REQUEST_BYTES,
   LOCKFILE_PIN_DELTA_METHOD,
   LOCKFILE_PIN_DELTA_PATH,
+  LOCKFILE_PIN_DELTA_PAYMENT_PROTOCOLS,
   LOCKFILE_PIN_DELTA_PRICE_DISPLAY,
   LOCKFILE_PIN_DELTA_PRICE_USD,
   LOCKFILE_PIN_DELTA_PRODUCT,
@@ -46,6 +48,7 @@ export {
   LOCKFILE_PIN_DELTA_ENGINE_SHA,
   LOCKFILE_PIN_DELTA_METHOD,
   LOCKFILE_PIN_DELTA_PATH,
+  LOCKFILE_PIN_DELTA_PAYMENT_PROTOCOLS,
   LOCKFILE_PIN_DELTA_PRICE_DISPLAY,
   LOCKFILE_PIN_DELTA_PRICE_USD,
   LOCKFILE_PIN_DELTA_PRODUCT,
@@ -61,6 +64,7 @@ export {
 export const LOCKFILE_PIN_DELTA_READ_ONLY_POST = Object.freeze({
   method: LOCKFILE_PIN_DELTA_METHOD,
   path: LOCKFILE_PIN_DELTA_PATH,
+  paymentProtocols: LOCKFILE_PIN_DELTA_PAYMENT_PROTOCOLS,
 });
 
 const ALLOWED_BODY_KEYS = Object.freeze(["before", "after"]);
@@ -527,14 +531,7 @@ export async function executeLockfilePinDelta({
   }
 }
 
-export function lockfilePinDeltaFailureDelivery(protocol) {
-  if (protocol === "mpp") {
-    return Object.freeze({
-      status: 503,
-      charged: true,
-      owedDelivery: true,
-    });
-  }
+export function lockfilePinDeltaFailureDelivery() {
   return Object.freeze({
     status: 503,
     charged: false,
@@ -634,6 +631,12 @@ export function validateLockfilePinDeltaRequest(req, res, next) {
   if (req.method !== LOCKFILE_PIN_DELTA_METHOD || !isLockfilePinDeltaPath(req.path)) return next();
   try {
     res.locals.lockfilePinDeltaInput = admitLockfilePinDeltaRequest(req.body);
+    if (hasMppPaymentAuthorizationForPreflight(req.headers)) {
+      return unchargedError(res, new LockfilePinDeltaInputError(
+        "POST /lockfile-pin-delta accepts x402 only. Do not send an MPP Authorization. Retry unpaid for x402 Payment-Required.",
+        { status: 400, code: "mpp_not_accepted" },
+      ));
+    }
     res.set("X-SameDayDesk-Paid-Effect", "read_only");
     res.set("X-SameDayDesk-Paid-Effect-Profile", "/.well-known/paid-action-effects.json");
     res.set("X-SameDayDesk-Lockfile-Pin-Delta", "enabled");
@@ -646,20 +649,11 @@ export function validateLockfilePinDeltaRequest(req, res, next) {
 export async function serveLockfilePinDelta(req, res) {
   res.set("Cache-Control", "no-store");
   res.set("X-SameDayDesk-Lockfile-Pin-Delta", "enabled");
-  const protocol = res.locals?.samedaydeskPayment?.protocol === "mpp" ? "mpp" : "x402";
   const failHttp = (result, transport) => {
-    const delivery = lockfilePinDeltaFailureDelivery(protocol);
+    const delivery = lockfilePinDeltaFailureDelivery();
     result.charged = delivery.charged;
     result.analysis = "not-run";
     result.error = transport === "timeout" ? "lockfile_compare_timeout" : "lockfile_engine_failed";
-    if (delivery.owedDelivery) {
-      result.owedDelivery = true;
-      result.boundary = {
-        ...result.boundary,
-        retrySameCredential: true,
-        newSettlementAttempt: false,
-      };
-    }
     return res.status(delivery.status).json(result);
   };
   try {
@@ -670,10 +664,10 @@ export async function serveLockfilePinDelta(req, res) {
     if (result.transport !== "ok") return failHttp(result, result.transport);
     return res.status(200).json(result);
   } catch (error) {
-    if (error instanceof LockfilePinDeltaInputError && protocol !== "mpp") return unchargedError(res, error);
+    if (error instanceof LockfilePinDeltaInputError) return unchargedError(res, error);
     const result = formatLockfilePinDeltaResult(null, {
-      charged: protocol === "mpp",
-      transport: error instanceof LockfilePinDeltaInputError ? "engine-crash" : "internal-error",
+      charged: false,
+      transport: "internal-error",
       admittedBodyBytes: req.rawBody ? Buffer.byteLength(req.rawBody) : null,
     });
     return failHttp(result, result.transport);
@@ -809,17 +803,6 @@ export function lockfilePinDeltaX402Route({ network, payTo, extensions, env = pr
   };
 }
 
-export function lockfilePinDeltaMppRoute(env = process.env) {
-  const price = lockfilePinDeltaPrice(env);
-  return {
-    amount: price.displayUsdc,
-    description: LOCKFILE_PIN_DELTA_DESCRIPTION,
-    method: LOCKFILE_PIN_DELTA_METHOD,
-    path: LOCKFILE_PIN_DELTA_PATH,
-    bindRequestBody: true,
-  };
-}
-
 export function lockfilePinDeltaOpenApiPath({ paymentInfo, env = process.env } = {}) {
   const price = lockfilePinDeltaPrice(env);
   return {
@@ -836,12 +819,12 @@ export function lockfilePinDeltaOpenApiPath({ paymentInfo, env = process.env } =
           description: "bounded pin delta after a completed compare. analysis is actionable, informational (identical pins), or partial. HTTP 200 is not used for timeout, crash, oversized worker output, or nonzero worker exit.",
           content: { "application/json": { schema: lockfilePinDeltaOutputSchema() } },
         },
-        "400": { description: "unsupported or malformed input, charged nothing" },
-        "402": { description: `payment required (x402 or MPP, ${price.priceUsd} bounded compare)` },
+        "400": { description: "unsupported or malformed input, or an MPP credential on this x402-only route; charged nothing" },
+        "402": { description: `payment required (x402 ${price.priceUsd} bounded compare). Initial live release does not accept MPP.` },
         "409": { description: "payment identifier already bound to a different request body, payer, credential, or payment terms" },
         "413": { description: "JSON request or lockfile exceeds the server byte ceiling; no authorization" },
         "415": { description: "Content-Type must be JSON" },
-        "503": { description: "engine timeout, crash, oversized worker output, nonzero worker exit, or unresolved settlement. Not a successful compare. x402 execute-before-settle: HTTP >=400 cancels settlement (charged false). MPP settles before the handler: charged remains true and the same credential retries through existing replay quarantine without a new settle." },
+        "503": { description: "engine timeout, crash, oversized worker output, nonzero worker exit, or unresolved settlement. Not a successful compare. x402 execute-before-settle: HTTP >=400 cancels settlement (charged false). This route does not accept MPP and does not sell an owed-retry." },
       },
       "x-payment-info": paymentInfo,
     },

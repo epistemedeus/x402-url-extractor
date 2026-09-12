@@ -238,6 +238,7 @@ test("mounted success, no-change, malformed, oversize, and wrong-replay-input", 
   const deltaBody = { before: journeyBefore, after: journeyAfter };
   const challengeResponse = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(deltaBody));
   assert.equal(challengeResponse.status, 402);
+  assert.doesNotMatch(challengeResponse.headers.get("www-authenticate") || "", /^Payment /);
   const challenge = decodePaymentRequired(challengeResponse);
   const accepted = challenge.accepts.find((entry) => entry.network === NETWORK && entry.scheme === "exact");
   assert.equal(accepted.amount, LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC);
@@ -246,6 +247,16 @@ test("mounted success, no-change, malformed, oversize, and wrong-replay-input", 
   const openapi = await fetch(`${merchant.base}/openapi.json`).then((r) => r.json());
   assert.equal(openapi.paths[LOCKFILE_PIN_DELTA_PATH].post.operationId, "compareLockfilePinDelta");
   assert.equal(Object.values(openapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length, 26);
+  const lockfileProtocols = (openapi.paths[LOCKFILE_PIN_DELTA_PATH].post["x-payment-info"]?.protocols || [])
+    .flatMap((entry) => Object.keys(entry || {}));
+  assert.deepEqual(lockfileProtocols, ["x402"]);
+  const mppOpenapi = await fetch(`${merchant.base}/mpp-openapi.json`).then((r) => r.json());
+  assert.equal(mppOpenapi.paths[LOCKFILE_PIN_DELTA_PATH], undefined);
+  const mppPaid = Object.values(mppOpenapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length;
+  assert.equal(mppPaid, 24, "MPP OpenAPI stays the dual-stack catalog without this x402-only route");
+  const catalog = await fetch(`${merchant.base}/api/actions`).then((r) => r.json());
+  const lockfileAction = catalog.actions.find((action) => action.route === LOCKFILE_PIN_DELTA_PATH);
+  assert.deepEqual(lockfileAction.paymentProtocols, ["x402"]);
 
   const payment = testPayment(challenge, { id: "lockfile_paid_1234567890ab" });
   const paid = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(deltaBody, { "payment-signature": payment }));
@@ -436,46 +447,8 @@ test("x402 worker crash is HTTP 503 and does not settle", { timeout: 60_000 }, a
   assert.equal(facilitator.calls.settle, 0);
 });
 
-test("MPP timeout stays charged and same-credential retry does not settle again", { timeout: 90_000 }, async (t) => {
-  const dataDir = await mkdtemp(path.join(tmpdir(), "lockfile-mpp-timeout-"));
-  const facilitator = await startFakeFacilitator();
-  let merchant;
-  t.after(async () => {
-    if (merchant) await stopChild(merchant.child);
-    await facilitator.close();
-    await rm(dataDir, { recursive: true, force: true });
-  });
-  merchant = await startMerchant({
-    dataDir,
-    facilitatorUrl: facilitator.url,
-    extraEnv: {
-      LOCKFILE_PIN_DELTA_TIMEOUT_MS: "200",
-      LOCKFILE_PIN_DELTA_WORKER_HOLD_MS: "2000",
-    },
-  });
-  const body = { before: journeyBefore, after: journeyAfter };
-  const unpaid = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(body));
-  assert.equal(unpaid.status, 402);
-  const authorization = await createMppCredential(unpaid);
-  const paid = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(body, { authorization }));
-  const result = await paid.json();
-  assert.equal(paid.status, 503, JSON.stringify(result));
-  assert.equal(result.charged, true);
-  assert.equal(result.owedDelivery, true);
-  assert.equal(result.analysis, "not-run");
-  assert.equal(result.transport, "timeout");
-  assert.equal(facilitator.calls.settle, 1);
-
-  const retry = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(body, { authorization }));
-  const retryText = await retry.text();
-  assert.equal(retry.status, 503, retryText.slice(0, 400));
-  assert.notEqual(retry.headers.get("x-payment-replay"), "hit");
-  assert.doesNotMatch(retryText, /"analysis"\s*:\s*"informational"/);
-  assert.equal(facilitator.calls.settle, 1);
-});
-
-test("MPP unpaid challenge binds POST body and refuses a changed body", { timeout: 90_000 }, async (t) => {
-  const dataDir = await mkdtemp(path.join(tmpdir(), "lockfile-mpp-"));
+test("supplied MPP credential is refused before settlement", { timeout: 90_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "lockfile-mpp-refuse-"));
   const facilitator = await startFakeFacilitator();
   let merchant;
   t.after(async () => {
@@ -484,31 +457,20 @@ test("MPP unpaid challenge binds POST body and refuses a changed body", { timeou
     await rm(dataDir, { recursive: true, force: true });
   });
   merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
-  const body = { before: journeyBefore, after: journeyAfter };
-  const unpaid = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(body));
-  assert.equal(unpaid.status, 402);
-  const authorization = await createMppCredential(unpaid);
-  const paid = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(body, { authorization }));
-  const result = await paid.json();
-  assert.equal(paid.status, 200, JSON.stringify(result));
-  assertOutput(result);
-  assert.equal(result.analysis, "actionable");
-  assert.equal(result.charged, true);
-  assert.equal(facilitator.calls.settle, 1);
-
-  const replay = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(body, { authorization }));
-  assert.equal(replay.status, 200);
-  assert.equal(replay.headers.get("x-payment-replay"), "hit");
-  assert.equal(facilitator.calls.settle, 1);
-
-  const otherBody = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(
-    { before: journeyBefore, after: journeyBefore },
+  const extractUnpaid = await fetch(`${merchant.base}/extract?url=${encodeURIComponent("https://example.com")}`);
+  assert.equal(extractUnpaid.status, 402);
+  assert.match(extractUnpaid.headers.get("www-authenticate") || "", /^Payment /);
+  const authorization = await createMppCredential(extractUnpaid);
+  const refused = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(
+    { before: journeyBefore, after: journeyAfter },
     { authorization },
   ));
-  const otherText = await otherBody.text();
-  assert.ok([402, 409].includes(otherBody.status), `changed MPP body returned ${otherBody.status} ${otherText.slice(0, 300)}`);
-  assert.doesNotMatch(otherText, /"charged"\s*:\s*true/);
-  assert.equal(facilitator.calls.settle, 1);
+  const body = await refused.json();
+  assert.equal(refused.status, 400, JSON.stringify(body));
+  assert.equal(body.charged, false);
+  assert.equal(body.code, "mpp_not_accepted");
+  assert.equal(body.analysis, "not-run");
+  assert.equal(facilitator.calls.settle, 0);
 });
 
 test("lockfile flag does not disable production extract_batch", { timeout: 60_000 }, async (t) => {
@@ -542,7 +504,12 @@ test("lockfile flag does not disable production extract_batch", { timeout: 60_00
   assert.equal(catalog.actions.some((action) => action.route === EXTRACT_BATCH_PATH), true);
   assert.equal(catalog.actions.some((action) => action.route === LOCKFILE_PIN_DELTA_PATH), true);
   assert.equal(batch.status, 402);
+  assert.match(batch.headers.get("www-authenticate") || "", /^Payment /);
   assert.equal(lockfile.status, 402);
+  assert.doesNotMatch(lockfile.headers.get("www-authenticate") || "", /^Payment /);
+  const mppOpenapi = await fetch(`${merchant.base}/mpp-openapi.json`).then((r) => r.json());
+  assert.ok(mppOpenapi.paths[EXTRACT_BATCH_PATH]);
+  assert.equal(mppOpenapi.paths[LOCKFILE_PIN_DELTA_PATH], undefined);
   assert.doesNotMatch(LOCKFILE_PIN_DELTA_QUOTE_MEANING, /D26|EC2/i);
   const client = new Client({ name: "lockfile-batch", version: "0" });
   await client.connect(new StreamableHTTPClientTransport(new URL(`${merchant.base}/mcp`)));

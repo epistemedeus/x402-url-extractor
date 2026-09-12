@@ -40,6 +40,7 @@ test("makes each overlapping web and company tool chooseable without renaming it
   const lockfilePinDelta = decorate("lockfile_pin_delta");
   assert.match(lockfilePinDelta.description, /package-lock\.json/);
   assert.match(lockfilePinDelta.description, /informational/);
+  assert.match(lockfilePinDelta.description, /x402 only/);
   assert.doesNotMatch(lockfilePinDelta.description, /extract\/batch/);
   assert.doesNotMatch(lockfilePinDelta.description, /D26|EC2/i);
   assert.match(extractBatch.description, /Use `extract` for a single URL/);

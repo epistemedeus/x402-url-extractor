@@ -3,7 +3,7 @@
  * External buyer example for POST /lockfile-pin-delta.
  * Reads local lockfile JSON and posts objects. Never sends filesystem paths,
  * commands, or production credentials. Discover is free. Compare is unpaid
- * unless PAYMENT_SIGNATURE or AUTHORIZATION is supplied by the caller.
+ * unless PAYMENT_SIGNATURE is supplied by the caller. MPP is not accepted.
  */
 import { readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
@@ -15,7 +15,7 @@ function usage() {
   node cli.mjs --base-url <origin> compare --before <lock.json> --after <lock.json>
 
 Reads local JSON files and posts lockfile objects. Does not pay unless
-PAYMENT_SIGNATURE (x402) or AUTHORIZATION (MPP) is already in the environment.
+PAYMENT_SIGNATURE (x402) is already in the environment. MPP is not accepted.
 `;
 }
 
@@ -108,7 +108,6 @@ async function compare(base, beforePath, afterPath) {
   const after = readLockfileObject(afterPath, "after");
   const headers = {};
   if (process.env.PAYMENT_SIGNATURE) headers["payment-signature"] = process.env.PAYMENT_SIGNATURE;
-  if (process.env.AUTHORIZATION) headers.authorization = process.env.AUTHORIZATION;
   const result = await postLockfiles(base, before, after, headers);
   return {
     ok: result.status === 200 && result.body?.ok === true,

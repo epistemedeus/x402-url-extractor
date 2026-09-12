@@ -10,7 +10,7 @@ already has batch on (26 paid HTTP / 23 MCP tools). Default-off catalogs are
 
 | Surface | Lockfile flag off | Lockfile flag on |
 | --- | --- | --- |
-| `POST /lockfile-pin-delta` unpaid | 404 | 402 x402 + MPP |
+| `POST /lockfile-pin-delta` unpaid | 404 | 402 x402 only (no MPP `WWW-Authenticate`) |
 | `/openapi.json` | path absent | `compareLockfilePinDelta` |
 | `/.well-known/x402` | item absent | item present |
 | `/api/actions` | action absent | POST action |

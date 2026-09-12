@@ -1063,9 +1063,9 @@ const mppDualStack = createMppDualStack({
         description: resource.description,
         method: resource.method || "GET",
         path,
-        ...(path === EXTRACT_BATCH_PATH || path === LOCKFILE_PIN_DELTA_PATH ? { bindRequestBody: true } : {}),
+        ...(path === EXTRACT_BATCH_PATH ? { bindRequestBody: true } : {}),
       };
-    }),
+    }).filter((route) => route.path !== LOCKFILE_PIN_DELTA_PATH),
     {
       amount: atomicUsdcToDisplay(RESOURCES[11].amount),
       description: RESOURCES[11].description,
@@ -1206,7 +1206,7 @@ const machineActionCatalog = () => ({
       description: resource.description,
       priceAtomicUsdc: resource.amount,
       priceUsdc: Number(resource.amount) / 1e6,
-      paymentProtocols: ["x402", "mpp"],
+      paymentProtocols: route === LOCKFILE_PIN_DELTA_PATH ? ["x402"] : ["x402", "mpp"],
       mimeType: resource.mimeType,
       ...serviceMetadata,
       request: projectDiscoveryRequest(resource.url, method, request),
@@ -1758,18 +1758,32 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
         : agentCashPaymentInfoFor(batchResource),
     });
   }
-  if (LOCKFILE_PIN_DELTA_ENABLED) {
+  if (LOCKFILE_PIN_DELTA_ENABLED && profile !== "mpp") {
     const lockfileResource = {
       amount: LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC,
       method: "POST",
     };
     document.paths[LOCKFILE_PIN_DELTA_PATH] = lockfilePinDeltaOpenApiPath({
-      paymentInfo: profile === "mpp"
-        ? mppPaymentInfoFor(lockfileResource)
-        : agentCashPaymentInfoFor(lockfileResource),
+      paymentInfo: {
+        price: {
+          amount: atomicUsdcToDisplay(lockfileResource.amount),
+          currency: "USD",
+          mode: "fixed",
+        },
+        protocols: [{
+          x402: {
+            asset: USDC_ASSET,
+            network: NETWORK,
+            scheme: "exact",
+          },
+        }],
+      },
     });
   }
-  attachPaidActionEffectContracts(document, EXTRACT_BATCH_PAID_POSTS);
+  attachPaidActionEffectContracts(
+    document,
+    EXTRACT_BATCH_PAID_POSTS.filter((op) => document.paths?.[op.path]?.[op.method.toLowerCase()]),
+  );
   if (profile === "agentcash" && circleGateway.enabled) {
     document.paths[CIRCLE_GATEWAY_PATH] = {
       get: {
