@@ -5,9 +5,9 @@ import { decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
 
 test("publishes unique action-oriented titles for every live MCP tool", () => {
   const metadata = listMcpToolMetadata();
-  assert.equal(metadata.length, 24);
-  assert.equal(new Set(metadata.map((entry) => entry.name)).size, 24);
-  assert.equal(new Set(metadata.map((entry) => entry.title)).size, 24);
+  assert.equal(metadata.length, 25);
+  assert.equal(new Set(metadata.map((entry) => entry.name)).size, 25);
+  assert.equal(new Set(metadata.map((entry) => entry.title)).size, 25);
   for (const entry of metadata) {
     assert.match(entry.title, /^(?:Extract|Read|Scan|Generate|Enrich|Audit|Inspect|Plan|Underwrite|Replay|Preflight|Verify|Evaluate|Search)\b/);
   }
@@ -37,6 +37,7 @@ test("makes each overlapping web and company tool chooseable without renaming it
   assert.match(extract.description, /Use `read` instead/);
   assert.doesNotMatch(extract.description, /Use `extract_batch`/, "default-off selection copy must not recommend an unavailable tool");
   assert.doesNotMatch(extract.description, /lockfile_pin_delta/, "default-off selection copy must not recommend an unavailable tool");
+  assert.doesNotMatch(extract.description, /vendor_budget_impact/, "default-off selection copy must not recommend an unavailable tool");
   const lockfilePinDelta = decorate("lockfile_pin_delta");
   assert.match(lockfilePinDelta.description, /package-lock\.json/);
   assert.match(lockfilePinDelta.description, /informational/);
@@ -45,6 +46,13 @@ test("makes each overlapping web and company tool chooseable without renaming it
   assert.doesNotMatch(lockfilePinDelta.description, /kit 1\.1\.0/);
   assert.doesNotMatch(lockfilePinDelta.description, /extract\/batch/);
   assert.doesNotMatch(lockfilePinDelta.description, /D26|EC2/i);
+  const vendorBudgetImpact = decorate("vendor_budget_impact");
+  assert.match(vendorBudgetImpact.description, /pricing-row/);
+  assert.match(vendorBudgetImpact.description, /informational/);
+  assert.match(vendorBudgetImpact.description, /x402 only/);
+  assert.match(vendorBudgetImpact.description, /customer-x402/);
+  assert.doesNotMatch(vendorBudgetImpact.description, /kit 1\.1\.0/);
+  assert.doesNotMatch(vendorBudgetImpact.description, /D26|EC2/i);
   assert.match(extractBatch.description, /Use `extract` for a single URL/);
   assert.match(read.description, /Use `extract` instead/);
   assert.match(schemaforge.description, /Use `deep_audit` instead/);

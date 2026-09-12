@@ -1,0 +1,10 @@
+{
+  "name": "@samedaydesk/vendor-budget-impact",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline before/after curated pricing-row field/unit impact. No purchase, live quote, or network fetch.",
+  "engines": {
+    "node": ">=22"
+  }
+}

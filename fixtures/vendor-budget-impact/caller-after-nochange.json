@@ -1,0 +1,8 @@
+{
+  "label": "caller",
+  "note": "Return-job no-delta pair. Same rows as SDS52 before.json. Not a SAMPLE kit fixture.",
+  "rows": [
+    { "field": "desk-chat-input", "value": 1.0, "unit": "USD/1M-tokens" },
+    { "field": "desk-chat-output", "value": 4.0, "unit": "USD/1M-tokens" }
+  ]
+}

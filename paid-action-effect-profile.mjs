@@ -20,7 +20,10 @@ export function isReadOnlyPaidPost(method, path) {
   if (batchOn && key === "POST /extract/batch") return true;
   const lockfileEnabled = String(process.env.LOCKFILE_PIN_DELTA_ENABLED || "").trim().toLowerCase();
   const lockfileOn = lockfileEnabled === "1" || lockfileEnabled === "true" || lockfileEnabled === "yes";
-  return lockfileOn && key === "POST /lockfile-pin-delta";
+  if (lockfileOn && key === "POST /lockfile-pin-delta") return true;
+  const vendorBudgetEnabled = String(process.env.VENDOR_BUDGET_IMPACT_ENABLED || "").trim().toLowerCase();
+  const vendorBudgetOn = vendorBudgetEnabled === "1" || vendorBudgetEnabled === "true" || vendorBudgetEnabled === "yes";
+  return vendorBudgetOn && key === "POST /vendor-budget-impact";
 }
 
 export function paidActionEffectExtension({ paymentProtocols = ["x402", "mpp"] } = {}) {

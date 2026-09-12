@@ -1,0 +1,92 @@
+{
+  "measuredAt": "2026-09-12T06:15:49.736Z",
+  "inProcessOrdinary": {
+    "name": "in-process-ordinary",
+    "inProcess": true,
+    "repeats": 20,
+    "wallMs": 0.299,
+    "cpuUserMs": 0.295,
+    "requestBytes": 553,
+    "responseBytes": 4884
+  },
+  "workerOrdinary": {
+    "name": "worker-ordinary",
+    "inProcess": false,
+    "repeats": 8,
+    "wallMs": 33.04,
+    "cpuUserMs": 1.786,
+    "requestBytes": 553,
+    "responseBytes": 4885
+  },
+  "workerMax": {
+    "name": "worker-max-256",
+    "inProcess": false,
+    "repeats": 4,
+    "wallMs": 36.688,
+    "cpuUserMs": 4.317,
+    "requestBytes": 30028,
+    "responseBytes": 3502
+  },
+  "http": {
+    "idleRssKb": 200932,
+    "one": {
+      "wallMs": 60.87,
+      "rssKb": 211132,
+      "responseBytes": 4885
+    },
+    "maxInput": {
+      "wallMs": 59.73,
+      "responseBytes": 3502
+    },
+    "cohort1": {
+      "n": 1,
+      "successful": 1,
+      "busy": 0,
+      "maxWorkersPerProcess": 4,
+      "totalWallMs": 59.41,
+      "meanWallMs": 52.97,
+      "maxWallMs": 52.97,
+      "peakRssKb": 246452,
+      "settle": 2
+    },
+    "cohort6": {
+      "n": 6,
+      "successful": 4,
+      "busy": 2,
+      "maxWorkersPerProcess": 4,
+      "totalWallMs": 98.35,
+      "meanWallMs": 66.07,
+      "maxWallMs": 89.07,
+      "peakRssKb": 325400,
+      "settle": 6
+    },
+    "cohort12": {
+      "n": 12,
+      "successful": 9,
+      "busy": 3,
+      "maxWorkersPerProcess": 4,
+      "totalWallMs": 198.98,
+      "meanWallMs": 158.82,
+      "maxWallMs": 183.35,
+      "peakRssKb": 357508,
+      "settle": 15
+    }
+  },
+  "rates": {
+    "source": "https://docs.railway.com/pricing.md and https://railway.com/pricing.md (2026-09-12); https://docs.cdp.coinbase.com/x402/seller/facilitator.md",
+    "railwayCpuPerVcpuS": 0.00000772,
+    "railwayRamPerGbS": 0.00000386,
+    "railwayEgressPerGb": 0.05,
+    "cdpVerifyUsd": 0,
+    "cdpSettleUsdAfter1000": 0.001
+  },
+  "estimate": {
+    "railwayCpuUsd": 0.0000014155,
+    "railwayRamUsdForCallWindow": 2.413e-7,
+    "railwayEgressUsd": 0.0000015614,
+    "cdpSettleUsdAfterFreeTier": 0.001,
+    "note": "Estimates only. Idle shared RAM is billed while the merchant runs, not per call. First 1000 CDP settles/month are $0."
+  },
+  "keepPriceUsd": "0.005",
+  "provenProfit": false
+}

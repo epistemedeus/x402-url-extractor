@@ -49,6 +49,21 @@ MCP tool's challenge resource is
 `https://agents.samedaydesk.com/lockfile-pin-delta`, not `mcp://`
 and not `/extract/batch`.
 
+`VENDOR_BUDGET_IMPACT_ENABLED=1` adds `POST /vendor-budget-impact` and MCP
+`vendor_budget_impact` for two caller-supplied pricing-row JSON objects
+(`rows` of `field`, finite numeric `value`, and `unit`). The default is off.
+Live `agents.samedaydesk.com` (read-only 2026-09-12) already has batch and
+lockfile on (27 paid HTTP / 24 MCP tools). Enabling vendor-budget beside that
+envelope is 28 / 25. Default-off catalogs remain 25 / 22. Default
+price is `$0.005` (`VENDOR_BUDGET_IMPACT_PRICE`), matching live `GET /extract`.
+Margin is not proven. Initial live release accepts x402 only; existing MPP
+routes including `extract_batch` are unchanged. HTTP JSON only: no filesystem
+paths, arbitrary commands, URLs, or writable caches. Identical rows are
+informational, not engine failure. The signed deployment statement is not
+rewritten here. Existing homepage, extract, and lockfile prices stay as they
+were. The vendor-budget MCP tool's challenge resource is
+`https://agents.samedaydesk.com/vendor-budget-impact`, not `mcp://`.
+
 The extract_batch MCP tool projects the existing HTTP payment and durable replay
 handler. Its challenge resource is `https://agents.samedaydesk.com/extract/batch`,
 not `mcp://`: first call without payment, then reuse the returned HTTP resource

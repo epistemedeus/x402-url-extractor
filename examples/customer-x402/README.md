@@ -74,7 +74,8 @@ Empty, missing, duplicate, or malformed `url` is `authorization_refused` before
 wallet lookup, signing, facilitator verify, or settle. The same client requires
 JSON `{before, after}` objects for `POST /lockfile-pin-delta`. Empty `{}` is
 unpaid lockfile discovery and is not a purchase. This example still supports
-only `GET /extract`, `POST /extract/batch`, and `POST /lockfile-pin-delta`.
+`GET /extract`, `POST /extract/batch`, `POST /lockfile-pin-delta`, and
+`POST /vendor-budget-impact`.
 
 ## Lockfile pin-delta (same client; not the default command)
 
@@ -121,6 +122,27 @@ npm run purchase -- --approve \
 
 Unknown transport after a signed send is **not** permission to pay again.
 Reconcile the attempt receipt; do not mint a new authorization.
+
+## Vendor budget impact (same client; not the default command)
+
+`POST https://agents.samedaydesk.com/vendor-budget-impact` compares two
+caller-supplied pricing-row JSON objects at **5000 atomic USDC** when the
+merchant flag is on. It is not live. Default commands still do **not** pay
+this route. There is no auto-approve.
+
+Empty `{}` is unpaid discovery and is not signed. Missing `before`/`after`
+or missing `rows` is refused before wallet lookup. Inspect, then `--approve`
+with the caller's already configured wallet:
+
+```bash
+npm run preflight -- --authorization ./fixtures/authorization-vendor-budget.json
+npm run purchase -- --approve \
+  --authorization ./fixtures/authorization-vendor-budget.json \
+  --private-key-env CUSTOMER_X402_PRIVATE_KEY
+```
+
+Identical rows are informational, not failure. Unit-string changes stay
+partial and do not invent numeric economics. `purchaseAuthority` stays false.
 
 ```bash
 npm run reconcile -- --reconcile \
