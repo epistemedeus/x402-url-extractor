@@ -2,12 +2,17 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
 
 import {
   SellerIntegrityAuditError,
   classifySellerIntegrityAcquisition,
   normalizeSellerIntegrityAuditInput,
   sellerIntegrityAudit,
+  sellerIntegrityAuditMcpOutputSchema,
   sellerIntegrityAuditOutputSchema,
 } from "./seller-integrity-audit.mjs";
 
@@ -85,6 +90,7 @@ test("returns bounded machine-buyable evidence without schemas or target payment
   assert.equal(result.report.evidenceClass, null);
   assert.equal(result.report.repairPlan.complete, true);
   assert.equal(sellerIntegrityAuditOutputSchema().properties.decision.enum.includes("unverified"), true);
+  assert.equal(sellerIntegrityAuditMcpOutputSchema.safeParse(result).success, true);
 });
 
 test("attributes a bounded receipt-derived referral without passing it to the target audit", async () => {
@@ -255,4 +261,31 @@ test("unverified output validates against the complete advertised schema", async
   assert.equal(result.referralOffer.reward, "none");
   assert.equal(result.referralOffer.qualifiesOn, "none");
   assert.equal(result.referralOffer.id, null);
+});
+
+test("MCP clients receive the full unverified seller-audit contract", async () => {
+  const unverified = await sellerIntegrityAudit({ origin: "https://seller.example", route: "/paid" }, {
+    auditImpl: async () => { throw new Error("request timed out"); },
+  });
+  assert.equal(sellerIntegrityAuditMcpOutputSchema.safeParse(unverified).success, true);
+
+  const server = new McpServer({ name: "seller-schema-test", version: "1.0.0" });
+  server.registerTool("seller_integrity_audit", {
+    inputSchema: { origin: z.string(), route: z.string() },
+    outputSchema: sellerIntegrityAuditMcpOutputSchema,
+  }, async () => ({ content: [{ type: "text", text: JSON.stringify(unverified) }], structuredContent: unverified }));
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const client = new Client({ name: "seller-schema-client", version: "1.0.0" });
+  try {
+    await server.connect(serverTransport);
+    await client.connect(clientTransport);
+    const listed = await client.listTools();
+    const advertised = listed.tools.find((tool) => tool.name === "seller_integrity_audit")?.outputSchema;
+    assert.equal(advertised?.properties?.decision?.enum.includes("unverified"), true);
+    assert.equal(Object.hasOwn(advertised?.properties?.report?.properties || {}, "observedHttpStatus"), true);
+    assert.equal(advertised?.properties?.referralOffer?.properties?.status?.enum.includes("unavailable"), true);
+  } finally {
+    await client.close();
+    await server.close();
+  }
 });

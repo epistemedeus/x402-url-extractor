@@ -1,4 +1,5 @@
 import { auditOrigin, normalizeOrigin } from "agent-payment-integrity";
+import { z } from "zod";
 import {
   createReceiptReferralOffer,
   normalizeReceiptReferralId,
@@ -175,6 +176,92 @@ export function sellerIntegrityAuditOutputSchema() {
     required: ["ok", "product", "version", "checkedAt", "decision", "request", "report", "nextActions", "referralOffer", "boundary"],
   };
 }
+
+const nullableObject = z.object({}).passthrough().nullable();
+const sellerIntegrityEvidenceClass = z.enum([
+  "missing_declared_operation",
+  "invalid_declaration",
+  "declared_url_unavailable",
+  "local_acquisition_limit",
+  "transport_unknown",
+  "seller_contract",
+]).nullable();
+const sellerIntegrityReferralOfferMcpSchema = z.object({
+  v: z.literal("1"),
+  status: z.enum(["available", "declared", "unavailable"]),
+  id: z.string().regex(/^r1_[0-9a-f]{64}$/).nullable(),
+  proof: z.literal("x402-offer-receipt-jcs-sha256-v1"),
+  reward: z.enum(["one_free_changed_state_recheck", "none"]),
+  qualifiesOn: z.enum(["two_distinct_seller_signed_settlement_receipts", "none"]),
+  broadcastRequired: z.literal(false),
+  attributionOnly: z.literal(true),
+  instructions: z.string(),
+}).strict();
+
+export const sellerIntegrityAuditMcpOutputSchema = z.object({
+  ok: z.boolean(),
+  product: z.literal("samedaydesk-seller-integrity-audit"),
+  version: z.literal("1.3.0"),
+  checkedAt: z.string().datetime(),
+  decision: z.enum(["machine_buyable", "contract_ready", "repair_required", "unverified"]),
+  request: z.object({
+    origin: z.string().url(),
+    route: z.string(),
+    method: z.enum(["GET", "POST"]),
+    requiredPaths: z.array(z.string()).max(16),
+    requireBazaar: z.boolean(),
+    referral: z.string().regex(/^r1_[0-9a-f]{64}$/).nullable(),
+  }).strict(),
+  report: z.object({
+    auditCompleted: z.boolean(),
+    failureCode: z.string().nullable(),
+    observedHttpStatus: z.number().int().min(100).max(599).nullable(),
+    evidenceClass: sellerIntegrityEvidenceClass,
+    schemaVersion: z.string().nullable(),
+    sellerVersions: z.object({ x402: z.string().nullable(), mpp: z.string().nullable() }).passthrough().nullable(),
+    status: z.number().int().nullable(),
+    runtimeChallengeVerified: z.boolean(),
+    probe: nullableObject,
+    protocols: z.array(z.string()),
+    valid: z.boolean(),
+    findings: z.array(z.string()),
+    economics: nullableObject,
+    discovery: nullableObject,
+    responseContract: nullableObject,
+    repairPlan: z.object({
+      mode: z.literal("advisory_openapi_repair"),
+      requiredPaths: z.array(z.string()).max(16),
+      guaranteedPaths: z.array(z.string()).max(16),
+      actions: z.array(z.object({
+        requiredPath: z.string(),
+        action: z.enum(["add_property_to_required", "define_and_require_property", "define_nested_property_path"]),
+        parentPath: z.string(),
+        property: z.string(),
+        propertyDeclared: z.boolean(),
+        propertyType: z.string().nullable(),
+      }).strict()).max(16),
+      complete: z.boolean(),
+      boundary: z.object({
+        schemaMutationApplied: z.literal(false),
+        propertyTypesInferred: z.literal(false),
+        sellerRuntimeVerified: z.literal(false),
+        statement: z.string(),
+      }).strict(),
+    }).strict().nullable(),
+  }).strict(),
+  nextActions: z.array(z.string()),
+  referralOffer: sellerIntegrityReferralOfferMcpSchema,
+  boundary: z.object({
+    credentialsUsed: z.literal(false),
+    targetPaymentSigned: z.literal(false),
+    targetPaymentSent: z.literal(false),
+    targetRequestSent: z.literal(false),
+    redirectsFollowed: z.literal(false),
+    responseBodyRead: z.literal(false),
+    schemaRetained: z.literal(false),
+    queryValuesRetained: z.literal(false),
+  }).strict(),
+}).strict();
 
 export const SELLER_INTEGRITY_AUDIT_EXAMPLE = Object.freeze({
   ok: true,
