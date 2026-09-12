@@ -199,6 +199,34 @@ function admitLockfileValue(value, role, limits) {
   return Object.freeze({ text, extracted });
 }
 
+const LOCKFILE_PAYMENT_CREDENTIAL_HEADERS = Object.freeze([
+  "payment-signature",
+  "x-payment",
+  "x-payment-signature",
+]);
+
+function headerPresent(headers, name) {
+  return Object.prototype.hasOwnProperty.call(headers || {}, name)
+    || Object.prototype.hasOwnProperty.call(headers || {}, name.toLowerCase());
+}
+
+function requestHasPaymentCredential(req) {
+  const headers = req?.headers || {};
+  if (LOCKFILE_PAYMENT_CREDENTIAL_HEADERS.some((name) => headerPresent(headers, name))) return true;
+  if (!headerPresent(headers, "authorization")) return false;
+  const authorization = req.get?.("authorization") || headers.authorization || headers.Authorization || "";
+  if (String(authorization).trim() === "") return true;
+  return hasMppPaymentAuthorizationForPreflight(headers);
+}
+
+export function isLockfileUnsignedDiscoveryProbe(req) {
+  if (requestHasPaymentCredential(req)) return false;
+  const body = req?.body;
+  if (body == null) return true;
+  if (typeof body !== "object" || Array.isArray(body)) return false;
+  return !Object.hasOwn(body, "before") && !Object.hasOwn(body, "after");
+}
+
 export function admitLockfilePinDeltaRequest(body, limits = lockfilePinDeltaLimits()) {
   if (body == null || typeof body !== "object" || Array.isArray(body)) {
     inputError("request body must be a JSON object");
@@ -606,13 +634,14 @@ export function mountLockfilePinDeltaParser(app, { env = process.env } = {}) {
   const limits = lockfilePinDeltaLimits(env);
   app.post(LOCKFILE_PIN_DELTA_PATH, async (req, res, next) => {
     try {
-      if (!isJsonContentType(req)) {
-        return unchargedError(res, new LockfilePinDeltaInputError("Content-Type must be application/json", { status: 415, code: "unsupported_media_type" }));
-      }
       const raw = await readBoundedJsonBody(req, { maxBytes: limits.maxRequestBytes, timeoutMs: limits.timeoutMs });
       req.rawBody = raw;
       if (!raw.length) {
-        return unchargedError(res, new LockfilePinDeltaInputError("request body must be a JSON object"));
+        req.body = {};
+        return next();
+      }
+      if (!isJsonContentType(req)) {
+        return unchargedError(res, new LockfilePinDeltaInputError("Content-Type must be application/json", { status: 415, code: "unsupported_media_type" }));
       }
       try {
         req.body = JSON.parse(raw.toString("utf8"));
@@ -630,6 +659,12 @@ export function mountLockfilePinDeltaParser(app, { env = process.env } = {}) {
 export function validateLockfilePinDeltaRequest(req, res, next) {
   if (req.method !== LOCKFILE_PIN_DELTA_METHOD || !isLockfilePinDeltaPath(req.path)) return next();
   try {
+    if (isLockfileUnsignedDiscoveryProbe(req)) {
+      res.set("X-SameDayDesk-Paid-Effect", "read_only");
+      res.set("X-SameDayDesk-Paid-Effect-Profile", "/.well-known/paid-action-effects.json");
+      res.set("X-SameDayDesk-Lockfile-Pin-Delta", "enabled");
+      return next();
+    }
     res.locals.lockfilePinDeltaInput = admitLockfilePinDeltaRequest(req.body);
     if (hasMppPaymentAuthorizationForPreflight(req.headers)) {
       return unchargedError(res, new LockfilePinDeltaInputError(

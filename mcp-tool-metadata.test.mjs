@@ -41,6 +41,8 @@ test("makes each overlapping web and company tool chooseable without renaming it
   assert.match(lockfilePinDelta.description, /package-lock\.json/);
   assert.match(lockfilePinDelta.description, /informational/);
   assert.match(lockfilePinDelta.description, /x402 only/);
+  assert.match(lockfilePinDelta.description, /customer-x402/);
+  assert.doesNotMatch(lockfilePinDelta.description, /kit 1\.1\.0/);
   assert.doesNotMatch(lockfilePinDelta.description, /extract\/batch/);
   assert.doesNotMatch(lockfilePinDelta.description, /D26|EC2/i);
   assert.match(extractBatch.description, /Use `extract` for a single URL/);
