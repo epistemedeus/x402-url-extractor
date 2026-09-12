@@ -1,0 +1,35 @@
+{
+  "package": "mcp",
+  "version": "2.2.0",
+  "yanked": false,
+  "requires_python": ">=3.10",
+  "summary": "Model Context Protocol SDK",
+  "classifiers_stable": "Development Status :: 5 - Production/Stable",
+  "pypi_json": "https://pypi.org/pypi/mcp/2.2.0/json",
+  "pypi_project": "https://pypi.org/project/mcp/2.2.0/",
+  "documentation": "https://py.sdk.modelcontextprotocol.io/",
+  "repository": "https://github.com/modelcontextprotocol/python-sdk",
+  "homepage": "https://modelcontextprotocol.io",
+  "client_import": "from mcp import Client",
+  "server_import": "from mcp.server import MCPServer",
+  "wheel": {
+    "filename": "mcp-2.2.0-py3-none-any.whl",
+    "packagetype": "bdist_wheel",
+    "sha256": "bde982589473a060ae145e3406e9a5333fe538c97229ba841f5a7f92be004f81",
+    "url": "https://files.pythonhosted.org/packages/1b/ff/8e7eade68b8a28f7da0ed1085544341b51f9c935dbf6b95c76b7edfea6a0/mcp-2.2.0-py3-none-any.whl",
+    "upload_time_iso_8601": "2026-09-07T16:06:19.711091Z"
+  },
+  "sdist": {
+    "filename": "mcp-2.2.0.tar.gz",
+    "packagetype": "sdist",
+    "sha256": "2dc37ecb1974becdcebdbf7561e7c15a07dbbf20ba21ba16c3593b3038b3afbd",
+    "url": "https://files.pythonhosted.org/packages/76/31/ac54fb0fdd5b37de704486e288bba4fbbb463f24cfcfedbede407b854513/mcp-2.2.0.tar.gz",
+    "upload_time_iso_8601": "2026-09-07T16:06:23.439276Z"
+  },
+  "dependency": {
+    "name": "mcp-types",
+    "pinned_by_mcp": "2.2.0"
+  },
+  "fetched_at": "2026-09-12T06:21:00Z",
+  "note": "This experiment imports the installed official Client. It does not implement JSON-RPC by hand."
+}

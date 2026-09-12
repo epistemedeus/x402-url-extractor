@@ -1,0 +1,2239 @@
+{
+  "lockfile_pin_delta": {
+    "name": "lockfile_pin_delta",
+    "title": "Inspect Lockfile Pin Delta",
+    "description": "Inspect two caller-supplied npm package-lock.json objects and return added, removed, and changed name+version+integrity+resolved pins. Supply JSON `before` and `after` lockfile objects, not filesystem paths, URLs, or commands. An identical pin set is informational, not a failure. HTML, package.json, and unsupported lockfileVersion values are refused before payment. This is not an npm install, audit, or purchase. Ordinary wallets sign through examples/customer-x402 (inspect, explicit approve, attempt-receipt, read-only reconcile), not a precomputed signature. Initial live release accepts x402 only. Payment challenge and credentials are bound to https://agents.samedaydesk.com/lockfile-pin-delta, not mcp://. Retry the identical authorized arguments and credential.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "before": {
+          "type": "object",
+          "additionalProperties": {},
+          "description": "npm package-lock.json object (lockfileVersion 2 or 3). Not a filesystem path, URL, or command."
+        },
+        "after": {
+          "type": "object",
+          "additionalProperties": {},
+          "description": "npm package-lock.json object (lockfileVersion 2 or 3). Not a filesystem path, URL, or command."
+        }
+      },
+      "required": [
+        "before",
+        "after"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "product": {
+          "type": "string",
+          "const": "samedaydesk-lockfile-pin-delta"
+        },
+        "schemaVersion": {
+          "type": "string",
+          "const": "samedaydesk.lockfile-pin-delta-http.v0"
+        },
+        "quote": {
+          "type": "object",
+          "properties": {
+            "amountAtomic": {
+              "type": "string"
+            },
+            "displayUsdc": {
+              "type": "string"
+            },
+            "meaning": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "amountAtomic",
+            "displayUsdc",
+            "meaning"
+          ],
+          "additionalProperties": false
+        },
+        "charged": {
+          "type": "boolean"
+        },
+        "analysis": {
+          "type": "string",
+          "enum": [
+            "actionable",
+            "informational",
+            "partial",
+            "not-run"
+          ]
+        },
+        "transport": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "timeout",
+            "engine-crash",
+            "internal-error",
+            "rejected"
+          ]
+        },
+        "engine": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": {}
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "markdown": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "markdownOmitted": {
+          "type": "boolean"
+        },
+        "digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "engineProvenance": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "costInputs": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "boundary": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "error": {
+          "type": "string"
+        },
+        "owedDelivery": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "ok",
+        "product",
+        "schemaVersion",
+        "quote",
+        "charged",
+        "analysis",
+        "transport",
+        "engine",
+        "digest",
+        "engineProvenance",
+        "costInputs",
+        "boundary",
+        "limits"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "annotations": null,
+    "_meta": {
+      "x402": {
+        "paymentRequired": true,
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "amount": "5000",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+            "maxTimeoutSeconds": 300,
+            "extra": {
+              "name": "USD Coin",
+              "version": "2"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "opportunity_preflight": {
+    "name": "opportunity_preflight",
+    "title": "Preflight Agent Work Opportunity",
+    "description": "Agent work opportunity -> deterministic attempt, verify-first, or abandon preflight using caller-supplied cost and selection assumptions plus dated platform evidence. Returns break-even probability, expected surplus, hard gates, and source-linked evidence. No claim, bid, payment, or submission.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "platform": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Optional platform slug used to attach dated platform-health evidence when a matching card exists."
+        },
+        "rewardUsd": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Maximum gross reward in USD if the opportunity is selected and paid."
+        },
+        "hours": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Estimated human and agent work time in hours for one complete attempt."
+        },
+        "hourlyCostUsd": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100000,
+          "description": "Internal opportunity cost per hour in USD."
+        },
+        "computeUsd": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0,
+          "description": "Expected model, API, hosting, and compute spend in USD for one attempt."
+        },
+        "mandatorySpendUsd": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0,
+          "description": "Non-recoverable cash spend in USD required before the opportunity can settle."
+        },
+        "reusableValueUsd": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0,
+          "description": "Conservative USD value of reusable code, research, distribution, or other assets created by the attempt."
+        },
+        "selectionProbabilityPct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Caller-supplied probability, from 0 to 100, of receiving the reward; omit to receive a verify-first decision."
+        },
+        "competition": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Known number of competing submissions or workers; use 0 when unknown."
+        },
+        "slots": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1,
+          "description": "Number of independently paid winner or worker slots."
+        },
+        "agentAccess": {
+          "type": "string",
+          "enum": [
+            "agent_allowed",
+            "agent_only",
+            "mixed",
+            "human_only",
+            "unknown"
+          ],
+          "default": "unknown",
+          "description": "Whether the platform explicitly allows agent participation, is agent-only, mixes agents and humans, is human-only, or remains unknown."
+        },
+        "acceptance": {
+          "type": "string",
+          "enum": [
+            "deterministic",
+            "machine_scored",
+            "timed_review",
+            "discretionary",
+            "unknown"
+          ],
+          "default": "unknown",
+          "description": "How completion is accepted: deterministic proof, machine score, review deadline, discretionary judgment, or unknown."
+        },
+        "settlement": {
+          "type": "string",
+          "enum": [
+            "direct",
+            "escrow",
+            "platform_balance",
+            "discretionary",
+            "unfunded",
+            "unknown"
+          ],
+          "default": "unknown",
+          "description": "How the reward is funded and paid: direct, escrow, platform balance, discretionary, unfunded, or unknown."
+        }
+      },
+      "required": [
+        "rewardUsd",
+        "hours",
+        "hourlyCostUsd"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean",
+          "const": true
+        },
+        "product": {
+          "type": "string",
+          "const": "samedaydesk-opportunity-preflight"
+        },
+        "version": {
+          "type": "string",
+          "const": "1.0.0"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "attempt",
+            "verify_first",
+            "abandon"
+          ]
+        },
+        "input": {
+          "type": "object",
+          "properties": {
+            "platform": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "rewardUsd": {
+              "type": "number"
+            },
+            "hours": {
+              "type": "number"
+            },
+            "hourlyCostUsd": {
+              "type": "number"
+            },
+            "computeUsd": {
+              "type": "number"
+            },
+            "mandatorySpendUsd": {
+              "type": "number"
+            },
+            "reusableValueUsd": {
+              "type": "number"
+            },
+            "selectionProbabilityPct": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "competition": {
+              "type": "integer"
+            },
+            "slots": {
+              "type": "integer"
+            },
+            "agentAccess": {
+              "type": "string",
+              "enum": [
+                "agent_allowed",
+                "agent_only",
+                "mixed",
+                "human_only",
+                "unknown"
+              ]
+            },
+            "acceptance": {
+              "type": "string",
+              "enum": [
+                "deterministic",
+                "machine_scored",
+                "timed_review",
+                "discretionary",
+                "unknown"
+              ]
+            },
+            "settlement": {
+              "type": "string",
+              "enum": [
+                "direct",
+                "escrow",
+                "platform_balance",
+                "discretionary",
+                "unfunded",
+                "unknown"
+              ]
+            }
+          },
+          "required": [
+            "platform",
+            "rewardUsd",
+            "hours",
+            "hourlyCostUsd",
+            "computeUsd",
+            "mandatorySpendUsd",
+            "reusableValueUsd",
+            "selectionProbabilityPct",
+            "competition",
+            "slots",
+            "agentAccess",
+            "acceptance",
+            "settlement"
+          ],
+          "additionalProperties": false
+        },
+        "economics": {
+          "type": "object",
+          "properties": {
+            "executionCostUsd": {
+              "type": "number"
+            },
+            "mandatorySpendUsd": {
+              "type": "number"
+            },
+            "totalAtRiskUsd": {
+              "type": "number"
+            },
+            "reusableValueUsd": {
+              "type": "number"
+            },
+            "expectedRewardUsd": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "expectedSurplusUsd": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "breakEvenSelectionProbabilityPct": {
+              "type": "number"
+            },
+            "equalEntryShareReferencePct": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "probabilitySource": {
+              "type": "string",
+              "enum": [
+                "missing",
+                "caller_supplied"
+              ]
+            },
+            "equalEntryShareBoundary": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "executionCostUsd",
+            "mandatorySpendUsd",
+            "totalAtRiskUsd",
+            "reusableValueUsd",
+            "expectedRewardUsd",
+            "expectedSurplusUsd",
+            "breakEvenSelectionProbabilityPct",
+            "equalEntryShareReferencePct",
+            "probabilitySource",
+            "equalEntryShareBoundary"
+          ],
+          "additionalProperties": false
+        },
+        "gates": {
+          "type": "object",
+          "properties": {
+            "hardBlocks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "requiredChecks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "hardBlocks",
+            "requiredChecks",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        "platformEvidence": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "platformId": {
+                  "type": "string"
+                },
+                "platformName": {
+                  "type": "string"
+                },
+                "healthCategory": {
+                  "type": "string"
+                },
+                "confidence": {
+                  "type": "string"
+                },
+                "freshness": {
+                  "type": "string"
+                },
+                "observedAt": {
+                  "type": "string"
+                },
+                "freshUntil": {
+                  "type": "string"
+                },
+                "sampleCount": {
+                  "type": "integer"
+                },
+                "settlementMechanism": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "rightsClass": {
+                  "type": "string"
+                },
+                "evidence": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "factClass": {
+                        "type": "string"
+                      },
+                      "summary": {
+                        "type": "string"
+                      },
+                      "sourceUrl": {
+                        "type": "string"
+                      },
+                      "observedAt": {
+                        "type": "string"
+                      },
+                      "stageReached": {
+                        "type": "string"
+                      },
+                      "failedAt": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "confidence": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "factClass",
+                      "summary",
+                      "sourceUrl",
+                      "observedAt",
+                      "stageReached",
+                      "failedAt",
+                      "confidence"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "unknowns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "platformId",
+                "platformName",
+                "healthCategory",
+                "confidence",
+                "freshness",
+                "observedAt",
+                "freshUntil",
+                "sampleCount",
+                "settlementMechanism",
+                "rightsClass",
+                "evidence",
+                "unknowns"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "boundary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ok",
+        "product",
+        "version",
+        "decision",
+        "input",
+        "economics",
+        "gates",
+        "platformEvidence",
+        "boundary"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "annotations": null,
+    "_meta": {
+      "x402": {
+        "paymentRequired": true,
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "amount": "50000",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+            "maxTimeoutSeconds": 300,
+            "extra": {
+              "name": "USD Coin",
+              "version": "2"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "agent_discoverability_audit": {
+    "name": "agent_discoverability_audit",
+    "title": "Audit Agent Service Discoverability",
+    "description": "Measure one service's brand-blind rank, source-family coverage, expected-route presence, canonical-vs-alias listing identity, duplicate records, competitors, and exact-price drift across ten public machine-service discovery views. Supply `runtimeUrl` with an exact GET route to derive the comparison price from one coherent live unsigned x402 or MPP offer; otherwise `expectedPriceUsd` remains caller-supplied. Set `surfaceAudit` to check the target's public Agent Card, ERC-8004 registration document, and action catalog. Set `materializationAudit` with an exact GET or POST route to distinguish Coinbase seller ineligibility from provider acceptance without exact-resource Bazaar materialization. Catalog queries use no credentials or payments. Results are point-in-time provider and catalog evidence, not demand, seller trust, settlement, or future-rank proof.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "origin": {
+          "type": "string",
+          "format": "uri",
+          "description": "Public HTTPS service origin"
+        },
+        "intent": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 500,
+          "description": "Brand-blind capability description"
+        },
+        "route": {
+          "type": "string",
+          "pattern": "^\\/[^?#]*$",
+          "description": "Optional expected exact path"
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "GET",
+            "POST"
+          ],
+          "description": "Exact route method for the optional Coinbase materialization audit. Defaults to GET; runtimeUrl is GET-only."
+        },
+        "runtimeUrl": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 2048,
+          "description": "Optional exact same-origin HTTPS GET URL whose unpaid x402 or MPP offer supplies the runtime price reference. Requires route and an exactly matching pathname."
+        },
+        "payTo": {
+          "type": "string",
+          "pattern": "^0x[0-9a-fA-F]{40}$",
+          "description": "Optional EVM payTo for alias matching"
+        },
+        "expectedPriceUsd": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000000
+            },
+            {
+              "type": "string",
+              "pattern": "^(?:0|[1-9][0-9]*)(?:\\.[0-9]{1,6})?$"
+            }
+          ],
+          "description": "Optional exact route price expected by the caller. A coherent runtimeUrl offer takes precedence and caller drift is reported."
+        },
+        "surfaceAudit": {
+          "type": "boolean",
+          "description": "When true, inspect the target's public Agent Card, ERC-8004 registration document, and action catalog for the expected route through bounded same-origin fetches."
+        },
+        "materializationAudit": {
+          "type": "boolean",
+          "description": "When true with route and method, distinguish Coinbase seller ineligibility from provider acceptance without exact-resource Bazaar materialization."
+        }
+      },
+      "required": [
+        "origin",
+        "intent"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": null,
+    "annotations": null,
+    "_meta": {
+      "x402": {
+        "paymentRequired": true,
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "amount": "50000",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+            "maxTimeoutSeconds": 300,
+            "extra": {
+              "name": "USD Coin",
+              "version": "2"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "payment_offer_preflight": {
+    "name": "payment_offer_preflight",
+    "title": "Preflight x402 and MPP Offer",
+    "description": "Compare x402 and MPP payment challenges, terms, and seller-declared JSON success-response readiness for one exact public HTTPS GET route before buyer authorization, including URL and realm binding, expiry, cross-protocol economic parity, and exact-route OpenAPI evidence. Use `agent_discoverability_audit` instead when you need to know whether catalogs rank or expose a service. This tool uses no target credential, signature, or target payment, follows no redirect, never reads the paid target body, and reads only the same-origin public OpenAPI document under a strict size cap. A seller declaration is advisory and does not establish runtime validity, seller trust, utility, or settlement reliability.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 2048,
+          "description": "Exact public HTTPS GET route whose unpaid x402 and MPP challenge headers and same-origin OpenAPI success-response declaration should be inspected before buyer authorization. Credential-like query keys, fragments, unresolved parameters, local hosts, redirects, and non-public IPs are rejected."
+        },
+        "catalog": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "description": "Public catalog or registry name."
+            },
+            "protocol": {
+              "type": "string",
+              "enum": [
+                "x402",
+                "mpp"
+              ],
+              "description": "Optional advertised payment protocol."
+            },
+            "method": {
+              "type": "string",
+              "const": "GET",
+              "description": "Catalog request method. The current product inspects exact GET routes."
+            },
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "maxLength": 2048,
+              "description": "Exact catalog candidate URL, including all non-secret query values."
+            },
+            "amountAtomic": {
+              "type": "string",
+              "pattern": "^(?:0|[1-9][0-9]{0,77})$",
+              "description": "Optional advertised price in atomic currency units."
+            },
+            "network": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Optional advertised network identifier."
+            },
+            "asset": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Optional advertised currency or asset identifier."
+            },
+            "recipient": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Optional advertised payment recipient."
+            },
+            "expiresAt": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Optional advertised offer expiry."
+            }
+          },
+          "required": [
+            "source",
+            "method",
+            "url"
+          ],
+          "additionalProperties": false,
+          "description": "Optional caller-supplied catalog candidate. When present, the tool compares it with every live unsigned offer across request, protocol, amount, network, asset, recipient, and expiry."
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean",
+          "const": true
+        },
+        "product": {
+          "type": "string",
+          "const": "samedaydesk-payment-offer-preflight"
+        },
+        "version": {
+          "type": "string",
+          "const": "1.2.0"
+        },
+        "checkedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "target": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string",
+              "const": "GET"
+            },
+            "url": {
+              "type": "string"
+            },
+            "httpStatus": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "method",
+            "url",
+            "httpStatus"
+          ],
+          "additionalProperties": false
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "parseable_offer",
+            "review_required",
+            "no_parseable_offer"
+          ]
+        },
+        "protocols": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "mpp",
+              "x402"
+            ]
+          }
+        },
+        "offerCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "offers": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "protocol": {
+                    "type": "string",
+                    "const": "x402"
+                  },
+                  "scheme": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "intent": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "network": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "asset": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "amountAtomic": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "decimals": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "amountDisplay": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "recipient": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "expiresAt": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "valid": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "protocol",
+                  "scheme",
+                  "intent",
+                  "network",
+                  "asset",
+                  "amountAtomic",
+                  "decimals",
+                  "amountDisplay",
+                  "recipient",
+                  "expiresAt",
+                  "valid"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "protocol": {
+                    "type": "string",
+                    "const": "mpp"
+                  },
+                  "scheme": {
+                    "$ref": "#/properties/offers/items/anyOf/0/properties/scheme"
+                  },
+                  "intent": {
+                    "$ref": "#/properties/offers/items/anyOf/0/properties/intent"
+                  },
+                  "network": {
+                    "$ref": "#/properties/offers/items/anyOf/0/properties/network"
+                  },
+                  "asset": {
+                    "$ref": "#/properties/offers/items/anyOf/0/properties/asset"
+                  },
+                  "amountAtomic": {
+                    "$ref": "#/properties/offers/items/anyOf/0/properties/amountAtomic"
+                  },
+                  "decimals": {
+                    "$ref": "#/properties/offers/items/anyOf/0/properties/decimals"
+                  },
+                  "amountDisplay": {
+                    "$ref": "#/properties/offers/items/anyOf/0/properties/amountDisplay"
+                  },
+                  "recipient": {
+                    "$ref": "#/properties/offers/items/anyOf/0/properties/recipient"
+                  },
+                  "expiresAt": {
+                    "$ref": "#/properties/offers/items/anyOf/0/properties/expiresAt"
+                  },
+                  "valid": {
+                    "$ref": "#/properties/offers/items/anyOf/0/properties/valid"
+                  },
+                  "realm": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "credentialTypes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "protocol",
+                  "scheme",
+                  "intent",
+                  "network",
+                  "asset",
+                  "amountAtomic",
+                  "decimals",
+                  "amountDisplay",
+                  "recipient",
+                  "expiresAt",
+                  "valid",
+                  "realm",
+                  "credentialTypes"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "parity": {
+          "type": "object",
+          "properties": {
+            "compared": {
+              "type": "boolean"
+            },
+            "consistent": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "driftFields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "compared",
+            "consistent",
+            "driftFields"
+          ],
+          "additionalProperties": false
+        },
+        "catalogCoherence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "decision": {
+                "type": "string",
+                "enum": [
+                  "coherent",
+                  "partial",
+                  "drifted"
+                ]
+              }
+            },
+            "required": [
+              "decision"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "responseContract": {
+          "type": "object",
+          "properties": {
+            "decision": {
+              "type": "string",
+              "enum": [
+                "admissible",
+                "partial",
+                "absent",
+                "invalid"
+              ]
+            }
+          },
+          "required": [
+            "decision"
+          ],
+          "additionalProperties": true
+        },
+        "responseContractAcquisition": {
+          "type": "object",
+          "properties": {
+            "attempted": {
+              "type": "boolean",
+              "const": true
+            },
+            "sameOrigin": {
+              "type": "boolean",
+              "const": true
+            },
+            "path": {
+              "type": "string",
+              "const": "/openapi.json"
+            },
+            "maxBytes": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "documentRead": {
+              "type": "boolean"
+            },
+            "targetResponseBodyRead": {
+              "type": "boolean",
+              "const": false
+            },
+            "credentialsUsed": {
+              "type": "boolean",
+              "const": false
+            },
+            "redirectsFollowed": {
+              "type": "boolean",
+              "const": false
+            }
+          },
+          "required": [
+            "attempted",
+            "sameOrigin",
+            "path",
+            "maxBytes",
+            "documentRead",
+            "targetResponseBodyRead",
+            "credentialsUsed",
+            "redirectsFollowed"
+          ],
+          "additionalProperties": false
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "error",
+                  "warning"
+                ]
+              },
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "severity",
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "boundary": {
+          "type": "object",
+          "properties": {
+            "credentialsUsed": {
+              "type": "boolean",
+              "const": false
+            },
+            "paymentSigned": {
+              "type": "boolean",
+              "const": false
+            },
+            "paymentSent": {
+              "type": "boolean",
+              "const": false
+            },
+            "targetResponseBodyRead": {
+              "type": "boolean",
+              "const": false
+            },
+            "openApiDocumentRead": {
+              "type": "boolean"
+            },
+            "redirectsFollowed": {
+              "type": "boolean",
+              "const": false
+            },
+            "claim": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "credentialsUsed",
+            "paymentSigned",
+            "paymentSent",
+            "targetResponseBodyRead",
+            "openApiDocumentRead",
+            "redirectsFollowed",
+            "claim"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "ok",
+        "product",
+        "version",
+        "checkedAt",
+        "target",
+        "decision",
+        "protocols",
+        "offerCount",
+        "offers",
+        "parity",
+        "catalogCoherence",
+        "responseContract",
+        "responseContractAcquisition",
+        "findings",
+        "boundary"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "annotations": null,
+    "_meta": {
+      "x402": {
+        "paymentRequired": true,
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "amount": "5000",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+            "maxTimeoutSeconds": 300,
+            "extra": {
+              "name": "USD Coin",
+              "version": "2"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "seller_integrity_audit": {
+    "name": "seller_integrity_audit",
+    "title": "Audit Seller Machine Buyability",
+    "description": "Use this after a buyer integration fails, a seller changes a paid route, or before the next paid retry or release. Audit one exact paid GET or POST seller route against buyer-required JSON success paths. GET verifies constructible non-secret input, exact request binding, live x402 and MPP economics, and optional Bazaar eligibility; POST performs static-safe OpenAPI contract analysis and sends no target request. Use `payment_offer_preflight` instead when you already have one exact callable GET URL and only need its current unpaid offer before buyer authorization, or `agent_discoverability_audit` for catalog rank and identity. Uses no target credential, signature, or target payment and retains no seller schema, body, or query values.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "origin": {
+          "type": "string",
+          "format": "uri",
+          "description": "Credential-free public HTTPS seller origin on port 443."
+        },
+        "route": {
+          "type": "string",
+          "pattern": "^\\/[^/?#{}][^?#{}]*$",
+          "description": "Exact paid GET or POST path declared by the seller, without query or template parameters."
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "GET",
+            "POST"
+          ],
+          "default": "GET",
+          "description": "POST receives static OpenAPI response-contract analysis without sending a target request."
+        },
+        "requiredPaths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+){0,7}$"
+          },
+          "maxItems": 16,
+          "default": [],
+          "description": "Buyer-required dotted success-response paths that the seller schema must guarantee recursively."
+        },
+        "requireBazaar": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, missing Bazaar discovery metadata becomes a repair finding for live-probed GET routes."
+        },
+        "referral": {
+          "type": "string",
+          "pattern": "^r1_[0-9a-f]{64}$",
+          "description": "Optional x402 receipt-derived acquisition label. It cannot change payment or delivery."
+        }
+      },
+      "required": [
+        "origin",
+        "route"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": null,
+    "annotations": null,
+    "_meta": {
+      "x402": {
+        "paymentRequired": true,
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "amount": "10000",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+            "maxTimeoutSeconds": 300,
+            "extra": {
+              "name": "USD Coin",
+              "version": "2"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "contract_qualified_search": {
+    "name": "contract_qualified_search",
+    "title": "Search Contract-Qualified Services",
+    "description": "Search Agent402 and the official MPP catalog for paid machine services that both match a capability intent and guarantee buyer-required JSON response paths. Use `agent_discoverability_audit` when you are measuring one known seller's catalog reach or rank, `seller_integrity_audit` when you already know the exact seller route to inspect, or `payment_offer_preflight` when you already have one exact callable GET URL. This search excludes SameDayDesk-owned supply and unresolved routes before audit, uses no credential or wallet, sends no seller POST or target payment, reads no paid response body, and returns only a query digest.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 300,
+          "description": "Capability intent sent to Agent402 and used locally to rank MPP catalog metadata. Do not include credentials or private values."
+        },
+        "requiredPaths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+){0,7}$"
+          },
+          "minItems": 1,
+          "maxItems": 16,
+          "description": "Buyer-required dotted success-response paths that every returned seller schema must guarantee recursively."
+        },
+        "maxPriceDisplayUnits": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10,
+          "default": 0.1,
+          "description": "Maximum advertised per-call price in each source's display currency."
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8,
+          "default": 5,
+          "description": "Maximum candidates audited and returned across Agent402 and MPP."
+        }
+      },
+      "required": [
+        "query",
+        "requiredPaths"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean",
+          "const": true
+        },
+        "product": {
+          "type": "string",
+          "const": "samedaydesk-contract-qualified-search"
+        },
+        "version": {
+          "type": "string",
+          "const": "1.1.0"
+        },
+        "checkedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "qualified_candidates_found",
+            "no_qualified_candidate"
+          ]
+        },
+        "request": {
+          "type": "object",
+          "properties": {
+            "queryDigest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "requiredPaths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "maxItems": 16
+            },
+            "maxPriceDisplayUnits": {
+              "type": "number"
+            },
+            "limit": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "queryDigest",
+            "requiredPaths",
+            "maxPriceDisplayUnits",
+            "limit"
+          ],
+          "additionalProperties": false
+        },
+        "sources": {
+          "type": "object",
+          "properties": {
+            "agent402": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "ok",
+                    "unavailable"
+                  ]
+                },
+                "discovered": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "audited": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "status",
+                "discovered",
+                "audited"
+              ],
+              "additionalProperties": false
+            },
+            "mpp": {
+              "$ref": "#/properties/sources/properties/agent402"
+            }
+          },
+          "required": [
+            "agent402",
+            "mpp"
+          ],
+          "additionalProperties": false
+        },
+        "qualified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string",
+                "enum": [
+                  "agent402",
+                  "mpp"
+                ]
+              },
+              "serviceName": {
+                "type": "string"
+              },
+              "origin": {
+                "type": "string",
+                "format": "uri"
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST"
+                ]
+              },
+              "route": {
+                "type": "string"
+              },
+              "price": {
+                "type": "object",
+                "properties": {
+                  "amountDisplayUnits": {
+                    "type": "number"
+                  },
+                  "currency": {
+                    "type": "string"
+                  },
+                  "decimals": {
+                    "type": "integer"
+                  },
+                  "amountAtomic": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amountDisplayUnits",
+                  "currency",
+                  "decimals",
+                  "amountAtomic"
+                ],
+                "additionalProperties": false
+              },
+              "description": {
+                "type": "string"
+              },
+              "decision": {
+                "type": "string",
+                "enum": [
+                  "machine_buyable",
+                  "contract_ready"
+                ]
+              },
+              "protocols": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "runtimeChallengeVerified": {
+                "type": "boolean"
+              },
+              "guaranteedPaths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 16
+              }
+            },
+            "required": [
+              "source",
+              "serviceName",
+              "origin",
+              "method",
+              "route",
+              "price",
+              "description",
+              "decision",
+              "protocols",
+              "runtimeChallengeVerified",
+              "guaranteedPaths"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 8
+        },
+        "rejected": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "$ref": "#/properties/qualified/items/properties/source"
+              },
+              "serviceName": {
+                "$ref": "#/properties/qualified/items/properties/serviceName"
+              },
+              "origin": {
+                "$ref": "#/properties/qualified/items/properties/origin"
+              },
+              "method": {
+                "$ref": "#/properties/qualified/items/properties/method"
+              },
+              "route": {
+                "$ref": "#/properties/qualified/items/properties/route"
+              },
+              "price": {
+                "$ref": "#/properties/qualified/items/properties/price"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "findings": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 12
+              }
+            },
+            "required": [
+              "source",
+              "serviceName",
+              "origin",
+              "method",
+              "route",
+              "price",
+              "reason",
+              "findings"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 8
+        },
+        "boundary": {
+          "type": "object",
+          "properties": {
+            "credentialsUsed": {
+              "type": "boolean",
+              "const": false
+            },
+            "walletAccessed": {
+              "type": "boolean",
+              "const": false
+            },
+            "targetPaymentSigned": {
+              "type": "boolean",
+              "const": false
+            },
+            "targetPaymentSent": {
+              "type": "boolean",
+              "const": false
+            },
+            "sellerPostRequestSent": {
+              "type": "boolean",
+              "const": false
+            },
+            "paidResponseBodyRead": {
+              "type": "boolean",
+              "const": false
+            },
+            "queryRetained": {
+              "type": "boolean",
+              "const": false
+            },
+            "querySentTo": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "const": "agent402"
+              }
+            },
+            "directoryRequests": {
+              "type": "integer"
+            },
+            "sellerAudits": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "credentialsUsed",
+            "walletAccessed",
+            "targetPaymentSigned",
+            "targetPaymentSent",
+            "sellerPostRequestSent",
+            "paidResponseBodyRead",
+            "queryRetained",
+            "querySentTo",
+            "directoryRequests",
+            "sellerAudits"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "ok",
+        "product",
+        "version",
+        "checkedAt",
+        "decision",
+        "request",
+        "sources",
+        "qualified",
+        "rejected",
+        "boundary"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "annotations": null,
+    "_meta": {
+      "x402": {
+        "paymentRequired": true,
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "amount": "10000",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+            "maxTimeoutSeconds": 300,
+            "extra": {
+              "name": "USD Coin",
+              "version": "2"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "agent_surface_budget_audit": {
+    "name": "agent_surface_budget_audit",
+    "title": "Audit Agent Surface Budget",
+    "description": "Measure one public service's credential-free MCP tools/list, OpenAPI, or both declared discovery surfaces before any tool call or target payment. Use `agent_discoverability_audit` for catalog reach and rank, `seller_integrity_audit` for one exact operation's response contract, or this tool for byte budgets, heaviest definitions, missing selection contracts, and progressive-discovery fixes. Unselected surfaces are not fetched or judged. It follows no redirect, calls no target tool, sends no credential or target payment, and returns no target schema, response body, or session identifier.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "origin": {
+          "type": "string",
+          "format": "uri",
+          "description": "Credential-free public HTTPS service origin on port 443, with no path or query."
+        },
+        "surfaceMode": {
+          "type": "string",
+          "enum": [
+            "mcp",
+            "openapi",
+            "both"
+          ],
+          "default": "both",
+          "description": "Audit MCP only, OpenAPI only, or both. Unselected surfaces are not fetched or judged."
+        },
+        "mcpPath": {
+          "type": "string",
+          "pattern": "^\\/[^/?#{}][^?#{}]*$",
+          "default": "/mcp",
+          "description": "Exact root-relative MCP streamable-HTTP path."
+        },
+        "openApiPath": {
+          "type": "string",
+          "pattern": "^\\/[^/?#{}][^?#{}]*$",
+          "default": "/openapi.json",
+          "description": "Exact root-relative OpenAPI JSON path."
+        },
+        "mcpBudgetBytes": {
+          "type": "integer",
+          "minimum": 8192,
+          "maximum": 1000000,
+          "default": 65536,
+          "description": "Maximum preferred raw MCP tools/list response size in bytes."
+        },
+        "openApiBudgetBytes": {
+          "type": "integer",
+          "minimum": 32768,
+          "maximum": 1000000,
+          "default": 524288,
+          "description": "Maximum preferred raw OpenAPI document size in bytes."
+        }
+      },
+      "required": [
+        "origin"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "product": {
+          "type": "string",
+          "const": "samedaydesk-agent-surface-budget-audit"
+        },
+        "version": {
+          "type": "string",
+          "const": "1.2.0"
+        },
+        "checkedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "within_budget",
+            "optimize",
+            "surface_incomplete"
+          ]
+        },
+        "request": {
+          "type": "object",
+          "properties": {
+            "origin": {
+              "type": "string",
+              "format": "uri"
+            },
+            "surfaceMode": {
+              "type": "string",
+              "enum": [
+                "mcp",
+                "openapi",
+                "both"
+              ]
+            },
+            "mcpPath": {
+              "type": "string"
+            },
+            "openApiPath": {
+              "type": "string"
+            },
+            "mcpBudgetBytes": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "openApiBudgetBytes": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "origin",
+            "surfaceMode",
+            "mcpPath",
+            "openApiPath",
+            "mcpBudgetBytes",
+            "openApiBudgetBytes"
+          ],
+          "additionalProperties": false
+        },
+        "mcp": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "requested": {
+                  "type": "boolean",
+                  "const": false
+                }
+              },
+              "required": [
+                "requested"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "requested": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "available": {
+                  "type": "boolean",
+                  "const": false
+                },
+                "failureCode": {
+                  "type": "string",
+                  "enum": [
+                    "authentication_required",
+                    "bounded_transport_failure",
+                    "connection_reset",
+                    "dns_failed",
+                    "method_not_allowed",
+                    "rate_limited",
+                    "redirect_rejected",
+                    "surface_invalid",
+                    "surface_too_large",
+                    "surface_unavailable",
+                    "transport_timeout",
+                    "upstream_unavailable"
+                  ]
+                },
+                "httpStatus": {
+                  "type": "integer",
+                  "minimum": 300,
+                  "maximum": 599
+                }
+              },
+              "required": [
+                "requested",
+                "available",
+                "failureCode"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "requested": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "available": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "byteDerivedTokenEstimate": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "budgetBytes": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0
+                },
+                "withinBudget": {
+                  "type": "boolean"
+                },
+                "protocolVersion": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "server": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "version": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "version"
+                  ],
+                  "additionalProperties": false
+                },
+                "toolCount": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "pageCount": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0
+                },
+                "selectionBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "missingTitleCount": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "missingDescriptionCount": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "missingInputSchemaCount": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "missingOutputSchemaCount": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "heaviestTools": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "bytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "descriptionBytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "inputSchemaBytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "outputSchemaBytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "hasTitle": {
+                        "type": "boolean"
+                      },
+                      "hasDescription": {
+                        "type": "boolean"
+                      },
+                      "hasInputSchema": {
+                        "type": "boolean"
+                      },
+                      "hasOutputSchema": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "bytes",
+                      "descriptionBytes",
+                      "inputSchemaBytes",
+                      "outputSchemaBytes",
+                      "hasTitle",
+                      "hasDescription",
+                      "hasInputSchema",
+                      "hasOutputSchema"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "maxItems": 8
+                }
+              },
+              "required": [
+                "requested",
+                "available",
+                "bytes",
+                "byteDerivedTokenEstimate",
+                "budgetBytes",
+                "withinBudget",
+                "protocolVersion",
+                "server",
+                "toolCount",
+                "pageCount",
+                "selectionBytes",
+                "missingTitleCount",
+                "missingDescriptionCount",
+                "missingInputSchemaCount",
+                "missingOutputSchemaCount",
+                "heaviestTools"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "openapi": {
+          "anyOf": [
+            {
+              "$ref": "#/properties/mcp/anyOf/0"
+            },
+            {
+              "$ref": "#/properties/mcp/anyOf/1"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "requested": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "available": {
+                  "type": "boolean",
+                  "const": true
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "byteDerivedTokenEstimate": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "budgetBytes": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0
+                },
+                "withinBudget": {
+                  "type": "boolean"
+                },
+                "operationCount": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "missingOperationIdCount": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "heaviestOperations": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "method": {
+                        "type": "string",
+                        "enum": [
+                          "GET",
+                          "POST",
+                          "PUT",
+                          "PATCH",
+                          "DELETE",
+                          "HEAD",
+                          "OPTIONS"
+                        ]
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "bytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "summaryBytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "hasOperationId": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "method",
+                      "path",
+                      "bytes",
+                      "summaryBytes",
+                      "hasOperationId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "maxItems": 8
+                }
+              },
+              "required": [
+                "requested",
+                "available",
+                "bytes",
+                "byteDerivedTokenEstimate",
+                "budgetBytes",
+                "withinBudget",
+                "operationCount",
+                "missingOperationIdCount",
+                "heaviestOperations"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16
+        },
+        "boundary": {
+          "type": "object",
+          "properties": {
+            "credentialsUsed": {
+              "type": "boolean",
+              "const": false
+            },
+            "toolsCalled": {
+              "type": "boolean",
+              "const": false
+            },
+            "targetPaymentSigned": {
+              "type": "boolean",
+              "const": false
+            },
+            "targetPaymentSent": {
+              "type": "boolean",
+              "const": false
+            },
+            "redirectsFollowed": {
+              "type": "boolean",
+              "const": false
+            },
+            "responseBodiesReturned": {
+              "type": "boolean",
+              "const": false
+            },
+            "schemasRetained": {
+              "type": "boolean",
+              "const": false
+            },
+            "sessionIdentifiersReturned": {
+              "type": "boolean",
+              "const": false
+            },
+            "tokenEstimateMethod": {
+              "type": "string",
+              "const": "ceil(UTF-8 bytes / 4); comparative estimate, not tokenizer billing"
+            }
+          },
+          "required": [
+            "credentialsUsed",
+            "toolsCalled",
+            "targetPaymentSigned",
+            "targetPaymentSent",
+            "redirectsFollowed",
+            "responseBodiesReturned",
+            "schemasRetained",
+            "sessionIdentifiersReturned",
+            "tokenEstimateMethod"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "ok",
+        "product",
+        "version",
+        "checkedAt",
+        "decision",
+        "request",
+        "mcp",
+        "openapi",
+        "actions",
+        "boundary"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "annotations": null,
+    "_meta": {
+      "x402": {
+        "paymentRequired": true,
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "amount": "10000",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+            "maxTimeoutSeconds": 300,
+            "extra": {
+              "name": "USD Coin",
+              "version": "2"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,718 @@
+{
+  "source": "https://agents.samedaydesk.com/mcp",
+  "method": "tools/list",
+  "fetched_at": "2026-09-12T06:23:00Z",
+  "protocol": "MCP streamable-HTTP JSON-RPC tools/list (unpaid)",
+  "server_info_from_initialize": {
+    "name": "x402-data-gateway",
+    "version": "1.23.49"
+  },
+  "tool_count": 24,
+  "names": [
+    "extract",
+    "extract_batch",
+    "lockfile_pin_delta",
+    "read",
+    "scan",
+    "schemaforge",
+    "enrich",
+    "wallet_enrich",
+    "deep_audit",
+    "morpho_position",
+    "morpho_protection",
+    "morpho_market_underwrite",
+    "morpho_preliquidation_replay",
+    "opportunity_preflight",
+    "agent_discoverability_audit",
+    "payment_offer_preflight",
+    "seller_integrity_audit",
+    "contract_qualified_search",
+    "agent_surface_budget_audit",
+    "settlement_proof",
+    "transaction_receipt",
+    "solana_transaction_receipt",
+    "wallet_policy_conformance",
+    "stateful_wallet_policy_conformance"
+  ],
+  "tools": [
+    {
+      "name": "extract",
+      "title": "Extract Web Page as Structured JSON",
+      "input_required": [
+        "url"
+      ],
+      "input_properties": [
+        "url"
+      ],
+      "has_output_schema": true,
+      "output_required": [
+        "ok",
+        "requestedUrl",
+        "finalUrl",
+        "url",
+        "status",
+        "sourceOk",
+        "error",
+        "contentType",
+        "title",
+        "description",
+        "canonical",
+        "lang",
+        "openGraph",
+        "twitter",
+        "jsonLd",
+        "headings",
+        "links",
+        "text",
+        "aiReadiness",
+        "capture",
+        "fetchedAt"
+      ],
+      "x402_payment_required": true,
+      "amount": "5000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "extract_batch",
+      "title": "Extract Public URLs in Batch",
+      "input_required": [
+        "urls"
+      ],
+      "input_properties": [
+        "fields",
+        "urls"
+      ],
+      "has_output_schema": true,
+      "output_required": [
+        "ok",
+        "product",
+        "schemaVersion",
+        "quote",
+        "jobId",
+        "jobStatus",
+        "stopReason",
+        "partial",
+        "sources",
+        "accounting",
+        "costInputs",
+        "charged",
+        "boundary"
+      ],
+      "x402_payment_required": true,
+      "amount": "10000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "lockfile_pin_delta",
+      "title": "Inspect Lockfile Pin Delta",
+      "input_required": [
+        "before",
+        "after"
+      ],
+      "input_properties": [
+        "after",
+        "before"
+      ],
+      "has_output_schema": true,
+      "output_required": [
+        "ok",
+        "product",
+        "schemaVersion",
+        "quote",
+        "charged",
+        "analysis",
+        "transport",
+        "engine",
+        "digest",
+        "engineProvenance",
+        "costInputs",
+        "boundary",
+        "limits"
+      ],
+      "x402_payment_required": true,
+      "amount": "5000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "read",
+      "title": "Read Web Page as Markdown",
+      "input_required": [
+        "url"
+      ],
+      "input_properties": [
+        "url"
+      ],
+      "has_output_schema": true,
+      "output_required": [
+        "ok",
+        "requestedUrl",
+        "finalUrl",
+        "url",
+        "status",
+        "sourceOk",
+        "error",
+        "title",
+        "markdown",
+        "wordCount",
+        "truncated",
+        "capture",
+        "fetchedAt"
+      ],
+      "x402_payment_required": true,
+      "amount": "5000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "scan",
+      "title": "Scan GitHub Repository Before Install",
+      "input_required": [
+        "repo"
+      ],
+      "input_properties": [
+        "repo"
+      ],
+      "has_output_schema": true,
+      "output_required": [
+        "ok",
+        "repo",
+        "branch",
+        "filesScanned",
+        "risk",
+        "summary",
+        "findings",
+        "disclaimer",
+        "scannedAt"
+      ],
+      "x402_payment_required": true,
+      "amount": "200000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "schemaforge",
+      "title": "Generate Business JSON-LD",
+      "input_required": [
+        "site"
+      ],
+      "input_properties": [
+        "city",
+        "site",
+        "vertical"
+      ],
+      "has_output_schema": false,
+      "output_required": null,
+      "x402_payment_required": true,
+      "amount": "250000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "enrich",
+      "title": "Enrich Company Domain",
+      "input_required": [
+        "domain"
+      ],
+      "input_properties": [
+        "domain"
+      ],
+      "has_output_schema": false,
+      "output_required": null,
+      "x402_payment_required": true,
+      "amount": "50000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "wallet_enrich",
+      "title": "Enrich Base Wallet or Contract",
+      "input_required": [
+        "address"
+      ],
+      "input_properties": [
+        "address"
+      ],
+      "has_output_schema": false,
+      "output_required": null,
+      "x402_payment_required": true,
+      "amount": "50000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "deep_audit",
+      "title": "Audit Complete AI Search Readiness",
+      "input_required": [
+        "domain"
+      ],
+      "input_properties": [
+        "city",
+        "domain",
+        "vertical"
+      ],
+      "has_output_schema": false,
+      "output_required": null,
+      "x402_payment_required": true,
+      "amount": "250000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "morpho_position",
+      "title": "Inspect Morpho Borrower Position",
+      "input_required": [
+        "address"
+      ],
+      "input_properties": [
+        "address",
+        "shocks"
+      ],
+      "has_output_schema": false,
+      "output_required": null,
+      "x402_payment_required": true,
+      "amount": "20000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "morpho_protection",
+      "title": "Plan Morpho Borrower Protection",
+      "input_required": [
+        "address"
+      ],
+      "input_properties": [
+        "address",
+        "executionBufferBps",
+        "protectAgainstShockPct",
+        "targetHealthFactor"
+      ],
+      "has_output_schema": true,
+      "output_required": [
+        "ok",
+        "product",
+        "version",
+        "address",
+        "chain",
+        "fetchedAt",
+        "latestIndexedAt",
+        "inputs",
+        "positionCount",
+        "actionableCount",
+        "unverifiedCount",
+        "quotes",
+        "source",
+        "invariants",
+        "boundary"
+      ],
+      "x402_payment_required": true,
+      "amount": "100000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "morpho_market_underwrite",
+      "title": "Underwrite Morpho Market",
+      "input_required": [
+        "marketId"
+      ],
+      "input_properties": [
+        "marketId"
+      ],
+      "has_output_schema": false,
+      "output_required": null,
+      "x402_payment_required": true,
+      "amount": "250000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "morpho_preliquidation_replay",
+      "title": "Replay Morpho PreLiquidation",
+      "input_required": [
+        "transactionHash"
+      ],
+      "input_properties": [
+        "transactionHash"
+      ],
+      "has_output_schema": true,
+      "output_required": [
+        "ok",
+        "product",
+        "version",
+        "chain",
+        "transaction",
+        "eventCount",
+        "events",
+        "verification",
+        "boundary"
+      ],
+      "x402_payment_required": true,
+      "amount": "100000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "opportunity_preflight",
+      "title": "Preflight Agent Work Opportunity",
+      "input_required": [
+        "rewardUsd",
+        "hours",
+        "hourlyCostUsd"
+      ],
+      "input_properties": [
+        "acceptance",
+        "agentAccess",
+        "competition",
+        "computeUsd",
+        "hourlyCostUsd",
+        "hours",
+        "mandatorySpendUsd",
+        "platform",
+        "reusableValueUsd",
+        "rewardUsd",
+        "selectionProbabilityPct",
+        "settlement",
+        "slots"
+      ],
+      "has_output_schema": true,
+      "output_required": [
+        "ok",
+        "product",
+        "version",
+        "decision",
+        "input",
+        "economics",
+        "gates",
+        "platformEvidence",
+        "boundary"
+      ],
+      "x402_payment_required": true,
+      "amount": "50000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "agent_discoverability_audit",
+      "title": "Audit Agent Service Discoverability",
+      "input_required": [
+        "origin",
+        "intent"
+      ],
+      "input_properties": [
+        "expectedPriceUsd",
+        "intent",
+        "materializationAudit",
+        "method",
+        "origin",
+        "payTo",
+        "route",
+        "runtimeUrl",
+        "surfaceAudit"
+      ],
+      "has_output_schema": false,
+      "output_required": null,
+      "x402_payment_required": true,
+      "amount": "50000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "payment_offer_preflight",
+      "title": "Preflight x402 and MPP Offer",
+      "input_required": [
+        "url"
+      ],
+      "input_properties": [
+        "catalog",
+        "url"
+      ],
+      "has_output_schema": true,
+      "output_required": [
+        "ok",
+        "product",
+        "version",
+        "checkedAt",
+        "target",
+        "decision",
+        "protocols",
+        "offerCount",
+        "offers",
+        "parity",
+        "catalogCoherence",
+        "responseContract",
+        "responseContractAcquisition",
+        "findings",
+        "boundary"
+      ],
+      "x402_payment_required": true,
+      "amount": "5000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "seller_integrity_audit",
+      "title": "Audit Seller Machine Buyability",
+      "input_required": [
+        "origin",
+        "route"
+      ],
+      "input_properties": [
+        "method",
+        "origin",
+        "referral",
+        "requireBazaar",
+        "requiredPaths",
+        "route"
+      ],
+      "has_output_schema": false,
+      "output_required": null,
+      "x402_payment_required": true,
+      "amount": "10000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "contract_qualified_search",
+      "title": "Search Contract-Qualified Services",
+      "input_required": [
+        "query",
+        "requiredPaths"
+      ],
+      "input_properties": [
+        "limit",
+        "maxPriceDisplayUnits",
+        "query",
+        "requiredPaths"
+      ],
+      "has_output_schema": true,
+      "output_required": [
+        "ok",
+        "product",
+        "version",
+        "checkedAt",
+        "decision",
+        "request",
+        "sources",
+        "qualified",
+        "rejected",
+        "boundary"
+      ],
+      "x402_payment_required": true,
+      "amount": "10000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "agent_surface_budget_audit",
+      "title": "Audit Agent Surface Budget",
+      "input_required": [
+        "origin"
+      ],
+      "input_properties": [
+        "mcpBudgetBytes",
+        "mcpPath",
+        "openApiBudgetBytes",
+        "openApiPath",
+        "origin",
+        "surfaceMode"
+      ],
+      "has_output_schema": true,
+      "output_required": [
+        "ok",
+        "product",
+        "version",
+        "checkedAt",
+        "decision",
+        "request",
+        "mcp",
+        "openapi",
+        "actions",
+        "boundary"
+      ],
+      "x402_payment_required": true,
+      "amount": "10000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "settlement_proof",
+      "title": "Verify Base USDC Settlement",
+      "input_required": [
+        "transactionHash",
+        "recipient",
+        "amountAtomic"
+      ],
+      "input_properties": [
+        "amountAtomic",
+        "payer",
+        "recipient",
+        "transactionHash"
+      ],
+      "has_output_schema": true,
+      "output_required": [
+        "ok",
+        "product",
+        "version",
+        "checkedAt",
+        "decision",
+        "request",
+        "chain",
+        "asset",
+        "transaction",
+        "settlement",
+        "findings",
+        "boundary"
+      ],
+      "x402_payment_required": true,
+      "amount": "5000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "transaction_receipt",
+      "title": "Inspect Transaction Receipt",
+      "input_required": [
+        "transactionHash"
+      ],
+      "input_properties": [
+        "network",
+        "transactionHash"
+      ],
+      "has_output_schema": false,
+      "output_required": null,
+      "x402_payment_required": true,
+      "amount": "2000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "solana_transaction_receipt",
+      "title": "Inspect Solana Transaction Receipt",
+      "input_required": [
+        "signature"
+      ],
+      "input_properties": [
+        "amountAtomic",
+        "mint",
+        "payer",
+        "recipient",
+        "signature"
+      ],
+      "has_output_schema": false,
+      "output_required": null,
+      "x402_payment_required": true,
+      "amount": "2000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "wallet_policy_conformance",
+      "title": "Evaluate Agent Wallet Policy Conformance",
+      "input_required": [
+        "profileId",
+        "provider",
+        "network",
+        "protocol",
+        "observations"
+      ],
+      "input_properties": [
+        "network",
+        "observations",
+        "profileId",
+        "protocol",
+        "provider"
+      ],
+      "has_output_schema": true,
+      "output_required": [
+        "schemaVersion",
+        "standardSchemaVersion",
+        "product",
+        "evaluatedAt",
+        "profile",
+        "decision",
+        "complete",
+        "exactShapePassed",
+        "results",
+        "providerNativeVerified",
+        "providerNativeUnverified",
+        "notEvaluatedByWalletPolicy",
+        "missingRequiredCases",
+        "unsafeCases",
+        "inconclusiveCases",
+        "boundary"
+      ],
+      "x402_payment_required": true,
+      "amount": "10000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "stateful_wallet_policy_conformance",
+      "title": "Evaluate Stateful Wallet Policy Conformance",
+      "input_required": [
+        "profileId",
+        "provider",
+        "network",
+        "protocol",
+        "observations"
+      ],
+      "input_properties": [
+        "network",
+        "observations",
+        "profileId",
+        "protocol",
+        "provider"
+      ],
+      "has_output_schema": true,
+      "output_required": [
+        "schemaVersion",
+        "standardSchemaVersion",
+        "product",
+        "evaluatedAt",
+        "profile",
+        "decision",
+        "complete",
+        "strictBudgetPassed",
+        "results",
+        "providerNativeVerified",
+        "providerNativeUnverified",
+        "applicationVerified",
+        "missingRequiredCases",
+        "unsafeCases",
+        "inconclusiveCases",
+        "boundary"
+      ],
+      "x402_payment_required": true,
+      "amount": "10000",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    }
+  ]
+}

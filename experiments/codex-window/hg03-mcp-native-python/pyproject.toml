@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hg03-mcp-native-python"
+version = "0.1.0"
+description = "Official Python MCP SDK consumer for SameDayDesk discovery/preflight tool envelopes, with a local fake facilitator runtime and no wallet."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "mcp==2.2.0",
+  "pydantic>=2.12",
+  "httpx>=0.28",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[project.scripts]
+hg03-mcp-native-python = "hg03_mcp_native_python.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-q --tb=short -p no:cacheprovider"
+testpaths = ["tests"]
+pythonpath = ["src"]
