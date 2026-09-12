@@ -5,11 +5,15 @@ import { approvalTemplate, BinderRefusal, executeJob, prepareJob } from "../src/
 
 function parseArgs(argv) {
   const args = { command: argv[0] || "prepare", approve: false };
+  const valueFlags = new Set(["--job", "--state-dir", "--approval", "--private-key-env", "--customer-cli"]);
+  const seen = new Set();
   for (let i = 1; i < argv.length; i += 1) {
     const arg = argv[i];
+    if (seen.has(arg)) throw new Error(`duplicate argument: ${arg}`);
+    seen.add(arg);
     if (arg === "--approve") args.approve = true;
-    else if (arg.startsWith("--")) args[arg.slice(2).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = argv[++i];
-    else throw new Error(`unknown argument: ${arg}`);
+    else if (valueFlags.has(arg) && argv[i + 1] && !argv[i + 1].startsWith("--")) args[arg.slice(2).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = argv[++i];
+    else throw new Error(`unknown argument or missing value: ${arg}`);
   }
   return args;
 }

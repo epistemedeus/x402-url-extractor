@@ -1,4 +1,7 @@
-# CW02 implementation receipt
+# CW02 implementation receipt (historical)
+
+Current reviewed consumer acceptance is in [REVIEW-RECEIPT](REVIEW-RECEIPT.md).
+The counts and source branch below describe the original CW02 export.
 
 ## Source and scope
 

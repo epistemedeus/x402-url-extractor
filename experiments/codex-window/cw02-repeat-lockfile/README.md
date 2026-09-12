@@ -8,13 +8,16 @@ or retry policy.
 The key boundary is content-addressed intent. The input-byte digests, serialized
 request body, exact route, and priced terms jointly determine `intentId` and
 `resumeId`. A response loss therefore cannot silently become a second payment:
-the preserved attempt receipt and state refuse another signed send under that
-intent. New input bytes form a new intent; changed price, recipient, network,
-asset, route, or body require a new explicit approval.
+the preserved attempt receipt, permanent per-intent dispatch lock, and state
+refuse another signed send under that intent. New input bytes form a new intent;
+changed amount cap, recipient, network, asset, route, or body require a new
+explicit approval. The amount cap is a ceiling, not an exact live price lock:
+the maintained client may accept a live quote at or below the approved cap.
+A permission label in a job or foreign approval does not authorize execution.
 
 ## Runtime support
 
-The live runtime advertises only npm `package-lock.json` versions 2 and 3.
+The pinned merchant runtime supports only npm `package-lock.json` versions 2 and 3.
 Those are the only formats this package accepts. `pnpm-lock.yaml` and
 `yarn.lock` fixtures are refusal tests, not claimed support. No registry lookup,
 install, vulnerability audit, dependency-list heuristic, wallet funding, or
@@ -31,7 +34,7 @@ npm test
 ```
 
 `prepare` is safe for a scheduler to invoke. It reads exact previous/current
-bytes, performs the maintained offline pin comparison, and writes an intent,
+bytes, performs a bounded comparison matching maintained pin normalization, and writes an intent,
 authorization, state, and `approval-request.json` below the caller's state
 directory. It exits successfully with `outcome: "no_change"` when pin fields
 are identical; no change is informational, not failure.
@@ -71,7 +74,25 @@ If the command returns `resume_required`, retain the reported `intentId`,
 `resumeId`, and attempt receipt. Use the maintained client's read-only
 reconciliation workflow with an explicitly selected Remote Procedure Call
 (RPC) endpoint. Do not rerun `run`, mint a new approval, or infer non-settlement
-from a lost Hypertext Transfer Protocol (HTTP) response.
+from a lost Hypertext Transfer Protocol (HTTP) response. Keep the same durable
+state directory, even after a process restart. Do not remove dispatch locks
+or switch state directories to bypass reconciliation. A local lock is a
+single-host safety boundary, not distributed coordination or protection
+against someone who can edit the operator's files.
+
+The generic client result is independently checked against the authorized
+pin inputs: exact product/schema, full added/removed/changed evidence,
+normalized pin metadata, counts, analysis, digest, and approved output/price
+ceilings. Unrelated or truncated output becomes `paid_invalid_output` and
+requires reconciliation, even if the underlying client labeled it valid.
+Missing integrity is `partial_delivered`, not full fulfillment. The original
+maintained attempt receipt is retained unchanged; binder validation is recorded
+in its separate state/output.
+
+Local reads are bounded to 128 KiB per lockfile, 256 KiB per request, depth 32,
+50,000 JSON nodes, and 8,000 pins. The child CLI is capped at 90 seconds and
+2 MiB of combined output. Failures after dispatch remain fail-closed and never
+automatically create a second attempt.
 
 The shell example only prepares an intent. It does not install cron, create a
 GitHub Actions schedule, set an auto-purchase policy, read a wallet, or sign.
@@ -82,6 +103,6 @@ GitHub Actions schedule, set an auto-purchase policy, read a wallet, or sign.
 - Maintained paid client: `examples/customer-x402/` from the owning repository.
 - Binder-side meaning check uses the live route's documented npm pin equality
   fields; the mounted integration verifies the seller's maintained comparator.
-- Live binding: `POST https://agents.samedaydesk.com/lockfile-pin-delta`, x402
+- Approved route binding: `POST https://agents.samedaydesk.com/lockfile-pin-delta`, x402
   only, cap `5000` atomic USD Coin (USDC) in the example.
 - State is caller-owned and deliberately excluded from source control.
