@@ -8,6 +8,7 @@ import { z } from "zod";
 
 const MAX_URL_LENGTH = 2_048;
 const MAX_HEADER_VALUE_BYTES = 64 * 1024;
+const MAX_LOCATION_BYTES = 2_048;
 const MAX_OPENAPI_BYTES = 1_000_000;
 const DEFAULT_TIMEOUT_MS = 8_000;
 const SENSITIVE_QUERY_KEY = /(?:^|[-_.])(api[-_.]?key|access[-_.]?token|auth|authorization|credential|password|secret|token)(?:$|[-_.])/i;
@@ -76,7 +77,7 @@ export function normalizePaymentTarget(value) {
   if (target.protocol !== "https:") fail("url must use HTTPS", { code: "invalid_url" });
   if (target.username || target.password) fail("url must not contain credentials", { code: "credential_rejected" });
   if (target.hash) fail("url must not contain a fragment", { code: "invalid_url" });
-  if (/[{}]/.test(target.pathname) || /:\w+/.test(target.pathname)) {
+  if (/[{}]/.test(target.pathname) || /%7b|%7d/i.test(target.pathname)) {
     fail("url contains an unresolved route parameter", { code: "invalid_url" });
   }
   if (target.searchParams.size > 30) fail("url has too many query parameters", { code: "invalid_url" });
@@ -94,6 +95,51 @@ export function normalizePaymentTarget(value) {
   }
   target.searchParams.sort();
   return target;
+}
+
+export function sanitizeLocationDiagnostic(location, requestUrl) {
+  if (location == null || location === "") {
+    return { location: null, locationClass: "absent" };
+  }
+  if (typeof location !== "string") {
+    return { location: null, locationClass: "omitted" };
+  }
+  if (Buffer.byteLength(location, "utf8") > MAX_LOCATION_BYTES) {
+    return { location: null, locationClass: "omitted" };
+  }
+  if (/[\u0000-\u001f\u007f]/.test(location) || /\\/.test(location)) {
+    return { location: null, locationClass: "omitted" };
+  }
+  let resolved;
+  try {
+    resolved = new URL(location, requestUrl);
+  } catch {
+    return { location: null, locationClass: "opaque" };
+  }
+  if (resolved.protocol !== "https:" && resolved.protocol !== "http:") {
+    return { location: null, locationClass: "omitted" };
+  }
+  resolved.username = "";
+  resolved.password = "";
+  const safeQuery = new URLSearchParams();
+  for (const [key, value] of resolved.searchParams) {
+    if (SENSITIVE_QUERY_KEY.test(key)) continue;
+    safeQuery.append(key, value);
+  }
+  safeQuery.sort();
+  const search = safeQuery.toString();
+  const path = `${resolved.pathname}${search ? `?${search}` : ""}`;
+  let request;
+  try {
+    request = new URL(requestUrl);
+  } catch {
+    return { location: null, locationClass: "opaque" };
+  }
+  const sameOrigin = resolved.protocol === request.protocol && resolved.host === request.host;
+  if (sameOrigin) {
+    return { location: path, locationClass: "same_origin" };
+  }
+  return { location: `${resolved.origin}${path}`, locationClass: "cross_origin" };
 }
 
 function strictRecord(value, label, allowed) {
@@ -384,6 +430,11 @@ function headerValue(headers, name) {
   return value.trim();
 }
 
+function rawLocationHeader(headers) {
+  const value = headers?.get?.("location");
+  return typeof value === "string" ? value : null;
+}
+
 function decimalAmount(amountAtomic, decimals) {
   if (!/^\d+$/.test(String(amountAtomic || "")) || !Number.isInteger(decimals) || decimals < 0 || decimals > 30) return null;
   const padded = String(amountAtomic).padStart(decimals + 1, "0");
@@ -516,8 +567,16 @@ export async function paymentOfferPreflight(input, {
   const responseContract = await responseContractFor(target, openapiImpl, now);
   const status = Number(response?.status || 0);
   const findings = [];
+  const locationDiagnostic = sanitizeLocationDiagnostic(rawLocationHeader(response?.headers), target.toString());
   if (response?.finalUrl && normalizePaymentTarget(response.finalUrl).toString() !== target.toString()) {
     fail("target redirected to a different URL", { code: "redirect_rejected", statusCode: 502 });
+  }
+  if (status >= 300 && status < 400) {
+    findings.push({
+      severity: "warning",
+      code: "redirect_observed",
+      message: `HTTP ${status} Location class ${locationDiagnostic.locationClass}. Redirects are not followed. This is not by itself a catalog-row defect.`,
+    });
   }
   if (status !== 402) {
     findings.push({ severity: "warning", code: "expected_402_missing", message: `The credential-free request returned HTTP ${status || "unknown"}, not 402.` });
@@ -581,7 +640,13 @@ export async function paymentOfferPreflight(input, {
     product: "samedaydesk-payment-offer-preflight",
     version: "1.2.0",
     checkedAt: new Date(now).toISOString(),
-    target: { method: "GET", url: target.toString(), httpStatus: status },
+    target: {
+      method: "GET",
+      url: target.toString(),
+      httpStatus: status,
+      location: locationDiagnostic.location,
+      locationClass: locationDiagnostic.locationClass,
+    },
     decision,
     protocols: [...new Set(validOffers.map((offer) => offer.protocol))].sort(),
     offerCount: validOffers.length,
@@ -634,6 +699,8 @@ export const paymentOfferPreflightMcpOutputSchema = z.object({
     method: z.literal("GET"),
     url: z.string(),
     httpStatus: z.number().int(),
+    location: z.string().nullable(),
+    locationClass: z.enum(["absent", "same_origin", "cross_origin", "opaque", "omitted"]),
   }).strict(),
   decision: z.enum(["parseable_offer", "review_required", "no_parseable_offer"]),
   protocols: z.array(z.enum(["mpp", "x402"])),

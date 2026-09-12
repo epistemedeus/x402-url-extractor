@@ -10,6 +10,7 @@ import {
   paymentOfferPreflight,
   paymentOfferPreflightMcpOutputSchema,
   publicAddress,
+  sanitizeLocationDiagnostic,
 } from "./payment-offer-preflight.mjs";
 
 const TARGET = "https://api.example.com/paid?a=1&b=2";
@@ -65,6 +66,10 @@ function openapiDocument({ schema = {
 
 test("normalizes only credential-free public HTTPS targets", () => {
   assert.equal(normalizePaymentTarget("https://api.example.com/paid?b=2&a=1").toString(), TARGET);
+  assert.equal(
+    normalizePaymentTarget("https://api.onesource.io/api/chain/ens/:input").toString(),
+    "https://api.onesource.io/api/chain/ens/:input",
+  );
   for (const value of [
     "http://api.example.com/paid",
     "https://user:pass@api.example.com/paid",
@@ -73,6 +78,7 @@ test("normalizes only credential-free public HTTPS targets", () => {
     "https://localhost/paid",
     "https://127.0.0.1/paid",
     "https://[::1]/paid",
+    "https://api.example.com/v1/{id}",
   ]) assert.throws(() => normalizePaymentTarget(value), PaymentOfferPreflightError);
 });
 
@@ -257,7 +263,63 @@ test("reports a non-402 target without reading a response body", async () => {
   assert.equal(result.decision, "no_parseable_offer");
   assert.equal(result.offerCount, 0);
   assert.deepEqual(result.findings.map((finding) => finding.code), ["expected_402_missing", "payment_offer_missing"]);
+  assert.equal(result.target.locationClass, "absent");
   assert.equal(result.boundary.targetResponseBodyRead, false);
+});
+
+test("observes a same-origin 301 without following it or accusing the catalog", async () => {
+  const headers = new Headers();
+  headers.set("location", "/v1/fungibles/");
+  const result = await paymentOfferPreflight("https://api.example.com/v1/fungibles", {
+    now: NOW,
+    openapiImpl: async () => null,
+    requestImpl: async () => ({
+      status: 301,
+      headers,
+      finalUrl: "https://api.example.com/v1/fungibles",
+    }),
+  });
+  assert.equal(result.decision, "no_parseable_offer");
+  assert.equal(result.target.httpStatus, 301);
+  assert.equal(result.target.location, "/v1/fungibles/");
+  assert.equal(result.target.locationClass, "same_origin");
+  assert.equal(result.findings[0].code, "redirect_observed");
+  assert.equal(result.findings[0].severity, "warning");
+  assert.equal(result.findings[0].message.includes("not by itself a catalog-row defect"), true);
+  assert.equal(result.boundary.redirectsFollowed, false);
+  assert.equal(paymentOfferPreflightMcpOutputSchema.safeParse(result).success, true);
+});
+
+test("sanitizes hostile, credentialed, secret, and oversized Location values without following them", () => {
+  const request = "https://api.example.com/v1/fungibles";
+  assert.deepEqual(sanitizeLocationDiagnostic("/v1/fungibles/", request), {
+    location: "/v1/fungibles/",
+    locationClass: "same_origin",
+  });
+  const credentialed = sanitizeLocationDiagnostic("https://user:pass@evil.example/path?token=secret&q=ok", request);
+  assert.equal(credentialed.locationClass, "cross_origin");
+  assert.equal(credentialed.location.includes("user"), false);
+  assert.equal(credentialed.location.includes("pass"), false);
+  assert.equal(credentialed.location.includes("token="), false);
+  assert.equal(credentialed.location.includes("q=ok"), true);
+  assert.equal(sanitizeLocationDiagnostic("javascript:alert(1)", request).locationClass, "omitted");
+  assert.equal(sanitizeLocationDiagnostic(`https://api.example.com/${"a".repeat(3000)}`, request).locationClass, "omitted");
+  assert.equal(sanitizeLocationDiagnostic("https://api.example.com/ok\0", request).locationClass, "omitted");
+});
+
+test("valid 402 remains parseable without a redirect finding", async () => {
+  const result = await paymentOfferPreflight({ url: TARGET }, {
+    now: NOW,
+    openapiImpl: async () => openapiDocument(),
+    requestImpl: async () => response({
+      paymentRequired: x402Header(),
+      authenticate: mppHeader(),
+    }),
+  });
+  assert.equal(result.decision, "parseable_offer");
+  assert.equal(result.findings.some((finding) => finding.code === "redirect_observed"), false);
+  assert.equal(result.target.locationClass, "absent");
+  assert.equal(paymentOfferPreflightMcpOutputSchema.safeParse(result).success, true);
 });
 
 test("rejects a changed final URL", async () => {
