@@ -1,0 +1,21 @@
+{
+  "schema": "samedaydesk.customer-x402.attempt-reconcile.v1",
+  "checkedAt": "2026-09-12T01:01:00.000Z",
+  "receipt": {
+    "schema": "samedaydesk.customer-x402.attempt-receipt.v1",
+    "stage": "paid_response_observed",
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "payer": "0x1111111111111111111111111111111111111111",
+    "payee": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "amountAtomic": "10000",
+    "nonce": "0xabababababababababababababababababababababababababababababababab",
+    "validAfter": "1789174500",
+    "validBefore": "1789174800",
+    "paymentIdentifier": "pay_synthetic_cw01_sample_01",
+    "request": {"method": "POST", "url": "https://agents.samedaydesk.com/extract/batch", "bodyDigest": "sha256:ad902ff2b89eb4d52774eea14faf10e6de37d7e271b857d514fb06e00aa8db7b"}
+  },
+  "decision": "used_settlement_confirmed",
+  "settlement": {"matched": true, "status": "exact_transfer_matched", "transactionHash": "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd", "blockNumber": "100"},
+  "finality": {"confirmed": true, "finalized": false}
+}

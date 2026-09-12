@@ -1,0 +1,8 @@
+{
+  "schema": "samedaydesk.buyer-feedback.v1",
+  "recordedAt": "2026-09-12T01:02:00.000Z",
+  "usefulness": "useful",
+  "returnAttribution": "unattributed",
+  "intendedUse": "evaluation",
+  "statement": "Synthetic example: the fields were sufficient for the caller's fixture evaluation. This is not a real customer statement."
+}

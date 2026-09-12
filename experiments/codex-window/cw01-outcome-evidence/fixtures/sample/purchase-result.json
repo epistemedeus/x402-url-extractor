@@ -1,0 +1,33 @@
+{
+  "outcome": "useful_delivered",
+  "paymentSent": true,
+  "attemptReceiptWritten": true,
+  "evidence": {
+    "bodyDigest": "sha256:ad902ff2b89eb4d52774eea14faf10e6de37d7e271b857d514fb06e00aa8db7b",
+    "selectedNetwork": "eip155:8453",
+    "selectedAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "selectedRecipient": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "settlementPresent": true,
+    "settlementSuccess": true,
+    "settlementTransaction": "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+    "settlementVerification": "unverified",
+    "retainedBody": {
+      "ok": true,
+      "product": "samedaydesk-extract-batch",
+      "schemaVersion": "samedaydesk.extract-batch.v0",
+      "quote": {"amountAtomic": "10000", "displayUsdc": "0.01", "meaning": "Synthetic fixture quote."},
+      "jobId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "jobStatus": "completed",
+      "stopReason": null,
+      "partial": false,
+      "sources": [
+        {"id": "item-001", "source": "https://example.com/", "status": "success", "data": {"title": "Synthetic title 1", "description": null, "headings": {"h1": ["Synthetic H1"], "h2": []}}, "notes": [], "error": null, "provenance": {"transport": "fixture", "finalUrl": "https://example.com/", "httpStatus": 200}},
+        {"id": "item-002", "source": "https://example.org/", "status": "success", "data": {"title": "Synthetic title 2", "description": null, "headings": {"h1": ["Synthetic H1"], "h2": []}}, "notes": [], "error": null, "provenance": {"transport": "fixture", "finalUrl": "https://example.org/", "httpStatus": 200}}
+      ],
+      "accounting": {"requests": 2, "bytes": 100, "wallMs": 10, "retries": 0, "succeeded": 2, "partial": 0, "failed": 0, "unknown": 0, "skippedDuplicate": 0},
+      "costInputs": {"admittedBodyBytes": 100, "requests": 2, "wallMs": 10, "hostingCosts": "unknown", "modelCosts": "none", "monetaryMargin": null},
+      "charged": true,
+      "boundary": {"guaranteedUrlSuccess": false, "introductoryPrice": true, "sourceFetchBeforeAuthorization": false, "automaticRetries": false}
+    }
+  }
+}
