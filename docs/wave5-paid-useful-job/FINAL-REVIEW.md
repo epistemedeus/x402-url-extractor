@@ -6,6 +6,7 @@ Start HEAD: `d758f85f36ec913c186e9f61581374768d000fff`.
 Closeout start: `0eaef8297d3ad991224dd328d3bbb10569293afe`.
 Base: `a143898dd1ec35c097ca7eb0b472f30dad1ee319`.
 Branch: `codex/w5-h01-merchant-review-20260911`.
+Closeout implementation: `93575f2d1be8270534d02b5efaad51aa40ddfd8d`.
 
 ## Verdict
 
