@@ -65,7 +65,7 @@ export function sellerIntegrityAuditOutputSchema() {
       product: { type: "string", const: "samedaydesk-seller-integrity-audit" },
       version: { type: "string", const: "1.3.0" },
       checkedAt: { type: "string", format: "date-time" },
-      decision: { type: "string", enum: ["machine_buyable", "contract_ready", "repair_required"] },
+      decision: { type: "string", enum: ["machine_buyable", "contract_ready", "repair_required", "unverified"] },
       request: {
         type: "object",
         additionalProperties: false,
@@ -85,6 +85,18 @@ export function sellerIntegrityAuditOutputSchema() {
         properties: {
           auditCompleted: { type: "boolean" },
           failureCode: { type: ["string", "null"] },
+          evidenceClass: {
+            type: ["string", "null"],
+            enum: [
+              "missing_declared_operation",
+              "invalid_declaration",
+              "declared_url_unavailable",
+              "local_acquisition_limit",
+              "transport_unknown",
+              "seller_contract",
+              null,
+            ],
+          },
           schemaVersion: { type: ["string", "null"] },
           sellerVersions: {
             type: ["object", "null"],
@@ -139,7 +151,7 @@ export function sellerIntegrityAuditOutputSchema() {
             required: ["mode", "requiredPaths", "guaranteedPaths", "actions", "complete", "boundary"],
           },
         },
-        required: ["auditCompleted", "failureCode", "schemaVersion", "sellerVersions", "status", "runtimeChallengeVerified", "probe", "protocols", "valid", "findings", "economics", "discovery", "responseContract", "repairPlan"],
+        required: ["auditCompleted", "failureCode", "evidenceClass", "schemaVersion", "sellerVersions", "status", "runtimeChallengeVerified", "probe", "protocols", "valid", "findings", "economics", "discovery", "responseContract", "repairPlan"],
       },
       nextActions: { type: "array", items: { type: "string" } },
       referralOffer: receiptReferralOfferSchema(),
@@ -173,6 +185,7 @@ export const SELLER_INTEGRITY_AUDIT_EXAMPLE = Object.freeze({
   report: {
     auditCompleted: true,
     failureCode: null,
+    evidenceClass: null,
     schemaVersion: "agent-payment-integrity.audit.v4",
     sellerVersions: { x402: "1.18.3", mpp: "1.18.3" },
     status: 402,
@@ -212,6 +225,79 @@ export const SELLER_INTEGRITY_AUDIT_EXAMPLE = Object.freeze({
   },
 });
 
+export function classifySellerIntegrityAcquisition(message) {
+  const text = String(message || "");
+  if (/not declared/.test(text)) {
+    return {
+      failureCode: "exact_route_not_declared",
+      evidenceClass: "missing_declared_operation",
+      decision: "repair_required",
+    };
+  }
+  if (/document did not return JSON/.test(text)) {
+    return {
+      failureCode: "openapi_invalid",
+      evidenceClass: "invalid_declaration",
+      decision: "repair_required",
+    };
+  }
+  if (/document returned HTTP/.test(text)) {
+    return {
+      failureCode: "openapi_unavailable",
+      evidenceClass: "declared_url_unavailable",
+      decision: "repair_required",
+    };
+  }
+  if (/response exceeded byte limit/.test(text)) {
+    return {
+      failureCode: "openapi_exceeds_byte_limit",
+      evidenceClass: "local_acquisition_limit",
+      decision: "unverified",
+    };
+  }
+  if (/route count exceeds/.test(text)) {
+    return {
+      failureCode: "route_ceiling_exceeded",
+      evidenceClass: "local_acquisition_limit",
+      decision: "unverified",
+    };
+  }
+  if (/redirects are not allowed/.test(text)) {
+    return {
+      failureCode: "redirect_not_followed",
+      evidenceClass: "transport_unknown",
+      decision: "unverified",
+    };
+  }
+  return {
+    failureCode: "bounded_transport_failure",
+    evidenceClass: "transport_unknown",
+    decision: "unverified",
+  };
+}
+
+function nextActionsForAcquisition(failureCode, request) {
+  if (failureCode === "exact_route_not_declared") {
+    return [`Declare the exact paid ${request.method} route in the seller OpenAPI document.`];
+  }
+  if (failureCode === "openapi_invalid") {
+    return [`The declared same-origin /openapi.json did not return JSON. Publish a valid OpenAPI document with the exact paid ${request.method} operation.`];
+  }
+  if (failureCode === "openapi_unavailable") {
+    return ["The declared same-origin /openapi.json was observed unavailable. Publish that document at the declared URL."];
+  }
+  if (failureCode === "openapi_exceeds_byte_limit") {
+    return ["Local OpenAPI byte limit prevented a complete audit. This is not seller-repair evidence. Probe one exact advertised URL with payment-offer-preflight."];
+  }
+  if (failureCode === "route_ceiling_exceeded") {
+    return ["Local route ceiling prevented a complete audit. Select one exact route. This is not seller-repair evidence."];
+  }
+  if (failureCode === "redirect_not_followed") {
+    return ["The declared URL responded with a redirect that this checker does not follow. This is not by itself a catalog or seller-repair finding."];
+  }
+  return ["The unpaid probe did not complete because of timeout, TLS, or network transport. This is not seller-repair evidence. Retry the bounded check."];
+}
+
 function nextActionsFor(routeReport) {
   const actions = new Set();
   for (const finding of routeReport.findings || []) {
@@ -236,26 +322,18 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
   try {
     report = await auditImpl({ ...auditRequest, maxRoutes: 1, publicDns: true });
   } catch (error) {
-    const message = String(error?.message || error);
-    const failureCode = /not declared/.test(message)
-      ? "exact_route_not_declared"
-      : /document returned HTTP/.test(message)
-        ? "openapi_unavailable"
-        : /document did not return JSON/.test(message)
-          ? "openapi_invalid"
-          : /route count exceeds/.test(message)
-            ? "route_ceiling_exceeded"
-            : "bounded_transport_failure";
+    const classified = classifySellerIntegrityAcquisition(error?.message || error);
     return {
       ok: false,
       product: "samedaydesk-seller-integrity-audit",
       version: "1.3.0",
       checkedAt: new Date().toISOString(),
-      decision: "repair_required",
+      decision: classified.decision,
       request,
       report: {
         auditCompleted: false,
-        failureCode,
+        failureCode: classified.failureCode,
+        evidenceClass: classified.evidenceClass,
         schemaVersion: null,
         sellerVersions: null,
         status: null,
@@ -263,18 +341,17 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
         probe: null,
         protocols: [],
         valid: false,
-        findings: [failureCode],
+        findings: [classified.failureCode],
         economics: null,
         discovery: null,
         responseContract: null,
         repairPlan: null,
       },
-      nextActions: [failureCode === "exact_route_not_declared"
-        ? `Declare the exact paid ${request.method} route in the seller OpenAPI document.`
-        : failureCode.startsWith("openapi_")
-          ? `Publish a valid same-origin /openapi.json document with the exact paid ${request.method} operation.`
-          : "Restore the seller declaration and unpaid challenge surfaces, then rerun the bounded audit."],
-      referralOffer: createReceiptReferralOffer({ referralId: referral, decision: "repair_required" }),
+      nextActions: nextActionsForAcquisition(classified.failureCode, request),
+      referralOffer: createReceiptReferralOffer({
+        referralId: classified.decision === "repair_required" ? referral : null,
+        decision: classified.decision,
+      }),
       boundary: {
         credentialsUsed: false,
         targetPaymentSigned: false,
@@ -303,6 +380,7 @@ export async function sellerIntegrityAudit(input, { auditImpl = auditOrigin } = 
     report: {
       auditCompleted: true,
       failureCode: null,
+      evidenceClass: decision === "repair_required" ? "seller_contract" : null,
       schemaVersion: report.schemaVersion,
       sellerVersions: report.versions,
       status: routeReport.status,

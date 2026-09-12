@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   SellerIntegrityAuditError,
+  classifySellerIntegrityAcquisition,
   normalizeSellerIntegrityAuditInput,
   sellerIntegrityAudit,
   sellerIntegrityAuditOutputSchema,
@@ -78,7 +79,9 @@ test("returns bounded machine-buyable evidence without schemas or target payment
   assert.equal(result.referralOffer.attributionOnly, true);
   assert.equal(result.report.auditCompleted, true);
   assert.equal(result.report.failureCode, null);
+  assert.equal(result.report.evidenceClass, null);
   assert.equal(result.report.repairPlan.complete, true);
+  assert.equal(sellerIntegrityAuditOutputSchema().properties.decision.enum.includes("unverified"), true);
 });
 
 test("attributes a bounded receipt-derived referral without passing it to the target audit", async () => {
@@ -123,7 +126,11 @@ test("turns controlled findings into seller repair actions", async () => {
   partial.routes[0].findings = ["seller_response_contract_absent", "x402_full_request_binding_mismatch", "bazaar_extension_missing"];
   const result = await sellerIntegrityAudit({ origin: "https://seller.example", route: "/paid", requireBazaar: true }, { auditImpl: async () => partial });
   assert.equal(result.decision, "repair_required");
+  assert.equal(result.report.evidenceClass, "seller_contract");
+  assert.equal(result.report.auditCompleted, true);
   assert.equal(result.nextActions.length, 3);
+  assert.equal(result.referralOffer.status, "available");
+  assert.equal(result.referralOffer.reward, "one_free_changed_state_recheck");
 });
 
 test("turns invalid x402 protocol documents into one exact repair action", async () => {
@@ -143,7 +150,66 @@ test("maps bounded seller-contract and transport failures", async () => {
   assert.equal(absent.decision, "repair_required");
   assert.equal(absent.report.auditCompleted, false);
   assert.equal(absent.report.failureCode, "exact_route_not_declared");
+  assert.equal(absent.report.evidenceClass, "missing_declared_operation");
+  assert.equal(absent.referralOffer.status, "available");
+  assert.equal(absent.referralOffer.reward, "one_free_changed_state_recheck");
+
+  const invalid = await sellerIntegrityAudit({ origin: "https://seller.example", route: "/paid" }, { auditImpl: async () => { throw new Error("document did not return JSON"); } });
+  assert.equal(invalid.decision, "repair_required");
+  assert.equal(invalid.report.evidenceClass, "invalid_declaration");
+
+  const unavailable = await sellerIntegrityAudit({ origin: "https://seller.example", route: "/paid" }, { auditImpl: async () => { throw new Error("document returned HTTP 404"); } });
+  assert.equal(unavailable.decision, "repair_required");
+  assert.equal(unavailable.report.evidenceClass, "declared_url_unavailable");
 
   const transport = await sellerIntegrityAudit({ origin: "https://seller.example", route: "/paid" }, { auditImpl: async () => { throw new Error("request timed out"); } });
   assert.equal(transport.report.failureCode, "bounded_transport_failure");
+  assert.equal(transport.decision, "unverified");
+  assert.equal(transport.report.auditCompleted, false);
+  assert.equal(transport.report.evidenceClass, "transport_unknown");
+  assert.equal(transport.referralOffer.status, "unavailable");
+  assert.equal(transport.referralOffer.reward, "none");
+  assert.equal(transport.referralOffer.id, null);
+  assert.equal(transport.nextActions[0].includes("not seller-repair evidence"), true);
+});
+
+test("incomplete acquisition is not repair and withholds referral even when a referral id is supplied", async () => {
+  const referral = `r1_${"d".repeat(64)}`;
+  const oversized = await sellerIntegrityAudit({ origin: "https://seller.example", route: "/paid", referral }, {
+    auditImpl: async () => { throw new Error("response exceeded byte limit"); },
+  });
+  assert.equal(oversized.decision, "unverified");
+  assert.equal(oversized.report.failureCode, "openapi_exceeds_byte_limit");
+  assert.equal(oversized.report.evidenceClass, "local_acquisition_limit");
+  assert.equal(oversized.referralOffer.status, "unavailable");
+  assert.equal(oversized.referralOffer.id, null);
+  assert.equal(oversized.referralOffer.reward, "none");
+  assert.equal(oversized.nextActions[0].includes("not seller-repair evidence"), true);
+
+  const ceiling = await sellerIntegrityAudit({ origin: "https://seller.example", route: "/paid" }, {
+    auditImpl: async () => { throw new Error("paid GET route count exceeds 1"); },
+  });
+  assert.equal(ceiling.decision, "unverified");
+  assert.equal(ceiling.report.evidenceClass, "local_acquisition_limit");
+  assert.equal(ceiling.referralOffer.status, "unavailable");
+
+  const tls = await sellerIntegrityAudit({ origin: "https://seller.example", route: "/paid", referral }, {
+    auditImpl: async () => { throw new Error("Client network socket disconnected before secure TLS connection was established"); },
+  });
+  assert.equal(tls.decision, "unverified");
+  assert.equal(tls.report.evidenceClass, "transport_unknown");
+  assert.equal(tls.referralOffer.id, null);
+
+  const redirect = await sellerIntegrityAudit({ origin: "https://seller.example", route: "/paid" }, {
+    auditImpl: async () => { throw new Error("redirects are not allowed"); },
+  });
+  assert.equal(redirect.decision, "unverified");
+  assert.equal(redirect.report.failureCode, "redirect_not_followed");
+  assert.equal(redirect.nextActions[0].includes("not by itself a catalog"), true);
+});
+
+test("classifies acquisition failures without inventing seller blame", () => {
+  assert.equal(classifySellerIntegrityAcquisition("exact paid GET route was not declared").decision, "repair_required");
+  assert.equal(classifySellerIntegrityAcquisition("request timed out").decision, "unverified");
+  assert.equal(classifySellerIntegrityAcquisition("response exceeded byte limit").evidenceClass, "local_acquisition_limit");
 });
