@@ -3,9 +3,11 @@ import { assertChallengeResource, decodeChallengeFromResponse, selectExactAccept
 import {
   assertAcceptMatchesAuthorization,
   assertRequestMatchesAuthorization,
+  AuthorizationRefusal,
   normalizeAuthorization,
 } from "./authorization.mjs";
 import { BatchAdmissionError, admitExtractBatchBody } from "./batch-admission.mjs";
+import { classifyRequestConstruction } from "./request-construction.mjs";
 import { safeJson } from "./redact.mjs";
 import { boundedFetch } from "./transport.mjs";
 
@@ -78,6 +80,14 @@ export async function runPreflight({
     throw new Error("GET preflight must not include a body");
   }
 
+  const construction = classifyRequestConstruction(resolvedUrl, {
+    method: resolvedMethod,
+    body: resolvedMethod === "POST" ? bodyRaw : null,
+  });
+  if (construction.kind === "invalid_input") {
+    throw new AuthorizationRefusal(construction.reason, { field: construction.missing[0] || "url" });
+  }
+
   let bound = null;
   if (auth) {
     bound = assertRequestMatchesAuthorization(resolvedUrl, auth, {
@@ -114,6 +124,7 @@ export async function runPreflight({
       message: `expected HTTP 402 unpaid challenge, received ${response.status}`,
       bodyPreviewBytes: Buffer.byteLength(bodyText),
       bodyDigest: bound?.bodyDigest ?? null,
+      construction,
       walletAccessed: false,
       paymentSigned: false,
       paymentSent: false,
@@ -144,6 +155,7 @@ export async function runPreflight({
     },
     resourceUrl: challenge.resource?.url ?? null,
     matchedAuthorization: matched,
+    construction,
     walletAccessed: false,
     paymentSigned: false,
     paymentSent: false,

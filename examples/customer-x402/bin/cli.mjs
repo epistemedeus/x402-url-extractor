@@ -7,6 +7,7 @@ import {
   LIVE_EXTRACT_BATCH_URL,
   LIVE_EXTRACT_URL,
   LIVE_LOCKFILE_URL,
+  LIVE_ORIGIN,
 } from "../src/constants.mjs";
 import {
   AttemptReceiptError,
@@ -33,6 +34,9 @@ Credential-free unpaid single-page GET preflight (backward compatible):
   npm run preflight:get
   npm run preflight -- --get --url '${LIVE_EXTRACT_URL}'
 
+Construct GET /extract before the wallet (required query url=). Bare
+  ${LIVE_ORIGIN}/extract without url is unsigned discovery (HTTP 402), not a purchase.
+
 Explicit approved purchase (customer-owned wallet injection required):
   npm run purchase -- --approve --authorization ./fixtures/authorization-batch.json --private-key-env CUSTOMER_X402_PRIVATE_KEY
   npm run purchase:get -- --approve --authorization ./fixtures/authorization.json --private-key-env CUSTOMER_X402_PRIVATE_KEY
@@ -48,6 +52,10 @@ Notes:
   - Default commands never read wallet credentials, sign, send payment headers, or pay.
   - Default route is POST ${LIVE_EXTRACT_BATCH_URL} with fixture public HTTPS URLs.
   - Local batch admission runs before any fetch or wallet lookup.
+  - GET /extract requires a public HTTP(S) query url= before --approve. Empty,
+    missing, duplicate, or malformed url is refused locally; a bare unpaid 402
+    remains discovery. POST /lockfile-pin-delta requires JSON {before, after}
+    objects; empty {} is unpaid discovery and is not signed.
   - POST ${LIVE_LOCKFILE_URL} (live 5000 atomic USDC, x402-only) uses the same
     inspect/--approve/reconcile path once --authorization binds that HTTPS URL
     and exact {before, after} body bytes. Default commands still do not pay
