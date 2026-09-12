@@ -15,6 +15,7 @@ import {
   lockfilePinDeltaOutputSchema,
   ownedLockfileWorkerCount,
   runLockfileCompareWorker,
+  lockfilePinDeltaFailureDelivery,
   LockfilePinDeltaInputError,
 } from "./lockfile-pin-delta.mjs";
 import {
@@ -58,6 +59,9 @@ test("flag stays off unless explicitly enabled", () => {
   assert.match(readme, /challenge resource is `https:\/\/agents\.samedaydesk\.com\/extract\/batch`/);
   assert.doesNotMatch(readme, /lockfile MCP tool's challenge\s+resource is `https:\/\/agents\.samedaydesk\.com\/extract\/batch`/);
   assert.doesNotMatch(readme, /95836161/);
+  const adapter = readFileSync(join(here, "lockfile-pin-delta.mjs"), "utf8");
+  assert.match(adapter, /HTTP 200 is not used for timeout/);
+  assert.match(adapter, /x402 execute-before-settle/);
 });
 
 test("admits JSON lockfile objects and refuses paths, URLs, commands, and extra fields", () => {
@@ -125,19 +129,25 @@ test("useful delta, informational no-change, and git resolved-only stay distinct
 });
 
 test("timeout and crash envelopes are not informational no-change", () => {
-  const timed = formatLockfilePinDeltaResult(null, { charged: true, transport: "timeout", wallMs: 12, admittedBodyBytes: 100 });
+  const timed = formatLockfilePinDeltaResult(null, { charged: false, transport: "timeout", wallMs: 12, admittedBodyBytes: 100 });
   assertOutput(timed);
   assert.equal(timed.ok, false);
-  assert.equal(timed.charged, true);
+  assert.equal(timed.charged, false);
   assert.equal(timed.analysis, "not-run");
   assert.equal(timed.transport, "timeout");
   assert.equal(timed.engine, null);
 
-  const crashed = formatLockfilePinDeltaResult(null, { charged: true, transport: "engine-crash" });
+  const crashed = formatLockfilePinDeltaResult(null, { charged: false, transport: "engine-crash" });
   assertOutput(crashed);
   assert.equal(crashed.analysis, "not-run");
   assert.equal(crashed.transport, "engine-crash");
   assert.notEqual(crashed.analysis, "informational");
+
+  assert.equal(lockfilePinDeltaFailureDelivery("x402").status, 503);
+  assert.equal(lockfilePinDeltaFailureDelivery("x402").charged, false);
+  assert.equal(lockfilePinDeltaFailureDelivery("mpp").status, 503);
+  assert.equal(lockfilePinDeltaFailureDelivery("mpp").charged, true);
+  assert.equal(lockfilePinDeltaFailureDelivery("mpp").owedDelivery, true);
 });
 
 test("discovery example is a real engine delta with a frozen sold boundary", () => {
@@ -219,6 +229,36 @@ test("worker timeout reaps the child", async () => {
     /timeout/i,
   );
   await new Promise((resolve) => setTimeout(resolve, 900));
+  assert.equal(ownedLockfileWorkerCount(), 0);
+});
+
+test("owned nonzero-exit worker is rejected even with valid-looking stdout", async () => {
+  await assert.rejects(
+    () => runLockfileCompareWorker({
+      beforeText: `${JSON.stringify(journeyBefore)}\n`,
+      afterText: `${JSON.stringify(journeyAfter)}\n`,
+      env: {
+        ...process.env,
+        LOCKFILE_PIN_DELTA_WORKER_PATH: join(here, "fixtures/lockfile-pin-delta/workers/nonzero-exit.mjs"),
+      },
+    }),
+    /exited 2|valid-looking stdout/i,
+  );
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  assert.equal(ownedLockfileWorkerCount(), 0);
+});
+
+test("owned zero-exit worker delivers a valid report", async () => {
+  const report = await runLockfileCompareWorker({
+    beforeText: `${JSON.stringify(journeyBefore)}\n`,
+    afterText: `${JSON.stringify(journeyAfter)}\n`,
+    env: {
+      ...process.env,
+      LOCKFILE_PIN_DELTA_WORKER_PATH: join(here, "fixtures/lockfile-pin-delta/workers/zero-exit.mjs"),
+    },
+  });
+  assert.equal(report.ok, true);
+  assert.equal(report.counts.changed, 1);
   assert.equal(ownedLockfileWorkerCount(), 0);
 });
 

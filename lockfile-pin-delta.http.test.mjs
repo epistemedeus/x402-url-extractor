@@ -373,12 +373,20 @@ test("timeout after simulated payment is not informational no-change", { timeout
   const payment = testPayment(challenge, { id: "lockfile_timeout_1234567890" });
   const paid = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(body, { "payment-signature": payment }));
   const result = await paid.json();
-  assert.equal(paid.status, 200, JSON.stringify(result));
-  assert.equal(result.charged, true);
+  assert.equal(paid.status, 503, JSON.stringify(result));
+  assert.equal(result.charged, false);
   assert.equal(result.ok, false);
   assert.equal(result.analysis, "not-run");
   assert.equal(result.transport, "timeout");
   assert.notEqual(result.analysis, "informational");
+  assert.equal(facilitator.calls.settle, 0);
+
+  const retry = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(body, { "payment-signature": payment }));
+  const retryBody = await retry.json();
+  assert.equal(retry.status, 503, JSON.stringify(retryBody));
+  assert.notEqual(retry.headers.get("x-payment-replay"), "hit");
+  assert.notEqual(retryBody.analysis, "informational");
+  assert.equal(facilitator.calls.settle, 0);
 });
 
 test("simulated facilitator verify failure does not settle", { timeout: 60_000 }, async (t) => {
@@ -400,6 +408,70 @@ test("simulated facilitator verify failure does not settle", { timeout: 60_000 }
   await rejected.text();
   assert.equal(facilitator.calls.verify, 1);
   assert.equal(facilitator.calls.settle, 0);
+});
+
+test("x402 worker crash is HTTP 503 and does not settle", { timeout: 60_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "lockfile-crash-"));
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => {
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({
+    dataDir,
+    facilitatorUrl: facilitator.url,
+    extraEnv: { LOCKFILE_PIN_DELTA_WORKER_CRASH: "1" },
+  });
+  const body = { before: journeyBefore, after: journeyAfter };
+  const challenge = decodePaymentRequired(await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(body)));
+  const payment = testPayment(challenge, { id: "lockfile_crash_1234567890ab" });
+  const paid = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(body, { "payment-signature": payment }));
+  const result = await paid.json();
+  assert.equal(paid.status, 503, JSON.stringify(result));
+  assert.equal(result.charged, false);
+  assert.equal(result.analysis, "not-run");
+  assert.equal(result.transport, "engine-crash");
+  assert.equal(facilitator.calls.settle, 0);
+});
+
+test("MPP timeout stays charged and same-credential retry does not settle again", { timeout: 90_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "lockfile-mpp-timeout-"));
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => {
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({
+    dataDir,
+    facilitatorUrl: facilitator.url,
+    extraEnv: {
+      LOCKFILE_PIN_DELTA_TIMEOUT_MS: "200",
+      LOCKFILE_PIN_DELTA_WORKER_HOLD_MS: "2000",
+    },
+  });
+  const body = { before: journeyBefore, after: journeyAfter };
+  const unpaid = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(body));
+  assert.equal(unpaid.status, 402);
+  const authorization = await createMppCredential(unpaid);
+  const paid = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(body, { authorization }));
+  const result = await paid.json();
+  assert.equal(paid.status, 503, JSON.stringify(result));
+  assert.equal(result.charged, true);
+  assert.equal(result.owedDelivery, true);
+  assert.equal(result.analysis, "not-run");
+  assert.equal(result.transport, "timeout");
+  assert.equal(facilitator.calls.settle, 1);
+
+  const retry = await fetch(`${merchant.base}${LOCKFILE_PIN_DELTA_PATH}`, jsonPost(body, { authorization }));
+  const retryText = await retry.text();
+  assert.equal(retry.status, 503, retryText.slice(0, 400));
+  assert.notEqual(retry.headers.get("x-payment-replay"), "hit");
+  assert.doesNotMatch(retryText, /"analysis"\s*:\s*"informational"/);
+  assert.equal(facilitator.calls.settle, 1);
 });
 
 test("MPP unpaid challenge binds POST body and refuses a changed body", { timeout: 90_000 }, async (t) => {

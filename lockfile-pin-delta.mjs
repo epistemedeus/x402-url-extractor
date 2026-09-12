@@ -447,12 +447,22 @@ export function runLockfileCompareWorker({ beforeText, afterText, env = process.
         fail(Object.assign(new Error("lockfile worker returned invalid JSON"), { code: "engine-crash", transport: "engine-crash" }));
         return;
       }
+      if (code !== 0) {
+        fail(Object.assign(new Error(`lockfile worker exited ${code} with${parsed?.ok === true && parsed.report ? " valid-looking stdout" : " a failure payload"}`), {
+          code: "engine-crash",
+          transport: "engine-crash",
+        }));
+        return;
+      }
       if (parsed?.ok === true && parsed.report) {
         succeed(parsed.report);
         return;
       }
       if (parsed?.refused === true) {
-        fail(new LockfilePinDeltaInputError(parsed.error || "engine refused", { status: 400, code: parsed.code || "engine_refused" }));
+        fail(Object.assign(new Error(parsed.error || "engine refused after admission"), {
+          code: parsed.code || "engine-crash",
+          transport: "engine-crash",
+        }));
         return;
       }
       fail(Object.assign(new Error(parsed?.error || `lockfile worker failed (${code ?? signal})`), {
@@ -507,7 +517,7 @@ export async function executeLockfilePinDelta({
     if (error instanceof LockfilePinDeltaInputError) throw error;
     const transport = error?.transport || (error?.code === "timeout" ? "timeout" : "engine-crash");
     return formatLockfilePinDeltaResult(null, {
-      charged: true,
+      charged: false,
       transport,
       wallMs: Date.now() - started,
       admittedBodyBytes,
@@ -515,6 +525,21 @@ export async function executeLockfilePinDelta({
       env,
     });
   }
+}
+
+export function lockfilePinDeltaFailureDelivery(protocol) {
+  if (protocol === "mpp") {
+    return Object.freeze({
+      status: 503,
+      charged: true,
+      owedDelivery: true,
+    });
+  }
+  return Object.freeze({
+    status: 503,
+    charged: false,
+    owedDelivery: false,
+  });
 }
 
 function unchargedError(res, error) {
@@ -621,22 +646,37 @@ export function validateLockfilePinDeltaRequest(req, res, next) {
 export async function serveLockfilePinDelta(req, res) {
   res.set("Cache-Control", "no-store");
   res.set("X-SameDayDesk-Lockfile-Pin-Delta", "enabled");
+  const protocol = res.locals?.samedaydeskPayment?.protocol === "mpp" ? "mpp" : "x402";
+  const failHttp = (result, transport) => {
+    const delivery = lockfilePinDeltaFailureDelivery(protocol);
+    result.charged = delivery.charged;
+    result.analysis = "not-run";
+    result.error = transport === "timeout" ? "lockfile_compare_timeout" : "lockfile_engine_failed";
+    if (delivery.owedDelivery) {
+      result.owedDelivery = true;
+      result.boundary = {
+        ...result.boundary,
+        retrySameCredential: true,
+        newSettlementAttempt: false,
+      };
+    }
+    return res.status(delivery.status).json(result);
+  };
   try {
     const result = await executeLockfilePinDelta({
       input: req.body,
       rawBody: req.rawBody,
     });
-    if (result.transport !== "ok") result.error = result.transport === "timeout" ? "lockfile_compare_timeout" : "lockfile_engine_failed";
+    if (result.transport !== "ok") return failHttp(result, result.transport);
     return res.status(200).json(result);
   } catch (error) {
-    if (error instanceof LockfilePinDeltaInputError) return unchargedError(res, error);
+    if (error instanceof LockfilePinDeltaInputError && protocol !== "mpp") return unchargedError(res, error);
     const result = formatLockfilePinDeltaResult(null, {
-      charged: true,
-      transport: "internal-error",
+      charged: protocol === "mpp",
+      transport: error instanceof LockfilePinDeltaInputError ? "engine-crash" : "internal-error",
       admittedBodyBytes: req.rawBody ? Buffer.byteLength(req.rawBody) : null,
     });
-    result.error = "lockfile_compare_interrupted";
-    return res.status(200).json(result);
+    return failHttp(result, result.transport);
   }
 }
 
@@ -702,6 +742,7 @@ export function lockfilePinDeltaOutputSchema() {
       boundary: { type: "object" },
       limits: { type: "object" },
       error: { type: "string" },
+      owedDelivery: { type: "boolean" },
     },
   };
 }
@@ -727,6 +768,7 @@ export const lockfilePinDeltaMcpOutputSchema = z.object({
   boundary: z.record(z.any()),
   limits: z.record(z.any()),
   error: z.string().optional(),
+  owedDelivery: z.boolean().optional(),
 }).strict();
 
 export function lockfilePinDeltaOutputExample() {
@@ -791,7 +833,7 @@ export function lockfilePinDeltaOpenApiPath({ paymentInfo, env = process.env } =
       },
       responses: {
         "200": {
-          description: "bounded pin delta; analysis may be actionable, informational, or partial. Timeout or engine crash after settlement stay charged and are not informational no-change.",
+          description: "bounded pin delta after a completed compare. analysis is actionable, informational (identical pins), or partial. HTTP 200 is not used for timeout, crash, oversized worker output, or nonzero worker exit.",
           content: { "application/json": { schema: lockfilePinDeltaOutputSchema() } },
         },
         "400": { description: "unsupported or malformed input, charged nothing" },
@@ -799,7 +841,7 @@ export function lockfilePinDeltaOpenApiPath({ paymentInfo, env = process.env } =
         "409": { description: "payment identifier already bound to a different request body, payer, credential, or payment terms" },
         "413": { description: "JSON request or lockfile exceeds the server byte ceiling; no authorization" },
         "415": { description: "Content-Type must be JSON" },
-        "503": { description: "matching execution is active or settlement is unresolved; no new settlement on this response" },
+        "503": { description: "engine timeout, crash, oversized worker output, nonzero worker exit, or unresolved settlement. Not a successful compare. x402 execute-before-settle: HTTP >=400 cancels settlement (charged false). MPP settles before the handler: charged remains true and the same credential retries through existing replay quarantine without a new settle." },
       },
       "x-payment-info": paymentInfo,
     },

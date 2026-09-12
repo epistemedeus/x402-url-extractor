@@ -3,53 +3,87 @@
 Reviewer: W5-H01 merchant exclusive amendment owner.
 Parent session `729e76bf-ea1d-49e7-8a31-4cc569fb1320`.
 Start HEAD: `d758f85f36ec913c186e9f61581374768d000fff`.
+Closeout start: `0eaef8297d3ad991224dd328d3bbb10569293afe`.
 Base: `a143898dd1ec35c097ca7eb0b472f30dad1ee319`.
 Branch: `codex/w5-h01-merchant-review-20260911`.
-H01 commits: `fe8f854268a3805b467fa75b556c349668f9304a` (catalog/docs gates), `c2be1f26fe0d842a9eaf1d61987752e49c92b040` (replay key/protocol/MPP, worker stdout bound, MCP resource copy). This file may sit on a later receipt commit of the same branch.
 
 ## Verdict
 
-**Ready for flag-gated hosted enable beside existing `extract_batch`.**
+**Ready for controlled hosted enable beside existing `extract_batch`.**
 
-Not ready as a signed-statement / proven-margin / production-money release. Root still decides Railway ship, `LOCKFILE_PIN_DELTA_ENABLED=1`, and whether to re-sign the 25-route envelope.
+Root policy already preserves extract_batch, existing routes, and the low introductory
+price. This closeout makes timeout/crash/oversized/nonzero-exit **not** look like a
+successful charged compare. Not ready as a signed-statement rewrite, proven-margin
+release, or production-money event. This job does not deploy.
+
+## Payment ordering (from source)
+
+Mounted order for this POST: bounded JSON parser and admission (`validateLockfilePinDeltaRequest`)
+→ idempotency replay → `mppDualStack.middleware` → x402 `paymentMiddleware` → `serveLockfilePinDelta`.
+
+- **x402 (`@x402/express` 2.16.0):** verify, then the handler, then `processSettlement` only
+  if `res.statusCode < 400`. HTTP `>=400` cancels settlement (`handler_failed`). Execute-before-settle.
+- **MPP (`mpp-dual-stack.mjs`):** `mppx.evm.charge()` runs in authorize **before** `next()`.
+  A paid MPP credential sets `res.locals.samedaydeskPayment.protocol = "mpp"` and skips the
+  x402 gate. Settle-before-execute.
+
+## Failure semantics
+
+| Outcome | HTTP | `charged` | Notes |
+| --- | ---: | --- | --- |
+| Admission refuse (HTML, path, URL, command, oversize input) | 400/413/415 | false | Before payment. |
+| Completed compare (actionable / informational / partial) | 200 | true | Useful paid output. Identical pins are informational, not failure. |
+| Timeout, crash, oversized worker stdout, nonzero exit (x402) | 503 | false | Status >=400 skips x402 settle. Same credential may retry; not a replay hit of a fake success. |
+| Same failures after MPP already settled | 503 | true, `owedDelivery: true` | Do not lie with `charged: false`. Same credential retries through existing replay quarantine without a new settle. |
+| Unknown facilitator settlement | 503 | not a new settle | Existing quarantine; settle count stays 1. |
+| Worker nonzero exit with valid-looking stdout | crash | as above | Rejected. Owned zero-exit worker still delivers. |
+
+HTTP 200 is only a completed compare. Discovery examples remain a successful journey delta.
 
 ## Evidence
 
 | Gate | Result |
 | --- | --- |
-| Independent supplied pairs, no install/URL job input | Pass. Handwritten expected pins in `fixtures/lockfile-pin-delta/expected-*.json` vs vendor journey and added-removed fixtures. Same-pair control is informational. Git resolved-only pair stays distinct. |
-| Malformed / oversized refuse before payment | Pass. Unpaid HTML/path/oversize → 400/413, `charged: false`, facilitator settle 0. |
-| Replay: changed body / key / principal / protocol | Pass. Same x402 payment, different body, `from`, signature, `accepted.network`, or payment-identifier → 409, `charged: false`, settle unchanged. x402 blob as `Authorization` does not 200. MPP pays, replays, and refuses a changed body without a second settle. |
-| Worker timeout + output bound, no leaked children | Pass. `ownedLockfileWorkerCount() === 0` after timeout and after stdout over `maxResponseBytes`. HTTP timeout stays `analysis: not-run`, charged. |
-| `extract_batch` stays enabled | Pass. Both flags on: OpenAPI 27 paid ops, MCP 24 tools, unpaid batch 402 and lockfile 402. Incumbent extract/batch HTTP suites 20/20. |
-| Meaningful engine output vs handwritten pins | Pass. fixture-alpha 1.0.0→1.0.1 version/integrity/resolved; beta unchanged. Added/removed names match handwritten expected JSON. |
-| Catalog counts | Pass. Production GET 2026-09-11 this session: OpenAPI **26 paid HTTP ops**, `/extract/batch` live, `/lockfile-pin-delta` absent. `/api/actions` 23. Default-off is 25/22. Docs distinguish these. |
-| Customer quote / provenance | Pass. Quote meaning has no D26/EC2. Catalog sha `a20232b0f777b0f737cdffefb64a9ca9d9c9ba0e`. Engine sha remains `fba9d14872bc4c04214e527b9edfb30c2123c9e7`. README lockfile MCP resource is `/lockfile-pin-delta`, not `/extract/batch`. |
-| Adapter vs vendor | Compare/parse stay in `vendor/lockfile-pin-delta/`. HTTP admission, worker isolation, stdout bound, and receipt envelope stay in the adapter (807 lines). No broad rewrite. |
-| Price / cost | `$0.005` is not proven margin. Empirical in-process max-admitted pair (110,145 bytes, 613 pins): **21 ms wall** this host. RSS delta is not a hosting invoice (sign can flip). No Railway invoice. No paid API spend. |
+| Independent supplied pairs | Pass. Handwritten expected pins vs vendor journey and added-removed. Same-pair informational. |
+| Malformed / oversized before payment | Pass. Unpaid 400/413, `charged: false`, settle 0. |
+| Replay body / key / principal / protocol | Pass. Drift 409, settle unchanged. MPP body bind refuses without a second settle. |
+| Timeout / crash not a successful compare | Pass. x402 timeout and crash → 503, `charged: false`, settle 0, retry not a 200 hit. |
+| MPP owed delivery | Pass. Timeout → 503, `charged: true`, `owedDelivery: true`, retry settle still 1. |
+| Unknown settlement quarantine | Pass. |
+| Nonzero exit vs zero-exit control | Pass. Owned `fixtures/lockfile-pin-delta/workers/nonzero-exit.mjs` rejected; `zero-exit.mjs` delivers. |
+| Worker reap | Pass. Timeout, stdout bound, and nonzero-exit leave `ownedLockfileWorkerCount() === 0`. |
+| extract_batch stays enabled | Pass. Both flags: OpenAPI 27 paid ops, MCP 24 tools. `npm run test:extract-batch` 45/45. |
+| Catalog / copy | Pass. Production OpenAPI 26 paid, batch live, lockfile absent. Default-off 25/22. M01 catalog `a20232b0…`, engine `fba9d148…`. No D26/EC2. |
+| Price | `$0.005` not proven margin. See COST.md public-rate estimate. No invoice. No live charge. |
 
-## Tests run this review
-
-```
-node --test --test-concurrency=1 lockfile-pin-delta.test.mjs mcp-tool-metadata.test.mjs
-# 14 pass (11 lockfile unit + 3 MCP metadata)
-```
+## Tests run on this source
 
 ```
-node --test --test-concurrency=1 lockfile-pin-delta.http.test.mjs lockfile-pin-delta.buyer.test.mjs
-# 9 pass
+npm run test:lockfile-pin-delta
+# 24 pass
 ```
 
 ```
-node --test --test-concurrency=1 extract-batch.http.test.mjs extract.http.test.mjs startup-smoke.test.mjs
-# 20 pass
+npm run test:extract-batch
+# 45 pass
 ```
+
+```
+node --test --test-concurrency=1 \
+  extract.http.test.mjs startup-smoke.test.mjs discovery-contract.test.mjs \
+  mcp-tool-metadata.test.mjs machine-surface-parity.test.mjs \
+  machine-surface-parity.http.test.mjs paid-action-effect-profile.test.mjs \
+  service-deployment-publication.test.mjs construction-surface.test.mjs
+# 36 pass
+```
+
+105 pass. No weakened incumbent tests. No live payer key.
 
 ## Remaining Root decisions
 
-1. Deploy this branch without merging `master`.
-2. Set `LOCKFILE_PIN_DELTA_ENABLED=1` **without** unsetting production `EXTRACT_BATCH_ENABLED`.
-3. Re-sign the service statement only if the new route must appear in the signed envelope.
-4. Margin and facilitator fees stay unknown until a real invoice exists.
+1. Deploy this branch without merging `master` (Auto does not deploy).
+2. Set `LOCKFILE_PIN_DELTA_ENABLED=1` without unsetting production `EXTRACT_BATCH_ENABLED`.
+3. Re-sign the 25-route statement only if the new route must appear in the signed envelope.
+4. Shared-process idle RAM and post-free-tier CDP `$0.001`/settle stay unknown against a real invoice.
 
-Unknown: live Railway RAM/egress bill; live MCP `tools/list` count was not re-fetched this session (OpenAPI 26 paid is confirmed; `/.well-known/mcp.json` is 404).
+Unknown: live Railway/CDP invoice; live MCP `tools/list` (OpenAPI 26 paid confirmed earlier; `/.well-known/mcp.json` is 404).
