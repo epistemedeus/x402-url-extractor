@@ -2,6 +2,7 @@ import { getAddress } from "viem";
 
 import {
   admitExtractBatchBody,
+  admitPublicHttpOrHttpsUrl,
   assertExactBodyBytes,
   BatchAdmissionError,
   bodyDigestFor,
@@ -90,7 +91,14 @@ function normalizeGetAuthorization(input) {
   }
   const url = normalizeHttpsUrl(input.url, "url");
   if (url.pathname !== "/extract") fail("authorization path must be /extract", "url");
-  if (!url.searchParams.get("url")) fail("authorization query must include url=", "url");
+  const targets = url.searchParams.getAll("url");
+  if (targets.length !== 1 || !targets[0]) fail("authorization query must include url=", "url");
+  try {
+    admitPublicHttpOrHttpsUrl(targets[0], { field: "url", httpsOnly: false });
+  } catch (error) {
+    if (error instanceof BatchAdmissionError) fail(error.message, "url");
+    throw error;
+  }
   return {
     method,
     url: url.toString(),

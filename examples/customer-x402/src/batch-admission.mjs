@@ -44,42 +44,58 @@ function isPublicV4(address) {
 }
 
 /**
- * Narrow public HTTPS admission aligned with the merchant batch route.
- * Does not fetch targets and does not authorize payment.
+ * Admit a caller-supplied public HTTP(S) URL without rewriting it.
+ * GET /extract allows http or https (merchant admission). Batch stays HTTPS-only.
  */
-export function assertPublicHttpsUrl(raw) {
+export function admitPublicHttpOrHttpsUrl(raw, { field = "url", httpsOnly = false } = {}) {
+  const missingMessage = httpsOnly
+    ? "each url must be a public HTTPS URL"
+    : "url must be a public HTTP or HTTPS URL";
   if (typeof raw !== "string" || raw.trim() === "") {
-    throw new BatchAdmissionError("each url must be a public HTTPS URL", { field: "urls" });
+    throw new BatchAdmissionError(missingMessage, { field });
   }
   if (raw.length > BATCH_MAX_URL_LENGTH) {
-    throw new BatchAdmissionError(`url exceeds ${BATCH_MAX_URL_LENGTH} characters`, { field: "urls" });
+    throw new BatchAdmissionError(`url exceeds ${BATCH_MAX_URL_LENGTH} characters`, { field });
   }
   let url;
   try {
     url = new URL(raw);
   } catch {
-    throw new BatchAdmissionError("each url must be a public HTTPS URL", { field: "urls" });
+    throw new BatchAdmissionError(missingMessage, { field });
   }
-  if (url.protocol !== "https:") {
-    throw new BatchAdmissionError("only public HTTPS URLs are accepted", { field: "urls" });
+  if (httpsOnly) {
+    if (url.protocol !== "https:") {
+      throw new BatchAdmissionError("only public HTTPS URLs are accepted", { field });
+    }
+  } else if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new BatchAdmissionError("url must be a public HTTP or HTTPS URL", { field });
   }
   if (url.username || url.password) {
-    throw new BatchAdmissionError("URL credentials unsupported", { field: "urls" });
+    throw new BatchAdmissionError("URL credentials unsupported", { field });
   }
   const host = url.hostname.toLowerCase();
   if (host.includes(":")) {
-    throw new BatchAdmissionError("private or IPv6 address unsupported", { field: "urls" });
+    throw new BatchAdmissionError("private or IPv6 address unsupported", { field });
   }
   if (isIP(host) && !isPublicV4(host)) {
-    throw new BatchAdmissionError("private/non-public host blocked", { field: "urls" });
+    throw new BatchAdmissionError("private/non-public host blocked", { field });
   }
   if (BLOCKED_HOST_RE.test(host) || BLOCKED_IPV4_172.test(host)) {
-    throw new BatchAdmissionError("private/loopback host blocked", { field: "urls" });
+    throw new BatchAdmissionError("private/loopback host blocked", { field });
   }
   if (url.href.length > BATCH_MAX_URL_LENGTH) {
-    throw new BatchAdmissionError("normalized url exceeds length limit", { field: "urls" });
+    throw new BatchAdmissionError("normalized url exceeds length limit", { field });
   }
-  return url.href;
+  return raw;
+}
+
+/**
+ * Narrow public HTTPS admission aligned with the merchant batch route.
+ * Does not fetch targets and does not authorize payment.
+ */
+export function assertPublicHttpsUrl(raw) {
+  admitPublicHttpOrHttpsUrl(raw, { field: "urls", httpsOnly: true });
+  return new URL(raw).href;
 }
 
 const ALLOWED_BODY_KEYS = new Set(["urls", "fields"]);

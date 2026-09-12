@@ -1,0 +1,111 @@
+{
+  "registry": {
+    "name": "io.github.epistemedeus/x402-data-gateway",
+    "version": "1.23.45",
+    "isLatest": true,
+    "status": "active",
+    "publishedAt": "2026-09-08T05:09:17.289155Z",
+    "description": "Paid x402 and MPP tools for agent discovery, payment safety, data, and DeFi.",
+    "websiteUrl": "https://agents.samedaydesk.com/",
+    "repository": {
+      "url": "https://github.com/epistemedeus/x402-url-extractor",
+      "source": "github"
+    },
+    "remotes": [
+      {
+        "type": "streamable-http",
+        "url": "https://agents.samedaydesk.com/mcp"
+      }
+    ]
+  },
+  "actualServerJson": {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.epistemedeus/x402-data-gateway",
+    "description": "Paid x402 and MPP tools for agent discovery, payment safety, data, and DeFi.",
+    "version": "1.23.49",
+    "websiteUrl": "https://agents.samedaydesk.com/",
+    "repository": {
+      "url": "https://github.com/epistemedeus/x402-url-extractor",
+      "source": "github"
+    },
+    "remotes": [
+      {
+        "type": "streamable-http",
+        "url": "https://agents.samedaydesk.com/mcp"
+      }
+    ]
+  },
+  "actualOpenApiVersion": "1.23.49",
+  "liveMcpServerInfoVersion": "1.23.49",
+  "constructionChangingDelta": {
+    "registryOmitsTools": true,
+    "liveMcpAddsSince12345": [
+      "lockfile_pin_delta"
+    ],
+    "liveOpenApiAddsSince12345": [
+      "POST /lockfile-pin-delta"
+    ],
+    "extractRequestParamsUnchanged": true,
+    "extractRequiredQuery": [
+      "url"
+    ],
+    "lockfileRequiredBody": [
+      "before",
+      "after"
+    ],
+    "versionLabelAloneIsNotALaunch": true
+  },
+  "mcpRequiredInputs": {
+    "extract": {
+      "title": "Extract Web Page as Structured JSON",
+      "required": [
+        "url"
+      ],
+      "properties": [
+        "url"
+      ]
+    },
+    "extract_batch": {
+      "title": "Extract Public URLs in Batch",
+      "required": [
+        "urls"
+      ],
+      "properties": [
+        "urls",
+        "fields"
+      ]
+    },
+    "lockfile_pin_delta": {
+      "title": "Inspect Lockfile Pin Delta",
+      "required": [
+        "before",
+        "after"
+      ],
+      "properties": [
+        "before",
+        "after"
+      ]
+    }
+  },
+  "openapiRequestSlice": {
+    "extractGetParameters": [
+      {
+        "name": "url",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ],
+    "lockfileRequired": [
+      "before",
+      "after"
+    ]
+  },
+  "sourceUrlsVerified": [
+    "https://github.com/epistemedeus/x402-url-extractor",
+    "https://agents.samedaydesk.com/mcp",
+    "https://agents.samedaydesk.com/"
+  ]
+}
