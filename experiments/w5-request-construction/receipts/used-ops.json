@@ -1,0 +1,17 @@
+{
+  "operations": [
+    {
+      "method": "get",
+      "path": "/extract"
+    },
+    {
+      "method": "post",
+      "path": "/extract/batch"
+    },
+    {
+      "method": "post",
+      "path": "/lockfile-pin-delta"
+    }
+  ],
+  "pinNote": "customer-x402 supported paid routes for request construction"
+}

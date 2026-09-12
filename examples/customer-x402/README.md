@@ -55,6 +55,27 @@ npm run preflight:get
 npm run preflight -- --get --url 'https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com'
 ```
 
+## Construct the request before the wallet
+
+Live OpenAPI `GET /extract` and the unpaid 402 Bazaar input both require query
+`url`. `GET https://agents.samedaydesk.com/extract` without that query is
+unsigned discovery. This client will inspect that 402 and will not treat it as
+authorization to sign.
+
+Bind a public HTTP(S) page URL first, then inspect, then `--approve`:
+
+```js
+import { bindGetExtractResourceUrl } from "./src/request-construction.mjs";
+bindGetExtractResourceUrl("https://example.com");
+// https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com
+```
+
+Empty, missing, duplicate, or malformed `url` is `authorization_refused` before
+wallet lookup, signing, facilitator verify, or settle. The same client requires
+JSON `{before, after}` objects for `POST /lockfile-pin-delta`. Empty `{}` is
+unpaid lockfile discovery and is not a purchase. This example still supports
+only `GET /extract`, `POST /extract/batch`, and `POST /lockfile-pin-delta`.
+
 ## Lockfile pin-delta (same client; not the default command)
 
 `POST https://agents.samedaydesk.com/lockfile-pin-delta` is the live x402-only

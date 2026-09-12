@@ -17,6 +17,7 @@ import {
 } from "./attempt-receipt.mjs";
 import { AuthorizationRefusal, assertAcceptMatchesAuthorization, assertRequestMatchesAuthorization,
   normalizeAuthorization } from "./authorization.mjs";
+import { assertPurchaseReady } from "./request-construction.mjs";
 import { assertChallengeResource, decodeChallengeFromResponse, selectExactAccept } from "./challenge.mjs";
 import { classifyPaidResponse } from "./outcome.mjs";
 import { resolveBuyerAccount } from "./wallet.mjs";
@@ -92,6 +93,10 @@ export async function runAuthorizedPurchase({ authorization, url, account = null
   try {
     if (!approve) throw new AuthorizationRefusal("purchase requires explicit approve=true");
     const auth = normalizeAuthorization(authorization);
+    assertPurchaseReady(auth.url, {
+      method: auth.method,
+      body: auth.method === "POST" ? auth.bodyRaw : null,
+    });
     assertRequestMatchesAuthorization(url ?? auth.url, auth, {
       method: auth.method,
       body: auth.method === "POST" ? auth.bodyRaw : null,
