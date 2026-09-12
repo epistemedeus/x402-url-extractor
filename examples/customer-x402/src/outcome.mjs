@@ -2,6 +2,7 @@ import { OUTCOMES } from "./constants.mjs";
 import { validateBatchBuyerOutput } from "./batch-output.mjs";
 import { decodeSettlementHeader } from "./challenge.mjs";
 import { validateBuyerOutput } from "./output.mjs";
+import { validateVendorBudgetBuyerOutput } from "./vendor-budget-output.mjs";
 import { redactValue } from "./redact.mjs";
 
 /**
@@ -22,6 +23,8 @@ export function classifyPaidResponse({
   let output;
   if (bodyError || mediaType !== requiredOutput.mediaType) {
     output = { valid: false, delivery: "invalid", reason: bodyError || "response Content-Type is not application/json", report: null };
+  } else if (authorization?.vendorBudget) {
+    output = validateVendorBudgetBuyerOutput(body, authorization);
   } else if (batch) {
     output = validateBatchBuyerOutput(body, authorization);
   } else {
@@ -57,6 +60,16 @@ export function classifyPaidResponse({
     };
   }
 
+  if (authorization?.vendorBudget && response.status === 503
+    && body?.charged === null && body?.settlementConfirmed === false
+    && ["payment_settlement_unknown", "payment_execution_in_flight_or_unknown"].includes(body?.error)) {
+    return {
+      outcome: OUTCOMES.UNKNOWN,
+      message: "vendor settlement is unconfirmed; retain the comparison and reconcile the original attempt without a replacement payment",
+      evidence,
+    };
+  }
+
   if (settlement.present && settlement.decoded && settlement.decoded.success === false) {
     return {
       outcome: OUTCOMES.SETTLEMENT_FAILED,
@@ -78,7 +91,9 @@ export function classifyPaidResponse({
     if (output.valid && output.delivery === "partial") {
       return {
         outcome: OUTCOMES.PARTIAL_DELIVERED,
-        message: "paid bounded batch attempt is structurally valid with explicit failed or partial rows; not a refund or automatic retry",
+        message: authorization?.vendorBudget
+          ? "vendor pricing comparison matches the authorized rows but contains conflicting or incomparable evidence; not an automatic retry"
+          : "paid bounded batch attempt is structurally valid with explicit failed or partial rows; not a refund or automatic retry",
         evidence,
       };
     }

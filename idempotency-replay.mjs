@@ -27,6 +27,15 @@ export function replaySettlementWasAttempted() {
   return settlementContext.getStore()?.attempted === true;
 }
 
+function retainedDeliveryFields(record) {
+  if (!record?.settlementAttempted || !record.precomputedBodyBase64) return {};
+  const bytes = Buffer.from(record.precomputedBodyBase64, "base64");
+  if (createHash("sha256").update(bytes).digest("hex") !== record.precomputedBodySha256) return {};
+  try {
+    return { settlementConfirmed: false, delivery: { ...JSON.parse(bytes.toString("utf8")), charged: null } };
+  } catch { return {}; }
+}
+
 function persistentReplaySecret(dataDir) {
   mkdirSync(dataDir, { recursive: true, mode: 0o700 });
   const file = path.join(dataDir, "idempotency-replay.key");
@@ -283,7 +292,7 @@ export function createIdempotencyReplay({
       if (existing.fingerprint !== binding.fingerprint) {
         return { records, result: { kind: "conflict" } };
       }
-      if (existing.pending) return { records, result: { kind: "pending" } };
+      if (existing.pending) return { records, result: { kind: "pending", record: existing } };
       return { records, result: { kind: "hit", record: existing } };
     });
   }
@@ -310,7 +319,7 @@ export function createIdempotencyReplay({
       if (existing.fingerprint !== binding.fingerprint) {
         return { records, result: { kind: "conflict" } };
       }
-      if (existing.pending) return { records, result: { kind: "pending" } };
+      if (existing.pending) return { records, result: { kind: "pending", record: existing } };
       return { records, result: { kind: "hit", record: existing } };
     });
   }
@@ -436,7 +445,8 @@ export function createIdempotencyReplay({
           error: "payment_execution_in_flight_or_unknown",
           charged: null,
           newSettlementAttempt: false,
-          boundary: "Matching execution is active or unresolved. This request did not settle or fetch again. Reconcile the original attempt; do not create a replacement payment automatically.",
+          ...retainedDeliveryFields(cached.record),
+          boundary: "Matching execution is active or unresolved. This request did not settle or fetch again. Any retained delivery is an unconfirmed precomputed result, not a paid-fulfillment claim. Reconcile the original attempt; do not create a replacement payment automatically.",
         });
       }
     }
@@ -464,9 +474,19 @@ export function createIdempotencyReplay({
       if (!cached.reserved) return;
       settlementAttempted = true;
       markSettlementAttempt.attempted = true;
+      const candidate = res.locals?.replayPrecomputedDelivery;
+      const candidateBytes = candidate ? Buffer.from(JSON.stringify(candidate)) : null;
+      if (candidateBytes && candidateBytes.length > maxResponseBytes) {
+        throw new Error("precomputed delivery exceeds replay capacity");
+      }
       await mutate(async (records) => ({
         records: records.map((record) => record.key === binding.key && record.fingerprint === binding.fingerprint
-          ? { ...record, settlementAttempted: true } : record),
+          ? { ...record, settlementAttempted: true,
+            ...(candidateBytes ? {
+              precomputedBodyBase64: candidateBytes.toString("base64"),
+              precomputedBodySha256: createHash("sha256").update(candidateBytes).digest("hex"),
+            } : {}),
+          } : record),
         result: true,
       }));
     };
@@ -499,7 +519,25 @@ export function createIdempotencyReplay({
         || responseHeaders["x-payment-response"],
       );
       if (endScheduled || overflow || res.statusCode < 200 || res.statusCode >= 300 || !hasSettlementProof) {
-        const finish = () => originalEnd(chunk, encoding, callback);
+        const finish = () => {
+          if (settlementAttempted && res.statusCode >= 400 && res.locals?.replayPrecomputedDelivery && !res.headersSent) {
+            const body = JSON.stringify({
+              ok: false, error: "payment_settlement_unknown", charged: null,
+              settlementConfirmed: false, newSettlementAttempt: true,
+              delivery: { ...res.locals.replayPrecomputedDelivery, charged: null },
+              boundary: "Precomputed comparison only. Settlement is unconfirmed; do not create a replacement payment automatically.",
+            });
+            // An attempted settlement is not a new unpaid challenge. Returning
+            // 402 here invites clients to authorize a replacement payment.
+            res.statusCode = 503;
+            res.removeHeader("Payment-Required");
+            res.removeHeader("WWW-Authenticate");
+            res.removeHeader("Content-Length");
+            res.setHeader("Content-Type", "application/json; charset=utf-8");
+            return originalEnd(body, "utf8", callback);
+          }
+          return originalEnd(chunk, encoding, callback);
+        };
         if (cached.reserved && !settlementAttempted && !hasSettlementProof) {
           endScheduled = true;
           void release(binding).catch(() => {}).finally(finish);

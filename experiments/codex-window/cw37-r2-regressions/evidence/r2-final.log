@@ -1,0 +1,297 @@
+TAP version 13
+# Subtest: F5 dormant feature child-process boot isolation
+    # Subtest: F5.unset.clean
+    ok 1 - F5.unset.clean
+      ---
+      duration_ms: 2079.127809
+      type: 'test'
+      ...
+    # Subtest: F5.unset.malformed-price
+    ok 2 - F5.unset.malformed-price
+      ---
+      duration_ms: 2057.716764
+      type: 'test'
+      ...
+    # Subtest: F5.unset.malformed-limit
+    ok 3 - F5.unset.malformed-limit
+      ---
+      duration_ms: 2202.550583
+      type: 'test'
+      ...
+    # Subtest: F5.unset.malformed-all-limits
+    ok 4 - F5.unset.malformed-all-limits
+      ---
+      duration_ms: 2102.285101
+      type: 'test'
+      ...
+    # Subtest: F5.unset.missing-discovery-fixture
+    ok 5 - F5.unset.missing-discovery-fixture
+      ---
+      duration_ms: 2100.982154
+      type: 'test'
+      ...
+    # Subtest: F5.0.clean
+    ok 6 - F5.0.clean
+      ---
+      duration_ms: 2421.142566
+      type: 'test'
+      ...
+    # Subtest: F5.0.malformed-price
+    ok 7 - F5.0.malformed-price
+      ---
+      duration_ms: 2005.894836
+      type: 'test'
+      ...
+    # Subtest: F5.0.malformed-limit
+    ok 8 - F5.0.malformed-limit
+      ---
+      duration_ms: 1996.694815
+      type: 'test'
+      ...
+    # Subtest: F5.0.malformed-all-limits
+    ok 9 - F5.0.malformed-all-limits
+      ---
+      duration_ms: 1999.36454
+      type: 'test'
+      ...
+    # Subtest: F5.0.missing-discovery-fixture
+    ok 10 - F5.0.missing-discovery-fixture
+      ---
+      duration_ms: 2100.17915
+      type: 'test'
+      ...
+    1..10
+ok 1 - F5 dormant feature child-process boot isolation
+  ---
+  duration_ms: 21547.863021
+  type: 'test'
+  ...
+# Subtest: F6 actual HTTP and maintained customer numeric admission
+    # Subtest: F6.raw.safe-boundary-distinct
+    ok 1 - F6.raw.safe-boundary-distinct
+      ---
+      duration_ms: 103.604248
+      type: 'test'
+      ...
+    # Subtest: F6.raw.integer-collapse
+    ok 2 - F6.raw.integer-collapse
+      ---
+      duration_ms: 3.872999
+      type: 'test'
+      ...
+    # Subtest: F6.raw.decimal-collapse
+    ok 3 - F6.raw.decimal-collapse
+      ---
+      duration_ms: 3.642109
+      type: 'test'
+      ...
+    # Subtest: F6.raw.decimal-distinct
+    ok 4 - F6.raw.decimal-distinct
+      ---
+      duration_ms: 70.642528
+      type: 'test'
+      ...
+    # Subtest: F6.raw.underflow-collapse
+    ok 5 - F6.raw.underflow-collapse
+      ---
+      duration_ms: 2.719902
+      type: 'test'
+      ...
+    # Subtest: F6.raw.subnormal-distinct
+    ok 6 - F6.raw.subnormal-distinct
+      ---
+      duration_ms: 79.201571
+      type: 'test'
+      ...
+    # Subtest: F6.raw.negative-finite
+    ok 7 - F6.raw.negative-finite
+      ---
+      duration_ms: 69.728555
+      type: 'test'
+      ...
+    # Subtest: F6.raw.finite-maximum
+    ok 8 - F6.raw.finite-maximum
+      ---
+      duration_ms: 69.248007
+      type: 'test'
+      ...
+    # Subtest: F6.raw.overflow-rounds-finite-collapse
+    ok 9 - F6.raw.overflow-rounds-finite-collapse
+      ---
+      duration_ms: 3.671191
+      type: 'test'
+      ...
+    # Subtest: F6.raw.signed-zero-equivalent
+    ok 10 - F6.raw.signed-zero-equivalent
+      ---
+      duration_ms: 68.509733
+      type: 'test'
+      ...
+    # Subtest: F6.raw.decimal-spelling-equivalent
+    ok 11 - F6.raw.decimal-spelling-equivalent
+      ---
+      duration_ms: 66.108773
+      type: 'test'
+      ...
+    # Subtest: F6.reject.1e400
+    ok 12 - F6.reject.1e400
+      ---
+      duration_ms: 4.809852
+      type: 'test'
+      ...
+    # Subtest: F6.reject.1.7976931348623159e308
+    ok 13 - F6.reject.1.7976931348623159e308
+      ---
+      duration_ms: 2.451975
+      type: 'test'
+      ...
+    # Subtest: F6.reject."1"
+    ok 14 - F6.reject."1"
+      ---
+      duration_ms: 3.270366
+      type: 'test'
+      ...
+    # Subtest: F6.reject.null
+    ok 15 - F6.reject.null
+      ---
+      duration_ms: 2.564282
+      type: 'test'
+      ...
+    # Subtest: F6.reject.true
+    ok 16 - F6.reject.true
+      ---
+      duration_ms: 3.999237
+      type: 'test'
+      ...
+    # Subtest: F6.reject.NaN
+    ok 17 - F6.reject.NaN
+      ---
+      duration_ms: 2.664238
+      type: 'test'
+      ...
+    # Subtest: F6.reject.Infinity
+    ok 18 - F6.reject.Infinity
+      ---
+      duration_ms: 3.935922
+      type: 'test'
+      ...
+    # Subtest: F6.maintained-client.integer-collapse
+    ok 19 - F6.maintained-client.integer-collapse
+      ---
+      duration_ms: 0.397381
+      type: 'test'
+      ...
+    # Subtest: F6.maintained-client.decimal-collapse
+    ok 20 - F6.maintained-client.decimal-collapse
+      ---
+      duration_ms: 0.236008
+      type: 'test'
+      ...
+    # Subtest: F6.maintained-client.decimal-distinct
+    ok 21 - F6.maintained-client.decimal-distinct
+      ---
+      duration_ms: 97.638064
+      type: 'test'
+      ...
+    # Subtest: F6.network-boundary
+    ok 22 - F6.network-boundary
+      ---
+      duration_ms: 0.310213
+      type: 'test'
+      ...
+    1..22
+ok 2 - F6 actual HTTP and maintained customer numeric admission
+  ---
+  duration_ms: 3071.072223
+  type: 'test'
+  ...
+# Subtest: F7 live operation metadata, MCP construction and signed route coverage
+    # Subtest: F7.runtime-x402-only
+    ok 1 - F7.runtime-x402-only
+      ---
+      duration_ms: 26.751028
+      type: 'test'
+      ...
+    # Subtest: F7.openapi-catalog-effects
+    ok 2 - F7.openapi-catalog-effects
+      ---
+      duration_ms: 49.676811
+      type: 'test'
+      ...
+    # Subtest: F7.purchase-evidence-per-operation
+    ok 3 - F7.purchase-evidence-per-operation
+      ---
+      duration_ms: 8.451198
+      type: 'test'
+      ...
+    # Subtest: F7.a2a-per-operation-protocols
+    ok 4 - F7.a2a-per-operation-protocols
+      ---
+      duration_ms: 28.041841
+      type: 'test'
+      ...
+    # Subtest: F7.mcp-zod-constructability
+    ok 5 - F7.mcp-zod-constructability
+      ---
+      duration_ms: 772.773953
+      type: 'test'
+      ...
+    # Subtest: F7.mcp-synthetic-paid-roundtrip
+    ok 6 - F7.mcp-synthetic-paid-roundtrip
+      ---
+      duration_ms: 89.781456
+      type: 'test'
+      ...
+    # Subtest: F7.mcp-unpaid-challenge-delivery
+    ok 7 - F7.mcp-unpaid-challenge-delivery
+      ---
+      duration_ms: 18.189633
+      type: 'test'
+      ...
+    # Subtest: F6.mcp-raw-rounding-rejected
+    ok 8 - F6.mcp-raw-rounding-rejected
+      ---
+      duration_ms: 3.686468
+      type: 'test'
+      ...
+    # Subtest: F7.mcp-schema-admission-parity
+    ok 9 - F7.mcp-schema-admission-parity
+      ---
+      duration_ms: 26.287833
+      type: 'test'
+      ...
+    # Subtest: F7.deployment-attestation-exact-route
+    ok 10 - F7.deployment-attestation-exact-route
+      ---
+      duration_ms: 55.547243
+      type: 'test'
+      ...
+    1..10
+ok 3 - F7 live operation metadata, MCP construction and signed route coverage
+  ---
+  duration_ms: 3562.787897
+  type: 'test'
+  ...
+# Subtest: F7 production vendor enablement requires existing exact signed coverage
+    # Subtest: F7.production-coverage-gate
+    ok 1 - F7.production-coverage-gate
+      ---
+      duration_ms: 1063.008679
+      type: 'test'
+      ...
+    1..1
+ok 4 - F7 production vendor enablement requires existing exact signed coverage
+  ---
+  duration_ms: 1063.531143
+  type: 'test'
+  ...
+# CW42 receipt: /workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/r2-final.json; 43 passed, 0 failed
+1..4
+# tests 47
+# suites 0
+# pass 47
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 29557.174026

@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 
 import { classifyCommerceRoute, createCommerceTelemetry } from "./commerce-events.mjs";
 import { createCommerceTrust } from "./commerce-trust.mjs";
+import { sellerIntegrityAudit } from "./seller-integrity-audit.mjs";
 import {
   ReceiptReferralRecheckError,
   createReceiptReferralClaimStore,
@@ -201,6 +202,24 @@ test("accepts equal-second receipt issuance and exposes the precise ordering evi
   assert.equal(result.evidence.downstreamIssuedAtNotEarlier, true);
   assert.equal(schema.properties.evidence.properties.downstreamIssuedAtNotEarlier.const, true);
   assert.equal(schema.properties.evidence.required.includes("downstreamIssuedAtNotEarlier"), true);
+});
+
+test("preserves an unverified recheck and its unavailable referral contract", async (t) => {
+  const { claimStore } = await testStore(t, "receipt-referral-unverified-");
+  const pair = await receiptPair();
+  const result = await receiptReferralRecheck(pair, options(claimStore, (input) => sellerIntegrityAudit(input, {
+    auditImpl: async () => { throw new Error("request timed out"); },
+  })));
+  const recheckSchema = receiptReferralRecheckOutputSchema().properties.recheck;
+
+  assert.equal(result.recheck.decision, "unverified");
+  assert.equal(result.recheck.report.evidenceClass, "transport_unknown");
+  assert.equal(result.recheck.referralOffer.status, "unavailable");
+  assert.equal(result.recheck.referralOffer.reward, "none");
+  assert.equal(result.recheck.referralOffer.id, null);
+  assert.equal(recheckSchema.properties.decision.enum.includes("unverified"), true);
+  assert.equal(recheckSchema.properties.report.required.includes("observedHttpStatus"), true);
+  assert.equal(recheckSchema.properties.referralOffer.properties.status.enum.includes("unavailable"), true);
 });
 
 test("rejects foreign signers, same payer, same transaction, wrong referral, and missing transaction binding", async (t) => {
@@ -432,6 +451,11 @@ test("HTTP and machine surfaces expose the POST as free and non-paywalled", { ti
     assert.deepEqual(operation.security, []);
     assert.equal(Object.hasOwn(operation, "x-payment-info"), false);
     assert.equal(operation.requestBody.content["application/json"].schema.additionalProperties, false);
+    const sellerSchema = document.paths["/commerce/seller-integrity-audit"].get
+      .responses["200"].content["application/json"].schema;
+    assert.equal(sellerSchema.properties.decision.enum.includes("unverified"), true);
+    assert.equal(sellerSchema.properties.report.required.includes("observedHttpStatus"), true);
+    assert.equal(sellerSchema.properties.referralOffer.properties.status.enum.includes("unavailable"), true);
   }
   assert.equal(gateway.machineCommerce.referralRecheck.price, "free");
   assert.equal(gateway.machineCommerce.referralRecheck.broadcastRequired, false);

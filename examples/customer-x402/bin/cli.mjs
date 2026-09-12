@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { parseLosslessNumericJson } from "../src/numeric-json.mjs";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -8,6 +9,7 @@ import {
   LIVE_EXTRACT_URL,
   LIVE_LOCKFILE_URL,
   LIVE_ORIGIN,
+  LIVE_VENDOR_BUDGET_URL,
 } from "../src/constants.mjs";
 import {
   AttemptReceiptError,
@@ -55,12 +57,19 @@ Notes:
   - GET /extract requires a public HTTP(S) query url= before --approve. Empty,
     missing, duplicate, or malformed url is refused locally; a bare unpaid 402
     remains discovery. POST /lockfile-pin-delta requires JSON {before, after}
-    objects; empty {} is unpaid discovery and is not signed.
+    objects; empty {} is unpaid discovery and is not signed. POST
+    /vendor-budget-impact requires JSON {before, after} pricing-row objects
+    with rows of field, finite value, and unit; empty {} is unpaid discovery
+    and is not signed.
   - POST ${LIVE_LOCKFILE_URL} (live 5000 atomic USDC, x402-only) uses the same
     inspect/--approve/reconcile path once --authorization binds that HTTPS URL
     and exact {before, after} body bytes. Default commands still do not pay
     lockfile; there is no auto-approve and no PAYMENT_SIGNATURE prerequisite.
     See fixtures/authorization-lockfile.json.
+  - POST ${LIVE_VENDOR_BUDGET_URL} (5000 atomic USDC, x402-only, flag-gated)
+    uses the same inspect/--approve path once --authorization binds that HTTPS
+    URL and exact pricing-row body bytes. Default commands still do not pay
+    vendor-budget. See fixtures/authorization-vendor-budget.json.
   - --approve binds exact HTTPS URL, method, body bytes, network, asset, recipient,
     amount cap, and buyer-required output before invoking @x402/fetch.
   - Without --attempt-receipt, unsigned EIP-3009 nonce/validBefore are not retained.
@@ -79,7 +88,9 @@ Notes:
 }
 
 function readJson(path) {
-  return JSON.parse(readFileSync(resolve(path), "utf8"));
+  const raw = readFileSync(resolve(path), "utf8");
+  const value = JSON.parse(raw);
+  return new URL(value.url || "https://invalid.example").pathname === "/vendor-budget-impact" ? parseLosslessNumericJson(raw) : value;
 }
 
 function parseArgs(argv) {

@@ -58,6 +58,7 @@ export function buildPurchaseEvidenceManifest({
       },
     }, { now: Date.parse("2026-01-01T00:00:00.000Z") });
     if (report.decision !== "admissible") throw new Error(`response contract is not admissible for ${key}`);
+    const protocols = resource.paymentProtocols || ["x402", "mpp"];
     const effect = method === "GET" || method === "HEAD" || readOnlyKeys.has(key) ? "read_only" : "undeclared";
     if (effect === "undeclared") throw new Error(`purchase evidence effect is undeclared for ${key}`);
     operations.push({
@@ -75,12 +76,12 @@ export function buildPurchaseEvidenceManifest({
         ttlSeconds: replay.ttlSeconds,
         mismatchStatus: replay.mismatchStatus,
         x402Requirement: "payment-identifier",
-        mppRequirement: "exact_settled_credential",
+        ...(protocols.includes("mpp") ? { mppRequirement: "exact_settled_credential" } : {}),
         requestBinding: [...replay.requestBinding],
       },
       receipt: {
         x402: "PAYMENT-RESPONSE with signed offer-receipt extension and settlement reference",
-        mpp: "Payment-Receipt",
+        ...(protocols.includes("mpp") ? { mpp: "Payment-Receipt" } : {}),
         runtimeValidationRequired: true,
       },
     });
@@ -91,6 +92,7 @@ export function buildPurchaseEvidenceManifest({
     service: { origin: normalizedOrigin, version: String(serviceVersion) },
     protocols: ["x402", "mpp"],
     evidence: {
+      ...(serviceDeployment.coverageFor ? { operationDeploymentCoverage: (resources || []).map(resource => serviceDeployment.coverageFor({ method: resource.method || "GET", path: new URL(resource.url, normalizedOrigin).pathname, paymentProtocols: resource.paymentProtocols || ["x402", "mpp"] })) } : {}),
       serviceDeploymentStatement: relativePath(serviceDeployment.statement, "deployment statement"),
       serviceDeploymentPublicKey: relativePath(serviceDeployment.publicKey, "deployment public key"),
       serviceDeploymentStatementId: String(serviceDeployment.statementId),

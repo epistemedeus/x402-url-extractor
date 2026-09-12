@@ -4,6 +4,7 @@ import {
   LIVE_EXTRACT_PATH,
   LIVE_LOCKFILE_PATH,
   LIVE_ORIGIN,
+  LIVE_VENDOR_BUDGET_PATH,
 } from "./constants.mjs";
 
 function fail(message, field = "url") {
@@ -123,6 +124,65 @@ export function classifyRequestConstruction(requestUrl, { method = "GET", body =
     });
   }
 
+  if (url.pathname === LIVE_VENDOR_BUDGET_PATH && methodUpper === "POST") {
+    let parsed;
+    try {
+      parsed = parseBody(body);
+    } catch (error) {
+      return freezeConstruction({
+        kind: "invalid_input",
+        purchaseReady: false,
+        missing: ["before", "after"],
+        reason: error instanceof AuthorizationRefusal ? error.message : "bodyRaw must be valid JSON",
+      });
+    }
+    if (parsed === undefined || (
+      parsed && typeof parsed === "object" && !Array.isArray(parsed) && Object.keys(parsed).length === 0
+    )) {
+      return freezeConstruction({
+        kind: "unsigned_discovery",
+        purchaseReady: false,
+        missing: ["before", "after"],
+        reason: "empty vendor-budget POST is unpaid discovery, not a purchase",
+      });
+    }
+    if (parsed == null || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return freezeConstruction({
+        kind: "invalid_input",
+        purchaseReady: false,
+        missing: ["before", "after"],
+        reason: "request body must be a JSON object",
+      });
+    }
+    const missing = ["before", "after"].filter((key) => (
+      parsed[key] == null || typeof parsed[key] !== "object" || Array.isArray(parsed[key])
+    ));
+    if (missing.length) {
+      return freezeConstruction({
+        kind: "invalid_input",
+        purchaseReady: false,
+        missing,
+        reason: `${missing[0]} must be a JSON object with a rows array (not a path or string)`,
+      });
+    }
+    for (const key of ["before", "after"]) {
+      if (!Array.isArray(parsed[key].rows) || parsed[key].rows.length === 0) {
+        return freezeConstruction({
+          kind: "invalid_input",
+          purchaseReady: false,
+          missing: [key],
+          reason: `${key} must include a non-empty rows array`,
+        });
+      }
+    }
+    return freezeConstruction({
+      kind: "bound_request",
+      purchaseReady: true,
+      missing: [],
+      boundUrl: url.toString(),
+    });
+  }
+
   if (url.pathname === LIVE_LOCKFILE_PATH && methodUpper === "POST") {
     let parsed;
     try {
@@ -185,7 +245,7 @@ export function classifyRequestConstruction(requestUrl, { method = "GET", body =
     kind: "undeclared",
     purchaseReady: false,
     missing: [],
-    reason: "this client constructs GET /extract, POST /extract/batch, and POST /lockfile-pin-delta only",
+    reason: "this client constructs GET /extract, POST /extract/batch, POST /lockfile-pin-delta, and POST /vendor-budget-impact only",
   });
 }
 

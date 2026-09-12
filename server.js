@@ -1,3 +1,4 @@
+import { parseLosslessNumericJson } from "./examples/customer-x402/src/numeric-json.mjs";
 // x402-merchant — a paid HTTP endpoint that charges AI agents in USDC and
 // settles directly to OUR OWN Base wallet.
 //
@@ -103,6 +104,7 @@ import {
   normalizeSellerIntegrityAuditInput,
   sellerIntegrityAudit,
   sellerIntegrityAuditOutputSchema,
+  sellerIntegrityAuditMcpOutputSchema,
 } from "./seller-integrity-audit.mjs";
 import {
   RECEIPT_REFERRAL_RECHECK_ROUTE,
@@ -222,6 +224,22 @@ import {
   serveLockfilePinDelta,
   validateLockfilePinDeltaRequest,
 } from "./lockfile-pin-delta.mjs";
+import { VENDOR_BUDGET_IMPACT_PATH, isVendorBudgetImpactEnabled, isVendorBudgetImpactPath } from "./vendor-budget-impact-config.mjs";
+const {
+  VENDOR_BUDGET_IMPACT_AMOUNT_ATOMIC,
+  VENDOR_BUDGET_IMPACT_DESCRIPTION,
+  VENDOR_BUDGET_IMPACT_PRICE_USD,
+  VENDOR_BUDGET_IMPACT_READ_ONLY_POST,
+  vendorBudgetImpactCostParameters,
+  vendorBudgetImpactMcpOutputSchema,
+  vendorBudgetImpactMcpInputSchema,
+  vendorBudgetImpactOpenApiPath,
+  vendorBudgetImpactResource,
+  vendorBudgetImpactX402Route,
+  mountVendorBudgetImpactParser,
+  serveVendorBudgetImpact,
+  validateVendorBudgetImpactRequest,
+} = isVendorBudgetImpactEnabled() ? await import("./vendor-budget-impact.mjs") : {};
 import {
   WELL_KNOWN_SKILLS_INDEX_PATH,
   mountWellKnownSkills,
@@ -271,7 +289,7 @@ import {
 } from "./platform-health-page.mjs";
 import { z } from "zod";
 import { SERVICE_VERSION } from "./service-version.mjs";
-import { loadServiceDeploymentPublication } from "./service-deployment-publication.mjs";
+import { loadServiceDeploymentPublication, assertServiceDeploymentCoverage } from "./service-deployment-publication.mjs";
 import { SERVICE_DEPLOYMENT_ROUTES } from "./service-deployment-routes.mjs";
 import { validateOpenApiOperationIds } from "./openapi-operation-contract.mjs";
 import { createExactUsdcAcceptsFor, usdcTermsForNetwork } from "./x402-payment-terms.mjs";
@@ -357,10 +375,13 @@ const EXTRACT_BATCH_ENABLED = isExtractBatchEnabled();
 if (EXTRACT_BATCH_ENABLED) extractBatchCostParameters();
 const LOCKFILE_PIN_DELTA_ENABLED = isLockfilePinDeltaEnabled();
 if (LOCKFILE_PIN_DELTA_ENABLED) lockfilePinDeltaCostParameters();
+const VENDOR_BUDGET_IMPACT_ENABLED = isVendorBudgetImpactEnabled();
+if (VENDOR_BUDGET_IMPACT_ENABLED) vendorBudgetImpactCostParameters();
 const EXTRACT_BATCH_PAID_POSTS = Object.freeze([
   ...READ_ONLY_PAID_POST_OPERATIONS,
   ...(EXTRACT_BATCH_ENABLED ? [EXTRACT_BATCH_READ_ONLY_POST] : []),
   ...(LOCKFILE_PIN_DELTA_ENABLED ? [LOCKFILE_PIN_DELTA_READ_ONLY_POST] : []),
+  ...(VENDOR_BUDGET_IMPACT_ENABLED ? [VENDOR_BUDGET_IMPACT_READ_ONLY_POST] : []),
 ]);
 
 // "$0.05" -> "50000" atomic USDC units (6 decimals) so the discovery docs
@@ -508,15 +529,22 @@ const jsonParser = express.json({
   type: ["application/json", "application/*+json"],
   verify(req, _res, buffer) {
     req.rawBody = Buffer.from(buffer);
+    if (req.path === "/mcp") {
+      const rpc = JSON.parse(buffer.toString("utf8"));
+      if (rpc?.method === "tools/call" && rpc?.params?.name === "vendor_budget_impact") {
+        parseLosslessNumericJson(buffer.toString("utf8"));
+      }
+    }
   },
 });
 app.use((req, res, next) => {
-  if (isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
+  if (isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path) || isVendorBudgetImpactPath(req.path)) return next();
   return jsonParser(req, res, next);
 });
 app.use(legacyCompatibleX402Body);
 mountPageChangeHttp(app);
 mountLockfilePinDeltaParser(app);
+if (VENDOR_BUDGET_IMPACT_ENABLED) mountVendorBudgetImpactParser(app);
 
 function parseCommerceWriterProcessCount(raw = process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES) {
   if (raw === undefined || raw === null || raw === "") return 1;
@@ -555,11 +583,13 @@ const idempotencyReplay = createIdempotencyReplay({
   requiredReplayPaths: new Set([
     ...(EXTRACT_BATCH_ENABLED ? [EXTRACT_BATCH_PATH] : []),
     ...(LOCKFILE_PIN_DELTA_ENABLED ? [LOCKFILE_PIN_DELTA_PATH] : []),
+    ...(VENDOR_BUDGET_IMPACT_ENABLED ? [VENDOR_BUDGET_IMPACT_PATH] : []),
   ]),
   routes: new Set([
     ...DEFAULT_PAID_ROUTES,
     ...(EXTRACT_BATCH_ENABLED ? [EXTRACT_BATCH_PATH] : []),
     ...(LOCKFILE_PIN_DELTA_ENABLED ? [LOCKFILE_PIN_DELTA_PATH] : []),
+    ...(VENDOR_BUDGET_IMPACT_ENABLED ? [VENDOR_BUDGET_IMPACT_PATH] : []),
   ]),
 });
 let commerceSettlementReconciler;
@@ -742,6 +772,7 @@ app.get("/healthz", async (_req, res) => {
       "wallet-policy-conformance": WALLET_POLICY_CONFORMANCE_PRICE,
       "stateful-wallet-policy-conformance": STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE,
       ...(LOCKFILE_PIN_DELTA_ENABLED ? { "lockfile-pin-delta": LOCKFILE_PIN_DELTA_PRICE_USD } : {}),
+      ...(VENDOR_BUDGET_IMPACT_ENABLED ? { "vendor-budget-impact": VENDOR_BUDGET_IMPACT_PRICE_USD } : {}),
     },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
@@ -884,6 +915,9 @@ const serviceDeploymentPublication = loadServiceDeploymentPublication({
   recipient: PAY_TO,
   operationalWallet: SOLANA_AGENT_REGISTRATION.merchantWallet,
 });
+if (VENDOR_BUDGET_IMPACT_ENABLED && process.env.NODE_ENV === "production") {
+  assertServiceDeploymentCoverage(serviceDeploymentPublication, [{ method: "POST", path: VENDOR_BUDGET_IMPACT_PATH, paymentProtocols: ["x402"] }]);
+}
 commerceSettlementReconciler = createCommerceSettlementReconciler({
   asset: USDC_ASSET,
   eventPaths: [commerceTelemetry.paths.rotatedPath, commerceTelemetry.paths.currentPath],
@@ -917,6 +951,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/distribution/agent-surface-budget-audit`, amount: priceToAtomic(AGENT_SURFACE_BUDGET_AUDIT_PRICE), description: "Measure one public service's free MCP tools/list, OpenAPI, or both before an agent calls or pays. Returns byte counts, byte-derived token estimates, missing selection contracts, heaviest definitions, budget decisions, and progressive-discovery fixes. Unselected surfaces are not fetched or judged. Uses public pinned DNS, follows no redirect, sends no credential or target payment, and calls no target tool.", mimeType: "application/json" },
   ...(EXTRACT_BATCH_ENABLED ? [extractBatchResource({ publicUrl: PUBLIC_URL })] : []),
   ...(LOCKFILE_PIN_DELTA_ENABLED ? [lockfilePinDeltaResource({ publicUrl: PUBLIC_URL })] : []),
+  ...(VENDOR_BUDGET_IMPACT_ENABLED ? [vendorBudgetImpactResource({ publicUrl: PUBLIC_URL })] : []),
 ];
 assertCdpResourceDescriptionCompatibility(RESOURCES);
 
@@ -1041,6 +1076,7 @@ const missingMetadataRoutes = [...paidResourceRoutes].filter((route) => !metadat
 const optionalMetadataRoutes = new Set([
   ...(EXTRACT_BATCH_ENABLED ? [] : [EXTRACT_BATCH_PATH]),
   ...(LOCKFILE_PIN_DELTA_ENABLED ? [] : [LOCKFILE_PIN_DELTA_PATH]),
+  ...(VENDOR_BUDGET_IMPACT_ENABLED ? [] : [VENDOR_BUDGET_IMPACT_PATH]),
 ]);
 const unknownMetadataRoutes = [...metadataRoutes].filter((route) => !paidResourceRoutes.has(route) && !optionalMetadataRoutes.has(route));
 if (missingMetadataRoutes.length || unknownMetadataRoutes.length) {
@@ -1089,7 +1125,7 @@ const mppDualStack = createMppDualStack({
         path,
         ...(path === EXTRACT_BATCH_PATH ? { bindRequestBody: true } : {}),
       };
-    }).filter((route) => route.path !== LOCKFILE_PIN_DELTA_PATH),
+    }).filter((route) => route.path !== LOCKFILE_PIN_DELTA_PATH && route.path !== VENDOR_BUDGET_IMPACT_PATH),
     {
       amount: atomicUsdcToDisplay(RESOURCES[11].amount),
       description: RESOURCES[11].description,
@@ -1228,9 +1264,11 @@ const machineActionCatalog = () => ({
       route,
       url: resource.url,
       description: resource.description,
+      deploymentAttestation: serviceDeploymentPublication.coverageFor({ method, path: route,
+        paymentProtocols: (route === LOCKFILE_PIN_DELTA_PATH || route === VENDOR_BUDGET_IMPACT_PATH) ? ["x402"] : ["x402", "mpp"] }),
       priceAtomicUsdc: resource.amount,
       priceUsdc: Number(resource.amount) / 1e6,
-      paymentProtocols: route === LOCKFILE_PIN_DELTA_PATH ? ["x402"] : ["x402", "mpp"],
+      paymentProtocols: (route === LOCKFILE_PIN_DELTA_PATH || route === VENDOR_BUDGET_IMPACT_PATH) ? ["x402"] : ["x402", "mpp"],
       mimeType: resource.mimeType,
       ...serviceMetadata,
       request: projectDiscoveryRequest(resource.url, method, request),
@@ -1804,6 +1842,28 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       },
     });
   }
+  if (VENDOR_BUDGET_IMPACT_ENABLED && profile !== "mpp") {
+    const vendorBudgetResource = {
+      amount: VENDOR_BUDGET_IMPACT_AMOUNT_ATOMIC,
+      method: "POST",
+    };
+    document.paths[VENDOR_BUDGET_IMPACT_PATH] = vendorBudgetImpactOpenApiPath({
+      paymentInfo: {
+        price: {
+          amount: atomicUsdcToDisplay(vendorBudgetResource.amount),
+          currency: "USD",
+          mode: "fixed",
+        },
+        protocols: [{
+          x402: {
+            asset: USDC_ASSET,
+            network: NETWORK,
+            scheme: "exact",
+          },
+        }],
+      },
+    });
+  }
   attachPaidActionEffectContracts(
     document,
     EXTRACT_BATCH_PAID_POSTS.filter((op) => document.paths?.[op.path]?.[op.method.toLowerCase()]),
@@ -1960,6 +2020,7 @@ app.post(RECEIPT_REFERRAL_RECHECK_ROUTE, async (req, res) => {
 // settlement. Changed request bindings fail with an uncharged 409.
 if (EXTRACT_BATCH_ENABLED) app.post(EXTRACT_BATCH_PATH, validateExtractBatchRequest);
 if (LOCKFILE_PIN_DELTA_ENABLED) app.post(LOCKFILE_PIN_DELTA_PATH, validateLockfilePinDeltaRequest);
+if (VENDOR_BUDGET_IMPACT_ENABLED) app.post(VENDOR_BUDGET_IMPACT_PATH, validateVendorBudgetImpactRequest);
 app.use((req, res, next) => idempotencyReplay.middleware(req, res, next).catch(next));
 
 const PAYMENT_CREDENTIAL_HEADERS = Object.freeze([
@@ -3411,6 +3472,11 @@ const x402Paywall = paymentMiddleware(
         payTo: PAY_TO,
         extensions: COMMON_COMMERCE_EXTENSIONS,
       }) : {}),
+      ...(VENDOR_BUDGET_IMPACT_ENABLED ? vendorBudgetImpactX402Route({
+        network: NETWORK,
+        payTo: PAY_TO,
+        extensions: COMMON_COMMERCE_EXTENSIONS,
+      }) : {}),
     },
     resourceServer
   );
@@ -3428,6 +3494,11 @@ if (LOCKFILE_PIN_DELTA_ENABLED) {
   if (!resource) throw new Error("Missing purchase evidence resource for POST /lockfile-pin-delta");
   evidenceResources.push({ ...resource, method: "POST", url: `${PUBLIC_URL}${LOCKFILE_PIN_DELTA_PATH}` });
 }
+if (VENDOR_BUDGET_IMPACT_ENABLED) {
+  const resource = RESOURCES.find((entry) => (entry.method || "GET") === "POST" && new URL(entry.url).pathname === VENDOR_BUDGET_IMPACT_PATH);
+  if (!resource) throw new Error("Missing purchase evidence resource for POST /vendor-budget-impact");
+  evidenceResources.push({ ...resource, method: "POST", url: `${PUBLIC_URL}${VENDOR_BUDGET_IMPACT_PATH}` });
+}
 purchaseEvidenceManifest = buildPurchaseEvidenceManifest({
   origin: PUBLIC_URL,
   serviceVersion: SERVICE_VERSION,
@@ -3435,6 +3506,7 @@ purchaseEvidenceManifest = buildPurchaseEvidenceManifest({
   responseContractFor: getDiscoveryOutputContract,
   readOnlyPaidPosts: EXTRACT_BATCH_PAID_POSTS,
   serviceDeployment: {
+    coverageFor: serviceDeploymentPublication.coverageFor,
     statement: serviceDeploymentPublication.paths.statement,
     publicKey: serviceDeploymentPublication.paths.publicKey,
     statementId: serviceDeploymentPublication.statementId,
@@ -3809,6 +3881,9 @@ if (EXTRACT_BATCH_ENABLED) {
 if (LOCKFILE_PIN_DELTA_ENABLED) {
   app.post(LOCKFILE_PIN_DELTA_PATH, serveLockfilePinDelta);
 }
+if (VENDOR_BUDGET_IMPACT_ENABLED) {
+  app.post(VENDOR_BUDGET_IMPACT_PATH, serveVendorBudgetImpact);
+}
 
 // One root, negotiated by audience. Browser navigation gets a fast human map;
 // API clients, curl, and agents retain the stable JSON descriptor.
@@ -3885,6 +3960,9 @@ app.get("/", (req, res) => {
       } : {}),
       ...(LOCKFILE_PIN_DELTA_ENABLED ? {
         "POST /lockfile-pin-delta": `${LOCKFILE_PIN_DELTA_PRICE_USD} - ${LOCKFILE_PIN_DELTA_DESCRIPTION}`,
+      } : {}),
+      ...(VENDOR_BUDGET_IMPACT_ENABLED ? {
+        "POST /vendor-budget-impact": `${VENDOR_BUDGET_IMPACT_PRICE_USD} - ${VENDOR_BUDGET_IMPACT_DESCRIPTION}`,
       } : {}),
       "GET /read?url=": `${READ_PRICE} - URL -> LLM-ready Markdown.`,
       "GET /scan?repo=": `${SCAN_PRICE} - static supply-chain security scan of a public GitHub repo before install.`,
@@ -3984,6 +4062,15 @@ import("./mcp-server.mjs")
           paidHttp: { method: "POST", path: LOCKFILE_PIN_DELTA_PATH, resourceUrl: `${PUBLIC_URL}${LOCKFILE_PIN_DELTA_PATH}`, maxRequestBytes: 256 * 1024, maxResponseBytes: 160 * 1024 },
           tags: ["lockfile", "npm", "pin-delta", "dependency-diff", "sbom"],
         }] : []),
+        ...(VENDOR_BUDGET_IMPACT_ENABLED ? [{
+          name: "vendor_budget_impact",
+          description: VENDOR_BUDGET_IMPACT_DESCRIPTION,
+          price: VENDOR_BUDGET_IMPACT_PRICE_USD,
+          inputSchema: vendorBudgetImpactMcpInputSchema,
+          outputSchema: vendorBudgetImpactMcpOutputSchema,
+          paidHttp: { method: "POST", path: VENDOR_BUDGET_IMPACT_PATH, resourceUrl: `${PUBLIC_URL}${VENDOR_BUDGET_IMPACT_PATH}`, maxRequestBytes: 64 * 1024, maxResponseBytes: 64 * 1024 },
+          tags: ["pricing", "budget-impact", "vendor-cost", "row-delta"],
+        }] : []),
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters. Check status/sourceOk/error/truncated/capture; missing discussion text is not proof of absence.") }, outputSchema: readMcpOutputSchema, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
         { name: "scan", description: RESOURCES[2].description, price: SCAN_PRICE, inputSchema: { repo: z.string().describe("Public GitHub repo: owner/name or URL") }, outputSchema: scanRepoMcpOutputSchema, run: (a) => scanRepo(a.repo), tags: ["security", "supply-chain", "github"] },
         { name: "schemaforge", description: RESOURCES[3].description, price: SCHEMAFORGE_PRICE, inputSchema: { site: z.string().describe("Public business homepage or representative landing-page URL. Live HTML must be directly fetchable; JavaScript is not executed."), vertical: z.string().optional().describe("Optional structured-data template profile. med-spas is currently the specialized profile; unsupported values fall back to it."), city: z.string().optional().describe("Optional city the business serves; used to contextualize the generated structured-data template.") }, run: (a) => schemaforge({ site: a.site, vertical: a.vertical, city: a.city }), tags: ["seo", "json-ld", "geo"] },
@@ -3997,7 +4084,7 @@ import("./mcp-server.mjs")
         { name: "opportunity_preflight", description: RESOURCES[11].description, price: OPPORTUNITY_PREFLIGHT_PRICE, inputSchema: { platform: z.string().max(100).optional().describe("Optional platform slug used to attach dated platform-health evidence when a matching card exists."), rewardUsd: z.number().positive().describe("Maximum gross reward in USD if the opportunity is selected and paid."), hours: z.number().min(0).max(10000).describe("Estimated human and agent work time in hours for one complete attempt."), hourlyCostUsd: z.number().min(0).max(100000).describe("Internal opportunity cost per hour in USD."), computeUsd: z.number().min(0).default(0).describe("Expected model, API, hosting, and compute spend in USD for one attempt."), mandatorySpendUsd: z.number().min(0).default(0).describe("Non-recoverable cash spend in USD required before the opportunity can settle."), reusableValueUsd: z.number().min(0).default(0).describe("Conservative USD value of reusable code, research, distribution, or other assets created by the attempt."), selectionProbabilityPct: z.number().min(0).max(100).optional().describe("Caller-supplied probability, from 0 to 100, of receiving the reward; omit to receive a verify-first decision."), competition: z.number().int().min(0).default(0).describe("Known number of competing submissions or workers; use 0 when unknown."), slots: z.number().int().min(1).default(1).describe("Number of independently paid winner or worker slots."), agentAccess: z.enum(["agent_allowed", "agent_only", "mixed", "human_only", "unknown"]).default("unknown").describe("Whether the platform explicitly allows agent participation, is agent-only, mixes agents and humans, is human-only, or remains unknown."), acceptance: z.enum(["deterministic", "machine_scored", "timed_review", "discretionary", "unknown"]).default("unknown").describe("How completion is accepted: deterministic proof, machine score, review deadline, discretionary judgment, or unknown."), settlement: z.enum(["direct", "escrow", "platform_balance", "discretionary", "unfunded", "unknown"]).default("unknown").describe("How the reward is funded and paid: direct, escrow, platform balance, discretionary, unfunded, or unknown.") }, outputSchema: opportunityPreflightMcpOutputSchema, run: (a) => opportunityPreflight(a, { platformCard: a.platform ? getPlatformHealthCard(a.platform.toLowerCase()) : null }), tags: ["work", "bounty", "economics", "preflight", "settlement-evidence"] },
         { name: "agent_discoverability_audit", description: RESOURCES[12].description, price: AGENT_DISCOVERABILITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Public HTTPS service origin"), intent: z.string().min(20).max(500).describe("Brand-blind capability description"), route: z.string().regex(/^\/[^?#]*$/).optional().describe("Optional expected exact path"), method: z.enum(["GET", "POST"]).optional().describe("Exact route method for the optional Coinbase materialization audit. Defaults to GET; runtimeUrl is GET-only."), runtimeUrl: z.string().url().max(2048).optional().describe("Optional exact same-origin HTTPS GET URL whose unpaid x402 or MPP offer supplies the runtime price reference. Requires route and an exactly matching pathname."), payTo: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional EVM payTo for alias matching"), expectedPriceUsd: z.union([z.number().min(0).max(1000000), z.string().regex(/^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,6})?$/)]).optional().describe("Optional exact route price expected by the caller. A coherent runtimeUrl offer takes precedence and caller drift is reported."), surfaceAudit: z.boolean().optional().describe("When true, inspect the target's public Agent Card, ERC-8004 registration document, and action catalog for the expected route through bounded same-origin fetches."), materializationAudit: z.boolean().optional().describe("When true with route and method, distinguish Coinbase seller ineligibility from provider acceptance without exact-resource Bazaar materialization.") }, run: (a) => agentDiscoverabilityAudit(a), tags: ["distribution", "discovery", "x402", "mpp", "agent402", "catalog-price", "runtime-coherence", "catalog-materialization", "a2a", "erc-8004"] },
         { name: "payment_offer_preflight", description: RESOURCES[13].description, price: PAYMENT_OFFER_PREFLIGHT_PRICE, inputSchema: { url: z.string().url().max(2048).describe("Exact public HTTPS GET route whose unpaid x402 and MPP challenge headers and same-origin OpenAPI success-response declaration should be inspected before buyer authorization. Credential-like query keys, fragments, unresolved parameters, local hosts, redirects, and non-public IPs are rejected."), catalog: PAYMENT_OFFER_CATALOG_SCHEMA.optional().describe("Optional caller-supplied catalog candidate. When present, the tool compares it with every live unsigned offer across request, protocol, amount, network, asset, recipient, and expiry.") }, outputSchema: paymentOfferPreflightMcpOutputSchema, run: (a) => paymentOfferPreflight(a), tags: ["payments", "x402", "mpp", "buyer-safety", "preflight", "catalog-coherence", "response-contract"] },
-        { name: "seller_integrity_audit", description: RESOURCES[19].description, price: SELLER_INTEGRITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Credential-free public HTTPS seller origin on port 443."), route: z.string().regex(/^\/[^/?#{}][^?#{}]*$/).describe("Exact paid GET or POST path declared by the seller, without query or template parameters."), method: z.enum(["GET", "POST"]).default("GET").describe("POST receives static OpenAPI response-contract analysis without sending a target request."), requiredPaths: z.array(z.string().regex(/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+){0,7}$/)).max(16).default([]).describe("Buyer-required dotted success-response paths that the seller schema must guarantee recursively."), requireBazaar: z.boolean().default(false).describe("When true, missing Bazaar discovery metadata becomes a repair finding for live-probed GET routes."), referral: z.string().regex(/^r1_[0-9a-f]{64}$/).optional().describe("Optional x402 receipt-derived acquisition label. It cannot change payment or delivery.") }, run: (a) => sellerIntegrityAudit(a), tags: ["payments", "seller-ci", "x402", "mpp", "response-contract", "machine-buyability", "post-contract", "receipt-referral"] },
+        { name: "seller_integrity_audit", description: RESOURCES[19].description, price: SELLER_INTEGRITY_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Credential-free public HTTPS seller origin on port 443."), route: z.string().regex(/^\/[^/?#{}][^?#{}]*$/).describe("Exact paid GET or POST path declared by the seller, without query or template parameters."), method: z.enum(["GET", "POST"]).default("GET").describe("POST receives static OpenAPI response-contract analysis without sending a target request."), requiredPaths: z.array(z.string().regex(/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+){0,7}$/)).max(16).default([]).describe("Buyer-required dotted success-response paths that the seller schema must guarantee recursively."), requireBazaar: z.boolean().default(false).describe("When true, missing Bazaar discovery metadata becomes a repair finding for live-probed GET routes."), referral: z.string().regex(/^r1_[0-9a-f]{64}$/).optional().describe("Optional x402 receipt-derived acquisition label. It cannot change payment or delivery.") }, outputSchema: sellerIntegrityAuditMcpOutputSchema, run: (a) => sellerIntegrityAudit(a), tags: ["payments", "seller-ci", "x402", "mpp", "response-contract", "machine-buyability", "post-contract", "receipt-referral"] },
         { name: "contract_qualified_search", description: RESOURCES[20].description, price: CONTRACT_QUALIFIED_SEARCH_PRICE, inputSchema: { query: z.string().min(10).max(300).describe("Capability intent sent to Agent402 and used locally to rank MPP catalog metadata. Do not include credentials or private values."), requiredPaths: z.array(z.string().regex(/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+){0,7}$/)).min(1).max(16).describe("Buyer-required dotted success-response paths that every returned seller schema must guarantee recursively."), maxPriceDisplayUnits: z.number().gt(0).max(10).default(0.1).describe("Maximum advertised per-call price in each source's display currency."), limit: z.number().int().min(1).max(8).default(5).describe("Maximum candidates audited and returned across Agent402 and MPP.") }, outputSchema: contractQualifiedSearchMcpOutputSchema, run: (a) => contractQualifiedSearch(a), tags: ["payments", "service-discovery", "agent402", "mpp", "response-contract", "buyer-safety"] },
         { name: "agent_surface_budget_audit", description: RESOURCES[21].description, price: AGENT_SURFACE_BUDGET_AUDIT_PRICE, inputSchema: { origin: z.string().url().describe("Credential-free public HTTPS service origin on port 443, with no path or query."), surfaceMode: z.enum(["mcp", "openapi", "both"]).default("both").describe("Audit MCP only, OpenAPI only, or both. Unselected surfaces are not fetched or judged."), mcpPath: z.string().regex(/^\/[^/?#{}][^?#{}]*$/).default("/mcp").describe("Exact root-relative MCP streamable-HTTP path."), openApiPath: z.string().regex(/^\/[^/?#{}][^?#{}]*$/).default("/openapi.json").describe("Exact root-relative OpenAPI JSON path."), mcpBudgetBytes: z.number().int().min(8192).max(1000000).default(65536).describe("Maximum preferred raw MCP tools/list response size in bytes."), openApiBudgetBytes: z.number().int().min(32768).max(1000000).default(524288).describe("Maximum preferred raw OpenAPI document size in bytes.") }, outputSchema: agentSurfaceBudgetAuditMcpOutputSchema, run: (a) => agentSurfaceBudgetAudit(a), tags: ["distribution", "mcp", "openapi", "context-budget", "tool-discovery", "agent-finops"] },
         { name: "settlement_proof", description: RESOURCES[14].description, price: SETTLEMENT_PROOF_PRICE, inputSchema: { transactionHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/).describe("Base mainnet transaction hash containing the claimed canonical USDC transfer."), recipient: z.string().regex(/^0x[0-9a-fA-F]{40}$/).describe("Expected canonical Base USDC recipient."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,20}$/).describe("Expected positive USDC amount in six-decimal atomic units."), payer: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional().describe("Optional expected canonical Base USDC payer.") }, outputSchema: settlementProofMcpOutputSchema, run: (a) => settlementProof(a), tags: ["payments", "x402", "settlement", "reconciliation", "base-usdc"] },

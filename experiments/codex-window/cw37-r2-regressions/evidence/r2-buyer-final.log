@@ -1,0 +1,1282 @@
+TAP version 13
+# Subtest: no-receipt purchase path stays compatible and honest about missing identity
+ok 1 - no-receipt purchase path stays compatible and honest about missing identity
+  ---
+  duration_ms: 51.319547
+  type: 'test'
+  ...
+# Subtest: GET and batch POST persist unsigned identity before the single paid send
+ok 2 - GET and batch POST persist unsigned identity before the single paid send
+  ---
+  duration_ms: 61.747289
+  type: 'test'
+  ...
+# Subtest: receipt write failure blocks paid send and refuses overwrite
+ok 3 - receipt write failure blocks paid send and refuses overwrite
+  ---
+  duration_ms: 6.655476
+  type: 'test'
+  ...
+# Subtest: transport timeout after dispatch preserves receipt stage and unknown settlement
+ok 4 - transport timeout after dispatch preserves receipt stage and unknown settlement
+  ---
+  duration_ms: 8.57316
+  type: 'test'
+  ...
+# Subtest: crash-stage fixture remains readable with dispatched unknown settlement
+ok 5 - crash-stage fixture remains readable with dispatched unknown settlement
+  ---
+  duration_ms: 0.665037
+  type: 'test'
+  ...
+# Subtest: malformed receipts and incorrect chain/asset/payer/nonce/amount are refused before RPC
+ok 6 - malformed receipts and incorrect chain/asset/payer/nonce/amount are refused before RPC
+  ---
+  duration_ms: 1.793611
+  type: 'test'
+  ...
+# Subtest: stage update cannot rewrite request or identity and boundary secrets are not copied
+ok 7 - stage update cannot rewrite request or identity and boundary secrets are not copied
+  ---
+  duration_ms: 1.302204
+  type: 'test'
+  ...
+# Subtest: reconcile reports used vs unused/expired/canceled and keeps confirmation separate from finality
+ok 8 - reconcile reports used vs unused/expired/canceled and keeps confirmation separate from finality
+  ---
+  duration_ms: 6.323162
+  type: 'test'
+  ...
+# Subtest: unavailable oversized and timeout RPC surfaces are explicit without secret leakage
+ok 9 - unavailable oversized and timeout RPC surfaces are explicit without secret leakage
+  ---
+  duration_ms: 2.050016
+  type: 'test'
+  ...
+# Subtest: wrong chain is rejected before authorizationState
+ok 10 - wrong chain is rejected before authorizationState
+  ---
+  duration_ms: 0.672753
+  type: 'test'
+  ...
+# Subtest: reverted transaction and duplicate transfers do not count as exact settlement
+ok 11 - reverted transaction and duplicate transfers do not count as exact settlement
+  ---
+  duration_ms: 2.577692
+  type: 'test'
+  ...
+# Subtest: canonical block hash mismatch refuses settlement finality claims
+ok 12 - canonical block hash mismatch refuses settlement finality claims
+  ---
+  duration_ms: 0.88368
+  type: 'test'
+  ...
+# Subtest: unsupported provider payment shapes return explicit unsupported without guessing
+ok 13 - unsupported provider payment shapes return explicit unsupported without guessing
+  ---
+  duration_ms: 0.157123
+  type: 'test'
+  ...
+# Subtest: receipt file stays private and safeAttemptJson omits secrets
+ok 14 - receipt file stays private and safeAttemptJson omits secrets
+  ---
+  duration_ms: 1.618065
+  type: 'test'
+  ...
+# Subtest: published illustrative sample validates with synthetic nonce and digest
+ok 15 - published illustrative sample validates with synthetic nonce and digest
+  ---
+  duration_ms: 0.308001
+  type: 'test'
+  ...
+# Subtest: CLI reconcile and purchase --attempt-receipt exercise exported commands
+ok 16 - CLI reconcile and purchase --attempt-receipt exercise exported commands
+  ---
+  duration_ms: 1409.191588
+  type: 'test'
+  ...
+# Subtest: chain usage cannot be inferred as delivery or retry permission
+ok 17 - chain usage cannot be inferred as delivery or retry permission
+  ---
+  duration_ms: 1.477074
+  type: 'test'
+  ...
+# Subtest: batch unpaid preflight never looks up wallet credentials
+ok 18 - batch unpaid preflight never looks up wallet credentials
+  ---
+  duration_ms: 66.683847
+  type: 'test'
+  ...
+# Subtest: malformed oversized and disallowed batch inputs fail before fetch or key
+ok 19 - malformed oversized and disallowed batch inputs fail before fetch or key
+  ---
+  duration_ms: 1.676184
+  type: 'test'
+  ...
+# Subtest: valid batch purchase delivers useful output with unverified settlement
+ok 20 - valid batch purchase delivers useful output with unverified settlement
+  ---
+  duration_ms: 59.885911
+  type: 'test'
+  ...
+# Subtest: exact body bytes are used for both unpaid and paid calls
+ok 21 - exact body bytes are used for both unpaid and paid calls
+  ---
+  duration_ms: 7.119855
+  type: 'test'
+  ...
+# Subtest: modified authorization body URL or method is refused before signer
+ok 22 - modified authorization body URL or method is refused before signer
+  ---
+  duration_ms: 1.895637
+  type: 'test'
+  ...
+# Subtest: mutating authorization input object after normalize cannot change sent bytes
+ok 23 - mutating authorization input object after normalize cannot change sent bytes
+  ---
+  duration_ms: 6.11279
+  type: 'test'
+  ...
+# Subtest: duplicate omitted wrong-order and wrong-URL results are invalid
+ok 24 - duplicate omitted wrong-order and wrong-URL results are invalid
+  ---
+  duration_ms: 0.496335
+  type: 'test'
+  ...
+# Subtest: nullable chosen output is accepted where seller permits it
+ok 25 - nullable chosen output is accepted where seller permits it
+  ---
+  duration_ms: 0.266489
+  type: 'test'
+  ...
+# Subtest: bounded per-row failures classify as partial_delivered
+ok 26 - bounded per-row failures classify as partial_delivered
+  ---
+  duration_ms: 5.312024
+  type: 'test'
+  ...
+# Subtest: oversized invalid content timeout and unknown do not retry
+ok 27 - oversized invalid content timeout and unknown do not retry
+  ---
+  duration_ms: 12.340888
+  type: 'test'
+  ...
+# Subtest: batch secret redaction hides payment material
+ok 28 - batch secret redaction hides payment material
+  ---
+  duration_ms: 5.845897
+  type: 'test'
+  ...
+# Subtest: copyable batch CLI paths use fixture transport without auto-loading wallet on preflight
+ok 29 - copyable batch CLI paths use fixture transport without auto-loading wallet on preflight
+  ---
+  duration_ms: 1809.890169
+  type: 'test'
+  ...
+# Subtest: official purchase attaches payment-identifier when seller declares it
+ok 30 - official purchase attaches payment-identifier when seller declares it
+  ---
+  duration_ms: 6.582918
+  type: 'test'
+  ...
+# Subtest: owned homepage fixture exists for future live trial and is not auto-executed
+ok 31 - owned homepage fixture exists for future live trial and is not auto-executed
+  ---
+  duration_ms: 1.941123
+  type: 'test'
+  ...
+# Subtest: GET suite path remains available through fixture helper
+ok 32 - GET suite path remains available through fixture helper
+  ---
+  duration_ms: 1.672661
+  type: 'test'
+  ...
+# Subtest: unpaid preflight never looks up wallet credentials
+ok 33 - unpaid preflight never looks up wallet credentials
+  ---
+  duration_ms: 41.070134
+  type: 'test'
+  ...
+# Subtest: explicit approved exact request delivers valid output with unverified settlement
+ok 34 - explicit approved exact request delivers valid output with unverified settlement
+  ---
+  duration_ms: 38.43499
+  type: 'test'
+  ...
+# Subtest: changed recipient is refused before signer
+ok 35 - changed recipient is refused before signer
+  ---
+  duration_ms: 1.796674
+  type: 'test'
+  ...
+# Subtest: changed asset is refused before signer
+ok 36 - changed asset is refused before signer
+  ---
+  duration_ms: 1.576985
+  type: 'test'
+  ...
+# Subtest: changed network is refused before signer
+ok 37 - changed network is refused before signer
+  ---
+  duration_ms: 1.227377
+  type: 'test'
+  ...
+# Subtest: amount over cap is refused before signer
+ok 38 - amount over cap is refused before signer
+  ---
+  duration_ms: 1.254466
+  type: 'test'
+  ...
+# Subtest: changed URL is refused before signer
+ok 39 - changed URL is refused before signer
+  ---
+  duration_ms: 0.47647
+  type: 'test'
+  ...
+# Subtest: request body is refused before signer
+ok 40 - request body is refused before signer
+  ---
+  duration_ms: 0.240692
+  type: 'test'
+  ...
+# Subtest: paid invalid output retains evidence and stays a distinct outcome
+ok 41 - paid invalid output retains evidence and stays a distinct outcome
+  ---
+  duration_ms: 5.263957
+  type: 'test'
+  ...
+# Subtest: settlement success=false is distinct from invalid output
+ok 42 - settlement success=false is distinct from invalid output
+  ---
+  duration_ms: 4.686714
+  type: 'test'
+  ...
+# Subtest: unknown HTTP status does not retry
+ok 43 - unknown HTTP status does not retry
+  ---
+  duration_ms: 4.667791
+  type: 'test'
+  ...
+# Subtest: logs never include fixture private keys
+ok 44 - logs never include fixture private keys
+  ---
+  duration_ms: 6.374013
+  type: 'test'
+  ...
+# Subtest: mcp:// targets are refused
+ok 45 - mcp:// targets are refused
+  ---
+  duration_ms: 0.318205
+  type: 'test'
+  ...
+# Subtest: copyable README default command runs unpaid preflight against fixture via --help and package scripts
+ok 46 - copyable README default command runs unpaid preflight against fixture via --help and package scripts
+  ---
+  duration_ms: 394.819689
+  type: 'test'
+  ...
+# Subtest: accept matcher binds exact terms
+ok 47 - accept matcher binds exact terms
+  ---
+  duration_ms: 0.44638
+  type: 'test'
+  ...
+# Subtest: bounded credential-free production preflight
+ok 48 - bounded credential-free production preflight # SKIP
+  ---
+  duration_ms: 0.069398
+  type: 'test'
+  ...
+# Subtest: POST /lockfile-pin-delta is admitted with exact body bytes
+ok 49 - POST /lockfile-pin-delta is admitted with exact body bytes
+  ---
+  duration_ms: 4.293657
+  type: 'test'
+  ...
+# Subtest: lockfile admission does not open arbitrary POST destinations
+ok 50 - lockfile admission does not open arbitrary POST destinations
+  ---
+  duration_ms: 1.169502
+  type: 'test'
+  ...
+# Subtest: GET /extract and POST /extract/batch stay admitted
+ok 51 - GET /extract and POST /extract/batch stay admitted
+  ---
+  duration_ms: 6.701608
+  type: 'test'
+  ...
+# Subtest: mutated lockfile body bytes after approval are refused
+ok 52 - mutated lockfile body bytes after approval are refused
+  ---
+  duration_ms: 0.582163
+  type: 'test'
+  ...
+# Subtest: mounted lockfile: change, no-change, replay-negative
+ok 53 - mounted lockfile: change, no-change, replay-negative
+  ---
+  duration_ms: 2527.29226
+  type: 'test'
+  ...
+# Subtest: mounted lockfile: timeout/unknown does not authorize a new payment
+ok 54 - mounted lockfile: timeout/unknown does not authorize a new payment
+  ---
+  duration_ms: 2652.14446
+  type: 'test'
+  ...
+# Subtest: CLI compare prints the customer-job JSON report
+ok 55 - CLI compare prints the customer-job JSON report
+  ---
+  duration_ms: 13.76355
+  type: 'test'
+  ...
+# Subtest: CLI job wraps the customer example
+ok 56 - CLI job wraps the customer example
+  ---
+  duration_ms: 4.072033
+  type: 'test'
+  ...
+# Subtest: CLI text format names the changed source
+ok 57 - CLI text format names the changed source
+  ---
+  duration_ms: 3.587462
+  type: 'test'
+  ...
+# Subtest: CLI rejects unknown options and missing fields
+ok 58 - CLI rejects unknown options and missing fields
+  ---
+  duration_ms: 0.431925
+  type: 'test'
+  ...
+# Subtest: CLI rejects compare without paths
+ok 59 - CLI rejects compare without paths
+  ---
+  duration_ms: 0.182351
+  type: 'test'
+  ...
+# Subtest: in-repo merchant runtime deliveries compose with the page-change recipe
+ok 60 - in-repo merchant runtime deliveries compose with the page-change recipe
+  ---
+  duration_ms: 63.541892
+  type: 'test'
+  ...
+# Subtest: vendored comparator files match reviewed C2 blobs
+ok 61 - vendored comparator files match reviewed C2 blobs
+  ---
+  duration_ms: 1.457819
+  type: 'test'
+  ...
+# Subtest: in-tree merchant still publishes extract-batch v0
+ok 62 - in-tree merchant still publishes extract-batch v0
+  ---
+  duration_ms: 2.230725
+  type: 'test'
+  ...
+# Subtest: customer and merchant fixtures satisfy the public batch seller shape
+ok 63 - customer and merchant fixtures satisfy the public batch seller shape
+  ---
+  duration_ms: 0.994385
+  type: 'test'
+  ...
+# Subtest: page-change recipe has no private git checkout or payment imports
+ok 64 - page-change recipe has no private git checkout or payment imports
+  ---
+  duration_ms: 1.134279
+  type: 'test'
+  ...
+# Subtest: public example lockfile includes both documented command entrypoints
+ok 65 - public example lockfile includes both documented command entrypoints
+  ---
+  duration_ms: 2.14452
+  type: 'test'
+  ...
+# Subtest: missing after artifact cannot prove no change
+ok 66 - missing after artifact cannot prove no change
+  ---
+  duration_ms: 7.191005
+  type: 'test'
+  ...
+# Subtest: malformed JSON is incomparable
+ok 67 - malformed JSON is incomparable
+  ---
+  duration_ms: 1.099865
+  type: 'test'
+  ...
+# Subtest: byte ceiling cannot masquerade as unchanged
+ok 68 - byte ceiling cannot masquerade as unchanged
+  ---
+  duration_ms: 1.533227
+  type: 'test'
+  ...
+# Subtest: absent selected field is coverage unknown, not deletion
+ok 69 - absent selected field is coverage unknown, not deletion
+  ---
+  duration_ms: 3.801793
+  type: 'test'
+  ...
+# Subtest: charged true never implies useful output when every row failed
+ok 70 - charged true never implies useful output when every row failed
+  ---
+  duration_ms: 1.627053
+  type: 'test'
+  ...
+# Subtest: unrecognized JSON cannot masquerade as an unchanged page brief
+ok 71 - unrecognized JSON cannot masquerade as an unchanged page brief
+  ---
+  duration_ms: 0.602339
+  type: 'test'
+  ...
+# Subtest: clock without horizon never claims current; fetchedAt is not freshness
+ok 72 - clock without horizon never claims current; fetchedAt is not freshness
+  ---
+  duration_ms: 2.387788
+  type: 'test'
+  ...
+# Subtest: future timestamps never claim current
+ok 73 - future timestamps never claim current
+  ---
+  duration_ms: 2.751081
+  type: 'test'
+  ...
+# Subtest: non-object row cannot silently disappear into unchanged
+ok 74 - non-object row cannot silently disappear into unchanged
+  ---
+  duration_ms: 1.872085
+  type: 'test'
+  ...
+# Subtest: missing source identity cannot silently disappear into unchanged
+ok 75 - missing source identity cannot silently disappear into unchanged
+  ---
+  duration_ms: 1.358529
+  type: 'test'
+  ...
+# Subtest: missing required row key cannot silently disappear into unchanged
+ok 76 - missing required row key cannot silently disappear into unchanged
+  ---
+  duration_ms: 1.240717
+  type: 'test'
+  ...
+# Subtest: orphan skipped-duplicate rows yield unknown coverage without crashing
+ok 77 - orphan skipped-duplicate rows yield unknown coverage without crashing
+  ---
+  duration_ms: 1.073417
+  type: 'test'
+  ...
+# Subtest: exact evidence preserves differences beyond the display excerpt
+ok 78 - exact evidence preserves differences beyond the display excerpt
+  ---
+  duration_ms: 1.880106
+  type: 'test'
+  ...
+# Subtest: UTF-8 excerpts do not split a multibyte code point
+ok 79 - UTF-8 excerpts do not split a multibyte code point
+  ---
+  duration_ms: 0.097171
+  type: 'test'
+  ...
+# Subtest: independent W5 composition: unchanged_pages
+ok 80 - independent W5 composition: unchanged_pages
+  ---
+  duration_ms: 12.707595
+  type: 'test'
+  ...
+# Subtest: independent W5 composition: changed_selected_fields
+ok 81 - independent W5 composition: changed_selected_fields
+  ---
+  duration_ms: 1.717855
+  type: 'test'
+  ...
+# Subtest: independent W5 composition: row_reorder
+ok 82 - independent W5 composition: row_reorder
+  ---
+  duration_ms: 2.091973
+  type: 'test'
+  ...
+# Subtest: independent W5 composition: duplicate_urls
+ok 83 - independent W5 composition: duplicate_urls
+  ---
+  duration_ms: 1.679265
+  type: 'test'
+  ...
+# Subtest: independent W5 composition: missing_requested_field
+ok 84 - independent W5 composition: missing_requested_field
+  ---
+  duration_ms: 2.308083
+  type: 'test'
+  ...
+# Subtest: independent W5 composition: failed_fetch
+ok 85 - independent W5 composition: failed_fetch
+  ---
+  duration_ms: 1.558777
+  type: 'test'
+  ...
+# Subtest: independent W5 composition: partial_batch
+ok 86 - independent W5 composition: partial_batch
+  ---
+  duration_ms: 2.368325
+  type: 'test'
+  ...
+# Subtest: independent W5 composition: differing_requested_fields
+ok 87 - independent W5 composition: differing_requested_fields
+  ---
+  duration_ms: 1.911553
+  type: 'test'
+  ...
+# Subtest: independent W5 composition: unknown_observation_freshness
+ok 88 - independent W5 composition: unknown_observation_freshness
+  ---
+  duration_ms: 2.36535
+  type: 'test'
+  ...
+# Subtest: actual CLI consumes independent W5 deliveries and preserves exact change
+ok 89 - actual CLI consumes independent W5 deliveries and preserves exact change
+  ---
+  duration_ms: 83.498599
+  type: 'test'
+  ...
+# Subtest: customer RFQ job reports exact title change, failed/missing rows, and coverage unknowns
+ok 90 - customer RFQ job reports exact title change, failed/missing rows, and coverage unknowns
+  ---
+  duration_ms: 10.812663
+  type: 'test'
+  ...
+# Subtest: reordered URLs with equal selected fields are order, not content change
+ok 91 - reordered URLs with equal selected fields are order, not content change
+  ---
+  duration_ms: 2.407807
+  type: 'test'
+  ...
+# Subtest: identical selected fields with later fetchedAt stay unchanged and not fresh
+ok 92 - identical selected fields with later fetchedAt stay unchanged and not fresh
+  ---
+  duration_ms: 2.164393
+  type: 'test'
+  ...
+# Subtest: C1 artifacts match fixture sources independently of item id and order
+ok 93 - C1 artifacts match fixture sources independently of item id and order
+  ---
+  duration_ms: 1.649156
+  type: 'test'
+  ...
+# Subtest: duplicate active URLs are ambiguous, not silently merged
+ok 94 - duplicate active URLs are ambiguous, not silently merged
+  ---
+  duration_ms: 1.187667
+  type: 'test'
+  ...
+# Subtest: merchant and C1 artifacts are incomparable kinds
+ok 95 - merchant and C1 artifacts are incomparable kinds
+  ---
+  duration_ms: 1.463071
+  type: 'test'
+  ...
+# Subtest: source ceiling cannot silently drop extra rows as unchanged
+ok 96 - source ceiling cannot silently drop extra rows as unchanged
+  ---
+  duration_ms: 1.337367
+  type: 'test'
+  ...
+# Subtest: field selection ignores unselected title edits
+ok 97 - field selection ignores unselected title edits
+  ---
+  duration_ms: 1.891498
+  type: 'test'
+  ...
+# Subtest: chunked RPC responses without content-length respect the byte ceiling
+ok 98 - chunked RPC responses without content-length respect the byte ceiling
+  ---
+  duration_ms: 39.429005
+  type: 'test'
+  ...
+# Subtest: the shared RPC deadline includes streamed bodies after earlier requests
+ok 99 - the shared RPC deadline includes streamed bodies after earlier requests
+  ---
+  duration_ms: 507.027841
+  type: 'test'
+  ...
+# Subtest: a changed observed-block hash cannot retain an unused verdict
+ok 100 - a changed observed-block hash cannot retain an unused verdict
+  ---
+  duration_ms: 1.254907
+  type: 'test'
+  ...
+# Subtest: a cancellation log without a canonical successful receipt is not proven cancellation
+ok 101 - a cancellation log without a canonical successful receipt is not proven cancellation
+  ---
+  duration_ms: 1.668972
+  type: 'test'
+  ...
+# Subtest: receipt numeric values remain representable as uint256 and exact seconds
+ok 102 - receipt numeric values remain representable as uint256 and exact seconds
+  ---
+  duration_ms: 0.638576
+  type: 'test'
+  ...
+# Subtest: invalid receipt fails before any network request
+ok 103 - invalid receipt fails before any network request
+  ---
+  duration_ms: 10.841419
+  type: 'test'
+  ...
+# Subtest: real transport rejects wrong chain before eth_call/authorizationState
+ok 104 - real transport rejects wrong chain before eth_call/authorizationState
+  ---
+  duration_ms: 28.353088
+  type: 'test'
+  ...
+# Subtest: pinned block chain-time expiry and unused authorization over local RPC
+ok 105 - pinned block chain-time expiry and unused authorization over local RPC
+  ---
+  duration_ms: 35.55888
+  type: 'test'
+  ...
+# Subtest: RPC timeout is not a 413 body limit because of endpoint port or URL
+ok 106 - RPC timeout is not a 413 body limit because of endpoint port or URL
+  ---
+  duration_ms: 1.691919
+  type: 'test'
+  ...
+# Subtest: oversized chunked and malformed RPC responses stay bounded and secret-free
+ok 107 - oversized chunked and malformed RPC responses stay bounded and secret-free
+  ---
+  duration_ms: 47.932354
+  type: 'test'
+  ...
+# Subtest: exact settlement match and cancellation over local JSON-RPC
+ok 108 - exact settlement match and cancellation over local JSON-RPC
+  ---
+  duration_ms: 72.750714
+  type: 'test'
+  ...
+# Subtest: CLI reconcile against local RPC is read-only and prints safe endpoint context
+ok 109 - CLI reconcile against local RPC is read-only and prints safe endpoint context
+  ---
+  duration_ms: 517.904479
+  type: 'test'
+  ...
+# Subtest: credential-bearing rpc urls are refused before fetch
+ok 110 - credential-bearing rpc urls are refused before fetch
+  ---
+  duration_ms: 1.006714
+  type: 'test'
+  ...
+# Subtest: sample and crash fixtures remain valid under hardened validation
+ok 111 - sample and crash fixtures remain valid under hardened validation
+  ---
+  duration_ms: 0.610648
+  type: 'test'
+  ...
+# Subtest: mapping rejects eval/fetch/remote execution keys
+ok 112 - mapping rejects eval/fetch/remote execution keys
+  ---
+  duration_ms: 1.414356
+  type: 'test'
+  ...
+# Subtest: schema $ref and remote keywords are unsupported
+ok 113 - schema $ref and remote keywords are unsupported
+  ---
+  duration_ms: 0.360122
+  type: 'test'
+  ...
+# Subtest: ambiguous array mapping fails the job closed with zero records
+ok 114 - ambiguous array mapping fails the job closed with zero records
+  ---
+  duration_ms: 38.768038
+  type: 'test'
+  ...
+# Subtest: prototype keys on source objects are rejected
+ok 115 - prototype keys on source objects are rejected
+  ---
+  duration_ms: 0.446745
+  type: 'test'
+  ...
+# Subtest: CLI rejects a symlink input
+ok 116 - CLI rejects a symlink input
+  ---
+  duration_ms: 135.732865
+  type: 'test'
+  ...
+# Subtest: oversized input is rejected
+ok 117 - oversized input is rejected
+  ---
+  duration_ms: 153.907381
+  type: 'test'
+  ...
+# Subtest: itemPointer at a single object is ambiguous unless cardinality is one
+ok 118 - itemPointer at a single object is ambiguous unless cardinality is one
+  ---
+  duration_ms: 19.60763
+  type: 'test'
+  ...
+# Subtest: getByPointer never materializes missing as null
+ok 119 - getByPointer never materializes missing as null
+  ---
+  duration_ms: 0.207434
+  type: 'test'
+  ...
+# Subtest: product example CLI writes records, report, and missing-path map
+ok 120 - product example CLI writes records, report, and missing-path map
+  ---
+  duration_ms: 183.79014
+  type: 'test'
+  ...
+# Subtest: org example CLI exits 1 for honest partial, not all-valid
+ok 121 - org example CLI exits 1 for honest partial, not all-valid
+  ---
+  duration_ms: 178.283475
+  type: 'test'
+  ...
+# Subtest: required SKU example preserves a usable record and the invalid record
+ok 122 - required SKU example preserves a usable record and the invalid record
+  ---
+  duration_ms: 179.305161
+  type: 'test'
+  ...
+# Subtest: CLI usage is flag-closed
+ok 123 - CLI usage is flag-closed
+  ---
+  duration_ms: 130.251136
+  type: 'test'
+  ...
+# Subtest: nonempty output directory is rejected
+ok 124 - nonempty output directory is rejected
+  ---
+  duration_ms: 170.180776
+  type: 'test'
+  ...
+# Subtest: library projection matches CLI accounting for the product fixture
+ok 125 - library projection matches CLI accounting for the product fixture
+  ---
+  duration_ms: 202.102484
+  type: 'test'
+  ...
+# Subtest: malformed input is rejected before any output files are written
+ok 126 - malformed input is rejected before any output files are written
+  ---
+  duration_ms: 150.528382
+  type: 'test'
+  ...
+# Subtest: product fixture matches public extract_batch seller field names
+ok 127 - product fixture matches public extract_batch seller field names
+  ---
+  duration_ms: 34.56847
+  type: 'test'
+  ...
+# Subtest: extract fixture matches public single-URL extract keys used by the customer validator
+ok 128 - extract fixture matches public single-URL extract keys used by the customer validator
+  ---
+  duration_ms: 26.49723
+  type: 'test'
+  ...
+# Subtest: success vs partial vs failure source statuses stay distinct
+ok 129 - success vs partial vs failure source statuses stay distinct
+  ---
+  duration_ms: 29.47469
+  type: 'test'
+  ...
+# Subtest: exact public merchant schema and injected real partial runtime compose
+ok 130 - exact public merchant schema and injected real partial runtime compose
+  ---
+  duration_ms: 705.299107
+  type: 'test'
+  ...
+# Subtest: customer package pins ajv 8.20.0 exactly
+ok 131 - customer package pins ajv 8.20.0 exactly
+  ---
+  duration_ms: 1.392769
+  type: 'test'
+  ...
+# Subtest: record recipe reuses public merchant product helpers
+ok 132 - record recipe reuses public merchant product helpers
+  ---
+  duration_ms: 0.177913
+  type: 'test'
+  ...
+# Subtest: record recipe has no private checkout, payment, or wallet imports
+ok 133 - record recipe has no private checkout, payment, or wallet imports
+  ---
+  duration_ms: 0.946802
+  type: 'test'
+  ...
+# Subtest: relocated recipe files keep MIT attribution and bounded schema snapshot
+ok 134 - relocated recipe files keep MIT attribution and bounded schema snapshot
+  ---
+  duration_ms: 0.948973
+  type: 'test'
+  ...
+# Subtest: RFC 6901 empty pointer is the document
+ok 135 - RFC 6901 empty pointer is the document
+  ---
+  duration_ms: 0.895488
+  type: 'test'
+  ...
+# Subtest: pointer encode/decode roundtrip including ~ and /
+ok 136 - pointer encode/decode roundtrip including ~ and /
+  ---
+  duration_ms: 2.326152
+  type: 'test'
+  ...
+# Subtest: joinPointers concatenates a relative pointer
+ok 137 - joinPointers concatenates a relative pointer
+  ---
+  duration_ms: 0.24312
+  type: 'test'
+  ...
+# Subtest: array field name without an index is ambiguous, not missing
+ok 138 - array field name without an index is ambiguous, not missing
+  ---
+  duration_ms: 0.468967
+  type: 'test'
+  ...
+# Subtest: exact array index is present or missing, never guessed
+ok 139 - exact array index is present or missing, never guessed
+  ---
+  duration_ms: 0.882436
+  type: 'test'
+  ...
+# Subtest: JSON Pointer '-' is rejected as write-append
+ok 140 - JSON Pointer '-' is rejected as write-append
+  ---
+  duration_ms: 0.472705
+  type: 'test'
+  ...
+# Subtest: prototype tokens are rejected
+ok 141 - prototype tokens are rejected
+  ---
+  duration_ms: 0.357185
+  type: 'test'
+  ...
+# Subtest: property-based: indexed walk matches native access for nested objects and arrays
+ok 142 - property-based: indexed walk matches native access for nested objects and arrays
+  ---
+  duration_ms: 0.796906
+  type: 'test'
+  ...
+# Subtest: product JSON-LD example emits one complete record and one partial missing sku
+ok 143 - product JSON-LD example emits one complete record and one partial missing sku
+  ---
+  duration_ms: 72.880292
+  type: 'test'
+  ...
+# Subtest: organization contact example is partial because email is absent, not null
+ok 144 - organization contact example is partial because email is absent, not null
+  ---
+  duration_ms: 47.615304
+  type: 'test'
+  ...
+# Subtest: missing optional field stays omitted unless buyer sets onMissing null
+ok 145 - missing optional field stays omitted unless buyer sets onMissing null
+  ---
+  duration_ms: 42.12488
+  type: 'test'
+  ...
+# Subtest: source row cardinality is preserved and failure rows are not turned into records
+ok 146 - source row cardinality is preserved and failure rows are not turned into records
+  ---
+  duration_ms: 27.26838
+  type: 'test'
+  ...
+# Subtest: malformed rows remain in cardinality and prevent all-valid result
+ok 147 - malformed rows remain in cardinality and prevent all-valid result
+  ---
+  duration_ms: 25.516673
+  type: 'test'
+  ...
+# Subtest: malformed item entries remain counted rather than vanishing
+ok 148 - malformed item entries remain counted rather than vanishing
+  ---
+  duration_ms: 19.080789
+  type: 'test'
+  ...
+# Subtest: missing item array beside valid row is incomplete even with empty policy
+ok 149 - missing item array beside valid row is incomplete even with empty policy
+  ---
+  duration_ms: 16.75934
+  type: 'test'
+  ...
+# Subtest: root JSON Pointer provenance is empty string, not slash
+ok 150 - root JSON Pointer provenance is empty string, not slash
+  ---
+  duration_ms: 15.266382
+  type: 'test'
+  ...
+# Subtest: required means present, null obeys the buyer schema without coercion
+ok 151 - required means present, null obeys the buyer schema without coercion
+  ---
+  duration_ms: 52.65505
+  type: 'test'
+  ...
+# Subtest: failure cap cannot hide fatal ambiguity after earlier malformed input
+ok 152 - failure cap cannot hide fatal ambiguity after earlier malformed input
+  ---
+  duration_ms: 12.419628
+  type: 'test'
+  ...
+# Subtest: explicit supported schema dialect is accepted; different dialect is rejected
+ok 153 - explicit supported schema dialect is accepted; different dialect is rejected
+  ---
+  duration_ms: 12.550055
+  type: 'test'
+  ...
+# Subtest: JSON Schema pointer escapes dots, slash and tilde correctly
+ok 154 - JSON Schema pointer escapes dots, slash and tilde correctly
+  ---
+  duration_ms: 13.360838
+  type: 'test'
+  ...
+# Subtest: output byte ceiling rejects before writing any report or records
+ok 155 - output byte ceiling rejects before writing any report or records
+  ---
+  duration_ms: 13.64814
+  type: 'test'
+  ...
+# Subtest: own source fields only: accessor is never called
+ok 156 - own source fields only: accessor is never called
+  ---
+  duration_ms: 0.450027
+  type: 'test'
+  ...
+# Subtest: duplicate seller row labels do not collide record identity
+ok 157 - duplicate seller row labels do not collide record identity
+  ---
+  duration_ms: 11.851106
+  type: 'test'
+  ...
+# Subtest: unknown schema keyword, references and mutation annotations are never ignored
+ok 158 - unknown schema keyword, references and mutation annotations are never ignored
+  ---
+  duration_ms: 13.069262
+  type: 'test'
+  ...
+# Subtest: AJV validates standard composition and boolean child schemas without coercion
+ok 159 - AJV validates standard composition and boolean child schemas without coercion
+  ---
+  duration_ms: 36.599818
+  type: 'test'
+  ...
+# Subtest: unmapped key display truncation is explicit and does not lose the count
+ok 160 - unmapped key display truncation is explicit and does not lose the count
+  ---
+  duration_ms: 10.631322
+  type: 'test'
+  ...
+# Subtest: hidden toJSON methods cannot run during the JSON-only preflight
+ok 161 - hidden toJSON methods cannot run during the JSON-only preflight
+  ---
+  duration_ms: 0.195796
+  type: 'test'
+  ...
+# Subtest: large unused delivered text does not block a small valid buyer record
+ok 162 - large unused delivered text does not block a small valid buyer record
+  ---
+  duration_ms: 23.074691
+  type: 'test'
+  ...
+# Subtest: W6 single-field oracle replay preserves 18 mapped, 2 missing, 3 invalid and rejects 3 ambiguous mappings
+ok 163 - W6 single-field oracle replay preserves 18 mapped, 2 missing, 3 invalid and rejects 3 ambiguous mappings
+  ---
+  duration_ms: 380.774707
+  type: 'test'
+  ...
+# Subtest: mounted merchant: discovery, invalid input, bound extract, refused verify
+ok 164 - mounted merchant: discovery, invalid input, bound extract, refused verify
+  ---
+  duration_ms: 2646.145234
+  type: 'test'
+  ...
+# Subtest: mounted merchant: facilitator verify refusal never settles
+ok 165 - mounted merchant: facilitator verify refusal never settles
+  ---
+  duration_ms: 2075.240842
+  type: 'test'
+  ...
+# Subtest: bindGetExtractResourceUrl matches the live example encoding
+ok 166 - bindGetExtractResourceUrl matches the live example encoding
+  ---
+  duration_ms: 5.467549
+  type: 'test'
+  ...
+# Subtest: bare GET /extract is unsigned discovery and is not purchase-ready
+ok 167 - bare GET /extract is unsigned discovery and is not purchase-ready
+  ---
+  duration_ms: 2.918522
+  type: 'test'
+  ...
+# Subtest: empty and malformed extract url are invalid input before any fetch
+ok 168 - empty and malformed extract url are invalid input before any fetch
+  ---
+  duration_ms: 2.132427
+  type: 'test'
+  ...
+# Subtest: valid bound GET extract is purchase-ready and unpaid preflight never opens a wallet
+ok 169 - valid bound GET extract is purchase-ready and unpaid preflight never opens a wallet
+  ---
+  duration_ms: 49.496736
+  type: 'test'
+  ...
+# Subtest: resource URL drift is refused before the wallet loader
+ok 170 - resource URL drift is refused before the wallet loader
+  ---
+  duration_ms: 0.403004
+  type: 'test'
+  ...
+# Subtest: lockfile missing before/after is refused before fetch or wallet
+ok 171 - lockfile missing before/after is refused before fetch or wallet
+  ---
+  duration_ms: 0.568128
+  type: 'test'
+  ...
+# Subtest: lockfile body drift after approval is refused before signer
+ok 172 - lockfile body drift after approval is refused before signer
+  ---
+  duration_ms: 0.617598
+  type: 'test'
+  ...
+# Subtest: unpaid 402 bazaar input still lists required extract url
+ok 173 - unpaid 402 bazaar input still lists required extract url
+  ---
+  duration_ms: 0.228604
+  type: 'test'
+  ...
+# Subtest: CLI --approve refuses missing and malformed extract url without reading the wallet env
+ok 174 - CLI --approve refuses missing and malformed extract url without reading the wallet env
+  ---
+  duration_ms: 887.629279
+  type: 'test'
+  ...
+# Subtest: CLI --approve refuses lockfile missing after without opening a wallet
+ok 175 - CLI --approve refuses lockfile missing after without opening a wallet
+  ---
+  duration_ms: 478.87679
+  type: 'test'
+  ...
+# Subtest: vendor-budget empty POST is unsigned discovery and missing after is refused before wallet
+ok 176 - vendor-budget empty POST is unsigned discovery and missing after is refused before wallet
+  ---
+  duration_ms: 397.375224
+  type: 'test'
+  ...
+# Subtest: fixture paid GET still signs only after a bound request
+ok 177 - fixture paid GET still signs only after a bound request
+  ---
+  duration_ms: 44.61523
+  type: 'test'
+  ...
+# Subtest: review: every required seller field and nullable row type is enforced
+ok 178 - review: every required seller field and nullable row type is enforced
+  ---
+  duration_ms: 2.109871
+  type: 'test'
+  ...
+# Subtest: review: a nonterminal or contradictory body cannot be useful delivery
+ok 179 - review: a nonterminal or contradictory body cannot be useful delivery
+  ---
+  duration_ms: 0.63178
+  type: 'test'
+  ...
+# Subtest: review: malformed successful response uses official SDK once and is paid-invalid
+ok 180 - review: malformed successful response uses official SDK once and is paid-invalid
+  ---
+  duration_ms: 78.540583
+  type: 'test'
+  ...
+# Subtest: review: sparse input and explicit preflight body drift are rejected before fetch
+ok 181 - review: sparse input and explicit preflight body drift are rejected before fetch
+  ---
+  duration_ms: 1.036373
+  type: 'test'
+  ...
+# Subtest: review: normalized approval refuses changed bytes with stale digest or conflicting body
+ok 182 - review: normalized approval refuses changed bytes with stale digest or conflicting body
+  ---
+  duration_ms: 0.528271
+  type: 'test'
+  ...
+# Subtest: resource URL refused before wallet loader
+ok 183 - resource URL refused before wallet loader
+  ---
+  duration_ms: 44.649737
+  type: 'test'
+  ...
+# Subtest: Permit2 approval path refused before wallet loader
+ok 184 - Permit2 approval path refused before wallet loader
+  ---
+  duration_ms: 2.418653
+  type: 'test'
+  ...
+# Subtest: EIP712 domain refused before wallet loader
+ok 185 - EIP712 domain refused before wallet loader
+  ---
+  duration_ms: 2.134939
+  type: 'test'
+  ...
+# Subtest: unbounded signature validity refused before wallet loader
+ok 186 - unbounded signature validity refused before wallet loader
+  ---
+  duration_ms: 1.617383
+  type: 'test'
+  ...
+# Subtest: wrong protocol version refused before wallet loader
+ok 187 - wrong protocol version refused before wallet loader
+  ---
+  duration_ms: 2.098788
+  type: 'test'
+  ...
+# Subtest: exact query order and encoding are not normalized away
+ok 188 - exact query order and encoding are not normalized away
+  ---
+  duration_ms: 0.519995
+  type: 'test'
+  ...
+# Subtest: invalid output bounds/paths fail before any transport
+ok 189 - invalid output bounds/paths fail before any transport
+  ---
+  duration_ms: 0.572624
+  type: 'test'
+  ...
+# Subtest: official client signs one exact EIP3009 payload and sends one paid request
+ok 190 - official client signs one exact EIP3009 payload and sends one paid request
+  ---
+  duration_ms: 47.20884
+  type: 'test'
+  ...
+# Subtest: network disconnect: truthful evidence with no paid retry
+ok 191 - network disconnect: truthful evidence with no paid retry
+  ---
+  duration_ms: 5.144695
+  type: 'test'
+  ...
+# Subtest: paid second challenge: truthful evidence with no paid retry
+ok 192 - paid second challenge: truthful evidence with no paid retry
+  ---
+  duration_ms: 4.272407
+  type: 'test'
+  ...
+# Subtest: malformed non-2xx body: truthful evidence with no paid retry
+ok 193 - malformed non-2xx body: truthful evidence with no paid retry
+  ---
+  duration_ms: 4.148259
+  type: 'test'
+  ...
+# Subtest: wrong media type: truthful evidence with no paid retry
+ok 194 - wrong media type: truthful evidence with no paid retry
+  ---
+  duration_ms: 4.647774
+  type: 'test'
+  ...
+# Subtest: null required value: truthful evidence with no paid retry
+ok 195 - null required value: truthful evidence with no paid retry
+  ---
+  duration_ms: 5.381977
+  type: 'test'
+  ...
+# Subtest: omitted required value: truthful evidence with no paid retry
+ok 196 - omitted required value: truthful evidence with no paid retry
+  ---
+  duration_ms: 7.802825
+  type: 'test'
+  ...
+# Subtest: source HTTP 403 with block text: truthful evidence with no paid retry
+ok 197 - source HTTP 403 with block text: truthful evidence with no paid retry
+  ---
+  duration_ms: 5.128156
+  type: 'test'
+  ...
+# Subtest: source HTTP 404 with typed body: truthful evidence with no paid retry
+ok 198 - source HTTP 404 with typed body: truthful evidence with no paid retry
+  ---
+  duration_ms: 5.52003
+  type: 'test'
+  ...
+# Subtest: non-JSON success: truthful evidence with no paid retry
+ok 199 - non-JSON success: truthful evidence with no paid retry
+  ---
+  duration_ms: 4.812295
+  type: 'test'
+  ...
+# Subtest: response bytes and stalled body reads are bounded after a possible paid send
+ok 200 - response bytes and stalled body reads are bounded after a possible paid send
+  ---
+  duration_ms: 60.397121
+  type: 'test'
+  ...
+# Subtest: preflight refuses non-HTTPS and bounds challenge bodies
+ok 201 - preflight refuses non-HTTPS and bounds challenge bodies
+  ---
+  duration_ms: 1.325701
+  type: 'test'
+  ...
+# Subtest: CLI refuses exact URL mismatch before reading an absent wallet
+ok 202 - CLI refuses exact URL mismatch before reading an absent wallet
+  ---
+  duration_ms: 521.76641
+  type: 'test'
+  ...
+# Subtest: receipt output hides reflected signatures and opaque payment headers
+ok 203 - receipt output hides reflected signatures and opaque payment headers
+  ---
+  duration_ms: 4.799076
+  type: 'test'
+  ...
+# Subtest: copyable npm commands run the real CLI with only fixture transport and wallet
+ok 204 - copyable npm commands run the real CLI with only fixture transport and wallet
+  ---
+  duration_ms: 2272.916871
+  type: 'test'
+  ...
+# Subtest: redirects are not followed before or after signing
+ok 205 - redirects are not followed before or after signing
+  ---
+  duration_ms: 5.003778
+  type: 'test'
+  ...
+# Subtest: POST /vendor-budget-impact is admitted with exact body bytes
+ok 206 - POST /vendor-budget-impact is admitted with exact body bytes
+  ---
+  duration_ms: 3.241586
+  type: 'test'
+  ...
+# Subtest: vendor-budget admission does not open arbitrary POST destinations
+ok 207 - vendor-budget admission does not open arbitrary POST destinations
+  ---
+  duration_ms: 0.651224
+  type: 'test'
+  ...
+# Subtest: GET /extract and POST /extract/batch stay admitted
+ok 208 - GET /extract and POST /extract/batch stay admitted
+  ---
+  duration_ms: 5.507578
+  type: 'test'
+  ...
+# Subtest: mutated vendor-budget body bytes after approval are refused
+ok 209 - mutated vendor-budget body bytes after approval are refused
+  ---
+  duration_ms: 1.085693
+  type: 'test'
+  ...
+# Subtest: missing rows and path-shaped snapshots are refused before purchase
+ok 210 - missing rows and path-shaped snapshots are refused before purchase
+  ---
+  duration_ms: 0.386383
+  type: 'test'
+  ...
+# Subtest: CLI --help documents vendor-budget inspect/approve
+ok 211 - CLI --help documents vendor-budget inspect/approve
+  ---
+  duration_ms: 490.549043
+  type: 'test'
+  ...
+# Subtest: CLI inspect then --approve against mounted merchant; refuse, replay, concurrent
+ok 212 - CLI inspect then --approve against mounted merchant; refuse, replay, concurrent
+  ---
+  duration_ms: 7969.612453
+  type: 'test'
+  ...
+1..212
+# tests 212
+# suites 0
+# pass 211
+# fail 0
+# cancelled 0
+# skipped 1
+# todo 0
+# duration_ms 39067.142218

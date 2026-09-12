@@ -20,12 +20,13 @@ export function buildPaidActionSkills(actions = []) {
     seen.add(id);
     const route = String(action.route || "");
     const price = String(action.priceAtomicUsdc || "");
+    const protocols = action.paymentProtocols || ["x402", "mpp"];
     const exampleUrl = typeof action?.request?.exampleUrl === "string" ? action.request.exampleUrl : null;
     return {
       id,
       name: `Discover paid action ${route || slug}`,
-      description: `Discover the direct ${route || slug} machine-paid action, its ${price || "current"} atomic USDC price, and x402/MPP invocation contract. Discovery only; invoke the returned exact request directly.${exampleUrl ? ` Complete example: ${exampleUrl}` : ""}`,
-      tags: [...new Set(["x402", "mpp", "paid-action", "discovery", ...(action.tags || [])])],
+      description: `Discover the direct ${route || slug} machine-paid action, its ${price || "current"} atomic USDC price, and ${protocols.join("/")} invocation contract. Discovery only; invoke the returned exact request directly.${exampleUrl ? ` Complete example: ${exampleUrl}` : ""}`,
+      tags: [...new Set([...protocols, "paid-action", "discovery", ...(action.tags || []).filter(tag => !["x402", "mpp"].includes(tag) || protocols.includes(tag))])],
       examples: [exampleUrl
         ? `Find the ${route || slug} paid action, then call ${exampleUrl}`
         : `Find the ${route || slug} paid action and its exact current price.`],

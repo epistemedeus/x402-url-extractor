@@ -49,6 +49,21 @@ MCP tool's challenge resource is
 `https://agents.samedaydesk.com/lockfile-pin-delta`, not `mcp://`
 and not `/extract/batch`.
 
+`VENDOR_BUDGET_IMPACT_ENABLED=1` adds `POST /vendor-budget-impact` and MCP
+`vendor_budget_impact` for two caller-supplied pricing-row JSON objects
+(`rows` of `field`, finite numeric `value`, and `unit`). The default is off.
+Live `agents.samedaydesk.com` (read-only 2026-09-12) already has batch and
+lockfile on (27 paid HTTP / 24 MCP tools). Enabling vendor-budget beside that
+envelope is 28 / 25. Default-off catalogs remain 25 / 22. Default
+price is `$0.005` (`VENDOR_BUDGET_IMPACT_PRICE`), matching live `GET /extract`.
+Margin is not proven. Initial live release accepts x402 only; existing MPP
+routes including `extract_batch` are unchanged. HTTP JSON only: no filesystem
+paths, arbitrary commands, URLs, or writable caches. Identical rows are
+informational, not engine failure. The signed deployment statement is not
+rewritten here. Existing homepage, extract, and lockfile prices stay as they
+were. The vendor-budget MCP tool's challenge resource is
+`https://agents.samedaydesk.com/vendor-budget-impact`, not `mcp://`.
+
 The extract_batch MCP tool projects the existing HTTP payment and durable replay
 handler. Its challenge resource is `https://agents.samedaydesk.com/extract/batch`,
 not `mcp://`: first call without payment, then reuse the returned HTTP resource
@@ -105,6 +120,7 @@ settlement proof, and AI-search readiness audits.
 - Agent discoverability audit: `GET /distribution/agent-discoverability-audit?origin=https://example.com&intent=extract+a+public+website+into+structured+JSON&route=/extract&method=GET&runtimeUrl=https%3A%2F%2Fexample.com%2Fextract%3Furl%3Dhttps%253A%252F%252Fexample.org&surfaceAudit=true&materializationAudit=true`
 - Payment offer preflight: `GET /commerce/payment-offer-preflight?url=https://example.com/paid-route`
 - Seller integrity audit: `GET /commerce/seller-integrity-audit?origin=https://seller.example&route=/paid-route&method=GET&requiredPaths=data.attributes`
+  - HTTP and MCP expose `machine_buyable`, `contract_ready`, `repair_required`, or `unverified`. Local acquisition limits and unknown transport produce `unverified`, not a seller-repair finding or referral qualification. The report keeps the bounded failure code, evidence class, and observed declaration HTTP status when available.
   - A buyer may add `referral=r1_<sha256>` derived from its complete seller-signed x402 settlement receipt. This creates a declared acquisition label, not verified proof. `POST /commerce/referral-recheck` accepts that receipt plus one downstream seller-signed settlement receipt from a distinct payer and transaction, then atomically grants at most one free changed-state recheck. The receipts prove neither an application HTTP 200 response nor output delivery or validity, and public posting or broadcasting is optional. A file matching Agent402 PR 1070's observable capture contract (bare pretty JSON receipt, no bundled Agent402 source) is already a drop-in input after ordinary `JSON.parse`; see [`docs/agent-outcome-referral-experiment.md`](docs/agent-outcome-referral-experiment.md) and `agent402-receipt-interop.test.mjs`.
 - Discovery↔live payment drift (library/CLI only; not a hosted or paid route): `node discovery-drift.mjs observe --url 'https://agent-economy-signal-x402-mainnet.bronzetti-andrea.workers.dev/premium/agent-brief' --bazaar-pay-to '0xbda48b29607b9dc66ef7e38b68ad53f2b17efb23'`
 - Contract-qualified search: `GET /commerce/contract-qualified-search?query=service+domain+ownership+code+provenance&requiredPaths=data.sourceRepository`

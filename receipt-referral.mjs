@@ -18,11 +18,11 @@ export function receiptReferralOfferSchema() {
     additionalProperties: false,
     properties: {
       v: { type: "string", const: "1" },
-      status: { type: "string", enum: ["available", "declared"] },
+      status: { type: "string", enum: ["available", "declared", "unavailable"] },
       id: { type: ["string", "null"], pattern: "^r1_[0-9a-f]{64}$" },
       proof: { type: "string", const: "x402-offer-receipt-jcs-sha256-v1" },
-      reward: { type: "string", const: "one_free_changed_state_recheck" },
-      qualifiesOn: { type: "string", const: "two_distinct_seller_signed_settlement_receipts" },
+      reward: { type: "string", enum: ["one_free_changed_state_recheck", "none"] },
+      qualifiesOn: { type: "string", enum: ["two_distinct_seller_signed_settlement_receipts", "none"] },
       broadcastRequired: { type: "boolean", const: false },
       attributionOnly: { type: "boolean", const: true },
       instructions: { type: "string" },
@@ -32,6 +32,19 @@ export function receiptReferralOfferSchema() {
 }
 
 export function createReceiptReferralOffer({ referralId = null, decision = "repair_required" } = {}) {
+  if (decision === "unverified") {
+    return {
+      v: "1",
+      status: "unavailable",
+      id: null,
+      proof: "x402-offer-receipt-jcs-sha256-v1",
+      reward: "none",
+      qualifiesOn: "none",
+      broadcastRequired: false,
+      attributionOnly: true,
+      instructions: "Result unverified. Measurement did not complete. This is not seller-repair evidence and does not offer a recheck reward. The paid call's price, authorization, and delivery never change.",
+    };
+  }
   const normalized = normalizeReceiptReferralId(referralId);
   return {
     v: "1",

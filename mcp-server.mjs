@@ -264,7 +264,11 @@ function isJsonRpcResponseMessage(message) {
 function isTypedPaymentRequiredResult(result) {
   if (!result || typeof result !== "object" || Array.isArray(result)) return false;
   if (result.isError !== true) return false;
-  const body = result.structuredContent;
+  let body = result.structuredContent;
+  if (!body) {
+    try { body = JSON.parse(result.content?.find(item => item.type === "text")?.text); }
+    catch { return false; }
+  }
   if (!body || typeof body !== "object" || Array.isArray(body)) return false;
   return Number.isInteger(body.x402Version) && Array.isArray(body.accepts);
 }
@@ -589,7 +593,18 @@ export async function mountMcp(app, {
       inputSchema: t.inputSchema,
       outputSchema: t.outputSchema,
       paymentMeta: createX402ToolMeta(accepts),
-      handler,
+      // SDK clients validate every structuredContent against the success schema,
+      // even for isError. x402 also supports the JSON text challenge. Preserve
+      // that wire payload and payment metadata without claiming success shape.
+      handler: t.outputSchema ? async (...args) => {
+        const result = await handler(...args);
+        if (result?.isError !== true || !result.structuredContent) return result;
+        const { structuredContent, ...errorResult } = result;
+        return {
+          ...errorResult,
+          content: result.content?.length ? result.content : [{ type: "text", text: JSON.stringify(structuredContent) }],
+        };
+      } : handler,
       binding,
     });
   }

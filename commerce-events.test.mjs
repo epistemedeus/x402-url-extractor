@@ -760,6 +760,16 @@ test("route classification preserves useful intent without recording opaque path
     kind: "paid",
     matched: true,
   });
+  assert.deepEqual(classifyCommerceRoute("/vendor-budget-impact"), {
+    route: "/vendor-budget-impact",
+    kind: "paid",
+    matched: true,
+  });
+  assert.deepEqual(classifyCommerceRoute("/lockfile-pin-delta"), {
+    route: "/lockfile-pin-delta",
+    kind: "paid",
+    matched: true,
+  });
   assert.deepEqual(classifyCommerceRoute("/extract/other"), {
     route: "/extract/*",
     kind: "unmatched",
@@ -3498,6 +3508,8 @@ const WRITER_ROUTE_PATHS = [
   "/alerts",
   "/extract",
   "/extract/batch",
+  "/lockfile-pin-delta",
+  "/vendor-budget-impact",
   "/read",
   "/scan",
   "/schemaforge",

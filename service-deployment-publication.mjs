@@ -82,6 +82,17 @@ export function loadServiceDeploymentPublication({
   }
   const fingerprint = `sha256:${createHash("sha256").update(publicDer).digest("hex")}`;
   return Object.freeze({
+    coverageFor({ method, path, paymentProtocols = ["x402", "mpp"] }) {
+      const covered = paymentProtocols.every(protocol => {
+        try {
+          const result = verifyServiceDeploymentStatement(envelope, { publicKey,
+            request: { method, url: `${canonicalOrigin}${path}` },
+            runtimeOffer: { protocol, asset, network, recipient, decimals: 6 }, now });
+          return result.decision === "verified_exact_binding";
+        } catch { return false; }
+      });
+      return { covered, status: covered ? "verified_exact_binding" : "uncovered", method, path, paymentProtocols };
+    },
     envelope: Object.freeze(envelope),
     publicKeyPem,
     statementId: payload.statementId,
@@ -94,4 +105,10 @@ export function loadServiceDeploymentPublication({
     operationalWallet: derivedWallet,
     paths: Object.freeze({ statement: SERVICE_DEPLOYMENT_PATH, publicKey: SERVICE_DEPLOYMENT_PUBLIC_KEY_PATH }),
   });
+}
+
+export function assertServiceDeploymentCoverage(publication, operations) {
+  for (const operation of operations) {
+    if (!publication.coverageFor(operation).covered) throw new Error(`service deployment does not attest ${operation.method} ${operation.path} for its payment protocols`);
+  }
 }

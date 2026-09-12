@@ -8,9 +8,11 @@ import { z } from "zod";
 
 const MAX_URL_LENGTH = 2_048;
 const MAX_HEADER_VALUE_BYTES = 64 * 1024;
+const MAX_LOCATION_BYTES = 2_048;
 const MAX_OPENAPI_BYTES = 1_000_000;
 const DEFAULT_TIMEOUT_MS = 8_000;
 const SENSITIVE_QUERY_KEY = /(?:^|[-_.])(api[-_.]?key|access[-_.]?token|auth|authorization|credential|password|secret|token)(?:$|[-_.])/i;
+const SENSITIVE_DIAGNOSTIC_NAME = /(?:^|[-_.])(?:api[-_.]?key|access[-_.]?token|auth(?:orization)?|bearer|credential|jwt|key|nonce|pass(?:word)?|secret|session[-_.]?token|signature|token)(?:$|[-_.])|^(?:apiKey|accessToken|authorizationCode|sessionToken)$/i;
 const CATALOG_SOURCE = /^[\u0020-\u007e]{1,128}$/;
 
 const blockedAddresses = new BlockList();
@@ -31,8 +33,13 @@ for (const [address, prefix, family] of [
   ["240.0.0.0", 4, "ipv4"],
   ["::", 128, "ipv6"],
   ["::1", 128, "ipv6"],
+  ["::", 96, "ipv6"],
   ["100::", 64, "ipv6"],
   ["2001:db8::", 32, "ipv6"],
+  ["64:ff9b::", 96, "ipv6"],
+  ["64:ff9b:1::", 48, "ipv6"],
+  ["2001::", 32, "ipv6"],
+  ["2002::", 16, "ipv6"],
   ["fc00::", 7, "ipv6"],
   ["fe80::", 10, "ipv6"],
   ["ff00::", 8, "ipv6"],
@@ -76,7 +83,7 @@ export function normalizePaymentTarget(value) {
   if (target.protocol !== "https:") fail("url must use HTTPS", { code: "invalid_url" });
   if (target.username || target.password) fail("url must not contain credentials", { code: "credential_rejected" });
   if (target.hash) fail("url must not contain a fragment", { code: "invalid_url" });
-  if (/[{}]/.test(target.pathname) || /:\w+/.test(target.pathname)) {
+  if (/[{}]/.test(target.pathname) || /%7b|%7d/i.test(target.pathname)) {
     fail("url contains an unresolved route parameter", { code: "invalid_url" });
   }
   if (target.searchParams.size > 30) fail("url has too many query parameters", { code: "invalid_url" });
@@ -94,6 +101,69 @@ export function normalizePaymentTarget(value) {
   }
   target.searchParams.sort();
   return target;
+}
+
+export function sanitizeLocationDiagnostic(location, requestUrl) {
+  if (location == null || location === "") {
+    return { location: null, locationClass: "absent" };
+  }
+  if (typeof location !== "string") {
+    return { location: null, locationClass: "omitted" };
+  }
+  if (Buffer.byteLength(location, "utf8") > MAX_LOCATION_BYTES) {
+    return { location: null, locationClass: "omitted" };
+  }
+  if (/[\u0000-\u001f\u007f]/.test(location) || /\\/.test(location)) {
+    return { location: null, locationClass: "omitted" };
+  }
+  let resolved;
+  try {
+    resolved = new URL(location, requestUrl);
+  } catch {
+    return { location: null, locationClass: "opaque" };
+  }
+  if (resolved.protocol !== "https:" && resolved.protocol !== "http:") {
+    return { location: null, locationClass: "omitted" };
+  }
+  let request;
+  try {
+    request = new URL(requestUrl);
+  } catch {
+    return { location: null, locationClass: "opaque" };
+  }
+  resolved.username = "";
+  resolved.password = "";
+  let decodedPath;
+  try {
+    decodedPath = decodeURIComponent(resolved.pathname);
+  } catch {
+    return { location: null, locationClass: "omitted" };
+  }
+  const pathSegments = decodedPath.split("/").filter(Boolean);
+  const secretLikePath = /[A-Za-z0-9_-]{32,}/;
+  if (
+    /[\u0000-\u001f\u007f\\]/.test(decodedPath)
+    || pathSegments.some((segment) => SENSITIVE_DIAGNOSTIC_NAME.test(segment) || secretLikePath.test(segment))
+  ) {
+    return {
+      location: null,
+      locationClass: resolved.origin === request.origin ? "same_origin" : "cross_origin",
+    };
+  }
+  const safeQuery = new URLSearchParams();
+  for (const [key, value] of resolved.searchParams) {
+    if (SENSITIVE_QUERY_KEY.test(key) || SENSITIVE_DIAGNOSTIC_NAME.test(key) || secretLikePath.test(value)) continue;
+    safeQuery.append(key, value);
+  }
+  safeQuery.sort();
+  const search = safeQuery.toString();
+  const path = `${resolved.pathname}${search ? `?${search}` : ""}`;
+  const sameOrigin = resolved.protocol === request.protocol && resolved.host === request.host;
+  const sanitized = sameOrigin ? path : `${resolved.origin}${path}`;
+  if (Buffer.byteLength(sanitized, "utf8") > MAX_LOCATION_BYTES) {
+    return { location: null, locationClass: "omitted" };
+  }
+  return { location: sanitized, locationClass: sameOrigin ? "same_origin" : "cross_origin" };
 }
 
 function strictRecord(value, label, allowed) {
@@ -384,6 +454,11 @@ function headerValue(headers, name) {
   return value.trim();
 }
 
+function rawLocationHeader(headers) {
+  const value = headers?.get?.("location");
+  return typeof value === "string" ? value : null;
+}
+
 function decimalAmount(amountAtomic, decimals) {
   if (!/^\d+$/.test(String(amountAtomic || "")) || !Number.isInteger(decimals) || decimals < 0 || decimals > 30) return null;
   const padded = String(amountAtomic).padStart(decimals + 1, "0");
@@ -516,8 +591,16 @@ export async function paymentOfferPreflight(input, {
   const responseContract = await responseContractFor(target, openapiImpl, now);
   const status = Number(response?.status || 0);
   const findings = [];
+  const locationDiagnostic = sanitizeLocationDiagnostic(rawLocationHeader(response?.headers), target.toString());
   if (response?.finalUrl && normalizePaymentTarget(response.finalUrl).toString() !== target.toString()) {
     fail("target redirected to a different URL", { code: "redirect_rejected", statusCode: 502 });
+  }
+  if (status >= 300 && status < 400) {
+    findings.push({
+      severity: "warning",
+      code: "redirect_observed",
+      message: `HTTP ${status} Location class ${locationDiagnostic.locationClass}. Redirects are not followed. This is not by itself a catalog-row defect.`,
+    });
   }
   if (status !== 402) {
     findings.push({ severity: "warning", code: "expected_402_missing", message: `The credential-free request returned HTTP ${status || "unknown"}, not 402.` });
@@ -581,7 +664,13 @@ export async function paymentOfferPreflight(input, {
     product: "samedaydesk-payment-offer-preflight",
     version: "1.2.0",
     checkedAt: new Date(now).toISOString(),
-    target: { method: "GET", url: target.toString(), httpStatus: status },
+    target: {
+      method: "GET",
+      url: target.toString(),
+      httpStatus: status,
+      location: locationDiagnostic.location,
+      locationClass: locationDiagnostic.locationClass,
+    },
     decision,
     protocols: [...new Set(validOffers.map((offer) => offer.protocol))].sort(),
     offerCount: validOffers.length,
@@ -634,6 +723,8 @@ export const paymentOfferPreflightMcpOutputSchema = z.object({
     method: z.literal("GET"),
     url: z.string(),
     httpStatus: z.number().int(),
+    location: z.string().nullable(),
+    locationClass: z.enum(["absent", "same_origin", "cross_origin", "opaque", "omitted"]),
   }).strict(),
   decision: z.enum(["parseable_offer", "review_required", "no_parseable_offer"]),
   protocols: z.array(z.enum(["mpp", "x402"])),
