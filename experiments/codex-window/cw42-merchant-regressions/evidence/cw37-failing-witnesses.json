@@ -1,0 +1,253 @@
+{
+  "schema": "cw42.minimal-failing-witnesses.v1",
+  "sourceHead": "79229d0caf9bd5a1f20dd8cdb46d286722721d17",
+  "sourceDigest": "d655678c7d7f4385d6c104a2319521957ed86c576a9397b64dec07654e64e70a",
+  "harnessHead": "59901a43063a4b65a9a45ec4e7f45dff0fa350ae",
+  "harnessDigest": "6c4e9dc91551efc886da7a961742781e9ebbfe4da5d89f37f5ccae9f3f9e6b52",
+  "receiptSha256": "1c611cb9c0ded167ce7a067fc4cf9839b7af45f2019175355f06952d60308842",
+  "startedAt": "2026-09-12T06:50:17.295Z",
+  "finishedAt": "2026-09-12T06:50:39.766Z",
+  "boundaries": {
+    "workers": 1,
+    "nodeHeapMiB": 768,
+    "port": 55549,
+    "realSigning": false,
+    "realPayment": false,
+    "realFacilitator": false,
+    "evidenceClass": "self-authored local regression; synthetic settlement only"
+  },
+  "sourceUnchanged": true,
+  "remainingOwnedChildren": 0,
+  "passed": 27,
+  "failed": 14,
+  "witnesses": [
+    {
+      "id": "F5.unset.malformed-price",
+      "assertion": "Dormant vendor state must not prevent incumbent server boot",
+      "observed": {
+        "flag": "unset",
+        "perturbation": "malformed-price",
+        "ready": false,
+        "error": "Error: VENDOR_BUDGET_IMPACT_PRICE must be a USDC amount such as $0.005"
+      }
+    },
+    {
+      "id": "F5.unset.missing-discovery-fixture",
+      "assertion": "Dormant vendor state must not prevent incumbent server boot",
+      "observed": {
+        "flag": "unset",
+        "perturbation": "missing-discovery-fixture",
+        "omittedFile": "vendor/vendor-budget-impact/fixtures/caller/before.json",
+        "ready": false,
+        "error": "Error: ENOENT: no such file or directory, open '/workspace/pilot/tmp/cw42-astra-merchant-off-admission-proof-20260912/src/experiments/codex-window/cw42-merchant-regressions/runtime/run-ki9ylX/missing-fixture/vendor/vendor-budget-impact/fixtures/caller/before.json'"
+      }
+    },
+    {
+      "id": "F5.0.malformed-price",
+      "assertion": "Dormant vendor state must not prevent incumbent server boot",
+      "observed": {
+        "flag": "0",
+        "perturbation": "malformed-price",
+        "ready": false,
+        "error": "Error: VENDOR_BUDGET_IMPACT_PRICE must be a USDC amount such as $0.005"
+      }
+    },
+    {
+      "id": "F5.0.missing-discovery-fixture",
+      "assertion": "Dormant vendor state must not prevent incumbent server boot",
+      "observed": {
+        "flag": "0",
+        "perturbation": "missing-discovery-fixture",
+        "omittedFile": "vendor/vendor-budget-impact/fixtures/caller/before.json",
+        "ready": false,
+        "error": "Error: ENOENT: no such file or directory, open '/workspace/pilot/tmp/cw42-astra-merchant-off-admission-proof-20260912/src/experiments/codex-window/cw42-merchant-regressions/runtime/run-ki9ylX/missing-fixture/vendor/vendor-budget-impact/fixtures/caller/before.json'"
+      }
+    },
+    {
+      "id": "F6.raw.integer-collapse",
+      "assertion": "Different exact numeric customer values must not be delivered as charged no-change",
+      "observed": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740992,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740993,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          9007199254740992,
+          9007199254740992
+        ],
+        "unpaidStatus": 402,
+        "httpStatus": 200,
+        "charged": true,
+        "analysis": "informational",
+        "fieldChangeCount": 0,
+        "unchanged": 1
+      }
+    },
+    {
+      "id": "F6.raw.decimal-collapse",
+      "assertion": "Different exact numeric customer values must not be delivered as charged no-change",
+      "observed": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0.1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":0.10000000000000001,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          0.1,
+          0.1
+        ],
+        "unpaidStatus": 402,
+        "httpStatus": 200,
+        "charged": true,
+        "analysis": "informational",
+        "fieldChangeCount": 0,
+        "unchanged": 1
+      }
+    },
+    {
+      "id": "F6.raw.underflow-collapse",
+      "assertion": "Different exact numeric customer values must not be delivered as charged no-change",
+      "observed": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":1e-400,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          0,
+          0
+        ],
+        "unpaidStatus": 402,
+        "httpStatus": 200,
+        "charged": true,
+        "analysis": "informational",
+        "fieldChangeCount": 0,
+        "unchanged": 1
+      }
+    },
+    {
+      "id": "F6.raw.overflow-rounds-finite-collapse",
+      "assertion": "Different exact numeric customer values must not be delivered as charged no-change",
+      "observed": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":1.7976931348623157e308,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":1.7976931348623158e308,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          1.7976931348623157e+308,
+          1.7976931348623157e+308
+        ],
+        "unpaidStatus": 402,
+        "httpStatus": 200,
+        "charged": true,
+        "analysis": "informational",
+        "fieldChangeCount": 0,
+        "unchanged": 1
+      }
+    },
+    {
+      "id": "F6.maintained-client.integer-collapse",
+      "assertion": "Maintained client accepted a charged no-change for different exact customer numeric values",
+      "observed": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740992,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740993,\"unit\":\"USD/unit\"}]}}",
+        "unpaidStatus": 402,
+        "httpStatus": 200,
+        "charged": true,
+        "analysis": "informational",
+        "fieldChangeCount": 0,
+        "unchanged": 1,
+        "maintainedClientOutcome": "valid_delivered",
+        "maintainedClientOutputValid": true,
+        "syntheticSignerCallbackCount": 1,
+        "exactBodyPreserved": true
+      }
+    },
+    {
+      "id": "F6.maintained-client.decimal-collapse",
+      "assertion": "Maintained client accepted a charged no-change for different exact customer numeric values",
+      "observed": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0.1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":0.10000000000000001,\"unit\":\"USD/unit\"}]}}",
+        "unpaidStatus": 402,
+        "httpStatus": 200,
+        "charged": true,
+        "analysis": "informational",
+        "fieldChangeCount": 0,
+        "unchanged": 1,
+        "maintainedClientOutcome": "valid_delivered",
+        "maintainedClientOutputValid": true,
+        "syntheticSignerCallbackCount": 1,
+        "exactBodyPreserved": true
+      }
+    },
+    {
+      "id": "F7.purchase-evidence-per-operation",
+      "assertion": "x402-only operation advertises MPP receipt/replay",
+      "observed": {
+        "method": "POST",
+        "path": "/vendor-budget-impact",
+        "receipt": {
+          "x402": "PAYMENT-RESPONSE with signed offer-receipt extension and settlement reference",
+          "mpp": "Payment-Receipt",
+          "runtimeValidationRequired": true
+        },
+        "replay": {
+          "responseReplay": "conditional",
+          "ttlSeconds": 900,
+          "mismatchStatus": 409,
+          "x402Requirement": "payment-identifier",
+          "mppRequirement": "exact_settled_credential",
+          "requestBinding": [
+            "method",
+            "canonical_url",
+            "exact_raw_body_sha256",
+            "payer",
+            "payment_terms",
+            "exact_settled_credential"
+          ]
+        }
+      }
+    },
+    {
+      "id": "F7.a2a-per-operation-protocols",
+      "assertion": "x402-only vendor A2A skill advertises mpp tag",
+      "observed": {
+        "httpStatus": 200,
+        "skill": {
+          "id": "discover-paid-action-vendor-budget-impact",
+          "name": "Discover paid action /vendor-budget-impact",
+          "description": "Discover the direct /vendor-budget-impact machine-paid action, its 5000 atomic USDC price, and x402/MPP invocation contract. Discovery only; invoke the returned exact request directly.",
+          "tags": [
+            "x402",
+            "mpp",
+            "paid-action",
+            "discovery",
+            "pricing",
+            "budget-impact",
+            "vendor-cost",
+            "row-delta"
+          ],
+          "examples": [
+            "Find the /vendor-budget-impact paid action and its exact current price."
+          ],
+          "inputModes": [
+            "text/plain",
+            "application/json"
+          ],
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      }
+    },
+    {
+      "id": "F7.mcp-schema-admission-parity",
+      "assertion": "Advertised MCP input schema admits missing rows that HTTP rejects",
+      "observed": {
+        "invalid": {
+          "before": {},
+          "after": {}
+        },
+        "schemaAccepts": true,
+        "directHttpStatus": 400
+      }
+    },
+    {
+      "id": "F7.deployment-attestation-exact-route",
+      "assertion": "Vendor route is absent from published signed deployment coverage",
+      "observed": {
+        "signedRoutePresent": false,
+        "validAtWallClock": true,
+        "verificationTime": "2026-09-12T06:50:39.676Z",
+        "expiresAt": "2026-10-07T22:17:39.273Z",
+        "incumbentDecision": "verified_exact_binding",
+        "vendorError": "request route is not authorized by the service deployment statement"
+      }
+    }
+  ]
+}

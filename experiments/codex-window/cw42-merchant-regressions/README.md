@@ -46,6 +46,16 @@ The pinned baseline has **41 leaf checks: 26 pass and 15 fail**. The failures
 are four dormant-boot witnesses, six numeric-collapse witnesses (including two
 maintained-client paths), and five metadata/MCP/attestation witnesses.
 
+The same unchanged harness was also run against CW37's published candidate
+`79229d0caf9bd5a1f20dd8cdb46d286722721d17`, in a separate immutable worktree,
+with its identical dependency lock. It has **27 passes and 14 failures**.
+`F7.mcp-unpaid-challenge-delivery` changes from failure to pass: CW37 fixes the
+SDK challenge delivery. Every other check has the same pass/fail result as the
+pinned baseline. The candidate still accepts both numeric-collapse examples
+as `valid_delivered`. See `evidence/cw37-79229d0.json` and
+`evidence/cw37-failing-witnesses.json`. This is an exact candidate result, not
+a claim about later CW37 commits or its active working tree.
+
 ## What this pack establishes
 
 F5 uses actual server children with the flag unset and `0`. It checks incumbent
@@ -123,7 +133,7 @@ round trip as a positive control. It does not create or modify an attestation.
 * **F7 MCP:** `server.js`'s `vendor_budget_impact.inputSchema` uses
   `z.record(z.any())`; replace it with a bounded pricing snapshot schema that
   agrees with HTTP admission. Actual current Zod 3.25.76 construction works.
-  Separately, `mcp-server.mjs` `httpRouteToolHandler` attaches error/challenge
+  On the baseline, `mcp-server.mjs` `httpRouteToolHandler` attaches error/challenge
   payloads as `structuredContent` under a success-only output schema.
   SDK 1.30.0 `Client.callTool` validates any present structured content even
   when `isError:true`, producing `-32602` and hiding the normal challenge from
@@ -132,6 +142,8 @@ round trip as a positive control. It does not create or modify an attestation.
   on non-2xx results. Preserve the typed-telemetry payment-required classifier,
   which currently reads `structuredContent`; changing that carrier requires
   updating the classifier too. Do not remove successful output validation.
+  The published CW37 candidate already repairs challenge delivery, as verified
+  above; retain that fix. Its overly broad input schema remains a failing check.
 * **F7 attestation:** `service-deployment-routes.mjs` omits
   `POST /vendor-budget-impact`; the live served statement therefore cannot
   verify that route, while `GET /extract` verifies with the same key/offer/time.
