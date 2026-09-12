@@ -1,0 +1,275 @@
+{
+  "schema": "cw42.minimal-failing-witnesses.v1",
+  "sourceHead": "3cb29f079604071e041a4b794990bb65fc593b3e",
+  "sourceDigest": "aed73475f74d9ec89dab8ffa0b6c612a38b2a658e7543aaa389b2a888b4c9ce3",
+  "harnessHead": "c45aab5e545c2f1c1da961fff50b5f8d6fce06f8",
+  "harnessDigest": "6c4e9dc91551efc886da7a961742781e9ebbfe4da5d89f37f5ccae9f3f9e6b52",
+  "receiptSha256": "e60e42a1bda24ccf396d533ca9ab0be11b2416507694371a05a66f46767508cd",
+  "startedAt": "2026-09-12T06:46:17.295Z",
+  "finishedAt": "2026-09-12T06:46:39.713Z",
+  "boundaries": {
+    "workers": 1,
+    "nodeHeapMiB": 768,
+    "port": 55549,
+    "realSigning": false,
+    "realPayment": false,
+    "realFacilitator": false,
+    "evidenceClass": "self-authored local regression; synthetic settlement only"
+  },
+  "sourceUnchanged": true,
+  "remainingOwnedChildren": 0,
+  "passed": 26,
+  "failed": 15,
+  "witnesses": [
+    {
+      "id": "F5.unset.malformed-price",
+      "assertion": "Dormant vendor state must not prevent incumbent server boot",
+      "observed": {
+        "flag": "unset",
+        "perturbation": "malformed-price",
+        "ready": false,
+        "error": "Error: VENDOR_BUDGET_IMPACT_PRICE must be a USDC amount such as $0.005"
+      }
+    },
+    {
+      "id": "F5.unset.missing-discovery-fixture",
+      "assertion": "Dormant vendor state must not prevent incumbent server boot",
+      "observed": {
+        "flag": "unset",
+        "perturbation": "missing-discovery-fixture",
+        "omittedFile": "vendor/vendor-budget-impact/fixtures/caller/before.json",
+        "ready": false,
+        "error": "Error: ENOENT: no such file or directory, open '/workspace/pilot/tmp/cw42-astra-merchant-off-admission-proof-20260912/src/experiments/codex-window/cw42-merchant-regressions/runtime/run-5dO5DJ/missing-fixture/vendor/vendor-budget-impact/fixtures/caller/before.json'"
+      }
+    },
+    {
+      "id": "F5.0.malformed-price",
+      "assertion": "Dormant vendor state must not prevent incumbent server boot",
+      "observed": {
+        "flag": "0",
+        "perturbation": "malformed-price",
+        "ready": false,
+        "error": "Error: VENDOR_BUDGET_IMPACT_PRICE must be a USDC amount such as $0.005"
+      }
+    },
+    {
+      "id": "F5.0.missing-discovery-fixture",
+      "assertion": "Dormant vendor state must not prevent incumbent server boot",
+      "observed": {
+        "flag": "0",
+        "perturbation": "missing-discovery-fixture",
+        "omittedFile": "vendor/vendor-budget-impact/fixtures/caller/before.json",
+        "ready": false,
+        "error": "Error: ENOENT: no such file or directory, open '/workspace/pilot/tmp/cw42-astra-merchant-off-admission-proof-20260912/src/experiments/codex-window/cw42-merchant-regressions/runtime/run-5dO5DJ/missing-fixture/vendor/vendor-budget-impact/fixtures/caller/before.json'"
+      }
+    },
+    {
+      "id": "F6.raw.integer-collapse",
+      "assertion": "Different exact numeric customer values must not be delivered as charged no-change",
+      "observed": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740992,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740993,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          9007199254740992,
+          9007199254740992
+        ],
+        "unpaidStatus": 402,
+        "httpStatus": 200,
+        "charged": true,
+        "analysis": "informational",
+        "fieldChangeCount": 0,
+        "unchanged": 1
+      }
+    },
+    {
+      "id": "F6.raw.decimal-collapse",
+      "assertion": "Different exact numeric customer values must not be delivered as charged no-change",
+      "observed": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0.1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":0.10000000000000001,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          0.1,
+          0.1
+        ],
+        "unpaidStatus": 402,
+        "httpStatus": 200,
+        "charged": true,
+        "analysis": "informational",
+        "fieldChangeCount": 0,
+        "unchanged": 1
+      }
+    },
+    {
+      "id": "F6.raw.underflow-collapse",
+      "assertion": "Different exact numeric customer values must not be delivered as charged no-change",
+      "observed": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":1e-400,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          0,
+          0
+        ],
+        "unpaidStatus": 402,
+        "httpStatus": 200,
+        "charged": true,
+        "analysis": "informational",
+        "fieldChangeCount": 0,
+        "unchanged": 1
+      }
+    },
+    {
+      "id": "F6.raw.overflow-rounds-finite-collapse",
+      "assertion": "Different exact numeric customer values must not be delivered as charged no-change",
+      "observed": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":1.7976931348623157e308,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":1.7976931348623158e308,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          1.7976931348623157e+308,
+          1.7976931348623157e+308
+        ],
+        "unpaidStatus": 402,
+        "httpStatus": 200,
+        "charged": true,
+        "analysis": "informational",
+        "fieldChangeCount": 0,
+        "unchanged": 1
+      }
+    },
+    {
+      "id": "F6.maintained-client.integer-collapse",
+      "assertion": "Maintained client accepted a charged no-change for different exact customer numeric values",
+      "observed": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740992,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740993,\"unit\":\"USD/unit\"}]}}",
+        "unpaidStatus": 402,
+        "httpStatus": 200,
+        "charged": true,
+        "analysis": "informational",
+        "fieldChangeCount": 0,
+        "unchanged": 1,
+        "maintainedClientOutcome": "valid_delivered",
+        "maintainedClientOutputValid": true,
+        "syntheticSignerCallbackCount": 1,
+        "exactBodyPreserved": true
+      }
+    },
+    {
+      "id": "F6.maintained-client.decimal-collapse",
+      "assertion": "Maintained client accepted a charged no-change for different exact customer numeric values",
+      "observed": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0.1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":0.10000000000000001,\"unit\":\"USD/unit\"}]}}",
+        "unpaidStatus": 402,
+        "httpStatus": 200,
+        "charged": true,
+        "analysis": "informational",
+        "fieldChangeCount": 0,
+        "unchanged": 1,
+        "maintainedClientOutcome": "valid_delivered",
+        "maintainedClientOutputValid": true,
+        "syntheticSignerCallbackCount": 1,
+        "exactBodyPreserved": true
+      }
+    },
+    {
+      "id": "F7.purchase-evidence-per-operation",
+      "assertion": "x402-only operation advertises MPP receipt/replay",
+      "observed": {
+        "method": "POST",
+        "path": "/vendor-budget-impact",
+        "receipt": {
+          "x402": "PAYMENT-RESPONSE with signed offer-receipt extension and settlement reference",
+          "mpp": "Payment-Receipt",
+          "runtimeValidationRequired": true
+        },
+        "replay": {
+          "responseReplay": "conditional",
+          "ttlSeconds": 900,
+          "mismatchStatus": 409,
+          "x402Requirement": "payment-identifier",
+          "mppRequirement": "exact_settled_credential",
+          "requestBinding": [
+            "method",
+            "canonical_url",
+            "exact_raw_body_sha256",
+            "payer",
+            "payment_terms",
+            "exact_settled_credential"
+          ]
+        }
+      }
+    },
+    {
+      "id": "F7.a2a-per-operation-protocols",
+      "assertion": "x402-only vendor A2A skill advertises mpp tag",
+      "observed": {
+        "httpStatus": 200,
+        "skill": {
+          "id": "discover-paid-action-vendor-budget-impact",
+          "name": "Discover paid action /vendor-budget-impact",
+          "description": "Discover the direct /vendor-budget-impact machine-paid action, its 5000 atomic USDC price, and x402/MPP invocation contract. Discovery only; invoke the returned exact request directly.",
+          "tags": [
+            "x402",
+            "mpp",
+            "paid-action",
+            "discovery",
+            "pricing",
+            "budget-impact",
+            "vendor-cost",
+            "row-delta"
+          ],
+          "examples": [
+            "Find the /vendor-budget-impact paid action and its exact current price."
+          ],
+          "inputModes": [
+            "text/plain",
+            "application/json"
+          ],
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      }
+    },
+    {
+      "id": "F7.mcp-unpaid-challenge-delivery",
+      "assertion": "SDK must receive the unpaid challenge, not an output-schema validation error",
+      "observed": {
+        "sdkError": -32602,
+        "sdkErrorMessage": "MCP error -32602: Structured content does not match the tool's output schema: data must have required property 'ok', data must have required property 'product', data must have required property 'schemaVersion', data must have required property 'quote', data must have required property 'charged', data must have required property 'analysis', data must have required property 'transport', data must have required property 'engine', data must have required property 'digest', data must have required property 'engineProvenance', data must have required property 'costInputs', data must have required property 'boundary', data must have required property 'limits', data must NOT have additional properties, data must NOT have additional properties, data must NOT have additional properties, data must NOT have additional properties",
+        "rawMcp": {
+          "httpStatus": 200,
+          "isError": true,
+          "structuredKeys": [
+            "x402Version",
+            "error",
+            "resource",
+            "accepts",
+            "extensions"
+          ],
+          "httpBridgeStatus": 402
+        }
+      }
+    },
+    {
+      "id": "F7.mcp-schema-admission-parity",
+      "assertion": "Advertised MCP input schema admits missing rows that HTTP rejects",
+      "observed": {
+        "invalid": {
+          "before": {},
+          "after": {}
+        },
+        "schemaAccepts": true,
+        "directHttpStatus": 400,
+        "sdkError": -32602,
+        "sdkErrorMessage": "MCP error -32602: Structured content does not match the tool's output schema: data must have required property 'quote', data must have required property 'engine', data must have required property 'digest', data must have required property 'engineProvenance', data must have required property 'costInputs', data must have required property 'limits', data must NOT have additional properties"
+      }
+    },
+    {
+      "id": "F7.deployment-attestation-exact-route",
+      "assertion": "Vendor route is absent from published signed deployment coverage",
+      "observed": {
+        "signedRoutePresent": false,
+        "validAtWallClock": true,
+        "verificationTime": "2026-09-12T06:46:39.626Z",
+        "expiresAt": "2026-10-07T22:17:39.273Z",
+        "incumbentDecision": "verified_exact_binding",
+        "vendorError": "request route is not authorized by the service deployment statement"
+      }
+    }
+  ]
+}
