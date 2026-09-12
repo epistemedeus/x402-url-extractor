@@ -1,0 +1,23 @@
+{
+  "kind": "adapted-source-projection",
+  "package": "http-delivery-evidence",
+  "source": {
+    "repo": "epistemedeus/samedaydesk",
+    "sha": "32c9b0d28f3c4f1d01ab59435cf9a8e09a993965",
+    "path": "experiments/wave5/d17/http-delivery-evidence/",
+    "assignment": "W5-D17"
+  },
+  "binding": {
+    "extract": "extractMcpOutputSchema",
+    "read": "readMcpOutputSchema",
+    "extractBatch": "extractBatchOutputSchema()",
+    "lockfile": "lockfilePinDeltaOutputSchema()",
+    "note": "Live same-repo parsers are production truth. generated JSON is a pin-time snapshot for equivalence tests only."
+  },
+  "not": [
+    "second-revenue-ledger",
+    "buyer-attested-usefulness",
+    "private-sds-sibling-import",
+    "mcp-typed-telemetry-as-http-identity"
+  ]
+}

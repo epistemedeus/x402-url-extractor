@@ -8,7 +8,9 @@ that the source succeeded or that the page is complete. The JSON keeps
 `requestedUrl`, observed `finalUrl` (also copied to `url` for compatibility),
 source HTTP `status`, `sourceOk`, a nullable `error`, and a `capture` object
 that labels the no-JavaScript GET, body/excerpt limits, charset, and truncation.
-A 403/404 with block text is not an empty 200. The extract `text` field is a
+A 403/404 with block text is not an empty 200. Observational HTTP delivery
+evidence may classify schema conformance, source refusal, and truncation; that
+is not buyer usefulness or a sold guarantee. The extract `text` field is a
 bounded excerpt; use `/read` for longer Markdown. Neither route executes
 JavaScript, so missing discussion text is not proof of absence. Script data islands
 and comments are stripped; this is not a full-discussion reader. Production source

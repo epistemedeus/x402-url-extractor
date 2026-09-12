@@ -1,0 +1,789 @@
+{
+  "merchantSha": "a143898dd1ec35c097ca7eb0b472f30dad1ee319",
+  "generator": "scripts/export-canonical-contracts.mjs",
+  "binding": {
+    "/extract": {
+      "httpHandler": "server.js GET /extract → res.json(await extract(url))",
+      "producingFunction": "extract",
+      "schemaExport": "extractMcpOutputSchema",
+      "schemaKind": "zod",
+      "mcpTool": "extract outputSchema is the same Zod object; run calls extract(url)",
+      "note": "HTTP success body is the extract() object. The export is named MCP because MCP reuses it. Catch ok:false envelopes are outside this success schema."
+    },
+    "/read": {
+      "httpHandler": "server.js GET /read → res.json(await readMarkdown(url))",
+      "producingFunction": "readMarkdown",
+      "schemaExport": "readMcpOutputSchema",
+      "schemaKind": "zod",
+      "mcpTool": "read outputSchema is the same Zod object; run calls readMarkdown(url)",
+      "note": "HTTP success body is the readMarkdown() object. Catch ok:false envelopes are outside this success schema."
+    },
+    "/extract/batch": {
+      "httpHandler": "server.js POST /extract/batch OpenAPI content schema extractBatchOutputSchema()",
+      "producingFunction": "formatMerchantResult / executeExtractBatch",
+      "schemaExport": "extractBatchOutputSchema",
+      "schemaKind": "json-schema",
+      "mcpZodExport": "extractBatchMcpOutputSchema",
+      "note": "HTTP OpenAPI uses extractBatchOutputSchema(). MCP uses a Zod sibling. This package binds HTTP to extractBatchOutputSchema, not the MCP Zod object."
+    }
+  },
+  "schemas": {
+    "extract": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean",
+          "const": true
+        },
+        "requestedUrl": {
+          "type": "string"
+        },
+        "finalUrl": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "status": {
+          "type": "integer"
+        },
+        "sourceOk": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "contentType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "canonical": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lang": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "openGraph": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "twitter": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "jsonLd": {
+          "type": "array",
+          "items": {}
+        },
+        "headings": {
+          "type": "object",
+          "properties": {
+            "h1": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "h2": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "h1",
+            "h2"
+          ],
+          "additionalProperties": false
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "text": {
+          "type": "string"
+        },
+        "aiReadiness": {
+          "type": "object",
+          "properties": {
+            "hasJsonLd": {
+              "type": "boolean"
+            },
+            "hasOpenGraph": {
+              "type": "boolean"
+            },
+            "hasTitle": {
+              "type": "boolean"
+            },
+            "hasDescription": {
+              "type": "boolean"
+            },
+            "hasCanonical": {
+              "type": "boolean"
+            },
+            "schemaTypes": {
+              "type": "array",
+              "items": {}
+            }
+          },
+          "required": [
+            "hasJsonLd",
+            "hasOpenGraph",
+            "hasTitle",
+            "hasDescription",
+            "hasCanonical",
+            "schemaTypes"
+          ],
+          "additionalProperties": false
+        },
+        "capture": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string",
+              "const": "http-get-no-javascript"
+            },
+            "javascriptExecuted": {
+              "type": "boolean",
+              "const": false
+            },
+            "maxBodyBytes": {
+              "type": "integer"
+            },
+            "textExcerptLimitChars": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "markdownLimitChars": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "bodyBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "bodyTruncated": {
+              "type": "boolean"
+            },
+            "textTruncated": {
+              "type": "boolean"
+            },
+            "charset": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "charsetSource": {
+              "type": "string",
+              "enum": [
+                "content-type",
+                "html-meta",
+                "default-utf-8",
+                "invalid-charset-fallback"
+              ]
+            }
+          },
+          "required": [
+            "method",
+            "javascriptExecuted",
+            "maxBodyBytes",
+            "textExcerptLimitChars",
+            "markdownLimitChars",
+            "bodyBytes",
+            "bodyTruncated",
+            "textTruncated",
+            "charset",
+            "charsetSource"
+          ],
+          "additionalProperties": false
+        },
+        "fetchedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ok",
+        "requestedUrl",
+        "finalUrl",
+        "url",
+        "status",
+        "sourceOk",
+        "error",
+        "contentType",
+        "title",
+        "description",
+        "canonical",
+        "lang",
+        "openGraph",
+        "twitter",
+        "jsonLd",
+        "headings",
+        "links",
+        "text",
+        "aiReadiness",
+        "capture",
+        "fetchedAt"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "read": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean",
+          "const": true
+        },
+        "requestedUrl": {
+          "type": "string"
+        },
+        "finalUrl": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "status": {
+          "type": "integer"
+        },
+        "sourceOk": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "message"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "markdown": {
+          "type": "string"
+        },
+        "wordCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "capture": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string",
+              "const": "http-get-no-javascript"
+            },
+            "javascriptExecuted": {
+              "type": "boolean",
+              "const": false
+            },
+            "maxBodyBytes": {
+              "type": "integer"
+            },
+            "textExcerptLimitChars": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "markdownLimitChars": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "bodyBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "bodyTruncated": {
+              "type": "boolean"
+            },
+            "textTruncated": {
+              "type": "boolean"
+            },
+            "charset": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "charsetSource": {
+              "type": "string",
+              "enum": [
+                "content-type",
+                "html-meta",
+                "default-utf-8",
+                "invalid-charset-fallback"
+              ]
+            }
+          },
+          "required": [
+            "method",
+            "javascriptExecuted",
+            "maxBodyBytes",
+            "textExcerptLimitChars",
+            "markdownLimitChars",
+            "bodyBytes",
+            "bodyTruncated",
+            "textTruncated",
+            "charset",
+            "charsetSource"
+          ],
+          "additionalProperties": false
+        },
+        "fetchedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ok",
+        "requestedUrl",
+        "finalUrl",
+        "url",
+        "status",
+        "sourceOk",
+        "error",
+        "title",
+        "markdown",
+        "wordCount",
+        "truncated",
+        "capture",
+        "fetchedAt"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "batchHttp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ok",
+        "product",
+        "schemaVersion",
+        "quote",
+        "jobId",
+        "jobStatus",
+        "stopReason",
+        "partial",
+        "sources",
+        "accounting",
+        "costInputs",
+        "charged",
+        "boundary"
+      ],
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "product": {
+          "type": "string",
+          "const": "samedaydesk-extract-batch"
+        },
+        "schemaVersion": {
+          "type": "string",
+          "const": "samedaydesk.extract-batch.v0"
+        },
+        "quote": {
+          "type": "object",
+          "required": [
+            "amountAtomic",
+            "displayUsdc",
+            "meaning"
+          ],
+          "properties": {
+            "amountAtomic": {
+              "type": "string",
+              "const": "10000"
+            },
+            "displayUsdc": {
+              "type": "string",
+              "const": "0.01"
+            },
+            "meaning": {
+              "type": "string"
+            }
+          }
+        },
+        "jobId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "jobStatus": {
+          "type": "string",
+          "enum": [
+            "running",
+            "completed",
+            "completed_with_unknown",
+            "stopped",
+            "interrupted"
+          ]
+        },
+        "stopReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "partial": {
+          "type": "boolean"
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "source",
+              "status",
+              "data",
+              "notes",
+              "error",
+              "provenance"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "success",
+                  "partial",
+                  "failure",
+                  "unknown",
+                  "skipped_duplicate"
+                ]
+              },
+              "data": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "notes": {
+                "type": "array"
+              },
+              "error": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "provenance": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "finalUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "httpStatus": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "accounting": {
+          "type": "object"
+        },
+        "costInputs": {
+          "type": "object"
+        },
+        "charged": {
+          "type": "boolean"
+        },
+        "boundary": {
+          "type": "object"
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "batchMcp": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "product": {
+          "type": "string",
+          "const": "samedaydesk-extract-batch"
+        },
+        "schemaVersion": {
+          "type": "string",
+          "const": "samedaydesk.extract-batch.v0"
+        },
+        "quote": {
+          "type": "object",
+          "properties": {
+            "amountAtomic": {
+              "type": "string",
+              "const": "10000"
+            },
+            "displayUsdc": {
+              "type": "string",
+              "const": "0.01"
+            },
+            "meaning": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "amountAtomic",
+            "displayUsdc",
+            "meaning"
+          ],
+          "additionalProperties": false
+        },
+        "jobId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "jobStatus": {
+          "type": "string",
+          "enum": [
+            "running",
+            "completed",
+            "completed_with_unknown",
+            "stopped",
+            "interrupted"
+          ]
+        },
+        "stopReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "partial": {
+          "type": "boolean"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "success",
+                  "partial",
+                  "failure",
+                  "unknown",
+                  "skipped_duplicate"
+                ]
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": {}
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "notes": {
+                "type": "array"
+              },
+              "error": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": {}
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "provenance": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": {}
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "finalUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "httpStatus": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "source",
+              "status",
+              "data",
+              "notes",
+              "error",
+              "provenance"
+            ],
+            "additionalProperties": true
+          },
+          "minItems": 1,
+          "maxItems": 5
+        },
+        "accounting": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "costInputs": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "charged": {
+          "type": "boolean"
+        },
+        "boundary": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "error": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ok",
+        "product",
+        "schemaVersion",
+        "quote",
+        "jobId",
+        "jobStatus",
+        "stopReason",
+        "partial",
+        "sources",
+        "accounting",
+        "costInputs",
+        "charged",
+        "boundary"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+}
