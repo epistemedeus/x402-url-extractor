@@ -1,0 +1,583 @@
+TAP version 13
+# Subtest: F5 dormant feature child-process boot isolation
+    # Subtest: F5.unset.clean
+    ok 1 - F5.unset.clean
+      ---
+      duration_ms: 2029.777199
+      type: 'test'
+      ...
+    # Subtest: F5.unset.malformed-price
+    not ok 2 - F5.unset.malformed-price
+      ---
+      duration_ms: 1062.113302
+      type: 'test'
+      location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:11'
+      failureType: 'testCodeFailure'
+      error: |-
+        Dormant vendor state must not prevent incumbent server boot
+        
+        false !== true
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: 'strictEqual'
+      stack: |-
+        file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:189:16
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:50:11)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async check (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:3)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:184:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: F5.unset.malformed-limit
+    ok 3 - F5.unset.malformed-limit
+      ---
+      duration_ms: 2099.311979
+      type: 'test'
+      ...
+    # Subtest: F5.unset.malformed-all-limits
+    ok 4 - F5.unset.malformed-all-limits
+      ---
+      duration_ms: 2149.796479
+      type: 'test'
+      ...
+    # Subtest: F5.unset.missing-discovery-fixture
+    not ok 5 - F5.unset.missing-discovery-fixture
+      ---
+      duration_ms: 859.106705
+      type: 'test'
+      location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:11'
+      failureType: 'testCodeFailure'
+      error: |-
+        Dormant vendor state must not prevent incumbent server boot
+        
+        false !== true
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: 'strictEqual'
+      stack: |-
+        file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:189:16
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:50:11)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async check (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:3)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:184:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: F5.0.clean
+    ok 6 - F5.0.clean
+      ---
+      duration_ms: 1999.498386
+      type: 'test'
+      ...
+    # Subtest: F5.0.malformed-price
+    not ok 7 - F5.0.malformed-price
+      ---
+      duration_ms: 908.303419
+      type: 'test'
+      location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:11'
+      failureType: 'testCodeFailure'
+      error: |-
+        Dormant vendor state must not prevent incumbent server boot
+        
+        false !== true
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: 'strictEqual'
+      stack: |-
+        file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:189:16
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:50:11)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async check (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:3)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:184:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: F5.0.malformed-limit
+    ok 8 - F5.0.malformed-limit
+      ---
+      duration_ms: 1845.417093
+      type: 'test'
+      ...
+    # Subtest: F5.0.malformed-all-limits
+    ok 9 - F5.0.malformed-all-limits
+      ---
+      duration_ms: 1792.6462
+      type: 'test'
+      ...
+    # Subtest: F5.0.missing-discovery-fixture
+    not ok 10 - F5.0.missing-discovery-fixture
+      ---
+      duration_ms: 854.945039
+      type: 'test'
+      location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:11'
+      failureType: 'testCodeFailure'
+      error: |-
+        Dormant vendor state must not prevent incumbent server boot
+        
+        false !== true
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: 'strictEqual'
+      stack: |-
+        file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:189:16
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:50:11)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async check (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:3)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:184:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    1..10
+not ok 1 - F5 dormant feature child-process boot isolation
+  ---
+  duration_ms: 16096.254338
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:162:1'
+  failureType: 'subtestsFailed'
+  error: '4 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: F6 actual HTTP and maintained customer numeric admission
+    # Subtest: F6.raw.safe-boundary-distinct
+    ok 1 - F6.raw.safe-boundary-distinct
+      ---
+      duration_ms: 84.148128
+      type: 'test'
+      ...
+    # Subtest: F6.raw.integer-collapse
+    not ok 2 - F6.raw.integer-collapse
+      ---
+      duration_ms: 68.313444
+      type: 'test'
+      location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:11'
+      failureType: 'testCodeFailure'
+      error: |-
+        Different exact numeric customer values must not be delivered as charged no-change
+        
+        false !== true
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: 'strictEqual'
+      stack: |-
+        file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:234:16
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:50:11)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async check (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:3)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:222:7)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: F6.raw.decimal-collapse
+    not ok 3 - F6.raw.decimal-collapse
+      ---
+      duration_ms: 64.276887
+      type: 'test'
+      location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:11'
+      failureType: 'testCodeFailure'
+      error: |-
+        Different exact numeric customer values must not be delivered as charged no-change
+        
+        false !== true
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: 'strictEqual'
+      stack: |-
+        file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:234:16
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:50:11)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async check (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:3)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:222:7)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: F6.raw.decimal-distinct
+    ok 4 - F6.raw.decimal-distinct
+      ---
+      duration_ms: 63.954535
+      type: 'test'
+      ...
+    # Subtest: F6.raw.underflow-collapse
+    not ok 5 - F6.raw.underflow-collapse
+      ---
+      duration_ms: 66.935819
+      type: 'test'
+      location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:11'
+      failureType: 'testCodeFailure'
+      error: |-
+        Different exact numeric customer values must not be delivered as charged no-change
+        
+        false !== true
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: 'strictEqual'
+      stack: |-
+        file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:234:16
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:50:11)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async check (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:3)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:222:7)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: F6.raw.subnormal-distinct
+    ok 6 - F6.raw.subnormal-distinct
+      ---
+      duration_ms: 87.041098
+      type: 'test'
+      ...
+    # Subtest: F6.raw.negative-finite
+    ok 7 - F6.raw.negative-finite
+      ---
+      duration_ms: 61.538308
+      type: 'test'
+      ...
+    # Subtest: F6.raw.finite-maximum
+    ok 8 - F6.raw.finite-maximum
+      ---
+      duration_ms: 63.41308
+      type: 'test'
+      ...
+    # Subtest: F6.raw.overflow-rounds-finite-collapse
+    not ok 9 - F6.raw.overflow-rounds-finite-collapse
+      ---
+      duration_ms: 74.630043
+      type: 'test'
+      location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:11'
+      failureType: 'testCodeFailure'
+      error: |-
+        Different exact numeric customer values must not be delivered as charged no-change
+        
+        false !== true
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: 'strictEqual'
+      stack: |-
+        file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:234:16
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:50:11)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async check (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:3)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:222:7)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: F6.raw.signed-zero-equivalent
+    ok 10 - F6.raw.signed-zero-equivalent
+      ---
+      duration_ms: 60.781213
+      type: 'test'
+      ...
+    # Subtest: F6.raw.decimal-spelling-equivalent
+    ok 11 - F6.raw.decimal-spelling-equivalent
+      ---
+      duration_ms: 63.649735
+      type: 'test'
+      ...
+    # Subtest: F6.reject.1e400
+    ok 12 - F6.reject.1e400
+      ---
+      duration_ms: 5.426244
+      type: 'test'
+      ...
+    # Subtest: F6.reject.1.7976931348623159e308
+    ok 13 - F6.reject.1.7976931348623159e308
+      ---
+      duration_ms: 3.721012
+      type: 'test'
+      ...
+    # Subtest: F6.reject."1"
+    ok 14 - F6.reject."1"
+      ---
+      duration_ms: 3.657521
+      type: 'test'
+      ...
+    # Subtest: F6.reject.null
+    ok 15 - F6.reject.null
+      ---
+      duration_ms: 2.486468
+      type: 'test'
+      ...
+    # Subtest: F6.reject.true
+    ok 16 - F6.reject.true
+      ---
+      duration_ms: 4.37341
+      type: 'test'
+      ...
+    # Subtest: F6.reject.NaN
+    ok 17 - F6.reject.NaN
+      ---
+      duration_ms: 3.708194
+      type: 'test'
+      ...
+    # Subtest: F6.reject.Infinity
+    ok 18 - F6.reject.Infinity
+      ---
+      duration_ms: 1.932845
+      type: 'test'
+      ...
+    # Subtest: F6.maintained-client.integer-collapse
+    not ok 19 - F6.maintained-client.integer-collapse
+      ---
+      duration_ms: 89.472757
+      type: 'test'
+      location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:11'
+      failureType: 'testCodeFailure'
+      error: 'Maintained client accepted a charged no-change for different exact customer numeric values'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:278:16
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:50:11)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async check (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:3)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:251:7)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: F6.maintained-client.decimal-collapse
+    not ok 20 - F6.maintained-client.decimal-collapse
+      ---
+      duration_ms: 83.384016
+      type: 'test'
+      location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:11'
+      failureType: 'testCodeFailure'
+      error: 'Maintained client accepted a charged no-change for different exact customer numeric values'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:278:16
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:50:11)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async check (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:3)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:251:7)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: F6.maintained-client.decimal-distinct
+    ok 21 - F6.maintained-client.decimal-distinct
+      ---
+      duration_ms: 72.804559
+      type: 'test'
+      ...
+    # Subtest: F6.network-boundary
+    ok 22 - F6.network-boundary
+      ---
+      duration_ms: 0.362324
+      type: 'test'
+      ...
+    1..22
+not ok 2 - F6 actual HTTP and maintained customer numeric admission
+  ---
+  duration_ms: 3154.70515
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:200:1'
+  failureType: 'subtestsFailed'
+  error: '6 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: F7 live operation metadata, MCP construction and signed route coverage
+    # Subtest: F7.runtime-x402-only
+    ok 1 - F7.runtime-x402-only
+      ---
+      duration_ms: 22.635467
+      type: 'test'
+      ...
+    # Subtest: F7.openapi-catalog-effects
+    ok 2 - F7.openapi-catalog-effects
+      ---
+      duration_ms: 21.941476
+      type: 'test'
+      ...
+    # Subtest: F7.purchase-evidence-per-operation
+    not ok 3 - F7.purchase-evidence-per-operation
+      ---
+      duration_ms: 4.728483
+      type: 'test'
+      location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:11'
+      failureType: 'testCodeFailure'
+      error: |-
+        x402-only operation advertises MPP receipt/replay
+        + actual - expected
+        
+          {
+        +   receiptMpp: true,
+        +   replayMpp: true
+        -   receiptMpp: false,
+        -   replayMpp: false
+          }
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected:
+        receiptMpp: false
+        replayMpp: false
+      actual:
+        receiptMpp: true
+        replayMpp: true
+      operator: 'deepStrictEqual'
+      stack: |-
+        file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:317:14
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:50:11)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async check (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:3)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:312:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: F7.a2a-per-operation-protocols
+    not ok 4 - F7.a2a-per-operation-protocols
+      ---
+      duration_ms: 6.105189
+      type: 'test'
+      location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:11'
+      failureType: 'testCodeFailure'
+      error: |-
+        x402-only vendor A2A skill advertises mpp tag
+        
+        true !== false
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: false
+      actual: true
+      operator: 'strictEqual'
+      stack: |-
+        file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:325:14
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:50:11)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async check (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:3)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:320:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: F7.mcp-zod-constructability
+    ok 5 - F7.mcp-zod-constructability
+      ---
+      duration_ms: 682.739942
+      type: 'test'
+      ...
+    # Subtest: F7.mcp-synthetic-paid-roundtrip
+    ok 6 - F7.mcp-synthetic-paid-roundtrip
+      ---
+      duration_ms: 81.214458
+      type: 'test'
+      ...
+    # Subtest: F7.mcp-unpaid-challenge-delivery
+    ok 7 - F7.mcp-unpaid-challenge-delivery
+      ---
+      duration_ms: 22.455171
+      type: 'test'
+      ...
+    # Subtest: F7.mcp-schema-admission-parity
+    not ok 8 - F7.mcp-schema-admission-parity
+      ---
+      duration_ms: 29.999166
+      type: 'test'
+      location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:11'
+      failureType: 'testCodeFailure'
+      error: |-
+        Advertised MCP input schema admits missing rows that HTTP rejects
+        
+        true !== false
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: false
+      actual: true
+      operator: 'strictEqual'
+      stack: |-
+        file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:387:16
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:50:11)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async check (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:3)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:377:7)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: F7.deployment-attestation-exact-route
+    not ok 9 - F7.deployment-attestation-exact-route
+      ---
+      duration_ms: 18.553331
+      type: 'test'
+      location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:11'
+      failureType: 'testCodeFailure'
+      error: |-
+        Vendor route is absent from published signed deployment coverage
+        + actual - expected
+        
+        + undefined
+        - 'verified_exact_binding'
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 'verified_exact_binding'
+      operator: 'strictEqual'
+      stack: |-
+        file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:407:14
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:50:11)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async check (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:47:3)
+        async TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:390:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    1..9
+not ok 3 - F7 live operation metadata, MCP construction and signed route coverage
+  ---
+  duration_ms: 3149.238
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/regressions.test.mjs:290:1'
+  failureType: 'subtestsFailed'
+  error: '4 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# CW42 receipt: /workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/r2-baseline.json; 27 passed, 14 failed
+1..3
+# tests 44
+# suites 0
+# pass 27
+# fail 17
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 22627.300994

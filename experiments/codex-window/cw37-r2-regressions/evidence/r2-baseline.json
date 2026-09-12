@@ -1,0 +1,1931 @@
+{
+  "schema": "cw42.merchant-regression.v1",
+  "checkout": "/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src",
+  "sourceHead": "79229d0caf9bd5a1f20dd8cdb46d286722721d17",
+  "sourceDigest": "d655678c7d7f4385d6c104a2319521957ed86c576a9397b64dec07654e64e70a",
+  "sourceDigestScope": "git tracked files except experiments; current bytes, not just HEAD",
+  "trackedStatus": "",
+  "harnessHead": "79229d0caf9bd5a1f20dd8cdb46d286722721d17",
+  "harnessDigest": "a59c33c4db1eb1ce1bd9af8f2e375b921cd34e2f7bd2e8161b8374ffe6e5644b",
+  "node": "v22.23.2",
+  "startedAt": "2026-09-12T06:50:08.802Z",
+  "packages": {
+    "zod": "3.25.76",
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "@x402/fetch": "2.16.0",
+    "agent-payment-policy": "0.12.0"
+  },
+  "boundaries": {
+    "workers": 1,
+    "nodeHeapMiB": 768,
+    "port": 55543,
+    "realSigning": false,
+    "realPayment": false,
+    "realFacilitator": false,
+    "evidenceClass": "self-authored local regression; synthetic settlement only"
+  },
+  "finishedAt": "2026-09-12T06:50:31.228Z",
+  "sourceUnchanged": true,
+  "sourceHeadAfter": "79229d0caf9bd5a1f20dd8cdb46d286722721d17",
+  "remainingOwnedChildren": 0,
+  "checks": [
+    {
+      "id": "F5.unset.clean",
+      "passed": true,
+      "witness": {
+        "flag": "unset",
+        "perturbation": "clean",
+        "ready": true,
+        "statuses": {
+          "health": 200,
+          "incumbent": 402,
+          "vendor": 404
+        }
+      }
+    },
+    {
+      "id": "F5.unset.malformed-price",
+      "passed": false,
+      "witness": {
+        "flag": "unset",
+        "perturbation": "malformed-price",
+        "ready": false,
+        "startupError": "file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact-config.mjs:53\n  if (!match) throw new Error(\"VENDOR_BUDGET_IMPACT_PRICE must be a USDC amount such as $0.005\");\n                    ^\n\nError: VENDOR_BUDGET_IMPACT_PRICE must be a USDC amount such as $0.005\n    at parsePriceUsd (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact-config.mjs:53:21)\n    at vendorBudgetImpactPrice (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact-config.mjs:70:18)\n    at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact-config.mjs:78:43\n    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v22.23.2\n"
+      },
+      "error": "Dormant vendor state must not prevent incumbent server boot\n\nfalse !== true\n"
+    },
+    {
+      "id": "F5.unset.malformed-limit",
+      "passed": true,
+      "witness": {
+        "flag": "unset",
+        "perturbation": "malformed-limit",
+        "ready": true,
+        "statuses": {
+          "health": 200,
+          "incumbent": 402,
+          "vendor": 404
+        }
+      }
+    },
+    {
+      "id": "F5.unset.malformed-all-limits",
+      "passed": true,
+      "witness": {
+        "flag": "unset",
+        "perturbation": "malformed-all-limits",
+        "ready": true,
+        "statuses": {
+          "health": 200,
+          "incumbent": 402,
+          "vendor": 404
+        }
+      }
+    },
+    {
+      "id": "F5.unset.missing-discovery-fixture",
+      "passed": false,
+      "witness": {
+        "flag": "unset",
+        "perturbation": "missing-discovery-fixture",
+        "omittedFile": "vendor/vendor-budget-impact/fixtures/caller/before.json",
+        "ready": false,
+        "startupError": "node:fs:440\n    return binding.readFileUtf8(path, stringToFlags(options.flag));\n                   ^\n\nError: ENOENT: no such file or directory, open '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/runtime/run-7lJAyv/missing-fixture/vendor/vendor-budget-impact/fixtures/caller/before.json'\n    at readFileSync (node:fs:440:20)\n    at readVendorFixture (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/runtime/run-7lJAyv/missing-fixture/vendor-budget-impact.mjs:81:35)\n    at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/runtime/run-7lJAyv/missing-fixture/vendor-budget-impact.mjs:83:24\n    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {\n  errno: -2,\n  code: 'ENOENT',\n  syscall: 'open',\n  path: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/runtime/run-7lJAyv/missing-fixture/vendor/vendor-budget-impact/fixtures/caller/before.json'\n}\n\nNode.js v22.23.2\n"
+      },
+      "error": "Dormant vendor state must not prevent incumbent server boot\n\nfalse !== true\n"
+    },
+    {
+      "id": "F5.0.clean",
+      "passed": true,
+      "witness": {
+        "flag": "0",
+        "perturbation": "clean",
+        "ready": true,
+        "statuses": {
+          "health": 200,
+          "incumbent": 402,
+          "vendor": 404
+        }
+      }
+    },
+    {
+      "id": "F5.0.malformed-price",
+      "passed": false,
+      "witness": {
+        "flag": "0",
+        "perturbation": "malformed-price",
+        "ready": false,
+        "startupError": "file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact-config.mjs:53\n  if (!match) throw new Error(\"VENDOR_BUDGET_IMPACT_PRICE must be a USDC amount such as $0.005\");\n                    ^\n\nError: VENDOR_BUDGET_IMPACT_PRICE must be a USDC amount such as $0.005\n    at parsePriceUsd (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact-config.mjs:53:21)\n    at vendorBudgetImpactPrice (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact-config.mjs:70:18)\n    at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact-config.mjs:78:43\n    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v22.23.2\n"
+      },
+      "error": "Dormant vendor state must not prevent incumbent server boot\n\nfalse !== true\n"
+    },
+    {
+      "id": "F5.0.malformed-limit",
+      "passed": true,
+      "witness": {
+        "flag": "0",
+        "perturbation": "malformed-limit",
+        "ready": true,
+        "statuses": {
+          "health": 200,
+          "incumbent": 402,
+          "vendor": 404
+        }
+      }
+    },
+    {
+      "id": "F5.0.malformed-all-limits",
+      "passed": true,
+      "witness": {
+        "flag": "0",
+        "perturbation": "malformed-all-limits",
+        "ready": true,
+        "statuses": {
+          "health": 200,
+          "incumbent": 402,
+          "vendor": 404
+        }
+      }
+    },
+    {
+      "id": "F5.0.missing-discovery-fixture",
+      "passed": false,
+      "witness": {
+        "flag": "0",
+        "perturbation": "missing-discovery-fixture",
+        "omittedFile": "vendor/vendor-budget-impact/fixtures/caller/before.json",
+        "ready": false,
+        "startupError": "node:fs:440\n    return binding.readFileUtf8(path, stringToFlags(options.flag));\n                   ^\n\nError: ENOENT: no such file or directory, open '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/runtime/run-7lJAyv/missing-fixture/vendor/vendor-budget-impact/fixtures/caller/before.json'\n    at readFileSync (node:fs:440:20)\n    at readVendorFixture (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/runtime/run-7lJAyv/missing-fixture/vendor-budget-impact.mjs:81:35)\n    at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/runtime/run-7lJAyv/missing-fixture/vendor-budget-impact.mjs:83:24\n    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {\n  errno: -2,\n  code: 'ENOENT',\n  syscall: 'open',\n  path: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/experiments/codex-window/cw37-r2-regressions/runtime/run-7lJAyv/missing-fixture/vendor/vendor-budget-impact/fixtures/caller/before.json'\n}\n\nNode.js v22.23.2\n"
+      },
+      "error": "Dormant vendor state must not prevent incumbent server boot\n\nfalse !== true\n"
+    },
+    {
+      "id": "F6.raw.safe-boundary-distinct",
+      "passed": true,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740991,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740992,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          9007199254740991,
+          9007199254740992
+        ],
+        "mathematicallyDifferent": true,
+        "unpaidStatus": 402,
+        "syntheticPaid": {
+          "httpStatus": 200,
+          "ok": true,
+          "charged": true,
+          "analysis": "actionable",
+          "transport": "ok",
+          "digest": "036f553b64038fa4be9221555be21eb4e99ec9420e0066ffeb75301ec4821129",
+          "fieldChanges": [
+            {
+              "fieldKey": "price",
+              "beforeValue": 9007199254740991,
+              "afterValue": 9007199254740992,
+              "unit": "USD/unit"
+            }
+          ],
+          "counts": {
+            "beforeRows": 1,
+            "afterRows": 1,
+            "added": 0,
+            "removed": 0,
+            "fieldChanges": 1,
+            "unitChanges": 0,
+            "conflicting": 0,
+            "unchanged": 0,
+            "unknown": 0
+          },
+          "actions": [
+            {
+              "priority": "medium",
+              "kind": "review-price-field",
+              "fieldKey": "price",
+              "beforeValue": 9007199254740991,
+              "afterValue": 9007199254740992,
+              "unit": "USD/unit",
+              "delta": 1,
+              "note": "Same-unit list-price field change in supplied snapshots. Delta is after minus before per stated unit, not a bill change or live quote."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "F6.raw.integer-collapse",
+      "passed": false,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740992,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740993,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          9007199254740992,
+          9007199254740992
+        ],
+        "mathematicallyDifferent": true,
+        "unpaidStatus": 402,
+        "syntheticPaid": {
+          "httpStatus": 200,
+          "ok": true,
+          "charged": true,
+          "analysis": "informational",
+          "transport": "ok",
+          "digest": "85b3414a48df51f4cab8b910c0fb31fba819c0afbb02603a7e35ead8e2c3c8b4",
+          "fieldChanges": [],
+          "counts": {
+            "beforeRows": 1,
+            "afterRows": 1,
+            "added": 0,
+            "removed": 0,
+            "fieldChanges": 0,
+            "unitChanges": 0,
+            "conflicting": 0,
+            "unchanged": 1,
+            "unknown": 0
+          },
+          "actions": [
+            {
+              "priority": "low",
+              "kind": "no-budget-delta",
+              "note": "No row deltas detected in supplied snapshots. This does not establish an unchanged bill."
+            }
+          ]
+        }
+      },
+      "error": "Different exact numeric customer values must not be delivered as charged no-change\n\nfalse !== true\n"
+    },
+    {
+      "id": "F6.raw.decimal-collapse",
+      "passed": false,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0.1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":0.10000000000000001,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          0.1,
+          0.1
+        ],
+        "mathematicallyDifferent": true,
+        "unpaidStatus": 402,
+        "syntheticPaid": {
+          "httpStatus": 200,
+          "ok": true,
+          "charged": true,
+          "analysis": "informational",
+          "transport": "ok",
+          "digest": "85b3414a48df51f4cab8b910c0fb31fba819c0afbb02603a7e35ead8e2c3c8b4",
+          "fieldChanges": [],
+          "counts": {
+            "beforeRows": 1,
+            "afterRows": 1,
+            "added": 0,
+            "removed": 0,
+            "fieldChanges": 0,
+            "unitChanges": 0,
+            "conflicting": 0,
+            "unchanged": 1,
+            "unknown": 0
+          },
+          "actions": [
+            {
+              "priority": "low",
+              "kind": "no-budget-delta",
+              "note": "No row deltas detected in supplied snapshots. This does not establish an unchanged bill."
+            }
+          ]
+        }
+      },
+      "error": "Different exact numeric customer values must not be delivered as charged no-change\n\nfalse !== true\n"
+    },
+    {
+      "id": "F6.raw.decimal-distinct",
+      "passed": true,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0.1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":0.10000000000000002,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          0.1,
+          0.10000000000000002
+        ],
+        "mathematicallyDifferent": true,
+        "unpaidStatus": 402,
+        "syntheticPaid": {
+          "httpStatus": 200,
+          "ok": true,
+          "charged": true,
+          "analysis": "actionable",
+          "transport": "ok",
+          "digest": "76da7eed957e8f62119792fed042dce77685c0c8e556fb3759e9887af2b9bf06",
+          "fieldChanges": [
+            {
+              "fieldKey": "price",
+              "beforeValue": 0.1,
+              "afterValue": 0.10000000000000002,
+              "unit": "USD/unit"
+            }
+          ],
+          "counts": {
+            "beforeRows": 1,
+            "afterRows": 1,
+            "added": 0,
+            "removed": 0,
+            "fieldChanges": 1,
+            "unitChanges": 0,
+            "conflicting": 0,
+            "unchanged": 0,
+            "unknown": 0
+          },
+          "actions": [
+            {
+              "priority": "medium",
+              "kind": "review-price-field",
+              "fieldKey": "price",
+              "beforeValue": 0.1,
+              "afterValue": 0.10000000000000002,
+              "unit": "USD/unit",
+              "delta": 1.3877787807814457e-17,
+              "note": "Same-unit list-price field change in supplied snapshots. Delta is after minus before per stated unit, not a bill change or live quote."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "F6.raw.underflow-collapse",
+      "passed": false,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":1e-400,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          0,
+          0
+        ],
+        "mathematicallyDifferent": true,
+        "unpaidStatus": 402,
+        "syntheticPaid": {
+          "httpStatus": 200,
+          "ok": true,
+          "charged": true,
+          "analysis": "informational",
+          "transport": "ok",
+          "digest": "85b3414a48df51f4cab8b910c0fb31fba819c0afbb02603a7e35ead8e2c3c8b4",
+          "fieldChanges": [],
+          "counts": {
+            "beforeRows": 1,
+            "afterRows": 1,
+            "added": 0,
+            "removed": 0,
+            "fieldChanges": 0,
+            "unitChanges": 0,
+            "conflicting": 0,
+            "unchanged": 1,
+            "unknown": 0
+          },
+          "actions": [
+            {
+              "priority": "low",
+              "kind": "no-budget-delta",
+              "note": "No row deltas detected in supplied snapshots. This does not establish an unchanged bill."
+            }
+          ]
+        }
+      },
+      "error": "Different exact numeric customer values must not be delivered as charged no-change\n\nfalse !== true\n"
+    },
+    {
+      "id": "F6.raw.subnormal-distinct",
+      "passed": true,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":5e-324,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          0,
+          5e-324
+        ],
+        "mathematicallyDifferent": true,
+        "unpaidStatus": 402,
+        "syntheticPaid": {
+          "httpStatus": 200,
+          "ok": true,
+          "charged": true,
+          "analysis": "actionable",
+          "transport": "ok",
+          "digest": "307b76963e9d113b05e10a01988752c6b6b586f2fdb35e523c535693064c8d7f",
+          "fieldChanges": [
+            {
+              "fieldKey": "price",
+              "beforeValue": 0,
+              "afterValue": 5e-324,
+              "unit": "USD/unit"
+            }
+          ],
+          "counts": {
+            "beforeRows": 1,
+            "afterRows": 1,
+            "added": 0,
+            "removed": 0,
+            "fieldChanges": 1,
+            "unitChanges": 0,
+            "conflicting": 0,
+            "unchanged": 0,
+            "unknown": 0
+          },
+          "actions": [
+            {
+              "priority": "medium",
+              "kind": "review-price-field",
+              "fieldKey": "price",
+              "beforeValue": 0,
+              "afterValue": 5e-324,
+              "unit": "USD/unit",
+              "delta": 5e-324,
+              "note": "Same-unit list-price field change in supplied snapshots. Delta is after minus before per stated unit, not a bill change or live quote."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "F6.raw.negative-finite",
+      "passed": true,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":-1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":-2,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          -1,
+          -2
+        ],
+        "mathematicallyDifferent": true,
+        "unpaidStatus": 402,
+        "syntheticPaid": {
+          "httpStatus": 200,
+          "ok": true,
+          "charged": true,
+          "analysis": "actionable",
+          "transport": "ok",
+          "digest": "bafc89dda53b19d4d9a4825463bd563c0657d366f48d324e1877bc24f9c289ce",
+          "fieldChanges": [
+            {
+              "fieldKey": "price",
+              "beforeValue": -1,
+              "afterValue": -2,
+              "unit": "USD/unit"
+            }
+          ],
+          "counts": {
+            "beforeRows": 1,
+            "afterRows": 1,
+            "added": 0,
+            "removed": 0,
+            "fieldChanges": 1,
+            "unitChanges": 0,
+            "conflicting": 0,
+            "unchanged": 0,
+            "unknown": 0
+          },
+          "actions": [
+            {
+              "priority": "medium",
+              "kind": "review-price-field",
+              "fieldKey": "price",
+              "beforeValue": -1,
+              "afterValue": -2,
+              "unit": "USD/unit",
+              "delta": -1,
+              "note": "Same-unit list-price field change in supplied snapshots. Delta is after minus before per stated unit, not a bill change or live quote."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "F6.raw.finite-maximum",
+      "passed": true,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":1e308,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":1.7976931348623157e308,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          1e+308,
+          1.7976931348623157e+308
+        ],
+        "mathematicallyDifferent": true,
+        "unpaidStatus": 402,
+        "syntheticPaid": {
+          "httpStatus": 200,
+          "ok": true,
+          "charged": true,
+          "analysis": "actionable",
+          "transport": "ok",
+          "digest": "3eeb1a1223da5c4a55cce688d410b46c1516c78d159487065249d9569d85f597",
+          "fieldChanges": [
+            {
+              "fieldKey": "price",
+              "beforeValue": 1e+308,
+              "afterValue": 1.7976931348623157e+308,
+              "unit": "USD/unit"
+            }
+          ],
+          "counts": {
+            "beforeRows": 1,
+            "afterRows": 1,
+            "added": 0,
+            "removed": 0,
+            "fieldChanges": 1,
+            "unitChanges": 0,
+            "conflicting": 0,
+            "unchanged": 0,
+            "unknown": 0
+          },
+          "actions": [
+            {
+              "priority": "medium",
+              "kind": "review-price-field",
+              "fieldKey": "price",
+              "beforeValue": 1e+308,
+              "afterValue": 1.7976931348623157e+308,
+              "unit": "USD/unit",
+              "delta": 7.976931348623157e+307,
+              "note": "Same-unit list-price field change in supplied snapshots. Delta is after minus before per stated unit, not a bill change or live quote."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "F6.raw.overflow-rounds-finite-collapse",
+      "passed": false,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":1.7976931348623157e308,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":1.7976931348623158e308,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          1.7976931348623157e+308,
+          1.7976931348623157e+308
+        ],
+        "mathematicallyDifferent": true,
+        "unpaidStatus": 402,
+        "syntheticPaid": {
+          "httpStatus": 200,
+          "ok": true,
+          "charged": true,
+          "analysis": "informational",
+          "transport": "ok",
+          "digest": "85b3414a48df51f4cab8b910c0fb31fba819c0afbb02603a7e35ead8e2c3c8b4",
+          "fieldChanges": [],
+          "counts": {
+            "beforeRows": 1,
+            "afterRows": 1,
+            "added": 0,
+            "removed": 0,
+            "fieldChanges": 0,
+            "unitChanges": 0,
+            "conflicting": 0,
+            "unchanged": 1,
+            "unknown": 0
+          },
+          "actions": [
+            {
+              "priority": "low",
+              "kind": "no-budget-delta",
+              "note": "No row deltas detected in supplied snapshots. This does not establish an unchanged bill."
+            }
+          ]
+        }
+      },
+      "error": "Different exact numeric customer values must not be delivered as charged no-change\n\nfalse !== true\n"
+    },
+    {
+      "id": "F6.raw.signed-zero-equivalent",
+      "passed": true,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":-0,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":0,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          0,
+          0
+        ],
+        "mathematicallyDifferent": false,
+        "unpaidStatus": 402,
+        "syntheticPaid": {
+          "httpStatus": 200,
+          "ok": true,
+          "charged": true,
+          "analysis": "informational",
+          "transport": "ok",
+          "digest": "85b3414a48df51f4cab8b910c0fb31fba819c0afbb02603a7e35ead8e2c3c8b4",
+          "fieldChanges": [],
+          "counts": {
+            "beforeRows": 1,
+            "afterRows": 1,
+            "added": 0,
+            "removed": 0,
+            "fieldChanges": 0,
+            "unitChanges": 0,
+            "conflicting": 0,
+            "unchanged": 1,
+            "unknown": 0
+          },
+          "actions": [
+            {
+              "priority": "low",
+              "kind": "no-budget-delta",
+              "note": "No row deltas detected in supplied snapshots. This does not establish an unchanged bill."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "F6.raw.decimal-spelling-equivalent",
+      "passed": true,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0.10,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":1e-1,\"unit\":\"USD/unit\"}]}}",
+        "parsedValues": [
+          0.1,
+          0.1
+        ],
+        "mathematicallyDifferent": false,
+        "unpaidStatus": 402,
+        "syntheticPaid": {
+          "httpStatus": 200,
+          "ok": true,
+          "charged": true,
+          "analysis": "informational",
+          "transport": "ok",
+          "digest": "85b3414a48df51f4cab8b910c0fb31fba819c0afbb02603a7e35ead8e2c3c8b4",
+          "fieldChanges": [],
+          "counts": {
+            "beforeRows": 1,
+            "afterRows": 1,
+            "added": 0,
+            "removed": 0,
+            "fieldChanges": 0,
+            "unitChanges": 0,
+            "conflicting": 0,
+            "unchanged": 1,
+            "unknown": 0
+          },
+          "actions": [
+            {
+              "priority": "low",
+              "kind": "no-budget-delta",
+              "note": "No row deltas detected in supplied snapshots. This does not establish an unchanged bill."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "F6.reject.1e400",
+      "passed": true,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":1e400,\"unit\":\"USD/unit\"}]}}",
+        "httpStatus": 400,
+        "clientError": "after row 0 value must be a finite number"
+      }
+    },
+    {
+      "id": "F6.reject.1.7976931348623159e308",
+      "passed": true,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":1.7976931348623159e308,\"unit\":\"USD/unit\"}]}}",
+        "httpStatus": 400,
+        "clientError": "after row 0 value must be a finite number"
+      }
+    },
+    {
+      "id": "F6.reject.\"1\"",
+      "passed": true,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":\"1\",\"unit\":\"USD/unit\"}]}}",
+        "httpStatus": 400,
+        "clientError": "after row 0 value must be a finite number"
+      }
+    },
+    {
+      "id": "F6.reject.null",
+      "passed": true,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":null,\"unit\":\"USD/unit\"}]}}",
+        "httpStatus": 400,
+        "clientError": "after row 0 value must be a finite number"
+      }
+    },
+    {
+      "id": "F6.reject.true",
+      "passed": true,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":true,\"unit\":\"USD/unit\"}]}}",
+        "httpStatus": 400,
+        "clientError": "after row 0 value must be a finite number"
+      }
+    },
+    {
+      "id": "F6.reject.NaN",
+      "passed": true,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":NaN,\"unit\":\"USD/unit\"}]}}",
+        "httpStatus": 400,
+        "clientError": "bodyRaw must be valid JSON"
+      }
+    },
+    {
+      "id": "F6.reject.Infinity",
+      "passed": true,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":Infinity,\"unit\":\"USD/unit\"}]}}",
+        "httpStatus": 400,
+        "clientError": "bodyRaw must be valid JSON"
+      }
+    },
+    {
+      "id": "F6.maintained-client.integer-collapse",
+      "passed": false,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740992,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740993,\"unit\":\"USD/unit\"}]}}",
+        "preflight": {
+          "httpStatus": 402,
+          "outcome": "preflight_ok",
+          "walletAccessed": false
+        },
+        "result": {
+          "outcome": "valid_delivered",
+          "message": "buyer-required output fields are present; settlement remains unverified unless the customer checks chain state separately",
+          "outputValid": true,
+          "outputDelivery": "useful",
+          "retainedBody": {
+            "httpStatus": 200,
+            "ok": true,
+            "charged": true,
+            "analysis": "informational",
+            "transport": "ok",
+            "digest": "85b3414a48df51f4cab8b910c0fb31fba819c0afbb02603a7e35ead8e2c3c8b4",
+            "fieldChanges": [],
+            "counts": {
+              "beforeRows": 1,
+              "afterRows": 1,
+              "added": 0,
+              "removed": 0,
+              "fieldChanges": 0,
+              "unitChanges": 0,
+              "conflicting": 0,
+              "unchanged": 1,
+              "unknown": 0
+            },
+            "actions": [
+              {
+                "priority": "low",
+                "kind": "no-budget-delta",
+                "note": "No row deltas detected in supplied snapshots. This does not establish an unchanged bill."
+              }
+            ]
+          }
+        },
+        "syntheticSignerCallbackCount": 1,
+        "transmitted": [
+          {
+            "method": "POST",
+            "path": "/vendor-budget-impact",
+            "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740992,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740993,\"unit\":\"USD/unit\"}]}}",
+            "syntheticPaid": false,
+            "rawBytePreserved": true
+          },
+          {
+            "method": "POST",
+            "path": "/vendor-budget-impact",
+            "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740992,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740993,\"unit\":\"USD/unit\"}]}}",
+            "syntheticPaid": false,
+            "rawBytePreserved": true
+          },
+          {
+            "method": "POST",
+            "path": "/vendor-budget-impact",
+            "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740992,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":9007199254740993,\"unit\":\"USD/unit\"}]}}",
+            "syntheticPaid": true,
+            "rawBytePreserved": true
+          }
+        ]
+      },
+      "error": "Maintained client accepted a charged no-change for different exact customer numeric values"
+    },
+    {
+      "id": "F6.maintained-client.decimal-collapse",
+      "passed": false,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0.1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":0.10000000000000001,\"unit\":\"USD/unit\"}]}}",
+        "preflight": {
+          "httpStatus": 402,
+          "outcome": "preflight_ok",
+          "walletAccessed": false
+        },
+        "result": {
+          "outcome": "valid_delivered",
+          "message": "buyer-required output fields are present; settlement remains unverified unless the customer checks chain state separately",
+          "outputValid": true,
+          "outputDelivery": "useful",
+          "retainedBody": {
+            "httpStatus": 200,
+            "ok": true,
+            "charged": true,
+            "analysis": "informational",
+            "transport": "ok",
+            "digest": "85b3414a48df51f4cab8b910c0fb31fba819c0afbb02603a7e35ead8e2c3c8b4",
+            "fieldChanges": [],
+            "counts": {
+              "beforeRows": 1,
+              "afterRows": 1,
+              "added": 0,
+              "removed": 0,
+              "fieldChanges": 0,
+              "unitChanges": 0,
+              "conflicting": 0,
+              "unchanged": 1,
+              "unknown": 0
+            },
+            "actions": [
+              {
+                "priority": "low",
+                "kind": "no-budget-delta",
+                "note": "No row deltas detected in supplied snapshots. This does not establish an unchanged bill."
+              }
+            ]
+          }
+        },
+        "syntheticSignerCallbackCount": 1,
+        "transmitted": [
+          {
+            "method": "POST",
+            "path": "/vendor-budget-impact",
+            "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0.1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":0.10000000000000001,\"unit\":\"USD/unit\"}]}}",
+            "syntheticPaid": false,
+            "rawBytePreserved": true
+          },
+          {
+            "method": "POST",
+            "path": "/vendor-budget-impact",
+            "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0.1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":0.10000000000000001,\"unit\":\"USD/unit\"}]}}",
+            "syntheticPaid": false,
+            "rawBytePreserved": true
+          },
+          {
+            "method": "POST",
+            "path": "/vendor-budget-impact",
+            "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0.1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":0.10000000000000001,\"unit\":\"USD/unit\"}]}}",
+            "syntheticPaid": true,
+            "rawBytePreserved": true
+          }
+        ]
+      },
+      "error": "Maintained client accepted a charged no-change for different exact customer numeric values"
+    },
+    {
+      "id": "F6.maintained-client.decimal-distinct",
+      "passed": true,
+      "witness": {
+        "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0.1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":0.10000000000000002,\"unit\":\"USD/unit\"}]}}",
+        "preflight": {
+          "httpStatus": 402,
+          "outcome": "preflight_ok",
+          "walletAccessed": false
+        },
+        "result": {
+          "outcome": "valid_delivered",
+          "message": "buyer-required output fields are present; settlement remains unverified unless the customer checks chain state separately",
+          "outputValid": true,
+          "outputDelivery": "useful",
+          "retainedBody": {
+            "httpStatus": 200,
+            "ok": true,
+            "charged": true,
+            "analysis": "actionable",
+            "transport": "ok",
+            "digest": "76da7eed957e8f62119792fed042dce77685c0c8e556fb3759e9887af2b9bf06",
+            "fieldChanges": [
+              {
+                "fieldKey": "price",
+                "beforeValue": 0.1,
+                "afterValue": 0.10000000000000002,
+                "unit": "USD/unit"
+              }
+            ],
+            "counts": {
+              "beforeRows": 1,
+              "afterRows": 1,
+              "added": 0,
+              "removed": 0,
+              "fieldChanges": 1,
+              "unitChanges": 0,
+              "conflicting": 0,
+              "unchanged": 0,
+              "unknown": 0
+            },
+            "actions": [
+              {
+                "priority": "medium",
+                "kind": "review-price-field",
+                "fieldKey": "price",
+                "beforeValue": 0.1,
+                "afterValue": 0.10000000000000002,
+                "unit": "USD/unit",
+                "delta": 1.3877787807814457e-17,
+                "note": "Same-unit list-price field change in supplied snapshots. Delta is after minus before per stated unit, not a bill change or live quote."
+              }
+            ]
+          }
+        },
+        "syntheticSignerCallbackCount": 1,
+        "transmitted": [
+          {
+            "method": "POST",
+            "path": "/vendor-budget-impact",
+            "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0.1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":0.10000000000000002,\"unit\":\"USD/unit\"}]}}",
+            "syntheticPaid": false,
+            "rawBytePreserved": true
+          },
+          {
+            "method": "POST",
+            "path": "/vendor-budget-impact",
+            "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0.1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":0.10000000000000002,\"unit\":\"USD/unit\"}]}}",
+            "syntheticPaid": false,
+            "rawBytePreserved": true
+          },
+          {
+            "method": "POST",
+            "path": "/vendor-budget-impact",
+            "raw": "{\"before\":{\"rows\":[{\"field\":\"price\",\"value\":0.1,\"unit\":\"USD/unit\"}]},\"after\":{\"rows\":[{\"field\":\"price\",\"value\":0.10000000000000002,\"unit\":\"USD/unit\"}]}}",
+            "syntheticPaid": true,
+            "rawBytePreserved": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "F6.network-boundary",
+      "passed": true,
+      "witness": {
+        "events": [
+          {
+            "kind": "fake-facilitator",
+            "method": "GET",
+            "path": "/supported"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "GET",
+            "path": "/supported"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/verify"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/settle"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/verify"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/settle"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/verify"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/settle"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/verify"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/settle"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/verify"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/settle"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/verify"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/settle"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/verify"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/settle"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/verify"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/settle"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/verify"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/settle"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/verify"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/settle"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/verify"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/settle"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/verify"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/settle"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/verify"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/settle"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/verify"
+          },
+          {
+            "kind": "fake-facilitator",
+            "method": "POST",
+            "path": "/settle"
+          }
+        ],
+        "realSigning": false,
+        "realSettlement": false
+      }
+    },
+    {
+      "id": "F7.runtime-x402-only",
+      "passed": true,
+      "witness": {
+        "unpaidStatus": 402,
+        "wwwAuthenticate": null,
+        "mppStatus": 400,
+        "mppBody": {
+          "ok": false,
+          "product": "samedaydesk-vendor-budget-impact",
+          "schemaVersion": "samedaydesk.vendor-budget-impact-http.v0",
+          "error": "POST /vendor-budget-impact accepts x402 only. Do not send an MPP Authorization. Retry unpaid for x402 Payment-Required.",
+          "code": "mpp_not_accepted",
+          "charged": false,
+          "analysis": "not-run",
+          "transport": "rejected",
+          "boundary": {
+            "filesystemInput": false,
+            "networkFetch": false,
+            "arbitraryCommand": false,
+            "writableCache": false,
+            "soldFlag": false,
+            "purchaseAuthority": false,
+            "liveMarketQuote": false
+          }
+        }
+      }
+    },
+    {
+      "id": "F7.openapi-catalog-effects",
+      "passed": true,
+      "witness": {
+        "paymentInfo": {
+          "price": {
+            "amount": "0.005",
+            "currency": "USD",
+            "mode": "fixed"
+          },
+          "protocols": [
+            {
+              "x402": {
+                "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                "network": "eip155:8453",
+                "scheme": "exact"
+              }
+            }
+          ]
+        },
+        "effect": {
+          "version": "0.1.0",
+          "classification": "read_only",
+          "unpaidRequest": {
+            "applicationEffects": "none",
+            "protocolStateMayBeRecorded": [
+              "payment_challenge"
+            ],
+            "telemetryPersisted": false
+          },
+          "retry": {
+            "applicationEffectAtMostOnce": "not_applicable_read_only",
+            "responseReplay": "conditional",
+            "requestBinding": [
+              "method",
+              "canonical_url",
+              "exact_raw_body_sha256",
+              "payer",
+              "payment_terms",
+              "exact_settled_credential"
+            ],
+            "x402Requirement": "payment-identifier extension",
+            "mismatchStatus": 409
+          },
+          "paymentProtocols": [
+            "x402"
+          ],
+          "profile": "/.well-known/paid-action-effects.json"
+        },
+        "catalog": {
+          "name": "vendor-budget-impact",
+          "method": "POST",
+          "route": "/vendor-budget-impact",
+          "url": "https://agents.samedaydesk.com/vendor-budget-impact",
+          "description": "Compare two caller-supplied vendor pricing-row JSON objects (rows of field, finite numeric value, and unit) and return field, unit, added, and removed budget-impact deltas. HTTP JSON only: no filesystem paths, commands, URLs, or writable caches. Identical rows are informational, not failure. Charge is the bounded compare, not a live quote, purchase, or ROI. Ordinary wallets sign through examples/customer-x402, not a precomputed signature. Initial live release accepts x402 only.",
+          "priceAtomicUsdc": "5000",
+          "priceUsdc": 0.005,
+          "paymentProtocols": [
+            "x402"
+          ],
+          "mimeType": "application/json",
+          "serviceName": "SameDayDesk",
+          "tags": [
+            "pricing",
+            "budget-impact",
+            "vendor-cost",
+            "row-delta"
+          ],
+          "iconUrl": "https://samedaydesk.com/favicon.svg",
+          "request": {
+            "method": "POST",
+            "url": "https://agents.samedaydesk.com/vendor-budget-impact",
+            "example": {
+              "type": "http",
+              "method": "POST",
+              "bodyType": "json",
+              "body": {
+                "before": {
+                  "label": "caller",
+                  "note": "Caller-supplied pricing rows. Not a SAMPLE kit fixture and not a live quote.",
+                  "rows": [
+                    {
+                      "field": "desk-chat-input",
+                      "value": 1,
+                      "unit": "USD/1M-tokens"
+                    },
+                    {
+                      "field": "desk-chat-output",
+                      "value": 4,
+                      "unit": "USD/1M-tokens"
+                    }
+                  ]
+                },
+                "after": {
+                  "label": "caller",
+                  "note": "Caller-supplied pricing rows. Not a SAMPLE kit fixture and not a live quote.",
+                  "rows": [
+                    {
+                      "field": "desk-chat-input",
+                      "value": 1.5,
+                      "unit": "USD/1M-tokens"
+                    },
+                    {
+                      "field": "desk-chat-output",
+                      "value": 6,
+                      "unit": "USD/1M-tokens"
+                    },
+                    {
+                      "field": "desk-embed",
+                      "value": 0.12,
+                      "unit": "USD/1M-tokens"
+                    }
+                  ]
+                }
+              }
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "http"
+                },
+                "method": {
+                  "type": "string",
+                  "enum": [
+                    "POST",
+                    "PUT",
+                    "PATCH"
+                  ]
+                },
+                "bodyType": {
+                  "type": "string",
+                  "enum": [
+                    "json",
+                    "form-data",
+                    "text"
+                  ]
+                },
+                "body": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "before",
+                    "after"
+                  ],
+                  "properties": {
+                    "before": {
+                      "type": "object",
+                      "description": "Pricing-row snapshot JSON with a rows array of {field, value, unit}. Not a filesystem path, URL, or command.",
+                      "additionalProperties": false,
+                      "required": [
+                        "rows"
+                      ],
+                      "properties": {
+                        "rows": {
+                          "type": "array",
+                          "minItems": 1,
+                          "maxItems": 256,
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "field",
+                              "value",
+                              "unit"
+                            ],
+                            "properties": {
+                              "field": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "value": {
+                                "type": "number"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              }
+                            }
+                          }
+                        },
+                        "label": {
+                          "type": "string",
+                          "maxLength": 256
+                        },
+                        "note": {
+                          "type": "string",
+                          "maxLength": 256
+                        }
+                      }
+                    },
+                    "after": {
+                      "type": "object",
+                      "description": "Pricing-row snapshot JSON with a rows array of {field, value, unit}. Not a filesystem path, URL, or command.",
+                      "additionalProperties": false,
+                      "required": [
+                        "rows"
+                      ],
+                      "properties": {
+                        "rows": {
+                          "type": "array",
+                          "minItems": 1,
+                          "maxItems": 256,
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "field",
+                              "value",
+                              "unit"
+                            ],
+                            "properties": {
+                              "field": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "value": {
+                                "type": "number"
+                              },
+                              "unit": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              }
+                            }
+                          }
+                        },
+                        "label": {
+                          "type": "string",
+                          "maxLength": 256
+                        },
+                        "note": {
+                          "type": "string",
+                          "maxLength": 256
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "method",
+                "bodyType",
+                "body"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "response": {
+            "mimeType": "application/json",
+            "example": {
+              "ok": true,
+              "product": "samedaydesk-vendor-budget-impact",
+              "schemaVersion": "samedaydesk.vendor-budget-impact-http.v0",
+              "quote": {
+                "amountAtomic": "5000",
+                "displayUsdc": "0.005",
+                "meaning": "Flat USDC quote for one bounded compare of two caller-supplied pricing-row JSON objects. Default $0.005 matches live GET /extract. Charge is the compare, not a live quote, purchase, or proven margin. Pay with x402; MPP is not accepted on this route. Ordinary buyers inspect and approve through examples/customer-x402, not a precomputed signature."
+              },
+              "charged": true,
+              "analysis": "actionable",
+              "transport": "ok",
+              "engine": {
+                "schema": "samedaydesk.vendor-budget-impact.v1",
+                "appId": "vendor-budget-impact",
+                "ok": true,
+                "status": "actionable",
+                "purchaseAuthority": false,
+                "paidValueClaim": false,
+                "settlement": "nonsettling-prototype",
+                "summary": "Budget-impact scan: fieldChanges=2 unitChanges=0 added=1 removed=0 conflicting=0 unknown=0",
+                "actions": [
+                  {
+                    "priority": "medium",
+                    "kind": "review-price-field",
+                    "fieldKey": "desk-chat-input",
+                    "beforeValue": 1,
+                    "afterValue": 1.5,
+                    "unit": "USD/1M-tokens",
+                    "delta": 0.5,
+                    "note": "Same-unit list-price field change in supplied snapshots. Delta is after minus before per stated unit, not a bill change or live quote."
+                  },
+                  {
+                    "priority": "medium",
+                    "kind": "review-price-field",
+                    "fieldKey": "desk-chat-output",
+                    "beforeValue": 4,
+                    "afterValue": 6,
+                    "unit": "USD/1M-tokens",
+                    "delta": 2,
+                    "note": "Same-unit list-price field change in supplied snapshots. Delta is after minus before per stated unit, not a bill change or live quote."
+                  },
+                  {
+                    "priority": "medium",
+                    "kind": "review-added-price-field",
+                    "fieldKey": "desk-embed",
+                    "afterValue": 0.12,
+                    "unit": "USD/1M-tokens",
+                    "note": "Field appears in the after snapshot. Check source coverage and SKU identity; this does not establish a new vendor offering, a replacement, or a bill increase."
+                  }
+                ],
+                "gaps": [],
+                "scope": {
+                  "kind": "supplied-pricing-row-diff",
+                  "billCalculation": false,
+                  "liveQuote": false,
+                  "unitsConverted": false,
+                  "sourceCoverageVerified": false,
+                  "note": "Caller supplies dated snapshots with stable field identity and comparable units. Actual usage and all tariff terms are required for a bill estimate."
+                },
+                "counts": {
+                  "beforeRows": 2,
+                  "afterRows": 3,
+                  "added": 1,
+                  "removed": 0,
+                  "fieldChanges": 2,
+                  "unitChanges": 0,
+                  "conflicting": 0,
+                  "unchanged": 0,
+                  "unknown": 0
+                },
+                "added": [
+                  {
+                    "fieldKey": "desk-embed",
+                    "after": {
+                      "field": "desk-embed",
+                      "fieldKey": "desk-embed",
+                      "value": 0.12,
+                      "unit": "USD/1M-tokens",
+                      "unitKey": "USD/1M-tokens"
+                    }
+                  }
+                ],
+                "removed": [],
+                "fieldChanges": [
+                  {
+                    "fieldKey": "desk-chat-input",
+                    "beforeValue": 1,
+                    "afterValue": 1.5,
+                    "unit": "USD/1M-tokens"
+                  },
+                  {
+                    "fieldKey": "desk-chat-output",
+                    "beforeValue": 4,
+                    "afterValue": 6,
+                    "unit": "USD/1M-tokens"
+                  }
+                ],
+                "unitChanges": [],
+                "conflicting": [],
+                "unknown": []
+              },
+              "markdown": "# Vendor budget impact (no purchase authority)\n\nStatus: **actionable**\n\nBudget-impact scan: fieldChanges=2 unitChanges=0 added=1 removed=0 conflicting=0 unknown=0\n\n## Recommended reviews\n- (medium) review-price-field: `desk-chat-input` - Same-unit list-price field change in supplied snapshots. Delta is after minus before per stated unit, not a bill change or live quote.\n- (medium) review-price-field: `desk-chat-output` - Same-unit list-price field change in supplied snapshots. Delta is after minus before per stated unit, not a bill change or live quote.\n- (medium) review-added-price-field: `desk-embed` - Field appears in the after snapshot. Check source coverage and SKU identity; this does not establish a new vendor offering, a replacement, or a bill increase.\n\ndesk-chat-input: before=1; after=1.5; unit=USD/1M-tokens.\nList-price delta per stated unit: 0.5 (after minus before).\n\ndesk-chat-output: before=4; after=6; unit=USD/1M-tokens.\nList-price delta per stated unit: 2 (after minus before).\n\ndesk-embed: after=0.12; unit=USD/1M-tokens.\n\n_Supplied pricing rows only. No live quote, unit conversion, bill calculation, or customer-demand evidence._\n",
+              "markdownOmitted": false,
+              "digest": "4deaa8a640fc877b5b20773a00483f188c268d97067d4813b38584a5d1f74826",
+              "engineProvenance": {
+                "repo": "epistemedeus/samedaydesk",
+                "sha": "b23260e6a2b74452075f73da1631da24d8ae6906",
+                "path": "experiments/s134-record-jobs/modules/pricing-table-change/",
+                "catalogSha": "dacb9950ef3e1ffcf9151c30324fe1f1cb209e19",
+                "mappingSha": "485a5023843f27bb920ad2a26ad0631fa1bbb4bd",
+                "mappingPath": "server/paid-useful-jobs/release/apps/vendor-budget-impact/cli.mjs",
+                "archiveSha256": "2b1949189f0ad2e3c1bd5f7a43f7eda800fd5f0dc3a395415689feee0419ff4f"
+              },
+              "costInputs": {
+                "admittedBodyBytes": 400,
+                "wallMs": 4,
+                "hostingCosts": "unknown",
+                "facilitatorFees": "unknown",
+                "modelCosts": "none",
+                "liveExtractPriceUsd": "0.005",
+                "monetaryMargin": null,
+                "note": "Default price matches live GET /extract $0.005. Margin is not proven."
+              },
+              "boundary": {
+                "filesystemInput": false,
+                "networkFetch": false,
+                "arbitraryCommand": false,
+                "writableCache": false,
+                "soldFlag": false,
+                "purchaseAuthority": false,
+                "liveMarketQuote": false
+              },
+              "limits": {
+                "maxRequestBytes": 65536,
+                "maxSnapshotBytes": 32768,
+                "timeoutMs": 5000,
+                "maxRows": 256
+              }
+            },
+            "schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "ok",
+                "product",
+                "schemaVersion",
+                "quote",
+                "charged",
+                "analysis",
+                "transport",
+                "engine",
+                "digest",
+                "engineProvenance",
+                "costInputs",
+                "boundary",
+                "limits"
+              ],
+              "properties": {
+                "ok": {
+                  "type": "boolean"
+                },
+                "product": {
+                  "type": "string",
+                  "const": "samedaydesk-vendor-budget-impact"
+                },
+                "schemaVersion": {
+                  "type": "string",
+                  "const": "samedaydesk.vendor-budget-impact-http.v0"
+                },
+                "quote": {
+                  "type": "object",
+                  "required": [
+                    "amountAtomic",
+                    "displayUsdc",
+                    "meaning"
+                  ],
+                  "properties": {
+                    "amountAtomic": {
+                      "type": "string"
+                    },
+                    "displayUsdc": {
+                      "type": "string"
+                    },
+                    "meaning": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "charged": {
+                  "type": "boolean"
+                },
+                "analysis": {
+                  "type": "string",
+                  "enum": [
+                    "actionable",
+                    "informational",
+                    "partial",
+                    "not-run"
+                  ]
+                },
+                "transport": {
+                  "type": "string",
+                  "enum": [
+                    "ok",
+                    "timeout",
+                    "engine-crash",
+                    "internal-error",
+                    "rejected",
+                    "busy"
+                  ]
+                },
+                "engine": {
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
+                "markdown": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "markdownOmitted": {
+                  "type": "boolean"
+                },
+                "digest": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "engineProvenance": {
+                  "type": "object"
+                },
+                "costInputs": {
+                  "type": "object"
+                },
+                "boundary": {
+                  "type": "object"
+                },
+                "limits": {
+                  "type": "object"
+                },
+                "error": {
+                  "type": "string"
+                },
+                "owedDelivery": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "mppAdvertised": false
+      }
+    },
+    {
+      "id": "F7.purchase-evidence-per-operation",
+      "passed": false,
+      "witness": {
+        "operation": {
+          "method": "POST",
+          "path": "/vendor-budget-impact",
+          "effect": "read_only",
+          "output": {
+            "mediaType": "application/json",
+            "schemaDigest": "sha256:92d776e67e7b3f3f913391f61b502593c315f810d71261d9a5ae5d15d759ff8c",
+            "requiredPaths": [
+              "analysis",
+              "boundary",
+              "charged",
+              "costInputs",
+              "digest",
+              "engine",
+              "engineProvenance",
+              "limits",
+              "ok",
+              "product",
+              "quote",
+              "quote.amountAtomic",
+              "quote.displayUsdc",
+              "quote.meaning",
+              "schemaVersion",
+              "transport"
+            ],
+            "declaration": "seller_declared"
+          },
+          "replay": {
+            "responseReplay": "conditional",
+            "ttlSeconds": 900,
+            "mismatchStatus": 409,
+            "x402Requirement": "payment-identifier",
+            "mppRequirement": "exact_settled_credential",
+            "requestBinding": [
+              "method",
+              "canonical_url",
+              "exact_raw_body_sha256",
+              "payer",
+              "payment_terms",
+              "exact_settled_credential"
+            ]
+          },
+          "receipt": {
+            "x402": "PAYMENT-RESPONSE with signed offer-receipt extension and settlement reference",
+            "mpp": "Payment-Receipt",
+            "runtimeValidationRequired": true
+          }
+        },
+        "evidence": {
+          "serviceDeploymentStatement": "/.well-known/agent-payment-policy-service-deployment.json",
+          "serviceDeploymentPublicKey": "/.well-known/agent-payment-policy-service-deployment.pem",
+          "serviceDeploymentStatementId": "sha256:5fa167601ebb462f59b4437604fcbcfb8586a77c2adbf29f8ba93eb8c42fd35e",
+          "serviceDeploymentExpiresAt": "2026-10-07T22:17:39.273Z",
+          "paidActionEffects": "/.well-known/paid-action-effects.json"
+        }
+      },
+      "error": "x402-only operation advertises MPP receipt/replay\n+ actual - expected\n\n  {\n+   receiptMpp: true,\n+   replayMpp: true\n-   receiptMpp: false,\n-   replayMpp: false\n  }\n"
+    },
+    {
+      "id": "F7.a2a-per-operation-protocols",
+      "passed": false,
+      "witness": {
+        "httpStatus": 200,
+        "skill": {
+          "id": "discover-paid-action-vendor-budget-impact",
+          "name": "Discover paid action /vendor-budget-impact",
+          "description": "Discover the direct /vendor-budget-impact machine-paid action, its 5000 atomic USDC price, and x402/MPP invocation contract. Discovery only; invoke the returned exact request directly.",
+          "tags": [
+            "x402",
+            "mpp",
+            "paid-action",
+            "discovery",
+            "pricing",
+            "budget-impact",
+            "vendor-cost",
+            "row-delta"
+          ],
+          "examples": [
+            "Find the /vendor-budget-impact paid action and its exact current price."
+          ],
+          "inputModes": [
+            "text/plain",
+            "application/json"
+          ],
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      },
+      "error": "x402-only vendor A2A skill advertises mpp tag\n\ntrue !== false\n"
+    },
+    {
+      "id": "F7.mcp-zod-constructability",
+      "passed": true,
+      "witness": {
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "before": {
+              "type": "object",
+              "additionalProperties": {},
+              "description": "Pricing-row JSON object with a rows array of {field, value, unit}. Not a filesystem path, URL, or command."
+            },
+            "after": {
+              "type": "object",
+              "additionalProperties": {},
+              "description": "Pricing-row JSON object with a rows array of {field, value, unit}. Not a filesystem path, URL, or command."
+            }
+          },
+          "required": [
+            "before",
+            "after"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchemaConstructed": true,
+        "acceptsValid": true,
+        "zodVersion": "3.25.76",
+        "actualExportedZodOutputAcceptsSyntheticPaidResponse": true
+      }
+    },
+    {
+      "id": "F7.mcp-synthetic-paid-roundtrip",
+      "passed": true,
+      "witness": {
+        "isError": false,
+        "response": {
+          "httpStatus": 200,
+          "ok": true,
+          "charged": true,
+          "analysis": "actionable",
+          "transport": "ok",
+          "digest": "c87dbea98cfc64f62e5e7ba5813b69ca2848dc395ff38ec65cc3e36ec9b4085a",
+          "fieldChanges": [
+            {
+              "fieldKey": "price",
+              "beforeValue": 1,
+              "afterValue": 2,
+              "unit": "USD/unit"
+            }
+          ],
+          "counts": {
+            "beforeRows": 1,
+            "afterRows": 1,
+            "added": 0,
+            "removed": 0,
+            "fieldChanges": 1,
+            "unitChanges": 0,
+            "conflicting": 0,
+            "unchanged": 0,
+            "unknown": 0
+          },
+          "actions": [
+            {
+              "priority": "medium",
+              "kind": "review-price-field",
+              "fieldKey": "price",
+              "beforeValue": 1,
+              "afterValue": 2,
+              "unit": "USD/unit",
+              "delta": 1,
+              "note": "Same-unit list-price field change in supplied snapshots. Delta is after minus before per stated unit, not a bill change or live quote."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "F7.mcp-unpaid-challenge-delivery",
+      "passed": true,
+      "witness": {
+        "call": {
+          "_meta": {
+            "samedaydesk/http": {
+              "resource": "https://agents.samedaydesk.com/vendor-budget-impact",
+              "status": 402,
+              "headers": {
+                "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwiZXJyb3IiOiJQYXltZW50IHJlcXVpcmVkIiwicmVzb3VyY2UiOnsidXJsIjoiaHR0cHM6Ly9hZ2VudHMuc2FtZWRheWRlc2suY29tL3ZlbmRvci1idWRnZXQtaW1wYWN0IiwiZGVzY3JpcHRpb24iOiJDb21wYXJlIHR3byBjYWxsZXItc3VwcGxpZWQgdmVuZG9yIHByaWNpbmctcm93IEpTT04gb2JqZWN0cyAocm93cyBvZiBmaWVsZCwgZmluaXRlIG51bWVyaWMgdmFsdWUsIGFuZCB1bml0KSBhbmQgcmV0dXJuIGZpZWxkLCB1bml0LCBhZGRlZCwgYW5kIHJlbW92ZWQgYnVkZ2V0LWltcGFjdCBkZWx0YXMuIEhUVFAgSlNPTiBvbmx5OiBubyBmaWxlc3lzdGVtIHBhdGhzLCBjb21tYW5kcywgVVJMcywgb3Igd3JpdGFibGUgY2FjaGVzLiBJZGVudGljYWwgcm93cyBhcmUgaW5mb3JtYXRpb25hbCwgbm90IGZhaWx1cmUuIENoYXJnZSBpcyB0aGUgYm91bmRlZCBjb21wYXJlLCBub3QgYSBsaXZlIHF1b3RlLCBwdXJjaGFzZSwgb3IgUk9JLiBPcmRpbmFyeSB3YWxsZXRzIHNpZ24gdGhyb3VnaCBleGFtcGxlcy9jdXN0b21lci14NDAyLCBub3QgYSBwcmVjb21wdXRlZCBzaWduYXR1cmUuIEluaXRpYWwgbGl2ZSByZWxlYXNlIGFjY2VwdHMgeDQwMiBvbmx5LiIsIm1pbWVUeXBlIjoiYXBwbGljYXRpb24vanNvbiIsInNlcnZpY2VOYW1lIjoiU2FtZURheURlc2siLCJ0YWdzIjpbInByaWNpbmciLCJidWRnZXQtaW1wYWN0IiwidmVuZG9yLWNvc3QiLCJyb3ctZGVsdGEiXSwiaWNvblVybCI6Imh0dHBzOi8vc2FtZWRheWRlc2suY29tL2Zhdmljb24uc3ZnIn0sImFjY2VwdHMiOlt7InNjaGVtZSI6ImV4YWN0IiwibmV0d29yayI6ImVpcDE1NTo4NDUzIiwiYW1vdW50IjoiNTAwMCIsImFzc2V0IjoiMHg4MzM1ODlmQ0Q2ZURiNkUwOGY0YzdDMzJENGY3MWI1NGJkQTAyOTEzIiwicGF5VG8iOiIweDg5MDRkRjNERTZERkVlNmE3QzhjYzM4NjE5ZDJmMTc4MDYyMTNDZWUiLCJtYXhUaW1lb3V0U2Vjb25kcyI6MzAwLCJleHRyYSI6eyJuYW1lIjoiVVNEIENvaW4iLCJ2ZXJzaW9uIjoiMiJ9fV0sImV4dGVuc2lvbnMiOnsicGF5bWVudC1pZGVudGlmaWVyIjp7ImluZm8iOnsicmVxdWlyZWQiOnRydWV9LCJzY2hlbWEiOnsiJHNjaGVtYSI6Imh0dHBzOi8vanNvbi1zY2hlbWEub3JnL2RyYWZ0LzIwMjAtMTIvc2NoZW1hIiwidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsicmVxdWlyZWQiOnsidHlwZSI6ImJvb2xlYW4ifSwiaWQiOnsidHlwZSI6InN0cmluZyIsIm1pbkxlbmd0aCI6MTYsIm1heExlbmd0aCI6MTI4LCJwYXR0ZXJuIjoiXlthLXpBLVowLTlfLV0rJCJ9fSwicmVxdWlyZWQiOlsicmVxdWlyZWQiXX19LCJiYXphYXIiOnsiaW5mbyI6eyJpbnB1dCI6eyJ0eXBlIjoiaHR0cCIsIm1ldGhvZCI6IlBPU1QiLCJib2R5VHlwZSI6Impzb24iLCJib2R5Ijp7ImJlZm9yZSI6eyJsYWJlbCI6ImNhbGxlciIsIm5vdGUiOiJDYWxsZXItc3VwcGxpZWQgcHJpY2luZyByb3dzLiBOb3QgYSBTQU1QTEUga2l0IGZpeHR1cmUgYW5kIG5vdCBhIGxpdmUgcXVvdGUuIiwicm93cyI6W3siZmllbGQiOiJkZXNrLWNoYXQtaW5wdXQiLCJ2YWx1ZSI6MSwidW5pdCI6IlVTRC8xTS10b2tlbnMifSx7ImZpZWxkIjoiZGVzay1jaGF0LW91dHB1dCIsInZhbHVlIjo0LCJ1bml0IjoiVVNELzFNLXRva2VucyJ9XX0sImFmdGVyIjp7ImxhYmVsIjoiY2FsbGVyIiwibm90ZSI6IkNhbGxlci1zdXBwbGllZCBwcmljaW5nIHJvd3MuIE5vdCBhIFNBTVBMRSBraXQgZml4dHVyZSBhbmQgbm90IGEgbGl2ZSBxdW90ZS4iLCJyb3dzIjpbeyJmaWVsZCI6ImRlc2stY2hhdC1pbnB1dCIsInZhbHVlIjoxLjUsInVuaXQiOiJVU0QvMU0tdG9rZW5zIn0seyJmaWVsZCI6ImRlc2stY2hhdC1vdXRwdXQiLCJ2YWx1ZSI6NiwidW5pdCI6IlVTRC8xTS10b2tlbnMifSx7ImZpZWxkIjoiZGVzay1lbWJlZCIsInZhbHVlIjowLjEyLCJ1bml0IjoiVVNELzFNLXRva2VucyJ9XX19fSwib3V0cHV0Ijp7InR5cGUiOiJqc29uIiwiZXhhbXBsZSI6eyJvayI6dHJ1ZSwicHJvZHVjdCI6InNhbWVkYXlkZXNrLXZlbmRvci1idWRnZXQtaW1wYWN0Iiwic2NoZW1hVmVyc2lvbiI6InNhbWVkYXlkZXNrLnZlbmRvci1idWRnZXQtaW1wYWN0LWh0dHAudjAiLCJxdW90ZSI6eyJhbW91bnRBdG9taWMiOiI1MDAwIiwiZGlzcGxheVVzZGMiOiIwLjAwNSIsIm1lYW5pbmciOiJGbGF0IFVTREMgcXVvdGUgZm9yIG9uZSBib3VuZGVkIGNvbXBhcmUgb2YgdHdvIGNhbGxlci1zdXBwbGllZCBwcmljaW5nLXJvdyBKU09OIG9iamVjdHMuIERlZmF1bHQgJDAuMDA1IG1hdGNoZXMgbGl2ZSBHRVQgL2V4dHJhY3QuIENoYXJnZSBpcyB0aGUgY29tcGFyZSwgbm90IGEgbGl2ZSBxdW90ZSwgcHVyY2hhc2UsIG9yIHByb3ZlbiBtYXJnaW4uIFBheSB3aXRoIHg0MDI7IE1QUCBpcyBub3QgYWNjZXB0ZWQgb24gdGhpcyByb3V0ZS4gT3JkaW5hcnkgYnV5ZXJzIGluc3BlY3QgYW5kIGFwcHJvdmUgdGhyb3VnaCBleGFtcGxlcy9jdXN0b21lci14NDAyLCBub3QgYSBwcmVjb21wdXRlZCBzaWduYXR1cmUuIn0sImNoYXJnZWQiOnRydWUsImFuYWx5c2lzIjoiYWN0aW9uYWJsZSIsInRyYW5zcG9ydCI6Im9rIiwiZW5naW5lIjp7InNjaGVtYSI6InNhbWVkYXlkZXNrLnZlbmRvci1idWRnZXQtaW1wYWN0LnYxIiwiYXBwSWQiOiJ2ZW5kb3ItYnVkZ2V0LWltcGFjdCIsIm9rIjp0cnVlLCJzdGF0dXMiOiJhY3Rpb25hYmxlIiwicHVyY2hhc2VBdXRob3JpdHkiOmZhbHNlLCJwYWlkVmFsdWVDbGFpbSI6ZmFsc2UsInNldHRsZW1lbnQiOiJub25zZXR0bGluZy1wcm90b3R5cGUiLCJzdW1tYXJ5IjoiQnVkZ2V0LWltcGFjdCBzY2FuOiBmaWVsZENoYW5nZXM9MiB1bml0Q2hhbmdlcz0wIGFkZGVkPTEgcmVtb3ZlZD0wIGNvbmZsaWN0aW5nPTAgdW5rbm93bj0wIiwiYWN0aW9ucyI6W3sicHJpb3JpdHkiOiJtZWRpdW0iLCJraW5kIjoicmV2aWV3LXByaWNlLWZpZWxkIiwiZmllbGRLZXkiOiJkZXNrLWNoYXQtaW5wdXQiLCJiZWZvcmVWYWx1ZSI6MSwiYWZ0ZXJWYWx1ZSI6MS41LCJ1bml0IjoiVVNELzFNLXRva2VucyIsImRlbHRhIjowLjUsIm5vdGUiOiJTYW1lLXVuaXQgbGlzdC1wcmljZSBmaWVsZCBjaGFuZ2UgaW4gc3VwcGxpZWQgc25hcHNob3RzLiBEZWx0YSBpcyBhZnRlciBtaW51cyBiZWZvcmUgcGVyIHN0YXRlZCB1bml0LCBub3QgYSBiaWxsIGNoYW5nZSBvciBsaXZlIHF1b3RlLiJ9LHsicHJpb3JpdHkiOiJtZWRpdW0iLCJraW5kIjoicmV2aWV3LXByaWNlLWZpZWxkIiwiZmllbGRLZXkiOiJkZXNrLWNoYXQtb3V0cHV0IiwiYmVmb3JlVmFsdWUiOjQsImFmdGVyVmFsdWUiOjYsInVuaXQiOiJVU0QvMU0tdG9rZW5zIiwiZGVsdGEiOjIsIm5vdGUiOiJTYW1lLXVuaXQgbGlzdC1wcmljZSBmaWVsZCBjaGFuZ2UgaW4gc3VwcGxpZWQgc25hcHNob3RzLiBEZWx0YSBpcyBhZnRlciBtaW51cyBiZWZvcmUgcGVyIHN0YXRlZCB1bml0LCBub3QgYSBiaWxsIGNoYW5nZSBvciBsaXZlIHF1b3RlLiJ9LHsicHJpb3JpdHkiOiJtZWRpdW0iLCJraW5kIjoicmV2aWV3LWFkZGVkLXByaWNlLWZpZWxkIiwiZmllbGRLZXkiOiJkZXNrLWVtYmVkIiwiYWZ0ZXJWYWx1ZSI6MC4xMiwidW5pdCI6IlVTRC8xTS10b2tlbnMiLCJub3RlIjoiRmllbGQgYXBwZWFycyBpbiB0aGUgYWZ0ZXIgc25hcHNob3QuIENoZWNrIHNvdXJjZSBjb3ZlcmFnZSBhbmQgU0tVIGlkZW50aXR5OyB0aGlzIGRvZXMgbm90IGVzdGFibGlzaCBhIG5ldyB2ZW5kb3Igb2ZmZXJpbmcsIGEgcmVwbGFjZW1lbnQsIG9yIGEgYmlsbCBpbmNyZWFzZS4ifV0sImdhcHMiOltdLCJzY29wZSI6eyJraW5kIjoic3VwcGxpZWQtcHJpY2luZy1yb3ctZGlmZiIsImJpbGxDYWxjdWxhdGlvbiI6ZmFsc2UsImxpdmVRdW90ZSI6ZmFsc2UsInVuaXRzQ29udmVydGVkIjpmYWxzZSwic291cmNlQ292ZXJhZ2VWZXJpZmllZCI6ZmFsc2UsIm5vdGUiOiJDYWxsZXIgc3VwcGxpZXMgZGF0ZWQgc25hcHNob3RzIHdpdGggc3RhYmxlIGZpZWxkIGlkZW50aXR5IGFuZCBjb21wYXJhYmxlIHVuaXRzLiBBY3R1YWwgdXNhZ2UgYW5kIGFsbCB0YXJpZmYgdGVybXMgYXJlIHJlcXVpcmVkIGZvciBhIGJpbGwgZXN0aW1hdGUuIn0sImNvdW50cyI6eyJiZWZvcmVSb3dzIjoyLCJhZnRlclJvd3MiOjMsImFkZGVkIjoxLCJyZW1vdmVkIjowLCJmaWVsZENoYW5nZXMiOjIsInVuaXRDaGFuZ2VzIjowLCJjb25mbGljdGluZyI6MCwidW5jaGFuZ2VkIjowLCJ1bmtub3duIjowfSwiYWRkZWQiOlt7ImZpZWxkS2V5IjoiZGVzay1lbWJlZCIsImFmdGVyIjp7ImZpZWxkIjoiZGVzay1lbWJlZCIsImZpZWxkS2V5IjoiZGVzay1lbWJlZCIsInZhbHVlIjowLjEyLCJ1bml0IjoiVVNELzFNLXRva2VucyIsInVuaXRLZXkiOiJVU0QvMU0tdG9rZW5zIn19XSwicmVtb3ZlZCI6W10sImZpZWxkQ2hhbmdlcyI6W3siZmllbGRLZXkiOiJkZXNrLWNoYXQtaW5wdXQiLCJiZWZvcmVWYWx1ZSI6MSwiYWZ0ZXJWYWx1ZSI6MS41LCJ1bml0IjoiVVNELzFNLXRva2VucyJ9LHsiZmllbGRLZXkiOiJkZXNrLWNoYXQtb3V0cHV0IiwiYmVmb3JlVmFsdWUiOjQsImFmdGVyVmFsdWUiOjYsInVuaXQiOiJVU0QvMU0tdG9rZW5zIn1dLCJ1bml0Q2hhbmdlcyI6W10sImNvbmZsaWN0aW5nIjpbXSwidW5rbm93biI6W119LCJtYXJrZG93biI6IiMgVmVuZG9yIGJ1ZGdldCBpbXBhY3QgKG5vIHB1cmNoYXNlIGF1dGhvcml0eSlcblxuU3RhdHVzOiAqKmFjdGlvbmFibGUqKlxuXG5CdWRnZXQtaW1wYWN0IHNjYW46IGZpZWxkQ2hhbmdlcz0yIHVuaXRDaGFuZ2VzPTAgYWRkZWQ9MSByZW1vdmVkPTAgY29uZmxpY3Rpbmc9MCB1bmtub3duPTBcblxuIyMgUmVjb21tZW5kZWQgcmV2aWV3c1xuLSAobWVkaXVtKSByZXZpZXctcHJpY2UtZmllbGQ6IGBkZXNrLWNoYXQtaW5wdXRgIC0gU2FtZS11bml0IGxpc3QtcHJpY2UgZmllbGQgY2hhbmdlIGluIHN1cHBsaWVkIHNuYXBzaG90cy4gRGVsdGEgaXMgYWZ0ZXIgbWludXMgYmVmb3JlIHBlciBzdGF0ZWQgdW5pdCwgbm90IGEgYmlsbCBjaGFuZ2Ugb3IgbGl2ZSBxdW90ZS5cbi0gKG1lZGl1bSkgcmV2aWV3LXByaWNlLWZpZWxkOiBgZGVzay1jaGF0LW91dHB1dGAgLSBTYW1lLXVuaXQgbGlzdC1wcmljZSBmaWVsZCBjaGFuZ2UgaW4gc3VwcGxpZWQgc25hcHNob3RzLiBEZWx0YSBpcyBhZnRlciBtaW51cyBiZWZvcmUgcGVyIHN0YXRlZCB1bml0LCBub3QgYSBiaWxsIGNoYW5nZSBvciBsaXZlIHF1b3RlLlxuLSAobWVkaXVtKSByZXZpZXctYWRkZWQtcHJpY2UtZmllbGQ6IGBkZXNrLWVtYmVkYCAtIEZpZWxkIGFwcGVhcnMgaW4gdGhlIGFmdGVyIHNuYXBzaG90LiBDaGVjayBzb3VyY2UgY292ZXJhZ2UgYW5kIFNLVSBpZGVudGl0eTsgdGhpcyBkb2VzIG5vdCBlc3RhYmxpc2ggYSBuZXcgdmVuZG9yIG9mZmVyaW5nLCBhIHJlcGxhY2VtZW50LCBvciBhIGJpbGwgaW5jcmVhc2UuXG5cbmRlc2stY2hhdC1pbnB1dDogYmVmb3JlPTE7IGFmdGVyPTEuNTsgdW5pdD1VU0QvMU0tdG9rZW5zLlxuTGlzdC1wcmljZSBkZWx0YSBwZXIgc3RhdGVkIHVuaXQ6IDAuNSAoYWZ0ZXIgbWludXMgYmVmb3JlKS5cblxuZGVzay1jaGF0LW91dHB1dDogYmVmb3JlPTQ7IGFmdGVyPTY7IHVuaXQ9VVNELzFNLXRva2Vucy5cbkxpc3QtcHJpY2UgZGVsdGEgcGVyIHN0YXRlZCB1bml0OiAyIChhZnRlciBtaW51cyBiZWZvcmUpLlxuXG5kZXNrLWVtYmVkOiBhZnRlcj0wLjEyOyB1bml0PVVTRC8xTS10b2tlbnMuXG5cbl9TdXBwbGllZCBwcmljaW5nIHJvd3Mgb25seS4gTm8gbGl2ZSBxdW90ZSwgdW5pdCBjb252ZXJzaW9uLCBiaWxsIGNhbGN1bGF0aW9uLCBvciBjdXN0b21lci1kZW1hbmQgZXZpZGVuY2UuX1xuIiwibWFya2Rvd25PbWl0dGVkIjpmYWxzZSwiZGlnZXN0IjoiNGRlYWE4YTY0MGZjODc3YjViMjA3NzNhMDA0ODNmMTg4YzI2OGQ5NzA2N2Q0ODEzYjM4NTg0YTVkMWY3NDgyNiIsImVuZ2luZVByb3ZlbmFuY2UiOnsicmVwbyI6ImVwaXN0ZW1lZGV1cy9zYW1lZGF5ZGVzayIsInNoYSI6ImIyMzI2MGU2YTJiNzQ0NTIwNzVmNzNkYTE2MzFkYTI0ZDhhZTY5MDYiLCJwYXRoIjoiZXhwZXJpbWVudHMvczEzNC1yZWNvcmQtam9icy9tb2R1bGVzL3ByaWNpbmctdGFibGUtY2hhbmdlLyIsImNhdGFsb2dTaGEiOiJkYWNiOTk1MGVmM2UxZmZjZjkxNTFjMzAzMjRmZTFmMWNiMjA5ZTE5IiwibWFwcGluZ1NoYSI6IjQ4NWE1MDIzODQzZjI3YmI5MjBhZDJhMjZhZDA2MzFmYTFiYmI0YmQiLCJtYXBwaW5nUGF0aCI6InNlcnZlci9wYWlkLXVzZWZ1bC1qb2JzL3JlbGVhc2UvYXBwcy92ZW5kb3ItYnVkZ2V0LWltcGFjdC9jbGkubWpzIiwiYXJjaGl2ZVNoYTI1NiI6IjJiMTk0OTE4OWYwYWQyZTNjMWJkNWY3YTQzZjdlZGE4MDBmZDVmMGRjM2EzOTU0MTU2ODlmZWVlMDQxOWZmNGYifSwiY29zdElucHV0cyI6eyJhZG1pdHRlZEJvZHlCeXRlcyI6NDAwLCJ3YWxsTXMiOjQsImhvc3RpbmdDb3N0cyI6InVua25vd24iLCJmYWNpbGl0YXRvckZlZXMiOiJ1bmtub3duIiwibW9kZWxDb3N0cyI6Im5vbmUiLCJsaXZlRXh0cmFjdFByaWNlVXNkIjoiMC4wMDUiLCJtb25ldGFyeU1hcmdpbiI6bnVsbCwibm90ZSI6IkRlZmF1bHQgcHJpY2UgbWF0Y2hlcyBsaXZlIEdFVCAvZXh0cmFjdCAkMC4wMDUuIE1hcmdpbiBpcyBub3QgcHJvdmVuLiJ9LCJib3VuZGFyeSI6eyJmaWxlc3lzdGVtSW5wdXQiOmZhbHNlLCJuZXR3b3JrRmV0Y2giOmZhbHNlLCJhcmJpdHJhcnlDb21tYW5kIjpmYWxzZSwid3JpdGFibGVDYWNoZSI6ZmFsc2UsInNvbGRGbGFnIjpmYWxzZSwicHVyY2hhc2VBdXRob3JpdHkiOmZhbHNlLCJsaXZlTWFya2V0UXVvdGUiOmZhbHNlfSwibGltaXRzIjp7Im1heFJlcXVlc3RCeXRlcyI6NjU1MzYsIm1heFNuYXBzaG90Qnl0ZXMiOjMyNzY4LCJ0aW1lb3V0TXMiOjUwMDAsIm1heFJvd3MiOjI1Nn19fX0sInNjaGVtYSI6eyIkc2NoZW1hIjoiaHR0cHM6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQvMjAyMC0xMi9zY2hlbWEiLCJ0eXBlIjoib2JqZWN0IiwicHJvcGVydGllcyI6eyJpbnB1dCI6eyJ0eXBlIjoib2JqZWN0IiwicHJvcGVydGllcyI6eyJ0eXBlIjp7InR5cGUiOiJzdHJpbmciLCJjb25zdCI6Imh0dHAifSwibWV0aG9kIjp7InR5cGUiOiJzdHJpbmciLCJlbnVtIjpbIlBPU1QiXX0sImJvZHlUeXBlIjp7InR5cGUiOiJzdHJpbmciLCJlbnVtIjpbImpzb24iLCJmb3JtLWRhdGEiLCJ0ZXh0Il19LCJib2R5Ijp7InR5cGUiOiJvYmplY3QiLCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2UsInJlcXVpcmVkIjpbImJlZm9yZSIsImFmdGVyIl0sInByb3BlcnRpZXMiOnsiYmVmb3JlIjp7InR5cGUiOiJvYmplY3QiLCJkZXNjcmlwdGlvbiI6IlByaWNpbmctcm93IHNuYXBzaG90IEpTT04gd2l0aCBhIHJvd3MgYXJyYXkgb2Yge2ZpZWxkLCB2YWx1ZSwgdW5pdH0uIE5vdCBhIGZpbGVzeXN0ZW0gcGF0aCwgVVJMLCBvciBjb21tYW5kLiIsImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjpmYWxzZSwicmVxdWlyZWQiOlsicm93cyJdLCJwcm9wZXJ0aWVzIjp7InJvd3MiOnsidHlwZSI6ImFycmF5IiwibWluSXRlbXMiOjEsIm1heEl0ZW1zIjoyNTYsIml0ZW1zIjp7InR5cGUiOiJvYmplY3QiLCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2UsInJlcXVpcmVkIjpbImZpZWxkIiwidmFsdWUiLCJ1bml0Il0sInByb3BlcnRpZXMiOnsiZmllbGQiOnsidHlwZSI6InN0cmluZyIsIm1pbkxlbmd0aCI6MSwibWF4TGVuZ3RoIjoyNTZ9LCJ2YWx1ZSI6eyJ0eXBlIjoibnVtYmVyIn0sInVuaXQiOnsidHlwZSI6InN0cmluZyIsIm1pbkxlbmd0aCI6MSwibWF4TGVuZ3RoIjoyNTZ9fX19LCJsYWJlbCI6eyJ0eXBlIjoic3RyaW5nIiwibWF4TGVuZ3RoIjoyNTZ9LCJub3RlIjp7InR5cGUiOiJzdHJpbmciLCJtYXhMZW5ndGgiOjI1Nn19fSwiYWZ0ZXIiOnsidHlwZSI6Im9iamVjdCIsImRlc2NyaXB0aW9uIjoiUHJpY2luZy1yb3cgc25hcHNob3QgSlNPTiB3aXRoIGEgcm93cyBhcnJheSBvZiB7ZmllbGQsIHZhbHVlLCB1bml0fS4gTm90IGEgZmlsZXN5c3RlbSBwYXRoLCBVUkwsIG9yIGNvbW1hbmQuIiwiYWRkaXRpb25hbFByb3BlcnRpZXMiOmZhbHNlLCJyZXF1aXJlZCI6WyJyb3dzIl0sInByb3BlcnRpZXMiOnsicm93cyI6eyJ0eXBlIjoiYXJyYXkiLCJtaW5JdGVtcyI6MSwibWF4SXRlbXMiOjI1NiwiaXRlbXMiOnsidHlwZSI6Im9iamVjdCIsImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjpmYWxzZSwicmVxdWlyZWQiOlsiZmllbGQiLCJ2YWx1ZSIsInVuaXQiXSwicHJvcGVydGllcyI6eyJmaWVsZCI6eyJ0eXBlIjoic3RyaW5nIiwibWluTGVuZ3RoIjoxLCJtYXhMZW5ndGgiOjI1Nn0sInZhbHVlIjp7InR5cGUiOiJudW1iZXIifSwidW5pdCI6eyJ0eXBlIjoic3RyaW5nIiwibWluTGVuZ3RoIjoxLCJtYXhMZW5ndGgiOjI1Nn19fX0sImxhYmVsIjp7InR5cGUiOiJzdHJpbmciLCJtYXhMZW5ndGgiOjI1Nn0sIm5vdGUiOnsidHlwZSI6InN0cmluZyIsIm1heExlbmd0aCI6MjU2fX19fX19LCJyZXF1aXJlZCI6WyJ0eXBlIiwibWV0aG9kIiwiYm9keVR5cGUiLCJib2R5Il0sImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjpmYWxzZX0sIm91dHB1dCI6eyJ0eXBlIjoib2JqZWN0IiwicHJvcGVydGllcyI6eyJ0eXBlIjp7InR5cGUiOiJzdHJpbmcifSwiZXhhbXBsZSI6eyJ0eXBlIjoib2JqZWN0IiwiYWRkaXRpb25hbFByb3BlcnRpZXMiOmZhbHNlLCJyZXF1aXJlZCI6WyJvayIsInByb2R1Y3QiLCJzY2hlbWFWZXJzaW9uIiwicXVvdGUiLCJjaGFyZ2VkIiwiYW5hbHlzaXMiLCJ0cmFuc3BvcnQiLCJlbmdpbmUiLCJkaWdlc3QiLCJlbmdpbmVQcm92ZW5hbmNlIiwiY29zdElucHV0cyIsImJvdW5kYXJ5IiwibGltaXRzIl0sInByb3BlcnRpZXMiOnsib2siOnsidHlwZSI6ImJvb2xlYW4ifSwicHJvZHVjdCI6eyJ0eXBlIjoic3RyaW5nIiwiY29uc3QiOiJzYW1lZGF5ZGVzay12ZW5kb3ItYnVkZ2V0LWltcGFjdCJ9LCJzY2hlbWFWZXJzaW9uIjp7InR5cGUiOiJzdHJpbmciLCJjb25zdCI6InNhbWVkYXlkZXNrLnZlbmRvci1idWRnZXQtaW1wYWN0LWh0dHAudjAifSwicXVvdGUiOnsidHlwZSI6Im9iamVjdCIsInJlcXVpcmVkIjpbImFtb3VudEF0b21pYyIsImRpc3BsYXlVc2RjIiwibWVhbmluZyJdLCJwcm9wZXJ0aWVzIjp7ImFtb3VudEF0b21pYyI6eyJ0eXBlIjoic3RyaW5nIn0sImRpc3BsYXlVc2RjIjp7InR5cGUiOiJzdHJpbmcifSwibWVhbmluZyI6eyJ0eXBlIjoic3RyaW5nIn19fSwiY2hhcmdlZCI6eyJ0eXBlIjoiYm9vbGVhbiJ9LCJhbmFseXNpcyI6eyJ0eXBlIjoic3RyaW5nIiwiZW51bSI6WyJhY3Rpb25hYmxlIiwiaW5mb3JtYXRpb25hbCIsInBhcnRpYWwiLCJub3QtcnVuIl19LCJ0cmFuc3BvcnQiOnsidHlwZSI6InN0cmluZyIsImVudW0iOlsib2siLCJ0aW1lb3V0IiwiZW5naW5lLWNyYXNoIiwiaW50ZXJuYWwtZXJyb3IiLCJyZWplY3RlZCIsImJ1c3kiXX0sImVuZ2luZSI6eyJ0eXBlIjpbIm9iamVjdCIsIm51bGwiXX0sIm1hcmtkb3duIjp7InR5cGUiOlsic3RyaW5nIiwibnVsbCJdfSwibWFya2Rvd25PbWl0dGVkIjp7InR5cGUiOiJib29sZWFuIn0sImRpZ2VzdCI6eyJ0eXBlIjpbInN0cmluZyIsIm51bGwiXX0sImVuZ2luZVByb3ZlbmFuY2UiOnsidHlwZSI6Im9iamVjdCJ9LCJjb3N0SW5wdXRzIjp7InR5cGUiOiJvYmplY3QifSwiYm91bmRhcnkiOnsidHlwZSI6Im9iamVjdCJ9LCJsaW1pdHMiOnsidHlwZSI6Im9iamVjdCJ9LCJlcnJvciI6eyJ0eXBlIjoic3RyaW5nIn0sIm93ZWREZWxpdmVyeSI6eyJ0eXBlIjoiYm9vbGVhbiJ9fX19LCJyZXF1aXJlZCI6WyJ0eXBlIl19fSwicmVxdWlyZWQiOlsiaW5wdXQiXX19fX0="
+              }
+            }
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"x402Version\":2,\"error\":\"Payment required\",\"resource\":{\"url\":\"https://agents.samedaydesk.com/vendor-budget-impact\",\"description\":\"Compare two caller-supplied vendor pricing-row JSON objects (rows of field, finite numeric value, and unit) and return field, unit, added, and removed budget-impact deltas. HTTP JSON only: no filesystem paths, commands, URLs, or writable caches. Identical rows are informational, not failure. Charge is the bounded compare, not a live quote, purchase, or ROI. Ordinary wallets sign through examples/customer-x402, not a precomputed signature. Initial live release accepts x402 only.\",\"mimeType\":\"application/json\",\"serviceName\":\"SameDayDesk\",\"tags\":[\"pricing\",\"budget-impact\",\"vendor-cost\",\"row-delta\"],\"iconUrl\":\"https://samedaydesk.com/favicon.svg\"},\"accepts\":[{\"scheme\":\"exact\",\"network\":\"eip155:8453\",\"amount\":\"5000\",\"asset\":\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\"payTo\":\"0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee\",\"maxTimeoutSeconds\":300,\"extra\":{\"name\":\"USD Coin\",\"version\":\"2\"}}],\"extensions\":{\"payment-identifier\":{\"info\":{\"required\":true},\"schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"required\":{\"type\":\"boolean\"},\"id\":{\"type\":\"string\",\"minLength\":16,\"maxLength\":128,\"pattern\":\"^[a-zA-Z0-9_-]+$\"}},\"required\":[\"required\"]}},\"bazaar\":{\"info\":{\"input\":{\"type\":\"http\",\"method\":\"POST\",\"bodyType\":\"json\",\"body\":{\"before\":{\"label\":\"caller\",\"note\":\"Caller-supplied pricing rows. Not a SAMPLE kit fixture and not a live quote.\",\"rows\":[{\"field\":\"desk-chat-input\",\"value\":1,\"unit\":\"USD/1M-tokens\"},{\"field\":\"desk-chat-output\",\"value\":4,\"unit\":\"USD/1M-tokens\"}]},\"after\":{\"label\":\"caller\",\"note\":\"Caller-supplied pricing rows. Not a SAMPLE kit fixture and not a live quote.\",\"rows\":[{\"field\":\"desk-chat-input\",\"value\":1.5,\"unit\":\"USD/1M-tokens\"},{\"field\":\"desk-chat-output\",\"value\":6,\"unit\":\"USD/1M-tokens\"},{\"field\":\"desk-embed\",\"value\":0.12,\"unit\":\"USD/1M-tokens\"}]}}},\"output\":{\"type\":\"json\",\"example\":{\"ok\":true,\"product\":\"samedaydesk-vendor-budget-impact\",\"schemaVersion\":\"samedaydesk.vendor-budget-impact-http.v0\",\"quote\":{\"amountAtomic\":\"5000\",\"displayUsdc\":\"0.005\",\"meaning\":\"Flat USDC quote for one bounded compare of two caller-supplied pricing-row JSON objects. Default $0.005 matches live GET /extract. Charge is the compare, not a live quote, purchase, or proven margin. Pay with x402; MPP is not accepted on this route. Ordinary buyers inspect and approve through examples/customer-x402, not a precomputed signature.\"},\"charged\":true,\"analysis\":\"actionable\",\"transport\":\"ok\",\"engine\":{\"schema\":\"samedaydesk.vendor-budget-impact.v1\",\"appId\":\"vendor-budget-impact\",\"ok\":true,\"status\":\"actionable\",\"purchaseAuthority\":false,\"paidValueClaim\":false,\"settlement\":\"nonsettling-prototype\",\"summary\":\"Budget-impact scan: fieldChanges=2 unitChanges=0 added=1 removed=0 conflicting=0 unknown=0\",\"actions\":[{\"priority\":\"medium\",\"kind\":\"review-price-field\",\"fieldKey\":\"desk-chat-input\",\"beforeValue\":1,\"afterValue\":1.5,\"unit\":\"USD/1M-tokens\",\"delta\":0.5,\"note\":\"Same-unit list-price field change in supplied snapshots. Delta is after minus before per stated unit, not a bill change or live quote.\"},{\"priority\":\"medium\",\"kind\":\"review-price-field\",\"fieldKey\":\"desk-chat-output\",\"beforeValue\":4,\"afterValue\":6,\"unit\":\"USD/1M-tokens\",\"delta\":2,\"note\":\"Same-unit list-price field change in supplied snapshots. Delta is after minus before per stated unit, not a bill change or live quote.\"},{\"priority\":\"medium\",\"kind\":\"review-added-price-field\",\"fieldKey\":\"desk-embed\",\"afterValue\":0.12,\"unit\":\"USD/1M-tokens\",\"note\":\"Field appears in the after snapshot. Check source coverage and SKU identity; this does not establish a new vendor offering, a replacement, or a bill increase.\"}],\"gaps\":[],\"scope\":{\"kind\":\"supplied-pricing-row-diff\",\"billCalculation\":false,\"liveQuote\":false,\"unitsConverted\":false,\"sourceCoverageVerified\":false,\"note\":\"Caller supplies dated snapshots with stable field identity and comparable units. Actual usage and all tariff terms are required for a bill estimate.\"},\"counts\":{\"beforeRows\":2,\"afterRows\":3,\"added\":1,\"removed\":0,\"fieldChanges\":2,\"unitChanges\":0,\"conflicting\":0,\"unchanged\":0,\"unknown\":0},\"added\":[{\"fieldKey\":\"desk-embed\",\"after\":{\"field\":\"desk-embed\",\"fieldKey\":\"desk-embed\",\"value\":0.12,\"unit\":\"USD/1M-tokens\",\"unitKey\":\"USD/1M-tokens\"}}],\"removed\":[],\"fieldChanges\":[{\"fieldKey\":\"desk-chat-input\",\"beforeValue\":1,\"afterValue\":1.5,\"unit\":\"USD/1M-tokens\"},{\"fieldKey\":\"desk-chat-output\",\"beforeValue\":4,\"afterValue\":6,\"unit\":\"USD/1M-tokens\"}],\"unitChanges\":[],\"conflicting\":[],\"unknown\":[]},\"markdown\":\"# Vendor budget impact (no purchase authority)\\n\\nStatus: **actionable**\\n\\nBudget-impact scan: fieldChanges=2 unitChanges=0 added=1 removed=0 conflicting=0 unknown=0\\n\\n## Recommended reviews\\n- (medium) review-price-field: `desk-chat-input` - Same-unit list-price field change in supplied snapshots. Delta is after minus before per stated unit, not a bill change or live quote.\\n- (medium) review-price-field: `desk-chat-output` - Same-unit list-price field change in supplied snapshots. Delta is after minus before per stated unit, not a bill change or live quote.\\n- (medium) review-added-price-field: `desk-embed` - Field appears in the after snapshot. Check source coverage and SKU identity; this does not establish a new vendor offering, a replacement, or a bill increase.\\n\\ndesk-chat-input: before=1; after=1.5; unit=USD/1M-tokens.\\nList-price delta per stated unit: 0.5 (after minus before).\\n\\ndesk-chat-output: before=4; after=6; unit=USD/1M-tokens.\\nList-price delta per stated unit: 2 (after minus before).\\n\\ndesk-embed: after=0.12; unit=USD/1M-tokens.\\n\\n_Supplied pricing rows only. No live quote, unit conversion, bill calculation, or customer-demand evidence._\\n\",\"markdownOmitted\":false,\"digest\":\"4deaa8a640fc877b5b20773a00483f188c268d97067d4813b38584a5d1f74826\",\"engineProvenance\":{\"repo\":\"epistemedeus/samedaydesk\",\"sha\":\"b23260e6a2b74452075f73da1631da24d8ae6906\",\"path\":\"experiments/s134-record-jobs/modules/pricing-table-change/\",\"catalogSha\":\"dacb9950ef3e1ffcf9151c30324fe1f1cb209e19\",\"mappingSha\":\"485a5023843f27bb920ad2a26ad0631fa1bbb4bd\",\"mappingPath\":\"server/paid-useful-jobs/release/apps/vendor-budget-impact/cli.mjs\",\"archiveSha256\":\"2b1949189f0ad2e3c1bd5f7a43f7eda800fd5f0dc3a395415689feee0419ff4f\"},\"costInputs\":{\"admittedBodyBytes\":400,\"wallMs\":4,\"hostingCosts\":\"unknown\",\"facilitatorFees\":\"unknown\",\"modelCosts\":\"none\",\"liveExtractPriceUsd\":\"0.005\",\"monetaryMargin\":null,\"note\":\"Default price matches live GET /extract $0.005. Margin is not proven.\"},\"boundary\":{\"filesystemInput\":false,\"networkFetch\":false,\"arbitraryCommand\":false,\"writableCache\":false,\"soldFlag\":false,\"purchaseAuthority\":false,\"liveMarketQuote\":false},\"limits\":{\"maxRequestBytes\":65536,\"maxSnapshotBytes\":32768,\"timeoutMs\":5000,\"maxRows\":256}}}},\"schema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"type\":\"object\",\"properties\":{\"input\":{\"type\":\"object\",\"properties\":{\"type\":{\"type\":\"string\",\"const\":\"http\"},\"method\":{\"type\":\"string\",\"enum\":[\"POST\"]},\"bodyType\":{\"type\":\"string\",\"enum\":[\"json\",\"form-data\",\"text\"]},\"body\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"before\",\"after\"],\"properties\":{\"before\":{\"type\":\"object\",\"description\":\"Pricing-row snapshot JSON with a rows array of {field, value, unit}. Not a filesystem path, URL, or command.\",\"additionalProperties\":false,\"required\":[\"rows\"],\"properties\":{\"rows\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":256,\"items\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"field\",\"value\",\"unit\"],\"properties\":{\"field\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"value\":{\"type\":\"number\"},\"unit\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256}}}},\"label\":{\"type\":\"string\",\"maxLength\":256},\"note\":{\"type\":\"string\",\"maxLength\":256}}},\"after\":{\"type\":\"object\",\"description\":\"Pricing-row snapshot JSON with a rows array of {field, value, unit}. Not a filesystem path, URL, or command.\",\"additionalProperties\":false,\"required\":[\"rows\"],\"properties\":{\"rows\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":256,\"items\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"field\",\"value\",\"unit\"],\"properties\":{\"field\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"value\":{\"type\":\"number\"},\"unit\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256}}}},\"label\":{\"type\":\"string\",\"maxLength\":256},\"note\":{\"type\":\"string\",\"maxLength\":256}}}}}},\"required\":[\"type\",\"method\",\"bodyType\",\"body\"],\"additionalProperties\":false},\"output\":{\"type\":\"object\",\"properties\":{\"type\":{\"type\":\"string\"},\"example\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"ok\",\"product\",\"schemaVersion\",\"quote\",\"charged\",\"analysis\",\"transport\",\"engine\",\"digest\",\"engineProvenance\",\"costInputs\",\"boundary\",\"limits\"],\"properties\":{\"ok\":{\"type\":\"boolean\"},\"product\":{\"type\":\"string\",\"const\":\"samedaydesk-vendor-budget-impact\"},\"schemaVersion\":{\"type\":\"string\",\"const\":\"samedaydesk.vendor-budget-impact-http.v0\"},\"quote\":{\"type\":\"object\",\"required\":[\"amountAtomic\",\"displayUsdc\",\"meaning\"],\"properties\":{\"amountAtomic\":{\"type\":\"string\"},\"displayUsdc\":{\"type\":\"string\"},\"meaning\":{\"type\":\"string\"}}},\"charged\":{\"type\":\"boolean\"},\"analysis\":{\"type\":\"string\",\"enum\":[\"actionable\",\"informational\",\"partial\",\"not-run\"]},\"transport\":{\"type\":\"string\",\"enum\":[\"ok\",\"timeout\",\"engine-crash\",\"internal-error\",\"rejected\",\"busy\"]},\"engine\":{\"type\":[\"object\",\"null\"]},\"markdown\":{\"type\":[\"string\",\"null\"]},\"markdownOmitted\":{\"type\":\"boolean\"},\"digest\":{\"type\":[\"string\",\"null\"]},\"engineProvenance\":{\"type\":\"object\"},\"costInputs\":{\"type\":\"object\"},\"boundary\":{\"type\":\"object\"},\"limits\":{\"type\":\"object\"},\"error\":{\"type\":\"string\"},\"owedDelivery\":{\"type\":\"boolean\"}}}},\"required\":[\"type\"]}},\"required\":[\"input\"]}}}}"
+            }
+          ],
+          "isError": true
+        },
+        "rawMcp": {
+          "httpStatus": 200,
+          "isError": true,
+          "structuredKeys": [],
+          "httpBridgeStatus": 402
+        }
+      }
+    },
+    {
+      "id": "F7.mcp-schema-admission-parity",
+      "passed": false,
+      "witness": {
+        "invalid": {
+          "before": {},
+          "after": {}
+        },
+        "schemaAccepts": true,
+        "directHttpStatus": 400,
+        "call": {
+          "_meta": {
+            "samedaydesk/http": {
+              "resource": "https://agents.samedaydesk.com/vendor-budget-impact",
+              "status": 400,
+              "headers": {}
+            }
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"ok\":false,\"product\":\"samedaydesk-vendor-budget-impact\",\"schemaVersion\":\"samedaydesk.vendor-budget-impact-http.v0\",\"error\":\"before must be a JSON object with a rows array\",\"code\":\"input-schema-mismatch\",\"charged\":false,\"analysis\":\"not-run\",\"transport\":\"rejected\",\"boundary\":{\"filesystemInput\":false,\"networkFetch\":false,\"arbitraryCommand\":false,\"writableCache\":false,\"soldFlag\":false,\"purchaseAuthority\":false,\"liveMarketQuote\":false}}"
+            }
+          ],
+          "isError": true
+        }
+      },
+      "error": "Advertised MCP input schema admits missing rows that HTTP rejects\n\ntrue !== false\n"
+    },
+    {
+      "id": "F7.deployment-attestation-exact-route",
+      "passed": false,
+      "witness": {
+        "issuedAt": "2026-09-07T22:17:39.273Z",
+        "expiresAt": "2026-10-07T22:17:39.273Z",
+        "validAtWallClock": true,
+        "verificationTime": "2026-09-12T06:50:31.148Z",
+        "signedRoutePresent": false,
+        "incumbent": {
+          "schemaVersion": "agent-payment-policy.service-deployment-verification.v1",
+          "decision": "verified_exact_binding",
+          "statementId": "sha256:5fa167601ebb462f59b4437604fcbcfb8586a77c2adbf29f8ba93eb8c42fd35e",
+          "kid": "solana-agent-wallet:DSG8V4tkhPQH9tWibYKzWePHYEgfocJXMWBfDxGDtaED",
+          "publicKeyFingerprint": "sha256:20f656e173fc4af36a88356f7ecc8765e3e76ba788bca5022633f7cae6cfeefd",
+          "canonicalOrigin": "https://agents.samedaydesk.com",
+          "observedOrigin": "https://agents.samedaydesk.com",
+          "route": {
+            "method": "GET",
+            "path": "/extract"
+          },
+          "settlement": {
+            "protocol": "x402",
+            "network": "eip155:8453",
+            "asset": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+            "recipient": "0x8904df3de6dfee6a7c8cc38619d2f17806213cee",
+            "decimals": 6
+          },
+          "expiresAt": "2026-10-07T22:17:39.273Z",
+          "verifiedAt": "2026-09-12T06:50:31.148Z",
+          "boundary": {
+            "signatureVerified": true,
+            "keyAuthoritySuppliedExternally": true,
+            "domainControlProven": false,
+            "walletAccessed": false,
+            "paymentAuthorized": false,
+            "paymentSigned": false,
+            "paymentSent": false
+          }
+        },
+        "vendor": {
+          "error": "request route is not authorized by the service deployment statement"
+        }
+      },
+      "error": "Vendor route is absent from published signed deployment coverage\n+ actual - expected\n\n+ undefined\n- 'verified_exact_binding'\n"
+    }
+  ],
+  "passed": 27,
+  "failed": 14
+}

@@ -1,0 +1,2523 @@
+TAP version 13
+# Subtest: agent card exposes aggregate and route-discovery skills over A2A HTTP+JSON
+ok 1 - agent card exposes aggregate and route-discovery skills over A2A HTTP+JSON
+  ---
+  duration_ms: 2.68266
+  type: 'test'
+  ...
+# Subtest: catalog response is a direct A2A message and preserves context
+ok 2 - catalog response is a direct A2A message and preserves context
+  ---
+  duration_ms: 0.435034
+  type: 'test'
+  ...
+# Subtest: message validation requires the normative inbound message fields
+ok 3 - message validation requires the normative inbound message fields
+  ---
+  duration_ms: 0.174284
+  type: 'test'
+  ...
+# Subtest: agent card rejects a missing version and duplicate route skill IDs
+ok 4 - agent card rejects a missing version and duplicate route skill IDs
+  ---
+  duration_ms: 0.382105
+  type: 'test'
+  ...
+# Subtest: version problem advertises supported A2A version
+ok 5 - version problem advertises supported A2A version
+  ---
+  duration_ms: 0.126921
+  type: 'test'
+  ...
+# Subtest: declares one valid provider identity and route-specific tags for all paid routes
+ok 6 - declares one valid provider identity and route-specific tags for all paid routes
+  ---
+  duration_ms: 2.669287
+  type: 'test'
+  ...
+# Subtest: rejects unsafe, oversized, duplicated, or incomplete resource metadata
+ok 7 - rejects unsafe, oversized, duplicated, or incomplete resource metadata
+  ---
+  duration_ms: 0.421451
+  type: 'test'
+  ...
+# Subtest: agent discovery sources reduce user agents to controlled labels
+ok 8 - agent discovery sources reduce user agents to controlled labels
+  ---
+  duration_ms: 4.456428
+  type: 'test'
+  ...
+# Subtest: published Claude and Goose declared sources retain on HTTP without becoming demand
+ok 9 - published Claude and Goose declared sources retain on HTTP without becoming demand
+  ---
+  duration_ms: 22.418776
+  type: 'test'
+  ...
+# Subtest: unknown malformed and spoofed declared sources cannot mint ownership
+ok 10 - unknown malformed and spoofed declared sources cannot mint ownership
+  ---
+  duration_ms: 10.9457
+  type: 'test'
+  ...
+# Subtest: declared AgenticTrade handoff enters the paid-route funnel without exposing the source token
+ok 11 - declared AgenticTrade handoff enters the paid-route funnel without exposing the source token
+  ---
+  duration_ms: 2.625711
+  type: 'test'
+  ...
+# Subtest: constructed request telemetry is prospective, contract-derived, aggregate, and value-free
+ok 12 - constructed request telemetry is prospective, contract-derived, aggregate, and value-free
+  ---
+  duration_ms: 9.067405
+  type: 'test'
+  ...
+# Subtest: provider user fetchers enter the prospective source-quality cohort
+ok 13 - provider user fetchers enter the prospective source-quality cohort
+  ---
+  duration_ms: 3.274521
+  type: 'test'
+  ...
+# Subtest: allowlisted declared sources attribute acquisition without becoming demand or storing raw headers
+ok 14 - allowlisted declared sources attribute acquisition without becoming demand or storing raw headers
+  ---
+  duration_ms: 4.549576
+  type: 'test'
+  ...
+# Subtest: receipt-derived referrals become a controlled acquisition source without retaining the digest
+ok 15 - receipt-derived referrals become a controlled acquisition source without retaining the digest
+  ---
+  duration_ms: 2.735931
+  type: 'test'
+  ...
+# Subtest: writer stores declared source separately from observed UA and does not verify identity
+ok 16 - writer stores declared source separately from observed UA and does not verify identity
+  ---
+  duration_ms: 2.239892
+  type: 'test'
+  ...
+# Subtest: optional invalid source split cannot invalidate core events or change public aggregates
+ok 17 - optional invalid source split cannot invalidate core events or change public aggregates
+  ---
+  duration_ms: 2.41061
+  type: 'test'
+  ...
+# Subtest: payer classification policy validates controlled explicit labels
+ok 18 - payer classification policy validates controlled explicit labels
+  ---
+  duration_ms: 0.577669
+  type: 'test'
+  ...
+# Subtest: route classification preserves useful intent without recording opaque path values
+ok 19 - route classification preserves useful intent without recording opaque path values
+  ---
+  duration_ms: 0.33818
+  type: 'test'
+  ...
+# Subtest: paid response classes separate challenge, validation, success, and failure
+ok 20 - paid response classes separate challenge, validation, success, and failure
+  ---
+  duration_ms: 0.099194
+  type: 'test'
+  ...
+# Subtest: payment failure codes stay bounded and preserve required-input aliases
+ok 21 - payment failure codes stay bounded and preserve required-input aliases
+  ---
+  duration_ms: 0.555421
+  type: 'test'
+  ...
+# Subtest: private paid-success evidence records exact x402 and MPP HTTP attribution
+ok 22 - private paid-success evidence records exact x402 and MPP HTTP attribution
+  ---
+  duration_ms: 12.512905
+  type: 'test'
+  ...
+# Subtest: paid evidence follows the runtime-selected rail when both credential families are present
+ok 23 - paid evidence follows the runtime-selected rail when both credential families are present
+  ---
+  duration_ms: 7.426422
+  type: 'test'
+  ...
+# Subtest: paid evidence requires a matching runtime-selected rail
+ok 24 - paid evidence requires a matching runtime-selected rail
+  ---
+  duration_ms: 3.549747
+  type: 'test'
+  ...
+# Subtest: paid evidence hashes only body bytes that HTTP transfers
+ok 25 - paid evidence hashes only body bytes that HTTP transfers
+  ---
+  duration_ms: 5.910493
+  type: 'test'
+  ...
+# Subtest: rejected response chunks invalidate private paid evidence
+ok 26 - rejected response chunks invalidate private paid evidence
+  ---
+  duration_ms: 2.334829
+  type: 'test'
+  ...
+# Subtest: encoded request bodies fail closed because parser rawBody is post-inflation
+ok 27 - encoded request bodies fail closed because parser rawBody is post-inflation
+  ---
+  duration_ms: 4.237167
+  type: 'test'
+  ...
+# Subtest: paid-success evidence digests are deterministic and independently sensitive
+ok 28 - paid-success evidence digests are deterministic and independently sensitive
+  ---
+  duration_ms: 8.398796
+  type: 'test'
+  ...
+# Subtest: paid-success evidence serialization contains no supplied raw private values
+ok 29 - paid-success evidence serialization contains no supplied raw private values
+  ---
+  duration_ms: 4.102249
+  type: 'test'
+  ...
+# Subtest: private evidence excludes unpaid, challenge, failure, replay, discovery, and MCP HTTP duplicate rows
+ok 30 - private evidence excludes unpaid, challenge, failure, replay, discovery, and MCP HTTP duplicate rows
+  ---
+  duration_ms: 5.062866
+  type: 'test'
+  ...
+# Subtest: private paid evidence survives repeated ordinary traffic rotations
+ok 31 - private paid evidence survives repeated ordinary traffic rotations
+  ---
+  duration_ms: 6.223164
+  type: 'test'
+  ...
+# Subtest: durable rare funnel evidence survives ordinary traffic rotations and stream loss
+ok 32 - durable rare funnel evidence survives ordinary traffic rotations and stream loss
+  ---
+  duration_ms: 7.790849
+  type: 'test'
+  ...
+# Subtest: durable rare funnel deduplicates duplicate ids and retains parseable credential errors
+ok 33 - durable rare funnel deduplicates duplicate ids and retains parseable credential errors
+  ---
+  duration_ms: 3.831181
+  type: 'test'
+  ...
+# Subtest: durable rare funnel captures MCP typed paid outcomes separately from stream counters
+ok 34 - durable rare funnel captures MCP typed paid outcomes separately from stream counters
+  ---
+  duration_ms: 5.031534
+  type: 'test'
+  ...
+# Subtest: durable rare funnel reloads after restart without claiming continuous history
+ok 35 - durable rare funnel reloads after restart without claiming continuous history
+  ---
+  duration_ms: 3.314305
+  type: 'test'
+  ...
+# Subtest: an old retained rare row is not proof of uninterrupted requested-window capture
+ok 36 - an old retained rare row is not proof of uninterrupted requested-window capture
+  ---
+  duration_ms: 3.443538
+  type: 'test'
+  ...
+# Subtest: single-writer concurrent rare appends stay parseable across bounded rotation
+ok 37 - single-writer concurrent rare appends stay parseable across bounded rotation
+  ---
+  duration_ms: 7.229847
+  type: 'test'
+  ...
+# commerce telemetry write failed: EISDIR: illegal operation on a directory, open '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/test-tmp/commerce-rare-funnel-write-failure-SHnHfb/commerce-rare-funnel-evidence.ndjson'
+# Subtest: durable rare funnel write failures remain visible to flush without leaking credentials
+ok 38 - durable rare funnel write failures remain visible to flush without leaking credentials
+  ---
+  duration_ms: 3.628275
+  type: 'test'
+  ...
+# Subtest: malformed and hostile paid evidence inputs fail closed without escaping middleware
+ok 39 - malformed and hostile paid evidence inputs fail closed without escaping middleware
+  ---
+  duration_ms: 4.672291
+  type: 'test'
+  ...
+# Subtest: paid evidence requires observing the response end before finish
+ok 40 - paid evidence requires observing the response end before finish
+  ---
+  duration_ms: 2.143962
+  type: 'test'
+  ...
+# Subtest: shutdown drain flushes the private paid evidence write
+ok 41 - shutdown drain flushes the private paid evidence write
+  ---
+  duration_ms: 2.593954
+  type: 'test'
+  ...
+# commerce telemetry write failed: EISDIR: illegal operation on a directory, open '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/test-tmp/commerce-paid-evidence-write-failure-6Y3Rx1/commerce-paid-success-evidence.ndjson'
+# Subtest: private paid evidence append failures remain visible to flush and shutdown
+ok 42 - private paid evidence append failures remain visible to flush and shutdown
+  ---
+  duration_ms: 3.18884
+  type: 'test'
+  ...
+# Subtest: unpaid paid-POST requests do not persist application telemetry
+ok 43 - unpaid paid-POST requests do not persist application telemetry
+  ---
+  duration_ms: 9.425692
+  type: 'test'
+  ...
+# Subtest: unpaid POST /extract/batch still persists challenge and invalid-body rows
+ok 44 - unpaid POST /extract/batch still persists challenge and invalid-body rows
+  ---
+  duration_ms: 7.519775
+  type: 'test'
+  ...
+# Subtest: historical unmatched /extract/* rows stay unmatched and are not backfilled as batch
+ok 45 - historical unmatched /extract/* rows stay unmatched and are not backfilled as batch
+  ---
+  duration_ms: 1.854505
+  type: 'test'
+  ...
+# Subtest: extract-batch body construction inspects urls bounds without retaining values
+ok 46 - extract-batch body construction inspects urls bounds without retaining values
+  ---
+  duration_ms: 0.789951
+  type: 'test'
+  ...
+# Subtest: semantic unmatched classification is high precision and excludes technical misses
+ok 47 - semantic unmatched classification is high precision and excludes technical misses
+  ---
+  duration_ms: 0.223193
+  type: 'test'
+  ...
+# Subtest: aggregate snapshot excludes internal and crawler events and exposes no actor IDs
+ok 48 - aggregate snapshot excludes internal and crawler events and exposes no actor IDs
+  ---
+  duration_ms: 8.896735
+  type: 'test'
+  ...
+# Subtest: only explicitly classified independent payers enter independent demand
+ok 49 - only explicitly classified independent payers enter independent demand
+  ---
+  duration_ms: 2.866705
+  type: 'test'
+  ...
+# Subtest: challenge conversion requires conservative same-actor continuity
+ok 50 - challenge conversion requires conservative same-actor continuity
+  ---
+  duration_ms: 3.24842
+  type: 'test'
+  ...
+# Subtest: aggregate snapshot honors a declared external experiment baseline
+ok 51 - aggregate snapshot honors a declared external experiment baseline
+  ---
+  duration_ms: 1.774039
+  type: 'test'
+  ...
+# Subtest: machine discovery uses an independent baseline and excludes owned monitors
+ok 52 - machine discovery uses an independent baseline and excludes owned monitors
+  ---
+  duration_ms: 2.005961
+  type: 'test'
+  ...
+# Subtest: provider source detail starts prospectively without reclassifying earlier events
+ok 53 - provider source detail starts prospectively without reclassifying earlier events
+  ---
+  duration_ms: 1.78738
+  type: 'test'
+  ...
+# Subtest: coverage helper classifies incomplete windows as unknown_for_full_window
+ok 54 - coverage helper classifies incomplete windows as unknown_for_full_window
+  ---
+  duration_ms: 0.360548
+  type: 'test'
+  ...
+# Subtest: conservative UTC day bounds never overstate retained coverage
+ok 55 - conservative UTC day bounds never overstate retained coverage
+  ---
+  duration_ms: 0.121399
+  type: 'test'
+  ...
+# Subtest: two rotations erase an older construction event and keep the 90-day zero unknown
+ok 56 - two rotations erase an older construction event and keep the 90-day zero unknown
+  ---
+  duration_ms: 5.431243
+  type: 'test'
+  ...
+# Subtest: incomplete 90-day coverage reports retained bounds and does not treat a zero as a full-window result
+ok 57 - incomplete 90-day coverage reports retained bounds and does not treat a zero as a full-window result
+  ---
+  duration_ms: 1.945725
+  type: 'test'
+  ...
+# Subtest: complete short-window coverage can honestly report a retained zero
+ok 58 - complete short-window coverage can honestly report a retained zero
+  ---
+  duration_ms: 2.024584
+  type: 'test'
+  ...
+# Subtest: a metric baseline later than retained start can be complete while the requested window is not
+ok 59 - a metric baseline later than retained start can be complete while the requested window is not
+  ---
+  duration_ms: 1.180132
+  type: 'test'
+  ...
+# Subtest: empty retained files are unknown_for_full_window rather than a complete-window zero
+ok 60 - empty retained files are unknown_for_full_window rather than a complete-window zero
+  ---
+  duration_ms: 0.878036
+  type: 'test'
+  ...
+# Subtest: corrupt lines in an otherwise complete window force unknown coverage without exposing payloads
+ok 61 - corrupt lines in an otherwise complete window force unknown coverage without exposing payloads
+  ---
+  duration_ms: 2.244184
+  type: 'test'
+  ...
+# Subtest: invalid timestamps and non-object records cannot support a complete window
+ok 62 - invalid timestamps and non-object records cannot support a complete window
+  ---
+  duration_ms: 1.437487
+  type: 'test'
+  ...
+# Subtest: construction and discovery counts match coverage across the externalSince cutoff
+ok 63 - construction and discovery counts match coverage across the externalSince cutoff
+  ---
+  duration_ms: 1.672964
+  type: 'test'
+  ...
+# Subtest: metrics still clipped by externalSince include that cutoff in coverage
+ok 64 - metrics still clipped by externalSince include that cutoff in coverage
+  ---
+  duration_ms: 1.322372
+  type: 'test'
+  ...
+# Subtest: one retained event does not expose exact timestamps or millisecond values
+ok 65 - one retained event does not expose exact timestamps or millisecond values
+  ---
+  duration_ms: 2.020293
+  type: 'test'
+  ...
+# Subtest: sparse retained events omit exact timing from serialized public output
+ok 66 - sparse retained events omit exact timing from serialized public output
+  ---
+  duration_ms: 2.244311
+  type: 'test'
+  ...
+# Subtest: February 30 and timestamp-only objects cannot establish coverage
+ok 67 - February 30 and timestamp-only objects cannot establish coverage
+  ---
+  duration_ms: 1.489944
+  type: 'test'
+  ...
+# Subtest: snapshot capture is atomic against a response-triggered 5 MiB rotation
+ok 68 - snapshot capture is atomic against a response-triggered 5 MiB rotation
+  ---
+  duration_ms: 44.526235
+  type: 'test'
+  ...
+# Subtest: agentSourceDetail count inputs and coverage agree across mixed cutoffs
+ok 69 - agentSourceDetail count inputs and coverage agree across mixed cutoffs
+  ---
+  duration_ms: 2.734835
+  type: 'test'
+  ...
+# Subtest: complete writer-emitted v3 paid-success rows can still establish coverage
+ok 70 - complete writer-emitted v3 paid-success rows can still establish coverage
+  ---
+  duration_ms: 2.89293
+  type: 'test'
+  ...
+# Subtest: near-complete paid-success missing payment fields cannot undercount while claiming complete
+ok 71 - near-complete paid-success missing payment fields cannot undercount while claiming complete
+  ---
+  duration_ms: 1.86039
+  type: 'test'
+  ...
+# Subtest: missing or mistyped payment classification fields cannot claim complete
+ok 72 - missing or mistyped payment classification fields cannot claim complete
+  ---
+  duration_ms: 15.950666
+  type: 'test'
+  ...
+# Subtest: missing or mistyped construction inputs cannot undercount while claiming complete
+ok 73 - missing or mistyped construction inputs cannot undercount while claiming complete
+  ---
+  duration_ms: 8.221549
+  type: 'test'
+  ...
+# Subtest: missing or mistyped settlement inputs cannot undercount while claiming complete
+ok 74 - missing or mistyped settlement inputs cannot undercount while claiming complete
+  ---
+  duration_ms: 9.573947
+  type: 'test'
+  ...
+# Subtest: missing or mistyped actor and source fields cannot undercount while claiming complete
+ok 75 - missing or mistyped actor and source fields cannot undercount while claiming complete
+  ---
+  duration_ms: 20.631289
+  type: 'test'
+  ...
+# Subtest: legacy and partial rows cannot establish full-window completeness
+ok 76 - legacy and partial rows cannot establish full-window completeness
+  ---
+  duration_ms: 8.655801
+  type: 'test'
+  ...
+# Subtest: arbitrary private route, source, and failure labels cannot become public keys
+ok 77 - arbitrary private route, source, and failure labels cannot become public keys
+  ---
+  duration_ms: 6.150937
+  type: 'test'
+  ...
+# Subtest: 100000-character route, source, and failure values cannot establish coverage or inflate output
+ok 78 - 100000-character route, source, and failure values cannot establish coverage or inflate output
+  ---
+  duration_ms: 6.50048
+  type: 'test'
+  ...
+# Subtest: every legitimate writer-emitted vocabulary value still passes
+ok 79 - every legitimate writer-emitted vocabulary value still passes
+  ---
+  duration_ms: 4.173663
+  type: 'test'
+  ...
+# Subtest: classifier outputs are exactly the retained writer vocabularies
+ok 80 - classifier outputs are exactly the retained writer vocabularies
+  ---
+  duration_ms: 0.702027
+  type: 'test'
+  ...
+# Subtest: middleware query-key names stay canonical, bounded, and coverage-comparable
+ok 81 - middleware query-key names stay canonical, bounded, and coverage-comparable
+  ---
+  duration_ms: 2.53921
+  type: 'test'
+  ...
+# Subtest: middleware query-key normalization never exceeds its retained cap
+ok 82 - middleware query-key normalization never exceeds its retained cap
+  ---
+  duration_ms: 2.413804
+  type: 'test'
+  ...
+# Subtest: nonhex, uppercase, wrong-version, and extreme identifiers cannot establish coverage
+ok 83 - nonhex, uppercase, wrong-version, and extreme identifiers cannot establish coverage
+  ---
+  duration_ms: 19.992896
+  type: 'test'
+  ...
+# Subtest: writer-impossible cross-field v3 rows cannot establish coverage or change public counts
+ok 84 - writer-impossible cross-field v3 rows cannot establish coverage or change public counts
+  ---
+  duration_ms: 36.09866
+  type: 'test'
+  ...
+# Subtest: middleware stores oversized settlement amounts as null without poisoning integrity
+ok 85 - middleware stores oversized settlement amounts as null without poisoning integrity
+  ---
+  duration_ms: 5.627429
+  type: 'test'
+  ...
+# Subtest: canonical v4 MCP typed rows are consumed separately and corrupt v4 is unusable
+ok 86 - canonical v4 MCP typed rows are consumed separately and corrupt v4 is unusable
+  ---
+  duration_ms: 3.798667
+  type: 'test'
+  ...
+# Subtest: canonical v4 ledger persists absent and rejected challenges without redefining presence
+ok 87 - canonical v4 ledger persists absent and rejected challenges without redefining presence
+  ---
+  duration_ms: 2.612186
+  type: 'test'
+  ...
+# Subtest: authenticated MCP validation markers bind a privacy-safe exact digest to one typed row
+ok 88 - authenticated MCP validation markers bind a privacy-safe exact digest to one typed row
+  ---
+  duration_ms: 2.193367
+  type: 'test'
+  ...
+# Subtest: forged, mismatched, missing, malformed, and hostile MCP markers fail to legacy-compatible rows
+ok 89 - forged, mismatched, missing, malformed, and hostile MCP markers fail to legacy-compatible rows
+  ---
+  duration_ms: 3.031335
+  type: 'test'
+  ...
+# Subtest: appendMcpTypedDecision owns the canonical event at call time
+ok 90 - appendMcpTypedDecision owns the canonical event at call time
+  ---
+  duration_ms: 2.218797
+  type: 'test'
+  ...
+# Subtest: appendMcpTypedDecision contains hostile adaptation failures without surfacing their text
+ok 91 - appendMcpTypedDecision contains hostile adaptation failures without surfacing their text
+  ---
+  duration_ms: 1.621897
+  type: 'test'
+  ...
+# Subtest: appendMcpTypedDecision still stores nonthrowing accessor and plain object decisions
+ok 92 - appendMcpTypedDecision still stores nonthrowing accessor and plain object decisions
+  ---
+  duration_ms: 2.023732
+  type: 'test'
+  ...
+# Subtest: typed snapshot coverage freshness and source-local integrity are retained
+ok 93 - typed snapshot coverage freshness and source-local integrity are retained
+  ---
+  duration_ms: 4.124212
+  type: 'test'
+  ...
+# Subtest: late baseline does not claim full requested window
+ok 94 - late baseline does not claim full requested window
+  ---
+  duration_ms: 1.797672
+  type: 'test'
+  ...
+# Subtest: future rows do not enter window or freshness
+ok 95 - future rows do not enter window or freshness
+  ---
+  duration_ms: 1.492579
+  type: 'test'
+  ...
+# Subtest: production shutdown helper rejects undrained or failed lifecycle visibly
+ok 96 - production shutdown helper rejects undrained or failed lifecycle visibly
+  ---
+  duration_ms: 0.694687
+  type: 'test'
+  ...
+# Subtest: typed MCP declared source is untrusted metadata separate from owner-validation proof
+ok 97 - typed MCP declared source is untrusted metadata separate from owner-validation proof
+  ---
+  duration_ms: 4.717297
+  type: 'test'
+  ...
+# Subtest: writer process gate accepts only the safe integer 1
+ok 98 - writer process gate accepts only the safe integer 1
+  ---
+  duration_ms: 0.89723
+  type: 'test'
+  ...
+# Subtest: accepts exact GET, POST, alternate, manifest, and A2A construction parity
+ok 99 - accepts exact GET, POST, alternate, manifest, and A2A construction parity
+  ---
+  duration_ms: 2.089866
+  type: 'test'
+  ...
+# Subtest: fails when a transform drops a contract or callable example
+ok 100 - fails when a transform drops a contract or callable example
+  ---
+  duration_ms: 1.607418
+  type: 'test'
+  ...
+# Subtest: generates mapped USDC construction terms for eip155:8453
+ok 101 - generates mapped USDC construction terms for eip155:8453
+  ---
+  duration_ms: 0.37545
+  type: 'test'
+  ...
+# Subtest: generates mapped USDC construction terms for eip155:84532
+ok 102 - generates mapped USDC construction terms for eip155:84532
+  ---
+  duration_ms: 0.144745
+  type: 'test'
+  ...
+# Subtest: rejects an unsupported USDC construction network
+ok 103 - rejects an unsupported USDC construction network
+  ---
+  duration_ms: 0.15846
+  type: 'test'
+  ...
+# Subtest: live schemas agree with generated snapshot and HTTP batch is not MCP Zod
+ok 104 - live schemas agree with generated snapshot and HTTP batch is not MCP Zod
+  ---
+  duration_ms: 8.182201
+  type: 'test'
+  ...
+# Subtest: HTTP 200 plus nonempty text is not a pass without the declared contract
+ok 105 - HTTP 200 plus nonempty text is not a pass without the declared contract
+  ---
+  duration_ms: 1.753815
+  type: 'test'
+  ...
+# Subtest: missing and malformed bodies stay unknown or invalid, never pass
+ok 106 - missing and malformed bodies stay unknown or invalid, never pass
+  ---
+  duration_ms: 0.29061
+  type: 'test'
+  ...
+# Subtest: declared extract distinguishes refusal, truncation, and full capture
+ok 107 - declared extract distinguishes refusal, truncation, and full capture
+  ---
+  duration_ms: 0.981516
+  type: 'test'
+  ...
+# Subtest: source refusal is principal when truncation is also present
+ok 108 - source refusal is principal when truncation is also present
+  ---
+  duration_ms: 0.421653
+  type: 'test'
+  ...
+# Subtest: schema-shaped HTTP 500 is not completed delivery
+ok 109 - schema-shaped HTTP 500 is not completed delivery
+  ---
+  duration_ms: 0.373616
+  type: 'test'
+  ...
+# Subtest: unsupported method or resource stays unknown
+ok 110 - unsupported method or resource stays unknown
+  ---
+  duration_ms: 0.470337
+  type: 'test'
+  ...
+# Subtest: timeout and unsupported encoding stay distinct from source refusal
+ok 111 - timeout and unsupported encoding stay distinct from source refusal
+  ---
+  duration_ms: 0.777531
+  type: 'test'
+  ...
+# Subtest: read, batch, lockfile, and vendor-budget no-change hold as completed capture
+ok 112 - read, batch, lockfile, and vendor-budget no-change hold as completed capture
+  ---
+  duration_ms: 5.677082
+  type: 'test'
+  ...
+# Subtest: bounded oversized capture is never full_bounded_capture
+ok 113 - bounded oversized capture is never full_bounded_capture
+  ---
+  duration_ms: 86.992898
+  type: 'test'
+  ...
+# Subtest: persistent identity and capacity preserve pending claims, corrupt state fails closed
+ok 114 - persistent identity and capacity preserve pending claims, corrupt state fails closed
+  ---
+  duration_ms: 12.522126
+  type: 'test'
+  ...
+# Subtest: canonical replay URL binds sorted query keys and values
+ok 115 - canonical replay URL binds sorted query keys and values
+  ---
+  duration_ms: 7.3453
+  type: 'test'
+  ...
+# Subtest: payment decoder requires a complete x402 v2 exact payment binding
+ok 116 - payment decoder requires a complete x402 v2 exact payment binding
+  ---
+  duration_ms: 0.535128
+  type: 'test'
+  ...
+# Subtest: same payment ID and canonical request replays without a second handler run
+ok 117 - same payment ID and canonical request replays without a second handler run
+  ---
+  duration_ms: 4.6255
+  type: 'test'
+  ...
+# Subtest: same payment ID on changed input or payer fails with uncharged 409
+ok 118 - same payment ID on changed input or payer fails with uncharged 409
+  ---
+  duration_ms: 4.216971
+  type: 'test'
+  ...
+# Subtest: cached x402 response requires the exact credential that originally settled
+ok 119 - cached x402 response requires the exact credential that originally settled
+  ---
+  duration_ms: 3.578766
+  type: 'test'
+  ...
+# Subtest: paid POST replay binds the exact request bytes and rejects body drift before the handler
+ok 120 - paid POST replay binds the exact request bytes and rejects body drift before the handler
+  ---
+  duration_ms: 3.434162
+  type: 'test'
+  ...
+# Subtest: expired records return to normal payment processing
+ok 121 - expired records return to normal payment processing
+  ---
+  duration_ms: 6.4851
+  type: 'test'
+  ...
+# Subtest: a newly settled response is durable before the network response ends
+ok 122 - a newly settled response is durable before the network response ends
+  ---
+  duration_ms: 9.818127
+  type: 'test'
+  ...
+# Subtest: in-flight claim prevents a twin POST from running a second handler
+ok 123 - in-flight claim prevents a twin POST from running a second handler
+  ---
+  duration_ms: 221.268659
+  type: 'test'
+  ...
+# Subtest: required replay paths classify missing identifier separately from unbounded validity
+ok 124 - required replay paths classify missing identifier separately from unbounded validity
+  ---
+  duration_ms: 2.076351
+  type: 'test'
+  ...
+# Subtest: x402-only catalog actions are killed from MPP OpenAPI and kept on default OpenAPI
+ok 125 - x402-only catalog actions are killed from MPP OpenAPI and kept on default OpenAPI
+  ---
+  duration_ms: 3.671308
+  type: 'test'
+  ...
+# Subtest: kills Circle Gateway on MCP, A2A, catalog actions, and MPP OpenAPI
+ok 126 - kills Circle Gateway on MCP, A2A, catalog actions, and MPP OpenAPI
+  ---
+  duration_ms: 1.043013
+  type: 'test'
+  ...
+# Subtest: maps HTTP routes to MCP tool names and formats llms prices
+ok 127 - maps HTTP routes to MCP tool names and formats llms prices
+  ---
+  duration_ms: 0.136662
+  type: 'test'
+  ...
+# Subtest: renders every canonical paid route plus a labeled Circle alternate
+ok 128 - renders every canonical paid route plus a labeled Circle alternate
+  ---
+  duration_ms: 0.415111
+  type: 'test'
+  ...
+# Subtest: accepts exact OpenAPI, x402, MCP, A2A, catalog, llms, and Circle alternate parity
+ok 129 - accepts exact OpenAPI, x402, MCP, A2A, catalog, llms, and Circle alternate parity
+  ---
+  duration_ms: 0.442418
+  type: 'test'
+  ...
+# Subtest: fails when llms omits a canonical paid route, matching the 2026-08-20 snapshot
+ok 130 - fails when llms omits a canonical paid route, matching the 2026-08-20 snapshot
+  ---
+  duration_ms: 0.427156
+  type: 'test'
+  ...
+# Subtest: fails when Circle is promoted onto a killed surface
+ok 131 - fails when Circle is promoted onto a killed surface
+  ---
+  duration_ms: 0.624923
+  type: 'test'
+  ...
+# Subtest: live MCP metadata still matches one tool per canonical route shape
+ok 132 - live MCP metadata still matches one tool per canonical route shape
+  ---
+  duration_ms: 1.118415
+  type: 'test'
+  ...
+# Subtest: maps extract/batch to extract_batch for MCP parity
+ok 133 - maps extract/batch to extract_batch for MCP parity
+  ---
+  duration_ms: 0.25241
+  type: 'test'
+  ...
+# Subtest: prior ten typed MCP schemas remain exported and strict
+ok 134 - prior ten typed MCP schemas remain exported and strict
+  ---
+  duration_ms: 3.555417
+  type: 'test'
+  ...
+# Subtest: extract handler success variants cover every MCP schema-required path
+ok 135 - extract handler success variants cover every MCP schema-required path
+  ---
+  duration_ms: 11.798572
+  type: 'test'
+  ...
+# Subtest: mounted MCP lists extract outputSchema and serves typed structuredContent on paid success
+ok 136 - mounted MCP lists extract outputSchema and serves typed structuredContent on paid success
+  ---
+  duration_ms: 133.119932
+  type: 'test'
+  ...
+# Subtest: unpaid extract stays a payment challenge, not a typed success body
+ok 137 - unpaid extract stays a payment challenge, not a typed success body
+  ---
+  duration_ms: 8.337024
+  type: 'test'
+  ...
+# Subtest: application errors and malformed success stay untyped
+ok 138 - application errors and malformed success stay untyped
+  ---
+  duration_ms: 35.228797
+  type: 'test'
+  ...
+# Subtest: InMemory transport projects extract structuredContent only with outputSchema
+ok 139 - InMemory transport projects extract structuredContent only with outputSchema
+  ---
+  duration_ms: 34.10412
+  type: 'test'
+  ...
+# Subtest: mounted read exports its actual schema and typed source refusal without granting useful-content status
+ok 140 - mounted read exports its actual schema and typed source refusal without granting useful-content status
+  ---
+  duration_ms: 17.911632
+  type: 'test'
+  ...
+# Subtest: payment_offer_preflight handler output covers every MCP schema-required path
+ok 141 - payment_offer_preflight handler output covers every MCP schema-required path
+  ---
+  duration_ms: 29.018349
+  type: 'test'
+  ...
+# Subtest: settlement_proof handler output covers every MCP schema-required path
+ok 142 - settlement_proof handler output covers every MCP schema-required path
+  ---
+  duration_ms: 5.55581
+  type: 'test'
+  ...
+# Subtest: contract_qualified_search handler output covers every MCP schema-required path
+ok 143 - contract_qualified_search handler output covers every MCP schema-required path
+  ---
+  duration_ms: 4.62367
+  type: 'test'
+  ...
+# Subtest: MCP tools/list advertises the three Zod output schemas without a paid call
+ok 144 - MCP tools/list advertises the three Zod output schemas without a paid call
+  ---
+  duration_ms: 67.483658
+  type: 'test'
+  ...
+# Subtest: structuredContent is attached only when an output schema exists, and throw paths stay unstructured
+ok 145 - structuredContent is attached only when an output schema exists, and throw paths stay unstructured
+  ---
+  duration_ms: 10.520314
+  type: 'test'
+  ...
+# unknown format "date-time" ignored in schema at path "\#/properties/evaluatedAt"
+# unknown format "date-time" ignored in schema at path "\#/properties/evaluatedAt"
+# unknown format "date-time" ignored in schema at path "\#/properties/evaluatedAt"
+# unknown format "date-time" ignored in schema at path "\#/properties/evaluatedAt"
+# unknown format "date-time" ignored in schema at path "\#/properties/evaluatedAt"
+# unknown format "date-time" ignored in schema at path "\#/properties/evaluatedAt"
+# unknown format "date-time" ignored in schema at path "\#/properties/evaluatedAt"
+# unknown format "date-time" ignored in schema at path "\#/properties/evaluatedAt"
+# unknown format "date-time" ignored in schema at path "\#/properties/evaluatedAt"
+# unknown format "date-time" ignored in schema at path "\#/properties/evaluatedAt"
+# unknown format "date-time" ignored in schema at path "\#/properties/evaluatedAt"
+# unknown format "date-time" ignored in schema at path "\#/properties/evaluatedAt"
+# Subtest: prior seven typed MCP outputs keep their required contracts
+ok 146 - prior seven typed MCP outputs keep their required contracts
+  ---
+  duration_ms: 5.571367
+  type: 'test'
+  ...
+# Subtest: opportunity-preflight JSON Schema and MCP Zod stay in required-key parity
+ok 147 - opportunity-preflight JSON Schema and MCP Zod stay in required-key parity
+  ---
+  duration_ms: 0.372006
+  type: 'test'
+  ...
+# Subtest: opportunity-preflight handler outputs pass AJV and MCP Zod
+ok 148 - opportunity-preflight handler outputs pass AJV and MCP Zod
+  ---
+  duration_ms: 73.777718
+  type: 'test'
+  ...
+# Subtest: paid opportunity-preflight POST and MCP schemas reject trial-only fields
+ok 149 - paid opportunity-preflight POST and MCP schemas reject trial-only fields
+  ---
+  duration_ms: 8.111815
+  type: 'test'
+  ...
+# Subtest: wallet-policy-conformance JSON Schema and MCP Zod stay in required-key parity
+ok 150 - wallet-policy-conformance JSON Schema and MCP Zod stay in required-key parity
+  ---
+  duration_ms: 0.474958
+  type: 'test'
+  ...
+# Subtest: wallet-policy-conformance handler outputs pass AJV and MCP Zod
+ok 151 - wallet-policy-conformance handler outputs pass AJV and MCP Zod
+  ---
+  duration_ms: 86.427409
+  type: 'test'
+  ...
+# Subtest: stateful-wallet-policy-conformance JSON Schema and MCP Zod stay in required-key parity
+ok 152 - stateful-wallet-policy-conformance JSON Schema and MCP Zod stay in required-key parity
+  ---
+  duration_ms: 2.335396
+  type: 'test'
+  ...
+# Subtest: stateful-wallet-policy-conformance handler outputs pass AJV and MCP Zod
+ok 153 - stateful-wallet-policy-conformance handler outputs pass AJV and MCP Zod
+  ---
+  duration_ms: 64.356299
+  type: 'test'
+  ...
+# Subtest: MCP tools/list advertises the three POST output schemas without a paid call
+ok 154 - MCP tools/list advertises the three POST output schemas without a paid call
+  ---
+  duration_ms: 41.549836
+  type: 'test'
+  ...
+# Subtest: structuredContent is attached for the three POST tools and throw paths stay unstructured
+ok 155 - structuredContent is attached for the three POST tools and throw paths stay unstructured
+  ---
+  duration_ms: 8.371622
+  type: 'test'
+  ...
+# Subtest: scan handler output covers every MCP schema-required path
+ok 156 - scan handler output covers every MCP schema-required path
+  ---
+  duration_ms: 11.368183
+  type: 'test'
+  ...
+# Subtest: morpho_protection handler output covers every MCP schema-required path
+ok 157 - morpho_protection handler output covers every MCP schema-required path
+  ---
+  duration_ms: 8.670572
+  type: 'test'
+  ...
+# Subtest: morpho_preliquidation_replay handler output covers every MCP schema-required path
+ok 158 - morpho_preliquidation_replay handler output covers every MCP schema-required path
+  ---
+  duration_ms: 4.603716
+  type: 'test'
+  ...
+# Subtest: MCP tools/list advertises the three Zod output schemas without a paid call
+ok 159 - MCP tools/list advertises the three Zod output schemas without a paid call
+  ---
+  duration_ms: 73.339784
+  type: 'test'
+  ...
+# Subtest: structuredContent is attached only when an output schema exists
+ok 160 - structuredContent is attached only when an output schema exists
+  ---
+  duration_ms: 1.039402
+  type: 'test'
+  ...
+# Subtest: bridges a bounded payment header into tools/call metadata
+ok 161 - bridges a bounded payment header into tools/call metadata
+  ---
+  duration_ms: 2.06629
+  type: 'test'
+  ...
+# Subtest: preserves canonical MCP payment metadata instead of overriding it
+ok 162 - preserves canonical MCP payment metadata instead of overriding it
+  ---
+  duration_ms: 0.197348
+  type: 'test'
+  ...
+# Subtest: ignores malformed, oversized, and incomplete headers
+ok 163 - ignores malformed, oversized, and incomplete headers
+  ---
+  duration_ms: 0.300828
+  type: 'test'
+  ...
+# Subtest: ignores payment headers outside tools/call
+ok 164 - ignores payment headers outside tools/call
+  ---
+  duration_ms: 0.204864
+  type: 'test'
+  ...
+# Subtest: advertises exact payment options for proactive MCP buyers
+ok 165 - advertises exact payment options for proactive MCP buyers
+  ---
+  duration_ms: 0.525522
+  type: 'test'
+  ...
+# Subtest: adds structured content only for a tool with a truthful output schema
+ok 166 - adds structured content only for a tool with a truthful output schema
+  ---
+  duration_ms: 0.267636
+  type: 'test'
+  ...
+# Subtest: revives JSON-stringified array args only for array-shaped schemas
+ok 167 - revives JSON-stringified array args only for array-shaped schemas
+  ---
+  duration_ms: 0.774189
+  type: 'test'
+  ...
+# Subtest: publishes unique action-oriented titles for every live MCP tool
+ok 168 - publishes unique action-oriented titles for every live MCP tool
+  ---
+  duration_ms: 1.275518
+  type: 'test'
+  ...
+# Subtest: makes each overlapping web and company tool chooseable without renaming it
+ok 169 - makes each overlapping web and company tool chooseable without renaming it
+  ---
+  duration_ms: 0.436794
+  type: 'test'
+  ...
+# Subtest: fails closed when a live tool lacks explicit selection metadata
+ok 170 - fails closed when a live tool lacks explicit selection metadata
+  ---
+  duration_ms: 0.353638
+  type: 'test'
+  ...
+# Subtest: M01 unpaid exact registered call is one challenge
+ok 171 - M01 unpaid exact registered call is one challenge
+  ---
+  duration_ms: 75.058878
+  type: 'test'
+  ...
+# Subtest: M02 verified handler success plus settlement success is paid_success
+ok 172 - M02 verified handler success plus settlement success is paid_success
+  ---
+  duration_ms: 46.364348
+  type: 'test'
+  ...
+# Subtest: M03 handler isError:true is application_failure never paid_success
+ok 173 - M03 handler isError:true is application_failure never paid_success
+  ---
+  duration_ms: 37.56312
+  type: 'test'
+  ...
+# Subtest: M04 handler throw is application_failure and retains no error text
+ok 174 - M04 handler throw is application_failure and retains no error text
+  ---
+  duration_ms: 39.369738
+  type: 'test'
+  ...
+# Subtest: M05 verifier rejection is challenge never paid_success
+ok 175 - M05 verifier rejection is challenge never paid_success
+  ---
+  duration_ms: 28.748283
+  type: 'test'
+  ...
+# Subtest: M06 settlement failed and unknown never paid_success
+ok 176 - M06 settlement failed and unknown never paid_success
+  ---
+  duration_ms: 60.096705
+  type: 'test'
+  ...
+# Subtest: M07 no-ID notification with forged payment never paid_success
+ok 177 - M07 no-ID notification with forged payment never paid_success
+  ---
+  duration_ms: 35.925956
+  type: 'test'
+  ...
+# Subtest: M08 numeric and string IDs bind exactly; type mismatch drops
+ok 178 - M08 numeric and string IDs bind exactly; type mismatch drops
+  ---
+  duration_ms: 33.61015
+  type: 'test'
+  ...
+# Subtest: M09 absent wrong unsafe and null IDs never succeed
+ok 179 - M09 absent wrong unsafe and null IDs never succeed
+  ---
+  duration_ms: 0.637548
+  type: 'test'
+  ...
+# Subtest: M10 each tool SKU resource credential-offer and settlement-offer mismatch drops
+ok 180 - M10 each tool SKU resource credential-offer and settlement-offer mismatch drops
+  ---
+  duration_ms: 14.456477
+  type: 'test'
+  ...
+# Subtest: M11 explicit wrapper replay path is replay_success never paid_success
+ok 181 - M11 explicit wrapper replay path is replay_success never paid_success
+  ---
+  duration_ms: 27.652265
+  type: 'test'
+  ...
+# Subtest: M12 JSON and SSE write boundaries yield identical typed results
+ok 182 - M12 JSON and SSE write boundaries yield identical typed results
+  ---
+  duration_ms: 170.856479
+  type: 'test'
+  ...
+# Subtest: M13 finish close and second finalize append at most once
+ok 183 - M13 finish close and second finalize append at most once
+  ---
+  duration_ms: 35.413945
+  type: 'test'
+  ...
+# Subtest: M14 32 interleaved requests with repeated IDs do not cross-wire
+ok 184 - M14 32 interleaved requests with repeated IDs do not cross-wire
+  ---
+  duration_ms: 196.203088
+  type: 'test'
+  ...
+# Subtest: M15 append throw reject and blocked promise keep response invariance
+ok 185 - M15 append throw reject and blocked promise keep response invariance
+  ---
+  duration_ms: 28.485354
+  type: 'test'
+  ...
+# SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+#     at JSON.parse (<anonymous>)
+#     at parse (/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/node_modules/body-parser/lib/types/json.js:96:19)
+#     at /workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/node_modules/body-parser/lib/read.js:128:18
+#     at AsyncResource.runInAsyncScope (node:async_hooks:214:14)
+#     at invokeCallback (/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/node_modules/raw-body/index.js:238:16)
+#     at done (/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/node_modules/raw-body/index.js:227:7)
+#     at IncomingMessage.onEnd (/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/node_modules/raw-body/index.js:287:7)
+#     at IncomingMessage.emit (node:events:519:28)
+#     at endReadableNT (node:internal/streams/readable:1698:12)
+#     at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+# Subtest: M16 initialize list ping malformed and unknown method emit zero economic events
+ok 186 - M16 initialize list ping malformed and unknown method emit zero economic events
+  ---
+  duration_ms: 45.56478
+  type: 'test'
+  ...
+# Subtest: M17 representative free and paid HTTP routes stay isolated
+ok 187 - M17 representative free and paid HTTP routes stay isolated
+  ---
+  duration_ms: 9.007485
+  type: 'test'
+  ...
+# Subtest: MCP POST declared-source headers are not retained by typed events or the HTTP writer
+ok 188 - MCP POST declared-source headers are not retained by typed events or the HTTP writer
+  ---
+  duration_ms: 7.424424
+  type: 'test'
+  ...
+# Subtest: M18 package and privacy scan excludes assignment fixtures and raw markers
+ok 189 - M18 package and privacy scan excludes assignment fixtures and raw markers
+  ---
+  duration_ms: 26.391001
+  type: 'test'
+  ...
+# Subtest: hook-enabled and hook-disabled control-flow receipt stays invariant
+ok 190 - hook-enabled and hook-disabled control-flow receipt stays invariant
+  ---
+  duration_ms: 25.252271
+  type: 'test'
+  ...
+# Subtest: final MCP output-schema failure after settlement is application_failure
+ok 191 - final MCP output-schema failure after settlement is application_failure
+  ---
+  duration_ms: 10.704859
+  type: 'test'
+  ...
+# Subtest: SDK input validation before the paid wrapper is not a payment challenge
+ok 192 - SDK input validation before the paid wrapper is not a payment challenge
+  ---
+  duration_ms: 6.777685
+  type: 'test'
+  ...
+# Subtest: synchronous append stall does not delay the HTTP response
+ok 193 - synchronous append stall does not delay the HTTP response
+  ---
+  duration_ms: 532.987985
+  type: 'test'
+  ...
+# Subtest: typed append uses canonical v4 ledger and production mount has no response observer
+ok 194 - typed append uses canonical v4 ledger and production mount has no response observer
+  ---
+  duration_ms: 16.2273
+  type: 'test'
+  ...
+# Subtest: M01 unpaid absent-credential challenge persists on the canonical ledger
+ok 195 - M01 unpaid absent-credential challenge persists on the canonical ledger
+  ---
+  duration_ms: 8.489783
+  type: 'test'
+  ...
+# Subtest: M01a authenticated validation marker joins the exact mounted challenge without raw retention
+ok 196 - M01a authenticated validation marker joins the exact mounted challenge without raw retention
+  ---
+  duration_ms: 6.593642
+  type: 'test'
+  ...
+# Subtest: M05 rejected-credential challenge persists on the canonical ledger
+ok 197 - M05 rejected-credential challenge persists on the canonical ledger
+  ---
+  duration_ms: 12.303578
+  type: 'test'
+  ...
+# Subtest: first callback is detached from the request stack
+ok 198 - first callback is detached from the request stack
+  ---
+  duration_ms: 234.334338
+  type: 'test'
+  ...
+# Subtest: lifecycle does not mutate Array.prototype during a callback
+ok 199 - lifecycle does not mutate Array.prototype during a callback
+  ---
+  duration_ms: 13.565264
+  type: 'test'
+  ...
+# Subtest: callback data stays isolated from lifecycle-owned queue
+ok 200 - callback data stays isolated from lifecycle-owned queue
+  ---
+  duration_ms: 15.423938
+  type: 'test'
+  ...
+# Subtest: hostile then-getter callback result is one contained append failure
+ok 201 - hostile then-getter callback result is one contained append failure
+  ---
+  duration_ms: 24.497288
+  type: 'test'
+  ...
+# Subtest: evaluateMcpTypedTelemetryOutcome matches the reviewer fixture matrix
+ok 202 - evaluateMcpTypedTelemetryOutcome matches the reviewer fixture matrix
+  ---
+  duration_ms: 9.467069
+  type: 'test'
+  ...
+# Subtest: pure evaluator rejects unknown fields, mutation, and unbounded side effects
+ok 203 - pure evaluator rejects unknown fields, mutation, and unbounded side effects
+  ---
+  duration_ms: 0.294255
+  type: 'test'
+  ...
+# Subtest: M08 M09 type-preserving request/response ID binding drops mismatches
+ok 204 - M08 M09 type-preserving request/response ID binding drops mismatches
+  ---
+  duration_ms: 1.076935
+  type: 'test'
+  ...
+# Subtest: M10 catalog and issued-offer dimensions fail closed independently
+ok 205 - M10 catalog and issued-offer dimensions fail closed independently
+  ---
+  duration_ms: 0.364082
+  type: 'test'
+  ...
+# Subtest: prior raw-response inference is not the typed paid-success predicate
+ok 206 - prior raw-response inference is not the typed paid-success predicate
+  ---
+  duration_ms: 0.474745
+  type: 'test'
+  ...
+# Subtest: issued-offer digest is domain-separated, canonical, and does not store accepts
+ok 207 - issued-offer digest is domain-separated, canonical, and does not store accepts
+  ---
+  duration_ms: 1.339942
+  type: 'test'
+  ...
+# Subtest: registered catalog fails closed on duplicates and inconsistent names
+ok 208 - registered catalog fails closed on duplicates and inconsistent names
+  ---
+  duration_ms: 0.374332
+  type: 'test'
+  ...
+# Subtest: M13 request-local attempt finalizes at most once and rejects impossible transitions
+ok 209 - M13 request-local attempt finalizes at most once and rejects impossible transitions
+  ---
+  duration_ms: 0.603727
+  type: 'test'
+  ...
+# Subtest: M08 attempt-level numeric/string response mismatch never paid_success
+ok 210 - M08 attempt-level numeric/string response mismatch never paid_success
+  ---
+  duration_ms: 0.392941
+  type: 'test'
+  ...
+# Subtest: M15 append throw and rejected promise cannot change the decision object
+ok 211 - M15 append throw and rejected promise cannot change the decision object
+  ---
+  duration_ms: 0.542486
+  type: 'test'
+  ...
+# Subtest: typed decisions never retain raw IDs, credentials, or error text
+ok 212 - typed decisions never retain raw IDs, credentials, or error text
+  ---
+  duration_ms: 0.220768
+  type: 'test'
+  ...
+# Subtest: consistent but unregistered tool/SKU/resource triple is rejected
+ok 213 - consistent but unregistered tool/SKU/resource triple is rejected
+  ---
+  duration_ms: 0.10505
+  type: 'test'
+  ...
+# Subtest: UTF-8 string ID bounds use bytes not JavaScript code units
+ok 214 - UTF-8 string ID bounds use bytes not JavaScript code units
+  ---
+  duration_ms: 0.239375
+  type: 'test'
+  ...
+# Subtest: absent and rejected payment-required challenges are both valid typed decisions
+ok 215 - absent and rejected payment-required challenges are both valid typed decisions
+  ---
+  duration_ms: 0.164392
+  type: 'test'
+  ...
+# Subtest: strict decision validator is an allowlist not a substring denylist
+ok 216 - strict decision validator is an allowlist not a substring denylist
+  ---
+  duration_ms: 0.151402
+  type: 'test'
+  ...
+# Subtest: digestMcpIssuedOfferV1 rejects malformed noncanonical and unknown-key offers
+ok 217 - digestMcpIssuedOfferV1 rejects malformed noncanonical and unknown-key offers
+  ---
+  duration_ms: 0.283596
+  type: 'test'
+  ...
+# Subtest: enqueueAppend is not synchronous on the attempt stack
+ok 218 - enqueueAppend is not synchronous on the attempt stack
+  ---
+  duration_ms: 0.211472
+  type: 'test'
+  ...
+# Subtest: publishes one explicit read-only contract for every paid JSON POST route
+ok 219 - publishes one explicit read-only contract for every paid JSON POST route
+  ---
+  duration_ms: 2.085603
+  type: 'test'
+  ...
+# Subtest: effect selection and headers are exact method-route bindings
+ok 220 - effect selection and headers are exact method-route bindings
+  ---
+  duration_ms: 0.306525
+  type: 'test'
+  ...
+# Subtest: the declared paid POST set matches every payment-gated JSON POST operation
+ok 221 - the declared paid POST set matches every payment-gated JSON POST operation
+  ---
+  duration_ms: 3.420769
+  type: 'test'
+  ...
+# Subtest: OpenAPI attachment is generated from the exact declared operation set
+ok 222 - OpenAPI attachment is generated from the exact declared operation set
+  ---
+  duration_ms: 0.503439
+  type: 'test'
+  ...
+# Subtest: normalizes only credential-free public HTTPS targets
+ok 223 - normalizes only credential-free public HTTPS targets
+  ---
+  duration_ms: 6.818482
+  type: 'test'
+  ...
+# Subtest: public address policy rejects private, reserved, and documentation ranges
+ok 224 - public address policy rejects private, reserved, and documentation ranges
+  ---
+  duration_ms: 0.31466
+  type: 'test'
+  ...
+# Subtest: pinned DNS lookup supports scalar and all-address Node callback contracts
+ok 225 - pinned DNS lookup supports scalar and all-address Node callback contracts
+  ---
+  duration_ms: 1.240111
+  type: 'test'
+  ...
+# Subtest: normalizes matching x402 and MPP offers without credentials or payment
+ok 226 - normalizes matching x402 and MPP offers without credentials or payment
+  ---
+  duration_ms: 34.374586
+  type: 'test'
+  ...
+# Subtest: compares caller-supplied catalog metadata with each live unsigned offer
+ok 227 - compares caller-supplied catalog metadata with each live unsigned offer
+  ---
+  duration_ms: 2.055986
+  type: 'test'
+  ...
+# Subtest: compares a protocol-specific catalog candidate only with that live protocol
+ok 228 - compares a protocol-specific catalog candidate only with that live protocol
+  ---
+  duration_ms: 1.741196
+  type: 'test'
+  ...
+# Subtest: turns explicit catalog to runtime drift into review-required before authorization
+ok 229 - turns explicit catalog to runtime drift into review-required before authorization
+  ---
+  duration_ms: 1.061555
+  type: 'test'
+  ...
+# Subtest: rejects malformed catalog metadata before any target request
+ok 230 - rejects malformed catalog metadata before any target request
+  ---
+  duration_ms: 0.410428
+  type: 'test'
+  ...
+# Subtest: flags economic drift across protocols
+ok 231 - flags economic drift across protocols
+  ---
+  duration_ms: 1.237862
+  type: 'test'
+  ...
+# Subtest: fails closed on resource binding, realm, and expiry errors
+ok 232 - fails closed on resource binding, realm, and expiry errors
+  ---
+  duration_ms: 1.502919
+  type: 'test'
+  ...
+# Subtest: reports a non-402 target without reading a response body
+ok 233 - reports a non-402 target without reading a response body
+  ---
+  duration_ms: 0.7244
+  type: 'test'
+  ...
+# Subtest: observes a same-origin 301 without following it or accusing the catalog
+ok 234 - observes a same-origin 301 without following it or accusing the catalog
+  ---
+  duration_ms: 1.487225
+  type: 'test'
+  ...
+# Subtest: sanitizes hostile, credentialed, secret, and oversized Location values without following them
+ok 235 - sanitizes hostile, credentialed, secret, and oversized Location values without following them
+  ---
+  duration_ms: 0.568419
+  type: 'test'
+  ...
+# Subtest: valid 402 remains parseable without a redirect finding
+ok 236 - valid 402 remains parseable without a redirect finding
+  ---
+  duration_ms: 1.048993
+  type: 'test'
+  ...
+# Subtest: rejects a changed final URL
+ok 237 - rejects a changed final URL
+  ---
+  duration_ms: 0.517091
+  type: 'test'
+  ...
+# Subtest: marks a parseable payment offer review-required when the seller omits its success response schema
+ok 238 - marks a parseable payment offer review-required when the seller omits its success response schema
+  ---
+  duration_ms: 0.424261
+  type: 'test'
+  ...
+# Subtest: builds bounded seller-declared authorization evidence for exact operations
+ok 239 - builds bounded seller-declared authorization evidence for exact operations
+  ---
+  duration_ms: 16.507203
+  type: 'test'
+  ...
+# Subtest: rejects missing response contracts, undeclared effects, and cross-origin resources
+ok 240 - rejects missing response contracts, undeclared effects, and cross-origin resources
+  ---
+  duration_ms: 0.749851
+  type: 'test'
+  ...
+# Subtest: advertises the manifest through one standard describedby link on configured paid or discovery routes
+ok 241 - advertises the manifest through one standard describedby link on configured paid or discovery routes
+  ---
+  duration_ms: 0.389356
+  type: 'test'
+  ...
+# Subtest: valid two-receipt claim reruns only the original signed target and persists an empty private marker
+ok 242 - valid two-receipt claim reruns only the original signed target and persists an empty private marker
+  ---
+  duration_ms: 31.81773
+  type: 'test'
+  ...
+# Subtest: a referred buyer can create the next generation while the free audit strips its ancestor referral
+ok 243 - a referred buyer can create the next generation while the free audit strips its ancestor referral
+  ---
+  duration_ms: 16.31954
+  type: 'test'
+  ...
+# Subtest: accepts equal-second receipt issuance and exposes the precise ordering evidence field
+ok 244 - accepts equal-second receipt issuance and exposes the precise ordering evidence field
+  ---
+  duration_ms: 8.838681
+  type: 'test'
+  ...
+# Subtest: preserves an unverified recheck and its unavailable referral contract
+ok 245 - preserves an unverified recheck and its unavailable referral contract
+  ---
+  duration_ms: 10.134537
+  type: 'test'
+  ...
+# Subtest: rejects foreign signers, same payer, same transaction, wrong referral, and missing transaction binding
+    # Subtest: foreign receipt signer
+    ok 1 - foreign receipt signer
+      ---
+      duration_ms: 8.337773
+      type: 'test'
+      ...
+    # Subtest: same payer with EVM case normalization
+    ok 2 - same payer with EVM case normalization
+      ---
+      duration_ms: 5.848494
+      type: 'test'
+      ...
+    # Subtest: same transaction with hex case normalization
+    ok 3 - same transaction with hex case normalization
+      ---
+      duration_ms: 5.878557
+      type: 'test'
+      ...
+    # Subtest: wrong downstream referral
+    ok 4 - wrong downstream referral
+      ---
+      duration_ms: 5.67857
+      type: 'test'
+      ...
+    # Subtest: missing downstream referral
+    ok 5 - missing downstream referral
+      ---
+      duration_ms: 6.015965
+      type: 'test'
+      ...
+    # Subtest: missing signed transaction
+    ok 6 - missing signed transaction
+      ---
+      duration_ms: 0.888138
+      type: 'test'
+      ...
+    1..6
+ok 246 - rejects foreign signers, same payer, same transaction, wrong referral, and missing transaction binding
+  ---
+  duration_ms: 44.448077
+  type: 'test'
+  ...
+# Subtest: rejects wrong origin, route, network, receipt order, and malformed or ambiguous signed URLs
+    # Subtest: wrong original origin
+    ok 1 - wrong original origin
+      ---
+      duration_ms: 6.022177
+      type: 'test'
+      ...
+    # Subtest: wrong original route
+    ok 2 - wrong original route
+      ---
+      duration_ms: 5.562745
+      type: 'test'
+      ...
+    # Subtest: wrong downstream origin
+    ok 3 - wrong downstream origin
+      ---
+      duration_ms: 5.595907
+      type: 'test'
+      ...
+    # Subtest: wrong downstream route
+    ok 4 - wrong downstream route
+      ---
+      duration_ms: 5.764123
+      type: 'test'
+      ...
+    # Subtest: wrong network
+    ok 5 - wrong network
+      ---
+      duration_ms: 5.969245
+      type: 'test'
+      ...
+    # Subtest: network mismatch
+    ok 6 - network mismatch
+      ---
+      duration_ms: 5.442285
+      type: 'test'
+      ...
+    # Subtest: earlier downstream timestamp
+    ok 7 - earlier downstream timestamp
+      ---
+      duration_ms: 5.009505
+      type: 'test'
+      ...
+    # Subtest: malformed percent escape
+    ok 8 - malformed percent escape
+      ---
+      duration_ms: 5.285758
+      type: 'test'
+      ...
+    # Subtest: ambiguous original query
+    ok 9 - ambiguous original query
+      ---
+      duration_ms: 4.531836
+      type: 'test'
+      ...
+    # Subtest: empty original referral
+    ok 10 - empty original referral
+      ---
+      duration_ms: 5.578706
+      type: 'test'
+      ...
+    # Subtest: fragment
+    ok 11 - fragment
+      ---
+      duration_ms: 5.895268
+      type: 'test'
+      ...
+    # Subtest: ambiguous downstream referral
+    ok 12 - ambiguous downstream referral
+      ---
+      duration_ms: 5.184803
+      type: 'test'
+      ...
+    1..12
+ok 247 - rejects wrong origin, route, network, receipt order, and malformed or ambiguous signed URLs
+  ---
+  duration_ms: 89.819129
+  type: 'test'
+  ...
+# Subtest: invalid publicUrl configurations fail as server errors before signed URL parsing
+    # Subtest: missing
+    ok 1 - missing
+      ---
+      duration_ms: 1.139221
+      type: 'test'
+      ...
+    # Subtest: malformed
+    ok 2 - malformed
+      ---
+      duration_ms: 0.680344
+      type: 'test'
+      ...
+    # Subtest: non-HTTPS
+    ok 3 - non-HTTPS
+      ---
+      duration_ms: 0.571891
+      type: 'test'
+      ...
+    # Subtest: credential-bearing
+    ok 4 - credential-bearing
+      ---
+      duration_ms: 0.950628
+      type: 'test'
+      ...
+    # Subtest: query-bearing
+    ok 5 - query-bearing
+      ---
+      duration_ms: 1.939848
+      type: 'test'
+      ...
+    # Subtest: fragment-bearing
+    ok 6 - fragment-bearing
+      ---
+      duration_ms: 0.820621
+      type: 'test'
+      ...
+    # Subtest: non-origin path
+    ok 7 - non-origin path
+      ---
+      duration_ms: 1.031815
+      type: 'test'
+      ...
+    1..7
+ok 248 - invalid publicUrl configurations fail as server errors before signed URL parsing
+  ---
+  duration_ms: 9.500241
+  type: 'test'
+  ...
+# Subtest: rejects unknown body fields and unsupported receipt modes
+ok 249 - rejects unknown body fields and unsupported receipt modes
+  ---
+  duration_ms: 3.022894
+  type: 'test'
+  ...
+# Subtest: sequential and concurrent duplicate claims have exactly one successful winner
+    # Subtest: sequential
+    ok 1 - sequential
+      ---
+      duration_ms: 17.334434
+      type: 'test'
+      ...
+    # Subtest: concurrent
+    ok 2 - concurrent
+      ---
+      duration_ms: 11.706517
+      type: 'test'
+      ...
+    1..2
+ok 250 - sequential and concurrent duplicate claims have exactly one successful winner
+  ---
+  duration_ms: 29.44214
+  type: 'test'
+  ...
+# Subtest: execution failure occurs before the documented claim consumption point
+ok 251 - execution failure occurs before the documented claim consumption point
+  ---
+  duration_ms: 6.866884
+  type: 'test'
+  ...
+# Subtest: telemetry excludes the free claim route from paid demand, settlement, and revenue evidence
+ok 252 - telemetry excludes the free claim route from paid demand, settlement, and revenue evidence
+  ---
+  duration_ms: 4.529516
+  type: 'test'
+  ...
+# Subtest: HTTP and machine surfaces expose the POST as free and non-paywalled
+ok 253 - HTTP and machine surfaces expose the POST as free and non-paywalled
+  ---
+  duration_ms: 1904.769409
+  type: 'test'
+  ...
+# Subtest: normalizes one exact public seller route
+ok 254 - normalizes one exact public seller route
+  ---
+  duration_ms: 6.495811
+  type: 'test'
+  ...
+# Subtest: returns bounded machine-buyable evidence without schemas or target payment
+ok 255 - returns bounded machine-buyable evidence without schemas or target payment
+  ---
+  duration_ms: 2.594741
+  type: 'test'
+  ...
+# Subtest: attributes a bounded receipt-derived referral without passing it to the target audit
+ok 256 - attributes a bounded receipt-derived referral without passing it to the target audit
+  ---
+  duration_ms: 0.381535
+  type: 'test'
+  ...
+# Subtest: separates static POST contract readiness from live machine buyability
+ok 257 - separates static POST contract readiness from live machine buyability
+  ---
+  duration_ms: 0.33957
+  type: 'test'
+  ...
+# Subtest: turns controlled findings into seller repair actions
+ok 258 - turns controlled findings into seller repair actions
+  ---
+  duration_ms: 0.277571
+  type: 'test'
+  ...
+# Subtest: turns invalid x402 protocol documents into one exact repair action
+ok 259 - turns invalid x402 protocol documents into one exact repair action
+  ---
+  duration_ms: 0.275382
+  type: 'test'
+  ...
+# Subtest: maps bounded seller-contract and transport failures
+ok 260 - maps bounded seller-contract and transport failures
+  ---
+  duration_ms: 1.156083
+  type: 'test'
+  ...
+# Subtest: incomplete acquisition is not repair and withholds referral even when a referral id is supplied
+ok 261 - incomplete acquisition is not repair and withholds referral even when a referral id is supplied
+  ---
+  duration_ms: 0.51574
+  type: 'test'
+  ...
+# Subtest: classifies acquisition failures without inventing seller blame
+ok 262 - classifies acquisition failures without inventing seller blame
+  ---
+  duration_ms: 0.290223
+  type: 'test'
+  ...
+# Subtest: preserves transient declared-URL HTTP evidence without asserting permanence
+ok 263 - preserves transient declared-URL HTTP evidence without asserting permanence
+  ---
+  duration_ms: 0.482967
+  type: 'test'
+  ...
+# Subtest: unverified output validates against the complete advertised schema
+ok 264 - unverified output validates against the complete advertised schema
+  ---
+  duration_ms: 59.798916
+  type: 'test'
+  ...
+# Subtest: MCP clients receive the full unverified seller-audit contract
+ok 265 - MCP clients receive the full unverified seller-audit contract
+  ---
+  duration_ms: 34.511012
+  type: 'test'
+  ...
+# Subtest: binds every declared standard route to both exact Base settlement protocols
+ok 266 - binds every declared standard route to both exact Base settlement protocols
+  ---
+  duration_ms: 98.157962
+  type: 'test'
+  ...
+# Subtest: identity-binding declaration is stable across rollout flags and does not authorize payment
+ok 267 - identity-binding declaration is stable across rollout flags and does not authorize payment
+  ---
+  duration_ms: 56.027139
+  type: 'test'
+  ...
+# Subtest: the PEM raw Ed25519 key is the registered operational wallet
+ok 268 - the PEM raw Ed25519 key is the registered operational wallet
+  ---
+  duration_ms: 28.704591
+  type: 'test'
+  ...
+# Subtest: fails closed on production origin, route, settlement, or registered-wallet drift
+ok 269 - fails closed on production origin, route, settlement, or registered-wallet drift
+  ---
+  duration_ms: 48.213285
+  type: 'test'
+  ...
+# Subtest: keeps expired static evidence visible but inactive for rotation monitoring
+ok 270 - keeps expired static evidence visible but inactive for rotation monitoring
+  ---
+  duration_ms: 20.925851
+  type: 'test'
+  ...
+# Subtest: bounded worker execution and mounted HTTP produce measured cost inputs
+not ok 271 - bounded worker execution and mounted HTTP produce measured cost inputs
+  ---
+  duration_ms: 1486.678516
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.cost.test.mjs:194:1'
+  failureType: 'testCodeFailure'
+  error: 'startup exited 1/null'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.cost.test.mjs:130:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: flag off leaves live extract and catalogs unchanged
+ok 272 - flag off leaves live extract and catalogs unchanged
+  ---
+  duration_ms: 2096.659367
+  type: 'test'
+  ...
+# Subtest: unsigned empty POSTs return 402; nonempty invalid probes refuse without facilitator calls
+not ok 273 - unsigned empty POSTs return 402; nonempty invalid probes refuse without facilitator calls
+  ---
+  duration_ms: 958.389314
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:336:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: official @x402/fetch buys a useful delta; no-change and unit-change stay distinct; telemetry matches bytes
+not ok 274 - official @x402/fetch buys a useful delta; no-change and unit-change stay distinct; telemetry matches bytes
+  ---
+  duration_ms: 1007.185687
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:384:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: two simultaneous distinct callers stay isolated
+not ok 275 - two simultaneous distinct callers stay isolated
+  ---
+  duration_ms: 1030.183879
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:520:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: timeout after simulated payment is not informational no-change
+not ok 276 - timeout after simulated payment is not informational no-change
+  ---
+  duration_ms: 914.840755
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:544:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: simulated facilitator verify failure does not settle
+not ok 277 - simulated facilitator verify failure does not settle
+  ---
+  duration_ms: 915.301028
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:579:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: unrelated worker report and oversized stdout do not settle
+not ok 278 - unrelated worker report and oversized stdout do not settle
+  ---
+  duration_ms: 864.97196
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:600:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: oversized worker stdout is HTTP 503 and does not settle
+not ok 279 - oversized worker stdout is HTTP 503 and does not settle
+  ---
+  duration_ms: 939.04839
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:628:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: x402 worker crash is HTTP 503 and does not settle
+not ok 280 - x402 worker crash is HTTP 503 and does not settle
+  ---
+  duration_ms: 950.129518
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:653:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: supplied MPP credential is refused before settlement
+not ok 281 - supplied MPP credential is refused before settlement
+  ---
+  duration_ms: 864.234636
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:679:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: vendor-budget flag does not disable production extract_batch
+not ok 282 - vendor-budget flag does not disable production extract_batch
+  ---
+  duration_ms: 905.723887
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:703:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: unknown settlement is not retried
+not ok 283 - unknown settlement is not retried
+  ---
+  duration_ms: 939.956304
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:742:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: response expansion preserves full evidence or refuses without a settlement
+not ok 284 - response expansion preserves full evidence or refuses without a settlement
+  ---
+  duration_ms: 869.849109
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:782:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: canonical vendor path is required before verification and settlement
+not ok 285 - canonical vendor path is required before verification and settlement
+  ---
+  duration_ms: 881.187683
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:804:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: unbound and explicitly rebound vendor preflight use pricing admission without a wallet
+not ok 286 - unbound and explicitly rebound vendor preflight use pricing admission without a wallet
+  ---
+  duration_ms: 1039.667778
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:823:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: HTTP overload refuses excess workers without settling those requests
+not ok 287 - HTTP overload refuses excess workers without settling those requests
+  ---
+  duration_ms: 1036.200642
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:845:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: precomputed delivery survives a hard crash after facilitator mutation starts
+not ok 288 - precomputed delivery survives a hard crash after facilitator mutation starts
+  ---
+  duration_ms: 1076.394009
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:858:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: combined server advertises seller diagnostic schema and unpaid MCP calls remain gated
+not ok 289 - combined server advertises seller diagnostic schema and unpaid MCP calls remain gated
+  ---
+  duration_ms: 885.873449
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:889:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: vendor HTTP documents JSON contracts for every owned response status
+not ok 290 - vendor HTTP documents JSON contracts for every owned response status
+  ---
+  duration_ms: 898.056853
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:930:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: bounded HTTP body refusals match the declared 408, 413 and 415 contracts
+not ok 291 - bounded HTTP body refusals match the declared 408, 413 and 415 contracts
+  ---
+  duration_ms: 891.733796
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:950:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# Subtest: official MCP payment client retains unknown vendor output without another settlement
+not ok 292 - official MCP payment client retains unknown vendor output without another settlement
+  ---
+  duration_ms: 1167.91331
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:981:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    startup exited before listening: code=1 signal=null
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17
+          throw new Error(
+                ^
+    
+    Error: x402 resource description exceeds CDP's 500-character limit for https://agents.samedaydesk.com/vendor-budget-impact: 636
+        at assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+        at file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    
+    Node.js v22.23.2
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertCdpResourceDescriptionCompatibility (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/x402-resource-compat.mjs:17:13)
+    file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/server.js:956:1
+    ChildProcess.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.http.test.mjs:148:14)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+# \# validated mounted vendor HTTP statuses: 
+# Subtest: 250 admitted changes keep complete evidence instead of charged array truncation
+ok 293 - 250 admitted changes keep complete evidence instead of charged array truncation
+  ---
+  duration_ms: 155.614742
+  type: 'test'
+  ...
+# Subtest: complete JSON beyond the response limit refuses rather than selling truncated evidence
+ok 294 - complete JSON beyond the response limit refuses rather than selling truncated evidence
+  ---
+  duration_ms: 0.869899
+  type: 'test'
+  ...
+# Subtest: field and unit string limits are enforced at both buyer and merchant admission
+ok 295 - field and unit string limits are enforced at both buyer and merchant admission
+  ---
+  duration_ms: 0.9274
+  type: 'test'
+  ...
+# Subtest: worker admission bounds simultaneous owned processes and reaps all admitted workers
+ok 296 - worker admission bounds simultaneous owned processes and reaps all admitted workers
+  ---
+  duration_ms: 306.490646
+  type: 'test'
+  ...
+# Subtest: buyer rejects unrelated and inconsistent 2xx output despite required field presence
+ok 297 - buyer rejects unrelated and inconsistent 2xx output despite required field presence
+  ---
+  duration_ms: 6.478661
+  type: 'test'
+  ...
+# Subtest: buyer recognizes partial cross-unit comparison without invented numeric changes
+ok 298 - buyer recognizes partial cross-unit comparison without invented numeric changes
+  ---
+  duration_ms: 0.938141
+  type: 'test'
+  ...
+# Subtest: membership-only actions preserve added and removed pricing fields
+ok 299 - membership-only actions preserve added and removed pricing fields
+  ---
+  duration_ms: 46.819524
+  type: 'test'
+  ...
+# Subtest: finite input subtraction overflow remains partial with no non-finite numeric delta
+ok 300 - finite input subtraction overflow remains partial with no non-finite numeric delta
+  ---
+  duration_ms: 44.586734
+  type: 'test'
+  ...
+# Subtest: vendor settlement ambiguity outranks an unconfirmed success=false header
+ok 301 - vendor settlement ambiguity outranks an unconfirmed success=false header
+  ---
+  duration_ms: 1.448247
+  type: 'test'
+  ...
+# Subtest: flag stays off unless explicitly enabled
+not ok 302 - flag stays off unless explicitly enabled
+  ---
+  duration_ms: 9.777627
+  type: 'test'
+  location: '/workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.test.mjs:46:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok([...VENDOR_BUDGET_IMPACT_DESCRIPTION].length <= 500)
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/pilot/tmp/cw37-astra-merchant-integration-20260912/src/vendor-budget-impact.test.mjs:57:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: only unsigned absent or empty-object bodies are discovery probes
+ok 303 - only unsigned absent or empty-object bodies are discovery probes
+  ---
+  duration_ms: 0.339954
+  type: 'test'
+  ...
+# Subtest: admits JSON pricing-row objects and refuses paths, URLs, commands, and extra fields
+ok 304 - admits JSON pricing-row objects and refuses paths, URLs, commands, and extra fields
+  ---
+  duration_ms: 1.731744
+  type: 'test'
+  ...
+# Subtest: unsupported and malformed snapshots refuse before any compare
+ok 305 - unsupported and malformed snapshots refuse before any compare
+  ---
+  duration_ms: 0.847088
+  type: 'test'
+  ...
+# Subtest: useful delta, informational no-change, and unit change stay distinct from crashes
+ok 306 - useful delta, informational no-change, and unit change stay distinct from crashes
+  ---
+  duration_ms: 3.694962
+  type: 'test'
+  ...
+# Subtest: syntactically shaped unrelated reports are not paid successes
+ok 307 - syntactically shaped unrelated reports are not paid successes
+  ---
+  duration_ms: 44.384646
+  type: 'test'
+  ...
+# Subtest: timeout and crash envelopes are not informational no-change
+ok 308 - timeout and crash envelopes are not informational no-change
+  ---
+  duration_ms: 0.420321
+  type: 'test'
+  ...
+# Subtest: discovery example is a real engine delta with a frozen sold boundary
+ok 309 - discovery example is a real engine delta with a frozen sold boundary
+  ---
+  duration_ms: 0.604978
+  type: 'test'
+  ...
+1..309
+# tests 336
+# suites 0
+# pass 314
+# fail 22
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 43231.646001
