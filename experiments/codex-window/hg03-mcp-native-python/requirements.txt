@@ -1,0 +1,10 @@
+# Official Model Context Protocol Python SDK, current stable on 2026-09-12.
+# Primary evidence: https://pypi.org/pypi/mcp/2.2.0/json
+# Wheel sha256 bde982589473a060ae145e3406e9a5333fe538c97229ba841f5a7f92be004f81
+# Sdist sha256 2dc37ecb1974becdcebdbf7561e7c15a07dbbf20ba21ba16c3593b3038b3afbd
+# Docs: https://py.sdk.modelcontextprotocol.io/
+# Repository: https://github.com/modelcontextprotocol/python-sdk
+mcp==2.2.0
+pydantic>=2.12
+httpx>=0.28
+pytest>=8

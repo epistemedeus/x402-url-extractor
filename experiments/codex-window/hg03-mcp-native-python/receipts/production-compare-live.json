@@ -1,0 +1,42 @@
+{
+  "source": "https://agents.samedaydesk.com/mcp",
+  "tool_count": 24,
+  "names": [
+    "extract",
+    "extract_batch",
+    "lockfile_pin_delta",
+    "read",
+    "scan",
+    "schemaforge",
+    "enrich",
+    "wallet_enrich",
+    "deep_audit",
+    "morpho_position",
+    "morpho_protection",
+    "morpho_market_underwrite",
+    "morpho_preliquidation_replay",
+    "opportunity_preflight",
+    "agent_discoverability_audit",
+    "payment_offer_preflight",
+    "seller_integrity_audit",
+    "contract_qualified_search",
+    "agent_surface_budget_audit",
+    "settlement_proof",
+    "transaction_receipt",
+    "solana_transaction_receipt",
+    "wallet_policy_conformance",
+    "stateful_wallet_policy_conformance"
+  ],
+  "ok": true,
+  "matched": [
+    "opportunity_preflight",
+    "agent_discoverability_audit",
+    "payment_offer_preflight",
+    "seller_integrity_audit",
+    "contract_qualified_search",
+    "agent_surface_budget_audit",
+    "lockfile_pin_delta"
+  ],
+  "findings": [],
+  "boundary": "Consumer constructability compare. Not a schema linter and not authorization to spend."
+}

@@ -1,0 +1,278 @@
+{
+  "sdk": {
+    "package": "mcp",
+    "version": "2.2.0",
+    "location": "/workspace/pilot/tmp/codex-window-hg03-20260912/src/experiments/codex-window/hg03-mcp-native-python/.venv/lib/python3.13/site-packages",
+    "pypi_json": "https://pypi.org/pypi/mcp/2.2.0/json",
+    "documentation": "https://py.sdk.modelcontextprotocol.io/",
+    "repository": "https://github.com/modelcontextprotocol/python-sdk",
+    "client_import": "mcp.Client",
+    "client_module": "mcp.client.client",
+    "server_module": "mcp.server.mcpserver.server"
+  },
+  "local_tools": [
+    "opportunity_preflight",
+    "lockfile_pin_delta",
+    "payment_offer_preflight",
+    "agent_discoverability_audit",
+    "seller_integrity_audit",
+    "contract_qualified_search",
+    "agent_surface_budget_audit"
+  ],
+  "opportunity_unpaid": {
+    "kind": "payment_required",
+    "message": "unpaid tools/call returned an x402 payment-required envelope",
+    "http_status": null,
+    "tool": "opportunity_preflight",
+    "is_error": true,
+    "charged": false,
+    "spend": false,
+    "wallet_accessed": false,
+    "structured": {
+      "x402Version": 2,
+      "error": "Payment required to access this tool",
+      "resource": {
+        "url": "mcp://tool/opportunity_preflight",
+        "description": "Preflight Agent Work Opportunity",
+        "mimeType": "application/json",
+        "serviceName": "hg03-local-discovery",
+        "tags": [
+          "local-fake",
+          "no-spend"
+        ]
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:84532",
+          "amount": "50000",
+          "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+          "payTo": "0x0000000000000000000000000000000000000000",
+          "maxTimeoutSeconds": 300,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2",
+            "localFake": true,
+            "spend": false,
+            "tool": "opportunity_preflight"
+          }
+        }
+      ]
+    },
+    "extra": {}
+  },
+  "opportunity_paid_shape": {
+    "kind": "paid_shape",
+    "message": "typed paid-shape result; local facilitator only, spend is false",
+    "http_status": null,
+    "tool": "opportunity_preflight",
+    "is_error": false,
+    "charged": true,
+    "spend": false,
+    "wallet_accessed": false,
+    "structured": {
+      "ok": true,
+      "product": "samedaydesk-opportunity-preflight",
+      "version": "1.0.0",
+      "decision": "attempt",
+      "input": {
+        "platform": null,
+        "rewardUsd": 100.0,
+        "hours": 1.0,
+        "hourlyCostUsd": 20.0,
+        "computeUsd": 0.0,
+        "mandatorySpendUsd": 0.0,
+        "reusableValueUsd": 0.0,
+        "selectionProbabilityPct": 80.0,
+        "competition": 0,
+        "slots": 1,
+        "agentAccess": "agent_allowed",
+        "acceptance": "deterministic",
+        "settlement": "direct"
+      },
+      "economics": {
+        "executionCostUsd": 20.0,
+        "mandatorySpendUsd": 0.0,
+        "totalAtRiskUsd": 20.0,
+        "reusableValueUsd": 0.0,
+        "expectedRewardUsd": 80.0,
+        "expectedSurplusUsd": 60.0,
+        "breakEvenSelectionProbabilityPct": 20.0,
+        "equalEntryShareReferencePct": null,
+        "probabilitySource": "caller_supplied"
+      },
+      "gates": {
+        "hardBlocks": [],
+        "requiredChecks": [],
+        "warnings": []
+      },
+      "platformEvidence": null,
+      "boundary": "Local fake facilitator paid-shape. Not a bid, claim, or spend.",
+      "charged": true,
+      "spend": false,
+      "localSettlement": {
+        "transaction": "local-fake:no-spend",
+        "network": "eip155:84532",
+        "spend": false,
+        "success": true
+      }
+    },
+    "extra": {}
+  },
+  "lockfile_unpaid": {
+    "kind": "payment_required",
+    "message": "unpaid tools/call returned an x402 payment-required envelope",
+    "http_status": null,
+    "tool": "lockfile_pin_delta",
+    "is_error": true,
+    "charged": false,
+    "spend": false,
+    "wallet_accessed": false,
+    "structured": {
+      "x402Version": 2,
+      "error": "Payment required to access this tool",
+      "resource": {
+        "url": "mcp://tool/lockfile_pin_delta",
+        "description": "Inspect Lockfile Pin Delta",
+        "mimeType": "application/json",
+        "serviceName": "hg03-local-discovery",
+        "tags": [
+          "local-fake",
+          "no-spend"
+        ]
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:84532",
+          "amount": "5000",
+          "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+          "payTo": "0x0000000000000000000000000000000000000000",
+          "maxTimeoutSeconds": 300,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2",
+            "localFake": true,
+            "spend": false,
+            "tool": "lockfile_pin_delta"
+          }
+        }
+      ]
+    },
+    "extra": {}
+  },
+  "lockfile_paid_shape": {
+    "kind": "paid_shape",
+    "message": "typed paid-shape result; local facilitator only, spend is false",
+    "http_status": null,
+    "tool": "lockfile_pin_delta",
+    "is_error": false,
+    "charged": true,
+    "spend": false,
+    "wallet_accessed": false,
+    "structured": {
+      "ok": true,
+      "product": "samedaydesk-lockfile-pin-delta",
+      "schemaVersion": "samedaydesk.lockfile-pin-delta-http.v0",
+      "quote": {
+        "amountAtomic": "5000",
+        "displayUsdc": "0.005",
+        "meaning": "local fake quote; not collected"
+      },
+      "charged": true,
+      "analysis": {
+        "added": [],
+        "removed": [],
+        "changed": [
+          {
+            "name": "ansi-wrap",
+            "before": {
+              "version": "0.1.0",
+              "integrity": "sha1-qCJQ3bABXponyoLoLqYDu/pF768=",
+              "resolved": "https://registry.npmjs.org/ansi-wrap/-/ansi-wrap-0.1.0.tgz"
+            },
+            "after": {
+              "version": "0.1.0",
+              "integrity": "sha512-ZyznvL8k/FZeQHr2T6LzcJ/+vBApDnMNZvfVFy3At0knswWd6rJ3/0Hhmpu8oqa6C92npmozs890sX9Dl6q+Qw==",
+              "resolved": "https://registry.npmjs.org/ansi-wrap/-/ansi-wrap-0.1.0.tgz"
+            }
+          },
+          {
+            "name": "archy",
+            "before": {
+              "version": "1.0.0",
+              "integrity": "sha1-+cjBN1fMHde8N5rHeyxipcKGjEA=",
+              "resolved": "https://registry.npmjs.org/archy/-/archy-1.0.0.tgz"
+            },
+            "after": {
+              "version": "1.0.0",
+              "integrity": "sha512-Xg+9RwCg/0p32teKdGMPTPnVXKD0w3DfHnFTficozsAgsvq2XenPJq/MYpzzQ/v8zrOyJn6Ds39VA4JIDwFfqw==",
+              "resolved": "https://registry.npmjs.org/archy/-/archy-1.0.0.tgz"
+            }
+          },
+          {
+            "name": "array-uniq",
+            "before": {
+              "version": "1.0.3",
+              "integrity": "sha1-r2rId6Jcx/dOBYiUdThY39sk/bY=",
+              "resolved": "https://registry.npmjs.org/array-uniq/-/array-uniq-1.0.3.tgz"
+            },
+            "after": {
+              "version": "1.0.3",
+              "integrity": "sha512-MNha4BWQ6JbwhFhj03YK552f7cb3AzoE8SzeljgChvL1dl3IcvggXVz1DilzySZkCja+CXuZbdW7yATchWn8/Q==",
+              "resolved": "https://registry.npmjs.org/array-uniq/-/array-uniq-1.0.3.tgz"
+            }
+          }
+        ],
+        "identical": false,
+        "beforeCount": 5,
+        "afterCount": 5,
+        "scope": "name+version+integrity+resolved",
+        "meaning": "informational pin delta; not an install, audit, or vulnerability proof"
+      },
+      "transport": {
+        "kind": "local-fake-mcp",
+        "spend": false
+      },
+      "engine": "hg03-local-pin-delta",
+      "digest": {
+        "identical": false,
+        "added": 0,
+        "removed": 0,
+        "changed": 3
+      },
+      "engineProvenance": {
+        "runtime": "hg03-mcp-native-python",
+        "spend": false
+      },
+      "costInputs": {
+        "amountAtomic": "5000",
+        "collected": false
+      },
+      "boundary": "Local pin-delta of caller-supplied objects. Not an install, audit, or purchase.",
+      "limits": {
+        "maxPins": 50000,
+        "filesystemPaths": false,
+        "commands": false
+      },
+      "spend": false,
+      "localSettlement": {
+        "transaction": "local-fake:no-spend",
+        "network": "eip155:84532",
+        "spend": false,
+        "success": true
+      }
+    },
+    "extra": {}
+  },
+  "facilitator": {
+    "verify_count": 2,
+    "settle_count": 2,
+    "rejected_count": 0,
+    "spend": false
+  },
+  "wallet_accessed": false,
+  "production_mcp": "https://agents.samedaydesk.com/mcp",
+  "local_origin": "https://local-fake.samedaydesk.test",
+  "local_fake_resource": "https://local-fake.samedaydesk.test/opportunity-preflight"
+}
