@@ -13,21 +13,29 @@
  * - `requirements.network` is an EVM CAIP-2 id (`eip155:*`)
  *
  * Behavior:
- * - Fill only absent `resource` / `extensions.bazaar` from route-owned declared
- *   metadata (canonical PUBLIC origin + path; never request Host).
+ * - Fill only absent or empty-object `resource` / `extensions.bazaar` from
+ *   route-owned declared metadata (canonical PUBLIC origin + path; never
+ *   request Host). Empty `{}` is treated as unusable-absent, not as a buyer
+ *   echo. Present objects, including conflicting `resource.url`, are retained.
  * - Never abort verify/settle for discovery-hint shape or mismatch; SDK
  *   `validateExtensions` already owns echo checks, and buyers with enriched or
- *   dynamic bazaar fields must not be declined here.
+ *   dynamic bazaar fields must not be declined here. Empty `bazaar: {}` that
+ *   fails echo never reaches these hooks on the HTTP path.
  * - Apply fills atomically after planning; never partially mutate then fail.
  * - Preserve `payload`, accepted payment terms, and unrelated extensions.
+ * - Byte-diff hashes cover only resource/extensions vs authority (payload,
+ *   accepted, x402Version). No signature or payload dumps.
  *
  * Installed via supported ResourceServer `onBeforeVerify` / `onBeforeSettle`
  * hooks (no `verifyPayment` / `settlePayment` reassignment).
  */
 
+import { createHash } from "node:crypto";
+
 const BAZAAR_KEY = "bazaar";
 const EXACT_SCHEME = "exact";
 const EVM_NETWORK_PREFIX = "eip155:";
+
 
 /** @typedef {{ url?: unknown, description?: unknown, mimeType?: unknown, serviceName?: unknown, tags?: unknown, iconUrl?: unknown }} DeclaredResource */
 /** @typedef {{ resource?: DeclaredResource | null, extensions?: Record<string, unknown> | null }} DeclaredIndexing */
@@ -47,7 +55,72 @@ function isPlainObject(value) {
  * @returns {T}
  */
 function cloneJson(value) {
+  if (value === undefined) return undefined;
   return structuredClone(value);
+}
+
+function isEmptyPlainObject(value) {
+  return isPlainObject(value) && Object.keys(value).length === 0;
+}
+
+function jsonUtf8Bytes(value) {
+  if (value === undefined) return Buffer.alloc(0);
+  return Buffer.from(JSON.stringify(value), "utf8");
+}
+
+function sha256Hex(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function fieldByteRecord(beforeValue, afterValue) {
+  const beforeBytes = jsonUtf8Bytes(beforeValue);
+  const afterBytes = jsonUtf8Bytes(afterValue);
+  const changed = !beforeBytes.equals(afterBytes);
+  return {
+    changed,
+    beforeByteLength: beforeBytes.length,
+    afterByteLength: afterBytes.length,
+    beforeSha256: sha256Hex(beforeBytes),
+    afterSha256: sha256Hex(afterBytes),
+  };
+}
+
+/**
+ * Exact changed-byte proof for indexing fills. Hashes only; no payload dump.
+ * Authority is `x402Version` + `payload` + `accepted` (includes amount, payTo,
+ * network, scheme, and the signed authorization object when present).
+ *
+ * @param {unknown} before
+ * @param {unknown} after
+ */
+export function diffIndexingContinuityBytes(before, after) {
+  const beforeObj = isPlainObject(before) ? before : {};
+  const afterObj = isPlainObject(after) ? after : {};
+  const authority = fieldByteRecord(
+    {
+      x402Version: beforeObj.x402Version,
+      payload: beforeObj.payload,
+      accepted: beforeObj.accepted,
+    },
+    {
+      x402Version: afterObj.x402Version,
+      payload: afterObj.payload,
+      accepted: afterObj.accepted,
+    },
+  );
+  const resource = fieldByteRecord(beforeObj.resource, afterObj.resource);
+  const extensions = fieldByteRecord(beforeObj.extensions, afterObj.extensions);
+  const patchedFields = [
+    ...(resource.changed ? ["resource"] : []),
+    ...(extensions.changed ? ["extensions"] : []),
+  ];
+  return {
+    authorityUnchanged: authority.changed === false,
+    authoritySha256: authority.beforeSha256,
+    patchedFields,
+    resource,
+    extensions,
+  };
 }
 
 /**
@@ -149,11 +222,15 @@ export function planIndexingPayloadContinuity(paymentPayload, declared = {}) {
     ? declaredExtensions[BAZAAR_KEY]
     : undefined;
 
-  // --- resource: fill only when absent ---
-  if (!("resource" in paymentPayload) || paymentPayload.resource === undefined || paymentPayload.resource === null) {
+  // --- resource: fill only when absent or empty object ---
+  const resourceVacant = !("resource" in paymentPayload)
+    || paymentPayload.resource === undefined
+    || paymentPayload.resource === null;
+  const resourceEmptyObject = isEmptyPlainObject(paymentPayload.resource);
+  if (resourceVacant || resourceEmptyObject) {
     if (isPlainObject(declaredResource) && typeof declaredResource.url === "string" && declaredResource.url) {
       patches.resource = cloneJson(declaredResource);
-      provenance.resource = "filled";
+      provenance.resource = resourceEmptyObject ? "filled_empty_object" : "filled";
     } else {
       provenance.resource = "absent_no_declared";
     }
@@ -164,7 +241,7 @@ export function planIndexingPayloadContinuity(paymentPayload, declared = {}) {
     provenance.resource = "present";
   }
 
-  // --- extensions.bazaar: fill only when absent; never deep-equal reject ---
+  // --- extensions.bazaar: fill only when absent or empty object; never deep-equal reject ---
   if (!("extensions" in paymentPayload) || paymentPayload.extensions === undefined || paymentPayload.extensions === null) {
     if (declaredBazaar !== undefined && isPlainObject(declaredBazaar)) {
       patches.extensions = { [BAZAAR_KEY]: cloneJson(declaredBazaar) };
@@ -180,13 +257,15 @@ export function planIndexingPayloadContinuity(paymentPayload, declared = {}) {
     !Object.prototype.hasOwnProperty.call(paymentPayload.extensions, BAZAAR_KEY) ||
     paymentPayload.extensions[BAZAAR_KEY] === undefined ||
     paymentPayload.extensions[BAZAAR_KEY] === null
+    || isEmptyPlainObject(paymentPayload.extensions[BAZAAR_KEY])
   ) {
+    const bazaarEmptyObject = isEmptyPlainObject(paymentPayload.extensions[BAZAAR_KEY]);
     if (declaredBazaar !== undefined && isPlainObject(declaredBazaar)) {
       patches.extensions = {
         ...paymentPayload.extensions,
         [BAZAAR_KEY]: cloneJson(declaredBazaar),
       };
-      provenance.bazaar = "filled";
+      provenance.bazaar = bazaarEmptyObject ? "filled_empty_object" : "filled";
     } else if (declaredBazaar !== undefined) {
       provenance.bazaar = "absent_declared_unusable";
     } else {
@@ -226,7 +305,21 @@ export function applyIndexingContinuityPatches(paymentPayload, patches) {
  * @param {unknown} requirements
  * @param {DeclaredIndexing} declared
  */
+function snapshotIndexingEnvelope(paymentPayload) {
+  if (!isPlainObject(paymentPayload)) {
+    return { x402Version: undefined, payload: undefined, accepted: undefined, resource: undefined, extensions: undefined };
+  }
+  return {
+    x402Version: paymentPayload.x402Version,
+    payload: "payload" in paymentPayload ? cloneJson(paymentPayload.payload) : undefined,
+    accepted: "accepted" in paymentPayload ? cloneJson(paymentPayload.accepted) : undefined,
+    resource: "resource" in paymentPayload ? cloneJson(paymentPayload.resource) : undefined,
+    extensions: "extensions" in paymentPayload ? cloneJson(paymentPayload.extensions) : undefined,
+  };
+}
+
 export function applyIndexingPayloadContinuity(paymentPayload, declared = {}, requirements = null) {
+  const before = snapshotIndexingEnvelope(paymentPayload);
   if (requirements != null && !isExactEvmV2IndexingContinuitySupported(paymentPayload, requirements)) {
     return {
       ok: true,
@@ -238,15 +331,18 @@ export function applyIndexingPayloadContinuity(paymentPayload, declared = {}, re
         untouchedAuthority: true,
         declinedPayment: false,
       },
+      byteDiff: diffIndexingContinuityBytes(before, paymentPayload),
     };
   }
   const planned = planIndexingPayloadContinuity(paymentPayload, declared);
   applyIndexingContinuityPatches(paymentPayload, planned.patches);
+  const byteDiff = diffIndexingContinuityBytes(before, paymentPayload);
   return {
     ok: true,
     skipped: false,
     paymentPayload,
     provenance: planned.provenance,
+    byteDiff,
   };
 }
 
@@ -274,9 +370,19 @@ let lastContinuityDiagnostic = null;
  * Presence-only diagnostic from the last continuity application (no raw payload).
  */
 export function getLastIndexingContinuityDiagnostic() {
-  return lastContinuityDiagnostic
-    ? { ...lastContinuityDiagnostic, provenance: { ...lastContinuityDiagnostic.provenance } }
-    : null;
+  if (!lastContinuityDiagnostic) return null;
+  return {
+    ...lastContinuityDiagnostic,
+    provenance: { ...lastContinuityDiagnostic.provenance },
+    byteDiff: lastContinuityDiagnostic.byteDiff
+      ? {
+          authorityUnchanged: lastContinuityDiagnostic.byteDiff.authorityUnchanged,
+          patchedFields: [...lastContinuityDiagnostic.byteDiff.patchedFields],
+          resource: { ...lastContinuityDiagnostic.byteDiff.resource },
+          extensions: { ...lastContinuityDiagnostic.byteDiff.extensions },
+        }
+      : null,
+  };
 }
 
 /**
@@ -321,6 +427,14 @@ export function registerIndexingPayloadContinuity(resourceServer, options = {}) 
       at: new Date().toISOString(),
       phase,
       provenance: result.provenance,
+      byteDiff: result.byteDiff
+        ? {
+            authorityUnchanged: result.byteDiff.authorityUnchanged,
+            patchedFields: [...result.byteDiff.patchedFields],
+            resource: { ...result.byteDiff.resource },
+            extensions: { ...result.byteDiff.extensions },
+          }
+        : null,
     };
   };
 

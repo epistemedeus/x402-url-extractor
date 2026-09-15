@@ -10,6 +10,7 @@ import {
   isExactEvmV2IndexingContinuitySupported,
   registerIndexingPayloadContinuity,
   getLastIndexingContinuityDiagnostic,
+  diffIndexingContinuityBytes,
 } from "./indexing-payload-continuity.mjs";
 
 const DECLARED_RESOURCE = {
@@ -193,6 +194,65 @@ describe("planIndexingPayloadContinuity", () => {
       extensions: { bazaar: DECLARED_BAZAAR },
     });
     assert.deepEqual(planned.patches, {});
+    assert.equal(payload.resource.url, "https://evil.example/commerce/seller-integrity-audit");
+  });
+
+  it("fills empty-object resource and bazaar without touching authority bytes", () => {
+    const payload = basePayload({ resource: {}, extensions: { unrelated: { keep: true }, bazaar: {} } });
+    const before = authorityFingerprint(payload);
+    const planned = planIndexingPayloadContinuity(payload, {
+      resource: DECLARED_RESOURCE,
+      extensions: { bazaar: DECLARED_BAZAAR },
+    });
+    assert.equal(planned.provenance.resource, "filled_empty_object");
+    assert.equal(planned.provenance.bazaar, "filled_empty_object");
+    applyIndexingContinuityPatches(payload, planned.patches);
+    assert.equal(payload.resource.url, DECLARED_RESOURCE.url);
+    assert.deepEqual(payload.extensions.bazaar, DECLARED_BAZAAR);
+    assert.equal(payload.extensions.unrelated.keep, true);
+    assert.equal(authorityFingerprint(payload), before);
+  });
+});
+
+describe("diffIndexingContinuityBytes", () => {
+  it("proves exact resource/extensions byte change and unchanged authority", () => {
+    const payload = basePayload();
+    delete payload.resource;
+    const before = {
+      x402Version: payload.x402Version,
+      payload: structuredClone(payload.payload),
+      accepted: structuredClone(payload.accepted),
+      resource: payload.resource,
+      extensions: structuredClone(payload.extensions),
+    };
+    const result = applyIndexingPayloadContinuity(
+      payload,
+      { resource: DECLARED_RESOURCE, extensions: { bazaar: DECLARED_BAZAAR } },
+      REQUIREMENTS,
+    );
+    assert.equal(result.byteDiff.authorityUnchanged, true);
+    assert.deepEqual(result.byteDiff.patchedFields, ["resource"]);
+    assert.equal(result.byteDiff.resource.changed, true);
+    assert.equal(result.byteDiff.resource.beforeByteLength, 0);
+    assert.equal(result.byteDiff.resource.afterByteLength > 0, true);
+    assert.equal(result.byteDiff.extensions.changed, false);
+    const independent = diffIndexingContinuityBytes(before, payload);
+    assert.equal(independent.resource.afterSha256, result.byteDiff.resource.afterSha256);
+    assert.equal(JSON.stringify(payload.payload), JSON.stringify(before.payload));
+  });
+
+  it("conflicting resource produces no patched fields", () => {
+    const payload = basePayload({
+      resource: { ...DECLARED_RESOURCE, url: "https://evil.example/commerce/seller-integrity-audit" },
+    });
+    const result = applyIndexingPayloadContinuity(
+      payload,
+      { resource: DECLARED_RESOURCE, extensions: { bazaar: DECLARED_BAZAAR } },
+      REQUIREMENTS,
+    );
+    assert.equal(result.provenance.resource, "present");
+    assert.deepEqual(result.byteDiff.patchedFields, []);
+    assert.equal(result.byteDiff.authorityUnchanged, true);
     assert.equal(payload.resource.url, "https://evil.example/commerce/seller-integrity-audit");
   });
 });

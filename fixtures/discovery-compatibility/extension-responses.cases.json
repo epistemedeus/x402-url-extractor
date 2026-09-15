@@ -1,0 +1,20 @@
+{
+  "schema": "samedaydesk.discovery-compatibility.extension-responses.v1",
+  "source": {
+    "docs": "https://docs.cdp.coinbase.com/x402/seller/get-discovered",
+    "spec": "https://github.com/x402-foundation/x402/blob/main/specs/extensions/bazaar.md",
+    "issue": "https://github.com/coinbase/cdp-sdk/issues/816"
+  },
+  "cases": [
+    { "id": "absent", "header": null, "headerState": "absent", "bazaarStatus": "unknown", "decoded": false },
+    { "id": "empty", "header": "", "headerState": "empty", "bazaarStatus": "unknown", "decoded": false },
+    { "id": "whitespace", "header": "   ", "headerState": "empty", "bazaarStatus": "unknown", "decoded": false },
+    { "id": "malformed-not-base64", "header": "not-base64", "headerState": "malformed", "bazaarStatus": "unknown", "decoded": false },
+    { "id": "malformed-json-array", "headerBase64Json": [], "headerState": "malformed", "bazaarStatus": "unknown", "decoded": false },
+    { "id": "decoded-empty-object", "headerBase64Json": {}, "headerState": "decoded", "bazaarStatus": "unknown", "decoded": true },
+    { "id": "decoded-success", "headerBase64Json": { "bazaar": { "status": "success" } }, "headerState": "decoded", "bazaarStatus": "success", "decoded": true },
+    { "id": "decoded-processing", "headerBase64Json": { "bazaar": { "status": "processing" } }, "headerState": "decoded", "bazaarStatus": "processing", "decoded": true },
+    { "id": "decoded-rejected", "headerBase64Json": { "bazaar": { "status": "rejected", "rejectedReason": "info failed schema validation" } }, "headerState": "decoded", "bazaarStatus": "rejected", "decoded": true, "bazaarRejectedReasonPresent": true },
+    { "id": "decoded-unknown-status", "headerBase64Json": { "bazaar": { "status": "cataloged" } }, "headerState": "decoded", "bazaarStatus": "unknown", "decoded": true }
+  ]
+}

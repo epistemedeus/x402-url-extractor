@@ -14,6 +14,7 @@ const MERCHANT = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(path.join(MERCHANT, "package.json"));
 const { x402Client } = await import(pathToFileURL(require.resolve("@x402/core/client")).href);
 const { HTTPFacilitatorClient } = await import(pathToFileURL(require.resolve("@x402/core/http")).href);
+const fetchPkg = await import(pathToFileURL(require.resolve("@x402/fetch")).href);
 
 const NETWORK = "eip155:8453";
 const PUBLIC = "https://agents.samedaydesk.com";
@@ -68,6 +69,11 @@ describe("official x402Client serializer + continuity", () => {
         },
       },
     };
+    const fetchClient = new fetchPkg.x402Client().register(NETWORK, new UnsignedExactScheme());
+    const fetchCopy = await fetchClient.createPaymentPayload(paymentRequired);
+    assert.equal(fetchCopy.resource.url, paymentRequired.resource.url);
+    assert.ok(fetchCopy.extensions.bazaar);
+
     const client = new x402Client().register(NETWORK, new UnsignedExactScheme());
     const complete = await client.createPaymentPayload(paymentRequired);
     assert.equal(complete.resource.url, paymentRequired.resource.url);

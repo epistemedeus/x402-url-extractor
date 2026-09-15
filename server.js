@@ -173,6 +173,7 @@ import {
 } from "./commerce-events.mjs";
 import { createCommerceSettlementReconciler } from "./commerce-settlement-reconciler.mjs";
 import { createIdempotencyReplay, DEFAULT_PAID_ROUTES, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
+import { wrapFacilitatorClientForExtensionResponseDiagnostics } from "./extension-response-diagnostics.mjs";
 import { registerIndexingPayloadContinuity } from "./indexing-payload-continuity.mjs";
 import {
   PURCHASE_EVIDENCE_MANIFEST_PATH,
@@ -442,7 +443,11 @@ function buildFacilitatorClient() {
   return new HTTPFacilitatorClient({ url });
 }
 
-const facilitatorClient = trackReplaySettlementAttempts(buildFacilitatorClient());
+// Classify facilitator EXTENSION-RESPONSES (absent/empty/malformed/decoded)
+// without changing verify/settle bodies or signed authority.
+const facilitatorClient = wrapFacilitatorClientForExtensionResponseDiagnostics(
+  trackReplaySettlementAttempts(buildFacilitatorClient()),
+);
 
 // Register the EVM "exact" scheme for our network. This is what settles USDC.
 const resourceServer = new x402ResourceServer(facilitatorClient).register(
