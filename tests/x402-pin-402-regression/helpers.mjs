@@ -41,6 +41,58 @@ export const EMPTY_ACCEPTS_PAYMENT_REQUIRED = Object.freeze({
   accepts: Object.freeze([]),
 });
 
+/** Recorded unpaid SDS MCP 402 for enrich (live 1.23.49, 3 tags — parses on 2.26). */
+export const SDS_ENRICH_PAYMENT_REQUIRED = Object.freeze({
+  x402Version: 2,
+  error: "Payment required to access this tool",
+  resource: Object.freeze({
+    url: "mcp://tool/enrich",
+    description: "Inspect a public company domain and return structured identity, technology, social, contact, DNS, email-infrastructure, and AI-readiness evidence.",
+    mimeType: "application/json",
+    serviceName: "x402-data-gateway",
+    tags: Object.freeze(["enrichment", "company-data", "firmographics"]),
+  }),
+  accepts: Object.freeze([
+    Object.freeze({
+      scheme: "exact",
+      network: NETWORK,
+      amount: "50000",
+      asset: BASE_USDC,
+      payTo: PAY_TO,
+      maxTimeoutSeconds: 300,
+      extra: Object.freeze({ name: "USD Coin", version: "2" }),
+    }),
+  ]),
+});
+
+/**
+ * Recorded unpaid SDS MCP 402 for agent_discoverability_audit (live 1.23.49).
+ * 10 resource.tags; @x402/core@2.26 ResourceInfoSchema.max(5) rejects this body.
+ */
+export const SDS_OVER_TAG_PAYMENT_REQUIRED = Object.freeze({
+  x402Version: 2,
+  error: "Payment required to access this tool",
+  resource: Object.freeze({
+    url: "mcp://tool/agent_discoverability_audit",
+    description: "Measure one service's brand-blind rank across public discovery views.",
+    mimeType: "application/json",
+    serviceName: "x402-data-gateway",
+    tags: Object.freeze([
+      "distribution",
+      "discovery",
+      "x402",
+      "mpp",
+      "agent402",
+      "catalog-price",
+      "runtime-coherence",
+      "catalog-materialization",
+      "a2a",
+      "erc-8004",
+    ]),
+  }),
+  accepts: SDS_ENRICH_PAYMENT_REQUIRED.accepts,
+});
+
 export function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
 }
@@ -56,6 +108,11 @@ export function packageLock() {
 export function createRefuseToPayScheme(paidCalls) {
   return {
     scheme: "exact",
+    findDefaultAsset(asset, network) {
+      if (network !== NETWORK) return undefined;
+      if (String(asset).toLowerCase() !== BASE_USDC.toLowerCase()) return undefined;
+      return { address: BASE_USDC, decimals: 6, symbol: "USDC" };
+    },
     createPaymentPayload: async () => {
       paidCalls.push("createPaymentPayload");
       throw new Error("seeded: refuse to pay");
@@ -90,14 +147,32 @@ export function assertNoBatchSettlementOrMinDeposit(value, label) {
   assert.equal(raw.includes("minDeposit"), false, `${label} must not mention minDeposit`);
 }
 
-export function parseSseOrJson(text, label) {
-  const dataLines = text.split(/\r?\n/).filter((line) => line.startsWith("data: "));
-  const raw = dataLines.length ? dataLines.at(-1).slice(6) : text;
+export function parseSseOrJson(text, label, id) {
+  const candidates = [];
   try {
-    return JSON.parse(raw);
+    candidates.push(JSON.parse(text));
   } catch {
-    throw new Error(`${label} did not return JSON or JSON SSE data`);
+    /* body is not a single JSON value */
   }
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.startsWith("data: ")) continue;
+    try {
+      candidates.push(JSON.parse(line.slice(6)));
+    } catch {
+      /* skip non-JSON SSE data */
+    }
+  }
+  const rpc = candidates.filter((value) => value && typeof value === "object" && value.jsonrpc === "2.0");
+  const matched = id === undefined
+    ? rpc.at(-1)
+    : rpc.find((value) => value.id === id) ?? rpc.at(-1);
+  if (matched) return matched;
+  if (candidates.length) return candidates.at(-1);
+  throw new Error(`${label} did not return JSON or JSON SSE data`);
+}
+
+export function mcpProbeOptions() {
+  return { timeout: LIVE_TIMEOUT_MS, signal: AbortSignal.timeout(LIVE_TIMEOUT_MS) };
 }
 
 export async function postMcp(method, params, id, extraHeaders = {}) {
@@ -115,5 +190,5 @@ export async function postMcp(method, params, id, extraHeaders = {}) {
   });
   const text = await response.text();
   assert.ok(Buffer.byteLength(text, "utf8") <= MAX_PROBE_BYTES, `${method} response too large`);
-  return { response, text, payload: parseSseOrJson(text, method) };
+  return { response, text, payload: parseSseOrJson(text, method, id) };
 }

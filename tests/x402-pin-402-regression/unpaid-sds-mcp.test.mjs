@@ -7,7 +7,10 @@ import { ExactEvmScheme } from "@x402/evm/exact/client";
 import { wrapMCPClientWithPayment } from "@x402/mcp";
 import { privateKeyToAccount } from "viem/accounts";
 
+import { parsePaymentRequired } from "@x402/core/schemas";
+
 import {
+  BASE_USDC,
   LIVE_MCP_URL,
   LIVE_WELL_KNOWN_X402,
   LIVE_TIMEOUT_MS,
@@ -17,6 +20,7 @@ import {
   assertExactBaseUsdcAccept,
   assertNoBatchSettlementOrMinDeposit,
   createRefuseToPayClient,
+  mcpProbeOptions,
   postMcp,
 } from "./helpers.mjs";
 
@@ -24,6 +28,9 @@ test("ExactEvmScheme for eip155:8453 constructs without Casper/Cardano/Celo/XRPL
   const account = privateKeyToAccount(`0x${"11".repeat(32)}`);
   const scheme = new ExactEvmScheme(account);
   assert.equal(scheme.scheme, "exact");
+  const asset = scheme.findDefaultAsset(BASE_USDC, NETWORK);
+  assert.equal(asset?.symbol, "USDC");
+  assert.equal(asset?.decimals, 6);
 });
 
 test("unpaid SDS MCP tools/call still yields exact eip155:8453 USDC accepts under 2.26.0", async () => {
@@ -53,6 +60,8 @@ test("unpaid SDS MCP tools/call still yields exact eip155:8453 USDC accepts unde
   assert.equal(paymentRequired.accepts[0].maxTimeoutSeconds, 300);
   assert.ok(paymentRequired.accepts[0].maxTimeoutSeconds <= TEN_MINUTE_SECONDS);
   assertNoBatchSettlementOrMinDeposit(paymentRequired, "live unpaid enrich");
+  const parsed = parsePaymentRequired(paymentRequired);
+  assert.equal(parsed.success, true, "live enrich 402 must parse on @x402/core@2.26");
 
   const quoted = {
     pin: PINNED_X402,
@@ -72,7 +81,8 @@ test("pinned @x402/mcp client extracts live SDS 402 and never pays", async () =>
   const transport = new StreamableHTTPClientTransport(new URL(LIVE_MCP_URL));
   await x402Mcp.connect(transport);
   try {
-    const error = await x402Mcp.callTool("enrich", { domain: "example.com" }).then(
+    const probe = mcpProbeOptions();
+    const error = await x402Mcp.callTool("enrich", { domain: "example.com" }, probe).then(
       (result) => {
         throw new Error(`expected unpaid throw, got ${JSON.stringify(result).slice(0, 300)}`);
       },

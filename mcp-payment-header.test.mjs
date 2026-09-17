@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { asToolResult, createX402ToolMeta, injectPaymentSignatureHeader } from "./mcp-server.mjs";
+import { asToolResult, createX402ToolMeta, injectPaymentSignatureHeader, resourceInfoForX402 } from "./mcp-server.mjs";
 
 const encode = (value) => Buffer.from(JSON.stringify(value)).toString("base64");
 const payment = {
@@ -51,6 +51,17 @@ test("ignores payment headers outside tools/call", () => {
   const req = request({ method: "tools/list", params: {} }, encode(payment));
   assert.equal(injectPaymentSignatureHeader(req), false);
   assert.equal(req.body.params._meta, undefined);
+});
+
+test("clamps MCP resource tags and serviceName to the 2.26 ResourceInfoSchema caps", () => {
+  const info = resourceInfoForX402({
+    url: "mcp://tool/agent_discoverability_audit",
+    description: "audit",
+    serviceName: "x402-data-gateway-with-a-very-long-name",
+    tags: ["distribution", "discovery", "x402", "mpp", "agent402", "catalog-price"],
+  });
+  assert.equal(info.serviceName.length, 32);
+  assert.deepEqual(info.tags, ["distribution", "discovery", "x402", "mpp", "agent402"]);
 });
 
 test("advertises exact payment options for proactive MCP buyers", () => {

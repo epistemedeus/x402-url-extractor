@@ -17,7 +17,9 @@
 //    initialize + buildPaymentRequirements per tool) is done ONCE at mount time.
 //  - express.json() is scoped to /mcp only, so it never touches the GET paywall routes.
 //
-// Verified against @x402/mcp@2.16.0 + @modelcontextprotocol/sdk@1.29.0 (June 2026).
+// Verified against @x402/mcp@2.26.0 + @modelcontextprotocol/sdk@1.30.0.
+// ResourceInfoSchema in 2.26 caps serviceName at 32 printable ASCII chars and
+// tags at 5 x 32; clamp before emit so 402 bodies stay parseable.
 
 import { AsyncLocalStorage } from "node:async_hooks";
 import { request as requestHttp } from "node:http";
@@ -42,6 +44,10 @@ const mcpHttpRequestAls = new AsyncLocalStorage();
 
 const MCP_PAYMENT_META_KEY = "x402/payment";
 const MAX_PAYMENT_SIGNATURE_HEADER_BYTES = 32 * 1024;
+const X402_RESOURCE_SERVICE_NAME_MAX = 32;
+const X402_RESOURCE_TAG_MAX = 32;
+const X402_RESOURCE_TAGS_MAX = 5;
+const X402_PRINTABLE_ASCII = /^[\x20-\x7e]+$/;
 const UNREGISTERED_SENTINEL_BINDING = Object.freeze({
   tool: "x",
   productSku: "y",
@@ -59,6 +65,31 @@ export function createX402ToolMeta(accepts) {
       accepts,
     },
   };
+}
+
+/**
+ * Shape MCP resource metadata to @x402/core@2.26 ResourceInfoSchema so a 402
+ * with extra discovery tags still parses as PaymentRequired.
+ */
+export function resourceInfoForX402({
+  url,
+  description,
+  mimeType = "application/json",
+  serviceName,
+  tags,
+} = {}) {
+  const info = { url, mimeType };
+  if (typeof description === "string") info.description = description;
+  if (typeof serviceName === "string" && serviceName.length > 0 && X402_PRINTABLE_ASCII.test(serviceName)) {
+    info.serviceName = serviceName.slice(0, X402_RESOURCE_SERVICE_NAME_MAX);
+  }
+  if (Array.isArray(tags)) {
+    info.tags = tags
+      .filter((tag) => typeof tag === "string" && tag.length > 0 && X402_PRINTABLE_ASCII.test(tag))
+      .map((tag) => tag.slice(0, X402_RESOURCE_TAG_MAX))
+      .slice(0, X402_RESOURCE_TAGS_MAX);
+  }
+  return info;
 }
 
 /**
@@ -554,13 +585,13 @@ export async function mountMcp(app, {
     catalogByName.set(t.name, { ...registered, binding, issuedOfferDigest, httpOwned: Boolean(t.paidHttp) });
     const paid = createPaymentWrapper(resourceServer, {
       accepts,
-      resource: {
+      resource: resourceInfoForX402({
         url: resourceForTool(t.name),
         description: t.description,
         mimeType: "application/json",
         serviceName: serverInfo.name,
         tags: t.tags,
-      },
+      }),
     });
     // paid(handler) -> MCP tool callback (args, extra) that verifies payment (from
     // extra._meta), runs the handler, then settles. We catch handler errors and return
