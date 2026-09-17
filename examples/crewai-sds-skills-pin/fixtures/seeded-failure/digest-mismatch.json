@@ -1,0 +1,26 @@
+{
+  "comment": "Deliberately wrong web-extract sha256. Used only to prove the pin rejects mutation. Not a published skill.",
+  "skills": [
+    {
+      "name": "web-extract",
+      "relativePath": "plugins/samedaydesk-x402/skills/web-extract/SKILL.md",
+      "bytes": 3324,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "gitBlobSha": "faffb077d648180d92e5bd1bfb8a76867bf6719f"
+    },
+    {
+      "name": "page-change",
+      "relativePath": "plugins/samedaydesk-x402/skills/page-change/SKILL.md",
+      "bytes": 3938,
+      "sha256": "24a197775f91a002027be506b8ba60afdd10bd7d165d8a629d0b38b5f707d13a",
+      "gitBlobSha": "e561d5b1f84af05fdaaded5dea14128b03a13105"
+    },
+    {
+      "name": "explicit-record",
+      "relativePath": "plugins/samedaydesk-x402/skills/explicit-record/SKILL.md",
+      "bytes": 4801,
+      "sha256": "509c816d00d42928249b019bfa8f072b0b414f53ff48ae195de1e02a99b17062",
+      "gitBlobSha": "abd78347b0a90425e9dbc065b6783772f4d7309c"
+    }
+  ]
+}

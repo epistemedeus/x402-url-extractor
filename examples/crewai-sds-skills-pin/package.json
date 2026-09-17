@@ -1,0 +1,20 @@
+{
+  "name": "samedaydesk-crewai-sds-skills-pin-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Populate CrewAI Agent.skills=[] from local digest-pinned SameDayDesk SKILL.md files. No registry, payment, or LLM.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "samedaydesk-crewai-sds-skills-pin": "./bin/cli.mjs"
+  },
+  "scripts": {
+    "start": "node bin/cli.mjs",
+    "pin": "node bin/cli.mjs",
+    "seeded-failure": "node bin/cli.mjs --seeded-failure",
+    "test": "node --test test/*.test.mjs"
+  },
+  "license": "MIT"
+}
