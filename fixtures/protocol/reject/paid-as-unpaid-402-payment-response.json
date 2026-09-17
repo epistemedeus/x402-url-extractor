@@ -1,0 +1,26 @@
+{
+  "id": "paid-as-unpaid-402-payment-response",
+  "title": "Seeded failure: HTTP 402 that also carries PAYMENT-RESPONSE (failed settlement, not unpaid)",
+  "expect": "reject",
+  "rejectCode": "paid_as_unpaid",
+  "transport": "http",
+  "provenance": {
+    "kind": "seeded-failure",
+    "spec": "https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/http.md",
+    "note": "A 402 with PAYMENT-RESPONSE is a payment-failed settlement signal, not a first-contact unpaid challenge."
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://api.example.com/premium-data",
+    "headers": {}
+  },
+  "response": {
+    "status": 402,
+    "headers": {
+      "content-type": "application/json",
+      "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwiZXJyb3IiOiJQQVlNRU5ULVNJR05BVFVSRSBoZWFkZXIgaXMgcmVxdWlyZWQiLCJyZXNvdXJjZSI6eyJ1cmwiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJkZXNjcmlwdGlvbiI6IkFjY2VzcyB0byBwcmVtaXVtIG1hcmtldCBkYXRhIiwibWltZVR5cGUiOiJhcHBsaWNhdGlvbi9qc29uIn0sImFjY2VwdHMiOlt7InNjaGVtZSI6ImV4YWN0IiwibmV0d29yayI6ImVpcDE1NTo4NDUzMiIsImFtb3VudCI6IjEwMDAwIiwiYXNzZXQiOiIweDAzNkNiRDUzODQyYzU0MjY2MzRlNzkyOTU0MWVDMjMxOGYzZENGN2UiLCJwYXlUbyI6IjB4MjA5NjkzQmM2YWZjMEM1MzI4YkEzNkZhRjAzQzUxNEVGMzEyMjg3QyIsIm1heFRpbWVvdXRTZWNvbmRzIjo2MCwiZXh0cmEiOnsibmFtZSI6IlVTREMiLCJ2ZXJzaW9uIjoiMiJ9fV19",
+      "payment-response": "eyJzdWNjZXNzIjpmYWxzZSwiZXJyb3JSZWFzb24iOiJpbnN1ZmZpY2llbnRfZnVuZHMiLCJ0cmFuc2FjdGlvbiI6IiIsIm5ldHdvcmsiOiJlaXAxNTU6ODQ1MzIiLCJwYXllciI6IjB4ODU3YjA2NTE5RTkxZTNBNTQ1Mzg3OTFiRGJiMEUyMjM3M2UzNmI2NiJ9"
+    },
+    "body": {}
+  }
+}

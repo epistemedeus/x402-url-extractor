@@ -1,0 +1,49 @@
+{
+  "id": "paid-as-unpaid-well-known-catalog",
+  "title": "Seeded failure: HTTP 200 /.well-known/x402 catalog presented as unpaid 402",
+  "expect": "reject",
+  "rejectCode": "not_unpaid_402",
+  "transport": "http",
+  "provenance": {
+    "kind": "seeded-failure",
+    "source": "https://agents.samedaydesk.com/.well-known/x402",
+    "note": "Discovery catalog is unpaid to read but is HTTP 200, not an x402 PaymentRequired challenge."
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://agents.samedaydesk.com/.well-known/x402",
+    "headers": {
+      "accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "body": {
+      "x402Version": 2,
+      "items": [
+        {
+          "resource": {
+            "url": "https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com"
+          },
+          "accepts": [
+            {
+              "scheme": "exact",
+              "network": "eip155:8453",
+              "amount": "5000",
+              "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+              "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+              "maxTimeoutSeconds": 300,
+              "extra": {
+                "name": "USD Coin",
+                "version": "2"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "id": "mcp-tool-extract-unpaid",
+  "title": "MCP tools/call extract without payment: isError PaymentRequired v2",
+  "expect": "pass",
+  "transport": "mcp",
+  "provenance": {
+    "kind": "live-unpaid-mcp-reconstruction",
+    "source": "POST https://agents.samedaydesk.com/mcp tools/call extract",
+    "observedAt": "2026-09-17T12:00:00Z",
+    "spec": "https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/mcp.md",
+    "paymentSent": false,
+    "credentialsUsed": false
+  },
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": {
+      "name": "extract",
+      "arguments": {
+        "url": "https://example.com"
+      }
+    }
+  },
+  "response": {
+    "httpStatus": 200,
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "isError": true,
+      "structuredContent": {
+        "x402Version": 2,
+        "error": "Payment required to access this tool",
+        "resource": {
+          "url": "mcp://tool/extract",
+          "description": "Fetch a public HTTP(S) page and return compact extraction signals for programmatic inspection: title, meta description, Open Graph/Twitter metadata, JSON-LD, headings, links, text excerpt, and AI-readiness flags. Use `read` instead when you need the page body as LLM-ready Markdown rather than metadata or a link inventory. Does not execute JavaScript; follows redirects and applies SSRF, timeout, and response-size guards.",
+          "mimeType": "application/json",
+          "serviceName": "x402-data-gateway",
+          "tags": [
+            "web",
+            "extract",
+            "structured-data"
+          ]
+        },
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "amount": "5000",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+            "maxTimeoutSeconds": 300,
+            "extra": {
+              "name": "USD Coin",
+              "version": "2"
+            }
+          }
+        ]
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"x402Version\":2,\"error\":\"Payment required to access this tool\",\"resource\":{\"url\":\"mcp://tool/extract\",\"description\":\"Fetch a public HTTP(S) page and return compact extraction signals for programmatic inspection: title, meta description, Open Graph/Twitter metadata, JSON-LD, headings, links, text excerpt, and AI-readiness flags. Use `read` instead when you need the page body as LLM-ready Markdown rather than metadata or a link inventory. Does not execute JavaScript; follows redirects and applies SSRF, timeout, and response-size guards.\",\"mimeType\":\"application/json\",\"serviceName\":\"x402-data-gateway\",\"tags\":[\"web\",\"extract\",\"structured-data\"]},\"accepts\":[{\"scheme\":\"exact\",\"network\":\"eip155:8453\",\"amount\":\"5000\",\"asset\":\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\"payTo\":\"0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee\",\"maxTimeoutSeconds\":300,\"extra\":{\"name\":\"USD Coin\",\"version\":\"2\"}}]}"
+        }
+      ]
+    }
+  }
+}

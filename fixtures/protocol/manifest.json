@@ -1,0 +1,82 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.unpaid-402.v1",
+  "scope": "x402 protocol conformance for unpaid PaymentRequired only (HTTP 402 and MCP isError PaymentRequired). No settlement, no PAYMENT-SIGNATURE emission, no facilitator verify/settle.",
+  "spec": {
+    "protocol": "https://github.com/x402-foundation/x402/blob/main/specs/x402-specification-v2.md",
+    "http": "https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/http.md",
+    "mcp": "https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/mcp.md",
+    "x402Version": 2
+  },
+  "fixtures": [
+    {
+      "id": "http-402-spec-v2",
+      "path": "unpaid/http-402-spec-v2.json",
+      "expect": "pass",
+      "rejectCode": null,
+      "transport": "http"
+    },
+    {
+      "id": "http-402-sds-extract",
+      "path": "unpaid/http-402-sds-extract.json",
+      "expect": "pass",
+      "rejectCode": null,
+      "transport": "http"
+    },
+    {
+      "id": "mcp-tool-extract-unpaid",
+      "path": "unpaid/mcp-tool-extract-unpaid.json",
+      "expect": "pass",
+      "rejectCode": null,
+      "transport": "mcp"
+    },
+    {
+      "id": "paid-as-unpaid-http-200-settlement",
+      "path": "reject/paid-as-unpaid-http-200-settlement.json",
+      "expect": "reject",
+      "rejectCode": "paid_as_unpaid",
+      "transport": "http"
+    },
+    {
+      "id": "paid-as-unpaid-payment-payload",
+      "path": "reject/paid-as-unpaid-payment-payload.json",
+      "expect": "reject",
+      "rejectCode": "paid_as_unpaid",
+      "transport": "http"
+    },
+    {
+      "id": "paid-as-unpaid-request-signature",
+      "path": "reject/paid-as-unpaid-request-signature.json",
+      "expect": "reject",
+      "rejectCode": "paid_as_unpaid",
+      "transport": "http"
+    },
+    {
+      "id": "paid-as-unpaid-402-payment-response",
+      "path": "reject/paid-as-unpaid-402-payment-response.json",
+      "expect": "reject",
+      "rejectCode": "paid_as_unpaid",
+      "transport": "http"
+    },
+    {
+      "id": "paid-as-unpaid-well-known-catalog",
+      "path": "reject/paid-as-unpaid-well-known-catalog.json",
+      "expect": "reject",
+      "rejectCode": "not_unpaid_402",
+      "transport": "http"
+    },
+    {
+      "id": "v1-body-as-unpaid-v2",
+      "path": "reject/v1-body-as-unpaid-v2.json",
+      "expect": "reject",
+      "rejectCode": "unsupported_version",
+      "transport": "http"
+    },
+    {
+      "id": "paid-as-unpaid-mcp-payment-meta",
+      "path": "reject/paid-as-unpaid-mcp-payment-meta.json",
+      "expect": "reject",
+      "rejectCode": "paid_as_unpaid",
+      "transport": "mcp"
+    }
+  ]
+}

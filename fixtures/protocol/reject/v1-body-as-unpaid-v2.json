@@ -1,0 +1,24 @@
+{
+  "id": "v1-body-as-unpaid-v2",
+  "title": "x402 v1 maxAmountRequired body presented as unpaid v2 402",
+  "expect": "reject",
+  "rejectCode": "unsupported_version",
+  "transport": "http",
+  "provenance": {
+    "kind": "seeded-failure",
+    "note": "v1 uses maxAmountRequired and network 'base'; this corpus is v2 unpaid only."
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://api.example.com/premium-data",
+    "headers": {}
+  },
+  "response": {
+    "status": 402,
+    "headers": {
+      "content-type": "application/json",
+      "payment-required": "eyJ4NDAyVmVyc2lvbiI6MSwiZXJyb3IiOiJYLVBBWU1FTlQgaGVhZGVyIGlzIHJlcXVpcmVkIiwiYWNjZXB0cyI6W3sic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoiYmFzZS1zZXBvbGlhIiwibWF4QW1vdW50UmVxdWlyZWQiOiIxMDAwMCIsImFzc2V0IjoiMHgwMzZDYkQ1Mzg0MmM1NDI2NjM0ZTc5Mjk1NDFlQzIzMThmM2RDRjdlIiwicGF5VG8iOiIweDIwOTY5M0JjNmFmYzBDNTMyOGJBMzZGYUYwM0M1MTRFRjMxMjI4N0MiLCJyZXNvdXJjZSI6Imh0dHBzOi8vYXBpLmV4YW1wbGUuY29tL3ByZW1pdW0tZGF0YSIsImRlc2NyaXB0aW9uIjoiQWNjZXNzIHRvIHByZW1pdW0gbWFya2V0IGRhdGEiLCJtaW1lVHlwZSI6ImFwcGxpY2F0aW9uL2pzb24iLCJtYXhUaW1lb3V0U2Vjb25kcyI6NjB9XX0="
+    },
+    "body": {}
+  }
+}

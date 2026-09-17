@@ -1,0 +1,28 @@
+{
+  "id": "paid-as-unpaid-http-200-settlement",
+  "title": "Seeded failure: HTTP 200 + PAYMENT-RESPONSE settlement labeled as unpaid 402",
+  "expect": "reject",
+  "rejectCode": "paid_as_unpaid",
+  "transport": "http",
+  "provenance": {
+    "kind": "seeded-failure",
+    "spec": "https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/http.md",
+    "note": "SettlementResponse on HTTP 200 is a paid success, not an unpaid PaymentRequired challenge."
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://api.example.com/premium-data",
+    "headers": {}
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json",
+      "payment-response": "eyJzdWNjZXNzIjp0cnVlLCJ0cmFuc2FjdGlvbiI6IjB4MTIzNDU2Nzg5MGFiY2RlZjEyMzQ1Njc4OTBhYmNkZWYxMjM0NTY3ODkwYWJjZGVmMTIzNDU2Nzg5MGFiY2RlZiIsIm5ldHdvcmsiOiJlaXAxNTU6ODQ1MzIiLCJwYXllciI6IjB4ODU3YjA2NTE5RTkxZTNBNTQ1Mzg3OTFiRGJiMEUyMjM3M2UzNmI2NiJ9"
+    },
+    "body": {
+      "data": "premium market data response",
+      "timestamp": "2024-01-15T10:30:00Z"
+    }
+  }
+}
