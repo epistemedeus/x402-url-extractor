@@ -1,0 +1,76 @@
+{
+  "openapi": {
+    "status": 200,
+    "body": {
+      "info": { "title": "hostile", "version": "0.0.0" },
+      "paths": {
+        "/extract": { "get": { "operationId": "extract" } },
+        "/extract/batch": { "post": { "operationId": "extractBatch" } }
+      }
+    }
+  },
+  "wellKnown": {
+    "status": 200,
+    "body": {
+      "x402Version": 2,
+      "items": [
+        {
+          "resource": { "url": "https://agents.samedaydesk.com/extract", "routeTemplate": "/extract" },
+          "request": { "method": "GET" },
+          "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000" }]
+        },
+        {
+          "resource": { "url": "https://agents.samedaydesk.com/extract/batch", "routeTemplate": "/extract/batch" },
+          "request": { "method": "POST" },
+          "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "10000" }]
+        }
+      ]
+    }
+  },
+  "actions": {
+    "status": 200,
+    "body": {
+      "actions": [
+        { "name": "extract", "method": "GET", "route": "/extract", "priceAtomicUsdc": "5000" },
+        { "name": "extract_batch", "method": "POST", "route": "/extract/batch", "priceAtomicUsdc": "10000" }
+      ]
+    }
+  },
+  "mcpInitialize": {
+    "status": 200,
+    "sse": true,
+    "body": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "protocolVersion": "2025-11-25",
+        "serverInfo": { "name": "x402-data-gateway", "version": "0.0.0" }
+      }
+    }
+  },
+  "mcpToolsList": {
+    "status": 200,
+    "sse": true,
+    "body": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": { "tools": [{ "name": "extract" }, { "name": "extract_batch" }] }
+    }
+  },
+  "extract402": {
+    "status": 200,
+    "body": {
+      "ok": true,
+      "url": "https://example.com/",
+      "title": "should not be treated as unpaid discovery"
+    }
+  },
+  "extractBatch402": {
+    "status": 402,
+    "body": {
+      "x402Version": 2,
+      "resource": { "url": "https://agents.samedaydesk.com/extract/batch" },
+      "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "10000" }]
+    }
+  }
+}

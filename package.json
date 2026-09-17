@@ -21,6 +21,7 @@
     "test:hermes-native:well-known": "node --test hermes-native.well-known.test.mjs",
     "test:mcp-extract-contract": "node --test mcp-output-schema-extract.test.mjs mcp-payment-header.test.mjs mcp-output-schema.test.mjs mcp-output-schema-wave2.test.mjs mcp-output-schema-wave3.test.mjs",
     "test:basepay-composition": "npm test --prefix examples/basepay-composition",
+    "test:anthropic-unpaid-list": "npm test --prefix examples/anthropic-unpaid-list",
     "acquire:basepay-upstream": "npm run acquire-upstream --prefix examples/basepay-composition",
     "test:page-change-xagent": "node --test page-change-http.test.mjs extract-batch-page-change.test.mjs page-change-xagent-package.test.mjs",
     "test:lockfile-pin-delta": "node --test --test-concurrency=1 lockfile-pin-delta.test.mjs lockfile-pin-delta.http.test.mjs lockfile-pin-delta.buyer.test.mjs",
