@@ -1,0 +1,41 @@
+{
+  "schema": "samedaydesk.crewai-unpaid-list.seed.v1",
+  "id": "seeded.false-accept.missing-extract",
+  "kind": "false_accept",
+  "claimedVerdict": "accept",
+  "productMust": "reject",
+  "title": "tools/list missing extract claimed as CrewAI discovery success",
+  "defect": "Hostile inventory omits extract while keeping extract_batch and claims unpaid tools/list succeeded.",
+  "crewai": {
+    "url": "https://agents.samedaydesk.com/mcp",
+    "transport": "streamable-http"
+  },
+  "recorded": {
+    "methods": ["initialize", "tools/list"],
+    "headers": {},
+    "toolsList": {
+      "tools": [
+        {
+          "name": "extract_batch",
+          "description": "1-5 public HTTPS URLs -> bounded records",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "urls": { "type": "array" }
+            },
+            "required": ["urls"]
+          }
+        },
+        {
+          "name": "read",
+          "description": "URL -> Markdown",
+          "inputSchema": {
+            "type": "object",
+            "properties": { "url": { "type": "string" } },
+            "required": ["url"]
+          }
+        }
+      ]
+    }
+  }
+}
