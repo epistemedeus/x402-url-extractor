@@ -1,0 +1,79 @@
+{
+  "id": "negative-tools-call",
+  "method": "tools/call",
+  "expect": "rejected",
+  "cases": [
+    {
+      "id": "seeded-unknown-tool",
+      "seededFailure": true,
+      "name": "__seeded_unknown_tool__",
+      "arguments": {},
+      "expectedLayer": "mcp-protocol",
+      "expectedCode": -32602,
+      "mustNotRunHandler": true,
+      "mustNotSettle": true,
+      "mustNotVerify": true,
+      "reason": "unknown tool must be rejected at MCP tools/call, not treated as a paid x402 product"
+    },
+    {
+      "id": "unknown-settle-now",
+      "name": "settle_now",
+      "arguments": {},
+      "expectedLayer": "mcp-protocol",
+      "expectedCode": -32602,
+      "mustNotRunHandler": true,
+      "mustNotSettle": true,
+      "mustNotVerify": true,
+      "reason": "undeclared settle_now is not a catalog tool"
+    },
+    {
+      "id": "extract-missing-url",
+      "name": "extract",
+      "arguments": {},
+      "expectedLayer": "mcp-protocol",
+      "expectedCode": -32602,
+      "mustNotRunHandler": true,
+      "mustNotSettle": true,
+      "mustNotVerify": true,
+      "reason": "known paid tool with missing required url is protocol-invalid, not a settlement"
+    },
+    {
+      "id": "extract-invalid-url",
+      "name": "extract",
+      "arguments": { "url": "not-a-url" },
+      "expectedLayer": "mcp-protocol",
+      "expectedCode": -32602,
+      "mustNotRunHandler": true,
+      "mustNotSettle": true,
+      "mustNotVerify": true,
+      "reason": "known paid tool with invalid url is protocol-invalid, not a settlement"
+    },
+    {
+      "id": "extract-unpaid",
+      "name": "extract",
+      "arguments": { "url": "https://example.invalid/" },
+      "expectedLayer": "x402-payment-required",
+      "mustNotRunHandler": true,
+      "mustNotSettle": true,
+      "mustNotVerify": true,
+      "reason": "unpaid tools/call of a paid tool must challenge, not execute the handler"
+    },
+    {
+      "id": "forged-payment-unknown-tool",
+      "name": "__seeded_unknown_tool__",
+      "arguments": {},
+      "meta": {
+        "x402/payment": {
+          "x402Version": 2,
+          "payload": { "signature": "0xforged" }
+        }
+      },
+      "expectedLayer": "mcp-protocol",
+      "expectedCode": -32602,
+      "mustNotRunHandler": true,
+      "mustNotSettle": true,
+      "mustNotVerify": true,
+      "reason": "a payment credential on an unknown tool must not verify, settle, or run a handler"
+    }
+  ]
+}

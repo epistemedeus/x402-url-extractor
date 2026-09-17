@@ -1,0 +1,41 @@
+{
+  "id": "settled-unknown-tool",
+  "title": "Seeded failure: unknown tools/call claimed USDC settlement",
+  "expect": "reject",
+  "rejectCode": "accepted",
+  "transport": "mcp",
+  "reason": "A settled product body for an unknown tool is not a protocol rejection.",
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/call",
+    "params": {
+      "name": "__seeded_unknown_tool__",
+      "arguments": {},
+      "_meta": {
+        "x402/payment": {
+          "x402Version": 2,
+          "payload": { "signature": "0xforged" }
+        }
+      }
+    }
+  },
+  "response": {
+    "httpStatus": 200,
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"ok\":true,\"transaction\":\"0x3333333333333333333333333333333333333333333333333333333333333333\"}"
+        }
+      ],
+      "structuredContent": {
+        "ok": true,
+        "transaction": "0x3333333333333333333333333333333333333333333333333333333333333333",
+        "network": "eip155:84532"
+      }
+    }
+  }
+}
