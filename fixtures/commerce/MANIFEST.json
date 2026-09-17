@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "samedaydesk.commerce-fixture-manifest.v1",
+  "product": "samedaydesk-x402-commerce-fixtures",
+  "unpublished": true,
+  "liveListing": false,
+  "boundary": {
+    "writePath": "fixtures/commerce/**",
+    "networkAccessed": false,
+    "paymentSent": false,
+    "walletAccessed": false,
+    "ownerRefresh": false,
+    "cdpPolled": false,
+    "registryMutated": false,
+    "checkoutMutated": false,
+    "neomorphicIoTouched": false
+  },
+  "driver": "fixtures/commerce/check.mjs",
+  "cases": [
+    {
+      "id": "seeded-absence",
+      "path": "unpaid-materialize/seeded-absence.json",
+      "plane": "unpaid-materialize",
+      "expectedOk": false,
+      "expectedVerdict": "provider_accepted_not_materialized"
+    },
+    {
+      "id": "sds-extract-canonical",
+      "path": "unpaid-materialize/sds-extract-canonical.json",
+      "plane": "unpaid-materialize",
+      "expectedOk": true,
+      "expectedVerdict": "canonical"
+    },
+    {
+      "id": "amount-mismatch",
+      "path": "unpaid-materialize/amount-mismatch.json",
+      "plane": "unpaid-materialize",
+      "expectedOk": false,
+      "expectedVerdict": "mismatch"
+    },
+    {
+      "id": "wrapper-charged-true",
+      "path": "unpaid-materialize/wrapper-charged-true.json",
+      "plane": "wrapper",
+      "expectedOk": false,
+      "expectedVerdict": "wrapper_nonconforming"
+    },
+    {
+      "id": "sds-extract-one-paywall",
+      "path": "wrapper/sds-extract-one-paywall.json",
+      "plane": "wrapper",
+      "expectedOk": true,
+      "expectedVerdict": "one_paywall"
+    },
+    {
+      "id": "two-paywall-wrap",
+      "path": "wrapper/two-paywall-wrap.json",
+      "plane": "wrapper",
+      "expectedOk": false,
+      "expectedVerdict": "two_paywall"
+    },
+    {
+      "id": "forged-offer-receipt",
+      "path": "receipts/forged-offer-receipt.json",
+      "plane": "receipt",
+      "expectedOk": false,
+      "expectedCode": "foreign_receipt_signer"
+    },
+    {
+      "id": "forged-signature-receipt",
+      "path": "receipts/forged-signature-receipt.json",
+      "plane": "receipt",
+      "expectedOk": false,
+      "expectedCode": "invalid_receipt_signature"
+    },
+    {
+      "id": "forged-attempt-receipt",
+      "path": "receipts/forged-attempt-receipt.json",
+      "plane": "receipt",
+      "expectedOk": false,
+      "expectedCode": "secret_material_refused"
+    }
+  ]
+}
