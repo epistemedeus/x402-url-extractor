@@ -1,0 +1,38 @@
+SameDayDesk CrewAI unpaid tools/list 0.1.0
+Merchant https://agents.samedaydesk.com/mcp
+
+Node 22 or newer is enough for the default command. This directory does not
+install CrewAI, mutate a global profile, or provide a cleanup command. It
+does not call tools and is not Crew.kickoff().
+
+Cold unpaid discovery (initialize then tools/list, no tools/call):
+
+  cd examples/crewai-unpaid-list
+  node bin/cli.mjs --json
+
+Stdlib Python, same protocol, still no CrewAI install:
+
+  python3 python/list_tools.py --json
+
+If CrewAI is already installed and you want MCPServerAdapter itself:
+
+  python3 python/mcpserver_adapter_example.py
+
+That host path lists tools and stops. If crewai_tools is missing, it records
+that exact limit and exits 2. Do not pip install CrewAI from this directory.
+
+Copyable adapter params are fixtures/crewai.mcp.json:
+
+  url: https://agents.samedaydesk.com/mcp
+  transport: streamable-http
+  headers: {}
+
+Default config sends no source headers and no payment headers.
+
+Seeded failure (offline; product must reject):
+
+  node bin/cli.mjs --seeded-failure --json
+
+Expected: exit 1, error.code SEED_REJECT, missing extract.
+
+To stop: there is no daemon. Unset nothing. Temporary files are not created.

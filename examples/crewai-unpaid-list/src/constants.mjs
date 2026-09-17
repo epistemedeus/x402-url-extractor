@@ -1,0 +1,29 @@
+/** Pinned SameDayDesk MCP. Discovery is unpaid. Tool calls are not this example. */
+export const LIVE_MCP_URL = "https://agents.samedaydesk.com/mcp";
+export const CREWAI_TRANSPORT = "streamable-http";
+export const MCP_PROTOCOL = "2025-11-25";
+export const FORBIDDEN_PROTOCOL = "2026-07-28";
+export const CLIENT_NAME = "samedaydesk-crewai-unpaid-list";
+export const CLIENT_VERSION = "0.1.0";
+export const USER_AGENT = "SameDayDesk-crewai-unpaid-list/0.1.0";
+export const REQUIRED_TOOLS = Object.freeze(["extract", "extract_batch"]);
+export const ALLOWED_METHODS = Object.freeze(["initialize", "tools/list"]);
+export const REPORT_SCHEMA = "samedaydesk.crewai-unpaid-list.report.v1";
+export const SEED_SCHEMA = "samedaydesk.crewai-unpaid-list.seed.v1";
+export const CREWAI_CONFIG_SCHEMA = "samedaydesk.crewai-unpaid-list.config.v1";
+export const TIMEOUT_MS = 15_000;
+export const MAX_BYTES = 1_000_000;
+export const DESIGNATED_SEED_ID = "seeded.false-accept.missing-extract";
+
+export const PAYMENT_HEADER_NAMES = Object.freeze([
+  "authorization",
+  "proxy-authorization",
+  "cookie",
+  "x-api-key",
+  "x-api-token",
+  "api-key",
+  "x-payment",
+  "payment-signature",
+  "x-payment-signature",
+  "payment-required",
+]);
