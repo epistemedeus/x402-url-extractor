@@ -1,0 +1,80 @@
+{
+  "x402Version": 2,
+  "lastUpdated": 1789647673,
+  "items": [
+    {
+      "resource": {
+        "url": "https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com",
+        "routeTemplate": "/extract",
+        "description": "Extract a public HTTP(S) web page into structured JSON with a clean text excerpt for LLM workflows.",
+        "mimeType": "application/json",
+        "serviceName": "SameDayDesk",
+        "tags": ["web", "web-extraction", "clean-text", "llm-ready", "structured-json"]
+      },
+      "type": "http",
+      "request": {
+        "method": "GET",
+        "url": "https://agents.samedaydesk.com/extract",
+        "exampleUrl": "https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com"
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "5000",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+        }
+      ]
+    },
+    {
+      "resource": {
+        "url": "https://agents.samedaydesk.com/extract/batch",
+        "routeTemplate": "/extract/batch",
+        "description": "Batch extract one to five public HTTPS URLs into bounded structured fields.",
+        "mimeType": "application/json",
+        "serviceName": "SameDayDesk",
+        "tags": ["web", "batch-extract", "structured-json", "multi-url", "bounded-attempt"]
+      },
+      "type": "http",
+      "request": {
+        "method": "POST",
+        "url": "https://agents.samedaydesk.com/extract/batch"
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "10000",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+        }
+      ]
+    },
+    {
+      "resource": {
+        "url": "https://agents.samedaydesk.com/read?url=https%3A%2F%2Fexample.com",
+        "routeTemplate": "/read",
+        "description": "URL to bounded Markdown from a no-JavaScript HTTP capture.",
+        "mimeType": "application/json",
+        "serviceName": "SameDayDesk",
+        "tags": ["web", "webpage-to-markdown", "llm-context", "clean-text", "url-reader"]
+      },
+      "type": "http",
+      "request": {
+        "method": "GET",
+        "url": "https://agents.samedaydesk.com/read",
+        "exampleUrl": "https://agents.samedaydesk.com/read?url=https%3A%2F%2Fexample.com"
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "5000",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+        }
+      ]
+    }
+  ]
+}

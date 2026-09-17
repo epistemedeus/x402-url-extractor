@@ -1,0 +1,19 @@
+{
+  "name": "samedaydesk-langchain-unpaid-list-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Credential-free LangChain-compatible unpaid x402 resource list. Reads a seller well-known catalog only. Never signs, sends payment headers, or fetches paid bodies.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "samedaydesk-langchain-unpaid-list": "./bin/cli.mjs"
+  },
+  "scripts": {
+    "start": "node bin/cli.mjs",
+    "list": "node bin/cli.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "license": "MIT"
+}
