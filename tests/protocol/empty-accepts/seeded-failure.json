@@ -1,0 +1,20 @@
+{
+  "x402Version": 2,
+  "error": "Payment required",
+  "resource": {
+    "url": "http://127.0.0.1/empty-accepts/seeded-failure",
+    "description": "Hostile empty-accepts challenge that claims settlement; must throw and never settle",
+    "mimeType": "application/json"
+  },
+  "accepts": [],
+  "seededFailure": {
+    "kind": "empty-accepts-claimed-settlement",
+    "mustReject": true,
+    "settlement": {
+      "success": true,
+      "transaction": "0xabababababababababababababababababababababababababababababababab",
+      "network": "eip155:8453",
+      "errorReason": ""
+    }
+  }
+}
