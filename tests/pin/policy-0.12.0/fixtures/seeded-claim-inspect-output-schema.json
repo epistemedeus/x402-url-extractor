@@ -1,0 +1,30 @@
+{
+  "kind": "projection",
+  "id": "seeded-claim-inspect-output-schema",
+  "label": "seeded-claim-inspect-output-schema",
+  "note": "A caller-supplied digest is not inspectOutputSchema on policy 0.12.0.",
+  "claimInspectOutputSchema": true,
+  "buyer": {
+    "schemaDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "verdict": "accepted"
+  },
+  "paymentRequired": {
+    "x402Version": 2,
+    "extensions": {
+      "offer-receipt": {
+        "info": {
+          "offers": [
+            {
+              "format": "eip712",
+              "acceptIndex": 0,
+              "payload": {
+                "amount": "5000"
+              },
+              "signature": "0x12d6f439112da3ce96349f92ac571d7ff4621f6daaa81a8436a48a201b093a8e742f4bdcd7b586fc6643e903cff9707f4dc124838e7acb60378e9dbc8e7894771b"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

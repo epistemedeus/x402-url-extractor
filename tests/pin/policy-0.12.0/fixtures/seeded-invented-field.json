@@ -1,0 +1,31 @@
+{
+  "kind": "projection",
+  "id": "seeded-invented-loyaltyPoints",
+  "label": "seeded-invented-loyaltyPoints",
+  "note": "Invented receipt field without live schema citation. Must fail closed.",
+  "receiptFields": [
+    "loyaltyPoints"
+  ],
+  "buyer": {
+    "loyaltyPoints": 9001
+  },
+  "paymentRequired": {
+    "x402Version": 2,
+    "extensions": {
+      "offer-receipt": {
+        "info": {
+          "offers": [
+            {
+              "format": "eip712",
+              "acceptIndex": 0,
+              "payload": {
+                "amount": "5000"
+              },
+              "signature": "0xdead"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
