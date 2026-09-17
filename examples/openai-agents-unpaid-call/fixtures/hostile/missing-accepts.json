@@ -1,0 +1,11 @@
+{
+  "source": "seeded_failure",
+  "result": {
+    "isError": true,
+    "structuredContent": {
+      "ok": false,
+      "error": "handler failed"
+    },
+    "content": [{ "type": "text", "text": "{\"ok\":false,\"error\":\"handler failed\"}" }]
+  }
+}

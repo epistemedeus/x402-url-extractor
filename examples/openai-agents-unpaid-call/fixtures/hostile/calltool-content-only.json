@@ -1,0 +1,12 @@
+{
+  "source": "seeded_failure",
+  "sdkMethod": "MCPServerStreamableHttp.callTool",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"x402Version\":2,\"accepts\":[{\"scheme\":\"exact\",\"network\":\"eip155:8453\",\"amount\":\"5000\"}]}"
+      }
+    ]
+  }
+}

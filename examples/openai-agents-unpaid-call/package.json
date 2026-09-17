@@ -1,0 +1,23 @@
+{
+  "name": "samedaydesk-openai-agents-unpaid-call-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Credential-free OpenAI Agents SDK unpaid MCP tools/call that preserves isError:true PaymentRequired. Never pays, never uses --live, never signs.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "samedaydesk-openai-agents-unpaid-call": "./bin/cli.mjs"
+  },
+  "scripts": {
+    "start": "node bin/cli.mjs",
+    "call": "node bin/cli.mjs",
+    "fail": "node bin/cli.mjs --fixture ./fixtures/hostile/is-error-false.json",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@openai/agents": "0.18.0"
+  },
+  "license": "MIT"
+}

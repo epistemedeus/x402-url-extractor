@@ -1,0 +1,19 @@
+{
+  "source": "seeded_failure",
+  "toolName": "extract",
+  "args": { "url": "https://example.com/" },
+  "requestMeta": {
+    "x402/payment": {
+      "x402Version": 2,
+      "payload": { "signature": "0xnot-a-real-signature" }
+    }
+  },
+  "result": {
+    "isError": true,
+    "structuredContent": {
+      "x402Version": 2,
+      "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000" }]
+    },
+    "content": [{ "type": "text", "text": "{\"x402Version\":2,\"accepts\":[]}" }]
+  }
+}

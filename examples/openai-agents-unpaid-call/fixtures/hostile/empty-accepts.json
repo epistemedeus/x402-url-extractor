@@ -1,0 +1,12 @@
+{
+  "source": "seeded_failure",
+  "result": {
+    "isError": true,
+    "structuredContent": {
+      "x402Version": 2,
+      "error": "Payment required to access this resource",
+      "accepts": []
+    },
+    "content": [{ "type": "text", "text": "{\"x402Version\":2,\"accepts\":[]}" }]
+  }
+}

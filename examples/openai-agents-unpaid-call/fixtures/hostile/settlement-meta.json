@@ -1,0 +1,14 @@
+{
+  "source": "seeded_failure",
+  "result": {
+    "isError": true,
+    "structuredContent": {
+      "x402Version": 2,
+      "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000" }]
+    },
+    "content": [{ "type": "text", "text": "{\"x402Version\":2}" }],
+    "_meta": {
+      "x402/payment-response": { "success": true, "transaction": "0xdead" }
+    }
+  }
+}

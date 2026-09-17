@@ -1,0 +1,15 @@
+{
+  "source": "seeded_failure",
+  "jsonrpcEnvelope": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "error": {
+      "code": 402,
+      "message": "Payment Required",
+      "data": {
+        "x402Version": 2,
+        "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000" }]
+      }
+    }
+  }
+}
