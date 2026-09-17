@@ -1,0 +1,32 @@
+{
+  "name": "web-extract",
+  "liveSkillUrl": "https://agents.samedaydesk.com/.well-known/skills/web-extract/SKILL.md",
+  "liveSkillSha256": "382e45d33e95b81dd27c2ab38c576118159a37af2d776bc0620ecf9b472d3551",
+  "sourcePath": "plugins/samedaydesk-x402/skills/web-extract/SKILL.md",
+  "sourcePin": "0153295c5851bf8f93fb27c77070a31417a59f69",
+  "mcp": {
+    "name": "samedaydesk",
+    "type": "http",
+    "url": "https://agents.samedaydesk.com/mcp",
+    "protocolVersion": "2025-11-25",
+    "headers": {
+      "X-SameDayDesk-Agent-Source": "agent-skills-v1"
+    }
+  },
+  "extract": {
+    "url": "https://agents.samedaydesk.com/extract",
+    "batchUrl": "https://agents.samedaydesk.com/extract/batch"
+  },
+  "supportedRuntimes": [
+    "cursor",
+    "claude-code",
+    "grok-bot"
+  ],
+  "rejectedRuntimes": [
+    {
+      "id": "claude-api-skills",
+      "product": "Claude API Skills",
+      "reason": "Claude API Skills have no network. This skill needs live HTTPS extract routes and Streamable HTTP MCP at https://agents.samedaydesk.com/mcp. Do not upload SKILL.md as a Claude API Skill; network tools will not run."
+    }
+  ]
+}
