@@ -1,0 +1,23 @@
+{
+  "name": "samedaydesk-openai-agents-sds-mcp-list-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Credential-free unpaid SameDayDesk tools/list via OpenAI Agents SDK MCPServerStreamableHttp. Does not call paid tools, run an agent, or send payment headers.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "samedaydesk-openai-agents-sds-mcp-list": "./bin/cli.mjs"
+  },
+  "scripts": {
+    "start": "node bin/cli.mjs",
+    "list": "node bin/cli.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@openai/agents": "0.18.0",
+    "@modelcontextprotocol/client": "2.0.0"
+  },
+  "license": "MIT"
+}
