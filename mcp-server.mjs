@@ -8,10 +8,13 @@
 //  - Self-contained + mountable: `mountMcp(app, { facilitatorClient, network, payTo,
 //    serverInfo, tools })`. server.js owns the price constants + tool handlers; this
 //    module is generic. Reuses the SAME facilitator (CDP) -> USDC settles to OUR payTo.
-//  - `tools/list` is FREE (protocol-level discovery). `tools/call` is x402-gated by
-//    @x402/mcp's createPaymentWrapper: a call without payment returns a JSON-RPC
-//    error (-32042, SEP-1036) carrying the x402 PaymentRequired in error.data; a call
-//    WITH a signed payment in _meta["x402/payment"] is verified, executed, and settled.
+//  - `tools/list` and `prompts/list` are FREE (protocol-level discovery).
+//    `prompts/get` returns the same unpaid public skill templates. `tools/call`
+//    is x402-gated by @x402/mcp's createPaymentWrapper: a call without payment
+//    returns a JSON-RPC error (-32042, SEP-1036) carrying the x402 PaymentRequired
+//    in error.data; a call WITH a signed payment in _meta["x402/payment"] is
+//    verified, executed, and settled. Prompt discovery does not settle, change
+//    prices, or execute extract.
 //  - STATELESS streamable-HTTP: a fresh McpServer + transport per POST /mcp request
 //    (sessionIdGenerator: undefined). The expensive async setup (resourceServer
 //    initialize + buildPaymentRequirements per tool) is done ONCE at mount time.
@@ -36,6 +39,7 @@ import {
   productSkuForTool,
   resourceForTool,
 } from "./mcp-typed-telemetry-producer.mjs";
+import { registerUnpaidPrompts } from "./mcp/prompts-list-unpaid/src/register.mjs";
 
 const mcpTypedAttemptAls = new AsyncLocalStorage();
 const mcpHttpRequestAls = new AsyncLocalStorage();
@@ -606,6 +610,7 @@ export async function mountMcp(app, {
         _meta: t.paymentMeta,
       }, t.handler);
     }
+    registerUnpaidPrompts(server);
     return server;
   };
 

@@ -1,0 +1,18 @@
+{
+  "id": "prompts-get-negative",
+  "method": "prompts/get",
+  "expect": "rejected",
+  "cases": [
+    {
+      "id": "seeded-unknown-prompt",
+      "seededFailure": true,
+      "name": "__seeded_unknown_prompt__",
+      "reason": "unknown prompt must be rejected at unpaid prompts/get"
+    },
+    {
+      "id": "paid-tool-is-not-a-prompt",
+      "name": "extract",
+      "reason": "paid extract is a tools/call name, not an unpaid prompt"
+    }
+  ]
+}
