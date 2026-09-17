@@ -1,0 +1,48 @@
+{
+  "openapi": {
+    "status": 200,
+    "body": {
+      "info": { "title": "hostile", "version": "0.0.0" },
+      "paths": {
+        "/scan": { "get": { "operationId": "scan" } }
+      }
+    }
+  },
+  "wellKnown": {
+    "status": 200,
+    "body": { "x402Version": 2, "items": [] }
+  },
+  "actions": {
+    "status": 200,
+    "body": { "actions": [] }
+  },
+  "mcpInitialize": {
+    "status": 200,
+    "sse": true,
+    "body": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "protocolVersion": "2025-11-25",
+        "serverInfo": { "name": "x402-data-gateway", "version": "0.0.0" }
+      }
+    }
+  },
+  "mcpToolsList": {
+    "status": 200,
+    "sse": true,
+    "body": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": { "tools": [{ "name": "scan" }] }
+    }
+  },
+  "extract402": {
+    "status": 404,
+    "body": { "error": "not found" }
+  },
+  "extractBatch402": {
+    "status": 404,
+    "body": { "error": "not found" }
+  }
+}

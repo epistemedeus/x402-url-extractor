@@ -1,0 +1,23 @@
+{
+  "name": "samedaydesk-anthropic-unpaid-list-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Credential-free unpaid discovery list for Anthropic/Claude Code extract surfaces. Never pays, checks out, publishes, or sends payment headers.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "samedaydesk-anthropic-unpaid-list": "./bin/cli.mjs"
+  },
+  "scripts": {
+    "start": "node bin/cli.mjs",
+    "list": "node bin/cli.mjs",
+    "list:fixture": "node bin/cli.mjs --fixture ./fixtures/recorded",
+    "test": "node --test test/*.test.mjs",
+    "fail:private": "node bin/cli.mjs --origin http://127.0.0.1",
+    "fail:approve": "node bin/cli.mjs --approve",
+    "fail:checkout": "node bin/cli.mjs --checkout"
+  },
+  "license": "MIT"
+}

@@ -1217,6 +1217,9 @@ curl -i 'http://localhost:3000/defi/morpho-position?address=0x...' # HTTP 402
 - `examples/customer-x402/` — credential-free preflight plus explicitly
   authorized `@x402/fetch` purchase example for `POST /extract/batch`
   (default) and backward-compatible `GET /extract`.
+- `examples/anthropic-unpaid-list/` — credential-free unpaid discovery list
+  for Claude Code / Anthropic extract surfaces. Never pays, checks out,
+  publishes, or touches neo. Listing is not payment authority.
 - `README.md` — this guide.
 - `extract.mjs` — pre-existing zero-dependency "URL → clean structured data"
   service. This is a natural **paid resource** to put behind `/premium`: in the
