@@ -1,0 +1,116 @@
+{
+  "schema": "x402.mcp.timeout-10m.catalog.v1",
+  "schemaVersion": 1,
+  "capSeconds": 600,
+  "source": "@x402/mcp maxRequestTimeoutSeconds default 600s (10 minutes); derived from accept.maxTimeoutSeconds; per-call options.timeout (ms) wins",
+  "cases": [
+    {
+      "id": "default-cap-is-10m",
+      "kind": "paid-retry",
+      "accept": { "maxTimeoutSeconds": 900 },
+      "expectTimeoutMs": 600000,
+      "expectCapped": true,
+      "reason": "accept 900s is clamped to the 10m client cap"
+    },
+    {
+      "id": "sds-enrich-300s",
+      "kind": "paid-retry",
+      "accept": {
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "50000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+        "maxTimeoutSeconds": 300
+      },
+      "expectTimeoutMs": 300000,
+      "expectCapped": false,
+      "reason": "recorded SDS enrich unpaid accept stays under the 10m cap"
+    },
+    {
+      "id": "missing-accept-timeout-defaults-300s",
+      "kind": "paid-retry",
+      "accept": { "scheme": "exact" },
+      "expectTimeoutMs": 300000,
+      "expectCapped": false,
+      "reason": "absent maxTimeoutSeconds uses DEFAULT_ACCEPT_TIMEOUT_SECONDS (300)"
+    },
+    {
+      "id": "probe-defaults-to-300s",
+      "kind": "probe",
+      "expectTimeoutMs": 300000,
+      "expectCapped": false,
+      "reason": "unpaid probe is min(300s, cap)"
+    },
+    {
+      "id": "probe-lower-cap-wins",
+      "kind": "probe",
+      "maxRequestTimeoutSeconds": 60,
+      "expectTimeoutMs": 60000,
+      "expectCapped": true,
+      "reason": "a 60s client cap shortens the 300s probe default"
+    },
+    {
+      "id": "over-cap-900s",
+      "kind": "paid-retry",
+      "accept": { "maxTimeoutSeconds": 900 },
+      "expectTimeoutMs": 600000,
+      "expectCapped": true,
+      "reason": "900s accept cannot buy a 15-minute MCP wait"
+    },
+    {
+      "id": "circle-gateway-604900",
+      "kind": "paid-retry",
+      "accept": { "maxTimeoutSeconds": 604900 },
+      "expectTimeoutMs": 600000,
+      "expectCapped": true,
+      "reason": "Circle Gateway 604900s validity window is still capped at 10m for MCP tools/call"
+    },
+    {
+      "id": "exact-cap-600s",
+      "kind": "paid-retry",
+      "accept": { "maxTimeoutSeconds": 600 },
+      "expectTimeoutMs": 600000,
+      "expectCapped": false,
+      "reason": "accept equal to the cap is not reduced further"
+    },
+    {
+      "id": "per-call-override-wins",
+      "kind": "paid-retry",
+      "accept": { "maxTimeoutSeconds": 900 },
+      "perCallTimeoutMs": 120000,
+      "expectTimeoutMs": 120000,
+      "expectCapped": false,
+      "reason": "callTool options.timeout (ms) takes precedence over accept maxTimeoutSeconds and the cap"
+    },
+    {
+      "id": "invalid-cap-zero",
+      "kind": "invalid-cap",
+      "maxRequestTimeoutSeconds": 0,
+      "expectThrow": true,
+      "paid": false,
+      "reason": "maxRequestTimeoutSeconds 0 throws instead of paying"
+    },
+    {
+      "id": "invalid-cap-negative",
+      "kind": "invalid-cap",
+      "maxRequestTimeoutSeconds": -1,
+      "expectThrow": true,
+      "paid": false,
+      "reason": "maxRequestTimeoutSeconds -1 throws instead of paying"
+    }
+  ],
+  "seeded": [
+    {
+      "id": "seeded.false-accept.uncapped-900s",
+      "kind": "false_accept",
+      "deriveKind": "paid-retry",
+      "accept": { "maxTimeoutSeconds": 900 },
+      "claimedTimeoutMs": 900000,
+      "claimedCapped": false,
+      "claimedPaid": false,
+      "claimedSettled": false,
+      "reason": "hostile claim that a 900s accept waits 15 minutes without the 10m cap"
+    }
+  ]
+}

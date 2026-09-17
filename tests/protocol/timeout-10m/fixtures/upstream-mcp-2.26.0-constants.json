@@ -1,0 +1,17 @@
+{
+  "id": "upstream-mcp-2.26.0-constants",
+  "source": "unpkg @x402/mcp@2.26.0/dist/esm/index.mjs",
+  "sourceUrl": "https://unpkg.com/@x402/mcp@2.26.0/dist/esm/index.mjs",
+  "recorded": {
+    "MAX_TIMEOUT_MS": 2147483647,
+    "DEFAULT_PROBE_TIMEOUT_SECONDS": 300,
+    "DEFAULT_ACCEPT_TIMEOUT_SECONDS": 300,
+    "DEFAULT_MAX_REQUEST_TIMEOUT_SECONDS": 600
+  },
+  "notes": [
+    "paidTimeoutMs = clamp(min(accept.maxTimeoutSeconds || 300, maxRequestTimeoutSeconds) * 1000)",
+    "probeTimeoutMs = clamp(min(300, maxRequestTimeoutSeconds) * 1000)",
+    "per-call options.timeout (ms) takes precedence and is not recapped",
+    "invalid maxRequestTimeoutSeconds throws instead of paying"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "id": "over-cap-900s",
+  "kind": "paid-retry",
+  "expect": "pass",
+  "accept": { "maxTimeoutSeconds": 900 },
+  "expectTimeoutMs": 600000,
+  "expectCapped": true,
+  "reason": "900s accept is clamped to 600s; MCP tools/call does not wait 15 minutes"
+}
