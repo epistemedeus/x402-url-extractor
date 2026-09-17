@@ -1,0 +1,24 @@
+{
+  "wave": "w7",
+  "policy": "buyer.schemaDigest is required; omit fails closed",
+  "omitCode": "buyer_schema_digest_omitted",
+  "digestPattern": "^sha256:[0-9a-f]{64}$",
+  "agentPaymentPolicy": "0.12.0",
+  "buyerSchema": {
+    "id": "customer-x402-required-sku",
+    "path": "examples/customer-x402/fixtures/record/required-sku/schema.json",
+    "request": {
+      "method": "POST",
+      "url": "https://agents.samedaydesk.com/extract/batch"
+    },
+    "example": {
+      "sourceId": "sku-1",
+      "sourceUrl": "https://example.com/p",
+      "type": "Product",
+      "name": "Widget",
+      "sku": "W-1"
+    },
+    "schemaDigest": "sha256:bf34c9b01168e962219afd4b96c4589ba9b10ac23f75fa9cf4cf536b3b1081b4",
+    "requiredFields": ["name", "sku", "sourceId", "sourceUrl", "type"]
+  }
+}

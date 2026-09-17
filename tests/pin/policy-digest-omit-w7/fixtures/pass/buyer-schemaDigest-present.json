@@ -1,0 +1,13 @@
+{
+  "id": "customer-x402-required-sku",
+  "expect": "pass",
+  "code": "buyer_schema_digest_pinned",
+  "role": "buyer",
+  "route": "POST /extract/batch",
+  "buyer": {
+    "schemaDigest": "sha256:bf34c9b01168e962219afd4b96c4589ba9b10ac23f75fa9cf4cf536b3b1081b4",
+    "requiredFields": ["name", "sku", "sourceId", "sourceUrl", "type"],
+    "maxResponseBytes": 131072,
+    "mediaType": "application/json"
+  }
+}
