@@ -34,3 +34,9 @@ Official `GET /v0.1/servers?search=` is a name substring, so
 `io.github.epistemedeus/x402-data-gateway` is listed. Do not treat that as
 unlisted and do not publish a second name. Workers must not call
 `mcp-publisher publish`.
+
+Live latest (GET `/v0.1/servers/io.github.epistemedeus%2Fx402-data-gateway/versions/latest`)
+is already `1.23.49` with no `title` and no SameDayDesk tokens. Registry
+versions are immutable, so Root cannot rewrite `1.23.49`; a new version
+string is required. This packet keeps merchant `1.23.49` because
+`server.json` version is locked to `package.json`.

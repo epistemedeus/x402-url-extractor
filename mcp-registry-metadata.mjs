@@ -55,7 +55,12 @@ export function namedServerFromLatest(namedLatest) {
   if (!server || typeof server !== "object") return null;
   if (server.name !== MCP_REGISTRY_SERVER_NAME) return null;
   if (!server.version) return null;
-  return { name: server.name, version: String(server.version), title: server.title ?? null };
+  return {
+    name: server.name,
+    version: String(server.version),
+    title: server.title ?? null,
+    description: server.description == null ? null : String(server.description),
+  };
 }
 
 export function brandSearchCount(brandSearch) {
@@ -76,33 +81,68 @@ export function planRegistryPublish({
   namedLatest,
   proposedName,
   command,
+  proposedManifest,
 } = {}) {
   refuseLivePublisherCommand(command);
   const existing = namedServerFromLatest(namedLatest);
   const count = brandSearchCount(brandSearch);
   const proposed = proposedName == null || proposedName === "" ? MCP_REGISTRY_SERVER_NAME : String(proposedName);
 
-  if (existing) {
-    if (proposed !== existing.name) {
-      throw new Error(
-        `duplicate-publish refused: treating search=${MCP_REGISTRY_BRAND_SEARCH} count:${count} as not listed would create ${proposed} beside existing ${existing.name}@${existing.version}`,
-      );
-    }
+  if (proposed !== MCP_REGISTRY_SERVER_NAME) {
+    const beside = existing
+      ? ` beside existing ${existing.name}@${existing.version}`
+      : `; ${MCP_REGISTRY_SERVER_NAME} latest is missing or unparseable`;
+    throw new Error(
+      `duplicate-publish refused: treating search=${MCP_REGISTRY_BRAND_SEARCH} count:${count} as not listed would create ${proposed}${beside}`,
+    );
+  }
+
+  if (!existing) {
+    throw new Error(
+      `duplicate-publish refused: treating search=${MCP_REGISTRY_BRAND_SEARCH} count:${count} as not listed is forbidden while ${MCP_REGISTRY_SERVER_NAME} latest is missing or unparseable`,
+    );
+  }
+
+  const local = proposedManifest ?? loadOfficialRegistryManifest();
+  const sameVersion = existing.version === String(local.version);
+  const metadataDrift =
+    (existing.title ?? null) !== (local.title ?? null) ||
+    String(existing.description ?? "") !== String(local.description ?? "");
+
+  if (sameVersion && metadataDrift) {
     return Object.freeze({
-      action: "already-listed",
+      action: "needs-new-immutable-version",
       publish: false,
       reason: MCP_REGISTRY_WORKER_PUBLISH_FORBIDDEN,
       existingName: existing.name,
       existingVersion: existing.version,
+      proposedVersion: String(local.version),
       brandSearchCount: count,
-      note: `search=${MCP_REGISTRY_BRAND_SEARCH} count:${count} is not unlisted; keep ${existing.name} and let Root publish title/description on a new immutable version`,
+      note: `search=${MCP_REGISTRY_BRAND_SEARCH} count:${count} is not unlisted; ${existing.name}@${existing.version} is already immutable without the in-repo title/brand tokens; Root must publish a new version`,
+    });
+  }
+
+  if (!sameVersion) {
+    return Object.freeze({
+      action: "new-version-not-published",
+      publish: false,
+      reason: MCP_REGISTRY_WORKER_PUBLISH_FORBIDDEN,
+      existingName: existing.name,
+      existingVersion: existing.version,
+      proposedVersion: String(local.version),
+      brandSearchCount: count,
+      note: `search=${MCP_REGISTRY_BRAND_SEARCH} count:${count} is not unlisted; keep ${existing.name}; Root may publish ${existing.name}@${local.version}`,
     });
   }
 
   return Object.freeze({
-    action: "not-listed",
+    action: "already-listed",
     publish: false,
     reason: MCP_REGISTRY_WORKER_PUBLISH_FORBIDDEN,
+    existingName: existing.name,
+    existingVersion: existing.version,
+    proposedVersion: String(local.version),
     brandSearchCount: count,
+    note: `search=${MCP_REGISTRY_BRAND_SEARCH} count:${count} is not unlisted; keep ${existing.name}`,
   });
 }
