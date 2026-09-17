@@ -1,0 +1,52 @@
+{
+  "id": "seeded-snake-is_error",
+  "title": "Seeded failure: snake_case is_error is not the SDS MCP unpaid wire",
+  "expect": "reject",
+  "rejectCode": "snake_is_error",
+  "kind": "mcp-tools-call-unpaid",
+  "method": "tools/call",
+  "note": "SEEDING FAILURE: MCP CallToolResult uses camelCase isError. FastMCP-style is_error is not this hop.",
+  "request": {
+    "method": "tools/call",
+    "params": {
+      "name": "extract",
+      "arguments": { "url": "https://example.com" }
+    },
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "headerNames": ["content-type"],
+    "hasPaymentRequiredHeader": false,
+    "jsonrpc": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+        "is_error": true,
+        "structuredContent": {
+          "x402Version": 2,
+          "error": "Payment required to access this tool",
+          "resource": { "url": "mcp://tool/extract" },
+          "accepts": [
+            {
+              "scheme": "exact",
+              "network": "eip155:8453",
+              "amount": "5000",
+              "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+              "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "successProven": false,
+    "settlement": false
+  }
+}
