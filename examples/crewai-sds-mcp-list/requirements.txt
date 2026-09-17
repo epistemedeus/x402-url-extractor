@@ -1,0 +1,5 @@
+# Pinned CrewAI native MCP client. mcp 1.28.1 is pulled in by crewai==1.15.22
+# (requires mcp~=1.28.1). Do not widen this pin without replaying unpaid
+# tools/list against https://agents.samedaydesk.com/mcp.
+crewai==1.15.22
+mcp==1.28.1
