@@ -1,6 +1,6 @@
 {
   "id": "wrapper-charged-true",
-  "note": "Seeded wrapper non-conformance: unpaid evidence must not claim charged:true.",
+  "note": "Seeded wrapper non-conformance only: unpaid evidence must not claim charged:true. Listing identity is omitted so this seed is not also route_absent.",
   "origin": "https://api.example.com",
   "route": "/extract",
   "method": "GET",
@@ -10,11 +10,5 @@
     "charged": true,
     "httpStatus": 200,
     "ok": true
-  },
-  "listingIdentity": {
-    "canonicalOrigin": "https://api.example.com",
-    "route": "/extract",
-    "sources": ["coinbase-bazaar"],
-    "records": []
   }
 }

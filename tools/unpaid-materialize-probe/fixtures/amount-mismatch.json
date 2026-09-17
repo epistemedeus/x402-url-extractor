@@ -19,7 +19,18 @@
   "catalogSearch": {
     "resources": [
       {
-        "resource": "https://agents.samedaydesk.com/commerce/payment-offer-preflight"
+        "resource": "https://agents.samedaydesk.com/commerce/payment-offer-preflight",
+        "type": "http",
+        "x402Version": 2,
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "amount": "5000",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ]
       }
     ]
   },
@@ -83,12 +94,12 @@
             "id": "samedaydesk",
             "name": "SameDayDesk",
             "hosts": ["agents.samedaydesk.com"],
-            "queries": [],
+            "queries": ["agents.samedaydesk.com"],
             "partial": false,
             "rowCount": 1,
             "routes": {
               "https://agents.samedaydesk.com/commerce/payment-offer-preflight": {
-                "digest": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                "digest": "c2df54f456e957103f76a962195e28ab1ba6d9f36c5f947970aca3b57cb3bcbf"
               }
             }
           }
