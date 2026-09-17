@@ -1,0 +1,45 @@
+{
+  "id": "fresh-within-window",
+  "title": "In-window credential may settle once (positive control)",
+  "expect": "pass",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "nowSec": 1700000000,
+  "maxTimeoutSeconds": 300,
+  "requirePaidDelivery": true,
+  "settleCount": 1,
+  "verifyCount": 1,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "paymentPresent": false,
+      "maxTimeoutSeconds": 300,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false
+    },
+    {
+      "seq": 2,
+      "phase": "fresh",
+      "httpStatus": 200,
+      "paymentPresent": true,
+      "validAfter": "0",
+      "validBefore": "1700000300",
+      "observedAtSec": 1700000000,
+      "maxTimeoutSeconds": 300,
+      "settleDelta": 1,
+      "verifyDelta": 1,
+      "hasPaymentResponse": true,
+      "charged": true
+    }
+  ]
+}

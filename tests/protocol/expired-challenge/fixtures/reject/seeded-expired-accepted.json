@@ -1,0 +1,51 @@
+{
+  "id": "seeded-expired-accepted",
+  "title": "Seeded failure: expired validBefore delivered as paid success",
+  "expect": "reject",
+  "rejectCode": "expired_challenge_accepted",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "nowSec": 1700000000,
+  "maxTimeoutSeconds": 300,
+  "claims": {
+    "ok": true,
+    "expiredRejected": false,
+    "message": "settlement complete"
+  },
+  "settleCount": 1,
+  "verifyCount": 1,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "paymentPresent": false,
+      "maxTimeoutSeconds": 300,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false
+    },
+    {
+      "seq": 2,
+      "phase": "expired-payload",
+      "httpStatus": 200,
+      "paymentPresent": true,
+      "validAfter": "0",
+      "validBefore": "1699999999",
+      "observedAtSec": 1700000000,
+      "maxTimeoutSeconds": 300,
+      "settleDelta": 1,
+      "verifyDelta": 1,
+      "hasPaymentResponse": true,
+      "charged": true,
+      "transaction": "0x3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  ]
+}

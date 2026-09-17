@@ -1,0 +1,48 @@
+{
+  "id": "seeded-not-yet-valid-accepted",
+  "title": "Seeded failure: not-yet-valid validAfter delivered as paid success",
+  "expect": "reject",
+  "rejectCode": "not_yet_valid_accepted",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "nowSec": 1700000000,
+  "maxTimeoutSeconds": 300,
+  "claims": {
+    "ok": true
+  },
+  "settleCount": 1,
+  "verifyCount": 1,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "paymentPresent": false,
+      "maxTimeoutSeconds": 300,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false
+    },
+    {
+      "seq": 2,
+      "phase": "not-yet-valid",
+      "httpStatus": 200,
+      "paymentPresent": true,
+      "validAfter": "1700003600",
+      "validBefore": "1700003900",
+      "observedAtSec": 1700000000,
+      "maxTimeoutSeconds": 300,
+      "settleDelta": 1,
+      "verifyDelta": 1,
+      "hasPaymentResponse": true,
+      "charged": true
+    }
+  ]
+}

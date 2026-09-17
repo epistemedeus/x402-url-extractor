@@ -1,0 +1,44 @@
+{
+  "id": "expired-replay-layer",
+  "title": "Merchant idempotency-replay rejects expired validBefore as 409 payment_replay_expired without settle",
+  "expect": "pass",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "nowSec": 1700000000,
+  "maxTimeoutSeconds": 300,
+  "settleCount": 0,
+  "verifyCount": 0,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "paymentPresent": false,
+      "maxTimeoutSeconds": 300,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false
+    },
+    {
+      "seq": 2,
+      "phase": "expired-payload",
+      "httpStatus": 409,
+      "paymentPresent": true,
+      "validAfter": "0",
+      "validBefore": "1699999999",
+      "observedAtSec": 1700000000,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false,
+      "charged": false,
+      "error": "payment_replay_expired"
+    }
+  ]
+}

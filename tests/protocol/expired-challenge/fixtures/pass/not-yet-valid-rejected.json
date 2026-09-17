@@ -1,0 +1,45 @@
+{
+  "id": "not-yet-valid-rejected",
+  "title": "Not-yet-valid EIP-3009 validAfter is HTTP 402 and does not settle",
+  "expect": "pass",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "nowSec": 1700000000,
+  "maxTimeoutSeconds": 300,
+  "settleCount": 0,
+  "verifyCount": 1,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "paymentPresent": false,
+      "maxTimeoutSeconds": 300,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false
+    },
+    {
+      "seq": 2,
+      "phase": "not-yet-valid",
+      "httpStatus": 402,
+      "paymentPresent": true,
+      "validAfter": "1700003600",
+      "validBefore": "1700003900",
+      "observedAtSec": 1700000000,
+      "maxTimeoutSeconds": 300,
+      "settleDelta": 0,
+      "verifyDelta": 1,
+      "hasPaymentResponse": false,
+      "charged": false,
+      "invalidReason": "invalid_exact_evm_payload_authorization_valid_after"
+    }
+  ]
+}
