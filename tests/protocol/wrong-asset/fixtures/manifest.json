@@ -1,0 +1,59 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.wrong-asset.v1",
+  "scope": "x402 facilitator settle never runs when payment accepted.asset or EIP-712 domain is not canonical Base USDC. Loopback merchant only; never pay, never xpay/CDP, never checkout, never --live.",
+  "spec": {
+    "x402Version": 2,
+    "matcher": "@x402/core findMatchingRequirements paymentRequirementsMatchAccepted",
+    "artifact": "server.js",
+    "canonicalAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "canonicalAssetName": "USD Coin",
+    "canonicalAssetVersion": "2"
+  },
+  "fixtures": [
+    {
+      "id": "canonical-asset-settles",
+      "path": "pass/canonical-asset-settles.json",
+      "expect": "pass",
+      "kind": "canonical-control"
+    },
+    {
+      "id": "wrong-erc20-never-settles",
+      "path": "pass/wrong-erc20-never-settles.json",
+      "expect": "pass",
+      "kind": "wrong-asset"
+    },
+    {
+      "id": "sepolia-usdc-never-settles",
+      "path": "pass/sepolia-usdc-never-settles.json",
+      "expect": "pass",
+      "kind": "wrong-asset"
+    },
+    {
+      "id": "wrong-eip712-name-never-settles",
+      "path": "pass/wrong-eip712-name-never-settles.json",
+      "expect": "pass",
+      "kind": "wrong-asset"
+    },
+    {
+      "id": "seeded-wrong-asset-settled",
+      "path": "reject/seeded-wrong-asset-settled.json",
+      "expect": "reject",
+      "rejectCode": "wrong_asset_settled",
+      "kind": "seeded-failure"
+    },
+    {
+      "id": "seeded-wrong-asset-claimed-ok",
+      "path": "reject/seeded-wrong-asset-claimed-ok.json",
+      "expect": "reject",
+      "rejectCode": "wrong_asset_settled",
+      "kind": "seeded-lie"
+    },
+    {
+      "id": "seeded-eip712-domain-settled",
+      "path": "reject/seeded-eip712-domain-settled.json",
+      "expect": "reject",
+      "rejectCode": "wrong_asset_settled",
+      "kind": "seeded-eip712"
+    }
+  ]
+}
