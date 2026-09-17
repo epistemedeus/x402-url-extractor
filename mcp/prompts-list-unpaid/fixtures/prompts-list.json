@@ -1,0 +1,9 @@
+{
+  "id": "prompts-list-unpaid",
+  "method": "prompts/list",
+  "paymentRequired": false,
+  "count": 3,
+  "mustInclude": ["web-extract", "page-change", "explicit-record"],
+  "mustExclude": ["__seeded_unknown_prompt__", "extract", "extract_batch", "read"],
+  "forbiddenPaymentKeys": ["x402", "paymentRequired", "price", "payTo"]
+}

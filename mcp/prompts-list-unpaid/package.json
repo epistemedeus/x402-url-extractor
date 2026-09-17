@@ -1,0 +1,20 @@
+{
+  "name": "samedaydesk-mcp-prompts-list-unpaid",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Unpaid MCP prompts/list discovery for the SameDayDesk x402 URL extractor. Does not pay, settle, publish, or change prices.",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "prompts-list-unpaid": "./bin/prompts-list-unpaid.mjs"
+  },
+  "scripts": {
+    "start": "node bin/prompts-list-unpaid.mjs",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
+    "cold-run": "node bin/prompts-list-unpaid.mjs cold-run",
+    "seeded-failure": "node bin/prompts-list-unpaid.mjs seeded-failure"
+  },
+  "license": "MIT"
+}
