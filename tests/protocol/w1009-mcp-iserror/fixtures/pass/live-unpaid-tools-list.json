@@ -1,0 +1,72 @@
+{
+  "id": "live-unpaid-tools-list",
+  "title": "Live SDS POST /mcp tools/list is unpaid HTTP 200 with extract._meta.x402.paymentRequired",
+  "expect": "pass",
+  "kind": "mcp-tools-list-unpaid",
+  "method": "tools/list",
+  "observedAt": "2026-09-17T12:44:40Z",
+  "origin": "https://agents.samedaydesk.com/mcp",
+  "serviceVersion": "1.23.49",
+  "request": {
+    "method": "tools/list",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 200,
+    "headers": {
+      "content-type": "text/event-stream",
+      "cache-control": "no-cache, no-transform"
+    },
+    "headerNames": [
+      "cache-control",
+      "connection",
+      "content-length",
+      "content-type",
+      "date",
+      "link",
+      "server"
+    ],
+    "hasPaymentRequiredHeader": false,
+    "toolCount": 24,
+    "jsonrpc": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": {
+        "tools": [
+          {
+            "name": "extract",
+            "inputSchema": {
+              "type": "object",
+              "required": ["url"]
+            },
+            "_meta": {
+              "x402": {
+                "paymentRequired": true,
+                "accepts": [
+                  {
+                    "scheme": "exact",
+                    "network": "eip155:8453",
+                    "amount": "5000",
+                    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                    "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+                    "maxTimeoutSeconds": 300,
+                    "extra": {
+                      "name": "USD Coin",
+                      "version": "2"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "successProven": false,
+    "settlement": false
+  }
+}
