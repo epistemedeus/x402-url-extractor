@@ -1,0 +1,263 @@
+{
+  "schemaVersion": "samedaydesk.unpaid-amount-matrix-fixture.v1",
+  "id": "canonical-matrix",
+  "unpublished": true,
+  "paymentAttempted": false,
+  "note": "String-exact unpaid amounts. Scan is 200000, tx-receipt is 2000, extract control is 5000. No unit conversion.",
+  "observed": {
+    "http": {
+      "/extract": {
+        "status": 402,
+        "method": "GET",
+        "requestHeaders": {},
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "5000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ],
+        "offerReceiptAmount": "5000"
+      },
+      "/read": {
+        "status": 402,
+        "method": "GET",
+        "requestHeaders": {},
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "5000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ],
+        "offerReceiptAmount": "5000"
+      },
+      "/scan": {
+        "status": 402,
+        "method": "GET",
+        "requestHeaders": {},
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "200000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ],
+        "offerReceiptAmount": "200000"
+      },
+      "/schemaforge": {
+        "status": 402,
+        "method": "GET",
+        "requestHeaders": {},
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "250000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ],
+        "offerReceiptAmount": "250000"
+      },
+      "/commerce/payment-offer-preflight": {
+        "status": 402,
+        "method": "GET",
+        "requestHeaders": {},
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "5000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ],
+        "offerReceiptAmount": "5000"
+      },
+      "/chain/transaction-receipt": {
+        "status": 402,
+        "method": "GET",
+        "requestHeaders": {},
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "2000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ],
+        "offerReceiptAmount": "2000"
+      }
+    },
+    "mcp": {
+      "tools": [
+        {
+          "name": "extract",
+          "_meta": {
+            "x402": {
+              "paymentRequired": true,
+              "accepts": [
+                {
+                  "scheme": "exact",
+                  "network": "eip155:8453",
+                  "amount": "5000",
+                  "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "read",
+          "_meta": {
+            "x402": {
+              "paymentRequired": true,
+              "accepts": [
+                {
+                  "scheme": "exact",
+                  "network": "eip155:8453",
+                  "amount": "5000",
+                  "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "scan",
+          "_meta": {
+            "x402": {
+              "paymentRequired": true,
+              "accepts": [
+                {
+                  "scheme": "exact",
+                  "network": "eip155:8453",
+                  "amount": "200000",
+                  "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "schemaforge",
+          "_meta": {
+            "x402": {
+              "paymentRequired": true,
+              "accepts": [
+                {
+                  "scheme": "exact",
+                  "network": "eip155:8453",
+                  "amount": "250000",
+                  "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "payment_offer_preflight",
+          "_meta": {
+            "x402": {
+              "paymentRequired": true,
+              "accepts": [
+                {
+                  "scheme": "exact",
+                  "network": "eip155:8453",
+                  "amount": "5000",
+                  "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "transaction_receipt",
+          "_meta": {
+            "x402": {
+              "paymentRequired": true,
+              "accepts": [
+                {
+                  "scheme": "exact",
+                  "network": "eip155:8453",
+                  "amount": "2000",
+                  "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "openapi": {
+      "paths": {
+        "/extract": {
+          "get": {
+            "responses": {
+              "402": { "description": "payment required (x402, $0.005 USDC base)" }
+            },
+            "x-payment-info": { "price": { "amount": "0.005", "currency": "USD", "mode": "fixed" } }
+          }
+        },
+        "/read": {
+          "get": {
+            "responses": {
+              "402": { "description": "payment required (x402, $0.005 USDC base)" }
+            },
+            "x-payment-info": { "price": { "amount": "0.005", "currency": "USD", "mode": "fixed" } }
+          }
+        },
+        "/scan": {
+          "get": {
+            "responses": {
+              "402": { "description": "payment required (x402, $0.20 USDC base)" }
+            },
+            "x-payment-info": { "price": { "amount": "0.2", "currency": "USD", "mode": "fixed" } }
+          }
+        },
+        "/schemaforge": {
+          "get": {
+            "responses": {
+              "402": { "description": "payment required (x402, $0.25 USDC base)" }
+            },
+            "x-payment-info": { "price": { "amount": "0.25", "currency": "USD", "mode": "fixed" } }
+          }
+        },
+        "/commerce/payment-offer-preflight": {
+          "get": {
+            "responses": {
+              "402": { "description": "payment required (x402 or MPP, $0.005 USDC base)" }
+            },
+            "x-payment-info": { "price": { "amount": "0.005", "currency": "USD", "mode": "fixed" } }
+          }
+        },
+        "/chain/transaction-receipt": {
+          "get": {
+            "responses": {
+              "402": { "description": "payment required (x402 or MPP, $0.002 USDC base)" }
+            },
+            "x-payment-info": { "price": { "amount": "0.002", "currency": "USD", "mode": "fixed" } }
+          }
+        }
+      }
+    },
+    "wellKnownX402": {
+      "items": [
+        { "resource": { "routeTemplate": "/extract" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000" }] },
+        { "resource": { "routeTemplate": "/read" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000" }] },
+        { "resource": { "routeTemplate": "/scan" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "200000" }] },
+        { "resource": { "routeTemplate": "/schemaforge" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "250000" }] },
+        { "resource": { "routeTemplate": "/commerce/payment-offer-preflight" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000" }] },
+        { "resource": { "routeTemplate": "/chain/transaction-receipt" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "2000" }] }
+      ]
+    }
+  }
+}
