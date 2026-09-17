@@ -1,0 +1,164 @@
+{
+  "id": "http-402-sds-extract",
+  "title": "SameDayDesk live-shaped unpaid GET /extract HTTP 402 (x402 v2 exact USDC on Base)",
+  "expect": "pass",
+  "transport": "http",
+  "provenance": {
+    "kind": "live-unpaid-402-reconstruction",
+    "source": "https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com",
+    "observedAt": "2026-09-17T12:00:00Z",
+    "merchantVersion": "1.23.49",
+    "note": "Wire fields reconstructed from a credential-free GET. Bazaar schemas compacted. Offer-receipt signature is a public 402 header value, not a buyer credential. No PAYMENT-SIGNATURE was sent.",
+    "paymentSent": false,
+    "credentialsUsed": false
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com",
+    "headers": {
+      "accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 402,
+    "headers": {
+      "content-type": "application/json; charset=utf-8",
+      "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwiZXJyb3IiOiJQYXltZW50IHJlcXVpcmVkIiwicmVzb3VyY2UiOnsidXJsIjoiaHR0cHM6Ly9hZ2VudHMuc2FtZWRheWRlc2suY29tL2V4dHJhY3Q/dXJsPWh0dHBzJTNBJTJGJTJGZXhhbXBsZS5jb20iLCJkZXNjcmlwdGlvbiI6IkV4dHJhY3QgYSBwdWJsaWMgSFRUUChTKSB3ZWIgcGFnZSBpbnRvIHN0cnVjdHVyZWQgSlNPTiB3aXRoIGEgY2xlYW4gdGV4dCBleGNlcnB0IGZvciBMTE0gd29ya2Zsb3dzOiB0aXRsZSwgZGVzY3JpcHRpb24sIEpTT04tTEQsIE9wZW4gR3JhcGgvVHdpdHRlciBtZXRhZGF0YSwgaGVhZGluZ3MsIGxpbmtzLCBhbmQgQUktcmVhZGluZXNzIHNpZ25hbHMuIEZldGNoZXMgd2l0aG91dCBKYXZhU2NyaXB0IHJlbmRlcmluZywgZm9sbG93cyByZWRpcmVjdHMsIGFuZCBhcHBsaWVzIGEgMTItc2Vjb25kIHRpbWVvdXQgYW5kIDMgTUIgcmVhZCBjYXAuIFRoZSBwYWlkIEpTT04ga2VlcHMgcmVxdWVzdGVkVXJsLCBmaW5hbFVybCwgc291cmNlIEhUVFAgc3RhdHVzLCBzb3VyY2VPaywgYSBudWxsYWJsZSBlcnJvciwgYW5kIGNhcHR1cmUgbGltaXRzOyB0aGUgZXhjZXJwdCBpcyBub3QgdGhlIGZ1bGwgcGFnZS4gVXNlIC9yZWFkIGZvciBsb25nZXIgY2xlYW5lZCBNYXJrZG93bi4iLCJtaW1lVHlwZSI6ImFwcGxpY2F0aW9uL2pzb24iLCJzZXJ2aWNlTmFtZSI6IlNhbWVEYXlEZXNrIiwidGFncyI6WyJ3ZWIiLCJ3ZWItZXh0cmFjdGlvbiIsImNsZWFuLXRleHQiLCJsbG0tcmVhZHkiLCJzdHJ1Y3R1cmVkLWpzb24iXSwiaWNvblVybCI6Imh0dHBzOi8vc2FtZWRheWRlc2suY29tL2Zhdmljb24uc3ZnIn0sImFjY2VwdHMiOlt7InNjaGVtZSI6ImV4YWN0IiwibmV0d29yayI6ImVpcDE1NTo4NDUzIiwiYW1vdW50IjoiNTAwMCIsImFzc2V0IjoiMHg4MzM1ODlmQ0Q2ZURiNkUwOGY0YzdDMzJENGY3MWI1NGJkQTAyOTEzIiwicGF5VG8iOiIweDg5MDRkRjNERTZERkVlNmE3QzhjYzM4NjE5ZDJmMTc4MDYyMTNDZWUiLCJtYXhUaW1lb3V0U2Vjb25kcyI6MzAwLCJleHRyYSI6eyJuYW1lIjoiVVNEIENvaW4iLCJ2ZXJzaW9uIjoiMiJ9fV0sImV4dGVuc2lvbnMiOnsicGF5bWVudC1pZGVudGlmaWVyIjp7ImluZm8iOnsicmVxdWlyZWQiOmZhbHNlfSwic2NoZW1hIjp7IiRzY2hlbWEiOiJodHRwczovL2pzb24tc2NoZW1hLm9yZy9kcmFmdC8yMDIwLTEyL3NjaGVtYSIsInR5cGUiOiJvYmplY3QiLCJwcm9wZXJ0aWVzIjp7InJlcXVpcmVkIjp7InR5cGUiOiJib29sZWFuIn0sImlkIjp7InR5cGUiOiJzdHJpbmcifX0sInJlcXVpcmVkIjpbInJlcXVpcmVkIl19fSwiYnVpbGRlci1jb2RlIjp7ImluZm8iOnsiYSI6ImJjX2xxajA5Ym5mIn0sInNjaGVtYSI6eyIkc2NoZW1hIjoiaHR0cHM6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQvMjAyMC0xMi9zY2hlbWEiLCJ0eXBlIjoib2JqZWN0IiwicHJvcGVydGllcyI6eyJhIjp7InR5cGUiOiJzdHJpbmcifX0sImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjpmYWxzZX19LCJvZmZlci1yZWNlaXB0Ijp7ImluZm8iOnsib2ZmZXJzIjpbeyJmb3JtYXQiOiJlaXA3MTIiLCJhY2NlcHRJbmRleCI6MCwicGF5bG9hZCI6eyJ2ZXJzaW9uIjoxLCJyZXNvdXJjZVVybCI6Imh0dHBzOi8vYWdlbnRzLnNhbWVkYXlkZXNrLmNvbS9leHRyYWN0P3VybD1odHRwcyUzQSUyRiUyRmV4YW1wbGUuY29tIiwic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoiZWlwMTU1Ojg0NTMiLCJhc3NldCI6IjB4ODMzNTg5ZkNENmVEYjZFMDhmNGM3QzMyRDRmNzFiNTRiZEEwMjkxMyIsInBheVRvIjoiMHg4OTA0ZEYzREU2REZFZTZhN0M4Y2MzODYxOWQyZjE3ODA2MjEzQ2VlIiwiYW1vdW50IjoiNTAwMCIsInZhbGlkVW50aWwiOjE3ODk2NDY3ODN9LCJzaWduYXR1cmUiOiIweGJhZmNkZTNhNjNkZmVmNmVmYTE0YTIxNGJkMWNmNjQ4YmY3MTUyMjkxODdhODJjNmE0NWUyYzZkMDFjOTM5ZmEzMmFjZDhjMDZmMGFiZDNhOGM4ZTVhZjE2YzlmYWJhZDBjNjZlYzM1YzQyOTRhNDA3NjU2NDAyZTM3OTlmZTQ1MWIifV19LCJzY2hlbWEiOnsiJHNjaGVtYSI6Imh0dHBzOi8vanNvbi1zY2hlbWEub3JnL2RyYWZ0LzIwMjAtMTIvc2NoZW1hIiwidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsib2ZmZXJzIjp7InR5cGUiOiJhcnJheSJ9fSwicmVxdWlyZWQiOlsib2ZmZXJzIl19fSwiYmF6YWFyIjp7ImluZm8iOnsiaW5wdXQiOnsidHlwZSI6Imh0dHAiLCJtZXRob2QiOiJHRVQiLCJxdWVyeVBhcmFtcyI6eyJ1cmwiOiJodHRwczovL2V4YW1wbGUuY29tIn19LCJvdXRwdXQiOnsidHlwZSI6Impzb24iLCJleGFtcGxlIjp7Im9rIjp0cnVlLCJyZXF1ZXN0ZWRVcmwiOiJodHRwczovL2V4YW1wbGUuY29tIn19fSwic2NoZW1hIjp7IiRzY2hlbWEiOiJodHRwczovL2pzb24tc2NoZW1hLm9yZy9kcmFmdC8yMDIwLTEyL3NjaGVtYSIsInR5cGUiOiJvYmplY3QiLCJwcm9wZXJ0aWVzIjp7ImlucHV0Ijp7InR5cGUiOiJvYmplY3QifSwib3V0cHV0Ijp7InR5cGUiOiJvYmplY3QifX0sInJlcXVpcmVkIjpbImlucHV0Il19fX19"
+    },
+    "body": {
+      "x402Version": 2,
+      "error": "Payment required",
+      "resource": {
+        "url": "https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com",
+        "description": "Extract a public HTTP(S) web page into structured JSON with a clean text excerpt for LLM workflows: title, description, JSON-LD, Open Graph/Twitter metadata, headings, links, and AI-readiness signals. Fetches without JavaScript rendering, follows redirects, and applies a 12-second timeout and 3 MB read cap. The paid JSON keeps requestedUrl, finalUrl, source HTTP status, sourceOk, a nullable error, and capture limits; the excerpt is not the full page. Use /read for longer cleaned Markdown.",
+        "mimeType": "application/json",
+        "serviceName": "SameDayDesk",
+        "tags": [
+          "web",
+          "web-extraction",
+          "clean-text",
+          "llm-ready",
+          "structured-json"
+        ],
+        "iconUrl": "https://samedaydesk.com/favicon.svg"
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "5000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+          "maxTimeoutSeconds": 300,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ],
+      "extensions": {
+        "payment-identifier": {
+          "info": {
+            "required": false
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "required": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "required"
+            ]
+          }
+        },
+        "builder-code": {
+          "info": {
+            "a": "bc_lqj09bnf"
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "a": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "offer-receipt": {
+          "info": {
+            "offers": [
+              {
+                "format": "eip712",
+                "acceptIndex": 0,
+                "payload": {
+                  "version": 1,
+                  "resourceUrl": "https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com",
+                  "scheme": "exact",
+                  "network": "eip155:8453",
+                  "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                  "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+                  "amount": "5000",
+                  "validUntil": 1789646783
+                },
+                "signature": "0xbafcde3a63dfef6efa14a214bd1cf648bf715229187a82c6a45e2c6d01c939fa32acd8c06f0abd3a8c8e5af16c9fabad0c66ec35c4294a407656402e3799fe451b"
+              }
+            ]
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "offers": {
+                "type": "array"
+              }
+            },
+            "required": [
+              "offers"
+            ]
+          }
+        },
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": {
+                "url": "https://example.com"
+              }
+            },
+            "output": {
+              "type": "json",
+              "example": {
+                "ok": true,
+                "requestedUrl": "https://example.com"
+              }
+            }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object"
+              },
+              "output": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "input"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "http-402-spec-v2",
+  "title": "Canonical x402 v2 HTTP 402 with PAYMENT-REQUIRED header and empty body",
+  "expect": "pass",
+  "transport": "http",
+  "provenance": {
+    "kind": "spec-example",
+    "spec": "https://github.com/x402-foundation/x402/blob/main/specs/x402-specification-v2.md",
+    "transport": "https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/http.md",
+    "capturedAt": "2026-09-17",
+    "paymentSent": false,
+    "credentialsUsed": false
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://api.example.com/premium-data",
+    "headers": {}
+  },
+  "response": {
+    "status": 402,
+    "headers": {
+      "content-type": "application/json",
+      "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwiZXJyb3IiOiJQQVlNRU5ULVNJR05BVFVSRSBoZWFkZXIgaXMgcmVxdWlyZWQiLCJyZXNvdXJjZSI6eyJ1cmwiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJkZXNjcmlwdGlvbiI6IkFjY2VzcyB0byBwcmVtaXVtIG1hcmtldCBkYXRhIiwibWltZVR5cGUiOiJhcHBsaWNhdGlvbi9qc29uIn0sImFjY2VwdHMiOlt7InNjaGVtZSI6ImV4YWN0IiwibmV0d29yayI6ImVpcDE1NTo4NDUzMiIsImFtb3VudCI6IjEwMDAwIiwiYXNzZXQiOiIweDAzNkNiRDUzODQyYzU0MjY2MzRlNzkyOTU0MWVDMjMxOGYzZENGN2UiLCJwYXlUbyI6IjB4MjA5NjkzQmM2YWZjMEM1MzI4YkEzNkZhRjAzQzUxNEVGMzEyMjg3QyIsIm1heFRpbWVvdXRTZWNvbmRzIjo2MCwiZXh0cmEiOnsibmFtZSI6IlVTREMiLCJ2ZXJzaW9uIjoiMiJ9fV19"
+    },
+    "body": {}
+  }
+}
