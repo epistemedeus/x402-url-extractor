@@ -1,0 +1,16 @@
+{
+  "id": "seeded.false-success.dropped-iserror",
+  "kind": "false_success",
+  "trap": "crewai.mcp.client.MCPClient.call_tool drops isError and returns content only",
+  "claimed": {
+    "kind": "paid_success",
+    "isError": false,
+    "reason": "HTTP 200 plus CrewAI call_tool content treated as extract success"
+  },
+  "observed": {
+    "kind": "unpaid_tools_call_is_error",
+    "isError": true,
+    "handlerRan": false
+  },
+  "productReject": "SEED_REJECT"
+}

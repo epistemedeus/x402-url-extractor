@@ -1,0 +1,20 @@
+{
+  "name": "samedaydesk-crewai-unpaid-call-w7",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Credential-free CrewAI MCPServerHTTP unpaid tools/call example. Proves isError:true is not paid success. Never kickoff, never pay, never --live.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "samedaydesk-crewai-unpaid-call-w7": "./bin/cli.mjs"
+  },
+  "scripts": {
+    "start": "node bin/cli.mjs",
+    "call": "node bin/cli.mjs",
+    "seeded-failure": "node bin/cli.mjs --seeded-failure",
+    "test": "node --test test/*.test.mjs"
+  },
+  "license": "MIT"
+}
