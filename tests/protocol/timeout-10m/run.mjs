@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { isAbsolute, resolve } from "node:path";
 import { performance } from "node:perf_hooks";
 
 import { createRecordingMcp, wrapFakeMcpWithTimeoutCap } from "./client.mjs";
@@ -15,7 +15,7 @@ import {
   seededAsRequiredTruth,
 } from "./evaluate.mjs";
 import { inspectInstalledMcp } from "./inspect-sdk.mjs";
-import { CATALOG_PATH, FIXTURE_ROOT } from "./paths.mjs";
+import { CATALOG_PATH, FIXTURE_ROOT, REPO_ROOT } from "./paths.mjs";
 
 const USAGE = `x402 MCP 10m timeout regression
 
@@ -60,6 +60,19 @@ function usageError(code, message) {
 
 function loadJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
+}
+
+function resolveFixturePath(path) {
+  if (isAbsolute(path) && existsSync(path)) return path;
+  const candidates = [
+    resolve(process.cwd(), path),
+    resolve(FIXTURE_ROOT, path),
+    resolve(REPO_ROOT, path),
+  ];
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+  throw usageError("missing_fixture", `fixture not found: ${path}`);
 }
 
 function loadCatalog() {
@@ -217,7 +230,7 @@ function runSeededFailure() {
 
 function runFixture(path) {
   const started = performance.now();
-  const fixture = loadJson(resolve(FIXTURE_ROOT, path));
+  const fixture = loadJson(resolveFixturePath(path));
   const wallMs = Math.round(performance.now() - started);
   if (fixture.kind === "false_accept" || fixture.expect === "reject") {
     const truth = seededAsRequiredTruth(fixture);

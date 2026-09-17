@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { test } from "node:test";
 
 import { TEN_MINUTE_MS } from "./derive.mjs";
-import { BIN, FIXTURE_ROOT } from "./paths.mjs";
+import { BIN, FIXTURE_ROOT, REPO_ROOT } from "./paths.mjs";
 
 function runBin(args, { timeoutMs = 15_000 } = {}) {
   return new Promise((resolve, reject) => {
@@ -110,4 +110,26 @@ test("fixture SDS 300s exits 0", async () => {
   assert.equal(result.code, 0, result.stderr || result.stdout);
   assert.equal(report.ok, true);
   assert.equal(report.cases[0].derived.timeoutMs, 300_000);
+});
+
+test("fixture path may be repo-relative from repo root", async () => {
+  const result = await new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [BIN, "--fixture", "tests/protocol/timeout-10m/fixtures/sds-enrich-300s.json", "--json"], {
+      cwd: REPO_ROOT,
+      env: { PATH: process.env.PATH, HOME: process.env.HOME, NODE_ENV: "test" },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => { stdout += chunk; });
+    child.stderr.on("data", (chunk) => { stderr += chunk; });
+    child.on("error", reject);
+    child.on("close", (code) => resolve({ code, stdout, stderr }));
+  });
+  const report = parseReport(result.stdout);
+  assert.equal(result.code, 0, result.stderr || result.stdout);
+  assert.equal(report.ok, true);
+  assert.equal(report.cases[0].id, "sds-enrich-300s");
 });
