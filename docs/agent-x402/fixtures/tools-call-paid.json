@@ -1,0 +1,20 @@
+{
+  "id": "tools-call-paid",
+  "expectReject": "tools/call is paid; unpaid discovery stops at tools/list",
+  "kind": "rpc",
+  "payload": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tools/call",
+    "params": {
+      "name": "extract",
+      "arguments": { "url": "https://example.com/" },
+      "_meta": {
+        "x402/payment": {
+          "x402Version": 2,
+          "payload": {}
+        }
+      }
+    }
+  }
+}
