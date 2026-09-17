@@ -1,0 +1,67 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.extract-batch-402.v1",
+  "id": "seeded-rewrite-presented-as-native",
+  "expect": "reject",
+  "rejectCode": "not_extract_rewrite",
+  "kind": "get-extract-rewrite",
+  "listing": {
+    "method": "POST",
+    "resourceUrl": "https://agents.samedaydesk.com/extract",
+    "rewritesSellerMethod": true,
+    "amountAtomic": "5000"
+  },
+  "seller": {
+    "method": "GET",
+    "path": "/extract",
+    "resourceUrl": "https://agents.samedaydesk.com/extract",
+    "amountAtomic": "5000"
+  },
+  "request": {
+    "method": "POST",
+    "url": "https://agents.samedaydesk.com/extract",
+    "headers": {
+      "accept": "application/json",
+      "content-type": "application/json"
+    },
+    "body": {
+      "url": "https://example.com"
+    }
+  },
+  "httpStatus": 402,
+  "challenge": {
+    "x402Version": 2,
+    "error": "Payment required",
+    "resource": {
+      "url": "https://agents.samedaydesk.com/extract"
+    },
+    "accepts": [
+      {
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "5000",
+        "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+      }
+    ],
+    "extensions": {
+      "bazaar": {
+        "info": {
+          "input": {
+            "type": "http",
+            "method": "GET",
+            "body": {
+              "url": "https://example.com"
+            }
+          }
+        }
+      }
+    }
+  },
+  "claims": {
+    "classification": "native_post_extract_batch",
+    "one_paywall": true,
+    "amountAtomic": "5000"
+  },
+  "boundary": {
+    "paymentSent": false
+  }
+}

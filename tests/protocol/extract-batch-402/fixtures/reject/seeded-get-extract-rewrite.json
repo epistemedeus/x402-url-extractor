@@ -1,0 +1,65 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.extract-batch-402.v1",
+  "id": "seeded-get-extract-rewrite",
+  "expect": "reject",
+  "rejectCode": "not_extract_rewrite",
+  "kind": "seeded-failure",
+  "observedAt": "2026-09-17T12:41:26Z",
+  "request": {
+    "method": "POST",
+    "url": "https://agents.samedaydesk.com/extract/batch",
+    "headers": {
+      "accept": "application/json",
+      "content-type": "application/json"
+    },
+    "body": {
+      "urls": ["https://example.com/"],
+      "fields": ["title"]
+    }
+  },
+  "httpStatus": 402,
+  "challenge": {
+    "x402Version": 2,
+    "error": "Payment required",
+    "resource": {
+      "url": "https://agents.samedaydesk.com/extract/batch",
+      "mimeType": "application/json",
+      "serviceName": "SameDayDesk"
+    },
+    "accepts": [
+      {
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "10000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+      }
+    ],
+    "extensions": {
+      "bazaar": {
+        "info": {
+          "input": {
+            "type": "http",
+            "method": "POST",
+            "bodyType": "json",
+            "body": {
+              "urls": ["https://example.com/"]
+            }
+          }
+        }
+      }
+    }
+  },
+  "claims": {
+    "ok": true,
+    "classification": "get_extract_rewrite",
+    "one_paywall": true,
+    "amountAtomic": "5000",
+    "method": "GET",
+    "path": "/extract",
+    "r6_02_code": "unsupported_target"
+  },
+  "boundary": {
+    "paymentSent": false
+  }
+}
