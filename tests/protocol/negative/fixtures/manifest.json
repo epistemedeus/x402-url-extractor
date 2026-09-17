@@ -1,0 +1,37 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.negative-tools-call.v1",
+  "scope": "x402 MCP negative tools/call. Unknown, schema-invalid, unpaid, and forged-payment calls must be rejected. No facilitator verify/settle, no handler execution, no live payment.",
+  "spec": {
+    "mcpTools": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools",
+    "x402Mcp": "https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/mcp.md",
+    "x402Version": 2
+  },
+  "fixtures": [
+    {
+      "id": "tools-list",
+      "path": "tools-list.json",
+      "expect": "pass",
+      "kind": "tools-list"
+    },
+    {
+      "id": "negative-tools-call",
+      "path": "negative-tools-call.json",
+      "expect": "rejected",
+      "kind": "negative-tools-call"
+    },
+    {
+      "id": "accepted-unknown-tool",
+      "path": "reject/accepted-unknown-tool.json",
+      "expect": "reject",
+      "rejectCode": "accepted",
+      "kind": "seeded-accepted-unknown"
+    },
+    {
+      "id": "settled-unknown-tool",
+      "path": "reject/settled-unknown-tool.json",
+      "expect": "reject",
+      "rejectCode": "accepted",
+      "kind": "seeded-settled-unknown"
+    }
+  ]
+}
