@@ -1,0 +1,29 @@
+{
+  "name": "explicit-record",
+  "liveSkillUrl": "https://agents.samedaydesk.com/.well-known/skills/explicit-record/SKILL.md",
+  "liveSkillSha256": "509c816d00d42928249b019bfa8f072b0b414f53ff48ae195de1e02a99b17062",
+  "sourcePath": "plugins/samedaydesk-x402/skills/explicit-record/SKILL.md",
+  "sourcePin": "0153295c5851bf8f93fb27c77070a31417a59f69",
+  "files": ["SKILL.md"],
+  "pays": false,
+  "network": false,
+  "cli": "examples/customer-x402/bin/record.mjs",
+  "rejectedActions": [
+    {
+      "id": "purchase",
+      "reason": "explicit-record maps already-held extract JSON. It does not fetch, pay, or treat a wallet receipt as records."
+    },
+    {
+      "id": "fetch",
+      "reason": "explicit-record does not fetch URLs. Supply local --input, --mapping, and --schema files."
+    },
+    {
+      "id": "pay",
+      "reason": "explicit-record is not payment-capable. Do not send payment headers from this skill."
+    },
+    {
+      "id": "network",
+      "reason": "explicit-record is an offline CLI transform. Do not call extract or extract_batch from this skill."
+    }
+  ]
+}

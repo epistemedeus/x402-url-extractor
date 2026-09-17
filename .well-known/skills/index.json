@@ -1,0 +1,18 @@
+{
+  "skills": [
+    {
+      "name": "page-change",
+      "description": "Offline compare of two extract-batch JSON field snapshots. Use when the caller already has two delivered POST /extract/batch JSON files and wants selected-field diffs without fetching, paying, retrying, or scheduling. Do not use to purchase a second observation.",
+      "files": [
+        "SKILL.md"
+      ]
+    },
+    {
+      "name": "explicit-record",
+      "description": "Project already-held SameDayDesk GET /extract or POST /extract/batch JSON into buyer-named records using explicit JSON Pointers and a local JSON Schema. Use when the caller already has observation JSON plus mapping and schema files. Do not fetch, pay, infer entities, or treat payment as useful output. Partial, missing, ambiguous, and invalid outcomes stay explicit.",
+      "files": [
+        "SKILL.md"
+      ]
+    }
+  ]
+}
