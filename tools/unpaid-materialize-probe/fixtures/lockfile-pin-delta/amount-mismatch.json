@@ -1,0 +1,116 @@
+{
+  "id": "lockfile-pin-delta-amount-mismatch",
+  "note": "Seeded failure: live unpaid POST /lockfile-pin-delta amount 10000 vs catalog/expected 5000. String-exact compare, no unit conversion.",
+  "origin": "https://agents.samedaydesk.com",
+  "route": "/lockfile-pin-delta",
+  "method": "POST",
+  "intent": "compare two caller-supplied npm package-lock.json objects for pin changes",
+  "now": "2026-09-17T12:38:37.000Z",
+  "wrapper": {
+    "charged": false,
+    "httpStatus": 402,
+    "ok": false,
+    "wwwAuthenticate": null
+  },
+  "unpaidOffer": {
+    "x402Version": 2,
+    "amountAtomic": "10000",
+    "scheme": "exact",
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "resource": "https://agents.samedaydesk.com/lockfile-pin-delta",
+    "protocols": ["x402"],
+    "wwwAuthenticate": null
+  },
+  "mcp": {
+    "tool": "lockfile_pin_delta",
+    "paymentRequired": true,
+    "amountAtomic": "10000"
+  },
+  "validator": {
+    "valid": true,
+    "simulation": { "outcome": "accepted" },
+    "index": 1
+  },
+  "catalogSearch": {
+    "resources": [
+      {
+        "resource": "https://agents.samedaydesk.com/lockfile-pin-delta"
+      }
+    ]
+  },
+  "listingIdentity": {
+    "canonicalOrigin": "https://agents.samedaydesk.com",
+    "route": "/lockfile-pin-delta",
+    "settlementIdentity": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "sources": ["coinbase-bazaar"],
+    "records": [
+      {
+        "source": "coinbase-bazaar",
+        "url": "https://agents.samedaydesk.com/lockfile-pin-delta",
+        "settlementIdentity": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+        "rank": 1
+      }
+    ]
+  },
+  "discoveryDrift": {
+    "catalog": {
+      "observedAt": "2026-09-17T12:38:37.000Z",
+      "source": "coinbase-bazaar-merchant-discovery",
+      "resource": "https://agents.samedaydesk.com/lockfile-pin-delta",
+      "lastUpdated": "2026-09-16T00:00:00.000Z",
+      "offers": [
+        {
+          "protocol": "x402",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amountAtomic": "5000",
+          "recipient": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+        }
+      ]
+    },
+    "live": {
+      "observedAt": "2026-09-17T12:38:38.000Z",
+      "source": "live-unpaid-402",
+      "resource": "https://agents.samedaydesk.com/lockfile-pin-delta",
+      "offers": [
+        {
+          "protocol": "x402",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amountAtomic": "10000",
+          "recipient": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+        }
+      ]
+    }
+  },
+  "bazaarTracker": {
+    "schema": "samedaydesk.bazaar-observation.v3",
+    "schemaVersion": 3,
+    "observedAt": "2026-09-17T12:38:37.000Z",
+    "captureSource": "fixture-readback",
+    "sources": {
+      "cdp-discovery": {
+        "endpoint": null,
+        "sellerCount": 1,
+        "routeCount": 1,
+        "sellers": {
+          "samedaydesk": {
+            "id": "samedaydesk",
+            "name": "SameDayDesk",
+            "hosts": ["agents.samedaydesk.com"],
+            "queries": [],
+            "partial": false,
+            "rowCount": 1,
+            "routes": {
+              "https://agents.samedaydesk.com/lockfile-pin-delta": {
+                "digest": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
