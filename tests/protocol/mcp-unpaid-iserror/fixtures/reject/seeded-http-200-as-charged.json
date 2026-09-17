@@ -1,0 +1,71 @@
+{
+  "id": "seeded-http-200-as-charged",
+  "title": "Seeded failure: classify unpaid tools/call HTTP 200 isError as charged/paid delivery",
+  "expect": "reject",
+  "rejectCode": "http_200_classified_as_charged",
+  "kind": "mcp-tools-call-unpaid",
+  "method": "tools/call",
+  "note": "SEEDING FAILURE: HTTP 200 isError unpaid challenge is not settlement. Gate must reject charged:true / paidDelivery / successProven.",
+  "observedAt": "2026-09-17T12:44:40Z",
+  "origin": "https://agents.samedaydesk.com/mcp",
+  "request": {
+    "method": "tools/call",
+    "params": {
+      "name": "extract",
+      "arguments": { "url": "https://example.com" }
+    },
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 200,
+    "headers": {
+      "content-type": "text/event-stream"
+    },
+    "headerNames": [
+      "cache-control",
+      "content-type",
+      "date",
+      "link",
+      "server"
+    ],
+    "hasPaymentRequiredHeader": false,
+    "jsonrpc": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+        "isError": true,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"x402Version\":2,\"error\":\"Payment required to access this tool\",\"resource\":{\"url\":\"mcp://tool/extract\"},\"accepts\":[{\"scheme\":\"exact\",\"network\":\"eip155:8453\",\"amount\":\"5000\",\"asset\":\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\"payTo\":\"0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee\"}]}"
+          }
+        ],
+        "structuredContent": {
+          "x402Version": 2,
+          "error": "Payment required to access this tool",
+          "resource": {
+            "url": "mcp://tool/extract",
+            "mimeType": "application/json",
+            "serviceName": "x402-data-gateway"
+          },
+          "accepts": [
+            {
+              "scheme": "exact",
+              "network": "eip155:8453",
+              "amount": "5000",
+              "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+              "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "claims": {
+    "charged": true,
+    "paidDelivery": true,
+    "successProven": true,
+    "settlement": true,
+    "message": "HTTP 200 so the extract call was billed"
+  }
+}
