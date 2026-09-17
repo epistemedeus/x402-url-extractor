@@ -1,0 +1,52 @@
+{
+  "id": "seeded-absence",
+  "note": "Validator-accepted unpaid 402 plus empty exact-resource search. Catalog absence is not demand.",
+  "origin": "https://api.example.com",
+  "route": "/extract",
+  "method": "GET",
+  "intent": "extract a public website into structured JSON metadata",
+  "now": "2026-09-17T00:00:00.000Z",
+  "wrapper": {
+    "charged": false,
+    "httpStatus": 402,
+    "ok": false
+  },
+  "validator": {
+    "valid": true,
+    "simulation": { "outcome": "accepted" },
+    "index": null
+  },
+  "catalogSearch": {
+    "resources": []
+  },
+  "listingIdentity": {
+    "canonicalOrigin": "https://api.example.com",
+    "route": "/extract",
+    "sources": ["coinbase-bazaar"],
+    "records": []
+  },
+  "bazaarTracker": {
+    "schema": "samedaydesk.bazaar-observation.v3",
+    "schemaVersion": 3,
+    "observedAt": "2026-09-17T00:00:00.000Z",
+    "captureSource": "fixture-readback",
+    "sources": {
+      "cdp-discovery": {
+        "endpoint": null,
+        "sellerCount": 1,
+        "routeCount": 0,
+        "sellers": {
+          "example": {
+            "id": "example",
+            "name": "Example",
+            "hosts": ["api.example.com"],
+            "queries": [],
+            "partial": false,
+            "rowCount": 0,
+            "routes": {}
+          }
+        }
+      }
+    }
+  }
+}

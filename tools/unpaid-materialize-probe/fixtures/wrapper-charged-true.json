@@ -1,0 +1,20 @@
+{
+  "id": "wrapper-charged-true",
+  "note": "Seeded wrapper non-conformance: unpaid evidence must not claim charged:true.",
+  "origin": "https://api.example.com",
+  "route": "/extract",
+  "method": "GET",
+  "intent": "extract a public website into structured JSON metadata",
+  "now": "2026-09-17T00:00:00.000Z",
+  "wrapper": {
+    "charged": true,
+    "httpStatus": 200,
+    "ok": true
+  },
+  "listingIdentity": {
+    "canonicalOrigin": "https://api.example.com",
+    "route": "/extract",
+    "sources": ["coinbase-bazaar"],
+    "records": []
+  }
+}
