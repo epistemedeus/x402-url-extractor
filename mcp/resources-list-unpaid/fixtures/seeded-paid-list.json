@@ -1,0 +1,40 @@
+{
+  "schema": "x402-url-extractor.mcp.resources-list-unpaid.v1",
+  "httpStatus": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "paymentSent": false,
+  "json": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+      "isError": true,
+      "structuredContent": {
+        "x402Version": 2,
+        "error": "Payment required to access this resource",
+        "resource": {
+          "url": "mcp://x402-url-extractor/unpaid/agent-card",
+          "description": "seeded paid resources/list",
+          "mimeType": "application/json"
+        },
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "amount": "10000",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+            "maxTimeoutSeconds": 60
+          }
+        ]
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"x402Version\":2,\"error\":\"Payment required to access this resource\",\"accepts\":[{\"scheme\":\"exact\",\"network\":\"eip155:8453\",\"amount\":\"10000\"}]}"
+        }
+      ]
+    }
+  }
+}
