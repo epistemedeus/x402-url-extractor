@@ -1,12 +1,14 @@
+import { createHash } from "node:crypto";
 import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 export const WELL_KNOWN_SKILLS_BASE = "/.well-known/skills";
 export const WELL_KNOWN_SKILLS_INDEX_PATH = `${WELL_KNOWN_SKILLS_BASE}/index.json`;
 export const WELL_KNOWN_SKILL_FILE = "SKILL.md";
 export const WELL_KNOWN_SKILLS_CACHE_CONTROL = "public, max-age=3600";
 export const WELL_KNOWN_SKILL_MAX_BYTES = 1_048_576;
+export const WELL_KNOWN_SKILL_DIGEST_PATTERN = /^sha256:[a-f0-9]{64}$/;
 export const WELL_KNOWN_SKILL_NAMES = Object.freeze([
   "web-extract",
   "page-change",
@@ -41,10 +43,43 @@ function readRegularFile(path, label) {
     if (bytes.length > WELL_KNOWN_SKILL_MAX_BYTES) {
       fail(`${label} exceeds ${WELL_KNOWN_SKILL_MAX_BYTES} bytes: ${path}`);
     }
-    return bytes.toString("utf8");
+    return bytes;
   } finally {
     closeSync(fd);
   }
+}
+
+function asSkillBytes(value, label = "skill artifact") {
+  if (Buffer.isBuffer(value)) return value;
+  if (value instanceof Uint8Array) {
+    return Buffer.from(value.buffer, value.byteOffset, value.byteLength);
+  }
+  if (typeof value === "string") return Buffer.from(value, "utf8");
+  fail(`${label} must be bytes or utf8 text`);
+}
+
+export function wellKnownSkillDigest(bytes) {
+  return `sha256:${createHash("sha256").update(asSkillBytes(bytes)).digest("hex")}`;
+}
+
+export function verifyWellKnownSkillArtifact(entry, bytes) {
+  if (!entry || typeof entry !== "object") fail("skill entry is required");
+  const name = typeof entry.name === "string" && entry.name ? entry.name : "skill";
+  if (typeof entry.digest !== "string" || !WELL_KNOWN_SKILL_DIGEST_PATTERN.test(entry.digest)) {
+    fail(`${name} digest must be sha256:{64 lowercase hex}`);
+  }
+  if (!Number.isInteger(entry.size) || entry.size < 0) {
+    fail(`${name} size must be a non-negative integer`);
+  }
+  const buffer = asSkillBytes(bytes, `${name} artifact`);
+  if (buffer.length !== entry.size) {
+    fail(`${name} size mismatch: advertised ${entry.size}, actual ${buffer.length}`);
+  }
+  const digest = wellKnownSkillDigest(buffer);
+  if (digest !== entry.digest) {
+    fail(`${name} digest mismatch: advertised ${entry.digest}, actual ${digest}`);
+  }
+  return { name, digest, size: buffer.length };
 }
 
 function assertRegularDirectory(path, label) {
@@ -84,7 +119,8 @@ function loadPortableSkill(skillsRoot, name) {
   const skillFile = join(skillDir, WELL_KNOWN_SKILL_FILE);
   assertRegularDirectory(skillsRoot, "skills root");
   assertRegularDirectory(skillDir, `${name} skill directory`);
-  const markdown = readRegularFile(skillFile, `${name} ${WELL_KNOWN_SKILL_FILE}`);
+  const bytes = readRegularFile(skillFile, `${name} ${WELL_KNOWN_SKILL_FILE}`);
+  const markdown = bytes.toString("utf8");
   if (markdown.includes("\uFEFF")) fail(`${name} SKILL.md must not have a BOM`);
   const meta = parseSkillFrontmatter(markdown, name);
   return {
@@ -92,6 +128,8 @@ function loadPortableSkill(skillsRoot, name) {
     description: meta.description,
     files: [WELL_KNOWN_SKILL_FILE],
     markdown,
+    digest: wellKnownSkillDigest(bytes),
+    size: bytes.length,
   };
 }
 
@@ -99,14 +137,38 @@ export function loadWellKnownSkills(skillsRoot = DEFAULT_SKILLS_ROOT) {
   return WELL_KNOWN_SKILL_NAMES.map((name) => loadPortableSkill(skillsRoot, name));
 }
 
-export function buildWellKnownSkillsIndex(skills = loadWellKnownSkills()) {
+function projectSkillIndexEntry(skill) {
+  if (!skill || typeof skill !== "object") fail("skill is required");
+  const name = typeof skill.name === "string" && skill.name ? skill.name : "skill";
+  if (typeof skill.markdown !== "string") fail(`${name} markdown is required`);
+  const bytes = Object.hasOwn(skill, "bytes")
+    ? asSkillBytes(skill.bytes, `${name} artifact`)
+    : Buffer.from(skill.markdown, "utf8");
+  const digest = wellKnownSkillDigest(bytes);
+  const size = bytes.length;
+  if (Object.hasOwn(skill, "digest") && skill.digest !== digest) {
+    fail(`${name} digest mismatch: advertised ${skill.digest}, actual ${digest}`);
+  }
+  if (Object.hasOwn(skill, "size") && skill.size !== size) {
+    fail(`${name} size mismatch: advertised ${skill.size}, actual ${size}`);
+  }
   return {
-    skills: skills.map((skill) => ({
-      name: skill.name,
-      description: skill.description,
-      files: [...skill.files],
-    })),
+    name: skill.name,
+    description: skill.description,
+    files: [...skill.files],
+    digest,
+    size,
   };
+}
+
+export function buildWellKnownSkillsIndex(skills = loadWellKnownSkills()) {
+  const index = {
+    skills: skills.map((skill) => projectSkillIndexEntry(skill)),
+  };
+  for (const [i, skill] of skills.entries()) {
+    verifyWellKnownSkillArtifact(index.skills[i], Buffer.from(skill.markdown, "utf8"));
+  }
+  return index;
 }
 
 export function canonicalWellKnownSkillsOrigin(publicUrl) {
@@ -264,4 +326,20 @@ export function mountWellKnownSkills(app, { publicUrl, skillsRoot = DEFAULT_SKIL
     index: buildWellKnownSkillsIndex(skills),
     names: skills.map((skill) => skill.name),
   };
+}
+
+function invokedAsCli() {
+  const argvPath = process.argv[1];
+  if (!argvPath) return false;
+  try {
+    return pathToFileURL(argvPath).href === import.meta.url;
+  } catch {
+    return false;
+  }
+}
+
+if (invokedAsCli()) {
+  const skills = loadWellKnownSkills();
+  const index = buildWellKnownSkillsIndex(skills);
+  process.stdout.write(`${JSON.stringify(index, null, 2)}\n`);
 }
