@@ -1,0 +1,77 @@
+{
+  "schemaVersion": "samedaydesk.paywall-wrapper-fixture.v1",
+  "id": "external-resource-contract-preserving",
+  "kind": "external-resource",
+  "unpublished": true,
+  "liveListing": false,
+  "contract": {
+    "openservIssue": "https://github.com/openserv-labs/client/issues/6",
+    "note": "Proposed external-resource listing kind. Not hosted, not priced by a platform, not listed anywhere."
+  },
+  "listing": {
+    "kind": "external-resource",
+    "method": "GET",
+    "resourceUrl": "https://agents.samedaydesk.com/extract",
+    "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "amountAtomic": "5000",
+    "x402Pricing": null,
+    "x402WalletAddress": null,
+    "webhookUrl": null,
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "url": { "type": "string", "description": "Public HTTP(S) URL to extract." }
+      },
+      "required": ["url"]
+    },
+    "outputContract": {
+      "authority": "seller_declared",
+      "mediaType": "application/json",
+      "requiredFields": [
+        "ok",
+        "url",
+        "title",
+        "text",
+        "fetchedAt",
+        "aiReadiness.hasTitle"
+      ]
+    }
+  },
+  "seller": {
+    "origin": "https://agents.samedaydesk.com",
+    "method": "GET",
+    "path": "/extract",
+    "resourceUrl": "https://agents.samedaydesk.com/extract",
+    "amountAtomic": "5000",
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "inputKeys": ["url"],
+    "outputRequiredFields": [
+      "ok",
+      "url",
+      "title",
+      "text",
+      "fetchedAt",
+      "aiReadiness.hasTitle"
+    ]
+  },
+  "charges": [
+    {
+      "role": "seller",
+      "method": "GET",
+      "resource": "https://agents.samedaydesk.com/extract",
+      "amountAtomic": "5000",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    }
+  ],
+  "observed402": {
+    "seller": {
+      "status": 402,
+      "method": "GET",
+      "resource": "https://agents.samedaydesk.com/extract",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "amountAtomic": "5000"
+    }
+  }
+}

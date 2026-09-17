@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "samedaydesk.paywall-wrapper-fixture.v1",
+  "id": "sds-mcp-extract-one-paywall",
+  "kind": "sds-mcp-extract",
+  "unpublished": true,
+  "liveListing": false,
+  "listing": {
+    "method": "GET",
+    "resourceUrl": "https://agents.samedaydesk.com/extract",
+    "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "amountAtomic": "5000",
+    "mcp": {
+      "url": "https://agents.samedaydesk.com/mcp",
+      "tool": "extract",
+      "toolsListPaid": false,
+      "toolsCallPaywall": true,
+      "wrapperPaywall": false
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "url": { "type": "string", "description": "Public HTTP(S) URL." }
+      },
+      "required": ["url"]
+    },
+    "outputContract": {
+      "authority": "seller_declared",
+      "mediaType": "application/json",
+      "requiredFields": [
+        "ok",
+        "url",
+        "title",
+        "text",
+        "fetchedAt",
+        "aiReadiness.hasTitle"
+      ]
+    }
+  },
+  "seller": {
+    "origin": "https://agents.samedaydesk.com",
+    "method": "GET",
+    "path": "/extract",
+    "resourceUrl": "https://agents.samedaydesk.com/extract",
+    "amountAtomic": "5000",
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "inputKeys": ["url"],
+    "outputRequiredFields": [
+      "ok",
+      "url",
+      "title",
+      "text",
+      "fetchedAt",
+      "aiReadiness.hasTitle"
+    ]
+  },
+  "surfaces": [
+    {
+      "name": "http-get-extract",
+      "method": "GET",
+      "resourceUrl": "https://agents.samedaydesk.com/extract",
+      "amountAtomic": "5000",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    },
+    {
+      "name": "mcp-extract",
+      "discovery": "tools/list unpaid",
+      "call": "tools/call x402",
+      "resourceUrl": "mcp://tool/extract",
+      "amountAtomic": "5000",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    }
+  ],
+  "charges": [
+    {
+      "role": "seller",
+      "method": "GET",
+      "resource": "https://agents.samedaydesk.com/extract",
+      "amountAtomic": "5000",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    }
+  ],
+  "observed402": {
+    "seller": {
+      "status": 402,
+      "method": "GET",
+      "resource": "https://agents.samedaydesk.com/extract",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "amountAtomic": "5000"
+    }
+  }
+}
