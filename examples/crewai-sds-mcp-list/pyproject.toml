@@ -1,0 +1,21 @@
+[project]
+name = "samedaydesk-crewai-sds-mcp-list"
+version = "0.1.0"
+description = "Credential-free CrewAI MCPServerHTTP unpaid SameDayDesk tools/list"
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+license = { text = "MIT" }
+dependencies = [
+  "crewai==1.15.22",
+  "mcp==1.28.1",
+]
+
+[project.scripts]
+samedaydesk-crewai-sds-mcp-list = "crewai_sds_mcp_list.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
