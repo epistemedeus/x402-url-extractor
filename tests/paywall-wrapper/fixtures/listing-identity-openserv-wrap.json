@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "agent-payment-policy.listing-identity-observation.v1",
+  "target": {
+    "canonicalOrigin": "https://agents.samedaydesk.com",
+    "route": "/extract",
+    "settlementIdentity": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+  },
+  "sources": ["openserv-x402-trigger"],
+  "records": [
+    {
+      "source": "openserv-x402-trigger",
+      "url": "https://api.openserv.ai/webhooks/x402/trigger/synthetic-unpublished-r6-02",
+      "settlementIdentity": "0x1111111111111111111111111111111111111111",
+      "rank": 1
+    }
+  ]
+}

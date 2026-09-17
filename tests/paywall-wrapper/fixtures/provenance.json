@@ -1,0 +1,37 @@
+{
+  "description": "Synthetic unpublished paywall-wrapper fixtures. OpenServ issue 6 is a fixture contract, not an integration. No OpenServ account, no live listing, no Agent402 source.",
+  "unpublished": true,
+  "liveListing": false,
+  "openserv": {
+    "issue": "https://github.com/openserv-labs/client/issues/6",
+    "title": "External x402 listings should preserve the canonical resource and a buyer-visible output contract",
+    "clientPin": "fb3f1d11911900aabb63ee5230a6a9466df99a03",
+    "role": "fixture contract not an integration",
+    "copiedSource": false,
+    "accountUsed": false,
+    "liveListing": false,
+    "observableTriggerFields": [
+      "type",
+      "name",
+      "description",
+      "x402Pricing",
+      "x402WalletAddress",
+      "timeout",
+      "inputSchema",
+      "waitForCompletion"
+    ]
+  },
+  "seller": {
+    "origin": "https://agents.samedaydesk.com",
+    "method": "GET",
+    "path": "/extract",
+    "amountAtomic": "5000",
+    "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+  },
+  "agent402": {
+    "sourceCopied": false,
+    "licenseNote": "AGPL-3.0 Agent402 source is not imported or retained"
+  }
+}

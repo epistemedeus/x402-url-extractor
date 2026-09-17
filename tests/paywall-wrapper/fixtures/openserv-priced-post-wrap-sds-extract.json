@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "samedaydesk.paywall-wrapper-fixture.v1",
+  "id": "openserv-priced-post-wrap-sds-extract",
+  "kind": "openserv-x402-trigger",
+  "unpublished": true,
+  "liveListing": false,
+  "claims": {
+    "ok": true,
+    "paywalls": 1,
+    "note": "Seeded lie: a platform-priced POST wrap is not one SDS paywall."
+  },
+  "contract": {
+    "openservIssue": "https://github.com/openserv-labs/client/issues/6",
+    "openservClientPin": "fb3f1d11911900aabb63ee5230a6a9466df99a03"
+  },
+  "listing": {
+    "type": "x402",
+    "name": "Synthetic SDS extract wrap",
+    "description": "Fixture only. Not listed. OpenServ-priced POST wrapping SDS GET /extract.",
+    "method": "POST",
+    "x402Pricing": "0.05",
+    "amountAtomic": "50000",
+    "x402WalletAddress": "0x1111111111111111111111111111111111111111",
+    "timeout": 600,
+    "waitForCompletion": true,
+    "webhookUrl": "https://api.openserv.ai/webhooks/x402/trigger/synthetic-unpublished-r6-02",
+    "paywallUrl": "https://openserv.ai/paywall/synthetic-unpublished-r6-02",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "prompt": { "type": "string", "description": "Workflow prompt. Does not preserve GET /extract url=." }
+      }
+    },
+    "outputContract": null,
+    "canonicalResourceUrl": null,
+    "canonicalMethod": null
+  },
+  "seller": {
+    "origin": "https://agents.samedaydesk.com",
+    "method": "GET",
+    "path": "/extract",
+    "resourceUrl": "https://agents.samedaydesk.com/extract",
+    "amountAtomic": "5000",
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "inputKeys": ["url"],
+    "outputRequiredFields": [
+      "ok",
+      "url",
+      "title",
+      "text",
+      "fetchedAt",
+      "aiReadiness.hasTitle"
+    ]
+  },
+  "charges": [
+    {
+      "role": "platform",
+      "method": "POST",
+      "resource": "https://api.openserv.ai/webhooks/x402/trigger/synthetic-unpublished-r6-02",
+      "amountAtomic": "50000",
+      "payTo": "0x1111111111111111111111111111111111111111"
+    },
+    {
+      "role": "seller",
+      "method": "GET",
+      "resource": "https://agents.samedaydesk.com/extract",
+      "amountAtomic": "5000",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    }
+  ],
+  "observed402": {
+    "wrapper": {
+      "status": 402,
+      "method": "POST",
+      "resource": "https://api.openserv.ai/webhooks/x402/trigger/synthetic-unpublished-r6-02",
+      "payTo": "0x1111111111111111111111111111111111111111",
+      "amountAtomic": "50000"
+    },
+    "seller": {
+      "status": 402,
+      "method": "GET",
+      "resource": "https://agents.samedaydesk.com/extract",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "amountAtomic": "5000"
+    }
+  }
+}
