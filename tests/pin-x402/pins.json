@@ -1,0 +1,85 @@
+{
+  "schema": "samedaydesk.x402-sdk-pin.v1",
+  "recordedAt": "2026-09-17",
+  "merchantVersion": "1.23.49",
+  "x402": "2.16.0",
+  "packages": {
+    "@x402/core": {
+      "version": "2.16.0",
+      "resolved": "https://registry.npmjs.org/@x402/core/-/core-2.16.0.tgz",
+      "integrity": "sha512-7MjwOEiE6ICAYtOsK9vQl66Ho4jERDuuoRg/No2Nc2GQ7y/M/yu4DJ65LzeBycQE+Qrg2RqQG7KR51tyT+hzjQ=="
+    },
+    "@x402/evm": {
+      "version": "2.16.0",
+      "resolved": "https://registry.npmjs.org/@x402/evm/-/evm-2.16.0.tgz",
+      "integrity": "sha512-DGcwATWosIb3hmO/CfWASrn+xbxp7KQyzmMPcIW23XuDjo9YPVRElZWtHBur3euakdM021Hl8SPF1zR0G+W4hw=="
+    },
+    "@x402/express": {
+      "version": "2.16.0",
+      "resolved": "https://registry.npmjs.org/@x402/express/-/express-2.16.0.tgz",
+      "integrity": "sha512-M3kAOy1oxHEsVVMNbuLhhb3S00p+O0k5T/O4f/m1D5txQrEpL4sQUHul9iVehp3a7K8uVMstkTyCJ+LO44HTtQ=="
+    },
+    "@x402/extensions": {
+      "version": "2.16.0",
+      "resolved": "https://registry.npmjs.org/@x402/extensions/-/extensions-2.16.0.tgz",
+      "integrity": "sha512-LHh5QrvB1QwiPr2zFqzpJonmMGxqJq1nDHifihyqNx1lJvU3DQgYGxPuHXE2l6nxGG0chF0alA/BsidDHFie/A=="
+    },
+    "@x402/mcp": {
+      "version": "2.16.0",
+      "resolved": "https://registry.npmjs.org/@x402/mcp/-/mcp-2.16.0.tgz",
+      "integrity": "sha512-VNCHByCQt9Kyu9V6fMENkKViP2sillgL8euhN73KOhBtvNB+mf9qHKjktTL9EqLbYOToZ1RmX26tM1n2W/JLRA=="
+    },
+    "@x402/fetch": {
+      "version": "2.16.0",
+      "resolved": "https://registry.npmjs.org/@x402/fetch/-/fetch-2.16.0.tgz",
+      "integrity": "sha512-skW0XsWzi4NIfqCrY6KxhO3UEJ8qh4nBIKIgwWFCXFHNqRKYWZ7qcCI/DHy7cy3jdYs1MV4PoXX24rP3Umca1Q=="
+    }
+  },
+  "alsoDeclared": {
+    "@coinbase/x402": "2.1.0",
+    "@circle-fin/x402-batching": "3.3.0",
+    "@modelcontextprotocol/sdk": "1.30.0"
+  },
+  "forbidden": [
+    "@x402/casper",
+    "@x402/cardano",
+    "@x402/celo",
+    "@x402/xrpl"
+  ],
+  "surfaces": [
+    {
+      "id": "root",
+      "packageJson": "package.json",
+      "lockfile": "package-lock.json",
+      "packages": [
+        "@x402/core",
+        "@x402/evm",
+        "@x402/express",
+        "@x402/extensions",
+        "@x402/mcp",
+        "@x402/fetch"
+      ]
+    },
+    {
+      "id": "customer-x402",
+      "packageJson": "examples/customer-x402/package.json",
+      "lockfile": "examples/customer-x402/package-lock.json",
+      "packages": [
+        "@x402/core",
+        "@x402/evm",
+        "@x402/extensions",
+        "@x402/fetch"
+      ]
+    }
+  ],
+  "sdsMcp": {
+    "url": "https://agents.samedaydesk.com/mcp",
+    "wellKnownX402": "https://agents.samedaydesk.com/.well-known/x402",
+    "serverInfoName": "x402-data-gateway",
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "scheme": "exact",
+    "maxTags": 5
+  }
+}
