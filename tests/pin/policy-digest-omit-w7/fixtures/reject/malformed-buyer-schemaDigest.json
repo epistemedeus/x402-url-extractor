@@ -1,0 +1,9 @@
+{
+  "id": "malformed-buyer-schemaDigest",
+  "expect": "reject",
+  "code": "buyer_schema_digest_invalid",
+  "buyer": {
+    "schemaDigest": "sha256:abc",
+    "requiredFields": ["sku"]
+  }
+}
