@@ -1,0 +1,53 @@
+{
+  "id": "wrong-eip712-name-never-settles",
+  "title": "Same USDC address with a foreign EIP-712 token name never settles",
+  "expect": "pass",
+  "kind": "wrong-asset",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "advertisedAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "advertisedAssetName": "USD Coin",
+  "advertisedAssetVersion": "2",
+  "payloadAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "payloadAssetName": "Wrapped Ether",
+  "payloadAssetVersion": "2",
+  "paymentIdentity": {
+    "id": "wrongasset_eip712_01",
+    "payer": "0x14791697260E4c9A71f18484C9f997B308e59325",
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "extra": { "name": "Wrapped Ether", "version": "2" }
+  },
+  "settleCount": 0,
+  "verifyCount": 0,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false
+    },
+    {
+      "seq": 2,
+      "phase": "paid",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false,
+      "paymentPresent": true,
+      "payloadAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payloadAssetName": "Wrapped Ether",
+      "charged": false
+    }
+  ]
+}
