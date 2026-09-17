@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "samedaydesk.commerce-wrapper-fixture.v1",
+  "id": "sds-extract-one-paywall",
+  "kind": "wrapper",
+  "unpublished": true,
+  "liveListing": false,
+  "note": "SameDayDesk GET /extract unpaid 402 is one seller paywall. MCP tools/list stays unpaid.",
+  "origin": "https://agents.samedaydesk.com",
+  "route": "/extract",
+  "method": "GET",
+  "now": "2026-09-17T00:00:00.000Z",
+  "wrapper": {
+    "charged": false,
+    "httpStatus": 402,
+    "ok": false
+  },
+  "listing": {
+    "method": "GET",
+    "resourceUrl": "https://agents.samedaydesk.com/extract",
+    "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "amountAtomic": "5000"
+  },
+  "charges": [
+    {
+      "role": "seller",
+      "method": "GET",
+      "resource": "https://agents.samedaydesk.com/extract",
+      "amountAtomic": "5000",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    }
+  ],
+  "observed402": {
+    "seller": {
+      "status": 402,
+      "method": "GET",
+      "resource": "https://agents.samedaydesk.com/extract",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "amountAtomic": "5000"
+    }
+  }
+}

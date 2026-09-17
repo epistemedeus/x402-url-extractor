@@ -1,0 +1,108 @@
+{
+  "schemaVersion": "samedaydesk.commerce-unpaid-materialize-fixture.v1",
+  "id": "amount-mismatch",
+  "kind": "unpaid-materialize",
+  "unpublished": true,
+  "liveListing": false,
+  "note": "Exact-resource catalog reach with atomic amount 5000 vs live unpaid 10000. String-exact compare, no unit conversion.",
+  "origin": "https://agents.samedaydesk.com",
+  "route": "/commerce/payment-offer-preflight",
+  "method": "GET",
+  "intent": "inspect an unsigned payment offer before a buyer authorizes",
+  "now": "2026-09-17T00:00:00.000Z",
+  "claims": {
+    "ok": true,
+    "match": true,
+    "note": "Seeded lie: 5000 vs 10000 atomic is not a match."
+  },
+  "wrapper": {
+    "charged": false,
+    "httpStatus": 402,
+    "ok": false
+  },
+  "validator": {
+    "valid": true,
+    "simulation": { "outcome": "accepted" },
+    "index": 1
+  },
+  "catalogSearch": {
+    "resources": [
+      {
+        "resource": "https://agents.samedaydesk.com/commerce/payment-offer-preflight"
+      }
+    ]
+  },
+  "listingIdentity": {
+    "canonicalOrigin": "https://agents.samedaydesk.com",
+    "route": "/commerce/payment-offer-preflight",
+    "settlementIdentity": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "sources": ["coinbase-bazaar"],
+    "records": [
+      {
+        "source": "coinbase-bazaar",
+        "url": "https://agents.samedaydesk.com/commerce/payment-offer-preflight",
+        "settlementIdentity": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+        "rank": 1
+      }
+    ]
+  },
+  "discoveryDrift": {
+    "catalog": {
+      "observedAt": "2026-09-17T00:00:00.000Z",
+      "source": "coinbase-bazaar-merchant-discovery",
+      "resource": "https://agents.samedaydesk.com/commerce/payment-offer-preflight",
+      "lastUpdated": "2026-09-16T00:00:00.000Z",
+      "offers": [
+        {
+          "protocol": "x402",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amountAtomic": "5000",
+          "recipient": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+        }
+      ]
+    },
+    "live": {
+      "observedAt": "2026-09-17T00:00:01.000Z",
+      "source": "live-unpaid-402",
+      "resource": "https://agents.samedaydesk.com/commerce/payment-offer-preflight",
+      "offers": [
+        {
+          "protocol": "x402",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amountAtomic": "10000",
+          "recipient": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+        }
+      ]
+    }
+  },
+  "bazaarTracker": {
+    "schema": "samedaydesk.bazaar-observation.v3",
+    "schemaVersion": 3,
+    "observedAt": "2026-09-17T00:00:00.000Z",
+    "captureSource": "fixture-readback",
+    "sources": {
+      "cdp-discovery": {
+        "endpoint": null,
+        "sellerCount": 1,
+        "routeCount": 1,
+        "sellers": {
+          "samedaydesk": {
+            "id": "samedaydesk",
+            "name": "SameDayDesk",
+            "hosts": ["agents.samedaydesk.com"],
+            "queries": [],
+            "partial": false,
+            "rowCount": 1,
+            "routes": {
+              "https://agents.samedaydesk.com/commerce/payment-offer-preflight": {
+                "digest": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

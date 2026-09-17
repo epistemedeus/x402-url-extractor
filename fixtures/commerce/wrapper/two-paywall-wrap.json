@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "samedaydesk.commerce-wrapper-fixture.v1",
+  "id": "two-paywall-wrap",
+  "kind": "wrapper",
+  "unpublished": true,
+  "liveListing": false,
+  "note": "Synthetic platform-priced POST wrapping SDS GET /extract. Two charges, two payTo. Not listed.",
+  "origin": "https://agents.samedaydesk.com",
+  "route": "/extract",
+  "method": "GET",
+  "now": "2026-09-17T00:00:00.000Z",
+  "claims": {
+    "ok": true,
+    "paywalls": 1,
+    "note": "Seeded lie: a platform-priced POST wrap is not one SDS paywall."
+  },
+  "wrapper": {
+    "charged": false,
+    "httpStatus": 402,
+    "ok": false
+  },
+  "listing": {
+    "method": "POST",
+    "resourceUrl": "https://api.example.com/webhooks/x402/trigger/synthetic-unpublished-x29",
+    "payTo": "0x1111111111111111111111111111111111111111",
+    "amountAtomic": "50000"
+  },
+  "charges": [
+    {
+      "role": "platform",
+      "method": "POST",
+      "resource": "https://api.example.com/webhooks/x402/trigger/synthetic-unpublished-x29",
+      "amountAtomic": "50000",
+      "payTo": "0x1111111111111111111111111111111111111111"
+    },
+    {
+      "role": "seller",
+      "method": "GET",
+      "resource": "https://agents.samedaydesk.com/extract",
+      "amountAtomic": "5000",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+    }
+  ],
+  "observed402": {
+    "wrapper": {
+      "status": 402,
+      "method": "POST",
+      "resource": "https://api.example.com/webhooks/x402/trigger/synthetic-unpublished-x29",
+      "payTo": "0x1111111111111111111111111111111111111111",
+      "amountAtomic": "50000"
+    },
+    "seller": {
+      "status": 402,
+      "method": "GET",
+      "resource": "https://agents.samedaydesk.com/extract",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "amountAtomic": "5000"
+    }
+  }
+}

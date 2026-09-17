@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "samedaydesk.commerce-receipt-fixture.v1",
+  "id": "forged-offer-receipt",
+  "kind": "forged-eip712-offer-receipt",
+  "unpublished": true,
+  "liveListing": false,
+  "note": "Seeded forged receipt: payload.payer mutated after a real merchant signature. Format stays eip712. Recovered signer is not the merchant.",
+  "claims": {
+    "ok": true,
+    "settled": true,
+    "merchantSigned": true,
+    "note": "Seeded lie: a tampered payer does not remain a merchant-signed settlement receipt."
+  },
+  "merchantSigner": "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+  "network": "eip155:8453",
+  "forge": {
+    "method": "payload.payer mutated after sign",
+    "originalPayer": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "claimedPayer": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "receipt": {
+    "format": "eip712",
+    "payload": {
+      "version": 1,
+      "network": "eip155:8453",
+      "resourceUrl": "https://agents.samedaydesk.com/commerce/seller-integrity-audit?origin=https%3A%2F%2Fseller.example&route=%2Fpaid&method=GET&requiredPaths=data.id&requireBazaar=true",
+      "payer": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "issuedAt": 1800000000,
+      "transaction": "0x1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "signature": "0x785556e0af9896ab5226c4eb11d2d52d0a6f705cafe1f7ab808e0ddaeda615935d7c199e6081d21bc63cb3288f5330fecec088b25f949f0dad27124d3a5cbda91c"
+  }
+}
