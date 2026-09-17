@@ -1,0 +1,44 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.double-settle-guard.v1",
+  "scope": "x402 facilitator settle is at most once per payment identity. Unknown settlement is quarantined. Replay must not settle again. Loopback merchant only; never pay, never xpay/CDP, never checkout.",
+  "spec": {
+    "x402Version": 2,
+    "replay": "idempotency-replay.mjs trackReplaySettlementAttempts",
+    "artifact": "server.js"
+  },
+  "fixtures": [
+    {
+      "id": "replay-after-success",
+      "path": "pass/replay-after-success.json",
+      "expect": "pass",
+      "kind": "success-replay"
+    },
+    {
+      "id": "unknown-quarantine",
+      "path": "pass/unknown-quarantine.json",
+      "expect": "pass",
+      "kind": "unknown-settlement"
+    },
+    {
+      "id": "seeded-double-settle",
+      "path": "reject/seeded-double-settle.json",
+      "expect": "reject",
+      "rejectCode": "double_settle",
+      "kind": "seeded-failure"
+    },
+    {
+      "id": "seeded-unknown-retry-settle",
+      "path": "reject/seeded-unknown-retry-settle.json",
+      "expect": "reject",
+      "rejectCode": "unknown_retry_settle",
+      "kind": "seeded-unknown-retry"
+    },
+    {
+      "id": "seeded-replay-resettle",
+      "path": "reject/seeded-replay-resettle.json",
+      "expect": "reject",
+      "rejectCode": "replay_resettle",
+      "kind": "seeded-replay-resettle"
+    }
+  ]
+}
