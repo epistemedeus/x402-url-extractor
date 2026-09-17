@@ -1,0 +1,11 @@
+{
+  "id": "registry-publish",
+  "expectReject": "registry publish is a kill condition",
+  "kind": "registry_publish",
+  "payload": {
+    "method": "POST",
+    "url": "https://registry.modelcontextprotocol.io/v0.1/publish",
+    "action": "publish",
+    "target": "mcp-registry"
+  }
+}

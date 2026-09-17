@@ -1,0 +1,101 @@
+{
+  "serverInfo": {
+    "name": "x402-data-gateway",
+    "version": "1.23.49"
+  },
+  "protocolVersion": "2025-11-25",
+  "tools": [
+    {
+      "name": "extract",
+      "title": "Extract Web Page as Structured JSON",
+      "description": "Fetch a public HTTPS page and return compact extraction signals. Discovery only in this pack; tools/call without payment must not run the handler.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["url"],
+        "properties": {
+          "url": { "type": "string" }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ok", "requestedUrl", "finalUrl", "url", "status", "sourceOk", "error",
+          "contentType", "title", "description", "canonical", "lang", "openGraph",
+          "twitter", "jsonLd", "headings", "links", "text", "aiReadiness", "capture",
+          "fetchedAt"
+        ]
+      },
+      "_meta": {
+        "x402": {
+          "paymentRequired": true,
+          "accepts": [
+            {
+              "scheme": "exact",
+              "network": "eip155:8453",
+              "resource": { "url": "https://agents.samedaydesk.com/extract" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "extract_batch",
+      "title": "Extract Public URLs in Batch",
+      "description": "Bounded 1–5 public HTTPS URLs. Listing this tool is unpaid discovery, not a batch-settlement enablement.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["urls"],
+        "properties": {
+          "urls": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 5,
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ok", "product", "schemaVersion", "quote", "jobId", "jobStatus",
+          "stopReason", "partial", "sources", "accounting", "costInputs",
+          "charged", "boundary"
+        ]
+      },
+      "_meta": {
+        "x402": {
+          "paymentRequired": true,
+          "accepts": [
+            {
+              "scheme": "exact",
+              "network": "eip155:8453",
+              "resource": { "url": "https://agents.samedaydesk.com/extract/batch" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "enrich",
+      "title": "Enrich Company Domain",
+      "description": "Extra unrelated tool. Presence is not drift.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["domain"],
+        "properties": {
+          "domain": { "type": "string" }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ok"]
+      }
+    }
+  ]
+}
