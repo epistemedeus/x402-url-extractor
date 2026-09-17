@@ -1,0 +1,31 @@
+{
+  "id": "seeded-unpaid-malformed-payto",
+  "title": "Seeded failure: unpaid 402 advertises ENS payTo as if well-formed",
+  "expect": "reject",
+  "rejectCode": "malformed_quoted_payto",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "payTo": "merchant.eth",
+  "settleCount": 0,
+  "verifyCount": 0,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "paymentPresent": false,
+      "payTo": "merchant.eth",
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false,
+      "charged": false
+    }
+  ]
+}
