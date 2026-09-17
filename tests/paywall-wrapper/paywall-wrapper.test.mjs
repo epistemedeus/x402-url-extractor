@@ -12,7 +12,7 @@ import {
   RESOURCES,
   isSupportedTarget,
 } from "../../http-delivery-evidence/index.mjs";
-import { CODES, OPENSERV_ISSUE_6, SDS } from "./constants.mjs";
+import { CODES, FIXTURE_PLATFORM_PAY_TO, OPENSERV_ISSUE_6, SDS } from "./constants.mjs";
 import { evaluatePaywallWrapper, listingIdentityObservationFor } from "./evaluate.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -247,4 +247,119 @@ test("evaluate ignores seeded one-paywall claims on a two-charge wrap", () => {
   assert.equal(report.ok, false);
   assert.equal(report.claimsRejected, true);
   assert.equal(report.codes.includes(CODES.TWO_PAYWALL) || report.codes.includes(CODES.SETTLEMENT_OWNER_HIDDEN), true);
+});
+
+function cloneFixture(name) {
+  return JSON.parse(JSON.stringify(readJson(join(FIXTURES, name))));
+}
+
+test("seller-surface listing advertising a non-seller payTo is settlement_owner_hidden", () => {
+  const fixture = cloneFixture("sds-mcp-extract-one-paywall.json");
+  fixture.listing.payTo = FIXTURE_PLATFORM_PAY_TO;
+  fixture.listing.x402WalletAddress = FIXTURE_PLATFORM_PAY_TO;
+  fixture.charges = [{
+    role: "platform",
+    method: "GET",
+    resource: SDS.extractResourceUrl,
+    amountAtomic: SDS.amountAtomic,
+    payTo: FIXTURE_PLATFORM_PAY_TO,
+  }];
+  const report = evaluatePaywallWrapper(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.decision, "refuse");
+  assert.equal(report.codes.includes(CODES.SETTLEMENT_OWNER_HIDDEN), true);
+});
+
+test("missing listing.method is lost_method, not one_paywall", () => {
+  const fixture = cloneFixture("sds-mcp-extract-one-paywall.json");
+  delete fixture.listing.method;
+  const report = evaluatePaywallWrapper(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.preserved.method, false);
+  assert.equal(report.codes.includes(CODES.LOST_METHOD), true);
+});
+
+test("charge without payTo is settlement_owner_hidden", () => {
+  const fixture = cloneFixture("sds-mcp-extract-one-paywall.json");
+  fixture.charges = [{
+    role: "seller",
+    method: "GET",
+    resource: SDS.extractResourceUrl,
+    amountAtomic: SDS.amountAtomic,
+    payTo: null,
+  }];
+  const report = evaluatePaywallWrapper(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.settlementOwnerCount, 0);
+  assert.equal(report.codes.includes(CODES.SETTLEMENT_OWNER_HIDDEN), true);
+});
+
+test("0X-prefixed seller payTo still counts as the SDS owner", () => {
+  const fixture = cloneFixture("sds-mcp-extract-one-paywall.json");
+  const prefixed = `0X${SDS.payTo.slice(2)}`;
+  fixture.listing.payTo = prefixed;
+  fixture.charges[0].payTo = prefixed;
+  const report = evaluatePaywallWrapper(fixture);
+  assert.equal(report.ok, true, JSON.stringify(report.codes));
+  assert.equal(report.decision, CODES.ONE_PAYWALL);
+  assert.equal(report.settlementOwnerCount, 1);
+});
+
+test("liveListing string true fails closed", () => {
+  const fixture = cloneFixture("sds-mcp-extract-one-paywall.json");
+  fixture.liveListing = "true";
+  const report = evaluatePaywallWrapper(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.codes.includes(CODES.LIVE_LISTING), true);
+  assert.equal(report.boundary.liveListing, true);
+});
+
+test("empty charges array still reads observed402 two-paywall", () => {
+  const fixture = cloneFixture("sds-mcp-extract-one-paywall.json");
+  fixture.charges = [];
+  fixture.listing.method = "POST";
+  fixture.listing.resourceUrl = "https://api.openserv.ai/webhooks/x402/trigger/synthetic-unpublished-r6-02";
+  fixture.listing.x402WalletAddress = FIXTURE_PLATFORM_PAY_TO;
+  delete fixture.listing.payTo;
+  fixture.observed402 = {
+    wrapper: {
+      status: 402,
+      method: "POST",
+      resource: "https://api.openserv.ai/webhooks/x402/trigger/synthetic-unpublished-r6-02",
+      payTo: FIXTURE_PLATFORM_PAY_TO,
+      amountAtomic: "50000",
+    },
+    seller: {
+      status: 402,
+      method: "GET",
+      resource: SDS.extractResourceUrl,
+      payTo: SDS.payTo,
+      amountAtomic: SDS.amountAtomic,
+    },
+  };
+  const report = evaluatePaywallWrapper(fixture);
+  assert.equal(report.ok, false);
+  assert.ok(report.paywallCount >= 2);
+  assert.equal(report.codes.includes(CODES.TWO_PAYWALL), true);
+});
+
+test("webhook-only listing copying SDS GET is route_absent, not one_paywall", () => {
+  const fixture = cloneFixture("sds-mcp-extract-one-paywall.json");
+  delete fixture.listing.resourceUrl;
+  fixture.listing.webhookUrl = "https://api.openserv.ai/webhooks/x402/trigger/synthetic-unpublished-r6-02";
+  const report = evaluatePaywallWrapper(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.listingIdentity.decision, "absent");
+  assert.equal(report.codes.includes(CODES.ROUTE_ABSENT), true);
+});
+
+test("listing without a URL does not inherit seller.resourceUrl as identity", () => {
+  const fixture = cloneFixture("sds-mcp-extract-one-paywall.json");
+  delete fixture.listing.resourceUrl;
+  delete fixture.listing.webhookUrl;
+  const observation = listingIdentityObservationFor(fixture);
+  assert.deepEqual(observation.records, []);
+  const report = evaluatePaywallWrapper(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.codes.includes(CODES.ROUTE_ABSENT), true);
 });

@@ -62,6 +62,7 @@ export const CODES = Object.freeze({
   LOST_OUTPUTS: "lost_outputs",
   LIVE_LISTING: "live_listing",
   MALFORMED_FIXTURE: "malformed_fixture",
+  ROUTE_ABSENT: "route_absent",
 });
 
 export const FAIL_CLOSED_CODES = Object.freeze([
@@ -74,4 +75,5 @@ export const FAIL_CLOSED_CODES = Object.freeze([
   CODES.LOST_OUTPUTS,
   CODES.LIVE_LISTING,
   CODES.MALFORMED_FIXTURE,
+  CODES.ROUTE_ABSENT,
 ]);

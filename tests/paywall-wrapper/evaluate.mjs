@@ -29,7 +29,10 @@ function upper(value) {
 }
 
 function lowerAddr(value) {
-  return typeof value === "string" && value.startsWith("0x") ? value.toLowerCase() : null;
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!/^0x[0-9a-fA-F]{40}$/i.test(trimmed)) return null;
+  return trimmed.toLowerCase();
 }
 
 function pathnameOf(url) {
@@ -80,7 +83,7 @@ function collectCharges(fixture) {
     });
   };
 
-  if (Array.isArray(fixture.charges)) {
+  if (Array.isArray(fixture.charges) && fixture.charges.length > 0) {
     for (const charge of fixture.charges) push(charge);
     return charges;
   }
@@ -114,7 +117,7 @@ function listingVisibleSettlement(listing) {
 export function listingIdentityObservationFor(fixture) {
   const seller = asRecord(fixture.seller) || {};
   const listing = asRecord(fixture.listing) || {};
-  const url = listing.resourceUrl || listing.webhookUrl || seller.resourceUrl;
+  const url = listing.resourceUrl || listing.webhookUrl || null;
   const listingPayTo = listing.payTo || listing.x402WalletAddress || listing.settlementIdentity;
   const record = url
     ? {
@@ -214,7 +217,7 @@ function preservedContract(fixture) {
   const listedOutputs = listingOutputFields(listing);
   const outputs = requiredOutputs.every((field) => listedOutputs.includes(field));
   const codes = [];
-  if (listingMethod && !method) codes.push(CODES.LOST_METHOD);
+  if (!listingMethod || !method) codes.push(CODES.LOST_METHOD);
   if (!inputs) codes.push(CODES.LOST_INPUTS);
   if (!outputs) codes.push(CODES.LOST_OUTPUTS);
   return { method, inputs, outputs, codes };
@@ -235,7 +238,7 @@ export function evaluatePaywallWrapper(fixture) {
     };
   }
   if (record.schemaVersion !== SCHEMA_FIXTURE) codes.push(CODES.MALFORMED_FIXTURE);
-  if (record.liveListing === true) codes.push(CODES.LIVE_LISTING);
+  if (record.liveListing !== false) codes.push(CODES.LIVE_LISTING);
 
   const listing = asRecord(record.listing) || {};
   const seller = asRecord(record.seller) || {};
@@ -247,14 +250,22 @@ export function evaluatePaywallWrapper(fixture) {
   if (paywallCount >= 2 || settlementOwnerCount >= 2) {
     codes.push(CODES.TWO_PAYWALL);
   }
+  if (paywallCount === 0) codes.push(CODES.MALFORMED_FIXTURE);
 
   const sellerPayTo = lowerAddr(seller.payTo || SDS.payTo);
   const visible = listingVisibleSettlement(listing);
   const listingIsSellerSurface = originOf(listing.resourceUrl) === (seller.origin || SDS.origin)
     && pathnameOf(listing.resourceUrl) === (seller.path || SDS.extractPath);
-  if (sellerPayTo && !visible.has(sellerPayTo) && !listingIsSellerSurface) {
-    codes.push(CODES.SETTLEMENT_OWNER_HIDDEN);
-  } else if (sellerPayTo && visible.size && ![...visible].includes(sellerPayTo) && !listingIsSellerSurface) {
+  const advertisedMismatch = Boolean(sellerPayTo && visible.size && !visible.has(sellerPayTo));
+  const omittedOnForeignSurface = Boolean(sellerPayTo && visible.size === 0 && !listingIsSellerSurface);
+  const chargeMismatch = Boolean(
+    sellerPayTo
+    && (
+      charges.length === 0
+      || charges.some((charge) => !lowerAddr(charge.payTo) || lowerAddr(charge.payTo) !== sellerPayTo)
+    ),
+  );
+  if (advertisedMismatch || omittedOnForeignSurface || chargeMismatch) {
     codes.push(CODES.SETTLEMENT_OWNER_HIDDEN);
   }
 
@@ -269,14 +280,18 @@ export function evaluatePaywallWrapper(fixture) {
     listingIdentity = evaluateListingIdentity(listingIdentityObservationFor(record));
   } catch (error) {
     listingIdentity = { available: false, reason: String(error?.message || "listing_identity_unavailable") };
+    codes.push(CODES.MALFORMED_FIXTURE);
+  }
+  if (!listingIdentity?.decision || listingIdentity.decision !== "canonical") {
+    codes.push(CODES.ROUTE_ABSENT);
   }
 
   const uniqueCodes = [...new Set(codes)];
   const failClosed = uniqueCodes.filter((code) => FAIL_CLOSED_CODES.includes(code));
   const onePaywall = paywallCount === 1
-    && settlementOwnerCount <= 1
+    && settlementOwnerCount === 1
     && failClosed.length === 0
-    && record.liveListing !== true;
+    && record.liveListing === false;
   const ok = onePaywall;
   return {
     schemaVersion: SCHEMA_REPORT,
@@ -307,7 +322,7 @@ export function evaluatePaywallWrapper(fixture) {
 
 function boundary(fixture) {
   return Object.freeze({
-    liveListing: fixture?.liveListing === true,
+    liveListing: fixture?.liveListing !== false,
     unpublished: fixture?.unpublished !== false,
     openservAccountUsed: false,
     agent402SourceCopied: false,
