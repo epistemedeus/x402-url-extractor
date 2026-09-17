@@ -1,0 +1,15 @@
+{
+  "id": "canonical.unpaid.extract.tools-call",
+  "method": "tools/call",
+  "params": {
+    "name": "extract",
+    "arguments": { "url": "https://example.com/" }
+  },
+  "expected": {
+    "httpStatus": 200,
+    "isError": true,
+    "kind": "unpaid_tools_call_is_error",
+    "handlerRan": false,
+    "settlement": false
+  }
+}
