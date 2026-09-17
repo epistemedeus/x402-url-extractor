@@ -1,0 +1,65 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.expired-challenge.v1",
+  "scope": "x402 v2 exact/EIP-3009 unpaid 402 maxTimeoutSeconds is bounded 1..300. Payloads with validBefore in the past, validAfter in the future, or remaining validity above the challenge timeout must not deliver or settle. Loopback merchant only; never pay, never xpay/CDP, never checkout.",
+  "spec": {
+    "x402Version": 2,
+    "scheme": "exact",
+    "validity": "EIP-3009 validAfter/validBefore",
+    "maxTimeoutSeconds": 300,
+    "expiredInvalidReason": "invalid_exact_evm_payload_authorization_valid_before",
+    "artifact": "server.js"
+  },
+  "fixtures": [
+    {
+      "id": "unpaid-bounded-timeout",
+      "path": "pass/unpaid-bounded-timeout.json",
+      "expect": "pass",
+      "kind": "unpaid-challenge"
+    },
+    {
+      "id": "expired-payload-rejected",
+      "path": "pass/expired-payload-rejected.json",
+      "expect": "pass",
+      "kind": "expired-rejected"
+    },
+    {
+      "id": "expired-replay-layer",
+      "path": "pass/expired-replay-layer.json",
+      "expect": "pass",
+      "kind": "expired-replay-409"
+    },
+    {
+      "id": "not-yet-valid-rejected",
+      "path": "pass/not-yet-valid-rejected.json",
+      "expect": "pass",
+      "kind": "not-yet-valid-rejected"
+    },
+    {
+      "id": "fresh-within-window",
+      "path": "pass/fresh-within-window.json",
+      "expect": "pass",
+      "kind": "fresh-delivery"
+    },
+    {
+      "id": "seeded-expired-accepted",
+      "path": "reject/seeded-expired-accepted.json",
+      "expect": "reject",
+      "rejectCode": "expired_challenge_accepted",
+      "kind": "seeded-failure"
+    },
+    {
+      "id": "seeded-unbounded-timeout",
+      "path": "reject/seeded-unbounded-timeout.json",
+      "expect": "reject",
+      "rejectCode": "unbounded_timeout",
+      "kind": "seeded-unbounded-challenge"
+    },
+    {
+      "id": "seeded-not-yet-valid-accepted",
+      "path": "reject/seeded-not-yet-valid-accepted.json",
+      "expect": "reject",
+      "rejectCode": "not_yet_valid_accepted",
+      "kind": "seeded-not-yet-valid"
+    }
+  ]
+}
