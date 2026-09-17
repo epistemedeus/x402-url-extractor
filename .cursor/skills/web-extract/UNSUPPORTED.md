@@ -18,4 +18,5 @@ Prove the reject from this skill directory:
 node reject-claude-api-skills.mjs claude-api-skills
 ```
 
-That command exits 1.
+That command exits 1. Broken pins (SKILL.md sha256 drift, MCP URL or header
+mismatch, credential headers, MCP 2026-07-28, or invalid JSON) exit 2.
