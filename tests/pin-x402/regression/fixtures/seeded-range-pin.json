@@ -1,0 +1,20 @@
+{
+  "kind": "pin-source",
+  "label": "seeded-range-pin-caret",
+  "names": [
+    "@x402/core",
+    "@x402/evm",
+    "@x402/express",
+    "@x402/extensions",
+    "@x402/mcp",
+    "@x402/fetch"
+  ],
+  "declared": {
+    "@x402/core": "^2.16.0",
+    "@x402/evm": "~2.16.0",
+    "@x402/express": ">=2.16.0",
+    "@x402/extensions": "2.16.0",
+    "@x402/mcp": "2.16.0",
+    "@x402/fetch": "latest"
+  }
+}

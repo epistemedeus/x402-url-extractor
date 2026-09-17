@@ -1,0 +1,36 @@
+{
+  "x402Version": 2,
+  "error": "Payment required to access this tool",
+  "resource": {
+    "url": "mcp://tool/agent_discoverability_audit",
+    "description": "Measure one service's brand-blind rank, source-family coverage, expected-route presence, canonical-vs-alias listing identity, duplicate records, competitors, and exact-price drift across ten public machine-service discovery views.",
+    "mimeType": "application/json",
+    "serviceName": "x402-data-gateway",
+    "tags": [
+      "distribution",
+      "discovery",
+      "x402",
+      "mpp",
+      "agent402",
+      "catalog-price",
+      "runtime-coherence",
+      "catalog-materialization",
+      "a2a",
+      "erc-8004"
+    ]
+  },
+  "accepts": [
+    {
+      "scheme": "exact",
+      "network": "eip155:8453",
+      "amount": "50000",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "maxTimeoutSeconds": 300,
+      "extra": {
+        "name": "USD Coin",
+        "version": "2"
+      }
+    }
+  ]
+}

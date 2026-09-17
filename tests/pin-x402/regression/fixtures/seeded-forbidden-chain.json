@@ -1,0 +1,70 @@
+{
+  "kind": "pin-source",
+  "label": "seeded-forbidden-casper",
+  "names": [
+    "@x402/core",
+    "@x402/evm",
+    "@x402/express",
+    "@x402/extensions",
+    "@x402/mcp",
+    "@x402/fetch"
+  ],
+  "declared": {
+    "@x402/core": "2.16.0",
+    "@x402/evm": "2.16.0",
+    "@x402/express": "2.16.0",
+    "@x402/extensions": "2.16.0",
+    "@x402/mcp": "2.16.0",
+    "@x402/fetch": "2.16.0",
+    "@x402/casper": "1.0.0",
+    "@x402/xrpl": "1.0.0"
+  },
+  "lockPackages": {
+    "": {
+      "dependencies": {
+        "@x402/core": "2.16.0",
+        "@x402/evm": "2.16.0",
+        "@x402/express": "2.16.0",
+        "@x402/extensions": "2.16.0",
+        "@x402/mcp": "2.16.0",
+        "@x402/casper": "1.0.0"
+      },
+      "devDependencies": {
+        "@x402/fetch": "2.16.0"
+      }
+    },
+    "node_modules/@x402/core": {
+      "version": "2.16.0",
+      "resolved": "https://registry.npmjs.org/@x402/core/-/core-2.16.0.tgz",
+      "integrity": "sha512-7MjwOEiE6ICAYtOsK9vQl66Ho4jERDuuoRg/No2Nc2GQ7y/M/yu4DJ65LzeBycQE+Qrg2RqQG7KR51tyT+hzjQ=="
+    },
+    "node_modules/@x402/evm": {
+      "version": "2.16.0",
+      "resolved": "https://registry.npmjs.org/@x402/evm/-/evm-2.16.0.tgz",
+      "integrity": "sha512-DGcwATWosIb3hmO/CfWASrn+xbxp7KQyzmMPcIW23XuDjo9YPVRElZWtHBur3euakdM021Hl8SPF1zR0G+W4hw=="
+    },
+    "node_modules/@x402/express": {
+      "version": "2.16.0",
+      "resolved": "https://registry.npmjs.org/@x402/express/-/express-2.16.0.tgz",
+      "integrity": "sha512-M3kAOy1oxHEsVVMNbuLhhb3S00p+O0k5T/O4f/m1D5txQrEpL4sQUHul9iVehp3a7K8uVMstkTyCJ+LO44HTtQ=="
+    },
+    "node_modules/@x402/extensions": {
+      "version": "2.16.0",
+      "resolved": "https://registry.npmjs.org/@x402/extensions/-/extensions-2.16.0.tgz",
+      "integrity": "sha512-LHh5QrvB1QwiPr2zFqzpJonmMGxqJq1nDHifihyqNx1lJvU3DQgYGxPuHXE2l6nxGG0chF0alA/BsidDHFie/A=="
+    },
+    "node_modules/@x402/mcp": {
+      "version": "2.16.0",
+      "resolved": "https://registry.npmjs.org/@x402/mcp/-/mcp-2.16.0.tgz",
+      "integrity": "sha512-VNCHByCQt9Kyu9V6fMENkKViP2sillgL8euhN73KOhBtvNB+mf9qHKjktTL9EqLbYOToZ1RmX26tM1n2W/JLRA=="
+    },
+    "node_modules/@x402/fetch": {
+      "version": "2.16.0",
+      "resolved": "https://registry.npmjs.org/@x402/fetch/-/fetch-2.16.0.tgz",
+      "integrity": "sha512-skW0XsWzi4NIfqCrY6KxhO3UEJ8qh4nBIKIgwWFCXFHNqRKYWZ7qcCI/DHy7cy3jdYs1MV4PoXX24rP3Umca1Q=="
+    },
+    "node_modules/@x402/casper": {
+      "version": "1.0.0"
+    }
+  }
+}

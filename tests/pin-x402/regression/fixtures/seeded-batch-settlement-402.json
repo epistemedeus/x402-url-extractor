@@ -1,0 +1,29 @@
+{
+  "label": "seeded-batch-settlement",
+  "kind": "sds-402",
+  "paymentRequired": {
+    "x402Version": 2,
+    "error": "Payment required to access this tool",
+    "resource": {
+      "url": "mcp://tool/enrich",
+      "mimeType": "application/json",
+      "serviceName": "x402-data-gateway",
+      "tags": ["enrichment"]
+    },
+    "accepts": [
+      {
+        "scheme": "batch-settlement",
+        "network": "eip155:8453",
+        "amount": "50000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+          "name": "USD Coin",
+          "version": "2",
+          "minDeposit": "1000"
+        }
+      }
+    ]
+  }
+}
