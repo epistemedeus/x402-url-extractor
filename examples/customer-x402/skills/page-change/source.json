@@ -1,0 +1,29 @@
+{
+  "name": "page-change",
+  "liveSkillUrl": "https://agents.samedaydesk.com/.well-known/skills/page-change/SKILL.md",
+  "liveSkillSha256": "24a197775f91a002027be506b8ba60afdd10bd7d165d8a629d0b38b5f707d13a",
+  "sourcePath": "plugins/samedaydesk-x402/skills/page-change/SKILL.md",
+  "sourcePin": "0153295c5851bf8f93fb27c77070a31417a59f69",
+  "files": ["SKILL.md"],
+  "pays": false,
+  "network": false,
+  "cli": "examples/customer-x402/bin/page-change.mjs",
+  "rejectedActions": [
+    {
+      "id": "purchase",
+      "reason": "page-change is an offline compare of two already delivered batch JSON files. It does not fetch, pay, retry, or schedule a second purchase."
+    },
+    {
+      "id": "fetch",
+      "reason": "page-change does not fetch URLs. Supply local --before and --after artifacts."
+    },
+    {
+      "id": "pay",
+      "reason": "page-change is not payment-capable. Do not send payment headers from this skill."
+    },
+    {
+      "id": "network",
+      "reason": "page-change is offline. No network call is required or allowed for the fixture job."
+    }
+  ]
+}
