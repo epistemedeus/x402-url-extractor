@@ -1,0 +1,11 @@
+{
+  "id": "checkout-mutation",
+  "expectReject": "checkout or payment mutation is a kill condition",
+  "kind": "checkout_mutation",
+  "payload": {
+    "method": "POST",
+    "url": "https://agents.samedaydesk.com/checkout",
+    "sku": "extract",
+    "price": "0.00"
+  }
+}

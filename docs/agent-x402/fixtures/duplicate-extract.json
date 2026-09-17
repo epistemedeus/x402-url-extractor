@@ -1,0 +1,12 @@
+{
+  "id": "duplicate-extract",
+  "expectReject": "tools/list missing or duplicate extract",
+  "kind": "inventory",
+  "payload": {
+    "tools": [
+      { "name": "extract" },
+      { "name": "extract" },
+      { "name": "extract_batch" }
+    ]
+  }
+}

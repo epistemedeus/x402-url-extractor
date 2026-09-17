@@ -1,0 +1,17 @@
+{
+  "id": "protocol-2026-07-28",
+  "expectReject": "protocolVersion 2026-07-28 is out of scope for unpaid discovery",
+  "kind": "initialize",
+  "payload": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "protocolVersion": "2026-07-28",
+      "capabilities": {},
+      "serverInfo": {
+        "name": "x402-data-gateway",
+        "version": "1.23.49"
+      }
+    }
+  }
+}
