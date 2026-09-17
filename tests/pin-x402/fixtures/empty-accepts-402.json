@@ -1,0 +1,13 @@
+{
+  "label": "seeded-empty-accepts",
+  "kind": "sds-402",
+  "paymentRequired": {
+    "x402Version": 2,
+    "error": "Payment required",
+    "resource": {
+      "url": "mcp://tool/enrich",
+      "mimeType": "application/json"
+    },
+    "accepts": []
+  }
+}
