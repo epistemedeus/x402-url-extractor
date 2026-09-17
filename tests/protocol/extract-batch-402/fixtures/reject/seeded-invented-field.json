@@ -1,0 +1,56 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.extract-batch-402.v1",
+  "id": "seeded-invented-field",
+  "expect": "reject",
+  "rejectCode": "invented_receipt_field",
+  "kind": "invented-field",
+  "request": {
+    "method": "POST",
+    "url": "https://agents.samedaydesk.com/extract/batch",
+    "headers": {
+      "accept": "application/json",
+      "content-type": "application/json"
+    },
+    "body": {
+      "urls": ["https://example.com/"]
+    }
+  },
+  "httpStatus": 402,
+  "challenge": {
+    "x402Version": 2,
+    "error": "Payment required",
+    "resource": {
+      "url": "https://agents.samedaydesk.com/extract/batch"
+    },
+    "accepts": [
+      {
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "10000",
+        "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+      }
+    ],
+    "extensions": {
+      "bazaar": {
+        "info": {
+          "input": {
+            "type": "http",
+            "method": "POST",
+            "bodyType": "json",
+            "body": {
+              "urls": ["https://example.com/"]
+            }
+          }
+        }
+      }
+    }
+  },
+  "receiptFields": ["loyaltyPoints"],
+  "claims": {
+    "loyaltyPoints": 42,
+    "buyerEmail": "agent@example.invalid"
+  },
+  "boundary": {
+    "paymentSent": false
+  }
+}

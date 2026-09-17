@@ -1,0 +1,113 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.extract-batch-402.v1",
+  "id": "native-post-extract-batch-402",
+  "expect": "pass",
+  "kind": "native-post-batch",
+  "observedAt": "2026-09-17T12:41:26Z",
+  "request": {
+    "method": "POST",
+    "url": "https://agents.samedaydesk.com/extract/batch",
+    "headers": {
+      "accept": "application/json",
+      "content-type": "application/json"
+    },
+    "body": {
+      "urls": ["https://example.com/"],
+      "fields": ["title"]
+    }
+  },
+  "httpStatus": 402,
+  "challenge": {
+    "x402Version": 2,
+    "error": "Payment required",
+    "resource": {
+      "url": "https://agents.samedaydesk.com/extract/batch",
+      "mimeType": "application/json",
+      "serviceName": "SameDayDesk"
+    },
+    "accepts": [
+      {
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "10000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+        "maxTimeoutSeconds": 300,
+        "maxAmountRequired": "10000"
+      }
+    ],
+    "extensions": {
+      "offer-receipt": {
+        "info": {
+          "offers": [
+            {
+              "format": "eip712",
+              "acceptIndex": 0,
+              "payload": {
+                "version": 1,
+                "resourceUrl": "https://agents.samedaydesk.com/extract/batch",
+                "scheme": "exact",
+                "network": "eip155:8453",
+                "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+                "amount": "10000"
+              }
+            }
+          ]
+        }
+      },
+      "bazaar": {
+        "info": {
+          "input": {
+            "type": "http",
+            "method": "POST",
+            "bodyType": "json",
+            "body": {
+              "urls": ["https://example.com/"],
+              "fields": ["title", "description", "headings"]
+            }
+          },
+          "output": {
+            "type": "json",
+            "example": {
+              "ok": true,
+              "product": "samedaydesk-extract-batch",
+              "quote": {
+                "amountAtomic": "10000",
+                "displayUsdc": "0.01"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "openapi": {
+    "path": "/extract/batch",
+    "method": "post",
+    "operationId": "extractPublicUrlsBatch",
+    "paymentRequiredDescription": "payment required (x402 or MPP, $0.01 introductory flat batch quote)",
+    "priceAmount": "0.01"
+  },
+  "wellKnown": {
+    "requestMethod": "POST",
+    "routeTemplate": "/extract/batch",
+    "amount": "10000"
+  },
+  "mcp": {
+    "extract_batch": {
+      "paymentRequired": true,
+      "amount": "10000"
+    },
+    "extract": {
+      "paymentRequired": true,
+      "amount": "5000"
+    },
+    "amount": "10000"
+  },
+  "boundary": {
+    "paymentSent": false,
+    "paymentSignature": false,
+    "published": false
+  }
+}

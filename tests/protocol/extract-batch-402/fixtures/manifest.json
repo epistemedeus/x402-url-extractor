@@ -1,0 +1,61 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.extract-batch-402.v1",
+  "scope": "Native POST /extract/batch unpaid 402 amount 10000 with bazaar.info.input.method POST. Not a GET /extract rewrite (R6-02 unsupported_target). No payment, no publish, no bazaar-tracker --live, no owner CDP.",
+  "spec": {
+    "x402Version": 2,
+    "method": "POST",
+    "path": "/extract/batch",
+    "amountAtomic": "10000",
+    "extractGetAmountAtomic": "5000",
+    "seededFailure": "not_extract_rewrite"
+  },
+  "fixtures": [
+    {
+      "id": "native-post-extract-batch-402",
+      "path": "pass/native-post-extract-batch-402.json",
+      "expect": "pass",
+      "kind": "native-post-batch"
+    },
+    {
+      "id": "well-known-x402-batch-post",
+      "path": "pass/well-known-x402-batch-post.json",
+      "expect": "pass",
+      "kind": "well-known-post"
+    },
+    {
+      "id": "seeded-get-extract-rewrite",
+      "path": "reject/seeded-get-extract-rewrite.json",
+      "expect": "reject",
+      "rejectCode": "not_extract_rewrite",
+      "kind": "seeded-failure"
+    },
+    {
+      "id": "seeded-rewrite-presented-as-native",
+      "path": "reject/seeded-rewrite-presented-as-native.json",
+      "expect": "reject",
+      "rejectCode": "not_extract_rewrite",
+      "kind": "get-extract-rewrite"
+    },
+    {
+      "id": "seeded-amount-mismatch",
+      "path": "reject/seeded-amount-mismatch.json",
+      "expect": "reject",
+      "rejectCode": "amount_mismatch",
+      "kind": "amount-copy"
+    },
+    {
+      "id": "seeded-invented-field",
+      "path": "reject/seeded-invented-field.json",
+      "expect": "reject",
+      "rejectCode": "invented_receipt_field",
+      "kind": "invented-field"
+    },
+    {
+      "id": "seeded-absence-as-demand",
+      "path": "reject/seeded-absence-as-demand.json",
+      "expect": "reject",
+      "rejectCode": "treat_absence_as_demand",
+      "kind": "absence-as-demand"
+    }
+  ]
+}
