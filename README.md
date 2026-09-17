@@ -1217,6 +1217,9 @@ curl -i 'http://localhost:3000/defi/morpho-position?address=0x...' # HTTP 402
 - `examples/customer-x402/` — credential-free preflight plus explicitly
   authorized `@x402/fetch` purchase example for `POST /extract/batch`
   (default) and backward-compatible `GET /extract`.
+- `examples/langchain-unpaid-list/` — credential-free LangChain tool that lists
+  advertised x402 resources from a well-known catalog. Default is a local
+  fixture; it never signs or sends payment headers.
 - `README.md` — this guide.
 - `extract.mjs` — pre-existing zero-dependency "URL → clean structured data"
   service. This is a natural **paid resource** to put behind `/premium`: in the
