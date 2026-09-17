@@ -1,0 +1,80 @@
+{
+  "surface": "mcp-unpaid-discovery",
+  "protocolVersion": "2025-11-25",
+  "forbiddenProtocol": "2026-07-28",
+  "forbiddenScheme": "batch-settlement",
+  "failures": [
+    {
+      "id": "batch-settlement",
+      "kind": "cli",
+      "fixture": "batch-settlement.json",
+      "expect": {
+        "exitNonZero": true,
+        "outputMatches": "batch-settlement scheme is forbidden for unpaid MCP discovery"
+      }
+    },
+    {
+      "id": "tools-call-paid",
+      "kind": "cli",
+      "fixture": "tools-call-paid.json",
+      "expect": {
+        "exitNonZero": true,
+        "outputMatches": "tools/call with payment is paid; unpaid discovery does not settle"
+      }
+    },
+    {
+      "id": "payment-header-initialize",
+      "kind": "cli",
+      "fixture": "payment-header-initialize.json",
+      "expect": {
+        "exitNonZero": true,
+        "outputMatches": "payment headers are forbidden on unpaid discovery"
+      }
+    },
+    {
+      "id": "mcp-method-header",
+      "kind": "cli",
+      "fixture": "mcp-method-header.json",
+      "expect": {
+        "exitNonZero": true,
+        "outputMatches": "Mcp-Method header is forbidden on initialize-era discovery"
+      }
+    },
+    {
+      "id": "registry-publish",
+      "kind": "cli",
+      "fixture": "registry-publish.json",
+      "expect": {
+        "exitNonZero": true,
+        "outputMatches": "registry publish is a kill condition"
+      }
+    },
+    {
+      "id": "missing-extract",
+      "kind": "document",
+      "fixture": "missing-extract.json",
+      "expect": {
+        "exitNonZero": true,
+        "outputMatches": "tools/list missing or duplicate extract"
+      }
+    },
+    {
+      "id": "protocol-2026-07-28",
+      "kind": "document",
+      "fixture": "protocol-2026-07-28.json",
+      "expect": {
+        "exitNonZero": true,
+        "outputMatches": "protocolVersion 2026-07-28 is out of scope for unpaid discovery"
+      }
+    },
+    {
+      "id": "checkout-mutation",
+      "kind": "document",
+      "fixture": "checkout-mutation.json",
+      "expect": {
+        "exitNonZero": true,
+        "outputMatches": "checkout or payment mutation is a kill condition"
+      }
+    }
+  ]
+}

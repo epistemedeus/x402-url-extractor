@@ -1,0 +1,18 @@
+{
+  "id": "payment-header-initialize",
+  "expectReject": "payment headers are forbidden on unpaid discovery",
+  "kind": "rpc",
+  "headers": {
+    "PAYMENT-SIGNATURE": "e30="
+  },
+  "payload": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2025-11-25",
+      "capabilities": {},
+      "clientInfo": { "name": "samedaydesk-agent-x402-howto", "version": "0.1.0" }
+    }
+  }
+}

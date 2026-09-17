@@ -1,0 +1,11 @@
+{
+  "id": "checkout-mutation",
+  "expectReject": "checkout or payment mutation is a kill condition",
+  "kind": "checkout_mutation",
+  "payload": {
+    "action": "checkout",
+    "sku": "extract",
+    "newPrice": "$0.00",
+    "url": "https://example.invalid/checkout"
+  }
+}

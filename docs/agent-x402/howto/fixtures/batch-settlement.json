@@ -1,0 +1,16 @@
+{
+  "id": "batch-settlement",
+  "expectReject": "batch-settlement scheme is forbidden for unpaid MCP discovery",
+  "kind": "offer",
+  "payload": {
+    "x402Version": 2,
+    "error": "Payment required",
+    "accepts": [
+      {
+        "scheme": "batch-settlement",
+        "network": "eip155:8453",
+        "resource": { "url": "https://agents.samedaydesk.com/extract" }
+      }
+    ]
+  }
+}
