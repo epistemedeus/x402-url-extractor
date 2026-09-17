@@ -1,0 +1,66 @@
+{
+  "id": "unknown-quarantine",
+  "title": "Unknown settlement is quarantined; retry and restart must not settle again",
+  "expect": "pass",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "paymentIdentity": {
+    "id": "dblsettle_guard_unk1",
+    "payer": "0x14791697260E4c9A71f18484C9f997B308e59325"
+  },
+  "settleCount": 1,
+  "verifyCount": 1,
+  "markerBeforeSettle": true,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false
+    },
+    {
+      "seq": 2,
+      "phase": "first-paid",
+      "httpStatus": 402,
+      "settleDelta": 1,
+      "verifyDelta": 1,
+      "markerBeforeSettle": true,
+      "hasPaymentResponse": false,
+      "paymentPresent": true,
+      "errorReason": "unknown_settlement"
+    },
+    {
+      "seq": 3,
+      "phase": "retry",
+      "httpStatus": 503,
+      "replay": null,
+      "idempotency": "in_flight",
+      "newSettlementAttempt": false,
+      "charged": null,
+      "error": "payment_execution_in_flight_or_unknown",
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": true
+    },
+    {
+      "seq": 4,
+      "phase": "restart-retry",
+      "httpStatus": 503,
+      "newSettlementAttempt": false,
+      "charged": null,
+      "error": "payment_execution_in_flight_or_unknown",
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": true
+    }
+  ]
+}

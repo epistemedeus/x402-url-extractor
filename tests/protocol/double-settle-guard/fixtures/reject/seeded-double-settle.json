@@ -1,0 +1,55 @@
+{
+  "id": "seeded-double-settle",
+  "title": "Seeded failure: same x402 payment identity settled twice",
+  "expect": "reject",
+  "rejectCode": "double_settle",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "paymentIdentity": {
+    "id": "shared_replay_1234567890",
+    "payer": "0x1111111111111111111111111111111111111111",
+    "nonce": "0x5555555555555555555555555555555555555555555555555555555555555555"
+  },
+  "claims": {
+    "ok": true,
+    "doubleSettle": false,
+    "message": "settlement complete"
+  },
+  "settleCount": 2,
+  "verifyCount": 2,
+  "markerBeforeSettle": true,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "first-paid",
+      "httpStatus": 200,
+      "replay": null,
+      "settleDelta": 1,
+      "verifyDelta": 1,
+      "markerBeforeSettle": true,
+      "hasPaymentResponse": true,
+      "paymentPresent": true,
+      "transaction": "0x3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+      "seq": 2,
+      "phase": "retry",
+      "httpStatus": 200,
+      "replay": null,
+      "newSettlementAttempt": true,
+      "settleDelta": 1,
+      "verifyDelta": 1,
+      "markerBeforeSettle": true,
+      "hasPaymentResponse": true,
+      "paymentPresent": true,
+      "transaction": "0x4444444444444444444444444444444444444444444444444444444444444444"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "id": "seeded-unknown-retry-settle",
+  "title": "Seeded failure: unknown settlement retried with a second facilitator settle",
+  "expect": "reject",
+  "rejectCode": "unknown_retry_settle",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "paymentIdentity": {
+    "id": "unknown_retry_1234567890",
+    "payer": "0x1111111111111111111111111111111111111111"
+  },
+  "claims": {
+    "ok": true,
+    "doubleSettle": false
+  },
+  "settleCount": 2,
+  "verifyCount": 2,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "first-paid",
+      "httpStatus": 402,
+      "settleDelta": 1,
+      "verifyDelta": 1,
+      "markerBeforeSettle": true,
+      "hasPaymentResponse": false,
+      "paymentPresent": true,
+      "errorReason": "unknown_settlement"
+    },
+    {
+      "seq": 2,
+      "phase": "retry",
+      "httpStatus": 200,
+      "newSettlementAttempt": true,
+      "settleDelta": 1,
+      "verifyDelta": 1,
+      "markerBeforeSettle": true,
+      "hasPaymentResponse": true,
+      "paymentPresent": true,
+      "transaction": "0x3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  ]
+}

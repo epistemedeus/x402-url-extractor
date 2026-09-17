@@ -1,0 +1,65 @@
+{
+  "id": "replay-after-success",
+  "title": "Same x402 payment identity replays after success without a second settle",
+  "expect": "pass",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "paymentIdentity": {
+    "id": "dblsettle_guard_ok1",
+    "payer": "0x14791697260E4c9A71f18484C9f997B308e59325"
+  },
+  "settleCount": 1,
+  "verifyCount": 1,
+  "markerBeforeSettle": true,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false
+    },
+    {
+      "seq": 2,
+      "phase": "first-paid",
+      "httpStatus": 200,
+      "replay": null,
+      "settleDelta": 1,
+      "verifyDelta": 1,
+      "markerBeforeSettle": true,
+      "hasPaymentResponse": true,
+      "paymentPresent": true,
+      "transaction": "0x3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+      "seq": 3,
+      "phase": "retry",
+      "httpStatus": 200,
+      "replay": "hit",
+      "newSettlementAttempt": false,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": true,
+      "paymentPresent": true
+    },
+    {
+      "seq": 4,
+      "phase": "restart-retry",
+      "httpStatus": 200,
+      "replay": "hit",
+      "newSettlementAttempt": false,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": true,
+      "paymentPresent": true
+    }
+  ]
+}
