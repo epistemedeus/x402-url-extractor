@@ -1,0 +1,56 @@
+{
+  "id": "seeded-payment-required-header",
+  "title": "Seeded failure: MCP unpaid tools/call must not be a Payment-Required header hop",
+  "expect": "reject",
+  "rejectCode": "payment_required_header_present",
+  "kind": "mcp-tools-call-unpaid",
+  "method": "tools/call",
+  "note": "SEEDING FAILURE: a Payment-Required header is not the SDS MCP unpaid tools/call shape.",
+  "request": {
+    "method": "tools/call",
+    "params": {
+      "name": "extract",
+      "arguments": { "url": "https://example.com" }
+    },
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 200,
+    "headers": {
+      "content-type": "application/json",
+      "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwicmVzb3VyY2UiOnsidXJsIjoibWNwOi8vdG9vbC9leHRyYWN0In19"
+    },
+    "headerNames": [
+      "content-type",
+      "payment-required"
+    ],
+    "hasPaymentRequiredHeader": true,
+    "jsonrpc": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+        "isError": true,
+        "structuredContent": {
+          "x402Version": 2,
+          "error": "Payment required to access this tool",
+          "resource": { "url": "mcp://tool/extract" },
+          "accepts": [
+            {
+              "scheme": "exact",
+              "network": "eip155:8453",
+              "amount": "5000",
+              "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+              "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "successProven": false,
+    "settlement": false
+  }
+}

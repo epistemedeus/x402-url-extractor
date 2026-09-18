@@ -1,0 +1,72 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.mcp-unpaid-iserror.v1",
+  "scope": "MCP tools/call unpaid challenge is HTTP 200 isError with mcp://tool/extract, not HTTP 402 and not paid delivery. No Payment-Required header. No PAYMENT-SIGNATURE.",
+  "spec": {
+    "x402Version": 2,
+    "mcp": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools",
+    "research": "epistemedeus/pilot#193 @ 606d41e047cb55ab16cdb09750ea381a646a4885 R11-402-02"
+  },
+  "fixtures": [
+    {
+      "id": "live-unpaid-tools-list",
+      "path": "pass/live-unpaid-tools-list.json",
+      "expect": "pass",
+      "kind": "mcp-tools-list-unpaid"
+    },
+    {
+      "id": "live-unpaid-tools-call",
+      "path": "pass/live-unpaid-tools-call.json",
+      "expect": "pass",
+      "kind": "mcp-tools-call-unpaid"
+    },
+    {
+      "id": "seeded-http-200-as-charged",
+      "path": "reject/seeded-http-200-as-charged.json",
+      "expect": "reject",
+      "rejectCode": "http_200_classified_as_charged",
+      "kind": "seeded-failure"
+    },
+    {
+      "id": "seeded-payment-required-header",
+      "path": "reject/seeded-payment-required-header.json",
+      "expect": "reject",
+      "rejectCode": "payment_required_header_present",
+      "kind": "seeded-payment-required-header"
+    },
+    {
+      "id": "seeded-invented-field",
+      "path": "reject/seeded-invented-field.json",
+      "expect": "reject",
+      "rejectCode": "invented_receipt_field",
+      "kind": "seeded-invented-field"
+    },
+    {
+      "id": "seeded-amount-mismatch",
+      "path": "reject/seeded-amount-mismatch.json",
+      "expect": "reject",
+      "rejectCode": "amount_mismatch",
+      "kind": "seeded-amount-mismatch"
+    },
+    {
+      "id": "seeded-verify-on-unpaid",
+      "path": "reject/seeded-verify-on-unpaid.json",
+      "expect": "reject",
+      "rejectCode": "verify_on_unpaid",
+      "kind": "seeded-verify-on-unpaid"
+    },
+    {
+      "id": "seeded-asset-mismatch",
+      "path": "reject/seeded-asset-mismatch.json",
+      "expect": "reject",
+      "rejectCode": "asset_mismatch",
+      "kind": "seeded-asset-mismatch"
+    },
+    {
+      "id": "seeded-x402-version-mismatch",
+      "path": "reject/seeded-x402-version-mismatch.json",
+      "expect": "reject",
+      "rejectCode": "x402_version_mismatch",
+      "kind": "seeded-x402-version-mismatch"
+    }
+  ]
+}

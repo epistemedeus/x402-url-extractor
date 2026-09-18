@@ -1,0 +1,88 @@
+{
+  "id": "live-unpaid-tools-call",
+  "title": "Live SDS POST /mcp tools/call extract unpaid is HTTP 200 isError, not settlement",
+  "expect": "pass",
+  "kind": "mcp-tools-call-unpaid",
+  "method": "tools/call",
+  "observedAt": "2026-09-17T12:44:40Z",
+  "origin": "https://agents.samedaydesk.com/mcp",
+  "serviceVersion": "1.23.49",
+  "request": {
+    "method": "tools/call",
+    "params": {
+      "name": "extract",
+      "arguments": { "url": "https://example.com" }
+    },
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 200,
+    "headers": {
+      "content-type": "text/event-stream",
+      "cache-control": "no-cache, no-transform"
+    },
+    "headerNames": [
+      "cache-control",
+      "connection",
+      "content-type",
+      "date",
+      "link",
+      "server",
+      "transfer-encoding",
+      "x-accel-buffering",
+      "x-hikari-trace",
+      "x-powered-by",
+      "x-railway-edge",
+      "x-railway-request-id"
+    ],
+    "hasPaymentRequiredHeader": false,
+    "jsonrpc": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+        "isError": true,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"x402Version\":2,\"error\":\"Payment required to access this tool\",\"resource\":{\"url\":\"mcp://tool/extract\",\"mimeType\":\"application/json\",\"serviceName\":\"x402-data-gateway\"},\"accepts\":[{\"scheme\":\"exact\",\"network\":\"eip155:8453\",\"amount\":\"5000\",\"asset\":\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\"payTo\":\"0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee\"}]}"
+          }
+        ],
+        "structuredContent": {
+          "x402Version": 2,
+          "error": "Payment required to access this tool",
+          "resource": {
+            "url": "mcp://tool/extract",
+            "mimeType": "application/json",
+            "serviceName": "x402-data-gateway",
+            "tags": ["web", "extract", "structured-data"]
+          },
+          "accepts": [
+            {
+              "scheme": "exact",
+              "network": "eip155:8453",
+              "amount": "5000",
+              "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+              "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+              "maxTimeoutSeconds": 300,
+              "extra": {
+                "name": "USD Coin",
+                "version": "2"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "successProven": false,
+    "settlement": false
+  },
+  "counters": {
+    "handler": 0,
+    "verify": 0,
+    "settle": 0
+  }
+}
