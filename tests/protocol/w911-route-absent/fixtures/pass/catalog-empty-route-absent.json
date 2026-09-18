@@ -1,0 +1,72 @@
+{
+  "id": "catalog-empty-route-absent",
+  "title": "Empty catalogs for POST /lockfile-pin-delta are checked route_absent, not demand",
+  "expect": "pass",
+  "kind": "catalog-empty-route-absent",
+  "observedAt": "2026-09-18T00:00:00.000Z",
+  "origin": "https://agents.samedaydesk.com",
+  "request": {
+    "origin": "https://agents.samedaydesk.com",
+    "route": "/lockfile-pin-delta",
+    "expectedPriceUsd": "0.005",
+    "paymentSignatureSent": false,
+    "paymentSent": false
+  },
+  "observation": {
+    "route": "/lockfile-pin-delta",
+    "expectedPriceAtomic": "5000",
+    "targetFound": false,
+    "expectedRouteFound": false,
+    "priceStatuses": {
+      "coinbase-bazaar": "route_absent",
+      "coinbase-agentic-market": "route_absent",
+      "agent402-router": "route_absent",
+      "circle-marketplace": "route_absent",
+      "agentictrade-catalog": "route_absent",
+      "official-mpp-catalog": "route_absent",
+      "mppscan-public-search": "route_absent",
+      "payanagent-public-search": "route_absent",
+      "x402jobs-public-search": "route_absent",
+      "8004market-public-search": "route_absent"
+    },
+    "identityStatuses": {
+      "coinbase-bazaar": "route_absent",
+      "coinbase-agentic-market": "route_absent",
+      "agent402-router": "route_absent",
+      "circle-marketplace": "route_absent",
+      "agentictrade-catalog": "route_absent",
+      "official-mpp-catalog": "route_absent",
+      "mppscan-public-search": "route_absent",
+      "payanagent-public-search": "route_absent",
+      "x402jobs-public-search": "route_absent",
+      "8004market-public-search": "route_absent"
+    },
+    "identityDecisions": {
+      "coinbase-bazaar": "absent",
+      "coinbase-agentic-market": "absent",
+      "agent402-router": "absent",
+      "circle-marketplace": "absent",
+      "agentictrade-catalog": "absent",
+      "official-mpp-catalog": "absent",
+      "mppscan-public-search": "absent",
+      "payanagent-public-search": "absent",
+      "x402jobs-public-search": "absent",
+      "8004market-public-search": "absent"
+    },
+    "findings": [
+      "target_absent_from_ranked_results"
+    ],
+    "paymentSent": false,
+    "paymentSignatureSent": false
+  },
+  "claims": {
+    "demand": false,
+    "charged": false,
+    "matched": false,
+    "settlement": false
+  },
+  "counters": {
+    "verify": 0,
+    "settle": 0
+  }
+}

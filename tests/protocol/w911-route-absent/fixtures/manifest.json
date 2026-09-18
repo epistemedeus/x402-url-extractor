@@ -1,0 +1,65 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.w911-route-absent.v1",
+  "scope": "w911: x402 route_absent is a checked catalog/merchant miss, not demand, not HTTP 402, not matched price, not settlement. Flag-off POST /lockfile-pin-delta is HTTP 404. No Payment-Required header. No PAYMENT-SIGNATURE.",
+  "spec": {
+    "x402Version": 2,
+    "workItem": "w911",
+    "status": "route_absent",
+    "finding": "origin_found_expected_route_absent"
+  },
+  "fixtures": [
+    {
+      "id": "catalog-empty-route-absent",
+      "path": "pass/catalog-empty-route-absent.json",
+      "expect": "pass",
+      "kind": "catalog-empty-route-absent"
+    },
+    {
+      "id": "origin-found-expected-route-absent",
+      "path": "pass/origin-found-expected-route-absent.json",
+      "expect": "pass",
+      "kind": "origin-found-expected-route-absent"
+    },
+    {
+      "id": "merchant-flag-off-404",
+      "path": "pass/merchant-flag-off-404.json",
+      "expect": "pass",
+      "kind": "merchant-flag-off"
+    },
+    {
+      "id": "seeded-route-absent-as-demand",
+      "path": "reject/seeded-route-absent-as-demand.json",
+      "expect": "reject",
+      "rejectCode": "route_absent_classified_as_demand",
+      "kind": "seeded-failure"
+    },
+    {
+      "id": "seeded-route-absent-as-matched",
+      "path": "reject/seeded-route-absent-as-matched.json",
+      "expect": "reject",
+      "rejectCode": "route_absent_classified_as_matched",
+      "kind": "seeded-route-absent-as-matched"
+    },
+    {
+      "id": "seeded-route-absent-as-charged",
+      "path": "reject/seeded-route-absent-as-charged.json",
+      "expect": "reject",
+      "rejectCode": "route_absent_classified_as_charged",
+      "kind": "seeded-route-absent-as-charged"
+    },
+    {
+      "id": "seeded-404-as-402",
+      "path": "reject/seeded-404-as-402.json",
+      "expect": "reject",
+      "rejectCode": "absence_treated_as_402",
+      "kind": "seeded-404-as-402"
+    },
+    {
+      "id": "seeded-origin-found-as-demand",
+      "path": "reject/seeded-origin-found-as-demand.json",
+      "expect": "reject",
+      "rejectCode": "route_absent_classified_as_demand",
+      "kind": "seeded-origin-found-as-demand"
+    }
+  ]
+}
