@@ -1,17 +1,10 @@
 #!/usr/bin/env node
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
-
-import { FORBIDDEN_FLAGS, OUTCOMES } from "../src/constants.mjs";
+import { FORBIDDEN_FLAGS, OUTCOMES, REJECTION_KINDS } from "../src/constants.mjs";
 import { UnpaidCallError } from "../src/errors.mjs";
 import { loadFixture } from "../src/fixture.mjs";
 import { runLoopbackUnpaidCall } from "../src/loopback.mjs";
 import { SDK_METHOD, SDK_PACKAGE, SDK_VERSION } from "../src/pins.mjs";
-import { safeJson } from "../src/redact.mjs";
-
-const ROOT = dirname(fileURLToPath(import.meta.url));
-const DEFAULT_FIXTURE = join(ROOT, "..", "fixtures", "unpaid-call-is-error.json");
-const SEEDED_FAILURE = join(ROOT, "..", "fixtures", "hostile", "is-error-false.json");
+import { assertNoSecretMaterial, safeJson } from "../src/redact.mjs";
 
 function usage(exitCode = 0) {
   const text = `SameDayDesk OpenAI Agents unpaid-call example
@@ -47,15 +40,24 @@ function parseArgs(argv) {
     const arg = argv[i];
     if (arg === "--help" || arg === "-h") args.help = true;
     else if (arg === "--fixture") {
-      args.fixture = argv[++i];
-      if (!args.fixture) throw new UnpaidCallError("--fixture requires a path", { kind: "invalid_shape" });
+      const value = argv[++i];
+      if (!value) {
+        throw new UnpaidCallError("--fixture requires a path", { kind: REJECTION_KINDS.INVALID_SHAPE });
+      }
+      if (FORBIDDEN_FLAGS.includes(value) || value.startsWith("--live") || value.startsWith("--pay") || value.startsWith("-")) {
+        throw new UnpaidCallError(
+          `refused flag ${value}. This example never pays, publishes, or calls a live merchant.`,
+          { kind: REJECTION_KINDS.FORBIDDEN_FLAG },
+        );
+      }
+      args.fixture = value;
     } else if (FORBIDDEN_FLAGS.includes(arg) || arg.startsWith("--live") || arg.startsWith("--pay")) {
       throw new UnpaidCallError(
         `refused flag ${arg}. This example never pays, publishes, or calls a live merchant.`,
-        { kind: "forbidden_flag" },
+        { kind: REJECTION_KINDS.FORBIDDEN_FLAG },
       );
     } else {
-      throw new UnpaidCallError(`unknown argument: ${arg}`, { kind: "invalid_shape" });
+      throw new UnpaidCallError(`unknown argument: ${arg}`, { kind: REJECTION_KINDS.INVALID_SHAPE });
     }
   }
   return args;
@@ -67,10 +69,13 @@ async function main() {
   const report = args.fixture
     ? loadFixture(args.fixture)
     : await runLoopbackUnpaidCall();
-  console.log(safeJson(report));
+  const text = safeJson(report);
+  assertNoSecretMaterial(text);
+  console.log(text);
   if (report.outcome !== OUTCOMES.UNPAID_CALL_IS_ERROR || report.isError !== true) {
-    process.exitCode = 1;
+    process.exit(1);
   }
+  process.exit(0);
 }
 
 main().catch((error) => {
@@ -84,7 +89,5 @@ main().catch((error) => {
     message: error?.message || String(error),
   };
   console.log(safeJson(payload));
-  process.exitCode = 1;
+  process.exit(1);
 });
-
-export { DEFAULT_FIXTURE, SEEDED_FAILURE };

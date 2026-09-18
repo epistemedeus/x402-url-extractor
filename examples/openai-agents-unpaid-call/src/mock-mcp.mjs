@@ -43,17 +43,28 @@ function readBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let bytes = 0;
+    let settled = false;
+    const done = (error, value) => {
+      if (settled) return;
+      settled = true;
+      if (error) reject(error);
+      else resolve(value);
+    };
     req.on("data", (chunk) => {
       bytes += chunk.length;
       if (bytes > 64 * 1024) {
         req.destroy();
-        reject(new Error("request too large"));
+        done(new Error("request too large"));
         return;
       }
       chunks.push(chunk);
     });
-    req.on("end", () => resolve(Buffer.concat(chunks)));
-    req.on("error", reject);
+    req.on("end", () => done(null, Buffer.concat(chunks)));
+    req.on("error", (error) => done(error));
+    req.on("aborted", () => done(new Error("request aborted")));
+    req.on("close", () => {
+      if (!req.complete) done(new Error("request closed"));
+    });
   });
 }
 
@@ -176,15 +187,13 @@ function handleMessage(message, session) {
   };
 }
 
-/**
- * Loopback-only Streamable HTTP MCP. Never binds a public interface, never pays.
- */
 export async function startUnpaidMockMcp({ host = "127.0.0.1" } = {}) {
   if (host !== "127.0.0.1" && host !== "::1") {
     fail("mock MCP binds loopback only", { kind: REJECTION_KINDS.FORBIDDEN_URL });
   }
 
   const sessions = new Map();
+  const sseTimers = new Set();
 
   const server = createServer(async (req, res) => {
     try {
@@ -216,8 +225,10 @@ export async function startUnpaidMockMcp({ host = "127.0.0.1" } = {}) {
           if (res.writableEnded) return;
           res.write(": keepalive\n\n");
         }, 15_000);
+        sseTimers.add(timer);
         req.on("close", () => {
           clearInterval(timer);
+          sseTimers.delete(timer);
           try { res.end(); } catch { /* ignore */ }
         });
         return;
@@ -290,13 +301,19 @@ export async function startUnpaidMockMcp({ host = "127.0.0.1" } = {}) {
 
   const address = server.address();
   const port = address.port;
-  const origin = `http://${host}:${port}`;
+  const hostname = host.includes(":") ? `[${host}]` : host;
+  const origin = `http://${hostname}:${port}`;
   return {
     origin,
     url: `${origin}/mcp`,
     host,
     port,
     async close() {
+      for (const timer of sseTimers) clearInterval(timer);
+      sseTimers.clear();
+      if (typeof server.closeAllConnections === "function") {
+        server.closeAllConnections();
+      }
       await new Promise((resolve, reject) => {
         server.close((error) => (error ? reject(error) : resolve()));
       });

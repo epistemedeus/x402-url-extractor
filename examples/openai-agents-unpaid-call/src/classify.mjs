@@ -1,4 +1,4 @@
-import { BOUNDARY, OUTCOMES, PAYMENT_META_KEYS, REJECTION_KINDS } from "./constants.mjs";
+import { BOUNDARY, OUTCOMES, REJECTION_KINDS } from "./constants.mjs";
 import { fail } from "./errors.mjs";
 import {
   PRODUCT,
@@ -14,9 +14,24 @@ function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function hasPaymentMeta(value) {
-  if (!isPlainObject(value)) return false;
-  return PAYMENT_META_KEYS.some((key) => Object.hasOwn(value, key) && value[key] != null);
+function paymentMetaKind(value) {
+  if (!isPlainObject(value)) return null;
+  if (Object.hasOwn(value, "x402/payment") && value["x402/payment"] != null) {
+    return REJECTION_KINDS.PAYMENT_ATTACHED;
+  }
+  if (Object.hasOwn(value, "x402/payment-response") && value["x402/payment-response"] != null) {
+    return REJECTION_KINDS.SETTLEMENT_EVIDENCE;
+  }
+  return null;
+}
+
+function rejectPaymentMeta(value, where) {
+  const kind = paymentMetaKind(value);
+  if (!kind) return;
+  fail(
+    `Payment metadata in ${where} is outside this unpaid example. Do not attach x402/payment or treat settlement evidence as unpaid isError.`,
+    { kind },
+  );
 }
 
 function paymentRequiredBody(result) {
@@ -32,18 +47,36 @@ function paymentRequiredBody(result) {
   }
 }
 
-function isPaymentRequired(body) {
-  return Boolean(
-    body
-    && Number.isInteger(body.x402Version)
-    && Array.isArray(body.accepts),
-  );
+function assertContentMatchesStructured(envelope) {
+  if (!isPlainObject(envelope.structuredContent)) return;
+  const text = envelope.content?.[0]?.text;
+  if (typeof text !== "string") return;
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    fail("content text must be JSON matching structuredContent", {
+      kind: REJECTION_KINDS.INVALID_SHAPE,
+    });
+  }
+  if (JSON.stringify(parsed) !== JSON.stringify(envelope.structuredContent)) {
+    fail("content text must match structuredContent", {
+      kind: REJECTION_KINDS.INVALID_SHAPE,
+    });
+  }
 }
 
-/**
- * Classify an OpenAI Agents MCP callToolResult (or a JSON-RPC envelope).
- * Unpaid x402 is a *result* with isError:true, never a protocol error, never paid.
- */
+function normalizeAccept(item) {
+  if (!isPlainObject(item)) return null;
+  const scheme = typeof item.scheme === "string" ? item.scheme.trim() : "";
+  const network = typeof item.network === "string" ? item.network.trim() : "";
+  const amount = typeof item.amount === "string" || typeof item.amount === "number"
+    ? String(item.amount)
+    : "";
+  if (!scheme || !network || !amount) return null;
+  return { scheme, network, amount };
+}
+
 export function classifyUnpaidCall({
   result,
   requestMeta = null,
@@ -67,13 +100,9 @@ export function classifyUnpaidCall({
     });
   }
 
-  if (hasPaymentMeta(requestMeta) || hasPaymentMeta(envelope._meta)) {
-    const attached = hasPaymentMeta(requestMeta) ? "request _meta" : "result _meta";
-    fail(
-      `Payment metadata in ${attached} is outside this unpaid example. Do not attach x402/payment or treat settlement evidence as unpaid isError.`,
-      { kind: hasPaymentMeta(requestMeta) ? REJECTION_KINDS.PAYMENT_ATTACHED : REJECTION_KINDS.SETTLEMENT_EVIDENCE },
-    );
-  }
+  rejectPaymentMeta(requestMeta, "request _meta");
+  rejectPaymentMeta(envelope._meta, "result _meta");
+  rejectPaymentMeta(envelope.structuredContent, "structuredContent");
 
   const isErrorPreserved = Object.hasOwn(envelope, "isError");
   if (!isErrorPreserved) {
@@ -90,27 +119,32 @@ export function classifyUnpaidCall({
     );
   }
 
+  assertContentMatchesStructured(envelope);
+
   const body = paymentRequiredBody(envelope);
-  if (!isPaymentRequired(body)) {
+  if (!body || body.x402Version !== 2 || !Array.isArray(body.accepts)) {
     fail(
-      "isError:true without PaymentRequired structuredContent (x402Version + accepts) is not an unpaid x402 challenge.",
+      "isError:true without PaymentRequired structuredContent (x402Version 2 + accepts) is not an unpaid x402 challenge.",
       { kind: REJECTION_KINDS.MISSING_PAYMENT_REQUIRED },
     );
   }
+  rejectPaymentMeta(body, "PaymentRequired body");
   if (body.accepts.length === 0) {
     fail("PaymentRequired accepts must contain at least one option", {
       kind: REJECTION_KINDS.EMPTY_ACCEPTS,
     });
   }
 
-  const accepts = body.accepts.map((item) => {
-    if (!isPlainObject(item)) return { scheme: null, network: null, amount: null };
-    return {
-      scheme: typeof item.scheme === "string" ? item.scheme : null,
-      network: typeof item.network === "string" ? item.network : null,
-      amount: typeof item.amount === "string" || typeof item.amount === "number" ? String(item.amount) : null,
-    };
-  });
+  const accepts = [];
+  for (const item of body.accepts) {
+    const normalized = normalizeAccept(item);
+    if (!normalized) {
+      fail("PaymentRequired accepts entries must include scheme, network, and amount", {
+        kind: REJECTION_KINDS.EMPTY_ACCEPTS,
+      });
+    }
+    accepts.push(normalized);
+  }
 
   return Object.freeze({
     ok: true,
@@ -134,7 +168,7 @@ export function classifyUnpaidCall({
     }),
     challenge: Object.freeze({
       x402Version: body.x402Version,
-      acceptCount: body.accepts.length,
+      acceptCount: accepts.length,
       accepts,
     }),
     boundary: BOUNDARY,
@@ -150,10 +184,22 @@ export function classifyFixture(fixture) {
   if (!isPlainObject(fixture)) {
     fail("fixture must be a JSON object", { kind: REJECTION_KINDS.INVALID_SHAPE });
   }
+  const nested = isPlainObject(fixture.jsonrpcEnvelope) ? fixture.jsonrpcEnvelope : null;
+  if (
+    nested
+    && isPlainObject(nested.result)
+    && Object.hasOwn(fixture, "result")
+    && fixture.jsonrpc !== "2.0"
+    && JSON.stringify(fixture.result) !== JSON.stringify(nested.result)
+  ) {
+    fail("fixture result and jsonrpcEnvelope.result conflict", {
+      kind: REJECTION_KINDS.INVALID_SHAPE,
+    });
+  }
   return classifyUnpaidCall({
     result: fixture.result ?? fixture,
     requestMeta: fixture.requestMeta ?? fixture.params?._meta ?? null,
-    jsonrpc: fixture.jsonrpc === "2.0" ? fixture : fixture.jsonrpcEnvelope ?? null,
+    jsonrpc: fixture.jsonrpc === "2.0" ? fixture : nested,
     source: fixture.source ?? "fixture",
     toolName: fixture.toolName ?? fixture.params?.name ?? null,
     args: fixture.args ?? fixture.params?.arguments ?? null,

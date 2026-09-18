@@ -1,6 +1,5 @@
 export const OUTCOMES = Object.freeze({
   UNPAID_CALL_IS_ERROR: "unpaid_call_is_error",
-  REJECTED: "rejected",
 });
 
 export const REJECTION_KINDS = Object.freeze({
@@ -14,7 +13,6 @@ export const REJECTION_KINDS = Object.freeze({
   INVALID_SHAPE: "invalid_shape",
   FORBIDDEN_FLAG: "forbidden_flag",
   FORBIDDEN_URL: "forbidden_url",
-  FORBIDDEN_META: "forbidden_meta",
 });
 
 export const FORBIDDEN_FLAGS = Object.freeze([

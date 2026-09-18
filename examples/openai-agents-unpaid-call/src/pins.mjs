@@ -1,13 +1,9 @@
-/** Immutable pins for the OpenAI Agents unpaid-call example. */
-
 export const SDK_PACKAGE = "@openai/agents";
 export const SDK_VERSION = "0.18.0";
 export const SDK_METHOD = "MCPServerStreamableHttp.callToolResult";
 export const SDK_CALLTOOL_METHOD = "MCPServerStreamableHttp.callTool";
 export const SDK_DOCS =
   "https://openai.github.io/openai-agents-js/openai/agents-core/classes/mcpserverstreamablehttp/";
-export const X402_MCP_TRANSPORT =
-  "https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/mcp.md";
 
 export const PRODUCT = "samedaydesk-openai-agents-unpaid-call";
 export const SCHEMA_VERSION = "samedaydesk.openai-agents-unpaid-call.v0";

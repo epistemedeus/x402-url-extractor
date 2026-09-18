@@ -62,6 +62,8 @@ That command must exit `1`. Other rejected shapes:
 node bin/cli.mjs --fixture ./fixtures/hostile/protocol-error-402.json
 node bin/cli.mjs --fixture ./fixtures/hostile/calltool-content-only.json
 node bin/cli.mjs --fixture ./fixtures/hostile/payment-request-meta.json
+node bin/cli.mjs --fixture ./fixtures/hostile/empty-object-accepts.json
+node bin/cli.mjs --fixture ./fixtures/hostile/bogus-x402-version.json
 ```
 
 `--live`, `--pay`, `--approve`, `--payment`, `--neo`, and `--publish` are

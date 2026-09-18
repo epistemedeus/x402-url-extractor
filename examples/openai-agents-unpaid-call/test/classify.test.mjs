@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { classifyFixture, classifyUnpaidCall } from "../src/classify.mjs";
 import { loadFixture } from "../src/fixture.mjs";
 import { unpaidCallToolResult } from "../src/mock-mcp.mjs";
+import { UnpaidCallError } from "../src/errors.mjs";
 import { OUTCOMES, REJECTION_KINDS } from "../src/constants.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -42,4 +43,35 @@ test("classifyFixture reads jsonrpc result envelopes", () => {
     result: unpaidCallToolResult(),
   });
   assert.equal(report.isError, true);
+});
+
+test("empty-object accepts and non-v2 x402Version are not unpaid challenges", () => {
+  assert.throws(
+    () => classifyUnpaidCall({
+      result: {
+        isError: true,
+        structuredContent: { x402Version: 2, accepts: [{}] },
+      },
+    }),
+    (error) => error instanceof UnpaidCallError && error.kind === REJECTION_KINDS.EMPTY_ACCEPTS,
+  );
+  assert.throws(
+    () => classifyUnpaidCall({
+      result: {
+        isError: true,
+        structuredContent: {
+          x402Version: 99,
+          accepts: [{ scheme: "exact", network: "eip155:8453", amount: "5000" }],
+        },
+      },
+    }),
+    (error) => error instanceof UnpaidCallError && error.kind === REJECTION_KINDS.MISSING_PAYMENT_REQUIRED,
+  );
+});
+
+test("loadFixture pins source to fixture even when the file claims loopback", () => {
+  const report = loadFixture(join(ROOT, "fixtures", "spoof-loopback-source.json"));
+  assert.equal(report.ok, true);
+  assert.equal(report.outcome, OUTCOMES.UNPAID_CALL_IS_ERROR);
+  assert.equal(report.source, "fixture");
 });

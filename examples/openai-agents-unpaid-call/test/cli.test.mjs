@@ -4,6 +4,8 @@ import test from "node:test";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { writeFileSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { OUTCOMES } from "../src/constants.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -69,4 +71,36 @@ test("unknown arguments fail closed", () => {
   const report = parseJsonStream(result.stdout);
   assert.equal(report.ok, false);
   assert.match(report.message, /refused flag|--private-key-env|unknown argument/);
+});
+
+test("--fixture --live is a refused flag, not a missing file", () => {
+  const result = run(["--fixture", "--live"], { expectStatus: 1 });
+  const report = parseJsonStream(result.stdout);
+  assert.equal(report.error, "forbidden_flag");
+  assert.match(report.message, /refused flag/);
+});
+
+test("fixture path outside this example is rejected", () => {
+  const dir = mkdtempSync(join(tmpdir(), "x170-unpaid-"));
+  const outside = join(dir, "spoof.json");
+  writeFileSync(outside, JSON.stringify({
+    result: {
+      isError: true,
+      structuredContent: {
+        x402Version: 2,
+        accepts: [{ scheme: "exact", network: "eip155:8453", amount: "5000" }],
+      },
+    },
+  }));
+  const result = run(["--fixture", outside], { expectStatus: 1 });
+  const report = parseJsonStream(result.stdout);
+  assert.equal(report.ok, false);
+  assert.equal(report.error, "forbidden_url");
+});
+
+test("spoofed loopback source still prints source=fixture", () => {
+  const result = run(["--fixture", "./fixtures/spoof-loopback-source.json"]);
+  const report = parseJsonStream(result.stdout);
+  assert.equal(report.outcome, OUTCOMES.UNPAID_CALL_IS_ERROR);
+  assert.equal(report.source, "fixture");
 });

@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runLoopbackUnpaidCall } from "../src/loopback.mjs";
+import { startUnpaidMockMcp } from "../src/mock-mcp.mjs";
 import { OUTCOMES } from "../src/constants.mjs";
 import { SDK_METHOD, SDK_PACKAGE } from "../src/pins.mjs";
 
@@ -34,9 +35,28 @@ test("default CLI cold path uses the real SDK loopback", { timeout: 30_000 }, ()
     timeout: 25_000,
   });
   assert.equal(result.status, 0, result.stderr || result.stdout);
-  const report = JSON.parse(result.stdout.slice(result.stdout.indexOf("{")));
+  const start = result.stdout.indexOf("{");
+  const end = result.stdout.lastIndexOf("}");
+  const report = JSON.parse(result.stdout.slice(start, end + 1));
   assert.equal(report.outcome, OUTCOMES.UNPAID_CALL_IS_ERROR);
   assert.equal(report.isError, true);
   assert.equal(report.source, "openai_agents_loopback");
   assert.equal(report.paid, false);
+});
+
+test("mock close does not hang on an open GET SSE", { timeout: 5_000 }, async () => {
+  const mock = await startUnpaidMockMcp();
+  const ac = new AbortController();
+  try {
+    const res = await fetch(mock.url, {
+      headers: { accept: "text/event-stream", "mcp-session-id": "sse-close-test" },
+      signal: ac.signal,
+    });
+    assert.equal(res.status, 200);
+    const started = Date.now();
+    await mock.close();
+    assert.equal(Date.now() - started < 750, true);
+  } finally {
+    ac.abort();
+  }
 });

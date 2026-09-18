@@ -43,42 +43,41 @@ async function loadAgents() {
   return mod;
 }
 
-/**
- * Real @openai/agents MCPServerStreamableHttp.callToolResult against loopback mock.
- * Never attaches payment metadata, never calls a public merchant.
- */
 export async function runLoopbackUnpaidCall({
   toolName = DEFAULT_TOOL_NAME,
   args = DEFAULT_TOOL_ARGS,
   timeoutMs = 12_000,
 } = {}) {
   const mock = await startUnpaidMockMcp();
-  assertLoopbackUrl(mock.url);
-  const { MCPServerStreamableHttp } = await loadAgents();
-  const server = new MCPServerStreamableHttp({
-    url: mock.url,
-    name: "samedaydesk-unpaid-loopback",
-    timeout: timeoutMs,
-    clientSessionTimeoutSeconds: Math.max(3, Math.ceil(timeoutMs / 1000)),
-  });
   try {
-    await server.connect();
-    if (typeof server.callToolResult !== "function") {
-      fail("@openai/agents MCPServerStreamableHttp.callToolResult is required", {
-        kind: REJECTION_KINDS.IS_ERROR_NOT_PRESERVED,
-      });
-    }
-    const result = await server.callToolResult(toolName, args, null);
-    return classifyUnpaidCall({
-      result,
-      requestMeta: null,
-      source: "openai_agents_loopback",
-      toolName,
-      args,
-      sdkMethod: SDK_METHOD,
+    assertLoopbackUrl(mock.url);
+    const { MCPServerStreamableHttp } = await loadAgents();
+    const server = new MCPServerStreamableHttp({
+      url: mock.url,
+      name: "samedaydesk-unpaid-loopback",
+      timeout: timeoutMs,
+      clientSessionTimeoutSeconds: Math.max(3, Math.ceil(timeoutMs / 1000)),
     });
+    try {
+      await server.connect();
+      if (typeof server.callToolResult !== "function") {
+        fail("@openai/agents MCPServerStreamableHttp.callToolResult is required", {
+          kind: REJECTION_KINDS.IS_ERROR_NOT_PRESERVED,
+        });
+      }
+      const result = await server.callToolResult(toolName, args, null);
+      return classifyUnpaidCall({
+        result,
+        requestMeta: null,
+        source: "openai_agents_loopback",
+        toolName,
+        args,
+        sdkMethod: SDK_METHOD,
+      });
+    } finally {
+      try { await server.close(); } catch { /* ignore */ }
+    }
   } finally {
-    try { await server.close(); } catch { /* ignore */ }
     await mock.close();
   }
 }

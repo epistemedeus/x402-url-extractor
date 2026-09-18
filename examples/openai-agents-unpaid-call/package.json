@@ -12,7 +12,6 @@
   },
   "scripts": {
     "start": "node bin/cli.mjs",
-    "call": "node bin/cli.mjs",
     "fail": "node bin/cli.mjs --fixture ./fixtures/hostile/is-error-false.json",
     "test": "node --test test/*.test.mjs"
   },

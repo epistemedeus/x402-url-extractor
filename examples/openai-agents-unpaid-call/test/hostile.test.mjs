@@ -19,7 +19,12 @@ const EXPECTED = Object.freeze({
   "calltool-content-only.json": REJECTION_KINDS.IS_ERROR_NOT_PRESERVED,
   "payment-request-meta.json": REJECTION_KINDS.PAYMENT_ATTACHED,
   "empty-accepts.json": REJECTION_KINDS.EMPTY_ACCEPTS,
+  "empty-object-accepts.json": REJECTION_KINDS.EMPTY_ACCEPTS,
+  "bogus-x402-version.json": REJECTION_KINDS.MISSING_PAYMENT_REQUIRED,
   "settlement-meta.json": REJECTION_KINDS.SETTLEMENT_EVIDENCE,
+  "settlement-in-body.json": REJECTION_KINDS.SETTLEMENT_EVIDENCE,
+  "dual-envelope.json": REJECTION_KINDS.INVALID_SHAPE,
+  "content-mismatch.json": REJECTION_KINDS.INVALID_SHAPE,
 });
 
 test("every hostile fixture is rejected", () => {
