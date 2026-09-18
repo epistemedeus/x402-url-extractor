@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, unlinkSync, symlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import test from "node:test";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -10,18 +11,22 @@ import {
   BUNDLED_CASES,
   EMPTY_SEARCH_COMMAND,
   EXPECTED_AMOUNT_ATOMIC,
+  EXPECTED_PAY_TO,
   INVENTED_FIELD_COMMAND,
   LOCKFILE_PIN_DELTA_MCP_TOOL,
   LOCKFILE_PIN_DELTA_RESOURCE,
   LOCKFILE_PIN_DELTA_UNPAID_SCHEMA,
   TREAT_ABSENCE_AS_DEMAND_COMMAND,
   bundledCaseSource,
+  cdpFixtureKind,
+  createFixtureFetch,
   demandClaim,
   inventedReceiptFields,
   loadFixture,
   probeExitCode,
   refusedFlag,
   runLockfilePinDeltaUnpaidCli,
+  runLockfilePinDeltaUnpaidProbe,
   usage,
 } from "./lib.mjs";
 import { LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC, LOCKFILE_PIN_DELTA_PATH } from "../../../../lockfile-pin-delta-config.mjs";
@@ -183,4 +188,184 @@ test("CLI refuses --live and prints usage on empty argv", () => {
   assert.match(help.stdout, /empty-search/);
   const empty = spawnCase([]);
   assert.equal(empty.status, 2);
+});
+
+function baseFixture(overrides = {}) {
+  return {
+    origin: "https://agents.samedaydesk.com",
+    route: "/lockfile-pin-delta",
+    method: "POST",
+    intent: "compare two caller-supplied npm package-lock.json objects for pin changes",
+    wrapper: { charged: false, httpStatus: 402, ok: false, wwwAuthenticate: null },
+    unpaidOffer: {
+      x402Version: 2,
+      amountAtomic: "5000",
+      scheme: "exact",
+      network: "eip155:8453",
+      asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      payTo: EXPECTED_PAY_TO,
+      resource: LOCKFILE_PIN_DELTA_RESOURCE,
+      protocols: ["x402"],
+      wwwAuthenticate: null,
+    },
+    validator: { valid: true, simulation: { outcome: "accepted" }, index: null },
+    catalogSearch: { resources: [] },
+    listingIdentity: {
+      canonicalOrigin: "https://agents.samedaydesk.com",
+      route: "/lockfile-pin-delta",
+      settlementIdentity: EXPECTED_PAY_TO,
+      sources: ["coinbase-bazaar"],
+      records: [],
+    },
+    ...overrides,
+  };
+}
+
+test("demand:true is treat_absence_as_demand, not silently overwritten route_absent", async () => {
+  assert.equal(demandClaim({ demand: true }), "demand");
+  assert.equal(demandClaim({ buyerDemand: true }), "buyerDemand");
+  const report = await runLockfilePinDeltaUnpaidProbe(baseFixture({ demand: true }));
+  assert.equal(report.code, "treat_absence_as_demand");
+  assert.equal(report.demand, false);
+  assert.equal(report.demandClaim, "demand");
+  assert.equal(report.ok, false);
+});
+
+test("numeric amountAtomic 5000 is amount_mismatch, not string-exact 5000", async () => {
+  const report = await runLockfilePinDeltaUnpaidProbe(baseFixture({
+    unpaidOffer: {
+      ...baseFixture().unpaidOffer,
+      amountAtomic: 5000,
+    },
+  }));
+  assert.equal(report.code, "amount_mismatch");
+  assert.equal(report.unitsConverted, false);
+  assert.deepEqual(report.observedAmounts, []);
+  assert.ok(report.nonStringAmounts.includes("5000"));
+});
+
+test("missing unpaidOffer does not invent amountAtomic 5000", async () => {
+  const fixture = baseFixture();
+  delete fixture.unpaidOffer;
+  const report = await runLockfilePinDeltaUnpaidProbe(fixture);
+  assert.equal(report.code, "settlement_mismatch");
+  assert.ok(report.mismatched.includes("unpaidOffer"));
+  assert.notEqual(report.amountAtomic, "5000");
+});
+
+test("attacker payTo is settlement_mismatch, not route_absent", async () => {
+  const report = await runLockfilePinDeltaUnpaidProbe(baseFixture({
+    unpaidOffer: {
+      ...baseFixture().unpaidOffer,
+      payTo: "0x000000000000000000000000000000000000dEaD",
+    },
+  }));
+  assert.equal(report.code, "settlement_mismatch");
+  assert.ok(report.mismatched.includes("payTo"));
+  assert.equal(report.expectedPayTo, EXPECTED_PAY_TO);
+});
+
+test("network and asset pins are required", async () => {
+  const network = await runLockfilePinDeltaUnpaidProbe(baseFixture({
+    unpaidOffer: { ...baseFixture().unpaidOffer, network: "eip155:1" },
+  }));
+  assert.equal(network.code, "settlement_mismatch");
+  assert.ok(network.mismatched.includes("network"));
+  const asset = await runLockfilePinDeltaUnpaidProbe(baseFixture({
+    unpaidOffer: { ...baseFixture().unpaidOffer, asset: "0x0000000000000000000000000000000000000000" },
+  }));
+  assert.equal(asset.code, "settlement_mismatch");
+  assert.ok(asset.mismatched.includes("asset"));
+  const resource = await runLockfilePinDeltaUnpaidProbe(baseFixture({
+    unpaidOffer: { ...baseFixture().unpaidOffer, resource: "https://evil.example/lockfile-pin-delta" },
+  }));
+  assert.equal(resource.code, "settlement_mismatch");
+  assert.ok(resource.mismatched.includes("resource"));
+});
+
+test("mcp tool extract is wrong_mcp_tool", async () => {
+  const report = await runLockfilePinDeltaUnpaidProbe(baseFixture({
+    mcp: { tool: "extract", paymentRequired: true, amountAtomic: "5000" },
+  }));
+  assert.equal(report.code, "wrong_mcp_tool");
+  assert.equal(report.observedTool, "extract");
+  assert.equal(report.expectedTool, LOCKFILE_PIN_DELTA_MCP_TOOL);
+});
+
+test("GET 200 is get_not_404", async () => {
+  const report = await runLockfilePinDeltaUnpaidProbe(baseFixture({
+    get: { method: "GET", httpStatus: 200 },
+  }));
+  assert.equal(report.code, "get_not_404");
+  assert.equal(report.get.httpStatus, 200);
+});
+
+test("fixture.pay true is owner_refresh_refused", async () => {
+  await assert.rejects(
+    () => runLockfilePinDeltaUnpaidProbe(baseFixture({ pay: true })),
+    (error) => error.code === "owner_refresh_refused",
+  );
+});
+
+test("listingIdentity route /extract cannot make lockfile probe ok:true", async () => {
+  await assert.rejects(
+    () => runLockfilePinDeltaUnpaidProbe(baseFixture({
+      validator: { valid: true, simulation: { outcome: "accepted" }, index: 1 },
+      catalogSearch: { resources: [{ resource: LOCKFILE_PIN_DELTA_RESOURCE }] },
+      listingIdentity: {
+        canonicalOrigin: "https://agents.samedaydesk.com",
+        route: "/extract",
+        settlementIdentity: EXPECTED_PAY_TO,
+        sources: ["coinbase-bazaar"],
+        records: [{
+          source: "coinbase-bazaar",
+          url: "https://agents.samedaydesk.com/extract",
+          settlementIdentity: EXPECTED_PAY_TO,
+          rank: 1,
+        }],
+      },
+    })),
+    (error) => error.code === "wrong_route" && /listingIdentity\.route/.test(error.message),
+  );
+});
+
+test("fixture fetch only answers exact Coinbase validate and search URLs", async () => {
+  assert.equal(cdpFixtureKind("https://api.cdp.coinbase.com/platform/v2/x402/validate"), "validate");
+  assert.equal(cdpFixtureKind("https://api.cdp.coinbase.com/platform/v2/x402/discovery/search?query=x"), "search");
+  assert.equal(cdpFixtureKind("https://evil.example/steal?q=/x402/validate"), null);
+  const fetchImpl = createFixtureFetch(baseFixture());
+  await assert.rejects(
+    () => fetchImpl("https://evil.example/steal?q=/x402/validate"),
+    (error) => error.code === "cdp_poll_refused",
+  );
+  const ok = await fetchImpl("https://api.cdp.coinbase.com/platform/v2/x402/validate");
+  assert.equal(ok.status, 200);
+});
+
+test("CLI replay refuses paths outside the fixture directory", () => {
+  const outside = join(tmpdir(), "r11-402-04-outside.json");
+  writeFileSync(outside, JSON.stringify(baseFixture({ id: "escaped" })));
+  const escaped = spawnCase(["replay", "--fixture", outside]);
+  assert.equal(escaped.status, 2, escaped.stderr);
+  assert.match(escaped.stderr, /must stay inside/);
+  const missing = spawnCase(["replay", "--fixture", join(HERE, "no-such-fixture.json")]);
+  assert.equal(missing.status, 2, missing.stderr);
+  assert.match(missing.stderr, /fixture not found/);
+  const replay = spawnCase(["replay", "--fixture", "tools/unpaid-materialize-probe/fixtures/lockfile-pin-delta/empty-search.json"]);
+  assert.equal(replay.status, 1, replay.stderr);
+  assert.match(replay.stdout, /"code": "route_absent"/);
+  const link = join(HERE, "symlink-escape.json");
+  try {
+    symlinkSync(outside, link);
+    const viaLink = spawnCase(["replay", "--fixture", "tools/unpaid-materialize-probe/fixtures/lockfile-pin-delta/symlink-escape.json"]);
+    assert.equal(viaLink.status, 2, viaLink.stderr);
+    assert.match(viaLink.stderr, /must stay inside/);
+  } finally {
+    try { unlinkSync(link); } catch {}
+    try { unlinkSync(outside); } catch {}
+  }
+});
+
+test("buyerEmail is an invented receipt field", () => {
+  assert.deepEqual(inventedReceiptFields({ unpaidOffer: { buyerEmail: "buyer@example.com" } }), ["buyerEmail"]);
 });

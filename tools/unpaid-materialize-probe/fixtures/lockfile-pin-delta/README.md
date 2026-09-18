@@ -34,10 +34,19 @@ acceptance plus `catalogSearch.resources=[]` is not demand.
 Seeded failures also exit **1**:
 
 - `treat-absence-as-demand` → `treat_absence_as_demand`
-- `amount-mismatch` → live `10000` vs expected `5000`
+- `amount-mismatch` → live `10000` vs expected `5000` (string-exact; numeric `5000` is also mismatch)
 - `invented-field` → `loyaltyPoints`, `throughBlock`
 
+The probe also rejects, with regression tests:
+
+- top-level `demand: true` (not silently rewritten to `route_absent`)
+- attacker `payTo` / `network` / `asset` / `resource` (`settlement_mismatch`)
+- `listingIdentity.route` other than `/lockfile-pin-delta` (`wrong_route`)
+- MCP tool `extract` (`wrong_mcp_tool`)
+- `GET` status other than 404 when present (`get_not_404`)
+
 `--live`, `--refresh`, `--cdp`, `--poll`, and `--pay` are refused (exit 2).
+`replay --fixture` paths must stay in this directory (exit 2).
 
 If R6-03's probe CLI is present, the same JSON is replayable:
 

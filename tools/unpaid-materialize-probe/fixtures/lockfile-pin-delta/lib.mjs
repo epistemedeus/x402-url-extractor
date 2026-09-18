@@ -1,4 +1,4 @@
-import { openSync, readSync, closeSync, readFileSync } from "node:fs";
+import { openSync, readSync, closeSync, realpathSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -28,6 +28,9 @@ const MAX_FIXTURE_BYTES = 250_000;
 const INVENTED_FIELDS = Object.freeze(["loyaltyPoints", "throughBlock", "buyerEmail"]);
 const REFUSED_FLAGS = Object.freeze(["live", "refresh", "cdp", "poll", "reindex", "watch", "daemon", "cron", "pay"]);
 const DEMAND_CLAIM_KEYS = Object.freeze(["treatAbsenceAsDemand", "absenceIsDemand", "catalogAbsenceIsDemand"]);
+const BAZAAR_VALIDATE = "https://api.cdp.coinbase.com/platform/v2/x402/validate";
+const BAZAAR_SEARCH = "https://api.cdp.coinbase.com/platform/v2/x402/discovery/search";
+const BAZAAR_ORIGIN = "https://api.cdp.coinbase.com";
 
 export const BUNDLED_CASES = Object.freeze({
   "empty-search": join(HERE, "empty-search.json"),
@@ -68,19 +71,38 @@ function jsonResponse(body, status = 200) {
   });
 }
 
+export function cdpFixtureKind(url) {
+  let parsed;
+  try {
+    parsed = new URL(String(url));
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== "https:" || parsed.username || parsed.password) return null;
+  if (parsed.origin !== BAZAAR_ORIGIN) return null;
+  if (parsed.pathname === new URL(BAZAAR_VALIDATE).pathname) return "validate";
+  if (parsed.pathname === new URL(BAZAAR_SEARCH).pathname) return "search";
+  return null;
+}
+
 export function createFixtureFetch(fixture) {
   return async (url) => {
-    const target = String(url);
-    if (target.includes("/x402/validate")) return jsonResponse(fixture.validator ?? {});
-    if (target.includes("/x402/discovery/search")) {
-      return jsonResponse(fixture.catalogSearch ?? { resources: [] });
-    }
-    fail(`refused non-fixture fetch: ${target}`, "cdp_poll_refused");
+    const kind = cdpFixtureKind(url);
+    if (kind === "validate") return jsonResponse(fixture.validator ?? {});
+    if (kind === "search") return jsonResponse(fixture.catalogSearch ?? { resources: [] });
+    fail(`refused non-fixture fetch: ${String(url)}`, "cdp_poll_refused");
   };
 }
 
 export function loadFixture(path) {
-  const fd = openSync(resolve(path), "r");
+  const resolved = resolve(path);
+  let fd;
+  try {
+    fd = openSync(resolved, "r");
+  } catch (error) {
+    if (error?.code === "ENOENT") fail(`fixture not found: ${path}`, "invalid_args");
+    throw error;
+  }
   try {
     const bytes = Buffer.alloc(MAX_FIXTURE_BYTES + 1);
     let size = 0;
@@ -97,6 +119,28 @@ export function loadFixture(path) {
   }
 }
 
+export function assertReplayFixturePath(path) {
+  const resolved = resolve(path);
+  const root = resolve(HERE);
+  const prefix = root.endsWith("/") ? root : `${root}/`;
+  if (resolved !== root && !resolved.startsWith(prefix)) {
+    fail("replay --fixture path must stay inside tools/unpaid-materialize-probe/fixtures/lockfile-pin-delta", "invalid_args");
+  }
+  if (!resolved.endsWith(".json")) fail("replay --fixture path must be a .json file", "invalid_args");
+  let real;
+  try {
+    real = realpathSync(resolved);
+  } catch (error) {
+    if (error?.code === "ENOENT") fail(`fixture not found: ${path}`, "invalid_args");
+    throw error;
+  }
+  if (real !== root && !real.startsWith(prefix)) {
+    fail("replay --fixture path must stay inside tools/unpaid-materialize-probe/fixtures/lockfile-pin-delta", "invalid_args");
+  }
+  if (!real.endsWith(".json")) fail("replay --fixture path must be a .json file", "invalid_args");
+  return real;
+}
+
 export function inventedReceiptFields(value, found = new Set()) {
   if (Array.isArray(value)) {
     for (const item of value) inventedReceiptFields(item, found);
@@ -111,6 +155,8 @@ export function inventedReceiptFields(value, found = new Set()) {
 
 export function demandClaim(fixture) {
   if (!fixture || typeof fixture !== "object") return null;
+  if (fixture.demand === true) return "demand";
+  if (fixture.buyerDemand === true) return "buyerDemand";
   for (const key of DEMAND_CLAIM_KEYS) {
     if (fixture[key] === true) return key;
   }
@@ -266,11 +312,16 @@ function collectStates({ wrapper, materialization, listingIdentity, discoveryDri
   return Object.freeze([...new Set(states)]);
 }
 
-function observedAmounts(fixture) {
+function collectObservedAmounts(fixture) {
   const amounts = [];
+  const nonString = [];
   const push = (value) => {
     if (value === undefined || value === null || value === "") return;
-    amounts.push(String(value));
+    if (typeof value !== "string") {
+      nonString.push(value);
+      return;
+    }
+    amounts.push(value);
   };
   push(fixture.unpaidOffer?.amountAtomic);
   push(fixture.unpaidOffer?.amount);
@@ -283,7 +334,26 @@ function observedAmounts(fixture) {
   for (const offer of fixture.discoveryDrift?.live?.offers || []) {
     push(offer?.amountAtomic);
   }
-  return [...new Set(amounts)];
+  return {
+    amounts: [...new Set(amounts)],
+    nonString,
+  };
+}
+
+function sameHexAddress(left, right) {
+  return /^0x[0-9a-fA-F]{40}$/.test(String(left || ""))
+    && String(left).toLowerCase() === String(right).toLowerCase();
+}
+
+export function settlementMismatches(fixture) {
+  const offer = fixture.unpaidOffer;
+  if (!offer || typeof offer !== "object" || Array.isArray(offer)) return Object.freeze(["unpaidOffer"]);
+  const mismatched = [];
+  if (!sameHexAddress(offer.payTo, EXPECTED_PAY_TO)) mismatched.push("payTo");
+  if (offer.network !== EXPECTED_NETWORK) mismatched.push("network");
+  if (!sameHexAddress(offer.asset, EXPECTED_ASSET)) mismatched.push("asset");
+  if (offer.resource !== LOCKFILE_PIN_DELTA_RESOURCE) mismatched.push("resource");
+  return Object.freeze(mismatched);
 }
 
 function emptyCatalog(fixture) {
@@ -294,8 +364,16 @@ function emptyCatalog(fixture) {
 }
 
 function assertOfflineFixture(fixture) {
-  if (fixture.live === true || fixture.pollCdp === true || fixture.ownerRefresh === true || fixture.refresh === true) {
-    fail("fixture must not request a live CDP poll or owner catalog refresh", "owner_refresh_refused");
+  if (
+    fixture.live === true
+    || fixture.pollCdp === true
+    || fixture.ownerRefresh === true
+    || fixture.refresh === true
+    || fixture.pay === true
+    || fixture.paymentSent === true
+    || fixture.paymentSigned === true
+  ) {
+    fail("fixture must not request a live CDP poll, payment, or owner catalog refresh", "owner_refresh_refused");
   }
 }
 
@@ -305,6 +383,30 @@ function assertLockfileTarget(fixture) {
   if (String(fixture.method || LOCKFILE_PIN_DELTA_METHOD).toUpperCase() !== LOCKFILE_PIN_DELTA_METHOD) {
     fail("fixture method must be POST", "wrong_method");
   }
+  const identity = fixture.listingIdentity;
+  if (identity && typeof identity === "object" && !Array.isArray(identity)) {
+    if (identity.canonicalOrigin && identity.canonicalOrigin !== LOCKFILE_PIN_DELTA_ORIGIN) {
+      fail("listingIdentity.canonicalOrigin must be the SameDayDesk canonical origin", "wrong_origin");
+    }
+    if (identity.route && identity.route !== LOCKFILE_PIN_DELTA_PATH) {
+      fail("listingIdentity.route must be /lockfile-pin-delta", "wrong_route");
+    }
+  }
+}
+
+function failedReport(fixture, fields) {
+  return reportBase(fixture, {
+    ok: false,
+    boundary: Object.freeze({
+      paymentSent: false,
+      cdpPolled: false,
+      ownerRefreshPerformed: false,
+      charged: false,
+      unitsConverted: false,
+      claim: BOUNDARY_CLAIM,
+    }),
+    ...fields,
+  });
 }
 
 function reportBase(fixture, extra) {
@@ -336,55 +438,89 @@ export async function runLockfilePinDeltaUnpaidProbe(fixture, {
 
   const invented = inventedReceiptFields(fixture);
   if (invented.length) {
-    return reportBase(fixture, {
-      ok: false,
+    return failedReport(fixture, {
       code: "invented_receipt_field",
       verdict: "invented_receipt_field",
       invented,
       claim: `invented receipt field without live schema: ${invented.join(",")}`,
       notClaimed: Object.freeze(["did not accept invented receipt fields as live 402 terms"]),
-      boundary: Object.freeze({ paymentSent: false, cdpPolled: false, ownerRefreshPerformed: false, charged: false, claim: BOUNDARY_CLAIM }),
     });
   }
 
   const claimedDemand = demandClaim(fixture);
   if (claimedDemand) {
-    return reportBase(fixture, {
-      ok: false,
+    return failedReport(fixture, {
       code: "treat_absence_as_demand",
       verdict: "treat_absence_as_demand",
       demandClaim: claimedDemand,
       claim: "catalog absence is route_absent, not buyer demand",
       notClaimed: Object.freeze(["did not treat catalog absence as demand"]),
-      boundary: Object.freeze({ paymentSent: false, cdpPolled: false, ownerRefreshPerformed: false, charged: false, claim: BOUNDARY_CLAIM }),
     });
   }
 
-  const amounts = observedAmounts(fixture);
+  const mismatchedSettlement = settlementMismatches(fixture);
+  if (mismatchedSettlement.length) {
+    return failedReport(fixture, {
+      code: "settlement_mismatch",
+      verdict: "settlement_mismatch",
+      mismatched: mismatchedSettlement,
+      expectedPayTo: EXPECTED_PAY_TO,
+      expectedNetwork: EXPECTED_NETWORK,
+      expectedAsset: EXPECTED_ASSET,
+      claim: "unpaid offer must pin SameDayDesk lockfile-pin-delta payTo, network, asset, and resource",
+      notClaimed: Object.freeze(["did not send payment", "did not treat attacker settlement as the live 402"]),
+    });
+  }
+
+  const { amounts, nonString } = collectObservedAmounts(fixture);
   const mismatched = amounts.filter((amount) => amount !== EXPECTED_AMOUNT_ATOMIC);
-  if (mismatched.length) {
-    return reportBase(fixture, {
-      ok: false,
+  if (nonString.length || mismatched.length || amounts.length === 0) {
+    return failedReport(fixture, {
       code: "amount_mismatch",
       verdict: "amount_mismatch",
       observedAmounts: Object.freeze(amounts),
-      claim: `unpaid amount must be string-exact ${EXPECTED_AMOUNT_ATOMIC}; observed ${mismatched.join(",")}`,
+      nonStringAmounts: Object.freeze(nonString.map((value) => String(value))),
+      claim: `unpaid amount must be string-exact ${EXPECTED_AMOUNT_ATOMIC}; observed ${[...mismatched, ...nonString.map(String)].join(",") || "(none)"}`,
       unitsConverted: false,
       notClaimed: Object.freeze(["did not convert units", "did not send payment"]),
-      boundary: Object.freeze({ paymentSent: false, cdpPolled: false, ownerRefreshPerformed: false, charged: false, unitsConverted: false, claim: BOUNDARY_CLAIM }),
     });
+  }
+
+  if (fixture.mcp != null) {
+    if (typeof fixture.mcp !== "object" || Array.isArray(fixture.mcp)) fail("mcp must be an object");
+    if (fixture.mcp.tool !== LOCKFILE_PIN_DELTA_MCP_TOOL) {
+      return failedReport(fixture, {
+        code: "wrong_mcp_tool",
+        verdict: "wrong_mcp_tool",
+        observedTool: fixture.mcp.tool ?? null,
+        expectedTool: LOCKFILE_PIN_DELTA_MCP_TOOL,
+        claim: "MCP tool must be lockfile_pin_delta; extract is a different route",
+        notClaimed: Object.freeze(["did not treat another MCP tool as this POST"]),
+      });
+    }
+  }
+
+  if (fixture.get != null) {
+    if (typeof fixture.get !== "object" || Array.isArray(fixture.get)) fail("get must be an object");
+    if (fixture.get.httpStatus !== 404) {
+      return failedReport(fixture, {
+        code: "get_not_404",
+        verdict: "get_not_404",
+        get: fixture.get,
+        claim: "GET /lockfile-pin-delta is 404; this POST is not a GET surface",
+        notClaimed: Object.freeze(["did not treat GET as the paid lockfile route"]),
+      });
+    }
   }
 
   const wrapper = inspectWrapper(fixture.wrapper ?? { charged: false });
   if (wrapper.wwwAuthenticate && /^Payment\b/i.test(String(wrapper.wwwAuthenticate))) {
-    return reportBase(fixture, {
-      ok: false,
+    return failedReport(fixture, {
       code: "mpp_not_x402_only",
       verdict: "mpp_not_x402_only",
       wrapper,
       claim: "POST /lockfile-pin-delta is x402-only; MPP WWW-Authenticate is not accepted",
       notClaimed: Object.freeze(["did not send payment"]),
-      boundary: Object.freeze({ paymentSent: false, cdpPolled: false, ownerRefreshPerformed: false, charged: false, claim: BOUNDARY_CLAIM }),
     });
   }
 
@@ -422,7 +558,7 @@ export async function runLockfilePinDeltaUnpaidProbe(fixture, {
     states,
     checkedAt: new Date(now).toISOString(),
     httpStatus: wrapper.httpStatus,
-    amountAtomic: amounts[0] || EXPECTED_AMOUNT_ATOMIC,
+    amountAtomic: amounts[0],
     x402Only: wrapper.x402Only,
     wwwAuthenticate: wrapper.wwwAuthenticate,
     catalogMiss,
@@ -487,9 +623,10 @@ node tools/unpaid-materialize-probe/fixtures/lockfile-pin-delta/check.mjs unpaid
 Replay a caller-supplied fixture:
   node tools/unpaid-materialize-probe/fixtures/lockfile-pin-delta/check.mjs replay --fixture <file>
 
-Exit 1 for route_absent, treat_absence_as_demand, amount_mismatch, and invented_receipt_field.
+Exit 1 for route_absent, treat_absence_as_demand, amount_mismatch, invented_receipt_field, settlement_mismatch, wrong_mcp_tool, and get_not_404.
 Exit 0 only when listing identity is canonical and the unpaid wrapper stays charged:false.
 Exit 2 for refused flags or invalid usage. --live, --refresh, --cdp, --poll, and --pay are refused.
+replay --fixture paths must stay inside this directory.
 `;
 }
 
@@ -513,7 +650,7 @@ export async function runLockfilePinDeltaUnpaidCli(argv = process.argv.slice(2),
     if (flag < 0 || !argv[flag + 1] || argv.length !== 3) {
       fail("replay requires --fixture <file>", "invalid_args");
     }
-    fixturePath = argv[flag + 1];
+    fixturePath = assertReplayFixturePath(argv[flag + 1]);
   } else {
     fail(`unknown command ${command}`, "invalid_args");
   }
@@ -526,6 +663,7 @@ export async function runLockfilePinDeltaUnpaidCli(argv = process.argv.slice(2),
 }
 
 export function bundledCaseSource(name) {
-  return JSON.parse(readFileSync(BUNDLED_CASES[name], "utf8"));
+  if (!BUNDLED_CASES[name]) fail(`unknown bundled case ${name}`, "invalid_args");
+  return loadFixture(BUNDLED_CASES[name]);
 }
 
