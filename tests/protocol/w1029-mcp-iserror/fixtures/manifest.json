@@ -1,0 +1,73 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.w1029-mcp-iserror.v1",
+  "scope": "w1029: MCP tools/call unpaid extract is HTTP 200 JSON-RPC result.isError===true with mcp://tool/extract PaymentRequired. Not HTTP 402, not JSON-RPC error -32042, not snake_case is_error, not paid delivery. No Payment-Required header. No PAYMENT-SIGNATURE.",
+  "spec": {
+    "x402Version": 2,
+    "mcpTools": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools",
+    "x402McpTransport": "https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/mcp.md",
+    "workItem": "w1029"
+  },
+  "fixtures": [
+    {
+      "id": "live-unpaid-tools-list",
+      "path": "pass/live-unpaid-tools-list.json",
+      "expect": "pass",
+      "kind": "mcp-tools-list-unpaid"
+    },
+    {
+      "id": "live-unpaid-tools-call",
+      "path": "pass/live-unpaid-tools-call.json",
+      "expect": "pass",
+      "kind": "mcp-tools-call-unpaid"
+    },
+    {
+      "id": "seeded-http-200-iserror-as-charged",
+      "path": "reject/seeded-http-200-iserror-as-charged.json",
+      "expect": "reject",
+      "rejectCode": "http_200_iserror_classified_as_charged",
+      "kind": "seeded-failure"
+    },
+    {
+      "id": "seeded-iserror-false",
+      "path": "reject/seeded-iserror-false.json",
+      "expect": "reject",
+      "rejectCode": "iserror_not_true",
+      "kind": "seeded-iserror-false"
+    },
+    {
+      "id": "seeded-iserror-omitted",
+      "path": "reject/seeded-iserror-omitted.json",
+      "expect": "reject",
+      "rejectCode": "iserror_not_true",
+      "kind": "seeded-iserror-omitted"
+    },
+    {
+      "id": "seeded-jsonrpc-error-32042",
+      "path": "reject/seeded-jsonrpc-error-32042.json",
+      "expect": "reject",
+      "rejectCode": "jsonrpc_error_not_iserror",
+      "kind": "seeded-jsonrpc-error"
+    },
+    {
+      "id": "seeded-http-402",
+      "path": "reject/seeded-http-402.json",
+      "expect": "reject",
+      "rejectCode": "http_402_not_mcp_iserror",
+      "kind": "seeded-http-402"
+    },
+    {
+      "id": "seeded-snake-is_error",
+      "path": "reject/seeded-snake-is_error.json",
+      "expect": "reject",
+      "rejectCode": "snake_is_error",
+      "kind": "seeded-snake-is_error"
+    },
+    {
+      "id": "seeded-iserror-with-delivery",
+      "path": "reject/seeded-iserror-with-delivery.json",
+      "expect": "reject",
+      "rejectCode": "iserror_mixed_with_delivery",
+      "kind": "seeded-iserror-with-delivery"
+    }
+  ]
+}
