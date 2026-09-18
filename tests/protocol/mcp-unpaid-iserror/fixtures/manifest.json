@@ -46,6 +46,27 @@
       "expect": "reject",
       "rejectCode": "amount_mismatch",
       "kind": "seeded-amount-mismatch"
+    },
+    {
+      "id": "seeded-verify-on-unpaid",
+      "path": "reject/seeded-verify-on-unpaid.json",
+      "expect": "reject",
+      "rejectCode": "verify_on_unpaid",
+      "kind": "seeded-verify-on-unpaid"
+    },
+    {
+      "id": "seeded-asset-mismatch",
+      "path": "reject/seeded-asset-mismatch.json",
+      "expect": "reject",
+      "rejectCode": "asset_mismatch",
+      "kind": "seeded-asset-mismatch"
+    },
+    {
+      "id": "seeded-x402-version-mismatch",
+      "path": "reject/seeded-x402-version-mismatch.json",
+      "expect": "reject",
+      "rejectCode": "x402_version_mismatch",
+      "kind": "seeded-x402-version-mismatch"
     }
   ]
 }

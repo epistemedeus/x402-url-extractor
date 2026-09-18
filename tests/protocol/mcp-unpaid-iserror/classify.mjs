@@ -8,7 +8,8 @@ export function inventedHits(value) {
   const text = typeof value === "string" ? value : JSON.stringify(value ?? {});
   const hits = [];
   for (const name of FORBIDDEN_INVENTED) {
-    const re = new RegExp(`\\b${name.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}\\b`);
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(`\\b${escaped}\\b`);
     if (re.test(text)) hits.push(name);
   }
   return hits;

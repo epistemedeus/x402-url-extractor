@@ -49,16 +49,23 @@ function pinMismatch(classified) {
   }
   if (classified.payTo && classified.payTo !== SDS.payTo) {
     violations.push(violation(
-      CODES.AMOUNT_MISMATCH,
+      CODES.PAY_TO_MISMATCH,
       `accepts[].payTo ${classified.payTo} does not match SDS payTo`,
       { expected: SDS.payTo, actual: classified.payTo },
     ));
   }
   if (classified.network && classified.network !== SDS.network) {
     violations.push(violation(
-      CODES.AMOUNT_MISMATCH,
+      CODES.NETWORK_MISMATCH,
       `accepts[].network ${classified.network} does not match SDS ${SDS.network}`,
       { expected: SDS.network, actual: classified.network },
+    ));
+  }
+  if (classified.asset && classified.asset !== SDS.asset) {
+    violations.push(violation(
+      CODES.ASSET_MISMATCH,
+      `accepts[].asset ${classified.asset} does not match SDS extract USDC`,
+      { expected: SDS.asset, actual: classified.asset },
     ));
   }
   return violations;
@@ -82,6 +89,9 @@ function sharedBoundaryViolations(classified, request, claims, counters) {
   if (Number(counters.handler) > 0) {
     violations.push(violation(CODES.HANDLER_RAN_UNPAID, "unpaid MCP hop ran the paid handler"));
   }
+  if (Number(counters.verify) > 0) {
+    violations.push(violation(CODES.VERIFY_ON_UNPAID, "unpaid MCP hop called facilitator verify"));
+  }
   if (Number(counters.settle) > 0) {
     violations.push(violation(CODES.SETTLE_ON_UNPAID, "unpaid MCP hop called facilitator settle"));
   }
@@ -91,7 +101,7 @@ function sharedBoundaryViolations(classified, request, claims, counters) {
       "Payment-Required header is not the MCP unpaid tools/call challenge",
     ));
   }
-  if (claimsDemandCharge(claims)) {
+  if (classified.httpStatus === 200 && claimsDemandCharge(claims)) {
     violations.push(violation(
       CODES.HTTP_200_CLASSIFIED_AS_CHARGED,
       "tools/call HTTP 200 isError is unpaid, not charged/paid delivery/successProven",
@@ -208,6 +218,13 @@ export function evaluateToolsCall(fixture = {}) {
       violations.push(violation(
         CODES.MALFORMED_FIXTURE,
         `unpaid error ${JSON.stringify(classified.error)} is not the MCP payment-required tool error`,
+      ));
+    }
+    if (classified.x402Version !== SDS.x402Version) {
+      violations.push(violation(
+        CODES.X402_VERSION_MISMATCH,
+        `x402Version ${JSON.stringify(classified.x402Version)} is not SDS extract v${SDS.x402Version}`,
+        { expected: SDS.x402Version, actual: classified.x402Version },
       ));
     }
     violations.push(...pinMismatch(classified));

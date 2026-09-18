@@ -52,7 +52,7 @@ test("cli --all-fixtures classifies pass and reject observations", async () => {
   const report = parseReport(result.stdout);
   assert.equal(result.code, 0, result.stderr);
   assert.equal(report.ok, true, JSON.stringify(report.failed));
-  assert.equal(report.counted, 6);
+  assert.equal(report.counted, 9);
 });
 
 test("cli --seeded-failure rejects HTTP 200 as charged/paid delivery (exit 1)", async () => {
@@ -91,6 +91,30 @@ test("cli fixture path rejects extract amount 200000 (exit 1)", async () => {
   assert.equal(result.code, 1, result.stderr);
   assert.equal(report.ok, false);
   assert.equal(report.code, CODES.AMOUNT_MISMATCH);
+});
+
+test("cli fixture path rejects facilitator verify on unpaid (exit 1)", async () => {
+  const result = await runCheck(["fixtures/reject/seeded-verify-on-unpaid.json"]);
+  const report = parseReport(result.stdout);
+  assert.equal(result.code, 1, result.stderr);
+  assert.equal(report.ok, false);
+  assert.equal(report.code, CODES.VERIFY_ON_UNPAID);
+});
+
+test("cli fixture path rejects extract asset mismatch (exit 1)", async () => {
+  const result = await runCheck(["fixtures/reject/seeded-asset-mismatch.json"]);
+  const report = parseReport(result.stdout);
+  assert.equal(result.code, 1, result.stderr);
+  assert.equal(report.ok, false);
+  assert.equal(report.code, CODES.ASSET_MISMATCH);
+});
+
+test("cli fixture path rejects x402Version 1 (exit 1)", async () => {
+  const result = await runCheck(["fixtures/reject/seeded-x402-version-mismatch.json"]);
+  const report = parseReport(result.stdout);
+  assert.equal(result.code, 1, result.stderr);
+  assert.equal(report.ok, false);
+  assert.equal(report.code, CODES.X402_VERSION_MISMATCH);
 });
 
 test("cli refuses --live / --cdp / --pay (exit 2)", async () => {

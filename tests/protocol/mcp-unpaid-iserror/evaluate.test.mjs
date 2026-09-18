@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { CODES, SDS } from "./constants.mjs";
-import { classifyToolsCallObservation, classifyToolsListObservation } from "./classify.mjs";
+import { classifyToolsCallObservation, classifyToolsListObservation, inventedHits } from "./classify.mjs";
 import { classifyFixture, evaluateFixture, evaluateFixtureCorpus, evaluateToolsCall } from "./evaluate.mjs";
 import {
   FIXTURE_SCHEMA,
@@ -91,6 +91,50 @@ test("copying scan amount 200000 onto extract is amount_mismatch", () => {
   assert.equal(evaluated.classified.amount, "200000");
 });
 
+test("facilitator verify on unpaid HTTP 200 isError is rejected", () => {
+  const fixture = loadFixture("reject/seeded-verify-on-unpaid.json");
+  const evaluated = evaluateToolsCall(fixture);
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, CODES.VERIFY_ON_UNPAID);
+  assert.equal(classifyFixture(fixture).verdict, "rejected");
+});
+
+test("wrong extract USDC asset is asset_mismatch not a pass", () => {
+  const fixture = loadFixture("reject/seeded-asset-mismatch.json");
+  const evaluated = evaluateFixture(fixture);
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, CODES.ASSET_MISMATCH);
+  assert.equal(evaluated.classified.asset, "0x1111111111111111111111111111111111111111");
+});
+
+test("x402Version 1 is not the SDS extract unpaid challenge", () => {
+  const fixture = loadFixture("reject/seeded-x402-version-mismatch.json");
+  const evaluated = evaluateFixture(fixture);
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, CODES.X402_VERSION_MISMATCH);
+  assert.equal(evaluated.classified.x402Version, 1);
+});
+
+test("payTo mismatch is pay_to_mismatch not amount_mismatch", () => {
+  const live = loadFixture("pass/live-unpaid-tools-call.json");
+  const fixture = structuredClone(live);
+  fixture.observation.jsonrpc.result.structuredContent.accepts[0].payTo =
+    "0x0000000000000000000000000000000000000001";
+  const evaluated = evaluateToolsCall(fixture);
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, CODES.PAY_TO_MISMATCH);
+  assert.notEqual(evaluated.code, CODES.AMOUNT_MISMATCH);
+});
+
+test("network mismatch is network_mismatch not amount_mismatch", () => {
+  const live = loadFixture("pass/live-unpaid-tools-call.json");
+  const fixture = structuredClone(live);
+  fixture.observation.jsonrpc.result.structuredContent.accepts[0].network = "eip155:84532";
+  const evaluated = evaluateToolsCall(fixture);
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, CODES.NETWORK_MISMATCH);
+});
+
 test("HTTP 402 is not the MCP unpaid tools/call shape", () => {
   const evaluated = evaluateToolsCall({
     kind: "mcp-tools-call-unpaid",
@@ -117,6 +161,30 @@ test("HTTP 402 is not the MCP unpaid tools/call shape", () => {
   assert.equal(evaluated.code, CODES.HTTP_402_NOT_MCP_ISERROR);
 });
 
+test("HTTP 402 plus charged claims is still http_402_not_mcp_iserror", () => {
+  const live = loadFixture("pass/live-unpaid-tools-call.json");
+  const evaluated = evaluateToolsCall({
+    kind: "mcp-tools-call-unpaid",
+    observation: {
+      httpStatus: 402,
+      headers: {},
+      jsonrpc: live.observation.jsonrpc,
+    },
+    claims: { charged: true, paidDelivery: true },
+  });
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, CODES.HTTP_402_NOT_MCP_ISERROR);
+  assert.equal(
+    evaluated.violations.some((item) => item.code === CODES.HTTP_200_CLASSIFIED_AS_CHARGED),
+    false,
+  );
+});
+
+test("inventedHits matches a forbidden field and not a prefix", () => {
+  assert.deepEqual(inventedHits({ loyaltyPoints: 1 }), ["loyaltyPoints"]);
+  assert.equal(inventedHits({ throughBlockX: 1 }).includes("throughBlock"), false);
+});
+
 test("claims.charged cannot override an unpaid HTTP 200 isError wire", () => {
   const live = loadFixture("pass/live-unpaid-tools-call.json");
   const evaluated = evaluateToolsCall({
@@ -141,7 +209,7 @@ test("PAYMENT-SIGNATURE on the request is refused", () => {
 test("classifyFixture matches expect for the on-disk corpus", () => {
   const report = evaluateFixtureCorpus(loadFixtures("pass"), loadFixtures("reject"));
   assert.equal(report.ok, true, JSON.stringify(report.failed));
-  assert.equal(report.counted, 6);
+  assert.equal(report.counted, 9);
   assert.equal(classifyFixture(loadFixture("reject/seeded-http-200-as-charged.json")).verdict, "rejected");
   assert.equal(classifyFixture(loadFixture("pass/live-unpaid-tools-call.json")).verdict, "pass");
 });

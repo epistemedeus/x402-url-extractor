@@ -61,6 +61,7 @@ function headerObservation(response) {
 export async function withUnpaidMcpSurface(fn) {
   const calls = { handler: 0, verify: 0, settle: 0 };
   const originalFetch = globalThis.fetch;
+  let server;
   globalThis.fetch = async (input, init) => {
     const url = new URL(typeof input === "string" || input instanceof URL ? String(input) : input.url);
     if (url.hostname !== "127.0.0.1" || url.protocol !== "http:") {
@@ -69,27 +70,27 @@ export async function withUnpaidMcpSurface(fn) {
     return originalFetch(input, init);
   };
 
-  const app = express();
-  const tools = [{
-    name: SDS.mcpTool,
-    description: "Fetch a public HTTP(S) page and return compact extraction signals.",
-    price: SDS.price,
-    inputSchema: { url: z.string() },
-    tags: ["web", "extract"],
-    run: async (args) => {
-      calls.handler += 1;
-      return { ok: true, url: args.url, charged: true };
-    },
-  }];
-
-  const server = app.listen(0, "127.0.0.1");
-  await new Promise((resolve, reject) => {
-    server.once("listening", resolve);
-    server.once("error", reject);
-  });
-  const origin = `http://127.0.0.1:${server.address().port}`;
-
   try {
+    const app = express();
+    const tools = [{
+      name: SDS.mcpTool,
+      description: "Fetch a public HTTP(S) page and return compact extraction signals.",
+      price: SDS.price,
+      inputSchema: { url: z.string() },
+      tags: ["web", "extract"],
+      run: async (args) => {
+        calls.handler += 1;
+        return { ok: true, url: args.url, charged: true };
+      },
+    }];
+
+    server = app.listen(0, "127.0.0.1");
+    await new Promise((resolve, reject) => {
+      server.once("listening", resolve);
+      server.once("error", reject);
+    });
+    const origin = `http://127.0.0.1:${server.address().port}`;
+
     await mountMcp(app, {
       facilitatorClient: createFacilitator(calls),
       network: SDS.network,
