@@ -1,0 +1,84 @@
+{
+  "id": "lockfile-pin-delta-unpaid-402",
+  "note": "Cold unpaid POST /lockfile-pin-delta capture. No PAYMENT-SIGNATURE. Amount is string-exact 5000. GET is 404. Catalog search is not this file.",
+  "capturedAt": "2026-09-17T12:38:37.000Z",
+  "origin": "https://agents.samedaydesk.com",
+  "route": "/lockfile-pin-delta",
+  "method": "POST",
+  "intent": "compare two caller-supplied npm package-lock.json objects for pin changes",
+  "now": "2026-09-17T12:38:37.000Z",
+  "wrapper": {
+    "charged": false,
+    "httpStatus": 402,
+    "ok": false,
+    "wwwAuthenticate": null,
+    "paymentRequiredHeader": true
+  },
+  "unpaidOffer": {
+    "x402Version": 2,
+    "error": "Payment required",
+    "amountAtomic": "5000",
+    "scheme": "exact",
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "resource": "https://agents.samedaydesk.com/lockfile-pin-delta",
+    "protocols": ["x402"],
+    "wwwAuthenticate": null,
+    "bazaarMethod": "POST",
+    "bodySha256": "342e6b4fdd71de4eabca3397129969c168cd4cfe38e0d98c1f5884c88b3e2353"
+  },
+  "mcp": {
+    "tool": "lockfile_pin_delta",
+    "httpStatus": 200,
+    "paymentRequired": true,
+    "amountAtomic": "5000"
+  },
+  "get": {
+    "method": "GET",
+    "httpStatus": 404
+  },
+  "validator": {
+    "valid": true,
+    "simulation": { "outcome": "accepted" },
+    "index": null
+  },
+  "catalogSearch": {
+    "resources": []
+  },
+  "listingIdentity": {
+    "canonicalOrigin": "https://agents.samedaydesk.com",
+    "route": "/lockfile-pin-delta",
+    "settlementIdentity": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "sources": ["coinbase-bazaar"],
+    "records": []
+  },
+  "bazaarTracker": {
+    "schema": "samedaydesk.bazaar-observation.v3",
+    "schemaVersion": 3,
+    "observedAt": "2026-09-03T09:54:04.798Z",
+    "captureSource": "fixture-readback",
+    "sources": {
+      "cdp-discovery": {
+        "endpoint": null,
+        "sellerCount": 1,
+        "routeCount": 1,
+        "sellers": {
+          "samedaydesk": {
+            "id": "samedaydesk",
+            "name": "SameDayDesk",
+            "hosts": ["agents.samedaydesk.com"],
+            "queries": [],
+            "partial": false,
+            "rowCount": 1,
+            "routes": {
+              "https://agents.samedaydesk.com/extract": {
+                "digest": "89abcdef0123456789abcdef0123456789abcdef0123456789abcdef01234567"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

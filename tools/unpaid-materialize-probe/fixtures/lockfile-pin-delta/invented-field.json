@@ -1,0 +1,43 @@
+{
+  "id": "lockfile-pin-delta-invented-field",
+  "note": "Seeded failure: invented receipt fields loyaltyPoints and throughBlock are not on the live unpaid 402 or MCP lockfile_pin_delta accepts.",
+  "origin": "https://agents.samedaydesk.com",
+  "route": "/lockfile-pin-delta",
+  "method": "POST",
+  "intent": "compare two caller-supplied npm package-lock.json objects for pin changes",
+  "now": "2026-09-17T12:38:37.000Z",
+  "wrapper": {
+    "charged": false,
+    "httpStatus": 402,
+    "ok": false,
+    "wwwAuthenticate": null
+  },
+  "unpaidOffer": {
+    "x402Version": 2,
+    "amountAtomic": "5000",
+    "scheme": "exact",
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "resource": "https://agents.samedaydesk.com/lockfile-pin-delta",
+    "protocols": ["x402"],
+    "wwwAuthenticate": null,
+    "loyaltyPoints": 99,
+    "throughBlock": "0xdeadbeef"
+  },
+  "validator": {
+    "valid": true,
+    "simulation": { "outcome": "accepted" },
+    "index": null
+  },
+  "catalogSearch": {
+    "resources": []
+  },
+  "listingIdentity": {
+    "canonicalOrigin": "https://agents.samedaydesk.com",
+    "route": "/lockfile-pin-delta",
+    "settlementIdentity": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "sources": ["coinbase-bazaar"],
+    "records": []
+  }
+}
