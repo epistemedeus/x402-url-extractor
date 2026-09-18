@@ -1,0 +1,7 @@
+{
+  "schema": "samedaydesk.w1032-unpaid-list.config.v1",
+  "url": "https://agents.samedaydesk.com/mcp",
+  "transport": "streamable-http",
+  "headers": {},
+  "note": "Unpaid initialize then tools/list only. Do not call tools, pay, publish, or use neo."
+}

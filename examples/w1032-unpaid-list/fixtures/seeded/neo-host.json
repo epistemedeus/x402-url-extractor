@@ -1,0 +1,40 @@
+{
+  "schema": "samedaydesk.w1032-unpaid-list.seed.v1",
+  "id": "seeded.false-accept.neo-host",
+  "kind": "false_accept",
+  "claimedVerdict": "accept",
+  "productMust": "reject",
+  "title": "Neo host claimed as SameDayDesk unpaid tools/list",
+  "defect": "Hostile recording points tools/list at a neo host. This example must refuse it.",
+  "mcp": {
+    "url": "https://mcp.neomorphic.io/mcp",
+    "transport": "streamable-http"
+  },
+  "recorded": {
+    "url": "https://mcp.neomorphic.io/mcp",
+    "methods": ["initialize", "tools/list"],
+    "headers": {},
+    "toolsList": {
+      "tools": [
+        {
+          "name": "extract",
+          "description": "URL -> structured JSON",
+          "inputSchema": {
+            "type": "object",
+            "properties": { "url": { "type": "string" } },
+            "required": ["url"]
+          }
+        },
+        {
+          "name": "extract_batch",
+          "description": "1-5 public HTTPS URLs -> bounded records",
+          "inputSchema": {
+            "type": "object",
+            "properties": { "urls": { "type": "array" } },
+            "required": ["urls"]
+          }
+        }
+      ]
+    }
+  }
+}
