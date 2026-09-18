@@ -1,0 +1,73 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.w929-mcp-iserror.v1",
+  "scope": "w929: MCP tools/call unpaid extract is HTTP 200 result.isError=true with mcp://tool/extract, not HTTP 402, not JSON-RPC error, not paid delivery. No Payment-Required header. No PAYMENT-SIGNATURE.",
+  "spec": {
+    "x402Version": 2,
+    "mcp": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools",
+    "x402Mcp": "https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/mcp.md",
+    "wave": "w929"
+  },
+  "fixtures": [
+    {
+      "id": "live-unpaid-tools-list",
+      "path": "pass/live-unpaid-tools-list.json",
+      "expect": "pass",
+      "kind": "mcp-tools-list-unpaid"
+    },
+    {
+      "id": "live-unpaid-tools-call",
+      "path": "pass/live-unpaid-tools-call.json",
+      "expect": "pass",
+      "kind": "mcp-tools-call-unpaid"
+    },
+    {
+      "id": "seeded-http-200-as-charged",
+      "path": "reject/seeded-http-200-as-charged.json",
+      "expect": "reject",
+      "rejectCode": "http_200_classified_as_charged",
+      "kind": "seeded-failure"
+    },
+    {
+      "id": "seeded-jsonrpc-error",
+      "path": "reject/seeded-jsonrpc-error.json",
+      "expect": "reject",
+      "rejectCode": "jsonrpc_error_not_iserror",
+      "kind": "seeded-jsonrpc-error"
+    },
+    {
+      "id": "seeded-iserror-omitted",
+      "path": "reject/seeded-iserror-omitted.json",
+      "expect": "reject",
+      "rejectCode": "iserror_omitted",
+      "kind": "seeded-iserror-omitted"
+    },
+    {
+      "id": "seeded-snake-is-error",
+      "path": "reject/seeded-snake-is-error.json",
+      "expect": "reject",
+      "rejectCode": "snake_case_is_error",
+      "kind": "seeded-snake-is-error"
+    },
+    {
+      "id": "seeded-payment-required-header",
+      "path": "reject/seeded-payment-required-header.json",
+      "expect": "reject",
+      "rejectCode": "payment_required_header_present",
+      "kind": "seeded-payment-required-header"
+    },
+    {
+      "id": "seeded-invented-field",
+      "path": "reject/seeded-invented-field.json",
+      "expect": "reject",
+      "rejectCode": "invented_receipt_field",
+      "kind": "seeded-invented-field"
+    },
+    {
+      "id": "seeded-amount-mismatch",
+      "path": "reject/seeded-amount-mismatch.json",
+      "expect": "reject",
+      "rejectCode": "amount_mismatch",
+      "kind": "seeded-amount-mismatch"
+    }
+  ]
+}

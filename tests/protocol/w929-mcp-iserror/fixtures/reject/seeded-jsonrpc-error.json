@@ -1,0 +1,53 @@
+{
+  "id": "seeded-jsonrpc-error",
+  "title": "Seeded failure: JSON-RPC error -32042 is not MCP result.isError",
+  "expect": "reject",
+  "rejectCode": "jsonrpc_error_not_iserror",
+  "kind": "mcp-tools-call-unpaid",
+  "method": "tools/call",
+  "note": "SEEDING FAILURE: x402 MCP unpaid extract is a JSON-RPC result with isError:true. A JSON-RPC error object (SEP-1036 -32042 or HTTP-style 402) is a different hop.",
+  "request": {
+    "method": "tools/call",
+    "params": {
+      "name": "extract",
+      "arguments": { "url": "https://example.com" }
+    },
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "headerNames": ["content-type"],
+    "hasPaymentRequiredHeader": false,
+    "jsonrpc": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "error": {
+        "code": -32042,
+        "message": "Payment required",
+        "data": {
+          "x402Version": 2,
+          "error": "Payment required to access this tool",
+          "resource": { "url": "mcp://tool/extract" },
+          "accepts": [
+            {
+              "scheme": "exact",
+              "network": "eip155:8453",
+              "amount": "5000",
+              "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+              "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "successProven": false,
+    "settlement": false
+  }
+}
