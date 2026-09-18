@@ -1,0 +1,27 @@
+{
+  "source": "seeded_failure",
+  "sdkMethod": "MCPServerStreamableHttp.callToolResult",
+  "toolName": "extract",
+  "args": { "url": "https://example.com/" },
+  "requestMeta": null,
+  "result": {
+    "isError": false,
+    "structuredContent": {
+      "x402Version": 2,
+      "error": "Payment required to access this resource",
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "5000"
+        }
+      ]
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"x402Version\":2,\"accepts\":[{\"scheme\":\"exact\"}]}"
+      }
+    ]
+  }
+}

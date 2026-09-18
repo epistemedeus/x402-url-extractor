@@ -1,0 +1,32 @@
+{
+  "sdk": "@openai/agents",
+  "sdkMethod": "MCPServerStreamableHttp.callToolResult",
+  "toolName": "extract",
+  "args": {
+    "url": "https://example.com/"
+  },
+  "requestMeta": null,
+  "result": {
+    "isError": true,
+    "structuredContent": {
+      "x402Version": 2,
+      "error": "Payment required to access this resource",
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "5000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+          "maxTimeoutSeconds": 300
+        }
+      ]
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"x402Version\":2,\"error\":\"Payment required to access this resource\",\"accepts\":[{\"scheme\":\"exact\",\"network\":\"eip155:8453\",\"amount\":\"5000\",\"asset\":\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\"payTo\":\"0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee\",\"maxTimeoutSeconds\":300}]}"
+      }
+    ]
+  }
+}
