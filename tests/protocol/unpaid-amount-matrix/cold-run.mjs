@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { REFUSED_FLAGS } from "./constants.mjs";
 import { evaluateAmountMatrix } from "./evaluate.mjs";
-import { captureUnpaidMatrix, startLocalMerchant } from "./probe.mjs";
+import { captureUnpaidMatrix, isLoopbackOrigin, startLocalMerchant } from "./probe.mjs";
 
 function refusedFlag(argv) {
   for (const arg of argv) {
@@ -33,6 +33,10 @@ export async function runCold(argv = process.argv.slice(2)) {
   }
 
   const origin = originFromArgv(argv);
+  if (origin && !isLoopbackOrigin(origin)) {
+    console.error(`${origin} is refused; unpaid matrix is loopback-only`);
+    return 2;
+  }
   let merchant = null;
   try {
     const base = origin || (merchant = await startLocalMerchant()).base;

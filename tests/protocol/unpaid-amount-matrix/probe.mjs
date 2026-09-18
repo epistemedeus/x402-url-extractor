@@ -41,9 +41,30 @@ export function decodePaymentRequired(response, bodyText) {
   return null;
 }
 
+export function isLoopbackOrigin(origin) {
+  let url;
+  try {
+    url = new URL(origin);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+  return url.hostname === "127.0.0.1" || url.hostname === "localhost" || url.hostname === "::1";
+}
+
+export function assertLoopbackOrigin(origin) {
+  if (!isLoopbackOrigin(origin)) {
+    throw new Error(`refused non-loopback origin ${origin}`);
+  }
+}
+
 function assertNoPaymentHeaders(headers) {
+  const map = {};
+  for (const [key, value] of Object.entries(headers || {})) {
+    map[String(key).toLowerCase()] = value;
+  }
   for (const name of PAYMENT_REQUEST_HEADER_NAMES) {
-    if (headers[name] || headers[name.toUpperCase()]) {
+    if (map[name]) {
       throw new Error(`refused payment request header ${name}`);
     }
   }
@@ -67,7 +88,7 @@ export async function getUnpaid(base, path, query) {
   return {
     status: response.status,
     method: "GET",
-    requestHeaders: {},
+    requestHeaders: { ...headers },
     accepts: challenge?.accepts || [],
     payTo: accepted?.payTo || null,
     amount: accepted?.amount ?? null,
@@ -119,6 +140,7 @@ export async function listMcpTools(base) {
 }
 
 export async function captureUnpaidMatrix(base) {
+  assertLoopbackOrigin(base);
   const http = {};
   for (const route of MATRIX) {
     http[route.path] = await getUnpaid(base, route.path, route.query);

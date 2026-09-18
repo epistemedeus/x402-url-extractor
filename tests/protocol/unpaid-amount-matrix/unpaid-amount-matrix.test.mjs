@@ -13,9 +13,9 @@ import {
   SDS,
   TX_RECEIPT_AMOUNT_ATOMIC,
 } from "./constants.mjs";
-import { amountsEqual, evaluateAmountMatrix } from "./evaluate.mjs";
+import { amountsEqual, evaluateAmountMatrix, openapiTokenPresent } from "./evaluate.mjs";
 import { BUNDLED } from "./check.mjs";
-import { captureUnpaidMatrix, startLocalMerchant } from "./probe.mjs";
+import { captureUnpaidMatrix, isLoopbackOrigin, startLocalMerchant } from "./probe.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const CHECK = join(HERE, "check.mjs");
@@ -104,6 +104,82 @@ test("check.mjs refuses --live and --pay", () => {
   assert.match(live.stderr, /--live is refused/);
   const pay = spawnCheck(["--pay"]);
   assert.equal(pay.status, 2);
+});
+
+test("missing HTTP or MCP scan amount is amount_mismatch, not ok", () => {
+  const missingHttp = JSON.parse(readFileSync(BUNDLED.canonical, "utf8"));
+  delete missingHttp.observed.http["/scan"].accepts[0].amount;
+  const httpReport = evaluateAmountMatrix(missingHttp);
+  assert.equal(httpReport.ok, false);
+  assert.equal(httpReport.codes.includes(CODES.AMOUNT_MISMATCH), true);
+  assert.equal(httpReport.codes.includes(CODES.OK), false);
+  const scanHttp = httpReport.rows.find((row) => row.id === "scan");
+  assert.equal(scanHttp.httpAmount, null);
+  assert.equal(scanHttp.match, false);
+
+  const missingMcp = JSON.parse(readFileSync(BUNDLED.canonical, "utf8"));
+  delete missingMcp.observed.mcp.tools.find((tool) => tool.name === "scan")._meta.x402.accepts[0].amount;
+  const mcpReport = evaluateAmountMatrix(missingMcp);
+  assert.equal(mcpReport.ok, false);
+  assert.equal(mcpReport.codes.includes(CODES.AMOUNT_MISMATCH), true);
+  const scanMcp = mcpReport.rows.find((row) => row.id === "scan");
+  assert.equal(scanMcp.mcpAmount, null);
+  assert.equal(scanMcp.match, false);
+});
+
+test("wrong-network or wrong-asset scan accept is accept_terms_mismatch", () => {
+  const network = JSON.parse(readFileSync(BUNDLED.canonical, "utf8"));
+  network.observed.http["/scan"].accepts[0].network = "eip155:1";
+  const networkReport = evaluateAmountMatrix(network);
+  assert.equal(networkReport.ok, false);
+  assert.equal(networkReport.codes.includes(CODES.ACCEPT_TERMS_MISMATCH), true);
+  assert.equal(networkReport.rows.find((row) => row.id === "scan").match, false);
+
+  const asset = JSON.parse(readFileSync(BUNDLED.canonical, "utf8"));
+  asset.observed.http["/scan"].accepts[0].asset = "0x0000000000000000000000000000000000000001";
+  const assetReport = evaluateAmountMatrix(asset);
+  assert.equal(assetReport.ok, false);
+  assert.equal(assetReport.codes.includes(CODES.ACCEPT_TERMS_MISMATCH), true);
+});
+
+test("OpenAPI $0.200 does not satisfy scan token $0.20", () => {
+  assert.equal(openapiTokenPresent("payment required (x402, $0.20 USDC base)", "$0.20"), true);
+  assert.equal(openapiTokenPresent("payment required (x402, $0.200 USDC base)", "$0.20"), false);
+  const fixture = JSON.parse(readFileSync(BUNDLED.canonical, "utf8"));
+  fixture.observed.openapi.paths["/scan"].get.responses["402"].description =
+    "payment required (x402, $0.200 USDC base)";
+  const report = evaluateAmountMatrix(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.codes.includes(CODES.OPENAPI_402_TEXT_MISMATCH), true);
+});
+
+test("missing OpenAPI scan path is openapi_402_text_mismatch when OpenAPI is declared", () => {
+  const fixture = JSON.parse(readFileSync(BUNDLED.canonical, "utf8"));
+  delete fixture.observed.openapi.paths["/scan"];
+  const report = evaluateAmountMatrix(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.codes.includes(CODES.OPENAPI_402_TEXT_MISMATCH), true);
+});
+
+test("payment request header sets boundary.paymentSent", () => {
+  const fixture = JSON.parse(readFileSync(BUNDLED.canonical, "utf8"));
+  fixture.observed.http["/scan"].requestHeaders = { "x-payment": "eyJ4NDAyVmVyc2lvbiI6MX0" };
+  const report = evaluateAmountMatrix(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.codes.includes(CODES.PAYMENT_ATTEMPTED), true);
+  assert.equal(report.paymentAttempted, true);
+  assert.equal(report.boundary.paymentSent, true);
+});
+
+test("cold-run.mjs refuses non-loopback --origin", () => {
+  assert.equal(isLoopbackOrigin("http://127.0.0.1:3000"), true);
+  assert.equal(isLoopbackOrigin("https://agents.samedaydesk.com"), false);
+  const result = spawnSync(process.execPath, [COLD, "--origin", "https://agents.samedaydesk.com"], {
+    encoding: "utf8",
+    cwd: join(HERE, "../../.."),
+  });
+  assert.equal(result.status, 2, result.stdout + result.stderr);
+  assert.match(result.stderr, /loopback-only/);
 });
 
 test("cold unpaid local merchant matches the amount matrix", { timeout: 120_000 }, async (t) => {

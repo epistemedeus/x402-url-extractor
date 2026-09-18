@@ -107,6 +107,7 @@ export const CODES = Object.freeze({
   PAYMENT_ATTEMPTED: "payment_attempted",
   INVALID_AMOUNT_TYPE: "invalid_amount_type",
   PAY_TO_MISMATCH: "pay_to_mismatch",
+  ACCEPT_TERMS_MISMATCH: "accept_terms_mismatch",
   OPENAPI_402_TEXT_MISMATCH: "openapi_402_text_mismatch",
   HTTP_NOT_402: "http_not_402",
   MALFORMED_FIXTURE: "malformed_fixture",

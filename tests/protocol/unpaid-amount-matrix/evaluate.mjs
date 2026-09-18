@@ -83,6 +83,7 @@ function pushCode(codes, code) {
 
 function inspectAmount(value, expected, codes, label) {
   if (value == null) {
+    pushCode(codes, CODES.AMOUNT_MISMATCH);
     return { present: false, value: null, match: false, label };
   }
   if (typeof value !== "string") {
@@ -96,6 +97,33 @@ function inspectAmount(value, expected, codes, label) {
   const match = amountsEqual(value, expected);
   if (!match) pushCode(codes, CODES.AMOUNT_MISMATCH);
   return { present: true, value, match, label };
+}
+
+export function openapiTokenPresent(description, token) {
+  if (typeof description !== "string" || typeof token !== "string" || !token) return false;
+  const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`${escaped}(?!\\d)`).test(description);
+}
+
+function acceptTermsOk(accepted, codes, { requireAsset = false } = {}) {
+  const row = asRecord(accepted);
+  if (!row) {
+    pushCode(codes, CODES.ACCEPT_TERMS_MISMATCH);
+    return false;
+  }
+  let ok = true;
+  if (row.scheme !== SDS.scheme || row.network !== SDS.network) {
+    pushCode(codes, CODES.ACCEPT_TERMS_MISMATCH);
+    ok = false;
+  }
+  if (requireAsset && (row.asset == null || String(row.asset).toLowerCase() !== SDS.asset.toLowerCase())) {
+    pushCode(codes, CODES.ACCEPT_TERMS_MISMATCH);
+    ok = false;
+  } else if (row.asset != null && String(row.asset).toLowerCase() !== SDS.asset.toLowerCase()) {
+    pushCode(codes, CODES.ACCEPT_TERMS_MISMATCH);
+    ok = false;
+  }
+  return ok;
 }
 
 export function evaluateAmountMatrix(document) {
@@ -130,6 +158,10 @@ export function evaluateAmountMatrix(document) {
   const mcp = asRecord(observed.mcp) || {};
   const openapi = asRecord(observed.openapi) || {};
   const wellKnown = asRecord(observed.wellKnownX402) || asRecord(observed.wellKnown) || {};
+  const openapiPaths = asRecord(openapi.paths);
+  const openapiDeclared = Boolean(openapiPaths && Object.keys(openapiPaths).length > 0);
+  const wellKnownItems = asList(wellKnown.items);
+  const wellKnownDeclared = wellKnownItems.length > 0;
 
   let paymentAttempted = fixture.paymentAttempted === true;
   const rows = [];
@@ -172,8 +204,8 @@ export function evaluateAmountMatrix(document) {
 
     const accepted = exactAccept(httpObs.accepts);
     const httpAmount = accepted?.amount;
-    const mcpAmount = exactAccept(mcpObs?._meta?.x402?.accepts)?.amount
-      ?? exactAccept(mcpObs?.accepts)?.amount;
+    const mcpAccepted = exactAccept(mcpObs?._meta?.x402?.accepts) || exactAccept(mcpObs?.accepts);
+    const mcpAmount = mcpAccepted?.amount;
     const offerAmount = httpObs.offerReceiptAmount
       ?? httpObs.extensions?.["offer-receipt"]?.info?.offers?.[0]?.payload?.amount;
     const wellKnownAmount = exactAccept(known?.accepts)?.amount;
@@ -182,22 +214,20 @@ export function evaluateAmountMatrix(document) {
     if (payTo && String(payTo).toLowerCase() !== SDS.payTo.toLowerCase()) {
       pushCode(codes, CODES.PAY_TO_MISMATCH);
     }
+    const httpTermsOk = acceptTermsOk(accepted, codes, { requireAsset: true });
+    const mcpTermsOk = acceptTermsOk(mcpAccepted, codes, { requireAsset: false });
 
-    if (!mcpObs) pushCode(codes, CODES.AMOUNT_MISMATCH);
     const httpCmp = inspectAmount(httpAmount, route.amountAtomic, codes, "http");
     const mcpCmp = inspectAmount(mcpAmount, route.amountAtomic, codes, "mcp");
     if (offerAmount != null) inspectAmount(offerAmount, route.amountAtomic, codes, "offer-receipt");
-    if (Array.isArray(wellKnown.items) && wellKnown.items.length > 0) {
-      if (wellKnownAmount == null) pushCode(codes, CODES.AMOUNT_MISMATCH);
-      else inspectAmount(wellKnownAmount, route.amountAtomic, codes, "well-known");
-    }
+    if (wellKnownDeclared) inspectAmount(wellKnownAmount, route.amountAtomic, codes, "well-known");
 
     if (httpCmp.present && mcpCmp.present && !amountsEqual(httpCmp.value, mcpCmp.value)) {
       pushCode(codes, CODES.AMOUNT_MISMATCH);
     }
 
     const desc = String(openapiObs?.responses?.["402"]?.description || "");
-    if (openapiObs && !desc.includes(route.openapi402Token)) {
+    if (openapiDeclared && !openapiTokenPresent(desc, route.openapi402Token)) {
       pushCode(codes, CODES.OPENAPI_402_TEXT_MISMATCH);
     }
 
@@ -234,9 +264,13 @@ export function evaluateAmountMatrix(document) {
       payTo: payTo ?? null,
       openapi402Token: route.openapi402Token,
       openapi402Text: desc || null,
+      network: accepted?.network ?? null,
+      asset: accepted?.asset ?? null,
       match: httpCmp.match
-        && (!mcpCmp.present || mcpCmp.match)
+        && mcpCmp.match
+        && mcpTermsOk
         && status === 402
+        && httpTermsOk
         && (!payTo || String(payTo).toLowerCase() === SDS.payTo.toLowerCase()),
     });
   }
@@ -264,7 +298,7 @@ export function evaluateAmountMatrix(document) {
     payTo: SDS.payTo,
     rows,
     boundary: {
-      paymentSent: false,
+      paymentSent: paymentAttempted,
       liveListing: false,
       bazaarTrackerLive: false,
       ownerCdp: false,

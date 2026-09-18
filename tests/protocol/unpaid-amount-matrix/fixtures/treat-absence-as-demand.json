@@ -17,6 +17,7 @@
           {
             "scheme": "exact",
             "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
             "amount": "5000",
             "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
           }
@@ -31,6 +32,7 @@
           {
             "scheme": "exact",
             "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
             "amount": "5000",
             "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
           }
@@ -45,6 +47,7 @@
           {
             "scheme": "exact",
             "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
             "amount": "250000",
             "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
           }
@@ -59,6 +62,7 @@
           {
             "scheme": "exact",
             "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
             "amount": "5000",
             "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
           }
@@ -73,6 +77,7 @@
           {
             "scheme": "exact",
             "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
             "amount": "2000",
             "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
           }
