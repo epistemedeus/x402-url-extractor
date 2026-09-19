@@ -1,0 +1,89 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.w1031-route-absent.v1",
+  "scope": "w1031: unregistered x402 method+path is route_absent. Not HTTP 402, not demand, not settlement. Flag-off POST /extract/batch and POST /lockfile-pin-delta stay 404. GET /extract remains unpaid 402 amount 5000. No PAYMENT-SIGNATURE on a present route.",
+  "spec": {
+    "x402Version": 2,
+    "listingIdentity": "agent-payment-policy.listing-identity-observation.v1",
+    "workItem": "w1031"
+  },
+  "fixtures": [
+    {
+      "id": "present-extract-402",
+      "path": "pass/present-extract-402.json",
+      "expect": "pass",
+      "kind": "http-present-402"
+    },
+    {
+      "id": "absent-invented-404",
+      "path": "pass/absent-invented-404.json",
+      "expect": "pass",
+      "kind": "http-route-absent"
+    },
+    {
+      "id": "absent-extract-batch-flag-off",
+      "path": "pass/absent-extract-batch-flag-off.json",
+      "expect": "pass",
+      "kind": "http-route-absent"
+    },
+    {
+      "id": "absent-lockfile-flag-off",
+      "path": "pass/absent-lockfile-flag-off.json",
+      "expect": "pass",
+      "kind": "http-route-absent"
+    },
+    {
+      "id": "catalog-omits-absent-routes",
+      "path": "pass/catalog-omits-absent-routes.json",
+      "expect": "pass",
+      "kind": "catalog"
+    },
+    {
+      "id": "absent-payment-signature-still-404",
+      "path": "pass/absent-payment-signature-still-404.json",
+      "expect": "pass",
+      "kind": "http-route-absent"
+    },
+    {
+      "id": "seeded-route-absent-as-demand",
+      "path": "reject/seeded-route-absent-as-demand.json",
+      "expect": "reject",
+      "rejectCode": "route_absent_classified_as_demand",
+      "kind": "seeded-failure"
+    },
+    {
+      "id": "seeded-absent-as-402",
+      "path": "reject/seeded-absent-as-402.json",
+      "expect": "reject",
+      "rejectCode": "absent_route_as_402",
+      "kind": "seeded-absent-as-402"
+    },
+    {
+      "id": "seeded-copy-extract-onto-batch",
+      "path": "reject/seeded-copy-extract-onto-batch.json",
+      "expect": "reject",
+      "rejectCode": "absent_route_as_402",
+      "kind": "seeded-copy-extract-onto-batch"
+    },
+    {
+      "id": "seeded-catalog-lists-absent",
+      "path": "reject/seeded-catalog-lists-absent.json",
+      "expect": "reject",
+      "rejectCode": "catalog_lists_absent_route",
+      "kind": "seeded-catalog-lists-absent"
+    },
+    {
+      "id": "seeded-absent-settled",
+      "path": "reject/seeded-absent-settled.json",
+      "expect": "reject",
+      "rejectCode": "settle_on_absent",
+      "kind": "seeded-absent-settled"
+    },
+    {
+      "id": "seeded-absent-as-charged",
+      "path": "reject/seeded-absent-as-charged.json",
+      "expect": "reject",
+      "rejectCode": "absent_route_classified_as_charged",
+      "kind": "seeded-absent-as-charged"
+    }
+  ]
+}

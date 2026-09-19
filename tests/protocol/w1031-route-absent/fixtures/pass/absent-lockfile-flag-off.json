@@ -1,0 +1,30 @@
+{
+  "id": "absent-lockfile-flag-off",
+  "title": "POST /lockfile-pin-delta with LOCKFILE_PIN_DELTA_ENABLED=0 is HTTP 404, not 402",
+  "expect": "pass",
+  "kind": "http-route-absent",
+  "observedAt": "2026-09-18T00:00:00Z",
+  "request": {
+    "method": "POST",
+    "path": "/lockfile-pin-delta",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 404,
+    "method": "POST",
+    "path": "/lockfile-pin-delta",
+    "headers": { "content-type": "text/html; charset=utf-8" },
+    "headerNames": ["content-type"],
+    "hasPaymentRequiredHeader": false,
+    "body": null,
+    "text": "Cannot POST /lockfile-pin-delta"
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "treatAbsenceAsDemand": false,
+    "listed": false,
+    "settlement": false
+  },
+  "counters": { "verify": 0, "settle": 0 }
+}

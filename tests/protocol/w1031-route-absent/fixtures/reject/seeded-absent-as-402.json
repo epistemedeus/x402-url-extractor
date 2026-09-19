@@ -1,0 +1,45 @@
+{
+  "id": "seeded-absent-as-402",
+  "title": "Seeded failure: invent a 402 challenge for GET /w1031-route-absent",
+  "expect": "reject",
+  "rejectCode": "absent_route_as_402",
+  "kind": "http-route-absent",
+  "note": "SEEDING FAILURE: an unregistered path must not advertise Payment-Required.",
+  "request": {
+    "method": "GET",
+    "path": "/w1031-route-absent",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 402,
+    "method": "GET",
+    "path": "/w1031-route-absent",
+    "headers": {
+      "content-type": "application/json",
+      "payment-required": "eyJ4NDAyVmVyc2lvbiI6Mn0="
+    },
+    "headerNames": ["content-type", "payment-required"],
+    "hasPaymentRequiredHeader": true,
+    "body": {
+      "x402Version": 2,
+      "error": "Payment required",
+      "resource": { "url": "https://agents.samedaydesk.com/w1031-route-absent" },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "5000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+        }
+      ]
+    }
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "treatAbsenceAsDemand": false,
+    "settlement": false
+  },
+  "counters": { "verify": 0, "settle": 0 }
+}
