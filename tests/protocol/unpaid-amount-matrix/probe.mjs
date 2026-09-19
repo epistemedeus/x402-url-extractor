@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
+import { createServer as createHttpServer } from "node:http";
 import { createServer as createNetServer } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -29,13 +30,19 @@ export function parseSseOrJson(text) {
 
 export function decodePaymentRequired(response, bodyText) {
   const encoded = response.headers.get("payment-required");
-  if (encoded) return JSON.parse(Buffer.from(encoded, "base64").toString("utf8"));
+  if (encoded) {
+    try {
+      return JSON.parse(Buffer.from(encoded, "base64").toString("utf8"));
+    } catch {
+      return null;
+    }
+  }
   if (bodyText) {
     try {
       const body = JSON.parse(bodyText);
       if (body?.x402Version || body?.accepts) return body;
     } catch {
-      // body is not a payment-required object
+      return null;
     }
   }
   return null;
@@ -49,7 +56,8 @@ export function isLoopbackOrigin(origin) {
     return false;
   }
   if (url.protocol !== "http:" && url.protocol !== "https:") return false;
-  return url.hostname === "127.0.0.1" || url.hostname === "localhost" || url.hostname === "::1";
+  const host = String(url.hostname || "").replace(/^\[|\]$/g, "");
+  return host === "127.0.0.1" || host === "localhost" || host === "::1";
 }
 
 export function assertLoopbackOrigin(origin) {
@@ -82,8 +90,7 @@ export async function getUnpaid(base, path, query) {
   const bodyText = await response.text();
   const challenge = decodePaymentRequired(response, bodyText);
   const accepted = Array.isArray(challenge?.accepts)
-    ? challenge.accepts.find((row) => row.network === SDS.network && row.scheme === SDS.scheme)
-      || challenge.accepts[0]
+    ? challenge.accepts.find((row) => row.network === SDS.network && row.scheme === SDS.scheme) || null
     : null;
   return {
     status: response.status,
@@ -174,46 +181,85 @@ export async function stopChild(child) {
   });
 }
 
-export async function startLocalMerchant() {
-  const dataDir = await mkdtemp(join(tmpdir(), "r11-402-01-unpaid-matrix-"));
-  const port = await unusedPort();
-  const child = spawn(process.execPath, ["server.js"], {
-    cwd: REPO_ROOT,
-    env: {
-      ...process.env,
-      PORT: String(port),
-      COMMERCE_DATA_DIR: dataDir,
-      COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
-      MPP_SECRET_KEY: "",
-      PUBLIC_URL: SDS.origin,
-    },
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-  let output = "";
-  await new Promise((resolveReady, reject) => {
-    const timer = setTimeout(() => reject(new Error(`startup timed out: ${output.slice(-2000)}`)), 30_000);
-    const onData = (chunk) => {
-      output = `${output}${chunk}`.slice(-40_000);
-      if (!output.includes(`x402-merchant listening on :${port}`)) return;
-      if (!output.includes("MCP server:  POST /mcp (")) return;
-      clearTimeout(timer);
-      resolveReady();
+async function startFakeFacilitator() {
+  const server = createHttpServer((req, res) => {
+    const send = (status, body) => {
+      res.writeHead(status, { "content-type": "application/json" });
+      res.end(JSON.stringify(body));
     };
-    child.stdout.on("data", onData);
-    child.stderr.on("data", onData);
-    child.once("exit", (code, signal) => {
-      clearTimeout(timer);
-      reject(new Error(`startup exited before listening: code=${code} signal=${signal}\n${output.slice(-4000)}`));
-    });
-    child.once("error", reject);
+    const path = String(req.url || "").split("?")[0];
+    if (req.method === "GET" && (path === "/supported" || path === "/supported/")) {
+      return send(200, {
+        kinds: [{ network: SDS.network, scheme: SDS.scheme, x402Version: 2 }],
+        extensions: [],
+        signers: {},
+      });
+    }
+    return send(403, { error: "unpaid_matrix_refuses_facilitator_settle" });
+  });
+  await new Promise((resolveListen, reject) => {
+    server.listen(0, "127.0.0.1", resolveListen);
+    server.once("error", reject);
   });
   return {
-    base: `http://127.0.0.1:${port}`,
-    child,
-    output: () => output,
-    async close() {
-      await stopChild(child);
-      await rm(dataDir, { recursive: true, force: true });
-    },
+    url: `http://127.0.0.1:${server.address().port}`,
+    close: () => new Promise((resolveClose) => server.close(resolveClose)),
   };
+}
+
+export async function startLocalMerchant() {
+  const dataDir = await mkdtemp(join(tmpdir(), "r11-402-01-unpaid-matrix-"));
+  const facilitator = await startFakeFacilitator();
+  let child = null;
+  try {
+    const port = await unusedPort();
+    child = spawn(process.execPath, ["server.js"], {
+      cwd: REPO_ROOT,
+      env: {
+        ...process.env,
+        PORT: String(port),
+        COMMERCE_DATA_DIR: dataDir,
+        COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
+        FACILITATOR: "xpay",
+        FACILITATOR_URL: facilitator.url,
+        MPP_SECRET_KEY: "",
+        PUBLIC_URL: SDS.origin,
+      },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let output = "";
+    await new Promise((resolveReady, reject) => {
+      const timer = setTimeout(() => reject(new Error(`startup timed out: ${output.slice(-2000)}`)), 30_000);
+      const onData = (chunk) => {
+        output = `${output}${chunk}`.slice(-40_000);
+        if (!output.includes(`x402-merchant listening on :${port}`)) return;
+        if (!output.includes("MCP server:  POST /mcp (")) return;
+        clearTimeout(timer);
+        resolveReady();
+      };
+      child.stdout.on("data", onData);
+      child.stderr.on("data", onData);
+      child.once("exit", (code, signal) => {
+        clearTimeout(timer);
+        reject(new Error(`startup exited before listening: code=${code} signal=${signal}\n${output.slice(-4000)}`));
+      });
+      child.once("error", reject);
+    });
+    const spawned = child;
+    return {
+      base: `http://127.0.0.1:${port}`,
+      child: spawned,
+      output: () => output,
+      async close() {
+        await stopChild(spawned);
+        await facilitator.close();
+        await rm(dataDir, { recursive: true, force: true });
+      },
+    };
+  } catch (error) {
+    if (child) await stopChild(child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+    throw error;
+  }
 }

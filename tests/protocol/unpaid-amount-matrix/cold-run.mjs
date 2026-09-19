@@ -15,9 +15,20 @@ function refusedFlag(argv) {
 }
 
 function originFromArgv(argv) {
-  const index = argv.indexOf("--origin");
-  if (index >= 0) return argv[index + 1];
-  return null;
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = String(argv[i]);
+    if (arg === "--origin") {
+      const value = argv[i + 1];
+      if (!value || String(value).startsWith("--")) return { error: "missing" };
+      return { value };
+    }
+    if (arg.startsWith("--origin=")) {
+      const value = arg.slice("--origin=".length);
+      if (!value) return { error: "missing" };
+      return { value };
+    }
+  }
+  return { value: null };
 }
 
 export async function runCold(argv = process.argv.slice(2)) {
@@ -32,7 +43,12 @@ export async function runCold(argv = process.argv.slice(2)) {
     return 0;
   }
 
-  const origin = originFromArgv(argv);
+  const parsedOrigin = originFromArgv(argv);
+  if (parsedOrigin.error) {
+    console.error("--origin requires a loopback URL");
+    return 2;
+  }
+  const origin = parsedOrigin.value;
   if (origin && !isLoopbackOrigin(origin)) {
     console.error(`${origin} is refused; unpaid matrix is loopback-only`);
     return 2;

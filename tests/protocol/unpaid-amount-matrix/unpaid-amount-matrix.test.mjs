@@ -142,12 +142,49 @@ test("wrong-network or wrong-asset scan accept is accept_terms_mismatch", () => 
   assert.equal(assetReport.codes.includes(CODES.ACCEPT_TERMS_MISMATCH), true);
 });
 
-test("OpenAPI $0.200 does not satisfy scan token $0.20", () => {
+test("OpenAPI $0.200 or $0.20.0 does not satisfy scan token $0.20", () => {
   assert.equal(openapiTokenPresent("payment required (x402, $0.20 USDC base)", "$0.20"), true);
   assert.equal(openapiTokenPresent("payment required (x402, $0.200 USDC base)", "$0.20"), false);
+  assert.equal(openapiTokenPresent("payment required (x402, $0.20.0 USDC base)", "$0.20"), false);
   const fixture = JSON.parse(readFileSync(BUNDLED.canonical, "utf8"));
   fixture.observed.openapi.paths["/scan"].get.responses["402"].description =
     "payment required (x402, $0.200 USDC base)";
+  const report = evaluateAmountMatrix(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.codes.includes(CODES.OPENAPI_402_TEXT_MISMATCH), true);
+});
+
+test("missing HTTP payTo is pay_to_mismatch, not ok", () => {
+  const fixture = JSON.parse(readFileSync(BUNDLED.canonical, "utf8"));
+  delete fixture.observed.http["/scan"].accepts[0].payTo;
+  const report = evaluateAmountMatrix(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.codes.includes(CODES.PAY_TO_MISMATCH), true);
+  assert.equal(report.rows.find((row) => row.id === "scan").match, false);
+});
+
+test("MCP payTo mismatch is pay_to_mismatch", () => {
+  const fixture = JSON.parse(readFileSync(BUNDLED.canonical, "utf8"));
+  fixture.observed.mcp.tools.find((tool) => tool.name === "scan")._meta.x402.accepts[0].payTo =
+    "0x0000000000000000000000000000000000000001";
+  const report = evaluateAmountMatrix(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.codes.includes(CODES.PAY_TO_MISMATCH), true);
+});
+
+test("wrong-network well-known scan accept is accept_terms_mismatch", () => {
+  const fixture = JSON.parse(readFileSync(BUNDLED.canonical, "utf8"));
+  fixture.observed.wellKnownX402.items.find((item) => item.resource.routeTemplate === "/scan")
+    .accepts[0].network = "eip155:1";
+  const report = evaluateAmountMatrix(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.codes.includes(CODES.ACCEPT_TERMS_MISMATCH), true);
+  assert.equal(report.codes.includes(CODES.OK), false);
+});
+
+test("numeric OpenAPI scan price 0.005 is openapi_402_text_mismatch", () => {
+  const fixture = JSON.parse(readFileSync(BUNDLED.canonical, "utf8"));
+  fixture.observed.openapi.paths["/scan"].get["x-payment-info"].price.amount = 0.005;
   const report = evaluateAmountMatrix(fixture);
   assert.equal(report.ok, false);
   assert.equal(report.codes.includes(CODES.OPENAPI_402_TEXT_MISMATCH), true);
@@ -173,6 +210,7 @@ test("payment request header sets boundary.paymentSent", () => {
 
 test("cold-run.mjs refuses non-loopback --origin", () => {
   assert.equal(isLoopbackOrigin("http://127.0.0.1:3000"), true);
+  assert.equal(isLoopbackOrigin("http://[::1]:3000"), true);
   assert.equal(isLoopbackOrigin("https://agents.samedaydesk.com"), false);
   const result = spawnSync(process.execPath, [COLD, "--origin", "https://agents.samedaydesk.com"], {
     encoding: "utf8",
@@ -180,6 +218,15 @@ test("cold-run.mjs refuses non-loopback --origin", () => {
   });
   assert.equal(result.status, 2, result.stdout + result.stderr);
   assert.match(result.stderr, /loopback-only/);
+});
+
+test("cold-run.mjs refuses --origin without a URL", () => {
+  const result = spawnSync(process.execPath, [COLD, "--origin"], {
+    encoding: "utf8",
+    cwd: join(HERE, "../../.."),
+  });
+  assert.equal(result.status, 2, result.stdout + result.stderr);
+  assert.match(result.stderr, /--origin requires a loopback URL/);
 });
 
 test("cold unpaid local merchant matches the amount matrix", { timeout: 120_000 }, async (t) => {
@@ -197,7 +244,7 @@ test("cold unpaid local merchant matches the amount matrix", { timeout: 120_000 
     assert.equal(row.mcpAmount, route.amountAtomic, `${route.path} mcp amount`);
     assert.equal(amountsEqual(row.httpAmount, row.mcpAmount), true);
     assert.equal(row.payTo.toLowerCase(), SDS.payTo.toLowerCase());
-    assert.ok(row.openapi402Text.includes(route.openapi402Token), row.openapi402Text);
+    assert.equal(openapiTokenPresent(row.openapi402Text, route.openapi402Token), true, row.openapi402Text);
   }
   assert.equal(byId.extract.httpAmount, "5000");
   assert.equal(byId.scan.httpAmount, "200000");

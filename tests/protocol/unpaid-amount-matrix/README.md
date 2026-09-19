@@ -40,5 +40,7 @@ node --test tests/protocol/unpaid-amount-matrix/unpaid-amount-matrix.test.mjs
 ```
 
 `--live`, `--pay`, `--cdp`, and bazaar-tracker refresh flags are refused.
-`--origin` is loopback-only (`127.0.0.1`, `localhost`, `::1`); non-loopback exits 2.
-These paths are unpublished: they are not in `package.json` scripts.
+`--origin` is loopback-only (`127.0.0.1`, `localhost`, `::1`); missing or
+non-loopback `--origin` exits 2. Missing HTTP `payTo` and wrong-network
+well-known accepts are refused. These paths are unpublished: they are not in
+`package.json` scripts.

@@ -60,7 +60,7 @@ function exactAccept(accepts) {
     asRecord(row)
     && row.scheme === SDS.scheme
     && row.network === SDS.network
-  )) || rows[0] || null;
+  )) || null;
 }
 
 function mcpTool(mcp, name) {
@@ -102,7 +102,7 @@ function inspectAmount(value, expected, codes, label) {
 export function openapiTokenPresent(description, token) {
   if (typeof description !== "string" || typeof token !== "string" || !token) return false;
   const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`${escaped}(?!\\d)`).test(description);
+  return new RegExp(`(?<![\\d.])${escaped}(?![\\d.])`).test(description);
 }
 
 function acceptTermsOk(accepted, codes, { requireAsset = false } = {}) {
@@ -124,6 +124,21 @@ function acceptTermsOk(accepted, codes, { requireAsset = false } = {}) {
     ok = false;
   }
   return ok;
+}
+
+function payToOk(payTo, codes, { required = false } = {}) {
+  if (payTo == null || payTo === "") {
+    if (required) {
+      pushCode(codes, CODES.PAY_TO_MISMATCH);
+      return false;
+    }
+    return true;
+  }
+  if (String(payTo).toLowerCase() !== SDS.payTo.toLowerCase()) {
+    pushCode(codes, CODES.PAY_TO_MISMATCH);
+    return false;
+  }
+  return true;
 }
 
 export function evaluateAmountMatrix(document) {
@@ -208,19 +223,29 @@ export function evaluateAmountMatrix(document) {
     const mcpAmount = mcpAccepted?.amount;
     const offerAmount = httpObs.offerReceiptAmount
       ?? httpObs.extensions?.["offer-receipt"]?.info?.offers?.[0]?.payload?.amount;
-    const wellKnownAmount = exactAccept(known?.accepts)?.amount;
+    const wellKnownAccepted = exactAccept(known?.accepts);
+    const wellKnownAmount = wellKnownAccepted?.amount;
     const payTo = accepted?.payTo;
 
-    if (payTo && String(payTo).toLowerCase() !== SDS.payTo.toLowerCase()) {
-      pushCode(codes, CODES.PAY_TO_MISMATCH);
-    }
+    const httpPayToOk = payToOk(payTo, codes, { required: true });
     const httpTermsOk = acceptTermsOk(accepted, codes, { requireAsset: true });
     const mcpTermsOk = acceptTermsOk(mcpAccepted, codes, { requireAsset: false });
+    const mcpPayToOk = payToOk(mcpAccepted?.payTo, codes, { required: Boolean(asRecord(mcpAccepted)) });
 
     const httpCmp = inspectAmount(httpAmount, route.amountAtomic, codes, "http");
     const mcpCmp = inspectAmount(mcpAmount, route.amountAtomic, codes, "mcp");
     if (offerAmount != null) inspectAmount(offerAmount, route.amountAtomic, codes, "offer-receipt");
-    if (wellKnownDeclared) inspectAmount(wellKnownAmount, route.amountAtomic, codes, "well-known");
+    let wellKnownTermsOk = true;
+    let wellKnownPayToOk = true;
+    if (wellKnownDeclared) {
+      inspectAmount(wellKnownAmount, route.amountAtomic, codes, "well-known");
+      if (known) {
+        wellKnownTermsOk = acceptTermsOk(wellKnownAccepted, codes, { requireAsset: false });
+        wellKnownPayToOk = payToOk(wellKnownAccepted?.payTo, codes, {
+          required: Boolean(asRecord(wellKnownAccepted)),
+        });
+      }
+    }
 
     if (httpCmp.present && mcpCmp.present && !amountsEqual(httpCmp.value, mcpCmp.value)) {
       pushCode(codes, CODES.AMOUNT_MISMATCH);
@@ -236,7 +261,7 @@ export function evaluateAmountMatrix(document) {
       if (amountsEqual(String(openApiPrice), route.amountAtomic)) {
         pushCode(codes, CODES.UNIT_CONVERSION);
       }
-      if (typeof openApiPrice === "string" && openApiPrice !== route.openapiPriceAmount) {
+      if (String(openApiPrice) !== route.openapiPriceAmount) {
         pushCode(codes, CODES.OPENAPI_402_TEXT_MISMATCH);
       }
     }
@@ -269,9 +294,12 @@ export function evaluateAmountMatrix(document) {
       match: httpCmp.match
         && mcpCmp.match
         && mcpTermsOk
+        && mcpPayToOk
         && status === 402
         && httpTermsOk
-        && (!payTo || String(payTo).toLowerCase() === SDS.payTo.toLowerCase()),
+        && httpPayToOk
+        && wellKnownTermsOk
+        && wellKnownPayToOk,
     });
   }
 

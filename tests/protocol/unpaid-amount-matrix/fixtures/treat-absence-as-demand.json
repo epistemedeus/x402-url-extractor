@@ -87,11 +87,11 @@
     },
     "mcp": {
       "tools": [
-        { "name": "extract", "_meta": { "x402": { "paymentRequired": true, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000" }] } } },
-        { "name": "read", "_meta": { "x402": { "paymentRequired": true, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000" }] } } },
-        { "name": "schemaforge", "_meta": { "x402": { "paymentRequired": true, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "250000" }] } } },
-        { "name": "payment_offer_preflight", "_meta": { "x402": { "paymentRequired": true, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000" }] } } },
-        { "name": "transaction_receipt", "_meta": { "x402": { "paymentRequired": true, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "2000" }] } } }
+        { "name": "extract", "_meta": { "x402": { "paymentRequired": true, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000", "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" }] } } },
+        { "name": "read", "_meta": { "x402": { "paymentRequired": true, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000", "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" }] } } },
+        { "name": "schemaforge", "_meta": { "x402": { "paymentRequired": true, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "250000", "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" }] } } },
+        { "name": "payment_offer_preflight", "_meta": { "x402": { "paymentRequired": true, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000", "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" }] } } },
+        { "name": "transaction_receipt", "_meta": { "x402": { "paymentRequired": true, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "2000", "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" }] } } }
       ]
     }
   }

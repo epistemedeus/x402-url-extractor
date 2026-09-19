@@ -251,12 +251,12 @@
     },
     "wellKnownX402": {
       "items": [
-        { "resource": { "routeTemplate": "/extract" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000" }] },
-        { "resource": { "routeTemplate": "/read" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000" }] },
-        { "resource": { "routeTemplate": "/scan" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "200000" }] },
-        { "resource": { "routeTemplate": "/schemaforge" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "250000" }] },
-        { "resource": { "routeTemplate": "/commerce/payment-offer-preflight" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000" }] },
-        { "resource": { "routeTemplate": "/chain/transaction-receipt" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "2000" }] }
+        { "resource": { "routeTemplate": "/extract" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000", "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" }] },
+        { "resource": { "routeTemplate": "/read" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000", "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" }] },
+        { "resource": { "routeTemplate": "/scan" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "200000", "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" }] },
+        { "resource": { "routeTemplate": "/schemaforge" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "250000", "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" }] },
+        { "resource": { "routeTemplate": "/commerce/payment-offer-preflight" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000", "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" }] },
+        { "resource": { "routeTemplate": "/chain/transaction-receipt" }, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "2000", "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" }] }
       ]
     }
   }
