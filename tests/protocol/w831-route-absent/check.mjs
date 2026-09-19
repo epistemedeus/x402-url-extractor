@@ -23,7 +23,7 @@ Usage:
   node tests/protocol/w831-route-absent/check.mjs --all-fixtures
   node tests/protocol/w831-route-absent/check.mjs <fixture.json>
 
-Cold run mounts server.js on loopback. Never pays, never CDP, never publish.
+Cold run mounts server.js on loopback. Never pays, never CDP, never publish, never neo.
 `;
 }
 

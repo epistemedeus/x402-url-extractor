@@ -27,4 +27,4 @@ node tests/protocol/w831-route-absent/check.mjs --seeded-failure
 node --test --test-concurrency=1 tests/protocol/w831-route-absent/*.test.mjs
 ```
 
-`--live`, `--pay`, `--cdp`, `--publish` are refused (exit 2).
+`--live`, `--pay`, `--cdp`, `--publish`, `--neo` are refused (exit 2).

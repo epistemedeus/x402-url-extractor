@@ -134,7 +134,9 @@ export function originFoundExpectedRouteAbsentFetch({
       });
     }
     if (target.includes("8004market.io")) {
-      return htmlResponse("<span>0</span><span>Assets found</span>");
+      return htmlResponse(
+        `<input name="q" value="${CATALOG_INTENT}"><span>0</span><span>Assets found</span>`,
+      );
     }
     throw new Error(`unexpected catalog ${target}`);
   };

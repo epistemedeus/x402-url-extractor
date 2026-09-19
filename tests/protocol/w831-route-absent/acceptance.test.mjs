@@ -46,8 +46,8 @@ test("cli help exits 0", async () => {
   assert.match(result.stdout, /--cold/);
 });
 
-test("cli refuses --pay/--live/--cdp/--publish (exit 2)", async () => {
-  for (const flag of ["--pay", "--live", "--cdp", "--publish"]) {
+test("cli refuses --pay/--live/--cdp/--publish/--neo (exit 2)", async () => {
+  for (const flag of ["--pay", "--live", "--cdp", "--publish", "--neo"]) {
     const result = await runCheck([flag]);
     const report = parseReport(result.stdout);
     assert.equal(result.code, 2, result.stderr);
@@ -128,5 +128,7 @@ test(
     assert.equal(catalog.catalog.priceObservationStatus, "route_absent");
     assert.equal(catalog.catalog.expectedRouteFound, false);
     assert.equal(catalog.catalog.originFoundExpectedRouteAbsent, true);
+    assert.equal(catalog.catalog.identityStatuses["8004market-public-search"], "route_absent");
+    assert.equal(catalog.catalog.safety.paymentSentToCatalogs, false);
   },
 );
