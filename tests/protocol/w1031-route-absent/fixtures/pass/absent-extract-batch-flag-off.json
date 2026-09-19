@@ -1,0 +1,30 @@
+{
+  "id": "absent-extract-batch-flag-off",
+  "title": "POST /extract/batch with EXTRACT_BATCH_ENABLED=0 is HTTP 404, not 402",
+  "expect": "pass",
+  "kind": "http-route-absent",
+  "observedAt": "2026-09-18T00:00:00Z",
+  "request": {
+    "method": "POST",
+    "path": "/extract/batch",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 404,
+    "method": "POST",
+    "path": "/extract/batch",
+    "headers": { "content-type": "text/html; charset=utf-8" },
+    "headerNames": ["content-type"],
+    "hasPaymentRequiredHeader": false,
+    "body": null,
+    "text": "Cannot POST /extract/batch"
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "treatAbsenceAsDemand": false,
+    "listed": false,
+    "settlement": false
+  },
+  "counters": { "verify": 0, "settle": 0 }
+}

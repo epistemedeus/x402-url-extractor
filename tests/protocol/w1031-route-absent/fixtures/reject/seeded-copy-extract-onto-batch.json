@@ -1,0 +1,45 @@
+{
+  "id": "seeded-copy-extract-onto-batch",
+  "title": "Seeded failure: copy GET /extract 402 onto flag-off POST /extract/batch",
+  "expect": "reject",
+  "rejectCode": "absent_route_as_402",
+  "kind": "http-route-absent",
+  "note": "SEEDING FAILURE: EXTRACT_BATCH_ENABLED=0 means POST /extract/batch is route_absent, not a payable 402 copied from /extract.",
+  "request": {
+    "method": "POST",
+    "path": "/extract/batch",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 402,
+    "method": "POST",
+    "path": "/extract/batch",
+    "headers": {
+      "content-type": "application/json",
+      "payment-required": "eyJ4NDAyVmVyc2lvbiI6Mn0="
+    },
+    "headerNames": ["content-type", "payment-required"],
+    "hasPaymentRequiredHeader": true,
+    "body": {
+      "x402Version": 2,
+      "error": "Payment required",
+      "resource": { "url": "https://agents.samedaydesk.com/extract/batch" },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "5000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+        }
+      ]
+    }
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "treatAbsenceAsDemand": false,
+    "settlement": false
+  },
+  "counters": { "verify": 0, "settle": 0 }
+}
