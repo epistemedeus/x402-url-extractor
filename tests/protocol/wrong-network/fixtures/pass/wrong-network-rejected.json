@@ -69,6 +69,28 @@
       "paymentPresent": true,
       "payloadNetwork": "eip155:84532",
       "offeredNetwork": "eip155:8453"
+    },
+    {
+      "seq": 6,
+      "phase": "wrong-network-legacy-base",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false,
+      "paymentPresent": true,
+      "payloadNetwork": "base",
+      "offeredNetwork": "eip155:8453"
+    },
+    {
+      "seq": 7,
+      "phase": "wrong-network-empty",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false,
+      "paymentPresent": true,
+      "payloadNetwork": "",
+      "offeredNetwork": "eip155:8453"
     }
   ]
 }

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { test } from "node:test";
 
-import { CHECK, GUARD_ROOT } from "./paths.mjs";
+import { CHECK, GUARD_ROOT, REFUSED_FLAGS } from "./paths.mjs";
 import { runSeededFailure } from "./run.mjs";
 
 function runCheck(args, { timeoutMs = 120_000 } = {}) {
@@ -88,6 +88,17 @@ test("runSeededFailure matches the CLI reject", () => {
   assert.equal(report.ok, false);
   assert.equal(report.code, "wrong_network_accepted");
   assert.equal(report.settleCount, 1);
+});
+
+test("cli refuses --live / --pay / --neo / --publish / --checkout (exit 2)", async () => {
+  for (const flag of REFUSED_FLAGS) {
+    const result = await runCheck([flag]);
+    const report = parseReport(result.stdout);
+    assert.equal(result.code, 2, `${flag}: ${result.stderr}`);
+    assert.equal(report.ok, false);
+    assert.equal(report.code, "refused");
+    assert.match(result.stderr, /refused flag/);
+  }
 });
 
 test(

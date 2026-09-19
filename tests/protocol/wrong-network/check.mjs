@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { evaluateTrace } from "./evaluate.mjs";
-import { GUARD_ROOT, loadJson, SEEDED_WRONG_NETWORK } from "./paths.mjs";
+import { GUARD_ROOT, loadJson, REFUSED_FLAGS, SEEDED_WRONG_NETWORK } from "./paths.mjs";
 import { runColdSuite, runFixtureCorpus, runSeededFailure } from "./run.mjs";
 
 function resolveFixture(input) {
@@ -22,9 +22,11 @@ Usage:
   node tests/protocol/wrong-network/check.mjs --all-fixtures
   node tests/protocol/wrong-network/check.mjs <fixture.json>
 
-Cold run starts loopback server.js against a fake facilitator. Never pays,
-never calls xpay/CDP, never mutates checkout or registry. A PAYMENT-SIGNATURE
-whose accepted.network is not the advertised route network must stay 402.
+Cold run starts loopback server.js against a fake facilitator. A PAYMENT-SIGNATURE
+whose accepted.network is not the advertised route network (eip155:8453) must stay
+402 with no facilitator verify or settle.
+
+--live, --pay, --payment, --neo, --publish, --checkout, --cdp are refused (exit 2).
 `;
 }
 
@@ -38,6 +40,17 @@ function failUsage(message) {
 }
 
 async function main(argv = process.argv.slice(2)) {
+  const refused = argv.find((arg) => REFUSED_FLAGS.includes(arg));
+  if (refused) {
+    print({
+      ok: false,
+      code: "refused",
+      error: `${refused} is refused. This suite is loopback fake-facilitator only.`,
+    });
+    process.stderr.write(`refused flag ${refused}\n`);
+    return 2;
+  }
+
   if (argv.includes("--help") || argv.includes("-h") || argv[0] === "help") {
     process.stdout.write(help());
     return 0;

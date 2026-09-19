@@ -11,6 +11,16 @@ export const HOST = "agents.samedaydesk.com";
 export const NETWORK = "eip155:8453";
 export const ROUTE = "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1";
 export const SEEDED_WRONG_NETWORK = join(FIXTURES_DIR, "reject", "seeded-wrong-network-accepted.json");
+export const REFUSED_FLAGS = Object.freeze([
+  "--live",
+  "--pay",
+  "--payment",
+  "--payment-signature",
+  "--neo",
+  "--publish",
+  "--checkout",
+  "--cdp",
+]);
 
 export const SEPOLIA = "eip155:84532";
 export const ETHEREUM = "eip155:1";

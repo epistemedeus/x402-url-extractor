@@ -30,6 +30,25 @@ test("pass traces hold the wrong-network guard", () => {
   }
 });
 
+test("pass corpus covers sepolia, ethereum, solana, field-only, legacy base, and empty network", () => {
+  const fixture = loadFixture("pass/wrong-network-rejected.json");
+  const phases = fixture.attempts.map((attempt) => attempt.phase);
+  assert.deepEqual(phases, [
+    "unpaid",
+    "wrong-network-sepolia",
+    "wrong-network-ethereum",
+    "wrong-network-solana",
+    "wrong-network-field-only",
+    "wrong-network-legacy-base",
+    "wrong-network-empty",
+  ]);
+  const evaluated = evaluateTrace(fixture);
+  assert.equal(evaluated.ok, true, JSON.stringify(evaluated.violations));
+  assert.equal(evaluated.mismatchAttempts, 6);
+  assert.equal(evaluated.settleCount, 0);
+  assert.equal(evaluated.verifyCount, 0);
+});
+
 test("seeded wrong-network acceptance is rejected as wrong_network_accepted", () => {
   const fixture = loadFixture("reject/seeded-wrong-network-accepted.json");
   const evaluated = evaluateTrace(fixture);
