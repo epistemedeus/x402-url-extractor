@@ -1,0 +1,55 @@
+{
+  "kind": "projection",
+  "id": "omitted-buyer-schema-digest",
+  "label": "omitted-buyer-schema-digest",
+  "note": "Seller offer-receipt is present. Buyer schemaDigest is omitted. Merchant pin 0.12.0 cannot supply inspectOutputSchema. Projection must fail closed.",
+  "paymentRequired": {
+    "x402Version": 2,
+    "accepts": [
+      {
+        "scheme": "exact",
+        "network": "eip155:8453",
+        "amount": "5000",
+        "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+      }
+    ],
+    "extensions": {
+      "offer-receipt": {
+        "info": {
+          "offers": [
+            {
+              "format": "eip712",
+              "acceptIndex": 0,
+              "payload": {
+                "version": 1,
+                "resourceUrl": "https://agents.samedaydesk.com/extract?url=https://example.com",
+                "scheme": "exact",
+                "network": "eip155:8453",
+                "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+                "amount": "5000",
+                "validUntil": 1789643288
+              },
+              "signature": "0x12d6f439112da3ce96349f92ac571d7ff4621f6daaa81a8436a48a201b093a8e742f4bdcd7b586fc6643e903cff9707f4dc124838e7acb60378e9dbc8e7894771b"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "buyer": {},
+  "receipt": {
+    "receiptId": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "settlement": {
+      "amountAtomic": "5000",
+      "transactionReference": "0xportable-evidence-fixture"
+    },
+    "output": {
+      "valid": true,
+      "schemaValidated": false,
+      "schemaDigest": null,
+      "responseDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "schema": "samedaydesk.agent-payment-policy-pin.v1",
+  "recordedAt": "2026-09-17",
+  "merchantVersion": "1.23.49",
+  "merchantHead": "0153295c5851bf8f93fb27c77070a31417a59f69",
+  "package": "agent-payment-policy",
+  "version": "0.12.0",
+  "resolved": "https://registry.npmjs.org/agent-payment-policy/-/agent-payment-policy-0.12.0.tgz",
+  "integrity": "sha512-CHJKxphBvrzQRfvUXC5xJoEeDT2hmDbicZ2JaCzaErr/HBhKoynScwdoeBwPbXJiBH3ds1ItDG4SAaOnqunMCQ==",
+  "buyerSchemaDigest": {
+    "availableOnPin": false,
+    "requiresPolicy": "0.13.0",
+    "source": "inspectOutputSchema / createIntent output.schemaDigest",
+    "authority": "buyer-intent",
+    "omittedReason": "buyer_schema_digest_omitted",
+    "r6_04": {
+      "repo": "epistemedeus/agent-payment-policy",
+      "pr": 3,
+      "head": "ed105e2239138e881d24dfa1897add2afd18c0bf",
+      "version": "0.15.1",
+      "quote": "buyer.schemaDigest from policy 0.13+ createIntent / inspectOutputSchema; omitted digest fails closed"
+    }
+  },
+  "exports": {
+    "present": [
+      "evaluateResponseContract",
+      "createPurchaseEvidenceManifest",
+      "createIntent",
+      "createReceipt"
+    ],
+    "absent": [
+      "inspectOutputSchema",
+      "prepareOutputValidator"
+    ]
+  },
+  "forbiddenInvented": [
+    "loyaltyPoints",
+    "throughBlock",
+    "buyerEmail",
+    "npsScore",
+    "tipAmount",
+    "uniqueVisitors"
+  ],
+  "citedIntegrityPin": {
+    "package": "agent-payment-integrity",
+    "agentPaymentPolicy": "0.12.0",
+    "note": "Cited from integrity package.json; this fixture does not clone integrity or bump merchant pins."
+  },
+  "surfaces": [
+    {
+      "id": "root",
+      "packageJson": "package.json",
+      "lockfile": "package-lock.json"
+    },
+    {
+      "id": "customer-x402",
+      "packageJson": "examples/customer-x402/package.json",
+      "lockfile": "examples/customer-x402/package-lock.json"
+    },
+    {
+      "id": "basepay-composition",
+      "packageJson": "examples/basepay-composition/package.json",
+      "lockfile": "examples/basepay-composition/package-lock.json"
+    }
+  ],
+  "sourceConsts": [
+    {
+      "id": "basepay-standard-version",
+      "path": "examples/basepay-composition/src/pins.mjs",
+      "pattern": "export const STANDARD_VERSION = \"0.12.0\";"
+    }
+  ]
+}

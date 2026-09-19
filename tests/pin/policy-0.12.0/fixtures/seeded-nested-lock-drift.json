@@ -1,0 +1,26 @@
+{
+  "id": "seeded-nested-lock-drift",
+  "kind": "pin-source",
+  "label": "seeded-nested-lock-drift",
+  "note": "Root lock entry matches 0.12.0 while a nested copy is 0.15.1. Must not report pins-match.",
+  "declared": {
+    "agent-payment-policy": "0.12.0"
+  },
+  "lockPackages": {
+    "": {
+      "dependencies": {
+        "agent-payment-policy": "0.12.0"
+      }
+    },
+    "node_modules/agent-payment-policy": {
+      "version": "0.12.0",
+      "resolved": "https://registry.npmjs.org/agent-payment-policy/-/agent-payment-policy-0.12.0.tgz",
+      "integrity": "sha512-CHJKxphBvrzQRfvUXC5xJoEeDT2hmDbicZ2JaCzaErr/HBhKoynScwdoeBwPbXJiBH3ds1ItDG4SAaOnqunMCQ=="
+    },
+    "node_modules/foo/node_modules/agent-payment-policy": {
+      "version": "0.15.1",
+      "resolved": "https://registry.npmjs.org/agent-payment-policy/-/agent-payment-policy-0.15.1.tgz",
+      "integrity": "sha512-invented-nested-integrity-must-not-match-0.12.0-lock"
+    }
+  }
+}
