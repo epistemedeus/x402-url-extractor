@@ -109,8 +109,8 @@ test("cli fixture path rejects isError mixed with delivery (exit 1)", async () =
   assert.equal(report.code, CODES.ISERROR_MIXED_WITH_DELIVERY);
 });
 
-test("cli refuses --live / --cdp / --pay (exit 2)", async () => {
-  for (const flag of ["--live", "--cdp", "--pay"]) {
+test("cli refuses --live / --cdp / --pay / --neo (exit 2)", async () => {
+  for (const flag of ["--live", "--cdp", "--pay", "--neo"]) {
     const result = await runCheck([flag]);
     const report = parseReport(result.stdout);
     assert.equal(result.code, 2, result.stderr);
@@ -127,15 +127,15 @@ test("runSeededFailure matches the CLI reject", () => {
 });
 
 test(
-  "cli --cold exits 0 against mounted mcp-server.mjs unpaid tools/call HTTP 200 isError",
-  { timeout: 90_000 },
+  "cli --cold exits 0 against mcp-server.mjs and loopback server.js unpaid tools/call HTTP 200 isError",
+  { timeout: 180_000 },
   async () => {
-    const result = await runCheck(["--cold"]);
+    const result = await runCheck(["--cold"], { timeoutMs: 180_000 });
     const report = parseReport(result.stdout);
     assert.equal(result.code, 0, result.stderr);
     assert.equal(report.ok, true, JSON.stringify(report, null, 2));
     assert.equal(report.mode, "cold");
-    assert.equal(report.artifact, "mcp-server.mjs");
+    assert.equal(report.artifact, "mcp-server.mjs+server.js");
     assert.equal(report.code, CODES.UNPAID_MCP_ISERROR);
     assert.equal(report.paymentSent, false);
     assert.equal(report.paymentSignatureSent, false);
@@ -157,6 +157,17 @@ test(
     assert.equal(report.counters.verify, 0);
     assert.equal(report.counters.settle, 0);
     assert.ok(!report.wire.headerNames.includes("payment-required"));
+    assert.equal(report.wire.productionToolsCallHttpStatus, 200);
+    assert.equal(report.wire.productionToolsCallIsError, true);
+    assert.equal(report.wire.productionJsonrpcError, false);
+    assert.equal(report.wire.productionPaymentRequiredHeader, false);
+    assert.equal(report.wire.productionSettle, 0);
+    assert.equal(report.wire.productionVerify, 0);
+    assert.equal(report.production.toolsCall.classified.kind, "unpaid_mcp_iserror_challenge");
+    assert.equal(report.production.toolsCall.classified.isError, true);
+    assert.equal(report.production.toolsCall.classified.charged, false);
+    assert.equal(report.production.toolsCall.classified.amount, SDS.amountAtomic);
+    assert.equal(report.production.toolsCall.classified.resourceUrl, SDS.mcpResourceUrl);
     assert.match(result.stderr, /w829-mcp-iserror cold: pass/);
   },
 );

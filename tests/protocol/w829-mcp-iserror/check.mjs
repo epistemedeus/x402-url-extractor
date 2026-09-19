@@ -23,8 +23,8 @@ Usage:
   node tests/protocol/w829-mcp-iserror/check.mjs --all-fixtures
   node tests/protocol/w829-mcp-iserror/check.mjs <fixture.json>
 
-Cold run mounts mcp-server.mjs on loopback. Never pays, never sends
-PAYMENT-SIGNATURE, never uses a Payment-Required header, never CDP.
+Cold run mounts mcp-server.mjs and loopback server.js. Never pays, never
+sends PAYMENT-SIGNATURE, never uses a Payment-Required header, never CDP.
 `;
 }
 
@@ -87,6 +87,8 @@ async function main(argv = process.argv.slice(2)) {
         + ` list=${report.wire?.toolsListHttpStatus} call=${report.wire?.toolsCallHttpStatus}`
         + ` isError=${report.wire?.toolsCallIsError} jsonrpcError=${report.wire?.toolsCallHasJsonRpcError}`
         + ` paymentRequiredHeader=${report.wire?.paymentRequiredHeader}`
+        + ` serverJsCall=${report.wire?.productionToolsCallHttpStatus}`
+        + ` serverJsIsError=${report.wire?.productionToolsCallIsError}`
         + ` paymentSent=${report.paymentSent}\n`,
     );
     return report.ok ? 0 : 1;

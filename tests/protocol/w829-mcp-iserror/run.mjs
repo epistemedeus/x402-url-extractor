@@ -1,5 +1,6 @@
 import { SDS } from "./constants.mjs";
 import { evaluateColdSuite, evaluateFixture, evaluateFixtureCorpus } from "./evaluate.mjs";
+import { withProductionMerchant } from "./merchant.mjs";
 import { loadFixtures, loadJson, SEEDED_HTTP_200_ISERROR_AS_CHARGED } from "./paths.mjs";
 import { SERVER_INFO, withUnpaidMcpSurface } from "./surface.mjs";
 
@@ -71,7 +72,7 @@ function asCallFixture(response, counters) {
   };
 }
 
-export async function runColdSuite() {
+async function runMountedUnpaid() {
   return withUnpaidMcpSurface(async (session) => {
     const initialized = await initialize(session);
     const listed = await session.post({
@@ -88,29 +89,79 @@ export async function runColdSuite() {
       params: { name: SDS.mcpTool, arguments: { url: "https://example.com" } },
     });
     const afterCall = session.snapshot();
-    const counters = {
-      handler: afterCall.handler - beforeCall.handler,
-      verify: afterCall.verify - beforeCall.verify,
-      settle: afterCall.settle - beforeCall.settle,
-    };
-    const report = evaluateColdSuite({
-      toolsList: asListFixture(listed),
-      toolsCall: asCallFixture(called, counters),
-      counters: session.snapshot(),
+    return {
+      initialized,
+      listed,
+      called,
+      counters: {
+        handler: afterCall.handler - beforeCall.handler,
+        verify: afterCall.verify - beforeCall.verify,
+        settle: afterCall.settle - beforeCall.settle,
+      },
       origin: session.origin,
-      serverInfo: initialized.json?.result?.serverInfo ?? SERVER_INFO,
-    });
-    report.wire = {
-      initializeHttpStatus: initialized.status,
-      toolsListHttpStatus: listed.status,
-      toolsCallHttpStatus: called.status,
-      toolsCallIsError: called.json?.result?.isError === true,
-      toolsCallHasJsonRpcError: Boolean(called.json && Object.hasOwn(called.json, "error")),
-      paymentRequiredHeader: called.hasPaymentRequiredHeader,
-      headerNames: called.headerNames,
     };
-    return report;
   });
+}
+
+async function runProductionUnpaid() {
+  return withProductionMerchant(async (session) => {
+    const listed = await session.post({
+      jsonrpc: "2.0",
+      id: 2,
+      method: "tools/list",
+      params: {},
+    });
+    const beforeCall = session.snapshot();
+    const called = await session.post({
+      jsonrpc: "2.0",
+      id: 3,
+      method: "tools/call",
+      params: { name: SDS.mcpTool, arguments: { url: "https://example.com" } },
+    });
+    const afterCall = session.snapshot();
+    return {
+      listed,
+      called,
+      counters: {
+        handler: 0,
+        verify: afterCall.verify - beforeCall.verify,
+        settle: afterCall.settle - beforeCall.settle,
+      },
+      origin: session.origin,
+    };
+  });
+}
+
+export async function runColdSuite() {
+  const mounted = await runMountedUnpaid();
+  const production = await runProductionUnpaid();
+  const report = evaluateColdSuite({
+    toolsList: asListFixture(mounted.listed),
+    toolsCall: asCallFixture(mounted.called, mounted.counters),
+    counters: mounted.counters,
+    origin: mounted.origin,
+    serverInfo: mounted.initialized.json?.result?.serverInfo ?? SERVER_INFO,
+    productionList: { ...asListFixture(production.listed), id: "cold-server-js-tools-list" },
+    productionCall: { ...asCallFixture(production.called, production.counters), id: "cold-server-js-tools-call" },
+    productionCounters: production.counters,
+    productionOrigin: production.origin,
+  });
+  report.wire = {
+    initializeHttpStatus: mounted.initialized.status,
+    toolsListHttpStatus: mounted.listed.status,
+    toolsCallHttpStatus: mounted.called.status,
+    toolsCallIsError: mounted.called.json?.result?.isError === true,
+    toolsCallHasJsonRpcError: Boolean(mounted.called.json && Object.hasOwn(mounted.called.json, "error")),
+    paymentRequiredHeader: mounted.called.hasPaymentRequiredHeader,
+    headerNames: mounted.called.headerNames,
+    productionToolsCallHttpStatus: production.called.status,
+    productionToolsCallIsError: production.called.json?.result?.isError === true,
+    productionJsonrpcError: Boolean(production.called.json && Object.hasOwn(production.called.json, "error")),
+    productionPaymentRequiredHeader: production.called.hasPaymentRequiredHeader,
+    productionSettle: production.counters.settle,
+    productionVerify: production.counters.verify,
+  };
+  return report;
 }
 
 export function runSeededFailure(fixturePath = SEEDED_HTTP_200_ISERROR_AS_CHARGED) {

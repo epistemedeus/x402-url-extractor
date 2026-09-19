@@ -60,4 +60,6 @@ export const REFUSED_FLAGS = Object.freeze([
   "--pay",
   "--payment-signature",
   "--publish",
+  "--neo",
+  "--deploy",
 ]);

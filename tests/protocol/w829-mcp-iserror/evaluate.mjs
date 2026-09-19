@@ -371,18 +371,40 @@ export function evaluateFixtureCorpus(passEntries, rejectEntries) {
   };
 }
 
-export function evaluateColdSuite({ toolsList, toolsCall, counters, origin, serverInfo }) {
+export function evaluateColdSuite({
+  toolsList,
+  toolsCall,
+  counters,
+  origin,
+  serverInfo,
+  productionList = null,
+  productionCall = null,
+  productionCounters = null,
+  productionOrigin = null,
+} = {}) {
   const list = evaluateToolsList(toolsList);
   const call = evaluateToolsCall(toolsCall);
-  const ok = list.ok === true && call.ok === true
+  const prodList = productionList ? evaluateToolsList(productionList) : null;
+  const prodCall = productionCall ? evaluateToolsCall(productionCall) : null;
+  const productionOk = (prodList == null || prodList.ok === true)
+    && (prodCall == null || prodCall.ok === true)
+    && Number(productionCounters?.settle || 0) === 0
+    && Number(productionCounters?.verify || 0) === 0;
+  const mountedOk = list.ok === true && call.ok === true
     && Number(counters?.handler || 0) === 0
     && Number(counters?.settle || 0) === 0
     && Number(counters?.verify || 0) === 0;
+  const ok = mountedOk && productionOk;
+  const failCode = !call.ok ? call.code
+    : !list.ok ? list.code
+    : prodCall && !prodCall.ok ? prodCall.code
+    : prodList && !prodList.ok ? prodList.code
+    : CODES.UNPAID_MCP_ISERROR;
   return {
     ok,
     mode: "cold",
-    artifact: "mcp-server.mjs",
-    code: ok ? CODES.UNPAID_MCP_ISERROR : (call.ok ? list.code : call.code),
+    artifact: productionCall ? "mcp-server.mjs+server.js" : "mcp-server.mjs",
+    code: ok ? CODES.UNPAID_MCP_ISERROR : failCode,
     origin,
     serverInfo,
     paymentSent: false,
@@ -390,12 +412,19 @@ export function evaluateColdSuite({ toolsList, toolsCall, counters, origin, serv
     toolsList: list,
     toolsCall: call,
     counters,
+    production: productionCall ? {
+      origin: productionOrigin,
+      toolsList: prodList,
+      toolsCall: prodCall,
+      counters: productionCounters,
+    } : null,
     boundary: {
       paymentSent: false,
       paymentSignatureSent: false,
       liveFacilitator: false,
       published: false,
       ownerCdp: false,
+      neoTouched: false,
     },
   };
 }

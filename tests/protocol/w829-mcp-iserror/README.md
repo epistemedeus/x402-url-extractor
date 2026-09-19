@@ -7,8 +7,8 @@ with `isError: true` and a PaymentRequired body (`resource.url=mcp://tool/extrac
 It is not HTTP 402, not JSON-RPC error `-32042`, not snake_case `is_error`,
 and not extract delivery. No `Payment-Required` header. No `PAYMENT-SIGNATURE`.
 
-This directory is the write boundary. It mounts `mcp-server.mjs` on loopback
-with a fake facilitator that throws on verify/settle.
+This directory is the write boundary. Cold run mounts `mcp-server.mjs` and
+loopback `server.js` with a fake facilitator that refuses verify/settle.
 
 ## Verify
 
@@ -22,4 +22,4 @@ node tests/protocol/w829-mcp-iserror/check.mjs --seeded-failure
 node --test --test-concurrency=1 tests/protocol/w829-mcp-iserror/*.test.mjs
 ```
 
-`--live`, `--pay`, `--cdp`, `--publish` are refused (exit 2).
+`--live`, `--pay`, `--cdp`, `--publish`, `--neo` are refused (exit 2).
