@@ -1,0 +1,41 @@
+{
+  "id": "seeded-wrong-network-verify",
+  "title": "Seeded failure: HTTP 402 for Ethereum payload but facilitator verify still ran",
+  "expect": "reject",
+  "rejectCode": "wrong_network_verify",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "offeredNetwork": "eip155:8453",
+  "settleCount": 0,
+  "verifyCount": 1,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false,
+      "offeredNetwork": "eip155:8453"
+    },
+    {
+      "seq": 2,
+      "phase": "wrong-network-ethereum",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 1,
+      "hasPaymentResponse": false,
+      "paymentPresent": true,
+      "payloadNetwork": "eip155:1",
+      "offeredNetwork": "eip155:8453"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "id": "seeded-wrong-network-settle",
+  "title": "Seeded failure: HTTP 402 for Sepolia payload but facilitator settle still ran",
+  "expect": "reject",
+  "rejectCode": "wrong_network_settle",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "offeredNetwork": "eip155:8453",
+  "settleCount": 1,
+  "verifyCount": 0,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false,
+      "offeredNetwork": "eip155:8453"
+    },
+    {
+      "seq": 2,
+      "phase": "wrong-network-sepolia",
+      "httpStatus": 402,
+      "settleDelta": 1,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false,
+      "paymentPresent": true,
+      "payloadNetwork": "eip155:84532",
+      "offeredNetwork": "eip155:8453"
+    }
+  ]
+}

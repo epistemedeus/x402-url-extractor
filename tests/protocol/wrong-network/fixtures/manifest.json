@@ -1,0 +1,45 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.wrong-network.v1",
+  "scope": "x402 PAYMENT-SIGNATURE accepted.network must match the advertised route network. Base Sepolia, Ethereum, Solana, legacy 'base', and empty network must stay 402 without facilitator verify or settle. Loopback merchant only; never pay, never xpay/CDP, never checkout.",
+  "spec": {
+    "x402Version": 2,
+    "match": "@x402/core findMatchingRequirements / paymentRequirementsMatchAccepted",
+    "artifact": "server.js",
+    "advertisedNetwork": "eip155:8453"
+  },
+  "fixtures": [
+    {
+      "id": "wrong-network-rejected",
+      "path": "pass/wrong-network-rejected.json",
+      "expect": "pass",
+      "kind": "wrong-network-rejection"
+    },
+    {
+      "id": "matching-network-control",
+      "path": "pass/matching-network-control.json",
+      "expect": "pass",
+      "kind": "matching-control"
+    },
+    {
+      "id": "seeded-wrong-network-accepted",
+      "path": "reject/seeded-wrong-network-accepted.json",
+      "expect": "reject",
+      "rejectCode": "wrong_network_accepted",
+      "kind": "seeded-failure"
+    },
+    {
+      "id": "seeded-wrong-network-settle",
+      "path": "reject/seeded-wrong-network-settle.json",
+      "expect": "reject",
+      "rejectCode": "wrong_network_settle",
+      "kind": "seeded-settle"
+    },
+    {
+      "id": "seeded-wrong-network-verify",
+      "path": "reject/seeded-wrong-network-verify.json",
+      "expect": "reject",
+      "rejectCode": "wrong_network_verify",
+      "kind": "seeded-verify"
+    }
+  ]
+}
