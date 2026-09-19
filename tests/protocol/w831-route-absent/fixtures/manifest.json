@@ -1,0 +1,80 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.w831-route-absent.v1",
+  "scope": "An undeclared x402 path is route_absent: not HTTP 402, not PAYMENT-REQUIRED, not facilitator verify/settle. Catalogs that list the origin on a different path report priceObservation.status route_absent. Declared paid GET /extract still 402s; GET /healthz is a present unpaid surface, not route_absent. Loopback merchant only; never pay, never xpay/CDP, never checkout.",
+  "spec": {
+    "x402Version": 2,
+    "artifact": "server.js",
+    "absentRoute": "/w831-absent-route",
+    "declaredPaidRoute": "/extract",
+    "declaredFreeRoute": "/healthz",
+    "catalogStatus": "route_absent"
+  },
+  "fixtures": [
+    {
+      "id": "absent-route-not-402",
+      "path": "pass/absent-route-not-402.json",
+      "expect": "pass",
+      "kind": "http-absent"
+    },
+    {
+      "id": "declared-paid-control",
+      "path": "pass/declared-paid-control.json",
+      "expect": "pass",
+      "kind": "http-paid-control"
+    },
+    {
+      "id": "declared-free-not-absent",
+      "path": "pass/declared-free-not-absent.json",
+      "expect": "pass",
+      "kind": "http-free-surface"
+    },
+    {
+      "id": "catalog-origin-found-route-absent",
+      "path": "pass/catalog-origin-found-route-absent.json",
+      "expect": "pass",
+      "kind": "catalog-route-absent"
+    },
+    {
+      "id": "seeded-absent-route-as-402",
+      "path": "reject/seeded-absent-route-as-402.json",
+      "expect": "reject",
+      "rejectCode": "absent_route_classified_as_402",
+      "kind": "seeded-failure"
+    },
+    {
+      "id": "seeded-absent-route-settled",
+      "path": "reject/seeded-absent-route-settled.json",
+      "expect": "reject",
+      "rejectCode": "absent_route_settle",
+      "kind": "seeded-settle"
+    },
+    {
+      "id": "seeded-absent-route-charged",
+      "path": "reject/seeded-absent-route-charged.json",
+      "expect": "reject",
+      "rejectCode": "absent_route_classified_as_charged",
+      "kind": "seeded-charged"
+    },
+    {
+      "id": "seeded-healthz-as-absent",
+      "path": "reject/seeded-healthz-as-absent.json",
+      "expect": "reject",
+      "rejectCode": "free_surface_classified_as_absent",
+      "kind": "seeded-free-as-absent"
+    },
+    {
+      "id": "seeded-extract-402-as-absent",
+      "path": "reject/seeded-extract-402-as-absent.json",
+      "expect": "reject",
+      "rejectCode": "declared_paid_classified_as_absent",
+      "kind": "seeded-paid-as-absent"
+    },
+    {
+      "id": "seeded-catalog-route-absent-as-matched",
+      "path": "reject/seeded-catalog-route-absent-as-matched.json",
+      "expect": "reject",
+      "rejectCode": "catalog_route_absent_classified_as_matched",
+      "kind": "seeded-catalog-matched"
+    }
+  ]
+}

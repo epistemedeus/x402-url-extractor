@@ -1,0 +1,38 @@
+{
+  "id": "seeded-catalog-route-absent-as-matched",
+  "title": "Seeded failure: origin-found expected-route-absent claimed as matched payable catalog",
+  "expect": "reject",
+  "rejectCode": "catalog_route_absent_classified_as_matched",
+  "rail": "x402",
+  "kind": "seeded-catalog-matched",
+  "route": "/extract",
+  "settleCount": 0,
+  "verifyCount": 0,
+  "claims": {
+    "ok": true,
+    "routeAbsent": false,
+    "payable": true,
+    "charged": false,
+    "settled": false
+  },
+  "catalog": {
+    "origin": "https://api.example.com",
+    "expectedRoute": "/extract",
+    "listedRoute": "/read",
+    "targetFound": true,
+    "expectedRouteFound": true,
+    "priceObservationStatus": "route_absent",
+    "findings": ["origin_found_expected_route_absent"],
+    "matched": true,
+    "payable": true,
+    "charged": false
+  },
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false
+  },
+  "attempts": []
+}
