@@ -1,0 +1,44 @@
+{
+  "id": "seeded-absent-route-settled",
+  "title": "Seeded failure: facilitator settle on an undeclared path",
+  "expect": "reject",
+  "rejectCode": "absent_route_settle",
+  "rail": "x402",
+  "kind": "seeded-settle",
+  "route": "/w831-absent-route",
+  "settleCount": 1,
+  "verifyCount": 0,
+  "claims": {
+    "ok": false,
+    "routeAbsent": true,
+    "payable": false,
+    "charged": false,
+    "settled": true
+  },
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "absent-unpaid",
+      "role": "absent",
+      "method": "GET",
+      "path": "/w831-absent-route",
+      "httpStatus": 404,
+      "hasPaymentRequired": false,
+      "hasPaymentResponse": false,
+      "charged": false,
+      "payable": false,
+      "routeAbsent": true,
+      "settleDelta": 1,
+      "verifyDelta": 0,
+      "paymentPresent": false
+    }
+  ]
+}

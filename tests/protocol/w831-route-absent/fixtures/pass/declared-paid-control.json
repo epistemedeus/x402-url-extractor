@@ -1,0 +1,62 @@
+{
+  "id": "declared-paid-control",
+  "title": "Declared GET /extract still returns unpaid HTTP 402; harness is not a blanket 404",
+  "expect": "pass",
+  "rail": "x402",
+  "kind": "http-paid-control",
+  "route": "/extract",
+  "declaredPaidRoute": "/extract",
+  "settleCount": 0,
+  "verifyCount": 0,
+  "claims": {
+    "ok": true,
+    "routeAbsent": false,
+    "payable": true,
+    "charged": false,
+    "settled": false
+  },
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "paid-control-unpaid",
+      "role": "paid-control",
+      "method": "GET",
+      "path": "/extract",
+      "httpStatus": 402,
+      "hasPaymentRequired": true,
+      "hasPaymentResponse": false,
+      "charged": false,
+      "payable": true,
+      "routeAbsent": false,
+      "offeredNetwork": "eip155:8453",
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false
+    },
+    {
+      "seq": 2,
+      "phase": "paid-control-casefold",
+      "role": "paid-control",
+      "method": "GET",
+      "path": "/EXTRACT",
+      "httpStatus": 402,
+      "hasPaymentRequired": true,
+      "hasPaymentResponse": false,
+      "charged": false,
+      "payable": true,
+      "routeAbsent": false,
+      "offeredNetwork": "eip155:8453",
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false
+    }
+  ]
+}
