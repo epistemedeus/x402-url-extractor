@@ -1,0 +1,116 @@
+{
+  "schema": "samedaydesk.x402-protocol-fixtures.w910-amount-matrix.v1",
+  "scope": "w910: unpaid x402 amount matrix. String-compare HTTP 402 accepts[].amount, MCP tools/list _meta.x402.accepts[].amount, well-known items, and OpenAPI 402 USD text. Amounts are canonical integer strings. HTTP 402 is not settlement. Missing routes are not demand. No PAYMENT-SIGNATURE.",
+  "spec": {
+    "x402Version": 2,
+    "pins": {
+      "extract": { "amountAtomic": "5000", "priceUsd": "$0.005" },
+      "scan": { "amountAtomic": "200000", "priceUsd": "$0.20" },
+      "transaction_receipt": { "amountAtomic": "2000", "priceUsd": "$0.002" }
+    },
+    "workItem": "w910"
+  },
+  "fixtures": [
+    {
+      "id": "live-unpaid-extract",
+      "path": "pass/live-unpaid-extract.json",
+      "expect": "pass",
+      "kind": "route-amount-matrix"
+    },
+    {
+      "id": "live-unpaid-scan",
+      "path": "pass/live-unpaid-scan.json",
+      "expect": "pass",
+      "kind": "route-amount-matrix"
+    },
+    {
+      "id": "live-unpaid-tx-receipt",
+      "path": "pass/live-unpaid-tx-receipt.json",
+      "expect": "pass",
+      "kind": "route-amount-matrix"
+    },
+    {
+      "id": "live-unpaid-matrix",
+      "path": "pass/live-unpaid-matrix.json",
+      "expect": "pass",
+      "kind": "amount-matrix"
+    },
+    {
+      "id": "seeded-amount-mismatch",
+      "path": "reject/seeded-amount-mismatch.json",
+      "expect": "reject",
+      "rejectCode": "amount_mismatch",
+      "kind": "seeded-failure"
+    },
+    {
+      "id": "seeded-missing-amount",
+      "path": "reject/seeded-missing-amount.json",
+      "expect": "reject",
+      "rejectCode": "amount_missing",
+      "kind": "seeded-missing-amount"
+    },
+    {
+      "id": "seeded-numeric-amount",
+      "path": "reject/seeded-numeric-amount.json",
+      "expect": "reject",
+      "rejectCode": "amount_not_string",
+      "kind": "seeded-numeric-amount"
+    },
+    {
+      "id": "seeded-scientific-amount",
+      "path": "reject/seeded-scientific-amount.json",
+      "expect": "reject",
+      "rejectCode": "amount_not_canonical_string",
+      "kind": "seeded-scientific-amount"
+    },
+    {
+      "id": "seeded-padded-amount",
+      "path": "reject/seeded-padded-amount.json",
+      "expect": "reject",
+      "rejectCode": "amount_not_canonical_string",
+      "kind": "seeded-padded-amount"
+    },
+    {
+      "id": "seeded-cross-surface-drift",
+      "path": "reject/seeded-cross-surface-drift.json",
+      "expect": "reject",
+      "rejectCode": "cross_surface_drift",
+      "kind": "seeded-cross-surface-drift"
+    },
+    {
+      "id": "seeded-402-as-settlement",
+      "path": "reject/seeded-402-as-settlement.json",
+      "expect": "reject",
+      "rejectCode": "http_402_classified_as_settlement",
+      "kind": "seeded-402-as-settlement"
+    },
+    {
+      "id": "seeded-absence-as-demand",
+      "path": "reject/seeded-absence-as-demand.json",
+      "expect": "reject",
+      "rejectCode": "absence_as_demand",
+      "kind": "seeded-absence-as-demand"
+    },
+    {
+      "id": "seeded-invented-field",
+      "path": "reject/seeded-invented-field.json",
+      "expect": "reject",
+      "rejectCode": "invented_receipt_field",
+      "kind": "seeded-invented-field"
+    },
+    {
+      "id": "seeded-openapi-price-mismatch",
+      "path": "reject/seeded-openapi-price-mismatch.json",
+      "expect": "reject",
+      "rejectCode": "openapi_price_mismatch",
+      "kind": "seeded-openapi-price-mismatch"
+    },
+    {
+      "id": "seeded-payment-signature",
+      "path": "reject/seeded-payment-signature.json",
+      "expect": "reject",
+      "rejectCode": "payment_signature_sent",
+      "kind": "seeded-payment-signature"
+    }
+  ]
+}
