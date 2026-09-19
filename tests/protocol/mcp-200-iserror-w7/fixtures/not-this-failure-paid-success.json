@@ -1,0 +1,23 @@
+{
+  "id": "not-this-failure-paid-success",
+  "seededFailure": false,
+  "httpStatus": 200,
+  "requestPaymentPresent": true,
+  "claimed": { "paid": true, "result": "paid_success" },
+  "note": "True paid_success is not this W7 failure. The rejector must not treat every paid claim as mcp_200_iserror_must_not_be_paid.",
+  "body": {
+    "jsonrpc": "2.0",
+    "id": 7,
+    "result": {
+      "content": [{ "type": "text", "text": "{\"ok\":true}" }],
+      "structuredContent": { "ok": true },
+      "_meta": {
+        "x402/payment-response": {
+          "success": true,
+          "transaction": "0x3333333333333333333333333333333333333333333333333333333333333333",
+          "network": "eip155:84532"
+        }
+      }
+    }
+  }
+}

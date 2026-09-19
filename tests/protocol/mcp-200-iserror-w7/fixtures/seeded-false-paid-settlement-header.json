@@ -1,0 +1,23 @@
+{
+  "id": "seeded-iserror-with-settlement-success-claimed-paid",
+  "seededFailure": true,
+  "httpStatus": 200,
+  "requestPaymentPresent": true,
+  "claimed": { "paid": true, "kind": "paid_success" },
+  "note": "Application or output-schema isError after a settlement proof is still not paid_success.",
+  "body": {
+    "jsonrpc": "2.0",
+    "id": 9,
+    "result": {
+      "isError": true,
+      "content": [{ "type": "text", "text": "Output validation error" }],
+      "_meta": {
+        "x402/payment-response": {
+          "success": true,
+          "transaction": "0x3333333333333333333333333333333333333333333333333333333333333333",
+          "network": "eip155:84532"
+        }
+      }
+    }
+  }
+}
