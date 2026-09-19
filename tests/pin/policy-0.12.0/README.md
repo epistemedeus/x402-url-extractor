@@ -30,5 +30,17 @@ node tests/pin/policy-0.12.0/check.mjs --project \
   tests/pin/policy-0.12.0/fixtures/seeded-treat-absence-as-demand.json
 # exit 1 — treat_absence_as_demand
 
+node tests/pin/policy-0.12.0/check.mjs \
+  tests/pin/policy-0.12.0/fixtures/seeded-empty-pin-source.json
+# exit 1 — pin-source-empty
+
+node tests/pin/policy-0.12.0/check.mjs \
+  tests/pin/policy-0.12.0/fixtures/seeded-lock-integrity-missing.json
+# exit 1 — lock-integrity-missing
+
+node tests/pin/policy-0.12.0/project.mjs \
+  tests/pin/policy-0.12.0/fixtures/seeded-caller-supplied-digest.json
+# exit 1 — inspect_output_schema_unavailable
+
 node --test --test-concurrency=1 tests/pin/policy-0.12.0/*.test.mjs
 ```

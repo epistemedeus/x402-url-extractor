@@ -1,0 +1,20 @@
+{
+  "id": "seeded-lock-integrity-missing",
+  "kind": "pin-source",
+  "label": "seeded-lock-integrity-missing",
+  "note": "Version string matches 0.12.0 but lock integrity is omitted. Must not report pins-match.",
+  "declared": {
+    "agent-payment-policy": "0.12.0"
+  },
+  "lockPackages": {
+    "": {
+      "dependencies": {
+        "agent-payment-policy": "0.12.0"
+      }
+    },
+    "node_modules/agent-payment-policy": {
+      "version": "0.12.0",
+      "resolved": "https://registry.npmjs.org/agent-payment-policy/-/agent-payment-policy-0.12.0.tgz"
+    }
+  }
+}

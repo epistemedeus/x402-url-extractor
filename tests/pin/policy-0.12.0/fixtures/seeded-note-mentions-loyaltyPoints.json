@@ -1,0 +1,26 @@
+{
+  "kind": "projection",
+  "id": "seeded-note-mentions-field-name",
+  "label": "seeded-note-mentions-field-name",
+  "note": "A note that names loyaltyPoints is not an invented receipt field.",
+  "buyer": {},
+  "paymentRequired": {
+    "x402Version": 2,
+    "extensions": {
+      "offer-receipt": {
+        "info": {
+          "offers": [
+            {
+              "format": "eip712",
+              "acceptIndex": 0,
+              "payload": {
+                "amount": "5000"
+              },
+              "signature": "0x12d6f439112da3ce96349f92ac571d7ff4621f6daaa81a8436a48a201b093a8e742f4bdcd7b586fc6643e903cff9707f4dc124838e7acb60378e9dbc8e7894771b"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

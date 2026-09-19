@@ -53,14 +53,30 @@ export function extractSignedOffers(input) {
   return offers;
 }
 
-export function inventedHits(input, forbidden) {
-  const hits = [];
-  const blob = JSON.stringify(input);
-  for (const name of forbidden) {
-    const re = new RegExp(`\\b${name.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}\\b`);
-    if (re.test(blob)) hits.push(name);
+function walkKeys(value, visit) {
+  if (Array.isArray(value)) {
+    value.forEach((item) => walkKeys(item, visit));
+    return;
   }
-  return hits;
+  const obj = record(value);
+  if (!obj) return;
+  for (const [key, child] of Object.entries(obj)) {
+    visit(key, child);
+    walkKeys(child, visit);
+  }
+}
+
+export function inventedHits(input, forbidden) {
+  const names = new Set(forbidden || []);
+  const hits = new Set();
+  const named = Array.isArray(input?.receiptFields) ? input.receiptFields : [];
+  for (const field of named) {
+    if (names.has(field)) hits.add(field);
+  }
+  walkKeys(input, (key) => {
+    if (names.has(key)) hits.add(key);
+  });
+  return [...hits];
 }
 
 export function projectPinBoundary(input, pins = loadPins()) {
@@ -68,21 +84,32 @@ export function projectPinBoundary(input, pins = loadPins()) {
   if (!body) failClosed("projection_input_invalid", "pin projection input must be a JSON object");
 
   const invented = inventedHits(body, pins.forbiddenInvented || []);
+  const buyer = record(body.buyer) || {};
+  const buyerDigest = digestString(buyer.schemaDigest);
+  const omitted = !buyerDigest;
+  let sellerPresent = false;
+  try {
+    sellerPresent = extractSignedOffers(body).length > 0;
+  } catch (error) {
+    if (!invented.length) throw error;
+  }
   if (invented.length) {
     failClosed(
       "invented_receipt_field_without_live_schema",
       "invented receipt field without live schema citation",
-      { invented, buyerSchemaDigest: null, decisionChanged: "buyer.schemaDigest:omitted" },
+      {
+        invented,
+        sellerOfferReceiptPresent: sellerPresent,
+        buyerSchemaDigest: null,
+        decisionChanged: "buyer.schemaDigest:omitted",
+      },
     );
   }
 
   const treatAbsenceAsDemand = body.treatOmittedDigestAsDemand === true
     || body.treatAbsenceAsDemand === true;
-  const buyer = record(body.buyer) || {};
-  const buyerDigest = digestString(buyer.schemaDigest);
   const offers = extractSignedOffers(body);
-  const sellerPresent = offers.length > 0;
-  const omitted = !buyerDigest;
+  sellerPresent = offers.length > 0;
 
   if (treatAbsenceAsDemand) {
     failClosed(
@@ -174,7 +201,7 @@ export async function run(argv = process.argv.slice(2)) {
   try {
     projectPinBoundary(JSON.parse(readFileSync(resolve(path), "utf8")), pins);
     printJson({
-      accepted: true,
+      accepted: false,
       evidence: null,
       error: "pin fixture must not mint portable evidence",
       pin: pinRecord(pins),

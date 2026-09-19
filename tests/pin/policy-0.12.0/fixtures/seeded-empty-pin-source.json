@@ -1,0 +1,6 @@
+{
+  "kind": "pin-source",
+  "id": "seeded-empty-pin-source",
+  "label": "seeded-empty-pin-source",
+  "note": "No declared version, lock entry, or surface. Must not report pins-match."
+}

@@ -18,7 +18,8 @@ function print(result, extra = {}) {
 
 function failUsage(message) {
   print({ ok: false, code: "usage", error: message });
-  process.exit(2);
+  process.exitCode = 2;
+  return false;
 }
 
 export async function run(argv = process.argv.slice(2)) {
@@ -47,7 +48,10 @@ export async function run(argv = process.argv.slice(2)) {
   }
 
   if (argv[0] === "--project") {
-    if (!argv[1]) failUsage("missing projection fixture path");
+    if (!argv[1]) {
+      failUsage("missing projection fixture path");
+      return;
+    }
     const pinResult = evaluateRepoPins();
     const fixture = JSON.parse(readFileSync(resolve(argv[1]), "utf8"));
     try {
@@ -55,7 +59,7 @@ export async function run(argv = process.argv.slice(2)) {
       print({
         ok: false,
         code: "pin_fixture_must_not_mint_evidence",
-        accepted: true,
+        accepted: false,
         evidence: null,
         pinCheck: { ok: pinResult.ok, code: pinResult.code },
       });
@@ -77,6 +81,7 @@ export async function run(argv = process.argv.slice(2)) {
 
   if (argv.length !== 1 || argv[0].startsWith("-")) {
     failUsage("expected a fixture path, --project <path>, --exports, or no args");
+    return;
   }
 
   const fixturePath = resolve(argv[0]);
@@ -85,7 +90,13 @@ export async function run(argv = process.argv.slice(2)) {
     const pinResult = evaluateRepoPins();
     try {
       projectPinBoundary(fixture, pins);
-      print({ ok: false, code: "pin_fixture_must_not_mint_evidence", evidence: null, fixture: argv[0] });
+      print({
+        ok: false,
+        code: "pin_fixture_must_not_mint_evidence",
+        accepted: false,
+        evidence: null,
+        fixture: argv[0],
+      });
       process.exitCode = 1;
     } catch (error) {
       const payload = refusalPayload(error, pins, pinResult);

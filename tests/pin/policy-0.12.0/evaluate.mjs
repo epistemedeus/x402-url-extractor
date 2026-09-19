@@ -52,6 +52,12 @@ export function compareDeclared(declared, pins, { surface } = {}) {
   return failures;
 }
 
+export function lockPackageKeys(lockPackages, name) {
+  return Object.keys(lockPackages || {}).filter((key) => (
+    key === `node_modules/${name}` || key.endsWith(`/node_modules/${name}`)
+  ));
+}
+
 export function compareLockPackages(lockPackages, pins, { surface } = {}) {
   const failures = [];
   const name = pins.package;
@@ -60,8 +66,8 @@ export function compareLockPackages(lockPackages, pins, { surface } = {}) {
   failures.push(...compareDeclared(declared, pins, {
     surface: surface ? `${surface}.lock-root` : "lock-root",
   }));
-  const entry = lockPackages?.[`node_modules/${name}`];
-  if (!entry) {
+  const keys = lockPackageKeys(lockPackages, name);
+  if (!keys.length) {
     addFailure(failures, {
       code: "lock-missing",
       surface,
@@ -71,32 +77,52 @@ export function compareLockPackages(lockPackages, pins, { surface } = {}) {
     });
     return failures;
   }
-  if (entry.version !== pins.version) {
-    addFailure(failures, {
-      code: "lock-version-drift",
-      surface,
-      name,
-      expected: pins.version,
-      actual: entry.version ?? null,
-    });
-  }
-  if (entry.integrity && pins.integrity && entry.integrity !== pins.integrity) {
-    addFailure(failures, {
-      code: "lock-integrity-drift",
-      surface,
-      name,
-      expected: pins.integrity,
-      actual: entry.integrity,
-    });
-  }
-  if (entry.resolved && pins.resolved && entry.resolved !== pins.resolved) {
-    addFailure(failures, {
-      code: "lock-resolved-drift",
-      surface,
-      name,
-      expected: pins.resolved,
-      actual: entry.resolved,
-    });
+  for (const key of keys) {
+    const entry = lockPackages[key] ?? {};
+    const entrySurface = surface ? `${surface}:${key}` : key;
+    if (entry.version !== pins.version) {
+      addFailure(failures, {
+        code: "lock-version-drift",
+        surface: entrySurface,
+        name,
+        expected: pins.version,
+        actual: entry.version ?? null,
+      });
+    }
+    if (!entry.integrity) {
+      addFailure(failures, {
+        code: "lock-integrity-missing",
+        surface: entrySurface,
+        name,
+        expected: pins.integrity,
+        actual: null,
+      });
+    } else if (pins.integrity && entry.integrity !== pins.integrity) {
+      addFailure(failures, {
+        code: "lock-integrity-drift",
+        surface: entrySurface,
+        name,
+        expected: pins.integrity,
+        actual: entry.integrity,
+      });
+    }
+    if (!entry.resolved) {
+      addFailure(failures, {
+        code: "lock-resolved-missing",
+        surface: entrySurface,
+        name,
+        expected: pins.resolved,
+        actual: null,
+      });
+    } else if (pins.resolved && entry.resolved !== pins.resolved) {
+      addFailure(failures, {
+        code: "lock-resolved-drift",
+        surface: entrySurface,
+        name,
+        expected: pins.resolved,
+        actual: entry.resolved,
+      });
+    }
   }
   return failures;
 }
@@ -142,23 +168,46 @@ export function loadRepoPinSource(repoRoot = REPO_ROOT, pins = loadPins()) {
 
 export function evaluatePinSource(source, pins = loadPins()) {
   const failures = [];
-  if (source.declared) {
-    failures.push(...compareDeclared(source.declared, pins, {
-      surface: source.id ?? source.label ?? "declared",
+  const body = source && typeof source === "object" && !Array.isArray(source) ? source : {};
+  const hasSurfaces = Array.isArray(body.surfaces);
+  const hasDeclared = Boolean(body.declared);
+  const hasLock = Boolean(body.lockPackages);
+  const hasConsts = Array.isArray(body.sourceConsts);
+  if (!hasSurfaces && !hasDeclared && !hasLock && !hasConsts) {
+    addFailure(failures, {
+      code: "pin-source-empty",
+      surface: body.id ?? body.label ?? null,
+      name: pins.package,
+      expected: pins.version,
+      actual: null,
+    });
+  }
+  if (hasDeclared && !hasLock && !hasSurfaces) {
+    addFailure(failures, {
+      code: "lock-missing",
+      surface: body.id ?? body.label ?? "declared",
+      name: pins.package,
+      expected: pins.version,
+      actual: null,
+    });
+  }
+  if (hasDeclared) {
+    failures.push(...compareDeclared(body.declared, pins, {
+      surface: body.id ?? body.label ?? "declared",
     }));
   }
-  if (source.lockPackages) {
-    failures.push(...compareLockPackages(source.lockPackages, pins, {
-      surface: source.id ?? source.label ?? "lock",
+  if (hasLock) {
+    failures.push(...compareLockPackages(body.lockPackages, pins, {
+      surface: body.id ?? body.label ?? "lock",
     }));
   }
-  if (Array.isArray(source.surfaces)) {
-    for (const surface of source.surfaces) {
+  if (hasSurfaces) {
+    for (const surface of body.surfaces) {
       failures.push(...evaluatePinSource(surface, pins).failures);
     }
   }
-  if (Array.isArray(source.sourceConsts)) {
-    for (const item of source.sourceConsts) {
+  if (hasConsts) {
+    for (const item of body.sourceConsts) {
       failures.push(...compareSourceConst(item.source, item, { surface: item.id }));
     }
   }
@@ -166,7 +215,7 @@ export function evaluatePinSource(source, pins = loadPins()) {
   return {
     ok,
     code: ok ? "pins-match" : "pin-drift",
-    label: source.label ?? source.id ?? null,
+    label: body.label ?? body.id ?? null,
     package: pins.package,
     version: pins.version,
     pin: pinRecord(pins),
@@ -231,7 +280,7 @@ export async function inspectInstalledPolicy(repoRoot = REPO_ROOT, pins = loadPi
 
 export function evaluateFixture(fixture, pins = loadPins()) {
   if (fixture?.kind === "projection") {
-    return { kind: "projection", fixture };
+    return { ok: false, code: "projection-not-a-pin-source", kind: "projection", fixture };
   }
   return evaluatePinSource(fixture, pins);
 }

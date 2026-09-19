@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 import { evaluateFixture, evaluateRepoPins, loadPins, readJson } from "./evaluate.mjs";
-import { projectPinBoundary, refusalPayload } from "./project.mjs";
+import { inventedHits, projectPinBoundary, refusalPayload } from "./project.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "..", "..");
@@ -18,9 +18,12 @@ const ABSENCE = join(HERE, "fixtures", "seeded-treat-absence-as-demand.json");
 const CLAIM = join(HERE, "fixtures", "seeded-claim-inspect-output-schema.json");
 
 function run(command, args) {
+  const env = { ...process.env, NO_COLOR: "1" };
+  delete env.FORCE_COLOR;
   return spawnSync(process.execPath, [command, ...args], {
     encoding: "utf8",
     cwd: ROOT,
+    env,
   });
 }
 
@@ -133,6 +136,53 @@ test("seeded invented field and treat-absence-as-demand fail closed", () => {
   assert.equal(claimBody.accepted, false);
   assert.deepEqual(claimBody.reasons, ["inspect_output_schema_unavailable"]);
   assert.equal(claimBody.evidence, null);
+});
+
+test("empty pin-source, missing integrity, and nested lock drift fail closed", () => {
+  const empty = run(CHECK, ["tests/pin/policy-0.12.0/fixtures/seeded-empty-pin-source.json"]);
+  assert.equal(empty.status, 1, empty.stderr || empty.stdout);
+  const emptyBody = JSON.parse(empty.stdout);
+  assert.equal(emptyBody.ok, false);
+  assert.equal(emptyBody.code, "pin-drift");
+  assert.ok(emptyBody.failures.some((failure) => failure.code === "pin-source-empty"));
+
+  const integrity = run(CHECK, ["tests/pin/policy-0.12.0/fixtures/seeded-lock-integrity-missing.json"]);
+  assert.equal(integrity.status, 1, integrity.stderr || integrity.stdout);
+  const integrityBody = JSON.parse(integrity.stdout);
+  assert.equal(integrityBody.ok, false);
+  assert.ok(integrityBody.failures.some((failure) => failure.code === "lock-integrity-missing"));
+  assert.equal(integrityBody.failures.some((failure) => failure.code === "version-drift"), false);
+
+  const nested = run(CHECK, ["tests/pin/policy-0.12.0/fixtures/seeded-nested-lock-drift.json"]);
+  assert.equal(nested.status, 1, nested.stderr || nested.stdout);
+  const nestedBody = JSON.parse(nested.stdout);
+  assert.equal(nestedBody.ok, false);
+  const nestedVersion = nestedBody.failures.find((failure) => failure.code === "lock-version-drift");
+  assert.equal(nestedVersion.actual, "0.15.1");
+  assert.match(nestedVersion.surface, /node_modules\/foo\/node_modules\/agent-payment-policy/);
+});
+
+test("caller-supplied digest is not inspectOutputSchema; notes are not invented fields", () => {
+  const pins = loadPins();
+  assert.deepEqual(inventedHits({ note: "must not invent loyaltyPoints", buyer: {} }, pins.forbiddenInvented), []);
+  assert.deepEqual(inventedHits({ buyer: { loyaltyPoints: 1 } }, pins.forbiddenInvented), ["loyaltyPoints"]);
+  assert.deepEqual(inventedHits({ axb: 1 }, ["a.b"]), []);
+
+  const caller = run(PROJECT, ["tests/pin/policy-0.12.0/fixtures/seeded-caller-supplied-digest.json"]);
+  assert.equal(caller.status, 1, caller.stderr || caller.stdout);
+  const callerBody = JSON.parse(caller.stdout);
+  assert.equal(callerBody.accepted, false);
+  assert.deepEqual(callerBody.reasons, ["inspect_output_schema_unavailable"]);
+  assert.equal(callerBody.evidence, null);
+  assert.equal(callerBody.buyerSchemaDigest, "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc");
+
+  const note = run(PROJECT, ["tests/pin/policy-0.12.0/fixtures/seeded-note-mentions-loyaltyPoints.json"]);
+  assert.equal(note.status, 1, note.stderr || note.stdout);
+  const noteBody = JSON.parse(note.stdout);
+  assert.equal(noteBody.accepted, false);
+  assert.deepEqual(noteBody.reasons, ["buyer_schema_digest_omitted"]);
+  assert.equal(noteBody.invented, undefined);
+  assert.equal(noteBody.evidence, null);
 });
 
 test("cold pin check passes and refusal payload never mints evidence", () => {
