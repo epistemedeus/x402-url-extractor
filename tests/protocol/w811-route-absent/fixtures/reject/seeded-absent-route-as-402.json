@@ -1,0 +1,63 @@
+{
+  "id": "seeded-absent-route-as-402",
+  "title": "Seeded failure: undeclared /w811-absent-route claimed as HTTP 402 payable settlement",
+  "expect": "reject",
+  "rejectCode": "absent_route_classified_as_402",
+  "rail": "x402",
+  "kind": "seeded-failure",
+  "route": "/w811-absent-route",
+  "declaredPaidRoute": "/extract",
+  "claims": {
+    "ok": true,
+    "routeAbsent": false,
+    "payable": true,
+    "charged": true,
+    "settled": true,
+    "message": "route is live and paid"
+  },
+  "settleCount": 1,
+  "verifyCount": 1,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "absent-unpaid",
+      "role": "absent",
+      "method": "GET",
+      "path": "/w811-absent-route",
+      "httpStatus": 402,
+      "hasPaymentRequired": true,
+      "hasPaymentResponse": false,
+      "charged": false,
+      "payable": true,
+      "routeAbsent": false,
+      "offeredNetwork": "eip155:8453",
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false
+    },
+    {
+      "seq": 2,
+      "phase": "absent-with-signature",
+      "role": "absent",
+      "method": "GET",
+      "path": "/w811-absent-route",
+      "httpStatus": 200,
+      "hasPaymentRequired": false,
+      "hasPaymentResponse": true,
+      "charged": true,
+      "payable": true,
+      "routeAbsent": false,
+      "settleDelta": 1,
+      "verifyDelta": 1,
+      "paymentPresent": true
+    }
+  ]
+}

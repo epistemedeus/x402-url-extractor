@@ -1,0 +1,46 @@
+{
+  "id": "seeded-extract-402-as-absent",
+  "title": "Seeded failure: declared paid GET /extract 402 claimed as route_absent",
+  "expect": "reject",
+  "rejectCode": "declared_paid_classified_as_absent",
+  "rail": "x402",
+  "kind": "seeded-paid-as-absent",
+  "route": "/extract",
+  "declaredPaidRoute": "/extract",
+  "settleCount": 0,
+  "verifyCount": 0,
+  "claims": {
+    "ok": true,
+    "routeAbsent": true,
+    "payable": false,
+    "charged": false,
+    "settled": false
+  },
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "paid-control-unpaid",
+      "role": "paid-control",
+      "method": "GET",
+      "path": "/extract",
+      "httpStatus": 402,
+      "hasPaymentRequired": true,
+      "hasPaymentResponse": false,
+      "charged": false,
+      "payable": true,
+      "routeAbsent": true,
+      "offeredNetwork": "eip155:8453",
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false
+    }
+  ]
+}

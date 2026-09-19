@@ -1,0 +1,44 @@
+{
+  "id": "seeded-absent-route-charged",
+  "title": "Seeded failure: undeclared path marked charged without HTTP 402",
+  "expect": "reject",
+  "rejectCode": "absent_route_classified_as_charged",
+  "rail": "x402",
+  "kind": "seeded-charged",
+  "route": "/w811-absent-route",
+  "settleCount": 0,
+  "verifyCount": 0,
+  "claims": {
+    "ok": true,
+    "routeAbsent": true,
+    "payable": false,
+    "charged": true,
+    "settled": false
+  },
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "absent-unpaid",
+      "role": "absent",
+      "method": "GET",
+      "path": "/w811-absent-route",
+      "httpStatus": 404,
+      "hasPaymentRequired": false,
+      "hasPaymentResponse": false,
+      "charged": true,
+      "payable": false,
+      "routeAbsent": true,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false
+    }
+  ]
+}
