@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "samedaydesk.unpaid-amount-matrix-fixture.v1",
+  "id": "treat-absence-as-demand",
+  "unpublished": true,
+  "paymentAttempted": false,
+  "claims": {
+    "treatAbsenceAsDemand": true,
+    "note": "SEEDING FAILURE: missing GET /scan is treated as buyer demand. Absence is not demand. Exit 1."
+  },
+  "observed": {
+    "http": {
+      "/extract": {
+        "status": 402,
+        "method": "GET",
+        "requestHeaders": {},
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "5000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ],
+        "offerReceiptAmount": "5000"
+      },
+      "/read": {
+        "status": 402,
+        "method": "GET",
+        "requestHeaders": {},
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "5000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ],
+        "offerReceiptAmount": "5000"
+      },
+      "/schemaforge": {
+        "status": 402,
+        "method": "GET",
+        "requestHeaders": {},
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "250000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ],
+        "offerReceiptAmount": "250000"
+      },
+      "/commerce/payment-offer-preflight": {
+        "status": 402,
+        "method": "GET",
+        "requestHeaders": {},
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "5000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ],
+        "offerReceiptAmount": "5000"
+      },
+      "/chain/transaction-receipt": {
+        "status": 402,
+        "method": "GET",
+        "requestHeaders": {},
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "2000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ],
+        "offerReceiptAmount": "2000"
+      }
+    },
+    "mcp": {
+      "tools": [
+        { "name": "extract", "_meta": { "x402": { "paymentRequired": true, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000", "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" }] } } },
+        { "name": "read", "_meta": { "x402": { "paymentRequired": true, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000", "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" }] } } },
+        { "name": "schemaforge", "_meta": { "x402": { "paymentRequired": true, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "250000", "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" }] } } },
+        { "name": "payment_offer_preflight", "_meta": { "x402": { "paymentRequired": true, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "5000", "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" }] } } },
+        { "name": "transaction_receipt", "_meta": { "x402": { "paymentRequired": true, "accepts": [{ "scheme": "exact", "network": "eip155:8453", "amount": "2000", "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee" }] } } }
+      ]
+    }
+  }
+}
