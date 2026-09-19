@@ -28,20 +28,33 @@ Naive predicate this suite rejects:
 
 ## Verify
 
-Cold run (no prior state):
+Cold run against the real loopback MCP (exit 0):
+
+```
+node tests/protocol/mcp-200-iserror-w7/check.mjs --cold
+```
+
+Seeded failure: HTTP 200 `isError:true` claimed as `paid_success` is rejected (exit 1):
+
+```
+node tests/protocol/mcp-200-iserror-w7/check.mjs --seeded-failure
+```
+
+`--live` is refused (exit 1).
+
+Cold node:test suite (exit 0):
 
 ```
 node --test tests/protocol/mcp-200-iserror-w7/*.test.mjs
 ```
 
-Seeded failure (false paid claims must exit 0 only because they are rejected):
+Seeded false-paid corpus (exit 0 because each claim is rejected):
 
 ```
 node tests/protocol/mcp-200-iserror-w7/reject-seeded.mjs
-node tests/protocol/mcp-200-iserror-w7/reject-seeded.mjs --claim tests/protocol/mcp-200-iserror-w7/fixtures/seeded-false-paid-http-2xx-iserror.json
 ```
 
-Rejector is not a tautology (true paid_success claim is not this failure; exit 1):
+Rejector is not a tautology (true `paid_success` is not this failure; exit 1):
 
 ```
 node tests/protocol/mcp-200-iserror-w7/reject-seeded.mjs --claim tests/protocol/mcp-200-iserror-w7/fixtures/not-this-failure-paid-success.json

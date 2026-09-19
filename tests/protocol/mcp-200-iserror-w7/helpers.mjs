@@ -173,6 +173,13 @@ export async function postMcp(origin, body) {
   return {
     status: response.status,
     contentType,
+    headers: {
+      "content-type": contentType,
+      "payment-required": response.headers.get("PAYMENT-REQUIRED")
+        || response.headers.get("payment-required"),
+      "payment-response": response.headers.get("PAYMENT-RESPONSE")
+        || response.headers.get("payment-response"),
+    },
     body: buffer,
     json: decodePosted(buffer, contentType),
   };

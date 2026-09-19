@@ -19,6 +19,8 @@ test("mounted unpaid tools/call is HTTP 200 isError challenge, not paid", { time
     assert.ok(accepts);
     assert.equal(unpaid.status, 200);
     assert.equal(unpaid.json?.result?.isError, true);
+    assert.equal(unpaid.headers["payment-required"] == null, true);
+    assert.equal(unpaid.headers["payment-response"] == null, true);
     const observation = {
       httpStatus: unpaid.status,
       body: unpaid.body,
