@@ -1,0 +1,10 @@
+{
+  "id": "seeded-sse-ping-then-iserror-claimed-paid",
+  "seededFailure": true,
+  "httpStatus": 200,
+  "contentType": "text/event-stream",
+  "requestPaymentPresent": true,
+  "claimed": { "paid": true, "result": "paid_success" },
+  "note": "Joining every SSE data: line hid isError and let a naive HTTP 2xx paid claim through.",
+  "body": "event: ping\ndata: {}\n\nevent: message\ndata: {\"jsonrpc\":\"2.0\",\"id\":11,\"result\":{\"isError\":true,\"structuredContent\":{\"x402Version\":2,\"accepts\":[{\"scheme\":\"exact\"}]},\"content\":[{\"type\":\"text\",\"text\":\"Payment Required\"}]}}\n\n"
+}

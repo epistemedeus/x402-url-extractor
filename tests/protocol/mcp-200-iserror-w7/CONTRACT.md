@@ -8,14 +8,19 @@ The x402 MCP transport returns a **tool result** with `isError: true` for:
 - unpaid payment-required (challenge)
 - invalid payment
 - application / handler failure
-- settlement failure
+- output-schema failure (after the handler; settle may already have run)
+
+`@x402/mcp` settlement failure is **not** always `isError: true`. When
+`settle()` returns `{ success: false }` it attaches
+`_meta["x402/payment-response"]` and leaves `isError` unset. When
+`settle()` throws, it re-challenges with `isError: true`.
 
 All of those are typically **HTTP 200**. HTTP 2xx plus a payment-looking
 body or request header is therefore **not** `paid_success`.
 
-`paid` is allowed only when the JSON-RPC result is a tool result whose
-`isError` is not `true`. This suite never treats `result.isError === true`
-as paid, including when:
+`paid` is allowed only for a JSON-RPC tool result whose `isError` is not
+`true` **and** whose settlement proof has `success === true`. This suite
+never treats `result.isError === true` as paid, including when:
 
 - the request carried `_meta["x402/payment"]`
 - the error text mentions `x402/payment`

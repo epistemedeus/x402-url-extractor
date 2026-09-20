@@ -101,3 +101,62 @@ test("SSE payment-required envelope is still not paid", () => {
   assert.equal(classified.paid, false);
   assert.equal(classified.kind, KIND.CHALLENGE);
 });
+
+test("sibling JSON-RPC error does not drop result.isError into a paid claim", () => {
+  const observation = corpus.cases.find((item) => item.id === "dual-jsonrpc-error-and-iserror");
+  const classified = classifyMcpHttpResponse(observation);
+  assert.equal(classified.isError, true);
+  assert.equal(classified.paid, false);
+  assert.notEqual(classified.kind, KIND.PAID_SUCCESS);
+  assert.equal(classified.kind, KIND.APPLICATION_ERROR);
+  assert.equal(naiveHttp2xxPaidInference(observation), "paid_success");
+  assert.equal(
+    rejectPaidClaimIfHttp200IsError(observation, { paid: true, result: "paid_success" }).rejected,
+    true,
+  );
+});
+
+test("SSE ping plus message still exposes isError and rejects a paid claim", () => {
+  const observation = corpus.cases.find((item) => item.id === "sse-ping-then-iserror");
+  const classified = classifyMcpHttpResponse(observation);
+  assert.equal(classified.isError, true);
+  assert.equal(classified.paid, false);
+  assert.equal(classified.kind, KIND.CHALLENGE);
+  assert.equal(naiveHttp2xxPaidInference(observation), "paid_success");
+  assert.equal(
+    rejectPaidClaimIfHttp200IsError(observation, { paid: true, result: "paid_success" }).rejected,
+    true,
+  );
+});
+
+test("pretty-printed JSON with a data field is not treated as concatenated SSE", () => {
+  const observation = {
+    httpStatus: 200,
+    requestPaymentPresent: true,
+    contentType: "application/json",
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 12,
+      result: {
+        isError: true,
+        structuredContent: { data: { note: "not sse" }, x402Version: 2, accepts: [{ scheme: "exact" }] },
+      },
+    }, null, 2),
+  };
+  const classified = classifyMcpHttpResponse(observation);
+  assert.equal(classified.isError, true);
+  assert.equal(classified.kind, KIND.CHALLENGE);
+  assert.equal(classified.paid, false);
+});
+
+test("settle() success:false without isError is settlement_failure, not paid", () => {
+  const observation = corpus.cases.find((item) => item.id === "settlement-failed");
+  const classified = classifyMcpHttpResponse(observation);
+  assert.equal(classified.isError, false);
+  assert.equal(classified.paid, false);
+  assert.equal(classified.kind, KIND.SETTLEMENT_FAILURE);
+  assert.equal(
+    rejectPaidClaimIfHttp200IsError(observation, { paid: true, result: "paid_success" }).rejected,
+    false,
+  );
+});

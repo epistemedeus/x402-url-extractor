@@ -170,15 +170,17 @@ test("mounted settlement failure is HTTP 200 and never paid_success", { timeout:
       requestPaymentPresent: true,
     };
     const classified = classifyMcpHttpResponse(observation);
+    assert.equal(failed.json?.result?.isError === true, false);
+    assert.equal(failed.json?.result?._meta?.["x402/payment-response"]?.success, false);
     assert.equal(classified.paid, false);
+    assert.equal(classified.isError, false);
+    assert.equal(classified.kind, KIND.SETTLEMENT_FAILURE);
     assert.notEqual(classified.kind, KIND.PAID_SUCCESS);
     assert.equal(holdsMcp200IsErrorNeverPaid(observation), true);
-    if (classified.isError === true) {
-      assert.equal(
-        rejectPaidClaimIfHttp200IsError(observation, { paid: true, result: "paid_success" }).rejected,
-        true,
-      );
-    }
+    assert.equal(
+      rejectPaidClaimIfHttp200IsError(observation, { paid: true, result: "paid_success" }).rejected,
+      false,
+    );
     assert.equal(mounted.events.length, 1);
     assert.equal(mounted.events[0].result, "settlement_failure");
     assert.notEqual(mounted.events[0].result, "paid_success");

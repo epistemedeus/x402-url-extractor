@@ -195,7 +195,7 @@ async function main(argv = process.argv.slice(2)) {
     return 0;
   }
 
-  if (argv.includes("--seeded-failure") || argv[0] === "--claim") {
+  if (argv.includes("--seeded-failure") || argv.includes("--claim")) {
     const claimIndex = argv.findIndex((arg) => arg === "--claim");
     const claimPath = claimIndex >= 0 && argv[claimIndex + 1]
       ? path.resolve(argv[claimIndex + 1])

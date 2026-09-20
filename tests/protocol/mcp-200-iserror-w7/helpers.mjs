@@ -2,6 +2,7 @@ import { createRequire } from "node:module";
 import { z } from "zod";
 
 import { mountMcp } from "../../../mcp-server.mjs";
+import { decodeMcpHttpBody } from "./classify-mcp-http.mjs";
 
 const requireFromHere = createRequire(import.meta.url);
 const express = requireFromHere("express");
@@ -118,47 +119,54 @@ export async function startMounted(options = {}) {
   };
   const events = [];
   const restoreFetch = installNetworkGuard(calls);
-  const app = express();
-  const mount = await mountMcp(app, {
-    facilitatorClient: createFacilitator(calls, options.facilitator),
-    network: NETWORK,
-    payTo: PAY_TO,
-    serverInfo: { name: "mcp-200-iserror-w7", version: "1" },
-    tools: options.tools || createTools(calls),
-    streamableHttpOptions: options.streamableHttpOptions ?? { enableJsonResponse: true },
-    typedTelemetry: {
-      enabled: options.typedEnabled !== false,
-      onAppend: (decision) => {
-        events.push(decision);
+  let server;
+  try {
+    const app = express();
+    const mount = await mountMcp(app, {
+      facilitatorClient: createFacilitator(calls, options.facilitator),
+      network: NETWORK,
+      payTo: PAY_TO,
+      serverInfo: { name: "mcp-200-iserror-w7", version: "1" },
+      tools: options.tools || createTools(calls),
+      streamableHttpOptions: options.streamableHttpOptions ?? { enableJsonResponse: true },
+      typedTelemetry: {
+        enabled: options.typedEnabled !== false,
+        onAppend: (decision) => {
+          events.push(decision);
+        },
       },
-    },
-  });
-  const server = app.listen(0, "127.0.0.1");
-  await new Promise((resolve, reject) => {
-    server.once("listening", resolve);
-    server.once("error", reject);
-  });
-  const origin = `http://127.0.0.1:${server.address().port}`;
-  return {
-    origin,
-    calls,
-    events,
-    async drain({ timeoutMs = 1_000 } = {}) {
-      const lifecycle = mount.typedTelemetryLifecycle;
-      if (typeof lifecycle?.flush === "function") {
-        return lifecycle.flush({ timeoutMs });
-      }
-      return { drained: true, pending: 0, failures: 0 };
-    },
-    async close() {
-      restoreFetch();
-      await closeServer(server);
-      const lifecycle = mount.typedTelemetryLifecycle;
-      if (typeof lifecycle?.shutdown === "function") {
-        await lifecycle.shutdown({ timeoutMs: 250 }).catch(() => {});
-      }
-    },
-  };
+    });
+    server = app.listen(0, "127.0.0.1");
+    await new Promise((resolve, reject) => {
+      server.once("listening", resolve);
+      server.once("error", reject);
+    });
+    const origin = `http://127.0.0.1:${server.address().port}`;
+    return {
+      origin,
+      calls,
+      events,
+      async drain({ timeoutMs = 1_000 } = {}) {
+        const lifecycle = mount.typedTelemetryLifecycle;
+        if (typeof lifecycle?.flush === "function") {
+          return lifecycle.flush({ timeoutMs });
+        }
+        return { drained: true, pending: 0, failures: 0 };
+      },
+      async close() {
+        restoreFetch();
+        await closeServer(server);
+        const lifecycle = mount.typedTelemetryLifecycle;
+        if (typeof lifecycle?.shutdown === "function") {
+          await lifecycle.shutdown({ timeoutMs: 250 }).catch(() => {});
+        }
+      },
+    };
+  } catch (error) {
+    restoreFetch();
+    await closeServer(server);
+    throw error;
+  }
 }
 
 export async function postMcp(origin, body) {
@@ -186,17 +194,7 @@ export async function postMcp(origin, body) {
 }
 
 function decodePosted(buffer, contentType) {
-  const text = Buffer.from(buffer || []).toString("utf8");
-  if (!text) return null;
-  if (String(contentType || "").includes("text/event-stream")) {
-    const payload = text
-      .split(/\r?\n/)
-      .filter((line) => line.startsWith("data:"))
-      .map((line) => line.slice(5).trimStart())
-      .join("");
-    return payload ? JSON.parse(payload) : null;
-  }
-  return JSON.parse(text);
+  return decodeMcpHttpBody(buffer, contentType);
 }
 
 export function paidCall(id, name, argumentKey, argumentValue, accepted) {
@@ -219,7 +217,13 @@ export async function unpaidAccepts(origin, name, argumentKey, argumentValue, id
     method: "tools/call",
     params: { name, arguments: { [argumentKey]: argumentValue } },
   });
-  const accepts = unpaid.json?.result?.structuredContent?.accepts?.[0]
-    || (unpaid.json?.result?.content?.[0]?.text && JSON.parse(unpaid.json.result.content[0].text).accepts?.[0]);
-  return { unpaid, accepts };
+  const structured = unpaid.json?.result?.structuredContent?.accepts?.[0];
+  if (structured) return { unpaid, accepts: structured };
+  const text = unpaid.json?.result?.content?.[0]?.text;
+  if (typeof text !== "string" || text.length === 0) return { unpaid, accepts: undefined };
+  try {
+    return { unpaid, accepts: JSON.parse(text).accepts?.[0] };
+  } catch {
+    return { unpaid, accepts: undefined };
+  }
 }

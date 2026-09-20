@@ -29,7 +29,7 @@ async function loadSeededFiles() {
 
 test("seeded false-paid claims are rejected", async () => {
   const seeded = await loadSeededFiles();
-  assert.equal(seeded.length >= 3, true);
+  assert.equal(seeded.length >= 5, true);
   for (const { name, claim } of seeded) {
     assert.equal(claim.seededFailure, true, name);
     const observation = {

@@ -67,3 +67,14 @@ test("check --live is refused", () => {
   assert.equal(report.error, "forbidden_flag");
   assert.equal(report.flag, "--live");
 });
+
+test("check --claim after other args still rejects a seeded isError paid claim", { timeout: 10_000 }, () => {
+  const fixture = path.join(here, "fixtures/seeded-false-paid-sse-multi-event.json");
+  const result = runCheck(["--claim", fixture]);
+  const report = parseStdout(result);
+  assert.equal(result.status, 1, result.stderr);
+  assert.equal(report.ok, true);
+  assert.equal(report.code, "mcp_200_iserror_must_not_be_paid");
+  assert.equal(report.isError, true);
+  assert.equal(report.paid, false);
+});

@@ -70,22 +70,45 @@
       "id": "settlement-failed",
       "httpStatus": 200,
       "requestPaymentPresent": true,
-      "expected": { "paid": false, "kind": "settlement_failure", "isError": true },
+      "expected": { "paid": false, "kind": "settlement_failure", "isError": false },
       "body": {
         "jsonrpc": "2.0",
         "id": 4,
         "result": {
-          "isError": true,
-          "content": [{ "type": "text", "text": "{\"error\":\"Settlement failed\"}" }],
+          "content": [{ "type": "text", "text": "{\"ok\":true}" }],
           "_meta": {
             "x402/payment-response": {
               "success": false,
-              "error": "settlement_failed",
+              "errorReason": "synthetic-fail",
+              "transaction": "",
               "network": "eip155:84532"
             }
           }
         }
       }
+    },
+    {
+      "id": "dual-jsonrpc-error-and-iserror",
+      "httpStatus": 200,
+      "requestPaymentPresent": true,
+      "expected": { "paid": false, "kind": "application_error", "isError": true },
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 10,
+        "error": { "code": -32000, "message": "Payment required" },
+        "result": {
+          "isError": true,
+          "content": [{ "type": "text", "text": "x402/payment" }]
+        }
+      }
+    },
+    {
+      "id": "sse-ping-then-iserror",
+      "httpStatus": 200,
+      "contentType": "text/event-stream",
+      "requestPaymentPresent": true,
+      "expected": { "paid": false, "kind": "challenge", "isError": true },
+      "body": "event: ping\ndata: {}\n\nevent: message\ndata: {\"jsonrpc\":\"2.0\",\"id\":11,\"result\":{\"isError\":true,\"structuredContent\":{\"x402Version\":2,\"accepts\":[{\"scheme\":\"exact\"}]},\"content\":[{\"type\":\"text\",\"text\":\"Payment Required\"}]}}\n\n"
     },
     {
       "id": "output-schema-failure-after-settle-proof",

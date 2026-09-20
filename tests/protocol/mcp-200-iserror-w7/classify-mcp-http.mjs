@@ -14,6 +14,47 @@ export const KIND = Object.freeze({
 
 const PAYMENT_LOOKS = /x402\/payment|PAYMENT-SIGNATURE|Payment Required/i;
 
+function parseJsonValue(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Streamable HTTP may emit several SSE events (ping, endpoint, message).
+ * Joining every `data:` line produces invalid JSON and hid `result.isError`.
+ * Parse each event; keep the last JSON-RPC response.
+ */
+function parseSseJsonRpc(text) {
+  const events = [];
+  let dataLines = [];
+  const flush = () => {
+    if (dataLines.length === 0) return;
+    const parsed = parseJsonValue(dataLines.join("\n"));
+    dataLines = [];
+    if (parsed != null) events.push(parsed);
+  };
+  for (const line of String(text).split(/\r?\n/)) {
+    if (line === "") {
+      flush();
+      continue;
+    }
+    if (line.startsWith("data:")) dataLines.push(line.slice(5).trimStart());
+  }
+  flush();
+  for (let i = events.length - 1; i >= 0; i -= 1) {
+    const event = events[i];
+    if (isJsonRpcObject(event) && (Object.hasOwn(event, "result") || Object.hasOwn(event, "error"))) {
+      return event;
+    }
+  }
+  return events.length > 0 && isJsonRpcObject(events[events.length - 1])
+    ? events[events.length - 1]
+    : null;
+}
+
 export function decodeMcpHttpBody(body, contentType = "") {
   if (body == null) return null;
   if (typeof body === "object" && !Buffer.isBuffer(body) && !ArrayBuffer.isView(body)) {
@@ -23,16 +64,13 @@ export function decodeMcpHttpBody(body, contentType = "") {
     ? Buffer.from(body).toString("utf8")
     : String(body);
   if (!text) return null;
-  const sse = String(contentType || "").includes("text/event-stream") || /^\s*event:/m.test(text) || /^\s*data:/m.test(text);
-  const payload = sse
-    ? text.split(/\r?\n/).filter((line) => line.startsWith("data:")).map((line) => line.slice(5).trimStart()).join("")
-    : text;
-  if (!payload) return null;
-  try {
-    return JSON.parse(payload);
-  } catch {
-    return null;
-  }
+  const direct = parseJsonValue(text);
+  if (direct != null && (isJsonRpcObject(direct) || Array.isArray(direct))) return direct;
+  const sse = String(contentType || "").includes("text/event-stream")
+    || /^\s*(?:event|id|retry):/m.test(text)
+    || /^\s*data:/m.test(text);
+  if (sse) return parseSseJsonRpc(text);
+  return null;
 }
 
 export function isJsonRpcObject(value) {
@@ -132,6 +170,37 @@ export function classifyMcpHttpResponse({
     });
   }
 
+  // JSON-RPC forbids result+error together. If result.isError is present, never
+  // treat the envelope as paid; do not let a sibling `error` drop isError.
+  if (isError) {
+    const settlement = settlementOf(result);
+    if (isPaymentRequiredToolResult(result)) {
+      return decision({
+        httpStatus: status,
+        isError: true,
+        jsonrpcError,
+        kind: KIND.CHALLENGE,
+        reason: "mcp_iserror_payment_required",
+      });
+    }
+    if (settlement && settlement.success === false) {
+      return decision({
+        httpStatus: status,
+        isError: true,
+        jsonrpcError,
+        kind: KIND.SETTLEMENT_FAILURE,
+        reason: "mcp_iserror_settlement_failed",
+      });
+    }
+    return decision({
+      httpStatus: status,
+      isError: true,
+      jsonrpcError,
+      kind: KIND.APPLICATION_ERROR,
+      reason: "mcp_iserror_not_paid",
+    });
+  }
+
   if (jsonrpcError) {
     return decision({
       httpStatus: status,
@@ -142,36 +211,18 @@ export function classifyMcpHttpResponse({
     });
   }
 
-  if (isError) {
-    const settlement = settlementOf(result);
-    if (isPaymentRequiredToolResult(result)) {
-      return decision({
-        httpStatus: status,
-        isError: true,
-        jsonrpcError: false,
-        kind: KIND.CHALLENGE,
-        reason: "mcp_iserror_payment_required",
-      });
-    }
-    if (settlement && settlement.success === false) {
-      return decision({
-        httpStatus: status,
-        isError: true,
-        jsonrpcError: false,
-        kind: KIND.SETTLEMENT_FAILURE,
-        reason: "mcp_iserror_settlement_failed",
-      });
-    }
+  const settlement = settlementOf(result);
+  // @x402/mcp attaches payment-response.success=false without setting isError
+  // when settle() returns a failed SettleResponse instead of throwing.
+  if (settlement && settlement.success === false && isJsonRpcObject(result)) {
     return decision({
       httpStatus: status,
-      isError: true,
+      isError: false,
       jsonrpcError: false,
-      kind: KIND.APPLICATION_ERROR,
-      reason: "mcp_iserror_not_paid",
+      kind: KIND.SETTLEMENT_FAILURE,
+      reason: "mcp_settlement_failed",
     });
   }
-
-  const settlement = settlementOf(result);
   if (requestPaymentPresent === true && settlement?.success === true && isJsonRpcObject(result)) {
     return decision({
       httpStatus: status,
@@ -208,22 +259,19 @@ export function classifyMcpHttpResponse({
  */
 export function rejectPaidClaimIfHttp200IsError(observation, claimed = {}) {
   const classified = classifyMcpHttpResponse(observation);
+  const rpc = decodeMcpHttpBody(observation?.body, observation?.contentType || "");
+  const rawResult = isJsonRpcObject(rpc) && Object.hasOwn(rpc, "result") ? rpc.result : null;
+  const rawIsError = mcpResultIsError(rawResult);
   const http2xx = Number.isInteger(classified.httpStatus)
     && classified.httpStatus >= 200
     && classified.httpStatus < 300;
   const claimsPaid = claimed.paid === true || claimed.result === "paid_success" || claimed.kind === KIND.PAID_SUCCESS;
-  if (http2xx && classified.isError === true && (claimsPaid || classified.paid === true)) {
+  const isError = classified.isError === true || rawIsError;
+  if (http2xx && isError && (claimsPaid || classified.paid === true)) {
     return {
       rejected: true,
       code: REJECT_CODE,
-      classified,
-    };
-  }
-  if (classified.paid === true && classified.isError === true) {
-    return {
-      rejected: true,
-      code: REJECT_CODE,
-      classified,
+      classified: classified.isError === true ? classified : { ...classified, isError: true, paid: false },
     };
   }
   return { rejected: false, code: null, classified };
@@ -256,10 +304,13 @@ export function naiveHttp2xxPaidInference({
 
 export function holdsMcp200IsErrorNeverPaid(observation) {
   const classified = classifyMcpHttpResponse(observation);
+  const rpc = decodeMcpHttpBody(observation?.body, observation?.contentType || "");
+  const rawResult = isJsonRpcObject(rpc) && Object.hasOwn(rpc, "result") ? rpc.result : null;
+  const isError = classified.isError === true || mcpResultIsError(rawResult);
   const http2xx = Number.isInteger(classified.httpStatus)
     && classified.httpStatus >= 200
     && classified.httpStatus < 300;
-  if (http2xx && classified.isError === true) {
+  if (http2xx && isError) {
     return classified.paid === false && classified.kind !== KIND.PAID_SUCCESS;
   }
   return true;

@@ -1,0 +1,17 @@
+{
+  "id": "seeded-dual-jsonrpc-error-and-iserror-claimed-paid",
+  "seededFailure": true,
+  "httpStatus": 200,
+  "requestPaymentPresent": true,
+  "claimed": { "paid": true, "result": "paid_success" },
+  "note": "A sibling JSON-RPC error must not drop result.isError. HTTP 200 + isError is still not paid.",
+  "body": {
+    "jsonrpc": "2.0",
+    "id": 10,
+    "error": { "code": -32000, "message": "Payment required" },
+    "result": {
+      "isError": true,
+      "content": [{ "type": "text", "text": "x402/payment" }]
+    }
+  }
+}
