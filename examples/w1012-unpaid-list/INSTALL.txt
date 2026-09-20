@@ -1,0 +1,30 @@
+SameDayDesk W1012 unpaid tools/list 0.1.0
+Merchant https://agents.samedaydesk.com/mcp
+
+Node 22 or newer is enough for the default command. This directory does not
+install extra npm packages, mutate a global profile, or provide a cleanup
+command. It does not call tools, pay, publish, or use neo.
+
+Cold unpaid discovery (initialize then tools/list, no tools/call):
+
+  cd examples/w1012-unpaid-list
+  node bin/cli.mjs --json
+
+Seeded failure (offline; product must reject):
+
+  node bin/cli.mjs --seeded-failure --json
+
+Expected: exit 1, error.code SEED_REJECT, missing extract.
+
+Copyable MCP params are fixtures/mcp.json:
+
+  url: https://agents.samedaydesk.com/mcp
+  transport: streamable-http
+  headers: {}
+
+Default config sends no source headers and no payment headers.
+
+Refused without network: --call, --pay, --approve, --purchase, --publish,
+--neo, --checkout.
+
+To stop: there is no daemon. Unset nothing. Temporary files are not created.
