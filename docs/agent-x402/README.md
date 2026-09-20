@@ -44,6 +44,7 @@ Useful slices:
 node docs/agent-x402/verify.mjs discover
 node docs/agent-x402/verify.mjs reject-seeded
 node docs/agent-x402/verify.mjs reject-seeded --fixture docs/agent-x402/fixtures/missing-extract.json
+node --test docs/agent-x402/verify.test.mjs
 ```
 
 Kill commands (`publish`, `registry`, `pay`, `payment`, `checkout`,
@@ -76,5 +77,6 @@ docs/agent-x402/
 ├── DISCOVERY.md
 ├── FAILURES.md
 ├── verify.mjs
+├── verify.test.mjs
 └── fixtures/
 ```

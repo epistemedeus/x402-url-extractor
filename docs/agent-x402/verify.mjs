@@ -10,11 +10,11 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIXTURE_DIR = join(HERE, "fixtures");
-const LIVE_MCP_URL = "https://agents.samedaydesk.com/mcp";
+export const LIVE_MCP_URL = "https://agents.samedaydesk.com/mcp";
 const MCP_PROTOCOL = "2025-11-25";
 const FORBIDDEN_PROTOCOL = "2026-07-28";
 const TIMEOUT_MS = 15_000;
-const MAX_BYTES = 1_000_000;
+export const MAX_BYTES = 1_000_000;
 const USER_AGENT = "samedaydesk-agent-x402-docs/0.1.0";
 const MAX_PAGES = 20;
 
@@ -64,7 +64,7 @@ function reject(message) {
   throw new Rejected(message);
 }
 
-function parseSseOrJson(text, label) {
+export function parseSseOrJson(text, label) {
   const dataLines = text.split(/\r?\n/).filter((line) => line.startsWith("data: "));
   const raw = dataLines.length ? dataLines.at(-1).slice(6) : text;
   try {
@@ -72,6 +72,40 @@ function parseSseOrJson(text, label) {
   } catch {
     throw new Error(`${label} did not return JSON or JSON SSE data`);
   }
+}
+
+export async function readCappedText(response, label, maxBytes = MAX_BYTES) {
+  const contentLength = Number(response.headers?.get?.("content-length"));
+  if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+    if (response.body) {
+      try { await response.body.cancel(); } catch { /* already closed */ }
+    }
+    throw new Error(`${label} response exceeded ${maxBytes} bytes`);
+  }
+  if (!response.body || typeof response.body.getReader !== "function") {
+    const text = typeof response.text === "function" ? await response.text() : "";
+    if (Buffer.byteLength(text, "utf8") > maxBytes) {
+      throw new Error(`${label} response exceeded ${maxBytes} bytes`);
+    }
+    return text;
+  }
+  const reader = response.body.getReader();
+  const chunks = [];
+  let received = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      received += value.byteLength;
+      if (received > maxBytes) {
+        throw new Error(`${label} response exceeded ${maxBytes} bytes`);
+      }
+      chunks.push(value);
+    }
+  } finally {
+    try { await reader.cancel(); } catch { /* already closed */ }
+  }
+  return Buffer.concat(chunks.map((chunk) => Buffer.from(chunk))).toString("utf8");
 }
 
 function headerMap(headers) {
@@ -215,15 +249,10 @@ export function rejectSeededDocument(doc) {
   }
 
   if (kind === "initialize") {
-    if (payload.result?.protocolVersion === FORBIDDEN_PROTOCOL) {
-      reject("protocolVersion 2026-07-28 is out of scope for unpaid discovery");
-    }
     reject("initialize fixture is not a completed unpaid tools/list inventory");
   }
 
-  const tools = payload.tools
-    || payload.result?.tools
-    || (kind === "inventory" ? payload.tools : null);
+  const tools = payload.tools || payload.result?.tools;
   if (Array.isArray(tools)) {
     assertDiscoveryInventory(tools);
     reject("seeded document was accepted as unpaid discovery");
@@ -232,8 +261,9 @@ export function rejectSeededDocument(doc) {
   reject("seeded document is not unpaid MCP discovery");
 }
 
-async function postRpc(method, params, id, extraHeaders = {}) {
-  const response = await fetch(LIVE_MCP_URL, {
+export async function postRpc(method, params, id, extraHeaders = {}, options = {}) {
+  const fetchImpl = options.fetchImpl || fetch;
+  const response = await fetchImpl(LIVE_MCP_URL, {
     method: "POST",
     redirect: "error",
     signal: AbortSignal.timeout(TIMEOUT_MS),
@@ -245,22 +275,33 @@ async function postRpc(method, params, id, extraHeaders = {}) {
     },
     body: JSON.stringify({ jsonrpc: "2.0", id, method, params }),
   });
-  const text = await response.text();
-  if (Buffer.byteLength(text, "utf8") > MAX_BYTES) {
-    throw new Error(`${method} response exceeded ${MAX_BYTES} bytes`);
+  if (response.status !== 200) {
+    if (response.body) {
+      try { await response.body.cancel(); } catch { /* already closed */ }
+    }
+    throw new Error(`${method} HTTP ${response.status}`);
   }
-  return { response, text, payload: parseSseOrJson(text, method) };
+  const text = await readCappedText(response, method);
+  const payload = parseSseOrJson(text, method);
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    throw new Error(`${method} did not return a JSON-RPC object`);
+  }
+  if (payload.error) {
+    throw new Error(`${method} JSON-RPC error ${payload.error.code}: ${payload.error.message}`);
+  }
+  if (payload.id !== id) {
+    throw new Error(`${method} JSON-RPC id mismatch`);
+  }
+  return { response, text, payload };
 }
 
-export async function discoverLive() {
+export async function discoverLive(options = {}) {
+  const fetchImpl = options.fetchImpl || fetch;
   const initialize = await postRpc("initialize", {
     protocolVersion: MCP_PROTOCOL,
     capabilities: {},
     clientInfo: { name: "samedaydesk-agent-x402-docs", version: "0.1.0" },
-  }, 1);
-  if (!initialize.response.ok) {
-    throw new Error(`initialize HTTP ${initialize.response.status}`);
-  }
+  }, 1, {}, { fetchImpl });
   const result = initialize.payload.result || {};
   if (result.protocolVersion === FORBIDDEN_PROTOCOL) {
     reject("protocolVersion 2026-07-28 is out of scope for unpaid discovery");
@@ -275,21 +316,23 @@ export async function discoverLive() {
   const sessionId = initialize.response.headers.get("mcp-session-id");
   const extra = sessionId ? { "mcp-session-id": sessionId } : {};
   const tools = [];
+  const seenCursors = new Set();
   let cursor;
   let pages = 0;
   let listId = 2;
   do {
     pages += 1;
     if (pages > MAX_PAGES) throw new Error("tools/list pagination exceeds the page ceiling");
-    const listed = await postRpc("tools/list", cursor ? { cursor } : {}, listId, extra);
+    const listed = await postRpc("tools/list", cursor ? { cursor } : {}, listId, extra, { fetchImpl });
     listId += 1;
-    if (!listed.response.ok) {
-      throw new Error(`tools/list HTTP ${listed.response.status}`);
-    }
     const pageTools = listed.payload.result?.tools;
     if (!Array.isArray(pageTools)) throw new Error("tools/list is missing tools");
     tools.push(...pageTools);
     cursor = listed.payload.result?.nextCursor;
+    if (cursor) {
+      if (seenCursors.has(cursor)) throw new Error("tools/list repeated nextCursor");
+      seenCursors.add(cursor);
+    }
   } while (cursor);
 
   const found = assertDiscoveryInventory(tools);

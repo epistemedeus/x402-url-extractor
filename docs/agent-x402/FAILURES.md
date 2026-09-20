@@ -46,3 +46,9 @@ the registry, or a checkout endpoint.
 
 Quoted verifier output for at least one fixture **and** the live
 `discover` command. Green tests in other packages do not substitute.
+
+Offline regressions (HTTP 201, JSON-RPC error, byte cap, cursor loop):
+
+```bash
+node --test docs/agent-x402/verify.test.mjs
+```

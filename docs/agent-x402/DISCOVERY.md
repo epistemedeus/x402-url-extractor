@@ -24,8 +24,11 @@ content-type: application/json
 If `initialize` returns `mcp-session-id`, replay it on `tools/list`.
 The live server may be stateless (no session header). Both are valid.
 
-Do not send `Mcp-Method`. Do not send payment headers. Cap the response
-at 1,000,000 bytes. Timeout 15 seconds. `redirect: error`.
+Do not send `Mcp-Method`. Do not send payment headers. Require HTTP 200
+exactly (not other 2xx). Cap the response at 1,000,000 bytes while
+reading; do not buffer an oversized body. Timeout 15 seconds.
+`redirect: error`. Treat a JSON-RPC `error` or an `id` mismatch as
+failure. Repeat `nextCursor` values are failure.
 
 ## Step 1 — initialize
 
@@ -139,7 +142,9 @@ Inspector is optional. The verifier is the acceptance command.
 
 | Observation | Action |
 | --- | --- |
-| HTTP not 200, timeout, redirect | Stop. Do not invent tools. |
+| HTTP not 200 (including other 2xx), timeout, redirect | Stop. Do not invent tools. |
+| JSON-RPC `error` or response `id` mismatch | Stop. Do not invent tools. |
+| Repeated `nextCursor` | Stop. Do not keep paging. |
 | `protocolVersion` is `2026-07-28` | Stop. Out of scope. |
 | `extract` / `extract_batch` missing or duplicate | Schema drift. Stop. |
 | Extra valid tools | Accept. Not drift. |
