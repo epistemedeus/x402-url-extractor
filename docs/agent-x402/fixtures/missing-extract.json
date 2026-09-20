@@ -1,0 +1,21 @@
+{
+  "id": "missing-extract",
+  "expectReject": "tools/list missing or duplicate extract",
+  "kind": "inventory",
+  "payload": {
+    "tools": [
+      {
+        "name": "extract_batch",
+        "title": "Extract Public URLs in Batch",
+        "inputSchema": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["urls"],
+          "properties": {
+            "urls": { "type": "array", "minItems": 1, "maxItems": 5 }
+          }
+        }
+      }
+    ]
+  }
+}

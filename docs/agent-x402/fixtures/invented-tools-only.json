@@ -1,0 +1,11 @@
+{
+  "id": "invented-tools-only",
+  "expectReject": "tools/list missing or duplicate extract",
+  "kind": "inventory",
+  "payload": {
+    "tools": [
+      { "name": "not_a_live_required_tool" },
+      { "name": "also_invented" }
+    ]
+  }
+}

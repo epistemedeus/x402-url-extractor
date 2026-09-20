@@ -1,0 +1,18 @@
+{
+  "id": "mcp-method-header",
+  "expectReject": "Mcp-Method header is forbidden on initialize-era discovery",
+  "kind": "rpc",
+  "payload": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "headers": {
+      "Mcp-Method": "initialize"
+    },
+    "params": {
+      "protocolVersion": "2025-11-25",
+      "capabilities": {},
+      "clientInfo": { "name": "seeded-failure", "version": "0.0.0" }
+    }
+  }
+}

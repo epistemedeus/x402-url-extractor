@@ -1,0 +1,13 @@
+{
+  "id": "registry-publish",
+  "expectReject": "registry publish is a kill condition",
+  "kind": "registry_publish",
+  "payload": {
+    "method": "POST",
+    "url": "https://registry.modelcontextprotocol.io/v0.1/publish",
+    "body": {
+      "name": "io.github.epistemedeus/x402-data-gateway",
+      "version": "1.23.49"
+    }
+  }
+}
