@@ -25,6 +25,9 @@
   "refusedFlags": [
     "--live",
     "--pay",
+    "--stripe",
+    "--checkout",
+    "--settle",
     "--cdp",
     "--publish",
     "--neo"

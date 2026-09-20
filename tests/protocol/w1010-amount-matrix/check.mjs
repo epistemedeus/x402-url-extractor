@@ -1,17 +1,17 @@
 #!/usr/bin/env node
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
-
 import { CODES, REFUSED_FLAGS } from "./constants.mjs";
 import { evaluateAmountMatrix } from "./evaluate.mjs";
-import { ROOT, loadJson, SEEDED_EXTRACT_ONTO_SCAN } from "./paths.mjs";
+import { loadBoundedFixture, SEEDED_EXTRACT_ONTO_SCAN } from "./paths.mjs";
 import { runColdSuite, runFixtureCorpus, runSeededFailure } from "./run.mjs";
 
-function resolveFixture(input) {
-  const fromCwd = resolve(input);
-  if (existsSync(fromCwd)) return fromCwd;
-  return resolve(ROOT, input);
-}
+const KNOWN_FLAGS = new Set([
+  "--cold",
+  "--seeded-failure",
+  "--all-fixtures",
+  "--help",
+  "-h",
+  "--origin",
+]);
 
 function help() {
   return `w1010: unpaid x402 amount matrix (HTTP 402 / MCP tools/list / OpenAPI).
@@ -25,6 +25,7 @@ Usage:
 
 Cold run mounts local server.js on loopback with a fake facilitator that
 refuses verify/settle. Unpaid GET/MCP/OpenAPI only. Never pays.
+Refused: --live --pay --stripe --checkout --settle --cdp --publish --neo --payment-signature.
 `;
 }
 
@@ -62,6 +63,22 @@ function originFromArgv(argv) {
   return { value: null };
 }
 
+function unknownFlag(argv) {
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = String(argv[i]);
+    if (arg === "--origin") {
+      i += 1;
+      continue;
+    }
+    if (!arg.startsWith("-")) continue;
+    const name = arg.split("=")[0];
+    if (KNOWN_FLAGS.has(name) || name === "-h") continue;
+    if (REFUSED_FLAGS.includes(name)) continue;
+    return arg;
+  }
+  return null;
+}
+
 async function main(argv = process.argv.slice(2)) {
   const refused = refusedFlag(argv);
   if (refused) {
@@ -72,6 +89,18 @@ async function main(argv = process.argv.slice(2)) {
       paymentAttempted: false,
     });
     process.stderr.write(`${refused} is refused\n`);
+    return 2;
+  }
+
+  const unknown = unknownFlag(argv);
+  if (unknown) {
+    print({
+      ok: false,
+      code: "unknown_flag",
+      error: `unknown flag ${unknown}`,
+      paymentAttempted: false,
+    });
+    process.stderr.write(`unknown flag ${unknown}\n`);
     return 2;
   }
 
@@ -133,8 +162,25 @@ async function main(argv = process.argv.slice(2)) {
     failUsage("expected --cold, --seeded-failure, --all-fixtures, a fixture path, or no args");
   }
 
-  const fixturePath = resolveFixture(positional[0]);
-  const fixture = loadJson(fixturePath);
+  let loaded;
+  try {
+    loaded = loadBoundedFixture(positional[0]);
+  } catch (error) {
+    const code = error?.code === "FIXTURE_ESCAPE"
+      ? "fixture_escape"
+      : error?.code === "FIXTURE_NOT_FOUND"
+        ? "fixture_not_found"
+        : "malformed_fixture";
+    print({
+      ok: false,
+      code,
+      error: error?.message || "invalid fixture",
+      paymentAttempted: false,
+    });
+    process.stderr.write(`${code}: ${error?.message || error}\n`);
+    return 2;
+  }
+  const fixture = loaded.document;
   const report = evaluateAmountMatrix(fixture);
   print({ ...report, fixture: positional[0] });
   if (fixture.expect === "reject") {

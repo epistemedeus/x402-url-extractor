@@ -4,6 +4,7 @@ import {
   FORBIDDEN_INVENTED,
   MATRIX,
   PAYMENT_REQUEST_HEADER_NAMES,
+  PAYMENT_RESPONSE_SETTLEMENT_HEADER_NAMES,
   SCAN_AMOUNT_ATOMIC,
   SCHEMA_REPORT,
   SDS,
@@ -37,31 +38,54 @@ function inventedHits(value, acc = []) {
 
 function headerMap(headers) {
   const out = {};
-  if (!headers || typeof headers !== "object") return out;
+  if (!headers || typeof headers !== "object" || Array.isArray(headers)) return out;
   for (const [key, value] of Object.entries(headers)) {
-    out[String(key).toLowerCase()] = value;
+    out[String(key).trim().toLowerCase()] = value;
   }
   return out;
 }
 
-function paymentRequestHeaders(headers) {
+function paymentHeaderHits(headers, names, { authorization = false } = {}) {
   const map = headerMap(headers);
   const hits = [];
-  for (const name of PAYMENT_REQUEST_HEADER_NAMES) {
-    if (map[name]) hits.push(name);
+  for (const name of names) {
+    if (Object.hasOwn(map, name)) hits.push(name);
   }
-  const authorization = String(map.authorization || "");
-  if (/^payment\s+/i.test(authorization)) hits.push("authorization");
+  if (authorization) {
+    const value = String(map.authorization || "").trim();
+    if (/^payment\s+/i.test(value)) hits.push("authorization");
+  }
   return hits;
 }
 
-function exactAccept(accepts) {
-  const rows = asList(accepts);
-  return rows.find((row) => (
+function claimedTrue(value) {
+  return value === true || value === "true" || value === 1 || value === "1";
+}
+
+function exactAccepts(accepts) {
+  return asList(accepts).filter((row) => (
     asRecord(row)
     && row.scheme === SDS.scheme
     && row.network === SDS.network
-  )) || null;
+  ));
+}
+
+function exactAccept(accepts) {
+  return exactAccepts(accepts)[0] || null;
+}
+
+function inspectExactAmounts(rows, expected, codes, label) {
+  if (!rows.length) {
+    return { ...inspectAmount(undefined, expected, codes, label), allMatch: false };
+  }
+  let first = null;
+  let allMatch = true;
+  for (const row of rows) {
+    const cmp = inspectAmount(row.amount, expected, codes, label);
+    if (!first) first = cmp;
+    if (!cmp.match) allMatch = false;
+  }
+  return { ...first, allMatch };
 }
 
 function mcpTool(mcp, name) {
@@ -182,12 +206,11 @@ export function evaluateAmountMatrix(document) {
   const mcp = asRecord(observed.mcp) || {};
   const openapi = asRecord(observed.openapi) || {};
   const wellKnown = asRecord(observed.wellKnownX402) || asRecord(observed.wellKnown) || {};
-  const openapiPaths = asRecord(openapi.paths);
-  const openapiDeclared = Boolean(openapiPaths && Object.keys(openapiPaths).length > 0);
   const wellKnownItems = asList(wellKnown.items);
   const wellKnownDeclared = wellKnownItems.length > 0;
 
-  let paymentAttempted = fixture.paymentAttempted === true;
+  let paymentAttempted = claimedTrue(fixture.paymentAttempted);
+  if (paymentAttempted) pushCode(codes, CODES.PAYMENT_ATTEMPTED);
   const rows = [];
 
   for (const route of MATRIX) {
@@ -195,18 +218,22 @@ export function evaluateAmountMatrix(document) {
     const mcpObs = mcpTool(mcp, route.mcpTool);
     const openapiObs = openapiOperation(openapi, route.path, route.method);
     const known = wellKnownItem(wellKnown, route.path);
-    const requestHeaderHits = paymentRequestHeaders(httpObs?.requestHeaders);
-    if (requestHeaderHits.length) {
+    const requestHeaderHits = paymentHeaderHits(
+      httpObs?.requestHeaders,
+      PAYMENT_REQUEST_HEADER_NAMES,
+      { authorization: true },
+    );
+    const responseHeaderHits = [
+      ...paymentHeaderHits(httpObs?.responseHeaders, PAYMENT_RESPONSE_SETTLEMENT_HEADER_NAMES),
+      ...paymentHeaderHits(httpObs?.headers, PAYMENT_RESPONSE_SETTLEMENT_HEADER_NAMES),
+    ];
+    if (requestHeaderHits.length || responseHeaderHits.length) {
       paymentAttempted = true;
       pushCode(codes, CODES.PAYMENT_ATTEMPTED);
     }
 
     if (!httpObs) {
-      if (claims.treatAbsenceAsDemand === true || claims.absenceIsDemand === true) {
-        pushCode(codes, CODES.TREAT_ABSENCE_AS_DEMAND);
-      } else {
-        pushCode(codes, CODES.ROUTE_ABSENT);
-      }
+      pushCode(codes, CODES.ROUTE_ABSENT);
       rows.push({
         id: route.id,
         path: route.path,
@@ -226,13 +253,19 @@ export function evaluateAmountMatrix(document) {
     const status = httpObs.status;
     if (status !== 402) pushCode(codes, CODES.HTTP_NOT_402);
 
-    const accepted = exactAccept(httpObs.accepts);
+    const httpExact = exactAccepts(httpObs.accepts);
+    const accepted = httpExact[0] || null;
     const httpAmount = accepted?.amount;
-    const mcpAccepted = exactAccept(mcpObs?._meta?.x402?.accepts) || exactAccept(mcpObs?.accepts);
+    const mcpExact = [
+      ...exactAccepts(mcpObs?._meta?.x402?.accepts),
+      ...exactAccepts(mcpObs?.accepts),
+    ];
+    const mcpAccepted = mcpExact[0] || null;
     const mcpAmount = mcpAccepted?.amount;
     const offerAmount = httpObs.offerReceiptAmount
       ?? httpObs.extensions?.["offer-receipt"]?.info?.offers?.[0]?.payload?.amount;
-    const wellKnownAccepted = exactAccept(known?.accepts);
+    const wellKnownExact = exactAccepts(known?.accepts);
+    const wellKnownAccepted = wellKnownExact[0] || null;
     const wellKnownAmount = wellKnownAccepted?.amount;
     const payTo = accepted?.payTo;
 
@@ -245,19 +278,21 @@ export function evaluateAmountMatrix(document) {
     const mcpTermsOk = acceptTermsOk(mcpAccepted, codes, { requireAsset: false });
     const mcpPayToOk = payToOk(mcpAccepted?.payTo, codes, { required: Boolean(asRecord(mcpAccepted)) });
 
-    const httpCmp = inspectAmount(httpAmount, route.amountAtomic, codes, "http");
-    let mcpCmp = { present: false, value: null, match: false, label: "mcp" };
+    const httpCmp = inspectExactAmounts(httpExact, route.amountAtomic, codes, "http");
+    let mcpCmp = { present: false, value: null, match: false, allMatch: false, label: "mcp" };
     if (mcpObs) {
       if (mcpAmount == null) {
         pushCode(codes, CODES.MCP_AMOUNT_MISSING);
       }
-      mcpCmp = inspectAmount(mcpAmount, route.amountAtomic, codes, "mcp");
+      mcpCmp = inspectExactAmounts(mcpExact, route.amountAtomic, codes, "mcp");
     }
     if (offerAmount != null) inspectAmount(offerAmount, route.amountAtomic, codes, "offer-receipt");
     let wellKnownTermsOk = true;
     let wellKnownPayToOk = true;
+    let wellKnownAllMatch = true;
     if (wellKnownDeclared) {
-      inspectAmount(wellKnownAmount, route.amountAtomic, codes, "well-known");
+      const wellKnownCmp = inspectExactAmounts(wellKnownExact, route.amountAtomic, codes, "well-known");
+      wellKnownAllMatch = wellKnownCmp.allMatch === true;
       if (known) {
         wellKnownTermsOk = acceptTermsOk(wellKnownAccepted, codes, { requireAsset: false });
         wellKnownPayToOk = payToOk(wellKnownAccepted?.payTo, codes, {
@@ -271,12 +306,16 @@ export function evaluateAmountMatrix(document) {
     }
 
     const desc = String(openapiObs?.responses?.["402"]?.description || "");
-    if (openapiDeclared && !openapiTokenPresent(desc, route.openapi402Token)) {
+    if (!openapiTokenPresent(desc, route.openapi402Token)) {
       pushCode(codes, CODES.OPENAPI_402_TEXT_MISMATCH);
     }
 
     const openApiPrice = openapiObs?.["x-payment-info"]?.price?.amount;
     if (openApiPrice != null) {
+      if (typeof openApiPrice !== "string") {
+        pushCode(codes, CODES.INVALID_AMOUNT_TYPE);
+        pushCode(codes, CODES.UNIT_CONVERSION);
+      }
       if (amountsEqual(String(openApiPrice), route.amountAtomic)) {
         pushCode(codes, CODES.UNIT_CONVERSION);
       }
@@ -286,11 +325,11 @@ export function evaluateAmountMatrix(document) {
     }
 
     const copiedExtractOntoScan = route.id === "scan"
-      && (
-        amountsEqual(httpAmount, EXTRACT_AMOUNT_ATOMIC)
-        || amountsEqual(mcpAmount, EXTRACT_AMOUNT_ATOMIC)
-        || amountsEqual(wellKnownAmount, EXTRACT_AMOUNT_ATOMIC)
-      )
+      && [
+        ...httpExact,
+        ...mcpExact,
+        ...wellKnownExact,
+      ].some((row) => amountsEqual(row.amount, EXTRACT_AMOUNT_ATOMIC))
       && !amountsEqual(EXTRACT_AMOUNT_ATOMIC, SCAN_AMOUNT_ATOMIC);
     if (copiedExtractOntoScan) {
       pushCode(codes, CODES.COPY_EXTRACT_ONTO_SCAN);
@@ -314,7 +353,9 @@ export function evaluateAmountMatrix(document) {
       network: accepted?.network ?? null,
       asset: accepted?.asset ?? null,
       match: httpCmp.match
+        && httpCmp.allMatch
         && mcpCmp.match
+        && mcpCmp.allMatch
         && mcpTermsOk
         && mcpPayToOk
         && status === 402
@@ -322,14 +363,18 @@ export function evaluateAmountMatrix(document) {
         && httpPayToOk
         && wellKnownTermsOk
         && wellKnownPayToOk
+        && wellKnownAllMatch
         && !copiedExtractOntoScan,
     });
   }
 
-  if (claims.copyExtractOntoScan === true) {
+  if (claimedTrue(claims.copyExtractOntoScan)) {
     pushCode(codes, CODES.COPY_EXTRACT_ONTO_SCAN);
   }
-  if (claims.charged === true || claims.paidDelivery === true || claims.successProven === true) {
+  if (claimedTrue(claims.treatAbsenceAsDemand) || claimedTrue(claims.absenceIsDemand)) {
+    pushCode(codes, CODES.TREAT_ABSENCE_AS_DEMAND);
+  }
+  if (claimedTrue(claims.charged) || claimedTrue(claims.paidDelivery) || claimedTrue(claims.successProven)) {
     pushCode(codes, CODES.PAYMENT_ATTEMPTED);
     paymentAttempted = true;
   }

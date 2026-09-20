@@ -124,6 +124,15 @@ export const PAYMENT_REQUEST_HEADER_NAMES = Object.freeze([
   "x-payment",
   "x-payment-signature",
   "payment-response",
+  "x-payment-response",
+]);
+
+/** Settlement evidence on responses. Do not include payment-required (the unpaid 402 challenge). */
+export const PAYMENT_RESPONSE_SETTLEMENT_HEADER_NAMES = Object.freeze([
+  "payment-response",
+  "x-payment-response",
+  "payment-signature",
+  "x-payment-signature",
 ]);
 
 export const REFUSED_FLAGS = Object.freeze([
@@ -138,4 +147,7 @@ export const REFUSED_FLAGS = Object.freeze([
   "--openserv",
   "--bazaar-tracker",
   "--reindex",
+  "--stripe",
+  "--checkout",
+  "--settle",
 ]);

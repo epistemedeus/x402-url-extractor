@@ -32,5 +32,5 @@ node tests/protocol/w1010-amount-matrix/check.mjs --seeded-failure
 node --test --test-concurrency=1 tests/protocol/w1010-amount-matrix/*.test.mjs
 ```
 
-`--live`, `--pay`, `--cdp`, `--publish`, `--neo` are refused (exit 2).
+`--live`, `--pay`, `--stripe`, `--checkout`, `--settle`, `--cdp`, `--publish`, `--neo` are refused (exit 2).
 These paths are unpublished: they are not in `package.json` scripts.

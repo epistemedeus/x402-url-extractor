@@ -25,7 +25,11 @@ function unusedPort() {
 export function parseSseOrJson(text) {
   const dataLines = String(text).split(/\r?\n/).filter((line) => line.startsWith("data: "));
   const raw = dataLines.length ? dataLines.at(-1).slice(6) : text;
-  return JSON.parse(raw);
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    throw new Error(`MCP tools/list response is not JSON: ${error?.message || error}`);
+  }
 }
 
 export function decodePaymentRequired(response, bodyText) {
@@ -188,6 +192,7 @@ export async function stopChild(child) {
 export async function startFakeFacilitator() {
   const calls = { settle: 0, supported: 0, verify: 0 };
   const server = createHttpServer((req, res) => {
+    req.resume();
     const send = (status, body) => {
       res.writeHead(status, { "content-type": "application/json" });
       res.end(JSON.stringify(body));

@@ -129,3 +129,82 @@ test("OpenAPI $0.200 is not a $0.20 token match", () => {
   assert.equal(report.ok, false);
   assert.equal(report.codes.includes(CODES.OPENAPI_402_TEXT_MISMATCH), true);
 });
+
+test("second exact /scan accept of extract 5000 is copy_extract_onto_scan", () => {
+  const fixture = canonicalFixture();
+  const scan = fixture.observed.http["/scan"].accepts[0];
+  fixture.observed.http["/scan"].accepts.push({ ...scan, amount: EXTRACT_AMOUNT_ATOMIC });
+  const report = evaluateAmountMatrix(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.codes.includes(CODES.COPY_EXTRACT_ONTO_SCAN), true);
+  assert.equal(report.codes.includes(CODES.AMOUNT_MISMATCH), true);
+  const row = report.rows.find((item) => item.id === "scan");
+  assert.equal(row.match, false);
+  assert.equal(row.httpAmount, SCAN_AMOUNT_ATOMIC);
+});
+
+test("paymentAttempted true fails closed even with matching amounts", () => {
+  const fixture = canonicalFixture();
+  fixture.paymentAttempted = true;
+  const report = evaluateAmountMatrix(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.codes.includes(CODES.PAYMENT_ATTEMPTED), true);
+  assert.equal(report.boundary.paymentSent, true);
+});
+
+test("treatAbsenceAsDemand claim fails even when every route is present", () => {
+  const fixture = canonicalFixture();
+  fixture.claims = { treatAbsenceAsDemand: true };
+  const report = evaluateAmountMatrix(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.codes.includes(CODES.TREAT_ABSENCE_AS_DEMAND), true);
+});
+
+test("x-payment-response and padded payment-signature headers are payment_attempted", () => {
+  const x402 = canonicalFixture();
+  x402.observed.http["/extract"].requestHeaders = { "x-payment-response": "eyJmb3JnZWQiOnRydWV9" };
+  const xReport = evaluateAmountMatrix(x402);
+  assert.equal(xReport.ok, false);
+  assert.equal(xReport.codes.includes(CODES.PAYMENT_ATTEMPTED), true);
+
+  const padded = canonicalFixture();
+  padded.observed.http["/extract"].requestHeaders = { " payment-signature ": "sig" };
+  const paddedReport = evaluateAmountMatrix(padded);
+  assert.equal(paddedReport.ok, false);
+  assert.equal(paddedReport.codes.includes(CODES.PAYMENT_ATTEMPTED), true);
+
+  const empty = canonicalFixture();
+  empty.observed.http["/extract"].requestHeaders = { "payment-signature": "" };
+  const emptyReport = evaluateAmountMatrix(empty);
+  assert.equal(emptyReport.ok, false);
+  assert.equal(emptyReport.codes.includes(CODES.PAYMENT_ATTEMPTED), true);
+
+  const settled = canonicalFixture();
+  settled.observed.http["/extract"].responseHeaders = { "payment-response": "settled" };
+  const settledReport = evaluateAmountMatrix(settled);
+  assert.equal(settledReport.ok, false);
+  assert.equal(settledReport.codes.includes(CODES.PAYMENT_ATTEMPTED), true);
+});
+
+test("omitted OpenAPI 402 text and numeric OpenAPI price fail closed", () => {
+  const omitted = canonicalFixture();
+  delete omitted.observed.openapi;
+  const omittedReport = evaluateAmountMatrix(omitted);
+  assert.equal(omittedReport.ok, false);
+  assert.equal(omittedReport.codes.includes(CODES.OPENAPI_402_TEXT_MISMATCH), true);
+
+  const numeric = canonicalFixture();
+  numeric.observed.openapi.paths["/scan"].get["x-payment-info"].price.amount = 0.2;
+  const numericReport = evaluateAmountMatrix(numeric);
+  assert.equal(numericReport.ok, false);
+  assert.equal(numericReport.codes.includes(CODES.INVALID_AMOUNT_TYPE), true);
+  assert.equal(numericReport.codes.includes(CODES.UNIT_CONVERSION), true);
+});
+
+test("string charged claim is payment_attempted", () => {
+  const fixture = canonicalFixture();
+  fixture.claims = { charged: "true" };
+  const report = evaluateAmountMatrix(fixture);
+  assert.equal(report.ok, false);
+  assert.equal(report.codes.includes(CODES.PAYMENT_ATTEMPTED), true);
+});

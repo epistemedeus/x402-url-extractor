@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { mkdtemp, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
 
 import { CODES, EXTRACT_AMOUNT_ATOMIC, MATRIX, SCAN_AMOUNT_ATOMIC } from "./constants.mjs";
-import { CHECK, REPO_ROOT } from "./paths.mjs";
+import { CHECK, FIXTURES, REPO_ROOT } from "./paths.mjs";
 
 function spawnCheck(args, { timeout = 20_000 } = {}) {
   return spawnSync(process.execPath, [CHECK, ...args], {
@@ -45,6 +48,50 @@ test("check.mjs refuses --live, --pay, --cdp, --publish, --neo, and --live=true"
     const result = spawnCheck([flag, "--cold"]);
     assert.equal(result.status, 2, `${flag}: ${result.stdout}${result.stderr}`);
     assert.match(result.stderr, /is refused/);
+  }
+});
+
+test("check.mjs refuses --stripe, --checkout, --settle, and unknown flags", () => {
+  for (const flag of ["--stripe", "--checkout", "--settle", "--pay=now"]) {
+    const result = spawnCheck([flag]);
+    assert.equal(result.status, 2, `${flag}: ${result.stdout}${result.stderr}`);
+    const report = reportFrom(result);
+    assert.equal(report.code, "refused");
+    assert.equal(report.paymentAttempted, false);
+  }
+  const unknown = spawnCheck(["--foo"]);
+  assert.equal(unknown.status, 2, unknown.stdout + unknown.stderr);
+  assert.equal(reportFrom(unknown).code, "unknown_flag");
+});
+
+test("check.mjs confines fixtures and JSON-fails malformed input", async () => {
+  const escaped = spawnCheck(["package.json"]);
+  assert.equal(escaped.status, 2, escaped.stdout + escaped.stderr);
+  assert.equal(reportFrom(escaped).code, "fixture_escape");
+
+  const outsideDir = await mkdtemp(join(tmpdir(), "w1010-outside-"));
+  try {
+    const outside = join(outsideDir, "canonical.json");
+    await writeFile(outside, "{}");
+    const outsideResult = spawnCheck([outside]);
+    assert.equal(outsideResult.status, 2, outsideResult.stdout + outsideResult.stderr);
+    assert.equal(reportFrom(outsideResult).code, "fixture_escape");
+  } finally {
+    await rm(outsideDir, { recursive: true, force: true });
+  }
+
+  const missing = spawnCheck(["fixtures/pass/does-not-exist.json"]);
+  assert.equal(missing.status, 2, missing.stdout + missing.stderr);
+  assert.equal(reportFrom(missing).code, "fixture_not_found");
+
+  const malformedPath = join(FIXTURES, "reject", ".tmp-malformed.json");
+  await writeFile(malformedPath, "{not json");
+  try {
+    const malformed = spawnCheck([malformedPath]);
+    assert.equal(malformed.status, 2, malformed.stdout + malformed.stderr);
+    assert.equal(reportFrom(malformed).code, "malformed_fixture");
+  } finally {
+    await rm(malformedPath, { force: true });
   }
 });
 
