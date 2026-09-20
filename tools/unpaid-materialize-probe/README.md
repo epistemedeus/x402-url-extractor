@@ -36,19 +36,23 @@ node tools/unpaid-materialize-probe/cli.mjs replay --fixture tools/unpaid-materi
 Exit **1** when the composed states show a catalog-reach gap, amount mismatch,
 or wrapper `charged:true`. Exit **0** when listing identity is canonical, the
 wrapper stays uncharged, and no mismatch is observed. Exit **2** for refused
-flags or invalid usage.
+flags or invalid usage. Bundled commands and `replay --fixture` of the same
+file share that exit contract.
 
 ## Seeded cases
 
-1. **Validator-accepted unpaid 402 plus empty exact-resource search**
-   (`seeded-absence`): `provider_accepted_not_materialized` and
-   `route_absent`. Absence is not demand.
-2. **Atomic 5000 vs 10000** (`amount-mismatch`): discovery-drift `mismatch`.
-   Amounts are compared as strings. Units are not converted.
-3. **SameDayDesk `/extract` listing identity** (`sds-extract-identity`):
-   `evaluateListingIdentity` decision `canonical` at
-   `https://agents.samedaydesk.com/extract`. Canonical origin match is not
-   hostname-ownership proof.
+Each operator-surface fixture maps to one invariant. Replay of the fixture
+file must produce the same exit and verdict as the bundled command (when one
+exists).
+
+| Command / fixture | Invariant | Exit |
+|---|---|---|
+| `seeded-absence` | `catalog-reach-gap`: validator-accepted unpaid 402 plus empty exact-resource search is `provider_accepted_not_materialized` / `route_absent`. Absence is not demand. | 1 |
+| `amount-mismatch` | `amount-mismatch`: atomic catalog `5000` vs live unpaid `10000` is discovery-drift `mismatch`. Amounts are compared as strings. Units are not converted. | 1 |
+| `sds-extract-identity` | `listing-identity-canonical`: SameDayDesk `/extract` listing identity is `canonical` at `https://agents.samedaydesk.com/extract`. Canonical origin match is not hostname-ownership proof. | 0 |
+| `replay --fixture …/wrapper-charged-true.json` | `wrapper-charged-false`: unpaid wrapper evidence must stay `charged:false`. `charged:true` is `wrapper_nonconforming`. | 1 |
+
+`--live`, `--refresh`, `--cdp`, and `--poll` remain refused (exit 2).
 
 ## Bazaar-tracker boundary
 

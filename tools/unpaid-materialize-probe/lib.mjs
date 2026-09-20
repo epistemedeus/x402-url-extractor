@@ -35,7 +35,7 @@ const REFUSED_FLAGS = Object.freeze([
   "daemon",
   "cron",
 ]);
-const FAILURE_STATES = Object.freeze([
+export const FAILURE_STATES = Object.freeze([
   "wrapper_nonconforming",
   "provider_accepted_not_materialized",
   "seller_not_provider_eligible",
@@ -43,6 +43,17 @@ const FAILURE_STATES = Object.freeze([
   "mismatch",
   "listing_identity_conflict",
   "charged:true",
+]);
+export const CATALOG_REACH_GAP_STATES = Object.freeze([
+  "provider_accepted_not_materialized",
+  "route_absent",
+]);
+export const AMOUNT_MISMATCH_STATE = "mismatch";
+export const REFUSED_OPERATOR_FLAGS = Object.freeze([
+  "--live",
+  "--refresh",
+  "--cdp",
+  "--poll",
 ]);
 const BOUNDARY_CLAIM = "Composes existing listing-identity, discovery-drift, charged:false wrapper, and bazaar-tracker readback states. Validator acceptance is not catalog materialization. Catalog absence is not demand. This probe does not refresh Bazaar as owner, poll CDP, reindex, follow redirects, or send payment.";
 
@@ -54,6 +65,45 @@ export const BUNDLED_CASES = Object.freeze({
   "seeded-absence": join(HERE, "fixtures/seeded-absence.json"),
   "amount-mismatch": join(HERE, "fixtures/amount-mismatch.json"),
   "sds-extract-identity": join(HERE, "fixtures/sds-extract-canonical.json"),
+});
+
+export const OPERATOR_SURFACE = Object.freeze({
+  "seeded-absence": Object.freeze({
+    bundled: "seeded-absence",
+    fixture: join(HERE, "fixtures/seeded-absence.json"),
+    invariant: "catalog-reach-gap",
+    claim: "Validator-accepted unpaid 402 plus empty exact-resource search is provider_accepted_not_materialized / route_absent. Catalog absence is not demand.",
+    expectedExit: 1,
+    expectedVerdict: "provider_accepted_not_materialized",
+    expectedStates: Object.freeze(["provider_accepted_not_materialized", "route_absent", "charged:false"]),
+  }),
+  "amount-mismatch": Object.freeze({
+    bundled: "amount-mismatch",
+    fixture: join(HERE, "fixtures/amount-mismatch.json"),
+    invariant: "amount-mismatch",
+    claim: "Atomic catalog 5000 vs live unpaid 10000 is discovery-drift mismatch. Amounts are compared as strings. Units are not converted.",
+    expectedExit: 1,
+    expectedVerdict: "mismatch",
+    expectedStates: Object.freeze(["mismatch", "charged:false", "canonical", "materialized"]),
+  }),
+  "sds-extract-identity": Object.freeze({
+    bundled: "sds-extract-identity",
+    fixture: join(HERE, "fixtures/sds-extract-canonical.json"),
+    invariant: "listing-identity-canonical",
+    claim: "SameDayDesk /extract listing identity is canonical at the declared origin. Canonical origin match is not hostname-ownership proof.",
+    expectedExit: 0,
+    expectedVerdict: "canonical",
+    expectedStates: Object.freeze(["canonical", "charged:false", "match", "materialized"]),
+  }),
+  "wrapper-charged-true": Object.freeze({
+    bundled: null,
+    fixture: join(HERE, "fixtures/wrapper-charged-true.json"),
+    invariant: "wrapper-charged-false",
+    claim: "Unpaid wrapper evidence must stay charged:false. charged:true is wrapper_nonconforming.",
+    expectedExit: 1,
+    expectedVerdict: "wrapper_nonconforming",
+    expectedStates: Object.freeze(["charged:true", "wrapper_nonconforming"]),
+  }),
 });
 
 export class UnpaidMaterializeProbeError extends Error {
@@ -275,7 +325,17 @@ function deriveVerdict(states, parts) {
 }
 
 export function probeExitCode(report) {
-  if (!report || report.ok !== true) return 1;
+  if (!report) return 1;
+  const verdict = report.verdict;
+  const states = Array.isArray(report.states) ? report.states : [];
+  const catalogReachGap = CATALOG_REACH_GAP_STATES.some(
+    (state) => states.includes(state) || verdict === state,
+  );
+  const amountMismatch = states.includes(AMOUNT_MISMATCH_STATE) || verdict === AMOUNT_MISMATCH_STATE;
+  const documentedFailure = FAILURE_STATES.some(
+    (state) => states.includes(state) || verdict === state,
+  );
+  if (catalogReachGap || amountMismatch || documentedFailure || report.ok !== true) return 1;
   return 0;
 }
 
@@ -379,9 +439,9 @@ Replay a caller-supplied fixture:
   node tools/unpaid-materialize-probe/cli.mjs replay --fixture tools/unpaid-materialize-probe/fixtures/seeded-absence.json
 
 Exit 0 only when the composed states show catalog reach without amount mismatch
-and unpaid wrapper charged:false. Validator-accepted empty search, amount
-mismatch, and charged:true exit 1. --live, --refresh, --cdp, and --poll are
-refused.
+and unpaid wrapper charged:false. Catalog-reach gap (seeded-absence), amount
+mismatch (amount-mismatch), and charged:true exit 1, including via replay
+--fixture of the same file. --live, --refresh, --cdp, and --poll are refused.
 
 Bazaar-tracker is readback-only (SDS tools/bazaar-tracker @ ${SDS_BAZAAR_TRACKER_PIN},
 ${SDS_BAZAAR_TRACKER_TESTS} tests). This kit does not fork x402scan or invent a collector.

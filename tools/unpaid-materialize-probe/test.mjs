@@ -13,7 +13,12 @@ import {
 import { evaluateListingIdentity, SCHEMAS } from "agent-payment-policy";
 import {
   AMOUNT_MISMATCH_COMMAND,
+  AMOUNT_MISMATCH_STATE,
   BUNDLED_CASES,
+  CATALOG_REACH_GAP_STATES,
+  FAILURE_STATES,
+  OPERATOR_SURFACE,
+  REFUSED_OPERATOR_FLAGS,
   SDS_BAZAAR_TRACKER_PIN,
   SDS_BAZAAR_TRACKER_TESTS,
   SDS_EXTRACT,
@@ -57,8 +62,56 @@ test("pins copy-paste operator commands and refuses collector flags", () => {
   assert.equal(refusedFlag(["--live"]), "--live");
   assert.equal(refusedFlag(["--cdp"]), "--cdp");
   assert.equal(refusedFlag(["--refresh"]), "--refresh");
+  assert.equal(refusedFlag(["--poll"]), "--poll");
   assert.equal(refusedFlag(["seeded-absence"]), null);
   assert.match(usage(), /No CDP poll/);
+  assert.deepEqual([...REFUSED_OPERATOR_FLAGS], ["--live", "--refresh", "--cdp", "--poll"]);
+  assert.equal(FAILURE_STATES.includes("provider_accepted_not_materialized"), true);
+  assert.equal(FAILURE_STATES.includes(AMOUNT_MISMATCH_STATE), true);
+  assert.deepEqual([...CATALOG_REACH_GAP_STATES], ["provider_accepted_not_materialized", "route_absent"]);
+});
+
+test("operator surface: each fixture maps to one invariant and the documented CLI exit", async () => {
+  const docs = readFileSync(join(HERE, "README.md"), "utf8");
+  const names = Object.keys(OPERATOR_SURFACE);
+  assert.deepEqual(names, ["seeded-absence", "amount-mismatch", "sds-extract-identity", "wrapper-charged-true"]);
+  for (const name of names) {
+    const spec = OPERATOR_SURFACE[name];
+    assert.match(docs, new RegExp(spec.invariant.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.equal(spec.expectedExit === 0 || spec.expectedExit === 1, true, name);
+    const replay = spawnCase(["replay", "--fixture", spec.fixture]);
+    assert.equal(replay.status, spec.expectedExit, `${name} replay stderr=${replay.stderr}`);
+    const report = JSON.parse(replay.stdout);
+    assert.equal(report.verdict, spec.expectedVerdict, name);
+    assert.equal(probeExitCode(report), spec.expectedExit, name);
+    for (const state of spec.expectedStates) {
+      assert.equal(report.states.includes(state), true, `${name} missing state ${state}`);
+    }
+    if (spec.bundled) {
+      const bundled = spawnCase([spec.bundled]);
+      assert.equal(bundled.status, spec.expectedExit, `${name} bundled stderr=${bundled.stderr}`);
+      assert.equal(JSON.parse(bundled.stdout).verdict, spec.expectedVerdict, name);
+      assert.equal(bundled.status, replay.status, `${name} bundled vs replay exit`);
+    }
+  }
+});
+
+test("probeExitCode fail-closes catalog-reach gap and amount mismatch even if ok is true", () => {
+  assert.equal(probeExitCode({
+    ok: true,
+    verdict: "provider_accepted_not_materialized",
+    states: ["provider_accepted_not_materialized", "route_absent"],
+  }), 1);
+  assert.equal(probeExitCode({
+    ok: true,
+    verdict: "mismatch",
+    states: ["mismatch"],
+  }), 1);
+  assert.equal(probeExitCode({
+    ok: true,
+    verdict: "canonical",
+    states: ["canonical", "charged:false", "match"],
+  }), 0);
 });
 
 test("fixture fetch serves validator and search only and refuses other URLs", async () => {
@@ -260,6 +313,16 @@ test("CLI refuses --live and does not probe the network", () => {
   assert.match(help.stdout, /seeded-absence/);
   const empty = spawnCase([]);
   assert.equal(empty.status, 2);
+});
+
+test("CLI refuses --live --refresh --cdp --poll with exit 2", () => {
+  for (const flag of REFUSED_OPERATOR_FLAGS) {
+    const result = spawnCase([flag]);
+    assert.equal(result.status, 2, flag);
+    assert.match(result.stderr, new RegExp(`${flag} is refused`));
+    assert.match(result.stderr, /does not poll CDP or refresh Bazaar as owner/);
+    assert.equal(result.stdout, "");
+  }
 });
 
 test("source tree does not invent a collector, x402scan fork, or owner refresh loop", () => {
