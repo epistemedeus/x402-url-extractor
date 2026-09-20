@@ -1,0 +1,42 @@
+{
+  "id": "merchant-flag-off-404",
+  "title": "Flag-off POST /lockfile-pin-delta is HTTP 404 route_absent; GET /extract stays unpaid 402",
+  "expect": "pass",
+  "kind": "merchant-flag-off",
+  "method": "POST /lockfile-pin-delta",
+  "observedAt": "2026-09-20T00:00:00.000Z",
+  "origin": "http://127.0.0.1",
+  "request": {
+    "method": "POST /lockfile-pin-delta",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 404,
+    "extractHttpStatus": 402,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "headerNames": [
+      "content-type"
+    ],
+    "hasPaymentRequiredHeader": false,
+    "charged": false,
+    "challenge": false,
+    "advertisedOpenApi": false,
+    "advertisedActions": false,
+    "advertisedWellKnown": false,
+    "facilitatorVerify": 0,
+    "facilitatorSettle": 0,
+    "paymentSignatureSent": false,
+    "path": "/lockfile-pin-delta"
+  },
+  "claims": {
+    "demand": false,
+    "charged": false,
+    "settlement": false
+  },
+  "counters": {
+    "verify": 0,
+    "settle": 0
+  }
+}

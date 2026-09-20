@@ -1,0 +1,45 @@
+{
+  "id": "seeded-route-absent-as-demand",
+  "title": "Seeded failure: classify catalog route_absent as demand/conversion",
+  "expect": "reject",
+  "rejectCode": "route_absent_classified_as_demand",
+  "kind": "catalog-empty-route-absent",
+  "note": "SEEDING FAILURE: empty catalogs for /lockfile-pin-delta are checked route_absent. Gate must reject demand:true.",
+  "observedAt": "2026-09-20T00:00:00.000Z",
+  "origin": "https://agents.samedaydesk.com",
+  "request": {
+    "origin": "https://agents.samedaydesk.com",
+    "route": "/lockfile-pin-delta",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "route": "/lockfile-pin-delta",
+    "expectedPriceAtomic": "5000",
+    "targetFound": false,
+    "expectedRouteFound": false,
+    "priceStatuses": {
+      "x402jobs-public-search": "route_absent",
+      "coinbase-bazaar": "route_absent"
+    },
+    "identityStatuses": {
+      "x402jobs-public-search": "route_absent",
+      "coinbase-bazaar": "route_absent"
+    },
+    "identityDecisions": {
+      "x402jobs-public-search": "absent",
+      "coinbase-bazaar": "absent"
+    },
+    "findings": [
+      "target_absent_from_ranked_results"
+    ],
+    "paymentSent": false,
+    "paymentSignatureSent": false
+  },
+  "claims": {
+    "demand": true,
+    "listed": true,
+    "conversion": true,
+    "sale": true,
+    "message": "catalog checked the origin so this is demand"
+  }
+}

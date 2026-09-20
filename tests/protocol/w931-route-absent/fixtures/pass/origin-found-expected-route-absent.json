@@ -1,0 +1,43 @@
+{
+  "id": "origin-found-expected-route-absent",
+  "title": "Canonical origin listed on /extract does not make /lockfile-pin-delta present or demand",
+  "expect": "pass",
+  "kind": "origin-found-expected-route-absent",
+  "observedAt": "2026-09-20T00:00:00.000Z",
+  "origin": "https://agents.samedaydesk.com",
+  "request": {
+    "origin": "https://agents.samedaydesk.com",
+    "route": "/lockfile-pin-delta",
+    "expectedPriceUsd": "0.005",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "route": "/lockfile-pin-delta",
+    "expectedPriceAtomic": "5000",
+    "targetFound": true,
+    "expectedRouteFound": false,
+    "priceStatuses": {
+      "coinbase-bazaar": "route_absent",
+      "x402jobs-public-search": "route_absent"
+    },
+    "identityStatuses": {
+      "coinbase-bazaar": "route_absent",
+      "x402jobs-public-search": "route_absent"
+    },
+    "identityDecisions": {
+      "coinbase-bazaar": "absent",
+      "x402jobs-public-search": "absent"
+    },
+    "findings": [
+      "origin_found_expected_route_absent"
+    ],
+    "paymentSent": false,
+    "paymentSignatureSent": false
+  },
+  "claims": {
+    "demand": false,
+    "charged": false,
+    "matched": false,
+    "settlement": false
+  }
+}

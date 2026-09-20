@@ -1,0 +1,32 @@
+{
+  "id": "seeded-origin-found-as-demand",
+  "title": "Seeded failure: treat origin_found_expected_route_absent as demand",
+  "expect": "reject",
+  "rejectCode": "route_absent_classified_as_demand",
+  "kind": "seeded-origin-found-as-demand",
+  "observedAt": "2026-09-20T00:00:00.000Z",
+  "request": {
+    "route": "/lockfile-pin-delta",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "route": "/lockfile-pin-delta",
+    "expectedPriceAtomic": "5000",
+    "targetFound": true,
+    "expectedRouteFound": false,
+    "priceStatuses": {
+      "coinbase-bazaar": "route_absent"
+    },
+    "identityStatuses": {
+      "coinbase-bazaar": "route_absent"
+    },
+    "findings": [
+      "origin_found_expected_route_absent"
+    ]
+  },
+  "claims": {
+    "demand": true,
+    "listed": true,
+    "message": "origin ranked so the missing route is demand"
+  }
+}

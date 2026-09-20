@@ -1,0 +1,37 @@
+{
+  "id": "seeded-404-as-402",
+  "title": "Seeded failure: treat flag-off HTTP 404 lockfile as HTTP 402 demand",
+  "expect": "reject",
+  "rejectCode": "absence_treated_as_402",
+  "kind": "seeded-404-as-402",
+  "method": "POST /lockfile-pin-delta",
+  "observedAt": "2026-09-20T00:00:00.000Z",
+  "request": {
+    "method": "POST /lockfile-pin-delta",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 404,
+    "extractHttpStatus": 402,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "headerNames": [
+      "content-type"
+    ],
+    "hasPaymentRequiredHeader": false,
+    "charged": false,
+    "challenge": true,
+    "advertisedOpenApi": false,
+    "advertisedActions": false,
+    "advertisedWellKnown": false,
+    "facilitatorVerify": 0,
+    "facilitatorSettle": 0,
+    "path": "/lockfile-pin-delta"
+  },
+  "claims": {
+    "demand": false,
+    "charged": false,
+    "message": "404 on a paid product is a 402 challenge"
+  }
+}
