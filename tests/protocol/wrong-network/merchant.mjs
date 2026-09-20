@@ -175,10 +175,13 @@ function encodeSignature(accepted, paymentId) {
 
 export async function withMerchant(fn) {
   const dataDir = await mkdtemp(path.join(tmpdir(), "wrong-network-"));
-  const facilitator = await startFakeFacilitator();
-  let merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
-  let advertised = null;
-  const session = {
+  let facilitator;
+  let merchant;
+  try {
+    facilitator = await startFakeFacilitator();
+    merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
+    let advertised = null;
+    const session = {
     dataDir,
     facilitator,
     host: HOST,
@@ -227,6 +230,7 @@ export async function withMerchant(fn) {
       }
       return {
         seq: undefined,
+        ...extra.fields,
         phase,
         httpStatus: response.status,
         replay: response.headers.get("x-payment-replay"),
@@ -247,7 +251,6 @@ export async function withMerchant(fn) {
         settleDelta: after.settle - before.settle,
         verifyDelta: after.verify - before.verify,
         paymentPresent: Boolean(headers["payment-signature"]),
-        ...extra.fields,
       };
     },
     async credential(paymentId, acceptedPatch = {}) {
@@ -264,11 +267,10 @@ export async function withMerchant(fn) {
     },
   };
 
-  try {
     return await fn(session);
   } finally {
-    await stopChild(merchant.child);
-    await facilitator.close();
+    if (merchant?.child) await stopChild(merchant.child);
+    if (facilitator) await facilitator.close();
     await rm(dataDir, { recursive: true, force: true });
   }
 }

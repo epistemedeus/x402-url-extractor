@@ -149,3 +149,113 @@ test("classifyFixture matches expect for the on-disk corpus", () => {
   assert.equal(classifyFixture(loadFixture("reject/seeded-wrong-network-accepted.json")).verdict, "rejected");
   assert.equal(classifyFixture(loadFixture("pass/wrong-network-rejected.json")).verdict, "pass");
 });
+
+test("omitted payloadNetwork on a granted payment is not treated as a match", () => {
+  const evaluated = evaluateTrace({
+    offeredNetwork: "eip155:8453",
+    settleCount: 1,
+    attempts: [
+      { seq: 1, phase: "unpaid", httpStatus: 402, settleDelta: 0, paymentPresent: false, offeredNetwork: "eip155:8453" },
+      {
+        seq: 2,
+        phase: "wrong-network-sepolia",
+        httpStatus: 200,
+        settleDelta: 1,
+        verifyDelta: 1,
+        hasPaymentResponse: true,
+        paymentPresent: true,
+        offeredNetwork: "eip155:8453",
+      },
+    ],
+  });
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, "wrong_network_accepted");
+  assert.equal(evaluated.mismatchAccepted, 1);
+  assert.equal(evaluated.matchingAttempts, 0);
+});
+
+test("non-string payloadNetwork on a granted payment is not treated as a match", () => {
+  const evaluated = evaluateTrace({
+    offeredNetwork: "eip155:8453",
+    attempts: [
+      { seq: 1, phase: "unpaid", httpStatus: 402, settleDelta: 0, paymentPresent: false, offeredNetwork: "eip155:8453" },
+      {
+        seq: 2,
+        phase: "wrong-network",
+        httpStatus: 200,
+        settleDelta: 1,
+        paymentPresent: true,
+        payloadNetwork: 84532,
+        offeredNetwork: "eip155:8453",
+      },
+    ],
+  });
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, "wrong_network_accepted");
+  assert.equal(evaluated.matchingAttempts, 0);
+});
+
+test("wrong-network HTTP 403 is not a protocol rejection", () => {
+  const evaluated = evaluateTrace({
+    offeredNetwork: "eip155:8453",
+    attempts: [
+      { seq: 1, phase: "unpaid", httpStatus: 402, settleDelta: 0, paymentPresent: false, offeredNetwork: "eip155:8453" },
+      {
+        seq: 2,
+        phase: "wrong-network-sepolia",
+        httpStatus: 403,
+        settleDelta: 0,
+        paymentPresent: true,
+        payloadNetwork: "eip155:84532",
+        offeredNetwork: "eip155:8453",
+      },
+    ],
+  });
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, "wrong_network_not_402");
+});
+
+test("non-finite settleDelta on a mismatch is rejected", () => {
+  const evaluated = evaluateTrace({
+    offeredNetwork: "eip155:8453",
+    attempts: [
+      { seq: 1, phase: "unpaid", httpStatus: 402, settleDelta: 0, paymentPresent: false, offeredNetwork: "eip155:8453" },
+      {
+        seq: 2,
+        phase: "wrong-network-sepolia",
+        httpStatus: 402,
+        settleDelta: Infinity,
+        paymentPresent: true,
+        payloadNetwork: "eip155:84532",
+        offeredNetwork: "eip155:8453",
+      },
+    ],
+  });
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, "invalid_settle_delta");
+  assert.equal(evaluated.settleCount, 0);
+});
+
+test("declared verifyCount cannot hide a zero verifyDelta sum", () => {
+  const evaluated = evaluateTrace({
+    offeredNetwork: "eip155:8453",
+    verifyCount: 1,
+    settleCount: 0,
+    attempts: [
+      { seq: 1, phase: "unpaid", httpStatus: 402, settleDelta: 0, verifyDelta: 0, paymentPresent: false, offeredNetwork: "eip155:8453" },
+      {
+        seq: 2,
+        phase: "wrong-network-sepolia",
+        httpStatus: 402,
+        settleDelta: 0,
+        verifyDelta: 0,
+        paymentPresent: true,
+        payloadNetwork: "eip155:84532",
+        offeredNetwork: "eip155:8453",
+      },
+    ],
+  });
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, "verify_count_inconsistent");
+  assert.equal(evaluated.verifyCount, 1);
+});

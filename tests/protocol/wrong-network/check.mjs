@@ -26,7 +26,7 @@ Cold run starts loopback server.js against a fake facilitator. A PAYMENT-SIGNATU
 whose accepted.network is not the advertised route network (eip155:8453) must stay
 402 with no facilitator verify or settle.
 
---live, --pay, --payment, --neo, --publish, --checkout, --cdp are refused (exit 2).
+--live, --pay, --payment, --payment-signature, --neo, --publish, --checkout, --cdp are refused (exit 2).
 `;
 }
 

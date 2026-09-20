@@ -18,9 +18,14 @@ function attemptsOf(trace) {
   return Array.isArray(trace?.attempts) ? trace.attempts.filter(isRecord) : [];
 }
 
-function numberOrZero(value) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : 0;
+function isFiniteNonNegative(value) {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
+}
+
+function countedDelta(value) {
+  if (value == null) return 0;
+  if (!isFiniteNonNegative(value)) return null;
+  return value;
 }
 
 function violation(code, message, extra = {}) {
@@ -37,15 +42,14 @@ function advertisedNetwork(trace, attempts) {
   return "";
 }
 
-function payloadNetworkOf(attempt, offeredNetwork) {
+function payloadNetworkOf(attempt) {
   if (typeof attempt?.payloadNetwork === "string") return attempt.payloadNetwork;
-  if (attempt?.paymentPresent === true) return offeredNetwork;
   return null;
 }
 
 function isMismatch(attempt, offeredNetwork) {
   if (attempt?.paymentPresent !== true) return false;
-  const payloadNetwork = payloadNetworkOf(attempt, offeredNetwork);
+  const payloadNetwork = payloadNetworkOf(attempt);
   if (payloadNetwork == null || payloadNetwork === "") return true;
   return payloadNetwork !== offeredNetwork;
 }
@@ -53,7 +57,8 @@ function isMismatch(attempt, offeredNetwork) {
 function isMatchingPayment(attempt, offeredNetwork) {
   if (attempt?.paymentPresent !== true) return false;
   if (!offeredNetwork) return false;
-  return payloadNetworkOf(attempt, offeredNetwork) === offeredNetwork;
+  const payloadNetwork = payloadNetworkOf(attempt);
+  return payloadNetwork !== "" && payloadNetwork === offeredNetwork;
 }
 
 function successStatus(attempt) {
@@ -77,10 +82,38 @@ export function evaluateTrace(trace = {}) {
   const offeredNetwork = advertisedNetwork(trace, attempts);
   const claims = isRecord(trace.claims) ? trace.claims : {};
   const boundary = isRecord(trace.boundary) ? trace.boundary : {};
-  const settleFromAttempts = attempts.reduce((sum, attempt) => sum + numberOrZero(attempt.settleDelta), 0);
-  const verifyFromAttempts = attempts.reduce((sum, attempt) => sum + numberOrZero(attempt.verifyDelta), 0);
-  const declaredSettle = trace.settleCount == null ? settleFromAttempts : numberOrZero(trace.settleCount);
-  const declaredVerify = trace.verifyCount == null ? verifyFromAttempts : numberOrZero(trace.verifyCount);
+  let settleFromAttempts = 0;
+  let verifyFromAttempts = 0;
+  for (const attempt of attempts) {
+    const settle = countedDelta(attempt.settleDelta);
+    const verify = countedDelta(attempt.verifyDelta);
+    if (attempt.settleDelta != null && settle == null) {
+      violations.push(violation(
+        "invalid_settle_delta",
+        "settleDelta must be a finite non-negative number",
+        { seq: attempt.seq },
+      ));
+    } else {
+      settleFromAttempts += settle ?? 0;
+    }
+    if (attempt.verifyDelta != null && verify == null) {
+      violations.push(violation(
+        "invalid_verify_delta",
+        "verifyDelta must be a finite non-negative number",
+        { seq: attempt.seq },
+      ));
+    } else {
+      verifyFromAttempts += verify ?? 0;
+    }
+  }
+  if (trace.settleCount != null && countedDelta(trace.settleCount) == null) {
+    violations.push(violation("invalid_settle_count", "settleCount must be a finite non-negative number"));
+  }
+  if (trace.verifyCount != null && countedDelta(trace.verifyCount) == null) {
+    violations.push(violation("invalid_verify_count", "verifyCount must be a finite non-negative number"));
+  }
+  const declaredSettle = trace.settleCount == null ? settleFromAttempts : (countedDelta(trace.settleCount) ?? 0);
+  const declaredVerify = trace.verifyCount == null ? verifyFromAttempts : (countedDelta(trace.verifyCount) ?? 0);
   const settleCount = Math.max(settleFromAttempts, declaredSettle);
   const verifyCount = Math.max(verifyFromAttempts, declaredVerify);
 
@@ -114,9 +147,9 @@ export function evaluateTrace(trace = {}) {
 
   for (const attempt of attempts) {
     const unpaid = attempt.phase === "unpaid" || attempt.paymentPresent === false;
-    const settleDelta = numberOrZero(attempt.settleDelta);
-    const verifyDelta = numberOrZero(attempt.verifyDelta);
-    const payloadNetwork = payloadNetworkOf(attempt, offeredNetwork);
+    const settleDelta = countedDelta(attempt.settleDelta) ?? 0;
+    const verifyDelta = countedDelta(attempt.verifyDelta) ?? 0;
+    const payloadNetwork = payloadNetworkOf(attempt);
 
     if (unpaid && settleDelta > 0) {
       violations.push(violation("unpaid_settle", "unpaid 402 must not call facilitator settle", { seq: attempt.seq }));
@@ -139,6 +172,12 @@ export function evaluateTrace(trace = {}) {
         violations.push(violation(
           "wrong_network_server_error",
           "wrong-network payload produced a 5xx instead of a protocol rejection",
+          { seq: attempt.seq, httpStatus: attempt.httpStatus },
+        ));
+      } else if (!successStatus(attempt) && Number(attempt?.httpStatus) !== 402) {
+        violations.push(violation(
+          "wrong_network_not_402",
+          `wrong-network payload must stay HTTP 402, got ${attempt.httpStatus}`,
           { seq: attempt.seq, httpStatus: attempt.httpStatus },
         ));
       }
@@ -191,6 +230,12 @@ export function evaluateTrace(trace = {}) {
     violations.push(violation(
       "settle_count_inconsistent",
       `declared settleCount ${declaredSettle} does not match attempt settleDelta sum ${settleFromAttempts}`,
+    ));
+  }
+  if (trace.verifyCount != null && verifyFromAttempts !== declaredVerify && attempts.length > 0) {
+    violations.push(violation(
+      "verify_count_inconsistent",
+      `declared verifyCount ${declaredVerify} does not match attempt verifyDelta sum ${verifyFromAttempts}`,
     ));
   }
 

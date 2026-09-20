@@ -126,6 +126,7 @@ test(
     const sepolia = matrix.attempts.find((attempt) => attempt.phase === "wrong-network-sepolia");
     assert.equal(sepolia.httpStatus, 402);
     assert.equal(sepolia.payloadNetwork, "eip155:84532");
+    assert.equal(sepolia.challengeError, "No matching payment requirements");
     assert.equal(sepolia.settleDelta, 0);
     assert.equal(sepolia.verifyDelta, 0);
     assert.equal(sepolia.hasPaymentResponse, false);
