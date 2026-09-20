@@ -100,3 +100,111 @@ test("fixture corpus classifies pass and reject files", () => {
     assert.equal(classified.verdict, "rejected");
   }
 });
+
+test("claims.settled is rejected even when settleDelta and settleCount are 0", () => {
+  const evaluated = evaluateTrace({
+    id: "lie-settled",
+    route: "/w811-absent-route",
+    claims: { ok: true, routeAbsent: true, payable: false, charged: false, settled: true },
+    settleCount: 0,
+    attempts: [{
+      seq: 1,
+      phase: "absent-unpaid",
+      role: "absent",
+      path: "/w811-absent-route",
+      httpStatus: 404,
+      hasPaymentRequired: false,
+      charged: false,
+      payable: false,
+      settleDelta: 0,
+      verifyDelta: 0,
+    }],
+  });
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, "absent_route_settle");
+  assert.equal(evaluated.claimsRejected, true);
+});
+
+test("catalog origin-found without expected route requires the finding even when status is route_absent", () => {
+  const evaluated = evaluateTrace({
+    id: "catalog-missing-finding",
+    route: "/extract",
+    claims: { ok: true, routeAbsent: true, payable: false, charged: false, settled: false },
+    catalog: {
+      targetFound: true,
+      expectedRouteFound: false,
+      priceObservationStatus: "route_absent",
+      findings: [],
+      matched: false,
+      payable: false,
+      charged: false,
+    },
+    attempts: [],
+  });
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, "catalog_missing_route_absent_status");
+});
+
+test("HTTP 402 on the absent path is rejected even when role and phase are omitted", () => {
+  const evaluated = evaluateTrace({
+    id: "unknown-role-402",
+    route: "/w811-absent-route",
+    claims: { ok: true, payable: true, charged: false, settled: false },
+    attempts: [{
+      seq: 1,
+      path: "/w811-absent-route",
+      httpStatus: 402,
+      hasPaymentRequired: true,
+      payable: true,
+      settleDelta: 0,
+      verifyDelta: 0,
+    }],
+  });
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, "absent_route_classified_as_402");
+  assert.equal(evaluated.absentAs402, 1);
+});
+
+test("paid-control role cannot relabel an absent-path HTTP 402", () => {
+  const evaluated = evaluateTrace({
+    id: "relabel-absent-402",
+    route: "/w811-absent-route",
+    claims: { ok: true, routeAbsent: false, payable: true },
+    attempts: [{
+      seq: 1,
+      role: "paid-control",
+      path: "/w811-absent-route",
+      httpStatus: 402,
+      hasPaymentRequired: true,
+      payable: true,
+      settleDelta: 0,
+      verifyDelta: 0,
+    }],
+  });
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, "absent_route_classified_as_402");
+});
+
+test("declared verifyCount that does not match attempt verifyDelta is rejected", () => {
+  const evaluated = evaluateTrace({
+    id: "verify-inconsistent",
+    route: "/w811-absent-route",
+    claims: { ok: true, routeAbsent: true, payable: false, charged: false, settled: false },
+    verifyCount: 3,
+    settleCount: 0,
+    attempts: [{
+      seq: 1,
+      phase: "absent-unpaid",
+      role: "absent",
+      path: "/w811-absent-route",
+      httpStatus: 404,
+      hasPaymentRequired: false,
+      charged: false,
+      payable: false,
+      settleDelta: 0,
+      verifyDelta: 0,
+    }],
+  });
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, "verify_count_inconsistent");
+});

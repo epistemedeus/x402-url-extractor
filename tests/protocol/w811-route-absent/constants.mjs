@@ -57,6 +57,8 @@ export const CODES = Object.freeze({
   CHECKOUT_MUTATED: "checkout_mutated",
   PUBLISHED: "published",
   NEO_TOUCHED: "neo_touched",
+  SETTLE_COUNT_INCONSISTENT: "settle_count_inconsistent",
+  VERIFY_COUNT_INCONSISTENT: "verify_count_inconsistent",
   MALFORMED_FIXTURE: "malformed_fixture",
   COLD_INCOMPLETE: "cold_incomplete",
 });

@@ -162,94 +162,96 @@ function encodeSignature(accepted, paymentId) {
 
 export async function withMerchant(fn) {
   const dataDir = await mkdtemp(path.join(tmpdir(), "w811-route-absent-"));
-  const facilitator = await startFakeFacilitator();
-  const merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
-  let advertised = null;
-
-  const session = {
-    dataDir,
-    facilitator,
-    host: SDS.host,
-    network: SDS.network,
-    origin: () => merchant.base,
-    snapshot() {
-      return { settle: facilitator.calls.settle, verify: facilitator.calls.verify };
-    },
-    async request(targetPath, { method = "GET", headers = {} } = {}) {
-      return fetch(`${merchant.base}${targetPath}`, {
-        method,
-        headers: { host: SDS.host, ...headers },
-        signal: AbortSignal.timeout(15_000),
-      });
-    },
-    async recordAttempt(phase, targetPath, { method = "GET", headers = {}, fields = {} } = {}) {
-      const before = session.snapshot();
-      const response = await session.request(targetPath, { method, headers });
-      const text = await response.text();
-      const body = parseBody(text);
-      const challenge = decodePaymentRequired(response);
-      const after = session.snapshot();
-      const names = headerNames(response);
-      const accepted = (challenge?.accepts || []).find((item) => item.network === SDS.network && item.scheme === "exact");
-      if (accepted && !advertised) {
-        advertised = {
-          offeredNetwork: accepted.network,
-          accepted,
-        };
-      }
-      const httpStatus = response.status;
-      const paymentRequired = Boolean(challenge) || names.includes("payment-required");
-      return {
-        seq: undefined,
-        phase,
-        method,
-        path: targetPath.split("?")[0],
-        httpStatus,
-        hasPaymentRequired: paymentRequired,
-        hasPaymentResponse: Boolean(
-          response.headers.get("payment-response")
-          || response.headers.get("x-payment-response")
-          || response.headers.get("payment-receipt"),
-        ),
-        charged: body && Object.hasOwn(body, "charged") ? body.charged : null,
-        payable: httpStatus === 402 || paymentRequired,
-        routeAbsent: httpStatus !== 402 && !paymentRequired && targetPath.split("?")[0] !== DECLARED_PAID_ROUTE,
-        error: typeof body?.error === "string" ? body.error : null,
-        offeredNetwork: accepted?.network ?? null,
-        settleDelta: after.settle - before.settle,
-        verifyDelta: after.verify - before.verify,
-        paymentPresent: Boolean(headers["payment-signature"]),
-        ...fields,
-      };
-    },
-    async wellKnownRoutes() {
-      const response = await session.request("/.well-known/x402");
-      const body = parseBody(await response.text());
-      const items = Array.isArray(body?.items) ? body.items : [];
-      return items.map((item) => item?.resource?.routeTemplate).filter(Boolean);
-    },
-    async credential(paymentId) {
-      if (!advertised) {
-        const unpaid = await session.request(DECLARED_PAID_ROUTE);
-        const challenge = decodePaymentRequired(unpaid);
-        await unpaid.arrayBuffer();
-        const accepted = (challenge?.accepts || []).find((item) => item.network === SDS.network && item.scheme === "exact");
-        if (!accepted) throw new Error("declared paid route omitted Base exact terms");
-        advertised = { offeredNetwork: accepted.network, accepted };
-      }
-      return {
-        headers: { "payment-signature": encodeSignature(advertised.accepted, paymentId) },
-        offeredNetwork: advertised.offeredNetwork,
-        accepted: advertised.accepted,
-      };
-    },
-  };
-
+  let facilitator;
+  let merchant;
   try {
+    facilitator = await startFakeFacilitator();
+    merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
+    let advertised = null;
+
+    const session = {
+      dataDir,
+      facilitator,
+      host: SDS.host,
+      network: SDS.network,
+      origin: () => merchant.base,
+      snapshot() {
+        return { settle: facilitator.calls.settle, verify: facilitator.calls.verify };
+      },
+      async request(targetPath, { method = "GET", headers = {} } = {}) {
+        return fetch(`${merchant.base}${targetPath}`, {
+          method,
+          headers: { host: SDS.host, ...headers },
+          signal: AbortSignal.timeout(15_000),
+        });
+      },
+      async recordAttempt(phase, targetPath, { method = "GET", headers = {}, fields = {} } = {}) {
+        const before = session.snapshot();
+        const response = await session.request(targetPath, { method, headers });
+        const text = await response.text();
+        const body = parseBody(text);
+        const challenge = decodePaymentRequired(response);
+        const after = session.snapshot();
+        const names = headerNames(response);
+        const accepted = (challenge?.accepts || []).find((item) => item.network === SDS.network && item.scheme === "exact");
+        if (accepted && !advertised) {
+          advertised = {
+            offeredNetwork: accepted.network,
+            accepted,
+          };
+        }
+        const httpStatus = response.status;
+        const paymentRequired = Boolean(challenge) || names.includes("payment-required");
+        return {
+          seq: undefined,
+          phase,
+          method,
+          path: targetPath.split("?")[0],
+          httpStatus,
+          hasPaymentRequired: paymentRequired,
+          hasPaymentResponse: Boolean(
+            response.headers.get("payment-response")
+            || response.headers.get("x-payment-response")
+            || response.headers.get("payment-receipt"),
+          ),
+          charged: body && Object.hasOwn(body, "charged") ? body.charged : null,
+          payable: httpStatus === 402 || paymentRequired,
+          routeAbsent: httpStatus !== 402 && !paymentRequired && targetPath.split("?")[0] !== DECLARED_PAID_ROUTE,
+          error: typeof body?.error === "string" ? body.error : null,
+          offeredNetwork: accepted?.network ?? null,
+          settleDelta: after.settle - before.settle,
+          verifyDelta: after.verify - before.verify,
+          paymentPresent: Boolean(headers["payment-signature"]),
+          ...fields,
+        };
+      },
+      async wellKnownRoutes() {
+        const response = await session.request("/.well-known/x402");
+        const body = parseBody(await response.text());
+        const items = Array.isArray(body?.items) ? body.items : [];
+        return items.map((item) => item?.resource?.routeTemplate).filter(Boolean);
+      },
+      async credential(paymentId) {
+        if (!advertised) {
+          const unpaid = await session.request(DECLARED_PAID_ROUTE);
+          const challenge = decodePaymentRequired(unpaid);
+          await unpaid.arrayBuffer();
+          const accepted = (challenge?.accepts || []).find((item) => item.network === SDS.network && item.scheme === "exact");
+          if (!accepted) throw new Error("declared paid route omitted Base exact terms");
+          advertised = { offeredNetwork: accepted.network, accepted };
+        }
+        return {
+          headers: { "payment-signature": encodeSignature(advertised.accepted, paymentId) },
+          offeredNetwork: advertised.offeredNetwork,
+          accepted: advertised.accepted,
+        };
+      },
+    };
+
     return await fn(session);
   } finally {
-    await stopChild(merchant.child);
-    await facilitator.close();
+    if (merchant?.child) await stopChild(merchant.child);
+    if (facilitator) await facilitator.close();
     await rm(dataDir, { recursive: true, force: true });
   }
 }

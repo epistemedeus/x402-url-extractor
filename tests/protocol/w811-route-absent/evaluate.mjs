@@ -3,6 +3,8 @@ import {
   CODES,
   DECLARED_FREE_ROUTE,
   DECLARED_PAID_ROUTE,
+  LOOKALIKE_ROUTES,
+  METHOD_ABSENT,
 } from "./constants.mjs";
 
 const LOOPBACK = new Set(["127.0.0.1", "localhost", "::1"]);
@@ -34,7 +36,30 @@ function violation(code, message, extra = {}) {
   return { code, message, ...extra };
 }
 
-function roleOf(attempt) {
+function pathOf(attempt) {
+  return typeof attempt?.path === "string" ? attempt.path.split("?")[0] : "";
+}
+
+function methodOf(attempt) {
+  return typeof attempt?.method === "string" && attempt.method
+    ? attempt.method.toUpperCase()
+    : "GET";
+}
+
+function roleOf(attempt, absentRoute, declaredPaid, declaredFree) {
+  const path = pathOf(attempt);
+  const method = methodOf(attempt);
+  const declaredPaidFold = declaredPaid.toLowerCase();
+  if (
+    path
+    && path !== declaredFree
+    && path.toLowerCase() !== declaredPaidFold
+    && (path === ABSENT_ROUTE || path === absentRoute)
+  ) {
+    return "absent";
+  }
+  if (LOOKALIKE_ROUTES.includes(path)) return "absent";
+  if (path === METHOD_ABSENT.path && method === METHOD_ABSENT.method) return "absent";
   if (typeof attempt?.role === "string" && attempt.role) return attempt.role;
   if (typeof attempt?.phase === "string" && attempt.phase) {
     if (attempt.phase.startsWith("absent")) return "absent";
@@ -42,6 +67,10 @@ function roleOf(attempt) {
     if (attempt.phase.startsWith("free")) return "free-surface";
     if (attempt.phase.startsWith("lookalike") || attempt.phase.startsWith("method-absent")) return "absent";
     if (attempt.phase.startsWith("catalog")) return "catalog";
+  }
+  if (path === declaredFree && method === "GET") return "free-surface";
+  if (method === "GET" && path && path.toLowerCase() === declaredPaidFold) {
+    return "paid-control";
   }
   return "unknown";
 }
@@ -130,7 +159,7 @@ export function evaluateTrace(trace = {}) {
   let freeSurfaceAttempts = 0;
 
   for (const attempt of attempts) {
-    const role = roleOf(attempt);
+    const role = roleOf(attempt, absentRoute, declaredPaid, declaredFree);
     const settleDelta = numberOrZero(attempt.settleDelta);
     const verifyDelta = numberOrZero(attempt.verifyDelta);
 
@@ -273,7 +302,11 @@ export function evaluateTrace(trace = {}) {
         "catalog claimed expectedRouteFound while the listed path differed",
       ));
     }
-    if (catalog.targetFound === true && !findingCodes.includes("origin_found_expected_route_absent") && status !== "route_absent") {
+    if (
+      catalog.targetFound === true
+      && expectedRouteFound !== true
+      && !findingCodes.includes("origin_found_expected_route_absent")
+    ) {
       violations.push(violation(
         CODES.CATALOG_MISSING_ROUTE_ABSENT,
         "origin found without expected route must emit origin_found_expected_route_absent",
@@ -305,7 +338,7 @@ export function evaluateTrace(trace = {}) {
       "product claimed charged on a route_absent observation",
     ));
   }
-  if (claims.settled === true && settleCount > 0 && absentAttempts > 0) {
+  if (claims.settled === true && (absentAttempts > 0 || catalog)) {
     violations.push(violation(
       CODES.ABSENT_ROUTE_SETTLE,
       "product claimed settlement on an undeclared path",
@@ -326,8 +359,14 @@ export function evaluateTrace(trace = {}) {
 
   if (trace.settleCount != null && settleFromAttempts !== declaredSettle && attempts.length > 0) {
     violations.push(violation(
-      "settle_count_inconsistent",
+      CODES.SETTLE_COUNT_INCONSISTENT,
       `declared settleCount ${declaredSettle} does not match attempt settleDelta sum ${settleFromAttempts}`,
+    ));
+  }
+  if (trace.verifyCount != null && verifyFromAttempts !== declaredVerify && attempts.length > 0) {
+    violations.push(violation(
+      CODES.VERIFY_COUNT_INCONSISTENT,
+      `declared verifyCount ${declaredVerify} does not match attempt verifyDelta sum ${verifyFromAttempts}`,
     ));
   }
 
@@ -336,7 +375,9 @@ export function evaluateTrace(trace = {}) {
   const ok = violations.length === 0 && hasEvidence;
   return {
     ok,
-    code: violations.length === 0 ? CODES.ROUTE_ABSENT_HOLDS : primary.code,
+    code: violations.length === 0
+      ? (hasEvidence ? CODES.ROUTE_ABSENT_HOLDS : CODES.COLD_INCOMPLETE)
+      : primary.code,
     id: trace.id ?? null,
     expect: trace.expect ?? null,
     rejectCode: trace.rejectCode ?? null,
