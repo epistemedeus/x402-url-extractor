@@ -156,34 +156,36 @@ async function startMerchant({ dataDir, facilitatorUrl }) {
 
 export async function withProductionMerchant(fn) {
   const dataDir = await mkdtemp(path.join(tmpdir(), "w809-mcp-iserror-"));
-  const facilitator = await startFakeFacilitator();
-  const merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
-  const session = {
-    origin: merchant.base,
-    snapshot() {
-      return { settle: facilitator.calls.settle, verify: facilitator.calls.verify, handler: 0 };
-    },
-    async post(body) {
-      const response = await fetch(`${merchant.base}/mcp`, {
-        method: "POST",
-        headers: { host: "agents.samedaydesk.com", ...MCP_HEADERS },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(20_000),
-      });
-      const text = await response.text();
-      return {
-        status: response.status,
-        json: decodeMcpBody(text, response.headers.get("content-type")),
-        text,
-        ...headerObservation(response),
-      };
-    },
-  };
+  let facilitator = null;
+  let merchant = null;
   try {
+    facilitator = await startFakeFacilitator();
+    merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
+    const session = {
+      origin: merchant.base,
+      snapshot() {
+        return { settle: facilitator.calls.settle, verify: facilitator.calls.verify, handler: 0 };
+      },
+      async post(body) {
+        const response = await fetch(`${merchant.base}/mcp`, {
+          method: "POST",
+          headers: { host: "agents.samedaydesk.com", ...MCP_HEADERS },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(20_000),
+        });
+        const text = await response.text();
+        return {
+          status: response.status,
+          json: decodeMcpBody(text, response.headers.get("content-type")),
+          text,
+          ...headerObservation(response),
+        };
+      },
+    };
     return await fn(session);
   } finally {
-    await stopChild(merchant.child);
-    await facilitator.close();
+    await stopChild(merchant?.child);
+    if (facilitator) await facilitator.close();
     await rm(dataDir, { recursive: true, force: true });
   }
 }

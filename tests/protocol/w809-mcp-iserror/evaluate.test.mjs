@@ -146,7 +146,51 @@ test("PAYMENT-SIGNATURE on the request is refused", () => {
 test("classifyFixture matches expect for the on-disk corpus", () => {
   const report = evaluateFixtureCorpus(loadFixtures("pass"), loadFixtures("reject"));
   assert.equal(report.ok, true, JSON.stringify(report.failed));
-  assert.equal(report.counted, 9);
+  assert.equal(report.counted, 13);
   assert.equal(classifyFixture(loadFixture("reject/seeded-http-200-iserror-as-charged.json")).verdict, "rejected");
   assert.equal(classifyFixture(loadFixture("pass/live-unpaid-tools-call.json")).verdict, "pass");
+});
+
+test("WETH asset on an unpaid isError challenge is rejected", () => {
+  const fixture = loadFixture("reject/seeded-wrong-asset.json");
+  const evaluated = evaluateFixture(fixture);
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, CODES.ASSET_MISMATCH);
+  assert.equal(evaluated.classified.kind, "unpaid_mcp_iserror_challenge");
+  assert.equal(classifyFixture(fixture).verdict, "rejected");
+});
+
+test("facilitator verify on unpaid isError is rejected", () => {
+  const fixture = loadFixture("reject/seeded-verify-on-unpaid.json");
+  const evaluated = evaluateFixture(fixture);
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, CODES.VERIFY_ON_UNPAID);
+  assert.equal(classifyFixture(fixture).verdict, "rejected");
+});
+
+test("PaymentRequired isError mixed with extract delivery fields is rejected", () => {
+  const fixture = loadFixture("reject/seeded-iserror-challenge-with-delivery.json");
+  const evaluated = evaluateFixture(fixture);
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, CODES.ISERROR_MIXED_WITH_DELIVERY);
+  assert.equal(evaluated.classified.kind, "iserror_mixed_with_delivery");
+  assert.equal(classifyFixture(fixture).verdict, "rejected");
+});
+
+test("EIP-712 name Wrapped Ether on USDC accept is rejected", () => {
+  const fixture = loadFixture("reject/seeded-wrong-eip712-name.json");
+  const evaluated = evaluateFixture(fixture);
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, CODES.PIN_MISMATCH);
+  assert.equal(classifyFixture(fixture).verdict, "rejected");
+});
+
+test("payTo mismatch is pin_mismatch, not amount_mismatch", () => {
+  const live = loadFixture("pass/live-unpaid-tools-call.json");
+  const fixture = structuredClone(live);
+  fixture.observation.jsonrpc.result.structuredContent.accepts[0].payTo =
+    "0x0000000000000000000000000000000000000001";
+  const evaluated = evaluateToolsCall(fixture);
+  assert.equal(evaluated.ok, false);
+  assert.equal(evaluated.code, CODES.PIN_MISMATCH);
 });

@@ -22,6 +22,8 @@ export const SDS = Object.freeze({
   serviceName: "x402-data-gateway",
   serviceVersion: "1.23.49",
   x402Version: 2,
+  eip712Name: "USD Coin",
+  eip712Version: "2",
 });
 
 export const FORBIDDEN_INVENTED = Object.freeze([
@@ -43,10 +45,13 @@ export const CODES = Object.freeze({
   ISERROR_MIXED_WITH_DELIVERY: "iserror_mixed_with_delivery",
   PAYMENT_REQUIRED_HEADER: "payment_required_header_present",
   AMOUNT_MISMATCH: "amount_mismatch",
+  ASSET_MISMATCH: "asset_mismatch",
+  PIN_MISMATCH: "pin_mismatch",
   RESOURCE_MISMATCH: "resource_mismatch",
   INVENTED_RECEIPT_FIELD: "invented_receipt_field",
   PAYMENT_SIGNATURE_SENT: "payment_signature_sent",
   HANDLER_RAN_UNPAID: "handler_ran_unpaid",
+  VERIFY_ON_UNPAID: "verify_on_unpaid",
   SETTLE_ON_UNPAID: "settle_on_unpaid",
   MALFORMED_FIXTURE: "malformed_fixture",
   TOOLS_LIST_NOT_UNPAID: "tools_list_not_unpaid",
@@ -58,7 +63,9 @@ export const REFUSED_FLAGS = Object.freeze([
   "--cdp",
   "--poll",
   "--pay",
+  "--payment",
   "--payment-signature",
+  "--checkout",
   "--publish",
   "--neo",
   "--deploy",

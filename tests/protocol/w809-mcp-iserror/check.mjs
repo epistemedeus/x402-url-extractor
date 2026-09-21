@@ -25,6 +25,7 @@ Usage:
 
 Cold run mounts mcp-server.mjs and loopback server.js. Never pays, never
 sends PAYMENT-SIGNATURE, never uses a Payment-Required header, never CDP.
+--live/--pay/--payment/--checkout/--cdp/--publish/--neo are refused.
 `;
 }
 

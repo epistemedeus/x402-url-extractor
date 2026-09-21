@@ -81,8 +81,11 @@ function resourceUrlOf(challenge) {
 function looksLikeDelivery(result) {
   const body = isRecord(result?.structuredContent) ? result.structuredContent : null;
   if (!body) return false;
-  if (Array.isArray(body.accepts) && Number.isInteger(body.x402Version)) return false;
-  return body.ok === true || typeof body.title === "string" || typeof body.requestedUrl === "string";
+  return body.ok === true
+    || body.sourceOk === true
+    || typeof body.title === "string"
+    || typeof body.requestedUrl === "string"
+    || typeof body.url === "string";
 }
 
 function jsonRpcErrorCode(jsonrpc) {
@@ -120,10 +123,10 @@ export function classifyToolsCallObservation(observation = {}, request = {}) {
   else if (httpStatus === 402) kind = "http_402";
   else if (hasJsonRpcError && !isErrorExact) kind = "jsonrpc_error_not_iserror";
   else if (snakeIsError && !isErrorExact) kind = "snake_is_error";
-  else if (httpStatus === 200 && isErrorExact && challenge) kind = "unpaid_mcp_iserror_challenge";
-  else if (httpStatus === 200 && isErrorExact && looksLikeDelivery(result) && !challenge) {
+  else if (httpStatus === 200 && isErrorExact && looksLikeDelivery(result)) {
     kind = "iserror_mixed_with_delivery";
-  } else if (httpStatus === 200 && challenge && !isErrorExact) kind = "iserror_not_true";
+  } else if (httpStatus === 200 && isErrorExact && challenge) kind = "unpaid_mcp_iserror_challenge";
+  else if (httpStatus === 200 && challenge && !isErrorExact) kind = "iserror_not_true";
   else if (httpStatus === 200 && isErrorExact !== true && isRecord(result)) kind = "paid_delivery";
 
   const unpaidChallenge = kind === "unpaid_mcp_iserror_challenge";
@@ -147,6 +150,8 @@ export function classifyToolsCallObservation(observation = {}, request = {}) {
     payTo: typeof accept?.payTo === "string" ? accept.payTo : null,
     network: typeof accept?.network === "string" ? accept.network : null,
     asset: typeof accept?.asset === "string" ? accept.asset : null,
+    eip712Name: typeof accept?.extra?.name === "string" ? accept.extra.name : null,
+    eip712Version: typeof accept?.extra?.version === "string" ? accept.extra.version : null,
     error: typeof challenge?.error === "string" ? challenge.error : null,
     x402Version: challenge?.x402Version ?? null,
     invented,
@@ -179,6 +184,9 @@ export function classifyToolsListObservation(observation = {}, request = {}) {
     payTo: typeof accept?.payTo === "string" ? accept.payTo : null,
     network: typeof accept?.network === "string" ? accept.network : null,
     asset: typeof accept?.asset === "string" ? accept.asset : null,
+    eip712Name: typeof accept?.extra?.name === "string" ? accept.extra.name : null,
+    eip712Version: typeof accept?.extra?.version === "string" ? accept.extra.version : null,
+    x402Version: x402?.x402Version ?? null,
     toolCount: tools.length || observation.toolCount || 0,
     extractPresent: Boolean(extract),
     invented,

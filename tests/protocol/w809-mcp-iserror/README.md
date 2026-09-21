@@ -22,4 +22,5 @@ node tests/protocol/w809-mcp-iserror/check.mjs --seeded-failure
 node --test --test-concurrency=1 tests/protocol/w809-mcp-iserror/*.test.mjs
 ```
 
-`--live`, `--pay`, `--cdp`, `--publish`, `--neo` are refused (exit 2).
+`--live`, `--pay`, `--payment`, `--checkout`, `--cdp`, `--publish`, `--neo` are refused (exit 2).
+`--help --live` is refused, not help.

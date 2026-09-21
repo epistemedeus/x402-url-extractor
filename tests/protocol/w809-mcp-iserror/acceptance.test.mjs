@@ -52,7 +52,7 @@ test("cli --all-fixtures classifies pass and reject observations", async () => {
   const report = parseReport(result.stdout);
   assert.equal(result.code, 0, result.stderr);
   assert.equal(report.ok, true, JSON.stringify(report.failed));
-  assert.equal(report.counted, 9);
+  assert.equal(report.counted, 13);
 });
 
 test("cli --seeded-failure rejects HTTP 200 isError as charged/paid delivery (exit 1)", async () => {
@@ -109,14 +109,35 @@ test("cli fixture path rejects isError mixed with delivery (exit 1)", async () =
   assert.equal(report.code, CODES.ISERROR_MIXED_WITH_DELIVERY);
 });
 
-test("cli refuses --live / --cdp / --pay / --neo (exit 2)", async () => {
-  for (const flag of ["--live", "--cdp", "--pay", "--neo"]) {
+test("cli refuses --live / --cdp / --pay / --payment / --checkout / --neo (exit 2)", async () => {
+  for (const flag of ["--live", "--cdp", "--pay", "--payment", "--checkout", "--neo"]) {
     const result = await runCheck([flag]);
     const report = parseReport(result.stdout);
     assert.equal(result.code, 2, result.stderr);
     assert.equal(report.ok, false);
     assert.equal(report.code, "refused");
   }
+});
+
+test("cli --help --live is refused, not help", async () => {
+  const result = await runCheck(["--help", "--live"]);
+  const report = parseReport(result.stdout);
+  assert.equal(result.code, 2, result.stderr);
+  assert.equal(report.code, "refused");
+});
+
+test("cli fixture path rejects WETH asset (exit 1)", async () => {
+  const result = await runCheck(["fixtures/reject/seeded-wrong-asset.json"]);
+  const report = parseReport(result.stdout);
+  assert.equal(result.code, 1, result.stderr);
+  assert.equal(report.code, CODES.ASSET_MISMATCH);
+});
+
+test("cli fixture path rejects verify-on-unpaid (exit 1)", async () => {
+  const result = await runCheck(["fixtures/reject/seeded-verify-on-unpaid.json"]);
+  const report = parseReport(result.stdout);
+  assert.equal(result.code, 1, result.stderr);
+  assert.equal(report.code, CODES.VERIFY_ON_UNPAID);
 });
 
 test("runSeededFailure matches the CLI reject", () => {

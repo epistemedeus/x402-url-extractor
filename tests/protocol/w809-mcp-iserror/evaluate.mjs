@@ -47,18 +47,46 @@ function pinMismatch(classified) {
       { expected: SDS.amountAtomic, actual: classified.amount },
     ));
   }
+  if (classified.asset && classified.asset !== SDS.asset) {
+    violations.push(violation(
+      CODES.ASSET_MISMATCH,
+      `accepts[].asset ${classified.asset} is not SDS extract USDC ${SDS.asset}`,
+      { expected: SDS.asset, actual: classified.asset },
+    ));
+  }
   if (classified.payTo && classified.payTo !== SDS.payTo) {
     violations.push(violation(
-      CODES.AMOUNT_MISMATCH,
+      CODES.PIN_MISMATCH,
       `accepts[].payTo ${classified.payTo} does not match SDS payTo`,
       { expected: SDS.payTo, actual: classified.payTo },
     ));
   }
   if (classified.network && classified.network !== SDS.network) {
     violations.push(violation(
-      CODES.AMOUNT_MISMATCH,
+      CODES.PIN_MISMATCH,
       `accepts[].network ${classified.network} does not match SDS ${SDS.network}`,
       { expected: SDS.network, actual: classified.network },
+    ));
+  }
+  if (classified.x402Version != null && classified.x402Version !== SDS.x402Version) {
+    violations.push(violation(
+      CODES.PIN_MISMATCH,
+      `x402Version ${classified.x402Version} does not match SDS ${SDS.x402Version}`,
+      { expected: SDS.x402Version, actual: classified.x402Version },
+    ));
+  }
+  if (classified.eip712Name && classified.eip712Name !== SDS.eip712Name) {
+    violations.push(violation(
+      CODES.PIN_MISMATCH,
+      `accepts[].extra.name ${JSON.stringify(classified.eip712Name)} is not SDS EIP-712 ${SDS.eip712Name}`,
+      { expected: SDS.eip712Name, actual: classified.eip712Name },
+    ));
+  }
+  if (classified.eip712Version && classified.eip712Version !== SDS.eip712Version) {
+    violations.push(violation(
+      CODES.PIN_MISMATCH,
+      `accepts[].extra.version ${JSON.stringify(classified.eip712Version)} is not SDS EIP-712 ${SDS.eip712Version}`,
+      { expected: SDS.eip712Version, actual: classified.eip712Version },
     ));
   }
   return violations;
@@ -81,6 +109,9 @@ function sharedBoundaryViolations(classified, request, claims, counters) {
   }
   if (Number(counters.handler) > 0) {
     violations.push(violation(CODES.HANDLER_RAN_UNPAID, "unpaid MCP hop ran the paid handler"));
+  }
+  if (Number(counters.verify) > 0) {
+    violations.push(violation(CODES.VERIFY_ON_UNPAID, "unpaid MCP hop called facilitator verify"));
   }
   if (Number(counters.settle) > 0) {
     violations.push(violation(CODES.SETTLE_ON_UNPAID, "unpaid MCP hop called facilitator settle"));
@@ -232,7 +263,12 @@ export function evaluateToolsCall(fixture = {}) {
       || item.code === CODES.PAYMENT_REQUIRED_HEADER
       || item.code === CODES.INVENTED_RECEIPT_FIELD
       || item.code === CODES.PAYMENT_SIGNATURE_SENT
-      || item.code === CODES.HTTP_200_ISERROR_CLASSIFIED_AS_CHARGED)) {
+      || item.code === CODES.HTTP_200_ISERROR_CLASSIFIED_AS_CHARGED
+      || item.code === CODES.ASSET_MISMATCH
+      || item.code === CODES.PIN_MISMATCH
+      || item.code === CODES.VERIFY_ON_UNPAID
+      || item.code === CODES.SETTLE_ON_UNPAID
+      || item.code === CODES.HANDLER_RAN_UNPAID)) {
       violations.push(violation(
         kindCode(classified.kind),
         `tools/call is ${classified.kind}, not unpaid_mcp_iserror_challenge`,

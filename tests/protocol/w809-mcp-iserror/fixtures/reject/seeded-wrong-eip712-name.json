@@ -1,0 +1,51 @@
+{
+  "id": "seeded-wrong-eip712-name",
+  "title": "Seeded failure: unpaid isError challenge with EIP-712 name Wrapped Ether is not SDS USDC",
+  "expect": "reject",
+  "rejectCode": "pin_mismatch",
+  "kind": "mcp-tools-call-unpaid",
+  "method": "tools/call",
+  "note": "SEEDING FAILURE: extra.name Wrapped Ether on the extract accept is a domain pin miss even when asset is USDC.",
+  "request": {
+    "method": "tools/call",
+    "params": {
+      "name": "extract",
+      "arguments": { "url": "https://example.com" }
+    },
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 200,
+    "headers": { "content-type": "application/json" },
+    "headerNames": ["content-type"],
+    "hasPaymentRequiredHeader": false,
+    "jsonrpc": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+        "isError": true,
+        "structuredContent": {
+          "x402Version": 2,
+          "error": "Payment required to access this tool",
+          "resource": { "url": "mcp://tool/extract" },
+          "accepts": [
+            {
+              "scheme": "exact",
+              "network": "eip155:8453",
+              "amount": "5000",
+              "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+              "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+              "extra": { "name": "Wrapped Ether", "version": "2" }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "successProven": false,
+    "settlement": false
+  }
+}

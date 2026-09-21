@@ -68,6 +68,34 @@
       "expect": "reject",
       "rejectCode": "iserror_mixed_with_delivery",
       "kind": "seeded-iserror-with-delivery"
+    },
+    {
+      "id": "seeded-wrong-asset",
+      "path": "reject/seeded-wrong-asset.json",
+      "expect": "reject",
+      "rejectCode": "asset_mismatch",
+      "kind": "seeded-wrong-asset"
+    },
+    {
+      "id": "seeded-verify-on-unpaid",
+      "path": "reject/seeded-verify-on-unpaid.json",
+      "expect": "reject",
+      "rejectCode": "verify_on_unpaid",
+      "kind": "seeded-verify-on-unpaid"
+    },
+    {
+      "id": "seeded-iserror-challenge-with-delivery",
+      "path": "reject/seeded-iserror-challenge-with-delivery.json",
+      "expect": "reject",
+      "rejectCode": "iserror_mixed_with_delivery",
+      "kind": "seeded-iserror-challenge-with-delivery"
+    },
+    {
+      "id": "seeded-wrong-eip712-name",
+      "path": "reject/seeded-wrong-eip712-name.json",
+      "expect": "reject",
+      "rejectCode": "pin_mismatch",
+      "kind": "seeded-wrong-eip712-name"
     }
   ]
 }
