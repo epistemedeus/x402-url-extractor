@@ -113,6 +113,39 @@ export function asToolResult(obj, { structured = false } = {}) {
   return result;
 }
 
+// A payment challenge is not a successful tool result. ok:true beside isError is.
+export function isSuccessShapedStructuredContent(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return false;
+  if (Number.isInteger(body.x402Version) && Array.isArray(body.accepts)) return false;
+  if (body.ok === false || body.success === false || body.error || body.isError === true) return false;
+  return body.ok === true || body.success === true;
+}
+
+export function withoutSuccessShapedStructuredContent(result) {
+  if (!result || result.isError !== true) return result;
+  if (!isSuccessShapedStructuredContent(result.structuredContent)) return result;
+  const next = { ...result };
+  delete next.structuredContent;
+  next.content = [{
+    type: "text",
+    text: JSON.stringify({ ok: false, error: "tool_execution_failed", charged: false }),
+  }];
+  return next;
+}
+
+export function unknownRegisteredToolError(body, catalog) {
+  if (!isJsonRpcObject(body) || body.jsonrpc !== "2.0" || body.method !== "tools/call") return null;
+  if (!jsonRpcHasId(body)) return null;
+  const name = jsonRpcToolName(body);
+  if (typeof name !== "string" || name.length === 0) return null;
+  if (catalog?.has?.(name)) return null;
+  return {
+    jsonrpc: "2.0",
+    id: body.id,
+    error: { code: -32602, message: "Unknown tool" },
+  };
+}
+
 /**
  * Modest, generic repair for clients that JSON-stringify array/object tool
  * arguments. Only parses when the live Zod field expects an array/object and
@@ -222,9 +255,9 @@ function httpRouteToolHandler(tool, baseUrl) {
       for (const name of ["www-authenticate", "payment-receipt", "payment-required", "payment-response"]) {
         if (typeof response.headers[name] === "string") publicHeaders[name] = response.headers[name];
       }
-      const result = { ...asToolResult(value, { structured: true }),
+      const result = withoutSuccessShapedStructuredContent({ ...asToolResult(value, { structured: true }),
         ...(!(response.statusCode >= 200 && response.statusCode < 300) || value.error ? { isError: true } : {}),
-        _meta: { "samedaydesk/http": { resource: resource.href, status: response.statusCode, headers: publicHeaders } } };
+        _meta: { "samedaydesk/http": { resource: resource.href, status: response.statusCode, headers: publicHeaders } } });
       const proof = response.headers["payment-response"];
       if (proof) {
         try { result._meta["x402/payment-response"] = JSON.parse(Buffer.from(proof, "base64").toString("utf8")); }
@@ -232,8 +265,8 @@ function httpRouteToolHandler(tool, baseUrl) {
       }
       return result;
     } catch {
-      return { ...asToolResult({ ok: false, error: "paid_http_outcome_unresolved", charged: null,
-        boundary: "Do not create a replacement payment automatically. Retry only the identical authorized request." }), isError: true };
+      return withoutSuccessShapedStructuredContent({ ...asToolResult({ ok: false, error: "paid_http_outcome_unresolved", charged: null,
+        boundary: "Do not create a replacement payment automatically. Retry only the identical authorized request." }), isError: true });
     }
   };
 }
@@ -275,13 +308,35 @@ function classifyOutboundKind(message) {
   return "tool_result";
 }
 
+function freeUnpaidHandler(tool) {
+  return async (args) => {
+    try {
+      const value = await tool.run(args);
+      const failed = !value || value.ok === false || Boolean(value.error);
+      return withoutSuccessShapedStructuredContent({
+        ...asToolResult(value, { structured: !failed }),
+        ...(failed ? { isError: true } : {}),
+      });
+    } catch (error) {
+      return withoutSuccessShapedStructuredContent({
+        ...asToolResult({
+          ok: false,
+          error: String(error?.message || error),
+          charged: false,
+        }),
+        isError: true,
+      });
+    }
+  };
+}
+
 function baselinePaidHandler(tool) {
   return async (args) => {
     if (tool.returnMcpResult) return tool.run(args);
     try {
-      return asToolResult(await tool.run(args), { structured: Boolean(tool.outputSchema) });
+      return withoutSuccessShapedStructuredContent(asToolResult(await tool.run(args), { structured: Boolean(tool.outputSchema) }));
     } catch (e) {
-      return { ...asToolResult({ ok: false, error: String(e?.message || e) }), isError: true };
+      return withoutSuccessShapedStructuredContent({ ...asToolResult({ ok: false, error: String(e?.message || e), charged: false }), isError: true });
     }
   };
 }
@@ -301,12 +356,12 @@ function observedPaidHandler(tool) {
       }
     }
     try {
-      const result = asToolResult(await tool.run(args), { structured: Boolean(tool.outputSchema) });
-      attempt?.handlerFinished({ isError: false });
+      const result = withoutSuccessShapedStructuredContent(asToolResult(await tool.run(args), { structured: Boolean(tool.outputSchema) }));
+      attempt?.handlerFinished({ isError: result?.isError === true });
       return result;
     } catch (e) {
       attempt?.handlerThrew();
-      return { ...asToolResult({ ok: false, error: String(e?.message || e) }), isError: true };
+      return withoutSuccessShapedStructuredContent({ ...asToolResult({ ok: false, error: String(e?.message || e), charged: false }), isError: true });
     }
   };
 }
@@ -469,6 +524,7 @@ function createTypedAttemptForBody(body, catalog, onAppend, requestAttribution =
   }
   const toolName = jsonRpcToolName(body);
   const registered = toolName ? catalog.get(toolName) : null;
+  if (registered?.free === true) return { attempt: null };
   const hasId = jsonRpcHasId(body);
   const binding = registered?.binding ?? UNREGISTERED_SENTINEL_BINDING;
   const attempt = createMcpTypedTelemetryAttempt({
@@ -521,7 +577,22 @@ export async function mountMcp(app, {
   const onAppend = typedLifecycle
     ? (decision, requestAttribution, declaredSource) => typedLifecycle.schedule(decision, requestAttribution, declaredSource)
     : undefined;
-  const catalogByName = buildRegisteredCatalog(tools);
+  const paidTools = tools.filter((tool) => tool?.free !== true);
+  const freeTools = tools.filter((tool) => tool?.free === true);
+  const catalogByName = buildRegisteredCatalog(paidTools);
+  for (const tool of freeTools) {
+    if (!tool?.name || catalogByName.has(tool.name)) {
+      throw new Error(`free MCP tool collides with a paid tool: ${tool?.name || "unnamed"}`);
+    }
+    catalogByName.set(tool.name, {
+      tool: tool.name,
+      productSku: `samedaydesk-${String(tool.name).replaceAll("_", "-")}`,
+      resource: `mcp://tool/${tool.name}`,
+      free: true,
+      binding: null,
+      httpOwned: false,
+    });
+  }
 
   // Dedicated resource server for MCP, sharing the facilitator with the HTTP routes.
   const resourceServer = new x402ResourceServer(facilitatorClient).register(network, new ExactEvmScheme());
@@ -533,7 +604,7 @@ export async function mountMcp(app, {
 
   // Pre-build the paid wrapper for each tool ONCE (buildPaymentRequirements is async).
   const prepared = [];
-  for (const t of tools) {
+  for (const t of paidTools) {
     const registered = catalogByName.get(t.name);
     const accepts = await resourceServer.buildPaymentRequirements({
       scheme: "exact",
@@ -593,6 +664,19 @@ export async function mountMcp(app, {
       binding,
     });
   }
+  for (const tool of freeTools) {
+    prepared.push({
+      name: tool.name,
+      title: tool.title,
+      description: tool.description,
+      inputSchema: tool.inputSchema,
+      outputSchema: tool.outputSchema,
+      free: true,
+      paymentMeta: { samedaydesk: { charged: false, paymentRequired: false } },
+      handler: freeUnpaidHandler(tool),
+      binding: null,
+    });
+  }
 
   // A fresh MCP server per request (stateless mode requires server+transport per call).
   const makeServer = () => {
@@ -637,6 +721,17 @@ export async function mountMcp(app, {
     const created = typedEnabled
       ? createTypedAttemptForBody(req.body, catalogByName, onAppend, requestAttribution, declaredSource)
       : { attempt: null };
+    const unknownTool = unknownRegisteredToolError(req.body, catalogByName);
+    if (unknownTool) {
+      if (created.attempt) {
+        created.attempt.finalize({
+          responseId: Object.hasOwn(req.body, "id") ? req.body.id : null,
+          kind: "transport_error",
+        });
+      }
+      res.set("Cache-Control", "no-store");
+      return res.status(200).json(unknownTool);
+    }
     const server = makeServer();
     const transport = new StreamableHTTPServerTransport(transportOptions);
     if (created.attempt) decorateTransportSend(transport, created.attempt);
@@ -669,7 +764,8 @@ export async function mountMcp(app, {
   app.delete("/mcp", methodNotAllowed);
 
   const mountResult = {
-    toolCount: prepared.length,
+    toolCount: prepared.filter((tool) => tool.free !== true).length,
+    freeToolCount: prepared.filter((tool) => tool.free === true).length,
     catalog: Object.freeze(Object.fromEntries(
       [...catalogByName.entries()].map(([name, entry]) => [name, entry.binding]),
     )),

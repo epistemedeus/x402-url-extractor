@@ -204,7 +204,15 @@ import {
   validateExtractBatchRequest,
   ALL_FIELDS,
 } from "./extract-batch.mjs";
-import { isPageChangeHttpPath, mountPageChangeHttp } from "./page-change-http.mjs";
+import {
+  PAGE_CHANGE_HTTP_PATH,
+  executePageChangeComparison,
+  isPageChangeHttpEnabled,
+  isPageChangeHttpPath,
+  mountPageChangeHttp,
+  pageChangeHttpInputSchema,
+  pageChangeHttpOutputSchema,
+} from "./page-change-http.mjs";
 import {
   LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC,
   LOCKFILE_PIN_DELTA_DESCRIPTION,
@@ -742,6 +750,7 @@ app.get("/healthz", async (_req, res) => {
       "wallet-policy-conformance": WALLET_POLICY_CONFORMANCE_PRICE,
       "stateful-wallet-policy-conformance": STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE,
       ...(LOCKFILE_PIN_DELTA_ENABLED ? { "lockfile-pin-delta": LOCKFILE_PIN_DELTA_PRICE_USD } : {}),
+      ...(EXTRACT_BATCH_ENABLED ? { "extract/batch": EXTRACT_BATCH_AMOUNT_ATOMIC } : {}),
     },
     facilitator: FACILITATOR,
     facilitatorUrl: facilitatorClient.url,
@@ -1237,6 +1246,15 @@ const machineActionCatalog = () => ({
       response: response ? { mimeType: "application/json", ...response } : null,
     };
   }),
+  freeRecipes: isPageChangeHttpEnabled() ? [{
+    name: "page_change",
+    method: "POST",
+    route: PAGE_CHANGE_HTTP_PATH,
+    url: `${PUBLIC_URL}${PAGE_CHANGE_HTTP_PATH}`,
+    charged: false,
+    priceAtomicUsdc: null,
+    description: "Compare two already-held extract-batch JSON artifacts. Not a paid SKU. No 402.",
+  }] : [],
   discovery: {
     manifest: `${PUBLIC_URL}/.well-known/x402`,
     openapi: `${PUBLIC_URL}/openapi.json`,
@@ -1370,7 +1388,13 @@ app.get("/mcp", (_req, res) => {
     endpoint: `${PUBLIC_URL}/mcp`,
     method: "POST",
     toolCount: RESOURCES.length,
-    payment: "x402 USDC on Base per MCP tool call; HTTP actions also accept native MPP",
+    freeTools: isPageChangeHttpEnabled() ? [{
+      name: "page_change",
+      method: "POST",
+      route: PAGE_CHANGE_HTTP_PATH,
+      charged: false,
+    }] : [],
+    payment: "x402 USDC on Base per paid MCP tool call; page_change is free and HTTP actions also accept native MPP",
     manifest: `${PUBLIC_URL}/.well-known/x402`,
     openapi: `${PUBLIC_URL}/openapi.json`,
     purchaseEvidence: `${PUBLIC_URL}${PURCHASE_EVIDENCE_MANIFEST_PATH}`,
@@ -1439,6 +1463,7 @@ app.get("/llms.txt", (_req, res) => {
     alternate: catalog.alternateAccess,
     buyerPolicyRelease: BUYER_POLICY_REFERENCE.release,
     purchaseEvidencePath: PURCHASE_EVIDENCE_MANIFEST_PATH,
+    freeRecipes: catalog.freeRecipes,
   }));
 });
 
@@ -1892,6 +1917,26 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     "/platforms": { operationId: "viewSettlementRadar", tags: ["Settlement Radar"] },
     [RECEIPT_REFERRAL_RECHECK_ROUTE]: { operationId: "claimReceiptReferralRecheck", tags: ["Agent Operations"] },
   };
+  if (isPageChangeHttpEnabled()) {
+    document.paths[PAGE_CHANGE_HTTP_PATH] = {
+      post: {
+        operationId: "postRecipesPageChange",
+        tags: ["Web Data"],
+        summary: "Free compare of two already-held extract-batch artifacts. charged is false. Not a paid SKU.",
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: pageChangeHttpInputSchema() } },
+        },
+        responses: {
+          "200": {
+            description: "Page-change brief with charged false. No payment is accepted.",
+            content: { "application/json": { schema: pageChangeHttpOutputSchema() } },
+          },
+          "400": { description: "Invalid input. charged is false." },
+        },
+      },
+    };
+  }
   for (const [pathname, metadata] of Object.entries(freeOperationMetadata)) {
     const pathItem = document.paths[pathname];
     const operation = pathItem.get || pathItem.post;
@@ -3959,6 +4004,19 @@ import("./mcp-server.mjs")
         declaredSourceForRequest: (req) => commerceTelemetry.mcpTypedDeclaredSourceForRequest(req),
       },
       tools: [
+        ...(isPageChangeHttpEnabled() ? [{
+          name: "page_change",
+          free: true,
+          description: "Compare two already-held extract-batch JSON artifacts. charged is false. Not a paid SKU. Does not fetch, pay, or schedule a second observation.",
+          price: "$0",
+          inputSchema: {
+            before: z.record(z.string(), z.any()).describe("Already delivered batch JSON object. Not a URL or filesystem path."),
+            after: z.record(z.string(), z.any()).describe("Already delivered batch JSON object. Not a URL or filesystem path."),
+            fields: z.array(z.string()).min(1).max(11).describe("Explicit field names to compare."),
+          },
+          run: (args) => executePageChangeComparison(args),
+          tags: ["page-change", "diff", "free"],
+        }] : []),
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a bounded text excerpt; use read for longer bounded Markdown. Content is fetched without JavaScript rendering. Check status/sourceOk/error/capture; ok means a typed extract record, not source completeness.") }, outputSchema: extractMcpOutputSchema, run: (a) => extract(a.url), tags: ["web", "extract", "structured-data"] },
         ...(EXTRACT_BATCH_ENABLED ? [{
           name: "extract_batch",

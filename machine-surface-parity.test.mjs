@@ -230,7 +230,9 @@ test("fails when Circle is promoted onto a killed surface", () => {
 
 test("live MCP metadata still matches one tool per canonical route shape", () => {
   const names = listMcpToolMetadata().map((entry) => entry.name).sort();
-  assert.equal(names.length, 24);
+  const paid = names.filter((name) => name !== "page_change");
+  assert.equal(paid.length, 24);
+  assert.ok(names.includes("page_change"));
   assert.ok(names.includes("extract_batch"));
   assert.ok(names.includes("lockfile_pin_delta"));
   assert.ok(names.includes("morpho_protection"));
@@ -238,8 +240,8 @@ test("live MCP metadata still matches one tool per canonical route shape", () =>
   assert.ok(names.includes("settlement_proof"));
   assert.ok(names.includes("transaction_receipt"));
   assert.ok(names.includes("solana_transaction_receipt"));
-  assert.equal(names.includes("circle_gateway"), false);
-  assert.equal(names.filter((name) => name === "payment_offer_preflight").length, 1);
+  assert.equal(paid.includes("circle_gateway"), false);
+  assert.equal(paid.filter((name) => name === "payment_offer_preflight").length, 1);
 });
 
 test("maps extract/batch to extract_batch for MCP parity", () => {
