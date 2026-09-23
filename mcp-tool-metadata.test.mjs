@@ -5,12 +5,18 @@ import { decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
 
 test("publishes unique action-oriented titles for every live MCP tool", () => {
   const metadata = listMcpToolMetadata();
-  assert.equal(metadata.length, 24);
-  assert.equal(new Set(metadata.map((entry) => entry.name)).size, 24);
-  assert.equal(new Set(metadata.map((entry) => entry.title)).size, 24);
-  for (const entry of metadata) {
+  const paid = metadata.filter((entry) => entry.name !== "page_change");
+  const free = metadata.filter((entry) => entry.name === "page_change");
+  assert.equal(paid.length, 24);
+  assert.equal(free.length, 1);
+  assert.equal(new Set(metadata.map((entry) => entry.name)).size, metadata.length);
+  assert.equal(new Set(metadata.map((entry) => entry.title)).size, metadata.length);
+  for (const entry of paid) {
     assert.match(entry.title, /^(?:Extract|Read|Scan|Generate|Enrich|Audit|Inspect|Plan|Underwrite|Replay|Preflight|Verify|Evaluate|Search)\b/);
   }
+  assert.match(free[0].title, /^Compare\b/);
+  assert.match(free[0].description, /charged is false/);
+  assert.doesNotMatch(free[0].description, /USDC/);
 });
 
 test("makes each overlapping web and company tool chooseable without renaming it", () => {

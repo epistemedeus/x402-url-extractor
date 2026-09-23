@@ -105,6 +105,7 @@ export function renderLlmsTxt({
   alternate = null,
   buyerPolicyRelease,
   purchaseEvidencePath,
+  freeRecipes = [],
 } = {}) {
   if (!origin || !facilitator || !payTo) fail("origin, facilitator, and payTo are required");
   if (!Array.isArray(actions) || actions.length === 0) fail("actions are required");
@@ -125,13 +126,18 @@ export function renderLlmsTxt({
       description: "the same payment-offer preflight product through Circle Gateway x402 Nanopayments, with gasless buyer authorization and batched USDC settlement.",
     }));
   }
+  const freeLines = (Array.isArray(freeRecipes) ? freeRecipes : []).map((recipe) => {
+    if (recipe?.charged !== false) fail(`free recipe ${recipe?.route || "unknown"} must set charged false`);
+    return `- ${String(recipe.method || "POST").toUpperCase()} ${recipe.route} (charged: false). ${flatten(recipe.description)}`;
+  });
+  const freeSection = freeLines.length ? `\n## Free recipes\n${freeLines.join("\n")}\n` : "\n";
   return `# SameDayDesk machine commerce gateway
 
 > Machine-discoverable HTTP capabilities settle USDC on Base through either x402 or native MPP Payment authentication. Payment-offer preflight also has a Circle Gateway x402 path for gasless batched USDC Nanopayments. MCP remains Base x402-gated. No account or subscription is required. Current standard facilitator: ${facilitator}. payTo ${payTo}.
 
 ## Endpoints
 ${lines.join("\n")}
-
+${freeSection}
 ## How to pay
 1. GET an endpoint such as ${publicOrigin}/enrich?domain=stripe.com. One HTTP 402 advertises both protocols.
 2. For x402, use PAYMENT-REQUIRED with an x402 v2 client and replay with PAYMENT-SIGNATURE. A successful response carries PAYMENT-RESPONSE.
@@ -272,7 +278,9 @@ export function validateMachineSurfaceParity({
   }
 
   const expectedMcp = actionRoutes.map((action) => mcpToolNameForRoute(action.route)).sort();
-  const actualMcp = [...new Set(mcpToolNames || [])].sort();
+  // page_change is the free recipe, not a priced action, so it is not catalog drift.
+  const freeUnpaidMcpTools = new Set(["page_change"]);
+  const actualMcp = [...new Set(mcpToolNames || [])].filter((name) => !freeUnpaidMcpTools.has(name)).sort();
   if (expectedMcp.join("\n") !== actualMcp.join("\n")) {
     fail("MCP tool names drifted from canonical paid actions");
   }

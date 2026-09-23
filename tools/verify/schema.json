@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agents.samedaydesk.com/tools/verify/schema.json",
+  "title": "SameDayDesk merchant verify CLI JSON envelope",
+  "description": "Single stdout object for tools/verify/cli.mjs. Human text belongs on stderr. Copied per product repo; not a shared package.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ok",
+    "schemaVersion",
+    "command",
+    "repo",
+    "checkedAt",
+    "node",
+    "dryRun",
+    "status",
+    "feature",
+    "evidence",
+    "error",
+    "boundary",
+    "result"
+  ],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "command": { "type": "string", "minLength": 1 },
+    "repo": { "type": "string", "const": "epistemedeus/x402-url-extractor" },
+    "checkedAt": { "type": "string", "minLength": 1 },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["wanted", "actual", "major", "satisfiesEngines"],
+      "properties": {
+        "wanted": { "type": "string" },
+        "actual": { "type": "string" },
+        "major": { "type": "integer" },
+        "satisfiesEngines": { "type": "boolean" }
+      }
+    },
+    "dryRun": { "type": "boolean" },
+    "status": { "type": "string", "enum": ["pass", "fail", "error", "dry-run"] },
+    "feature": { "type": ["string", "null"] },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "executed", "observed", "expected", "assertionPassed", "note"],
+        "properties": {
+          "id": { "type": "string" },
+          "executed": { "type": "boolean" },
+          "observed": {},
+          "expected": {},
+          "assertionPassed": { "type": "boolean" },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "error": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" }
+      }
+    },
+    "boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["paymentSent", "toolsCalled", "settled"],
+      "properties": {
+        "paymentSent": { "type": "boolean" },
+        "toolsCalled": { "type": "boolean" },
+        "settled": { "type": "boolean" }
+      }
+    },
+    "result": { "type": ["object", "null"] }
+  }
+}

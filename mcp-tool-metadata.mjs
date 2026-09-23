@@ -3,6 +3,10 @@ const TOOL_METADATA = Object.freeze({
     title: "Extract Web Page as Structured JSON",
     description: "Fetch a public HTTP(S) page and return compact extraction signals for programmatic inspection: title, meta description, Open Graph/Twitter metadata, JSON-LD, headings, links, text excerpt, and AI-readiness flags. Use `read` instead when you need the page body as LLM-ready Markdown rather than metadata or a link inventory. Does not execute JavaScript; follows redirects and applies SSRF, timeout, and response-size guards.",
   },
+  page_change: {
+    title: "Compare Held Page Extracts",
+    description: "Compare two already-held extract-batch JSON artifacts on caller-named fields. This tool is free: charged is false, it does not fetch, and it does not accept payment. Use extract_batch when you still need a paid observation. Do not add a second paid diff.",
+  },
   extract_batch: {
     title: "Extract Public URLs in Batch",
     description: "Fetch one to five public HTTPS URLs and return bounded structured fields for each source in one paid attempt. Supply `urls` as a JSON array and optional unique `fields`. Use `extract` for a single URL when you do not need batch accounting. Charge is one flat introductory 0.01 USDC quote for the bounded attempt, not a guarantee that every URL succeeds. Automatic retries are disabled; unknown outcomes must not be re-paid automatically.",

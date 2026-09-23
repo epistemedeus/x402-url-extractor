@@ -234,7 +234,7 @@ export function pageChangeHttpOpenApiExample() {
     info: {
       title: "SameDayDesk page-change HTTP companion",
       version: PAGE_CHANGE_HTTP_SCHEMA,
-      description: "Optional unpaid transform. Compares two already delivered batch JSON artifacts. Not a paid SKU. Disabled until PAGE_CHANGE_HTTP_ENABLED is set. Does not fetch, pay, or schedule a second observation.",
+      description: "Optional unpaid transform. Compares two already delivered batch JSON artifacts. Not a paid SKU. charged is false. Does not fetch, pay, or schedule a second observation.",
     },
     paths: {
       [PAGE_CHANGE_HTTP_PATH]: {
@@ -712,6 +712,29 @@ export function drainRequest(req, res) {
   req.pause();
   res.set("Connection", "close");
   res.once("finish", () => req.destroy());
+}
+
+export async function executePageChangeComparison(body, env = process.env) {
+  if (!isPageChangeHttpEnabled(env)) {
+    return {
+      ok: false,
+      enabled: false,
+      product: PAGE_CHANGE_HTTP_PRODUCT,
+      schemaVersion: PAGE_CHANGE_HTTP_SCHEMA,
+      charged: false,
+      error: "page_change_http_disabled",
+    };
+  }
+  const limits = pageChangeHttpLimits(env);
+  const job = admitPageChangeRequest(body, limits);
+  const report = await runPageChangeCompare(job, { env });
+  return {
+    ok: true,
+    product: PAGE_CHANGE_HTTP_PRODUCT,
+    schemaVersion: PAGE_CHANGE_HTTP_SCHEMA,
+    charged: false,
+    report,
+  };
 }
 
 export function mountPageChangeHttp(app, { env = process.env } = {}) {

@@ -1,6 +1,6 @@
 ---
 name: page-change
-description: Offline compare of two extract-batch JSON field snapshots. Use when the caller already has two delivered POST /extract/batch JSON files and wants selected-field diffs without fetching, paying, retrying, or scheduling. Do not use to purchase a second observation.
+description: Offline compare of two extract-batch JSON field snapshots. Use when the caller already has two delivered POST /extract/batch JSON files and wants selected-field diffs without fetching, paying, retrying, or scheduling. Do not use to purchase a second observation. Free POST /recipes/page-change returns charged: false and is not a paid SKU.
 license: MIT
 ---
 
