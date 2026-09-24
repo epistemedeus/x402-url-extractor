@@ -660,6 +660,7 @@ export async function mountMcp(app, {
       inputSchema: t.inputSchema,
       outputSchema: t.outputSchema,
       paymentMeta: createX402ToolMeta(accepts),
+      operationIdentity: t.operationIdentity,
       handler,
       binding,
     });
@@ -682,12 +683,15 @@ export async function mountMcp(app, {
   const makeServer = () => {
     const server = new McpServer(serverInfo);
     for (const t of prepared) {
+      const operationMeta = t.operationIdentity
+        ? { samedaydesk: { operation: t.operationIdentity } }
+        : {};
       server.registerTool(t.name, {
         title: t.title,
         description: t.description,
         inputSchema: t.inputSchema,
         outputSchema: t.outputSchema,
-        _meta: t.paymentMeta,
+        _meta: { ...t.paymentMeta, ...operationMeta },
       }, t.handler);
     }
     return server;

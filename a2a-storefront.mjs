@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { operationIdentity } from "./operation-identity.mjs";
 
 const A2A_VERSION = "1.0";
 const A2A_CATALOG_SKILL_ID = "discover-x402-paid-actions";
@@ -23,6 +24,7 @@ export function buildPaidActionSkills(actions = []) {
     const exampleUrl = typeof action?.request?.exampleUrl === "string" ? action.request.exampleUrl : null;
     return {
       id,
+      operation: operationIdentity({ route, priceAtomic: price }),
       name: `Discover paid action ${route || slug}`,
       description: `Discover the direct ${route || slug} machine-paid action, its ${price || "current"} atomic USDC price, and x402/MPP invocation contract. Discovery only; invoke the returned exact request directly.${exampleUrl ? ` Complete example: ${exampleUrl}` : ""}`,
       tags: [...new Set(["x402", "mpp", "paid-action", "discovery", ...(action.tags || [])])],
