@@ -245,6 +245,7 @@ import {
   x402JobsVerification,
 } from "./directory-verification.mjs";
 import { renderGatewayLanding, wantsGatewayHtml } from "./gateway-landing.mjs";
+import { browserAgentCorsMiddleware } from "./gateway-cors.mjs";
 import { decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
 import { BUYER_POLICY_REFERENCE } from "./buyer-policy-reference.mjs";
 import {
@@ -511,6 +512,7 @@ const app = express();
 // Railway terminates TLS before forwarding to Express. Trust exactly one proxy
 // hop so x402 payment requirements preserve the public https:// resource URL.
 app.set("trust proxy", 1);
+app.use(browserAgentCorsMiddleware);
 const jsonParser = express.json({
   limit: "16kb",
   type: ["application/json", "application/*+json"],
