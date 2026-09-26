@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "samedaydesk.x402-protocol-fixtures.w1010-amount-matrix.v1",
+  "wave": "w1010",
+  "unpublished": true,
+  "description": "Unpaid x402 amount matrix. String-compare HTTP 402, MCP tools/list, and OpenAPI 402 text. No payment.",
+  "pass": [
+    "pass/canonical-matrix.json"
+  ],
+  "reject": [
+    "reject/seeded-extract-onto-scan.json",
+    "reject/seeded-invented-field.json",
+    "reject/seeded-absence-as-demand.json",
+    "reject/seeded-unit-conversion.json"
+  ],
+  "seededFailure": "reject/seeded-extract-onto-scan.json",
+  "amountsAtomic": {
+    "extract": "5000",
+    "read": "5000",
+    "scan": "200000",
+    "schemaforge": "250000",
+    "payment-offer-preflight": "5000",
+    "transaction-receipt": "2000"
+  },
+  "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+  "refusedFlags": [
+    "--live",
+    "--pay",
+    "--stripe",
+    "--checkout",
+    "--settle",
+    "--cdp",
+    "--publish",
+    "--neo"
+  ]
+}
