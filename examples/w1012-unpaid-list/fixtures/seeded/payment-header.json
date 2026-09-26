@@ -1,0 +1,41 @@
+{
+  "schema": "samedaydesk.w1012-unpaid-list.seed.v1",
+  "id": "seeded.false-accept.payment-header",
+  "kind": "false_accept",
+  "claimedVerdict": "accept",
+  "productMust": "reject",
+  "title": "PAYMENT-SIGNATURE on tools/list claimed unpaid",
+  "defect": "Hostile recording attaches a payment header to discovery. Unpaid list must refuse it.",
+  "mcp": {
+    "url": "https://agents.samedaydesk.com/mcp",
+    "transport": "streamable-http"
+  },
+  "recorded": {
+    "methods": ["initialize", "tools/list"],
+    "headers": {
+      "PAYMENT-SIGNATURE": "eyJhbGciOiJub25lIn0.seeded"
+    },
+    "toolsList": {
+      "tools": [
+        {
+          "name": "extract",
+          "description": "URL -> structured JSON",
+          "inputSchema": {
+            "type": "object",
+            "properties": { "url": { "type": "string" } },
+            "required": ["url"]
+          }
+        },
+        {
+          "name": "extract_batch",
+          "description": "1-5 public HTTPS URLs -> bounded records",
+          "inputSchema": {
+            "type": "object",
+            "properties": { "urls": { "type": "array" } },
+            "required": ["urls"]
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "samedaydesk.w1012-unpaid-list.seed.v1",
+  "id": "recorded.ok-inventory",
+  "kind": "recorded_inventory",
+  "claimedVerdict": "accept",
+  "productMust": "accept",
+  "title": "Offline inventory that includes extract and extract_batch",
+  "mcp": {
+    "url": "https://agents.samedaydesk.com/mcp",
+    "transport": "streamable-http"
+  },
+  "recorded": {
+    "methods": ["initialize", "tools/list"],
+    "headers": {},
+    "toolsList": {
+      "tools": [
+        {
+          "name": "extract",
+          "description": "URL -> structured JSON",
+          "inputSchema": {
+            "type": "object",
+            "properties": { "url": { "type": "string" } },
+            "required": ["url"]
+          }
+        },
+        {
+          "name": "extract_batch",
+          "description": "1-5 public HTTPS URLs -> bounded records",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "urls": { "type": "array" },
+              "fields": { "type": "array" }
+            },
+            "required": ["urls"]
+          }
+        },
+        {
+          "name": "read",
+          "description": "URL -> Markdown",
+          "inputSchema": {
+            "type": "object",
+            "properties": { "url": { "type": "string" } },
+            "required": ["url"]
+          }
+        }
+      ]
+    }
+  }
+}
