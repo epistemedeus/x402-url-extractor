@@ -1,3 +1,5 @@
+import { operationIdentity } from "./operation-identity.mjs";
+
 function fail(message) {
   throw new Error(`Machine construction surface invalid: ${message}`);
 }
@@ -34,6 +36,7 @@ export function buildX402ManifestItems({ resources, actions, acceptsFor, alterna
         ...projectResourceServiceMetadata(action, resource),
       },
       type: "http",
+      identity: operationIdentity({ route, priceAtomic: action?.priceAtomicUsdc || resource.amount }),
       request: action?.request || null,
       accepts: acceptsFor(resource.amount),
     };

@@ -2,6 +2,7 @@
 // Merchant cross-surface verifier. Never pays, settles, or deploys.
 // Exit 0 pass, 1 demonstrated failure, 2 bad invocation, 3 evidence missing, 64 unexpected.
 
+import { entriesFromSurfaces, identityMap, identityProblems } from "../../operation-identity.mjs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -86,6 +87,30 @@ const LOCAL_FIXTURES = {
     canonicalHost: CANONICAL_HOST,
     aliasHost: RAILWAY_HOST,
   },
+  "operation-identity-ok": {
+    kind: "operation-identity",
+    entries: [
+      ...["mcp", "manifest", "a2a", "openapi"].flatMap((surface) => ([
+        { surface, identity: { id: "extract", price: "5000", billingBasis: "per-call", supportedRails: ["x402", "mpp"] } },
+        { surface, identity: { id: "extract_batch", price: "10000", billingBasis: "per-bounded-attempt", supportedRails: ["x402", "mpp"] } },
+        { surface, identity: { id: "lockfile-pin-delta", price: "5000", billingBasis: "per-call", supportedRails: ["x402"] } },
+      ])),
+    ],
+  },
+  "batch-per-successful-call": {
+    kind: "operation-identity",
+    entries: ["mcp", "manifest", "a2a", "openapi"].map((surface) => ({
+      surface,
+      identity: { id: "extract_batch", price: "10000", billingBasis: "per successful call", supportedRails: ["x402", "mpp"] },
+    })),
+  },
+  "lockfile-on-mpp": {
+    kind: "operation-identity",
+    entries: ["mcp", "manifest", "a2a", "openapi"].map((surface) => ({
+      surface,
+      identity: { id: "lockfile-pin-delta", price: "5000", billingBasis: "per-call", supportedRails: ["x402", "mpp"] },
+    })),
+  },
 };
 
 const FAIL_FIXTURES = new Set([
@@ -95,6 +120,8 @@ const FAIL_FIXTURES = new Set([
   "railway-canonical",
   "settle-requested",
   "healthz-missing-batch",
+  "batch-per-successful-call",
+  "lockfile-on-mpp",
 ]);
 
 function nodeInfo() {
@@ -404,6 +431,17 @@ function evaluateFixture(fixture) {
       "healthz prices.extract/batch must be the manifest atomic amount",
     )];
   }
+  if (fixture.kind === "operation-identity") {
+    const problems = identityProblems(fixture.entries);
+    const ids = Object.keys(identityMap(fixture.entries)).sort();
+    return [evidenceItem(
+      "operation-identity",
+      true,
+      { consistent: problems.length === 0, problems, ids },
+      { consistent: true, problems: [], ids },
+      "one id, price, billing basis, and rail list on every surface that lists the operation",
+    )];
+  }
   if (fixture.kind === "counterexample") {
     const observed = counterexampleObserved(fixture);
     return [evidenceItem(
@@ -619,11 +657,12 @@ function openApiDisplay(document, route) {
 }
 
 async function runCatalog(origin) {
-  const [manifestResponse, openapiResponse, healthResponse, llmsResponse] = await Promise.all([
+  const [manifestResponse, openapiResponse, healthResponse, llmsResponse, cardResponse] = await Promise.all([
     fetchUnpaid(new URL("/.well-known/x402", origin).href),
     fetchUnpaid(new URL("/openapi.json", origin).href),
     fetchUnpaid(new URL("/healthz", origin).href),
     fetchUnpaid(new URL("/llms.txt", origin).href),
+    fetchUnpaid(new URL("/.well-known/agent-card.json", origin).href),
   ]);
   if ([manifestResponse, openapiResponse, healthResponse].some((item) => item.status !== 200)) {
     const error = new Error("catalog surfaces were not all readable");
@@ -685,6 +724,31 @@ async function runCatalog(origin) {
       "page-change is free on every surface that lists it",
     ));
   }
+  const card = cardResponse.status === 200 ? JSON.parse(cardResponse.text) : { skills: [] };
+  let mcpTools = [];
+  try {
+    mcpTools = (await mcpSession(origin)).tools;
+  } catch (error) {
+    if (error.code === "evidence-unavailable") throw error;
+    mcpTools = [];
+  }
+  const identityEntries = entriesFromSurfaces({
+    mcpTools,
+    manifestItems: manifest.items || [],
+    skills: card.skills || [],
+    openapi,
+  });
+  const identityProblemsFound = identityEntries.length === 0
+    ? ["no-priced-identities"]
+    : identityProblems(identityEntries);
+  const identityIds = Object.keys(identityMap(identityEntries)).sort();
+  evidence.push(evidenceItem(
+    "operation-identity",
+    cardResponse.status === 200 && identityEntries.length > 0,
+    { consistent: identityProblemsFound.length === 0, problems: identityProblemsFound, ids: identityIds },
+    { consistent: true, problems: [], ids: identityIds },
+    "one id, price, billing basis, and rail list on every surface that lists the operation",
+  ));
   evidence.push(...await runMcpList(origin).catch((error) => {
     if (error.code === "evidence-unavailable") throw error;
     return [evidenceItem("mcp-list", false, String(error.message), "listed", "mcp list failed")];

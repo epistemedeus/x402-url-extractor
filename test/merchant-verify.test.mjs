@@ -101,6 +101,21 @@ test("settle request exits 1 without setting settled", () => {
   assert.equal(result.json.evidence[0].observed, "settlement-requested");
 });
 
+test("operation identity agrees across surfaces and rejects batch-per-success and lockfile-on-mpp", () => {
+  const ok = run(["catalog", "check", "--profile", "local", "--fixture", "operation-identity-ok", "--json"]);
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.equal(ok.json.evidence[0].observed.consistent, true);
+  assert.deepEqual(ok.json.evidence[0].observed.ids, ["extract", "extract_batch", "lockfile-pin-delta"]);
+  const batch = run(["catalog", "check", "--profile", "local", "--fixture", "batch-per-successful-call", "--json"]);
+  assert.equal(batch.status, 1);
+  assert.equal(batch.json.evidence[0].observed.consistent, false);
+  assert.ok(batch.json.evidence[0].observed.problems.some((problem) => problem.includes("batch-per-successful-call")));
+  const lockfile = run(["catalog", "check", "--profile", "local", "--fixture", "lockfile-on-mpp", "--json"]);
+  assert.equal(lockfile.status, 1);
+  assert.ok(lockfile.json.evidence[0].observed.problems.some((problem) => problem.includes("lockfile-not-x402-only")));
+  assert.equal(lockfile.json.boundary.settled, false);
+});
+
 test("counterexample fixtures pass", () => {
   for (const name of ["bazaar-sample-differs", "a2a-redirect", "zero-charge-write", "range-vs-fixed", "stripe-human"]) {
     const result = run(["journey", "catalog", "--profile", "local", "--fixture", name, "--json"]);

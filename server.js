@@ -36,6 +36,12 @@ import {
   renderLlmsTxt,
   validateMachineSurfaceParity,
 } from "./machine-surface-parity.mjs";
+import {
+  billingBasisForRoute,
+  operationIdForRoute,
+  operationIdentity,
+  supportedRailsForRoute,
+} from "./operation-identity.mjs";
 import { assertCdpResourceDescriptionCompatibility } from "./x402-resource-compat.mjs";
 import {
   BAZAAR_RESOURCE_METADATA,
@@ -1116,6 +1122,10 @@ const mppDualStack = createMppDualStack({
 });
 
 const agentCashPaymentInfoFor = (resource) => ({
+  operation: operationIdentity({
+    route: new URL(resource.url).pathname,
+    priceAtomic: resource.amount,
+  }),
   price: {
     amount: atomicUsdcToDisplay(resource.amount),
     currency: "USD",
@@ -1157,6 +1167,10 @@ const circleGatewayPaymentInfo = () => ({
 });
 
 const mppPaymentInfoFor = (resource) => ({
+  operation: operationIdentity({
+    route: new URL(resource.url).pathname,
+    priceAtomic: resource.amount,
+  }),
   offers: [
     {
       amount: resource.amount,
@@ -1239,7 +1253,10 @@ const machineActionCatalog = () => ({
       description: resource.description,
       priceAtomicUsdc: resource.amount,
       priceUsdc: Number(resource.amount) / 1e6,
-      paymentProtocols: route === LOCKFILE_PIN_DELTA_PATH ? ["x402"] : ["x402", "mpp"],
+      id: operationIdForRoute(route),
+      billingBasis: billingBasisForRoute(route),
+      supportedRails: supportedRailsForRoute(route),
+      paymentProtocols: supportedRailsForRoute(route),
       mimeType: resource.mimeType,
       ...serviceMetadata,
       request: projectDiscoveryRequest(resource.url, method, request),
@@ -1800,6 +1817,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     const batchResource = {
       amount: EXTRACT_BATCH_AMOUNT_ATOMIC,
       method: "POST",
+      url: `${PUBLIC_URL}${EXTRACT_BATCH_PATH}`,
     };
     document.paths[EXTRACT_BATCH_PATH] = extractBatchOpenApiPath({
       paymentInfo: profile === "mpp"
@@ -1811,9 +1829,14 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
     const lockfileResource = {
       amount: LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC,
       method: "POST",
+      url: `${PUBLIC_URL}${LOCKFILE_PIN_DELTA_PATH}`,
     };
     document.paths[LOCKFILE_PIN_DELTA_PATH] = lockfilePinDeltaOpenApiPath({
       paymentInfo: {
+        operation: operationIdentity({
+          route: LOCKFILE_PIN_DELTA_PATH,
+          priceAtomic: lockfileResource.amount,
+        }),
         price: {
           amount: atomicUsdcToDisplay(lockfileResource.amount),
           currency: "USD",
@@ -4063,7 +4086,12 @@ import("./mcp-server.mjs")
         { name: "solana_transaction_receipt", description: RESOURCES[16].description, price: SOLANA_TRANSACTION_RECEIPT_PRICE, inputSchema: { signature: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/).describe("Finalized Solana mainnet transaction signature."), mint: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional SPL-token mint; defaults to canonical Solana USDC."), recipient: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional expected token recipient owner."), amountAtomic: z.string().regex(/^[1-9][0-9]{0,19}$/).optional().describe("Optional expected positive token amount in atomic units; requires recipient."), payer: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/).optional().describe("Optional expected token payer owner; requires recipient and amountAtomic.") }, run: (a) => solanaTransactionReceipt(a), tags: ["blockchain", "solana", "receipt", "spl-token", "usdc"] },
         { name: "wallet_policy_conformance", description: RESOURCES[17].description, price: WALLET_POLICY_CONFORMANCE_PRICE, inputSchema: { profileId: z.string().min(1).max(128).describe("Caller-defined policy profile identifier with no credential or wallet secret."), provider: z.string().min(1).max(128).describe("Wallet or delegated-signer provider name."), network: z.string().min(1).max(128).describe("Network identifier used by the tested profile."), protocol: z.string().min(1).max(128).describe("Payment or execution protocol bound by the tested profile."), observations: z.array(z.object({ case: z.enum(WALLET_POLICY_CASE_NAMES).describe("Standardized mutation or control case."), actual: z.enum(["allowed", "denied", "error"]).describe("Observed high-level outcome."), denialClass: z.enum(["none", "policy", "validation", "provider"]).describe("Where the denial or error occurred; only policy earns provider-native coverage."), code: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$/).optional().describe("Optional safe provider code only, never a raw message or payload.") }).strict()).min(1).max(16).describe("Unique standardized observations. Raw provider responses, signatures, transactions, credentials, and wallet IDs are rejected.") }, outputSchema: walletPolicyConformanceMcpOutputSchema, run: (a) => walletPolicyConformance(a), tags: ["security", "wallet-policy", "delegated-signer", "conformance", "execution-shape"] },
         { name: "stateful_wallet_policy_conformance", description: RESOURCES[18].description, price: STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE, inputSchema: { profileId: z.string().min(1).max(128).describe("Caller-defined stateful policy profile identifier with no credential, wallet, or counter secret."), provider: z.string().min(1).max(128).describe("Wallet or delegated-signer provider name."), network: z.string().min(1).max(128).describe("Network identifier used by the tested stateful profile."), protocol: z.string().min(1).max(128).describe("Payment or execution protocol bound by the tested stateful profile."), observations: z.array(z.object({ case: z.enum(STATEFUL_WALLET_POLICY_CASE_NAMES).describe("Standardized cumulative, extraction, concurrency, reference, or application-serialization case."), actual: z.enum(["allowed", "denied", "error"]).describe("Observed high-level outcome."), enforcementClass: z.enum(["none", "policy", "application", "validation", "provider"]).describe("Where enforcement occurred. Provider policy and application guards remain separate."), code: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,63}$/).optional().describe("Optional safe provider code only, never a raw message, counter value, or payload.") }).strict()).min(1).max(7).describe("Unique standardized stateful observations. Raw provider responses, signatures, transactions, counter values, credentials, wallet IDs, and resource IDs are rejected.") }, outputSchema: statefulWalletPolicyConformanceMcpOutputSchema, run: (a) => statefulWalletPolicyConformance(a), tags: ["security", "wallet-policy", "stateful-policy", "spend-cap", "concurrency"] },
-      ].map(decorateMcpTool),
+      ].map(decorateMcpTool).map((tool) => {
+        if (tool.free) return tool;
+        const action = machineActions.find((entry) => mcpToolNameForRoute(entry.route) === tool.name);
+        if (!action) throw new Error(`MCP tool ${tool.name} has no catalog operation`);
+        return { ...tool, operationIdentity: operationIdentity({ route: action.route, priceAtomic: action.priceAtomicUsdc }) };
+      }),
     })
   )
   .then((r) => {
