@@ -1,0 +1,12 @@
+{
+  "id": "seeded.false-accept.uncapped-900s",
+  "kind": "false_accept",
+  "expect": "reject",
+  "deriveKind": "paid-retry",
+  "accept": { "maxTimeoutSeconds": 900 },
+  "claimedTimeoutMs": 900000,
+  "claimedCapped": false,
+  "claimedPaid": false,
+  "claimedSettled": false,
+  "reason": "seeded false_accept: 900s accept claimed as a 15-minute uncapped MCP wait"
+}

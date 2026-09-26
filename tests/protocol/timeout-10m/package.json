@@ -1,0 +1,11 @@
+{
+  "name": "x402-mcp-timeout-10m",
+  "private": true,
+  "type": "module",
+  "description": "x402 MCP 10-minute tool-call timeout regression fixture. Write boundary tests/protocol/timeout-10m/**.",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 derive.test.mjs evaluate.test.mjs run.test.mjs",
+    "cold": "node run.mjs --json",
+    "seeded-failure": "node run.mjs --seeded-failure --json"
+  }
+}
