@@ -1,0 +1,96 @@
+{
+  "id": "wrong-network-rejected",
+  "title": "PAYMENT-SIGNATURE networks other than advertised eip155:8453 stay 402 without verify or settle",
+  "expect": "pass",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "offeredNetwork": "eip155:8453",
+  "settleCount": 0,
+  "verifyCount": 0,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false,
+      "offeredNetwork": "eip155:8453"
+    },
+    {
+      "seq": 2,
+      "phase": "wrong-network-sepolia",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false,
+      "paymentPresent": true,
+      "payloadNetwork": "eip155:84532",
+      "offeredNetwork": "eip155:8453",
+      "challengeError": "No matching payment requirements"
+    },
+    {
+      "seq": 3,
+      "phase": "wrong-network-ethereum",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false,
+      "paymentPresent": true,
+      "payloadNetwork": "eip155:1",
+      "offeredNetwork": "eip155:8453"
+    },
+    {
+      "seq": 4,
+      "phase": "wrong-network-solana",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false,
+      "paymentPresent": true,
+      "payloadNetwork": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+      "offeredNetwork": "eip155:8453"
+    },
+    {
+      "seq": 5,
+      "phase": "wrong-network-field-only",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false,
+      "paymentPresent": true,
+      "payloadNetwork": "eip155:84532",
+      "offeredNetwork": "eip155:8453"
+    },
+    {
+      "seq": 6,
+      "phase": "wrong-network-legacy-base",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false,
+      "paymentPresent": true,
+      "payloadNetwork": "base",
+      "offeredNetwork": "eip155:8453"
+    },
+    {
+      "seq": 7,
+      "phase": "wrong-network-empty",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false,
+      "paymentPresent": true,
+      "payloadNetwork": "",
+      "offeredNetwork": "eip155:8453"
+    }
+  ]
+}

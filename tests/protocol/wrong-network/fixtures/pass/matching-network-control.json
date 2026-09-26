@@ -1,0 +1,41 @@
+{
+  "id": "matching-network-control",
+  "title": "PAYMENT-SIGNATURE on advertised eip155:8453 may settle once so the harness is not a blanket block",
+  "expect": "pass",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "offeredNetwork": "eip155:8453",
+  "settleCount": 1,
+  "verifyCount": 1,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false,
+      "offeredNetwork": "eip155:8453"
+    },
+    {
+      "seq": 2,
+      "phase": "matching",
+      "role": "matching",
+      "httpStatus": 200,
+      "settleDelta": 1,
+      "verifyDelta": 1,
+      "hasPaymentResponse": true,
+      "paymentPresent": true,
+      "payloadNetwork": "eip155:8453",
+      "offeredNetwork": "eip155:8453"
+    }
+  ]
+}
