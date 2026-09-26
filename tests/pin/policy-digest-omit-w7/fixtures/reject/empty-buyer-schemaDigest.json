@@ -1,0 +1,9 @@
+{
+  "id": "empty-buyer-schemaDigest",
+  "expect": "reject",
+  "code": "buyer_schema_digest_omitted",
+  "buyer": {
+    "schemaDigest": "",
+    "requiredFields": ["sku"]
+  }
+}
