@@ -1,0 +1,40 @@
+{
+  "id": "seeded-padded-amount",
+  "title": "Seeded failure: leading-zero 05000 is not the canonical string 5000",
+  "expect": "reject",
+  "rejectCode": "amount_not_canonical_string",
+  "kind": "route-amount-matrix",
+  "routeId": "extract",
+  "note": "SEEDING FAILURE: Number(\"05000\") === 5000 is not string equality.",
+  "request": { "paymentSignatureSent": false },
+  "observation": {
+    "http": {
+      "httpStatus": 402,
+      "hasPaymentRequiredHeader": true,
+      "amount": "05000",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "network": "eip155:8453"
+    },
+    "mcp": {
+      "httpStatus": 200,
+      "tool": "extract",
+      "toolPresent": true,
+      "paymentRequired": true,
+      "amount": "05000"
+    },
+    "openapi": {
+      "present": true,
+      "path": "/extract",
+      "method": "get",
+      "description402": "payment required (x402, $0.005 USDC base)",
+      "priceUsd": "$0.005"
+    },
+    "wellKnown": { "present": true, "amount": "05000" }
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "successProven": false,
+    "settlement": false
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "seeded-amount-mismatch",
+  "title": "Seeded failure: scan advertised as extract amount 5000 instead of pin 200000",
+  "expect": "reject",
+  "rejectCode": "amount_mismatch",
+  "kind": "route-amount-matrix",
+  "routeId": "scan",
+  "note": "SEEDING FAILURE: GET /scan pin is string 200000 ($0.20). Copying extract 5000 is not the scan offer and is not settlement.",
+  "request": {
+    "method": "GET",
+    "path": "/scan?repo=octocat/Hello-World",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "http": {
+      "httpStatus": 402,
+      "hasPaymentRequiredHeader": true,
+      "amount": "5000",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+    },
+    "mcp": {
+      "httpStatus": 200,
+      "tool": "scan",
+      "toolPresent": true,
+      "paymentRequired": true,
+      "amount": "5000"
+    },
+    "openapi": {
+      "present": true,
+      "path": "/scan",
+      "method": "get",
+      "description402": "payment required (x402, $0.005 USDC base)",
+      "priceUsd": "$0.005"
+    },
+    "wellKnown": {
+      "present": true,
+      "amount": "5000"
+    }
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "successProven": false,
+    "settlement": false
+  }
+}

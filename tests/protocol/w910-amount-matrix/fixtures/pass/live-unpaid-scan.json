@@ -1,0 +1,51 @@
+{
+  "id": "live-unpaid-scan",
+  "title": "Unpaid GET /scan HTTP 402 amount 200000 string-equals MCP and OpenAPI $0.20",
+  "expect": "pass",
+  "kind": "route-amount-matrix",
+  "routeId": "scan",
+  "observedAt": "2026-09-17T12:44:40Z",
+  "origin": "https://agents.samedaydesk.com",
+  "serviceVersion": "1.23.49",
+  "request": {
+    "method": "GET",
+    "path": "/scan?repo=octocat/Hello-World",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "http": {
+      "httpStatus": 402,
+      "hasPaymentRequiredHeader": true,
+      "amount": "200000",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+    },
+    "mcp": {
+      "httpStatus": 200,
+      "tool": "scan",
+      "toolPresent": true,
+      "paymentRequired": true,
+      "amount": "200000"
+    },
+    "openapi": {
+      "present": true,
+      "path": "/scan",
+      "method": "get",
+      "httpStatus": 200,
+      "description402": "payment required (x402, $0.20 USDC base)",
+      "priceUsd": "$0.20"
+    },
+    "wellKnown": {
+      "present": true,
+      "amount": "200000"
+    }
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "successProven": false,
+    "settlement": false,
+    "treatAbsenceAsDemand": false
+  }
+}

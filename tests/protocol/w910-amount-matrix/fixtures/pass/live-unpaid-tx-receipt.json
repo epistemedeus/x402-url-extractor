@@ -1,0 +1,51 @@
+{
+  "id": "live-unpaid-tx-receipt",
+  "title": "Unpaid GET /chain/transaction-receipt HTTP 402 amount 2000 string-equals MCP and OpenAPI $0.002",
+  "expect": "pass",
+  "kind": "route-amount-matrix",
+  "routeId": "transaction_receipt",
+  "observedAt": "2026-09-17T12:44:40Z",
+  "origin": "https://agents.samedaydesk.com",
+  "serviceVersion": "1.23.49",
+  "request": {
+    "method": "GET",
+    "path": "/chain/transaction-receipt",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "http": {
+      "httpStatus": 402,
+      "hasPaymentRequiredHeader": true,
+      "amount": "2000",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+    },
+    "mcp": {
+      "httpStatus": 200,
+      "tool": "transaction_receipt",
+      "toolPresent": true,
+      "paymentRequired": true,
+      "amount": "2000"
+    },
+    "openapi": {
+      "present": true,
+      "path": "/chain/transaction-receipt",
+      "method": "get",
+      "httpStatus": 200,
+      "description402": "payment required (x402 or MPP, $0.002 USDC base)",
+      "priceUsd": "$0.002"
+    },
+    "wellKnown": {
+      "present": true,
+      "amount": "2000"
+    }
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "successProven": false,
+    "settlement": false,
+    "treatAbsenceAsDemand": false
+  }
+}

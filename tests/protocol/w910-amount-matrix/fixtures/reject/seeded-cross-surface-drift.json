@@ -1,0 +1,40 @@
+{
+  "id": "seeded-cross-surface-drift",
+  "title": "Seeded failure: HTTP 200000 vs MCP 5000 on scan is not one amount",
+  "expect": "reject",
+  "rejectCode": "cross_surface_drift",
+  "kind": "route-amount-matrix",
+  "routeId": "scan",
+  "note": "SEEDING FAILURE: surfaces must string-equal each other before anyone pays.",
+  "request": { "paymentSignatureSent": false },
+  "observation": {
+    "http": {
+      "httpStatus": 402,
+      "hasPaymentRequiredHeader": true,
+      "amount": "200000",
+      "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "network": "eip155:8453"
+    },
+    "mcp": {
+      "httpStatus": 200,
+      "tool": "scan",
+      "toolPresent": true,
+      "paymentRequired": true,
+      "amount": "5000"
+    },
+    "openapi": {
+      "present": true,
+      "path": "/scan",
+      "method": "get",
+      "description402": "payment required (x402, $0.20 USDC base)",
+      "priceUsd": "$0.20"
+    },
+    "wellKnown": { "present": true, "amount": "200000" }
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "successProven": false,
+    "settlement": false
+  }
+}
