@@ -1,0 +1,31 @@
+{
+  "id": "seeded-route-absent-as-matched",
+  "title": "Seeded failure: classify catalog route_absent as a matched price",
+  "expect": "reject",
+  "rejectCode": "route_absent_classified_as_matched",
+  "kind": "catalog-empty-route-absent",
+  "observedAt": "2026-09-18T00:00:00.000Z",
+  "request": {
+    "route": "/lockfile-pin-delta",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "route": "/lockfile-pin-delta",
+    "expectedPriceAtomic": "5000",
+    "targetFound": false,
+    "expectedRouteFound": false,
+    "priceStatuses": {
+      "coinbase-bazaar": "route_absent"
+    },
+    "identityStatuses": {
+      "coinbase-bazaar": "route_absent"
+    },
+    "findings": [
+      "target_absent_from_ranked_results"
+    ]
+  },
+  "claims": {
+    "matched": true,
+    "message": "route_absent means the expected price matched"
+  }
+}

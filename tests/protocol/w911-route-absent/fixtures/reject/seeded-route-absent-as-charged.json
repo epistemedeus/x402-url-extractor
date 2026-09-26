@@ -1,0 +1,34 @@
+{
+  "id": "seeded-route-absent-as-charged",
+  "title": "Seeded failure: classify catalog route_absent as charged/paid delivery",
+  "expect": "reject",
+  "rejectCode": "route_absent_classified_as_charged",
+  "kind": "catalog-empty-route-absent",
+  "observedAt": "2026-09-18T00:00:00.000Z",
+  "request": {
+    "route": "/lockfile-pin-delta",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "route": "/lockfile-pin-delta",
+    "expectedPriceAtomic": "5000",
+    "targetFound": false,
+    "expectedRouteFound": false,
+    "priceStatuses": {
+      "coinbase-bazaar": "route_absent"
+    },
+    "identityStatuses": {
+      "coinbase-bazaar": "route_absent"
+    },
+    "findings": [
+      "target_absent_from_ranked_results"
+    ]
+  },
+  "claims": {
+    "charged": true,
+    "paidDelivery": true,
+    "successProven": true,
+    "settlement": true,
+    "message": "catalog row exists so the route was billed"
+  }
+}
