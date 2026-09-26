@@ -1,0 +1,40 @@
+{
+  "wave": "w830",
+  "schemaVersion": "samedaydesk.x402-protocol-fixtures.w830-amount-matrix.v1",
+  "unpublished": true,
+  "liveListing": false,
+  "boundary": "tests/protocol/w830-amount-matrix/**",
+  "seller": {
+    "origin": "https://agents.samedaydesk.com",
+    "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "amountsAtomic": {
+      "extract": "5000",
+      "read": "5000",
+      "scan": "200000",
+      "schemaforge": "250000",
+      "enrich": "50000",
+      "morpho-position": "20000",
+      "morpho-protection": "100000",
+      "payment-offer-preflight": "5000",
+      "transaction-receipt": "2000",
+      "seller-integrity-audit": "10000"
+    }
+  },
+  "pass": [
+    "pass/canonical-matrix.json"
+  ],
+  "reject": [
+    "reject/seeded-extract-onto-scan.json",
+    "reject/seeded-invented-field.json",
+    "reject/treat-absence-as-demand.json",
+    "reject/seeded-unit-conversion.json"
+  ],
+  "seededFailure": "reject/seeded-extract-onto-scan.json",
+  "notes": [
+    "Atomic amounts are strings. Never convert 200000 to 0.20.",
+    "Copying extract 5000 onto /scan is the designated seeded failure.",
+    "No payment headers, no --live, no neo, no publish."
+  ]
+}
