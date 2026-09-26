@@ -1,0 +1,55 @@
+{
+  "id": "canonical-asset-settles",
+  "title": "Canonical Base USDC payment matches advertised terms and settles once",
+  "expect": "pass",
+  "kind": "canonical-control",
+  "mustSettle": true,
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "advertisedAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "advertisedAssetName": "USD Coin",
+  "advertisedAssetVersion": "2",
+  "payloadAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "payloadAssetName": "USD Coin",
+  "payloadAssetVersion": "2",
+  "paymentIdentity": {
+    "id": "wrongasset_canon_01",
+    "payer": "0x14791697260E4c9A71f18484C9f997B308e59325",
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "extra": { "name": "USD Coin", "version": "2" }
+  },
+  "settleCount": 1,
+  "verifyCount": 1,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false
+    },
+    {
+      "seq": 2,
+      "phase": "paid",
+      "httpStatus": 200,
+      "replay": null,
+      "settleDelta": 1,
+      "verifyDelta": 1,
+      "hasPaymentResponse": true,
+      "paymentPresent": true,
+      "payloadAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payloadAssetName": "USD Coin",
+      "transaction": "0x3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  ]
+}

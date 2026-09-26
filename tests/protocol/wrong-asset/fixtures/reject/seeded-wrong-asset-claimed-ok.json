@@ -1,0 +1,44 @@
+{
+  "id": "seeded-wrong-asset-claimed-ok",
+  "title": "Seeded failure: native ETH sentinel settled while claiming canonical USDC",
+  "expect": "reject",
+  "rejectCode": "wrong_asset_settled",
+  "kind": "seeded-lie",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "advertisedAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "payloadAsset": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  "paymentIdentity": {
+    "id": "seeded_wrong_eth_0001",
+    "payer": "0x1111111111111111111111111111111111111111",
+    "network": "eip155:8453",
+    "asset": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+  },
+  "claims": {
+    "ok": true,
+    "settled": true,
+    "doubleSettle": false
+  },
+  "settleCount": 1,
+  "verifyCount": 1,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "paid",
+      "httpStatus": 200,
+      "settleDelta": 1,
+      "verifyDelta": 1,
+      "hasPaymentResponse": true,
+      "paymentPresent": true,
+      "payloadAsset": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    }
+  ]
+}

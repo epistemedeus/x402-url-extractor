@@ -1,0 +1,53 @@
+{
+  "id": "wrong-erc20-never-settles",
+  "title": "Base WETH in accepted.asset never reaches facilitator settle",
+  "expect": "pass",
+  "kind": "wrong-asset",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "advertisedAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "advertisedAssetName": "USD Coin",
+  "advertisedAssetVersion": "2",
+  "payloadAsset": "0x4200000000000000000000000000000000000006",
+  "payloadAssetName": "USD Coin",
+  "payloadAssetVersion": "2",
+  "paymentIdentity": {
+    "id": "wrongasset_weth_0001",
+    "payer": "0x14791697260E4c9A71f18484C9f997B308e59325",
+    "network": "eip155:8453",
+    "asset": "0x4200000000000000000000000000000000000006",
+    "extra": { "name": "USD Coin", "version": "2" }
+  },
+  "settleCount": 0,
+  "verifyCount": 0,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "unpaid",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false
+    },
+    {
+      "seq": 2,
+      "phase": "paid",
+      "httpStatus": 402,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "hasPaymentResponse": false,
+      "paymentPresent": true,
+      "payloadAsset": "0x4200000000000000000000000000000000000006",
+      "payloadAssetName": "USD Coin",
+      "charged": false
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "id": "seeded-eip712-domain-settled",
+  "title": "Seeded failure: canonical USDC address with a foreign EIP-712 name settled",
+  "expect": "reject",
+  "rejectCode": "wrong_asset_settled",
+  "kind": "seeded-eip712",
+  "rail": "x402",
+  "route": "/work/opportunity-preflight?rewardUsd=10&hours=1&hourlyCostUsd=1",
+  "advertisedAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "advertisedAssetName": "USD Coin",
+  "advertisedAssetVersion": "2",
+  "payloadAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "payloadAssetName": "Wrapped Ether",
+  "payloadAssetVersion": "2",
+  "paymentIdentity": {
+    "id": "seeded_wrong_domain_01",
+    "payer": "0x1111111111111111111111111111111111111111",
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "extra": { "name": "Wrapped Ether", "version": "2" }
+  },
+  "claims": {
+    "ok": true,
+    "settled": true
+  },
+  "settleCount": 1,
+  "verifyCount": 1,
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "paid",
+      "httpStatus": 200,
+      "settleDelta": 1,
+      "verifyDelta": 1,
+      "hasPaymentResponse": true,
+      "paymentPresent": true,
+      "payloadAsset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payloadAssetName": "Wrapped Ether"
+    }
+  ]
+}
