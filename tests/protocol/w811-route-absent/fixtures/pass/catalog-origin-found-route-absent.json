@@ -1,0 +1,37 @@
+{
+  "id": "catalog-origin-found-route-absent",
+  "title": "Catalogs that list the origin on /read while the caller asks for /extract report route_absent",
+  "expect": "pass",
+  "rail": "x402",
+  "kind": "catalog-route-absent",
+  "route": "/extract",
+  "settleCount": 0,
+  "verifyCount": 0,
+  "claims": {
+    "ok": true,
+    "routeAbsent": true,
+    "payable": false,
+    "charged": false,
+    "settled": false
+  },
+  "catalog": {
+    "origin": "https://api.example.com",
+    "expectedRoute": "/extract",
+    "listedRoute": "/read",
+    "targetFound": true,
+    "expectedRouteFound": false,
+    "priceObservationStatus": "route_absent",
+    "findings": ["origin_found_expected_route_absent"],
+    "matched": false,
+    "payable": false,
+    "charged": false
+  },
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false
+  },
+  "attempts": []
+}

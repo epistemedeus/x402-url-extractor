@@ -1,0 +1,44 @@
+{
+  "id": "declared-free-not-absent",
+  "title": "GET /healthz is a present unpaid surface, not route_absent and not HTTP 402",
+  "expect": "pass",
+  "rail": "x402",
+  "kind": "http-free-surface",
+  "route": "/healthz",
+  "declaredFreeRoute": "/healthz",
+  "settleCount": 0,
+  "verifyCount": 0,
+  "claims": {
+    "ok": true,
+    "routeAbsent": false,
+    "payable": false,
+    "charged": false,
+    "settled": false
+  },
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "free-healthz",
+      "role": "free-surface",
+      "method": "GET",
+      "path": "/healthz",
+      "httpStatus": 200,
+      "hasPaymentRequired": false,
+      "hasPaymentResponse": false,
+      "charged": false,
+      "payable": false,
+      "routeAbsent": false,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false
+    }
+  ]
+}

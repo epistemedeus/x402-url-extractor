@@ -1,0 +1,80 @@
+{
+  "id": "absent-route-not-402",
+  "title": "Undeclared /w811-absent-route is not HTTP 402 and does not verify or settle",
+  "expect": "pass",
+  "rail": "x402",
+  "kind": "http-absent",
+  "route": "/w811-absent-route",
+  "declaredPaidRoute": "/extract",
+  "settleCount": 0,
+  "verifyCount": 0,
+  "claims": {
+    "ok": true,
+    "routeAbsent": true,
+    "payable": false,
+    "charged": false,
+    "settled": false
+  },
+  "wellKnown": {
+    "itemRoutes": ["/extract", "/read", "/scan"],
+    "includesAbsentRoute": false
+  },
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "absent-unpaid",
+      "role": "absent",
+      "method": "GET",
+      "path": "/w811-absent-route",
+      "httpStatus": 404,
+      "hasPaymentRequired": false,
+      "hasPaymentResponse": false,
+      "charged": false,
+      "payable": false,
+      "routeAbsent": true,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false
+    },
+    {
+      "seq": 2,
+      "phase": "lookalike-0",
+      "role": "absent",
+      "method": "GET",
+      "path": "/extract-w811",
+      "httpStatus": 404,
+      "hasPaymentRequired": false,
+      "hasPaymentResponse": false,
+      "charged": false,
+      "payable": false,
+      "routeAbsent": true,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false
+    },
+    {
+      "seq": 3,
+      "phase": "absent-with-signature",
+      "role": "absent",
+      "method": "GET",
+      "path": "/w811-absent-route",
+      "httpStatus": 404,
+      "hasPaymentRequired": false,
+      "hasPaymentResponse": false,
+      "charged": false,
+      "payable": false,
+      "routeAbsent": true,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": true
+    }
+  ]
+}
