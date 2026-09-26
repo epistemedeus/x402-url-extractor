@@ -1,0 +1,45 @@
+{
+  "id": "seeded-healthz-as-absent",
+  "title": "Seeded failure: declared free GET /healthz claimed as route_absent",
+  "expect": "reject",
+  "rejectCode": "free_surface_classified_as_absent",
+  "rail": "x402",
+  "kind": "seeded-free-as-absent",
+  "route": "/healthz",
+  "declaredFreeRoute": "/healthz",
+  "settleCount": 0,
+  "verifyCount": 0,
+  "claims": {
+    "ok": true,
+    "routeAbsent": true,
+    "payable": false,
+    "charged": false,
+    "settled": false
+  },
+  "boundary": {
+    "paymentSent": false,
+    "liveFacilitator": false,
+    "checkoutMutated": false,
+    "published": false,
+    "neoTouched": false,
+    "facilitatorUrl": "http://127.0.0.1:9"
+  },
+  "attempts": [
+    {
+      "seq": 1,
+      "phase": "free-healthz",
+      "role": "free-surface",
+      "method": "GET",
+      "path": "/healthz",
+      "httpStatus": 200,
+      "hasPaymentRequired": false,
+      "hasPaymentResponse": false,
+      "charged": false,
+      "payable": false,
+      "routeAbsent": true,
+      "settleDelta": 0,
+      "verifyDelta": 0,
+      "paymentPresent": false
+    }
+  ]
+}
