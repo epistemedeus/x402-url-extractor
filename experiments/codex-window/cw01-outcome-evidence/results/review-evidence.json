@@ -1,0 +1,312 @@
+{
+  "source": "82a521a8b8778b2224cf5fd5ade2f14d7618d139",
+  "sourceParentAndObservedDefault": "0153295c5851bf8f93fb27c77070a31417a59f69",
+  "scope": "experiments/codex-window/cw01-outcome-evidence/",
+  "branch": "codex/cw18-astra-outcome-evidence-20260912",
+  "execution": {
+    "surface": "remote VM only; direct native Codex/Astra edits; no delegated agents",
+    "node": "v22.23.2",
+    "maxNodeHeapMB": 768,
+    "testConcurrency": 1,
+    "livePreflight": false,
+    "networkPayment": false,
+    "liveRpc": false
+  },
+  "before": {
+    "tests": 45,
+    "pass": 3,
+    "fail": 42,
+    "skipped": 0
+  },
+  "originalWorkerSuite": {
+    "tests": 10,
+    "pass": 10,
+    "fail": 0,
+    "skipped": 0
+  },
+  "after": {
+    "tests": 61,
+    "pass": 61,
+    "fail": 0,
+    "skipped": 0
+  },
+  "owningCustomerRegression": {
+    "tests": 204,
+    "pass": 197,
+    "fail": 0,
+    "skipped": 7
+  },
+  "coveragePercent": {
+    "scope": "adapter src/index.mjs and bin/cli.mjs, including actual CLI subprocesses",
+    "line": 99.17,
+    "branch": 86.55,
+    "function": 100
+  },
+  "qualification": "The original adapter and CLI were read with git show at the exact source into temporary same-depth files within this experiment. The identical hostile test and customer-control files ran against that CLI with CW18_EVIDENCE_CLI; temporary baseline files were then removed. This avoids treating existing fixtures or tests as the oracle.",
+  "testCommands": [
+    "NODE_OPTIONS=--max-old-space-size=768 node --experimental-test-coverage --test-coverage-include=\"experiments/codex-window/cw01-outcome-evidence/src/*.mjs\" --test-coverage-include=\"experiments/codex-window/cw01-outcome-evidence/bin/*.mjs\" --test --test-concurrency=1 experiments/codex-window/cw01-outcome-evidence/test/*.test.mjs",
+    "CUSTOMER_X402_LIVE_PREFLIGHT=0 NODE_OPTIONS=--max-old-space-size=768 node --test --test-concurrency=1 examples/customer-x402/test/*.test.mjs"
+  ],
+  "beforeAfterCases": [
+    {
+      "test": "real customer serializers: redacted HTTP tx remains unknown, exact reconciliation is usable",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: HTTP 500 with borrowed useful outcome",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: HTTP settlement success=false contradicts useful outcome",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: outputValid=false contradicts retained success",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: outputDelivery contradicts retained success",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: matched request is for another URL",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: matched selected amount is not receipt amount",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: authorized cap evidence disagrees",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: EIP712 domain disagrees",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: case sensitive payment identifier disagrees",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: reconcile validity window disagrees",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: reconcile chain mismatch contradicts status",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: unused authorization contradicts exact status",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: transfer recipient differs",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: transfer amount differs",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: missing supporting transfer",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: missing tx cannot prove settlement",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: canonical block contradicts matched status",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: confirmation claim contradicts depth",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: canceled log contradicts exact status",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: removed log contradicts exact status",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI: log tx differs",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "same transaction replay with a different nonce counts once",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "same transaction on different chain is a separate identity",
+      "before": "pass",
+      "after": "pass"
+    },
+    {
+      "test": "unknown historical retained body stays unknown rather than invalid",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "arbitrary feedback is caller attestation with no authenticated attempt binding",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "portable export omits free-text feedback, catalog labels and source error messages",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "saved repository receipt and historical example summary cannot invent retained output",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "GET source refusal retains the current customer partial outcome",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "same authorization with different transaction sources quarantines both records in either order",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "a bad output record cannot consume a later valid settlement slot",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "unconfirmed canonical settlement preserves finality without inventing confirmation",
+      "before": "pass",
+      "after": "pass"
+    },
+    {
+      "test": "absent reconciliation remains unverified even with perfect buyer feedback",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "feedback may be absent, explicitly bound, or conflicting without authenticating a caller",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "no catalog means unknown example reuse, never inferred organic use",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "unsupported historical batch schema stays unknown",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "GET paid response for another original source cannot be joined",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "GET redirect identity is not confused with original source",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "request URLs with private query values are not exported",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "hostile CLI diagnostics do not echo arbitrary keys or filesystem paths",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "retained output business field is data rather than an inferred claim",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "c22 saved implementation receipt is never accepted as a paid attempt identity",
+      "before": "pass",
+      "after": "pass"
+    },
+    {
+      "test": "partially redacted historical body cannot stand in for original valid output",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "matching failed HTTP outcome still records its contradiction with exact settlement",
+      "before": "fail",
+      "after": "pass"
+    },
+    {
+      "test": "unmatched settlement cannot retain a used_settlement_confirmed decision",
+      "before": "fail",
+      "after": "pass"
+    }
+  ],
+  "testedFilesSha256": {
+    "experiments/codex-window/cw01-outcome-evidence/bin/cli.mjs": "253b3f1665699f8f350c463162a71256e1e2b3214cee2b7c017b03e7f154bf09",
+    "experiments/codex-window/cw01-outcome-evidence/src/index.mjs": "f7d54e873484d3617b53bfd6346d637da9c8c2cc09a94b1a3600c8eb3987e2a7",
+    "experiments/codex-window/cw01-outcome-evidence/test/customer-control.mjs": "6c2cd6d419629239e839c63a8b9fbfb6c76402fe7e71bb3350bf6d8ba1b0cbac",
+    "experiments/codex-window/cw01-outcome-evidence/test/export-boundaries.test.mjs": "b0871b023f456b24b36058385d59ca315c1082427ea9fa245ebd1a91d40593e5",
+    "experiments/codex-window/cw01-outcome-evidence/test/hostile-cli.test.mjs": "f710b9f162de36b2fea2495ed1ae6eb03f41c7073b20552784c549037416b388",
+    "experiments/codex-window/cw01-outcome-evidence/test/outcome-evidence.test.mjs": "65c60c9fb21c0c3fbda940a5a77132d2d3bcaf452fdec4334ecfb6f9bdac29d5"
+  },
+  "savedSourceReceiptsSha256": {
+    "examples/customer-x402/results/attempt-receipt.sample.json": "be3bf071681ac1149aebe3ebd04b195a7d40e09009c2a8cffdd128b6f105d62b",
+    "examples/customer-x402/results/c22-receipt.json": "1626f63c3ee0423032b090c9799b7b193504f1279a64bb95b975f1435452954c",
+    "examples/customer-x402/results/example-result.json": "6bad8301d9da35de0e5a90f3309ca63377615afaa913627d789b731cd033d136"
+  },
+  "capturedCurrentCustomerFixtureSha256": {
+    "experiments/codex-window/cw01-outcome-evidence/fixtures/sample/authorization.json": "702383428ab690e16853445224cad1cf93705cb9efa5ef2e6c64f03e433af116",
+    "experiments/codex-window/cw01-outcome-evidence/fixtures/sample/feedback.json": "500d3fe4332bc3a5cf96aec9f45a5f782125fdefe9143bee98bc73d73c69fc53",
+    "experiments/codex-window/cw01-outcome-evidence/fixtures/sample/purchase-result.json": "33df43918303832633b0e4b12b0cd0505abcc422ef2b07bf71201c75f69a810e",
+    "experiments/codex-window/cw01-outcome-evidence/fixtures/sample/receipt.json": "75aacdb332d9a786fe8dfe52c81385b2904865bd91e86f825129a9f1e650bfaf",
+    "experiments/codex-window/cw01-outcome-evidence/fixtures/sample/reconcile.json": "07ac19d8191b85159562a92bca9b327026bfc0a20ba5b22ce017a568654351f0"
+  },
+  "localRawLogsSha256": {
+    "worker-baseline.tap": "3e457bd161d25134f45c2078ee8211c6c3a29b12ba98bb49f7c282e8a3066fe8",
+    "hostile-before-final.tap": "91dd702294def39f168baae4321400a2f0378b8e632a58a4f43783eeb728d330",
+    "adapter-final.tap": "d60ee4b1f9a0166d08b048ffa4a2f49c7bab6f38f24360cec69e78bfd3bc961a",
+    "customer-regression.tap": "09a8540f4ed182e19e66d0e119413698e998116b18a676190a6f16d5a5103bab"
+  },
+  "limits": [
+    "Input records and feedback are unsigned local files, not independently authenticated evidence. Coherent forgeries are outside this offline adapter.",
+    "No production acceptance, external buyer, settled revenue, live RPC, deployment or payment was tested or claimed.",
+    "Customer regression has 7 explicit skips: 1 opt-in production preflight and 6 mounted-runtime checks without merchant dependencies. Full merchant suite was not run.",
+    "V2 export intentionally changes privacy fields and restricts compilePortableEvidence to immutable joined records.",
+    "Retained body checks reuse the supplied customer contract; original wire/media type and original policy provenance are unavailable.",
+    "Transaction deduplication is conservative without a unique transfer log index, and applies within an export only.",
+    "Digest redaction preserves correlation and is not protection against guessing."
+  ]
+}

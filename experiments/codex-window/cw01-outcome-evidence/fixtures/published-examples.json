@@ -1,0 +1,17 @@
+{
+  "schema": "samedaydesk.published-request-catalog.v1",
+  "entries": [
+    {
+      "label": "customer-x402 published example.com/example.org batch fixture",
+      "method": "POST",
+      "url": "https://agents.samedaydesk.com/extract/batch",
+      "bodyDigest": "sha256:ad902ff2b89eb4d52774eea14faf10e6de37d7e271b857d514fb06e00aa8db7b"
+    },
+    {
+      "label": "customer-x402 published example.com GET fixture",
+      "method": "GET",
+      "url": "https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com",
+      "bodyDigest": null
+    }
+  ]
+}
