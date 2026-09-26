@@ -1,0 +1,10 @@
+{
+  "x402Version": 2,
+  "error": "Payment required",
+  "resource": {
+    "url": "http://127.0.0.1/empty-accepts",
+    "description": "x402 empty-accepts throw fixture; never settle",
+    "mimeType": "application/json"
+  },
+  "accepts": []
+}
