@@ -1,0 +1,51 @@
+{
+  "id": "seeded-iserror-with-delivery",
+  "title": "Seeded failure: isError:true must not carry extract delivery structuredContent",
+  "expect": "reject",
+  "rejectCode": "iserror_mixed_with_delivery",
+  "kind": "mcp-tools-call-unpaid",
+  "method": "tools/call",
+  "note": "SEEDING FAILURE: unpaid isError is PaymentRequired only. Mixing isError:true with extract delivery (ok:true, no accepts) is not the challenge hop.",
+  "request": {
+    "method": "tools/call",
+    "params": {
+      "name": "extract",
+      "arguments": { "url": "https://example.com" }
+    },
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "headerNames": ["content-type"],
+    "hasPaymentRequiredHeader": false,
+    "jsonrpc": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+        "isError": true,
+        "content": [
+          {
+            "type": "text",
+            "text": "{\"ok\":true,\"url\":\"https://example.com\",\"title\":\"Example Domain\"}"
+          }
+        ],
+        "structuredContent": {
+          "ok": true,
+          "url": "https://example.com",
+          "requestedUrl": "https://example.com",
+          "title": "Example Domain",
+          "sourceOk": true
+        }
+      }
+    }
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "successProven": false,
+    "settlement": false
+  }
+}
