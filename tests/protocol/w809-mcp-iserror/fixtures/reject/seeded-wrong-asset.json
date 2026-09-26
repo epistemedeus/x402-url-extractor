@@ -1,0 +1,50 @@
+{
+  "id": "seeded-wrong-asset",
+  "title": "Seeded failure: unpaid isError challenge advertising WETH is not SDS extract USDC",
+  "expect": "reject",
+  "rejectCode": "asset_mismatch",
+  "kind": "mcp-tools-call-unpaid",
+  "method": "tools/call",
+  "note": "SEEDING FAILURE: HTTP 200 isError with PaymentRequired is still a pin miss if accepts[].asset is not Base USDC.",
+  "request": {
+    "method": "tools/call",
+    "params": {
+      "name": "extract",
+      "arguments": { "url": "https://example.com" }
+    },
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 200,
+    "headers": { "content-type": "application/json" },
+    "headerNames": ["content-type"],
+    "hasPaymentRequiredHeader": false,
+    "jsonrpc": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+        "isError": true,
+        "structuredContent": {
+          "x402Version": 2,
+          "error": "Payment required to access this tool",
+          "resource": { "url": "mcp://tool/extract" },
+          "accepts": [
+            {
+              "scheme": "exact",
+              "network": "eip155:8453",
+              "amount": "5000",
+              "asset": "0x4200000000000000000000000000000000000006",
+              "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "successProven": false,
+    "settlement": false
+  }
+}
