@@ -1,0 +1,47 @@
+{
+  "id": "present-extract-402",
+  "title": "Unpaid GET /extract is HTTP 402 amount 5000, not settlement",
+  "expect": "pass",
+  "kind": "http-present-402",
+  "observedAt": "2026-09-18T00:00:00Z",
+  "origin": "https://agents.samedaydesk.com",
+  "serviceVersion": "1.23.49",
+  "request": {
+    "method": "GET",
+    "path": "/extract",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 402,
+    "method": "GET",
+    "path": "/extract",
+    "headers": {
+      "content-type": "application/json; charset=utf-8",
+      "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwiZXJyb3IiOiJQYXltZW50IHJlcXVpcmVkIn0="
+    },
+    "headerNames": ["content-type", "payment-required"],
+    "hasPaymentRequiredHeader": true,
+    "body": {
+      "x402Version": 2,
+      "error": "Payment required",
+      "resource": { "url": "https://agents.samedaydesk.com/extract" },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "5000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+        }
+      ]
+    }
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "successProven": false,
+    "settlement": false,
+    "treatAbsenceAsDemand": false
+  },
+  "counters": { "verify": 0, "settle": 0 }
+}

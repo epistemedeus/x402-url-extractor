@@ -1,0 +1,31 @@
+{
+  "id": "absent-invented-404",
+  "title": "GET /w1031-route-absent is HTTP 404 with no Payment-Required",
+  "expect": "pass",
+  "kind": "http-route-absent",
+  "observedAt": "2026-09-18T00:00:00Z",
+  "request": {
+    "method": "GET",
+    "path": "/w1031-route-absent",
+    "paymentSignatureSent": false
+  },
+  "observation": {
+    "httpStatus": 404,
+    "method": "GET",
+    "path": "/w1031-route-absent",
+    "headers": { "content-type": "text/html; charset=utf-8" },
+    "headerNames": ["content-type", "content-security-policy", "x-content-type-options"],
+    "hasPaymentRequiredHeader": false,
+    "body": null,
+    "text": "Cannot GET /w1031-route-absent"
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "treatAbsenceAsDemand": false,
+    "listed": false,
+    "http402": false,
+    "settlement": false
+  },
+  "counters": { "verify": 0, "settle": 0 }
+}

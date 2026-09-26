@@ -1,0 +1,36 @@
+{
+  "id": "catalog-omits-absent-routes",
+  "title": "well-known x402 lists GET /extract and omits /w1031-route-absent; listing identity is route_absent",
+  "expect": "pass",
+  "kind": "catalog",
+  "observedAt": "2026-09-18T00:00:00Z",
+  "request": {
+    "path": "/w1031-route-absent",
+    "route": "/w1031-route-absent"
+  },
+  "observation": {
+    "items": [
+      {
+        "resource": {
+          "url": "https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com",
+          "routeTemplate": "/extract"
+        }
+      },
+      {
+        "resource": {
+          "url": "https://agents.samedaydesk.com/read?url=https%3A%2F%2Fexample.com",
+          "routeTemplate": "/read"
+        }
+      }
+    ],
+    "actions": [
+      { "route": "/extract", "method": "GET" },
+      { "route": "/read", "method": "GET" }
+    ]
+  },
+  "claims": {
+    "treatAbsenceAsDemand": false,
+    "listed": false,
+    "demand": false
+  }
+}

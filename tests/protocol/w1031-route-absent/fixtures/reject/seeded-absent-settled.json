@@ -1,0 +1,30 @@
+{
+  "id": "seeded-absent-settled",
+  "title": "Seeded failure: facilitator settle on HTTP 404 route_absent",
+  "expect": "reject",
+  "rejectCode": "settle_on_absent",
+  "kind": "http-route-absent",
+  "note": "SEEDING FAILURE: an absent route must not call facilitator settle.",
+  "request": {
+    "method": "GET",
+    "path": "/w1031-route-absent",
+    "paymentSignatureSent": true
+  },
+  "observation": {
+    "httpStatus": 404,
+    "method": "GET",
+    "path": "/w1031-route-absent",
+    "headers": { "content-type": "text/html; charset=utf-8" },
+    "headerNames": ["content-type"],
+    "hasPaymentRequiredHeader": false,
+    "body": null,
+    "text": "Cannot GET /w1031-route-absent"
+  },
+  "claims": {
+    "charged": false,
+    "paidDelivery": false,
+    "treatAbsenceAsDemand": false,
+    "settlement": false
+  },
+  "counters": { "verify": 1, "settle": 1 }
+}
