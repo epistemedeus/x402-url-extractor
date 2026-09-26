@@ -1,0 +1,7 @@
+{
+  "schema": "samedaydesk.crewai-unpaid-list.config.v1",
+  "url": "https://agents.samedaydesk.com/mcp",
+  "transport": "streamable-http",
+  "headers": {},
+  "note": "Pass {url, transport} to crewai_tools.MCPServerAdapter. List tools, then stop. Do not call tools or Crew.kickoff()."
+}

@@ -1,0 +1,20 @@
+{
+  "name": "samedaydesk-crewai-unpaid-list-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CrewAI unpaid MCP tools/list against SameDayDesk. Initialize plus tools/list only. Does not call tools, kick off a crew, or pay.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "samedaydesk-crewai-unpaid-list": "./bin/cli.mjs"
+  },
+  "scripts": {
+    "start": "node bin/cli.mjs",
+    "list": "node bin/cli.mjs",
+    "seeded-failure": "node bin/cli.mjs --seeded-failure --json",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs"
+  },
+  "license": "MIT"
+}
