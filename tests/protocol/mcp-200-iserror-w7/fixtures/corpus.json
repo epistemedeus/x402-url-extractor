@@ -1,0 +1,186 @@
+{
+  "schemaVersion": "samedaydesk.protocol.mcp-200-iserror-w7.fixtures.v1",
+  "cases": [
+    {
+      "id": "unpaid-challenge",
+      "httpStatus": 200,
+      "requestPaymentPresent": false,
+      "expected": { "paid": false, "kind": "challenge", "isError": true },
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "isError": true,
+          "structuredContent": {
+            "x402Version": 2,
+            "error": "Payment required to access this resource",
+            "accepts": [
+              {
+                "scheme": "exact",
+                "network": "eip155:84532",
+                "amount": "10000",
+                "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+                "payTo": "0x209693Bc6afc0C5328bA36FaF03C514EF312287C"
+              }
+            ]
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"x402Version\":2,\"error\":\"Payment required to access this resource\",\"accepts\":[{\"scheme\":\"exact\"}]}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "payment-invalid",
+      "httpStatus": 200,
+      "requestPaymentPresent": true,
+      "expected": { "paid": false, "kind": "challenge", "isError": true },
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "isError": true,
+          "structuredContent": {
+            "x402Version": 2,
+            "error": "Payment verification failed",
+            "accepts": [{ "scheme": "exact", "network": "eip155:84532", "amount": "10000" }]
+          },
+          "content": [{ "type": "text", "text": "{\"x402Version\":2,\"error\":\"Payment verification failed\",\"accepts\":[]}" }]
+        }
+      }
+    },
+    {
+      "id": "handler-iserror",
+      "httpStatus": 200,
+      "requestPaymentPresent": true,
+      "expected": { "paid": false, "kind": "application_error", "isError": true },
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "result": {
+          "isError": true,
+          "content": [{ "type": "text", "text": "{\"ok\":false,\"error\":\"handler failed\"}" }]
+        }
+      }
+    },
+    {
+      "id": "settlement-failed",
+      "httpStatus": 200,
+      "requestPaymentPresent": true,
+      "expected": { "paid": false, "kind": "settlement_failure", "isError": false },
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "result": {
+          "content": [{ "type": "text", "text": "{\"ok\":true}" }],
+          "_meta": {
+            "x402/payment-response": {
+              "success": false,
+              "errorReason": "synthetic-fail",
+              "transaction": "",
+              "network": "eip155:84532"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "dual-jsonrpc-error-and-iserror",
+      "httpStatus": 200,
+      "requestPaymentPresent": true,
+      "expected": { "paid": false, "kind": "application_error", "isError": true },
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 10,
+        "error": { "code": -32000, "message": "Payment required" },
+        "result": {
+          "isError": true,
+          "content": [{ "type": "text", "text": "x402/payment" }]
+        }
+      }
+    },
+    {
+      "id": "sse-ping-then-iserror",
+      "httpStatus": 200,
+      "contentType": "text/event-stream",
+      "requestPaymentPresent": true,
+      "expected": { "paid": false, "kind": "challenge", "isError": true },
+      "body": "event: ping\ndata: {}\n\nevent: message\ndata: {\"jsonrpc\":\"2.0\",\"id\":11,\"result\":{\"isError\":true,\"structuredContent\":{\"x402Version\":2,\"accepts\":[{\"scheme\":\"exact\"}]},\"content\":[{\"type\":\"text\",\"text\":\"Payment Required\"}]}}\n\n"
+    },
+    {
+      "id": "output-schema-failure-after-settle-proof",
+      "httpStatus": 200,
+      "requestPaymentPresent": true,
+      "expected": { "paid": false, "kind": "application_error", "isError": true },
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "result": {
+          "isError": true,
+          "content": [{ "type": "text", "text": "Output validation error" }],
+          "_meta": {
+            "x402/payment-response": {
+              "success": true,
+              "transaction": "0x3333333333333333333333333333333333333333333333333333333333333333",
+              "network": "eip155:84532"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "jsonrpc-minus-32042",
+      "httpStatus": 200,
+      "requestPaymentPresent": false,
+      "expected": { "paid": false, "kind": "jsonrpc_error", "isError": false },
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 6,
+        "error": {
+          "code": -32042,
+          "message": "Payment required",
+          "data": { "x402": { "x402Version": 2, "accepts": [] } }
+        }
+      }
+    },
+    {
+      "id": "paid-success",
+      "httpStatus": 200,
+      "requestPaymentPresent": true,
+      "expected": { "paid": true, "kind": "paid_success", "isError": false },
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 7,
+        "result": {
+          "content": [{ "type": "text", "text": "{\"ok\":true}" }],
+          "structuredContent": { "ok": true },
+          "_meta": {
+            "x402/payment-response": {
+              "success": true,
+              "transaction": "0x3333333333333333333333333333333333333333333333333333333333333333",
+              "network": "eip155:84532"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "sse-unpaid-challenge",
+      "httpStatus": 200,
+      "contentType": "text/event-stream",
+      "requestPaymentPresent": false,
+      "expected": { "paid": false, "kind": "challenge", "isError": true },
+      "body": "event: message\ndata: {\"jsonrpc\":\"2.0\",\"id\":8,\"result\":{\"isError\":true,\"structuredContent\":{\"x402Version\":2,\"accepts\":[{\"scheme\":\"exact\"}]},\"content\":[{\"type\":\"text\",\"text\":\"{\\\"x402Version\\\":2,\\\"accepts\\\":[]}\"}]}}\n\n"
+    },
+    {
+      "id": "http-402-not-mcp-paid",
+      "httpStatus": 402,
+      "requestPaymentPresent": false,
+      "expected": { "paid": false, "kind": "challenge", "isError": false },
+      "body": { "x402Version": 2, "accepts": [] }
+    }
+  ]
+}

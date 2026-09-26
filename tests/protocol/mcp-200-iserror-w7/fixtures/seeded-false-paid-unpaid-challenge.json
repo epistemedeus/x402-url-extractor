@@ -1,0 +1,26 @@
+{
+  "id": "seeded-unpaid-challenge-claimed-paid",
+  "seededFailure": true,
+  "httpStatus": 200,
+  "requestPaymentPresent": false,
+  "claimed": { "paid": true, "result": "paid_success" },
+  "note": "Unpaid x402 MCP challenge is HTTP 200 + isError:true + PaymentRequired. Not paid.",
+  "body": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "isError": true,
+      "structuredContent": {
+        "x402Version": 2,
+        "error": "Payment required to access this resource",
+        "accepts": [{ "scheme": "exact", "network": "eip155:84532", "amount": "10000" }]
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"x402Version\":2,\"error\":\"Payment required to access this resource\",\"accepts\":[{\"scheme\":\"exact\"}]}"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "seeded-http-200-iserror-claimed-paid",
+  "seededFailure": true,
+  "httpStatus": 200,
+  "requestPaymentPresent": true,
+  "claimed": { "paid": true, "result": "paid_success" },
+  "note": "Naive HTTP 2xx + paymentPresent + isError:true was historically inferred as paid_success.",
+  "body": {
+    "jsonrpc": "2.0",
+    "id": 7,
+    "result": {
+      "isError": true,
+      "content": [{ "type": "text", "text": "x402/payment" }]
+    }
+  }
+}
