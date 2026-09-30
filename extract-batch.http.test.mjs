@@ -267,13 +267,15 @@ test("flag off leaves live extract and catalogs unchanged", { timeout: 60_000 },
     if (Date.now() > deadline) throw new Error(`MCP mount timed out:\n${merchant.output().slice(-2000)}`);
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
-  const [openapi, catalog, extract, manifest] = await Promise.all([
+  const [openapi, catalog, extract, manifest, healthz] = await Promise.all([
     fetch(`${merchant.base}/openapi.json`).then((r) => r.json()),
     fetch(`${merchant.base}/api/actions`).then((r) => r.json()),
     fetch(`${merchant.base}/extract?url=https%3A%2F%2Fexample.com`),
     fetch(`${merchant.base}/.well-known/x402`).then((r) => r.json()),
+    fetch(`${merchant.base}/healthz`).then((r) => r.json()),
   ]);
   assert.equal(openapi.paths[EXTRACT_BATCH_PATH], undefined);
+  assert.equal(Object.hasOwn(healthz.prices, "extract/batch"), false);
   assert.equal(Object.values(openapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length, 25);
   assert.equal(catalog.actions.length, 22);
   assert.equal(catalog.actions.some((action) => action.route === EXTRACT_BATCH_PATH), false);
@@ -355,8 +357,15 @@ test("unpaid valid requests issue x402 and MPP challenges without fetching sourc
   const mppOpenapi = await fetch(`${merchant.base}/mpp-openapi.json`).then((r) => r.json());
   assert.deepEqual(mppOpenapi.paths[EXTRACT_BATCH_PATH].post.requestBody, openapi.paths[EXTRACT_BATCH_PATH].post.requestBody);
   assert.deepEqual(mppOpenapi.paths[EXTRACT_BATCH_PATH].post.responses["200"], openapi.paths[EXTRACT_BATCH_PATH].post.responses["200"]);
-  const manifest = await fetch(`${merchant.base}/.well-known/x402`).then((r) => r.json());
-  assert.equal(manifest.items.some((item) => item.resource?.routeTemplate === EXTRACT_BATCH_PATH), true);
+  const [manifest, healthz] = await Promise.all([
+    fetch(`${merchant.base}/.well-known/x402`).then((r) => r.json()),
+    fetch(`${merchant.base}/healthz`).then((r) => r.json()),
+  ]);
+  const batchItem = manifest.items.find((item) => item.resource?.routeTemplate === EXTRACT_BATCH_PATH);
+  assert.ok(batchItem);
+  assert.equal(batchItem.accepts[0].amount, EXTRACT_BATCH_AMOUNT_ATOMIC);
+  assert.equal(healthz.prices["extract/batch"], EXTRACT_BATCH_AMOUNT_ATOMIC);
+  assert.equal(healthz.prices["extract/batch"], batchItem.accepts[0].amount);
   const catalog = await fetch(`${merchant.base}/api/actions`).then((r) => r.json());
   const action = catalog.actions.find((entry) => entry.route === EXTRACT_BATCH_PATH);
   assert.ok(action);
