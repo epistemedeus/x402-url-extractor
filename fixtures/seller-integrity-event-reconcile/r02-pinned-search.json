@@ -1,0 +1,27 @@
+{
+  "partialResults": false,
+  "resources": [
+    {
+      "resource": "https://agents.samedaydesk.com/commerce/seller-integrity-audit",
+      "serviceName": "SameDayDesk",
+      "type": "http",
+      "x402Version": 2,
+      "description": "x402 and MPP seller integrity audit for one exact paid GET or POST route after a buyer integration fails, a seller changes the route, or before the next paid retry or release. Returns machine_buyable, contract_ready, or repair_required with exact repair actions. Checks constructible non-secret input, live unpaid GET terms, optional Bazaar metadata, and buyer-required success paths. Uses no credential or target payment, follows no redirect, and sends no target POST.",
+      "accepts": [
+        {
+          "amount": "10000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "maxTimeoutSeconds": 300,
+          "network": "eip155:8453",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+          "scheme": "exact"
+        }
+      ],
+      "quality": {
+        "l30DaysTotalCalls": 3,
+        "l30DaysUniquePayers": 3,
+        "lastCalledAt": "2026-09-28T06:02:21.396Z"
+      }
+    }
+  ]
+}
