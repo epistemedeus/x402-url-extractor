@@ -125,6 +125,34 @@ test("counterexample fixtures pass", () => {
   }
 });
 
+test("route binding accepts a matched handler and rejects a method mismatch or missing handler", () => {
+  const ok = run(["routes", "inspect", "--profile", "local", "--fixture", "route-binding-ok", "--json"]);
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.equal(ok.json.evidence[0].observed.consistent, true);
+  const mismatch = run(["routes", "inspect", "--profile", "local", "--fixture", "route-binding-method-mismatch", "--json"]);
+  assert.equal(mismatch.status, 1);
+  assert.equal(mismatch.json.ok, false);
+  assert.equal(mismatch.json.boundary.paymentSent, false);
+  assert.equal(mismatch.json.boundary.settled, false);
+  assert.ok(mismatch.json.evidence[0].observed.problems.some((problem) => problem.startsWith("method-mismatch")));
+  const missing = run(["routes", "inspect", "--profile", "local", "--fixture", "route-binding-missing-handler", "--json"]);
+  assert.equal(missing.status, 1);
+  assert.ok(missing.json.evidence[0].observed.problems.some((problem) => problem.startsWith("missing-handler")));
+});
+
+test("page-change listing accepts a free unpaid snapshot and rejects a settlement demand", () => {
+  const ok = run(["page-change", "check", "--profile", "local", "--fixture", "page-change-listing-ok", "--json"]);
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.equal(ok.json.evidence[0].observed.settlementDemanded, false);
+  assert.equal(ok.json.evidence[0].observed.charged, false);
+  const demanded = run(["page-change", "check", "--profile", "local", "--fixture", "page-change-settlement-demanded", "--json"]);
+  assert.equal(demanded.status, 1);
+  assert.equal(demanded.json.ok, false);
+  assert.equal(demanded.json.boundary.settled, false);
+  assert.equal(demanded.json.evidence[0].observed.settlementDemanded, true);
+  assert.ok(demanded.json.evidence[0].observed.problems.some((problem) => problem.startsWith("settlement-demanded")));
+});
+
 test("archive profile passes the canonical unpaid snapshot", () => {
   const result = run(["journey", "challenge", "--profile", "archive", "--json"]);
   assert.equal(result.status, 0, result.stderr);

@@ -2,11 +2,16 @@
 // Merchant cross-surface verifier. Never pays, settles, or deploys.
 // Exit 0 pass, 1 demonstrated failure, 2 bad invocation, 3 evidence missing, 64 unexpected.
 
-import { entriesFromSurfaces, identityMap, identityProblems } from "../../operation-identity.mjs";
+import { spawn } from "node:child_process";
+import { createServer as createHttpServer } from "node:http";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { createServer as createNetServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { entriesFromSurfaces, identityMap, identityProblems } from "../../operation-identity.mjs";
+import { pageChangeListingVerdict } from "../../page-change-listing.mjs";
+import { routeBindingProblems } from "../../route-binding-inspect.mjs";
 
 const REPO = "epistemedeus/x402-url-extractor";
 const CANONICAL_HOST = "agents.samedaydesk.com";
@@ -39,6 +44,84 @@ const SECOND_EXTRACT = {
   query: { url: "https://example.org/docs" },
   amount: "5000",
 };
+
+function extractBindingFixture({
+  catalogMethod = "GET",
+  expressMethod = "GET",
+  handlerCount = 1,
+  openapiMethod = "GET",
+  mcpMethod = "GET",
+  mcpRun = true,
+} = {}) {
+  return {
+    kind: "route-binding",
+    bindings: [{
+      path: "/extract",
+      methods: expressMethod ? {
+        [expressMethod]: {
+          explicit: true,
+          handlerCount,
+          handlerNames: handlerCount ? ["extractHandler"] : [],
+        },
+      } : {},
+    }],
+    catalog: {
+      actions: [{ method: catalogMethod, route: "/extract", priceAtomicUsdc: "5000" }],
+      freeRecipes: [],
+      alternateAccess: null,
+    },
+    openapi: {
+      paths: {
+        "/extract": {
+          [openapiMethod.toLowerCase()]: {
+            responses: { "200": { description: "paid extract" }, "402": { description: "payment required" } },
+            "x-payment-info": { price: { amount: "0.005" } },
+          },
+        },
+      },
+    },
+    mcpTools: [{
+      name: "extract",
+      method: mcpMethod,
+      route: "/extract",
+      run: mcpRun ? function extractTool() {} : undefined,
+    }],
+  };
+}
+
+function pageChangeFixture({ demanded = false } = {}) {
+  return {
+    kind: "page-change-listing",
+    catalogFree: {
+      method: "POST",
+      route: "/recipes/page-change",
+      charged: demanded,
+      priceAtomicUsdc: demanded ? "5000" : null,
+    },
+    paidAction: demanded,
+    openapi: {
+      present: true,
+      paymentInfo: demanded,
+      response402: demanded,
+      chargedConst: demanded,
+    },
+    llms: { chargedFalse: !demanded, priced: demanded },
+    healthz: { ok: true, priced: demanded },
+    mcp: {
+      listed: true,
+      method: "POST",
+      charged: demanded ? true : false,
+      paidTool: demanded,
+    },
+    unpaid: {
+      status: demanded ? 402 : 200,
+      paymentRequired: demanded,
+      wwwAuthenticate: demanded,
+      charged: demanded ? true : false,
+      settled: false,
+    },
+  };
+}
 
 const LOCAL_FIXTURES = {
   "amount-5001": { kind: "amount", observedAmount: "5001", expectedAmount: "5000" },
@@ -111,6 +194,16 @@ const LOCAL_FIXTURES = {
       identity: { id: "lockfile-pin-delta", price: "5000", billingBasis: "per-call", supportedRails: ["x402", "mpp"] },
     })),
   },
+  "route-binding-ok": extractBindingFixture(),
+  "route-binding-method-mismatch": extractBindingFixture({
+    catalogMethod: "POST",
+    expressMethod: "GET",
+    openapiMethod: "GET",
+    mcpMethod: "GET",
+  }),
+  "route-binding-missing-handler": extractBindingFixture({ handlerCount: 0, mcpRun: false }),
+  "page-change-listing-ok": pageChangeFixture(),
+  "page-change-settlement-demanded": pageChangeFixture({ demanded: true }),
 };
 
 const FAIL_FIXTURES = new Set([
@@ -122,6 +215,9 @@ const FAIL_FIXTURES = new Set([
   "healthz-missing-batch",
   "batch-per-successful-call",
   "lockfile-on-mpp",
+  "route-binding-method-mismatch",
+  "route-binding-missing-handler",
+  "page-change-settlement-demanded",
 ]);
 
 function nodeInfo() {
@@ -234,6 +330,8 @@ function commandName(positionals) {
   if (positionals[0] === "mcp" && positionals[1] === "list") return "mcp list";
   if (positionals[0] === "mcp" && positionals[1] === "absent") return "mcp absent";
   if (positionals[0] === "catalog" && positionals[1] === "check") return "catalog check";
+  if (positionals[0] === "routes" && positionals[1] === "inspect") return "routes inspect";
+  if (positionals[0] === "page-change" && positionals[1] === "check") return "page-change check";
   if (positionals[0] === "journey") return `journey ${positionals[1] || ""}`.trim();
   return positionals[0] || "";
 }
@@ -241,7 +339,7 @@ function commandName(positionals) {
 function usage() {
   return [
     "tools/verify/cli.mjs <command> [--profile local|archive|hosted-unpaid] [--json]",
-    "commands: discover | mcp list | challenge | mcp absent | catalog check | journey <id> | self-test",
+    "commands: discover | mcp list | challenge | mcp absent | catalog check | routes inspect | page-change check | journey <id> | self-test",
     "local fixtures: " + Object.keys(LOCAL_FIXTURES).join(", "),
   ].join("\n");
 }
@@ -450,6 +548,25 @@ function evaluateFixture(fixture) {
       observed,
       { ...observed, defect: false },
       "this difference is not a defect",
+    )];
+  }
+  if (fixture.kind === "route-binding") {
+    const problems = routeBindingProblems(fixture);
+    return [evidenceItem(
+      "route-bindings",
+      true,
+      { consistent: problems.length === 0, problems },
+      { consistent: true, problems: [] },
+      "each public route method must have a handler and match catalog, OpenAPI, and MCP",
+    )];
+  }
+  if (fixture.kind === "page-change-listing") {
+    return [evidenceItem(
+      "page-change-listing",
+      true,
+      pageChangeListingVerdict(fixture),
+      { consistent: true, settlementDemanded: false, charged: false, problems: [] },
+      "free POST /recipes/page-change stays unpaid and does not demand settlement",
     )];
   }
   throw new Error(`unknown fixture kind: ${fixture.kind}`);
@@ -756,8 +873,307 @@ async function runCatalog(origin) {
   return evidence;
 }
 
+function merchantChildEnv(extra = {}) {
+  return {
+    PATH: process.env.PATH || "",
+    HOME: process.env.HOME || "",
+    LANG: process.env.LANG || "C.UTF-8",
+    TMPDIR: process.env.TMPDIR || "/tmp",
+    NETWORK: "eip155:8453",
+    PUBLIC_URL: DEFAULT_ORIGIN,
+    FACILITATOR: "xpay",
+    MPP_SECRET_KEY: "",
+    PAGE_CHANGE_HTTP_ENABLED: "1",
+    PAGE_CHANGE_SOURCE_COMMIT: "",
+    SOURCE_COMMIT: "",
+    RAILWAY_GIT_COMMIT_SHA: "",
+    PAGE_CHANGE_XAGENT_SLUG: "",
+    PAGE_CHANGE_XAGENT_COMMIT: "",
+    COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
+    X402_BUILDER_CODE: "",
+    RECEIPT_SIGNING_PRIVATE_KEY: "",
+    ...extra,
+  };
+}
+
+function freePort() {
+  return new Promise((resolve, reject) => {
+    const server = createNetServer();
+    server.listen(0, "127.0.0.1", () => {
+      const { port } = server.address();
+      server.close((error) => (error ? reject(error) : resolve(port)));
+    });
+    server.once("error", reject);
+  });
+}
+
+function startFakeFacilitator() {
+  const server = createHttpServer((req, res) => {
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify({
+      kinds: [{ network: "eip155:8453", scheme: "exact", x402Version: 2 }],
+      extensions: [],
+      signers: {},
+      isValid: false,
+      success: false,
+    }));
+  });
+  return new Promise((resolve, reject) => {
+    server.listen(0, "127.0.0.1", () => {
+      resolve({
+        url: `http://127.0.0.1:${server.address().port}`,
+        close: () => new Promise((done) => server.close(() => done())),
+      });
+    });
+    server.once("error", reject);
+  });
+}
+
+function stopChild(child) {
+  if (!child || child.exitCode !== null || child.signalCode !== null) return Promise.resolve();
+  child.kill("SIGTERM");
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      child.kill("SIGKILL");
+      resolve();
+    }, 2000);
+    child.once("exit", () => {
+      clearTimeout(timer);
+      resolve();
+    });
+  });
+}
+
+function parseJsonLine(text) {
+  const lines = String(text || "").split(/\r?\n/).filter(Boolean);
+  for (let index = lines.length - 1; index >= 0; index -= 1) {
+    try {
+      const parsed = JSON.parse(lines[index]);
+      if (parsed && typeof parsed === "object" && Array.isArray(parsed.problems)) return parsed;
+    } catch {
+      // keep scanning
+    }
+  }
+  return null;
+}
+
+async function runLiveRouteInspect() {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "mer-route-binding-"));
+  const reportPath = path.join(dataDir, "report.json");
+  const child = spawn(process.execPath, ["server.js"], {
+    cwd: ROOT,
+    env: merchantChildEnv({
+      PORT: "0",
+      COMMERCE_DATA_DIR: dataDir,
+      X402_ROUTE_BINDING_INSPECT: "1",
+      X402_ROUTE_BINDING_REPORT: reportPath,
+    }),
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.setEncoding("utf8");
+  child.stderr.setEncoding("utf8");
+  child.stdout.on("data", (chunk) => { stdout += chunk; });
+  child.stderr.on("data", (chunk) => { stderr += chunk; });
+  let exitCode = null;
+  try {
+    exitCode = await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        child.kill("SIGKILL");
+        const error = new Error(`route binding inspect timed out: ${stderr.slice(-1500)}`);
+        error.code = "evidence-unavailable";
+        reject(error);
+      }, 45000);
+      child.once("exit", (code) => {
+        clearTimeout(timer);
+        resolve(code);
+      });
+      child.once("error", (error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+    });
+  } finally {
+    await stopChild(child);
+  }
+  let report = null;
+  try {
+    report = JSON.parse(await readFile(reportPath, "utf8"));
+  } catch {
+    report = parseJsonLine(stdout);
+  }
+  await rm(dataDir, { recursive: true, force: true });
+  if (!report || !Array.isArray(report.problems)) {
+    const error = new Error(`route binding inspect produced no report (exit ${exitCode}): ${stderr.slice(-1500)}`);
+    error.code = "evidence-unavailable";
+    throw error;
+  }
+  return {
+    evidence: [evidenceItem(
+      "route-bindings",
+      true,
+      { consistent: report.ok === true && report.problems.length === 0, problems: report.problems },
+      { consistent: true, problems: [] },
+      "live Express method/handler bindings agree with catalog, OpenAPI, and MCP",
+    )],
+    result: {
+      profile: "local",
+      exitCode,
+      inspected: report.inspected,
+      catalogActions: report.catalogActions,
+      freeRecipes: report.freeRecipes,
+      mcpTools: report.mcpTools,
+      pageChange: report.pageChange,
+    },
+  };
+}
+
+async function runLivePageChange() {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "mer-page-change-"));
+  const facilitator = await startFakeFacilitator();
+  const port = await freePort();
+  const child = spawn(process.execPath, ["server.js"], {
+    cwd: ROOT,
+    env: merchantChildEnv({
+      PORT: String(port),
+      COMMERCE_DATA_DIR: dataDir,
+      FACILITATOR_URL: facilitator.url,
+    }),
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let output = "";
+  child.stdout.setEncoding("utf8");
+  child.stderr.setEncoding("utf8");
+  child.stdout.on("data", (chunk) => { output += chunk; });
+  child.stderr.on("data", (chunk) => { output += chunk; });
+  try {
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        const error = new Error(`page-change merchant timed out: ${output.slice(-1500)}`);
+        error.code = "evidence-unavailable";
+        reject(error);
+      }, 30000);
+      const finish = (error) => {
+        clearTimeout(timer);
+        child.off("exit", onExit);
+        if (error) reject(error);
+        else resolve();
+      };
+      const onData = () => {
+        if (output.includes(`x402-merchant listening on :${port}`)) finish();
+      };
+      const onExit = (code, signal) => finish(Object.assign(new Error(`page-change merchant exited ${code} ${signal}: ${output.slice(-1500)}`), { code: "evidence-unavailable" }));
+      child.stdout.on("data", onData);
+      child.stderr.on("data", onData);
+      child.once("exit", onExit);
+      if (output.includes(`x402-merchant listening on :${port}`)) finish();
+    });
+    const base = `http://127.0.0.1:${port}`;
+    const artifact = {
+      product: "samedaydesk-extract-batch",
+      sources: [{
+        id: "item-001",
+        source: "https://example.com/a",
+        status: "success",
+        data: { title: "Same" },
+      }],
+    };
+    const [catalogResponse, openapiResponse, llmsResponse, healthResponse, mcpResponse, unpaidResponse] = await Promise.all([
+      fetchUnpaid(new URL("/api/actions", base).href),
+      fetchUnpaid(new URL("/openapi.json", base).href),
+      fetchUnpaid(new URL("/llms.txt", base).href),
+      fetchUnpaid(new URL("/healthz", base).href),
+      fetchUnpaid(new URL("/mcp", base).href),
+      fetchUnpaid(new URL("/recipes/page-change", base).href, {
+        method: "POST",
+        body: { before: artifact, after: artifact, fields: ["title"] },
+      }),
+    ]);
+    if ([catalogResponse, openapiResponse, healthResponse, mcpResponse].some((item) => item.status !== 200)) {
+      const error = new Error("page-change listing surfaces were not all readable");
+      error.code = "evidence-unavailable";
+      throw error;
+    }
+    const catalog = JSON.parse(catalogResponse.text);
+    const openapi = JSON.parse(openapiResponse.text);
+    const healthz = JSON.parse(healthResponse.text);
+    const mcp = JSON.parse(mcpResponse.text);
+    let unpaidBody = null;
+    try { unpaidBody = JSON.parse(unpaidResponse.text); } catch { unpaidBody = null; }
+    const free = (catalog.freeRecipes || []).find((recipe) => recipe.route === "/recipes/page-change") || null;
+    const operation = openapi.paths?.["/recipes/page-change"]?.post;
+    const freeTool = (mcp.freeTools || []).find((tool) => tool.name === "page_change") || null;
+    const snapshot = {
+      catalogFree: free ? {
+        method: free.method,
+        route: free.route,
+        charged: free.charged,
+        priceAtomicUsdc: free.priceAtomicUsdc,
+      } : null,
+      paidAction: (catalog.actions || []).some((action) => action.route === "/recipes/page-change"),
+      openapi: {
+        present: Boolean(operation),
+        paymentInfo: Boolean(operation?.["x-payment-info"]),
+        response402: Boolean(operation?.responses?.["402"]),
+        chargedConst: operation?.responses?.["200"]?.content?.["application/json"]?.schema?.properties?.charged?.const ?? null,
+      },
+      llms: {
+        chargedFalse: /POST \/recipes\/page-change \(charged: false\)/.test(llmsResponse.text || ""),
+        priced: /\/recipes\/page-change[^\n]*USDC/.test(llmsResponse.text || ""),
+      },
+      healthz: {
+        ok: healthz.ok === true,
+        priced: Object.hasOwn(healthz.prices || {}, "page-change") || Object.hasOwn(healthz.prices || {}, "recipes/page-change"),
+      },
+      mcp: {
+        listed: Boolean(freeTool),
+        method: freeTool?.method || null,
+        charged: freeTool ? freeTool.charged : null,
+        paidTool: (mcp.freeTools || []).some((tool) => tool.name === "page_change" && tool.charged === true),
+      },
+      unpaid: {
+        status: unpaidResponse.status,
+        paymentRequired: unpaidResponse.headers.has("payment-required"),
+        wwwAuthenticate: Boolean(unpaidResponse.headers.get("www-authenticate")),
+        charged: unpaidBody?.charged ?? null,
+        settled: false,
+      },
+    };
+    const verdict = pageChangeListingVerdict(snapshot);
+    return {
+      evidence: [evidenceItem(
+        "page-change-listing",
+        true,
+        verdict,
+        { consistent: true, settlementDemanded: false, charged: false, problems: [] },
+        "live free POST /recipes/page-change matches the catalog and does not demand settlement",
+      )],
+      result: {
+        profile: "local",
+        origin: base,
+        status: unpaidResponse.status,
+        charged: unpaidBody?.charged ?? null,
+        settlementDemanded: verdict.settlementDemanded,
+        problems: verdict.problems,
+      },
+    };
+  } finally {
+    await stopChild(child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  }
+}
+
 async function dispatch(command, flags) {
   const boundary = { paymentSent: false, toolsCalled: false, settled: false };
+  if (command === "routes inspect" || command === "page-change check") {
+    if (flags.fixture) {
+      return { evidence: await runLocalFixture(flags.fixture), boundary, result: { profile: "local", fixture: flags.fixture } };
+    }
+    const live = command === "routes inspect" ? await runLiveRouteInspect() : await runLivePageChange();
+    return { evidence: live.evidence, boundary, result: live.result };
+  }
   if (flags.profile === "local") {
     if (command === "discover") return { evidence: await runLocalFixture("price-surface-ok"), boundary, result: { profile: "local" } };
     if (command === "challenge") return { evidence: await runArchive(), boundary, result: { profile: "local-archive-fallback" } };
@@ -858,7 +1274,7 @@ async function main() {
     process.exit(flags.help ? 0 : 2);
   }
   const command = commandName(positionals);
-  const known = new Set(["discover", "mcp list", "challenge", "mcp absent", "catalog check", "self-test"]);
+  const known = new Set(["discover", "mcp list", "challenge", "mcp absent", "catalog check", "routes inspect", "page-change check", "self-test"]);
   const journeyId = positionals[0] === "journey" ? positionals[1] : null;
   if (!known.has(command) && !journeyId) {
     process.stderr.write(`unknown command\n${usage()}\n`);
@@ -873,7 +1289,9 @@ async function main() {
       : journeyId === "challenge" ? "challenge"
         : journeyId === "mcp-absent" ? "mcp absent"
           : journeyId === "catalog" ? "catalog check"
-            : journeyId ? null : command;
+            : journeyId === "route-bindings" ? "routes inspect"
+              : journeyId === "page-change" ? "page-change check"
+                : journeyId ? null : command;
   if (positionals[0] === "journey" && !effective) {
     process.stderr.write(`unknown journey: ${journeyId}\n`);
     process.exit(2);

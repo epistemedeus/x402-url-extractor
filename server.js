@@ -17,6 +17,7 @@
 // seller's Gateway balance, which can later be withdrawn to a supported chain.
 // It does not change or intercept the standard Base exact or native MPP paths.
 
+import { writeFileSync } from "node:fs";
 import express from "express";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { HTTPFacilitatorClient } from "@x402/core/server";
@@ -219,6 +220,7 @@ import {
   pageChangeHttpInputSchema,
   pageChangeHttpOutputSchema,
 } from "./page-change-http.mjs";
+import { buildRouteBindingReport } from "./route-binding-inspect.mjs";
 import {
   LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC,
   LOCKFILE_PIN_DELTA_DESCRIPTION,
@@ -3995,17 +3997,20 @@ app.get("/", (req, res) => {
 });
 
 const constructionAcceptance = constructionParityReceipt();
-app.listen(PORT, () => {
-  commerceSettlementReconciler.schedule(process.env.COMMERCE_RECONCILIATION_INTERVAL_MS || 60_000);
-  console.log(`x402-merchant listening on :${PORT}`);
-  console.log(`  payTo:       ${PAY_TO}`);
-  console.log(`  network:     ${NETWORK}`);
-  console.log(`  price:       ${PRICE}`);
-  console.log(`  facilitator: ${FACILITATOR} (${facilitatorClient.url})`);
-  console.log(`  protocols:   x402 + MPP (${mppDualStack.enabled ? "enabled" : "disabled"})`);
-  console.log(`  paid route:  GET /extract`);
-  console.log(`  construction: ${constructionAcceptance.actionCount} actions (${constructionAcceptance.getExamples} GET examples, ${constructionAcceptance.postExamples} POST bodies, ${constructionAcceptance.alternateExamples} alternate)`);
-});
+const routeBindingInspectOnly = process.env.X402_ROUTE_BINDING_INSPECT === "1";
+if (!routeBindingInspectOnly) {
+  app.listen(PORT, () => {
+    commerceSettlementReconciler.schedule(process.env.COMMERCE_RECONCILIATION_INTERVAL_MS || 60_000);
+    console.log(`x402-merchant listening on :${PORT}`);
+    console.log(`  payTo:       ${PAY_TO}`);
+    console.log(`  network:     ${NETWORK}`);
+    console.log(`  price:       ${PRICE}`);
+    console.log(`  facilitator: ${FACILITATOR} (${facilitatorClient.url})`);
+    console.log(`  protocols:   x402 + MPP (${mppDualStack.enabled ? "enabled" : "disabled"})`);
+    console.log(`  paid route:  GET /extract`);
+    console.log(`  construction: ${constructionAcceptance.actionCount} actions (${constructionAcceptance.getExamples} GET examples, ${constructionAcceptance.postExamples} POST bodies, ${constructionAcceptance.alternateExamples} alternate)`);
+  });
+}
 
 // --- Paid MCP server at POST /mcp (streamable-HTTP), x402-gated ---------------
 // Reaches MCP-enabled agent clients (Claude Desktop, Cursor, Windsurf) — a buyer
@@ -4014,24 +4019,13 @@ app.listen(PORT, () => {
 // facilitator. Mounted AFTER listen, async + NON-FATAL: any MCP setup failure
 // leaves the 6 HTTP paid routes fully intact (logged, never thrown).
 import("./mcp-server.mjs")
-  .then(({ mountMcp }) =>
-    mountMcp(app, {
-      httpBaseUrl: `http://127.0.0.1:${PORT}`,
-      facilitatorClient,
-      network: NETWORK,
-      payTo: PAY_TO,
-      serverInfo: { name: "x402-data-gateway", version: SERVICE_VERSION },
-      typedTelemetry: {
-        enabled: true,
-        onAppend: (decision, requestAttribution, declaredSource) =>
-          commerceTelemetry.appendMcpTypedDecision(decision, requestAttribution, declaredSource),
-        attributionForRequest: (req) => commerceTelemetry.mcpTypedAttributionForRequest(req),
-        declaredSourceForRequest: (req) => commerceTelemetry.mcpTypedDeclaredSourceForRequest(req),
-      },
-      tools: [
+  .then(({ mountMcp }) => {
+    const mcpTools = [
         ...(isPageChangeHttpEnabled() ? [{
           name: "page_change",
           free: true,
+          method: "POST",
+          route: PAGE_CHANGE_HTTP_PATH,
           description: "Compare two already-held extract-batch JSON artifacts. charged is false. Not a paid SKU. Does not fetch, pay, or schedule a second observation.",
           price: "$0",
           inputSchema: {
@@ -4093,11 +4087,40 @@ import("./mcp-server.mjs")
         const action = machineActions.find((entry) => mcpToolNameForRoute(entry.route) === tool.name);
         if (!action) throw new Error(`MCP tool ${tool.name} has no catalog operation`);
         return { ...tool, operationIdentity: operationIdentity({ route: action.route, priceAtomic: action.priceAtomicUsdc }) };
-      }),
-    })
-  )
+      });
+    if (routeBindingInspectOnly) {
+      const report = buildRouteBindingReport({
+        app,
+        catalog: machineActionCatalog(),
+        openapi: buildOpenApiDocument({ profile: "agentcash" }),
+        mcpTools,
+      });
+      const payload = `${JSON.stringify(report)}\n`;
+      if (process.env.X402_ROUTE_BINDING_REPORT) writeFileSync(process.env.X402_ROUTE_BINDING_REPORT, payload);
+      process.stdout.write(payload);
+      process.exit(report.ok ? 0 : 1);
+    }
+    return mountMcp(app, {
+      httpBaseUrl: `http://127.0.0.1:${PORT}`,
+      facilitatorClient,
+      network: NETWORK,
+      payTo: PAY_TO,
+      serverInfo: { name: "x402-data-gateway", version: SERVICE_VERSION },
+      typedTelemetry: {
+        enabled: true,
+        onAppend: (decision, requestAttribution, declaredSource) =>
+          commerceTelemetry.appendMcpTypedDecision(decision, requestAttribution, declaredSource),
+        attributionForRequest: (req) => commerceTelemetry.mcpTypedAttributionForRequest(req),
+        declaredSourceForRequest: (req) => commerceTelemetry.mcpTypedDeclaredSourceForRequest(req),
+      },
+      tools: mcpTools,
+    });
+  })
   .then((r) => {
     mcpMountResult = r;
     console.log(`  MCP server:  POST /mcp (${r.toolCount} paid tools)`);
   })
-  .catch((e) => console.error(`  /mcp mount FAILED (HTTP routes unaffected): ${e.message}`));
+  .catch((e) => {
+    console.error(`  /mcp mount FAILED (HTTP routes unaffected): ${e.message}`);
+    if (routeBindingInspectOnly) process.exit(1);
+  });
