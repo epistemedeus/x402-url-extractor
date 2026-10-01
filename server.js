@@ -17,6 +17,7 @@
 // seller's Gateway balance, which can later be withdrawn to a supported chain.
 // It does not change or intercept the standard Base exact or native MPP paths.
 
+import { installPaidReceiptRetention, noteReceiptRetention } from "./useful-result-reuse/delivery.mjs";
 import { existsSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import express from "express";
@@ -1405,6 +1406,8 @@ app.get(["/.well-known/x402", "/.well-known/x402.json", "/x402.json", "/api/x402
 
 let publicAcquisitionDiscoveryUrl = null;
 let usefulResultReuseUrl = null;
+let usefulResultGrantUrl = null;
+let retainDeliveredReceipt = null;
 
 // A browser or indexer sometimes probes MCP with GET before opening the
 // streamable-HTTP POST transport. Return a free machine descriptor instead of
@@ -1430,6 +1433,7 @@ app.get("/mcp", (_req, res) => {
     skillAcquisition: `${PUBLIC_URL}/.well-known/skills/route-lock-receipt/SKILL.md`,
     ...(publicAcquisitionDiscoveryUrl ? { publicAcquisition: publicAcquisitionDiscoveryUrl } : {}),
     ...(usefulResultReuseUrl ? { usefulResultReuse: usefulResultReuseUrl } : {}),
+    ...(usefulResultGrantUrl ? { usefulResultGrant: usefulResultGrantUrl } : {}),
   });
 });
 
@@ -1466,6 +1470,8 @@ if (existsSync(usefulResultReuseMount)) {
     });
     if (mountedReuse.mounted === true) {
       usefulResultReuseUrl = `${new URL(PUBLIC_URL).origin}/.well-known/useful-result-reuse/current.json`;
+      usefulResultGrantUrl = `${new URL(PUBLIC_URL).origin}/.well-known/useful-result-reuse/retained`;
+      retainDeliveredReceipt = mountedReuse.service.retainDeliveredReceipt.bind(mountedReuse.service);
     }
   } catch (error) {
     console.error(`useful-result reuse adapter not mounted: ${error.code || error.message}`);
@@ -1655,6 +1661,11 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       [PAID_ACTION_EFFECT_PROFILE_PATH]: { get: { summary: "Experimental read-only effect and retry contract for SameDayDesk paid POST operations.", responses: { "200": { description: "Exact method-route effect declarations and payment-response replay boundary" } } } },
       [PURCHASE_EVIDENCE_MANIFEST_PATH]: { get: { summary: "Seller-declared purchase-authorization evidence for every exact paid operation.", responses: { "200": { description: "Bounded operation-level effect, response guarantee, replay, receipt, and signed-deployment pointers" } } } },
       "/.well-known/agent-card.json": { get: { summary: "A2A v1.0 agent card for the free machine-commerce storefront.", responses: { "200": { description: "A2A AgentCard" } } } },
+      "/.well-known/useful-result-reuse/current.json": { get: { operationId: "getUsefulResultReuseCurrent", tags: ["Agent Operations"], summary: "Anonymous useful-result reuse document. Scoped owner retrieval still requires the internal producer token. hostedReuseVerified stays false.", responses: { "200": { description: "Explicit shares only. No customer grant and no raw paid result." } } } },
+      "/.well-known/useful-result-reuse/retained": {
+        get: { operationId: "readRetainedUsefulResult", tags: ["Agent Operations"], summary: "Read one retained transaction-receipt result with the customer-held grant header. The grant is not a payment credential and is not accepted in the URL.", responses: { "200": { description: "Retained result for the exact grant binding" }, "401": { description: "grant_required" }, "403": { description: "grant_rejected, expired, revoked, wrong_result, wrong_method, or wrong_resource" }, "409": { description: "record_integrity" } } },
+        post: { operationId: "mutateRetainedUsefulResult", tags: ["Agent Operations"], summary: "Revoke, share address-free compatibility knowledge, or correct a prior share. Requires the customer-held grant header and x-samedaydesk-result-action.", responses: { "200": { description: "Revoke, share, or correction accepted" }, "400": { description: "action_rejected or credential_in_url" }, "403": { description: "grant_rejected" } } },
+      },
       "/.well-known/glama.json": { get: { summary: "Project-owned Glama connector maintainer verification.", responses: { "200": { description: "Glama connector verification" } } } },
       "/.well-known/x402-verification.json": { get: { summary: "Public server-ownership proof for the x402.jobs resource registry.", responses: { "200": { description: "x402.jobs ownership verification" } } } },
       "/.well-known/agent-registration.json": { get: { summary: "ERC-8004-compatible SameDayDesk registration metadata for the Solana Agent Registry.", responses: { "200": { description: "SameDayDesk agent identity, service endpoints, settlement wallet, and x402 support" } } } },
@@ -3609,7 +3620,9 @@ const serveSettlementProof = async (req, res) => {
 
 const serveTransactionReceipt = async (req, res) => {
   res.set("Cache-Control", "no-store");
-  return res.json(await transactionReceipt(req.query));
+  const body = await transactionReceipt(req.query);
+  noteReceiptRetention(req, res, body);
+  return res.json(body);
 };
 
 const serveSolanaTransactionReceipt = async (req, res) => {
@@ -3665,6 +3678,7 @@ app.post("/security/stateful-wallet-policy-conformance", (req, res, next) => {
   }
 });
 
+installPaidReceiptRetention(app, () => retainDeliveredReceipt);
 app.use(mppDualStack.middleware);
 app.use((req, res, next) => {
   if (res.locals?.samedaydeskPayment?.protocol === "mpp") return next();
@@ -3949,6 +3963,13 @@ app.get("/", (req, res) => {
         settlement: "gasless batched USDC Nanopayments",
         product: "payment_offer_preflight",
       } : { enabled: false },
+      usefulResultRetention: {
+        current: "/.well-known/useful-result-reuse/current.json",
+        read: "/.well-known/useful-result-reuse/retained",
+        credentialInUrl: false,
+        internalTokenRequired: false,
+        price: "free",
+      },
       manifest: "/.well-known/x402",
       manifestAliases: ["/.well-known/x402.json", "/x402.json", "/api/x402"],
       openapi: "/openapi.json",

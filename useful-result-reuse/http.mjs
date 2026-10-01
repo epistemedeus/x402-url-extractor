@@ -1,4 +1,4 @@
-import { CURRENT_PATH, CURRENT_SCHEMA } from "./constants.mjs";
+import { CURRENT_PATH, CURRENT_SCHEMA, GRANT_READ_PATH } from "./constants.mjs";
 import { createUsefulResultReuse } from "./service.mjs";
 
 function header(req, name) {
@@ -19,8 +19,116 @@ function send(res, status, body, method) {
   res.end(encoded);
 }
 
+function queryHasCredential(url) {
+  for (const key of url.searchParams.keys()) {
+    if (/grant|token|authorization|signature/i.test(key)) return true;
+  }
+  return false;
+}
+
+async function handleCustomerGrant(req, res, service) {
+  const url = new URL(req.originalUrl || req.url || "/", "http://127.0.0.1");
+  if (queryHasCredential(url)) {
+    send(res, 400, { schema: CURRENT_SCHEMA, error: "credential_in_url" }, req.method);
+    return;
+  }
+  const token = header(req, "x-samedaydesk-result-grant");
+  const assertedResult = header(req, "x-samedaydesk-result-id");
+  const assertedMethod = header(req, "x-samedaydesk-bound-method");
+  const assertedResource = header(req, "x-samedaydesk-bound-resource");
+  if (req.method === "GET") {
+    if (header(req, "x-samedaydesk-result-action")) {
+      send(res, 400, { schema: CURRENT_SCHEMA, error: "action_rejected" }, req.method);
+      return;
+    }
+    if (!token) {
+      send(res, 401, { schema: CURRENT_SCHEMA, error: "grant_required" }, req.method);
+      return;
+    }
+    const retrieved = await service.readDeliveredReceipt({
+      method: assertedMethod || null,
+      resource: assertedResource || null,
+      resultId: assertedResult || null,
+      token,
+    });
+    const status = !retrieved.found
+      ? (retrieved.reason === "grant_rejected" ? 403 : 404)
+      : retrieved.reason === "record_integrity"
+        ? 409
+        : retrieved.reason
+          ? 403
+          : 200;
+    const body = retrieved.reason
+      ? { schema: CURRENT_SCHEMA, error: retrieved.reason, paymentPermitted: false }
+      : {
+        schema: CURRENT_SCHEMA,
+        currentAuthority: false,
+        evidenceClass: retrieved.evidenceClass,
+        executionSaved: false,
+        expiresAt: retrieved.expiresAt,
+        historicalRevenue: "unknown",
+        method: retrieved.method,
+        operationId: retrieved.operationId,
+        paidValidDelivery: retrieved.paidValidDelivery,
+        paymentPermitted: false,
+        requestIdentity: retrieved.requestIdentity,
+        result: retrieved.result,
+        resultId: retrieved.resultId,
+        route: retrieved.route,
+      };
+    send(res, status, body, req.method);
+    return;
+  }
+  if (req.method !== "POST") {
+    send(res, 405, { schema: CURRENT_SCHEMA, error: "method_rejected" }, req.method);
+    return;
+  }
+  const action = header(req, "x-samedaydesk-result-action");
+  if (!token) {
+    send(res, 401, { schema: CURRENT_SCHEMA, error: "grant_required" }, req.method);
+    return;
+  }
+  if (action === "revoke") {
+    const revoked = await service.revokeDeliveredReceipt({ token });
+    send(res, revoked.accepted ? 200 : 403, {
+      schema: CURRENT_SCHEMA,
+      accepted: revoked.accepted,
+      error: revoked.accepted ? null : revoked.reason,
+      paymentPermitted: false,
+      reason: revoked.reason,
+    }, req.method);
+    return;
+  }
+  if (action === "share-knowledge") {
+    const shared = await service.shareDeliveredKnowledge({ token });
+    send(res, shared.accepted ? 200 : 403, shared.accepted
+      ? { schema: CURRENT_SCHEMA, accepted: true, share: shared.share }
+      : { schema: CURRENT_SCHEMA, accepted: false, error: shared.reason, paymentPermitted: false }, req.method);
+    return;
+  }
+  if (action === "correct-knowledge") {
+    const corrected = await service.correctDeliveredKnowledge({ token });
+    send(res, corrected.accepted ? 200 : 403, {
+      accepted: corrected.accepted,
+      applyPrior: false,
+      error: corrected.accepted ? null : corrected.reason,
+      paymentPermitted: false,
+      reason: corrected.reason,
+      schema: CURRENT_SCHEMA,
+    }, req.method);
+    return;
+  }
+  send(res, 400, { schema: CURRENT_SCHEMA, error: "action_rejected" }, req.method);
+}
+
 export function handleUsefulResultReuse(req, res, service) {
   const pathName = req.path || new URL(req.originalUrl || req.url || "/", "http://127.0.0.1").pathname;
+  if (pathName === GRANT_READ_PATH) {
+    void handleCustomerGrant(req, res, service).catch((error) => {
+      send(res, 503, { schema: CURRENT_SCHEMA, error: error?.code || "rejected" }, req.method);
+    });
+    return true;
+  }
   if (pathName !== CURRENT_PATH) return false;
   if (req.method !== "GET" && req.method !== "HEAD") {
     send(res, 405, { schema: CURRENT_SCHEMA, error: "method_rejected" }, req.method);

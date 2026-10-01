@@ -132,5 +132,14 @@ export function createReuseStore({ dataDir, maxFileBytes = MAX_FILE_BYTES, maxRe
     append(name, record) {
       return exclusive(() => appendName(name, record));
     },
+    // Read and optional append share one turn so a duplicate check cannot race.
+    mutate(name, work) {
+      return exclusive(async () => {
+        const rows = await readName(name);
+        const outcome = await work(rows);
+        if (outcome?.append) await appendName(name, outcome.append);
+        return outcome?.result;
+      });
+    },
   });
 }

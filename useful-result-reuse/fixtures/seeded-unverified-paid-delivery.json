@@ -1,0 +1,8 @@
+{
+  "schema": "samedaydesk.useful-result-reuse.customer-grant.v1",
+  "paidValidDelivery": true,
+  "settlementStatus": "unknown",
+  "execution": { "decision": "unavailable" },
+  "grant": "seed-grant-not-a-customer-authority",
+  "wallet": "0x1111111111111111111111111111111111111111"
+}
