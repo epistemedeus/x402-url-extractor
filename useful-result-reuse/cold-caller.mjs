@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 // Unrelated loopback caller. It uses fetch only and does not import the merchant package.
+import { spawnSync } from "node:child_process";
+import { writeFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 const base = process.env.USEFUL_RESULT_BASE;
 const token = process.env.USEFUL_RESULT_TOKEN || "";
 const task = process.env.USEFUL_RESULT_TASK || "";
@@ -56,7 +61,63 @@ const wrongGrant = await call("/.well-known/useful-result-reuse/current.json", {
   },
 });
 
-const body = JSON.stringify({ current, scoped, wrongGrant });
+const work = process.env.USEFUL_RESULT_WORK || "";
+const receiptFile = process.env.USEFUL_RESULT_RECEIPT || "";
+let knowledge = null;
+if (work && receiptFile) {
+  const resolvedWork = path.resolve(work);
+  const resolvedReceipt = path.resolve(receiptFile);
+  const receiptInside = resolvedReceipt === resolvedWork || resolvedReceipt.startsWith(`${resolvedWork}${path.sep}`);
+  const item = Array.isArray(current.json?.knowledge) ? current.json.knowledge[0] : null;
+  if (!receiptInside) {
+    knowledge = { exercised: false, reason: "receipt_outside_work" };
+  } else if (!item) {
+    knowledge = { exercised: false, reason: "knowledge_missing" };
+  } else {
+    const derivativePath = path.join(resolvedWork, "derivative.json");
+    await writeFile(derivativePath, JSON.stringify(item));
+    const consumer = path.join(path.dirname(fileURLToPath(import.meta.url)), "later-consumer.mjs");
+    const child = spawnSync(process.execPath, [
+      consumer,
+      "--derivative", derivativePath,
+      "--receipt", resolvedReceipt,
+      "--task", "reconcile-closed-expense",
+      "--operation", "account-closed-expense",
+      "--compare",
+      "--now", "2026-10-01T12:00:00.000Z",
+    ], {
+      cwd: resolvedWork,
+      env: { PATH: process.env.PATH || "", HOME: process.env.HOME || "/tmp" },
+      encoding: "utf8",
+    });
+    let parsed = null;
+    try {
+      parsed = JSON.parse(child.stdout || "");
+    } catch {
+      parsed = null;
+    }
+    knowledge = {
+      exercised: true,
+      status: child.status,
+      knowledgeApplied: parsed?.knowledgeApplied ?? null,
+      usefulTransferred: parsed?.usefulTransferred ?? null,
+      executionSaved: parsed?.executionSaved ?? null,
+      paymentPermitted: parsed?.paymentPermitted ?? null,
+      currentAuthority: parsed?.currentAuthority ?? null,
+      evidenceClass: parsed?.evidenceClass ?? null,
+      expenseAtomic: parsed?.accounting?.expenseAtomic ?? null,
+      recognizedRevenueAtomic: parsed?.accounting?.recognizedRevenueAtomic ?? null,
+      secondPay: parsed?.accounting?.secondPay ?? null,
+      sameAccounting: parsed?.compare?.sameAccounting ?? null,
+      observedSaving: parsed?.compare?.observedSaving ?? null,
+      providerCalls: parsed?.providerCalls ?? null,
+      directProviderCalls: parsed?.direct?.providerCalls ?? null,
+      modelCalls: parsed?.modelCalls ?? null,
+    };
+  }
+}
+
+const preview = JSON.stringify({ current, scoped, wrongGrant, knowledge });
 const receiptOut = {
   schema: "samedaydesk.useful-result-reuse.cold-caller.v1",
   currentStatus: current.status,
@@ -73,8 +134,10 @@ const receiptOut = {
   scopedStatus: scoped?.status ?? null,
   scopedUseful: scoped?.json?.scoped?.useful ?? null,
   wrongGrantStatus: wrongGrant.status,
-  leakedToken: token.length > 0 && body.includes(token),
-  leakedTaskLabel: task.length > 0 && body.includes(task),
+  knowledge,
+  leakedToken: token.length > 0 && preview.includes(token),
+  leakedTaskLabel: task.length > 0 && preview.includes(task),
+  leakedWallet: preview.toLowerCase().includes("8904df3d") || preview.toLowerCase().includes("aef308a4"),
 };
 process.stdout.write(`${JSON.stringify(receiptOut)}\n`);
 const ok = current.status === 200
@@ -87,5 +150,24 @@ const ok = current.status === 200
   && receipt.status === 402
   && wrongGrant.status === 403
   && receiptOut.leakedToken === false
-  && receiptOut.leakedTaskLabel === false;
+  && receiptOut.leakedTaskLabel === false
+  && receiptOut.leakedWallet === false
+  && (knowledge === null || (
+    knowledge.status === 0
+    && knowledge.knowledgeApplied === true
+    && knowledge.usefulTransferred === false
+    && knowledge.executionSaved === false
+    && knowledge.paymentPermitted === false
+    && knowledge.currentAuthority === false
+    && knowledge.evidenceClass === "independently_replayed_utility"
+    && knowledge.expenseAtomic === "200000"
+    && knowledge.recognizedRevenueAtomic === "0"
+    && knowledge.secondPay === false
+    && knowledge.sameAccounting === true
+    && knowledge.observedSaving === false
+    && knowledge.providerCalls?.receipt === 1
+    && knowledge.providerCalls?.paid === 0
+    && knowledge.directProviderCalls?.receipt === 1
+    && knowledge.modelCalls === 0
+  ));
 process.exit(ok ? 0 : 1);

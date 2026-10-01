@@ -2,6 +2,8 @@
 import { readFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 
+import { publicHistoricalClient } from "../transaction-receipt.mjs";
+import { CAPTURED_RECEIPT, clientFromCapture, directSolve, executeClosedSettlement, readCapture } from "./base-receipt.mjs";
 import { createUsefulResultReuse, rejectSeededFixture, selectExistingPaidOperation } from "./service.mjs";
 
 const { values, positionals } = parseArgs({
@@ -25,6 +27,7 @@ const { values, positionals } = parseArgs({
     "requirement-file": { type: "string" },
     "offer-file": { type: "string" },
     "authorization-file": { type: "string" },
+    "receipt-file": { type: "string" },
     limit: { type: "string" },
     cursor: { type: "string" },
   },
@@ -42,6 +45,44 @@ try {
   if (command === "reject-seeded") {
     const result = await rejectSeededFixture(positionals[1]);
     exitJson(result.refused ? 0 : 2, result);
+  }
+  if (command === "read-public") {
+    const capture = await readCapture(values["receipt-file"] || CAPTURED_RECEIPT);
+    const fixture = await executeClosedSettlement({
+      client: clientFromCapture(capture),
+      now: () => new Date(),
+    });
+    const live = await executeClosedSettlement({
+      client: publicHistoricalClient("base"),
+      now: () => new Date(),
+    });
+    const fixtureMatch = fixture.projection.pinMatch === true
+      && live.projection.pinMatch === true
+      && fixture.projection.evidenceDigest === live.projection.evidenceDigest
+      && fixture.projection.transactionFeeWei === live.projection.transactionFeeWei
+      && fixture.projection.blockNumber === live.projection.blockNumber
+      && fixture.projection.matchedAtomic === live.projection.matchedAtomic;
+    exitJson(fixtureMatch ? 0 : 2, {
+      evidenceClass: "server_executed_output",
+      fixtureMatch,
+      live: {
+        blockNumber: live.projection.blockNumber,
+        decision: live.projection.decision,
+        evidenceDigest: live.projection.evidenceDigest,
+        matchedAtomic: live.projection.matchedAtomic,
+        qualification: live.projection.qualification,
+        status: live.projection.status,
+        transactionFeeWei: live.projection.transactionFeeWei,
+      },
+      providerCalls: live.providerCalls,
+      elapsedMs: live.elapsedMs,
+      paymentPermitted: false,
+    });
+  }
+  if (command === "direct-solve") {
+    const capture = await readCapture(values["receipt-file"]);
+    const solved = await directSolve({ client: clientFromCapture(capture), now: () => Date.now() });
+    exitJson(solved.solved ? 0 : 2, solved);
   }
   if (command === "next-paid") {
     const requirement = JSON.parse(await readFile(values["requirement-file"], "utf8"));
@@ -86,6 +127,21 @@ try {
     exitJson(result.accepted ? 0 : 1, result);
   }
   if (command === "revoke") exitJson(0, await service.revoke({ ...common, share: true }));
+  if (command === "verify-settlement") {
+    const result = await service.verifySettlement({
+      ...common,
+      receiptFile: values["receipt-file"],
+    });
+    exitJson(result.accepted ? 0 : 1, result);
+  }
+  if (command === "share-knowledge") {
+    const result = await service.shareKnowledge(common);
+    exitJson(result.accepted ? 0 : 1, result);
+  }
+  if (command === "correct-knowledge") {
+    const result = await service.correctKnowledge({ ...common, receiptFile: values["receipt-file"] });
+    exitJson(result.accepted ? 0 : 1, result);
+  }
   if (command === "consume") {
     const result = await service.consume({
       ...common,

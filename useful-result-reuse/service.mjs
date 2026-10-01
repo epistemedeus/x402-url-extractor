@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 
-import { createForwardOutcomeWriter } from "../commerce-outcome-binding.mjs";
+import { buildTaskRefRecord, createForwardOutcomeWriter, stableForwardEventId } from "../commerce-outcome-binding.mjs";
 import { metricCoverageStatus } from "../commerce-events.mjs";
 import {
   assessFreeDiagnosis,
@@ -9,10 +9,24 @@ import {
 } from "../paid-useful-journey.mjs";
 import { hasDisallowedKey } from "../task-linked-delivery/experiments/delivery-outcome-100173/src/privacy.mjs";
 import {
+  RECEIPT_METHOD,
+  RECEIPT_OPERATION,
+  RECEIPT_ROUTE,
+  RECEIPT_SCHEMA_NAME,
+  RECEIPT_SCHEMA_VERSION,
+  clientFromCapture,
+  executeClosedSettlement,
+  knowledgeView,
+  readCapture,
+  receiveKnowledge,
+} from "./base-receipt.mjs";
+import {
   CLOSED_SPONSORED_REF,
   CURRENT_SCHEMA,
   DEFAULT_TTL_MS,
+  EVIDENCE_CLASSES,
   EXISTING_PAID_OPERATIONS,
+  KNOWLEDGE_SCHEMA,
   METRIC_FILE,
   METRIC_KINDS,
   METRIC_SCHEMA,
@@ -89,6 +103,7 @@ export function createUsefulResultReuse({
       attribution: "Copyright (c) 2026 SameDayDesk",
       computedDigest: row.computedDigest,
       correctionScope: row.correctionOf,
+      evidenceClass: "supplied_observation",
       license: "MIT",
       method: row.method,
       operationId: row.operationId,
@@ -142,6 +157,7 @@ export function createUsefulResultReuse({
         operationId: qualified.operationId,
         outcomeSchema: qualified.outcomeSchema,
         outcomeSchemaVersion: qualified.outcomeSchemaVersion,
+        evidenceClass: "supplied_observation",
         qualification: qualified.qualification,
         recordId: qualified.recordId,
         route: qualified.route,
@@ -153,6 +169,7 @@ export function createUsefulResultReuse({
       };
       await store.append(PRIVATE_FILE, record);
       await remember("useful_result_received", { recordId: record.recordId, taskRef: record.taskRef });
+      await remember("supplied_observation", { recordId: record.recordId, taskRef: record.taskRef });
       if (qualified.correctionOf) await remember("corrected_reuse", { recordId: record.recordId, taskRef: record.taskRef });
       if (qualified.qualification === "useful" && qualified.useful === "true") {
         await remember("valid_delivery", { recordId: record.recordId, taskRef: record.taskRef });
@@ -163,6 +180,7 @@ export function createUsefulResultReuse({
         assertedSuccessIgnored: qualified.assertedSuccessIgnored,
         classification: qualified.classification,
         computedDigest: qualified.computedDigest,
+        evidenceClass: "supplied_observation",
         independentUse: false,
         qualification: qualified.qualification,
         recordId: qualified.recordId,
@@ -177,8 +195,42 @@ export function createUsefulResultReuse({
       const rows = await privateRows();
       const row = latestPrivate(rows, claim.taskRef, operationId);
       if (!row) return { found: false, reason: "not_found" };
-      const integrity = createHash("sha256").update(JSON.stringify(row.joinEvent)).digest("hex");
+      const integrityMaterial = row.evidenceClass === "server_executed_output" ? row.projection : row.joinEvent;
+      const integrity = createHash("sha256").update(JSON.stringify(integrityMaterial)).digest("hex");
       if (integrity !== row.eventDigest) return { found: false, reason: "record_integrity", usable: false };
+      if (row.revoked) {
+        return {
+          found: true,
+          useful: "unknown",
+          usable: false,
+          reason: "revoked",
+          qualification: "revoked",
+          derived: null,
+          evidenceClass: row.evidenceClass || "supplied_observation",
+          independentUse: 0,
+          executionSaved: false,
+          currentAuthority: false,
+          paymentPermitted: false,
+        };
+      }
+      if (row.evidenceClass === "server_executed_output") {
+        return {
+          found: true,
+          useful: "unknown",
+          usable: false,
+          reason: "server_executed_not_supplied_delivery",
+          qualification: row.qualification,
+          derived: null,
+          evidenceClass: "server_executed_output",
+          recordId: row.recordId,
+          taskRef: row.taskRef,
+          independentUse: 0,
+          executionSaved: false,
+          currentAuthority: false,
+          paymentPermitted: false,
+          recomputed: false,
+        };
+      }
       const clock = now();
       const readout = recompute(row.joinEvent, {
         asOf: new Date(clock).toISOString(),
@@ -191,19 +243,6 @@ export function createUsefulResultReuse({
       });
       const task = readout.tasks.find((item) => item.taskRef === row.taskRef);
       const useful = task?.useful || "unknown";
-      if (row.revoked) {
-        return {
-          found: true,
-          useful,
-          usable: false,
-          reason: "revoked",
-          qualification: "revoked",
-          derived: null,
-          independentUse: 0,
-          executionSaved: false,
-          currentAuthority: false,
-        };
-      }
       if (row.stale || task?.decisionCurrent !== true) {
         return {
           found: true,
@@ -237,6 +276,7 @@ export function createUsefulResultReuse({
         outcomeSchemaVersion: row.outcomeSchemaVersion,
         classification: row.classification,
         assertedDigestMatches: row.assertedDigestMatches,
+        evidenceClass: "supplied_observation",
         independentUse: 0,
         callerClaimIndependent: row.classification === "independent",
         executionSaved: false,
@@ -397,7 +437,8 @@ export function createUsefulResultReuse({
         latestByTask.set(`${row.taskRef}\0${row.operationId}`, row);
         if (typeof row.correctionOf === "string") correctedIds.add(row.correctionOf);
       }
-      const shares = (await sharedRows())
+      const sharedLog = await sharedRows();
+      const shares = sharedLog
         .filter((row) => row.schema === SHARED_SCHEMA && !row.revoked && !row.stale)
         .filter((row) => latestByTask.get(`${row.taskRef}\0${row.operationId}`)?.revoked !== true)
         .filter((row) => !correctedIds.has(row.recordId))
@@ -419,6 +460,7 @@ export function createUsefulResultReuse({
         coverage: coverage.coverage,
         recognizedRevenueAtomic: "0",
         items: page,
+        knowledge: listKnowledge(sharedLog),
         page: {
           limit: bounded,
           nextCursor: start + bounded < shares.length ? page[page.length - 1]?.shareId || null : null,
@@ -450,6 +492,11 @@ export function createUsefulResultReuse({
         complete: false,
         recognizedRevenueAtomic: "0",
         fetchIsNotAdoption: true,
+        evidenceClass: {
+          valid_delivery: "supplied_observation",
+          ...Object.fromEntries(EVIDENCE_CLASSES.map((name) => [name, counts[name] || 0])),
+          verified_settlement: counts.verified_settlement,
+        },
       };
     },
 
@@ -463,10 +510,219 @@ export function createUsefulResultReuse({
       return { accepted: true, paymentSent: false };
     },
 
+    async verifySettlement({ taskLabel, operationId, classification, suppliedToken, capture = null, client = null, receiptFile = null }) {
+      const clock = now();
+      const { claim, cohort } = claimFor({
+        token: internalToken,
+        suppliedToken,
+        taskLabel,
+        operationId,
+        classification,
+      });
+      if (operationId !== RECEIPT_OPERATION) throw new QualifyError("foreign_capability");
+      const loaded = capture || (receiptFile ? await readCapture(receiptFile) : null);
+      const executionClient = client || (loaded ? clientFromCapture(loaded) : null);
+      if (!executionClient) throw new QualifyError("not_execution");
+      let executed;
+      try {
+        executed = await executeClosedSettlement({ client: executionClient, now: () => new Date(clock) });
+      } catch (error) {
+        throw new QualifyError(error.code || "not_execution");
+      }
+      const projection = {
+        blockNumber: executed.projection.blockNumber,
+        decision: executed.projection.decision,
+        evidenceDigest: executed.projection.evidenceDigest,
+        matchedAtomic: executed.projection.matchedAtomic,
+        movementRef: executed.projection.movementRef,
+        network: executed.projection.network,
+        receiptFound: executed.projection.receiptFound,
+        status: executed.projection.status,
+        transactionFeeWei: executed.projection.transactionFeeWei,
+      };
+      const recordId = createHash("sha256")
+        .update(`${claim.taskRef}\0${operationId}\0${clock}\0${projection.evidenceDigest}\0settlement`)
+        .digest("hex")
+        .slice(0, 32);
+      const commerceEventId = stableForwardEventId(`${operationId}\0receipt\0${claim.taskRef}\0${recordId}`);
+      const taskRefRecord = buildTaskRefRecord({ claim, commerceEventId });
+      if (!taskRefRecord) return { accepted: false, reason: "task_ref_rejected", wrote: false, evidenceClass: "server_executed_output" };
+      const appended = await writer.appendTaskRef(taskRefRecord);
+      if (!appended?.accepted) {
+        return { accepted: false, reason: appended?.reason || "task_ref_rejected", wrote: false, evidenceClass: "server_executed_output" };
+      }
+      const record = {
+        action: "retain",
+        classification,
+        cohort,
+        createdAt: new Date(clock).toISOString(),
+        evidenceClass: "server_executed_output",
+        eventDigest: createHash("sha256").update(JSON.stringify(projection)).digest("hex"),
+        expiresAt: new Date(clock + ttlMs).toISOString(),
+        method: RECEIPT_METHOD,
+        operationId,
+        outcomeSchema: RECEIPT_SCHEMA_NAME,
+        outcomeSchemaVersion: RECEIPT_SCHEMA_VERSION,
+        projection,
+        qualification: executed.projection.qualification,
+        recordId,
+        route: RECEIPT_ROUTE,
+        schema: PRIVATE_SCHEMA,
+        sourceSha: executionClient.sourceSha || null,
+        taskRef: claim.taskRef,
+      };
+      await store.append(PRIVATE_FILE, record);
+      await remember("server_executed_output", { recordId, taskRef: claim.taskRef });
+      return {
+        accepted: executed.projection.pinMatch === true,
+        currentAuthority: false,
+        elapsedMs: executed.elapsedMs,
+        evidenceClass: "server_executed_output",
+        executionSaved: false,
+        paymentPermitted: false,
+        projection,
+        providerCalls: executed.providerCalls,
+        qualification: executed.projection.qualification,
+        recordId,
+        sourceSha: record.sourceSha,
+        usefulTransferred: false,
+        wrote: true,
+      };
+    },
+
+    async shareKnowledge({ taskLabel, operationId, classification, suppliedToken }) {
+      const { claim } = claimFor({ token: internalToken, suppliedToken, taskLabel, operationId, classification });
+      const row = latestPrivate(await privateRows(), claim.taskRef, operationId);
+      if (!row || row.evidenceClass !== "server_executed_output") return { accepted: false, reason: "not_found" };
+      if (row.revoked) return { accepted: false, reason: "revoked" };
+      if (row.stale) return { accepted: false, reason: "expired_scope" };
+      if (row.qualification !== "pin_match" || !row.sourceSha) return { accepted: false, reason: "pin_mismatch" };
+      const shareId = `k${createHash("sha256").update(`${row.recordId}\0knowledge`).digest("hex").slice(0, 32)}`;
+      const view = knowledgeView({
+        corrects: null,
+        evidence: row.projection,
+        expiresAt: row.expiresAt,
+        schema: KNOWLEDGE_SCHEMA,
+        shareId,
+        sourceSha: row.sourceSha,
+      });
+      if (!view) return { accepted: false, reason: "restricted_field" };
+      await store.append(SHARED_FILE, {
+        ...view,
+        action: "share",
+        createdAt: new Date(now()).toISOString(),
+        recordId: row.recordId,
+      });
+      return { accepted: true, share: view };
+    },
+
+    async correctKnowledge({ taskLabel, operationId, classification, suppliedToken, capture = null, client = null, receiptFile = null }) {
+      const clock = now();
+      const { claim } = claimFor({ token: internalToken, suppliedToken, taskLabel, operationId, classification });
+      const row = latestPrivate(await privateRows(), claim.taskRef, operationId);
+      if (!row || row.evidenceClass !== "server_executed_output") return { accepted: false, reason: "not_found", applyPrior: false };
+      const loaded = capture || (receiptFile ? await readCapture(receiptFile) : null);
+      const executionClient = client || (loaded ? clientFromCapture(loaded) : null);
+      if (!executionClient) throw new QualifyError("not_execution");
+      let executed;
+      try {
+        executed = await executeClosedSettlement({ client: executionClient, now: () => new Date(clock) });
+      } catch (error) {
+        throw new QualifyError(error.code || "not_execution");
+      }
+      await remember("server_executed_output", { recordId: row.recordId, taskRef: claim.taskRef });
+      const shares = (await sharedRows()).filter((item) => item.schema === KNOWLEDGE_SCHEMA && item.recordId === row.recordId && !item.revoked);
+      const prior = shares.length ? shares[shares.length - 1] : null;
+      if (!executed.projection.pinMatch || executionClient.sourceSha !== row.sourceSha) {
+        return {
+          accepted: false,
+          applyPrior: false,
+          evidenceClass: "server_executed_output",
+          paymentPermitted: false,
+          reason: executed.projection.pinMatch ? "source_changed" : "pin_mismatch",
+        };
+      }
+      const shareId = `k${createHash("sha256").update(`${row.recordId}\0knowledge\0${prior?.shareId || ""}\0${clock}`).digest("hex").slice(0, 32)}`;
+      const view = knowledgeView({
+        corrects: prior?.shareId || null,
+        evidence: {
+          blockNumber: executed.projection.blockNumber,
+          decision: executed.projection.decision,
+          evidenceDigest: executed.projection.evidenceDigest,
+          matchedAtomic: executed.projection.matchedAtomic,
+          movementRef: executed.projection.movementRef,
+          network: executed.projection.network,
+          receiptFound: executed.projection.receiptFound,
+          status: executed.projection.status,
+          transactionFeeWei: executed.projection.transactionFeeWei,
+        },
+        expiresAt: row.expiresAt,
+        schema: KNOWLEDGE_SCHEMA,
+        shareId,
+        sourceSha: executionClient.sourceSha,
+      });
+      if (!view) return { accepted: false, applyPrior: false, reason: "restricted_field" };
+      await store.append(SHARED_FILE, {
+        ...view,
+        action: "share",
+        createdAt: new Date(clock).toISOString(),
+        recordId: row.recordId,
+      });
+      await remember("corrected_reuse", { recordId: row.recordId, taskRef: claim.taskRef });
+      return { accepted: true, applyPrior: false, corrects: prior?.shareId || null, share: view };
+    },
+
+    async replayKnowledge({ derivative, client = null, capture = null, receiptFile = null, correction = null, method, route, outcomeSchema, outcomeSchemaVersion, at = null }) {
+      const loaded = capture || (receiptFile ? await readCapture(receiptFile) : null);
+      const executionClient = client || (loaded ? clientFromCapture(loaded) : null);
+      const result = await receiveKnowledge({
+        derivative,
+        client: executionClient,
+        correction,
+        method,
+        route,
+        outcomeSchema,
+        outcomeSchemaVersion,
+        now: at || now(),
+      });
+      if (result.knowledgeApplied === true && result.evidenceClass === "independently_replayed_utility") {
+        await remember("independently_replayed_utility", { recordId: derivative?.shareId || null });
+      }
+      return result;
+    },
+
+    async revokeKnowledge({ taskLabel, operationId, classification, suppliedToken }) {
+      const { claim } = claimFor({ token: internalToken, suppliedToken, taskLabel, operationId, classification });
+      const row = latestPrivate(await privateRows(), claim.taskRef, operationId);
+      if (!row) return { accepted: false, reason: "not_found" };
+      const shares = (await sharedRows()).filter((item) => item.schema === KNOWLEDGE_SCHEMA && item.recordId === row.recordId && !item.revoked);
+      const latest = shares.length ? shares[shares.length - 1] : null;
+      if (!latest) return { accepted: false, reason: "not_found" };
+      await store.append(SHARED_FILE, {
+        action: "revoke",
+        schema: KNOWLEDGE_SCHEMA,
+        targetId: latest.shareId,
+        at: new Date(now()).toISOString(),
+      });
+      return { accepted: true, reason: "revoked" };
+    },
+
     nextPaid(requirement, options = {}) {
       return selectExistingPaidOperation(requirement, options);
     },
   });
+}
+
+function listKnowledge(rows) {
+  const corrected = new Set(
+    rows
+      .filter((row) => row.schema === KNOWLEDGE_SCHEMA && typeof row.corrects === "string" && row.corrects)
+      .map((row) => row.corrects),
+  );
+  return rows
+    .filter((row) => row.schema === KNOWLEDGE_SCHEMA && !row.revoked && !row.stale && !corrected.has(row.shareId))
+    .map((row) => knowledgeView(row))
+    .filter(Boolean);
 }
 
 function refuseConsume(reason, extra = {}) {

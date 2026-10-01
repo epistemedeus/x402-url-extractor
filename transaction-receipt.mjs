@@ -213,4 +213,22 @@ export async function transactionReceipt(input, {
   };
 }
 
+export function publicHistoricalClient(network = "base", rpcUrls) {
+  const config = NETWORKS[network];
+  if (!config) fail("network must be base or ethereum", "unsupported_network");
+  const inner = defaultClient(config, rpcUrls || config.rpcUrls);
+  const calls = { receipt: 0, block: 0, paid: 0, model: 0 };
+  return {
+    calls,
+    async getTransactionReceipt(args) {
+      calls.receipt += 1;
+      return inner.getTransactionReceipt(args);
+    },
+    async getBlock(args) {
+      calls.block += 1;
+      return inner.getBlock(args);
+    },
+  };
+}
+
 export { MAX_DECODED_TRANSFERS, NETWORKS };

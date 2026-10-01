@@ -13,6 +13,29 @@ The existing `GET /chain/transaction-receipt` is named only when the caller
 still lacks a normalized receipt and holds a finalized hash other than the
 closed sponsored reference. This canary does not send that request.
 
+The supplied `caller-unpaid-receipt` example remains owner instrumentation.
+Its `valid_delivery` counter is that supplied class. It is not an external
+agent capability.
+
+The no-spend utility is the authorized H15 derivative on the same public
+document (`knowledge`). The closed hash is not a purchase. A cold caller
+without the producer token fetches that derivative and runs
+`useful-result-reuse/later-consumer.mjs` against its own copy of
+`useful-result-reuse/fixtures/h15-base-receipt.json`. Expected accounting:
+expense `200000`, recognized revenue `0`, `secondPay` false,
+`usefulTransferred` false, `executionSaved` false, and the same accounting
+as a direct solve of the receipt. `independentRepeat` stays `unknown`.
+
+## Commercial next step
+
+No fit for a new buyer. The dated input is the closed sponsored pin observed
+`2026-09-30T22:31:29.000Z`. Its free baseline is the public Base receipt
+read, which already returns the body. The paid `GET /chain/transaction-receipt`
+route stays 402 and is not offered for this hash (`closed_sponsored_reference`).
+Root should not solicit payment, a bid, or an outreach for H15. Keep the
+broader paid-journey experiment open; one quiet sample does not retire it.
+The x402-pulse question remains a separate Root item.
+
 ## Cold calls
 
 Against the owned loopback, with no payment header:
@@ -41,8 +64,12 @@ curl -sS -H "x-samedaydesk-internal: $COMMERCE_INTERNAL_TOKEN" \
 ## Falsifiers
 
 - A wrong grant returns 403 and no stored derivative.
-- A different task, route, schema, source hash, revocation, or correction
-  does not apply the shared result.
+- A different task does not receive the supplied outcome (`different_task`,
+  `usefulTransferred` false). A changed route, schema, or source, or an
+  expired, revoked, or corrected knowledge derivative, does not apply.
+- A forged supplied success, a foreign capability, and a wallet or sentinel
+  field are absent from the public derivative. The later directory does not
+  contain the producer token or data files.
 - `usefulDelivery: true` plus a wallet field is refused and writes nothing.
 - A digest with no body stays `useful: unknown`.
 - Exposure may increase while `independentRepeat` stays `unknown` and
@@ -51,7 +78,7 @@ curl -sS -H "x-samedaydesk-internal: $COMMERCE_INTERNAL_TOKEN" \
   `match`, or if the only evidence is a 402, a download, or the closed
   sponsored hash `0x593559ea7a19277645a76e41aa29e713ed219db1f97e4be29c9dac9cf6cd4b37`.
 
-Next customer action, not taken here: an integrator who already lost a
-finalized Base receipt body can choose the existing transaction-receipt
-operation under their own payment policy. The Root-owned x402-pulse question
-is not that lead. No bid, comment, or payment is part of this canary.
+Root action: do not open a purchase or an outreach for this closed receipt.
+The paid transaction-receipt route remains available for some other finalized
+hash under that caller's own payment policy. No bid, comment, or payment is
+part of this canary.

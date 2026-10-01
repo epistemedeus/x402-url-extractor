@@ -1,5 +1,7 @@
 export const PRIVATE_SCHEMA = "samedaydesk.useful-result-reuse.private.v1";
 export const SHARED_SCHEMA = "samedaydesk.useful-result-reuse.shared.v1";
+export const KNOWLEDGE_SCHEMA = "samedaydesk.useful-result-reuse.knowledge.v1";
+export const ACCOUNTING_SCHEMA = "samedaydesk.closed-expense-accounting.v1";
 export const CURRENT_SCHEMA = "samedaydesk.useful-result-reuse.current.v1";
 export const METRIC_SCHEMA = "samedaydesk.useful-result-reuse.metric.v1";
 export const OUTCOME_SCHEMA = "samedaydesk.useful-result.v1";
@@ -44,6 +46,13 @@ export const OUTCOME_CODES = Object.freeze([
 
 export const DISPOSITIONS = Object.freeze(["useful", "failed", "partial", "unavailable", "not_useful"]);
 
+export const EVIDENCE_CLASSES = Object.freeze([
+  "supplied_observation",
+  "server_executed_output",
+  "independently_replayed_utility",
+  "paid_settlement",
+]);
+
 export const METRIC_KINDS = Object.freeze([
   "exposure",
   "useful_result_received",
@@ -52,6 +61,10 @@ export const METRIC_KINDS = Object.freeze([
   "paid_attempt",
   "verified_settlement",
   "valid_delivery",
+  "supplied_observation",
+  "server_executed_output",
+  "independently_replayed_utility",
+  "paid_settlement",
 ]);
 
 // Documented output of the existing handlers. Not a new price or SKU.

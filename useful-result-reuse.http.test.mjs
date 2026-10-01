@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { copyFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -110,6 +111,65 @@ test("clean loopback caller retrieves a scoped result and leaves paid routes unp
     assert.equal(JSON.stringify(current).includes(TOKEN), false);
     const descriptor = await fetch("http://127.0.0.1:39114/mcp").then((response) => response.json());
     assert.equal(descriptor.usefulResultReuse, "https://agents.samedaydesk.com/.well-known/useful-result-reuse/current.json");
+    const sentinel = "sentinel-private-reuse-100224";
+    await writeFile(path.join(dataDir, "PRIVATE_SENTINEL"), sentinel);
+    const fixture = path.join(root, "useful-result-reuse/fixtures/h15-base-receipt.json");
+    const verified = run([
+      "useful-result-reuse/cli.mjs", "verify-settlement",
+      "--data", dataDir,
+      "--token-file", tokenFile,
+      "--task", "owner-closed-settlement",
+      "--operation", "normalized-transaction-receipt",
+      "--class", "owner",
+      "--receipt-file", fixture,
+    ]);
+    assert.equal(verified.status, 0, verified.stderr);
+    const knowledge = run([
+      "useful-result-reuse/cli.mjs", "share-knowledge",
+      "--data", dataDir,
+      "--token-file", tokenFile,
+      "--task", "owner-closed-settlement",
+      "--operation", "normalized-transaction-receipt",
+      "--class", "owner",
+    ]);
+    assert.equal(knowledge.status, 0, knowledge.stderr);
+    const work = await mkdtemp(path.join(tmpdir(), "useful-reuse-receiver-"));
+    copyFileSync(fixture, path.join(work, "receipt.json"));
+    try {
+      const exercised = run(["useful-result-reuse/cold-caller.mjs"], {
+        USEFUL_RESULT_BASE: "http://127.0.0.1:39114",
+        USEFUL_RESULT_TOKEN: TOKEN,
+        USEFUL_RESULT_TASK: "caller-unpaid-receipt",
+        USEFUL_RESULT_OPERATION: "read-unpaid-receipt",
+        USEFUL_RESULT_WORK: work,
+        USEFUL_RESULT_RECEIPT: path.join(work, "receipt.json"),
+      });
+      assert.equal(exercised.status, 0, `${exercised.stdout}\n${exercised.stderr}`);
+      const exercisedBody = JSON.parse(exercised.stdout);
+      assert.equal(exercisedBody.extractStatus, 402);
+      assert.equal(exercisedBody.transactionReceiptStatus, 402);
+      assert.equal(exercisedBody.archiveBytes, 107420);
+      assert.equal(exercisedBody.knowledge.knowledgeApplied, true);
+      assert.equal(exercisedBody.knowledge.usefulTransferred, false);
+      assert.equal(exercisedBody.knowledge.executionSaved, false);
+      assert.equal(exercisedBody.knowledge.sameAccounting, true);
+      assert.equal(exercisedBody.knowledge.observedSaving, false);
+      assert.equal(exercisedBody.knowledge.expenseAtomic, "200000");
+      assert.equal(exercisedBody.leakedToken, false);
+      assert.equal(exercisedBody.leakedTaskLabel, false);
+      assert.equal(exercisedBody.leakedWallet, false);
+      const names = await readdir(work);
+      assert.equal(names.includes("PRIVATE_SENTINEL"), false);
+      assert.equal(names.includes("useful-result-private.ndjson"), false);
+      const derivative = await readFile(path.join(work, "derivative.json"), "utf8");
+      assert.equal(derivative.includes(sentinel), false);
+      assert.equal(derivative.includes(TOKEN), false);
+      assert.equal(derivative.includes("caller-unpaid-receipt"), false);
+      assert.equal(derivative.includes("owner-closed-settlement"), false);
+      assert.equal(/8904df3d|aef308a4/i.test(derivative), false);
+    } finally {
+      await rm(work, { recursive: true, force: true });
+    }
   } finally {
     child.kill("SIGTERM");
     await new Promise((resolve) => {
