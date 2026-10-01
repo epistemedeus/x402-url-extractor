@@ -1,5 +1,6 @@
-// Free POST /recipes/page-change listing coherence. The unpaid route must stay
-// aligned with the catalog and must not demand settlement.
+// Free POST /recipes/page-change listing coherence. A valid unpaid probe is HTTP 200.
+// Other statuses stay non-settling unless a payment indicator is present.
+// mcp.session is initialize + tools/list + tools/call, not the GET /mcp descriptor.
 
 export const PAGE_CHANGE_ROUTE = "/recipes/page-change";
 
@@ -28,16 +29,21 @@ export function pageChangeListingProblems(snapshot = {}) {
   if (snapshot.healthz?.priced === true) problems.push("healthz-priced");
   const mcp = snapshot.mcp || {};
   if (mcp.listed !== true) problems.push("mcp-free-tool-missing");
-  if (mcp.listed === true && String(mcp.method || "").toUpperCase() !== "POST") {
-    problems.push(`method-mismatch mcp ${mcp.method || "missing"}`);
+  if (mcp.listed === true && mcp.method != null && String(mcp.method).toUpperCase() !== "POST") {
+    problems.push(`method-mismatch mcp ${mcp.method}`);
+  } else if (mcp.listed === true && (mcp.method == null || mcp.method === "") && mcp.session !== true) {
+    problems.push("method-mismatch mcp missing");
   }
   if (mcp.charged !== false) problems.push("mcp-charged");
   if (mcp.paidTool === true) problems.push("mcp-paid-tool");
+  if (mcp.session === true && mcp.listed === true && mcp.callOk !== true) problems.push("mcp-call-failed");
+  if (mcp.paymentChallenge === true) problems.push("settlement-demanded-mcp");
   const unpaid = snapshot.unpaid;
   if (!unpaid) {
     problems.push("unpaid-missing");
   } else {
     if (unpaid.status === 402) problems.push("settlement-demanded-status");
+    else if (unpaid.status !== 200) problems.push(`unpaid-status-${unpaid.status ?? "missing"}`);
     if (unpaid.paymentRequired === true) problems.push("settlement-demanded-payment-required");
     if (unpaid.wwwAuthenticate === true) problems.push("settlement-demanded-www-authenticate");
     if (unpaid.charged !== false) problems.push("settlement-demanded-charged");

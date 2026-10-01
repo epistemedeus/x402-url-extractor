@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -140,6 +141,31 @@ test("route binding accepts a matched handler and rejects a method mismatch or m
   assert.ok(missing.json.evidence[0].observed.problems.some((problem) => problem.startsWith("missing-handler")));
 });
 
+test("proxy-backed paidHttp tools pass without run and malformed bindings fail", () => {
+  for (const name of ["route-binding-proxy-extract-batch", "route-binding-proxy-lockfile-pin-delta"]) {
+    const ok = run(["routes", "inspect", "--profile", "local", "--fixture", name, "--json"]);
+    assert.equal(ok.status, 0, `${name} ${ok.stderr}`);
+    assert.equal(ok.json.evidence[0].observed.consistent, true, name);
+    assert.deepEqual(ok.json.evidence[0].observed.problems, []);
+    assert.equal(ok.json.boundary.paymentSent, false);
+    assert.equal(ok.json.boundary.settled, false);
+  }
+  const absent = run(["routes", "inspect", "--profile", "local", "--fixture", "route-binding-proxy-paidhttp-absent", "--json"]);
+  assert.equal(absent.status, 1);
+  assert.equal(absent.json.boundary.paymentSent, false);
+  assert.equal(absent.json.boundary.settled, false);
+  assert.ok(absent.json.evidence[0].observed.problems.includes("missing-handler MCP extract_batch"));
+  const wrongMethod = run(["routes", "inspect", "--profile", "local", "--fixture", "route-binding-proxy-paidhttp-wrong-method", "--json"]);
+  assert.equal(wrongMethod.status, 1);
+  assert.ok(wrongMethod.json.evidence[0].observed.problems.includes("method-mismatch /extract/batch catalog POST mcp GET"));
+  const wrongPath = run(["routes", "inspect", "--profile", "local", "--fixture", "route-binding-proxy-paidhttp-wrong-path", "--json"]);
+  assert.equal(wrongPath.status, 1);
+  assert.ok(wrongPath.json.evidence[0].observed.problems.includes("method-mismatch /extract/batch catalog /extract/batch mcp /extract"));
+  const malformed = run(["routes", "inspect", "--profile", "local", "--fixture", "route-binding-proxy-paidhttp-malformed", "--json"]);
+  assert.equal(malformed.status, 1);
+  assert.ok(malformed.json.evidence[0].observed.problems.includes("malformed-paid-http MCP extract_batch"));
+});
+
 test("page-change listing accepts a free unpaid snapshot and rejects a settlement demand", () => {
   const ok = run(["page-change", "check", "--profile", "local", "--fixture", "page-change-listing-ok", "--json"]);
   assert.equal(ok.status, 0, ok.stderr);
@@ -151,6 +177,41 @@ test("page-change listing accepts a free unpaid snapshot and rejects a settlemen
   assert.equal(demanded.json.boundary.settled, false);
   assert.equal(demanded.json.evidence[0].observed.settlementDemanded, true);
   assert.ok(demanded.json.evidence[0].observed.problems.some((problem) => problem.startsWith("settlement-demanded")));
+});
+
+test("non-success page-change statuses stay unpaid and fail coherence", () => {
+  for (const status of [404, 405, 500, 503]) {
+    const result = run(["page-change", "check", "--profile", "local", "--fixture", `page-change-status-${status}`, "--json"]);
+    assert.equal(result.status, 1, String(status));
+    assert.equal(result.json.ok, false);
+    assert.equal(result.json.boundary.paymentSent, false);
+    assert.equal(result.json.boundary.settled, false);
+    assert.equal(result.json.evidence[0].observed.consistent, false);
+    assert.equal(result.json.evidence[0].observed.settlementDemanded, false);
+    assert.equal(result.json.evidence[0].observed.charged, false);
+    assert.ok(result.json.evidence[0].observed.problems.includes(`unpaid-status-${status}`));
+  }
+});
+
+test("page-change MCP session rejects a missing tool and a payment challenge", () => {
+  const missing = run(["page-change", "check", "--profile", "local", "--fixture", "page-change-mcp-unlisted", "--json"]);
+  assert.equal(missing.status, 1);
+  assert.equal(missing.json.evidence[0].observed.settlementDemanded, false);
+  assert.equal(missing.json.boundary.settled, false);
+  assert.ok(missing.json.evidence[0].observed.problems.includes("mcp-free-tool-missing"));
+  const challenge = run(["page-change", "check", "--profile", "local", "--fixture", "page-change-mcp-payment-challenge", "--json"]);
+  assert.equal(challenge.status, 1);
+  assert.equal(challenge.json.boundary.paymentSent, false);
+  assert.equal(challenge.json.boundary.settled, false);
+  assert.equal(challenge.json.evidence[0].observed.settlementDemanded, true);
+  assert.ok(challenge.json.evidence[0].observed.problems.includes("settlement-demanded-mcp"));
+  assert.ok(challenge.json.evidence[0].observed.problems.includes("mcp-call-failed"));
+});
+
+test("merchant-verify is on the default npm test path", () => {
+  const pkg = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
+  const files = pkg.scripts.test.replace(/^node --test\s+/, "").split(/\s+/).filter(Boolean);
+  assert.equal(files.filter((file) => file === "test/merchant-verify.test.mjs").length, 1);
 });
 
 test("archive profile passes the canonical unpaid snapshot", () => {

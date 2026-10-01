@@ -97,11 +97,44 @@ function requireHandler(bindings, method, path, problems, label) {
   return true;
 }
 
-function toolMatchesRoute(tool, route) {
-  if (!tool || !route) return false;
-  if (tool.route && tool.route !== route) return false;
-  if (tool.paidHttp?.path && tool.paidHttp.path !== route) return false;
-  return true;
+function paidHttpParts(paidHttp) {
+  if (!paidHttp || typeof paidHttp !== "object" || Array.isArray(paidHttp)) return null;
+  return {
+    method: String(paidHttp.method || "").toUpperCase(),
+    path: normalizePath(paidHttp.path || ""),
+  };
+}
+
+function paidHttpComplete(parts) {
+  return Boolean(parts && HTTP_METHODS.has(parts.method) && parts.path.startsWith("/"));
+}
+
+// extract_batch and lockfile_pin_delta are HTTP proxies: a complete paidHttp
+// method and path is the handler. A callable run remains sufficient for local tools.
+function paidMcpToolProblems(tool, method, path, name) {
+  const problems = [];
+  if (tool.route && normalizePath(tool.route) !== path) {
+    problems.push(`method-mismatch ${path} catalog ${path} mcp ${normalizePath(tool.route)}`);
+  }
+  if (tool.method && String(tool.method).toUpperCase() !== method) {
+    problems.push(`method-mismatch ${path} catalog ${method} mcp ${String(tool.method).toUpperCase()}`);
+  }
+  if (tool.paidHttp == null) {
+    if (typeof tool.run !== "function") problems.push(`missing-handler MCP ${name}`);
+    return problems;
+  }
+  const parts = paidHttpParts(tool.paidHttp);
+  if (!paidHttpComplete(parts)) {
+    problems.push(`malformed-paid-http MCP ${name}`);
+    return problems;
+  }
+  if (parts.path !== path) {
+    problems.push(`method-mismatch ${path} catalog ${path} mcp ${parts.path}`);
+  }
+  if (parts.method !== method) {
+    problems.push(`method-mismatch ${path} catalog ${method} mcp ${parts.method}`);
+  }
+  return problems;
 }
 
 export function routeBindingProblems({ bindings = [], catalog = {}, openapi = null, mcpTools = [] } = {}) {
@@ -111,6 +144,8 @@ export function routeBindingProblems({ bindings = [], catalog = {}, openapi = nu
   const operations = openApiOperations(openapi);
   const tools = Array.isArray(mcpTools) ? mcpTools : [];
 
+  // Every OpenAPI method needs an Express handler. Tool names are path-derived, so a
+  // second method on the same path does not mint a second MCP identity.
   for (const operation of operations) {
     requireHandler(bindings, operation.method, operation.path, problems, "openapi");
   }
@@ -132,16 +167,10 @@ export function routeBindingProblems({ bindings = [], catalog = {}, openapi = nu
     const tool = tools.find((item) => item.name === name);
     if (!tool) {
       problems.push(`missing-handler MCP ${name}`);
-    } else if (typeof tool.run !== "function") {
-      problems.push(`missing-handler MCP ${name}`);
     } else if (tool.free === true) {
       problems.push(`method-mismatch ${path} catalog paid mcp free`);
-    } else if (!toolMatchesRoute(tool, path)) {
-      problems.push(`method-mismatch ${path} catalog ${path} mcp ${tool.route || tool.paidHttp?.path || "unbound"}`);
-    } else if (tool.method && String(tool.method).toUpperCase() !== method) {
-      problems.push(`method-mismatch ${path} catalog ${method} mcp ${String(tool.method).toUpperCase()}`);
-    } else if (tool.paidHttp && String(tool.paidHttp.method || "").toUpperCase() !== method) {
-      problems.push(`method-mismatch ${path} catalog ${method} mcp ${String(tool.paidHttp.method || "missing").toUpperCase()}`);
+    } else {
+      problems.push(...paidMcpToolProblems(tool, method, path, name));
     }
   }
 
@@ -179,7 +208,10 @@ export function routeBindingProblems({ bindings = [], catalog = {}, openapi = nu
     ...freeRecipes.map((recipe) => mcpToolNameForRoute(recipe.route)),
   ]);
   for (const tool of tools) {
-    if (typeof tool.run !== "function") problems.push(`missing-handler MCP ${tool.name || "unnamed"}`);
+    const hasRun = typeof tool.run === "function";
+    const completeProxy = paidHttpComplete(paidHttpParts(tool.paidHttp));
+    if (!hasRun && tool.paidHttp == null) problems.push(`missing-handler MCP ${tool.name || "unnamed"}`);
+    else if (!hasRun && !completeProxy) problems.push(`malformed-paid-http MCP ${tool.name || "unnamed"}`);
     if (!knownNames.has(tool.name)) problems.push(`mcp-unlisted ${tool.name || "unnamed"}`);
   }
 
@@ -214,6 +246,11 @@ export function buildRouteBindingReport({ app, catalog, openapi, mcpTools }) {
     catalogActions: (catalog?.actions || []).length,
     freeRecipes: (catalog?.freeRecipes || []).length,
     mcpTools: (mcpTools || []).length,
+    proxyTools: (mcpTools || []).filter((tool) => paidHttpComplete(paidHttpParts(tool?.paidHttp)) && typeof tool.run !== "function").map((tool) => ({
+      name: tool.name,
+      method: String(tool.paidHttp.method || "").toUpperCase(),
+      path: normalizePath(tool.paidHttp.path),
+    })),
     pageChange: {
       method: pageChange?.methods?.POST ? "POST" : null,
       handlerPresent: (pageChange?.methods?.POST?.handlerCount || 0) > 0,

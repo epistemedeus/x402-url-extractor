@@ -89,7 +89,42 @@ function extractBindingFixture({
   };
 }
 
-function pageChangeFixture({ demanded = false } = {}) {
+function proxyBindingFixture(route, priceAtomicUsdc, { paidHttp } = {}) {
+  const name = route === "/extract/batch"
+    ? "extract_batch"
+    : route.split("/").filter(Boolean).at(-1).replaceAll("-", "_");
+  const binding = paidHttp === undefined ? { method: "POST", path: route } : paidHttp;
+  const tool = { name };
+  if (binding) tool.paidHttp = binding;
+  return {
+    kind: "route-binding",
+    bindings: [{
+      path: route,
+      methods: {
+        POST: { explicit: true, handlerCount: 1, handlerNames: ["proxyHandler"] },
+      },
+    }],
+    catalog: {
+      actions: [{ method: "POST", route, priceAtomicUsdc }],
+      freeRecipes: [],
+      alternateAccess: null,
+    },
+    openapi: {
+      paths: {
+        [route]: {
+          post: {
+            responses: { "200": { description: "paid proxy route" }, "402": { description: "payment required" } },
+            "x-payment-info": { price: { amount: "0.01" } },
+          },
+        },
+      },
+    },
+    mcpTools: [tool],
+  };
+}
+
+function pageChangeFixture({ demanded = false, status = null, mcp = null } = {}) {
+  const httpStatus = status == null ? (demanded ? 402 : 200) : status;
   return {
     kind: "page-change-listing",
     catalogFree: {
@@ -107,14 +142,14 @@ function pageChangeFixture({ demanded = false } = {}) {
     },
     llms: { chargedFalse: !demanded, priced: demanded },
     healthz: { ok: true, priced: demanded },
-    mcp: {
+    mcp: mcp || {
       listed: true,
       method: "POST",
       charged: demanded ? true : false,
       paidTool: demanded,
     },
     unpaid: {
-      status: demanded ? 402 : 200,
+      status: httpStatus,
       paymentRequired: demanded,
       wwwAuthenticate: demanded,
       charged: demanded ? true : false,
@@ -202,8 +237,46 @@ const LOCAL_FIXTURES = {
     mcpMethod: "GET",
   }),
   "route-binding-missing-handler": extractBindingFixture({ handlerCount: 0, mcpRun: false }),
+  "route-binding-proxy-extract-batch": proxyBindingFixture("/extract/batch", "10000"),
+  "route-binding-proxy-lockfile-pin-delta": proxyBindingFixture("/lockfile-pin-delta", "5000"),
+  "route-binding-proxy-paidhttp-absent": proxyBindingFixture("/extract/batch", "10000", { paidHttp: null }),
+  "route-binding-proxy-paidhttp-wrong-method": proxyBindingFixture("/extract/batch", "10000", {
+    paidHttp: { method: "GET", path: "/extract/batch" },
+  }),
+  "route-binding-proxy-paidhttp-wrong-path": proxyBindingFixture("/extract/batch", "10000", {
+    paidHttp: { method: "POST", path: "/extract" },
+  }),
+  "route-binding-proxy-paidhttp-malformed": proxyBindingFixture("/extract/batch", "10000", {
+    paidHttp: { method: "POST" },
+  }),
   "page-change-listing-ok": pageChangeFixture(),
   "page-change-settlement-demanded": pageChangeFixture({ demanded: true }),
+  "page-change-status-404": pageChangeFixture({ status: 404 }),
+  "page-change-status-405": pageChangeFixture({ status: 405 }),
+  "page-change-status-500": pageChangeFixture({ status: 500 }),
+  "page-change-status-503": pageChangeFixture({ status: 503 }),
+  "page-change-mcp-unlisted": pageChangeFixture({
+    mcp: {
+      listed: false,
+      method: null,
+      charged: false,
+      paidTool: false,
+      session: true,
+      callOk: false,
+      paymentChallenge: false,
+    },
+  }),
+  "page-change-mcp-payment-challenge": pageChangeFixture({
+    mcp: {
+      listed: true,
+      method: null,
+      charged: null,
+      paidTool: true,
+      session: true,
+      callOk: false,
+      paymentChallenge: true,
+    },
+  }),
 };
 
 const FAIL_FIXTURES = new Set([
@@ -217,7 +290,17 @@ const FAIL_FIXTURES = new Set([
   "lockfile-on-mpp",
   "route-binding-method-mismatch",
   "route-binding-missing-handler",
+  "route-binding-proxy-paidhttp-absent",
+  "route-binding-proxy-paidhttp-wrong-method",
+  "route-binding-proxy-paidhttp-wrong-path",
+  "route-binding-proxy-paidhttp-malformed",
   "page-change-settlement-demanded",
+  "page-change-status-404",
+  "page-change-status-405",
+  "page-change-status-500",
+  "page-change-status-503",
+  "page-change-mcp-unlisted",
+  "page-change-mcp-payment-challenge",
 ]);
 
 function nodeInfo() {
@@ -470,6 +553,72 @@ async function mcpSession(origin) {
     throw error;
   }
   return { extra, tools, protocol: initialized.payload.result.protocolVersion || null };
+}
+
+function mcpResultBody(payload) {
+  const result = payload?.result;
+  if (!result || typeof result !== "object") return { result: null, body: null };
+  const structured = result.structuredContent;
+  if (structured && typeof structured === "object" && !Array.isArray(structured)) {
+    return { result, body: structured };
+  }
+  const text = Array.isArray(result.content)
+    ? result.content.find((item) => item?.type === "text")?.text
+    : null;
+  if (typeof text !== "string") return { result, body: null };
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return { result, body: parsed };
+  } catch {
+    return { result, body: null };
+  }
+  return { result, body: null };
+}
+
+function listedToolIsPaid(tool) {
+  const meta = tool?._meta;
+  if (!meta || typeof meta !== "object") return false;
+  const accepts = meta?.x402?.accepts || meta?.["x402/payment"]?.accepts;
+  if (Array.isArray(accepts) && accepts.length > 0) return true;
+  return meta.samedaydesk?.charged === true || meta.samedaydesk?.paymentRequired === true;
+}
+
+function pageChangeArtifact() {
+  return {
+    product: "samedaydesk-extract-batch",
+    sources: [{
+      id: "item-001",
+      source: "https://example.com/a",
+      status: "success",
+      data: { title: "Same" },
+    }],
+  };
+}
+
+async function callFreePageChange(origin, extra, artifact) {
+  const called = await postMcp(origin, {
+    jsonrpc: "2.0",
+    id: 3,
+    method: "tools/call",
+    params: {
+      name: "page_change",
+      arguments: { before: artifact, after: artifact, fields: ["title"] },
+    },
+  }, extra);
+  const { result, body } = mcpResultBody(called.payload);
+  const challenge = Boolean(
+    called.headers.get("www-authenticate")
+    || called.headers.has("payment-required")
+    || (body && Number.isInteger(body.x402Version) && Array.isArray(body.accepts))
+  );
+  const charged = body && Object.hasOwn(body, "charged") ? body.charged : null;
+  const callOk = called.status === 200
+    && called.payload?.error == null
+    && result?.isError !== true
+    && body?.ok === true
+    && charged === false
+    && !challenge;
+  return { called, result, body, charged, challenge, callOk };
 }
 
 function evaluateFixture(fixture) {
@@ -874,7 +1023,12 @@ async function runCatalog(origin) {
 }
 
 function merchantChildEnv(extra = {}) {
+  const forwarded = {};
+  for (const key of ["EXTRACT_BATCH_ENABLED", "LOCKFILE_PIN_DELTA_ENABLED"]) {
+    if (process.env[key]) forwarded[key] = process.env[key];
+  }
   return {
+    ...forwarded,
     PATH: process.env.PATH || "",
     HOME: process.env.HOME || "",
     LANG: process.env.LANG || "C.UTF-8",
@@ -1024,6 +1178,7 @@ async function runLiveRouteInspect() {
       catalogActions: report.catalogActions,
       freeRecipes: report.freeRecipes,
       mcpTools: report.mcpTools,
+      proxyTools: report.proxyTools || [],
       pageChange: report.pageChange,
     },
   };
@@ -1053,7 +1208,7 @@ async function runLivePageChange() {
         const error = new Error(`page-change merchant timed out: ${output.slice(-1500)}`);
         error.code = "evidence-unavailable";
         reject(error);
-      }, 30000);
+      }, 45000);
       const finish = (error) => {
         clearTimeout(timer);
         child.off("exit", onExit);
@@ -1061,49 +1216,46 @@ async function runLivePageChange() {
         else resolve();
       };
       const onData = () => {
-        if (output.includes(`x402-merchant listening on :${port}`)) finish();
+        if (output.includes("/mcp mount FAILED")) {
+          finish(Object.assign(new Error(`page-change MCP did not mount: ${output.slice(-1500)}`), { code: "evidence-unavailable" }));
+        } else if (output.includes("MCP server:  POST /mcp")) {
+          finish();
+        }
       };
       const onExit = (code, signal) => finish(Object.assign(new Error(`page-change merchant exited ${code} ${signal}: ${output.slice(-1500)}`), { code: "evidence-unavailable" }));
       child.stdout.on("data", onData);
       child.stderr.on("data", onData);
       child.once("exit", onExit);
-      if (output.includes(`x402-merchant listening on :${port}`)) finish();
+      if (output.includes("/mcp mount FAILED")) onData();
+      else if (output.includes("MCP server:  POST /mcp")) onData();
     });
     const base = `http://127.0.0.1:${port}`;
-    const artifact = {
-      product: "samedaydesk-extract-batch",
-      sources: [{
-        id: "item-001",
-        source: "https://example.com/a",
-        status: "success",
-        data: { title: "Same" },
-      }],
-    };
-    const [catalogResponse, openapiResponse, llmsResponse, healthResponse, mcpResponse, unpaidResponse] = await Promise.all([
+    const artifact = pageChangeArtifact();
+    const [catalogResponse, openapiResponse, llmsResponse, healthResponse, unpaidResponse] = await Promise.all([
       fetchUnpaid(new URL("/api/actions", base).href),
       fetchUnpaid(new URL("/openapi.json", base).href),
       fetchUnpaid(new URL("/llms.txt", base).href),
       fetchUnpaid(new URL("/healthz", base).href),
-      fetchUnpaid(new URL("/mcp", base).href),
       fetchUnpaid(new URL("/recipes/page-change", base).href, {
         method: "POST",
         body: { before: artifact, after: artifact, fields: ["title"] },
       }),
     ]);
-    if ([catalogResponse, openapiResponse, healthResponse, mcpResponse].some((item) => item.status !== 200)) {
+    if ([catalogResponse, openapiResponse, healthResponse].some((item) => item.status !== 200)) {
       const error = new Error("page-change listing surfaces were not all readable");
       error.code = "evidence-unavailable";
       throw error;
     }
+    const session = await mcpSession(base);
+    const listedTool = session.tools.find((tool) => tool.name === "page_change") || null;
+    const call = listedTool ? await callFreePageChange(base, session.extra, artifact) : null;
     const catalog = JSON.parse(catalogResponse.text);
     const openapi = JSON.parse(openapiResponse.text);
     const healthz = JSON.parse(healthResponse.text);
-    const mcp = JSON.parse(mcpResponse.text);
     let unpaidBody = null;
     try { unpaidBody = JSON.parse(unpaidResponse.text); } catch { unpaidBody = null; }
     const free = (catalog.freeRecipes || []).find((recipe) => recipe.route === "/recipes/page-change") || null;
     const operation = openapi.paths?.["/recipes/page-change"]?.post;
-    const freeTool = (mcp.freeTools || []).find((tool) => tool.name === "page_change") || null;
     const snapshot = {
       catalogFree: free ? {
         method: free.method,
@@ -1127,10 +1279,13 @@ async function runLivePageChange() {
         priced: Object.hasOwn(healthz.prices || {}, "page-change") || Object.hasOwn(healthz.prices || {}, "recipes/page-change"),
       },
       mcp: {
-        listed: Boolean(freeTool),
-        method: freeTool?.method || null,
-        charged: freeTool ? freeTool.charged : null,
-        paidTool: (mcp.freeTools || []).some((tool) => tool.name === "page_change" && tool.charged === true),
+        listed: Boolean(listedTool),
+        method: listedTool?.method ?? null,
+        charged: call?.charged === false ? false : (call ? call.charged : false),
+        paidTool: listedToolIsPaid(listedTool) || call?.challenge === true,
+        session: true,
+        callOk: call?.callOk === true,
+        paymentChallenge: call?.challenge === true,
       },
       unpaid: {
         status: unpaidResponse.status,
@@ -1141,14 +1296,43 @@ async function runLivePageChange() {
       },
     };
     const verdict = pageChangeListingVerdict(snapshot);
+    const mcpProof = {
+      initialize: true,
+      protocol: session.protocol,
+      listed: Boolean(listedTool),
+      called: call ? "page_change" : null,
+      callOk: call?.callOk === true,
+      charged: call?.charged ?? null,
+      paymentChallenge: call?.challenge === true,
+      descriptorUsed: false,
+    };
     return {
-      evidence: [evidenceItem(
-        "page-change-listing",
-        true,
-        verdict,
-        { consistent: true, settlementDemanded: false, charged: false, problems: [] },
-        "live free POST /recipes/page-change matches the catalog and does not demand settlement",
-      )],
+      evidence: [
+        evidenceItem(
+          "page-change-listing",
+          true,
+          verdict,
+          { consistent: true, settlementDemanded: false, charged: false, problems: [] },
+          "live free POST /recipes/page-change is HTTP 200 and does not demand settlement",
+        ),
+        evidenceItem(
+          "page-change-mcp-call",
+          true,
+          mcpProof,
+          {
+            initialize: true,
+            protocol: session.protocol,
+            listed: true,
+            called: "page_change",
+            callOk: true,
+            charged: false,
+            paymentChallenge: false,
+            descriptorUsed: false,
+          },
+          "page_change is proven by MCP initialize, tools/list, and an unpaid tools/call",
+        ),
+      ],
+      toolsCalled: Boolean(call),
       result: {
         profile: "local",
         origin: base,
@@ -1156,6 +1340,7 @@ async function runLivePageChange() {
         charged: unpaidBody?.charged ?? null,
         settlementDemanded: verdict.settlementDemanded,
         problems: verdict.problems,
+        mcp: mcpProof,
       },
     };
   } finally {
@@ -1172,6 +1357,7 @@ async function dispatch(command, flags) {
       return { evidence: await runLocalFixture(flags.fixture), boundary, result: { profile: "local", fixture: flags.fixture } };
     }
     const live = command === "routes inspect" ? await runLiveRouteInspect() : await runLivePageChange();
+    if (live.toolsCalled === true) boundary.toolsCalled = true;
     return { evidence: live.evidence, boundary, result: live.result };
   }
   if (flags.profile === "local") {
