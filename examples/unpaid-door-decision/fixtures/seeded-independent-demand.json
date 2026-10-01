@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "samedaydesk.unpaid-door-decision-receipt.v1",
+  "taskId": "classify-unpaid-seller-door",
+  "independentDemandConfirmed": true,
+  "actorLabel": "independent",
+  "actorLabelEvidence": "seeded_self_report",
+  "cashUsd": 0,
+  "ownerQa": "unknown",
+  "decision": "paid_audit_required",
+  "note": "Seeded failure. A self-reported independent actor is not independent demand, and this inventory did not require the paid audit."
+}

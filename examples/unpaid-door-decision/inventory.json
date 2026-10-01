@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "samedaydesk.unpaid-door-inventory.v1",
+  "note": "Named sources only. This is not a seller census and it does not add a route.",
+  "entries": [
+    {
+      "id": "issue3249-root",
+      "source": "https://github.com/x402-foundation/x402/issues/3249 opened 2026-08-24. Invented-path control from comment 5402932983.",
+      "method": "GET",
+      "url": "https://published-zeta.vercel.app/",
+      "controlUrl": "https://published-zeta.vercel.app/.well-known/zzq-invented-control-9931",
+      "requiredPaths": []
+    },
+    {
+      "id": "t1-bronzetti-brief",
+      "source": "Maintained capture fixtures/discovery-drift/t1-s94.",
+      "method": "GET",
+      "url": "https://agent-economy-signal-x402-mainnet.bronzetti-andrea.workers.dev/premium/agent-brief",
+      "openapiUrl": "https://agent-economy-signal-x402-mainnet.bronzetti-andrea.workers.dev/openapi.json",
+      "route": "/premium/agent-brief",
+      "requiredPaths": ["generated_at", "decision", "next_action"]
+    },
+    {
+      "id": "merchant-extract",
+      "source": "Documented merchant GET /extract.",
+      "method": "GET",
+      "url": "https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com",
+      "openapiUrl": "https://agents.samedaydesk.com/openapi.json",
+      "route": "/extract",
+      "requiredPaths": ["ok", "title", "finalUrl"]
+    },
+    {
+      "id": "merchant-lockfile-get",
+      "source": "Documented POST /lockfile-pin-delta probed with GET.",
+      "method": "GET",
+      "url": "https://agents.samedaydesk.com/lockfile-pin-delta",
+      "openapiUrl": "https://agents.samedaydesk.com/openapi.json",
+      "route": "/lockfile-pin-delta",
+      "requiredPaths": []
+    }
+  ]
+}

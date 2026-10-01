@@ -1,0 +1,268 @@
+{
+  "schemaVersion": "samedaydesk.unpaid-door-evidence.v1",
+  "observedAt": "2026-10-01T10:16:28Z",
+  "paymentSent": false,
+  "actor": "unknown",
+  "assumptions": {
+    "usdcDecimals": 6,
+    "usdcDecimalsScope": "USD catalog text converts to atomic units only when the single unpaid accept is Base USDC on eip155:8453. Otherwise the amount comparison is unknown.",
+    "cashUsd": 0,
+    "tokenNote": "Replaying the saved evidence does not call a model. A live refetch is unpaid HTTPS only."
+  },
+  "observedUnpaidAudit": {
+    "source": "Unpaid GET /commerce/seller-integrity-audit on https://agents.samedaydesk.com at 2026-10-01T10:16:28Z",
+    "amountAtomic": "10000",
+    "network": "eip155:8453",
+    "baseUsdc": true,
+    "maxTimeoutSeconds": 300,
+    "paymentSent": false,
+    "bodyPurchased": false
+  },
+  "demand": {
+    "generatedAt": "2026-10-01T10:17:03.086Z",
+    "requestedWindowCoverage": "unknown_for_full_window",
+    "independentPaidSuccessActors": 0,
+    "repeatIndependentPaidSuccessActors": 0,
+    "paidSuccessActors": 1,
+    "repeatPaidSuccessActors": 0,
+    "note": "The public counter is inside unknown_for_full_window. A zero there is not a historical zero and is not independent demand. The one paid-success actor is not labeled independent."
+  },
+  "mcp": {
+    "source": "Unpaid POST https://agents.samedaydesk.com/mcp initialize and tools/list at 2026-10-01T10:31:21.362Z, protocol 2025-11-25, server x402-data-gateway 1.23.49. GET /mcp at 2026-10-01T10:16:28Z reported toolCount 24 and freeTools page_change.",
+    "toolsListObservedAt": "2026-10-01T10:31:21.362Z",
+    "protocolVersion": "2025-11-25",
+    "serverVersion": "1.23.49",
+    "descriptorToolCount": 24,
+    "toolCountListed": 25,
+    "descriptorInterpretation": "toolCount 24 plus the separately named free page_change tool matches the 25 names from tools/list. This is not a catalog contradiction.",
+    "sellerIntegrityAuditPresent": true,
+    "paymentAttempted": false,
+    "freeTools": ["page_change"],
+    "toolNames": [
+      "agent_discoverability_audit",
+      "agent_surface_budget_audit",
+      "contract_qualified_search",
+      "deep_audit",
+      "enrich",
+      "extract",
+      "extract_batch",
+      "lockfile_pin_delta",
+      "morpho_market_underwrite",
+      "morpho_position",
+      "morpho_preliquidation_replay",
+      "morpho_protection",
+      "opportunity_preflight",
+      "page_change",
+      "payment_offer_preflight",
+      "read",
+      "scan",
+      "schemaforge",
+      "seller_integrity_audit",
+      "settlement_proof",
+      "solana_transaction_receipt",
+      "stateful_wallet_policy_conformance",
+      "transaction_receipt",
+      "wallet_enrich",
+      "wallet_policy_conformance"
+    ]
+  },
+  "rows": [
+    {
+      "id": "t1-bronzetti-brief",
+      "source": "Maintained capture fixtures/discovery-drift/t1-s94, first observed 2026-09-10T07:21:38Z. Unpaid refetch 2026-10-01T10:16:28Z. Free OpenAPI 200 and /.well-known/x402 200 on the same origin.",
+      "evidenceClass": "public_replay",
+      "observedAt": "2026-10-01T10:16:28Z",
+      "method": "GET",
+      "urlPath": "/premium/agent-brief",
+      "status": 402,
+      "payment": {
+        "parsed": true,
+        "acceptCount": 1,
+        "scheme": "exact",
+        "amountAtomic": "20000",
+        "network": "eip155:8453",
+        "baseUsdc": true,
+        "maxTimeoutSeconds": 300
+      },
+      "catalog": {
+        "method": "GET",
+        "amountUsd": "0.02",
+        "schemaPresent": true,
+        "schemaRequired": ["generated_at", "valid_for_seconds", "decision", "evidence", "next_action", "price_usd"]
+      },
+      "requiredPaths": ["generated_at", "decision", "next_action"]
+    },
+    {
+      "id": "issue3249-root",
+      "source": "https://github.com/x402-foundation/x402/issues/3249 opened 2026-08-24. Invented-path control from comment 5402932983 on 2026-08-24. Unpaid refetch 2026-10-01T10:16:28Z.",
+      "evidenceClass": "public_replay",
+      "observedAt": "2026-10-01T10:16:28Z",
+      "method": "GET",
+      "urlPath": "/",
+      "status": 402,
+      "payment": { "parsed": false, "acceptCount": 0 },
+      "body": {
+        "byteLength": 57,
+        "sha256": "deaef0b6030ffe6fedc2148a0ab97d938e49b47dce19266dae5d551c1ad45b29",
+        "text": "{\"error\": {\"code\": \"402\", \"message\": \"Payment required\"}}",
+        "note": "The 2026-08-24 comment quoted a DEPLOYMENT_DISABLED body. The 2026-10-01 body is this JSON error. Payment metadata is still absent."
+      },
+      "control": {
+        "path": "/.well-known/zzq-invented-control-9931",
+        "status": 402,
+        "paymentParsed": false,
+        "byteLength": 57
+      },
+      "requiredPaths": []
+    },
+    {
+      "id": "issue3249-manifest",
+      "source": "x402-foundation/x402#3249 named /.well-known/x402-manifest.json. Unpaid refetch 2026-10-01T10:16:28Z.",
+      "evidenceClass": "public_replay",
+      "observedAt": "2026-10-01T10:16:28Z",
+      "method": "GET",
+      "urlPath": "/.well-known/x402-manifest.json",
+      "status": 402,
+      "payment": { "parsed": false, "acceptCount": 0 },
+      "body": { "byteLength": 57 },
+      "requiredPaths": []
+    },
+    {
+      "id": "issue3249-canonical",
+      "source": "x402#3249 comment 5402932983 canonical /.well-known/x402 control. Unpaid refetch 2026-10-01T10:16:28Z.",
+      "evidenceClass": "public_replay",
+      "observedAt": "2026-10-01T10:16:28Z",
+      "method": "GET",
+      "urlPath": "/.well-known/x402",
+      "status": 402,
+      "payment": { "parsed": false, "acceptCount": 0 },
+      "body": { "byteLength": 57 },
+      "requiredPaths": []
+    },
+    {
+      "id": "merchant-extract",
+      "source": "Documented merchant GET /extract. Unpaid refetch 2026-10-01T10:16:28Z. Free /openapi.json required fields for HTTP 200.",
+      "evidenceClass": "public_replay",
+      "observedAt": "2026-10-01T10:16:28Z",
+      "method": "GET",
+      "urlPath": "/extract",
+      "status": 402,
+      "payment": {
+        "parsed": true,
+        "acceptCount": 1,
+        "scheme": "exact",
+        "amountAtomic": "5000",
+        "network": "eip155:8453",
+        "baseUsdc": true,
+        "maxTimeoutSeconds": 300
+      },
+      "catalog": {
+        "method": "GET",
+        "amountAtomic": "5000",
+        "amountUsd": "0.005",
+        "schemaPresent": true,
+        "schemaRequired": ["ok", "url", "title", "status", "sourceOk", "requestedUrl", "finalUrl"]
+      },
+      "linkRels": ["service-desc"],
+      "requiredPaths": ["ok", "title", "finalUrl"]
+    },
+    {
+      "id": "merchant-healthz",
+      "source": "Documented merchant GET /healthz. Unpaid 2026-10-01T10:16:28Z. prices.seller-integrity-audit was $0.01 and prices.extract was $0.005.",
+      "evidenceClass": "public_replay",
+      "observedAt": "2026-10-01T10:16:28Z",
+      "method": "GET",
+      "urlPath": "/healthz",
+      "status": 200,
+      "payment": { "parsed": false, "acceptCount": 0 },
+      "requiredPaths": []
+    },
+    {
+      "id": "merchant-audit-door",
+      "source": "Unpaid door of the existing GET /commerce/seller-integrity-audit. The audit body was not purchased.",
+      "evidenceClass": "public_replay",
+      "observedAt": "2026-10-01T10:16:28Z",
+      "method": "GET",
+      "urlPath": "/commerce/seller-integrity-audit",
+      "status": 402,
+      "payment": {
+        "parsed": true,
+        "acceptCount": 1,
+        "scheme": "exact",
+        "amountAtomic": "10000",
+        "network": "eip155:8453",
+        "baseUsdc": true,
+        "maxTimeoutSeconds": 300
+      },
+      "catalog": { "method": "GET", "schemaPresent": true },
+      "requiredPaths": []
+    },
+    {
+      "id": "merchant-manifest",
+      "source": "Pilot252 D1 contradiction: GET /.well-known/x402-manifest.json on the merchant. Unpaid 2026-10-01T10:16:28Z. The served catalog is /.well-known/x402.",
+      "evidenceClass": "public_replay",
+      "observedAt": "2026-10-01T10:16:28Z",
+      "method": "GET",
+      "urlPath": "/.well-known/x402-manifest.json",
+      "status": 404,
+      "payment": { "parsed": false, "acceptCount": 0 },
+      "requiredPaths": []
+    },
+    {
+      "id": "merchant-lockfile-get",
+      "source": "Documented POST /lockfile-pin-delta probed with GET. GET was 404. OPTIONS returned Allow: POST. Free OpenAPI declares post only.",
+      "evidenceClass": "public_replay",
+      "observedAt": "2026-10-01T10:16:28Z",
+      "method": "GET",
+      "urlPath": "/lockfile-pin-delta",
+      "status": 404,
+      "allow": "POST",
+      "allowSource": "OPTIONS",
+      "payment": { "parsed": false, "acceptCount": 0 },
+      "catalog": { "method": "POST", "schemaPresent": true },
+      "requiredPaths": []
+    },
+    {
+      "id": "merchant-lockfile-post",
+      "source": "Unpaid POST /lockfile-pin-delta with no body and no payment header. 2026-10-01T10:16:28Z.",
+      "evidenceClass": "public_replay",
+      "observedAt": "2026-10-01T10:16:28Z",
+      "method": "POST",
+      "urlPath": "/lockfile-pin-delta",
+      "status": 402,
+      "payment": {
+        "parsed": true,
+        "acceptCount": 1,
+        "scheme": "exact",
+        "amountAtomic": "5000",
+        "network": "eip155:8453",
+        "baseUsdc": true
+      },
+      "catalog": { "method": "POST" },
+      "requiredPaths": []
+    },
+    {
+      "id": "merchant-mcp-get",
+      "source": "Unpaid GET https://agents.samedaydesk.com/mcp descriptor. toolCount 24 with freeTools page_change.",
+      "evidenceClass": "public_replay",
+      "observedAt": "2026-10-01T10:16:28Z",
+      "method": "GET",
+      "urlPath": "/mcp",
+      "status": 200,
+      "payment": { "parsed": false, "acceptCount": 0 },
+      "requiredPaths": []
+    },
+    {
+      "id": "minia2a-root",
+      "source": "x402#3249 comment 5668426979 on 2026-09-14 named the host minia2a.uk and did not name a path. Only GET / was requested. The trialExhausted route was not in the source inventory and was not searched for.",
+      "evidenceClass": "public_replay",
+      "observedAt": "2026-10-01T10:16:28Z",
+      "method": "GET",
+      "urlPath": "/",
+      "status": 200,
+      "payment": { "parsed": false, "acceptCount": 0 },
+      "requiredPaths": [],
+      "routeNotInSource": true
+    }
+  ]
+}
