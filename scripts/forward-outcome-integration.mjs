@@ -1,8 +1,8 @@
 import { spawnSync } from "node:child_process";
-import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { chmod, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { createCommerceTelemetry } from "../commerce-events.mjs";
 import {
@@ -126,6 +126,23 @@ export async function produceForwardOutcome() {
     });
     if (sent.nextRuns !== 1) fail(errors, "middleware did not continue the response");
     if (sent.output.toString("utf8") !== JSON.stringify(goodBody)) fail(errors, "telemetry changed the merchant response body");
+    await telemetry.flush();
+    await chmod(telemetry.paths.outcomeBindingPath, 0o400);
+    let failureDeliveryOk = false;
+    try {
+      const duringFailure = emit(telemetry, {
+        requestPath: "/extract",
+        headers: boundHeaders("op-controlled", "controlled_test"),
+        query: { url: "https://ok.example/" },
+        body: goodBody,
+      });
+      await telemetry.flush();
+      failureDeliveryOk = duringFailure.nextRuns === 1
+        && duringFailure.output.toString("utf8") === JSON.stringify(goodBody);
+    } finally {
+      await chmod(telemetry.paths.outcomeBindingPath, 0o600);
+    }
+    if (!failureDeliveryOk) fail(errors, "telemetry write failure changed service delivery");
 
     emit(telemetry, {
       requestPath: "/openapi.json",
@@ -413,7 +430,17 @@ export async function produceForwardOutcome() {
     await writeFile(telemetry.paths.outcomeBindingPath, torn.subarray(0, 12));
     const rotatedBytes = await readFile(telemetry.paths.outcomeBindingRotatedPath);
     const currentBytes = await readFile(telemetry.paths.outcomeBindingPath);
-    const commerceBytes = await readFile(telemetry.paths.currentPath);
+    const rotatedCommerce = await readFile(telemetry.paths.rotatedPath).catch((error) => (
+      error?.code === "ENOENT" ? Buffer.alloc(0) : Promise.reject(error)
+    ));
+    const commerceCurrent = await readFile(telemetry.paths.currentPath);
+    const commerceBytes = Buffer.concat([
+      rotatedCommerce,
+      rotatedCommerce.length > 0 && !rotatedCommerce.subarray(-1).equals(Buffer.from("\n"))
+        ? Buffer.from("\n")
+        : Buffer.alloc(0),
+      commerceCurrent,
+    ]);
     const forwardBytes = Buffer.concat([rotatedBytes, currentBytes]);
     return {
       ok: errors.length === 0,
@@ -428,6 +455,99 @@ export async function produceForwardOutcome() {
     else process.env.HTTP_DELIVERY_EVIDENCE_SETTLEMENT_CLASS = previousClass;
     await rm(sideDir, { recursive: true, force: true });
   }
+}
+
+function settlementRefs(fixture) {
+  const site = fixture.sites.find((row) => row.id === "samedaydesk");
+  return site.merchantEvidence.settlements
+    .map((row) => String(row.settlementReference).toLowerCase())
+    .sort();
+}
+
+function atomicSum(rows) {
+  return rows.reduce((sum, row) => sum + BigInt(row.amountAtomic), 0n);
+}
+
+async function proveRecordedAdapter(pilotRoot, produced) {
+  const errors = [];
+  const fixturePath = path.join(
+    pilotRoot,
+    "tools/ops/three-site-settlement-join/fixtures/merchant-classified.json",
+  );
+  const fixtureBytes = await readFile(fixturePath);
+  const fixture = JSON.parse(fixtureBytes.toString("utf8"));
+  const site = fixture.sites.find((row) => row.id === "samedaydesk");
+  const root = path.join(pilotRoot, "tools/ops/three-site-settlement-join/src");
+  const [{ joinThreeSite, adaptSameDayDesk }, { classifySettlements }] = await Promise.all([
+    import(pathToFileURL(path.join(root, "index.mjs")).href),
+    import(pathToFileURL(path.join(root, "records.mjs")).href),
+  ]);
+  const adapted = adaptSameDayDesk(site.merchantEvidence);
+  const classified = classifySettlements([adapted]);
+  const joined = joinThreeSite(fixture);
+  const accepted = classified.samedaydesk.accepted.map((row) => row.settlementReference).sort();
+  const expectedRefs = settlementRefs(fixture);
+  const expectedAmount = atomicSum(site.merchantEvidence.settlements);
+  const acceptedAmount = Object.values(classified.samedaydesk.byClassAtomic)
+    .reduce((sum, value) => sum + BigInt(value), 0n);
+  if (adapted.adapter?.name !== "samedaydesk-v1") errors.push("recorded fixture did not use the samedaydesk-v1 adapter");
+  if (accepted.join() !== expectedRefs.join() || acceptedAmount !== expectedAmount) {
+    errors.push("adapter output did not match the recorded reconciler rows");
+  }
+  if (joined.money.recognizedRevenueAtomic !== "0" || joined.claims.settledPayment !== false || joined.claims.moneyMoved !== false) {
+    errors.push("recorded adapter booked revenue or a settled payment");
+  }
+  const settled = joined.sites.samedaydesk.evidence.settledPayment;
+  if (settled.status !== "unestablished" || settled.reason !== "serialized_reconciler_output_is_not_authenticated_chain_evidence") {
+    errors.push("recorded reconciler output was treated as chain proof");
+  }
+  if (accepted.includes(H15_TX)) errors.push("closed H15 expense was inside the recorded fixture projection");
+  const seeded = structuredClone(fixture);
+  seeded.sites.find((row) => row.id === "samedaydesk").merchantEvidence.settlements[0].state = "pending";
+  const seededJoin = joinThreeSite(seeded);
+  const seededReasons = seededJoin.sites.samedaydesk.settlement.quarantined.map((row) => row.reason);
+  if (seededJoin.sites.samedaydesk.settlement.gate !== "reject"
+    || !seededReasons.includes("invalid_settlement_record")
+    || seededJoin.money.recognizedRevenueAtomic !== "0"
+    || seededJoin.sites.samedaydesk.evidence.settledPayment.status !== "unestablished") {
+    errors.push("seeded non-reconciled row was not rejected");
+  }
+  const promoted = structuredClone(fixture);
+  const promotedSite = promoted.sites.find((row) => row.id === "samedaydesk");
+  promotedSite.merchantEvidence.settlements[0].settlementReference = H15_TX;
+  const promotedJoin = joinThreeSite(promoted);
+  if (promotedJoin.money.recognizedRevenueAtomic !== "0"
+    || promotedJoin.claims.settledPayment !== false
+    || promotedJoin.claims.moneyMoved !== false
+    || promotedJoin.sites.samedaydesk.evidence.settledPayment.status !== "unestablished") {
+    errors.push("closed H15 expense was promoted to customer revenue");
+  }
+  const probe = createCommerceTelemetry({
+    dataDir: produced.dataDir,
+    secret: "forward-outcome-actor-secret",
+    internalToken: TOKEN,
+  });
+  const unbound = await probe.observeRuntimeSettlementReadback({
+    internalToken: TOKEN,
+    operationId: "op-controlled",
+    receiptDigest: produced.controlledDigest,
+    readback: site.merchantEvidence.settlements[0],
+  });
+  await probe.flush();
+  if (unbound?.accepted || unbound?.reason !== "unbound_artifact") {
+    errors.push(`recorded reconciler row was attached to a different delivery (${unbound?.reason})`);
+  }
+  return {
+    ok: errors.length === 0,
+    errors,
+    adapter: adapted.adapter.name,
+    accepted: accepted.length,
+    revenue: joined.money.recognizedRevenueAtomic,
+    settled: settled.status,
+    seededRejected: seededJoin.sites.samedaydesk.settlement.gate === "reject",
+    h15Revenue: promotedJoin.money.recognizedRevenueAtomic,
+    unbound: unbound?.reason === "unbound_artifact",
+  };
 }
 
 function importBytes(pilotRoot, bytes) {
@@ -458,7 +578,8 @@ export async function runCleanClient(pilotRoot = PILOT_ROOT) {
   }
   const combined = Buffer.concat([produced.commerceBytes, Buffer.from("\n"), produced.forwardBytes]);
   const imported = importBytes(pilotRoot, combined);
-  const errors = [];
+  const adapterProof = await proveRecordedAdapter(pilotRoot, produced);
+  const errors = [...adapterProof.errors];
   if (imported.status !== 0) errors.push(`importer exit ${imported.status}: ${imported.stderr}`);
   let receipt = null;
   try {
@@ -553,6 +674,13 @@ export async function runCleanClient(pilotRoot = PILOT_ROOT) {
     `wrong_brand_quarantine: ${branded?.quarantine?.includes("wrong_brand") === true}`,
     `wrong_receipt_quarantine: ${wrongReceiptOp?.quarantine?.includes("wrong_receipt") === true}`,
     `header_settlement_unbound: ${receipt?.historical?.observations?.some((row) => row.settlementReference === HEADER_TX && row.canonicalJoin === false) === true}`,
+    `adapter: ${adapterProof.adapter}`,
+    `adapter_accepted_records: ${adapterProof.accepted}`,
+    `adapter_recognized_revenue: ${adapterProof.revenue}`,
+    `adapter_settled_payment: ${adapterProof.settled}`,
+    `seeded_adapter_reject: ${adapterProof.seededRejected}`,
+    `h15_promoted_revenue: ${adapterProof.h15Revenue}`,
+    `fixture_readback_unbound: ${adapterProof.unbound}`,
     `errors: ${errors.length}`,
   ].join("\n");
   return { ok: errors.length === 0, errors, report };

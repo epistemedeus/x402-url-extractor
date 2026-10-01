@@ -13,3 +13,9 @@ The forward file is `commerce-outcome-binding.ndjson`, rotated once to `commerce
 Schema: `samedaydesk.outcome-binding.forward.v2`. `producerBaseCommit` is `ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048`. `writerId` is `x402-url-extractor.createCommerceTelemetry.forward-v2`. v1 rows remain readable by the consumer and cannot satisfy schema-valid delivery.
 
 Recognized revenue stays 0. A controlled evidence join is not external customer demand. The closed H15 sponsored expense stays closed. No public endpoint was added.
+
+## Deployment and rollback
+
+No route, price, SKU, or human page changes. `createCommerceTelemetry` also appends `commerce-outcome-binding.ndjson`, rotated once to `commerce-outcome-binding.1.ndjson`, mode `0600`, on the existing single-writer queue. A failed append is discarded and the HTTP response is the merchant handler's response. Existing `commerce-events` v1 rows stay readable and are not backfilled.
+
+Rollback is removing those two forward files and reverting this commit. Paid-success evidence, rare-funnel evidence, and the settlement ledger are separate files and stay in place. The Pilot measure commands are offline readers. `reconcile` without a file performs a read-only chain check; `--live` is refused. This integration does not run that chain check, sign a wallet, or submit a payment. The H15 pin `0x593559ea7a19277645a76e41aa29e713ed219db1f97e4be29c9dac9cf6cd4b37` stays a closed 0.20 USDC expense.
