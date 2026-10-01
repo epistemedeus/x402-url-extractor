@@ -1,0 +1,27 @@
+composition-route-knowledge 0.1.0 — SOURCE NOTICE
+
+Original MIT code in this directory. Node.js built-ins only. No npm install.
+
+The quote inspector is experiments/s20-route-compare-ro from Pilot commit
+f65cdfcb534b5fbcf5ad10a0062aa287bdb8c9c4 (heavy/s20-route-compare-ro-0930),
+also MIT, also Node built-ins only. The packed archive vendors that directory.
+It does not vendor epistemedeus/agent-traffic-intelligence. That evaluator has
+no LICENSE file and is not a public dependency. This consumer does not import it.
+
+The named compatibility result is the executed VF14 comparison, freeze digest
+c16c7a2d399a8652606de002055a1682cf4f80f46d6c3742cbcac041ccb19a8c, class
+different-adapter. Pilot commit d524bd43dc86fcbe716de0032ae2d6c8fcc3425a and
+current main share that comparison blob. This package cites the measured
+result. It does not copy the VF14 freeze archive or the solver harness.
+
+R6 decision text is copied from relay control/inputs/R6-100142, which records
+Pilot commit c9d479960aefaf4448bc92ec75a60806259ac32d. The copy is an input
+pin, not a second decision catalog.
+
+A clone of epistemedeus/pilot is not cold public entry. Cold entry is the
+versioned tarball after the Neomorphic receiving action in
+export/NEOMORPHIC-RECEIVING.json. Until that host serves the bytes,
+hostedAcquisitionVerified stays false and launched stays false.
+
+This program does not spend, sign, take custody, publish a price, or rank a
+route. A missing fee is not zero.

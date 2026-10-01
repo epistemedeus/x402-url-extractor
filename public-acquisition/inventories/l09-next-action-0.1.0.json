@@ -1,0 +1,3909 @@
+{
+  "schema": "samedaydesk.public-acquisition.members.v1",
+  "id": "l09-next-action",
+  "version": "0.1.0",
+  "archiveSha256": "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0",
+  "memberCount": 650,
+  "members": [
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0",
+      "sha256": null
+    },
+    {
+      "bytes": 1386,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/COLD-INSTALL.txt",
+      "sha256": "c842f40be4c13e8882e2dc0d6ad1534150c8395555193d09b2b36417629d2772"
+    },
+    {
+      "bytes": 1395,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/LICENSE",
+      "sha256": "24c39339d59a9b969c17cf36e60fcebf9ac6c2fdc7155363d58f95a70d642722"
+    },
+    {
+      "bytes": 3270,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/LICENSE-PROVENANCE.json",
+      "sha256": "c01bb0d614287b76d746119df8c880e600b5713b1b4460a7139dcedd180706a1"
+    },
+    {
+      "bytes": 169,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/SOURCE-NOTICE.txt",
+      "sha256": "07aca8ab5cdc66e3972e9be99df733ae70ee651eabb4d95f7d1f5dafcce514a6"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912",
+      "sha256": null
+    },
+    {
+      "bytes": 1094,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912/LICENSE",
+      "sha256": "24a5b88893d78ef372153aea9ee3b0ccbca7aab04d914eeaa7717df77a6759ad"
+    },
+    {
+      "bytes": 1950,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912/SENSITIVITY-CONTRACT.json",
+      "sha256": "4870800a19175fed7ab56a93af0f401777d1cbef8a417afa854f3dc1d86bfaa9"
+    },
+    {
+      "bytes": 1905,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912/SOURCE-NOTICE.txt",
+      "sha256": "b5045343c5e46267e7da2c978adee78639a338ca17a06cc332ff0e45bedf88c1"
+    },
+    {
+      "bytes": 780,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912/package.json",
+      "sha256": "3ec12ad477d2487a971194a5b1bf57c3d31b33e43cb7d04cd1dff3701de77731"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912/src",
+      "sha256": null
+    },
+    {
+      "bytes": 4263,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912/src/constants.mjs",
+      "sha256": "c32008179a9c2fd2eda76103539012fcb20ca8ce3fc535c9eb6aec06b208d88e"
+    },
+    {
+      "bytes": 6541,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912/src/costs.mjs",
+      "sha256": "403c4695cde02f4f0557c185e33e68abae2515f4345ec51af28a62c40a8c22b4"
+    },
+    {
+      "bytes": 299,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912/src/errors.mjs",
+      "sha256": "2b4fa17c557f8d7d4cec25943e9a2b2ae070dec8ff2666542af34c75a7a8bc87"
+    },
+    {
+      "bytes": 2413,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912/src/honesty.mjs",
+      "sha256": "9ea52e59a2915863ce7b0e904222ad64adcd210290549456a6a01dd742e095f2"
+    },
+    {
+      "bytes": 1708,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912/src/load.mjs",
+      "sha256": "9aebf39b5a507b4d35a1724d0e251f897f7509763e42b80d6e2938b137e1392c"
+    },
+    {
+      "bytes": 4625,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912/src/money.mjs",
+      "sha256": "da76c98719c322817b31ae16ac343c67530f30268178244acfcb6817f95476a3"
+    },
+    {
+      "bytes": 7958,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912/src/quantity.mjs",
+      "sha256": "2e1fafa914f57af843099455421adbd3951936dc3d5e91eca2d87545bee4fbd6"
+    },
+    {
+      "bytes": 33839,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912/src/sensitivity.mjs",
+      "sha256": "60c60fa0c937a606f0bc53c40807da91092687bf9227aa7aaa669dfc740b6bf6"
+    },
+    {
+      "bytes": 4928,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912/src/tokens.mjs",
+      "sha256": "0f399bf028003f002adb59138fb291723c73fbb781ba42c2e32ad39d54aec1f8"
+    },
+    {
+      "bytes": 889,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912/src/units.mjs",
+      "sha256": "115e65c8e5f6d0c3b6a2e206ccec690105bd46c8fdeaf1fd7c9aeeb7f02c8590"
+    },
+    {
+      "bytes": 10811,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/bounty-economics-20260912/src/wallet.mjs",
+      "sha256": "58f4278218f3f8104a13cf7fcfcd1076e60427ee7c8cff5faf88699e99f91ad6"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/codex-window",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/codex-window/h36-earned-requester-integration",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/codex-window/h36-earned-requester-integration/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 1669,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/codex-window/h36-earned-requester-integration/fixtures/operator-declared-e18.json",
+      "sha256": "4cdac9452d6764e2562ba5f2fdafa6cd7883dcffc0b3fce5d10f536b574f4cbf"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076",
+      "sha256": null
+    },
+    {
+      "bytes": 1503,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/PINS.json",
+      "sha256": "89db2c8b50d125f0e3e8f6898274070b74d2b3579e9a32772b1f006bacdbcb4e"
+    },
+    {
+      "bytes": 7668,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/README.md",
+      "sha256": "71a1f5990c7f70c2551d189a6c2e7f019d01301758c90ed6da09ef181d0a37f5"
+    },
+    {
+      "bytes": 1522,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/SOURCE-NOTICE.txt",
+      "sha256": "88e3222c5852addd0b740a3ef25badfa12f86ddaeb96091785c6784a819d1706"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/bin",
+      "sha256": null
+    },
+    {
+      "bytes": 128,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/bin/l09.mjs",
+      "sha256": "de6865c08b03b6eec9dc5895053f6fdedbc217186e6eefff685d954610772afb"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/fixtures/bugzilla",
+      "sha256": null
+    },
+    {
+      "bytes": 309,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/fixtures/bugzilla/closed-only.json",
+      "sha256": "a15ce33de4d963f6cdf4b7b030b9493884b98dc8fa4103e6572c7024d10a3601"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/fixtures/decision",
+      "sha256": null
+    },
+    {
+      "bytes": 349,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/fixtures/decision/budget.json",
+      "sha256": "9e6e18f941b0366a9113677bbea91aba40a9787087719bfeced22fe403e5279d"
+    },
+    {
+      "bytes": 79,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/fixtures/decision/inventory-empty.json",
+      "sha256": "740365b1f97ecceb466ae04c04a82c3ee71b7891a178f750d5f03edc30f56763"
+    },
+    {
+      "bytes": 564,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/fixtures/decision/inventory-reuse.json",
+      "sha256": "49bd5134fc71351730a041a04229b65a91b19c5763c8b986c38ae764936fd294"
+    },
+    {
+      "bytes": 2052,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/fixtures/decision/snapshot.json",
+      "sha256": "2189bb3b3e57fa2cc9f913fff27d8403d143f445fbceab73b7820b5705f95a8e"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/fixtures/github",
+      "sha256": null
+    },
+    {
+      "bytes": 329,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/fixtures/github/search-later.json",
+      "sha256": "0b26c113272eeeff97ecd283963e43d536bb5c1452354a1af4683d0c14435cab"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/fixtures/reward",
+      "sha256": null
+    },
+    {
+      "bytes": 184,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/fixtures/reward/changed.json",
+      "sha256": "1009c151a299ca0802236f5a1348ac9202b01d7bcb9246430dbfc27a257cdf82"
+    },
+    {
+      "bytes": 250,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/fixtures/reward/claimant.json",
+      "sha256": "18af93b74f51636d4854cef3e95e9e19eba9cd876a393794c4e093e4424738c1"
+    },
+    {
+      "bytes": 236,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/fixtures/reward/synthetic-profit.json",
+      "sha256": "fbc249d41370438e050ba1895577ba9203a83d92ff40aeace8da7a1a1d59d177"
+    },
+    {
+      "bytes": 365,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/package.json",
+      "sha256": "e3a7e5b66515d4518ac1702ce839a3949919b7d1d98d370df410b1e0d64298ea"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/published",
+      "sha256": null
+    },
+    {
+      "bytes": 2378,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/published/README.md",
+      "sha256": "13e1cc57ad78a50fdfc8af3b5ee772ea6dad81d2408ef82980715995bd3f3a4e"
+    },
+    {
+      "bytes": 45418,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/published/cold-budget-decision.json",
+      "sha256": "2d76d68c3bc73f414ccc5e038583df871e3c26130c57d6c9b81edf8b242356ed"
+    },
+    {
+      "bytes": 12861,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/published/cold-shortlist.json",
+      "sha256": "b1984fa9572a96d876bf1d07d8d10f13dfd9fbf098965ff49361fe7581373c9d"
+    },
+    {
+      "bytes": 2008,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/published/contributor-task-spec.json",
+      "sha256": "c73e15955a2277ed00cf2e62c6fe992d43b246485453e8bead92515dbb4547eb"
+    },
+    {
+      "bytes": 2807,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/published/current-next-get.json",
+      "sha256": "eb35ab25d358c13ffdc6c6b7c8248ee12be4734d90c08d782e0c522257b69f50"
+    },
+    {
+      "bytes": 884,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/published/current-refresh-cache.json",
+      "sha256": "433a9b68a99fbb5cebce87a1be77823f3b8bde6c34c5a11f4b9ba92df3a9ac19"
+    },
+    {
+      "bytes": 12652,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/published/current-shortlist.json",
+      "sha256": "43e12fa1d0bd772da87911d9026895a2fa38c7bd43b6e2565cd27e33155e93d7"
+    },
+    {
+      "bytes": 295954,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/published/live-discovery-snapshot.json",
+      "sha256": "f20c3e72e1940617744ff74c94237c44c0ae5aa88ff620bf2e24822f5f51a1a7"
+    },
+    {
+      "bytes": 869,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/published/live-refresh-cache.json",
+      "sha256": "b963598e443c5ac7d9264ba89b7d639ef39ca05fdf524855becc926b4d7df9b2"
+    },
+    {
+      "bytes": 12600,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/published/live-shortlist.json",
+      "sha256": "ce987c7cca7d98668270a512cbd6ffea7163fc4bcf025245027a1c74e3e64319"
+    },
+    {
+      "bytes": 2759,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/published/next-get.json",
+      "sha256": "0bc3cdd07573a59ca3310d1330a95b5a1e4d8ad231b3607824d43fb142132d3e"
+    },
+    {
+      "bytes": 49031,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/published/opportunity-record.json",
+      "sha256": "b596aeb322d2b7908960b16b52ff7adec8d49c16e4eeebcad044c883389b93c2"
+    },
+    {
+      "bytes": 862,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/published/refresh-cache.json",
+      "sha256": "7fe85b959adcce0dc668307332707a928c5ed4c0f9c29ab18cbfaa1f11623833"
+    },
+    {
+      "bytes": 43579,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/published/stale-snapshot-decision.json",
+      "sha256": "1f870da01e8d5c082e2fb1781d0d41a8f4cdafcbdd625abec8655d78b90f2ee7"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/scripts",
+      "sha256": null
+    },
+    {
+      "bytes": 1531,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/scripts/live-probe.mjs",
+      "sha256": "d0092d7d7c44955eb297e6ab86f91447d78f18de5950038ca6ba83acace4ff30"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src",
+      "sha256": null
+    },
+    {
+      "bytes": 9339,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/answer.mjs",
+      "sha256": "a79f12446ff6932e7297b92316ef5af22b397a3e711cac1d33123dedb8625685"
+    },
+    {
+      "bytes": 8639,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/budget.mjs",
+      "sha256": "831724e085c94799fbc7fcc2508b02f6a3aa4c85c861f2fad517da5eea812c63"
+    },
+    {
+      "bytes": 13797,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/cli.mjs",
+      "sha256": "3fff87e7faa7066d16238d3619945205d1b5757de2b14027240e718280ceb870"
+    },
+    {
+      "bytes": 4481,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/constants.mjs",
+      "sha256": "88d6977c122ff36d74d697b6e8d5ebf11e89d7a5c623fc7b410c2dbfc6792c2c"
+    },
+    {
+      "bytes": 11426,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/decision.mjs",
+      "sha256": "7be03faf2a7087584d02939bec619ea8cdde40fbce73e657965c1ef9f4334dad"
+    },
+    {
+      "bytes": 995,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/discovery.mjs",
+      "sha256": "7dd4207e8320681baee0c39970caf6796df5dd91e00447e3cf19eade725a1e56"
+    },
+    {
+      "bytes": 2456,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/economics.mjs",
+      "sha256": "05e2219b346d643aa48243e1812614ea6bc06dbdde11c297603fe8ba9448b474"
+    },
+    {
+      "bytes": 473,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/index.mjs",
+      "sha256": "f1fc8c1dec6b44b7b1f4aa1ee67de41f97a877d83090c894a7babddf62614633"
+    },
+    {
+      "bytes": 10798,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/next-get.mjs",
+      "sha256": "a8a75211f615b6ae49f720beaece4308568a94e5f246199c457749f313d9f84c"
+    },
+    {
+      "bytes": 2597,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/operator.mjs",
+      "sha256": "cdeca17504b065c2f9e5b4fb6d8ec8c9f3282fa3caadf4efba804679dc8743d9"
+    },
+    {
+      "bytes": 17847,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/opportunity.mjs",
+      "sha256": "bb63e6f2a82d6953bc623cddabbee58452a383d33b4542bb9d55f5e9b151400b"
+    },
+    {
+      "bytes": 6934,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/paths.mjs",
+      "sha256": "13bf80f6fe202e0ce8e4fe2405cf2d520888d28f1bc6423ca762f2df9c3defef"
+    },
+    {
+      "bytes": 4156,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/persist.mjs",
+      "sha256": "7b104275d1213b7be152884d02dbd33c4cd446014867fadfdc9f786decdb416f"
+    },
+    {
+      "bytes": 11154,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/refresh.mjs",
+      "sha256": "570a572cfea7224fe4a057bdd449b314009300cf14c3adca7bdfb9743254fd8d"
+    },
+    {
+      "bytes": 2830,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/reward.mjs",
+      "sha256": "97f77a975d77e9ec7b3798946bf3d8a6047c4e2c629895da7ba8c192aafb13f5"
+    },
+    {
+      "bytes": 1857,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/scrub.mjs",
+      "sha256": "763131eafd0aa34771f1ad0ed3200c7af1d1a04a7f510ee4ef193f46b6b89a46"
+    },
+    {
+      "bytes": 5632,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/shortlist.mjs",
+      "sha256": "2e50a6526ccc53d51e6feb308c9a427fc0376ed368bf8b4f37d0ece5da6cce36"
+    },
+    {
+      "bytes": 3576,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/sources.mjs",
+      "sha256": "c01e8ab8401a023d0915b5a9c3fdbbfee3d4186db698f4964943420f1244490f"
+    },
+    {
+      "bytes": 2175,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/src/taskspec.mjs",
+      "sha256": "6b81714390b8acce4a04e1eea3b3e5b217ed092723c9d8ae5b99e2b8c774bf78"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/tests",
+      "sha256": null
+    },
+    {
+      "bytes": 4887,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/tests/cache.test.mjs",
+      "sha256": "2e992f4593e579b45fa707cf36fbd2b484b0ffa1ed712e334f8b3a7dcdce629b"
+    },
+    {
+      "bytes": 3061,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/tests/consumer.test.mjs",
+      "sha256": "59b58039d0c1b25983637ac77b3ae52a346faf23da7264297ca02e1c7e81744b"
+    },
+    {
+      "bytes": 12213,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/tests/decision.test.mjs",
+      "sha256": "bf2b1b8a9a7c72a7e59cd0557803c0ec5bda2ff1fc8990262f6ffcb35f2438af"
+    },
+    {
+      "bytes": 1159,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/tests/helpers.mjs",
+      "sha256": "623c1aec3f952ac9e5079053c13a1d9d5efe49ddd53e721a9cb89d102ce096d1"
+    },
+    {
+      "bytes": 10876,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/tests/persist.test.mjs",
+      "sha256": "5251f2a737b301da55d38a04e8c29b009e4214b53c90f368aa7988d1367f8fcf"
+    },
+    {
+      "bytes": 5319,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/tests/refresh.test.mjs",
+      "sha256": "3b3560ce5f6f1690a3fa7dc586f0a089e9e4771dd85b54c7a1b8dcf06f183f58"
+    },
+    {
+      "bytes": 2503,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/tests/replay.test.mjs",
+      "sha256": "86f6ec10d9306ab3b403098446c9ccfd2c2b39042a302e4daf860a448ef54aae"
+    },
+    {
+      "bytes": 6662,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/tests/scrub.test.mjs",
+      "sha256": "4b3cb8b3081f0f0b1600637fa74e202fec18c3abcd7bbfbbe8ce4231802e68a2"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work",
+      "sha256": null
+    },
+    {
+      "bytes": 3872,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/README.md",
+      "sha256": "d84441fc9732c274e91abbd1f18b6ba3b1d3f3120413f58b10d3ded2ca0e10ea"
+    },
+    {
+      "bytes": 1103,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/SOURCE-NOTICE.txt",
+      "sha256": "8694431dd64668443b70e6f57612905c595bff72a7595b64baee8e30a6a9cc45"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/fixtures/bugzilla",
+      "sha256": null
+    },
+    {
+      "bytes": 1304,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/fixtures/bugzilla/bugs-happy.json",
+      "sha256": "beb7634c11b74cdf02aca280554db806933b24bf68e94e2c3ec229ac58c52993"
+    },
+    {
+      "bytes": 40,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/fixtures/bugzilla/malformed.json",
+      "sha256": "01ac8e0458fb4347dad52066fada1dabce95e519f39a35bcfc2ca1dcce93fdad"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/fixtures/github",
+      "sha256": null
+    },
+    {
+      "bytes": 318,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/fixtures/github/closed-only.json",
+      "sha256": "a06f0711e98054e1b0aad3ceb1c61b96f33d99ffdfc24295cbee79031b0c3bcb"
+    },
+    {
+      "bytes": 84,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/fixtures/github/malformed.json",
+      "sha256": "9ad390371e5175c0a00e55415abc3aeadb304401c6b4d2c06bedbdb6b89a66a0"
+    },
+    {
+      "bytes": 42,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/fixtures/github/not-json.html",
+      "sha256": "5e64de6355123f3c1d0c03d03dd0319b23358c4c038e84f3fd558fd5bba433f3"
+    },
+    {
+      "bytes": 2406,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/fixtures/github/search-happy.json",
+      "sha256": "1098d0ebfb43d119e7f541cf1d988b202721e82bb38162659cddc658452b1704"
+    },
+    {
+      "bytes": 365,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/package.json",
+      "sha256": "4bbe530a5a2635a6b44e910aabfb57771bbfb4c1b8609b889d89b32d8284c66d"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/schema",
+      "sha256": null
+    },
+    {
+      "bytes": 986,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/schema/cold-client-answer.v1.json",
+      "sha256": "564a9a702bef55ec32ed50e68bd3049f55e29b5b5d9a2d2713b656719e146b47"
+    },
+    {
+      "bytes": 1634,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/schema/qualified-next-action.v1.json",
+      "sha256": "07be6d46df85445ec176022a1406e764d2c71c52772af7451d4cd5f0e48bd99b"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/src",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/src/adapters",
+      "sha256": null
+    },
+    {
+      "bytes": 5460,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/src/adapters/bugzilla-mozilla.mjs",
+      "sha256": "4d84211b8454b037f7b43f2d1d330ef8ebb8111859aafb3cd42098af00787222"
+    },
+    {
+      "bytes": 6165,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/src/adapters/github-public-issues.mjs",
+      "sha256": "b04201e732ff82ae3af0c8ebc0a79228daba8d34a311a32ca9743bfddb18a94e"
+    },
+    {
+      "bytes": 673,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/src/adapters/index.mjs",
+      "sha256": "58691ba699691c9cdd45298521a9b765f916c420c3e963d1da295d7cb8ceca4d"
+    },
+    {
+      "bytes": 2496,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/src/adapters/read-json.mjs",
+      "sha256": "f8ef1d1df08b34288e418cf5a81112d7f74516d46728ef63045bb8fab7462110"
+    },
+    {
+      "bytes": 3189,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/src/catalog-bridge.mjs",
+      "sha256": "c06f9cda84dbae7dfe1b1d8b2442b59b68e44c26dbcc04b5d99ebaa4915296ec"
+    },
+    {
+      "bytes": 10594,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/src/cli.mjs",
+      "sha256": "73a2dffd4a8e34c1d69d8104044f587f15ab98b941339f14a8f596749e9abc2c"
+    },
+    {
+      "bytes": 1732,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/src/constants.mjs",
+      "sha256": "249317a215c73989a4cae0089baa13812d0354de8db42b19bf95130869ca1a40"
+    },
+    {
+      "bytes": 181,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/src/hash.mjs",
+      "sha256": "74233f6241446a83f5de41822fd49b2e5f2c6c2de8c9d5581f3895299ad11e03"
+    },
+    {
+      "bytes": 1817,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/src/http.mjs",
+      "sha256": "27546ee3ae32a992392510c03846e17c3b1b3d52876bf1ea84eb7720f3dc74df"
+    },
+    {
+      "bytes": 318,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/src/index.mjs",
+      "sha256": "6d32e9e2cf84927a8e1e8264396f5f9061d594daf8388372ccb2398ba9a3fc0b"
+    },
+    {
+      "bytes": 7212,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/src/qualify.mjs",
+      "sha256": "0625860a2c03c21a7b49667b4e17af3017d747eea88273fd1cff1d7923bc7031"
+    },
+    {
+      "bytes": 1095,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/src/query.mjs",
+      "sha256": "04b9a8586cc9e23f78d6f1e7e67441161606ef96062d20b7e38dec103e475426"
+    },
+    {
+      "bytes": 1000,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/src/text.mjs",
+      "sha256": "ff8d55e2f81fec9da1fb605e49734ac85b4ee8b551ee21d16a45f741a681c094"
+    },
+    {
+      "bytes": 8723,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/experiments/vf15-actionable-work/src/validate.mjs",
+      "sha256": "ca6213addd78d7dfd5b0a43261c81914a32493054daa40864722eb10827ea201"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery",
+      "sha256": null
+    },
+    {
+      "bytes": 53943,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/ENGINE-CONTENT-MANIFEST.json",
+      "sha256": "d633c04cc2232a718e3b212cb8df90a5d9045ea127df1155b3aadf9a0572f42e"
+    },
+    {
+      "bytes": 1116,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/LICENSE",
+      "sha256": "2413cf7569eb7180a35fb16db40ec67b60d25a660788e9d8c09ecd68268b11ee"
+    },
+    {
+      "bytes": 35852,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/PUBLICATION-ALLOWLIST.json",
+      "sha256": "65afe93b9333c271b7e3f130b3088f23f718ae451b239f10be31cbbcf44a4439"
+    },
+    {
+      "bytes": 785,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/README.md",
+      "sha256": "66e413bd368c3444c4da15b35cbda798a1e497b424e3d203ff2b3906696a7575"
+    },
+    {
+      "bytes": 1820,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/SOURCE-NOTICE.txt",
+      "sha256": "f171375f09e8f231e9ad25ece38cd8e033031f13db1270ed61dd3b7963a79bd5"
+    },
+    {
+      "bytes": 598,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/package.json",
+      "sha256": "9c65b427e10190c9aaf5d0e026965c19bbe2804819266d885046dac3ded80033"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/src",
+      "sha256": null
+    },
+    {
+      "bytes": 3432,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/src/cli.mjs",
+      "sha256": "4a60abe5fad8911400db332543aecfbfc15b44f4d5daa0a24542903167150771"
+    },
+    {
+      "bytes": 2257,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/src/engines.mjs",
+      "sha256": "1c71a43d594925bebdd8d9719e143f45b6dcbe25071bfcf91b9309f9f1b7eef8"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/src/five-source",
+      "sha256": null
+    },
+    {
+      "bytes": 930,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/src/five-source/clock.mjs",
+      "sha256": "c78fa5e60f14eee1a0873d8c46e8ad254ce177f16b9c5c727cfbb6c2cd8c6c74"
+    },
+    {
+      "bytes": 15516,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/src/five-source/compile.mjs",
+      "sha256": "ccb4bdb0a9254082f6895ca3541ec9e3fd981ecd20794d8f893d4f6eb328e974"
+    },
+    {
+      "bytes": 4955,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/src/five-source/engine-content.mjs",
+      "sha256": "cecd103294847e2f810dae3885ab4951d9b6656976ab175bd1d8a45a89683288"
+    },
+    {
+      "bytes": 1984,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/src/five-source/engine-pins.mjs",
+      "sha256": "e8c71a7caed50b5f04a730da4805509b7df2efcd18f283c093eafe6c3b749564"
+    },
+    {
+      "bytes": 831,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/src/five-source/index.mjs",
+      "sha256": "055a22e8705c3ea5a7c87fe1dbd5786b7fed9e3493bfff4649828c351124420c"
+    },
+    {
+      "bytes": 8478,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/src/five-source/job-card-from-listing.mjs",
+      "sha256": "deef6377c0b0fdc1e55e3dfe3d10bec9ceb3edb91b9fc2c5b06ab2e98c6fc213"
+    },
+    {
+      "bytes": 2345,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/src/five-source/policy.mjs",
+      "sha256": "40c75a72e87e831e63d9a8d0966e4e500e17de85348865accd90b758609fb56e"
+    },
+    {
+      "bytes": 1847,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/src/five-source/query-output.mjs",
+      "sha256": "99fd7ce42b8079164627893283b39ee1972463552c76ff0f896e88494d4cc0df"
+    },
+    {
+      "bytes": 745,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/src/five-source/query.mjs",
+      "sha256": "4737497ae26b12b8433beb0a5ef1dfc941b89df1c84b87ef01c1775f58169756"
+    },
+    {
+      "bytes": 6269,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/src/five-source/snapshot.mjs",
+      "sha256": "f226954c48b978a6f4b7d924328d1ba161bc51a7077641d3f44da66738cd4f93"
+    },
+    {
+      "bytes": 1570,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/src/five-source/view-state.mjs",
+      "sha256": "2b9758bee6d8a8e344aa38fdfc5ffc23ba6b848f38cd79e6c6120b8b12862492"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source",
+      "sha256": null
+    },
+    {
+      "bytes": 890,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/SOURCE-NOTICE.txt",
+      "sha256": "ad8030a39eb90bd43d78f382c883aeacf8c4856949b7b0b706c6ac165013db33"
+    },
+    {
+      "bytes": 10982,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/UPSTREAM.json",
+      "sha256": "4c3c18a091b431c34c500a9c8a9e5adc7bebc112b9bd45f40f374e06784e1cb6"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/adversarial",
+      "sha256": null
+    },
+    {
+      "bytes": 477,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/adversarial/cloudflare-403.html",
+      "sha256": "fda714908b1b5699144720010c3235f195368e5c3ce149ae9eb120eb4c12fde9"
+    },
+    {
+      "bytes": 452,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/adversarial/login-form-200.html",
+      "sha256": "7e345f0bc4328d4db2c68fd3797da99bc680fbf6bc4a82a2615d4fbae13a3cd7"
+    },
+    {
+      "bytes": 315,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/adversarial/missing-asset.json",
+      "sha256": "4fe2e0f6ee737dd43262b09ceded89241326d3cc1f16ee6e88b4668ac6b31eaa"
+    },
+    {
+      "bytes": 574,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/adversarial/paid-label.json",
+      "sha256": "78d0c9c5aa29099cdc3efb91a14190a94825401848d8ca7cd516602c47587d83"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/agentbounties",
+      "sha256": null
+    },
+    {
+      "bytes": 1497,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/agentbounties/feed-claimable.json",
+      "sha256": "be5bba0adf7583c8e0df979d0a97223e242e063ea34a5deb4c4255a691b34b32"
+    },
+    {
+      "bytes": 3,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/agentbounties/feed-empty.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "bytes": 3,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/agentbounties/feed-malformed.json",
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+    },
+    {
+      "bytes": 1517,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/agentbounties/feed-unfunded.json",
+      "sha256": "512d68294de950d131092993fdb5163c81d10ab0d51d4d9ce77a217cc5e71da2"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/bountyhub",
+      "sha256": null
+    },
+    {
+      "bytes": 140,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/bountyhub/cloudflare-403.html",
+      "sha256": "14e2457cb9f9559b89e46d49983c436f21335dbfb857c3ef3168b52a10e198c8"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/gibwork",
+      "sha256": null
+    },
+    {
+      "bytes": 79,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/gibwork/explore-empty.json",
+      "sha256": "d9c0c38cd22e90524bf89f404f3c58dc0ec97e8a15e230f618e7ce11cfc0f2fe"
+    },
+    {
+      "bytes": 782,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/gibwork/explore-hidden.json",
+      "sha256": "5089178045c4c1c867d2ff5de78389501a16bffd77c5283881edce00acb244dd"
+    },
+    {
+      "bytes": 667,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/gibwork/explore-missing-asset.json",
+      "sha256": "babbb1518dd3fc581de0e9afff0b0eb59e03350874c6e8a1dbfbd54116cda0a9"
+    },
+    {
+      "bytes": 887,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/gibwork/explore-open.json",
+      "sha256": "622c874d68912c9b47bf88f62b91c3b1205dfd7425062820cdb98d6f10aca2dd"
+    },
+    {
+      "bytes": 833,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/gibwork/explore-page.json",
+      "sha256": "b71d55569f7d78683fe37a0aeaffd977f4de04ecc8d9be04b763ba30fb023e57"
+    },
+    {
+      "bytes": 843,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/gibwork/explore-verified-only.json",
+      "sha256": "370aab52f61706a46724141b4ba1a1c969abee6c156e8ec1f403d32b3d23d35d"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/gofrantic",
+      "sha256": null
+    },
+    {
+      "bytes": 1606,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/gofrantic/board-empty.json",
+      "sha256": "a0cb1e5af943081b760ee0c2b52473f35e48c3b2bc4aa77a7091402c65f35df7"
+    },
+    {
+      "bytes": 2031,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/gofrantic/board-human-reddit.json",
+      "sha256": "dd1e7096d8a1d0ceee7a7f8583d30c56d98c52d34744cbd364fb0ea731d3be07"
+    },
+    {
+      "bytes": 486,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/gofrantic/board-not-ok.json",
+      "sha256": "1aee97cc26521378116dc9ac3619122d4097c310c820767de87342f19e20501f"
+    },
+    {
+      "bytes": 1869,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/gofrantic/board-open.json",
+      "sha256": "bdc2566b730f9c6215aa30f1158163349e9457767627818c2a5004e03d30c639"
+    },
+    {
+      "bytes": 1651,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/gofrantic/board-settled-at.json",
+      "sha256": "9faacf2c5cadd180368559e2a9e0301694a5b27f1abda02174f14c113532769c"
+    },
+    {
+      "bytes": 1677,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/gofrantic/board-unfunded.json",
+      "sha256": "1b702191925099ec4c8c6d6677f9ee7e77631944d57eb96434f885c809900894"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/superteam",
+      "sha256": null
+    },
+    {
+      "bytes": 3,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/superteam/listings-empty.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "bytes": 21,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/superteam/listings-malformed.json",
+      "sha256": "3707cab6dc598830897b4984bdc756df80cd144e0a124e57fefe6d5e6b6a9dfa"
+    },
+    {
+      "bytes": 1220,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/superteam/listings-open.json",
+      "sha256": "22bea53287b0d511ada384d1a6ab0f1d73d62443d6b5069c2c0785f3ab3e2f62"
+    },
+    {
+      "bytes": 584,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/superteam/listings-range.json",
+      "sha256": "9a91f213e779574cc96579cf2f6ff82aaa70fdee7db5fc4659927ceac8571288"
+    },
+    {
+      "bytes": 651,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/superteam/listings-winners.json",
+      "sha256": "b1dac5ba4ee6344d96f112ad2f92bab3c36f46231beb3031a2e6239597762ea4"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/taskmarket",
+      "sha256": null
+    },
+    {
+      "bytes": 137120,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/taskmarket/h02-2026-09-12T01-17-57.json",
+      "sha256": "a9fb2619b0a3fa404430e7b02dd6dd97270290463316c5156960bce33388b120"
+    },
+    {
+      "bytes": 1001,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/taskmarket/tasks-completed.json",
+      "sha256": "8bd17d2daa5db05aa95384a0e3d6547f3859939177763ddc5bf5acfcbc929418"
+    },
+    {
+      "bytes": 60,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/taskmarket/tasks-empty.json",
+      "sha256": "2cbd3d57d7d2565e91456a099191830ac4ea68c4e1d7dc0fcd7b51867f23466e"
+    },
+    {
+      "bytes": 19,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/taskmarket/tasks-error-shape.json",
+      "sha256": "2d8463ce50dd2321525829b1d9374e1576e85131b3a19de47539e547bba70030"
+    },
+    {
+      "bytes": 863,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/taskmarket/tasks-no-escrow.json",
+      "sha256": "f35745e7c1bc5f1724d8ea376b5e76a4e10e7383415065a5c195dd1097df5ebd"
+    },
+    {
+      "bytes": 919,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/taskmarket/tasks-open-escrow.json",
+      "sha256": "c7f608abd7995096b94a94874c5e2368752b9e1383e82fee726cef7b38b8e47c"
+    },
+    {
+      "bytes": 938,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/fixtures/taskmarket/tasks-page2.json",
+      "sha256": "ec9ab694735c15b35e00308b272e387854659f5bdba8ff614277bfdd33941164"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/adapters",
+      "sha256": null
+    },
+    {
+      "bytes": 11467,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/adapters/agentbounties.mjs",
+      "sha256": "f0fdce17ffead595adc695c6223a7cc353055260e6150b9e585669f2e491f93e"
+    },
+    {
+      "bytes": 2857,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/adapters/bountyhub-unsupported.mjs",
+      "sha256": "e948748097311de1c071913e09c74e12e53c390260757dc7fd3aafc856a98413"
+    },
+    {
+      "bytes": 10377,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/adapters/gibwork.mjs",
+      "sha256": "3d796b3bd9377875b3d24b47920fb33b07369ad043bb20f9242646eb925a1e42"
+    },
+    {
+      "bytes": 10461,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/adapters/gofrantic.mjs",
+      "sha256": "038e4b05321423603e515c93d63b92037b4a47dba83cc6339ef17da14cf45eb1"
+    },
+    {
+      "bytes": 506,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/adapters/index.mjs",
+      "sha256": "67b48cc4068f02df256134df8ae8b7faf8c0d09dd3dad07dc25bd03461162c9a"
+    },
+    {
+      "bytes": 11459,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/adapters/superteam.mjs",
+      "sha256": "baa7f1dbea39a7802d2a50c4d036113eafb60f09734dc0088ec5fa3d02d06869"
+    },
+    {
+      "bytes": 10914,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/adapters/taskmarket.mjs",
+      "sha256": "42cec7b638fd987a558ae67f21fa68cea5007bb9f600ec150c1bcdf713973f15"
+    },
+    {
+      "bytes": 7019,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/contract.mjs",
+      "sha256": "d2ed1d12497b1b06a32dbe5fa34f47cd8fb35509e0ceea0dbd43e6b548f5ad92"
+    },
+    {
+      "bytes": 2266,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/eligibility.mjs",
+      "sha256": "9f8fda4f6866b339585784d6e6dadedb1d3407560eb39d7240ccaf16004f39e9"
+    },
+    {
+      "bytes": 3511,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/freshness.mjs",
+      "sha256": "e34851a8c4ec1831ca52539fafeceb6cb452080aad709e58ae9587c6b5dfae7c"
+    },
+    {
+      "bytes": 6344,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/http.mjs",
+      "sha256": "d77e40cb40a026097d504eea9325e361ce4264368dec7e780d6831872849147d"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/query",
+      "sha256": null
+    },
+    {
+      "bytes": 2895,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/query/adapters.mjs",
+      "sha256": "16b79ff340ccf841cd2be5e982724555b52bd6f32ce31d8106658eb5b71099d1"
+    },
+    {
+      "bytes": 3366,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/query/capture.mjs",
+      "sha256": "ca279ca431c468de227a8ea488a33112605e8b11cd627f22d44caf31fece4ff7"
+    },
+    {
+      "bytes": 914,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/query/identity.mjs",
+      "sha256": "c40d06b41f03275213dea7f3f5056eb85fa3c8d22ece8822873f0f0140caca81"
+    },
+    {
+      "bytes": 14787,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/query/ingest.mjs",
+      "sha256": "c305994197abde6c20d5899431275f251bb94088eb2c1f60044e6c0deba769a6"
+    },
+    {
+      "bytes": 563,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/query/modes.mjs",
+      "sha256": "dd4b132f03cc7388dc49d17784cd3ac47c3e70105157767d5f323fa0b4109505"
+    },
+    {
+      "bytes": 6561,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor-readonly/h02-five-source/src/reward-planes.mjs",
+      "sha256": "5ee1f80ffa3c4667421ba934fdbd93876b357f54a6cddd14655e74fef3d19666"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05",
+      "sha256": null
+    },
+    {
+      "bytes": 3479,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/FEATURE-MAP.md",
+      "sha256": "3d49ff2c758168b6ffda54f8be2cb0ec0677d7cfbca2a5edba90e77f26ff0657"
+    },
+    {
+      "bytes": 1300,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/LICENSE",
+      "sha256": "3b26e873b2a445482dc1a0b990a2b4497992310191cedb39e11c74d5f579e98f"
+    },
+    {
+      "bytes": 1704,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/README.md",
+      "sha256": "c3d5106680857c62f7e509654d5a6620fd82a0b961ad5eda52a0445db58064ac"
+    },
+    {
+      "bytes": 1070,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/SOURCE-NOTICE.txt",
+      "sha256": "0b9710ff2f924835e44d9e4340390e3b2d149540b87cb006d195cfd648bb517a"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/contracts",
+      "sha256": null
+    },
+    {
+      "bytes": 714,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/contracts/search-observation.v1.json",
+      "sha256": "f9b515f0cc47dd4040e83fe2c56104041ddd25eadba0e37accce69180278d84a"
+    },
+    {
+      "bytes": 980,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/package.json",
+      "sha256": "28465d56379edc26c2ed9a7927ae685cadcd99c231aaaec1b774ee110bb0ceb0"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/src",
+      "sha256": null
+    },
+    {
+      "bytes": 1118,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/src/adapters.mjs",
+      "sha256": "42b72aebf4af16244d88728ffd787d870de023ca4e474a57ad6629c493ea846b"
+    },
+    {
+      "bytes": 6249,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/src/cli.mjs",
+      "sha256": "fc80a304a406872d7ec5be1ce0d5e53886ca50f042810e0056d5faada480f0ff"
+    },
+    {
+      "bytes": 2314,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/src/constants.mjs",
+      "sha256": "8f4d0944f237aa6ef03d82b78022148b3570da22126cd91386feb7681dcab5ed"
+    },
+    {
+      "bytes": 345,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/src/errors.mjs",
+      "sha256": "3fae3ef9e456e05aa816ea131dd2c1e29f9c6adad5fb3e23e64d46022ae1a430"
+    },
+    {
+      "bytes": 3748,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/src/fields.mjs",
+      "sha256": "0119da8a1d5e14aaffbd7e87ade525bc31e1a4cfb96557ed6009d59a7059efed"
+    },
+    {
+      "bytes": 2990,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/src/hits.mjs",
+      "sha256": "984d1b9875dd1abc41278a2f0263e03ac24c8478fe2c82cfa409fdae114dee3d"
+    },
+    {
+      "bytes": 1198,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/src/index.mjs",
+      "sha256": "a98142b5fd069466458905d0f25cadd720107944a58f64f55acbc812f1b24981"
+    },
+    {
+      "bytes": 4695,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/src/ingest.mjs",
+      "sha256": "4d3297f697ee4c839b2c90135bb859456626a378db52eff30da56561c9f9e34a"
+    },
+    {
+      "bytes": 2480,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/src/local-http.mjs",
+      "sha256": "7a36d46559b0d30b14337f25c789a1fd5bad33d5e59c8950e523cb53f7fc1f42"
+    },
+    {
+      "bytes": 2587,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/src/observation.mjs",
+      "sha256": "d2aa3d07a886306ee2020759d5fa276cbe3d04ead8d7f6bc1d042c1e6f6cb34a"
+    },
+    {
+      "bytes": 3409,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/src/project.mjs",
+      "sha256": "fe9924520bb7ad5266f7a6d36ce03eff2587de28d2af4694610aa36ad6862f67"
+    },
+    {
+      "bytes": 4324,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/src/query.mjs",
+      "sha256": "d22fdd454dd209cd275e8b77aa3afd32e9ded99b9c3d83115c4b70fca99774e3"
+    },
+    {
+      "bytes": 1580,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/src/search.mjs",
+      "sha256": "1ea731a8173d5297cb0e91712503ced50cd0ec4e3a0209dd2573ebdee1660f2b"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence",
+      "sha256": null
+    },
+    {
+      "bytes": 2201,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/FEATURE-MAP.md",
+      "sha256": "2e253f4777ae59132f05c0b4eb55bfe683f746dd6ab11b016e2d4b9030207988"
+    },
+    {
+      "bytes": 1258,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/SOURCE-NOTICE.txt",
+      "sha256": "75ce560120b164266748f8a7bfa0de96f7509d91345873ebc5c02636e32d7c84"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/docs",
+      "sha256": null
+    },
+    {
+      "bytes": 2409,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/docs/CONTRACT.md",
+      "sha256": "f5338d3a511912c6ec848bb26f4258df7790b10443f07f6bd92aa15dc97b0fe1"
+    },
+    {
+      "bytes": 1158,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/docs/PACKET.md",
+      "sha256": "b3dd03dcecfc694cb0f79849cc6d8ea14a5595cd71b785875090bd1ce3cfe3d3"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/fixtures/s282",
+      "sha256": null
+    },
+    {
+      "bytes": 1279,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/fixtures/s282/bountyhub-paid-open-issue.card.json",
+      "sha256": "1a14338095ab871240eb08f5c224b79d09e7974b59d3eee91912f2ef85418685"
+    },
+    {
+      "bytes": 2079,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/fixtures/s282/claimable-funded-open.card.json",
+      "sha256": "719a4ee5219f123082a7a0824dfd5f49f985531923c025376f5a5dc43c4a9a87"
+    },
+    {
+      "bytes": 1040,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-algora-no-public-get.card.json",
+      "sha256": "0cba54518fd2e503b34a85fe7adc25f40ad8682c58231814411737a10d0ae945"
+    },
+    {
+      "bytes": 1174,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-bountybook-open.card.json",
+      "sha256": "f58c8aeff95caa1e294acdc7d0f3a32b52c51d8205dddcdc35195881bb1c35c0"
+    },
+    {
+      "bytes": 898,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-clawtasks-paid-disabled.card.json",
+      "sha256": "7491feeee80ebe6c8f6be36ec3b05f3c81facbb7d9d568a84c4c98f14244ce56"
+    },
+    {
+      "bytes": 1878,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-expired-open.card.json",
+      "sha256": "2695def5d62d9890f481c81e5de7037c2d5538138714b7a37c5eb605a44a7b78"
+    },
+    {
+      "bytes": 1167,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-gigs-directory.card.json",
+      "sha256": "9c6e0f066aca475545811717d8654b7f6cc84b22802e333c7c37178c02e27606"
+    },
+    {
+      "bytes": 1268,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-human-only.card.json",
+      "sha256": "ccdd6f471a5638e5ee851943272b9f14980d687bf3efdade35b1bc2113726c3e"
+    },
+    {
+      "bytes": 828,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-onlydust-closed.card.json",
+      "sha256": "f760d39429fbaa1e0f607e80ef4ba1f742c96a645d8bb565c53c76f7b1696fad"
+    },
+    {
+      "bytes": 1501,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-platform-referral.card.json",
+      "sha256": "cfc608a4312c176366fa31c63457f983677d77feb90bfc22034d6be1d89b7582"
+    },
+    {
+      "bytes": 1214,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-promised.card.json",
+      "sha256": "40b9e7437a590fe8dbe599513c3a9c433605b4b18f7b76b4fb74c878bf53debf"
+    },
+    {
+      "bytes": 1323,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-taskmarket-crowded.card.json",
+      "sha256": "b4545c1a7786d82aa93ae9cd4ff224d611ff673495dc649a6f8bf360c7d9d1e4"
+    },
+    {
+      "bytes": 833,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-the402-paused.card.json",
+      "sha256": "5814f30197aa6462fb13052543dc2da5dbe6df141d546feac84d3e3fb0c83644"
+    },
+    {
+      "bytes": 991,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-walletless-iou.card.json",
+      "sha256": "277fc8c37501a3db87608326ae7478d7d993caa2bc271d12edb67bfef3506e85"
+    },
+    {
+      "bytes": 757,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/package.json",
+      "sha256": "e7520e130d440f84f179a1c0a7e15a87f52b2d833ee317e8cc1102ff8b2daf85"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/adapters",
+      "sha256": null
+    },
+    {
+      "bytes": 10221,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/adapters/frantic.mjs",
+      "sha256": "3ce64be8cd1d9aabdeca8305120aa5a560312c8b6e01f7835f5ec854de70d9a9"
+    },
+    {
+      "bytes": 5720,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/adapters/github-issues.mjs",
+      "sha256": "6ac7253190977789c8368a5aec94e62e754a10ceaaca85ce0c7d2c6a9d11d2c0"
+    },
+    {
+      "bytes": 828,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/adapters/index.mjs",
+      "sha256": "3492bd4e18872efbf91cb274f55da2cd3f8f2e9755f514027beaf197ce6396fa"
+    },
+    {
+      "bytes": 3642,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/adapters/moltbook-inaccessible.mjs",
+      "sha256": "d36103588455717ec0c74b47eb70d0c8708a46720b2d67cf836ff68445dd03d8"
+    },
+    {
+      "bytes": 8492,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/adapters/moltjobs.mjs",
+      "sha256": "4adb06321fc60bb633a49f42709815c8032cb58916aed83c76428a62af727418"
+    },
+    {
+      "bytes": 5648,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/adapters/neomorphic-schedule.mjs",
+      "sha256": "9d26fa5c9b0a6f89ae565d4fa84a2eaf9bede7c2b2295f410853233eb382f69f"
+    },
+    {
+      "bytes": 1652,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/capture.mjs",
+      "sha256": "e0008bbe579f2335d4a4a5328e52e62b385feb99c671a1c7daef0a4e83ab48bc"
+    },
+    {
+      "bytes": 5524,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/cli.mjs",
+      "sha256": "45901282fdd5ca82c5dba41201cb2b30e9f3c2826601eaacccfa5af30351b710"
+    },
+    {
+      "bytes": 940,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/clock.mjs",
+      "sha256": "bc410df44d1cba827978d18ece53fed37181c6cfe12434cfa7cf44e3ba1394bc"
+    },
+    {
+      "bytes": 4263,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/constants.mjs",
+      "sha256": "67907501b98ba478c2d9a345986beb246ce7c822fb683334f7272eb62c085dcd"
+    },
+    {
+      "bytes": 2083,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/events.mjs",
+      "sha256": "50e9b915791feb25c621f151ad3a57962773e9b2759606c8cd7c1c49429b6504"
+    },
+    {
+      "bytes": 2387,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/experience.mjs",
+      "sha256": "20b2d4d0dd7c4add09c4b08060e92b12b119e5c00d2389b4974c90bfa086de3a"
+    },
+    {
+      "bytes": 832,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/fixture.mjs",
+      "sha256": "d0f230a890686d5c8befc41a85ee15ae01401e8e92730d7bf959ce34533d788b"
+    },
+    {
+      "bytes": 872,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/hash.mjs",
+      "sha256": "42f11fd2d0b3c369d722a4926d77129db168034e6d03729d5cf7cc33a507b5b0"
+    },
+    {
+      "bytes": 6062,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/html.mjs",
+      "sha256": "939caebe6fa98726aa1aad86b55bd49e7ad91f5de0c5643238b70d34339e7f39"
+    },
+    {
+      "bytes": 1495,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/http.mjs",
+      "sha256": "4444743f32004e06c297601810dbb8a9c1bd1e29076349cf7177437eb7dd4d7c"
+    },
+    {
+      "bytes": 1319,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/index.mjs",
+      "sha256": "58ae0452076b7b8adf453cb2e02d774b0732ad6e2eed4060546e279907bebaeb"
+    },
+    {
+      "bytes": 2785,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/ingest.mjs",
+      "sha256": "074af1658747c4f559f0d8b95eb5a7368c8da2bbf1cbb1d37c7afe8dfba8488f"
+    },
+    {
+      "bytes": 2476,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/interop.mjs",
+      "sha256": "a3d1723b0d73c6492654d7b95edbe306b6028cc7c640d9f493aaced3761f6b68"
+    },
+    {
+      "bytes": 8548,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/job-card.mjs",
+      "sha256": "5a8c3f6e29048df1b3879d55951b88b678131058dd7c820ca54c6b82dda8fd8a"
+    },
+    {
+      "bytes": 3559,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/money.mjs",
+      "sha256": "6a07ac800e15cb230ac7dbb306bf87b87c53037594286eef9934332d6236b74c"
+    },
+    {
+      "bytes": 7649,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/packet.mjs",
+      "sha256": "ca803bb3b12d76f84b5fe5f8675eae25624f9d3373dde4e790bdc979b7ca6497"
+    },
+    {
+      "bytes": 929,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/policy.mjs",
+      "sha256": "27b563038929399272362d19fd569c1eb0be4e405fdf329430e14a19c7b1e9c7"
+    },
+    {
+      "bytes": 9591,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/rank.mjs",
+      "sha256": "c433c5d33c895b8a0c7650cb0b8108878f1c525217d30201e0d79ab283fc917f"
+    },
+    {
+      "bytes": 2602,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/reconcile.mjs",
+      "sha256": "ec6ce6d47f0943de68c1b390b2d40976b9f8947e56a3f2a85fc1b04a970360c1"
+    },
+    {
+      "bytes": 8308,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/record.mjs",
+      "sha256": "7b8c009926c7fb7b43f1525a723f3f514f32ac376a32125cca792b794002ff1c"
+    },
+    {
+      "bytes": 3169,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/report.mjs",
+      "sha256": "f7d515a9c8e8df94418d529eaffcdce0e473e6300f352301fbe5df66c430a2b8"
+    },
+    {
+      "bytes": 1583,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/select.mjs",
+      "sha256": "74c0917f7c9e28f4910339a340ffb03b82f146d13b9ab4d4716d43839d341961"
+    },
+    {
+      "bytes": 3048,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/source-quality.mjs",
+      "sha256": "242c710f54eeb598e19ad2ebf6ff68c72892bdb3453549aae639296994793d2a"
+    },
+    {
+      "bytes": 569,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/bounty-intelligence/src/unknown.mjs",
+      "sha256": "55f2ec4464a62c213ebebe9fd01a00e1c49ba47506dab9559e68c4af3714f986"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions",
+      "sha256": null
+    },
+    {
+      "bytes": 3744,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/FEATURE-MAP.md",
+      "sha256": "586e4b2f7fe33dea13150c91f5f272429b0ff9882cc9030c5a7614aa5a1e1123"
+    },
+    {
+      "bytes": 1120,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/LICENSE",
+      "sha256": "cce4bf027d60b1bbe7ddb3b2ce6059fde17e4a0aaa083c8de69a8067eecbd7db"
+    },
+    {
+      "bytes": 758,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/README.md",
+      "sha256": "9746fadc414eace7f2c6aff70e1c7f79278bc982e4e8ea35465e859ca0151670"
+    },
+    {
+      "bytes": 1478,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/SOURCE-NOTICE.txt",
+      "sha256": "9af94d11f5979d3b47cbfe3d6696bd4c97b3e2b5e628c235ca3552b634003912"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/examples",
+      "sha256": null
+    },
+    {
+      "bytes": 1305,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/examples/score-s282-fixtures.ts",
+      "sha256": "2e92d405d67d00d03035c2158dde6cba1463d9e981d00ef09e6209e7ee7218e7"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/fixtures/s282",
+      "sha256": null
+    },
+    {
+      "bytes": 1068,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/fixtures/s282/README.md",
+      "sha256": "2df3ef7b6e7f5d9d876ccad8398a968e4a21aa1de858b9f689aba765627b1e4e"
+    },
+    {
+      "bytes": 1175,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/fixtures/s282/bountybook-unfunded.card.json",
+      "sha256": "71ed101740818ed872278d80dd1dea5eb9105a7e16662e38e8a3d4babecd18d0"
+    },
+    {
+      "bytes": 2092,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/fixtures/s282/claimable-funded-open.card.json",
+      "sha256": "4760007485386d343aa565fa23e62f4bc6bf8b85bbaf701542641c13b6b1cfe2"
+    },
+    {
+      "bytes": 1137,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/fixtures/s282/gigs-directory.card.json",
+      "sha256": "fb09a358ba81cf1ec9d1651c69f13e61929e96641126f50a4e53893d4b238763"
+    },
+    {
+      "bytes": 1214,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/fixtures/s282/hostile-list-get-200.card.json",
+      "sha256": "b4c0d073ade0baaa8c0be062c6785e8e0e165e7b834092915d0ab832b1dd6477"
+    },
+    {
+      "bytes": 1518,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/fixtures/s282/moltjobs-referral.card.json",
+      "sha256": "19655e78112c8236f5510bdc6c9d437190b2e1e7354c08d42efe963976796f4f"
+    },
+    {
+      "bytes": 903,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/fixtures/s282/paused-401.card.json",
+      "sha256": "edc3ce398c9f337d81d130221995e4cdc0c8dc477b6a6c2d1c3be097c25f06f3"
+    },
+    {
+      "bytes": 1882,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/fixtures/s282/refuse-expired-open.card.json",
+      "sha256": "c6d699cf475e496524afde5b4f64002e80177857ce0d2b417808375ab5867d49"
+    },
+    {
+      "bytes": 1283,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/fixtures/s282/superteam-human-only.card.json",
+      "sha256": "42d9a411d79c99a2c2dce1a52c8df02222da13a53b8e512b1dfbef7753064c4a"
+    },
+    {
+      "bytes": 1394,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/fixtures/s282/taskmarket-crowded.card.json",
+      "sha256": "53fb25f4fcd879dc12f26ed34df61c7b2794343628e73ec66b199229b6634e54"
+    },
+    {
+      "bytes": 857,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/package.json",
+      "sha256": "c35065d24a995b04bcdeb86463fcc48f82b3019aff40fa63fe56fc3530f5c8a8"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/src",
+      "sha256": null
+    },
+    {
+      "bytes": 832,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/src/card.ts",
+      "sha256": "a70ba3df469212e7ef2a9064796da0350814639f53623fe14ecc10e6157619d7"
+    },
+    {
+      "bytes": 3583,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/src/cli.ts",
+      "sha256": "9e74324b0cb116eadc5bcc349a749fba76eb0b313a5d18ba6fb1946a91f5c674"
+    },
+    {
+      "bytes": 1118,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/src/constants.ts",
+      "sha256": "a15ca63dd7271b37aa79dd56f31386299acfd9ba15fa8d9f8e6af11e976b2df5"
+    },
+    {
+      "bytes": 1209,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/src/effort.ts",
+      "sha256": "72563d458a55441567ec736822fce5af4f73fde1455d2795ce13e8081735dcc6"
+    },
+    {
+      "bytes": 3368,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/src/eligibility.ts",
+      "sha256": "70a1a53470d9ffc9fa42ff0f36b2fb92f96f2f2e2dbdbc4c037a0b43f82ae6af"
+    },
+    {
+      "bytes": 1798,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/src/funding.ts",
+      "sha256": "7b6b4d62671d8a23ef0029b599d50e1503e0da77f7467d4df40d1b19826a9d87"
+    },
+    {
+      "bytes": 1572,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/src/honesty.ts",
+      "sha256": "d5bd7cc2660c937204788cf015fe90238c7f66ccd7f955120759c121dc313ba8"
+    },
+    {
+      "bytes": 922,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/src/index.ts",
+      "sha256": "369d1013da62bf6578555c18ad7f7532e7c8af4c63130f3bee5223202e775dae"
+    },
+    {
+      "bytes": 3150,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/src/inspect.ts",
+      "sha256": "ff7f73c8f6b927d08dd9f30dc9843a89d5523de3b28b891f89d412f09ac566d1"
+    },
+    {
+      "bytes": 2383,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/src/intake.ts",
+      "sha256": "7822890be83af2897b504cd142c2dbc936a5681ebdf9c6588a4be846c1a6f96a"
+    },
+    {
+      "bytes": 2134,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/src/mixed-score.ts",
+      "sha256": "9433ab78ccdf4dc9d712077454544c8ad0bf4418a0a9025fe183e632d0f439a2"
+    },
+    {
+      "bytes": 2783,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/src/packet.ts",
+      "sha256": "676d275c3100836bce4e8caf9af3fe35211bca0a2a006e7d3e24b0e4d76ca315"
+    },
+    {
+      "bytes": 1689,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/src/paths.ts",
+      "sha256": "437894f1af2c960f02b2b8bf6f6b6b899a86d58f8f3d72de6a99ad40b08041e9"
+    },
+    {
+      "bytes": 690,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/src/reuse.ts",
+      "sha256": "ef55c03d2f48fde87218a098424aa735283550c8611dcfb2d00d860ff49baa04"
+    },
+    {
+      "bytes": 3783,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/src/types.ts",
+      "sha256": "eabafe05f67873ef52ed36e525c91bce24953f2b4aa4c99086ea050b827c9349"
+    },
+    {
+      "bytes": 378,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c05/vendor-readonly/workability-dimensions/tsconfig.json",
+      "sha256": "72289d77807f480a5e4227f3ac8a8f0bd0705c48bd0e8594383d48dc17705e88"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06",
+      "sha256": null
+    },
+    {
+      "bytes": 3297,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/FEATURE-MAP.md",
+      "sha256": "fa6eef63d3328585e57a0ae6f8c9018b9aae8f533d79aed366be5303e0c355ed"
+    },
+    {
+      "bytes": 1420,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/LICENSE",
+      "sha256": "ead4db90a4d989b6ba80c5e39eb1c1f259f0232e54b5f159ce880f3ea87057ea"
+    },
+    {
+      "bytes": 1238,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/README.md",
+      "sha256": "9a7fcbc41711d1b552f7d94d312ab1a53c41bfd20ab8abd3e384e7854511315c"
+    },
+    {
+      "bytes": 2230,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/SOURCE-NOTICE.txt",
+      "sha256": "79696ed1bfa2c065d7ec3f0e4748011d647baee71645d15066efe9f0e1395072"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/contracts",
+      "sha256": null
+    },
+    {
+      "bytes": 1028,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/contracts/source-freshness.v1.json",
+      "sha256": "0d7f988e84f73b9b6996ec9b1e47cf87a762122063e6097c8533a2bed2b7ec3a"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 605,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/fixtures/README.md",
+      "sha256": "1ae18e79e3c9c72031e1c4fb5874fb0075a8d40bfbc94f562a465afeea6866ab"
+    },
+    {
+      "bytes": 862,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/package.json",
+      "sha256": "818563ccce036d3e7cdcdd9d0c9039250e4e318f8551f6fb267ab2d604ba086b"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/src",
+      "sha256": null
+    },
+    {
+      "bytes": 1861,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/src/adapters.mjs",
+      "sha256": "535b25d2668c7bbff5bc0ca552b712cff47dd14b472b82bbfb6a90bef0cea7f1"
+    },
+    {
+      "bytes": 8836,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/src/classify.mjs",
+      "sha256": "862750a8a706d383fd6404ec019b55f8c5de5d7bea1a96ac37c82c86061517ea"
+    },
+    {
+      "bytes": 3519,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/src/cli.mjs",
+      "sha256": "375d8aa6d1af5c227ebc16221978d62905fad07a3445d06699a0470b3c6b2759"
+    },
+    {
+      "bytes": 4833,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/src/constants.mjs",
+      "sha256": "59c57e6e16e65cf4660fed90eae9beebd12a9ef4f64ad28964c00bb4e8299c2d"
+    },
+    {
+      "bytes": 1795,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/src/http-report.mjs",
+      "sha256": "f1f5f825ce2bf09d638a92fce8d30966e3eccaa7a17e547a698ad42a1f4ee918"
+    },
+    {
+      "bytes": 865,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/src/index.mjs",
+      "sha256": "19827d60560b60ad507928333e4683f24ae72ee20ecb1773a2c45ec7b387178a"
+    },
+    {
+      "bytes": 2943,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/src/journey.mjs",
+      "sha256": "ea790ec47c3f166c1625dfc3afecbee3df43d12c6d892e21154cabd2ac16d4ad"
+    },
+    {
+      "bytes": 1711,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/src/load.mjs",
+      "sha256": "64b0982692b6d006b27a35ced8b0909e900c478566ea9c6af6fda3bf6722c7f9"
+    },
+    {
+      "bytes": 2130,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/src/local-http.mjs",
+      "sha256": "0379ae6a095fac1cfff34a2ff3cc4a06c9d98a7fbfaa8d6e1508aa2aa3faa3dd"
+    },
+    {
+      "bytes": 1780,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/src/observation.mjs",
+      "sha256": "477bd728b3f605e55102c3002583b3be1a0af22fa323730ee6660d36b2de2df0"
+    },
+    {
+      "bytes": 2171,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/src/report.mjs",
+      "sha256": "93ecb09288d2585e6d0c4c9eb510417a0aebf5a195c3d32a1832f03abb850879"
+    },
+    {
+      "bytes": 2467,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/src/seeded.mjs",
+      "sha256": "039d8b05b06c869ab873e84bb8236dca9686ffb78f7d31121cd523e6af9fa6fc"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence",
+      "sha256": null
+    },
+    {
+      "bytes": 654,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/SOURCE-NOTICE.txt",
+      "sha256": "ccc66b2c2f74cd60301ed4d80b4027b0aededf0a21a06a738bdbb6ee83741301"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/fixtures/s282",
+      "sha256": null
+    },
+    {
+      "bytes": 2079,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/fixtures/s282/claimable-funded-open.card.json",
+      "sha256": "719a4ee5219f123082a7a0824dfd5f49f985531923c025376f5a5dc43c4a9a87"
+    },
+    {
+      "bytes": 1040,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-algora-no-public-get.card.json",
+      "sha256": "0cba54518fd2e503b34a85fe7adc25f40ad8682c58231814411737a10d0ae945"
+    },
+    {
+      "bytes": 1878,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-expired-open.card.json",
+      "sha256": "2695def5d62d9890f481c81e5de7037c2d5538138714b7a37c5eb605a44a7b78"
+    },
+    {
+      "bytes": 1167,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-gigs-directory.card.json",
+      "sha256": "9c6e0f066aca475545811717d8654b7f6cc84b22802e333c7c37178c02e27606"
+    },
+    {
+      "bytes": 828,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-onlydust-closed.card.json",
+      "sha256": "f760d39429fbaa1e0f607e80ef4ba1f742c96a645d8bb565c53c76f7b1696fad"
+    },
+    {
+      "bytes": 833,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/fixtures/s282/refuse-the402-paused.card.json",
+      "sha256": "5814f30197aa6462fb13052543dc2da5dbe6df141d546feac84d3e3fb0c83644"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/src",
+      "sha256": null
+    },
+    {
+      "bytes": 940,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/src/clock.mjs",
+      "sha256": "bc410df44d1cba827978d18ece53fed37181c6cfe12434cfa7cf44e3ba1394bc"
+    },
+    {
+      "bytes": 4263,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/src/constants.mjs",
+      "sha256": "67907501b98ba478c2d9a345986beb246ce7c822fb683334f7272eb62c085dcd"
+    },
+    {
+      "bytes": 832,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/src/fixture.mjs",
+      "sha256": "d0f230a890686d5c8befc41a85ee15ae01401e8e92730d7bf959ce34533d788b"
+    },
+    {
+      "bytes": 872,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/src/hash.mjs",
+      "sha256": "42f11fd2d0b3c369d722a4926d77129db168034e6d03729d5cf7cc33a507b5b0"
+    },
+    {
+      "bytes": 8548,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/src/job-card.mjs",
+      "sha256": "5a8c3f6e29048df1b3879d55951b88b678131058dd7c820ca54c6b82dda8fd8a"
+    },
+    {
+      "bytes": 3559,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/src/money.mjs",
+      "sha256": "6a07ac800e15cb230ac7dbb306bf87b87c53037594286eef9934332d6236b74c"
+    },
+    {
+      "bytes": 7649,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/src/packet.mjs",
+      "sha256": "ca803bb3b12d76f84b5fe5f8675eae25624f9d3373dde4e790bdc979b7ca6497"
+    },
+    {
+      "bytes": 929,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/src/policy.mjs",
+      "sha256": "27b563038929399272362d19fd569c1eb0be4e405fdf329430e14a19c7b1e9c7"
+    },
+    {
+      "bytes": 9591,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/src/rank.mjs",
+      "sha256": "c433c5d33c895b8a0c7650cb0b8108878f1c525217d30201e0d79ab283fc917f"
+    },
+    {
+      "bytes": 8308,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/src/record.mjs",
+      "sha256": "7b8c009926c7fb7b43f1525a723f3f514f32ac376a32125cca792b794002ff1c"
+    },
+    {
+      "bytes": 3048,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/src/source-quality.mjs",
+      "sha256": "242c710f54eeb598e19ad2ebf6ff68c72892bdb3453549aae639296994793d2a"
+    },
+    {
+      "bytes": 569,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/bounty-intelligence/src/unknown.mjs",
+      "sha256": "55f2ec4464a62c213ebebe9fd01a00e1c49ba47506dab9559e68c4af3714f986"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-cost-filter",
+      "sha256": null
+    },
+    {
+      "bytes": 1122,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-cost-filter/LICENSE",
+      "sha256": "ac1119925dc2d30ff283f6e659aad6f1f4afd820209d4f05eeae778cf86170ef"
+    },
+    {
+      "bytes": 786,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-cost-filter/SOURCE-NOTICE.txt",
+      "sha256": "293150ff276f1563208d72f1f21f4396b5522a7f06b69a511ab2afe3f56acedc"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-cost-filter/src",
+      "sha256": null
+    },
+    {
+      "bytes": 4636,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-cost-filter/src/card.mjs",
+      "sha256": "8263a26d998bcb6a8a23bb8f3e51c617695bdfb673b490a6ee90395e3e12f4ac"
+    },
+    {
+      "bytes": 3205,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-cost-filter/src/constants.mjs",
+      "sha256": "4c2292aa4bef6c471dc437aedd4405a87a71349fa5cd98694f5ebdf6288b38e5"
+    },
+    {
+      "bytes": 14112,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-cost-filter/src/filter.mjs",
+      "sha256": "1a2377dc8825e21cc7c618e98d09dddb471bf4fe0f9d7a29a0c492f9a37b3cc7"
+    },
+    {
+      "bytes": 1693,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-cost-filter/src/honesty.mjs",
+      "sha256": "133ae1dcd58ac34a070397780b9d05f7a280d196dc570dccd93550be484d39b5"
+    },
+    {
+      "bytes": 1068,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-cost-filter/src/load.mjs",
+      "sha256": "81ea64aed11cfc3497fb4541287fcc5710b7bfa15404dc0e2d79de8bbf9d8b9d"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight",
+      "sha256": null
+    },
+    {
+      "bytes": 1120,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/LICENSE",
+      "sha256": "ffc6c38e31097da48f90bb4650e0fa5377b4d0889fdd1ea9cf2119c16b8bfa10"
+    },
+    {
+      "bytes": 677,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/README.PORTABLE.md",
+      "sha256": "5980230c9298b2774ff58213732e37a2e0ff871505fd4348f8482cca17aae644"
+    },
+    {
+      "bytes": 2273,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/README.md",
+      "sha256": "ea34b257a62d3b0f5902e384e14aef2b4b3b2afc3d8607db9fa3d0d42b6ea17d"
+    },
+    {
+      "bytes": 4294,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/SOURCE-MAP.json",
+      "sha256": "c9ebd5ba4a325da6642e1fc007bab05c69ec17bec0b99364bf4fa3b863df4b98"
+    },
+    {
+      "bytes": 1076,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/SOURCE.txt",
+      "sha256": "3d98d81fe903f31090ed01a282f0283c30a0f69e9b0c67a5d702bfbd7e8734c8"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/cold-start",
+      "sha256": null
+    },
+    {
+      "bytes": 126,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/cold-start/caller-job.json",
+      "sha256": "79f9a168b5e8688cda49120badac4399bb40967f012014e66164b5178626f582"
+    },
+    {
+      "bytes": 36,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/cold-start/caller-manifest-catalog-only.json",
+      "sha256": "2a209c88516c8ab52597cdbce8b19bd32db6c58b86cda8d8ce98e5d01e2d443d"
+    },
+    {
+      "bytes": 115,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/cold-start/caller-manifest-ready.json",
+      "sha256": "f7e5a9456016c39e28ee74cf48b370ed7f101a32921c3c40550344b99796ce3a"
+    },
+    {
+      "bytes": 157,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/cold-start/caller-part-a.json",
+      "sha256": "271f515b19619ae67b668add0ef8d117daff0582b964f907e33548afa0488dae"
+    },
+    {
+      "bytes": 164,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/cold-start/caller-part-c.json",
+      "sha256": "b2f4b9c5fcfd983595b4c0dabe72a4d2b65d74f91a99657476f9e6064d0ecb72"
+    },
+    {
+      "bytes": 74,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/cold-start/caller-probe-ready.json",
+      "sha256": "399afe5524c4cc98cb3905682df86e67e00d15d3e40ce751c668b4b731195a21"
+    },
+    {
+      "bytes": 873,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/cold-start/caller-requirements.json",
+      "sha256": "68d9e7f5c7c18c83f9be052db27fc83e1ca5ccb95705b649ad22a68ed529cafb"
+    },
+    {
+      "bytes": 34,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/cold-start/caller-source.mjs",
+      "sha256": "dd330fab65d926f60f6381b14480d2c036ed4c13ec88b3ce06e6e7e9a3157b35"
+    },
+    {
+      "bytes": 41,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/cold-start/caller-tap-pass.txt",
+      "sha256": "9dd2066b3e5889291812101d445dc7ac9263afb61bae4842b231ee77d45304d1"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/cold-start/pkg",
+      "sha256": null
+    },
+    {
+      "bytes": 57,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/cold-start/pkg/cli.js",
+      "sha256": "5e00b27a4241d1e148b011f0551371ff14e490416a4f7e26937bd92e54b6392e"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/journey",
+      "sha256": null
+    },
+    {
+      "bytes": 5715,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/journey-input.json",
+      "sha256": "d9ba1b033876049e5a8c2f7b9d777236644110a6abaad29e811173777d3a8762"
+    },
+    {
+      "bytes": 338,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/journey/artifact.good.json",
+      "sha256": "27691bd5d7ce0f53f9e1fd843810456b5d6aa883e9d3b6e3877eff7bb2dafc9a"
+    },
+    {
+      "bytes": 1663,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/journey/buyer-context.json",
+      "sha256": "00cad55c58d18f2ebb5ea99b29c10876761c57baa12a2a30786282aaee123447"
+    },
+    {
+      "bytes": 762,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/journey/cost-input.json",
+      "sha256": "be0ab6fca8cc70d06f760c6afd56f311d11deecea92400c5355705cbb9bfe5bd"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/s191",
+      "sha256": null
+    },
+    {
+      "bytes": 5158,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/s191/caller-job.json",
+      "sha256": "68471038e29ed88ddd71e7d8df5769406f30a8ba2c6d6e635ccf612ceda6cc55"
+    },
+    {
+      "bytes": 43,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/s191/caller-source.mjs",
+      "sha256": "9a6ca19780b089dd4ca512cadd4826a63e3453fde5e19bbe84fd3b6883039c62"
+    },
+    {
+      "bytes": 47,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/fixtures/s191/caller-tap-pass.txt",
+      "sha256": "3ce43bb9a46097b46e8bf6cf3865c844737a5798129c664c7a64413b182695b9"
+    },
+    {
+      "bytes": 889,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/package.json",
+      "sha256": "a825635797cb84dab22b1b0a79131e8fd40b99c26b204e8978fedd195b27a829"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/scripts",
+      "sha256": null
+    },
+    {
+      "bytes": 13967,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/scripts/pack-portable.mjs",
+      "sha256": "9f40c796722333ee666f9850717321b6d61e58a1ef5091acf25b055ce024c95b"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/src",
+      "sha256": null
+    },
+    {
+      "bytes": 2776,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/src/constants.mjs",
+      "sha256": "0964cf26451a1844ff2119f0e42840981fc4fa39e8a6ea6870b7e5045cb0b884"
+    },
+    {
+      "bytes": 1457,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/src/index.mjs",
+      "sha256": "0377f8c402fa06507af27c17a85cd37e0c7fd47d85f030a95bd62b193925f9eb"
+    },
+    {
+      "bytes": 25826,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/src/journey.mjs",
+      "sha256": "46a9286b199276a102a991bcc73e8c3deebfd1195f0e6971e97c97eecb2b9338"
+    },
+    {
+      "bytes": 4174,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/src/next-step.mjs",
+      "sha256": "f4ea44274a9243d023574f788c3fa90749d5e1c5a4361e7f326ccbaeea4174d4"
+    },
+    {
+      "bytes": 4012,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/src/portable.mjs",
+      "sha256": "dd1f1e29c923e0524186c21726f258ddfbd55cc4b0a42d6a9429a5aec7774fca"
+    },
+    {
+      "bytes": 6934,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/src/probes.mjs",
+      "sha256": "85dbdc32d1f97715ef06c075b54c42487b8ec156a08857d8cad73e74b24d1c69"
+    },
+    {
+      "bytes": 3909,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/src/trust.mjs",
+      "sha256": "623ae4bdbc43cb38c8cc5989bea2e15b0423575e5a2f3c1dc3a20482651dd1e1"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/01",
+      "sha256": null
+    },
+    {
+      "bytes": 2307,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/01/README.md",
+      "sha256": "b31409b6300ee387e2fd207bf13dcf30322cdff3e0e585173c76c10a33f53fd4"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/01/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 924,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/01/fixtures/input.capability-missing.json",
+      "sha256": "4613b2c3508b9ddba4a919c1ec2e3412409178c1c6e27ace6f38eadbf9ac9339"
+    },
+    {
+      "bytes": 403,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/01/fixtures/input.partial.json",
+      "sha256": "7b9f5ece460f2728523da0de8f69545dbed431d8814b3cf5e9c3146718cecdd0"
+    },
+    {
+      "bytes": 1934,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/01/fixtures/input.with-capability.json",
+      "sha256": "12aa43840e3aa6bc81f315677d10c32edf21b47e8520ab8731aff4e13dc3381d"
+    },
+    {
+      "bytes": 73,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/01/fixtures/requirements.malformed.json",
+      "sha256": "fbc5169dffe9c8ea47bfadc08753bb3d909d44f1d665b6fc2879cf9e719bfebe"
+    },
+    {
+      "bytes": 405,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/01/fixtures/requirements.negative.json",
+      "sha256": "f667270240f647f01ad37e5901a79aeff5a20db4498898a80a1815c2b6d8163c"
+    },
+    {
+      "bytes": 1760,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/01/fixtures/requirements.positive.json",
+      "sha256": "f0e376a4e7f09dc8509b513380d91e01303798f54e00bccb2c153f45814832c3"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/01/src",
+      "sha256": null
+    },
+    {
+      "bytes": 2826,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/01/src/cli.mjs",
+      "sha256": "33c14a96b6f7f09100d2f431b87c6fc17f8d1057f0c4bc63785caa73d82d8638"
+    },
+    {
+      "bytes": 1998,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/01/src/constants.mjs",
+      "sha256": "ebfb29a4f6c2b011a3f7f04991310be59e5d673c411f473e7a27e170aa1baa9a"
+    },
+    {
+      "bytes": 11231,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/01/src/envelope.mjs",
+      "sha256": "6a798bf088cc993c55ed95eeca55e3635711725057fd54c71f296bb7d755febc"
+    },
+    {
+      "bytes": 493,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/01/src/index.mjs",
+      "sha256": "a2b5664fd7183e266cbf0c0ae8a5abdda73a718fec16aba0f3bc383843a60cfc"
+    },
+    {
+      "bytes": 16271,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/01/src/validate.mjs",
+      "sha256": "20169ef8dcd557e9984c576a7324d42e901286748f026746e53cfc4945769862"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/04",
+      "sha256": null
+    },
+    {
+      "bytes": 3560,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/04/README.md",
+      "sha256": "69e6bd8e76324c704db26db3027f2a854fcba7dca6570c8689de7a344cf56cf5"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/04/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 1248,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/04/fixtures/external-cost.json",
+      "sha256": "f6e098e953734a92d20e20ecf3eb6ab576672c170b2dc71286e8c5470caf7997"
+    },
+    {
+      "bytes": 767,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/04/fixtures/free-unavailable.json",
+      "sha256": "fb7675c5de039334cc74767c5335fb8413030c5e5963267bb9aa3f904892d944"
+    },
+    {
+      "bytes": 593,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/04/fixtures/negative-forbidden.json",
+      "sha256": "64f8c8a5360e30757b79c036dcfd7a9791918cfdc83e7665501aca8a459d5e2f"
+    },
+    {
+      "bytes": 709,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/04/fixtures/partial-missing-price.json",
+      "sha256": "490c025810cbde1d7e552cf11d17d88faf4af3d525a5105550b20a9c3e476da3"
+    },
+    {
+      "bytes": 1105,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/04/fixtures/positive.json",
+      "sha256": "876a6ecc64b5acbef0224bcfbe0dab8e5692bed5a770de051b31c28bedd80ea9"
+    },
+    {
+      "bytes": 416,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/04/package.json",
+      "sha256": "de68f834eb2be2934b99d167c06e4212e0e9227afa04080d4f9e4b7c7af3013a"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/04/src",
+      "sha256": null
+    },
+    {
+      "bytes": 3101,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/04/src/cli.mjs",
+      "sha256": "6dc2d5dbe3d23a57704f5e15ca72f5215f1239153cf3038e6f398e609464a401"
+    },
+    {
+      "bytes": 6142,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/04/src/compare.mjs",
+      "sha256": "a1bbe265b5fce84fb250e6119d8871dffd6ff220ced3ef6ba632f13b23bf14bf"
+    },
+    {
+      "bytes": 3621,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/04/src/constants.mjs",
+      "sha256": "f4adf0a55161e0eac4fee5e67c9ade69d4113b474c2892d5c13bbbf0d200d099"
+    },
+    {
+      "bytes": 500,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/04/src/index.mjs",
+      "sha256": "27215280057e994ef6285dad3e37230f690d86e18affd093c848c97baf2bd3fe"
+    },
+    {
+      "bytes": 7319,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/04/src/validate.mjs",
+      "sha256": "af3961705d1796108d2bc8b0a3e2ad77fbb9029b9b4504e3d0a3d378b8c74b88"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/05",
+      "sha256": null
+    },
+    {
+      "bytes": 2825,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/05/README.md",
+      "sha256": "46fe541788fd1d191c8aee3b6b16185613da4e7b1aecf85f4340339e5d18a527"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/05/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 470,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/05/fixtures/ambiguous-mutation.json",
+      "sha256": "821b1d99cfd1e64244ef691f7c985bc024d27b0412d275da72d7547a18bbea79"
+    },
+    {
+      "bytes": 628,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/05/fixtures/free-baseline-hint.json",
+      "sha256": "f82293802b2084865fc5d71268492b31b8f4b0b85fe59e64e86a547ccbd653ec"
+    },
+    {
+      "bytes": 411,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/05/fixtures/negative-forbidden.json",
+      "sha256": "4cb120835d5c22a3a47dfbf09c4bb593ff2eab590e854358635c5d0d9868179b"
+    },
+    {
+      "bytes": 250,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/05/fixtures/partial-missing-fields.json",
+      "sha256": "3e8af1b6961b4d09b24383ec15cd9091d0abddf83332b80961063214906a3b58"
+    },
+    {
+      "bytes": 505,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/05/fixtures/positive-known-mutation.json",
+      "sha256": "78937b5a6e57c9cf2014e03bce8e9e579cb31185c76bd5918186ce4e83367b9d"
+    },
+    {
+      "bytes": 420,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/05/package.json",
+      "sha256": "a6a9cdc4b7b03c4d9a349c7c22324202d93ec25bfdd3730c8c2e6926187aef64"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/05/src",
+      "sha256": null
+    },
+    {
+      "bytes": 3389,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/05/src/cli.mjs",
+      "sha256": "d3552cb7ea5757ae0feb6da4c660898369cfc30a82478fdce9860e583f69b0aa"
+    },
+    {
+      "bytes": 3778,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/05/src/constants.mjs",
+      "sha256": "a20ed35cc355d67f5f1870ab563cb7117bad0e56e255367849288bab52830513"
+    },
+    {
+      "bytes": 522,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/05/src/index.mjs",
+      "sha256": "6ae5fc4ca05e41c8841c5c5fd3e5602288ff300d78aa44bbc5230479264c92d1"
+    },
+    {
+      "bytes": 14046,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/05/src/plan.mjs",
+      "sha256": "34ff3cebe05f09c1068f33d5daa4bd8b45ece9d645c514b770a74ddc4a4241c3"
+    },
+    {
+      "bytes": 7305,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/05/src/validate.mjs",
+      "sha256": "165d8ff7fcf0c5f1420c40541b04a5d471898d69159857dba34342746f02a174"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/07",
+      "sha256": null
+    },
+    {
+      "bytes": 3690,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/07/README.md",
+      "sha256": "32caad7088809a56403f3d81500c082fe34e139c60255607285744a34faad31d"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/07/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 424,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/07/fixtures/negative-endpoint-secrets.json",
+      "sha256": "cb7c0e6e71e89859d1c8017c41138a55dd7074ca441b8cf6d761f0cbaff933b8"
+    },
+    {
+      "bytes": 550,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/07/fixtures/negative-forbidden.json",
+      "sha256": "05277c5c39dbcd22a704d27619ea969c795d8a1d0549ca5b7cf02cf9e30d5dc4"
+    },
+    {
+      "bytes": 829,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/07/fixtures/partial-missing-secret.json",
+      "sha256": "906b15a41572518ac6b0545b54273846ed23d4162e2c9d56141b3b703bfc0b1e"
+    },
+    {
+      "bytes": 709,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/07/fixtures/positive-required-inputs-only.json",
+      "sha256": "9f8bd4555a4724981ee2c601015b98fc8e512ba988551db86ec541d13a348866"
+    },
+    {
+      "bytes": 1652,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/07/fixtures/positive.json",
+      "sha256": "1f525587baa9f6960572c992571ca963082b9beee374a3a2c6da0523109afaa8"
+    },
+    {
+      "bytes": 415,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/07/package.json",
+      "sha256": "7e55bf62996c92db31381d199dc605da5a30f93cf31e326822df4390af051a48"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/07/src",
+      "sha256": null
+    },
+    {
+      "bytes": 3451,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/07/src/cli.mjs",
+      "sha256": "e767e121f3fcb51c8ed093d975fff43bfd9c1824515ef93095e0bb7f6fd20c71"
+    },
+    {
+      "bytes": 2233,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/07/src/constants.mjs",
+      "sha256": "cf44aed81f5723dc443b783f0513e98ec5e860f049c2a6c55547f6d6187fc292"
+    },
+    {
+      "bytes": 472,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/07/src/index.mjs",
+      "sha256": "a13c7e54a53e63f10c5cae9a517661d2354b5efa0446856abe4cb7316a7d1822"
+    },
+    {
+      "bytes": 11719,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/07/src/pack.mjs",
+      "sha256": "ae178c9b7dc4316adfe4f4b151c13547819982c58f967ab565c1918918653960"
+    },
+    {
+      "bytes": 10765,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/07/src/validate.mjs",
+      "sha256": "27f466e10c17adf1e9a89703d6dfb3cc5e9de44e6539df6e2b0fd3da7b371c6a"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08",
+      "sha256": null
+    },
+    {
+      "bytes": 3293,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/README.md",
+      "sha256": "c1002266a5cabb3dff03db0cdc3a049357ec7ad30f1659eddb2d37f86c8084b3"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 191,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/fixtures/artifact.bad.json",
+      "sha256": "84dda34a6853e83e32e2560dd4d24678f4d8aa992fcdf775f0b4bfac4d1edc9e"
+    },
+    {
+      "bytes": 298,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/fixtures/artifact.good.json",
+      "sha256": "d0d74b93ebf63737d628f269b9be2564da8f34d55c7aa5f17781db17e8ec81f7"
+    },
+    {
+      "bytes": 769,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/fixtures/cost-input.json",
+      "sha256": "6c3c35a8c99e4564e50dd29cfbe30a31f4f52d73181f76e7c78d3b6e5f25b83c"
+    },
+    {
+      "bytes": 470,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/fixtures/failed-outcome.ambiguous.json",
+      "sha256": "821b1d99cfd1e64244ef691f7c985bc024d27b0412d275da72d7547a18bbea79"
+    },
+    {
+      "bytes": 1805,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/fixtures/requirements.json",
+      "sha256": "d53d1b1c83090013365c84fe5a86d72357d8262be989730ee7f959b043837743"
+    },
+    {
+      "bytes": 454,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/fixtures/walkthrough.demo.json",
+      "sha256": "c228753224520efbb8e913271a77859b90acb9d9b88ecada8b9110539546bd8b"
+    },
+    {
+      "bytes": 392,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/package.json",
+      "sha256": "54717167bf2ac2941e23f86e17fc7a8f55c605e1dd2907f4fd90be03b1add169"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/src",
+      "sha256": null
+    },
+    {
+      "bytes": 2159,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/src/cli.mjs",
+      "sha256": "5026ef5f98a0f90bac2540e88769fd7ff9957ba9abfb5739736d4cfbfea24acc"
+    },
+    {
+      "bytes": 1722,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/src/constants.mjs",
+      "sha256": "8c35f07daeeccbb975e3e0d86b87ae166415b03f5955e8417c31227aee6fcd26"
+    },
+    {
+      "bytes": 3624,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/src/deps.mjs",
+      "sha256": "c6552b282fcb8d1a15dffd81a2f1931360b2bfd54f8f57f9ad38834f2dfeb010"
+    },
+    {
+      "bytes": 690,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/src/index.mjs",
+      "sha256": "3de689bb201c9f7a893058eb0162ece04cef86115182232e756d6322adf81b91"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/src/stubs",
+      "sha256": null
+    },
+    {
+      "bytes": 4685,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/src/stubs/cap01_cap04.mjs",
+      "sha256": "ac0f8e4947fe017ce6004df85e74fd4decbd1a08fba712f97ef311daba9478a5"
+    },
+    {
+      "bytes": 775,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/src/stubs/discovery.mjs",
+      "sha256": "f0f8ec6a46612b8b2d4a022a8c2ed540acfd120857d475349fcc756098eea5d7"
+    },
+    {
+      "bytes": 412,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/src/stubs/evidence.mjs",
+      "sha256": "1c53f2a6469ae75323726f6036d63c22e779484e3540dd376e0e16579e906dd4"
+    },
+    {
+      "bytes": 2507,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/src/stubs/fallback.mjs",
+      "sha256": "46ea92945db1995f0c878bff7652177c9eda7c7ed0dbe0b32511e71c29c2906e"
+    },
+    {
+      "bytes": 1027,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/src/stubs/prereq.mjs",
+      "sha256": "43ace3ab363e90e6d72dcbab4791792188cb187209befc670755460bda83d388"
+    },
+    {
+      "bytes": 5826,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/src/verify.mjs",
+      "sha256": "a8cc1d1880da1fabb75dbabe65e08d972e3b6987ef5f124f649bd65ffed7f432"
+    },
+    {
+      "bytes": 10316,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/08/src/walkthrough.mjs",
+      "sha256": "ac01319902e28247d2c74a21c88c9a372b40b1645dfd21d339b30109e3192491"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170",
+      "sha256": null
+    },
+    {
+      "bytes": 3110,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/README.md",
+      "sha256": "c77b8a6ebd0786aeedae11495d29d3ae7f8a3726d5d8d10814c40be9901162f3"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 1636,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/fixtures/recipe-context-pack.input.json",
+      "sha256": "dfda9fa0dd5b539d4a9763beb5fc926c73f620f4694b54e35f3374bfee7bff30"
+    },
+    {
+      "bytes": 1148,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/fixtures/recipe-cost-compare.input.json",
+      "sha256": "236aefe61639576496fc594180132138c82fab5ebd72d52229534f1212541314"
+    },
+    {
+      "bytes": 1360,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/fixtures/recipe-envelope.requirements.json",
+      "sha256": "625ba0ee4633e2c38c2bf0d68176597f674d31ad9193aedcd66e23baeabf7908"
+    },
+    {
+      "bytes": 544,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/fixtures/recipe-fallback.failed-outcome.json",
+      "sha256": "d6efb48a41c9232c39afa13e199f10c5340f1c0e4ae6d0dd01b3eab58e5eaf3d"
+    },
+    {
+      "bytes": 282,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/fixtures/recipe-walkthrough-lite.artifact.json",
+      "sha256": "ec7de1500a045987c1f4d16d57658310bf33a6d8051e5e7799a9cbb10055f91c"
+    },
+    {
+      "bytes": 629,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/fixtures/recipe-walkthrough-lite.cost.json",
+      "sha256": "3d6e0b673244c4213823f9272652cf3a1766353d89b38deeed90babbeefa3ec0"
+    },
+    {
+      "bytes": 1052,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/fixtures/recipe-walkthrough-lite.requirements.json",
+      "sha256": "fb21a69ac754391f883e150e0e11a57df2b34a8fb38930f02148868dafe8802c"
+    },
+    {
+      "bytes": 493,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/package.json",
+      "sha256": "a6c4e68738f687acde635459da34e8af089c8033c49997a1e51c430dfa367ee1"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/src",
+      "sha256": null
+    },
+    {
+      "bytes": 3770,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/src/cli.mjs",
+      "sha256": "9286af9b4c4956575d11cfa0a74f8fd88be215e68147e8158b672704c58cb119"
+    },
+    {
+      "bytes": 1768,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/src/constants.mjs",
+      "sha256": "630d035e6563d6d50841e783955b6aeec0825c3e246d62c1adb5494f3aa038ff"
+    },
+    {
+      "bytes": 970,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/src/index.mjs",
+      "sha256": "96d0cf8ffac70d9986981ec73bd6d498c0193b514dbb2bd623e2f9fb8b6d75a9"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/src/recipes",
+      "sha256": null
+    },
+    {
+      "bytes": 2068,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/src/recipes/context-pack.mjs",
+      "sha256": "f9b912e614300f2d0fadb7b67bee508e3a1f87f3f5ee4886ea15ec6a3f052ea4"
+    },
+    {
+      "bytes": 2169,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/src/recipes/cost-compare.mjs",
+      "sha256": "5c8694b59f9c0182ec1e851c41cbf8892b9cac129aaa175d6609d89331dbba99"
+    },
+    {
+      "bytes": 2016,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/src/recipes/envelope.mjs",
+      "sha256": "d3720b89aca740fdc497adc1404ca80cddccffaee9532e08ab1879323669e703"
+    },
+    {
+      "bytes": 2215,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/src/recipes/fallback.mjs",
+      "sha256": "dd088302359bf980d1e3190155bd762bb044676588d09755f0873457b8112af2"
+    },
+    {
+      "bytes": 3781,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/examples-s170/src/recipes/walkthrough-lite.mjs",
+      "sha256": "fb44e873b8441ac9742e4161d446330574716ef56f6d61cc4b79383b2e396909"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172",
+      "sha256": null
+    },
+    {
+      "bytes": 640,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172/README.md",
+      "sha256": "6cfd76bbc4682808b3af9119b56036ee68b3e6f56144e5e991cf0ff074f14fd6"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 126,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172/fixtures/caller-job.json",
+      "sha256": "79f9a168b5e8688cda49120badac4399bb40967f012014e66164b5178626f582"
+    },
+    {
+      "bytes": 36,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172/fixtures/caller-manifest-catalog-only.json",
+      "sha256": "2a209c88516c8ab52597cdbce8b19bd32db6c58b86cda8d8ce98e5d01e2d443d"
+    },
+    {
+      "bytes": 107,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172/fixtures/caller-manifest-ready.json",
+      "sha256": "edcbfc6b0338333dfa6580e634a23395476e37a37976aff4f1264e5f82a39201"
+    },
+    {
+      "bytes": 157,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172/fixtures/caller-part-a.json",
+      "sha256": "271f515b19619ae67b668add0ef8d117daff0582b964f907e33548afa0488dae"
+    },
+    {
+      "bytes": 164,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172/fixtures/caller-part-c.json",
+      "sha256": "b2f4b9c5fcfd983595b4c0dabe72a4d2b65d74f91a99657476f9e6064d0ecb72"
+    },
+    {
+      "bytes": 74,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172/fixtures/caller-probe-ready.json",
+      "sha256": "399afe5524c4cc98cb3905682df86e67e00d15d3e40ce751c668b4b731195a21"
+    },
+    {
+      "bytes": 873,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172/fixtures/caller-requirements.json",
+      "sha256": "68d9e7f5c7c18c83f9be052db27fc83e1ca5ccb95705b649ad22a68ed529cafb"
+    },
+    {
+      "bytes": 34,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172/fixtures/caller-source.mjs",
+      "sha256": "dd330fab65d926f60f6381b14480d2c036ed4c13ec88b3ce06e6e7e9a3157b35"
+    },
+    {
+      "bytes": 41,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172/fixtures/caller-tap-pass.txt",
+      "sha256": "9dd2066b3e5889291812101d445dc7ac9263afb61bae4842b231ee77d45304d1"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172/src",
+      "sha256": null
+    },
+    {
+      "bytes": 1768,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172/src/cli.mjs",
+      "sha256": "7e279ec0467e8eba8e7189549537368de9afda60d106d527d4757203e2439f98"
+    },
+    {
+      "bytes": 585,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172/src/constants.mjs",
+      "sha256": "7647f2f4286289d2e67d3b717f49db4a4ff397b7f86711c2e42bbdbee6a8fc03"
+    },
+    {
+      "bytes": 4527,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172/src/first-run.mjs",
+      "sha256": "f9c69c5e35d50c745bf9d1785fadd6449aee9a9bef76c143544790b61d0f73e0"
+    },
+    {
+      "bytes": 200,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/first-run-s172/src/index.mjs",
+      "sha256": "67d904488a726c0d29f2ff53e942043f0aad8707e051e395ff4f7fd6ba4aec4f"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162",
+      "sha256": null
+    },
+    {
+      "bytes": 5420,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/JOURNEY-PACKET-S162.md",
+      "sha256": "589ee71c2dc5bfd75ff127ce4cb15af706ce06561a380ad71fdc248b4a2f2de4"
+    },
+    {
+      "bytes": 1132,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/README.md",
+      "sha256": "ed07449b16ebc315f914b3d8ededa278f67b8de3eddab61e0e4de5432937d117"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 298,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/artifact.good.json",
+      "sha256": "d0d74b93ebf63737d628f269b9be2564da8f34d55c7aa5f17781db17e8ec81f7"
+    },
+    {
+      "bytes": 1663,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/buyer-context.json",
+      "sha256": "00cad55c58d18f2ebb5ea99b29c10876761c57baa12a2a30786282aaee123447"
+    },
+    {
+      "bytes": 762,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/cost-input.json",
+      "sha256": "be0ab6fca8cc70d06f760c6afd56f311d11deecea92400c5355705cbb9bfe5bd"
+    },
+    {
+      "bytes": 505,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/failed-outcome.json",
+      "sha256": "78937b5a6e57c9cf2014e03bce8e9e579cb31185c76bd5918186ce4e83367b9d"
+    },
+    {
+      "bytes": 593,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/forbidden-cost.json",
+      "sha256": "64f8c8a5360e30757b79c036dcfd7a9791918cfdc83e7665501aca8a459d5e2f"
+    },
+    {
+      "bytes": 691,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/forbidden-requirements.json",
+      "sha256": "1adcbd68b0b14abca8891fdc1791233e9a8ea15dd643802a5d0efac9dc5aadff"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/heavy",
+      "sha256": null
+    },
+    {
+      "bytes": 587,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/heavy/compose-input.json",
+      "sha256": "cb1911d5b835dffb78cbeb8b0f5edbc1d484f02ec6ed8f4d54b0edbd68c2438e"
+    },
+    {
+      "bytes": 127,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/heavy/declaration.json",
+      "sha256": "b404addd4b68e3e740586d8662999a8641b739add69a7196f39f0dda4f10ae27"
+    },
+    {
+      "bytes": 723,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/heavy/evidence-bind-input.json",
+      "sha256": "c7fd15b473c708ce85bab20067220e227086d1e6a249e295cf00c0b2a65e02d2"
+    },
+    {
+      "bytes": 126,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/heavy/job.json",
+      "sha256": "79f9a168b5e8688cda49120badac4399bb40967f012014e66164b5178626f582"
+    },
+    {
+      "bytes": 36,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/heavy/manifest-catalog-only.json",
+      "sha256": "2a209c88516c8ab52597cdbce8b19bd32db6c58b86cda8d8ce98e5d01e2d443d"
+    },
+    {
+      "bytes": 247,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/heavy/manifest-ready.json",
+      "sha256": "968b853eb42031557c7bb7fb82d73d355b4acbb1e3ee15b244cf0489c08b469c"
+    },
+    {
+      "bytes": 157,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/heavy/part-a.json",
+      "sha256": "271f515b19619ae67b668add0ef8d117daff0582b964f907e33548afa0488dae"
+    },
+    {
+      "bytes": 164,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/heavy/part-c-ok.json",
+      "sha256": "b2f4b9c5fcfd983595b4c0dabe72a4d2b65d74f91a99657476f9e6064d0ecb72"
+    },
+    {
+      "bytes": 75,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/heavy/probe-ready.json",
+      "sha256": "4dbc8f424bdb451ca7ebe156e7392050372cf9e2095f909afd8147e429f565a7"
+    },
+    {
+      "bytes": 64,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/heavy/sample-tap-pass.txt",
+      "sha256": "4bfa25d75306eee99867bd46c604ea262b6c0b62ca7d554776a68f4e5a99ad81"
+    },
+    {
+      "bytes": 76,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/heavy/source-snippet.mjs",
+      "sha256": "0f76e986922535914756794b74a25dcd7b7e6268d55540a979a4450ba1f8d652"
+    },
+    {
+      "bytes": 206,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/journey.demo.json",
+      "sha256": "06173c229788d2e90915150d41eb42f139d22d9a6c6a6366847ea0483093035f"
+    },
+    {
+      "bytes": 1964,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/fixtures/requirements.json",
+      "sha256": "2173fbc0589d35c153b455f9f71fda4cdd6b827de8624c5c1e704f08bd927c08"
+    },
+    {
+      "bytes": 543,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/package.json",
+      "sha256": "49fa1016ecbef7dcd58c79d52ee2e72237048842ca2bbde585b3e6b4c1c6b548"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/src",
+      "sha256": null
+    },
+    {
+      "bytes": 6862,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/src/adapters.mjs",
+      "sha256": "ad3a7613dbb3fd00c3e78f4bb5fcd36f86f025d56d07f6ac71ce6d1cb511f145"
+    },
+    {
+      "bytes": 5629,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/src/cli.mjs",
+      "sha256": "0c7b9cf1aa0ce18c856aa5a7b2745b7f343634f8d1b1b48dd2d16293c132ffde"
+    },
+    {
+      "bytes": 3511,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/src/constants.mjs",
+      "sha256": "e9f7dfbdec9e6c8e5d06949820a6e8b5ccc6084599ebd230ae0e24fb08e8b900"
+    },
+    {
+      "bytes": 470,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/src/index.mjs",
+      "sha256": "0c14cf20b0c601a1cff0e6753f5fe9fda1a1efafc1f640dc9921e6ff3ff077a2"
+    },
+    {
+      "bytes": 17014,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/capabilities/journey-s162/src/journey.mjs",
+      "sha256": "f7e4e7718c85d07a91d0ef7ffb9a73fa945f50de0ed7e89c29cfd87fb9422a25"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence",
+      "sha256": null
+    },
+    {
+      "bytes": 4390,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/BOT-INTEGRATION.md",
+      "sha256": "08664bebb51450efecfaf28f80b756820155f0630c5dda089060c4ec2e061b4d"
+    },
+    {
+      "bytes": 470,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/DESTINATION.md",
+      "sha256": "7d94b687ca538420bd99801b96a0abc9d55812dff9e38021a2d255190969c2d2"
+    },
+    {
+      "bytes": 1091,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/LICENSE",
+      "sha256": "92315e3a0d301ee5b958ce7272a1825307fbb6ae8dbaa0169839198713ab2c46"
+    },
+    {
+      "bytes": 1145,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/README.md",
+      "sha256": "08b3632f344d595c78b682f6376e0760b8c490f8ff4ba915dc68a06d32838456"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/evidence",
+      "sha256": null
+    },
+    {
+      "bytes": 8377,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/evidence/admission-events.jsonl",
+      "sha256": "72ccfa1d68c7d23c559c1ddad2f45af2bd58052ac7c5f8c603d067e62c39c386"
+    },
+    {
+      "bytes": 616,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/evidence/native-child-catalog.md",
+      "sha256": "d2bc018aa9cc8d8df913d743e66304e45f29fe7bbf129c988ff0d60c60c1000f"
+    },
+    {
+      "bytes": 11329,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/evidence/r2-capabilities-owned.json",
+      "sha256": "9d37762ccddf5b09b3ead9e4991de352c2145a8abd7806a0f6421e8a544b6bd3"
+    },
+    {
+      "bytes": 413,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/evidence/s129-capacity-semantics.md",
+      "sha256": "173a6fedbe8591b6565d02917fa26d555673da3cd753a082fb1184221ce1bb4d"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/examples",
+      "sha256": null
+    },
+    {
+      "bytes": 448,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/examples/README.md",
+      "sha256": "cdc2b8422aa3c31db8300f6201428b8eb9ef71f12f4fd98b961aa2b692065fe4"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/examples/demo-out",
+      "sha256": null
+    },
+    {
+      "bytes": 1991,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/examples/demo-out/02-prereq.json",
+      "sha256": "46bf90223b2dd888c551affd82e04835e222f3a57a57714cdce43179415101bd"
+    },
+    {
+      "bytes": 2624,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/examples/demo-out/03-bound.json",
+      "sha256": "c2036b4bc505a3680155a99a0c586467e2d89c95eb7139e89365c44578ecf996"
+    },
+    {
+      "bytes": 1270,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/examples/demo-out/06-partial.json",
+      "sha256": "acc050f3903b33255cd9ee70592951564b22afd88aae61cdc050ac526709aeff"
+    },
+    {
+      "bytes": 199,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/examples/demo-out/summary.json",
+      "sha256": "c62bd1e3907c81dd6ad33c8624e982b364c4bb3c84e3cb1848cda08ce4aa02ab"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/evidence",
+      "sha256": null
+    },
+    {
+      "bytes": 127,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/evidence/declaration-02.json",
+      "sha256": "b404addd4b68e3e740586d8662999a8641b739add69a7196f39f0dda4f10ae27"
+    },
+    {
+      "bytes": 105,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/evidence/declaration-untested.json",
+      "sha256": "0972bce9fea3ff136480a9573a9d64bc0d0f9b405d884ead08da9a5e299b3a6f"
+    },
+    {
+      "bytes": 80,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/evidence/provenance-only.json",
+      "sha256": "be6974aa7513505c897ef16c62329ae0b24d93e8b274f2e3beede9ecac1cef9e"
+    },
+    {
+      "bytes": 61,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/evidence/sample-tap-fail.txt",
+      "sha256": "adf2519702bbc38943c0b2ef82422fd202cb67299c6262caed7dc7b606cfddec"
+    },
+    {
+      "bytes": 64,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/evidence/sample-tap-pass.txt",
+      "sha256": "4bfa25d75306eee99867bd46c604ea262b6c0b62ca7d554776a68f4e5a99ad81"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/manifests",
+      "sha256": null
+    },
+    {
+      "bytes": 108,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/manifests/grexal-bad-ext.json",
+      "sha256": "66b1ff92706f51f8c993e27ec3947536e77c828f337de9a141b844bea7a622d2"
+    },
+    {
+      "bytes": 149,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/manifests/grexal-ok.json",
+      "sha256": "9720a38872963606dd0926703182dce2e486bb19a325a9a81854710713941f67"
+    },
+    {
+      "bytes": 36,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/manifests/package-catalog-only.json",
+      "sha256": "2a209c88516c8ab52597cdbce8b19bd32db6c58b86cda8d8ce98e5d01e2d443d"
+    },
+    {
+      "bytes": 247,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/manifests/package-ready.json",
+      "sha256": "968b853eb42031557c7bb7fb82d73d355b4acbb1e3ee15b244cf0489c08b469c"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/partial",
+      "sha256": null
+    },
+    {
+      "bytes": 126,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/partial/job.json",
+      "sha256": "79f9a168b5e8688cda49120badac4399bb40967f012014e66164b5178626f582"
+    },
+    {
+      "bytes": 157,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/partial/part-a.json",
+      "sha256": "271f515b19619ae67b668add0ef8d117daff0582b964f907e33548afa0488dae"
+    },
+    {
+      "bytes": 171,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/partial/part-b-stale.json",
+      "sha256": "508bed85845c74000275d96d5381c4be20b1524e6137a186b9e5bcd4500ebd73"
+    },
+    {
+      "bytes": 164,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/partial/part-c-ok.json",
+      "sha256": "b2f4b9c5fcfd983595b4c0dabe72a4d2b65d74f91a99657476f9e6064d0ecb72"
+    },
+    {
+      "bytes": 132,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/fixtures/partial/part-wrong-schema.json",
+      "sha256": "1397ee3c1f3e932e22ac723bd4842f9d3524cf84eeb0fe95a46d92178a06b32b"
+    },
+    {
+      "bytes": 740,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/package.json",
+      "sha256": "476742240934abf23f945e40c04ad1a1d2e55fac90502e8900db41b4df0c847d"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/schemas",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/schemas/v1",
+      "sha256": null
+    },
+    {
+      "bytes": 1114,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/schemas/v1/evidence-binding.schema.json",
+      "sha256": "6c2731bda9157cd6f12e42a93183f5e1638453b5060a75baf0a638d0c2ab3084"
+    },
+    {
+      "bytes": 582,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/schemas/v1/partial-composition.schema.json",
+      "sha256": "b49beefbc878af6f6dd2c693a1a0bb399320744a5c7777318dfe37268411c8d3"
+    },
+    {
+      "bytes": 600,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/schemas/v1/prereq-report.schema.json",
+      "sha256": "677983c13f88d884d81a97a0d10dac35b32f50df4e7ad79b8f2735ab20c611db"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/src",
+      "sha256": null
+    },
+    {
+      "bytes": 11985,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/src/bind-evidence.mjs",
+      "sha256": "159b49249fc5f657aac900fe2b0b54c29efebd79e1b86608aa4fcad3245af17e"
+    },
+    {
+      "bytes": 9633,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/src/compose-partial.mjs",
+      "sha256": "85a48814ac8e23a20a334c194c6304d0b0f4bac58140849270217cb06abe540f"
+    },
+    {
+      "bytes": 176,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/src/index.mjs",
+      "sha256": "5be3317ffb726e8394de03a051e265ef376d8f108c3e5b5b2f3d15c562c5f17b"
+    },
+    {
+      "bytes": 13019,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/src/resolve-prerequisites.mjs",
+      "sha256": "6c2e1548d94b15de0b2863dd529b25bb8ac3f7561e2bd721622eea0c294b36b3"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/test",
+      "sha256": null
+    },
+    {
+      "bytes": 7623,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/test/capabilities.test.mjs",
+      "sha256": "537f16545a0b3917500ae173d621e3d01a6c48794326d620c93144746f0d6ce2"
+    },
+    {
+      "bytes": 2891,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c06/vendor-readonly/capability-preflight/vendor/s138-capability-evidence/test/cli-regressions.test.mjs",
+      "sha256": "cfacdb21ed39efa4835645edce32aa319f3b94ee37cf8f2db685566789a03545"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c07",
+      "sha256": null
+    },
+    {
+      "bytes": 1139,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c07/LICENSE",
+      "sha256": "4bf5b27b3d879e68e4373f5b4b7ccce8b32b314469cb1775616ad600017ff960"
+    },
+    {
+      "bytes": 84,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c07/package.json",
+      "sha256": "07794a06415a113179a6a340f88ef9502e71eb0367b6e7a84347c2426d278c23"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c07/src",
+      "sha256": null
+    },
+    {
+      "bytes": 4554,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c07/src/constants.mjs",
+      "sha256": "5dbf7f5e227b277d1380774a9c4136fc23c3eeed6c51f5e3ffe47cc4a5428562"
+    },
+    {
+      "bytes": 1852,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/bounty-discovery/vendor/c07/src/reservation.mjs",
+      "sha256": "605706c44555200c44346cc24c109f10082bf963a055b3ef6cae72dac103233e"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/contributor-desk",
+      "sha256": null
+    },
+    {
+      "bytes": 1116,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/contributor-desk/LICENSE",
+      "sha256": "ac709fde417dbf84af9c403a7fa6512c4387fc633c855776f98ace67f3d84b9e"
+    },
+    {
+      "bytes": 1079,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/contributor-desk/SOURCE-NOTICE.txt",
+      "sha256": "014fc1bf3b1e56532f6474098ed48103991b94f1bc80d747f1752af9f86458dc"
+    },
+    {
+      "bytes": 922,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/contributor-desk/package.json",
+      "sha256": "eaf471f46f314bebdb2112921b9d9b23e2acca4ee77abf68b5f7c407e7ee4445"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/contributor-desk/src",
+      "sha256": null
+    },
+    {
+      "bytes": 5716,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/contributor-desk/src/constants.mjs",
+      "sha256": "ebaa2e7a7bb917dcd2738a1bf17cbdd49151e84c9de166c610d1e81653338a13"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/funded-task-terms",
+      "sha256": null
+    },
+    {
+      "bytes": 1117,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/funded-task-terms/LICENSE",
+      "sha256": "9fac723cb7efb91568af7917aefef87dcd773b15f74d7d2692178083f3e0a9a8"
+    },
+    {
+      "bytes": 1143,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/funded-task-terms/package.json",
+      "sha256": "864a61fb20a3b1cbd0ecec6a494b182a0b2c085ee5d152211b701c424e08a788"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/packs/funded-task-terms/src",
+      "sha256": null
+    },
+    {
+      "bytes": 1206,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/funded-task-terms/src/canonical.mjs",
+      "sha256": "5bac27213929a6e35c7616b9128ab74f3cd13a2b3d50f94195388e54c12ebda1"
+    },
+    {
+      "bytes": 1073,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/packs/funded-task-terms/src/hash.mjs",
+      "sha256": "0d39984d7224d4c946cce5f2d4c5e860847f872538a905553a4041a65d2f707c"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/public",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/public/labs",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "l09-next-action-0.1.0/public/labs/bounty-discovery",
+      "sha256": null
+    },
+    {
+      "bytes": 265394,
+      "kind": "file",
+      "path": "l09-next-action-0.1.0/public/labs/bounty-discovery/snapshot-v1.json",
+      "sha256": "6e878c64f73cdaf460d0de24dff1e14516e2e0227c0f39d0ae8666084e62c09b"
+    }
+  ]
+}

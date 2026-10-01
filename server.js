@@ -17,7 +17,8 @@
 // seller's Gateway balance, which can later be withdrawn to a supported chain.
 // It does not change or intercept the standard Base exact or native MPP paths.
 
-import { writeFileSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import express from "express";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { HTTPFacilitatorClient } from "@x402/core/server";
@@ -1402,6 +1403,8 @@ app.get(["/.well-known/x402", "/.well-known/x402.json", "/x402.json", "/api/x402
   });
 });
 
+let publicAcquisitionDiscoveryUrl = null;
+
 // A browser or indexer sometimes probes MCP with GET before opening the
 // streamable-HTTP POST transport. Return a free machine descriptor instead of
 // a 405; actual tool discovery and calls remain on POST /mcp.
@@ -1424,6 +1427,7 @@ app.get("/mcp", (_req, res) => {
     openapi: `${PUBLIC_URL}/openapi.json`,
     purchaseEvidence: `${PUBLIC_URL}${PURCHASE_EVIDENCE_MANIFEST_PATH}`,
     skillAcquisition: `${PUBLIC_URL}/.well-known/skills/route-lock-receipt/SKILL.md`,
+    ...(publicAcquisitionDiscoveryUrl ? { publicAcquisition: publicAcquisitionDiscoveryUrl } : {}),
   });
 });
 
@@ -1434,6 +1438,20 @@ mountWellKnownSkills(app, {
   publicUrl: PUBLIC_URL,
   extraIndexSkills: [acquisitionIndexSkill({ recipient: PAY_TO })],
 });
+
+const publicAcquisitionOptional = fileURLToPath(new URL("./public-acquisition/optional-mount.mjs", import.meta.url));
+if (existsSync(publicAcquisitionOptional)) {
+  try {
+    const { mountPublicAcquisitionIfPresent } = await import(new URL("./public-acquisition/optional-mount.mjs", import.meta.url).href);
+    const publicAcquisitionEngine = fileURLToPath(new URL("./public-acquisition/engine.mjs", import.meta.url));
+    const mounted = await mountPublicAcquisitionIfPresent(app, { publicUrl: PUBLIC_URL }, publicAcquisitionEngine);
+    if (mounted.mounted === true) {
+      publicAcquisitionDiscoveryUrl = `${new URL(PUBLIC_URL).origin}/.well-known/public-acquisition/index.json`;
+    }
+  } catch (error) {
+    console.error(`public-acquisition adapter not mounted: ${error.code || error.message}`);
+  }
+}
 
 app.get(["/skill.md", "/SKILL.md"], (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");

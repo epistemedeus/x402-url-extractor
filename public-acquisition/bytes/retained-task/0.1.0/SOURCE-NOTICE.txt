@@ -1,0 +1,1 @@
+Packaging notice only. change-monitor support bytes match the frozen 0.1.0 archive. sourceQualified stays false.
