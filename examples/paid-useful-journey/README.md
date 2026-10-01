@@ -71,3 +71,5 @@ The merchant writes `paidUsefulJourney` on the existing commerce event for `GET 
 `joined-example.json` is the offer-only join of `fixtures/offer-only-events.json` for the fixture diagnosis at `2026-09-10T07:22:00.000Z` with `--stale-ms 86400000`. Attempt, settlement, useful delivery, decline, and later reuse are the string `unknown`. The payer field on the source event is ignored.
 
 Binding: `binding.json`. Acceptance checklist: `docs/paid-useful-journey-acceptance.md`.
+
+Classifying an unpaid door (payable, 402 without payment metadata, a blanket 402 on an invented path, or a method mismatch) is the free decision in `examples/unpaid-door-decision`. The 2026-10-01 public replay did not require this paid operation for that question. This client still offers the existing seller-integrity audit only after an unresolved discovery-drift comparison, and only with an explicit authorization. It does not send a live payment.

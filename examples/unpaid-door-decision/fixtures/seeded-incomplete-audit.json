@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "samedaydesk.unpaid-door-decision-receipt.v1",
+  "taskId": "classify-unpaid-seller-door",
+  "independentDemandConfirmed": false,
+  "cashUsd": 0,
+  "ownerQa": "unknown",
+  "decision": "paid_audit_not_required",
+  "attempts": [
+    {
+      "evidenceClass": "seeded",
+      "usefulDelivery": true,
+      "auditCompleted": false,
+      "note": "Seeded failure. An incomplete audit must not count as useful delivery."
+    }
+  ]
+}

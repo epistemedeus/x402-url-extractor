@@ -1,0 +1,238 @@
+{
+  "schemaVersion": "samedaydesk.unpaid-door-decision-receipt.v1",
+  "taskId": "classify-unpaid-seller-door",
+  "taskDigest": "5461202a87b6b66de67d58538635dd36e6a8776c5379265c26a393a176857cec",
+  "evidencePath": "examples/unpaid-door-decision/evidence/2026-10-01-public-replay.json",
+  "evidenceDigest": "9d3d2711db03a475c2bac3d87fa42dd05cb5e3a29d5d3ec911fe666ae814161e",
+  "decision": "paid_audit_not_required",
+  "criterion": {
+    "id": "public_rows_free_sufficient_and_paid_audit_not_required",
+    "ok": true,
+    "publicRows": 12,
+    "paidAuditRequired": 0,
+    "independentDemandConfirmed": false,
+    "cashUsd": 0
+  },
+  "paidDiagnosticChangesDecision": false,
+  "freeClassifierChangesDecision": true,
+  "cashUsd": 0,
+  "tokenUsd": null,
+  "ownerQa": "unknown",
+  "actorLabel": "unknown",
+  "actorLabelEvidence": "not_observed",
+  "independentDemandConfirmed": false,
+  "sampleCapApplied": false,
+  "hypothesisRef": "Pilot252 c9d479960aefaf4448bc92ec75a60806259ac32d overview/research/phase-20261001/revenue-next-decisions/EXPERIMENTS.md E2",
+  "demand": {
+    "generatedAt": "2026-10-01T10:17:03.086Z",
+    "requestedWindowCoverage": "unknown_for_full_window",
+    "independentPaidSuccessActors": 0,
+    "repeatIndependentPaidSuccessActors": 0,
+    "qualifiesIndependentDemand": false,
+    "note": "The public counter is inside unknown_for_full_window. A zero there is not a historical zero and is not independent demand. The one paid-success actor is not labeled independent."
+  },
+  "mcp": {
+    "source": "Unpaid POST https://agents.samedaydesk.com/mcp initialize and tools/list at 2026-10-01T10:31:21.362Z, protocol 2025-11-25, server x402-data-gateway 1.23.49. GET /mcp at 2026-10-01T10:16:28Z reported toolCount 24 and freeTools page_change.",
+    "toolsListObservedAt": "2026-10-01T10:31:21.362Z",
+    "protocolVersion": "2025-11-25",
+    "serverVersion": "1.23.49",
+    "descriptorToolCount": 24,
+    "toolCountListed": 25,
+    "descriptorInterpretation": "toolCount 24 plus the separately named free page_change tool matches the 25 names from tools/list. This is not a catalog contradiction.",
+    "sellerIntegrityAuditPresent": true,
+    "paymentAttempted": false,
+    "freeTools": [
+      "page_change"
+    ],
+    "toolNames": [
+      "agent_discoverability_audit",
+      "agent_surface_budget_audit",
+      "contract_qualified_search",
+      "deep_audit",
+      "enrich",
+      "extract",
+      "extract_batch",
+      "lockfile_pin_delta",
+      "morpho_market_underwrite",
+      "morpho_position",
+      "morpho_preliquidation_replay",
+      "morpho_protection",
+      "opportunity_preflight",
+      "page_change",
+      "payment_offer_preflight",
+      "read",
+      "scan",
+      "schemaforge",
+      "seller_integrity_audit",
+      "settlement_proof",
+      "solana_transaction_receipt",
+      "stateful_wallet_policy_conformance",
+      "transaction_receipt",
+      "wallet_enrich",
+      "wallet_policy_conformance"
+    ]
+  },
+  "observedUnpaidAudit": {
+    "source": "Unpaid GET /commerce/seller-integrity-audit on https://agents.samedaydesk.com at 2026-10-01T10:16:28Z",
+    "amountAtomic": "10000",
+    "network": "eip155:8453",
+    "baseUsdc": true,
+    "maxTimeoutSeconds": 300,
+    "paymentSent": false,
+    "bodyPurchased": false
+  },
+  "assumptions": {
+    "usdcDecimals": 6,
+    "usdcDecimalsScope": "USD catalog text converts to atomic units only when the single unpaid accept is Base USDC on eip155:8453. Otherwise the amount comparison is unknown.",
+    "cashUsd": 0,
+    "tokenNote": "Replaying the saved evidence does not call a model. A live refetch is unpaid HTTPS only."
+  },
+  "effort": {
+    "setup": "Read the existing seller-integrity audit, paid-useful journey, purchase-evidence links, commerce-demand snapshot, and Pilot252 E2. No new dependency.",
+    "adaptation": "Classify caller-supplied unpaid observations. No new route, price, recipient, human page, or SKU.",
+    "review": "Self-review kept incomplete audits non-useful and self-reported actor labels unqualified."
+  },
+  "decisionChange": {
+    "freeClassifier": true,
+    "paidSellerIntegrityAudit": false,
+    "statement": "The free class changes the next action for a blanket 402, a missing route, and a method mismatch. It does not pay. The paid audit did not add a fact the unpaid documents lacked on this inventory."
+  },
+  "nextExperiment": "On one URL that is not in this inventory, run the live command unpaid before looking at the class. If it is free-sufficient, append that redacted row and recheck the receipt only while TASK.txt is unchanged. If method, Allow, and the free catalog still disagree after that refetch, stop and show the existing seller-integrity offer with no authorization. Do not pay and do not widen the set into a census.",
+  "remainingProductionCheck": "Production prices, recipient, and routes were not changed. A second network can rerun live --id issue3249-root and mcp. Saved observations are not payment authority.",
+  "rows": [
+    {
+      "id": "t1-bronzetti-brief",
+      "doorClass": "payable",
+      "also": [],
+      "freeSufficient": true,
+      "paidAuditRequired": false,
+      "responseContract": "declared_in_free_schema",
+      "catalogComparison": "agree",
+      "whyPaidAuditNotRequired": "The free catalog amount and the live unpaid amount agree under the stated asset assumption. Buyer-required paths are already in the free schema.",
+      "nextActionKind": "use_live_unpaid_terms"
+    },
+    {
+      "id": "issue3249-root",
+      "doorClass": "false_routing",
+      "also": [
+        "402_sans_accepts"
+      ],
+      "freeSufficient": true,
+      "paidAuditRequired": false,
+      "responseContract": "not_requested",
+      "catalogComparison": "not_comparable",
+      "whyPaidAuditNotRequired": "The named path and a different invented path returned 402 without payment metadata. The unpaid pair already shows the 402 is not an offer for this resource.",
+      "nextActionKind": "do_not_pay"
+    },
+    {
+      "id": "issue3249-manifest",
+      "doorClass": "402_sans_accepts",
+      "also": [],
+      "freeSufficient": true,
+      "paidAuditRequired": false,
+      "responseContract": "not_requested",
+      "catalogComparison": "not_comparable",
+      "whyPaidAuditNotRequired": "HTTP 402 with no parseable payment metadata is already a client dead end. Paying for an audit would not create the missing offer.",
+      "nextActionKind": "do_not_pay"
+    },
+    {
+      "id": "issue3249-canonical",
+      "doorClass": "402_sans_accepts",
+      "also": [],
+      "freeSufficient": true,
+      "paidAuditRequired": false,
+      "responseContract": "not_requested",
+      "catalogComparison": "not_comparable",
+      "whyPaidAuditNotRequired": "HTTP 402 with no parseable payment metadata is already a client dead end. Paying for an audit would not create the missing offer.",
+      "nextActionKind": "do_not_pay"
+    },
+    {
+      "id": "merchant-extract",
+      "doorClass": "payable",
+      "also": [],
+      "freeSufficient": true,
+      "paidAuditRequired": false,
+      "responseContract": "declared_in_free_schema",
+      "catalogComparison": "agree",
+      "whyPaidAuditNotRequired": "The free catalog amount and the live unpaid amount agree under the stated asset assumption. Buyer-required paths are already in the free schema.",
+      "nextActionKind": "use_live_unpaid_terms"
+    },
+    {
+      "id": "merchant-healthz",
+      "doorClass": "free_or_open",
+      "also": [],
+      "freeSufficient": true,
+      "paidAuditRequired": false,
+      "responseContract": "not_requested",
+      "catalogComparison": "not_comparable",
+      "whyPaidAuditNotRequired": "The unpaid response succeeded without a payment challenge.",
+      "nextActionKind": "free_document"
+    },
+    {
+      "id": "merchant-audit-door",
+      "doorClass": "payable",
+      "also": [],
+      "freeSufficient": true,
+      "paidAuditRequired": false,
+      "responseContract": "not_requested",
+      "catalogComparison": "unknown",
+      "whyPaidAuditNotRequired": "One unpaid exact challenge already answers whether the door is payable.",
+      "nextActionKind": "use_live_unpaid_terms"
+    },
+    {
+      "id": "merchant-manifest",
+      "doorClass": "missing_route",
+      "also": [],
+      "freeSufficient": true,
+      "paidAuditRequired": false,
+      "responseContract": "not_requested",
+      "catalogComparison": "not_comparable",
+      "whyPaidAuditNotRequired": "The unpaid 404 says this path is not a served door. A paid audit of an undeclared path does not change that.",
+      "nextActionKind": "missing_route"
+    },
+    {
+      "id": "merchant-lockfile-get",
+      "doorClass": "method_mismatch",
+      "also": [],
+      "freeSufficient": true,
+      "paidAuditRequired": false,
+      "responseContract": "not_requested",
+      "catalogComparison": "not_comparable",
+      "whyPaidAuditNotRequired": "Allow or 405 already names the method mismatch. The paid audit is not required to read it.",
+      "nextActionKind": "use_allowed_method"
+    },
+    {
+      "id": "merchant-lockfile-post",
+      "doorClass": "payable",
+      "also": [],
+      "freeSufficient": true,
+      "paidAuditRequired": false,
+      "responseContract": "not_requested",
+      "catalogComparison": "unknown",
+      "whyPaidAuditNotRequired": "One unpaid exact challenge already answers whether the door is payable.",
+      "nextActionKind": "use_live_unpaid_terms"
+    },
+    {
+      "id": "merchant-mcp-get",
+      "doorClass": "free_or_open",
+      "also": [],
+      "freeSufficient": true,
+      "paidAuditRequired": false,
+      "responseContract": "not_requested",
+      "catalogComparison": "not_comparable",
+      "whyPaidAuditNotRequired": "The unpaid response succeeded without a payment challenge.",
+      "nextActionKind": "free_document"
+    },
+    {
+      "id": "minia2a-root",
+      "doorClass": "free_or_open",
+      "also": [],
+      "freeSufficient": true,
+      "paidAuditRequired": false,
+      "responseContract": "not_requested",
+      "catalogComparison": "not_comparable",
+      "whyPaidAuditNotRequired": "The unpaid response succeeded without a payment challenge.",
+      "nextActionKind": "free_document"
+    }
+  ]
+}
