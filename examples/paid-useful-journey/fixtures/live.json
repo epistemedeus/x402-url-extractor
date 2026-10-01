@@ -1,0 +1,15 @@
+{
+  "observedAt": "2026-09-10T07:21:39.018Z",
+  "source": "fixture-live-unpaid-402",
+  "resource": "https://example.com/extract",
+  "lastUpdated": "2026-09-09T18:21:18.178Z",
+  "offers": [
+    {
+      "protocol": "x402",
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountAtomic": "20000",
+      "recipient": "0xbda48b29607b9dc66ef7e38b68ad53f2b17efb23"
+    }
+  ]
+}
