@@ -23,6 +23,7 @@ const USEFUL_REASONS = new Set([
   "additional_work_present",
   "echoes_free_diagnostic",
   "additional_work_missing",
+  "audit_incomplete",
   "target_mismatch",
   "schema_invalid",
   "delivery_failed",
@@ -109,9 +110,11 @@ export function assessSellerIntegrityUsefulness(body, target) {
   if (!AUDIT_DECISIONS.has(body.decision) || !plainObject(body.report) || typeof body.report.auditCompleted !== "boolean") {
     return { useful: false, reason: "schema_invalid" };
   }
-  const additional = (plainObject(body.report.responseContract) ? 1 : 0)
-    + (plainObject(body.report.repairPlan) ? 1 : 0)
-    + (Array.isArray(body.report.findings) && body.report.findings.length > 0 ? 1 : 0);
+  if (body.report.auditCompleted !== true) return { useful: false, reason: "audit_incomplete" };
+  const hasContent = (value) => plainObject(value) && Object.keys(value).length > 0;
+  const additional = (hasContent(body.report.responseContract) ? 1 : 0)
+    + (hasContent(body.report.repairPlan) ? 1 : 0)
+    + (Array.isArray(body.report.findings) && body.report.findings.some((value) => typeof value === "string" && value.trim().length > 0) ? 1 : 0);
   if (!additional) return { useful: false, reason: "additional_work_missing" };
   const request = body.request;
   const method = String(target?.method || "GET").toUpperCase();
@@ -651,6 +654,16 @@ export function joinPaidUsefulJourney({ events = [], forwardRecords = [], journe
     schemaVersion: PAID_USEFUL_JOURNEY_JOIN_SCHEMA,
     journey: journeyId,
     actorLabel: actor,
+    actorLabelEvidence: "caller_claim",
+    independentDemandConfirmed: false,
+    evidenceBasis: {
+      eligible_diagnosis: "caller_diagnosis_reference",
+      offered_operation: "merchant_challenge",
+      explicit_attempt: "merchant_observed_payment_request",
+      settlement: "merchant_recorded_settlement_reference",
+      useful_delivery: "merchant_response_assessment",
+      later_task_reuse: "reported_reuse_or_forward_record",
+    },
     revenueRecognized: false,
     attemptCount: attempts.length,
     settlementReference: references.length === 1 ? references[0] : null,

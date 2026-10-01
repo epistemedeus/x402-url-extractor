@@ -66,8 +66,8 @@ function usefulBody(target = TARGET, patch = {}) {
     decision: "repair_required",
     request: { origin: target.origin, route: target.route, method: target.method },
     report: {
-      auditCompleted: false,
-      findings: ["bounded_transport_failure"],
+      auditCompleted: true,
+      findings: ["payment_contract_mismatch"],
       responseContract: null,
       repairPlan: null,
     },
@@ -304,6 +304,33 @@ test("useful delivery requires seller-integrity work for the same target", () =>
   const empty = usefulBody();
   empty.report.findings = [];
   assert.equal(assessSellerIntegrityUsefulness(empty, TARGET).reason, "additional_work_missing");
+  empty.report.responseContract = {};
+  empty.report.repairPlan = {};
+  empty.report.findings = ["", "  ", null];
+  assert.equal(assessSellerIntegrityUsefulness(empty, TARGET).reason, "additional_work_missing");
+  const incomplete = usefulBody();
+  incomplete.report.auditCompleted = false;
+  incomplete.report.findings = ["bounded_transport_failure"];
+  assert.deepEqual(assessSellerIntegrityUsefulness(incomplete, TARGET), { useful: false, reason: "audit_incomplete" });
+  const claim = parsePaidUsefulJourneyHeader(encodePaidUsefulJourneyHeader({
+    journey: "d".repeat(32), diagnosis: "e".repeat(64), actor: "independent", decision: "attempt",
+  }));
+  const metadata = paidUsefulJourneyMetadata(claim, {
+    status: 200, paymentPresent: true, body: incomplete, target: TARGET, route: PAID_OPERATION_PATH,
+  });
+  assert.equal(metadata.usefulDelivery, "false");
+  assert.equal(metadata.usefulReason, "audit_incomplete");
+  const joined = joinPaidUsefulJourney({
+    journeyId: claim.journey,
+    events: [{ id: "failed-audit", status: 200, result: "paid_success", paymentPresent: true,
+      settlementReference: TX, paidUsefulJourney: metadata }],
+  });
+  assert.equal(joined.stages.settlement, "present");
+  assert.equal(joined.stages.useful_delivery, "false");
+  assert.equal(joined.actorLabel, "independent");
+  assert.equal(joined.actorLabelEvidence, "caller_claim");
+  assert.equal(joined.independentDemandConfirmed, false);
+  assert.equal(joined.revenueRecognized, false);
   const moved = usefulBody({ ...TARGET, route: "/other" });
   assert.equal(assessSellerIntegrityUsefulness(moved, TARGET).reason, "target_mismatch");
   const paidTarget = usefulBody();
@@ -833,12 +860,9 @@ test("local merchant unpaid regression and one test-mode settlement", { timeout:
   });
   assert.equal(purchased.paymentSent, true, JSON.stringify(purchased));
   assert.equal(purchased.revenueRecognized, false);
-  assert.equal(purchased.usefulDelivery, "true", JSON.stringify({
-    reason: purchased.usefulReason,
-    status: purchased.status,
-    decision: purchased.body?.decision,
-    log: merchant.output().slice(-1500),
-  }));
+  assert.equal(purchased.body.report.auditCompleted, false);
+  assert.equal(purchased.usefulDelivery, "false");
+  assert.equal(purchased.usefulReason, "audit_incomplete");
   assert.equal(purchased.settlementReference, TX);
   assert.equal(facilitator.calls.settle, 1);
   const duplicate = await purchaseAuthorized({
@@ -869,7 +893,7 @@ test("local merchant unpaid regression and one test-mode settlement", { timeout:
   assert.equal(joined.stages.explicit_decline, "present");
   assert.equal(joined.stages.explicit_attempt, "present");
   assert.equal(joined.stages.settlement, "present");
-  assert.equal(joined.stages.useful_delivery, "true");
+  assert.equal(joined.stages.useful_delivery, "false");
   assert.equal(joined.stages.later_task_reuse, "unknown");
   assert.equal(joined.revenueRecognized, false);
   assert.equal(joined.actorLabel, "owner_test");
