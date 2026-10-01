@@ -1,0 +1,1 @@
+Packaging notice only. Component grants are LICENSE-PROVENANCE.json inside the archive.

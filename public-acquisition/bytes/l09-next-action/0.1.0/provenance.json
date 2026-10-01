@@ -1,0 +1,83 @@
+{
+  "schema": "neomorphic.public-consumer.license-provenance.v1",
+  "files": 519,
+  "privateKernelsExcluded": [
+    "services/earned-work/",
+    "packages/release-gate/",
+    "packages/route-lock/",
+    "epistemedeus/pilot-heavy-relay"
+  ],
+  "components": [
+    {
+      "path": "experiments/bounty-economics-20260912/",
+      "grant": "MIT",
+      "evidence": "experiments/bounty-economics-20260912/LICENSE",
+      "copyright": "2026 Pilot (epistemedeus) / Neomorphic LLC",
+      "relicensed": false,
+      "note": "MIT modules only. The private forge repository named in sensitivity.mjs is not copied. That mention is not a license.",
+      "files": 15
+    },
+    {
+      "path": "experiments/codex-window/h36-earned-requester-integration/fixtures/operator-declared-e18.json",
+      "grant": "fixture-data",
+      "evidence": "operator_declared JSON fixture",
+      "relicensed": false,
+      "note": "Fixture JSON only. experiments/codex-window author.mjs and services/earned-work are not included.",
+      "files": 1
+    },
+    {
+      "path": "experiments/l09-bounty-next-093076/",
+      "grant": "public-repository-source",
+      "evidence": "experiments/l09-bounty-next-093076/SOURCE-NOTICE.txt",
+      "relicensed": false,
+      "note": "Same-repository experiment. This pack does not relicense neomorphic-io. No earned-work kernel is included.",
+      "files": 56
+    },
+    {
+      "path": "experiments/vf15-actionable-work/",
+      "grant": "public-repository-source",
+      "evidence": "experiments/vf15-actionable-work/SOURCE-NOTICE.txt",
+      "relicensed": false,
+      "note": "No separate MIT file. Included as the public-repository adapters the consumer already imports. Not relicensed.",
+      "files": 25
+    },
+    {
+      "path": "packs/bounty-discovery/",
+      "grant": "MIT",
+      "evidence": "packs/bounty-discovery/LICENSE",
+      "copyright": "2026 Pilot (epistemedeus) — Neomorphic bounty-discovery SAMPLE",
+      "relicensed": false,
+      "note": "Sample MIT extract plus nested vendor LICENSE files. Does not relicense upstream payloads. Frozen bounty-discovery 1.0.x archives are not rebuilt.",
+      "files": 413
+    },
+    {
+      "path": "packs/contributor-desk/",
+      "grant": "MIT",
+      "evidence": "packs/contributor-desk/SOURCE-NOTICE.txt",
+      "copyright": "2026 Pilot (epistemedeus)",
+      "relicensed": false,
+      "note": "constants.mjs only. SOURCE-NOTICE limits MIT to this desk sample. The earned-work kernel is not included.",
+      "files": 4
+    },
+    {
+      "path": "packs/funded-task-terms/",
+      "grant": "MIT",
+      "evidence": "packs/funded-task-terms/LICENSE",
+      "copyright": "2026 Pilot (epistemedeus) — Neomorphic funded-task-terms SAMPLE",
+      "relicensed": false,
+      "note": "Hash module only. The earned-work kernel is not included. The wrapper grant does not license that kernel.",
+      "files": 4
+    },
+    {
+      "path": "public/labs/bounty-discovery/snapshot-v1.json",
+      "grant": "public-site-data",
+      "evidence": "already published at public/labs/bounty-discovery/snapshot-v1.json",
+      "relicensed": false,
+      "note": "Dated public snapshot. claimAuthority remains none.",
+      "files": 1
+    }
+  ],
+  "packageName": "l09-next-action",
+  "version": "0.1.0",
+  "archiveSha256": "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0"
+}

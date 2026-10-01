@@ -1,0 +1,23 @@
+SameDayDesk public acquisition adapter
+license: the hosted bytes keep the license and attribution of each Neomorphic artifact.
+This directory is not a relicensed product.
+
+The receiving manifest names the only public files this mount may serve.
+Those files are the 0.1.0 archives and sidecars already published at
+https://neomorphic.io/downloads/ for l09-next-action, retained-task, and
+composition-route-knowledge. Provenance, LICENSE, and SOURCE-NOTICE bytes are
+unchanged. A candidate or private flag inside a sidecar stays as published.
+
+This mount is an alternate GET/HEAD origin for clients that the merchant
+already accepts. It does not replace the Neomorphic URLs, rewrite a release
+descriptor, or establish private Git availability, a paid launch, measured
+savings, or independent demand. hostedAcquisitionVerified stays false.
+productionHosted stays false until Root records a public readback.
+
+Official Hermes is the PyPI distribution hermes-agent 0.19.0. A later Git
+checkout is a different source. This adapter does not vendor either one.
+Python httpx is a separate dependency. A sparse copy of source files is not
+a checkout. Unknown source qualification stays unknown.
+
+No runtime download, credential, writable publish path, or private repository
+is part of publication. Loopback output is not production acceptance.

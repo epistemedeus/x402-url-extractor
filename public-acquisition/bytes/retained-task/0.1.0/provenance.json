@@ -1,0 +1,41 @@
+{
+  "schema": "neomorphic.public-consumer.license-provenance.v1",
+  "files": 72,
+  "privateKernelsExcluded": [
+    "services/earned-work/",
+    "packages/release-gate/",
+    "packages/route-lock/",
+    "epistemedeus/pilot-heavy-relay"
+  ],
+  "components": [
+    {
+      "path": "packages/change-monitor/",
+      "grant": "MIT",
+      "evidence": "packages/change-monitor/LICENSE",
+      "copyright": "2026 Neomorphic LLC",
+      "relicensed": false,
+      "note": "Bytes match frozen change-monitor-0.1.0.tgz. Private git source stays unavailable. packages/release-gate is not included.",
+      "files": 58
+    },
+    {
+      "path": "packages/retained-task/",
+      "grant": "MIT",
+      "evidence": "packages/retained-task/LICENSE",
+      "copyright": "2026 Neomorphic LLC",
+      "relicensed": false,
+      "note": "Caller-owned composition. MIT on this package does not license an absent private kernel.",
+      "files": 13
+    },
+    {
+      "path": "packages/retained-task/support/change-monitor-0.1.0-release-status.json",
+      "grant": "public-sidecar",
+      "evidence": "public/downloads/change-monitor/0.1.0/release-status.json",
+      "relicensed": false,
+      "note": "Byte copy of the Neo234 sidecar so qualification agrees. Not a new launch.",
+      "files": 1
+    }
+  ],
+  "packageName": "retained-task",
+  "version": "0.1.0",
+  "archiveSha256": "350629b7bf1a14b092d94e0c27579f2e05114bf7f2f05a33c33d32b4c68176de"
+}

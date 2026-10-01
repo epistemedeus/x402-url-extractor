@@ -1,0 +1,55 @@
+{
+  "schema": "samedaydesk.public-acquisition.cold-commands.v1",
+  "proofClass": "loopback",
+  "productionAcceptance": false,
+  "commands": [
+    {
+      "id": "composition-route-knowledge",
+      "version": "0.1.0",
+      "filename": "composition-route-knowledge-0.1.0.tgz",
+      "cwd": ".",
+      "steps": [
+        {
+          "argv": ["node", "package/bin/decide.mjs", "self-check"],
+          "stdoutIncludes": ["\"ok\": true", "\"version\": \"0.1.0\"", "\"coldPublicEntry\": false"]
+        },
+        {
+          "argv": ["node", "package/bin/decide.mjs", "inspect", "--case", "package/vendor/s20-route-compare-ro/fixtures/cases/live-x402-vs-payai.json"],
+          "stdoutIncludes": ["\"ranking\": \"withheld\"", "\"selection\": \"none\"", "\"savingsObserved\": false"]
+        }
+      ]
+    },
+    {
+      "id": "retained-task",
+      "version": "0.1.0",
+      "filename": "retained-task-0.1.0.tar.gz",
+      "cwd": "retained-task-0.1.0",
+      "steps": [
+        {
+          "argv": ["node", "--input-type=module", "-e", "import { writeFileSync } from 'node:fs'; import { projectReading, x402Reading } from './packages/retained-task/test/support.mjs'; writeFileSync('capture.json', JSON.stringify(projectReading(x402Reading({ sellers: 10 })))); writeFileSync('receivers.json', JSON.stringify({ 'local-vm': { kind: 'local-http', baseUrl: 'http://127.0.0.1:9' } }));"],
+          "stdoutIncludes": []
+        },
+        {
+          "argv": ["node", "packages/retained-task/src/cli.mjs", "open", "--home", "./var/task", "--task", "hold-sellers", "--source", "x402stats", "--owner", "ordinary-agent", "--file", "./capture.json", "--receivers", "./receivers.json", "--now", "2026-10-01T12:00:00.000Z"],
+          "stdoutIncludes": ["\"outcome\": \"baseline_established\"", "\"naturalCustomerDemand\": false"]
+        },
+        {
+          "argv": ["node", "packages/retained-task/src/cli.mjs", "resume", "--home", "./var/task", "--task", "hold-sellers", "--file", "./capture.json", "--now", "2026-10-01T13:00:00.000Z"],
+          "stdoutIncludes": ["\"outcome\": \"unchanged\"", "\"naturalCustomerDemand\": false", "\"executed\": false"]
+        }
+      ]
+    },
+    {
+      "id": "l09-next-action",
+      "version": "0.1.0",
+      "filename": "l09-next-action-0.1.0.tar.gz",
+      "cwd": ".",
+      "steps": [
+        {
+          "argv": ["node", "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/bin/l09.mjs", "task-spec"],
+          "stdoutIncludes": ["\"state\": \"unlaunched\"", "\"claimAuthority\": \"none\"", "\"paymentAuthority\": \"none\""]
+        }
+      ]
+    }
+  ]
+}

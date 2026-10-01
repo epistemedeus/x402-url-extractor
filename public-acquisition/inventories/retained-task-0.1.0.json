@@ -1,0 +1,561 @@
+{
+  "schema": "samedaydesk.public-acquisition.members.v1",
+  "id": "retained-task",
+  "version": "0.1.0",
+  "archiveSha256": "350629b7bf1a14b092d94e0c27579f2e05114bf7f2f05a33c33d32b4c68176de",
+  "memberCount": 92,
+  "members": [
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "retained-task-0.1.0",
+      "sha256": null
+    },
+    {
+      "bytes": 1485,
+      "kind": "file",
+      "path": "retained-task-0.1.0/COLD-INSTALL.txt",
+      "sha256": "522dc78d12ffd1127d143cc24161d51bb53528c3a4f6cd8e6f0eee38ec4284f7"
+    },
+    {
+      "bytes": 1395,
+      "kind": "file",
+      "path": "retained-task-0.1.0/LICENSE",
+      "sha256": "24c39339d59a9b969c17cf36e60fcebf9ac6c2fdc7155363d58f95a70d642722"
+    },
+    {
+      "bytes": 1346,
+      "kind": "file",
+      "path": "retained-task-0.1.0/LICENSE-PROVENANCE.json",
+      "sha256": "566b392178c04fb3ff13f3196ad02d731b689d6a6eace0eef5dfbf9fdf3fed73"
+    },
+    {
+      "bytes": 159,
+      "kind": "file",
+      "path": "retained-task-0.1.0/SOURCE-NOTICE.txt",
+      "sha256": "845833fa033d23f971c3a658dec094a2fae7d17b220e2208e9e4c2fff8ad8cc1"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "retained-task-0.1.0/packages",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "retained-task-0.1.0/packages/change-monitor",
+      "sha256": null
+    },
+    {
+      "bytes": 4638,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/COLD-CONSUMER-CONTRACT.md",
+      "sha256": "bf424300156ffbc8919b078396db4b4ea2509f51ed20667941a84fd7bdccaddb"
+    },
+    {
+      "bytes": 2821,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/EXTENSION.md",
+      "sha256": "251554752b1d0fc616055a87df9a6abfff39abc7ee6ecec10343375bbb70115b"
+    },
+    {
+      "bytes": 1071,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/LICENSE",
+      "sha256": "044d7291c37a2ead106ea4b4c26f713e63b7834637ed634da640f74e8cbe4625"
+    },
+    {
+      "bytes": 3599,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/PINS.json",
+      "sha256": "a085984e5d1539adca0b52ba29aa6b99e8e7db7f5188b140653211ccf988df70"
+    },
+    {
+      "bytes": 12234,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/README.md",
+      "sha256": "4ce7a3e145510df9fc7e1d4488f4415a6abcc019b52750e5829fe9b5d104b3f1"
+    },
+    {
+      "bytes": 906,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/SOURCE-NOTICE.txt",
+      "sha256": "296299f2e178ae18f13db11c40cb2832888407a5c1a86804edda02704cbe3d06"
+    },
+    {
+      "bytes": 4564,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/SOURCE-PACKET.md",
+      "sha256": "081dcdae9f1f637ff5db05c6ac8e9d1c26c89e0dd436cfd4ecddeb763065fc95"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "retained-task-0.1.0/packages/change-monitor/examples",
+      "sha256": null
+    },
+    {
+      "bytes": 1680,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/examples/README.md",
+      "sha256": "73ae6f25b559e31f7cf50a0e859f31ca7d904f853005de3987b9e0790fafa6c6"
+    },
+    {
+      "bytes": 2491,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/examples/cold-consumer.mjs",
+      "sha256": "8664c787d7c8c9ee63fabd9247fa16f99154c7cb8f710abdaefd65e2adfc4942"
+    },
+    {
+      "bytes": 16432,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/examples/cold-install.mjs",
+      "sha256": "06daf2f2c7752c4f049c5ee8b8859d9108c608030bc25c4a6c5e01f7c113b4ae"
+    },
+    {
+      "bytes": 2191,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/examples/loopback-receiver.mjs",
+      "sha256": "1a8b68e5db4781e2fd2250fa3035c872db5fb189262bcf677b430f5c7147ea40"
+    },
+    {
+      "bytes": 392,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/examples/rejected-url-subscription.json",
+      "sha256": "59ea10f6c12790ce830b702f744d2eff2167fe2b09e8b2602d58d8ce653d066c"
+    },
+    {
+      "bytes": 356,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/examples/subscription.release-gate.json",
+      "sha256": "c0dd3cff21b1f796fa45ea489ab81fc6a392d4277596d5f1aca3a6d5dc066f24"
+    },
+    {
+      "bytes": 364,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/examples/subscription.source-projection.json",
+      "sha256": "871a28d12ae00e92672e217e50631494858cbccc4e57569bcd73160c901045fe"
+    },
+    {
+      "bytes": 495,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/examples/unavailable-not-zero.json",
+      "sha256": "73ed508544f79083633b4695c0c770ce115446d41216b54188472121828e7536"
+    },
+    {
+      "bytes": 672,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/package.json",
+      "sha256": "a07415321b86cb2bc6ee344381300eaf5356a54622fc276d876eb06d0c1c0353"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "retained-task-0.1.0/packages/change-monitor/schema",
+      "sha256": null
+    },
+    {
+      "bytes": 1549,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/schema/event.schema.json",
+      "sha256": "fcb34ef373da0ae2b6a7a578ceb127699f27d8f8f54a89659e79e8e0e5f0a966"
+    },
+    {
+      "bytes": 1479,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/schema/subscription.schema.json",
+      "sha256": "c70f2640db40d818d90cbb7bf517a037454fdc7cefadc9e4be01901f102633a8"
+    },
+    {
+      "bytes": 1073,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/schema/usage-receipt.schema.json",
+      "sha256": "f5264b1a94499baca9855c082eda31791a19082255b51179b8a9300ebb4f40ab"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "retained-task-0.1.0/packages/change-monitor/src",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/adapters",
+      "sha256": null
+    },
+    {
+      "bytes": 1469,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/adapters/registry.mjs",
+      "sha256": "a80209617d0b6646a40eebf81797e27d9c3db0164b8204463f6a02b738e32c06"
+    },
+    {
+      "bytes": 4724,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/adapters/release-gate.mjs",
+      "sha256": "308d6a12453c61176d5bbfd62367a55f04afd8c241891b75e7622f6068bf43cd"
+    },
+    {
+      "bytes": 6325,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/adapters/route-lock.mjs",
+      "sha256": "13252b922a3ac32509904073f44e292d8f568f1998ed707ce3783cb3e8fcfee8"
+    },
+    {
+      "bytes": 951,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/adapters/shape.mjs",
+      "sha256": "3bed4399e6edc0e323ccf617f195d1781e0257f9979f33a7576e27fdc808a770"
+    },
+    {
+      "bytes": 16202,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/adapters/source-projection.mjs",
+      "sha256": "6ed4264357c15388789308b663258181f37d85d027aa2b2f891dcfa9088a9ad3"
+    },
+    {
+      "bytes": 1580,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/canonical.mjs",
+      "sha256": "c664f98984d962ca2349926e8d992c96db619196e7ec86b5e72b8576ad44cfca"
+    },
+    {
+      "bytes": 9791,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/cli.mjs",
+      "sha256": "1bf219594bc17f1d3c96c92c040a51bd881ef68f3ca164fc6e87a8f5970f5621"
+    },
+    {
+      "bytes": 1077,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/clock.mjs",
+      "sha256": "f84b1c1db7c196b35e636df808aac20db08c3b46644fc1439337dfc35dfa4434"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/consumers",
+      "sha256": null
+    },
+    {
+      "bytes": 721,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/consumers/release-gate.mjs",
+      "sha256": "f67011538f56582d44aaabfa565281085ca992bcec9a443157f3ad05857f2a2e"
+    },
+    {
+      "bytes": 8384,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/consumers/source-projection.mjs",
+      "sha256": "911c14539c51f10879d7263eba3ae4e3065074e844b1dd13f404f79372445ca7"
+    },
+    {
+      "bytes": 4882,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/deliver.mjs",
+      "sha256": "01d19e5ed1cd8f45f11e52f3391be63ec012a83b9042e37ba85f5e2eed6056ad"
+    },
+    {
+      "bytes": 180,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/errors.mjs",
+      "sha256": "f8271a004a61068aba2097b3154c176cf265c7bbd5b851895e2a51eef9a11915"
+    },
+    {
+      "bytes": 1747,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/index.mjs",
+      "sha256": "7e2fadd301174a88dc8cbed9846c8e2543df751c4475e9bd6d73833c44e61330"
+    },
+    {
+      "bytes": 3036,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/receivers.mjs",
+      "sha256": "b9dd9b27133fadde62677881f1eb5d323b0937063f5f9e921915e8f11556fd8c"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/runtime",
+      "sha256": null
+    },
+    {
+      "bytes": 15313,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/runtime/acquire-release-gate.mjs",
+      "sha256": "70c57955a781e9bf5d3f2ea741480999b13d2a550b82c4315e71dbdd843d5442"
+    },
+    {
+      "bytes": 626,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/runtime/release-gate-pin.mjs",
+      "sha256": "f594feb6689b5e8c0d1816bbb39d75f68f0d52c096643e7f32113164033d589e"
+    },
+    {
+      "bytes": 8709,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/service.mjs",
+      "sha256": "86b8f4c5c71899cc933949c1e541aa79024d720780c302ff23a0bb84700a20db"
+    },
+    {
+      "bytes": 3716,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/store.mjs",
+      "sha256": "07a738dde3c710c5dda4d1a7c6d18a0fd3f3f62cab324f5b43221241bdef2202"
+    },
+    {
+      "bytes": 8821,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/subscription.mjs",
+      "sha256": "0de5f3fecc0a5db587d977f2d7a80fcc218f813a110b912d46bc72e601fe23a7"
+    },
+    {
+      "bytes": 17822,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/transition.mjs",
+      "sha256": "98ce159bbf51ec271015ea4c2c9a0eeae1eb62d560a4a1de884dded581a81fe0"
+    },
+    {
+      "bytes": 2472,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/src/usage.mjs",
+      "sha256": "a599331d5cd82c1df7d12c11350335162a0e48160029a6cd040562862970c6a1"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "retained-task-0.1.0/packages/change-monitor/test",
+      "sha256": null
+    },
+    {
+      "bytes": 4738,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/test/archive-install.test.mjs",
+      "sha256": "b0d41f3704f1c0503801c6e2a36192df0eae1108ccde5fe91fa9b66207af298c"
+    },
+    {
+      "bytes": 10211,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/test/cache-probe.mjs",
+      "sha256": "6fd5bbb52235ddd37488a234dd9c35496fd1b6b84307658af1abf491e5a31fc2"
+    },
+    {
+      "bytes": 1934,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/test/cache-worker.mjs",
+      "sha256": "c84e3896f0ee67bc9abd385bf975746c123c68980c4b9f7c0e17fcbf9d6044ec"
+    },
+    {
+      "bytes": 10270,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/test/cli.test.mjs",
+      "sha256": "a42d785d12920ea3fd6179b194224aa3f46af7b67204a83dd2e9d0c25fbcbefa"
+    },
+    {
+      "bytes": 1973,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/test/executable-cache.test.mjs",
+      "sha256": "080438c4a1f8535061c8ed664d41a6138493fbb5a2359ee8ff0f9b49bfad9ea8"
+    },
+    {
+      "bytes": 5179,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/test/pins.test.mjs",
+      "sha256": "b3faac91c6fc234c2904dd03ac695f6c562ae594c4de60cf56a19f7d8753463e"
+    },
+    {
+      "bytes": 11332,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/test/projection-integration.test.mjs",
+      "sha256": "0a97001e075d362d289b6d8e1bde8a087c74c8f8fb0bf871cedfeeae77bafb4c"
+    },
+    {
+      "bytes": 10710,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/test/receiver-effects.test.mjs",
+      "sha256": "c32a27dd3440eb995354dbf3758e53c1ce9d317bb3757dce24af7fcad72c6db1"
+    },
+    {
+      "bytes": 4825,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/test/release-gate-runtime.test.mjs",
+      "sha256": "8f948c3d18f18693365066f4a5f728b06ef0ddd9b4367ed4f35ce0327645e02e"
+    },
+    {
+      "bytes": 10437,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/test/scenario.test.mjs",
+      "sha256": "5d85866ed5daf135b5c49289dcd1d0d5d62e266416d97cd4c0b370c515ee6e36"
+    },
+    {
+      "bytes": 8738,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/test/support.mjs",
+      "sha256": "4ca3fc67fbf35836c964047ae654fd1f999c0b95cb521e7062cc51e581ca11b6"
+    },
+    {
+      "bytes": 22839,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/test/transition.test.mjs",
+      "sha256": "2a3c9318975090e46ec5e88bc8b79956ccfbea171bde8d87f34181d1eef7cd8f"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "retained-task-0.1.0/packages/change-monitor/vendor",
+      "sha256": null
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "retained-task-0.1.0/packages/change-monitor/vendor/s12-observatory",
+      "sha256": null
+    },
+    {
+      "bytes": 1628,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/vendor/s12-observatory/PROVENANCE.json",
+      "sha256": "dbeecce721f035a02505637ea3eafa6bf57c9944ac29a32588eac5bc13ad6aaf"
+    },
+    {
+      "bytes": 11345,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/vendor/s12-observatory/contract.js",
+      "sha256": "c3324aa44824c0e0efe817236f441b26adf35f4fa8ea8e3e7ec39bd1a781fc9b"
+    },
+    {
+      "bytes": 22594,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/vendor/s12-observatory/envelope.js",
+      "sha256": "0131d42080e48109ebdbd747701c45bc489a845dda87a3f5e02e8190a91fa11c"
+    },
+    {
+      "bytes": 9958,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/vendor/s12-observatory/fetch-observatory.js",
+      "sha256": "10f62e9af364810597ba53587aa1132beb4b70d68d913820184d8e47ab230511"
+    },
+    {
+      "bytes": 30569,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/vendor/s12-observatory/paid-activity.js",
+      "sha256": "3993e7aabd8f6f7cfb90f16b829a32ee19b9aa018338066c3b520acfb255ebfd"
+    },
+    {
+      "bytes": 35463,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/change-monitor/vendor/s12-observatory/projection.js",
+      "sha256": "3a4559e2150694e61cc40868a37711b4f50496960234d337b8693bcfdcaceba4"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "retained-task-0.1.0/packages/retained-task",
+      "sha256": null
+    },
+    {
+      "bytes": 1071,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/retained-task/LICENSE",
+      "sha256": "044d7291c37a2ead106ea4b4c26f713e63b7834637ed634da640f74e8cbe4625"
+    },
+    {
+      "bytes": 2546,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/retained-task/README.md",
+      "sha256": "ca1d083d025ead56e9a0bca73f31bc17e841a04863b4dfa89b66be50a6509ee9"
+    },
+    {
+      "bytes": 1289,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/retained-task/SOURCE-NOTICE.txt",
+      "sha256": "582f1000137ea4b410268300cf1e7e3c21e58c81df2722d159313d349f6167c8"
+    },
+    {
+      "bytes": 479,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/retained-task/package.json",
+      "sha256": "b0191d3a4b9d3ee850effa514c613d312ee552c070d630370f831bf2761e4e74"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "retained-task-0.1.0/packages/retained-task/src",
+      "sha256": null
+    },
+    {
+      "bytes": 4635,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/retained-task/src/cli.mjs",
+      "sha256": "4e454911f725ab3dcc6a54dfbc6d3094755a103b50e9cd292f7acff9384a5591"
+    },
+    {
+      "bytes": 20745,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/retained-task/src/compose.mjs",
+      "sha256": "7b3d788abf69f237f001a409ab65f9bda63ea717c63ac599c398a6bc7cb55e7e"
+    },
+    {
+      "bytes": 7961,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/retained-task/src/decision.mjs",
+      "sha256": "90c536bf1775df01c7221e7dca4d988cb6e163a14a287849e283c0352449111f"
+    },
+    {
+      "bytes": 174,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/retained-task/src/errors.mjs",
+      "sha256": "34fc71e3e78d28f6dc3046cdc433ba5b6c571be0adff30f4baa15132b859d1b5"
+    },
+    {
+      "bytes": 1690,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/retained-task/src/provenance.mjs",
+      "sha256": "a4368164f144a6412695a5947c21658773eb15aa5cd4780697071f19c783dfc7"
+    },
+    {
+      "bytes": 3017,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/retained-task/src/qualification.mjs",
+      "sha256": "b41d1d954974d5ded838d623b59d256daa548ed9ea898e1c0cad19900257be63"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "retained-task-0.1.0/packages/retained-task/support",
+      "sha256": null
+    },
+    {
+      "bytes": 1626,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/retained-task/support/change-monitor-0.1.0-release-status.json",
+      "sha256": "fa57b9e09a65c23cda23bc507ca742ef7b94ed5326f6dd25a11e7fa2da45d0f9"
+    },
+    {
+      "bytes": 0,
+      "kind": "directory",
+      "path": "retained-task-0.1.0/packages/retained-task/test",
+      "sha256": null
+    },
+    {
+      "bytes": 20901,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/retained-task/test/compose.test.mjs",
+      "sha256": "2618f24ad6de590a799f2724f947c6996beca5851ff71dd1bf6157c31044b996"
+    },
+    {
+      "bytes": 5855,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/retained-task/test/live.test.mjs",
+      "sha256": "d44d47784fc8c712b3e2049736e2f441cc4808b8bd5ee7f419def35a08eff37a"
+    },
+    {
+      "bytes": 4922,
+      "kind": "file",
+      "path": "retained-task-0.1.0/packages/retained-task/test/support.mjs",
+      "sha256": "4c7c410c49d528338ef305b948a0fb770aad32281d8d533b4135dd916413e9a4"
+    }
+  ]
+}
