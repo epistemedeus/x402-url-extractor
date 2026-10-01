@@ -1,0 +1,22 @@
+{
+  "schema": "samedaydesk.useful-result-reuse.seed.v1",
+  "task": "caller-forged-success",
+  "operationId": "read-unpaid-receipt",
+  "method": "GET",
+  "route": "/extract",
+  "outcomeSchema": "samedaydesk.useful-result.v1",
+  "outcomeSchemaVersion": "1",
+  "classification": "independent",
+  "assertedDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "digestOnly": true,
+  "outcome": {
+    "schema": "samedaydesk.useful-result.v1",
+    "schemaVersion": "1",
+    "availability": "present",
+    "disposition": "useful",
+    "code": "unpaid_receipt_readable",
+    "httpStatus": 200,
+    "usefulDelivery": "true",
+    "wallet": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+  }
+}

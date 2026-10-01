@@ -1,0 +1,8 @@
+{
+  "schema": "samedaydesk.useful-result.v1",
+  "schemaVersion": "1",
+  "availability": "present",
+  "disposition": "useful",
+  "code": "unpaid_receipt_readable",
+  "httpStatus": 200
+}

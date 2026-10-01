@@ -1404,6 +1404,7 @@ app.get(["/.well-known/x402", "/.well-known/x402.json", "/x402.json", "/api/x402
 });
 
 let publicAcquisitionDiscoveryUrl = null;
+let usefulResultReuseUrl = null;
 
 // A browser or indexer sometimes probes MCP with GET before opening the
 // streamable-HTTP POST transport. Return a free machine descriptor instead of
@@ -1428,6 +1429,7 @@ app.get("/mcp", (_req, res) => {
     purchaseEvidence: `${PUBLIC_URL}${PURCHASE_EVIDENCE_MANIFEST_PATH}`,
     skillAcquisition: `${PUBLIC_URL}/.well-known/skills/route-lock-receipt/SKILL.md`,
     ...(publicAcquisitionDiscoveryUrl ? { publicAcquisition: publicAcquisitionDiscoveryUrl } : {}),
+    ...(usefulResultReuseUrl ? { usefulResultReuse: usefulResultReuseUrl } : {}),
   });
 });
 
@@ -1450,6 +1452,23 @@ if (existsSync(publicAcquisitionOptional)) {
     }
   } catch (error) {
     console.error(`public-acquisition adapter not mounted: ${error.code || error.message}`);
+  }
+}
+
+const usefulResultReuseMount = fileURLToPath(new URL("./useful-result-reuse/http.mjs", import.meta.url));
+if (existsSync(usefulResultReuseMount)) {
+  try {
+    const { mountUsefulResultReuse } = await import(new URL("./useful-result-reuse/http.mjs", import.meta.url).href);
+    const mountedReuse = mountUsefulResultReuse(app, {
+      dataDir: process.env.COMMERCE_DATA_DIR || `${process.cwd()}/data`,
+      internalToken: process.env.COMMERCE_INTERNAL_TOKEN || "",
+      publicUrl: PUBLIC_URL,
+    });
+    if (mountedReuse.mounted === true) {
+      usefulResultReuseUrl = `${new URL(PUBLIC_URL).origin}/.well-known/useful-result-reuse/current.json`;
+    }
+  } catch (error) {
+    console.error(`useful-result reuse adapter not mounted: ${error.code || error.message}`);
   }
 }
 
