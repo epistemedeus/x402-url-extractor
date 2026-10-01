@@ -6,6 +6,8 @@ import {
   SCHEMAS,
 } from "agent-payment-policy";
 
+import { machineDocumentationLinkHeaders } from "./machine-documentation-links.mjs";
+
 export const PURCHASE_EVIDENCE_MANIFEST_PATH = "/.well-known/agent-payment-evidence.json";
 export const PURCHASE_EVIDENCE_MANIFEST_VERSION = "1.0.0";
 export { PURCHASE_EVIDENCE_RELATION };
@@ -115,8 +117,12 @@ export function purchaseEvidenceLinkHeader({ origin, path = PURCHASE_EVIDENCE_MA
 export function purchaseEvidenceHeaders({ origin, paidRoutes, path = PURCHASE_EVIDENCE_MANIFEST_PATH } = {}) {
   const routes = paidRoutes instanceof Set ? paidRoutes : new Set(paidRoutes || []);
   const link = purchaseEvidenceLinkHeader({ origin, path });
+  const documentation = machineDocumentationLinkHeaders({ origin });
   return (req, res, next) => {
-    if (routes.has(req.path)) res.append("Link", link);
+    if (routes.has(req.path)) {
+      res.append("Link", link);
+      for (const value of documentation) res.append("Link", value);
+    }
     return next();
   };
 }

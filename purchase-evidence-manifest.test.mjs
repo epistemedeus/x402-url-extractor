@@ -2,6 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  MACHINE_OPENAPI_PATH,
+  MACHINE_X402_CATALOG_PATH,
+  machineDocumentationLinkHeaders,
+} from "./machine-documentation-links.mjs";
+import {
   PURCHASE_EVIDENCE_MANIFEST_PATH,
   PURCHASE_EVIDENCE_RELATION,
   buildPurchaseEvidenceManifest,
@@ -92,8 +97,31 @@ test("advertises the manifest through one standard describedby link on configure
   middleware({ path: "/skill.md" }, { append: (name, value) => appended.push([name, value]) }, () => { nextRuns += 1; });
   middleware({ path: PURCHASE_EVIDENCE_MANIFEST_PATH }, { append: (name, value) => appended.push([name, value]) }, () => { nextRuns += 1; });
   assert.equal(nextRuns, 3);
+  const evidence = purchaseEvidenceLinkHeader({ origin: "https://agents.samedaydesk.com" });
+  const documentation = machineDocumentationLinkHeaders({ origin: "https://agents.samedaydesk.com" });
   assert.deepEqual(appended, [
-    ["Link", purchaseEvidenceLinkHeader({ origin: "https://agents.samedaydesk.com" })],
-    ["Link", purchaseEvidenceLinkHeader({ origin: "https://agents.samedaydesk.com" })],
+    ["Link", evidence],
+    ["Link", documentation[0]],
+    ["Link", documentation[1]],
+    ["Link", evidence],
+    ["Link", documentation[0]],
+    ["Link", documentation[1]],
   ]);
+  assert.equal(documentation.filter((value) => value.includes(PURCHASE_EVIDENCE_RELATION)).length, 0);
+  assert.equal(appended.filter(([, value]) => value.includes(PURCHASE_EVIDENCE_RELATION)).length, 2);
+});
+
+test("machine documentation links name the existing OpenAPI document and x402 catalog", () => {
+  assert.deepEqual(machineDocumentationLinkHeaders({ origin: "https://agents.samedaydesk.com" }), [
+    `<https://agents.samedaydesk.com${MACHINE_OPENAPI_PATH}>; rel="service-desc"; type="application/vnd.oai.openapi+json"`,
+    `<https://agents.samedaydesk.com${MACHINE_X402_CATALOG_PATH}>; rel="service-desc"; type="application/json"`,
+  ]);
+  assert.throws(
+    () => machineDocumentationLinkHeaders({ origin: "https://user:pass@agents.samedaydesk.com" }),
+    /credentials/,
+  );
+  assert.throws(
+    () => machineDocumentationLinkHeaders({ origin: "not a url" }),
+    /absolute http/,
+  );
 });
