@@ -11,6 +11,7 @@ import { normalizeExtractBatchInput } from "./extract-batch.mjs";
 import {
   authorizeOutcomeBinding,
   buildHttpFinishForwardRecords,
+  buildTaskRefRecord,
   createForwardOutcomeWriter,
 } from "./commerce-outcome-binding.mjs";
 import { bindMerchantHttpDeliveryContracts } from "./http-delivery-evidence/bind-merchant-contracts.mjs";
@@ -3050,10 +3051,11 @@ export function createCommerceTelemetry({
     await chmod(rareFunnelPath, 0o600).catch(() => {});
   }
 
-  function enqueue(event, evidence = null, httpDeliveryRecord = null, forwardRecords = null) {
+  function enqueue(event, evidence = null, httpDeliveryRecord = null, forwardRecords = null, taskRefRecord = null) {
     const ownedEvidence = evidence === null ? null : canonicalPaidSuccessEvidence(evidence);
     const rareEvidence = rareFunnelEvidenceFromHttpEvent(event);
     const ownedForward = Array.isArray(forwardRecords) ? forwardRecords : null;
+    const ownedTaskRef = taskRefRecord && typeof taskRefRecord === "object" ? taskRefRecord : null;
     enqueueExclusive(async () => {
       await appendEvent(event);
       if (ownedEvidence) await appendPaidSuccessEvidence(ownedEvidence);
@@ -3070,6 +3072,13 @@ export function createCommerceTelemetry({
           await outcomeBinding.appendRecords(ownedForward);
         } catch {
           // Forward evidence must not fail the commerce event write.
+        }
+      }
+      if (ownedTaskRef) {
+        try {
+          await outcomeBinding.appendTaskRef(ownedTaskRef);
+        } catch {
+          // A task link must not fail the commerce event, replay payment, or rewrite older evidence.
         }
       }
     }).catch((error) => {
@@ -3409,7 +3418,13 @@ export function createCommerceTelemetry({
       } catch {
         forwardRecords = null;
       }
-      enqueue(event, paidEvidence, httpDeliveryRecord, forwardRecords);
+      let taskRefRecord = null;
+      try {
+        taskRefRecord = buildTaskRefRecord({ claim: outcomeClaim, commerceEventId: event.id });
+      } catch {
+        taskRefRecord = null;
+      }
+      enqueue(event, paidEvidence, httpDeliveryRecord, forwardRecords, taskRefRecord);
       } catch {
         // Malformed or hostile runtime values cannot escape or produce evidence.
       }
@@ -3976,6 +3991,8 @@ export function createCommerceTelemetry({
       rareFunnelRotatedPath,
       outcomeBindingPath: outcomeBinding.currentPath,
       outcomeBindingRotatedPath: outcomeBinding.rotatedPath,
+      taskRefPath: outcomeBinding.taskRefPath,
+      taskRefRotatedPath: outcomeBinding.taskRefRotatedPath,
     },
   };
 }

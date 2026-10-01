@@ -1,0 +1,14 @@
+{
+  "schema": "pilot.s17.sponsored-outflow-pin.v1",
+  "network": "eip155:8453",
+  "asset": "base-native-usdc",
+  "direction": "out",
+  "atomic": "200000",
+  "blockNumber": 52009071,
+  "movementRef": "0x593559ea7a19277645a76e41aa29e713ed219db1f97e4be29c9dac9cf6cd4b37",
+  "observedAt": "2026-09-30T22:31:29.000Z",
+  "class": "sponsored_evaluation_expense",
+  "recognizedRevenue": false,
+  "claim": "closed",
+  "secondPay": false
+}

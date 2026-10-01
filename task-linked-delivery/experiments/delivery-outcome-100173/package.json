@@ -1,0 +1,19 @@
+{
+  "name": "delivery-outcome-100173",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Replayable goal and campaign join from discovery through a later useful call. Reuses the accepted three-site evidence join. No warehouse, dashboard, or customer claim.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "delivery-outcome": "bin/delivery-outcome.mjs"
+  },
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
+    "replay-real": "node bin/delivery-outcome.mjs replay --input fixtures/real/snapshot.json",
+    "replay-seeded-failure": "node bin/delivery-outcome.mjs replay --input fixtures/synthetic/seeded-relabel.json"
+  }
+}

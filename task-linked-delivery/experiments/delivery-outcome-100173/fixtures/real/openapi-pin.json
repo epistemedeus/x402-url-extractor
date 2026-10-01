@@ -1,0 +1,10 @@
+{
+  "openapi": "3.1.0",
+  "version": "1.23.49",
+  "title": "SameDayDesk machine commerce gateway",
+  "pathCount": 41,
+  "bytes": 143470,
+  "sha256": "ce51d15771690032856caa77451812a0f99970a368ddf0d07d9b294ac724d756",
+  "locator": "https://agents.samedaydesk.com/openapi.json",
+  "httpStatus": 200
+}
