@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { appendFile, chmod, mkdir, readFile, rename, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 
@@ -19,6 +19,14 @@ export const FORWARD_WRITER_ID = "x402-url-extractor.createCommerceTelemetry.for
 export const FORWARD_SOURCE_PLANE = "forward_instrumenter";
 export const FORWARD_BINDING_FILENAME = "commerce-outcome-binding.ndjson";
 export const FORWARD_BINDING_ROTATED_FILENAME = "commerce-outcome-binding.1.ndjson";
+export const TASK_REF_SCHEMA = "samedaydesk.outcome-task-ref.v1";
+export const TASK_REF_FILENAME = "commerce-outcome-task-ref.ndjson";
+export const TASK_REF_ROTATED_FILENAME = "commerce-outcome-task-ref.1.ndjson";
+// Current file plus one rotation. A third rotation deletes the oldest file.
+// Duplicate admission is only for event ids still in those two files.
+export const TASK_REF_RETAINED_GENERATIONS = 2;
+const TASK_REF_EPOCH = "samedaydesk.outcome-task-ref.epoch.v1";
+const OPAQUE_TASK_REF = /^t[a-f0-9]{62}$/;
 export const RECONCILIATION_SCHEMA = "samedaydesk.commerce-settlement-reconciliation.v1";
 export const REUSE_AUTHORITY = "authenticated_producer_observation";
 export const SETTLEMENT_AUTHORITY_READBACK = "runtime_readback";
@@ -106,17 +114,98 @@ function tokenAuthorized(supplied, internalToken) {
   return left.length === right.length && timingSafeEqual(left, right);
 }
 
+const TASK_REF_KEYS = Object.freeze([
+  "cohort",
+  "commerceEventId",
+  "eventId",
+  "operationId",
+  "schemaVersion",
+  "taskRef",
+  "writerId",
+]);
+
+function foldIdentity(value) {
+  return String(value).toLowerCase();
+}
+
+function obviousIdentity(value) {
+  if (typeof value !== "string" || value.length === 0 || value.length > 512) return true;
+  const folded = foldIdentity(value);
+  if (folded.includes("@") || folded.includes("://")) return true;
+  if (folded.startsWith("mailto:") || folded.startsWith("http:") || folded.startsWith("https:")) return true;
+  if (folded.startsWith("0x") || folded.startsWith("bc1") || folded.startsWith("tb1") || folded.startsWith("ltc1")) return true;
+  if (/(^|[^a-z0-9])(bearer|sk-|pk_live|pk_test)/.test(folded)) return true;
+  if (folded.startsWith("eyj") && folded.includes(".")) return true;
+  if (/^[1-9a-hj-np-z]{32,44}$/.test(folded)) return true;
+  return false;
+}
+
+function acceptedTaskLabel(value, internalToken) {
+  if (typeof value !== "string" || value.length === 0) return null;
+  if (obviousIdentity(value) || obviousIdentity(foldIdentity(value))) return null;
+  if (!OPERATION_ID_RE.test(value)) return null;
+  if (typeof internalToken === "string" && foldIdentity(value) === foldIdentity(internalToken)) return null;
+  return value;
+}
+
+export function taskRefCapabilityEpoch(internalToken) {
+  if (typeof internalToken !== "string" || Buffer.byteLength(internalToken, "utf8") < 32) return null;
+  return createHash("sha256").update(`${TASK_REF_EPOCH}\0${internalToken}`).digest("hex").slice(0, 16);
+}
+
+function opaqueTaskRef(internalToken, label) {
+  const epoch = taskRefCapabilityEpoch(internalToken);
+  if (!epoch) return null;
+  const mac = createHmac("sha256", internalToken)
+    .update(`${TASK_REF_EPOCH}\0${epoch}\0${label}`)
+    .digest("hex");
+  let body = mac.slice(0, 62);
+  if (body.startsWith("0x") || body.startsWith("bc1")) body = `a${body.slice(1)}`;
+  const link = `t${body}`;
+  return OPAQUE_TASK_REF.test(link) ? link : null;
+}
+
 export function authorizeOutcomeBinding(headers, internalToken) {
   const supplied = headerValue(headers, "x-samedaydesk-internal");
   if (!tokenAuthorized(supplied, internalToken)) return null;
   const operationId = headerValue(headers, "x-samedaydesk-outcome-operation");
   const cohort = headerValue(headers, "x-samedaydesk-outcome-cohort");
   if (!OPERATION_ID_RE.test(operationId) || !COHORTS.has(cohort)) return null;
+  const suppliedTask = headerValue(headers, "x-samedaydesk-outcome-task");
+  const label = suppliedTask ? acceptedTaskLabel(suppliedTask, internalToken) : null;
   return Object.freeze({
     brand: "samedaydesk",
     operationId,
     cohort,
+    taskRef: label ? opaqueTaskRef(internalToken, label) : null,
   });
+}
+
+export function isTaskRefRecord(record) {
+  if (!record || typeof record !== "object" || Array.isArray(record)) return false;
+  const keys = Object.keys(record).sort();
+  if (keys.length !== TASK_REF_KEYS.length || keys.some((key, index) => key !== TASK_REF_KEYS[index])) return false;
+  if (record.schemaVersion !== TASK_REF_SCHEMA || record.writerId !== FORWARD_WRITER_ID) return false;
+  if (!OPERATION_ID_RE.test(record.operationId) || !OPAQUE_TASK_REF.test(record.taskRef || "")) return false;
+  if (obviousIdentity(record.taskRef)) return false;
+  if (!COHORTS.has(record.cohort)) return false;
+  return UUID_V4.test(record.commerceEventId || "") && UUID_V4.test(record.eventId || "");
+}
+
+export function buildTaskRefRecord({ claim, commerceEventId } = {}) {
+  if (!claim || typeof claim.taskRef !== "string" || !OPAQUE_TASK_REF.test(claim.taskRef)) return null;
+  if (!OPERATION_ID_RE.test(claim.operationId || "") || !COHORTS.has(claim.cohort)) return null;
+  if (!UUID_V4.test(commerceEventId || "")) return null;
+  const record = {
+    cohort: claim.cohort,
+    commerceEventId,
+    eventId: stableForwardEventId(`${claim.operationId}\0task-ref\0${claim.taskRef}\0${commerceEventId}`),
+    operationId: claim.operationId,
+    schemaVersion: TASK_REF_SCHEMA,
+    taskRef: claim.taskRef,
+    writerId: FORWARD_WRITER_ID,
+  };
+  return isTaskRefRecord(record) ? Object.freeze(record) : null;
 }
 
 export function stableForwardEventId(material) {
@@ -416,9 +505,101 @@ function canonicalRuntimeReadback(value) {
 export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken }) {
   const currentPath = path.join(dataDir, FORWARD_BINDING_FILENAME);
   const rotatedPath = path.join(dataDir, FORWARD_BINDING_ROTATED_FILENAME);
+  const taskRefPath = path.join(dataDir, TASK_REF_FILENAME);
+  const taskRefRotatedPath = path.join(dataDir, TASK_REF_ROTATED_FILENAME);
   const boundedMax = Number.isSafeInteger(maxBytes) && maxBytes > 0 ? maxBytes : 5 * 1024 * 1024;
   let index = emptyIndex();
   let loaded = false;
+  let taskRefIds = null;
+  let taskAdmission = Promise.resolve();
+
+  function admitTask(work) {
+    const run = taskAdmission.then(work, work);
+    taskAdmission = run.then(() => undefined, () => undefined);
+    return run;
+  }
+
+  async function scanTaskRefFile(file, ids) {
+    const raw = await readFile(file).catch((error) => (error?.code === "ENOENT" ? null : Promise.reject(error)));
+    if (!raw || raw.length === 0) return;
+    // One retained file is rotated at maxBytes, then one more record is appended,
+    // so a legal file is larger than maxBytes. The tail cap keeps a hostile
+    // pre-seeded file from becoming an unbounded index.
+    const cap = boundedMax + 4096;
+    const slice = raw.length > cap ? raw.subarray(raw.length - cap) : raw;
+    let text = slice.toString("utf8");
+    if (raw.length > cap) {
+      const newline = text.indexOf("\n");
+      text = newline === -1 ? "" : text.slice(newline + 1);
+    }
+    for (const line of text.split("\n")) {
+      if (!line) continue;
+      try {
+        const parsed = JSON.parse(line);
+        if (isTaskRefRecord(parsed)) ids.add(parsed.eventId);
+      } catch {
+        // A torn line is not a duplicate and is not rewritten.
+      }
+    }
+  }
+
+  async function ensureTaskRefIndex() {
+    if (taskRefIds) return;
+    const ids = new Set();
+    await scanTaskRefFile(taskRefRotatedPath, ids);
+    await scanTaskRefFile(taskRefPath, ids);
+    taskRefIds = ids;
+  }
+
+  async function appendTaskLine(record) {
+    await mkdir(dataDir, { recursive: true, mode: 0o700 });
+    await chmod(dataDir, 0o700).catch(() => {});
+    const size = await stat(taskRefPath).then((entry) => entry.size).catch((error) => (
+      error?.code === "ENOENT" ? 0 : Promise.reject(error)
+    ));
+    if (size >= boundedMax) {
+      await unlink(taskRefRotatedPath).catch((error) => {
+        if (error?.code !== "ENOENT") throw error;
+      });
+      await rename(taskRefPath, taskRefRotatedPath).catch((error) => {
+        if (error?.code !== "ENOENT") throw error;
+      });
+      const kept = new Set();
+      await scanTaskRefFile(taskRefRotatedPath, kept);
+      taskRefIds = kept;
+    }
+    await appendFile(taskRefPath, `${JSON.stringify(record)}\n`, { encoding: "utf8", mode: 0o600 });
+    await chmod(taskRefPath, 0o600).catch(() => {});
+  }
+
+  async function appendTaskRef(record) {
+    return admitTask(async () => {
+      if (!isTaskRefRecord(record)) return { accepted: false, reason: "invalid_record", eventId: null };
+      try {
+        await ensureTaskRefIndex();
+      } catch {
+        return { accepted: false, reason: "write_outcome_unknown", eventId: record.eventId };
+      }
+      if (taskRefIds.has(record.eventId)) return { accepted: false, reason: "duplicate", eventId: record.eventId };
+      try {
+        await appendTaskLine(record);
+      } catch {
+        taskRefIds = null;
+        try {
+          await ensureTaskRefIndex();
+        } catch {
+          taskRefIds = null;
+          return { accepted: false, reason: "write_outcome_unknown", eventId: record.eventId };
+        }
+        if (taskRefIds.has(record.eventId)) {
+          return { accepted: false, reason: "duplicate", eventId: record.eventId };
+        }
+        return { accepted: false, reason: "write_outcome_unknown", eventId: record.eventId };
+      }
+      taskRefIds.add(record.eventId);
+      return { accepted: true, reason: null, eventId: record.eventId };
+    });
+  }
 
   async function ensureIndex() {
     if (loaded) return;
@@ -574,7 +755,10 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
   return {
     currentPath,
     rotatedPath,
+    taskRefPath,
+    taskRefRotatedPath,
     appendRecords,
+    appendTaskRef,
     observeMockedSettlementBoundary,
     observeRuntimeSettlementReadback,
     observeRetainedUse,
