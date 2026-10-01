@@ -8,10 +8,20 @@ import {
   MACHINE_ACQUISITION_CACHE_CONTROL,
   MACHINE_ACQUISITION_MAX_BYTES,
 } from "../machine-acquisition.mjs";
+import {
+  CURRENT_DOCUMENT_SCHEMA,
+  DEFAULT_ARTIFACT_PATH,
+  DEFAULT_COMMANDS_PATH,
+  PUBLIC_ACQUISITION_CURRENT_PATH,
+  loadColdCommandSet,
+  loadReceivingFile,
+  projectCurrentDelivery,
+} from "./receiving-lifecycle.mjs";
 
 export const PUBLIC_ACQUISITION_PREFIX = "/.well-known/public-acquisition";
 export const PUBLIC_ACQUISITION_INDEX_PATH = `${PUBLIC_ACQUISITION_PREFIX}/index.json`;
 export const PUBLIC_ACQUISITION_ASSET_PREFIX = `${PUBLIC_ACQUISITION_PREFIX}/assets`;
+export { PUBLIC_ACQUISITION_CURRENT_PATH };
 export const ARCHIVE_CACHE_CONTROL = MACHINE_ACQUISITION_CACHE_CONTROL;
 export const INDEX_CACHE_CONTROL = "public, max-age=300";
 export const MAX_ASSET_BYTES = MACHINE_ACQUISITION_MAX_BYTES;
@@ -247,8 +257,11 @@ export function loadPublicAcquisition({
 } = {}) {
   const manifestDir = dirname(resolve(manifestPath));
   let document = manifest;
+  let manifestSha256 = null;
   if (!document) {
-    document = JSON.parse(readRegularFile(manifestPath).toString("utf8"));
+    const manifestBytes = readRegularFile(manifestPath);
+    manifestSha256 = sha256(manifestBytes);
+    document = JSON.parse(manifestBytes.toString("utf8"));
   }
   if (!document || document.schema !== "samedaydesk.public-acquisition.receiving.v1") fail("receiving manifest schema is not recognized");
   if (document.draft !== true || document.productionHosted !== false || document.hostedAcquisitionVerified !== false) {
@@ -307,7 +320,7 @@ export function loadPublicAcquisition({
     }
   }
   if (present.length !== declared.size) fail("byte set does not match the manifest", "missing_asset");
-  return { document, files, order: [...declared] };
+  return { document, files, order: [...declared], manifestSha256 };
 }
 
 export function buildAcquisitionDocument(published, { publicUrl } = {}) {
@@ -337,6 +350,10 @@ export function buildAcquisitionDocument(published, { publicUrl } = {}) {
   });
   return {
     schema: "samedaydesk.public-acquisition.document.v1",
+    currentDelivery: {
+      schema: CURRENT_DOCUMENT_SCHEMA,
+      path: PUBLIC_ACQUISITION_CURRENT_PATH,
+    },
     draft: true,
     productionHosted: false,
     hostedAcquisitionVerified: false,
@@ -364,6 +381,7 @@ function resolveAcquisitionPath(pathname, originalUrl) {
     return { owned: true, reject: true };
   }
   if (path === PUBLIC_ACQUISITION_INDEX_PATH) return { owned: true, index: true };
+  if (path === PUBLIC_ACQUISITION_CURRENT_PATH) return { owned: true, current: true };
   if (!path.startsWith(`${PUBLIC_ACQUISITION_ASSET_PREFIX}/`)) return { owned: true, reject: true };
   const rel = path.slice(PUBLIC_ACQUISITION_ASSET_PREFIX.length + 1);
   if (!rel || rel.split("/").some((part) => part === "" || part === "." || part === "..")) return { owned: true, reject: true };
@@ -385,9 +403,40 @@ function send(res, { status, headers, body, method }) {
   return res.end(body);
 }
 
+function currentBody(published, publicUrl, { receivingPath, commandsPath, now }) {
+  const clock = typeof now === "function" ? now() : Number.isInteger(now) ? now : Date.now();
+  try {
+    const artifactState = loadReceivingFile(receivingPath);
+    let coldCommands = null;
+    try {
+      coldCommands = loadColdCommandSet(commandsPath);
+    } catch {
+      coldCommands = null;
+    }
+    return `${JSON.stringify(projectCurrentDelivery({
+      published,
+      publicUrl,
+      artifactState,
+      coldCommands,
+      now: clock,
+    }), null, 2)}\n`;
+  } catch (error) {
+    return `${JSON.stringify(projectCurrentDelivery({
+      published,
+      publicUrl,
+      artifactState: { kind: "rejected", code: "invalid_observation", message: error.message },
+      coldCommands: null,
+      now: clock,
+    }), null, 2)}\n`;
+  }
+}
+
 export function handlePublicAcquisitionRequest(req, res, {
   published,
   publicUrl,
+  receivingPath = DEFAULT_ARTIFACT_PATH,
+  commandsPath = DEFAULT_COMMANDS_PATH,
+  now = null,
 } = {}) {
   const method = String(req.method || "GET").toUpperCase();
   const resolved = resolveAcquisitionPath(req.path, req.originalUrl || req.url);
@@ -421,17 +470,24 @@ export function handlePublicAcquisitionRequest(req, res, {
     });
     return true;
   }
-  if (resolved.index) {
-    const body = `${JSON.stringify(buildAcquisitionDocument(published, { publicUrl }), null, 2)}\n`;
-    let canonical = "";
-    if (publicUrl) canonical = `${new URL(publicUrl).origin}${PUBLIC_ACQUISITION_INDEX_PATH}`;
+  if (resolved.index || resolved.current) {
+    const body = resolved.current
+      ? currentBody(published, publicUrl, { receivingPath, commandsPath, now })
+      : `${JSON.stringify(buildAcquisitionDocument(published, { publicUrl }), null, 2)}\n`;
+    const links = [];
+    if (publicUrl) {
+      const origin = new URL(publicUrl).origin;
+      const selfPath = resolved.current ? PUBLIC_ACQUISITION_CURRENT_PATH : PUBLIC_ACQUISITION_INDEX_PATH;
+      links.push(`<${origin}${selfPath}>; rel="canonical"`);
+      if (!resolved.current) links.push(`<${origin}${PUBLIC_ACQUISITION_CURRENT_PATH}>; rel="current"`);
+    }
     send(res, {
       status: 200,
       headers: {
         ...headers,
-        "Cache-Control": INDEX_CACHE_CONTROL,
+        "Cache-Control": resolved.current ? "no-store" : INDEX_CACHE_CONTROL,
         "Content-Type": "application/json; charset=utf-8",
-        ...(canonical ? { Link: `<${canonical}>; rel="canonical"` } : {}),
+        ...(links.length > 0 ? { Link: links.join(", ") } : {}),
       },
       body,
       method,
@@ -465,12 +521,21 @@ export function mountPublicAcquisition(app, {
   manifestPath = DEFAULT_MANIFEST,
   bytesRoot = DEFAULT_BYTES,
   published = null,
+  receivingPath = DEFAULT_ARTIFACT_PATH,
+  commandsPath = DEFAULT_COMMANDS_PATH,
+  now = null,
 } = {}) {
   const loaded = published || loadPublicAcquisition({ manifestPath, bytesRoot });
   app.use((req, res, next) => {
-    const handled = handlePublicAcquisitionRequest(req, res, { published: loaded, publicUrl });
+    const handled = handlePublicAcquisitionRequest(req, res, {
+      published: loaded,
+      publicUrl,
+      receivingPath,
+      commandsPath,
+      now,
+    });
     if (handled === false) return next();
     return undefined;
   });
-  return { files: loaded.order.length, index: PUBLIC_ACQUISITION_INDEX_PATH };
+  return { files: loaded.order.length, index: PUBLIC_ACQUISITION_INDEX_PATH, current: PUBLIC_ACQUISITION_CURRENT_PATH };
 }

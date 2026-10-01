@@ -7,3 +7,6 @@ data/
 # BasePay composition: optional pinned upstream JSON (no license grant)
 examples/basepay-composition/runtime/upstream/
 
+# Root deployment readback. Refresh the file; do not commit a receiving claim.
+public-acquisition/receiving/artifact.json
+

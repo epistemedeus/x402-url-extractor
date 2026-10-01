@@ -1,6 +1,8 @@
 # Root production readback
 
-This draft is not hosted. `hostedAcquisitionVerified` and `productionHosted` stay false in the served document. A loopback run of `cold-acquire.mjs` or `cold-httpx.py` is not this readback.
+This draft is not hosted. `hostedAcquisitionVerified` and `productionHosted` stay false in the served index. A loopback run of `cold-acquire.mjs`, `cold-httpx.py`, or `receive.mjs` is not this readback.
+
+The index keeps those candidate flags. Current delivery is `GET /.well-known/public-acquisition/current.json`, projected from the local file `public-acquisition/receiving/artifact.json`. Root writes that file with `node public-acquisition/receive.mjs --proof public --origin https://agents.samedaydesk.com --artifact public-acquisition/receiving/artifact.json --evidence <evidence.json>`. This page is not the readback and it is not a receiving claim.
 
 Apply `public-acquisition/root-mount.patch` on the merchant tree that already contains `machine-acquisition.mjs`. That file at `26a2655b0672f0add4c8208347be1be106334297` matches `server.js` on master `84cce4284d145deae0c6a89d222b09d9a1f8b997` (#142, squash-merged). #141's client-diagnostic tests are already on that master and stay registered in `package.json`. Do not treat this patch as a price, payTo, signing, or catalog change.
 
