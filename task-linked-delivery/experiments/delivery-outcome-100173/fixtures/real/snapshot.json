@@ -1,0 +1,91 @@
+{
+  "schema": "pilot.delivery-outcome.snapshot.v1",
+  "mode": "real",
+  "asOf": "2026-10-01T12:13:51.557Z",
+  "pins": {
+    "assignmentPilotMain": "0c1368b2828b24cf6f26e702e60141fbe963f993",
+    "workingTreeMain": "3c27c241fbbb9ca351f8f5ab7a15fe8dcc92d4bd",
+    "evidenceJoin": "4f5f631ec32d4738e8dee4cc5964ce4b5ecb55a6",
+    "merchantRailwayAccepted": "950fe15b5c936a8f882b3c949d1fb380d3306ad9",
+    "sdsCommit": "1f333f33e088ffd466f8ce13fb7202e8d4e6d0b5",
+    "sdsCommitDate": "2026-10-01T11:49:05Z",
+    "neoCommitNamed": "e02ddd8c74b40b27dd197417eed517244d9af5f8",
+    "launchInferred": false
+  },
+  "catalog": {
+    "kind": "merchant_openapi",
+    "version": "1.23.49",
+    "locator": "https://agents.samedaydesk.com/openapi.json",
+    "sha256": "ce51d15771690032856caa77451812a0f99970a368ddf0d07d9b294ac724d756",
+    "boundSha256": "ce51d15771690032856caa77451812a0f99970a368ddf0d07d9b294ac724d756",
+    "bytes": 143470,
+    "pathCount": 41,
+    "httpStatus": 200
+  },
+  "sources": [
+    {
+      "id": "commerce-demand",
+      "kind": "public_aggregate",
+      "locator": "https://agents.samedaydesk.com/v0/commerce-demand.json",
+      "path": "commerce-demand.json",
+      "sha256": "6bc4bbcef74ce80e35a5b6ae91627bc68a847ce2507d0f5de0065e500a7c99f6",
+      "bytes": 40000,
+      "observedAt": "2026-10-01T12:13:51.557Z",
+      "httpStatus": 200
+    }
+  ],
+  "observations": {
+    "sdsHealth": {
+      "locator": "https://samedaydesk.com/api/health",
+      "httpStatus": 200,
+      "sha256": "4372011706556596b2caa987dcb291bd029fd27c2a2f2460f0c56de119064f1b",
+      "provesReadinessChecker": false
+    },
+    "sdsSuppliedRowGetStatus": 404,
+    "sdsSuppliedRowLocator": "https://samedaydesk.com/api/public-readiness/supplied-row",
+    "neoCommitApiStatus": 404,
+    "purchaseEvidence": {
+      "locator": "https://agents.samedaydesk.com/.well-known/agent-payment-evidence.json",
+      "httpStatus": 200,
+      "bytes": 26418,
+      "sha256": "72f25bdcf241d9868cadbb099749b41dac128529e73fd193ea667121b04ff4a6",
+      "manifestDigest": "sha256:09957f390d7a7163daa057a3fc3fcb217ce662044cd7e3c99b5edb5d76673820",
+      "status": "experimental",
+      "operationCount": 26,
+      "sellerDeclaredUntilIndependentlyVerified": true
+    },
+    "downloads": [
+      {
+        "locator": "https://neomorphic.io/downloads/bounty-discovery/bounty-discovery-1.0.3.tar.gz",
+        "httpStatus": 200,
+        "bytes": 434515,
+        "sha256": "fd31b0224a0abd733bfde042cdbd08e6af29849adad1910ab895b7fdb05587b4"
+      }
+    ]
+  },
+  "citedSample": {
+    "source": "cited_unmerged_merchant_draft_pr_140",
+    "recheckedThisRun": false,
+    "productionMerged": false,
+    "paymentSent": false,
+    "decision": "paid_audit_not_required",
+    "taskDigest": "5461202a87b6b66de67d58538635dd36e6a8776c5379265c26a393a176857cec",
+    "evidenceDigest": "9d3d2711db03a475c2bac3d87fa42dd05cb5e3a29d5d3ec911fe666ae814161e",
+    "doors": [
+      { "id": "bronzetti-agent-brief", "freeSufficient": true, "paidAuditRequired": false },
+      { "id": "published-zeta-root", "freeSufficient": true, "paidAuditRequired": false },
+      { "id": "published-zeta-manifest", "freeSufficient": true, "paidAuditRequired": false },
+      { "id": "published-zeta-canonical", "freeSufficient": true, "paidAuditRequired": false },
+      { "id": "merchant-extract", "freeSufficient": true, "paidAuditRequired": false },
+      { "id": "merchant-healthz", "freeSufficient": true, "paidAuditRequired": false },
+      { "id": "merchant-mcp-get", "freeSufficient": true, "paidAuditRequired": false },
+      { "id": "minia2a-root", "freeSufficient": true, "paidAuditRequired": false },
+      { "id": "unpaid-audit-door", "freeSufficient": true, "paidAuditRequired": false },
+      { "id": "merchant-x402-manifest", "freeSufficient": true, "paidAuditRequired": false },
+      { "id": "lockfile-get", "freeSufficient": true, "paidAuditRequired": false },
+      { "id": "lockfile-post", "freeSufficient": true, "paidAuditRequired": false }
+    ]
+  },
+  "events": [],
+  "forwardRecords": []
+}

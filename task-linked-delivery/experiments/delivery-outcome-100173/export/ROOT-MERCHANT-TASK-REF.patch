@@ -1,0 +1,245 @@
+--- a/commerce-events.mjs
++++ b/commerce-events.mjs
+@@ -11,6 +11,7 @@
+ import {
+   authorizeOutcomeBinding,
+   buildHttpFinishForwardRecords,
++  buildTaskRefRecord,
+   createForwardOutcomeWriter,
+ } from "./commerce-outcome-binding.mjs";
+ import { bindMerchantHttpDeliveryContracts } from "./http-delivery-evidence/bind-merchant-contracts.mjs";
+@@ -3050,7 +3051,7 @@
+     await chmod(rareFunnelPath, 0o600).catch(() => {});
+   }
+ 
+-  function enqueue(event, evidence = null, httpDeliveryRecord = null, forwardRecords = null) {
++  function enqueue(event, evidence = null, httpDeliveryRecord = null, forwardRecords = null, taskRefRecord = null) {
+     const ownedEvidence = evidence === null ? null : canonicalPaidSuccessEvidence(evidence);
+     const rareEvidence = rareFunnelEvidenceFromHttpEvent(event);
+     const ownedForward = Array.isArray(forwardRecords) ? forwardRecords : null;
+@@ -3070,6 +3071,13 @@
+           await outcomeBinding.appendRecords(ownedForward);
+         } catch {
+           // Forward evidence must not fail the commerce event write.
++        }
++      }
++      if (taskRefRecord) {
++        try {
++          await outcomeBinding.appendTaskRef(taskRefRecord);
++        } catch {
++          // A task pseudonym must not fail the commerce event write.
+         }
+       }
+     }).catch((error) => {
+@@ -3409,7 +3417,13 @@
+       } catch {
+         forwardRecords = null;
+       }
+-      enqueue(event, paidEvidence, httpDeliveryRecord, forwardRecords);
++      let taskRefRecord = null;
++      try {
++        taskRefRecord = buildTaskRefRecord({ claim: outcomeClaim, commerceEventId: event.id });
++      } catch {
++        taskRefRecord = null;
++      }
++      enqueue(event, paidEvidence, httpDeliveryRecord, forwardRecords, taskRefRecord);
+       } catch {
+         // Malformed or hostile runtime values cannot escape or produce evidence.
+       }
+--- a/commerce-outcome-binding.mjs
++++ b/commerce-outcome-binding.mjs
+@@ -19,6 +19,8 @@
+ export const FORWARD_SOURCE_PLANE = "forward_instrumenter";
+ export const FORWARD_BINDING_FILENAME = "commerce-outcome-binding.ndjson";
+ export const FORWARD_BINDING_ROTATED_FILENAME = "commerce-outcome-binding.1.ndjson";
++export const TASK_REF_SCHEMA = "samedaydesk.outcome-task-ref.v1";
++export const TASK_REF_FILENAME = "commerce-outcome-task-ref.ndjson";
+ export const RECONCILIATION_SCHEMA = "samedaydesk.commerce-settlement-reconciliation.v1";
+ export const REUSE_AUTHORITY = "authenticated_producer_observation";
+ export const SETTLEMENT_AUTHORITY_READBACK = "runtime_readback";
+@@ -106,17 +108,61 @@
+   return left.length === right.length && timingSafeEqual(left, right);
+ }
+ 
++function acceptedTaskRef(value) {
++  if (typeof value !== "string" || !OPERATION_ID_RE.test(value)) return null;
++  if (value.startsWith("0x") || value.startsWith("bc1") || value.includes("@")) return null;
++  return value;
++}
++
+ export function authorizeOutcomeBinding(headers, internalToken) {
+   const supplied = headerValue(headers, "x-samedaydesk-internal");
+   if (!tokenAuthorized(supplied, internalToken)) return null;
+   const operationId = headerValue(headers, "x-samedaydesk-outcome-operation");
+   const cohort = headerValue(headers, "x-samedaydesk-outcome-cohort");
+   if (!OPERATION_ID_RE.test(operationId) || !COHORTS.has(cohort)) return null;
++  const suppliedTask = headerValue(headers, "x-samedaydesk-outcome-task");
+   return Object.freeze({
+     brand: "samedaydesk",
+     operationId,
+     cohort,
++    taskRef: suppliedTask ? acceptedTaskRef(suppliedTask) : null,
+   });
++}
++
++const TASK_REF_KEYS = Object.freeze([
++  "cohort",
++  "commerceEventId",
++  "eventId",
++  "operationId",
++  "schemaVersion",
++  "taskRef",
++  "writerId",
++]);
++
++export function isTaskRefRecord(record) {
++  if (!record || typeof record !== "object" || Array.isArray(record)) return false;
++  const keys = Object.keys(record).sort();
++  if (keys.length !== TASK_REF_KEYS.length || keys.some((key, index) => key !== TASK_REF_KEYS[index])) return false;
++  if (record.schemaVersion !== TASK_REF_SCHEMA || record.writerId !== FORWARD_WRITER_ID) return false;
++  if (!OPERATION_ID_RE.test(record.operationId) || typeof record.taskRef !== "string" || acceptedTaskRef(record.taskRef) !== record.taskRef) return false;
++  if (!COHORTS.has(record.cohort)) return false;
++  return UUID_V4.test(record.commerceEventId || "") && UUID_V4.test(record.eventId || "");
++}
++
++export function buildTaskRefRecord({ claim, commerceEventId } = {}) {
++  if (!claim || typeof claim.taskRef !== "string" || acceptedTaskRef(claim.taskRef) !== claim.taskRef) return null;
++  if (!OPERATION_ID_RE.test(claim.operationId || "") || !COHORTS.has(claim.cohort)) return null;
++  if (!UUID_V4.test(commerceEventId || "")) return null;
++  const record = {
++    schemaVersion: TASK_REF_SCHEMA,
++    writerId: FORWARD_WRITER_ID,
++    operationId: claim.operationId,
++    taskRef: claim.taskRef,
++    cohort: claim.cohort,
++    commerceEventId,
++    eventId: stableForwardEventId(`${claim.operationId}\0task-ref\0${claim.taskRef}\0${commerceEventId}`),
++  };
++  return isTaskRefRecord(record) ? Object.freeze(record) : null;
+ }
+ 
+ export function stableForwardEventId(material) {
+@@ -416,7 +462,9 @@
+ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken }) {
+   const currentPath = path.join(dataDir, FORWARD_BINDING_FILENAME);
+   const rotatedPath = path.join(dataDir, FORWARD_BINDING_ROTATED_FILENAME);
++  const taskRefPath = path.join(dataDir, TASK_REF_FILENAME);
+   const boundedMax = Number.isSafeInteger(maxBytes) && maxBytes > 0 ? maxBytes : 5 * 1024 * 1024;
++  let taskRefIds = null;
+   let index = emptyIndex();
+   let loaded = false;
+ 
+@@ -571,10 +619,40 @@
+     return { accepted: true, reason: null, eventId: record.eventId };
+   }
+ 
++  async function ensureTaskRefIndex() {
++    if (taskRefIds) return;
++    const text = await readFile(taskRefPath, "utf8").catch((error) => (error?.code === "ENOENT" ? "" : Promise.reject(error)));
++    const ids = new Set();
++    for (const line of text.split("\n")) {
++      if (!line) continue;
++      try {
++        const parsed = JSON.parse(line);
++        if (isTaskRefRecord(parsed)) ids.add(parsed.eventId);
++      } catch {
++        // A torn task-ref line is not a duplicate and is not rewritten.
++      }
++    }
++    taskRefIds = ids;
++  }
++
++  async function appendTaskRef(record) {
++    if (!isTaskRefRecord(record)) return { accepted: false, reason: "invalid_record", eventId: null };
++    await ensureTaskRefIndex();
++    if (taskRefIds.has(record.eventId)) return { accepted: false, reason: "duplicate", eventId: record.eventId };
++    await mkdir(dataDir, { recursive: true, mode: 0o700 });
++    await chmod(dataDir, 0o700).catch(() => {});
++    await appendFile(taskRefPath, `${JSON.stringify(record)}\n`, { encoding: "utf8", mode: 0o600 });
++    await chmod(taskRefPath, 0o600).catch(() => {});
++    taskRefIds.add(record.eventId);
++    return { accepted: true, reason: null, eventId: record.eventId };
++  }
++
+   return {
+     currentPath,
+     rotatedPath,
++    taskRefPath,
+     appendRecords,
++    appendTaskRef,
+     observeMockedSettlementBoundary,
+     observeRuntimeSettlementReadback,
+     observeRetainedUse,
+--- a/commerce-outcome-binding.test.mjs
++++ b/commerce-outcome-binding.test.mjs
+@@ -1,8 +1,10 @@
+ import assert from "node:assert/strict";
+-import { rm } from "node:fs/promises";
++import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
++import { tmpdir } from "node:os";
++import path from "node:path";
+ import test from "node:test";
+ 
+-import { authorizeOutcomeBinding, isSchemaValidDeliveryEvidence } from "./commerce-outcome-binding.mjs";
++import { authorizeOutcomeBinding, buildTaskRefRecord, createForwardOutcomeWriter, isSchemaValidDeliveryEvidence } from "./commerce-outcome-binding.mjs";
+ import { produceForwardOutcome } from "./scripts/forward-outcome-integration.mjs";
+ 
+ const TOKEN = "forward-outcome-internal-token-32b-min";
+@@ -17,7 +19,13 @@
+     brand: "samedaydesk",
+     operationId: "op-controlled",
+     cohort: "controlled_test",
++    taskRef: null,
+   });
++  const walletTask = `0x${"ab".repeat(20)}`;
++  assert.equal(authorizeOutcomeBinding({ ...headers, "x-samedaydesk-outcome-task": walletTask }, TOKEN).taskRef, null);
++  assert.equal(authorizeOutcomeBinding({ ...headers, "x-samedaydesk-outcome-task": "bc1qexampleaddress" }, TOKEN).taskRef, null);
++  assert.equal(authorizeOutcomeBinding({ ...headers, "x-samedaydesk-outcome-task": "person@example.com" }, TOKEN).taskRef, null);
++  assert.equal(authorizeOutcomeBinding({ ...headers, "x-samedaydesk-outcome-task": "install-to-unpaid-call-166" }, TOKEN).taskRef, "install-to-unpaid-call-166");
+   assert.equal(authorizeOutcomeBinding({ ...headers, "x-samedaydesk-internal": "forged-internal-token-not-the-real-one" }, TOKEN), null);
+   assert.equal(authorizeOutcomeBinding(headers, "short-token"), null);
+   assert.equal(authorizeOutcomeBinding({
+@@ -50,3 +58,43 @@
+     if (produced?.dataDir) await rm(produced.dataDir, { recursive: true, force: true });
+   }
+ });
++
++test("task pseudonym is a sibling record and never a forward v2 field", async () => {
++  const dir = await mkdtemp(path.join(tmpdir(), "outcome-task-ref-"));
++  try {
++    const writer = createForwardOutcomeWriter({ dataDir: dir, maxBytes: 1, internalToken: TOKEN });
++    const claim = authorizeOutcomeBinding({
++      "x-samedaydesk-internal": TOKEN,
++      "x-samedaydesk-outcome-operation": "op-controlled",
++      "x-samedaydesk-outcome-cohort": "controlled_test",
++      "x-samedaydesk-outcome-task": "install-to-unpaid-call-166",
++    }, TOKEN);
++    const commerceEventId = "20000000-0000-4000-8000-000000000011";
++    const record = buildTaskRefRecord({ claim, commerceEventId });
++    assert.equal(record.schemaVersion, "samedaydesk.outcome-task-ref.v1");
++    assert.equal(Object.hasOwn(record, "prompt"), false);
++    const first = await writer.appendTaskRef(record);
++    const second = await writer.appendTaskRef(record);
++    assert.equal(first.accepted, true);
++    assert.equal(second.accepted, false);
++    assert.equal(second.reason, "duplicate");
++    const reopened = createForwardOutcomeWriter({ dataDir: dir, maxBytes: 1, internalToken: TOKEN });
++    const third = await reopened.appendTaskRef(record);
++    assert.equal(third.reason, "duplicate");
++    await assert.rejects(stat(writer.currentPath), (error) => error.code === "ENOENT");
++    await assert.rejects(stat(writer.rotatedPath), (error) => error.code === "ENOENT");
++    const stored = await readFile(writer.taskRefPath, "utf8");
++    assert.equal(stored.trim().split("\n").length, 1);
++    assert.equal(stored.includes("samedaydesk.outcome-binding.forward.v2"), false);
++    const mode = (await stat(writer.taskRefPath)).mode & 0o777;
++    assert.equal(mode, 0o600);
++    const invalid = await writer.appendTaskRef({ ...record, prompt: "hidden" });
++    assert.equal(invalid.reason, "invalid_record");
++    const after = await readFile(writer.taskRefPath, "utf8");
++    assert.equal(after, stored);
++    assert.equal(after.includes("hidden"), false);
++    assert.equal(buildTaskRefRecord({ claim: { ...claim, taskRef: null }, commerceEventId }), null);
++  } finally {
++    await rm(dir, { recursive: true, force: true });
++  }
++});
