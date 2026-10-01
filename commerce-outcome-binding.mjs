@@ -1,5 +1,6 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-import { appendFile, chmod, mkdir, readFile, rename, stat, unlink } from "node:fs/promises";
+import { constants } from "node:fs";
+import { appendFile, chmod, lstat, mkdir, open, readFile, rename, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 
 import {
@@ -520,17 +521,35 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
   }
 
   async function scanTaskRefFile(file, ids) {
-    const raw = await readFile(file).catch((error) => (error?.code === "ENOENT" ? null : Promise.reject(error)));
-    if (!raw || raw.length === 0) return;
-    // One retained file is rotated at maxBytes, then one more record is appended,
-    // so a legal file is larger than maxBytes. The tail cap keeps a hostile
-    // pre-seeded file from becoming an unbounded index.
-    const cap = boundedMax + 4096;
-    const slice = raw.length > cap ? raw.subarray(raw.length - cap) : raw;
-    let text = slice.toString("utf8");
-    if (raw.length > cap) {
-      const newline = text.indexOf("\n");
-      text = newline === -1 ? "" : text.slice(newline + 1);
+    let handle;
+    try {
+      handle = await open(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    } catch (error) {
+      if (error?.code === "ENOENT") return;
+      throw error;
+    }
+    let text;
+    try {
+      const entry = await handle.stat();
+      if (!entry.isFile()) throw new Error("task reference evidence is not a regular file");
+      // Bound the actual read/allocation, not just the index after readFile.
+      // No stored record can exceed 4096 bytes under the existing allowlist.
+      const size = Math.min(entry.size, boundedMax + 4096);
+      const start = entry.size - size;
+      const bytes = Buffer.alloc(size);
+      let used = 0;
+      while (used < size) {
+        const { bytesRead } = await handle.read(bytes, used, size - used, start + used);
+        if (bytesRead === 0) break;
+        used += bytesRead;
+      }
+      text = bytes.subarray(0, used).toString("utf8");
+      if (start > 0) {
+        const newline = text.indexOf("\n");
+        text = newline === -1 ? "" : text.slice(newline + 1);
+      }
+    } finally {
+      await handle.close();
     }
     for (const line of text.split("\n")) {
       if (!line) continue;
@@ -554,10 +573,11 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
   async function appendTaskLine(record) {
     await mkdir(dataDir, { recursive: true, mode: 0o700 });
     await chmod(dataDir, 0o700).catch(() => {});
-    const size = await stat(taskRefPath).then((entry) => entry.size).catch((error) => (
-      error?.code === "ENOENT" ? 0 : Promise.reject(error)
+    const entry = await lstat(taskRefPath).catch((error) => (
+      error?.code === "ENOENT" ? null : Promise.reject(error)
     ));
-    if (size >= boundedMax) {
+    if (entry && !entry.isFile()) throw new Error("task reference evidence is not a regular file");
+    if (entry && entry.size >= boundedMax) {
       await unlink(taskRefRotatedPath).catch((error) => {
         if (error?.code !== "ENOENT") throw error;
       });
@@ -568,8 +588,24 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
       await scanTaskRefFile(taskRefRotatedPath, kept);
       taskRefIds = kept;
     }
-    await appendFile(taskRefPath, `${JSON.stringify(record)}\n`, { encoding: "utf8", mode: 0o600 });
-    await chmod(taskRefPath, 0o600).catch(() => {});
+    const handle = await open(taskRefPath,
+      constants.O_RDWR | constants.O_CREAT | constants.O_APPEND | constants.O_NOFOLLOW | constants.O_NONBLOCK, 0o600);
+    try {
+      const current = await handle.stat();
+      if (!current.isFile()) throw new Error("task reference evidence is not a regular file");
+      let separator = "";
+      if (current.size > 0) {
+        const last = Buffer.alloc(1);
+        const { bytesRead } = await handle.read(last, 0, 1, current.size - 1);
+        if (bytesRead !== 1) throw new Error("task reference tail changed during append");
+        // Keep old evidence bytes intact while isolating a torn final record.
+        if (last[0] !== 10) separator = "\n";
+      }
+      await handle.appendFile(`${separator}${JSON.stringify(record)}\n`, { encoding: "utf8" });
+      await handle.chmod(0o600).catch(() => {});
+    } finally {
+      await handle.close();
+    }
   }
 
   async function appendTaskRef(record) {
