@@ -326,10 +326,13 @@ test("adapter mount leaves the skill and a later paid route reachable", async ()
   server.close();
 });
 
-test("old route-lock descriptors are unchanged and the server file is not edited", () => {
+test("old route-lock descriptors are unchanged and Root mounts only the optional public adapter", () => {
   const bundle = loadMachineAcquisition();
   assert.equal(bundle.files.get("references/manifest.json").toString("utf8").includes("\"hostedAcquisitionVerified\": false"), true);
-  assert.equal(readFileSync(join(REPO, "server.js"), "utf8").includes("public-acquisition"), false);
+  const server = readFileSync(join(REPO, "server.js"), "utf8");
+  assert.match(server, /mountPublicAcquisitionIfPresent/);
+  assert.match(server, /if \(existsSync\(publicAcquisitionOptional\)\)/);
+  assert.match(server, /extraIndexSkills: \[acquisitionIndexSkill\(\{ recipient: PAY_TO \}\)\]/);
   const patch = readFileSync(join(ROOT, "root-mount.patch"), "utf8");
   assert.match(patch, /mountPublicAcquisitionIfPresent/);
   assert.doesNotMatch(patch, /priceToAtomic|EXTRACT_PRICE|PAY_TO =/);
