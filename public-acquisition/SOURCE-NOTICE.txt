@@ -21,3 +21,9 @@ a checkout. Unknown source qualification stays unknown.
 
 No runtime download, credential, writable publish path, or private repository
 is part of publication. Loopback output is not production acceptance.
+
+Current delivery is a separate document at
+/.well-known/public-acquisition/current.json. The server reads only the local
+file public-acquisition/receiving/artifact.json. The index above stays the
+historical candidate record. Replace that artifact with
+public-acquisition/receive.mjs; do not edit product code to publish a claim.
