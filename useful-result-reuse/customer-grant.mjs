@@ -38,6 +38,10 @@ function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
 }
 
+function contributionId(token, resultId) {
+  return `c${sha256(`${sha256(token)}\0${resultId}\0knowledge`).slice(0, 32)}`;
+}
+
 function sameHex(left, right) {
   if (typeof left !== "string" || typeof right !== "string" || left.length !== right.length || left.length !== 64) {
     return false;
@@ -157,13 +161,14 @@ export function compatibilityView(row) {
 
 export function listCompatibility(rows) {
   const list = Array.isArray(rows) ? rows : [];
+  const revoked = new Set(list.filter(row => row?.schema === COMPATIBILITY_SCHEMA && row.action === "revoke").map(row => row.targetId));
   const corrected = new Set(
     list
       .filter((row) => row?.schema === COMPATIBILITY_SCHEMA && typeof row.corrects === "string" && row.corrects)
       .map((row) => row.corrects),
   );
   return list
-    .filter((row) => row?.schema === COMPATIBILITY_SCHEMA && !row.revoked && !row.stale && !corrected.has(row.shareId))
+    .filter((row) => row?.schema === COMPATIBILITY_SCHEMA && !row.revoked && !revoked.has(row.shareId) && !row.stale && !corrected.has(row.shareId))
     .map(compatibilityView)
     .filter(Boolean);
 }
@@ -447,17 +452,14 @@ export function createCustomerRetention({
         schema: CUSTOMER_SCHEMA,
         targetId: current.grantId,
       });
-      const shares = await sharedStore.read(SHARED_FILE);
-      const related = shares.filter((row) => row?.schema === COMPATIBILITY_SCHEMA && row.recordId === current.resultId?.slice(0, 32) && row.shareId);
-      for (const share of related) {
-        if (share.action === "revoke") continue;
-        await sharedStore.append(SHARED_FILE, {
-          action: "revoke",
-          at: new Date(now()).toISOString(),
-          schema: COMPATIBILITY_SCHEMA,
-          targetId: share.shareId,
-        });
-      }
+      // Write a grant-owned tombstone even before its share exists. This also
+      // withdraws a concurrently started share that completes after revoke.
+      await sharedStore.append(SHARED_FILE, {
+        action: "revoke",
+        at: new Date(now()).toISOString(),
+        schema: COMPATIBILITY_SCHEMA,
+        targetId: contributionId(token, current.resultId),
+      });
       return { accepted: true, paymentPermitted: false, reason: "revoked" };
     },
 
@@ -474,6 +476,7 @@ export function createCustomerRetention({
         row?.schema === COMPATIBILITY_SCHEMA
         && row.action === "share"
         && row.recordId === recordId
+        && row.contributionBinding === sha256(token)
         && !shares.some((item) => item?.action === "revoke" && item.targetId === row.shareId)
         && !shares.some((item) => item?.corrects === row.shareId)
       ));
@@ -481,7 +484,7 @@ export function createCustomerRetention({
         const priorView = compatibilityView(existing);
         if (priorView) return { accepted: true, duplicate: true, share: priorView };
       }
-      const shareId = `c${sha256(`${current.resultId}\0knowledge`).slice(0, 32)}`;
+      const shareId = contributionId(token, current.resultId);
       const view = compatibilityView({
         evidence,
         expiresAt: current.expiresAt,
@@ -493,6 +496,7 @@ export function createCustomerRetention({
       await sharedStore.append(SHARED_FILE, {
         ...view,
         action: "share",
+        contributionBinding: sha256(token),
         createdAt: new Date(now()).toISOString(),
         recordId,
       });
@@ -509,6 +513,7 @@ export function createCustomerRetention({
         row?.schema === COMPATIBILITY_SCHEMA
         && row.action === "share"
         && row.recordId === current.resultId?.slice(0, 32)
+        && row.contributionBinding === sha256(token)
       ));
       if (!prior) return { accepted: false, applyPrior: false, reason: "not_found" };
       const shareId = `c${sha256(`${prior.shareId}\0correct\0${now()}`).slice(0, 32)}`;

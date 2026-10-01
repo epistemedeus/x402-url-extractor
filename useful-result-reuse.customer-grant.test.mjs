@@ -94,6 +94,41 @@ async function retain(api, body, extra = {}) {
   });
 }
 
+test("identical customer results do not transfer contribution revocation or correction authority", async () => {
+  const { api, dataDir } = await openApi();
+  try {
+    const body = await foundBody();
+    const a = await retain(api, body, { credentialDigest: "aa".repeat(32) });
+    const b = await retain(api, body, { credentialDigest: "bb".repeat(32) });
+    assert.equal(a.accepted, true);
+    assert.equal(b.accepted, true);
+    assert.equal(a.resultId, b.resultId);
+    assert.notEqual(a.grant, b.grant);
+    const sharedB = await api.shareDeliveredKnowledge({ token: b.grant });
+    assert.equal(sharedB.accepted, true);
+    assert.equal((await api.correctDeliveredKnowledge({ token: a.grant })).reason, "not_found");
+    const sharedA = await api.shareDeliveredKnowledge({ token: a.grant });
+    assert.equal(sharedA.accepted, true);
+    assert.notEqual(sharedA.share.shareId, sharedB.share.shareId);
+    await api.revokeDeliveredReceipt({ token: a.grant });
+    const current = await api.current();
+    assert.equal(current.compatibility.some(row => row.shareId === sharedA.share.shareId), false);
+    assert.equal(current.compatibility.some(row => row.shareId === sharedB.share.shareId), true);
+    assert.equal((await api.readDeliveredReceipt({ token: b.grant })).reason, null);
+    assert.equal(JSON.stringify(current).includes(b.grant), false);
+    assert.equal(JSON.stringify(current).includes("contributionBinding"), false);
+    assert.equal((await api.correctDeliveredKnowledge({ token: b.grant })).accepted, true);
+    const c = await retain(api, body, { credentialDigest: "cc".repeat(32) });
+    await Promise.all([
+      api.shareDeliveredKnowledge({ token: c.grant }),
+      api.revokeDeliveredReceipt({ token: c.grant }),
+    ]);
+    assert.equal((await api.current()).compatibility.length, 0);
+  } finally {
+    await rm(dataDir, { recursive: true, force: true });
+  }
+});
+
 test("stashes an explicit retain header and ignores query, user agent, and wallet labels", async () => {
   const body = await foundBody();
   const res = { locals: {} };
