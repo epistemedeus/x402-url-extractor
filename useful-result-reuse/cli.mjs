@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 
 import { publicHistoricalClient } from "../transaction-receipt.mjs";
 import { CAPTURED_RECEIPT, clientFromCapture, directSolve, executeClosedSettlement, readCapture } from "./base-receipt.mjs";
+import { rejectSeededPaidDelivery } from "./customer-grant.mjs";
 import { createUsefulResultReuse, rejectSeededFixture, selectExistingPaidOperation } from "./service.mjs";
 
 const { values, positionals } = parseArgs({
@@ -44,6 +45,11 @@ const command = positionals[0] || "";
 try {
   if (command === "reject-seeded") {
     const result = await rejectSeededFixture(positionals[1]);
+    exitJson(result.refused ? 0 : 2, result);
+  }
+  if (command === "reject-seeded-paid") {
+    const raw = JSON.parse(await readFile(positionals[1], "utf8"));
+    const result = await rejectSeededPaidDelivery(raw);
     exitJson(result.refused ? 0 : 2, result);
   }
   if (command === "read-public") {

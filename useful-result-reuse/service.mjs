@@ -21,8 +21,16 @@ import {
   receiveKnowledge,
 } from "./base-receipt.mjs";
 import {
+  createCustomerRetention,
+  listCompatibility,
+  listCompatibilityCorrections,
+  listCompatibilityRevocations,
+} from "./customer-grant.mjs";
+import {
   CLOSED_SPONSORED_REF,
   CURRENT_SCHEMA,
+  CUSTOMER_MAX_RECORD_BYTES,
+  CUSTOMER_RETENTION_DESCRIPTOR,
   DEFAULT_TTL_MS,
   EVIDENCE_CLASSES,
   EXISTING_PAID_OPERATIONS,
@@ -126,6 +134,16 @@ export function createUsefulResultReuse({
     const clock = now();
     await store.append(METRIC_FILE, metricEvent(kind, clock, extra));
   }
+
+  const customer = createCustomerRetention({
+    customerStore: createReuseStore({ dataDir, maxRecordBytes: CUSTOMER_MAX_RECORD_BYTES }),
+    internalToken,
+    now,
+    remember,
+    sharedStore: store,
+    ttlMs,
+    writer,
+  });
 
   return Object.freeze({
     async bind(input) {
@@ -455,12 +473,18 @@ export function createUsefulResultReuse({
         schema: CURRENT_SCHEMA,
         productionHosted: false,
         hostedReuseVerified: false,
+        customerRetentionHostedVerified: false,
         independentAdoption: "unknown",
         independentRepeat: "unknown",
         coverage: coverage.coverage,
         recognizedRevenueAtomic: "0",
+        historicalRevenue: "unknown",
+        customerRetention: CUSTOMER_RETENTION_DESCRIPTOR,
         items: page,
         knowledge: listKnowledge(sharedLog),
+        compatibility: listCompatibility(sharedLog),
+        compatibilityCorrections: listCompatibilityCorrections(sharedLog),
+        compatibilityRevocations: listCompatibilityRevocations(sharedLog),
         page: {
           limit: bounded,
           nextCursor: start + bounded < shares.length ? page[page.length - 1]?.shareId || null : null,
@@ -491,6 +515,7 @@ export function createUsefulResultReuse({
         coverage: status.coverage,
         complete: false,
         recognizedRevenueAtomic: "0",
+        historicalRevenue: "unknown",
         fetchIsNotAdoption: true,
         evidenceClass: {
           valid_delivery: "supplied_observation",
@@ -710,6 +735,13 @@ export function createUsefulResultReuse({
     nextPaid(requirement, options = {}) {
       return selectExistingPaidOperation(requirement, options);
     },
+
+    retainDeliveredReceipt: customer.retainDeliveredReceipt,
+    readDeliveredReceipt: customer.readDeliveredReceipt,
+    revokeDeliveredReceipt: customer.revokeDeliveredReceipt,
+    shareDeliveredKnowledge: customer.shareDeliveredKnowledge,
+    correctDeliveredKnowledge: customer.correctDeliveredKnowledge,
+    consumeDeliveredKnowledge: customer.consumeDeliveredKnowledge,
   });
 }
 

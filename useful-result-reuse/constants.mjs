@@ -5,13 +5,18 @@ export const ACCOUNTING_SCHEMA = "samedaydesk.closed-expense-accounting.v1";
 export const CURRENT_SCHEMA = "samedaydesk.useful-result-reuse.current.v1";
 export const METRIC_SCHEMA = "samedaydesk.useful-result-reuse.metric.v1";
 export const OUTCOME_SCHEMA = "samedaydesk.useful-result.v1";
+export const CUSTOMER_SCHEMA = "samedaydesk.useful-result-reuse.customer-grant.v1";
+export const COMPATIBILITY_SCHEMA = "samedaydesk.useful-result-reuse.compatibility.v1";
 export const CURRENT_PATH = "/.well-known/useful-result-reuse/current.json";
+export const GRANT_READ_PATH = "/.well-known/useful-result-reuse/retained";
 
 export const PRIVATE_FILE = "useful-result-private.ndjson";
 export const SHARED_FILE = "useful-result-shared.ndjson";
 export const METRIC_FILE = "useful-result-metrics.ndjson";
+export const CUSTOMER_FILE = "useful-result-customer.ndjson";
 
 export const MAX_RECORD_BYTES = 4096;
+export const CUSTOMER_MAX_RECORD_BYTES = 16_384;
 export const MAX_FILE_BYTES = 262_144;
 export const PAGE_MAX = 50;
 export const DEFAULT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -65,7 +70,23 @@ export const METRIC_KINDS = Object.freeze([
   "server_executed_output",
   "independently_replayed_utility",
   "paid_settlement",
+  "retention_opt_in",
+  "retained_result",
+  "useful_later_read",
+  "correction",
+  "paid_valid_delivery",
 ]);
+
+// Machine descriptor for the customer-held grant. It is not a price or a SKU.
+export const CUSTOMER_RETENTION_DESCRIPTOR = Object.freeze({
+  credentialInUrl: false,
+  internalTokenRequired: false,
+  price: "free",
+  read: Object.freeze({ method: "GET", route: GRANT_READ_PATH }),
+  revoke: Object.freeze({ method: "POST", route: GRANT_READ_PATH, action: "revoke" }),
+  share: Object.freeze({ method: "POST", route: GRANT_READ_PATH, action: "share-knowledge" }),
+  correct: Object.freeze({ method: "POST", route: GRANT_READ_PATH, action: "correct-knowledge" }),
+});
 
 // Documented output of the existing handlers. Not a new price or SKU.
 export const EXISTING_PAID_OPERATIONS = Object.freeze({

@@ -82,3 +82,34 @@ Root action: do not open a purchase or an outreach for this closed receipt.
 The paid transaction-receipt route remains available for some other finalized
 hash under that caller's own payment policy. No bid, comment, or payment is
 part of this canary.
+
+## Customer-held path, separate from this canary
+
+The anonymous `current.json` view stays empty of private results.
+`hostedReuseVerified`, `customerRetentionHostedVerified`, and
+`productionHosted` stay false. `independentAdoption` and `independentRepeat`
+stay `unknown`. `recognizedRevenueAtomic` stays `"0"`.
+`historicalRevenue` stays `"unknown"`. Scoped owner retrieval still requires
+`x-samedaydesk-internal`. A public caller never sends that token to read a
+retained receipt.
+
+The external path is the existing paid `GET /chain/transaction-receipt`.
+Opt-in is the request header `x-samedaydesk-retain-result: 1` together with
+the caller's own payment. The response header `x-samedaydesk-result-grant`
+is the only later credential. Commands and rollback are in `RUNBOOK.md`.
+
+Unpaid and public readback, no grant minted:
+
+```sh
+curl -sS -D - -o /dev/null \
+  -H 'x-samedaydesk-retain-result: 1' \
+  "$ORIGIN/chain/transaction-receipt?transactionHash=$TX&network=base"
+curl -sS -D - -o /dev/null "$ORIGIN/.well-known/useful-result-reuse/retained"
+curl -sS "$ORIGIN/.well-known/useful-result-reuse/current.json"
+```
+
+Expect 402 with no `x-samedaydesk-result-grant`, then 401 `grant_required`,
+then a current document whose `customerRetention.internalTokenRequired` is
+false and whose `hostedReuseVerified` is false. A grant presented as
+`payment-signature` does not settle a new execution. Owner QA that increments
+`paid_valid_delivery` is not customer revenue and is not independent adoption.
