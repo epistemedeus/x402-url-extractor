@@ -388,10 +388,16 @@ test("compiled extract challenge links the generated OpenAPI document and x402 c
   assert.equal(alone.parsed.code, "readiness_dimensions_absent");
   process.stdout.write(`ALONE decision=${alone.parsed.decision} code=${alone.parsed.code}\n`);
 
+});
+
+test("deployed extract advertises machine documentation", {
+  skip: process.env.COLD_DISCOVERY_LIVE !== "1",
+}, async () => {
   const live = await fetch(LIVE_EXTRACT, { signal: AbortSignal.timeout(20_000) });
   assert.equal(live.status, 402);
   const liveLink = live.headers.get("link") || "";
-  assert.equal(liveLink.includes("service-desc"), false);
+  assert.deepEqual(relationUrls(liveLink, "service-desc"), [`${ORIGIN}/openapi.json`, `${ORIGIN}/.well-known/x402`]);
   assert.equal(selectPurchaseEvidenceLink(liveLink, LIVE_EXTRACT), `${ORIGIN}/.well-known/agent-payment-evidence.json`);
-  process.stdout.write(`LIVE status=${live.status} service-desc=false describedby=agent-payment-evidence\n`);
+  await live.body?.cancel();
+  process.stdout.write(`LIVE status=${live.status} service-desc=true describedby=agent-payment-evidence\n`);
 });
