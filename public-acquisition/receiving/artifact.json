@@ -1,0 +1,536 @@
+{
+  "schema": "samedaydesk.public-acquisition.receiving-artifact.v1",
+  "kind": "deployment-readback",
+  "proofClass": "public-origin",
+  "complete": true,
+  "configuredPublicOrigin": "https://agents.samedaydesk.com",
+  "observedAt": "2026-10-01T16:21:06.490Z",
+  "manifest": {
+    "schema": "samedaydesk.public-acquisition.receiving.v1",
+    "sha256": "2e2fddc409a0a5f599ccb866b0f4422302b3e3507ad50b288d252ea0cefd2727",
+    "assetCount": 12
+  },
+  "inventories": [
+    {
+      "path": "inventories/l09-next-action-0.1.0.json",
+      "fileSha256": "5991fcf85c498e67ac8a6ea83a4f3e07a3e0cdb2d1d305b346eef62ebb64379b",
+      "memberCount": 650
+    },
+    {
+      "path": "inventories/retained-task-0.1.0.json",
+      "fileSha256": "7bc6db9f54ac372465ed70ccb0f500b931336ddc192fd92379197c375f0ba84f",
+      "memberCount": 92
+    },
+    {
+      "path": "inventories/composition-route-knowledge-0.1.0.json",
+      "fileSha256": "b9e2cac7bd51e8ee67fff4521a6ade6735b15f39830f68d58d46c0b1c2705dd2",
+      "memberCount": 85
+    }
+  ],
+  "runtime": {
+    "name": "node",
+    "version": "v22.22.2",
+    "range": ">=22.20.0",
+    "satisfied": true
+  },
+  "bounds": {
+    "redirects": "refused",
+    "maxAssetBytes": 1048576,
+    "maxRequestMs": 20000,
+    "maxRunMs": 180000
+  },
+  "assets": [
+    {
+      "id": "l09-next-action",
+      "version": "0.1.0",
+      "role": "archive",
+      "filename": "l09-next-action-0.1.0.tar.gz",
+      "relativePath": "l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
+      "sha256": "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0",
+      "bytes": 477108,
+      "inventory": {
+        "path": "inventories/l09-next-action-0.1.0.json",
+        "fileSha256": "5991fcf85c498e67ac8a6ea83a4f3e07a3e0cdb2d1d305b346eef62ebb64379b",
+        "memberCount": 650
+      },
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
+        "status": 200,
+        "bodyBytes": 477108,
+        "bodySha256": "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0",
+        "contentType": "application/gzip",
+        "elapsedMs": 77,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 477108,
+        "elapsedMs": 20,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "l09-next-action",
+      "version": "0.1.0",
+      "role": "provenance",
+      "filename": "provenance.json",
+      "relativePath": "l09-next-action/0.1.0/provenance.json",
+      "sha256": "1966fcbc814b25a623f472b0adbb20a312bb0b63ea24faf8cbf46217c2544357",
+      "bytes": 3357,
+      "inventory": null,
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/l09-next-action/0.1.0/provenance.json",
+        "status": 200,
+        "bodyBytes": 3357,
+        "bodySha256": "1966fcbc814b25a623f472b0adbb20a312bb0b63ea24faf8cbf46217c2544357",
+        "contentType": "application/json; charset=utf-8",
+        "elapsedMs": 19,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/l09-next-action/0.1.0/provenance.json",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 3357,
+        "elapsedMs": 38,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "l09-next-action",
+      "version": "0.1.0",
+      "role": "source-notice",
+      "filename": "SOURCE-NOTICE.txt",
+      "relativePath": "l09-next-action/0.1.0/SOURCE-NOTICE.txt",
+      "sha256": "47ab3eac7ffc2b4d099369f4e410cc2474a6835fb56d593347bcb14312f80ca9",
+      "bytes": 88,
+      "inventory": null,
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/l09-next-action/0.1.0/SOURCE-NOTICE.txt",
+        "status": 200,
+        "bodyBytes": 88,
+        "bodySha256": "47ab3eac7ffc2b4d099369f4e410cc2474a6835fb56d593347bcb14312f80ca9",
+        "contentType": "text/plain; charset=utf-8",
+        "elapsedMs": 16,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/l09-next-action/0.1.0/SOURCE-NOTICE.txt",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 88,
+        "elapsedMs": 33,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "l09-next-action",
+      "version": "0.1.0",
+      "role": "license",
+      "filename": "LICENSE",
+      "relativePath": "l09-next-action/0.1.0/LICENSE",
+      "sha256": "24c39339d59a9b969c17cf36e60fcebf9ac6c2fdc7155363d58f95a70d642722",
+      "bytes": 1395,
+      "inventory": null,
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/l09-next-action/0.1.0/LICENSE",
+        "status": 200,
+        "bodyBytes": 1395,
+        "bodySha256": "24c39339d59a9b969c17cf36e60fcebf9ac6c2fdc7155363d58f95a70d642722",
+        "contentType": "text/plain; charset=utf-8",
+        "elapsedMs": 16,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/l09-next-action/0.1.0/LICENSE",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 1395,
+        "elapsedMs": 40,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "retained-task",
+      "version": "0.1.0",
+      "role": "archive",
+      "filename": "retained-task-0.1.0.tar.gz",
+      "relativePath": "retained-task/0.1.0/retained-task-0.1.0.tar.gz",
+      "sha256": "350629b7bf1a14b092d94e0c27579f2e05114bf7f2f05a33c33d32b4c68176de",
+      "bytes": 107420,
+      "inventory": {
+        "path": "inventories/retained-task-0.1.0.json",
+        "fileSha256": "7bc6db9f54ac372465ed70ccb0f500b931336ddc192fd92379197c375f0ba84f",
+        "memberCount": 92
+      },
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
+        "status": 200,
+        "bodyBytes": 107420,
+        "bodySha256": "350629b7bf1a14b092d94e0c27579f2e05114bf7f2f05a33c33d32b4c68176de",
+        "contentType": "application/gzip",
+        "elapsedMs": 19,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 107420,
+        "elapsedMs": 34,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "retained-task",
+      "version": "0.1.0",
+      "role": "provenance",
+      "filename": "provenance.json",
+      "relativePath": "retained-task/0.1.0/provenance.json",
+      "sha256": "25c1d1d3a2d3eb31e6291fb9c06b96bede2eacefff840385f7d4927f11d93061",
+      "bytes": 1433,
+      "inventory": null,
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/retained-task/0.1.0/provenance.json",
+        "status": 200,
+        "bodyBytes": 1433,
+        "bodySha256": "25c1d1d3a2d3eb31e6291fb9c06b96bede2eacefff840385f7d4927f11d93061",
+        "contentType": "application/json; charset=utf-8",
+        "elapsedMs": 15,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/retained-task/0.1.0/provenance.json",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 1433,
+        "elapsedMs": 41,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "retained-task",
+      "version": "0.1.0",
+      "role": "source-notice",
+      "filename": "SOURCE-NOTICE.txt",
+      "relativePath": "retained-task/0.1.0/SOURCE-NOTICE.txt",
+      "sha256": "c9c5d84d3ed461508cb93ce1062bcbb52e83832d1d0e93d59e998fc24b0afb2e",
+      "bytes": 113,
+      "inventory": null,
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/retained-task/0.1.0/SOURCE-NOTICE.txt",
+        "status": 200,
+        "bodyBytes": 113,
+        "bodySha256": "c9c5d84d3ed461508cb93ce1062bcbb52e83832d1d0e93d59e998fc24b0afb2e",
+        "contentType": "text/plain; charset=utf-8",
+        "elapsedMs": 17,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/retained-task/0.1.0/SOURCE-NOTICE.txt",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 113,
+        "elapsedMs": 35,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "retained-task",
+      "version": "0.1.0",
+      "role": "license",
+      "filename": "LICENSE",
+      "relativePath": "retained-task/0.1.0/LICENSE",
+      "sha256": "24c39339d59a9b969c17cf36e60fcebf9ac6c2fdc7155363d58f95a70d642722",
+      "bytes": 1395,
+      "inventory": null,
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/retained-task/0.1.0/LICENSE",
+        "status": 200,
+        "bodyBytes": 1395,
+        "bodySha256": "24c39339d59a9b969c17cf36e60fcebf9ac6c2fdc7155363d58f95a70d642722",
+        "contentType": "text/plain; charset=utf-8",
+        "elapsedMs": 17,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/retained-task/0.1.0/LICENSE",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 1395,
+        "elapsedMs": 36,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "composition-route-knowledge",
+      "version": "0.1.0",
+      "role": "archive",
+      "filename": "composition-route-knowledge-0.1.0.tgz",
+      "relativePath": "composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
+      "sha256": "11d5a0e2df86282b6d4edbeab84b6d8ab5ccdb26b44364042cf76c9576c23817",
+      "bytes": 66166,
+      "inventory": {
+        "path": "inventories/composition-route-knowledge-0.1.0.json",
+        "fileSha256": "b9e2cac7bd51e8ee67fff4521a6ade6735b15f39830f68d58d46c0b1c2705dd2",
+        "memberCount": 85
+      },
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
+        "status": 200,
+        "bodyBytes": 66166,
+        "bodySha256": "11d5a0e2df86282b6d4edbeab84b6d8ab5ccdb26b44364042cf76c9576c23817",
+        "contentType": "application/x-gtar",
+        "elapsedMs": 18,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 66166,
+        "elapsedMs": 39,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "composition-route-knowledge",
+      "version": "0.1.0",
+      "role": "provenance",
+      "filename": "provenance.json",
+      "relativePath": "composition-route-knowledge/0.1.0/provenance.json",
+      "sha256": "6d1d4dd057533c3cd3ddfc2635fa8c1f0b1b2ba06d565084c4de30b4cd3ed8f2",
+      "bytes": 4486,
+      "inventory": null,
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/provenance.json",
+        "status": 200,
+        "bodyBytes": 4486,
+        "bodySha256": "6d1d4dd057533c3cd3ddfc2635fa8c1f0b1b2ba06d565084c4de30b4cd3ed8f2",
+        "contentType": "application/json; charset=utf-8",
+        "elapsedMs": 17,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/provenance.json",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 4486,
+        "elapsedMs": 32,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "composition-route-knowledge",
+      "version": "0.1.0",
+      "role": "source-notice",
+      "filename": "SOURCE-NOTICE.txt",
+      "relativePath": "composition-route-knowledge/0.1.0/SOURCE-NOTICE.txt",
+      "sha256": "6d0d7edcf4e5a971c0b1a2422e7800e7d121f53fd8cf5339331c72a40d0a2c0b",
+      "bytes": 1462,
+      "inventory": null,
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/SOURCE-NOTICE.txt",
+        "status": 200,
+        "bodyBytes": 1462,
+        "bodySha256": "6d0d7edcf4e5a971c0b1a2422e7800e7d121f53fd8cf5339331c72a40d0a2c0b",
+        "contentType": "text/plain; charset=utf-8",
+        "elapsedMs": 17,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/SOURCE-NOTICE.txt",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 1462,
+        "elapsedMs": 45,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "composition-route-knowledge",
+      "version": "0.1.0",
+      "role": "license",
+      "filename": "LICENSE",
+      "relativePath": "composition-route-knowledge/0.1.0/LICENSE",
+      "sha256": "2c844e541eb597e55dcb35e0bf23d96fcb9ca540f14a9ea6973e4c00cefb1aaa",
+      "bytes": 1069,
+      "inventory": null,
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/LICENSE",
+        "status": 200,
+        "bodyBytes": 1069,
+        "bodySha256": "2c844e541eb597e55dcb35e0bf23d96fcb9ca540f14a9ea6973e4c00cefb1aaa",
+        "contentType": "text/plain; charset=utf-8",
+        "elapsedMs": 17,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/LICENSE",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 1069,
+        "elapsedMs": 31,
+        "redirect": "refused"
+      }
+    }
+  ],
+  "coldCommands": [
+    {
+      "id": "composition-route-knowledge",
+      "version": "0.1.0",
+      "filename": "composition-route-knowledge-0.1.0.tgz",
+      "definitionSha256": "34edb9dab77d85da5b4527b0594655ccbdf3979468190070bef0003fe48afd02",
+      "coverage": "complete",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "package/bin/decide.mjs",
+            "self-check"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "532fa5f270d543d218f9d88447b236c83a81e3aaed0bb29a403eacc81573f50c",
+          "stdoutBytes": 298
+        },
+        {
+          "argv": [
+            "node",
+            "package/bin/decide.mjs",
+            "inspect",
+            "--case",
+            "package/vendor/s20-route-compare-ro/fixtures/cases/live-x402-vs-payai.json"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "7d4c79234ace63d82f6281dd80376dce8e3568545af1acc2dfe18ceec3c6281d",
+          "stdoutBytes": 6963
+        }
+      ]
+    },
+    {
+      "id": "retained-task",
+      "version": "0.1.0",
+      "filename": "retained-task-0.1.0.tar.gz",
+      "definitionSha256": "08bdba9b6104135137b2253a46502a83bb7185323407ca41f444688e6dc2cb93",
+      "coverage": "complete",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "--input-type=module",
+            "-e",
+            "import { writeFileSync } from 'node:fs'; import { projectReading, x402Reading } from './packages/retained-task/test/support.mjs'; writeFileSync('capture.json', JSON.stringify(projectReading(x402Reading({ sellers: 10 })))); writeFileSync('receivers.json', JSON.stringify({ 'local-vm': { kind: 'local-http', baseUrl: 'http://127.0.0.1:9' } }));"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutBytes": 0
+        },
+        {
+          "argv": [
+            "node",
+            "packages/retained-task/src/cli.mjs",
+            "open",
+            "--home",
+            "./var/task",
+            "--task",
+            "hold-sellers",
+            "--source",
+            "x402stats",
+            "--owner",
+            "ordinary-agent",
+            "--file",
+            "./capture.json",
+            "--receivers",
+            "./receivers.json",
+            "--now",
+            "2026-10-01T12:00:00.000Z"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "1e932f180bdfdc7cefbeb04beee412cd5ce439ee8121b5803371c9bafd42a29d",
+          "stdoutBytes": 3140
+        },
+        {
+          "argv": [
+            "node",
+            "packages/retained-task/src/cli.mjs",
+            "resume",
+            "--home",
+            "./var/task",
+            "--task",
+            "hold-sellers",
+            "--file",
+            "./capture.json",
+            "--now",
+            "2026-10-01T13:00:00.000Z"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "7171c3558ab359755b3e9638845891e1bf39fb7fbab030a64a8afe8182c9041d",
+          "stdoutBytes": 3568
+        }
+      ]
+    },
+    {
+      "id": "l09-next-action",
+      "version": "0.1.0",
+      "filename": "l09-next-action-0.1.0.tar.gz",
+      "definitionSha256": "ab4c29af0465b56a5f306a01b3bbb185a1329467264463d2b72ebad793ff8797",
+      "coverage": "complete",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/bin/l09.mjs",
+            "task-spec"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "c73e15955a2277ed00cf2e62c6fe992d43b246485453e8bead92515dbb4547eb",
+          "stdoutBytes": 2008
+        }
+      ]
+    }
+  ],
+  "qualifications": {
+    "sourceQualification": "unknown",
+    "privateGit": "unavailable",
+    "independentAdoption": false,
+    "paidLaunch": false,
+    "measuredSavings": false,
+    "purchaseAuthorization": false
+  },
+  "remoteIndex": {
+    "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/index.json",
+    "status": 200,
+    "bytes": 11507,
+    "sha256": "dfb12c7d98996f04ac3c044f34977d47f1e0d53893a52070f76190c5a5171c99",
+    "draft": true,
+    "productionHosted": false,
+    "hostedAcquisitionVerified": false,
+    "assetCount": 12
+  }
+}

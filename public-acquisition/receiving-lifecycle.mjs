@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { closeSync, constants, fstatSync, openSync, readFileSync } from "node:fs";
+import { closeSync, constants, fstatSync, openSync, readSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -78,7 +78,7 @@ export function commandDefinitionSha256(command) {
 function readRegularBounded(path, maxBytes) {
   let fd;
   try {
-    fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+    fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
   } catch (error) {
     if (error.code === "ELOOP") fail(`symlink is not a receiving artifact: ${path}`, "symlink");
     if (error.code === "ENOENT") {
@@ -92,7 +92,19 @@ function readRegularBounded(path, maxBytes) {
     const st = fstatSync(fd);
     if (!st.isFile()) fail(`not a regular file: ${path}`, "unsafe_path");
     if (st.size > maxBytes) fail(`file exceeds ${maxBytes} bytes: ${path}`, "bounds");
-    return readFileSync(fd);
+    // One extra byte detects growth; allocation and every read remain bounded.
+    const bytes = Buffer.alloc(st.size + 1);
+    let offset = 0;
+    while (offset < bytes.length) {
+      const count = readSync(fd, bytes, offset, bytes.length - offset, null);
+      if (count === 0) break;
+      offset += count;
+    }
+    const after = fstatSync(fd);
+    if (offset !== st.size || after.size !== st.size || after.mtimeMs !== st.mtimeMs) {
+      fail(`file changed during receiving: ${path}`, "concurrent_modification");
+    }
+    return bytes.subarray(0, offset);
   } finally {
     closeSync(fd);
   }
