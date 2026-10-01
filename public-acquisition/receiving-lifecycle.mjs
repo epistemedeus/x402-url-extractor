@@ -338,14 +338,14 @@ export function loadReceivingFile(path = DEFAULT_ARTIFACT_PATH) {
     return {
       kind: "rejected",
       code: error.receivingCode || error.code || "invalid_observation",
-      message: error.message,
+      message: "receiving artifact could not be safely loaded",
     };
   }
   let parsed;
   try {
     parsed = JSON.parse(bytes.toString("utf8"));
   } catch (error) {
-    return { kind: "rejected", code: "invalid_observation", message: `receiving artifact is not JSON: ${error.message}` };
+    return { kind: "rejected", code: "invalid_observation", message: "receiving artifact is not valid JSON" };
   }
   try {
     return { kind: "loaded", value: parseReceivingArtifact(parsed), sha256: sha256(bytes) };
@@ -353,7 +353,7 @@ export function loadReceivingFile(path = DEFAULT_ARTIFACT_PATH) {
     return {
       kind: "rejected",
       code: error.receivingCode || "invalid_observation",
-      message: error.message,
+      message: "receiving artifact does not match its schema",
     };
   }
 }

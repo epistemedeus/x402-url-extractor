@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, truncateSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -32,6 +32,28 @@ test("receiving refuses a FIFO without waiting for a writer", { skip: process.pl
     });
     assert.equal(child.error, undefined, child.error?.message);
     assert.equal(child.status, 0, child.stderr);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("public rejection omits local paths and malformed input bytes", () => {
+  const dir = mkdtempSync(join(tmpdir(), "receiving-private-path-"));
+  try {
+    const path = join(dir, "artifact.json");
+    const marker = "PRIVATE_BODY_MARKER_100195";
+    writeFileSync(path, `${marker} not JSON`);
+    const badJson = loadReceivingFile(path);
+    assert.equal(badJson.kind, "rejected");
+    assert.equal(badJson.code, "invalid_observation");
+    assert.equal(badJson.message.includes(marker), false);
+    assert.equal(badJson.message.includes(dir), false);
+    const alias = join(dir, "alias.json");
+    symlinkSync(path, alias);
+    const badPath = loadReceivingFile(alias);
+    assert.equal(badPath.kind, "rejected");
+    assert.equal(badPath.code, "symlink");
+    assert.equal(badPath.message.includes(dir), false);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

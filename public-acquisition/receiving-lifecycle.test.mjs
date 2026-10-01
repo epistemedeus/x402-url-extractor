@@ -351,7 +351,7 @@ test("unexpected fields, wrong proof, future time, and symlink bytes are rejecte
   const loaded = loadReceivingFile(writeArtifact(extra));
   assert.equal(loaded.kind, "rejected");
   assert.equal(loaded.code, "unexpected_field");
-  assert.match(loaded.message, /unexpected field/);
+  assert.equal(loaded.message, "receiving artifact does not match its schema");
   const rejected = projectCurrentDelivery({
     published,
     publicUrl: ORIGIN,
