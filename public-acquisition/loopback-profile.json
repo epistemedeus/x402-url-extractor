@@ -1,0 +1,226 @@
+{
+  "node": {
+    "schema": "samedaydesk.public-acquisition.loopback-profile.v1",
+    "proofClass": "loopback",
+    "productionAcceptance": false,
+    "hostedAcquisitionVerified": false,
+    "node": {
+      "version": "v22.14.0",
+      "execPath": "/exec-daemon/node",
+      "rootInstall": false,
+      "skillEnginePin": ">=22.20.0",
+      "skillEngineSatisfied": false
+    },
+    "hermes": {
+      "invoked": false,
+      "officialDistribution": "PyPI",
+      "officialPackage": "hermes-agent",
+      "officialVersion": "0.19.0",
+      "gitCheckout": false,
+      "sparseFilesAreNotACheckout": true
+    },
+    "results": [
+      {
+        "id": "composition-route-knowledge",
+        "version": "0.1.0",
+        "filename": "composition-route-knowledge-0.1.0.tgz",
+        "bytes": 66166,
+        "sha256": "11d5a0e2df86282b6d4edbeab84b6d8ab5ccdb26b44364042cf76c9576c23817",
+        "originalUrl": "https://neomorphic.io/downloads/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
+        "fetchedFrom": "http://127.0.0.1:35879/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
+        "contentType": "application/x-gtar",
+        "steps": [
+          {
+            "argv": [
+              "/exec-daemon/node",
+              "package/bin/decide.mjs",
+              "self-check"
+            ],
+            "exitCode": 0,
+            "missing": []
+          },
+          {
+            "argv": [
+              "/exec-daemon/node",
+              "package/bin/decide.mjs",
+              "inspect",
+              "--case",
+              "package/vendor/s20-route-compare-ro/fixtures/cases/live-x402-vs-payai.json"
+            ],
+            "exitCode": 0,
+            "missing": []
+          }
+        ]
+      },
+      {
+        "id": "retained-task",
+        "version": "0.1.0",
+        "filename": "retained-task-0.1.0.tar.gz",
+        "bytes": 107420,
+        "sha256": "350629b7bf1a14b092d94e0c27579f2e05114bf7f2f05a33c33d32b4c68176de",
+        "originalUrl": "https://neomorphic.io/downloads/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:35879/.well-known/public-acquisition/assets/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
+        "contentType": "application/gzip",
+        "steps": [
+          {
+            "argv": [
+              "/exec-daemon/node",
+              "--input-type=module",
+              "-e",
+              "import { writeFileSync } from 'node:fs'; import { projectReading, x402Reading } from './packages/retained-task/test/support.mjs'; writeFileSync('capture.json', JSON.stringify(projectReading(x402Reading({ sellers: 10 })))); writeFileSync('receivers.json', JSON.stringify({ 'local-vm': { kind: 'local-http', baseUrl: 'http://127.0.0.1:9' } }));"
+            ],
+            "exitCode": 0,
+            "missing": []
+          },
+          {
+            "argv": [
+              "/exec-daemon/node",
+              "packages/retained-task/src/cli.mjs",
+              "open",
+              "--home",
+              "./var/task",
+              "--task",
+              "hold-sellers",
+              "--source",
+              "x402stats",
+              "--owner",
+              "ordinary-agent",
+              "--file",
+              "./capture.json",
+              "--receivers",
+              "./receivers.json",
+              "--now",
+              "2026-10-01T12:00:00.000Z"
+            ],
+            "exitCode": 0,
+            "missing": []
+          },
+          {
+            "argv": [
+              "/exec-daemon/node",
+              "packages/retained-task/src/cli.mjs",
+              "resume",
+              "--home",
+              "./var/task",
+              "--task",
+              "hold-sellers",
+              "--file",
+              "./capture.json",
+              "--now",
+              "2026-10-01T13:00:00.000Z"
+            ],
+            "exitCode": 0,
+            "missing": []
+          }
+        ]
+      },
+      {
+        "id": "l09-next-action",
+        "version": "0.1.0",
+        "filename": "l09-next-action-0.1.0.tar.gz",
+        "bytes": 477108,
+        "sha256": "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0",
+        "originalUrl": "https://neomorphic.io/downloads/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:35879/.well-known/public-acquisition/assets/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
+        "contentType": "application/gzip",
+        "steps": [
+          {
+            "argv": [
+              "/exec-daemon/node",
+              "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/bin/l09.mjs",
+              "task-spec"
+            ],
+            "exitCode": 0,
+            "missing": []
+          }
+        ]
+      }
+    ]
+  },
+  "python": {
+    "schema": "samedaydesk.public-acquisition.loopback-profile.v1",
+    "client": "python-httpx",
+    "proofClass": "loopback",
+    "productionAcceptance": false,
+    "hostedAcquisitionVerified": false,
+    "python": {
+      "version": "3.12.3",
+      "executable": "/usr/bin/python3",
+      "httpx": "0.28.1",
+      "userAgent": "python-httpx/0.28.1",
+      "rootInstall": false,
+      "dependencyInstall": "python package httpx, distinct from a Hermes install"
+    },
+    "hermes": {
+      "invoked": false,
+      "installedVersion": null,
+      "officialDistribution": "PyPI",
+      "officialPackage": "hermes-agent",
+      "officialVersion": "0.19.0",
+      "gitCheckout": false,
+      "sparseFilesAreNotACheckout": true
+    },
+    "results": [
+      {
+        "id": "composition-route-knowledge",
+        "version": "0.1.0",
+        "filename": "composition-route-knowledge-0.1.0.tgz",
+        "bytes": 66166,
+        "sha256": "11d5a0e2df86282b6d4edbeab84b6d8ab5ccdb26b44364042cf76c9576c23817",
+        "originalUrl": "https://neomorphic.io/downloads/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
+        "fetchedFrom": "http://127.0.0.1:35879/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
+        "contentType": "application/x-gtar",
+        "steps": [
+          {
+            "exitCode": 0,
+            "missing": []
+          },
+          {
+            "exitCode": 0,
+            "missing": []
+          }
+        ]
+      },
+      {
+        "id": "retained-task",
+        "version": "0.1.0",
+        "filename": "retained-task-0.1.0.tar.gz",
+        "bytes": 107420,
+        "sha256": "350629b7bf1a14b092d94e0c27579f2e05114bf7f2f05a33c33d32b4c68176de",
+        "originalUrl": "https://neomorphic.io/downloads/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:35879/.well-known/public-acquisition/assets/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
+        "contentType": "application/gzip",
+        "steps": [
+          {
+            "exitCode": 0,
+            "missing": []
+          },
+          {
+            "exitCode": 0,
+            "missing": []
+          },
+          {
+            "exitCode": 0,
+            "missing": []
+          }
+        ]
+      },
+      {
+        "id": "l09-next-action",
+        "version": "0.1.0",
+        "filename": "l09-next-action-0.1.0.tar.gz",
+        "bytes": 477108,
+        "sha256": "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0",
+        "originalUrl": "https://neomorphic.io/downloads/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:35879/.well-known/public-acquisition/assets/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
+        "contentType": "application/gzip",
+        "steps": [
+          {
+            "exitCode": 0,
+            "missing": []
+          }
+        ]
+      }
+    ]
+  }
+}

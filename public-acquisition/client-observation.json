@@ -1,0 +1,154 @@
+{
+  "schema": "samedaydesk.public-acquisition.client-observation.v1",
+  "observedOn": "2026-10-01",
+  "causeAssigned": false,
+  "cause": null,
+  "cdnPolicyConfirmed": false,
+  "serverHeaderIsNotACause": true,
+  "hermesCliInvoked": false,
+  "officialHermes": {
+    "distribution": "PyPI",
+    "package": "hermes-agent",
+    "version": "0.19.0",
+    "requires": "httpx[socks]==0.28.1",
+    "requiresPython": "<3.14,>=3.11",
+    "installedHere": false,
+    "gitCheckout": false
+  },
+  "clients": {
+    "curl/8.5.0": {
+      "redirects": "curl default",
+      "results": [
+        {
+          "url": "https://neomorphic.io/downloads/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
+          "status": 200,
+          "contentType": "application/gzip",
+          "bodyBytes": 477108,
+          "sha256": "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0",
+          "server": "hcdn"
+        },
+        {
+          "url": "https://neomorphic.io/downloads/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
+          "status": 200,
+          "contentType": "application/gzip",
+          "bodyBytes": 107420,
+          "sha256": "350629b7bf1a14b092d94e0c27579f2e05114bf7f2f05a33c33d32b4c68176de",
+          "server": "hcdn"
+        },
+        {
+          "url": "https://neomorphic.io/downloads/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
+          "status": 200,
+          "contentType": "application/x-gtar",
+          "bodyBytes": 66166,
+          "sha256": "11d5a0e2df86282b6d4edbeab84b6d8ab5ccdb26b44364042cf76c9576c23817",
+          "server": "hcdn"
+        },
+        {
+          "url": "https://neomorphic.io/downloads/",
+          "status": 403,
+          "contentType": "text/html",
+          "bodyBytes": 787,
+          "server": "hcdn"
+        },
+        {
+          "url": "https://agents.samedaydesk.com/.well-known/skills/index.json",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "bodyBytes": 2827,
+          "sha256": "2b07413f1543127eeeee061607d0a46ede9eb7780ac18fd9553832aa8671aaa6",
+          "server": "railway-hikari"
+        }
+      ]
+    },
+    "curl-user-agent-node": {
+      "userAgent": "node",
+      "results": [
+        {
+          "url": "https://neomorphic.io/downloads/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
+          "status": 200,
+          "bodyBytes": 477108,
+          "sha256": "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0",
+          "server": "hcdn"
+        },
+        {
+          "url": "https://neomorphic.io/downloads/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
+          "status": 200,
+          "bodyBytes": 107420,
+          "sha256": "350629b7bf1a14b092d94e0c27579f2e05114bf7f2f05a33c33d32b4c68176de",
+          "server": "hcdn"
+        },
+        {
+          "url": "https://neomorphic.io/downloads/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
+          "status": 200,
+          "bodyBytes": 66166,
+          "sha256": "11d5a0e2df86282b6d4edbeab84b6d8ab5ccdb26b44364042cf76c9576c23817",
+          "server": "hcdn"
+        }
+      ]
+    },
+    "node-fetch": {
+      "redirect": "manual",
+      "results": [
+        {
+          "url": "https://neomorphic.io/downloads/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
+          "status": 200,
+          "contentType": "application/gzip",
+          "bodyBytes": 477108,
+          "sha256": "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0",
+          "server": "hcdn"
+        },
+        {
+          "url": "https://agents.samedaydesk.com/.well-known/skills/index.json",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "bodyBytes": 2827,
+          "sha256": "2b07413f1543127eeeee061607d0a46ede9eb7780ac18fd9553832aa8671aaa6",
+          "server": "railway-hikari"
+        }
+      ]
+    },
+    "python-httpx/0.28.1": {
+      "followRedirects": false,
+      "userAgent": "python-httpx/0.28.1",
+      "hermesPackageImported": false,
+      "results": [
+        {
+          "url": "https://neomorphic.io/downloads/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
+          "status": 403,
+          "contentType": "text/html",
+          "bodyBytes": 6192,
+          "server": "hcdn"
+        },
+        {
+          "url": "https://neomorphic.io/downloads/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
+          "status": 403,
+          "contentType": "text/html",
+          "bodyBytes": 6192,
+          "server": "hcdn"
+        },
+        {
+          "url": "https://neomorphic.io/downloads/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
+          "status": 403,
+          "contentType": "text/html",
+          "bodyBytes": 6192,
+          "server": "hcdn"
+        },
+        {
+          "url": "https://neomorphic.io/downloads/",
+          "status": 403,
+          "contentType": "text/html",
+          "bodyBytes": 6192,
+          "server": "hcdn"
+        },
+        {
+          "url": "https://agents.samedaydesk.com/.well-known/skills/index.json",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "bodyBytes": 2827,
+          "sha256": "2b07413f1543127eeeee061607d0a46ede9eb7780ac18fd9553832aa8671aaa6",
+          "server": "railway-hikari"
+        }
+      ]
+    }
+  }
+}
