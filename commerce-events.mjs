@@ -8,6 +8,11 @@ import {
   EXTRACT_BATCH_PATH,
 } from "./extract-batch-config.mjs";
 import { normalizeExtractBatchInput } from "./extract-batch.mjs";
+import {
+  authorizeOutcomeBinding,
+  buildHttpFinishForwardRecords,
+  createForwardOutcomeWriter,
+} from "./commerce-outcome-binding.mjs";
 import { bindMerchantHttpDeliveryContracts } from "./http-delivery-evidence/bind-merchant-contracts.mjs";
 import {
   isSupportedTarget,
@@ -2910,6 +2915,7 @@ export function createCommerceTelemetry({
   const httpDeliveryEvidencePath = path.join(dataDir, VALIDATION_FILENAME);
   const rareFunnelPath = path.join(dataDir, "commerce-rare-funnel-evidence.ndjson");
   const rareFunnelRotatedPath = path.join(dataDir, "commerce-rare-funnel-evidence.1.ndjson");
+  const outcomeBinding = createForwardOutcomeWriter({ dataDir, maxBytes, internalToken });
   const parsedExternalSince = Date.parse(externalSince);
   const externalSinceMs = Number.isFinite(parsedExternalSince) ? parsedExternalSince : null;
   const parsedAgentDiscoverySince = Date.parse(agentDiscoverySince);
@@ -3038,9 +3044,10 @@ export function createCommerceTelemetry({
     await chmod(rareFunnelPath, 0o600).catch(() => {});
   }
 
-  function enqueue(event, evidence = null, httpDeliveryRecord = null) {
+  function enqueue(event, evidence = null, httpDeliveryRecord = null, forwardRecords = null) {
     const ownedEvidence = evidence === null ? null : canonicalPaidSuccessEvidence(evidence);
     const rareEvidence = rareFunnelEvidenceFromHttpEvent(event);
+    const ownedForward = Array.isArray(forwardRecords) ? forwardRecords : null;
     enqueueExclusive(async () => {
       await appendEvent(event);
       if (ownedEvidence) await appendPaidSuccessEvidence(ownedEvidence);
@@ -3052,8 +3059,25 @@ export function createCommerceTelemetry({
           // Observational HTTP delivery rows must not fail paid-success writes.
         }
       }
+      if (ownedForward?.length) {
+        try {
+          await outcomeBinding.appendRecords(ownedForward);
+        } catch {
+          // Forward evidence must not fail the commerce event write.
+        }
+      }
     }).catch((error) => {
       console.error(`commerce telemetry write failed: ${error.message}`);
+    });
+  }
+
+  function observeBound(work) {
+    return enqueueExclusive(async () => {
+      try {
+        return await work();
+      } catch {
+        return { accepted: false, reason: "writer_error", eventId: null };
+      }
     });
   }
 
@@ -3121,6 +3145,12 @@ export function createCommerceTelemetry({
     });
     const agentDiscoverySource = sourceSplit.agentDiscoverySource;
     const suppliedInternal = headerValue(headers, "x-samedaydesk-internal");
+    let outcomeClaim = null;
+    try {
+      outcomeClaim = authorizeOutcomeBinding(headers, internalToken);
+    } catch {
+      outcomeClaim = null;
+    }
     const protocol = paymentProtocol(headers);
     const paymentPresent = Boolean(protocol);
     const originClass = safeEqual(suppliedInternal, internalToken)
@@ -3290,8 +3320,9 @@ export function createCommerceTelemetry({
       };
       let paidEvidence = null;
       let httpDeliveryRecord = null;
+      let captured = null;
       if (result === "paid_success" && paidEvidenceRequest && finishPaidEvidenceResponseDigest) {
-        const captured = finishPaidEvidenceResponseDigest();
+        captured = finishPaidEvidenceResponseDigest();
         const responseDigest = captured?.digest || null;
         const selectedProtocol = runtimePaymentProtocol(res);
         if (responseDigest && selectedProtocol === paidEvidenceRequest.paymentProtocol) {
@@ -3328,7 +3359,19 @@ export function createCommerceTelemetry({
           });
         }
       }
-        enqueue(event, paidEvidence, httpDeliveryRecord);
+      let forwardRecords = null;
+      try {
+        forwardRecords = buildHttpFinishForwardRecords({
+          claim: outcomeClaim,
+          event,
+          paidEvidence,
+          httpDeliveryRecord,
+          captured,
+        });
+      } catch {
+        forwardRecords = null;
+      }
+      enqueue(event, paidEvidence, httpDeliveryRecord, forwardRecords);
       } catch {
         // Malformed or hostile runtime values cannot escape or produce evidence.
       }
@@ -3863,6 +3906,18 @@ export function createCommerceTelemetry({
     }
   }
 
+  function observeRetainedUse(input) {
+    return observeBound(() => outcomeBinding.observeRetainedUse(input));
+  }
+
+  function observeMockedSettlementBoundary(input) {
+    return observeBound(() => outcomeBinding.observeMockedSettlementBoundary(input));
+  }
+
+  function observeRuntimeSettlementReadback(input) {
+    return observeBound(() => outcomeBinding.observeRuntimeSettlementReadback(input));
+  }
+
   return {
     middleware,
     snapshot,
@@ -3870,6 +3925,9 @@ export function createCommerceTelemetry({
     appendMcpTypedDecision,
     mcpTypedAttributionForRequest,
     mcpTypedDeclaredSourceForRequest,
+    observeRetainedUse,
+    observeMockedSettlementBoundary,
+    observeRuntimeSettlementReadback,
     flush,
     paths: {
       currentPath,
@@ -3878,6 +3936,8 @@ export function createCommerceTelemetry({
       httpDeliveryEvidencePath,
       rareFunnelPath,
       rareFunnelRotatedPath,
+      outcomeBindingPath: outcomeBinding.currentPath,
+      outcomeBindingRotatedPath: outcomeBinding.rotatedPath,
     },
   };
 }
