@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "samedaydesk.paid-useful-journey-join.v1",
+  "journey": "f29c8b3fe6ade8a3c8fc94068cc23ce2",
+  "actorLabel": "owner_test",
+  "actorLabelEvidence": "caller_claim",
+  "independentDemandConfirmed": false,
+  "evidenceBasis": {
+    "eligible_diagnosis": "caller_diagnosis_reference",
+    "offered_operation": "merchant_challenge",
+    "explicit_attempt": "merchant_observed_payment_request",
+    "settlement": "merchant_recorded_settlement_reference",
+    "useful_delivery": "merchant_response_assessment",
+    "later_task_reuse": "reported_reuse_or_forward_record"
+  },
+  "revenueRecognized": false,
+  "attemptCount": 0,
+  "settlementReference": null,
+  "rejectedSettlementClaim": null,
+  "stages": {
+    "eligible_diagnosis": "present",
+    "offered_operation": "present",
+    "explicit_decline": "unknown",
+    "explicit_attempt": "unknown",
+    "settlement": "unknown",
+    "useful_delivery": "unknown",
+    "later_task_reuse": "unknown"
+  },
+  "evidence": {
+    "eligible_diagnosis": "example-offer-1",
+    "offered_operation": "example-offer-1",
+    "explicit_decline": null,
+    "explicit_attempt": null,
+    "settlement": null,
+    "useful_delivery": null,
+    "later_task_reuse": null
+  },
+  "missing": [
+    "explicit_decline",
+    "explicit_attempt",
+    "settlement",
+    "useful_delivery",
+    "later_task_reuse"
+  ]
+}

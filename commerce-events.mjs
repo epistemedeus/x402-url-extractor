@@ -23,6 +23,12 @@ import {
   VALIDATION_FILENAME,
 } from "./http-delivery-evidence/index.mjs";
 import { isReceiptReferralId } from "./receipt-referral.mjs";
+import {
+  PAID_OPERATION_PATH,
+  PAID_USEFUL_JOURNEY_HEADER,
+  paidUsefulJourneyMetadata,
+  parsePaidUsefulJourneyHeader,
+} from "./paid-useful-journey.mjs";
 
 const CRAWLER_PATTERN = /bot|crawler|spider|slurp|uptime|monitor|observer|probe|indexer|headless|preview|liveness|healthcheck|sentineloracle|mcpbeat|agentreeve|agent402|trust[- ]?oracle/i;
 const EXPLOIT_PROBE_PATH_PATTERN = /(?:^|\/)\.(?:env|git)(?:[./]|$)|^\/(?:wp-admin|wp-login\.php|wp-json|xmlrpc\.php)(?:\/|$)|^\/(?:api\/)?(?:config|env|settings)(?:[./]|$)|^\/js\/(?:config|env)\.js$/i;
@@ -3151,6 +3157,13 @@ export function createCommerceTelemetry({
     } catch {
       outcomeClaim = null;
     }
+    // Optional journey measurement. It does not authorize payment or identify a wallet.
+    let journeyClaim = null;
+    try {
+      journeyClaim = parsePaidUsefulJourneyHeader(headerValue(headers, PAID_USEFUL_JOURNEY_HEADER));
+    } catch {
+      journeyClaim = null;
+    }
     const protocol = paymentProtocol(headers);
     const paymentPresent = Boolean(protocol);
     const originClass = safeEqual(suppliedInternal, internalToken)
@@ -3220,11 +3233,22 @@ export function createCommerceTelemetry({
     }
     const queryKeys = normalizeQueryKeyNames(req.query);
     let responseProblem = null;
+    let journeyResponseBody;
+    let journeyBodySeen = false;
     const originalJson = typeof res.json === "function" ? res.json.bind(res) : null;
     const originalSend = typeof res.send === "function" ? res.send.bind(res) : null;
     if (originalJson) {
       res.json = function telemetryJson(body) {
         responseProblem ||= problemDetails(body);
+        if (journeyClaim && route.route === PAID_OPERATION_PATH) {
+          journeyBodySeen = true;
+          try {
+            const encoded = JSON.stringify(body);
+            journeyResponseBody = typeof encoded === "string" && encoded.length <= 65_536 ? body : undefined;
+          } catch {
+            journeyResponseBody = undefined;
+          }
+        }
         return originalJson(body);
       };
     }
@@ -3318,6 +3342,20 @@ export function createCommerceTelemetry({
         result,
         durationMs: Math.max(0, Date.now() - startedAt),
       };
+      const paidUsefulJourney = paidUsefulJourneyMetadata(journeyClaim, {
+        status,
+        paymentPresent,
+        body: journeyBodySeen ? journeyResponseBody : undefined,
+        target: {
+          origin: typeof req.query?.origin === "string" ? req.query.origin : "",
+          route: typeof req.query?.route === "string" ? req.query.route : "",
+          method: typeof req.query?.method === "string" && req.query.method
+            ? String(req.query.method).toUpperCase()
+            : "GET",
+        },
+        route: route.route,
+      });
+      if (paidUsefulJourney) event.paidUsefulJourney = paidUsefulJourney;
       let paidEvidence = null;
       let httpDeliveryRecord = null;
       let captured = null;

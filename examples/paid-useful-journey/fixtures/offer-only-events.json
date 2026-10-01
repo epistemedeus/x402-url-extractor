@@ -1,0 +1,21 @@
+[
+  {
+    "id": "example-offer-1",
+    "v": 3,
+    "result": "challenge",
+    "status": 402,
+    "paymentPresent": false,
+    "settlementReference": null,
+    "originClass": "external",
+    "payer": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "paidUsefulJourney": {
+      "v": 1,
+      "journey": "f29c8b3fe6ade8a3c8fc94068cc23ce2",
+      "diagnosis": "b0646851666d90e6e909f67baab35cab5a89e3d86b68f6c600bd78a45266a788",
+      "actor": "owner_test",
+      "decision": "offer",
+      "usefulDelivery": "unknown",
+      "usefulReason": "not_delivery"
+    }
+  }
+]

@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "samedaydesk.paid-useful-journey-binding.v1",
+  "freeDiagnostic": {
+    "product": "samedaydesk-discovery-drift",
+    "interface": "library-and-cli",
+    "hostedRoute": null,
+    "paid": false,
+    "command": "node discovery-drift.mjs compare --catalog <catalog.json> --live <live.json>"
+  },
+  "paidOperation": {
+    "method": "GET",
+    "path": "/commerce/seller-integrity-audit",
+    "product": "samedaydesk-seller-integrity-audit",
+    "priceSource": "live_unpaid_challenge",
+    "recipientSource": "live_unpaid_challenge",
+    "additionalWork": "response contract, repair plan, and machine-buyable decision"
+  },
+  "authorization": "An explicit authorizePurchase decision for the current terms digest, target, and expiry is required. An offer is not payment authority.",
+  "actorLabels": ["owner_test", "recruited", "independent", "unknown"],
+  "actorRule": "Use only an explicit label. A missing or unrecognized label is unknown. Never derive the label from a wallet.",
+  "measurement": {
+    "store": "commerce-events.ndjson optional paidUsefulJourney field, plus existing commerce-outcome-binding retained_use rows",
+    "header": "x-samedaydesk-paid-journey",
+    "stages": [
+      "eligible_diagnosis",
+      "offered_operation",
+      "explicit_decline",
+      "explicit_attempt",
+      "settlement",
+      "useful_delivery",
+      "later_task_reuse"
+    ],
+    "missingEvidence": "unknown",
+    "revenueRecognized": false
+  },
+  "links": {
+    "serviceDesc": ["/.well-known/x402", "/openapi.json"],
+    "purchaseEvidence": "/.well-known/agent-payment-evidence.json"
+  }
+}
