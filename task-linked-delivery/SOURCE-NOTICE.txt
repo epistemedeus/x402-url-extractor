@@ -1,0 +1,16 @@
+Task-linked delivery consumer for TASK-LINKED-DELIVERY-100177.
+
+The delivery-outcome adapter is copied verbatim from epistemedeus/pilot
+commit 0c136a96dfdecf72e141dd9078c2f6c2e38ca8aa, path
+experiments/delivery-outcome-100173. Its MIT license is beside that copy.
+
+It imports the accepted three-site evidence join from the same commit:
+tools/ops/three-site-settlement-join/measure/src/outcome-binding.mjs
+and the modules that file loads (project.mjs, restricted.mjs, constants.mjs,
+pins/sponsored-outflow.json, and src/constants.mjs). Those files are copied
+here so the relative imports stay exact. Their interpretation is not forked.
+
+Evidence-join pin inside that importer: 4f5f631ec32d4738e8dee4cc5964ce4b5ecb55a6.
+Merchant base this package reads: 84cce4284d145deae0c6a89d222b09d9a1f8b997.
+
+This directory does not mount a server, change a price, or send a payment.

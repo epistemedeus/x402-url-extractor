@@ -1,0 +1,12 @@
+Delivery outcome join for DELIVERY-OUTCOME-JOIN-100173.
+
+Reuses the accepted three-site evidence join at Pilot commit
+4f5f631ec32d4738e8dee4cc5964ce4b5ecb55a6 (PR 234) by importing
+tools/ops/three-site-settlement-join/measure/src/outcome-binding.mjs.
+It does not fork that join, open a warehouse, or write merchant handlers.
+
+The merchant task-ref patch under export/ is for Root to apply. It is not
+applied here and it is not a second writer on INSTALL-TO-FIRST-CALL-100166.
+
+Public snapshot bytes were read on 2026-10-01. A download, a 402, an HTTP 200,
+a settlement total, and a Git commit name are not a launch or a customer.

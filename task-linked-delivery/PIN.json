@@ -1,0 +1,12 @@
+{
+  "consumerCommit": "0c136a96dfdecf72e141dd9078c2f6c2e38ca8aa",
+  "consumerPath": "experiments/delivery-outcome-100173",
+  "evidenceJoinCommit": "4f5f631ec32d4738e8dee4cc5964ce4b5ecb55a6",
+  "merchantBase": "84cce4284d145deae0c6a89d222b09d9a1f8b997",
+  "taskRefSchema": "samedaydesk.outcome-task-ref.v1",
+  "forwardSchema": "samedaydesk.outcome-binding.forward.v2",
+  "historicBankedRevenueUsdc": 10.955,
+  "historicBankedRevenueSource": "pilot overview/EXPERIMENT-RETURN-LEDGER.json portfolioMandate.bankedRevenueUsdc at consumerCommit",
+  "h15SponsoredExpenseAtomic": "200000",
+  "h15MovementRef": "0x593559ea7a19277645a76e41aa29e713ed219db1f97e4be29c9dac9cf6cd4b37"
+}

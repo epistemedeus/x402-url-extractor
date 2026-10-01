@@ -1,0 +1,201 @@
+{
+  "schemaVersion": "pilot.delivery-outcome.purchase-evidence-pin.v1",
+  "locator": "https://agents.samedaydesk.com/.well-known/agent-payment-evidence.json",
+  "httpStatus": 200,
+  "bytes": 26418,
+  "sha256": "72f25bdcf241d9868cadbb099749b41dac128529e73fd193ea667121b04ff4a6",
+  "manifestDigest": "sha256:09957f390d7a7163daa057a3fc3fcb217ce662044cd7e3c99b5edb5d76673820",
+  "manifestSchema": "agent-payment-policy.purchase-evidence-manifest.v1",
+  "status": "experimental",
+  "version": "1.0.0",
+  "operationCount": 26,
+  "operations": [
+    {
+      "method": "GET",
+      "path": "/chain/solana-transaction-receipt",
+      "effect": "read_only",
+      "schemaDigest": "sha256:901b3af79e87f26606704f32f7e2720f636445bc55ca4229d12125614bc560ac",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/chain/transaction-receipt",
+      "effect": "read_only",
+      "schemaDigest": "sha256:48d4c391d9aa7ed32154635994f91f0bf74311eae5b17b5ffe638249c09745a6",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/commerce/contract-qualified-search",
+      "effect": "read_only",
+      "schemaDigest": "sha256:a12454be84efd685722f4c61dc3c6c1b9167bb6909d969ca005753184c51205d",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/commerce/payment-offer-preflight",
+      "effect": "read_only",
+      "schemaDigest": "sha256:16b902aa4be1400c5017bb198619cd6358a08bc23b5b83432e64aea000d5852e",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/commerce/seller-integrity-audit",
+      "effect": "read_only",
+      "schemaDigest": "sha256:386a58bf62288eb04477caf8744de4245ec043d48141054eb8e64075aa343ba3",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/commerce/settlement-proof",
+      "effect": "read_only",
+      "schemaDigest": "sha256:c2a8e82004a290960b052de712f1bde0ca2ef1acf5d4dc8074705702b8f909ad",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/deep-audit",
+      "effect": "read_only",
+      "schemaDigest": "sha256:f170c27d767edef891e67f4da48f2c65211600defe5ce679d9bd3d5887c0f606",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/defi/morpho-market-underwrite",
+      "effect": "read_only",
+      "schemaDigest": "sha256:fdabe0d7162af4ae19d60f638025ba5fe01ad547125ce897d75461dcd68ae99f",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/defi/morpho-position",
+      "effect": "read_only",
+      "schemaDigest": "sha256:04a8414ae307f17cc714bc550a6ff7c296a20f4eafb1b2058c1176e10707933e",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/defi/morpho-preliquidation-replay",
+      "effect": "read_only",
+      "schemaDigest": "sha256:c2e8a803d6b14089716f3d8b9a0536944080ae6980683b5f817637de3eb9e11e",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/defi/morpho-protection",
+      "effect": "read_only",
+      "schemaDigest": "sha256:1f67b8b50607248f92c1969abad6e5cb84e5c1ad01c974b6a4468600d28ac21c",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/distribution/agent-discoverability-audit",
+      "effect": "read_only",
+      "schemaDigest": "sha256:50757318fa12fce75b540f44c67dfb948aa4af11fa4d35493206a713fae45d1a",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/distribution/agent-surface-budget-audit",
+      "effect": "read_only",
+      "schemaDigest": "sha256:0ab373cf2f505ca5641e708fe6b1ad4a6b122d97b42308fcb864a7acfd26633f",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/enrich",
+      "effect": "read_only",
+      "schemaDigest": "sha256:551ec5a353d52082403565955464ac08fc2d81a487c7ddddc7a3eb8edb4ecb77",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/extract",
+      "effect": "read_only",
+      "schemaDigest": "sha256:be1b465f4e4fcc77cb5560032f15164bc6610b217bb6b689f1b3cdf77ada0b1f",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/read",
+      "effect": "read_only",
+      "schemaDigest": "sha256:7049453e1fb8aedf733d879ead133c030941d6f3ce36ade7aaef26f3dee5cca1",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/scan",
+      "effect": "read_only",
+      "schemaDigest": "sha256:7efc41d2ac872a578af968143b280e946f87eaba13303e08a9306409286bb382",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/schemaforge",
+      "effect": "read_only",
+      "schemaDigest": "sha256:3c6a7c443f4fc031aade660beffdca0557c27dabe275288886719a21c4b82760",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/wallet-enrich",
+      "effect": "read_only",
+      "schemaDigest": "sha256:1f0a85bca8a56993feb231920f9238341e6b266725ef3f1528cb22f4ca97c969",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "GET",
+      "path": "/work/opportunity-preflight",
+      "effect": "read_only",
+      "schemaDigest": "sha256:163b97f51996783343750c943c4162456d631f55764fb5e587bee513a81c06ec",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "POST",
+      "path": "/commerce/payment-offer-preflight",
+      "effect": "read_only",
+      "schemaDigest": "sha256:16b902aa4be1400c5017bb198619cd6358a08bc23b5b83432e64aea000d5852e",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "POST",
+      "path": "/extract/batch",
+      "effect": "read_only",
+      "schemaDigest": "sha256:d2095228466519067e7b6789220e764a60788b5e539c389284c6b5f192f83e75",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "POST",
+      "path": "/lockfile-pin-delta",
+      "effect": "read_only",
+      "schemaDigest": "sha256:ffa263ffd7780c31de7dcb76d3174d7ad3aa5a1ad3154a4670c076a90a528def",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "POST",
+      "path": "/security/stateful-wallet-policy-conformance",
+      "effect": "read_only",
+      "schemaDigest": "sha256:f656e1d7f94fc8d4183b6b1243b33c9854cb0723d3cb1ae6868d4cb90a7713d2",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "POST",
+      "path": "/security/wallet-policy-conformance",
+      "effect": "read_only",
+      "schemaDigest": "sha256:9b1d1ea79c35497216e79c04aba9e7d00bdc5ea3ec164733b02c626134d73ffe",
+      "declaration": "seller_declared"
+    },
+    {
+      "method": "POST",
+      "path": "/work/opportunity-preflight",
+      "effect": "read_only",
+      "schemaDigest": "sha256:3727b57805b6c7c7ca7b3058b1b5e83d9ee4636de583be8484cac9e04b30c9df",
+      "declaration": "seller_declared"
+    }
+  ],
+  "boundaryClaims": "seller_declared_until_independently_verified",
+  "authorization": "This manifest is evidence for a separate buyer policy decision and is not permission to spend.",
+  "serviceDeploymentStatementId": "sha256:5fa167601ebb462f59b4437604fcbcfb8586a77c2adbf29f8ba93eb8c42fd35e",
+  "serviceDeploymentExpiresAt": "2026-10-07T22:17:39.273Z",
+  "observedAt": "2026-10-01T12:13:51Z"
+}
