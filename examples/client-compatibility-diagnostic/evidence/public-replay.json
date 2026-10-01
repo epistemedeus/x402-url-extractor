@@ -1,0 +1,144 @@
+{
+  "taskText": "Later task: after an official Hermes client change or a Root-owned edge change, decide whether the official Hermes well-known installer can fetch the public skill index, using a successful Node HTTPS control on the same method and route. A header profile is not native execution. A generic 403 is not a confirmed CDN policy. Do not pay for seller-integrity to explain a client or edge refusal the unpaid responses already separate. A changed task, client, or route invalidates the previous result.\n",
+  "binding": {
+    "clientId": "hermes-agent",
+    "clientVersion": "0.19.0",
+    "method": "GET",
+    "origin": "https://neomorphic.io",
+    "route": "/.well-known/skills/index.json"
+  },
+  "execution": "independent_replay",
+  "executor": "client-compatibility-diagnostic",
+  "receivedAt": "2026-10-01T11:21:46.691Z",
+  "runtime": {
+    "node": "v22.14.0"
+  },
+  "official": {
+    "clientId": "hermes-agent",
+    "version": "0.19.0",
+    "httpxVersion": "0.28.1",
+    "nativeExecution": true,
+    "headerProfileInjected": false,
+    "executor": "client-compatibility-diagnostic",
+    "method": "GET",
+    "origin": "https://neomorphic.io",
+    "route": "/.well-known/skills/index.json",
+    "status": 403,
+    "observedAt": "2026-10-01T11:21:46.835572Z",
+    "headers": {
+      "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate, post-check=0, pre-check=0",
+      "content-type": "text/html",
+      "date": "Thu, 01 Oct 2026 11:21:46 GMT",
+      "server": "hcdn",
+      "x-hcdn-request-id": "d844bc15e7275db9670af7e94af0a320-imm-edge6"
+    },
+    "headersCaptured": true,
+    "requestHeaderNames": [
+      "accept",
+      "accept-encoding",
+      "connection",
+      "user-agent"
+    ],
+    "requestHeaders": {
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "user-agent": "python-httpx/0.28.1"
+    },
+    "requestSemantics": "tools.skills_hub._guarded_http_get httpx.get default headers follow_redirects=False",
+    "redirectsFollowed": false,
+    "tlsWeakened": false,
+    "installed": false,
+    "exitCode": 0,
+    "couldNotFetch": "Could not fetch 'https://neomorphic.io/.well-known/skills/route-lock-receipt/SKILL.md' from any source.",
+    "wellKnownFetchReturnedBundle": false,
+    "urlSourceClaims": false,
+    "supportMissing": [],
+    "error": null,
+    "bodyRetained": false,
+    "installerObservedAt": "2026-10-01T11:21:47.465296Z"
+  },
+  "control": {
+    "clientId": "node-https",
+    "version": "v22.14.0",
+    "nativeExecution": true,
+    "headerProfileInjected": false,
+    "executor": "client-compatibility-diagnostic",
+    "method": "GET",
+    "origin": "https://neomorphic.io",
+    "route": "/.well-known/skills/index.json",
+    "status": 200,
+    "observedAt": "2026-10-01T11:21:47.109Z",
+    "headers": {
+      "date": "Thu, 01 Oct 2026 11:21:47 GMT",
+      "content-type": "application/json; charset=UTF-8",
+      "cache-control": "public, max-age=300",
+      "server": "hcdn",
+      "x-hcdn-request-id": "29d44e27bed17072c1ba6628fe07df7f-imm-edge5",
+      "x-hcdn-cache-status": "DYNAMIC"
+    },
+    "headersCaptured": true,
+    "redirectsFollowed": false,
+    "bodyRetained": false,
+    "bodyTruncated": false,
+    "bodyBytes": 658,
+    "bodySha256": "f89aec6eb41f93791406c85c301859fac9ab407780b62da3a81f065fe5ac9e43",
+    "contentType": "application/json; charset=UTF-8",
+    "support": {
+      "indexParsed": true,
+      "skills": [
+        {
+          "name": "route-lock-receipt",
+          "files": [
+            "SKILL.md",
+            "LICENSE",
+            "references/LICENSE",
+            "references/SOURCE-NOTICE.txt",
+            "references/manifest.json",
+            "references/pins.json",
+            "scripts/lock-and-capture.mjs",
+            "scripts/run-task.mjs",
+            "scripts/http-boundary.mjs",
+            "scripts/map-challenge.mjs",
+            "scripts/package-cache.mjs",
+            "scripts/read-receipt.mjs",
+            "scripts/receipt.mjs",
+            "scripts/time.mjs"
+          ]
+        }
+      ],
+      "missing": []
+    },
+    "supportMissing": [],
+    "error": null
+  },
+  "additionalControl": {
+    "clientId": "curl",
+    "version": "curl",
+    "nativeExecution": true,
+    "headerProfileInjected": false,
+    "executor": "client-compatibility-diagnostic",
+    "method": "GET",
+    "origin": "https://neomorphic.io",
+    "route": "/.well-known/skills/index.json",
+    "status": 200,
+    "observedAt": "2026-10-01T11:21:47.327Z",
+    "headers": {
+      "date": "Thu, 01 Oct 2026 11:21:47 GMT",
+      "content-type": "application/json; charset=UTF-8",
+      "cache-control": "public, max-age=300",
+      "server": "hcdn",
+      "x-hcdn-request-id": "cbc5db26728ccfe12e793f5b9b2bf017-imm-edge6",
+      "x-hcdn-cache-status": "DYNAMIC"
+    },
+    "headersCaptured": true,
+    "redirectsFollowed": false,
+    "bodyRetained": false,
+    "bodyBytes": 658,
+    "bodySha256": "f89aec6eb41f93791406c85c301859fac9ab407780b62da3a81f065fe5ac9e43",
+    "contentType": "application/json; charset=UTF-8",
+    "supportMissing": [],
+    "error": null
+  },
+  "authorizeNextAction": false
+}
