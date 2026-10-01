@@ -1,0 +1,23 @@
+route-lock-receipt 0.1.0
+license: MIT
+
+This directory is the public machine skill. Ordinary acquisition is an HTTPS
+GET of https://neomorphic.io/.well-known/skills/index.json and the files it
+lists. No private Git credential is required.
+
+scripts/lock-and-capture.mjs is the new 0.1.0 executable. The other scripts
+and references/pins.json are unchanged members of route-release-decision 0.1.0.
+That package archive is not rewritten. route-lock 0.1.0 and release-gate 0.1.4
+archives stay frozen and are downloaded from their existing public URLs.
+
+npm ci --ignore-scripts installs the pinned public lockfile. One dependency is
+the public HTTPS archive
+https://github.com/epistemedeus/agent-payment-integrity/archive/731ac9b0ff22615a3d22e4897c39f3f14b55087f.tar.gz
+recorded in that lockfile. It is not a private Git remote.
+
+DNS lookup can refuse a private answer. That check is not a sandbox, and the
+later connection is not pinned to the answer. confinementClaim stays none.
+
+Installing this skill does not authorize payment, signature, settlement, or
+fund reservation. hostedAcquisitionVerified for this skill URL stays false
+until Root records a public GET of these bytes.

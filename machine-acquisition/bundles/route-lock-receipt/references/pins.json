@@ -1,0 +1,83 @@
+{
+  "schema": "neomorphic.route-release-decision.pins.v1",
+  "skill": {
+    "name": "route-release-decision",
+    "version": "0.1.0",
+    "license": "MIT",
+    "deploymentUrl": "https://neomorphic.io/downloads/route-release-decision/0.1.0/route-release-decision-0.1.0.tgz",
+    "deploymentReadback": "untested",
+    "hostedAcquisitionVerified": false
+  },
+  "mechanism": {
+    "spec": "https://agentskills.io/specification",
+    "specCommit": "69ef37e9424c0a7ea9dd2293b559e43ec8176379",
+    "skillsCli": {
+      "name": "skills",
+      "version": "1.7.0",
+      "license": "MIT",
+      "repository": "https://github.com/vercel-labs/skills",
+      "enginesNode": ">=22.20.0"
+    },
+    "skillsRef": {
+      "name": "skills-ref",
+      "version": "0.1.0",
+      "license": "Apache-2.0",
+      "commit": "69ef37e9424c0a7ea9dd2293b559e43ec8176379",
+      "repository": "https://github.com/agentskills/agentskills",
+      "subdirectory": "skills-ref",
+      "requirement": "skills-ref @ git+https://github.com/agentskills/agentskills.git@69ef37e9424c0a7ea9dd2293b559e43ec8176379#subdirectory=skills-ref"
+    }
+  },
+  "packages": {
+    "route-lock": {
+      "version": "0.1.0",
+      "license": "MIT",
+      "repository": "https://github.com/epistemedeus/neomorphic-io",
+      "codeCommit": "034e12710b8f38b83f6b614195bf808d299ee2be",
+      "archive": {
+        "url": "https://neomorphic.io/downloads/route-lock/0.1.0/route-lock-0.1.0.tgz",
+        "sha256": "6f1b59e96eb4e6b222a0f5ac4db6cc9375a0f703e642b841f4c7de4bfa570cbf",
+        "bytes": 20149
+      },
+      "lock": {
+        "url": "https://neomorphic.io/downloads/route-lock/0.1.0/package-lock.json",
+        "sha256": "eed6f8c3e417faed7bb70151c96acffc0ed6ee57d30fea7138b7dea18cba0666",
+        "bytes": 16327
+      },
+      "release": {
+        "url": "https://neomorphic.io/downloads/route-lock/0.1.0/release.json",
+        "sha256": "ae65acdc4b2375e3e83d15fb3046ea93e9653dfb21eb87982ebf4d63ab9c1826",
+        "bytes": 2347
+      },
+      "provenance": {
+        "url": "https://neomorphic.io/downloads/route-lock/0.1.0/provenance.json",
+        "sha256": "51710f3e9a53c60e018bdbbf9fc99c81ebb21d6e82502801e881280ea8489671",
+        "bytes": 5138,
+        "observed": "2026-10-01",
+        "note": "Pinned to the bytes served at this URL. The copy beside the frozen archive in git is a different document and is not rewritten."
+      }
+    },
+    "release-gate": {
+      "version": "0.1.4",
+      "license": "MIT",
+      "repository": "https://github.com/epistemedeus/neomorphic-io",
+      "archive": {
+        "url": "https://neomorphic.io/downloads/release-gate/0.1.4/release-gate-0.1.4.tgz",
+        "sha256": "f14eac0c4c10bba3f3d8b2e89d6eed1a87f47077bb06a7c70f96409ced9d7bef",
+        "bytes": 16254
+      },
+      "lock": {
+        "url": "https://neomorphic.io/downloads/release-gate/0.1.4/package-lock.json",
+        "sha256": "d9349ffba1aa6b186acb384374deeda0dc36238e39a45c01f40dd2c241008d20",
+        "bytes": 324
+      },
+      "provenance": {
+        "url": "https://neomorphic.io/downloads/release-gate/0.1.4/provenance.json",
+        "sha256": "0ec2625eab39110359e82f470e5c3dd846e2c93e6d8400c4270f12b0f3575e07",
+        "bytes": 6624,
+        "observed": "2026-10-01",
+        "note": "Pinned to the bytes served at this URL. The copy beside the frozen archive in git is a different document and is not rewritten."
+      }
+    }
+  }
+}

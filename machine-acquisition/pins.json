@@ -1,0 +1,27 @@
+{
+  "schema": "samedaydesk.machine-acquisition.pins.v1",
+  "skill": "route-lock-receipt",
+  "license": "MIT",
+  "publicSourceCommit": "79a18338251769f22ca31a951008fca62dc70797",
+  "originIndex": "https://neomorphic.io/.well-known/skills/index.json",
+  "originSkill": "https://neomorphic.io/.well-known/skills/route-lock-receipt/SKILL.md",
+  "executable": "scripts/lock-and-capture.mjs",
+  "executableSha256": "39255dba1910af4ef6aeee2141f3bb9740ecbd15c9d590f2d175398e18c613de",
+  "enginesNode": ">=22.20.0",
+  "files": {
+    "SKILL.md": "225248d6d4de2692e27fb014d8928b54d9dae14fcb58187f94f5805a0f695e2b",
+    "LICENSE": "044d7291c37a2ead106ea4b4c26f713e63b7834637ed634da640f74e8cbe4625",
+    "references/LICENSE": "044d7291c37a2ead106ea4b4c26f713e63b7834637ed634da640f74e8cbe4625",
+    "references/SOURCE-NOTICE.txt": "aad468bf1c085dba0b5900d3a1d4fec2125f08e2d89f149c6760bf1fc0990722",
+    "references/manifest.json": "801e63f9e229e5fc62e5767607170a4e5bcc6f19163ca66bb37ccabcf2f82604",
+    "references/pins.json": "c44a36270541192dd3ad9cfaf9d08eb3374c3c01be9687a8ca2ac11d457a60ee",
+    "scripts/lock-and-capture.mjs": "39255dba1910af4ef6aeee2141f3bb9740ecbd15c9d590f2d175398e18c613de",
+    "scripts/run-task.mjs": "9f5b578ce33d206a387405d78902ac236a1fac6fc29242cad8ee4f5ab4b46901",
+    "scripts/http-boundary.mjs": "eababe6422c00e61380eecb38e572e54d0d1a2ef41eb330e1a3c7608e672a90f",
+    "scripts/map-challenge.mjs": "6abd07d2642d3fc0ceebeb956a6f074d4f89e0a904cbe6f2f165f6fbe4ac13f5",
+    "scripts/package-cache.mjs": "6d1fa3b82bb37cbf92792e41dcd569bd22b8f50884f71966c38a5b5d7284aeee",
+    "scripts/read-receipt.mjs": "ba2f6d24f6a603d323300b972b394e07d46c9ab10367338636e4aeb21c00cd28",
+    "scripts/receipt.mjs": "95cfb48ba3229f425a4cc1c03835b1221d381ca00f00bba52ac0f4d503f0f2c4",
+    "scripts/time.mjs": "5d02fc4440d5a60b5db30d0dc3dc3f634ce3ecc4d5d6e4f7ebb70898827a8397"
+  }
+}

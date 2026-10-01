@@ -242,6 +242,10 @@ import {
   WELL_KNOWN_SKILLS_INDEX_PATH,
   mountWellKnownSkills,
 } from "./well-known-skills.mjs";
+import {
+  acquisitionIndexSkill,
+  mountMachineAcquisition,
+} from "./machine-acquisition.mjs";
 import { legacyCompatibleX402Body } from "./x402-legacy-body.mjs";
 import {
   VIBES_DISCOVERABILITY_PATH,
@@ -1419,12 +1423,17 @@ app.get("/mcp", (_req, res) => {
     manifest: `${PUBLIC_URL}/.well-known/x402`,
     openapi: `${PUBLIC_URL}/openapi.json`,
     purchaseEvidence: `${PUBLIC_URL}${PURCHASE_EVIDENCE_MANIFEST_PATH}`,
+    skillAcquisition: `${PUBLIC_URL}/.well-known/skills/route-lock-receipt/SKILL.md`,
   });
 });
 
 // Compact skill contract for agents that probe a domain for a directly usable
 // instruction file before they parse OpenAPI or start an MCP session.
-mountWellKnownSkills(app, { publicUrl: PUBLIC_URL });
+mountMachineAcquisition(app, { publicUrl: PUBLIC_URL });
+mountWellKnownSkills(app, {
+  publicUrl: PUBLIC_URL,
+  extraIndexSkills: [acquisitionIndexSkill({ recipient: PAY_TO })],
+});
 
 app.get(["/skill.md", "/SKILL.md"], (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
