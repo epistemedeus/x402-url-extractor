@@ -1,0 +1,31 @@
+{
+  "schema": "neomorphic.route-lock-receipt.manifest.v1",
+  "name": "route-lock-receipt",
+  "version": "0.1.0",
+  "license": "MIT",
+  "executable": "scripts/lock-and-capture.mjs",
+  "executableSha256": "39255dba1910af4ef6aeee2141f3bb9740ecbd15c9d590f2d175398e18c613de",
+  "vendored": {
+    "package": "route-release-decision",
+    "version": "0.1.0",
+    "note": "Every script other than lock-and-capture.mjs, and references/pins.json, matches the route-release-decision 0.1.0 archive. That archive is not a new version."
+  },
+  "pins": {
+    "route-lock": {
+      "version": "0.1.0",
+      "sha256": "6f1b59e96eb4e6b222a0f5ac4db6cc9375a0f703e642b841f4c7de4bfa570cbf"
+    },
+    "release-gate": {
+      "version": "0.1.4",
+      "sha256": "f14eac0c4c10bba3f3d8b2e89d6eed1a87f47077bb06a7c70f96409ced9d7bef"
+    }
+  },
+  "hostedAcquisitionVerified": false,
+  "deploymentReadback": "untested",
+  "indexUrl": "https://neomorphic.io/.well-known/skills/index.json",
+  "deploymentUrl": "https://neomorphic.io/.well-known/skills/route-lock-receipt/SKILL.md",
+  "launched": false,
+  "ownerPayment": false,
+  "paidServiceLaunch": false,
+  "note": "Machine skill in this origin tree. A 404 on the deployment URL is expected until Root publishes these bytes. Source publication is not hosted proof."
+}

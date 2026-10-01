@@ -99,13 +99,37 @@ export function loadWellKnownSkills(skillsRoot = DEFAULT_SKILLS_ROOT) {
   return WELL_KNOWN_SKILL_NAMES.map((name) => loadPortableSkill(skillsRoot, name));
 }
 
-export function buildWellKnownSkillsIndex(skills = loadWellKnownSkills()) {
+function publicIndexSkill(skill) {
+  if (!skill || typeof skill.name !== "string" || typeof skill.description !== "string" || !Array.isArray(skill.files)) {
+    fail("extra index skill is incomplete");
+  }
+  for (const file of skill.files) {
+    if (typeof file !== "string" || file.length === 0 || file.startsWith("/") || file.includes("\\") || file.includes("\0")) {
+      fail("extra index skill file is not allowlisted");
+    }
+    if (file.split("/").some((part) => part === "" || part === "." || part === "..")) {
+      fail("extra index skill file is not allowlisted");
+    }
+  }
+  const entry = {
+    name: skill.name,
+    description: skill.description,
+    files: [...skill.files],
+  };
+  if (skill.source && typeof skill.source === "object") entry.source = skill.source;
+  return entry;
+}
+
+export function buildWellKnownSkillsIndex(skills = loadWellKnownSkills(), extraIndexSkills = []) {
   return {
-    skills: skills.map((skill) => ({
-      name: skill.name,
-      description: skill.description,
-      files: [...skill.files],
-    })),
+    skills: [
+      ...skills.map((skill) => ({
+        name: skill.name,
+        description: skill.description,
+        files: [...skill.files],
+      })),
+      ...extraIndexSkills.map((skill) => publicIndexSkill(skill)),
+    ],
   };
 }
 
@@ -170,6 +194,7 @@ function send(res, { status, headers, body, method }) {
 export function handleWellKnownSkillsRequest(req, res, {
   publicUrl,
   skills = loadWellKnownSkills(),
+  extraIndexSkills = [],
 } = {}) {
   const method = String(req.method || "GET").toUpperCase();
   const origin = canonicalWellKnownSkillsOrigin(publicUrl);
@@ -223,7 +248,7 @@ export function handleWellKnownSkillsRequest(req, res, {
     }).end();
   }
   if (resolved.kind === "index") {
-    const body = `${JSON.stringify(buildWellKnownSkillsIndex(skills), null, 2)}\n`;
+    const body = `${JSON.stringify(buildWellKnownSkillsIndex(skills, extraIndexSkills), null, 2)}\n`;
     return send(res, {
       status: 200,
       headers: skillsHeaders(INDEX_CONTENT_TYPE, canonicalWellKnownSkillsIndexUrl(publicUrl)),
@@ -253,11 +278,15 @@ export function handleWellKnownSkillsRequest(req, res, {
   fail(`unhandled resolved path kind: ${resolved.kind}`);
 }
 
-export function mountWellKnownSkills(app, { publicUrl, skillsRoot = DEFAULT_SKILLS_ROOT } = {}) {
+export function mountWellKnownSkills(app, {
+  publicUrl,
+  skillsRoot = DEFAULT_SKILLS_ROOT,
+  extraIndexSkills = [],
+} = {}) {
   const skills = loadWellKnownSkills(skillsRoot);
   const handler = (req, res, next) => {
     if (!isWellKnownSkillsPath(req.path)) return next();
-    return handleWellKnownSkillsRequest(req, res, { publicUrl, skills });
+    return handleWellKnownSkillsRequest(req, res, { publicUrl, skills, extraIndexSkills });
   };
   app.use(handler);
   return {

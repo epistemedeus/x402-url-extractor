@@ -79,7 +79,13 @@ test("official well-known adapter against live HTTPS records undeployed index, n
     assert.equal(receipt.model_execution, false);
     assert.equal(receipt.payment_executed, false);
     if (receipt.ok) {
-      assert.deepEqual(receipt.search_names.sort(), ["explicit-record", "page-change", "web-extract"]);
+      const names = [...receipt.search_names].sort();
+      const base = ["explicit-record", "page-change", "web-extract"];
+      assert.deepEqual(names.filter((name) => base.includes(name)), base);
+      assert.deepEqual(
+        names.filter((name) => !base.includes(name)),
+        names.includes("route-lock-receipt") ? ["route-lock-receipt"] : [],
+      );
       assert.equal(receipt.installed, true);
       assert.equal(receipt.boundary, null);
     } else {

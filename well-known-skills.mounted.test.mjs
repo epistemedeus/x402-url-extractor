@@ -157,10 +157,13 @@ test("mounted index and SKILL.md match current portable skill source", { timeout
   assert.match(indexResponse.headers.get("link"), /<https:\/\/agents\.samedaydesk\.com\/\.well-known\/skills\/index\.json>; rel="canonical"/);
   const index = await indexResponse.json();
   const source = loadWellKnownSkills();
-  assert.deepEqual(index.skills.map((skill) => skill.name), [...WELL_KNOWN_SKILL_NAMES]);
+  assert.deepEqual(index.skills.slice(0, source.length).map((skill) => skill.name), [...WELL_KNOWN_SKILL_NAMES]);
+  assert.equal(index.skills[source.length]?.name, "route-lock-receipt");
+  assert.equal(index.skills.length, source.length + 1);
   for (const [i, skill] of source.entries()) {
     assert.equal(index.skills[i].description, skill.description);
     assert.deepEqual(index.skills[i].files, ["SKILL.md"]);
+    assert.equal(index.skills[i].source, undefined);
     const resource = await fetch(`${merchant.base}/.well-known/skills/${skill.name}/SKILL.md`);
     assert.equal(resource.status, 200);
     assert.equal(resource.headers.get("content-type"), "text/markdown; charset=utf-8");
@@ -174,6 +177,26 @@ test("mounted index and SKILL.md match current portable skill source", { timeout
   const redirected = await fetch(`${merchant.base}/.well-known/skills`, { redirect: "manual" });
   assert.equal(redirected.status, 302);
   assert.equal(redirected.headers.get("location"), `${PUBLIC_URL}${WELL_KNOWN_SKILLS_INDEX_PATH}`);
+
+  const acquired = index.skills.find((skill) => skill.name === "route-lock-receipt");
+  assert.equal(acquired.files.length, 14);
+  assert.equal(acquired.files.includes("scripts/lock-and-capture.mjs"), true);
+  assert.equal(acquired.source.license, "MIT");
+  assert.equal(acquired.source.operation.method, "GET");
+  assert.equal(acquired.source.operation.origin, "https://agents.samedaydesk.com");
+  assert.equal(acquired.source.operation.route, "/extract");
+  assert.equal(acquired.source.operation.recipient, "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee");
+  const executable = await fetch(`${merchant.base}/.well-known/skills/route-lock-receipt/scripts/lock-and-capture.mjs`);
+  assert.equal(executable.status, 200);
+  assert.equal(executable.headers.get("location"), null);
+  const escaped = await rawRequest(merchant.base, "/.well-known/skills/route-lock-receipt/%2e%2e/%2e%2e/server.js");
+  assert.equal(escaped.status, 404);
+  const mcp = await fetch(`${merchant.base}/mcp`);
+  assert.equal(mcp.status, 200);
+  const descriptor = await mcp.json();
+  assert.equal(descriptor.skillAcquisition, `${PUBLIC_URL}/.well-known/skills/route-lock-receipt/SKILL.md`);
+  const extract = await fetch(`${merchant.base}/extract?url=${encodeURIComponent("https://example.com/")}`);
+  assert.equal(extract.status, 402);
 });
 
 test("mounted negatives: missing file, traversal, unknown name", { timeout: 30_000 }, async (t) => {

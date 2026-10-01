@@ -1,0 +1,20 @@
+SameDayDesk machine acquisition mirror
+license: MIT (Copyright (c) 2026 Neomorphic LLC). See bundles/route-lock-receipt/LICENSE.
+
+These files are the public route-lock-receipt 0.1.0 bytes from Neo234 main
+79a18338251769f22ca31a951008fca62dc70797, originally published at
+https://neomorphic.io/.well-known/skills/route-lock-receipt/SKILL.md.
+The public index is https://neomorphic.io/.well-known/skills/index.json.
+Pilot251 549b9cb6a4c10692b695706148a0b4d324e9156c recorded that official Hermes
+httpx receives HTTP 403 from that Neo origin while ordinary HTTPS receives 200.
+
+This directory is a static allowlist served by the existing merchant so an
+official Hermes client can fetch the same bytes from an origin that accepts
+that client. It does not rewrite route-lock 0.1.0, release-gate 0.1.4, the
+Neo archive URLs, or the skill's declared operation. The unpaid operation
+remains GET https://agents.samedaydesk.com/extract. The recipient remains the
+merchant's existing payTo. No private Git credential, payment, signature, or
+wallet initialization is required to read these files.
+
+hostedAcquisitionVerified stays false until Root records a public readback
+after the Railway deploy.
