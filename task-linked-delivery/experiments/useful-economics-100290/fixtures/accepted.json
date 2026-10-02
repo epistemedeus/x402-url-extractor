@@ -1,0 +1,23 @@
+{
+  "schema": "samedaydesk.useful-economics.bundle.v1",
+  "coverage": "supplied_records",
+  "observations": [
+    {
+      "schema": "samedaydesk.useful-economics.observation.v1",
+      "eventId": "accepted-negative",
+      "operationId": "normalized-transaction-receipt",
+      "taskRef": "task-accepted",
+      "stage": "verified_delivery",
+      "sourceClass": "server_execution",
+      "authority": "server_execution",
+      "cohort": "public_aggregate",
+      "httpStatus": 200,
+      "serverExecution": "not_found",
+      "callerExpectation": "agreed_negative",
+      "expectationAuthority": "operation_contract",
+      "settlementStatus": "verified",
+      "settlementTrusted": true,
+      "explicitCriterionMet": false
+    }
+  ]
+}

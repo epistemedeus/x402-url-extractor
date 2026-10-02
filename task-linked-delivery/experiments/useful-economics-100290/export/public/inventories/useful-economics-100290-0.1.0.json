@@ -1,0 +1,124 @@
+{
+  "members": [
+    {
+      "bytes": 1068,
+      "kind": "file",
+      "path": "LICENSE",
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c"
+    },
+    {
+      "bytes": 629,
+      "kind": "file",
+      "path": "PIN.json",
+      "sha256": "35d7879be0e33a11db807284583b1ce1f15f20b3c9bc254347c6ff8609c83f6a"
+    },
+    {
+      "bytes": 1856,
+      "kind": "file",
+      "path": "README.md",
+      "sha256": "8119a59430a7d34ffb231a771713894d7430d7829521096f296704f2a799c92f"
+    },
+    {
+      "bytes": 370,
+      "kind": "file",
+      "path": "SOURCE-NOTICE.txt",
+      "sha256": "86c9ed9a3ea02d4bd9dd633df13c27096198010749afc088e40addf2948ae35a"
+    },
+    {
+      "bytes": 2970,
+      "kind": "file",
+      "path": "bin/cold-consumer.mjs",
+      "sha256": "477985fc807c4b4927672fec56171b473b793d48e6b0b20974c661eaaeb6a0d9"
+    },
+    {
+      "bytes": 3327,
+      "kind": "file",
+      "path": "bin/useful-economics.mjs",
+      "sha256": "8cb6d18b176128be0a15f7f5f8b1534e9e50a263086469e10eaa28ab509a118c"
+    },
+    {
+      "bytes": 738,
+      "kind": "file",
+      "path": "fixtures/accepted.json",
+      "sha256": "4a46c82586ab2cd752100cf15078e7c8e2d1776c764eac51945f1b81d34241a5"
+    },
+    {
+      "bytes": 600,
+      "kind": "file",
+      "path": "fixtures/seeded-http200.json",
+      "sha256": "303aaae71018e2bd069c4e0bfb54318dcc895768e7943d89631ab5ecc7e43426"
+    },
+    {
+      "bytes": 495,
+      "kind": "file",
+      "path": "fixtures/seeded-margin.json",
+      "sha256": "c29ad8ebceb2807253d75d9e99cca43dc6b36b893acc5f0a55d143330866c2df"
+    },
+    {
+      "bytes": 485,
+      "kind": "file",
+      "path": "fixtures/seeded-restricted.json",
+      "sha256": "58780930eb38108a233d9c876a07d38f2cc8c5fbf21af38c2e624da8cb35300b"
+    },
+    {
+      "bytes": 300,
+      "kind": "file",
+      "path": "package.json",
+      "sha256": "118575b6255d8e8940f6cda3bdf59f7576eafcfd4830b10455fbf2b00d4ae106"
+    },
+    {
+      "bytes": 17057,
+      "kind": "file",
+      "path": "src/adapters.mjs",
+      "sha256": "dc139296c85df60f4e91565edf5aa79e589c9d40f07f2bfda80f45ccc975fd5a"
+    },
+    {
+      "bytes": 612,
+      "kind": "file",
+      "path": "src/canonical.mjs",
+      "sha256": "1a7cf64616580a40ae22da84a31a6adb5b9924de4be2b082f43144458ffc0fbf"
+    },
+    {
+      "bytes": 3418,
+      "kind": "file",
+      "path": "src/constants.mjs",
+      "sha256": "8d160b902dfc50b6c0ac9cae48c5a1f11ae1463517065730dc0bfba0cf878477"
+    },
+    {
+      "bytes": 9670,
+      "kind": "file",
+      "path": "src/economics.mjs",
+      "sha256": "b02ff914168b33e7118bcc68cc88dd40a73b77782171bbead240a2a1de921036"
+    },
+    {
+      "bytes": 1065,
+      "kind": "file",
+      "path": "src/errors.mjs",
+      "sha256": "69f526d71d090af04684da002df8944357f7100f4acf22824c4aabf6bded3098"
+    },
+    {
+      "bytes": 22344,
+      "kind": "file",
+      "path": "src/evaluate.mjs",
+      "sha256": "72d8fcf2b6aac8f97d482ff098d67787b06c608bf0cd7223ba4c519290a50bad"
+    },
+    {
+      "bytes": 3325,
+      "kind": "file",
+      "path": "src/privacy.mjs",
+      "sha256": "527d20bd1b7087a06dfef9119d7b3020dbc34b4a40598729c41ea39b2ec79f29"
+    },
+    {
+      "bytes": 949,
+      "kind": "file",
+      "path": "src/project-merchant.mjs",
+      "sha256": "8d533610a015877608ab8d6a72f317e1dbfe57ff136acd66a38e5fbd53d24310"
+    },
+    {
+      "bytes": 879,
+      "kind": "file",
+      "path": "src/read.mjs",
+      "sha256": "574a8f3ac2f8b81f42b0d4baf94d2426d2afee8473bdec734e77a26ee7c8f264"
+    }
+  ]
+}

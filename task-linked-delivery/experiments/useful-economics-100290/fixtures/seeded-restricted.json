@@ -1,0 +1,17 @@
+{
+  "schema": "samedaydesk.useful-economics.bundle.v1",
+  "coverage": "supplied_records",
+  "observations": [
+    {
+      "schema": "samedaydesk.useful-economics.observation.v1",
+      "eventId": "restricted-row",
+      "operationId": "catalog-read",
+      "taskRef": "task-restricted",
+      "stage": "attempted_call",
+      "sourceClass": "caller_supplied",
+      "authority": "caller_expectation",
+      "cohort": "public_aggregate",
+      "email": "buyer@example.test"
+    }
+  ]
+}

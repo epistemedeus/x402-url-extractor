@@ -1,0 +1,16 @@
+{
+  "package": "useful-economics-100290",
+  "base": "30ab2c1b6a2b76045f16a91a906a7e72cc76ac91",
+  "consumerCommit": "0c136a96dfdecf72e141dd9078c2f6c2e38ca8aa",
+  "evidenceJoinCommit": "4f5f631ec32d4738e8dee4cc5964ce4b5ecb55a6",
+  "producerCommit": "92b3610c5c39b09c2333b27c647f9df06c1db5f5",
+  "grantCommit": "5206246ca831aa5b7c01ec147f69b22b5f71447b",
+  "historicBankedRevenueUsdc": 10.955,
+  "historicCountsAsMargin": false,
+  "historicCountsAsFutureCashAllocation": false,
+  "recognizedRevenueAtomic": "0",
+  "effortLedgerInCheckout": false,
+  "serverPatch": false,
+  "settlementPatch": false,
+  "outcomeKernelPatch": false
+}
