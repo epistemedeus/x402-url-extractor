@@ -7,7 +7,7 @@ import {
   TASK_REF_FILENAME, TASK_REF_ROTATED_FILENAME,
 } from "../../../commerce-outcome-binding.mjs";
 import { producerBindings } from "../../../task-linked-delivery/experiments/useful-economics-100290/src/adapters.mjs";
-import { assert, digest, hash } from "./value.mjs";
+import { assert, checkedJson, digest, hash, keys } from "./value.mjs";
 
 const FILES = [FORWARD_BINDING_FILENAME, FORWARD_BINDING_ROTATED_FILENAME, TASK_REF_FILENAME, TASK_REF_ROTATED_FILENAME];
 const MAX_FILE = 1024 * 1024;
@@ -47,6 +47,8 @@ async function readLines(file, validator) {
 // response seal comes from that writer's in-process causal callback, never
 // from a caller header, wallet, task label or receipt digest.
 export async function consumeJournalEvidence(target, { dataDir, causalEventProof, internalToken } = {}) {
+  target = checkedJson(target, 2048);
+  keys(target, ["taskId", "operationId", "method", "route", "wireDigest", "cohort"]);
   const empty = reason => ({
     schema: "samedaydesk.service-delivery.journal-consumer.v1", binding: "unknown", reason,
     settlement: "unknown", schemaDelivery: "unknown", retainedObservation: "unknown",
@@ -104,7 +106,7 @@ export async function consumeJournalEvidence(target, { dataDir, causalEventProof
     return {
       ...empty(null), binding: "bound", reason: null, authority: "existing_authenticated_producer_and_journal",
       coverage: incomplete ? "partial_retained_generations" : "retained_generations_only",
-      journalSnapshotDigest: hash(JSON.stringify(before)), settlement,
+      journalSnapshotDigest: hash(JSON.stringify(before)), settlement: incomplete ? "unknown" : settlement,
       schemaDelivery: rows.some(isSchemaValidDeliveryEvidence) ? "schema_valid" : "unknown",
       retainedObservation: rows.some(row => row.stage === "retained_use" && row.correctionOf === null) ? "observed" : "unknown",
       correctionObserved: rows.some(row => row.correctionOf !== null),

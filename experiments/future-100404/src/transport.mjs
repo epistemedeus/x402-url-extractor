@@ -1,5 +1,5 @@
 import { performance } from "node:perf_hooks";
-import { assert, checkedJson, digest, hash } from "./value.mjs";
+import { assert, checkedJson, digest } from "./value.mjs";
 import { digestResponseBytes } from "../upstream/digest.mjs";
 
 export function serviceOrigin(raw, { allowLoopback = false } = {}) {

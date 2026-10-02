@@ -51,7 +51,8 @@ export async function completeReceipt(file, expected, raw) {
   const completed = verifyReceipt(raw);
   const pending = verifyReceipt(expected);
   assert(completed.state === "captured" && pending.state === "in_flight"
-    && completed.attemptId === pending.attemptId && completed.contractDigest === pending.contractDigest, "receipt_scope_conflict");
+    && completed.attemptId === pending.attemptId && completed.contractDigest === pending.contractDigest
+    && completed.origin === pending.origin && completed.startedAt === pending.startedAt, "receipt_scope_conflict");
   const old = verifyReceipt(await readJsonFile(file));
   assert(digest(old) === digest(pending), "receipt_changed_before_completion");
   const st = await lstat(file);

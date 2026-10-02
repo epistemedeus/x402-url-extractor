@@ -1,0 +1,949 @@
+TAP version 13
+# Subtest: agent discovery sources reduce user agents to controlled labels
+ok 1 - agent discovery sources reduce user agents to controlled labels
+  ---
+  duration_ms: 2.807352
+  type: 'test'
+  ...
+# Subtest: published Claude and Goose declared sources retain on HTTP without becoming demand
+ok 2 - published Claude and Goose declared sources retain on HTTP without becoming demand
+  ---
+  duration_ms: 19.979391
+  type: 'test'
+  ...
+# Subtest: unknown malformed and spoofed declared sources cannot mint ownership
+ok 3 - unknown malformed and spoofed declared sources cannot mint ownership
+  ---
+  duration_ms: 6.473035
+  type: 'test'
+  ...
+# Subtest: declared AgenticTrade handoff enters the paid-route funnel without exposing the source token
+ok 4 - declared AgenticTrade handoff enters the paid-route funnel without exposing the source token
+  ---
+  duration_ms: 1.848008
+  type: 'test'
+  ...
+# Subtest: constructed request telemetry is prospective, contract-derived, aggregate, and value-free
+ok 5 - constructed request telemetry is prospective, contract-derived, aggregate, and value-free
+  ---
+  duration_ms: 4.862921
+  type: 'test'
+  ...
+# Subtest: provider user fetchers enter the prospective source-quality cohort
+ok 6 - provider user fetchers enter the prospective source-quality cohort
+  ---
+  duration_ms: 2.719745
+  type: 'test'
+  ...
+# Subtest: allowlisted declared sources attribute acquisition without becoming demand or storing raw headers
+ok 7 - allowlisted declared sources attribute acquisition without becoming demand or storing raw headers
+  ---
+  duration_ms: 3.906691
+  type: 'test'
+  ...
+# Subtest: receipt-derived referrals become a controlled acquisition source without retaining the digest
+ok 8 - receipt-derived referrals become a controlled acquisition source without retaining the digest
+  ---
+  duration_ms: 2.057596
+  type: 'test'
+  ...
+# Subtest: writer stores declared source separately from observed UA and does not verify identity
+ok 9 - writer stores declared source separately from observed UA and does not verify identity
+  ---
+  duration_ms: 1.67956
+  type: 'test'
+  ...
+# Subtest: optional invalid source split cannot invalidate core events or change public aggregates
+ok 10 - optional invalid source split cannot invalidate core events or change public aggregates
+  ---
+  duration_ms: 3.00581
+  type: 'test'
+  ...
+# Subtest: payer classification policy validates controlled explicit labels
+ok 11 - payer classification policy validates controlled explicit labels
+  ---
+  duration_ms: 0.775159
+  type: 'test'
+  ...
+# Subtest: route classification preserves useful intent without recording opaque path values
+ok 12 - route classification preserves useful intent without recording opaque path values
+  ---
+  duration_ms: 0.456728
+  type: 'test'
+  ...
+# Subtest: paid response classes separate challenge, validation, success, and failure
+ok 13 - paid response classes separate challenge, validation, success, and failure
+  ---
+  duration_ms: 0.150478
+  type: 'test'
+  ...
+# Subtest: payment failure codes stay bounded and preserve required-input aliases
+ok 14 - payment failure codes stay bounded and preserve required-input aliases
+  ---
+  duration_ms: 0.546706
+  type: 'test'
+  ...
+# Subtest: private paid-success evidence records exact x402 and MPP HTTP attribution
+ok 15 - private paid-success evidence records exact x402 and MPP HTTP attribution
+  ---
+  duration_ms: 8.530295
+  type: 'test'
+  ...
+# Subtest: paid evidence follows the runtime-selected rail when both credential families are present
+ok 16 - paid evidence follows the runtime-selected rail when both credential families are present
+  ---
+  duration_ms: 4.783911
+  type: 'test'
+  ...
+# Subtest: paid evidence requires a matching runtime-selected rail
+ok 17 - paid evidence requires a matching runtime-selected rail
+  ---
+  duration_ms: 1.956379
+  type: 'test'
+  ...
+# Subtest: paid evidence hashes only body bytes that HTTP transfers
+ok 18 - paid evidence hashes only body bytes that HTTP transfers
+  ---
+  duration_ms: 3.566603
+  type: 'test'
+  ...
+# Subtest: rejected response chunks invalidate private paid evidence
+ok 19 - rejected response chunks invalidate private paid evidence
+  ---
+  duration_ms: 1.723902
+  type: 'test'
+  ...
+# Subtest: encoded request bodies fail closed because parser rawBody is post-inflation
+ok 20 - encoded request bodies fail closed because parser rawBody is post-inflation
+  ---
+  duration_ms: 2.891287
+  type: 'test'
+  ...
+# Subtest: paid-success evidence digests are deterministic and independently sensitive
+ok 21 - paid-success evidence digests are deterministic and independently sensitive
+  ---
+  duration_ms: 5.578524
+  type: 'test'
+  ...
+# Subtest: paid-success evidence serialization contains no supplied raw private values
+ok 22 - paid-success evidence serialization contains no supplied raw private values
+  ---
+  duration_ms: 2.411136
+  type: 'test'
+  ...
+# Subtest: private evidence excludes unpaid, challenge, failure, replay, discovery, and MCP HTTP duplicate rows
+ok 23 - private evidence excludes unpaid, challenge, failure, replay, discovery, and MCP HTTP duplicate rows
+  ---
+  duration_ms: 2.432084
+  type: 'test'
+  ...
+# Subtest: private paid evidence survives repeated ordinary traffic rotations
+ok 24 - private paid evidence survives repeated ordinary traffic rotations
+  ---
+  duration_ms: 2.897047
+  type: 'test'
+  ...
+# Subtest: durable rare funnel evidence survives ordinary traffic rotations and stream loss
+ok 25 - durable rare funnel evidence survives ordinary traffic rotations and stream loss
+  ---
+  duration_ms: 8.777521
+  type: 'test'
+  ...
+# Subtest: durable rare funnel deduplicates duplicate ids and retains parseable credential errors
+ok 26 - durable rare funnel deduplicates duplicate ids and retains parseable credential errors
+  ---
+  duration_ms: 2.040992
+  type: 'test'
+  ...
+# Subtest: durable rare funnel captures MCP typed paid outcomes separately from stream counters
+ok 27 - durable rare funnel captures MCP typed paid outcomes separately from stream counters
+  ---
+  duration_ms: 2.590015
+  type: 'test'
+  ...
+# Subtest: durable rare funnel reloads after restart without claiming continuous history
+ok 28 - durable rare funnel reloads after restart without claiming continuous history
+  ---
+  duration_ms: 1.53015
+  type: 'test'
+  ...
+# Subtest: an old retained rare row is not proof of uninterrupted requested-window capture
+ok 29 - an old retained rare row is not proof of uninterrupted requested-window capture
+  ---
+  duration_ms: 1.604063
+  type: 'test'
+  ...
+# Subtest: single-writer concurrent rare appends stay parseable across bounded rotation
+ok 30 - single-writer concurrent rare appends stay parseable across bounded rotation
+  ---
+  duration_ms: 3.348858
+  type: 'test'
+  ...
+# commerce telemetry write failed: EISDIR: illegal operation on a directory, open '/tmp/commerce-rare-funnel-write-failure-Kje3WR/commerce-rare-funnel-evidence.ndjson'
+# Subtest: durable rare funnel write failures remain visible to flush without leaking credentials
+ok 31 - durable rare funnel write failures remain visible to flush without leaking credentials
+  ---
+  duration_ms: 1.684378
+  type: 'test'
+  ...
+# Subtest: malformed and hostile paid evidence inputs fail closed without escaping middleware
+ok 32 - malformed and hostile paid evidence inputs fail closed without escaping middleware
+  ---
+  duration_ms: 2.158659
+  type: 'test'
+  ...
+# Subtest: paid evidence requires observing the response end before finish
+ok 33 - paid evidence requires observing the response end before finish
+  ---
+  duration_ms: 1.619329
+  type: 'test'
+  ...
+# Subtest: shutdown drain flushes the private paid evidence write
+ok 34 - shutdown drain flushes the private paid evidence write
+  ---
+  duration_ms: 1.841672
+  type: 'test'
+  ...
+# commerce telemetry write failed: EISDIR: illegal operation on a directory, open '/tmp/commerce-paid-evidence-write-failure-lZ53q7/commerce-paid-success-evidence.ndjson'
+# Subtest: private paid evidence append failures remain visible to flush and shutdown
+ok 35 - private paid evidence append failures remain visible to flush and shutdown
+  ---
+  duration_ms: 1.538966
+  type: 'test'
+  ...
+# Subtest: unpaid paid-POST requests do not persist application telemetry
+ok 36 - unpaid paid-POST requests do not persist application telemetry
+  ---
+  duration_ms: 0.903546
+  type: 'test'
+  ...
+# Subtest: unpaid POST /extract/batch still persists challenge and invalid-body rows
+ok 37 - unpaid POST /extract/batch still persists challenge and invalid-body rows
+  ---
+  duration_ms: 5.691809
+  type: 'test'
+  ...
+# Subtest: historical unmatched /extract/* rows stay unmatched and are not backfilled as batch
+ok 38 - historical unmatched /extract/* rows stay unmatched and are not backfilled as batch
+  ---
+  duration_ms: 1.497092
+  type: 'test'
+  ...
+# Subtest: extract-batch body construction inspects urls bounds without retaining values
+ok 39 - extract-batch body construction inspects urls bounds without retaining values
+  ---
+  duration_ms: 0.662448
+  type: 'test'
+  ...
+# Subtest: semantic unmatched classification is high precision and excludes technical misses
+ok 40 - semantic unmatched classification is high precision and excludes technical misses
+  ---
+  duration_ms: 0.187881
+  type: 'test'
+  ...
+# Subtest: aggregate snapshot excludes internal and crawler events and exposes no actor IDs
+ok 41 - aggregate snapshot excludes internal and crawler events and exposes no actor IDs
+  ---
+  duration_ms: 6.548372
+  type: 'test'
+  ...
+# Subtest: only explicitly classified independent payers enter independent demand
+ok 42 - only explicitly classified independent payers enter independent demand
+  ---
+  duration_ms: 3.150229
+  type: 'test'
+  ...
+# Subtest: challenge conversion requires conservative same-actor continuity
+ok 43 - challenge conversion requires conservative same-actor continuity
+  ---
+  duration_ms: 2.842176
+  type: 'test'
+  ...
+# Subtest: aggregate snapshot honors a declared external experiment baseline
+ok 44 - aggregate snapshot honors a declared external experiment baseline
+  ---
+  duration_ms: 1.254605
+  type: 'test'
+  ...
+# Subtest: machine discovery uses an independent baseline and excludes owned monitors
+ok 45 - machine discovery uses an independent baseline and excludes owned monitors
+  ---
+  duration_ms: 1.364233
+  type: 'test'
+  ...
+# Subtest: provider source detail starts prospectively without reclassifying earlier events
+ok 46 - provider source detail starts prospectively without reclassifying earlier events
+  ---
+  duration_ms: 1.563821
+  type: 'test'
+  ...
+# Subtest: coverage helper classifies incomplete windows as unknown_for_full_window
+ok 47 - coverage helper classifies incomplete windows as unknown_for_full_window
+  ---
+  duration_ms: 0.264807
+  type: 'test'
+  ...
+# Subtest: conservative UTC day bounds never overstate retained coverage
+ok 48 - conservative UTC day bounds never overstate retained coverage
+  ---
+  duration_ms: 0.085984
+  type: 'test'
+  ...
+# Subtest: two rotations erase an older construction event and keep the 90-day zero unknown
+ok 49 - two rotations erase an older construction event and keep the 90-day zero unknown
+  ---
+  duration_ms: 2.215473
+  type: 'test'
+  ...
+# Subtest: incomplete 90-day coverage reports retained bounds and does not treat a zero as a full-window result
+ok 50 - incomplete 90-day coverage reports retained bounds and does not treat a zero as a full-window result
+  ---
+  duration_ms: 1.532294
+  type: 'test'
+  ...
+# Subtest: complete short-window coverage can honestly report a retained zero
+ok 51 - complete short-window coverage can honestly report a retained zero
+  ---
+  duration_ms: 1.178242
+  type: 'test'
+  ...
+# Subtest: a metric baseline later than retained start can be complete while the requested window is not
+ok 52 - a metric baseline later than retained start can be complete while the requested window is not
+  ---
+  duration_ms: 0.964864
+  type: 'test'
+  ...
+# Subtest: empty retained files are unknown_for_full_window rather than a complete-window zero
+ok 53 - empty retained files are unknown_for_full_window rather than a complete-window zero
+  ---
+  duration_ms: 0.647523
+  type: 'test'
+  ...
+# Subtest: corrupt lines in an otherwise complete window force unknown coverage without exposing payloads
+ok 54 - corrupt lines in an otherwise complete window force unknown coverage without exposing payloads
+  ---
+  duration_ms: 1.614014
+  type: 'test'
+  ...
+# Subtest: invalid timestamps and non-object records cannot support a complete window
+ok 55 - invalid timestamps and non-object records cannot support a complete window
+  ---
+  duration_ms: 1.058084
+  type: 'test'
+  ...
+# Subtest: construction and discovery counts match coverage across the externalSince cutoff
+ok 56 - construction and discovery counts match coverage across the externalSince cutoff
+  ---
+  duration_ms: 1.250656
+  type: 'test'
+  ...
+# Subtest: metrics still clipped by externalSince include that cutoff in coverage
+ok 57 - metrics still clipped by externalSince include that cutoff in coverage
+  ---
+  duration_ms: 1.049471
+  type: 'test'
+  ...
+# Subtest: one retained event does not expose exact timestamps or millisecond values
+ok 58 - one retained event does not expose exact timestamps or millisecond values
+  ---
+  duration_ms: 0.990129
+  type: 'test'
+  ...
+# Subtest: sparse retained events omit exact timing from serialized public output
+ok 59 - sparse retained events omit exact timing from serialized public output
+  ---
+  duration_ms: 2.463987
+  type: 'test'
+  ...
+# Subtest: February 30 and timestamp-only objects cannot establish coverage
+ok 60 - February 30 and timestamp-only objects cannot establish coverage
+  ---
+  duration_ms: 4.576545
+  type: 'test'
+  ...
+# Subtest: snapshot capture is atomic against a response-triggered 5 MiB rotation
+ok 61 - snapshot capture is atomic against a response-triggered 5 MiB rotation
+  ---
+  duration_ms: 25.908064
+  type: 'test'
+  ...
+# Subtest: agentSourceDetail count inputs and coverage agree across mixed cutoffs
+ok 62 - agentSourceDetail count inputs and coverage agree across mixed cutoffs
+  ---
+  duration_ms: 2.23534
+  type: 'test'
+  ...
+# Subtest: complete writer-emitted v3 paid-success rows can still establish coverage
+ok 63 - complete writer-emitted v3 paid-success rows can still establish coverage
+  ---
+  duration_ms: 1.269392
+  type: 'test'
+  ...
+# Subtest: near-complete paid-success missing payment fields cannot undercount while claiming complete
+ok 64 - near-complete paid-success missing payment fields cannot undercount while claiming complete
+  ---
+  duration_ms: 1.201434
+  type: 'test'
+  ...
+# Subtest: missing or mistyped payment classification fields cannot claim complete
+ok 65 - missing or mistyped payment classification fields cannot claim complete
+  ---
+  duration_ms: 20.029973
+  type: 'test'
+  ...
+# Subtest: missing or mistyped construction inputs cannot undercount while claiming complete
+ok 66 - missing or mistyped construction inputs cannot undercount while claiming complete
+  ---
+  duration_ms: 5.45268
+  type: 'test'
+  ...
+# Subtest: missing or mistyped settlement inputs cannot undercount while claiming complete
+ok 67 - missing or mistyped settlement inputs cannot undercount while claiming complete
+  ---
+  duration_ms: 6.21294
+  type: 'test'
+  ...
+# Subtest: missing or mistyped actor and source fields cannot undercount while claiming complete
+ok 68 - missing or mistyped actor and source fields cannot undercount while claiming complete
+  ---
+  duration_ms: 6.886531
+  type: 'test'
+  ...
+# Subtest: legacy and partial rows cannot establish full-window completeness
+ok 69 - legacy and partial rows cannot establish full-window completeness
+  ---
+  duration_ms: 5.730585
+  type: 'test'
+  ...
+# Subtest: arbitrary private route, source, and failure labels cannot become public keys
+ok 70 - arbitrary private route, source, and failure labels cannot become public keys
+  ---
+  duration_ms: 2.746447
+  type: 'test'
+  ...
+# Subtest: 100000-character route, source, and failure values cannot establish coverage or inflate output
+ok 71 - 100000-character route, source, and failure values cannot establish coverage or inflate output
+  ---
+  duration_ms: 6.892186
+  type: 'test'
+  ...
+# Subtest: every legitimate writer-emitted vocabulary value still passes
+ok 72 - every legitimate writer-emitted vocabulary value still passes
+  ---
+  duration_ms: 3.279532
+  type: 'test'
+  ...
+# Subtest: classifier outputs are exactly the retained writer vocabularies
+ok 73 - classifier outputs are exactly the retained writer vocabularies
+  ---
+  duration_ms: 0.478833
+  type: 'test'
+  ...
+# Subtest: middleware query-key names stay canonical, bounded, and coverage-comparable
+ok 74 - middleware query-key names stay canonical, bounded, and coverage-comparable
+  ---
+  duration_ms: 1.688684
+  type: 'test'
+  ...
+# Subtest: middleware query-key normalization never exceeds its retained cap
+ok 75 - middleware query-key normalization never exceeds its retained cap
+  ---
+  duration_ms: 1.619421
+  type: 'test'
+  ...
+# Subtest: nonhex, uppercase, wrong-version, and extreme identifiers cannot establish coverage
+ok 76 - nonhex, uppercase, wrong-version, and extreme identifiers cannot establish coverage
+  ---
+  duration_ms: 16.847852
+  type: 'test'
+  ...
+# Subtest: writer-impossible cross-field v3 rows cannot establish coverage or change public counts
+ok 77 - writer-impossible cross-field v3 rows cannot establish coverage or change public counts
+  ---
+  duration_ms: 19.298128
+  type: 'test'
+  ...
+# Subtest: middleware stores oversized settlement amounts as null without poisoning integrity
+ok 78 - middleware stores oversized settlement amounts as null without poisoning integrity
+  ---
+  duration_ms: 5.099675
+  type: 'test'
+  ...
+# Subtest: canonical v4 MCP typed rows are consumed separately and corrupt v4 is unusable
+ok 79 - canonical v4 MCP typed rows are consumed separately and corrupt v4 is unusable
+  ---
+  duration_ms: 2.367763
+  type: 'test'
+  ...
+# Subtest: canonical v4 ledger persists absent and rejected challenges without redefining presence
+ok 80 - canonical v4 ledger persists absent and rejected challenges without redefining presence
+  ---
+  duration_ms: 2.00604
+  type: 'test'
+  ...
+# Subtest: authenticated MCP validation markers bind a privacy-safe exact digest to one typed row
+ok 81 - authenticated MCP validation markers bind a privacy-safe exact digest to one typed row
+  ---
+  duration_ms: 1.384813
+  type: 'test'
+  ...
+# Subtest: forged, mismatched, missing, malformed, and hostile MCP markers fail to legacy-compatible rows
+ok 82 - forged, mismatched, missing, malformed, and hostile MCP markers fail to legacy-compatible rows
+  ---
+  duration_ms: 2.310684
+  type: 'test'
+  ...
+# Subtest: appendMcpTypedDecision owns the canonical event at call time
+ok 83 - appendMcpTypedDecision owns the canonical event at call time
+  ---
+  duration_ms: 1.722871
+  type: 'test'
+  ...
+# Subtest: appendMcpTypedDecision contains hostile adaptation failures without surfacing their text
+ok 84 - appendMcpTypedDecision contains hostile adaptation failures without surfacing their text
+  ---
+  duration_ms: 1.302627
+  type: 'test'
+  ...
+# Subtest: appendMcpTypedDecision still stores nonthrowing accessor and plain object decisions
+ok 85 - appendMcpTypedDecision still stores nonthrowing accessor and plain object decisions
+  ---
+  duration_ms: 1.478334
+  type: 'test'
+  ...
+# Subtest: typed snapshot coverage freshness and source-local integrity are retained
+ok 86 - typed snapshot coverage freshness and source-local integrity are retained
+  ---
+  duration_ms: 1.417527
+  type: 'test'
+  ...
+# Subtest: late baseline does not claim full requested window
+ok 87 - late baseline does not claim full requested window
+  ---
+  duration_ms: 1.16754
+  type: 'test'
+  ...
+# Subtest: future rows do not enter window or freshness
+ok 88 - future rows do not enter window or freshness
+  ---
+  duration_ms: 0.985809
+  type: 'test'
+  ...
+# Subtest: production shutdown helper rejects undrained or failed lifecycle visibly
+ok 89 - production shutdown helper rejects undrained or failed lifecycle visibly
+  ---
+  duration_ms: 0.418437
+  type: 'test'
+  ...
+# Subtest: typed MCP declared source is untrusted metadata separate from owner-validation proof
+ok 90 - typed MCP declared source is untrusted metadata separate from owner-validation proof
+  ---
+  duration_ms: 3.644735
+  type: 'test'
+  ...
+# Subtest: writer process gate accepts only the safe integer 1
+ok 91 - writer process gate accepts only the safe integer 1
+  ---
+  duration_ms: 0.857526
+  type: 'test'
+  ...
+# Subtest: settlement durability names the local filesystem assumption
+ok 92 - settlement durability names the local filesystem assumption
+  ---
+  duration_ms: 0.690588
+  type: 'test'
+  ...
+# Subtest: stale or wrong settlement proof is refused and writes nothing
+ok 93 - stale or wrong settlement proof is refused and writes nothing
+  ---
+  duration_ms: 20.127279
+  type: 'test'
+  ...
+# Subtest: distinct settlement references admit one row and reload it
+ok 94 - distinct settlement references admit one row and reload it
+  ---
+  duration_ms: 10.692819
+  type: 'test'
+  ...
+# Subtest: the same settlement reference is one physical journal record
+ok 95 - the same settlement reference is one physical journal record
+  ---
+  duration_ms: 7.686296
+  type: 'test'
+  ...
+# Subtest: telemetry and a second writer on the same directory admit one settlement
+ok 96 - telemetry and a second writer on the same directory admit one settlement
+  ---
+  duration_ms: 9.71317
+  type: 'test'
+  ...
+# Subtest: distinct operations settle independently
+ok 97 - distinct operations settle independently
+  ---
+  duration_ms: 14.006719
+  type: 'test'
+  ...
+# Subtest: distinct journal directories do not share a settlement claim
+ok 98 - distinct journal directories do not share a settlement claim
+  ---
+  duration_ms: 13.322655
+  type: 'test'
+  ...
+# Subtest: identical forward records from two writers leave one physical line
+ok 99 - identical forward records from two writers leave one physical line
+  ---
+  duration_ms: 4.974986
+  type: 'test'
+  ...
+# Subtest: a failed settlement stays unknown until an explicit later readback
+ok 100 - a failed settlement stays unknown until an explicit later readback
+  ---
+  duration_ms: 8.787607
+  type: 'test'
+  ...
+# Subtest: settlement append keeps a torn forward tail
+ok 101 - settlement append keeps a torn forward tail
+  ---
+  duration_ms: 9.994775
+  type: 'test'
+  ...
+# Subtest: rotation keeps the prior forward bytes and the settlement
+ok 102 - rotation keeps the prior forward bytes and the settlement
+  ---
+  duration_ms: 8.616902
+  type: 'test'
+  ...
+# Subtest: a symlink cannot redirect settlement admission
+ok 103 - a symlink cannot redirect settlement admission
+  ---
+  duration_ms: 0.951819
+  type: 'test'
+  ...
+# Subtest: mocked boundary admission is single and real_unverified is refused
+ok 104 - mocked boundary admission is single and real_unverified is refused
+  ---
+  duration_ms: 7.777806
+  type: 'test'
+  ...
+# Subtest: task admission and settlement admission do not deadlock
+ok 105 - task admission and settlement admission do not deadlock
+  ---
+  duration_ms: 9.252371
+  type: 'test'
+  ...
+# Subtest: restart reads a bounded tail from a huge sparse file, not the whole file
+ok 106 - restart reads a bounded tail from a huge sparse file, not the whole file
+  ---
+  duration_ms: 7.484643
+  type: 'test'
+  ...
+# Subtest: append separates an unterminated complete or torn record without rewriting evidence
+ok 107 - append separates an unterminated complete or torn record without rewriting evidence
+  ---
+  duration_ms: 7.88094
+  type: 'test'
+  ...
+# Subtest: a symlink cannot redirect the task-reference append or expose another file
+ok 108 - a symlink cannot redirect the task-reference append or expose another file
+  ---
+  duration_ms: 1.576624
+  type: 'test'
+  ...
+# Subtest: outcome binding requires the internal token and an opaque operation id
+ok 109 - outcome binding requires the internal token and an opaque operation id
+  ---
+  duration_ms: 1.551269
+  type: 'test'
+  ...
+# Subtest: disposable HTTP through createCommerceTelemetry persists schema-valid delivery only
+ok 110 - disposable HTTP through createCommerceTelemetry persists schema-valid delivery only
+  ---
+  duration_ms: 76.011998
+  type: 'test'
+  ...
+# Subtest: task link is an opaque sibling and stays inside the forward rotation bound
+ok 111 - task link is an opaque sibling and stays inside the forward rotation bound
+  ---
+  duration_ms: 5.562135
+  type: 'test'
+  ...
+# Subtest: torn task lines and a refused append do not overwrite older evidence
+ok 112 - torn task lines and a refused append do not overwrite older evidence
+  ---
+  duration_ms: 2.538333
+  type: 'test'
+  ...
+# Subtest: optional task input cannot block a commerce event or replay payment
+ok 113 - optional task input cannot block a commerce event or replay payment
+  ---
+  duration_ms: 8.58781
+  type: 'test'
+  ...
+# Subtest: a caller event id cannot seal another response, and finish enqueues that id once
+ok 114 - a caller event id cannot seal another response, and finish enqueues that id once
+  ---
+  duration_ms: 1.88348
+  type: 'test'
+  ...
+# Subtest: packaged scanner runs without optional retention or runtime source fetch
+ok 115 - packaged scanner runs without optional retention or runtime source fetch
+  ---
+  duration_ms: 108.765451
+  type: 'test'
+  ...
+# Subtest: invalid configured artifacts do not fall back to a different scanner
+ok 116 - invalid configured artifacts do not fall back to a different scanner
+  ---
+  duration_ms: 0.224292
+  type: 'test'
+  ...
+# Subtest: reused write buffers are copied before mutation
+ok 117 - reused write buffers are copied before mutation
+  ---
+  duration_ms: 1.090861
+  type: 'test'
+  ...
+# Subtest: oversized bodies retain a prefix while hashing the full length
+ok 118 - oversized bodies retain a prefix while hashing the full length
+  ---
+  duration_ms: 15.858701
+  type: 'test'
+  ...
+# Subtest: unsupported paid routes hash without retaining body bytes
+ok 119 - unsupported paid routes hash without retaining body bytes
+  ---
+  duration_ms: 0.226863
+  type: 'test'
+  ...
+# Subtest: live schemas agree with generated snapshot and HTTP batch is not MCP Zod
+ok 120 - live schemas agree with generated snapshot and HTTP batch is not MCP Zod
+  ---
+  duration_ms: 4.026175
+  type: 'test'
+  ...
+# Subtest: HTTP 200 plus nonempty text is not a pass without the declared contract
+ok 121 - HTTP 200 plus nonempty text is not a pass without the declared contract
+  ---
+  duration_ms: 0.784455
+  type: 'test'
+  ...
+# Subtest: missing and malformed bodies stay unknown or invalid, never pass
+ok 122 - missing and malformed bodies stay unknown or invalid, never pass
+  ---
+  duration_ms: 0.253829
+  type: 'test'
+  ...
+# Subtest: declared extract distinguishes refusal, truncation, and full capture
+ok 123 - declared extract distinguishes refusal, truncation, and full capture
+  ---
+  duration_ms: 0.584139
+  type: 'test'
+  ...
+# Subtest: source refusal is principal when truncation is also present
+ok 124 - source refusal is principal when truncation is also present
+  ---
+  duration_ms: 0.274058
+  type: 'test'
+  ...
+# Subtest: schema-shaped HTTP 500 is not completed delivery
+ok 125 - schema-shaped HTTP 500 is not completed delivery
+  ---
+  duration_ms: 0.247671
+  type: 'test'
+  ...
+# Subtest: unsupported method or resource stays unknown
+ok 126 - unsupported method or resource stays unknown
+  ---
+  duration_ms: 0.227936
+  type: 'test'
+  ...
+# Subtest: timeout and unsupported encoding stay distinct from source refusal
+ok 127 - timeout and unsupported encoding stay distinct from source refusal
+  ---
+  duration_ms: 0.405507
+  type: 'test'
+  ...
+# Subtest: read, batch, and lockfile no-change hold as completed capture
+ok 128 - read, batch, and lockfile no-change hold as completed capture
+  ---
+  duration_ms: 3.520546
+  type: 'test'
+  ...
+# Subtest: bounded oversized capture is never full_bounded_capture
+ok 129 - bounded oversized capture is never full_bounded_capture
+  ---
+  duration_ms: 48.196534
+  type: 'test'
+  ...
+# Subtest: optional validation records survive restart and still join unchanged v1 rows
+ok 130 - optional validation records survive restart and still join unchanged v1 rows
+  ---
+  duration_ms: 12.560999
+  type: 'test'
+  ...
+# Subtest: join emits one row per historical id even when response digests match
+ok 131 - join emits one row per historical id even when response digests match
+  ---
+  duration_ms: 2.732202
+  type: 'test'
+  ...
+# Subtest: body-only validation without paidEvidenceId does not attach to any purchase
+ok 132 - body-only validation without paidEvidenceId does not attach to any purchase
+  ---
+  duration_ms: 2.180689
+  type: 'test'
+  ...
+# Subtest: builds bounded seller-declared authorization evidence for exact operations
+ok 133 - builds bounded seller-declared authorization evidence for exact operations
+  ---
+  duration_ms: 12.826433
+  type: 'test'
+  ...
+# Subtest: rejects missing response contracts, undeclared effects, and cross-origin resources
+ok 134 - rejects missing response contracts, undeclared effects, and cross-origin resources
+  ---
+  duration_ms: 0.627217
+  type: 'test'
+  ...
+# Subtest: advertises the manifest through one standard describedby link on configured paid or discovery routes
+ok 135 - advertises the manifest through one standard describedby link on configured paid or discovery routes
+  ---
+  duration_ms: 0.414834
+  type: 'test'
+  ...
+# Subtest: machine documentation links name the existing OpenAPI document and x402 catalog
+ok 136 - machine documentation links name the existing OpenAPI document and x402 catalog
+  ---
+  duration_ms: 0.146458
+  type: 'test'
+  ...
+# Subtest: reordered records keep one observation digest and a later append does not rewrite it
+ok 137 - reordered records keep one observation digest and a later append does not rewrite it
+  ---
+  duration_ms: 10.924148
+  type: 'test'
+  ...
+# Subtest: a conflicting duplicate stays unjoinable and a torn line stays incomplete
+ok 138 - a conflicting duplicate stays unjoinable and a torn line stays incomplete
+  ---
+  duration_ms: 1.999516
+  type: 'test'
+  ...
+# Subtest: unknown source and a self-asserted label are not eligible demand
+ok 139 - unknown source and a self-asserted label are not eligible demand
+  ---
+  duration_ms: 1.093597
+  type: 'test'
+  ...
+# Subtest: two owners of one body stay distinct when one grant is withdrawn
+ok 140 - two owners of one body stay distinct when one grant is withdrawn
+  ---
+  duration_ms: 2.153302
+  type: 'test'
+  ...
+# Subtest: http 200, http 402, wallet transfer, and historic margin are refused
+ok 141 - http 200, http 402, wallet transfer, and historic margin are refused
+  ---
+  duration_ms: 1.644464
+  type: 'test'
+  ...
+# Subtest: breakeven uses only known gross, fees, and cash marginal
+ok 142 - breakeven uses only known gross, fees, and cash marginal
+  ---
+  duration_ms: 0.495748
+  type: 'test'
+  ...
+# Subtest: owner QA coverage does not become a world rate
+ok 143 - owner QA coverage does not become a world rate
+  ---
+  duration_ms: 0.502849
+  type: 'test'
+  ...
+# Subtest: a verified producer binding keeps paid success apart from useful and negative outcomes
+ok 144 - a verified producer binding keeps paid success apart from useful and negative outcomes
+  ---
+  duration_ms: 8.178399
+  type: 'test'
+  ...
+# Subtest: seller repair, a retained negative, activation, and a maintained task share one core
+ok 145 - seller repair, a retained negative, activation, and a maintained task share one core
+  ---
+  duration_ms: 343.394307
+  type: 'test'
+  ...
+# Subtest: the owner CLI rejects seeded claims and keeps the first receipt bytes
+ok 146 - the owner CLI rejects seeded claims and keeps the first receipt bytes
+  ---
+  duration_ms: 210.767602
+  type: 'test'
+  ...
+# USEFUL_ECONOMICS_MERCHANT {"calls":21,"eligible":30,"settled":1,"useful":1,"reused":1,"population":31,"runtimeMs":262,"tokenMeter":"unknown","failureCodes":["payment_service_unavailable","payment_verification_failed"],"files":[{"name":"useful-result-customer.ndjson","rows":4,"truncated":0},{"name":"useful-result-metrics.ndjson","rows":12,"truncated":0},{"name":"useful-result-shared.ndjson","rows":1,"truncated":0},{"name":"commerce-outcome-task-ref.ndjson","rows":3,"truncated":0},{"name":"commerce-events.ndjson","rows":21,"truncated":0}],"gaps":["body_digest_is_not_a_join_key","commerce_event_not_task_bound","commerce_paid_success_is_not_useful_delivery","effort_ledger_not_in_checkout","historical_10_955_usdc_is_not_margin","owner_qa_is_not_world_coverage","unknown_source","wallet_user_agent_email_and_ip_are_not_identity"],"boundUseful":"true","agreedNegative":true,"boundEventIds":["6d5ae7cf-a48e-4517-8f60-654dd103093a","90c72651-285b-4fd1-85eb-e04e39d88515","e5c80908-1832-47c7-abfb-38a99efffb88"],"paidUseful":"false","identicalBody":true,"revocationTransferred":false}
+# Subtest: disposable merchant execution joins retained, failed, and later records
+ok 147 - disposable merchant execution joins retained, failed, and later records
+  ---
+  duration_ms: 3255.05893
+  type: 'test'
+  ...
+# Subtest: two processes record a controlled delivery and reject a seeded relabel
+ok 148 - two processes record a controlled delivery and reject a seeded relabel
+  ---
+  duration_ms: 668.123169
+  type: 'test'
+  ...
+# Subtest: a second process sees a refused append and then a recovered one
+ok 149 - a second process sees a refused append and then a recovered one
+  ---
+  duration_ms: 112.064764
+  type: 'test'
+  ...
+# Subtest: identical customer results do not transfer contribution revocation or correction authority
+ok 150 - identical customer results do not transfer contribution revocation or correction authority
+  ---
+  duration_ms: 29.847762
+  type: 'test'
+  ...
+# Subtest: stashes an explicit retain header and ignores query, user agent, and wallet labels
+ok 151 - stashes an explicit retain header and ignores query, user agent, and wallet labels
+  ---
+  duration_ms: 0.871764
+  type: 'test'
+  ...
+# Subtest: the delivery wrapper retains only a settled HTTP 200
+ok 152 - the delivery wrapper retains only a settled HTTP 200
+  ---
+  duration_ms: 102.076289
+  type: 'test'
+  ...
+# Subtest: retains a real handler receipt and refuses settlement, execution, and seeded delivery
+ok 153 - retains a real handler receipt and refuses settlement, execution, and seeded delivery
+  ---
+  duration_ms: 15.127125
+  type: 'test'
+  ...
+# Subtest: a later process replays useful and negative output without payment authority
+ok 154 - a later process replays useful and negative output without payment authority
+  ---
+  duration_ms: 277.068004
+  type: 'test'
+  ...
+# Subtest: restart, expiry, revocation, corruption, and concurrent grants stay precise
+ok 155 - restart, expiry, revocation, corruption, and concurrent grants stay precise
+  ---
+  duration_ms: 541.224343
+  type: 'test'
+  ...
+# Subtest: a second HTTP client retrieves a retained receipt with only the returned grant
+ok 156 - a second HTTP client retrieves a retained receipt with only the returned grant
+  ---
+  duration_ms: 9401.719656
+  type: 'test'
+  ...
+1..156
+# tests 156
+# suites 0
+# pass 156
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 20136.292025

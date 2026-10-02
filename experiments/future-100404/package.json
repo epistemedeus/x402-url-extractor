@@ -8,6 +8,8 @@
     "test": "node --test --test-concurrency=1 test/*.test.mjs",
     "check": "node bin/service-delivery.mjs",
     "prepare:qa": "node scripts/prepare-qa.mjs",
-    "verify:owners": "node scripts/verify-owners.mjs"
+    "verify:owners": "node scripts/verify-owners.mjs",
+    "verify:owner-sources": "node scripts/verify-owner-sources.mjs",
+    "export:source": "node scripts/export-source.mjs"
   }
 }

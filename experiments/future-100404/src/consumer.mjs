@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { CONTRACT_SCHEMA, RECEIPT_SCHEMA, RETAINED, VALIDATION_SCHEMA, criteria, parseContract } from "./contract.mjs";
+import { RECEIPT_SCHEMA, RETAINED, VALIDATION_SCHEMA, criteria, parseContract } from "./contract.mjs";
 import { fetchJson, operationBudget, serviceOrigin } from "./transport.mjs";
 import { assert, checkedJson, digest, freeze, keys, MAX_RECEIPT_BYTES, time } from "./value.mjs";
 
@@ -42,6 +42,7 @@ export function verifyReceipt(raw) {
       if (capture.state === "received") assert(capture.bodyDigest === digest(capture.body) && /^[a-f0-9]{64}$/.test(capture.wireDigest), "capture_integrity");
       else assert(capture.body === null && capture.bodyDigest === null && capture.wireDigest === null, "capture_integrity");
     }
+    assert(Object.values(r.observations).filter(Boolean).reduce((total, capture) => total + capture.bytes, 0) <= contract.expectations.maxResponseBytes, "capture_total_bytes");
     assert(r.observations.execution.method === contract.request.method && r.observations.execution.route === contract.request.route, "capture_operation");
     for (const entry of [r.observations.releaseBefore, r.observations.releaseAfter]) assert(entry?.method === "GET" && entry?.route === contract.expectations.release.resource, "capture_release");
     const rights = contract.expectations.rights;
@@ -185,7 +186,8 @@ export function evaluateReceipt(raw, { now = Date.now() } = {}) {
   if (c.expectations.rights.required) dimensions.push(rights.state);
   const latency = { state: capture.attempted ? r.elapsedMs <= c.expectations.maxLatencyMs ? "met" : "unmet" : "unknown",
     elapsedMs: r.elapsedMs, serviceResponseMs: capture.elapsedMs, expectedMaxMs: c.expectations.maxLatencyMs,
-    measurement: "requester_monotonic_whole_operation", includes: ["release_before", "execution_and_body", "current_rights", "release_after"] };
+    measurement: "requester_monotonic_http_validation_operation", includes: ["release_before", "execution_and_body", "current_rights", "release_after"],
+    excludes: ["contract_acquisition", "local_receipt_io", "review_and_adaptation"] };
   dimensions.push(latency.state);
   let verdict = collapse(dimensions);
   if (retention.state === "expired") verdict = "expired";
@@ -194,6 +196,7 @@ export function evaluateReceipt(raw, { now = Date.now() } = {}) {
   const reasons = dimensions.filter(s => !["met", "not_requested"].includes(s));
   return {
     schema: VALIDATION_SCHEMA, verdict, usefulOutput, delivery, executionBinding: binding, predicates, latency, freshness, release, retention, continuation, rights,
+    evaluationScope: "saved_capture", currentValidationPerformed: false,
     attemptId: r.attemptId, contractDigest: r.contractDigest, snapshotIntegrityChecked: true,
     captureAuthority: CAPTURE_AUTHORITY, requesterAttestedUsefulness: "unknown", independentUse: "unknown",
     settlement: { state: retainedRead ? "unknown" : "not_attempted", authority: "none", paidValidDeliveryClaimIgnored: Boolean(body?.paidValidDelivery) },
@@ -205,7 +208,11 @@ export function evaluateReceipt(raw, { now = Date.now() } = {}) {
 
 function makeGood(receipt, actions) {
   return { kind: "nonfinancial_work_proposal", state: "proposal_only", contractDigest: receipt.contractDigest,
-    operationId: receipt.contract.operationId, actions, authorization: "none", financialAction: "none",
+    taskId: receipt.contract.taskId, operationId: receipt.contract.operationId,
+    requestDigest: digest(receipt.contract.request), expectationsDigest: digest(receipt.contract.expectations),
+    ownerOperation: { method: receipt.contract.request.method, route: receipt.contract.request.route },
+    scope: "same_caller_input_and_expectations", acceptance: "new_private_receipt_checks_required_caller_dimensions",
+    actions, authorization: "none", financialAction: "none",
     refund: false, credit: false, spending: false, newSku: false, automaticallyExecuted: false };
 }
 
@@ -231,7 +238,7 @@ export async function validateLater(raw, nextContract, origin, options = {}) {
   if (prior.state === "in_flight") relation.priorAttempt = "unknown_no_replay";
   const rightsChanged = historical.rights?.revision !== currentEvaluation.rights?.revision
     || historical.rights?.generation !== currentEvaluation.rights?.generation;
-  return { schema: VALIDATION_SCHEMA, historical, current, currentEvaluation, relation, rightsChanged,
+  return { schema: VALIDATION_SCHEMA, historical, current, currentEvaluation: { ...currentEvaluation, evaluationScope: "fresh_readback", currentValidationPerformed: true }, relation, rightsChanged,
     priorMayApply: false, settlementInherited: false, rightsInherited: false, automaticallyReplayed: false };
 }
 
@@ -241,6 +248,7 @@ export function publicSummary(receipt, options) {
   return { schema: e.schema, attemptId: e.attemptId, verdict: e.verdict, delivery: e.delivery,
     usefulOutput: e.usefulOutput, currentExecution: e.freshness?.currentExecution ?? "unknown",
     release: e.release?.state ?? "unknown", rights: e.rights?.state ?? "unknown",
+    evaluationScope: "saved_capture", currentValidationPerformed: false,
     settlement: e.settlement.state, paymentPermitted: false, automaticReplay: false,
     makeGood: e.makeGood ? { kind: e.makeGood.kind, state: e.makeGood.state, financialAction: "none" } : null };
 }

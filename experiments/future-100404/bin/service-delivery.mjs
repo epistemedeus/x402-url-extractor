@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { parseContract } from "../src/contract.mjs";
-import { executePrepared, prepareDelivery, publicSummary, validateLater, verifyReceipt } from "../src/consumer.mjs";
-import { readJsonFile, reserveReceipt, completeReceipt } from "../src/receipt-file.mjs";
-import { assert, digest, MAX_INPUT_BYTES } from "../src/value.mjs";
-import { serviceOrigin } from "../src/transport.mjs";
+import { publicSummary, verifyReceipt } from "../src/consumer.mjs";
+import { readJsonFile } from "../src/receipt-file.mjs";
+import { runCallerDelivery } from "../src/caller.mjs";
+import { assert, MAX_INPUT_BYTES } from "../src/value.mjs";
 
 async function main(argv) {
   const [action, ...args] = argv;
@@ -26,22 +26,7 @@ async function main(argv) {
   const prior = action === "validate" ? verifyReceipt(await readJsonFile(flags["--prior"])) : null;
   const options = { allowLoopback: flags["--loopback-qa"] === true,
     resultGrant: process.env.SERVICE_DELIVERY_RESULT_GRANT || null };
-  try {
-    const existing = verifyReceipt(await readJsonFile(flags["--receipt"]));
-    assert(existing.contractDigest === digest(contract) && existing.origin === serviceOrigin(flags["--origin"], options), "receipt_scope_conflict");
-    return { ...publicSummary(existing), recoveredExistingReceipt: true };
-  } catch (error) { if (error.code !== "ENOENT") throw error; }
-  const prepared = prepareDelivery(contract, flags["--origin"], options);
-  const reservation = await reserveReceipt(flags["--receipt"], prepared);
-  if (!reservation.acquired) return { ...publicSummary(reservation.receipt), recoveredExistingReceipt: true };
-  let current; let comparison;
-  if (prior) {
-    comparison = await validateLater(prior, contract, flags["--origin"], { ...options, prepared });
-    current = comparison.current;
-  } else current = await executePrepared(prepared, options);
-  await completeReceipt(flags["--receipt"], prepared, current);
-  return { ...publicSummary(current),
-    ...(comparison ? { relation: comparison.relation, priorMayApply: false, rightsInherited: false, settlementInherited: false } : {}) };
+  return runCallerDelivery({ contract, origin: flags["--origin"], receipt: flags["--receipt"], prior }, options);
 }
 
 try {

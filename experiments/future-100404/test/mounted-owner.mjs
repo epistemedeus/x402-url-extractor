@@ -30,7 +30,7 @@ export async function startMounted({ directory, clock = { value: Date.now() }, i
   const customer = createUsefulResultReuse({ dataDir: path.join(directory, "commerce"), internalToken: TEST_TOKEN, now: () => clock.value });
   app.use((req, res, next) => {
     state.requests.push({ method: req.method, path: req.path });
-    if (state.admission && req.path.startsWith("/commerce/scoped-surface-")) {
+    if (state.admission && (req.path.startsWith("/commerce/scoped-surface-") || req.path === state.admission.route)) {
       req.headers["x-samedaydesk-internal"] = TEST_TOKEN;
       req.headers["x-samedaydesk-outcome-task"] = state.admission.taskId;
       req.headers["x-samedaydesk-outcome-operation"] = state.admission.operationId;

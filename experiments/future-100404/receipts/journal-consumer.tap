@@ -1,0 +1,28 @@
+TAP version 13
+# Subtest: actual free mount task reference alone does not invent its absent forward delivery side
+ok 1 - actual free mount task reference alone does not invent its absent forward delivery side
+  ---
+  duration_ms: 99.297626
+  type: 'test'
+  ...
+# Subtest: real existing producer and schema writer join a disposable mocked response; restart, missing/torn/foreign sides stay bounded
+ok 2 - real existing producer and schema writer join a disposable mocked response; restart, missing/torn/foreign sides stay bounded
+  ---
+  duration_ms: 37.39312
+  type: 'test'
+  ...
+# Subtest: exact existing digest helper is preserved for binary and text response capture
+ok 3 - exact existing digest helper is preserved for binary and text response capture
+  ---
+  duration_ms: 0.516006
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 702.993088

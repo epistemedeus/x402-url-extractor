@@ -1,0 +1,43 @@
+{
+  "schema": "samedaydesk.service-delivery.contract.v1",
+  "taskId": "caller-task",
+  "operationId": "caller-scan",
+  "request": {
+    "method": "GET",
+    "route": "/.well-known/useful-result-reuse/retained",
+    "input": null
+  },
+  "expectations": {
+    "usefulOutput": [
+      {
+        "id": "found",
+        "pointer": "/result/decision",
+        "op": "equals",
+        "value": "found"
+      }
+    ],
+    "maxLatencyMs": 5000,
+    "deadlineMs": 10000,
+    "maxResponseBytes": 262144,
+    "freshness": {
+      "maxAgeMs": 3600000,
+      "requireCurrentExecution": false
+    },
+    "release": {
+      "resource": "/.well-known/agent-payment-evidence.json",
+      "expectedVersion": "1.23.49",
+      "required": true
+    },
+    "continuation": {
+      "mode": "retained-read",
+      "required": true
+    },
+    "rights": {
+      "purpose": "private-evaluation",
+      "regressionId": null,
+      "contextId": null,
+      "required": false
+    }
+  },
+  "retainUntil": "2026-11-01T00:00:00.000Z"
+}

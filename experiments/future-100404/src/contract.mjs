@@ -10,12 +10,13 @@ export const SAFE_ROUTES = Object.freeze({
 });
 export const RETAINED = "/.well-known/useful-result-reuse/retained";
 const ID = /^[a-z0-9][a-z0-9-]{0,63}$/;
+function identity(value) { return typeof value === "string" && ID.test(value); }
 function integer(n, min, max) { return Number.isSafeInteger(n) && n >= min && n <= max; }
 
 export function parseContract(raw) {
   const c = checkedJson(raw);
   keys(c, ["schema", "taskId", "operationId", "request", "expectations", "retainUntil"]);
-  assert(c.schema === CONTRACT_SCHEMA && ID.test(c.taskId) && ID.test(c.operationId), "contract_identity");
+  assert(c.schema === CONTRACT_SCHEMA && identity(c.taskId) && identity(c.operationId), "contract_identity");
   keys(c.request, ["method", "route", "input"]);
   assert(SAFE_ROUTES[c.request.route] === c.request.method, "operation_not_free_or_supported");
   if (c.request.method === "GET") assert(c.request.input === null, "get_body_rejected");
@@ -28,7 +29,7 @@ export function parseContract(raw) {
   const ids = new Set();
   for (const p of e.usefulOutput) {
     keys(p, ["id", "pointer", "op", "value"], ["id", "pointer", "op"]);
-    assert(ID.test(p.id) && !ids.has(p.id), "criterion_identity"); ids.add(p.id);
+    assert(identity(p.id) && !ids.has(p.id), "criterion_identity"); ids.add(p.id);
     pointer({}, p.pointer);
     assert(["exists", "equals", "gte", "lte"].includes(p.op), "criterion_operator");
     if (p.op === "exists") assert(!Object.hasOwn(p, "value"), "criterion_value_rejected");
@@ -50,7 +51,7 @@ export function parseContract(raw) {
   assert((c.request.route === RETAINED) === (e.continuation.mode === "retained-read"), "continuation_operation_mismatch");
   keys(e.rights, ["purpose", "regressionId", "contextId", "required"]);
   assert(["private-evaluation", "shared-reuse"].includes(e.rights.purpose) && typeof e.rights.required === "boolean", "rights_purpose");
-  if (e.rights.purpose === "shared-reuse") assert(ID.test(e.rights.regressionId) && ID.test(e.rights.contextId), "rights_identity");
+  if (e.rights.purpose === "shared-reuse") assert(identity(e.rights.regressionId) && identity(e.rights.contextId), "rights_identity");
   else assert(e.rights.regressionId === null && e.rights.contextId === null, "rights_identity_rejected");
   assert(Number.isFinite(time(c.retainUntil)), "retention_time");
   return freeze(c);

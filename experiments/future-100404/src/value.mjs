@@ -45,17 +45,18 @@ export function freeze(value) {
   return value;
 }
 export function time(value) {
-  return typeof value === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(value)
-    ? Date.parse(value) : NaN;
+  if (typeof value !== "string" || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(value)) return NaN;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) && new Date(parsed).toISOString() === value ? parsed : NaN;
 }
 export function pointer(root, path) {
   assert(typeof path === "string" && path.startsWith("/") && path.length <= 240, "bad_pointer");
   const bits = path.slice(1).split("/");
   assert(bits.length <= 12 && bits.every(bit => !/~(?![01])/.test(bit)), "bad_pointer");
+  const decoded = bits.map(raw => raw.replace(/~1/g, "/").replace(/~0/g, "~"));
+  assert(decoded.every(key => !["__proto__", "prototype", "constructor"].includes(key)), "unsafe_pointer");
   let value = root;
-  for (const raw of bits) {
-    const key = raw.replace(/~1/g, "/").replace(/~0/g, "~");
-    assert(!["__proto__", "prototype", "constructor"].includes(key), "unsafe_pointer");
+  for (const key of decoded) {
     if (value === null || typeof value !== "object" || !Object.hasOwn(value, key)) return { present: false };
     value = value[key];
   }

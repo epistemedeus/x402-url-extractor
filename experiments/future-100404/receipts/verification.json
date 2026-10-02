@@ -1,0 +1,178 @@
+{
+  "schema": "samedaydesk.service-delivery.verification.v1",
+  "observedAt": "2026-10-02T19:34:04.071Z",
+  "execution": "actual Cursor Cloud VM",
+  "node": "22.22.2",
+  "base": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+  "branch": "codex/sol-future-404-20261002",
+  "results": {
+    "consumer": {
+      "receipt": "receipts/consumer-final.tap",
+      "sha256": "287aae04004270bb7bfb5558926ce8823c2e9763da6fb9a74c77a13d585b14a4",
+      "tests": 26,
+      "pass": 26,
+      "fail": 0,
+      "skipped": 0
+    },
+    "retainedOwners": {
+      "receipt": "receipts/retained-owners.tap",
+      "sha256": "a43ece605b4198c3c12edcdbd83eb9df5dfc5a0a67004ca0f02e294f087ad248",
+      "tests": 156,
+      "pass": 156,
+      "fail": 0,
+      "skipped": 0
+    }
+  },
+  "testDenominator": 182,
+  "ownerSourceCheck": {
+    "schema": "samedaydesk.service-delivery.owner-source-check.v1",
+    "base": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+    "ownerFilesVerified": 75,
+    "receivedAndQaBytesMatch": true,
+    "digestAndLicenseVerbatim": true
+  },
+  "testedExecutableFiles": [
+    {
+      "path": "bin/service-delivery.mjs",
+      "bytes": 2330,
+      "sha256": "8886a21da54b988ba0a89e6db5e1c3372207c657e52d5275aa565deef566f684"
+    },
+    {
+      "path": "package.json",
+      "bytes": 500,
+      "sha256": "29172057b4f7d76c90fa110afe986a6837b0947139b5b0e6c4b1bab516d9fda1"
+    },
+    {
+      "path": "scripts/export-source.mjs",
+      "bytes": 6127,
+      "sha256": "0795648d91cab08e2c43d1ed9ccc7d046fa27e98c4da9afd66f19a28b56d8495"
+    },
+    {
+      "path": "scripts/prepare-qa.mjs",
+      "bytes": 1290,
+      "sha256": "c4add4bc6b9ad2945658c4f1561ab0fec91b79a089b8f664e54be84cb4ea6baf"
+    },
+    {
+      "path": "scripts/verify-owner-sources.mjs",
+      "bytes": 2072,
+      "sha256": "5fd8b8caafacaa1105a2dc53cd4b09d35794a4173d19adbebce25478c241de53"
+    },
+    {
+      "path": "scripts/verify-owners.mjs",
+      "bytes": 2187,
+      "sha256": "a068f4243d0044d22aa2030a83f18a5d1aa6351ab2b5d5c9e06cd54d49bb9079"
+    },
+    {
+      "path": "scripts/verify-source.mjs",
+      "bytes": 2280,
+      "sha256": "3fa68feda48a78b0a3d246582a7264ef569c3cdbd593e01acdaac2e17d102919"
+    },
+    {
+      "path": "src/caller.mjs",
+      "bytes": 1838,
+      "sha256": "1e448a16334ab3d2796e452a2a798da38156de2d8514a710065b97fdf0e811cf"
+    },
+    {
+      "path": "src/compose.mjs",
+      "bytes": 1790,
+      "sha256": "5c730604abad66287a27ea6765c908250de0fa5ae289748123f1e4269876f9dd"
+    },
+    {
+      "path": "src/consumer.mjs",
+      "bytes": 18489,
+      "sha256": "24d9a3a7f2943c26b2697603b12f5a94935cc563e0fad130c768d219dfbca3a4"
+    },
+    {
+      "path": "src/contract.mjs",
+      "bytes": 5029,
+      "sha256": "d4c782e31f6da13828c6f345a739cabfa96095fdd8a121929292c1764dd6a222"
+    },
+    {
+      "path": "src/journal-consumer.mjs",
+      "bytes": 7926,
+      "sha256": "21818728acf1c79250bc45d22548cf5b39809b753326f98a9a5e372d10e29a62"
+    },
+    {
+      "path": "src/receipt-file.mjs",
+      "bytes": 3639,
+      "sha256": "db4bb17d64df9149d8e144290fca0058992c024836c0c56f9d3fb35e305e64e1"
+    },
+    {
+      "path": "src/transport.mjs",
+      "bytes": 5019,
+      "sha256": "e966cd3170f87b133951cc80624511aeb9e6d4a45e8e9c63646a5f57a229ed8d"
+    },
+    {
+      "path": "src/value.mjs",
+      "bytes": 2939,
+      "sha256": "296f1dad4f2ed3732c146ea1439366ff8a11e0baf0747a5eb7aad8340c392d00"
+    },
+    {
+      "path": "test/caller.mjs",
+      "bytes": 1944,
+      "sha256": "5edbb28bedb14989afa2ea5e9806c27e622f6757a72e169f8cbc26b3a4fe982f"
+    },
+    {
+      "path": "test/contract.test.mjs",
+      "bytes": 1982,
+      "sha256": "7878b053dd185aa23e3940e1715d333b96d7b16b19ada15a7313420c8a3f9f2c"
+    },
+    {
+      "path": "test/delivery.test.mjs",
+      "bytes": 11600,
+      "sha256": "a2470733ee8b2db3e09bf856d16fbb473f6e3b0cb5869c06e342ae942630dfea"
+    },
+    {
+      "path": "test/export.test.mjs",
+      "bytes": 4011,
+      "sha256": "e8168784b93d807483291cb3eaa5653f21afc26b263d0b4ae49e4e6fb831d6af"
+    },
+    {
+      "path": "test/full-server.test.mjs",
+      "bytes": 3611,
+      "sha256": "082d6da6093ccbf976bb12b1f05ca0adf5c7af3bbe7ed8aaaa405ae6f70c6b19"
+    },
+    {
+      "path": "test/integration-patch.test.mjs",
+      "bytes": 4045,
+      "sha256": "d63e47b494296000044a6cc942551ae5ef4a53110af1e4cf2484dffa6c10e87e"
+    },
+    {
+      "path": "test/journal.test.mjs",
+      "bytes": 6624,
+      "sha256": "1206297a808a805e7ca1c26b33ddb080e8886d37d1887334f00fc34831645b24"
+    },
+    {
+      "path": "test/mounted-owner.mjs",
+      "bytes": 5977,
+      "sha256": "72f4415bfd4939d2a4cf266c297ebbfd00a72e619e61b1c3c4d522218f87fe79"
+    },
+    {
+      "path": "test/receipt-cold.test.mjs",
+      "bytes": 7919,
+      "sha256": "5fbc8abfae1dd21183d010ad036271d8b576e53571577fb81ddbb011d240f616"
+    },
+    {
+      "path": "test/transport.test.mjs",
+      "bytes": 5522,
+      "sha256": "826a065f1b14261858602780006c85688f27219baf4ac4439df8dee1dee12355"
+    },
+    {
+      "path": "upstream/digest.mjs",
+      "bytes": 1165,
+      "sha256": "65d8bb19113e9639cf0196503085544352cad34d37a66dada181ef94bdb7584c"
+    }
+  ],
+  "executableInventorySha256": "d2421ccb33f58dcedb730adc686d2ceee1b7dae42cea45124aa6ea2ba0c36da7",
+  "equalTaskComparison": "receipts/equal-task-comparison.json",
+  "testingBoundary": "loopback mounted owners, stripped Node processes and existing disposable mocked settlement only",
+  "integrationPatchApplied": false,
+  "publicHostingObserved": false,
+  "externalUse": "unknown",
+  "reconciledRealPaymentObserved": false,
+  "revenue": "unknown",
+  "customers": "unknown",
+  "cost": "unknown",
+  "savings": "unknown",
+  "production": false
+}

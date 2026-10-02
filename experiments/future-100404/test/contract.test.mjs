@@ -13,10 +13,16 @@ test("nonfree routes, arbitrary predicates, hidden authority and unbounded work 
     c => { c.request.route = "/extract"; c.request.method = "GET"; },
     c => { c.expectations.usefulOutput[0].op = "eval"; },
     c => { c.expectations.usefulOutput[0].pointer = "/__proto__/x"; },
+    c => { c.expectations.usefulOutput[0].pointer = "/missing/constructor/x"; },
+    c => { c.retainUntil = "2026-02-31T00:00:00.000Z"; },
     c => { c.expectations.deadlineMs = Infinity; },
     c => { c.expectations.rights.authorized = true; },
     c => { c.request.authorization = "unaccepted"; },
     c => { c.expectations.usefulOutput = []; },
+    c => { c.taskId = null; c.request.input.taskId = null; },
+    c => { c.operationId = 123; },
+    c => { c.expectations.usefulOutput[0].id = null; },
+    c => { c.expectations.rights = { purpose: "shared-reuse", regressionId: null, contextId: 123, required: true }; },
   ]) { const c = contract(); change(c); assert.throws(() => parseContract(c)); }
 });
 test("HTTP-shaped claims do not answer a caller predicate; useful negatives can", () => {

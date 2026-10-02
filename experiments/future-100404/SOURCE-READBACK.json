@@ -1,0 +1,70 @@
+{
+  "schema": "samedaydesk.service-delivery.context-readback.v1",
+  "pilot": {
+    "repository": "epistemedeus/pilot",
+    "commit": "a228be542fd557e2f2022b25fc3724972a1b672f",
+    "files": [
+      {
+        "path": "overview/GRAND-LAUNCH-BUILD-PLAN.md",
+        "sha256": "c4c4b3d23de66f1c92d45cc6838863cdeeacebad4fb4ae68f6b3d7651a022752",
+        "bytes": 26442,
+        "read": "complete"
+      },
+      {
+        "path": "overview/DELIVERY-TO-DEMAND-IMPLEMENTATION-20261002.md",
+        "sha256": "08dec2890b17953cb6e895994b64b1067a487877cc412dd7f080e84e3242f49d",
+        "bytes": 21970,
+        "read": "complete"
+      }
+    ],
+    "missingPath": "overview/research/20260926-agentic-research/PILOT-STRUCTURAL-EXPANSION.md",
+    "gitPathPresent": false,
+    "exactContentsApiStatus": 404
+  },
+  "canonicalVF": {
+    "repository": "epistemedeus/neomorphic-io",
+    "commit": "1652533b1823ac33b86591ec4e931a8c4ea4aa97",
+    "readOnly": true,
+    "files": [
+      {
+        "path": "scripts/visitor-foundry/integration/ROOT-RECEIVING-RESULT.md",
+        "gitBlob": "05de1de53400a249cc64eca30fba142c157fe762",
+        "sha256": "31474cf3da65fd05ff715d094c40f132ed16b4e97396751c0597d61670f7efa4",
+        "bytes": 2401
+      },
+      {
+        "path": "scripts/visitor-foundry/integration/VF12-HEAVY-RECEIVING-DELTA.md",
+        "gitBlob": "d5b647ceb64798c99fac0623616d1ad7d12dc237",
+        "sha256": "1bd6818ee6085c12da7a64b50a81c52f389ef4e7b3dd8de3beb762122816956c",
+        "bytes": 19007
+      },
+      {
+        "path": "scripts/visitor-foundry/integration/entry/receiver.mjs",
+        "gitBlob": "eac525e844e0ad46075cddccc5e051e1510262c4",
+        "sha256": "7913b6b8e765739134a2c7eb2044189c608cb8ebf41fc1b6bbe0b3f950fd0109",
+        "bytes": 9642
+      },
+      {
+        "path": "scripts/visitor-foundry/integration/entry/client.mjs",
+        "gitBlob": "a0356427ee797d095a3ccebd27a7cc15861a8fc1",
+        "sha256": "125ac4baa998a125c1f540e0209c8c6daeebc7c89c0786db03f85845c6adcf3a",
+        "bytes": 5182
+      },
+      {
+        "path": "scripts/visitor-foundry/integration/src/verification.mjs",
+        "gitBlob": "93b5752d5bc0bfc22c138aff8d74a977d3707d15",
+        "sha256": "94aecd4b49a493dca60a6a17f828e453a6e296f2bdd435e473d374b4a3358e07",
+        "bytes": 1723
+      },
+      {
+        "path": "scripts/visitor-foundry/validation/src/reuse.mjs",
+        "gitBlob": "0ba99b9bc3f68e07d7fe4d2760d6022704783e9c",
+        "sha256": "0015abf1c2a8d61ee61eaf616cc208f7a80b35ea4a2dd0a6ba1801b6a71ee680",
+        "bytes": 11563
+      }
+    ]
+  },
+  "privateSourceDistributed": false,
+  "canonicalVFExecutedHere": false,
+  "production": false
+}

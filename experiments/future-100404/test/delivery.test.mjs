@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { performance } from "node:perf_hooks";
+import { writeFile } from "node:fs/promises";
 import { executeDelivery, evaluateReceipt, validateLater, publicSummary, verifyReceipt } from "../src/consumer.mjs";
 import { criteria } from "../src/contract.mjs";
 import { digest } from "../src/value.mjs";
@@ -12,6 +13,7 @@ test("actual received mount executes two caller inputs and matches the direct ow
   const f = await startMounted();
   const { runScan } = await ownerModule("experiments/scoped-surface-delivery-100312/src/adapter.mjs");
   const { resolveHostedScanner } = await ownerModule("experiments/scoped-surface-delivery-100312/deploy/hosted-scanner.mjs");
+  const cases = [];
   try {
     for (const c of [contract(), danger()]) {
       const received = await executeDelivery(c, f.origin, options);
@@ -26,7 +28,20 @@ test("actual received mount executes two caller inputs and matches the direct ow
       assert.deepEqual(criteria(c, { report: direct }), e.predicates);
       assert.equal(direct.concern.result, received.observations.execution.body.report.concern.result);
       assert.equal(e.requesterAttestedUsefulness, "unknown");
+      cases.push({ contractDigest: received.contractDigest, operation: c.request.route,
+        expectedConcern: c.expectations.usefulOutput[1].value, receivedConcern: direct.concern.result,
+        equalInput: true, equalPredicates: true, directOwnerPredicates: criteria(c, { report: direct }),
+        receivedPredicates: e.predicates, directElapsedMs, receivedHttpValidationMs: e.latency.elapsedMs,
+        receivedServiceResponseMs: e.latency.serviceResponseMs, scannerCommit: direct.scanner.commit,
+        settlement: "not_attempted", reviewAndAdaptationMs: "unknown", cost: "unknown", savings: "unknown" });
     }
+    await writeFile(new URL("../receipts/equal-task-comparison.json", import.meta.url), JSON.stringify({
+      schema: "samedaydesk.service-delivery.equal-task-comparison.v1", observedAt: new Date().toISOString(),
+      base: "015f07d5a75d02a4e74709b17b2b1176501e92a5", execution: "actual Cursor Cloud VM",
+      comparison: "existing runScan versus received mounted HTTP using the same packaged scanner and caller bytes",
+      observations: "two QA cases; sequential measurements, no performance or savings claim", cases,
+      customerCount: "unknown", revenue: "unknown", externalUse: "unknown", production: false,
+    }, null, 2) + "\n");
   } finally { await f.close(); }
 });
 test("changed later input and predicates get new execution and preserve the old historical result", async () => {
@@ -46,6 +61,34 @@ test("changed later input and predicates get new execution and preserve the old 
     assert.equal(independent.currentEvaluation.verdict, "fulfilled");
     assert.equal(independent.settlementInherited, false);
     assert.equal(independent.rightsInherited, false);
+  } finally { await f.close(); }
+});
+test("received retest uses the existing two-scan owner and refuses a saved report as repair authority", async () => {
+  const f = await startMounted();
+  const { rerun } = await ownerModule("experiments/scoped-surface-delivery-100312/src/retest.mjs");
+  const { resolveHostedScanner } = await ownerModule("experiments/scoped-surface-delivery-100312/deploy/hosted-scanner.mjs");
+  try {
+    const c = contract(); const original = danger().request.input; const repair = structuredClone(original);
+    repair.files = c.request.input.files;
+    c.request = { method: "POST", route: "/commerce/scoped-surface-retest", input: { original, request: repair } };
+    c.expectations.usefulOutput = [
+      { id: "scanned", pointer: "/retest/current/scanPerformed", op: "equals", value: true },
+      { id: "fixed", pointer: "/retest/comparison", op: "equals", value: "fixed" },
+      { id: "cleared", pointer: "/retest/current/concern/result", op: "equals", value: "no_match" },
+    ];
+    const received = await executeDelivery(c, f.origin, options);
+    assert.equal(evaluateReceipt(received).verdict, "fulfilled");
+    const direct = await rerun(c.request.input, resolveHostedScanner({}));
+    assert.deepEqual(criteria(c, { retest: direct }), evaluateReceipt(received).predicates);
+    assert.equal(received.observations.execution.body.retest.operation.spawns, 2);
+    const forged = structuredClone(c);
+    forged.request.input = { previous: received.observations.execution.body.retest.current, request: repair };
+    const later = await validateLater(received, forged, f.origin, options);
+    assert.equal(later.current.observations.execution.body.retest.reason, "unverified_prior");
+    assert.equal(later.currentEvaluation.delivery, "partial");
+    assert.equal(later.currentEvaluation.makeGood.requestDigest, digest(forged.request));
+    assert.equal(later.currentEvaluation.makeGood.automaticallyExecuted, false);
+    assert.equal(later.priorMayApply, false);
   } finally { await f.close(); }
 });
 test("release changes and unavailable source leave useful output and current validation separate", async () => {

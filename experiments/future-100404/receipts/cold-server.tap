@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: actual unchanged merchant server publishes its real manifest and delivers a free caller scan without settlement
+ok 1 - actual unchanged merchant server publishes its real manifest and delivers a free caller scan without settlement
+  ---
+  duration_ms: 1918.973285
+  type: 'test'
+  ...
+# Subtest: two stripped acquired processes retain and later validate changed caller work without owner tokens
+ok 2 - two stripped acquired processes retain and later validate changed caller work without owner tokens
+  ---
+  duration_ms: 406.376488
+  type: 'test'
+  ...
+# Subtest: simultaneous cold callers reserve one receipt and perform one HTTP operation
+ok 3 - simultaneous cold callers reserve one receipt and perform one HTTP operation
+  ---
+  duration_ms: 211.267462
+  type: 'test'
+  ...
+# Subtest: lost terminal output recovers the completed file and a killed in-flight caller remains unknown without another POST
+ok 4 - lost terminal output recovers the completed file and a killed in-flight caller remains unknown without another POST
+  ---
+  duration_ms: 304.784044
+  type: 'test'
+  ...
+# Subtest: wrong task, corrupt receipt, symlink and hard-link inputs never overwrite caller history or start another operation
+ok 5 - wrong task, corrupt receipt, symlink and hard-link inputs never overwrite caller history or start another operation
+  ---
+  duration_ms: 13.898615
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4155.823504

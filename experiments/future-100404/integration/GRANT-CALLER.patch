@@ -1,0 +1,34 @@
+diff --git a/useful-result-reuse/grant-caller.mjs b/useful-result-reuse/grant-caller.mjs
+--- a/useful-result-reuse/grant-caller.mjs
++++ b/useful-result-reuse/grant-caller.mjs
+@@ -12,6 +12,30 @@
+ if (!base || !grant) {
+   process.stderr.write("grant_required\n");
+   process.exit(2);
++}
++
++// Optional caller contract. Recovery stays in the caller's receipt document.
++// Existing grant authority and service writers are unchanged.
++if (process.env.USEFUL_RESULT_DELIVERY_CONTRACT || process.env.USEFUL_RESULT_DELIVERY_RECEIPT) {
++  try {
++    if (!process.env.USEFUL_RESULT_DELIVERY_CONTRACT || !process.env.USEFUL_RESULT_DELIVERY_RECEIPT
++      || process.env.USEFUL_RESULT_ACTION || process.env.USEFUL_RESULT_QUERY
++      || process.env.USEFUL_RESULT_BOUND_RESOURCE || process.env.USEFUL_RESULT_BOUND_METHOD
++      || process.env.USEFUL_RESULT_RESULT_ID || process.env.USEFUL_RESULT_OMIT_GRANT
++      || (process.env.USEFUL_RESULT_METHOD && process.env.USEFUL_RESULT_METHOD !== "GET")) throw new Error("delivery_input_rejected");
++    const { runCallerDelivery } = await import("../experiments/future-100404/src/caller.mjs");
++    const { readJsonFile } = await import("../experiments/future-100404/src/receipt-file.mjs");
++    const contract = await readJsonFile(process.env.USEFUL_RESULT_DELIVERY_CONTRACT, 163840);
++    if (contract?.request?.route !== "/.well-known/useful-result-reuse/retained" || contract?.request?.method !== "GET") throw new Error("delivery_operation_rejected");
++    const summary = await runCallerDelivery({ contract, origin: base, receipt: process.env.USEFUL_RESULT_DELIVERY_RECEIPT }, {
++      resultGrant: grant, allowLoopback: process.env.USEFUL_RESULT_DELIVERY_LOOPBACK_QA === "1",
++    });
++    process.stdout.write(JSON.stringify(summary) + "\n");
++    process.exit(summary.verdict === "fulfilled" ? 0 : 3);
++  } catch {
++    process.stdout.write(JSON.stringify({ error: "delivery_input_or_receipt_unavailable", paymentPermitted: false, automaticReplay: false }) + "\n");
++    process.exit(2);
++  }
+ }
+ 
+ const action = process.env.USEFUL_RESULT_ACTION || "";

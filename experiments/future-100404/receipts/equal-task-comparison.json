@@ -1,0 +1,94 @@
+{
+  "schema": "samedaydesk.service-delivery.equal-task-comparison.v1",
+  "observedAt": "2026-10-02T19:32:11.028Z",
+  "base": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+  "execution": "actual Cursor Cloud VM",
+  "comparison": "existing runScan versus received mounted HTTP using the same packaged scanner and caller bytes",
+  "observations": "two QA cases; sequential measurements, no performance or savings claim",
+  "cases": [
+    {
+      "contractDigest": "966547395978b3f45be3b4a5c96f1c80195c5f28e3a7d2fbec2e2f37a30df75c",
+      "operation": "/commerce/scoped-surface-scan",
+      "expectedConcern": "no_match",
+      "receivedConcern": "no_match",
+      "equalInput": true,
+      "equalPredicates": true,
+      "directOwnerPredicates": [
+        {
+          "id": "ran",
+          "state": "met",
+          "reason": "caller_predicate_holds"
+        },
+        {
+          "id": "concern",
+          "state": "met",
+          "reason": "caller_predicate_holds"
+        }
+      ],
+      "receivedPredicates": [
+        {
+          "id": "ran",
+          "state": "met",
+          "reason": "caller_predicate_holds"
+        },
+        {
+          "id": "concern",
+          "state": "met",
+          "reason": "caller_predicate_holds"
+        }
+      ],
+      "directElapsedMs": 34.65603799999997,
+      "receivedHttpValidationMs": 73.458305,
+      "receivedServiceResponseMs": 51.568100999999956,
+      "scannerCommit": "beec14acbb56de37cd361acc949087b9ae019b70",
+      "settlement": "not_attempted",
+      "reviewAndAdaptationMs": "unknown",
+      "cost": "unknown",
+      "savings": "unknown"
+    },
+    {
+      "contractDigest": "9438e44232030459d73bc5f8663d65864a4ae69b096d1c5d177b0e7fc07b1f14",
+      "operation": "/commerce/scoped-surface-scan",
+      "expectedConcern": "match",
+      "receivedConcern": "match",
+      "equalInput": true,
+      "equalPredicates": true,
+      "directOwnerPredicates": [
+        {
+          "id": "ran",
+          "state": "met",
+          "reason": "caller_predicate_holds"
+        },
+        {
+          "id": "concern",
+          "state": "met",
+          "reason": "caller_predicate_holds"
+        }
+      ],
+      "receivedPredicates": [
+        {
+          "id": "ran",
+          "state": "met",
+          "reason": "caller_predicate_holds"
+        },
+        {
+          "id": "concern",
+          "state": "met",
+          "reason": "caller_predicate_holds"
+        }
+      ],
+      "directElapsedMs": 31.093124000000103,
+      "receivedHttpValidationMs": 44.069953000000055,
+      "receivedServiceResponseMs": 39.4963130000001,
+      "scannerCommit": "beec14acbb56de37cd361acc949087b9ae019b70",
+      "settlement": "not_attempted",
+      "reviewAndAdaptationMs": "unknown",
+      "cost": "unknown",
+      "savings": "unknown"
+    }
+  ],
+  "customerCount": "unknown",
+  "revenue": "unknown",
+  "externalUse": "unknown",
+  "production": false
+}
