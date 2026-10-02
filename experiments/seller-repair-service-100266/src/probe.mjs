@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import http from "node:http";
 import https from "node:https";
+import { isIP } from "node:net";
 
 import { admitProbe, createBudget, noteProbe } from "./budget.mjs";
 import { PRIVATE_MARKER } from "./constants.mjs";
@@ -30,6 +31,8 @@ export async function probeOnce({
   bodyBytes,
   fixtureMode = null,
   headerImpl = null,
+  lookup = null,
+  socket = null,
 }) {
   if (typeof baseUrl !== "string" || typeof route !== "string" || !route.startsWith("/")) {
     fail("probe target is incomplete");
@@ -51,7 +54,25 @@ export async function probeOnce({
       clearTimeout(deadlineTimer);
       resolve(result);
     };
-    const request = transport.request(url, { method, headers, timeout: deadlineMs }, (response) => {
+    const requestOptions = { method, headers, timeout: deadlineMs };
+    if (socket?.host) {
+      const family = isIP(socket.host) || 4;
+      requestOptions.host = socket.host;
+      requestOptions.port = socket.port;
+      requestOptions.servername = url.hostname;
+      requestOptions.rejectUnauthorized = socket.rejectUnauthorized !== false;
+      requestOptions.lookup = (_hostname, options, callback) => {
+        if (typeof options === "function") {
+          callback = options;
+          options = {};
+        }
+        if (options?.all === true) return callback(null, [{ address: socket.host, family }]);
+        return callback(null, socket.host, family);
+      };
+    } else if (lookup) {
+      requestOptions.lookup = lookup;
+    }
+    const request = transport.request(url, requestOptions, (response) => {
       const status = Number(response.statusCode || 0);
       if (status >= 300 && status < 400) {
         response.destroy();
@@ -205,16 +226,76 @@ export async function probeOnce({
   });
 }
 
-async function attempt(budget, fields) {
+async function attempt(budget, fields, beforeProbe) {
   const admission = admitProbe(budget);
   if (!admission.ok) return { stopped: admission.reason, probe: null };
   if (admission.bodyBytes < 1) return { stopped: "total_body_ceiling", probe: null };
-  const probe = await probeOnce({ ...fields, deadlineMs: admission.deadlineMs, bodyBytes: admission.bodyBytes });
+  let transport = {};
+  if (beforeProbe) {
+    transport = await beforeProbe();
+    if (!transport?.ok) return { stopped: transport?.reason || "target_not_authorized", probe: null };
+  }
+  const probe = await probeOnce({
+    ...fields,
+    deadlineMs: admission.deadlineMs,
+    bodyBytes: admission.bodyBytes,
+    lookup: transport.lookup || fields.lookup || null,
+    socket: transport.socket || fields.socket || null,
+  });
   noteProbe(budget, probe);
   return { stopped: null, probe };
 }
 
-export async function probeDeclarationAndResource({ baseUrl, intake, fixtureMode = null, budget = null }) {
+export function observationFromEvidence(intake) {
+  const observed = intake?.callerEvidence?.observed;
+  if (!observed || typeof observed.json !== "object" || observed.json === null || Array.isArray(observed.json)) return null;
+  const text = Buffer.from(JSON.stringify(observed.json));
+  if (containsPrivateMarker(text)) {
+    return {
+      route: intake.resource,
+      method: intake.method,
+      status: observed.status,
+      redirectUnfollowed: false,
+      bodyDeadline: false,
+      privateSentinel: true,
+      bodyRetained: false,
+      json: false,
+      byteLength: text.length,
+      digest: null,
+      paths: [],
+      values: {},
+      contentType: observed.contentType || "application/json",
+      paymentSent: false,
+      bytesSeen: text.length,
+      body: null,
+      source: "caller_supplied",
+    };
+  }
+  const paths = collectPaths(observed.json);
+  const values = {};
+  for (const path of paths) values[path] = pathValue(observed.json, path);
+  return {
+    route: intake.resource,
+    method: intake.method,
+    status: observed.status,
+    redirectUnfollowed: false,
+    bodyDeadline: false,
+    privateSentinel: false,
+    bodyRetained: true,
+    json: true,
+    byteLength: text.length,
+    digest: sha256(text),
+    paths,
+    values,
+    contentType: observed.contentType || "application/json",
+    paymentSent: false,
+    bytesSeen: text.length,
+    body: observed.json,
+    source: "caller_supplied",
+  };
+}
+
+export async function probeDeclarationAndResource({ baseUrl, intake, fixtureMode = null, budget = null, beforeProbe = null }) {
   const active = budget || createBudget(intake.maxEffort);
   const calls = [];
   let document = null;
@@ -231,7 +312,7 @@ export async function probeDeclarationAndResource({ baseUrl, intake, fixtureMode
       method: "GET",
       route: "/openapi.json",
       fixtureMode,
-    });
+    }, beforeProbe);
     stopped = declared.stopped;
     documentProbe = declared.probe;
     if (documentProbe) {
@@ -255,7 +336,7 @@ export async function probeDeclarationAndResource({ baseUrl, intake, fixtureMode
     method: intake.method,
     route: intake.resource,
     fixtureMode,
-  });
+  }, beforeProbe);
   const resourceProbe = resource.probe;
   if (resourceProbe) calls.push(summarize(resourceProbe));
   return {

@@ -147,15 +147,33 @@ test("authorized contribution supports correction, expiry, revocation, and indep
   assert.equal(result.contribution.existingKnowledgePath.receiptSharesReturned, 0);
   assert.equal(result.contribution.spendingGrantTransferred, false);
   const boundTarget = { origin: result.target.origin, method: result.target.method, resource: result.target.resource };
-  const replay = replayContribution({
+  const hashOnly = replayContribution({
     contribution: result.contribution,
     now: Date.parse(result.contribution.row.expiresAt) - 1000,
     taskDigest: result.taskDigest,
     sdk: result.declaredSdk,
     target: boundTarget,
   });
+  assert.equal(hashOnly.reused, false);
+  assert.equal(hashOnly.reason, "hash_is_not_execution");
+  assert.equal(hashOnly.hashIsExecution, false);
+  const replay = replayContribution({
+    contribution: result.contribution,
+    now: Date.parse(result.contribution.row.expiresAt) - 1000,
+    taskDigest: result.taskDigest,
+    sdk: result.declaredSdk,
+    target: boundTarget,
+    execution: {
+      independent: true,
+      callerId: "later-agent",
+      operationId: result.operationId,
+      observedDigest: result.observed.digest,
+    },
+  });
   assert.equal(replay.reused, true);
+  assert.equal(replay.reason, "independent_execution");
   assert.equal(replay.usefulTransferred, false);
+  assert.equal(replay.hashIsExecution, false);
   assert.equal(replay.receiptSharesReturned, 0);
   const revoked = revokeContribution(result.contribution);
   const afterRevoke = replayContribution({

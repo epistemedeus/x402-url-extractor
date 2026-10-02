@@ -97,7 +97,7 @@ export function normalizeIntake(input = {}) {
   }
   if (typeof input.callerId !== "string" || !CALLER.test(input.callerId)) fail("callerId is invalid");
   if (!plain(input.probeConsent) || input.probeConsent.confirmed !== true) fail("probeConsent must confirm the target");
-  if (!["loopback", "public-read-only"].includes(input.probeConsent.class)) fail("probeConsent class is not supported");
+  if (!["loopback", "public-read-only", "public-https"].includes(input.probeConsent.class)) fail("probeConsent class is not supported");
   const extraAuth = Object.keys(input.probeConsent).filter((key) => !["class", "confirmed"].includes(key));
   if (extraAuth.length) fail(`unsupported probeConsent field: ${extraAuth[0]}`);
 
@@ -120,6 +120,19 @@ export function normalizeIntake(input = {}) {
   if (input.callerEvidence !== undefined) {
     if (!plain(input.callerEvidence)) fail("callerEvidence must be an object");
     if (hasDisallowedKey(input.callerEvidence)) fail("callerEvidence contains a private field");
+    if (input.callerEvidence.observed !== undefined) {
+      const observed = input.callerEvidence.observed;
+      if (!plain(observed)) fail("callerEvidence.observed must be an object");
+      const extraObserved = Object.keys(observed).filter((key) => !["status", "json", "contentType"].includes(key));
+      if (extraObserved.length) fail(`unsupported callerEvidence.observed field: ${extraObserved[0]}`);
+      if (!Number.isInteger(observed.status) || observed.status < 100 || observed.status > 599) {
+        fail("callerEvidence.observed.status is invalid");
+      }
+      if (observed.json !== undefined && !plain(observed.json)) fail("callerEvidence.observed.json must be an object");
+      if (observed.contentType !== undefined && (typeof observed.contentType !== "string" || observed.contentType.length > 80 || /[\u0000-\u001f\u007f]/.test(observed.contentType))) {
+        fail("callerEvidence.observed.contentType is invalid");
+      }
+    }
   }
   if (input.patch !== undefined && !plain(input.patch)) fail("patch must be an object");
 

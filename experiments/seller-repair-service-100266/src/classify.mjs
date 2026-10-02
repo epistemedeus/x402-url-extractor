@@ -38,7 +38,7 @@ export function classify({ intake, declared, observed, stopped = null }) {
     };
   }
   if (!observed) {
-    const reason = ["effort_exhausted", "total_body_ceiling", "total_response_deadline", "target_not_authorized", "resource_not_authorized"].includes(stopped)
+    const reason = ["effort_exhausted", "total_body_ceiling", "total_response_deadline", "target_not_authorized", "resource_not_authorized", "target_not_public", "dns_changed", "dns_failed"].includes(stopped)
       ? stopped
       : "body_not_observed";
     return { ...view, outcome: "unknown", reason, nextAction: "unknown", useful: false };

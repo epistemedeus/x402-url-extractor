@@ -37,6 +37,7 @@ export function prepareContribution({ intake, classification, patch, authorized 
     return { accepted: false, reason: "authorization_required", paymentPermitted: false, spendingGrantTransferred: false };
   }
   const evidence = {
+    callerId: intake.callerId,
     expectedPaths: intake.expectedUsefulOutput.paths,
     method: intake.method,
     origin: intake.origin,
@@ -67,7 +68,9 @@ export function prepareContribution({ intake, classification, patch, authorized 
   row.evidenceDigest = digestOf(evidence);
   row.shareId = `c${digestOf({ evidenceDigest: row.evidenceDigest, taskDigest: intake.taskDigest }).slice(0, 32)}`;
   const packed = { ...row, marker };
-  if (marker || privateKey(packed) || hasDisallowedKey(row) || classification?.reason === "private_body_withheld") {
+  const serialized = JSON.stringify(packed);
+  const privateText = serialized.includes("PRIVATE_SENTINEL_do_not_keep") || serialized.includes("sk_live_") || /0x[0-9a-fA-F]{40}/.test(serialized);
+  if (marker || privateKey(packed) || hasDisallowedKey(row) || privateText || classification?.reason === "private_body_withheld") {
     return {
       accepted: false,
       reason: "private_material",
@@ -93,6 +96,8 @@ export function prepareContribution({ intake, classification, patch, authorized 
     usefulTransferred: false,
     recognizedRevenueAtomic: "0",
     historicalRevenue: "unknown",
+    independentExecutionRequired: true,
+    hashIsExecution: false,
   };
 }
 
@@ -128,7 +133,18 @@ export function revokeContribution(contribution) {
   };
 }
 
-export function replayContribution({ contribution, corrections = [], revocations = [], now = Date.now(), taskDigest, sdk, target = null }) {
+function executionWitness(execution, contribution) {
+  const evidence = contribution?.row?.evidence;
+  if (!evidence || !execution || execution.independent !== true || execution.hashOnly === true) return false;
+  if (typeof execution.callerId !== "string" || !execution.callerId || execution.callerId === evidence.callerId) return false;
+  if (execution.operationId !== `${evidence.method} ${evidence.route}`) return false;
+  if (typeof execution.observedDigest !== "string" || !/^[0-9a-f]{64}$/.test(execution.observedDigest)) return false;
+  if (execution.observedDigest === contribution.row.evidenceDigest) return false;
+  if (execution.observedDigest === contribution.row.shareId) return false;
+  return true;
+}
+
+export function replayContribution({ contribution, corrections = [], revocations = [], now = Date.now(), taskDigest, sdk, target = null, execution = null }) {
   const rows = [
     contribution?.row,
     contribution?.control,
@@ -158,10 +174,22 @@ export function replayContribution({ contribution, corrections = [], revocations
   if (taskDigest !== evidence.taskDigest || sdk !== evidence.sdk || !targetMatches) {
     return { reused: false, reason: "stale_applicability", usefulTransferred: false, paymentPermitted: false, spendingGrantTransferred: false };
   }
+  if (!executionWitness(execution, contribution)) {
+    return {
+      reused: false,
+      reason: "hash_is_not_execution",
+      usefulTransferred: false,
+      paymentPermitted: false,
+      spendingGrantTransferred: false,
+      hashIsExecution: false,
+      independentExecutionRequired: true,
+    };
+  }
   return {
     reused: true,
-    reason: "independent_replay",
+    reason: "independent_execution",
     usefulTransferred: false,
+    hashIsExecution: false,
     paymentPermitted: false,
     spendingGrantTransferred: false,
     recognizedRevenueAtomic: "0",
