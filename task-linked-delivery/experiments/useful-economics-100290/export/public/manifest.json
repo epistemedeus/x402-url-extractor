@@ -23,8 +23,8 @@
       "role": "archive",
       "filename": "useful-economics-100290-0.1.0.tar.gz",
       "relativePath": "useful-economics-100290/0.1.0/useful-economics-100290-0.1.0.tar.gz",
-      "bytes": 17963,
-      "sha256": "07bdd9c4c75216306a67992e2cebc8d0daa60eff40bf134a92a48b282dc267e4",
+      "bytes": 18363,
+      "sha256": "0e03fbdabec828a10ceade744a7d03d09170e1abfdd1f2844681e420c695c24c",
       "mediaType": "application/gzip",
       "originContentType": "application/gzip",
       "originalUrl": "https://neomorphic.io/downloads/useful-economics-100290/0.1.0/useful-economics-100290-0.1.0.tar.gz",
@@ -47,7 +47,7 @@
       ],
       "inventory": {
         "path": "inventories/useful-economics-100290-0.1.0.json",
-        "fileSha256": "6471fa6ef39976c4b1eb73176c2420fc956b3506258eaa212a21a02c217698c5",
+        "fileSha256": "ef56dffafdcf3b6523f6419e69f51c1b814b0d6a9bbd3de61205a81bece9d27b",
         "memberCount": 20
       }
     },

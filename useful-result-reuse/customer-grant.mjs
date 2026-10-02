@@ -3,6 +3,7 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import {
   authorizeOutcomeBinding,
   buildTaskRefRecord,
+  openCausalCommerceEvent,
   stableForwardEventId,
 } from "../commerce-outcome-binding.mjs";
 import { digestOf } from "../task-linked-delivery/experiments/delivery-outcome-100173/src/canonical.mjs";
@@ -220,7 +221,7 @@ export function createCustomerRetention({
 } = {}) {
   if (!customerStore || !sharedStore || typeof remember !== "function") fail("store_required");
 
-  function taskBinding({ taskLabel, requestIdentity, resultId }) {
+  function taskBinding({ taskLabel, requestIdentity, resultId, causalEventProof = null }) {
     const supplied = typeof taskLabel === "string" && taskLabel.length > 0;
     if (supplied && (!TASK_LABEL.test(taskLabel) || taskLabel.startsWith("0x"))) {
       return { rejected: true };
@@ -240,7 +241,8 @@ export function createCustomerRetention({
         ? { rejected: true }
         : { rejected: false, taskRef: null, taskJoin: "unbound_artifact", labelStored: false };
     }
-    const commerceEventId = stableForwardEventId(`${OPERATION_ID}\0customer\0${requestIdentity}\0${resultId}`);
+    const sealedEventId = openCausalCommerceEvent(causalEventProof, internalToken);
+    const commerceEventId = sealedEventId || stableForwardEventId(`${OPERATION_ID}\0customer\0${requestIdentity}\0${resultId}`);
     const taskRefRecord = buildTaskRefRecord({ claim, commerceEventId });
     return {
       rejected: false,
@@ -319,6 +321,7 @@ export function createCustomerRetention({
       retainUntil = null,
       method = METHOD,
       route = ROUTE,
+      causalEventProof = null,
     } = {}) {
       if (optIn !== true) return emptyRetain("not_requested");
       await remember("retention_opt_in", {});
@@ -353,7 +356,12 @@ export function createCustomerRetention({
       }
       const resultId = digestOf(body);
       const comparable = comparableDigest(body);
-      const binding = taskBinding({ taskLabel, requestIdentity: identity, resultId });
+      const binding = taskBinding({
+        taskLabel,
+        requestIdentity: identity,
+        resultId,
+        causalEventProof,
+      });
       if (binding.rejected) return emptyRetain("task_label_rejected");
       const paidValidDelivery = success === true;
       const evidenceClass = paidValidDelivery ? "paid_valid_delivery" : "useful_negative";

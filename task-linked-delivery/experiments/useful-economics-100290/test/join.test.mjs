@@ -270,6 +270,107 @@ test("owner QA coverage does not become a world rate", async () => {
   assert.equal(receipt.meters.tokenMeter, "unknown");
 });
 
+test("a verified producer binding keeps paid success apart from useful and negative outcomes", async () => {
+  const taskRef = `t${"ab".repeat(31)}`;
+  const otherRef = `t${"cd".repeat(31)}`;
+  const boundId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const negativeId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+  const failedId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+  const foreignId = "ffffffff-ffff-4fff-8fff-ffffffffffff";
+  const taskRefRow = (commerceEventId, ref = taskRef) => ({
+    schemaVersion: "samedaydesk.outcome-task-ref.v1",
+    commerceEventId,
+    eventId: `task-${commerceEventId}`,
+    operationId: "normalized-transaction-receipt",
+    taskRef: ref,
+    cohort: "external_unknown",
+  });
+  const commerce = (id, route, status, result) => ({
+    v: 3,
+    id,
+    method: "GET",
+    route,
+    status,
+    result,
+    paymentPresent: status !== 402,
+    durationMs: 12,
+  });
+  const positive = {
+    schema: "samedaydesk.useful-result-reuse.customer-grant.v1",
+    action: "retain",
+    grantId: "aaaa1111aaaa1111",
+    recordId: "record-positive",
+    operationId: "normalized-transaction-receipt",
+    taskRef,
+    comparable: "ab".repeat(32),
+    settlementStatus: "verified",
+    paidValidDelivery: true,
+    evidenceClass: "paid_valid_delivery",
+    body: { decision: "found" },
+  };
+  const negative = {
+    ...positive,
+    grantId: "bbbb2222bbbb2222",
+    recordId: "record-negative",
+    comparable: "cd".repeat(32),
+    paidValidDelivery: false,
+    evidenceClass: "useful_negative",
+    body: { decision: "not_found" },
+  };
+  const records = [
+    commerce(failedId, "/chain/transaction-receipt", 200, "paid_success"),
+    negative,
+    taskRefRow(negativeId),
+    commerce(negativeId, "/chain/transaction-receipt", 200, "paid_success"),
+    positive,
+    taskRefRow(boundId),
+    commerce(boundId, "/chain/transaction-receipt", 200, "paid_success"),
+    commerce(foreignId, "/extract", 402, "challenge"),
+    taskRefRow(foreignId, otherRef),
+  ];
+  const forward = await evaluateBundle(bundle({ records }));
+  const reversed = await evaluateBundle(bundle({ records: [...records].reverse() }));
+  assert.equal(forward.observationDigest, reversed.observationDigest);
+  const useful = forward.journeys.find((journey) => journey.taskRef === taskRef && journey.operationId === "normalized-transaction-receipt");
+  const paid = forward.journeys.find((journey) => journey.taskRef === taskRef && journey.operationId === "get:/chain/transaction-receipt");
+  assert.equal(useful.useful, "true");
+  assert.equal(useful.ownerSlots.some((slot) => slot.useful === "agreed_negative"), true);
+  assert.equal(useful.ownerSlots.filter((slot) => slot.paidValidDelivery).length, 1);
+  assert.deepEqual([...useful.commerceEventIds].sort(), [boundId, negativeId].sort());
+  assert.deepEqual([...paid.commerceEventIds].sort(), [boundId, negativeId].sort());
+  assert.equal(paid.useful === "true" || paid.useful === "agreed_negative", false);
+  assert.equal(paid.settlementTrusted, false);
+  assert.equal(paid.paidValidDelivery, false);
+  const failed = forward.journeys.find((journey) => journey.commerceEventIds?.includes(failedId));
+  assert.equal(failed.taskRef, null);
+  assert.equal(failed.useful === "true" || failed.useful === "agreed_negative", false);
+  const extract = forward.journeys.find((journey) => journey.operationId === "get:/extract");
+  assert.equal(extract.taskRef, otherRef);
+  assert.notEqual(extract.operationId, useful.operationId);
+  assert.equal(forward.economics.recognizedRevenueAtomic, "0");
+  assert.equal(forward.gaps.includes("commerce_event_not_task_bound"), true);
+  const conflict = await evaluateBundle(bundle({
+    records: [
+      taskRefRow(boundId, taskRef),
+      taskRefRow(boundId, otherRef),
+      commerce(boundId, "/chain/transaction-receipt", 200, "paid_success"),
+    ],
+  }));
+  const conflicted = conflict.journeys.find((journey) => journey.operationId === "get:/chain/transaction-receipt");
+  assert.equal(conflicted.taskRef, null);
+  assert.equal(conflict.gaps.includes("causal_binding_conflict"), true);
+  assert.equal(conflicted.useful === "true", false);
+  const torn = readNdjson(`${JSON.stringify(taskRefRow(boundId))}\n{"commerceEventId":`);
+  assert.equal(torn.truncated, 1);
+  const tornReceipt = await evaluateBundle(bundle({
+    records: [...torn.rows, commerce(boundId, "/chain/transaction-receipt", 200, "paid_success")],
+    truncatedRecords: torn.truncated,
+  }));
+  const tornPaid = tornReceipt.journeys.find((journey) => journey.commerceEventIds?.includes(boundId) && journey.operationId === "get:/chain/transaction-receipt");
+  assert.equal(tornPaid.taskRef, taskRef);
+  assert.equal(tornReceipt.journeys.some((journey) => journey.operationId === "truncated-record" && journey.useful === "unknown"), true);
+});
+
 test("seller repair, a retained negative, activation, and a maintained task share one core", async () => {
   const { runJourney } = await import("../../../../experiments/seller-repair-service-100266/src/journey.mjs");
   const { startFixtureSeller } = await import("../../../../experiments/seller-repair-service-100266/src/fixture-seller.mjs");

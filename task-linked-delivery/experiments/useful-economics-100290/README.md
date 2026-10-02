@@ -32,7 +32,8 @@ node bin/cold-consumer.mjs reject fixtures/seeded-http200.json
 accepted. The cold consumer exits 2 when `COMMERCE_DATA_DIR`,
 `COMMERCE_INTERNAL_TOKEN`, or `USEFUL_RESULT_GRANT` is set.
 
-Commerce event ids in this checkout are not the customer task-ref
-`commerceEventId`. Those rows stay unbound. This package does not patch the
-seller route, `server.js`, the outcome kernel, the signer, or a settlement
-ledger.
+A commerce event joins a task only when the server task-ref row names that
+event id. A caller wallet, transaction, label, digest, or header does not
+repair a missing row. Unbound events stay unknown. Paid success stays apart
+from useful delivery. This package does not patch the seller route, prices,
+the signer, or a settlement ledger.

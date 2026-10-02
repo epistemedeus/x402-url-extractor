@@ -3678,7 +3678,9 @@ app.post("/security/stateful-wallet-policy-conformance", (req, res, next) => {
   }
 });
 
-installPaidReceiptRetention(app, () => retainDeliveredReceipt);
+installPaidReceiptRetention(app, () => retainDeliveredReceipt, {
+  causalEventProof: (res) => commerceTelemetry.causalCommerceEventProof(res),
+});
 app.use(mppDualStack.middleware);
 app.use((req, res, next) => {
   if (res.locals?.samedaydeskPayment?.protocol === "mpp") return next();

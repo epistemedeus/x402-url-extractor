@@ -38,7 +38,8 @@ function credentialDigest(req) {
 // The x402 rail invokes the route handler before settlement and only flushes
 // the buffered response after settlement succeeds. Retention runs on that
 // flush, so a failed or unknown settlement never mints a grant.
-export function installPaidReceiptRetention(app, getRetain) {
+export function installPaidReceiptRetention(app, getRetain, { causalEventProof = null } = {}) {
+  const proofFor = typeof causalEventProof === "function" ? causalEventProof : () => null;
   app.use((req, res, next) => {
     if (req.path !== RECEIPT_ROUTE || req.method !== "GET") return next();
     const originalEnd = res.end.bind(res);
@@ -53,8 +54,15 @@ export function installPaidReceiptRetention(app, getRetain) {
       if (typeof retain !== "function") return originalEnd(...args);
       armed = true;
       const body = res.locals?.usefulResultBody;
+      let proof = null;
+      try {
+        proof = proofFor(res);
+      } catch {
+        proof = null;
+      }
       void retain({
         body,
+        causalEventProof: typeof proof === "string" ? proof : null,
         credentialDigest: optIn.credentialDigest,
         method: "GET",
         optIn: true,

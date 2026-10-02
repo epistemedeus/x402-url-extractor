@@ -22,6 +22,7 @@ const NETWORK = "eip155:8453";
 const TOKEN = "useful-economics-internal-token-32b-min";
 const SENTINEL = "sentinel-useful-economics-100290";
 const TASK = "receipt-task-100290";
+const FOREIGN_EVENT = "ffffffff-ffff-4fff-8fff-ffffffffffff";
 const FROM = "0x1111111111111111111111111111111111111111";
 const TO = "0x2222222222222222222222222222222222222222";
 const FOUND = `0x${"ab".repeat(32)}`;
@@ -345,6 +346,8 @@ test("disposable merchant execution joins retained, failed, and later records", 
       headers: {
         "payment-signature": testPayment(challenge),
         "user-agent": SENTINEL,
+        "x-commerce-event-id": FOREIGN_EVENT,
+        "x-samedaydesk-commerce-event-id": FOREIGN_EVENT,
         "x-samedaydesk-outcome-task": TASK,
         "x-samedaydesk-retain-result": "1",
       },
@@ -436,7 +439,7 @@ test("disposable merchant execution joins retained, failed, and later records", 
   assert.equal(bound.revocationTransferred, false);
   assert.equal(bound.reused, true);
   assert.equal(bound.useful, "true");
-  const slots = receipt.journeys.find((journey) => journey.taskRef === bound.taskRef).ownerSlots;
+  const slots = receipt.journeys.find((journey) => journey.taskRef === bound.taskRef && journey.operationId === "normalized-transaction-receipt").ownerSlots;
   assert.equal(slots.some((slot) => slot.serverExecution === "not_found" && slot.useful === "agreed_negative"), true);
   assert.equal(slots.filter((slot) => slot.paidValidDelivery).length, 1);
   assert.equal(slots.filter((slot) => slot.withdrawn).length, 1);
@@ -444,11 +447,34 @@ test("disposable merchant execution joins retained, failed, and later records", 
   assert.ok(failedExecution);
   assert.equal(failedExecution.useful, "false");
   assert.equal(failedExecution.settlementTrusted, false);
-  const loose = published.journeys.filter((journey) => journey.operationId === "get:/chain/transaction-receipt");
-  assert.equal(loose.length > 0, true);
-  assert.equal(loose.every((journey) => journey.settlementTrusted === false), true);
-  assert.equal(loose.every((journey) => journey.useful !== "true" && journey.useful !== "agreed_negative"), true);
-  assert.equal(loose.every((journey) => journey.taskRef == null), true);
+  const routeJourneys = published.journeys.filter((journey) => journey.operationId === "get:/chain/transaction-receipt");
+  const boundRoute = routeJourneys.filter((journey) => journey.taskRef === bound.taskRef);
+  const unboundRoute = routeJourneys.filter((journey) => journey.taskRef == null);
+  assert.equal(boundRoute.length, 1);
+  assert.equal(boundRoute[0].settlementTrusted, false);
+  assert.equal(boundRoute[0].useful === "true" || boundRoute[0].useful === "agreed_negative", false);
+  assert.equal(unboundRoute.length > 0, true);
+  assert.equal(unboundRoute.every((journey) => journey.settlementTrusted === false), true);
+  assert.equal(unboundRoute.every((journey) => journey.useful !== "true" && journey.useful !== "agreed_negative"), true);
+  const taskRefs = projected.records.filter((row) => row?.schemaVersion === "samedaydesk.outcome-task-ref.v1");
+  const boundEventIds = taskRefs.map((row) => row.commerceEventId).sort();
+  const paidSuccess = projected.records.filter((row) => row?.v === 3 && row.route === "/chain/transaction-receipt" && row.result === "paid_success");
+  const unboundPaid = paidSuccess.filter((row) => !boundEventIds.includes(row.id));
+  assert.equal(boundEventIds.length, 3);
+  assert.equal(unboundPaid.length, 1);
+  assert.equal(unboundPaid[0].status, 200);
+  assert.equal(boundEventIds.includes(FOREIGN_EVENT), false);
+  assert.equal(paidSuccess.some((row) => row.id === FOREIGN_EVENT), false);
+  const customerJourney = receipt.journeys.find((journey) => journey.taskRef === bound.taskRef && journey.operationId === "normalized-transaction-receipt");
+  const paidJourney = receipt.journeys.find((journey) => journey.taskRef === bound.taskRef && journey.operationId === "get:/chain/transaction-receipt");
+  assert.deepEqual([...customerJourney.commerceEventIds].sort(), boundEventIds);
+  assert.deepEqual([...paidJourney.commerceEventIds].sort(), boundEventIds);
+  assert.equal(customerJourney.commerceEventIds.includes(unboundPaid[0].id), false);
+  assert.equal(paidJourney.useful === "true" || paidJourney.useful === "agreed_negative", false);
+  assert.equal(paidJourney.settlementTrusted, false);
+  const storedText = JSON.stringify(projected.records);
+  assert.equal(storedText.includes(FOREIGN_EVENT), false);
+  assert.equal(/[0-9a-f-]{36}\.[0-9a-f]{64}/.test(storedText), false);
   const extractJourney = published.journeys.find((journey) => journey.operationId === "get:/extract");
   assert.ok(extractJourney);
   assert.equal(extractJourney.taskRef, null);
@@ -462,7 +488,32 @@ test("disposable merchant execution joins retained, failed, and later records", 
   assert.equal(published.demandEstablished, false);
   assert.equal(published.globalTrafficEstablished, false);
   assert.equal(published.gaps.includes("commerce_event_not_task_bound"), true);
+  assert.equal(published.gaps.includes("causal_binding_conflict"), false);
   assert.equal(published.gaps.includes("effort_ledger_not_in_checkout"), true);
+  const taskPath = path.join(dataDir, "commerce-outcome-task-ref.ndjson");
+  const eventPath = path.join(dataDir, "commerce-events.ndjson");
+  const taskBefore = await readFile(taskPath, "utf8");
+  const eventsBefore = await readFile(eventPath, "utf8");
+  await stopChild(merchant.child);
+  merchant = await startMerchant({ dataDir, facilitatorUrl, rpcUrl });
+  assert.equal(await readFile(taskPath, "utf8"), taskBefore);
+  assert.equal(await readFile(eventPath, "utf8"), eventsBefore);
+  const replayedRecords = await readMerchantRecords(dataDir);
+  const replayed = await evaluateBundle({
+    schema: BUNDLE_SCHEMA,
+    coverage: "owner_qa",
+    records: replayedRecords.records,
+    observations: live,
+    truncatedRecords: replayedRecords.truncated,
+  });
+  const replayedCustomer = replayed.journeys.find((journey) => journey.taskRef === bound.taskRef && journey.operationId === "normalized-transaction-receipt");
+  const replayedPaid = replayed.journeys.find((journey) => journey.taskRef === bound.taskRef && journey.operationId === "get:/chain/transaction-receipt");
+  assert.equal(replayedCustomer.useful, "true");
+  assert.equal(replayedCustomer.ownerSlots.some((slot) => slot.serverExecution === "not_found" && slot.useful === "agreed_negative"), true);
+  assert.equal(replayedCustomer.ownerSlots.filter((slot) => slot.paidValidDelivery).length, 1);
+  assert.deepEqual([...replayedPaid.commerceEventIds].sort(), boundEventIds);
+  assert.equal(replayedPaid.useful === "true" || replayedPaid.useful === "agreed_negative", false);
+  assert.equal(replayed.economics.recognizedRevenueAtomic, "0");
   assert.equal(published.meters.tokenMeter, "unknown");
   const customer = JSON.parse(await readFile(path.join(dataDir, "useful-result-customer.ndjson"), "utf8").then((value) => value.trim().split("\n").filter(Boolean).at(-1)));
   assert.equal(customer.schema, "samedaydesk.useful-result-reuse.customer-grant.v1");
@@ -479,6 +530,9 @@ test("disposable merchant execution joins retained, failed, and later records", 
     files: projected.files,
     gaps: published.gaps,
     boundUseful: bound.useful,
+    agreedNegative: slots.some((slot) => slot.useful === "agreed_negative"),
+    boundEventIds,
+    paidUseful: paidJourney.useful,
     identicalBody: bound.identicalBody,
     revocationTransferred: bound.revocationTransferred,
   })}`);

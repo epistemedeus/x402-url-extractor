@@ -13,6 +13,8 @@ import {
   buildTaskRefRecord,
   createForwardOutcomeWriter,
   isSchemaValidDeliveryEvidence,
+  openCausalCommerceEvent,
+  sealCausalCommerceEvent,
   taskRefCapabilityEpoch,
 } from "./commerce-outcome-binding.mjs";
 import { validExtractBody } from "./http-delivery-evidence/test/helpers.mjs";
@@ -215,7 +217,7 @@ function emit(telemetry, { requestPath, headers, query = {}, statusCode = 200, b
   telemetry.middleware(req, res, () => { nextRuns += 1; });
   res.end(Buffer.from(JSON.stringify(body)));
   res.finish();
-  return { nextRuns, output: Buffer.concat(res.output) };
+  return { nextRuns, output: Buffer.concat(res.output), res };
 }
 
 test("optional task input cannot block a commerce event or replay payment", async () => {
@@ -306,6 +308,39 @@ test("optional task input cannot block a commerce event or replay payment", asyn
   } finally {
     if (previous === undefined) delete process.env.HTTP_DELIVERY_EVIDENCE_SETTLEMENT_CLASS;
     else process.env.HTTP_DELIVERY_EVIDENCE_SETTLEMENT_CLASS = previous;
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a caller event id cannot seal another response, and finish enqueues that id once", async () => {
+  const forged = "ffffffff-ffff-4fff-8fff-ffffffffffff";
+  const minted = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  assert.equal(sealCausalCommerceEvent(forged, "short"), null);
+  assert.equal(sealCausalCommerceEvent("not-a-uuid", TOKEN), null);
+  const proof = sealCausalCommerceEvent(minted, TOKEN);
+  assert.equal(openCausalCommerceEvent(proof, TOKEN), minted);
+  assert.equal(openCausalCommerceEvent(proof, `${TOKEN}-other-token-32-bytes-minimum`), null);
+  assert.equal(openCausalCommerceEvent(`${forged}.${"ab".repeat(32)}`, TOKEN), null);
+  assert.equal(openCausalCommerceEvent(forged, TOKEN), null);
+  const dir = await mkdtemp(path.join(tmpdir(), "causal-commerce-event-"));
+  try {
+    const telemetry = createCommerceTelemetry({ dataDir: dir, secret: "causal-actor-secret", internalToken: TOKEN });
+    const sent = emit(telemetry, {
+      requestPath: "/openapi.json",
+      headers: { "x-samedaydesk-commerce-event-id": forged, "x-commerce-event-id": forged },
+      body: { ok: true },
+    });
+    const sealed = telemetry.causalCommerceEventProof(sent.res);
+    const eventId = openCausalCommerceEvent(sealed, TOKEN);
+    assert.match(eventId, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    assert.notEqual(eventId, forged);
+    sent.res.finish();
+    await telemetry.flush();
+    const rows = (await readFile(telemetry.paths.currentPath, "utf8")).trim().split("\n").map((line) => JSON.parse(line));
+    assert.equal(rows.filter((row) => row.id === eventId).length, 1);
+    assert.equal(rows.some((row) => row.id === forged), false);
+    assert.equal((await readFile(telemetry.paths.currentPath, "utf8")).includes(sealed), false);
+  } finally {
     await rm(dir, { recursive: true, force: true });
   }
 });

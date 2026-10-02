@@ -10,6 +10,7 @@ import {
 const CUSTOMER_SCHEMA = "samedaydesk.useful-result-reuse.customer-grant.v1";
 const METRIC_SCHEMA = "samedaydesk.useful-result-reuse.metric.v1";
 const TASK_REF_SCHEMA = "samedaydesk.outcome-task-ref.v1";
+const COMMERCE_EVENT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const SELLER_SCHEMA = "samedaydesk.seller-repair-service.v1";
 const JOURNEY_SCHEMA = "samedaydesk.paid-useful-journey.v1";
 const MAINTAINED_SCHEMA = "samedaydesk.maintained-task.envelope.v1";
@@ -425,6 +426,44 @@ function linkRevocations(records, observations) {
   }
 }
 
+export function producerBindings(records) {
+  const byEvent = new Map();
+  const blocked = new Set();
+  const conflicts = [];
+  for (const record of records || []) {
+    if (!record || record.schemaVersion !== TASK_REF_SCHEMA) continue;
+    const taskRef = taskRefOrNull(record.taskRef);
+    const commerceEventId = typeof record.commerceEventId === "string" ? record.commerceEventId : "";
+    if (!taskRef || !COMMERCE_EVENT_ID.test(commerceEventId) || typeof record.operationId !== "string") continue;
+    if (blocked.has(commerceEventId)) continue;
+    const prior = byEvent.get(commerceEventId);
+    if (!prior) {
+      byEvent.set(commerceEventId, { taskRef, operationId: record.operationId });
+      continue;
+    }
+    if (prior.taskRef !== taskRef || prior.operationId !== record.operationId) {
+      conflicts.push(commerceEventId);
+      byEvent.delete(commerceEventId);
+      blocked.add(commerceEventId);
+    }
+  }
+  return { byEvent, conflicts };
+}
+
+// Attach a task ref only when a task-ref row names the commerce event id.
+// The route operation, settlement flag, and usefulness stay on their own rows.
+export function applyProducerBindings(records, observations) {
+  const { byEvent, conflicts } = producerBindings(records);
+  for (const row of observations || []) {
+    if (!row || row.taskRef || typeof row.commerceEventId !== "string") continue;
+    if (typeof row.operationId !== "string" || !row.operationId.includes(":/")) continue;
+    const binding = byEvent.get(row.commerceEventId);
+    if (!binding) continue;
+    row.taskRef = binding.taskRef;
+  }
+  return { conflicts };
+}
+
 export function adaptRecords(records) {
   const observations = [];
   const costs = [];
@@ -434,5 +473,6 @@ export function adaptRecords(records) {
     if (adapted.costs) costs.push(adapted.costs);
   }
   linkRevocations(records, observations);
-  return { observations, costs };
+  const binding = applyProducerBindings(records, observations);
+  return { observations, costs, bindingConflicts: binding.conflicts };
 }

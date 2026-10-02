@@ -451,11 +451,9 @@ export async function evaluateBundle(bundle, { prior = null, sealedAt = "2026-10
     "wallet_user_agent_email_and_ip_are_not_identity",
     "commerce_paid_success_is_not_useful_delivery",
   ];
-  const taskCommerce = new Set(normalized.filter((row) => row.taskRef && row.commerceEventId).map((row) => row.commerceEventId));
-  const looseCommerce = normalized.filter((row) => row.commerceEventId && !row.taskRef);
-  if (looseCommerce.length && [...looseCommerce].every((row) => !taskCommerce.has(row.commerceEventId))) {
-    gaps.push("commerce_event_not_task_bound");
-  }
+  const looseCommerce = normalized.filter((row) => row.commerceEventId && !row.taskRef && String(row.operationId).includes(":/"));
+  if (looseCommerce.length) gaps.push("commerce_event_not_task_bound");
+  if (adapted.bindingConflicts?.length) gaps.push("causal_binding_conflict");
   if (truncated) gaps.push("truncated_record");
   if (journeys.some((journey) => journey.status === "unjoinable")) gaps.push("duplicate_id_conflict");
   if (journeys.some((journey) => journey.status === "unknown_source")) gaps.push("unknown_source");
