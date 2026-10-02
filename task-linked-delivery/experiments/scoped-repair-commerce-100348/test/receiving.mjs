@@ -13,14 +13,14 @@ cpSync(pkg,path.join(dir,prefix),{recursive:true});symlinkSync(path.join(root,'n
 const patch=path.join(dir,prefix,'route/ROOT-INTEGRATION.patch');
 try{run(process.execPath,[path.join(dir,prefix,'export/install-candidate.mjs'),'--apply'],{timeout:10000});}catch(error){if(error.message!=='receiving_check_failed')throw error;throw new Error('export_required_before_receiving');}
 run('git',['apply','--check',patch],{timeout:5000});run('git',['apply',patch],{timeout:5000});
-run('git',['add','server.js','commerce-events.mjs','experiments/seller-repair-service-100266','public-acquisition',prefix]);
+run('git',['add','server.js','commerce-events.mjs','useful-result-reuse/store.mjs','experiments/seller-repair-service-100266','public-acquisition',prefix]);
 run('git',['-c','user.name=Disposable receiving QA','-c','user.email=qa@example.invalid','commit','-m','Disposable Root mount and source defect regression']);
 const env={PATH:process.env.PATH||'',SCOPED_ROOT_MOUNT_PATCHED:'1',SCOPED_SURFACE_AUTHORITY:process.env.SCOPED_SURFACE_AUTHORITY||'/home/ubuntu/root-sol-347/packages/accepted-derivative/src/index.mjs',
   NEO_OWNER_ROOT:process.env.NEO_OWNER_ROOT||'/home/ubuntu/root-sol-347',SKILLGUARD_ROOT:process.env.SKILLGUARD_ROOT||'/home/ubuntu/sol348-skillguard'};
 const suites=[['package',[prefix+'/test/*.test.mjs']],['commerce-journal-source',[
   'experiments/seller-repair-service-100266/test/*.test.mjs','task-linked-delivery/experiments/task-demand-100339/test/*.test.mjs',
   'commerce-events.test.mjs','commerce-payment-evidence.test.mjs','commerce-outcome-binding*.test.mjs','commerce-settlement-reconciler.test.mjs',
-  'commerce-settlement-source-delivery.test.mjs','task-linked-delivery/receiving.test.mjs']],
+  'commerce-settlement-source-delivery.test.mjs','task-linked-delivery/receiving.test.mjs','useful-result-reuse.test.mjs']],
   ['surface-source',['experiments/scoped-surface-delivery-100312/test/*.test.mjs']],['public-acquisition',['public-acquisition/*.test.mjs']]];
 const checks=[];
 for(const [name,files] of suites){

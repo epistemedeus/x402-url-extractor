@@ -48,6 +48,11 @@ test('actual unpaid merchant quote and existing signatures bind exact scoped acc
   differentPlan.planId=digest(Object.fromEntries(Object.entries(differentPlan).filter(([k])=>k!=='planId')));
   assert.equal((await env.service.accept(signed(packet,key,{plan:differentPlan}))).acceptance.authorized,false);
   assert.deepEqual(real.calls,{verify:0,settle:0});
+  mutation={url:packet.quote.offer.url+'&requiredPaths=another-task'};
+  const wrongQuote={...request,requestId:'wrong-initial-quote'};
+  const wrongPacket=await env.service.deliver(wrongQuote);
+  assert.equal(wrongPacket.packet.quote.reason,'quote_operation_binding_changed');
+  assert.equal(wrongPacket.packet.quote.authorized,false);
 });
 
 test('assessment error, no-match, 402, declined work and a second priced scope never mint payment authority',async t=>{

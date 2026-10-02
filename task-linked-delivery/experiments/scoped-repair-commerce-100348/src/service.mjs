@@ -3,6 +3,7 @@ import { allowance, fail } from './bounds.mjs';
 import { digest, evaluateAcceptance, PACKET, RECORD, sealPacket, validateRequest, verifyPacket } from './contracts.mjs';
 import { checkAcceptance, quoteFor } from './authority.mjs';
 import { auditUrl, ownerInput, projectObserverEvidence, sellerRun, surfaceRun } from './owners.mjs';
+import { packetAccess } from './packet-store.mjs';
 
 const FILE = 'scoped-repair-packets.ndjson';
 const no = reason => ({ status: 'unknown', reason });
@@ -16,9 +17,10 @@ function summary(report) {
 
 export function createScopedRepairService({ store = null, skillguardRoot = null, retention = null, regressionFor = null,
   offerFor = null, evidenceFor = null, publicKeys = new Map(), now = () => Date.now() } = {}) {
+  const packets=store?packetAccess(store,FILE):null;
   async function stored(packetId, budget) {
     if (!store) fail('delivery_store_unavailable');
-    const rows = await budget.wait(store.read(FILE)); budget.read(Buffer.byteLength(JSON.stringify(rows)));
+    const rows = await budget.wait(packets.read(budget));
     const matches = rows.filter(row => row.schema === RECORD && row.packet?.packetId === packetId);
     if (matches.length !== 1) fail(matches.length ? 'ambiguous_packet' : 'packet_not_found');
     return verifyPacket(matches[0].packet);
@@ -66,9 +68,10 @@ export function createScopedRepairService({ store = null, skillguardRoot = null,
     }
     let quote = { status: 'withheld', reason: 'free_output_already_sufficient', authorized: false, paymentPerformed: false };
     if (qualification !== 'free_already_sufficient') {
+      const url=request.kind==='seller'?auditUrl(request):null;
       const offer = request.quoteIntent && offerFor && request.kind === 'seller'
-        ? await budget.wait(Promise.resolve(offerFor({ request, url: auditUrl(request), budget }))) : null;
-      quote = quoteFor(request, binding, offer, now());
+        ? await budget.wait(Promise.resolve(offerFor({ request, url, budget }))) : null;
+      quote = quoteFor(request, binding, offer, now(),url);
     }
     const packet = { schema: PACKET, requestId: request.requestId, binding, qualification: { state: qualification, reason, paidDemandEstablished: false },
       claimant: { expectation: request.kind === 'surface' ? { concern: request.input.concern, result: 'no_match' } : request.input.expect,
@@ -82,7 +85,7 @@ export function createScopedRepairService({ store = null, skillguardRoot = null,
       reuse: { localRerunPermitted: true, currentSharingAuthorized: regression?.authorized === true, paymentInherited: false, outcomeInherited: false },
       effort: { executionMs: Math.round((performance.now() - started) * 1000) / 1000, allowance: budget.snapshot(),
         marginalCashAtomic: '0', providerCalls: 0, modelTokens: 'unknown', apiEquivalentCost: 'unknown', includedQuotaOpportunityCost: 'unknown', sharedRndCost: 'unknown' },
-      delivery: { replayAvailable: Boolean(store), proof: 'owner_qa_execution', sourceAcceptedByRoot: false },
+      delivery: { replayAvailable: Boolean(store), proof: 'source_execution_without_customer_attribution', sourceAcceptedByRoot: false },
       publication: { productionHosted: false, hostedAcquisitionVerified: false, outsideUseful: false },
       paymentPerformed: false, skuAdded: false, priceChanged: false, recognizedRevenueAtomic: '0' };
     packet.acceptanceResult = evaluateAcceptance(packet);
@@ -93,8 +96,8 @@ export function createScopedRepairService({ store = null, skillguardRoot = null,
       validateRequest(request); budget.restrict(request.limits); ownerInput(request);
       const binding = validateRequest(request), requestDigest = digest(request);
       if (!store) return { packet: await fresh(request, binding, budget), replay: false, persistence: 'unconfigured' };
-      const response = await budget.wait(store.mutate(FILE, async rows => {
-        budget.read(Buffer.byteLength(JSON.stringify(rows))); budget.check();
+      const response = await budget.wait(packets.mutate(budget, async rows => {
+        budget.check();
         const old = rows.filter(row => row.schema === RECORD && row.requestId === request.requestId && row.callerId === request.task.callerId);
         if (old.length > 1) fail('ambiguous_request');
         if (old.length) {

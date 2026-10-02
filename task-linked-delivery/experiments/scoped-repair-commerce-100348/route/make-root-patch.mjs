@@ -17,8 +17,8 @@ function add(file,change){
 }
 try{
   add('server.js',source=>{
-    source=replace(source,'import { mountSellerRepairDiagnosis }',
-      'import { mountScopedRepairCommerce } from "./task-linked-delivery/experiments/scoped-repair-commerce-100348/route/mount.mjs";\nimport { isScopedRepairPath } from "./task-linked-delivery/experiments/scoped-repair-commerce-100348/route/paths.mjs";\nimport { mountSellerRepairDiagnosis }');
+    source=replace(source,'import { paymentMiddleware, x402ResourceServer }',
+      'import { mountScopedRepairCommerce } from "./task-linked-delivery/experiments/scoped-repair-commerce-100348/route/mount.mjs";\nimport { isScopedRepairPath } from "./task-linked-delivery/experiments/scoped-repair-commerce-100348/route/paths.mjs";\nimport { paymentMiddleware, x402ResourceServer }');
     source=replace(source,'if (isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path))',
       'if (isScopedRepairPath(req.path) || isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path))');
     return replace(source,'app.use(commerceTelemetry.middleware);',
@@ -26,6 +26,8 @@ try{
   });
   add('commerce-events.mjs',source=>replace(source,'const EXACT_ROUTES = new Map([',
     'const EXACT_ROUTES = new Map([\n  // Known free calls use the existing non-paid request classification.\n  ...["deliver", "reuse", "accept", "review"].map((command) => {\n    const route = `/commerce/scoped-repair/${command}`;\n    return [route, { route, kind: "unmatched" }];\n  }),'));
+  add('useful-result-reuse/store.mjs',source=>replace(source,'if (entry && entry.size >= maxFileBytes)',
+    'if (entry && (entry.size >= maxFileBytes || entry.size + Buffer.byteLength(line) > maxFileBytes))'));
   // Real inherited defect: an observed wrong predicate value was classified
   // as a missing field, preventing the existing caller-owned repair/retest.
   add('experiments/seller-repair-service-100266/src/classify.mjs',source=>replace(source,'  if (intake.question === "declaration_contract") {\n    return {',

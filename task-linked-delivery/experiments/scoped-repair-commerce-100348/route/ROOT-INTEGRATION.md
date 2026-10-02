@@ -17,7 +17,8 @@ git apply task-linked-delivery/experiments/scoped-repair-commerce-100348/route/R
 The patch adds four known free routes to the existing commerce classifier,
 bypasses the global JSON parser so their full allowance starts before intake,
 and mounts them after telemetry and before payment middleware. It also fixes
-seller classification of a present, incorrect scalar and seals historical
+seller classification of a present, incorrect scalar, rotates the existing
+store before a bounded append would make its file unreadable, and seals historical
 exporters. It changes no paid route, payment rail, signer, price or journal.
 All seller predecessor archive bytes remain exact. Any future seller source
 publication must use a successor version, rather than regenerate 0.2/0.3/0.4.

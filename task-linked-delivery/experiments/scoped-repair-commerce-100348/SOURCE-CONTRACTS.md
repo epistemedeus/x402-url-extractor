@@ -16,7 +16,7 @@ human-facing pages. The staged CONTEXT.md and the 100348 dispatch were read.
 | Neo caller-composition258 / external-job-intake | quotes.mjs; lib/brief.py and capability.py | Unknown equivalence withholds pricing; preserve acceptance; advertised budget and auth errors create no authority |
 | Merchant commerce-outcome-binding + settlement325 | existing producer proof/task ref, forward schema and reconciler | No join by label, wallet or HTTP200; unknown settlement survives restart |
 | Sol339 task-demand | exportObserverSource/projectObserverEvidence | Consume authorized read-only cuts; current generic scanner usefulness is outside the receipt-specific retained contract |
-| useful-result-reuse/store.mjs | createReuseStore | Optional isolated delivery packet storage; no replacement DB or shared journal writes; one configured writer |
+| useful-result-reuse/store.mjs | createReuseStore, physical-byte preflight | Optional isolated packet storage; no replacement DB or shared journal writes; one configured writer; Root patch rotates before append would exceed its readable bound |
 
 Independent untouched baseline: 172 tests, 171 pass, 1 fail. The inherited
 caller-execution test rebuilds sealed seller0.3.0 and changes its bytes;

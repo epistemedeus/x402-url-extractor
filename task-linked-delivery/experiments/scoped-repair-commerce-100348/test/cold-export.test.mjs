@@ -58,8 +58,8 @@ test('licensed cold HTTP acquisition, two caller tasks, changed later input and 
   recovered.packet.binding.termsDigest='altered';await writeFile(packetFile,JSON.stringify(recovered));
   assert.equal((await processRun(['bin/scoped-repair.mjs','check','--packet','delivery.json'],{cwd:two})).code,2);
   const receipt={schema:'samedaydesk.scoped-repair.cold-readback.v1',sourceCommit:provenance.sourceCommit,archiveSha256:hash(bytes),archiveBytes:bytes.length,
-    acquiringRoute:'actual_public_acquisition_engine_loopback',tasks:[{task:staticTask.task.id,qualification:staticDelivery.packet.qualification.state,passed:true},
-      {task:outputTask.task.id,qualification:outputDelivery.packet.qualification.state,passed:true}],usefulNegative:true,contradictoryOutcome:true,
+    acquiringRoute:'actual_public_acquisition_engine_loopback',tasks:[{task:staticTask.task.id,qualification:staticDelivery.packet.qualification.state,passed:true,executionMs:staticDelivery.packet.effort.executionMs},
+      {task:outputTask.task.id,qualification:outputDelivery.packet.qualification.state,passed:true,executionMs:outputDelivery.packet.effort.executionMs}],usefulNegative:true,contradictoryOutcome:true,
     changedLaterInput:true,restartedReplay:true,strippedRoots:2,npmInstallRequired:false,wallMs:Math.round(performance.now()-started),
     productionHosted:false,hostedAcquisitionVerified:false,outsideUseful:false,paidProviderCalls:0,settlement:'unknown',recognizedRevenueAtomic:'0'};
   if(process.env.SCOPED_COLD_RECEIPT)await writeFile(process.env.SCOPED_COLD_RECEIPT,JSON.stringify(receipt,null,2)+'\n');

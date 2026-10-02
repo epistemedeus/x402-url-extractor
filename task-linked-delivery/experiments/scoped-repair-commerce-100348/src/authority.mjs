@@ -5,12 +5,14 @@ export const AUDIT_PRICE = '10000';
 export const AUDIT_ROUTE = '/commerce/seller-integrity-audit';
 const no = reason => ({ status: 'withheld', reason, authorized: false, paymentPerformed: false });
 
-export function quoteFor(request, binding, offer, now) {
+export function quoteFor(request, binding, offer, now,expectedUrl) {
   if (!request.quoteIntent) return no('quote_not_requested');
   if (request.kind !== 'seller' || request.input.question !== 'declaration_contract') return no('existing_audit_is_not_this_scope');
   if (!offer) return no('current_offer_unavailable');
+  if(Object.hasOwn(offer,'body'))return no('quote_operation_binding_changed');
   offer = Object.fromEntries(['method','url','protocol','amountAtomic','recipient','network','asset','expiresAt'].map(k => [k,offer[k]]));
   if (offer.amountAtomic !== AUDIT_PRICE || new URL(offer.url).pathname !== AUDIT_ROUTE || offer.method !== 'GET') return no('existing_price_or_route_changed');
+  if(!expectedUrl||digest(normalizeRequest('GET',expectedUrl))!==digest(normalizeRequest(offer.method,offer.url)))return no('quote_operation_binding_changed');
   const intent = createIntent({ purposeId: request.task.id, needDigest: binding.digest,
     output: { requiredFields: ['report.responseContract','report.repairPlan','report.findings'], maxResponseBytes: 100000 },
     economics: request.quoteIntent.economics, policy: request.quoteIntent.policy }, { now, ttlMs: 300000 });

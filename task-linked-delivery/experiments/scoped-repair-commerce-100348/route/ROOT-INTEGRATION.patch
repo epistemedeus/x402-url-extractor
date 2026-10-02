@@ -1,16 +1,16 @@
 diff --git a/server.js b/server.js
-index 4418d14..4112a26 100644
+index 4418d14..77e0e67 100644
 --- a/server.js
 +++ b/server.js
-@@ -18,6 +18,8 @@
- // It does not change or intercept the standard Base exact or native MPP paths.
- 
- import { installPaidReceiptRetention, noteReceiptRetention } from "./useful-result-reuse/delivery.mjs";
+@@ -24,6 +24,8 @@ import { resolveHostedScanner } from "./experiments/scoped-surface-delivery-1003
+ import { existsSync, writeFileSync } from "node:fs";
+ import { fileURLToPath } from "node:url";
+ import express from "express";
 +import { mountScopedRepairCommerce } from "./task-linked-delivery/experiments/scoped-repair-commerce-100348/route/mount.mjs";
 +import { isScopedRepairPath } from "./task-linked-delivery/experiments/scoped-repair-commerce-100348/route/paths.mjs";
- import { mountSellerRepairDiagnosis } from "./experiments/seller-repair-service-100266/route/mount.mjs";
- import { mountScopedSurfaceDelivery } from "./experiments/scoped-surface-delivery-100312/route/mount.mjs";
- import { resolveHostedScanner } from "./experiments/scoped-surface-delivery-100312/deploy/hosted-scanner.mjs";
+ import { paymentMiddleware, x402ResourceServer } from "@x402/express";
+ import { HTTPFacilitatorClient } from "@x402/core/server";
+ import { ExactEvmScheme } from "@x402/evm/exact/server";
 @@ -538,7 +540,7 @@ const jsonParser = express.json({
    },
  });
@@ -48,6 +48,19 @@ index 3ba5949..f0ed8a0 100644
    ["/", { route: "/", kind: "discovery" }],
    ["/healthz", { route: "/healthz", kind: "excluded" }],
    ["/.well-known/x402", { route: "/.well-known/x402", kind: "discovery" }],
+diff --git a/useful-result-reuse/store.mjs b/useful-result-reuse/store.mjs
+index 0a7d0b8..ffe43e4 100644
+--- a/useful-result-reuse/store.mjs
++++ b/useful-result-reuse/store.mjs
+@@ -94,7 +94,7 @@ export function createReuseStore({ dataDir, maxFileBytes = MAX_FILE_BYTES, maxRe
+     const entry = await lstat(current).catch((error) => (error?.code === "ENOENT" ? null : Promise.reject(error)));
+     if (entry?.isSymbolicLink()) fail("symlink");
+     if (entry && !entry.isFile()) fail(entry.isFIFO() ? "fifo" : "not_file");
+-    if (entry && entry.size >= maxFileBytes) {
++    if (entry && (entry.size >= maxFileBytes || entry.size + Buffer.byteLength(line) > maxFileBytes)) {
+       await unlink(rotated).catch((error) => {
+         if (error?.code !== "ENOENT") throw error;
+       });
 diff --git a/experiments/seller-repair-service-100266/src/classify.mjs b/experiments/seller-repair-service-100266/src/classify.mjs
 index fcf0d5c..66e318d 100644
 --- a/experiments/seller-repair-service-100266/src/classify.mjs
@@ -170,3 +183,115 @@ index 37378b9..f2f2a30 100644
    assertFrozen();
    rmSync(STAGE, { recursive: true, force: true });
    ensureDir(STAGE);
+diff --git a/public-acquisition/manifest.json b/public-acquisition/manifest.json
+index 770b2d7..c2a3ff7 100644
+--- a/public-acquisition/manifest.json
++++ b/public-acquisition/manifest.json
+@@ -395,6 +395,107 @@
+       "measuredSavings": false,
+       "independentDemand": false,
+       "carriesPackageClaims": false
++    },
++    {
++      "id": "scoped-repair-commerce-100348",
++      "version": "0.1.0",
++      "role": "archive",
++      "filename": "scoped-repair-commerce-100348-0.1.0.tar.gz",
++      "relativePath": "scoped-repair-commerce-100348/0.1.0/scoped-repair-commerce-100348-0.1.0.tar.gz",
++      "bytes": 37078,
++      "sha256": "58d915c5b0ebaad0a29cc46a9102b51b943ead96de3b3c5185a530edc14c3b27",
++      "mediaType": "application/gzip",
++      "originContentType": "application/gzip",
++      "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.0/scoped-repair-commerce-100348-0.1.0.tar.gz",
++      "attribution": "Copyright (c) 2026 SameDayDesk",
++      "licenseId": "MIT",
++      "sourceQualification": "unknown",
++      "sourceQualified": false,
++      "privateGit": "unavailable",
++      "hostedAcquisitionVerified": false,
++      "paidLaunch": false,
++      "measuredSavings": false,
++      "independentDemand": false,
++      "publicationStatus": "candidate",
++      "forbiddenPathPrefixes": [
++        ".env",
++        "data/",
++        "secrets/",
++        "server.js",
++        "node_modules/"
++      ],
++      "inventory": {
++        "path": "inventories/scoped-repair-commerce-100348-0.1.0.json",
++        "fileSha256": "0ccafdd684a6039f14f8d02a665d7b8fdb0e1015fee7c62755c946b66bda4853",
++        "memberCount": 15
++      }
++    },
++    {
++      "id": "scoped-repair-commerce-100348",
++      "version": "0.1.0",
++      "role": "provenance",
++      "filename": "provenance.json",
++      "relativePath": "scoped-repair-commerce-100348/0.1.0/provenance.json",
++      "bytes": 7978,
++      "sha256": "b6befc52484f3755ec2c02b4adaa3fc7d51bcebabaded7dea0005aab64a28cea",
++      "mediaType": "application/json; charset=utf-8",
++      "originContentType": "text/plain; charset=utf-8",
++      "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.0/provenance.json",
++      "attribution": "Copyright (c) 2026 SameDayDesk",
++      "licenseId": "MIT",
++      "sourceQualification": "unknown",
++      "sourceQualified": false,
++      "privateGit": "unavailable",
++      "hostedAcquisitionVerified": false,
++      "paidLaunch": false,
++      "measuredSavings": false,
++      "independentDemand": false,
++      "publicationStatus": "candidate",
++      "carriesPackageClaims": false
++    },
++    {
++      "id": "scoped-repair-commerce-100348",
++      "version": "0.1.0",
++      "role": "license",
++      "filename": "LICENSE",
++      "relativePath": "scoped-repair-commerce-100348/0.1.0/LICENSE",
++      "bytes": 1068,
++      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
++      "mediaType": "text/plain; charset=utf-8",
++      "originContentType": "text/plain; charset=utf-8",
++      "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.0/LICENSE",
++      "attribution": "Copyright (c) 2026 SameDayDesk",
++      "licenseId": "MIT",
++      "sourceQualification": "unknown",
++      "sourceQualified": false,
++      "privateGit": "unavailable",
++      "hostedAcquisitionVerified": false,
++      "paidLaunch": false,
++      "measuredSavings": false,
++      "independentDemand": false,
++      "publicationStatus": "candidate"
++    },
++    {
++      "id": "scoped-repair-commerce-100348",
++      "version": "0.1.0",
++      "role": "source-notice",
++      "filename": "SOURCE-NOTICE.txt",
++      "relativePath": "scoped-repair-commerce-100348/0.1.0/SOURCE-NOTICE.txt",
++      "bytes": 525,
++      "sha256": "69c2976f40a52b602d6caa270d202f255380977612622f5285fddc0fd6df18d3",
++      "mediaType": "text/plain; charset=utf-8",
++      "originContentType": "text/plain; charset=utf-8",
++      "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.0/SOURCE-NOTICE.txt",
++      "attribution": "Copyright (c) 2026 SameDayDesk",
++      "licenseId": "MIT",
++      "sourceQualification": "unknown",
++      "sourceQualified": false,
++      "privateGit": "unavailable",
++      "hostedAcquisitionVerified": false,
++      "paidLaunch": false,
++      "measuredSavings": false,
++      "independentDemand": false,
++      "publicationStatus": "candidate"
+     }
+   ]
+ }

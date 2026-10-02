@@ -1,0 +1,8 @@
+scoped-repair-commerce-100348 0.1.0
+Copyright (c) 2026 SameDayDesk. MIT.
+This isolated integration consumes the owning seller0.4.1, SkillGuard312/319,
+agent-payment-policy, existing storage and Sol339 causal projection contracts.
+Frozen predecessor archives are preserved. Private Neo authority is optional
+and is never copied into the public client. No signer, new price or payment
+executor is added. Source, loopback QA, hosting, useful outside delivery and
+settlement are separate observations. Publication is unverified.
