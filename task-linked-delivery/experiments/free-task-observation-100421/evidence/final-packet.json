@@ -1,0 +1,344 @@
+{
+  "schema": "sol421.final-packet.v1",
+  "observedAt": "2026-10-02T18:45:04.890Z",
+  "baseCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+  "sourceCommit": "f8bae389eee4c201c29007212d8b0977b8c0b4be",
+  "branch": "codex/sol-free-use-causal-bridge-100421",
+  "ownedScope": "task-linked-delivery/experiments/free-task-observation-100421",
+  "checkpoints": [
+    "f8bae389eee4c201c29007212d8b0977b8c0b4be Export opt-in free task observation bridge and exact-source receiving",
+    "6703c8572594400eec6a9e0d08f9fbf9365c7431 Checkpoint free task observation ownership and receiving plan"
+  ],
+  "onlyOwnedChangedPaths": true,
+  "changedTrackedPathCount": 84,
+  "sharedWorkspaceChanged": false,
+  "rootPatchesApplied": false,
+  "preservation": [
+    {
+      "class": "upstreamFiles",
+      "path": "commerce-events.mjs",
+      "sha256": "a825425e38c521c6737892ca67f46d0a6a26bb92f0beae9f9946ddb1d6215f5f",
+      "unchanged": true
+    },
+    {
+      "class": "upstreamFiles",
+      "path": "commerce-outcome-binding.mjs",
+      "sha256": "67661ed440fd96a10dc5e08238453486779b889b67f933d228fa2a94c4193c54",
+      "unchanged": true
+    },
+    {
+      "class": "upstreamFiles",
+      "path": "useful-result-reuse/service.mjs",
+      "sha256": "9dacc6f3a4bd7dbb089a52431f4bfe941ddafcf3d0ec8ed17076bd43e4ba87fc",
+      "unchanged": true
+    },
+    {
+      "class": "upstreamFiles",
+      "path": "useful-result-reuse/http.mjs",
+      "sha256": "864830636f3af2daab3c90e7344bab5d11097d902cfffadd53ba2f1db387fe9d",
+      "unchanged": true
+    },
+    {
+      "class": "upstreamFiles",
+      "path": "useful-result-reuse/customer-grant.mjs",
+      "sha256": "a3a17fa1d82b4a5620dddaf34a7da111e67a01185ed46083fca84fe9516c89ac",
+      "unchanged": true
+    },
+    {
+      "class": "upstreamFiles",
+      "path": "useful-result-reuse/store.mjs",
+      "sha256": "efebae286004b4b901a2c03019bdd4b610d67d8e4f4e754d530d18a27dd29e99",
+      "unchanged": true
+    },
+    {
+      "class": "upstreamFiles",
+      "path": "transaction-receipt.mjs",
+      "sha256": "68e420952a517ab5c820babc2f02c2f43b29f3b7e24c69d92cf70863e189793f",
+      "unchanged": true
+    },
+    {
+      "class": "upstreamFiles",
+      "path": "paid-useful-journey.mjs",
+      "sha256": "2d3f747490cf837e23fe058ac4b5aad8544e7c7dd1712f41fbfe575214650d47",
+      "unchanged": true
+    },
+    {
+      "class": "upstreamFiles",
+      "path": "task-linked-delivery/experiments/task-demand-100339/src/project.mjs",
+      "sha256": "7e0e283c542d7a52cc20203780eb15096d2d02542fd3bcdf0d380507170b0598",
+      "unchanged": true
+    },
+    {
+      "class": "upstreamFiles",
+      "path": "task-linked-delivery/experiments/task-demand-100339/src/export.mjs",
+      "sha256": "c9ce1d8359e92a7596bfb15bda94737c9c00a0195709032086d485037b75cbeb",
+      "unchanged": true
+    },
+    {
+      "class": "upstreamFiles",
+      "path": "docs/reviews/sol395-causal-task-receiving/native-ports.mjs",
+      "sha256": "9f9252ef7064cef2fe38766273d1795f66d20e2816f5e947b388e52a4f2e5e5b",
+      "unchanged": true
+    },
+    {
+      "class": "upstreamFiles",
+      "path": "docs/reviews/sol395-causal-task-receiving/receiving.test.mjs",
+      "sha256": "85ae2b8468acc885a00ff7be50c18dae5db55ebb629ce92490a42aedc328afe3",
+      "unchanged": true
+    },
+    {
+      "class": "upstreamFiles",
+      "path": "docs/reviews/sol395-causal-task-receiving/evidence/free-result.retained.json",
+      "sha256": "ef113d0bb83422d9d52ac52a25e0577f9040a22d74b9760522f32363aedefd19",
+      "unchanged": true
+    },
+    {
+      "class": "frozenArchives",
+      "path": "task-linked-delivery/experiments/task-demand-100339/export/public/bytes/task-demand-100339/0.1.0/task-demand-100339-0.1.0.tar.gz",
+      "sha256": "44209579e6a005e6f80dbe7f26946fbb4a52b236d8c32e326eba5761b4d749f5",
+      "unchanged": true
+    },
+    {
+      "class": "frozenArchives",
+      "path": "docs/reviews/sol395-causal-task-receiving/consumer/public/bytes/task-demand-100339/0.1.1/task-demand-100339-0.1.1.tar.gz",
+      "sha256": "6cec3a3f4b3f51f485f1bf55688305b83a9fb41bbc34b31f30f6a774ef100cbb",
+      "unchanged": true
+    },
+    {
+      "class": "reusedSources",
+      "path": "task-linked-delivery/experiments/task-demand-100339/src/bounds.mjs",
+      "sha256": "8e2d5e1cfb41319683862113ef8dbea9796cf421fa50fac47e57e30e89b603a6",
+      "adaptation": "byte exact"
+    },
+    {
+      "class": "reusedSources",
+      "path": "task-linked-delivery/experiments/task-demand-100339/vendor/causal-contract.mjs",
+      "sha256": "ec58a8bcfd0c232c33807ae5ea69d2831c2d715ff07d27a1d7749c13e9c333b1",
+      "adaptation": "byte exact"
+    },
+    {
+      "class": "reusedSources",
+      "path": "task-linked-delivery/experiments/task-demand-100339/src/export.mjs",
+      "sha256": "c9ce1d8359e92a7596bfb15bda94737c9c00a0195709032086d485037b75cbeb",
+      "adaptation": "relative imports only"
+    }
+  ],
+  "sourceMemberChecks": [
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/LICENSE",
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
+      "bytes": 1068
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/README.md",
+      "sha256": "868b4b00e81831ccfd2cc6123e2d3819080383ad628d09aa1c2701a652ae85a7",
+      "bytes": 4021
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/SOURCE-NOTICE.txt",
+      "sha256": "e07725374dd52db9c9bf9cc884811a84eeb55975733d06e4b6546a6a383e44ac",
+      "bytes": 505
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/PIN.json",
+      "sha256": "46a39dc6f0d74cc2c0dafc22bee7939e14ecab0da18bf73bc55e99665894d0d7",
+      "bytes": 4960
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/package.json",
+      "sha256": "fe6cfa28665aab4909aa654f8bb23aa3d4158c33884947522f12ce6bacceecd6",
+      "bytes": 286
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/bin/free-task-observation.mjs",
+      "sha256": "b282b257f82cc0bfb38d6cd2fc722639f7a30513d3b00f059f4df5c220272807",
+      "bytes": 2618
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/src/receipt.mjs",
+      "sha256": "08fd8ad2b046437ad3ca42187a10eebeb6d3615d610df4b74ec31797e65b8f45",
+      "bytes": 5167
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/src/export.mjs",
+      "sha256": "f8040f3f84f69c76ebd5954ea16f6134433a6430795b16d476c7188c8ef36f85",
+      "bytes": 6162
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/src/project.mjs",
+      "sha256": "011f5cc4c9cebc4a1503b990ac58fc64fb1c1f6ee6cac15323f083160c975e14",
+      "bytes": 13232
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/src/integration.mjs",
+      "sha256": "dfb9753e36315d9be9132386ebeb2788ec7a01bde78b8355175e64735c7de804",
+      "bytes": 12109
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/src/http-integration.mjs",
+      "sha256": "498f45bb9d9aae0b5cd1c19a13a07a407b39b4dffe76f149c29ea5af83031b76",
+      "bytes": 2918
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/vendor/bounds.mjs",
+      "sha256": "8e2d5e1cfb41319683862113ef8dbea9796cf421fa50fac47e57e30e89b603a6",
+      "bytes": 4022
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/vendor/causal-contract.mjs",
+      "sha256": "ec58a8bcfd0c232c33807ae5ea69d2831c2d715ff07d27a1d7749c13e9c333b1",
+      "bytes": 10549
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/vendor/task-demand-export.mjs",
+      "sha256": "381cf7befbd0793ba9d67b514221cbc857a6092030df33a3b19d5a2554f06930",
+      "bytes": 8149
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/fixtures/after.bundle.json",
+      "sha256": "7a60e8717011bb6154f222fea4c61d1dcb421ba3ea0cea23355725f150adc3e2",
+      "bytes": 31588
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/fixtures/395-gap.bundle.json",
+      "sha256": "eee39f53341837a0dfb402c617646398562233afd63f62b52e6f9bf52b2b1db2",
+      "bytes": 20476
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/test/portable.test.mjs",
+      "sha256": "169450971729ddf31cd860c1129bcc229934df64041ffb2912408040d3aabfb9",
+      "bytes": 4718
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/test/direct-equal-input.mjs",
+      "sha256": "e8898b727c5c31e6d6aeaed9085f1a3e46202d065ead85285467fb72cfcc7e33",
+      "bytes": 3826
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/export/ROOT-FREE-RESPONSE-OBSERVATION.patch",
+      "sha256": "671df70ae0087427281153af4e1aba9b6763a59755162213f11bec087c696134",
+      "bytes": 4005
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/export/ROOT-CUSTOMER-STORE-ADAPTER.patch",
+      "sha256": "9db7a6c60c0d4acc7d3fd100a84ef405efbdbdad6f797bdfacc974f356b52b82",
+      "bytes": 874
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/export/ROOT-OBSERVATION-MOUNT.patch",
+      "sha256": "9d6b4aecda72542250e4c773a599785d8b248f0c2fa921c6de592be2fae6bb6f",
+      "bytes": 904
+    }
+  ],
+  "archive": {
+    "filename": "free-task-observation-100421-0.1.0.tar.gz",
+    "bytes": 33783,
+    "sha256": "dc73c078ea88837220baa45ec0f17872ea1eeba4c6bc8bcc032f2adf7c36f48c",
+    "members": 21,
+    "path": "task-linked-delivery/experiments/free-task-observation-100421/export/public/bytes/free-task-observation-100421/0.1.0/free-task-observation-100421-0.1.0.tar.gz",
+    "sourceTreeDigest": "6f44ab07a9467ee177b218f4926799a31d0922fbd2828cf60a03922eeb6e2a8d"
+  },
+  "finalArtifacts": [
+    {
+      "path": "RESULT.md",
+      "bytes": 14147,
+      "sha256": "b1185626084a9b0a2a140e5d30dd278ec8199a03fc2a844578173f8b575bff2f"
+    },
+    {
+      "path": "HEAVY-IMPLEMENTATION-PLAN.md",
+      "bytes": 10699,
+      "sha256": "a1417206146571a8cbcdb9d5c49d125972a0008442367e19690689ad1f12123d"
+    },
+    {
+      "path": "evidence/decision-changing-gap.json",
+      "bytes": 7899,
+      "sha256": "67e1974a9907096ed98179357d6e3cb7b2b7a604f86ae55b944e209bb29219b1"
+    },
+    {
+      "path": "evidence/two-objectives.retained.json",
+      "bytes": 47380,
+      "sha256": "06cd468f9ba38bdfa97d749144b45acbefa29103275db390a275cf1645f1f143"
+    },
+    {
+      "path": "evidence/actual-overhead.json",
+      "bytes": 1390,
+      "sha256": "5fe0739d8afb4ec4dfb2d66cacddeff0c633a1270e4dabd5b93221042d45f854"
+    },
+    {
+      "path": "evidence/cold-receiving.json",
+      "bytes": 5182,
+      "sha256": "3f0ef605d6d27156087ad875648d406e5af2669ca92daa7bb34de103d7d9d192"
+    },
+    {
+      "path": "evidence/exact-receiving/validation.json",
+      "bytes": 9036,
+      "sha256": "f5875681a9fc59c44a6b12199f770d610f47dd9bece8e947c907ade296b0b664"
+    },
+    {
+      "path": "export/public/manifest.json",
+      "bytes": 4691,
+      "sha256": "a1693261cc59794cb85827b8e2b36c032bf9a821a61aa80b01612fc349630c53"
+    },
+    {
+      "path": "export/public/inventories/free-task-observation-100421-0.1.0.json",
+      "bytes": 3782,
+      "sha256": "3d5b481c595e5f93a01092165a9a74dd416498cb66d4735fdadb2f5e1eee3d26"
+    },
+    {
+      "path": "export/public/bytes/free-task-observation-100421/0.1.0/provenance.json",
+      "bytes": 5425,
+      "sha256": "c04e90ed1e6461d72ad4a72fb79d06b1ca4f7bff09ae6072422258434498ad76"
+    }
+  ],
+  "acceptance": {
+    "beforeNative": {
+      "pass": 1,
+      "fail": 0
+    },
+    "ownedMounted": {
+      "pass": 11,
+      "fail": 0
+    },
+    "exact395": {
+      "pass": 26,
+      "fail": 0
+    },
+    "paidAndJournals": {
+      "pass": 240,
+      "fail": 0
+    },
+    "coldPortable": {
+      "pass": 3,
+      "fail": 0
+    },
+    "afterReceivingAndRegressions": 277,
+    "directEqualInputVariants": 3,
+    "usefulPositive": "transactionFeeWei=42000",
+    "usefulNegative": "minedReceiptAvailable=false;decision=not_found",
+    "callerClaim": "unverified",
+    "paidRetentionRefusal": "settlement_unverified",
+    "newFreeSettlementRows": 0,
+    "paymentPermitted": false,
+    "recognizedRevenueAtomic": "0"
+  },
+  "limits": {
+    "rpcBoundary": "fixture_rpc",
+    "offlineSourceAuthenticity": "supplied_export_not_independently_authenticated",
+    "customerStoreFsync": false,
+    "oneWriterProcess": true,
+    "crossProcessExclusion": false,
+    "automaticMutationRetries": 0,
+    "lostPlaintextGrantRecovered": false,
+    "liveJournalEnrollment": false,
+    "hostingEstablished": false,
+    "tokenSavings": "unknown",
+    "customerCount": "unknown",
+    "unknownSpend": "unknown"
+  },
+  "remotePush": {
+    "officialHelper": "/usr/bin/gh auth git-credential",
+    "ghConfigDir": "/home/ubuntu/.config/pilot-gh",
+    "force": false,
+    "verification": "final packet commit and remote SHA recorded by completion message"
+  }
+}
