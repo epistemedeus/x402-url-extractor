@@ -1,0 +1,9 @@
+{
+  "name": "scoped-repair-commerce-100348",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=22.22.2" },
+  "bin": { "scoped-repair": "bin/scoped-repair.mjs" },
+  "scripts": { "test": "node --test --test-concurrency=1 test/*.test.mjs" }
+}
