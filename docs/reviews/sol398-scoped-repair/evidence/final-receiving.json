@@ -1,0 +1,101 @@
+{
+  "schema": "sol398.final-receiving.v1",
+  "sourceCommit": "5ef03b39b80de8d047388de0aa6b0852c298fc13",
+  "currentMaster": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+  "masterReceivingCommit": "7f710d883f3d1356fcc0d0ced508c39a56222c3a",
+  "neoDependencyCommit": "08eb7fb8b5d8971b48bad11a0c626bbc5db9f41e",
+  "patchSha256": "8210e2ad2dd831fd7c827f33f862d1cd10363a6c26d50edc5bb98b996984d8b6",
+  "checks": [
+    {
+      "name": "final-package",
+      "tests": 22,
+      "pass": 22,
+      "fail": 0,
+      "skipped": 0,
+      "wallMs": 11269,
+      "logSha256": "937110054acafd958b505985d117041e4b1d439a188338a06523a2e02daf6986",
+      "exitCode": 0
+    },
+    {
+      "name": "final-commerce-journal-source",
+      "tests": 283,
+      "pass": 283,
+      "fail": 0,
+      "skipped": 0,
+      "wallMs": 29394,
+      "logSha256": "f2462b37ca71d59bcb51e1b310c39944d98f955f2ae5c3c40963496b6c6ecd92",
+      "exitCode": 0
+    },
+    {
+      "name": "final-surface",
+      "tests": 24,
+      "pass": 24,
+      "fail": 0,
+      "skipped": 0,
+      "wallMs": 3823,
+      "logSha256": "9bd3d0dfa85b03256d7111fb10f002c43544cd6998c273f179242c59480c20a3",
+      "exitCode": 0
+    },
+    {
+      "name": "final-acquisition",
+      "tests": 24,
+      "pass": 24,
+      "fail": 0,
+      "skipped": 0,
+      "wallMs": 5231,
+      "logSha256": "7d93d3dc12004546daf9c564108ab8157ca38ab8e0e2f07e8c5f6daca3ca955f",
+      "exitCode": 0
+    },
+    {
+      "name": "final-mounted",
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skipped": 0,
+      "wallMs": 7343,
+      "logSha256": "ae8e305efee960464774ef3464a7e76667723e1a0d3e559cab1223351e8ed47f",
+      "exitCode": 0
+    },
+    {
+      "name": "master-package",
+      "tests": 22,
+      "pass": 22,
+      "fail": 0,
+      "skipped": 0,
+      "wallMs": 11570,
+      "logSha256": "6fe029f0ca604ee9abbba13f4ca4ca0253291230f2f1d708d6deac5c06a48a75",
+      "exitCode": 0
+    },
+    {
+      "name": "master-acquisition",
+      "tests": 24,
+      "pass": 24,
+      "fail": 0,
+      "skipped": 0,
+      "wallMs": 5334,
+      "logSha256": "28b832b2b174d4f7ff7d0adadb591fc74ec6e0fba14f87a5adf54c6570b9bbe4",
+      "exitCode": 0
+    },
+    {
+      "name": "master-mounted",
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skipped": 0,
+      "wallMs": 7276,
+      "logSha256": "498b25be46b93d27a0fba23e068689fa00fb06b38f09b03d9b1d9edd30037c38",
+      "exitCode": 0
+    }
+  ],
+  "disposableDirectory": "/tmp/sol398-final-iE6mKH",
+  "runtimeCodeDiff": [],
+  "taskDemandProjectionChangedInExport": false,
+  "sourceAcceptedInIsolatedBranch": true,
+  "proofClass": "loopback",
+  "productionHosted": false,
+  "hostedAcquisitionVerified": false,
+  "outsideUse": "unknown",
+  "settlement": "unknown",
+  "paidProviderCalls": 0,
+  "recognizedRevenueAtomic": "0"
+}

@@ -1,0 +1,14 @@
+{
+  "schema": "sol398.anonymous-mounted-acquisition.v1",
+  "proofClass": "loopback",
+  "observationComplete": true,
+  "assets": 21,
+  "coldCommands": 6,
+  "artifactWritten": false,
+  "verifyCalls": 0,
+  "settleCalls": 0,
+  "wallMs": 1231,
+  "productionHosted": false,
+  "outsideUse": "unknown",
+  "recognizedRevenueAtomic": "0"
+}

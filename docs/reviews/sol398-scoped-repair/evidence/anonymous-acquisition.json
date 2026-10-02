@@ -1,0 +1,425 @@
+{
+  "schema": "samedaydesk.public-acquisition.receiving-evidence.v1",
+  "kind": "deployment-readback-evidence",
+  "proofClass": "loopback",
+  "requestedOrigin": "http://127.0.0.1:37749",
+  "startedAt": "2026-10-02T17:16:22.191Z",
+  "stopped": false,
+  "deadline": false,
+  "assets": [
+    {
+      "relativePath": "l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 477108,
+      "sha256": "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0",
+      "redirected": false
+    },
+    {
+      "relativePath": "l09-next-action/0.1.0/provenance.json",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 3357,
+      "sha256": "1966fcbc814b25a623f472b0adbb20a312bb0b63ea24faf8cbf46217c2544357",
+      "redirected": false
+    },
+    {
+      "relativePath": "l09-next-action/0.1.0/SOURCE-NOTICE.txt",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 88,
+      "sha256": "47ab3eac7ffc2b4d099369f4e410cc2474a6835fb56d593347bcb14312f80ca9",
+      "redirected": false
+    },
+    {
+      "relativePath": "l09-next-action/0.1.0/LICENSE",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 1395,
+      "sha256": "24c39339d59a9b969c17cf36e60fcebf9ac6c2fdc7155363d58f95a70d642722",
+      "redirected": false
+    },
+    {
+      "relativePath": "retained-task/0.1.0/retained-task-0.1.0.tar.gz",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 107420,
+      "sha256": "350629b7bf1a14b092d94e0c27579f2e05114bf7f2f05a33c33d32b4c68176de",
+      "redirected": false
+    },
+    {
+      "relativePath": "retained-task/0.1.0/provenance.json",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 1433,
+      "sha256": "25c1d1d3a2d3eb31e6291fb9c06b96bede2eacefff840385f7d4927f11d93061",
+      "redirected": false
+    },
+    {
+      "relativePath": "retained-task/0.1.0/SOURCE-NOTICE.txt",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 113,
+      "sha256": "c9c5d84d3ed461508cb93ce1062bcbb52e83832d1d0e93d59e998fc24b0afb2e",
+      "redirected": false
+    },
+    {
+      "relativePath": "retained-task/0.1.0/LICENSE",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 1395,
+      "sha256": "24c39339d59a9b969c17cf36e60fcebf9ac6c2fdc7155363d58f95a70d642722",
+      "redirected": false
+    },
+    {
+      "relativePath": "composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 66166,
+      "sha256": "11d5a0e2df86282b6d4edbeab84b6d8ab5ccdb26b44364042cf76c9576c23817",
+      "redirected": false
+    },
+    {
+      "relativePath": "composition-route-knowledge/0.1.0/provenance.json",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 4486,
+      "sha256": "6d1d4dd057533c3cd3ddfc2635fa8c1f0b1b2ba06d565084c4de30b4cd3ed8f2",
+      "redirected": false
+    },
+    {
+      "relativePath": "composition-route-knowledge/0.1.0/SOURCE-NOTICE.txt",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 1462,
+      "sha256": "6d0d7edcf4e5a971c0b1a2422e7800e7d121f53fd8cf5339331c72a40d0a2c0b",
+      "redirected": false
+    },
+    {
+      "relativePath": "composition-route-knowledge/0.1.0/LICENSE",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 1069,
+      "sha256": "2c844e541eb597e55dcb35e0bf23d96fcb9ca540f14a9ea6973e4c00cefb1aaa",
+      "redirected": false
+    },
+    {
+      "relativePath": "seller-repair-external-consumer/0.2.0/seller-repair-external-consumer-0.2.0.tar.gz",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 30462,
+      "sha256": "86e55a75f7e7e5c5ad188de8b20c64648f40c236b11981186b56abeb6d11350f",
+      "redirected": false
+    },
+    {
+      "relativePath": "seller-repair-external-consumer/0.2.0/provenance.json",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 1781,
+      "sha256": "4ac8bb1123cbb3ebab7bf8a38581e96be1faf90d3fc54d68a70010eb7d57a43c",
+      "redirected": false
+    },
+    {
+      "relativePath": "seller-repair-external-consumer/0.2.0/SOURCE-NOTICE.txt",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 1385,
+      "sha256": "3c830a652f73ea681b80044fed1798bda7b3192c16e050ad19c8ec6835d7920c",
+      "redirected": false
+    },
+    {
+      "relativePath": "seller-repair-external-consumer/0.2.0/LICENSE",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 1068,
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
+      "redirected": false
+    },
+    {
+      "relativePath": "seller-repair-external-consumer/0.4.1/seller-repair-external-consumer-0.4.1.tar.gz",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 40891,
+      "sha256": "64dbe1ee7f69dd40ebf71741eed92f1f3f893c44af8eadf18b71c0fac82227b8",
+      "redirected": false
+    },
+    {
+      "relativePath": "scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 37921,
+      "sha256": "f95db152722ac820d57975cdab9b2bb486888f2faf023dc271b82da5eba84656",
+      "redirected": false
+    },
+    {
+      "relativePath": "scoped-repair-commerce-100348/0.1.2/provenance.json",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 8453,
+      "sha256": "7febcb560b80a9cdd02a59b419707fe9f4a9a9a2030c8b130da4e399a33c3ca8",
+      "redirected": false
+    },
+    {
+      "relativePath": "scoped-repair-commerce-100348/0.1.2/LICENSE",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 1068,
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
+      "redirected": false
+    },
+    {
+      "relativePath": "scoped-repair-commerce-100348/0.1.2/SOURCE-NOTICE.txt",
+      "acquisition": "match",
+      "status": 200,
+      "headStatus": 200,
+      "bytes": 525,
+      "sha256": "a394bc61d96049ce3faed08a0c248b0de05d05bbb4af10d07ab836c6766bedd3",
+      "redirected": false
+    }
+  ],
+  "coldCommands": [
+    {
+      "id": "composition-route-knowledge",
+      "version": "0.1.0",
+      "filename": "composition-route-knowledge-0.1.0.tgz",
+      "coverage": "complete",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "package/bin/decide.mjs",
+            "self-check"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "532fa5f270d543d218f9d88447b236c83a81e3aaed0bb29a403eacc81573f50c"
+        },
+        {
+          "argv": [
+            "node",
+            "package/bin/decide.mjs",
+            "inspect",
+            "--case",
+            "package/vendor/s20-route-compare-ro/fixtures/cases/live-x402-vs-payai.json"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "366a39d70d8249745ae0abcaae168336382f9176dd5fecabd3bba776522a535a"
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "retained-task",
+      "version": "0.1.0",
+      "filename": "retained-task-0.1.0.tar.gz",
+      "coverage": "complete",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "--input-type=module",
+            "-e",
+            "import { writeFileSync } from 'node:fs'; import { projectReading, x402Reading } from './packages/retained-task/test/support.mjs'; writeFileSync('capture.json', JSON.stringify(projectReading(x402Reading({ sellers: 10 })))); writeFileSync('receivers.json', JSON.stringify({ 'local-vm': { kind: 'local-http', baseUrl: 'http://127.0.0.1:9' } }));"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "argv": [
+            "node",
+            "packages/retained-task/src/cli.mjs",
+            "open",
+            "--home",
+            "./var/task",
+            "--task",
+            "hold-sellers",
+            "--source",
+            "x402stats",
+            "--owner",
+            "ordinary-agent",
+            "--file",
+            "./capture.json",
+            "--receivers",
+            "./receivers.json",
+            "--now",
+            "2026-10-01T12:00:00.000Z"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "8d8903d601b8819ff0bcb749d91a02e2fad482a3e417dff8a8d1557d35c41c29"
+        },
+        {
+          "argv": [
+            "node",
+            "packages/retained-task/src/cli.mjs",
+            "resume",
+            "--home",
+            "./var/task",
+            "--task",
+            "hold-sellers",
+            "--file",
+            "./capture.json",
+            "--now",
+            "2026-10-01T13:00:00.000Z"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "ca9f505e2dd0a2df295779fbbc785b0a47b68c3730dabcc51c2c614f40f413d4"
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "l09-next-action",
+      "version": "0.1.0",
+      "filename": "l09-next-action-0.1.0.tar.gz",
+      "coverage": "complete",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/bin/l09.mjs",
+            "task-spec"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "c73e15955a2277ed00cf2e62c6fe992d43b246485453e8bead92515dbb4547eb"
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "seller-repair-external-consumer",
+      "version": "0.2.0",
+      "filename": "seller-repair-external-consumer-0.2.0.tar.gz",
+      "coverage": "complete",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "package/bin/seller-repair.mjs",
+            "deliver"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "ccac67b4f220ebdb8b0abb0b0c4363928d31e850bd531d341c699aab6f0dc152"
+        },
+        {
+          "argv": [
+            "node",
+            "package/bin/seller-repair.mjs",
+            "reproduce",
+            "--case",
+            "package/cases/retained-case.json"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "340a2744d0294f9e64bffa572e01c78d0f9abf7f3ff444ad722300ae13dd9d08"
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "seller-repair-external-consumer",
+      "version": "0.4.1",
+      "filename": "seller-repair-external-consumer-0.4.1.tar.gz",
+      "coverage": "complete",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "--input-type=module",
+            "-e",
+            "await import('data:text/javascript;base64,'+Buffer.from(process.argv.slice(1).join('')).toString('base64'))",
+            "\nimport assert from 'node:assert/strict';\nimport { createServer } from 'node:http';\nimport { spawn } from 'node:child_process';\nimport { writeFile } from 'node:fs/promises';\nimport { join } from 'node:path';\nconst cli=join(process.cwd(),'package/bin/caller-deliver.mjs');\nconst server=createServer((req,res)=>{\n  assert.equal(req.headers['payment-signature'],undefined);\n  res.writeHead(200,{'content",
+            "-type':'application/json'});\n  res.end(JSON.stringify(req.url==='/v1/gamma'?{note:'still-up'}:{status:'ready'}));\n});\nawait new Promise(r=>server.listen(0,'127.0.0.1',r));\nconst baseUrl='http://127.0.0.1:'+server.address().port;\nconst request=name=>({schema:'samedaydesk.seller-repair-caller-request.v1',callerId:'cold-'+name,\n task:'Check whether GET /v1/'+name+' supplies the required status field.",
+            "',origin:'https://widget.example',\n operation:'GET /v1/'+name,sdk:'node-https@22',runtime:'node/'+process.versions.node,\n expect:{path:'status',value:'ready'},question:'useful_output',paidIntent:false,\n limits:{probes:4,bodyBytes:4096,deadlineMs:1000,totalBodyBytes:16384,totalResponseMs:4000,redirects:0,outputBytes:65536},\n probeConsent:{class:'loopback',confirmed:true,baseUrl}});\nasync function r",
+            "un(args){return new Promise((done,fail)=>{\n const p=spawn(process.execPath,[cli,...args],{env:{PATH:process.env.PATH},stdio:['ignore','pipe','pipe']});\n let out='',err='';const timer=setTimeout(()=>p.kill('SIGKILL'),15000);\n p.stdout.on('data',b=>{out+=b;if(out.length>131072)p.kill('SIGKILL');});\n p.stderr.on('data',b=>{err+=b;if(err.length>16384)p.kill('SIGKILL');});\n p.once('error',e=>{clearTime",
+            "out(timer);fail(e);});\n p.once('close',code=>{clearTimeout(timer);assert.equal(code,0,err||out);done(JSON.parse(out));});\n});}\ntry{\n for(const name of ['alpha','beta','gamma']){\n  const path=join(process.cwd(),'cold041-'+name+'.json');await writeFile(path,JSON.stringify(request(name)));\n  const r=await run(['deliver','--request',path,'--out','cold041-'+name]);\n  assert.equal(r.operationId,'GET /v1",
+            "/'+name);assert.equal(r.classification.useful,name!=='gamma');\n  assert.equal(r.paymentSent,false);assert.equal(r.fixtureTransport,false);\n  if(name==='gamma')assert.equal(r.classification.reason,'missing_field_not_paid_demand');\n }\n const laterPath=join(process.cwd(),'cold041-later.json');\n await writeFile(laterPath,JSON.stringify({...request('gamma'),callerId:'cold-alpha'}));\n const later=await ",
+            "run(['later','--artifact','cold041-alpha/regression.json','--caller',laterPath]);\n assert.equal(later.executed,true);assert.equal(later.predicateApplies,false);assert.equal(later.reason,'stale_applicability');\n console.log(JSON.stringify({loopbackTaskReceiving:true,usefulPositiveCount:2,usefulNegativeCount:1,\n   laterChangedInputRefused:true,actualCustomerUse:false,paymentSent:false}));\n}finally{s",
+            "erver.closeAllConnections();await new Promise(r=>server.close(r));}\n"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "c60853950439b8b8583faf0c3f993dfd3be8d2eb7b8384c70dfce0728ff3c4f4"
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "scoped-repair-commerce-100348",
+      "version": "0.1.2",
+      "filename": "scoped-repair-commerce-100348-0.1.2.tar.gz",
+      "coverage": "complete",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "bin/check-cold.mjs"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "a7a1cc6ee70afe7bdf201764a57de5ec390234822bf910d9a5c65a20f12e7ba3"
+        }
+      ],
+      "error": null
+    }
+  ],
+  "errors": [],
+  "observationComplete": true,
+  "artifactWritten": false,
+  "publishBlockedBy": [
+    "proof-class"
+  ],
+  "runtime": {
+    "name": "node",
+    "version": "v22.22.2",
+    "range": ">=22.20.0",
+    "satisfied": true
+  },
+  "manifestSha256": "493f94c4a36ae1708fa4ae741bd8c1789110815cb36801540e18507165560f7c",
+  "remoteIndex": {
+    "url": "http://127.0.0.1:37749/.well-known/public-acquisition/index.json",
+    "status": 200,
+    "redirected": false,
+    "parsed": true,
+    "draft": true,
+    "productionHosted": false,
+    "hostedAcquisitionVerified": false,
+    "assetCount": 21
+  },
+  "finishedAt": "2026-10-02T17:16:23.421Z"
+}
