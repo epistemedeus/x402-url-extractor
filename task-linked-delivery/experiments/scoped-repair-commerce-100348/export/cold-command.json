@@ -1,0 +1,12 @@
+{
+  "id": "scoped-repair-commerce-100348",
+  "version": "0.1.0",
+  "filename": "scoped-repair-commerce-100348-0.1.0.tar.gz",
+  "cwd": ".",
+  "steps": [
+    {
+      "argv": ["node", "--test", "test/portable.test.mjs"],
+      "stdoutIncludes": ["cold client requires its own task and transport", "# pass 1", "# fail 0"]
+    }
+  ]
+}

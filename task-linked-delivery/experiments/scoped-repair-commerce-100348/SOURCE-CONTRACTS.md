@@ -29,6 +29,10 @@ Separate unchanged baselines: surface source 24/24; pinned public SkillGuard
 35/35 on this VM under its supported home checkout location. The first /tmp
 SkillGuard run was 34/35 because its inherited test assumes a home-based path;
 moving the same source under home resolved that environment assumption.
+The unchanged public acquisition source baseline is 24/24. Adding the client
+requires its cold command alongside its manifest entry; without that command
+the existing current projection correctly stays partial. Root's patch appends
+both and extends the exact asset-pin test, preserving all predecessor checks.
 
 Implemented residual seam: deterministic task qualification, executable scoped
 acceptance, packet/restart/reuse adapters and a bounded standalone client.

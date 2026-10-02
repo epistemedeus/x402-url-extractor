@@ -295,3 +295,53 @@ index 770b2d7..c2a3ff7 100644
      }
    ]
  }
+diff --git a/public-acquisition/cold-commands.json b/public-acquisition/cold-commands.json
+index 8578347..5beda95 100644
+--- a/public-acquisition/cold-commands.json
++++ b/public-acquisition/cold-commands.json
+@@ -162,6 +162,26 @@
+           ]
+         }
+       ]
++    },
++    {
++      "id": "scoped-repair-commerce-100348",
++      "version": "0.1.0",
++      "filename": "scoped-repair-commerce-100348-0.1.0.tar.gz",
++      "cwd": ".",
++      "steps": [
++        {
++          "argv": [
++            "node",
++            "--test",
++            "test/portable.test.mjs"
++          ],
++          "stdoutIncludes": [
++            "cold client requires its own task and transport",
++            "# pass 1",
++            "# fail 0"
++          ]
++        }
++      ]
+     }
+   ]
+ }
+diff --git a/public-acquisition/engine.test.mjs b/public-acquisition/engine.test.mjs
+index 16a4913..12c06ce 100644
+--- a/public-acquisition/engine.test.mjs
++++ b/public-acquisition/engine.test.mjs
+@@ -61,7 +61,13 @@ function listen(app) {
+ 
+ test("receiving manifest publishes the public archives and keeps draft claims false", () => {
+   const loaded = published();
+-  assert.equal(loaded.order.length, 16);
++  assert.equal(loaded.order.length, 20);
++  // Sixteen sealed predecessor assets plus the four exact client assets.
++  const client=loaded.files.get("scoped-repair-commerce-100348/0.1.0/scoped-repair-commerce-100348-0.1.0.tar.gz");
++  assert.equal(client.bytes.length, 37078);
++  assert.equal(sha256(client.bytes), "58d915c5b0ebaad0a29cc46a9102b51b943ead96de3b3c5185a530edc14c3b27");
++  assert.equal(client.asset.hostedAcquisitionVerified, false);
++  assert.equal(client.asset.licenseId, "MIT");
+   const composition = loaded.files.get("composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz");
+   const retained = loaded.files.get("retained-task/0.1.0/retained-task-0.1.0.tar.gz");
+   const l09 = loaded.files.get("l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz");

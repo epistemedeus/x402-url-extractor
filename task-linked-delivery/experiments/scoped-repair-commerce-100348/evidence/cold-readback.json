@@ -8,12 +8,14 @@
     {
       "task": "cold-env-task",
       "qualification": "compatible_reusable_fix",
-      "passed": true
+      "passed": true,
+      "executionMs": 115.949
     },
     {
       "task": "order-status",
       "qualification": "compatible_reusable_fix",
-      "passed": true
+      "passed": true,
+      "executionMs": 393.621
     }
   ],
   "usefulNegative": true,
@@ -22,7 +24,7 @@
   "restartedReplay": true,
   "strippedRoots": 2,
   "npmInstallRequired": false,
-  "wallMs": 1933,
+  "wallMs": 1777,
   "productionHosted": false,
   "hostedAcquisitionVerified": false,
   "outsideUseful": false,

@@ -23,6 +23,13 @@ exporters. It changes no paid route, payment rail, signer, price or journal.
 All seller predecessor archive bytes remain exact. Any future seller source
 publication must use a successor version, rather than regenerate 0.2/0.3/0.4.
 
+The acquisition additions include the client's exact archive/sidecars, inventory
+and a bounded cold command that proves useful missing-input refusal. Existing
+cold commands and all predecessor pins stay byte-for-byte within their entries.
+The current projection must stay partial if that command is missing; an index
+row alone is insufficient. Repository cold QA separately runs two supplied tasks
+through the actual service. Those QA facts confer no production readback flag.
+
 Default mount uses the already packaged public SkillGuard scanner. Missing
 scanner yields `missing_task_input` with unavailable observations. No private
 provider is downloaded. Optional `SCOPED_REPAIR_PACKET_DIR` must be an isolated
