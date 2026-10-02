@@ -1,0 +1,15 @@
+{
+  "merchantCommit": "5206246ca831aa5b7c01ec147f69b22b5f71447b",
+  "agentPaymentIntegrity": "0b58000ef619c46a1173096614f1dd973d90f26d",
+  "agentPaymentIntegrityVersion": "0.1.0-candidate.12",
+  "sellerIntegrityProduct": "samedaydesk-seller-integrity-audit",
+  "sellerIntegrityVersion": "1.3.0",
+  "paidMethod": "GET",
+  "paidRoute": "/commerce/seller-integrity-audit",
+  "paidPriceDisplay": "$0.01",
+  "paidPriceAtomic": "10000",
+  "paidPriceAuthority": "existing_route_challenge",
+  "knowledgeModule": "useful-result-reuse/customer-grant.mjs",
+  "knowledgeSchema": "samedaydesk.useful-result-reuse.compatibility.v1",
+  "deliveryOutcome": "task-linked-delivery/experiments/delivery-outcome-100173"
+}

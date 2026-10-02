@@ -1,0 +1,26 @@
+{
+  "schema": "samedaydesk.seller-repair-case.v1",
+  "id": "catalog-item-sku-100266",
+  "task": "Confirm the unpaid catalog item response for GET /catalog/item includes result.sku equal to the seller catalog constant WIDGET-1.",
+  "origin": "https://seller.example",
+  "method": "GET",
+  "resource": "/catalog/item",
+  "expectedUsefulOutput": {
+    "paths": ["result.sku"],
+    "equals": { "path": "result.sku", "value": "WIDGET-1" }
+  },
+  "declaredSdk": "node-https@22",
+  "declaredRuntime": "node/22.14.0",
+  "maxEffort": { "probes": 4, "bodyBytes": 4096, "deadlineMs": 1000 },
+  "question": "useful_output",
+  "paidIntent": false,
+  "patch": {
+    "kind": "response_overlay",
+    "instructions": [
+      "The handler already knows the catalog constant WIDGET-1 and omits it from the JSON body.",
+      "Add result.sku from that constant.",
+      "Do not delete result.sku from the OpenAPI required array."
+    ],
+    "responseOverlay": { "result": { "sku": "WIDGET-1" } }
+  }
+}

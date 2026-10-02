@@ -1,0 +1,6 @@
+seller-repair-service-100266 is an experiment inside epistemedeus/x402-url-extractor.
+It reuses seller-integrity-audit, agent-payment-integrity auditIntegrity,
+paid-useful-journey handoff checks, delivery-outcome canonical digests, and
+useful-result-reuse privacy plus compatibility revocation helpers.
+It does not add a price, SKU, payment route, or knowledge kernel.
+The package does not purchase, sign, or settle.
