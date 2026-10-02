@@ -1,0 +1,183 @@
+{
+  "schema": "samedaydesk.scoped-repair.receiving-qa.v1",
+  "sourceCommit": "34bf6e0fcc10e2765560f1ffcab80f9cddab969d",
+  "receivingCommit": "425d754f62301fda7eeefe4ab2c59b7a2c73277f",
+  "patchSha256": "3db056827dcdb50ed5b24bdc47a8a616e6359b134878f573615ce9057bd21ff9",
+  "checks": [
+    {
+      "suite": "package",
+      "tests": 22,
+      "pass": 22,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 15368.366344,
+      "logSha256": "d9b422e49e4b0b6211325a08a93010cca41e4d60673021bfdfeff7197696c272"
+    },
+    {
+      "suite": "commerce-journal-source",
+      "tests": 283,
+      "pass": 283,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 33850.0941,
+      "logSha256": "1f3fdf1f3c4ded9ec0f08ab68618b0f79e19762a1272189b7ac6a4baa840c771"
+    },
+    {
+      "suite": "surface-source",
+      "tests": 24,
+      "pass": 24,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 4251.891009,
+      "logSha256": "599de375c6677db0aad004d87ef2289333762d7a4c4c11b24c7ec718ffd3b24d"
+    },
+    {
+      "suite": "public-acquisition",
+      "tests": 24,
+      "pass": 24,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 4177.21546,
+      "logSha256": "212a92e94b69cae9f9cfc13e963479c9bd34a522e9197fe09ae8e051f3900fc7"
+    }
+  ],
+  "ownedSourceFiles": [
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/bin/check-cold.mjs",
+      "sha256": "f9442afecfa942b466cc5f5f06cddb2287d01ed71a75b66b4865ef50ee19168a"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/bin/scoped-repair.mjs",
+      "sha256": "2457f8c49396b954fbbb5301c889b01a79540ce6bc45c158cf97d7169d08f56f"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/export/install-candidate.mjs",
+      "sha256": "01c06bfa4109f1460f37876b96541fa24f345fbca50f22b24a5a6821725fca98"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/export/pack.mjs",
+      "sha256": "23af9098d98764ba70f1840fca16421e34c52ebb3ddb46fd36fea6bd09802ecd"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/export/portable.test.mjs",
+      "sha256": "f966b0bea58acb6cb65be5919e53f8876e8f5bb1c788a82a15a65ad8352bc8ed"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/route/make-root-patch.mjs",
+      "sha256": "728cb1824684a73ea2086ebf00059acd20c2a36648d64c212fd8057546b1de89"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/route/mount.mjs",
+      "sha256": "02bb6b49f3e6ce2c7b9d406c37685ed1e963a090d5b31e20efbf4fa3f695de3f"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/route/paths.mjs",
+      "sha256": "196c70f3781a608bb5f9b567c9b99386a786f907e37210c8f81a21df92591b18"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/src/authority.mjs",
+      "sha256": "153807ab401595513fe79923c3f46a54a5a09a45e37c34096f000bc7bc94e087"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/src/bounds.mjs",
+      "sha256": "e7e483e88d7c6d52eeae3a1230e2f268675fbf77f5f3055f07335e3d91a05f90"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/src/client.mjs",
+      "sha256": "0d649920602789259373815fcd32c4e7949c99a1a37a1b6734f8a9acf685f875"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/src/contracts.mjs",
+      "sha256": "06ac979e504ec7b633fbe0a800d9342b3f54f927a297f323b0a047569704eaa1"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/src/owners.mjs",
+      "sha256": "7d6b533078ff4892ae705c8e9586ab7ab2ce75bc8abb84406f4b81320888472f"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/src/packet-store.mjs",
+      "sha256": "b45be89f2481a45b7f0b19bbc2e0ac07102783b68bedc70607af5c3e1b277e93"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/src/seller-worker.mjs",
+      "sha256": "b89d101da705f40150650da1e732b4d5a566ae0c8a68ab53addcb1494fe4f233"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/src/service.mjs",
+      "sha256": "90fc727a2272b9c366458a44137a8ecbcc93833451ef695eda09aced271db93b"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/test/bounds.test.mjs",
+      "sha256": "38b8c8e1a472e2c77a132c4f1ca5ff261abb7ff7e3876f480453facf804ee7d8"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/test/cold-export.test.mjs",
+      "sha256": "06b6799025e0272612bde83894cabccb1cd8bc298263d6215b9b16fdc01493f3"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/test/evidence.test.mjs",
+      "sha256": "83a40512ba07a8764bb288e68e78b2bb2c8504ca4592a4eb5d4700992f35b8ee"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/test/host-helper.mjs",
+      "sha256": "e4c74f439023f7c74c088f496ada852e6f44abb99edb37d1c8d11dafe284f74a"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/test/host.mjs",
+      "sha256": "6b285482410a13db7456298638254902c0dc571e62ef490e2d11054cf0e07c1f"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/test/mandate.test.mjs",
+      "sha256": "7e31aa0c807ab921c10a4ae69cc47a769fc26a48f0ad13c9503261f3e3cce349"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/test/merchant.mjs",
+      "sha256": "a6525ffc3efb38f749cab89286b46c6f4a8c2951724aef19d7cf04bb3273abc6"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/test/packet-store.test.mjs",
+      "sha256": "f0bbc64b85c215d4e292ae7162f8e4d65784c5d79e9b8b4c5d51a9b629ee04cc"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/test/payment.test.mjs",
+      "sha256": "deda53d6e91f3379c52b3be2ae8381c46ebec550a4fcfa6da93bbd800bf14c7b"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/test/process.mjs",
+      "sha256": "36219ca9c87227208bf70f8dc4a910077e95099b6ad4fe113401400a1b7e7564"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/test/qualification.test.mjs",
+      "sha256": "b660537a4bfbc1ebbdf806c5c3868138471a906d7faa1766e78b0e999ca31ea7"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/test/receiving.mjs",
+      "sha256": "8c2226d8ea0098781fcf7983f16b54a9cb14c2f1e67288113f9220190301792e"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/test/restart.test.mjs",
+      "sha256": "bdd78fc27f06298bf1c47d125924dfd116a52da1264c0ba434a010b768f899d4"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/test/root-integration.test.mjs",
+      "sha256": "08d56963133814f30a97b15da2e7b83a3034a0933c74c88e7a2085afc637556b"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/test/shared-allowance.test.mjs",
+      "sha256": "0047fa6467fe2c7d64aafedba4f0335e7fe6065284522842d8492d1ffd1a6a95"
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/test/support.mjs",
+      "sha256": "7aafe8b6d2ad4b94cb556f25a84e487de56e91a6ca239b079a3562d44972fdde"
+    }
+  ],
+  "disposableDirectory": "/tmp/sol348-root-receiving-hykxc6",
+  "sharedSourceChangedInWorker": false,
+  "productionHosted": false,
+  "hostedAcquisitionVerified": false,
+  "outsideUseful": false,
+  "settlement": "unknown",
+  "paidProviderCalls": 0,
+  "recognizedRevenueAtomic": "0",
+  "validationNote": "All impacted suites passed in this checkout. Only acquisition pin/count assertions changed before its rerun. The package was rerun after the final unknown-outcome regression; other owners were unchanged. Known generated loopback profile was preserved beside logs and restored."
+}

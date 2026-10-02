@@ -1,21 +1,21 @@
 {
   "schema": "samedaydesk.scoped-repair.cold-readback.v1",
-  "sourceCommit": "1363530406e26e1e48c6684becd8cf3cca400854",
-  "archiveSha256": "58d915c5b0ebaad0a29cc46a9102b51b943ead96de3b3c5185a530edc14c3b27",
-  "archiveBytes": 37078,
+  "sourceCommit": "72ff0e5ecf8363740408a2ea42fe1ce498d3f3e6",
+  "archiveSha256": "f95db152722ac820d57975cdab9b2bb486888f2faf023dc271b82da5eba84656",
+  "archiveBytes": 37921,
   "acquiringRoute": "actual_public_acquisition_engine_loopback",
   "tasks": [
     {
       "task": "cold-env-task",
       "qualification": "compatible_reusable_fix",
       "passed": true,
-      "executionMs": 115.949
+      "executionMs": 118.786
     },
     {
       "task": "order-status",
       "qualification": "compatible_reusable_fix",
       "passed": true,
-      "executionMs": 393.621
+      "executionMs": 386.049
     }
   ],
   "usefulNegative": true,
@@ -24,7 +24,7 @@
   "restartedReplay": true,
   "strippedRoots": 2,
   "npmInstallRequired": false,
-  "wallMs": 1777,
+  "wallMs": 2009,
   "productionHosted": false,
   "hostedAcquisitionVerified": false,
   "outsideUseful": false,
