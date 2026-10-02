@@ -1,0 +1,66 @@
+{
+  "name": "seller-repair-external-consumer",
+  "version": "0.4.1",
+  "filename": "seller-repair-external-consumer-0.4.1.tar.gz",
+  "bytes": 40891,
+  "sha256": "64dbe1ee7f69dd40ebf71741eed92f1f3f893c44af8eadf18b71c0fac82227b8",
+  "enginesNode": ">=22.22.0",
+  "productionHosted": false,
+  "hostedAcquisitionVerified": false,
+  "launched": false,
+  "predecessorFrozen": {
+    "seller-repair-external-consumer-0.4.0.tar.gz": {
+      "bytes": 40008,
+      "sha256": "0a6f2f45aab81831137c7f2d1a83bce0cd31decb1013d5e92afe5f839faa9025"
+    },
+    "seller-repair-external-consumer-0.1.0.tar.gz": {
+      "bytes": 22870,
+      "sha256": "3f3552e9cdedff9910211b1820b229daa834cf3811fcc5b38035046cefda4a27"
+    },
+    "seller-repair-external-consumer-0.2.0.tar.gz": {
+      "bytes": 30462,
+      "sha256": "86e55a75f7e7e5c5ad188de8b20c64648f40c236b11981186b56abeb6d11350f"
+    },
+    "seller-repair-external-consumer-0.3.0.tar.gz": {
+      "bytes": 32020,
+      "sha256": "9a3ff801104d95513ded6791f476a13042453ed9702635a117ebaac9afd73f2e"
+    }
+  },
+  "members": [
+    "package/bin/caller-deliver.mjs",
+    "package/commercial/caller-request.mjs",
+    "package/commercial/later-consumer.mjs",
+    "package/commercial/maintained.mjs",
+    "package/commercial/method-binding.mjs",
+    "package/commercial/read-input.mjs",
+    "package/LICENSE",
+    "package/package.json",
+    "package/README.md",
+    "package/references/pins.json",
+    "package/SOURCE-NOTICE.txt",
+    "package/src/authorize.mjs",
+    "package/src/budget.mjs",
+    "package/src/classify.mjs",
+    "package/src/compare.mjs",
+    "package/src/constants.mjs",
+    "package/src/declaration.mjs",
+    "package/src/errors.mjs",
+    "package/src/fixture-seller.mjs",
+    "package/src/intake.mjs",
+    "package/src/journey.mjs",
+    "package/src/later.mjs",
+    "package/src/machine.mjs",
+    "package/src/measure.mjs",
+    "package/src/operation.mjs",
+    "package/src/paid-report.mjs",
+    "package/src/paths.mjs",
+    "package/src/privacy.mjs",
+    "package/src/probe.mjs",
+    "package/src/public-target.mjs",
+    "package/src/repair.mjs",
+    "package/src/seed.mjs",
+    "task-linked-delivery/experiments/delivery-outcome-100173/src/errors.mjs",
+    "task-linked-delivery/experiments/delivery-outcome-100173/src/privacy.mjs",
+    "task-linked-delivery/tools/ops/three-site-settlement-join/measure/src/restricted.mjs"
+  ]
+}
