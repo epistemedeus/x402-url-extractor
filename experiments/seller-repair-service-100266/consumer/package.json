@@ -1,0 +1,14 @@
+{
+  "name": "seller-repair-external-consumer",
+  "version": "0.2.0",
+  "license": "MIT",
+  "type": "module",
+  "description": "Caller-owned seller repair consumer. Draft 0.2.0. No purchase and no npm packages.",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "dependencies": {},
+  "bin": {
+    "seller-repair": "./bin/seller-repair.mjs"
+  }
+}

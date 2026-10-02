@@ -1,0 +1,23 @@
+{
+  "product": "samedaydesk-seller-integrity-audit",
+  "version": "1.3.0",
+  "decision": "repair_required",
+  "request": {
+    "origin": "https://example.com",
+    "route": "/extract",
+    "method": "GET"
+  },
+  "report": {
+    "auditCompleted": false,
+    "failureCode": "openapi_unavailable",
+    "findings": ["openapi_unavailable"],
+    "responseContract": null,
+    "repairPlan": null
+  },
+  "boundary": {
+    "responseBodyRead": false,
+    "targetPaymentSent": false,
+    "targetRequestSent": false,
+    "redirectsFollowed": false
+  }
+}

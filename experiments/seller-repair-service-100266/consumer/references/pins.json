@@ -1,0 +1,31 @@
+{
+  "schema": "samedaydesk.seller-repair-external-consumer.pins.v1",
+  "name": "seller-repair-external-consumer",
+  "version": "0.2.0",
+  "enginesNode": ">=22.22.0",
+  "npmPackages": [],
+  "runtimeModules": [
+    "node:crypto",
+    "node:dns/promises",
+    "node:fs",
+    "node:fs/promises",
+    "node:http",
+    "node:https",
+    "node:net"
+  ],
+  "scannerBundled": false,
+  "agentPaymentIntegrity": "not_bundled",
+  "privacy": {
+    "task-linked-delivery/experiments/delivery-outcome-100173/src/privacy.mjs": "0c116dd78c69d9b5da47775e5d058fc1f3e2b9e0cd71d801a4e6fad92a7dbca8",
+    "task-linked-delivery/experiments/delivery-outcome-100173/src/errors.mjs": "84fb984f031f9ada8d95d06536ce3c6d22826bed9cbab692e890fdc34bb125ae",
+    "task-linked-delivery/tools/ops/three-site-settlement-join/measure/src/restricted.mjs": "197cc019e157586dfdbba9a14e25b2b661dee5e642845d12a98d76ee89f76d63"
+  },
+  "frozenPublicAcquisitionUnchanged": {
+    "l09-next-action-0.1.0.tar.gz": "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0",
+    "retained-task-0.1.0.tar.gz": "350629b7bf1a14b092d94e0c27579f2e05114bf7f2f05a33c33d32b4c68176de",
+    "composition-route-knowledge-0.1.0.tgz": "11d5a0e2df86282b6d4edbeab84b6d8ab5ccdb26b44364042cf76c9576c23817"
+  },
+  "productionHosted": false,
+  "hostedAcquisitionVerified": false,
+  "launched": false
+}

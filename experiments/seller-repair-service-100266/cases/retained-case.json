@@ -1,17 +1,31 @@
 {
   "schema": "samedaydesk.seller-repair-case.v1",
   "id": "catalog-item-sku-100266",
+  "callerId": "catalog-example",
   "task": "Confirm the unpaid catalog item response for GET /catalog/item includes result.sku equal to the seller catalog constant WIDGET-1.",
   "origin": "https://seller.example",
   "method": "GET",
   "resource": "/catalog/item",
+  "operation": {
+    "method": "GET",
+    "resource": "/catalog/item",
+    "operationId": "GET /catalog/item"
+  },
   "expectedUsefulOutput": {
     "paths": ["result.sku"],
     "equals": { "path": "result.sku", "value": "WIDGET-1" }
   },
   "declaredSdk": "node-https@22",
   "declaredRuntime": "node/22.14.0",
-  "maxEffort": { "probes": 4, "bodyBytes": 4096, "deadlineMs": 1000 },
+  "maxEffort": {
+    "probes": 4,
+    "bodyBytes": 4096,
+    "deadlineMs": 1000,
+    "totalBodyBytes": 16384,
+    "totalResponseMs": 4000,
+    "redirects": 0
+  },
+  "probeConsent": { "class": "loopback", "confirmed": true },
   "question": "useful_output",
   "paidIntent": false,
   "patch": {

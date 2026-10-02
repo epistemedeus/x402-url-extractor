@@ -1,0 +1,31 @@
+{
+  "schema": "samedaydesk.seller-repair-case.v1",
+  "id": "public-acquisition-index-100273",
+  "callerId": "external-consumer-100273",
+  "task": "Read the current public acquisition index and confirm productionHosted is false. HTTP 200 alone is not useful delivery.",
+  "origin": "https://agents.samedaydesk.com",
+  "method": "GET",
+  "resource": "/.well-known/public-acquisition/index.json",
+  "operation": {
+    "method": "GET",
+    "resource": "/.well-known/public-acquisition/index.json",
+    "operationId": "GET /.well-known/public-acquisition/index.json"
+  },
+  "expectedUsefulOutput": {
+    "paths": ["schema", "productionHosted", "hostedAcquisitionVerified"],
+    "equals": { "path": "productionHosted", "value": false }
+  },
+  "declaredSdk": "node-https@22",
+  "declaredRuntime": "node/22.22.2",
+  "maxEffort": {
+    "probes": 2,
+    "bodyBytes": 32768,
+    "deadlineMs": 5000,
+    "totalBodyBytes": 65536,
+    "totalResponseMs": 8000,
+    "redirects": 0
+  },
+  "probeConsent": { "class": "public-read-only", "confirmed": true },
+  "question": "useful_output",
+  "paidIntent": false
+}

@@ -331,7 +331,8 @@ test("partial command coverage and a source change invalidate only the affected 
   const inventoryAsset = inventoryView.assets.find((asset) => asset.role === "archive" && asset.inventory === "invalidated");
   assert.ok(inventoryAsset);
   assert.equal(inventoryAsset.acquisition, "acquired");
-  assert.equal(inventoryView.assets.filter((asset) => asset.inventory === "matched").length, 2);
+  const archiveCount = inventoryView.assets.filter((asset) => asset.role === "archive").length;
+  assert.equal(inventoryView.assets.filter((asset) => asset.inventory === "matched").length, archiveCount - 1);
 
   const runtime = matchingArtifact({ version: "v22.14.0" });
   const runtimeView = project(runtime);

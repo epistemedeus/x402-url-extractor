@@ -14,6 +14,8 @@ export function repairInstructions(patch) {
     dropsRequiredPaths: Array.isArray(patch?.dropRequiredPaths) ? patch.dropRequiredPaths : [],
     schemaMutationApplied: false,
     sellerRuntimeVerified: false,
+    counterpartyMutated: false,
+    callerReviewed: true,
   };
 }
 

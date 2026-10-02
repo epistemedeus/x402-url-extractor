@@ -1,0 +1,15 @@
+{
+  "callerId": "health-caller",
+  "origin": "https://status.example",
+  "operation": "GET /v1/health",
+  "sdk": "python-httpx@1",
+  "runtime": "python/3.12.0",
+  "expect": { "path": "status", "value": "ready" },
+  "observed": {
+    "status": 200,
+    "json": { "status": "ready" },
+    "contentType": "application/json"
+  },
+  "question": "useful_output",
+  "paidIntent": true
+}

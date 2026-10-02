@@ -18,6 +18,7 @@
 // It does not change or intercept the standard Base exact or native MPP paths.
 
 import { installPaidReceiptRetention, noteReceiptRetention } from "./useful-result-reuse/delivery.mjs";
+import { mountSellerRepairDiagnosis } from "./experiments/seller-repair-service-100266/route/mount.mjs";
 import { existsSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import express from "express";
@@ -3678,6 +3679,7 @@ app.post("/security/stateful-wallet-policy-conformance", (req, res, next) => {
   }
 });
 
+mountSellerRepairDiagnosis(app);
 installPaidReceiptRetention(app, () => retainDeliveredReceipt, {
   causalEventProof: (res) => commerceTelemetry.causalCommerceEventProof(res),
 });

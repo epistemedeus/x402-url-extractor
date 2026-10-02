@@ -1,4 +1,4 @@
-import { hasDisallowedKey } from "../../../task-linked-delivery/experiments/delivery-outcome-100173/src/privacy.mjs";
+import { hasDisallowedKey } from "./privacy.mjs";
 
 export function rejectSeeded(claim) {
   const reasons = [];
@@ -8,6 +8,9 @@ export function rejectSeeded(claim) {
   if (claim?.claim === "useful_repair" && claim?.body && !claim.body?.result?.sku) reasons.push("repair_not_useful");
   if (typeof claim?.recognizedRevenueAtomic === "string" && claim.recognizedRevenueAtomic !== "0") reasons.push("revenue_claim");
   if (claim?.cashAtomic && claim.cashAtomic !== "unknown") reasons.push("unknown_cash_relabeled");
+  if (claim?.sourceCoverage === "complete" || claim?.coverageProvesUseful === true) reasons.push("unknown_coverage_is_not_useful");
+  if (claim?.declarationProvesExecution === true) reasons.push("declaration_is_not_execution");
+  if (claim?.deployedCounterpartyRepair === true) reasons.push("counterparty_not_mutated");
   if (hasDisallowedKey(claim)) reasons.push("restricted_fields");
   return {
     refused: reasons.length > 0,

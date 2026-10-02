@@ -59,9 +59,9 @@ function listen(app) {
   });
 }
 
-test("receiving manifest publishes the three public archives and keeps draft claims false", () => {
+test("receiving manifest publishes the public archives and keeps draft claims false", () => {
   const loaded = published();
-  assert.equal(loaded.order.length, 12);
+  assert.equal(loaded.order.length, 16);
   const composition = loaded.files.get("composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz");
   const retained = loaded.files.get("retained-task/0.1.0/retained-task-0.1.0.tar.gz");
   const l09 = loaded.files.get("l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz");
@@ -71,6 +71,11 @@ test("receiving manifest publishes the three public archives and keeps draft cla
   assert.equal(sha256(retained.bytes), "350629b7bf1a14b092d94e0c27579f2e05114bf7f2f05a33c33d32b4c68176de");
   assert.equal(l09.bytes.length, 477108);
   assert.equal(sha256(l09.bytes), "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0");
+  const seller = loaded.files.get("seller-repair-external-consumer/0.2.0/seller-repair-external-consumer-0.2.0.tar.gz");
+  assert.equal(seller.bytes.length, 30462);
+  assert.equal(sha256(seller.bytes), "86e55a75f7e7e5c5ad188de8b20c64648f40c236b11981186b56abeb6d11350f");
+  assert.equal(seller.asset.hostedAcquisitionVerified, false);
+  assert.equal(seller.asset.paidLaunch, false);
   assert.equal(loaded.document.hostedAcquisitionVerified, false);
   assert.equal(loaded.document.productionHosted, false);
   assert.equal(loaded.document.sourceQualification, "unknown");
@@ -360,7 +365,8 @@ test("cold node and python httpx clients unpack the mount and run the declared c
     const nodeProfile = JSON.parse(nodeRun.stdout);
     assert.equal(nodeProfile.proofClass, "loopback");
     assert.equal(nodeProfile.productionAcceptance, false);
-    assert.equal(nodeProfile.results.length, 3);
+    assert.equal(nodeProfile.results.length, 4);
+    assert.equal(nodeProfile.results[3].id, "seller-repair-external-consumer");
     assert.equal(nodeProfile.results[1].id, "retained-task");
     assert.equal(nodeProfile.hermes.invoked, false);
     const pythonRun = spawnSync("python3", [join(ROOT, "cold-httpx.py"), "--proof", "loopback", "--base", base], { encoding: "utf8" });
