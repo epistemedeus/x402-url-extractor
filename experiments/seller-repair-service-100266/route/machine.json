@@ -1,0 +1,28 @@
+{
+  "schema": "samedaydesk.seller-repair-diagnosis.machine.v1",
+  "route": "POST /commerce/seller-repair-diagnosis",
+  "method": "POST",
+  "charged": false,
+  "mounted": false,
+  "mount": "experiments/seller-repair-service-100266/route/ROOT-SERVER-MOUNT.patch",
+  "priceChanged": false,
+  "skuAdded": false,
+  "paidAudit": {
+    "method": "GET",
+    "route": "/commerce/seller-integrity-audit",
+    "product": "samedaydesk-seller-integrity-audit",
+    "version": "1.3.0",
+    "priceDisplay": "$0.01",
+    "priceAtomic": "10000"
+  },
+  "commands": [
+    "node experiments/seller-repair-service-100266/bin/seller-repair.mjs deliver",
+    "node experiments/seller-repair-service-100266/bin/seller-repair.mjs diagnose --case experiments/seller-repair-service-100266/cases/supplied-quota.json",
+    "node experiments/seller-repair-service-100266/bin/seller-repair.mjs diagnose --case experiments/seller-repair-service-100266/cases/supplied-health.json",
+    "node experiments/seller-repair-service-100266/bin/seller-repair.mjs reject-seeded experiments/seller-repair-service-100266/fixtures/seeded-false-useful.json"
+  ],
+  "coverage": "unknown",
+  "adaptationMaintenanceCost": "unknown",
+  "tokens": "unknown",
+  "recognizedRevenueAtomic": "0"
+}

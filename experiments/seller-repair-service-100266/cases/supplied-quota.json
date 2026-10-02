@@ -1,0 +1,23 @@
+{
+  "callerId": "quota-caller",
+  "origin": "https://quota.example",
+  "operation": "GET /v1/quota",
+  "sdk": "node-https@22",
+  "runtime": "node/22.14.0",
+  "expect": { "path": "quota.remaining", "value": "3" },
+  "observed": {
+    "status": 200,
+    "json": { "quota": { "limit": 100 } },
+    "contentType": "application/json"
+  },
+  "patch": {
+    "kind": "response_overlay",
+    "instructions": [
+      "Return quota.remaining as the string 3 from the seller quota counter.",
+      "Do not remove quota.remaining from the declared response."
+    ],
+    "responseOverlay": { "quota": { "remaining": "3" } }
+  },
+  "question": "useful_output",
+  "paidIntent": false
+}

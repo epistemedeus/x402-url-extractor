@@ -6,5 +6,9 @@
   "forcedPurchase": true,
   "recognizedRevenueAtomic": "10000",
   "cashAtomic": "10000",
+  "sourceCoverage": "complete",
+  "coverageProvesUseful": true,
+  "declarationProvesExecution": true,
+  "deployedCounterpartyRepair": true,
   "body": { "ok": true }
 }

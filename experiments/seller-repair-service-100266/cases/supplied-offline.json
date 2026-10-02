@@ -1,0 +1,36 @@
+{
+  "callerId": "offline-caller",
+  "task": "Caller supplied GET /v1/health on https://status.example and observed status ready for python-httpx@1.",
+  "origin": "https://status.example",
+  "method": "GET",
+  "resource": "/v1/health",
+  "operation": {
+    "method": "GET",
+    "resource": "/v1/health",
+    "operationId": "GET /v1/health"
+  },
+  "expectedUsefulOutput": {
+    "paths": ["status"],
+    "equals": { "path": "status", "value": "ready" }
+  },
+  "declaredSdk": "python-httpx@1",
+  "declaredRuntime": "python/3.12.0",
+  "maxEffort": {
+    "probes": 4,
+    "bodyBytes": 4096,
+    "deadlineMs": 1000,
+    "totalBodyBytes": 16384,
+    "totalResponseMs": 4000,
+    "redirects": 0
+  },
+  "probeConsent": { "class": "public-https", "confirmed": true },
+  "question": "useful_output",
+  "paidIntent": false,
+  "callerEvidence": {
+    "observed": {
+      "status": 200,
+      "json": { "status": "ready" },
+      "contentType": "application/json"
+    }
+  }
+}

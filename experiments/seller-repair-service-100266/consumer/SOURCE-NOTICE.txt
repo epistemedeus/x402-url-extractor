@@ -1,0 +1,28 @@
+seller-repair-external-consumer 0.2.0
+license: MIT
+Copyright (c) 2026 SameDayDesk
+
+This archive is a portable consumer of the seller-repair experiment. The frozen
+0.1.0 archive is a different byte string and is not rewritten. 0.2.0 is prepared
+as a draft public-acquisition asset. productionHosted and
+hostedAcquisitionVerified stay false until Root hosts these bytes and runs the
+cold command against that hosted copy.
+
+No private Git remote, npm package, or hidden worker directory is required.
+Runtime dependencies are Node.js >=22.22.0 and the standard modules named in
+README.md. agent-payment-integrity is not bundled. Scanner coverage stays
+unknown and does not prove useful execution.
+
+The privacy check is the existing delivery-outcome authority, copied
+byte-for-byte at the task-linked-delivery paths inside this archive. Those
+files are the same MIT-licensed sources as the merchant repository. They are
+not a new privacy engine.
+
+A caller may name a public HTTPS origin, one GET operation, an SDK, and the
+observed output. Loopback and the public acquisition index remain separate
+consent classes. Private and reserved addresses, DNS changes, redirects, and
+budget overruns keep their checks. This package does not mutate a deployed
+seller, follow redirects, or purchase a report.
+
+Installing or unpacking this archive is not revenue, savings, adoption, or
+paid authority.

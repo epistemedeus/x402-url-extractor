@@ -1,0 +1,45 @@
+{
+  "schema": "samedaydesk.public-acquisition.cold-commands.v1",
+  "proofClass": "loopback",
+  "productionAcceptance": false,
+  "hostedAcquisitionVerified": false,
+  "productionHosted": false,
+  "launched": false,
+  "note": "Draft 0.2.0 command. Root runs it on hosted bytes. Checks that exit 2 stay outside this runner.",
+  "commands": [
+    {
+      "id": "seller-repair-external-consumer",
+      "version": "0.2.0",
+      "filename": "seller-repair-external-consumer-0.2.0.tar.gz",
+      "cwd": ".",
+      "steps": [
+        {
+          "argv": ["node", "package/bin/seller-repair.mjs", "deliver"],
+          "stdoutIncludes": [
+            "\"privateTargetRefused\":true",
+            "\"directBaselineAgrees\":true",
+            "\"tokens\":\"unknown\"",
+            "\"adaptationMaintenanceCost\":\"unknown\"",
+            "\"paymentSent\":false",
+            "\"charged\":false",
+            "\"useful\":true",
+            "\"http200IsSuccess\":false",
+            "\"deployedCounterpartyRepair\":false"
+          ]
+        },
+        {
+          "argv": ["node", "package/bin/seller-repair.mjs", "reproduce", "--case", "package/cases/retained-case.json"],
+          "stdoutIncludes": [
+            "\"loopbackFix\":true",
+            "\"deployedCounterpartyRepair\":false",
+            "\"paymentSent\":false",
+            "\"scanner\":\"not_bundled\"",
+            "\"purchaseRecommended\":false",
+            "\"recognizedRevenueAtomic\":\"0\"",
+            "\"contribution_authority_unavailable\""
+          ]
+        }
+      ]
+    }
+  ]
+}
