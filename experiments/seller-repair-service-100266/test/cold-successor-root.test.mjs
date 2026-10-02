@@ -56,7 +56,7 @@ test("0.4.1 stripped successor executes supplied tasks, useful negatives and lat
     assert.equal(later.status,0,later.err||later.out);const lb=JSON.parse(later.out);
     assert.equal(lb.executed,true);assert.equal(lb.predicateApplies,false);
     assert.equal(lb.reason,"stale_applicability");assert.equal(lb.receipt.classification.useful,false);
-    for(const [name,decision] of [["method-gedx402-3511","mismatch"],["method-operator-3657","compatible"]]){
+    for(const [name,decision] of [["method-gedx402-3511","mismatch"],["method-issue-3657","unknown"]]){
       const input=await readFile(join(exp,"cases",name+".json"));const file=join(dir,name+".json");
       await writeFile(file,input);const r=await run([cli,"deliver","--request",file],dir);
       assert.equal(r.status,0,r.err||r.out);const b=JSON.parse(r.out);
