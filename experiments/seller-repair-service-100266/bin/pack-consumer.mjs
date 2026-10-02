@@ -10,8 +10,13 @@ const EXP = join(HERE, "..");
 const REPO = join(EXP, "..", "..");
 const STAGE = join(EXP, "candidate", ".stage");
 const OUT_DIR = join(EXP, "candidate");
-const ARCHIVE_NAME = "seller-repair-external-consumer-0.1.0.tar.gz";
+const ARCHIVE_NAME = "seller-repair-external-consumer-0.2.0.tar.gz";
 const ARCHIVE = join(OUT_DIR, ARCHIVE_NAME);
+const FROZEN_CONSUMER = {
+  filename: "seller-repair-external-consumer-0.1.0.tar.gz",
+  bytes: 22870,
+  sha256: "3f3552e9cdedff9910211b1820b229daa834cf3811fcc5b38035046cefda4a27",
+};
 
 const SRC_DENY = new Set(["scan.mjs", "handoff.mjs", "contribution.mjs"]);
 const PRIVACY_FILES = [
@@ -69,7 +74,15 @@ function normalizeModes(dir) {
   }
 }
 
+function assertFrozenConsumer() {
+  const bytes = readFileSync(join(OUT_DIR, FROZEN_CONSUMER.filename));
+  if (bytes.length !== FROZEN_CONSUMER.bytes || sha256(bytes) !== FROZEN_CONSUMER.sha256) {
+    throw new Error("frozen 0.1.0 consumer archive changed");
+  }
+}
+
 function pack() {
+  assertFrozenConsumer();
   rmSync(STAGE, { recursive: true, force: true });
   ensureDir(STAGE);
   ensureDir(join(STAGE, "package"));
@@ -89,8 +102,9 @@ function pack() {
     copyFile(join(EXP, "bin", name), join("package", "bin", name));
     chmodSync(join(STAGE, "package", "bin", name), 0o755);
   }
-  copyFile(join(EXP, "cases", "retained-case.json"), "package/cases/retained-case.json");
-  copyFile(join(EXP, "cases", "public-readonly.json"), "package/cases/public-readonly.json");
+  for (const name of ["retained-case.json", "public-readonly.json", "supplied-quota.json", "supplied-health.json", "supplied-offline.json"]) {
+    copyFile(join(EXP, "cases", name), join("package", "cases", name));
+  }
   copyFile(join(EXP, "fixtures", "seeded-false-useful.json"), "package/fixtures/seeded-false-useful.json");
 
   const privacyPins = {};
@@ -106,10 +120,10 @@ function pack() {
   const pins = {
     schema: "samedaydesk.seller-repair-external-consumer.pins.v1",
     name: "seller-repair-external-consumer",
-    version: "0.1.0",
+    version: "0.2.0",
     enginesNode: ">=22.22.0",
     npmPackages: [],
-    runtimeModules: ["node:crypto", "node:fs", "node:fs/promises", "node:http", "node:https"],
+    runtimeModules: ["node:crypto", "node:dns/promises", "node:fs", "node:fs/promises", "node:http", "node:https", "node:net"],
     scannerBundled: false,
     agentPaymentIntegrity: "not_bundled",
     privacy: privacyPins,
@@ -149,7 +163,7 @@ function pack() {
   const archiveBytes = readFileSync(ARCHIVE);
   const provenance = {
     name: "seller-repair-external-consumer",
-    version: "0.1.0",
+    version: "0.2.0",
     filename: ARCHIVE_NAME,
     bytes: archiveBytes.length,
     sha256: sha256(archiveBytes),
@@ -164,7 +178,8 @@ function pack() {
   chmodSync(join(OUT_DIR, "cold-command.json"), 0o644);
   chmodSync(join(OUT_DIR, "provenance.json"), 0o644);
   rmSync(STAGE, { recursive: true, force: true });
-  process.stdout.write(`${JSON.stringify({ sha256: provenance.sha256, bytes: provenance.bytes, members: members.length })}\n`);
+  assertFrozenConsumer();
+  process.stdout.write(`${JSON.stringify({ sha256: provenance.sha256, bytes: provenance.bytes, members: members.length, version: "0.2.0" })}\n`);
 }
 
 try {

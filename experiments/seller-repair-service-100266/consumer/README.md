@@ -1,4 +1,4 @@
-# seller-repair-external-consumer 0.1.0
+# seller-repair-external-consumer 0.2.0
 
 Portable caller-owned receiver for one seller-repair case. The retained catalog
 fixture remains a deterministic loopback example. A visiting agent supplies the
@@ -12,12 +12,13 @@ a price, or create revenue, savings, adoption, or paid authority.
 ## Runtime dependencies
 
 - Node.js `>=22.22.0` (`engines.node`).
-- Standard library only: `node:crypto`, `node:fs`, `node:fs/promises`, `node:http`, `node:https`.
+- Standard library only: `node:crypto`, `node:dns/promises`, `node:fs`, `node:fs/promises`, `node:http`, `node:https`, and `node:net`.
 - No npm packages, no `npm install`, and no `agent-payment-integrity` install. The scanner is absent. Its coverage is `unknown` and is not useful execution.
 - System `tar` and `gzip` to unpack the archive. They are not imported by the program.
 - No private Git remote and no `.git`, `node_modules`, or `.grok` directory.
-- Loopback `127.0.0.1` for the catalog example, the retest, and a caller-supplied pair of services.
-- Optional unpaid network: one GET of `https://agents.samedaydesk.com/.well-known/public-acquisition/index.json`. Redirects are not followed. No other public path is probed.
+- Loopback `127.0.0.1` for the catalog example, `deliver`'s direct baseline, and a caller-supplied pair of services.
+- `public-https` for one caller-named public origin. The address check matches the merchant public-target boundary. A portable install uses the vendored copy of that check when `payment-offer-preflight.mjs` is absent.
+- Optional unpaid network: one GET of `https://agents.samedaydesk.com/.well-known/public-acquisition/index.json` under `public-read-only`. Redirects are not followed.
 
 The privacy modules under `task-linked-delivery/` are vendored byte-for-byte from the MIT sources in this repository. `package/references/pins.json` records their sha256.
 
@@ -34,13 +35,15 @@ The privacy modules under `task-linked-delivery/` are vendored byte-for-byte fro
 | totalResponseMs | 20–20000 | Shared wall clock for every stage. |
 | redirects | 0 | Redirects are counted and never followed. |
 
-`probeConsent` is `{ "class": "loopback" \| "public-read-only", "confirmed": true }`. The field is not named `authorization` because that key is private evidence. `callerId` matches `^[a-z0-9][a-z0-9-]{0,63}$`. `operation.operationId` must equal `METHOD resource`. A similar path is a different operation.
+`probeConsent` is `{ "class": "loopback" \| "public-read-only" \| "public-https", "confirmed": true }`. The field is not named `authorization` because that key is private evidence. `callerId` matches `^[a-z0-9][a-z0-9-]{0,63}$`. `operation.operationId` must equal `METHOD resource`. A similar path is a different operation. `diagnose` accepts the shorter machine object: `callerId`, `origin`, `operation`, `sdk`, and `expect`. A long task string is optional.
 
 ## Commands
 
 Run from the extract root.
 
 ```bash
+node package/bin/seller-repair.mjs deliver
+node package/bin/seller-repair.mjs diagnose --case package/cases/supplied-health.json
 node package/bin/seller-repair.mjs reproduce --case package/cases/retained-case.json
 node package/bin/seller-repair.mjs retest --case package/cases/retained-case.json --mode repaired
 node package/bin/cold-later.mjs package/cases/retained-case.json --resource /catalog/items

@@ -27,7 +27,7 @@
         "bytes": 66166,
         "sha256": "11d5a0e2df86282b6d4edbeab84b6d8ab5ccdb26b44364042cf76c9576c23817",
         "originalUrl": "https://neomorphic.io/downloads/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
-        "fetchedFrom": "http://127.0.0.1:35879/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
+        "fetchedFrom": "http://127.0.0.1:36257/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
         "contentType": "application/x-gtar",
         "steps": [
           {
@@ -59,7 +59,7 @@
         "bytes": 107420,
         "sha256": "350629b7bf1a14b092d94e0c27579f2e05114bf7f2f05a33c33d32b4c68176de",
         "originalUrl": "https://neomorphic.io/downloads/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
-        "fetchedFrom": "http://127.0.0.1:35879/.well-known/public-acquisition/assets/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:36257/.well-known/public-acquisition/assets/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
         "contentType": "application/gzip",
         "steps": [
           {
@@ -121,7 +121,7 @@
         "bytes": 477108,
         "sha256": "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0",
         "originalUrl": "https://neomorphic.io/downloads/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
-        "fetchedFrom": "http://127.0.0.1:35879/.well-known/public-acquisition/assets/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:36257/.well-known/public-acquisition/assets/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
         "contentType": "application/gzip",
         "steps": [
           {
@@ -129,6 +129,38 @@
               "/exec-daemon/node",
               "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/bin/l09.mjs",
               "task-spec"
+            ],
+            "exitCode": 0,
+            "missing": []
+          }
+        ]
+      },
+      {
+        "id": "seller-repair-external-consumer",
+        "version": "0.2.0",
+        "filename": "seller-repair-external-consumer-0.2.0.tar.gz",
+        "bytes": 30462,
+        "sha256": "86e55a75f7e7e5c5ad188de8b20c64648f40c236b11981186b56abeb6d11350f",
+        "originalUrl": "https://neomorphic.io/downloads/seller-repair-external-consumer/0.2.0/seller-repair-external-consumer-0.2.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:36257/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.2.0/seller-repair-external-consumer-0.2.0.tar.gz",
+        "contentType": "application/gzip",
+        "steps": [
+          {
+            "argv": [
+              "/exec-daemon/node",
+              "package/bin/seller-repair.mjs",
+              "deliver"
+            ],
+            "exitCode": 0,
+            "missing": []
+          },
+          {
+            "argv": [
+              "/exec-daemon/node",
+              "package/bin/seller-repair.mjs",
+              "reproduce",
+              "--case",
+              "package/cases/retained-case.json"
             ],
             "exitCode": 0,
             "missing": []
@@ -153,7 +185,7 @@
     },
     "hermes": {
       "invoked": false,
-      "installedVersion": null,
+      "installedVersion": "0.19.0",
       "officialDistribution": "PyPI",
       "officialPackage": "hermes-agent",
       "officialVersion": "0.19.0",
@@ -168,7 +200,7 @@
         "bytes": 66166,
         "sha256": "11d5a0e2df86282b6d4edbeab84b6d8ab5ccdb26b44364042cf76c9576c23817",
         "originalUrl": "https://neomorphic.io/downloads/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
-        "fetchedFrom": "http://127.0.0.1:35879/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
+        "fetchedFrom": "http://127.0.0.1:36257/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
         "contentType": "application/x-gtar",
         "steps": [
           {
@@ -188,7 +220,7 @@
         "bytes": 107420,
         "sha256": "350629b7bf1a14b092d94e0c27579f2e05114bf7f2f05a33c33d32b4c68176de",
         "originalUrl": "https://neomorphic.io/downloads/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
-        "fetchedFrom": "http://127.0.0.1:35879/.well-known/public-acquisition/assets/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:36257/.well-known/public-acquisition/assets/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
         "contentType": "application/gzip",
         "steps": [
           {
@@ -212,9 +244,29 @@
         "bytes": 477108,
         "sha256": "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0",
         "originalUrl": "https://neomorphic.io/downloads/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
-        "fetchedFrom": "http://127.0.0.1:35879/.well-known/public-acquisition/assets/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:36257/.well-known/public-acquisition/assets/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
         "contentType": "application/gzip",
         "steps": [
+          {
+            "exitCode": 0,
+            "missing": []
+          }
+        ]
+      },
+      {
+        "id": "seller-repair-external-consumer",
+        "version": "0.2.0",
+        "filename": "seller-repair-external-consumer-0.2.0.tar.gz",
+        "bytes": 30462,
+        "sha256": "86e55a75f7e7e5c5ad188de8b20c64648f40c236b11981186b56abeb6d11350f",
+        "originalUrl": "https://neomorphic.io/downloads/seller-repair-external-consumer/0.2.0/seller-repair-external-consumer-0.2.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:36257/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.2.0/seller-repair-external-consumer-0.2.0.tar.gz",
+        "contentType": "application/gzip",
+        "steps": [
+          {
+            "exitCode": 0,
+            "missing": []
+          },
           {
             "exitCode": 0,
             "missing": []

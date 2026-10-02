@@ -71,7 +71,7 @@ does not transfer a spending grant.
 visiting agent uses the same case schema with its own `callerId`, `operation`,
 `expectedUsefulOutput`, `declaredSdk`, and `probeConsent`. `operationId` must
 equal `METHOD resource`. A nearby path is not inferred. `probeConsent.class`
-is `loopback` or `public-read-only`, and `confirmed` must be true. The key is
+is `loopback`, `public-read-only`, or `public-https`, and `confirmed` must be true. `public-https` uses the same public-address boundary as payment-target checks. A private or reserved answer, a DNS change, a redirect, or a budget overrun stops the probe. The key is
 not `authorization`, which the privacy authority treats as private evidence.
 
 `maxEffort` carries `probes`, `bodyBytes`, `deadlineMs`, `totalBodyBytes`,
@@ -102,18 +102,39 @@ The local incomplete seller-integrity report (`openapi_unavailable`,
 `auditCompleted` false, body not read) stays a useful negative.
 `purchaseRecommended` stays false. The price remains `$0.01` / atomic `10000`.
 
+## Supplied public target
+
+`cases/supplied-quota.json` and `cases/supplied-health.json` are caller
+machine requests, not the catalog fixture. Quota asks whether `GET /v1/quota`
+returns `quota.remaining` equal to the string `3`. Health asks whether
+`GET /v1/health` returns `status` equal to `ready`. `diagnose` reads supplied
+evidence without a charge. A live retest is a caller-reviewed comparison of
+two processes the caller already runs. `deployedCounterpartyRepair` stays
+false.
+
+`POST /commerce/seller-repair-diagnosis` is the free intake. It is not mounted
+in `server.js` on this branch. Root applies
+`route/ROOT-SERVER-MOUNT.patch` before the paid middleware. The route does
+not add a SKU and does not change the `$0.01` seller-integrity audit. A
+completed audit is connected only when the caller asked for declaration
+contract work and the report matches the same target. It still does not read
+the useful body and it does not recommend a purchase.
+
 ## Portable consumer
 
-`consumer/` is the unlaunched 0.1.0 skill. Pack it with:
+`consumer/` is the unlaunched 0.2.0 skill. Pack it with:
 
 ```bash
 node experiments/seller-repair-service-100266/bin/pack-consumer.mjs
 ```
 
-The archive is `candidate/seller-repair-external-consumer-0.1.0.tar.gz`.
-Runtime dependencies are Node.js `>=22.22.0` and `node:crypto`, `node:fs`,
-`node:fs/promises`, `node:http`, and `node:https`. No npm packages are
-required. Privacy sources are vendored. The scanner, handoff, and contribution
-modules stay in this repository. `candidate/cold-command.json` is the command
-Root runs after hosting the bytes. This branch does not mount the archive on
-`public-acquisition/` and does not change the frozen 0.1.0 bundles.
+The new archive is `candidate/seller-repair-external-consumer-0.2.0.tar.gz`.
+`candidate/seller-repair-external-consumer-0.1.0.tar.gz` stays
+`3f3552e9cdedff9910211b1820b229daa834cf3811fcc5b38035046cefda4a27` (22870 bytes).
+Runtime dependencies are Node.js `>=22.22.0` and `node:crypto`,
+`node:dns/promises`, `node:fs`, `node:fs/promises`, `node:http`, `node:https`,
+and `node:net`. No npm packages are required. Privacy sources are vendored.
+The scanner, handoff, and contribution modules stay in this repository.
+`candidate/cold-command.json` is the command Root runs after hosting the
+bytes. The 0.2.0 archive, provenance, source notice, and license are draft
+assets under `public-acquisition/`. `hostedAcquisitionVerified` stays false.

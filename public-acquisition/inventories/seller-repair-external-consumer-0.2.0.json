@@ -1,0 +1,237 @@
+{
+  "schema": "samedaydesk.public-acquisition.members.v1",
+  "id": "seller-repair-external-consumer",
+  "version": "0.2.0",
+  "archiveSha256": "86e55a75f7e7e5c5ad188de8b20c64648f40c236b11981186b56abeb6d11350f",
+  "memberCount": 38,
+  "members": [
+    {
+      "bytes": 1068,
+      "kind": "file",
+      "path": "package/LICENSE",
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c"
+    },
+    {
+      "bytes": 4629,
+      "kind": "file",
+      "path": "package/README.md",
+      "sha256": "a97dc5c4ec121337c01e0297156d1060ff7b450b988956eafbd1b5918ad39dfa"
+    },
+    {
+      "bytes": 3453,
+      "kind": "file",
+      "path": "package/SKILL.md",
+      "sha256": "765d29d4b491c45bb37d18bc57ceb3467101c64c7900a67fc5e9e1329e952a38"
+    },
+    {
+      "bytes": 1385,
+      "kind": "file",
+      "path": "package/SOURCE-NOTICE.txt",
+      "sha256": "3c830a652f73ea681b80044fed1798bda7b3192c16e050ad19c8ec6835d7920c"
+    },
+    {
+      "bytes": 2478,
+      "kind": "file",
+      "path": "package/bin/cold-later.mjs",
+      "sha256": "6f4d3e04e32d7a574b18adf66ffb298735030db4fc703d3bb3516138ab220292"
+    },
+    {
+      "bytes": 10547,
+      "kind": "file",
+      "path": "package/bin/seller-repair.mjs",
+      "sha256": "b4b3c142b57b0e6b15935ecb81994cdee5012d51809024fc911f4f70e04849f6"
+    },
+    {
+      "bytes": 1095,
+      "kind": "file",
+      "path": "package/cases/public-readonly.json",
+      "sha256": "874510c5cbda1127d78521dd0edb3d0e64ceb05a3f4e061c533a613e15f297ac"
+    },
+    {
+      "bytes": 1284,
+      "kind": "file",
+      "path": "package/cases/retained-case.json",
+      "sha256": "5ba963637abf48e4889ee5b75c6bef8490d17c6dec027a96d85b55005116dc28"
+    },
+    {
+      "bytes": 380,
+      "kind": "file",
+      "path": "package/cases/supplied-health.json",
+      "sha256": "eccfc27a4927ef3df16eab3dae89ec23d54be048e6c39b6c00351a7a4b54a6d6"
+    },
+    {
+      "bytes": 961,
+      "kind": "file",
+      "path": "package/cases/supplied-offline.json",
+      "sha256": "f5d5e8ab36dc03d28442a651df37b401487b1bd70637ccd18a9e52ca9f9d05fd"
+    },
+    {
+      "bytes": 670,
+      "kind": "file",
+      "path": "package/cases/supplied-quota.json",
+      "sha256": "b56e69ee128579a7d13b28661d09f07fb8388bca2a04b2846e3df4cb14fd5799"
+    },
+    {
+      "bytes": 368,
+      "kind": "file",
+      "path": "package/fixtures/seeded-false-useful.json",
+      "sha256": "65ac054c9df1b1bba606e066ef329101dfae54fa8cd342b8daead939f525ace5"
+    },
+    {
+      "bytes": 342,
+      "kind": "file",
+      "path": "package/package.json",
+      "sha256": "72f53553dc383d4346b255d5f146e9ed103ba9fbc94003d04fd6b9a0142b276a"
+    },
+    {
+      "bytes": 1342,
+      "kind": "file",
+      "path": "package/references/pins.json",
+      "sha256": "2a45efca5642a8f2ade1818609d9a4e83c48d7e76cc2801e6723c3f5656cf8e5"
+    },
+    {
+      "bytes": 2433,
+      "kind": "file",
+      "path": "package/src/authorize.mjs",
+      "sha256": "670a0d7184a22dd99baeaf73b383d110c506b9d0f5016293225dbc55300e1424"
+    },
+    {
+      "bytes": 1360,
+      "kind": "file",
+      "path": "package/src/budget.mjs",
+      "sha256": "311371cee2f6236e161a07b1a8fee7bbbeec2e930449912093fea6e6897b6218"
+    },
+    {
+      "bytes": 4113,
+      "kind": "file",
+      "path": "package/src/classify.mjs",
+      "sha256": "2ce7660cbcc5002c50eb780c55c968f6976264fd998138b9e4a217399e2990f0"
+    },
+    {
+      "bytes": 5425,
+      "kind": "file",
+      "path": "package/src/compare.mjs",
+      "sha256": "6f503d2e8bb5ac8854fe68e8f9ed0ea762bf09b36a10d814ac1369cce7993d3f"
+    },
+    {
+      "bytes": 1567,
+      "kind": "file",
+      "path": "package/src/constants.mjs",
+      "sha256": "7f6f1348fdc7933ff52a5d2f307da5f7e7e610aee62a55ea32c88ccb96ffc15f"
+    },
+    {
+      "bytes": 1671,
+      "kind": "file",
+      "path": "package/src/declaration.mjs",
+      "sha256": "7688eddee5133887bb521bab950a00b36476d9670d0c126456994aff6480c162"
+    },
+    {
+      "bytes": 295,
+      "kind": "file",
+      "path": "package/src/errors.mjs",
+      "sha256": "bfad825cf976ed9faa60937e311738544f6742a5f7e2d64163984c64a0e0f9bb"
+    },
+    {
+      "bytes": 3488,
+      "kind": "file",
+      "path": "package/src/fixture-seller.mjs",
+      "sha256": "f8d8c81b80a6730b5486101fd14da8bfc008849b9a3b3436b35807365d5db0e2"
+    },
+    {
+      "bytes": 7786,
+      "kind": "file",
+      "path": "package/src/intake.mjs",
+      "sha256": "1a86d1de40c6cb853cb4e9129479296231526a46da2b677f730938515b74742f"
+    },
+    {
+      "bytes": 12121,
+      "kind": "file",
+      "path": "package/src/journey.mjs",
+      "sha256": "1928c7531dda3bcea05e1c2e407825c5d3ead4f5dc8d28582c36567c970478bc"
+    },
+    {
+      "bytes": 1670,
+      "kind": "file",
+      "path": "package/src/later.mjs",
+      "sha256": "3252a7d58f24dac7e96ff443f6d5320b4f1b9429aa438922db23f37f5d44fef9"
+    },
+    {
+      "bytes": 3946,
+      "kind": "file",
+      "path": "package/src/machine.mjs",
+      "sha256": "be73499f164f75d133bba20c4456339e0599469b852698f27c86204112301d07"
+    },
+    {
+      "bytes": 2301,
+      "kind": "file",
+      "path": "package/src/measure.mjs",
+      "sha256": "bf9fe427d5288821cf87331c0d5c37a3a3203ec509fcc55d58786b8a1b761b37"
+    },
+    {
+      "bytes": 1867,
+      "kind": "file",
+      "path": "package/src/operation.mjs",
+      "sha256": "fd48893e63d288d3bc2110e5899aed1980a00d7b47786edbc491c5abb3702573"
+    },
+    {
+      "bytes": 2460,
+      "kind": "file",
+      "path": "package/src/paid-report.mjs",
+      "sha256": "b1ad12c4fc52cc7c166d859f488e60805b0dbe3df57f9d80ca70d286733806ec"
+    },
+    {
+      "bytes": 1659,
+      "kind": "file",
+      "path": "package/src/paths.mjs",
+      "sha256": "14ac935d0f02ed3d9301cfd5e5d37a459127790db9cf774cad3bf1024ae0aceb"
+    },
+    {
+      "bytes": 115,
+      "kind": "file",
+      "path": "package/src/privacy.mjs",
+      "sha256": "c1db2120691c677d301a6ca5ae31099802628a657f5c0699e225b00e82ded867"
+    },
+    {
+      "bytes": 11650,
+      "kind": "file",
+      "path": "package/src/probe.mjs",
+      "sha256": "cfaba03c8e21089e890f80457b77e840fb131c45ec4e2906334da97de8326ddc"
+    },
+    {
+      "bytes": 8442,
+      "kind": "file",
+      "path": "package/src/public-target.mjs",
+      "sha256": "d42b10489836bd275799d07e9f834b262376826641b4da640e7eab411bdcb1ae"
+    },
+    {
+      "bytes": 3510,
+      "kind": "file",
+      "path": "package/src/repair.mjs",
+      "sha256": "e921784f46ff194e15dec40c5b1b69a991228c8930741a6af7930bf42771c300"
+    },
+    {
+      "bytes": 1328,
+      "kind": "file",
+      "path": "package/src/seed.mjs",
+      "sha256": "7f46ea749a47c5b640e08ca714c54a73b40819ba63c2f964ae499747cb41042d"
+    },
+    {
+      "bytes": 1069,
+      "kind": "file",
+      "path": "task-linked-delivery/experiments/delivery-outcome-100173/src/errors.mjs",
+      "sha256": "84fb984f031f9ada8d95d06536ce3c6d22826bed9cbab692e890fdc34bb125ae"
+    },
+    {
+      "bytes": 2771,
+      "kind": "file",
+      "path": "task-linked-delivery/experiments/delivery-outcome-100173/src/privacy.mjs",
+      "sha256": "0c116dd78c69d9b5da47775e5d058fc1f3e2b9e0cd71d801a4e6fad92a7dbca8"
+    },
+    {
+      "bytes": 2313,
+      "kind": "file",
+      "path": "task-linked-delivery/tools/ops/three-site-settlement-join/measure/src/restricted.mjs",
+      "sha256": "197cc019e157586dfdbba9a14e25b2b661dee5e642845d12a98d76ee89f76d63"
+    }
+  ]
+}

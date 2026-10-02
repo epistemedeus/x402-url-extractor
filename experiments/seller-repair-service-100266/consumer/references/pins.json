@@ -1,15 +1,17 @@
 {
   "schema": "samedaydesk.seller-repair-external-consumer.pins.v1",
   "name": "seller-repair-external-consumer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "enginesNode": ">=22.22.0",
   "npmPackages": [],
   "runtimeModules": [
     "node:crypto",
+    "node:dns/promises",
     "node:fs",
     "node:fs/promises",
     "node:http",
-    "node:https"
+    "node:https",
+    "node:net"
   ],
   "scannerBundled": false,
   "agentPaymentIntegrity": "not_bundled",
