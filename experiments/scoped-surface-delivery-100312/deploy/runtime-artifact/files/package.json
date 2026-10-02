@@ -1,0 +1,38 @@
+{
+  "name": "skillguard",
+  "version": "1.3.0",
+  "description": "Static security scanner for Claude Code skills, plugins, and MCP servers. Detects env-var exfiltration, install-time shell hooks, prompt injection, committed binaries, and auto-approve configs. Never executes the scanned code.",
+  "type": "module",
+  "bin": {
+    "skillguard": "index.js",
+    "skillguard-mcp": "mcp.js"
+  },
+  "main": "index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "mcp-security",
+    "claude-code",
+    "security",
+    "scanner",
+    "prompt-injection",
+    "supply-chain",
+    "ai-tools",
+    "skills",
+    "mcp-server",
+    "model-context-protocol"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/epistemedeus/skillguard"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1"
+  }
+}

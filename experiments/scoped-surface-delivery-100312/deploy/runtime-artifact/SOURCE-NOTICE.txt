@@ -1,0 +1,3 @@
+Unchanged public SkillGuard runtime from https://github.com/epistemedeus/skillguard at beec14acbb56de37cd361acc949087b9ae019b70.
+The original package.json declares MIT. No LICENSE file exists in that source tree; no new license or private authority is implied here.
+Manifest pins the complete seven-file runtime. No fixtures, dependencies, credential, private source or ledger is bundled.

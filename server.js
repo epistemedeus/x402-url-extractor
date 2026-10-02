@@ -19,6 +19,8 @@
 
 import { installPaidReceiptRetention, noteReceiptRetention } from "./useful-result-reuse/delivery.mjs";
 import { mountSellerRepairDiagnosis } from "./experiments/seller-repair-service-100266/route/mount.mjs";
+import { mountScopedSurfaceDelivery } from "./experiments/scoped-surface-delivery-100312/route/mount.mjs";
+import { resolveHostedScanner } from "./experiments/scoped-surface-delivery-100312/deploy/hosted-scanner.mjs";
 import { existsSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import express from "express";
@@ -3680,6 +3682,12 @@ app.post("/security/stateful-wallet-policy-conformance", (req, res, next) => {
 });
 
 mountSellerRepairDiagnosis(app);
+// Optional. Missing scanner, journal, or retention authority must not throw.
+mountScopedSurfaceDelivery(app, {
+  ...resolveHostedScanner(),
+  journalDir: process.env.SCOPED_SURFACE_JOURNAL || null,
+  authorityFile: process.env.SCOPED_SURFACE_AUTHORITY || null,
+});
 installPaidReceiptRetention(app, () => retainDeliveredReceipt, {
   causalEventProof: (res) => commerceTelemetry.causalCommerceEventProof(res),
 });

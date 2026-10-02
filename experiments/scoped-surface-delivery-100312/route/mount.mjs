@@ -222,7 +222,7 @@ export function mountScopedSurfaceDelivery(app, options = {}) {
     return res.status(200).json(envelope({ report: viewed, scanPerformed: false }).body);
   });
 
-  app.get("/commerce/scoped-surface-price", (req, res) => {
+  if (options.includePriceProposal === true) app.get("/commerce/scoped-surface-price", (req, res) => {
     const proposal = proposePrice({
       internalToken: options.internalToken || null,
       taskId: "scoped-surface-scan",
@@ -252,6 +252,7 @@ export async function createIsolatedApp(options = {}) {
     clock: options.clock,
     internalToken: options.internalToken || null,
     measurement: options.measurement || null,
+    includePriceProposal: options.includePriceProposal === true,
   });
   app.use((error, req, res, next) => {
     if (error instanceof SyntaxError && error.status === 400 && Object.hasOwn(error, "body")) {

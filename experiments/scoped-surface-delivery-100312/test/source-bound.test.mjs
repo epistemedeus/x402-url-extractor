@@ -502,7 +502,7 @@ test("changed later input is not inherited, and the whole retest shares one budg
 
 test("the shared-server patch fits and does not fetch or open an unconfigured journal", () => {
   const patch = path.join(PACKAGE, "route", "ROOT-SERVER-MOUNT.patch");
-  const check = spawnSync("git", ["apply", "--check", patch], { cwd: ROOT, encoding: "utf8" });
+  const check = spawnSync("git", ["apply", "--reverse", "--check", patch], { cwd: ROOT, encoding: "utf8" });
   assert.equal(check.status, 0, check.stdout + check.stderr);
   const text = fs.readFileSync(patch, "utf8");
   assert.equal(text.includes("ensurePins"), false);
@@ -510,13 +510,14 @@ test("the shared-server patch fits and does not fetch or open an unconfigured jo
   assert.equal(text.includes("openJournal"), false);
   const copyDir = fs.mkdtempSync(path.join(os.tmpdir(), "scoped-patch-"));
   fs.copyFileSync(path.join(ROOT, "server.js"), path.join(copyDir, "server.js"));
-  const applied = spawnSync("patch", ["-p1"], { cwd: copyDir, input: text, encoding: "utf8" });
-  assert.equal(applied.status, 0, applied.stdout + applied.stderr);
+  const mounted = fs.readFileSync(path.join(copyDir, "server.js"), "utf8");
+  assert.equal(mounted.split("mountScopedSurfaceDelivery(app,").length, 2);
+  assert.equal(mounted.includes("...resolveHostedScanner()"), true);
   const syntax = spawnSync(process.execPath, ["--check", path.join(copyDir, "server.js")], { encoding: "utf8" });
   assert.equal(syntax.status, 0, syntax.stdout + syntax.stderr);
   const untouched = spawnSync("git", ["diff", "--exit-code", "--", "server.js"], { cwd: ROOT, encoding: "utf8" });
   assert.equal(untouched.status, 0);
-  const resolved = resolveHostedScanner({});
+  const resolved = resolveHostedScanner({}, path.join(copyDir, "missing-scanner"));
   assert.equal(resolved.skillguardRoot, null);
   assert.equal(resolved.scannerSource, "unavailable");
   fs.rmSync(copyDir, { recursive: true, force: true });

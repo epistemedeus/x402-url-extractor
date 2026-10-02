@@ -370,6 +370,7 @@ test("cold consumer runs two supplied tasks and preserves the dangerous exit", a
 test("isolated HTTP mount retrieves after restart and does not treat 200 as the work", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "scoped-http-"));
   const firstApp = await createIsolatedApp({
+    includePriceProposal: true,
     journalDir: dir,
     clock: () => CLOCK,
     internalToken: TOKEN,
@@ -428,6 +429,7 @@ test("isolated HTTP mount retrieves after restart and does not treat 200 as the 
   assert.equal(retained.body.retained, true);
   await close(server);
   const second = await createIsolatedApp({
+    includePriceProposal: true,
     journalDir: dir,
     clock: () => CLOCK,
     skillguardRoot: pins.skillguardRoot,

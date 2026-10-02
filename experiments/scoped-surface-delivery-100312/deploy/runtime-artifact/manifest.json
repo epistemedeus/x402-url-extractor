@@ -1,0 +1,18 @@
+{
+  "schema": "samedaydesk.scoped-surface.scanner-artifact.v1",
+  "commit": "beec14acbb56de37cd361acc949087b9ae019b70",
+  "version": "1.3.0",
+  "licenseDeclared": "MIT",
+  "licenseFile": null,
+  "npmDependencies": {},
+  "fetchedOnRequest": false,
+  "files": {
+    "package.json": "0d3779302eed7a84e2ecd276fc4b42cd4413d2033d3a335d2b324c6780fb7cdd",
+    "index.js": "65889c7f283609f0881707f24bbee1b82efdc8b66ce68adb02c24eb57ec59ab1",
+    "report.js": "8ca493009a9500c8da0e70caf9702db4f7df5babfe0a7ef61b5f06f40dc2480f",
+    "rules.js": "896b876ee972b9f0b81ff44f01c6c43d5f6b625809b77ceba2539d00eb5b3ad3",
+    "secrets.js": "7334d84f3034630ad01469b6b556af880b861719ebd54d9923541ac08a3f2662",
+    "version.js": "e6ea4e3e6cb72d77dd8eea7e5d49261af8850be9039350343b09d87bf99f142d",
+    "mcp.js": "4e9b6ad6c1634d63e41c33c4fdad304eda28a365ec084964390b07fd92ef7d0e"
+  }
+}
