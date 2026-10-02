@@ -63,4 +63,8 @@ test('assessment error, no-match, 402, declined work and a second priced scope n
   assert.equal((await env.service.accept({packetId:packet.packetId,taskId:scan.task.id,callerId:scan.task.callerId,decision:'accepted'})).acceptance.reason,'work_predicate_failed');
   const invalid=structuredClone(scan);invalid.quoteIntent.purpose='new_surface_subscription';
   await assert.rejects(()=>env.service.deliver(invalid),{code:'unsupported_paid_scope'});
+  const unavailable=await service({skillguardRoot:null});t.after(unavailable.close);
+  const unknown=await unavailable.service.deliver(surface({id:'unobserved-outcome'}));
+  const claim=await unavailable.service.review({packetId:unknown.packet.packetId,taskId:'unobserved-outcome',callerId:'caller-a',claimantUseful:true});
+  assert.equal(claim.claimantOutcome.state,'unverified_claim');assert.equal(claim.observedWork.reason,'no_independent_observation');
 });

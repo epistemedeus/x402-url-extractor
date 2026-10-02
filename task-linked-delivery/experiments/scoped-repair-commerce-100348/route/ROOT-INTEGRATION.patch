@@ -184,7 +184,7 @@ index 37378b9..f2f2a30 100644
    rmSync(STAGE, { recursive: true, force: true });
    ensureDir(STAGE);
 diff --git a/public-acquisition/manifest.json b/public-acquisition/manifest.json
-index 770b2d7..076782d 100644
+index 770b2d7..f26d83b 100644
 --- a/public-acquisition/manifest.json
 +++ b/public-acquisition/manifest.json
 @@ -395,6 +395,107 @@
@@ -194,15 +194,15 @@ index 770b2d7..076782d 100644
 +    },
 +    {
 +      "id": "scoped-repair-commerce-100348",
-+      "version": "0.1.1",
++      "version": "0.1.2",
 +      "role": "archive",
-+      "filename": "scoped-repair-commerce-100348-0.1.1.tar.gz",
-+      "relativePath": "scoped-repair-commerce-100348/0.1.1/scoped-repair-commerce-100348-0.1.1.tar.gz",
-+      "bytes": 37741,
-+      "sha256": "7963aa93a08b4c8a177349e8fc58dcbeab2198b48efcc1d5dcfc6a20362c1f9e",
++      "filename": "scoped-repair-commerce-100348-0.1.2.tar.gz",
++      "relativePath": "scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz",
++      "bytes": 37921,
++      "sha256": "f95db152722ac820d57975cdab9b2bb486888f2faf023dc271b82da5eba84656",
 +      "mediaType": "application/gzip",
 +      "originContentType": "application/gzip",
-+      "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.1/scoped-repair-commerce-100348-0.1.1.tar.gz",
++      "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz",
 +      "attribution": "Copyright (c) 2026 SameDayDesk",
 +      "licenseId": "MIT",
 +      "sourceQualification": "unknown",
@@ -221,22 +221,22 @@ index 770b2d7..076782d 100644
 +        "node_modules/"
 +      ],
 +      "inventory": {
-+        "path": "inventories/scoped-repair-commerce-100348-0.1.1.json",
-+        "fileSha256": "e50b3344884cac8f4ff10c6a43687f6cd39c4fd1ed5dd90cb15e12bd796168cf",
++        "path": "inventories/scoped-repair-commerce-100348-0.1.2.json",
++        "fileSha256": "e26fd4e8bdbdd3d9d77ac8cb09db4b01df5c991bb7e609fbf2eeff75b9ad3d77",
 +        "memberCount": 16
 +      }
 +    },
 +    {
 +      "id": "scoped-repair-commerce-100348",
-+      "version": "0.1.1",
++      "version": "0.1.2",
 +      "role": "provenance",
 +      "filename": "provenance.json",
-+      "relativePath": "scoped-repair-commerce-100348/0.1.1/provenance.json",
++      "relativePath": "scoped-repair-commerce-100348/0.1.2/provenance.json",
 +      "bytes": 8453,
-+      "sha256": "43908478d988b8e645bb8f9aa084d675f2b3848588cde41c5710c36bdebe30ba",
++      "sha256": "7febcb560b80a9cdd02a59b419707fe9f4a9a9a2030c8b130da4e399a33c3ca8",
 +      "mediaType": "application/json; charset=utf-8",
 +      "originContentType": "text/plain; charset=utf-8",
-+      "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.1/provenance.json",
++      "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.2/provenance.json",
 +      "attribution": "Copyright (c) 2026 SameDayDesk",
 +      "licenseId": "MIT",
 +      "sourceQualification": "unknown",
@@ -251,15 +251,15 @@ index 770b2d7..076782d 100644
 +    },
 +    {
 +      "id": "scoped-repair-commerce-100348",
-+      "version": "0.1.1",
++      "version": "0.1.2",
 +      "role": "license",
 +      "filename": "LICENSE",
-+      "relativePath": "scoped-repair-commerce-100348/0.1.1/LICENSE",
++      "relativePath": "scoped-repair-commerce-100348/0.1.2/LICENSE",
 +      "bytes": 1068,
 +      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
 +      "mediaType": "text/plain; charset=utf-8",
 +      "originContentType": "text/plain; charset=utf-8",
-+      "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.1/LICENSE",
++      "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.2/LICENSE",
 +      "attribution": "Copyright (c) 2026 SameDayDesk",
 +      "licenseId": "MIT",
 +      "sourceQualification": "unknown",
@@ -273,15 +273,15 @@ index 770b2d7..076782d 100644
 +    },
 +    {
 +      "id": "scoped-repair-commerce-100348",
-+      "version": "0.1.1",
++      "version": "0.1.2",
 +      "role": "source-notice",
 +      "filename": "SOURCE-NOTICE.txt",
-+      "relativePath": "scoped-repair-commerce-100348/0.1.1/SOURCE-NOTICE.txt",
++      "relativePath": "scoped-repair-commerce-100348/0.1.2/SOURCE-NOTICE.txt",
 +      "bytes": 525,
-+      "sha256": "6b206ea64b8ae0239dfb720af36d99e938593f1243fd40437b39e51e3c2c16ea",
++      "sha256": "a394bc61d96049ce3faed08a0c248b0de05d05bbb4af10d07ab836c6766bedd3",
 +      "mediaType": "text/plain; charset=utf-8",
 +      "originContentType": "text/plain; charset=utf-8",
-+      "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.1/SOURCE-NOTICE.txt",
++      "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.2/SOURCE-NOTICE.txt",
 +      "attribution": "Copyright (c) 2026 SameDayDesk",
 +      "licenseId": "MIT",
 +      "sourceQualification": "unknown",
@@ -296,7 +296,7 @@ index 770b2d7..076782d 100644
    ]
  }
 diff --git a/public-acquisition/cold-commands.json b/public-acquisition/cold-commands.json
-index 8578347..b06b958 100644
+index 8578347..7771281 100644
 --- a/public-acquisition/cold-commands.json
 +++ b/public-acquisition/cold-commands.json
 @@ -162,6 +162,25 @@
@@ -306,8 +306,8 @@ index 8578347..b06b958 100644
 +    },
 +    {
 +      "id": "scoped-repair-commerce-100348",
-+      "version": "0.1.1",
-+      "filename": "scoped-repair-commerce-100348-0.1.1.tar.gz",
++      "version": "0.1.2",
++      "filename": "scoped-repair-commerce-100348-0.1.2.tar.gz",
 +      "cwd": ".",
 +      "steps": [
 +        {
@@ -326,7 +326,7 @@ index 8578347..b06b958 100644
    ]
  }
 diff --git a/public-acquisition/engine.test.mjs b/public-acquisition/engine.test.mjs
-index 16a4913..c946fc6 100644
+index 16a4913..63c2ee7 100644
 --- a/public-acquisition/engine.test.mjs
 +++ b/public-acquisition/engine.test.mjs
 @@ -61,7 +61,13 @@ function listen(app) {
@@ -336,11 +336,22 @@ index 16a4913..c946fc6 100644
 -  assert.equal(loaded.order.length, 16);
 +  assert.equal(loaded.order.length, 20);
 +  // Sixteen sealed predecessor assets plus the four exact client assets.
-+  const client=loaded.files.get("scoped-repair-commerce-100348/0.1.1/scoped-repair-commerce-100348-0.1.1.tar.gz");
-+  assert.equal(client.bytes.length, 37741);
-+  assert.equal(sha256(client.bytes), "7963aa93a08b4c8a177349e8fc58dcbeab2198b48efcc1d5dcfc6a20362c1f9e");
++  const client=loaded.files.get("scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz");
++  assert.equal(client.bytes.length, 37921);
++  assert.equal(sha256(client.bytes), "f95db152722ac820d57975cdab9b2bb486888f2faf023dc271b82da5eba84656");
 +  assert.equal(client.asset.hostedAcquisitionVerified, false);
 +  assert.equal(client.asset.licenseId, "MIT");
    const composition = loaded.files.get("composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz");
    const retained = loaded.files.get("retained-task/0.1.0/retained-task-0.1.0.tar.gz");
    const l09 = loaded.files.get("l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz");
+@@ -365,7 +371,9 @@ test("cold node and python httpx clients unpack the mount and run the declared c
+     const nodeProfile = JSON.parse(nodeRun.stdout);
+     assert.equal(nodeProfile.proofClass, "loopback");
+     assert.equal(nodeProfile.productionAcceptance, false);
+-    assert.equal(nodeProfile.results.length, 4);
++    assert.equal(nodeProfile.results.length, 5);
++    assert.equal(nodeProfile.results[4].id, "scoped-repair-commerce-100348");
++    assert.equal(nodeProfile.results[4].sha256, "f95db152722ac820d57975cdab9b2bb486888f2faf023dc271b82da5eba84656");
+     assert.equal(nodeProfile.results[3].id, "seller-repair-external-consumer");
+     assert.equal(nodeProfile.results[1].id, "retained-task");
+     assert.equal(nodeProfile.hermes.invoked, false);

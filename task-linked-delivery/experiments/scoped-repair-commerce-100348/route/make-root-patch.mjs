@@ -50,8 +50,12 @@ try{
     const command=JSON.parse(readFileSync(path.join(PACKAGE,'export/cold-command.json'),'utf8'));
     add('public-acquisition/cold-commands.json',source=>{const commands=JSON.parse(source);commands.commands.push(command);return JSON.stringify(commands,null,2)+'\n';});
     const archive=assets.find(asset=>asset.role==='archive');
-    add('public-acquisition/engine.test.mjs',source=>replace(source,'  assert.equal(loaded.order.length, 16);',
-      '  assert.equal(loaded.order.length, 20);\n  // Sixteen sealed predecessor assets plus the four exact client assets.\n  const client=loaded.files.get("'+archive.relativePath+'");\n  assert.equal(client.bytes.length, '+archive.bytes+');\n  assert.equal(sha256(client.bytes), "'+archive.sha256+'");\n  assert.equal(client.asset.hostedAcquisitionVerified, false);\n  assert.equal(client.asset.licenseId, "MIT");'));
+    add('public-acquisition/engine.test.mjs',source=>{
+      source=replace(source,'  assert.equal(loaded.order.length, 16);',
+        '  assert.equal(loaded.order.length, 20);\n  // Sixteen sealed predecessor assets plus the four exact client assets.\n  const client=loaded.files.get("'+archive.relativePath+'");\n  assert.equal(client.bytes.length, '+archive.bytes+');\n  assert.equal(sha256(client.bytes), "'+archive.sha256+'");\n  assert.equal(client.asset.hostedAcquisitionVerified, false);\n  assert.equal(client.asset.licenseId, "MIT");');
+      return replace(source,'    assert.equal(nodeProfile.results.length, 4);',
+        '    assert.equal(nodeProfile.results.length, 5);\n    assert.equal(nodeProfile.results[4].id, "'+archive.id+'");\n    assert.equal(nodeProfile.results[4].sha256, "'+archive.sha256+'");');
+    });
   }catch(e){if(e.code!=='ENOENT')throw e;}
   writeFileSync(path.join(PACKAGE,'route/ROOT-INTEGRATION.patch'),patch);
   process.stdout.write(JSON.stringify({files:(patch.match(/^diff --git/gm)||[]).length,bytes:Buffer.byteLength(patch)})+'\n');

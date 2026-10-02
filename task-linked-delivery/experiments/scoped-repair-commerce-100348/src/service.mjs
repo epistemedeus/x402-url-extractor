@@ -140,7 +140,7 @@ export function createScopedRepairService({ store = null, skillguardRoot = null,
       if (command.taskId !== packet.binding.task.id || command.callerId !== packet.binding.task.callerId) fail('wrong_task_or_owner');
       const observed = evaluateAcceptance(packet);
       const outcome = typeof command.claimantUseful === 'boolean' ? { value: command.claimantUseful, authority: 'claimant_statement',
-        state: command.claimantUseful && !observed.passed ? 'contradicted_by_observed_work' : 'unverified_claim', outsideUseful: false } : no('claimant_outcome_absent');
+        state: command.claimantUseful && packet.observed.independent === true && !observed.passed ? 'contradicted_by_observed_work' : 'unverified_claim', outsideUseful: false } : no('claimant_outcome_absent');
       let projection = null;
       if (evidenceFor) {
         const cut = await budget.wait(Promise.resolve(evidenceFor({ packet, budget })));
