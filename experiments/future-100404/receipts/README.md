@@ -23,12 +23,16 @@ capture and customer grant are disposable QA; no real settlement is observed.
 `cold-server.tap`, `journal-consumer.tap`, `narrow-patch.tap` and
 `archive-acquisition.tap` and `patch-export-final.tap` are narrower receiving/checkpoint runs.
 The latter receives the normalized patch and archive after the final full suite;
-Git apply check and whitespace check also pass.
+Git apply check and source/documentation whitespace checks pass; raw historical
+TAP indentation is preserved.
 `core-initial.tap` and `core-receiving.tap` preserve intermediate fixture failures
 that preceded the final passing run. They remain debugging history, not current
 acceptance. `retained-owners-run.json` is the original wrapper stdout for the same
 156-test run. No historical subset or retry is a new independent result.
 
 Raw private caller receipts and source context are not retained here. They are
-excluded from Git and the source archive. Hosting, public acquisition, outside
+excluded from Git and the source archive. `acquired-exact-export.tap` receives the final sealed archive (not rebuilt source),
+and its receipt is bound to that archive in `verification.json`.
+
+Hosting, public acquisition, outside
 requester utility, production rights and paid service delivery remain unobserved.

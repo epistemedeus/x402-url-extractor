@@ -1,0 +1,25 @@
+{
+  "schema": "samedaydesk.service-delivery.source-export.v1",
+  "repository": "epistemedeus/x402-url-extractor",
+  "branch": "codex/sol-future-404-20261002",
+  "base": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+  "sourceCommit": "e06f0eb27405c6ed94484dfd5b4d10cbf01b94a7",
+  "version": "0.1.0",
+  "archive": "service-delivery-consumer-0.1.0.tgz",
+  "archiveBytes": 55631,
+  "sha256": "ec70d87b47e7587eb766bc696d4b4ca29d6164ec82280231849ec8e70727869d",
+  "inventorySha256": "265be18e02a2109fcf51f964b4fd5b9bf7513697e7b8b593155ed64cb7416a3d",
+  "memberCount": 41,
+  "callerRuntimeClosure": "Node built-ins and included source",
+  "ownerSideRequires": {
+    "merchantBase": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+    "modules": [
+      "src/compose.mjs",
+      "src/journal-consumer.mjs"
+    ]
+  },
+  "integrationPatchApplied": false,
+  "privateReceiptsIncluded": false,
+  "publicHostingObserved": false,
+  "production": false
+}
