@@ -1,0 +1,18 @@
+{
+  "schema": "samedaydesk.useful-economics.provenance.v1",
+  "package": "useful-economics-100290",
+  "version": "0.1.0",
+  "draft": true,
+  "hostedAcquisitionVerified": false,
+  "productionHosted": false,
+  "privateGit": "unavailable",
+  "sourceQualification": "unknown",
+  "paidLaunch": false,
+  "measuredSavings": false,
+  "independentDemand": false,
+  "recognizedRevenueAtomic": "0",
+  "historicalBankedRevenueUsdc": 10.955,
+  "historicalCountsAsMargin": false,
+  "historicalCountsAsFutureCashAllocation": false,
+  "note": "originalUrl is a path convention. This draft is not a hosted acquisition."
+}

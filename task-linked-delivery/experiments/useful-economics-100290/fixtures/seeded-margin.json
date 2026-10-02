@@ -1,0 +1,19 @@
+{
+  "schema": "samedaydesk.useful-economics.bundle.v1",
+  "coverage": "supplied_records",
+  "directives": {
+    "bookHistoricalAsMargin": true
+  },
+  "observations": [
+    {
+      "schema": "samedaydesk.useful-economics.observation.v1",
+      "eventId": "historic-pin",
+      "operationId": "catalog-read",
+      "taskRef": "task-historic",
+      "stage": "settlement",
+      "sourceClass": "explicit_source",
+      "authority": "explicit_source",
+      "cohort": "public_aggregate"
+    }
+  ]
+}

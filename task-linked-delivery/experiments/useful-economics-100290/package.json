@@ -1,0 +1,14 @@
+{
+  "name": "useful-economics-100290",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "useful-economics": "./bin/useful-economics.mjs"
+  },
+  "scripts": {
+    "join": "node ./bin/useful-economics.mjs",
+    "cold": "node ./bin/cold-consumer.mjs"
+  }
+}

@@ -209,6 +209,41 @@ export function buildTaskRefRecord({ claim, commerceEventId } = {}) {
   return isTaskRefRecord(record) ? Object.freeze(record) : null;
 }
 
+// Causal producer contract. One admitted response has one server-minted
+// commerce event id. The seal is HMAC(internal token, epoch + id). The
+// binding is the existing task-ref row, written only when this process
+// both minted that id and accepted the task-bound operation. A caller
+// header, wallet, transaction, label, or digest is not an event id and
+// cannot repair a missing seal. The same response enqueues one commerce
+// event; a repeated task-ref id is a duplicate, not a second grant or
+// payment. A crash between the task-ref append and the commerce append
+// leaves the missing side unknown. Torn lines and two task refs for one
+// event id stay unbound. Paid success, HTTP 200, and owner QA stay
+// distinct from useful delivery, reuse, and recognized revenue.
+const CAUSAL_EVENT_EPOCH = "samedaydesk.causal-commerce-event.v1";
+
+export function sealCausalCommerceEvent(id, internalToken) {
+  if (!UUID_V4.test(id || "")) return null;
+  if (typeof internalToken !== "string" || Buffer.byteLength(internalToken, "utf8") < 32) return null;
+  const mac = createHmac("sha256", internalToken).update(`${CAUSAL_EVENT_EPOCH}\0${id}`).digest("hex");
+  return `${id}.${mac}`;
+}
+
+export function openCausalCommerceEvent(sealed, internalToken) {
+  if (typeof sealed !== "string" || sealed.length > 200) return null;
+  if (typeof internalToken !== "string" || Buffer.byteLength(internalToken, "utf8") < 32) return null;
+  const dot = sealed.indexOf(".");
+  if (dot !== 36) return null;
+  const id = sealed.slice(0, dot);
+  const mac = sealed.slice(dot + 1);
+  if (!UUID_V4.test(id) || !/^[0-9a-f]{64}$/.test(mac)) return null;
+  const expected = createHmac("sha256", internalToken).update(`${CAUSAL_EVENT_EPOCH}\0${id}`).digest("hex");
+  const left = Buffer.from(mac, "hex");
+  const right = Buffer.from(expected, "hex");
+  if (left.length !== right.length || !timingSafeEqual(left, right)) return null;
+  return id;
+}
+
 export function stableForwardEventId(material) {
   const digest = createHash("sha256")
     .update(`samedaydesk.outcome-binding.forward.v2\0${material}`)

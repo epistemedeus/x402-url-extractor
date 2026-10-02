@@ -1,0 +1,22 @@
+{
+  "schema": "samedaydesk.useful-economics.bundle.v1",
+  "coverage": "supplied_records",
+  "directives": {
+    "treatHttp200AsUseful": true
+  },
+  "observations": [
+    {
+      "schema": "samedaydesk.useful-economics.observation.v1",
+      "eventId": "bare-http-200",
+      "operationId": "catalog-read",
+      "taskRef": "task-http-200",
+      "stage": "verified_delivery",
+      "sourceClass": "server_execution",
+      "authority": "server_execution",
+      "cohort": "public_aggregate",
+      "httpStatus": 200,
+      "serverExecution": "absent",
+      "explicitCriterionMet": false
+    }
+  ]
+}

@@ -13,6 +13,7 @@ import {
   buildHttpFinishForwardRecords,
   buildTaskRefRecord,
   createForwardOutcomeWriter,
+  sealCausalCommerceEvent,
 } from "./commerce-outcome-binding.mjs";
 import { bindMerchantHttpDeliveryContracts } from "./http-delivery-evidence/bind-merchant-contracts.mjs";
 import {
@@ -2923,6 +2924,22 @@ export function createCommerceTelemetry({
   const rareFunnelPath = path.join(dataDir, "commerce-rare-funnel-evidence.ndjson");
   const rareFunnelRotatedPath = path.join(dataDir, "commerce-rare-funnel-evidence.1.ndjson");
   const outcomeBinding = createForwardOutcomeWriter({ dataDir, maxBytes, internalToken });
+  const causalEvents = new WeakMap();
+
+  function rememberCausalCommerceEvent(res) {
+    if (!res || typeof res !== "object") return null;
+    const existing = causalEvents.get(res);
+    if (existing) return existing;
+    const id = randomUUID();
+    const entry = { id, proof: sealCausalCommerceEvent(id, internalToken), enqueued: false };
+    causalEvents.set(res, entry);
+    return entry;
+  }
+
+  function causalCommerceEventProof(res) {
+    const entry = res && typeof res === "object" ? causalEvents.get(res) : null;
+    return typeof entry?.proof === "string" ? entry.proof : null;
+  }
   const parsedExternalSince = Date.parse(externalSince);
   const externalSinceMs = Number.isFinite(parsedExternalSince) ? parsedExternalSince : null;
   const parsedAgentDiscoverySince = Date.parse(agentDiscoverySince);
@@ -3147,6 +3164,7 @@ export function createCommerceTelemetry({
   function middleware(req, res, next) {
     const route = classifyCommerceRoute(req.path || req.url);
     if (route.kind === "excluded") return next();
+    rememberCausalCommerceEvent(res);
 
     const startedAt = Date.now();
     const headers = req.headers || {};
@@ -3273,6 +3291,8 @@ export function createCommerceTelemetry({
 
     res.once("finish", () => {
       try {
+        const causal = causalEvents.get(res);
+        if (causal?.enqueued) return;
         const status = Number(res.statusCode || 0);
       const method = String(req.method || "GET").toUpperCase();
       // Typed MCP observation owns POST /mcp economic facts. HTTP-header
@@ -3316,7 +3336,7 @@ export function createCommerceTelemetry({
         replayed,
         status,
       });
-      const eventId = randomUUID();
+      const eventId = causal?.id || randomUUID();
       const responseFinishedAt = new Date().toISOString();
       const event = {
         v: 3,
@@ -3424,6 +3444,7 @@ export function createCommerceTelemetry({
       } catch {
         taskRefRecord = null;
       }
+      if (causal) causal.enqueued = true;
       enqueue(event, paidEvidence, httpDeliveryRecord, forwardRecords, taskRefRecord);
       } catch {
         // Malformed or hostile runtime values cannot escape or produce evidence.
@@ -3981,6 +4002,7 @@ export function createCommerceTelemetry({
     observeRetainedUse,
     observeMockedSettlementBoundary,
     observeRuntimeSettlementReadback,
+    causalCommerceEventProof,
     flush,
     paths: {
       currentPath,
