@@ -1,0 +1,142 @@
+TAP version 13
+# Subtest: raw file/stdin intake, FIFO, total reads and output obey the same allowance
+ok 1 - raw file/stdin intake, FIFO, total reads and output obey the same allowance
+  ---
+  duration_ms: 469.3074
+  type: 'test'
+  ...
+# Subtest: child execution and slow whole-response transport are actually terminated within one deadline
+ok 2 - child execution and slow whole-response transport are actually terminated within one deadline
+  ---
+  duration_ms: 225.701006
+  type: 'test'
+  ...
+# Subtest: licensed cold HTTP acquisition, two caller tasks, changed later input and restart use the actual owners
+ok 3 - licensed cold HTTP acquisition, two caller tasks, changed later input and restart use the actual owners
+  ---
+  duration_ms: 2507.766435
+  type: 'test'
+  ...
+# Subtest: actual causal middleware feeds actual Sol339 projection; observed free work and claimant statements leave settlement unknown
+ok 4 - actual causal middleware feeds actual Sol339 projection; observed free work and claimant statements leave settlement unknown
+  ---
+  duration_ms: 96.978388
+  type: 'test'
+  ...
+# Subtest: missing optional store, scanner, quote and authority give supported limits without weakening existing free output
+ok 5 - missing optional store, scanner, quote and authority give supported limits without weakening existing free output
+  ---
+  duration_ms: 13.911591
+  type: 'test'
+  ...
+# Subtest: actual adjacent mandate rejects current-task, principal, revision, expiry and challenge changes
+ok 6 - actual adjacent mandate rejects current-task, principal, revision, expiry and challenge changes
+  ---
+  duration_ms: 17.997032
+  type: 'test'
+  ...
+# Subtest: physical packet-store bytes, including ignored rows, consume the caller allowance before kernel reads
+ok 7 - physical packet-store bytes, including ignored rows, consume the caller allowance before kernel reads
+  ---
+  duration_ms: 38.645198
+  type: 'test'
+  ...
+# Subtest: existing rotation kernel keeps an append crossing the file threshold readable after restart
+ok 8 - existing rotation kernel keeps an append crossing the file threshold readable after restart
+  ---
+  duration_ms: 6.199919
+  type: 'test'
+  ...
+# Subtest: the existing request normalizer rejects seller GET bodies before any work
+ok 9 - the existing request normalizer rejects seller GET bodies before any work
+  ---
+  duration_ms: 7.913672
+  type: 'test'
+  ...
+# Subtest: the actual seller regression artifact is stored privately, bound to the packet and read after restart
+ok 10 - the actual seller regression artifact is stored privately, bound to the packet and read after restart
+  ---
+  duration_ms: 680.577766
+  type: 'test'
+  ...
+# Subtest: actual unpaid merchant quote and existing signatures bind exact scoped acceptance without payment
+ok 11 - actual unpaid merchant quote and existing signatures bind exact scoped acceptance without payment
+  ---
+  duration_ms: 2337.671726
+  type: 'test'
+  ...
+# Subtest: assessment error, no-match, 402, declined work and a second priced scope never mint payment authority
+ok 12 - assessment error, no-match, 402, declined work and a second priced scope never mint payment authority
+  ---
+  duration_ms: 45.758118
+  type: 'test'
+  ...
+# Subtest: actual free scanner baseline and two distinct integration tasks deliver bounded executable acceptance
+ok 13 - actual free scanner baseline and two distinct integration tasks deliver bounded executable acceptance
+  ---
+  duration_ms: 470.240588
+  type: 'test'
+  ...
+# Subtest: free already-sufficient output and useful missing-field negative do not become paid demand
+ok 14 - free already-sufficient output and useful missing-field negative do not become paid demand
+  ---
+  duration_ms: 351.973672
+  type: 'test'
+  ...
+# Subtest: explicit new implementation scope is distinct from diagnosis, unsupported coverage and missing input
+ok 15 - explicit new implementation scope is distinct from diagnosis, unsupported coverage and missing input
+  ---
+  duration_ms: 42.112958
+  type: 'test'
+  ...
+# Subtest: current actual adjacent retained authority permits scoped later regression, including restart, changed input and expiry
+ok 16 - current actual adjacent retained authority permits scoped later regression, including restart, changed input and expiry
+  ---
+  duration_ms: 763.722375
+  type: 'test'
+  ...
+# Subtest: restart replay is historical and changed request/terms cannot reuse the same delivery identity
+ok 17 - restart replay is historical and changed request/terms cannot reuse the same delivery identity
+  ---
+  duration_ms: 106.850718
+  type: 'test'
+  ...
+# Subtest: real lost reply, new host process and bounded retry recover one historical packet without renewed work
+ok 18 - real lost reply, new host process and bounded retry recover one historical packet without renewed work
+  ---
+  duration_ms: 421.215611
+  type: 'test'
+  ...
+# Subtest: Root patch applies only to the exact shared contracts; observed false differs from an absent field
+ok 19 - Root patch applies only to the exact shared contracts; observed false differs from an absent field
+  ---
+  duration_ms: 331.903328
+  type: 'test'
+  ...
+# Subtest: received archives remain sealed under every historical exporter and reject corrupted predecessor bytes
+ok 20 - received archives remain sealed under every historical exporter and reject corrupted predecessor bytes
+  ---
+  duration_ms: 139.300894
+  type: 'test'
+  ...
+# Subtest: actual receiving merchant mounts bounded free work and leaves missing acceptance authority explicit
+ok 21 - actual receiving merchant mounts bounded free work and leaves missing acceptance authority explicit
+  ---
+  duration_ms: 1610.777415
+  type: 'test'
+  ...
+# Subtest: file/stdin, transport, service reads, child output and final output share reserved allowances
+ok 22 - file/stdin, transport, service reads, child output and final output share reserved allowances
+  ---
+  duration_ms: 272.778255
+  type: 'test'
+  ...
+1..22
+# tests 22
+# suites 0
+# pass 22
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 13195.651662
