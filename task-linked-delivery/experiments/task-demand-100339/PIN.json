@@ -54,6 +54,22 @@
     {
       "path": "useful-result-reuse/base-receipt.mjs",
       "sha256": "b9cedf56086cca29ab16e8800040b88a663818594dc232b29bc3e3c87332bc9b"
+    },
+    {
+      "path": "task-linked-delivery/experiments/useful-economics-100290/src/adapters.mjs",
+      "sha256": "31d9ddfdb916eaf8c0881755b518002aab735958a7b44dd2d184ad46bfc4d568"
+    },
+    {
+      "path": "task-linked-delivery/experiments/useful-economics-100290/src/evaluate.mjs",
+      "sha256": "91350edb57e0d044f88bddd9adfcd64c14fdc9896bcc26cb6c134f489a8e7100"
+    },
+    {
+      "path": "task-linked-delivery/experiments/useful-economics-100290/src/project-merchant.mjs",
+      "sha256": "8d533610a015877608ab8d6a72f317e1dbfe57ff136acd66a38e5fbd53d24310"
+    },
+    {
+      "path": "task-linked-delivery/tools/ops/three-site-settlement-join/measure/src/outcome-binding.mjs",
+      "sha256": "4371cdfdfc4491d249d097efe03b6a9dbe195b74ecd3166d362601a015df48ab"
     }
   ],
   "vendor": {

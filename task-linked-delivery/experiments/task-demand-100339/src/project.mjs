@@ -184,12 +184,12 @@ export function projectBundle(bundle, { tick = budget(), priorReportId = null } 
       && x.row.cohort === ref.cohort && x.row.route === e.route && x.row.method === e.method);
     const wrongForward = rows.forward.filter(x => x.row.commerceEventId === e.id && !forward.includes(x));
     diagnostics.wrongTaskOrOperation += wrongForward.length;
-    const deliveries = forward.filter(x => isSchemaValidDeliveryEvidence(x.row));
+    const deliveries = forward.filter(x => isSchemaValidDeliveryEvidence(x.row) && e.result === 'paid_success' && e.status >= 200 && e.status < 300);
     const delivery = deliveries.length === 1 ? deliveries[0] : null;
     const ledger = rows.settlements.filter(x => x.row.sourceEventId === e.id && x.row.route === e.route && x.row.sourceEventTimestamp === e.ts);
     const validLedger = ledger.filter(x => Date.parse(x.row.reconciledAt) <= asOf);
     diagnostics.lateRecords += ledger.length - validLedger.length;
-    const settlement = validLedger.length === 1 && e.result !== 'replay_success' ? validLedger[0] : null;
+    const settlement = validLedger.length === 1 && e.result === 'paid_success' && e.status >= 200 && e.status < 300 ? validLedger[0] : null;
     const stages = { attempt: observed([e.id], { at: e.ts, result: e.result }),
       valid_delivery: delivery ? observed([delivery.row.eventId], { at: e.ts, timing: 'same_causal_response' }) : unknown(deliveries.length > 1 ? 'conflicting_delivery' : 'no_schema_valid_delivery'),
       claimed_usefulness: unknown('no_operation_contract_usefulness'), retention: unknown('no_bound_retention'), later_use: unknown('no_authorized_later_read'),

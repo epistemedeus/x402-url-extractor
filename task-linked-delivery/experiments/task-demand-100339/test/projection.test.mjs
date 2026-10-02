@@ -102,6 +102,10 @@ test('population/time/source misalignment yields scoped unknown conversion', () 
   }
   const b = fixture(); plane(b,'retention').populationId='other-population';
   assert.equal(projectBundle(b).groups.owner_internal.rates.later_use.value,null);
+  const scoped=fixture(); plane(scoped,'attempts').scope.cohorts=['external_unknown'];
+  assert.equal(projectBundle(scoped).denominator.covered,false);
+  const unnamed=fixture(); delete plane(unnamed,'attempts').scope;
+  assert.throws(()=>projectBundle(unnamed),/source_scope_rejected/);
 });
 
 test('grant revocation, expiry and changed usefulness survive replay without stale facts', () => {
@@ -136,6 +140,13 @@ test('supplied flags, wallet/UA, HTTP200, archive fetch and mocked settlement ar
   }
   const replay = fixture(); plane(replay,'attempts').records[0].result='replay_success';
   assert.equal(projectBundle(replay).groups.owner_internal.counts.settlement,0);
+  const failed=fixture(); plane(failed,'attempts').records[0].status=500;
+  assert.equal(projectBundle(failed).groups.owner_internal.counts.valid_delivery,0);
+  assert.equal(projectBundle(failed).groups.owner_internal.counts.settlement,0);
+  const zero=fixture(); plane(zero,'settlements').records[0].amountAtomic='0';
+  assert.equal(projectBundle(zero).groups.owner_internal.counts.settlement,0);
+  const forgedRecord=fixture(); plane(forgedRecord,'retention').records[0].recordId='a'.repeat(32);
+  assert.equal(projectBundle(forgedRecord).groups.owner_internal.counts.retention,0);
 });
 
 test('direct/marginal economics preserve resource planes and historic commission pin', () => {

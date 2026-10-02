@@ -32,7 +32,7 @@ export function stripRecord(row, plane) {
   }
   if (plane === 'settlements' && row.schemaVersion === RECONCILIATION_SCHEMA && row.state === 'reconciled'
     && UUID.test(row.sourceEventId || '') && time(row.reconciledAt) && time(row.sourceEventTimestamp)
-    && /^0x[0-9a-f]{64}$/.test(row.settlementReference || '') && ATOMIC.test(row.amountAtomic || '')
+    && /^0x[0-9a-f]{64}$/.test(row.settlementReference || '') && ATOMIC.test(row.amountAtomic || '') && BigInt(row.amountAtomic) > 0n
     && row.network === 'eip155:8453' && /^\/[a-zA-Z0-9/._:*-]{1,199}$/.test(row.route || '')) {
     const out = pick(row, ['schemaVersion','state','sourceEventId','sourceEventTimestamp','reconciledAt','route','network','settlementReference','amountAtomic']);
     if (['internal','validation','incentivized','affiliated','independent','unclassified'].includes(row.paymentClass)) out.paymentClass = row.paymentClass;
@@ -45,6 +45,7 @@ export function stripRecord(row, plane) {
       || !/^[a-f0-9]{32}$/.test(row.recordId || '') || !time(row.createdAt) || !time(row.expiresAt)
       || row.operationId !== 'normalized-transaction-receipt' || !/^t[a-f0-9]{62}$/.test(row.taskRef || '')
       || row.taskJoin !== 'bound' || row.method !== 'GET' || row.route !== '/chain/transaction-receipt') return null;
+    if (row.recordId !== row.resultId.slice(0,32)) return null;
     const body = row.body;
     if (!body || body.product !== 'samedaydesk-transaction-receipt' || body.version !== '1.0.0'
       || body.paidValidDelivery === true || body.usefulDelivery === 'true' || row.settlementStatus !== 'verified'
@@ -72,7 +73,7 @@ export function validRetention(row) {
   if (row.action === 'revoke') return exactKeys(row, ['schema','action','at','targetId']) && time(row.at) && /^[a-f0-9]{16}$/.test(row.targetId || '');
   return row.action === 'retain' && exactKeys(row, ['schema','action','grantId','recordId','resultId','operationId','taskRef','createdAt','expiresAt','method','route','criterion','criterionAuthority','sourceSchema'])
     && /^[a-f0-9]{16}$/.test(row.grantId || '') && /^[a-f0-9]{32}$/.test(row.recordId || '') && HEX.test(row.resultId || '')
-    && /^t[a-f0-9]{62}$/.test(row.taskRef || '') && row.operationId === 'normalized-transaction-receipt'
+    && row.recordId === row.resultId.slice(0,32) && /^t[a-f0-9]{62}$/.test(row.taskRef || '') && row.operationId === 'normalized-transaction-receipt'
     && row.method === 'GET' && row.route === '/chain/transaction-receipt' && time(row.createdAt) && time(row.expiresAt)
     && Date.parse(row.expiresAt) > Date.parse(row.createdAt) && ['positive','agreed_negative','unknown'].includes(row.criterion)
     && row.criterionAuthority === 'operation_contract' && row.sourceSchema === CUSTOMER_SCHEMA;

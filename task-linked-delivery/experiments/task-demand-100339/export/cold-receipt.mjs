@@ -12,7 +12,7 @@ const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 async function fetchBytes(url,method='GET') {
   const response=await fetch(url,{method,redirect:'error',signal:AbortSignal.timeout(5000)});
   const chunks=[];let total=0;
-  for await (const chunk of response.body) {total+=chunk.length;assert.ok(total<=1_048_576);chunks.push(chunk);}
+  if(response.body) for await (const chunk of response.body) {total+=chunk.length;assert.ok(total<=1_048_576);chunks.push(chunk);}
   return {status:response.status,headers:response.headers,bytes:Buffer.concat(chunks)};
 }
 export async function coldReceipt(candidate) {
