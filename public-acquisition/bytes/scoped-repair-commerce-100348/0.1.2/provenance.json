@@ -1,0 +1,208 @@
+{
+  "schema": "samedaydesk.scoped-repair.provenance.v1",
+  "id": "scoped-repair-commerce-100348",
+  "version": "0.1.2",
+  "repository": "https://github.com/epistemedeus/x402-url-extractor",
+  "sourceCommit": "72ff0e5ecf8363740408a2ea42fe1ce498d3f3e6",
+  "merchantAcceptedCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+  "taskDemandCommit": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+  "sourceFiles": [
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/LICENSE",
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
+      "bytes": 1068
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/README.md",
+      "sha256": "c093cfbbfaa777146c847ce6b60b474f3fa458b9b8b3adbc4862de8a716b35de",
+      "bytes": 3768
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/SOURCE-NOTICE.txt",
+      "sha256": "a394bc61d96049ce3faed08a0c248b0de05d05bbb4af10d07ab836c6766bedd3",
+      "bytes": 525
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/bin/scoped-repair.mjs",
+      "sha256": "2457f8c49396b954fbbb5301c889b01a79540ce6bc45c158cf97d7169d08f56f",
+      "bytes": 2411
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/bin/check-cold.mjs",
+      "sha256": "f9442afecfa942b466cc5f5f06cddb2287d01ed71a75b66b4865ef50ee19168a",
+      "bytes": 751
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/src/client.mjs",
+      "sha256": "0d649920602789259373815fcd32c4e7949c99a1a37a1b6734f8a9acf685f875",
+      "bytes": 4061
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/src/contracts.mjs",
+      "sha256": "06ac979e504ec7b633fbe0a800d9342b3f54f927a297f323b0a047569704eaa1",
+      "bytes": 5766
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/src/bounds.mjs",
+      "sha256": "e7e483e88d7c6d52eeae3a1230e2f268675fbf77f5f3055f07335e3d91a05f90",
+      "bytes": 4619
+    },
+    {
+      "path": "experiments/scoped-surface-delivery-100312/src/budget.mjs",
+      "sha256": "4ab24a2c93244f6430854fd54ecc2cef1a6d66ff0c6b92f1a9e531884aabe73d",
+      "bytes": 1638
+    },
+    {
+      "path": "experiments/scoped-surface-delivery-100312/src/pins.mjs",
+      "sha256": "2795dcc6bfca6c1f2ef5190b553cc2e40611017994092377dd1b702257a89a1d",
+      "bytes": 4636
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/src/bounds.mjs",
+      "sha256": "8e2d5e1cfb41319683862113ef8dbea9796cf421fa50fac47e57e30e89b603a6",
+      "bytes": 4022
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/export/client-package.json",
+      "sha256": "f0871bfd86eb7f29e8d703bcf20c54590982a3598098603e6c7e297165114ce9",
+      "bytes": 293
+    },
+    {
+      "path": "task-linked-delivery/experiments/scoped-repair-commerce-100348/export/portable.test.mjs",
+      "sha256": "f966b0bea58acb6cb65be5919e53f8876e8f5bb1c788a82a15a65ad8352bc8ed",
+      "bytes": 645
+    },
+    {
+      "path": "npm:agent-payment-policy@0.12.0/core.mjs",
+      "sha256": "a68b677440430abaefab75b87059e83c528aa2138106df7bf244fa56f73abfd1",
+      "bytes": 122160,
+      "integrity": "sha512-CHJKxphBvrzQRfvUXC5xJoEeDT2hmDbicZ2JaCzaErr/HBhKoynScwdoeBwPbXJiBH3ds1ItDG4SAaOnqunMCQ==",
+      "resolved": "https://registry.npmjs.org/agent-payment-policy/-/agent-payment-policy-0.12.0.tgz"
+    },
+    {
+      "path": "npm:agent-payment-policy@0.12.0/LICENSE",
+      "sha256": "48778414be7220ecf3f9bfbaf1e4d9f462b06e5f035ce3df7cd8d5a488935a11",
+      "bytes": 1090,
+      "integrity": "sha512-CHJKxphBvrzQRfvUXC5xJoEeDT2hmDbicZ2JaCzaErr/HBhKoynScwdoeBwPbXJiBH3ds1ItDG4SAaOnqunMCQ==",
+      "resolved": "https://registry.npmjs.org/agent-payment-policy/-/agent-payment-policy-0.12.0.tgz"
+    }
+  ],
+  "sourceTreeDigest": "dc32093b0b8b43b7350d956645eae2965202b3979eff0f4ca6afe4c8f1b51aa0",
+  "archiveSha256": "f95db152722ac820d57975cdab9b2bb486888f2faf023dc271b82da5eba84656",
+  "members": 16,
+  "license": "MIT",
+  "licensedMinimalSuccessor": true,
+  "predecessorArchivesChanged": false,
+  "relocations": [
+    {
+      "member": "LICENSE",
+      "source": "task-linked-delivery/experiments/scoped-repair-commerce-100348/LICENSE",
+      "relocations": [],
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c"
+    },
+    {
+      "member": "README.md",
+      "source": "task-linked-delivery/experiments/scoped-repair-commerce-100348/README.md",
+      "relocations": [],
+      "sha256": "c093cfbbfaa777146c847ce6b60b474f3fa458b9b8b3adbc4862de8a716b35de"
+    },
+    {
+      "member": "SOURCE-NOTICE.txt",
+      "source": "task-linked-delivery/experiments/scoped-repair-commerce-100348/SOURCE-NOTICE.txt",
+      "relocations": [],
+      "sha256": "a394bc61d96049ce3faed08a0c248b0de05d05bbb4af10d07ab836c6766bedd3"
+    },
+    {
+      "member": "bin/scoped-repair.mjs",
+      "source": "task-linked-delivery/experiments/scoped-repair-commerce-100348/bin/scoped-repair.mjs",
+      "relocations": [],
+      "sha256": "2457f8c49396b954fbbb5301c889b01a79540ce6bc45c158cf97d7169d08f56f"
+    },
+    {
+      "member": "bin/check-cold.mjs",
+      "source": "task-linked-delivery/experiments/scoped-repair-commerce-100348/bin/check-cold.mjs",
+      "relocations": [],
+      "sha256": "f9442afecfa942b466cc5f5f06cddb2287d01ed71a75b66b4865ef50ee19168a"
+    },
+    {
+      "member": "src/client.mjs",
+      "source": "task-linked-delivery/experiments/scoped-repair-commerce-100348/src/client.mjs",
+      "relocations": [
+        [
+          "from 'agent-payment-policy'",
+          "from '../vendor/policy/core.mjs'"
+        ],
+        [
+          "from '../../task-demand-100339/src/bounds.mjs'",
+          "from '../vendor/task-demand-bounds.mjs'"
+        ]
+      ],
+      "sha256": "66358f6e7418c0636d470235c7ee66dd6fac252a9fcb020c3854c230201037be"
+    },
+    {
+      "member": "src/contracts.mjs",
+      "source": "task-linked-delivery/experiments/scoped-repair-commerce-100348/src/contracts.mjs",
+      "relocations": [
+        [
+          "from 'agent-payment-policy'",
+          "from '../vendor/policy/core.mjs'"
+        ]
+      ],
+      "sha256": "7348f257597f244c7e4c576fcaf65f956dba7836d527ff06a9aafa253addef74"
+    },
+    {
+      "member": "src/bounds.mjs",
+      "source": "task-linked-delivery/experiments/scoped-repair-commerce-100348/src/bounds.mjs",
+      "relocations": [
+        [
+          "from '../../../../experiments/scoped-surface-delivery-100312/src/budget.mjs'",
+          "from '../vendor/surface-budget.mjs'"
+        ],
+        [
+          "from '../../task-demand-100339/src/bounds.mjs'",
+          "from '../vendor/task-demand-bounds.mjs'"
+        ]
+      ],
+      "sha256": "64364d0cec00b00d07d720694585b4d3a4889077760af9c90b20ba7a88767d45"
+    },
+    {
+      "member": "vendor/surface-budget.mjs",
+      "source": "experiments/scoped-surface-delivery-100312/src/budget.mjs",
+      "relocations": [],
+      "sha256": "4ab24a2c93244f6430854fd54ecc2cef1a6d66ff0c6b92f1a9e531884aabe73d"
+    },
+    {
+      "member": "vendor/pins.mjs",
+      "source": "experiments/scoped-surface-delivery-100312/src/pins.mjs",
+      "relocations": [],
+      "sha256": "2795dcc6bfca6c1f2ef5190b553cc2e40611017994092377dd1b702257a89a1d"
+    },
+    {
+      "member": "vendor/task-demand-bounds.mjs",
+      "source": "task-linked-delivery/experiments/task-demand-100339/src/bounds.mjs",
+      "relocations": [],
+      "sha256": "8e2d5e1cfb41319683862113ef8dbea9796cf421fa50fac47e57e30e89b603a6"
+    },
+    {
+      "member": "package.json",
+      "source": "task-linked-delivery/experiments/scoped-repair-commerce-100348/export/client-package.json",
+      "relocations": [],
+      "sha256": "f0871bfd86eb7f29e8d703bcf20c54590982a3598098603e6c7e297165114ce9"
+    },
+    {
+      "member": "test/portable.test.mjs",
+      "source": "task-linked-delivery/experiments/scoped-repair-commerce-100348/export/portable.test.mjs",
+      "relocations": [],
+      "sha256": "f966b0bea58acb6cb65be5919e53f8876e8f5bb1c788a82a15a65ad8352bc8ed"
+    }
+  ],
+  "candidate": true,
+  "draft": true,
+  "productionHosted": false,
+  "hostedAcquisitionVerified": false,
+  "sourceAcceptedByRoot": false,
+  "independentDemand": false,
+  "outsideUseEstablished": false,
+  "settlement": "unknown",
+  "recognizedRevenueAtomic": "0"
+}

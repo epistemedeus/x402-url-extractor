@@ -1,0 +1,215 @@
+{
+  "schema": "samedaydesk.public-acquisition.inventory.v1",
+  "members": [
+    {
+      "bytes": 1068,
+      "kind": "file",
+      "path": "package/LICENSE",
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c"
+    },
+    {
+      "bytes": 467,
+      "kind": "file",
+      "path": "package/README.md",
+      "sha256": "a82cfde9438f06b9dc1cd1b963f92c722accf4a3eb580385439aa35411bf8b40"
+    },
+    {
+      "bytes": 844,
+      "kind": "file",
+      "path": "package/SOURCE-NOTICE.txt",
+      "sha256": "b8581bef3ffe7354f1cdf38f0cdbd78f468d4addafefa21c92aa34725ce8bc3a"
+    },
+    {
+      "bytes": 2857,
+      "kind": "file",
+      "path": "package/bin/caller-deliver.mjs",
+      "sha256": "a3d8add811bfc5d6081a99ad49af6db49ec82261e0177d705e1d02dd505d5485"
+    },
+    {
+      "bytes": 33070,
+      "kind": "file",
+      "path": "package/commercial/caller-request.mjs",
+      "sha256": "8837ec9f1d3425098679857ed177326252e4caa60a9e31976085ccea15177d59"
+    },
+    {
+      "bytes": 2855,
+      "kind": "file",
+      "path": "package/commercial/later-consumer.mjs",
+      "sha256": "98d0aeb40cc72084a8d5cf977b6d39c86f4ec4a7d9b8e99dbd57adb7dc835c9f"
+    },
+    {
+      "bytes": 733,
+      "kind": "file",
+      "path": "package/commercial/maintained.mjs",
+      "sha256": "6823f4afcc97ac7e58795093874f8aab2ee73ebebb20d51ee4519187ef17852c"
+    },
+    {
+      "bytes": 30812,
+      "kind": "file",
+      "path": "package/commercial/method-binding.mjs",
+      "sha256": "8715592abb0e6de9e5763cdc3b6a909dd43a5c39585abd6ba3611c703f79710a"
+    },
+    {
+      "bytes": 2447,
+      "kind": "file",
+      "path": "package/commercial/read-input.mjs",
+      "sha256": "2789a0f3e3196a17b9c74fd5ddec7850d6d6a061d1205792198a056273907ab0"
+    },
+    {
+      "bytes": 350,
+      "kind": "file",
+      "path": "package/package.json",
+      "sha256": "ffeea224da1ffea48c000e499deda966fdd48ecb962de0819fdbe80f4e950d75"
+    },
+    {
+      "bytes": 1935,
+      "kind": "file",
+      "path": "package/references/pins.json",
+      "sha256": "7957d1672539e1b220fda269d3a3f15a0b5f2f10f5e2f97b174b28ea6d2fa77b"
+    },
+    {
+      "bytes": 2433,
+      "kind": "file",
+      "path": "package/src/authorize.mjs",
+      "sha256": "670a0d7184a22dd99baeaf73b383d110c506b9d0f5016293225dbc55300e1424"
+    },
+    {
+      "bytes": 1360,
+      "kind": "file",
+      "path": "package/src/budget.mjs",
+      "sha256": "311371cee2f6236e161a07b1a8fee7bbbeec2e930449912093fea6e6897b6218"
+    },
+    {
+      "bytes": 4113,
+      "kind": "file",
+      "path": "package/src/classify.mjs",
+      "sha256": "2ce7660cbcc5002c50eb780c55c968f6976264fd998138b9e4a217399e2990f0"
+    },
+    {
+      "bytes": 5425,
+      "kind": "file",
+      "path": "package/src/compare.mjs",
+      "sha256": "6f503d2e8bb5ac8854fe68e8f9ed0ea762bf09b36a10d814ac1369cce7993d3f"
+    },
+    {
+      "bytes": 1567,
+      "kind": "file",
+      "path": "package/src/constants.mjs",
+      "sha256": "7f6f1348fdc7933ff52a5d2f307da5f7e7e610aee62a55ea32c88ccb96ffc15f"
+    },
+    {
+      "bytes": 1671,
+      "kind": "file",
+      "path": "package/src/declaration.mjs",
+      "sha256": "7688eddee5133887bb521bab950a00b36476d9670d0c126456994aff6480c162"
+    },
+    {
+      "bytes": 295,
+      "kind": "file",
+      "path": "package/src/errors.mjs",
+      "sha256": "bfad825cf976ed9faa60937e311738544f6742a5f7e2d64163984c64a0e0f9bb"
+    },
+    {
+      "bytes": 3488,
+      "kind": "file",
+      "path": "package/src/fixture-seller.mjs",
+      "sha256": "f8d8c81b80a6730b5486101fd14da8bfc008849b9a3b3436b35807365d5db0e2"
+    },
+    {
+      "bytes": 7786,
+      "kind": "file",
+      "path": "package/src/intake.mjs",
+      "sha256": "1a86d1de40c6cb853cb4e9129479296231526a46da2b677f730938515b74742f"
+    },
+    {
+      "bytes": 12121,
+      "kind": "file",
+      "path": "package/src/journey.mjs",
+      "sha256": "1928c7531dda3bcea05e1c2e407825c5d3ead4f5dc8d28582c36567c970478bc"
+    },
+    {
+      "bytes": 1670,
+      "kind": "file",
+      "path": "package/src/later.mjs",
+      "sha256": "3252a7d58f24dac7e96ff443f6d5320b4f1b9429aa438922db23f37f5d44fef9"
+    },
+    {
+      "bytes": 3946,
+      "kind": "file",
+      "path": "package/src/machine.mjs",
+      "sha256": "be73499f164f75d133bba20c4456339e0599469b852698f27c86204112301d07"
+    },
+    {
+      "bytes": 2301,
+      "kind": "file",
+      "path": "package/src/measure.mjs",
+      "sha256": "bf9fe427d5288821cf87331c0d5c37a3a3203ec509fcc55d58786b8a1b761b37"
+    },
+    {
+      "bytes": 1867,
+      "kind": "file",
+      "path": "package/src/operation.mjs",
+      "sha256": "fd48893e63d288d3bc2110e5899aed1980a00d7b47786edbc491c5abb3702573"
+    },
+    {
+      "bytes": 2460,
+      "kind": "file",
+      "path": "package/src/paid-report.mjs",
+      "sha256": "b1ad12c4fc52cc7c166d859f488e60805b0dbe3df57f9d80ca70d286733806ec"
+    },
+    {
+      "bytes": 1659,
+      "kind": "file",
+      "path": "package/src/paths.mjs",
+      "sha256": "14ac935d0f02ed3d9301cfd5e5d37a459127790db9cf774cad3bf1024ae0aceb"
+    },
+    {
+      "bytes": 115,
+      "kind": "file",
+      "path": "package/src/privacy.mjs",
+      "sha256": "c1db2120691c677d301a6ca5ae31099802628a657f5c0699e225b00e82ded867"
+    },
+    {
+      "bytes": 11650,
+      "kind": "file",
+      "path": "package/src/probe.mjs",
+      "sha256": "cfaba03c8e21089e890f80457b77e840fb131c45ec4e2906334da97de8326ddc"
+    },
+    {
+      "bytes": 8442,
+      "kind": "file",
+      "path": "package/src/public-target.mjs",
+      "sha256": "d42b10489836bd275799d07e9f834b262376826641b4da640e7eab411bdcb1ae"
+    },
+    {
+      "bytes": 3510,
+      "kind": "file",
+      "path": "package/src/repair.mjs",
+      "sha256": "e921784f46ff194e15dec40c5b1b69a991228c8930741a6af7930bf42771c300"
+    },
+    {
+      "bytes": 1328,
+      "kind": "file",
+      "path": "package/src/seed.mjs",
+      "sha256": "7f46ea749a47c5b640e08ca714c54a73b40819ba63c2f964ae499747cb41042d"
+    },
+    {
+      "bytes": 1069,
+      "kind": "file",
+      "path": "task-linked-delivery/experiments/delivery-outcome-100173/src/errors.mjs",
+      "sha256": "84fb984f031f9ada8d95d06536ce3c6d22826bed9cbab692e890fdc34bb125ae"
+    },
+    {
+      "bytes": 2771,
+      "kind": "file",
+      "path": "task-linked-delivery/experiments/delivery-outcome-100173/src/privacy.mjs",
+      "sha256": "0c116dd78c69d9b5da47775e5d058fc1f3e2b9e0cd71d801a4e6fad92a7dbca8"
+    },
+    {
+      "bytes": 2313,
+      "kind": "file",
+      "path": "task-linked-delivery/tools/ops/three-site-settlement-join/measure/src/restricted.mjs",
+      "sha256": "197cc019e157586dfdbba9a14e25b2b661dee5e642845d12a98d76ee89f76d63"
+    }
+  ]
+}
