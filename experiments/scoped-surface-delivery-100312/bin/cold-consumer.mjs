@@ -4,7 +4,7 @@
 
 import fs from "node:fs";
 import { rankExit, runScan } from "../src/adapter.mjs";
-import { ensurePins } from "../src/hydrate.mjs";
+import { ensurePublicScanner } from "../src/hydrate.mjs";
 
 const paths = process.argv.slice(2);
 if (paths.length !== 2) {
@@ -18,7 +18,7 @@ if (!distinct) {
   process.stderr.write("tasks_not_distinct\n");
   process.exit(64);
 }
-const pins = await ensurePins();
+const pins = await ensurePublicScanner();
 const prep = process.hrtime.bigint();
 const reports = [];
 for (const task of tasks) {

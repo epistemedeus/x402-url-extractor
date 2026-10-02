@@ -8,6 +8,7 @@
     { "method": "POST", "path": "/commerce/scoped-surface-retest", "charged": false },
     { "method": "POST", "path": "/commerce/scoped-surface-retain", "charged": false },
     { "method": "GET", "path": "/commerce/scoped-surface-regression/:id", "charged": false },
+    { "method": "POST", "path": "/commerce/scoped-surface-regression/:id", "charged": false, "role": "owner-correction-or-revocation" },
     { "method": "POST", "path": "/commerce/scoped-surface-local-report", "charged": false },
     { "method": "GET", "path": "/commerce/scoped-surface-price", "charged": false }
   ],

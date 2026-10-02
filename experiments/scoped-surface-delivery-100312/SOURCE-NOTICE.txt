@@ -4,6 +4,9 @@ This package does not relicense or copy the scanner. It hydrates that commit and
 
 The accepted-derivative reader is private Neo source at a7bd87116a4e8285e779b10e549fc4c1cd179674.
 It is hydrated outside this repository and checked by sha256. It is not committed here.
-Root203 and Root222 are declared pins only. This package does not copy them and does not add a database, signer, or lock.
+The public scan and retest do not load it. Missing retention authority is an explicit limit.
+Root203 and Root222 are declared pins only. This package does not copy them.
+Journal updates use a directory flock in the same way as the maintained-operations lock.
+This package does not add a database or a signer.
 
 No payment, subscription, or new rail is performed here.

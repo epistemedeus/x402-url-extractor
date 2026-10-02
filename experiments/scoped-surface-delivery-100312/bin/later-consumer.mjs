@@ -4,7 +4,7 @@
 
 import fs from "node:fs";
 import { runScan } from "../src/adapter.mjs";
-import { ensurePins } from "../src/hydrate.mjs";
+import { ensurePublicScanner, ensureRetentionAuthority } from "../src/hydrate.mjs";
 import { createRetention } from "../src/regression.mjs";
 
 const forbidden = ["USEFUL_RESULT_GRANT", "COMMERCE_INTERNAL_TOKEN", "PAYMENT_SIGNATURE", "X402_PAYMENT"];
@@ -23,14 +23,19 @@ if (regression.payment || regression.reward || regression.ownerId || regression.
   process.stderr.write("ownership_not_inherited\n");
   process.exit(64);
 }
-const pins = await ensurePins();
-const scan = (request) => runScan(request, { skillguardRoot: pins.skillguardRoot });
+const pins = await ensurePublicScanner();
+const authority = ensureRetentionAuthority();
+const scan = (request, scanOptions = {}) => runScan(request, {
+  skillguardRoot: pins.skillguardRoot,
+  budget: scanOptions.budget || null,
+});
 scan.skillguardRoot = pins.skillguardRoot;
 const retention = createRetention({
   journalDir,
-  authorityFile: pins.authorityFile,
+  authorityFile: authority.authorityFile,
   clock: () => process.env.SCOPED_SURFACE_CLOCK || new Date().toISOString(),
   scan,
+  skillguardRoot: pins.skillguardRoot,
 });
 const decision = await retention.read(regression.id, {
   contextId: process.argv[4] || null,

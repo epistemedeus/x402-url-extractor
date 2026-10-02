@@ -5,11 +5,22 @@ candidate runs the pinned SkillGuard scanner, names what it examined, and
 keeps the scanner's exit codes. A no-match is not a universal guarantee.
 `blanketSafetyScore` stays null.
 
-The caller can send changed bytes for the same concern. The rerun says
-`fixed`, `unchanged`, or `inconclusive`. A share is kept only when the caller
-asks and an independent rescan agrees. The share is checked with Neo's
-accepted-derivative reader (`a7bd871`). A payment receipt, HTTP 200, or a
-caller `accepted` flag is not that grant. A later process can use the public
+The caller can send the original bytes and the changed bytes for the same
+concern. The rerun scans both. It says `fixed`, `unchanged`, or
+`inconclusive`. A saved report is an unverified observation: shaping its
+`schema`, `scanPerformed`, commit, or findings does not make a repair.
+A server that stored the original bytes can also accept its own opaque prior
+token. That token is not a caller report.
+
+A share is kept only when the caller asks and an independent rescan agrees.
+The record binds the originating owner, task, request, concern, explicit
+sharing scope, and the observed rerun. Equal bytes may share a payload and
+still keep separate owners. The originating owner corrects or revokes with a
+continuation that survives restart. A later read checks the current
+revision. Neo's accepted-derivative reader (`a7bd871`) is the optional
+retention authority. A payment receipt, HTTP 200, or a caller label is not
+that grant. Without that authority the free scan and retest still run, and
+retention returns an explicit limit. A later process can rescan a public
 regression without receiving payment, reward, or owner id.
 
 The direct free baseline remains:
@@ -47,5 +58,6 @@ report is not a scan. Owner QA cohort `owner_qa` on the price proposal is not
 customer revenue. Cash, token, and profit figures are unknown.
 `recognizedRevenueAtomic` stays `0`.
 
-Root applies `route/ROOT-SERVER-MOUNT.patch` only after hydrating the pins in
-`SOURCE-PIN.json`. See `ROOT-RECEIVING.md`.
+Root applies `route/ROOT-SERVER-MOUNT.patch` only after placing the public
+scanner artifact from `deploy/artifact.mjs`. Missing retention enrollment
+does not stop the merchant process. See `ROOT-RECEIVING.md`.

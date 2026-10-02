@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { budgetFromLimits } from "./budget.mjs";
 import { runBoundedChild } from "./bounded-child.mjs";
 import { inputFailure, validateInventory } from "./intake.mjs";
 import { materializeInventory, removeTree } from "./materialize.mjs";
@@ -54,8 +55,8 @@ function baseReport(inventory, extra) {
     limits: {
       maxFiles: LIMITS.maxFiles,
       maxAggregateBytes: LIMITS.maxAggregateBytes,
-      deadlineMs: inventory?.deadlineMs ?? LIMITS.deadlineMs,
-      maxOutputBytes: inventory?.maxOutputBytes ?? LIMITS.maxOutputBytes,
+      deadlineMs: extra.deadlineMs ?? inventory?.deadlineMs ?? LIMITS.deadlineMs,
+      maxOutputBytes: extra.maxOutputBytes ?? inventory?.maxOutputBytes ?? LIMITS.maxOutputBytes,
       breached: extra.breached || [],
     },
     negativeLimits: NEGATIVE_LIMITS,
@@ -88,7 +89,8 @@ function childEnv(skillguardRoot) {
   };
 }
 
-export async function runScan(request, { skillguardRoot, childScript = CHILD } = {}) {
+export async function runScan(request, { skillguardRoot, childScript = CHILD, budget = null } = {}) {
+  const operation = budget || budgetFromLimits(request?.limits);
   const prepStarted = process.hrtime.bigint();
   const validated = validateInventory(request);
   if (!validated.ok) {
@@ -103,6 +105,10 @@ export async function runScan(request, { skillguardRoot, childScript = CHILD } =
     });
   }
   const inventory = validated.value;
+  const reportedLimits = budget ? {
+    deadlineMs: operation.deadlineMs,
+    maxOutputBytes: operation.maxOutputBytes,
+  } : {};
   let placed = null;
   try {
     placed = materializeInventory(inventory.files);
@@ -111,30 +117,39 @@ export async function runScan(request, { skillguardRoot, childScript = CHILD } =
     return inputReport(inventory, [code], prepStarted);
   }
   const prepMicros = Number(process.hrtime.bigint() - prepStarted) / 1000;
+  const remainingMs = operation.remainingMs();
+  const remainingOutput = operation.remainingOutput();
+  if (remainingMs < 1 || remainingOutput < 1) {
+    removeTree(placed.root);
+    const reason = remainingOutput < 1 ? "output_bounded" : "cancelled";
+    return stopped(inventory, prepMicros, { wallMs: 0 }, reason, [remainingOutput < 1 ? "output" : "deadline"], reportedLimits);
+  }
+  operation.noteSpawn();
   const child = await runBoundedChild({
     command: process.execPath,
     args: [childScript, placed.tree],
     cwd: placed.root,
     env: childEnv(skillguardRoot),
-    deadlineMs: inventory.deadlineMs,
-    maxStdout: inventory.maxOutputBytes,
-    maxStderr: LIMITS.maxStderrBytes,
+    deadlineMs: Math.max(1, Math.floor(remainingMs)),
+    maxStdout: remainingOutput,
+    maxStderr: Math.min(LIMITS.maxStderrBytes, remainingOutput),
   });
+  operation.chargeOutput(child.stdout.length + child.stderr.length);
   removeTree(placed.root);
   if (child.timedOut) {
-    return stopped(inventory, prepMicros, child, "cancelled", ["deadline"]);
+    return stopped(inventory, prepMicros, child, "cancelled", ["deadline"], reportedLimits);
   }
   if (child.overOutput) {
-    return stopped(inventory, prepMicros, child, "output_bounded", ["output"]);
+    return stopped(inventory, prepMicros, child, "output_bounded", ["output"], reportedLimits);
   }
   let parsed;
   try {
     parsed = JSON.parse(child.stdout.toString("utf8"));
   } catch {
-    return stopped(inventory, prepMicros, child, "child_output", ["output"]);
+    return stopped(inventory, prepMicros, child, "child_output", ["output"], reportedLimits);
   }
   if (!parsed.ok) {
-    return stopped(inventory, prepMicros, child, parsed.error || "scan_failed", []);
+    return stopped(inventory, prepMicros, child, parsed.error || "scan_failed", [], reportedLimits);
   }
   const findings = (parsed.findings || []).map((finding) => ({
     file: finding.file,
@@ -145,7 +160,7 @@ export async function runScan(request, { skillguardRoot, childScript = CHILD } =
   const exitByVerdict = { clean: 0, suspicious: 2, dangerous: 3 };
   const scannerExit = exitByVerdict[parsed.verdict];
   if (scannerExit === undefined || parsed.version !== SKILLGUARD.version) {
-    return stopped(inventory, prepMicros, child, "scanner_pin_mismatch", []);
+    return stopped(inventory, prepMicros, child, "scanner_pin_mismatch", [], reportedLimits);
   }
   let concernResult = "no_match";
   let concernReason = "rule_absent";
@@ -174,6 +189,7 @@ export async function runScan(request, { skillguardRoot, childScript = CHILD } =
     },
     authority: "pinned_scanner",
     scanPerformed: true,
+    ...reportedLimits,
   });
 }
 
@@ -189,8 +205,9 @@ function inputReport(inventory, errors, prepStarted) {
   });
 }
 
-function stopped(inventory, prepMicros, child, reason, breached) {
+function stopped(inventory, prepMicros, child, reason, breached, reportedLimits = {}) {
   return baseReport(inventory, {
+    ...reportedLimits,
     concernResult: "inconclusive",
     concernReason: reason,
     exitCode: 65,

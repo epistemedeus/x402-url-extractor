@@ -95,6 +95,15 @@ export const SCHEMA = "samedaydesk.scoped-surface.v1";
 export const RETEST_SCHEMA = "samedaydesk.scoped-surface.retest.v1";
 export const REGRESSION_SCHEMA = "samedaydesk.scoped-surface.regression.v1";
 export const PRICE_SCHEMA = "samedaydesk.scoped-surface.price-proposal.v1";
+export const JOURNAL_SCHEMA = "samedaydesk.scoped-surface.journal.v1";
+export const SHARING_SCOPE = "contributor_control_safe_derivative";
+export const PUBLIC_LIMITS = Object.freeze([
+  "Hosted retention is optional. Without the enrolled authority a share is not accepted.",
+  "A saved scanner report is an unverified observation, not repair history.",
+  "A static no-match is not a universal safety guarantee.",
+  "A caller label, payment receipt, or HTTP 200 is not sharing authority.",
+  "The free scan does not fetch private source and does not need a gh login.",
+]);
 export const TASK_ID = /^[a-z0-9][a-z0-9-]{0,63}$/;
 export const CONCERN_DECIDE = "scanner-cannot-decide";
 export const SOURCE_ID = "scoped-surface-retest";

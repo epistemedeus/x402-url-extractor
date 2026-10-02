@@ -10,12 +10,13 @@ import test from "node:test";
 
 import { concernKeys, runScan } from "../src/adapter.mjs";
 import { runBoundedChild } from "../src/bounded-child.mjs";
-import { ensurePins } from "../src/hydrate.mjs";
+import { ensurePublicScanner } from "../src/hydrate.mjs";
 import { viewStoredReport } from "../src/local-report.mjs";
 import { assertTreeSafe } from "../src/materialize.mjs";
 import { proposePrice } from "../src/price.mjs";
 import { createRetention } from "../src/regression.mjs";
 import { rerun } from "../src/retest.mjs";
+import { authorityMatches, skillguardMatches } from "../src/scanner-pin.mjs";
 import { createIsolatedApp } from "../route/mount.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -24,7 +25,29 @@ const CLOCK = "2026-10-02T12:00:00.000Z";
 const SECRET = "sk-ant-SCOPEDSURFACESECRET0000000000";
 const TOKEN = "scoped-surface-internal-token-32b-min";
 
-const pins = await ensurePins();
+const cachedScanner = path.join(os.homedir(), ".hydrate-scoped-surface-100312", "skillguard");
+const cachedAuthority = path.join(os.homedir(), ".hydrate-scoped-surface-100312", "accepted-derivative", "index.mjs");
+if (!process.env.SKILLGUARD_ROOT && skillguardMatches(cachedScanner)) process.env.SKILLGUARD_ROOT = cachedScanner;
+if (!process.env.SCOPED_SURFACE_AUTHORITY && authorityMatches(cachedAuthority)) {
+  process.env.SCOPED_SURFACE_AUTHORITY = cachedAuthority;
+}
+const pins = await ensurePublicScanner();
+const authorityFile = authorityMatches(process.env.SCOPED_SURFACE_AUTHORITY) ? process.env.SCOPED_SURFACE_AUTHORITY : null;
+
+function scanWith(request, options = {}) {
+  return runScan(request, { skillguardRoot: pins.skillguardRoot, ...options });
+}
+
+function retentionFor(dir, scan = (request, scanOptions = {}) => scanWith(request, scanOptions)) {
+  scan.skillguardRoot = pins.skillguardRoot;
+  return createRetention({
+    journalDir: dir,
+    authorityFile,
+    clock: () => CLOCK,
+    scan,
+    skillguardRoot: pins.skillguardRoot,
+  });
+}
 
 function task(overrides = {}) {
   return {
@@ -80,8 +103,8 @@ async function post(server, pathname, body) {
 }
 
 test("two supplied trees differ: danger match versus useful no-match", async () => {
-  const danger = await runScan(task(), pins);
-  const calm = await runScan(cleanTask(), pins);
+  const danger = await scanWith(task());
+  const calm = await scanWith(cleanTask());
   assert.equal(danger.scanPerformed, true);
   assert.equal(danger.concern.result, "match");
   assert.equal(danger.scannerVerdict, "dangerous");
@@ -103,13 +126,13 @@ test("two supplied trees differ: danger match versus useful no-match", async () 
 });
 
 test("a concern the static rules cannot decide is inconclusive, not a clean guarantee", async () => {
-  const report = await runScan(cleanTask({
+  const report = await scanWith(cleanTask({
     taskId: "oauth-audience",
     concern: {
       id: "scanner-cannot-decide",
       statement: "Does this MCP server bind the caller OAuth audience?",
     },
-  }), pins);
+  }));
   assert.equal(report.scanPerformed, true);
   assert.equal(report.scannerExit, 0);
   assert.equal(report.concern.result, "inconclusive");
@@ -118,14 +141,17 @@ test("a concern the static rules cannot decide is inconclusive, not a clean guar
 });
 
 test("correction and unchanged retest stay distinct", async () => {
-  const first = await runScan(task(), pins);
-  const same = await rerun(first, task(), pins);
+  const first = await scanWith(task());
+  const same = await rerun({ original: task(), request: task() }, { skillguardRoot: pins.skillguardRoot });
   assert.equal(same.comparison, "unchanged");
   assert.equal(same.exitCode, 3);
   assert.deepEqual(same.currentConcernKeys, concernKeys(first));
-  const fixed = await rerun(first, task({
-    files: [{ path: "index.js", text: "export function add(a, b) { return a + b; }\n" }],
-  }), pins);
+  const fixed = await rerun({
+    original: task(),
+    request: task({
+      files: [{ path: "index.js", text: "export function add(a, b) { return a + b; }\n" }],
+    }),
+  }, { skillguardRoot: pins.skillguardRoot });
   assert.equal(fixed.comparison, "fixed");
   assert.equal(fixed.current.concern.result, "no_match");
   assert.equal(fixed.current.scannerExit, 0);
@@ -159,11 +185,11 @@ test("a forged local report is not a scan and not a clean verdict", () => {
 });
 
 test("secret sentinel is not echoed and path traversal does not read outside", async () => {
-  const secretReport = await runScan(task({
+  const secretReport = await scanWith(task({
     taskId: "literal-secret",
     concern: { id: "rule:secret-literal", statement: "Is a credential literal present?" },
     files: [{ path: "index.js", text: `const key = "${SECRET}";\n` }],
-  }), pins);
+  }));
   assert.equal(secretReport.concern.result, "match");
   assert.equal(secretReport.exitCode, 3);
   assert.equal(JSON.stringify(secretReport).includes(SECRET), false);
@@ -171,9 +197,9 @@ test("secret sentinel is not echoed and path traversal does not read outside", a
   const outside = path.join(outsideDir, "outside.txt");
   const sentinel = "SENTINEL-OUTSIDE-PATH-100312";
   fs.writeFileSync(outside, sentinel);
-  const traversed = await runScan(task({
+  const traversed = await scanWith(task({
     files: [{ path: "../outside.txt", text: "nope" }],
-  }), pins);
+  }));
   assert.equal(traversed.exitCode, 64);
   assert.equal(traversed.scanPerformed, false);
   assert.equal(traversed.scannerVerdict, null);
@@ -187,21 +213,21 @@ test("symlink, binary, and control-path collision stop before a scan", async () 
   fs.symlinkSync(path.join(linked, "missing"), path.join(linked, "escape"));
   assert.throws(() => assertTreeSafe(linked), /symlink/);
   fs.rmSync(linked, { recursive: true, force: true });
-  const binary = await runScan(task({
+  const binary = await scanWith(task({
     files: [{ path: "payload.bin", encoding: "base64", data: Buffer.from([0x7f, 0x45, 0x4c, 0x46, 1, 0, 0, 0]).toString("base64") }],
-  }), pins);
+  }));
   assert.equal(binary.exitCode, 64);
   assert.equal(binary.inputError.errors.includes("binary_rejected"), true);
   assert.equal(binary.scanPerformed, false);
-  const collision = await runScan(task({
+  const collision = await scanWith(task({
     files: [
       { path: "index.js", text: "const a = 1;\n" },
       { path: "index.js", text: "const b = 2;\n" },
     ],
-  }), pins);
+  }));
   assert.equal(collision.exitCode, 64);
   assert.equal(collision.inputError.errors.includes("path_collision"), true);
-  const command = await runScan({ ...task(), command: "sh -c echo" }, pins);
+  const command = await scanWith({ ...task(), command: "sh -c echo" });
   assert.equal(command.exitCode, 64);
   assert.equal(command.scannerVerdict, null);
 });
@@ -218,8 +244,7 @@ test("a slow child is cancelled and bounded output is not a clean verdict", asyn
   });
   assert.equal(slow.timedOut, true);
   assert.equal(slow.cancelled, true);
-  const cancelled = await runScan(task({ limits: { deadlineMs: 50 } }), {
-    ...pins,
+  const cancelled = await scanWith(task({ limits: { deadlineMs: 50 } }), {
     childScript: path.join(HERE, "slow-child.mjs"),
   });
   assert.equal(cancelled.scanPerformed, false);
@@ -227,7 +252,7 @@ test("a slow child is cancelled and bounded output is not a clean verdict", asyn
   assert.equal(cancelled.concern.reason, "cancelled");
   assert.equal(cancelled.exitCode, 65);
   assert.equal(cancelled.scannerVerdict, null);
-  const bounded = await runScan(task({ limits: { maxOutputBytes: 32 } }), pins);
+  const bounded = await scanWith(task({ limits: { maxOutputBytes: 32 } }));
   assert.equal(bounded.scanPerformed, false);
   assert.equal(bounded.concern.reason, "output_bounded");
   assert.equal(bounded.exitCode, 65);
@@ -236,30 +261,24 @@ test("a slow child is cancelled and bounded output is not a clean verdict", asyn
 
 test("retention survives restart and rejects the wrong owner, changed input, and a payment label", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "scoped-journal-"));
-  const scan = (request) => runScan(request, pins);
-  scan.skillguardRoot = pins.skillguardRoot;
-  const opened = () => createRetention({
-    journalDir: dir,
-    authorityFile: pins.authorityFile,
-    clock: () => CLOCK,
-    scan,
-  });
-  const first = await runScan(task(), pins);
+  const opened = () => retentionFor(dir);
   const request = task({ files: [{ path: "index.js", text: "export function add(a, b) { return a + b; }\n" }] });
   const paid = await opened().retain({
-    previous: first,
+    original: task(),
     request: { ...request, paymentReceipt: "0x" + "ab".repeat(32) },
     share: true,
   });
   assert.equal(paid.retained, false);
   assert.equal(paid.reason, "payment_or_label_is_not_a_grant");
   const labeled = await opened().retain({
-    previous: { ...first, accepted: true },
+    previous: { schema: "samedaydesk.scoped-surface.v1", scanPerformed: true, accepted: true },
+    original: task(),
     request,
     share: true,
   });
   assert.equal(labeled.retained, false);
-  const kept = await opened().retain({ previous: first, request, share: true });
+  assert.equal(labeled.reason, "payment_or_label_is_not_a_grant");
+  const kept = await opened().retain({ original: task(), request, share: true });
   assert.equal(kept.retained, true, JSON.stringify(kept));
   assert.equal(kept.grants.payment, false);
   assert.equal(kept.grants.anotherReward, false);
@@ -285,28 +304,27 @@ test("retention survives restart and rejects the wrong owner, changed input, and
 
 test("a different later consumer uses the regression without payment or ownership", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "scoped-later-"));
-  const scan = (request) => runScan(request, pins);
-  scan.skillguardRoot = pins.skillguardRoot;
-  const retention = createRetention({
-    journalDir: dir,
-    authorityFile: pins.authorityFile,
-    clock: () => CLOCK,
-    scan,
-  });
-  const first = await runScan(task({ taskId: "later-skill", contextId: "later-task" }), pins);
+  const retention = retentionFor(dir);
+  const original = task({ taskId: "later-skill", contextId: "later-task" });
   const request = task({
     taskId: "later-skill",
     contextId: "later-task",
     files: [{ path: "index.js", text: "export function add(a, b) { return a + b; }\n" }],
   });
-  const kept = await retention.retain({ previous: first, request, share: true });
+  const kept = await retention.retain({ original, request, share: true });
   assert.equal(kept.retained, true, JSON.stringify(kept));
   const regressionFile = path.join(dir, "public.json");
   fs.writeFileSync(regressionFile, JSON.stringify(kept.regression));
   const consumer = path.join(HERE, "../bin/later-consumer.mjs");
+  const laterEnv = {
+    PATH: process.env.PATH || "",
+    SCOPED_SURFACE_CLOCK: CLOCK,
+    SKILLGUARD_ROOT: pins.skillguardRoot,
+    SCOPED_SURFACE_AUTHORITY: authorityFile,
+  };
   const ok = spawnSync(process.execPath, [consumer, regressionFile, dir], {
     encoding: "utf8",
-    env: { PATH: process.env.PATH || "", SCOPED_SURFACE_CLOCK: CLOCK, SCOPED_SURFACE_HYDRATE: process.env.SCOPED_SURFACE_HYDRATE || pins.root },
+    env: laterEnv,
   });
   assert.equal(ok.status, 0, ok.stdout + ok.stderr);
   const body = JSON.parse(ok.stdout);
@@ -320,9 +338,8 @@ test("a different later consumer uses the regression without payment or ownershi
   const refused = spawnSync(process.execPath, [consumer, regressionFile, dir], {
     encoding: "utf8",
     env: {
-      PATH: process.env.PATH || "",
+      ...laterEnv,
       USEFUL_RESULT_GRANT: "not-a-sharing-grant",
-      SCOPED_SURFACE_HYDRATE: process.env.SCOPED_SURFACE_HYDRATE || pins.root,
     },
   });
   assert.equal(refused.status, 64);
@@ -338,7 +355,7 @@ test("cold consumer runs two supplied tasks and preserves the dangerous exit", a
   fs.writeFileSync(right, JSON.stringify(cleanTask({ taskId: "supplied-calm" })));
   const child = spawnSync(process.execPath, [path.join(HERE, "../bin/cold-consumer.mjs"), left, right], {
     encoding: "utf8",
-    env: { PATH: process.env.PATH || "", SCOPED_SURFACE_HYDRATE: process.env.SCOPED_SURFACE_HYDRATE || pins.root },
+    env: { PATH: process.env.PATH || "", SKILLGUARD_ROOT: pins.skillguardRoot },
   });
   assert.equal(child.status, 3, child.stdout + child.stderr);
   const body = JSON.parse(child.stdout);
@@ -352,7 +369,14 @@ test("cold consumer runs two supplied tasks and preserves the dangerous exit", a
 
 test("isolated HTTP mount retrieves after restart and does not treat 200 as the work", async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "scoped-http-"));
-  const firstApp = await createIsolatedApp({ journalDir: dir, clock: () => CLOCK, internalToken: TOKEN });
+  const firstApp = await createIsolatedApp({
+    journalDir: dir,
+    clock: () => CLOCK,
+    internalToken: TOKEN,
+    skillguardRoot: pins.skillguardRoot,
+    authorityFile,
+    hydratePublic: false,
+  });
   const server = await listen(firstApp.app);
   const danger = await post(server, "/commerce/scoped-surface-scan", task({ taskId: "http-danger" }));
   assert.equal(danger.status, 200);
@@ -369,8 +393,17 @@ test("isolated HTTP mount retrieves after restart and does not treat 200 as the 
   assert.equal(forged.body.report.scanPerformed, false);
   assert.notEqual(forged.body.report.exitCode, 0);
   const previous = danger.body.report;
-  const retest = await post(server, "/commerce/scoped-surface-retest", {
+  const forgedRetest = await post(server, "/commerce/scoped-surface-retest", {
     previous,
+    request: task({
+      taskId: "http-danger",
+      files: [{ path: "index.js", text: "export function add(a, b) { return a + b; }\n" }],
+    }),
+  });
+  assert.notEqual(forgedRetest.body.retest.comparison, "fixed");
+  assert.equal(forgedRetest.body.retest.reason, "unverified_prior");
+  const retest = await post(server, "/commerce/scoped-surface-retest", {
+    original: task({ taskId: "http-danger" }),
     request: task({
       taskId: "http-danger",
       files: [{ path: "index.js", text: "export function add(a, b) { return a + b; }\n" }],
@@ -378,13 +411,13 @@ test("isolated HTTP mount retrieves after restart and does not treat 200 as the 
   });
   assert.equal(retest.body.retest.comparison, "fixed");
   const unchanged = await post(server, "/commerce/scoped-surface-retest", {
-    previous,
+    original: task({ taskId: "http-danger" }),
     request: task({ taskId: "http-danger" }),
   });
   assert.equal(unchanged.body.retest.comparison, "unchanged");
   const retained = await post(server, "/commerce/scoped-surface-retain", {
     share: true,
-    previous,
+    original: task({ taskId: "http-danger", contextId: "http-task" }),
     request: task({
       taskId: "http-danger",
       contextId: "http-task",
@@ -394,7 +427,13 @@ test("isolated HTTP mount retrieves after restart and does not treat 200 as the 
   assert.equal(retained.status, 200, JSON.stringify(retained.body));
   assert.equal(retained.body.retained, true);
   await close(server);
-  const second = await createIsolatedApp({ journalDir: dir, clock: () => CLOCK });
+  const second = await createIsolatedApp({
+    journalDir: dir,
+    clock: () => CLOCK,
+    skillguardRoot: pins.skillguardRoot,
+    authorityFile,
+    hydratePublic: false,
+  });
   const restarted = await listen(second.app);
   const loaded = await fetch(`http://127.0.0.1:${restarted.address().port}/commerce/scoped-surface-regression/${retained.body.regression.id}`);
   const loadedBody = await loaded.json();
