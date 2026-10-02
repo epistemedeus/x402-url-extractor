@@ -170,6 +170,9 @@ const EXACT_ROUTES = new Map([
   ["/distribution/agent-discoverability-audit", { route: "/distribution/agent-discoverability-audit", kind: "paid" }],
   ["/commerce/payment-offer-preflight", { route: "/commerce/payment-offer-preflight", kind: "paid" }],
   ["/commerce/seller-integrity-audit", { route: "/commerce/seller-integrity-audit", kind: "paid" }],
+  // Free diagnosis is an exact unmatched route so the received producer records
+  // it apart from the paid audit. It is not a price, a SKU, or a paid kind.
+  ["/commerce/seller-repair-diagnosis", { route: "/commerce/seller-repair-diagnosis", kind: "unmatched", matched: true }],
   ["/commerce/contract-qualified-search", { route: "/commerce/contract-qualified-search", kind: "paid" }],
   ["/commerce/settlement-proof", { route: "/commerce/settlement-proof", kind: "paid" }],
   ["/chain/transaction-receipt", { route: "/chain/transaction-receipt", kind: "paid" }],
