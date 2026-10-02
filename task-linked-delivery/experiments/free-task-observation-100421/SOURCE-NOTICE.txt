@@ -1,0 +1,7 @@
+Copyright (c) 2026 SameDayDesk. MIT license; see LICENSE.
+The bounds and causal read-only contract are exact reused sources from
+task-demand-100339 at merchant base 519645af3a2fa36f745d59f08aab4008776a4aa6.
+Their older originating source pins remain in task-demand-100339/PIN.json.
+The receipt delivery, customer grant, journal and payment authority remain owned
+by their existing repository modules. This isolated integration does not enroll
+production journals. Frozen earlier exports are not replaced.
