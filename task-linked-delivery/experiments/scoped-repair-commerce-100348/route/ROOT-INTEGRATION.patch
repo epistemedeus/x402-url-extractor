@@ -1,0 +1,172 @@
+diff --git a/server.js b/server.js
+index 4418d14..4112a26 100644
+--- a/server.js
++++ b/server.js
+@@ -18,6 +18,8 @@
+ // It does not change or intercept the standard Base exact or native MPP paths.
+ 
+ import { installPaidReceiptRetention, noteReceiptRetention } from "./useful-result-reuse/delivery.mjs";
++import { mountScopedRepairCommerce } from "./task-linked-delivery/experiments/scoped-repair-commerce-100348/route/mount.mjs";
++import { isScopedRepairPath } from "./task-linked-delivery/experiments/scoped-repair-commerce-100348/route/paths.mjs";
+ import { mountSellerRepairDiagnosis } from "./experiments/seller-repair-service-100266/route/mount.mjs";
+ import { mountScopedSurfaceDelivery } from "./experiments/scoped-surface-delivery-100312/route/mount.mjs";
+ import { resolveHostedScanner } from "./experiments/scoped-surface-delivery-100312/deploy/hosted-scanner.mjs";
+@@ -538,7 +540,7 @@ const jsonParser = express.json({
+   },
+ });
+ app.use((req, res, next) => {
+-  if (isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
++  if (isScopedRepairPath(req.path) || isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
+   return jsonParser(req, res, next);
+ });
+ app.use(legacyCompatibleX402Body);
+@@ -576,6 +578,11 @@ process.once("SIGTERM", requestCommerceWriterDrain);
+ process.once("SIGINT", requestCommerceWriterDrain);
+ app.use(paidActionEffectHeaders);
+ app.use(commerceTelemetry.middleware);
++// Free scoped qualification. Enrollment and existing paid work remain separate.
++mountScopedRepairCommerce(app, {
++  ...resolveHostedScanner(),
++  dataDir: process.env.SCOPED_REPAIR_PACKET_DIR || null,
++});
+ const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
+ const idempotencyReplay = createIdempotencyReplay({
+   publicUrl: PUBLIC_URL,
+diff --git a/commerce-events.mjs b/commerce-events.mjs
+index 3ba5949..f0ed8a0 100644
+--- a/commerce-events.mjs
++++ b/commerce-events.mjs
+@@ -114,6 +114,11 @@ const CANONICAL_AGENT_DISCOVERY_SOURCES = new Set([
+ ]);
+ 
+ const EXACT_ROUTES = new Map([
++  // Known free calls use the existing non-paid request classification.
++  ...["deliver", "reuse", "accept", "review"].map((command) => {
++    const route = `/commerce/scoped-repair/${command}`;
++    return [route, { route, kind: "unmatched" }];
++  }),
+   ["/", { route: "/", kind: "discovery" }],
+   ["/healthz", { route: "/healthz", kind: "excluded" }],
+   ["/.well-known/x402", { route: "/.well-known/x402", kind: "discovery" }],
+diff --git a/experiments/seller-repair-service-100266/src/classify.mjs b/experiments/seller-repair-service-100266/src/classify.mjs
+index fcf0d5c..66e318d 100644
+--- a/experiments/seller-repair-service-100266/src/classify.mjs
++++ b/experiments/seller-repair-service-100266/src/classify.mjs
+@@ -93,6 +93,9 @@ export function classify({ intake, declared, observed, stopped = null }) {
+       useful: false,
+     };
+   }
++  if (expected.every((path) => observed.paths.includes(path)) && intake.expectedUsefulOutput.equals) {
++    return { ...view, outcome: "mismatch", reason: "observed_value_mismatch", nextAction: "repair", useful: false };
++  }
+   if (intake.question === "declaration_contract") {
+     return {
+       ...view,
+diff --git a/experiments/seller-repair-service-100266/bin/pack-consumer.mjs b/experiments/seller-repair-service-100266/bin/pack-consumer.mjs
+index fd0a123..55683dc 100644
+--- a/experiments/seller-repair-service-100266/bin/pack-consumer.mjs
++++ b/experiments/seller-repair-service-100266/bin/pack-consumer.mjs
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env node
+ import { spawnSync } from "node:child_process";
+ import { createHash } from "node:crypto";
+-import { chmodSync, cpSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
++import { existsSync, chmodSync, cpSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+ import { dirname, join, relative } from "node:path";
+ import { fileURLToPath } from "node:url";
+ 
+@@ -82,6 +82,13 @@ function assertFrozenConsumer() {
+ }
+ 
+ function pack() {
++  // A received version is sealed. Changed source requires a new version.
++  if (existsSync(ARCHIVE)) {
++    const sealed = readFileSync(ARCHIVE);
++    if (sealed.length !== 30462 || sha256(sealed) !== "86e55a75f7e7e5c5ad188de8b20c64648f40c236b11981186b56abeb6d11350f") throw new Error("sealed archive changed; export a successor");
++    process.stdout.write(JSON.stringify({ version: "0.2.0", sha256: sha256(sealed), bytes: sealed.length, sealed: true }) + "\n");
++    return;
++  }
+   assertFrozenConsumer();
+   rmSync(STAGE, { recursive: true, force: true });
+   ensureDir(STAGE);
+diff --git a/experiments/seller-repair-service-100266/bin/pack-consumer-030.mjs b/experiments/seller-repair-service-100266/bin/pack-consumer-030.mjs
+index 999cc7c..5e6b51d 100644
+--- a/experiments/seller-repair-service-100266/bin/pack-consumer-030.mjs
++++ b/experiments/seller-repair-service-100266/bin/pack-consumer-030.mjs
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env node
+ import { spawnSync } from "node:child_process";
+ import { createHash } from "node:crypto";
+-import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
++import { existsSync, chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+ import { dirname, join } from "node:path";
+ import { fileURLToPath } from "node:url";
+ 
+@@ -73,6 +73,13 @@ function assertFrozen() {
+ }
+ 
+ function pack() {
++  // A received version is sealed. Changed source requires a new version.
++  if (existsSync(ARCHIVE)) {
++    const sealed = readFileSync(ARCHIVE);
++    if (sealed.length !== 32020 || sha256(sealed) !== "9a3ff801104d95513ded6791f476a13042453ed9702635a117ebaac9afd73f2e") throw new Error("sealed archive changed; export a successor");
++    process.stdout.write(JSON.stringify({ version: "0.3.0", sha256: sha256(sealed), bytes: sealed.length, sealed: true }) + "\n");
++    return;
++  }
+   assertFrozen();
+   rmSync(STAGE, { recursive: true, force: true });
+   ensureDir(STAGE);
+diff --git a/experiments/seller-repair-service-100266/bin/pack-consumer-040.mjs b/experiments/seller-repair-service-100266/bin/pack-consumer-040.mjs
+index 94b1b74..74652f4 100644
+--- a/experiments/seller-repair-service-100266/bin/pack-consumer-040.mjs
++++ b/experiments/seller-repair-service-100266/bin/pack-consumer-040.mjs
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env node
+ import { spawnSync } from "node:child_process";
+ import { createHash } from "node:crypto";
+-import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
++import { existsSync, chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+ import { dirname, join } from "node:path";
+ import { fileURLToPath } from "node:url";
+ 
+@@ -70,6 +70,13 @@ function assertFrozen() {
+ }
+ 
+ function pack() {
++  // A received version is sealed. Changed source requires a new version.
++  if (existsSync(ARCHIVE)) {
++    const sealed = readFileSync(ARCHIVE);
++    if (sealed.length !== 40008 || sha256(sealed) !== "0a6f2f45aab81831137c7f2d1a83bce0cd31decb1013d5e92afe5f839faa9025") throw new Error("sealed archive changed; export a successor");
++    process.stdout.write(JSON.stringify({ version: "0.4.0", sha256: sha256(sealed), bytes: sealed.length, sealed: true }) + "\n");
++    return;
++  }
+   assertFrozen();
+   rmSync(STAGE, { recursive: true, force: true });
+   ensureDir(STAGE);
+diff --git a/experiments/seller-repair-service-100266/bin/pack-consumer-041.mjs b/experiments/seller-repair-service-100266/bin/pack-consumer-041.mjs
+index 37378b9..f2f2a30 100644
+--- a/experiments/seller-repair-service-100266/bin/pack-consumer-041.mjs
++++ b/experiments/seller-repair-service-100266/bin/pack-consumer-041.mjs
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env node
+ import { spawnSync } from "node:child_process";
+ import { createHash } from "node:crypto";
+-import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
++import { existsSync, chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+ import { dirname, join } from "node:path";
+ import { fileURLToPath } from "node:url";
+ 
+@@ -71,6 +71,13 @@ function assertFrozen() {
+ }
+ 
+ function pack() {
++  // A received version is sealed. Changed source requires a new version.
++  if (existsSync(ARCHIVE)) {
++    const sealed = readFileSync(ARCHIVE);
++    if (sealed.length !== 40891 || sha256(sealed) !== "64dbe1ee7f69dd40ebf71741eed92f1f3f893c44af8eadf18b71c0fac82227b8") throw new Error("sealed archive changed; export a successor");
++    process.stdout.write(JSON.stringify({ version: "0.4.1", sha256: sha256(sealed), bytes: sealed.length, sealed: true }) + "\n");
++    return;
++  }
+   assertFrozen();
+   rmSync(STAGE, { recursive: true, force: true });
+   ensureDir(STAGE);
