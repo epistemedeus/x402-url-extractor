@@ -12,26 +12,12 @@ import { assessPublicOrigin } from "../src/public-target.mjs";
 import { runJourney } from "../src/journey.mjs";
 import { prepareContribution, replayContribution } from "../src/contribution.mjs";
 import { consumeLaterArtifact, REGRESSION_SCHEMA } from "./later-consumer.mjs";
+import { MAINTAINED_INSPECTION } from "./maintained.mjs";
 import { rejectSeeded } from "../src/seed.mjs";
 
-export { consumeLaterArtifact, REGRESSION_SCHEMA };
+export { consumeLaterArtifact, REGRESSION_SCHEMA, MAINTAINED_INSPECTION };
 
 export const MERCHANT_HEAD = "c1518cce1b60799044cfd8b8a749abb150299a63";
-export const MAINTAINED_INSPECTION = Object.freeze({
-  package: "maintained-operations",
-  version: "0.1.0",
-  url: "https://neomorphic.io/downloads/maintained-operations/0.1.0/maintained-operations-0.1.0.tar.gz",
-  sha256: "b68024a3b359b354b6869cfdc4621f1eb2947cb40311bf7bafcbd546b0cdabc9",
-  bytes: 104792,
-  license: "MIT",
-  copyright: "Copyright (c) 2026 Neomorphic LLC",
-  runtime: "Node.js 22",
-  source: "packages/retained-task 0.1.0 and packages/change-monitor 0.1.0",
-  providesSellerDiagnosis: false,
-  providesRepairRetest: false,
-  inspectedAt: "2026-10-02T08:21:11.000Z",
-  note: "The public runner rechecks one retained observatory task. It does not accept a seller operation, expected output, or repair retest.",
-});
 
 export const PRODUCTION_OBSERVATION = Object.freeze({
   observedAt: "2026-10-02T08:21:11.000Z",
@@ -149,7 +135,8 @@ export function buyerPath(observation = PRODUCTION_OBSERVATION) {
     skuAdded: false,
     humanPage: false,
     command: `${COMMAND} buyer`,
-    deliverCommand: `${COMMAND} deliver`,
+    deliverCommand: `${COMMAND} deliver --request <caller-request.json>`,
+    selfTestCommand: `${COMMAND} self-test`,
     laterCommand: `${COMMAND} later --artifact <regression.json> --caller <caller.json>`,
     freeDiagnosis: {
       route: "POST /commerce/seller-repair-diagnosis",
@@ -394,6 +381,10 @@ function buildArtifact({ repair, negative, directRepair, directNegative, share, 
     paymentPermitted: false,
     deployedCounterpartyRepair: false,
     recognizedRevenueAtomic: "0",
+    mode: "self-test",
+    qa: true,
+    visitorExecution: false,
+    fixtureTransport: true,
     callerId: repair.callerId,
     taskDigest: repair.taskDigest,
     operationId: repair.operationId,
@@ -413,7 +404,7 @@ function buildArtifact({ repair, negative, directRepair, directNegative, share, 
       fixedCatalogExample: false,
     },
     execution: {
-      command: `${COMMAND} deliver`,
+      command: `${COMMAND} self-test`,
       beforeDigest: repair.observed?.digest || null,
       directDigest: directRepair.digest,
       directAgrees: directRepair.digest === repair.observed?.digest,
@@ -567,9 +558,25 @@ function summarizeEconomics(receipt, diagnosisIds) {
   };
 }
 
+function sameJson(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 export async function runCommercialDeliver({ repairCaller, negativeCaller, authorizeShare = false } = {}) {
   if (isFixedCatalogExample(repairCaller) || isFixedCatalogExample(negativeCaller)) {
     return { ok: false, reason: "fixed_example_is_not_caller_task", paymentSent: false, recognizedRevenueAtomic: "0" };
+  }
+  const qa = defaultCallers();
+  if (!sameJson(repairCaller, qa.repairCaller) || !sameJson(negativeCaller, qa.negativeCaller) || authorizeShare === true) {
+    return {
+      ok: false,
+      reason: "caller_request_required",
+      paymentSent: false,
+      recognizedRevenueAtomic: "0",
+      visitorExecution: false,
+      fixtureTransport: false,
+      help: "Pass the caller request to deliver --request. self-test is the only disposable quota fixture.",
+    };
   }
   const repairMachine = normalizeMachineRequest(repairCaller);
   const negativeMachine = normalizeMachineRequest(negativeCaller);
@@ -782,6 +789,10 @@ export async function runCommercialDeliver({ repairCaller, negativeCaller, autho
         },
       },
       schema: "samedaydesk.seller-repair-commercial.v1",
+      mode: "self-test",
+      qa: true,
+      visitorExecution: false,
+      fixtureTransport: true,
       charged: false,
       paymentSent: false,
       priceChanged: false,

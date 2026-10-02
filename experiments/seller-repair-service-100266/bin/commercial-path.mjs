@@ -2,8 +2,12 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 
 import {
+  DELIVER_HELP,
+  executeCallerRequest,
+  resolveLater,
+} from "../commercial/caller-request.mjs";
+import {
   buyerPath,
-  consumeLaterArtifact,
   defaultCallers,
   invitationPacket,
   rejectCommercialSeed,
@@ -21,7 +25,7 @@ function arg(name) {
   return index === -1 ? null : process.argv[index + 1] || null;
 }
 
-function publicReceipt(result) {
+function publicReceipt(result, commandName) {
   return {
     schema: result.schema,
     ok: result.ok === true,
@@ -31,6 +35,10 @@ function publicReceipt(result) {
     priceChanged: false,
     skuAdded: false,
     recognizedRevenueAtomic: "0",
+    mode: result.mode || commandName,
+    qa: result.qa === true,
+    visitorExecution: result.visitorExecution === true,
+    fixtureTransport: result.fixtureTransport === true,
     detail: result.detail || null,
     diagnosis: result.diagnosis || null,
     refusals: result.refusals || null,
@@ -38,8 +46,14 @@ function publicReceipt(result) {
     laterChanged: result.laterChanged || null,
     shareReplay: result.shareReplay || null,
     artifactTrusted: result.artifact?.trusted === true,
-    command: "node experiments/seller-repair-service-100266/bin/commercial-path.mjs deliver",
+    command: `node experiments/seller-repair-service-100266/bin/commercial-path.mjs ${commandName}`,
   };
+}
+
+async function readStdin() {
+  const chunks = [];
+  for await (const chunk of process.stdin) chunks.push(chunk);
+  return Buffer.concat(chunks).toString("utf8");
 }
 
 const command = process.argv[2];
@@ -73,27 +87,99 @@ if (command === "later") {
     process.stderr.write("artifact_and_caller_required\n");
     process.exit(2);
   }
-  const artifact = JSON.parse(await readFile(artifactPath, "utf8"));
-  const caller = JSON.parse(await readFile(callerPath, "utf8"));
-  const later = consumeLaterArtifact(artifact, caller);
+  let artifact;
+  let caller;
+  try {
+    artifact = JSON.parse(await readFile(artifactPath, "utf8"));
+    caller = JSON.parse(await readFile(callerPath, "utf8"));
+  } catch (error) {
+    process.stderr.write(`request_malformed\n${error.message}\n`);
+    process.exit(2);
+  }
+  const later = await resolveLater(artifact, caller);
   process.stdout.write(`${JSON.stringify({ ...later, paymentSent: false, recognizedRevenueAtomic: "0" })}\n`);
-  process.exit(later.refused ? 2 : 0);
+  process.exit(later.exitCode ?? (later.refused ? 2 : 0));
 }
 
-if (command === "deliver") {
+if (command === "self-test") {
   const callers = defaultCallers();
   const result = await runCommercialDeliver(callers);
   const out = arg("--out");
-  if (out) {
+  const receipt = publicReceipt(result, "self-test");
+  if (out && result.artifact) {
     await mkdir(out, { recursive: true });
     await writeFile(`${out}/regression.json`, `${JSON.stringify(result.artifact, null, 2)}\n`);
     await writeFile(`${out}/buyer-path.json`, `${JSON.stringify(result.buyer, null, 2)}\n`);
     await writeFile(`${out}/invitation.json`, `${JSON.stringify(result.invitation, null, 2)}\n`);
-    await writeFile(`${out}/receipt.json`, `${JSON.stringify(publicReceipt(result), null, 2)}\n`);
+    await writeFile(`${out}/receipt.json`, `${JSON.stringify(receipt, null, 2)}\n`);
   }
-  process.stdout.write(`${JSON.stringify(publicReceipt(result))}\n`);
+  process.stdout.write(`${JSON.stringify(receipt)}\n`);
   process.exit(result.ok ? 0 : 1);
 }
 
+if (command === "deliver") {
+  const requestPath = arg("--request");
+  if (!requestPath) {
+    process.stderr.write(`${DELIVER_HELP}\n`);
+    process.stdout.write(`${JSON.stringify({
+      ok: false,
+      executed: false,
+      help: true,
+      reason: "deliver_request_required",
+      charged: false,
+      paymentSent: false,
+      order: false,
+      recognizedRevenueAtomic: "0",
+    })}\n`);
+    process.exit(2);
+  }
+  let text;
+  try {
+    text = requestPath === "-" ? await readStdin() : await readFile(requestPath, "utf8");
+  } catch (error) {
+    process.stderr.write(`request_unreadable\n${error.message}\n`);
+    process.exit(2);
+  }
+  if (!text.trim()) {
+    process.stderr.write(`${DELIVER_HELP}\n`);
+    process.stdout.write(`${JSON.stringify({
+      ok: false,
+      executed: false,
+      help: true,
+      reason: "deliver_request_required",
+      charged: false,
+      paymentSent: false,
+      recognizedRevenueAtomic: "0",
+    })}\n`);
+    process.exit(2);
+  }
+  let input;
+  try {
+    input = JSON.parse(text);
+  } catch (error) {
+    process.stderr.write(`request_malformed\n${error.message}\n${DELIVER_HELP}\n`);
+    process.stdout.write(`${JSON.stringify({
+      ok: false,
+      executed: false,
+      help: true,
+      reason: "request_malformed",
+      charged: false,
+      paymentSent: false,
+      recognizedRevenueAtomic: "0",
+    })}\n`);
+    process.exit(2);
+  }
+  const result = await executeCallerRequest(input);
+  const out = arg("--out");
+  if (out) {
+    await mkdir(out, { recursive: true });
+    if (result.artifact) await writeFile(`${out}/regression.json`, `${JSON.stringify(result.artifact, null, 2)}\n`);
+    await writeFile(`${out}/receipt.json`, `${JSON.stringify(result.receipt, null, 2)}\n`);
+  }
+  process.stdout.write(`${JSON.stringify(result.receipt)}\n`);
+  process.exit(result.exitCode);
+}
+
 process.stderr.write("command_required\n");
+process.stderr.write("commands: buyer | invitation | deliver --request <file> | self-test | later --artifact <file> --caller <file> | reject-seeded <file>\n");
 process.exit(2);

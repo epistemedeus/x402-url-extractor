@@ -69,13 +69,17 @@ test("a fixed catalog example and a seeded success flag are refused", async () =
   assert.equal(rejectCommercialSeed({ http200IsSuccess: true }).refused, true);
 });
 
-test("deliver records two caller cases, refusals, and a zero-revenue economics receipt", { timeout: 120_000 }, () => {
+test("self-test records the disposable fixture, refusals, and a zero-revenue economics receipt", { timeout: 120_000 }, () => {
   const out = spawnSync("mktemp", ["-d"], { encoding: "utf8" });
   const dir = out.stdout.trim();
-  const delivered = run([join(exp, "bin", "commercial-path.mjs"), "deliver", "--out", dir]);
+  const delivered = run([join(exp, "bin", "commercial-path.mjs"), "self-test", "--out", dir]);
   assert.equal(delivered.status, 0, delivered.stdout || delivered.stderr);
   const receipt = JSON.parse(delivered.stdout);
   assert.equal(receipt.ok, true);
+  assert.equal(receipt.mode, "self-test");
+  assert.equal(receipt.qa, true);
+  assert.equal(receipt.visitorExecution, false);
+  assert.equal(receipt.fixtureTransport, true);
   assert.deepEqual(receipt.failed, []);
   assert.equal(receipt.charged, false);
   assert.equal(receipt.paymentSent, false);
@@ -94,6 +98,9 @@ test("deliver records two caller cases, refusals, and a zero-revenue economics r
   assert.equal(delivered.stdout.includes("commercial-path-disposable-token"), false);
   const artifact = JSON.parse(readFileSync(join(dir, "regression.json"), "utf8"));
   assert.equal(artifact.schema, "samedaydesk.seller-repair-regression.v1");
+  assert.equal(artifact.mode, "self-test");
+  assert.equal(artifact.qa, true);
+  assert.equal(artifact.visitorExecution, false);
   assert.equal(artifact.trusted, false);
   assert.equal(artifact.retest.class, "caller_reviewed_retest");
   assert.equal(artifact.negative.reason, "missing_field_not_paid_demand");

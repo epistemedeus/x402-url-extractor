@@ -1,6 +1,9 @@
 import { laterApplicability } from "../src/later.mjs";
 
 export const REGRESSION_SCHEMA = "samedaydesk.seller-repair-regression.v1";
+export const CALLER_REGRESSION_SCHEMA = "samedaydesk.seller-repair-caller-regression.v1";
+
+const ACCEPTED = new Set([REGRESSION_SCHEMA, CALLER_REGRESSION_SCHEMA]);
 
 function changed(artifact, caller) {
   return caller.taskDigest !== artifact.taskDigest
@@ -11,33 +14,43 @@ function changed(artifact, caller) {
     || caller.expectValue !== artifact.expected?.value;
 }
 
-// A file is not execution and is not a share grant. Changed inputs are refused
-// before any probe. The same binding still requires a new retest.
-export function consumeLaterArtifact(artifact, caller = {}) {
-  if (!artifact || artifact.schema !== REGRESSION_SCHEMA) {
-    return { refused: true, reason: "artifact_schema", probed: false, usefulTransferred: false, paymentPermitted: false, trusted: false };
+function closed(reason, extra = {}) {
+  return {
+    refused: true,
+    reason,
+    probed: false,
+    executed: false,
+    usefulTransferred: false,
+    paymentPermitted: false,
+    trusted: false,
+    independentRetest: false,
+    ...extra,
+  };
+}
+
+// A caller flag or a submitted file is not execution, trust, sharing, or payment.
+// Compatible reuse still needs an owned execution witness from this process.
+export function consumeLaterArtifact(artifact, caller = {}, execution = null) {
+  if (!artifact || !ACCEPTED.has(artifact.schema)) {
+    return closed("artifact_schema");
   }
   if (artifact.trusted === true || caller.trustSubmitted === true) {
-    return {
-      refused: true,
-      reason: "submitted_artifact_is_not_trusted",
-      probed: false,
-      usefulTransferred: false,
-      paymentPermitted: false,
-      trusted: false,
-    };
+    return closed("submitted_artifact_is_not_trusted");
+  }
+  const asserted = caller.independentRetest === true || caller.submittedReport === true;
+  const submittedRetest = caller.retest != null && execution?.owned !== true;
+  if ((asserted || submittedRetest) && execution?.owned !== true) {
+    return closed("caller_assertion_is_not_execution", {
+      predicateReason: changed(artifact, caller) ? "stale_applicability" : null,
+    });
   }
   if (changed(artifact, caller)) {
-    return {
-      refused: true,
-      reason: "stale_applicability",
-      probed: false,
-      usefulTransferred: false,
-      paymentPermitted: false,
-      trusted: false,
-      reused: false,
-    };
+    return closed("stale_applicability", { reused: false });
   }
+  if (typeof caller.callerId === "string" && caller.callerId !== artifact.callerId) {
+    return closed("wrong_owner", { reused: false });
+  }
+  const owned = execution?.owned === true;
   const later = laterApplicability({
     intake: {
       taskDigest: artifact.taskDigest,
@@ -51,14 +64,16 @@ export function consumeLaterArtifact(artifact, caller = {}) {
     sdk: caller.sdk,
     target: { origin: caller.origin, method: caller.method, resource: caller.resource },
     callerId: caller.callerId,
-    retest: caller.retest || null,
-    independentRetest: caller.independentRetest === true,
+    retest: owned ? execution.retest || null : null,
+    independentRetest: owned && execution.probed === true,
   });
   return {
     refused: later.reused !== true,
     ...later,
-    probed: caller.independentRetest === true,
+    probed: owned && execution.probed === true,
+    executed: owned,
     trusted: false,
     paymentPermitted: false,
+    independentRetest: owned && execution.probed === true,
   };
 }

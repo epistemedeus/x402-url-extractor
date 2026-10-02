@@ -5,7 +5,8 @@
   "skuAdded": false,
   "humanPage": false,
   "command": "node experiments/seller-repair-service-100266/bin/commercial-path.mjs buyer",
-  "deliverCommand": "node experiments/seller-repair-service-100266/bin/commercial-path.mjs deliver",
+  "deliverCommand": "node experiments/seller-repair-service-100266/bin/commercial-path.mjs deliver --request <caller-request.json>",
+  "selfTestCommand": "node experiments/seller-repair-service-100266/bin/commercial-path.mjs self-test",
   "laterCommand": "node experiments/seller-repair-service-100266/bin/commercial-path.mjs later --artifact <regression.json> --caller <caller.json>",
   "freeDiagnosis": {
     "route": "POST /commerce/seller-repair-diagnosis",

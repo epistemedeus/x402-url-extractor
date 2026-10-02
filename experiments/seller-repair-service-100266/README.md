@@ -124,11 +124,14 @@ the useful body and it does not recommend a purchase.
 The reusable commercial command is
 `node experiments/seller-repair-service-100266/bin/commercial-path.mjs`.
 `buyer` states what the free diagnosis can answer and when the existing audit
-is a different scope. `deliver` runs two supplied caller operations, writes one
-untrusted regression artifact, and passes that artifact to the economics
-consumer with the received commerce events. `later` refuses changed inputs
-before a probe. The Agent402 unemployment invitation is
-`buyer/invitation.json`. It is not sent, and HTTP 402 is not a repair order.
+is a different scope. `deliver --request <file>` executes one bounded caller
+request through the existing diagnosis journey. The request names the operation,
+the expected output, limits, and either a supplied observation or explicit probe
+consent. `self-test` is the disposable quota fixture and is not a visitor task.
+`later` reruns a compatible supplied request, or states why the previous
+predicate does not apply. A caller flag does not count as a probe. The Agent402
+unemployment invitation is `buyer/invitation.json`. It is not sent, and HTTP 402
+is not a repair order.
 Maintained-operations 0.1.0 was inspected and does not diagnose a seller.
 
 ## Portable consumer
@@ -149,3 +152,11 @@ The scanner, handoff, and contribution modules stay in this repository.
 `candidate/cold-command.json` is the command Root runs after hosting the
 bytes. The 0.2.0 archive, provenance, source notice, and license are draft
 assets under `public-acquisition/`. `hostedAcquisitionVerified` stays false.
+
+0.3.0 is the successor cold contract for `deliver --request`. Pack it with
+`node experiments/seller-repair-service-100266/bin/pack-consumer-030.mjs`.
+That pack writes `candidate/seller-repair-external-consumer-0.3.0.tar.gz`,
+`candidate/provenance-0.3.0.json`, `candidate/cold-command-0.3.0.json`, and
+`candidate/ROOT-PUBLIC-ACQUISITION-0.3.0.patch`. It does not rewrite the
+0.1.0 or 0.2.0 archives and it does not edit `public-acquisition/manifest.json`.
+Root applies the patch only after choosing to host the bytes.

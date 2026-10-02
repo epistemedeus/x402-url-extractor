@@ -34,7 +34,8 @@
     "node experiments/seller-repair-service-100266/bin/seller-repair.mjs diagnose --case experiments/seller-repair-service-100266/cases/supplied-health.json",
     "node experiments/seller-repair-service-100266/bin/seller-repair.mjs reject-seeded experiments/seller-repair-service-100266/fixtures/seeded-false-useful.json",
     "node experiments/seller-repair-service-100266/bin/commercial-path.mjs buyer",
-    "node experiments/seller-repair-service-100266/bin/commercial-path.mjs deliver",
+    "node experiments/seller-repair-service-100266/bin/commercial-path.mjs deliver --request <caller-request.json>",
+    "node experiments/seller-repair-service-100266/bin/commercial-path.mjs self-test",
     "node experiments/seller-repair-service-100266/bin/commercial-path.mjs later --artifact experiments/seller-repair-service-100266/commercial/export/regression.json --caller experiments/seller-repair-service-100266/buyer/later-changed-caller.json",
     "node experiments/seller-repair-service-100266/bin/commercial-path.mjs reject-seeded experiments/seller-repair-service-100266/fixtures/commercial-seeded-false.json"
   ],
