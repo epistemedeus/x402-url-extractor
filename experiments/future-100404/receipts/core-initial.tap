@@ -1,0 +1,327 @@
+TAP version 13
+# Subtest: caller task, input and all expectation dimensions are frozen
+ok 1 - caller task, input and all expectation dimensions are frozen
+  ---
+  duration_ms: 1.245339
+  type: 'test'
+  ...
+# Subtest: nonfree routes, arbitrary predicates, hidden authority and unbounded work are rejected
+ok 2 - nonfree routes, arbitrary predicates, hidden authority and unbounded work are rejected
+  ---
+  duration_ms: 0.576763
+  type: 'test'
+  ...
+# Subtest: HTTP-shaped claims do not answer a caller predicate; useful negatives can
+ok 3 - HTTP-shaped claims do not answer a caller predicate; useful negatives can
+  ---
+  duration_ms: 0.798041
+  type: 'test'
+  ...
+# Error: purchase evidence operations are invalid
+#     at fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:145:9)
+#     at createPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:1897:84)
+#     at buildPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/purchase-evidence-manifest.mjs:92:10)
+#     at file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:48:14
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:346:12)
+# Error: purchase evidence operations are invalid
+#     at fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:145:9)
+#     at createPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:1897:84)
+#     at buildPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/purchase-evidence-manifest.mjs:92:10)
+#     at file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:48:14
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:346:12)
+# Subtest: actual received mount executes two caller inputs and matches the direct owner's equal-task decisions
+not ok 4 - actual received mount executes two caller inputs and matches the direct owner's equal-task decisions
+  ---
+  duration_ms: 114.139078
+  type: 'test'
+  location: '/home/ubuntu/root-sol-404/experiments/future-100404/test/delivery.test.mjs:11:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'partial'
+    - 'fulfilled'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'fulfilled'
+  actual: 'partial'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/root-sol-404/experiments/future-100404/test/delivery.test.mjs:19:14)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Error: purchase evidence operations are invalid
+#     at fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:145:9)
+#     at createPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:1897:84)
+#     at buildPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/purchase-evidence-manifest.mjs:92:10)
+#     at file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:48:14
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:346:12)
+# Error: purchase evidence operations are invalid
+#     at fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:145:9)
+#     at createPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:1897:84)
+#     at buildPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/purchase-evidence-manifest.mjs:92:10)
+#     at file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:48:14
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:346:12)
+# Error: purchase evidence operations are invalid
+#     at fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:145:9)
+#     at createPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:1897:84)
+#     at buildPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/purchase-evidence-manifest.mjs:92:10)
+#     at file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:48:14
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:346:12)
+# Error: purchase evidence operations are invalid
+#     at fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:145:9)
+#     at createPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:1897:84)
+#     at buildPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/purchase-evidence-manifest.mjs:92:10)
+#     at file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:48:14
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:346:12)
+# Subtest: changed later input and predicates get new execution and preserve the old historical result
+not ok 5 - changed later input and predicates get new execution and preserve the old historical result
+  ---
+  duration_ms: 104.495284
+  type: 'test'
+  location: '/home/ubuntu/root-sol-404/experiments/future-100404/test/delivery.test.mjs:32:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'partial'
+    - 'fulfilled'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'fulfilled'
+  actual: 'partial'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/root-sol-404/experiments/future-100404/test/delivery.test.mjs:38:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Error: purchase evidence operations are invalid
+#     at fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:145:9)
+#     at createPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:1897:84)
+#     at buildPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/purchase-evidence-manifest.mjs:92:10)
+#     at file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:48:14
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:346:12)
+# Error: purchase evidence operations are invalid
+#     at fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:145:9)
+#     at createPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:1897:84)
+#     at buildPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/purchase-evidence-manifest.mjs:92:10)
+#     at file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:48:14
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:346:12)
+# Error: purchase evidence operations are invalid
+#     at fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:145:9)
+#     at createPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:1897:84)
+#     at buildPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/purchase-evidence-manifest.mjs:92:10)
+#     at file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:48:14
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:346:12)
+# Error: purchase evidence operations are invalid
+#     at fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:145:9)
+#     at createPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:1897:84)
+#     at buildPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/purchase-evidence-manifest.mjs:92:10)
+#     at file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:48:14
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:346:12)
+# Subtest: release changes and unavailable source leave useful output and current validation separate
+not ok 6 - release changes and unavailable source leave useful output and current validation separate
+  ---
+  duration_ms: 98.278906
+  type: 'test'
+  location: '/home/ubuntu/root-sol-404/experiments/future-100404/test/delivery.test.mjs:51:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    'unknown' !== 'unmet'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'unmet'
+  actual: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/root-sol-404/experiments/future-100404/test/delivery.test.mjs:58:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Error: purchase evidence operations are invalid
+#     at fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:145:9)
+#     at createPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:1897:84)
+#     at buildPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/purchase-evidence-manifest.mjs:92:10)
+#     at file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:48:14
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:346:12)
+# Error: purchase evidence operations are invalid
+#     at fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:145:9)
+#     at createPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:1897:84)
+#     at buildPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/purchase-evidence-manifest.mjs:92:10)
+#     at file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:48:14
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:346:12)
+# Error: purchase evidence operations are invalid
+#     at fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:145:9)
+#     at createPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:1897:84)
+#     at buildPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/purchase-evidence-manifest.mjs:92:10)
+#     at file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:48:14
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:346:12)
+# Error: purchase evidence operations are invalid
+#     at fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:145:9)
+#     at createPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:1897:84)
+#     at buildPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/purchase-evidence-manifest.mjs:92:10)
+#     at file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:48:14
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:346:12)
+# Subtest: missing fields, partial scanner decisions, age and caller retention expiry remain meaningful
+ok 7 - missing fields, partial scanner decisions, age and caller retention expiry remain meaningful
+  ---
+  duration_ms: 93.608311
+  type: 'test'
+  ...
+# Subtest: existing retained owner survives restart, refuses another grant and revocation; no paid result grants current execution
+not ok 8 - existing retained owner survives restart, refuses another grant and revocation; no paid result grants current execution
+  ---
+  duration_ms: 4.549332
+  type: 'test'
+  location: '/home/ubuntu/root-sol-404/experiments/future-100404/test/delivery.test.mjs:79:1'
+  failureType: 'testCodeFailure'
+  error: 'transactionHash must be a 32-byte 0x-prefixed transaction hash'
+  code: 'invalid_transaction_hash'
+  name: 'TransactionReceiptError'
+  stack: |-
+    fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/transaction-receipt.mjs:45:9)
+    normalizeTransactionReceiptInput (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/transaction-receipt.mjs:71:5)
+    transactionReceipt (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/transaction-receipt.mjs:136:19)
+    createTestRetained (file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:75:22)
+    async TestContext.<anonymous> (file:///home/ubuntu/root-sol-404/experiments/future-100404/test/delivery.test.mjs:82:24)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: current retained expiry and unenrolled sharing cannot be repaired by payment or caller labels
+not ok 9 - current retained expiry and unenrolled sharing cannot be repaired by payment or caller labels
+  ---
+  duration_ms: 2.00017
+  type: 'test'
+  location: '/home/ubuntu/root-sol-404/experiments/future-100404/test/delivery.test.mjs:106:1'
+  failureType: 'testCodeFailure'
+  error: 'transactionHash must be a 32-byte 0x-prefixed transaction hash'
+  code: 'invalid_transaction_hash'
+  name: 'TransactionReceiptError'
+  stack: |-
+    fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/transaction-receipt.mjs:45:9)
+    normalizeTransactionReceiptInput (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/transaction-receipt.mjs:71:5)
+    transactionReceipt (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/transaction-receipt.mjs:136:19)
+    createTestRetained (file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:75:22)
+    async TestContext.<anonymous> (file:///home/ubuntu/root-sol-404/experiments/future-100404/test/delivery.test.mjs:109:24)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Error: purchase evidence operations are invalid
+#     at fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:145:9)
+#     at createPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:1897:84)
+#     at buildPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/purchase-evidence-manifest.mjs:92:10)
+#     at file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:48:14
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:346:12)
+# Error: purchase evidence operations are invalid
+#     at fail (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:145:9)
+#     at createPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/agent-payment-policy/core.mjs:1897:84)
+#     at buildPurchaseEvidenceManifest (file:///home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/purchase-evidence-manifest.mjs:92:10)
+#     at file:///home/ubuntu/root-sol-404/experiments/future-100404/test/mounted-owner.mjs:48:14
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/root-sol-404/experiments/future-100404/.runtime/merchant/node_modules/express/lib/router/index.js:346:12)
+# Subtest: edited unsigned receipt fails integrity; recomputing its hash does not acquire merchant authority
+ok 10 - edited unsigned receipt fails integrity; recomputing its hash does not acquire merchant authority
+  ---
+  duration_ms: 45.170492
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 5
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1315.087678

@@ -1,0 +1,106 @@
+TAP version 13
+# Subtest: caller task, input and all expectation dimensions are frozen
+ok 1 - caller task, input and all expectation dimensions are frozen
+  ---
+  duration_ms: 3.003111
+  type: 'test'
+  ...
+# Subtest: nonfree routes, arbitrary predicates, hidden authority and unbounded work are rejected
+ok 2 - nonfree routes, arbitrary predicates, hidden authority and unbounded work are rejected
+  ---
+  duration_ms: 0.612959
+  type: 'test'
+  ...
+# Subtest: HTTP-shaped claims do not answer a caller predicate; useful negatives can
+ok 3 - HTTP-shaped claims do not answer a caller predicate; useful negatives can
+  ---
+  duration_ms: 0.836641
+  type: 'test'
+  ...
+# Subtest: actual received mount executes two caller inputs and matches the direct owner's equal-task decisions
+not ok 4 - actual received mount executes two caller inputs and matches the direct owner's equal-task decisions
+  ---
+  duration_ms: 189.104069
+  type: 'test'
+  location: '/home/ubuntu/root-sol-404/experiments/future-100404/test/delivery.test.mjs:11:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'partial'
+    - 'fulfilled'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'fulfilled'
+  actual: 'partial'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/root-sol-404/experiments/future-100404/test/delivery.test.mjs:19:14)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: changed later input and predicates get new execution and preserve the old historical result
+not ok 5 - changed later input and predicates get new execution and preserve the old historical result
+  ---
+  duration_ms: 119.33723
+  type: 'test'
+  location: '/home/ubuntu/root-sol-404/experiments/future-100404/test/delivery.test.mjs:32:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    'met' !== 'partial'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'partial'
+  actual: 'met'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/root-sol-404/experiments/future-100404/test/delivery.test.mjs:39:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: release changes and unavailable source leave useful output and current validation separate
+ok 6 - release changes and unavailable source leave useful output and current validation separate
+  ---
+  duration_ms: 103.017423
+  type: 'test'
+  ...
+# Subtest: missing fields, partial scanner decisions, age and caller retention expiry remain meaningful
+ok 7 - missing fields, partial scanner decisions, age and caller retention expiry remain meaningful
+  ---
+  duration_ms: 119.224337
+  type: 'test'
+  ...
+# Subtest: existing retained owner survives restart, refuses another grant and revocation; no paid result grants current execution
+ok 8 - existing retained owner survives restart, refuses another grant and revocation; no paid result grants current execution
+  ---
+  duration_ms: 65.56036
+  type: 'test'
+  ...
+# Subtest: current retained expiry and unenrolled sharing cannot be repaired by payment or caller labels
+ok 9 - current retained expiry and unenrolled sharing cannot be repaired by payment or caller labels
+  ---
+  duration_ms: 61.296368
+  type: 'test'
+  ...
+# Subtest: edited unsigned receipt fails integrity; recomputing its hash does not acquire merchant authority
+ok 10 - edited unsigned receipt fails integrity; recomputing its hash does not acquire merchant authority
+  ---
+  duration_ms: 51.120239
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 8
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2708.482943

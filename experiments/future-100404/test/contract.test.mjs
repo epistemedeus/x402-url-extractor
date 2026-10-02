@@ -1,27 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseContract, criteria, CONTRACT_SCHEMA } from "../src/contract.mjs";
-
-export function contract(overrides = {}) {
-  return {
-    schema: CONTRACT_SCHEMA, taskId: "caller-task", operationId: "caller-scan",
-    request: { method: "POST", route: "/commerce/scoped-surface-scan", input: {
-      taskId: "caller-task", callerId: "caller-one", contextId: "private-one",
-      concern: { id: "rule:env-exfil", statement: "Check supplied text for environment exfiltration." },
-      files: [{ path: "index.js", text: "export const add = (a, b) => a + b;\n" }],
-    } },
-    expectations: {
-      usefulOutput: [
-        { id: "ran", pointer: "/report/scanPerformed", op: "equals", value: true },
-        { id: "concern", pointer: "/report/concern/result", op: "equals", value: "no_match" },
-      ], maxLatencyMs: 5000, deadlineMs: 10000, maxResponseBytes: 262144,
-      freshness: { maxAgeMs: 3600000, requireCurrentExecution: true },
-      release: { resource: "/api/actions", expectedVersion: "1.23.49", required: true },
-      continuation: { mode: "reexecute", required: true },
-      rights: { purpose: "private-evaluation", regressionId: null, contextId: null, required: false },
-    }, retainUntil: "2026-11-01T00:00:00.000Z", ...overrides,
-  };
-}
+import { parseContract, criteria } from "../src/contract.mjs";
+import { contract } from "./caller.mjs";
 test("caller task, input and all expectation dimensions are frozen", () => {
   const input = contract(); const parsed = parseContract(input);
   input.request.input.files[0].text = "changed";

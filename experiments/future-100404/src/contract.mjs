@@ -20,6 +20,8 @@ export function parseContract(raw) {
   assert(SAFE_ROUTES[c.request.route] === c.request.method, "operation_not_free_or_supported");
   if (c.request.method === "GET") assert(c.request.input === null, "get_body_rejected");
   else assert(c.request.input && typeof c.request.input === "object" && !Array.isArray(c.request.input), "input_required");
+  if (c.request.route === "/commerce/scoped-surface-scan") assert(c.request.input.taskId === c.taskId, "request_task_mismatch");
+  if (c.request.route === "/commerce/scoped-surface-retest") assert(c.request.input.request?.taskId === c.taskId, "request_task_mismatch");
   const e = c.expectations;
   keys(e, ["usefulOutput", "maxLatencyMs", "deadlineMs", "maxResponseBytes", "freshness", "release", "continuation", "rights"]);
   assert(Array.isArray(e.usefulOutput) && e.usefulOutput.length >= 1 && e.usefulOutput.length <= 16, "criteria_required");
@@ -41,7 +43,7 @@ export function parseContract(raw) {
   keys(e.freshness, ["maxAgeMs", "requireCurrentExecution"]);
   assert(integer(e.freshness.maxAgeMs, 0, 30 * 86400000) && typeof e.freshness.requireCurrentExecution === "boolean", "freshness_bounds");
   keys(e.release, ["resource", "expectedVersion", "required"]);
-  assert(e.release.resource === "/api/actions" && typeof e.release.required === "boolean", "release_resource");
+  assert(e.release.resource === "/.well-known/agent-payment-evidence.json" && typeof e.release.required === "boolean", "release_resource");
   assert(e.release.expectedVersion === null || /^\d+\.\d+\.\d+$/.test(e.release.expectedVersion), "release_version");
   keys(e.continuation, ["mode", "required"]);
   assert(["reexecute", "retained-read"].includes(e.continuation.mode) && typeof e.continuation.required === "boolean", "continuation_mode");
