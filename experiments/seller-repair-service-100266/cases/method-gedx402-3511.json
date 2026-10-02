@@ -1,0 +1,74 @@
+{
+  "schema": "samedaydesk.seller-repair-caller-request.v1",
+  "callerId": "method-gedx402-3511",
+  "task": "Replay the supplied unpaid GET and POST captures for chat.gedx402.com chat completions. The captures are dated observations, not an order and not our price.",
+  "origin": "https://chat.gedx402.com",
+  "operation": "GET /v1/chat/completions",
+  "sdk": "capture-replay",
+  "runtime": "node/22.22.2",
+  "expect": { "path": "status", "value": "ready" },
+  "limits": {
+    "probes": 2,
+    "bodyBytes": 8192,
+    "deadlineMs": 1000,
+    "totalBodyBytes": 16384,
+    "totalResponseMs": 4000,
+    "redirects": 0,
+    "outputBytes": 65536
+  },
+  "question": "useful_output",
+  "paidIntent": false,
+  "observed": {
+    "status": 402,
+    "contentType": "application/json",
+    "json": {
+      "x402Version": 2,
+      "error": "Payment required",
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "1000",
+          "assetName": "USD Coin"
+        }
+      ]
+    }
+  },
+  "protocol": {
+    "name": "x402",
+    "scheme": "exact",
+    "x402Version": 2,
+    "network": "eip155:8453"
+  },
+  "methodBinding": {
+    "discoveringMethod": "GET",
+    "intendedInvocationMethod": "GET",
+    "declaredMethods": ["GET"],
+    "declaration": {
+      "source": "bazaar.info.input",
+      "observedAt": "2026-10-02T09:26:19.000Z",
+      "url": "https://chat.gedx402.com/v1/chat/completions"
+    },
+    "bodyShape": {
+      "bodyType": "json",
+      "hasBody": true,
+      "invokeWithBody": true,
+      "originAgreement": null,
+      "headerOnly": false
+    },
+    "client": { "profile": "fetch", "retry": "prepared_request" },
+    "freshness": {
+      "observedAt": "2026-10-02T09:26:19.000Z",
+      "expiresAt": "2026-10-03T09:26:19.000Z",
+      "evaluatedAt": "2026-10-02T09:26:19.000Z"
+    },
+    "observations": [
+      {
+        "discoveringMethod": "POST",
+        "declaredMethods": ["POST"],
+        "bodyShape": { "bodyType": "json", "hasBody": true }
+      }
+    ],
+    "challengeAmount": "1000"
+  }
+}

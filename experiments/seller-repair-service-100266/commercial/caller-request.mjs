@@ -13,6 +13,16 @@ import {
   REGRESSION_SCHEMA,
 } from "./later-consumer.mjs";
 import { MAINTAINED_INSPECTION } from "./maintained.mjs";
+import {
+  decideMethodBinding,
+  probeMethodContract,
+  sealCompletedProbe,
+  sealFailedProbe,
+  sealSupplied,
+  spendClaim,
+  validateMethodBinding,
+  validateProtocol,
+} from "./method-binding.mjs";
 
 const SOURCE_SHA = createHash("sha256").update(readFileSync(fileURLToPath(import.meta.url))).digest("hex");
 const COMMAND = "node experiments/seller-repair-service-100266/bin/commercial-path.mjs";
@@ -41,6 +51,9 @@ export const DELIVER_HELP = [
   "loopback requires probeConsent.baseUrl http://127.0.0.1:<port>. public-https probes the named origin.",
   "Optional retest.baseUrl or retest.observed is caller-owned and does not deploy a counterparty repair.",
   "A supplied observation is not an independent probe. Missing input does not fabricate a completed task.",
+  "Optional methodBinding sits beside operation and protocol (scheme, x402Version, network).",
+  "It records the discovering method, the intended method, declared and accepted methods, body shape, client retry, and freshness.",
+  "Method agreement is compatibility evidence. It is not spend authority. There is no default capture.",
   `The disposable QA fixture is: ${COMMAND} self-test`,
 ].join("\n");
 
@@ -97,6 +110,9 @@ function operationOf(value, errors) {
 export function validateCallerRequest(input) {
   const errors = [];
   if (!plain(input)) return { ok: false, reason: "request_malformed", errors: ["request must be a JSON object"] };
+  if (spendClaim(input)) {
+    return { ok: false, reason: "seeded_spend_claim", errors: ["a caller safeToPay, payment, signing, or order flag is not accepted"] };
+  }
   const leak = controlKey(input) || controlKey(input.probeConsent) || controlKey(input.retest) || controlKey(input.limits);
   if (leak) return { ok: false, reason: "fixture_transport_refused", errors: [`${leak} is not accepted on a caller request`] };
   if (input.schema !== undefined && input.schema !== "samedaydesk.seller-repair-caller-request.v1") {
@@ -179,6 +195,11 @@ export function validateCallerRequest(input) {
     }
   }
   if (input.patch !== undefined && !plain(input.patch)) errors.push("patch must be an object");
+  const methodBinding = input.methodBinding === undefined ? null : validateMethodBinding(input.methodBinding, errors);
+  const protocol = input.protocol === undefined ? null : validateProtocol(input.protocol, errors);
+  if (methodBinding?.localContract && consent?.class !== "loopback") {
+    errors.push("a method contract probe requires loopback consent");
+  }
   if (errors.length) return { ok: false, reason: "request_invalid", errors };
   return {
     ok: true,
@@ -206,6 +227,8 @@ export function validateCallerRequest(input) {
       question: input.question || "useful_output",
       paidIntent: input.paidIntent === true,
       producerEventId: input.producer?.commerceEventId || null,
+      methodBinding,
+      protocol,
       inputsSha256: sha256(JSON.stringify(input)),
     },
   };
@@ -237,6 +260,9 @@ function refused(reason, extra = {}) {
       charged: false,
       paymentSent: false,
       order: false,
+      safeToPay: false,
+      paymentAuthorized: false,
+      signingAuthorized: false,
       purchaseRecommended: false,
       recognizedRevenueAtomic: "0",
       mode: "caller",
@@ -363,7 +389,7 @@ function liveRetest(journey, request) {
   };
 }
 
-function envelope({ request, journey, retest, executionMs, probes, bodyBytes, executionClass, limitReason = null }) {
+function envelope({ request, journey, retest, executionMs, probes, bodyBytes, executionClass, limitReason = null, methodCompatibility = null }) {
   const classification = journey?.classification || {
     useful: false,
     reason: limitReason,
@@ -415,6 +441,7 @@ function envelope({ request, journey, retest, executionMs, probes, bodyBytes, ex
       limited: Boolean(limitReason) || classification.useful !== true,
     },
     retest,
+    ...(methodCompatibility ? { methodCompatibility } : {}),
     paid,
     target402IsOrder: false,
     missingFieldIsPaidDelta: false,
@@ -509,6 +536,7 @@ function artifactFrom(receipt, retest) {
       redirectsFollowed: 0,
     },
     retest: retest || { deployedCounterpartyRepair: false, counterpartyMutated: false, useful: false },
+    ...(receipt.methodCompatibility ? { methodCompatibility: receipt.methodCompatibility } : {}),
     causal: receipt.causal,
     paid: receipt.paid,
     resources: receipt.resources,
@@ -542,6 +570,80 @@ function limitResult(request, reason, executionMs) {
   };
 }
 
+async function executeLocalMethodContract(request, started) {
+  const discovering = request.methodBinding.discoveringMethod;
+  const intended = request.methodBinding.intendedInvocationMethod;
+  const methods = [];
+  if (discovering && discovering !== intended) methods.push(discovering);
+  if (intended) methods.push(intended);
+  if (!methods.length) methods.push(request.operation.method);
+  const probed = await probeMethodContract({
+    baseUrl: request.probeConsent.baseUrl,
+    resource: request.operation.resource,
+    methods,
+    limits: request.limits,
+  });
+  const supplied = decideMethodBinding(request.methodBinding, {
+    origin: request.origin,
+    resource: request.operation.resource,
+    protocol: request.protocol,
+    httpStatus: probed.seen.at(-1)?.status ?? null,
+    evidenceClass: "loopback_probe",
+  });
+  const methodCompatibility = probed.partial ? sealFailedProbe(supplied, probed.reason) : sealCompletedProbe(supplied);
+  const journey = {
+    classification: {
+      useful: false,
+      reason: methodCompatibility.reason,
+      outcome: "unknown",
+      http200IsSuccess: false,
+    },
+    taskDigest: taskDigest(request.task),
+    target: { origin: request.origin, method: request.operation.method, resource: request.operation.resource },
+    observation: { independentlyObserved: methodCompatibility.independentlyObserved === true },
+    metrics: { callerEffort: { probes: probed.probes, bodyBytes: probed.bodyBytes } },
+  };
+  const retest = {
+    class: "loopback_method_contract",
+    independentlyObserved: methodCompatibility.independentlyObserved === true,
+    callerSupplied: false,
+    deployedCounterpartyRepair: false,
+    counterpartyMutated: false,
+    useful: false,
+    reason: probed.reason || methodCompatibility.reason,
+    changedOutput: {
+      path: request.expect.path,
+      before: probed.seen[0]?.status ?? null,
+      after: probed.seen.at(-1)?.status ?? null,
+      changed: probed.seen.length > 1 && probed.seen[0]?.status !== probed.seen.at(-1)?.status,
+    },
+    probes: probed.seen,
+    paymentHeadersSent: [],
+  };
+  const receipt = envelope({
+    request,
+    journey,
+    retest,
+    executionMs: Date.now() - started,
+    probes: probed.probes,
+    bodyBytes: probed.bodyBytes,
+    executionClass: "live",
+    methodCompatibility,
+  });
+  const bounded = boundOutput(receipt, request.limits.outputBytes);
+  return {
+    ok: true,
+    executed: true,
+    exitCode: 0,
+    help: false,
+    reason: bounded.limited ? "output_ceiling" : methodCompatibility.reason,
+    probed: probed.probes > 0,
+    executionClass: "live",
+    receipt: bounded.receipt,
+    artifact: bounded.limited ? null : artifactFrom(receipt, retest),
+  };
+}
+
 export async function executeCallerRequest(input) {
   const parsed = validateCallerRequest(input);
   if (!parsed.ok) return refused(parsed.reason, { errors: parsed.errors });
@@ -553,6 +655,9 @@ export async function executeCallerRequest(input) {
     return refused("fixed_example_is_not_caller_task");
   }
   const started = Date.now();
+  if (request.methodBinding?.localContract) {
+    return executeLocalMethodContract(request, started);
+  }
   if (request.probeConsent?.class === "public-https") {
     const shape = publicOriginShape(request.origin);
     if (!shape.ok) return limitResult(request, shape.reason, Date.now() - started);
@@ -587,6 +692,15 @@ export async function executeCallerRequest(input) {
   }
   const probes = journey.metrics?.callerEffort?.probes || 0;
   const bodyBytes = journey.metrics?.callerEffort?.bodyBytes || 0;
+  const methodCompatibility = request.methodBinding
+    ? sealSupplied(decideMethodBinding(request.methodBinding, {
+      origin: request.origin,
+      resource: request.operation.resource,
+      protocol: request.protocol,
+      httpStatus: request.observed?.status || journey?.observed?.status || null,
+      evidenceClass: "caller_supplied",
+    }))
+    : null;
   const receipt = envelope({
     request,
     journey,
@@ -595,6 +709,7 @@ export async function executeCallerRequest(input) {
     probes,
     bodyBytes,
     executionClass,
+    methodCompatibility,
   });
   const bounded = boundOutput(receipt, request.limits.outputBytes);
   return {
@@ -624,6 +739,9 @@ function predicateOf(artifact, caller, receipt) {
     && resource === artifact.target?.resource
     && expectValue === artifact.expected?.value;
   if (!same) return { applies: false, reason: "stale_applicability" };
+  const priorDigest = artifact.methodCompatibility?.bindingDigest || null;
+  const nextDigest = receipt?.methodCompatibility?.bindingDigest || null;
+  if (priorDigest !== nextDigest) return { applies: false, reason: "changed_method_binding" };
   const owner = caller.callerId;
   if (typeof owner === "string" && owner !== artifact.callerId) return { applies: false, reason: "wrong_owner" };
   return { applies: true, reason: "fresh_execution" };

@@ -1,0 +1,70 @@
+{
+  "schema": "samedaydesk.seller-repair-caller-request.v1",
+  "callerId": "method-issue-3657",
+  "task": "Replay the historical GET discovery versus POST acceptance report for the named satledger routes. The reporter says that disagreement was later changed.",
+  "origin": "https://api.satledger.org",
+  "operation": "GET /x402/provision",
+  "sdk": "x402-python-requests/2.21.0",
+  "runtime": "node/22.22.2",
+  "expect": { "path": "status", "value": "ready" },
+  "limits": {
+    "probes": 2,
+    "bodyBytes": 8192,
+    "deadlineMs": 1000,
+    "totalBodyBytes": 16384,
+    "totalResponseMs": 4000,
+    "redirects": 0,
+    "outputBytes": 65536
+  },
+  "question": "useful_output",
+  "paidIntent": false,
+  "observed": {
+    "status": 402,
+    "contentType": "application/json",
+    "json": {
+      "error": "PAYMENT-SIGNATURE is required, by POST",
+      "historical": true
+    }
+  },
+  "protocol": {
+    "name": "x402",
+    "scheme": "exact",
+    "x402Version": 2,
+    "network": "eip155:8453"
+  },
+  "methodBinding": {
+    "discoveringMethod": "GET",
+    "intendedInvocationMethod": "GET",
+    "acceptedMethods": ["POST"],
+    "declaration": {
+      "source": "issue-3657-reporter",
+      "observedAt": "2026-10-02T06:57:43.000Z",
+      "url": "https://github.com/x402-foundation/x402/issues/3657"
+    },
+    "bodyShape": {
+      "hasBody": false,
+      "invokeWithBody": false,
+      "originAgreement": null,
+      "headerOnly": false
+    },
+    "client": { "profile": "python-requests", "retry": "prepared_request" },
+    "freshness": {
+      "observedAt": "2026-10-02T06:57:43.000Z",
+      "expiresAt": "2026-10-09T06:57:43.000Z",
+      "evaluatedAt": "2026-10-02T12:00:00.000Z"
+    },
+    "challengeAmount": null,
+    "reportedRepair": {
+      "provenance": "issue_3657_reporter",
+      "verifiedByUs": false,
+      "methodDiscriminationChanged": true,
+      "getPaymentSettled": true,
+      "discriminator": "PAYMENT-SIGNATURE",
+      "headRestrictionIsReporterPolicy": true,
+      "endpoints": [
+        "https://api.satledger.org/x402/provision",
+        "https://api.satledger.org/x402/receipt"
+      ]
+    }
+  }
+}

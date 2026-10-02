@@ -160,3 +160,34 @@ That pack writes `candidate/seller-repair-external-consumer-0.3.0.tar.gz`,
 `candidate/ROOT-PUBLIC-ACQUISITION-0.3.0.patch`. It does not rewrite the
 0.1.0 or 0.2.0 archives and it does not edit `public-acquisition/manifest.json`.
 Root applies the patch only after choosing to host the bytes.
+
+## Method compatibility
+
+`deliver --request` accepts an optional `methodBinding` beside `operation` and
+`protocol` (`scheme`, `x402Version`, `network`). The binding names the
+discovering method, the intended invocation method, declared and accepted
+methods with their source and time, the body shape, the client retry profile,
+and the freshness window. The decision is `mismatch`, `compatible`, or
+`unknown`, and only from those fields. A JSON body does not imply POST. Fetch's
+refusal to send a GET or HEAD body is that client's transport limit. It is not
+a protocol ban, and a header-only resource, including HEAD, can still agree.
+Agreement is not spend authority. `safeToPay` stays false.
+
+The two supplied captures are passed explicitly. They are not a default fixture:
+
+```bash
+node experiments/seller-repair-service-100266/bin/commercial-path.mjs deliver \
+  --request experiments/seller-repair-service-100266/cases/method-gedx402-3511.json
+node experiments/seller-repair-service-100266/bin/commercial-path.mjs deliver \
+  --request experiments/seller-repair-service-100266/cases/method-issue-3657.json
+```
+
+Issue 3657 is a historical report. The replay does not treat
+`api.satledger.org` as a current outage and does not propose another repair.
+Draft maintainer notes are in `drafts/`. They are not sent.
+
+0.4.0 is the cold successor when the caller-request bytes change. Pack it with
+`node experiments/seller-repair-service-100266/bin/pack-consumer-040.mjs`.
+That pack leaves the 0.1.0, 0.2.0, and 0.3.0 archives unchanged and writes
+`candidate/ROOT-PUBLIC-ACQUISITION-0.4.0.patch`. It does not edit
+`public-acquisition/manifest.json`, add a price, or vendor the x402 SDK.
