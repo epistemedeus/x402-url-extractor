@@ -1,0 +1,203 @@
+{
+  "ok": true,
+  "schema": "sol398.release-prep.v1",
+  "sourcePin": "64ba4887916a159edb7a06daef045e505683dd77",
+  "masterPin": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+  "files": [
+    {
+      "path": "commerce-events.mjs",
+      "bytes": 168717,
+      "sha256": "68a345384aeacd3b7ff5ca3aab0fd335b1b71ad57b6f10bb1b922abfc9a53a57"
+    },
+    {
+      "path": "server.js",
+      "bytes": 249077,
+      "sha256": "723d8fde99cd21fdcecc2920aa0ad2284e6b7c2e0dda2db83bc194878a514dd7"
+    },
+    {
+      "path": "useful-result-reuse/store.mjs",
+      "bytes": 4642,
+      "sha256": "791b9096dc37892c61581c95441df767a093c906f42d2e8a403fc43f55d7ea8c"
+    },
+    {
+      "path": "experiments/seller-repair-service-100266/src/classify.mjs",
+      "bytes": 4337,
+      "sha256": "ca6e23df0b43f114f641acba27b064e49c896583d474ac0898d115239c0e13f3"
+    },
+    {
+      "path": "experiments/seller-repair-service-100266/bin/pack-consumer.mjs",
+      "bytes": 7402,
+      "sha256": "8e58896bc3c8cffef285c6513c5722a4490f7edf4c519f891a34523083c705c2"
+    },
+    {
+      "path": "experiments/seller-repair-service-100266/bin/pack-consumer-030.mjs",
+      "bytes": 10628,
+      "sha256": "1a72b1c0ddda99f36a5684723a6f8e46993ebb6e2342b4fb93ae5902656c1a9b"
+    },
+    {
+      "path": "experiments/seller-repair-service-100266/bin/pack-consumer-040.mjs",
+      "bytes": 11710,
+      "sha256": "b855281e6d868d5af3cc1f82fa54005d8ee7ea23810961222e2031ecaefe24ca"
+    },
+    {
+      "path": "experiments/seller-repair-service-100266/bin/pack-consumer-041.mjs",
+      "bytes": 11785,
+      "sha256": "e4a4be83706ae6584fd44df6793219bd033c205d655418ffb7a2e6aa4f0a9f95"
+    },
+    {
+      "path": "public-acquisition/manifest.json",
+      "bytes": 21421,
+      "sha256": "493f94c4a36ae1708fa4ae741bd8c1789110815cb36801540e18507165560f7c"
+    },
+    {
+      "path": "public-acquisition/cold-commands.json",
+      "bytes": 9128,
+      "sha256": "05b986688811daefed6f60baac6fb50a50c16c8c38f6a620d2cf96fc12f90793"
+    },
+    {
+      "path": "public-acquisition/engine.test.mjs",
+      "bytes": 20371,
+      "sha256": "27bbf73ca260f65f9c2337907d16e06d99a3f9db830a4a79bdebe54892b511b7"
+    }
+  ],
+  "assets": [
+    {
+      "path": "public-acquisition/bytes/scoped-repair-commerce-100348/0.1.2/LICENSE",
+      "bytes": 1068,
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
+      "version": "0.1.2"
+    },
+    {
+      "path": "public-acquisition/bytes/scoped-repair-commerce-100348/0.1.2/SOURCE-NOTICE.txt",
+      "bytes": 525,
+      "sha256": "a394bc61d96049ce3faed08a0c248b0de05d05bbb4af10d07ab836c6766bedd3",
+      "version": "0.1.2"
+    },
+    {
+      "path": "public-acquisition/bytes/scoped-repair-commerce-100348/0.1.2/provenance.json",
+      "bytes": 8453,
+      "sha256": "7febcb560b80a9cdd02a59b419707fe9f4a9a9a2030c8b130da4e399a33c3ca8",
+      "version": "0.1.2"
+    },
+    {
+      "path": "public-acquisition/bytes/scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz",
+      "bytes": 37921,
+      "sha256": "f95db152722ac820d57975cdab9b2bb486888f2faf023dc271b82da5eba84656",
+      "version": "0.1.2"
+    },
+    {
+      "path": "public-acquisition/inventories/scoped-repair-commerce-100348-0.1.2.json",
+      "bytes": 2804,
+      "sha256": "e26fd4e8bdbdd3d9d77ac8cb09db4b01df5c991bb7e609fbf2eeff75b9ad3d77",
+      "version": "0.1.2"
+    }
+  ],
+  "coldCommands": [
+    {
+      "id": "composition-route-knowledge",
+      "version": "0.1.0",
+      "filename": "composition-route-knowledge-0.1.0.tgz"
+    },
+    {
+      "id": "retained-task",
+      "version": "0.1.0",
+      "filename": "retained-task-0.1.0.tar.gz"
+    },
+    {
+      "id": "l09-next-action",
+      "version": "0.1.0",
+      "filename": "l09-next-action-0.1.0.tar.gz"
+    },
+    {
+      "id": "seller-repair-external-consumer",
+      "version": "0.2.0",
+      "filename": "seller-repair-external-consumer-0.2.0.tar.gz"
+    },
+    {
+      "id": "seller-repair-external-consumer",
+      "version": "0.4.1",
+      "filename": "seller-repair-external-consumer-0.4.1.tar.gz"
+    },
+    {
+      "id": "scoped-repair-commerce-100348",
+      "version": "0.1.2",
+      "filename": "scoped-repair-commerce-100348-0.1.2.tar.gz"
+    }
+  ],
+  "manifestAssets": 21,
+  "clientAssets": 4,
+  "seller": {
+    "version": "0.4.1",
+    "bytes": 40891,
+    "sha256": "64dbe1ee7f69dd40ebf71741eed92f1f3f893c44af8eadf18b71c0fac82227b8",
+    "sku": "seller-repair-external-consumer",
+    "priceAtomic": "10000",
+    "auditRoute": "/commerce/seller-integrity-audit",
+    "sealed": {
+      "version": "0.4.1",
+      "sha256": "64dbe1ee7f69dd40ebf71741eed92f1f3f893c44af8eadf18b71c0fac82227b8",
+      "bytes": 40891,
+      "sealed": true
+    }
+  },
+  "auditPriceAtomic": "10000",
+  "auditRoute": "/commerce/seller-integrity-audit",
+  "patchSha256": "8210e2ad2dd831fd7c827f33f862d1cd10363a6c26d50edc5bb98b996984d8b6",
+  "authority": {
+    "rejected": true,
+    "reason": "repair_authority_absent",
+    "acceptanceReason": "acceptance_authority_unavailable",
+    "authorized": false,
+    "paymentPerformed": false,
+    "implementationAuthorized": false,
+    "verifyCalls": 0,
+    "settleCalls": 0,
+    "wrote": false
+  },
+  "problems": [],
+  "productionHosted": false,
+  "deployed": false,
+  "paymentPerformed": false,
+  "verifyCalls": 0,
+  "settleCalls": 0,
+  "adjacency": {
+    "ok": true,
+    "schema": "sol398.master-adjacency.v1",
+    "master": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+    "originMaster": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+    "liveMaster": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+    "sellerBefore": {
+      "bytes": 40891,
+      "sha256": "64dbe1ee7f69dd40ebf71741eed92f1f3f893c44af8eadf18b71c0fac82227b8"
+    },
+    "sellerAfter": {
+      "bytes": 40891,
+      "sha256": "64dbe1ee7f69dd40ebf71741eed92f1f3f893c44af8eadf18b71c0fac82227b8"
+    },
+    "sellerUnchanged": true,
+    "masterAssets": 17,
+    "integratedAssets": 21,
+    "masterColdCommands": 5,
+    "integratedColdCommands": 6,
+    "claimPaths": [
+      "commerce-events.mjs",
+      "experiments/seller-repair-service-100266/bin/pack-consumer-030.mjs",
+      "experiments/seller-repair-service-100266/bin/pack-consumer-040.mjs",
+      "experiments/seller-repair-service-100266/bin/pack-consumer-041.mjs",
+      "experiments/seller-repair-service-100266/bin/pack-consumer.mjs",
+      "experiments/seller-repair-service-100266/src/classify.mjs",
+      "public-acquisition/bytes/scoped-repair-commerce-100348/0.1.2/LICENSE",
+      "public-acquisition/bytes/scoped-repair-commerce-100348/0.1.2/SOURCE-NOTICE.txt",
+      "public-acquisition/bytes/scoped-repair-commerce-100348/0.1.2/provenance.json",
+      "public-acquisition/bytes/scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz",
+      "public-acquisition/cold-commands.json",
+      "public-acquisition/engine.test.mjs",
+      "public-acquisition/inventories/scoped-repair-commerce-100348-0.1.2.json",
+      "public-acquisition/manifest.json",
+      "server.js",
+      "useful-result-reuse/store.mjs"
+    ],
+    "problems": [],
+    "deployed": false
+  }
+}
