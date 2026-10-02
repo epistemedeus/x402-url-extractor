@@ -395,6 +395,39 @@
       "measuredSavings": false,
       "independentDemand": false,
       "carriesPackageClaims": false
+    },
+    {
+      "id": "seller-repair-external-consumer",
+      "version": "0.4.1",
+      "role": "archive",
+      "filename": "seller-repair-external-consumer-0.4.1.tar.gz",
+      "relativePath": "seller-repair-external-consumer/0.4.1/seller-repair-external-consumer-0.4.1.tar.gz",
+      "bytes": 40891,
+      "sha256": "64dbe1ee7f69dd40ebf71741eed92f1f3f893c44af8eadf18b71c0fac82227b8",
+      "mediaType": "application/gzip",
+      "originContentType": "application/gzip",
+      "originalUrl": "https://neomorphic.io/downloads/seller-repair-external-consumer/0.4.1/seller-repair-external-consumer-0.4.1.tar.gz",
+      "attribution": "Copyright (c) 2026 SameDayDesk",
+      "licenseId": "MIT",
+      "sourceQualification": "unknown",
+      "sourceQualified": false,
+      "privateGit": "unavailable",
+      "hostedAcquisitionVerified": false,
+      "paidLaunch": false,
+      "measuredSavings": false,
+      "independentDemand": false,
+      "forbiddenPathPrefixes": [
+        "services/earned-work/",
+        "packages/release-gate/",
+        "packages/route-lock/",
+        "epistemedeus/pilot-heavy-relay"
+      ],
+      "publicationStatus": "candidate",
+      "inventory": {
+        "path": "inventories/seller-repair-external-consumer-0.4.1.json",
+        "fileSha256": "258f924397835c068ed43eb4d089e17bcde40c55d16abf13bc60454c101cbe97",
+        "memberCount": 35
+      }
     }
   ]
 }

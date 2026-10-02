@@ -61,7 +61,7 @@ function listen(app) {
 
 test("receiving manifest publishes the public archives and keeps draft claims false", () => {
   const loaded = published();
-  assert.equal(loaded.order.length, 16);
+  assert.equal(loaded.order.length, JSON.parse(readFileSync(MANIFEST_PATH, "utf8")).assets.length);
   const composition = loaded.files.get("composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz");
   const retained = loaded.files.get("retained-task/0.1.0/retained-task-0.1.0.tar.gz");
   const l09 = loaded.files.get("l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz");
@@ -365,7 +365,9 @@ test("cold node and python httpx clients unpack the mount and run the declared c
     const nodeProfile = JSON.parse(nodeRun.stdout);
     assert.equal(nodeProfile.proofClass, "loopback");
     assert.equal(nodeProfile.productionAcceptance, false);
-    assert.equal(nodeProfile.results.length, 4);
+    assert.equal(nodeProfile.results.length, JSON.parse(readFileSync(join(ROOT, "cold-commands.json"), "utf8")).commands.length);
+    assert.equal(nodeProfile.results.at(-1).id, "seller-repair-external-consumer");
+    assert.equal(nodeProfile.results.at(-1).sha256, "64dbe1ee7f69dd40ebf71741eed92f1f3f893c44af8eadf18b71c0fac82227b8");
     assert.equal(nodeProfile.results[3].id, "seller-repair-external-consumer");
     assert.equal(nodeProfile.results[1].id, "retained-task");
     assert.equal(nodeProfile.hermes.invoked, false);
