@@ -1,0 +1,26 @@
+seller-repair-external-consumer 0.1.0
+license: MIT
+Copyright (c) 2026 SameDayDesk
+
+This archive is a portable consumer of the seller-repair experiment. It is not
+mounted on the public acquisition index. productionHosted and
+hostedAcquisitionVerified stay false until Root hosts these bytes and runs the
+cold command against that hosted copy.
+
+No private Git remote, npm package, or hidden worker directory is required.
+Runtime dependencies are Node.js >=22.22.0 and the standard modules named in
+README.md. agent-payment-integrity is not bundled. Scanner coverage stays
+unknown and does not prove useful execution.
+
+The privacy check is the existing delivery-outcome authority, copied
+byte-for-byte at the task-linked-delivery paths inside this archive. Those
+files are the same MIT-licensed sources as the merchant repository. They are
+not a new privacy engine.
+
+The catalog case is one deterministic loopback example. A caller supplies
+their own operation, expected output, SDK, and probeConsent for an authorized
+target. The repair is a caller-reviewed patch instruction. This package does
+not mutate a deployed seller, follow redirects, or purchase a report.
+
+Installing or unpacking this archive is not revenue, savings, adoption, or
+paid authority.

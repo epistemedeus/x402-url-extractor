@@ -1,0 +1,35 @@
+{
+  "schema": "samedaydesk.public-acquisition.cold-commands.v1",
+  "proofClass": "loopback",
+  "productionAcceptance": false,
+  "hostedAcquisitionVerified": false,
+  "productionHosted": false,
+  "launched": false,
+  "note": "Unlaunched candidate. Root copies this command onto hosted bytes. Do not mount it before that GET exists. Refusal checks exit 2 and stay outside this runner.",
+  "commands": [
+    {
+      "id": "seller-repair-external-consumer",
+      "version": "0.1.0",
+      "filename": "seller-repair-external-consumer-0.1.0.tar.gz",
+      "cwd": ".",
+      "steps": [
+        {
+          "argv": ["node", "package/bin/seller-repair.mjs", "reproduce", "--case", "package/cases/retained-case.json"],
+          "stdoutIncludes": [
+            "\"loopbackFix\":true",
+            "\"deployedCounterpartyRepair\":false",
+            "\"paymentSent\":false",
+            "\"scanner\":\"not_bundled\"",
+            "\"purchaseRecommended\":false",
+            "\"recognizedRevenueAtomic\":\"0\"",
+            "\"contribution_authority_unavailable\""
+          ]
+        },
+        {
+          "argv": ["node", "package/bin/seller-repair.mjs", "retest", "--case", "package/cases/retained-case.json", "--mode", "repaired"],
+          "stdoutIncludes": ["\"useful\":true"]
+        }
+      ]
+    }
+  ]
+}

@@ -64,3 +64,56 @@ A cold later process exits 2 when `COMMERCE_DATA_DIR`,
 is set. Pass `--sdk python-httpx@1` or a different `--task` to refuse stale
 applicability. The contribution path does not return a receipt share and
 does not transfer a spending grant.
+
+## Caller-owned request
+
+`cases/retained-case.json` stays the deterministic loopback example. A
+visiting agent uses the same case schema with its own `callerId`, `operation`,
+`expectedUsefulOutput`, `declaredSdk`, and `probeConsent`. `operationId` must
+equal `METHOD resource`. A nearby path is not inferred. `probeConsent.class`
+is `loopback` or `public-read-only`, and `confirmed` must be true. The key is
+not `authorization`, which the privacy authority treats as private evidence.
+
+`maxEffort` carries `probes`, `bodyBytes`, `deadlineMs`, `totalBodyBytes`,
+`totalResponseMs`, and `redirects` across the direct probe and the retest.
+`deadlineMs` is an absolute whole-response deadline. `redirects` is 0. Only
+GET is probed. HTTP 200, a declaration, unknown coverage, and a missing field
+do not prove useful execution or a paid need.
+
+```bash
+node experiments/seller-repair-service-100266/bin/seller-repair.mjs receive \
+  --case experiments/seller-repair-service-100266/cases/retained-case.json \
+  --base http://127.0.0.1:PORT --retest-base http://127.0.0.1:PORT
+node experiments/seller-repair-service-100266/bin/seller-repair.mjs readonly \
+  --case experiments/seller-repair-service-100266/cases/public-readonly.json
+node experiments/seller-repair-service-100266/bin/cold-later.mjs \
+  experiments/seller-repair-service-100266/cases/retained-case.json \
+  --resource /catalog/items
+```
+
+`receive` compares the authorized service with a caller-reviewed retest of a
+second service the caller already runs. The package does not write the patch
+into either process. A passing loopback retest is `loopback_fix` with
+`deployedCounterpartyRepair` false. The public index command observes
+`productionHosted === false` and is not a repair. A later caller on the same
+task, SDK, and target must retest. `usefulTransferred` stays false.
+
+The local incomplete seller-integrity report (`openapi_unavailable`,
+`auditCompleted` false, body not read) stays a useful negative.
+`purchaseRecommended` stays false. The price remains `$0.01` / atomic `10000`.
+
+## Portable consumer
+
+`consumer/` is the unlaunched 0.1.0 skill. Pack it with:
+
+```bash
+node experiments/seller-repair-service-100266/bin/pack-consumer.mjs
+```
+
+The archive is `candidate/seller-repair-external-consumer-0.1.0.tar.gz`.
+Runtime dependencies are Node.js `>=22.22.0` and `node:crypto`, `node:fs`,
+`node:fs/promises`, `node:http`, and `node:https`. No npm packages are
+required. Privacy sources are vendored. The scanner, handoff, and contribution
+modules stay in this repository. `candidate/cold-command.json` is the command
+Root runs after hosting the bytes. This branch does not mount the archive on
+`public-acquisition/` and does not change the frozen 0.1.0 bundles.
