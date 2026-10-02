@@ -1,0 +1,54 @@
+{
+  "receipts": [
+    {
+      "fault": "before_append",
+      "workerPid": 724171,
+      "initialReason": "write_outcome_unknown",
+      "reconciledReason": "write_outcome_unknown",
+      "explicitDuplicateReason": null,
+      "freeAdmissionCalls": 1,
+      "physicalAppendAcknowledged": 0,
+      "physicalRows": 0,
+      "customerStoreFsyncCalls": 0,
+      "automaticMutationRetries": 0,
+      "grantReturned": false,
+      "grantAcknowledgement": "not_established",
+      "recognizedRevenueAtomic": "0",
+      "restarted": {
+        "workerPid": 724198,
+        "reason": "write_outcome_unknown",
+        "physicalRows": 0,
+        "grantReturned": false,
+        "automaticMutationRetries": 0,
+        "recognizedRevenueAtomic": "0"
+      }
+    },
+    {
+      "fault": "lost_ack",
+      "workerPid": 724210,
+      "initialReason": "duplicate",
+      "reconciledReason": "duplicate",
+      "explicitDuplicateReason": "duplicate",
+      "freeAdmissionCalls": 1,
+      "physicalAppendAcknowledged": 1,
+      "physicalRows": 1,
+      "customerStoreFsyncCalls": 0,
+      "automaticMutationRetries": 0,
+      "grantReturned": false,
+      "grantAcknowledgement": "unknown",
+      "recognizedRevenueAtomic": "0",
+      "restarted": {
+        "workerPid": 724237,
+        "reason": "duplicate",
+        "physicalRows": 1,
+        "grantReturned": false,
+        "automaticMutationRetries": 0,
+        "recognizedRevenueAtomic": "0"
+      }
+    }
+  ],
+  "durability": "existing_customer_store_buffered_write_no_fsync_guarantee",
+  "oneWriter": true,
+  "crossProcessExclusion": false,
+  "recognizedRevenueAtomic": "0"
+}

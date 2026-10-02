@@ -1,0 +1,77 @@
+TAP version 13
+# Subtest: existing customer store loss before append stays unknown and a lost ACK reconciles without replay
+ok 1 - existing customer store loss before append stays unknown and a lost ACK reconciles without replay
+  ---
+  duration_ms: 3348.873575
+  type: 'test'
+  ...
+# Subtest: an additional process writer is refused before any port is opened
+ok 2 - an additional process writer is refused before any port is opened
+  ---
+  duration_ms: 0.599562
+  type: 'test'
+  ...
+# Subtest: actual scoped free fee and receipt-absence callers through isolated current HTTP/journal ports
+    # Subtest: useful negative remains independently useful and a success assertion remains unverified
+    ok 1 - useful negative remains independently useful and a success assertion remains unverified
+      ---
+      duration_ms: 0.670365
+      type: 'test'
+      ...
+    # Subtest: exact task/attempt/tenant/body, cuts, finish timing and settlement authority refusals are physical
+    ok 2 - exact task/attempt/tenant/body, cuts, finish timing and settlement authority refusals are physical
+      ---
+      duration_ms: 0.235702
+      type: 'test'
+      ...
+    # Subtest: scope, source, cutoff, predecessor and conflicting evidence change the projection decision
+    ok 3 - scope, source, cutoff, predecessor and conflicting evidence change the projection decision
+      ---
+      duration_ms: 32.748021
+      type: 'test'
+      ...
+    # Subtest: a restarted native process reads then withdraws the prior exact grant
+    ok 4 - a restarted native process reads then withdraws the prior exact grant
+      ---
+      duration_ms: 1764.460784
+      type: 'test'
+      ...
+    # Subtest: stripped CLI receiving reproduces the same report and refuses changed retained evidence
+    ok 5 - stripped CLI receiving reproduces the same report and refuses changed retained evidence
+      ---
+      duration_ms: 95.031985
+      type: 'test'
+      ...
+    1..5
+ok 3 - actual scoped free fee and receipt-absence callers through isolated current HTTP/journal ports
+  ---
+  duration_ms: 3640.039543
+  type: 'test'
+  ...
+# Subtest: caller-owned source runs in a stripped process and agrees with separate direct equal-input solving
+ok 4 - caller-owned source runs in a stripped process and agrees with separate direct equal-input solving
+  ---
+  duration_ms: 410.392617
+  type: 'test'
+  ...
+# Subtest: bounds, output overwrite, symlink, malformed input and silent stdin remain explicit refusals
+ok 5 - bounds, output overwrite, symlink, malformed input and silent stdin remain explicit refusals
+  ---
+  duration_ms: 295.382619
+  type: 'test'
+  ...
+# Subtest: reuse of exact395 free evidence preserves the original unknowns
+ok 6 - reuse of exact395 free evidence preserves the original unknowns
+  ---
+  duration_ms: 1.61139
+  type: 'test'
+  ...
+1..6
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8805.473763
