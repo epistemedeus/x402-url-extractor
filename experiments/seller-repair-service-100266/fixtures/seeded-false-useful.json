@@ -1,0 +1,10 @@
+{
+  "claim": "useful_repair",
+  "httpStatus": 200,
+  "treatHttp200AsUseful": true,
+  "paidAuditRequired": true,
+  "forcedPurchase": true,
+  "recognizedRevenueAtomic": "10000",
+  "cashAtomic": "10000",
+  "body": { "ok": true }
+}

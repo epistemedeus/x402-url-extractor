@@ -1,0 +1,10 @@
+{
+  "name": "seller-repair-service-100266",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Target-specific seller repair case around the existing seller-integrity audit. No new price or payment.",
+  "bin": {
+    "seller-repair": "./bin/seller-repair.mjs"
+  }
+}
