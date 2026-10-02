@@ -475,14 +475,15 @@ test("price proposal uses the causal seal and ignores a caller event and receipt
   assert.match(proposal.binding.taskRef, /^t[a-f0-9]{62}$/);
 });
 
-test("merchant server, commerce events, and package index stay untouched", () => {
+test("received merchant mount leaves commerce events and package index untouched", () => {
   const diff = spawnSync("git", ["diff", "--exit-code", "--", "server.js", "commerce-events.mjs", "package.json"], {
     cwd: ROOT,
     encoding: "utf8",
   });
   assert.equal(diff.status, 0, diff.stdout + diff.stderr);
   const server = fs.readFileSync(path.join(ROOT, "server.js"), "utf8");
-  assert.equal(server.includes("scoped-surface-delivery-100312"), false);
+  assert.equal(server.split("mountScopedSurfaceDelivery(app,").length, 2);
+  assert.equal(server.includes("...resolveHostedScanner()"), true);
   const events = fs.readFileSync(path.join(ROOT, "commerce-events.mjs"), "utf8");
   assert.equal(events.includes("scoped-surface"), false);
   assert.equal(createHash("sha256").update(server).digest("hex").length, 64);

