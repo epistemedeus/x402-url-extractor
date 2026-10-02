@@ -1,0 +1,55 @@
+{
+  "schema": "samedaydesk.task-demand.cold-receipt.v1",
+  "observedAt": "2026-10-02T12:28:56.748Z",
+  "proofClass": "loopback_owner_qa",
+  "productionHosted": false,
+  "hostedAcquisitionVerified": false,
+  "independentDemand": false,
+  "outsideUseEstablished": false,
+  "recognizedRevenueAtomic": "0",
+  "sourceCommit": "dd30439b991b4fbecc67365af68f7fd2acaccc91",
+  "sourceTreeDigest": "cedb6d34dac45dc51035ee64dd8d56447d276e6870ef00e7c3ce56d1ccaf1992",
+  "acquisitionTool": "public-acquisition/engine.mjs loadPublicAcquisition + mountPublicAcquisition",
+  "archive": {
+    "filename": "task-demand-100339-0.1.0.tar.gz",
+    "bytes": 29093,
+    "sha256": "44209579e6a005e6f80dbe7f26946fbb4a52b236d8c32e326eba5761b4d749f5",
+    "inventoryMembers": 18
+  },
+  "license": "MIT",
+  "fetched": [
+    {
+      "role": "provenance",
+      "bytes": 4492,
+      "sha256": "ca882bb0cdec89f0e69217d0aa3fa751160b730837a1394d0a21127bb3a8e44d"
+    },
+    {
+      "role": "license",
+      "bytes": 1068,
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c"
+    },
+    {
+      "role": "source-notice",
+      "bytes": 863,
+      "sha256": "c4415e66fcf024f6e578321ce0640c41f58418ec9bb4e5934f7f0c68fe73ac00"
+    }
+  ],
+  "freshProcesses": 6,
+  "questions": [
+    {
+      "id": "retention-friction",
+      "reportId": "c1d67df62b5ba6274648f3d9e4de6fae99e981b56be647c4aaf14f8f9428feaf"
+    },
+    {
+      "id": "negative-utility",
+      "reportId": "7d5057739d7df7d95f611247da46dc571ac5ef4fecb9c33e9d0538fd9b6d71e2"
+    }
+  ],
+  "restartedReplay": true,
+  "changedEvidenceReplay": true,
+  "seededIndependentOutsideUseRefused": true,
+  "standalonePortableTests": 3,
+  "node": "v22.22.2",
+  "merchantDependenciesInstalledInConsumers": false,
+  "providerCredentialsUsed": false
+}
