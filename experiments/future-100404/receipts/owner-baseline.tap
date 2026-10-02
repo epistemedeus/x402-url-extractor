@@ -1,0 +1,208 @@
+TAP version 13
+# Subtest: settlement durability names the local filesystem assumption
+ok 1 - settlement durability names the local filesystem assumption
+  ---
+  duration_ms: 0.938544
+  type: 'test'
+  ...
+# Subtest: stale or wrong settlement proof is refused and writes nothing
+ok 2 - stale or wrong settlement proof is refused and writes nothing
+  ---
+  duration_ms: 23.774505
+  type: 'test'
+  ...
+# Subtest: distinct settlement references admit one row and reload it
+ok 3 - distinct settlement references admit one row and reload it
+  ---
+  duration_ms: 43.468123
+  type: 'test'
+  ...
+# Subtest: the same settlement reference is one physical journal record
+ok 4 - the same settlement reference is one physical journal record
+  ---
+  duration_ms: 11.915601
+  type: 'test'
+  ...
+# Subtest: telemetry and a second writer on the same directory admit one settlement
+ok 5 - telemetry and a second writer on the same directory admit one settlement
+  ---
+  duration_ms: 11.917799
+  type: 'test'
+  ...
+# Subtest: distinct operations settle independently
+ok 6 - distinct operations settle independently
+  ---
+  duration_ms: 13.157043
+  type: 'test'
+  ...
+# Subtest: distinct journal directories do not share a settlement claim
+ok 7 - distinct journal directories do not share a settlement claim
+  ---
+  duration_ms: 12.88013
+  type: 'test'
+  ...
+# Subtest: identical forward records from two writers leave one physical line
+ok 8 - identical forward records from two writers leave one physical line
+  ---
+  duration_ms: 11.391242
+  type: 'test'
+  ...
+# Subtest: a failed settlement stays unknown until an explicit later readback
+ok 9 - a failed settlement stays unknown until an explicit later readback
+  ---
+  duration_ms: 6.912793
+  type: 'test'
+  ...
+# Subtest: settlement append keeps a torn forward tail
+ok 10 - settlement append keeps a torn forward tail
+  ---
+  duration_ms: 10.043801
+  type: 'test'
+  ...
+# Subtest: rotation keeps the prior forward bytes and the settlement
+ok 11 - rotation keeps the prior forward bytes and the settlement
+  ---
+  duration_ms: 6.50034
+  type: 'test'
+  ...
+# Subtest: a symlink cannot redirect settlement admission
+ok 12 - a symlink cannot redirect settlement admission
+  ---
+  duration_ms: 1.129124
+  type: 'test'
+  ...
+# Subtest: mocked boundary admission is single and real_unverified is refused
+ok 13 - mocked boundary admission is single and real_unverified is refused
+  ---
+  duration_ms: 7.892966
+  type: 'test'
+  ...
+# Subtest: task admission and settlement admission do not deadlock
+ok 14 - task admission and settlement admission do not deadlock
+  ---
+  duration_ms: 8.774392
+  type: 'test'
+  ...
+# Subtest: restart reads a bounded tail from a huge sparse file, not the whole file
+ok 15 - restart reads a bounded tail from a huge sparse file, not the whole file
+  ---
+  duration_ms: 6.448848
+  type: 'test'
+  ...
+# Subtest: append separates an unterminated complete or torn record without rewriting evidence
+ok 16 - append separates an unterminated complete or torn record without rewriting evidence
+  ---
+  duration_ms: 6.698929
+  type: 'test'
+  ...
+# Subtest: a symlink cannot redirect the task-reference append or expose another file
+ok 17 - a symlink cannot redirect the task-reference append or expose another file
+  ---
+  duration_ms: 1.657721
+  type: 'test'
+  ...
+# Subtest: outcome binding requires the internal token and an opaque operation id
+ok 18 - outcome binding requires the internal token and an opaque operation id
+  ---
+  duration_ms: 1.542376
+  type: 'test'
+  ...
+# Subtest: disposable HTTP through createCommerceTelemetry persists schema-valid delivery only
+ok 19 - disposable HTTP through createCommerceTelemetry persists schema-valid delivery only
+  ---
+  duration_ms: 71.965006
+  type: 'test'
+  ...
+# Subtest: task link is an opaque sibling and stays inside the forward rotation bound
+ok 20 - task link is an opaque sibling and stays inside the forward rotation bound
+  ---
+  duration_ms: 4.960942
+  type: 'test'
+  ...
+# Subtest: torn task lines and a refused append do not overwrite older evidence
+ok 21 - torn task lines and a refused append do not overwrite older evidence
+  ---
+  duration_ms: 2.186964
+  type: 'test'
+  ...
+# Subtest: optional task input cannot block a commerce event or replay payment
+ok 22 - optional task input cannot block a commerce event or replay payment
+  ---
+  duration_ms: 7.878658
+  type: 'test'
+  ...
+# Subtest: a caller event id cannot seal another response, and finish enqueues that id once
+ok 23 - a caller event id cannot seal another response, and finish enqueues that id once
+  ---
+  duration_ms: 2.103377
+  type: 'test'
+  ...
+# Subtest: packaged scanner runs without optional retention or runtime source fetch
+ok 24 - packaged scanner runs without optional retention or runtime source fetch
+  ---
+  duration_ms: 120.735298
+  type: 'test'
+  ...
+# Subtest: invalid configured artifacts do not fall back to a different scanner
+ok 25 - invalid configured artifacts do not fall back to a different scanner
+  ---
+  duration_ms: 0.284993
+  type: 'test'
+  ...
+# Subtest: two processes record a controlled delivery and reject a seeded relabel
+ok 26 - two processes record a controlled delivery and reject a seeded relabel
+  ---
+  duration_ms: 670.625373
+  type: 'test'
+  ...
+# Subtest: a second process sees a refused append and then a recovered one
+ok 27 - a second process sees a refused append and then a recovered one
+  ---
+  duration_ms: 115.876556
+  type: 'test'
+  ...
+# Subtest: identical customer results do not transfer contribution revocation or correction authority
+ok 28 - identical customer results do not transfer contribution revocation or correction authority
+  ---
+  duration_ms: 36.156949
+  type: 'test'
+  ...
+# Subtest: stashes an explicit retain header and ignores query, user agent, and wallet labels
+ok 29 - stashes an explicit retain header and ignores query, user agent, and wallet labels
+  ---
+  duration_ms: 0.915757
+  type: 'test'
+  ...
+# Subtest: the delivery wrapper retains only a settled HTTP 200
+ok 30 - the delivery wrapper retains only a settled HTTP 200
+  ---
+  duration_ms: 101.976455
+  type: 'test'
+  ...
+# Subtest: retains a real handler receipt and refuses settlement, execution, and seeded delivery
+ok 31 - retains a real handler receipt and refuses settlement, execution, and seeded delivery
+  ---
+  duration_ms: 18.442456
+  type: 'test'
+  ...
+# Subtest: a later process replays useful and negative output without payment authority
+ok 32 - a later process replays useful and negative output without payment authority
+  ---
+  duration_ms: 335.714096
+  type: 'test'
+  ...
+# Subtest: restart, expiry, revocation, corruption, and concurrent grants stay precise
+ok 33 - restart, expiry, revocation, corruption, and concurrent grants stay precise
+  ---
+  duration_ms: 630.806564
+  type: 'test'
+  ...
+1..33
+# tests 33
+# suites 0
+# pass 33
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4300.838017

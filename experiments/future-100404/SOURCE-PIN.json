@@ -1,0 +1,25 @@
+{
+  "repository": "epistemedeus/x402-url-extractor",
+  "base": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+  "branch": "codex/sol-future-404-20261002",
+  "scope": "experiments/future-100404",
+  "pilot": "a228be542fd557e2f2022b25fc3724972a1b672f",
+  "canonicalVF": "1652533b1823ac33b86591ec4e931a8c4ea4aa97",
+  "authorityOwners": ["VF1652533", "E01", "CW53", "H36", "existing earned/contribution/correspondence"],
+  "runtimeOwners": [
+    "experiments/scoped-surface-delivery-100312/route/mount.mjs",
+    "experiments/scoped-surface-delivery-100312/src/adapter.mjs",
+    "experiments/scoped-surface-delivery-100312/src/journal.mjs",
+    "useful-result-reuse/http.mjs",
+    "useful-result-reuse/service.mjs",
+    "commerce-outcome-binding.mjs",
+    "commerce-events.mjs",
+    "http-delivery-evidence/index.mjs",
+    "task-linked-delivery/experiments/useful-economics-100290/src/evaluate.mjs"
+  ],
+  "plansRead": ["overview/GRAND-LAUNCH-BUILD-PLAN.md", "overview/DELIVERY-TO-DEMAND-IMPLEMENTATION-20261002.md"],
+  "missingAtPilotPin": "overview/research/20260926-agentic-research/PILOT-STRUCTURAL-EXPANSION.md",
+  "missingEvidence": "git show at exact Pilot commit: path does not exist; exact GitHub contents request: HTTP 404",
+  "production": false,
+  "integrationPatchApplied": false
+}

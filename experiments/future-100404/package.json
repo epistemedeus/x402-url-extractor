@@ -1,0 +1,13 @@
+{
+  "name": "service-delivery-consumer-100404",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
+    "check": "node bin/service-delivery.mjs",
+    "prepare:qa": "node scripts/prepare-qa.mjs",
+    "verify:owners": "node scripts/verify-owners.mjs"
+  }
+}
