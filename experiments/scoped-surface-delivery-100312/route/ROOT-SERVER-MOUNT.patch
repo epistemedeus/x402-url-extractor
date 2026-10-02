@@ -1,0 +1,19 @@
+diff --git a/server.js b/server.js
+--- a/server.js
++++ b/server.js
+@@ -19,6 +19,7 @@
+ 
+ import { installPaidReceiptRetention, noteReceiptRetention } from "./useful-result-reuse/delivery.mjs";
+ import { mountSellerRepairDiagnosis } from "./experiments/seller-repair-service-100266/route/mount.mjs";
++import { mountScopedSurfaceDelivery } from "./experiments/scoped-surface-delivery-100312/route/mount.mjs";
+ import { existsSync, writeFileSync } from "node:fs";
+ import { fileURLToPath } from "node:url";
+ import express from "express";
+@@ -3680,6 +3681,7 @@
+ });
+ 
+ mountSellerRepairDiagnosis(app);
++mountScopedSurfaceDelivery(app, { journalDir: process.env.SCOPED_SURFACE_JOURNAL, skillguardRoot: process.env.SKILLGUARD_ROOT, authorityFile: process.env.SCOPED_SURFACE_AUTHORITY });
+ installPaidReceiptRetention(app, () => retainDeliveredReceipt, {
+   causalEventProof: (res) => commerceTelemetry.causalCommerceEventProof(res),
+ });

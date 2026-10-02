@@ -1,0 +1,10 @@
+{
+  "name": "scoped-surface-delivery-100312",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Unpublished scoped SkillGuard delivery candidate. It does not add a price or SKU.",
+  "engines": {
+    "node": ">=22"
+  }
+}

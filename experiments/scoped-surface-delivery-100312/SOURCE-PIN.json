@@ -1,0 +1,49 @@
+{
+  "merchant": {
+    "repo": "epistemedeus/x402-url-extractor",
+    "commit": "c1518cce1b60799044cfd8b8a749abb150299a63"
+  },
+  "pilotContext": "64c83609faf6a44d9d8a76930546a06313100033",
+  "solReturn": {
+    "repo": "epistemedeus/pilot-heavy-relay",
+    "commit": "29c80e6b4aa19a437af3870489281b7820cd6cc7",
+    "path": "control/review-returns/S21-SKILLGUARD-2.md",
+    "reviewedHead": "951230b727b84b95d3ce438a6aaa5bace381f820",
+    "note": "That return does not cover SkillGuard beec14ac. This package re-ran the current tests and did not reuse the return as a pass."
+  },
+  "skillguard": {
+    "repo": "epistemedeus/skillguard",
+    "commit": "beec14acbb56de37cd361acc949087b9ae019b70",
+    "branch": "heavy/s21-skillguard-delivery-0930",
+    "version": "1.3.0",
+    "licenseDeclared": "MIT",
+    "licenseFile": null,
+    "amendedHere": false
+  },
+  "acceptedDerivative": {
+    "repo": "epistemedeus/neomorphic-io",
+    "foundation272": "4dbd9612a2d263d464bbf7c782a7e1211c164dcb",
+    "inputTotality283": "a7bd87116a4e8285e779b10e549fc4c1cd179674",
+    "path": "packages/accepted-derivative/src/index.mjs",
+    "sha256": "fcd9d9c10c1a82154384f367fa7c3fc9096d234978609a1c45ade819eb102e5b",
+    "private": true,
+    "vendoredInThisRepo": false
+  },
+  "protocolEnvelope203": {
+    "repo": "epistemedeus/pilot",
+    "commit": "d0bff9127bd609137a32167b0120d0382ca7225e",
+    "role": "declared-source-not-copied"
+  },
+  "maintainedLock222": {
+    "repo": "epistemedeus/neomorphic-io",
+    "commit": "ba7e32612568c967907828f340aa5ba7cfa91afc",
+    "path": "experiments/maintained-operations-100184/src/persist.mjs",
+    "role": "declared-source-not-copied"
+  },
+  "commerceBinding301": {
+    "module": "commerce-outcome-binding.mjs",
+    "merchantCommit": "c1518cce1b60799044cfd8b8a749abb150299a63",
+    "operationId": "scoped-surface-scan",
+    "cohort": "owner_qa"
+  }
+}
