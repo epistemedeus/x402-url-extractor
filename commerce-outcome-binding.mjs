@@ -831,7 +831,7 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
     } finally {
       await handle.close();
     }
-    if (durable && rotated) {
+    if (durable && (rotated || entry === null)) {
       const dir = await open(dataDir, constants.O_RDONLY | constants.O_DIRECTORY);
       try {
         await dir.sync();
