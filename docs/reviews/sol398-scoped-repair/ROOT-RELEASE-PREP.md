@@ -101,6 +101,14 @@ Neo pin `08eb7fb8b5d8971b48bad11a0c626bbc5db9f41e`.
 SkillGuard pin `beec14acbb56de37cd361acc949087b9ae019b70`.
 Zero skips required. Do not point these suites at a live origin.
 
+The acquisition suite rewrites `public-acquisition/loopback-profile.json`. That file
+is not on the claim path. Restore it before committing:
+
+```sh
+git restore --source=HEAD -- public-acquisition/loopback-profile.json
+git diff --exit-code -- public-acquisition/loopback-profile.json
+```
+
 ## Stop
 
 Do not deploy, merge, settle, remint, or open a paid route. After this
