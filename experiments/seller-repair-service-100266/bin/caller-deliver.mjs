@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
+import { readInputText } from "../commercial/read-input.mjs";
 
 import { DELIVER_HELP, executeCallerRequest, resolveLater } from "../commercial/caller-request.mjs";
 
@@ -21,11 +22,6 @@ function arg(name) {
   return index === -1 ? null : process.argv[index + 1] || null;
 }
 
-async function readStdin() {
-  const chunks = [];
-  for await (const chunk of process.stdin) chunks.push(chunk);
-  return Buffer.concat(chunks).toString("utf8");
-}
 
 const command = process.argv[2] || "deliver";
 
@@ -36,8 +32,8 @@ if (command === "later") {
     process.stderr.write("artifact_and_caller_required\n");
     process.exit(2);
   }
-  const artifact = JSON.parse(await readFile(artifactPath, "utf8"));
-  const caller = JSON.parse(await readFile(callerPath, "utf8"));
+  const artifact = JSON.parse(await readInputText(artifactPath));
+  const caller = JSON.parse(await readInputText(callerPath));
   const later = await resolveLater(artifact, caller);
   process.stdout.write(`${JSON.stringify({ ...later, paymentSent: false, privateImported: false, recognizedRevenueAtomic: "0" })}\n`);
   process.exit(later.exitCode ?? (later.refused ? 2 : 0));
@@ -56,9 +52,9 @@ if (!requestPath) {
 }
 let text;
 try {
-  text = requestPath === "-" ? await readStdin() : await readFile(requestPath, "utf8");
+  text = await readInputText(requestPath);
 } catch (error) {
-  process.stderr.write(`request_unreadable\n${error.message}\n`);
+  process.stderr.write(`${error.code || "request_unreadable"}\n`);
   process.exit(2);
 }
 if (!text.trim()) {

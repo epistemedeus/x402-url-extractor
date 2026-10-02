@@ -8,11 +8,12 @@ import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const EXP = join(HERE, "..");
 const REPO = join(EXP, "..", "..");
-const STAGE = join(EXP, "candidate", ".stage-040");
+const STAGE = join(EXP, "candidate", ".stage-041");
 const OUT_DIR = join(EXP, "candidate");
-const ARCHIVE_NAME = "seller-repair-external-consumer-0.4.0.tar.gz";
+const ARCHIVE_NAME = "seller-repair-external-consumer-0.4.1.tar.gz";
 const ARCHIVE = join(OUT_DIR, ARCHIVE_NAME);
 const FROZEN = {
+  "seller-repair-external-consumer-0.4.0.tar.gz":{bytes:40008,sha256:"0a6f2f45aab81831137c7f2d1a83bce0cd31decb1013d5e92afe5f839faa9025"},
   "seller-repair-external-consumer-0.1.0.tar.gz": {
     bytes: 22870,
     sha256: "3f3552e9cdedff9910211b1820b229daa834cf3811fcc5b38035046cefda4a27",
@@ -75,10 +76,10 @@ function pack() {
   ensureDir(STAGE);
   const pkg = {
     name: "seller-repair-external-consumer",
-    version: "0.4.0",
+    version: "0.4.1",
     license: "MIT",
     type: "module",
-    description: "Caller-owned seller repair consumer. Draft 0.4.0. No purchase and no npm packages.",
+    description: "Caller-owned seller repair consumer. Draft 0.4.1. No purchase and no npm packages.",
     engines: { node: ">=22.22.0" },
     dependencies: {},
     bin: { "seller-repair-caller": "./bin/caller-deliver.mjs" },
@@ -86,12 +87,12 @@ function pack() {
   putFile("package/package.json", `${JSON.stringify(pkg, null, 2)}\n`);
   putFile("package/LICENSE", readFileSync(join(EXP, "consumer/LICENSE")));
   putFile("package/SOURCE-NOTICE.txt", [
-    "seller-repair-external-consumer 0.4.0",
+    "seller-repair-external-consumer 0.4.1",
     "license: MIT",
     "Copyright (c) 2026 SameDayDesk",
     "",
-    "Successor of the 0.3.0 draft. The 0.1.0, 0.2.0, and 0.3.0 archive bytes are not rewritten.",
-    "0.4.0 adds method-binding evidence on deliver --request: discovering method, intended method,",
+    "Successor of the 0.4.0 draft with raw JSON intake limited to 1MiB and a 5s stdin ceiling. The 0.1.0, 0.2.0, and 0.3.0 archive bytes are not rewritten.",
+    "0.4.1 adds method-binding evidence on deliver --request: discovering method, intended method,",
     "declared and accepted methods, body shape, client retry, and freshness.",
     "Method agreement is compatibility evidence. It does not sign, spend, or price a request.",
     "The x402 pin 6b6ee91fee027b540faabcb25774e73851006c3b is provenance only and is not vendored.",
@@ -101,7 +102,7 @@ function pack() {
     "",
   ].join("\n"));
   putFile("package/README.md", [
-    "# seller-repair-external-consumer 0.4.0",
+    "# seller-repair-external-consumer 0.4.1",
     "",
     "Bounded caller execution plus a method-compatibility replay.",
     "Node.js >=22.22.0. No npm packages. No default capture.",
@@ -120,10 +121,9 @@ function pack() {
     "package/src/privacy.mjs",
     'export { hasDisallowedKey } from "../../task-linked-delivery/experiments/delivery-outcome-100173/src/privacy.mjs";\n',
   );
-  const originalCaller=spawnSync("git",["show","8aa6488736f69bfad1f72c996f447106612e687b:experiments/seller-repair-service-100266/bin/caller-deliver.mjs"],{cwd:REPO});
-  if(originalCaller.status!==0) throw new Error("frozen 0.4.0 caller unavailable");
-  putFile("package/bin/caller-deliver.mjs",originalCaller.stdout);
+  putFile("package/bin/caller-deliver.mjs", readFileSync(join(EXP, "bin/caller-deliver.mjs")));
   chmodSync(join(STAGE, "package/bin/caller-deliver.mjs"), 0o755);
+  putFile("package/commercial/read-input.mjs",readFileSync(join(EXP,"commercial/read-input.mjs")));
   putFile("package/commercial/caller-request.mjs", readFileSync(join(EXP, "commercial/caller-request.mjs")));
   putFile("package/commercial/later-consumer.mjs", readFileSync(join(EXP, "commercial/later-consumer.mjs")));
   putFile("package/commercial/maintained.mjs", readFileSync(join(EXP, "commercial/maintained.mjs")));
@@ -137,7 +137,7 @@ function pack() {
   const pins = {
     schema: "samedaydesk.seller-repair-external-consumer.pins.v1",
     name: "seller-repair-external-consumer",
-    version: "0.4.0",
+    version: "0.4.1",
     enginesNode: ">=22.22.0",
     npmPackages: [],
     runtimeModules: ["node:crypto", "node:dns/promises", "node:fs", "node:fs/promises", "node:http", "node:https", "node:net"],
@@ -164,7 +164,7 @@ function pack() {
   for (const name of listed.stdout.split("\n").filter(Boolean)) members.push(name);
   if (!members.includes("package/commercial/method-binding.mjs")) throw new Error("method binding missing from pack");
   if (members.some((name) => name.includes("node_modules") || name.includes("@x402"))) throw new Error("unexpected dependency in pack");
-  const listPath = join(OUT_DIR, ".members-040");
+  const listPath = join(OUT_DIR, ".members-041");
   writeFileSync(listPath, `${members.join("\n")}\n`);
   const tar = spawnSync("tar", [
     "--format=gnu", "--sort=name", "--mtime=@0", "--owner=0", "--group=0", "--numeric-owner",
@@ -175,7 +175,7 @@ function pack() {
   const archiveBytes = readFileSync(ARCHIVE);
   const provenance = {
     name: "seller-repair-external-consumer",
-    version: "0.4.0",
+    version: "0.4.1",
     filename: ARCHIVE_NAME,
     bytes: archiveBytes.length,
     sha256: sha256(archiveBytes),
@@ -186,7 +186,7 @@ function pack() {
     predecessorFrozen: FROZEN,
     members,
   };
-  writeFileSync(join(OUT_DIR, "provenance-0.4.0.json"), `${JSON.stringify(provenance, null, 2)}\n`);
+  writeFileSync(join(OUT_DIR, "provenance-0.4.1.json"), `${JSON.stringify(provenance, null, 2)}\n`);
   const cold = {
     schema: "samedaydesk.public-acquisition.cold-commands.v1",
     proofClass: "loopback",
@@ -194,10 +194,10 @@ function pack() {
     hostedAcquisitionVerified: false,
     productionHosted: false,
     launched: false,
-    note: "Draft 0.4.0 command. Root runs it on hosted bytes. 0.1.0, 0.2.0, and 0.3.0 bytes stay unchanged.",
+    note: "Draft 0.4.1 command. Root runs it on hosted bytes. 0.1.0, 0.2.0, and 0.3.0 bytes stay unchanged.",
     commands: [{
       id: "seller-repair-external-consumer",
-      version: "0.4.0",
+      version: "0.4.1",
       filename: ARCHIVE_NAME,
       cwd: ".",
       steps: [{
@@ -206,17 +206,17 @@ function pack() {
       }],
     }],
   };
-  writeFileSync(join(OUT_DIR, "cold-command-0.4.0.json"), `${JSON.stringify(cold, null, 2)}\n`);
+  writeFileSync(join(OUT_DIR, "cold-command-0.4.1.json"), `${JSON.stringify(cold, null, 2)}\n`);
   const patch = [
     "--- a/public-acquisition/manifest.json",
     "+++ b/public-acquisition/manifest.json",
     "@@ Root applies this. This branch does not edit the live index.",
     "+    {",
     `+      "id": "seller-repair-external-consumer",`,
-    `+      "version": "0.4.0",`,
+    `+      "version": "0.4.1",`,
     `+      "role": "archive",`,
     `+      "filename": "${ARCHIVE_NAME}",`,
-    `+      "relativePath": "seller-repair-external-consumer/0.4.0/${ARCHIVE_NAME}",`,
+    `+      "relativePath": "seller-repair-external-consumer/0.4.1/${ARCHIVE_NAME}",`,
     `+      "bytes": ${provenance.bytes},`,
     `+      "sha256": "${provenance.sha256}",`,
     `+      "licenseId": "MIT",`,
@@ -234,10 +234,10 @@ function pack() {
     "No second SDK copy, marketplace row, MCP entry, or public price is added.",
     "",
   ].join("\n");
-  writeFileSync(join(OUT_DIR, "ROOT-PUBLIC-ACQUISITION-0.4.0.patch"), patch);
+  writeFileSync(join(OUT_DIR, "ROOT-PUBLIC-ACQUISITION-0.4.1.patch"), patch);
   rmSync(STAGE, { recursive: true, force: true });
   assertFrozen();
-  process.stdout.write(`${JSON.stringify({ sha256: provenance.sha256, bytes: provenance.bytes, members: members.length, version: "0.4.0" })}\n`);
+  process.stdout.write(`${JSON.stringify({ sha256: provenance.sha256, bytes: provenance.bytes, members: members.length, version: "0.4.1" })}\n`);
 }
 
 try {

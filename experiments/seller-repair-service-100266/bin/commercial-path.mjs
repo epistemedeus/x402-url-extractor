@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
+import { readInputText } from "../commercial/read-input.mjs";
 
 import {
   DELIVER_HELP,
@@ -50,11 +51,6 @@ function publicReceipt(result, commandName) {
   };
 }
 
-async function readStdin() {
-  const chunks = [];
-  for await (const chunk of process.stdin) chunks.push(chunk);
-  return Buffer.concat(chunks).toString("utf8");
-}
 
 const command = process.argv[2];
 
@@ -74,7 +70,7 @@ if (command === "reject-seeded") {
     process.stderr.write("claim_required\n");
     process.exit(2);
   }
-  const claim = JSON.parse(await readFile(file, "utf8"));
+  const claim = JSON.parse(await readInputText(file));
   const result = rejectCommercialSeed(claim);
   process.stdout.write(`${JSON.stringify(result)}\n`);
   process.exit(result.refused ? 2 : 1);
@@ -90,8 +86,8 @@ if (command === "later") {
   let artifact;
   let caller;
   try {
-    artifact = JSON.parse(await readFile(artifactPath, "utf8"));
-    caller = JSON.parse(await readFile(callerPath, "utf8"));
+    artifact = JSON.parse(await readInputText(artifactPath));
+    caller = JSON.parse(await readInputText(callerPath));
   } catch (error) {
     process.stderr.write(`request_malformed\n${error.message}\n`);
     process.exit(2);
@@ -135,9 +131,9 @@ if (command === "deliver") {
   }
   let text;
   try {
-    text = requestPath === "-" ? await readStdin() : await readFile(requestPath, "utf8");
+    text = await readInputText(requestPath);
   } catch (error) {
-    process.stderr.write(`request_unreadable\n${error.message}\n`);
+    process.stderr.write(`${error.code || "request_unreadable"}\n`);
     process.exit(2);
   }
   if (!text.trim()) {
