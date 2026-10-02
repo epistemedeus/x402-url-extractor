@@ -1,6 +1,7 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { constants } from "node:fs";
-import { appendFile, chmod, lstat, mkdir, open, readFile, rename, stat, unlink } from "node:fs/promises";
+import { chmod, lstat, mkdir, open, realpath, rename, unlink } from "node:fs/promises";
 import path from "node:path";
 
 import {
@@ -28,6 +29,11 @@ export const TASK_REF_ROTATED_FILENAME = "commerce-outcome-task-ref.1.ndjson";
 export const TASK_REF_RETAINED_GENERATIONS = 2;
 const TASK_REF_EPOCH = "samedaydesk.outcome-task-ref.epoch.v1";
 const OPAQUE_TASK_REF = /^t[a-f0-9]{62}$/;
+// Settlement admission fsyncs the journal file and, after a rotation, the
+// directory. That is durable only on a local filesystem that reports success
+// after the file bytes and the directory entry are stable. Copying an older
+// backup onto the same path is outside this guarantee and is not detected.
+export const FORWARD_JOURNAL_DURABILITY = "local-filesystem-fsync-rename-v1";
 export const RECONCILIATION_SCHEMA = "samedaydesk.commerce-settlement-reconciliation.v1";
 export const REUSE_AUTHORITY = "authenticated_producer_observation";
 export const SETTLEMENT_AUTHORITY_READBACK = "runtime_readback";
@@ -524,6 +530,33 @@ function parseForwardLines(text, index) {
   }
 }
 
+// Process-local claim for one resolved journal directory. Task-ref admission
+// keeps its own queue so the two claims cannot re-enter each other. Distinct
+// directories do not share a gate. This does not exclude another process;
+// commerce telemetry still refuses writerProcessCount other than 1.
+const journalGates = new Map();
+const journalAdmission = new AsyncLocalStorage();
+
+function journalGate(key) {
+  let gate = journalGates.get(key);
+  if (!gate) {
+    gate = { tail: Promise.resolve(), epoch: 0 };
+    journalGates.set(key, gate);
+  }
+  return gate;
+}
+
+function admitJournal(key, work) {
+  if (journalAdmission.getStore() === key) return work();
+  const gate = journalGate(key);
+  const run = gate.tail.then(
+    () => journalAdmission.run(key, work),
+    () => journalAdmission.run(key, work),
+  );
+  gate.tail = run.then(() => undefined, () => undefined);
+  return run;
+}
+
 function canonicalRuntimeReadback(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   if (value.schemaVersion !== RECONCILIATION_SCHEMA || value.state !== "reconciled") return null;
@@ -546,6 +579,8 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
   const boundedMax = Number.isSafeInteger(maxBytes) && maxBytes > 0 ? maxBytes : 5 * 1024 * 1024;
   let index = emptyIndex();
   let loaded = false;
+  let seenEpoch = -1;
+  let resolvedKey = null;
   let taskRefIds = null;
   let taskAdmission = Promise.resolve();
 
@@ -672,43 +707,205 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
     });
   }
 
-  async function ensureIndex() {
-    if (loaded) return;
-    const rotated = await readFile(rotatedPath, "utf8").catch((error) => (error?.code === "ENOENT" ? "" : Promise.reject(error)));
-    const current = await readFile(currentPath, "utf8").catch((error) => (error?.code === "ENOENT" ? "" : Promise.reject(error)));
-    const next = emptyIndex();
-    parseForwardLines(rotated, next);
-    parseForwardLines(current, next);
-    index = next;
-    loaded = true;
+  function unknownWrite(eventId = null) {
+    return { accepted: false, reason: "write_outcome_unknown", eventId };
   }
 
-  async function appendLine(record) {
+  async function journalKey() {
+    if (resolvedKey) return resolvedKey;
     await mkdir(dataDir, { recursive: true, mode: 0o700 });
     await chmod(dataDir, 0o700).catch(() => {});
-    const size = await stat(currentPath).then((entry) => entry.size).catch(() => 0);
-    if (size >= boundedMax) {
+    resolvedKey = await realpath(dataDir);
+    return resolvedKey;
+  }
+
+  function currentGate() {
+    if (!resolvedKey) throw new Error("forward journal directory is unresolved");
+    return journalGate(resolvedKey);
+  }
+
+  function mutateEpoch() {
+    const gate = currentGate();
+    gate.epoch += 1;
+    seenEpoch = gate.epoch;
+  }
+
+  function invalidateIndex() {
+    const gate = currentGate();
+    gate.epoch += 1;
+    seenEpoch = -1;
+    loaded = false;
+    index = emptyIndex();
+  }
+
+  async function readForwardFile(file, into) {
+    let handle;
+    try {
+      handle = await open(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    } catch (error) {
+      if (error?.code === "ENOENT") return;
+      throw error;
+    }
+    let text;
+    try {
+      const entry = await handle.stat();
+      if (!entry.isFile()) throw new Error("forward outcome evidence is not a regular file");
+      const size = Math.min(entry.size, boundedMax + 4096);
+      const start = entry.size - size;
+      const bytes = Buffer.alloc(size);
+      let used = 0;
+      while (used < size) {
+        const { bytesRead } = await handle.read(bytes, used, size - used, start + used);
+        if (bytesRead === 0) break;
+        used += bytesRead;
+      }
+      text = bytes.subarray(0, used).toString("utf8");
+      if (start > 0) {
+        const newline = text.indexOf("\n");
+        text = newline === -1 ? "" : text.slice(newline + 1);
+      }
+    } finally {
+      await handle.close();
+    }
+    parseForwardLines(text, into);
+  }
+
+  async function ensureIndex() {
+    const gate = currentGate();
+    if (loaded && seenEpoch === gate.epoch) return;
+    const next = emptyIndex();
+    await readForwardFile(rotatedPath, next);
+    await readForwardFile(currentPath, next);
+    index = next;
+    loaded = true;
+    seenEpoch = gate.epoch;
+  }
+
+  async function syncRegularFile(file) {
+    const handle = await open(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    try {
+      const entry = await handle.stat();
+      if (!entry.isFile()) throw new Error("forward outcome evidence is not a regular file");
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+  }
+
+  async function appendLine(record, { durable = false } = {}) {
+    await mkdir(dataDir, { recursive: true, mode: 0o700 });
+    await chmod(dataDir, 0o700).catch(() => {});
+    const entry = await lstat(currentPath).catch((error) => (
+      error?.code === "ENOENT" ? null : Promise.reject(error)
+    ));
+    if (entry && !entry.isFile()) throw new Error("forward outcome evidence is not a regular file");
+    let rotated = false;
+    if (entry && entry.size >= boundedMax) {
+      if (durable) await syncRegularFile(currentPath);
       await unlink(rotatedPath).catch((error) => {
         if (error?.code !== "ENOENT") throw error;
       });
-      await rename(currentPath, rotatedPath).catch((error) => {
-        if (error?.code !== "ENOENT") throw error;
-      });
+      await rename(currentPath, rotatedPath).catch((error) => (
+        error?.code === "ENOENT" ? null : Promise.reject(error)
+      ));
+      rotated = true;
     }
-    await appendFile(currentPath, `${JSON.stringify(record)}\n`, { encoding: "utf8", mode: 0o600 });
-    await chmod(currentPath, 0o600).catch(() => {});
+    const handle = await open(
+      currentPath,
+      constants.O_RDWR | constants.O_CREAT | constants.O_APPEND | constants.O_NOFOLLOW | constants.O_NONBLOCK,
+      0o600,
+    );
+    try {
+      const current = await handle.stat();
+      if (!current.isFile()) throw new Error("forward outcome evidence is not a regular file");
+      let separator = "";
+      if (current.size > 0) {
+        const last = Buffer.alloc(1);
+        const { bytesRead } = await handle.read(last, 0, 1, current.size - 1);
+        if (bytesRead !== 1) throw new Error("forward outcome tail changed during append");
+        if (last[0] !== 10) separator = "\n";
+      }
+      await handle.appendFile(`${separator}${JSON.stringify(record)}\n`, { encoding: "utf8" });
+      if (durable) await handle.sync();
+      await handle.chmod(0o600).catch(() => {});
+    } finally {
+      await handle.close();
+    }
+    if (durable) {
+      const dir = await open(dataDir, constants.O_RDONLY | constants.O_DIRECTORY);
+      try {
+        await dir.sync();
+      } finally {
+        await dir.close();
+      }
+    }
   }
 
-  async function appendRecords(records) {
+  async function writeRecords(records) {
     await ensureIndex();
     const written = [];
     for (const record of records || []) {
       if (!isForwardV2Record(record) || index.eventIds.has(record.eventId)) continue;
-      await appendLine(record);
+      try {
+        await appendLine(record, { durable: record.stage === "settlement" });
+      } catch (error) {
+        invalidateIndex();
+        throw error;
+      }
       rememberRecord(index, record);
+      mutateEpoch();
       written.push(record);
     }
     return written;
+  }
+
+  async function appendRecords(records) {
+    const key = await journalKey();
+    return admitJournal(key, () => writeRecords(records));
+  }
+
+  async function classifyWriteFailure(record) {
+    invalidateIndex();
+    try {
+      await ensureIndex();
+    } catch {
+      return unknownWrite(record?.eventId || null);
+    }
+    if (record?.eventId && index.eventIds.has(record.eventId)) {
+      return { accepted: false, reason: "duplicate", eventId: record.eventId };
+    }
+    return unknownWrite(record?.eventId || null);
+  }
+
+  async function commitForward(record, { durable }) {
+    if (index.eventIds.has(record.eventId)) {
+      return { accepted: false, reason: "duplicate", eventId: record.eventId };
+    }
+    try {
+      await appendLine(record, { durable });
+    } catch {
+      return classifyWriteFailure(record);
+    }
+    rememberRecord(index, record);
+    mutateEpoch();
+    return { accepted: true, reason: null, eventId: record.eventId };
+  }
+
+  async function admitObserved(work) {
+    let key;
+    try {
+      key = await journalKey();
+    } catch {
+      return unknownWrite(null);
+    }
+    return admitJournal(key, async () => {
+      try {
+        await ensureIndex();
+      } catch {
+        return unknownWrite(null);
+      }
+      return work();
+    });
   }
 
   function refuse(reason) {
@@ -724,31 +921,30 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
 
   async function observeMockedSettlementBoundary({ internalToken: supplied, operationId, receiptDigest } = {}) {
     if (!tokenAuthorized(supplied, internalToken)) return refuse("unauthorized");
-    await ensureIndex();
-    const delivery = deliveryFor(operationId, receiptDigest);
-    if (!delivery) return refuse("unbound_artifact");
-    if (!MOCKED_BOUNDARY.has(delivery.settlementClass)) return refuse("not_mocked_boundary");
-    const bucket = index.operations.get(operationId);
-    if (bucket.settlements.size > 0) return refuse("duplicate_settlement");
-    const record = blankRecord({
-      brand: "samedaydesk",
-      cohort: [...bucket.cohorts][0],
-      operationId,
-      commerceEventId: delivery.commerceEventId,
-      stage: "settlement",
-      evidencePlane: "economic_settlement",
-      eventId: stableForwardEventId(`${operationId}\0settlement\0mocked\0${delivery.settlementClass}\0${receiptDigest}`),
-      method: delivery.method,
-      route: delivery.route,
-      receiptDigest,
-      settlementAuthority: SETTLEMENT_AUTHORITY_MOCKED,
-      settlementClass: delivery.settlementClass,
-      usefulness: USEFULNESS_UNKNOWN,
+    return admitObserved(() => {
+      const delivery = deliveryFor(operationId, receiptDigest);
+      if (!delivery) return refuse("unbound_artifact");
+      if (!MOCKED_BOUNDARY.has(delivery.settlementClass)) return refuse("not_mocked_boundary");
+      const bucket = index.operations.get(operationId);
+      if (bucket.settlements.size > 0) return refuse("duplicate_settlement");
+      const record = blankRecord({
+        brand: "samedaydesk",
+        cohort: [...bucket.cohorts][0],
+        operationId,
+        commerceEventId: delivery.commerceEventId,
+        stage: "settlement",
+        evidencePlane: "economic_settlement",
+        eventId: stableForwardEventId(`${operationId}\0settlement\0mocked\0${delivery.settlementClass}\0${receiptDigest}`),
+        method: delivery.method,
+        route: delivery.route,
+        receiptDigest,
+        settlementAuthority: SETTLEMENT_AUTHORITY_MOCKED,
+        settlementClass: delivery.settlementClass,
+        usefulness: USEFULNESS_UNKNOWN,
+      });
+      if (!record) return refuse("invalid_record");
+      return commitForward(record, { durable: true });
     });
-    if (!record) return refuse("invalid_record");
-    const written = await appendRecords([record]);
-    if (written.length !== 1) return refuse("duplicate");
-    return { accepted: true, reason: null, eventId: record.eventId };
   }
 
   async function observeRuntimeSettlementReadback({
@@ -760,32 +956,31 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
     if (!tokenAuthorized(supplied, internalToken)) return refuse("unauthorized");
     const canonical = canonicalRuntimeReadback(readback);
     if (!canonical) return refuse("not_runtime_readback");
-    await ensureIndex();
-    const delivery = deliveryFor(operationId, receiptDigest);
-    if (!delivery || delivery.commerceEventId !== canonical.sourceEventId) return refuse("unbound_artifact");
-    const bucket = index.operations.get(operationId);
-    if (bucket.settlements.size > 0) return refuse("duplicate_settlement");
-    const record = blankRecord({
-      brand: "samedaydesk",
-      cohort: [...bucket.cohorts][0],
-      operationId,
-      commerceEventId: delivery.commerceEventId,
-      stage: "settlement",
-      evidencePlane: "economic_settlement",
-      eventId: stableForwardEventId(`${operationId}\0settlement\0readback\0${canonical.settlementReference}\0${canonical.amountAtomic}\0${receiptDigest}`),
-      method: delivery.method,
-      route: delivery.route,
-      receiptDigest,
-      settlementAuthority: SETTLEMENT_AUTHORITY_READBACK,
-      settlementClass: "reconciled",
-      settlementReference: canonical.settlementReference,
-      valueAtomic: canonical.amountAtomic,
-      usefulness: USEFULNESS_UNKNOWN,
+    return admitObserved(() => {
+      const delivery = deliveryFor(operationId, receiptDigest);
+      if (!delivery || delivery.commerceEventId !== canonical.sourceEventId) return refuse("unbound_artifact");
+      const bucket = index.operations.get(operationId);
+      if (bucket.settlements.size > 0) return refuse("duplicate_settlement");
+      const record = blankRecord({
+        brand: "samedaydesk",
+        cohort: [...bucket.cohorts][0],
+        operationId,
+        commerceEventId: delivery.commerceEventId,
+        stage: "settlement",
+        evidencePlane: "economic_settlement",
+        eventId: stableForwardEventId(`${operationId}\0settlement\0readback\0${canonical.settlementReference}\0${canonical.amountAtomic}\0${receiptDigest}`),
+        method: delivery.method,
+        route: delivery.route,
+        receiptDigest,
+        settlementAuthority: SETTLEMENT_AUTHORITY_READBACK,
+        settlementClass: "reconciled",
+        settlementReference: canonical.settlementReference,
+        valueAtomic: canonical.amountAtomic,
+        usefulness: USEFULNESS_UNKNOWN,
+      });
+      if (!record) return refuse("invalid_record");
+      return commitForward(record, { durable: true });
     });
-    if (!record) return refuse("invalid_record");
-    const written = await appendRecords([record]);
-    if (written.length !== 1) return refuse("duplicate");
-    return { accepted: true, reason: null, eventId: record.eventId };
   }
 
   async function observeRetainedUse({
@@ -796,31 +991,30 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
   } = {}) {
     if (!tokenAuthorized(supplied, internalToken)) return refuse("unauthorized");
     if (correctionOf !== null && correctionOf !== operationId) return refuse("wrong_operation");
-    await ensureIndex();
-    const delivery = deliveryFor(operationId, receiptDigest);
-    if (!delivery) return refuse("unbound_artifact");
-    const bucket = index.operations.get(operationId);
-    const eventId = stableForwardEventId(`${operationId}\0retained\0${receiptDigest}\0${correctionOf || ""}`);
-    if (index.eventIds.has(eventId)) return refuse("duplicate");
-    const record = blankRecord({
-      brand: "samedaydesk",
-      cohort: [...bucket.cohorts][0],
-      operationId,
-      commerceEventId: delivery.commerceEventId,
-      stage: "retained_use",
-      evidencePlane: "retained_use",
-      eventId,
-      method: delivery.method,
-      route: delivery.route,
-      receiptDigest,
-      correctionOf,
-      reuseAuthority: REUSE_AUTHORITY,
-      usefulness: USEFULNESS_UNKNOWN,
+    return admitObserved(() => {
+      const delivery = deliveryFor(operationId, receiptDigest);
+      if (!delivery) return refuse("unbound_artifact");
+      const bucket = index.operations.get(operationId);
+      const eventId = stableForwardEventId(`${operationId}\0retained\0${receiptDigest}\0${correctionOf || ""}`);
+      if (index.eventIds.has(eventId)) return refuse("duplicate");
+      const record = blankRecord({
+        brand: "samedaydesk",
+        cohort: [...bucket.cohorts][0],
+        operationId,
+        commerceEventId: delivery.commerceEventId,
+        stage: "retained_use",
+        evidencePlane: "retained_use",
+        eventId,
+        method: delivery.method,
+        route: delivery.route,
+        receiptDigest,
+        correctionOf,
+        reuseAuthority: REUSE_AUTHORITY,
+        usefulness: USEFULNESS_UNKNOWN,
+      });
+      if (!record) return refuse("invalid_record");
+      return commitForward(record, { durable: false });
     });
-    if (!record) return refuse("invalid_record");
-    const written = await appendRecords([record]);
-    if (written.length !== 1) return refuse("duplicate");
-    return { accepted: true, reason: null, eventId: record.eventId };
   }
 
   return {
