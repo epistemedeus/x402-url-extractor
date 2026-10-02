@@ -4,3 +4,12 @@ paid-useful-journey handoff checks, delivery-outcome canonical digests, and
 useful-result-reuse privacy plus compatibility revocation helpers.
 It does not add a price, SKU, payment route, or knowledge kernel.
 The package does not purchase, sign, or settle.
+
+The commercial lifecycle reuses this service, the received commerce producer,
+and useful-economics 100290. It does not vendor maintained-operations.
+That package is MIT, Copyright (c) 2026 Neomorphic LLC, version 0.1.0,
+sha256 b68024a3b359b354b6869cfdc4621f1eb2947cb40311bf7bafcbd546b0cdabc9,
+from https://neomorphic.io/downloads/maintained-operations/0.1.0/maintained-operations-0.1.0.tar.gz.
+Its runner rechecks one retained observatory task. It does not accept a seller
+operation or a repair retest. Runtime attribution for this experiment remains
+Node.js as executed; the portable consumer pin stays >=22.22.0.

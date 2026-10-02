@@ -15,3 +15,7 @@ The frozen 0.1.0 archive is `candidate/seller-repair-external-consumer-0.1.0.tar
 The free diagnosis route is not mounted. Apply `experiments/seller-repair-service-100266/route/ROOT-SERVER-MOUNT.patch` before the paid middleware. It registers `POST /commerce/seller-repair-diagnosis` with `charged: false`. It does not add a SKU and does not change `GET /commerce/seller-integrity-audit` at `$0.01` / atomic `10000`.
 
 Declared runtime for the consumer is Node.js `>=22.22.0`. A public proof on an older Node stays blocked by that pin. Loopback acquisition can still run the cold command. Do not mark the draft hosted from this branch.
+
+## 2026-10-02 addendum (100308)
+
+The paragraph above is the 100287 receiving note and stays as written. Source head `c1518cce1b60799044cfd8b8a749abb150299a63` already calls `mountSellerRepairDiagnosis` before the paid middleware. A disposable observation of production `POST /commerce/seller-repair-diagnosis` with `{}` on 2026-10-02T08:21:11Z returned HTTP 400, `charged` false, and `paymentSent` false. `hostedAcquisitionVerified` and `productionHosted` stay false. The `$0.01` audit is unchanged at atomic `10000`. The commercial lifecycle command is `node experiments/seller-repair-service-100266/bin/commercial-path.mjs`. It does not add a price, SKU, signer, or customer grant. Node on the worker that ran the disposable merchant was v22.14.0; that run is not a public receiving proof of the consumer pin.

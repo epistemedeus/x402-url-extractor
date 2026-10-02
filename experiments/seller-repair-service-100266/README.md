@@ -112,13 +112,24 @@ evidence without a charge. A live retest is a caller-reviewed comparison of
 two processes the caller already runs. `deployedCounterpartyRepair` stays
 false.
 
-`POST /commerce/seller-repair-diagnosis` is the free intake. It is not mounted
-in `server.js` on this branch. Root applies
-`route/ROOT-SERVER-MOUNT.patch` before the paid middleware. The route does
+`POST /commerce/seller-repair-diagnosis` is the free intake. `server.js` calls
+`mountSellerRepairDiagnosis` before the paid middleware. On 2026-10-02 an
+empty production POST returned HTTP 400 with `charged` false. That observation
+does not set `hostedAcquisitionVerified` or `productionHosted`. The route does
 not add a SKU and does not change the `$0.01` seller-integrity audit. A
 completed audit is connected only when the caller asked for declaration
 contract work and the report matches the same target. It still does not read
 the useful body and it does not recommend a purchase.
+
+The reusable commercial command is
+`node experiments/seller-repair-service-100266/bin/commercial-path.mjs`.
+`buyer` states what the free diagnosis can answer and when the existing audit
+is a different scope. `deliver` runs two supplied caller operations, writes one
+untrusted regression artifact, and passes that artifact to the economics
+consumer with the received commerce events. `later` refuses changed inputs
+before a probe. The Agent402 unemployment invitation is
+`buyer/invitation.json`. It is not sent, and HTTP 402 is not a repair order.
+Maintained-operations 0.1.0 was inspected and does not diagnose a seller.
 
 ## Portable consumer
 

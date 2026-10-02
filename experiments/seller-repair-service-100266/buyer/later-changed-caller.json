@@ -1,0 +1,10 @@
+{
+  "callerId": "later-agent",
+  "taskDigest": "c9ee8809db29e251b0f6d77c74f030ef3603a813a370e4d08fcfe23998ff1cd4",
+  "sdk": "node-https@22",
+  "origin": "https://quota.example",
+  "method": "GET",
+  "resource": "/v1/quota-changed",
+  "expectValue": "3",
+  "independentRetest": false
+}

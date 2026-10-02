@@ -1,0 +1,12 @@
+{
+  "http200IsSuccess": true,
+  "trusted": true,
+  "targetReturned402": true,
+  "purchaseRecommended": true,
+  "defect": true,
+  "order": true,
+  "causalIdentityGrantsUsefulness": true,
+  "savingsAtomic": "1",
+  "fixedExampleIsCallerTask": true,
+  "recognizedRevenueAtomic": "10000"
+}

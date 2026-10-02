@@ -1,0 +1,115 @@
+{
+  "schema": "samedaydesk.seller-repair-regression.v1",
+  "trusted": false,
+  "hashIsExecution": false,
+  "usefulTransferred": false,
+  "paymentPermitted": false,
+  "deployedCounterpartyRepair": false,
+  "recognizedRevenueAtomic": "0",
+  "callerId": "quota-caller-100308",
+  "taskDigest": "c9ee8809db29e251b0f6d77c74f030ef3603a813a370e4d08fcfe23998ff1cd4",
+  "operationId": "GET /v1/quota",
+  "declaredSdk": "node-https@22",
+  "target": {
+    "origin": "https://quota.example",
+    "method": "GET",
+    "resource": "/v1/quota"
+  },
+  "expected": {
+    "path": "quota.remaining",
+    "value": "3"
+  },
+  "provenance": {
+    "merchantHead": "c1518cce1b60799044cfd8b8a749abb150299a63",
+    "package": "seller-repair-service-100266",
+    "license": "MIT",
+    "copyright": "Copyright (c) 2026 SameDayDesk",
+    "runtime": "v22.14.0",
+    "maintained": {
+      "package": "maintained-operations",
+      "version": "0.1.0",
+      "url": "https://neomorphic.io/downloads/maintained-operations/0.1.0/maintained-operations-0.1.0.tar.gz",
+      "sha256": "b68024a3b359b354b6869cfdc4621f1eb2947cb40311bf7bafcbd546b0cdabc9",
+      "bytes": 104792,
+      "license": "MIT",
+      "copyright": "Copyright (c) 2026 Neomorphic LLC",
+      "runtime": "Node.js 22",
+      "source": "packages/retained-task 0.1.0 and packages/change-monitor 0.1.0",
+      "providesSellerDiagnosis": false,
+      "providesRepairRetest": false,
+      "inspectedAt": "2026-10-02T08:21:11.000Z",
+      "note": "The public runner rechecks one retained observatory task. It does not accept a seller operation, expected output, or repair retest."
+    },
+    "fixedCatalogExample": false
+  },
+  "execution": {
+    "command": "node experiments/seller-repair-service-100266/bin/commercial-path.mjs deliver",
+    "beforeDigest": "ff0e6c338c63c1afde54ecf991c8072b95ca01cb17f8049c3633387c5cca55c3",
+    "directDigest": "ff0e6c338c63c1afde54ecf991c8072b95ca01cb17f8049c3633387c5cca55c3",
+    "directAgrees": true,
+    "outcome": "mismatch",
+    "probes": 6,
+    "redirectsFollowed": 0
+  },
+  "retest": {
+    "useful": true,
+    "reason": "retest_matched",
+    "class": "caller_reviewed_retest",
+    "changedOutput": {
+      "path": "quota.remaining",
+      "before": null,
+      "after": "3"
+    },
+    "deployedCounterpartyRepair": false,
+    "counterpartyMutated": false
+  },
+  "negative": {
+    "callerId": "negative-caller-100308",
+    "operationId": "GET /v1/health",
+    "declaredSdk": "python-httpx@1",
+    "taskDigest": "81e4bf1966cf5e7d34d4dd5e70b8e9620cc19c8a76e249c371a82a1204038ae7",
+    "useful": false,
+    "reason": "missing_field_not_paid_demand",
+    "http200IsSuccess": false,
+    "directAgrees": true,
+    "purchaseRecommended": false
+  },
+  "share": {
+    "accepted": false,
+    "reason": "authorization_required",
+    "trusted": false,
+    "usefulTransferred": false,
+    "spendingGrantTransferred": false
+  },
+  "laterCommand": "node experiments/seller-repair-service-100266/bin/commercial-path.mjs later --artifact <regression.json> --caller <caller.json>",
+  "resources": {
+    "cash": {
+      "atomic": "0",
+      "countsAsCash": true,
+      "reason": "no_payment_executed"
+    },
+    "apiEquivalent": {
+      "probes": 6,
+      "tokens": "unknown",
+      "countsAsCash": false
+    },
+    "includedQuota": {
+      "known": false,
+      "reason": "included_quota_not_metered",
+      "countsAsCash": false
+    },
+    "reviewAdaptation": {
+      "known": false,
+      "reason": "original_token_review_cost_unknown",
+      "countsAsCash": false
+    },
+    "executionMs": 795,
+    "founderEngineeringCost": "unknown",
+    "founderCommissionGrossUsdc": "3.00",
+    "founderCommissionNetUsdc": "2.85",
+    "founderCommissionIsThisRun": false,
+    "historicalBankedRevenueUsdc": 10.955,
+    "historicalCountsAsMargin": false,
+    "savings": "unknown"
+  }
+}

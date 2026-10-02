@@ -1,0 +1,92 @@
+{
+  "schema": "samedaydesk.seller-repair-buyer-path.v1",
+  "charged": false,
+  "priceChanged": false,
+  "skuAdded": false,
+  "humanPage": false,
+  "command": "node experiments/seller-repair-service-100266/bin/commercial-path.mjs buyer",
+  "deliverCommand": "node experiments/seller-repair-service-100266/bin/commercial-path.mjs deliver",
+  "laterCommand": "node experiments/seller-repair-service-100266/bin/commercial-path.mjs later --artifact <regression.json> --caller <caller.json>",
+  "freeDiagnosis": {
+    "route": "POST /commerce/seller-repair-diagnosis",
+    "charged": false,
+    "answers": [
+      "whether the observed GET body matches the caller's expected path and value",
+      "a useful negative when the field is missing and that gap is not a purchase",
+      "transport refusals for a private address, DNS change, redirect, body ceiling, or whole-response deadline",
+      "that a caller-reviewed retest changed the compared output on a stand-in the caller already runs"
+    ],
+    "doesNotAnswer": [
+      "a paid response body",
+      "a deployed counterparty repair",
+      "handler execution proved by HTTP 200, a declared field, or a paid-success flag",
+      "settlement, reuse, or recognized revenue"
+    ]
+  },
+  "paidAudit": {
+    "product": "samedaydesk-seller-integrity-audit",
+    "route": "/commerce/seller-integrity-audit",
+    "priceDisplay": "$0.01",
+    "priceAtomic": "10000",
+    "distinctWhen": "The caller asked for declaration_contract work and a completed report for the same origin, route, and method adds a declaration finding the free body comparison does not already state.",
+    "answersUsefulOutput": false,
+    "purchaseRecommended": false,
+    "purchasePerformed": false
+  },
+  "customerAuthority": {
+    "freeDiagnosis": "No payment authority. A live public probe requires probeConsent class public-https and confirmed true. Evidence mode does not probe.",
+    "paidAudit": "The customer's own payment authority. This path does not grant it and does not pay.",
+    "share": "The existing useful-result-reuse compatibility authorization. A submitted regression file is not trusted and does not grant sharing."
+  },
+  "possibleRevenueDistinctFromAcceptedOrder": true,
+  "acceptedPaidOrder": false,
+  "recognizedRevenueAtomic": "0",
+  "production": {
+    "observedAt": "2026-10-02T08:21:11.000Z",
+    "diagnosis": {
+      "method": "POST",
+      "url": "https://agents.samedaydesk.com/commerce/seller-repair-diagnosis",
+      "emptyBodyStatus": 400,
+      "mounted": true,
+      "charged": false,
+      "paymentSent": false,
+      "error": "operation must be GET and one exact path"
+    },
+    "paidAudit": {
+      "method": "GET",
+      "url": "https://agents.samedaydesk.com/commerce/seller-integrity-audit?origin=https%3A%2F%2Fagent402.tools&route=%2Fapi%2Funemployment-rate&method=GET",
+      "status": 402,
+      "amount": "10000",
+      "network": "eip155:8453",
+      "scheme": "exact",
+      "priceDisplay": "$0.01",
+      "priceChanged": false
+    },
+    "unemployment": {
+      "method": "GET",
+      "url": "https://agent402.tools/api/unemployment-rate",
+      "status": 402,
+      "baseExactAmount": "5000",
+      "network": "eip155:8453",
+      "scheme": "exact",
+      "outputSchemaRequired": [
+        "date",
+        "current",
+        "months",
+        "history",
+        "source"
+      ],
+      "bodyPurchased": false,
+      "defect": false,
+      "order": false
+    },
+    "acquisition": {
+      "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/index.json",
+      "draft": true,
+      "productionHosted": false,
+      "hostedAcquisitionVerified": false,
+      "listsSellerRepairConsumer020": true,
+      "assetCount": 16
+    }
+  }
+}
