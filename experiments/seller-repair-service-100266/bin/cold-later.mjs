@@ -28,10 +28,23 @@ const intake = normalizeIntake(raw);
 const sdk = arg("--sdk") || intake.declaredSdk;
 const task = arg("--task");
 const digest = task ? taskDigest(task) : intake.taskDigest;
-if (sdk !== intake.declaredSdk || digest !== intake.taskDigest) {
-  const refused = laterApplicability({ intake, taskDigest: digest, sdk, retest: null });
-  process.stdout.write(`${JSON.stringify({ ...refused, paymentSent: false, privateImported: false })}\n`);
-  process.exit(0);
+const origin = arg("--origin") || intake.origin;
+const resource = arg("--resource") || intake.resource;
+const method = arg("--method") || intake.method;
+const callerId = arg("--caller") || intake.callerId;
+const target = { origin, method, resource };
+if (sdk !== intake.declaredSdk || digest !== intake.taskDigest || origin !== intake.origin || resource !== intake.resource || method !== intake.method) {
+  const refused = laterApplicability({
+    intake,
+    taskDigest: digest,
+    sdk,
+    target,
+    callerId,
+    retest: null,
+    independentRetest: false,
+  });
+  process.stdout.write(`${JSON.stringify({ ...refused, probed: false, paymentSent: false, privateImported: false, trustedPriorUseful: false })}\n`);
+  process.exit(2);
 }
 
 const seller = await startFixtureSeller();
@@ -46,7 +59,10 @@ try {
     intake,
     taskDigest: digest,
     sdk,
+    target,
+    callerId,
     retest: result.repair,
+    independentRetest: true,
   });
   process.stdout.write(`${JSON.stringify({
     ...later,

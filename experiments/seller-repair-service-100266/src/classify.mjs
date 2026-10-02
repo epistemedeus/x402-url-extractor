@@ -23,8 +23,11 @@ function base(intake, declared, observed) {
   };
 }
 
-export function classify({ intake, declared, observed }) {
+export function classify({ intake, declared, observed, stopped = null }) {
   const view = base(intake, declared, observed);
+  if (stopped === "method_not_read_only" || intake.method !== "GET") {
+    return { ...view, outcome: "unsupported", reason: "method_not_read_only", nextAction: "unsupported", useful: false };
+  }
   if (intake.question === "semantic") {
     return {
       ...view,
@@ -35,7 +38,10 @@ export function classify({ intake, declared, observed }) {
     };
   }
   if (!observed) {
-    return { ...view, outcome: "unknown", reason: "body_not_observed", nextAction: "unknown", useful: false };
+    const reason = ["effort_exhausted", "total_body_ceiling", "total_response_deadline", "target_not_authorized", "resource_not_authorized"].includes(stopped)
+      ? stopped
+      : "body_not_observed";
+    return { ...view, outcome: "unknown", reason, nextAction: "unknown", useful: false };
   }
   if (observed.privateSentinel) {
     return { ...view, outcome: "unknown", reason: "private_body_withheld", nextAction: "unknown", useful: false };
@@ -45,6 +51,9 @@ export function classify({ intake, declared, observed }) {
   }
   if (observed.bodyDeadline) {
     return { ...view, outcome: "unknown", reason: "body_deadline", nextAction: "unknown", useful: false };
+  }
+  if (observed.bodyCeiling || observed.reason === "body_ceiling") {
+    return { ...view, outcome: "unknown", reason: "body_ceiling", nextAction: "unknown", useful: false };
   }
   if (observed.status === 402) {
     return {

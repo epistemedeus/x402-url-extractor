@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import http from "node:http";
 import https from "node:https";
 
+import { admitProbe, createBudget, noteProbe } from "./budget.mjs";
 import { PRIVATE_MARKER } from "./constants.mjs";
 import { fail } from "./errors.mjs";
 import { collectPaths, pathValue } from "./paths.mjs";
@@ -69,6 +70,7 @@ export async function probeOnce({
           values: {},
           contentType: String(response.headers["content-type"] || ""),
           paymentSent: false,
+          bytesSeen: 0,
         });
         return;
       }
@@ -90,6 +92,7 @@ export async function probeOnce({
         values: {},
         contentType: String(response.headers["content-type"] || ""),
         paymentSent: false,
+        bytesSeen: 0,
         ...extra,
       });
       response.on("data", (chunk) => {
@@ -99,7 +102,7 @@ export async function probeOnce({
           discarded = true;
           chunks.length = 0;
           response.destroy();
-          empty({ bodyDeadline: false, reason: "body_ceiling" });
+          empty({ bodyDeadline: false, bodyCeiling: true, reason: "body_ceiling", bytesSeen: total });
           return;
         }
         chunks.push(chunk);
@@ -108,7 +111,7 @@ export async function probeOnce({
         if (discarded) return;
         const body = Buffer.concat(chunks);
         if (containsPrivateMarker(body)) {
-          empty({ privateSentinel: true, byteLength: body.length });
+          empty({ privateSentinel: true, byteLength: body.length, bytesSeen: body.length });
           return;
         }
         let parsed = null;
@@ -140,6 +143,7 @@ export async function probeOnce({
           values,
           contentType: type,
           paymentSent: false,
+          bytesSeen: body.length,
           body: json ? parsed : null,
         });
       });
@@ -164,6 +168,7 @@ export async function probeOnce({
         values: {},
         contentType: "",
         paymentSent: false,
+        bytesSeen: 0,
         reason: "body_deadline",
       });
     };
@@ -187,6 +192,7 @@ export async function probeOnce({
           values: {},
           contentType: "",
           paymentSent: false,
+          bytesSeen: 0,
           reason: "body_deadline",
         });
         return;
@@ -199,35 +205,68 @@ export async function probeOnce({
   });
 }
 
-export async function probeDeclarationAndResource({ baseUrl, intake, fixtureMode = null }) {
+async function attempt(budget, fields) {
+  const admission = admitProbe(budget);
+  if (!admission.ok) return { stopped: admission.reason, probe: null };
+  if (admission.bodyBytes < 1) return { stopped: "total_body_ceiling", probe: null };
+  const probe = await probeOnce({ ...fields, deadlineMs: admission.deadlineMs, bodyBytes: admission.bodyBytes });
+  noteProbe(budget, probe);
+  return { stopped: null, probe };
+}
+
+export async function probeDeclarationAndResource({ baseUrl, intake, fixtureMode = null, budget = null }) {
+  const active = budget || createBudget(intake.maxEffort);
   const calls = [];
   let document = null;
   let documentProbe = null;
-  if (intake.maxEffort.probes >= 2) {
-    documentProbe = await probeOnce({
+  let stopped = null;
+  if (intake.method !== "GET") {
+    return { document, documentProbe, resourceProbe: null, calls, stopped: "method_not_read_only", budget: active, paymentSent: false };
+  }
+  const fetchDeclaration = intake.probeConsent?.class !== "public-read-only"
+    && active.maxEffort.probes - active.probesUsed >= 2;
+  if (fetchDeclaration) {
+    const declared = await attempt(active, {
       baseUrl,
       method: "GET",
       route: "/openapi.json",
-      deadlineMs: intake.maxEffort.deadlineMs,
-      bodyBytes: intake.maxEffort.bodyBytes,
       fixtureMode,
     });
-    calls.push(summarize(documentProbe));
-    if (documentProbe.json && documentProbe.body) document = documentProbe.body;
+    stopped = declared.stopped;
+    documentProbe = declared.probe;
+    if (documentProbe) {
+      calls.push(summarize(documentProbe));
+      if (documentProbe.json && documentProbe.body && !documentProbe.privateSentinel) document = documentProbe.body;
+    }
   }
-  if (calls.length >= intake.maxEffort.probes) {
-    return { document, documentProbe, resourceProbe: null, calls, paymentSent: false };
+  if (stopped || active.probesUsed >= active.maxEffort.probes) {
+    return {
+      document,
+      documentProbe,
+      resourceProbe: null,
+      calls,
+      stopped: stopped || "effort_exhausted",
+      budget: active,
+      paymentSent: false,
+    };
   }
-  const resourceProbe = await probeOnce({
+  const resource = await attempt(active, {
     baseUrl,
     method: intake.method,
     route: intake.resource,
-    deadlineMs: intake.maxEffort.deadlineMs,
-    bodyBytes: intake.maxEffort.bodyBytes,
     fixtureMode,
   });
-  calls.push(summarize(resourceProbe));
-  return { document, documentProbe, resourceProbe, calls, paymentSent: false };
+  const resourceProbe = resource.probe;
+  if (resourceProbe) calls.push(summarize(resourceProbe));
+  return {
+    document,
+    documentProbe,
+    resourceProbe,
+    calls,
+    stopped: resource.stopped,
+    budget: active,
+    paymentSent: false,
+  };
 }
 
 export function summarize(probe) {
@@ -244,6 +283,7 @@ export function summarize(probe) {
     bodyRetained: probe.bodyRetained === true,
     json: probe.json === true,
     paths: probe.paths || [],
+    bodyCeiling: probe.bodyCeiling === true,
     paymentSent: false,
   };
 }

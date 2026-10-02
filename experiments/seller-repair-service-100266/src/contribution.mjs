@@ -128,7 +128,7 @@ export function revokeContribution(contribution) {
   };
 }
 
-export function replayContribution({ contribution, corrections = [], revocations = [], now = Date.now(), taskDigest, sdk }) {
+export function replayContribution({ contribution, corrections = [], revocations = [], now = Date.now(), taskDigest, sdk, target = null }) {
   const rows = [
     contribution?.row,
     contribution?.control,
@@ -150,7 +150,12 @@ export function replayContribution({ contribution, corrections = [], revocations
   if (Date.parse(contribution.row.expiresAt) <= now) {
     return { reused: false, reason: "expired", usefulTransferred: false, paymentPermitted: false, spendingGrantTransferred: false };
   }
-  if (taskDigest !== contribution.row.evidence.taskDigest || sdk !== contribution.row.evidence.sdk) {
+  const evidence = contribution.row.evidence;
+  const targetMatches = Boolean(target)
+    && target.origin === evidence.origin
+    && target.method === evidence.method
+    && (target.resource === evidence.route || target.route === evidence.route);
+  if (taskDigest !== evidence.taskDigest || sdk !== evidence.sdk || !targetMatches) {
     return { reused: false, reason: "stale_applicability", usefulTransferred: false, paymentPermitted: false, spendingGrantTransferred: false };
   }
   return {

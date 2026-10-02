@@ -1,15 +1,42 @@
 import { classify } from "./classify.mjs";
 import { declaredRequiredPaths } from "./declaration.mjs";
+import { normalizeIntake } from "./intake.mjs";
 import { probeDeclarationAndResource, publicObservation } from "./probe.mjs";
-import { scanCaptured } from "./scan.mjs";
 import { runJourney } from "./journey.mjs";
+
+async function scanOptional(args) {
+  try {
+    const mod = await import("./scan.mjs");
+    return await mod.scanCaptured(args);
+  } catch (error) {
+    const message = String(error?.message || error);
+    if (error?.code === "ERR_MODULE_NOT_FOUND" || message.includes("Cannot find package") || message.includes("Cannot find module")) {
+      return {
+        ran: false,
+        findings: [],
+        repairPlan: null,
+        coverage: "unknown",
+        boundary: { sellerRuntimeVerified: false },
+      };
+    }
+    throw error;
+  }
+}
 
 export async function directProbe({ intake, baseUrl, fixtureMode }) {
   const probed = await probeDeclarationAndResource({ baseUrl, intake, fixtureMode });
   const observed = probed.resourceProbe ? publicObservation(probed.resourceProbe) : null;
   return {
     arm: "direct_probe",
-    equipped: { deadlineMs: intake.maxEffort.deadlineMs, bodyBytes: intake.maxEffort.bodyBytes, redirectsFollowed: false, paymentSent: false },
+    equipped: {
+      deadlineMs: intake.maxEffort.deadlineMs,
+      totalResponseMs: intake.maxEffort.totalResponseMs,
+      bodyBytes: intake.maxEffort.bodyBytes,
+      totalBodyBytes: intake.maxEffort.totalBodyBytes,
+      redirects: intake.maxEffort.redirects,
+      redirectsFollowed: false,
+      paymentSent: false,
+    },
     status: observed?.status ?? null,
     byteLength: observed?.byteLength ?? 0,
     paths: observed?.paths || [],
@@ -23,7 +50,7 @@ export async function directProbe({ intake, baseUrl, fixtureMode }) {
 export async function openImplementation({ intake, baseUrl, fixtureMode }) {
   const probed = await probeDeclarationAndResource({ baseUrl, intake, fixtureMode });
   const declared = declaredRequiredPaths(probed.document, intake.resource, intake.method);
-  const scan = await scanCaptured({
+  const scan = await scanOptional({
     origin: intake.origin,
     method: intake.method,
     route: intake.resource,
@@ -68,6 +95,42 @@ export async function compareArms({ raw, intake, baseUrl, fixtureMode, retestFix
       "unforced_paid_handoff",
     ],
     notClaimed: "The direct probe can see the same missing path. The repair case adds the bound retest and the refusal to purchase.",
+    loopbackFix: repair.delivery?.loopbackFix === true,
+    deployedCounterpartyRepair: false,
+    sameInputQa: repair.delivery?.sameInputQa === true,
+    laterCallerReuse: false,
+    actualSourceCoverage: "unknown",
+    paymentSent: false,
+    recognizedRevenueAtomic: "0",
+  };
+}
+
+export async function compareBeforeAfter({ raw, beforeBaseUrl, afterBaseUrl }) {
+  const intake = normalizeIntake(raw);
+  const before = await runJourney({ intake: raw, baseUrl: beforeBaseUrl });
+  const repaired = await runJourney({ intake: raw, baseUrl: beforeBaseUrl, retestBaseUrl: afterBaseUrl });
+  return {
+    equallyEquipped: {
+      deadlineMs: intake.maxEffort.deadlineMs,
+      totalResponseMs: intake.maxEffort.totalResponseMs,
+      bodyBytes: intake.maxEffort.bodyBytes,
+      totalBodyBytes: intake.maxEffort.totalBodyBytes,
+      redirects: intake.maxEffort.redirects,
+      redirectsFollowed: false,
+      paymentSent: false,
+    },
+    beforeOutcome: before.classification.outcome,
+    beforeUseful: before.classification.useful === true,
+    afterUseful: repaired.repair?.useful === true,
+    usefulOutputChanged: before.classification.useful !== true && repaired.repair?.useful === true,
+    loopbackFix: repaired.delivery.loopbackFix === true,
+    deployedCounterpartyRepair: false,
+    counterpartyMutated: false,
+    sameInputQa: repaired.delivery.sameInputQa === true,
+    laterCallerReuse: false,
+    http200IsSuccess: false,
+    paidAuditRequired: false,
+    actualSourceCoverage: "unknown",
     paymentSent: false,
     recognizedRevenueAtomic: "0",
   };

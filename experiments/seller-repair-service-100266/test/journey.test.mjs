@@ -117,7 +117,9 @@ test("private sentinel, redirect, deadline, and unpaid 402 stay non-useful", asy
   assert.equal(redirected.classification.reason, "redirect_unfollowed");
   assert.equal(redirected.observed.redirectUnfollowed, true);
 
-  const slow = await journey("slow", { maxEffort: { probes: 2, bodyBytes: 4096, deadlineMs: 40 } });
+  const slow = await journey("slow", {
+    maxEffort: { probes: 2, bodyBytes: 4096, deadlineMs: 40, totalBodyBytes: 8192, totalResponseMs: 80, redirects: 0 },
+  });
   assert.equal(slow.classification.reason, "body_deadline");
   assert.equal(JSON.stringify(slow).includes(PRIVATE_MARKER), false);
 
@@ -144,11 +146,13 @@ test("authorized contribution supports correction, expiry, revocation, and indep
   assert.equal(result.contribution.accepted, true);
   assert.equal(result.contribution.existingKnowledgePath.receiptSharesReturned, 0);
   assert.equal(result.contribution.spendingGrantTransferred, false);
+  const boundTarget = { origin: result.target.origin, method: result.target.method, resource: result.target.resource };
   const replay = replayContribution({
     contribution: result.contribution,
     now: Date.parse(result.contribution.row.expiresAt) - 1000,
     taskDigest: result.taskDigest,
     sdk: result.declaredSdk,
+    target: boundTarget,
   });
   assert.equal(replay.reused, true);
   assert.equal(replay.usefulTransferred, false);
@@ -159,6 +163,7 @@ test("authorized contribution supports correction, expiry, revocation, and indep
     revocations: [revoked],
     taskDigest: result.taskDigest,
     sdk: result.declaredSdk,
+    target: boundTarget,
   });
   assert.equal(afterRevoke.reason, "revoked");
   const corrected = correctContribution(result.contribution, {
@@ -173,6 +178,7 @@ test("authorized contribution supports correction, expiry, revocation, and indep
     corrections: [corrected.control],
     taskDigest: result.taskDigest,
     sdk: result.declaredSdk,
+    target: boundTarget,
   });
   assert.equal(afterCorrect.reason, "corrected");
   const expired = replayContribution({
@@ -180,14 +186,23 @@ test("authorized contribution supports correction, expiry, revocation, and indep
     now: Date.parse(result.contribution.row.expiresAt) + 1,
     taskDigest: result.taskDigest,
     sdk: result.declaredSdk,
+    target: boundTarget,
   });
   assert.equal(expired.reason, "expired");
   const stale = replayContribution({
     contribution: result.contribution,
     taskDigest: result.taskDigest,
     sdk: "python-httpx@1",
+    target: boundTarget,
   });
   assert.equal(stale.reason, "stale_applicability");
+  const moved = replayContribution({
+    contribution: result.contribution,
+    taskDigest: result.taskDigest,
+    sdk: result.declaredSdk,
+    target: { ...boundTarget, resource: "/catalog/items" },
+  });
+  assert.equal(moved.reason, "stale_applicability");
   const withheld = await journey("private", {}, { authorizeContribution: true });
   assert.equal(withheld.contribution.accepted, false);
   assert.equal(withheld.contribution.reason, "private_material");
@@ -278,14 +293,14 @@ test("two cold processes use the retained case without producer state", async ()
   assert.equal(keptBody.reused, true);
   assert.equal(keptBody.privateImported, false);
   assert.equal(keptBody.paymentSent, false);
-  assert.equal(stale.code, 0, stale.stderr);
+  assert.equal(stale.code, 2, stale.stderr);
   const staleBody = JSON.parse(stale.stdout);
   assert.equal(staleBody.reason, "stale_applicability");
   assert.equal(staleBody.currentTask, true);
   assert.equal(staleBody.currentSdk, false);
   assert.equal(staleBody.repairApplied, false);
   assert.equal(staleBody.usefulTransferred, false);
-  assert.equal(otherTask.code, 0, otherTask.stderr);
+  assert.equal(otherTask.code, 2, otherTask.stderr);
   const otherBody = JSON.parse(otherTask.stdout);
   assert.equal(otherBody.reason, "stale_applicability");
   assert.equal(otherBody.currentTask, false);

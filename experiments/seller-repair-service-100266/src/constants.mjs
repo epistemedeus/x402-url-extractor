@@ -14,6 +14,10 @@ export const PAID_PRICE_ATOMIC = "10000";
 
 export const CATALOG_SKU = "WIDGET-1";
 export const PRIVATE_MARKER = "PRIVATE_SENTINEL_do_not_keep";
+export const PUBLIC_READONLY_ORIGIN = "https://agents.samedaydesk.com";
+export const PUBLIC_READONLY_RESOURCES = Object.freeze([
+  "/.well-known/public-acquisition/index.json",
+]);
 
 export const AUDIT_ADDS = Object.freeze([
   "unpaid_challenge_schema",

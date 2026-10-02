@@ -28,6 +28,25 @@ if (!casePath) {
   process.exit(1);
 }
 const raw = JSON.parse(await readFile(casePath, "utf8"));
+if (command === "readonly") {
+  const { runJourney: run } = await import("../src/journey.mjs");
+  const result = await run({ intake: raw, baseUrl: raw.origin });
+  process.stdout.write(`${JSON.stringify(result)}\n`);
+  process.exit(result.paymentSent === false && result.delivery?.deployedCounterpartyRepair === false ? 0 : 1);
+}
+if (command === "receive") {
+  const base = arg("--base");
+  if (!base) {
+    process.stderr.write("base_required\n");
+    process.exit(1);
+  }
+  const { runJourney: run } = await import("../src/journey.mjs");
+  const result = await run({ intake: raw, baseUrl: base, retestBaseUrl: arg("--retest-base") });
+  process.stdout.write(`${JSON.stringify(result)}\n`);
+  const usefulRepair = result.repair?.useful === true;
+  const usefulObservation = result.classification.useful === true && !result.repair;
+  process.exit(usefulRepair || usefulObservation ? 0 : 1);
+}
 const seller = await startFixtureSeller();
 try {
   if (command === "reproduce") {
