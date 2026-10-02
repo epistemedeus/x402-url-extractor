@@ -162,6 +162,39 @@
           ]
         }
       ]
+    },
+    {
+      "id": "seller-repair-external-consumer",
+      "version": "0.4.1",
+      "filename": "seller-repair-external-consumer-0.4.1.tar.gz",
+      "cwd": ".",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "--input-type=module",
+            "-e",
+            "await import('data:text/javascript;base64,'+Buffer.from(process.argv.slice(1).join('')).toString('base64'))",
+            "\nimport assert from 'node:assert/strict';\nimport { createServer } from 'node:http';\nimport { spawn } from 'node:child_process';\nimport { writeFile } from 'node:fs/promises';\nimport { join } from 'node:path';\nconst cli=join(process.cwd(),'package/bin/caller-deliver.mjs');\nconst server=createServer((req,res)=>{\n  assert.equal(req.headers['payment-signature'],undefined);\n  res.writeHead(200,{'content",
+            "-type':'application/json'});\n  res.end(JSON.stringify(req.url==='/v1/gamma'?{note:'still-up'}:{status:'ready'}));\n});\nawait new Promise(r=>server.listen(0,'127.0.0.1',r));\nconst baseUrl='http://127.0.0.1:'+server.address().port;\nconst request=name=>({schema:'samedaydesk.seller-repair-caller-request.v1',callerId:'cold-'+name,\n task:'Check whether GET /v1/'+name+' supplies the required status field.",
+            "',origin:'https://widget.example',\n operation:'GET /v1/'+name,sdk:'node-https@22',runtime:'node/'+process.versions.node,\n expect:{path:'status',value:'ready'},question:'useful_output',paidIntent:false,\n limits:{probes:4,bodyBytes:4096,deadlineMs:1000,totalBodyBytes:16384,totalResponseMs:4000,redirects:0,outputBytes:65536},\n probeConsent:{class:'loopback',confirmed:true,baseUrl}});\nasync function r",
+            "un(args){return new Promise((done,fail)=>{\n const p=spawn(process.execPath,[cli,...args],{env:{PATH:process.env.PATH},stdio:['ignore','pipe','pipe']});\n let out='',err='';const timer=setTimeout(()=>p.kill('SIGKILL'),15000);\n p.stdout.on('data',b=>{out+=b;if(out.length>131072)p.kill('SIGKILL');});\n p.stderr.on('data',b=>{err+=b;if(err.length>16384)p.kill('SIGKILL');});\n p.once('error',e=>{clearTime",
+            "out(timer);fail(e);});\n p.once('close',code=>{clearTimeout(timer);assert.equal(code,0,err||out);done(JSON.parse(out));});\n});}\ntry{\n for(const name of ['alpha','beta','gamma']){\n  const path=join(process.cwd(),'cold041-'+name+'.json');await writeFile(path,JSON.stringify(request(name)));\n  const r=await run(['deliver','--request',path,'--out','cold041-'+name]);\n  assert.equal(r.operationId,'GET /v1",
+            "/'+name);assert.equal(r.classification.useful,name!=='gamma');\n  assert.equal(r.paymentSent,false);assert.equal(r.fixtureTransport,false);\n  if(name==='gamma')assert.equal(r.classification.reason,'missing_field_not_paid_demand');\n }\n const laterPath=join(process.cwd(),'cold041-later.json');\n await writeFile(laterPath,JSON.stringify({...request('gamma'),callerId:'cold-alpha'}));\n const later=await ",
+            "run(['later','--artifact','cold041-alpha/regression.json','--caller',laterPath]);\n assert.equal(later.executed,true);assert.equal(later.predicateApplies,false);assert.equal(later.reason,'stale_applicability');\n console.log(JSON.stringify({loopbackTaskReceiving:true,usefulPositiveCount:2,usefulNegativeCount:1,\n   laterChangedInputRefused:true,actualCustomerUse:false,paymentSent:false}));\n}finally{s",
+            "erver.closeAllConnections();await new Promise(r=>server.close(r));}\n"
+          ],
+          "stdoutIncludes": [
+            "\"loopbackTaskReceiving\":true",
+            "\"usefulPositiveCount\":2",
+            "\"usefulNegativeCount\":1",
+            "\"laterChangedInputRefused\":true",
+            "\"actualCustomerUse\":false",
+            "\"paymentSent\":false"
+          ]
+        }
+      ],
+      "note": "Automatic receiving supplies owner QA tasks to a loopback server. Actual consumers supply their own request.json; this is not customer use."
     }
   ]
 }
