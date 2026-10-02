@@ -18,7 +18,8 @@ for(let i=2;i<process.argv.length;i+=2){
 const sourceCommit=args['--source-commit'];
 if(!/^[a-f0-9]{40}$/.test(sourceCommit || '')) fail('exact_source_commit_required');
 const out=path.resolve(args['--out'] || path.join(pkg,'export/public'));
-const id='task-demand-100339',version='0.1.0';
+const id='task-demand-100339',version=JSON.parse(readFileSync(path.join(pkg,'package.json'))).version;
+if(!/^\d+\.\d+\.\d+$/.test(version)) fail('package_version_rejected');
 const members=['LICENSE','README.md','SOURCE-NOTICE.txt','PIN.json','package.json','bin/task-demand.mjs',
   'src/bounds.mjs','src/export.mjs','src/project.mjs','src/observer-integration.mjs',
   'vendor/causal-contract.mjs','vendor/economics/economics.mjs','vendor/economics/constants.mjs','vendor/economics/errors.mjs',

@@ -1,6 +1,6 @@
 {
   "name": "task-demand-100339",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "license": "MIT",
   "engines": { "node": ">=22.20.0" },

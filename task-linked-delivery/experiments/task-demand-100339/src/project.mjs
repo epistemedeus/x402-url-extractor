@@ -201,7 +201,8 @@ export function projectBundle(bundle, { tick = budget(), priorReportId = null } 
       if (e.result === 'challenge') stages.valid_delivery.reasons.push('challenge_is_not_delivery');
     }
     const candidateRetains = rows.retention.filter(x => x.row.action === 'retain' && x.row.taskRef === ref.taskRef && x.row.operationId === ref.operationId && x.row.route === e.route && x.row.method === e.method);
-    const retains = candidateRetains.filter(x => Date.parse(x.row.createdAt) >= Date.parse(e.ts) && Date.parse(x.row.createdAt) <= asOf);
+    const responseStart = Date.parse(e.ts) - (e.durationMs || 0);
+    const retains = candidateRetains.filter(x => Date.parse(x.row.createdAt) >= responseStart && Date.parse(x.row.createdAt) <= asOf);
     diagnostics.lateRecords += candidateRetains.filter(x => Date.parse(x.row.createdAt) > asOf).length;
     retains.sort((a,b) => a.row.createdAt.localeCompare(b.row.createdAt) || a.row.grantId.localeCompare(b.row.grantId));
     const ambiguous = peers.get(ref.taskRef + ':' + ref.operationId) !== 1 || retains.length > 1 && retains.at(-1).row.createdAt === retains.at(-2).row.createdAt;
@@ -217,7 +218,8 @@ export function projectBundle(bundle, { tick = budget(), priorReportId = null } 
       // not support this route. Never fabricate its validator verdict.
       if (settlement && r.criterion !== 'unknown' && e.result === 'paid_success' && e.status >= 200 && e.status < 300) {
         stages.valid_delivery = observed([r.recordId], { at: r.createdAt,
-          authority: 'existing_receipt_retention_contract', timing: 'retention_created_after_causal_attempt' });
+          authority: 'existing_receipt_retention_contract', timing: Date.parse(r.createdAt) < Date.parse(e.ts)
+            ? 'retention_created_during_causal_response' : 'retention_created_after_causal_attempt' });
       }
       const revoked = rows.retention.filter(x => x.row.action === 'revoke' && x.row.targetId === r.grantId && Date.parse(x.row.at) <= asOf);
       const expired = Date.parse(r.expiresAt) <= asOf;

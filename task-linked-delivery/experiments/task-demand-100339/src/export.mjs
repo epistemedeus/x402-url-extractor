@@ -25,6 +25,12 @@ export function stripRecord(row, plane) {
     && ['request','challenge','validation_failure','service_failure','paid_route_response','paid_success','replay_success'].includes(row.result)
     && Number.isInteger(row.status) && row.status >= 100 && row.status <= 599) {
     const out = pick(row, ['v','id','ts','method','route','result','status']);
+    // Native v3 ts is response finish, while receipt retention runs during
+    // res.end. Preserve the producer's measured interval, not a guessed grace.
+    if (row.durationMs !== undefined) {
+      if (!Number.isSafeInteger(row.durationMs) || row.durationMs < 0 || row.durationMs > Date.parse(row.ts)) return null;
+      out.durationMs = row.durationMs;
+    }
     // These are existing producer classifications, never identity join keys.
     if (['internal','owner_monitor','external','scanner','crawler'].includes(row.originClass)) out.originClass = row.originClass;
     if (/^[a-z_]{1,64}$/.test(row.paymentFailureCode || '')) out.paymentFailureCode = row.paymentFailureCode;

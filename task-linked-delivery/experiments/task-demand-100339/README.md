@@ -43,7 +43,11 @@ receipt route. Its valid delivery instead requires the received receipt
 retention contract plus exact causal task/operation and runtime reconciliation.
 
 Stages are attempt, valid delivery, claimed usefulness, retention, later use,
-and settlement. Native forward rows have no timestamps; same-response delivery
+and settlement. Native v3 `ts` records HTTP response finish. When the existing
+producer supplies its measured `durationMs`, retention created inside that
+response interval can join the unique causal attempt. Absent duration preserves
+the original finish-time lower bound; no guessed timing allowance is used.
+Native forward rows have no timestamps; same-response delivery
 uses the causal attempt's timestamp. Forward retained use alone leaves later
 use unknown because it lacks time and grant ownership. Read metrics join by
 the existing retained record id and exact task ref. Multiple causal attempts
@@ -95,3 +99,8 @@ module. A cold candidate's provenance records its actual source commit, member
 hashes, archive hash and inventory; it is not a production hosting receipt.
 `src/observer-integration.mjs` exposes `exportObserverSource` and
 `projectObserverEvidence` for Root's isolated handoff. Root owns shared routes.
+
+The original `export/public` candidate remains the received 0.1.0 archive.
+Sol395's reviewed 0.1.1 candidate and native receiving evidence live separately
+at `docs/reviews/sol395-causal-task-receiving`. Root must pin its source commit
+and archive hash when adopting the measured response interval fix.
