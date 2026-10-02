@@ -1,0 +1,538 @@
+[
+  {
+    "name": "read_task_mismatch",
+    "reportId": "d7cabd6c740a09edd00d745735c162b89f9a548170ec5aab45ede9fe11472882",
+    "denominator": {
+      "unit": "server_bound_attempt",
+      "observed": 1,
+      "covered": true,
+      "reasons": [],
+      "allMarketTraffic": null
+    },
+    "journeys": [
+      {
+        "eventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+        "retainedState": "active",
+        "stages": {
+          "attempt": {
+            "status": "observed",
+            "reasons": []
+          },
+          "valid_delivery": {
+            "status": "observed",
+            "reasons": []
+          },
+          "claimed_usefulness": {
+            "status": "observed",
+            "reasons": [],
+            "current": true
+          },
+          "retention": {
+            "status": "observed",
+            "reasons": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_later_read",
+              "read_task_mismatch"
+            ]
+          },
+          "settlement": {
+            "status": "observed",
+            "reasons": []
+          }
+        }
+      }
+    ],
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "missingCausalSide": 0,
+      "bindingConflicts": 0,
+      "wrongTaskOrOperation": 0,
+      "ambiguousRetention": 0,
+      "lateRecords": 0,
+      "excludedSources": [],
+      "unboundEvents": []
+    },
+    "recognizedRevenueAtomic": "0"
+  },
+  {
+    "name": "partial_attempts",
+    "reportId": "a5f7d7c43c9e02dd4239f0f86d81ab4233a8b45c67ebc23e8b9a441b7ae65d2c",
+    "denominator": {
+      "unit": "server_bound_attempt",
+      "observed": 1,
+      "covered": false,
+      "reasons": [
+        "attempts_not_covered"
+      ],
+      "allMarketTraffic": null
+    },
+    "journeys": [
+      {
+        "eventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+        "retainedState": "active",
+        "stages": {
+          "attempt": {
+            "status": "observed",
+            "reasons": []
+          },
+          "valid_delivery": {
+            "status": "observed",
+            "reasons": []
+          },
+          "claimed_usefulness": {
+            "status": "observed",
+            "reasons": [],
+            "current": true
+          },
+          "retention": {
+            "status": "observed",
+            "reasons": []
+          },
+          "later_use": {
+            "status": "observed",
+            "reasons": []
+          },
+          "settlement": {
+            "status": "observed",
+            "reasons": []
+          }
+        }
+      }
+    ],
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "missingCausalSide": 0,
+      "bindingConflicts": 0,
+      "wrongTaskOrOperation": 0,
+      "ambiguousRetention": 0,
+      "lateRecords": 0,
+      "excludedSources": [],
+      "unboundEvents": []
+    },
+    "recognizedRevenueAtomic": "0"
+  },
+  {
+    "name": "conflicting_settlement",
+    "reportId": "10a7c6f2e14a50982864461c825fb613428cece294864fb9d7ad165a40128612",
+    "denominator": {
+      "unit": "server_bound_attempt",
+      "observed": 1,
+      "covered": false,
+      "reasons": [
+        "conflicting_evidence"
+      ],
+      "allMarketTraffic": null
+    },
+    "journeys": [
+      {
+        "eventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+        "retainedState": "active",
+        "stages": {
+          "attempt": {
+            "status": "observed",
+            "reasons": []
+          },
+          "valid_delivery": {
+            "status": "unknown",
+            "reasons": [
+              "no_schema_valid_delivery",
+              "unsupported_target",
+              "http200_is_not_delivery_authority"
+            ]
+          },
+          "claimed_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "claim_without_valid_delivery"
+            ]
+          },
+          "retention": {
+            "status": "observed",
+            "reasons": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "read_before_retention_after_expiry_revocation_or_without_usefulness"
+            ]
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "no_runtime_reconciliation"
+            ]
+          }
+        }
+      }
+    ],
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 1,
+      "rejectedRecords": 0,
+      "missingCausalSide": 0,
+      "bindingConflicts": 0,
+      "wrongTaskOrOperation": 0,
+      "ambiguousRetention": 0,
+      "lateRecords": 0,
+      "excludedSources": [],
+      "unboundEvents": []
+    },
+    "recognizedRevenueAtomic": "0"
+  },
+  {
+    "name": "conflicting_usefulness",
+    "reportId": "1c175e4ef0c0df73d4f25bef7253077d0f2fe60d46b62230140979a5b3e1c701",
+    "denominator": {
+      "unit": "server_bound_attempt",
+      "observed": 1,
+      "covered": false,
+      "reasons": [
+        "conflicting_evidence"
+      ],
+      "allMarketTraffic": null
+    },
+    "journeys": [
+      {
+        "eventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+        "retainedState": "unknown",
+        "stages": {
+          "attempt": {
+            "status": "observed",
+            "reasons": []
+          },
+          "valid_delivery": {
+            "status": "unknown",
+            "reasons": [
+              "no_schema_valid_delivery",
+              "unsupported_target",
+              "http200_is_not_delivery_authority"
+            ]
+          },
+          "claimed_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_operation_contract_usefulness"
+            ]
+          },
+          "retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_bound_retention"
+            ]
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_later_read"
+            ]
+          },
+          "settlement": {
+            "status": "observed",
+            "reasons": []
+          }
+        }
+      }
+    ],
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 1,
+      "rejectedRecords": 0,
+      "missingCausalSide": 0,
+      "bindingConflicts": 0,
+      "wrongTaskOrOperation": 0,
+      "ambiguousRetention": 0,
+      "lateRecords": 0,
+      "excludedSources": [],
+      "unboundEvents": []
+    },
+    "recognizedRevenueAtomic": "0"
+  },
+  {
+    "name": "caller_assertion",
+    "reportId": "5985ca7c755a90aa5a61ec4612239a440188bf2a9764b9de15ff8a9adfd2a3d7",
+    "denominator": {
+      "unit": "server_bound_attempt",
+      "observed": 0,
+      "covered": false,
+      "reasons": [
+        "attempts_not_covered",
+        "causal_population_incomplete"
+      ],
+      "allMarketTraffic": null
+    },
+    "journeys": [],
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 1,
+      "missingCausalSide": 1,
+      "bindingConflicts": 0,
+      "wrongTaskOrOperation": 0,
+      "ambiguousRetention": 0,
+      "lateRecords": 0,
+      "excludedSources": [],
+      "unboundEvents": []
+    },
+    "recognizedRevenueAtomic": "0"
+  },
+  {
+    "name": "outside_response_interval",
+    "reportId": "41edc0fe55830d0e57decd34bbd6b4a37f493dacaa678d88132a6cff58dd7845",
+    "denominator": {
+      "unit": "server_bound_attempt",
+      "observed": 1,
+      "covered": true,
+      "reasons": [],
+      "allMarketTraffic": null
+    },
+    "journeys": [
+      {
+        "eventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+        "retainedState": "unknown",
+        "stages": {
+          "attempt": {
+            "status": "observed",
+            "reasons": []
+          },
+          "valid_delivery": {
+            "status": "unknown",
+            "reasons": [
+              "no_schema_valid_delivery",
+              "unsupported_target",
+              "http200_is_not_delivery_authority"
+            ]
+          },
+          "claimed_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_operation_contract_usefulness"
+            ]
+          },
+          "retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_bound_retention"
+            ]
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_later_read"
+            ]
+          },
+          "settlement": {
+            "status": "observed",
+            "reasons": []
+          }
+        }
+      }
+    ],
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "missingCausalSide": 0,
+      "bindingConflicts": 0,
+      "wrongTaskOrOperation": 0,
+      "ambiguousRetention": 0,
+      "lateRecords": 0,
+      "excludedSources": [],
+      "unboundEvents": []
+    },
+    "recognizedRevenueAtomic": "0"
+  },
+  {
+    "name": "tenant_drift",
+    "reportId": "1dfb7250c070cd411066e266971d96baed26a6980cb839cb2b1092e953a5dbdb",
+    "denominator": {
+      "unit": "server_bound_attempt",
+      "observed": 1,
+      "covered": true,
+      "reasons": [],
+      "allMarketTraffic": null
+    },
+    "journeys": [
+      {
+        "eventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+        "retainedState": "unknown",
+        "stages": {
+          "attempt": {
+            "status": "observed",
+            "reasons": []
+          },
+          "valid_delivery": {
+            "status": "unknown",
+            "reasons": [
+              "no_schema_valid_delivery",
+              "unsupported_target",
+              "http200_is_not_delivery_authority"
+            ]
+          },
+          "claimed_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_operation_contract_usefulness"
+            ]
+          },
+          "retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_bound_retention"
+            ]
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_later_read"
+            ]
+          },
+          "settlement": {
+            "status": "observed",
+            "reasons": []
+          }
+        }
+      }
+    ],
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "missingCausalSide": 0,
+      "bindingConflicts": 0,
+      "wrongTaskOrOperation": 0,
+      "ambiguousRetention": 0,
+      "lateRecords": 0,
+      "excludedSources": [
+        "native-retention"
+      ],
+      "unboundEvents": []
+    },
+    "recognizedRevenueAtomic": "0"
+  },
+  {
+    "name": "scope_drift",
+    "reportId": "66c2e3ee9fe0c2d4ac92d93f92cd7188c5a17a4aee57b59904e7fe769865261d",
+    "denominator": {
+      "unit": "server_bound_attempt",
+      "observed": 1,
+      "covered": false,
+      "reasons": [
+        "attempts_not_covered",
+        "task_refs_not_covered"
+      ],
+      "allMarketTraffic": null
+    },
+    "journeys": [
+      {
+        "eventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+        "retainedState": "active",
+        "stages": {
+          "attempt": {
+            "status": "observed",
+            "reasons": []
+          },
+          "valid_delivery": {
+            "status": "observed",
+            "reasons": []
+          },
+          "claimed_usefulness": {
+            "status": "observed",
+            "reasons": [],
+            "current": true
+          },
+          "retention": {
+            "status": "observed",
+            "reasons": []
+          },
+          "later_use": {
+            "status": "observed",
+            "reasons": []
+          },
+          "settlement": {
+            "status": "observed",
+            "reasons": []
+          }
+        }
+      }
+    ],
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "missingCausalSide": 0,
+      "bindingConflicts": 0,
+      "wrongTaskOrOperation": 0,
+      "ambiguousRetention": 0,
+      "lateRecords": 0,
+      "excludedSources": [],
+      "unboundEvents": []
+    },
+    "recognizedRevenueAtomic": "0"
+  },
+  {
+    "name": "time_drift",
+    "reportId": "18a929dca02ae1b22725f5e494fe4da2ea2c293d04190c0579ec950bb36c84ec",
+    "denominator": {
+      "unit": "server_bound_attempt",
+      "observed": 1,
+      "covered": true,
+      "reasons": [],
+      "allMarketTraffic": null
+    },
+    "journeys": [
+      {
+        "eventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+        "retainedState": "active",
+        "stages": {
+          "attempt": {
+            "status": "observed",
+            "reasons": []
+          },
+          "valid_delivery": {
+            "status": "observed",
+            "reasons": []
+          },
+          "claimed_usefulness": {
+            "status": "observed",
+            "reasons": [],
+            "current": true
+          },
+          "retention": {
+            "status": "observed",
+            "reasons": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_later_read"
+            ]
+          },
+          "settlement": {
+            "status": "observed",
+            "reasons": []
+          }
+        }
+      }
+    ],
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "missingCausalSide": 0,
+      "bindingConflicts": 0,
+      "wrongTaskOrOperation": 0,
+      "ambiguousRetention": 0,
+      "lateRecords": 0,
+      "excludedSources": [],
+      "unboundEvents": []
+    },
+    "recognizedRevenueAtomic": "0"
+  }
+]

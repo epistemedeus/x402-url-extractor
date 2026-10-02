@@ -1,0 +1,292 @@
+{
+  "schema": "sol395.native-ports.v1",
+  "observedAt": "2026-10-02T16:48:45.714Z",
+  "operations": [
+    {
+      "generation": "a",
+      "workerPid": 316575,
+      "workerComm": "node",
+      "executionCalls": 1,
+      "resultDecision": "found",
+      "actualUsefulResult": true,
+      "callerUse": {
+        "requirement": "compute the source receipt fee without another execution",
+        "observedFeeWei": "42000",
+        "passed": true
+      },
+      "paidBoundary": "fixture_payment_response_and_fixture_transfer_readback",
+      "grantAccepted": true,
+      "grantReason": null,
+      "settlementPortReason": "unbound_artifact",
+      "laterReadAccepted": true,
+      "wrongResourceReason": "wrong_resource",
+      "previousGrantReadAfterRestart": false,
+      "previousGrantWithdrawn": false,
+      "secretsRetained": false,
+      "productionHosted": false,
+      "customerAcquired": false,
+      "recognizedRevenueAtomic": "0"
+    },
+    {
+      "generation": "b",
+      "workerPid": 316917,
+      "workerComm": "node",
+      "executionCalls": 1,
+      "resultDecision": "not_found",
+      "actualUsefulResult": false,
+      "callerUse": {
+        "requirement": "determine mined receipt availability",
+        "observed": "not_found",
+        "passed": true
+      },
+      "paidBoundary": "fixture_payment_response_and_fixture_transfer_readback",
+      "grantAccepted": true,
+      "grantReason": null,
+      "settlementPortReason": "unbound_artifact",
+      "laterReadAccepted": true,
+      "wrongResourceReason": "wrong_resource",
+      "previousGrantReadAfterRestart": true,
+      "previousGrantWithdrawn": true,
+      "secretsRetained": false,
+      "productionHosted": false,
+      "customerAcquired": false,
+      "recognizedRevenueAtomic": "0"
+    },
+    {
+      "generation": "free",
+      "workerPid": 317390,
+      "workerComm": "node",
+      "executionCalls": 1,
+      "resultDecision": "found",
+      "actualUsefulResult": true,
+      "callerUse": {
+        "requirement": "compute the source receipt fee without another execution",
+        "observedFeeWei": "42000",
+        "passed": true
+      },
+      "paidBoundary": "none",
+      "grantAccepted": false,
+      "grantReason": "settlement_unverified",
+      "settlementPortReason": null,
+      "laterReadAccepted": false,
+      "wrongResourceReason": null,
+      "previousGrantReadAfterRestart": false,
+      "previousGrantWithdrawn": false,
+      "secretsRetained": false,
+      "productionHosted": false,
+      "customerAcquired": false,
+      "recognizedRevenueAtomic": "0"
+    }
+  ],
+  "before": [
+    {
+      "eventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+      "retainedState": "active",
+      "stages": {
+        "attempt": {
+          "status": "observed",
+          "reasons": []
+        },
+        "valid_delivery": {
+          "status": "observed",
+          "reasons": []
+        },
+        "claimed_usefulness": {
+          "status": "observed",
+          "reasons": [],
+          "current": true
+        },
+        "retention": {
+          "status": "observed",
+          "reasons": []
+        },
+        "later_use": {
+          "status": "observed",
+          "reasons": []
+        },
+        "settlement": {
+          "status": "observed",
+          "reasons": []
+        }
+      }
+    }
+  ],
+  "after": [
+    {
+      "eventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+      "retainedState": "revoked",
+      "stages": {
+        "attempt": {
+          "status": "observed",
+          "reasons": []
+        },
+        "valid_delivery": {
+          "status": "observed",
+          "reasons": []
+        },
+        "claimed_usefulness": {
+          "status": "observed",
+          "reasons": [
+            "grant_revoked"
+          ],
+          "current": false
+        },
+        "retention": {
+          "status": "observed",
+          "reasons": []
+        },
+        "later_use": {
+          "status": "observed",
+          "reasons": []
+        },
+        "settlement": {
+          "status": "observed",
+          "reasons": []
+        }
+      }
+    },
+    {
+      "eventId": "b1ae4eb2-7c82-4e6d-8a77-6fac5db8650d",
+      "retainedState": "active",
+      "stages": {
+        "attempt": {
+          "status": "observed",
+          "reasons": []
+        },
+        "valid_delivery": {
+          "status": "observed",
+          "reasons": []
+        },
+        "claimed_usefulness": {
+          "status": "observed",
+          "reasons": [],
+          "current": true
+        },
+        "retention": {
+          "status": "observed",
+          "reasons": []
+        },
+        "later_use": {
+          "status": "observed",
+          "reasons": []
+        },
+        "settlement": {
+          "status": "observed",
+          "reasons": []
+        }
+      }
+    }
+  ],
+  "free": [
+    {
+      "eventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+      "retainedState": "revoked",
+      "stages": {
+        "attempt": {
+          "status": "observed",
+          "reasons": []
+        },
+        "valid_delivery": {
+          "status": "observed",
+          "reasons": []
+        },
+        "claimed_usefulness": {
+          "status": "observed",
+          "reasons": [
+            "grant_revoked"
+          ],
+          "current": false
+        },
+        "retention": {
+          "status": "observed",
+          "reasons": []
+        },
+        "later_use": {
+          "status": "observed",
+          "reasons": []
+        },
+        "settlement": {
+          "status": "observed",
+          "reasons": []
+        }
+      }
+    },
+    {
+      "eventId": "89fc781b-6d23-47d8-9d34-1351013393e8",
+      "retainedState": "unknown",
+      "stages": {
+        "attempt": {
+          "status": "observed",
+          "reasons": []
+        },
+        "valid_delivery": {
+          "status": "unknown",
+          "reasons": [
+            "no_schema_valid_delivery",
+            "http200_is_not_delivery_authority"
+          ]
+        },
+        "claimed_usefulness": {
+          "status": "unknown",
+          "reasons": [
+            "no_operation_contract_usefulness"
+          ]
+        },
+        "retention": {
+          "status": "unknown",
+          "reasons": [
+            "no_bound_retention"
+          ]
+        },
+        "later_use": {
+          "status": "unknown",
+          "reasons": [
+            "no_authorized_later_read"
+          ]
+        },
+        "settlement": {
+          "status": "unknown",
+          "reasons": [
+            "no_runtime_reconciliation"
+          ]
+        }
+      }
+    },
+    {
+      "eventId": "b1ae4eb2-7c82-4e6d-8a77-6fac5db8650d",
+      "retainedState": "active",
+      "stages": {
+        "attempt": {
+          "status": "observed",
+          "reasons": []
+        },
+        "valid_delivery": {
+          "status": "observed",
+          "reasons": []
+        },
+        "claimed_usefulness": {
+          "status": "observed",
+          "reasons": [],
+          "current": true
+        },
+        "retention": {
+          "status": "observed",
+          "reasons": []
+        },
+        "later_use": {
+          "status": "observed",
+          "reasons": []
+        },
+        "settlement": {
+          "status": "observed",
+          "reasons": []
+        }
+      }
+    }
+  ],
+  "syntheticPaymentAndRpc": true,
+  "actualDurableJournalOperations": true,
+  "productionJournalEnrolled": false,
+  "measurementAuthenticity": "owned_native_ports_with_fixture_payment_and_rpc",
+  "recognizedRevenueAtomic": "0"
+}

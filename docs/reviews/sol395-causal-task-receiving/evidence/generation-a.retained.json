@@ -1,0 +1,1114 @@
+{
+  "schema": "samedaydesk.task-demand.retained.v1",
+  "bundle": {
+    "schema": "samedaydesk.task-demand.bundle.v1",
+    "question": {
+      "id": "native-two-generations",
+      "text": "Which caller-owned attempts retain an authorized useful result across a process restart?",
+      "populationId": "caller-owned-sol395",
+      "from": "2026-10-02T16:48:42.575Z",
+      "to": "2026-10-02T16:48:43.661Z",
+      "asOf": "2026-10-02T16:48:43.661Z",
+      "operationIds": [
+        "normalized-transaction-receipt"
+      ],
+      "cohorts": [
+        "external_unknown"
+      ]
+    },
+    "sources": [
+      {
+        "id": "native-attempts",
+        "plane": "attempts",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol395",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "external_unknown"
+          ]
+        },
+        "from": "2026-10-02T16:48:42.575Z",
+        "to": "2026-10-02T16:48:43.661Z",
+        "asOf": "2026-10-02T16:48:43.661Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.task-demand.export.v1",
+        "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+        "records": [
+          {
+            "v": 3,
+            "id": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+            "ts": "2026-10-02T16:48:43.575Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "result": "paid_success",
+            "status": 200,
+            "durationMs": 36,
+            "originClass": "internal"
+          }
+        ],
+        "intake": {
+          "rawBytes": 897,
+          "rawSha256": "eacc5dba49a5501f2df050051617c60484b94ee3de6898bf7c49de3f1f037e22",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-task-refs",
+        "plane": "task_refs",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol395",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "external_unknown"
+          ]
+        },
+        "from": "2026-10-02T16:48:42.575Z",
+        "to": "2026-10-02T16:48:43.661Z",
+        "asOf": "2026-10-02T16:48:43.661Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.task-demand.export.v1",
+        "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+        "records": [
+          {
+            "cohort": "external_unknown",
+            "commerceEventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+            "eventId": "5dc2a4a9-bae5-45e2-9d44-dde2aff47407",
+            "operationId": "normalized-transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+            "taskRef": "tef98ccb2e3d0a478958458711c3730727c34246959bfc96c13ed5bc177ee12",
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          }
+        ],
+        "intake": {
+          "rawBytes": 377,
+          "rawSha256": "7c86d75c513853acd469392a53ad0fa7c12f65d33be1f55164f38a7ab0001b67",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-forward",
+        "plane": "forward",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol395",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "external_unknown"
+          ]
+        },
+        "from": "2026-10-02T16:48:42.575Z",
+        "to": "2026-10-02T16:48:43.661Z",
+        "asOf": "2026-10-02T16:48:43.661Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.task-demand.export.v1",
+        "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+        "records": [
+          {
+            "brand": "samedaydesk",
+            "cohort": "external_unknown",
+            "commerceEventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+            "evidencePlane": "journey_marker",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": null,
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "call",
+            "usefulness": null,
+            "validatorAuthority": null,
+            "validatorSource": null,
+            "validatorVerdict": null,
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "external_unknown",
+            "commerceEventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "306f27ce-8abf-48a7-ae10-6bc8469c4c41",
+            "evidencePlane": "transport_observation",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": "2bdeb60f52430df1968af8b1022f81adf2e7d42607a9d8b07d69ad90d17aa06a",
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "transport",
+            "usefulness": "unknown",
+            "validatorAuthority": "none",
+            "validatorSource": "http_runtime_not_checked",
+            "validatorVerdict": "not_checked",
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "external_unknown",
+            "commerceEventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+            "correctionOf": null,
+            "deliveryClass": "unsupported_target",
+            "eventId": "091d7070-38a6-42c8-84f7-0edb3cbf37f4",
+            "evidencePlane": "schema_delivery",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": "2bdeb60f52430df1968af8b1022f81adf2e7d42607a9d8b07d69ad90d17aa06a",
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "delivery",
+            "usefulness": "unknown",
+            "validatorAuthority": "merchant_declared_schema",
+            "validatorSource": "caller_observed_http_bytes",
+            "validatorVerdict": "unknown",
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          }
+        ],
+        "intake": {
+          "rawBytes": 2655,
+          "rawSha256": "8aaf102c9e319bb267a161ff688094f18f2ee14bd8e647a0be009e7da3d9f071",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-retention",
+        "plane": "retention",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol395",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "external_unknown"
+          ]
+        },
+        "from": "2026-10-02T16:48:42.575Z",
+        "to": "2026-10-02T16:48:43.661Z",
+        "asOf": "2026-10-02T16:48:43.661Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.task-demand.export.v1",
+        "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+        "records": [
+          {
+            "action": "retain",
+            "grantId": "22fdb9591368e7ed",
+            "recordId": "d7fc443afed03cc2a0dcecad9262d714",
+            "resultId": "d7fc443afed03cc2a0dcecad9262d714ad3226ae0b2c6ed1936a2df9863b2253",
+            "operationId": "normalized-transaction-receipt",
+            "taskRef": "tef98ccb2e3d0a478958458711c3730727c34246959bfc96c13ed5bc177ee12",
+            "createdAt": "2026-10-02T16:48:43.553Z",
+            "expiresAt": "2026-10-09T16:48:43.553Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "schema": "samedaydesk.task-demand.retention-export.v1",
+            "criterion": "positive",
+            "criterionAuthority": "operation_contract",
+            "sourceSchema": "samedaydesk.useful-result-reuse.customer-grant.v1"
+          }
+        ],
+        "intake": {
+          "rawBytes": 2349,
+          "rawSha256": "0fc82843b8af4566fcd7f9e52eee675993951c5abc811ed5eae4202f6a33304a",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-reads",
+        "plane": "reads",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol395",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "external_unknown"
+          ]
+        },
+        "from": "2026-10-02T16:48:42.575Z",
+        "to": "2026-10-02T16:48:43.661Z",
+        "asOf": "2026-10-02T16:48:43.661Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.task-demand.export.v1",
+        "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+        "records": [
+          {
+            "schema": "samedaydesk.useful-result-reuse.metric.v1",
+            "kind": "useful_later_read",
+            "eventId": "8478aaa0d2ea6983ca0ed34f",
+            "at": "2026-10-02T16:48:43.625Z",
+            "recordId": "d7fc443afed03cc2a0dcecad9262d714",
+            "taskRef": "tef98ccb2e3d0a478958458711c3730727c34246959bfc96c13ed5bc177ee12"
+          }
+        ],
+        "intake": {
+          "rawBytes": 274,
+          "rawSha256": "c2c4a07cef8678ba9e6551926fb678f2f4f63c51dd923f7398050f59076b5ed6",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-settlements",
+        "plane": "settlements",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol395",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "external_unknown"
+          ]
+        },
+        "from": "2026-10-02T16:48:42.575Z",
+        "to": "2026-10-02T16:48:43.661Z",
+        "asOf": "2026-10-02T16:48:43.661Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.task-demand.export.v1",
+        "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+        "records": [
+          {
+            "schemaVersion": "samedaydesk.commerce-settlement-reconciliation.v1",
+            "state": "reconciled",
+            "sourceEventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+            "sourceEventTimestamp": "2026-10-02T16:48:43.575Z",
+            "reconciledAt": "2026-10-02T16:48:43.604Z",
+            "route": "/chain/transaction-receipt",
+            "network": "eip155:8453",
+            "settlementReference": "0x3333333333333333333333333333333333333333333333333333333333333333",
+            "amountAtomic": "5000",
+            "paymentClass": "validation"
+          }
+        ],
+        "intake": {
+          "rawBytes": 1279,
+          "rawSha256": "65bbc25f0962177b717d4e8728f5233708c809c01f2a7c918ebe68b6fa7371ac",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      }
+    ]
+  },
+  "report": {
+    "schema": "samedaydesk.task-demand.report.v1",
+    "question": {
+      "id": "native-two-generations",
+      "text": "Which caller-owned attempts retain an authorized useful result across a process restart?",
+      "populationId": "caller-owned-sol395",
+      "from": "2026-10-02T16:48:42.575Z",
+      "to": "2026-10-02T16:48:43.661Z",
+      "asOf": "2026-10-02T16:48:43.661Z",
+      "operationIds": [
+        "normalized-transaction-receipt"
+      ],
+      "cohorts": [
+        "external_unknown"
+      ]
+    },
+    "inputDigest": "20b5b92a4e01ee013a82595a1042ebd1b8bcfaa00e8c53cfae23cf99d957d2eb",
+    "priorReportId": null,
+    "measurementSpace": "synthetic_replay",
+    "sources": [
+      {
+        "id": "native-attempts",
+        "plane": "attempts",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol395",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "external_unknown"
+          ]
+        },
+        "from": "2026-10-02T16:48:42.575Z",
+        "to": "2026-10-02T16:48:43.661Z",
+        "asOf": "2026-10-02T16:48:43.661Z",
+        "coverage": "complete",
+        "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+        "projectedDigest": "9a94a985ecc1e0db1960f113b9aaf7da241b403a13ca60aaca2f52134785ad93",
+        "intake": {
+          "rawBytes": 897,
+          "rawSha256": "eacc5dba49a5501f2df050051617c60484b94ee3de6898bf7c49de3f1f037e22",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        },
+        "records": 1,
+        "rejected": 0,
+        "alignedComplete": true,
+        "reasons": []
+      },
+      {
+        "id": "native-task-refs",
+        "plane": "task_refs",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol395",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "external_unknown"
+          ]
+        },
+        "from": "2026-10-02T16:48:42.575Z",
+        "to": "2026-10-02T16:48:43.661Z",
+        "asOf": "2026-10-02T16:48:43.661Z",
+        "coverage": "complete",
+        "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+        "projectedDigest": "7c86d75c513853acd469392a53ad0fa7c12f65d33be1f55164f38a7ab0001b67",
+        "intake": {
+          "rawBytes": 377,
+          "rawSha256": "7c86d75c513853acd469392a53ad0fa7c12f65d33be1f55164f38a7ab0001b67",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        },
+        "records": 1,
+        "rejected": 0,
+        "alignedComplete": true,
+        "reasons": []
+      },
+      {
+        "id": "native-forward",
+        "plane": "forward",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol395",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "external_unknown"
+          ]
+        },
+        "from": "2026-10-02T16:48:42.575Z",
+        "to": "2026-10-02T16:48:43.661Z",
+        "asOf": "2026-10-02T16:48:43.661Z",
+        "coverage": "complete",
+        "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+        "projectedDigest": "8aaf102c9e319bb267a161ff688094f18f2ee14bd8e647a0be009e7da3d9f071",
+        "intake": {
+          "rawBytes": 2655,
+          "rawSha256": "8aaf102c9e319bb267a161ff688094f18f2ee14bd8e647a0be009e7da3d9f071",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        },
+        "records": 3,
+        "rejected": 0,
+        "alignedComplete": true,
+        "reasons": []
+      },
+      {
+        "id": "native-retention",
+        "plane": "retention",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol395",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "external_unknown"
+          ]
+        },
+        "from": "2026-10-02T16:48:42.575Z",
+        "to": "2026-10-02T16:48:43.661Z",
+        "asOf": "2026-10-02T16:48:43.661Z",
+        "coverage": "complete",
+        "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+        "projectedDigest": "c5668e897a2960b7290a38f3167cadbc0d7c81220a065e7d7332dc7b3ae7be15",
+        "intake": {
+          "rawBytes": 2349,
+          "rawSha256": "0fc82843b8af4566fcd7f9e52eee675993951c5abc811ed5eae4202f6a33304a",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        },
+        "records": 1,
+        "rejected": 0,
+        "alignedComplete": true,
+        "reasons": []
+      },
+      {
+        "id": "native-reads",
+        "plane": "reads",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol395",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "external_unknown"
+          ]
+        },
+        "from": "2026-10-02T16:48:42.575Z",
+        "to": "2026-10-02T16:48:43.661Z",
+        "asOf": "2026-10-02T16:48:43.661Z",
+        "coverage": "complete",
+        "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+        "projectedDigest": "c2c4a07cef8678ba9e6551926fb678f2f4f63c51dd923f7398050f59076b5ed6",
+        "intake": {
+          "rawBytes": 274,
+          "rawSha256": "c2c4a07cef8678ba9e6551926fb678f2f4f63c51dd923f7398050f59076b5ed6",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        },
+        "records": 1,
+        "rejected": 0,
+        "alignedComplete": true,
+        "reasons": []
+      },
+      {
+        "id": "native-settlements",
+        "plane": "settlements",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol395",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "external_unknown"
+          ]
+        },
+        "from": "2026-10-02T16:48:42.575Z",
+        "to": "2026-10-02T16:48:43.661Z",
+        "asOf": "2026-10-02T16:48:43.661Z",
+        "coverage": "complete",
+        "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+        "projectedDigest": "5b873f4fb2a574c17adc1f7313205ccc5b8ed13b5a3a9c5b05bd0d5c55a50554",
+        "intake": {
+          "rawBytes": 1279,
+          "rawSha256": "65bbc25f0962177b717d4e8728f5233708c809c01f2a7c918ebe68b6fa7371ac",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        },
+        "records": 1,
+        "rejected": 0,
+        "alignedComplete": true,
+        "reasons": []
+      }
+    ],
+    "planeCoverage": {
+      "attempts": {
+        "complete": true,
+        "reasons": []
+      },
+      "task_refs": {
+        "complete": true,
+        "reasons": []
+      },
+      "forward": {
+        "complete": true,
+        "reasons": []
+      },
+      "retention": {
+        "complete": true,
+        "reasons": []
+      },
+      "reads": {
+        "complete": true,
+        "reasons": []
+      },
+      "settlements": {
+        "complete": true,
+        "reasons": []
+      }
+    },
+    "denominator": {
+      "unit": "server_bound_attempt",
+      "observed": 1,
+      "covered": true,
+      "reasons": [],
+      "allMarketTraffic": null
+    },
+    "groups": {
+      "owner_internal": {
+        "counts": {
+          "attempt": 1,
+          "valid_delivery": 1,
+          "claimed_usefulness": 1,
+          "retention": 1,
+          "later_use": 1,
+          "settlement": 1
+        },
+        "rates": {
+          "valid_delivery": {
+            "numerator": 1,
+            "denominator": 1,
+            "value": 1,
+            "reasons": [],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          },
+          "claimed_usefulness": {
+            "numerator": 1,
+            "denominator": 1,
+            "value": 1,
+            "reasons": [],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          },
+          "retention": {
+            "numerator": 1,
+            "denominator": 1,
+            "value": 1,
+            "reasons": [],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          },
+          "later_use": {
+            "numerator": 1,
+            "denominator": 1,
+            "value": 1,
+            "reasons": [],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          },
+          "settlement": {
+            "numerator": 1,
+            "denominator": 1,
+            "value": 1,
+            "reasons": [],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          }
+        }
+      },
+      "recruited_sponsored": {
+        "counts": {
+          "attempt": 0,
+          "valid_delivery": 0,
+          "claimed_usefulness": 0,
+          "retention": 0,
+          "later_use": 0,
+          "settlement": 0
+        },
+        "rates": {
+          "valid_delivery": {
+            "numerator": 0,
+            "denominator": null,
+            "value": null,
+            "reasons": [
+              "empty_covered_denominator"
+            ],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          },
+          "claimed_usefulness": {
+            "numerator": 0,
+            "denominator": null,
+            "value": null,
+            "reasons": [
+              "empty_covered_denominator"
+            ],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          },
+          "retention": {
+            "numerator": 0,
+            "denominator": null,
+            "value": null,
+            "reasons": [
+              "empty_covered_denominator"
+            ],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          },
+          "later_use": {
+            "numerator": 0,
+            "denominator": null,
+            "value": null,
+            "reasons": [
+              "empty_covered_denominator"
+            ],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          },
+          "settlement": {
+            "numerator": 0,
+            "denominator": null,
+            "value": null,
+            "reasons": [
+              "empty_covered_denominator"
+            ],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          }
+        }
+      },
+      "attributable_independent": {
+        "counts": {
+          "attempt": 0,
+          "valid_delivery": 0,
+          "claimed_usefulness": 0,
+          "retention": 0,
+          "later_use": 0,
+          "settlement": 0
+        },
+        "rates": {
+          "valid_delivery": {
+            "numerator": 0,
+            "denominator": null,
+            "value": null,
+            "reasons": [
+              "empty_covered_denominator"
+            ],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          },
+          "claimed_usefulness": {
+            "numerator": 0,
+            "denominator": null,
+            "value": null,
+            "reasons": [
+              "empty_covered_denominator"
+            ],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          },
+          "retention": {
+            "numerator": 0,
+            "denominator": null,
+            "value": null,
+            "reasons": [
+              "empty_covered_denominator"
+            ],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          },
+          "later_use": {
+            "numerator": 0,
+            "denominator": null,
+            "value": null,
+            "reasons": [
+              "empty_covered_denominator"
+            ],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          },
+          "settlement": {
+            "numerator": 0,
+            "denominator": null,
+            "value": null,
+            "reasons": [
+              "empty_covered_denominator"
+            ],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          }
+        }
+      },
+      "unclassified": {
+        "counts": {
+          "attempt": 0,
+          "valid_delivery": 0,
+          "claimed_usefulness": 0,
+          "retention": 0,
+          "later_use": 0,
+          "settlement": 0
+        },
+        "rates": {
+          "valid_delivery": {
+            "numerator": 0,
+            "denominator": null,
+            "value": null,
+            "reasons": [
+              "empty_covered_denominator"
+            ],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          },
+          "claimed_usefulness": {
+            "numerator": 0,
+            "denominator": null,
+            "value": null,
+            "reasons": [
+              "empty_covered_denominator"
+            ],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          },
+          "retention": {
+            "numerator": 0,
+            "denominator": null,
+            "value": null,
+            "reasons": [
+              "empty_covered_denominator"
+            ],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          },
+          "later_use": {
+            "numerator": 0,
+            "denominator": null,
+            "value": null,
+            "reasons": [
+              "empty_covered_denominator"
+            ],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          },
+          "settlement": {
+            "numerator": 0,
+            "denominator": null,
+            "value": null,
+            "reasons": [
+              "empty_covered_denominator"
+            ],
+            "population": "server_bound_attempts_in_question_window",
+            "timeBasis": "outcomes_observed_by_asof"
+          }
+        }
+      }
+    },
+    "journeys": [
+      {
+        "commerceEventId": "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29",
+        "taskRef": "tef98ccb2e3d0a478958458711c3730727c34246959bfc96c13ed5bc177ee12",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "external_unknown",
+        "classification": "owner_internal",
+        "classificationAuthority": "existing_server_classification",
+        "identity": "not_inferred",
+        "retainedState": "active",
+        "stages": {
+          "attempt": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29"
+            ],
+            "at": "2026-10-02T16:48:43.575Z",
+            "result": "paid_success"
+          },
+          "valid_delivery": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "d7fc443afed03cc2a0dcecad9262d714"
+            ],
+            "at": "2026-10-02T16:48:43.553Z",
+            "authority": "existing_receipt_retention_contract",
+            "timing": "retention_created_during_causal_response"
+          },
+          "claimed_usefulness": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "d7fc443afed03cc2a0dcecad9262d714"
+            ],
+            "at": "2026-10-02T16:48:43.553Z",
+            "claim": "positive",
+            "authority": "operation_contract",
+            "current": true,
+            "outsideUseEstablished": false
+          },
+          "retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "d7fc443afed03cc2a0dcecad9262d714"
+            ],
+            "at": "2026-10-02T16:48:43.553Z",
+            "state": "active",
+            "expiresAt": "2026-10-09T16:48:43.553Z"
+          },
+          "later_use": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "8478aaa0d2ea6983ca0ed34f"
+            ],
+            "at": "2026-10-02T16:48:43.625Z",
+            "authority": "existing_authorized_retained_read",
+            "utility": "positive",
+            "outsideUseEstablished": false,
+            "historical": true
+          },
+          "settlement": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "5d2699c6-1df2-4d7e-a5fb-554ef06d6c29"
+            ],
+            "at": "2026-10-02T16:48:43.604Z",
+            "amountAtomic": "5000"
+          }
+        },
+        "gaps": [],
+        "reasons": [
+          "paid_success"
+        ]
+      }
+    ],
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "missingCausalSide": 0,
+      "bindingConflicts": 0,
+      "wrongTaskOrOperation": 0,
+      "ambiguousRetention": 0,
+      "lateRecords": 0,
+      "excludedSources": [],
+      "unboundEvents": []
+    },
+    "economics": {
+      "source": "useful-economics-100290/src/economics.mjs@5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+      "directBaseline": {
+        "grossSettledRevenue": {
+          "known": false,
+          "reason": "not_supplied"
+        },
+        "fees": {
+          "known": false,
+          "reason": "not_supplied"
+        },
+        "cashMarginal": {
+          "known": false,
+          "reason": "not_supplied"
+        },
+        "apiEquivalentBuildEffort": {
+          "known": false,
+          "reason": "not_supplied",
+          "countsAsCash": false
+        },
+        "includedQuotaOpportunityCost": {
+          "known": false,
+          "reason": "not_supplied",
+          "countsAsCash": false
+        },
+        "reviewAdaptation": {
+          "known": false,
+          "reason": "not_supplied"
+        },
+        "sharedRnd": {
+          "known": false,
+          "reason": "not_supplied",
+          "allocatable": false
+        },
+        "measuredLaterSavedWork": {
+          "known": false,
+          "reason": "not_supplied",
+          "countsAsCash": false
+        }
+      },
+      "marginal": {
+        "grossSettledRevenue": {
+          "known": false,
+          "reason": "not_supplied"
+        },
+        "fees": {
+          "known": false,
+          "reason": "not_supplied"
+        },
+        "cashMarginal": {
+          "known": false,
+          "reason": "not_supplied"
+        },
+        "apiEquivalentBuildEffort": {
+          "known": false,
+          "reason": "not_supplied",
+          "countsAsCash": false
+        },
+        "includedQuotaOpportunityCost": {
+          "known": false,
+          "reason": "not_supplied",
+          "countsAsCash": false
+        },
+        "reviewAdaptation": {
+          "known": false,
+          "reason": "not_supplied"
+        },
+        "sharedRnd": {
+          "known": false,
+          "reason": "not_supplied",
+          "allocatable": false
+        },
+        "measuredLaterSavedWork": {
+          "known": false,
+          "reason": "not_supplied",
+          "countsAsCash": false
+        }
+      },
+      "cashAssessment": {
+        "planes": {
+          "grossSettledRevenue": {
+            "known": true,
+            "lower": "5000",
+            "upper": "5000",
+            "countsAsCash": false,
+            "verified": 1
+          },
+          "fees": {
+            "known": false,
+            "reason": "not_supplied"
+          },
+          "cashMarginal": {
+            "known": false,
+            "reason": "not_supplied"
+          },
+          "apiEquivalentBuildEffort": {
+            "known": false,
+            "reason": "not_supplied",
+            "countsAsCash": false
+          },
+          "includedQuotaOpportunityCost": {
+            "known": false,
+            "reason": "not_supplied",
+            "countsAsCash": false
+          },
+          "reviewAdaptation": {
+            "known": false,
+            "reason": "not_supplied"
+          },
+          "sharedRnd": {
+            "known": false,
+            "reason": "not_supplied",
+            "allocatable": false,
+            "countsAsCash": false
+          },
+          "measuredLaterSavedWork": {
+            "known": false,
+            "reason": "not_supplied",
+            "countsAsCash": false
+          }
+        },
+        "effortPlanes": [
+          {
+            "id": "F01",
+            "field": "cashMarginal",
+            "ledgerView": "jobCash",
+            "sumsIntoCash": false,
+            "known": false
+          },
+          {
+            "id": "F02",
+            "field": "apiEquivalentBuildEffort",
+            "ledgerView": "measuredApiEquivalent",
+            "sumsIntoCash": false,
+            "known": false
+          },
+          {
+            "id": "F03",
+            "field": "includedQuotaOpportunityCost",
+            "ledgerView": "includedQuotaOpportunityCost",
+            "sumsIntoCash": false,
+            "known": false
+          },
+          {
+            "id": "F04",
+            "field": "sharedRnd",
+            "ledgerView": "sharedRnd",
+            "sumsIntoCash": false,
+            "known": false
+          }
+        ],
+        "breakeven": {
+          "calculable": false,
+          "reason": "missing_cash_inputs",
+          "lowerNetAtomic": null,
+          "upperNetAtomic": null
+        },
+        "recognizedRevenueAtomic": "0",
+        "historicalBankedRevenueUsdc": 10.955,
+        "historicalBankedRevenueSource": "pilot overview/EXPERIMENT-RETURN-LEDGER.json portfolioMandate.bankedRevenueUsdc at consumerCommit 0c136a96dfdecf72e141dd9078c2f6c2e38ca8aa",
+        "historicalCountsAsMargin": false,
+        "historicalCountsAsFutureCashAllocation": false,
+        "historicalCountedInBreakeven": false,
+        "profit": null,
+        "summed": false
+      },
+      "comparison": {
+        "savings": null,
+        "reason": "no_matched_metered_effort_comparison",
+        "sumsIntoCash": false
+      },
+      "historicalCommissions": {
+        "netUsdc": "2.85",
+        "source": "experiments/seller-repair-service-100266/commercial/deliver.mjs@5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+        "currentRun": false,
+        "historicalTokens": "unknown",
+        "recalibrated": false,
+        "includedInCashAssessment": false
+      }
+    },
+    "provenance": {
+      "baseCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+      "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2",
+      "causalContractProducer": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+      "evidenceAuthenticity": "supplied_read_only_exports_not_independently_authenticated",
+      "retainedGenerations": 2,
+      "crossProcessJournalExclusion": false
+    },
+    "decisions": [
+      {
+        "id": "repair-next-stage",
+        "basis": "Per-attempt gaps and producer failure codes identify delivery, retention or read friction."
+      },
+      {
+        "id": "compare-covered-cohorts",
+        "basis": "Covered denominators and separate classifications constrain conversion comparisons."
+      },
+      {
+        "id": "stop-or-retest-usefulness",
+        "basis": "Unknown, useful negative, corrected or revoked outcomes guide a bounded retest."
+      },
+      {
+        "id": "budget-marginal-work",
+        "basis": "Direct baseline, review/adaptation and distinct resource planes constrain further effort."
+      }
+    ],
+    "recognizedRevenueAtomic": "0",
+    "reportId": "d5a4c8e76bcb64c90329967d83c5b5b68c54f6fdcdc676343491fadcc2261103"
+  }
+}
