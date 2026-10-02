@@ -1,0 +1,9 @@
+{
+  "name": "task-demand-100339",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=22.20.0" },
+  "bin": { "task-demand": "bin/task-demand.mjs" },
+  "scripts": { "test": "node --test test/*.test.mjs" }
+}

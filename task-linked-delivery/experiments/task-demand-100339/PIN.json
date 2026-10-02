@@ -1,0 +1,63 @@
+{
+  "schema": "samedaydesk.task-demand.source-pin.v1",
+  "repository": "epistemedeus/x402-url-extractor",
+  "baseCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+  "sources": [
+    {
+      "path": "commerce-events.mjs",
+      "sha256": "a825425e38c521c6737892ca67f46d0a6a26bb92f0beae9f9946ddb1d6215f5f"
+    },
+    {
+      "path": "commerce-outcome-binding.mjs",
+      "sha256": "67661ed440fd96a10dc5e08238453486779b889b67f933d228fa2a94c4193c54"
+    },
+    {
+      "path": "commerce-settlement-reconciler.mjs",
+      "sha256": "fac50cb438b37fd725617a5225bd486ec26a27cad5f0eb42e81a5f71511bd35e"
+    },
+    {
+      "path": "docs/causal-journal-receiving-100325.md",
+      "sha256": "88f0c70dfdea242b0c4592b9dc31b590a6eff8f380d4b09679835f4627564368"
+    },
+    {
+      "path": "http-delivery-evidence/classify.mjs",
+      "sha256": "0da87e6f85a08f21c46df637e7ce0d0c6ac9e51dac098a82f9af8b0fd79d76af"
+    },
+    {
+      "path": "useful-result-reuse/customer-grant.mjs",
+      "sha256": "a3a17fa1d82b4a5620dddaf34a7da111e67a01185ed46083fca84fe9516c89ac"
+    },
+    {
+      "path": "useful-result-reuse/service.mjs",
+      "sha256": "9dacc6f3a4bd7dbb089a52431f4bfe941ddafcf3d0ec8ed17076bd43e4ba87fc"
+    },
+    {
+      "path": "task-linked-delivery/experiments/useful-economics-100290/README.md",
+      "sha256": "da0afac23732a789d19c4f0b3f2ac997e7e9ddf09d7fb1aae6bd736c9e7fe63b"
+    },
+    {
+      "path": "task-linked-delivery/experiments/useful-economics-100290/src/economics.mjs",
+      "sha256": "b02ff914168b33e7118bcc68cc88dd40a73b77782171bbead240a2a1de921036"
+    },
+    {
+      "path": "task-linked-delivery/experiments/useful-economics-100290/src/constants.mjs",
+      "sha256": "8d160b902dfc50b6c0ac9cae48c5a1f11ae1463517065730dc0bfba0cf878477"
+    },
+    {
+      "path": "task-linked-delivery/experiments/useful-economics-100290/src/errors.mjs",
+      "sha256": "69f526d71d090af04684da002df8944357f7100f4acf22824c4aabf6bded3098"
+    },
+    {
+      "path": "experiments/seller-repair-service-100266/commercial/deliver.mjs",
+      "sha256": "7601d50a073536a30d46580f9eecebea183f1131ee3a6c4411675b84111a67f5"
+    },
+    {
+      "path": "useful-result-reuse/base-receipt.mjs",
+      "sha256": "b9cedf56086cca29ab16e8800040b88a663818594dc232b29bc3e3c87332bc9b"
+    }
+  ],
+  "vendor": {
+    "causal-contract.mjs": "Exact read-only constant and predicate excerpts; parity tested against received native module.",
+    "economics": "Byte-identical economics.mjs, constants.mjs and errors.mjs."
+  }
+}
