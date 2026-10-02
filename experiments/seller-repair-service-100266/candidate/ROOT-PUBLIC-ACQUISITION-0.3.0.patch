@@ -1,0 +1,22 @@
+--- a/public-acquisition/manifest.json
++++ b/public-acquisition/manifest.json
+@@ Root applies this. This branch does not edit the live index.
++    {
++      "id": "seller-repair-external-consumer",
++      "version": "0.3.0",
++      "role": "archive",
++      "filename": "seller-repair-external-consumer-0.3.0.tar.gz",
++      "relativePath": "seller-repair-external-consumer/0.3.0/seller-repair-external-consumer-0.3.0.tar.gz",
++      "bytes": 32020,
++      "sha256": "9a3ff801104d95513ded6791f476a13042453ed9702635a117ebaac9afd73f2e",
++      "licenseId": "MIT",
++      "hostedAcquisitionVerified": false,
++      "productionHosted": false,
++      "paidLaunch": false,
++      "publicationStatus": "candidate"
++    }
+
+Frozen and still published:
+- seller-repair-external-consumer 0.1.0 sha256 3f3552e9cdedff9910211b1820b229daa834cf3811fcc5b38035046cefda4a27 bytes 22870
+- seller-repair-external-consumer 0.2.0 sha256 86e55a75f7e7e5c5ad188de8b20c64648f40c236b11981186b56abeb6d11350f bytes 30462
+Do not replace public-acquisition/manifest.json or the 0.2.0 byte path from this branch.

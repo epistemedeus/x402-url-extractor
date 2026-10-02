@@ -1,0 +1,15 @@
+export const MAINTAINED_INSPECTION = Object.freeze({
+  package: "maintained-operations",
+  version: "0.1.0",
+  url: "https://neomorphic.io/downloads/maintained-operations/0.1.0/maintained-operations-0.1.0.tar.gz",
+  sha256: "b68024a3b359b354b6869cfdc4621f1eb2947cb40311bf7bafcbd546b0cdabc9",
+  bytes: 104792,
+  license: "MIT",
+  copyright: "Copyright (c) 2026 Neomorphic LLC",
+  runtime: "Node.js 22",
+  source: "packages/retained-task 0.1.0 and packages/change-monitor 0.1.0",
+  providesSellerDiagnosis: false,
+  providesRepairRetest: false,
+  inspectedAt: "2026-10-02T08:21:11.000Z",
+  note: "The public runner rechecks one retained observatory task. It does not accept a seller operation, expected output, or repair retest.",
+});

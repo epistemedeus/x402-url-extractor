@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Target-specific seller repair case around the existing seller-integrity audit. No new price or payment.",
   "bin": {
-    "seller-repair": "./bin/seller-repair.mjs"
+    "seller-repair": "./bin/seller-repair.mjs",
+    "seller-repair-commercial-path": "./bin/commercial-path.mjs"
   }
 }

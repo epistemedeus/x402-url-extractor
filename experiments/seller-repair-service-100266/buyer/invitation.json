@@ -1,0 +1,97 @@
+{
+  "schema": "samedaydesk.seller-repair-invitation.v1",
+  "id": "agent402-unemployment-followup",
+  "doNotSend": [
+    "payment",
+    "PAYMENT-SIGNATURE",
+    "email",
+    "outreach",
+    "target POST"
+  ],
+  "sent": false,
+  "acceptedPaidOrder": false,
+  "possibleRevenueDistinctFromAcceptedOrder": true,
+  "recognizedRevenueAtomic": "0",
+  "task": {
+    "callerId": "agent402-unemployment-followup",
+    "origin": "https://agent402.tools",
+    "operation": "GET /api/unemployment-rate",
+    "sdk": "agent402-smoke",
+    "runtime": "github-actions",
+    "defect": false,
+    "order": false,
+    "reason": "The unpaid Base exact challenge already requires date, current, months, history, and source. HTTP 402 is the target's price, not a repair order and not a reason to pay the 0.01 audit."
+  },
+  "directBaseline": {
+    "method": "GET",
+    "url": "https://agent402.tools/api/unemployment-rate",
+    "status": 402,
+    "baseExactAmount": "5000",
+    "network": "eip155:8453",
+    "scheme": "exact",
+    "outputSchemaRequired": [
+      "date",
+      "current",
+      "months",
+      "history",
+      "source"
+    ],
+    "bodyPurchased": false,
+    "defect": false,
+    "order": false
+  },
+  "paidAuditDoNotCall": {
+    "method": "GET",
+    "url": "https://agents.samedaydesk.com/commerce/seller-integrity-audit?origin=https%3A%2F%2Fagent402.tools&route=%2Fapi%2Funemployment-rate&method=GET",
+    "status": 402,
+    "amount": "10000",
+    "network": "eip155:8453",
+    "scheme": "exact",
+    "priceDisplay": "$0.01",
+    "priceChanged": false
+  },
+  "diagnosis": {
+    "method": "POST",
+    "url": "https://agents.samedaydesk.com/commerce/seller-repair-diagnosis",
+    "emptyBodyStatus": 400,
+    "mounted": true,
+    "charged": false,
+    "paymentSent": false,
+    "error": "operation must be GET and one exact path",
+    "body": {
+      "callerId": "agent402-unemployment-followup",
+      "origin": "https://agent402.tools",
+      "operation": "GET /api/unemployment-rate",
+      "sdk": "agent402-smoke",
+      "runtime": "github-actions",
+      "transport": "public-https",
+      "probe": false,
+      "paidIntent": false,
+      "requestId": "ra02-agent402-unemployment-20261002",
+      "question": "useful_output",
+      "expect": {
+        "paths": [
+          "date",
+          "current",
+          "months",
+          "history",
+          "source"
+        ]
+      },
+      "observed": {
+        "status": 402,
+        "contentType": "application/json",
+        "json": false
+      }
+    }
+  },
+  "command": "node experiments/seller-repair-service-100266/bin/commercial-path.mjs buyer",
+  "customerAuthority": {
+    "freeDiagnosis": "No payment authority. A live public probe requires probeConsent class public-https and confirmed true. Evidence mode does not probe.",
+    "paidAudit": "The customer's own payment authority. This path does not grant it and does not pay.",
+    "share": "The existing useful-result-reuse compatibility authorization. A submitted regression file is not trusted and does not grant sharing."
+  },
+  "purchaseRecommended": false,
+  "priceChanged": false,
+  "skuAdded": false
+}

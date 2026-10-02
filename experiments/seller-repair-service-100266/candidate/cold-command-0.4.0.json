@@ -1,0 +1,29 @@
+{
+  "schema": "samedaydesk.public-acquisition.cold-commands.v1",
+  "proofClass": "loopback",
+  "productionAcceptance": false,
+  "hostedAcquisitionVerified": false,
+  "productionHosted": false,
+  "launched": false,
+  "note": "Draft 0.4.0 command. Root runs it on hosted bytes. 0.1.0, 0.2.0, and 0.3.0 bytes stay unchanged.",
+  "commands": [
+    {
+      "id": "seller-repair-external-consumer",
+      "version": "0.4.0",
+      "filename": "seller-repair-external-consumer-0.4.0.tar.gz",
+      "cwd": ".",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "package/bin/caller-deliver.mjs",
+            "deliver",
+            "--request",
+            "request.json"
+          ],
+          "note": "request.json is supplied by the caller and is not inside the archive"
+        }
+      ]
+    }
+  ]
+}
