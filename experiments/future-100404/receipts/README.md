@@ -21,7 +21,9 @@ capture and customer grant are disposable QA; no real settlement is observed.
 
 `checkpoint-contract.tap`, `owner-baseline.tap`, `core-controls.tap`,
 `cold-server.tap`, `journal-consumer.tap`, `narrow-patch.tap` and
-`archive-acquisition.tap` are narrower receiving/checkpoint runs.
+`archive-acquisition.tap` and `patch-export-final.tap` are narrower receiving/checkpoint runs.
+The latter receives the normalized patch and archive after the final full suite;
+Git apply check and whitespace check also pass.
 `core-initial.tap` and `core-receiving.tap` preserve intermediate fixture failures
 that preceded the final passing run. They remain debugging history, not current
 acceptance. `retained-owners-run.json` is the original wrapper stdout for the same

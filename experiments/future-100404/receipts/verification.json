@@ -174,5 +174,16 @@
   "customers": "unknown",
   "cost": "unknown",
   "savings": "unknown",
-  "production": false
+  "production": false,
+  "focusedFinalPatchAndArchiveCheck": {
+    "receipt": "receipts/patch-export-final.tap",
+    "sha256": "ec537e068fdeb793f9b251fc57320fbdb7bb0691bec230b62758d975f84d21d9",
+    "tests": 2,
+    "pass": 2,
+    "fail": 0,
+    "notAddedToTestDenominator": true
+  },
+  "patchGitApplyCheck": true,
+  "gitWhitespaceCheck": true,
+  "patchSha256": "f2607033672ffd6fcbcd8dc7d9a18b3a4106fad0e55d309b84b21f47159064ff"
 }

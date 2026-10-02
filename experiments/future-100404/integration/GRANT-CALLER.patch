@@ -30,5 +30,5 @@ diff --git a/useful-result-reuse/grant-caller.mjs b/useful-result-reuse/grant-ca
 +    process.exit(2);
 +  }
  }
- 
+
  const action = process.env.USEFUL_RESULT_ACTION || "";
