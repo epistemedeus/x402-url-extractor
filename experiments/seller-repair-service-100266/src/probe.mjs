@@ -43,15 +43,17 @@ export async function probeOnce({
 
   return await new Promise((resolve, reject) => {
     let settled = false;
+    let deadlineTimer;
     const finish = (result) => {
       if (settled) return;
       settled = true;
+      clearTimeout(deadlineTimer);
       resolve(result);
     };
     const request = transport.request(url, { method, headers, timeout: deadlineMs }, (response) => {
       const status = Number(response.statusCode || 0);
       if (status >= 300 && status < 400) {
-        response.resume();
+        response.destroy();
         finish({
           route,
           method,
@@ -145,7 +147,7 @@ export async function probeOnce({
         empty({ bodyDeadline: true, reason: "body_deadline" });
       });
     });
-    request.on("timeout", () => {
+    const deadline = () => {
       request.destroy();
       finish({
         route,
@@ -164,7 +166,9 @@ export async function probeOnce({
         paymentSent: false,
         reason: "body_deadline",
       });
-    });
+    };
+    deadlineTimer = setTimeout(deadline, deadlineMs);
+    request.on("timeout", deadline);
     request.on("error", (error) => {
       if (settled) return;
       if (error?.code === "ECONNRESET" || String(error?.message || "").includes("socket")) {
@@ -187,6 +191,8 @@ export async function probeOnce({
         });
         return;
       }
+      settled = true;
+      clearTimeout(deadlineTimer);
       reject(error);
     });
     request.end();
