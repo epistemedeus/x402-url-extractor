@@ -20,9 +20,9 @@ export async function callService(base, command, input, budget) {
   // Reserve both sides before transport: service child/output bytes plus local
   // reply output, and service reads plus the local response read. Reservations
   // are allowances, not claimed measured resource costs.
-  const replyCap=Math.floor(budget.remainingOutput()/2);
+  const availableOutput=budget.remainingOutput(),replyCap=Math.floor(availableOutput*2/5),serviceOutput=availableOutput-replyCap;
   if(replyCap<1024)fail('output_bytes_exceeded');
-  budget.chargeOutput(replyCap);budget.read(replyCap);
+  budget.chargeOutput(serviceOutput);budget.read(replyCap);
   const snapshot=budget.snapshot(),serviceReads=snapshot.caps.maxReadBytes-snapshot.readBytes;
   const serviceInput=snapshot.caps.maxInputBytes-snapshot.inputBytes;
   if(serviceReads<1024||serviceInput<1024||bytes.length>serviceInput)fail('input_bytes_exceeded');
@@ -32,9 +32,11 @@ export async function callService(base, command, input, budget) {
     'x-scoped-deadline-at': String(Date.now() + Math.floor(budget.remainingMs())),
     'x-scoped-read-left': String(serviceReads),
     'x-scoped-input-left': String(serviceInput),
-    'x-scoped-output-left': String(replyCap) };
+    'x-scoped-output-left': String(serviceOutput),
+    'x-scoped-reply-left': String(replyCap) };
   let req;
-  const result = await budget.wait(new Promise((resolve, reject) => {
+  let result;
+  try { result = await budget.wait(new Promise((resolve, reject) => {
     req = (isLoopback ? http : https).request(url, { method: 'POST', headers,
       lookup: isLoopback ? undefined : (host, options, done) => lookup(host, { all: true }, (error, entries) => {
         try {
@@ -61,6 +63,7 @@ export async function callService(base, command, input, budget) {
         });
       });
     req.once('error', reject); req.end(bytes);
-  }), () => req?.destroy());
+  }), () => req?.destroy()); }
+  catch(error){error.remoteAttempted=Boolean(req);throw error;}
   return result;
 }

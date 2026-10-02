@@ -2,7 +2,8 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { loadPublicAcquisition } from '../../../../public-acquisition/engine.mjs';
-const pkg=path.resolve(import.meta.dirname,'..'),repo=path.resolve(pkg,'../../..'),candidate=path.join(pkg,'export/current');
+const pkg=path.resolve(import.meta.dirname,'..'),repo=path.resolve(pkg,'../../..');
+const candidate=path.join(pkg,'export/candidates',JSON.parse(readFileSync(path.join(pkg,'export/client-package.json'))).version);
 const mode=process.argv[2];if(process.argv.length!==3||!['--check','--apply'].includes(mode))throw new Error('explicit_install_mode_required');
 const manifest=JSON.parse(readFileSync(path.join(candidate,'manifest.json')));
 loadPublicAcquisition({manifestPath:path.join(candidate,'manifest.json'),bytesRoot:path.join(candidate,'bytes')});

@@ -25,11 +25,15 @@ export function mountScopedRepairCommerce(app, options = {}) {
       const input = req.body === undefined ? await streamJson(req, budget) : (() => { throw Object.assign(new Error('raw_mount_required'), { code: 'raw_mount_required' }); })();
       const response = await service[command](input, budget);
       const bytes = encode(response, budget);
+      if(req.headers['x-scoped-reply-left']){
+        const replyLeft=Number(req.headers['x-scoped-reply-left']);
+        if(!Number.isInteger(replyLeft)||replyLeft<1024||bytes.length>replyLeft)throw Object.assign(new Error('response_bytes_exceeded'),{code:'response_bytes_exceeded'});
+      }
       if (!res.destroyed) { res.writeHead(200, { 'content-type': 'application/json', 'content-length': bytes.length, 'cache-control': 'no-store' }); res.end(bytes); }
     } catch (error) {
       if (res.destroyed) return;
       const reason = /^[a-z][a-z0-9_]{0,80}$/.test(error.code || '') ? error.code : 'qualification_failed';
-      const body = JSON.stringify({ ok: false, reason, qualification: 'missing_task_input', executed: false, paymentPerformed: false,
+      const body = JSON.stringify({ ok: false, reason, qualification: 'missing_task_input', executed: 'unknown', paymentPerformed: false,
         recognizedRevenueAtomic: '0', nextAction });
       // A fixed small failure envelope must itself fit the declared output cap.
       if (Buffer.byteLength(body) > budget.remainingOutput()) return res.destroy();

@@ -26,7 +26,7 @@ try {
   await writeJson(result, process.stdout, budget);
 } catch (error) {
   const reason = /^[a-z][a-z0-9_]{0,80}$/.test(error.code || '') ? error.code : 'client_failed';
-  const result = { ok: false, qualification: 'missing_task_input', reason, executed: false, paymentPerformed: false,
+  const result = { ok: false, qualification: 'missing_task_input', reason, executed: error.remoteAttempted?'unknown':false, paymentPerformed: false,
     recognizedRevenueAtomic: '0', nextAction: error.nextAction || 'Supply --service https://<received-host> --request <caller.json> (or - for bounded stdin); no request or service is defaulted.' };
   // Errors never echo caller bytes, signatures, environment, paths or secrets.
   try { await writeJson(result, process.stdout, budget); } catch { process.exitCode = 2; }

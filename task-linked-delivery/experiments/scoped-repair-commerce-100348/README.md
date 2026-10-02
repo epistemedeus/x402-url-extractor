@@ -45,10 +45,14 @@ ships no successful example as a default. All intake, file/stdin/transport reads
 child work and output share a deadline (maximum five seconds), cumulative read
 allowance (2 MiB), caller input allowance (512 KiB), output allowance (16 KiB)
 and child allowance (eight). Callers may lower these limits.
-The client reserves a service read allowance, response reads, and half of the
-output allowance for each side before sending. The propagated deadline begins
+The client reserves a service read allowance, response reads, and three fifths
+of output for the service and two fifths for local reply output before sending.
+The service also checks that the wire reply fits the local reservation. SDK
+regression artifacts stay inside isolated storage; their digest binds the packet.
+The propagated deadline begins
 before file/stdin intake. A reservation is an upper bound, not measured spending.
-Current client 0.1.1 is in `export/current`; sealed 0.1.0 remains in `export/public`.
+Current client 0.1.2 is in `export/candidates/0.1.2`; sealed 0.1.0 and 0.1.1
+remain in `export/public` and `export/current` respectively.
 
 Root applies the focused mount/classifier/exporter patch and supplies optional
 providers as described in `route/ROOT-INTEGRATION.md`. Current publication,

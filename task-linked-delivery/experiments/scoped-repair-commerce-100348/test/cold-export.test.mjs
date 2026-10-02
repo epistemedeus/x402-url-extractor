@@ -11,10 +11,11 @@ import { surface, seller, target } from './support.mjs';
 import { startHost } from './host-helper.mjs';
 import { processRun } from './process.mjs';
 
-const pkg=path.resolve(import.meta.dirname,'..'),candidate=path.join(pkg,'export/current');
+const pkg=path.resolve(import.meta.dirname,'..');
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 test('licensed cold HTTP acquisition, two caller tasks, changed later input and restart use the actual owners',async t=>{
   const started=performance.now(),root=await mkdtemp(path.join(tmpdir(),'scoped-cold-'));t.after(()=>rm(root,{recursive:true,force:true}));
+  const version=JSON.parse(await readFile(path.join(pkg,'export/client-package.json'))).version,candidate=path.join(pkg,'export/candidates',version);
   const manifest=JSON.parse(await readFile(path.join(candidate,'manifest.json'))),asset=manifest.assets.find(asset=>asset.role==='archive');
   const provenance=JSON.parse(await readFile(path.join(candidate,'bytes',path.dirname(asset.relativePath),'provenance.json')));
   const repack=spawnSync(process.execPath,[path.join(pkg,'export/pack.mjs'),'--source-commit',provenance.sourceCommit,'--out',path.join(root,'repack')],{timeout:16000,encoding:'utf8',maxBuffer:16384});

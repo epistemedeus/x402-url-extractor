@@ -13,10 +13,11 @@ test('file/stdin, transport, service reads, child output and final output share 
   const bytes=Buffer.byteLength(JSON.stringify(request)),budget=allowance();budget.read(bytes,true);
   const result=await callService(host.base,'deliver',request,budget);assert.equal(result.packet.acceptanceResult.passed,true);
   const serviceCaps=result.packet.effort.allowance.caps;
-  assert.equal(serviceCaps.maxOutputBytes,HARD.maxOutputBytes/2);
-  assert.equal(serviceCaps.maxReadBytes,HARD.maxReadBytes-bytes*2-HARD.maxOutputBytes/2);
+  const replyCap=Math.floor(HARD.maxOutputBytes*2/5);
+  assert.equal(serviceCaps.maxOutputBytes,HARD.maxOutputBytes-replyCap);
+  assert.equal(serviceCaps.maxReadBytes,HARD.maxReadBytes-bytes*2-replyCap);
   assert.equal(serviceCaps.maxInputBytes,HARD.maxInputBytes-bytes);
   const final=encode(result,budget);
-  assert.ok(final.length<=HARD.maxOutputBytes/2);assert.ok(budget.snapshot().outputUsed<=HARD.maxOutputBytes);
+  assert.ok(final.length<=replyCap);assert.ok(budget.snapshot().outputUsed<=HARD.maxOutputBytes);
   assert.equal(budget.snapshot().readBytes,HARD.maxReadBytes);
 });

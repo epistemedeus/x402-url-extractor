@@ -17,7 +17,7 @@ function run(command,args,options={}){const result=spawnSync(command,args,{timeo
 const args={};
 for(let i=2;i<process.argv.length;i+=2){if(!['--source-commit','--out'].includes(process.argv[i])||!process.argv[i+1]||args[process.argv[i]])die('pack_argument');args[process.argv[i]]=process.argv[i+1];}
 const sourceCommit=args['--source-commit'];if(!/^[a-f0-9]{40}$/.test(sourceCommit||''))die('exact_source_commit_required');
-const out=path.resolve(args['--out']||path.join(pkg,'export/current'));
+const out=path.resolve(args['--out']||path.join(pkg,'export/candidates',version));
 const stage=mkdtempSync(path.join(tmpdir(),'scoped-client-pack-'));
 const sources=[],transforms=[];
 function member(from,to,changes=[]){

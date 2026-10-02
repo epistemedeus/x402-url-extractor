@@ -18,12 +18,14 @@ function summary(report) {
 export function createScopedRepairService({ store = null, skillguardRoot = null, retention = null, regressionFor = null,
   offerFor = null, evidenceFor = null, publicKeys = new Map(), now = () => Date.now() } = {}) {
   const packets=store?packetAccess(store,FILE):null;
-  async function stored(packetId, budget) {
+  async function stored(packetId, budget,withArtifact=false) {
     if (!store) fail('delivery_store_unavailable');
     const rows = await budget.wait(packets.read(budget));
     const matches = rows.filter(row => row.schema === RECORD && row.packet?.packetId === packetId);
     if (matches.length !== 1) fail(matches.length ? 'ambiguous_packet' : 'packet_not_found');
-    return verifyPacket(matches[0].packet);
+    const packet=verifyPacket(matches[0].packet),artifact=matches[0].artifact||packet.artifact||null;
+    if(packet.artifactDigest!==undefined&&packet.artifactDigest!==(artifact?digest(artifact):null))fail('stored_artifact_changed');
+    return withArtifact?{...packet,artifact}:packet;
   }
   async function currentRegression(request, binding, budget, prior = null) {
     if (request.kind !== 'surface' || !regressionFor || !retention) return { authorized: false, reason: 'retention_not_enrolled', paymentPermitted: false };
@@ -78,7 +80,7 @@ export function createScopedRepairService({ store = null, skillguardRoot = null,
         implementationRequest: request.implementation || null, ownership: 'caller_asserted_not_authority', usefulness: 'unknown' },
       baseline, observed, acceptance: { kind: request.kind, operationId: binding.operation.method + ' ' + binding.operation.origin + binding.operation.pathname,
         termsDigest: binding.termsDigest, criterion: request.kind === 'surface' ? { concernId: request.input.concern.id, result: 'no_match', staticOnly: true } : request.input.expect },
-      regression, artifact, quote, workAcceptance: no('no_explicit_verified_acceptance'),
+      regression, artifactDigest:artifact?digest(artifact):null, quote, workAcceptance: no('no_explicit_verified_acceptance'),
       reviewAdaptation: { durationMs: null, costAtomic: null, authority: 'unknown' },
       causal: no('no_authorized_observer_cut'), settlement: no('no_runtime_readback'),
       usefulOutcome: { operationPredicate: observed.useful, outsideUsefulness: 'unknown', laterUsefulness: 'unknown' },
@@ -89,13 +91,13 @@ export function createScopedRepairService({ store = null, skillguardRoot = null,
       publication: { productionHosted: false, hostedAcquisitionVerified: false, outsideUseful: false },
       paymentPerformed: false, skuAdded: false, priceChanged: false, recognizedRevenueAtomic: '0' };
     packet.acceptanceResult = evaluateAcceptance(packet);
-    budget.check(); return sealPacket(packet);
+    budget.check(); return {packet:sealPacket(packet),artifact};
   }
   return Object.freeze({
     async deliver(request, budget = allowance()) {
       validateRequest(request); budget.restrict(request.limits); ownerInput(request);
       const binding = validateRequest(request), requestDigest = digest(request);
-      if (!store) return { packet: await fresh(request, binding, budget), replay: false, persistence: 'unconfigured' };
+      if (!store) return { packet: (await fresh(request, binding, budget)).packet, replay: false, persistence: 'unconfigured' };
       const response = await budget.wait(packets.mutate(budget, async rows => {
         budget.check();
         const old = rows.filter(row => row.schema === RECORD && row.requestId === request.requestId && row.callerId === request.task.callerId);
@@ -104,10 +106,10 @@ export function createScopedRepairService({ store = null, skillguardRoot = null,
           if (old[0].requestDigest !== requestDigest) fail('request_binding_changed');
           return { result: { packet: verifyPacket(old[0].packet), replay: true, persistence: 'historical_readback' } };
         }
-        const packet = await fresh(request, binding, budget);
+        const {packet,artifact} = await fresh(request, binding, budget);
         if (Buffer.byteLength(JSON.stringify(packet)) > budget.remainingOutput()) fail('output_bytes_exceeded');
         budget.check();
-        return { append: { schema: RECORD, requestId: request.requestId, callerId: request.task.callerId, requestDigest, packet },
+        return { append: { schema: RECORD, requestId: request.requestId, callerId: request.task.callerId, requestDigest, packet,artifact },
           result: { packet, replay: false, persistence: 'local_append_requires_readback' } };
       }));
       if (!response.replay) { await stored(response.packet.packetId, budget); response.persistence = 'local_readback'; }
@@ -121,13 +123,13 @@ export function createScopedRepairService({ store = null, skillguardRoot = null,
       return { packetId: packet.packetId, acceptance, paymentPerformed: false, recognizedRevenueAtomic: '0' };
     },
     async reuse(command, budget = allowance()) {
-      const prior = await stored(command?.packetId, budget);
+      const prior = await stored(command?.packetId, budget,true);
       const request = command?.request; validateRequest(request); budget.restrict(request.limits); ownerInput(request);
       const binding = validateRequest(request);
       const ownerMatches = binding.task.id === prior.binding.task.id && binding.task.callerId === prior.binding.task.callerId;
       const unchanged = ownerMatches && binding.digest === prior.binding.digest;
       if (!ownerMatches) return { inherited: false, reason: 'wrong_task_or_owner', current: null, paymentInherited: false };
-      const current = await fresh(request, binding, budget, prior);
+      const {packet:current} = await fresh(request, binding, budget, prior);
       return { inherited: false, applicability: unchanged ? 'same_scoped_input' : 'changed_input_requires_fresh_execution',
         reason: unchanged ? 'fresh_execution_and_current_authority' : 'changed_binding',
         priorSharingAuthorized: unchanged && current.regression?.authorized === true,

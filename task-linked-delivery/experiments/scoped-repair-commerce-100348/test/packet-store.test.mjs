@@ -38,3 +38,17 @@ test('the existing request normalizer rejects seller GET bodies before any work'
   const request=seller(before.base);request.operation.body={differentCallerTask:true};
   await assert.rejects(()=>env.service.deliver(request),/GET request body is not supported/);
 });
+
+test('the actual seller regression artifact is stored privately, bound to the packet and read after restart',async t=>{
+  const before=await target(null),after=await target(true);t.after(before.close);t.after(after.close);
+  const env=await service();t.after(env.close);const request=seller(before.base,after.base);
+  const {packet}=await env.service.deliver(request);
+  assert.equal(packet.artifact,undefined);assert.match(packet.artifactDigest,/^sha256:[a-f0-9]{64}$/);
+  const rows=await env.store.read('scoped-repair-packets.ndjson');assert.ok(rows[0].artifact);
+  const {createScopedRepairService}=await import('../src/service.mjs');
+  const restarted=createScopedRepairService({store:createReuseStore({dataDir:env.dir,maxFileBytes:131072,maxRecordBytes:16384})});
+  const later=await restarted.reuse({packetId:packet.packetId,request});
+  assert.equal(later.current.acceptanceResult.passed,true);assert.equal(later.current.artifact,undefined);
+  rows[0].artifact.changed=true;await writeFile(path.join(env.dir,'scoped-repair-packets.ndjson'),JSON.stringify(rows[0])+'\n');
+  await assert.rejects(()=>restarted.reuse({packetId:packet.packetId,request}),{code:'stored_artifact_changed'});
+});
