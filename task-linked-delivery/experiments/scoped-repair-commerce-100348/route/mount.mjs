@@ -19,7 +19,7 @@ export function mountScopedRepairCommerce(app, options = {}) {
         budget.restrict({ deadlineMs: Math.max(20, Math.min(5000, Math.floor(left))) });
         if (!Number.isFinite(left) || left < 20) throw Object.assign(new Error('deadline_exceeded'), { code: 'deadline_exceeded' });
       }
-      for (const [header, key] of [['x-scoped-read-left','maxReadBytes'],['x-scoped-output-left','maxOutputBytes']]) {
+      for (const [header, key] of [['x-scoped-read-left','maxReadBytes'],['x-scoped-input-left','maxInputBytes'],['x-scoped-output-left','maxOutputBytes']]) {
         if (req.headers[header]) budget.restrict({ [key]: Number(req.headers[header]) });
       }
       const input = req.body === undefined ? await streamJson(req, budget) : (() => { throw Object.assign(new Error('raw_mount_required'), { code: 'raw_mount_required' }); })();

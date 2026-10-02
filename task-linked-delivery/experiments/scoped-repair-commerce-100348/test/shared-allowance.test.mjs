@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, rm } from 'node:fs/promises';
+import path from 'node:path';
+import { tmpdir } from 'node:os';
+import { allowance, encode, HARD } from '../src/bounds.mjs';
+import { callService } from '../src/client.mjs';
+import { surface } from './support.mjs';
+import { startHost } from './host-helper.mjs';
+test('file/stdin, transport, service reads, child output and final output share reserved allowances',async t=>{
+  const dir=await mkdtemp(path.join(tmpdir(),'scoped-shared-allowance-'));t.after(()=>rm(dir,{recursive:true,force:true}));
+  const host=await startHost(dir);t.after(host.close);const request=surface({id:'shared-real-task'});
+  const bytes=Buffer.byteLength(JSON.stringify(request)),budget=allowance();budget.read(bytes,true);
+  const result=await callService(host.base,'deliver',request,budget);assert.equal(result.packet.acceptanceResult.passed,true);
+  const serviceCaps=result.packet.effort.allowance.caps;
+  assert.equal(serviceCaps.maxOutputBytes,HARD.maxOutputBytes/2);
+  assert.equal(serviceCaps.maxReadBytes,HARD.maxReadBytes-bytes*2-HARD.maxOutputBytes/2);
+  assert.equal(serviceCaps.maxInputBytes,HARD.maxInputBytes-bytes);
+  const final=encode(result,budget);
+  assert.ok(final.length<=HARD.maxOutputBytes/2);assert.ok(budget.snapshot().outputUsed<=HARD.maxOutputBytes);
+  assert.equal(budget.snapshot().readBytes,HARD.maxReadBytes);
+});

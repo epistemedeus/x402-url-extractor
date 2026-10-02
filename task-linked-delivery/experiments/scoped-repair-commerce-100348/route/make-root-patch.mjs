@@ -42,7 +42,7 @@ try{
         'function pack() {\n  // A received version is sealed. Changed source requires a new version.\n  if (existsSync(ARCHIVE)) {\n    const sealed = readFileSync(ARCHIVE);\n    if (sealed.length !== '+archive.length+' || sha256(sealed) !== "'+hash+'") throw new Error("sealed archive changed; export a successor");\n    process.stdout.write(JSON.stringify({ version: "'+version+'", sha256: sha256(sealed), bytes: sealed.length, sealed: true }) + "\\n");\n    return;\n  }');
     });
   }
-  const candidate=path.join(PACKAGE,'export/public/manifest.json');
+  const candidate=path.join(PACKAGE,'export/current/manifest.json');
   try{
     const assets=JSON.parse(readFileSync(candidate,'utf8')).assets;
     add('public-acquisition/manifest.json',source=>{const manifest=JSON.parse(source);manifest.assets.push(...assets);return JSON.stringify(manifest,null,2)+'\n';});

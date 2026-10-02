@@ -29,6 +29,11 @@ for(const [name,files] of suites){
   const count=key=>Number(output.match(new RegExp('^# '+key+' (\\d+)$','m'))?.[1]);
   checks.push({suite:name,tests:count('tests'),pass:count('pass'),fail:count('fail'),skipped:count('skipped'),logSha256:createHash('sha256').update(output).digest('hex')});
 }
+// An inherited cold-acquire test writes this QA profile. Preserve its measured
+// result beside the logs, then restore the known generated file before checking
+// committed source. No other modifications are permitted.
+cpSync(path.join(dir,'public-acquisition/loopback-profile.json'),path.join(dir,'sol348-loopback-profile.json'));
+run('git',['restore','--source=HEAD','--','public-acquisition/loopback-profile.json']);
 const status=run('git',['status','--porcelain','--untracked-files=no']);if(status.trim())throw new Error('receiving_modified_committed_source');
 const receipt={schema:'samedaydesk.scoped-repair.receiving-qa.v1',sourceCommit:run('git',['-C',root,'rev-parse','HEAD']).trim(),
   receivingCommit:run('git',['rev-parse','HEAD']).trim(),patchSha256:createHash('sha256').update(readFileSync(patch)).digest('hex'),

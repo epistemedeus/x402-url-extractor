@@ -1,4 +1,4 @@
-scoped-repair-commerce-100348 0.1.0
+scoped-repair-commerce-100348 0.1.1
 Copyright (c) 2026 SameDayDesk. MIT.
 This isolated integration consumes the owning seller0.4.1, SkillGuard312/319,
 agent-payment-policy, existing storage and Sol339 causal projection contracts.

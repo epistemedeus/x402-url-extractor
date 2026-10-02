@@ -11,11 +11,12 @@ import { surface, seller, target } from './support.mjs';
 import { startHost } from './host-helper.mjs';
 import { processRun } from './process.mjs';
 
-const pkg=path.resolve(import.meta.dirname,'..'),candidate=path.join(pkg,'export/public');
+const pkg=path.resolve(import.meta.dirname,'..'),candidate=path.join(pkg,'export/current');
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 test('licensed cold HTTP acquisition, two caller tasks, changed later input and restart use the actual owners',async t=>{
   const started=performance.now(),root=await mkdtemp(path.join(tmpdir(),'scoped-cold-'));t.after(()=>rm(root,{recursive:true,force:true}));
-  const provenance=JSON.parse(await readFile(path.join(candidate,'bytes/scoped-repair-commerce-100348/0.1.0/provenance.json')));
+  const manifest=JSON.parse(await readFile(path.join(candidate,'manifest.json'))),asset=manifest.assets.find(asset=>asset.role==='archive');
+  const provenance=JSON.parse(await readFile(path.join(candidate,'bytes',path.dirname(asset.relativePath),'provenance.json')));
   const repack=spawnSync(process.execPath,[path.join(pkg,'export/pack.mjs'),'--source-commit',provenance.sourceCommit,'--out',path.join(root,'repack')],{timeout:16000,encoding:'utf8',maxBuffer:16384});
   assert.equal(repack.status,0,repack.stderr);assert.equal(JSON.parse(repack.stdout).archiveSha256,provenance.archiveSha256);
   const published=loadPublicAcquisition({manifestPath:path.join(candidate,'manifest.json'),bytesRoot:path.join(candidate,'bytes')});
@@ -24,7 +25,7 @@ test('licensed cold HTTP acquisition, two caller tasks, changed later input and 
   const base='http://127.0.0.1:'+server.address().port;
   const index=await fetch(base+'/.well-known/public-acquisition/index.json',{signal:AbortSignal.timeout(1000)});
   assert.equal(index.status,200);assert.equal((await index.json()).productionHosted,false);
-  const rel='scoped-repair-commerce-100348/0.1.0/scoped-repair-commerce-100348-0.1.0.tar.gz';
+  const rel=asset.relativePath;
   const received=await fetch(base+'/.well-known/public-acquisition/assets/'+rel,{signal:AbortSignal.timeout(1000)});
   assert.equal(received.status,200);const bytes=Buffer.from(await received.arrayBuffer());assert.equal(hash(bytes),provenance.archiveSha256);
   const archive=path.join(root,'client.tar.gz');await writeFile(archive,bytes);
@@ -32,6 +33,7 @@ test('licensed cold HTTP acquisition, two caller tasks, changed later input and 
   for(const dir of [one,two]){
     const extract=spawnSync('tar',['-xzf',archive,'-C',dir],{timeout:2000,maxBuffer:16384});assert.equal(extract.status,0);
     const portable=await processRun(['--test','test/portable.test.mjs'],{cwd:dir});assert.equal(portable.code,0,portable.err);
+    const smoke=await processRun(['bin/check-cold.mjs'],{cwd:dir});assert.equal(smoke.code,0);assert.equal(JSON.parse(smoke.out).requestRequired,true);
   }
   const data=path.join(root,'isolated-data');let host=await startHost(data);t.after(()=>host.close());
   async function cli(dir,command,input){const result=await processRun(['bin/scoped-repair.mjs',command,'--service',host.base,'--request','-'],{cwd:dir,stdin:JSON.stringify(input),deadline:6000});assert.equal(result.code,0,result.err||result.out);return JSON.parse(result.out);}

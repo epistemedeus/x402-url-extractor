@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { inventoryArchive, loadPublicAcquisition } from '../../../../public-acquisition/engine.mjs';
 
 const pkg=path.resolve(import.meta.dirname,'..'),repo=path.resolve(pkg,'../../..'),prefix=path.relative(repo,pkg);
-const id='scoped-repair-commerce-100348',version='0.1.0';
+const id='scoped-repair-commerce-100348',version=JSON.parse(readFileSync(path.join(pkg,'export/client-package.json'))).version;
 const hash=x=>createHash('sha256').update(x).digest('hex');
 const die=code=>{throw new Error(code);};
 const end=performance.now()+15000;let sourceBytes=0;
@@ -17,7 +17,7 @@ function run(command,args,options={}){const result=spawnSync(command,args,{timeo
 const args={};
 for(let i=2;i<process.argv.length;i+=2){if(!['--source-commit','--out'].includes(process.argv[i])||!process.argv[i+1]||args[process.argv[i]])die('pack_argument');args[process.argv[i]]=process.argv[i+1];}
 const sourceCommit=args['--source-commit'];if(!/^[a-f0-9]{40}$/.test(sourceCommit||''))die('exact_source_commit_required');
-const out=path.resolve(args['--out']||path.join(pkg,'export/public'));
+const out=path.resolve(args['--out']||path.join(pkg,'export/current'));
 const stage=mkdtempSync(path.join(tmpdir(),'scoped-client-pack-'));
 const sources=[],transforms=[];
 function member(from,to,changes=[]){
@@ -31,7 +31,7 @@ function member(from,to,changes=[]){
   transforms.push({member:to,source:from,relocations:changes,sha256:hash(Buffer.from(output))});
 }
 try{
-  for(const file of ['LICENSE','README.md','SOURCE-NOTICE.txt','bin/scoped-repair.mjs'])member(prefix+'/'+file,file);
+  for(const file of ['LICENSE','README.md','SOURCE-NOTICE.txt','bin/scoped-repair.mjs','bin/check-cold.mjs'])member(prefix+'/'+file,file);
   member(prefix+'/src/client.mjs','src/client.mjs',[["from 'agent-payment-policy'","from '../vendor/policy/core.mjs'"],["from '../../task-demand-100339/src/bounds.mjs'","from '../vendor/task-demand-bounds.mjs'"]]);
   member(prefix+'/src/contracts.mjs','src/contracts.mjs',[["from 'agent-payment-policy'","from '../vendor/policy/core.mjs'"]]);
   member(prefix+'/src/bounds.mjs','src/bounds.mjs',[["from '../../../../experiments/scoped-surface-delivery-100312/src/budget.mjs'","from '../vendor/surface-budget.mjs'"],["from '../../task-demand-100339/src/bounds.mjs'","from '../vendor/task-demand-bounds.mjs'"]]);
