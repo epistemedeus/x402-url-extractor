@@ -1,0 +1,17 @@
+{
+  "schema": "samedaydesk.scoped-surface.machine.v1",
+  "published": false,
+  "skuAdded": false,
+  "mountedInServer": false,
+  "routes": [
+    { "method": "POST", "path": "/commerce/scoped-surface-scan", "charged": false },
+    { "method": "POST", "path": "/commerce/scoped-surface-retest", "charged": false },
+    { "method": "POST", "path": "/commerce/scoped-surface-retain", "charged": false },
+    { "method": "GET", "path": "/commerce/scoped-surface-regression/:id", "charged": false },
+    { "method": "POST", "path": "/commerce/scoped-surface-regression/:id", "charged": false, "role": "owner-correction-or-revocation" },
+    { "method": "POST", "path": "/commerce/scoped-surface-local-report", "charged": false },
+    { "method": "GET", "path": "/commerce/scoped-surface-price", "charged": false }
+  ],
+  "patch": "route/ROOT-SERVER-MOUNT.patch",
+  "freeBaseline": "npx github:epistemedeus/skillguard <local-tree>"
+}

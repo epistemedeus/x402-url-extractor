@@ -1,0 +1,15 @@
+{
+  "schema": "samedaydesk.scoped-surface.public-dependencies.v1",
+  "runtime": "node>=22",
+  "npmDependencies": {},
+  "privateCheckouts": [],
+  "publicLicensed": [
+    {
+      "name": "skillguard",
+      "commit": "beec14acbb56de37cd361acc949087b9ae019b70",
+      "licenseDeclared": "MIT",
+      "licenseFile": null,
+      "acquisition": "Prebuilt deployment artifact. The request path does not fetch or install it."
+    }
+  ]
+}
