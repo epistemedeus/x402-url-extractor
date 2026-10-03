@@ -1,6 +1,8 @@
 export const REPORT_SCHEMA = "samedaydesk.attempt-useful-view.report.v1";
 export const RETAINED_SCHEMA = "samedaydesk.attempt-useful-view.retained.v1";
 export const JOB_ID = "HEAVY-ATTEMPT-USEFUL-VIEW-1005";
+export const ADAPT_JOB_ID = "HEAVY-ATTEMPT-USEFUL-ADAPT-161-1005";
+export const PRIOR_VIEW_HEAD = "4e49c4db58ea0f5897240781fd14d80566bbabd0";
 
 // This view is not a child of a prior attempt. Callers may not set another value.
 export const ATTEMPT_OF = null;
@@ -23,13 +25,21 @@ export const PINS = Object.freeze({
   freeUseObserver421: "26d806f20e57d0c073321675dacb13395e30c643",
   terminalReader423: "5693610be4d7fdf7d13044be666f712b7ea189f8",
   seller041: "015f07d5a75d02a4e74709b17b2b1176501e92a5",
-  releasedMerchantHead: "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+  // Merchant160 stays historical. Integration is pinned to merged merchant161.
+  releasedMerchantHead: "32f07a836fb28e400d56b0e2e876043644bde31a",
+  historicalReleasedMerchantHead: "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+  // Cold-command receiving readback merged by merchant161. It is not a server patch.
+  publicAcquisitionArtifact: "4b7928f315be9d9ec7d14f2604eab1b7b236a63a",
 });
 
-// Test-only clock-window fix. It is not applied here and does not change production freshness.
+// Test-only clock-window fix. This branch does not apply it. Production freshness stays 900000 ms.
+// Commit de4c2a1f is not an ancestor of merchant161. Merchant161's observer test blob matches that commit.
 export const CLOCK_WINDOW_FIX = "de4c2a1f5e52065273b677a8694913a98850dcf0";
 export const CLOCK_WINDOW_FIX_BRANCH = "codex/task-observer-window-1003";
 export const CLOCK_WINDOW_FIX_APPLIED = false;
+export const CLOCK_WINDOW_FIX_ON_THIS_BRANCH = false;
+export const CLOCK_WINDOW_FIX_COMMIT_ANCESTOR_OF_MERCHANT161 = false;
+export const CLOCK_WINDOW_FIX_CONTENT_ON_MERCHANT161 = true;
 export const PRODUCTION_FRESHNESS_MAX_AGE_MS = 900_000;
 
 export const TASK_REF = /^t[a-f0-9]{62}$/;

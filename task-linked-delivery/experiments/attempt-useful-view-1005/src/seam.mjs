@@ -2,6 +2,8 @@ import { containsRestrictedKey } from "../../../tools/ops/three-site-settlement-
 import {
   CLOCK_WINDOW_FIX,
   CLOCK_WINDOW_FIX_APPLIED,
+  CLOCK_WINDOW_FIX_COMMIT_ANCESTOR_OF_MERCHANT161,
+  CLOCK_WINDOW_FIX_CONTENT_ON_MERCHANT161,
   FORBIDDEN_OPERATION,
   PINS,
   PRODUCTION_FRESHNESS_MAX_AGE_MS,
@@ -30,6 +32,9 @@ export function publicSeam(baseline) {
       },
       populationConversionRate: null,
       enrollment: "waiting",
+      releasedMerchantHead: PINS.releasedMerchantHead,
+      historicalReleasedMerchantHead: PINS.historicalReleasedMerchantHead,
+      publicAcquisitionArtifact: PINS.publicAcquisitionArtifact,
     };
   }
   if (baseline.schema !== BASELINE_SCHEMA) fail("public_aggregate_rejected");
@@ -56,9 +61,13 @@ export function publicSeam(baseline) {
     clockWindowFix: {
       commit: CLOCK_WINDOW_FIX,
       applied: CLOCK_WINDOW_FIX_APPLIED,
+      commitIsAncestorOfMerchant161: CLOCK_WINDOW_FIX_COMMIT_ANCESTOR_OF_MERCHANT161,
+      contentPresentOnMerchant161: CLOCK_WINDOW_FIX_CONTENT_ON_MERCHANT161,
       productionFreshnessMaxAgeMs: PRODUCTION_FRESHNESS_MAX_AGE_MS,
     },
     releasedMerchantHead: PINS.releasedMerchantHead,
+    historicalReleasedMerchantHead: PINS.historicalReleasedMerchantHead,
+    publicAcquisitionArtifact: PINS.publicAcquisitionArtifact,
   };
 }
 

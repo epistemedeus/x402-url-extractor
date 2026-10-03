@@ -1,0 +1,147 @@
+{
+  "schema": "samedaydesk.attempt-useful-view.merchant161-inspection.v1",
+  "inspectedFrom": "git",
+  "priorViewHead": "4e49c4db58ea0f5897240781fd14d80566bbabd0",
+  "priorViewOperation": "bc331d8d-2e56-4770-93d2-bc40bc146e8c",
+  "priorViewOperationReused": false,
+  "remoteMaster": "32f07a836fb28e400d56b0e2e876043644bde31a",
+  "remoteMasterMatchesMerchant161": true,
+  "merchant161": {
+    "sha": "32f07a836fb28e400d56b0e2e876043644bde31a",
+    "subject": "Merge pull request #161 from epistemedeus/codex/public-acquisition-receiving-1003",
+    "parents": [
+      "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+      "4b7928f315be9d9ec7d14f2604eab1b7b236a63a"
+    ]
+  },
+  "merchant160": {
+    "sha": "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+    "subject": "Merge pull request #160 from epistemedeus/codex/root-scoped-repair-launch-1003",
+    "role": "historical_only",
+    "isAncestorOfMerchant161": true
+  },
+  "publicAcquisitionArtifact": {
+    "sha": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a",
+    "subject": "Record actual public acquisition and cold command receiving",
+    "isSecondParentOfMerchant161": true,
+    "isAncestorOfMerchant161": true
+  },
+  "diffNameOnlyMerchant160ToMerchant161": [
+    "public-acquisition/receiving/artifact.json"
+  ],
+  "blobs": {
+    "serverJs": {
+      "merchant160": "77e0e67c6c62f8e4a5c12d5b84e3bd8c7e74e0b7",
+      "merchant161": "77e0e67c6c62f8e4a5c12d5b84e3bd8c7e74e0b7",
+      "thisBranch": "4418d14afabdd9f38d83e2948a84bebb4f416855"
+    },
+    "publicAcquisitionManifest": {
+      "merchant160": "4dacbd4904b784246ca45511c22f25e294860b4d",
+      "merchant161": "4dacbd4904b784246ca45511c22f25e294860b4d",
+      "thisBranch": "770b2d7c87764768c1bd7a5dfd8f31bf35e19789"
+    },
+    "publicAcquisitionReceivingArtifact": {
+      "merchant160": "fc1da954b652ed74cfa0c20bba6ff148014e1172",
+      "merchant161": "736c6d98c285c78e5c0c8e3b75bd99688a283d8c",
+      "artifactCommit": "736c6d98c285c78e5c0c8e3b75bd99688a283d8c",
+      "thisBranch": "fc1da954b652ed74cfa0c20bba6ff148014e1172"
+    },
+    "serviceDeploymentStatement": {
+      "merchant160": "c3841d0a0c67eba1e2f0a2b6ce61db78b447b781",
+      "merchant161": "c3841d0a0c67eba1e2f0a2b6ce61db78b447b781",
+      "thisBranch": "c3841d0a0c67eba1e2f0a2b6ce61db78b447b781"
+    },
+    "observerTest": {
+      "thisBranch": "49295b4e027ef63017d40cff96aacce81de3632d",
+      "merchant160": "8f67a79a5d71eacb85df0c6812b18a9875d8ec2e",
+      "merchant161": "8f67a79a5d71eacb85df0c6812b18a9875d8ec2e",
+      "clockWindowFixCommit": "8f67a79a5d71eacb85df0c6812b18a9875d8ec2e"
+    }
+  },
+  "freeTaskObservation": {
+    "merchant161ServerAndUsefulResultReuse": {
+      "exitCode": 1,
+      "matches": 0
+    },
+    "thisBranchServerAndUsefulResultReuse": {
+      "exitCode": 1,
+      "matches": 0
+    }
+  },
+  "attemptUsefulViewOnMerchant161Server": {
+    "exitCode": 1,
+    "matches": 0
+  },
+  "clockWindowFix": {
+    "commit": "de4c2a1f5e52065273b677a8694913a98850dcf0",
+    "subject": "test(observer): scope live producer fixture to its actual executed interval",
+    "commitIsAncestorOfMerchant161": false,
+    "commitIsAncestorOfThisBranch": false,
+    "observerTestBlobEqualsMerchant161": true
+  },
+  "productionFreshness": {
+    "merchant161Line": "32f07a836fb28e400d56b0e2e876043644bde31a:commerce-events.mjs:2907:  mcpTypedFreshnessMaxAgeMs = 900_000,",
+    "thisBranchLine": "HEAD:commerce-events.mjs:2902:  mcpTypedFreshnessMaxAgeMs = 900_000,"
+  },
+  "artifactReadback": {
+    "schema": "samedaydesk.public-acquisition.receiving-artifact.v1",
+    "kind": "deployment-readback",
+    "proofClass": "public-origin",
+    "complete": true,
+    "observedAt": "2026-10-03T09:16:46.141Z",
+    "configuredPublicOrigin": "https://agents.samedaydesk.com",
+    "coldCommandIds": [
+      {
+        "id": "composition-route-knowledge",
+        "version": "0.1.0",
+        "coverage": "complete"
+      },
+      {
+        "id": "retained-task",
+        "version": "0.1.0",
+        "coverage": "complete"
+      },
+      {
+        "id": "l09-next-action",
+        "version": "0.1.0",
+        "coverage": "complete"
+      },
+      {
+        "id": "seller-repair-external-consumer",
+        "version": "0.2.0",
+        "coverage": "complete"
+      },
+      {
+        "id": "seller-repair-external-consumer",
+        "version": "0.4.1",
+        "coverage": "complete"
+      },
+      {
+        "id": "scoped-repair-commerce-100348",
+        "version": "0.1.2",
+        "coverage": "complete"
+      }
+    ],
+    "qualifications": {
+      "sourceQualification": "unknown",
+      "privateGit": "unavailable",
+      "independentAdoption": false,
+      "paidLaunch": false,
+      "measuredSavings": false,
+      "purchaseAuthorization": false
+    },
+    "remoteIndex": {
+      "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/index.json",
+      "status": 200,
+      "draft": true,
+      "productionHosted": false,
+      "hostedAcquisitionVerified": false,
+      "assetCount": 21,
+      "sha256": "67d4e3661e138f4e02e773ec046486fcec6072a04f35345d9ea800b6cf737300"
+    },
+    "paidSuccessMentions": 0,
+    "attemptUsefulViewMentions": 0
+  },
+  "branchPointWithMerchant161": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+  "seller041": "015f07d5a75d02a4e74709b17b2b1176501e92a5"
+}

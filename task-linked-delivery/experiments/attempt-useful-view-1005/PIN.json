@@ -1,7 +1,11 @@
 {
   "schema": "samedaydesk.attempt-useful-view.pin.v1",
   "jobId": "HEAVY-ATTEMPT-USEFUL-VIEW-1005",
+  "adaptJobId": "HEAVY-ATTEMPT-USEFUL-ADAPT-161-1005",
   "attemptOf": null,
+  "priorViewHead": "4e49c4db58ea0f5897240781fd14d80566bbabd0",
+  "priorViewOperation": "bc331d8d-2e56-4770-93d2-bc40bc146e8c",
+  "priorViewOperationReused": false,
   "ownedScope": "task-linked-delivery/experiments/attempt-useful-view-1005",
   "reusedCommits": {
     "causalProof301": "45db5507d1fef740dfe5fe84ec611c7b764d8c43",
@@ -11,12 +15,16 @@
     "terminalReader423": "5693610be4d7fdf7d13044be666f712b7ea189f8"
   },
   "seller041": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
-  "releasedMerchantHead": "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+  "releasedMerchantHead": "32f07a836fb28e400d56b0e2e876043644bde31a",
+  "historicalReleasedMerchantHead": "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+  "publicAcquisitionArtifact": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a",
   "clockWindowFix": {
     "commit": "de4c2a1f5e52065273b677a8694913a98850dcf0",
     "branch": "codex/task-observer-window-1003",
     "applied": false,
     "onThisBranch": false,
+    "commitIsAncestorOfMerchant161": false,
+    "contentPresentOnMerchant161": true,
     "productionFreshnessMaxAgeMs": 900000
   },
   "forbiddenOperation": "add923ae-3eb5-474b-8b3e-e376666dee83",
@@ -31,13 +39,13 @@
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/README.md",
-      "sha256": "11b5a1cc2a7348b746acb536bdfea351262934c0574d015ef04a998d5d8783e6",
-      "bytes": 3171
+      "sha256": "b23ada510c1a03c263b2147543214452a9ea03004638df96e15718643986365d",
+      "bytes": 3598
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/SOURCE-NOTICE.txt",
-      "sha256": "b8ea236e41b06ca692125d52d3058f62d5adb4a74d8a3f198869f277924c4b65",
-      "bytes": 395
+      "sha256": "5c9263d5d12ce8a337ad397177087833256fdf99fbd2f7819d4747a28728712f",
+      "bytes": 549
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/bin/attempt-useful-view.mjs",
@@ -46,23 +54,28 @@
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/evidence/one-useful-task.json",
-      "sha256": "eb6fc3118fb3278eb7b3e199a577fa697d41d579ed049a513f6b9a0e7ee41177",
-      "bytes": 4045
+      "sha256": "eaac9a0800d9cacefc0f975659edf4c8f131eb4603c703bb74f2ec798d8350ab",
+      "bytes": 4728
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/export/MERCHANT161-INSPECTION.json",
+      "sha256": "8268cdb630ed111329d562af6a4104b596e00e8d5e954aae2d425ce02a9eaba2",
+      "bytes": 5265
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/export/NEEDED-ENROLLMENT.md",
-      "sha256": "0b8021746b0007188cb7bc4d6c3177d10d9ffd3c32d03caaaeae47d0f5f7123f",
-      "bytes": 1220
+      "sha256": "c930870ed6af1762d6de7028c83d51931764bd7d4422e0a95b56dcc1a33f40fa",
+      "bytes": 2027
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/export/PUBLIC-SEAM.md",
-      "sha256": "e6065b45bffaf7f5852ed0720991493d9879caa8cf5b049194c1472d723c008a",
-      "bytes": 890
+      "sha256": "b4689a4d8032821dcc3c873e9c8f6962165e445b93aa38d0e00f188aa4193011",
+      "bytes": 1282
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/export/ROOT-INTEGRATION-DELTA.json",
-      "sha256": "0fa48901c561054b30fef352857a66a99099c7fc52e1750b7c7586d6ed6569a1",
-      "bytes": 1481
+      "sha256": "c79bd4d8fe2ecce0f48e7f45db2d28f5e1a58771a108a04369c7392563812816",
+      "bytes": 4218
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/package.json",
@@ -71,8 +84,8 @@
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/constants.mjs",
-      "sha256": "119dea35b2ad979fa2a1d497eddd31d6ef7f7d26a88812759af1029bc4d55ebb",
-      "bytes": 1613
+      "sha256": "32b7dbb5680514d068df9348d58332961d3b9fbb134b47ab9d1580012c0512cd",
+      "bytes": 2369
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/errors.mjs",
@@ -81,13 +94,13 @@
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/seam.mjs",
-      "sha256": "61be0cb649bb0677991d57022f67de9a310d5e9d3012cb2a343258e20e3d50ed",
-      "bytes": 4281
+      "sha256": "68c0e23e07785c253ab4387f8e4db290be047a22140c3ffb1ab2c811f5706512",
+      "bytes": 4868
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/view.mjs",
-      "sha256": "6f9c102bee23a6668ad2c09c028490eb3e29f8bc1f7d584c340b3aa18947857b",
-      "bytes": 15765
+      "sha256": "43a06640588d3b14c2e2e00e3c08fad05d94f26af9e43829cdfc3064dcbd512a",
+      "bytes": 16255
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/test/seeded-false-join.json",
@@ -96,8 +109,8 @@
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/test/view.test.mjs",
-      "sha256": "47ae9668acb885a4cd7d5111b584e891a7574b3e368dc5832bb50a8973a60708",
-      "bytes": 17384
+      "sha256": "721501137db39195c5a56d219acfdbace357703762cc37f2857499a9c4ada3e7",
+      "bytes": 22898
     }
   ]
 }

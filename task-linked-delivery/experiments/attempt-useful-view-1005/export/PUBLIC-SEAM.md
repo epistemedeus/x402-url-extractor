@@ -16,3 +16,11 @@ The per-attempt view does not close that seam. It reads one task from an
 existing journal and leaves `publicSeam.status` unresolved. A retained
 owner-QA fixture that is covered inside its own cut is still not live
 coverage of this public day.
+
+Merchant161 `32f07a836fb28e400d56b0e2e876043644bde31a` merged the
+public-acquisition receiving artifact
+`4b7928f315be9d9ec7d14f2604eab1b7b236a63a`. That readback lists cold commands.
+It has no `paid_success` field. `productionHosted` and
+`hostedAcquisitionVerified` are false. Merchant160
+`dc32cf7bf5fd76a5cd9047865f49b2462252897c` is historical only. The public
+numerator stays unresolved.

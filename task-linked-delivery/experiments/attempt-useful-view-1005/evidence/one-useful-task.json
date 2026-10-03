@@ -84,9 +84,13 @@
     "clockWindowFix": {
       "commit": "de4c2a1f5e52065273b677a8694913a98850dcf0",
       "applied": false,
+      "commitIsAncestorOfMerchant161": false,
+      "contentPresentOnMerchant161": true,
       "productionFreshnessMaxAgeMs": 900000
     },
-    "releasedMerchantHead": "dc32cf7bf5fd76a5cd9047865f49b2462252897c"
+    "releasedMerchantHead": "32f07a836fb28e400d56b0e2e876043644bde31a",
+    "historicalReleasedMerchantHead": "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+    "publicAcquisitionArtifact": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a"
   },
   "provenance": {
     "reader": "isolated_attempt_useful_view_reuses_421_projectBundle",
@@ -100,7 +104,9 @@
       "freeUseObserver421": "26d806f20e57d0c073321675dacb13395e30c643",
       "terminalReader423": "5693610be4d7fdf7d13044be666f712b7ea189f8",
       "seller041": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
-      "releasedMerchantHead": "dc32cf7bf5fd76a5cd9047865f49b2462252897c"
+      "releasedMerchantHead": "32f07a836fb28e400d56b0e2e876043644bde31a",
+      "historicalReleasedMerchantHead": "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+      "publicAcquisitionArtifact": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a"
     },
     "observerProducerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
     "clockWindowFix": {
@@ -108,10 +114,17 @@
       "branch": "codex/task-observer-window-1003",
       "applied": false,
       "onThisBranch": false,
+      "commitIsAncestorOfMerchant161": false,
+      "contentPresentOnMerchant161": true,
       "productionFreshnessMaxAgeMs": 900000
     },
     "seller041": "frozen_not_rewritten",
     "integrationDelta": "prepared_unapplied",
-    "enrollment": "waiting"
+    "enrollment": "waiting",
+    "adapt": {
+      "jobId": "HEAVY-ATTEMPT-USEFUL-ADAPT-161-1005",
+      "priorViewHead": "4e49c4db58ea0f5897240781fd14d80566bbabd0",
+      "priorViewOperationReused": false
+    }
   }
 }

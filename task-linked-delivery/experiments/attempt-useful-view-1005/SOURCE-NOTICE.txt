@@ -1,4 +1,6 @@
 Isolated per-attempt observation view for HEAVY-ATTEMPT-USEFUL-VIEW-1005.
+HEAVY-ATTEMPT-USEFUL-ADAPT-161-1005 retargets the merchant pin to merchant161
+32f07a836fb28e400d56b0e2e876043644bde31a. The server delta stays unapplied.
 It reads existing 421 journals and the committed 423 baseline. It does not
 rebuild the 301 causal proof, the 339 task producer, the 395 measurement,
 the 421 observer, or the 423 reader. It does not edit Root's server,

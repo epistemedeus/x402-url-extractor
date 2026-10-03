@@ -8,15 +8,20 @@ import {
 } from "../../free-task-observation-100421/src/project.mjs";
 import { containsRestrictedKey } from "../../../tools/ops/three-site-settlement-join/measure/src/restricted.mjs";
 import {
+  ADAPT_JOB_ID,
   ATTEMPT_OF,
   CLOCK_WINDOW_FIX,
   CLOCK_WINDOW_FIX_APPLIED,
+  CLOCK_WINDOW_FIX_COMMIT_ANCESTOR_OF_MERCHANT161,
+  CLOCK_WINDOW_FIX_CONTENT_ON_MERCHANT161,
+  CLOCK_WINDOW_FIX_ON_THIS_BRANCH,
   DISPOSITIONS,
   EVENT_ID,
   FORBIDDEN_OPERATION,
   HEX64,
   JOB_ID,
   PINS,
+  PRIOR_VIEW_HEAD,
   PRODUCTION_FRESHNESS_MAX_AGE_MS,
   REPORT_SCHEMA,
   RETAINED_SCHEMA,
@@ -136,12 +141,19 @@ function shell(fields) {
         commit: CLOCK_WINDOW_FIX,
         branch: "codex/task-observer-window-1003",
         applied: CLOCK_WINDOW_FIX_APPLIED,
-        onThisBranch: false,
+        onThisBranch: CLOCK_WINDOW_FIX_ON_THIS_BRANCH,
+        commitIsAncestorOfMerchant161: CLOCK_WINDOW_FIX_COMMIT_ANCESTOR_OF_MERCHANT161,
+        contentPresentOnMerchant161: CLOCK_WINDOW_FIX_CONTENT_ON_MERCHANT161,
         productionFreshnessMaxAgeMs: PRODUCTION_FRESHNESS_MAX_AGE_MS,
       },
       seller041: "frozen_not_rewritten",
       integrationDelta: "prepared_unapplied",
       enrollment: "waiting",
+      adapt: {
+        jobId: ADAPT_JOB_ID,
+        priorViewHead: PRIOR_VIEW_HEAD,
+        priorViewOperationReused: false,
+      },
     },
   };
 }

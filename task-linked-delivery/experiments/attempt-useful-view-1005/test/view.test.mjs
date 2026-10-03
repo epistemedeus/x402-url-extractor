@@ -5,7 +5,15 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { digest } from "../../free-task-observation-100421/vendor/bounds.mjs";
 import { containsRestrictedKey } from "../../../tools/ops/three-site-settlement-join/measure/src/restricted.mjs";
-import { CLOCK_WINDOW_FIX_APPLIED, DISPOSITIONS, FORBIDDEN_OPERATION, PRODUCTION_FRESHNESS_MAX_AGE_MS } from "../src/constants.mjs";
+import {
+  CLOCK_WINDOW_FIX_APPLIED,
+  CLOCK_WINDOW_FIX_CONTENT_ON_MERCHANT161,
+  DISPOSITIONS,
+  FORBIDDEN_OPERATION,
+  PINS,
+  PRIOR_VIEW_HEAD,
+  PRODUCTION_FRESHNESS_MAX_AGE_MS,
+} from "../src/constants.mjs";
 import { ViewError } from "../src/errors.mjs";
 import { refuseFalseJoin } from "../src/seam.mjs";
 import {
@@ -21,6 +29,13 @@ const afterPath = fileURLToPath(new URL("../../free-task-observation-100421/fixt
 const baselinePath = fileURLToPath(new URL("../../production-funnel-100423/evidence/baseline.stripped.json", import.meta.url));
 const binPath = fileURLToPath(new URL("../bin/attempt-useful-view.mjs", import.meta.url));
 const seededPath = fileURLToPath(new URL("./seeded-false-join.json", import.meta.url));
+const evidencePath = fileURLToPath(new URL("../evidence/one-useful-task.json", import.meta.url));
+const inspectionPath = fileURLToPath(new URL("../export/MERCHANT161-INSPECTION.json", import.meta.url));
+const deltaPath = fileURLToPath(new URL("../export/ROOT-INTEGRATION-DELTA.json", import.meta.url));
+const MERCHANT161 = "32f07a836fb28e400d56b0e2e876043644bde31a";
+const MERCHANT160 = "dc32cf7bf5fd76a5cd9047865f49b2462252897c";
+const ACQUISITION_ARTIFACT = "4b7928f315be9d9ec7d14f2604eab1b7b236a63a";
+const PRIOR_VIEW_OPERATION = "bc331d8d-2e56-4770-93d2-bc40bc146e8c";
 
 const POSITIVE = "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f";
 const NEGATIVE = "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60";
@@ -346,6 +361,7 @@ test("the cold command reports one useful task and the seeded command exits 2", 
     baselinePath,
   ], { cwd: root, encoding: "utf8" });
   assert.equal(reportRun.status, 0, reportRun.stderr);
+  assert.equal(reportRun.stdout, readFileSync(evidencePath, "utf8"));
   const report = JSON.parse(reportRun.stdout);
   assert.equal(report.decision, "one_attempt");
   assert.equal(report.taskRef, POSITIVE);
@@ -353,7 +369,14 @@ test("the cold command reports one useful task and the seeded command exits 2", 
   assert.equal(report.liveCoverage, false);
   assert.equal(report.attemptOf, null);
   assert.equal(report.publicSeam.paidSuccess.observed, null);
+  assert.equal(report.publicSeam.paidSuccess.disposition, "unresolved");
   assert.equal(report.publicSeam.coveredExternalEvents, 3692);
+  assert.equal(report.publicSeam.releasedMerchantHead, MERCHANT161);
+  assert.equal(report.publicSeam.historicalReleasedMerchantHead, MERCHANT160);
+  assert.equal(report.publicSeam.publicAcquisitionArtifact, ACQUISITION_ARTIFACT);
+  assert.equal(report.provenance.integrationDelta, "prepared_unapplied");
+  assert.equal(report.provenance.enrollment, "waiting");
+  assert.equal(report.liveCoverage, false);
   assert.equal(report.populationConversionRate, null);
   assert.equal(containsRestrictedKey(report), false);
 
@@ -372,4 +395,74 @@ test("the cold command reports one useful task and the seeded command exits 2", 
   assert.ok(refusal.reasons.includes("paid_success_absent_is_not_zero"));
   assert.ok(refusal.reasons.includes("population_conversion_refused"));
   assert.ok(refusal.reasons.includes("operation_remint_refused"));
+});
+
+test("merchant161 is the released pin and the server delta stays prepared_unapplied", () => {
+  const inspection = JSON.parse(readFileSync(inspectionPath, "utf8"));
+  const delta = JSON.parse(readFileSync(deltaPath, "utf8"));
+  assert.equal(PINS.releasedMerchantHead, MERCHANT161);
+  assert.equal(PINS.historicalReleasedMerchantHead, MERCHANT160);
+  assert.equal(PINS.publicAcquisitionArtifact, ACQUISITION_ARTIFACT);
+  assert.equal(PINS.seller041, "015f07d5a75d02a4e74709b17b2b1176501e92a5");
+  assert.equal(inspection.priorViewHead, PRIOR_VIEW_HEAD);
+  assert.equal(inspection.priorViewOperation, PRIOR_VIEW_OPERATION);
+  assert.equal(inspection.priorViewOperationReused, false);
+  assert.equal(inspection.remoteMasterMatchesMerchant161, true);
+  assert.equal(inspection.remoteMaster, MERCHANT161);
+  assert.equal(inspection.publicAcquisitionArtifact.sha, ACQUISITION_ARTIFACT);
+  assert.equal(inspection.publicAcquisitionArtifact.isSecondParentOfMerchant161, true);
+  assert.equal(inspection.merchant160.role, "historical_only");
+  assert.equal(inspection.blobs.serverJs.merchant160, inspection.blobs.serverJs.merchant161);
+  assert.equal(inspection.freeTaskObservation.merchant161ServerAndUsefulResultReuse.matches, 0);
+  assert.deepEqual(inspection.diffNameOnlyMerchant160ToMerchant161, [
+    "public-acquisition/receiving/artifact.json",
+  ]);
+  assert.equal(
+    inspection.blobs.publicAcquisitionReceivingArtifact.thisBranch,
+    inspection.blobs.publicAcquisitionReceivingArtifact.merchant160,
+  );
+  assert.notEqual(
+    inspection.blobs.publicAcquisitionReceivingArtifact.thisBranch,
+    inspection.blobs.publicAcquisitionReceivingArtifact.merchant161,
+  );
+  assert.equal(inspection.artifactReadback.qualifications.paidLaunch, false);
+  assert.equal(inspection.artifactReadback.remoteIndex.productionHosted, false);
+  assert.equal(inspection.artifactReadback.remoteIndex.hostedAcquisitionVerified, false);
+  assert.equal(inspection.artifactReadback.paidSuccessMentions, 0);
+  assert.equal(inspection.artifactReadback.attemptUsefulViewMentions, 0);
+  assert.equal(inspection.clockWindowFix.commitIsAncestorOfMerchant161, false);
+  assert.equal(inspection.clockWindowFix.observerTestBlobEqualsMerchant161, CLOCK_WINDOW_FIX_CONTENT_ON_MERCHANT161);
+  assert.equal(delta.status, "prepared_unapplied");
+  assert.equal(delta.enrollment, "waiting");
+  assert.equal(delta.releasedMerchantHead, MERCHANT161);
+  assert.equal(delta.historicalReleasedMerchantHead, MERCHANT160);
+  assert.equal(delta.publicAcquisitionArtifact, ACQUISITION_ARTIFACT);
+  assert.equal(delta.serverEdited, false);
+  assert.equal(delta.serverPublished, false);
+  assert.equal(delta.indexPublicationEdited, false);
+  assert.equal(delta.artifactJsonCopiedOntoThisBranch, false);
+  assert.equal(delta.seller041Rewritten, false);
+  assert.equal(delta.observationMountOnReleasedHead, false);
+  assert.equal(delta.minimalServerDeltaLines, 0);
+  assert.equal(delta.priorViewOperationReused, false);
+  assert.equal(delta.priorViewOperation, PRIOR_VIEW_OPERATION);
+  assert.equal(delta.priorViewHead, PRIOR_VIEW_HEAD);
+  assert.equal(delta.liveCoverage, false);
+  assert.equal(delta.paidSuccess, "unresolved");
+  assert.equal(delta.attemptOf, null);
+  const report = view(retained, POSITIVE, { baseline });
+  assert.equal(report.provenance.pins.releasedMerchantHead, MERCHANT161);
+  assert.equal(report.provenance.pins.historicalReleasedMerchantHead, MERCHANT160);
+  assert.equal(report.provenance.pins.publicAcquisitionArtifact, ACQUISITION_ARTIFACT);
+  assert.equal(report.publicSeam.releasedMerchantHead, MERCHANT161);
+  assert.equal(report.provenance.integrationDelta, "prepared_unapplied");
+  assert.equal(report.provenance.enrollment, "waiting");
+  assert.equal(report.provenance.adapt.jobId, "HEAVY-ATTEMPT-USEFUL-ADAPT-161-1005");
+  assert.equal(report.provenance.adapt.priorViewHead, PRIOR_VIEW_HEAD);
+  assert.equal(report.provenance.adapt.priorViewOperationReused, false);
+  assert.equal(report.liveCoverage, false);
+  assert.equal(report.publicSeam.paidSuccess.observed, null);
+  assert.equal(report.publicSeam.paidSuccess.reason, "absent_from_covered_byresult_not_zero");
+  assert.equal(JSON.stringify(report).includes(PRIOR_VIEW_OPERATION), false);
+  assert.equal(JSON.stringify(report).includes(FORBIDDEN_OPERATION), true);
 });

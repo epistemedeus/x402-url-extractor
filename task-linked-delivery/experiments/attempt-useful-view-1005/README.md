@@ -56,15 +56,21 @@ node --test --test-concurrency=1 task-linked-delivery/experiments/attempt-useful
 
 ## Enrollment and the public seam
 
-Root's released merchant head `dc32cf7bf5fd76a5cd9047865f49b2462252897c` was
-fetched and inspected. The 421 observation mount is not on it. This packet
-does not edit `server.js` or the index. The server delta is prepared and
-unapplied; production enrollment is waiting. See
+Released merchant head `32f07a836fb28e400d56b0e2e876043644bde31a` (merchant161,
+merge of pull request 161) was fetched and inspected. Merchant160
+`dc32cf7bf5fd76a5cd9047865f49b2462252897c` is historical only. Merchant161's
+second parent is public-acquisition artifact
+`4b7928f315be9d9ec7d14f2604eab1b7b236a63a`. The 421 observation mount is absent
+on merchant161. This packet does not edit `server.js`, the public-acquisition
+manifest, or seller 0.4.1. The server delta stays `prepared_unapplied`.
+Production enrollment stays waiting. See
 [export/NEEDED-ENROLLMENT.md](export/NEEDED-ENROLLMENT.md),
-[export/PUBLIC-SEAM.md](export/PUBLIC-SEAM.md), and
-[export/ROOT-INTEGRATION-DELTA.json](export/ROOT-INTEGRATION-DELTA.json).
+[export/PUBLIC-SEAM.md](export/PUBLIC-SEAM.md),
+[export/ROOT-INTEGRATION-DELTA.json](export/ROOT-INTEGRATION-DELTA.json), and
+[export/MERCHANT161-INSPECTION.json](export/MERCHANT161-INSPECTION.json).
 
 The test-only clock-window fix `de4c2a1f5e52065273b677a8694913a98850dcf0` is
-on `codex/task-observer-window-1003`. It is not on this branch and not on
-released master. It is not applied. Production freshness stays 900000 ms.
-Seller 0.4.1 stays `015f07d5a75d02a4e74709b17b2b1176501e92a5`.
+on `codex/task-observer-window-1003`. That commit is not an ancestor of this
+branch or of merchant161. Merchant161's observer-test blob matches the fix
+commit. This adapt does not apply the commit. Production freshness stays
+900000 ms. Seller 0.4.1 stays `015f07d5a75d02a4e74709b17b2b1176501e92a5`.
