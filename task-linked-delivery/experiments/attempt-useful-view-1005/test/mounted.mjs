@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from 'node:crypto';
 import express from "express";
 import { createCommerceTelemetry } from "../../../../commerce-events.mjs";
 import { createCommerceSettlementReconciler } from "../../../../commerce-settlement-reconciler.mjs";
@@ -88,7 +89,8 @@ export async function boot(dataDir, { fault = null, maxBytes, storeMaxBytes, set
     if (paid) {
       // Isolated rail fixture only: no signer, facilitator or provider is called.
       res.locals.samedaydeskPayment = { protocol: 'x402' };
-      res.set('payment-response', Buffer.from(JSON.stringify({ success: true, transaction: hash,
+      const paymentReference = '0x' + createHash('sha256').update('isolated-rail:' + hash).digest('hex');
+      res.set('payment-response', Buffer.from(JSON.stringify({ success: true, transaction: paymentReference,
         network: 'eip155:8453', payer: '0x1111111111111111111111111111111111111111', amount: '50000' })).toString('base64'));
       noteReceiptRetention(req, res, body);
     }

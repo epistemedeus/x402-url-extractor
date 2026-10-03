@@ -242,6 +242,8 @@ function labelStages(journey) {
       disposition: "authorized",
       authority: "existing_customer_grant",
       currentRights: stages.authorized_retention.currentRights === true,
+      ...(stages.authorized_retention.operationCriterion ? { operationCriterion: stages.authorized_retention.operationCriterion,
+        criterionAuthority: 'existing_paid_receipt_operation_contract' } : {}),
     }
     : unresolvedStage(stages.authorized_retention.reasons[0] || "retention_unknown");
   const later = stages.later_use.status === "observed"
