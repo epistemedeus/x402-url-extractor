@@ -1,0 +1,47 @@
+TAP version 13
+# Subtest: actual scoped free fee and receipt-absence callers through isolated current HTTP/journal ports
+    # Subtest: useful negative remains independently useful and a success assertion remains unverified
+    ok 1 - useful negative remains independently useful and a success assertion remains unverified
+      ---
+      duration_ms: 0.655904
+      type: 'test'
+      ...
+    # Subtest: exact task/attempt/tenant/body, cuts, finish timing and settlement authority refusals are physical
+    ok 2 - exact task/attempt/tenant/body, cuts, finish timing and settlement authority refusals are physical
+      ---
+      duration_ms: 0.245159
+      type: 'test'
+      ...
+    # Subtest: scope, source, cutoff, predecessor and conflicting evidence change the projection decision
+    ok 3 - scope, source, cutoff, predecessor and conflicting evidence change the projection decision
+      ---
+      duration_ms: 30.434933
+      type: 'test'
+      ...
+    # Subtest: a restarted native process reads then withdraws the prior exact grant
+    ok 4 - a restarted native process reads then withdraws the prior exact grant
+      ---
+      duration_ms: 1713.775793
+      type: 'test'
+      ...
+    # Subtest: stripped CLI receiving reproduces the same report and refuses changed retained evidence
+    ok 5 - stripped CLI receiving reproduces the same report and refuses changed retained evidence
+      ---
+      duration_ms: 98.083096
+      type: 'test'
+      ...
+    1..5
+ok 1 - actual scoped free fee and receipt-absence callers through isolated current HTTP/journal ports
+  ---
+  duration_ms: 3619.778768
+  type: 'test'
+  ...
+1..1
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4202.587092

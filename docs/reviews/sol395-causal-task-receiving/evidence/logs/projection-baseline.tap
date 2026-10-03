@@ -1,0 +1,100 @@
+TAP version 13
+# Subtest: licensed candidate reproduces exact committed bytes and passes cold acquisition/restart
+ok 1 - licensed candidate reproduces exact committed bytes and passes cold acquisition/restart
+  ---
+  duration_ms: 1918.615104
+  type: 'test'
+  ...
+# Subtest: real causal middleware and existing receipt retention feed the isolated observer adapter
+ok 2 - real causal middleware and existing receipt retention feed the isolated observer adapter
+  ---
+  duration_ms: 101.011493
+  type: 'test'
+  ...
+# Subtest: stripped files, stdin and another process replay two questions after restart and changed evidence
+ok 3 - stripped files, stdin and another process replay two questions after restart and changed evidence
+  ---
+  duration_ms: 1088.75142
+  type: 'test'
+  ...
+# Subtest: stdin silence obeys the CLI hard deadline
+ok 4 - stdin silence obeys the CLI hard deadline
+  ---
+  duration_ms: 169.739171
+  type: 'test'
+  ...
+# Subtest: explicit NDJSON export strips private fields and retains torn-data coverage reasons
+ok 5 - explicit NDJSON export strips private fields and retains torn-data coverage reasons
+  ---
+  duration_ms: 159.282237
+  type: 'test'
+  ...
+# Subtest: two supplied questions separate owner/sponsored drops and useful negatives
+ok 6 - two supplied questions separate owner/sponsored drops and useful negatives
+  ---
+  duration_ms: 41.654303
+  type: 'test'
+  ...
+# Subtest: received native predicates and vendored read-only contracts have exact parity
+ok 7 - received native predicates and vendored read-only contracts have exact parity
+  ---
+  duration_ms: 2.415569
+  type: 'test'
+  ...
+# Subtest: either missing causal side, false task records and conflicting task bindings stay unknown
+ok 8 - either missing causal side, false task records and conflicting task bindings stay unknown
+  ---
+  duration_ms: 24.524825
+  type: 'test'
+  ...
+# Subtest: duplicates collapse; conflicting or torn/late records cannot produce a covered rate
+ok 9 - duplicates collapse; conflicting or torn/late records cannot produce a covered rate
+  ---
+  duration_ms: 14.617094
+  type: 'test'
+  ...
+# Subtest: wrong task/read owner and repeated causal attempts do not repair joins
+ok 10 - wrong task/read owner and repeated causal attempts do not repair joins
+  ---
+  duration_ms: 13.80389
+  type: 'test'
+  ...
+# Subtest: population/time/source misalignment yields scoped unknown conversion
+ok 11 - population/time/source misalignment yields scoped unknown conversion
+  ---
+  duration_ms: 29.483472
+  type: 'test'
+  ...
+# Subtest: grant revocation, expiry and changed usefulness survive replay without stale facts
+ok 12 - grant revocation, expiry and changed usefulness survive replay without stale facts
+  ---
+  duration_ms: 56.315799
+  type: 'test'
+  ...
+# Subtest: supplied flags, wallet/UA, HTTP200, archive fetch and mocked settlement are useful negatives
+ok 13 - supplied flags, wallet/UA, HTTP200, archive fetch and mocked settlement are useful negatives
+  ---
+  duration_ms: 36.574282
+  type: 'test'
+  ...
+# Subtest: direct/marginal economics preserve resource planes and historic commission pin
+ok 14 - direct/marginal economics preserve resource planes and historic commission pin
+  ---
+  duration_ms: 6.25366
+  type: 'test'
+  ...
+# Subtest: raw intake, nesting, sources, rows, output and deadline are bounded
+ok 15 - raw intake, nesting, sources, rows, output and deadline are bounded
+  ---
+  duration_ms: 31.641832
+  type: 'test'
+  ...
+1..15
+# tests 15
+# suites 0
+# pass 15
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2130.78527

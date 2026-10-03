@@ -1,0 +1,39 @@
+{
+  "generations": [
+    {
+      "generation": "a",
+      "admitted": false,
+      "reason": "duplicate",
+      "actualAppendCalls": 1,
+      "actualFileSyncsBeforeLostAck": 1,
+      "physicalSettlementRows": 1,
+      "directorySyncedBeforeLostAck": true,
+      "absentWriteReason": null,
+      "restartedDuplicateReason": "duplicate_settlement",
+      "wrongJoinReason": "unbound_artifact"
+    },
+    {
+      "generation": "b",
+      "admitted": true,
+      "reason": null,
+      "actualAppendCalls": 0,
+      "actualFileSyncsBeforeLostAck": 0,
+      "physicalSettlementRows": 1,
+      "directorySyncedBeforeLostAck": false,
+      "absentWriteReason": "write_outcome_unknown",
+      "restartedDuplicateReason": "duplicate_settlement",
+      "wrongJoinReason": "unbound_artifact"
+    }
+  ],
+  "retainedFiles": [
+    "commerce-outcome-binding.1.ndjson",
+    "commerce-outcome-binding.ndjson"
+  ],
+  "fileMode": "0600",
+  "retainedSettlementRows": 2,
+  "durability": "local-filesystem-fsync-rename-v1",
+  "actualRotation": true,
+  "lostWriteAckReadBack": true,
+  "crossProcessExclusionClaimed": false,
+  "recognizedRevenueAtomic": "0"
+}

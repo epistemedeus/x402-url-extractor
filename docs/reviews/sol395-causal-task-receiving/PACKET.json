@@ -1,0 +1,30 @@
+{
+  "schema": "sol395.receiving-packet.v1",
+  "baseCommit": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+  "sourceCheckpoint": "b24ece44464302680df93639026ff103126da41a",
+  "sourceTree": "0b56afd7176061dc7de4058ed7f7d9e1771ed950",
+  "nativeGitAccount": "epistemedeus",
+  "branch": "codex/sol-causal-task-measurement-receiving-100395",
+  "ownedScopes": [
+    "task-linked-delivery/experiments/task-demand-100339",
+    "docs/reviews/sol395-causal-task-receiving"
+  ],
+  "portableVersion": "0.1.1",
+  "portableManifest": "consumer/public/manifest.json",
+  "sourceBundle": "export/sol395-source.bundle",
+  "sourceBundleSha256": "28a9922f6a9e9c86587ffc24bdb9849eab0fdcb18723fc77ce8f9b1e7955817a",
+  "sourcePatch": "export/sol395-source.patch",
+  "sourcePatchSha256": "ea9339aa35a5127b5d1b42e9a129303b736c80fbff79fc72244414c68f718f85",
+  "sourcePatchAppliedOnExactBase": true,
+  "appliedTreeEqualsSourceCheckpoint": true,
+  "bundleVerifiedWithExactBasePrerequisite": true,
+  "sharedProducerOrJournalPatchApplied": false,
+  "authorityStages": {
+    "acquiredSource": "native Git clone plus verified licensed loopback bytes",
+    "hosted": "not established",
+    "customer": "not established",
+    "payment": "synthetic fixture boundary only"
+  },
+  "measurementGap": "Actual useful free receipt execution lacks native paid-gated retention/usefulness evidence; preserve unknown without inventing settlement or identity",
+  "recognizedRevenueAtomic": "0"
+}

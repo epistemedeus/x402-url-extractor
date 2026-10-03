@@ -1,0 +1,17 @@
+{
+  "id": "negative-utility",
+  "text": "Did a bounded negative receipt remain useful for a later authorized read?",
+  "populationId": "synthetic-cohort",
+  "from": "2026-10-01T00:00:00.000Z",
+  "to": "2026-10-02T00:00:00.000Z",
+  "asOf": "2026-10-02T00:00:00.000Z",
+  "operationIds": [
+    "normalized-transaction-receipt"
+  ],
+  "cohorts": [
+    "external_unknown"
+  ],
+  "taskRefs": [
+    "te17cf705959f01e3212cac1c1dd27e467bee31c01f3d6eab5b239b88e0cedc"
+  ]
+}

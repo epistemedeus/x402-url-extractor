@@ -1,0 +1,296 @@
+{
+  "schema": "sol395.executed-validation.v1",
+  "observedAt": "2026-10-02T17:02:51.317769+00:00",
+  "node": "v22.22.2",
+  "environment": "supplied Cursor Cloud remote VM",
+  "baseCommit": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+  "sourceCommit": "b24ece44464302680df93639026ff103126da41a",
+  "suites": [
+    {
+      "id": "baseline-projection",
+      "command": "node --test task-linked-delivery/experiments/task-demand-100339/test/*.test.mjs",
+      "projectionSourceCommit": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+      "harnessSourceCommit": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+      "exitCode": 0,
+      "status": "pass",
+      "counts": {
+        "tests": 15,
+        "pass": 15,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "log": "evidence/logs/projection-baseline.tap",
+      "logSha256": "63f4e6448ed33ab1a4494a6842217f9efb928781d07da941e9c6053949eadb97"
+    },
+    {
+      "id": "baseline-retained",
+      "command": "node --test --test-concurrency=1 commerce-outcome-binding.concurrency.test.mjs commerce-outcome-binding.test.mjs commerce-outcome-binding.root.test.mjs commerce-events.test.mjs commerce-settlement-reconciler.test.mjs commerce-settlement-source-delivery.test.mjs task-linked-delivery/receiving.test.mjs task-linked-delivery/experiments/delivery-outcome-100173/test/join.test.mjs task-linked-delivery/experiments/useful-economics-100290/test/join.test.mjs task-linked-delivery/experiments/useful-economics-100290/test/merchant-execution.test.mjs task-linked-delivery/experiments/useful-economics-100290/test/cold-export.test.mjs",
+      "projectionSourceCommit": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+      "harnessSourceCommit": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+      "exitCode": 0,
+      "status": "pass",
+      "counts": {
+        "tests": 208,
+        "pass": 208,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "log": "evidence/logs/retained-208.tap",
+      "logSha256": "bb4d19969e5f2ed997a75d2d95c9132d51e37cb56c2c1111c1abc47c0c7676e8"
+    },
+    {
+      "id": "publication-environment-failure",
+      "command": "node --test machine-acquisition.test.mjs public-acquisition/engine.test.mjs public-acquisition/receiving-lifecycle.test.mjs public-acquisition/receiving-file-bounds.test.mjs",
+      "projectionSourceCommit": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+      "harnessSourceCommit": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+      "exitCode": 1,
+      "status": "missing_httpx",
+      "counts": {
+        "tests": 31,
+        "pass": 30,
+        "fail": 1,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "log": "evidence/logs/publication-31.tap",
+      "logSha256": "23e2caed89ef4317c2f25667ad54ff90df9da300d93233f2b1078f4f72d67158"
+    },
+    {
+      "id": "baseline-publication-complete",
+      "command": "PYTHONPATH=/tmp/sol395-receiving-F6KFEr/python-site node --test machine-acquisition.test.mjs public-acquisition/engine.test.mjs public-acquisition/receiving-lifecycle.test.mjs public-acquisition/receiving-file-bounds.test.mjs",
+      "projectionSourceCommit": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+      "harnessSourceCommit": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+      "exitCode": 0,
+      "status": "pass",
+      "counts": {
+        "tests": 31,
+        "pass": 31,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "log": "evidence/logs/publication-31-replay.tap",
+      "logSha256": "80397e1f7d83e77b903f992beed0ff0aed6bfd6a39f510703ce7ce09969ff005"
+    },
+    {
+      "id": "clean-focused",
+      "command": "SOL395_EVIDENCE_OUT=/tmp/sol395-receiving-F6KFEr/clean-evidence node --test task-linked-delivery/experiments/task-demand-100339/test/*.test.mjs docs/reviews/sol395-causal-task-receiving/receiving.test.mjs",
+      "projectionSourceCommit": "b24ece44464302680df93639026ff103126da41a",
+      "harnessSourceCommit": "b24ece44464302680df93639026ff103126da41a",
+      "exitCode": 0,
+      "status": "pass",
+      "counts": {
+        "tests": 26,
+        "pass": 26,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "log": "evidence/logs/clean-focused.tap",
+      "logSha256": "ed72fec9b523aa8c2bb1c4fe85b00a93d539d0f9f2dd3cd720e53669bc6058ea"
+    },
+    {
+      "id": "clean-retained",
+      "command": "node --test --test-concurrency=1 commerce-outcome-binding.concurrency.test.mjs commerce-outcome-binding.test.mjs commerce-outcome-binding.root.test.mjs commerce-events.test.mjs commerce-settlement-reconciler.test.mjs commerce-settlement-source-delivery.test.mjs task-linked-delivery/receiving.test.mjs task-linked-delivery/experiments/delivery-outcome-100173/test/join.test.mjs task-linked-delivery/experiments/useful-economics-100290/test/join.test.mjs task-linked-delivery/experiments/useful-economics-100290/test/merchant-execution.test.mjs task-linked-delivery/experiments/useful-economics-100290/test/cold-export.test.mjs",
+      "projectionSourceCommit": "b24ece44464302680df93639026ff103126da41a",
+      "harnessSourceCommit": "b24ece44464302680df93639026ff103126da41a",
+      "exitCode": 0,
+      "status": "pass",
+      "counts": {
+        "tests": 208,
+        "pass": 208,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "log": "evidence/logs/clean-retained-208.tap",
+      "logSha256": "8268af095816e7d3d54901bcc50a9108aa4409c05704bff526385c06066bb15e"
+    },
+    {
+      "id": "clean-publication",
+      "command": "PYTHONPATH=/tmp/sol395-receiving-F6KFEr/python-site node --test machine-acquisition.test.mjs public-acquisition/engine.test.mjs public-acquisition/receiving-lifecycle.test.mjs public-acquisition/receiving-file-bounds.test.mjs",
+      "projectionSourceCommit": "b24ece44464302680df93639026ff103126da41a",
+      "harnessSourceCommit": "b24ece44464302680df93639026ff103126da41a",
+      "exitCode": 0,
+      "status": "pass",
+      "counts": {
+        "tests": 31,
+        "pass": 31,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "log": "evidence/logs/clean-publication-31.tap",
+      "logSha256": "270df13b8749804be77a607e2f7597016a1ac8dfe31c2f73ac7d1c95c713ba44"
+    },
+    {
+      "id": "unfixed-native-regression",
+      "command": "SOL395_EVIDENCE_OUT=/tmp/sol395-receiving-F6KFEr/unfixed-evidence node --test /tmp/sol395-receiving-F6KFEr/unfixed/docs/reviews/sol395-causal-task-receiving/receiving.test.mjs",
+      "projectionSourceCommit": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+      "harnessSourceCommit": "b24ece44464302680df93639026ff103126da41a",
+      "exitCode": 1,
+      "status": "expected_native_retention_interval_failures",
+      "counts": {
+        "tests": 9,
+        "pass": 5,
+        "fail": 4,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "log": "evidence/logs/unfixed-native-final-harness.tap",
+      "logSha256": "be9f975719519408de192517d9350846d73b31c261e374e88aa283a70f1f5a4e"
+    }
+  ],
+  "cleanTotals": {
+    "focused": 26,
+    "projection": 17,
+    "nativeReceiving": 9,
+    "retained": 208,
+    "publication": 31,
+    "passed": 265,
+    "failed": 0
+  },
+  "codeAndHarnessFiles": [
+    {
+      "path": "docs/reviews/sol395-causal-task-receiving/cold-receiving.mjs",
+      "sha256": "bbd28cdd35d91ffac75862835a42f7f4c7dba3790bbfa64c37fb5f7a3fcd7d54"
+    },
+    {
+      "path": "docs/reviews/sol395-causal-task-receiving/native-ports.mjs",
+      "sha256": "9f9252ef7064cef2fe38766273d1795f66d20e2816f5e947b388e52a4f2e5e5b"
+    },
+    {
+      "path": "docs/reviews/sol395-causal-task-receiving/receiving.test.mjs",
+      "sha256": "85ae2b8468acc885a00ff7be50c18dae5db55ebb629ce92490a42aedc328afe3"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/README.md",
+      "sha256": "e6957ae7c9e6a23b3f6f41254418c5f7a631cb993b49cc553787e4f4d3558417"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/export/pack.mjs",
+      "sha256": "cdba7e91167a45281584d1b2712af8c0420dd21974a41158f8cc6ea169e6d068"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/package.json",
+      "sha256": "48408f89f113f07d90465c69ea7519b7e8b45db58d0b636dbda711a6a8463854"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/src/export.mjs",
+      "sha256": "c9ce1d8359e92a7596bfb15bda94737c9c00a0195709032086d485037b75cbeb"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/src/project.mjs",
+      "sha256": "7e0e283c542d7a52cc20203780eb15096d2d02542fd3bcdf0d380507170b0598"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/test/cold-export.test.mjs",
+      "sha256": "364c56387d28ff0dbe2bdff80d2d422f2852fb5b74b52b16bb8f9c17ed4c97ba"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/test/response-interval.test.mjs",
+      "sha256": "b24fc3fbc8ecf567e2a6c97e73cd5502dff8adfeeb481a45ded497fc79041751"
+    }
+  ],
+  "sharedSourcePins": [
+    {
+      "path": "commerce-events.mjs",
+      "sha256": "a825425e38c521c6737892ca67f46d0a6a26bb92f0beae9f9946ddb1d6215f5f"
+    },
+    {
+      "path": "commerce-outcome-binding.mjs",
+      "sha256": "67661ed440fd96a10dc5e08238453486779b889b67f933d228fa2a94c4193c54"
+    },
+    {
+      "path": "commerce-settlement-reconciler.mjs",
+      "sha256": "fac50cb438b37fd725617a5225bd486ec26a27cad5f0eb42e81a5f71511bd35e"
+    },
+    {
+      "path": "docs/causal-journal-receiving-100325.md",
+      "sha256": "88f0c70dfdea242b0c4592b9dc31b590a6eff8f380d4b09679835f4627564368"
+    },
+    {
+      "path": "http-delivery-evidence/classify.mjs",
+      "sha256": "0da87e6f85a08f21c46df637e7ce0d0c6ac9e51dac098a82f9af8b0fd79d76af"
+    },
+    {
+      "path": "useful-result-reuse/customer-grant.mjs",
+      "sha256": "a3a17fa1d82b4a5620dddaf34a7da111e67a01185ed46083fca84fe9516c89ac"
+    },
+    {
+      "path": "useful-result-reuse/service.mjs",
+      "sha256": "9dacc6f3a4bd7dbb089a52431f4bfe941ddafcf3d0ec8ed17076bd43e4ba87fc"
+    },
+    {
+      "path": "task-linked-delivery/experiments/useful-economics-100290/README.md",
+      "sha256": "da0afac23732a789d19c4f0b3f2ac997e7e9ddf09d7fb1aae6bd736c9e7fe63b"
+    },
+    {
+      "path": "task-linked-delivery/experiments/useful-economics-100290/src/economics.mjs",
+      "sha256": "b02ff914168b33e7118bcc68cc88dd40a73b77782171bbead240a2a1de921036"
+    },
+    {
+      "path": "task-linked-delivery/experiments/useful-economics-100290/src/constants.mjs",
+      "sha256": "8d160b902dfc50b6c0ac9cae48c5a1f11ae1463517065730dc0bfba0cf878477"
+    },
+    {
+      "path": "task-linked-delivery/experiments/useful-economics-100290/src/errors.mjs",
+      "sha256": "69f526d71d090af04684da002df8944357f7100f4acf22824c4aabf6bded3098"
+    },
+    {
+      "path": "experiments/seller-repair-service-100266/commercial/deliver.mjs",
+      "sha256": "7601d50a073536a30d46580f9eecebea183f1131ee3a6c4411675b84111a67f5"
+    },
+    {
+      "path": "useful-result-reuse/base-receipt.mjs",
+      "sha256": "b9cedf56086cca29ab16e8800040b88a663818594dc232b29bc3e3c87332bc9b"
+    },
+    {
+      "path": "task-linked-delivery/experiments/useful-economics-100290/src/adapters.mjs",
+      "sha256": "31d9ddfdb916eaf8c0881755b518002aab735958a7b44dd2d184ad46bfc4d568"
+    },
+    {
+      "path": "task-linked-delivery/experiments/useful-economics-100290/src/evaluate.mjs",
+      "sha256": "91350edb57e0d044f88bddd9adfcd64c14fdc9896bcc26cb6c134f489a8e7100"
+    },
+    {
+      "path": "task-linked-delivery/experiments/useful-economics-100290/src/project-merchant.mjs",
+      "sha256": "8d533610a015877608ab8d6a72f317e1dbfe57ff136acd66a38e5fbd53d24310"
+    },
+    {
+      "path": "task-linked-delivery/tools/ops/three-site-settlement-join/measure/src/outcome-binding.mjs",
+      "sha256": "4371cdfdfc4491d249d097efe03b6a9dbe195b74ecd3166d362601a015df48ab"
+    }
+  ],
+  "allSharedPinsUnchanged": true,
+  "original339ExportUnchanged": true,
+  "originalRetainedReportsByteIdentical": true,
+  "dependencies": {
+    "node": "npm ci --ignore-scripts --no-audit --no-fund in isolated base checkout; reused exact package-lock dependencies in receiving clone",
+    "packageLockSha256": "4ec0dc584c260dffa3f042297f5bea5fff2e5294ebaa679cf0ad1ae62a82743b",
+    "pythonHttpx": "0.28.1",
+    "pythonInstall": "python3 -m pip install --target /tmp/sol395-receiving-F6KFEr/python-site --ignore-installed httpx==0.28.1",
+    "pythonScope": "isolated target directory; no system package writes"
+  },
+  "cleanNativeGitReceiving": {
+    "remote": "https://github.com/epistemedeus/x402-url-extractor.git",
+    "branch": "codex/sol-causal-task-measurement-receiving-100395",
+    "exactHead": "b24ece44464302680df93639026ff103126da41a",
+    "trackedAndUntrackedSourceCleanBeforeChecks": true,
+    "trackedAndUntrackedSourceCleanAfterRestoringGeneratedLoopbackProfile": true,
+    "restoredPath": "public-acquisition/loopback-profile.json",
+    "restoredFromExactCommittedBytes": true
+  },
+  "cold": {
+    "command": "node docs/reviews/sol395-causal-task-receiving/cold-receiving.mjs /home/ubuntu/root-sol-395/docs/reviews/sol395-causal-task-receiving/consumer/public /tmp/sol395-receiving-F6KFEr/clean-evidence",
+    "receipt": "evidence/cold-receiving.json",
+    "receiptSha256": "08f8e1be6da711f76732dd890b393be641c9622252892b15bd58008df1eec48e"
+  },
+  "modelChildrenLaunched": 0,
+  "liveAuthorityWrites": false,
+  "realSpend": false,
+  "recognizedRevenueAtomic": "0",
+  "advisoryOrUnexecutedTestsCounted": false
+}

@@ -1,0 +1,65 @@
+{
+  "mode": "before",
+  "workerPid": 723483,
+  "callerProcesses": [
+    {
+      "callerPid": 723508,
+      "eventId": "d07a899f-4e15-4e79-a26e-f93deb054b93",
+      "taskRef": "te4e7bfdf4a11d41203a7ee4492d93837e4832a0b01dc6aa0e995fbb00c7018",
+      "callerPredicate": {
+        "status": "pass",
+        "reason": null,
+        "criterion": "positive",
+        "output": {
+          "transactionFeeWei": "42000"
+        }
+      },
+      "observationAccepted": false,
+      "observationReason": "no_bound_response_observation",
+      "independentlyExecuted": null,
+      "receivedMs": 54.972614,
+      "observationMs": 13.067669999999993,
+      "httpStatus": 200,
+      "paymentPermitted": false
+    },
+    {
+      "callerPid": 723537,
+      "eventId": "cc826bff-7fd3-4a65-995c-9d8bfea90578",
+      "taskRef": "t894248ff118d384f8da802407aa8bcc7ec3c147ef4713d84b418bf65901a4a",
+      "callerPredicate": {
+        "status": "pass",
+        "reason": null,
+        "criterion": "agreed_negative",
+        "output": {
+          "minedReceiptAvailable": false,
+          "decision": "not_found"
+        }
+      },
+      "observationAccepted": false,
+      "observationReason": "no_bound_response_observation",
+      "independentlyExecuted": null,
+      "receivedMs": 28.287518,
+      "observationMs": 6.206347000000001,
+      "httpStatus": 200,
+      "paymentPermitted": false
+    }
+  ],
+  "replayPids": [],
+  "replayCalls": 0,
+  "executionCalls": {
+    "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": 1,
+    "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb": 1
+  },
+  "preFinishReason": "missing_or_conflicting_predecessor",
+  "probes": [],
+  "priorRestart": null,
+  "actualHTTP": true,
+  "actualJournalWrites": true,
+  "rpcBoundary": "fixture_rpc",
+  "realPayment": false,
+  "keyCreated": false,
+  "productionJournalEnrolled": false,
+  "customerCount": "unknown",
+  "tokenSavings": "unknown",
+  "recognizedRevenueAtomic": "0"
+}

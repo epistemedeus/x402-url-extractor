@@ -1,0 +1,726 @@
+diff --git a/docs/reviews/sol395-causal-task-receiving/cold-receiving.mjs b/docs/reviews/sol395-causal-task-receiving/cold-receiving.mjs
+new file mode 100644
+index 0000000..7b52ec8
+--- /dev/null
++++ b/docs/reviews/sol395-causal-task-receiving/cold-receiving.mjs
+@@ -0,0 +1,80 @@
++// Receive the licensed candidate without installing merchant dependencies in
++// either extracted consumer. Retained inputs contain only stripped owner QA.
++import assert from 'node:assert/strict';
++import { spawnSync } from 'node:child_process';
++import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
++import { tmpdir } from 'node:os';
++import path from 'node:path';
++import { fileURLToPath } from 'node:url';
++import { coldReceipt } from '../../../task-linked-delivery/experiments/task-demand-100339/export/cold-receipt.mjs';
++import { bytesDigest } from '../../../task-linked-delivery/experiments/task-demand-100339/src/bounds.mjs';
++
++const here = path.dirname(fileURLToPath(import.meta.url));
++const candidate = path.resolve(process.argv[2] || path.join(here, 'consumer/public'));
++const evidence = path.resolve(process.argv[3] || path.join(here, 'evidence'));
++const fixtureCold = await coldReceipt(candidate);
++const manifest = JSON.parse(await readFile(path.join(candidate, 'manifest.json')));
++const described = role => manifest.assets.find(a => a.id === 'task-demand-100339' && a.role === role);
++const provenance = JSON.parse(await readFile(path.join(candidate, 'bytes', described('provenance').relativePath)));
++assert.equal(provenance.version, '0.1.1');
++const archive = path.join(candidate, 'bytes', described('archive').relativePath);
++assert.equal(bytesDigest(await readFile(archive)), fixtureCold.archive.sha256);
++const work = await mkdtemp(path.join(tmpdir(), 'sol395-cold-consumer-'));
++const env = { PATH: process.env.PATH };
++const run = (cwd, args, input) => spawnSync(process.execPath, ['bin/task-demand.mjs', ...args], {
++  cwd, env, input, encoding: 'utf8', timeout: 10000, maxBuffer: 2_097_152,
++});
++try {
++  const consumer = path.join(work, 'reviewed'); await mkdir(consumer);
++  const unpack = spawnSync('tar', ['-xzf', archive, '-C', consumer], { env, encoding: 'utf8', timeout: 10000 });
++  assert.equal(unpack.status, 0, unpack.stderr);
++  for (const member of provenance.sourceFiles) {
++    const rel = member.path.replace('task-linked-delivery/experiments/task-demand-100339/', '');
++    assert.equal(bytesDigest(await readFile(path.join(consumer, rel))), member.sha256);
++  }
++  const receipts = [];
++  for (const name of ['generation-a', 'generation-b', 'free-result']) {
++    const file = path.join(evidence, name + '.retained.json');
++    const retained = JSON.parse(await readFile(file));
++    const replay = run(consumer, ['replay', '--receipt', file]);
++    assert.equal(replay.status, 0, replay.stderr);
++    assert.deepEqual(JSON.parse(replay.stdout), retained.report);
++    receipts.push({ name, reportId: retained.report.reportId, inputDigest: retained.report.inputDigest,
++      byteIdenticalReplay: true, recognizedRevenueAtomic: retained.report.recognizedRevenueAtomic });
++  }
++  const firstFile = path.join(evidence, 'generation-a.retained.json');
++  const second = JSON.parse(await readFile(path.join(evidence, 'generation-b.retained.json')));
++  const query = run(consumer, ['query', '--bundle', '-', '--prior', firstFile,
++    '--retain', path.join(work, 'fresh-generation-b.retained.json')], JSON.stringify(second.bundle));
++  assert.equal(query.status, 0, query.stderr); assert.deepEqual(JSON.parse(query.stdout), second.report);
++  const changed = structuredClone(second.bundle);
++  const last = changed.sources.find(s => s.plane === 'retention').records.filter(r => r.action === 'retain')
++    .sort((a, b) => a.createdAt.localeCompare(b.createdAt)).at(-1);
++  last.criterion = 'unknown';
++  const updatedFile = path.join(work, 'changed.retained.json');
++  const updated = run(consumer, ['query', '--bundle', '-', '--prior', firstFile, '--retain', updatedFile], JSON.stringify(changed));
++  assert.equal(updated.status, 0, updated.stderr);
++  const updatedReport = JSON.parse(updated.stdout);
++  const changedJourney = updatedReport.journeys.find(j => j.taskRef === last.taskRef);
++  assert.equal(changedJourney.stages.claimed_usefulness.status, 'unknown');
++  assert.equal(changedJourney.stages.later_use.status, 'unknown');
++  const replay = run(consumer, ['replay', '--receipt', updatedFile]);
++  assert.equal(replay.status, 0, replay.stderr); assert.deepEqual(JSON.parse(replay.stdout), updatedReport);
++
++  // Keep the received 0.1.0 export byte-identical and make the new source pin a
++  // consequential receiving choice: its old CLI cannot replay new duration rows.
++  const old = path.join(work, 'received-0.1.0'); await mkdir(old);
++  const oldArchive = path.resolve(here, '../../../task-linked-delivery/experiments/task-demand-100339/export/public/bytes/task-demand-100339/0.1.0/task-demand-100339-0.1.0.tar.gz');
++  const oldUnpack = spawnSync('tar', ['-xzf', oldArchive, '-C', old], { env, encoding: 'utf8', timeout: 10000 });
++  assert.equal(oldUnpack.status, 0, oldUnpack.stderr);
++  const oldReplay = run(old, ['replay', '--receipt', firstFile]);
++  assert.equal(oldReplay.status, 2); assert.equal(JSON.parse(oldReplay.stderr).error, 'replay_mismatch');
++  process.stdout.write(JSON.stringify({ schema: 'sol395.cold-receiving.v1', observedAt: new Date().toISOString(),
++    sourceCommit: provenance.sourceCommit, sourceTreeDigest: provenance.sourceTreeDigest,
++    archive: fixtureCold.archive, fixtureCold, nativeRetainedReceipts: receipts, nativeFreshCliProcesses: 7,
++    freshNativeGenerationQuery: true, changedEvidenceRemovesCurrentUsefulness: true,
++    originalArchiveDurationReplay: { version: '0.1.0', exitCode: oldReplay.status, error: 'replay_mismatch' },
++    acquired: 'loopback_verified_bytes', hosted: false, customer: false, payment: 'fixture_only',
++    merchantDependenciesInstalledInConsumers: false, providerCredentialsUsed: false,
++    recognizedRevenueAtomic: '0' }, null, 2) + '\n');
++} finally { await rm(work, { recursive: true, force: true }); }
+diff --git a/docs/reviews/sol395-causal-task-receiving/native-ports.mjs b/docs/reviews/sol395-causal-task-receiving/native-ports.mjs
+new file mode 100644
+index 0000000..7979d36
+--- /dev/null
++++ b/docs/reviews/sol395-causal-task-receiving/native-ports.mjs
+@@ -0,0 +1,274 @@
++// Owner QA only. Native ports operate exclusively in caller-created temp dirs.
++// Payment/RPC boundaries below are explicit fixtures; no network payment occurs.
++import assert from 'node:assert/strict';
++import fs from 'node:fs/promises';
++import { syncBuiltinESMExports } from 'node:module';
++import path from 'node:path';
++import express from 'express';
++import { encodeAbiParameters, encodeEventTopics, parseAbiItem } from 'viem';
++import { createCommerceTelemetry } from '../../../commerce-events.mjs';
++import { createForwardOutcomeWriter, openCausalCommerceEvent } from '../../../commerce-outcome-binding.mjs';
++import { BASE_USDC, createCommerceSettlementReconciler } from '../../../commerce-settlement-reconciler.mjs';
++import { createUsefulResultReuse } from '../../../useful-result-reuse/service.mjs';
++import { installPaidReceiptRetention, noteReceiptRetention } from '../../../useful-result-reuse/delivery.mjs';
++import { CUSTOMER_FILE, METRIC_FILE } from '../../../useful-result-reuse/constants.mjs';
++import { transactionReceipt } from '../../../transaction-receipt.mjs';
++import { validExtractBody } from '../../../http-delivery-evidence/test/helpers.mjs';
++import { parseNdjson } from '../../../task-linked-delivery/experiments/task-demand-100339/src/export.mjs';
++
++const TOKEN = 'synthetic-native-receiving-token-only-100395';
++const SECRET = 'synthetic-native-receiving-actor-secret-100395';
++const TREASURY = '0x' + '8'.repeat(40), PAYER = '0x' + '2'.repeat(40);
++const transfer = parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 value)');
++const hex = n => '0x' + n.repeat(64);
++const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
++const read = file => fs.readFile(file).catch(e => e.code === 'ENOENT' ? Buffer.alloc(0) : Promise.reject(e));
++
++function fixtureSettlementClient() {
++  return {
++    async getTransactionReceipt() {
++      return { status: 'success', blockNumber: 123n, logs: [{ address: BASE_USDC,
++        topics: encodeEventTopics({ abi: [transfer], eventName: 'Transfer', args: { from: PAYER, to: TREASURY } }),
++        data: encodeAbiParameters([{ type: 'uint256' }], [5000n]) }] };
++    },
++    async getBlock() { return { timestamp: BigInt(Math.floor(Date.now() / 1000)) }; },
++  };
++}
++function reconciler(dataDir) {
++  return createCommerceSettlementReconciler({ dataDir, actorSecret: SECRET, client: fixtureSettlementClient(),
++    network: 'eip155:8453', treasury: TREASURY, payerClasses: [{ address: PAYER, class: 'validation' }],
++    settlementEvidenceSince: '2026-01-01T00:00:00.000Z', rpcUrls: [] });
++}
++function telemetry(dataDir) {
++  return createCommerceTelemetry({ dataDir, internalToken: TOKEN, secret: SECRET, writerProcessCount: 1,
++    payerClasses: [{ address: PAYER, class: 'validation' }] });
++}
++function headers(label, operationId, paid = true) {
++  return { 'x-samedaydesk-internal': TOKEN, 'x-samedaydesk-outcome-operation': operationId,
++    'x-samedaydesk-outcome-cohort': 'external_unknown', 'x-samedaydesk-outcome-task': label,
++    ...(paid ? { 'payment-signature': 'synthetic-fixture-boundary-' + label } : {}) };
++}
++function fixturePayment(res, reference) {
++  res.locals.samedaydeskPayment = { protocol: 'x402' };
++  res.set('payment-response', Buffer.from(JSON.stringify({ success: true, network: 'eip155:8453',
++    transaction: reference, amount: '5000' })).toString('base64'));
++}
++async function listen(app) {
++  const server = app.listen(0, '127.0.0.1');
++  await new Promise((resolve, reject) => { server.once('listening', resolve); server.once('error', reject); });
++  return { server, base: 'http://127.0.0.1:' + server.address().port };
++}
++async function close(server) { await new Promise(resolve => server.close(resolve)); }
++async function cut(dataDir) {
++  const files = {
++    attempts: ['commerce-events.1.ndjson', 'commerce-events.ndjson'],
++    task_refs: ['commerce-outcome-task-ref.1.ndjson', 'commerce-outcome-task-ref.ndjson'],
++    forward: ['commerce-outcome-binding.1.ndjson', 'commerce-outcome-binding.ndjson'],
++    retention: [CUSTOMER_FILE.replace('.ndjson', '.1.ndjson'), CUSTOMER_FILE],
++    reads: [METRIC_FILE.replace('.ndjson', '.1.ndjson'), METRIC_FILE],
++    settlements: ['commerce-settlements.ndjson'],
++  };
++  const planes = {};
++  for (const [plane, names] of Object.entries(files)) {
++    const bytes = Buffer.concat(await Promise.all(names.map(name => read(path.join(dataDir, name)))));
++    const parsed = parseNdjson(bytes);
++    // Metrics include other supported kinds; the adapter receives only the
++    // authorized later-read plane, rather than declaring rejected kinds complete.
++    const records = plane === 'reads' ? parsed.rows.filter(r => r.kind === 'useful_later_read') : parsed.rows;
++    planes[plane] = { records, malformed: parsed.malformed, torn: parsed.torn };
++  }
++  return planes;
++}
++
++export async function receiptGeneration({ dataDir, generation, priorGrant = null }) {
++  const t = telemetry(dataDir), reuse = createUsefulResultReuse({ dataDir, internalToken: TOKEN });
++  const op = 'normalized-transaction-receipt', label = 'sol395-caller-task-' + generation;
++  const paid = generation !== 'free', reference = hex(generation === 'a' ? '3' : '4');
++  const tx = hex(generation === 'a' ? 'a' : generation === 'free' ? 'c' : 'b');
++  let proof, retained = null, executionCalls = 0;
++  const nativeRetain = async input => {
++    // Widen the measured response interval deterministically without rewriting
++    // timestamps, so the ordering test does not depend on millisecond scheduling.
++    retained = await reuse.retainDeliveredReceipt(input);
++    await delay(15);
++    return retained;
++  };
++  const app = express(); app.use(t.middleware);
++  installPaidReceiptRetention(app, () => nativeRetain, { causalEventProof: res => t.causalCommerceEventProof(res) });
++  app.get('/chain/transaction-receipt', async (req, res) => {
++    try {
++      proof = t.causalCommerceEventProof(res);
++      const body = await transactionReceipt({ network: 'base', transactionHash: tx }, { client: {
++        async getTransactionReceipt() {
++          executionCalls++;
++          if (generation === 'b') { const e = new Error('could not be found'); e.name = 'TransactionReceiptNotFoundError'; throw e; }
++          return { status: 'success', blockNumber: 50n, logs: [], gasUsed: 21000n, effectiveGasPrice: 2n };
++        },
++        async getBlock() { return { timestamp: BigInt(Math.floor(Date.now() / 1000)) }; },
++      } });
++      if (paid) fixturePayment(res, reference);
++      noteReceiptRetention(req, res, body);
++      if (!paid) retained = await nativeRetain({ optIn: true, settlementStatus: 'unknown', body,
++        taskLabel: label, causalEventProof: proof });
++      res.json(body);
++    } catch (e) { res.status(500).json({ error: e.code || 'isolated_execution_failed' }); }
++  });
++  const { server, base } = await listen(app);
++  try {
++    const response = await fetch(base + '/chain/transaction-receipt?network=base&transactionHash=' + tx,
++      { headers: { ...headers(label, op, paid), 'x-samedaydesk-retain-result': '1' }, signal: AbortSignal.timeout(5000) });
++    const body = await response.json();
++    assert.equal(response.status, 200); assert.equal(body.ok, true); assert.equal(executionCalls, 1);
++    if (generation !== 'b') assert.equal(body.transaction.transactionFeeWei, '42000');
++    await t.flush();
++    const eventId = openCausalCommerceEvent(proof, TOKEN); assert.ok(eventId);
++    const beforeRead = await cut(dataDir);
++    const event = beforeRead.attempts.records.find(r => r.id === eventId);
++    assert.ok(event); assert.equal(event.result, paid ? 'paid_success' : 'paid_route_response');
++    const ref = beforeRead.task_refs.records.find(r => r.commerceEventId === eventId); assert.ok(ref);
++    const settlement = reconciler(dataDir); await settlement.reconcile();
++    let priorRead = null, withdrawn = null;
++    if (priorGrant) {
++      priorRead = await reuse.readDeliveredReceipt({ token: priorGrant });
++      assert.equal(priorRead.reason, null);
++      assert.equal((await reuse.revokeDeliveredReceipt({ token: priorGrant })).accepted, true);
++      withdrawn = await reuse.readDeliveredReceipt({ token: priorGrant });
++      assert.equal(withdrawn.reason, 'revoked'); assert.equal(withdrawn.result, null);
++    }
++    let wrongResource = null, laterRead = null, settlementPort = null;
++    if (paid) {
++      assert.equal(retained.accepted, true);
++      await delay(5);
++      wrongResource = await reuse.readDeliveredReceipt({ token: retained.grant, resource: '/other-scope' });
++      assert.equal(wrongResource.reason, 'wrong_resource');
++      laterRead = await reuse.readDeliveredReceipt({ token: retained.grant });
++      assert.equal(laterRead.reason, null); assert.equal(laterRead.result.decision, body.decision);
++      const ledger = (await cut(dataDir)).settlements.records.find(r => r.sourceEventId === eventId); assert.ok(ledger);
++      const forward = beforeRead.forward.records.find(r => r.commerceEventId === eventId && r.stage === 'delivery');
++      assert.ok(forward); assert.equal(forward.deliveryClass, 'unsupported_target');
++      settlementPort = await t.observeRuntimeSettlementReadback({ internalToken: TOKEN, operationId: op,
++        receiptDigest: forward.receiptDigest, readback: ledger });
++      // Native receipt retention is the delivery contract; the generic journal
++      // settlement port correctly refuses its unsupported validator target.
++      assert.equal(settlementPort.reason, 'unbound_artifact');
++    } else {
++      assert.equal(retained.reason, 'settlement_unverified'); assert.equal(retained.accepted, false);
++    }
++    const planes = await cut(dataDir);
++    const result = { planes, eventId, taskRef: ref.taskRef, grant: retained.grant || null,
++      observation: { generation, workerPid: process.pid, workerComm: (await fs.readFile('/proc/self/comm', 'utf8')).trim(),
++        executionCalls, resultDecision: body.decision, actualUsefulResult: body.ok && body.receipt.found,
++        callerUse: generation === 'b' ? { requirement: 'determine mined receipt availability', observed: 'not_found', passed: true }
++          : { requirement: 'compute the source receipt fee without another execution', observedFeeWei: body.transaction.transactionFeeWei, passed: true },
++        paidBoundary: paid ? 'fixture_payment_response_and_fixture_transfer_readback' : 'none',
++        grantAccepted: retained.accepted, grantReason: retained.reason,
++        settlementPortReason: settlementPort?.reason || null, laterReadAccepted: laterRead?.reason === null,
++        wrongResourceReason: wrongResource?.reason || null, previousGrantReadAfterRestart: priorRead?.reason === null,
++        previousGrantWithdrawn: withdrawn?.reason === 'revoked', secretsRetained: false,
++        productionHosted: false, customerAcquired: false, recognizedRevenueAtomic: '0' } };
++    return result;
++  } finally { await close(server); }
++}
++
++export async function journalChecks({ dataDir }) {
++  let t = telemetry(dataDir);
++  const app = express(); app.use((req, res, next) => t.middleware(req, res, next));
++  app.get('/extract', (req, res) => { fixturePayment(res, hex(req.query.generation === 'a' ? '5' : '6')); res.json(validExtractBody()); });
++  const { server, base } = await listen(app);
++  const deliveries = [];
++  try {
++    for (const generation of ['a', 'b']) {
++      const op = 'sol395-journal-' + generation;
++      const response = await fetch(base + '/extract?url=https%3A%2F%2Fexample.test&generation=' + generation,
++        { headers: headers('sol395-journal-task-' + generation, op), signal: AbortSignal.timeout(5000) });
++      assert.equal(response.status, 200); await response.arrayBuffer(); await t.flush();
++      const delivery = (await cut(dataDir)).forward.records.find(r => r.operationId === op && r.stage === 'delivery');
++      assert.equal(delivery.validatorVerdict, 'pass'); deliveries.push(delivery);
++      const readback = { schemaVersion: 'samedaydesk.commerce-settlement-reconciliation.v1', state: 'reconciled',
++        sourceEventId: delivery.commerceEventId, settlementReference: hex(generation === 'a' ? '5' : '6'), amountAtomic: '5000' };
++      const writer = createForwardOutcomeWriter({ dataDir, internalToken: TOKEN, maxBytes: 1 });
++      const input = { internalToken: TOKEN, operationId: op, receiptDigest: delivery.receiptDigest, readback };
++      const realOpen = fs.open; let appendCalls = 0, syncCalls = 0;
++      let absentWriteReason = null;
++      if (generation === 'b') {
++        // A failure before any bytes reach the file has a different result from
++        // a lost ACK after fsync. The later invocation is an explicit retest.
++        fs.open = async (...args) => {
++          const handle = await realOpen(...args);
++          if (args[0] === writer.currentPath && (args[1] & (await import('node:fs')).constants.O_APPEND))
++            handle.appendFile = async () => { throw new Error('isolated failure before physical append'); };
++          return handle;
++        };
++        syncBuiltinESMExports();
++        try { absentWriteReason = (await writer.observeRuntimeSettlementReadback(input)).reason; }
++        finally { fs.open = realOpen; syncBuiltinESMExports(); }
++        assert.equal(absentWriteReason, 'write_outcome_unknown');
++        assert.equal((await cut(dataDir)).forward.records.filter(r => r.stage === 'settlement' && r.operationId === op).length, 0);
++      }
++      if (generation === 'a') {
++        fs.open = async (...args) => {
++          const handle = await realOpen(...args);
++          if (args[0] === writer.currentPath && (args[1] & (await import('node:fs')).constants.O_APPEND)) {
++            const append = handle.appendFile.bind(handle);
++            handle.appendFile = async (...a) => { appendCalls++; await append(...a); await handle.sync(); syncCalls++;
++              const directory = await realOpen(dataDir, (await import('node:fs')).constants.O_RDONLY | (await import('node:fs')).constants.O_DIRECTORY);
++              try { await directory.sync(); } finally { await directory.close(); }
++              throw new Error('isolated lost append acknowledgement after physical write and fsync'); };
++          }
++          return handle;
++        };
++        syncBuiltinESMExports();
++      }
++      let first;
++      try { first = await writer.observeRuntimeSettlementReadback(input); }
++      finally { fs.open = realOpen; syncBuiltinESMExports(); }
++      assert.equal(first.reason, generation === 'a' ? 'duplicate' : null);
++      assert.equal(first.accepted, generation === 'b');
++      if (generation === 'a') { assert.equal(appendCalls, 1); assert.equal(syncCalls, 1); }
++      const restarted = createForwardOutcomeWriter({ dataDir, internalToken: TOKEN, maxBytes: 1 });
++      assert.equal((await restarted.observeRuntimeSettlementReadback(input)).reason, 'duplicate_settlement');
++      const rows = (await cut(dataDir)).forward.records.filter(r => r.stage === 'settlement' && r.operationId === op);
++      assert.equal(rows.length, 1);
++      const wrong = await restarted.observeRuntimeSettlementReadback({ ...input, readback: { ...readback, sourceEventId: 'ffffffff-ffff-4fff-8fff-ffffffffffff' } });
++      assert.equal(wrong.reason, 'unbound_artifact');
++      deliveries[deliveries.length - 1] = { generation, admitted: first.accepted, reason: first.reason,
++        actualAppendCalls: appendCalls, actualFileSyncsBeforeLostAck: syncCalls, physicalSettlementRows: rows.length,
++        directorySyncedBeforeLostAck: generation === 'a', absentWriteReason,
++        restartedDuplicateReason: 'duplicate_settlement', wrongJoinReason: wrong.reason };
++      t = telemetry(dataDir);
++    }
++    const paths = ['commerce-outcome-binding.1.ndjson', 'commerce-outcome-binding.ndjson'];
++    for (const name of paths) assert.equal((await fs.stat(path.join(dataDir, name))).mode & 0o777, 0o600);
++    const retainedSettlements = (await cut(dataDir)).forward.records.filter(r => r.stage === 'settlement');
++    assert.equal(retainedSettlements.length, 2);
++    return { generations: deliveries, retainedFiles: paths, fileMode: '0600', retainedSettlementRows: 2,
++      durability: 'local-filesystem-fsync-rename-v1', actualRotation: true, lostWriteAckReadBack: true,
++      crossProcessExclusionClaimed: false, recognizedRevenueAtomic: '0' };
++  } finally { await close(server); }
++}
++
++export async function grantChecks({ dataDir, grant }) {
++  const current = createUsefulResultReuse({ dataDir, internalToken: TOKEN });
++  const wrongMethod = await current.readDeliveredReceipt({ token: grant, method: 'POST' });
++  assert.equal(wrongMethod.reason, 'wrong_method');
++  const foreign = createUsefulResultReuse({ dataDir: path.join(dataDir, 'different-tenant'), internalToken: TOKEN });
++  const wrongTenant = await foreign.readDeliveredReceipt({ token: grant });
++  assert.equal(wrongTenant.reason, 'grant_rejected');
++  const afterExpiry = createUsefulResultReuse({ dataDir, internalToken: TOKEN, now: () => Date.now() + 8 * 86400000 });
++  const expired = await afterExpiry.readDeliveredReceipt({ token: grant });
++  assert.equal(expired.reason, 'expired'); assert.equal(expired.result, null);
++  return { wrongMethod: wrongMethod.reason, wrongTenant: wrongTenant.reason, expired: expired.reason,
++    currentAuthority: false, paymentPermitted: false, clock: 'explicit isolated 8-day expiry probe' };
++}
++
++if (process.send) process.once('message', async message => {
++  try {
++    const value = await ({ receipt: receiptGeneration, journal: journalChecks, grants: grantChecks }[message.action])(message);
++    process.send({ value }, () => process.disconnect());
++  } catch (e) {
++    // Keep assertions and errors free of raw journal/credential bytes.
++    process.send({ error: { name: e.name, code: e.code || null, message: e.message,
++      stack: e.stack?.split('\n').slice(0, 6).join('\n') } }, () => process.disconnect());
++    process.exitCode = 1;
++  }
++});
+diff --git a/docs/reviews/sol395-causal-task-receiving/receiving.test.mjs b/docs/reviews/sol395-causal-task-receiving/receiving.test.mjs
+new file mode 100644
+index 0000000..dbe3b52
+--- /dev/null
++++ b/docs/reviews/sol395-causal-task-receiving/receiving.test.mjs
+@@ -0,0 +1,175 @@
++import assert from 'node:assert/strict';
++import { fork, spawnSync } from 'node:child_process';
++import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
++import { tmpdir } from 'node:os';
++import path from 'node:path';
++import { fileURLToPath } from 'node:url';
++import test from 'node:test';
++import { exportObserverSource } from '../../../task-linked-delivery/experiments/task-demand-100339/src/observer-integration.mjs';
++import { BUNDLE_SCHEMA, PLANES, projectBundle, replayRetained, retainReport } from '../../../task-linked-delivery/experiments/task-demand-100339/src/project.mjs';
++
++const here = path.dirname(fileURLToPath(import.meta.url));
++const cli = path.resolve(here, '../../../task-linked-delivery/experiments/task-demand-100339/bin/task-demand.mjs');
++const byPlane = (bundle, plane) => bundle.sources.find(s => s.plane === plane);
++const stages = report => report.journeys.map(j => ({ eventId: j.commerceEventId, retainedState: j.retainedState,
++  stages: Object.fromEntries(Object.entries(j.stages).map(([k, v]) => [k, { status: v.status, reasons: v.reasons, current: v.current }])) }));
++
++async function native(input) {
++  const child = fork(path.join(here, 'native-ports.mjs'), [], {
++    env: { PATH: process.env.PATH }, stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
++  });
++  let stderr = '';
++  child.stderr.on('data', b => { stderr = (stderr + b).slice(-1000); });
++  return new Promise((resolve, reject) => {
++    let message;
++    const timer = setTimeout(() => { child.kill('SIGKILL'); reject(new Error('owned native worker deadline')); }, 20000);
++    child.on('message', m => { message = m; });
++    child.on('error', reject);
++    child.on('exit', code => {
++      clearTimeout(timer);
++      if (code !== 0 || message?.error) reject(new Error(message?.error?.stack || stderr || 'native worker failed'));
++      else resolve(message.value);
++    });
++    child.send(input);
++  });
++}
++function bundleFrom(result, question = null) {
++  const from = new Date(Math.min(...result.planes.attempts.records.map(r => Date.parse(r.ts))) - 1000).toISOString();
++  const asOf = new Date().toISOString();
++  const scope = { operationIds: ['normalized-transaction-receipt'], cohorts: ['external_unknown'] };
++  const sources = PLANES.map(plane => exportObserverSource({
++    metadata: { id: 'native-' + plane.replace('_', '-'), plane, kind: 'synthetic_fixture', populationId: 'caller-owned-sol395',
++      scope, from, to: asOf, asOf, coverage: 'complete' }, ...result.planes[plane],
++  }));
++  return { schema: BUNDLE_SCHEMA, question: question || { id: 'native-two-generations',
++    text: 'Which caller-owned attempts retain an authorized useful result across a process restart?',
++    populationId: 'caller-owned-sol395', from, to: asOf, asOf, ...scope }, sources };
++}
++async function evidence(name, value) {
++  const out = process.env.SOL395_EVIDENCE_OUT;
++  if (!out) return;
++  await mkdir(out, { recursive: true });
++  await writeFile(path.join(out, name), JSON.stringify(value, null, 2) + '\n', { mode: 0o600 });
++}
++
++test('two real native receipt generations, restart, grants, negatives and a useful free gap', async t => {
++  const dataDir = await mkdtemp(path.join(tmpdir(), 'sol395-owned-receipts-'));
++  try {
++    const a = await native({ action: 'receipt', dataDir, generation: 'a' });
++    const firstBundle = bundleFrom(a), first = projectBundle(firstBundle);
++    const b = await native({ action: 'receipt', dataDir, generation: 'b', priorGrant: a.grant });
++    assert.notEqual(a.observation.workerPid, b.observation.workerPid);
++    assert.notEqual(a.eventId, b.eventId); assert.notEqual(a.taskRef, b.taskRef);
++    const secondBundle = bundleFrom(b), second = projectBundle(secondBundle, { priorReportId: first.reportId });
++    const free = await native({ action: 'receipt', dataDir, generation: 'free' });
++    const freeBundle = bundleFrom(free), freeReport = projectBundle(freeBundle);
++    await evidence('native-observation.json', { schema: 'sol395.native-ports.v1', observedAt: new Date().toISOString(),
++      operations: [a.observation, b.observation, free.observation], before: stages(first), after: stages(second), free: stages(freeReport),
++      syntheticPaymentAndRpc: true, actualDurableJournalOperations: true, productionJournalEnrolled: false,
++      measurementAuthenticity: 'owned_native_ports_with_fixture_payment_and_rpc', recognizedRevenueAtomic: '0' });
++
++    await t.test('pre-finish native retention remains inside the measured response interval', () => {
++      const event = byPlane(firstBundle, 'attempts').records[0];
++      const retain = byPlane(firstBundle, 'retention').records[0];
++      assert.ok(Date.parse(retain.createdAt) < Date.parse(event.ts));
++      // Expected behavior is specified before fixing the received implementation.
++      for (const stage of ['attempt', 'valid_delivery', 'claimed_usefulness', 'retention', 'later_use', 'settlement'])
++        assert.equal(first.journeys[0].stages[stage].status, 'observed', stage);
++      assert.equal(first.groups.owner_internal.rates.later_use.value, 1);
++      assert.equal(first.journeys[0].stages.later_use.outsideUseEstablished, false);
++    });
++    await t.test('a restarted caller reads and withdraws the prior grant while a new useful negative stays current', () => {
++      assert.equal(b.observation.previousGrantReadAfterRestart, true);
++      assert.equal(b.observation.previousGrantWithdrawn, true);
++      assert.equal(second.denominator.covered, true); assert.equal(second.denominator.observed, 2);
++      const old = second.journeys.find(j => j.commerceEventId === a.eventId), current = second.journeys.find(j => j.commerceEventId === b.eventId);
++      assert.equal(old.retainedState, 'revoked'); assert.equal(old.stages.claimed_usefulness.current, false);
++      assert.equal(current.retainedState, 'active'); assert.equal(current.stages.claimed_usefulness.claim, 'agreed_negative');
++      assert.equal(current.stages.later_use.utility, 'agreed_negative');
++      assert.equal(current.stages.later_use.status, 'observed');
++      assert.equal(second.recognizedRevenueAtomic, '0');
++    });
++    await t.test('real useful free execution has no settlement or native retained grant', () => {
++      const j = freeReport.journeys.find(j => j.commerceEventId === free.eventId);
++      assert.equal(free.observation.actualUsefulResult, true);
++      assert.equal(free.observation.paidBoundary, 'none'); assert.equal(free.observation.executionCalls, 1);
++      assert.equal(free.observation.grantReason, 'settlement_unverified');
++      assert.equal(j.stages.attempt.status, 'observed'); assert.equal(j.stages.settlement.status, 'unknown');
++      assert.equal(j.stages.claimed_usefulness.status, 'unknown'); assert.equal(j.stages.later_use.status, 'unknown');
++      assert.equal(j.reasons.includes('paid_route_response'), true);
++      assert.equal(freeReport.recognizedRevenueAtomic, '0');
++    });
++    await t.test('native grant ports reject another tenant, changed method and expiry', async () => {
++      const probes = await native({ action: 'grants', dataDir, grant: b.grant });
++      assert.deepEqual([probes.wrongTenant, probes.wrongMethod, probes.expired], ['grant_rejected', 'wrong_method', 'expired']);
++      await evidence('grant-scope-probes.json', probes);
++    });
++    const negatives = [];
++    const rejectCase = (name, change, verify) => {
++      const bundle = structuredClone(firstBundle); change(bundle);
++      const report = projectBundle(bundle); verify(report);
++      negatives.push({ name, reportId: report.reportId, denominator: report.denominator, journeys: stages(report),
++        diagnostics: report.diagnostics, recognizedRevenueAtomic: report.recognizedRevenueAtomic });
++    };
++    await t.test('mismatched task, partial coverage, conflicting settlement and usefulness change decisions', () => {
++      rejectCase('read_task_mismatch', x => { byPlane(x, 'reads').records[0].taskRef = b.taskRef; }, r => {
++        assert.equal(r.journeys[0].stages.later_use.status, 'unknown');
++        assert.ok(r.journeys[0].stages.later_use.reasons.includes('read_task_mismatch'));
++      });
++      rejectCase('partial_attempts', x => { byPlane(x, 'attempts').coverage = 'partial'; }, r => {
++        assert.equal(r.denominator.covered, false); assert.equal(r.groups.owner_internal.rates.later_use.value, null);
++      });
++      rejectCase('conflicting_settlement', x => { const s = byPlane(x, 'settlements'); s.records.push({ ...s.records[0], amountAtomic: '6000' }); }, r => {
++        assert.equal(r.denominator.covered, false); assert.equal(r.journeys[0].stages.settlement.status, 'unknown');
++        assert.equal(r.economics.cashAssessment.planes.grossSettledRevenue.known, false);
++      });
++      rejectCase('conflicting_usefulness', x => { const s = byPlane(x, 'retention'); s.records.push({ ...s.records[0], criterion: 'unknown' }); }, r => {
++        assert.equal(r.denominator.covered, false); assert.equal(r.journeys[0].stages.claimed_usefulness.status, 'unknown');
++      });
++      rejectCase('caller_assertion', x => { byPlane(x, 'attempts').records[0].success = true; }, r => {
++        assert.equal(r.denominator.covered, false); assert.equal(r.diagnostics.rejectedRecords, 1);
++      });
++      rejectCase('outside_response_interval', x => { byPlane(x, 'retention').records[0].createdAt = x.question.from; }, r => {
++        assert.equal(r.journeys[0].stages.retention.status, 'unknown');
++      });
++    });
++    await t.test('scope, tenant and time drift leave covered rates unknown', () => {
++      rejectCase('tenant_drift', x => { byPlane(x, 'retention').populationId = 'other-tenant'; }, r => {
++        assert.equal(r.journeys[0].stages.retention.status, 'unknown'); assert.equal(r.groups.owner_internal.rates.later_use.value, null);
++      });
++      rejectCase('scope_drift', x => { byPlane(x, 'reads').scope.operationIds = ['different-operation']; }, r => {
++        assert.equal(r.groups.owner_internal.rates.later_use.value, null);
++      });
++      rejectCase('time_drift', x => { byPlane(x, 'reads').to = new Date(Date.parse(x.question.asOf) + 1000).toISOString();
++        byPlane(x, 'reads').asOf = byPlane(x, 'reads').to; }, r => {
++        assert.equal(r.journeys[0].stages.later_use.status, 'unknown'); assert.equal(r.groups.owner_internal.rates.later_use.value, null);
++      });
++    });
++    await t.test('caller-retained actual cuts replay in fresh CLI processes', async () => {
++      for (const [name, bundle, priorReportId] of [['generation-a', firstBundle, null], ['generation-b', secondBundle, first.reportId], ['free-result', freeBundle, null]]) {
++        const report = projectBundle(bundle, { priorReportId }), retained = retainReport(bundle, report);
++        assert.deepEqual(replayRetained(retained), report);
++        const receiptPath = path.join(dataDir, name + '.retained.json');
++        await writeFile(receiptPath, JSON.stringify(retained) + '\n', { mode: 0o600 });
++        const replay = spawnSync(process.execPath, [cli, 'replay', '--receipt', receiptPath], {
++          env: { PATH: process.env.PATH }, encoding: 'utf8', timeout: 10000,
++        });
++        assert.equal(replay.status, 0, replay.stderr); assert.deepEqual(JSON.parse(replay.stdout), report);
++        const text = JSON.stringify(retained);
++        for (const sentinel of ['grantHash', 'credentialDigest', 'transactionHash', 'payment-signature', 'synthetic-native-receiving-token'])
++          assert.equal(text.includes(sentinel), false, sentinel);
++        await evidence(name + '.retained.json', retained);
++      }
++      await evidence('decision-negatives.json', negatives);
++    });
++  } finally { await rm(dataDir, { recursive: true, force: true }); }
++});
++
++test('native settlement journal rotates, fsyncs a lost write ACK and reloads two retained generations', async () => {
++  const dataDir = await mkdtemp(path.join(tmpdir(), 'sol395-owned-journal-'));
++  try {
++    const result = await native({ action: 'journal', dataDir });
++    assert.equal(result.retainedSettlementRows, 2); assert.equal(result.lostWriteAckReadBack, true);
++    await evidence('journal-restart-lost-ack.json', result);
++  } finally { await rm(dataDir, { recursive: true, force: true }); }
++});
+diff --git a/task-linked-delivery/experiments/task-demand-100339/README.md b/task-linked-delivery/experiments/task-demand-100339/README.md
+index 087669d..5fdf30a 100644
+--- a/task-linked-delivery/experiments/task-demand-100339/README.md
++++ b/task-linked-delivery/experiments/task-demand-100339/README.md
+@@ -43,7 +43,11 @@ receipt route. Its valid delivery instead requires the received receipt
+ retention contract plus exact causal task/operation and runtime reconciliation.
+ 
+ Stages are attempt, valid delivery, claimed usefulness, retention, later use,
+-and settlement. Native forward rows have no timestamps; same-response delivery
++and settlement. Native v3 `ts` records HTTP response finish. When the existing
++producer supplies its measured `durationMs`, retention created inside that
++response interval can join the unique causal attempt. Absent duration preserves
++the original finish-time lower bound; no guessed timing allowance is used.
++Native forward rows have no timestamps; same-response delivery
+ uses the causal attempt's timestamp. Forward retained use alone leaves later
+ use unknown because it lacks time and grant ownership. Read metrics join by
+ the existing retained record id and exact task ref. Multiple causal attempts
+@@ -95,3 +99,8 @@ module. A cold candidate's provenance records its actual source commit, member
+ hashes, archive hash and inventory; it is not a production hosting receipt.
+ `src/observer-integration.mjs` exposes `exportObserverSource` and
+ `projectObserverEvidence` for Root's isolated handoff. Root owns shared routes.
++
++The original `export/public` candidate remains the received 0.1.0 archive.
++Sol395's reviewed 0.1.1 candidate and native receiving evidence live separately
++at `docs/reviews/sol395-causal-task-receiving`. Root must pin its source commit
++and archive hash when adopting the measured response interval fix.
+diff --git a/task-linked-delivery/experiments/task-demand-100339/export/pack.mjs b/task-linked-delivery/experiments/task-demand-100339/export/pack.mjs
+index 2598efc..8209204 100644
+--- a/task-linked-delivery/experiments/task-demand-100339/export/pack.mjs
++++ b/task-linked-delivery/experiments/task-demand-100339/export/pack.mjs
+@@ -18,7 +18,8 @@ for(let i=2;i<process.argv.length;i+=2){
+ const sourceCommit=args['--source-commit'];
+ if(!/^[a-f0-9]{40}$/.test(sourceCommit || '')) fail('exact_source_commit_required');
+ const out=path.resolve(args['--out'] || path.join(pkg,'export/public'));
+-const id='task-demand-100339',version='0.1.0';
++const id='task-demand-100339',version=JSON.parse(readFileSync(path.join(pkg,'package.json'))).version;
++if(!/^\d+\.\d+\.\d+$/.test(version)) fail('package_version_rejected');
+ const members=['LICENSE','README.md','SOURCE-NOTICE.txt','PIN.json','package.json','bin/task-demand.mjs',
+   'src/bounds.mjs','src/export.mjs','src/project.mjs','src/observer-integration.mjs',
+   'vendor/causal-contract.mjs','vendor/economics/economics.mjs','vendor/economics/constants.mjs','vendor/economics/errors.mjs',
+diff --git a/task-linked-delivery/experiments/task-demand-100339/package.json b/task-linked-delivery/experiments/task-demand-100339/package.json
+index f9a8d95..759881b 100644
+--- a/task-linked-delivery/experiments/task-demand-100339/package.json
++++ b/task-linked-delivery/experiments/task-demand-100339/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "task-demand-100339",
+-  "version": "0.1.0",
++  "version": "0.1.1",
+   "type": "module",
+   "license": "MIT",
+   "engines": { "node": ">=22.20.0" },
+diff --git a/task-linked-delivery/experiments/task-demand-100339/src/export.mjs b/task-linked-delivery/experiments/task-demand-100339/src/export.mjs
+index 9f9ec2d..eadde3e 100644
+--- a/task-linked-delivery/experiments/task-demand-100339/src/export.mjs
++++ b/task-linked-delivery/experiments/task-demand-100339/src/export.mjs
+@@ -25,6 +25,12 @@ export function stripRecord(row, plane) {
+     && ['request','challenge','validation_failure','service_failure','paid_route_response','paid_success','replay_success'].includes(row.result)
+     && Number.isInteger(row.status) && row.status >= 100 && row.status <= 599) {
+     const out = pick(row, ['v','id','ts','method','route','result','status']);
++    // Native v3 ts is response finish, while receipt retention runs during
++    // res.end. Preserve the producer's measured interval, not a guessed grace.
++    if (row.durationMs !== undefined) {
++      if (!Number.isSafeInteger(row.durationMs) || row.durationMs < 0 || row.durationMs > Date.parse(row.ts)) return null;
++      out.durationMs = row.durationMs;
++    }
+     // These are existing producer classifications, never identity join keys.
+     if (['internal','owner_monitor','external','scanner','crawler'].includes(row.originClass)) out.originClass = row.originClass;
+     if (/^[a-z_]{1,64}$/.test(row.paymentFailureCode || '')) out.paymentFailureCode = row.paymentFailureCode;
+diff --git a/task-linked-delivery/experiments/task-demand-100339/src/project.mjs b/task-linked-delivery/experiments/task-demand-100339/src/project.mjs
+index 1bf3045..2433506 100644
+--- a/task-linked-delivery/experiments/task-demand-100339/src/project.mjs
++++ b/task-linked-delivery/experiments/task-demand-100339/src/project.mjs
+@@ -201,7 +201,8 @@ export function projectBundle(bundle, { tick = budget(), priorReportId = null }
+       if (e.result === 'challenge') stages.valid_delivery.reasons.push('challenge_is_not_delivery');
+     }
+     const candidateRetains = rows.retention.filter(x => x.row.action === 'retain' && x.row.taskRef === ref.taskRef && x.row.operationId === ref.operationId && x.row.route === e.route && x.row.method === e.method);
+-    const retains = candidateRetains.filter(x => Date.parse(x.row.createdAt) >= Date.parse(e.ts) && Date.parse(x.row.createdAt) <= asOf);
++    const responseStart = Date.parse(e.ts) - (e.durationMs || 0);
++    const retains = candidateRetains.filter(x => Date.parse(x.row.createdAt) >= responseStart && Date.parse(x.row.createdAt) <= asOf);
+     diagnostics.lateRecords += candidateRetains.filter(x => Date.parse(x.row.createdAt) > asOf).length;
+     retains.sort((a,b) => a.row.createdAt.localeCompare(b.row.createdAt) || a.row.grantId.localeCompare(b.row.grantId));
+     const ambiguous = peers.get(ref.taskRef + ':' + ref.operationId) !== 1 || retains.length > 1 && retains.at(-1).row.createdAt === retains.at(-2).row.createdAt;
+@@ -217,7 +218,8 @@ export function projectBundle(bundle, { tick = budget(), priorReportId = null }
+       // not support this route. Never fabricate its validator verdict.
+       if (settlement && r.criterion !== 'unknown' && e.result === 'paid_success' && e.status >= 200 && e.status < 300) {
+         stages.valid_delivery = observed([r.recordId], { at: r.createdAt,
+-          authority: 'existing_receipt_retention_contract', timing: 'retention_created_after_causal_attempt' });
++          authority: 'existing_receipt_retention_contract', timing: Date.parse(r.createdAt) < Date.parse(e.ts)
++            ? 'retention_created_during_causal_response' : 'retention_created_after_causal_attempt' });
+       }
+       const revoked = rows.retention.filter(x => x.row.action === 'revoke' && x.row.targetId === r.grantId && Date.parse(x.row.at) <= asOf);
+       const expired = Date.parse(r.expiresAt) <= asOf;
+diff --git a/task-linked-delivery/experiments/task-demand-100339/test/cold-export.test.mjs b/task-linked-delivery/experiments/task-demand-100339/test/cold-export.test.mjs
+index 7d70475..6f397b4 100644
+--- a/task-linked-delivery/experiments/task-demand-100339/test/cold-export.test.mjs
++++ b/task-linked-delivery/experiments/task-demand-100339/test/cold-export.test.mjs
+@@ -1,21 +1,38 @@
+ import assert from 'node:assert/strict';
+ import { spawnSync } from 'node:child_process';
+-import { mkdtemp,readFile,rm } from 'node:fs/promises';
++import { mkdir,mkdtemp,readFile,rm,writeFile } from 'node:fs/promises';
+ import { tmpdir } from 'node:os';
+ import path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ import test from 'node:test';
+ import { coldReceipt } from '../export/cold-receipt.mjs';
++import { bytesDigest,digest } from '../src/bounds.mjs';
+ 
+ test('licensed candidate reproduces exact committed bytes and passes cold acquisition/restart',async()=>{
+   const pkg=fileURLToPath(new URL('../',import.meta.url)),candidate=path.join(pkg,'export/public');
+   const provenance=JSON.parse(await readFile(path.join(candidate,'bytes/task-demand-100339/0.1.0/provenance.json')));
+   const fresh=await mkdtemp(path.join(tmpdir(),'task-demand-repack-'));
+   try {
+-    const repack=spawnSync(process.execPath,[path.join(pkg,'export/pack.mjs'),'--source-commit',provenance.sourceCommit,'--out',fresh],{encoding:'utf8',timeout:15000});
+-    assert.equal(repack.status,0,repack.stderr);
+-    assert.equal(JSON.parse(repack.stdout).archiveSha256,provenance.archiveSha256);
+-    const receipt=await coldReceipt(fresh);
++    // A received candidate remains pinned to its original committed bytes even
++    // after the owned projection is repaired. Rebuild that historical tree,
++    // rather than silently replacing it with the current checkout's source.
++    const repo=path.resolve(pkg,'../../..'),prefix=path.relative(repo,pkg).replaceAll(path.sep,'/')+'/';
++    assert.equal(digest(provenance.sourceFiles),provenance.sourceTreeDigest);
++    const members=[];
++    for(const member of provenance.sourceFiles){
++      assert.ok(member.path.startsWith(prefix));
++      const rel=member.path.slice(prefix.length);assert.ok(!rel.split('/').includes('..'));
++      const committed=spawnSync('git',['show',provenance.sourceCommit+':'+member.path],{cwd:repo,maxBuffer:2_097_152});
++      assert.equal(committed.status,0,committed.stderr.toString());
++      assert.equal(bytesDigest(committed.stdout),member.sha256);assert.equal(committed.stdout.length,member.bytes);
++      const dest=path.join(fresh,rel);await mkdir(path.dirname(dest),{recursive:true});await writeFile(dest,committed.stdout);
++      members.push(rel);
++    }
++    const archive=path.join(fresh,'candidate.tar.gz');
++    const packed=spawnSync('tar',['--sort=name','--mtime=UTC 2026-10-02','--owner=0','--group=0','--numeric-owner','-czf',archive,...members],{cwd:fresh,encoding:'utf8',timeout:15000});
++    assert.equal(packed.status,0,packed.stderr);
++    assert.equal(bytesDigest(await readFile(archive)),provenance.archiveSha256);
++    const receipt=await coldReceipt(candidate);
+     assert.equal(receipt.archive.sha256,provenance.archiveSha256);
+     assert.equal(receipt.productionHosted,false);assert.equal(receipt.restartedReplay,true);assert.equal(receipt.changedEvidenceReplay,true);
+     assert.equal(receipt.questions.length,2);
+diff --git a/task-linked-delivery/experiments/task-demand-100339/test/response-interval.test.mjs b/task-linked-delivery/experiments/task-demand-100339/test/response-interval.test.mjs
+new file mode 100644
+index 0000000..b57e3fd
+--- /dev/null
++++ b/task-linked-delivery/experiments/task-demand-100339/test/response-interval.test.mjs
+@@ -0,0 +1,32 @@
++import assert from 'node:assert/strict';
++import test from 'node:test';
++import { projectBundle, replayRetained, retainReport } from '../src/project.mjs';
++import { stripRecord } from '../src/export.mjs';
++import { fixture, plane } from './fixtures.mjs';
++
++test('native retention during response uses measured duration and survives portable replay', () => {
++  const bundle = fixture(), event = plane(bundle, 'attempts').records[0], retain = plane(bundle, 'retention').records[0];
++  event.durationMs = 2000;
++  retain.createdAt = new Date(Date.parse(event.ts) - 1000).toISOString();
++  const report = projectBundle(bundle);
++  assert.equal(report.journeys[0].stages.valid_delivery.timing, 'retention_created_during_causal_response');
++  assert.equal(report.journeys[0].stages.retention.status, 'observed');
++  assert.equal(report.journeys[0].stages.later_use.status, 'observed');
++  assert.deepEqual(replayRetained(retainReport(bundle, report)), report);
++  delete event.durationMs;
++  assert.equal(projectBundle(bundle).journeys[0].stages.retention.status, 'unknown');
++  event.durationMs = 999;
++  assert.equal(projectBundle(bundle).journeys[0].stages.retention.status, 'unknown');
++});
++
++test('measured response duration rejects invalid values and does not replace causal ownership', () => {
++  const bundle = fixture(), event = plane(bundle, 'attempts').records[0];
++  for (const durationMs of [-1, 1.5, '2000', Number.MAX_SAFE_INTEGER, null])
++    assert.equal(stripRecord({ ...event, durationMs }, 'attempts'), null);
++  assert.equal(stripRecord({ ...event, durationMs: 0 }, 'attempts').durationMs, 0);
++  event.durationMs = 1000;
++  plane(bundle, 'task_refs').records.shift();
++  const report = projectBundle(bundle);
++  assert.equal(report.denominator.covered, false);
++  assert.equal(report.groups.owner_internal.counts.retention, 0);
++});

@@ -1,0 +1,138 @@
+TAP version 13
+# Subtest: two real native receipt generations, restart, grants, negatives and a useful free gap
+    # Subtest: pre-finish native retention remains inside the measured response interval
+    not ok 1 - pre-finish native retention remains inside the measured response interval
+      ---
+      duration_ms: 1.177089
+      type: 'test'
+      location: '/tmp/sol395-receiving-F6KFEr/unfixed/docs/reviews/sol395-causal-task-receiving/receiving.test.mjs:71:13'
+      failureType: 'testCodeFailure'
+      error: |-
+        valid_delivery
+        + actual - expected
+        
+        + 'unknown'
+        - 'observed'
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 'observed'
+      actual: 'unknown'
+      operator: 'strictEqual'
+      stack: |-
+        TestContext.<anonymous> (file:///tmp/sol395-receiving-F6KFEr/unfixed/docs/reviews/sol395-causal-task-receiving/receiving.test.mjs:77:16)
+        Test.runInAsyncScope (node:async_hooks:214:14)
+        Test.run (node:internal/test_runner/test:1047:25)
+        Test.start (node:internal/test_runner/test:944:17)
+        TestContext.test (node:internal/test_runner/test:373:20)
+        TestContext.<anonymous> (file:///tmp/sol395-receiving-F6KFEr/unfixed/docs/reviews/sol395-causal-task-receiving/receiving.test.mjs:71:13)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: a restarted caller reads and withdraws the prior grant while a new useful negative stays current
+    not ok 2 - a restarted caller reads and withdraws the prior grant while a new useful negative stays current
+      ---
+      duration_ms: 0.262244
+      type: 'test'
+      location: '/tmp/sol395-receiving-F6KFEr/unfixed/docs/reviews/sol395-causal-task-receiving/receiving.test.mjs:81:13'
+      failureType: 'testCodeFailure'
+      error: |-
+        Expected values to be strictly equal:
+        + actual - expected
+        
+        + 'unknown'
+        - 'revoked'
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 'revoked'
+      actual: 'unknown'
+      operator: 'strictEqual'
+      stack: |-
+        TestContext.<anonymous> (file:///tmp/sol395-receiving-F6KFEr/unfixed/docs/reviews/sol395-causal-task-receiving/receiving.test.mjs:86:14)
+        Test.runInAsyncScope (node:async_hooks:214:14)
+        Test.run (node:internal/test_runner/test:1047:25)
+        Test.start (node:internal/test_runner/test:944:17)
+        TestContext.test (node:internal/test_runner/test:373:20)
+        TestContext.<anonymous> (file:///tmp/sol395-receiving-F6KFEr/unfixed/docs/reviews/sol395-causal-task-receiving/receiving.test.mjs:81:13)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: real useful free execution has no settlement or native retained grant
+    ok 3 - real useful free execution has no settlement or native retained grant
+      ---
+      duration_ms: 0.145522
+      type: 'test'
+      ...
+    # Subtest: native grant ports reject another tenant, changed method and expiry
+    ok 4 - native grant ports reject another tenant, changed method and expiry
+      ---
+      duration_ms: 494.449259
+      type: 'test'
+      ...
+    # Subtest: mismatched task, partial coverage, conflicting settlement and usefulness change decisions
+    not ok 5 - mismatched task, partial coverage, conflicting settlement and usefulness change decisions
+      ---
+      duration_ms: 11.016469
+      type: 'test'
+      location: '/tmp/sol395-receiving-F6KFEr/unfixed/docs/reviews/sol395-causal-task-receiving/receiving.test.mjs:114:13'
+      failureType: 'testCodeFailure'
+      error: |-
+        The expression evaluated to a falsy value:
+        
+          assert.ok(r.journeys[0].stages.later_use.reasons.includes('read_task_mismatch'))
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        file:///tmp/sol395-receiving-F6KFEr/unfixed/docs/reviews/sol395-causal-task-receiving/receiving.test.mjs:117:16
+        rejectCase (file:///tmp/sol395-receiving-F6KFEr/unfixed/docs/reviews/sol395-causal-task-receiving/receiving.test.mjs:110:45)
+        TestContext.<anonymous> (file:///tmp/sol395-receiving-F6KFEr/unfixed/docs/reviews/sol395-causal-task-receiving/receiving.test.mjs:115:7)
+        Test.runInAsyncScope (node:async_hooks:214:14)
+        Test.run (node:internal/test_runner/test:1047:25)
+        Test.start (node:internal/test_runner/test:944:17)
+        TestContext.test (node:internal/test_runner/test:373:20)
+        TestContext.<anonymous> (file:///tmp/sol395-receiving-F6KFEr/unfixed/docs/reviews/sol395-causal-task-receiving/receiving.test.mjs:114:13)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: scope, tenant and time drift leave covered rates unknown
+    ok 6 - scope, tenant and time drift leave covered rates unknown
+      ---
+      duration_ms: 5.824524
+      type: 'test'
+      ...
+    # Subtest: caller-retained actual cuts replay in fresh CLI processes
+    ok 7 - caller-retained actual cuts replay in fresh CLI processes
+      ---
+      duration_ms: 163.459775
+      type: 'test'
+      ...
+    1..7
+not ok 1 - two real native receipt generations, restart, grants, negatives and a useful free gap
+  ---
+  duration_ms: 2553.73782
+  type: 'test'
+  location: '/tmp/sol395-receiving-F6KFEr/unfixed/docs/reviews/sol395-causal-task-receiving/receiving.test.mjs:55:1'
+  failureType: 'subtestsFailed'
+  error: '3 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: native settlement journal rotates, fsyncs a lost write ACK and reloads two retained generations
+ok 2 - native settlement journal rotates, fsyncs a lost write ACK and reloads two retained generations
+  ---
+  duration_ms: 580.467568
+  type: 'test'
+  ...
+1..2
+# tests 9
+# suites 0
+# pass 5
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3181.50709

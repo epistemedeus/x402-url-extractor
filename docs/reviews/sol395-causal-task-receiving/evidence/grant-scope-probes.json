@@ -1,0 +1,8 @@
+{
+  "wrongMethod": "wrong_method",
+  "wrongTenant": "grant_rejected",
+  "expired": "expired",
+  "currentAuthority": false,
+  "paymentPermitted": false,
+  "clock": "explicit isolated 8-day expiry probe"
+}

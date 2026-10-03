@@ -1,0 +1,105 @@
+{
+  "schema": "sol395.cold-receiving.v1",
+  "observedAt": "2026-10-02T16:49:56.877Z",
+  "sourceCommit": "b24ece44464302680df93639026ff103126da41a",
+  "sourceTreeDigest": "a3784a1118a97385f8fc4aa80b0514f7c4d4088ca539e9496c509fb478feaa8f",
+  "archive": {
+    "filename": "task-demand-100339-0.1.1.tar.gz",
+    "bytes": 29492,
+    "sha256": "6cec3a3f4b3f51f485f1bf55688305b83a9fb41bbc34b31f30f6a774ef100cbb",
+    "inventoryMembers": 18
+  },
+  "fixtureCold": {
+    "schema": "samedaydesk.task-demand.cold-receipt.v1",
+    "observedAt": "2026-10-02T16:49:56.383Z",
+    "proofClass": "loopback_owner_qa",
+    "productionHosted": false,
+    "hostedAcquisitionVerified": false,
+    "independentDemand": false,
+    "outsideUseEstablished": false,
+    "recognizedRevenueAtomic": "0",
+    "sourceCommit": "b24ece44464302680df93639026ff103126da41a",
+    "sourceTreeDigest": "a3784a1118a97385f8fc4aa80b0514f7c4d4088ca539e9496c509fb478feaa8f",
+    "acquisitionTool": "public-acquisition/engine.mjs loadPublicAcquisition + mountPublicAcquisition",
+    "archive": {
+      "filename": "task-demand-100339-0.1.1.tar.gz",
+      "bytes": 29492,
+      "sha256": "6cec3a3f4b3f51f485f1bf55688305b83a9fb41bbc34b31f30f6a774ef100cbb",
+      "inventoryMembers": 18
+    },
+    "license": "MIT",
+    "fetched": [
+      {
+        "role": "provenance",
+        "bytes": 4492,
+        "sha256": "82c1dfe14c23b0402a4444a21b71a9e45b11f18b45a36c6801d9da05ca2f8532"
+      },
+      {
+        "role": "license",
+        "bytes": 1068,
+        "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c"
+      },
+      {
+        "role": "source-notice",
+        "bytes": 863,
+        "sha256": "c4415e66fcf024f6e578321ce0640c41f58418ec9bb4e5934f7f0c68fe73ac00"
+      }
+    ],
+    "freshProcesses": 6,
+    "questions": [
+      {
+        "id": "retention-friction",
+        "reportId": "c1d67df62b5ba6274648f3d9e4de6fae99e981b56be647c4aaf14f8f9428feaf"
+      },
+      {
+        "id": "negative-utility",
+        "reportId": "7d5057739d7df7d95f611247da46dc571ac5ef4fecb9c33e9d0538fd9b6d71e2"
+      }
+    ],
+    "restartedReplay": true,
+    "changedEvidenceReplay": true,
+    "seededIndependentOutsideUseRefused": true,
+    "standalonePortableTests": 3,
+    "node": "v22.22.2",
+    "merchantDependenciesInstalledInConsumers": false,
+    "providerCredentialsUsed": false
+  },
+  "nativeRetainedReceipts": [
+    {
+      "name": "generation-a",
+      "reportId": "d5a4c8e76bcb64c90329967d83c5b5b68c54f6fdcdc676343491fadcc2261103",
+      "inputDigest": "20b5b92a4e01ee013a82595a1042ebd1b8bcfaa00e8c53cfae23cf99d957d2eb",
+      "byteIdenticalReplay": true,
+      "recognizedRevenueAtomic": "0"
+    },
+    {
+      "name": "generation-b",
+      "reportId": "7de4b409690aa5f2c835587da2553c42f786859ec2167c5461b03876b7bc508c",
+      "inputDigest": "e31b47199ee27505cbe0b34b061a533c7f1f66033b10f01bbb89e36efc345fc8",
+      "byteIdenticalReplay": true,
+      "recognizedRevenueAtomic": "0"
+    },
+    {
+      "name": "free-result",
+      "reportId": "f4059493994063dcec0d055c14f7e4715a5c7abe7101428015d09b72254164ba",
+      "inputDigest": "2f27734f7ec43f0d2cad35cacf5e1511ed9d93202a4e9ef170b07c8dadcbda17",
+      "byteIdenticalReplay": true,
+      "recognizedRevenueAtomic": "0"
+    }
+  ],
+  "nativeFreshCliProcesses": 7,
+  "freshNativeGenerationQuery": true,
+  "changedEvidenceRemovesCurrentUsefulness": true,
+  "originalArchiveDurationReplay": {
+    "version": "0.1.0",
+    "exitCode": 2,
+    "error": "replay_mismatch"
+  },
+  "acquired": "loopback_verified_bytes",
+  "hosted": false,
+  "customer": false,
+  "payment": "fixture_only",
+  "merchantDependenciesInstalledInConsumers": false,
+  "providerCredentialsUsed": false,
+  "recognizedRevenueAtomic": "0"
+}

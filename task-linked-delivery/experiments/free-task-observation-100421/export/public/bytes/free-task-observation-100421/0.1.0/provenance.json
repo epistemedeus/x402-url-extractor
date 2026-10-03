@@ -1,0 +1,127 @@
+{
+  "schema": "samedaydesk.free-task-observation.provenance.v1",
+  "package": "free-task-observation-100421",
+  "version": "0.1.0",
+  "repository": "https://github.com/epistemedeus/x402-url-extractor",
+  "sourceCommit": "f8bae389eee4c201c29007212d8b0977b8c0b4be",
+  "baseCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+  "sourceFiles": [
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/LICENSE",
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
+      "bytes": 1068
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/README.md",
+      "sha256": "868b4b00e81831ccfd2cc6123e2d3819080383ad628d09aa1c2701a652ae85a7",
+      "bytes": 4021
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/SOURCE-NOTICE.txt",
+      "sha256": "e07725374dd52db9c9bf9cc884811a84eeb55975733d06e4b6546a6a383e44ac",
+      "bytes": 505
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/PIN.json",
+      "sha256": "46a39dc6f0d74cc2c0dafc22bee7939e14ecab0da18bf73bc55e99665894d0d7",
+      "bytes": 4960
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/package.json",
+      "sha256": "fe6cfa28665aab4909aa654f8bb23aa3d4158c33884947522f12ce6bacceecd6",
+      "bytes": 286
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/bin/free-task-observation.mjs",
+      "sha256": "b282b257f82cc0bfb38d6cd2fc722639f7a30513d3b00f059f4df5c220272807",
+      "bytes": 2618
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/src/receipt.mjs",
+      "sha256": "08fd8ad2b046437ad3ca42187a10eebeb6d3615d610df4b74ec31797e65b8f45",
+      "bytes": 5167
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/src/export.mjs",
+      "sha256": "f8040f3f84f69c76ebd5954ea16f6134433a6430795b16d476c7188c8ef36f85",
+      "bytes": 6162
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/src/project.mjs",
+      "sha256": "011f5cc4c9cebc4a1503b990ac58fc64fb1c1f6ee6cac15323f083160c975e14",
+      "bytes": 13232
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/src/integration.mjs",
+      "sha256": "dfb9753e36315d9be9132386ebeb2788ec7a01bde78b8355175e64735c7de804",
+      "bytes": 12109
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/src/http-integration.mjs",
+      "sha256": "498f45bb9d9aae0b5cd1c19a13a07a407b39b4dffe76f149c29ea5af83031b76",
+      "bytes": 2918
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/vendor/bounds.mjs",
+      "sha256": "8e2d5e1cfb41319683862113ef8dbea9796cf421fa50fac47e57e30e89b603a6",
+      "bytes": 4022
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/vendor/causal-contract.mjs",
+      "sha256": "ec58a8bcfd0c232c33807ae5ea69d2831c2d715ff07d27a1d7749c13e9c333b1",
+      "bytes": 10549
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/vendor/task-demand-export.mjs",
+      "sha256": "381cf7befbd0793ba9d67b514221cbc857a6092030df33a3b19d5a2554f06930",
+      "bytes": 8149
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/fixtures/after.bundle.json",
+      "sha256": "7a60e8717011bb6154f222fea4c61d1dcb421ba3ea0cea23355725f150adc3e2",
+      "bytes": 31588
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/fixtures/395-gap.bundle.json",
+      "sha256": "eee39f53341837a0dfb402c617646398562233afd63f62b52e6f9bf52b2b1db2",
+      "bytes": 20476
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/test/portable.test.mjs",
+      "sha256": "169450971729ddf31cd860c1129bcc229934df64041ffb2912408040d3aabfb9",
+      "bytes": 4718
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/test/direct-equal-input.mjs",
+      "sha256": "e8898b727c5c31e6d6aeaed9085f1a3e46202d065ead85285467fb72cfcc7e33",
+      "bytes": 3826
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/export/ROOT-FREE-RESPONSE-OBSERVATION.patch",
+      "sha256": "671df70ae0087427281153af4e1aba9b6763a59755162213f11bec087c696134",
+      "bytes": 4005
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/export/ROOT-CUSTOMER-STORE-ADAPTER.patch",
+      "sha256": "9db7a6c60c0d4acc7d3fd100a84ef405efbdbdad6f797bdfacc974f356b52b82",
+      "bytes": 874
+    },
+    {
+      "path": "task-linked-delivery/experiments/free-task-observation-100421/export/ROOT-OBSERVATION-MOUNT.patch",
+      "sha256": "9d6b4aecda72542250e4c773a599785d8b248f0c2fa921c6de592be2fae6bb6f",
+      "bytes": 904
+    }
+  ],
+  "sourceTreeDigest": "6f44ab07a9467ee177b218f4926799a31d0922fbd2828cf60a03922eeb6e2a8d",
+  "archiveSha256": "dc73c078ea88837220baa45ec0f17872ea1eeba4c6bc8bcc032f2adf7c36f48c",
+  "license": "MIT",
+  "candidate": true,
+  "draft": true,
+  "productionHosted": false,
+  "hostedAcquisitionVerified": false,
+  "independentDemand": false,
+  "outsideUseEstablished": false,
+  "recognizedRevenueAtomic": "0",
+  "syntheticRpcBoundary": true,
+  "actualOwnedHttpAndJournalEvidence": true
+}

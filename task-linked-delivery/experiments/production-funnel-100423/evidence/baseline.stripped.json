@@ -1,0 +1,443 @@
+{
+  "schema": "samedaydesk.production-funnel-baseline.v1",
+  "jobId": "HEAVY-423-FUNNEL-100423",
+  "individualJoin": false,
+  "recognizedRevenueAtomic": "0",
+  "merchantWrite": false,
+  "pins": {
+    "sourceCommit": "26d806f20e57d0c073321675dacb13395e30c643",
+    "merchant157": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+    "relayUnion": "ea4e20b350bd519967535f00fb7dfaaa5bd257b7",
+    "seller041": "frozen_not_rewritten",
+    "shared421Patches": "unapplied"
+  },
+  "acquisition": {
+    "covered": {
+      "url": "https://agents.samedaydesk.com/v0/commerce-demand.json?days=1",
+      "sha256": "a331dbe47a62259b8bcadea1686fe10a4ef8d6346445bdd29b358d451f1f290a",
+      "bytes": 39894,
+      "acquiredAt": "2026-10-03T07:56:45.289Z",
+      "httpStatus": 200
+    },
+    "rareContext": {
+      "url": "https://agents.samedaydesk.com/v0/commerce-demand.json?days=30",
+      "sha256": "d25612cd5e970a024f9d1fff83c6d86677467ce0a66bb0942f5b54722273dab9",
+      "bytes": 40857,
+      "acquiredAt": "2026-10-03T07:56:45.522Z",
+      "httpStatus": 200
+    }
+  },
+  "coveredWindow": {
+    "selected": true,
+    "requestedDays": 1,
+    "expectedDays": 1,
+    "start": "2026-10-02T07:56:45.096Z",
+    "end": "2026-10-03T07:56:45.096Z",
+    "generatedAt": "2026-10-03T07:56:45.096Z",
+    "requestedWindowCoverage": "complete",
+    "retainedCompleteUtcDays": 0,
+    "retainedObservationStartUtcDay": null,
+    "retainedObservationEndUtcDay": null,
+    "selectionRule": "producer requestedWindowComplete on the existing commerce-demand route; no synthetic range"
+  },
+  "stream": {
+    "coverage": "complete",
+    "externalEvents": {
+      "observed": 3692,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "retained_stream_events_inside_the_producer_complete_window_not_customers"
+    },
+    "challengeEvents": {
+      "observed": 1207,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "retained_stream_events_inside_the_producer_complete_window_not_customers"
+    },
+    "discoveryEvents": {
+      "observed": 1533,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "retained_stream_events_inside_the_producer_complete_window_not_customers"
+    },
+    "validationFailureEvents": {
+      "observed": 214,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "retained_stream_events_inside_the_producer_complete_window_not_customers"
+    },
+    "unmatchedEvents": {
+      "observed": 538,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "retained_stream_events_inside_the_producer_complete_window_not_customers"
+    },
+    "protocolDiscoveryEvents": {
+      "observed": 200,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "retained_stream_events_inside_the_producer_complete_window_not_customers"
+    },
+    "paidSuccessEvents": {
+      "observed": null,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "retained_stream_events_inside_the_producer_complete_window_not_customers"
+    },
+    "paymentHeaderEvents": {
+      "observed": 0,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "retained_stream_events_inside_the_producer_complete_window_not_customers"
+    },
+    "parseableCredentialAttempts": {
+      "observed": 0,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "retained_stream_events_inside_the_producer_complete_window_not_customers"
+    },
+    "constructedRequestEvents": {
+      "observed": 365,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "retained_stream_events_inside_the_producer_complete_window_not_customers"
+    },
+    "paidSuccessActorHashes": {
+      "observed": 0,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "stream_local_actor_hash_not_a_paying_customer"
+    },
+    "independentPaidSuccessActorHashes": {
+      "observed": 0,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "stream_zero_is_not_an_independent_customer_census"
+    },
+    "challengeActorHashes": {
+      "observed": 170,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "actor_hash_is_not_a_unique_agent"
+    },
+    "challengeBySource": {
+      "declared-receipt-referral": 42,
+      "generic-agent-indexer": 2897,
+      "mpp-ecosystem": 8,
+      "coinbase-bazaar": 48
+    },
+    "constructedRequestBySource": {
+      "declared-receipt-referral": 42,
+      "generic-agent-indexer": 185,
+      "direct-or-unattributed": 134,
+      "coinbase-bazaar": 4
+    },
+    "byResult": {
+      "discovery": 1533,
+      "validation_failure": 214,
+      "challenge": 1207,
+      "unmatched": 538,
+      "protocol_discovery": 200
+    }
+  },
+  "rareCoveredSlice": {
+    "paymentHeaderEvents": {
+      "observed": 0,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "rare_rows_whose_timestamps_fall_in_the_covered_request_continuity_unproven",
+      "continuityProven": false
+    },
+    "parseableCredentialAttempts": {
+      "observed": 0,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "rare_rows_whose_timestamps_fall_in_the_covered_request_continuity_unproven",
+      "continuityProven": false
+    },
+    "unparseablePaymentHeaders": {
+      "observed": 0,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "rare_rows_whose_timestamps_fall_in_the_covered_request_continuity_unproven",
+      "continuityProven": false
+    },
+    "paidSuccessEvents": {
+      "observed": 0,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "rare_rows_whose_timestamps_fall_in_the_covered_request_continuity_unproven",
+      "continuityProven": false
+    },
+    "paidSuccessActorHashes": {
+      "observed": 0,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "rare_rows_whose_timestamps_fall_in_the_covered_request_continuity_unproven",
+      "continuityProven": false,
+      "actorHashIsIdentity": false
+    },
+    "paymentErrorEvents": {
+      "observed": 0,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "rare_rows_whose_timestamps_fall_in_the_covered_request_continuity_unproven",
+      "continuityProven": false
+    },
+    "byResult": {},
+    "independentOperatorCount": null,
+    "independentUsefulDemand": "unknown"
+  },
+  "rareFile": {
+    "retainedObservationStartUtcDay": "2026-09-11",
+    "retainedObservationEndUtcDay": "2026-09-30",
+    "retainedDurationWholeDays": 20,
+    "retainedParseableRecordCount": 102,
+    "requestedWindowComplete": false,
+    "captureContinuityProven": false,
+    "integrityStatus": "ok",
+    "context": {
+      "status": "retained_file_context_not_a_covered_census",
+      "file": {
+        "retainedObservationStartUtcDay": "2026-09-11",
+        "retainedObservationEndUtcDay": "2026-09-30",
+        "retainedDurationWholeDays": 20,
+        "retainedParseableRecordCount": 102,
+        "requestedWindowComplete": false,
+        "captureContinuityProven": false,
+        "integrityStatus": "ok"
+      },
+      "requestedDays": 30,
+      "slice": {
+        "paymentHeaderEvents": {
+          "observed": 102,
+          "census": false,
+          "customerDenominator": null,
+          "reason": "retained_rare_rows_inside_the_wide_request_continuity_unproven_not_the_covered_window",
+          "continuityProven": false
+        },
+        "parseableCredentialAttempts": {
+          "observed": 50,
+          "census": false,
+          "customerDenominator": null,
+          "reason": "retained_rare_rows_inside_the_wide_request_continuity_unproven_not_the_covered_window",
+          "continuityProven": false
+        },
+        "unparseablePaymentHeaders": {
+          "observed": 52,
+          "census": false,
+          "customerDenominator": null,
+          "reason": "retained_rare_rows_inside_the_wide_request_continuity_unproven_not_the_covered_window",
+          "continuityProven": false
+        },
+        "paidSuccessEvents": {
+          "observed": 12,
+          "census": false,
+          "customerDenominator": null,
+          "reason": "retained_rare_rows_inside_the_wide_request_continuity_unproven_not_the_covered_window",
+          "continuityProven": false
+        },
+        "paidSuccessActorHashes": {
+          "observed": 9,
+          "census": false,
+          "customerDenominator": null,
+          "reason": "retained_rare_rows_inside_the_wide_request_continuity_unproven_not_the_covered_window",
+          "continuityProven": false,
+          "actorHashIsIdentity": false
+        },
+        "paymentErrorEvents": {
+          "observed": 90,
+          "census": false,
+          "customerDenominator": null,
+          "reason": "retained_rare_rows_inside_the_wide_request_continuity_unproven_not_the_covered_window",
+          "continuityProven": false
+        },
+        "byResult": {
+          "validation_failure": 80,
+          "paid_success": 12,
+          "challenge": 10
+        },
+        "independentOperatorCount": null,
+        "independentUsefulDemand": "unknown"
+      }
+    },
+    "contextDays": 30
+  },
+  "settlementLedger": {
+    "assignedToCoveredWindow": false,
+    "coverageFlag": "complete",
+    "coverageFlagMeans": "baseline_is_at_or_before_the_requested_window_start_not_a_windowed_count",
+    "relationship": "durable_settlement_outlives_retained_paid_event",
+    "ledgerSettlements": 43,
+    "ledgerAmountAtomic": "1027000",
+    "amountIsRevenue": false,
+    "coveredWindowSettlements": null,
+    "cohorts": {
+      "probe_qa": {
+        "sourceClass": "validation",
+        "ledgerSettlements": 1,
+        "ledgerAmountAtomic": "10000",
+        "coveredWindowSettlements": null,
+        "reason": "durable_ledger_row_not_assigned_to_the_covered_window"
+      },
+      "sponsored": {
+        "sourceClass": null,
+        "ledgerSettlements": null,
+        "ledgerAmountAtomic": null,
+        "coveredWindowSettlements": null,
+        "reason": "class_absent_not_a_zero_census"
+      },
+      "recruited": {
+        "sourceClass": null,
+        "ledgerSettlements": null,
+        "ledgerAmountAtomic": null,
+        "coveredWindowSettlements": null,
+        "reason": "class_absent_not_a_zero_census"
+      },
+      "independent": {
+        "sourceClass": null,
+        "ledgerSettlements": null,
+        "ledgerAmountAtomic": null,
+        "coveredWindowSettlements": null,
+        "reason": "class_absent_not_a_zero_census"
+      },
+      "internal_owner": {
+        "sourceClass": "internal",
+        "ledgerSettlements": 12,
+        "ledgerAmountAtomic": "577000",
+        "coveredWindowSettlements": null,
+        "reason": "durable_ledger_row_not_assigned_to_the_covered_window"
+      },
+      "unknown": {
+        "sourceClass": "unclassified",
+        "ledgerSettlements": 30,
+        "ledgerAmountAtomic": "440000",
+        "coveredWindowSettlements": null,
+        "reason": "durable_ledger_row_not_assigned_to_the_covered_window"
+      }
+    },
+    "unmapped": [],
+    "closedSponsoredExpense": {
+      "class": "sponsored_evaluation_expense",
+      "atomic": "200000",
+      "secondPay": false,
+      "recognizedRevenue": false,
+      "includedInLedgerCohorts": false
+    }
+  },
+  "journey": {
+    "attempts": {
+      "observed": null,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "no_per_attempt_identity_on_the_public_route"
+    },
+    "deliverySuccess": {
+      "observed": null,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "seller_paid_success_is_not_buyer_valid_delivery"
+    },
+    "deliveryFailure": {
+      "observed": null,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "stream_and_rare_failures_are_not_one_denominator"
+    },
+    "independentlyUseful": {
+      "observed": null,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "usefulness_requires_separate_authority"
+    },
+    "authorizedRetention": {
+      "observed": null,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "production_retention_port_not_enrolled"
+    },
+    "laterUse": {
+      "observed": null,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "repeat_actor_hash_is_not_later_use"
+    },
+    "settlement": {
+      "observed": null,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "ledger_is_not_joined_to_an_attempt"
+    },
+    "payingCustomers": {
+      "observed": null,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "headers_wallets_and_settlements_are_not_customers"
+    },
+    "uniqueAgents": {
+      "observed": null,
+      "census": false,
+      "customerDenominator": null,
+      "reason": "actor_hash_is_not_a_unique_agent"
+    }
+  },
+  "customerPlane": {
+    "attributableCustomerCount": null,
+    "buyerValidDeliveryCount": null,
+    "repeatIndependentCustomerCount": null
+  },
+  "eventPlanePaidActors": {
+    "coverage": "complete",
+    "requestedWindowPaidSuccessActors": 0,
+    "copiedFromStream": true,
+    "census": false,
+    "reason": "complete_stream_coverage_copies_the_stream_local_paid_actor_count_and_does_not_cover_the_rare_plane"
+  },
+  "policyContinuation": {
+    "exactAction": {
+      "paidRoute": "/security/wallet-policy-conformance",
+      "contractReads": 20,
+      "challengeContinuationActors": 0,
+      "credentialContinuationActors": 0,
+      "paidDeliveryContinuationActors": 0,
+      "actorHashIsIdentity": false,
+      "customerDenominator": null
+    },
+    "stateful": {
+      "paidRoute": "/security/stateful-wallet-policy-conformance",
+      "contractReads": 19,
+      "challengeContinuationActors": 0,
+      "credentialContinuationActors": 0,
+      "paidDeliveryContinuationActors": 0,
+      "actorHashIsIdentity": false,
+      "customerDenominator": null
+    }
+  },
+  "missing": [
+    "per_attempt_public_call_id",
+    "buyer_valid_delivery",
+    "independently_useful_output",
+    "authorized_retention",
+    "later_use_of_the_same_attempt",
+    "windowed_settlement",
+    "cross_rail_join",
+    "later_repeat_same_call_id",
+    "sluzen_public_example",
+    "caller_supplied_task"
+  ],
+  "missingLink": {
+    "id": "per_attempt_public_call_identity",
+    "status": "absent",
+    "why": "The covered stream window has no per-attempt id that joins challenge, delivery, settlement, independent usefulness, authorized retention, and later use. Sluzen describes a private per-attempt callId. Its public example, cross-rail join, and later-repeat join are absent."
+  },
+  "provenance": {
+    "route": "https://agents.samedaydesk.com/v0/commerce-demand.json",
+    "reader": "existing_projectPublicAggregate_plus_isolated_funnel_projection",
+    "merchantBuilderPatch": "not_required",
+    "seller041": "unchanged",
+    "model": "grok-4.7",
+    "effort": "xhigh",
+    "session": "73e7334c-abbc-4adc-bd36-2dda6865656a",
+    "jobId": "HEAVY-423-FUNNEL-100423"
+  }
+}

@@ -1,0 +1,3913 @@
+[
+  {
+    "name": "partial_attempts",
+    "reportId": "8df3f69ee5fcd9176b67bfcb3b1ab35e023ef29080ac2c3b2c9adf974edfe9e5",
+    "denominator": {
+      "covered": false,
+      "observed": 0,
+      "reasons": [
+        "attempts_not_covered",
+        "causal_population_incomplete"
+      ]
+    },
+    "rates": {
+      "delivery_observation": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "attempts_not_covered",
+          "causal_population_incomplete",
+          "empty_denominator"
+        ]
+      },
+      "independently_replayed_output": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "attempts_not_covered",
+          "causal_population_incomplete",
+          "empty_denominator"
+        ]
+      },
+      "authorized_retention": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "attempts_not_covered",
+          "causal_population_incomplete",
+          "empty_denominator"
+        ]
+      },
+      "later_use": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "attempts_not_covered",
+          "causal_population_incomplete",
+          "empty_denominator"
+        ]
+      }
+    },
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "bindingConflicts": 0,
+      "unboundAttempts": 0,
+      "missingPredecessors": 6,
+      "unexpectedSettlements": 0
+    },
+    "journeys": []
+  },
+  {
+    "name": "torn_cut",
+    "reportId": "c07ad83f77d89cbc256f6c9c1196be2204a47e58082ad58e65bb5f68ab1f16ad",
+    "denominator": {
+      "covered": false,
+      "observed": 0,
+      "reasons": [
+        "task_refs_not_covered",
+        "causal_population_incomplete"
+      ]
+    },
+    "rates": {
+      "delivery_observation": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "causal_population_incomplete",
+          "empty_denominator",
+          "task_refs_not_covered"
+        ]
+      },
+      "independently_replayed_output": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "causal_population_incomplete",
+          "empty_denominator",
+          "task_refs_not_covered"
+        ]
+      },
+      "authorized_retention": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "causal_population_incomplete",
+          "empty_denominator",
+          "task_refs_not_covered"
+        ]
+      },
+      "later_use": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "causal_population_incomplete",
+          "empty_denominator",
+          "task_refs_not_covered"
+        ]
+      }
+    },
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "bindingConflicts": 0,
+      "unboundAttempts": 6,
+      "missingPredecessors": 0,
+      "unexpectedSettlements": 0
+    },
+    "journeys": []
+  },
+  {
+    "name": "foreign_population",
+    "reportId": "97440b088187a6432dc2890c810fef1e77ae5c7a14d90b23141d22da0bdd7303",
+    "denominator": {
+      "covered": true,
+      "observed": 6,
+      "reasons": []
+    },
+    "rates": {
+      "delivery_observation": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "retention_not_covered"
+        ]
+      },
+      "independently_replayed_output": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "retention_not_covered"
+        ]
+      },
+      "authorized_retention": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "retention_not_covered"
+        ]
+      },
+      "later_use": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "retention_not_covered"
+        ]
+      }
+    },
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "bindingConflicts": 0,
+      "unboundAttempts": 0,
+      "missingPredecessors": 0,
+      "unexpectedSettlements": 0
+    },
+    "journeys": [
+      {
+        "commerceEventId": "314decee-50ea-4720-a152-18310ca75125",
+        "taskRef": "ta1a239c15d636556411d8730f53466739b7037f2bef3c104aad8126235d6b0",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+        "taskRef": "t5c3b285ea13990250575736af72852f3ff5468f16d18f1caebbcea72c3b0f4",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "97575d63-9f2a-474f-a746-cba2021452a7",
+        "taskRef": "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "b4a48afe-09ab-4d75-a043-b2db2ea83842",
+        "taskRef": "tc8ce82a2f4c0f38687b78ea88c75495e3542c553fd920090b6033b48ba54d8",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+        "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+        "taskRef": "tcf67a0b71435ae6f803645948c757e090a0f828b2d0c2c46fe1e8aaa9ea003",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      }
+    ]
+  },
+  {
+    "name": "foreign_scope",
+    "reportId": "8a952688e19a511ce880bfe51c1d1e53f68f544bac2672fd75fbd8b1b7a146c2",
+    "denominator": {
+      "covered": true,
+      "observed": 6,
+      "reasons": []
+    },
+    "rates": {
+      "delivery_observation": {
+        "numerator": 4,
+        "denominator": 6,
+        "value": 0.6666666666666666,
+        "reasons": []
+      },
+      "independently_replayed_output": {
+        "numerator": 2,
+        "denominator": 6,
+        "value": 0.3333333333333333,
+        "reasons": []
+      },
+      "authorized_retention": {
+        "numerator": 4,
+        "denominator": 6,
+        "value": 0.6666666666666666,
+        "reasons": []
+      },
+      "later_use": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "reads_not_covered"
+        ]
+      }
+    },
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "bindingConflicts": 0,
+      "unboundAttempts": 0,
+      "missingPredecessors": 0,
+      "unexpectedSettlements": 0
+    },
+    "journeys": [
+      {
+        "commerceEventId": "314decee-50ea-4720-a152-18310ca75125",
+        "taskRef": "ta1a239c15d636556411d8730f53466739b7037f2bef3c104aad8126235d6b0",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+        "taskRef": "t5c3b285ea13990250575736af72852f3ff5468f16d18f1caebbcea72c3b0f4",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "0bcabdca-f030-46f6-b2a0-a31536e82769",
+              "3ae7f99242e97be183e185cb636972ec"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.506Z",
+            "httpFinish": "2026-10-02T18:12:41.492Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "asserted",
+            "verification": "unverified",
+            "value": true,
+            "reasons": [
+              "caller_success_is_not_independent_usefulness"
+            ],
+            "evidence": [
+              "3ae7f99242e97be183e185cb636972ec"
+            ]
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independent_predicate"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "bcc03580b529bbff"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.506Z",
+            "expiresAt": "2026-10-09T18:12:41.506Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "reads_not_covered"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "97575d63-9f2a-474f-a746-cba2021452a7",
+        "taskRef": "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "positive",
+        "currentUseful": true,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "79835b16e3ce3ee8651ee975dc307d65",
+              "9410609f-817f-41b3-a712-ace5d721bc8c"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:40.908Z",
+            "httpFinish": "2026-10-02T18:12:40.893Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "79835b16e3ce3ee8651ee975dc307d65"
+            ],
+            "authority": "separate_receipt_execution_and_fixed_predicate",
+            "predicate": {
+              "id": "fee-total-wei"
+            },
+            "criterion": "positive",
+            "output": {
+              "transactionFeeWei": "42000"
+            },
+            "provenance": "fixture_rpc",
+            "historical": true,
+            "sourceAuthenticity": "supplied_export_not_independently_authenticated"
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "f627746402036fad"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:40.908Z",
+            "expiresAt": "2026-10-09T18:12:40.908Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "reads_not_covered"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "b4a48afe-09ab-4d75-a043-b2db2ea83842",
+        "taskRef": "tc8ce82a2f4c0f38687b78ea88c75495e3542c553fd920090b6033b48ba54d8",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+        "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "agreed_negative",
+        "currentUseful": true,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4c2f819665bcb0f15f63b74d14a31d96",
+              "573ef379-0e61-4f23-94a6-c8a24e90c734"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.192Z",
+            "httpFinish": "2026-10-02T18:12:41.181Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4c2f819665bcb0f15f63b74d14a31d96"
+            ],
+            "authority": "separate_receipt_execution_and_fixed_predicate",
+            "predicate": {
+              "id": "receipt-absence"
+            },
+            "criterion": "agreed_negative",
+            "output": {
+              "minedReceiptAvailable": false,
+              "decision": "not_found"
+            },
+            "provenance": "fixture_rpc",
+            "historical": true,
+            "sourceAuthenticity": "supplied_export_not_independently_authenticated"
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4e5af6d455965104"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.192Z",
+            "expiresAt": "2026-10-09T18:12:41.192Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "reads_not_covered"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+        "taskRef": "tcf67a0b71435ae6f803645948c757e090a0f828b2d0c2c46fe1e8aaa9ea003",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "2568e412733cd1fe20019176721f8c7c",
+              "fb4b6e03-5e22-4093-b88f-15569913893f"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.634Z",
+            "httpFinish": "2026-10-02T18:12:41.621Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "replayed_output_changed"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "e15ca24db4da34e1"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.634Z",
+            "expiresAt": "2026-10-09T18:12:41.634Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "reads_not_covered"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      }
+    ]
+  },
+  {
+    "name": "future_cut",
+    "reportId": "d59b9866f918363335a2114290a653867231a93762ddde3507d8cfe782b08e6c",
+    "denominator": {
+      "covered": true,
+      "observed": 6,
+      "reasons": []
+    },
+    "rates": {
+      "delivery_observation": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "retention_not_covered"
+        ]
+      },
+      "independently_replayed_output": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "retention_not_covered"
+        ]
+      },
+      "authorized_retention": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "retention_not_covered"
+        ]
+      },
+      "later_use": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "retention_not_covered"
+        ]
+      }
+    },
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "bindingConflicts": 0,
+      "unboundAttempts": 0,
+      "missingPredecessors": 0,
+      "unexpectedSettlements": 0
+    },
+    "journeys": [
+      {
+        "commerceEventId": "314decee-50ea-4720-a152-18310ca75125",
+        "taskRef": "ta1a239c15d636556411d8730f53466739b7037f2bef3c104aad8126235d6b0",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+        "taskRef": "t5c3b285ea13990250575736af72852f3ff5468f16d18f1caebbcea72c3b0f4",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "97575d63-9f2a-474f-a746-cba2021452a7",
+        "taskRef": "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "b4a48afe-09ab-4d75-a043-b2db2ea83842",
+        "taskRef": "tc8ce82a2f4c0f38687b78ea88c75495e3542c553fd920090b6033b48ba54d8",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+        "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+        "taskRef": "tcf67a0b71435ae6f803645948c757e090a0f828b2d0c2c46fe1e8aaa9ea003",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      }
+    ]
+  },
+  {
+    "name": "missing_predecessor",
+    "reportId": "d1864824c1e092a06dfc44aaa0bcf6655de981ad7a4ee1043699a3ca871e6776",
+    "denominator": {
+      "covered": false,
+      "observed": 5,
+      "reasons": [
+        "causal_population_incomplete"
+      ]
+    },
+    "rates": {
+      "delivery_observation": {
+        "numerator": 3,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "causal_population_incomplete"
+        ]
+      },
+      "independently_replayed_output": {
+        "numerator": 1,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "causal_population_incomplete"
+        ]
+      },
+      "authorized_retention": {
+        "numerator": 3,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "causal_population_incomplete"
+        ]
+      },
+      "later_use": {
+        "numerator": 1,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "causal_population_incomplete"
+        ]
+      }
+    },
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "bindingConflicts": 0,
+      "unboundAttempts": 1,
+      "missingPredecessors": 0,
+      "unexpectedSettlements": 0
+    },
+    "journeys": [
+      {
+        "commerceEventId": "314decee-50ea-4720-a152-18310ca75125",
+        "taskRef": "ta1a239c15d636556411d8730f53466739b7037f2bef3c104aad8126235d6b0",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+        "taskRef": "t5c3b285ea13990250575736af72852f3ff5468f16d18f1caebbcea72c3b0f4",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "0bcabdca-f030-46f6-b2a0-a31536e82769",
+              "3ae7f99242e97be183e185cb636972ec"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.506Z",
+            "httpFinish": "2026-10-02T18:12:41.492Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "asserted",
+            "verification": "unverified",
+            "value": true,
+            "reasons": [
+              "caller_success_is_not_independent_usefulness"
+            ],
+            "evidence": [
+              "3ae7f99242e97be183e185cb636972ec"
+            ]
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independent_predicate"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "bcc03580b529bbff"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.506Z",
+            "expiresAt": "2026-10-09T18:12:41.506Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "read_without_independent_usefulness"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "b4a48afe-09ab-4d75-a043-b2db2ea83842",
+        "taskRef": "tc8ce82a2f4c0f38687b78ea88c75495e3542c553fd920090b6033b48ba54d8",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+        "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "agreed_negative",
+        "currentUseful": true,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4c2f819665bcb0f15f63b74d14a31d96",
+              "573ef379-0e61-4f23-94a6-c8a24e90c734"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.192Z",
+            "httpFinish": "2026-10-02T18:12:41.181Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4c2f819665bcb0f15f63b74d14a31d96"
+            ],
+            "authority": "separate_receipt_execution_and_fixed_predicate",
+            "predicate": {
+              "id": "receipt-absence"
+            },
+            "criterion": "agreed_negative",
+            "output": {
+              "minedReceiptAvailable": false,
+              "decision": "not_found"
+            },
+            "provenance": "fixture_rpc",
+            "historical": true,
+            "sourceAuthenticity": "supplied_export_not_independently_authenticated"
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4e5af6d455965104"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.192Z",
+            "expiresAt": "2026-10-09T18:12:41.192Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "45f8f9f6c3711efe7e24143c"
+            ],
+            "authority": "existing_authorized_retained_read",
+            "utility": "agreed_negative",
+            "historical": true,
+            "outsideUseEstablished": false
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+        "taskRef": "tcf67a0b71435ae6f803645948c757e090a0f828b2d0c2c46fe1e8aaa9ea003",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "2568e412733cd1fe20019176721f8c7c",
+              "fb4b6e03-5e22-4093-b88f-15569913893f"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.634Z",
+            "httpFinish": "2026-10-02T18:12:41.621Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "replayed_output_changed"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "e15ca24db4da34e1"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.634Z",
+            "expiresAt": "2026-10-09T18:12:41.634Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "read_without_independent_usefulness"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      }
+    ]
+  },
+  {
+    "name": "changed_response_digest",
+    "reportId": "ec90a19ea4ac19011cff190d9d3bcfe090781330fd82758e0aeb8754e4fa57f0",
+    "denominator": {
+      "covered": true,
+      "observed": 6,
+      "reasons": []
+    },
+    "rates": {
+      "delivery_observation": {
+        "numerator": 3,
+        "denominator": 6,
+        "value": 0.5,
+        "reasons": []
+      },
+      "independently_replayed_output": {
+        "numerator": 1,
+        "denominator": 6,
+        "value": 0.16666666666666666,
+        "reasons": []
+      },
+      "authorized_retention": {
+        "numerator": 3,
+        "denominator": 6,
+        "value": 0.5,
+        "reasons": []
+      },
+      "later_use": {
+        "numerator": 1,
+        "denominator": 6,
+        "value": 0.16666666666666666,
+        "reasons": []
+      }
+    },
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "bindingConflicts": 0,
+      "unboundAttempts": 0,
+      "missingPredecessors": 0,
+      "unexpectedSettlements": 0
+    },
+    "journeys": [
+      {
+        "commerceEventId": "314decee-50ea-4720-a152-18310ca75125",
+        "taskRef": "ta1a239c15d636556411d8730f53466739b7037f2bef3c104aad8126235d6b0",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+        "taskRef": "t5c3b285ea13990250575736af72852f3ff5468f16d18f1caebbcea72c3b0f4",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "0bcabdca-f030-46f6-b2a0-a31536e82769",
+              "3ae7f99242e97be183e185cb636972ec"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.506Z",
+            "httpFinish": "2026-10-02T18:12:41.492Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "asserted",
+            "verification": "unverified",
+            "value": true,
+            "reasons": [
+              "caller_success_is_not_independent_usefulness"
+            ],
+            "evidence": [
+              "3ae7f99242e97be183e185cb636972ec"
+            ]
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independent_predicate"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "bcc03580b529bbff"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.506Z",
+            "expiresAt": "2026-10-09T18:12:41.506Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "read_without_independent_usefulness"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "97575d63-9f2a-474f-a746-cba2021452a7",
+        "taskRef": "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "response_or_scope_mismatch"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "b4a48afe-09ab-4d75-a043-b2db2ea83842",
+        "taskRef": "tc8ce82a2f4c0f38687b78ea88c75495e3542c553fd920090b6033b48ba54d8",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+        "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "agreed_negative",
+        "currentUseful": true,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4c2f819665bcb0f15f63b74d14a31d96",
+              "573ef379-0e61-4f23-94a6-c8a24e90c734"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.192Z",
+            "httpFinish": "2026-10-02T18:12:41.181Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4c2f819665bcb0f15f63b74d14a31d96"
+            ],
+            "authority": "separate_receipt_execution_and_fixed_predicate",
+            "predicate": {
+              "id": "receipt-absence"
+            },
+            "criterion": "agreed_negative",
+            "output": {
+              "minedReceiptAvailable": false,
+              "decision": "not_found"
+            },
+            "provenance": "fixture_rpc",
+            "historical": true,
+            "sourceAuthenticity": "supplied_export_not_independently_authenticated"
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4e5af6d455965104"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.192Z",
+            "expiresAt": "2026-10-09T18:12:41.192Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "45f8f9f6c3711efe7e24143c"
+            ],
+            "authority": "existing_authorized_retained_read",
+            "utility": "agreed_negative",
+            "historical": true,
+            "outsideUseEstablished": false
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+        "taskRef": "tcf67a0b71435ae6f803645948c757e090a0f828b2d0c2c46fe1e8aaa9ea003",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "2568e412733cd1fe20019176721f8c7c",
+              "fb4b6e03-5e22-4093-b88f-15569913893f"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.634Z",
+            "httpFinish": "2026-10-02T18:12:41.621Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "replayed_output_changed"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "e15ca24db4da34e1"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.634Z",
+            "expiresAt": "2026-10-09T18:12:41.634Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "read_without_independent_usefulness"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      }
+    ]
+  },
+  {
+    "name": "changed_predicate_evidence",
+    "reportId": "4cbacb5cf6907a2dc27f7d93d5e1bbc492241943f6bd221225d3c215e081836f",
+    "denominator": {
+      "covered": true,
+      "observed": 6,
+      "reasons": []
+    },
+    "rates": {
+      "delivery_observation": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "retention_not_covered"
+        ]
+      },
+      "independently_replayed_output": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "retention_not_covered"
+        ]
+      },
+      "authorized_retention": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "retention_not_covered"
+        ]
+      },
+      "later_use": {
+        "numerator": 0,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "retention_not_covered"
+        ]
+      }
+    },
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 1,
+      "bindingConflicts": 0,
+      "unboundAttempts": 0,
+      "missingPredecessors": 0,
+      "unexpectedSettlements": 0
+    },
+    "journeys": [
+      {
+        "commerceEventId": "314decee-50ea-4720-a152-18310ca75125",
+        "taskRef": "ta1a239c15d636556411d8730f53466739b7037f2bef3c104aad8126235d6b0",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+        "taskRef": "t5c3b285ea13990250575736af72852f3ff5468f16d18f1caebbcea72c3b0f4",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "97575d63-9f2a-474f-a746-cba2021452a7",
+        "taskRef": "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "b4a48afe-09ab-4d75-a043-b2db2ea83842",
+        "taskRef": "tc8ce82a2f4c0f38687b78ea88c75495e3542c553fd920090b6033b48ba54d8",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+        "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+        "taskRef": "tcf67a0b71435ae6f803645948c757e090a0f828b2d0c2c46fe1e8aaa9ea003",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      }
+    ]
+  },
+  {
+    "name": "wrong_task_read",
+    "reportId": "91e88bc48af949b125e0d57456b2278b4ab82af0357d8883ec7e7c41b567cd4f",
+    "denominator": {
+      "covered": true,
+      "observed": 6,
+      "reasons": []
+    },
+    "rates": {
+      "delivery_observation": {
+        "numerator": 4,
+        "denominator": 6,
+        "value": 0.6666666666666666,
+        "reasons": []
+      },
+      "independently_replayed_output": {
+        "numerator": 2,
+        "denominator": 6,
+        "value": 0.3333333333333333,
+        "reasons": []
+      },
+      "authorized_retention": {
+        "numerator": 4,
+        "denominator": 6,
+        "value": 0.6666666666666666,
+        "reasons": []
+      },
+      "later_use": {
+        "numerator": 1,
+        "denominator": 6,
+        "value": 0.16666666666666666,
+        "reasons": []
+      }
+    },
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "bindingConflicts": 0,
+      "unboundAttempts": 0,
+      "missingPredecessors": 0,
+      "unexpectedSettlements": 0
+    },
+    "journeys": [
+      {
+        "commerceEventId": "314decee-50ea-4720-a152-18310ca75125",
+        "taskRef": "ta1a239c15d636556411d8730f53466739b7037f2bef3c104aad8126235d6b0",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+        "taskRef": "t5c3b285ea13990250575736af72852f3ff5468f16d18f1caebbcea72c3b0f4",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "0bcabdca-f030-46f6-b2a0-a31536e82769",
+              "3ae7f99242e97be183e185cb636972ec"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.506Z",
+            "httpFinish": "2026-10-02T18:12:41.492Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "asserted",
+            "verification": "unverified",
+            "value": true,
+            "reasons": [
+              "caller_success_is_not_independent_usefulness"
+            ],
+            "evidence": [
+              "3ae7f99242e97be183e185cb636972ec"
+            ]
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independent_predicate"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "bcc03580b529bbff"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.506Z",
+            "expiresAt": "2026-10-09T18:12:41.506Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "read_without_independent_usefulness"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "97575d63-9f2a-474f-a746-cba2021452a7",
+        "taskRef": "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "positive",
+        "currentUseful": true,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "79835b16e3ce3ee8651ee975dc307d65",
+              "9410609f-817f-41b3-a712-ace5d721bc8c"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:40.908Z",
+            "httpFinish": "2026-10-02T18:12:40.893Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "79835b16e3ce3ee8651ee975dc307d65"
+            ],
+            "authority": "separate_receipt_execution_and_fixed_predicate",
+            "predicate": {
+              "id": "fee-total-wei"
+            },
+            "criterion": "positive",
+            "output": {
+              "transactionFeeWei": "42000"
+            },
+            "provenance": "fixture_rpc",
+            "historical": true,
+            "sourceAuthenticity": "supplied_export_not_independently_authenticated"
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "f627746402036fad"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:40.908Z",
+            "expiresAt": "2026-10-09T18:12:40.908Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_later_read",
+              "read_task_mismatch"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "b4a48afe-09ab-4d75-a043-b2db2ea83842",
+        "taskRef": "tc8ce82a2f4c0f38687b78ea88c75495e3542c553fd920090b6033b48ba54d8",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+        "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "agreed_negative",
+        "currentUseful": true,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4c2f819665bcb0f15f63b74d14a31d96",
+              "573ef379-0e61-4f23-94a6-c8a24e90c734"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.192Z",
+            "httpFinish": "2026-10-02T18:12:41.181Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4c2f819665bcb0f15f63b74d14a31d96"
+            ],
+            "authority": "separate_receipt_execution_and_fixed_predicate",
+            "predicate": {
+              "id": "receipt-absence"
+            },
+            "criterion": "agreed_negative",
+            "output": {
+              "minedReceiptAvailable": false,
+              "decision": "not_found"
+            },
+            "provenance": "fixture_rpc",
+            "historical": true,
+            "sourceAuthenticity": "supplied_export_not_independently_authenticated"
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4e5af6d455965104"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.192Z",
+            "expiresAt": "2026-10-09T18:12:41.192Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "45f8f9f6c3711efe7e24143c"
+            ],
+            "authority": "existing_authorized_retained_read",
+            "utility": "agreed_negative",
+            "historical": true,
+            "outsideUseEstablished": false
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+        "taskRef": "tcf67a0b71435ae6f803645948c757e090a0f828b2d0c2c46fe1e8aaa9ea003",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "2568e412733cd1fe20019176721f8c7c",
+              "fb4b6e03-5e22-4093-b88f-15569913893f"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.634Z",
+            "httpFinish": "2026-10-02T18:12:41.621Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "replayed_output_changed"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "e15ca24db4da34e1"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.634Z",
+            "expiresAt": "2026-10-09T18:12:41.634Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "read_without_independent_usefulness"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      }
+    ]
+  },
+  {
+    "name": "conflicting_attempt",
+    "reportId": "a6ba0f04774e4fa66182fdcb242da333ee4bc15b91d31c575efb3f41facac18e",
+    "denominator": {
+      "covered": false,
+      "observed": 5,
+      "reasons": [
+        "causal_population_incomplete",
+        "conflicting_evidence"
+      ]
+    },
+    "rates": {
+      "delivery_observation": {
+        "numerator": 3,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "causal_population_incomplete",
+          "conflicting_evidence"
+        ]
+      },
+      "independently_replayed_output": {
+        "numerator": 1,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "causal_population_incomplete",
+          "conflicting_evidence"
+        ]
+      },
+      "authorized_retention": {
+        "numerator": 3,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "causal_population_incomplete",
+          "conflicting_evidence"
+        ]
+      },
+      "later_use": {
+        "numerator": 1,
+        "denominator": null,
+        "value": null,
+        "reasons": [
+          "causal_population_incomplete",
+          "conflicting_evidence"
+        ]
+      }
+    },
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 1,
+      "rejectedRecords": 0,
+      "bindingConflicts": 0,
+      "unboundAttempts": 0,
+      "missingPredecessors": 1,
+      "unexpectedSettlements": 0
+    },
+    "journeys": [
+      {
+        "commerceEventId": "314decee-50ea-4720-a152-18310ca75125",
+        "taskRef": "ta1a239c15d636556411d8730f53466739b7037f2bef3c104aad8126235d6b0",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+        "taskRef": "t5c3b285ea13990250575736af72852f3ff5468f16d18f1caebbcea72c3b0f4",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "0bcabdca-f030-46f6-b2a0-a31536e82769",
+              "3ae7f99242e97be183e185cb636972ec"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.506Z",
+            "httpFinish": "2026-10-02T18:12:41.492Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "asserted",
+            "verification": "unverified",
+            "value": true,
+            "reasons": [
+              "caller_success_is_not_independent_usefulness"
+            ],
+            "evidence": [
+              "3ae7f99242e97be183e185cb636972ec"
+            ]
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independent_predicate"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "bcc03580b529bbff"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.506Z",
+            "expiresAt": "2026-10-09T18:12:41.506Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "read_without_independent_usefulness"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "b4a48afe-09ab-4d75-a043-b2db2ea83842",
+        "taskRef": "tc8ce82a2f4c0f38687b78ea88c75495e3542c553fd920090b6033b48ba54d8",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+        "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "agreed_negative",
+        "currentUseful": true,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4c2f819665bcb0f15f63b74d14a31d96",
+              "573ef379-0e61-4f23-94a6-c8a24e90c734"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.192Z",
+            "httpFinish": "2026-10-02T18:12:41.181Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4c2f819665bcb0f15f63b74d14a31d96"
+            ],
+            "authority": "separate_receipt_execution_and_fixed_predicate",
+            "predicate": {
+              "id": "receipt-absence"
+            },
+            "criterion": "agreed_negative",
+            "output": {
+              "minedReceiptAvailable": false,
+              "decision": "not_found"
+            },
+            "provenance": "fixture_rpc",
+            "historical": true,
+            "sourceAuthenticity": "supplied_export_not_independently_authenticated"
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4e5af6d455965104"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.192Z",
+            "expiresAt": "2026-10-09T18:12:41.192Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "45f8f9f6c3711efe7e24143c"
+            ],
+            "authority": "existing_authorized_retained_read",
+            "utility": "agreed_negative",
+            "historical": true,
+            "outsideUseEstablished": false
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+        "taskRef": "tcf67a0b71435ae6f803645948c757e090a0f828b2d0c2c46fe1e8aaa9ea003",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "2568e412733cd1fe20019176721f8c7c",
+              "fb4b6e03-5e22-4093-b88f-15569913893f"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.634Z",
+            "httpFinish": "2026-10-02T18:12:41.621Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "replayed_output_changed"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "e15ca24db4da34e1"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.634Z",
+            "expiresAt": "2026-10-09T18:12:41.634Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "read_without_independent_usefulness"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      }
+    ]
+  },
+  {
+    "name": "duplicate_cuts",
+    "reportId": "e532878ca8a1cc94619812e5e2b1664831b3caf2d1cf65d3b1a171bd864575fd",
+    "denominator": {
+      "covered": true,
+      "observed": 6,
+      "reasons": []
+    },
+    "rates": {
+      "delivery_observation": {
+        "numerator": 4,
+        "denominator": 6,
+        "value": 0.6666666666666666,
+        "reasons": []
+      },
+      "independently_replayed_output": {
+        "numerator": 2,
+        "denominator": 6,
+        "value": 0.3333333333333333,
+        "reasons": []
+      },
+      "authorized_retention": {
+        "numerator": 4,
+        "denominator": 6,
+        "value": 0.6666666666666666,
+        "reasons": []
+      },
+      "later_use": {
+        "numerator": 2,
+        "denominator": 6,
+        "value": 0.3333333333333333,
+        "reasons": []
+      }
+    },
+    "diagnostics": {
+      "duplicates": 1,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "bindingConflicts": 0,
+      "unboundAttempts": 0,
+      "missingPredecessors": 0,
+      "unexpectedSettlements": 0
+    },
+    "journeys": [
+      {
+        "commerceEventId": "314decee-50ea-4720-a152-18310ca75125",
+        "taskRef": "ta1a239c15d636556411d8730f53466739b7037f2bef3c104aad8126235d6b0",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+        "taskRef": "t5c3b285ea13990250575736af72852f3ff5468f16d18f1caebbcea72c3b0f4",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "0bcabdca-f030-46f6-b2a0-a31536e82769",
+              "3ae7f99242e97be183e185cb636972ec"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.506Z",
+            "httpFinish": "2026-10-02T18:12:41.492Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "asserted",
+            "verification": "unverified",
+            "value": true,
+            "reasons": [
+              "caller_success_is_not_independent_usefulness"
+            ],
+            "evidence": [
+              "3ae7f99242e97be183e185cb636972ec"
+            ]
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independent_predicate"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "bcc03580b529bbff"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.506Z",
+            "expiresAt": "2026-10-09T18:12:41.506Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "read_without_independent_usefulness"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "97575d63-9f2a-474f-a746-cba2021452a7",
+        "taskRef": "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "positive",
+        "currentUseful": true,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "79835b16e3ce3ee8651ee975dc307d65",
+              "9410609f-817f-41b3-a712-ace5d721bc8c"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:40.908Z",
+            "httpFinish": "2026-10-02T18:12:40.893Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "79835b16e3ce3ee8651ee975dc307d65"
+            ],
+            "authority": "separate_receipt_execution_and_fixed_predicate",
+            "predicate": {
+              "id": "fee-total-wei"
+            },
+            "criterion": "positive",
+            "output": {
+              "transactionFeeWei": "42000"
+            },
+            "provenance": "fixture_rpc",
+            "historical": true,
+            "sourceAuthenticity": "supplied_export_not_independently_authenticated"
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "f627746402036fad"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:40.908Z",
+            "expiresAt": "2026-10-09T18:12:40.908Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "30985801dc97462948be865d"
+            ],
+            "authority": "existing_authorized_retained_read",
+            "utility": "positive",
+            "historical": true,
+            "outsideUseEstablished": false
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "b4a48afe-09ab-4d75-a043-b2db2ea83842",
+        "taskRef": "tc8ce82a2f4c0f38687b78ea88c75495e3542c553fd920090b6033b48ba54d8",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+        "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "agreed_negative",
+        "currentUseful": true,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4c2f819665bcb0f15f63b74d14a31d96",
+              "573ef379-0e61-4f23-94a6-c8a24e90c734"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.192Z",
+            "httpFinish": "2026-10-02T18:12:41.181Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4c2f819665bcb0f15f63b74d14a31d96"
+            ],
+            "authority": "separate_receipt_execution_and_fixed_predicate",
+            "predicate": {
+              "id": "receipt-absence"
+            },
+            "criterion": "agreed_negative",
+            "output": {
+              "minedReceiptAvailable": false,
+              "decision": "not_found"
+            },
+            "provenance": "fixture_rpc",
+            "historical": true,
+            "sourceAuthenticity": "supplied_export_not_independently_authenticated"
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4e5af6d455965104"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.192Z",
+            "expiresAt": "2026-10-09T18:12:41.192Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "45f8f9f6c3711efe7e24143c"
+            ],
+            "authority": "existing_authorized_retained_read",
+            "utility": "agreed_negative",
+            "historical": true,
+            "outsideUseEstablished": false
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+        "taskRef": "tcf67a0b71435ae6f803645948c757e090a0f828b2d0c2c46fe1e8aaa9ea003",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "2568e412733cd1fe20019176721f8c7c",
+              "fb4b6e03-5e22-4093-b88f-15569913893f"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.634Z",
+            "httpFinish": "2026-10-02T18:12:41.621Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "replayed_output_changed"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "e15ca24db4da34e1"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.634Z",
+            "expiresAt": "2026-10-09T18:12:41.634Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "read_without_independent_usefulness"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      }
+    ]
+  }
+]

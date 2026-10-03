@@ -1,0 +1,35 @@
+TAP version 13
+# Subtest: actual scoped free fee and receipt-absence callers through isolated current HTTP/journal ports
+not ok 1 - actual scoped free fee and receipt-absence callers through isolated current HTTP/journal ports
+  ---
+  duration_ms: 1523.758182
+  type: 'test'
+  location: '/tmp/sol421-exact-source-u5z2d21q/task-linked-delivery/experiments/free-task-observation-100421/test/native.test.mjs:19:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    AssertionError [ERR_ASSERTION]: {"error":"rejected","paymentPermitted":false}
+    + actual - expected
+    
+    + undefined
+    - true
+    
+        at session (file:///tmp/sol421-exact-source-u5z2d21q/task-linked-delivery/experiments/free-task-observation-100421/test/native-ports.mjs:112:14)
+        at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    session (file:///tmp/sol421-exact-source-u5z2d21q/task-linked-delivery/experiments/free-task-observation-100421/test/native-ports.mjs:112:14)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    ChildProcess.<anonymous> (file:///tmp/sol421-exact-source-u5z2d21q/task-linked-delivery/experiments/free-task-observation-100421/test/native-ports.mjs:61:57)
+    Object.onceWrapper (node:events:634:26)
+    ChildProcess.emit (node:events:519:28)
+    ChildProcess._handle.onexit (node:internal/child_process:293:12)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2779.353841

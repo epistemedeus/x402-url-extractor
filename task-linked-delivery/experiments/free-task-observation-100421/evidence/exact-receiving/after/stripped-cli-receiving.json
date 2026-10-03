@@ -1,0 +1,10 @@
+{
+  "sameReportId": "d365da8505c2313626277e5fe2787c26a0d38696c875e7286476a2659bd7b589",
+  "processEnvironmentKeys": [
+    "PATH"
+  ],
+  "retainedTamperReason": "replay_mismatch",
+  "inputSha256": "c2f9f19722b1c1f1c96dcd8852d3c51cb84f4de682696b2952fc076f9f75bf37",
+  "paymentPermitted": false,
+  "recognizedRevenueAtomic": "0"
+}

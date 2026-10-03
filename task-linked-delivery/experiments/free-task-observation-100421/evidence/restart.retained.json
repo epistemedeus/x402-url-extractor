@@ -1,0 +1,2578 @@
+{
+  "schema": "samedaydesk.free-task-observation.retained.v1",
+  "bundle": {
+    "schema": "samedaydesk.free-task-observation.bundle.v1",
+    "question": {
+      "id": "owned-free-tasks",
+      "text": "Which explicitly scoped free tasks returned independently useful output and retained current rights?",
+      "populationId": "caller-owned-sol421",
+      "from": "2026-10-02T18:12:39.893Z",
+      "to": "2026-10-02T18:12:43.897Z",
+      "asOf": "2026-10-02T18:12:43.897Z",
+      "operationIds": [
+        "normalized-transaction-receipt"
+      ],
+      "cohorts": [
+        "owner_qa"
+      ]
+    },
+    "sources": [
+      {
+        "id": "native-attempts",
+        "plane": "attempts",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "owner_qa"
+          ]
+        },
+        "from": "2026-10-02T18:12:39.893Z",
+        "to": "2026-10-02T18:12:43.897Z",
+        "asOf": "2026-10-02T18:12:43.897Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.free-task-observation.source.v1",
+        "producerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+        "records": [
+          {
+            "v": 3,
+            "id": "97575d63-9f2a-474f-a746-cba2021452a7",
+            "ts": "2026-10-02T18:12:40.893Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "result": "paid_route_response",
+            "status": 200,
+            "durationMs": 24,
+            "originClass": "internal"
+          },
+          {
+            "v": 3,
+            "id": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+            "ts": "2026-10-02T18:12:41.181Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "result": "paid_route_response",
+            "status": 200,
+            "durationMs": 1,
+            "originClass": "internal"
+          },
+          {
+            "v": 3,
+            "id": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+            "ts": "2026-10-02T18:12:41.492Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "result": "paid_route_response",
+            "status": 200,
+            "durationMs": 3,
+            "originClass": "internal"
+          },
+          {
+            "v": 3,
+            "id": "b4a48afe-09ab-4d75-a043-b2db2ea83842",
+            "ts": "2026-10-02T18:12:41.563Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "result": "paid_route_response",
+            "status": 200,
+            "durationMs": 1,
+            "originClass": "internal"
+          },
+          {
+            "v": 3,
+            "id": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+            "ts": "2026-10-02T18:12:41.621Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "result": "paid_route_response",
+            "status": 200,
+            "durationMs": 1,
+            "originClass": "internal"
+          },
+          {
+            "v": 3,
+            "id": "314decee-50ea-4720-a152-18310ca75125",
+            "ts": "2026-10-02T18:12:41.931Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "result": "paid_route_response",
+            "status": 200,
+            "durationMs": 14,
+            "originClass": "internal"
+          },
+          {
+            "v": 3,
+            "id": "9ffec850-909d-4dee-89ef-b1f81050cb98",
+            "ts": "2026-10-02T18:12:42.754Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "result": "paid_route_response",
+            "status": 200,
+            "durationMs": 16,
+            "originClass": "internal"
+          },
+          {
+            "v": 3,
+            "id": "046e84f9-12b4-4ba8-a91e-4ba37d2a8354",
+            "ts": "2026-10-02T18:12:43.066Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "result": "paid_route_response",
+            "status": 200,
+            "durationMs": 2,
+            "originClass": "internal"
+          },
+          {
+            "v": 3,
+            "id": "4e57780f-e9e2-406c-b947-e88a397448b0",
+            "ts": "2026-10-02T18:12:43.380Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "result": "paid_route_response",
+            "status": 200,
+            "durationMs": 1,
+            "originClass": "internal"
+          },
+          {
+            "v": 3,
+            "id": "17dca377-74b0-4953-a08d-9ddf31dd0443",
+            "ts": "2026-10-02T18:12:43.456Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "result": "paid_route_response",
+            "status": 200,
+            "durationMs": 3,
+            "originClass": "internal"
+          },
+          {
+            "v": 3,
+            "id": "a7b555c2-f5a4-46c0-bde8-8b7a5ff95837",
+            "ts": "2026-10-02T18:12:43.521Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "result": "paid_route_response",
+            "status": 200,
+            "durationMs": 1,
+            "originClass": "internal"
+          },
+          {
+            "v": 3,
+            "id": "746c9c90-40fd-4138-a2ea-86ef530bbe45",
+            "ts": "2026-10-02T18:12:43.837Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "result": "paid_route_response",
+            "status": 200,
+            "durationMs": 18,
+            "originClass": "internal"
+          }
+        ],
+        "intake": {
+          "rawBytes": 55270,
+          "rawSha256": "dd5422ab02393934a4f32398ba7a7f8e7cdbc943d0287cb8c6d2172a04d9a960",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-task-refs",
+        "plane": "task_refs",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "owner_qa"
+          ]
+        },
+        "from": "2026-10-02T18:12:39.893Z",
+        "to": "2026-10-02T18:12:43.897Z",
+        "asOf": "2026-10-02T18:12:43.897Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.free-task-observation.source.v1",
+        "producerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+        "records": [
+          {
+            "cohort": "owner_qa",
+            "commerceEventId": "97575d63-9f2a-474f-a746-cba2021452a7",
+            "eventId": "e430526c-d06f-4ebd-9707-4f66e4b93ab4",
+            "operationId": "normalized-transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+            "taskRef": "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f",
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "cohort": "owner_qa",
+            "commerceEventId": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+            "eventId": "5a9109e2-8975-4270-82d0-a73741a42f67",
+            "operationId": "normalized-transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+            "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60",
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "cohort": "owner_qa",
+            "commerceEventId": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+            "eventId": "f975a14b-3c25-4816-b844-f8a48ae26b81",
+            "operationId": "normalized-transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+            "taskRef": "t5c3b285ea13990250575736af72852f3ff5468f16d18f1caebbcea72c3b0f4",
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "cohort": "owner_qa",
+            "commerceEventId": "b4a48afe-09ab-4d75-a043-b2db2ea83842",
+            "eventId": "813de60c-d809-480a-a683-b6ad9322589d",
+            "operationId": "normalized-transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+            "taskRef": "tc8ce82a2f4c0f38687b78ea88c75495e3542c553fd920090b6033b48ba54d8",
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "cohort": "owner_qa",
+            "commerceEventId": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+            "eventId": "ecf86978-c684-4f94-8ac9-ed9154809c6c",
+            "operationId": "normalized-transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+            "taskRef": "tcf67a0b71435ae6f803645948c757e090a0f828b2d0c2c46fe1e8aaa9ea003",
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "cohort": "owner_qa",
+            "commerceEventId": "314decee-50ea-4720-a152-18310ca75125",
+            "eventId": "a868ee44-6a1a-4514-994c-d340ec0b0983",
+            "operationId": "normalized-transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+            "taskRef": "ta1a239c15d636556411d8730f53466739b7037f2bef3c104aad8126235d6b0",
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "cohort": "owner_qa",
+            "commerceEventId": "9ffec850-909d-4dee-89ef-b1f81050cb98",
+            "eventId": "e5fbe751-95fd-4bf2-8381-9fdadd70db2f",
+            "operationId": "normalized-transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+            "taskRef": "t8ef07a1db6a84c0ad4683d3f45206cb3fed0efc75c162c82fb998dfe6008a7",
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "cohort": "owner_qa",
+            "commerceEventId": "046e84f9-12b4-4ba8-a91e-4ba37d2a8354",
+            "eventId": "5a64de3f-f3f8-4842-854f-a0c58924c31b",
+            "operationId": "normalized-transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+            "taskRef": "tbcb9e47859a433046dd01fbe1247eb8e861d03486847c2110ed073139180ef",
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "cohort": "owner_qa",
+            "commerceEventId": "4e57780f-e9e2-406c-b947-e88a397448b0",
+            "eventId": "0da756d1-dffc-4891-8a4c-fd46b07d78a7",
+            "operationId": "normalized-transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+            "taskRef": "t12f62fdf5e35741aa8e70a7b7d5628b56fe3800afe00d1fc4e9681c828302e",
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "cohort": "owner_qa",
+            "commerceEventId": "17dca377-74b0-4953-a08d-9ddf31dd0443",
+            "eventId": "74eda5fd-1ee1-4e75-9444-ba39cc00b30f",
+            "operationId": "normalized-transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+            "taskRef": "td4c305291b27fb7ad93a3ebbaf92eb9f8500100276474fef8219d8a6e5193a",
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "cohort": "owner_qa",
+            "commerceEventId": "a7b555c2-f5a4-46c0-bde8-8b7a5ff95837",
+            "eventId": "559571ec-331e-4430-9ea9-9dfa1b93ad4d",
+            "operationId": "normalized-transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+            "taskRef": "t7581e4ddf76317db235f7c8cecad60edc565c0026d5ac791cad9e7a9d1029a",
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "cohort": "owner_qa",
+            "commerceEventId": "746c9c90-40fd-4138-a2ea-86ef530bbe45",
+            "eventId": "c84eb6ab-8159-4494-99bd-35b0ae7877ee",
+            "operationId": "normalized-transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+            "taskRef": "t27f531b6311581be25c7d570e1a1ba985e00f2b12bc19b4606fe4e64b5a536",
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          }
+        ],
+        "intake": {
+          "rawBytes": 4416,
+          "rawSha256": "0b342ebdd303a842e2deffb093f668c23b5c1991507bba371d68e7fbc75f4dc8",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-forward",
+        "plane": "forward",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "owner_qa"
+          ]
+        },
+        "from": "2026-10-02T18:12:39.893Z",
+        "to": "2026-10-02T18:12:43.897Z",
+        "asOf": "2026-10-02T18:12:43.897Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.free-task-observation.source.v1",
+        "producerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+        "records": [
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "97575d63-9f2a-474f-a746-cba2021452a7",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "97575d63-9f2a-474f-a746-cba2021452a7",
+            "evidencePlane": "journey_marker",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": null,
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "call",
+            "usefulness": null,
+            "validatorAuthority": null,
+            "validatorSource": null,
+            "validatorVerdict": null,
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "97575d63-9f2a-474f-a746-cba2021452a7",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "9410609f-817f-41b3-a712-ace5d721bc8c",
+            "evidencePlane": "transport_observation",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": "73a31b2a0b2348ce17f04ce00094df3e9243f7037f0528e501fe348fd8bc444c",
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "transport",
+            "usefulness": "unknown",
+            "validatorAuthority": "none",
+            "validatorSource": "http_runtime_not_checked",
+            "validatorVerdict": "not_checked",
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+            "evidencePlane": "journey_marker",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": null,
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "call",
+            "usefulness": null,
+            "validatorAuthority": null,
+            "validatorSource": null,
+            "validatorVerdict": null,
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "573ef379-0e61-4f23-94a6-c8a24e90c734",
+            "evidencePlane": "transport_observation",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": "f4345f1e9f59da7dfb72d9799601ead22fba49f97f7db48882ff48548043aa27",
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "transport",
+            "usefulness": "unknown",
+            "validatorAuthority": "none",
+            "validatorSource": "http_runtime_not_checked",
+            "validatorVerdict": "not_checked",
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+            "evidencePlane": "journey_marker",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": null,
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "call",
+            "usefulness": null,
+            "validatorAuthority": null,
+            "validatorSource": null,
+            "validatorVerdict": null,
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "0bcabdca-f030-46f6-b2a0-a31536e82769",
+            "evidencePlane": "transport_observation",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": "51e8446765ae0ea50529b62fa430ab7e09016598a9d09aa202ced28a2eaac4ca",
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "transport",
+            "usefulness": "unknown",
+            "validatorAuthority": "none",
+            "validatorSource": "http_runtime_not_checked",
+            "validatorVerdict": "not_checked",
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "b4a48afe-09ab-4d75-a043-b2db2ea83842",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "b4a48afe-09ab-4d75-a043-b2db2ea83842",
+            "evidencePlane": "journey_marker",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": null,
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "call",
+            "usefulness": null,
+            "validatorAuthority": null,
+            "validatorSource": null,
+            "validatorVerdict": null,
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "b4a48afe-09ab-4d75-a043-b2db2ea83842",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "eaa8c047-be4c-408e-be0f-da633d8f0fb0",
+            "evidencePlane": "transport_observation",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": "651733ddda59729bbfa92e3316253d78a53d712e2039f7e42e63c0a240409a4e",
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "transport",
+            "usefulness": "unknown",
+            "validatorAuthority": "none",
+            "validatorSource": "http_runtime_not_checked",
+            "validatorVerdict": "not_checked",
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+            "evidencePlane": "journey_marker",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": null,
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "call",
+            "usefulness": null,
+            "validatorAuthority": null,
+            "validatorSource": null,
+            "validatorVerdict": null,
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "fb4b6e03-5e22-4093-b88f-15569913893f",
+            "evidencePlane": "transport_observation",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": "89e0965a089fede4eab9151f77c9e6a0b945fff2348f7bb556e6122953ea627a",
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "transport",
+            "usefulness": "unknown",
+            "validatorAuthority": "none",
+            "validatorSource": "http_runtime_not_checked",
+            "validatorVerdict": "not_checked",
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "314decee-50ea-4720-a152-18310ca75125",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "314decee-50ea-4720-a152-18310ca75125",
+            "evidencePlane": "journey_marker",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": null,
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "call",
+            "usefulness": null,
+            "validatorAuthority": null,
+            "validatorSource": null,
+            "validatorVerdict": null,
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "9ffec850-909d-4dee-89ef-b1f81050cb98",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "9ffec850-909d-4dee-89ef-b1f81050cb98",
+            "evidencePlane": "journey_marker",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": null,
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "call",
+            "usefulness": null,
+            "validatorAuthority": null,
+            "validatorSource": null,
+            "validatorVerdict": null,
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "9ffec850-909d-4dee-89ef-b1f81050cb98",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "4c82d6df-37c7-4251-9556-fe7de297eb01",
+            "evidencePlane": "transport_observation",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": "115019571b67b044cf6e6d1431adc5106a101dc54bae237a7158b49e77b1e1e5",
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "transport",
+            "usefulness": "unknown",
+            "validatorAuthority": "none",
+            "validatorSource": "http_runtime_not_checked",
+            "validatorVerdict": "not_checked",
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "046e84f9-12b4-4ba8-a91e-4ba37d2a8354",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "046e84f9-12b4-4ba8-a91e-4ba37d2a8354",
+            "evidencePlane": "journey_marker",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": null,
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "call",
+            "usefulness": null,
+            "validatorAuthority": null,
+            "validatorSource": null,
+            "validatorVerdict": null,
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "046e84f9-12b4-4ba8-a91e-4ba37d2a8354",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "96f038a5-43e6-4009-a5b4-86c9dbc26cbe",
+            "evidencePlane": "transport_observation",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": "2f73eb96d45d4277c04330faef613bb1f40faeabf9bfb23df6434705fb8069be",
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "transport",
+            "usefulness": "unknown",
+            "validatorAuthority": "none",
+            "validatorSource": "http_runtime_not_checked",
+            "validatorVerdict": "not_checked",
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "4e57780f-e9e2-406c-b947-e88a397448b0",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "4e57780f-e9e2-406c-b947-e88a397448b0",
+            "evidencePlane": "journey_marker",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": null,
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "call",
+            "usefulness": null,
+            "validatorAuthority": null,
+            "validatorSource": null,
+            "validatorVerdict": null,
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "4e57780f-e9e2-406c-b947-e88a397448b0",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "e9bf9921-701d-4102-bcb4-51919a942d2f",
+            "evidencePlane": "transport_observation",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": "f8d4bd5c849963e07d148659964a72a175f91b60a2a6ee8118cb275afb72d92a",
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "transport",
+            "usefulness": "unknown",
+            "validatorAuthority": "none",
+            "validatorSource": "http_runtime_not_checked",
+            "validatorVerdict": "not_checked",
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "17dca377-74b0-4953-a08d-9ddf31dd0443",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "17dca377-74b0-4953-a08d-9ddf31dd0443",
+            "evidencePlane": "journey_marker",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": null,
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "call",
+            "usefulness": null,
+            "validatorAuthority": null,
+            "validatorSource": null,
+            "validatorVerdict": null,
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "17dca377-74b0-4953-a08d-9ddf31dd0443",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "a119067f-779e-4bce-82ce-69307a21779a",
+            "evidencePlane": "transport_observation",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": "363670612355c3025581133f43e70766cc3d4a24a62126ed1eed07fcaad39e70",
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "transport",
+            "usefulness": "unknown",
+            "validatorAuthority": "none",
+            "validatorSource": "http_runtime_not_checked",
+            "validatorVerdict": "not_checked",
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "a7b555c2-f5a4-46c0-bde8-8b7a5ff95837",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "a7b555c2-f5a4-46c0-bde8-8b7a5ff95837",
+            "evidencePlane": "journey_marker",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": null,
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "call",
+            "usefulness": null,
+            "validatorAuthority": null,
+            "validatorSource": null,
+            "validatorVerdict": null,
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "a7b555c2-f5a4-46c0-bde8-8b7a5ff95837",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "80189af1-db48-4484-9e05-7243c3fdc2f4",
+            "evidencePlane": "transport_observation",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": "a14be3dbf07d6760b81ac699712836da9ac39f7d2708488b1a32bc2cc4ab4607",
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "transport",
+            "usefulness": "unknown",
+            "validatorAuthority": "none",
+            "validatorSource": "http_runtime_not_checked",
+            "validatorVerdict": "not_checked",
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "746c9c90-40fd-4138-a2ea-86ef530bbe45",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "746c9c90-40fd-4138-a2ea-86ef530bbe45",
+            "evidencePlane": "journey_marker",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": null,
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "call",
+            "usefulness": null,
+            "validatorAuthority": null,
+            "validatorSource": null,
+            "validatorVerdict": null,
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          }
+        ],
+        "intake": {
+          "rawBytes": 18566,
+          "rawSha256": "ea05330d1ed99ac9ff506fed9ab929ec93c32400f569dcbede8946b395a007a8",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-retention",
+        "plane": "retention",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "owner_qa"
+          ]
+        },
+        "from": "2026-10-02T18:12:39.893Z",
+        "to": "2026-10-02T18:12:43.897Z",
+        "asOf": "2026-10-02T18:12:43.897Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.free-task-observation.source.v1",
+        "producerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+        "records": [
+          {
+            "action": "retain",
+            "grantId": "f627746402036fad",
+            "recordId": "79835b16e3ce3ee8651ee975dc307d65",
+            "resultId": "79835b16e3ce3ee8651ee975dc307d654b447deebdd969b1c08eb8e9865517e1",
+            "commerceEventId": "97575d63-9f2a-474f-a746-cba2021452a7",
+            "operationId": "normalized-transaction-receipt",
+            "cohort": "owner_qa",
+            "taskRef": "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f",
+            "createdAt": "2026-10-02T18:12:40.908Z",
+            "expiresAt": "2026-10-09T18:12:40.908Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "observation": {
+              "authority": "authorized_caller_received_bytes",
+              "commerceEventId": "97575d63-9f2a-474f-a746-cba2021452a7",
+              "capturedAt": "2026-10-02T18:12:40.893Z",
+              "observedAt": "2026-10-02T18:12:40.908Z",
+              "responseDigest": "73a31b2a0b2348ce17f04ce00094df3e9243f7037f0528e501fe348fd8bc444c",
+              "responseByteLength": 1072,
+              "evidence": {
+                "network": "eip155:8453",
+                "decision": "found",
+                "receiptFound": true,
+                "status": "success",
+                "blockNumber": "50",
+                "gasUsedAtomic": "21000",
+                "effectiveGasPriceWei": "2",
+                "transactionFeeWei": "42000"
+              },
+              "predicate": {
+                "id": "fee-total-wei"
+              },
+              "callerClaim": null,
+              "requestDigest": "f50a0b86c50b1832654728fdac2a70eefb3ed39e0e1b430665cd98728044208d",
+              "replay": {
+                "authority": "separate_receipt_execution",
+                "evidence": {
+                  "network": "eip155:8453",
+                  "decision": "found",
+                  "receiptFound": true,
+                  "status": "success",
+                  "blockNumber": "50",
+                  "gasUsedAtomic": "21000",
+                  "effectiveGasPriceWei": "2",
+                  "transactionFeeWei": "42000"
+                },
+                "provenance": "fixture_rpc"
+              },
+              "independent": {
+                "status": "pass",
+                "reason": null,
+                "criterion": "positive",
+                "output": {
+                  "transactionFeeWei": "42000"
+                }
+              }
+            },
+            "schema": "samedaydesk.free-task-observation.retention-export.v1"
+          },
+          {
+            "action": "retain",
+            "grantId": "4e5af6d455965104",
+            "recordId": "4c2f819665bcb0f15f63b74d14a31d96",
+            "resultId": "4c2f819665bcb0f15f63b74d14a31d96db60ce33f290fc6b77d60b0246156525",
+            "commerceEventId": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+            "operationId": "normalized-transaction-receipt",
+            "cohort": "owner_qa",
+            "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60",
+            "createdAt": "2026-10-02T18:12:41.192Z",
+            "expiresAt": "2026-10-09T18:12:41.192Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "observation": {
+              "authority": "authorized_caller_received_bytes",
+              "commerceEventId": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+              "capturedAt": "2026-10-02T18:12:41.181Z",
+              "observedAt": "2026-10-02T18:12:41.192Z",
+              "responseDigest": "f4345f1e9f59da7dfb72d9799601ead22fba49f97f7db48882ff48548043aa27",
+              "responseByteLength": 957,
+              "evidence": {
+                "network": "eip155:8453",
+                "decision": "not_found",
+                "receiptFound": false,
+                "status": "unavailable",
+                "blockNumber": null,
+                "gasUsedAtomic": null,
+                "effectiveGasPriceWei": null,
+                "transactionFeeWei": null
+              },
+              "predicate": {
+                "id": "receipt-absence"
+              },
+              "callerClaim": null,
+              "requestDigest": "2054684d98ae6cd17c3d35049a184fd63b10dcbac707b716f3fae29a3f180c9c",
+              "replay": {
+                "authority": "separate_receipt_execution",
+                "evidence": {
+                  "network": "eip155:8453",
+                  "decision": "not_found",
+                  "receiptFound": false,
+                  "status": "unavailable",
+                  "blockNumber": null,
+                  "gasUsedAtomic": null,
+                  "effectiveGasPriceWei": null,
+                  "transactionFeeWei": null
+                },
+                "provenance": "fixture_rpc"
+              },
+              "independent": {
+                "status": "pass",
+                "reason": null,
+                "criterion": "agreed_negative",
+                "output": {
+                  "minedReceiptAvailable": false,
+                  "decision": "not_found"
+                }
+              }
+            },
+            "schema": "samedaydesk.free-task-observation.retention-export.v1"
+          },
+          {
+            "action": "retain",
+            "grantId": "bcc03580b529bbff",
+            "recordId": "3ae7f99242e97be183e185cb636972ec",
+            "resultId": "3ae7f99242e97be183e185cb636972ec4f25a677455799663d0195576884f6ff",
+            "commerceEventId": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+            "operationId": "normalized-transaction-receipt",
+            "cohort": "owner_qa",
+            "taskRef": "t5c3b285ea13990250575736af72852f3ff5468f16d18f1caebbcea72c3b0f4",
+            "createdAt": "2026-10-02T18:12:41.506Z",
+            "expiresAt": "2026-10-09T18:12:41.506Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "observation": {
+              "authority": "authorized_caller_received_bytes",
+              "commerceEventId": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+              "capturedAt": "2026-10-02T18:12:41.492Z",
+              "observedAt": "2026-10-02T18:12:41.506Z",
+              "responseDigest": "51e8446765ae0ea50529b62fa430ab7e09016598a9d09aa202ced28a2eaac4ca",
+              "responseByteLength": 1072,
+              "evidence": {
+                "network": "eip155:8453",
+                "decision": "found",
+                "receiptFound": true,
+                "status": "success",
+                "blockNumber": "50",
+                "gasUsedAtomic": "21000",
+                "effectiveGasPriceWei": "2",
+                "transactionFeeWei": "42000"
+              },
+              "predicate": null,
+              "callerClaim": true,
+              "requestDigest": "9d52943a900acc7d6a761caf088cf846efc09d769ba723d13b505a6685c06828",
+              "replay": null,
+              "independent": {
+                "status": "unknown",
+                "reason": "no_independent_predicate",
+                "criterion": "unknown",
+                "output": null
+              }
+            },
+            "schema": "samedaydesk.free-task-observation.retention-export.v1"
+          },
+          {
+            "action": "retain",
+            "grantId": "e15ca24db4da34e1",
+            "recordId": "2568e412733cd1fe20019176721f8c7c",
+            "resultId": "2568e412733cd1fe20019176721f8c7cf6bc174a919fc0fd01b6080f2159f254",
+            "commerceEventId": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+            "operationId": "normalized-transaction-receipt",
+            "cohort": "owner_qa",
+            "taskRef": "tcf67a0b71435ae6f803645948c757e090a0f828b2d0c2c46fe1e8aaa9ea003",
+            "createdAt": "2026-10-02T18:12:41.634Z",
+            "expiresAt": "2026-10-09T18:12:41.634Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "observation": {
+              "authority": "authorized_caller_received_bytes",
+              "commerceEventId": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+              "capturedAt": "2026-10-02T18:12:41.621Z",
+              "observedAt": "2026-10-02T18:12:41.634Z",
+              "responseDigest": "89e0965a089fede4eab9151f77c9e6a0b945fff2348f7bb556e6122953ea627a",
+              "responseByteLength": 1072,
+              "evidence": {
+                "network": "eip155:8453",
+                "decision": "found",
+                "receiptFound": true,
+                "status": "success",
+                "blockNumber": "50",
+                "gasUsedAtomic": "21000",
+                "effectiveGasPriceWei": "2",
+                "transactionFeeWei": "42000"
+              },
+              "predicate": {
+                "id": "fee-total-wei"
+              },
+              "callerClaim": null,
+              "requestDigest": "ae367267786b0bec1ba676b7088cd1f8ea2995014bc9b49f1261961f8337cd61",
+              "replay": {
+                "authority": "separate_receipt_execution",
+                "evidence": {
+                  "network": "eip155:8453",
+                  "decision": "found",
+                  "receiptFound": true,
+                  "status": "success",
+                  "blockNumber": "50",
+                  "gasUsedAtomic": "21000",
+                  "effectiveGasPriceWei": "3",
+                  "transactionFeeWei": "63000"
+                },
+                "provenance": "fixture_rpc"
+              },
+              "independent": {
+                "status": "fail",
+                "reason": "replayed_output_changed",
+                "criterion": "unknown",
+                "output": null
+              }
+            },
+            "schema": "samedaydesk.free-task-observation.retention-export.v1"
+          },
+          {
+            "schema": "samedaydesk.task-demand.retention-export.v1",
+            "action": "revoke",
+            "at": "2026-10-02T18:12:42.657Z",
+            "targetId": "f627746402036fad"
+          },
+          {
+            "action": "retain",
+            "grantId": "b6a8de8a924c6f4f",
+            "recordId": "d4fd4fd813311ce8f5cf79795e148f50",
+            "resultId": "d4fd4fd813311ce8f5cf79795e148f5031c9208b887dbbaf95a76c6d2f249340",
+            "commerceEventId": "9ffec850-909d-4dee-89ef-b1f81050cb98",
+            "operationId": "normalized-transaction-receipt",
+            "cohort": "owner_qa",
+            "taskRef": "t8ef07a1db6a84c0ad4683d3f45206cb3fed0efc75c162c82fb998dfe6008a7",
+            "createdAt": "2026-10-02T18:12:42.765Z",
+            "expiresAt": "2026-10-09T18:12:42.765Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "observation": {
+              "authority": "authorized_caller_received_bytes",
+              "commerceEventId": "9ffec850-909d-4dee-89ef-b1f81050cb98",
+              "capturedAt": "2026-10-02T18:12:42.754Z",
+              "observedAt": "2026-10-02T18:12:42.765Z",
+              "responseDigest": "115019571b67b044cf6e6d1431adc5106a101dc54bae237a7158b49e77b1e1e5",
+              "responseByteLength": 1072,
+              "evidence": {
+                "network": "eip155:8453",
+                "decision": "found",
+                "receiptFound": true,
+                "status": "success",
+                "blockNumber": "50",
+                "gasUsedAtomic": "21000",
+                "effectiveGasPriceWei": "2",
+                "transactionFeeWei": "42000"
+              },
+              "predicate": {
+                "id": "fee-total-wei"
+              },
+              "callerClaim": null,
+              "requestDigest": "caf2dc520a45d6a6f3d827e9e7e3b94a0656a06bb9c791dc1c4d7f8977b15400",
+              "replay": {
+                "authority": "separate_receipt_execution",
+                "evidence": {
+                  "network": "eip155:8453",
+                  "decision": "found",
+                  "receiptFound": true,
+                  "status": "success",
+                  "blockNumber": "50",
+                  "gasUsedAtomic": "21000",
+                  "effectiveGasPriceWei": "2",
+                  "transactionFeeWei": "42000"
+                },
+                "provenance": "fixture_rpc"
+              },
+              "independent": {
+                "status": "pass",
+                "reason": null,
+                "criterion": "positive",
+                "output": {
+                  "transactionFeeWei": "42000"
+                }
+              }
+            },
+            "schema": "samedaydesk.free-task-observation.retention-export.v1"
+          },
+          {
+            "action": "retain",
+            "grantId": "ed0b1524d19f1347",
+            "recordId": "765be162bd7f579ddf3b325eee2df155",
+            "resultId": "765be162bd7f579ddf3b325eee2df155a1d71e5341524df42b64bef32cf00689",
+            "commerceEventId": "046e84f9-12b4-4ba8-a91e-4ba37d2a8354",
+            "operationId": "normalized-transaction-receipt",
+            "cohort": "owner_qa",
+            "taskRef": "tbcb9e47859a433046dd01fbe1247eb8e861d03486847c2110ed073139180ef",
+            "createdAt": "2026-10-02T18:12:43.079Z",
+            "expiresAt": "2026-10-09T18:12:43.079Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "observation": {
+              "authority": "authorized_caller_received_bytes",
+              "commerceEventId": "046e84f9-12b4-4ba8-a91e-4ba37d2a8354",
+              "capturedAt": "2026-10-02T18:12:43.066Z",
+              "observedAt": "2026-10-02T18:12:43.079Z",
+              "responseDigest": "2f73eb96d45d4277c04330faef613bb1f40faeabf9bfb23df6434705fb8069be",
+              "responseByteLength": 957,
+              "evidence": {
+                "network": "eip155:8453",
+                "decision": "not_found",
+                "receiptFound": false,
+                "status": "unavailable",
+                "blockNumber": null,
+                "gasUsedAtomic": null,
+                "effectiveGasPriceWei": null,
+                "transactionFeeWei": null
+              },
+              "predicate": {
+                "id": "receipt-absence"
+              },
+              "callerClaim": null,
+              "requestDigest": "23f8c8017e695471fefa9147df52e558c0ea8b089fbb000883020cae20e7e123",
+              "replay": {
+                "authority": "separate_receipt_execution",
+                "evidence": {
+                  "network": "eip155:8453",
+                  "decision": "not_found",
+                  "receiptFound": false,
+                  "status": "unavailable",
+                  "blockNumber": null,
+                  "gasUsedAtomic": null,
+                  "effectiveGasPriceWei": null,
+                  "transactionFeeWei": null
+                },
+                "provenance": "fixture_rpc"
+              },
+              "independent": {
+                "status": "pass",
+                "reason": null,
+                "criterion": "agreed_negative",
+                "output": {
+                  "minedReceiptAvailable": false,
+                  "decision": "not_found"
+                }
+              }
+            },
+            "schema": "samedaydesk.free-task-observation.retention-export.v1"
+          },
+          {
+            "action": "retain",
+            "grantId": "b73b93f92a489df9",
+            "recordId": "294427cca87a8b38e6a2369d9f6347ab",
+            "resultId": "294427cca87a8b38e6a2369d9f6347abff8187251ea183ec9c31d50e0c22aeb8",
+            "commerceEventId": "4e57780f-e9e2-406c-b947-e88a397448b0",
+            "operationId": "normalized-transaction-receipt",
+            "cohort": "owner_qa",
+            "taskRef": "t12f62fdf5e35741aa8e70a7b7d5628b56fe3800afe00d1fc4e9681c828302e",
+            "createdAt": "2026-10-02T18:12:43.392Z",
+            "expiresAt": "2026-10-09T18:12:43.392Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "observation": {
+              "authority": "authorized_caller_received_bytes",
+              "commerceEventId": "4e57780f-e9e2-406c-b947-e88a397448b0",
+              "capturedAt": "2026-10-02T18:12:43.380Z",
+              "observedAt": "2026-10-02T18:12:43.392Z",
+              "responseDigest": "f8d4bd5c849963e07d148659964a72a175f91b60a2a6ee8118cb275afb72d92a",
+              "responseByteLength": 1072,
+              "evidence": {
+                "network": "eip155:8453",
+                "decision": "found",
+                "receiptFound": true,
+                "status": "success",
+                "blockNumber": "50",
+                "gasUsedAtomic": "21000",
+                "effectiveGasPriceWei": "2",
+                "transactionFeeWei": "42000"
+              },
+              "predicate": null,
+              "callerClaim": true,
+              "requestDigest": "8a194c2c5f31206a025a5bfd3e13cf06b5c440bbd65472c841049023fb59630c",
+              "replay": null,
+              "independent": {
+                "status": "unknown",
+                "reason": "no_independent_predicate",
+                "criterion": "unknown",
+                "output": null
+              }
+            },
+            "schema": "samedaydesk.free-task-observation.retention-export.v1"
+          },
+          {
+            "action": "retain",
+            "grantId": "37491b0c2eadb1f8",
+            "recordId": "c68cb112b37528b555f87a0e4c671b99",
+            "resultId": "c68cb112b37528b555f87a0e4c671b994eaf17aadab402bc693af92ed52869d3",
+            "commerceEventId": "a7b555c2-f5a4-46c0-bde8-8b7a5ff95837",
+            "operationId": "normalized-transaction-receipt",
+            "cohort": "owner_qa",
+            "taskRef": "t7581e4ddf76317db235f7c8cecad60edc565c0026d5ac791cad9e7a9d1029a",
+            "createdAt": "2026-10-02T18:12:43.533Z",
+            "expiresAt": "2026-10-09T18:12:43.533Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "observation": {
+              "authority": "authorized_caller_received_bytes",
+              "commerceEventId": "a7b555c2-f5a4-46c0-bde8-8b7a5ff95837",
+              "capturedAt": "2026-10-02T18:12:43.521Z",
+              "observedAt": "2026-10-02T18:12:43.533Z",
+              "responseDigest": "a14be3dbf07d6760b81ac699712836da9ac39f7d2708488b1a32bc2cc4ab4607",
+              "responseByteLength": 1072,
+              "evidence": {
+                "network": "eip155:8453",
+                "decision": "found",
+                "receiptFound": true,
+                "status": "success",
+                "blockNumber": "50",
+                "gasUsedAtomic": "21000",
+                "effectiveGasPriceWei": "2",
+                "transactionFeeWei": "42000"
+              },
+              "predicate": {
+                "id": "fee-total-wei"
+              },
+              "callerClaim": null,
+              "requestDigest": "04b3498fc74f6f7b0dc1dc6b9d1f7a43888b1fe819a86eae07459243c2a0d876",
+              "replay": {
+                "authority": "separate_receipt_execution",
+                "evidence": {
+                  "network": "eip155:8453",
+                  "decision": "found",
+                  "receiptFound": true,
+                  "status": "success",
+                  "blockNumber": "50",
+                  "gasUsedAtomic": "21000",
+                  "effectiveGasPriceWei": "3",
+                  "transactionFeeWei": "63000"
+                },
+                "provenance": "fixture_rpc"
+              },
+              "independent": {
+                "status": "fail",
+                "reason": "replayed_output_changed",
+                "criterion": "unknown",
+                "output": null
+              }
+            },
+            "schema": "samedaydesk.free-task-observation.retention-export.v1"
+          }
+        ],
+        "intake": {
+          "rawBytes": 24916,
+          "rawSha256": "413e6c44a6700537fb01c728cc423eafabd1b4a402eef0eaa4b624b6ab97a93a",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-reads",
+        "plane": "reads",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "owner_qa"
+          ]
+        },
+        "from": "2026-10-02T18:12:39.893Z",
+        "to": "2026-10-02T18:12:43.897Z",
+        "asOf": "2026-10-02T18:12:43.897Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.free-task-observation.source.v1",
+        "producerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+        "records": [
+          {
+            "schema": "samedaydesk.useful-result-reuse.metric.v1",
+            "kind": "useful_later_read",
+            "eventId": "30985801dc97462948be865d",
+            "at": "2026-10-02T18:12:41.429Z",
+            "recordId": "79835b16e3ce3ee8651ee975dc307d65",
+            "taskRef": "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f"
+          },
+          {
+            "schema": "samedaydesk.useful-result-reuse.metric.v1",
+            "kind": "useful_later_read",
+            "eventId": "45f8f9f6c3711efe7e24143c",
+            "at": "2026-10-02T18:12:41.440Z",
+            "recordId": "4c2f819665bcb0f15f63b74d14a31d96",
+            "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60"
+          },
+          {
+            "schema": "samedaydesk.useful-result-reuse.metric.v1",
+            "kind": "useful_later_read",
+            "eventId": "14189b262acfe7c024ada08b",
+            "at": "2026-10-02T18:12:41.513Z",
+            "recordId": "3ae7f99242e97be183e185cb636972ec",
+            "taskRef": "t5c3b285ea13990250575736af72852f3ff5468f16d18f1caebbcea72c3b0f4"
+          },
+          {
+            "schema": "samedaydesk.useful-result-reuse.metric.v1",
+            "kind": "useful_later_read",
+            "eventId": "846baf04765097e25bbb8935",
+            "at": "2026-10-02T18:12:42.644Z",
+            "recordId": "79835b16e3ce3ee8651ee975dc307d65",
+            "taskRef": "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f"
+          },
+          {
+            "schema": "samedaydesk.useful-result-reuse.metric.v1",
+            "kind": "useful_later_read",
+            "eventId": "33ce76dbdcdac6afba22c9a6",
+            "at": "2026-10-02T18:12:43.326Z",
+            "recordId": "d4fd4fd813311ce8f5cf79795e148f50",
+            "taskRef": "t8ef07a1db6a84c0ad4683d3f45206cb3fed0efc75c162c82fb998dfe6008a7"
+          },
+          {
+            "schema": "samedaydesk.useful-result-reuse.metric.v1",
+            "kind": "useful_later_read",
+            "eventId": "653f62df94b0d19569e5dcce",
+            "at": "2026-10-02T18:12:43.329Z",
+            "recordId": "765be162bd7f579ddf3b325eee2df155",
+            "taskRef": "tbcb9e47859a433046dd01fbe1247eb8e861d03486847c2110ed073139180ef"
+          },
+          {
+            "schema": "samedaydesk.useful-result-reuse.metric.v1",
+            "kind": "useful_later_read",
+            "eventId": "117f7cf22949ca47d58de775",
+            "at": "2026-10-02T18:12:43.399Z",
+            "recordId": "294427cca87a8b38e6a2369d9f6347ab",
+            "taskRef": "t12f62fdf5e35741aa8e70a7b7d5628b56fe3800afe00d1fc4e9681c828302e"
+          }
+        ],
+        "intake": {
+          "rawBytes": 4083,
+          "rawSha256": "9a7848d583f9acc921dc95a48f8d52fe99cceffd5c48f7c981eeb3e0edc54a2b",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-settlements",
+        "plane": "settlements",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "owner_qa"
+          ]
+        },
+        "from": "2026-10-02T18:12:39.893Z",
+        "to": "2026-10-02T18:12:43.897Z",
+        "asOf": "2026-10-02T18:12:43.897Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.free-task-observation.source.v1",
+        "producerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+        "records": [],
+        "intake": {
+          "rawBytes": 0,
+          "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      }
+    ]
+  },
+  "report": {
+    "schema": "samedaydesk.free-task-observation.report.v1",
+    "question": {
+      "id": "owned-free-tasks",
+      "text": "Which explicitly scoped free tasks returned independently useful output and retained current rights?",
+      "populationId": "caller-owned-sol421",
+      "from": "2026-10-02T18:12:39.893Z",
+      "to": "2026-10-02T18:12:43.897Z",
+      "asOf": "2026-10-02T18:12:43.897Z",
+      "operationIds": [
+        "normalized-transaction-receipt"
+      ],
+      "cohorts": [
+        "owner_qa"
+      ]
+    },
+    "priorReportId": null,
+    "denominator": {
+      "covered": true,
+      "observed": 12,
+      "reasons": []
+    },
+    "journeys": [
+      {
+        "commerceEventId": "046e84f9-12b4-4ba8-a91e-4ba37d2a8354",
+        "taskRef": "tbcb9e47859a433046dd01fbe1247eb8e861d03486847c2110ed073139180ef",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "agreed_negative",
+        "currentUseful": true,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "765be162bd7f579ddf3b325eee2df155",
+              "96f038a5-43e6-4009-a5b4-86c9dbc26cbe"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:43.079Z",
+            "httpFinish": "2026-10-02T18:12:43.066Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "765be162bd7f579ddf3b325eee2df155"
+            ],
+            "authority": "separate_receipt_execution_and_fixed_predicate",
+            "predicate": {
+              "id": "receipt-absence"
+            },
+            "criterion": "agreed_negative",
+            "output": {
+              "minedReceiptAvailable": false,
+              "decision": "not_found"
+            },
+            "provenance": "fixture_rpc",
+            "historical": true,
+            "sourceAuthenticity": "supplied_export_not_independently_authenticated"
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "ed0b1524d19f1347"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:43.079Z",
+            "expiresAt": "2026-10-09T18:12:43.079Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "653f62df94b0d19569e5dcce"
+            ],
+            "authority": "existing_authorized_retained_read",
+            "utility": "agreed_negative",
+            "historical": true,
+            "outsideUseEstablished": false
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "17dca377-74b0-4953-a08d-9ddf31dd0443",
+        "taskRef": "td4c305291b27fb7ad93a3ebbaf92eb9f8500100276474fef8219d8a6e5193a",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "314decee-50ea-4720-a152-18310ca75125",
+        "taskRef": "ta1a239c15d636556411d8730f53466739b7037f2bef3c104aad8126235d6b0",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "3fbfc231-4fc2-406c-9276-1c8106cea1bd",
+        "taskRef": "t5c3b285ea13990250575736af72852f3ff5468f16d18f1caebbcea72c3b0f4",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "0bcabdca-f030-46f6-b2a0-a31536e82769",
+              "3ae7f99242e97be183e185cb636972ec"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.506Z",
+            "httpFinish": "2026-10-02T18:12:41.492Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "asserted",
+            "verification": "unverified",
+            "value": true,
+            "reasons": [
+              "caller_success_is_not_independent_usefulness"
+            ],
+            "evidence": [
+              "3ae7f99242e97be183e185cb636972ec"
+            ]
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independent_predicate"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "bcc03580b529bbff"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.506Z",
+            "expiresAt": "2026-10-09T18:12:41.506Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "read_without_independent_usefulness"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "4e57780f-e9e2-406c-b947-e88a397448b0",
+        "taskRef": "t12f62fdf5e35741aa8e70a7b7d5628b56fe3800afe00d1fc4e9681c828302e",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "294427cca87a8b38e6a2369d9f6347ab",
+              "e9bf9921-701d-4102-bcb4-51919a942d2f"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:43.392Z",
+            "httpFinish": "2026-10-02T18:12:43.380Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "asserted",
+            "verification": "unverified",
+            "value": true,
+            "reasons": [
+              "caller_success_is_not_independent_usefulness"
+            ],
+            "evidence": [
+              "294427cca87a8b38e6a2369d9f6347ab"
+            ]
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independent_predicate"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "b73b93f92a489df9"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:43.392Z",
+            "expiresAt": "2026-10-09T18:12:43.392Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "read_without_independent_usefulness"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "746c9c90-40fd-4138-a2ea-86ef530bbe45",
+        "taskRef": "t27f531b6311581be25c7d570e1a1ba985e00f2b12bc19b4606fe4e64b5a536",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "97575d63-9f2a-474f-a746-cba2021452a7",
+        "taskRef": "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "revoked",
+        "usefulness": "positive",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "79835b16e3ce3ee8651ee975dc307d65",
+              "9410609f-817f-41b3-a712-ace5d721bc8c"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:40.908Z",
+            "httpFinish": "2026-10-02T18:12:40.893Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "79835b16e3ce3ee8651ee975dc307d65"
+            ],
+            "authority": "separate_receipt_execution_and_fixed_predicate",
+            "predicate": {
+              "id": "fee-total-wei"
+            },
+            "criterion": "positive",
+            "output": {
+              "transactionFeeWei": "42000"
+            },
+            "provenance": "fixture_rpc",
+            "historical": true,
+            "sourceAuthenticity": "supplied_export_not_independently_authenticated"
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "f627746402036fad"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:40.908Z",
+            "expiresAt": "2026-10-09T18:12:40.908Z",
+            "state": "revoked",
+            "currentRights": false,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "30985801dc97462948be865d",
+              "846baf04765097e25bbb8935"
+            ],
+            "authority": "existing_authorized_retained_read",
+            "utility": "positive",
+            "historical": true,
+            "outsideUseEstablished": false
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "9ffec850-909d-4dee-89ef-b1f81050cb98",
+        "taskRef": "t8ef07a1db6a84c0ad4683d3f45206cb3fed0efc75c162c82fb998dfe6008a7",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "positive",
+        "currentUseful": true,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4c82d6df-37c7-4251-9556-fe7de297eb01",
+              "d4fd4fd813311ce8f5cf79795e148f50"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:42.765Z",
+            "httpFinish": "2026-10-02T18:12:42.754Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "d4fd4fd813311ce8f5cf79795e148f50"
+            ],
+            "authority": "separate_receipt_execution_and_fixed_predicate",
+            "predicate": {
+              "id": "fee-total-wei"
+            },
+            "criterion": "positive",
+            "output": {
+              "transactionFeeWei": "42000"
+            },
+            "provenance": "fixture_rpc",
+            "historical": true,
+            "sourceAuthenticity": "supplied_export_not_independently_authenticated"
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "b6a8de8a924c6f4f"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:42.765Z",
+            "expiresAt": "2026-10-09T18:12:42.765Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "33ce76dbdcdac6afba22c9a6"
+            ],
+            "authority": "existing_authorized_retained_read",
+            "utility": "positive",
+            "historical": true,
+            "outsideUseEstablished": false
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "a7b555c2-f5a4-46c0-bde8-8b7a5ff95837",
+        "taskRef": "t7581e4ddf76317db235f7c8cecad60edc565c0026d5ac791cad9e7a9d1029a",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "80189af1-db48-4484-9e05-7243c3fdc2f4",
+              "c68cb112b37528b555f87a0e4c671b99"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:43.533Z",
+            "httpFinish": "2026-10-02T18:12:43.521Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "replayed_output_changed"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "37491b0c2eadb1f8"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:43.533Z",
+            "expiresAt": "2026-10-09T18:12:43.533Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "read_without_independent_usefulness"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "b4a48afe-09ab-4d75-a043-b2db2ea83842",
+        "taskRef": "tc8ce82a2f4c0f38687b78ea88c75495e3542c553fd920090b6033b48ba54d8",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "bd2e4bea-ef4a-41d2-9c00-59147c85b322",
+        "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "agreed_negative",
+        "currentUseful": true,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4c2f819665bcb0f15f63b74d14a31d96",
+              "573ef379-0e61-4f23-94a6-c8a24e90c734"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.192Z",
+            "httpFinish": "2026-10-02T18:12:41.181Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4c2f819665bcb0f15f63b74d14a31d96"
+            ],
+            "authority": "separate_receipt_execution_and_fixed_predicate",
+            "predicate": {
+              "id": "receipt-absence"
+            },
+            "criterion": "agreed_negative",
+            "output": {
+              "minedReceiptAvailable": false,
+              "decision": "not_found"
+            },
+            "provenance": "fixture_rpc",
+            "historical": true,
+            "sourceAuthenticity": "supplied_export_not_independently_authenticated"
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "4e5af6d455965104"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.192Z",
+            "expiresAt": "2026-10-09T18:12:41.192Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "45f8f9f6c3711efe7e24143c"
+            ],
+            "authority": "existing_authorized_retained_read",
+            "utility": "agreed_negative",
+            "historical": true,
+            "outsideUseEstablished": false
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "c53bd5f6-cf4f-4d9a-9753-8c901e65f97e",
+        "taskRef": "tcf67a0b71435ae6f803645948c757e090a0f828b2d0c2c46fe1e8aaa9ea003",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "active",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "2568e412733cd1fe20019176721f8c7c",
+              "fb4b6e03-5e22-4093-b88f-15569913893f"
+            ],
+            "authority": "authorized_caller_received_bytes",
+            "contract": "existing_receipt_contract",
+            "at": "2026-10-02T18:12:41.634Z",
+            "httpFinish": "2026-10-02T18:12:41.621Z",
+            "coverage": "complete"
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "replayed_output_changed"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "evidence": [
+              "e15ca24db4da34e1"
+            ],
+            "authority": "existing_customer_grant",
+            "at": "2026-10-02T18:12:41.634Z",
+            "expiresAt": "2026-10-09T18:12:41.634Z",
+            "state": "active",
+            "currentRights": true,
+            "durability": "existing_customer_store_no_fsync_guarantee"
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "read_without_independent_usefulness"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      }
+    ],
+    "rates": {
+      "delivery_observation": {
+        "numerator": 8,
+        "denominator": 12,
+        "value": 0.6666666666666666,
+        "reasons": []
+      },
+      "independently_replayed_output": {
+        "numerator": 4,
+        "denominator": 12,
+        "value": 0.3333333333333333,
+        "reasons": []
+      },
+      "authorized_retention": {
+        "numerator": 8,
+        "denominator": 12,
+        "value": 0.6666666666666666,
+        "reasons": []
+      },
+      "later_use": {
+        "numerator": 4,
+        "denominator": 12,
+        "value": 0.3333333333333333,
+        "reasons": []
+      }
+    },
+    "coverage": {
+      "attempts": {
+        "complete": true,
+        "reasons": []
+      },
+      "task_refs": {
+        "complete": true,
+        "reasons": []
+      },
+      "forward": {
+        "complete": true,
+        "reasons": []
+      },
+      "retention": {
+        "complete": true,
+        "reasons": []
+      },
+      "reads": {
+        "complete": true,
+        "reasons": []
+      },
+      "settlements": {
+        "complete": true,
+        "reasons": []
+      }
+    },
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "bindingConflicts": 0,
+      "unboundAttempts": 0,
+      "missingPredecessors": 0,
+      "unexpectedSettlements": 0
+    },
+    "sources": [
+      {
+        "id": "native-attempts",
+        "plane": "attempts",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "coverage": "complete",
+        "alignedComplete": true,
+        "reasons": [],
+        "projectedDigest": "6d1849b92c8e20e68a3be6ee8b3032541bcee5ef289463c85a8cd2a48604f0da",
+        "intake": {
+          "rawBytes": 55270,
+          "rawSha256": "dd5422ab02393934a4f32398ba7a7f8e7cdbc943d0287cb8c6d2172a04d9a960",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-task-refs",
+        "plane": "task_refs",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "coverage": "complete",
+        "alignedComplete": true,
+        "reasons": [],
+        "projectedDigest": "284200ffa54d7e197a77c29e574597fb9a64b40d21a57fdd95c897cce3d5d545",
+        "intake": {
+          "rawBytes": 4416,
+          "rawSha256": "0b342ebdd303a842e2deffb093f668c23b5c1991507bba371d68e7fbc75f4dc8",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-forward",
+        "plane": "forward",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "coverage": "complete",
+        "alignedComplete": true,
+        "reasons": [],
+        "projectedDigest": "19b27fb6c339f8106558b988b2f954eeee50437579c1e55f39d4e52c5b71b302",
+        "intake": {
+          "rawBytes": 18566,
+          "rawSha256": "ea05330d1ed99ac9ff506fed9ab929ec93c32400f569dcbede8946b395a007a8",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-retention",
+        "plane": "retention",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "coverage": "complete",
+        "alignedComplete": true,
+        "reasons": [],
+        "projectedDigest": "fe43a3fc61fcd49dc5b130999b24a7429d088dd320627c1a17d7a82ab669e1c3",
+        "intake": {
+          "rawBytes": 24916,
+          "rawSha256": "413e6c44a6700537fb01c728cc423eafabd1b4a402eef0eaa4b624b6ab97a93a",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-reads",
+        "plane": "reads",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "coverage": "complete",
+        "alignedComplete": true,
+        "reasons": [],
+        "projectedDigest": "401cd376378392cc5a7c3ef89a4c37284b0a611d582d262116358010168092ad",
+        "intake": {
+          "rawBytes": 4083,
+          "rawSha256": "9a7848d583f9acc921dc95a48f8d52fe99cceffd5c48f7c981eeb3e0edc54a2b",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-settlements",
+        "plane": "settlements",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "coverage": "complete",
+        "alignedComplete": true,
+        "reasons": [],
+        "projectedDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "intake": {
+          "rawBytes": 0,
+          "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      }
+    ],
+    "provenance": {
+      "baseCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+      "authenticity": "supplied_read_only_exports_not_independently_authenticated",
+      "identity": "not_inferred",
+      "outsideUseEstablished": false,
+      "crossProcessJournalExclusion": false,
+      "retainedGenerations": 2
+    },
+    "tokenSavings": "unknown",
+    "customerCount": "unknown",
+    "unknownSpend": "unknown",
+    "paymentPermitted": false,
+    "recognizedRevenueAtomic": "0",
+    "reportId": "ab229577e6d910293f9293b602a4a9275aac86f463b36f6ae422998f042d8dd4"
+  }
+}

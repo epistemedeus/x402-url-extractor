@@ -1,0 +1,14 @@
+Copyright (c) 2026 SameDayDesk. Licensed under MIT; see LICENSE.
+
+Original task-demand projection, consumer, isolated observer adapter and
+synthetic fixtures for epistemedeus/x402-url-extractor.
+Received merchant base: 5008b5e7213511e26eb3d369fcc0056e48b4ef20.
+PIN.json contains exact causal producer, outcome binding/reconciler, journal325,
+receipt retention and useful-economics source hashes.
+vendor/causal-contract.mjs contains exact read-only predicate/constant excerpts
+from that base. vendor/economics contains byte-identical economics sources.
+
+The candidate contains synthetic evidence only. No secrets, real raw private
+journals, capabilities, grant tokens or private merchant data are included.
+Loopback acquisition and owner QA are compatibility evidence; they establish
+no hosted acquisition, independent adoption, outside use or recognized revenue.
