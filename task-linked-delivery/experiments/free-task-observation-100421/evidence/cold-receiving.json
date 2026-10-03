@@ -1,0 +1,153 @@
+{
+  "schema": "sol421.cold-receiving.v1",
+  "observedAt": "2026-10-02T18:27:02.882Z",
+  "node": "v22.22.2",
+  "sourceCommit": "f8bae389eee4c201c29007212d8b0977b8c0b4be",
+  "sourceTreeDigest": "6f44ab07a9467ee177b218f4926799a31d0922fbd2828cf60a03922eeb6e2a8d",
+  "archive": {
+    "filename": "free-task-observation-100421-0.1.0.tar.gz",
+    "bytes": 33783,
+    "sha256": "dc73c078ea88837220baa45ec0f17872ea1eeba4c6bc8bcc032f2adf7c36f48c",
+    "members": 21
+  },
+  "fetched": [
+    {
+      "role": "license",
+      "bytes": 1068,
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c"
+    },
+    {
+      "role": "source-notice",
+      "bytes": 505,
+      "sha256": "e07725374dd52db9c9bf9cc884811a84eeb55975733d06e4b6546a6a383e44ac"
+    },
+    {
+      "role": "provenance",
+      "bytes": 5425,
+      "sha256": "c04e90ed1e6461d72ad4a72fb79d06b1ca4f7bff09ae6072422258434498ad76"
+    }
+  ],
+  "extractionMs": 4.467984999999999,
+  "adaptation": {
+    "memberHashChecks": 21,
+    "memberVerificationMs": 2.0214809999999943,
+    "noDependencyInstall": true,
+    "explicitCallerInputs": true,
+    "environmentKeys": [
+      "PATH"
+    ]
+  },
+  "measurements": [
+    {
+      "name": "both-objectives",
+      "inputBytes": 22436,
+      "inputSha256": "e04127ce43a1455d4db6137c1dbebb7fe7d5abac1669b33d8086af8754231431",
+      "reportId": "10ed68bfff1fe5e5ac4b7b245fbade724d9cb9fdd8ac02cc1a562f6f2b99cc72",
+      "decisions": [
+        {
+          "eventId": "40924ca5-544b-4d64-99d6-d0794607059a",
+          "taskRef": "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f",
+          "delivery": "observed",
+          "independent": "observed",
+          "criterion": "positive",
+          "output": {
+            "transactionFeeWei": "42000"
+          },
+          "retentionState": "active",
+          "laterUse": "observed"
+        },
+        {
+          "eventId": "72f0ce7a-9524-4f44-91d6-d6a1c51c6605",
+          "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60",
+          "delivery": "observed",
+          "independent": "observed",
+          "criterion": "agreed_negative",
+          "output": {
+            "minedReceiptAvailable": false,
+            "decision": "not_found"
+          },
+          "retentionState": "active",
+          "laterUse": "observed"
+        }
+      ],
+      "directEqualInput": true,
+      "queryIncludingProcessStartupMs": 59.695166,
+      "directIncludingProcessStartupMs": 29.020768000000004,
+      "restartMs": 52.17071400000003
+    },
+    {
+      "name": "absence-only",
+      "inputBytes": 22360,
+      "inputSha256": "14f799cd5f50617316b6bb3751189e703bab9c019b593dabbe77ee6ea754a187",
+      "reportId": "cbc52bdd1720a6b56a54810c17caa9c7bc3d062e889f837c52de2aa339608b44",
+      "decisions": [
+        {
+          "eventId": "72f0ce7a-9524-4f44-91d6-d6a1c51c6605",
+          "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60",
+          "delivery": "observed",
+          "independent": "observed",
+          "criterion": "agreed_negative",
+          "output": {
+            "minedReceiptAvailable": false,
+            "decision": "not_found"
+          },
+          "retentionState": "active",
+          "laterUse": "observed"
+        }
+      ],
+      "directEqualInput": true,
+      "queryIncludingProcessStartupMs": 47.22007100000002,
+      "directIncludingProcessStartupMs": 25.40268900000001,
+      "restartMs": 37.52049400000004
+    },
+    {
+      "name": "changed-response",
+      "inputBytes": 22436,
+      "inputSha256": "aaa2195cadb9f7a25ea625d3adba7e826e873855de289f46963b4cbdb942cb52",
+      "reportId": "566f3056803415268235a9cc8124814c1f16ee4cfda736c8a2cb79e6d8a4e6e3",
+      "decisions": [
+        {
+          "eventId": "40924ca5-544b-4d64-99d6-d0794607059a",
+          "taskRef": "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f",
+          "delivery": "unknown",
+          "independent": "unknown",
+          "criterion": "unknown",
+          "output": null,
+          "retentionState": "unknown",
+          "laterUse": "unknown"
+        },
+        {
+          "eventId": "72f0ce7a-9524-4f44-91d6-d6a1c51c6605",
+          "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60",
+          "delivery": "observed",
+          "independent": "observed",
+          "criterion": "agreed_negative",
+          "output": {
+            "minedReceiptAvailable": false,
+            "decision": "not_found"
+          },
+          "retentionState": "active",
+          "laterUse": "observed"
+        }
+      ],
+      "directEqualInput": true,
+      "queryIncludingProcessStartupMs": 52.66707600000001,
+      "directIncludingProcessStartupMs": 27.882633,
+      "restartMs": 47.70252499999998
+    }
+  ],
+  "portableTests": {
+    "tests": 3,
+    "pass": 3,
+    "fail": 0,
+    "elapsedMs": 774.1315269999999,
+    "tapSha256": "d7e9807dd67382c9dd33b3e2717c1e7a2beb603e64c4f90f10db518363f8c492"
+  },
+  "totalMs": 1213.60908,
+  "acquired": "existing_public_acquisition_loopback_bytes",
+  "hosted": false,
+  "customerCount": "unknown",
+  "tokenSavings": "unknown",
+  "paymentPermitted": false,
+  "recognizedRevenueAtomic": "0"
+}

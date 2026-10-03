@@ -24,6 +24,8 @@ import { resolveHostedScanner } from "./experiments/scoped-surface-delivery-1003
 import { existsSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import express from "express";
+import { mountScopedRepairCommerce } from "./task-linked-delivery/experiments/scoped-repair-commerce-100348/route/mount.mjs";
+import { isScopedRepairPath } from "./task-linked-delivery/experiments/scoped-repair-commerce-100348/route/paths.mjs";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
@@ -538,7 +540,7 @@ const jsonParser = express.json({
   },
 });
 app.use((req, res, next) => {
-  if (isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
+  if (isScopedRepairPath(req.path) || isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
   return jsonParser(req, res, next);
 });
 app.use(legacyCompatibleX402Body);
@@ -576,6 +578,11 @@ process.once("SIGTERM", requestCommerceWriterDrain);
 process.once("SIGINT", requestCommerceWriterDrain);
 app.use(paidActionEffectHeaders);
 app.use(commerceTelemetry.middleware);
+// Free scoped qualification. Enrollment and existing paid work remain separate.
+mountScopedRepairCommerce(app, {
+  ...resolveHostedScanner(),
+  dataDir: process.env.SCOPED_REPAIR_PACKET_DIR || null,
+});
 const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
 const idempotencyReplay = createIdempotencyReplay({
   publicUrl: PUBLIC_URL,

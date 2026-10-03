@@ -1,0 +1,278 @@
+{
+  "schema": "sol421.decision-changing-gap.v1",
+  "sourceBase": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+  "before": {
+    "reportId": "af70179a32f31f37b6eed0ed21a7cbed3026921171c91633daf9b1c4800551a8",
+    "denominator": {
+      "covered": true,
+      "observed": 2,
+      "reasons": []
+    },
+    "journeys": [
+      {
+        "taskRef": "te4e7bfdf4a11d41203a7ee4492d93837e4832a0b01dc6aa0e995fbb00c7018",
+        "commerceEventId": "71ad9ef8-06fe-4493-a887-377fafdfdcbd",
+        "usefulness": "unknown",
+        "retentionState": "unknown",
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "output": null
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "output": null
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "output": null
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "output": null
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "output": null
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "output": null
+          }
+        }
+      },
+      {
+        "taskRef": "t894248ff118d384f8da802407aa8bcc7ec3c147ef4713d84b418bf65901a4a",
+        "commerceEventId": "aa226028-d77d-4722-b19b-74dfa55824cc",
+        "usefulness": "unknown",
+        "retentionState": "unknown",
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "output": null
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "output": null
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "output": null
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "output": null
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "output": null
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "output": null
+          }
+        }
+      }
+    ],
+    "rates": {
+      "delivery_observation": {
+        "numerator": 0,
+        "denominator": 2,
+        "value": 0,
+        "reasons": []
+      },
+      "independently_replayed_output": {
+        "numerator": 0,
+        "denominator": 2,
+        "value": 0,
+        "reasons": []
+      },
+      "authorized_retention": {
+        "numerator": 0,
+        "denominator": 2,
+        "value": 0,
+        "reasons": []
+      },
+      "later_use": {
+        "numerator": 0,
+        "denominator": 2,
+        "value": 0,
+        "reasons": []
+      }
+    },
+    "paymentPermitted": false,
+    "recognizedRevenueAtomic": "0"
+  },
+  "after": {
+    "reportId": "960b6ec735a38aabf61097122a288558f069b74bbb814c62274ecefc442b4dd1",
+    "denominator": {
+      "covered": true,
+      "observed": 2,
+      "reasons": []
+    },
+    "journeys": [
+      {
+        "taskRef": "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f",
+        "commerceEventId": "77a96ee0-7be7-478d-b606-36a3608f63c1",
+        "usefulness": "positive",
+        "retentionState": "active",
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "output": null
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "output": null
+          },
+          "independently_replayed_output": {
+            "status": "observed",
+            "reasons": [],
+            "output": {
+              "transactionFeeWei": "42000"
+            }
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "output": null
+          },
+          "later_use": {
+            "status": "observed",
+            "reasons": [],
+            "output": null
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "output": null
+          }
+        }
+      },
+      {
+        "taskRef": "te5713fce1add04cdbbdf4697d41d08e207239288e5d1d030191c2f46a68a60",
+        "commerceEventId": "872751bd-a36d-416e-9626-5c95bebcd6ea",
+        "usefulness": "agreed_negative",
+        "retentionState": "active",
+        "stages": {
+          "delivery_observation": {
+            "status": "observed",
+            "reasons": [],
+            "output": null
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_claim"
+            ],
+            "output": null
+          },
+          "independently_replayed_output": {
+            "status": "observed",
+            "reasons": [],
+            "output": {
+              "minedReceiptAvailable": false,
+              "decision": "not_found"
+            }
+          },
+          "authorized_retention": {
+            "status": "observed",
+            "reasons": [],
+            "output": null
+          },
+          "later_use": {
+            "status": "observed",
+            "reasons": [],
+            "output": null
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "output": null
+          }
+        }
+      }
+    ],
+    "rates": {
+      "delivery_observation": {
+        "numerator": 2,
+        "denominator": 2,
+        "value": 1,
+        "reasons": []
+      },
+      "independently_replayed_output": {
+        "numerator": 2,
+        "denominator": 2,
+        "value": 1,
+        "reasons": []
+      },
+      "authorized_retention": {
+        "numerator": 2,
+        "denominator": 2,
+        "value": 1,
+        "reasons": []
+      },
+      "later_use": {
+        "numerator": 2,
+        "denominator": 2,
+        "value": 1,
+        "reasons": []
+      }
+    },
+    "paymentPermitted": false,
+    "recognizedRevenueAtomic": "0"
+  },
+  "sameObjectives": "fee calculation from normalized receipt; absence of mined receipt",
+  "beforeBothCallersActuallyPassedTheirPredicates": true,
+  "afterBothIndependentExecutionsPassed": true,
+  "paidRetentionRefusal": "settlement_unverified",
+  "newFreeSettlementRows": 0,
+  "customerCount": "unknown",
+  "tokenSavings": "unknown",
+  "decision": "The two real owner free tasks are now visible as useful observations, with current retention and authorized later reads; no payment authorization.",
+  "provenance": "actual isolated HTTP and retained journals; RPC observations are fixtures; source authenticity of offline cuts remains supplied"
+}

@@ -1,0 +1,4 @@
+Isolated read-only receiving for HEAVY-423-FUNNEL-100423.
+The public commerce-demand route is the production input.
+Stripped counts only. No raw customer bodies, secrets, grants, or logs.
+Seller 0.4.1, the merchant runtime, and the 421 shared patches are unchanged.

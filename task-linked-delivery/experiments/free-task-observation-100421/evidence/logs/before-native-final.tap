@@ -1,0 +1,16 @@
+TAP version 13
+# Subtest: actual scoped free fee and receipt-absence callers through isolated current HTTP/journal ports
+ok 1 - actual scoped free fee and receipt-absence callers through isolated current HTTP/journal ports
+  ---
+  duration_ms: 776.282748
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1354.141558

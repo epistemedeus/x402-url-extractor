@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { chmodSync, cpSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, chmodSync, cpSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -82,6 +82,13 @@ function assertFrozenConsumer() {
 }
 
 function pack() {
+  // A received version is sealed. Changed source requires a new version.
+  if (existsSync(ARCHIVE)) {
+    const sealed = readFileSync(ARCHIVE);
+    if (sealed.length !== 30462 || sha256(sealed) !== "86e55a75f7e7e5c5ad188de8b20c64648f40c236b11981186b56abeb6d11350f") throw new Error("sealed archive changed; export a successor");
+    process.stdout.write(JSON.stringify({ version: "0.2.0", sha256: sha256(sealed), bytes: sealed.length, sealed: true }) + "\n");
+    return;
+  }
   assertFrozenConsumer();
   rmSync(STAGE, { recursive: true, force: true });
   ensureDir(STAGE);

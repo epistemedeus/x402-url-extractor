@@ -1,0 +1,603 @@
+{
+  "schema": "samedaydesk.free-task-observation.retained.v1",
+  "bundle": {
+    "schema": "samedaydesk.free-task-observation.bundle.v1",
+    "question": {
+      "id": "owned-free-tasks",
+      "text": "Which explicitly scoped free tasks returned independently useful output and retained current rights?",
+      "populationId": "caller-owned-sol421",
+      "from": "2026-10-02T18:12:36.067Z",
+      "to": "2026-10-02T18:12:37.161Z",
+      "asOf": "2026-10-02T18:12:37.161Z",
+      "operationIds": [
+        "normalized-transaction-receipt"
+      ],
+      "cohorts": [
+        "owner_qa"
+      ]
+    },
+    "sources": [
+      {
+        "id": "native-attempts",
+        "plane": "attempts",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "owner_qa"
+          ]
+        },
+        "from": "2026-10-02T18:12:36.067Z",
+        "to": "2026-10-02T18:12:37.161Z",
+        "asOf": "2026-10-02T18:12:37.161Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.free-task-observation.source.v1",
+        "producerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+        "records": [
+          {
+            "v": 3,
+            "id": "d07a899f-4e15-4e79-a26e-f93deb054b93",
+            "ts": "2026-10-02T18:12:37.067Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "result": "paid_route_response",
+            "status": 200,
+            "durationMs": 23,
+            "originClass": "internal"
+          },
+          {
+            "v": 3,
+            "id": "cc826bff-7fd3-4a65-995c-9d8bfea90578",
+            "ts": "2026-10-02T18:12:37.144Z",
+            "method": "GET",
+            "route": "/chain/transaction-receipt",
+            "result": "paid_route_response",
+            "status": 200,
+            "durationMs": 2,
+            "originClass": "internal"
+          }
+        ],
+        "intake": {
+          "rawBytes": 3217,
+          "rawSha256": "d91c352ed512e9731917eb040e07b648c77fbc95ba34903ee1441305cff70687",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-task-refs",
+        "plane": "task_refs",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "owner_qa"
+          ]
+        },
+        "from": "2026-10-02T18:12:36.067Z",
+        "to": "2026-10-02T18:12:37.161Z",
+        "asOf": "2026-10-02T18:12:37.161Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.free-task-observation.source.v1",
+        "producerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+        "records": [
+          {
+            "cohort": "owner_qa",
+            "commerceEventId": "d07a899f-4e15-4e79-a26e-f93deb054b93",
+            "eventId": "e8f2f040-21f8-4106-b664-96e8bb5fcea6",
+            "operationId": "normalized-transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+            "taskRef": "te4e7bfdf4a11d41203a7ee4492d93837e4832a0b01dc6aa0e995fbb00c7018",
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "cohort": "owner_qa",
+            "commerceEventId": "cc826bff-7fd3-4a65-995c-9d8bfea90578",
+            "eventId": "8c37f732-3cff-4059-a353-dcc5d25ea72c",
+            "operationId": "normalized-transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+            "taskRef": "t894248ff118d384f8da802407aa8bcc7ec3c147ef4713d84b418bf65901a4a",
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          }
+        ],
+        "intake": {
+          "rawBytes": 736,
+          "rawSha256": "f16e0ef92ceab5ecba79b0faabad18964b29cfcb348e41e1983f2c89be411690",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-forward",
+        "plane": "forward",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "owner_qa"
+          ]
+        },
+        "from": "2026-10-02T18:12:36.067Z",
+        "to": "2026-10-02T18:12:37.161Z",
+        "asOf": "2026-10-02T18:12:37.161Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.free-task-observation.source.v1",
+        "producerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+        "records": [
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "d07a899f-4e15-4e79-a26e-f93deb054b93",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "d07a899f-4e15-4e79-a26e-f93deb054b93",
+            "evidencePlane": "journey_marker",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": null,
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "call",
+            "usefulness": null,
+            "validatorAuthority": null,
+            "validatorSource": null,
+            "validatorVerdict": null,
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          },
+          {
+            "brand": "samedaydesk",
+            "cohort": "owner_qa",
+            "commerceEventId": "cc826bff-7fd3-4a65-995c-9d8bfea90578",
+            "correctionOf": null,
+            "deliveryClass": null,
+            "eventId": "cc826bff-7fd3-4a65-995c-9d8bfea90578",
+            "evidencePlane": "journey_marker",
+            "method": "GET",
+            "operationId": "normalized-transaction-receipt",
+            "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+            "receiptDigest": null,
+            "reuseAuthority": null,
+            "route": "/chain/transaction-receipt",
+            "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+            "settlementAuthority": null,
+            "settlementClass": null,
+            "settlementReference": null,
+            "sourcePlane": "forward_instrumenter",
+            "stage": "call",
+            "usefulness": null,
+            "validatorAuthority": null,
+            "validatorSource": null,
+            "validatorVerdict": null,
+            "valueAtomic": null,
+            "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+          }
+        ],
+        "intake": {
+          "rawBytes": 1586,
+          "rawSha256": "4f96df6c4bdcd00cff207e5dfcd31ae01eb85867be68837fcccee907efeadc1c",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-retention",
+        "plane": "retention",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "owner_qa"
+          ]
+        },
+        "from": "2026-10-02T18:12:36.067Z",
+        "to": "2026-10-02T18:12:37.161Z",
+        "asOf": "2026-10-02T18:12:37.161Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.free-task-observation.source.v1",
+        "producerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+        "records": [],
+        "intake": {
+          "rawBytes": 0,
+          "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-reads",
+        "plane": "reads",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "owner_qa"
+          ]
+        },
+        "from": "2026-10-02T18:12:36.067Z",
+        "to": "2026-10-02T18:12:37.161Z",
+        "asOf": "2026-10-02T18:12:37.161Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.free-task-observation.source.v1",
+        "producerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+        "records": [],
+        "intake": {
+          "rawBytes": 362,
+          "rawSha256": "06d719091a0806ba2850ca165232599b2afed61e2b9bb739afc1aa4ea3bf3e28",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-settlements",
+        "plane": "settlements",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "scope": {
+          "operationIds": [
+            "normalized-transaction-receipt"
+          ],
+          "cohorts": [
+            "owner_qa"
+          ]
+        },
+        "from": "2026-10-02T18:12:36.067Z",
+        "to": "2026-10-02T18:12:37.161Z",
+        "asOf": "2026-10-02T18:12:37.161Z",
+        "coverage": "complete",
+        "schema": "samedaydesk.free-task-observation.source.v1",
+        "producerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+        "records": [],
+        "intake": {
+          "rawBytes": 0,
+          "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      }
+    ]
+  },
+  "report": {
+    "schema": "samedaydesk.free-task-observation.report.v1",
+    "question": {
+      "id": "owned-free-tasks",
+      "text": "Which explicitly scoped free tasks returned independently useful output and retained current rights?",
+      "populationId": "caller-owned-sol421",
+      "from": "2026-10-02T18:12:36.067Z",
+      "to": "2026-10-02T18:12:37.161Z",
+      "asOf": "2026-10-02T18:12:37.161Z",
+      "operationIds": [
+        "normalized-transaction-receipt"
+      ],
+      "cohorts": [
+        "owner_qa"
+      ]
+    },
+    "priorReportId": null,
+    "denominator": {
+      "covered": true,
+      "observed": 2,
+      "reasons": []
+    },
+    "journeys": [
+      {
+        "commerceEventId": "cc826bff-7fd3-4a65-995c-9d8bfea90578",
+        "taskRef": "t894248ff118d384f8da802407aa8bcc7ec3c147ef4713d84b418bf65901a4a",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      },
+      {
+        "commerceEventId": "d07a899f-4e15-4e79-a26e-f93deb054b93",
+        "taskRef": "te4e7bfdf4a11d41203a7ee4492d93837e4832a0b01dc6aa0e995fbb00c7018",
+        "operationId": "normalized-transaction-receipt",
+        "cohort": "owner_qa",
+        "classification": "owner_internal",
+        "identity": "not_inferred",
+        "retentionState": "unknown",
+        "usefulness": "unknown",
+        "currentUseful": false,
+        "stages": {
+          "delivery_observation": {
+            "status": "unknown",
+            "reasons": [
+              "no_free_delivery_record"
+            ],
+            "evidence": []
+          },
+          "caller_asserted_usefulness": {
+            "status": "unknown",
+            "reasons": [
+              "no_caller_asserted_usefulness_authority"
+            ],
+            "evidence": []
+          },
+          "independently_replayed_output": {
+            "status": "unknown",
+            "reasons": [
+              "no_independently_replayed_output_authority"
+            ],
+            "evidence": []
+          },
+          "authorized_retention": {
+            "status": "unknown",
+            "reasons": [
+              "no_authorized_retention_authority"
+            ],
+            "evidence": []
+          },
+          "later_use": {
+            "status": "unknown",
+            "reasons": [
+              "no_later_use_authority"
+            ],
+            "evidence": []
+          },
+          "settlement": {
+            "status": "unknown",
+            "reasons": [
+              "free_observation_has_no_payment_authority"
+            ],
+            "evidence": []
+          }
+        },
+        "paymentPermitted": false
+      }
+    ],
+    "rates": {
+      "delivery_observation": {
+        "numerator": 0,
+        "denominator": 2,
+        "value": 0,
+        "reasons": []
+      },
+      "independently_replayed_output": {
+        "numerator": 0,
+        "denominator": 2,
+        "value": 0,
+        "reasons": []
+      },
+      "authorized_retention": {
+        "numerator": 0,
+        "denominator": 2,
+        "value": 0,
+        "reasons": []
+      },
+      "later_use": {
+        "numerator": 0,
+        "denominator": 2,
+        "value": 0,
+        "reasons": []
+      }
+    },
+    "coverage": {
+      "attempts": {
+        "complete": true,
+        "reasons": []
+      },
+      "task_refs": {
+        "complete": true,
+        "reasons": []
+      },
+      "forward": {
+        "complete": true,
+        "reasons": []
+      },
+      "retention": {
+        "complete": true,
+        "reasons": []
+      },
+      "reads": {
+        "complete": true,
+        "reasons": []
+      },
+      "settlements": {
+        "complete": true,
+        "reasons": []
+      }
+    },
+    "diagnostics": {
+      "duplicates": 0,
+      "conflicts": 0,
+      "rejectedRecords": 0,
+      "bindingConflicts": 0,
+      "unboundAttempts": 0,
+      "missingPredecessors": 0,
+      "unexpectedSettlements": 0
+    },
+    "sources": [
+      {
+        "id": "native-attempts",
+        "plane": "attempts",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "coverage": "complete",
+        "alignedComplete": true,
+        "reasons": [],
+        "projectedDigest": "bc13e06a99139dcb5bc0d3eb06528eba8340ff3f47cd85b7bec646f4147e49b9",
+        "intake": {
+          "rawBytes": 3217,
+          "rawSha256": "d91c352ed512e9731917eb040e07b648c77fbc95ba34903ee1441305cff70687",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-task-refs",
+        "plane": "task_refs",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "coverage": "complete",
+        "alignedComplete": true,
+        "reasons": [],
+        "projectedDigest": "3f1f5c397a00de79ed5df3017b2828efaa21e1e9baabf6bd701419cd54b96e76",
+        "intake": {
+          "rawBytes": 736,
+          "rawSha256": "f16e0ef92ceab5ecba79b0faabad18964b29cfcb348e41e1983f2c89be411690",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-forward",
+        "plane": "forward",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "coverage": "complete",
+        "alignedComplete": true,
+        "reasons": [],
+        "projectedDigest": "5c6b03e94d0a4bce423dcab83f7a1f02ce238e0d95270b136df03650e1f2ea32",
+        "intake": {
+          "rawBytes": 1586,
+          "rawSha256": "4f96df6c4bdcd00cff207e5dfcd31ae01eb85867be68837fcccee907efeadc1c",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-retention",
+        "plane": "retention",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "coverage": "complete",
+        "alignedComplete": true,
+        "reasons": [],
+        "projectedDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "intake": {
+          "rawBytes": 0,
+          "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-reads",
+        "plane": "reads",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "coverage": "complete",
+        "alignedComplete": true,
+        "reasons": [],
+        "projectedDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "intake": {
+          "rawBytes": 362,
+          "rawSha256": "06d719091a0806ba2850ca165232599b2afed61e2b9bb739afc1aa4ea3bf3e28",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      },
+      {
+        "id": "native-settlements",
+        "plane": "settlements",
+        "kind": "synthetic_fixture",
+        "populationId": "caller-owned-sol421",
+        "coverage": "complete",
+        "alignedComplete": true,
+        "reasons": [],
+        "projectedDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "intake": {
+          "rawBytes": 0,
+          "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "malformed": 0,
+          "torn": 0,
+          "rejected": 0
+        }
+      }
+    ],
+    "provenance": {
+      "baseCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+      "authenticity": "supplied_read_only_exports_not_independently_authenticated",
+      "identity": "not_inferred",
+      "outsideUseEstablished": false,
+      "crossProcessJournalExclusion": false,
+      "retainedGenerations": 2
+    },
+    "tokenSavings": "unknown",
+    "customerCount": "unknown",
+    "unknownSpend": "unknown",
+    "paymentPermitted": false,
+    "recognizedRevenueAtomic": "0",
+    "reportId": "e2d3ab27662325afcdcad4cb4ff7335fe69beab85eb98a195cbf25a185a2af79"
+  }
+}

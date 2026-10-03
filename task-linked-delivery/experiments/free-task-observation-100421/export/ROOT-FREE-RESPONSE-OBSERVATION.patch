@@ -1,0 +1,78 @@
+diff --git a/commerce-events.mjs b/commerce-events.mjs
+index 3ba5949..59047de 100644
+--- a/commerce-events.mjs
++++ b/commerce-events.mjs
+@@ -3288,8 +3288,14 @@ export function createCommerceTelemetry({
+         return originalSend(body);
+       };
+     }
+-    const finishPaidEvidenceResponseDigest = paidEvidenceRequest
+-      ? capturePaidEvidenceResponseDigest(res, paidEvidenceRequest.method, route.route)
++    // Explicitly scoped free observation uses the existing bounded response
++    // digest capture and forward queue. It conveys no delivery or settlement.
++    const freeObservationRequested = outcomeClaim?.taskRef
++      && outcomeClaim.operationId === "normalized-transaction-receipt"
++      && route.route === "/chain/transaction-receipt" && req.method === "GET"
++      && !paymentPresent && headerValue(headers, "x-samedaydesk-observe-free-result") === "1";
++    const finishPaidEvidenceResponseDigest = paidEvidenceRequest || freeObservationRequested
++      ? capturePaidEvidenceResponseDigest(res, paidEvidenceRequest?.method || req.method, route.route)
+       : null;
+ 
+     res.once("finish", () => {
+@@ -3429,6 +3435,9 @@ export function createCommerceTelemetry({
+           });
+         }
+       }
++      if (freeObservationRequested && result === "paid_route_response" && finishPaidEvidenceResponseDigest) {
++        captured = finishPaidEvidenceResponseDigest();
++      }
+       let forwardRecords = null;
+       try {
+         forwardRecords = buildHttpFinishForwardRecords({
+@@ -3437,6 +3446,7 @@ export function createCommerceTelemetry({
+           paidEvidence,
+           httpDeliveryRecord,
+           captured,
++          freeObservation: freeObservationRequested === true,
+         });
+       } catch {
+         forwardRecords = null;
+diff --git a/commerce-outcome-binding.mjs b/commerce-outcome-binding.mjs
+index 6c7e5b6..29ae5df 100644
+--- a/commerce-outcome-binding.mjs
++++ b/commerce-outcome-binding.mjs
+@@ -413,7 +413,7 @@ function evidenceForUnsupported(event, captured) {
+   }
+ }
+ 
+-export function buildHttpFinishForwardRecords({ claim, event, paidEvidence = null, httpDeliveryRecord = null, captured = null } = {}) {
++export function buildHttpFinishForwardRecords({ claim, event, paidEvidence = null, httpDeliveryRecord = null, captured = null, freeObservation = false } = {}) {
+   if (!claim || !event || !UUID_V4.test(event.id || "")) return [];
+   const shared = {
+     brand: claim.brand,
+@@ -441,8 +441,13 @@ export function buildHttpFinishForwardRecords({ claim, event, paidEvidence = nul
+     eventId: event.id,
+   });
+   if (call) records.push(call);
+-  if (event.replayed === true || event.result !== "paid_success") return records;
+-  const digest = typeof paidEvidence?.responseDigest === "string" ? paidEvidence.responseDigest : null;
++  const free = freeObservation === true && /^t[a-f0-9]{62}$/.test(claim.taskRef || "")
++    && claim.operationId === "normalized-transaction-receipt" && event.method === "GET"
++    && event.route === "/chain/transaction-receipt" && event.result === "paid_route_response"
++    && event.paymentPresent === false && event.status === 200;
++  if (event.replayed === true || event.result !== "paid_success" && !free) return records;
++  const digest = free ? captured?.digest
++    : typeof paidEvidence?.responseDigest === "string" ? paidEvidence.responseDigest : null;
+   if (!HEX64.test(digest || "")) return records;
+   const transport = blankRecord({
+     ...shared,
+@@ -456,6 +461,9 @@ export function buildHttpFinishForwardRecords({ claim, event, paidEvidence = nul
+     usefulness: USEFULNESS_UNKNOWN,
+   });
+   if (transport) records.push(transport);
++  // Exact received bytes may be observed for free. Their useful output and
++  // retention are separate caller-authorized ports, never settlement rows.
++  if (free) return records;
+   const evidence = copySchemaEvidence(httpDeliveryRecord, digest)
+     || (httpDeliveryRecord ? null : evidenceForUnsupported(event, captured));
+   if (!evidence) return records;

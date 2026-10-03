@@ -1,0 +1,46 @@
+{
+  "schema": "sol421.actual-overhead.v1",
+  "node": "v22.22.2",
+  "before": [
+    {
+      "eventId": "71ad9ef8-06fe-4493-a887-377fafdfdcbd",
+      "receivedMs": 48.475096,
+      "observationMs": 11.087367999999998
+    },
+    {
+      "eventId": "aa226028-d77d-4722-b19b-74dfa55824cc",
+      "receivedMs": 25.453218999999997,
+      "observationMs": 7.096966000000002
+    }
+  ],
+  "after": [
+    {
+      "eventId": "77a96ee0-7be7-478d-b606-36a3608f63c1",
+      "receivedMs": 52.309781,
+      "observationMs": 236.77934899999997
+    },
+    {
+      "eventId": "872751bd-a36d-416e-9626-5c95bebcd6ea",
+      "receivedMs": 24.638697,
+      "observationMs": 233.63714900000002
+    },
+    {
+      "eventId": "739de3eb-d682-4579-a2cf-4ec9c8f5b6e1",
+      "receivedMs": 24.144399000000003,
+      "observationMs": 8.135732000000004
+    },
+    {
+      "eventId": "4ceb7550-338d-4d62-9c84-889c4b8b8525",
+      "receivedMs": 24.207946000000003,
+      "observationMs": 7.742415999999999
+    }
+  ],
+  "separateReplayProcessCount": 3,
+  "independentReceiptReplayCalls": 3,
+  "interpretation": "Elapsed HTTP/post observation time includes isolated Node replay startup and fixture provider execution; samples are not a metered savings comparison.",
+  "tokenSavings": "unknown",
+  "customerCount": "unknown",
+  "reviewAdaptationMoney": "unknown",
+  "unknownSpend": "unknown",
+  "recognizedRevenueAtomic": "0"
+}

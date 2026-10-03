@@ -1,0 +1,154 @@
+TAP version 13
+# Subtest: two supplied trees differ: danger match versus useful no-match
+ok 1 - two supplied trees differ: danger match versus useful no-match
+  ---
+  duration_ms: 70.608903
+  type: 'test'
+  ...
+# Subtest: a concern the static rules cannot decide is inconclusive, not a clean guarantee
+ok 2 - a concern the static rules cannot decide is inconclusive, not a clean guarantee
+  ---
+  duration_ms: 33.966827
+  type: 'test'
+  ...
+# Subtest: correction and unchanged retest stay distinct
+ok 3 - correction and unchanged retest stay distinct
+  ---
+  duration_ms: 166.093107
+  type: 'test'
+  ...
+# Subtest: a forged local report is not a scan and not a clean verdict
+ok 4 - a forged local report is not a scan and not a clean verdict
+  ---
+  duration_ms: 57.278704
+  type: 'test'
+  ...
+# Subtest: secret sentinel is not echoed and path traversal does not read outside
+ok 5 - secret sentinel is not echoed and path traversal does not read outside
+  ---
+  duration_ms: 31.330221
+  type: 'test'
+  ...
+# Subtest: symlink, binary, and control-path collision stop before a scan
+ok 6 - symlink, binary, and control-path collision stop before a scan
+  ---
+  duration_ms: 1.036319
+  type: 'test'
+  ...
+# Subtest: a slow child is cancelled and bounded output is not a clean verdict
+ok 7 - a slow child is cancelled and bounded output is not a clean verdict
+  ---
+  duration_ms: 169.545538
+  type: 'test'
+  ...
+# Subtest: retention survives restart and rejects the wrong owner, changed input, and a payment label
+ok 8 - retention survives restart and rejects the wrong owner, changed input, and a payment label
+  ---
+  duration_ms: 228.941945
+  type: 'test'
+  ...
+# Subtest: a different later consumer uses the regression without payment or ownership
+ok 9 - a different later consumer uses the regression without payment or ownership
+  ---
+  duration_ms: 245.144571
+  type: 'test'
+  ...
+# Subtest: cold consumer runs two supplied tasks and preserves the dangerous exit
+ok 10 - cold consumer runs two supplied tasks and preserves the dangerous exit
+  ---
+  duration_ms: 102.225364
+  type: 'test'
+  ...
+# Subtest: isolated HTTP mount retrieves after restart and does not treat 200 as the work
+ok 11 - isolated HTTP mount retrieves after restart and does not treat 200 as the work
+  ---
+  duration_ms: 433.788367
+  type: 'test'
+  ...
+# Subtest: price proposal uses the causal seal and ignores a caller event and receipt
+ok 12 - price proposal uses the causal seal and ignores a caller event and receipt
+  ---
+  duration_ms: 0.985452
+  type: 'test'
+  ...
+# Subtest: received merchant mount leaves commerce events and package index untouched
+ok 13 - received merchant mount leaves commerce events and package index untouched
+  ---
+  duration_ms: 6.009967
+  type: 'test'
+  ...
+# Subtest: packaged scanner runs without optional retention or runtime source fetch
+ok 14 - packaged scanner runs without optional retention or runtime source fetch
+  ---
+  duration_ms: 123.763437
+  type: 'test'
+  ...
+# Subtest: invalid configured artifacts do not fall back to a different scanner
+ok 15 - invalid configured artifacts do not fall back to a different scanner
+  ---
+  duration_ms: 0.28971
+  type: 'test'
+  ...
+# Subtest: a shaped forged prior plus clean bytes is not a fix
+ok 16 - a shaped forged prior plus clean bytes is not a fix
+  ---
+  duration_ms: 1.778729
+  type: 'test'
+  ...
+# Subtest: same repaired bytes keep separate owners across callers and tasks
+ok 17 - same repaired bytes keep separate owners across callers and tasks
+  ---
+  duration_ms: 239.604417
+  type: 'test'
+  ...
+# Subtest: originating owner can read and revoke after restart, including from another process
+ok 18 - originating owner can read and revoke after restart, including from another process
+  ---
+  duration_ms: 178.044194
+  type: 'test'
+  ...
+# Subtest: concurrent read does not succeed after revoke, and two writers keep one tombstone
+ok 19 - concurrent read does not succeed after revoke, and two writers keep one tombstone
+  ---
+  duration_ms: 324.443754
+  type: 'test'
+  ...
+# Subtest: missing private authority is an explicit limit and does not fetch
+ok 20 - missing private authority is an explicit limit and does not fetch
+  ---
+  duration_ms: 0.749384
+  type: 'test'
+  ...
+# Subtest: anonymous scanner acquisition runs outside the repository without private authority
+ok 21 - anonymous scanner acquisition runs outside the repository without private authority
+  ---
+  duration_ms: 199.248383
+  type: 'test'
+  ...
+# Subtest: null and malformed retention bodies and a mount without enrollment stay limited
+ok 22 - null and malformed retention bodies and a mount without enrollment stay limited
+  ---
+  duration_ms: 219.600476
+  type: 'test'
+  ...
+# Subtest: changed later input is not inherited, and the whole retest shares one budget
+ok 23 - changed later input is not inherited, and the whole retest shares one budget
+  ---
+  duration_ms: 591.977744
+  type: 'test'
+  ...
+# Subtest: the shared-server patch fits and does not fetch or open an unconfigured journal
+ok 24 - the shared-server patch fits and does not fetch or open an unconfigured journal
+  ---
+  duration_ms: 28.869654
+  type: 'test'
+  ...
+1..24
+# tests 24
+# suites 0
+# pass 24
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3794.603304

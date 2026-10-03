@@ -1,0 +1,357 @@
+diff --git a/server.js b/server.js
+index 4418d14..77e0e67 100644
+--- a/server.js
++++ b/server.js
+@@ -24,6 +24,8 @@ import { resolveHostedScanner } from "./experiments/scoped-surface-delivery-1003
+ import { existsSync, writeFileSync } from "node:fs";
+ import { fileURLToPath } from "node:url";
+ import express from "express";
++import { mountScopedRepairCommerce } from "./task-linked-delivery/experiments/scoped-repair-commerce-100348/route/mount.mjs";
++import { isScopedRepairPath } from "./task-linked-delivery/experiments/scoped-repair-commerce-100348/route/paths.mjs";
+ import { paymentMiddleware, x402ResourceServer } from "@x402/express";
+ import { HTTPFacilitatorClient } from "@x402/core/server";
+ import { ExactEvmScheme } from "@x402/evm/exact/server";
+@@ -538,7 +540,7 @@ const jsonParser = express.json({
+   },
+ });
+ app.use((req, res, next) => {
+-  if (isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
++  if (isScopedRepairPath(req.path) || isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
+   return jsonParser(req, res, next);
+ });
+ app.use(legacyCompatibleX402Body);
+@@ -576,6 +578,11 @@ process.once("SIGTERM", requestCommerceWriterDrain);
+ process.once("SIGINT", requestCommerceWriterDrain);
+ app.use(paidActionEffectHeaders);
+ app.use(commerceTelemetry.middleware);
++// Free scoped qualification. Enrollment and existing paid work remain separate.
++mountScopedRepairCommerce(app, {
++  ...resolveHostedScanner(),
++  dataDir: process.env.SCOPED_REPAIR_PACKET_DIR || null,
++});
+ const PUBLIC_URL = process.env.PUBLIC_URL || "https://x402-url-extractor-production.up.railway.app";
+ const idempotencyReplay = createIdempotencyReplay({
+   publicUrl: PUBLIC_URL,
+diff --git a/commerce-events.mjs b/commerce-events.mjs
+index 3ba5949..f0ed8a0 100644
+--- a/commerce-events.mjs
++++ b/commerce-events.mjs
+@@ -114,6 +114,11 @@ const CANONICAL_AGENT_DISCOVERY_SOURCES = new Set([
+ ]);
+ 
+ const EXACT_ROUTES = new Map([
++  // Known free calls use the existing non-paid request classification.
++  ...["deliver", "reuse", "accept", "review"].map((command) => {
++    const route = `/commerce/scoped-repair/${command}`;
++    return [route, { route, kind: "unmatched" }];
++  }),
+   ["/", { route: "/", kind: "discovery" }],
+   ["/healthz", { route: "/healthz", kind: "excluded" }],
+   ["/.well-known/x402", { route: "/.well-known/x402", kind: "discovery" }],
+diff --git a/useful-result-reuse/store.mjs b/useful-result-reuse/store.mjs
+index 0a7d0b8..ffe43e4 100644
+--- a/useful-result-reuse/store.mjs
++++ b/useful-result-reuse/store.mjs
+@@ -94,7 +94,7 @@ export function createReuseStore({ dataDir, maxFileBytes = MAX_FILE_BYTES, maxRe
+     const entry = await lstat(current).catch((error) => (error?.code === "ENOENT" ? null : Promise.reject(error)));
+     if (entry?.isSymbolicLink()) fail("symlink");
+     if (entry && !entry.isFile()) fail(entry.isFIFO() ? "fifo" : "not_file");
+-    if (entry && entry.size >= maxFileBytes) {
++    if (entry && (entry.size >= maxFileBytes || entry.size + Buffer.byteLength(line) > maxFileBytes)) {
+       await unlink(rotated).catch((error) => {
+         if (error?.code !== "ENOENT") throw error;
+       });
+diff --git a/experiments/seller-repair-service-100266/src/classify.mjs b/experiments/seller-repair-service-100266/src/classify.mjs
+index fcf0d5c..66e318d 100644
+--- a/experiments/seller-repair-service-100266/src/classify.mjs
++++ b/experiments/seller-repair-service-100266/src/classify.mjs
+@@ -93,6 +93,9 @@ export function classify({ intake, declared, observed, stopped = null }) {
+       useful: false,
+     };
+   }
++  if (expected.every((path) => observed.paths.includes(path)) && intake.expectedUsefulOutput.equals) {
++    return { ...view, outcome: "mismatch", reason: "observed_value_mismatch", nextAction: "repair", useful: false };
++  }
+   if (intake.question === "declaration_contract") {
+     return {
+       ...view,
+diff --git a/experiments/seller-repair-service-100266/bin/pack-consumer.mjs b/experiments/seller-repair-service-100266/bin/pack-consumer.mjs
+index fd0a123..55683dc 100644
+--- a/experiments/seller-repair-service-100266/bin/pack-consumer.mjs
++++ b/experiments/seller-repair-service-100266/bin/pack-consumer.mjs
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env node
+ import { spawnSync } from "node:child_process";
+ import { createHash } from "node:crypto";
+-import { chmodSync, cpSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
++import { existsSync, chmodSync, cpSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+ import { dirname, join, relative } from "node:path";
+ import { fileURLToPath } from "node:url";
+ 
+@@ -82,6 +82,13 @@ function assertFrozenConsumer() {
+ }
+ 
+ function pack() {
++  // A received version is sealed. Changed source requires a new version.
++  if (existsSync(ARCHIVE)) {
++    const sealed = readFileSync(ARCHIVE);
++    if (sealed.length !== 30462 || sha256(sealed) !== "86e55a75f7e7e5c5ad188de8b20c64648f40c236b11981186b56abeb6d11350f") throw new Error("sealed archive changed; export a successor");
++    process.stdout.write(JSON.stringify({ version: "0.2.0", sha256: sha256(sealed), bytes: sealed.length, sealed: true }) + "\n");
++    return;
++  }
+   assertFrozenConsumer();
+   rmSync(STAGE, { recursive: true, force: true });
+   ensureDir(STAGE);
+diff --git a/experiments/seller-repair-service-100266/bin/pack-consumer-030.mjs b/experiments/seller-repair-service-100266/bin/pack-consumer-030.mjs
+index 999cc7c..5e6b51d 100644
+--- a/experiments/seller-repair-service-100266/bin/pack-consumer-030.mjs
++++ b/experiments/seller-repair-service-100266/bin/pack-consumer-030.mjs
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env node
+ import { spawnSync } from "node:child_process";
+ import { createHash } from "node:crypto";
+-import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
++import { existsSync, chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+ import { dirname, join } from "node:path";
+ import { fileURLToPath } from "node:url";
+ 
+@@ -73,6 +73,13 @@ function assertFrozen() {
+ }
+ 
+ function pack() {
++  // A received version is sealed. Changed source requires a new version.
++  if (existsSync(ARCHIVE)) {
++    const sealed = readFileSync(ARCHIVE);
++    if (sealed.length !== 32020 || sha256(sealed) !== "9a3ff801104d95513ded6791f476a13042453ed9702635a117ebaac9afd73f2e") throw new Error("sealed archive changed; export a successor");
++    process.stdout.write(JSON.stringify({ version: "0.3.0", sha256: sha256(sealed), bytes: sealed.length, sealed: true }) + "\n");
++    return;
++  }
+   assertFrozen();
+   rmSync(STAGE, { recursive: true, force: true });
+   ensureDir(STAGE);
+diff --git a/experiments/seller-repair-service-100266/bin/pack-consumer-040.mjs b/experiments/seller-repair-service-100266/bin/pack-consumer-040.mjs
+index 94b1b74..74652f4 100644
+--- a/experiments/seller-repair-service-100266/bin/pack-consumer-040.mjs
++++ b/experiments/seller-repair-service-100266/bin/pack-consumer-040.mjs
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env node
+ import { spawnSync } from "node:child_process";
+ import { createHash } from "node:crypto";
+-import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
++import { existsSync, chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+ import { dirname, join } from "node:path";
+ import { fileURLToPath } from "node:url";
+ 
+@@ -70,6 +70,13 @@ function assertFrozen() {
+ }
+ 
+ function pack() {
++  // A received version is sealed. Changed source requires a new version.
++  if (existsSync(ARCHIVE)) {
++    const sealed = readFileSync(ARCHIVE);
++    if (sealed.length !== 40008 || sha256(sealed) !== "0a6f2f45aab81831137c7f2d1a83bce0cd31decb1013d5e92afe5f839faa9025") throw new Error("sealed archive changed; export a successor");
++    process.stdout.write(JSON.stringify({ version: "0.4.0", sha256: sha256(sealed), bytes: sealed.length, sealed: true }) + "\n");
++    return;
++  }
+   assertFrozen();
+   rmSync(STAGE, { recursive: true, force: true });
+   ensureDir(STAGE);
+diff --git a/experiments/seller-repair-service-100266/bin/pack-consumer-041.mjs b/experiments/seller-repair-service-100266/bin/pack-consumer-041.mjs
+index 37378b9..f2f2a30 100644
+--- a/experiments/seller-repair-service-100266/bin/pack-consumer-041.mjs
++++ b/experiments/seller-repair-service-100266/bin/pack-consumer-041.mjs
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env node
+ import { spawnSync } from "node:child_process";
+ import { createHash } from "node:crypto";
+-import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
++import { existsSync, chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+ import { dirname, join } from "node:path";
+ import { fileURLToPath } from "node:url";
+ 
+@@ -71,6 +71,13 @@ function assertFrozen() {
+ }
+ 
+ function pack() {
++  // A received version is sealed. Changed source requires a new version.
++  if (existsSync(ARCHIVE)) {
++    const sealed = readFileSync(ARCHIVE);
++    if (sealed.length !== 40891 || sha256(sealed) !== "64dbe1ee7f69dd40ebf71741eed92f1f3f893c44af8eadf18b71c0fac82227b8") throw new Error("sealed archive changed; export a successor");
++    process.stdout.write(JSON.stringify({ version: "0.4.1", sha256: sha256(sealed), bytes: sealed.length, sealed: true }) + "\n");
++    return;
++  }
+   assertFrozen();
+   rmSync(STAGE, { recursive: true, force: true });
+   ensureDir(STAGE);
+diff --git a/public-acquisition/manifest.json b/public-acquisition/manifest.json
+index 770b2d7..f26d83b 100644
+--- a/public-acquisition/manifest.json
++++ b/public-acquisition/manifest.json
+@@ -395,6 +395,107 @@
+       "measuredSavings": false,
+       "independentDemand": false,
+       "carriesPackageClaims": false
++    },
++    {
++      "id": "scoped-repair-commerce-100348",
++      "version": "0.1.2",
++      "role": "archive",
++      "filename": "scoped-repair-commerce-100348-0.1.2.tar.gz",
++      "relativePath": "scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz",
++      "bytes": 37921,
++      "sha256": "f95db152722ac820d57975cdab9b2bb486888f2faf023dc271b82da5eba84656",
++      "mediaType": "application/gzip",
++      "originContentType": "application/gzip",
++      "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz",
++      "attribution": "Copyright (c) 2026 SameDayDesk",
++      "licenseId": "MIT",
++      "sourceQualification": "unknown",
++      "sourceQualified": false,
++      "privateGit": "unavailable",
++      "hostedAcquisitionVerified": false,
++      "paidLaunch": false,
++      "measuredSavings": false,
++      "independentDemand": false,
++      "publicationStatus": "candidate",
++      "forbiddenPathPrefixes": [
++        ".env",
++        "data/",
++        "secrets/",
++        "server.js",
++        "node_modules/"
++      ],
++      "inventory": {
++        "path": "inventories/scoped-repair-commerce-100348-0.1.2.json",
++        "fileSha256": "e26fd4e8bdbdd3d9d77ac8cb09db4b01df5c991bb7e609fbf2eeff75b9ad3d77",
++        "memberCount": 16
++      }
++    },
++    {
++      "id": "scoped-repair-commerce-100348",
++      "version": "0.1.2",
++      "role": "provenance",
++      "filename": "provenance.json",
++      "relativePath": "scoped-repair-commerce-100348/0.1.2/provenance.json",
++      "bytes": 8453,
++      "sha256": "7febcb560b80a9cdd02a59b419707fe9f4a9a9a2030c8b130da4e399a33c3ca8",
++      "mediaType": "application/json; charset=utf-8",
++      "originContentType": "text/plain; charset=utf-8",
++      "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.2/provenance.json",
++      "attribution": "Copyright (c) 2026 SameDayDesk",
++      "licenseId": "MIT",
++      "sourceQualification": "unknown",
++      "sourceQualified": false,
++      "privateGit": "unavailable",
++      "hostedAcquisitionVerified": false,
++      "paidLaunch": false,
++      "measuredSavings": false,
++      "independentDemand": false,
++      "publicationStatus": "candidate",
++      "carriesPackageClaims": false
++    },
++    {
++      "id": "scoped-repair-commerce-100348",
++      "version": "0.1.2",
++      "role": "license",
++      "filename": "LICENSE",
++      "relativePath": "scoped-repair-commerce-100348/0.1.2/LICENSE",
++      "bytes": 1068,
++      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
++      "mediaType": "text/plain; charset=utf-8",
++      "originContentType": "text/plain; charset=utf-8",
++      "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.2/LICENSE",
++      "attribution": "Copyright (c) 2026 SameDayDesk",
++      "licenseId": "MIT",
++      "sourceQualification": "unknown",
++      "sourceQualified": false,
++      "privateGit": "unavailable",
++      "hostedAcquisitionVerified": false,
++      "paidLaunch": false,
++      "measuredSavings": false,
++      "independentDemand": false,
++      "publicationStatus": "candidate"
++    },
++    {
++      "id": "scoped-repair-commerce-100348",
++      "version": "0.1.2",
++      "role": "source-notice",
++      "filename": "SOURCE-NOTICE.txt",
++      "relativePath": "scoped-repair-commerce-100348/0.1.2/SOURCE-NOTICE.txt",
++      "bytes": 525,
++      "sha256": "a394bc61d96049ce3faed08a0c248b0de05d05bbb4af10d07ab836c6766bedd3",
++      "mediaType": "text/plain; charset=utf-8",
++      "originContentType": "text/plain; charset=utf-8",
++      "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.2/SOURCE-NOTICE.txt",
++      "attribution": "Copyright (c) 2026 SameDayDesk",
++      "licenseId": "MIT",
++      "sourceQualification": "unknown",
++      "sourceQualified": false,
++      "privateGit": "unavailable",
++      "hostedAcquisitionVerified": false,
++      "paidLaunch": false,
++      "measuredSavings": false,
++      "independentDemand": false,
++      "publicationStatus": "candidate"
+     }
+   ]
+ }
+diff --git a/public-acquisition/cold-commands.json b/public-acquisition/cold-commands.json
+index 8578347..7771281 100644
+--- a/public-acquisition/cold-commands.json
++++ b/public-acquisition/cold-commands.json
+@@ -162,6 +162,25 @@
+           ]
+         }
+       ]
++    },
++    {
++      "id": "scoped-repair-commerce-100348",
++      "version": "0.1.2",
++      "filename": "scoped-repair-commerce-100348-0.1.2.tar.gz",
++      "cwd": ".",
++      "steps": [
++        {
++          "argv": [
++            "node",
++            "bin/check-cold.mjs"
++          ],
++          "stdoutIncludes": [
++            "\"requestRequired\":true",
++            "\"executed\":false",
++            "\"paymentPerformed\":false"
++          ]
++        }
++      ]
+     }
+   ]
+ }
+diff --git a/public-acquisition/engine.test.mjs b/public-acquisition/engine.test.mjs
+index 16a4913..63c2ee7 100644
+--- a/public-acquisition/engine.test.mjs
++++ b/public-acquisition/engine.test.mjs
+@@ -61,7 +61,13 @@ function listen(app) {
+ 
+ test("receiving manifest publishes the public archives and keeps draft claims false", () => {
+   const loaded = published();
+-  assert.equal(loaded.order.length, 16);
++  assert.equal(loaded.order.length, 20);
++  // Sixteen sealed predecessor assets plus the four exact client assets.
++  const client=loaded.files.get("scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz");
++  assert.equal(client.bytes.length, 37921);
++  assert.equal(sha256(client.bytes), "f95db152722ac820d57975cdab9b2bb486888f2faf023dc271b82da5eba84656");
++  assert.equal(client.asset.hostedAcquisitionVerified, false);
++  assert.equal(client.asset.licenseId, "MIT");
+   const composition = loaded.files.get("composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz");
+   const retained = loaded.files.get("retained-task/0.1.0/retained-task-0.1.0.tar.gz");
+   const l09 = loaded.files.get("l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz");
+@@ -365,7 +371,9 @@ test("cold node and python httpx clients unpack the mount and run the declared c
+     const nodeProfile = JSON.parse(nodeRun.stdout);
+     assert.equal(nodeProfile.proofClass, "loopback");
+     assert.equal(nodeProfile.productionAcceptance, false);
+-    assert.equal(nodeProfile.results.length, 4);
++    assert.equal(nodeProfile.results.length, 5);
++    assert.equal(nodeProfile.results[4].id, "scoped-repair-commerce-100348");
++    assert.equal(nodeProfile.results[4].sha256, "f95db152722ac820d57975cdab9b2bb486888f2faf023dc271b82da5eba84656");
+     assert.equal(nodeProfile.results[3].id, "seller-repair-external-consumer");
+     assert.equal(nodeProfile.results[1].id, "retained-task");
+     assert.equal(nodeProfile.hermes.invoked, false);

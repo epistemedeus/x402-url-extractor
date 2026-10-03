@@ -114,6 +114,11 @@ const CANONICAL_AGENT_DISCOVERY_SOURCES = new Set([
 ]);
 
 const EXACT_ROUTES = new Map([
+  // Known free calls use the existing non-paid request classification.
+  ...["deliver", "reuse", "accept", "review"].map((command) => {
+    const route = `/commerce/scoped-repair/${command}`;
+    return [route, { route, kind: "unmatched" }];
+  }),
   ["/", { route: "/", kind: "discovery" }],
   ["/healthz", { route: "/healthz", kind: "excluded" }],
   ["/.well-known/x402", { route: "/.well-known/x402", kind: "discovery" }],

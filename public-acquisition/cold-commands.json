@@ -195,6 +195,25 @@
         }
       ],
       "note": "Automatic receiving supplies owner QA tasks to a loopback server. Actual consumers supply their own request.json; this is not customer use."
+    },
+    {
+      "id": "scoped-repair-commerce-100348",
+      "version": "0.1.2",
+      "filename": "scoped-repair-commerce-100348-0.1.2.tar.gz",
+      "cwd": ".",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "bin/check-cold.mjs"
+          ],
+          "stdoutIncludes": [
+            "\"requestRequired\":true",
+            "\"executed\":false",
+            "\"paymentPerformed\":false"
+          ]
+        }
+      ]
     }
   ]
 }
