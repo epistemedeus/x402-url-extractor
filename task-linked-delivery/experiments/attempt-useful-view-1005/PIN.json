@@ -39,8 +39,8 @@
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/README.md",
-      "sha256": "7de36b918f620eab5e034f589ded4009b65c7a809b47a2b40cb294c335d5151d",
-      "bytes": 6054
+      "sha256": "611d9fb2c9ec0eb48089a2eb59484ff245a4709ab87fbfbe6620d9520271019a",
+      "bytes": 6268
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/SOURCE-NOTICE.txt",
@@ -99,8 +99,8 @@
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/causal-stages.mjs",
-      "sha256": "fc585e8ff32ac16a485bea887940d909b7a57d543bd990d9f2e8e1e2b0e9f5f5",
-      "bytes": 7401
+      "sha256": "4b76a2e99ef5bc00b00b98b22199a562343eba630ad41760a1b88e85d81a170c",
+      "bytes": 7455
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/constants.mjs",
@@ -144,8 +144,8 @@
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/view.mjs",
-      "sha256": "22f90991f18fa8e219e7cebc0029b6d421a28eec1e29fd5f3fcf4287708a29b9",
-      "bytes": 20474
+      "sha256": "f3d66855233d168e98cfa0db5d0b6d71d5c592eae3b8303792e6ee661fb92e5f",
+      "bytes": 20683
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/test/capture.test.mjs",
@@ -164,13 +164,13 @@
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/test/mounted.mjs",
-      "sha256": "514abe7482d69a9f4d0843aab8b9a7c9823071cbd2aa506981e22474faacd444",
-      "bytes": 4962
+      "sha256": "63fa770a2463ff429096002da2e3b99fd0164137b5f53502dcd52f443ddae808",
+      "bytes": 5122
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/test/paid-mounted.test.mjs",
-      "sha256": "e07bb1b33109dbeb123ad19dffe6f9eac39a26d2c7a8e0b47ef089b43b5d5f99",
-      "bytes": 5519
+      "sha256": "b51a462d1af5dfc50dfe558178453ec841f27f84d3cf7b3e636b8617fb03b0a1",
+      "bytes": 6049
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/test/readback-cli.test.mjs",

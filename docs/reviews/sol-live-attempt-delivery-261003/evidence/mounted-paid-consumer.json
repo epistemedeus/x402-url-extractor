@@ -8,7 +8,7 @@
     "decision": "one_attempt",
     "reason": null,
     "taskRef": "tca420c6d9c384e36a04ea50b6383c4fa2d28222614df9bf2f35e960309ef34",
-    "commerceEventId": "053631ab-4e6d-47ba-a124-706ac4a53863",
+    "commerceEventId": "1dc36e45-5ff1-477b-a9aa-2c4d520b14ff",
     "operationId": "normalized-transaction-receipt",
     "cohort": "owner_qa",
     "sourceDeliveryAttribution": {
@@ -81,7 +81,9 @@
       "retention": {
         "disposition": "authorized",
         "authority": "existing_customer_grant",
-        "currentRights": true
+        "currentRights": true,
+        "operationCriterion": "positive",
+        "criterionAuthority": "existing_paid_receipt_operation_contract"
       },
       "laterUse": {
         "disposition": "authorized",
@@ -132,7 +134,7 @@
       },
       "observerProducerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
       "observerProducerCommitRole": "conversion_schema_compatibility",
-      "producerSourceDigest": "1d7f987a108906796c61fb7ec7ada8985b7832d17516c533158db6263a2a5527",
+      "producerSourceDigest": "dce3d09e84b3217afebae8963bccf6d48589fef1d7dac1e5474736eb6d2e047f",
       "clockWindowFix": {
         "commit": "de4c2a1f5e52065273b677a8694913a98850dcf0",
         "branch": "codex/task-observer-window-1003",
@@ -167,15 +169,15 @@
       "laterUse": "authorized",
       "settlement": "producer-observed"
     },
-    "cutId": "1f999505-7333-4755-950f-068e5dc7cb3e",
+    "cutId": "2a0d0d86-fff8-4d4f-a1ba-4335e7ccd746",
     "capture": {
       "schema": "samedaydesk.attempt-useful.journal-cut.v1",
       "kind": "attempt_useful_capture",
-      "cutId": "1f999505-7333-4755-950f-068e5dc7cb3e",
-      "sessionId": "fa4865d8-bc0a-49e1-851f-cb6576dad11a",
-      "namespace": "65056:4412968",
+      "cutId": "2a0d0d86-fff8-4d4f-a1ba-4335e7ccd746",
+      "sessionId": "2bdd8c91-3fd5-42cd-a91a-66377dd970c1",
+      "namespace": "65056:4478141",
       "producer": "canonical_commerce_and_useful_result_journals",
-      "sourceDigest": "1d7f987a108906796c61fb7ec7ada8985b7832d17516c533158db6263a2a5527",
+      "sourceDigest": "dce3d09e84b3217afebae8963bccf6d48589fef1d7dac1e5474736eb6d2e047f",
       "durability": "existing_flush_and_closed_files_no_fsync_guarantee",
       "callerReceipt": "unknown",
       "writerProcesses": 1,
@@ -184,8 +186,8 @@
         "deploymentId": null,
         "source": null
       },
-      "from": "2026-10-03T18:29:36.052Z",
-      "asOf": "2026-10-03T18:29:36.117Z",
+      "from": "2026-10-03T19:22:56.963Z",
+      "asOf": "2026-10-03T19:22:57.027Z",
       "planes": {
         "attempts": {
           "coverage": "complete",
@@ -200,22 +202,22 @@
               "name": "commerce-events.ndjson",
               "present": true,
               "reason": null,
-              "identity": "65056:4412976",
+              "identity": "65056:4478145",
               "size": 1678,
-              "sha256": "fc39e1416e43d061fdb16817e720657aaf7faaba697ddb9c7fbccf8f6634e0f0"
+              "sha256": "a7ee2410a86e57a34c42b92a0c5ec58287b85e2d65282b1158a81f0f9f562120"
             }
           ],
           "bounds": [
             {
               "name": "commerce-events.ndjson",
-              "identity": "65056:4412976",
+              "identity": "65056:4478145",
               "from": 0,
               "to": 1678,
-              "sha256": "fc39e1416e43d061fdb16817e720657aaf7faaba697ddb9c7fbccf8f6634e0f0",
-              "prefixSha256": "fc39e1416e43d061fdb16817e720657aaf7faaba697ddb9c7fbccf8f6634e0f0"
+              "sha256": "a7ee2410a86e57a34c42b92a0c5ec58287b85e2d65282b1158a81f0f9f562120",
+              "prefixSha256": "a7ee2410a86e57a34c42b92a0c5ec58287b85e2d65282b1158a81f0f9f562120"
             }
           ],
-          "producerDigest": "fb420585abe9cf4e43992904685b96a03f794793c69bb754d4c4556e2fa08fce",
+          "producerDigest": "cd5eb863d4139ba2db506404b25b292d0463252ab8f9c9c4087ba795371e88e3",
           "producer": "canonical_single_process_owner",
           "rotations": 0,
           "writes": 2
@@ -233,22 +235,22 @@
               "name": "commerce-outcome-task-ref.ndjson",
               "present": true,
               "reason": null,
-              "identity": "65056:4412971",
+              "identity": "65056:4478143",
               "size": 368,
-              "sha256": "fd9d52c1782076f8ce32407a1245c19360644e15755534ccb21f570918c62cfd"
+              "sha256": "282a0ebed34fc01d6f87cc7dc189a08cf5be7c1a5257f7173be916f7bde6d12c"
             }
           ],
           "bounds": [
             {
               "name": "commerce-outcome-task-ref.ndjson",
-              "identity": "65056:4412971",
+              "identity": "65056:4478143",
               "from": 0,
               "to": 368,
-              "sha256": "fd9d52c1782076f8ce32407a1245c19360644e15755534ccb21f570918c62cfd",
-              "prefixSha256": "fd9d52c1782076f8ce32407a1245c19360644e15755534ccb21f570918c62cfd"
+              "sha256": "282a0ebed34fc01d6f87cc7dc189a08cf5be7c1a5257f7173be916f7bde6d12c",
+              "prefixSha256": "282a0ebed34fc01d6f87cc7dc189a08cf5be7c1a5257f7173be916f7bde6d12c"
             }
           ],
-          "producerDigest": "d4688f0740529e3cf1bf7821ff66141c3d896bd50538656fc3567e5c9f743732",
+          "producerDigest": "8b541407fbea79d3995bd0207e47ebee28bed76d2eb3dacb286cd0ddbbb567cd",
           "producer": "canonical_single_process_owner",
           "rotations": 0,
           "writes": 1
@@ -266,22 +268,22 @@
               "name": "commerce-outcome-binding.ndjson",
               "present": true,
               "reason": null,
-              "identity": "65056:4412984",
+              "identity": "65056:4478148",
               "size": 2630,
-              "sha256": "1b089300a46aff89046e629a85f4b50931dfdde47aaa1b0cb52beea47d2a51a9"
+              "sha256": "b110f13b5b4f312802e2e4c72e4b11f42b2297b61a8624cb8272d0e1c35e05e2"
             }
           ],
           "bounds": [
             {
               "name": "commerce-outcome-binding.ndjson",
-              "identity": "65056:4412984",
+              "identity": "65056:4478148",
               "from": 0,
               "to": 2630,
-              "sha256": "1b089300a46aff89046e629a85f4b50931dfdde47aaa1b0cb52beea47d2a51a9",
-              "prefixSha256": "1b089300a46aff89046e629a85f4b50931dfdde47aaa1b0cb52beea47d2a51a9"
+              "sha256": "b110f13b5b4f312802e2e4c72e4b11f42b2297b61a8624cb8272d0e1c35e05e2",
+              "prefixSha256": "b110f13b5b4f312802e2e4c72e4b11f42b2297b61a8624cb8272d0e1c35e05e2"
             }
           ],
-          "producerDigest": "1f4b8cb0f1b661736d4e154e6e5c4bc728b9073d40128bec93de2c7477c2612f",
+          "producerDigest": "b4cc2bf3010106746b065c3f1d2dfa3c7369671a371f56e5357128b5851c3385",
           "producer": "canonical_single_process_owner",
           "rotations": 0,
           "writes": 3
@@ -299,22 +301,22 @@
               "name": "useful-result-customer.ndjson",
               "present": true,
               "reason": null,
-              "identity": "65056:4412974",
+              "identity": "65056:4478144",
               "size": 2405,
-              "sha256": "84e7b6ca22dd09d7feb2d1856f68de96aed8059ced5631f8e014de3f148d1e70"
+              "sha256": "3f6a8091549cf6d0460ecd0c311b0de2ea2fe332dda2f94221c837e86eca2ff0"
             }
           ],
           "bounds": [
             {
               "name": "useful-result-customer.ndjson",
-              "identity": "65056:4412974",
+              "identity": "65056:4478144",
               "from": 0,
               "to": 2405,
-              "sha256": "84e7b6ca22dd09d7feb2d1856f68de96aed8059ced5631f8e014de3f148d1e70",
-              "prefixSha256": "84e7b6ca22dd09d7feb2d1856f68de96aed8059ced5631f8e014de3f148d1e70"
+              "sha256": "3f6a8091549cf6d0460ecd0c311b0de2ea2fe332dda2f94221c837e86eca2ff0",
+              "prefixSha256": "3f6a8091549cf6d0460ecd0c311b0de2ea2fe332dda2f94221c837e86eca2ff0"
             }
           ],
-          "producerDigest": "c3487911d4260c8bcc5638116f223e41ac1ae928df8d1c26754d2e3524d13da1",
+          "producerDigest": "c4cadb294f25648243b310bb58bbdc178fa2d310f058f4659783c7581ce1485a",
           "producer": "canonical_single_process_owner",
           "rotations": 0,
           "writes": 1
@@ -332,22 +334,22 @@
               "name": "useful-result-metrics.ndjson",
               "present": true,
               "reason": null,
-              "identity": "65056:4412970",
+              "identity": "65056:4478142",
               "size": 1000,
-              "sha256": "74259fe94a15cd19aa3e85001caae4054d78dd168bb921ae2fd111de6b1a92e2"
+              "sha256": "f54675f1481c3715968dfc3f2687a4d5d7980ed2a79659f0d855c5d5435e66ff"
             }
           ],
           "bounds": [
             {
               "name": "useful-result-metrics.ndjson",
-              "identity": "65056:4412970",
+              "identity": "65056:4478142",
               "from": 0,
               "to": 1000,
-              "sha256": "74259fe94a15cd19aa3e85001caae4054d78dd168bb921ae2fd111de6b1a92e2",
-              "prefixSha256": "74259fe94a15cd19aa3e85001caae4054d78dd168bb921ae2fd111de6b1a92e2"
+              "sha256": "f54675f1481c3715968dfc3f2687a4d5d7980ed2a79659f0d855c5d5435e66ff",
+              "prefixSha256": "f54675f1481c3715968dfc3f2687a4d5d7980ed2a79659f0d855c5d5435e66ff"
             }
           ],
-          "producerDigest": "435db9406a69b1d1eebfd381c19be787f497e64710959745204ef21014641414",
+          "producerDigest": "a26c9c1e85893d605d347b10cb7c171c81f081c5ae1761f2f0dd0fb3f07369e8",
           "producer": "canonical_single_process_owner",
           "rotations": 0,
           "writes": 4
@@ -360,44 +362,44 @@
               "name": "commerce-settlements.ndjson",
               "present": true,
               "reason": null,
-              "identity": "65056:4412986",
+              "identity": "65056:4478150",
               "size": 1281,
-              "sha256": "278fd1c51e310f4cffc53a2333354f618fc82782b1db166b2c56ba715c694334"
+              "sha256": "34f9e0ca72d892f84a050d95d4465c439ece82abbc93aba4d310fde9644129e4"
             }
           ],
           "bounds": [
             {
               "name": "commerce-settlements.ndjson",
-              "identity": "65056:4412986",
+              "identity": "65056:4478150",
               "from": 0,
               "to": 1281,
-              "sha256": "278fd1c51e310f4cffc53a2333354f618fc82782b1db166b2c56ba715c694334",
-              "prefixSha256": "278fd1c51e310f4cffc53a2333354f618fc82782b1db166b2c56ba715c694334"
+              "sha256": "34f9e0ca72d892f84a050d95d4465c439ece82abbc93aba4d310fde9644129e4",
+              "prefixSha256": "34f9e0ca72d892f84a050d95d4465c439ece82abbc93aba4d310fde9644129e4"
             }
           ],
-          "producerDigest": "dc46e23c88116bdff0eb97b9dfc458207a004a95d1e85acdfede632a968bf9ae",
+          "producerDigest": "2d7499796a26d29b6f722c6158b691dfdd3f69710248aaf46fe44eb9713a54bd",
           "producer": "canonical_single_process_owner",
           "rotations": 0,
           "writes": 1,
           "settlementCapture": {
             "schemaVersion": "samedaydesk.commerce-settlement-plane-capture.v1",
-            "capturedAt": "2026-10-03T18:29:36.124Z",
-            "generationId": "setlcut_2a77543665a946f59f81a49d9f8a0a5e",
-            "observationId": "setlobs_657ff587c02903414147a25974a329e8",
+            "capturedAt": "2026-10-03T19:22:57.034Z",
+            "generationId": "setlcut_922debbb1f808f69318a4e9273ccba44",
+            "observationId": "setlobs_7b0707bc9d9b1281e61604228f53d973",
             "lifecycle": "ok",
             "enabled": true,
-            "baseline": "2026-10-03T18:29:36.049Z",
+            "baseline": "2026-10-03T19:22:56.957Z",
             "attemptsUsed": 1,
             "ledger": {
               "present": true,
               "regularFile": true,
               "identity": {
                 "dev": "65056",
-                "ino": "4412986",
+                "ino": "4478150",
                 "mode": "0600"
               },
               "byteCount": 1281,
-              "byteDigest": "278fd1c51e310f4cffc53a2333354f618fc82782b1db166b2c56ba715c694334"
+              "byteDigest": "34f9e0ca72d892f84a050d95d4465c439ece82abbc93aba4d310fde9644129e4"
             },
             "integrity": {
               "corruptLines": 0,
@@ -425,11 +427,11 @@
             },
             "summaryDigest": "4feb221ccdae4cac772dbead53b1f66c398d6189a8ccd37021ea1f8683e5cf2e",
             "run": {
-              "runGenerationId": "setlrun_710d24adb42f2ffad25571f9",
+              "runGenerationId": "setlrun_681866d1408d799be99b5d2b",
               "state": "complete",
-              "generationNonce": "e9ed3b019408e4a6a0a905f21657d190",
-              "completedAt": "2026-10-03T18:29:36.106Z",
-              "namespaceId": "setlns_7a6b8b1888e13b5bd335144148a38d2d",
+              "generationNonce": "ecfed48da115c5405e3a291d84f5dfdb",
+              "completedAt": "2026-10-03T19:22:57.018Z",
+              "namespaceId": "setlns_935032e293b8087d0e9352c2bd2539fd",
               "lastError": null,
               "lastIssueCounts": {}
             }
@@ -451,22 +453,22 @@
             "name": "commerce-events.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412976",
+            "identity": "65056:4478145",
             "size": 1678,
-            "sha256": "fc39e1416e43d061fdb16817e720657aaf7faaba697ddb9c7fbccf8f6634e0f0"
+            "sha256": "a7ee2410a86e57a34c42b92a0c5ec58287b85e2d65282b1158a81f0f9f562120"
           }
         ],
         "bounds": [
           {
             "name": "commerce-events.ndjson",
-            "identity": "65056:4412976",
+            "identity": "65056:4478145",
             "from": 0,
             "to": 1678,
-            "sha256": "fc39e1416e43d061fdb16817e720657aaf7faaba697ddb9c7fbccf8f6634e0f0",
-            "prefixSha256": "fc39e1416e43d061fdb16817e720657aaf7faaba697ddb9c7fbccf8f6634e0f0"
+            "sha256": "a7ee2410a86e57a34c42b92a0c5ec58287b85e2d65282b1158a81f0f9f562120",
+            "prefixSha256": "a7ee2410a86e57a34c42b92a0c5ec58287b85e2d65282b1158a81f0f9f562120"
           }
         ],
-        "producerDigest": "fb420585abe9cf4e43992904685b96a03f794793c69bb754d4c4556e2fa08fce",
+        "producerDigest": "cd5eb863d4139ba2db506404b25b292d0463252ab8f9c9c4087ba795371e88e3",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
         "writes": 2
@@ -484,22 +486,22 @@
             "name": "commerce-outcome-task-ref.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412971",
+            "identity": "65056:4478143",
             "size": 368,
-            "sha256": "fd9d52c1782076f8ce32407a1245c19360644e15755534ccb21f570918c62cfd"
+            "sha256": "282a0ebed34fc01d6f87cc7dc189a08cf5be7c1a5257f7173be916f7bde6d12c"
           }
         ],
         "bounds": [
           {
             "name": "commerce-outcome-task-ref.ndjson",
-            "identity": "65056:4412971",
+            "identity": "65056:4478143",
             "from": 0,
             "to": 368,
-            "sha256": "fd9d52c1782076f8ce32407a1245c19360644e15755534ccb21f570918c62cfd",
-            "prefixSha256": "fd9d52c1782076f8ce32407a1245c19360644e15755534ccb21f570918c62cfd"
+            "sha256": "282a0ebed34fc01d6f87cc7dc189a08cf5be7c1a5257f7173be916f7bde6d12c",
+            "prefixSha256": "282a0ebed34fc01d6f87cc7dc189a08cf5be7c1a5257f7173be916f7bde6d12c"
           }
         ],
-        "producerDigest": "d4688f0740529e3cf1bf7821ff66141c3d896bd50538656fc3567e5c9f743732",
+        "producerDigest": "8b541407fbea79d3995bd0207e47ebee28bed76d2eb3dacb286cd0ddbbb567cd",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
         "writes": 1
@@ -517,22 +519,22 @@
             "name": "commerce-outcome-binding.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412984",
+            "identity": "65056:4478148",
             "size": 2630,
-            "sha256": "1b089300a46aff89046e629a85f4b50931dfdde47aaa1b0cb52beea47d2a51a9"
+            "sha256": "b110f13b5b4f312802e2e4c72e4b11f42b2297b61a8624cb8272d0e1c35e05e2"
           }
         ],
         "bounds": [
           {
             "name": "commerce-outcome-binding.ndjson",
-            "identity": "65056:4412984",
+            "identity": "65056:4478148",
             "from": 0,
             "to": 2630,
-            "sha256": "1b089300a46aff89046e629a85f4b50931dfdde47aaa1b0cb52beea47d2a51a9",
-            "prefixSha256": "1b089300a46aff89046e629a85f4b50931dfdde47aaa1b0cb52beea47d2a51a9"
+            "sha256": "b110f13b5b4f312802e2e4c72e4b11f42b2297b61a8624cb8272d0e1c35e05e2",
+            "prefixSha256": "b110f13b5b4f312802e2e4c72e4b11f42b2297b61a8624cb8272d0e1c35e05e2"
           }
         ],
-        "producerDigest": "1f4b8cb0f1b661736d4e154e6e5c4bc728b9073d40128bec93de2c7477c2612f",
+        "producerDigest": "b4cc2bf3010106746b065c3f1d2dfa3c7369671a371f56e5357128b5851c3385",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
         "writes": 3
@@ -550,22 +552,22 @@
             "name": "useful-result-customer.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412974",
+            "identity": "65056:4478144",
             "size": 2405,
-            "sha256": "84e7b6ca22dd09d7feb2d1856f68de96aed8059ced5631f8e014de3f148d1e70"
+            "sha256": "3f6a8091549cf6d0460ecd0c311b0de2ea2fe332dda2f94221c837e86eca2ff0"
           }
         ],
         "bounds": [
           {
             "name": "useful-result-customer.ndjson",
-            "identity": "65056:4412974",
+            "identity": "65056:4478144",
             "from": 0,
             "to": 2405,
-            "sha256": "84e7b6ca22dd09d7feb2d1856f68de96aed8059ced5631f8e014de3f148d1e70",
-            "prefixSha256": "84e7b6ca22dd09d7feb2d1856f68de96aed8059ced5631f8e014de3f148d1e70"
+            "sha256": "3f6a8091549cf6d0460ecd0c311b0de2ea2fe332dda2f94221c837e86eca2ff0",
+            "prefixSha256": "3f6a8091549cf6d0460ecd0c311b0de2ea2fe332dda2f94221c837e86eca2ff0"
           }
         ],
-        "producerDigest": "c3487911d4260c8bcc5638116f223e41ac1ae928df8d1c26754d2e3524d13da1",
+        "producerDigest": "c4cadb294f25648243b310bb58bbdc178fa2d310f058f4659783c7581ce1485a",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
         "writes": 1
@@ -583,22 +585,22 @@
             "name": "useful-result-metrics.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412970",
+            "identity": "65056:4478142",
             "size": 1000,
-            "sha256": "74259fe94a15cd19aa3e85001caae4054d78dd168bb921ae2fd111de6b1a92e2"
+            "sha256": "f54675f1481c3715968dfc3f2687a4d5d7980ed2a79659f0d855c5d5435e66ff"
           }
         ],
         "bounds": [
           {
             "name": "useful-result-metrics.ndjson",
-            "identity": "65056:4412970",
+            "identity": "65056:4478142",
             "from": 0,
             "to": 1000,
-            "sha256": "74259fe94a15cd19aa3e85001caae4054d78dd168bb921ae2fd111de6b1a92e2",
-            "prefixSha256": "74259fe94a15cd19aa3e85001caae4054d78dd168bb921ae2fd111de6b1a92e2"
+            "sha256": "f54675f1481c3715968dfc3f2687a4d5d7980ed2a79659f0d855c5d5435e66ff",
+            "prefixSha256": "f54675f1481c3715968dfc3f2687a4d5d7980ed2a79659f0d855c5d5435e66ff"
           }
         ],
-        "producerDigest": "435db9406a69b1d1eebfd381c19be787f497e64710959745204ef21014641414",
+        "producerDigest": "a26c9c1e85893d605d347b10cb7c171c81f081c5ae1761f2f0dd0fb3f07369e8",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
         "writes": 4
@@ -611,44 +613,44 @@
             "name": "commerce-settlements.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412986",
+            "identity": "65056:4478150",
             "size": 1281,
-            "sha256": "278fd1c51e310f4cffc53a2333354f618fc82782b1db166b2c56ba715c694334"
+            "sha256": "34f9e0ca72d892f84a050d95d4465c439ece82abbc93aba4d310fde9644129e4"
           }
         ],
         "bounds": [
           {
             "name": "commerce-settlements.ndjson",
-            "identity": "65056:4412986",
+            "identity": "65056:4478150",
             "from": 0,
             "to": 1281,
-            "sha256": "278fd1c51e310f4cffc53a2333354f618fc82782b1db166b2c56ba715c694334",
-            "prefixSha256": "278fd1c51e310f4cffc53a2333354f618fc82782b1db166b2c56ba715c694334"
+            "sha256": "34f9e0ca72d892f84a050d95d4465c439ece82abbc93aba4d310fde9644129e4",
+            "prefixSha256": "34f9e0ca72d892f84a050d95d4465c439ece82abbc93aba4d310fde9644129e4"
           }
         ],
-        "producerDigest": "dc46e23c88116bdff0eb97b9dfc458207a004a95d1e85acdfede632a968bf9ae",
+        "producerDigest": "2d7499796a26d29b6f722c6158b691dfdd3f69710248aaf46fe44eb9713a54bd",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
         "writes": 1,
         "settlementCapture": {
           "schemaVersion": "samedaydesk.commerce-settlement-plane-capture.v1",
-          "capturedAt": "2026-10-03T18:29:36.124Z",
-          "generationId": "setlcut_2a77543665a946f59f81a49d9f8a0a5e",
-          "observationId": "setlobs_657ff587c02903414147a25974a329e8",
+          "capturedAt": "2026-10-03T19:22:57.034Z",
+          "generationId": "setlcut_922debbb1f808f69318a4e9273ccba44",
+          "observationId": "setlobs_7b0707bc9d9b1281e61604228f53d973",
           "lifecycle": "ok",
           "enabled": true,
-          "baseline": "2026-10-03T18:29:36.049Z",
+          "baseline": "2026-10-03T19:22:56.957Z",
           "attemptsUsed": 1,
           "ledger": {
             "present": true,
             "regularFile": true,
             "identity": {
               "dev": "65056",
-              "ino": "4412986",
+              "ino": "4478150",
               "mode": "0600"
             },
             "byteCount": 1281,
-            "byteDigest": "278fd1c51e310f4cffc53a2333354f618fc82782b1db166b2c56ba715c694334"
+            "byteDigest": "34f9e0ca72d892f84a050d95d4465c439ece82abbc93aba4d310fde9644129e4"
           },
           "integrity": {
             "corruptLines": 0,
@@ -676,11 +678,11 @@
           },
           "summaryDigest": "4feb221ccdae4cac772dbead53b1f66c398d6189a8ccd37021ea1f8683e5cf2e",
           "run": {
-            "runGenerationId": "setlrun_710d24adb42f2ffad25571f9",
+            "runGenerationId": "setlrun_681866d1408d799be99b5d2b",
             "state": "complete",
-            "generationNonce": "e9ed3b019408e4a6a0a905f21657d190",
-            "completedAt": "2026-10-03T18:29:36.106Z",
-            "namespaceId": "setlns_7a6b8b1888e13b5bd335144148a38d2d",
+            "generationNonce": "ecfed48da115c5405e3a291d84f5dfdb",
+            "completedAt": "2026-10-03T19:22:57.018Z",
+            "namespaceId": "setlns_935032e293b8087d0e9352c2bd2539fd",
             "lastError": null,
             "lastIssueCounts": {}
           }
@@ -688,9 +690,9 @@
       }
     },
     "window": {
-      "from": "2026-10-03T18:29:36.052Z",
-      "to": "2026-10-03T18:29:36.117Z",
-      "asOf": "2026-10-03T18:29:36.117Z"
+      "from": "2026-10-03T19:22:56.963Z",
+      "to": "2026-10-03T19:22:57.027Z",
+      "asOf": "2026-10-03T19:22:57.027Z"
     },
     "executionDecision": "found",
     "paymentInvoked": false,
@@ -705,13 +707,13 @@
     "decision": "one_attempt",
     "reason": null,
     "taskRef": "t69c78b38196951119847300f275748a6028a015ffbeaad9ba85cc07ec447e0",
-    "commerceEventId": "7a32c36a-8486-406d-9832-a1d18e73e39c",
+    "commerceEventId": "628f959a-1fc5-4bfc-88c3-cff7f9a2633a",
     "operationId": "normalized-transaction-receipt",
     "cohort": "external_unknown",
     "sourceDeliveryAttribution": {
       "schemaVersion": "samedaydesk.settlement-source-delivery-attribution.v1",
-      "originClass": "internal",
-      "originVerification": "verified_internal_token",
+      "originClass": "external",
+      "originVerification": "unverified",
       "declaredDiscoverySource": null,
       "observedDiscoverySource": null,
       "collapsedDiscoverySource": null,
@@ -760,10 +762,9 @@
         "authority": "server_minted_commerce_event_and_task_ref"
       },
       "delivery": {
-        "disposition": "producer-observed",
-        "authority": "producer_journal_http_finish_and_transport",
-        "schemaUsefulOutput": "agreed_negative",
-        "schemaAuthority": "existing_paid_receipt_operation_contract"
+        "disposition": "unresolved",
+        "reason": "no_bound_response_observation",
+        "observed": "unknown"
       },
       "callerUsefulness": {
         "disposition": "unresolved",
@@ -778,7 +779,9 @@
       "retention": {
         "disposition": "authorized",
         "authority": "existing_customer_grant",
-        "currentRights": true
+        "currentRights": true,
+        "operationCriterion": "agreed_negative",
+        "criterionAuthority": "existing_paid_receipt_operation_contract"
       },
       "laterUse": {
         "disposition": "authorized",
@@ -829,7 +832,7 @@
       },
       "observerProducerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
       "observerProducerCommitRole": "conversion_schema_compatibility",
-      "producerSourceDigest": "1d7f987a108906796c61fb7ec7ada8985b7832d17516c533158db6263a2a5527",
+      "producerSourceDigest": "dce3d09e84b3217afebae8963bccf6d48589fef1d7dac1e5474736eb6d2e047f",
       "clockWindowFix": {
         "commit": "de4c2a1f5e52065273b677a8694913a98850dcf0",
         "branch": "codex/task-observer-window-1003",
@@ -857,22 +860,22 @@
     },
     "stageWords": {
       "attempt": "producer-observed",
-      "delivery": "producer-observed",
+      "delivery": "unknown",
       "callerUsefulness": "unknown",
       "independentReplay": "unknown",
       "retention": "authorized",
       "laterUse": "authorized",
       "settlement": "producer-observed"
     },
-    "cutId": "1849145b-03bf-4e40-8c6f-05beed14796e",
+    "cutId": "cef01555-3460-4c0d-817d-56d14f75e09c",
     "capture": {
       "schema": "samedaydesk.attempt-useful.journal-cut.v1",
       "kind": "attempt_useful_capture",
-      "cutId": "1849145b-03bf-4e40-8c6f-05beed14796e",
-      "sessionId": "fa4865d8-bc0a-49e1-851f-cb6576dad11a",
-      "namespace": "65056:4412968",
+      "cutId": "cef01555-3460-4c0d-817d-56d14f75e09c",
+      "sessionId": "2bdd8c91-3fd5-42cd-a91a-66377dd970c1",
+      "namespace": "65056:4478141",
       "producer": "canonical_commerce_and_useful_result_journals",
-      "sourceDigest": "1d7f987a108906796c61fb7ec7ada8985b7832d17516c533158db6263a2a5527",
+      "sourceDigest": "dce3d09e84b3217afebae8963bccf6d48589fef1d7dac1e5474736eb6d2e047f",
       "durability": "existing_flush_and_closed_files_no_fsync_guarantee",
       "callerReceipt": "unknown",
       "writerProcesses": 1,
@@ -881,8 +884,8 @@
         "deploymentId": null,
         "source": null
       },
-      "from": "2026-10-03T18:29:36.052Z",
-      "asOf": "2026-10-03T18:29:36.169Z",
+      "from": "2026-10-03T19:22:56.963Z",
+      "asOf": "2026-10-03T19:22:57.073Z",
       "planes": {
         "attempts": {
           "coverage": "complete",
@@ -897,22 +900,22 @@
               "name": "commerce-events.ndjson",
               "present": true,
               "reason": null,
-              "identity": "65056:4412976",
+              "identity": "65056:4478145",
               "size": 10375,
-              "sha256": "f307a8d7390ece42d8195b140456d5535094b4e48c5236d44c0692082c9374b5"
+              "sha256": "b6a8d190ea21a85bbf8fe7d1a5506b24fdd593cc813d7a0b07a9fb5ffcf5265a"
             }
           ],
           "bounds": [
             {
               "name": "commerce-events.ndjson",
-              "identity": "65056:4412976",
+              "identity": "65056:4478145",
               "from": 0,
               "to": 10375,
-              "sha256": "f307a8d7390ece42d8195b140456d5535094b4e48c5236d44c0692082c9374b5",
-              "prefixSha256": "f307a8d7390ece42d8195b140456d5535094b4e48c5236d44c0692082c9374b5"
+              "sha256": "b6a8d190ea21a85bbf8fe7d1a5506b24fdd593cc813d7a0b07a9fb5ffcf5265a",
+              "prefixSha256": "b6a8d190ea21a85bbf8fe7d1a5506b24fdd593cc813d7a0b07a9fb5ffcf5265a"
             }
           ],
-          "producerDigest": "d307f08224c2096c726f4c079a695699a6e26ef9e4d9004e9d34e5dc21ca29ff",
+          "producerDigest": "e5724fc13e277f49e744a0efbe01c862002c55a6440f6fd87cfbf7689eb9e2e6",
           "producer": "canonical_single_process_owner",
           "rotations": 0,
           "writes": 6
@@ -930,25 +933,25 @@
               "name": "commerce-outcome-task-ref.ndjson",
               "present": true,
               "reason": null,
-              "identity": "65056:4412971",
-              "size": 1120,
-              "sha256": "8042a78463b6f6d50275a2e692538f82e8a600272eb3b7d8488cb670e648955a"
+              "identity": "65056:4478143",
+              "size": 744,
+              "sha256": "d02d1c9695d6558bf71891956c11b97e316328afb2c5a39c00e0d4c96ea20b58"
             }
           ],
           "bounds": [
             {
               "name": "commerce-outcome-task-ref.ndjson",
-              "identity": "65056:4412971",
+              "identity": "65056:4478143",
               "from": 0,
-              "to": 1120,
-              "sha256": "8042a78463b6f6d50275a2e692538f82e8a600272eb3b7d8488cb670e648955a",
-              "prefixSha256": "8042a78463b6f6d50275a2e692538f82e8a600272eb3b7d8488cb670e648955a"
+              "to": 744,
+              "sha256": "d02d1c9695d6558bf71891956c11b97e316328afb2c5a39c00e0d4c96ea20b58",
+              "prefixSha256": "d02d1c9695d6558bf71891956c11b97e316328afb2c5a39c00e0d4c96ea20b58"
             }
           ],
-          "producerDigest": "a0ddbb65a13b5f8ca0d3ca2111c4ca1f15079add6fda6a7e634fd1577529dbbd",
+          "producerDigest": "f2b4175ef586c03abd6a820e40fcd825caa0e5a6c93fdc8450ca9193f78c9d79",
           "producer": "canonical_single_process_owner",
           "rotations": 0,
-          "writes": 3
+          "writes": 2
         },
         "forward": {
           "coverage": "complete",
@@ -963,25 +966,25 @@
               "name": "commerce-outcome-binding.ndjson",
               "present": true,
               "reason": null,
-              "identity": "65056:4412984",
-              "size": 5284,
-              "sha256": "60f41ca80d1382767e1a46a066a57c088763bcf8d240b6e075487411529c44ed"
+              "identity": "65056:4478148",
+              "size": 2630,
+              "sha256": "b110f13b5b4f312802e2e4c72e4b11f42b2297b61a8624cb8272d0e1c35e05e2"
             }
           ],
           "bounds": [
             {
               "name": "commerce-outcome-binding.ndjson",
-              "identity": "65056:4412984",
+              "identity": "65056:4478148",
               "from": 0,
-              "to": 5284,
-              "sha256": "60f41ca80d1382767e1a46a066a57c088763bcf8d240b6e075487411529c44ed",
-              "prefixSha256": "60f41ca80d1382767e1a46a066a57c088763bcf8d240b6e075487411529c44ed"
+              "to": 2630,
+              "sha256": "b110f13b5b4f312802e2e4c72e4b11f42b2297b61a8624cb8272d0e1c35e05e2",
+              "prefixSha256": "b110f13b5b4f312802e2e4c72e4b11f42b2297b61a8624cb8272d0e1c35e05e2"
             }
           ],
-          "producerDigest": "e3fa781e3232896fd8e7f68878b2b3b20d2a8147af45afc2f35c51c9c3d2bb72",
+          "producerDigest": "b4cc2bf3010106746b065c3f1d2dfa3c7369671a371f56e5357128b5851c3385",
           "producer": "canonical_single_process_owner",
           "rotations": 0,
-          "writes": 6
+          "writes": 3
         },
         "retention": {
           "coverage": "complete",
@@ -996,22 +999,22 @@
               "name": "useful-result-customer.ndjson",
               "present": true,
               "reason": null,
-              "identity": "65056:4412974",
+              "identity": "65056:4478144",
               "size": 4692,
-              "sha256": "d5a7d2794a8f8988d43d0bab88c88aad56d4737b8d9a0d52c9f7c645b2933231"
+              "sha256": "3a64ac99320bdaeabc0bf1d77416c010c873e7cb8d026224a361f5f9ddeaa7df"
             }
           ],
           "bounds": [
             {
               "name": "useful-result-customer.ndjson",
-              "identity": "65056:4412974",
+              "identity": "65056:4478144",
               "from": 0,
               "to": 4692,
-              "sha256": "d5a7d2794a8f8988d43d0bab88c88aad56d4737b8d9a0d52c9f7c645b2933231",
-              "prefixSha256": "d5a7d2794a8f8988d43d0bab88c88aad56d4737b8d9a0d52c9f7c645b2933231"
+              "sha256": "3a64ac99320bdaeabc0bf1d77416c010c873e7cb8d026224a361f5f9ddeaa7df",
+              "prefixSha256": "3a64ac99320bdaeabc0bf1d77416c010c873e7cb8d026224a361f5f9ddeaa7df"
             }
           ],
-          "producerDigest": "1780b005b59c71b2250ead984db9768d71e90cdd47b2dff43e8a72bcc4d86a90",
+          "producerDigest": "4aca85179c7520024a5efccb97f89dce884329c8872bd147b5fcf517ebe87355",
           "producer": "canonical_single_process_owner",
           "rotations": 0,
           "writes": 2
@@ -1029,22 +1032,22 @@
               "name": "useful-result-metrics.ndjson",
               "present": true,
               "reason": null,
-              "identity": "65056:4412970",
+              "identity": "65056:4478142",
               "size": 1725,
-              "sha256": "3b4afa1c462a69eb3510e9de2321381a87f7872f27ed89da636c4c1cda2920a5"
+              "sha256": "ae91eea149c8e7dfc1eb4c648f4026c35d7153bfb054550e9cbc9e541e4f2bc6"
             }
           ],
           "bounds": [
             {
               "name": "useful-result-metrics.ndjson",
-              "identity": "65056:4412970",
+              "identity": "65056:4478142",
               "from": 0,
               "to": 1725,
-              "sha256": "3b4afa1c462a69eb3510e9de2321381a87f7872f27ed89da636c4c1cda2920a5",
-              "prefixSha256": "3b4afa1c462a69eb3510e9de2321381a87f7872f27ed89da636c4c1cda2920a5"
+              "sha256": "ae91eea149c8e7dfc1eb4c648f4026c35d7153bfb054550e9cbc9e541e4f2bc6",
+              "prefixSha256": "ae91eea149c8e7dfc1eb4c648f4026c35d7153bfb054550e9cbc9e541e4f2bc6"
             }
           ],
-          "producerDigest": "c4250b373064653c5171eb82e32e1df4da0d89faad22a8ac148ca2e21192d674",
+          "producerDigest": "dba847eb6d4203114e0fc4d1f2671b9915d527ecb20c853d41c2b68f16d2ff51",
           "producer": "canonical_single_process_owner",
           "rotations": 0,
           "writes": 7
@@ -1057,44 +1060,44 @@
               "name": "commerce-settlements.ndjson",
               "present": true,
               "reason": null,
-              "identity": "65056:4412986",
-              "size": 2562,
-              "sha256": "6be037195cc296b655a6757bb5413118e5cf36e518df29c833c0540f16a309d0"
+              "identity": "65056:4478150",
+              "size": 2549,
+              "sha256": "3a107996e99921bc9d9482063b1f7f4c801447aee69d1be688ea9a2f8ad26e16"
             }
           ],
           "bounds": [
             {
               "name": "commerce-settlements.ndjson",
-              "identity": "65056:4412986",
+              "identity": "65056:4478150",
               "from": 0,
-              "to": 2562,
-              "sha256": "6be037195cc296b655a6757bb5413118e5cf36e518df29c833c0540f16a309d0",
-              "prefixSha256": "6be037195cc296b655a6757bb5413118e5cf36e518df29c833c0540f16a309d0"
+              "to": 2549,
+              "sha256": "3a107996e99921bc9d9482063b1f7f4c801447aee69d1be688ea9a2f8ad26e16",
+              "prefixSha256": "3a107996e99921bc9d9482063b1f7f4c801447aee69d1be688ea9a2f8ad26e16"
             }
           ],
-          "producerDigest": "d04d8277e276532997806e22f8de25cb5b9f8e814d72e9e774bd7b09338c0033",
+          "producerDigest": "9d9de69d3f45329d5b685f2fc958cddacdf1710091752f54b711306493e816fd",
           "producer": "canonical_single_process_owner",
           "rotations": 0,
           "writes": 2,
           "settlementCapture": {
             "schemaVersion": "samedaydesk.commerce-settlement-plane-capture.v1",
-            "capturedAt": "2026-10-03T18:29:36.173Z",
-            "generationId": "setlcut_2cd35e55b75f3b096b1ada0c788579b6",
-            "observationId": "setlobs_015abf0161f3c0d1d3161d338c2eb539",
+            "capturedAt": "2026-10-03T19:22:57.076Z",
+            "generationId": "setlcut_042859e125949a37792907a12f71684c",
+            "observationId": "setlobs_1ac2974056466a847472a3c3224121aa",
             "lifecycle": "ok",
             "enabled": true,
-            "baseline": "2026-10-03T18:29:36.049Z",
+            "baseline": "2026-10-03T19:22:56.957Z",
             "attemptsUsed": 1,
             "ledger": {
               "present": true,
               "regularFile": true,
               "identity": {
                 "dev": "65056",
-                "ino": "4412986",
+                "ino": "4478150",
                 "mode": "0600"
               },
-              "byteCount": 2562,
-              "byteDigest": "6be037195cc296b655a6757bb5413118e5cf36e518df29c833c0540f16a309d0"
+              "byteCount": 2549,
+              "byteDigest": "3a107996e99921bc9d9482063b1f7f4c801447aee69d1be688ea9a2f8ad26e16"
             },
             "integrity": {
               "corruptLines": 0,
@@ -1122,11 +1125,11 @@
             },
             "summaryDigest": "49527443b1fa6a4cf4bcd9914e18990c5e204174a746da89ad05327f1407cde5",
             "run": {
-              "runGenerationId": "setlrun_aa832321774f7b66a3cda3e4",
+              "runGenerationId": "setlrun_795ae54c3b6961702486fa27",
               "state": "complete",
-              "generationNonce": "d003338edc70ca98c901ed1349b2fd08",
-              "completedAt": "2026-10-03T18:29:36.162Z",
-              "namespaceId": "setlns_7a6b8b1888e13b5bd335144148a38d2d",
+              "generationNonce": "397564a19f179571c78368d7e47257b5",
+              "completedAt": "2026-10-03T19:22:57.066Z",
+              "namespaceId": "setlns_935032e293b8087d0e9352c2bd2539fd",
               "lastError": null,
               "lastIssueCounts": {}
             }
@@ -1148,22 +1151,22 @@
             "name": "commerce-events.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412976",
+            "identity": "65056:4478145",
             "size": 10375,
-            "sha256": "f307a8d7390ece42d8195b140456d5535094b4e48c5236d44c0692082c9374b5"
+            "sha256": "b6a8d190ea21a85bbf8fe7d1a5506b24fdd593cc813d7a0b07a9fb5ffcf5265a"
           }
         ],
         "bounds": [
           {
             "name": "commerce-events.ndjson",
-            "identity": "65056:4412976",
+            "identity": "65056:4478145",
             "from": 0,
             "to": 10375,
-            "sha256": "f307a8d7390ece42d8195b140456d5535094b4e48c5236d44c0692082c9374b5",
-            "prefixSha256": "f307a8d7390ece42d8195b140456d5535094b4e48c5236d44c0692082c9374b5"
+            "sha256": "b6a8d190ea21a85bbf8fe7d1a5506b24fdd593cc813d7a0b07a9fb5ffcf5265a",
+            "prefixSha256": "b6a8d190ea21a85bbf8fe7d1a5506b24fdd593cc813d7a0b07a9fb5ffcf5265a"
           }
         ],
-        "producerDigest": "d307f08224c2096c726f4c079a695699a6e26ef9e4d9004e9d34e5dc21ca29ff",
+        "producerDigest": "e5724fc13e277f49e744a0efbe01c862002c55a6440f6fd87cfbf7689eb9e2e6",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
         "writes": 6
@@ -1181,25 +1184,25 @@
             "name": "commerce-outcome-task-ref.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412971",
-            "size": 1120,
-            "sha256": "8042a78463b6f6d50275a2e692538f82e8a600272eb3b7d8488cb670e648955a"
+            "identity": "65056:4478143",
+            "size": 744,
+            "sha256": "d02d1c9695d6558bf71891956c11b97e316328afb2c5a39c00e0d4c96ea20b58"
           }
         ],
         "bounds": [
           {
             "name": "commerce-outcome-task-ref.ndjson",
-            "identity": "65056:4412971",
+            "identity": "65056:4478143",
             "from": 0,
-            "to": 1120,
-            "sha256": "8042a78463b6f6d50275a2e692538f82e8a600272eb3b7d8488cb670e648955a",
-            "prefixSha256": "8042a78463b6f6d50275a2e692538f82e8a600272eb3b7d8488cb670e648955a"
+            "to": 744,
+            "sha256": "d02d1c9695d6558bf71891956c11b97e316328afb2c5a39c00e0d4c96ea20b58",
+            "prefixSha256": "d02d1c9695d6558bf71891956c11b97e316328afb2c5a39c00e0d4c96ea20b58"
           }
         ],
-        "producerDigest": "a0ddbb65a13b5f8ca0d3ca2111c4ca1f15079add6fda6a7e634fd1577529dbbd",
+        "producerDigest": "f2b4175ef586c03abd6a820e40fcd825caa0e5a6c93fdc8450ca9193f78c9d79",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
-        "writes": 3
+        "writes": 2
       },
       "forward": {
         "coverage": "complete",
@@ -1214,25 +1217,25 @@
             "name": "commerce-outcome-binding.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412984",
-            "size": 5284,
-            "sha256": "60f41ca80d1382767e1a46a066a57c088763bcf8d240b6e075487411529c44ed"
+            "identity": "65056:4478148",
+            "size": 2630,
+            "sha256": "b110f13b5b4f312802e2e4c72e4b11f42b2297b61a8624cb8272d0e1c35e05e2"
           }
         ],
         "bounds": [
           {
             "name": "commerce-outcome-binding.ndjson",
-            "identity": "65056:4412984",
+            "identity": "65056:4478148",
             "from": 0,
-            "to": 5284,
-            "sha256": "60f41ca80d1382767e1a46a066a57c088763bcf8d240b6e075487411529c44ed",
-            "prefixSha256": "60f41ca80d1382767e1a46a066a57c088763bcf8d240b6e075487411529c44ed"
+            "to": 2630,
+            "sha256": "b110f13b5b4f312802e2e4c72e4b11f42b2297b61a8624cb8272d0e1c35e05e2",
+            "prefixSha256": "b110f13b5b4f312802e2e4c72e4b11f42b2297b61a8624cb8272d0e1c35e05e2"
           }
         ],
-        "producerDigest": "e3fa781e3232896fd8e7f68878b2b3b20d2a8147af45afc2f35c51c9c3d2bb72",
+        "producerDigest": "b4cc2bf3010106746b065c3f1d2dfa3c7369671a371f56e5357128b5851c3385",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
-        "writes": 6
+        "writes": 3
       },
       "retention": {
         "coverage": "complete",
@@ -1247,22 +1250,22 @@
             "name": "useful-result-customer.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412974",
+            "identity": "65056:4478144",
             "size": 4692,
-            "sha256": "d5a7d2794a8f8988d43d0bab88c88aad56d4737b8d9a0d52c9f7c645b2933231"
+            "sha256": "3a64ac99320bdaeabc0bf1d77416c010c873e7cb8d026224a361f5f9ddeaa7df"
           }
         ],
         "bounds": [
           {
             "name": "useful-result-customer.ndjson",
-            "identity": "65056:4412974",
+            "identity": "65056:4478144",
             "from": 0,
             "to": 4692,
-            "sha256": "d5a7d2794a8f8988d43d0bab88c88aad56d4737b8d9a0d52c9f7c645b2933231",
-            "prefixSha256": "d5a7d2794a8f8988d43d0bab88c88aad56d4737b8d9a0d52c9f7c645b2933231"
+            "sha256": "3a64ac99320bdaeabc0bf1d77416c010c873e7cb8d026224a361f5f9ddeaa7df",
+            "prefixSha256": "3a64ac99320bdaeabc0bf1d77416c010c873e7cb8d026224a361f5f9ddeaa7df"
           }
         ],
-        "producerDigest": "1780b005b59c71b2250ead984db9768d71e90cdd47b2dff43e8a72bcc4d86a90",
+        "producerDigest": "4aca85179c7520024a5efccb97f89dce884329c8872bd147b5fcf517ebe87355",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
         "writes": 2
@@ -1280,22 +1283,22 @@
             "name": "useful-result-metrics.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412970",
+            "identity": "65056:4478142",
             "size": 1725,
-            "sha256": "3b4afa1c462a69eb3510e9de2321381a87f7872f27ed89da636c4c1cda2920a5"
+            "sha256": "ae91eea149c8e7dfc1eb4c648f4026c35d7153bfb054550e9cbc9e541e4f2bc6"
           }
         ],
         "bounds": [
           {
             "name": "useful-result-metrics.ndjson",
-            "identity": "65056:4412970",
+            "identity": "65056:4478142",
             "from": 0,
             "to": 1725,
-            "sha256": "3b4afa1c462a69eb3510e9de2321381a87f7872f27ed89da636c4c1cda2920a5",
-            "prefixSha256": "3b4afa1c462a69eb3510e9de2321381a87f7872f27ed89da636c4c1cda2920a5"
+            "sha256": "ae91eea149c8e7dfc1eb4c648f4026c35d7153bfb054550e9cbc9e541e4f2bc6",
+            "prefixSha256": "ae91eea149c8e7dfc1eb4c648f4026c35d7153bfb054550e9cbc9e541e4f2bc6"
           }
         ],
-        "producerDigest": "c4250b373064653c5171eb82e32e1df4da0d89faad22a8ac148ca2e21192d674",
+        "producerDigest": "dba847eb6d4203114e0fc4d1f2671b9915d527ecb20c853d41c2b68f16d2ff51",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
         "writes": 7
@@ -1308,44 +1311,44 @@
             "name": "commerce-settlements.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412986",
-            "size": 2562,
-            "sha256": "6be037195cc296b655a6757bb5413118e5cf36e518df29c833c0540f16a309d0"
+            "identity": "65056:4478150",
+            "size": 2549,
+            "sha256": "3a107996e99921bc9d9482063b1f7f4c801447aee69d1be688ea9a2f8ad26e16"
           }
         ],
         "bounds": [
           {
             "name": "commerce-settlements.ndjson",
-            "identity": "65056:4412986",
+            "identity": "65056:4478150",
             "from": 0,
-            "to": 2562,
-            "sha256": "6be037195cc296b655a6757bb5413118e5cf36e518df29c833c0540f16a309d0",
-            "prefixSha256": "6be037195cc296b655a6757bb5413118e5cf36e518df29c833c0540f16a309d0"
+            "to": 2549,
+            "sha256": "3a107996e99921bc9d9482063b1f7f4c801447aee69d1be688ea9a2f8ad26e16",
+            "prefixSha256": "3a107996e99921bc9d9482063b1f7f4c801447aee69d1be688ea9a2f8ad26e16"
           }
         ],
-        "producerDigest": "d04d8277e276532997806e22f8de25cb5b9f8e814d72e9e774bd7b09338c0033",
+        "producerDigest": "9d9de69d3f45329d5b685f2fc958cddacdf1710091752f54b711306493e816fd",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
         "writes": 2,
         "settlementCapture": {
           "schemaVersion": "samedaydesk.commerce-settlement-plane-capture.v1",
-          "capturedAt": "2026-10-03T18:29:36.173Z",
-          "generationId": "setlcut_2cd35e55b75f3b096b1ada0c788579b6",
-          "observationId": "setlobs_015abf0161f3c0d1d3161d338c2eb539",
+          "capturedAt": "2026-10-03T19:22:57.076Z",
+          "generationId": "setlcut_042859e125949a37792907a12f71684c",
+          "observationId": "setlobs_1ac2974056466a847472a3c3224121aa",
           "lifecycle": "ok",
           "enabled": true,
-          "baseline": "2026-10-03T18:29:36.049Z",
+          "baseline": "2026-10-03T19:22:56.957Z",
           "attemptsUsed": 1,
           "ledger": {
             "present": true,
             "regularFile": true,
             "identity": {
               "dev": "65056",
-              "ino": "4412986",
+              "ino": "4478150",
               "mode": "0600"
             },
-            "byteCount": 2562,
-            "byteDigest": "6be037195cc296b655a6757bb5413118e5cf36e518df29c833c0540f16a309d0"
+            "byteCount": 2549,
+            "byteDigest": "3a107996e99921bc9d9482063b1f7f4c801447aee69d1be688ea9a2f8ad26e16"
           },
           "integrity": {
             "corruptLines": 0,
@@ -1373,11 +1376,11 @@
           },
           "summaryDigest": "49527443b1fa6a4cf4bcd9914e18990c5e204174a746da89ad05327f1407cde5",
           "run": {
-            "runGenerationId": "setlrun_aa832321774f7b66a3cda3e4",
+            "runGenerationId": "setlrun_795ae54c3b6961702486fa27",
             "state": "complete",
-            "generationNonce": "d003338edc70ca98c901ed1349b2fd08",
-            "completedAt": "2026-10-03T18:29:36.162Z",
-            "namespaceId": "setlns_7a6b8b1888e13b5bd335144148a38d2d",
+            "generationNonce": "397564a19f179571c78368d7e47257b5",
+            "completedAt": "2026-10-03T19:22:57.066Z",
+            "namespaceId": "setlns_935032e293b8087d0e9352c2bd2539fd",
             "lastError": null,
             "lastIssueCounts": {}
           }
@@ -1385,9 +1388,9 @@
       }
     },
     "window": {
-      "from": "2026-10-03T18:29:36.052Z",
-      "to": "2026-10-03T18:29:36.169Z",
-      "asOf": "2026-10-03T18:29:36.169Z"
+      "from": "2026-10-03T19:22:56.963Z",
+      "to": "2026-10-03T19:22:57.073Z",
+      "asOf": "2026-10-03T19:22:57.073Z"
     },
     "executionDecision": "not_found",
     "paymentInvoked": false,

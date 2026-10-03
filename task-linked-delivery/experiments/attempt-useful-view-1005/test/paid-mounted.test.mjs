@@ -35,12 +35,15 @@ test('actual paid retention middleware, canonical reconciliation and grant reads
       const credential = Buffer.from(JSON.stringify({ x402Version: 2, accepted: { network: 'eip155:8453', scheme: 'exact' },
         payload: { authorization: { from: payer, to: treasury, value: '50000', nonce: hash } } })).toString('base64');
       const response = await fetch(mount.base + '/chain/transaction-receipt?network=base&transactionHash=' + hash, { headers: {
-        'payment-signature': credential, 'x-samedaydesk-retain-result': '1', 'x-samedaydesk-internal': TOKEN,
-        'x-samedaydesk-outcome-operation': 'normalized-transaction-receipt', 'x-samedaydesk-outcome-cohort': cohort,
+        'payment-signature': credential, 'x-samedaydesk-retain-result': '1',
+        ...(cohort === 'owner_qa' ? { 'x-samedaydesk-internal': TOKEN,
+          'x-samedaydesk-outcome-operation': 'normalized-transaction-receipt', 'x-samedaydesk-outcome-cohort': cohort } : {}),
         'x-samedaydesk-outcome-task': label,
       } });
       assert.equal(response.status, 200);
       const body = await response.json();
+      const rail = JSON.parse(Buffer.from(response.headers.get('payment-response'), 'base64').toString());
+      assert.notEqual(rail.transaction, hash); // task receipt and payment receipt are distinct causal inputs
       const grant = response.headers.get('x-samedaydesk-result-grant');
       assert.match(grant || '', /^[a-f0-9]{64}$/);
       await mount.telemetry.flush();
@@ -60,11 +63,13 @@ test('actual paid retention middleware, canonical reconciliation and grant reads
       assert.equal(r.commerceEventId, record.commerceEventId, JSON.stringify(r));
       assert.equal(r.cohort, cohort); // canonical retention must not replace the accepted owner cohort
       assert.equal(r.journalCutCoverage, 'complete');
-      assert.equal(r.stages.delivery.schemaUsefulOutput, criterion, JSON.stringify(r));
+      if (cohort === 'owner_qa') assert.equal(r.stages.delivery.schemaUsefulOutput, criterion, JSON.stringify(r));
+      else assert.equal(r.stages.delivery.observed, 'unknown'); // missing bound transport is distinct from canonical settlement
       assert.equal(r.stages.retention.disposition, 'authorized');
+      assert.equal(r.stages.retention.operationCriterion, criterion);
       assert.equal(r.stages.laterUse.disposition, 'authorized');
       assert.equal(r.stages.settlement.disposition, 'producer-observed');
-      assert.equal(r.sourceDeliveryAttribution.originVerification, 'verified_internal_token');
+      assert.equal(r.sourceDeliveryAttribution.originVerification, cohort === 'owner_qa' ? 'verified_internal_token' : 'unverified');
       assert.equal(r.paymentClassification.authority, 'existing_settlement_journal');
       assert.equal(r.stages.callerUsefulness.observed, 'unknown');
       assert.equal(r.stages.independentReplay.observed, 'unknown');

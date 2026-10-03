@@ -2,259 +2,259 @@ TAP version 13
 # Subtest: mounted current sidecar persists positive and useful-negative task cuts and an authorized later read
 ok 1 - mounted current sidecar persists positive and useful-negative task cuts and an authorized later read
   ---
-  duration_ms: 1147.712258
+  duration_ms: 1139.990801
   type: 'test'
   ...
 # Subtest: registered producers prove legitimately empty journal planes without inferring a customer or settlement
 ok 2 - registered producers prove legitimately empty journal planes without inferring a customer or settlement
   ---
-  duration_ms: 15.412403
+  duration_ms: 17.793612
   type: 'test'
   ...
 # Subtest: registered deployment capture coverage is computed from actual files while fixture usefulness remains isolated
 ok 3 - registered deployment capture coverage is computed from actual files while fixture usefulness remains isolated
   ---
-  duration_ms: 292.273441
+  duration_ms: 283.263054
   type: 'test'
   ...
 # Subtest: missing-all and missing-plane without a registered producer remain unknown
 ok 4 - missing-all and missing-plane without a registered producer remain unknown
   ---
-  duration_ms: 3.112344
+  duration_ms: 1.967307
   type: 'test'
   ...
 # Subtest: a torn journal plane remains partial
 ok 5 - a torn journal plane remains partial
   ---
-  duration_ms: 7.184828
+  duration_ms: 6.777549
   type: 'test'
   ...
 # Subtest: a malformed journal plane remains partial
 ok 6 - a malformed journal plane remains partial
   ---
-  duration_ms: 7.122085
+  duration_ms: 7.673902
   type: 'test'
   ...
 # Subtest: a oversized-row journal plane remains partial
 ok 7 - a oversized-row journal plane remains partial
   ---
-  duration_ms: 6.736789
+  duration_ms: 6.514962
   type: 'test'
   ...
 # Subtest: an over-limit file, unsafe path and unknown filesystem owner never establish coverage
 ok 8 - an over-limit file, unsafe path and unknown filesystem owner never establish coverage
   ---
-  duration_ms: 23.625556
+  duration_ms: 23.247596
   type: 'test'
   ...
 # Subtest: forged provenance, changed prefixes and stale cuts cannot extend coverage
 ok 9 - forged provenance, changed prefixes and stale cuts cannot extend coverage
   ---
-  duration_ms: 283.767338
+  duration_ms: 282.196588
   type: 'test'
   ...
 # Subtest: one canonical rotation includes both generations and deduplicates a repeated read event
 ok 10 - one canonical rotation includes both generations and deduplicates a repeated read event
   ---
-  duration_ms: 286.219706
+  duration_ms: 289.199792
   type: 'test'
   ...
 # Subtest: concurrent mounted writers and reads publish bounded coherent cuts, then restart preserves their as-of
 ok 11 - concurrent mounted writers and reads publish bounded coherent cuts, then restart preserves their as-of
   ---
-  duration_ms: 755.588092
+  duration_ms: 759.465202
   type: 'test'
   ...
 # Subtest: wrong grant owner or task does not produce a later-use row, and a lost read response leaves caller receipt unknown
 ok 12 - wrong grant owner or task does not produce a later-use row, and a lost read response leaves caller receipt unknown
   ---
-  duration_ms: 304.693779
+  duration_ms: 290.090089
   type: 'test'
   ...
 # Subtest: a lost cut publication acknowledgement can be physically reconciled once without completing a new cut
 ok 13 - a lost cut publication acknowledgement can be physically reconciled once without completing a new cut
   ---
-  duration_ms: 282.785255
+  duration_ms: 278.864046
   type: 'test'
   ...
 # Subtest: canonical-size legacy source files do not turn new enrolled capture into a fake fixture
 ok 14 - canonical-size legacy source files do not turn new enrolled capture into a fake fixture
   ---
-  duration_ms: 296.459725
+  duration_ms: 298.483836
   type: 'test'
   ...
 # Subtest: capture records preserve the existing public commerce counts and integrity instead of masquerading as events
 ok 15 - capture records preserve the existing public commerce counts and integrity instead of masquerading as events
   ---
-  duration_ms: 287.530841
+  duration_ms: 281.157891
   type: 'test'
   ...
 # Subtest: an operator begins a real new bounded interval without backfilling an older task
 ok 16 - an operator begins a real new bounded interval without backfilling an older task
   ---
-  duration_ms: 581.416225
+  duration_ms: 575.499362
   type: 'test'
   ...
 # Subtest: a repeated task projects separate server-minted attempts without a task conversion rate
 ok 17 - a repeated task projects separate server-minted attempts without a task conversion rate
   ---
-  duration_ms: 569.195403
+  duration_ms: 548.026684
   type: 'test'
   ...
 # Subtest: unsafe capture publication refuses a symlink without poisoning commerce or modifying its target
 ok 18 - unsafe capture publication refuses a symlink without poisoning commerce or modifying its target
   ---
-  duration_ms: 10.779855
+  duration_ms: 10.166021
   type: 'test'
   ...
 # Subtest: missing all six planes cannot be a completed journal cut
 ok 19 - missing all six planes cannot be a completed journal cut
   ---
-  duration_ms: 6.740045
+  duration_ms: 6.713026
   type: 'test'
   ...
 # Subtest: an unobserved cut cannot invent a current or future covered window
 ok 20 - an unobserved cut cannot invent a current or future covered window
   ---
-  duration_ms: 0.503336
+  duration_ms: 0.493017
   type: 'test'
   ...
 # Subtest: a named cohort cannot promote an unproved cut to a supported native export
 ok 21 - a named cohort cannot promote an unproved cut to a supported native export
   ---
-  duration_ms: 0.136601
+  duration_ms: 0.133611
   type: 'test'
   ...
 # Subtest: enrolled persistence binds the real attempt and delivery and leaves live coverage unresolved
 ok 22 - enrolled persistence binds the real attempt and delivery and leaves live coverage unresolved
   ---
-  duration_ms: 338.187641
+  duration_ms: 329.567706
   type: 'test'
   ...
 # Subtest: a restarted process reads the same attempt and refuses payment replay
 ok 23 - a restarted process reads the same attempt and refuses payment replay
   ---
-  duration_ms: 1705.008291
+  duration_ms: 1647.706199
   type: 'test'
   ...
 # Subtest: a lost acknowledgement stays one physical row and does not replay payment
 ok 24 - a lost acknowledgement stays one physical row and does not replay payment
   ---
-  duration_ms: 1215.90635
+  duration_ms: 1196.705307
   type: 'test'
   ...
 # Subtest: the mount refuses a new database and the executable delta matches the artifact
 ok 25 - the mount refuses a new database and the executable delta matches the artifact
   ---
-  duration_ms: 448.583609
+  duration_ms: 442.285442
   type: 'test'
   ...
 # Subtest: actual paid retention middleware, canonical reconciliation and grant reads retain the original attempt owner
 ok 26 - actual paid retention middleware, canonical reconciliation and grant reads retain the original attempt owner
   ---
-  duration_ms: 138.151764
+  duration_ms: 132.485583
   type: 'test'
   ...
 # Subtest: the operator command rejects ordinary current.json HTTP 200 after native enrollment is absent or rolled back
 ok 27 - the operator command rejects ordinary current.json HTTP 200 after native enrollment is absent or rolled back
   ---
-  duration_ms: 83.927296
+  duration_ms: 82.56165
   type: 'test'
   ...
 # Subtest: actual current-master server entry mounts authenticated native cuts and preserves anonymous archives/current contracts
 ok 28 - actual current-master server entry mounts authenticated native cuts and preserves anonymous archives/current contracts
   ---
-  duration_ms: 2590.832499
+  duration_ms: 1404.801884
   type: 'test'
   ...
 # Subtest: two retained tasks stay separate attempts and do not become a population rate
 ok 29 - two retained tasks stay separate attempts and do not become a population rate
   ---
-  duration_ms: 25.211929
+  duration_ms: 25.055112
   type: 'test'
   ...
 # Subtest: stage dispositions name producer, caller, predicate class, grant, and unresolved payment
 ok 30 - stage dispositions name producer, caller, predicate class, grant, and unresolved payment
   ---
-  duration_ms: 4.905262
+  duration_ms: 9.212986
   type: 'test'
   ...
 # Subtest: a useful negative is classified by the existing predicate and is not a payment
 ok 31 - a useful negative is classified by the existing predicate and is not a payment
   ---
-  duration_ms: 5.064503
+  duration_ms: 3.61882
   type: 'test'
   ...
 # Subtest: an external caller claim does not establish usefulness
 ok 32 - an external caller claim does not establish usefulness
   ---
-  duration_ms: 2.016882
+  duration_ms: 1.945836
   type: 'test'
   ...
 # Subtest: changed replay evidence inside the journal does not inherit usefulness
 ok 33 - changed replay evidence inside the journal does not inherit usefulness
   ---
-  duration_ms: 1.869329
+  duration_ms: 1.826536
   type: 'test'
   ...
 # Subtest: a changed later digest is refused and does not inherit the covered criterion
 ok 34 - a changed later digest is refused and does not inherit the covered criterion
   ---
-  duration_ms: 3.779431
+  duration_ms: 3.696252
   type: 'test'
   ...
 # Subtest: a missing delivery record and a partial cut stay unknown
 ok 35 - a missing delivery record and a partial cut stay unknown
   ---
-  duration_ms: 5.609127
+  duration_ms: 6.434349
   type: 'test'
   ...
 # Subtest: a producer-commit mismatch and a foreign population do not join
 ok 36 - a producer-commit mismatch and a foreign population do not join
   ---
-  duration_ms: 3.231705
+  duration_ms: 2.679037
   type: 'test'
   ...
 # Subtest: a torn cut and a lost record do not mint a grant
 ok 37 - a torn cut and a lost record do not mint a grant
   ---
-  duration_ms: 9.677873
+  duration_ms: 10.268616
   type: 'test'
   ...
 # Subtest: counterfeit links, a reminted operation, a parent attempt, and a wallet are refused
 ok 38 - counterfeit links, a reminted operation, a parent attempt, and a wallet are refused
   ---
-  duration_ms: 8.637659
+  duration_ms: 8.056645
   type: 'test'
   ...
 # Subtest: a tampered retained journal and a tampered view report do not replay
 ok 39 - a tampered retained journal and a tampered view report do not replay
   ---
-  duration_ms: 23.158329
+  duration_ms: 23.406173
   type: 'test'
   ...
 # Subtest: the seeded false join is rejected against the committed 423 baseline
 ok 40 - the seeded false join is rejected against the committed 423 baseline
   ---
-  duration_ms: 0.257843
+  duration_ms: 0.250386
   type: 'test'
   ...
 # Subtest: production freshness stays at the strong default and the clock-window fix is not applied
 ok 41 - production freshness stays at the strong default and the clock-window fix is not applied
   ---
-  duration_ms: 0.598963
+  duration_ms: 0.655219
   type: 'test'
   ...
 # Subtest: the cold command reports one useful task and the seeded command exits 2
 ok 42 - the cold command reports one useful task and the seeded command exits 2
   ---
-  duration_ms: 928.289823
+  duration_ms: 914.677912
   type: 'test'
   ...
 # Subtest: merchant161 is the released pin and the isolated server delta is applied
 ok 43 - merchant161 is the released pin and the isolated server delta is applied
   ---
-  duration_ms: 4.437588
+  duration_ms: 5.335868
   type: 'test'
   ...
 1..43
@@ -265,4 +265,4 @@ ok 43 - merchant161 is the released pin and the isolated server delta is applied
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 16113.623936
+# duration_ms 14744.751787

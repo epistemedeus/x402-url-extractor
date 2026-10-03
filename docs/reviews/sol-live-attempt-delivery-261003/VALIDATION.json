@@ -1,6 +1,6 @@
 {
   "base": "32f07a836fb28e400d56b0e2e876043644bde31a",
-  "sourceFingerprint": "a5895e01cc64adb2800255774c551e2804663bf521511eb6d383c5e7b8e60cdf",
+  "sourceFingerprint": "b0e2320ae9754ded38b20a3640e648d4aeda1a608eeff27f2bf2952c84e76faf",
   "node": "v22.22.2",
   "vmHostname": "cursor",
   "cwd": "/home/ubuntu/root-sol-live-attempt-261003",
@@ -51,7 +51,7 @@
   "physicalColdReplay": "passed in separate process after server exit",
   "frozenCurrentVerifiedFiles": 328,
   "licenseAndHistoricalReceivedReceiptPreserved": true,
-  "release": "undeployed source branch; Root owns release",
+  "release": "worker source-only delivery; PR165 externally merged earlier 8d14ef9; later correction remains for Root; hosted deployment not verified",
   "outsideCustomers": "unobserved",
   "recognizedRevenue": "unknown"
 }

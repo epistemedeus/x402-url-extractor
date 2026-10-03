@@ -7,7 +7,7 @@
   "decision": "one_attempt",
   "reason": null,
   "taskRef": "t31e5765fd86c19a1e9cae0be6872411106e8e4940e4923b5a4912361575527",
-  "commerceEventId": "18b78aac-c1d7-4ca1-bc4e-b5c027349aa1",
+  "commerceEventId": "d06d2c8c-bf29-48bf-aa47-b1feb9189095",
   "operationId": "normalized-transaction-receipt",
   "cohort": "owner_qa",
   "sourceDeliveryAttribution": {
@@ -129,7 +129,7 @@
     },
     "observerProducerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
     "observerProducerCommitRole": "conversion_schema_compatibility",
-    "producerSourceDigest": "1d7f987a108906796c61fb7ec7ada8985b7832d17516c533158db6263a2a5527",
+    "producerSourceDigest": "dce3d09e84b3217afebae8963bccf6d48589fef1d7dac1e5474736eb6d2e047f",
     "clockWindowFix": {
       "commit": "de4c2a1f5e52065273b677a8694913a98850dcf0",
       "branch": "codex/task-observer-window-1003",
@@ -164,15 +164,15 @@
     "laterUse": "authorized",
     "settlement": "unknown"
   },
-  "cutId": "4a12a834-4f10-4cb6-adf6-85fb1c1dd7b5",
+  "cutId": "318c62c4-e506-4a67-9f60-51951ee2b5f8",
   "capture": {
     "schema": "samedaydesk.attempt-useful.journal-cut.v1",
     "kind": "attempt_useful_capture",
-    "cutId": "4a12a834-4f10-4cb6-adf6-85fb1c1dd7b5",
-    "sessionId": "00b61be1-cf27-4566-8728-543ee89738a1",
-    "namespace": "65056:4412968",
+    "cutId": "318c62c4-e506-4a67-9f60-51951ee2b5f8",
+    "sessionId": "69e68c97-33df-439e-9244-1774ea469ba8",
+    "namespace": "65056:4478141",
     "producer": "canonical_commerce_and_useful_result_journals",
-    "sourceDigest": "1d7f987a108906796c61fb7ec7ada8985b7832d17516c533158db6263a2a5527",
+    "sourceDigest": "dce3d09e84b3217afebae8963bccf6d48589fef1d7dac1e5474736eb6d2e047f",
     "durability": "existing_flush_and_closed_files_no_fsync_guarantee",
     "callerReceipt": "unknown",
     "writerProcesses": 1,
@@ -181,8 +181,8 @@
       "deploymentId": null,
       "source": null
     },
-    "from": "2026-10-03T18:29:25.725Z",
-    "asOf": "2026-10-03T18:29:26.339Z",
+    "from": "2026-10-03T19:22:46.799Z",
+    "asOf": "2026-10-03T19:22:47.415Z",
     "planes": {
       "attempts": {
         "coverage": "complete",
@@ -197,22 +197,22 @@
             "name": "commerce-events.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412970",
+            "identity": "65056:4478142",
             "size": 15601,
-            "sha256": "218fd30685c5baf914d14371799a6cfba4184c666169588a7131fd042b7de643"
+            "sha256": "b577a236ffb2a3f8f5a13afd4f869d375171fd0f08cd5cb09d94c9bf9d880858"
           }
         ],
         "bounds": [
           {
             "name": "commerce-events.ndjson",
-            "identity": "65056:4412970",
+            "identity": "65056:4478142",
             "from": 0,
             "to": 15601,
-            "sha256": "218fd30685c5baf914d14371799a6cfba4184c666169588a7131fd042b7de643",
-            "prefixSha256": "218fd30685c5baf914d14371799a6cfba4184c666169588a7131fd042b7de643"
+            "sha256": "b577a236ffb2a3f8f5a13afd4f869d375171fd0f08cd5cb09d94c9bf9d880858",
+            "prefixSha256": "b577a236ffb2a3f8f5a13afd4f869d375171fd0f08cd5cb09d94c9bf9d880858"
           }
         ],
-        "producerDigest": "1e64534dbc0f0ce857b17f3b0b92b1506d96e0c8d368de81219c6527a6142322",
+        "producerDigest": "67473488631f2a0c309fb8762888624f1b6bc19bfe6967a286e6e4100fc1da6d",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
         "writes": 10
@@ -230,22 +230,22 @@
             "name": "commerce-outcome-task-ref.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412974",
+            "identity": "65056:4478144",
             "size": 736,
-            "sha256": "95889f253b5a76c46ebf38bef7bfada8dfa6c06c4718afcd3e62f9931a37259a"
+            "sha256": "d49aea0e3155450a6534fd638581ba9bbe84e099ed08bd5c5b4ceb64c22233bc"
           }
         ],
         "bounds": [
           {
             "name": "commerce-outcome-task-ref.ndjson",
-            "identity": "65056:4412974",
+            "identity": "65056:4478144",
             "from": 0,
             "to": 736,
-            "sha256": "95889f253b5a76c46ebf38bef7bfada8dfa6c06c4718afcd3e62f9931a37259a",
-            "prefixSha256": "95889f253b5a76c46ebf38bef7bfada8dfa6c06c4718afcd3e62f9931a37259a"
+            "sha256": "d49aea0e3155450a6534fd638581ba9bbe84e099ed08bd5c5b4ceb64c22233bc",
+            "prefixSha256": "d49aea0e3155450a6534fd638581ba9bbe84e099ed08bd5c5b4ceb64c22233bc"
           }
         ],
-        "producerDigest": "22573f50ca73740a40c9054112f2a049e69518279b4a6f221cdab4849ca7ab88",
+        "producerDigest": "484f1146f15c9836f1bde4eb2421ae04513f743566b807ee9e044afba111700c",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
         "writes": 2
@@ -263,22 +263,22 @@
             "name": "commerce-outcome-binding.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412971",
+            "identity": "65056:4478143",
             "size": 3396,
-            "sha256": "1db108d785152a6ecefc705f9e0a1bbfd65247548d5ccdafa43e8d2352e49fce"
+            "sha256": "0f26e5f2752bd0d29ce588bd65a7d5eb6fe65eb089272aeab5724fb51a7bbc9e"
           }
         ],
         "bounds": [
           {
             "name": "commerce-outcome-binding.ndjson",
-            "identity": "65056:4412971",
+            "identity": "65056:4478143",
             "from": 0,
             "to": 3396,
-            "sha256": "1db108d785152a6ecefc705f9e0a1bbfd65247548d5ccdafa43e8d2352e49fce",
-            "prefixSha256": "1db108d785152a6ecefc705f9e0a1bbfd65247548d5ccdafa43e8d2352e49fce"
+            "sha256": "0f26e5f2752bd0d29ce588bd65a7d5eb6fe65eb089272aeab5724fb51a7bbc9e",
+            "prefixSha256": "0f26e5f2752bd0d29ce588bd65a7d5eb6fe65eb089272aeab5724fb51a7bbc9e"
           }
         ],
-        "producerDigest": "8f137f1742d937ce8ba7e1b5c2ac722cefa0f58cbd478fb817c414f2a84aa126",
+        "producerDigest": "1c2c51da35589b3229d833b1f2769912adb5ef98fb24417785ba1be396284692",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
         "writes": 4
@@ -296,22 +296,22 @@
             "name": "useful-result-customer.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412976",
+            "identity": "65056:4478145",
             "size": 6291,
-            "sha256": "4c96b4fd5cabaa3140788d71ae35d6f2e796445bed6a71a0d75eb4919804ea42"
+            "sha256": "50b463c96f94f1098fd8e94fc6939b71433f3abd97a752f096a437cf239692e6"
           }
         ],
         "bounds": [
           {
             "name": "useful-result-customer.ndjson",
-            "identity": "65056:4412976",
+            "identity": "65056:4478145",
             "from": 0,
             "to": 6291,
-            "sha256": "4c96b4fd5cabaa3140788d71ae35d6f2e796445bed6a71a0d75eb4919804ea42",
-            "prefixSha256": "4c96b4fd5cabaa3140788d71ae35d6f2e796445bed6a71a0d75eb4919804ea42"
+            "sha256": "50b463c96f94f1098fd8e94fc6939b71433f3abd97a752f096a437cf239692e6",
+            "prefixSha256": "50b463c96f94f1098fd8e94fc6939b71433f3abd97a752f096a437cf239692e6"
           }
         ],
-        "producerDigest": "899a500c4be2b560dc056cc49b2ea288349705098e3eca9852a74b53c6b1820e",
+        "producerDigest": "533b927b65157735db40022e8b3c79c0786a0a3af3ff1fbc5f376f715da62f86",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
         "writes": 2
@@ -329,22 +329,22 @@
             "name": "useful-result-metrics.ndjson",
             "present": true,
             "reason": null,
-            "identity": "65056:4412977",
+            "identity": "65056:4478146",
             "size": 446,
-            "sha256": "dc4f404b791b58b7e30e8e637c26d0c67bc344445cbd9bcf839df37a51b3b106"
+            "sha256": "b6d2ebf8c0123d90debf296624326f56701a10be60126e5d1fa3406f9055f4fb"
           }
         ],
         "bounds": [
           {
             "name": "useful-result-metrics.ndjson",
-            "identity": "65056:4412977",
+            "identity": "65056:4478146",
             "from": 0,
             "to": 446,
-            "sha256": "dc4f404b791b58b7e30e8e637c26d0c67bc344445cbd9bcf839df37a51b3b106",
-            "prefixSha256": "dc4f404b791b58b7e30e8e637c26d0c67bc344445cbd9bcf839df37a51b3b106"
+            "sha256": "b6d2ebf8c0123d90debf296624326f56701a10be60126e5d1fa3406f9055f4fb",
+            "prefixSha256": "b6d2ebf8c0123d90debf296624326f56701a10be60126e5d1fa3406f9055f4fb"
           }
         ],
-        "producerDigest": "0e7cf39718de32214215b0894d9724c0cebdc9b121d26a20a12a4460025fae0d",
+        "producerDigest": "292477559e3a670ceb38ba851fd0457568531cb8c63e92a4fce7f57580093763",
         "producer": "canonical_single_process_owner",
         "rotations": 0,
         "writes": 2
@@ -366,12 +366,12 @@
         "writes": 0,
         "settlementCapture": {
           "schemaVersion": "samedaydesk.commerce-settlement-plane-capture.v1",
-          "capturedAt": "2026-10-03T18:29:26.357Z",
-          "generationId": "setlcut_4dd207d65fa2fea5ad701d3a818c9143",
-          "observationId": "setlobs_e82efa3703ec219b52a43a60fc999cad",
+          "capturedAt": "2026-10-03T19:22:47.427Z",
+          "generationId": "setlcut_521d2ba1879590d45f5b03b66d73b130",
+          "observationId": "setlobs_9f2da0c786974b886cb26c311eee0460",
           "lifecycle": "never_run",
           "enabled": true,
-          "baseline": "2026-10-03T18:29:25.721Z",
+          "baseline": "2026-10-03T19:22:46.794Z",
           "attemptsUsed": 1,
           "ledger": {
             "present": false,
@@ -406,22 +406,22 @@
           "name": "commerce-events.ndjson",
           "present": true,
           "reason": null,
-          "identity": "65056:4412970",
+          "identity": "65056:4478142",
           "size": 15601,
-          "sha256": "218fd30685c5baf914d14371799a6cfba4184c666169588a7131fd042b7de643"
+          "sha256": "b577a236ffb2a3f8f5a13afd4f869d375171fd0f08cd5cb09d94c9bf9d880858"
         }
       ],
       "bounds": [
         {
           "name": "commerce-events.ndjson",
-          "identity": "65056:4412970",
+          "identity": "65056:4478142",
           "from": 0,
           "to": 15601,
-          "sha256": "218fd30685c5baf914d14371799a6cfba4184c666169588a7131fd042b7de643",
-          "prefixSha256": "218fd30685c5baf914d14371799a6cfba4184c666169588a7131fd042b7de643"
+          "sha256": "b577a236ffb2a3f8f5a13afd4f869d375171fd0f08cd5cb09d94c9bf9d880858",
+          "prefixSha256": "b577a236ffb2a3f8f5a13afd4f869d375171fd0f08cd5cb09d94c9bf9d880858"
         }
       ],
-      "producerDigest": "1e64534dbc0f0ce857b17f3b0b92b1506d96e0c8d368de81219c6527a6142322",
+      "producerDigest": "67473488631f2a0c309fb8762888624f1b6bc19bfe6967a286e6e4100fc1da6d",
       "producer": "canonical_single_process_owner",
       "rotations": 0,
       "writes": 10
@@ -439,22 +439,22 @@
           "name": "commerce-outcome-task-ref.ndjson",
           "present": true,
           "reason": null,
-          "identity": "65056:4412974",
+          "identity": "65056:4478144",
           "size": 736,
-          "sha256": "95889f253b5a76c46ebf38bef7bfada8dfa6c06c4718afcd3e62f9931a37259a"
+          "sha256": "d49aea0e3155450a6534fd638581ba9bbe84e099ed08bd5c5b4ceb64c22233bc"
         }
       ],
       "bounds": [
         {
           "name": "commerce-outcome-task-ref.ndjson",
-          "identity": "65056:4412974",
+          "identity": "65056:4478144",
           "from": 0,
           "to": 736,
-          "sha256": "95889f253b5a76c46ebf38bef7bfada8dfa6c06c4718afcd3e62f9931a37259a",
-          "prefixSha256": "95889f253b5a76c46ebf38bef7bfada8dfa6c06c4718afcd3e62f9931a37259a"
+          "sha256": "d49aea0e3155450a6534fd638581ba9bbe84e099ed08bd5c5b4ceb64c22233bc",
+          "prefixSha256": "d49aea0e3155450a6534fd638581ba9bbe84e099ed08bd5c5b4ceb64c22233bc"
         }
       ],
-      "producerDigest": "22573f50ca73740a40c9054112f2a049e69518279b4a6f221cdab4849ca7ab88",
+      "producerDigest": "484f1146f15c9836f1bde4eb2421ae04513f743566b807ee9e044afba111700c",
       "producer": "canonical_single_process_owner",
       "rotations": 0,
       "writes": 2
@@ -472,22 +472,22 @@
           "name": "commerce-outcome-binding.ndjson",
           "present": true,
           "reason": null,
-          "identity": "65056:4412971",
+          "identity": "65056:4478143",
           "size": 3396,
-          "sha256": "1db108d785152a6ecefc705f9e0a1bbfd65247548d5ccdafa43e8d2352e49fce"
+          "sha256": "0f26e5f2752bd0d29ce588bd65a7d5eb6fe65eb089272aeab5724fb51a7bbc9e"
         }
       ],
       "bounds": [
         {
           "name": "commerce-outcome-binding.ndjson",
-          "identity": "65056:4412971",
+          "identity": "65056:4478143",
           "from": 0,
           "to": 3396,
-          "sha256": "1db108d785152a6ecefc705f9e0a1bbfd65247548d5ccdafa43e8d2352e49fce",
-          "prefixSha256": "1db108d785152a6ecefc705f9e0a1bbfd65247548d5ccdafa43e8d2352e49fce"
+          "sha256": "0f26e5f2752bd0d29ce588bd65a7d5eb6fe65eb089272aeab5724fb51a7bbc9e",
+          "prefixSha256": "0f26e5f2752bd0d29ce588bd65a7d5eb6fe65eb089272aeab5724fb51a7bbc9e"
         }
       ],
-      "producerDigest": "8f137f1742d937ce8ba7e1b5c2ac722cefa0f58cbd478fb817c414f2a84aa126",
+      "producerDigest": "1c2c51da35589b3229d833b1f2769912adb5ef98fb24417785ba1be396284692",
       "producer": "canonical_single_process_owner",
       "rotations": 0,
       "writes": 4
@@ -505,22 +505,22 @@
           "name": "useful-result-customer.ndjson",
           "present": true,
           "reason": null,
-          "identity": "65056:4412976",
+          "identity": "65056:4478145",
           "size": 6291,
-          "sha256": "4c96b4fd5cabaa3140788d71ae35d6f2e796445bed6a71a0d75eb4919804ea42"
+          "sha256": "50b463c96f94f1098fd8e94fc6939b71433f3abd97a752f096a437cf239692e6"
         }
       ],
       "bounds": [
         {
           "name": "useful-result-customer.ndjson",
-          "identity": "65056:4412976",
+          "identity": "65056:4478145",
           "from": 0,
           "to": 6291,
-          "sha256": "4c96b4fd5cabaa3140788d71ae35d6f2e796445bed6a71a0d75eb4919804ea42",
-          "prefixSha256": "4c96b4fd5cabaa3140788d71ae35d6f2e796445bed6a71a0d75eb4919804ea42"
+          "sha256": "50b463c96f94f1098fd8e94fc6939b71433f3abd97a752f096a437cf239692e6",
+          "prefixSha256": "50b463c96f94f1098fd8e94fc6939b71433f3abd97a752f096a437cf239692e6"
         }
       ],
-      "producerDigest": "899a500c4be2b560dc056cc49b2ea288349705098e3eca9852a74b53c6b1820e",
+      "producerDigest": "533b927b65157735db40022e8b3c79c0786a0a3af3ff1fbc5f376f715da62f86",
       "producer": "canonical_single_process_owner",
       "rotations": 0,
       "writes": 2
@@ -538,22 +538,22 @@
           "name": "useful-result-metrics.ndjson",
           "present": true,
           "reason": null,
-          "identity": "65056:4412977",
+          "identity": "65056:4478146",
           "size": 446,
-          "sha256": "dc4f404b791b58b7e30e8e637c26d0c67bc344445cbd9bcf839df37a51b3b106"
+          "sha256": "b6d2ebf8c0123d90debf296624326f56701a10be60126e5d1fa3406f9055f4fb"
         }
       ],
       "bounds": [
         {
           "name": "useful-result-metrics.ndjson",
-          "identity": "65056:4412977",
+          "identity": "65056:4478146",
           "from": 0,
           "to": 446,
-          "sha256": "dc4f404b791b58b7e30e8e637c26d0c67bc344445cbd9bcf839df37a51b3b106",
-          "prefixSha256": "dc4f404b791b58b7e30e8e637c26d0c67bc344445cbd9bcf839df37a51b3b106"
+          "sha256": "b6d2ebf8c0123d90debf296624326f56701a10be60126e5d1fa3406f9055f4fb",
+          "prefixSha256": "b6d2ebf8c0123d90debf296624326f56701a10be60126e5d1fa3406f9055f4fb"
         }
       ],
-      "producerDigest": "0e7cf39718de32214215b0894d9724c0cebdc9b121d26a20a12a4460025fae0d",
+      "producerDigest": "292477559e3a670ceb38ba851fd0457568531cb8c63e92a4fce7f57580093763",
       "producer": "canonical_single_process_owner",
       "rotations": 0,
       "writes": 2
@@ -575,12 +575,12 @@
       "writes": 0,
       "settlementCapture": {
         "schemaVersion": "samedaydesk.commerce-settlement-plane-capture.v1",
-        "capturedAt": "2026-10-03T18:29:26.357Z",
-        "generationId": "setlcut_4dd207d65fa2fea5ad701d3a818c9143",
-        "observationId": "setlobs_e82efa3703ec219b52a43a60fc999cad",
+        "capturedAt": "2026-10-03T19:22:47.427Z",
+        "generationId": "setlcut_521d2ba1879590d45f5b03b66d73b130",
+        "observationId": "setlobs_9f2da0c786974b886cb26c311eee0460",
         "lifecycle": "never_run",
         "enabled": true,
-        "baseline": "2026-10-03T18:29:25.721Z",
+        "baseline": "2026-10-03T19:22:46.794Z",
         "attemptsUsed": 1,
         "ledger": {
           "present": false,
@@ -601,8 +601,8 @@
     }
   },
   "window": {
-    "from": "2026-10-03T18:29:25.725Z",
-    "to": "2026-10-03T18:29:26.339Z",
-    "asOf": "2026-10-03T18:29:26.339Z"
+    "from": "2026-10-03T19:22:46.799Z",
+    "to": "2026-10-03T19:22:47.415Z",
+    "asOf": "2026-10-03T19:22:47.415Z"
   }
 }

@@ -41,6 +41,7 @@ export function projectCapturedStages(bundle, projected) {
       const revokes = rows('retention').filter(r => r.action === 'revoke' && r.targetId === record.grantId && Date.parse(r.at) <= asOf);
       retentionState = revokes.length ? 'revoked' : Date.parse(record.expiresAt) <= asOf ? 'expired' : 'active';
       stages.authorized_retention = observed([record.grantId], { authority: 'existing_customer_grant', state: retentionState, currentRights: retentionState === 'active', durability: 'existing_customer_store_no_fsync_guarantee' });
+      if (!o) stages.authorized_retention.operationCriterion = record.criterion;
       const bound = !!o && event.status === 200 && transports.length === 1 && transports[0].receiptDigest === o.responseDigest && o.capturedAt === event.ts;
       const replay = o ? verifyReplay(o.evidence, o.predicate, o.replay) : { status: 'unknown', reason: 'no_independent_replay_authority' };
       if (bound && replay.status === 'pass') {
@@ -66,7 +67,7 @@ export function projectCapturedStages(bundle, projected) {
     // Classification and revenue remain with that existing reconciler.
     if (event.result === 'paid_success' && covered('settlements')) {
       const settlements = rows('settlements').filter(r => r.sourceEventId === event.id && r.sourceEventTimestamp === event.ts && r.route === event.route);
-      if (settlements.length === 1 && transports.length === 1) stages.settlement = observed([settlements[0].sourceEventId], {
+      if (settlements.length === 1) stages.settlement = observed([settlements[0].sourceEventId], {
         authority: 'existing_settlement_journal', paymentClass: settlements[0].paymentClass || 'unclassified', settlementReference: settlements[0].settlementReference });
     }
     journeys.push({ commerceEventId: event.id, taskRef: ref.taskRef, operationId: ref.operationId, cohort: ref.cohort,
