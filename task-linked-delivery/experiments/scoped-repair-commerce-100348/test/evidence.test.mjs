@@ -24,7 +24,7 @@ test('actual causal middleware feeds actual Sol339 projection; observed free wor
   const evidenceFor=async({budget})=>{
     await budget.wait(telemetry.flush());
     const metadata={kind:'synthetic_fixture',populationId:'scoped-harness',scope:{operationIds:['scoped-surface-scan'],cohorts:['owner_qa']},
-      from:'2026-10-02T00:00:00.000Z',to:'2026-10-03T00:00:00.000Z',asOf:'2026-10-03T00:00:00.000Z',coverage:'partial'};
+      from:'2026-10-02T00:00:00.000Z',to:'2026-10-04T00:00:00.000Z',asOf:'2026-10-04T00:00:00.000Z',coverage:'partial'};
     const sources=[];
     for(const [plane,file] of [['attempts',telemetry.paths.currentPath],['task_refs',telemetry.paths.taskRefPath]]){
       const raw=await budget.wait(readFile(file));budget.read(raw.length);

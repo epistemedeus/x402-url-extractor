@@ -6,6 +6,25 @@ import { createScopedRepairService, nextAction } from '../src/service.mjs';
 
 // No fetch, signer, paid call, private authority enrollment or shared journal.
 // Optional isolated storage uses the existing store. Root owns configuration.
+
+// streamJson pauses on a raw size failure and clears its wait timer. Finish the
+// bounded error, then drop an unfinished body. The allowance deadline is the
+// backstop if that write never finishes. Do not resume an unbounded drain.
+function destroyIncomplete(req) {
+  if (!req || req.destroyed || req.complete !== false) return;
+  const ignore = () => {};
+  req.on('error', ignore);
+  const socket = req.socket;
+  if (socket) socket.on('error', ignore);
+  req.destroy();
+  if (socket && !socket.destroyed) socket.destroy();
+}
+function releaseIncomplete(req, budget) {
+  if (!req || req.destroyed || req.complete !== false) return () => {};
+  const timer = setTimeout(() => destroyIncomplete(req), Math.max(1, budget.remainingMs()));
+  req.once('close', () => clearTimeout(timer));
+  return () => { clearTimeout(timer); destroyIncomplete(req); };
+}
 export function mountScopedRepairCommerce(app, options = {}) {
   const store = options.store || (options.dataDir ? createReuseStore({ dataDir: options.dataDir, maxFileBytes: 131072, maxRecordBytes: 16384 }) : null);
   const service = createScopedRepairService({ skillguardRoot: resolveHostedScanner().skillguardRoot, ...options, store });
@@ -31,14 +50,18 @@ export function mountScopedRepairCommerce(app, options = {}) {
       }
       if (!res.destroyed) { res.writeHead(200, { 'content-type': 'application/json', 'content-length': bytes.length, 'cache-control': 'no-store' }); res.end(bytes); }
     } catch (error) {
-      if (res.destroyed) return;
+      const release = releaseIncomplete(req, budget);
+      if (res.destroyed) { release(); return; }
       const reason = /^[a-z][a-z0-9_]{0,80}$/.test(error.code || '') ? error.code : 'qualification_failed';
       const body = JSON.stringify({ ok: false, reason, qualification: 'missing_task_input', executed: 'unknown', paymentPerformed: false,
         recognizedRevenueAtomic: '0', nextAction });
       // A fixed small failure envelope must itself fit the declared output cap.
-      if (Buffer.byteLength(body) > budget.remainingOutput()) return res.destroy();
-      res.writeHead(['request_binding_changed','wrong_task_or_owner'].includes(reason) ? 409 : reason.includes('unavailable') ? 503 : 400,
-        { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body), 'cache-control': 'no-store' }); res.end(body);
+      if (Buffer.byteLength(body) > budget.remainingOutput()) { release(); return res.destroy(); }
+      const headers = { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body), 'cache-control': 'no-store' };
+      if (req.complete === false) headers.connection = 'close';
+      res.writeHead(['request_binding_changed','wrong_task_or_owner'].includes(reason) ? 409 : reason.includes('unavailable') ? 503 : 400, headers);
+      res.once('finish', release);
+      res.end(body);
     }
   });
   return { service, store };

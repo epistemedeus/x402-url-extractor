@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import net from 'node:net';
 import express from 'express';
 import { authorizePlan, authorizeExecution, verifyAuthorization } from 'agent-payment-policy';
 import { surface, seller, target, service, quoteIntent, NOW } from '../../../task-linked-delivery/experiments/scoped-repair-commerce-100348/test/support.mjs';
@@ -164,5 +165,55 @@ test('signed acceptance is read-only, rechecks current merchant terms and respec
   publicKeys.delete('caller-b');
   assert.equal((await post(base, 'accept', command)).body.acceptance.reason, 'acceptance_authority_unavailable');
   assert.deepEqual(await readFile(path.join(env.dir, 'scoped-repair-packets.ndjson')), original);
+  assert.deepEqual(real.calls, { verify: 0, settle: 0 });
+});
+
+test('withheld oversized intake closes the mounted merchant socket within the operation deadline', async t => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'sol398-raw-hold-')); t.after(() => rm(dir, { recursive: true, force: true }));
+  const real = await startMerchant(path.join(dir, 'packets')); t.after(() => real.close());
+  const port = Number(new URL(real.base).port);
+  const declared = 1000000, sent = 530000;
+  const payload = Buffer.alloc(sent, 0x78);
+  const head = [
+    `POST /commerce/scoped-repair/deliver HTTP/1.1`,
+    `Host: 127.0.0.1:${port}`,
+    'Content-Type: application/json',
+    `Content-Length: ${declared}`,
+    'Connection: keep-alive',
+    '',
+    '',
+  ].join('\r\n');
+  const started = performance.now();
+  const response = await new Promise((resolve, reject) => {
+    const socket = net.connect(port, '127.0.0.1');
+    let buf = Buffer.alloc(0), closed = false, settled = false;
+    const timer = setTimeout(() => { if (!settled) { settled = true; reject(new Error('mounted_raw_timeout')); } }, 6000);
+    socket.on('error', error => { if (!settled) { settled = true; clearTimeout(timer); reject(error); } });
+    socket.on('close', () => { closed = true; });
+    socket.on('data', chunk => {
+      buf = Buffer.concat([buf, chunk]);
+      const sep = buf.indexOf('\r\n\r\n');
+      if (sep < 0) return;
+      const headText = buf.subarray(0, sep).toString('latin1');
+      const length = Number((headText.match(/content-length:\s*(\d+)/i) || [])[1]);
+      if (!Number.isInteger(length) || buf.length < sep + 4 + length) return;
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      socket.removeAllListeners('data');
+      resolve({ status: Number(headText.slice(9, 12)), body: JSON.parse(buf.subarray(sep + 4, sep + 4 + length).toString('utf8')), socket, closed: () => closed });
+    });
+    socket.once('connect', () => { socket.write(head); socket.write(payload); });
+  });
+  assert.equal(response.status, 400);
+  assert.equal(response.body.reason, 'input_bytes_exceeded');
+  assert.equal(response.body.paymentPerformed, false);
+  const clientClosed = response.closed() || await Promise.race([
+    new Promise(resolve => response.socket.once('close', () => resolve(true))),
+    new Promise(resolve => setTimeout(() => resolve(false), 5000)),
+  ]);
+  assert.equal(clientClosed, true);
+  assert.ok(performance.now() - started < 5000, `still open after ${performance.now() - started}ms`);
+  response.socket.destroy();
   assert.deepEqual(real.calls, { verify: 0, settle: 0 });
 });
