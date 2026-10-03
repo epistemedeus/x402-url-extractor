@@ -171,7 +171,10 @@ function streamSection(document, covered) {
     paidSuccessEvents: observed(count(document.byResult?.paid_success), reason),
     paymentHeaderEvents: observed(count(document.paymentHeaderEvents), reason),
     parseableCredentialAttempts: observed(count(document.parseableCredentialAttemptEvents), reason),
-    constructedRequestEvents: observed(count(document.constructedRequestEvents), reason),
+    constructedRequestEvents: observed(count(document.constructedRequestEvents),
+      "matched_constructed_request_challenges_across_external_and_crawler"),
+    crawlerChallengeEvents: observed(count(document.agentChallengeObservations),
+      "crawler_paid_route_challenges_not_external_request_events"),
     paidSuccessActorHashes: observed(count(document.paidSuccessActors), "stream_local_actor_hash_not_a_paying_customer"),
     independentPaidSuccessActorHashes: observed(
       count(document.independentPaidSuccessActors),
@@ -180,6 +183,28 @@ function streamSection(document, covered) {
     challengeActorHashes: observed(count(document.agentChallengeActors), "actor_hash_is_not_a_unique_agent"),
     challengeBySource: countMap(document.agentChallengeBySource),
     constructedRequestBySource: countMap(document.constructedRequestBySource),
+    sourceCounterPopulations: {
+      challengeBySource: {
+        sourceField: "agentChallengeBySource",
+        population: "crawler_paid_route_challenges",
+        originClasses: ["crawler"],
+        result: "challenge",
+        totalSourceField: "agentChallengeObservations",
+        observed: count(document.agentChallengeObservations),
+        samePopulationAsExternalResults: false,
+        coverage: "not_inferred_from_external_stream",
+      },
+      constructedRequestBySource: {
+        sourceField: "constructedRequestBySource",
+        population: "constructed_request_challenges",
+        originClasses: ["external", "crawler"],
+        result: "challenge",
+        totalSourceField: "constructedRequestEvents",
+        observed: count(document.constructedRequestEvents),
+        samePopulationAsExternalResults: false,
+        coverage: "not_inferred_from_external_stream",
+      },
+    },
     byResult: countMap(document.byResult),
   };
 }
