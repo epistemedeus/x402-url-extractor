@@ -27,7 +27,8 @@ view does not recompute them and does not replay a payment.
 ## Cold command
 
 From the repository root. This reads the retained two-task journal and prints
-one task. It is covered inside that journal. `liveCoverage` stays false.
+one task. It is covered inside that journal. `liveCoverage` stays
+`unresolved`. A fixture pass is not live production coverage.
 
 ```sh
 node task-linked-delivery/experiments/attempt-useful-view-1005/bin/attempt-useful-view.mjs report \
@@ -60,14 +61,21 @@ Released merchant head `32f07a836fb28e400d56b0e2e876043644bde31a` (merchant161,
 merge of pull request 161) was fetched and inspected. Merchant160
 `dc32cf7bf5fd76a5cd9047865f49b2462252897c` is historical only. Merchant161's
 second parent is public-acquisition artifact
-`4b7928f315be9d9ec7d14f2604eab1b7b236a63a`. The 421 observation mount is absent
-on merchant161. This packet does not edit `server.js`, the public-acquisition
-manifest, or seller 0.4.1. The server delta stays `prepared_unapplied`.
-Production enrollment stays waiting. See
+`4b7928f315be9d9ec7d14f2604eab1b7b236a63a`. This isolated branch applies the
+three 421 patches and `export/MERCHANT161-SERVER.patch`. Released merchant161
+is not published. Seller 0.4.1 is not edited. The public-acquisition artifact
+is read, not copied. Live coverage and `paid_success` stay unresolved. Missing
+stages stay unknown. See
 [export/NEEDED-ENROLLMENT.md](export/NEEDED-ENROLLMENT.md),
 [export/PUBLIC-SEAM.md](export/PUBLIC-SEAM.md),
 [export/ROOT-INTEGRATION-DELTA.json](export/ROOT-INTEGRATION-DELTA.json), and
 [export/MERCHANT161-INSPECTION.json](export/MERCHANT161-INSPECTION.json).
+
+Check the executable delta from the repository root:
+
+```sh
+node task-linked-delivery/experiments/attempt-useful-view-1005/bin/merchant161-delta.mjs check
+```
 
 The test-only clock-window fix `de4c2a1f5e52065273b677a8694913a98850dcf0` is
 on `codex/task-observer-window-1003`. That commit is not an ancestor of this

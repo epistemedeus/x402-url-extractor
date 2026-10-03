@@ -2,6 +2,8 @@ export const REPORT_SCHEMA = "samedaydesk.attempt-useful-view.report.v1";
 export const RETAINED_SCHEMA = "samedaydesk.attempt-useful-view.retained.v1";
 export const JOB_ID = "HEAVY-ATTEMPT-USEFUL-VIEW-1005";
 export const ADAPT_JOB_ID = "HEAVY-ATTEMPT-USEFUL-ADAPT-161-1005";
+export const COMPLETE_JOB_ID = "HEAVY-ATTEMPT-USEFUL-COMPLETE-161-1005";
+export const ADAPT_HEAD = "e687ca11c2e05e8ac41ede83dc1b98cfe46c3a7c";
 export const PRIOR_VIEW_HEAD = "4e49c4db58ea0f5897240781fd14d80566bbabd0";
 
 // This view is not a child of a prior attempt. Callers may not set another value.

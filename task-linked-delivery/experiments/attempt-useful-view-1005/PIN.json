@@ -28,9 +28,9 @@
     "productionFreshnessMaxAgeMs": 900000
   },
   "forbiddenOperation": "add923ae-3eb5-474b-8b3e-e376666dee83",
-  "integrationDelta": "prepared_unapplied",
-  "enrollment": "waiting",
-  "liveCoverage": false,
+  "integrationDelta": "applied",
+  "enrollment": "isolated_branch",
+  "liveCoverage": "unresolved",
   "files": [
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/LICENSE",
@@ -39,8 +39,8 @@
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/README.md",
-      "sha256": "b23ada510c1a03c263b2147543214452a9ea03004638df96e15718643986365d",
-      "bytes": 3598
+      "sha256": "5c73818b10a1ec2fe2ae9066d943e526d3676581b02babaa34a44c15aac5c77d",
+      "bytes": 3879
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/SOURCE-NOTICE.txt",
@@ -53,9 +53,14 @@
       "bytes": 2270
     },
     {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/bin/merchant161-delta.mjs",
+      "sha256": "e8269ada940897808edb360d8b4c44d1e82d8e74762726210e7a57d8bfc48548",
+      "bytes": 1900
+    },
+    {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/evidence/one-useful-task.json",
-      "sha256": "eaac9a0800d9cacefc0f975659edf4c8f131eb4603c703bb74f2ec798d8350ab",
-      "bytes": 4728
+      "sha256": "b777457d4de896465771560f662719627216205736bbe92bbc578b79547df381",
+      "bytes": 5219
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/export/MERCHANT161-INSPECTION.json",
@@ -63,29 +68,49 @@
       "bytes": 5265
     },
     {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/export/MERCHANT161-SERVER.patch",
+      "sha256": "98c08edfeda730d077a95c0e7fc9005b76d1d1c289b57c6bd7112d35937eb876",
+      "bytes": 1285
+    },
+    {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/export/NEEDED-ENROLLMENT.md",
-      "sha256": "c930870ed6af1762d6de7028c83d51931764bd7d4422e0a95b56dcc1a33f40fa",
-      "bytes": 2027
+      "sha256": "b9cf0e8a422a45ba6dad59fa05b5b0fb715de08e5ba382d0fc02dc35ee9cf8f6",
+      "bytes": 1051
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/export/PUBLIC-SEAM.md",
-      "sha256": "b4689a4d8032821dcc3c873e9c8f6962165e445b93aa38d0e00f188aa4193011",
-      "bytes": 1282
+      "sha256": "1297dc89c4569ab3a1c7a8b466776fee4df19b20596cd9e7da533f4119d6e9cb",
+      "bytes": 1420
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/export/ROOT-INTEGRATION-DELTA.json",
-      "sha256": "c79bd4d8fe2ecce0f48e7f45db2d28f5e1a58771a108a04369c7392563812816",
-      "bytes": 4218
+      "sha256": "e56dabd53c09fb7e6d1d9cc34a04e501adee6b656882d29630d3ed0581273545",
+      "bytes": 3537
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/package.json",
-      "sha256": "3d7ca9e63499d7d3e34324890870a14322128d32ed10a652b6b724945e1d5ac8",
-      "bytes": 920
+      "sha256": "cc3c33a1d2d00d97c20a79b5ecb98d661e7eec5b51eb4c5971cf14297fa9192e",
+      "bytes": 973
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/constants.mjs",
-      "sha256": "32b7dbb5680514d068df9348d58332961d3b9fbb134b47ab9d1580012c0512cd",
-      "bytes": 2369
+      "sha256": "b9c4aeaa64a7601c5f9745972cc78d8fe88a6748d9329490905aa03ff62e1eff",
+      "bytes": 2512
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/cut.mjs",
+      "sha256": "2304548a395346e8820620cc3bfbabc5aeafdc7720808be81e7529ef7430770c",
+      "bytes": 6124
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/delta.mjs",
+      "sha256": "e114c7bf3c9985fe2021a09c540f385f7eeac954ce5fcb53590c0cf1c55755e9",
+      "bytes": 6548
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/enroll.mjs",
+      "sha256": "9ca189d9d7f63c316f710ec0b370ee4860fd7b4331969bb14378e03033574b06",
+      "bytes": 4916
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/errors.mjs",
@@ -93,14 +118,29 @@
       "bytes": 234
     },
     {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/read.mjs",
+      "sha256": "1cd02da2cca82963aea5d2706ab83cfb1fdab48635d2875544a6ff35897892eb",
+      "bytes": 2767
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/restart-worker.mjs",
+      "sha256": "8a638b4b306e708e8428275fa595daf2bfaf63420744974981a5b62de53bc80d",
+      "bytes": 800
+    },
+    {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/seam.mjs",
-      "sha256": "68c0e23e07785c253ab4387f8e4db290be047a22140c3ffb1ab2c811f5706512",
-      "bytes": 4868
+      "sha256": "3ef6f93c294cce89c261ff4c94071170b692ca09d5b012622193e16284df0f28",
+      "bytes": 4932
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/view.mjs",
-      "sha256": "43a06640588d3b14c2e2e00e3c08fad05d94f26af9e43829cdfc3064dcbd512a",
-      "bytes": 16255
+      "sha256": "71ca56747e64a1b39d25e1985e3bdee3987d1b2d22b98564f97c906ee246abed",
+      "bytes": 17406
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/test/integration.test.mjs",
+      "sha256": "6ce268ff755a9256a613d63aba4d4db722d4ecba12844911143ee9490243081a",
+      "bytes": 14556
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/test/seeded-false-join.json",
@@ -109,8 +149,12 @@
     },
     {
       "path": "task-linked-delivery/experiments/attempt-useful-view-1005/test/view.test.mjs",
-      "sha256": "721501137db39195c5a56d219acfdbace357703762cc37f2857499a9c4ada3e7",
-      "bytes": 22898
+      "sha256": "950c173aaac6650b5e323d71d536659b05767de4499265992b579a3349cc2fc7",
+      "bytes": 24237
     }
-  ]
+  ],
+  "completeJobId": "HEAVY-ATTEMPT-USEFUL-COMPLETE-161-1005",
+  "adaptHead": "e687ca11c2e05e8ac41ede83dc1b98cfe46c3a7c",
+  "paidSuccess": "unresolved",
+  "serverPublished": false
 }

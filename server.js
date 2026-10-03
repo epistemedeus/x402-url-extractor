@@ -1466,10 +1466,19 @@ const usefulResultReuseMount = fileURLToPath(new URL("./useful-result-reuse/http
 if (existsSync(usefulResultReuseMount)) {
   try {
     const { mountUsefulResultReuse } = await import(new URL("./useful-result-reuse/http.mjs", import.meta.url).href);
-    const mountedReuse = mountUsefulResultReuse(app, {
+    const { merchant161ObservationMount } = await import(new URL("./task-linked-delivery/experiments/attempt-useful-view-1005/src/enroll.mjs", import.meta.url).href);
+    const observationMount = merchant161ObservationMount({
+      app,
+      telemetry: commerceTelemetry,
       dataDir: process.env.COMMERCE_DATA_DIR || `${process.cwd()}/data`,
       internalToken: process.env.COMMERCE_INTERNAL_TOKEN || "",
+    });
+    const mountedReuse = mountUsefulResultReuse(app, {
+      dataDir: observationMount.dataDir,
+      internalToken: observationMount.internalToken,
       publicUrl: PUBLIC_URL,
+      customerStore: observationMount.customerStore,
+      freeTaskObservation: observationMount.freeTaskObservation,
     });
     if (mountedReuse.mounted === true) {
       usefulResultReuseUrl = `${new URL(PUBLIC_URL).origin}/.well-known/useful-result-reuse/current.json`;

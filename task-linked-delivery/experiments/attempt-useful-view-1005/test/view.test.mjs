@@ -73,9 +73,12 @@ function assertUnresolvedAttempt(report) {
   assert.equal(report.attemptOf, null);
   assert.equal(report.customer, null);
   assert.equal(report.mintedGrant, false);
-  assert.equal(report.liveCoverage, false);
+  assert.equal(report.liveCoverage, "unresolved");
+  assert.equal(typeof report.liveCoverage, "string");
   for (const stage of Object.values(report.stages)) {
     assert.equal(stage.disposition, "unresolved");
+    assert.equal(stage.observed, "unknown");
+    assert.notEqual(stage.observed, 0);
     assert.ok(DISPOSITIONS.includes(stage.disposition));
   }
 }
@@ -103,7 +106,9 @@ test("two retained tasks stay separate attempts and do not become a population r
   assert.equal(positive.publicSeam.paidSuccess.reason, "absent_from_covered_byresult_not_zero");
   assert.equal(positive.attemptOf, null);
   assert.equal(negative.attemptOf, null);
-  assert.equal(positive.liveCoverage, false);
+  assert.equal(positive.liveCoverage, "unresolved");
+  assert.equal(positive.journalCutCoverage, "complete");
+  assert.equal(positive.liveCoverageReason, "fixture_or_owner_qa_is_not_live_production_coverage");
   assert.equal(positive.evidenceKind, "synthetic_fixture");
   assert.equal(positive.recognizedRevenueAtomic, "0");
   assert.equal(positive.paymentPermitted, false);
@@ -128,6 +133,7 @@ test("stage dispositions name producer, caller, predicate class, grant, and unre
   assert.equal(report.stages.retention.disposition, "authorized");
   assert.equal(report.stages.laterUse.disposition, "authorized");
   assert.equal(report.stages.settlement.disposition, "unresolved");
+  assert.equal(report.stages.settlement.observed, "unknown");
   assert.equal(report.journalCovered, true);
 });
 
@@ -149,7 +155,8 @@ test("an external caller claim does not establish usefulness", () => {
   assert.equal(report.stages.callerUsefulness.verification, "unverified");
   assert.equal(report.stages.independentReplay.disposition, "unresolved");
   assert.equal(report.useful, null);
-  assert.equal(report.liveCoverage, false);
+  assert.equal(report.liveCoverage, "unresolved");
+  assert.equal(typeof report.liveCoverage, "string");
 });
 
 test("changed replay evidence inside the journal does not inherit usefulness", () => {
@@ -366,7 +373,8 @@ test("the cold command reports one useful task and the seeded command exits 2", 
   assert.equal(report.decision, "one_attempt");
   assert.equal(report.taskRef, POSITIVE);
   assert.equal(report.useful, true);
-  assert.equal(report.liveCoverage, false);
+  assert.equal(report.liveCoverage, "unresolved");
+  assert.equal(typeof report.liveCoverage, "string");
   assert.equal(report.attemptOf, null);
   assert.equal(report.publicSeam.paidSuccess.observed, null);
   assert.equal(report.publicSeam.paidSuccess.disposition, "unresolved");
@@ -374,9 +382,10 @@ test("the cold command reports one useful task and the seeded command exits 2", 
   assert.equal(report.publicSeam.releasedMerchantHead, MERCHANT161);
   assert.equal(report.publicSeam.historicalReleasedMerchantHead, MERCHANT160);
   assert.equal(report.publicSeam.publicAcquisitionArtifact, ACQUISITION_ARTIFACT);
-  assert.equal(report.provenance.integrationDelta, "prepared_unapplied");
-  assert.equal(report.provenance.enrollment, "waiting");
-  assert.equal(report.liveCoverage, false);
+  assert.equal(report.provenance.integrationDelta, "applied");
+  assert.equal(report.provenance.enrollment, "isolated_branch");
+  assert.equal(report.liveCoverage, "unresolved");
+  assert.equal(typeof report.liveCoverage, "string");
   assert.equal(report.populationConversionRate, null);
   assert.equal(containsRestrictedKey(report), false);
 
@@ -397,7 +406,7 @@ test("the cold command reports one useful task and the seeded command exits 2", 
   assert.ok(refusal.reasons.includes("operation_remint_refused"));
 });
 
-test("merchant161 is the released pin and the server delta stays prepared_unapplied", () => {
+test("merchant161 is the released pin and the isolated server delta is applied", () => {
   const inspection = JSON.parse(readFileSync(inspectionPath, "utf8"));
   const delta = JSON.parse(readFileSync(deltaPath, "utf8"));
   assert.equal(PINS.releasedMerchantHead, MERCHANT161);
@@ -432,35 +441,47 @@ test("merchant161 is the released pin and the server delta stays prepared_unappl
   assert.equal(inspection.artifactReadback.attemptUsefulViewMentions, 0);
   assert.equal(inspection.clockWindowFix.commitIsAncestorOfMerchant161, false);
   assert.equal(inspection.clockWindowFix.observerTestBlobEqualsMerchant161, CLOCK_WINDOW_FIX_CONTENT_ON_MERCHANT161);
-  assert.equal(delta.status, "prepared_unapplied");
-  assert.equal(delta.enrollment, "waiting");
+  assert.equal(delta.status, "applied");
+  assert.equal(delta.enrollment, "isolated_branch");
   assert.equal(delta.releasedMerchantHead, MERCHANT161);
   assert.equal(delta.historicalReleasedMerchantHead, MERCHANT160);
   assert.equal(delta.publicAcquisitionArtifact, ACQUISITION_ARTIFACT);
-  assert.equal(delta.serverEdited, false);
+  assert.equal(delta.serverEdited, true);
   assert.equal(delta.serverPublished, false);
   assert.equal(delta.indexPublicationEdited, false);
   assert.equal(delta.artifactJsonCopiedOntoThisBranch, false);
   assert.equal(delta.seller041Rewritten, false);
   assert.equal(delta.observationMountOnReleasedHead, false);
-  assert.equal(delta.minimalServerDeltaLines, 0);
+  assert.equal(delta.observationMountOnThisBranch, true);
+  assert.ok(delta.minimalServerDeltaLines > 0);
   assert.equal(delta.priorViewOperationReused, false);
   assert.equal(delta.priorViewOperation, PRIOR_VIEW_OPERATION);
   assert.equal(delta.priorViewHead, PRIOR_VIEW_HEAD);
-  assert.equal(delta.liveCoverage, false);
+  assert.equal(delta.measurementSource, PRIOR_VIEW_HEAD);
+  assert.equal(delta.adaptHead, "e687ca11c2e05e8ac41ede83dc1b98cfe46c3a7c");
+  assert.equal(delta.priorAdaptOperation, "03b2c62c-b742-48d2-aaf9-a70e1270f758");
+  assert.equal(delta.priorAdaptOperationReused, false);
+  assert.equal(delta.missingStages, "unknown");
+  assert.equal(delta.liveCoverage, "unresolved");
+  assert.notEqual(delta.liveCoverage, false);
   assert.equal(delta.paidSuccess, "unresolved");
+  assert.notEqual(delta.paidSuccess, 0);
   assert.equal(delta.attemptOf, null);
   const report = view(retained, POSITIVE, { baseline });
   assert.equal(report.provenance.pins.releasedMerchantHead, MERCHANT161);
   assert.equal(report.provenance.pins.historicalReleasedMerchantHead, MERCHANT160);
   assert.equal(report.provenance.pins.publicAcquisitionArtifact, ACQUISITION_ARTIFACT);
   assert.equal(report.publicSeam.releasedMerchantHead, MERCHANT161);
-  assert.equal(report.provenance.integrationDelta, "prepared_unapplied");
-  assert.equal(report.provenance.enrollment, "waiting");
+  assert.equal(report.provenance.integrationDelta, "applied");
+  assert.equal(report.provenance.enrollment, "isolated_branch");
   assert.equal(report.provenance.adapt.jobId, "HEAVY-ATTEMPT-USEFUL-ADAPT-161-1005");
   assert.equal(report.provenance.adapt.priorViewHead, PRIOR_VIEW_HEAD);
+  assert.equal(report.provenance.adapt.adaptHead, "e687ca11c2e05e8ac41ede83dc1b98cfe46c3a7c");
   assert.equal(report.provenance.adapt.priorViewOperationReused, false);
-  assert.equal(report.liveCoverage, false);
+  assert.equal(report.provenance.complete.jobId, "HEAVY-ATTEMPT-USEFUL-COMPLETE-161-1005");
+  assert.equal(report.provenance.complete.measurementSource, PRIOR_VIEW_HEAD);
+  assert.equal(report.liveCoverage, "unresolved");
+  assert.equal(typeof report.liveCoverage, "string");
   assert.equal(report.publicSeam.paidSuccess.observed, null);
   assert.equal(report.publicSeam.paidSuccess.reason, "absent_from_covered_byresult_not_zero");
   assert.equal(JSON.stringify(report).includes(PRIOR_VIEW_OPERATION), false);

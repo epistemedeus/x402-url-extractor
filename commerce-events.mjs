@@ -3288,8 +3288,14 @@ export function createCommerceTelemetry({
         return originalSend(body);
       };
     }
-    const finishPaidEvidenceResponseDigest = paidEvidenceRequest
-      ? capturePaidEvidenceResponseDigest(res, paidEvidenceRequest.method, route.route)
+    // Explicitly scoped free observation uses the existing bounded response
+    // digest capture and forward queue. It conveys no delivery or settlement.
+    const freeObservationRequested = outcomeClaim?.taskRef
+      && outcomeClaim.operationId === "normalized-transaction-receipt"
+      && route.route === "/chain/transaction-receipt" && req.method === "GET"
+      && !paymentPresent && headerValue(headers, "x-samedaydesk-observe-free-result") === "1";
+    const finishPaidEvidenceResponseDigest = paidEvidenceRequest || freeObservationRequested
+      ? capturePaidEvidenceResponseDigest(res, paidEvidenceRequest?.method || req.method, route.route)
       : null;
 
     res.once("finish", () => {
@@ -3429,6 +3435,9 @@ export function createCommerceTelemetry({
           });
         }
       }
+      if (freeObservationRequested && result === "paid_route_response" && finishPaidEvidenceResponseDigest) {
+        captured = finishPaidEvidenceResponseDigest();
+      }
       let forwardRecords = null;
       try {
         forwardRecords = buildHttpFinishForwardRecords({
@@ -3437,6 +3446,7 @@ export function createCommerceTelemetry({
           paidEvidence,
           httpDeliveryRecord,
           captured,
+          freeObservation: freeObservationRequested === true,
         });
       } catch {
         forwardRecords = null;

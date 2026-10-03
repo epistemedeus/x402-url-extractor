@@ -16,8 +16,9 @@
   "signer": null,
   "mintedGrant": false,
   "automaticMutationRetries": 0,
-  "liveCoverage": false,
-  "liveCoverageReason": "fixture_or_retained_journal_is_not_live_production_coverage",
+  "liveCoverage": "unresolved",
+  "liveCoverageReason": "fixture_or_owner_qa_is_not_live_production_coverage",
+  "journalCutCoverage": "complete",
   "evidenceKind": "synthetic_fixture",
   "journalCovered": true,
   "populationConversionRate": null,
@@ -44,7 +45,8 @@
     },
     "callerUsefulness": {
       "disposition": "unresolved",
-      "reason": "no_caller_claim"
+      "reason": "no_caller_claim",
+      "observed": "unknown"
     },
     "independentReplay": {
       "disposition": "classified",
@@ -62,7 +64,8 @@
     },
     "settlement": {
       "disposition": "unresolved",
-      "reason": "free_observation_has_no_payment_authority"
+      "reason": "free_observation_has_no_payment_authority",
+      "observed": "unknown"
     }
   },
   "restart": null,
@@ -80,7 +83,8 @@
     },
     "rareCoveredPaidSuccessCensus": false,
     "populationConversionRate": null,
-    "enrollment": "waiting",
+    "enrollment": "unresolved",
+    "serverDelta": "applied",
     "clockWindowFix": {
       "commit": "de4c2a1f5e52065273b677a8694913a98850dcf0",
       "applied": false,
@@ -119,12 +123,19 @@
       "productionFreshnessMaxAgeMs": 900000
     },
     "seller041": "frozen_not_rewritten",
-    "integrationDelta": "prepared_unapplied",
-    "enrollment": "waiting",
+    "integrationDelta": "applied",
+    "enrollment": "isolated_branch",
     "adapt": {
       "jobId": "HEAVY-ATTEMPT-USEFUL-ADAPT-161-1005",
       "priorViewHead": "4e49c4db58ea0f5897240781fd14d80566bbabd0",
+      "adaptHead": "e687ca11c2e05e8ac41ede83dc1b98cfe46c3a7c",
       "priorViewOperationReused": false
+    },
+    "complete": {
+      "jobId": "HEAVY-ATTEMPT-USEFUL-COMPLETE-161-1005",
+      "measurementSource": "4e49c4db58ea0f5897240781fd14d80566bbabd0",
+      "releasedMerchantHead": "32f07a836fb28e400d56b0e2e876043644bde31a",
+      "publicAcquisitionArtifact": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a"
     }
   }
 }

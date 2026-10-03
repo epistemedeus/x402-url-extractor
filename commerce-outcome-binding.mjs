@@ -413,7 +413,7 @@ function evidenceForUnsupported(event, captured) {
   }
 }
 
-export function buildHttpFinishForwardRecords({ claim, event, paidEvidence = null, httpDeliveryRecord = null, captured = null } = {}) {
+export function buildHttpFinishForwardRecords({ claim, event, paidEvidence = null, httpDeliveryRecord = null, captured = null, freeObservation = false } = {}) {
   if (!claim || !event || !UUID_V4.test(event.id || "")) return [];
   const shared = {
     brand: claim.brand,
@@ -441,8 +441,13 @@ export function buildHttpFinishForwardRecords({ claim, event, paidEvidence = nul
     eventId: event.id,
   });
   if (call) records.push(call);
-  if (event.replayed === true || event.result !== "paid_success") return records;
-  const digest = typeof paidEvidence?.responseDigest === "string" ? paidEvidence.responseDigest : null;
+  const free = freeObservation === true && /^t[a-f0-9]{62}$/.test(claim.taskRef || "")
+    && claim.operationId === "normalized-transaction-receipt" && event.method === "GET"
+    && event.route === "/chain/transaction-receipt" && event.result === "paid_route_response"
+    && event.paymentPresent === false && event.status === 200;
+  if (event.replayed === true || event.result !== "paid_success" && !free) return records;
+  const digest = free ? captured?.digest
+    : typeof paidEvidence?.responseDigest === "string" ? paidEvidence.responseDigest : null;
   if (!HEX64.test(digest || "")) return records;
   const transport = blankRecord({
     ...shared,
@@ -456,6 +461,9 @@ export function buildHttpFinishForwardRecords({ claim, event, paidEvidence = nul
     usefulness: USEFULNESS_UNKNOWN,
   });
   if (transport) records.push(transport);
+  // Exact received bytes may be observed for free. Their useful output and
+  // retention are separate caller-authorized ports, never settlement rows.
+  if (free) return records;
   const evidence = copySchemaEvidence(httpDeliveryRecord, digest)
     || (httpDeliveryRecord ? null : evidenceForUnsupported(event, captured));
   if (!evidence) return records;

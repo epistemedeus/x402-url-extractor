@@ -8,9 +8,11 @@ import {
 } from "../../free-task-observation-100421/src/project.mjs";
 import { containsRestrictedKey } from "../../../tools/ops/three-site-settlement-join/measure/src/restricted.mjs";
 import {
+  ADAPT_HEAD,
   ADAPT_JOB_ID,
   ATTEMPT_OF,
   CLOCK_WINDOW_FIX,
+  COMPLETE_JOB_ID,
   CLOCK_WINDOW_FIX_APPLIED,
   CLOCK_WINDOW_FIX_COMMIT_ANCESTOR_OF_MERCHANT161,
   CLOCK_WINDOW_FIX_CONTENT_ON_MERCHANT161,
@@ -76,7 +78,24 @@ function refuseOwnLabels(object) {
 }
 
 function unresolvedStage(reason) {
-  return { disposition: "unresolved", reason };
+  return { disposition: "unresolved", reason, observed: "unknown" };
+}
+
+function coverageFields(bundle, cohort) {
+  const sources = Array.isArray(bundle?.sources) ? bundle.sources : [];
+  const kinds = new Set(sources.map((source) => source.kind));
+  const coverages = [...new Set(sources.map((source) => source.coverage))];
+  const journalCutCoverage = coverages.length === 1 && ["complete", "partial", "unknown"].includes(coverages[0])
+    ? coverages[0]
+    : "unknown";
+  const fixture = kinds.has("synthetic_fixture") || cohort === "owner_qa";
+  return {
+    liveCoverage: "unresolved",
+    liveCoverageReason: fixture
+      ? "fixture_or_owner_qa_is_not_live_production_coverage"
+      : "unresolved",
+    journalCutCoverage,
+  };
 }
 
 function unresolvedStages(reason) {
@@ -110,8 +129,9 @@ function shell(fields) {
     signer: null,
     mintedGrant: false,
     automaticMutationRetries: 0,
-    liveCoverage: false,
-    liveCoverageReason: "fixture_or_retained_journal_is_not_live_production_coverage",
+    liveCoverage: fields.liveCoverage,
+    liveCoverageReason: fields.liveCoverageReason,
+    journalCutCoverage: fields.journalCutCoverage,
     evidenceKind: fields.evidenceKind,
     journalCovered: fields.journalCovered,
     populationConversionRate: null,
@@ -147,12 +167,19 @@ function shell(fields) {
         productionFreshnessMaxAgeMs: PRODUCTION_FRESHNESS_MAX_AGE_MS,
       },
       seller041: "frozen_not_rewritten",
-      integrationDelta: "prepared_unapplied",
-      enrollment: "waiting",
+      integrationDelta: "applied",
+      enrollment: "isolated_branch",
       adapt: {
         jobId: ADAPT_JOB_ID,
         priorViewHead: PRIOR_VIEW_HEAD,
+        adaptHead: ADAPT_HEAD,
         priorViewOperationReused: false,
+      },
+      complete: {
+        jobId: COMPLETE_JOB_ID,
+        measurementSource: PRIOR_VIEW_HEAD,
+        releasedMerchantHead: PINS.releasedMerchantHead,
+        publicAcquisitionArtifact: PINS.publicAcquisitionArtifact,
       },
     },
   };
@@ -282,6 +309,7 @@ export function readAttemptUsefulView(input) {
   const kinds = new Set(bundle.sources.map((source) => source.kind));
   if (commits.size !== 1 || !commits.has(BASE_COMMIT) || kinds.size !== 1) fail("source_mismatch");
   const evidenceKind = [...kinds][0];
+  const observedCoverage = (cohort) => coverageFields(bundle, cohort);
   if (Array.isArray(bundle.question?.taskRefs) && !bundle.question.taskRefs.includes(input.taskRef)) {
     fail("task_not_in_source");
   }
@@ -315,6 +343,7 @@ export function readAttemptUsefulView(input) {
       operationId: null,
       cohort: null,
       evidenceKind,
+      ...observedCoverage(null),
       journalCovered: false,
       useful: null,
       usefulNegative: null,
@@ -362,6 +391,7 @@ export function readAttemptUsefulView(input) {
     operationId: journey.operationId,
     cohort: journey.cohort,
     evidenceKind,
+    ...observedCoverage(journey.cohort),
     journalCovered: covered && decision !== "unresolved",
     useful,
     usefulNegative,
