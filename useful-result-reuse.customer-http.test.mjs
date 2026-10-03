@@ -720,6 +720,12 @@ test("a second HTTP client retrieves a retained receipt with only the returned g
   assert.ok(openapi.paths["/chain/transaction-receipt"].get["x-payment-info"]);
 
   const stored = await readFile(path.join(dataDir, "useful-result-customer.ndjson"), "utf8");
+  const retainedAttempts = stored.trim().split("\n").map(JSON.parse).filter(row => row.action === "retain");
+  const commerceAttempts = (await readFile(path.join(dataDir, "commerce-events.ndjson"), "utf8")).trim().split("\n").map(JSON.parse);
+  for (const row of retainedAttempts) {
+    assert.match(row.commerceEventId, /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/);
+    assert.equal(commerceAttempts.find(event => event.id === row.commerceEventId)?.result, "paid_success");
+  }
   const replayFile = await readFile(path.join(dataDir, "idempotency-replay.json"), "utf8");
   const metricFile = await readFile(path.join(dataDir, "useful-result-metrics.ndjson"), "utf8");
   const sharedFile = await readFile(path.join(dataDir, "useful-result-shared.ndjson"), "utf8");

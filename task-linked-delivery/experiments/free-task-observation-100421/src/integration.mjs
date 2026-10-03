@@ -37,7 +37,7 @@ export function createFreeTaskObservation({ internalToken, writerProcessCount = 
   }
   async function predecessor(input, claim, eventId) {
     const cut = await readCut();
-    if (!cut || cut.coverage !== 'complete' || cut.malformed || cut.torn || cut.rejected) fail('causal_cut_not_covered');
+    if (!cut || !['attempts','task_refs','forward'].every(p => cut.planes ? cut.planes[p]?.coverage === 'complete' : cut.coverage === 'complete') || cut.malformed || cut.torn || cut.rejected) fail('causal_cut_not_covered');
     const events = cut.attempts.filter(x => x.id === eventId);
     const refs = cut.task_refs.filter(x => x.commerceEventId === eventId);
     if (events.length !== 1 || refs.length !== 1 || !isTaskRefRecord(refs[0])) fail('missing_or_conflicting_predecessor');

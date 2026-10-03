@@ -1,0 +1,28 @@
+TAP version 13
+# Subtest: missing all six planes cannot be a completed journal cut
+ok 1 - missing all six planes cannot be a completed journal cut
+  ---
+  duration_ms: 6.361161
+  type: 'test'
+  ...
+# Subtest: an unobserved cut cannot invent a current or future covered window
+ok 2 - an unobserved cut cannot invent a current or future covered window
+  ---
+  duration_ms: 0.495462
+  type: 'test'
+  ...
+# Subtest: a named cohort cannot promote an unproved cut to a supported native export
+ok 3 - a named cohort cannot promote an unproved cut to a supported native export
+  ---
+  duration_ms: 0.132612
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 497.746463

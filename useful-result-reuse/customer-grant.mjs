@@ -1,4 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { journalTaskBinding } from '../commerce-journal-admission.mjs';
 
 import {
   authorizeOutcomeBinding,
@@ -221,7 +222,7 @@ export function createCustomerRetention({
 } = {}) {
   if (!customerStore || !sharedStore || typeof remember !== "function") fail("store_required");
 
-  function taskBinding({ taskLabel, requestIdentity, resultId, causalEventProof = null }) {
+  function taskBinding({ taskLabel, requestIdentity, resultId, causalEventProof = null, causalTaskBinding = null }) {
     const supplied = typeof taskLabel === "string" && taskLabel.length > 0;
     if (supplied && (!TASK_LABEL.test(taskLabel) || taskLabel.startsWith("0x"))) {
       return { rejected: true };
@@ -242,6 +243,12 @@ export function createCustomerRetention({
         : { rejected: false, taskRef: null, taskJoin: "unbound_artifact", labelStored: false };
     }
     const sealedEventId = openCausalCommerceEvent(causalEventProof, internalToken);
+    if (causalTaskBinding != null) {
+      if (!journalTaskBinding(causalTaskBinding) || !sealedEventId || causalTaskBinding.commerceEventId !== sealedEventId
+        || causalTaskBinding.operationId !== OPERATION_ID || supplied && causalTaskBinding.taskRef !== claim.taskRef) return { rejected: true };
+      return { rejected: false, labelStored: false, taskJoin: 'bound', taskRef: causalTaskBinding.taskRef,
+        taskRefRecord: causalTaskBinding, commerceEventId: sealedEventId };
+    }
     const commerceEventId = sealedEventId || stableForwardEventId(`${OPERATION_ID}\0customer\0${requestIdentity}\0${resultId}`);
     const taskRefRecord = buildTaskRefRecord({ claim, commerceEventId });
     return {
@@ -250,6 +257,10 @@ export function createCustomerRetention({
       taskJoin: taskRefRecord ? "bound" : "unbound_artifact",
       taskRef: claim.taskRef,
       taskRefRecord,
+      // Only the existing server seal binds a retained artifact to a real
+      // commerce attempt. The historical fallback remains a task reference,
+      // never evidence of an admitted HTTP execution.
+      commerceEventId: sealedEventId || null,
     };
   }
 
@@ -322,6 +333,7 @@ export function createCustomerRetention({
       method = METHOD,
       route = ROUTE,
       causalEventProof = null,
+      causalTaskBinding = null,
     } = {}) {
       if (optIn !== true) return emptyRetain("not_requested");
       await remember("retention_opt_in", {});
@@ -361,6 +373,7 @@ export function createCustomerRetention({
         requestIdentity: identity,
         resultId,
         causalEventProof,
+        causalTaskBinding,
       });
       if (binding.rejected) return emptyRetain("task_label_rejected");
       const paidValidDelivery = success === true;
@@ -372,6 +385,7 @@ export function createCustomerRetention({
         actions: [...ACTIONS],
         body,
         comparable,
+        commerceEventId: binding.commerceEventId || null,
         createdAt: new Date(clock).toISOString(),
         credentialDigest: credentialDigest ? sha256(credentialDigest) : null,
         evidenceClass,

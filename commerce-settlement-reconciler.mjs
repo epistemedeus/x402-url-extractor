@@ -1,3 +1,4 @@
+import { admitCommerceJournal, noteJournalWrite, noteJournalFault, registerJournalProducer } from "./commerce-journal-admission.mjs";
 import { createHash, createHmac, randomBytes } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
 import {
@@ -3004,7 +3005,7 @@ export function createCommerceSettlementReconciler({
     let pinnedParent = null;
     let leaseForRun = null;
     reconcileInFlight += 1;
-    running = running.then(async () => {
+    running = running.then(() => admitCommerceJournal(dataDir, async () => {
       try {
         // Establish the trusted pinned namespace before any parent ledger
         // append; every ledger operation below uses the pinned alias so the
@@ -3092,6 +3093,8 @@ export function createCommerceSettlementReconciler({
           }
         }
 
+        for (const record of result.newRecords) noteJournalWrite(dataDir, "settlements", record);
+
         // Parent operational success transition happens at the same logical
         // point with identical fields and values as original parent behavior.
         const completedAt = new Date().toISOString();
@@ -3133,6 +3136,7 @@ export function createCommerceSettlementReconciler({
           void publicationError;
         }
       } catch (error) {
+        noteJournalFault(dataDir, enabled ? ["settlements"] : []);
         console.error(`commerce settlement reconciliation failed: ${String(error?.message || error).slice(0, 200)}`);
         runSequence += 1;
         const failedAt = new Date().toISOString();
@@ -3168,7 +3172,7 @@ export function createCommerceSettlementReconciler({
           leaseForRun = null;
         }
       }
-    });
+    }));
     await running;
     const resultStatus = pinnedParent
       ? await status({ pinnedPrefix: pinnedParent.procPrefix })
@@ -3187,7 +3191,7 @@ export function createCommerceSettlementReconciler({
     return () => clearInterval(timer);
   }
 
-  return { capturePlane, enabled, ledgerPath, reconcile, schedule, status };
+  return registerJournalProducer({ capturePlane, enabled, ledgerPath, reconcile, schedule, status }, dataDir, enabled ? ["settlements"] : []);
 }
 
 export { BASE_USDC, SCHEMA_VERSION };

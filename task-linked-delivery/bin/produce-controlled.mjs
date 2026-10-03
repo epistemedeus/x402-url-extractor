@@ -3,7 +3,7 @@ import { mkdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
 import { createCommerceTelemetry } from "../../commerce-events.mjs";
-import { isSchemaValidDeliveryEvidence } from "../../commerce-outcome-binding.mjs";
+import { isSchemaValidDeliveryEvidence, isTaskRefRecord } from "../../commerce-outcome-binding.mjs";
 import { validExtractBody } from "../../http-delivery-evidence/test/helpers.mjs";
 
 const dataDir = process.env.TASK_LINK_DATA_DIR || process.env.COMMERCE_DATA_DIR || "";
@@ -168,7 +168,9 @@ const taskText = await readFile(telemetry.paths.taskRefPath, "utf8").catch((erro
 if (taskText.includes(USEFUL_LABEL) || taskText.includes(UNPAID_LABEL) || taskText.includes(token)) {
   fail("task file stored a label or token");
 }
-if (taskText.includes("0x") || taskText.toLowerCase().includes("bc1") || taskText.includes("@")) {
+// Validate the existing closed row contract. A random UUID or opaque hash may
+// contain the hex substring bc1; that substring is not a customer identifier.
+if (!taskText.trim().split("\n").filter(Boolean).map(JSON.parse).every(isTaskRefRecord)) {
   fail("task file stored an identity marker");
 }
 process.stdout.write(`${JSON.stringify({

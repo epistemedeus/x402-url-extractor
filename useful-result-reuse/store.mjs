@@ -1,3 +1,4 @@
+import { admitCommerceJournal, noteJournalWrite, noteJournalRotation, registerJournalProducer } from "../commerce-journal-admission.mjs";
 import { constants } from "node:fs";
 import { chmod, lstat, mkdir, open, rename, unlink } from "node:fs/promises";
 import path from "node:path";
@@ -21,9 +22,11 @@ export function createReuseStore({ dataDir, maxFileBytes = MAX_FILE_BYTES, maxRe
   let chain = Promise.resolve();
 
   function exclusive(work) {
-    const run = chain.then(work, work);
-    chain = run.then(() => undefined, () => undefined);
-    return run;
+    return admitCommerceJournal(dataDir, () => {
+      const run = chain.then(work, work);
+      chain = run.then(() => undefined, () => undefined);
+      return run;
+    });
   }
 
   async function ensureDir() {
@@ -98,6 +101,9 @@ export function createReuseStore({ dataDir, maxFileBytes = MAX_FILE_BYTES, maxRe
       await unlink(rotated).catch((error) => {
         if (error?.code !== "ENOENT") throw error;
       });
+      if (name === "useful-result-customer.ndjson" || name === "useful-result-metrics.ndjson") {
+        noteJournalRotation(dataDir, name === "useful-result-customer.ndjson" ? "retention" : "reads");
+      }
       await rename(current, rotated);
     }
     const handle = await open(
@@ -115,13 +121,16 @@ export function createReuseStore({ dataDir, maxFileBytes = MAX_FILE_BYTES, maxRe
         if (bytesWritten === 0) fail("write_failed");
         offset += bytesWritten;
       }
+      if (name === "useful-result-customer.ndjson" || name === "useful-result-metrics.ndjson") {
+        noteJournalWrite(dataDir, name === "useful-result-customer.ndjson" ? "retention" : "reads", record);
+      }
       await handle.chmod(0o600).catch(() => {});
     } finally {
       await handle.close();
     }
   }
 
-  return Object.freeze({
+  return registerJournalProducer(Object.freeze({
     dataDir,
     retainedGenerations: RETAINED_GENERATIONS,
     maxFileBytes,
@@ -141,5 +150,5 @@ export function createReuseStore({ dataDir, maxFileBytes = MAX_FILE_BYTES, maxRe
         return outcome?.result;
       });
     },
-  });
+  }), dataDir, ["retention", "reads"]);
 }

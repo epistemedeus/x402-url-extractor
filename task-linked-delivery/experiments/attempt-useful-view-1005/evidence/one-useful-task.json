@@ -1,0 +1,141 @@
+{
+  "schema": "samedaydesk.attempt-useful-view.report.v1",
+  "jobId": "HEAVY-ATTEMPT-USEFUL-VIEW-1005",
+  "attemptOf": null,
+  "operationRemint": "refused",
+  "forbiddenOperationId": "add923ae-3eb5-474b-8b3e-e376666dee83",
+  "decision": "one_attempt",
+  "reason": null,
+  "taskRef": "tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f",
+  "commerceEventId": "77a96ee0-7be7-478d-b606-36a3608f63c1",
+  "operationId": "normalized-transaction-receipt",
+  "cohort": "owner_qa",
+  "customer": null,
+  "globalAgentId": null,
+  "database": null,
+  "signer": null,
+  "mintedGrant": false,
+  "automaticMutationRetries": 0,
+  "liveCoverage": "unresolved",
+  "liveCoverageReason": "fixture_or_owner_qa_is_not_live_production_coverage",
+  "journalCutCoverage": "complete",
+  "evidenceKind": "synthetic_fixture",
+  "journalCovered": true,
+  "populationConversionRate": null,
+  "stageCounts": null,
+  "recognizedRevenueAtomic": "0",
+  "paymentPermitted": false,
+  "paymentClassification": {
+    "disposition": "unresolved",
+    "authority": "existing_payment_classifier_not_recomputed",
+    "joinedToThisAttempt": false
+  },
+  "useful": true,
+  "usefulNegative": null,
+  "inheritedUsefulness": null,
+  "historicalCriterion": null,
+  "stages": {
+    "attempt": {
+      "disposition": "producer-observed",
+      "authority": "server_minted_commerce_event_and_task_ref"
+    },
+    "delivery": {
+      "disposition": "producer-observed",
+      "authority": "producer_journal_http_finish_and_transport"
+    },
+    "callerUsefulness": {
+      "disposition": "unresolved",
+      "reason": "no_caller_claim",
+      "observed": "unknown"
+    },
+    "independentReplay": {
+      "disposition": "classified",
+      "authority": "existing_fixed_predicate",
+      "criterion": "positive"
+    },
+    "retention": {
+      "disposition": "authorized",
+      "authority": "existing_customer_grant",
+      "currentRights": true
+    },
+    "laterUse": {
+      "disposition": "authorized",
+      "authority": "existing_authorized_retained_read"
+    },
+    "settlement": {
+      "disposition": "unresolved",
+      "reason": "free_observation_has_no_payment_authority",
+      "observed": "unknown"
+    }
+  },
+  "restart": null,
+  "publicSeam": {
+    "status": "unresolved",
+    "missingLink": "per_attempt_public_call_identity",
+    "coveredExternalEvents": 3692,
+    "coveredExternalEventsAreCustomers": false,
+    "coveredExternalEventsAreAttemptDenominator": false,
+    "paidSuccess": {
+      "disposition": "unresolved",
+      "observed": null,
+      "streamField": null,
+      "reason": "absent_from_covered_byresult_not_zero"
+    },
+    "rareCoveredPaidSuccessCensus": false,
+    "populationConversionRate": null,
+    "enrollment": "unresolved",
+    "serverDelta": "applied",
+    "clockWindowFix": {
+      "commit": "de4c2a1f5e52065273b677a8694913a98850dcf0",
+      "applied": false,
+      "commitIsAncestorOfMerchant161": false,
+      "contentPresentOnMerchant161": true,
+      "productionFreshnessMaxAgeMs": 900000
+    },
+    "releasedMerchantHead": "32f07a836fb28e400d56b0e2e876043644bde31a",
+    "historicalReleasedMerchantHead": "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+    "publicAcquisitionArtifact": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a"
+  },
+  "provenance": {
+    "reader": "isolated_attempt_useful_view_reuses_421_projectBundle",
+    "measurement": "not_reimplemented",
+    "authenticity": "supplied_journal_not_independently_authenticated",
+    "identity": "not_inferred",
+    "pins": {
+      "causalProof301": "45db5507d1fef740dfe5fe84ec611c7b764d8c43",
+      "taskProducer339": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+      "causalMeasurement395": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+      "freeUseObserver421": "26d806f20e57d0c073321675dacb13395e30c643",
+      "terminalReader423": "5693610be4d7fdf7d13044be666f712b7ea189f8",
+      "seller041": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+      "releasedMerchantHead": "32f07a836fb28e400d56b0e2e876043644bde31a",
+      "historicalReleasedMerchantHead": "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+      "publicAcquisitionArtifact": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a"
+    },
+    "observerProducerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+    "clockWindowFix": {
+      "commit": "de4c2a1f5e52065273b677a8694913a98850dcf0",
+      "branch": "codex/task-observer-window-1003",
+      "applied": false,
+      "onThisBranch": false,
+      "commitIsAncestorOfMerchant161": false,
+      "contentPresentOnMerchant161": true,
+      "productionFreshnessMaxAgeMs": 900000
+    },
+    "seller041": "frozen_not_rewritten",
+    "integrationDelta": "applied",
+    "enrollment": "isolated_branch",
+    "adapt": {
+      "jobId": "HEAVY-ATTEMPT-USEFUL-ADAPT-161-1005",
+      "priorViewHead": "4e49c4db58ea0f5897240781fd14d80566bbabd0",
+      "adaptHead": "e687ca11c2e05e8ac41ede83dc1b98cfe46c3a7c",
+      "priorViewOperationReused": false
+    },
+    "complete": {
+      "jobId": "HEAVY-ATTEMPT-USEFUL-COMPLETE-161-1005",
+      "measurementSource": "4e49c4db58ea0f5897240781fd14d80566bbabd0",
+      "releasedMerchantHead": "32f07a836fb28e400d56b0e2e876043644bde31a",
+      "publicAcquisitionArtifact": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a"
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "base": "32f07a836fb28e400d56b0e2e876043644bde31a",
+  "sourceFingerprint": "a5895e01cc64adb2800255774c551e2804663bf521511eb6d383c5e7b8e60cdf",
+  "node": "v22.22.2",
+  "vmHostname": "cursor",
+  "cwd": "/home/ubuntu/root-sol-live-attempt-261003",
+  "suites": {
+    "completion.tap": {
+      "tests": 43,
+      "pass": 43,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "canonical.tap": {
+      "tests": 225,
+      "pass": 225,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "merchant-boundaries.tap": {
+      "tests": 79,
+      "pass": 79,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "dependencies.tap": {
+      "tests": 28,
+      "pass": 28,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "persisted-server-mount.tap": {
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "after.tap": {
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    }
+  },
+  "physicalColdReplay": "passed in separate process after server exit",
+  "frozenCurrentVerifiedFiles": 328,
+  "licenseAndHistoricalReceivedReceiptPreserved": true,
+  "release": "undeployed source branch; Root owns release",
+  "outsideCustomers": "unobserved",
+  "recognizedRevenue": "unknown"
+}

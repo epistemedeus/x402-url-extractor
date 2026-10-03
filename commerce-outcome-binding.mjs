@@ -1,3 +1,4 @@
+import { admitCommerceJournal, noteJournalWrite, noteJournalRotation } from "./commerce-journal-admission.mjs";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { constants } from "node:fs";
@@ -413,7 +414,7 @@ function evidenceForUnsupported(event, captured) {
   }
 }
 
-export function buildHttpFinishForwardRecords({ claim, event, paidEvidence = null, httpDeliveryRecord = null, captured = null } = {}) {
+export function buildHttpFinishForwardRecords({ claim, event, paidEvidence = null, httpDeliveryRecord = null, captured = null, freeObservation = false } = {}) {
   if (!claim || !event || !UUID_V4.test(event.id || "")) return [];
   const shared = {
     brand: claim.brand,
@@ -441,8 +442,13 @@ export function buildHttpFinishForwardRecords({ claim, event, paidEvidence = nul
     eventId: event.id,
   });
   if (call) records.push(call);
-  if (event.replayed === true || event.result !== "paid_success") return records;
-  const digest = typeof paidEvidence?.responseDigest === "string" ? paidEvidence.responseDigest : null;
+  const free = freeObservation === true && /^t[a-f0-9]{62}$/.test(claim.taskRef || "")
+    && claim.operationId === "normalized-transaction-receipt" && event.method === "GET"
+    && event.route === "/chain/transaction-receipt" && event.result === "paid_route_response"
+    && event.paymentPresent === false && event.status === 200;
+  if (event.replayed === true || event.result !== "paid_success" && !free) return records;
+  const digest = free ? captured?.digest
+    : typeof paidEvidence?.responseDigest === "string" ? paidEvidence.responseDigest : null;
   if (!HEX64.test(digest || "")) return records;
   const transport = blankRecord({
     ...shared,
@@ -456,6 +462,9 @@ export function buildHttpFinishForwardRecords({ claim, event, paidEvidence = nul
     usefulness: USEFULNESS_UNKNOWN,
   });
   if (transport) records.push(transport);
+  // Exact received bytes may be observed for free. Their useful output and
+  // retention are separate caller-authorized ports, never settlement rows.
+  if (free) return records;
   const evidence = copySchemaEvidence(httpDeliveryRecord, digest)
     || (httpDeliveryRecord ? null : evidenceForUnsupported(event, captured));
   if (!evidence) return records;
@@ -585,9 +594,11 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
   let taskAdmission = Promise.resolve();
 
   function admitTask(work) {
-    const run = taskAdmission.then(work, work);
-    taskAdmission = run.then(() => undefined, () => undefined);
-    return run;
+    return admitCommerceJournal(dataDir, () => {
+      const run = taskAdmission.then(work, work);
+      taskAdmission = run.then(() => undefined, () => undefined);
+      return run;
+    });
   }
 
   async function scanTaskRefFile(file, ids) {
@@ -651,6 +662,7 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
       await unlink(taskRefRotatedPath).catch((error) => {
         if (error?.code !== "ENOENT") throw error;
       });
+      noteJournalRotation(dataDir, "task_refs");
       await rename(taskRefPath, taskRefRotatedPath).catch((error) => {
         if (error?.code !== "ENOENT") throw error;
       });
@@ -702,6 +714,7 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
         }
         return { accepted: false, reason: "write_outcome_unknown", eventId: record.eventId };
       }
+      noteJournalWrite(dataDir, "task_refs", record);
       taskRefIds.add(record.eventId);
       return { accepted: true, reason: null, eventId: record.eventId };
     });
@@ -805,6 +818,7 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
       await unlink(rotatedPath).catch((error) => {
         if (error?.code !== "ENOENT") throw error;
       });
+      noteJournalRotation(dataDir, "forward");
       await rename(currentPath, rotatedPath).catch((error) => (
         error?.code === "ENOENT" ? null : Promise.reject(error)
       ));
@@ -826,6 +840,7 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
         if (last[0] !== 10) separator = "\n";
       }
       await handle.appendFile(`${separator}${JSON.stringify(record)}\n`, { encoding: "utf8" });
+      noteJournalWrite(dataDir, "forward", record);
       if (durable) await handle.sync();
       await handle.chmod(0o600).catch(() => {});
     } finally {
@@ -861,7 +876,7 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
 
   async function appendRecords(records) {
     const key = await journalKey();
-    return admitJournal(key, () => writeRecords(records));
+    return admitCommerceJournal(dataDir, () => admitJournal(key, () => writeRecords(records)));
   }
 
   async function classifyWriteFailure(record) {
@@ -898,14 +913,14 @@ export function createForwardOutcomeWriter({ dataDir, maxBytes, internalToken })
     } catch {
       return unknownWrite(null);
     }
-    return admitJournal(key, async () => {
+    return admitCommerceJournal(dataDir, () => admitJournal(key, async () => {
       try {
         await ensureIndex();
       } catch {
         return unknownWrite(null);
       }
       return work();
-    });
+    }));
   }
 
   function refuse(reason) {

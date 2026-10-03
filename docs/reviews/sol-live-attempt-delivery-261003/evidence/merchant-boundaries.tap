@@ -1,0 +1,486 @@
+TAP version 13
+# Subtest: test:nonlive owns local commerce unit paths and excludes live payment scripts
+ok 1 - test:nonlive owns local commerce unit paths and excludes live payment scripts
+  ---
+  duration_ms: 0.925915
+  type: 'test'
+  ...
+# Subtest: mounted rare-funnel is in npm test and test:nonlive without joining live scripts
+ok 2 - mounted rare-funnel is in npm test and test:nonlive without joining live scripts
+  ---
+  duration_ms: 0.155427
+  type: 'test'
+  ...
+# Subtest: non-live suite files do not target live MCP or construct provider RPC clients
+ok 3 - non-live suite files do not target live MCP or construct provider RPC clients
+  ---
+  duration_ms: 1.960921
+  type: 'test'
+  ...
+# unknown format "date-time" ignored in schema at path "\#/properties/settlementPlane/properties/baseline/anyOf/0"
+# unknown format "date-time" ignored in schema at path "\#/properties/settlementPlane/properties/baseline/anyOf/0"
+# Subtest: durable settlements outlive rotated paid-success events without becoming customers
+ok 4 - durable settlements outlive rotated paid-success events without becoming customers
+  ---
+  duration_ms: 1.157005
+  type: 'test'
+  ...
+# Subtest: retained paid events and durable settlements remain separate positive planes
+ok 5 - retained paid events and durable settlements remain separate positive planes
+  ---
+  duration_ms: 0.145154
+  type: 'test'
+  ...
+# Subtest: complete event coverage admits an exact requested-window zero
+ok 6 - complete event coverage admits an exact requested-window zero
+  ---
+  duration_ms: 0.134882
+  type: 'test'
+  ...
+# Subtest: a complete event slice cannot manufacture a zero before settlement coverage begins
+ok 7 - a complete event slice cannot manufacture a zero before settlement coverage begins
+  ---
+  duration_ms: 0.10028
+  type: 'test'
+  ...
+# Subtest: an unreconciled retained paid event remains pending instead of becoming revenue
+ok 8 - an unreconciled retained paid event remains pending instead of becoming revenue
+  ---
+  duration_ms: 0.083574
+  type: 'test'
+  ...
+# Subtest: missing planes stay unknown rather than fabricating zero
+ok 9 - missing planes stay unknown rather than fabricating zero
+  ---
+  duration_ms: 0.066545
+  type: 'test'
+  ...
+# Subtest: the exported schema accepts the readout and rejects invented customer authority
+ok 10 - the exported schema accepts the readout and rejects invented customer authority
+  ---
+  duration_ms: 30.28108
+  type: 'test'
+  ...
+# Subtest: public aggregate contains no raw buyer fields
+ok 11 - public aggregate contains no raw buyer fields
+  ---
+  duration_ms: 16.599876
+  type: 'test'
+  ...
+# Subtest: incomplete coverage cannot be reported as a full-window zero
+ok 12 - incomplete coverage cannot be reported as a full-window zero
+  ---
+  duration_ms: 3.325027
+  type: 'test'
+  ...
+# Subtest: mounted /v0/commerce-demand.json exposes durableRareFunnel after rare capture
+ok 13 - mounted /v0/commerce-demand.json exposes durableRareFunnel after rare capture
+  ---
+  duration_ms: 1351.586154
+  type: 'test'
+  ...
+# Subtest: reconcile snapshots allowlisted source and delivery facts and they survive event rotation
+ok 14 - reconcile snapshots allowlisted source and delivery facts and they survive event rotation
+  ---
+  duration_ms: 27.076028
+  type: 'test'
+  ...
+# Subtest: legacy events without split stay truthful unknown and do not invent a declared source
+ok 15 - legacy events without split stay truthful unknown and do not invent a declared source
+  ---
+  duration_ms: 0.775325
+  type: 'test'
+  ...
+# Subtest: source spoof and unknown identity stay unverified and never become customers
+ok 16 - source spoof and unknown identity stay unverified and never become customers
+  ---
+  duration_ms: 1.050372
+  type: 'test'
+  ...
+# Subtest: published runtime declared sources stay unverified through settlement composition
+ok 17 - published runtime declared sources stay unverified through settlement composition
+  ---
+  duration_ms: 0.935529
+  type: 'test'
+  ...
+# Subtest: contradictory or invalid metadata is omitted without blocking valid settlement
+ok 18 - contradictory or invalid metadata is omitted without blocking valid settlement
+  ---
+  duration_ms: 0.447373
+  type: 'test'
+  ...
+# Subtest: hostile extra fields never copy secrets, bodies, URLs, or credentials into the ledger
+ok 19 - hostile extra fields never copy secrets, bodies, URLs, or credentials into the ledger
+  ---
+  duration_ms: 1.004266
+  type: 'test'
+  ...
+# Subtest: legacy ledger rows stay unchanged and the helper reports truthful unknown
+ok 20 - legacy ledger rows stay unchanged and the helper reports truthful unknown
+  ---
+  duration_ms: 0.3915
+  type: 'test'
+  ...
+# Subtest: duplicate replay does not rewrite an existing row or backfill attribution
+ok 21 - duplicate replay does not rewrite an existing row or backfill attribution
+  ---
+  duration_ms: 0.764675
+  type: 'test'
+  ...
+# Subtest: concurrent eligible references still fail closed on duplicates and preserve one-write semantics
+ok 22 - concurrent eligible references still fail closed on duplicates and preserve one-write semantics
+  ---
+  duration_ms: 0.839357
+  type: 'test'
+  ...
+# Subtest: public payment-evidence schema consumers keep customer and buyer-valid planes null
+ok 23 - public payment-evidence schema consumers keep customer and buyer-valid planes null
+  ---
+  duration_ms: 0.600188
+  type: 'test'
+  ...
+# Subtest: baseline limitation: HTTP 200 paid_success is not buyer-valid output and settlement is not demand
+ok 24 - baseline limitation: HTTP 200 paid_success is not buyer-valid output and settlement is not demand
+  ---
+  duration_ms: 0.19493
+  type: 'test'
+  ...
+# Subtest: real HTTP writer to reconciliation and rotation keeps source claims distinct from token authority
+ok 25 - real HTTP writer to reconciliation and rotation keeps source claims distinct from token authority
+  ---
+  duration_ms: 127.033174
+  type: 'test'
+  ...
+# Subtest: malformed optional ledger attribution stays unknown without changing money, identity, or replay
+ok 26 - malformed optional ledger attribution stays unknown without changing money, identity, or replay
+  ---
+  duration_ms: 1.330226
+  type: 'test'
+  ...
+# Subtest: disables signed commerce artifacts when no receipt key is configured
+ok 27 - disables signed commerce artifacts when no receipt key is configured
+  ---
+  duration_ms: 0.937685
+  type: 'test'
+  ...
+# Subtest: fails closed on malformed receipt keys and networks
+ok 28 - fails closed on malformed receipt keys and networks
+  ---
+  duration_ms: 0.356104
+  type: 'test'
+  ...
+# Subtest: includeTxHash only changes route extensions, not the signer identity
+ok 29 - includeTxHash only changes route extensions, not the signer identity
+  ---
+  duration_ms: 24.127938
+  type: 'test'
+  ...
+# Subtest: signs independently verifiable EIP-712 offers and receipts
+ok 30 - signs independently verifiable EIP-712 offers and receipts
+  ---
+  duration_ms: 18.266625
+  type: 'test'
+  ...
+# Subtest: actual merchant acquisition supplies two stripped CLI tasks, free diagnosis, negative, decline, changed later input and restart
+ok 31 - actual merchant acquisition supplies two stripped CLI tasks, free diagnosis, negative, decline, changed later input and restart
+  ---
+  duration_ms: 3789.614342
+  type: 'test'
+  ...
+# Subtest: mounted raw intake and hostile payment headers cannot grant authority or reach verification/settlement
+ok 32 - mounted raw intake and hostile payment headers cannot grant authority or reach verification/settlement
+  ---
+  duration_ms: 1409.839759
+  type: 'test'
+  ...
+# Subtest: signed acceptance is read-only, rechecks current merchant terms and respects removed trusted caller rights
+ok 33 - signed acceptance is read-only, rechecks current merchant terms and respects removed trusted caller rights
+  ---
+  duration_ms: 1664.452604
+  type: 'test'
+  ...
+# Subtest: withheld oversized intake closes the mounted merchant socket within the operation deadline
+ok 34 - withheld oversized intake closes the mounted merchant socket within the operation deadline
+  ---
+  duration_ms: 1321.17606
+  type: 'test'
+  ...
+# Subtest: normalizes only credential-free public HTTPS targets
+ok 35 - normalizes only credential-free public HTTPS targets
+  ---
+  duration_ms: 4.926764
+  type: 'test'
+  ...
+# Subtest: public address policy rejects private, reserved, and documentation ranges
+ok 36 - public address policy rejects private, reserved, and documentation ranges
+  ---
+  duration_ms: 0.216737
+  type: 'test'
+  ...
+# Subtest: pinned DNS lookup supports scalar and all-address Node callback contracts
+ok 37 - pinned DNS lookup supports scalar and all-address Node callback contracts
+  ---
+  duration_ms: 0.536462
+  type: 'test'
+  ...
+# Subtest: normalizes matching x402 and MPP offers without credentials or payment
+ok 38 - normalizes matching x402 and MPP offers without credentials or payment
+  ---
+  duration_ms: 15.602767
+  type: 'test'
+  ...
+# Subtest: compares caller-supplied catalog metadata with each live unsigned offer
+ok 39 - compares caller-supplied catalog metadata with each live unsigned offer
+  ---
+  duration_ms: 1.585224
+  type: 'test'
+  ...
+# Subtest: compares a protocol-specific catalog candidate only with that live protocol
+ok 40 - compares a protocol-specific catalog candidate only with that live protocol
+  ---
+  duration_ms: 1.369699
+  type: 'test'
+  ...
+# Subtest: turns explicit catalog to runtime drift into review-required before authorization
+ok 41 - turns explicit catalog to runtime drift into review-required before authorization
+  ---
+  duration_ms: 0.724496
+  type: 'test'
+  ...
+# Subtest: rejects malformed catalog metadata before any target request
+ok 42 - rejects malformed catalog metadata before any target request
+  ---
+  duration_ms: 0.24687
+  type: 'test'
+  ...
+# Subtest: flags economic drift across protocols
+ok 43 - flags economic drift across protocols
+  ---
+  duration_ms: 1.051071
+  type: 'test'
+  ...
+# Subtest: fails closed on resource binding, realm, and expiry errors
+ok 44 - fails closed on resource binding, realm, and expiry errors
+  ---
+  duration_ms: 1.021257
+  type: 'test'
+  ...
+# Subtest: reports a non-402 target without reading a response body
+ok 45 - reports a non-402 target without reading a response body
+  ---
+  duration_ms: 0.601599
+  type: 'test'
+  ...
+# Subtest: rejects a changed final URL
+ok 46 - rejects a changed final URL
+  ---
+  duration_ms: 0.450795
+  type: 'test'
+  ...
+# Subtest: marks a parseable payment offer review-required when the seller omits its success response schema
+ok 47 - marks a parseable payment offer review-required when the seller omits its success response schema
+  ---
+  duration_ms: 0.505212
+  type: 'test'
+  ...
+# Subtest: receiving manifest publishes the public archives and keeps draft claims false
+ok 48 - receiving manifest publishes the public archives and keeps draft claims false
+  ---
+  duration_ms: 32.777669
+  type: 'test'
+  ...
+# Subtest: mount serves exact bytes and refuses traversal without taking other routes
+ok 49 - mount serves exact bytes and refuses traversal without taking other routes
+  ---
+  duration_ms: 21.471547
+  type: 'test'
+  ...
+# Subtest: changed, missing, wrong-length, extra, private, and symlink bytes are refused
+ok 50 - changed, missing, wrong-length, extra, private, and symlink bytes are refused
+  ---
+  duration_ms: 100.405503
+  type: 'test'
+  ...
+# Subtest: unsafe archive members, private prefixes, and arbitrary upstreams are refused
+ok 51 - unsafe archive members, private prefixes, and arbitrary upstreams are refused
+  ---
+  duration_ms: 50.580859
+  type: 'test'
+  ...
+# Subtest: existing skill mount stays useful when this adapter is absent
+ok 52 - existing skill mount stays useful when this adapter is absent
+  ---
+  duration_ms: 32.945352
+  type: 'test'
+  ...
+# Subtest: adapter mount leaves the skill and a later paid route reachable
+ok 53 - adapter mount leaves the skill and a later paid route reachable
+  ---
+  duration_ms: 35.845896
+  type: 'test'
+  ...
+# Subtest: old route-lock descriptors are unchanged and Root mounts only the optional public adapter
+ok 54 - old route-lock descriptors are unchanged and Root mounts only the optional public adapter
+  ---
+  duration_ms: 1.524487
+  type: 'test'
+  ...
+# Subtest: cold node and python httpx clients unpack the mount and run the declared commands
+ok 55 - cold node and python httpx clients unpack the mount and run the declared commands
+  ---
+  duration_ms: 2316.403332
+  type: 'test'
+  ...
+# Subtest: receiving refuses a sparse over-limit file without body allocation
+ok 56 - receiving refuses a sparse over-limit file without body allocation
+  ---
+  duration_ms: 1.198652
+  type: 'test'
+  ...
+# Subtest: receiving refuses a FIFO without waiting for a writer
+ok 57 - receiving refuses a FIFO without waiting for a writer
+  ---
+  duration_ms: 32.295326
+  type: 'test'
+  ...
+# Subtest: public rejection omits local paths and malformed input bytes
+ok 58 - public rejection omits local paths and malformed input bytes
+  ---
+  duration_ms: 0.543288
+  type: 'test'
+  ...
+# Subtest: candidate delivery keeps the frozen index and selects the primary origin
+ok 59 - candidate delivery keeps the frozen index and selects the primary origin
+  ---
+  duration_ms: 1.451486
+  type: 'test'
+  ...
+# Subtest: a fresh public readback selects the configured origin without collapsing qualifications
+ok 60 - a fresh public readback selects the configured origin without collapsing qualifications
+  ---
+  duration_ms: 2.499828
+  type: 'test'
+  ...
+# Subtest: changed, missing, and revoked evidence stay qualified per asset
+ok 61 - changed, missing, and revoked evidence stay qualified per asset
+  ---
+  duration_ms: 1.758843
+  type: 'test'
+  ...
+# Subtest: exact origin is required and a bad asset does not promote the readback
+ok 62 - exact origin is required and a bad asset does not promote the readback
+  ---
+  duration_ms: 1.420211
+  type: 'test'
+  ...
+# Subtest: partial command coverage and a source change invalidate only the affected evidence
+ok 63 - partial command coverage and a source change invalidate only the affected evidence
+  ---
+  duration_ms: 2.309399
+  type: 'test'
+  ...
+# Subtest: unexpected fields, wrong proof, future time, and symlink bytes are rejected
+ok 64 - unexpected fields, wrong proof, future time, and symlink bytes are rejected
+  ---
+  duration_ms: 2.034163
+  type: 'test'
+  ...
+# Subtest: restart rereads the local artifact and absence stays optional
+ok 65 - restart rereads the local artifact and absence stays optional
+  ---
+  duration_ms: 97.537995
+  type: 'test'
+  ...
+# Subtest: a direct current request is served beside the frozen index
+ok 66 - a direct current request is served beside the frozen index
+  ---
+  duration_ms: 1.462412
+  type: 'test'
+  ...
+# Subtest: public and loopback proofs stay distinct, and a redirect cannot publish
+ok 67 - public and loopback proofs stay distinct, and a redirect cannot publish
+  ---
+  duration_ms: 54.43427
+  type: 'test'
+  ...
+# Subtest: a stopped run exports evidence and does not write a receiving artifact
+ok 68 - a stopped run exports evidence and does not write a receiving artifact
+  ---
+  duration_ms: 21.345099
+  type: 'test'
+  ...
+# Subtest: loopback receiving observes the mounted bytes and cold commands without publishing
+ok 69 - loopback receiving observes the mounted bytes and cold commands without publishing
+  ---
+  duration_ms: 1150.445882
+  type: 'test'
+  ...
+# Subtest: a public proof parses a readback and does not publish when the runtime pin is unmet
+ok 70 - a public proof parses a readback and does not publish when the runtime pin is unmet
+  ---
+  duration_ms: 1040.022256
+  type: 'test'
+  ...
+# Subtest: the default command line refuses a public claim from a loopback origin
+ok 71 - the default command line refuses a public claim from a loopback origin
+  ---
+  duration_ms: 31.08696
+  type: 'test'
+  ...
+# Subtest: builds bounded seller-declared authorization evidence for exact operations
+ok 72 - builds bounded seller-declared authorization evidence for exact operations
+  ---
+  duration_ms: 12.398695
+  type: 'test'
+  ...
+# Subtest: rejects missing response contracts, undeclared effects, and cross-origin resources
+ok 73 - rejects missing response contracts, undeclared effects, and cross-origin resources
+  ---
+  duration_ms: 0.568668
+  type: 'test'
+  ...
+# Subtest: advertises the manifest through one standard describedby link on configured paid or discovery routes
+ok 74 - advertises the manifest through one standard describedby link on configured paid or discovery routes
+  ---
+  duration_ms: 0.422469
+  type: 'test'
+  ...
+# Subtest: machine documentation links name the existing OpenAPI document and x402 catalog
+ok 75 - machine documentation links name the existing OpenAPI document and x402 catalog
+  ---
+  duration_ms: 0.143992
+  type: 'test'
+  ...
+# Subtest: normalizes the exact bounded Base-USDC proof request
+ok 76 - normalizes the exact bounded Base-USDC proof request
+  ---
+  duration_ms: 2.037458
+  type: 'test'
+  ...
+# Subtest: verifies one exact successful canonical Base USDC transfer
+ok 77 - verifies one exact successful canonical Base USDC transfer
+  ---
+  duration_ms: 4.317127
+  type: 'test'
+  ...
+# Subtest: fails closed on recipient, amount, payer, duplicate, status, and block mismatches
+ok 78 - fails closed on recipient, amount, payer, duplicate, status, and block mismatches
+  ---
+  duration_ms: 2.329761
+  type: 'test'
+  ...
+# Subtest: returns a bounded diagnostic when the public receipt is unavailable
+ok 79 - returns a bounded diagnostic when the public receipt is unavailable
+  ---
+  duration_ms: 0.494581
+  type: 'test'
+  ...
+1..79
+# tests 79
+# suites 0
+# pass 79
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 22524.046721

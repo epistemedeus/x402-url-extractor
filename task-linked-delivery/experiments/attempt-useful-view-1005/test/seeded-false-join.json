@@ -1,0 +1,17 @@
+{
+  "attemptOf": "add923ae-3eb5-474b-8b3e-e376666dee83",
+  "operationId": "add923ae-3eb5-474b-8b3e-e376666dee83",
+  "census": true,
+  "paidSuccess": 0,
+  "rarePaidSuccessIsCensus": true,
+  "conversionDenominator": 3692,
+  "payingCustomers": 43,
+  "uniqueAgentsFromActors": true,
+  "externalUsefulnessClaim": true,
+  "paymentReplay": true,
+  "link": {
+    "taskRef": "t000000000000000000000000000000000000000000000000000000000000000",
+    "commerceEventId": "00000000-0000-4000-8000-000000000099",
+    "operationId": "normalized-transaction-receipt"
+  }
+}
