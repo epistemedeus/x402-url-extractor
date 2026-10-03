@@ -93,6 +93,9 @@ export function classify({ intake, declared, observed, stopped = null }) {
       useful: false,
     };
   }
+  if (expected.every((path) => observed.paths.includes(path)) && intake.expectedUsefulOutput.equals) {
+    return { ...view, outcome: "mismatch", reason: "observed_value_mismatch", nextAction: "repair", useful: false };
+  }
   if (intake.question === "declaration_contract") {
     return {
       ...view,

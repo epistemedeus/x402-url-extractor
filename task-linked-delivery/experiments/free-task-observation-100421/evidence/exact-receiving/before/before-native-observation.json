@@ -1,0 +1,65 @@
+{
+  "mode": "before",
+  "workerPid": 724119,
+  "callerProcesses": [
+    {
+      "callerPid": 724127,
+      "eventId": "71ad9ef8-06fe-4493-a887-377fafdfdcbd",
+      "taskRef": "te4e7bfdf4a11d41203a7ee4492d93837e4832a0b01dc6aa0e995fbb00c7018",
+      "callerPredicate": {
+        "status": "pass",
+        "reason": null,
+        "criterion": "positive",
+        "output": {
+          "transactionFeeWei": "42000"
+        }
+      },
+      "observationAccepted": false,
+      "observationReason": "no_bound_response_observation",
+      "independentlyExecuted": null,
+      "receivedMs": 48.475096,
+      "observationMs": 11.087367999999998,
+      "httpStatus": 200,
+      "paymentPermitted": false
+    },
+    {
+      "callerPid": 724139,
+      "eventId": "aa226028-d77d-4722-b19b-74dfa55824cc",
+      "taskRef": "t894248ff118d384f8da802407aa8bcc7ec3c147ef4713d84b418bf65901a4a",
+      "callerPredicate": {
+        "status": "pass",
+        "reason": null,
+        "criterion": "agreed_negative",
+        "output": {
+          "minedReceiptAvailable": false,
+          "decision": "not_found"
+        }
+      },
+      "observationAccepted": false,
+      "observationReason": "no_bound_response_observation",
+      "independentlyExecuted": null,
+      "receivedMs": 25.453218999999997,
+      "observationMs": 7.096966000000002,
+      "httpStatus": 200,
+      "paymentPermitted": false
+    }
+  ],
+  "replayPids": [],
+  "replayCalls": 0,
+  "executionCalls": {
+    "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": 1,
+    "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb": 1
+  },
+  "preFinishReason": "missing_or_conflicting_predecessor",
+  "probes": [],
+  "priorRestart": null,
+  "actualHTTP": true,
+  "actualJournalWrites": true,
+  "rpcBoundary": "fixture_rpc",
+  "realPayment": false,
+  "keyCreated": false,
+  "productionJournalEnrolled": false,
+  "customerCount": "unknown",
+  "tokenSavings": "unknown",
+  "recognizedRevenueAtomic": "0"
+}

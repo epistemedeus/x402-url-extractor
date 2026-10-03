@@ -1,0 +1,154 @@
+TAP version 13
+# Subtest: receiving manifest publishes the public archives and keeps draft claims false
+ok 1 - receiving manifest publishes the public archives and keeps draft claims false
+  ---
+  duration_ms: 37.084781
+  type: 'test'
+  ...
+# Subtest: mount serves exact bytes and refuses traversal without taking other routes
+ok 2 - mount serves exact bytes and refuses traversal without taking other routes
+  ---
+  duration_ms: 21.729195
+  type: 'test'
+  ...
+# Subtest: changed, missing, wrong-length, extra, private, and symlink bytes are refused
+ok 3 - changed, missing, wrong-length, extra, private, and symlink bytes are refused
+  ---
+  duration_ms: 124.491272
+  type: 'test'
+  ...
+# Subtest: unsafe archive members, private prefixes, and arbitrary upstreams are refused
+ok 4 - unsafe archive members, private prefixes, and arbitrary upstreams are refused
+  ---
+  duration_ms: 55.643633
+  type: 'test'
+  ...
+# Subtest: existing skill mount stays useful when this adapter is absent
+ok 5 - existing skill mount stays useful when this adapter is absent
+  ---
+  duration_ms: 35.436297
+  type: 'test'
+  ...
+# Subtest: adapter mount leaves the skill and a later paid route reachable
+ok 6 - adapter mount leaves the skill and a later paid route reachable
+  ---
+  duration_ms: 39.435674
+  type: 'test'
+  ...
+# Subtest: old route-lock descriptors are unchanged and Root mounts only the optional public adapter
+ok 7 - old route-lock descriptors are unchanged and Root mounts only the optional public adapter
+  ---
+  duration_ms: 1.584588
+  type: 'test'
+  ...
+# Subtest: cold node and python httpx clients unpack the mount and run the declared commands
+ok 8 - cold node and python httpx clients unpack the mount and run the declared commands
+  ---
+  duration_ms: 1724.793576
+  type: 'test'
+  ...
+# Subtest: receiving refuses a sparse over-limit file without body allocation
+ok 9 - receiving refuses a sparse over-limit file without body allocation
+  ---
+  duration_ms: 1.22795
+  type: 'test'
+  ...
+# Subtest: receiving refuses a FIFO without waiting for a writer
+ok 10 - receiving refuses a FIFO without waiting for a writer
+  ---
+  duration_ms: 26.735251
+  type: 'test'
+  ...
+# Subtest: public rejection omits local paths and malformed input bytes
+ok 11 - public rejection omits local paths and malformed input bytes
+  ---
+  duration_ms: 0.576255
+  type: 'test'
+  ...
+# Subtest: candidate delivery keeps the frozen index and selects the primary origin
+ok 12 - candidate delivery keeps the frozen index and selects the primary origin
+  ---
+  duration_ms: 1.663111
+  type: 'test'
+  ...
+# Subtest: a fresh public readback selects the configured origin without collapsing qualifications
+ok 13 - a fresh public readback selects the configured origin without collapsing qualifications
+  ---
+  duration_ms: 2.675183
+  type: 'test'
+  ...
+# Subtest: changed, missing, and revoked evidence stay qualified per asset
+ok 14 - changed, missing, and revoked evidence stay qualified per asset
+  ---
+  duration_ms: 1.814234
+  type: 'test'
+  ...
+# Subtest: exact origin is required and a bad asset does not promote the readback
+ok 15 - exact origin is required and a bad asset does not promote the readback
+  ---
+  duration_ms: 1.774878
+  type: 'test'
+  ...
+# Subtest: partial command coverage and a source change invalidate only the affected evidence
+ok 16 - partial command coverage and a source change invalidate only the affected evidence
+  ---
+  duration_ms: 2.156333
+  type: 'test'
+  ...
+# Subtest: unexpected fields, wrong proof, future time, and symlink bytes are rejected
+ok 17 - unexpected fields, wrong proof, future time, and symlink bytes are rejected
+  ---
+  duration_ms: 1.814021
+  type: 'test'
+  ...
+# Subtest: restart rereads the local artifact and absence stays optional
+ok 18 - restart rereads the local artifact and absence stays optional
+  ---
+  duration_ms: 98.001479
+  type: 'test'
+  ...
+# Subtest: a direct current request is served beside the frozen index
+ok 19 - a direct current request is served beside the frozen index
+  ---
+  duration_ms: 1.554902
+  type: 'test'
+  ...
+# Subtest: public and loopback proofs stay distinct, and a redirect cannot publish
+ok 20 - public and loopback proofs stay distinct, and a redirect cannot publish
+  ---
+  duration_ms: 58.119512
+  type: 'test'
+  ...
+# Subtest: a stopped run exports evidence and does not write a receiving artifact
+ok 21 - a stopped run exports evidence and does not write a receiving artifact
+  ---
+  duration_ms: 20.603488
+  type: 'test'
+  ...
+# Subtest: loopback receiving observes the mounted bytes and cold commands without publishing
+ok 22 - loopback receiving observes the mounted bytes and cold commands without publishing
+  ---
+  duration_ms: 807.469572
+  type: 'test'
+  ...
+# Subtest: a public proof parses a readback and does not publish when the runtime pin is unmet
+ok 23 - a public proof parses a readback and does not publish when the runtime pin is unmet
+  ---
+  duration_ms: 709.373972
+  type: 'test'
+  ...
+# Subtest: the default command line refuses a public claim from a loopback origin
+ok 24 - the default command line refuses a public claim from a loopback origin
+  ---
+  duration_ms: 33.39942
+  type: 'test'
+  ...
+1..24
+# tests 24
+# suites 0
+# pass 24
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4088.209686

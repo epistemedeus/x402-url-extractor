@@ -1,0 +1,741 @@
+{
+  "schema": "samedaydesk.task-demand.bundle.v1",
+  "question": {
+    "id": "retention-friction",
+    "text": "Where did this covered owner and sponsored task cohort stop before later use?",
+    "populationId": "synthetic-cohort",
+    "from": "2026-10-01T00:00:00.000Z",
+    "to": "2026-10-02T00:00:00.000Z",
+    "asOf": "2026-10-02T00:00:00.000Z",
+    "operationIds": [
+      "normalized-transaction-receipt"
+    ],
+    "cohorts": [
+      "owner_qa",
+      "sponsored_trial"
+    ],
+    "taskRefs": [
+      "tf3c9990593d07a8cf112b5bc14afd9f35b39e0bf89e90abe8ecb2b939904af",
+      "t018848386852e4f06a3311a000c1752f3c8ab8408ddd696c058b5ee7bd2497"
+    ]
+  },
+  "sources": [
+    {
+      "id": "synthetic-attempts",
+      "plane": "attempts",
+      "kind": "synthetic_fixture",
+      "populationId": "synthetic-cohort",
+      "scope": {
+        "operationIds": [
+          "normalized-transaction-receipt"
+        ],
+        "cohorts": [
+          "owner_qa",
+          "sponsored_trial",
+          "external_unknown"
+        ],
+        "taskRefs": [
+          "tf3c9990593d07a8cf112b5bc14afd9f35b39e0bf89e90abe8ecb2b939904af",
+          "t018848386852e4f06a3311a000c1752f3c8ab8408ddd696c058b5ee7bd2497",
+          "te17cf705959f01e3212cac1c1dd27e467bee31c01f3d6eab5b239b88e0cedc",
+          "t91c77587ec9ad5ac1ad99e988ecc498d8e2dcf213595c72879a2a766fea101"
+        ]
+      },
+      "from": "2026-10-01T00:00:00.000Z",
+      "to": "2026-10-02T00:00:00.000Z",
+      "asOf": "2026-10-02T00:00:00.000Z",
+      "coverage": "complete",
+      "schema": "samedaydesk.task-demand.export.v1",
+      "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+      "records": [
+        {
+          "v": 3,
+          "id": "10000000-0000-4000-8000-000000000001",
+          "ts": "2026-10-01T01:01:00.000Z",
+          "method": "GET",
+          "route": "/chain/transaction-receipt",
+          "result": "paid_success",
+          "status": 200,
+          "originClass": "internal"
+        },
+        {
+          "v": 3,
+          "id": "10000000-0000-4000-8000-000000000002",
+          "ts": "2026-10-01T01:02:00.000Z",
+          "method": "GET",
+          "route": "/chain/transaction-receipt",
+          "result": "challenge",
+          "status": 402,
+          "originClass": "external"
+        },
+        {
+          "v": 3,
+          "id": "10000000-0000-4000-8000-000000000003",
+          "ts": "2026-10-01T01:03:00.000Z",
+          "method": "GET",
+          "route": "/chain/transaction-receipt",
+          "result": "paid_success",
+          "status": 200,
+          "originClass": "external"
+        },
+        {
+          "v": 3,
+          "id": "10000000-0000-4000-8000-000000000004",
+          "ts": "2026-10-01T01:04:00.000Z",
+          "method": "GET",
+          "route": "/chain/transaction-receipt",
+          "result": "paid_success",
+          "status": 200,
+          "originClass": "external"
+        }
+      ],
+      "intake": {
+        "rawBytes": 790,
+        "rawSha256": "1d1ba41d7b1882fea728182b32fb448c2db4cab0d744e4131be323c4d1fe69b0",
+        "malformed": 0,
+        "torn": 0,
+        "rejected": 0
+      }
+    },
+    {
+      "id": "synthetic-task-refs",
+      "plane": "task_refs",
+      "kind": "synthetic_fixture",
+      "populationId": "synthetic-cohort",
+      "scope": {
+        "operationIds": [
+          "normalized-transaction-receipt"
+        ],
+        "cohorts": [
+          "owner_qa",
+          "sponsored_trial",
+          "external_unknown"
+        ],
+        "taskRefs": [
+          "tf3c9990593d07a8cf112b5bc14afd9f35b39e0bf89e90abe8ecb2b939904af",
+          "t018848386852e4f06a3311a000c1752f3c8ab8408ddd696c058b5ee7bd2497",
+          "te17cf705959f01e3212cac1c1dd27e467bee31c01f3d6eab5b239b88e0cedc",
+          "t91c77587ec9ad5ac1ad99e988ecc498d8e2dcf213595c72879a2a766fea101"
+        ]
+      },
+      "from": "2026-10-01T00:00:00.000Z",
+      "to": "2026-10-02T00:00:00.000Z",
+      "asOf": "2026-10-02T00:00:00.000Z",
+      "coverage": "complete",
+      "schema": "samedaydesk.task-demand.export.v1",
+      "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+      "records": [
+        {
+          "cohort": "owner_qa",
+          "commerceEventId": "10000000-0000-4000-8000-000000000001",
+          "eventId": "19451738-b0f3-43f0-80a6-1bdfd069fee7",
+          "operationId": "normalized-transaction-receipt",
+          "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+          "taskRef": "tf3c9990593d07a8cf112b5bc14afd9f35b39e0bf89e90abe8ecb2b939904af",
+          "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+        },
+        {
+          "cohort": "sponsored_trial",
+          "commerceEventId": "10000000-0000-4000-8000-000000000002",
+          "eventId": "0ceca8f3-d00f-418c-bf3b-118cc2e6ae23",
+          "operationId": "normalized-transaction-receipt",
+          "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+          "taskRef": "t018848386852e4f06a3311a000c1752f3c8ab8408ddd696c058b5ee7bd2497",
+          "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+        },
+        {
+          "cohort": "external_unknown",
+          "commerceEventId": "10000000-0000-4000-8000-000000000003",
+          "eventId": "0c60ebf8-b604-4208-86d4-b864afb9d04a",
+          "operationId": "normalized-transaction-receipt",
+          "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+          "taskRef": "te17cf705959f01e3212cac1c1dd27e467bee31c01f3d6eab5b239b88e0cedc",
+          "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+        },
+        {
+          "cohort": "external_unknown",
+          "commerceEventId": "10000000-0000-4000-8000-000000000004",
+          "eventId": "3dc9ffa3-2aad-4e83-aeed-d8e680d67e36",
+          "operationId": "normalized-transaction-receipt",
+          "schemaVersion": "samedaydesk.outcome-task-ref.v1",
+          "taskRef": "t91c77587ec9ad5ac1ad99e988ecc498d8e2dcf213595c72879a2a766fea101",
+          "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+        }
+      ],
+      "intake": {
+        "rawBytes": 1496,
+        "rawSha256": "4853a61901e43dd882b9bef935be03214aa56f7c1e11872688ea40659c4bfa1f",
+        "malformed": 0,
+        "torn": 0,
+        "rejected": 0
+      }
+    },
+    {
+      "id": "synthetic-forward",
+      "plane": "forward",
+      "kind": "synthetic_fixture",
+      "populationId": "synthetic-cohort",
+      "scope": {
+        "operationIds": [
+          "normalized-transaction-receipt"
+        ],
+        "cohorts": [
+          "owner_qa",
+          "sponsored_trial",
+          "external_unknown"
+        ],
+        "taskRefs": [
+          "tf3c9990593d07a8cf112b5bc14afd9f35b39e0bf89e90abe8ecb2b939904af",
+          "t018848386852e4f06a3311a000c1752f3c8ab8408ddd696c058b5ee7bd2497",
+          "te17cf705959f01e3212cac1c1dd27e467bee31c01f3d6eab5b239b88e0cedc",
+          "t91c77587ec9ad5ac1ad99e988ecc498d8e2dcf213595c72879a2a766fea101"
+        ]
+      },
+      "from": "2026-10-01T00:00:00.000Z",
+      "to": "2026-10-02T00:00:00.000Z",
+      "asOf": "2026-10-02T00:00:00.000Z",
+      "coverage": "complete",
+      "schema": "samedaydesk.task-demand.export.v1",
+      "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+      "records": [
+        {
+          "brand": "samedaydesk",
+          "cohort": "owner_qa",
+          "commerceEventId": "10000000-0000-4000-8000-000000000001",
+          "correctionOf": null,
+          "deliveryClass": null,
+          "eventId": "10000000-0000-4000-8000-000000000001",
+          "evidencePlane": "journey_marker",
+          "method": "GET",
+          "operationId": "normalized-transaction-receipt",
+          "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+          "receiptDigest": null,
+          "reuseAuthority": null,
+          "route": "/chain/transaction-receipt",
+          "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+          "settlementAuthority": null,
+          "settlementClass": null,
+          "settlementReference": null,
+          "sourcePlane": "forward_instrumenter",
+          "stage": "call",
+          "usefulness": null,
+          "validatorAuthority": null,
+          "validatorSource": null,
+          "validatorVerdict": null,
+          "valueAtomic": null,
+          "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+        },
+        {
+          "brand": "samedaydesk",
+          "cohort": "owner_qa",
+          "commerceEventId": "10000000-0000-4000-8000-000000000001",
+          "correctionOf": null,
+          "deliveryClass": null,
+          "eventId": "8878bca5-b889-46c0-bc6a-ad00de564e6e",
+          "evidencePlane": "transport_observation",
+          "method": "GET",
+          "operationId": "normalized-transaction-receipt",
+          "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+          "receiptDigest": "d8b709ac19ddec668fd27cc2e1e13947654daa9a58828fabf3067d71f2d7c261",
+          "reuseAuthority": null,
+          "route": "/chain/transaction-receipt",
+          "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+          "settlementAuthority": null,
+          "settlementClass": null,
+          "settlementReference": null,
+          "sourcePlane": "forward_instrumenter",
+          "stage": "transport",
+          "usefulness": "unknown",
+          "validatorAuthority": "none",
+          "validatorSource": "http_runtime_not_checked",
+          "validatorVerdict": "not_checked",
+          "valueAtomic": null,
+          "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+        },
+        {
+          "brand": "samedaydesk",
+          "cohort": "owner_qa",
+          "commerceEventId": "10000000-0000-4000-8000-000000000001",
+          "correctionOf": null,
+          "deliveryClass": "unsupported_target",
+          "eventId": "319a0df1-fdc9-4a08-b2c6-1b4a306d64d5",
+          "evidencePlane": "schema_delivery",
+          "method": "GET",
+          "operationId": "normalized-transaction-receipt",
+          "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+          "receiptDigest": "d8b709ac19ddec668fd27cc2e1e13947654daa9a58828fabf3067d71f2d7c261",
+          "reuseAuthority": null,
+          "route": "/chain/transaction-receipt",
+          "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+          "settlementAuthority": null,
+          "settlementClass": "real_unverified",
+          "settlementReference": null,
+          "sourcePlane": "forward_instrumenter",
+          "stage": "delivery",
+          "usefulness": "unknown",
+          "validatorAuthority": "merchant_declared_schema",
+          "validatorSource": "caller_observed_http_bytes",
+          "validatorVerdict": "unknown",
+          "valueAtomic": null,
+          "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+        },
+        {
+          "brand": "samedaydesk",
+          "cohort": "sponsored_trial",
+          "commerceEventId": "10000000-0000-4000-8000-000000000002",
+          "correctionOf": null,
+          "deliveryClass": null,
+          "eventId": "10000000-0000-4000-8000-000000000002",
+          "evidencePlane": "journey_marker",
+          "method": "GET",
+          "operationId": "normalized-transaction-receipt",
+          "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+          "receiptDigest": null,
+          "reuseAuthority": null,
+          "route": "/chain/transaction-receipt",
+          "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+          "settlementAuthority": null,
+          "settlementClass": null,
+          "settlementReference": null,
+          "sourcePlane": "forward_instrumenter",
+          "stage": "call",
+          "usefulness": null,
+          "validatorAuthority": null,
+          "validatorSource": null,
+          "validatorVerdict": null,
+          "valueAtomic": null,
+          "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+        },
+        {
+          "brand": "samedaydesk",
+          "cohort": "external_unknown",
+          "commerceEventId": "10000000-0000-4000-8000-000000000003",
+          "correctionOf": null,
+          "deliveryClass": null,
+          "eventId": "10000000-0000-4000-8000-000000000003",
+          "evidencePlane": "journey_marker",
+          "method": "GET",
+          "operationId": "normalized-transaction-receipt",
+          "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+          "receiptDigest": null,
+          "reuseAuthority": null,
+          "route": "/chain/transaction-receipt",
+          "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+          "settlementAuthority": null,
+          "settlementClass": null,
+          "settlementReference": null,
+          "sourcePlane": "forward_instrumenter",
+          "stage": "call",
+          "usefulness": null,
+          "validatorAuthority": null,
+          "validatorSource": null,
+          "validatorVerdict": null,
+          "valueAtomic": null,
+          "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+        },
+        {
+          "brand": "samedaydesk",
+          "cohort": "external_unknown",
+          "commerceEventId": "10000000-0000-4000-8000-000000000003",
+          "correctionOf": null,
+          "deliveryClass": null,
+          "eventId": "b012ccc3-e158-4f2e-8af4-7f54d1a6eeac",
+          "evidencePlane": "transport_observation",
+          "method": "GET",
+          "operationId": "normalized-transaction-receipt",
+          "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+          "receiptDigest": "978500ebabe06f18276a87db48bd75a71ab211a5c10fa795087521ce7f8d1c1d",
+          "reuseAuthority": null,
+          "route": "/chain/transaction-receipt",
+          "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+          "settlementAuthority": null,
+          "settlementClass": null,
+          "settlementReference": null,
+          "sourcePlane": "forward_instrumenter",
+          "stage": "transport",
+          "usefulness": "unknown",
+          "validatorAuthority": "none",
+          "validatorSource": "http_runtime_not_checked",
+          "validatorVerdict": "not_checked",
+          "valueAtomic": null,
+          "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+        },
+        {
+          "brand": "samedaydesk",
+          "cohort": "external_unknown",
+          "commerceEventId": "10000000-0000-4000-8000-000000000003",
+          "correctionOf": null,
+          "deliveryClass": "unsupported_target",
+          "eventId": "d215bae5-936a-4cf7-a3a3-2a0f51bdac47",
+          "evidencePlane": "schema_delivery",
+          "method": "GET",
+          "operationId": "normalized-transaction-receipt",
+          "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+          "receiptDigest": "978500ebabe06f18276a87db48bd75a71ab211a5c10fa795087521ce7f8d1c1d",
+          "reuseAuthority": null,
+          "route": "/chain/transaction-receipt",
+          "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+          "settlementAuthority": null,
+          "settlementClass": "real_unverified",
+          "settlementReference": null,
+          "sourcePlane": "forward_instrumenter",
+          "stage": "delivery",
+          "usefulness": "unknown",
+          "validatorAuthority": "merchant_declared_schema",
+          "validatorSource": "caller_observed_http_bytes",
+          "validatorVerdict": "unknown",
+          "valueAtomic": null,
+          "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+        },
+        {
+          "brand": "samedaydesk",
+          "cohort": "external_unknown",
+          "commerceEventId": "10000000-0000-4000-8000-000000000004",
+          "correctionOf": null,
+          "deliveryClass": null,
+          "eventId": "10000000-0000-4000-8000-000000000004",
+          "evidencePlane": "journey_marker",
+          "method": "GET",
+          "operationId": "normalized-transaction-receipt",
+          "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+          "receiptDigest": null,
+          "reuseAuthority": null,
+          "route": "/chain/transaction-receipt",
+          "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+          "settlementAuthority": null,
+          "settlementClass": null,
+          "settlementReference": null,
+          "sourcePlane": "forward_instrumenter",
+          "stage": "call",
+          "usefulness": null,
+          "validatorAuthority": null,
+          "validatorSource": null,
+          "validatorVerdict": null,
+          "valueAtomic": null,
+          "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+        },
+        {
+          "brand": "samedaydesk",
+          "cohort": "external_unknown",
+          "commerceEventId": "10000000-0000-4000-8000-000000000004",
+          "correctionOf": null,
+          "deliveryClass": null,
+          "eventId": "24460b26-3b41-4c90-9208-4f2005c50eb2",
+          "evidencePlane": "transport_observation",
+          "method": "GET",
+          "operationId": "normalized-transaction-receipt",
+          "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+          "receiptDigest": "f16e2b56ddca4e50d787391062571a1ee9839fe52bae3a9622430d469f883bd0",
+          "reuseAuthority": null,
+          "route": "/chain/transaction-receipt",
+          "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+          "settlementAuthority": null,
+          "settlementClass": null,
+          "settlementReference": null,
+          "sourcePlane": "forward_instrumenter",
+          "stage": "transport",
+          "usefulness": "unknown",
+          "validatorAuthority": "none",
+          "validatorSource": "http_runtime_not_checked",
+          "validatorVerdict": "not_checked",
+          "valueAtomic": null,
+          "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+        },
+        {
+          "brand": "samedaydesk",
+          "cohort": "external_unknown",
+          "commerceEventId": "10000000-0000-4000-8000-000000000004",
+          "correctionOf": null,
+          "deliveryClass": "unsupported_target",
+          "eventId": "3a95c819-48ef-42d3-b21e-901b112e8c20",
+          "evidencePlane": "schema_delivery",
+          "method": "GET",
+          "operationId": "normalized-transaction-receipt",
+          "producerBaseCommit": "ebd6834f3501ace0948b2ad5b7a3df9ab5c6b048",
+          "receiptDigest": "f16e2b56ddca4e50d787391062571a1ee9839fe52bae3a9622430d469f883bd0",
+          "reuseAuthority": null,
+          "route": "/chain/transaction-receipt",
+          "schemaVersion": "samedaydesk.outcome-binding.forward.v2",
+          "settlementAuthority": null,
+          "settlementClass": "real_unverified",
+          "settlementReference": null,
+          "sourcePlane": "forward_instrumenter",
+          "stage": "delivery",
+          "usefulness": "unknown",
+          "validatorAuthority": "merchant_declared_schema",
+          "validatorSource": "caller_observed_http_bytes",
+          "validatorVerdict": "unknown",
+          "valueAtomic": null,
+          "writerId": "x402-url-extractor.createCommerceTelemetry.forward-v2"
+        }
+      ],
+      "intake": {
+        "rawBytes": 8778,
+        "rawSha256": "9ef37453aef024fdc605c8db43ff96a8c1719bc7781a3c164ca362c625e18977",
+        "malformed": 0,
+        "torn": 0,
+        "rejected": 0
+      }
+    },
+    {
+      "id": "synthetic-retention",
+      "plane": "retention",
+      "kind": "synthetic_fixture",
+      "populationId": "synthetic-cohort",
+      "scope": {
+        "operationIds": [
+          "normalized-transaction-receipt"
+        ],
+        "cohorts": [
+          "owner_qa",
+          "sponsored_trial",
+          "external_unknown"
+        ],
+        "taskRefs": [
+          "tf3c9990593d07a8cf112b5bc14afd9f35b39e0bf89e90abe8ecb2b939904af",
+          "t018848386852e4f06a3311a000c1752f3c8ab8408ddd696c058b5ee7bd2497",
+          "te17cf705959f01e3212cac1c1dd27e467bee31c01f3d6eab5b239b88e0cedc",
+          "t91c77587ec9ad5ac1ad99e988ecc498d8e2dcf213595c72879a2a766fea101"
+        ]
+      },
+      "from": "2026-10-01T00:00:00.000Z",
+      "to": "2026-10-02T00:00:00.000Z",
+      "asOf": "2026-10-02T00:00:00.000Z",
+      "coverage": "complete",
+      "schema": "samedaydesk.task-demand.export.v1",
+      "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+      "records": [
+        {
+          "action": "retain",
+          "grantId": "1111111111111111",
+          "recordId": "d8b709ac19ddec668fd27cc2e1e13947",
+          "resultId": "d8b709ac19ddec668fd27cc2e1e13947654daa9a58828fabf3067d71f2d7c261",
+          "operationId": "normalized-transaction-receipt",
+          "taskRef": "tf3c9990593d07a8cf112b5bc14afd9f35b39e0bf89e90abe8ecb2b939904af",
+          "createdAt": "2026-10-01T01:20:00.000Z",
+          "expiresAt": "2026-10-08T01:20:00.000Z",
+          "method": "GET",
+          "route": "/chain/transaction-receipt",
+          "schema": "samedaydesk.task-demand.retention-export.v1",
+          "criterion": "positive",
+          "criterionAuthority": "operation_contract",
+          "sourceSchema": "samedaydesk.useful-result-reuse.customer-grant.v1"
+        },
+        {
+          "action": "retain",
+          "grantId": "3333333333333333",
+          "recordId": "978500ebabe06f18276a87db48bd75a7",
+          "resultId": "978500ebabe06f18276a87db48bd75a71ab211a5c10fa795087521ce7f8d1c1d",
+          "operationId": "normalized-transaction-receipt",
+          "taskRef": "te17cf705959f01e3212cac1c1dd27e467bee31c01f3d6eab5b239b88e0cedc",
+          "createdAt": "2026-10-01T01:20:00.000Z",
+          "expiresAt": "2026-10-08T01:20:00.000Z",
+          "method": "GET",
+          "route": "/chain/transaction-receipt",
+          "schema": "samedaydesk.task-demand.retention-export.v1",
+          "criterion": "agreed_negative",
+          "criterionAuthority": "operation_contract",
+          "sourceSchema": "samedaydesk.useful-result-reuse.customer-grant.v1"
+        },
+        {
+          "action": "retain",
+          "grantId": "4444444444444444",
+          "recordId": "f16e2b56ddca4e50d787391062571a1e",
+          "resultId": "f16e2b56ddca4e50d787391062571a1ee9839fe52bae3a9622430d469f883bd0",
+          "operationId": "normalized-transaction-receipt",
+          "taskRef": "t91c77587ec9ad5ac1ad99e988ecc498d8e2dcf213595c72879a2a766fea101",
+          "createdAt": "2026-10-01T01:20:00.000Z",
+          "expiresAt": "2026-10-08T01:20:00.000Z",
+          "method": "GET",
+          "route": "/chain/transaction-receipt",
+          "schema": "samedaydesk.task-demand.retention-export.v1",
+          "criterion": "positive",
+          "criterionAuthority": "operation_contract",
+          "sourceSchema": "samedaydesk.useful-result-reuse.customer-grant.v1"
+        }
+      ],
+      "intake": {
+        "rawBytes": 2653,
+        "rawSha256": "acda909f2a85f0bae61ecebeeedaa2f0d94c7d1d7ec34be0f7bd1f49827a9520",
+        "malformed": 0,
+        "torn": 0,
+        "rejected": 0
+      }
+    },
+    {
+      "id": "synthetic-reads",
+      "plane": "reads",
+      "kind": "synthetic_fixture",
+      "populationId": "synthetic-cohort",
+      "scope": {
+        "operationIds": [
+          "normalized-transaction-receipt"
+        ],
+        "cohorts": [
+          "owner_qa",
+          "sponsored_trial",
+          "external_unknown"
+        ],
+        "taskRefs": [
+          "tf3c9990593d07a8cf112b5bc14afd9f35b39e0bf89e90abe8ecb2b939904af",
+          "t018848386852e4f06a3311a000c1752f3c8ab8408ddd696c058b5ee7bd2497",
+          "te17cf705959f01e3212cac1c1dd27e467bee31c01f3d6eab5b239b88e0cedc",
+          "t91c77587ec9ad5ac1ad99e988ecc498d8e2dcf213595c72879a2a766fea101"
+        ]
+      },
+      "from": "2026-10-01T00:00:00.000Z",
+      "to": "2026-10-02T00:00:00.000Z",
+      "asOf": "2026-10-02T00:00:00.000Z",
+      "coverage": "complete",
+      "schema": "samedaydesk.task-demand.export.v1",
+      "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+      "records": [
+        {
+          "schema": "samedaydesk.useful-result-reuse.metric.v1",
+          "kind": "useful_later_read",
+          "eventId": "read-1",
+          "at": "2026-10-01T02:00:00.000Z",
+          "recordId": "d8b709ac19ddec668fd27cc2e1e13947",
+          "taskRef": "tf3c9990593d07a8cf112b5bc14afd9f35b39e0bf89e90abe8ecb2b939904af"
+        },
+        {
+          "schema": "samedaydesk.useful-result-reuse.metric.v1",
+          "kind": "useful_later_read",
+          "eventId": "read-3",
+          "at": "2026-10-01T02:00:00.000Z",
+          "recordId": "978500ebabe06f18276a87db48bd75a7",
+          "taskRef": "te17cf705959f01e3212cac1c1dd27e467bee31c01f3d6eab5b239b88e0cedc"
+        },
+        {
+          "schema": "samedaydesk.useful-result-reuse.metric.v1",
+          "kind": "useful_later_read",
+          "eventId": "read-4",
+          "at": "2026-10-01T02:00:00.000Z",
+          "recordId": "f16e2b56ddca4e50d787391062571a1e",
+          "taskRef": "t91c77587ec9ad5ac1ad99e988ecc498d8e2dcf213595c72879a2a766fea101"
+        }
+      ],
+      "intake": {
+        "rawBytes": 766,
+        "rawSha256": "c6896c61182999560e658e7d4949cda8bdc9d18e9cf3122efdda70e9c032f918",
+        "malformed": 0,
+        "torn": 0,
+        "rejected": 0
+      }
+    },
+    {
+      "id": "synthetic-settlements",
+      "plane": "settlements",
+      "kind": "synthetic_fixture",
+      "populationId": "synthetic-cohort",
+      "scope": {
+        "operationIds": [
+          "normalized-transaction-receipt"
+        ],
+        "cohorts": [
+          "owner_qa",
+          "sponsored_trial",
+          "external_unknown"
+        ],
+        "taskRefs": [
+          "tf3c9990593d07a8cf112b5bc14afd9f35b39e0bf89e90abe8ecb2b939904af",
+          "t018848386852e4f06a3311a000c1752f3c8ab8408ddd696c058b5ee7bd2497",
+          "te17cf705959f01e3212cac1c1dd27e467bee31c01f3d6eab5b239b88e0cedc",
+          "t91c77587ec9ad5ac1ad99e988ecc498d8e2dcf213595c72879a2a766fea101"
+        ]
+      },
+      "from": "2026-10-01T00:00:00.000Z",
+      "to": "2026-10-02T00:00:00.000Z",
+      "asOf": "2026-10-02T00:00:00.000Z",
+      "coverage": "complete",
+      "schema": "samedaydesk.task-demand.export.v1",
+      "producerCommit": "5008b5e7213511e26eb3d369fcc0056e48b4ef20",
+      "records": [
+        {
+          "schemaVersion": "samedaydesk.commerce-settlement-reconciliation.v1",
+          "state": "reconciled",
+          "sourceEventId": "10000000-0000-4000-8000-000000000001",
+          "sourceEventTimestamp": "2026-10-01T01:01:00.000Z",
+          "reconciledAt": "2026-10-01T01:10:00.000Z",
+          "route": "/chain/transaction-receipt",
+          "network": "eip155:8453",
+          "settlementReference": "0x1111111111111111111111111111111111111111111111111111111111111111",
+          "amountAtomic": "5000",
+          "paymentClass": "internal"
+        },
+        {
+          "schemaVersion": "samedaydesk.commerce-settlement-reconciliation.v1",
+          "state": "reconciled",
+          "sourceEventId": "10000000-0000-4000-8000-000000000003",
+          "sourceEventTimestamp": "2026-10-01T01:03:00.000Z",
+          "reconciledAt": "2026-10-01T01:10:00.000Z",
+          "route": "/chain/transaction-receipt",
+          "network": "eip155:8453",
+          "settlementReference": "0x3333333333333333333333333333333333333333333333333333333333333333",
+          "amountAtomic": "5000",
+          "paymentClass": "unclassified"
+        },
+        {
+          "schemaVersion": "samedaydesk.commerce-settlement-reconciliation.v1",
+          "state": "reconciled",
+          "sourceEventId": "10000000-0000-4000-8000-000000000004",
+          "sourceEventTimestamp": "2026-10-01T01:04:00.000Z",
+          "reconciledAt": "2026-10-01T01:10:00.000Z",
+          "route": "/chain/transaction-receipt",
+          "network": "eip155:8453",
+          "settlementReference": "0x4444444444444444444444444444444444444444444444444444444444444444",
+          "amountAtomic": "5000",
+          "paymentClass": "independent"
+        }
+      ],
+      "intake": {
+        "rawBytes": 1322,
+        "rawSha256": "0c1fbe9660dd6ff810b3cebc665838ac3faa7c026ec8ced75f23763c1a66d603",
+        "malformed": 0,
+        "torn": 0,
+        "rejected": 0
+      }
+    }
+  ],
+  "economics": {
+    "source": "useful-economics-100290",
+    "directBaseline": {
+      "apiEquivalentBuildEffort": {
+        "probes": 3,
+        "tokens": "unknown"
+      },
+      "reviewAdaptationAtomic": {
+        "known": false,
+        "reason": "original_token_review_cost_unknown"
+      },
+      "cashMarginalAtomic": {
+        "atomic": "0"
+      }
+    },
+    "marginal": {
+      "apiEquivalentBuildEffort": {
+        "probes": 1,
+        "tokens": 120
+      },
+      "cashMarginalAtomic": {
+        "atomic": "0"
+      },
+      "feesAtomic": {
+        "atomic": "0"
+      },
+      "reviewAdaptationAtomic": {
+        "known": false,
+        "reason": "review_not_metered"
+      },
+      "includedQuotaOpportunityCostAtomic": {
+        "known": false,
+        "reason": "included_quota_not_metered"
+      },
+      "sharedRndAtomic": {
+        "known": false,
+        "reason": "not_allocatable",
+        "allocatable": false
+      }
+    }
+  }
+}

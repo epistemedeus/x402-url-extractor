@@ -418,6 +418,12 @@ test("disposable merchant execution joins retained, failed, and later records", 
   assert.equal(extract.status, 402);
   await extract.text();
 
+  // HTTP completion precedes the asynchronous journal append. The existing
+  // queued snapshot is a deterministic barrier, not an arbitrary sleep or a
+  // weaker assertion about a partially observed file.
+  const observed = await fetch(`${merchant.base}/v0/commerce-demand.json?days=1`);
+  assert.equal(observed.status, 200);
+  await observed.json();
   const projected = await readMerchantRecords(dataDir);
   const commerce = projected.records.filter((row) => row?.v === 3 && row.route === "/chain/transaction-receipt");
   const failureCodes = [...new Set(commerce.map((row) => row.paymentFailureCode).filter(Boolean))].sort();

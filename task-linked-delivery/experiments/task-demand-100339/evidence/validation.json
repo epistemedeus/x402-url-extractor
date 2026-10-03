@@ -1,0 +1,90 @@
+{
+  "schema": "samedaydesk.task-demand.validation.v1",
+  "observedAt": "2026-10-02T12:31:09.400021+00:00",
+  "node": "v22.22.2",
+  "sourceCommit": "dd30439b991b4fbecc67365af68f7fd2acaccc91",
+  "suites": [
+    {
+      "id": "task-demand",
+      "command": "node --test task-linked-delivery/experiments/task-demand-100339/test/*.test.mjs",
+      "tests": 15,
+      "passed": 15,
+      "failed": 0,
+      "tapSha256": "0b238dbc2673107fab761e5c5e8850dff15765ebe24fb1a7a3b0d1784ecd492c"
+    },
+    {
+      "id": "retained-commerce-economics",
+      "command": "node --test --test-concurrency=1 commerce-outcome-binding.concurrency.test.mjs commerce-outcome-binding.test.mjs commerce-outcome-binding.root.test.mjs commerce-events.test.mjs commerce-settlement-reconciler.test.mjs commerce-settlement-source-delivery.test.mjs task-linked-delivery/receiving.test.mjs task-linked-delivery/experiments/delivery-outcome-100173/test/join.test.mjs task-linked-delivery/experiments/useful-economics-100290/test/join.test.mjs task-linked-delivery/experiments/useful-economics-100290/test/merchant-execution.test.mjs task-linked-delivery/experiments/useful-economics-100290/test/cold-export.test.mjs",
+      "tests": 208,
+      "passed": 208,
+      "failed": 0,
+      "tapSha256": "58d0240c7fd6ef8092bc42837b7efb588cdf25fd92110f4c2350eb30df31eaf4"
+    },
+    {
+      "id": "existing-acquisition",
+      "command": "node --test machine-acquisition.test.mjs public-acquisition/engine.test.mjs public-acquisition/receiving-lifecycle.test.mjs public-acquisition/receiving-file-bounds.test.mjs",
+      "tests": 31,
+      "passed": 31,
+      "failed": 0,
+      "tapSha256": "579d2a6b8bf07e69137729b2519afaa3d8da48e748f3c6095e814a19fa10d5af"
+    }
+  ],
+  "codeAndHarnessFiles": [
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/src/bounds.mjs",
+      "sha256": "8e2d5e1cfb41319683862113ef8dbea9796cf421fa50fac47e57e30e89b603a6"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/src/export.mjs",
+      "sha256": "07ff265798fcefedf7e5d1ec905c0018df3ed7e8e6c082a10a732c5e43a2d3d6"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/src/observer-integration.mjs",
+      "sha256": "73bf60d6f71685bd1d1236b8cecd7f4989e303ff86cbac75a7429acbb3cbc8d9"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/src/project.mjs",
+      "sha256": "2941f1ca3d5571120e3ddf138bcb31fbb43498149985e160dfb735229c73f360"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/bin/task-demand.mjs",
+      "sha256": "7d565830046f90455ed27386a134cb6462c09ab9ef79f66f73d80e89f2c19e2d"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/test/cold-export.test.mjs",
+      "sha256": "25a47799a93f8a5fde04350158b9423543c117b5320b8aa755530cdd05027a92"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/test/fixtures.mjs",
+      "sha256": "b315db96281b0d9b5177ee5e7015dbffb83b9e49c894687854d5fa12b39db7a7"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/test/observer.test.mjs",
+      "sha256": "e95be04b4e752d97794bec1649603d22d05c62608d1344183430e32c5fb4ece4"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/test/portable.test.mjs",
+      "sha256": "b8c306604ab6c987b7a9ae08212b77b9477dde7be55027d0038450015e349198"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/test/projection.test.mjs",
+      "sha256": "d230085a9039b81540842b28006355bccd22311453cefd76047ba27285c79939"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/export/cold-receipt.mjs",
+      "sha256": "a8322fb9665265dccd5d77ac31720b839f5b0fd603cb75e958da44ac8e6d728a"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/export/pack.mjs",
+      "sha256": "8f8ad4b805020a2fe112e9b02d152541d343165e422d486cd547d6bca445d57a"
+    }
+  ],
+  "retainedMachineReports": [
+    "evidence/retention-friction.retained.json",
+    "evidence/negative-utility.retained.json"
+  ],
+  "retainedReplaysByteIdentical": true,
+  "outsideUseEstablished": false,
+  "productionHosted": false,
+  "recognizedRevenueAtomic": "0"
+}

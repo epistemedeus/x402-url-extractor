@@ -1,0 +1,279 @@
+{
+  "schema": "sol421.exact-receiving.v1",
+  "observedAt": "2026-10-02T18:19:40.231Z",
+  "node": "v22.22.2",
+  "host": "cursor",
+  "baseCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+  "checks": [
+    {
+      "name": "clone",
+      "command": [
+        "git",
+        "clone",
+        "--quiet",
+        "--no-hardlinks",
+        "--no-checkout",
+        "/home/ubuntu/root-sol-421",
+        "/tmp/sol421-final-exact-source-zxaTVg"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 19.870796000000002,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0
+    },
+    {
+      "name": "checkout",
+      "command": [
+        "git",
+        "checkout",
+        "--quiet",
+        "--detach",
+        "519645af3a2fa36f745d59f08aab4008776a4aa6"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 79.25787700000001,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0
+    },
+    {
+      "name": "historical-source",
+      "command": [
+        "git",
+        "-c",
+        "credential.helper=",
+        "-c",
+        "credential.helper=!/usr/bin/gh auth git-credential",
+        "fetch",
+        "--refetch",
+        "--no-filter",
+        "--no-tags",
+        "https://github.com/epistemedeus/x402-url-extractor.git",
+        "dd30439b991b4fbecc67365af68f7fd2acaccc91"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 538.366953,
+      "logSha256": "b8c803d10229317d24376e9677046eb6fd85bf72d3543cd5b2fa7907114c26c4",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0
+    },
+    {
+      "name": "lockfile-dependencies",
+      "command": [
+        "npm",
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 3168.565607,
+      "logSha256": "dd26904baf8b043110667df9c27ffc200efb3beba2be64521bcf632ef6b04404",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0
+    },
+    {
+      "name": "before-native",
+      "command": [
+        "/home/ubuntu/.nvm/versions/node/v22.22.2/bin/node",
+        "--test",
+        "task-linked-delivery/experiments/free-task-observation-100421/test/native.test.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 1245.014671,
+      "logSha256": "16ae4a86d1c3a58f6e32e7c58e6bd29bb3ea4f7b5929606952dcb45c4a2113a7",
+      "tests": 1,
+      "pass": 1,
+      "fail": 0
+    },
+    {
+      "name": "ROOT-CUSTOMER-STORE-ADAPTER.patch.check",
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "/home/ubuntu/root-sol-421/task-linked-delivery/experiments/free-task-observation-100421/export/ROOT-CUSTOMER-STORE-ADAPTER.patch"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 2.1562039999998888,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0
+    },
+    {
+      "name": "ROOT-CUSTOMER-STORE-ADAPTER.patch.apply",
+      "command": [
+        "git",
+        "apply",
+        "/home/ubuntu/root-sol-421/task-linked-delivery/experiments/free-task-observation-100421/export/ROOT-CUSTOMER-STORE-ADAPTER.patch"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 2.4784469999995054,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0
+    },
+    {
+      "name": "ROOT-FREE-RESPONSE-OBSERVATION.patch.check",
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "/home/ubuntu/root-sol-421/task-linked-delivery/experiments/free-task-observation-100421/export/ROOT-FREE-RESPONSE-OBSERVATION.patch"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 2.4072690000002694,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0
+    },
+    {
+      "name": "ROOT-FREE-RESPONSE-OBSERVATION.patch.apply",
+      "command": [
+        "git",
+        "apply",
+        "/home/ubuntu/root-sol-421/task-linked-delivery/experiments/free-task-observation-100421/export/ROOT-FREE-RESPONSE-OBSERVATION.patch"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 2.5901249999997162,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0
+    },
+    {
+      "name": "ROOT-OBSERVATION-MOUNT.patch.check",
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "/home/ubuntu/root-sol-421/task-linked-delivery/experiments/free-task-observation-100421/export/ROOT-OBSERVATION-MOUNT.patch"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 1.5893129999994926,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0
+    },
+    {
+      "name": "ROOT-OBSERVATION-MOUNT.patch.apply",
+      "command": [
+        "git",
+        "apply",
+        "/home/ubuntu/root-sol-421/task-linked-delivery/experiments/free-task-observation-100421/export/ROOT-OBSERVATION-MOUNT.patch"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 1.7058230000002368,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0
+    },
+    {
+      "name": "owned-mounted",
+      "command": [
+        "/home/ubuntu/.nvm/versions/node/v22.22.2/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "task-linked-delivery/experiments/free-task-observation-100421/test/journal.test.mjs",
+        "task-linked-delivery/experiments/free-task-observation-100421/test/native.test.mjs",
+        "task-linked-delivery/experiments/free-task-observation-100421/test/portable.test.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 8830.828586,
+      "logSha256": "c23979167e3138666912011a3b804c6696df435dd6f1b78282cd7e7e5e5a4be6",
+      "tests": 11,
+      "pass": 11,
+      "fail": 0
+    },
+    {
+      "name": "exact395",
+      "command": [
+        "/home/ubuntu/.nvm/versions/node/v22.22.2/bin/node",
+        "--test",
+        "task-linked-delivery/experiments/task-demand-100339/test/cold-export.test.mjs",
+        "task-linked-delivery/experiments/task-demand-100339/test/observer.test.mjs",
+        "task-linked-delivery/experiments/task-demand-100339/test/portable.test.mjs",
+        "task-linked-delivery/experiments/task-demand-100339/test/projection.test.mjs",
+        "task-linked-delivery/experiments/task-demand-100339/test/response-interval.test.mjs",
+        "docs/reviews/sol395-causal-task-receiving/receiving.test.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 3344.8887179999983,
+      "logSha256": "0148d8e14e039689d19800cd2c552911c1faca38d6d721ae57ec464b840a2495",
+      "tests": 26,
+      "pass": 26,
+      "fail": 0
+    },
+    {
+      "name": "paid-and-journals",
+      "command": [
+        "/home/ubuntu/.nvm/versions/node/v22.22.2/bin/node",
+        "--test",
+        "--test-concurrency=1",
+        "commerce-outcome-binding.concurrency.test.mjs",
+        "commerce-outcome-binding.test.mjs",
+        "commerce-outcome-binding.root.test.mjs",
+        "commerce-events.test.mjs",
+        "commerce-settlement-reconciler.test.mjs",
+        "commerce-settlement-source-delivery.test.mjs",
+        "task-linked-delivery/receiving.test.mjs",
+        "task-linked-delivery/experiments/delivery-outcome-100173/test/join.test.mjs",
+        "task-linked-delivery/experiments/useful-economics-100290/test/join.test.mjs",
+        "task-linked-delivery/experiments/useful-economics-100290/test/merchant-execution.test.mjs",
+        "task-linked-delivery/experiments/useful-economics-100290/test/cold-export.test.mjs",
+        "useful-result-reuse.test.mjs",
+        "useful-result-reuse.customer-grant.test.mjs",
+        "useful-result-reuse.customer-http.test.mjs",
+        "useful-result-reuse.http.test.mjs",
+        "paid-useful-journey.test.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 28405.203274000003,
+      "logSha256": "ad214401e297cc1656ff64fae955b714e875e386ea7be6e97d46844b58f7ea9a",
+      "tests": 240,
+      "pass": 240,
+      "fail": 0
+    },
+    {
+      "name": "disposable-shared-diff",
+      "command": [
+        "git",
+        "diff",
+        "--numstat"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 29.458357999996224,
+      "logSha256": "03bba30b8110181609b300ce5b936be3dd9e3615077f79c5836746153c98ad61",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0
+    }
+  ],
+  "disposableSharedDiff": [
+    "12\t2\tcommerce-events.mjs",
+    "11\t3\tcommerce-outcome-binding.mjs",
+    "5\t0\tuseful-result-reuse/http.mjs",
+    "3\t1\tuseful-result-reuse/service.mjs"
+  ],
+  "sharedWorkspaceChanged": false,
+  "original395DurationFixUnchanged": true,
+  "frozenArchivesUnchanged": true,
+  "productionJournalEnrolled": false,
+  "currentPaymentAuthorityChanged": false,
+  "modelChildren": 0,
+  "realPayments": 0,
+  "keyCreation": 0,
+  "tokenSavings": "unknown",
+  "customerCount": "unknown",
+  "recognizedRevenueAtomic": "0"
+}

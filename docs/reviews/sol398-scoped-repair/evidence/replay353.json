@@ -1,0 +1,48 @@
+{
+  "schema": "samedaydesk.scoped-repair.receiving-qa.v1",
+  "sourceCommit": "d9f8f0ac82b14ead8ecac4748640c2396b93192d",
+  "receivingCommit": "654f692653ae93dfedc1de16d0c3007bf5d4ca1d",
+  "patchSha256": "3db056827dcdb50ed5b24bdc47a8a616e6359b134878f573615ce9057bd21ff9",
+  "checks": [
+    {
+      "suite": "package",
+      "tests": 22,
+      "pass": 22,
+      "fail": 0,
+      "skipped": 0,
+      "logSha256": "22fe7ffaf0062085ecc1e26190a67ad5b728602e7d4a5a8efeab59d23335eef7"
+    },
+    {
+      "suite": "commerce-journal-source",
+      "tests": 283,
+      "pass": 283,
+      "fail": 0,
+      "skipped": 0,
+      "logSha256": "fdd3e2ca0998b6c33b705d7de7d200f0bbd08b2ceb8398c9ce9bec60737f4b40"
+    },
+    {
+      "suite": "surface-source",
+      "tests": 24,
+      "pass": 24,
+      "fail": 0,
+      "skipped": 0,
+      "logSha256": "4cc8bc20fb7af005787f9916e1a879a9ef88c502d57832dca45ed82db58a6a99"
+    },
+    {
+      "suite": "public-acquisition",
+      "tests": 24,
+      "pass": 24,
+      "fail": 0,
+      "skipped": 0,
+      "logSha256": "b009a7f479fd3bcc498c495a5565610a363257621a128a170314b0d1379c1a11"
+    }
+  ],
+  "disposableDirectory": "/tmp/sol348-root-receiving-qZYWiq",
+  "sharedSourceChangedInWorker": false,
+  "productionHosted": false,
+  "hostedAcquisitionVerified": false,
+  "outsideUseful": false,
+  "settlement": "unknown",
+  "paidProviderCalls": 0,
+  "recognizedRevenueAtomic": "0"
+}

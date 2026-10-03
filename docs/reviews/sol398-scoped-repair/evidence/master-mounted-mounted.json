@@ -1,0 +1,54 @@
+{
+  "schema": "sol398.mounted-receiving.v1",
+  "proofClass": "loopback",
+  "clientSha256": "f95db152722ac820d57975cdab9b2bb486888f2faf023dc271b82da5eba84656",
+  "receivedAssets": [
+    {
+      "relativePath": "scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz",
+      "bytes": 37921,
+      "sha256": "f95db152722ac820d57975cdab9b2bb486888f2faf023dc271b82da5eba84656"
+    },
+    {
+      "relativePath": "scoped-repair-commerce-100348/0.1.2/provenance.json",
+      "bytes": 8453,
+      "sha256": "7febcb560b80a9cdd02a59b419707fe9f4a9a9a2030c8b130da4e399a33c3ca8"
+    },
+    {
+      "relativePath": "scoped-repair-commerce-100348/0.1.2/LICENSE",
+      "bytes": 1068,
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c"
+    },
+    {
+      "relativePath": "scoped-repair-commerce-100348/0.1.2/SOURCE-NOTICE.txt",
+      "bytes": 525,
+      "sha256": "a394bc61d96049ce3faed08a0c248b0de05d05bbb4af10d07ab836c6766bedd3"
+    }
+  ],
+  "strippedRoots": 2,
+  "tasks": [
+    {
+      "task": "caller-sdk-concern",
+      "passed": true,
+      "executionMs": 115.702
+    },
+    {
+      "task": "order-status",
+      "passed": true,
+      "executionMs": 352.407
+    }
+  ],
+  "actualMerchant": true,
+  "actualFreeScanner": true,
+  "suppliedSellerEvidenceIsIndependent": false,
+  "usefulNegative": true,
+  "decline": true,
+  "changedLater": true,
+  "restartedRetry": true,
+  "unchangedStoreOnRetry": true,
+  "verifyCalls": 0,
+  "settleCalls": 0,
+  "productionHosted": false,
+  "outsideUse": "unknown",
+  "settlement": "unknown",
+  "recognizedRevenueAtomic": "0"
+}

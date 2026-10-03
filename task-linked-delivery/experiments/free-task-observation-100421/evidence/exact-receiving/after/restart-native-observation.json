@@ -1,0 +1,224 @@
+{
+  "mode": "restart",
+  "workerPid": 724354,
+  "callerProcesses": [
+    {
+      "callerPid": 724366,
+      "eventId": "f0f0c6a6-fd1b-455e-9af7-aee33765b097",
+      "taskRef": "t8ef07a1db6a84c0ad4683d3f45206cb3fed0efc75c162c82fb998dfe6008a7",
+      "callerPredicate": {
+        "status": "pass",
+        "reason": null,
+        "criterion": "positive",
+        "output": {
+          "transactionFeeWei": "42000"
+        }
+      },
+      "observationAccepted": true,
+      "observationReason": null,
+      "independentlyExecuted": {
+        "status": "pass",
+        "reason": null,
+        "criterion": "positive",
+        "output": {
+          "transactionFeeWei": "42000"
+        }
+      },
+      "receivedMs": 43.441174000000004,
+      "observationMs": 236.483922,
+      "httpStatus": 200,
+      "paymentPermitted": false
+    },
+    {
+      "callerPid": 724381,
+      "eventId": "9c25a550-ec84-4b94-acd7-2f7d25ffd60f",
+      "taskRef": "tbcb9e47859a433046dd01fbe1247eb8e861d03486847c2110ed073139180ef",
+      "callerPredicate": {
+        "status": "pass",
+        "reason": null,
+        "criterion": "agreed_negative",
+        "output": {
+          "minedReceiptAvailable": false,
+          "decision": "not_found"
+        }
+      },
+      "observationAccepted": true,
+      "observationReason": null,
+      "independentlyExecuted": {
+        "status": "pass",
+        "reason": null,
+        "criterion": "agreed_negative",
+        "output": {
+          "minedReceiptAvailable": false,
+          "decision": "not_found"
+        }
+      },
+      "receivedMs": 24.372159999999997,
+      "observationMs": 230.19574899999998,
+      "httpStatus": 200,
+      "paymentPermitted": false
+    },
+    {
+      "callerPid": 724396,
+      "eventId": "1d425098-15b4-4ff8-9201-9c9422882af8",
+      "taskRef": "t12f62fdf5e35741aa8e70a7b7d5628b56fe3800afe00d1fc4e9681c828302e",
+      "callerPredicate": {
+        "status": "unknown",
+        "reason": "no_independent_predicate",
+        "criterion": "unknown",
+        "output": null
+      },
+      "observationAccepted": true,
+      "observationReason": null,
+      "independentlyExecuted": {
+        "status": "unknown",
+        "reason": "no_independent_predicate",
+        "criterion": "unknown",
+        "output": null
+      },
+      "receivedMs": 27.888825,
+      "observationMs": 8.044488999999999,
+      "httpStatus": 200,
+      "paymentPermitted": false
+    },
+    {
+      "callerPid": 724404,
+      "eventId": "672c1542-13f9-4c2a-a694-eca5688bef20",
+      "taskRef": "td4c305291b27fb7ad93a3ebbaf92eb9f8500100276474fef8219d8a6e5193a",
+      "callerPredicate": {
+        "status": "fail",
+        "reason": "execution_failed",
+        "criterion": "unknown",
+        "output": null
+      },
+      "observationAccepted": false,
+      "observationReason": "execution_failed",
+      "independentlyExecuted": null,
+      "receivedMs": 25.015933,
+      "observationMs": 7.897071000000004,
+      "httpStatus": 200,
+      "paymentPermitted": false
+    }
+  ],
+  "replayPids": [
+    724374,
+    724389,
+    724420
+  ],
+  "replayCalls": 3,
+  "executionCalls": {
+    "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": 2,
+    "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb": 1,
+    "0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd": 1,
+    "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc": 1,
+    "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee": 1
+  },
+  "preFinishReason": "missing_or_conflicting_predecessor",
+  "probes": [
+    {
+      "name": "changed_independent_output",
+      "reason": "replayed_output_changed"
+    },
+    {
+      "name": "http200_without_opt_in_proof",
+      "reason": "wrong_attempt",
+      "actualUsefulFee": "42000"
+    },
+    {
+      "name": "caller_label_without_native_proof",
+      "reason": "wrong_attempt"
+    },
+    {
+      "name": "wrong_attempt",
+      "reason": "wrong_attempt"
+    },
+    {
+      "name": "wrong_task",
+      "reason": "wrong_task"
+    },
+    {
+      "name": "wrong_resource",
+      "reason": "wrong_resource"
+    },
+    {
+      "name": "arbitrary_success_predicate",
+      "reason": "predicate_rejected"
+    },
+    {
+      "name": "invented_settlement",
+      "reason": "unsupported_authority_field"
+    },
+    {
+      "name": "not_requested",
+      "reason": "not_requested"
+    },
+    {
+      "name": "changed_response",
+      "reason": "response_changed"
+    },
+    {
+      "name": "forged_token",
+      "reason": "unauthorized"
+    },
+    {
+      "name": "partial_cut",
+      "reason": "causal_cut_not_covered"
+    },
+    {
+      "name": "missing_predecessor",
+      "reason": "missing_or_conflicting_predecessor"
+    },
+    {
+      "name": "duplicate_explicit_reconciliation",
+      "reason": "duplicate",
+      "grantReturned": false
+    },
+    {
+      "name": "grant_wrong_task",
+      "reason": "wrong_task"
+    },
+    {
+      "name": "grant_wrong_attempt",
+      "reason": "wrong_attempt"
+    },
+    {
+      "name": "grant_wrong_body",
+      "reason": "wrong_result"
+    },
+    {
+      "name": "grant_wrong_method",
+      "reason": "wrong_method"
+    },
+    {
+      "name": "undelegated_share_right",
+      "reason": "action_rejected"
+    },
+    {
+      "name": "expired_no_regrant",
+      "reason": "expired"
+    },
+    {
+      "name": "expired_grant_read",
+      "reason": "expired"
+    },
+    {
+      "name": "wrong_tenant",
+      "reason": "grant_rejected"
+    }
+  ],
+  "priorRestart": {
+    "readStatus": 200,
+    "readDecision": "found",
+    "revoked": true,
+    "withdrawnReason": "revoked"
+  },
+  "actualHTTP": true,
+  "actualJournalWrites": true,
+  "rpcBoundary": "fixture_rpc",
+  "realPayment": false,
+  "keyCreated": false,
+  "productionJournalEnrolled": false,
+  "customerCount": "unknown",
+  "tokenSavings": "unknown",
+  "recognizedRevenueAtomic": "0"
+}

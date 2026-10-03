@@ -1,0 +1,184 @@
+TAP version 13
+# Subtest: two real native receipt generations, restart, grants, negatives and a useful free gap
+    # Subtest: pre-finish native retention remains inside the measured response interval
+    ok 1 - pre-finish native retention remains inside the measured response interval
+      ---
+      duration_ms: 0.809985
+      type: 'test'
+      ...
+    # Subtest: a restarted caller reads and withdraws the prior grant while a new useful negative stays current
+    ok 2 - a restarted caller reads and withdraws the prior grant while a new useful negative stays current
+      ---
+      duration_ms: 0.23468
+      type: 'test'
+      ...
+    # Subtest: real useful free execution has no settlement or native retained grant
+    ok 3 - real useful free execution has no settlement or native retained grant
+      ---
+      duration_ms: 0.116445
+      type: 'test'
+      ...
+    # Subtest: native grant ports reject another tenant, changed method and expiry
+    ok 4 - native grant ports reject another tenant, changed method and expiry
+      ---
+      duration_ms: 597.595139
+      type: 'test'
+      ...
+    # Subtest: mismatched task, partial coverage, conflicting settlement and usefulness change decisions
+    ok 5 - mismatched task, partial coverage, conflicting settlement and usefulness change decisions
+      ---
+      duration_ms: 13.721347
+      type: 'test'
+      ...
+    # Subtest: scope, tenant and time drift leave covered rates unknown
+    ok 6 - scope, tenant and time drift leave covered rates unknown
+      ---
+      duration_ms: 4.958988
+      type: 'test'
+      ...
+    # Subtest: caller-retained actual cuts replay in fresh CLI processes
+    ok 7 - caller-retained actual cuts replay in fresh CLI processes
+      ---
+      duration_ms: 177.164971
+      type: 'test'
+      ...
+    1..7
+ok 1 - two real native receipt generations, restart, grants, negatives and a useful free gap
+  ---
+  duration_ms: 3626.320193
+  type: 'test'
+  ...
+# Subtest: native settlement journal rotates, fsyncs a lost write ACK and reloads two retained generations
+ok 2 - native settlement journal rotates, fsyncs a lost write ACK and reloads two retained generations
+  ---
+  duration_ms: 639.607572
+  type: 'test'
+  ...
+# Subtest: licensed candidate reproduces exact committed bytes and passes cold acquisition/restart
+not ok 3 - licensed candidate reproduces exact committed bytes and passes cold acquisition/restart
+  ---
+  duration_ms: 57.269892
+  type: 'test'
+  location: '/tmp/sol421-exact-source-u5z2d21q/task-linked-delivery/experiments/task-demand-100339/test/cold-export.test.mjs:11:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    fatal: bad object dd30439b991b4fbecc67365af68f7fd2acaccc91:task-linked-delivery/experiments/task-demand-100339/README.md
+    
+    
+    128 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 128
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/sol421-exact-source-u5z2d21q/task-linked-delivery/experiments/task-demand-100339/test/cold-export.test.mjs:26:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: real causal middleware and existing receipt retention feed the isolated observer adapter
+ok 4 - real causal middleware and existing receipt retention feed the isolated observer adapter
+  ---
+  duration_ms: 70.082824
+  type: 'test'
+  ...
+# Subtest: stripped files, stdin and another process replay two questions after restart and changed evidence
+ok 5 - stripped files, stdin and another process replay two questions after restart and changed evidence
+  ---
+  duration_ms: 1144.33222
+  type: 'test'
+  ...
+# Subtest: stdin silence obeys the CLI hard deadline
+ok 6 - stdin silence obeys the CLI hard deadline
+  ---
+  duration_ms: 164.488735
+  type: 'test'
+  ...
+# Subtest: explicit NDJSON export strips private fields and retains torn-data coverage reasons
+ok 7 - explicit NDJSON export strips private fields and retains torn-data coverage reasons
+  ---
+  duration_ms: 138.837064
+  type: 'test'
+  ...
+# Subtest: two supplied questions separate owner/sponsored drops and useful negatives
+ok 8 - two supplied questions separate owner/sponsored drops and useful negatives
+  ---
+  duration_ms: 40.533095
+  type: 'test'
+  ...
+# Subtest: received native predicates and vendored read-only contracts have exact parity
+ok 9 - received native predicates and vendored read-only contracts have exact parity
+  ---
+  duration_ms: 2.291311
+  type: 'test'
+  ...
+# Subtest: either missing causal side, false task records and conflicting task bindings stay unknown
+ok 10 - either missing causal side, false task records and conflicting task bindings stay unknown
+  ---
+  duration_ms: 28.915352
+  type: 'test'
+  ...
+# Subtest: duplicates collapse; conflicting or torn/late records cannot produce a covered rate
+ok 11 - duplicates collapse; conflicting or torn/late records cannot produce a covered rate
+  ---
+  duration_ms: 29.484669
+  type: 'test'
+  ...
+# Subtest: wrong task/read owner and repeated causal attempts do not repair joins
+ok 12 - wrong task/read owner and repeated causal attempts do not repair joins
+  ---
+  duration_ms: 17.283428
+  type: 'test'
+  ...
+# Subtest: population/time/source misalignment yields scoped unknown conversion
+ok 13 - population/time/source misalignment yields scoped unknown conversion
+  ---
+  duration_ms: 41.336522
+  type: 'test'
+  ...
+# Subtest: grant revocation, expiry and changed usefulness survive replay without stale facts
+ok 14 - grant revocation, expiry and changed usefulness survive replay without stale facts
+  ---
+  duration_ms: 42.810232
+  type: 'test'
+  ...
+# Subtest: supplied flags, wallet/UA, HTTP200, archive fetch and mocked settlement are useful negatives
+ok 15 - supplied flags, wallet/UA, HTTP200, archive fetch and mocked settlement are useful negatives
+  ---
+  duration_ms: 32.167247
+  type: 'test'
+  ...
+# Subtest: direct/marginal economics preserve resource planes and historic commission pin
+ok 16 - direct/marginal economics preserve resource planes and historic commission pin
+  ---
+  duration_ms: 13.843139
+  type: 'test'
+  ...
+# Subtest: raw intake, nesting, sources, rows, output and deadline are bounded
+ok 17 - raw intake, nesting, sources, rows, output and deadline are bounded
+  ---
+  duration_ms: 44.043216
+  type: 'test'
+  ...
+# Subtest: native retention during response uses measured duration and survives portable replay
+ok 18 - native retention during response uses measured duration and survives portable replay
+  ---
+  duration_ms: 83.380908
+  type: 'test'
+  ...
+# Subtest: measured response duration rejects invalid values and does not replace causal ownership
+ok 19 - measured response duration rejects invalid values and does not replace causal ownership
+  ---
+  duration_ms: 8.925565
+  type: 'test'
+  ...
+1..19
+# tests 26
+# suites 0
+# pass 25
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4343.057555

@@ -1,0 +1,218 @@
+{
+  "coveredDocument": {
+    "generatedAt": "2026-10-03T03:01:52.512Z",
+    "requestedWindowDays": 1,
+    "requestedWindowStart": "2026-10-02T03:01:52.512Z",
+    "requestedWindowEnd": "2026-10-03T03:01:52.512Z",
+    "requestedWindowComplete": true,
+    "requestedWindowCoverage": "complete",
+    "externalEvents": 10,
+    "paidSuccessActors": 0,
+    "independentPaidSuccessActors": 0,
+    "agentChallengeActors": 3,
+    "paymentHeaderEvents": 0,
+    "parseableCredentialAttemptEvents": 0,
+    "constructedRequestEvents": 1,
+    "byResult": {
+      "challenge": 4,
+      "discovery": 5,
+      "validation_failure": 1,
+      "unmatched": 0,
+      "protocol_discovery": 0,
+      "paid_success": 0
+    },
+    "agentChallengeBySource": {
+      "generic-agent-indexer": 4
+    },
+    "constructedRequestBySource": {
+      "direct-or-unattributed": 1
+    },
+    "coverage": {
+      "retainedDurationWholeDays": 0,
+      "retainedObservationStartUtcDay": null,
+      "retainedObservationEndUtcDay": null
+    },
+    "durableRareFunnel": {
+      "paymentHeaderEvents": 0,
+      "parseableCredentialAttemptEvents": 0,
+      "unparseablePaymentHeaderEvents": 0,
+      "paidSuccessEvents": 0,
+      "paidSuccessActors": 0,
+      "paymentErrorEvents": 0,
+      "byResult": {},
+      "independentOperatorCount": null,
+      "independentUsefulDemand": "unknown",
+      "coverage": {
+        "retainedObservationStartUtcDay": "2026-09-11",
+        "retainedObservationEndUtcDay": "2026-09-30",
+        "retainedDurationWholeDays": 20,
+        "retainedParseableRecordCount": 102,
+        "requestedWindowComplete": false,
+        "captureContinuityProven": false,
+        "integrityStatus": "ok"
+      }
+    },
+    "paymentEvidence": {
+      "relationship": "durable_settlement_outlives_retained_paid_event",
+      "eventPlane": {
+        "coverage": "complete",
+        "requestedWindowPaidSuccessActors": 0
+      },
+      "settlementPlane": {
+        "coverage": "complete",
+        "reconciledSettlements": 43,
+        "amountAtomic": "1027000",
+        "byClass": {
+          "unclassified": {
+            "settlements": 30,
+            "amountAtomic": "440000"
+          },
+          "internal": {
+            "settlements": 12,
+            "amountAtomic": "577000"
+          },
+          "validation": {
+            "settlements": 1,
+            "amountAtomic": "10000"
+          }
+        }
+      },
+      "customerPlane": {
+        "attributableCustomerCount": null,
+        "buyerValidDeliveryCount": null,
+        "repeatIndependentCustomerCount": null
+      }
+    },
+    "policyContractFunnel": {
+      "exactAction": {
+        "paidRoute": "/security/wallet-policy-conformance",
+        "contractReads": 1,
+        "challengeContinuationActors": 0,
+        "credentialContinuationActors": 0,
+        "paidDeliveryContinuationActors": 0
+      }
+    }
+  },
+  "rareDocument": {
+    "generatedAt": "2026-10-03T03:01:52.512Z",
+    "requestedWindowDays": 30,
+    "requestedWindowStart": "2026-09-03T03:01:52.512Z",
+    "requestedWindowEnd": "2026-10-03T03:01:52.512Z",
+    "requestedWindowComplete": false,
+    "requestedWindowCoverage": "unknown_for_full_window",
+    "externalEvents": 10,
+    "paidSuccessActors": 0,
+    "independentPaidSuccessActors": 0,
+    "agentChallengeActors": 3,
+    "paymentHeaderEvents": 102,
+    "parseableCredentialAttemptEvents": 0,
+    "constructedRequestEvents": 1,
+    "byResult": {
+      "challenge": 4,
+      "discovery": 5,
+      "validation_failure": 1,
+      "unmatched": 0,
+      "protocol_discovery": 0,
+      "paid_success": 0
+    },
+    "agentChallengeBySource": {
+      "generic-agent-indexer": 4
+    },
+    "constructedRequestBySource": {
+      "direct-or-unattributed": 1
+    },
+    "coverage": {
+      "retainedDurationWholeDays": 0,
+      "retainedObservationStartUtcDay": null,
+      "retainedObservationEndUtcDay": null
+    },
+    "durableRareFunnel": {
+      "paymentHeaderEvents": 102,
+      "parseableCredentialAttemptEvents": 1,
+      "unparseablePaymentHeaderEvents": 101,
+      "paidSuccessEvents": 12,
+      "paidSuccessActors": 9,
+      "paymentErrorEvents": 90,
+      "byResult": {
+        "validation_failure": 80,
+        "paid_success": 12,
+        "challenge": 10
+      },
+      "independentOperatorCount": null,
+      "independentUsefulDemand": "unknown",
+      "coverage": {
+        "retainedObservationStartUtcDay": "2026-09-11",
+        "retainedObservationEndUtcDay": "2026-09-30",
+        "retainedDurationWholeDays": 20,
+        "retainedParseableRecordCount": 102,
+        "requestedWindowComplete": false,
+        "captureContinuityProven": false,
+        "integrityStatus": "ok"
+      }
+    },
+    "paymentEvidence": {
+      "relationship": "durable_settlement_outlives_retained_paid_event",
+      "eventPlane": {
+        "coverage": "unknown_for_full_window",
+        "requestedWindowPaidSuccessActors": 0
+      },
+      "settlementPlane": {
+        "coverage": "unknown_for_full_window",
+        "reconciledSettlements": 43,
+        "amountAtomic": "1027000",
+        "byClass": {
+          "unclassified": {
+            "settlements": 30,
+            "amountAtomic": "440000"
+          },
+          "internal": {
+            "settlements": 12,
+            "amountAtomic": "577000"
+          },
+          "validation": {
+            "settlements": 1,
+            "amountAtomic": "10000"
+          }
+        }
+      },
+      "customerPlane": {
+        "attributableCustomerCount": null,
+        "buyerValidDeliveryCount": null,
+        "repeatIndependentCustomerCount": null
+      }
+    },
+    "policyContractFunnel": {
+      "exactAction": {
+        "paidRoute": "/security/wallet-policy-conformance",
+        "contractReads": 1,
+        "challengeContinuationActors": 0,
+        "credentialContinuationActors": 0,
+        "paidDeliveryContinuationActors": 0
+      }
+    }
+  },
+  "coveredMeta": {
+    "url": "https://agents.samedaydesk.com/v0/commerce-demand.json?days=1",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "bytes": 100,
+    "acquiredAt": "2026-10-03T03:02:00.000Z",
+    "httpStatus": 200
+  },
+  "rareMeta": {
+    "url": "https://agents.samedaydesk.com/v0/commerce-demand.json?days=30",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "bytes": 100,
+    "acquiredAt": "2026-10-03T03:02:00.000Z",
+    "httpStatus": 200
+  },
+  "proposal": {
+    "census": true,
+    "payingCustomers": 43,
+    "uniqueAgentsFromActors": true,
+    "windowPaidDeliveries": 0,
+    "joinSluzenCallId": true,
+    "publicExample": true,
+    "laterRepeatInheritsUsefulness": true,
+    "productionPopulation": true
+  }
+}

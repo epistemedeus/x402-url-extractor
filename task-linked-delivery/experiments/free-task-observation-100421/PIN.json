@@ -1,0 +1,121 @@
+{
+  "schema": "sol421.source-pin.v1",
+  "baseCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+  "exact395SourceCheckpoint": "b24ece44464302680df93639026ff103126da41a",
+  "ownedScope": "task-linked-delivery/experiments/free-task-observation-100421",
+  "upstreamFiles": [
+    {
+      "path": "commerce-events.mjs",
+      "sha256": "a825425e38c521c6737892ca67f46d0a6a26bb92f0beae9f9946ddb1d6215f5f"
+    },
+    {
+      "path": "commerce-outcome-binding.mjs",
+      "sha256": "67661ed440fd96a10dc5e08238453486779b889b67f933d228fa2a94c4193c54"
+    },
+    {
+      "path": "useful-result-reuse/service.mjs",
+      "sha256": "9dacc6f3a4bd7dbb089a52431f4bfe941ddafcf3d0ec8ed17076bd43e4ba87fc"
+    },
+    {
+      "path": "useful-result-reuse/http.mjs",
+      "sha256": "864830636f3af2daab3c90e7344bab5d11097d902cfffadd53ba2f1db387fe9d"
+    },
+    {
+      "path": "useful-result-reuse/customer-grant.mjs",
+      "sha256": "a3a17fa1d82b4a5620dddaf34a7da111e67a01185ed46083fca84fe9516c89ac"
+    },
+    {
+      "path": "useful-result-reuse/store.mjs",
+      "sha256": "efebae286004b4b901a2c03019bdd4b610d67d8e4f4e754d530d18a27dd29e99"
+    },
+    {
+      "path": "transaction-receipt.mjs",
+      "sha256": "68e420952a517ab5c820babc2f02c2f43b29f3b7e24c69d92cf70863e189793f"
+    },
+    {
+      "path": "paid-useful-journey.mjs",
+      "sha256": "2d3f747490cf837e23fe058ac4b5aad8544e7c7dd1712f41fbfe575214650d47"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/src/project.mjs",
+      "sha256": "7e0e283c542d7a52cc20203780eb15096d2d02542fd3bcdf0d380507170b0598"
+    },
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/src/export.mjs",
+      "sha256": "c9ce1d8359e92a7596bfb15bda94737c9c00a0195709032086d485037b75cbeb"
+    },
+    {
+      "path": "docs/reviews/sol395-causal-task-receiving/native-ports.mjs",
+      "sha256": "9f9252ef7064cef2fe38766273d1795f66d20e2816f5e947b388e52a4f2e5e5b"
+    },
+    {
+      "path": "docs/reviews/sol395-causal-task-receiving/receiving.test.mjs",
+      "sha256": "85ae2b8468acc885a00ff7be50c18dae5db55ebb629ce92490a42aedc328afe3"
+    },
+    {
+      "path": "docs/reviews/sol395-causal-task-receiving/evidence/free-result.retained.json",
+      "sha256": "ef113d0bb83422d9d52ac52a25e0577f9040a22d74b9760522f32363aedefd19"
+    }
+  ],
+  "frozenArchives": [
+    {
+      "path": "task-linked-delivery/experiments/task-demand-100339/export/public/bytes/task-demand-100339/0.1.0/task-demand-100339-0.1.0.tar.gz",
+      "sha256": "44209579e6a005e6f80dbe7f26946fbb4a52b236d8c32e326eba5761b4d749f5"
+    },
+    {
+      "path": "docs/reviews/sol395-causal-task-receiving/consumer/public/bytes/task-demand-100339/0.1.1/task-demand-100339-0.1.1.tar.gz",
+      "sha256": "6cec3a3f4b3f51f485f1bf55688305b83a9fb41bbc34b31f30f6a774ef100cbb"
+    }
+  ],
+  "reusedSources": [
+    {
+      "path": "vendor/bounds.mjs",
+      "sha256": "8e2d5e1cfb41319683862113ef8dbea9796cf421fa50fac47e57e30e89b603a6",
+      "source": "task-linked-delivery/experiments/task-demand-100339/src/bounds.mjs",
+      "sourceSha256": "8e2d5e1cfb41319683862113ef8dbea9796cf421fa50fac47e57e30e89b603a6",
+      "adaptation": "byte exact"
+    },
+    {
+      "path": "vendor/causal-contract.mjs",
+      "sha256": "ec58a8bcfd0c232c33807ae5ea69d2831c2d715ff07d27a1d7749c13e9c333b1",
+      "source": "task-linked-delivery/experiments/task-demand-100339/vendor/causal-contract.mjs",
+      "sourceSha256": "ec58a8bcfd0c232c33807ae5ea69d2831c2d715ff07d27a1d7749c13e9c333b1",
+      "adaptation": "byte exact"
+    },
+    {
+      "path": "vendor/task-demand-export.mjs",
+      "sha256": "381cf7befbd0793ba9d67b514221cbc857a6092030df33a3b19d5a2554f06930",
+      "source": "task-linked-delivery/experiments/task-demand-100339/src/export.mjs",
+      "sourceSha256": "c9ce1d8359e92a7596bfb15bda94737c9c00a0195709032086d485037b75cbeb",
+      "adaptation": "relative imports only"
+    }
+  ],
+  "rootAdoptionPatches": [
+    {
+      "path": "export/ROOT-CUSTOMER-STORE-ADAPTER.patch",
+      "sha256": "9db7a6c60c0d4acc7d3fd100a84ef405efbdbdad6f797bdfacc974f356b52b82",
+      "appliedToSharedWorkspace": false
+    },
+    {
+      "path": "export/ROOT-FREE-RESPONSE-OBSERVATION.patch",
+      "sha256": "671df70ae0087427281153af4e1aba9b6763a59755162213f11bec087c696134",
+      "appliedToSharedWorkspace": false
+    },
+    {
+      "path": "export/ROOT-OBSERVATION-MOUNT.patch",
+      "sha256": "9d6b4aecda72542250e4c773a599785d8b248f0c2fa921c6de592be2fae6bb6f",
+      "appliedToSharedWorkspace": false
+    }
+  ],
+  "limits": {
+    "oneWriterProcess": true,
+    "crossProcessExclusion": false,
+    "retainedGenerations": 2,
+    "forwardSettlementDurability": "local-filesystem-fsync-rename-v1",
+    "customerStoreDurability": "existing buffered write; no fsync guarantee",
+    "unknownOutcome": "explicit readback only; never automatic mutation replay"
+  },
+  "productionJournalEnrolled": false,
+  "paymentPermitted": false,
+  "recognizedRevenueAtomic": "0"
+}

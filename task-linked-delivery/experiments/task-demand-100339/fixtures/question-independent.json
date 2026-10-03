@@ -1,0 +1,17 @@
+{
+  "id": "independent-attribution",
+  "text": "Which explicitly classified independent attempts reached later use?",
+  "populationId": "synthetic-cohort",
+  "from": "2026-10-01T00:00:00.000Z",
+  "to": "2026-10-02T00:00:00.000Z",
+  "asOf": "2026-10-02T00:00:00.000Z",
+  "operationIds": [
+    "normalized-transaction-receipt"
+  ],
+  "cohorts": [
+    "external_unknown"
+  ],
+  "taskRefs": [
+    "t91c77587ec9ad5ac1ad99e988ecc498d8e2dcf213595c72879a2a766fea101"
+  ]
+}

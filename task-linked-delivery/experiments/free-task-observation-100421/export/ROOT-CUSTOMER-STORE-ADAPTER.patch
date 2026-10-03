@@ -1,0 +1,22 @@
+diff --git a/useful-result-reuse/service.mjs b/useful-result-reuse/service.mjs
+index fbaceb8..8fbf54d 100644
+--- a/useful-result-reuse/service.mjs
++++ b/useful-result-reuse/service.mjs
+@@ -95,6 +95,7 @@ export function createUsefulResultReuse({
+   now = () => Date.now(),
+   ttlMs = DEFAULT_TTL_MS,
+   store = createReuseStore({ dataDir }),
++  customerStore = createReuseStore({ dataDir, maxRecordBytes: CUSTOMER_MAX_RECORD_BYTES }),
+ } = {}) {
+   const writer = createForwardOutcomeWriter({ dataDir, internalToken });
+ 
+@@ -136,7 +137,8 @@ export function createUsefulResultReuse({
+   }
+ 
+   const customer = createCustomerRetention({
+-    customerStore: createReuseStore({ dataDir, maxRecordBytes: CUSTOMER_MAX_RECORD_BYTES }),
++    // Optional composition shares this exact existing store admission queue.
++    customerStore,
+     internalToken,
+     now,
+     remember,

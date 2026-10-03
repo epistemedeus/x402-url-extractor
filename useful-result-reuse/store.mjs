@@ -94,7 +94,7 @@ export function createReuseStore({ dataDir, maxFileBytes = MAX_FILE_BYTES, maxRe
     const entry = await lstat(current).catch((error) => (error?.code === "ENOENT" ? null : Promise.reject(error)));
     if (entry?.isSymbolicLink()) fail("symlink");
     if (entry && !entry.isFile()) fail(entry.isFIFO() ? "fifo" : "not_file");
-    if (entry && entry.size >= maxFileBytes) {
+    if (entry && (entry.size >= maxFileBytes || entry.size + Buffer.byteLength(line) > maxFileBytes)) {
       await unlink(rotated).catch((error) => {
         if (error?.code !== "ENOENT") throw error;
       });
