@@ -11,6 +11,8 @@ import { exportObserverSource, projectObserverEvidence } from '../src/observer-i
 import { parseNdjson } from '../src/export.mjs';
 
 test('real causal middleware and existing receipt retention feed the isolated observer adapter',async()=>{
+  // Bound this real producer run, rather than a calendar window that expires.
+  const phaseStartedAt=Date.now();
   const dir=await mkdtemp(path.join(tmpdir(),'task-demand-observer-'));
   const token='synthetic-observer-integration-token-100339';
   const telemetry=createCommerceTelemetry({dataDir:dir,internalToken:token,secret:'synthetic-actor-secret-100339'});
@@ -19,7 +21,7 @@ test('real causal middleware and existing receipt retention feed the isolated ob
   const store=rows=>({maxRecordBytes:16384,read:async()=>rows,append:async(_file,row)=>rows.push(row),
     mutate:async(_file,work)=>{const changed=await work(rows);if(changed.append) rows.push(changed.append);return changed.result;}});
   const customer=createCustomerRetention({customerStore:store(customerRows),sharedStore:store(sharedRows),writer,internalToken:token,
-    now:()=>Date.parse('2026-10-01T12:00:00.000Z'),remember:async()=>{}});
+    now:()=>phaseStartedAt,remember:async()=>{}});
   let proof,retained;
   const app=express(); app.use(telemetry.middleware);
   app.get('/chain/transaction-receipt',async(req,res)=>{
@@ -41,7 +43,8 @@ test('real causal middleware and existing receipt retention feed the isolated ob
     assert.equal(openCausalCommerceEvent(proof,token),events[0].id);
     assert.equal(refs[0].commerceEventId,events[0].id);
     assert.equal(retained.accepted,true);
-    const metadata={kind:'synthetic_fixture',populationId:'native-observer',scope:{operationIds:['normalized-transaction-receipt'],cohorts:['external_unknown']},from:'2026-10-01T00:00:00.000Z',to:'2026-10-03T00:00:00.000Z',asOf:'2026-10-03T00:00:00.000Z',coverage:'partial'};
+    const phaseObservedAt=new Date(Date.now()+1).toISOString();
+    const metadata={kind:'synthetic_fixture',populationId:'native-observer',scope:{operationIds:['normalized-transaction-receipt'],cohorts:['external_unknown']},from:new Date(phaseStartedAt-1000).toISOString(),to:phaseObservedAt,asOf:phaseObservedAt,coverage:'partial'};
     const source=(plane,records)=>exportObserverSource({metadata:{...metadata,id:'native-'+plane.replace('_','-'),plane},records});
     const s=[source('attempts',events),source('task_refs',refs),source('retention',customerRows)];
     assert.equal(s[2].records.length,1);
