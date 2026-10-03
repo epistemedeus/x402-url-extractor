@@ -56,3 +56,21 @@ snapshot; commit a new snapshot only after checking it.
 
 The next visitor step is [NEXT-VISITOR.md](NEXT-VISITOR.md). Root owns
 outreach, spending, and release.
+
+## Source-counter populations
+
+The canonical producer's `captureSnapshot` selects `byResult` from
+`originClass: external`. Its `agentChallengeBySource` selects matched crawler
+paid-route challenges, and `constructedRequestBySource` selects constructed
+challenge requests across both external and crawler origins. These are separate
+event populations. They cannot share an external-request denominator.
+
+New reads expose `crawlerChallengeEvents` and `sourceCounterPopulations`,
+including the producer field, origin classes, result predicate and independently
+declared total. A missing total remains unknown even when a source map exists.
+External-stream coverage does not establish source-population coverage. Source
+labels are observations, not operator identity or independent demand.
+
+The historical stripped snapshot and measured table above are retained unchanged.
+This metadata correction does not join settlements, change payment or produce a
+customer count. The per-attempt reader added later is the separate causal path.
