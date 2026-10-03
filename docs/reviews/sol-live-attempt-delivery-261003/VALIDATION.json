@@ -51,7 +51,7 @@
   "physicalColdReplay": "passed in separate process after server exit",
   "frozenCurrentVerifiedFiles": 328,
   "licenseAndHistoricalReceivedReceiptPreserved": true,
-  "release": "undeployed source branch; Root owns release",
+  "release": "worker source-only delivery; PR165 externally merged earlier 8d14ef9; later correction remains for Root; hosted deployment not verified",
   "outsideCustomers": "unobserved",
   "recognizedRevenue": "unknown"
 }
