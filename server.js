@@ -1,3 +1,4 @@
+import { registerCommerceRuntime } from "./commerce-journal-admission.mjs";
 // x402-merchant — a paid HTTP endpoint that charges AI agents in USDC and
 // settles directly to OUR OWN Base wallet.
 //
@@ -1473,10 +1474,25 @@ const usefulResultReuseMount = fileURLToPath(new URL("./useful-result-reuse/http
 if (existsSync(usefulResultReuseMount)) {
   try {
     const { mountUsefulResultReuse } = await import(new URL("./useful-result-reuse/http.mjs", import.meta.url).href);
-    const mountedReuse = mountUsefulResultReuse(app, {
+    const { merchant161ObservationMount } = await import(new URL("./task-linked-delivery/experiments/attempt-useful-view-1005/src/enroll.mjs", import.meta.url).href);
+    registerCommerceRuntime(app, {
+      entrypoint: "server.js",
+      serviceVersion: SERVICE_VERSION,
+      publicUrl: PUBLIC_URL,
+      deploymentId: process.env.RAILWAY_DEPLOYMENT_ID || null,
+      source: process.env.RAILWAY_GIT_COMMIT_SHA || null,
+    });
+    const observationMount = merchant161ObservationMount({
+      app, telemetry: commerceTelemetry, settlement: commerceSettlementReconciler,
       dataDir: process.env.COMMERCE_DATA_DIR || `${process.cwd()}/data`,
       internalToken: process.env.COMMERCE_INTERNAL_TOKEN || "",
+    });
+    const mountedReuse = mountUsefulResultReuse(app, {
+      dataDir: observationMount.dataDir,
+      internalToken: observationMount.internalToken,
       publicUrl: PUBLIC_URL,
+      customerStore: observationMount.customerStore,
+      freeTaskObservation: observationMount.freeTaskObservation,
     });
     if (mountedReuse.mounted === true) {
       usefulResultReuseUrl = `${new URL(PUBLIC_URL).origin}/.well-known/useful-result-reuse/current.json`;
@@ -3697,6 +3713,7 @@ mountScopedSurfaceDelivery(app, {
 });
 installPaidReceiptRetention(app, () => retainDeliveredReceipt, {
   causalEventProof: (res) => commerceTelemetry.causalCommerceEventProof(res),
+  causalTaskBinding: (res) => commerceTelemetry.causalCommerceTaskBinding(res),
 });
 app.use(mppDualStack.middleware);
 app.use((req, res, next) => {

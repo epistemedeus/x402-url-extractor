@@ -1,0 +1,1396 @@
+[
+  {
+    "schema": "samedaydesk.attempt-useful-view.report.v1",
+    "jobId": "SOL-LIVE-ATTEMPT-DELIVERY-261003",
+    "attemptOf": null,
+    "operationRemint": "refused",
+    "forbiddenOperationId": "add923ae-3eb5-474b-8b3e-e376666dee83",
+    "decision": "one_attempt",
+    "reason": null,
+    "taskRef": "tca420c6d9c384e36a04ea50b6383c4fa2d28222614df9bf2f35e960309ef34",
+    "commerceEventId": "053631ab-4e6d-47ba-a124-706ac4a53863",
+    "operationId": "normalized-transaction-receipt",
+    "cohort": "owner_qa",
+    "sourceDeliveryAttribution": {
+      "schemaVersion": "samedaydesk.settlement-source-delivery-attribution.v1",
+      "originClass": "internal",
+      "originVerification": "verified_internal_token",
+      "declaredDiscoverySource": null,
+      "observedDiscoverySource": null,
+      "collapsedDiscoverySource": null,
+      "discoverySourceKind": "none",
+      "discoverySourceVerification": "unverified",
+      "responseStatus": 200,
+      "responseResult": "paid_success",
+      "buyerValidOutput": "unknown",
+      "deliveryValidation": "not_checked",
+      "deliveryValidationAuthority": "none",
+      "customerDemand": "unknown",
+      "repeatDemand": "unknown"
+    },
+    "customer": null,
+    "globalAgentId": null,
+    "database": null,
+    "signer": null,
+    "mintedGrant": false,
+    "automaticMutationRetries": 0,
+    "liveCoverage": "unresolved",
+    "liveCoverageReason": "fixture_or_owner_qa_is_not_live_production_coverage",
+    "journalCutCoverage": "complete",
+    "productionJournalCoverage": "unknown",
+    "coverageAuthority": "authenticated_producer_capture",
+    "observationClassification": "owner_qa_or_fixture",
+    "outsideUseEstablished": false,
+    "evidenceKind": "synthetic_fixture",
+    "journalCovered": true,
+    "populationConversionRate": null,
+    "stageCounts": null,
+    "recognizedRevenueAtomic": "unknown",
+    "paymentPermitted": false,
+    "paymentClassification": {
+      "disposition": "producer-observed",
+      "authority": "existing_settlement_journal",
+      "joinedToThisAttempt": true,
+      "class": "unclassified"
+    },
+    "useful": null,
+    "usefulNegative": null,
+    "inheritedUsefulness": null,
+    "historicalCriterion": null,
+    "stages": {
+      "attempt": {
+        "disposition": "producer-observed",
+        "authority": "server_minted_commerce_event_and_task_ref"
+      },
+      "delivery": {
+        "disposition": "producer-observed",
+        "authority": "producer_journal_http_finish_and_transport",
+        "schemaUsefulOutput": "positive",
+        "schemaAuthority": "existing_paid_receipt_operation_contract"
+      },
+      "callerUsefulness": {
+        "disposition": "unresolved",
+        "reason": "no_caller_claim",
+        "observed": "unknown"
+      },
+      "independentReplay": {
+        "disposition": "unresolved",
+        "reason": "no_independent_replay_authority",
+        "observed": "unknown"
+      },
+      "retention": {
+        "disposition": "authorized",
+        "authority": "existing_customer_grant",
+        "currentRights": true
+      },
+      "laterUse": {
+        "disposition": "authorized",
+        "authority": "existing_authorized_retained_read",
+        "callerReceipt": "unknown",
+        "appliedUse": "unknown"
+      },
+      "settlement": {
+        "disposition": "producer-observed",
+        "authority": "existing_settlement_journal",
+        "recognizedRevenue": "unknown"
+      }
+    },
+    "restart": null,
+    "publicSeam": {
+      "status": "unresolved",
+      "missingLink": "per_attempt_public_call_identity",
+      "coveredExternalEvents": null,
+      "coveredExternalEventsAreCustomers": false,
+      "coveredExternalEventsAreAttemptDenominator": false,
+      "paidSuccess": {
+        "disposition": "unresolved",
+        "observed": null,
+        "reason": "covered_baseline_not_attached"
+      },
+      "populationConversionRate": null,
+      "enrollment": "unresolved",
+      "serverDelta": "applied",
+      "releasedMerchantHead": "32f07a836fb28e400d56b0e2e876043644bde31a",
+      "historicalReleasedMerchantHead": "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+      "publicAcquisitionArtifact": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a"
+    },
+    "provenance": {
+      "reader": "isolated_attempt_useful_view_reuses_421_projectBundle",
+      "measurement": "not_reimplemented",
+      "authenticity": "authenticated_producer_capture_not_customer_identity",
+      "identity": "not_inferred",
+      "pins": {
+        "causalProof301": "45db5507d1fef740dfe5fe84ec611c7b764d8c43",
+        "taskProducer339": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+        "causalMeasurement395": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+        "freeUseObserver421": "26d806f20e57d0c073321675dacb13395e30c643",
+        "terminalReader423": "5693610be4d7fdf7d13044be666f712b7ea189f8",
+        "seller041": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+        "releasedMerchantHead": "32f07a836fb28e400d56b0e2e876043644bde31a",
+        "historicalReleasedMerchantHead": "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+        "publicAcquisitionArtifact": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a"
+      },
+      "observerProducerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+      "observerProducerCommitRole": "conversion_schema_compatibility",
+      "producerSourceDigest": "1d7f987a108906796c61fb7ec7ada8985b7832d17516c533158db6263a2a5527",
+      "clockWindowFix": {
+        "commit": "de4c2a1f5e52065273b677a8694913a98850dcf0",
+        "branch": "codex/task-observer-window-1003",
+        "applied": false,
+        "onThisBranch": false,
+        "commitIsAncestorOfMerchant161": false,
+        "contentPresentOnMerchant161": true,
+        "productionFreshnessMaxAgeMs": 900000
+      },
+      "seller041": "frozen_not_rewritten",
+      "integrationDelta": "applied",
+      "enrollment": "isolated_branch",
+      "adapt": {
+        "jobId": "HEAVY-ATTEMPT-USEFUL-ADAPT-161-1005",
+        "priorViewHead": "4e49c4db58ea0f5897240781fd14d80566bbabd0",
+        "adaptHead": "e687ca11c2e05e8ac41ede83dc1b98cfe46c3a7c",
+        "priorViewOperationReused": false
+      },
+      "complete": {
+        "jobId": "HEAVY-ATTEMPT-USEFUL-COMPLETE-161-1005",
+        "measurementSource": "4e49c4db58ea0f5897240781fd14d80566bbabd0",
+        "releasedMerchantHead": "32f07a836fb28e400d56b0e2e876043644bde31a",
+        "publicAcquisitionArtifact": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a"
+      }
+    },
+    "stageWords": {
+      "attempt": "producer-observed",
+      "delivery": "producer-observed",
+      "callerUsefulness": "unknown",
+      "independentReplay": "unknown",
+      "retention": "authorized",
+      "laterUse": "authorized",
+      "settlement": "producer-observed"
+    },
+    "cutId": "1f999505-7333-4755-950f-068e5dc7cb3e",
+    "capture": {
+      "schema": "samedaydesk.attempt-useful.journal-cut.v1",
+      "kind": "attempt_useful_capture",
+      "cutId": "1f999505-7333-4755-950f-068e5dc7cb3e",
+      "sessionId": "fa4865d8-bc0a-49e1-851f-cb6576dad11a",
+      "namespace": "65056:4412968",
+      "producer": "canonical_commerce_and_useful_result_journals",
+      "sourceDigest": "1d7f987a108906796c61fb7ec7ada8985b7832d17516c533158db6263a2a5527",
+      "durability": "existing_flush_and_closed_files_no_fsync_guarantee",
+      "callerReceipt": "unknown",
+      "writerProcesses": 1,
+      "runtime": {
+        "entrypoint": "isolated_express_mount",
+        "deploymentId": null,
+        "source": null
+      },
+      "from": "2026-10-03T18:29:36.052Z",
+      "asOf": "2026-10-03T18:29:36.117Z",
+      "planes": {
+        "attempts": {
+          "coverage": "complete",
+          "reasons": [],
+          "files": [
+            {
+              "name": "commerce-events.1.ndjson",
+              "present": false,
+              "reason": null
+            },
+            {
+              "name": "commerce-events.ndjson",
+              "present": true,
+              "reason": null,
+              "identity": "65056:4412976",
+              "size": 1678,
+              "sha256": "fc39e1416e43d061fdb16817e720657aaf7faaba697ddb9c7fbccf8f6634e0f0"
+            }
+          ],
+          "bounds": [
+            {
+              "name": "commerce-events.ndjson",
+              "identity": "65056:4412976",
+              "from": 0,
+              "to": 1678,
+              "sha256": "fc39e1416e43d061fdb16817e720657aaf7faaba697ddb9c7fbccf8f6634e0f0",
+              "prefixSha256": "fc39e1416e43d061fdb16817e720657aaf7faaba697ddb9c7fbccf8f6634e0f0"
+            }
+          ],
+          "producerDigest": "fb420585abe9cf4e43992904685b96a03f794793c69bb754d4c4556e2fa08fce",
+          "producer": "canonical_single_process_owner",
+          "rotations": 0,
+          "writes": 2
+        },
+        "task_refs": {
+          "coverage": "complete",
+          "reasons": [],
+          "files": [
+            {
+              "name": "commerce-outcome-task-ref.1.ndjson",
+              "present": false,
+              "reason": null
+            },
+            {
+              "name": "commerce-outcome-task-ref.ndjson",
+              "present": true,
+              "reason": null,
+              "identity": "65056:4412971",
+              "size": 368,
+              "sha256": "fd9d52c1782076f8ce32407a1245c19360644e15755534ccb21f570918c62cfd"
+            }
+          ],
+          "bounds": [
+            {
+              "name": "commerce-outcome-task-ref.ndjson",
+              "identity": "65056:4412971",
+              "from": 0,
+              "to": 368,
+              "sha256": "fd9d52c1782076f8ce32407a1245c19360644e15755534ccb21f570918c62cfd",
+              "prefixSha256": "fd9d52c1782076f8ce32407a1245c19360644e15755534ccb21f570918c62cfd"
+            }
+          ],
+          "producerDigest": "d4688f0740529e3cf1bf7821ff66141c3d896bd50538656fc3567e5c9f743732",
+          "producer": "canonical_single_process_owner",
+          "rotations": 0,
+          "writes": 1
+        },
+        "forward": {
+          "coverage": "complete",
+          "reasons": [],
+          "files": [
+            {
+              "name": "commerce-outcome-binding.1.ndjson",
+              "present": false,
+              "reason": null
+            },
+            {
+              "name": "commerce-outcome-binding.ndjson",
+              "present": true,
+              "reason": null,
+              "identity": "65056:4412984",
+              "size": 2630,
+              "sha256": "1b089300a46aff89046e629a85f4b50931dfdde47aaa1b0cb52beea47d2a51a9"
+            }
+          ],
+          "bounds": [
+            {
+              "name": "commerce-outcome-binding.ndjson",
+              "identity": "65056:4412984",
+              "from": 0,
+              "to": 2630,
+              "sha256": "1b089300a46aff89046e629a85f4b50931dfdde47aaa1b0cb52beea47d2a51a9",
+              "prefixSha256": "1b089300a46aff89046e629a85f4b50931dfdde47aaa1b0cb52beea47d2a51a9"
+            }
+          ],
+          "producerDigest": "1f4b8cb0f1b661736d4e154e6e5c4bc728b9073d40128bec93de2c7477c2612f",
+          "producer": "canonical_single_process_owner",
+          "rotations": 0,
+          "writes": 3
+        },
+        "retention": {
+          "coverage": "complete",
+          "reasons": [],
+          "files": [
+            {
+              "name": "useful-result-customer.1.ndjson",
+              "present": false,
+              "reason": null
+            },
+            {
+              "name": "useful-result-customer.ndjson",
+              "present": true,
+              "reason": null,
+              "identity": "65056:4412974",
+              "size": 2405,
+              "sha256": "84e7b6ca22dd09d7feb2d1856f68de96aed8059ced5631f8e014de3f148d1e70"
+            }
+          ],
+          "bounds": [
+            {
+              "name": "useful-result-customer.ndjson",
+              "identity": "65056:4412974",
+              "from": 0,
+              "to": 2405,
+              "sha256": "84e7b6ca22dd09d7feb2d1856f68de96aed8059ced5631f8e014de3f148d1e70",
+              "prefixSha256": "84e7b6ca22dd09d7feb2d1856f68de96aed8059ced5631f8e014de3f148d1e70"
+            }
+          ],
+          "producerDigest": "c3487911d4260c8bcc5638116f223e41ac1ae928df8d1c26754d2e3524d13da1",
+          "producer": "canonical_single_process_owner",
+          "rotations": 0,
+          "writes": 1
+        },
+        "reads": {
+          "coverage": "complete",
+          "reasons": [],
+          "files": [
+            {
+              "name": "useful-result-metrics.1.ndjson",
+              "present": false,
+              "reason": null
+            },
+            {
+              "name": "useful-result-metrics.ndjson",
+              "present": true,
+              "reason": null,
+              "identity": "65056:4412970",
+              "size": 1000,
+              "sha256": "74259fe94a15cd19aa3e85001caae4054d78dd168bb921ae2fd111de6b1a92e2"
+            }
+          ],
+          "bounds": [
+            {
+              "name": "useful-result-metrics.ndjson",
+              "identity": "65056:4412970",
+              "from": 0,
+              "to": 1000,
+              "sha256": "74259fe94a15cd19aa3e85001caae4054d78dd168bb921ae2fd111de6b1a92e2",
+              "prefixSha256": "74259fe94a15cd19aa3e85001caae4054d78dd168bb921ae2fd111de6b1a92e2"
+            }
+          ],
+          "producerDigest": "435db9406a69b1d1eebfd381c19be787f497e64710959745204ef21014641414",
+          "producer": "canonical_single_process_owner",
+          "rotations": 0,
+          "writes": 4
+        },
+        "settlements": {
+          "coverage": "complete",
+          "reasons": [],
+          "files": [
+            {
+              "name": "commerce-settlements.ndjson",
+              "present": true,
+              "reason": null,
+              "identity": "65056:4412986",
+              "size": 1281,
+              "sha256": "278fd1c51e310f4cffc53a2333354f618fc82782b1db166b2c56ba715c694334"
+            }
+          ],
+          "bounds": [
+            {
+              "name": "commerce-settlements.ndjson",
+              "identity": "65056:4412986",
+              "from": 0,
+              "to": 1281,
+              "sha256": "278fd1c51e310f4cffc53a2333354f618fc82782b1db166b2c56ba715c694334",
+              "prefixSha256": "278fd1c51e310f4cffc53a2333354f618fc82782b1db166b2c56ba715c694334"
+            }
+          ],
+          "producerDigest": "dc46e23c88116bdff0eb97b9dfc458207a004a95d1e85acdfede632a968bf9ae",
+          "producer": "canonical_single_process_owner",
+          "rotations": 0,
+          "writes": 1,
+          "settlementCapture": {
+            "schemaVersion": "samedaydesk.commerce-settlement-plane-capture.v1",
+            "capturedAt": "2026-10-03T18:29:36.124Z",
+            "generationId": "setlcut_2a77543665a946f59f81a49d9f8a0a5e",
+            "observationId": "setlobs_657ff587c02903414147a25974a329e8",
+            "lifecycle": "ok",
+            "enabled": true,
+            "baseline": "2026-10-03T18:29:36.049Z",
+            "attemptsUsed": 1,
+            "ledger": {
+              "present": true,
+              "regularFile": true,
+              "identity": {
+                "dev": "65056",
+                "ino": "4412986",
+                "mode": "0600"
+              },
+              "byteCount": 1281,
+              "byteDigest": "278fd1c51e310f4cffc53a2333354f618fc82782b1db166b2c56ba715c694334"
+            },
+            "integrity": {
+              "corruptLines": 0,
+              "issues": {},
+              "reason": null
+            },
+            "summary": {
+              "schemaVersion": "samedaydesk.commerce-settlement-summary.v1",
+              "reconciledSettlements": 1,
+              "distinctSettlementReferences": 1,
+              "amountAtomic": "50000",
+              "byClass": {
+                "unclassified": {
+                  "settlements": 1,
+                  "amountAtomic": "50000"
+                }
+              },
+              "byRoute": {
+                "/chain/transaction-receipt": {
+                  "settlements": 1,
+                  "amountAtomic": "50000"
+                }
+              },
+              "invalidLines": 0
+            },
+            "summaryDigest": "4feb221ccdae4cac772dbead53b1f66c398d6189a8ccd37021ea1f8683e5cf2e",
+            "run": {
+              "runGenerationId": "setlrun_710d24adb42f2ffad25571f9",
+              "state": "complete",
+              "generationNonce": "e9ed3b019408e4a6a0a905f21657d190",
+              "completedAt": "2026-10-03T18:29:36.106Z",
+              "namespaceId": "setlns_7a6b8b1888e13b5bd335144148a38d2d",
+              "lastError": null,
+              "lastIssueCounts": {}
+            }
+          }
+        }
+      }
+    },
+    "planeCoverage": {
+      "attempts": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "commerce-events.1.ndjson",
+            "present": false,
+            "reason": null
+          },
+          {
+            "name": "commerce-events.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412976",
+            "size": 1678,
+            "sha256": "fc39e1416e43d061fdb16817e720657aaf7faaba697ddb9c7fbccf8f6634e0f0"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "commerce-events.ndjson",
+            "identity": "65056:4412976",
+            "from": 0,
+            "to": 1678,
+            "sha256": "fc39e1416e43d061fdb16817e720657aaf7faaba697ddb9c7fbccf8f6634e0f0",
+            "prefixSha256": "fc39e1416e43d061fdb16817e720657aaf7faaba697ddb9c7fbccf8f6634e0f0"
+          }
+        ],
+        "producerDigest": "fb420585abe9cf4e43992904685b96a03f794793c69bb754d4c4556e2fa08fce",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 2
+      },
+      "task_refs": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "commerce-outcome-task-ref.1.ndjson",
+            "present": false,
+            "reason": null
+          },
+          {
+            "name": "commerce-outcome-task-ref.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412971",
+            "size": 368,
+            "sha256": "fd9d52c1782076f8ce32407a1245c19360644e15755534ccb21f570918c62cfd"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "commerce-outcome-task-ref.ndjson",
+            "identity": "65056:4412971",
+            "from": 0,
+            "to": 368,
+            "sha256": "fd9d52c1782076f8ce32407a1245c19360644e15755534ccb21f570918c62cfd",
+            "prefixSha256": "fd9d52c1782076f8ce32407a1245c19360644e15755534ccb21f570918c62cfd"
+          }
+        ],
+        "producerDigest": "d4688f0740529e3cf1bf7821ff66141c3d896bd50538656fc3567e5c9f743732",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 1
+      },
+      "forward": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "commerce-outcome-binding.1.ndjson",
+            "present": false,
+            "reason": null
+          },
+          {
+            "name": "commerce-outcome-binding.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412984",
+            "size": 2630,
+            "sha256": "1b089300a46aff89046e629a85f4b50931dfdde47aaa1b0cb52beea47d2a51a9"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "commerce-outcome-binding.ndjson",
+            "identity": "65056:4412984",
+            "from": 0,
+            "to": 2630,
+            "sha256": "1b089300a46aff89046e629a85f4b50931dfdde47aaa1b0cb52beea47d2a51a9",
+            "prefixSha256": "1b089300a46aff89046e629a85f4b50931dfdde47aaa1b0cb52beea47d2a51a9"
+          }
+        ],
+        "producerDigest": "1f4b8cb0f1b661736d4e154e6e5c4bc728b9073d40128bec93de2c7477c2612f",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 3
+      },
+      "retention": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "useful-result-customer.1.ndjson",
+            "present": false,
+            "reason": null
+          },
+          {
+            "name": "useful-result-customer.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412974",
+            "size": 2405,
+            "sha256": "84e7b6ca22dd09d7feb2d1856f68de96aed8059ced5631f8e014de3f148d1e70"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "useful-result-customer.ndjson",
+            "identity": "65056:4412974",
+            "from": 0,
+            "to": 2405,
+            "sha256": "84e7b6ca22dd09d7feb2d1856f68de96aed8059ced5631f8e014de3f148d1e70",
+            "prefixSha256": "84e7b6ca22dd09d7feb2d1856f68de96aed8059ced5631f8e014de3f148d1e70"
+          }
+        ],
+        "producerDigest": "c3487911d4260c8bcc5638116f223e41ac1ae928df8d1c26754d2e3524d13da1",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 1
+      },
+      "reads": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "useful-result-metrics.1.ndjson",
+            "present": false,
+            "reason": null
+          },
+          {
+            "name": "useful-result-metrics.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412970",
+            "size": 1000,
+            "sha256": "74259fe94a15cd19aa3e85001caae4054d78dd168bb921ae2fd111de6b1a92e2"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "useful-result-metrics.ndjson",
+            "identity": "65056:4412970",
+            "from": 0,
+            "to": 1000,
+            "sha256": "74259fe94a15cd19aa3e85001caae4054d78dd168bb921ae2fd111de6b1a92e2",
+            "prefixSha256": "74259fe94a15cd19aa3e85001caae4054d78dd168bb921ae2fd111de6b1a92e2"
+          }
+        ],
+        "producerDigest": "435db9406a69b1d1eebfd381c19be787f497e64710959745204ef21014641414",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 4
+      },
+      "settlements": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "commerce-settlements.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412986",
+            "size": 1281,
+            "sha256": "278fd1c51e310f4cffc53a2333354f618fc82782b1db166b2c56ba715c694334"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "commerce-settlements.ndjson",
+            "identity": "65056:4412986",
+            "from": 0,
+            "to": 1281,
+            "sha256": "278fd1c51e310f4cffc53a2333354f618fc82782b1db166b2c56ba715c694334",
+            "prefixSha256": "278fd1c51e310f4cffc53a2333354f618fc82782b1db166b2c56ba715c694334"
+          }
+        ],
+        "producerDigest": "dc46e23c88116bdff0eb97b9dfc458207a004a95d1e85acdfede632a968bf9ae",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 1,
+        "settlementCapture": {
+          "schemaVersion": "samedaydesk.commerce-settlement-plane-capture.v1",
+          "capturedAt": "2026-10-03T18:29:36.124Z",
+          "generationId": "setlcut_2a77543665a946f59f81a49d9f8a0a5e",
+          "observationId": "setlobs_657ff587c02903414147a25974a329e8",
+          "lifecycle": "ok",
+          "enabled": true,
+          "baseline": "2026-10-03T18:29:36.049Z",
+          "attemptsUsed": 1,
+          "ledger": {
+            "present": true,
+            "regularFile": true,
+            "identity": {
+              "dev": "65056",
+              "ino": "4412986",
+              "mode": "0600"
+            },
+            "byteCount": 1281,
+            "byteDigest": "278fd1c51e310f4cffc53a2333354f618fc82782b1db166b2c56ba715c694334"
+          },
+          "integrity": {
+            "corruptLines": 0,
+            "issues": {},
+            "reason": null
+          },
+          "summary": {
+            "schemaVersion": "samedaydesk.commerce-settlement-summary.v1",
+            "reconciledSettlements": 1,
+            "distinctSettlementReferences": 1,
+            "amountAtomic": "50000",
+            "byClass": {
+              "unclassified": {
+                "settlements": 1,
+                "amountAtomic": "50000"
+              }
+            },
+            "byRoute": {
+              "/chain/transaction-receipt": {
+                "settlements": 1,
+                "amountAtomic": "50000"
+              }
+            },
+            "invalidLines": 0
+          },
+          "summaryDigest": "4feb221ccdae4cac772dbead53b1f66c398d6189a8ccd37021ea1f8683e5cf2e",
+          "run": {
+            "runGenerationId": "setlrun_710d24adb42f2ffad25571f9",
+            "state": "complete",
+            "generationNonce": "e9ed3b019408e4a6a0a905f21657d190",
+            "completedAt": "2026-10-03T18:29:36.106Z",
+            "namespaceId": "setlns_7a6b8b1888e13b5bd335144148a38d2d",
+            "lastError": null,
+            "lastIssueCounts": {}
+          }
+        }
+      }
+    },
+    "window": {
+      "from": "2026-10-03T18:29:36.052Z",
+      "to": "2026-10-03T18:29:36.117Z",
+      "asOf": "2026-10-03T18:29:36.117Z"
+    },
+    "executionDecision": "found",
+    "paymentInvoked": false,
+    "fixtureRail": true
+  },
+  {
+    "schema": "samedaydesk.attempt-useful-view.report.v1",
+    "jobId": "SOL-LIVE-ATTEMPT-DELIVERY-261003",
+    "attemptOf": null,
+    "operationRemint": "refused",
+    "forbiddenOperationId": "add923ae-3eb5-474b-8b3e-e376666dee83",
+    "decision": "one_attempt",
+    "reason": null,
+    "taskRef": "t69c78b38196951119847300f275748a6028a015ffbeaad9ba85cc07ec447e0",
+    "commerceEventId": "7a32c36a-8486-406d-9832-a1d18e73e39c",
+    "operationId": "normalized-transaction-receipt",
+    "cohort": "external_unknown",
+    "sourceDeliveryAttribution": {
+      "schemaVersion": "samedaydesk.settlement-source-delivery-attribution.v1",
+      "originClass": "internal",
+      "originVerification": "verified_internal_token",
+      "declaredDiscoverySource": null,
+      "observedDiscoverySource": null,
+      "collapsedDiscoverySource": null,
+      "discoverySourceKind": "none",
+      "discoverySourceVerification": "unverified",
+      "responseStatus": 200,
+      "responseResult": "paid_success",
+      "buyerValidOutput": "unknown",
+      "deliveryValidation": "not_checked",
+      "deliveryValidationAuthority": "none",
+      "customerDemand": "unknown",
+      "repeatDemand": "unknown"
+    },
+    "customer": null,
+    "globalAgentId": null,
+    "database": null,
+    "signer": null,
+    "mintedGrant": false,
+    "automaticMutationRetries": 0,
+    "liveCoverage": "unresolved",
+    "liveCoverageReason": "fixture_or_owner_qa_is_not_live_production_coverage",
+    "journalCutCoverage": "complete",
+    "productionJournalCoverage": "unknown",
+    "coverageAuthority": "authenticated_producer_capture",
+    "observationClassification": "owner_qa_or_fixture",
+    "outsideUseEstablished": false,
+    "evidenceKind": "synthetic_fixture",
+    "journalCovered": true,
+    "populationConversionRate": null,
+    "stageCounts": null,
+    "recognizedRevenueAtomic": "unknown",
+    "paymentPermitted": false,
+    "paymentClassification": {
+      "disposition": "producer-observed",
+      "authority": "existing_settlement_journal",
+      "joinedToThisAttempt": true,
+      "class": "unclassified"
+    },
+    "useful": null,
+    "usefulNegative": null,
+    "inheritedUsefulness": null,
+    "historicalCriterion": null,
+    "stages": {
+      "attempt": {
+        "disposition": "producer-observed",
+        "authority": "server_minted_commerce_event_and_task_ref"
+      },
+      "delivery": {
+        "disposition": "producer-observed",
+        "authority": "producer_journal_http_finish_and_transport",
+        "schemaUsefulOutput": "agreed_negative",
+        "schemaAuthority": "existing_paid_receipt_operation_contract"
+      },
+      "callerUsefulness": {
+        "disposition": "unresolved",
+        "reason": "no_caller_claim",
+        "observed": "unknown"
+      },
+      "independentReplay": {
+        "disposition": "unresolved",
+        "reason": "no_independent_replay_authority",
+        "observed": "unknown"
+      },
+      "retention": {
+        "disposition": "authorized",
+        "authority": "existing_customer_grant",
+        "currentRights": true
+      },
+      "laterUse": {
+        "disposition": "authorized",
+        "authority": "existing_authorized_retained_read",
+        "callerReceipt": "unknown",
+        "appliedUse": "unknown"
+      },
+      "settlement": {
+        "disposition": "producer-observed",
+        "authority": "existing_settlement_journal",
+        "recognizedRevenue": "unknown"
+      }
+    },
+    "restart": null,
+    "publicSeam": {
+      "status": "unresolved",
+      "missingLink": "per_attempt_public_call_identity",
+      "coveredExternalEvents": null,
+      "coveredExternalEventsAreCustomers": false,
+      "coveredExternalEventsAreAttemptDenominator": false,
+      "paidSuccess": {
+        "disposition": "unresolved",
+        "observed": null,
+        "reason": "covered_baseline_not_attached"
+      },
+      "populationConversionRate": null,
+      "enrollment": "unresolved",
+      "serverDelta": "applied",
+      "releasedMerchantHead": "32f07a836fb28e400d56b0e2e876043644bde31a",
+      "historicalReleasedMerchantHead": "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+      "publicAcquisitionArtifact": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a"
+    },
+    "provenance": {
+      "reader": "isolated_attempt_useful_view_reuses_421_projectBundle",
+      "measurement": "not_reimplemented",
+      "authenticity": "authenticated_producer_capture_not_customer_identity",
+      "identity": "not_inferred",
+      "pins": {
+        "causalProof301": "45db5507d1fef740dfe5fe84ec611c7b764d8c43",
+        "taskProducer339": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+        "causalMeasurement395": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+        "freeUseObserver421": "26d806f20e57d0c073321675dacb13395e30c643",
+        "terminalReader423": "5693610be4d7fdf7d13044be666f712b7ea189f8",
+        "seller041": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+        "releasedMerchantHead": "32f07a836fb28e400d56b0e2e876043644bde31a",
+        "historicalReleasedMerchantHead": "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+        "publicAcquisitionArtifact": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a"
+      },
+      "observerProducerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+      "observerProducerCommitRole": "conversion_schema_compatibility",
+      "producerSourceDigest": "1d7f987a108906796c61fb7ec7ada8985b7832d17516c533158db6263a2a5527",
+      "clockWindowFix": {
+        "commit": "de4c2a1f5e52065273b677a8694913a98850dcf0",
+        "branch": "codex/task-observer-window-1003",
+        "applied": false,
+        "onThisBranch": false,
+        "commitIsAncestorOfMerchant161": false,
+        "contentPresentOnMerchant161": true,
+        "productionFreshnessMaxAgeMs": 900000
+      },
+      "seller041": "frozen_not_rewritten",
+      "integrationDelta": "applied",
+      "enrollment": "isolated_branch",
+      "adapt": {
+        "jobId": "HEAVY-ATTEMPT-USEFUL-ADAPT-161-1005",
+        "priorViewHead": "4e49c4db58ea0f5897240781fd14d80566bbabd0",
+        "adaptHead": "e687ca11c2e05e8ac41ede83dc1b98cfe46c3a7c",
+        "priorViewOperationReused": false
+      },
+      "complete": {
+        "jobId": "HEAVY-ATTEMPT-USEFUL-COMPLETE-161-1005",
+        "measurementSource": "4e49c4db58ea0f5897240781fd14d80566bbabd0",
+        "releasedMerchantHead": "32f07a836fb28e400d56b0e2e876043644bde31a",
+        "publicAcquisitionArtifact": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a"
+      }
+    },
+    "stageWords": {
+      "attempt": "producer-observed",
+      "delivery": "producer-observed",
+      "callerUsefulness": "unknown",
+      "independentReplay": "unknown",
+      "retention": "authorized",
+      "laterUse": "authorized",
+      "settlement": "producer-observed"
+    },
+    "cutId": "1849145b-03bf-4e40-8c6f-05beed14796e",
+    "capture": {
+      "schema": "samedaydesk.attempt-useful.journal-cut.v1",
+      "kind": "attempt_useful_capture",
+      "cutId": "1849145b-03bf-4e40-8c6f-05beed14796e",
+      "sessionId": "fa4865d8-bc0a-49e1-851f-cb6576dad11a",
+      "namespace": "65056:4412968",
+      "producer": "canonical_commerce_and_useful_result_journals",
+      "sourceDigest": "1d7f987a108906796c61fb7ec7ada8985b7832d17516c533158db6263a2a5527",
+      "durability": "existing_flush_and_closed_files_no_fsync_guarantee",
+      "callerReceipt": "unknown",
+      "writerProcesses": 1,
+      "runtime": {
+        "entrypoint": "isolated_express_mount",
+        "deploymentId": null,
+        "source": null
+      },
+      "from": "2026-10-03T18:29:36.052Z",
+      "asOf": "2026-10-03T18:29:36.169Z",
+      "planes": {
+        "attempts": {
+          "coverage": "complete",
+          "reasons": [],
+          "files": [
+            {
+              "name": "commerce-events.1.ndjson",
+              "present": false,
+              "reason": null
+            },
+            {
+              "name": "commerce-events.ndjson",
+              "present": true,
+              "reason": null,
+              "identity": "65056:4412976",
+              "size": 10375,
+              "sha256": "f307a8d7390ece42d8195b140456d5535094b4e48c5236d44c0692082c9374b5"
+            }
+          ],
+          "bounds": [
+            {
+              "name": "commerce-events.ndjson",
+              "identity": "65056:4412976",
+              "from": 0,
+              "to": 10375,
+              "sha256": "f307a8d7390ece42d8195b140456d5535094b4e48c5236d44c0692082c9374b5",
+              "prefixSha256": "f307a8d7390ece42d8195b140456d5535094b4e48c5236d44c0692082c9374b5"
+            }
+          ],
+          "producerDigest": "d307f08224c2096c726f4c079a695699a6e26ef9e4d9004e9d34e5dc21ca29ff",
+          "producer": "canonical_single_process_owner",
+          "rotations": 0,
+          "writes": 6
+        },
+        "task_refs": {
+          "coverage": "complete",
+          "reasons": [],
+          "files": [
+            {
+              "name": "commerce-outcome-task-ref.1.ndjson",
+              "present": false,
+              "reason": null
+            },
+            {
+              "name": "commerce-outcome-task-ref.ndjson",
+              "present": true,
+              "reason": null,
+              "identity": "65056:4412971",
+              "size": 1120,
+              "sha256": "8042a78463b6f6d50275a2e692538f82e8a600272eb3b7d8488cb670e648955a"
+            }
+          ],
+          "bounds": [
+            {
+              "name": "commerce-outcome-task-ref.ndjson",
+              "identity": "65056:4412971",
+              "from": 0,
+              "to": 1120,
+              "sha256": "8042a78463b6f6d50275a2e692538f82e8a600272eb3b7d8488cb670e648955a",
+              "prefixSha256": "8042a78463b6f6d50275a2e692538f82e8a600272eb3b7d8488cb670e648955a"
+            }
+          ],
+          "producerDigest": "a0ddbb65a13b5f8ca0d3ca2111c4ca1f15079add6fda6a7e634fd1577529dbbd",
+          "producer": "canonical_single_process_owner",
+          "rotations": 0,
+          "writes": 3
+        },
+        "forward": {
+          "coverage": "complete",
+          "reasons": [],
+          "files": [
+            {
+              "name": "commerce-outcome-binding.1.ndjson",
+              "present": false,
+              "reason": null
+            },
+            {
+              "name": "commerce-outcome-binding.ndjson",
+              "present": true,
+              "reason": null,
+              "identity": "65056:4412984",
+              "size": 5284,
+              "sha256": "60f41ca80d1382767e1a46a066a57c088763bcf8d240b6e075487411529c44ed"
+            }
+          ],
+          "bounds": [
+            {
+              "name": "commerce-outcome-binding.ndjson",
+              "identity": "65056:4412984",
+              "from": 0,
+              "to": 5284,
+              "sha256": "60f41ca80d1382767e1a46a066a57c088763bcf8d240b6e075487411529c44ed",
+              "prefixSha256": "60f41ca80d1382767e1a46a066a57c088763bcf8d240b6e075487411529c44ed"
+            }
+          ],
+          "producerDigest": "e3fa781e3232896fd8e7f68878b2b3b20d2a8147af45afc2f35c51c9c3d2bb72",
+          "producer": "canonical_single_process_owner",
+          "rotations": 0,
+          "writes": 6
+        },
+        "retention": {
+          "coverage": "complete",
+          "reasons": [],
+          "files": [
+            {
+              "name": "useful-result-customer.1.ndjson",
+              "present": false,
+              "reason": null
+            },
+            {
+              "name": "useful-result-customer.ndjson",
+              "present": true,
+              "reason": null,
+              "identity": "65056:4412974",
+              "size": 4692,
+              "sha256": "d5a7d2794a8f8988d43d0bab88c88aad56d4737b8d9a0d52c9f7c645b2933231"
+            }
+          ],
+          "bounds": [
+            {
+              "name": "useful-result-customer.ndjson",
+              "identity": "65056:4412974",
+              "from": 0,
+              "to": 4692,
+              "sha256": "d5a7d2794a8f8988d43d0bab88c88aad56d4737b8d9a0d52c9f7c645b2933231",
+              "prefixSha256": "d5a7d2794a8f8988d43d0bab88c88aad56d4737b8d9a0d52c9f7c645b2933231"
+            }
+          ],
+          "producerDigest": "1780b005b59c71b2250ead984db9768d71e90cdd47b2dff43e8a72bcc4d86a90",
+          "producer": "canonical_single_process_owner",
+          "rotations": 0,
+          "writes": 2
+        },
+        "reads": {
+          "coverage": "complete",
+          "reasons": [],
+          "files": [
+            {
+              "name": "useful-result-metrics.1.ndjson",
+              "present": false,
+              "reason": null
+            },
+            {
+              "name": "useful-result-metrics.ndjson",
+              "present": true,
+              "reason": null,
+              "identity": "65056:4412970",
+              "size": 1725,
+              "sha256": "3b4afa1c462a69eb3510e9de2321381a87f7872f27ed89da636c4c1cda2920a5"
+            }
+          ],
+          "bounds": [
+            {
+              "name": "useful-result-metrics.ndjson",
+              "identity": "65056:4412970",
+              "from": 0,
+              "to": 1725,
+              "sha256": "3b4afa1c462a69eb3510e9de2321381a87f7872f27ed89da636c4c1cda2920a5",
+              "prefixSha256": "3b4afa1c462a69eb3510e9de2321381a87f7872f27ed89da636c4c1cda2920a5"
+            }
+          ],
+          "producerDigest": "c4250b373064653c5171eb82e32e1df4da0d89faad22a8ac148ca2e21192d674",
+          "producer": "canonical_single_process_owner",
+          "rotations": 0,
+          "writes": 7
+        },
+        "settlements": {
+          "coverage": "complete",
+          "reasons": [],
+          "files": [
+            {
+              "name": "commerce-settlements.ndjson",
+              "present": true,
+              "reason": null,
+              "identity": "65056:4412986",
+              "size": 2562,
+              "sha256": "6be037195cc296b655a6757bb5413118e5cf36e518df29c833c0540f16a309d0"
+            }
+          ],
+          "bounds": [
+            {
+              "name": "commerce-settlements.ndjson",
+              "identity": "65056:4412986",
+              "from": 0,
+              "to": 2562,
+              "sha256": "6be037195cc296b655a6757bb5413118e5cf36e518df29c833c0540f16a309d0",
+              "prefixSha256": "6be037195cc296b655a6757bb5413118e5cf36e518df29c833c0540f16a309d0"
+            }
+          ],
+          "producerDigest": "d04d8277e276532997806e22f8de25cb5b9f8e814d72e9e774bd7b09338c0033",
+          "producer": "canonical_single_process_owner",
+          "rotations": 0,
+          "writes": 2,
+          "settlementCapture": {
+            "schemaVersion": "samedaydesk.commerce-settlement-plane-capture.v1",
+            "capturedAt": "2026-10-03T18:29:36.173Z",
+            "generationId": "setlcut_2cd35e55b75f3b096b1ada0c788579b6",
+            "observationId": "setlobs_015abf0161f3c0d1d3161d338c2eb539",
+            "lifecycle": "ok",
+            "enabled": true,
+            "baseline": "2026-10-03T18:29:36.049Z",
+            "attemptsUsed": 1,
+            "ledger": {
+              "present": true,
+              "regularFile": true,
+              "identity": {
+                "dev": "65056",
+                "ino": "4412986",
+                "mode": "0600"
+              },
+              "byteCount": 2562,
+              "byteDigest": "6be037195cc296b655a6757bb5413118e5cf36e518df29c833c0540f16a309d0"
+            },
+            "integrity": {
+              "corruptLines": 0,
+              "issues": {},
+              "reason": null
+            },
+            "summary": {
+              "schemaVersion": "samedaydesk.commerce-settlement-summary.v1",
+              "reconciledSettlements": 2,
+              "distinctSettlementReferences": 2,
+              "amountAtomic": "100000",
+              "byClass": {
+                "unclassified": {
+                  "settlements": 2,
+                  "amountAtomic": "100000"
+                }
+              },
+              "byRoute": {
+                "/chain/transaction-receipt": {
+                  "settlements": 2,
+                  "amountAtomic": "100000"
+                }
+              },
+              "invalidLines": 0
+            },
+            "summaryDigest": "49527443b1fa6a4cf4bcd9914e18990c5e204174a746da89ad05327f1407cde5",
+            "run": {
+              "runGenerationId": "setlrun_aa832321774f7b66a3cda3e4",
+              "state": "complete",
+              "generationNonce": "d003338edc70ca98c901ed1349b2fd08",
+              "completedAt": "2026-10-03T18:29:36.162Z",
+              "namespaceId": "setlns_7a6b8b1888e13b5bd335144148a38d2d",
+              "lastError": null,
+              "lastIssueCounts": {}
+            }
+          }
+        }
+      }
+    },
+    "planeCoverage": {
+      "attempts": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "commerce-events.1.ndjson",
+            "present": false,
+            "reason": null
+          },
+          {
+            "name": "commerce-events.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412976",
+            "size": 10375,
+            "sha256": "f307a8d7390ece42d8195b140456d5535094b4e48c5236d44c0692082c9374b5"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "commerce-events.ndjson",
+            "identity": "65056:4412976",
+            "from": 0,
+            "to": 10375,
+            "sha256": "f307a8d7390ece42d8195b140456d5535094b4e48c5236d44c0692082c9374b5",
+            "prefixSha256": "f307a8d7390ece42d8195b140456d5535094b4e48c5236d44c0692082c9374b5"
+          }
+        ],
+        "producerDigest": "d307f08224c2096c726f4c079a695699a6e26ef9e4d9004e9d34e5dc21ca29ff",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 6
+      },
+      "task_refs": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "commerce-outcome-task-ref.1.ndjson",
+            "present": false,
+            "reason": null
+          },
+          {
+            "name": "commerce-outcome-task-ref.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412971",
+            "size": 1120,
+            "sha256": "8042a78463b6f6d50275a2e692538f82e8a600272eb3b7d8488cb670e648955a"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "commerce-outcome-task-ref.ndjson",
+            "identity": "65056:4412971",
+            "from": 0,
+            "to": 1120,
+            "sha256": "8042a78463b6f6d50275a2e692538f82e8a600272eb3b7d8488cb670e648955a",
+            "prefixSha256": "8042a78463b6f6d50275a2e692538f82e8a600272eb3b7d8488cb670e648955a"
+          }
+        ],
+        "producerDigest": "a0ddbb65a13b5f8ca0d3ca2111c4ca1f15079add6fda6a7e634fd1577529dbbd",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 3
+      },
+      "forward": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "commerce-outcome-binding.1.ndjson",
+            "present": false,
+            "reason": null
+          },
+          {
+            "name": "commerce-outcome-binding.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412984",
+            "size": 5284,
+            "sha256": "60f41ca80d1382767e1a46a066a57c088763bcf8d240b6e075487411529c44ed"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "commerce-outcome-binding.ndjson",
+            "identity": "65056:4412984",
+            "from": 0,
+            "to": 5284,
+            "sha256": "60f41ca80d1382767e1a46a066a57c088763bcf8d240b6e075487411529c44ed",
+            "prefixSha256": "60f41ca80d1382767e1a46a066a57c088763bcf8d240b6e075487411529c44ed"
+          }
+        ],
+        "producerDigest": "e3fa781e3232896fd8e7f68878b2b3b20d2a8147af45afc2f35c51c9c3d2bb72",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 6
+      },
+      "retention": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "useful-result-customer.1.ndjson",
+            "present": false,
+            "reason": null
+          },
+          {
+            "name": "useful-result-customer.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412974",
+            "size": 4692,
+            "sha256": "d5a7d2794a8f8988d43d0bab88c88aad56d4737b8d9a0d52c9f7c645b2933231"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "useful-result-customer.ndjson",
+            "identity": "65056:4412974",
+            "from": 0,
+            "to": 4692,
+            "sha256": "d5a7d2794a8f8988d43d0bab88c88aad56d4737b8d9a0d52c9f7c645b2933231",
+            "prefixSha256": "d5a7d2794a8f8988d43d0bab88c88aad56d4737b8d9a0d52c9f7c645b2933231"
+          }
+        ],
+        "producerDigest": "1780b005b59c71b2250ead984db9768d71e90cdd47b2dff43e8a72bcc4d86a90",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 2
+      },
+      "reads": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "useful-result-metrics.1.ndjson",
+            "present": false,
+            "reason": null
+          },
+          {
+            "name": "useful-result-metrics.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412970",
+            "size": 1725,
+            "sha256": "3b4afa1c462a69eb3510e9de2321381a87f7872f27ed89da636c4c1cda2920a5"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "useful-result-metrics.ndjson",
+            "identity": "65056:4412970",
+            "from": 0,
+            "to": 1725,
+            "sha256": "3b4afa1c462a69eb3510e9de2321381a87f7872f27ed89da636c4c1cda2920a5",
+            "prefixSha256": "3b4afa1c462a69eb3510e9de2321381a87f7872f27ed89da636c4c1cda2920a5"
+          }
+        ],
+        "producerDigest": "c4250b373064653c5171eb82e32e1df4da0d89faad22a8ac148ca2e21192d674",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 7
+      },
+      "settlements": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "commerce-settlements.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412986",
+            "size": 2562,
+            "sha256": "6be037195cc296b655a6757bb5413118e5cf36e518df29c833c0540f16a309d0"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "commerce-settlements.ndjson",
+            "identity": "65056:4412986",
+            "from": 0,
+            "to": 2562,
+            "sha256": "6be037195cc296b655a6757bb5413118e5cf36e518df29c833c0540f16a309d0",
+            "prefixSha256": "6be037195cc296b655a6757bb5413118e5cf36e518df29c833c0540f16a309d0"
+          }
+        ],
+        "producerDigest": "d04d8277e276532997806e22f8de25cb5b9f8e814d72e9e774bd7b09338c0033",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 2,
+        "settlementCapture": {
+          "schemaVersion": "samedaydesk.commerce-settlement-plane-capture.v1",
+          "capturedAt": "2026-10-03T18:29:36.173Z",
+          "generationId": "setlcut_2cd35e55b75f3b096b1ada0c788579b6",
+          "observationId": "setlobs_015abf0161f3c0d1d3161d338c2eb539",
+          "lifecycle": "ok",
+          "enabled": true,
+          "baseline": "2026-10-03T18:29:36.049Z",
+          "attemptsUsed": 1,
+          "ledger": {
+            "present": true,
+            "regularFile": true,
+            "identity": {
+              "dev": "65056",
+              "ino": "4412986",
+              "mode": "0600"
+            },
+            "byteCount": 2562,
+            "byteDigest": "6be037195cc296b655a6757bb5413118e5cf36e518df29c833c0540f16a309d0"
+          },
+          "integrity": {
+            "corruptLines": 0,
+            "issues": {},
+            "reason": null
+          },
+          "summary": {
+            "schemaVersion": "samedaydesk.commerce-settlement-summary.v1",
+            "reconciledSettlements": 2,
+            "distinctSettlementReferences": 2,
+            "amountAtomic": "100000",
+            "byClass": {
+              "unclassified": {
+                "settlements": 2,
+                "amountAtomic": "100000"
+              }
+            },
+            "byRoute": {
+              "/chain/transaction-receipt": {
+                "settlements": 2,
+                "amountAtomic": "100000"
+              }
+            },
+            "invalidLines": 0
+          },
+          "summaryDigest": "49527443b1fa6a4cf4bcd9914e18990c5e204174a746da89ad05327f1407cde5",
+          "run": {
+            "runGenerationId": "setlrun_aa832321774f7b66a3cda3e4",
+            "state": "complete",
+            "generationNonce": "d003338edc70ca98c901ed1349b2fd08",
+            "completedAt": "2026-10-03T18:29:36.162Z",
+            "namespaceId": "setlns_7a6b8b1888e13b5bd335144148a38d2d",
+            "lastError": null,
+            "lastIssueCounts": {}
+          }
+        }
+      }
+    },
+    "window": {
+      "from": "2026-10-03T18:29:36.052Z",
+      "to": "2026-10-03T18:29:36.169Z",
+      "asOf": "2026-10-03T18:29:36.169Z"
+    },
+    "executionDecision": "not_found",
+    "paymentInvoked": false,
+    "fixtureRail": true
+  }
+]

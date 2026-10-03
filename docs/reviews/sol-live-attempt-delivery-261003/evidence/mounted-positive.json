@@ -1,0 +1,608 @@
+{
+  "schema": "samedaydesk.attempt-useful-view.report.v1",
+  "jobId": "SOL-LIVE-ATTEMPT-DELIVERY-261003",
+  "attemptOf": null,
+  "operationRemint": "refused",
+  "forbiddenOperationId": "add923ae-3eb5-474b-8b3e-e376666dee83",
+  "decision": "one_attempt",
+  "reason": null,
+  "taskRef": "t31e5765fd86c19a1e9cae0be6872411106e8e4940e4923b5a4912361575527",
+  "commerceEventId": "18b78aac-c1d7-4ca1-bc4e-b5c027349aa1",
+  "operationId": "normalized-transaction-receipt",
+  "cohort": "owner_qa",
+  "sourceDeliveryAttribution": {
+    "schemaVersion": "samedaydesk.settlement-source-delivery-attribution.v1",
+    "originClass": "internal",
+    "originVerification": "verified_internal_token",
+    "declaredDiscoverySource": null,
+    "observedDiscoverySource": null,
+    "collapsedDiscoverySource": null,
+    "discoverySourceKind": "none",
+    "discoverySourceVerification": "unverified",
+    "responseStatus": 200,
+    "responseResult": "paid_route_response",
+    "buyerValidOutput": "unknown",
+    "deliveryValidation": "not_checked",
+    "deliveryValidationAuthority": "none",
+    "customerDemand": "unknown",
+    "repeatDemand": "unknown"
+  },
+  "customer": null,
+  "globalAgentId": null,
+  "database": null,
+  "signer": null,
+  "mintedGrant": false,
+  "automaticMutationRetries": 0,
+  "liveCoverage": "unresolved",
+  "liveCoverageReason": "fixture_or_owner_qa_is_not_live_production_coverage",
+  "journalCutCoverage": "complete",
+  "productionJournalCoverage": "unknown",
+  "coverageAuthority": "authenticated_producer_capture",
+  "observationClassification": "owner_qa_or_fixture",
+  "outsideUseEstablished": false,
+  "evidenceKind": "synthetic_fixture",
+  "journalCovered": true,
+  "populationConversionRate": null,
+  "stageCounts": null,
+  "recognizedRevenueAtomic": "unknown",
+  "paymentPermitted": false,
+  "paymentClassification": {
+    "disposition": "unresolved",
+    "authority": "existing_payment_classifier_not_recomputed",
+    "joinedToThisAttempt": false
+  },
+  "useful": true,
+  "usefulNegative": null,
+  "inheritedUsefulness": null,
+  "historicalCriterion": null,
+  "stages": {
+    "attempt": {
+      "disposition": "producer-observed",
+      "authority": "server_minted_commerce_event_and_task_ref"
+    },
+    "delivery": {
+      "disposition": "producer-observed",
+      "authority": "producer_journal_http_finish_and_transport"
+    },
+    "callerUsefulness": {
+      "disposition": "caller asserted",
+      "authority": "caller_claim",
+      "verification": "unverified",
+      "value": true
+    },
+    "independentReplay": {
+      "disposition": "classified",
+      "authority": "existing_fixed_predicate",
+      "criterion": "positive"
+    },
+    "retention": {
+      "disposition": "authorized",
+      "authority": "existing_customer_grant",
+      "currentRights": true
+    },
+    "laterUse": {
+      "disposition": "authorized",
+      "authority": "existing_authorized_retained_read",
+      "callerReceipt": "unknown",
+      "appliedUse": "unknown"
+    },
+    "settlement": {
+      "disposition": "unresolved",
+      "reason": "free_observation_has_no_payment_authority",
+      "observed": "unknown"
+    }
+  },
+  "restart": null,
+  "publicSeam": {
+    "status": "unresolved",
+    "missingLink": "per_attempt_public_call_identity",
+    "coveredExternalEvents": null,
+    "coveredExternalEventsAreCustomers": false,
+    "coveredExternalEventsAreAttemptDenominator": false,
+    "paidSuccess": {
+      "disposition": "unresolved",
+      "observed": null,
+      "reason": "covered_baseline_not_attached"
+    },
+    "populationConversionRate": null,
+    "enrollment": "unresolved",
+    "serverDelta": "applied",
+    "releasedMerchantHead": "32f07a836fb28e400d56b0e2e876043644bde31a",
+    "historicalReleasedMerchantHead": "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+    "publicAcquisitionArtifact": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a"
+  },
+  "provenance": {
+    "reader": "isolated_attempt_useful_view_reuses_421_projectBundle",
+    "measurement": "not_reimplemented",
+    "authenticity": "authenticated_producer_capture_not_customer_identity",
+    "identity": "not_inferred",
+    "pins": {
+      "causalProof301": "45db5507d1fef740dfe5fe84ec611c7b764d8c43",
+      "taskProducer339": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+      "causalMeasurement395": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+      "freeUseObserver421": "26d806f20e57d0c073321675dacb13395e30c643",
+      "terminalReader423": "5693610be4d7fdf7d13044be666f712b7ea189f8",
+      "seller041": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+      "releasedMerchantHead": "32f07a836fb28e400d56b0e2e876043644bde31a",
+      "historicalReleasedMerchantHead": "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+      "publicAcquisitionArtifact": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a"
+    },
+    "observerProducerCommit": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+    "observerProducerCommitRole": "conversion_schema_compatibility",
+    "producerSourceDigest": "1d7f987a108906796c61fb7ec7ada8985b7832d17516c533158db6263a2a5527",
+    "clockWindowFix": {
+      "commit": "de4c2a1f5e52065273b677a8694913a98850dcf0",
+      "branch": "codex/task-observer-window-1003",
+      "applied": false,
+      "onThisBranch": false,
+      "commitIsAncestorOfMerchant161": false,
+      "contentPresentOnMerchant161": true,
+      "productionFreshnessMaxAgeMs": 900000
+    },
+    "seller041": "frozen_not_rewritten",
+    "integrationDelta": "applied",
+    "enrollment": "isolated_branch",
+    "adapt": {
+      "jobId": "HEAVY-ATTEMPT-USEFUL-ADAPT-161-1005",
+      "priorViewHead": "4e49c4db58ea0f5897240781fd14d80566bbabd0",
+      "adaptHead": "e687ca11c2e05e8ac41ede83dc1b98cfe46c3a7c",
+      "priorViewOperationReused": false
+    },
+    "complete": {
+      "jobId": "HEAVY-ATTEMPT-USEFUL-COMPLETE-161-1005",
+      "measurementSource": "4e49c4db58ea0f5897240781fd14d80566bbabd0",
+      "releasedMerchantHead": "32f07a836fb28e400d56b0e2e876043644bde31a",
+      "publicAcquisitionArtifact": "4b7928f315be9d9ec7d14f2604eab1b7b236a63a"
+    }
+  },
+  "stageWords": {
+    "attempt": "producer-observed",
+    "delivery": "producer-observed",
+    "callerUsefulness": "caller asserted",
+    "independentReplay": "classified",
+    "retention": "authorized",
+    "laterUse": "authorized",
+    "settlement": "unknown"
+  },
+  "cutId": "4a12a834-4f10-4cb6-adf6-85fb1c1dd7b5",
+  "capture": {
+    "schema": "samedaydesk.attempt-useful.journal-cut.v1",
+    "kind": "attempt_useful_capture",
+    "cutId": "4a12a834-4f10-4cb6-adf6-85fb1c1dd7b5",
+    "sessionId": "00b61be1-cf27-4566-8728-543ee89738a1",
+    "namespace": "65056:4412968",
+    "producer": "canonical_commerce_and_useful_result_journals",
+    "sourceDigest": "1d7f987a108906796c61fb7ec7ada8985b7832d17516c533158db6263a2a5527",
+    "durability": "existing_flush_and_closed_files_no_fsync_guarantee",
+    "callerReceipt": "unknown",
+    "writerProcesses": 1,
+    "runtime": {
+      "entrypoint": "isolated_express_mount",
+      "deploymentId": null,
+      "source": null
+    },
+    "from": "2026-10-03T18:29:25.725Z",
+    "asOf": "2026-10-03T18:29:26.339Z",
+    "planes": {
+      "attempts": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "commerce-events.1.ndjson",
+            "present": false,
+            "reason": null
+          },
+          {
+            "name": "commerce-events.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412970",
+            "size": 15601,
+            "sha256": "218fd30685c5baf914d14371799a6cfba4184c666169588a7131fd042b7de643"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "commerce-events.ndjson",
+            "identity": "65056:4412970",
+            "from": 0,
+            "to": 15601,
+            "sha256": "218fd30685c5baf914d14371799a6cfba4184c666169588a7131fd042b7de643",
+            "prefixSha256": "218fd30685c5baf914d14371799a6cfba4184c666169588a7131fd042b7de643"
+          }
+        ],
+        "producerDigest": "1e64534dbc0f0ce857b17f3b0b92b1506d96e0c8d368de81219c6527a6142322",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 10
+      },
+      "task_refs": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "commerce-outcome-task-ref.1.ndjson",
+            "present": false,
+            "reason": null
+          },
+          {
+            "name": "commerce-outcome-task-ref.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412974",
+            "size": 736,
+            "sha256": "95889f253b5a76c46ebf38bef7bfada8dfa6c06c4718afcd3e62f9931a37259a"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "commerce-outcome-task-ref.ndjson",
+            "identity": "65056:4412974",
+            "from": 0,
+            "to": 736,
+            "sha256": "95889f253b5a76c46ebf38bef7bfada8dfa6c06c4718afcd3e62f9931a37259a",
+            "prefixSha256": "95889f253b5a76c46ebf38bef7bfada8dfa6c06c4718afcd3e62f9931a37259a"
+          }
+        ],
+        "producerDigest": "22573f50ca73740a40c9054112f2a049e69518279b4a6f221cdab4849ca7ab88",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 2
+      },
+      "forward": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "commerce-outcome-binding.1.ndjson",
+            "present": false,
+            "reason": null
+          },
+          {
+            "name": "commerce-outcome-binding.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412971",
+            "size": 3396,
+            "sha256": "1db108d785152a6ecefc705f9e0a1bbfd65247548d5ccdafa43e8d2352e49fce"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "commerce-outcome-binding.ndjson",
+            "identity": "65056:4412971",
+            "from": 0,
+            "to": 3396,
+            "sha256": "1db108d785152a6ecefc705f9e0a1bbfd65247548d5ccdafa43e8d2352e49fce",
+            "prefixSha256": "1db108d785152a6ecefc705f9e0a1bbfd65247548d5ccdafa43e8d2352e49fce"
+          }
+        ],
+        "producerDigest": "8f137f1742d937ce8ba7e1b5c2ac722cefa0f58cbd478fb817c414f2a84aa126",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 4
+      },
+      "retention": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "useful-result-customer.1.ndjson",
+            "present": false,
+            "reason": null
+          },
+          {
+            "name": "useful-result-customer.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412976",
+            "size": 6291,
+            "sha256": "4c96b4fd5cabaa3140788d71ae35d6f2e796445bed6a71a0d75eb4919804ea42"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "useful-result-customer.ndjson",
+            "identity": "65056:4412976",
+            "from": 0,
+            "to": 6291,
+            "sha256": "4c96b4fd5cabaa3140788d71ae35d6f2e796445bed6a71a0d75eb4919804ea42",
+            "prefixSha256": "4c96b4fd5cabaa3140788d71ae35d6f2e796445bed6a71a0d75eb4919804ea42"
+          }
+        ],
+        "producerDigest": "899a500c4be2b560dc056cc49b2ea288349705098e3eca9852a74b53c6b1820e",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 2
+      },
+      "reads": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "useful-result-metrics.1.ndjson",
+            "present": false,
+            "reason": null
+          },
+          {
+            "name": "useful-result-metrics.ndjson",
+            "present": true,
+            "reason": null,
+            "identity": "65056:4412977",
+            "size": 446,
+            "sha256": "dc4f404b791b58b7e30e8e637c26d0c67bc344445cbd9bcf839df37a51b3b106"
+          }
+        ],
+        "bounds": [
+          {
+            "name": "useful-result-metrics.ndjson",
+            "identity": "65056:4412977",
+            "from": 0,
+            "to": 446,
+            "sha256": "dc4f404b791b58b7e30e8e637c26d0c67bc344445cbd9bcf839df37a51b3b106",
+            "prefixSha256": "dc4f404b791b58b7e30e8e637c26d0c67bc344445cbd9bcf839df37a51b3b106"
+          }
+        ],
+        "producerDigest": "0e7cf39718de32214215b0894d9724c0cebdc9b121d26a20a12a4460025fae0d",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 2
+      },
+      "settlements": {
+        "coverage": "complete",
+        "reasons": [],
+        "files": [
+          {
+            "name": "commerce-settlements.ndjson",
+            "present": false,
+            "reason": null
+          }
+        ],
+        "bounds": [],
+        "producerDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "producer": "canonical_single_process_owner",
+        "rotations": 0,
+        "writes": 0,
+        "settlementCapture": {
+          "schemaVersion": "samedaydesk.commerce-settlement-plane-capture.v1",
+          "capturedAt": "2026-10-03T18:29:26.357Z",
+          "generationId": "setlcut_4dd207d65fa2fea5ad701d3a818c9143",
+          "observationId": "setlobs_e82efa3703ec219b52a43a60fc999cad",
+          "lifecycle": "never_run",
+          "enabled": true,
+          "baseline": "2026-10-03T18:29:25.721Z",
+          "attemptsUsed": 1,
+          "ledger": {
+            "present": false,
+            "regularFile": false,
+            "identity": null,
+            "byteCount": null,
+            "byteDigest": null
+          },
+          "integrity": {
+            "corruptLines": 0,
+            "issues": {},
+            "reason": null
+          },
+          "summary": null,
+          "summaryDigest": null,
+          "run": null
+        }
+      }
+    }
+  },
+  "planeCoverage": {
+    "attempts": {
+      "coverage": "complete",
+      "reasons": [],
+      "files": [
+        {
+          "name": "commerce-events.1.ndjson",
+          "present": false,
+          "reason": null
+        },
+        {
+          "name": "commerce-events.ndjson",
+          "present": true,
+          "reason": null,
+          "identity": "65056:4412970",
+          "size": 15601,
+          "sha256": "218fd30685c5baf914d14371799a6cfba4184c666169588a7131fd042b7de643"
+        }
+      ],
+      "bounds": [
+        {
+          "name": "commerce-events.ndjson",
+          "identity": "65056:4412970",
+          "from": 0,
+          "to": 15601,
+          "sha256": "218fd30685c5baf914d14371799a6cfba4184c666169588a7131fd042b7de643",
+          "prefixSha256": "218fd30685c5baf914d14371799a6cfba4184c666169588a7131fd042b7de643"
+        }
+      ],
+      "producerDigest": "1e64534dbc0f0ce857b17f3b0b92b1506d96e0c8d368de81219c6527a6142322",
+      "producer": "canonical_single_process_owner",
+      "rotations": 0,
+      "writes": 10
+    },
+    "task_refs": {
+      "coverage": "complete",
+      "reasons": [],
+      "files": [
+        {
+          "name": "commerce-outcome-task-ref.1.ndjson",
+          "present": false,
+          "reason": null
+        },
+        {
+          "name": "commerce-outcome-task-ref.ndjson",
+          "present": true,
+          "reason": null,
+          "identity": "65056:4412974",
+          "size": 736,
+          "sha256": "95889f253b5a76c46ebf38bef7bfada8dfa6c06c4718afcd3e62f9931a37259a"
+        }
+      ],
+      "bounds": [
+        {
+          "name": "commerce-outcome-task-ref.ndjson",
+          "identity": "65056:4412974",
+          "from": 0,
+          "to": 736,
+          "sha256": "95889f253b5a76c46ebf38bef7bfada8dfa6c06c4718afcd3e62f9931a37259a",
+          "prefixSha256": "95889f253b5a76c46ebf38bef7bfada8dfa6c06c4718afcd3e62f9931a37259a"
+        }
+      ],
+      "producerDigest": "22573f50ca73740a40c9054112f2a049e69518279b4a6f221cdab4849ca7ab88",
+      "producer": "canonical_single_process_owner",
+      "rotations": 0,
+      "writes": 2
+    },
+    "forward": {
+      "coverage": "complete",
+      "reasons": [],
+      "files": [
+        {
+          "name": "commerce-outcome-binding.1.ndjson",
+          "present": false,
+          "reason": null
+        },
+        {
+          "name": "commerce-outcome-binding.ndjson",
+          "present": true,
+          "reason": null,
+          "identity": "65056:4412971",
+          "size": 3396,
+          "sha256": "1db108d785152a6ecefc705f9e0a1bbfd65247548d5ccdafa43e8d2352e49fce"
+        }
+      ],
+      "bounds": [
+        {
+          "name": "commerce-outcome-binding.ndjson",
+          "identity": "65056:4412971",
+          "from": 0,
+          "to": 3396,
+          "sha256": "1db108d785152a6ecefc705f9e0a1bbfd65247548d5ccdafa43e8d2352e49fce",
+          "prefixSha256": "1db108d785152a6ecefc705f9e0a1bbfd65247548d5ccdafa43e8d2352e49fce"
+        }
+      ],
+      "producerDigest": "8f137f1742d937ce8ba7e1b5c2ac722cefa0f58cbd478fb817c414f2a84aa126",
+      "producer": "canonical_single_process_owner",
+      "rotations": 0,
+      "writes": 4
+    },
+    "retention": {
+      "coverage": "complete",
+      "reasons": [],
+      "files": [
+        {
+          "name": "useful-result-customer.1.ndjson",
+          "present": false,
+          "reason": null
+        },
+        {
+          "name": "useful-result-customer.ndjson",
+          "present": true,
+          "reason": null,
+          "identity": "65056:4412976",
+          "size": 6291,
+          "sha256": "4c96b4fd5cabaa3140788d71ae35d6f2e796445bed6a71a0d75eb4919804ea42"
+        }
+      ],
+      "bounds": [
+        {
+          "name": "useful-result-customer.ndjson",
+          "identity": "65056:4412976",
+          "from": 0,
+          "to": 6291,
+          "sha256": "4c96b4fd5cabaa3140788d71ae35d6f2e796445bed6a71a0d75eb4919804ea42",
+          "prefixSha256": "4c96b4fd5cabaa3140788d71ae35d6f2e796445bed6a71a0d75eb4919804ea42"
+        }
+      ],
+      "producerDigest": "899a500c4be2b560dc056cc49b2ea288349705098e3eca9852a74b53c6b1820e",
+      "producer": "canonical_single_process_owner",
+      "rotations": 0,
+      "writes": 2
+    },
+    "reads": {
+      "coverage": "complete",
+      "reasons": [],
+      "files": [
+        {
+          "name": "useful-result-metrics.1.ndjson",
+          "present": false,
+          "reason": null
+        },
+        {
+          "name": "useful-result-metrics.ndjson",
+          "present": true,
+          "reason": null,
+          "identity": "65056:4412977",
+          "size": 446,
+          "sha256": "dc4f404b791b58b7e30e8e637c26d0c67bc344445cbd9bcf839df37a51b3b106"
+        }
+      ],
+      "bounds": [
+        {
+          "name": "useful-result-metrics.ndjson",
+          "identity": "65056:4412977",
+          "from": 0,
+          "to": 446,
+          "sha256": "dc4f404b791b58b7e30e8e637c26d0c67bc344445cbd9bcf839df37a51b3b106",
+          "prefixSha256": "dc4f404b791b58b7e30e8e637c26d0c67bc344445cbd9bcf839df37a51b3b106"
+        }
+      ],
+      "producerDigest": "0e7cf39718de32214215b0894d9724c0cebdc9b121d26a20a12a4460025fae0d",
+      "producer": "canonical_single_process_owner",
+      "rotations": 0,
+      "writes": 2
+    },
+    "settlements": {
+      "coverage": "complete",
+      "reasons": [],
+      "files": [
+        {
+          "name": "commerce-settlements.ndjson",
+          "present": false,
+          "reason": null
+        }
+      ],
+      "bounds": [],
+      "producerDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "producer": "canonical_single_process_owner",
+      "rotations": 0,
+      "writes": 0,
+      "settlementCapture": {
+        "schemaVersion": "samedaydesk.commerce-settlement-plane-capture.v1",
+        "capturedAt": "2026-10-03T18:29:26.357Z",
+        "generationId": "setlcut_4dd207d65fa2fea5ad701d3a818c9143",
+        "observationId": "setlobs_e82efa3703ec219b52a43a60fc999cad",
+        "lifecycle": "never_run",
+        "enabled": true,
+        "baseline": "2026-10-03T18:29:25.721Z",
+        "attemptsUsed": 1,
+        "ledger": {
+          "present": false,
+          "regularFile": false,
+          "identity": null,
+          "byteCount": null,
+          "byteDigest": null
+        },
+        "integrity": {
+          "corruptLines": 0,
+          "issues": {},
+          "reason": null
+        },
+        "summary": null,
+        "summaryDigest": null,
+        "run": null
+      }
+    }
+  },
+  "window": {
+    "from": "2026-10-03T18:29:25.725Z",
+    "to": "2026-10-03T18:29:26.339Z",
+    "asOf": "2026-10-03T18:29:26.339Z"
+  }
+}

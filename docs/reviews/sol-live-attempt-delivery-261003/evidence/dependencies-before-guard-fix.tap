@@ -1,0 +1,197 @@
+TAP version 13
+# Subtest: existing customer store loss before append stays unknown and a lost ACK reconciles without replay
+ok 1 - existing customer store loss before append stays unknown and a lost ACK reconciles without replay
+  ---
+  duration_ms: 3205.314425
+  type: 'test'
+  ...
+# Subtest: an additional process writer is refused before any port is opened
+ok 2 - an additional process writer is refused before any port is opened
+  ---
+  duration_ms: 0.495849
+  type: 'test'
+  ...
+# Subtest: actual scoped free fee and receipt-absence callers through isolated current HTTP/journal ports
+    # Subtest: useful negative remains independently useful and a success assertion remains unverified
+    ok 1 - useful negative remains independently useful and a success assertion remains unverified
+      ---
+      duration_ms: 0.579444
+      type: 'test'
+      ...
+    # Subtest: exact task/attempt/tenant/body, cuts, finish timing and settlement authority refusals are physical
+    ok 2 - exact task/attempt/tenant/body, cuts, finish timing and settlement authority refusals are physical
+      ---
+      duration_ms: 0.192577
+      type: 'test'
+      ...
+    # Subtest: scope, source, cutoff, predecessor and conflicting evidence change the projection decision
+    ok 3 - scope, source, cutoff, predecessor and conflicting evidence change the projection decision
+      ---
+      duration_ms: 43.751
+      type: 'test'
+      ...
+    # Subtest: a restarted native process reads then withdraws the prior exact grant
+    ok 4 - a restarted native process reads then withdraws the prior exact grant
+      ---
+      duration_ms: 1764.723137
+      type: 'test'
+      ...
+    # Subtest: stripped CLI receiving reproduces the same report and refuses changed retained evidence
+    ok 5 - stripped CLI receiving reproduces the same report and refuses changed retained evidence
+      ---
+      duration_ms: 93.494594
+      type: 'test'
+      ...
+    1..5
+ok 3 - actual scoped free fee and receipt-absence callers through isolated current HTTP/journal ports
+  ---
+  duration_ms: 3667.03337
+  type: 'test'
+  ...
+# Subtest: caller-owned source runs in a stripped process and agrees with separate direct equal-input solving
+ok 4 - caller-owned source runs in a stripped process and agrees with separate direct equal-input solving
+  ---
+  duration_ms: 425.143967
+  type: 'test'
+  ...
+# Subtest: bounds, output overwrite, symlink, malformed input and silent stdin remain explicit refusals
+ok 5 - bounds, output overwrite, symlink, malformed input and silent stdin remain explicit refusals
+  ---
+  duration_ms: 305.341872
+  type: 'test'
+  ...
+# Subtest: reuse of exact395 free evidence preserves the original unknowns
+ok 6 - reuse of exact395 free evidence preserves the original unknowns
+  ---
+  duration_ms: 1.477727
+  type: 'test'
+  ...
+# Subtest: the committed live read is the stripped covered-window baseline
+ok 7 - the committed live read is the stripped covered-window baseline
+  ---
+  duration_ms: 0.529427
+  type: 'test'
+  ...
+# Subtest: covered one-day fixture keeps settlement, customers, and rare history unjoined
+ok 8 - covered one-day fixture keeps settlement, customers, and rare history unjoined
+  ---
+  duration_ms: 8.115051
+  type: 'test'
+  ...
+# Subtest: an incomplete request is not a covered denominator
+ok 9 - an incomplete request is not a covered denominator
+  ---
+  duration_ms: 1.165779
+  type: 'test'
+  ...
+# Subtest: filled customer plane, revenue, and a restricted field are rejected
+ok 10 - filled customer plane, revenue, and a restricted field are rejected
+  ---
+  duration_ms: 0.61474
+  type: 'test'
+  ...
+# Subtest: conflicting rare reads do not supply the wide numerator
+ok 11 - conflicting rare reads do not supply the wide numerator
+  ---
+  duration_ms: 0.675867
+  type: 'test'
+  ...
+# Subtest: seeded false-complete join is rejected
+ok 12 - seeded false-complete join is rejected
+  ---
+  duration_ms: 1.082844
+  type: 'test'
+  ...
+# Subtest: one supplied attempt joins its own phases and does not invent usefulness
+ok 13 - one supplied attempt joins its own phases and does not invent usefulness
+  ---
+  duration_ms: 0.663605
+  type: 'test'
+  ...
+# Subtest: duplicates do not raise the numerator
+ok 14 - duplicates do not raise the numerator
+  ---
+  duration_ms: 0.234421
+  type: 'test'
+  ...
+# Subtest: a missing settlement stays unknown
+ok 15 - a missing settlement stays unknown
+  ---
+  duration_ms: 0.156161
+  type: 'test'
+  ...
+# Subtest: wrong settlement reference, changed later input, and cross-rail joins are refused
+ok 16 - wrong settlement reference, changed later input, and cross-rail joins are refused
+  ---
+  duration_ms: 0.502476
+  type: 'test'
+  ...
+# Subtest: a wallet field and a later-repeat inheritance are refused
+ok 17 - a wallet field and a later-repeat inheritance are refused
+  ---
+  duration_ms: 0.335425
+  type: 'test'
+  ...
+# Subtest: distinct call ids stay distinct attempts
+ok 18 - distinct call ids stay distinct attempts
+  ---
+  duration_ms: 0.16612
+  type: 'test'
+  ...
+# Subtest: the 421 observation port stays owner QA and a changed retention is rejected
+ok 19 - the 421 observation port stays owner QA and a changed retention is rejected
+  ---
+  duration_ms: 22.380636
+  type: 'test'
+  ...
+# Subtest: only the existing commerce-demand day query is readable
+ok 20 - only the existing commerce-demand day query is readable
+  ---
+  duration_ms: 0.237757
+  type: 'test'
+  ...
+# Subtest: real causal middleware and existing receipt retention feed the isolated observer adapter
+ok 21 - real causal middleware and existing receipt retention feed the isolated observer adapter
+  ---
+  duration_ms: 43.913394
+  type: 'test'
+  ...
+# Subtest: two processes record a controlled delivery and reject a seeded relabel
+not ok 22 - two processes record a controlled delivery and reject a seeded relabel
+  ---
+  duration_ms: 490.596397
+  type: 'test'
+  location: '/home/ubuntu/root-sol-live-attempt-261003/task-linked-delivery/receiving.test.mjs:21:1'
+  failureType: 'testCodeFailure'
+  error: |-
+
+    task file stored an identity marker
+
+
+    1 !== 0
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/root-sol-live-attempt-261003/task-linked-delivery/receiving.test.mjs:30:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: a second process sees a refused append and then a recovered one
+ok 23 - a second process sees a refused append and then a recovered one
+  ---
+  duration_ms: 104.742494
+  type: 'test'
+  ...
+1..23
+# tests 28
+# suites 0
+# pass 27
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9969.437084

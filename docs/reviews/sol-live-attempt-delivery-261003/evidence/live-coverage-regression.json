@@ -1,0 +1,166 @@
+{
+  "input": "actual registered canonical mounted producer capture; explicitly isolated bootstrap fixture",
+  "receivedHead": "0c29e9fb3a9d31269f666a51957067e1ee98a90e",
+  "receivedViewSha256": "71ca56747e64a1b39d25e1985e3bdee3987d1b2d22b98564f97c906ee246abed",
+  "cutId": "983aedd5-57f2-4db7-b20c-b3e355ea1d37",
+  "planes": {
+    "attempts": {
+      "coverage": "complete",
+      "reasons": [],
+      "files": [
+        {
+          "name": "commerce-events.1.ndjson",
+          "present": false,
+          "reason": null
+        },
+        {
+          "name": "commerce-events.ndjson",
+          "present": false,
+          "reason": null
+        }
+      ],
+      "bounds": [],
+      "producerDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "producer": "canonical_single_process_owner",
+      "rotations": 0,
+      "writes": 0
+    },
+    "task_refs": {
+      "coverage": "complete",
+      "reasons": [],
+      "files": [
+        {
+          "name": "commerce-outcome-task-ref.1.ndjson",
+          "present": false,
+          "reason": null
+        },
+        {
+          "name": "commerce-outcome-task-ref.ndjson",
+          "present": false,
+          "reason": null
+        }
+      ],
+      "bounds": [],
+      "producerDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "producer": "canonical_single_process_owner",
+      "rotations": 0,
+      "writes": 0
+    },
+    "forward": {
+      "coverage": "complete",
+      "reasons": [],
+      "files": [
+        {
+          "name": "commerce-outcome-binding.1.ndjson",
+          "present": false,
+          "reason": null
+        },
+        {
+          "name": "commerce-outcome-binding.ndjson",
+          "present": false,
+          "reason": null
+        }
+      ],
+      "bounds": [],
+      "producerDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "producer": "canonical_single_process_owner",
+      "rotations": 0,
+      "writes": 0
+    },
+    "retention": {
+      "coverage": "complete",
+      "reasons": [],
+      "files": [
+        {
+          "name": "useful-result-customer.1.ndjson",
+          "present": false,
+          "reason": null
+        },
+        {
+          "name": "useful-result-customer.ndjson",
+          "present": false,
+          "reason": null
+        }
+      ],
+      "bounds": [],
+      "producerDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "producer": "canonical_single_process_owner",
+      "rotations": 0,
+      "writes": 0
+    },
+    "reads": {
+      "coverage": "complete",
+      "reasons": [],
+      "files": [
+        {
+          "name": "useful-result-metrics.1.ndjson",
+          "present": false,
+          "reason": null
+        },
+        {
+          "name": "useful-result-metrics.ndjson",
+          "present": false,
+          "reason": null
+        }
+      ],
+      "bounds": [],
+      "producerDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "producer": "canonical_single_process_owner",
+      "rotations": 0,
+      "writes": 0
+    },
+    "settlements": {
+      "coverage": "complete",
+      "reasons": [],
+      "files": [
+        {
+          "name": "commerce-settlements.ndjson",
+          "present": false,
+          "reason": null
+        }
+      ],
+      "bounds": [],
+      "producerDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "producer": "canonical_single_process_owner",
+      "rotations": 0,
+      "writes": 0,
+      "settlementCapture": {
+        "schemaVersion": "samedaydesk.commerce-settlement-plane-capture.v1",
+        "capturedAt": "2026-10-03T18:05:08.846Z",
+        "generationId": "setlcut_cc2a71da8f63a4e7743e3324643f5e4b",
+        "observationId": "setlobs_629bb74d04a69174f6a873406017f649",
+        "lifecycle": "never_run",
+        "enabled": true,
+        "baseline": "2026-10-03T18:05:08.833Z",
+        "attemptsUsed": 1,
+        "ledger": {
+          "present": false,
+          "regularFile": false,
+          "identity": null,
+          "byteCount": null,
+          "byteDigest": null
+        },
+        "integrity": {
+          "corruptLines": 0,
+          "issues": {},
+          "reason": null
+        },
+        "summary": null,
+        "summaryDigest": null,
+        "run": null
+      }
+    }
+  },
+  "expected": "complete journal coverage independent of outside usefulness",
+  "before": {
+    "liveCoverage": "unresolved",
+    "expectedAssertion": "fails"
+  },
+  "after": {
+    "liveCoverage": "complete",
+    "expectedAssertion": "passes",
+    "outsideUseEstablished": false,
+    "customer": null
+  },
+  "deployed": false
+}

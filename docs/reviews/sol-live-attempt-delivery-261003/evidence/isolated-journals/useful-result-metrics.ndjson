@@ -1,0 +1,2 @@
+{"at":"2026-10-03T18:29:26.316Z","eventId":"454e4e37fc6582ef29806f34","kind":"exposure","recordId":null,"schema":"samedaydesk.useful-result-reuse.metric.v1","taskRef":null}
+{"at":"2026-10-03T18:29:26.332Z","eventId":"6b5e4739ab7333a356caf2d3","kind":"useful_later_read","recordId":"17d6395cb8a8b519050f21ad27d488c6","schema":"samedaydesk.useful-result-reuse.metric.v1","taskRef":"t31e5765fd86c19a1e9cae0be6872411106e8e4940e4923b5a4912361575527"}

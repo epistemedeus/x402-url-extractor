@@ -184,7 +184,12 @@ export function handleUsefulResultReuse(req, res, service) {
 
 export function mountUsefulResultReuse(app, options = {}) {
   const service = createUsefulResultReuse(options);
+  // Root may opt into the caller observation adapter on the existing resource.
+  // The callback receives the same service/store, not another shared writer.
+  const observationHandler = typeof options.freeTaskObservation === "function"
+    ? options.freeTaskObservation(service) : null;
   app.use((req, res, next) => {
+    if (typeof observationHandler === "function" && observationHandler(req, res) === true) return;
     if (handleUsefulResultReuse(req, res, service) === false) return next();
     return undefined;
   });

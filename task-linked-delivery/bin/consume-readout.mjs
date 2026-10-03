@@ -66,7 +66,7 @@ const taskText = `${taskCurrent.text}\n${taskRotated.text}`;
 const forwardText = `${forwardCurrent.text}\n${forwardRotated.text}`;
 check(!taskText.includes("task-useful-delivery"), "useful label was stored");
 check(!taskText.includes("task-unpaid-obs"), "unpaid label was stored");
-check(!taskText.includes("0x") && !taskText.toLowerCase().includes("bc1") && !taskText.includes("@"), "task file has an identity marker");
+check(!taskCurrent.torn && !taskRotated.torn && [...taskCurrent.rows, ...taskRotated.rows].every(isTaskRefRecord), "task file violates the closed identity-free row contract");
 check(!forwardText.includes(H15), "H15 expense was copied into the new forward rows");
 check(!forwardText.includes("samedaydesk.outcome-task-ref.v1"), "task schema was written into forward v2");
 

@@ -1,5 +1,8 @@
+import { constants as journalFs } from "node:fs";
+import { authenticateJournalCut } from "./commerce-journal-cut-auth.mjs";
+import { admitCommerceJournal, noteJournalRotation, noteJournalWrite, noteJournalFault, registerJournalProducer, registerJournalTaskBinding } from "./commerce-journal-admission.mjs";
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
-import { appendFile, chmod, mkdir, readFile, rename, stat, unlink } from "node:fs/promises";
+import { appendFile, chmod, lstat, mkdir, open, readFile, rename, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 import { Credential } from "mppx";
 import { classifyDiscoveryRequestConstruction } from "./discovery-contract.mjs";
@@ -1051,7 +1054,7 @@ function buildAgentSourceFunnel({
   return funnel;
 }
 
-async function readEvents(filePath) {
+async function readEvents(filePath, internalToken) {
   try {
     const contents = await readFile(filePath, "utf8");
     const events = [];
@@ -1062,6 +1065,9 @@ async function readEvents(filePath) {
       if (!line.trim()) continue;
       try {
         const parsed = JSON.parse(line);
+        // Authenticated capture metadata is not a commerce event or an
+        // unusable event. It changes neither public counts nor their identity.
+        if (authenticateJournalCut(parsed, internalToken)) continue;
         if (isCanonicalCommerceEvent(parsed)) {
           events.push(parsed);
           continue;
@@ -2948,6 +2954,9 @@ export function createCommerceTelemetry({
     const entry = res && typeof res === "object" ? causalEvents.get(res) : null;
     return typeof entry?.proof === "string" ? entry.proof : null;
   }
+  function causalCommerceTaskBinding(res) {
+    return causalEvents.get(res)?.taskRefRecord || null;
+  }
   const parsedExternalSince = Date.parse(externalSince);
   const externalSinceMs = Number.isFinite(parsedExternalSince) ? parsedExternalSince : null;
   const parsedAgentDiscoverySince = Date.parse(agentDiscoverySince);
@@ -3020,7 +3029,7 @@ export function createCommerceTelemetry({
   }
 
   function enqueueExclusive(work) {
-    const run = queue.then(work);
+    const run = queue.then(() => admitCommerceJournal(dataDir, work));
     queue = run.then(
       () => undefined,
       (error) => {
@@ -3038,17 +3047,25 @@ export function createCommerceTelemetry({
   async function appendEvent(event) {
     await mkdir(dataDir, { recursive: true, mode: 0o700 });
     await chmod(dataDir, 0o700).catch(() => {});
-    const size = await stat(currentPath).then((entry) => entry.size).catch(() => 0);
-    if (size >= maxBytes) {
+    const currentEntry = await lstat(currentPath).catch(error => error.code === "ENOENT" ? null : Promise.reject(error));
+    if (currentEntry && (!currentEntry.isFile() || currentEntry.uid !== process.getuid() || currentEntry.nlink !== 1)) throw new Error("unsafe commerce journal file");
+    if (currentEntry && currentEntry.size >= maxBytes) {
       await unlink(rotatedPath).catch((error) => {
         if (error?.code !== "ENOENT") throw error;
       });
+      noteJournalRotation(dataDir, "attempts");
       await rename(currentPath, rotatedPath).catch((error) => {
         if (error?.code !== "ENOENT") throw error;
       });
     }
-    await appendFile(currentPath, `${JSON.stringify(event)}\n`, { encoding: "utf8", mode: 0o600 });
-    await chmod(currentPath, 0o600).catch(() => {});
+    const handle = await open(currentPath, journalFs.O_WRONLY | journalFs.O_CREAT | journalFs.O_APPEND | journalFs.O_NOFOLLOW | journalFs.O_NONBLOCK, 0o600);
+    try {
+      const current = await handle.stat();
+      if (!current.isFile() || current.uid !== process.getuid() || current.nlink !== 1) throw new Error("unsafe commerce journal file");
+      await handle.appendFile(`${JSON.stringify(event)}\n`, { encoding: "utf8" });
+      noteJournalWrite(dataDir, "attempts", event);
+      await handle.chmod(0o600).catch(() => {});
+    } finally { await handle.close(); }
   }
 
   async function appendPaidSuccessEvidence(evidence) {
@@ -3094,15 +3111,19 @@ export function createCommerceTelemetry({
       }
       if (ownedForward?.length) {
         try {
-          await outcomeBinding.appendRecords(ownedForward);
+          const written = await outcomeBinding.appendRecords(ownedForward);
+          if (written?.accepted === false && written.reason !== "duplicate") noteJournalFault(dataDir, ["forward"]);
         } catch {
+          noteJournalFault(dataDir, ["forward"]);
           // Forward evidence must not fail the commerce event write.
         }
       }
       if (ownedTaskRef) {
         try {
-          await outcomeBinding.appendTaskRef(ownedTaskRef);
+          const written = await outcomeBinding.appendTaskRef(ownedTaskRef);
+          if (written?.accepted === false && written.reason !== "duplicate") noteJournalFault(dataDir, ["task_refs"]);
         } catch {
+          noteJournalFault(dataDir, ["task_refs"]);
           // A task link must not fail the commerce event, replay payment, or rewrite older evidence.
         }
       }
@@ -3192,6 +3213,7 @@ export function createCommerceTelemetry({
     } catch {
       outcomeClaim = null;
     }
+    causalEvents.get(res).taskRefRecord = registerJournalTaskBinding(buildTaskRefRecord({ claim: outcomeClaim, commerceEventId: causalEvents.get(res).id }));
     // Optional journey measurement. It does not authorize payment or identify a wallet.
     let journeyClaim = null;
     try {
@@ -3293,8 +3315,14 @@ export function createCommerceTelemetry({
         return originalSend(body);
       };
     }
-    const finishPaidEvidenceResponseDigest = paidEvidenceRequest
-      ? capturePaidEvidenceResponseDigest(res, paidEvidenceRequest.method, route.route)
+    // Explicitly scoped free observation uses the existing bounded response
+    // digest capture and forward queue. It conveys no delivery or settlement.
+    const freeObservationRequested = outcomeClaim?.taskRef
+      && outcomeClaim.operationId === "normalized-transaction-receipt"
+      && route.route === "/chain/transaction-receipt" && req.method === "GET"
+      && !paymentPresent && headerValue(headers, "x-samedaydesk-observe-free-result") === "1";
+    const finishPaidEvidenceResponseDigest = paidEvidenceRequest || freeObservationRequested
+      ? capturePaidEvidenceResponseDigest(res, paidEvidenceRequest?.method || req.method, route.route)
       : null;
 
     res.once("finish", () => {
@@ -3434,6 +3462,9 @@ export function createCommerceTelemetry({
           });
         }
       }
+      if (freeObservationRequested && result === "paid_route_response" && finishPaidEvidenceResponseDigest) {
+        captured = finishPaidEvidenceResponseDigest();
+      }
       let forwardRecords = null;
       try {
         forwardRecords = buildHttpFinishForwardRecords({
@@ -3442,6 +3473,7 @@ export function createCommerceTelemetry({
           paidEvidence,
           httpDeliveryRecord,
           captured,
+          freeObservation: freeObservationRequested === true,
         });
       } catch {
         forwardRecords = null;
@@ -3473,8 +3505,8 @@ export function createCommerceTelemetry({
     const externalCutoffMs = externalSinceMs === null
       ? windowCutoff
       : Math.max(windowCutoff, externalSinceMs);
-    const rotatedRead = await readEvents(rotatedPath);
-    const currentRead = await readEvents(currentPath);
+    const rotatedRead = await readEvents(rotatedPath, internalToken);
+    const currentRead = await readEvents(currentPath, internalToken);
     const rareRotatedRead = await readRareFunnelEvidence(rareFunnelRotatedPath);
     const rareCurrentRead = await readRareFunnelEvidence(rareFunnelPath);
     const rareById = new Map();
@@ -4000,7 +4032,7 @@ export function createCommerceTelemetry({
     return observeBound(() => outcomeBinding.observeRuntimeSettlementReadback(input));
   }
 
-  return {
+  return registerJournalProducer({
     middleware,
     snapshot,
     storageStatus,
@@ -4011,6 +4043,19 @@ export function createCommerceTelemetry({
     observeMockedSettlementBoundary,
     observeRuntimeSettlementReadback,
     causalCommerceEventProof,
+    causalCommerceTaskBinding,
+    // Capture metadata shares the event journal and its existing rotation.
+    withJournalCapture: async work => {
+      // A failed observational read/publication cannot poison commerce writes.
+      // A prior canonical write failure still withholds a completed capture.
+      const result = await enqueueExclusive(async () => {
+        if (writerFailure) return { failure: writerFailure };
+        try { return { value: await work() }; } catch (failure) { return { failure }; }
+      });
+      if (result.failure) throw result.failure;
+      return result.value;
+    },
+    persistJournalCut: record => admitCommerceJournal(dataDir, () => appendEvent(record)),
     flush,
     paths: {
       currentPath,
@@ -4024,5 +4069,5 @@ export function createCommerceTelemetry({
       taskRefPath: outcomeBinding.taskRefPath,
       taskRefRotatedPath: outcomeBinding.taskRefRotatedPath,
     },
-  };
+  }, dataDir, ["attempts", "task_refs", "forward"]);
 }

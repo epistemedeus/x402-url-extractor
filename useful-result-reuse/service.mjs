@@ -95,6 +95,7 @@ export function createUsefulResultReuse({
   now = () => Date.now(),
   ttlMs = DEFAULT_TTL_MS,
   store = createReuseStore({ dataDir }),
+  customerStore = createReuseStore({ dataDir, maxRecordBytes: CUSTOMER_MAX_RECORD_BYTES }),
 } = {}) {
   const writer = createForwardOutcomeWriter({ dataDir, internalToken });
 
@@ -136,7 +137,8 @@ export function createUsefulResultReuse({
   }
 
   const customer = createCustomerRetention({
-    customerStore: createReuseStore({ dataDir, maxRecordBytes: CUSTOMER_MAX_RECORD_BYTES }),
+    // Optional composition shares this exact existing store admission queue.
+    customerStore,
     internalToken,
     now,
     remember,
