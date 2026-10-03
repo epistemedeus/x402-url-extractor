@@ -4,11 +4,11 @@
   "proofClass": "public-origin",
   "complete": true,
   "configuredPublicOrigin": "https://agents.samedaydesk.com",
-  "observedAt": "2026-10-01T16:21:06.490Z",
+  "observedAt": "2026-10-03T09:16:46.141Z",
   "manifest": {
     "schema": "samedaydesk.public-acquisition.receiving.v1",
-    "sha256": "2e2fddc409a0a5f599ccb866b0f4422302b3e3507ad50b288d252ea0cefd2727",
-    "assetCount": 12
+    "sha256": "493f94c4a36ae1708fa4ae741bd8c1789110815cb36801540e18507165560f7c",
+    "assetCount": 21
   },
   "inventories": [
     {
@@ -25,6 +25,21 @@
       "path": "inventories/composition-route-knowledge-0.1.0.json",
       "fileSha256": "b9e2cac7bd51e8ee67fff4521a6ade6735b15f39830f68d58d46c0b1c2705dd2",
       "memberCount": 85
+    },
+    {
+      "path": "inventories/seller-repair-external-consumer-0.2.0.json",
+      "fileSha256": "b6fe4053aa8bd5822dd33c55ea416d449f67d216187720ed34385b2ed27d0939",
+      "memberCount": 38
+    },
+    {
+      "path": "inventories/seller-repair-external-consumer-0.4.1.json",
+      "fileSha256": "258f924397835c068ed43eb4d089e17bcde40c55d16abf13bc60454c101cbe97",
+      "memberCount": 35
+    },
+    {
+      "path": "inventories/scoped-repair-commerce-100348-0.1.2.json",
+      "fileSha256": "e26fd4e8bdbdd3d9d77ac8cb09db4b01df5c991bb7e609fbf2eeff75b9ad3d77",
+      "memberCount": 16
     }
   ],
   "runtime": {
@@ -60,7 +75,7 @@
         "bodyBytes": 477108,
         "bodySha256": "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0",
         "contentType": "application/gzip",
-        "elapsedMs": 77,
+        "elapsedMs": 148,
         "redirect": "refused"
       },
       "head": {
@@ -68,7 +83,7 @@
         "status": 200,
         "bodyBytes": 0,
         "contentLength": 477108,
-        "elapsedMs": 20,
+        "elapsedMs": 33,
         "redirect": "refused"
       }
     },
@@ -88,7 +103,7 @@
         "bodyBytes": 3357,
         "bodySha256": "1966fcbc814b25a623f472b0adbb20a312bb0b63ea24faf8cbf46217c2544357",
         "contentType": "application/json; charset=utf-8",
-        "elapsedMs": 19,
+        "elapsedMs": 27,
         "redirect": "refused"
       },
       "head": {
@@ -96,7 +111,7 @@
         "status": 200,
         "bodyBytes": 0,
         "contentLength": 3357,
-        "elapsedMs": 38,
+        "elapsedMs": 62,
         "redirect": "refused"
       }
     },
@@ -116,7 +131,7 @@
         "bodyBytes": 88,
         "bodySha256": "47ab3eac7ffc2b4d099369f4e410cc2474a6835fb56d593347bcb14312f80ca9",
         "contentType": "text/plain; charset=utf-8",
-        "elapsedMs": 16,
+        "elapsedMs": 28,
         "redirect": "refused"
       },
       "head": {
@@ -124,7 +139,7 @@
         "status": 200,
         "bodyBytes": 0,
         "contentLength": 88,
-        "elapsedMs": 33,
+        "elapsedMs": 67,
         "redirect": "refused"
       }
     },
@@ -144,7 +159,7 @@
         "bodyBytes": 1395,
         "bodySha256": "24c39339d59a9b969c17cf36e60fcebf9ac6c2fdc7155363d58f95a70d642722",
         "contentType": "text/plain; charset=utf-8",
-        "elapsedMs": 16,
+        "elapsedMs": 25,
         "redirect": "refused"
       },
       "head": {
@@ -152,7 +167,7 @@
         "status": 200,
         "bodyBytes": 0,
         "contentLength": 1395,
-        "elapsedMs": 40,
+        "elapsedMs": 69,
         "redirect": "refused"
       }
     },
@@ -176,7 +191,7 @@
         "bodyBytes": 107420,
         "bodySha256": "350629b7bf1a14b092d94e0c27579f2e05114bf7f2f05a33c33d32b4c68176de",
         "contentType": "application/gzip",
-        "elapsedMs": 19,
+        "elapsedMs": 31,
         "redirect": "refused"
       },
       "head": {
@@ -184,7 +199,7 @@
         "status": 200,
         "bodyBytes": 0,
         "contentLength": 107420,
-        "elapsedMs": 34,
+        "elapsedMs": 64,
         "redirect": "refused"
       }
     },
@@ -204,7 +219,7 @@
         "bodyBytes": 1433,
         "bodySha256": "25c1d1d3a2d3eb31e6291fb9c06b96bede2eacefff840385f7d4927f11d93061",
         "contentType": "application/json; charset=utf-8",
-        "elapsedMs": 15,
+        "elapsedMs": 27,
         "redirect": "refused"
       },
       "head": {
@@ -212,7 +227,7 @@
         "status": 200,
         "bodyBytes": 0,
         "contentLength": 1433,
-        "elapsedMs": 41,
+        "elapsedMs": 64,
         "redirect": "refused"
       }
     },
@@ -232,7 +247,7 @@
         "bodyBytes": 113,
         "bodySha256": "c9c5d84d3ed461508cb93ce1062bcbb52e83832d1d0e93d59e998fc24b0afb2e",
         "contentType": "text/plain; charset=utf-8",
-        "elapsedMs": 17,
+        "elapsedMs": 26,
         "redirect": "refused"
       },
       "head": {
@@ -240,7 +255,7 @@
         "status": 200,
         "bodyBytes": 0,
         "contentLength": 113,
-        "elapsedMs": 35,
+        "elapsedMs": 67,
         "redirect": "refused"
       }
     },
@@ -260,7 +275,7 @@
         "bodyBytes": 1395,
         "bodySha256": "24c39339d59a9b969c17cf36e60fcebf9ac6c2fdc7155363d58f95a70d642722",
         "contentType": "text/plain; charset=utf-8",
-        "elapsedMs": 17,
+        "elapsedMs": 29,
         "redirect": "refused"
       },
       "head": {
@@ -268,7 +283,7 @@
         "status": 200,
         "bodyBytes": 0,
         "contentLength": 1395,
-        "elapsedMs": 36,
+        "elapsedMs": 72,
         "redirect": "refused"
       }
     },
@@ -292,7 +307,7 @@
         "bodyBytes": 66166,
         "bodySha256": "11d5a0e2df86282b6d4edbeab84b6d8ab5ccdb26b44364042cf76c9576c23817",
         "contentType": "application/x-gtar",
-        "elapsedMs": 18,
+        "elapsedMs": 27,
         "redirect": "refused"
       },
       "head": {
@@ -300,7 +315,7 @@
         "status": 200,
         "bodyBytes": 0,
         "contentLength": 66166,
-        "elapsedMs": 39,
+        "elapsedMs": 67,
         "redirect": "refused"
       }
     },
@@ -320,7 +335,7 @@
         "bodyBytes": 4486,
         "bodySha256": "6d1d4dd057533c3cd3ddfc2635fa8c1f0b1b2ba06d565084c4de30b4cd3ed8f2",
         "contentType": "application/json; charset=utf-8",
-        "elapsedMs": 17,
+        "elapsedMs": 27,
         "redirect": "refused"
       },
       "head": {
@@ -328,7 +343,7 @@
         "status": 200,
         "bodyBytes": 0,
         "contentLength": 4486,
-        "elapsedMs": 32,
+        "elapsedMs": 63,
         "redirect": "refused"
       }
     },
@@ -348,7 +363,7 @@
         "bodyBytes": 1462,
         "bodySha256": "6d0d7edcf4e5a971c0b1a2422e7800e7d121f53fd8cf5339331c72a40d0a2c0b",
         "contentType": "text/plain; charset=utf-8",
-        "elapsedMs": 17,
+        "elapsedMs": 26,
         "redirect": "refused"
       },
       "head": {
@@ -356,7 +371,7 @@
         "status": 200,
         "bodyBytes": 0,
         "contentLength": 1462,
-        "elapsedMs": 45,
+        "elapsedMs": 65,
         "redirect": "refused"
       }
     },
@@ -376,7 +391,7 @@
         "bodyBytes": 1069,
         "bodySha256": "2c844e541eb597e55dcb35e0bf23d96fcb9ca540f14a9ea6973e4c00cefb1aaa",
         "contentType": "text/plain; charset=utf-8",
-        "elapsedMs": 17,
+        "elapsedMs": 25,
         "redirect": "refused"
       },
       "head": {
@@ -384,7 +399,271 @@
         "status": 200,
         "bodyBytes": 0,
         "contentLength": 1069,
-        "elapsedMs": 31,
+        "elapsedMs": 65,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "seller-repair-external-consumer",
+      "version": "0.2.0",
+      "role": "archive",
+      "filename": "seller-repair-external-consumer-0.2.0.tar.gz",
+      "relativePath": "seller-repair-external-consumer/0.2.0/seller-repair-external-consumer-0.2.0.tar.gz",
+      "sha256": "86e55a75f7e7e5c5ad188de8b20c64648f40c236b11981186b56abeb6d11350f",
+      "bytes": 30462,
+      "inventory": {
+        "path": "inventories/seller-repair-external-consumer-0.2.0.json",
+        "fileSha256": "b6fe4053aa8bd5822dd33c55ea416d449f67d216187720ed34385b2ed27d0939",
+        "memberCount": 38
+      },
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.2.0/seller-repair-external-consumer-0.2.0.tar.gz",
+        "status": 200,
+        "bodyBytes": 30462,
+        "bodySha256": "86e55a75f7e7e5c5ad188de8b20c64648f40c236b11981186b56abeb6d11350f",
+        "contentType": "application/gzip",
+        "elapsedMs": 25,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.2.0/seller-repair-external-consumer-0.2.0.tar.gz",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 30462,
+        "elapsedMs": 71,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "seller-repair-external-consumer",
+      "version": "0.2.0",
+      "role": "provenance",
+      "filename": "provenance.json",
+      "relativePath": "seller-repair-external-consumer/0.2.0/provenance.json",
+      "sha256": "4ac8bb1123cbb3ebab7bf8a38581e96be1faf90d3fc54d68a70010eb7d57a43c",
+      "bytes": 1781,
+      "inventory": null,
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.2.0/provenance.json",
+        "status": 200,
+        "bodyBytes": 1781,
+        "bodySha256": "4ac8bb1123cbb3ebab7bf8a38581e96be1faf90d3fc54d68a70010eb7d57a43c",
+        "contentType": "application/json; charset=utf-8",
+        "elapsedMs": 26,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.2.0/provenance.json",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 1781,
+        "elapsedMs": 68,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "seller-repair-external-consumer",
+      "version": "0.2.0",
+      "role": "source-notice",
+      "filename": "SOURCE-NOTICE.txt",
+      "relativePath": "seller-repair-external-consumer/0.2.0/SOURCE-NOTICE.txt",
+      "sha256": "3c830a652f73ea681b80044fed1798bda7b3192c16e050ad19c8ec6835d7920c",
+      "bytes": 1385,
+      "inventory": null,
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.2.0/SOURCE-NOTICE.txt",
+        "status": 200,
+        "bodyBytes": 1385,
+        "bodySha256": "3c830a652f73ea681b80044fed1798bda7b3192c16e050ad19c8ec6835d7920c",
+        "contentType": "text/plain; charset=utf-8",
+        "elapsedMs": 26,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.2.0/SOURCE-NOTICE.txt",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 1385,
+        "elapsedMs": 64,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "seller-repair-external-consumer",
+      "version": "0.2.0",
+      "role": "license",
+      "filename": "LICENSE",
+      "relativePath": "seller-repair-external-consumer/0.2.0/LICENSE",
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
+      "bytes": 1068,
+      "inventory": null,
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.2.0/LICENSE",
+        "status": 200,
+        "bodyBytes": 1068,
+        "bodySha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
+        "contentType": "text/plain; charset=utf-8",
+        "elapsedMs": 26,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.2.0/LICENSE",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 1068,
+        "elapsedMs": 66,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "seller-repair-external-consumer",
+      "version": "0.4.1",
+      "role": "archive",
+      "filename": "seller-repair-external-consumer-0.4.1.tar.gz",
+      "relativePath": "seller-repair-external-consumer/0.4.1/seller-repair-external-consumer-0.4.1.tar.gz",
+      "sha256": "64dbe1ee7f69dd40ebf71741eed92f1f3f893c44af8eadf18b71c0fac82227b8",
+      "bytes": 40891,
+      "inventory": {
+        "path": "inventories/seller-repair-external-consumer-0.4.1.json",
+        "fileSha256": "258f924397835c068ed43eb4d089e17bcde40c55d16abf13bc60454c101cbe97",
+        "memberCount": 35
+      },
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.4.1/seller-repair-external-consumer-0.4.1.tar.gz",
+        "status": 200,
+        "bodyBytes": 40891,
+        "bodySha256": "64dbe1ee7f69dd40ebf71741eed92f1f3f893c44af8eadf18b71c0fac82227b8",
+        "contentType": "application/gzip",
+        "elapsedMs": 27,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.4.1/seller-repair-external-consumer-0.4.1.tar.gz",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 40891,
+        "elapsedMs": 67,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "scoped-repair-commerce-100348",
+      "version": "0.1.2",
+      "role": "archive",
+      "filename": "scoped-repair-commerce-100348-0.1.2.tar.gz",
+      "relativePath": "scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz",
+      "sha256": "f95db152722ac820d57975cdab9b2bb486888f2faf023dc271b82da5eba84656",
+      "bytes": 37921,
+      "inventory": {
+        "path": "inventories/scoped-repair-commerce-100348-0.1.2.json",
+        "fileSha256": "e26fd4e8bdbdd3d9d77ac8cb09db4b01df5c991bb7e609fbf2eeff75b9ad3d77",
+        "memberCount": 16
+      },
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz",
+        "status": 200,
+        "bodyBytes": 37921,
+        "bodySha256": "f95db152722ac820d57975cdab9b2bb486888f2faf023dc271b82da5eba84656",
+        "contentType": "application/gzip",
+        "elapsedMs": 26,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 37921,
+        "elapsedMs": 67,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "scoped-repair-commerce-100348",
+      "version": "0.1.2",
+      "role": "provenance",
+      "filename": "provenance.json",
+      "relativePath": "scoped-repair-commerce-100348/0.1.2/provenance.json",
+      "sha256": "7febcb560b80a9cdd02a59b419707fe9f4a9a9a2030c8b130da4e399a33c3ca8",
+      "bytes": 8453,
+      "inventory": null,
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/scoped-repair-commerce-100348/0.1.2/provenance.json",
+        "status": 200,
+        "bodyBytes": 8453,
+        "bodySha256": "7febcb560b80a9cdd02a59b419707fe9f4a9a9a2030c8b130da4e399a33c3ca8",
+        "contentType": "application/json; charset=utf-8",
+        "elapsedMs": 26,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/scoped-repair-commerce-100348/0.1.2/provenance.json",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 8453,
+        "elapsedMs": 66,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "scoped-repair-commerce-100348",
+      "version": "0.1.2",
+      "role": "license",
+      "filename": "LICENSE",
+      "relativePath": "scoped-repair-commerce-100348/0.1.2/LICENSE",
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
+      "bytes": 1068,
+      "inventory": null,
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/scoped-repair-commerce-100348/0.1.2/LICENSE",
+        "status": 200,
+        "bodyBytes": 1068,
+        "bodySha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
+        "contentType": "text/plain; charset=utf-8",
+        "elapsedMs": 25,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/scoped-repair-commerce-100348/0.1.2/LICENSE",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 1068,
+        "elapsedMs": 64,
+        "redirect": "refused"
+      }
+    },
+    {
+      "id": "scoped-repair-commerce-100348",
+      "version": "0.1.2",
+      "role": "source-notice",
+      "filename": "SOURCE-NOTICE.txt",
+      "relativePath": "scoped-repair-commerce-100348/0.1.2/SOURCE-NOTICE.txt",
+      "sha256": "a394bc61d96049ce3faed08a0c248b0de05d05bbb4af10d07ab836c6766bedd3",
+      "bytes": 525,
+      "inventory": null,
+      "acquisition": "match",
+      "get": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/scoped-repair-commerce-100348/0.1.2/SOURCE-NOTICE.txt",
+        "status": 200,
+        "bodyBytes": 525,
+        "bodySha256": "a394bc61d96049ce3faed08a0c248b0de05d05bbb4af10d07ab836c6766bedd3",
+        "contentType": "text/plain; charset=utf-8",
+        "elapsedMs": 25,
+        "redirect": "refused"
+      },
+      "head": {
+        "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/assets/scoped-repair-commerce-100348/0.1.2/SOURCE-NOTICE.txt",
+        "status": 200,
+        "bodyBytes": 0,
+        "contentLength": 525,
+        "elapsedMs": 62,
         "redirect": "refused"
       }
     }
@@ -420,7 +699,7 @@
           "exitCode": 0,
           "matched": true,
           "missing": [],
-          "stdoutSha256": "7d4c79234ace63d82f6281dd80376dce8e3568545af1acc2dfe18ceec3c6281d",
+          "stdoutSha256": "b2b1796faf15e60413f33aab5aac5e9a061340399376379cd3c170c1703f9347",
           "stdoutBytes": 6963
         }
       ]
@@ -468,8 +747,8 @@
           "exitCode": 0,
           "matched": true,
           "missing": [],
-          "stdoutSha256": "1e932f180bdfdc7cefbeb04beee412cd5ce439ee8121b5803371c9bafd42a29d",
-          "stdoutBytes": 3140
+          "stdoutSha256": "26dd8a8f2145be4119af0de5d00136ac391145ca05e03fc1717285efed6243b4",
+          "stdoutBytes": 3139
         },
         {
           "argv": [
@@ -488,7 +767,7 @@
           "exitCode": 0,
           "matched": true,
           "missing": [],
-          "stdoutSha256": "7171c3558ab359755b3e9638845891e1bf39fb7fbab030a64a8afe8182c9041d",
+          "stdoutSha256": "df7ac68ae76660de2e72006c1c0f4afe4a02916ed04434a00fa700b154de25f6",
           "stdoutBytes": 3568
         }
       ]
@@ -513,6 +792,91 @@
           "stdoutBytes": 2008
         }
       ]
+    },
+    {
+      "id": "seller-repair-external-consumer",
+      "version": "0.2.0",
+      "filename": "seller-repair-external-consumer-0.2.0.tar.gz",
+      "definitionSha256": "ebe214dd1151b8e34282de71fd58d2f46b11aa1de46773548776f2c10b930798",
+      "coverage": "complete",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "package/bin/seller-repair.mjs",
+            "deliver"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "ccac67b4f220ebdb8b0abb0b0c4363928d31e850bd531d341c699aab6f0dc152",
+          "stdoutBytes": 688
+        },
+        {
+          "argv": [
+            "node",
+            "package/bin/seller-repair.mjs",
+            "reproduce",
+            "--case",
+            "package/cases/retained-case.json"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "340a2744d0294f9e64bffa572e01c78d0f9abf7f3ff444ad722300ae13dd9d08",
+          "stdoutBytes": 6180
+        }
+      ]
+    },
+    {
+      "id": "seller-repair-external-consumer",
+      "version": "0.4.1",
+      "filename": "seller-repair-external-consumer-0.4.1.tar.gz",
+      "definitionSha256": "606d671364e657a4fbd20dbf9de64a82d2c7b45ae97aa9c2f71f89155f457b9b",
+      "coverage": "complete",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "--input-type=module",
+            "-e",
+            "await import('data:text/javascript;base64,'+Buffer.from(process.argv.slice(1).join('')).toString('base64'))",
+            "\nimport assert from 'node:assert/strict';\nimport { createServer } from 'node:http';\nimport { spawn } from 'node:child_process';\nimport { writeFile } from 'node:fs/promises';\nimport { join } from 'node:path';\nconst cli=join(process.cwd(),'package/bin/caller-deliver.mjs');\nconst server=createServer((req,res)=>{\n  assert.equal(req.headers['payment-signature'],undefined);\n  res.writeHead(200,{'content",
+            "-type':'application/json'});\n  res.end(JSON.stringify(req.url==='/v1/gamma'?{note:'still-up'}:{status:'ready'}));\n});\nawait new Promise(r=>server.listen(0,'127.0.0.1',r));\nconst baseUrl='http://127.0.0.1:'+server.address().port;\nconst request=name=>({schema:'samedaydesk.seller-repair-caller-request.v1',callerId:'cold-'+name,\n task:'Check whether GET /v1/'+name+' supplies the required status field.",
+            "',origin:'https://widget.example',\n operation:'GET /v1/'+name,sdk:'node-https@22',runtime:'node/'+process.versions.node,\n expect:{path:'status',value:'ready'},question:'useful_output',paidIntent:false,\n limits:{probes:4,bodyBytes:4096,deadlineMs:1000,totalBodyBytes:16384,totalResponseMs:4000,redirects:0,outputBytes:65536},\n probeConsent:{class:'loopback',confirmed:true,baseUrl}});\nasync function r",
+            "un(args){return new Promise((done,fail)=>{\n const p=spawn(process.execPath,[cli,...args],{env:{PATH:process.env.PATH},stdio:['ignore','pipe','pipe']});\n let out='',err='';const timer=setTimeout(()=>p.kill('SIGKILL'),15000);\n p.stdout.on('data',b=>{out+=b;if(out.length>131072)p.kill('SIGKILL');});\n p.stderr.on('data',b=>{err+=b;if(err.length>16384)p.kill('SIGKILL');});\n p.once('error',e=>{clearTime",
+            "out(timer);fail(e);});\n p.once('close',code=>{clearTimeout(timer);assert.equal(code,0,err||out);done(JSON.parse(out));});\n});}\ntry{\n for(const name of ['alpha','beta','gamma']){\n  const path=join(process.cwd(),'cold041-'+name+'.json');await writeFile(path,JSON.stringify(request(name)));\n  const r=await run(['deliver','--request',path,'--out','cold041-'+name]);\n  assert.equal(r.operationId,'GET /v1",
+            "/'+name);assert.equal(r.classification.useful,name!=='gamma');\n  assert.equal(r.paymentSent,false);assert.equal(r.fixtureTransport,false);\n  if(name==='gamma')assert.equal(r.classification.reason,'missing_field_not_paid_demand');\n }\n const laterPath=join(process.cwd(),'cold041-later.json');\n await writeFile(laterPath,JSON.stringify({...request('gamma'),callerId:'cold-alpha'}));\n const later=await ",
+            "run(['later','--artifact','cold041-alpha/regression.json','--caller',laterPath]);\n assert.equal(later.executed,true);assert.equal(later.predicateApplies,false);assert.equal(later.reason,'stale_applicability');\n console.log(JSON.stringify({loopbackTaskReceiving:true,usefulPositiveCount:2,usefulNegativeCount:1,\n   laterChangedInputRefused:true,actualCustomerUse:false,paymentSent:false}));\n}finally{s",
+            "erver.closeAllConnections();await new Promise(r=>server.close(r));}\n"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "c60853950439b8b8583faf0c3f993dfd3be8d2eb7b8384c70dfce0728ff3c4f4",
+          "stdoutBytes": 157
+        }
+      ]
+    },
+    {
+      "id": "scoped-repair-commerce-100348",
+      "version": "0.1.2",
+      "filename": "scoped-repair-commerce-100348-0.1.2.tar.gz",
+      "definitionSha256": "db59f7d569dabbd6724932fe0d508174ef5d7533bca0d8dec228d20a83f35af1",
+      "coverage": "complete",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "bin/check-cold.mjs"
+          ],
+          "exitCode": 0,
+          "matched": true,
+          "missing": [],
+          "stdoutSha256": "a7a1cc6ee70afe7bdf201764a57de5ec390234822bf910d9a5c65a20f12e7ba3",
+          "stdoutBytes": 97
+        }
+      ]
     }
   ],
   "qualifications": {
@@ -526,11 +890,11 @@
   "remoteIndex": {
     "url": "https://agents.samedaydesk.com/.well-known/public-acquisition/index.json",
     "status": 200,
-    "bytes": 11507,
-    "sha256": "dfb12c7d98996f04ac3c044f34977d47f1e0d53893a52070f76190c5a5171c99",
+    "bytes": 20495,
+    "sha256": "67d4e3661e138f4e02e773ec046486fcec6072a04f35345d9ea800b6cf737300",
     "draft": true,
     "productionHosted": false,
     "hostedAcquisitionVerified": false,
-    "assetCount": 12
+    "assetCount": 21
   }
 }
