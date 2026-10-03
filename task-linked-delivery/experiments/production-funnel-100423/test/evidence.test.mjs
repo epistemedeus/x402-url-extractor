@@ -1,0 +1,48 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { test } from "node:test";
+import { fileURLToPath } from "node:url";
+
+const evidenceUrl = new URL("../evidence/baseline.stripped.json", import.meta.url);
+const baseline = JSON.parse(readFileSync(fileURLToPath(evidenceUrl), "utf8"));
+
+test("the committed live read is the stripped covered-window baseline", () => {
+  assert.equal(baseline.schema, "samedaydesk.production-funnel-baseline.v1");
+  assert.equal(baseline.individualJoin, false);
+  assert.equal(baseline.recognizedRevenueAtomic, "0");
+  assert.equal(baseline.merchantWrite, false);
+  assert.equal(baseline.coveredWindow.selected, true);
+  assert.equal(baseline.coveredWindow.requestedDays, 1);
+  assert.equal(baseline.coveredWindow.generatedAt, "2026-10-03T07:56:45.096Z");
+  assert.equal(baseline.coveredWindow.start, "2026-10-02T07:56:45.096Z");
+  assert.equal(baseline.coveredWindow.retainedCompleteUtcDays, 0);
+  assert.equal(baseline.acquisition.covered.sha256, "a331dbe47a62259b8bcadea1686fe10a4ef8d6346445bdd29b358d451f1f290a");
+  assert.equal(baseline.acquisition.covered.bytes, 39894);
+  assert.equal(baseline.acquisition.rareContext.sha256, "d25612cd5e970a024f9d1fff83c6d86677467ce0a66bb0942f5b54722273dab9");
+  assert.equal(baseline.customerPlane.attributableCustomerCount, null);
+  assert.equal(baseline.customerPlane.buyerValidDeliveryCount, null);
+  assert.equal(baseline.customerPlane.repeatIndependentCustomerCount, null);
+  assert.equal(baseline.settlementLedger.assignedToCoveredWindow, false);
+  assert.equal(baseline.settlementLedger.ledgerSettlements, 43);
+  assert.equal(baseline.settlementLedger.ledgerAmountAtomic, "1027000");
+  assert.equal(baseline.settlementLedger.amountIsRevenue, false);
+  assert.equal(baseline.settlementLedger.coveredWindowSettlements, null);
+  assert.equal(baseline.settlementLedger.cohorts.sponsored.ledgerSettlements, null);
+  assert.equal(baseline.settlementLedger.cohorts.recruited.ledgerSettlements, null);
+  assert.equal(baseline.settlementLedger.cohorts.independent.ledgerSettlements, null);
+  assert.equal(baseline.settlementLedger.cohorts.probe_qa.ledgerSettlements, 1);
+  assert.equal(baseline.settlementLedger.cohorts.internal_owner.ledgerSettlements, 12);
+  assert.equal(baseline.settlementLedger.cohorts.unknown.ledgerSettlements, 30);
+  assert.equal(baseline.rareCoveredSlice.paymentHeaderEvents.observed, 0);
+  assert.equal(baseline.rareCoveredSlice.paymentHeaderEvents.census, false);
+  assert.equal(baseline.rareFile.captureContinuityProven, false);
+  assert.equal(baseline.rareFile.context.slice.paidSuccessEvents.observed, 12);
+  assert.equal(baseline.rareFile.context.slice.paidSuccessEvents.census, false);
+  assert.equal(baseline.stream.paidSuccessEvents.observed, null);
+  assert.equal(baseline.journey.payingCustomers.observed, null);
+  assert.equal(baseline.journey.independentlyUseful.observed, null);
+  assert.equal(baseline.journey.settlement.observed, null);
+  assert.equal(baseline.missingLink.status, "absent");
+  assert.equal(baseline.missingLink.id, "per_attempt_public_call_identity");
+  assert.equal(JSON.stringify(baseline).includes("BEGIN "), false);
+});

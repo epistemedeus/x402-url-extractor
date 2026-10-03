@@ -1,0 +1,19 @@
+{
+  "name": "production-funnel-100423",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Read-only production funnel baseline and one missing per-attempt join. No merchant store, dashboard, or payment.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "funnel-baseline": "bin/funnel-baseline.mjs"
+  },
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
+    "read": "node bin/funnel-baseline.mjs read --write-evidence",
+    "reject-seeded": "node bin/funnel-baseline.mjs reject --input test/seeded-false-complete.json"
+  }
+}
