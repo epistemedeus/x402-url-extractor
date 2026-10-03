@@ -1,0 +1,19 @@
+{
+  "name": "attempt-useful-view-1005",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Source-bound per-attempt observation view over existing journals. No new store, signer, customer label, or population rate.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "attempt-useful-view": "bin/attempt-useful-view.mjs"
+  },
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
+    "report": "node bin/attempt-useful-view.mjs report --receipt ../../free-task-observation-100421/evidence/two-objectives.retained.json --task tdb90824374e9fc51c87f350974a336be759233d9b973a73b56c93cbaf7618f --baseline ../../production-funnel-100423/evidence/baseline.stripped.json",
+    "reject-seeded": "node bin/attempt-useful-view.mjs reject --input test/seeded-false-join.json --baseline ../../production-funnel-100423/evidence/baseline.stripped.json"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schema": "samedaydesk.attempt-useful-view.integration-delta.v1",
+  "status": "prepared_unapplied",
+  "enrollment": "waiting",
+  "headAvailable": true,
+  "releasedMerchantHead": "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+  "releasedHeadSubject": "Merge pull request #160 from epistemedeus/codex/root-scoped-repair-launch-1003",
+  "serverEdited": false,
+  "serverPublished": false,
+  "indexPublicationEdited": false,
+  "seller041": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+  "seller041Rewritten": false,
+  "minimalServerDeltaLines": 0,
+  "observationMountOnReleasedHead": false,
+  "reason": "Released master was fetched and inspected. It does not contain the 421 observation mount or a per-attempt public call identity. Adding a route would publish a server change and a second writer. Root enrolls later by applying the existing 421 patches in Root's checkout and passing one authorized read-only journal cut to readAttemptUsefulView. This packet does not do that.",
+  "hook": "readAttemptUsefulView({ attemptOf: null, taskRef, journal, baseline })",
+  "attemptOf": null,
+  "forbiddenOperation": "add923ae-3eb5-474b-8b3e-e376666dee83",
+  "clockWindowFix": {
+    "commit": "de4c2a1f5e52065273b677a8694913a98850dcf0",
+    "branch": "codex/task-observer-window-1003",
+    "onThisBranch": false,
+    "onReleasedMaster": false,
+    "applied": false,
+    "scope": "test-only observer fixture window",
+    "productionFreshnessMaxAgeMs": 900000,
+    "takenFromCloudC": false
+  }
+}

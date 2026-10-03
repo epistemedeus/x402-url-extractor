@@ -1,0 +1,103 @@
+{
+  "schema": "samedaydesk.attempt-useful-view.pin.v1",
+  "jobId": "HEAVY-ATTEMPT-USEFUL-VIEW-1005",
+  "attemptOf": null,
+  "ownedScope": "task-linked-delivery/experiments/attempt-useful-view-1005",
+  "reusedCommits": {
+    "causalProof301": "45db5507d1fef740dfe5fe84ec611c7b764d8c43",
+    "taskProducer339": "91fbf94786658c96c89f94e0f88b03caefd951b0",
+    "causalMeasurement395": "519645af3a2fa36f745d59f08aab4008776a4aa6",
+    "freeUseObserver421": "26d806f20e57d0c073321675dacb13395e30c643",
+    "terminalReader423": "5693610be4d7fdf7d13044be666f712b7ea189f8"
+  },
+  "seller041": "015f07d5a75d02a4e74709b17b2b1176501e92a5",
+  "releasedMerchantHead": "dc32cf7bf5fd76a5cd9047865f49b2462252897c",
+  "clockWindowFix": {
+    "commit": "de4c2a1f5e52065273b677a8694913a98850dcf0",
+    "branch": "codex/task-observer-window-1003",
+    "applied": false,
+    "onThisBranch": false,
+    "productionFreshnessMaxAgeMs": 900000
+  },
+  "forbiddenOperation": "add923ae-3eb5-474b-8b3e-e376666dee83",
+  "integrationDelta": "prepared_unapplied",
+  "enrollment": "waiting",
+  "liveCoverage": false,
+  "files": [
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/LICENSE",
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
+      "bytes": 1068
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/README.md",
+      "sha256": "11b5a1cc2a7348b746acb536bdfea351262934c0574d015ef04a998d5d8783e6",
+      "bytes": 3171
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/SOURCE-NOTICE.txt",
+      "sha256": "b8ea236e41b06ca692125d52d3058f62d5adb4a74d8a3f198869f277924c4b65",
+      "bytes": 395
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/bin/attempt-useful-view.mjs",
+      "sha256": "7ad63a38508acfebbf348f281e96f3ea1d91947d1dcd8ef9076baa20020431a6",
+      "bytes": 2270
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/evidence/one-useful-task.json",
+      "sha256": "eb6fc3118fb3278eb7b3e199a577fa697d41d579ed049a513f6b9a0e7ee41177",
+      "bytes": 4045
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/export/NEEDED-ENROLLMENT.md",
+      "sha256": "0b8021746b0007188cb7bc4d6c3177d10d9ffd3c32d03caaaeae47d0f5f7123f",
+      "bytes": 1220
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/export/PUBLIC-SEAM.md",
+      "sha256": "e6065b45bffaf7f5852ed0720991493d9879caa8cf5b049194c1472d723c008a",
+      "bytes": 890
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/export/ROOT-INTEGRATION-DELTA.json",
+      "sha256": "0fa48901c561054b30fef352857a66a99099c7fc52e1750b7c7586d6ed6569a1",
+      "bytes": 1481
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/package.json",
+      "sha256": "3d7ca9e63499d7d3e34324890870a14322128d32ed10a652b6b724945e1d5ac8",
+      "bytes": 920
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/constants.mjs",
+      "sha256": "119dea35b2ad979fa2a1d497eddd31d6ef7f7d26a88812759af1029bc4d55ebb",
+      "bytes": 1613
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/errors.mjs",
+      "sha256": "cc2a1951ab336e1aee6450485ac4d8d900077532130c032fdbdb5de74f31741a",
+      "bytes": 234
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/seam.mjs",
+      "sha256": "61be0cb649bb0677991d57022f67de9a310d5e9d3012cb2a343258e20e3d50ed",
+      "bytes": 4281
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/src/view.mjs",
+      "sha256": "6f9c102bee23a6668ad2c09c028490eb3e29f8bc1f7d584c340b3aa18947857b",
+      "bytes": 15765
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/test/seeded-false-join.json",
+      "sha256": "9a67a01d534d099af9d69b1ad89f5eec4ba3357eb85f3f1fc17830bd0b40b1a4",
+      "bytes": 555
+    },
+    {
+      "path": "task-linked-delivery/experiments/attempt-useful-view-1005/test/view.test.mjs",
+      "sha256": "47ae9668acb885a4cd7d5111b584e891a7574b3e368dc5832bb50a8973a60708",
+      "bytes": 17384
+    }
+  ]
+}
