@@ -80,10 +80,6 @@ test("excerpt budget parser rejects bad values and keeps the default", () => {
   assert.equal(parseTextExcerptLimit(undefined).value, EXTRACT_TEXT_EXCERPT_CHARS);
   assert.equal(parseTextExcerptLimit("40000").value, EXTRACT_TEXT_EXCERPT_MAX_CHARS);
   for (const bad of [0, -1, 40001, 1.5, "1200abc", "0", "", "  ", true]) {
-    if (bad === "") {
-      assert.equal(parseTextExcerptLimit(bad).ok, true);
-      continue;
-    }
     assert.equal(parseTextExcerptLimit(bad).ok, false, String(bad));
   }
 });

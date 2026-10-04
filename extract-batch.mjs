@@ -59,9 +59,10 @@ export const EXTRACT_BATCH_READ_ONLY_POST = Object.freeze({
 const ALLOWED_BODY_KEYS = new Set(["urls", "fields", "textExcerptLimitChars"]);
 
 /**
- * Largest excerpt that cannot blow the batch response ceiling after fetch.
- * Worst-case UTF-8 is 4 bytes per character. 48 KiB stays reserved for the
- * envelope and structured fields. The default 1,200 still fits five URLs.
+ * Bound the excerpt share of the batch response ceiling before fetch.
+ * JSON escapes a control character or lone surrogate into 6 ASCII bytes.
+ * Reserve 48 KiB for the envelope and structured fields; their existing final
+ * response check still applies. The default 1,200 fits five URLs.
  * Single-URL /extract may go up to EXTRACT_TEXT_EXCERPT_MAX_CHARS because
  * that route does not use this 128 KiB batch ceiling.
  */
@@ -72,7 +73,7 @@ export function maxAdmittedBatchExcerptChars(urlCount) {
   }
   const reserve = 48 * 1024;
   const room = EXTRACT_BATCH_MAX_RESPONSE_BYTES - reserve;
-  const perUrl = Math.floor(room / count / 4);
+  const perUrl = Math.floor(room / count / 6);
   const ceiling = Math.min(EXTRACT_TEXT_EXCERPT_MAX_CHARS, perUrl);
   if (ceiling < EXTRACT_TEXT_EXCERPT_CHARS) {
     throw new Error("batch response ceiling cannot admit the default excerpt");

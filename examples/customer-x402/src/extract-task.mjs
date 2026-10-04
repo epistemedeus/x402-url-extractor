@@ -107,7 +107,8 @@ export function decideExtractTask(body, task = null) {
     });
   }
 
-  if (body.sourceOk === false) {
+  const sourceStatus = Number(body.status);
+  if (body.sourceOk === false || (Number.isInteger(sourceStatus) && (sourceStatus < 200 || sourceStatus >= 300))) {
     return finish({
       predicate: kind,
       satisfied: false,
@@ -202,12 +203,13 @@ export function decideExtractTask(body, task = null) {
   }
 
   const required = predicate.requiredChars;
-  const withinBudget = body.sourceOk === true && !textTruncated && (required == null || text.length >= required);
+  const withinBudget = body.sourceOk === true
+    && (required == null ? !textTruncated : text.length >= required);
   if (withinBudget) {
     return finish({
       predicate: "excerpt",
       satisfied: true,
-      reason: "excerpt_within_budget",
+      reason: textTruncated ? "bounded_excerpt_sufficient_text_cropped" : "excerpt_within_budget",
       delivery: "excerpt_sufficient",
       nextAction: action("sufficient", `Text fits the ${limit ?? EXTRACT_TEXT_EXCERPT_CHARS}-character excerpt budget.`),
     });

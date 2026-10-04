@@ -22,10 +22,14 @@ const EXCERPT_LIMIT_ERROR = `textExcerptLimitChars must be an integer from 1 thr
  * Rejects non-integers and out-of-range values before any fetch.
  */
 export function parseTextExcerptLimit(value) {
-  if (value === undefined || value === null || value === "") {
+  if (value === undefined) {
     return { ok: true, value: EXTRACT_TEXT_EXCERPT_CHARS, explicit: false };
   }
-  const raw = typeof value === "number" && Number.isInteger(value) ? String(value) : String(value).trim();
+  if ((typeof value !== "number" && typeof value !== "string")
+    || (typeof value === "number" && !Number.isInteger(value))) {
+    return { ok: false, error: EXCERPT_LIMIT_ERROR };
+  }
+  const raw = typeof value === "number" ? String(value) : value.trim();
   if (!/^[1-9][0-9]*$/.test(raw)) return { ok: false, error: EXCERPT_LIMIT_ERROR };
   const parsed = Number(raw);
   if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > EXTRACT_TEXT_EXCERPT_MAX_CHARS) {
