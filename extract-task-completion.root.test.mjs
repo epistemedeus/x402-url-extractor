@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { parseTextExcerptLimit } from './extract-capture.mjs';
+import { EXTRACT_BATCH_MAX_RESPONSE_BYTES } from './extract-batch-config.mjs';
 import {
-  EXTRACT_BATCH_MAX_RESPONSE_BYTES,
   maxAdmittedBatchExcerptChars,
   normalizeExtractBatchInput,
 } from './extract-batch.mjs';
