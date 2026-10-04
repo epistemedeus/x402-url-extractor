@@ -368,3 +368,30 @@ test('unsafe capture publication refuses a symlink without poisoning commerce or
     assert.equal(safe.planes.attempts.coverage, 'complete');
   });
 });
+
+test('later ordinary traffic does not hide a retained historical marker beyond the interval tail', async () => {
+  await withMount({settlementEnabled: true}, async (mount, dir) => {
+    const o = await observed(mount);
+    const cut = await mount.capture.capture();
+    const prior = await readPersistedAttempt({dataDir: dir, internalToken: TOKEN, taskRef: o.request.taskRef, cutId: cut.cutId});
+    const file = path.join(dir, 'commerce-events.ndjson');
+    const original = await readFile(file);
+    const later = Buffer.from((JSON.stringify({later: 'outside-the-retained-window'}) + String.fromCharCode(10)).repeat(Math.ceil(LIMITS.fileBytes / 39) + 2000));
+    assert.ok(later.length > LIMITS.fileBytes);
+    assert.ok(original.length + later.length < SOURCE_FILE_BYTES);
+    await writeFile(file, Buffer.concat([original, later]), {mode: 0o600});
+    const physical = await readBoundedCut(dir, {internalToken: TOKEN, cutId: cut.cutId});
+    assert.equal(physical.cutId, cut.cutId);
+    assert.equal(physical.coverage, 'complete');
+    assert.deepEqual(physical.window, cut.window);
+    assert.equal(physical.attempts.length, cut.attempts.length);
+    const replay = await readPersistedAttempt({dataDir: dir, internalToken: TOKEN, taskRef: o.request.taskRef, cutId: cut.cutId});
+    assert.deepEqual(replay.stages, prior.stages);
+    assert.equal(replay.window.asOf, prior.window.asOf);
+    const latest = await readBoundedCut(dir, {internalToken: TOKEN});
+    assert.equal(latest.cutId, cut.cutId);
+    assert.equal((await readBoundedCut(dir, {internalToken: 'wrong', cutId: cut.cutId})).coverage, 'unknown');
+    const missing = await readBoundedCut(dir, {internalToken: TOKEN, cutId: '00000000-0000-4000-8000-000000000000'});
+    assert.equal(missing.window, null);
+  });
+});

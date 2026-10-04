@@ -111,11 +111,10 @@ function dedup(rows, plane) {
 }
 function markerRows(file) {
   if (!file.bytes) return [];
-  let bytes = file.bytes.subarray(Math.max(0, file.bytes.length - LIMITS.fileBytes));
-  if (file.bytes.length > LIMITS.fileBytes) {
-    const newline = bytes.indexOf(10);
-    bytes = newline < 0 ? Buffer.alloc(0) : bytes.subarray(newline + 1);
-  }
+  // snapshot already limits the entire canonical generation to SOURCE_FILE_BYTES.
+  // Search those retained bytes, not merely the newest interval-sized tail:
+  // ordinary later traffic cannot erase a still-retained authenticated marker.
+  const bytes = file.bytes;
   // Capture markers are canonical producer rows with schema first. Decode
   // only those rows; thousands of older events cannot exhaust marker intake.
   const lines = new TextDecoder('utf-8', { fatal: true }).decode(bytes).split('\n');
