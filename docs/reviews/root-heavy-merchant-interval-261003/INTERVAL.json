@@ -1,0 +1,98 @@
+{
+  "schema": "root-heavy-merchant-interval-261003.result.v1",
+  "status": "killed",
+  "attemptOf": null,
+  "resume": false,
+  "remint": false,
+  "merchantCommit": "e4d984b66d49c5fb2a54008f0fa92588562a9b60",
+  "merchantSubject": "Merge pull request #167 from epistemedeus/codex/sol-live-attempt-delivery-261003",
+  "railwayDeploymentId": "1b407af9-85f0-46ba-b63d-d3c6b7e062bc",
+  "railwayDeploymentName": "1b407af9",
+  "origin": "https://agents.samedaydesk.com",
+  "nativeSession": "7d7095fe-06e5-4e2a-9d71-3b482f356231",
+  "githubCommitStatus": {
+    "context": "x402-url-extractor - x402-url-extractor",
+    "state": "success",
+    "description": "Success - agents.samedaydesk.com",
+    "deploymentIdInTargetUrl": "1b407af9-85f0-46ba-b63d-d3c6b7e062bc"
+  },
+  "githubDeployment": {
+    "id": 6832542576,
+    "sha": "e4d984b66d49c5fb2a54008f0fa92588562a9b60",
+    "environment": "x402-url-extractor / production",
+    "createdAt": "2026-10-03T20:12:28Z",
+    "latestState": "success",
+    "latestStateAt": "2026-10-03T20:13:05Z"
+  },
+  "producer": {
+    "name": "canonical_commerce_and_useful_result_journals",
+    "observedOnThisInterval": false,
+    "population": "one covered current journal cut on deployment 1b407af9",
+    "window": null
+  },
+  "population": {
+    "name": "external task attempts inside one covered current cut",
+    "established": false
+  },
+  "window": null,
+  "facts": {
+    "externalTaskAttempts": {
+      "value": "unobserved",
+      "producer": "canonical_commerce_and_useful_result_journals",
+      "population": "external task attempts in the current cut",
+      "window": null
+    },
+    "protocolNegatives": {
+      "value": "unobserved",
+      "producer": "canonical_commerce_and_useful_result_journals",
+      "population": "protocol negatives bound to attempts in the current cut",
+      "window": null
+    },
+    "usefulDelivery": {
+      "value": "unobserved",
+      "producer": "canonical_commerce_and_useful_result_journals",
+      "population": "useful delivery stages for attempts in the current cut",
+      "window": null
+    },
+    "retainedOrLaterUse": {
+      "value": "unobserved",
+      "producer": "canonical_commerce_and_useful_result_journals",
+      "population": "retained artifacts and later reads for attempts in the current cut",
+      "window": null
+    },
+    "settlement": {
+      "value": "unobserved",
+      "producer": "canonical settlement journal for the current cut",
+      "population": "settlement rows joined to attempts in the current cut",
+      "window": null,
+      "note": "No settlement journal for this cut was read. Emptiness was not established and is not reconciliation, revenue, or a customer."
+    },
+    "missingAttribution": {
+      "value": "enrolled read and production journal mount are absent",
+      "producer": "existing per-attempt reader",
+      "population": "attempts that would have been attributed inside the current cut",
+      "window": null
+    }
+  },
+  "coverage": {
+    "journalCut": "not_mounted",
+    "liveProduction": "unresolved",
+    "detail": "GitHub reports deployment 1b407af9 success for this pin. No production journal directory is mounted on this host. The only local commerce-events.ndjson is the excluded isolated review fixture, and the existing reader left that fixture unobserved. An unauthenticated start was refused by production with HTTP 403, so this operation did not open a cut."
+  },
+  "namedFailure": {
+    "kind": "observed_failure",
+    "name": "existing_enrolled_authority_required",
+    "coveredUsefulNegative": false,
+    "detail": "COMMERCE_INTERNAL_TOKEN is unset, so read-task-cut.mjs --start refused before any network call. That is not a covered useful negative."
+  },
+  "recognizedRevenueAtomic": "unknown",
+  "customer": null,
+  "paymentPermitted": false,
+  "populationConversionRate": null,
+  "stageCounts": null,
+  "spent": false,
+  "rewardConfigurationChanged": false,
+  "startedAnotherCut": false,
+  "isolatedFixtureUsedAsInterval": false,
+  "missingFact": "COMMERCE_INTERNAL_TOKEN is unset and no production journal directory is mounted, so the existing reader cannot read or start one covered current interval."
+}
