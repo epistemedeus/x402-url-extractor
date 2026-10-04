@@ -16,15 +16,20 @@ export function validateBuyerOutput(body, requiredOutput) {
       report: null,
     }, task);
   }
-  if (body?.ok !== true) {
-    return withTask({
-      valid: task.delivery === "unavailable",
-      delivery: task.delivery === "unavailable" ? "unavailable" : "invalid",
-      reason: task.nextAction.statement,
-      report: null,
-    }, task);
-  }
   try {
+    if (body?.ok === false) {
+      const report = validateOutput(body, {
+        mediaType: requiredOutput.mediaType || "application/json",
+        requiredFields: ["ok", "url", "requestedUrl", "sourceOk", "error.code", "error.message", "capture"],
+        maxResponseBytes: requiredOutput.maxResponseBytes,
+      });
+      return withTask({
+        valid: task.delivery === "unavailable",
+        delivery: task.delivery === "unavailable" ? "unavailable" : "invalid",
+        reason: task.nextAction.statement,
+        report,
+      }, task);
+    }
     const report = validateOutput(body, {
       mediaType: requiredOutput.mediaType || "application/json",
       requiredFields: requiredOutput.requiredFields,

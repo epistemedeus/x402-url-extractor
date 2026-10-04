@@ -1,8 +1,9 @@
 /**
- * Credential-free measurement for ROOT-1004. Writes EVIDENCE.json beside this
- * file. Does not retain source plaintext, pay, or call a live facilitator.
+ * Credential-free measurement for ROOT-1004. Defaults to EVIDENCE.json beside
+ * this file; a CLI output path preserves prior measurements. Does not retain source plaintext, pay, or call a live facilitator.
  */
-import { spawn } from "node:child_process";
+import assert from "node:assert/strict";
+import { spawn, execFileSync } from "node:child_process";
 import { createServer as createHttpServer } from "node:http";
 import { createServer as createNetServer } from "node:net";
 import { randomBytes } from "node:crypto";
@@ -20,10 +21,11 @@ import { classifyRequestConstruction } from "../../examples/customer-x402/src/re
 import { FIXTURE_VALID_BODY } from "../../examples/customer-x402/fixtures/transport.mjs";
 import { extract, extractMcpOutputSchema, readMarkdown } from "../../extract.mjs";
 import { maxAdmittedBatchExcerptChars, normalizeExtractBatchInput } from "../../extract-batch.mjs";
-import { EXTRACT_TEXT_EXCERPT_MAX_CHARS, fetchFailureCode, parseTextExcerptLimit } from "../../extract-capture.mjs";
+import { EXTRACT_TEXT_EXCERPT_MAX_CHARS, buildCapture, fetchFailureCode, parseTextExcerptLimit } from "../../extract-capture.mjs";
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const outPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "EVIDENCE.json");
+const outPath = process.argv[2] ? path.resolve(process.argv[2]) : path.join(path.dirname(fileURLToPath(import.meta.url)), "EVIDENCE.json");
+const sourceRevision = execFileSync("git", ["rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).trim();
 const MARKER = "later-discussion-marker";
 const PAY_TO = "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee";
 const PAYER = `0x${"2".repeat(40)}`;
@@ -512,12 +514,17 @@ async function inProcess() {
     let timeoutBody = null;
     const timeoutTimed = await timed(async () => {
       try {
-        return await extract("https://slow.example/");
+        return await extract("https://slow.example/", { textExcerptLimitChars: 8000 });
       } catch (error) {
         timeoutBody = {
           ok: false,
+          url: "https://slow.example/",
+          requestedUrl: "https://slow.example/",
+          finalUrl: null,
+          status: null,
           sourceOk: false,
           error: { code: fetchFailureCode(error), message: "aborted" },
+          capture: buildCapture({ textExcerptLimitChars: 8000, bodyBytes: 0, charset: null }),
         };
         return timeoutBody;
       }
@@ -527,7 +534,7 @@ async function inProcess() {
     const timeoutRecord = timeoutTimed.value?.ok === false ? timeoutTimed.value : timeoutBody;
     cases.push({
       id: "timeout_unavailable",
-      producer: { ok: timeoutRecord?.ok ?? null, errorCode: timeoutRecord?.error?.code ?? null },
+      producer: { ok: timeoutRecord?.ok ?? null, errorCode: timeoutRecord?.error?.code ?? null, capture: captureView(timeoutRecord) },
       caller: decisionView(decideExtractTask(timeoutRecord, { kind: "excerpt" })),
       latencyMs: timeoutTimed.latencyMs,
       costUsdc: 0,
@@ -651,6 +658,7 @@ const mounted = await mountedJourney();
 const evidence = {
   job: "ROOT-1004-EXTRACT-TASK-COMPLETION",
   measuredAt: new Date().toISOString(),
+  sourceRevision,
   population: "in-process controlled fixture plus one local merchant process and a fake facilitator",
   source: "hooked fixture hosts doc.example, short.example, denied.example, start.example, wide.example, huge.example, slow.example; no live page fetch and no response plaintext retained",
   costUsdc: 0,
@@ -661,6 +669,12 @@ const evidence = {
     rows: mounted.rows,
   },
 };
+assert.equal(inProcessCases.find((row) => row.id === "timeout_unavailable").caller.delivery, "unavailable");
+assert.equal(inProcessCases.find((row) => row.id === "timeout_unavailable").producer.capture.textExcerptLimitChars, 8000);
+assert.equal(inProcessCases.find((row) => row.id === "batch_ceiling_and_omitted_key").fiveUrlCeiling, maxAdmittedBatchExcerptChars(5));
+assert.equal(mounted.rows.find((row) => row.id === "mounted_seeded_bad_budget").httpStatus, 400);
+assert.equal(mounted.rows.find((row) => row.id === "mounted_seeded_bad_budget").settleCount, 0);
+assert.equal(mounted.rows.find((row) => row.id === "mounted_paid_raised_excerpt").caller.satisfied, true);
 await writeFile(outPath, `${JSON.stringify(evidence, null, 2)}\n`);
 const bad = mounted.rows.find((row) => row.id === "mounted_seeded_bad_budget");
 console.log(JSON.stringify({

@@ -10,6 +10,7 @@ import { decideExtractTask } from "./examples/customer-x402/src/extract-task.mjs
 import { classifyRequestConstruction } from "./examples/customer-x402/src/request-construction.mjs";
 import { classifyPaidResponse } from "./examples/customer-x402/src/outcome.mjs";
 import {
+  buildCapture,
   EXTRACT_TEXT_EXCERPT_CHARS,
   EXTRACT_TEXT_EXCERPT_MAX_CHARS,
   parseTextExcerptLimit,
@@ -143,11 +144,21 @@ test("caller predicates do not treat schema-pass, refusal, or a cropped body as 
 
   const unavailable = decideExtractTask({
     ok: false,
+    url: "https://example.com/",
+    requestedUrl: "https://example.com/",
+    finalUrl: null,
+    status: null,
     sourceOk: false,
     error: { code: "timeout", message: "aborted" },
+    capture: buildCapture({ textExcerptLimitChars: 8000, bodyBytes: 0, charset: null }),
   }, { kind: "excerpt" });
   assert.equal(unavailable.delivery, "unavailable");
   assert.equal(unavailable.nextAction.purchaseAuthorized, false);
+  const untypedFailure = decideExtractTask({
+    ok: false, sourceOk: false, error: { code: "timeout", message: "aborted" },
+  }, { kind: "excerpt" });
+  assert.equal(untypedFailure.delivery, "invalid");
+  assert.equal(untypedFailure.nextAction.purchaseAuthorized, false);
 
   const budget = decideExtractTask(record({
     capture: { textExcerptLimitChars: 1200, textTruncated: true, bodyTruncated: true },

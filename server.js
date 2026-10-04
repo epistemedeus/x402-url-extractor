@@ -2117,12 +2117,7 @@ app.post(RECEIPT_REFERRAL_RECHECK_ROUTE, async (req, res) => {
   }
 });
 
-// Return a short-lived response for an exact logical retry before validation or
-// settlement. Changed request bindings fail with an uncharged 409.
-if (EXTRACT_BATCH_ENABLED) app.post(EXTRACT_BATCH_PATH, validateExtractBatchRequest);
-if (LOCKFILE_PIN_DELTA_ENABLED) app.post(LOCKFILE_PIN_DELTA_PATH, validateLockfilePinDeltaRequest);
-app.use((req, res, next) => idempotencyReplay.middleware(req, res, next).catch(next));
-
+// Admit scalar inputs before replay reservations and before either payment rail.
 const PAYMENT_CREDENTIAL_HEADERS = Object.freeze([
   "payment-signature",
   "x-payment",
@@ -2235,6 +2230,12 @@ app.get("/extract", (req, res, next) => {
   }
   return next();
 });
+// Return a short-lived response for an exact admitted logical retry before
+// settlement. Changed admitted request bindings fail with an uncharged 409.
+if (EXTRACT_BATCH_ENABLED) app.post(EXTRACT_BATCH_PATH, validateExtractBatchRequest);
+if (LOCKFILE_PIN_DELTA_ENABLED) app.post(LOCKFILE_PIN_DELTA_PATH, validateLockfilePinDeltaRequest);
+app.use((req, res, next) => idempotencyReplay.middleware(req, res, next).catch(next));
+
 app.get("/read", (req, res, next) => requireStringQuery(req, res, next, {
   aliases: ["url"],
   error: "url must be a public HTTP or HTTPS URL",
@@ -3776,7 +3777,7 @@ app.get("/extract", async (req, res) => {
       status: null,
       sourceOk: false,
       error: { code: fetchFailureCode(e), message: String(e.message || e) },
-      capture: buildCapture({ bodyBytes: 0, charset: null, charsetSource: "default-utf-8" }),
+      capture: buildCapture({ textExcerptLimitChars: excerptLimit.value, bodyBytes: 0, charset: null, charsetSource: "default-utf-8" }),
     });
   }
 });
