@@ -1,80 +1,54 @@
-# ROOT-1004 extract task completion
+# Extract task sufficiency: received implementation
 
-status: done
+Status: remote suites passed; Root release receiving owns live deployment status.
 
-Candidate: optional `textExcerptLimitChars` on the existing extract path, plus the existing customer caller deciding completeness from capture flags and an explicit predicate. No new paid route, price, recipient, or response fields.
+The original Heavy report and measurement remain in Git at c6973daca03b9ff0d46c1f4eae55f866fa59704e.
+Its five-URL 4096-character claim is superseded. The actual merchant and caller
+share a pure admission budget: 128 KiB response cap, 48 KiB reserved for other
+fields, and six worst-case escaped JSON bytes per UTF-16 unit. Five URLs admit
+2730 characters; one admits 13653. Final response-size checks remain necessary
+because metadata is not bounded by the excerpt share.
 
-## What changed
+Single extraction keeps the default1200 and explicit1–40000 range, price5000
+atomic USDC and existing recipient. Strict scalar/extract validation occurs
+before replay claims, verification, settlement or source fetch. Invalid duplicate
+requests with a syntactically valid payment header return400/charged:false
+without creating a replay claim. Failure capture preserves the admitted budget.
 
-- Default excerpt stays 1,200 characters. A caller may set `textExcerptLimitChars` from 1 through 40,000, the same returned-text ceiling as `GET /read`. Bad values return HTTP 400 `charged: false` before fetch or settlement. The price stays 5000 atomic USDC (0.005) and payTo stays `0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee`.
-- Batch uses the same parser and a tighter ceiling so five excerpts cannot pass admission and then exceed the 128 KiB response cap. Five URLs admit 4,096 characters. Omitting the key leaves the canonical body unchanged.
-- `decideExtractTask` does not fetch or pay. Schema-pass without a predicate is not task completion. A cropped excerpt with an excerpt predicate is `partial_delivered` and names `raise_excerpt_budget` with `purchaseAuthorized: false`. Markdown names existing `GET /read` and does not call it. Source refusal stays refusal. A 3 MB body cutoff is `source_budget_exhausted`. Metadata can be satisfied while body text is cropped.
-- URL-only responses keep the same JSON keys. The old customer fixture with no capture and no task stays `valid_delivered`.
+The caller validates batch shape, URL/field selection and the same excerpt
+ceiling before wallet access. Omitted budget preserves the old canonical request
+and digest; an explicit budget is bound into both. Typed unavailable results
+receive the authorized byte cap and remain unsatisfied, while malformed failure
+objects are invalid. Metadata, bounded excerpts, cropped bodies, refusals and
+Markdown guidance remain distinct; no decision fetches or repurchases.
 
-## Measured
+## Actual verification
 
-Population: hooked fixture hosts and one local merchant with a fake facilitator. Cost: 0 USDC. No source plaintext retained. Historical October 4 purchases were not repeated.
+On actual Cursor cloud-f, source939477cc04fc3d6f76ff304aa5fa298a138d8124:
 
-| Case | Predicate | Result |
-| --- | --- | --- |
-| Short page | excerpt, 5 chars | satisfied, text length 5, not truncated, 6 ms |
-| Default long page, no predicate | none | schema-pass, text 1,200, `textTruncated` true, satisfied null, delivery partial, next `/read` not executed |
-| Same record | metadata | satisfied, reason `metadata_sufficient_text_cropped` |
-| Same record | excerpt, 2,000 chars | unsatisfied, `raise_excerpt_budget`, not executed |
-| Excerpt budget 8,000 | excerpt, 2,000 chars | satisfied, marker present, text length 2,423, `textTruncated` false, same response keys |
-| Markdown predicate | markdown | unsatisfied, next `/read` not executed; a separate read was 2,424 chars, marker present, not truncated, 3 ms |
-| Read bound | markdown, 40,001 chars | markdown length 40,000, truncated, `bound_exceeds_product` |
-| 403 | excerpt | `source_refused`, schema-pass, not a second purchase |
-| Abort at 40 ms | excerpt | producer `timeout`, caller unavailable, 41 ms |
-| Redirect | excerpt, 5 chars | requested `start.example`, final `end.example/page`, satisfied |
-| 4 MB stream | excerpt | body 3,000,000 bytes, both truncation flags, `source_budget_exhausted`, 20 ms |
-| Non-object body | excerpt | delivery invalid |
-| Five-URL batch at 40,000 | admission | rejected before fetch; omitted key stays absent |
-| Old fixture, no task | none | `valid_delivered`, task satisfied null |
-| Cropped excerpt through the caller | excerpt, 2,000 | `partial_delivered`, not useful |
-| Settlement `success: false` | excerpt | `settlement_failed`, next action not executed |
-| Mounted `textExcerptLimitChars=0` | seeded failure | HTTP 400, charged false, settle 0, source fetches 0, 26 ms |
-| Mounted unpaid default and 8,000 | challenge | both HTTP 402, amount 5000, same payTo, description 402 code points |
-| Mounted paid default then replay | same payment id | replay `hit`, settle stays 1 |
-| Same payment id with budget 8,000 | conflict | HTTP 409, charged false, settle stays 1 |
-| Separate paid `/read` | markdown route | HTTP 200, marker present, not called by extract |
+- Complete caller suite:208 tests,207 pass,0 fail,1 existing optional skip.
+- Complete merchant suite:14 pre-suite passes;974 main tests,970 pass,
+  0 fail,4 existing optional skips.
+- Five new focused regression groups reproduced on894296c8 and pass after
+  the owning implementation repair.
+- Existing failure fixture was corrected to the actual typed producer response;
+  its unavailable positive remains and an untyped negative was added.
 
-Live origin readback on 2026-10-04, this branch not deployed:
+The fresh [source-pinned measurement](ROOT-POSTREVIEW-EVIDENCE.json) contains
+18 in-process and10 mounted cases, with0USDC moved and a fake facilitator.
+It asserts invalid-budget400/zero settlement, the shared batch ceiling, admitted
+8000-character timeout capture and useful raised-excerpt delivery. Original
+[EVIDENCE.json](EVIDENCE.json) is historical, not the current implementation.
 
-`curl -sS --max-time 20 "https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com&textExcerptLimitChars=0"`
+Reproduce with the owning Node22.22.2 runtime and declared dependencies:
 
-HTTP 402, amount 5000, same payTo, description 493 code points, description does not name `textExcerptLimitChars`, Bazaar query parameters are only `url`.
-
-## Verify
-
-```
-env -u FORCE_COLOR -u NO_COLOR node --test extract.semantics.test.mjs extract-task-completion.test.mjs extract-batch.test.mjs examples/customer-x402/test/customer-x402.test.mjs examples/customer-x402/test/request-construction.test.mjs
+```sh
+npm --prefix examples/customer-x402 test
+npm test
+node experiments/extract-task-completion-1004/measure.mjs /tmp/extract-measurement.json
 ```
 
-Exit 0. 52 tests, 51 pass, 1 skip, 0 fail.
-
-```
-env -u FORCE_COLOR -u NO_COLOR node --test extract-task-completion.http.test.mjs
-```
-
-Exit 0. Mounted journey passed in 1881 ms.
-
-```
-env -u FORCE_COLOR -u NO_COLOR node --test plugins/samedaydesk-x402/plugin.test.mjs extract.http.test.mjs extract-batch.http.test.mjs goose-native.test.mjs mcp-output-schema-extract.test.mjs
-```
-
-Exit 0. 46 tests, 45 pass, 1 skip, 0 fail.
-
-```
-env -u FORCE_COLOR -u NO_COLOR node experiments/extract-task-completion-1004/measure.mjs
-```
-
-Exit 0. Writes `EVIDENCE.json`.
-
-## Limits
-
-The two October 4 calls remain usefulness-unknown. This run does not identify a payer or claim those calls needed a full document. Neither route executes JavaScript. A larger excerpt does not recover a body stopped at 3 MB. Batch cannot carry a 40,000-character excerpt for five URLs. Root integrates and deploys; this branch is not live.
-
-## Next outside check
-
-After integration, the same public curl must return HTTP 400 with `charged: false` before any 402. Then one declared excerpt predicate on a fixture, with `requiredChars` above 1,200, must stay `partial_delivered` and must not purchase another route.
+Root's [Pilot adjudication](https://github.com/epistemedeus/pilot/blob/main/overview/research/phase-20261001/extract-task-receiving-1004/ROOT-ADJUDICATION.md)
+records original and post-review reproduction, deployment and unpaid public checks.
+These controlled tests do not establish outside task usefulness, repeat demand,
+payer identity or new revenue. Historical October4 purchases were not repeated.
