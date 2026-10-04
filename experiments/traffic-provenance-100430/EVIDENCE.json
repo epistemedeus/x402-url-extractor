@@ -1,0 +1,281 @@
+{
+  "schema": "samedaydesk.traffic-provenance-100430.evidence.v1",
+  "task": "ROOT-SOL-TRAFFIC-PROVENANCE-100430",
+  "disposition": "fixed",
+  "source": {
+    "repository": "epistemedeus/x402-url-extractor",
+    "base": "4017314696a4dd5d4ce7ab4e1a22743c2bfd94c5",
+    "originMaster": "4017314696a4dd5d4ce7ab4e1a22743c2bfd94c5",
+    "candidateBranch": "codex/root-traffic-provenance-1004",
+    "candidatePresentOnOrigin": false,
+    "workBranch": "heavy/root-traffic-provenance-1004",
+    "pilotCommit": "6aeb9023b1c54049cc3dcdd9a5be787823638602",
+    "pilotCommitDate": "2026-10-04T14:04:42Z",
+    "pilotMainAtLookup": "13511cbb2c3d3e1cba387913392b85ebefa44b00",
+    "pilotMainDate": "2026-10-04T15:30:43Z",
+    "laterPilotFilesAcquired": false
+  },
+  "historicalCut": {
+    "receivedAt": "2026-10-04T13:00:47.543Z",
+    "generatedAt": "2026-10-04T13:00:47.352Z",
+    "source": "overview/research/phase-20261001/COMMERCE-DEMAND-OBSERVATION-20261004.json",
+    "externalEvents": 3109,
+    "externalActors": 323,
+    "constructedRequestEvents": 220,
+    "constructedRequestActors": 64,
+    "credentialAttemptByResult": {
+      "paid_success": 1
+    },
+    "paidSuccessByRoute": {
+      "/commerce/seller-integrity-audit": 1
+    },
+    "independentPaidSuccessActors": 0,
+    "diagnosticsObservations": 0,
+    "usefulness": "unknown",
+    "rareFunnelCoverage": "unknown_for_full_window",
+    "backfillApplied": false,
+    "note": "Credential attempts and externalEvents on this base count stored originClass external only, so this paid success was not stored as internal or owner_monitor. Origin population volumes for the cut are absent from the received aggregate."
+  },
+  "trace": {
+    "httpOriginAssignmentUnchanged": true,
+    "verifiedInternalRequiresMatchingToken": true,
+    "ownerMonitorIsUserAgentSelfReport": true,
+    "missingHeaderIsUnattributedExternal": true,
+    "missingHeaderIsNotAnOutsideCustomer": true,
+    "mcpValidationRequiresTokenAndMarkerProof": true,
+    "declaredSourceDoesNotChangeOrigin": true,
+    "rarePublicPaymentCountersAreUnattributedExternalOnly": true,
+    "rawJournalsNotRewritten": true
+  },
+  "controlledReplay": {
+    "httpJournalRows": 10,
+    "duplicateFinishWritesOneRow": true,
+    "originCounts": {
+      "internal": 2,
+      "owner_monitor": 2,
+      "external": 4,
+      "crawler": 1,
+      "scanner": 1
+    },
+    "secretsAbsentFromJournal": true,
+    "selfClaimedJourney": {
+      "route": "/commerce/seller-integrity-audit",
+      "originClass": "external",
+      "actor": "independent",
+      "usefulDelivery": "unknown"
+    },
+    "snapshot": {
+      "externalEvents": 4,
+      "constructedRequestEvents": 2,
+      "independentPaidSuccessActors": 0,
+      "paidSuccessByClass": {
+        "unclassified": 1
+      },
+      "byResultPaidSuccess": 1,
+      "byResultValidationFailure": 1,
+      "historicalBackfill": false,
+      "readTimeIdentityBackfill": false,
+      "selfReportedGrantsTrust": false,
+      "markerExpiry": "none",
+      "unattributedIsNotIndependent": true,
+      "populations": {
+        "verifiedInternal": {
+          "events": 2,
+          "paidSuccesses": 1,
+          "constructedChallenges": 1,
+          "credentialAttempts": 1,
+          "provedOutsideDemand": false,
+          "independentDemand": false,
+          "verification": "verified_internal_token",
+          "excludedFromExternalEvents": true
+        },
+        "selfReportedOwnerMonitor": {
+          "events": 2,
+          "paidSuccesses": 1,
+          "constructedChallenges": 1,
+          "credentialAttempts": 1,
+          "provedOutsideDemand": false,
+          "independentDemand": false,
+          "verification": "unverified",
+          "excludedFromExternalEvents": true
+        },
+        "scanner": {
+          "events": 1,
+          "verification": "unverified"
+        },
+        "crawler": {
+          "events": 1,
+          "constructedChallenges": 1
+        },
+        "unattributedExternal": {
+          "events": 4,
+          "paidSuccesses": 1,
+          "constructedChallenges": 1,
+          "credentialAttempts": 1,
+          "provedOutsideDemand": false,
+          "independentDemand": false,
+          "verification": "unverified",
+          "excludedFromExternalEvents": false
+        }
+      }
+    },
+    "rare": {
+      "paidSuccessEvents": 1,
+      "paymentHeaderEvents": 2,
+      "independentOperatorCount": null,
+      "independentUsefulDemand": "unknown",
+      "originPopulations": {
+        "schemaVersion": "samedaydesk.commerce-rare-origin-populations.v1",
+        "historicalBackfill": false,
+        "unattributedIsNotIndependent": true,
+        "selfReportedGrantsTrust": false,
+        "verifiedInternal": {
+          "paymentHeaderEvents": 1,
+          "parseableCredentialAttemptEvents": 1,
+          "unparseablePaymentHeaderEvents": 0,
+          "paidSuccessEvents": 1,
+          "paymentErrorEvents": 0,
+          "paymentUnknownOrPartialEvents": 0,
+          "byResult": {
+            "paid_success": 1
+          },
+          "independentOperatorCount": null,
+          "independentUsefulDemand": "unknown",
+          "provedOutsideDemand": false,
+          "independentDemand": false,
+          "verification": "verified_internal_token"
+        },
+        "selfReportedOwnerMonitor": {
+          "paymentHeaderEvents": 1,
+          "parseableCredentialAttemptEvents": 1,
+          "unparseablePaymentHeaderEvents": 0,
+          "paidSuccessEvents": 1,
+          "paymentErrorEvents": 0,
+          "paymentUnknownOrPartialEvents": 0,
+          "byResult": {
+            "paid_success": 1
+          },
+          "independentOperatorCount": null,
+          "independentUsefulDemand": "unknown",
+          "provedOutsideDemand": false,
+          "independentDemand": false,
+          "verification": "unverified"
+        },
+        "unattributedExternal": {
+          "paymentHeaderEvents": 2,
+          "parseableCredentialAttemptEvents": 1,
+          "unparseablePaymentHeaderEvents": 1,
+          "paidSuccessEvents": 1,
+          "paymentErrorEvents": 1,
+          "paymentUnknownOrPartialEvents": 0,
+          "byResult": {
+            "paid_success": 1,
+            "validation_failure": 1
+          },
+          "independentOperatorCount": null,
+          "independentUsefulDemand": "unknown",
+          "provedOutsideDemand": false,
+          "independentDemand": false,
+          "verification": "unverified"
+        },
+        "otherRetained": {
+          "paymentHeaderEvents": 0,
+          "parseableCredentialAttemptEvents": 0,
+          "unparseablePaymentHeaderEvents": 0,
+          "paidSuccessEvents": 0,
+          "paymentErrorEvents": 0,
+          "paymentUnknownOrPartialEvents": 0,
+          "byResult": {},
+          "independentOperatorCount": null,
+          "independentUsefulDemand": "unknown",
+          "provedOutsideDemand": false,
+          "independentDemand": false,
+          "verification": "unverified"
+        }
+      },
+      "storedOriginCounts": {
+        "internal": 1,
+        "owner_monitor": 1,
+        "external": 2
+      }
+    },
+    "restart": {
+      "historicalLineRetained": true,
+      "unattributedPaidSuccessEvents": 2,
+      "verifiedPaidSuccessEvents": 1,
+      "externalEvents": 4
+    },
+    "seededForgedMarker": {
+      "shortMarkerAccepted": false,
+      "wrongTokenAccepted": false,
+      "forgedRowHasAttribution": false,
+      "forgedDemand": false,
+      "forgedIndependentUse": false,
+      "forgedRareOrigin": "external",
+      "forgedDeclaredSourceStored": null,
+      "reusedVerifiedRareOrigins": [
+        "internal",
+        "internal"
+      ],
+      "verifiedValidationRecords": 2,
+      "unattributedTypedRecords": 1,
+      "rarePaidSuccessEvents": 1,
+      "rareVerifiedPaid": 2,
+      "rareUnattributedPaid": 1,
+      "independentPaidSuccessActors": 0,
+      "externalEvents": 0,
+      "rawMarkerOrTokenAbsent": true
+    }
+  },
+  "tests": [
+    {
+      "command": "node --test commerce-traffic-provenance.test.mjs",
+      "exitCode": 0,
+      "pass": 3,
+      "fail": 0,
+      "skip": 0
+    },
+    {
+      "command": "node --test commerce-events.test.mjs",
+      "exitCode": 0,
+      "pass": 91,
+      "fail": 0,
+      "skip": 0
+    },
+    {
+      "command": "node --test commerce-privacy-coverage.test.mjs commerce-rare-funnel.mounted.test.mjs commerce-settlement-source-delivery.test.mjs mcp-typed-marker-reconciler.test.mjs commerce-nonlive-suite.test.mjs",
+      "exitCode": 0,
+      "pass": 39,
+      "fail": 0,
+      "skip": 0
+    },
+    {
+      "command": "npm test --prefix task-linked-delivery/experiments/production-funnel-100423",
+      "exitCode": 0,
+      "pass": 24,
+      "fail": 0,
+      "skip": 0
+    },
+    {
+      "command": "node --test paid-useful-journey.test.mjs mcp-typed-telemetry-producer.test.mjs task-linked-delivery/experiments/delivery-outcome-100173/test/join.test.mjs",
+      "exitCode": 0,
+      "pass": 37,
+      "fail": 0,
+      "skip": 0
+    }
+  ],
+  "unavailableControls": [
+    "Full npm test was not run.",
+    "No live public commerce-demand write and no purchase.",
+    "The 13:00:47 raw journal was not in the named pilot inputs, so that cut was not replayed."
+  ],
+  "seededRejection": {
+    "case": "forged MCP validation proof with declared source independent-customer",
+    "forgedRowHasAttribution": false,
+    "forgedDemand": false,
+    "forgedIndependentUse": false,
+    "forgedRareOrigin": "external",
+    "shortMarkerAccepted": false,
+    "wrongTokenAccepted": false
+  }
+}

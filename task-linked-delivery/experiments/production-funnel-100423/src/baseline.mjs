@@ -131,12 +131,77 @@ function sameRareFile(left, right) {
     && left.retainedParseableRecordCount !== null;
 }
 
+function populationCounts(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return {
+    paymentHeaderEvents: count(value.paymentHeaderEvents),
+    paidSuccessEvents: count(value.paidSuccessEvents),
+    parseableCredentialAttemptEvents: count(value.parseableCredentialAttemptEvents),
+    events: count(value.events),
+    paidSuccesses: count(value.paidSuccesses),
+    constructedChallenges: count(value.constructedChallenges),
+    credentialAttempts: count(value.credentialAttempts),
+    verification: value.verification === "verified_internal_token" || value.verification === "unverified"
+      ? value.verification
+      : "unknown",
+    provedOutsideDemand: false,
+    independentDemand: false,
+  };
+}
+
+function rareOriginPopulations(rare) {
+  const populations = rare?.originPopulations;
+  if (!populations || typeof populations !== "object" || Array.isArray(populations)) {
+    return {
+      status: "unknown",
+      reason: "producer_origin_split_absent_do_not_read_paid_success_as_outside_demand",
+      historicalBackfill: false,
+    };
+  }
+  return {
+    status: "present",
+    historicalBackfill: false,
+    unattributedIsNotIndependent: populations.unattributedIsNotIndependent === true,
+    selfReportedGrantsTrust: false,
+    verifiedInternal: populationCounts(populations.verifiedInternal),
+    selfReportedOwnerMonitor: populationCounts(populations.selfReportedOwnerMonitor),
+    unattributedExternal: populationCounts(populations.unattributedExternal),
+    otherRetained: populationCounts(populations.otherRetained),
+  };
+}
+
+function trafficProvenanceView(document) {
+  const provenance = document?.trafficProvenance;
+  const populations = provenance?.populations;
+  if (!provenance || typeof provenance !== "object" || !populations || typeof populations !== "object") {
+    return {
+      status: "unknown",
+      reason: "producer_traffic_provenance_absent_external_events_are_not_an_outside_customer_census",
+      historicalBackfill: false,
+    };
+  }
+  return {
+    status: "present",
+    historicalBackfill: false,
+    readTimeIdentityBackfill: false,
+    unattributedIsNotIndependent: provenance.unattributedIsNotIndependent === true,
+    selfReportedGrantsTrust: false,
+    markerExpiry: provenance.markerExpiry === "none" ? "none" : "unknown",
+    verifiedInternal: populationCounts(populations.verifiedInternal),
+    selfReportedOwnerMonitor: populationCounts(populations.selfReportedOwnerMonitor),
+    scanner: populationCounts(populations.scanner),
+    crawler: populationCounts(populations.crawler),
+    unattributedExternal: populationCounts(populations.unattributedExternal),
+  };
+}
+
 function rareSlice(rare, reason) {
   if (!rare || typeof rare !== "object") {
     return observed(null, "rare_plane_absent");
   }
   const continuity = rare?.coverage?.captureContinuityProven === true;
   return {
+    originPopulations: rareOriginPopulations(rare),
     paymentHeaderEvents: observed(count(rare.paymentHeaderEvents), reason, { continuityProven: continuity }),
     parseableCredentialAttempts: observed(count(rare.parseableCredentialAttemptEvents), reason, { continuityProven: continuity }),
     unparseablePaymentHeaders: observed(count(rare.unparseablePaymentHeaderEvents), reason, { continuityProven: continuity }),
@@ -206,6 +271,7 @@ function streamSection(document, covered) {
       },
     },
     byResult: countMap(document.byResult),
+    trafficProvenance: trafficProvenanceView(document),
   };
 }
 

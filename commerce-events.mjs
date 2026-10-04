@@ -343,6 +343,98 @@ function isConstructedRequestFunnelEvent(event) {
   return isWriterMeasuredPaidExtractBatchPost(event);
 }
 
+function trafficPopulation(rows, { requestConstructionSinceMs, credentialAttemptSinceMs }) {
+  let paidSuccesses = 0;
+  let constructedChallenges = 0;
+  let credentialAttempts = 0;
+  for (const event of rows) {
+    const result = eventResult(event);
+    const observedAt = eventTimestampMs(event);
+    if (result === "paid_success") paidSuccesses += 1;
+    if (
+      requestConstructionSinceMs !== null
+      && observedAt !== null
+      && observedAt >= requestConstructionSinceMs
+      && isConstructedRequestFunnelEvent(event)
+      && result === "challenge"
+    ) {
+      constructedChallenges += 1;
+    }
+    if (
+      event.paymentPresent === true
+      && event.kind === "paid"
+      && event.matched === true
+      && event.paymentCredentialParsed === true
+      && (credentialAttemptSinceMs === null || (observedAt !== null && observedAt >= credentialAttemptSinceMs))
+    ) {
+      credentialAttempts += 1;
+    }
+  }
+  return {
+    events: rows.length,
+    paidSuccesses,
+    constructedChallenges,
+    credentialAttempts,
+    provedOutsideDemand: false,
+    independentDemand: false,
+  };
+}
+
+function buildTrafficProvenance({
+  windowedEvents,
+  externalEvents,
+  requestConstructionSinceMs,
+  credentialAttemptSinceMs,
+}) {
+  const byOrigin = {
+    internal: [],
+    owner_monitor: [],
+    scanner: [],
+    crawler: [],
+  };
+  for (const event of windowedEvents) {
+    if (byOrigin[event.originClass]) byOrigin[event.originClass].push(event);
+  }
+  const options = { requestConstructionSinceMs, credentialAttemptSinceMs };
+  // Read the origin class stored at capture. Do not re-identify old rows from
+  // user-agent, address, timing, or worker count.
+  return {
+    schemaVersion: "samedaydesk.commerce-traffic-provenance.v1",
+    historicalBackfill: false,
+    readTimeIdentityBackfill: false,
+    unattributedIsNotIndependent: true,
+    selfReportedGrantsTrust: false,
+    markerExpiry: "none",
+    populations: {
+      verifiedInternal: {
+        ...trafficPopulation(byOrigin.internal, options),
+        verification: "verified_internal_token",
+        excludedFromExternalEvents: true,
+      },
+      selfReportedOwnerMonitor: {
+        ...trafficPopulation(byOrigin.owner_monitor, options),
+        verification: "unverified",
+        excludedFromExternalEvents: true,
+      },
+      scanner: {
+        ...trafficPopulation(byOrigin.scanner, options),
+        verification: "unverified",
+        excludedFromExternalEvents: true,
+      },
+      crawler: {
+        ...trafficPopulation(byOrigin.crawler, options),
+        verification: "unverified",
+        excludedFromExternalEvents: true,
+      },
+      unattributedExternal: {
+        ...trafficPopulation(externalEvents, options),
+        verification: "unverified",
+        excludedFromExternalEvents: false,
+      },
+    },
+  };
+}
+
 function headerValue(headers, name) {
   try {
     const value = headers?.[name];
@@ -1968,7 +2060,11 @@ function rareFunnelEvidenceFromMcpTypedEvent(event) {
     captureProvenance: RARE_FUNNEL_CAPTURE_PROVENANCE.mcpTypedAdapter,
     id: event.id,
     ts: event.ts,
-    originClass: "external",
+    // The rare-row vocabulary has no validation class. A proof-checked
+    // internal-token marker is the same verified internal population as HTTP.
+    // A declared source or an unverified marker stays unattributed external
+    // and is not independent. The raw marker is not copied onto this row.
+    originClass: isCanonicalMcpTypedAttribution(event.requestAttribution) ? "internal" : "external",
     actor,
     paymentActor,
     agentDiscoverySource: typeof event.declaredAgentDiscoverySource === "string"
@@ -2056,7 +2152,22 @@ function summarizeDurableRareFunnel({
   const sinceFiltered = windowed.filter((record) => (
     credentialAttemptSinceMs === null || eventTimestampMs(record) >= credentialAttemptSinceMs
   ));
-  const paymentHeaderEvents = sinceFiltered;
+  const rareByOrigin = {
+    verifiedInternal: [],
+    selfReportedOwnerMonitor: [],
+    unattributedExternal: [],
+    otherRetained: [],
+  };
+  for (const record of sinceFiltered) {
+    if (record.originClass === "internal") rareByOrigin.verifiedInternal.push(record);
+    else if (record.originClass === "owner_monitor") rareByOrigin.selfReportedOwnerMonitor.push(record);
+    else if (record.originClass === "external") rareByOrigin.unattributedExternal.push(record);
+    else rareByOrigin.otherRetained.push(record);
+  }
+  // Public rare payment counters are the unattributed external population.
+  // Verified internal and self-reported owner-monitor rows stay in
+  // originPopulations so they are neither promoted nor discarded.
+  const paymentHeaderEvents = rareByOrigin.unattributedExternal;
   const parseable = paymentHeaderEvents.filter((record) => record.paymentCredentialParsed === true);
   const actors = new Map();
   const paidActors = new Map();
@@ -2132,6 +2243,10 @@ function summarizeDurableRareFunnel({
       usefulnessRemainsUnknownWithoutSeparateAuthority: true,
       doesNotClassifyRevenue: true,
       streamCountersRemainStreamLocal: true,
+      verifiedInternalIsNotExternalDemand: true,
+      selfReportedIsNotIndependent: true,
+      unattributedIsNotIndependent: true,
+      historicalIdentityBackfill: false,
     },
     paymentHeaderEvents: paymentHeaderEvents.length,
     parseableCredentialAttemptEvents: parseable.length,
@@ -2148,7 +2263,57 @@ function summarizeDurableRareFunnel({
     byRoute,
     byProtocol,
     byCaptureProvenance,
+    originPopulations: {
+      schemaVersion: "samedaydesk.commerce-rare-origin-populations.v1",
+      historicalBackfill: false,
+      unattributedIsNotIndependent: true,
+      selfReportedGrantsTrust: false,
+      verifiedInternal: {
+        ...summarizeRarePaymentPopulation(rareByOrigin.verifiedInternal),
+        verification: "verified_internal_token",
+      },
+      selfReportedOwnerMonitor: {
+        ...summarizeRarePaymentPopulation(rareByOrigin.selfReportedOwnerMonitor),
+        verification: "unverified",
+      },
+      unattributedExternal: {
+        ...summarizeRarePaymentPopulation(rareByOrigin.unattributedExternal),
+        verification: "unverified",
+      },
+      otherRetained: {
+        ...summarizeRarePaymentPopulation(rareByOrigin.otherRetained),
+        verification: "unverified",
+      },
+    },
     boundedBytes: rareMaxBytes * 2,
+  };
+}
+
+function summarizeRarePaymentPopulation(records) {
+  const byResult = emptyCounts();
+  let parseableCredentialAttemptEvents = 0;
+  let paidSuccessEvents = 0;
+  let paymentErrorEvents = 0;
+  let paymentUnknownOrPartialEvents = 0;
+  for (const record of records) {
+    increment(byResult, record.result);
+    if (record.paymentCredentialParsed) parseableCredentialAttemptEvents += 1;
+    if (record.result === "paid_success") paidSuccessEvents += 1;
+    else if (record.status >= 400) paymentErrorEvents += 1;
+    else if (record.result !== "replay_success") paymentUnknownOrPartialEvents += 1;
+  }
+  return {
+    paymentHeaderEvents: records.length,
+    parseableCredentialAttemptEvents,
+    unparseablePaymentHeaderEvents: records.length - parseableCredentialAttemptEvents,
+    paidSuccessEvents,
+    paymentErrorEvents,
+    paymentUnknownOrPartialEvents,
+    byResult,
+    independentOperatorCount: null,
+    independentUsefulDemand: "unknown",
+    provedOutsideDemand: false,
+    independentDemand: false,
   };
 }
 
@@ -2523,6 +2688,8 @@ function summarizeMcpTypedView(events) {
   const byTool = Object.create(null);
   const byReason = Object.create(null);
   const byDeclaredSource = Object.create(null);
+  let verifiedValidationRecords = 0;
+  let unattributedTypedRecords = 0;
   for (const event of events) {
     const result = typeof event.result === "string" ? event.result : "invalid";
     byResult[result] = (byResult[result] || 0) + 1;
@@ -2536,6 +2703,8 @@ function summarizeMcpTypedView(events) {
     if (typeof declared === "string" && MCP_TYPED_DECLARED_SOURCE_LABELS.has(declared)) {
       byDeclaredSource[declared] = (byDeclaredSource[declared] || 0) + 1;
     }
+    if (isCanonicalMcpTypedAttribution(event.requestAttribution)) verifiedValidationRecords += 1;
+    else unattributedTypedRecords += 1;
   }
   return {
     sourceContract: MCP_TYPED_COMMERCE_SOURCE,
@@ -2545,7 +2714,9 @@ function summarizeMcpTypedView(events) {
     byTool,
     byReason,
     byDeclaredSource,
-    policy: "Seller-declared typed MCP outcomes from the mounted producer. Optional caller-declared source labels are untrusted metadata on observed typed tool events. Not payer identity, chain truth, accounting, revenue, demand, independent use, or authorization.",
+    verifiedValidationRecords,
+    unattributedTypedRecords,
+    policy: "Seller-declared typed MCP outcomes from the mounted producer. Optional caller-declared source labels are untrusted metadata on observed typed tool events. A verified internal-token validation marker is counted separately from unattributed typed rows. Neither is payer identity, chain truth, accounting, revenue, demand, independent use, or authorization.",
   };
 }
 
@@ -3919,6 +4090,12 @@ export function createCommerceTelemetry({
         }),
       },
       externalSince: externalSinceMs === null ? null : new Date(externalSinceMs).toISOString(),
+      trafficProvenance: buildTrafficProvenance({
+        windowedEvents,
+        externalEvents: events,
+        requestConstructionSinceMs,
+        credentialAttemptSinceMs,
+      }),
       externalEvents: events.length,
       externalActors: actors.size,
       repeatExternalActors: [...actors.values()].filter((count) => count > 1).length,
@@ -4029,8 +4206,8 @@ export function createCommerceTelemetry({
       settlementEvidencePolicy: "After the declared settlement-evidence baseline, a successful paid response should carry a valid Base transaction reference in PAYMENT-RESPONSE or Payment-Receipt. Raw response headers and transaction references remain private; public output exposes only coverage counts by evidence class.",
       paidDiagnosticReportContract,
       paidDiagnosticReportContractPolicy: "Prospective report-contract measurement for ordinary paid GET or POST /commerce/seller-integrity-audit responses whose bounded bytes were captured and joined to an external paid-success event in this window. A schema-complete audit, including repair_required, can be a delivered diagnostic. An incomplete, malformed, truncated, or oversized body cannot. Schema conformance is not buyer usefulness, so usefulness stays unknown on this plane. The population unit is a paid HTTP response, not a customer. Public output is counts only: no raw credentials, target queries, report bodies, or settlement hashes. An old settlement with no captured validation stays unknown and is not backfilled. Transaction counts, transport class, and useful output stay separate. Cash and recognized revenue stay 0.",
-      durableRareFunnelPolicy: "Credential-attempt and rare payment-outcome rows are mirrored into a separately rotated rare-funnel store so ordinary /mcp probe volume cannot erase them from the shared event stream. The durableRareFunnel plane reports its own window coverage, capture version, reset policy, and provenance. It never backfills pre-capture history, never stores raw credentials or addresses, treats actor hashes as continuity keys rather than identity, leaves usefulness unknown without separate authority, and does not invent revenue classification. Stream-local counters remain stream-local; settlement ledger and private paid-success evidence stay separate accepted planes.",
-      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, SameDayDesk-owned monitor, crawler, and exploit-probe traffic is excluded from demand, but unidentified automated fetchers can remain. Separately reported agent-discovery observations begin at their own declared baseline and are user-agent-declared crawler or indexer fetches of known discovery and paid routes; SameDayDesk-owned monitor user agents are excluded, and the remainder are neither authenticated catalog referrals nor buyer intent. Unmatched requests are acquisition misses, not intents. Known MCP transport probes and semantic-unmatched counts remain acquisition-friction evidence and do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Payment classes are applied against those pseudonyms at read time, so known marketplace verification can be reclassified without storing a raw address. Unknown payers remain unclassified. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Settlement-reference coverage begins only at its declared baseline; raw transaction references remain on the private volume and are not returned publicly. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
+      durableRareFunnelPolicy: "Credential-attempt and rare payment-outcome rows are mirrored into a separately rotated rare-funnel store so ordinary /mcp probe volume cannot erase them from the shared event stream. The durableRareFunnel plane reports its own window coverage, capture version, reset policy, and provenance. It never backfills pre-capture history, never stores raw credentials or addresses, treats actor hashes as continuity keys rather than identity, leaves usefulness unknown without separate authority, and does not invent revenue classification. Public payment counters on this plane count originClass external only. Verified internal-token rows and self-reported owner-monitor rows remain in originPopulations; they are not external demand and not independent. A rare row keeps the origin class stored at capture. Stream-local counters remain stream-local; settlement ledger and private paid-success evidence stay separate accepted planes.",
+      boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, SameDayDesk-owned monitor, crawler, and exploit-probe traffic is excluded from demand and reported as separate retained populations, but unidentified automated fetchers can remain. Unattributed external activity stays unattributed and is not independent. Separately reported agent-discovery observations begin at their own declared baseline and are user-agent-declared crawler or indexer fetches of known discovery and paid routes; SameDayDesk-owned monitor user agents are excluded, and the remainder are neither authenticated catalog referrals nor buyer intent. Unmatched requests are acquisition misses, not intents. Known MCP transport probes and semantic-unmatched counts remain acquisition-friction evidence and do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Payment classes are applied against those pseudonyms at read time, so known marketplace verification can be reclassified without storing a raw address. Unknown payers remain unclassified. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Settlement-reference coverage begins only at its declared baseline; raw transaction references remain on the private volume and are not returned publicly. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts. Historical rows are not re-identified from timing, address, or user-agent.",
     };
   }
 

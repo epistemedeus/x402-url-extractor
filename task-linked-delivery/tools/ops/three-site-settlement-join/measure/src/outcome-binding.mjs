@@ -624,6 +624,69 @@ function classCounts(byClass) {
   })).sort((left, right) => left.class.localeCompare(right.class));
 }
 
+function nonNegative(value) {
+  return Number.isInteger(value) && value >= 0 ? value : null;
+}
+
+function projectPopulation(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return {
+    events: nonNegative(value.events),
+    paidSuccesses: nonNegative(value.paidSuccesses),
+    constructedChallenges: nonNegative(value.constructedChallenges),
+    credentialAttempts: nonNegative(value.credentialAttempts),
+    paymentHeaderEvents: nonNegative(value.paymentHeaderEvents),
+    paidSuccessEvents: nonNegative(value.paidSuccessEvents),
+    verification: value.verification === "verified_internal_token" || value.verification === "unverified"
+      ? value.verification
+      : "unknown",
+    provedOutsideDemand: false,
+    independentDemand: false,
+  };
+}
+
+function projectTrafficProvenance(value) {
+  const populations = value?.populations;
+  if (!value || typeof value !== "object" || Array.isArray(value) || !populations || typeof populations !== "object") {
+    return {
+      status: "unknown",
+      reason: "producer_traffic_provenance_absent_external_events_are_not_an_outside_customer_census",
+      historicalBackfill: false,
+    };
+  }
+  return {
+    status: "present",
+    historicalBackfill: false,
+    unattributedIsNotIndependent: value.unattributedIsNotIndependent === true,
+    selfReportedGrantsTrust: false,
+    verifiedInternal: projectPopulation(populations.verifiedInternal),
+    selfReportedOwnerMonitor: projectPopulation(populations.selfReportedOwnerMonitor),
+    scanner: projectPopulation(populations.scanner),
+    crawler: projectPopulation(populations.crawler),
+    unattributedExternal: projectPopulation(populations.unattributedExternal),
+  };
+}
+
+function projectRareOriginPopulations(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {
+      status: "unknown",
+      reason: "producer_origin_split_absent_do_not_read_paid_success_as_outside_demand",
+      historicalBackfill: false,
+    };
+  }
+  return {
+    status: "present",
+    historicalBackfill: false,
+    unattributedIsNotIndependent: value.unattributedIsNotIndependent === true,
+    selfReportedGrantsTrust: false,
+    verifiedInternal: projectPopulation(value.verifiedInternal),
+    selfReportedOwnerMonitor: projectPopulation(value.selfReportedOwnerMonitor),
+    unattributedExternal: projectPopulation(value.unattributedExternal),
+    otherRetained: projectPopulation(value.otherRetained),
+  };
+}
+
 export function projectPublicAggregate(document, meta) {
   if (!isPublicAggregate(document)) fail("public_aggregate_rejected");
   if (claimsRevenue(document)) fail("revenue_claim");
@@ -652,6 +715,8 @@ export function projectPublicAggregate(document, meta) {
     settlementAmountIsRevenue: false,
     settlementClasses: classCounts(settlement.byClass),
     customerPlane: plane,
+    trafficProvenance: projectTrafficProvenance(document.trafficProvenance),
+    rareOriginPopulations: projectRareOriginPopulations(document.durableRareFunnel?.originPopulations),
     usefulnessRemainsUnknown: rare.usefulnessRemainsUnknownWithoutSeparateAuthority === true,
     actorHashIsNotIdentity: rare.actorHashNotIndependentIdentity === true,
     individualJoin: false,
