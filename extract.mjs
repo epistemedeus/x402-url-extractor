@@ -11,6 +11,7 @@ import {
   EXTRACT_TIMEOUT_MS,
   EXTRACT_TEXT_EXCERPT_CHARS,
   READ_MARKDOWN_MAX_CHARS,
+  parseTextExcerptLimit,
   decodeHttpBody,
   classifyHttpStatus,
   buildCapture,
@@ -185,7 +186,12 @@ function identityUrls(requested, res) {
   return { requestedUrl, finalUrl, url: finalUrl };
 }
 
-export async function extract(rawUrl) {
+export async function extract(rawUrl, options = {}) {
+  const excerptLimit = parseTextExcerptLimit(options?.textExcerptLimitChars);
+  if (!excerptLimit.ok) {
+    throw Object.assign(new Error(excerptLimit.error), { code: "invalid_excerpt_limit" });
+  }
+  const textExcerptLimitChars = excerptLimit.value;
   const u = assertPublicHttpUrl(rawUrl);
   const fetched = await fetchWithGuards(u.href);
   const { res, html } = fetched;
@@ -197,7 +203,7 @@ export async function extract(rawUrl) {
   const canonical = (html.match(/<link\b[^>]*rel\s*=\s*["']canonical["'][^>]*href\s*=\s*["']([^"']+)["']/i) || [])[1] || null;
   const ids = identityUrls(u.href, res);
   const classified = classifyHttpStatus(res.status);
-  const excerpt = textExcerpt(html);
+  const excerpt = textExcerpt(html, textExcerptLimitChars);
   const textTruncated = excerpt.textTruncated || fetched.bodyTruncated;
 
   return {
@@ -228,7 +234,7 @@ export async function extract(rawUrl) {
       schemaTypes: ld.flatMap(b => [].concat(b?.['@type'] || (Array.isArray(b?.['@graph']) ? b['@graph'].map(g => g?.['@type']) : []) || [])).filter(Boolean),
     },
     capture: buildCapture({
-      textExcerptLimitChars: EXTRACT_TEXT_EXCERPT_CHARS,
+      textExcerptLimitChars,
       markdownLimitChars: null,
       bodyBytes: fetched.bytes,
       bodyTruncated: fetched.bodyTruncated,

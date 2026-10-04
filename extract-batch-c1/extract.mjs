@@ -4,6 +4,8 @@
  * perform network I/O — callers supply HTML via the batch transport.
  */
 
+import { EXTRACT_TEXT_EXCERPT_CHARS, parseTextExcerptLimit } from "../extract-capture.mjs";
+
 function decodeEntities(s = "") {
   return s
     .replace(/&amp;/g, "&")
@@ -64,7 +66,7 @@ function headings(html) {
   return { h1: grab("h1"), h2: grab("h2") };
 }
 
-function textExcerpt(html, max = 1200) {
+function textExcerpt(html, max = EXTRACT_TEXT_EXCERPT_CHARS) {
   let body = (html.match(/<body\b[^>]*>([\s\S]*)<\/body>/i) || [, html])[1];
   body = body
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
@@ -119,7 +121,13 @@ export function normalizeRequirement(requirement) {
       code: "invalid_requirement",
     });
   }
-  return { fields: [...new Set(fields)] };
+  const normalized = { fields: [...new Set(fields)] };
+  if (requirement && Object.prototype.hasOwnProperty.call(requirement, "textExcerptLimitChars")) {
+    const parsed = parseTextExcerptLimit(requirement.textExcerptLimitChars);
+    if (!parsed.ok) throw new Error(parsed.error);
+    normalized.textExcerptLimitChars = parsed.value;
+  }
+  return normalized;
 }
 
 /**
@@ -141,7 +149,8 @@ export function extractStructured(html, opts = {}) {
       /<link\b[^>]*rel\s*=\s*["']canonical["'][^>]*href\s*=\s*["']([^"']+)["']/i,
     ) || [])[1] || null;
 
-  const excerpt = textExcerpt(html || "");
+  const excerptLimit = requirement.textExcerptLimitChars ?? EXTRACT_TEXT_EXCERPT_CHARS;
+  const excerpt = textExcerpt(html || "", excerptLimit);
   const full = {
     title,
     description: meta.description || og["og:description"] || tw["twitter:description"] || null,

@@ -8,6 +8,11 @@ import { declareDiscoveryContract } from "./discovery-contract.mjs";
 import { decodeReplayPayment } from "./idempotency-replay.mjs";
 import { planJob, runBatch } from "./extract-batch-c1/index.mjs";
 import { ALL_FIELDS, normalizeRequirement } from "./extract-batch-c1/extract.mjs";
+import {
+  EXTRACT_TEXT_EXCERPT_CHARS,
+  EXTRACT_TEXT_EXCERPT_MAX_CHARS,
+  parseTextExcerptLimit,
+} from "./extract-capture.mjs";
 import { publicFetch } from "./extract-batch-c1/public-fetch.mjs";
 import { assertPublicHttpUrl } from "./extract-batch-c1/url-guard.mjs";
 import {
@@ -51,7 +56,29 @@ export const EXTRACT_BATCH_READ_ONLY_POST = Object.freeze({
   path: EXTRACT_BATCH_PATH,
 });
 
-const ALLOWED_BODY_KEYS = new Set(["urls", "fields"]);
+const ALLOWED_BODY_KEYS = new Set(["urls", "fields", "textExcerptLimitChars"]);
+
+/**
+ * Largest excerpt that cannot blow the batch response ceiling after fetch.
+ * Worst-case UTF-8 is 4 bytes per character. 48 KiB stays reserved for the
+ * envelope and structured fields. The default 1,200 still fits five URLs.
+ * Single-URL /extract may go up to EXTRACT_TEXT_EXCERPT_MAX_CHARS because
+ * that route does not use this 128 KiB batch ceiling.
+ */
+export function maxAdmittedBatchExcerptChars(urlCount) {
+  const count = Number(urlCount);
+  if (!Number.isInteger(count) || count < 1 || count > EXTRACT_BATCH_MAX_URLS) {
+    throw new ExtractBatchInputError(`urls must be an array of 1 to ${EXTRACT_BATCH_MAX_URLS} public HTTPS URLs`);
+  }
+  const reserve = 48 * 1024;
+  const room = EXTRACT_BATCH_MAX_RESPONSE_BYTES - reserve;
+  const perUrl = Math.floor(room / count / 4);
+  const ceiling = Math.min(EXTRACT_TEXT_EXCERPT_MAX_CHARS, perUrl);
+  if (ceiling < EXTRACT_TEXT_EXCERPT_CHARS) {
+    throw new Error("batch response ceiling cannot admit the default excerpt");
+  }
+  return ceiling;
+}
 const inProcessJobs = new Map();
 
 export class ExtractBatchInputError extends Error {
@@ -98,9 +125,22 @@ export function normalizeExtractBatchInput(body) {
   } catch (error) {
     throw new ExtractBatchInputError(error.message || "invalid fields");
   }
+  let textExcerptLimitChars;
+  if (Object.prototype.hasOwnProperty.call(body, "textExcerptLimitChars")) {
+    const parsed = parseTextExcerptLimit(body.textExcerptLimitChars);
+    if (!parsed.ok) throw new ExtractBatchInputError(parsed.error);
+    const ceiling = maxAdmittedBatchExcerptChars(urls.length);
+    if (parsed.value > ceiling) {
+      throw new ExtractBatchInputError(
+        `textExcerptLimitChars exceeds ${ceiling} for ${urls.length} URL(s) under the ${EXTRACT_BATCH_MAX_RESPONSE_BYTES}-byte batch response ceiling`,
+      );
+    }
+    textExcerptLimitChars = parsed.value;
+  }
   return Object.freeze({
     urls: Object.freeze(urls),
     fields: Object.freeze([...requirement.fields]),
+    ...(textExcerptLimitChars !== undefined ? { textExcerptLimitChars } : {}),
   });
 }
 
@@ -147,6 +187,7 @@ export function canonicalExtractBatchBody(input) {
   const normalized = input?.urls ? input : normalizeExtractBatchInput(input);
   const body = { urls: [...normalized.urls] };
   if (normalized.fields) body.fields = [...normalized.fields];
+  if (normalized.textExcerptLimitChars !== undefined) body.textExcerptLimitChars = normalized.textExcerptLimitChars;
   return Object.freeze(body);
 }
 
@@ -218,6 +259,12 @@ export function extractBatchInputSchema() {
         uniqueItems: true,
         items: { type: "string", enum: [...ALL_FIELDS] },
         description: "Optional bounded subset of structured extraction fields.",
+      },
+      textExcerptLimitChars: {
+        type: "integer",
+        minimum: 1,
+        maximum: EXTRACT_TEXT_EXCERPT_MAX_CHARS,
+        description: "Optional per-item text excerpt budget. Omitted requests keep 1200. The batch response ceiling can admit fewer characters as the URL count grows. Rejected before fetch. Does not promise rendered text.",
       },
     },
   };
@@ -381,7 +428,12 @@ export async function executeExtractBatch({
     const job = planJob({
       jobId,
       sources: [...normalized.urls],
-      requirement: { fields: [...normalized.fields] },
+      requirement: {
+        fields: [...normalized.fields],
+        ...(normalized.textExcerptLimitChars !== undefined
+          ? { textExcerptLimitChars: normalized.textExcerptLimitChars }
+          : {}),
+      },
       checkpointPath: extractBatchCheckpointPath(dataDir, jobId),
       allowLive: true,
       retryUnknown: false,

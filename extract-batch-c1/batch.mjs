@@ -3,7 +3,7 @@ import { extractStructured, normalizeRequirement } from "./extract.mjs";
 import { loadSource } from "./transport.mjs";
 import { normalizeSourceKey } from "./url-guard.mjs";
 import { publicFetch } from "./public-fetch.mjs";
-import { classifyHttpStatus, buildCapture } from "../extract-capture.mjs";
+import { classifyHttpStatus, buildCapture, EXTRACT_TEXT_EXCERPT_CHARS } from "../extract-capture.mjs";
 
 const DEFAULT_COST = Object.freeze({
   maxRequests: 20,
@@ -307,9 +307,12 @@ function applyExtractedItem(item, loaded, job) {
   item.requirement = extracted.requirement;
   item.httpStatus = extracted.httpStatus ?? loaded.httpStatus ?? null;
   item.finalUrl = extracted.url || loaded.finalUrl || null;
+  const excerptLimit = job.config.requirement.fields.includes("text")
+    ? (job.config.requirement.textExcerptLimitChars ?? EXTRACT_TEXT_EXCERPT_CHARS)
+    : null;
   item.provenance = { ...item.provenance, capture: buildCapture({
     maxBodyBytes: loaded.provenance?.maxBodyBytes ?? job.costParameters.maxBytesPerItem,
-    textExcerptLimitChars: job.config.requirement.fields.includes("text") ? 1200 : null,
+    textExcerptLimitChars: excerptLimit,
     bodyBytes: loaded.bytes, bodyTruncated: loaded.bodyTruncated,
     textTruncated: extracted.textTruncated || loaded.bodyTruncated,
     charset: loaded.provenance?.charset || "utf-8",
@@ -322,7 +325,9 @@ function applyExtractedItem(item, loaded, job) {
   } else if (loaded.bodyTruncated || extracted.textTruncated) {
     item.status = "partial";
     const code = loaded.bodyTruncated ? "body_truncated" : "text_truncated";
-    const message = loaded.bodyTruncated ? "source body truncated at capture byte limit" : "text excerpt truncated at 1200 characters";
+    const message = loaded.bodyTruncated
+      ? "source body truncated at capture byte limit"
+      : `text excerpt truncated at ${excerptLimit} characters`;
     item.notes = [...item.notes, { field: loaded.bodyTruncated ? "body" : "text", error: message }];
     item.error = { code, message };
   } else {
