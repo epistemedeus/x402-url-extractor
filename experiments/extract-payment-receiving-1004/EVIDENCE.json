@@ -1,0 +1,244 @@
+{
+  "schema": "samedaydesk.extract-payment-receiving.v1",
+  "task": "ROOT-1004-EXTRACT-PAYMENT-RECEIVING",
+  "receivedAt": "2026-10-04T17:45:00.000Z",
+  "recognizedRevenue": false,
+  "recognizedRevenueAtomic": "0",
+  "completeCensus": false,
+  "independentCustomer": false,
+  "rollingWindowsAreDeltas": false,
+  "provenance": {
+    "trafficSession": "0e57e6c7-96a3-4e65-be3a-182428783f7e",
+    "trafficSessionHostEnrollment": "cloud-f",
+    "trafficSessionHostname": "cursor",
+    "trafficSessionEndedAt": "2026-10-04T15:39:39.487065437Z",
+    "trafficSessionModel": "grok-4.7",
+    "trafficSessionEffort": "xhigh",
+    "trafficExport": "c3f04b2328cac074e99742cf16b23a4c471bc2ca",
+    "trafficExportIsAncestorOfHead": true,
+    "continuation": "saved-export",
+    "continuationReason": "Session files match the traffic job and are terminal. The export is already merged at e3815c49715421ae8b3e53c8ba5410d4a16ac82a. The new cut is later than that session, so this receiving continues from the export in one new session instead of forking the finished process.",
+    "thisSession": "1cc2c2ac-912f-4a3e-88a2-6e9595c37c1a",
+    "thisModel": "grok-4.7",
+    "thisEffort": "xhigh"
+  },
+  "admittedCut": {
+    "source": "pilot 10a54899ac5614f4890924a2e05125022d024f7b overview/research/phase-20261001/traffic-provenance-1004/ROOT-ADJUDICATION.md",
+    "rawBody": "not-acquired",
+    "rawBodyLocation": "/home/ubuntu/root-traffic-receiving-1004.uPkVHI/public-demand.json on cloud-d",
+    "rawBodyBytes": 44742,
+    "generatedAt": "2026-10-04T17:16:31.688Z",
+    "requestedWindowStart": "2026-10-03T17:16:31.688Z",
+    "requestedWindowEnd": "2026-10-04T17:16:31.688Z",
+    "streamCoverage": "unknown_for_full_window",
+    "rareCoverage": "unknown_for_full_window",
+    "paidSuccessByRoute": {
+      "/commerce/seller-integrity-audit": 1,
+      "/extract": 2
+    },
+    "paidSuccessByClass": { "unclassified": 3 },
+    "repeatPaidSuccessActors": 1,
+    "independentPaidSuccessActors": 0,
+    "repeatIndependentPaidSuccessActors": 0,
+    "unattributedExternalEvents": 3046,
+    "unattributedExternalActors": 338,
+    "constructedRequestEvents": 230,
+    "constructedRequestActors": 69,
+    "rarePaidSuccessEvents": 3,
+    "sellerDiagnosticObservations": 0
+  },
+  "laterRead": {
+    "url": "https://agents.samedaydesk.com/v0/commerce-demand.json?days=1",
+    "fetchedAt": "2026-10-04T17:34:41.039Z",
+    "httpStatus": 200,
+    "bytes": 44744,
+    "sha256": "d3514e5a19241bb55d40bbb22fb281dc163a97410710dc8f23959ec2bcfdab7e",
+    "file": "later-public-demand.json",
+    "notTheAdmittedCut": true,
+    "paidSuccessByRoute": {
+      "/commerce/seller-integrity-audit": 1,
+      "/extract": 2
+    },
+    "paidSuccessByClass": { "unclassified": 3 },
+    "paidSuccessActors": 2,
+    "repeatPaidSuccessActors": 1,
+    "independentPaidSuccessActors": 0,
+    "repeatIndependentPaidSuccessActors": 0,
+    "settlementReferenceEligiblePaidSuccesses": 3,
+    "settlementReferencePaidSuccesses": 3,
+    "distinctSettlementReferences": 3,
+    "missingSettlementReferencePaidSuccesses": 0,
+    "replaySuccessEvents": 0,
+    "paidSuccessByProtocol": { "x402": 3 },
+    "paidSuccessByDiscoverySource": {
+      "declared-receipt-referral": 1,
+      "direct-or-unattributed": 2
+    },
+    "credentialAttemptByRoute": {
+      "/commerce/seller-integrity-audit": 1,
+      "/extract": 2
+    },
+    "agentChallengeConvertedPaidSuccesses": 1,
+    "agentChallengeConvertedBySource": { "declared-receipt-referral": 1 },
+    "sellerTransactionPlane": {
+      "paidSuccess": 1,
+      "replayNotPromoted": 0,
+      "failedOrRejected": 2,
+      "settlementReferencePresent": 1,
+      "settlementReferenceAbsent": 0
+    },
+    "sellerDiagnosticObservations": 0,
+    "sellerUsefulness": "unknown",
+    "rarePaidSuccessEvents": 3,
+    "rarePaidSuccessActors": 2,
+    "rareCoverage": "unknown_for_full_window",
+    "rareCaptureContinuityProven": false,
+    "rareRotatedFilePresent": false,
+    "streamCoverage": "unknown_for_full_window",
+    "streamRequestedWindowComplete": false,
+    "verifiedInternalPaidSuccesses": 0,
+    "selfReportedOwnerMonitorPaidSuccesses": 0,
+    "unattributedExternalPaidSuccesses": 3,
+    "ledger": {
+      "reconciledSettlements": 46,
+      "amountAtomic": "1047000",
+      "extractSettlements": 20,
+      "extractAmountAtomic": "190000",
+      "sellerSettlements": 7,
+      "sellerAmountAtomic": "70000",
+      "lastRunAt": "2026-10-04T17:36:26.768Z"
+    },
+    "priorLedger": {
+      "source": "pilot COMMERCE-DEMAND-OBSERVATION-20261004.json and SELLER-SETTLEMENT-OBSERVATION-20261003.json",
+      "at": "2026-10-04T13:00:47.543Z",
+      "reconciledSettlements": 44,
+      "amountAtomic": "1037000"
+    }
+  },
+  "chainJoin": {
+    "method": "Public Blockscout reads of USDC Transfer logs to the documented treasury, then per-transaction confirmation. No Railway volume read and no purchase.",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "treasury": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "continuity": "sha256 of the lowercased Transfer from address, first 12 hex characters. This is not the server HMAC paymentActor and not a customer name.",
+    "selector": "0xe3ee160e",
+    "selectorName": "transferWithAuthorization",
+    "extract": [
+      {
+        "label": "extract-a",
+        "timestamp": "2026-10-04T14:16:09.000Z",
+        "settlementReference": "0x3e3dee90f56fb88f9f1ec334dd4b78b119ab2a408c8181c273e8e22685d12090",
+        "amountAtomic": "5000",
+        "status": "success",
+        "chainFromSha256_12": "f4d5c65ea76d",
+        "replay": false
+      },
+      {
+        "label": "extract-b",
+        "timestamp": "2026-10-04T15:30:37.000Z",
+        "settlementReference": "0x104467b62ad4edff622eb0f008e9d127b59c75075947ce3962dbf7c4d622887f",
+        "amountAtomic": "5000",
+        "status": "success",
+        "chainFromSha256_12": "f4d5c65ea76d",
+        "replay": false
+      }
+    ],
+    "knownSeller": {
+      "timestamp": "2026-10-04T02:53:13.000Z",
+      "matchesPilotBlockTimestamp": "2026-10-04T02:53:13.000Z",
+      "settlementReference": "0x1d9f6315c0c0c2c9c5976dc8fa567ca0bb226e360cd3d3c64814f4d8da176b37",
+      "amountAtomic": "10000",
+      "route": "/commerce/seller-integrity-audit",
+      "chainFromSha256_12": "761193f9b887",
+      "alreadyInPriorLedger": true
+    },
+    "augustExtractCohortChainFromSha256_12": "41a1a825bcef",
+    "samePayerAsExtractPair": false,
+    "newUsdcInflowsAfterSeller": 2,
+    "ledgerDeltaSettlements": 2,
+    "ledgerDeltaAmountAtomic": "10000"
+  },
+  "attempts": [
+    {
+      "label": "extract-a",
+      "route": "/extract",
+      "commerceEventId": null,
+      "commerceEventIdReason": "private journal not read; this host has no Railway CLI session",
+      "timestamp": "2026-10-04T14:16:09.000Z",
+      "timestampSource": "Base block timestamp of the only new 5000-atomic USDC transferWithAuthorization in the interval opened after the 13:00 cut",
+      "settlementReference": "0x3e3dee90f56fb88f9f1ec334dd4b78b119ab2a408c8181c273e8e22685d12090",
+      "amountAtomic": "5000",
+      "replay": false,
+      "httpEvent": "retained paid_success on /extract; one of two direct-or-unattributed successes",
+      "canonicalTransfer": "confirmed USDC transferWithAuthorization to treasury",
+      "bankedRecognizedRevenue": false,
+      "paymentClass": "unclassified",
+      "origin": "unattributed-external",
+      "discoverySource": "direct-or-unattributed",
+      "duplicateOfPriorLedgerEntry": false,
+      "duplicateOfSeller": false,
+      "duplicateOfAugustCohort": false
+    },
+    {
+      "label": "extract-b",
+      "route": "/extract",
+      "commerceEventId": null,
+      "commerceEventIdReason": "private journal not read; this host has no Railway CLI session",
+      "timestamp": "2026-10-04T15:30:37.000Z",
+      "timestampSource": "Base block timestamp of the second new 5000-atomic transfer",
+      "settlementReference": "0x104467b62ad4edff622eb0f008e9d127b59c75075947ce3962dbf7c4d622887f",
+      "amountAtomic": "5000",
+      "replay": false,
+      "httpEvent": "retained paid_success on /extract; same chain payer as extract-a",
+      "canonicalTransfer": "confirmed USDC transferWithAuthorization to treasury",
+      "bankedRecognizedRevenue": false,
+      "paymentClass": "unclassified",
+      "origin": "unattributed-external",
+      "discoverySource": "direct-or-unattributed",
+      "duplicateOfPriorLedgerEntry": false,
+      "duplicateOfSeller": false,
+      "duplicateOfAugustCohort": false
+    }
+  ],
+  "delivery": {
+    "owningContract": "GET /extract http-delivery-evidence",
+    "body": "not_read",
+    "reason": "Response bytes, if retained, are in the Railway volume file http-response-validation.v1.ndjson. commerce-demand.json does not publish them. No second purchase was made.",
+    "usefulness": "unknown",
+    "http200IsNotUsefulness": true,
+    "requestedUrl": "not_in_public_aggregate",
+    "queryValuesRetainedInCommerceEvent": false
+  },
+  "repeatSemantics": {
+    "paidSuccessActors": 2,
+    "repeatPaidSuccessActors": 1,
+    "sellerPlanePaidSuccess": 1,
+    "explanation": "repeatPaidSuccessActors counts external paid_success continuity keys with count greater than 1 across every route. The seller plane counts only /commerce/seller-integrity-audit. The two extract transfers share one chain from address and the seller transfer uses another, which is the only split that yields two actors and one repeat while the seller plane stays at one.",
+    "sellerHistoricalSamePayerOutsideWindow": true,
+    "sellerHistoricalNote": "The seller chain payer also settled 10000 atomic USDC on 2026-10-01 and 2026-09-28. Those are outside this requested window, so the windowed seller plane stays at one."
+  },
+  "attribution": {
+    "verifiedInternalPaidSuccesses": 0,
+    "ownerMonitorPaidSuccesses": 0,
+    "allowlistClass": "unclassified",
+    "absentInternalMarkerProvesOutsideBuyer": false,
+    "admittedJobMatch": false,
+    "trafficJobOverlap": "ROOT-SOL-TRAFFIC-PROVENANCE-100430 ran 15:17:16Z through 15:39:39Z and recorded no purchase. The 15:30:37Z transfer falls in that clock interval. The session transcript does not contain either settlement reference. Timing is not identity.",
+    "changedIndexAndSolMcpStartedAfterBothTransfers": true
+  },
+  "ledgerCorrectionForRoot": {
+    "applyHere": false,
+    "recognizedBankedNetUsdc": "10.955",
+    "changeRecognizedBankedNet": false,
+    "doNotIncrementExperiment": "extract-unclassified-repeat-settlements-2026-08-26",
+    "reason": "That August cohort is a different chain payer.",
+    "proposedObservation": {
+      "id": "extract-unclassified-pair-2026-10-04",
+      "class": "conditional-incoming-settlement-observation",
+      "recognized": false,
+      "externalRevenueUsdc": 0,
+      "unclassifiedSettledUsdc": 0.01,
+      "settlementCount": 2,
+      "counterpartyControl": "unknown"
+    }
+  }
+}
