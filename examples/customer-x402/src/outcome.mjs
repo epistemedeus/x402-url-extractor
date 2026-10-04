@@ -41,6 +41,7 @@ export function classifyPaidResponse({
     outputDelivery: output.delivery ?? null,
     outputReason: output.reason ?? null,
     outputReport: output.report,
+    task: output.task ?? null,
     retainedBody: redactValue(body),
     bodyDigest: authorization.bodyDigest ?? null,
     authorizedAmountCapAtomic: authorization.amountCapAtomic,
@@ -75,10 +76,19 @@ export function classifyPaidResponse({
         evidence,
       };
     }
-    if (output.valid && output.delivery === "partial") {
+    if (output.valid && (output.delivery === "partial" || output.delivery === "unavailable")) {
       return {
         outcome: OUTCOMES.PARTIAL_DELIVERED,
-        message: "paid bounded batch attempt is structurally valid with explicit failed or partial rows; not a refund or automatic retry",
+        message: batch
+          ? "paid bounded batch attempt is structurally valid with explicit failed or partial rows; not a refund or automatic retry"
+          : (output.reason || "explicit partial result; not an automatic repurchase"),
+        evidence,
+      };
+    }
+    if (output.valid && (output.delivery === "metadata_sufficient" || output.delivery === "excerpt_sufficient")) {
+      return {
+        outcome: OUTCOMES.VALID_DELIVERED,
+        message: output.reason,
         evidence,
       };
     }

@@ -150,6 +150,37 @@ test("redirect preserves requested URL identity and observed final URL", async (
   }
 });
 
+test("a caller excerpt budget above the default stays inside the read ceiling and is rejected before fetch", async () => {
+  let fetches = 0;
+  const known = "later-discussion-marker";
+  const html = `<html><head><title>Issue</title></head><body><article>${"intro ".repeat(400)}</article><p>${known}</p></body></html>`;
+  const restore = installExtractFetch({
+    "https://budget.example/": () => {
+      fetches += 1;
+      return htmlResponse(html, { url: "https://budget.example/" });
+    },
+  });
+  try {
+    await assert.rejects(
+      () => extract("https://budget.example/", { textExcerptLimitChars: 40001 }),
+      /textExcerptLimitChars/,
+    );
+    assert.equal(fetches, 0);
+    const raised = await extract("https://budget.example/", { textExcerptLimitChars: 8000 });
+    assert.equal(extractMcpOutputSchema.safeParse(raised).success, true);
+    assert.equal(raised.capture.textExcerptLimitChars, 8000);
+    assert.equal(raised.capture.textTruncated, false);
+    assert.equal(raised.text.includes(known), true);
+    const unchanged = await extract("https://budget.example/");
+    assert.equal(unchanged.capture.textExcerptLimitChars, EXTRACT_TEXT_EXCERPT_CHARS);
+    assert.equal(unchanged.capture.textTruncated, true);
+    assert.equal(unchanged.text.includes(known), false);
+    assert.deepEqual(Object.keys(unchanged).sort(), Object.keys(raised).sort());
+  } finally {
+    restore();
+  }
+});
+
 test("text excerpt and oversized bodies are labeled truncated rather than complete", async () => {
   const restore = installExtractFetch({
     "https://trunc.example/": htmlResponse(`<html><body>${"word ".repeat(800)}</body></html>`, { url: "https://trunc.example/" }),

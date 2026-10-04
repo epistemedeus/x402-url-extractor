@@ -1,5 +1,7 @@
 import { getAddress } from "viem";
 
+import { parseTextExcerptLimit } from "../../../extract-capture.mjs";
+
 import {
   admitExtractBatchBody,
   admitPublicHttpOrHttpsUrl,
@@ -76,10 +78,28 @@ function normalizeRequiredOutput(requiredOutput, { batch }) {
   if (!Number.isSafeInteger(maxResponseBytes) || maxResponseBytes < 1 || maxResponseBytes > ceiling) {
     fail(`maxResponseBytes must be an integer from 1 to ${ceiling}`, "requiredOutput");
   }
+  let task = null;
+  if (requiredOutput.task != null) {
+    const kind = typeof requiredOutput.task === "string"
+      ? requiredOutput.task
+      : requiredOutput.task.kind || requiredOutput.task.predicate;
+    if (!["metadata", "excerpt", "markdown"].includes(kind)) {
+      fail("task.kind must be metadata, excerpt, or markdown", "requiredOutput");
+    }
+    const requiredChars = typeof requiredOutput.task === "object" ? requiredOutput.task.requiredChars : undefined;
+    if (requiredChars !== undefined && (!Number.isInteger(requiredChars) || requiredChars < 1)) {
+      fail("task.requiredChars must be a positive integer", "requiredOutput");
+    }
+    task = Object.freeze({
+      kind,
+      ...(Number.isInteger(requiredChars) ? { requiredChars } : {}),
+    });
+  }
   return Object.freeze({
     mediaType: "application/json",
     requiredFields: Object.freeze([...requiredOutput.requiredFields].map(String)),
     maxResponseBytes,
+    ...(task ? { task } : {}),
   });
 }
 
@@ -98,6 +118,12 @@ function normalizeGetAuthorization(input) {
   } catch (error) {
     if (error instanceof BatchAdmissionError) fail(error.message, "url");
     throw error;
+  }
+  const limits = url.searchParams.getAll("textExcerptLimitChars");
+  if (limits.length > 1) fail("textExcerptLimitChars must be supplied exactly once", "textExcerptLimitChars");
+  if (limits.length === 1) {
+    const parsed = parseTextExcerptLimit(limits[0]);
+    if (!parsed.ok) fail(parsed.error, "textExcerptLimitChars");
   }
   return {
     method,

@@ -1,41 +1,54 @@
 import { validateOutput } from "agent-payment-policy";
 
+import { decideExtractTask } from "./extract-task.mjs";
+
+function withTask(result, task) {
+  return { ...result, task };
+}
+
 export function validateBuyerOutput(body, requiredOutput) {
+  const task = decideExtractTask(body, requiredOutput?.task ?? null);
+  if (task.delivery === "invalid") {
+    return withTask({
+      valid: false,
+      delivery: "invalid",
+      reason: task.nextAction.statement,
+      report: null,
+    }, task);
+  }
+  if (body?.ok !== true) {
+    return withTask({
+      valid: task.delivery === "unavailable",
+      delivery: task.delivery === "unavailable" ? "unavailable" : "invalid",
+      reason: task.nextAction.statement,
+      report: null,
+    }, task);
+  }
   try {
     const report = validateOutput(body, {
       mediaType: requiredOutput.mediaType || "application/json",
       requiredFields: requiredOutput.requiredFields,
       maxResponseBytes: requiredOutput.maxResponseBytes,
     });
-    if (body?.ok !== true) {
-      return {
-        valid: false,
-        delivery: "invalid",
-        reason: "buyer-required ok literal is not true",
-        report,
-      };
-    }
     for (const field of requiredOutput.requiredFields) {
       const value = field.split(".").reduce((current, key) => current?.[key], body);
       if (value === null || value === undefined) throw new Error(`required field is null or missing: ${field}`);
     }
-    const sourceStatus = Number(body.status);
-    const sourceRefused = body.sourceOk === false
-      || (Number.isInteger(sourceStatus) && (sourceStatus < 200 || sourceStatus >= 300));
-    if (sourceRefused) {
-      return {
+    if (task.delivery === "source_refused" || task.delivery === "partial" || task.delivery === "metadata_sufficient" || task.delivery === "excerpt_sufficient") {
+      return withTask({
         valid: true,
-        delivery: "source_refused",
-        reason: body.error?.message || `source HTTP ${sourceStatus}`,
+        delivery: task.delivery,
+        reason: task.nextAction.statement,
         report,
-      };
+      }, task);
     }
-    return { valid: true, delivery: "useful", report };
+    return withTask({ valid: true, delivery: "useful", report }, task);
   } catch (error) {
-    return {
+    return withTask({
       valid: false,
+      delivery: "invalid",
       reason: error.message,
       report: null,
-    };
+    }, task);
   }
 }

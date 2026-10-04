@@ -1,6 +1,7 @@
 /** Test support for unpaid discovery, not a runtime router or payment client. */
 import assert from "node:assert/strict";
 import { toJsonSchemaCompat } from "@modelcontextprotocol/sdk/server/zod-json-schema-compat.js";
+import { EXTRACT_TEXT_EXCERPT_MAX_CHARS } from "./extract-capture.mjs";
 import { extractMcpOutputSchema } from "./extract.mjs";
 import { extractBatchInputSchema, extractBatchMcpOutputSchema } from "./extract-batch.mjs";
 
@@ -27,7 +28,15 @@ export function assertExtractDiscoveryInventory(tools) {
   delete batchInput.properties.fields.uniqueItems;
   const expected = {
     extract: {
-      inputSchema: { type: "object", properties: { url: { type: "string" } }, required: ["url"], additionalProperties: false },
+      inputSchema: {
+        type: "object",
+        properties: {
+          url: { type: "string" },
+          textExcerptLimitChars: { type: "integer", minimum: 1, maximum: EXTRACT_TEXT_EXCERPT_MAX_CHARS },
+        },
+        required: ["url"],
+        additionalProperties: false,
+      },
       outputSchema: toJsonSchemaCompat(extractMcpOutputSchema, { strictUnions: true, pipeStrategy: "output" }),
     },
     extract_batch: {

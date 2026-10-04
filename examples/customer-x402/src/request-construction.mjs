@@ -1,3 +1,4 @@
+import { parseTextExcerptLimit } from "../../../extract-capture.mjs";
 import { AuthorizationRefusal } from "./authorization.mjs";
 import { admitPublicHttpOrHttpsUrl, BatchAdmissionError } from "./batch-admission.mjs";
 import {
@@ -45,7 +46,7 @@ function freezeConstruction(value) {
  * Bind GET /extract to a caller page URL. Bare /extract is discovery, not this
  * bound resource. Preserves the caller string; does not add a trailing slash.
  */
-export function bindGetExtractResourceUrl(pageUrl, { origin = LIVE_ORIGIN } = {}) {
+export function bindGetExtractResourceUrl(pageUrl, { origin = LIVE_ORIGIN, textExcerptLimitChars } = {}) {
   let admitted;
   try {
     admitted = admitPublicHttpOrHttpsUrl(pageUrl, { field: "url", httpsOnly: false });
@@ -53,7 +54,13 @@ export function bindGetExtractResourceUrl(pageUrl, { origin = LIVE_ORIGIN } = {}
     if (error instanceof BatchAdmissionError) fail(error.message, error.field || "url");
     throw error;
   }
-  return `${origin}${LIVE_EXTRACT_PATH}?url=${encodeURIComponent(admitted)}`;
+  let budget = "";
+  if (textExcerptLimitChars !== undefined) {
+    const parsed = parseTextExcerptLimit(textExcerptLimitChars);
+    if (!parsed.ok) fail(parsed.error, "textExcerptLimitChars");
+    budget = `&textExcerptLimitChars=${parsed.value}`;
+  }
+  return `${origin}${LIVE_EXTRACT_PATH}?url=${encodeURIComponent(admitted)}${budget}`;
 }
 
 /**
@@ -111,6 +118,25 @@ export function classifyRequestConstruction(requestUrl, { method = "GET", body =
         reason: error instanceof BatchAdmissionError
           ? error.message
           : "url must be a public HTTP or HTTPS URL",
+        boundUrl: url.toString(),
+      });
+    }
+    const limits = url.searchParams.getAll("textExcerptLimitChars");
+    if (limits.length > 1) {
+      return freezeConstruction({
+        kind: "invalid_input",
+        purchaseReady: false,
+        missing: ["textExcerptLimitChars"],
+        reason: "textExcerptLimitChars must be supplied exactly once",
+        boundUrl: url.toString(),
+      });
+    }
+    if (limits.length === 1 && !parseTextExcerptLimit(limits[0]).ok) {
+      return freezeConstruction({
+        kind: "invalid_input",
+        purchaseReady: false,
+        missing: ["textExcerptLimitChars"],
+        reason: parseTextExcerptLimit(limits[0]).error,
         boundUrl: url.toString(),
       });
     }
