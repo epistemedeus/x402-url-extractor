@@ -188,6 +188,30 @@ test("mounted extract budget is rejected before payment and does not silently bu
   const facilitator = await startFakeFacilitator();
   const merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url, fetchLog });
   try {
+    const validTarget = `${merchant.base}/extract?url=${encodeURIComponent("https://doc.example/")}`;
+    const preflight = decodePaymentRequired(await fetch(validTarget));
+    const beforeAdmissionPayment = testPayment(preflight, "extract_invalid_admission");
+    const invalidTargets = [
+      `${validTarget}&textExcerptLimitChars=0`,
+      `${validTarget}&textExcerptLimitChars=1&textExcerptLimitChars=2`,
+      `${merchant.base}/extract?url=not-a-url`,
+      `${merchant.base}/extract?url=${encodeURIComponent("https://doc.example/")}&url=${encodeURIComponent("https://short.example/")}`,
+    ];
+    for (const target of invalidTargets) {
+      const responses = await Promise.all([0, 1].map(() => fetch(target, {
+        headers: { "payment-signature": beforeAdmissionPayment },
+      })));
+      for (const response of responses) {
+        const body = await response.json();
+        assert.equal(response.status, 400, JSON.stringify(body));
+        assert.equal(body.charged, false);
+      }
+      await assert.rejects(() => readFile(path.join(dataDir, "idempotency-replay.json")), { code: "ENOENT" });
+    }
+    assert.equal(facilitator.calls.verify, 0);
+    assert.equal(facilitator.calls.settle, 0);
+    assert.equal(await readFile(fetchLog, "utf8"), "");
+
     const badValues = ["0", "40001", "nope", "1.2"];
     for (const value of badValues) {
       const bad = await fetch(`${merchant.base}/extract?url=${encodeURIComponent("https://doc.example/")}&textExcerptLimitChars=${value}`);
@@ -269,14 +293,15 @@ test("mounted extract budget is rejected before payment and does not silently bu
     assert.equal(deniedBody.sourceOk, false);
     assert.equal(deniedBody.error.code, "http_403");
 
-    const slowChallenge = decodePaymentRequired(await fetch(`${merchant.base}/extract?url=${encodeURIComponent("https://slow.example/")}`));
-    const slow = await fetch(`${merchant.base}/extract?url=${encodeURIComponent("https://slow.example/")}`, {
+    const slowChallenge = decodePaymentRequired(await fetch(`${merchant.base}/extract?url=${encodeURIComponent("https://slow.example/")}&textExcerptLimitChars=8000`));
+    const slow = await fetch(`${merchant.base}/extract?url=${encodeURIComponent("https://slow.example/")}&textExcerptLimitChars=8000`, {
       headers: { "payment-signature": testPayment(slowChallenge, "extract_task_slow") },
     });
     const slowBody = await slow.json();
     assert.equal(slow.status, 200);
     assert.equal(slowBody.ok, false);
     assert.equal(slowBody.error.code, "timeout");
+    assert.equal(slowBody.capture.textExcerptLimitChars, 8000);
 
     const hugeChallenge = decodePaymentRequired(await fetch(`${merchant.base}/extract?url=${encodeURIComponent("https://huge.example/")}`));
     const huge = await fetch(`${merchant.base}/extract?url=${encodeURIComponent("https://huge.example/")}`, {
