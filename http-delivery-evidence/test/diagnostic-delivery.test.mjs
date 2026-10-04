@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, open, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -26,7 +26,7 @@ import {
   openStore,
   recordFromObservedResponse,
 } from "../index.mjs";
-import { receivePaidDiagnostic, receivingExitCode } from "../receive-diagnostic.mjs";
+import { readBoundedDiagnosticReport, receivePaidDiagnostic, receivingExitCode } from "../receive-diagnostic.mjs";
 import { historicalV1Row } from "./helpers.mjs";
 
 bindMerchantHttpDeliveryContracts();
@@ -513,3 +513,63 @@ function runNode(args) {
     });
   });
 }
+
+test("receiver does not relabel unsupported HTTP methods as GET", async () => {
+  const repair = await completedReport("repair_required");
+  for (const method of ["PUT", "DELETE", "PATCH", "", null]) {
+    const received = receivePaidDiagnostic({
+      method,
+      reportBytes: bytesOf(repair),
+      predicate: predicate("repair_required"),
+    });
+    assert.equal(received.accepted, false);
+    assert.equal(received.serverContract.deliveredDiagnostic, false);
+    assert.equal(received.serverContract.deliveryClass, DELIVERY.UNSUPPORTED_TARGET);
+  }
+});
+
+test("diagnostic file receiving reads only the retained byte budget", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "diagnostic-file-bounds-"));
+  const file = path.join(dir, "large.json");
+  const fullLength = 128 * 1024 * 1024;
+  try {
+    const handle = await open(file, "w");
+    try {
+      await handle.write(bytesOf(await completedReport("repair_required")));
+      await handle.truncate(fullLength);
+    } finally {
+      await handle.close();
+    }
+    const loaded = await readBoundedDiagnosticReport(file);
+    assert.equal(loaded.bytes.length, MAX_RESPONSE_BYTES);
+    assert.equal(loaded.byteLength, fullLength);
+    const received = receivePaidDiagnostic({
+      reportBytes: loaded.bytes,
+      responseByteLength: loaded.byteLength,
+      predicate: predicate("repair_required"),
+    });
+    assert.equal(received.accepted, false);
+    assert.equal(received.serverContract.deliveredDiagnostic, false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("cold diagnostic CLI preserves an unsupported method declaration", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "diagnostic-cold-method-"));
+  const file = path.join(dir, "report.json");
+  try {
+    await writeFile(file, JSON.stringify(await completedReport("repair_required")));
+    const received = await runNode([
+      path.join(ROOT, "http-delivery-evidence/receive-diagnostic.mjs"),
+      "--report", file,
+      "--expect", "decision=repair_required",
+      "--target-method", "PUT",
+    ]);
+    assert.equal(received.code, 2);
+    assert.equal(received.json.accepted, false);
+    assert.equal(received.json.serverContract.deliveryClass, DELIVERY.UNSUPPORTED_TARGET);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});

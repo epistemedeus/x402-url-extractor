@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFile, stat } from "node:fs/promises";
+import { open } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
 import { taskDigest } from "../experiments/seller-repair-service-100266/src/intake.mjs";
@@ -147,7 +147,7 @@ export function receivePaidDiagnostic({
 } = {}) {
   bindMerchantHttpDeliveryContracts();
   const settled = settlementView(settlement || { status: "unknown" });
-  const httpMethod = method === "POST" ? "POST" : "GET";
+  const httpMethod = typeof method === "string" ? method.toUpperCase() : "";
   const evaluated = evaluateResponseBytes({
     method: httpMethod,
     resource: RESOURCES.SELLER_INTEGRITY,
@@ -227,12 +227,20 @@ function parseExpect(value) {
   return { path, value: parsed };
 }
 
-async function readBounded(file) {
-  const info = await stat(file);
-  const handle = await readFile(file);
-  const fullLength = info.size;
-  const retained = handle.length > MAX_RESPONSE_BYTES ? handle.subarray(0, MAX_RESPONSE_BYTES) : handle;
-  return { bytes: retained, byteLength: fullLength };
+export async function readBoundedDiagnosticReport(file) {
+  const handle = await open(file, "r");
+  try {
+    const before = await handle.stat();
+    const retained = Buffer.alloc(Math.min(MAX_RESPONSE_BYTES, before.size + 1));
+    const { bytesRead } = await handle.read(retained, 0, retained.length, 0);
+    const after = await handle.stat();
+    return {
+      bytes: retained.subarray(0, bytesRead),
+      byteLength: Math.max(before.size, after.size, bytesRead),
+    };
+  } finally {
+    await handle.close();
+  }
 }
 
 async function main(argv) {
@@ -245,7 +253,7 @@ async function main(argv) {
     process.stderr.write("report_required\n");
     return 2;
   }
-  const loaded = await readBounded(report);
+  const loaded = await readBoundedDiagnosticReport(report);
   const expect = parseExpect(flag(argv, "--expect"));
   const targetOrigin = flag(argv, "--target-origin");
   const targetRoute = flag(argv, "--target-route");
@@ -294,7 +302,7 @@ async function main(argv) {
   const result = receivePaidDiagnostic({
     reportBytes: loaded.bytes,
     responseByteLength: loaded.byteLength,
-    method: method === "POST" ? "POST" : "GET",
+    method,
     merchantHttpStatus: Number(flag(argv, "--merchant-status") || 200),
     predicate,
     settlement,
