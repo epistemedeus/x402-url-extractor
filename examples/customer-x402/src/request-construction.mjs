@@ -1,6 +1,6 @@
-import { parseTextExcerptLimit } from "../../../extract-capture.mjs";
+import { parseTextExcerptLimit } from "../../../extract-excerpt-budget.mjs";
 import { AuthorizationRefusal } from "./authorization.mjs";
-import { admitPublicHttpOrHttpsUrl, BatchAdmissionError } from "./batch-admission.mjs";
+import { admitExtractBatchBody, admitPublicHttpOrHttpsUrl, BatchAdmissionError } from "./batch-admission.mjs";
 import {
   LIVE_EXTRACT_PATH,
   LIVE_LOCKFILE_PATH,
@@ -199,6 +199,17 @@ export function classifyRequestConstruction(requestUrl, { method = "GET", body =
   }
 
   if (url.pathname === "/extract/batch" && methodUpper === "POST") {
+    try {
+      admitExtractBatchBody(parseBody(body));
+    } catch (error) {
+      return freezeConstruction({
+        kind: "invalid_input",
+        purchaseReady: false,
+        missing: [error.field || error.details?.field || "body"],
+        reason: error.message || "invalid batch body",
+        boundUrl: url.toString(),
+      });
+    }
     return freezeConstruction({
       kind: "bound_request",
       purchaseReady: true,

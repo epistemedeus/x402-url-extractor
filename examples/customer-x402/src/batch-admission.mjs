@@ -1,3 +1,5 @@
+import { parseTextExcerptLimit, maxAdmittedBatchExcerptChars } from "../../../extract-excerpt-budget.mjs";
+import { EXTRACT_BATCH_MAX_RESPONSE_BYTES } from "../../../extract-batch-config.mjs";
 import { createHash } from "node:crypto";
 import { isIP } from "node:net";
 
@@ -98,7 +100,7 @@ export function assertPublicHttpsUrl(raw) {
   return new URL(raw).href;
 }
 
-const ALLOWED_BODY_KEYS = new Set(["urls", "fields"]);
+const ALLOWED_BODY_KEYS = new Set(["urls", "fields", "textExcerptLimitChars"]);
 
 /**
  * Pure local admission for POST /extract/batch. Fetching a payment challenge
@@ -135,7 +137,25 @@ export function admitExtractBatchBody(body) {
     }
     fields = Object.freeze([...body.fields]);
   }
-  const bodyRaw = JSON.stringify({ urls: [...urls], fields: [...fields] });
+  let textExcerptLimitChars;
+  const explicitLimit = Object.hasOwn(body, "textExcerptLimitChars");
+  if (explicitLimit) {
+    const parsed = parseTextExcerptLimit(body.textExcerptLimitChars);
+    if (!parsed.ok) throw new BatchAdmissionError(parsed.error, { field: "textExcerptLimitChars" });
+    const ceiling = maxAdmittedBatchExcerptChars(urls.length);
+    if (parsed.value > ceiling) {
+      throw new BatchAdmissionError(
+        `textExcerptLimitChars exceeds ${ceiling} for ${urls.length} URL(s) under the ${EXTRACT_BATCH_MAX_RESPONSE_BYTES}-byte batch response ceiling`,
+        { field: "textExcerptLimitChars" },
+      );
+    }
+    textExcerptLimitChars = parsed.value;
+  }
+  // Historical omitted requests keep their exact canonical JSON and digest.
+  const bodyRaw = JSON.stringify({
+    urls: [...urls], fields: [...fields],
+    ...(explicitLimit ? { textExcerptLimitChars } : {}),
+  });
   const bodyBytes = Buffer.byteLength(bodyRaw);
   if (bodyBytes > BATCH_MAX_REQUEST_JSON_BYTES) {
     throw new BatchAdmissionError(
@@ -146,6 +166,7 @@ export function admitExtractBatchBody(body) {
   return Object.freeze({
     urls,
     fields,
+    ...(explicitLimit ? { textExcerptLimitChars } : {}),
     bodyRaw,
     bodyBytes,
     bodyDigest: bodyDigestFor(bodyRaw),

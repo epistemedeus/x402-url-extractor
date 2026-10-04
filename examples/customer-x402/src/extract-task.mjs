@@ -2,7 +2,7 @@ import {
   EXTRACT_TEXT_EXCERPT_CHARS,
   EXTRACT_TEXT_EXCERPT_MAX_CHARS,
   READ_MARKDOWN_MAX_CHARS,
-} from "../../../extract-capture.mjs";
+} from "../../../extract-excerpt-budget.mjs";
 
 /**
  * Decide whether an already-held extract record satisfies a named task.
@@ -62,6 +62,34 @@ function errorCode(body) {
   return null;
 }
 
+function record(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+// A failed attempt has its own typed shape, not the success-field contract.
+export function isTypedExtractFailure(body) {
+  const capture = body?.capture;
+  return record(body) && body.ok === false && body.sourceOk === false
+    && typeof body.url === "string" && body.url.length > 0
+    && typeof body.requestedUrl === "string" && body.requestedUrl.length > 0
+    && body.finalUrl === null && body.status === null
+    && record(body.error) && UNAVAILABLE_CODES.has(body.error.code)
+    && typeof body.error.message === "string"
+    && record(capture) && capture.method === "http-get-no-javascript"
+    && capture.javascriptExecuted === false
+    && Number.isSafeInteger(capture.maxBodyBytes) && capture.maxBodyBytes > 0
+    && Number.isSafeInteger(capture.bodyBytes) && capture.bodyBytes >= 0
+    && capture.bodyBytes <= capture.maxBodyBytes
+    && Number.isInteger(capture.textExcerptLimitChars)
+    && capture.textExcerptLimitChars >= 1
+    && capture.textExcerptLimitChars <= EXTRACT_TEXT_EXCERPT_MAX_CHARS
+    && capture.markdownLimitChars === null
+    && typeof capture.bodyTruncated === "boolean"
+    && typeof capture.textTruncated === "boolean"
+    && (capture.charset === null || typeof capture.charset === "string")
+    && ["content-type", "html-meta", "default-utf-8", "invalid-charset-fallback"].includes(capture.charsetSource);
+}
+
 function hasMetadata(body) {
   if (typeof body?.title === "string" && body.title.trim()) return true;
   if (typeof body?.description === "string" && body.description.trim()) return true;
@@ -97,7 +125,16 @@ export function decideExtractTask(body, task = null) {
   const code = errorCode(body);
   const kind = predicate?.kind ?? null;
 
-  if (body.ok === false || UNAVAILABLE_CODES.has(code)) {
+  if (body.ok !== true || UNAVAILABLE_CODES.has(code)) {
+    if (!isTypedExtractFailure(body)) {
+      return finish({
+        predicate: kind,
+        satisfied: false,
+        reason: "malformed_output",
+        delivery: "invalid",
+        nextAction: action("malformed_output", "The failure is not a bounded typed unavailable record. Nothing was repurchased."),
+      });
+    }
     return finish({
       predicate: kind,
       satisfied: false,

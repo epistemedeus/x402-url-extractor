@@ -1,3 +1,4 @@
+import { maxAdmittedBatchExcerptChars as sharedBatchExcerptCeiling } from "./extract-excerpt-budget.mjs";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { z } from "zod";
@@ -58,27 +59,13 @@ export const EXTRACT_BATCH_READ_ONLY_POST = Object.freeze({
 
 const ALLOWED_BODY_KEYS = new Set(["urls", "fields", "textExcerptLimitChars"]);
 
-/**
- * Bound the excerpt share of the batch response ceiling before fetch.
- * JSON escapes a control character or lone surrogate into 6 ASCII bytes.
- * Reserve 48 KiB for the envelope and structured fields; their existing final
- * response check still applies. The default 1,200 fits five URLs.
- * Single-URL /extract may go up to EXTRACT_TEXT_EXCERPT_MAX_CHARS because
- * that route does not use this 128 KiB batch ceiling.
- */
+// Keep the merchant's public error type while sharing the pure ceiling with callers.
 export function maxAdmittedBatchExcerptChars(urlCount) {
-  const count = Number(urlCount);
-  if (!Number.isInteger(count) || count < 1 || count > EXTRACT_BATCH_MAX_URLS) {
-    throw new ExtractBatchInputError(`urls must be an array of 1 to ${EXTRACT_BATCH_MAX_URLS} public HTTPS URLs`);
+  try {
+    return sharedBatchExcerptCeiling(urlCount);
+  } catch (error) {
+    throw new ExtractBatchInputError(error.message);
   }
-  const reserve = 48 * 1024;
-  const room = EXTRACT_BATCH_MAX_RESPONSE_BYTES - reserve;
-  const perUrl = Math.floor(room / count / 6);
-  const ceiling = Math.min(EXTRACT_TEXT_EXCERPT_MAX_CHARS, perUrl);
-  if (ceiling < EXTRACT_TEXT_EXCERPT_CHARS) {
-    throw new Error("batch response ceiling cannot admit the default excerpt");
-  }
-  return ceiling;
 }
 const inProcessJobs = new Map();
 
