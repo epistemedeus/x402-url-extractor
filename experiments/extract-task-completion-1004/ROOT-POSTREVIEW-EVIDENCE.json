@@ -1,0 +1,608 @@
+{
+  "job": "ROOT-1004-EXTRACT-TASK-COMPLETION",
+  "measuredAt": "2026-10-04T21:05:57.669Z",
+  "sourceRevision": "939477cc04fc3d6f76ff304aa5fa298a138d8124",
+  "population": "in-process controlled fixture plus one local merchant process and a fake facilitator",
+  "source": "hooked fixture hosts doc.example, short.example, denied.example, start.example, wide.example, huge.example, slow.example; no live page fetch and no response plaintext retained",
+  "costUsdc": 0,
+  "historicalPurchasesNotRepeated": true,
+  "inProcess": [
+    {
+      "id": "in_process_bad_budget_before_fetch",
+      "predicate": "excerpt",
+      "rejected": true,
+      "error": "textExcerptLimitChars must be an integer from 1 through 40000",
+      "fetchesAdded": 0,
+      "parser": {
+        "ok": false,
+        "error": "textExcerptLimitChars must be an integer from 1 through 40000"
+      },
+      "costUsdc": 0
+    },
+    {
+      "id": "short_full_excerpt",
+      "predicate": {
+        "kind": "excerpt",
+        "requiredChars": 5
+      },
+      "producer": {
+        "schemaPass": true,
+        "ok": true,
+        "sourceOk": true,
+        "status": 200,
+        "errorCode": null,
+        "requestedUrl": "https://short.example/",
+        "finalUrl": "https://short.example/",
+        "textLength": 5,
+        "markdownLength": null,
+        "markerPresent": false,
+        "truncated": null,
+        "capture": {
+          "textExcerptLimitChars": 1200,
+          "markdownLimitChars": null,
+          "bodyBytes": 71,
+          "bodyTruncated": false,
+          "textTruncated": false
+        }
+      },
+      "caller": {
+        "predicate": "excerpt",
+        "satisfied": true,
+        "delivery": "excerpt_sufficient",
+        "reason": "excerpt_within_budget",
+        "nextAction": {
+          "id": "sufficient",
+          "route": null,
+          "executed": false,
+          "purchaseAuthorized": false
+        }
+      },
+      "latencyMs": 6,
+      "costUsdc": 0
+    },
+    {
+      "id": "default_excerpt_cropped_no_predicate",
+      "predicate": null,
+      "producer": {
+        "schemaPass": true,
+        "ok": true,
+        "sourceOk": true,
+        "status": 200,
+        "errorCode": null,
+        "requestedUrl": "https://doc.example/",
+        "finalUrl": "https://doc.example/",
+        "textLength": 1200,
+        "markdownLength": null,
+        "markerPresent": false,
+        "truncated": null,
+        "capture": {
+          "textExcerptLimitChars": 1200,
+          "markdownLimitChars": null,
+          "bodyBytes": 2555,
+          "bodyTruncated": false,
+          "textTruncated": true
+        }
+      },
+      "caller": {
+        "predicate": null,
+        "satisfied": null,
+        "delivery": "partial",
+        "reason": "truncated_partial",
+        "nextAction": {
+          "id": "declare_predicate_or_use_read",
+          "route": "/read",
+          "executed": false,
+          "purchaseAuthorized": false
+        }
+      },
+      "latencyMs": 1,
+      "costUsdc": 0
+    },
+    {
+      "id": "metadata_sufficient_while_text_cropped",
+      "predicate": {
+        "kind": "metadata"
+      },
+      "producer": {
+        "textTruncated": true,
+        "titlePresent": true
+      },
+      "caller": {
+        "predicate": "metadata",
+        "satisfied": true,
+        "delivery": "metadata_sufficient",
+        "reason": "metadata_sufficient_text_cropped",
+        "nextAction": {
+          "id": "sufficient",
+          "route": null,
+          "executed": false,
+          "purchaseAuthorized": false
+        }
+      },
+      "costUsdc": 0
+    },
+    {
+      "id": "excerpt_required_beyond_1200",
+      "predicate": {
+        "kind": "excerpt",
+        "requiredChars": 2000
+      },
+      "caller": {
+        "predicate": "excerpt",
+        "satisfied": false,
+        "delivery": "partial",
+        "reason": "excerpt_short",
+        "nextAction": {
+          "id": "raise_excerpt_budget",
+          "route": "/extract",
+          "executed": false,
+          "purchaseAuthorized": false
+        }
+      },
+      "costUsdc": 0
+    },
+    {
+      "id": "raised_excerpt_8000",
+      "predicate": {
+        "kind": "excerpt",
+        "requiredChars": 2000
+      },
+      "producer": {
+        "schemaPass": true,
+        "ok": true,
+        "sourceOk": true,
+        "status": 200,
+        "errorCode": null,
+        "requestedUrl": "https://doc.example/",
+        "finalUrl": "https://doc.example/",
+        "textLength": 2423,
+        "markdownLength": null,
+        "markerPresent": true,
+        "truncated": null,
+        "capture": {
+          "textExcerptLimitChars": 8000,
+          "markdownLimitChars": null,
+          "bodyBytes": 2555,
+          "bodyTruncated": false,
+          "textTruncated": false
+        }
+      },
+      "caller": {
+        "predicate": "excerpt",
+        "satisfied": true,
+        "delivery": "excerpt_sufficient",
+        "reason": "excerpt_within_budget",
+        "nextAction": {
+          "id": "sufficient",
+          "route": null,
+          "executed": false,
+          "purchaseAuthorized": false
+        }
+      },
+      "responseKeysSameAsDefault": true,
+      "latencyMs": 0,
+      "costUsdc": 0
+    },
+    {
+      "id": "markdown_predicate_points_at_read",
+      "caller": {
+        "predicate": "markdown",
+        "satisfied": false,
+        "delivery": "partial",
+        "reason": "extract_is_not_markdown",
+        "nextAction": {
+          "id": "use_existing_read",
+          "route": "/read",
+          "executed": false,
+          "purchaseAuthorized": false
+        }
+      },
+      "readInvokedByDecision": false,
+      "separateRead": {
+        "markdownLength": 2424,
+        "markerPresent": true,
+        "truncated": false,
+        "latencyMs": 1
+      },
+      "costUsdc": 0
+    },
+    {
+      "id": "read_40000_bound",
+      "markdownLength": 40000,
+      "truncated": true,
+      "captureMarkdownLimit": 40000,
+      "caller": {
+        "predicate": "markdown",
+        "satisfied": false,
+        "delivery": "partial",
+        "reason": "bound_exceeds_product",
+        "nextAction": {
+          "id": "bound_exceeds_product",
+          "route": null,
+          "executed": false,
+          "purchaseAuthorized": false
+        }
+      },
+      "latencyMs": 1,
+      "costUsdc": 0
+    },
+    {
+      "id": "timeout_unavailable",
+      "producer": {
+        "ok": false,
+        "errorCode": "timeout",
+        "capture": {
+          "textExcerptLimitChars": 8000,
+          "markdownLimitChars": null,
+          "bodyBytes": 0,
+          "bodyTruncated": false,
+          "textTruncated": false
+        }
+      },
+      "caller": {
+        "predicate": "excerpt",
+        "satisfied": false,
+        "delivery": "unavailable",
+        "reason": "source_unavailable",
+        "nextAction": {
+          "id": "source_unavailable",
+          "route": null,
+          "executed": false,
+          "purchaseAuthorized": false
+        }
+      },
+      "latencyMs": 40,
+      "costUsdc": 0
+    },
+    {
+      "id": "source_refusal",
+      "producer": {
+        "schemaPass": true,
+        "ok": true,
+        "sourceOk": false,
+        "status": 403,
+        "errorCode": "http_403",
+        "requestedUrl": "https://denied.example/",
+        "finalUrl": "https://denied.example/",
+        "textLength": 13,
+        "markdownLength": null,
+        "markerPresent": false,
+        "truncated": null,
+        "capture": {
+          "textExcerptLimitChars": 1200,
+          "markdownLimitChars": null,
+          "bodyBytes": 48,
+          "bodyTruncated": false,
+          "textTruncated": false
+        }
+      },
+      "caller": {
+        "predicate": "excerpt",
+        "satisfied": false,
+        "delivery": "source_refused",
+        "reason": "source_refused",
+        "nextAction": {
+          "id": "source_refused",
+          "route": null,
+          "executed": false,
+          "purchaseAuthorized": false
+        }
+      },
+      "latencyMs": 0,
+      "costUsdc": 0
+    },
+    {
+      "id": "redirect_identity",
+      "producer": {
+        "schemaPass": true,
+        "ok": true,
+        "sourceOk": true,
+        "status": 200,
+        "errorCode": null,
+        "requestedUrl": "https://start.example/",
+        "finalUrl": "https://end.example/page",
+        "textLength": 14,
+        "markdownLength": null,
+        "markerPresent": false,
+        "truncated": null,
+        "capture": {
+          "textExcerptLimitChars": 1200,
+          "markdownLimitChars": null,
+          "bodyBytes": 80,
+          "bodyTruncated": false,
+          "textTruncated": false
+        }
+      },
+      "caller": {
+        "predicate": "excerpt",
+        "satisfied": true,
+        "delivery": "excerpt_sufficient",
+        "reason": "excerpt_within_budget",
+        "nextAction": {
+          "id": "sufficient",
+          "route": null,
+          "executed": false,
+          "purchaseAuthorized": false
+        }
+      },
+      "latencyMs": 0,
+      "costUsdc": 0
+    },
+    {
+      "id": "body_budget_cutoff",
+      "producer": {
+        "schemaPass": true,
+        "ok": true,
+        "sourceOk": true,
+        "status": 200,
+        "errorCode": null,
+        "requestedUrl": "https://huge.example/",
+        "finalUrl": "https://huge.example/",
+        "textLength": 1200,
+        "markdownLength": null,
+        "markerPresent": false,
+        "truncated": null,
+        "capture": {
+          "textExcerptLimitChars": 1200,
+          "markdownLimitChars": null,
+          "bodyBytes": 3000000,
+          "bodyTruncated": true,
+          "textTruncated": true
+        }
+      },
+      "caller": {
+        "predicate": "excerpt",
+        "satisfied": false,
+        "delivery": "partial",
+        "reason": "source_body_budget",
+        "nextAction": {
+          "id": "source_budget_exhausted",
+          "route": null,
+          "executed": false,
+          "purchaseAuthorized": false
+        }
+      },
+      "latencyMs": 19,
+      "costUsdc": 0
+    },
+    {
+      "id": "malformed_output",
+      "caller": {
+        "predicate": "excerpt",
+        "satisfied": false,
+        "delivery": "invalid",
+        "reason": "malformed_output",
+        "nextAction": {
+          "id": "malformed_output",
+          "route": null,
+          "executed": false,
+          "purchaseAuthorized": false
+        }
+      },
+      "costUsdc": 0
+    },
+    {
+      "id": "batch_ceiling_and_omitted_key",
+      "fiveUrlCeiling": 2730,
+      "rejected": "textExcerptLimitChars exceeds 2730 for 5 URL(s) under the 131072-byte batch response ceiling",
+      "omittedKeyPresent": false,
+      "costUsdc": 0
+    },
+    {
+      "id": "old_consumer_fixture_without_task",
+      "outcome": "valid_delivered",
+      "outputDelivery": "useful",
+      "taskSatisfied": null,
+      "taskDelivery": "fields_present",
+      "purchaseAuthorized": false,
+      "usefulNegative": "URL-only fixture with no capture and no predicate stays valid_delivered",
+      "costUsdc": 0
+    },
+    {
+      "id": "new_consumer_cropped_excerpt",
+      "outcome": "partial_delivered",
+      "outputDelivery": "partial",
+      "taskSatisfied": false,
+      "nextAction": "raise_excerpt_budget",
+      "purchaseAuthorized": false,
+      "costUsdc": 0
+    },
+    {
+      "id": "fixture_settlement_failed",
+      "outcome": "settlement_failed",
+      "nextExecuted": false,
+      "costUsdc": 0
+    },
+    {
+      "id": "caller_rejects_bad_budget_before_purchase",
+      "badPurchaseReady": false,
+      "badKind": "invalid_input",
+      "legacyPurchaseReady": true,
+      "costUsdc": 0
+    }
+  ],
+  "mounted": {
+    "unpaidReadbackUrl": "http://127.0.0.1:36869/extract?url=https%3A%2F%2Fdoc.example%2F&textExcerptLimitChars=0",
+    "rows": [
+      {
+        "id": "mounted_seeded_bad_budget",
+        "population": "local merchant + fake facilitator",
+        "method": "GET",
+        "query": "textExcerptLimitChars=0",
+        "httpStatus": 400,
+        "charged": false,
+        "error": "textExcerptLimitChars must be an integer from 1 through 40000",
+        "settleCount": 0,
+        "sourceFetchCount": 0,
+        "latencyMs": 35,
+        "costUsdc": 0
+      },
+      {
+        "id": "mounted_unpaid_default_challenge",
+        "httpStatus": 402,
+        "amountAtomic": "5000",
+        "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+        "descriptionCodePoints": 402,
+        "descriptionNamesBudget": true,
+        "latencyMs": 6,
+        "costUsdc": 0
+      },
+      {
+        "id": "mounted_unpaid_raised_budget_same_price",
+        "httpStatus": 402,
+        "amountAtomic": "5000",
+        "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+        "sameAmountAsDefault": true,
+        "costUsdc": 0
+      },
+      {
+        "id": "mounted_paid_default_excerpt_predicate",
+        "httpStatus": 200,
+        "producer": {
+          "schemaPass": true,
+          "ok": true,
+          "sourceOk": true,
+          "status": 200,
+          "errorCode": null,
+          "requestedUrl": "https://doc.example/",
+          "finalUrl": "https://doc.example/",
+          "textLength": 1200,
+          "markdownLength": null,
+          "markerPresent": false,
+          "truncated": null,
+          "capture": {
+            "textExcerptLimitChars": 1200,
+            "markdownLimitChars": null,
+            "bodyBytes": 2555,
+            "bodyTruncated": false,
+            "textTruncated": true
+          }
+        },
+        "caller": {
+          "predicate": "excerpt",
+          "satisfied": false,
+          "delivery": "partial",
+          "reason": "excerpt_short",
+          "nextAction": {
+            "id": "raise_excerpt_budget",
+            "route": "/extract",
+            "executed": false,
+            "purchaseAuthorized": false
+          }
+        },
+        "settleCount": 1,
+        "latencyMs": 16,
+        "costUsdc": 0,
+        "note": "Fake facilitator. No USDC moved."
+      },
+      {
+        "id": "mounted_replay_same_payment",
+        "httpStatus": 200,
+        "replay": "hit",
+        "settleCount": 1,
+        "costUsdc": 0
+      },
+      {
+        "id": "mounted_same_payment_changed_budget",
+        "httpStatus": 409,
+        "charged": false,
+        "error": "payment_identifier_request_conflict",
+        "settleCount": 1,
+        "costUsdc": 0
+      },
+      {
+        "id": "mounted_paid_raised_excerpt",
+        "httpStatus": 200,
+        "amountAtomic": "5000",
+        "producer": {
+          "schemaPass": true,
+          "ok": true,
+          "sourceOk": true,
+          "status": 200,
+          "errorCode": null,
+          "requestedUrl": "https://doc.example/",
+          "finalUrl": "https://doc.example/",
+          "textLength": 2423,
+          "markdownLength": null,
+          "markerPresent": true,
+          "truncated": null,
+          "capture": {
+            "textExcerptLimitChars": 8000,
+            "markdownLimitChars": null,
+            "bodyBytes": 2555,
+            "bodyTruncated": false,
+            "textTruncated": false
+          }
+        },
+        "caller": {
+          "predicate": "excerpt",
+          "satisfied": true,
+          "delivery": "excerpt_sufficient",
+          "reason": "excerpt_within_budget",
+          "nextAction": {
+            "id": "sufficient",
+            "route": null,
+            "executed": false,
+            "purchaseAuthorized": false
+          }
+        },
+        "settleCount": 2,
+        "latencyMs": 12,
+        "costUsdc": 0
+      },
+      {
+        "id": "mounted_paid_read_separate_request",
+        "httpStatus": 200,
+        "amountAtomic": "5000",
+        "markdownLength": 2424,
+        "markerPresent": true,
+        "truncated": false,
+        "calledByExtract": false,
+        "latencyMs": 13,
+        "costUsdc": 0
+      },
+      {
+        "id": "mounted_source_refusal",
+        "httpStatus": 200,
+        "producer": {
+          "schemaPass": true,
+          "ok": true,
+          "sourceOk": false,
+          "status": 403,
+          "errorCode": "http_403",
+          "requestedUrl": "https://denied.example/",
+          "finalUrl": "https://denied.example/",
+          "textLength": 13,
+          "markdownLength": null,
+          "markerPresent": false,
+          "truncated": null,
+          "capture": {
+            "textExcerptLimitChars": 1200,
+            "markdownLimitChars": null,
+            "bodyBytes": 48,
+            "bodyTruncated": false,
+            "textTruncated": false
+          }
+        },
+        "caller": {
+          "predicate": "excerpt",
+          "satisfied": false,
+          "delivery": "source_refused",
+          "reason": "source_refused",
+          "nextAction": {
+            "id": "source_refused",
+            "route": null,
+            "executed": false,
+            "purchaseAuthorized": false
+          }
+        },
+        "costUsdc": 0
+      },
+      {
+        "id": "mounted_fetch_log_not_empty_after_paid",
+        "sourceFetchCount": 4,
+        "settleCount": 4
+      }
+    ]
+  }
+}
