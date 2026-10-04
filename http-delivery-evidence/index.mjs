@@ -18,6 +18,7 @@ export {
   READ_CONTRACT,
   EXTRACT_BATCH_CONTRACT,
   LOCKFILE_CONTRACT,
+  SELLER_INTEGRITY_CONTRACT,
   CANONICAL_PIN,
   MAX_RESPONSE_BYTES,
   bindOwningContracts,
@@ -44,6 +45,14 @@ export {
   classifyParsedBody,
   evaluateResponseBytes,
 } from "./classify.mjs";
+export {
+  PAID_DIAGNOSTIC_MEASUREMENT,
+  PAID_DIAGNOSTIC_POPULATION,
+  PAID_DIAGNOSTIC_POPULATION_UNIT,
+  isDeliveredSellerDiagnostic,
+  emptySellerTransactionPlane,
+  publicPaidDiagnosticMeasurement,
+} from "./diagnostic.mjs";
 export {
   VALIDATION_FILENAME,
   VALIDATION_KEYS,
