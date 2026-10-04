@@ -21,6 +21,7 @@ export const DELIVERY = Object.freeze({
   MISSING_BODY: "missing_body",
   MERCHANT_HTTP_FAILURE: "merchant_http_failure",
   UNSUPPORTED_TARGET: "unsupported_target",
+  INCOMPLETE_REPORT: "incomplete_report",
 });
 
 export const VERDICT = Object.freeze({
@@ -54,6 +55,7 @@ export const PROHIBITED_INFERENCES = Object.freeze([
   "mcp_tool_is_http_buyer",
   "schema_shaped_http_500_is_completed_delivery",
   "truncate_class_hides_source_refusal",
+  "schema_conformance_is_buyer_usefulness",
 ]);
 
 const ENGINE_CODES = new Set([
@@ -313,6 +315,10 @@ function classifyLayers({
     });
   }
 
+  if (resource === RESOURCES.SELLER_INTEGRITY) {
+    return classifySellerIntegrityReport({ body, contract, truncateMarks, oversized });
+  }
+
   if (body.sourceOk === false) {
     return wrap({
       verdict: VERDICT.PASS,
@@ -352,6 +358,43 @@ function classifyLayers({
     contract,
     truncateMarks,
     sourceRefusalMarks,
+    schemaConformance: SCHEMA_CONFORMANCE.HOLDS,
+  });
+}
+
+const SELLER_DECISIONS = new Set(["machine_buyable", "contract_ready", "repair_required"]);
+
+function classifySellerIntegrityReport({ body, contract, truncateMarks, oversized }) {
+  const schemaConformance = contract.ok ? SCHEMA_CONFORMANCE.HOLDS : SCHEMA_CONFORMANCE.FAILS;
+  if (oversized || truncateMarks > 0) {
+    return wrap({
+      verdict: VERDICT.UNKNOWN,
+      deliveryClass: DELIVERY.TRUNCATED_PARTIAL,
+      contract,
+      truncateMarks: boundCounter(Math.max(truncateMarks, 1)),
+      sourceRefusalMarks: 0,
+      schemaConformance,
+    });
+  }
+  const completed = body?.report?.auditCompleted === true
+    && SELLER_DECISIONS.has(body?.decision)
+    && body?.product === "samedaydesk-seller-integrity-audit";
+  if (!completed) {
+    return wrap({
+      verdict: VERDICT.UNKNOWN,
+      deliveryClass: DELIVERY.INCOMPLETE_REPORT,
+      contract,
+      truncateMarks: 0,
+      sourceRefusalMarks: 0,
+      schemaConformance,
+    });
+  }
+  return wrap({
+    verdict: VERDICT.PASS,
+    deliveryClass: DELIVERY.FULL_BOUNDED_CAPTURE,
+    contract,
+    truncateMarks: 0,
+    sourceRefusalMarks: 0,
     schemaConformance: SCHEMA_CONFORMANCE.HOLDS,
   });
 }

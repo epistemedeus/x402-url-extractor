@@ -23,6 +23,7 @@ import {
   isSupportedTarget,
   MAX_RESPONSE_BYTES,
   openStore,
+  publicPaidDiagnosticMeasurement,
   recordFromObservedResponse,
   SETTLEMENT_CLASS,
   VALIDATION_FILENAME,
@@ -3812,6 +3813,55 @@ export function createCommerceTelemetry({
       actors.set(event.actor, (actors.get(event.actor) || 0) + 1);
     }
 
+    const sellerEvents = events.filter((event) => event.route === PAID_OPERATION_PATH);
+    const sellerTransactionPlane = {
+      paidSuccess: 0,
+      replayNotPromoted: 0,
+      failedOrRejected: 0,
+      settlementReferencePresent: 0,
+      settlementReferenceAbsent: 0,
+    };
+    for (const event of sellerEvents) {
+      const sellerResult = eventResult(event);
+      if (sellerResult === "paid_success") {
+        sellerTransactionPlane.paidSuccess += 1;
+        if (TRANSACTION_HASH_PATTERN.test(String(event.settlementReference || ""))) {
+          sellerTransactionPlane.settlementReferencePresent += 1;
+        } else {
+          sellerTransactionPlane.settlementReferenceAbsent += 1;
+        }
+      } else if (sellerResult === "replay_success") {
+        sellerTransactionPlane.replayNotPromoted += 1;
+      } else if (sellerResult === "validation_failure" || sellerResult === "service_failure") {
+        sellerTransactionPlane.failedOrRejected += 1;
+      }
+    }
+    let diagnosticRead = "empty";
+    let diagnosticRows = [];
+    try {
+      const storedValidations = await openStore(dataDir).readValidations();
+      const sellerPaidIds = new Set(
+        sellerEvents
+          .filter((event) => eventResult(event) === "paid_success")
+          .map((event) => event.id),
+      );
+      diagnosticRows = storedValidations.filter((row) => {
+        if (row.resource !== PAID_OPERATION_PATH) return false;
+        const capturedMs = Date.parse(row.capturedAt);
+        if (!Number.isFinite(capturedMs) || capturedMs < windowCutoff || capturedMs > generatedAtMs) return false;
+        return sellerPaidIds.has(row.paidEvidenceId);
+      });
+      diagnosticRead = storedValidations.length === 0 ? "empty" : "read";
+    } catch {
+      diagnosticRead = "unavailable";
+      diagnosticRows = [];
+    }
+    const paidDiagnosticReportContract = publicPaidDiagnosticMeasurement({
+      rows: diagnosticRows,
+      read: diagnosticRead,
+      transactionPlane: sellerTransactionPlane,
+    });
+
     const paidSuccessEvents = events.filter((event) => eventResult(event) === "paid_success");
     const agentSourceFunnel = buildAgentSourceFunnel({
       discoveryEvents: agentDiscoveryEvents,
@@ -3977,6 +4027,8 @@ export function createCommerceTelemetry({
       credentialAttemptPolicy: "After the declared credential-attempt baseline, a parseable attempt must carry a syntactically complete x402 v2 exact Base-style binding or MPP evm/charge credential. Signature validity and settlement are separate later outcomes. Controlled failure codes are derived from required query-key presence, x402 response error classes, or MPP Problem Details. Public output contains only aggregate protocol, result, route, source, payer class, and failure-code counts; raw credentials, errors, bodies, query values, actors, and payer addresses are not exposed.",
       requestConstructionPolicy: "Prospective seller-declared GET measurement, plus the exact declared paid POST /extract/batch body. A constructed GET must target an exact paid route, carry a non-empty scalar for every required non-secret query key from that route's canonical Bazaar request contract, and receive an HTTP 402 challenge rather than validation failure. A constructed POST /extract/batch must pass the merchant's synchronous input validator (1 to 5 bounded public HTTPS URL strings, valid optional fields and no extra keys) and receive an HTTP 402 challenge. GET values are inspected for scalar non-emptiness; POST bodies use that validator without DNS lookup or source fetching. Invalid or incomplete POST input is classified missing_required_input. Values are neither retained nor published. Header, cookie, path, other POST bodies, unsafe unpaid POST, credential-like required names, and undeclared contracts remain unmeasured. Public output contains aggregate events, distinct secret-keyed actor counts, controlled source labels, and canonical routes only. Construction proves neither input validity, buyer intent, payment authorization, settlement, nor demand.",
       settlementEvidencePolicy: "After the declared settlement-evidence baseline, a successful paid response should carry a valid Base transaction reference in PAYMENT-RESPONSE or Payment-Receipt. Raw response headers and transaction references remain private; public output exposes only coverage counts by evidence class.",
+      paidDiagnosticReportContract,
+      paidDiagnosticReportContractPolicy: "Prospective report-contract measurement for ordinary paid GET or POST /commerce/seller-integrity-audit responses whose bounded bytes were captured and joined to an external paid-success event in this window. A schema-complete audit, including repair_required, can be a delivered diagnostic. An incomplete, malformed, truncated, or oversized body cannot. Schema conformance is not buyer usefulness, so usefulness stays unknown on this plane. The population unit is a paid HTTP response, not a customer. Public output is counts only: no raw credentials, target queries, report bodies, or settlement hashes. An old settlement with no captured validation stays unknown and is not backfilled. Transaction counts, transport class, and useful output stay separate. Cash and recognized revenue stay 0.",
       durableRareFunnelPolicy: "Credential-attempt and rare payment-outcome rows are mirrored into a separately rotated rare-funnel store so ordinary /mcp probe volume cannot erase them from the shared event stream. The durableRareFunnel plane reports its own window coverage, capture version, reset policy, and provenance. It never backfills pre-capture history, never stores raw credentials or addresses, treats actor hashes as continuity keys rather than identity, leaves usefulness unknown without separate authority, and does not invent revenue classification. Stream-local counters remain stream-local; settlement ledger and private paid-success evidence stay separate accepted planes.",
       boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, SameDayDesk-owned monitor, crawler, and exploit-probe traffic is excluded from demand, but unidentified automated fetchers can remain. Separately reported agent-discovery observations begin at their own declared baseline and are user-agent-declared crawler or indexer fetches of known discovery and paid routes; SameDayDesk-owned monitor user agents are excluded, and the remainder are neither authenticated catalog referrals nor buyer intent. Unmatched requests are acquisition misses, not intents. Known MCP transport probes and semantic-unmatched counts remain acquisition-friction evidence and do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Payment classes are applied against those pseudonyms at read time, so known marketplace verification can be reclassified without storing a raw address. Unknown payers remain unclassified. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Settlement-reference coverage begins only at its declared baseline; raw transaction references remain on the private volume and are not returned publicly. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts.",
     };
