@@ -66,6 +66,49 @@ test("an incomplete external window does not manufacture source-population cover
   assert.equal(out.stream.challengeEvents.customerDenominator, null);
 });
 
+test("a missing origin split stays unknown and does not turn external events into outside customers", () => {
+  const out = project(aggregate());
+  assert.equal(out.stream.trafficProvenance.status, "unknown");
+  assert.equal(out.stream.externalEvents.observed, 10);
+  assert.equal(out.stream.externalEvents.customerDenominator, null);
+  assert.equal(out.stream.trafficProvenance.historicalBackfill, false);
+  assert.equal(out.rareCoveredSlice.originPopulations.status, "unknown");
+  assert.equal(out.recognizedRevenueAtomic, "0");
+});
+
+test("present provenance populations stay separate from external events and cannot grant outside demand", () => {
+  const doc = aggregate();
+  doc.externalEvents = 4;
+  doc.trafficProvenance = {
+    schemaVersion: "samedaydesk.commerce-traffic-provenance.v1",
+    historicalBackfill: true,
+    populations: {
+      verifiedInternal: { events: 3, paidSuccesses: 1, constructedChallenges: 2, credentialAttempts: 1, provedOutsideDemand: true, verification: "verified_internal_token" },
+      selfReportedOwnerMonitor: { events: 2, paidSuccesses: 0, constructedChallenges: 2, credentialAttempts: 0, verification: "unverified" },
+      unattributedExternal: { events: 4, paidSuccesses: 0, constructedChallenges: 1, credentialAttempts: 0, verification: "unverified", independentDemand: true },
+    },
+  };
+  doc.durableRareFunnel.originPopulations = {
+    verifiedInternal: { paymentHeaderEvents: 1, paidSuccessEvents: 1, parseableCredentialAttemptEvents: 1, verification: "verified_internal_token", provedOutsideDemand: true },
+    unattributedExternal: { paymentHeaderEvents: 0, paidSuccessEvents: 0, parseableCredentialAttemptEvents: 0, verification: "unverified" },
+  };
+  const out = project(doc);
+  assert.equal(out.stream.externalEvents.observed, 4);
+  assert.equal(out.stream.trafficProvenance.status, "present");
+  assert.equal(out.stream.trafficProvenance.historicalBackfill, false);
+  assert.equal(out.stream.trafficProvenance.selfReportedGrantsTrust, false);
+  assert.equal(out.stream.trafficProvenance.verifiedInternal.events, 3);
+  assert.equal(out.stream.trafficProvenance.verifiedInternal.provedOutsideDemand, false);
+  assert.equal(out.stream.trafficProvenance.selfReportedOwnerMonitor.events, 2);
+  assert.equal(out.stream.trafficProvenance.unattributedExternal.events, 4);
+  assert.equal(out.stream.trafficProvenance.unattributedExternal.independentDemand, false);
+  assert.equal(out.rareCoveredSlice.originPopulations.status, "present");
+  assert.equal(out.rareCoveredSlice.originPopulations.verifiedInternal.paidSuccessEvents, 1);
+  assert.equal(out.rareCoveredSlice.originPopulations.verifiedInternal.provedOutsideDemand, false);
+  assert.equal(out.rareCoveredSlice.paidSuccessEvents.observed, 0);
+  assert.equal(out.customerPlane.attributableCustomerCount, null);
+});
+
 test("missing constructed-request totals are not derived from source maps", () => {
   const doc = aggregate();
   delete doc.constructedRequestEvents;
