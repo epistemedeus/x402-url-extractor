@@ -376,7 +376,7 @@ test('later ordinary traffic does not hide a retained historical marker beyond t
     const prior = await readPersistedAttempt({dataDir: dir, internalToken: TOKEN, taskRef: o.request.taskRef, cutId: cut.cutId});
     const file = path.join(dir, 'commerce-events.ndjson');
     const original = await readFile(file);
-    const later = Buffer.from(('{"later":"outside-the-retained-window"}\\n').repeat(Math.ceil(LIMITS.fileBytes / 39) + 2000));
+    const later = Buffer.from((JSON.stringify({later: 'outside-the-retained-window'}) + String.fromCharCode(10)).repeat(Math.ceil(LIMITS.fileBytes / 39) + 2000));
     assert.ok(later.length > LIMITS.fileBytes);
     assert.ok(original.length + later.length < SOURCE_FILE_BYTES);
     await writeFile(file, Buffer.concat([original, later]), {mode: 0o600});
