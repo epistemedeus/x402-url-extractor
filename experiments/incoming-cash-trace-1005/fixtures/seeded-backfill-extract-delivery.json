@@ -1,0 +1,59 @@
+{
+  "schema": "samedaydesk.incoming-cash-trace-1005.evidence.v1",
+  "join": {
+    "settlementReference": "0x2439870db33f6e81157beffed44c26b02aad663aff595424929ac04f9030008d",
+    "route": "/extract",
+    "newSettlementCount": 2,
+    "amountAtomic": "20000",
+    "countsPayoutAsSettlement": true,
+    "payoutReference": "0x2439870db33f6e81157beffed44c26b02aad663aff595424929ac04f9030008d"
+  },
+  "chain": {
+    "payoutReference": "0x2439870db33f6e81157beffed44c26b02aad663aff595424929ac04f9030008d",
+    "payoutAmountAtomic": "20000",
+    "payoutDirection": "incoming_settlement",
+    "treasuryInflows": [
+      {
+        "tx": "0x2439870db33f6e81157beffed44c26b02aad663aff595424929ac04f9030008d",
+        "atomic": "20000"
+      },
+      {
+        "tx": "0x6c51682c8678b4779548e8b717b327ab1b9dfb06141850cce92eb220075e3a20",
+        "atomic": "20000"
+      }
+    ]
+  },
+  "ledgerDelta": {
+    "route": "/extract",
+    "settlementDelta": 2,
+    "amountAtomicDelta": "20000",
+    "extractSettlementDelta": 1,
+    "paymentClass": "internal"
+  },
+  "demandWindow": {
+    "paidSuccessByRoute": {
+      "/defi/morpho-position": 0,
+      "/extract": 3
+    },
+    "independentPaidSuccessActors": 1
+  },
+  "delivery": {
+    "class": "truncated_partial",
+    "copiedFromExtractPair": true,
+    "usefulness": "useful",
+    "buyerPredicate": "full document"
+  },
+  "caller": {
+    "origin": "verified_internal",
+    "verifiedInternal": true,
+    "selfReportedOwnerMonitor": false,
+    "ownerMarkerAbsenceProvesOutsideBuyer": true,
+    "sameOnchainPayerAsExtractPair": true,
+    "repeatPayerWithinWindow": true
+  },
+  "revenue": {
+    "recognizedUsdc": "10.975",
+    "promotedToOrganicSale": true,
+    "walletBalanceIsRevenue": true
+  }
+}
