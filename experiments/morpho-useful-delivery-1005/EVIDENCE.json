@@ -1,0 +1,46 @@
+{
+  "schema": "samedaydesk.morpho-useful-delivery-1005.v1",
+  "task": "non-customer indexed borrower, shocks -10 and -50, same GraphQL page for both sides",
+  "historical": {
+    "eventId": "e87c5642-c177-49bb-809a-05912264d7e3",
+    "settlementReference": "0x2439870db33f6e81157beffed44c26b02aad663aff595424929ac04f9030008d",
+    "route": "/defi/morpho-position",
+    "outputRetained": false,
+    "backfilled": false,
+    "buyerPredicate": "unknown",
+    "usefulness": "unknown"
+  },
+  "classes": {
+    "okSnapshot": "complete_useful",
+    "noPosition": "useful_negative",
+    "http200OkFalse": "upstream_failed",
+    "truncated": "truncated_partial",
+    "malformed": "malformed_body",
+    "missingOutput": "missing_body",
+    "contradictoryCount": "unknown"
+  },
+  "verdicts": {
+    "okSnapshot": "pass",
+    "http200OkFalse": "invalid"
+  },
+  "usefulnessOnMeasuredClasses": "unknown",
+  "fidelity": {
+    "healthFactor": "exact",
+    "liquidationMove": "same_quantity_rescaled_to_percent",
+    "shockTable": "exact_local_arithmetic"
+  },
+  "adaptation": {
+    "newUpstreamFacts": 0,
+    "localArithmetic": true,
+    "directRpcInThisComparison": "disabled_on_both_sides",
+    "fieldsRescaled": [
+      "priceVariationToLiquidationPrice"
+    ],
+    "shocksPrecomputedFromFreeIntegers": true
+  },
+  "incrementalUtility": false,
+  "proposeNewPaidOffer": false,
+  "paymentTimingChanged": false,
+  "responseShapeChanged": false,
+  "http200IsNotComplete": true
+}

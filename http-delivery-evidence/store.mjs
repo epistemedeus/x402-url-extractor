@@ -19,7 +19,7 @@ import {
   isHistoricalV1PaidSuccess,
   parseNdjson,
 } from "./historical.mjs";
-import { MAX_RESPONSE_BYTES, contractNameForResource } from "./contract.mjs";
+import { MAX_RESPONSE_BYTES, contractNameForResource, httpDeliveryEmissionAllowed } from "./contract.mjs";
 
 export const VALIDATION_FILENAME = "http-response-validation.v1.ndjson";
 
@@ -34,6 +34,7 @@ export const VALIDATION_KEYS = Object.freeze([
   "payerClass",
   "prohibitedInferences",
   "recordId",
+  "requestDigest",
   "resource",
   "responseByteLength",
   "responseDigest",
@@ -50,7 +51,7 @@ export const VALIDATION_KEYS = Object.freeze([
 const RECORD_ID_RE = /^hrv_[0-9a-f]{32}$/;
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const METHOD_RE = /^(GET|POST)$/;
-const RESOURCE_RE = /^\/(extract|read|extract\/batch|lockfile-pin-delta|commerce\/seller-integrity-audit)$/;
+const RESOURCE_RE = /^\/(extract|read|extract\/batch|lockfile-pin-delta|commerce\/seller-integrity-audit|defi\/morpho-position)$/;
 const TX_RE = /^0x[0-9a-fA-F]{64}$/;
 const DIGEST_RE = /^[0-9a-f]{64}$/;
 const VERDICTS = new Set(["pass", "invalid", "unknown"]);
@@ -130,7 +131,7 @@ export function openStore(dir) {
         if (!id || !PAID_EVIDENCE_ID_PATTERN.test(id)) continue;
         const existing = byId.get(id);
         if (!existing) continue;
-        if (validation.responseDigest !== existing.historical.responseDigest) continue;
+        if (!validationAttachesToHistorical(validation, existing.historical)) continue;
         existing.validations.push(validation);
       }
       return [...byId.values()];
@@ -149,9 +150,13 @@ export function recordFromObservedResponse({
   capturedAt,
   recordId,
   paidEvidenceId,
+  requestDigest = null,
   responseDigest,
   responseByteLength,
 } = {}) {
+  if (!httpDeliveryEmissionAllowed(paidEvidenceId)) {
+    throw new Error("retained output is absent for this paid evidence id");
+  }
   const bytes = Buffer.from(responseBytes || []);
   const actualLength = Number.isInteger(responseByteLength) ? responseByteLength : bytes.length;
   if (actualLength !== bytes.length && (typeof responseDigest !== "string" || !DIGEST_RE.test(responseDigest))) {
@@ -180,6 +185,7 @@ export function recordFromObservedResponse({
     method,
     resource,
     paidEvidenceId,
+    requestDigest: requestDigest || null,
     contractName: evaluated.contractName || contractNameForResource(resource),
     responseDigest: digest,
     responseByteLength: actualLength,
@@ -207,6 +213,7 @@ export function canonicalizeValidationRecord(value) {
     method: value.method,
     resource: value.resource,
     paidEvidenceId: value.paidEvidenceId,
+    requestDigest: value.requestDigest ?? null,
     contractName: value.contractName,
     responseDigest: value.responseDigest,
     responseByteLength: value.responseByteLength,
@@ -249,6 +256,10 @@ export function assertValidationRecord(value) {
   }
   if (!DIGEST_RE.test(value.responseDigest)) throw new Error("invalid responseDigest");
   if (!PAID_EVIDENCE_ID_PATTERN.test(value.paidEvidenceId)) throw new Error("invalid paidEvidenceId");
+  if (value.requestDigest !== null && !DIGEST_RE.test(value.requestDigest)) throw new Error("invalid requestDigest");
+  if (!httpDeliveryEmissionAllowed(value.paidEvidenceId)) {
+    throw new Error("retained output is absent for this paid evidence id");
+  }
   requireFiniteInteger(value.responseByteLength, "responseByteLength", 0, Number.MAX_SAFE_INTEGER);
   requireFiniteInteger(value.retainedByteLength, "retainedByteLength", 0, MAX_RESPONSE_BYTES);
   if (value.retainedByteLength > value.responseByteLength) {
@@ -285,6 +296,22 @@ export function assertValidationRecord(value) {
   if (value.validatorVerdict === HISTORICAL_VALIDATOR_VERDICT) {
     throw new Error("new records must not reuse historical not_checked");
   }
+}
+
+export function validationAttachesToHistorical(validation, historical) {
+  if (!validation || !historical) return false;
+  if (validation.paidEvidenceId !== historical.id) return false;
+  if (validation.responseDigest !== historical.responseDigest) return false;
+  if (validation.method !== historical.method) return false;
+  if (validation.resource !== historical.route) return false;
+  if (validation.settlementReference) {
+    if (!historical.settlementReference) return false;
+    if (String(validation.settlementReference).toLowerCase() !== String(historical.settlementReference).toLowerCase()) {
+      return false;
+    }
+  }
+  if (validation.requestDigest && validation.requestDigest !== historical.requestDigest) return false;
+  return true;
 }
 
 function makeRecordId() {

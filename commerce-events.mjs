@@ -592,6 +592,7 @@ function buildHttpDeliveryValidationRecord({
   settlementReference,
   payerClass,
   paidEvidenceId,
+  requestDigest = null,
 }) {
   try {
     if (!isSupportedTarget(method, resource)) return null;
@@ -607,6 +608,7 @@ function buildHttpDeliveryValidationRecord({
       settlementReference,
       payerClass: payerClass || "unclassified",
       paidEvidenceId,
+      requestDigest,
     });
   } catch {
     return null;
@@ -3631,6 +3633,7 @@ export function createCommerceTelemetry({
             settlementReference: settlement?.reference || null,
             payerClass: paidEvidenceRequest.payerClass,
             paidEvidenceId: eventId,
+            requestDigest: paidEvidenceRequest.requestDigest,
           });
         }
       }

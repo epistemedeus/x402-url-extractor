@@ -25,6 +25,7 @@ test("optional validation records survive restart and still join unchanged v1 ro
     const v1 = historicalV1Row({
       method: "GET",
       route: "/extract",
+      settlementReference: `0x${"e".repeat(64)}`,
     });
     const record = recordFromObservedResponse({
       method: "GET",

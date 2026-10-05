@@ -22,6 +22,10 @@ export const DELIVERY = Object.freeze({
   MERCHANT_HTTP_FAILURE: "merchant_http_failure",
   UNSUPPORTED_TARGET: "unsupported_target",
   INCOMPLETE_REPORT: "incomplete_report",
+  COMPLETE_USEFUL: "complete_useful",
+  USEFUL_NEGATIVE: "useful_negative",
+  UPSTREAM_FAILED: "upstream_failed",
+  UNKNOWN: "unknown",
 });
 
 export const VERDICT = Object.freeze({
@@ -56,6 +60,8 @@ export const PROHIBITED_INFERENCES = Object.freeze([
   "schema_shaped_http_500_is_completed_delivery",
   "truncate_class_hides_source_refusal",
   "schema_conformance_is_buyer_usefulness",
+  "ok_false_http_200_is_complete_useful",
+  "model_inferred_caller_usefulness",
 ]);
 
 const ENGINE_CODES = new Set([
@@ -220,6 +226,10 @@ function classifyLayers({
     });
   }
 
+  if (resource === RESOURCES.MORPHO_POSITION) {
+    return classifyMorphoPosition({ body, contract, truncateMarks, oversized });
+  }
+
   const typedFailure = typedFailureDelivery(body);
   if (typedFailure) {
     return wrap({
@@ -360,6 +370,179 @@ function classifyLayers({
     sourceRefusalMarks,
     schemaConformance: SCHEMA_CONFORMANCE.HOLDS,
   });
+}
+
+function classifyMorphoPosition({ body, contract, truncateMarks, oversized }) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return wrap({
+      verdict: VERDICT.UNKNOWN,
+      deliveryClass: DELIVERY.UNKNOWN,
+      contract,
+      truncateMarks,
+      sourceRefusalMarks: 0,
+      schemaConformance: SCHEMA_CONFORMANCE.NOT_APPLICABLE,
+    });
+  }
+  // HTTP 200 and MCP isError both land here. ok:false is upstream failure,
+  // including when the success schema would also reject the envelope.
+  if (body.ok === false) {
+    return wrap({
+      verdict: VERDICT.INVALID,
+      deliveryClass: DELIVERY.UPSTREAM_FAILED,
+      contract: { ok: false, schemaErrors: 0, requiredPresent: 0, codes: ["ok_false"] },
+      truncateMarks,
+      sourceRefusalMarks: 0,
+      schemaConformance: SCHEMA_CONFORMANCE.NOT_APPLICABLE,
+    });
+  }
+  if (contract?.unsupported) {
+    return wrap({
+      verdict: VERDICT.UNKNOWN,
+      deliveryClass: DELIVERY.UNKNOWN,
+      contract,
+      truncateMarks,
+      sourceRefusalMarks: 0,
+      schemaConformance: SCHEMA_CONFORMANCE.NOT_APPLICABLE,
+    });
+  }
+  if (!contract?.ok || body.ok !== true) {
+    return wrap({
+      verdict: VERDICT.INVALID,
+      deliveryClass: DELIVERY.MALFORMED_BODY,
+      contract,
+      truncateMarks,
+      sourceRefusalMarks: 0,
+      schemaConformance: SCHEMA_CONFORMANCE.FAILS,
+    });
+  }
+  if (oversized || body.truncated === true || truncateMarks > 0) {
+    return wrap({
+      verdict: VERDICT.PASS,
+      deliveryClass: DELIVERY.TRUNCATED_PARTIAL,
+      contract,
+      truncateMarks: boundCounter(Math.max(truncateMarks, 1)),
+      sourceRefusalMarks: 0,
+      schemaConformance: SCHEMA_CONFORMANCE.HOLDS,
+    });
+  }
+  const positions = Array.isArray(body.positions) ? body.positions : null;
+  const count = body.positionCount;
+  if (!positions || !Number.isInteger(count) || count !== positions.length) {
+    return wrap({
+      verdict: VERDICT.UNKNOWN,
+      deliveryClass: DELIVERY.UNKNOWN,
+      contract,
+      truncateMarks: 0,
+      sourceRefusalMarks: 0,
+      schemaConformance: SCHEMA_CONFORMANCE.HOLDS,
+    });
+  }
+  if (count === 0) {
+    return wrap({
+      verdict: VERDICT.PASS,
+      deliveryClass: DELIVERY.USEFUL_NEGATIVE,
+      contract,
+      truncateMarks: 0,
+      sourceRefusalMarks: 0,
+      schemaConformance: SCHEMA_CONFORMANCE.HOLDS,
+    });
+  }
+  return wrap({
+    verdict: VERDICT.PASS,
+    deliveryClass: DELIVERY.COMPLETE_USEFUL,
+    contract,
+    truncateMarks: 0,
+    sourceRefusalMarks: 0,
+    schemaConformance: SCHEMA_CONFORMANCE.HOLDS,
+  });
+}
+
+/**
+ * MCP morpho_position returns the same JSON as GET /defi/morpho-position,
+ * or the paid handler's ok:false text when the tool throws. isError never
+ * promotes that text into a complete snapshot.
+ */
+export function evaluateMcpToolDelivery({
+  toolName,
+  toolResult,
+  settlementClass,
+  settlementReference = null,
+  payerClass = "unclassified",
+  capturedAt,
+  recordId,
+} = {}) {
+  if (toolName !== "morpho_position") {
+    return evaluateResponseBytes({
+      method: "GET",
+      resource: toolName ? `/mcp/${toolName}` : "",
+      responseBytes: Buffer.alloc(0),
+      merchantHttpStatus: 200,
+      settlementClass,
+      settlementReference,
+      payerClass,
+      capturedAt,
+      recordId,
+    });
+  }
+  const extracted = bodyFromMcpToolResult(toolResult);
+  if (!extracted.ok && extracted.reason === "malformed") {
+    return evaluateResponseBytes({
+      method: "GET",
+      resource: RESOURCES.MORPHO_POSITION,
+      responseBytes: Buffer.from("{"),
+      merchantHttpStatus: 200,
+      settlementClass,
+      settlementReference,
+      payerClass,
+      capturedAt,
+      recordId,
+    });
+  }
+  if (!extracted.ok) {
+    return evaluateResponseBytes({
+      method: "GET",
+      resource: RESOURCES.MORPHO_POSITION,
+      responseBytes: Buffer.alloc(0),
+      merchantHttpStatus: 200,
+      settlementClass,
+      settlementReference,
+      payerClass,
+      capturedAt,
+      recordId,
+    });
+  }
+  const payload = extracted.isError && extracted.body?.ok !== false
+    ? { ok: false, error: "tool_execution_failed", charged: false }
+    : extracted.body;
+  return evaluateResponseBytes({
+    method: "GET",
+    resource: RESOURCES.MORPHO_POSITION,
+    responseBytes: Buffer.from(JSON.stringify(payload)),
+    merchantHttpStatus: 200,
+    settlementClass,
+    settlementReference,
+    payerClass,
+    capturedAt,
+    recordId,
+  });
+}
+
+function bodyFromMcpToolResult(result) {
+  if (!result || typeof result !== "object" || Array.isArray(result)) {
+    return { ok: false, reason: "missing" };
+  }
+  const isError = result.isError === true;
+  if (result.structuredContent && typeof result.structuredContent === "object" && !Array.isArray(result.structuredContent)) {
+    return { ok: true, body: result.structuredContent, isError };
+  }
+  const text = result.content?.[0]?.text;
+  if (typeof text !== "string" || !text.trim()) return { ok: false, reason: "missing" };
+  try {
+    const body = JSON.parse(text);
+    return { ok: true, body, isError };
+  } catch {
+    return { ok: false, reason: "malformed" };
+  }
 }
 
 const SELLER_DECISIONS = new Set(["machine_buyable", "contract_ready", "repair_required"]);

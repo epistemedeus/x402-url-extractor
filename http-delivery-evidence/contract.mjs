@@ -13,6 +13,7 @@ export const RESOURCES = Object.freeze({
   EXTRACT_BATCH: "/extract/batch",
   LOCKFILE: "/lockfile-pin-delta",
   SELLER_INTEGRITY: "/commerce/seller-integrity-audit",
+  MORPHO_POSITION: "/defi/morpho-position",
 });
 
 export const EXTRACT_CONTRACT = "x402-url-extractor.extractMcpOutputSchema";
@@ -20,6 +21,19 @@ export const READ_CONTRACT = "x402-url-extractor.readMcpOutputSchema";
 export const EXTRACT_BATCH_CONTRACT = "x402-url-extractor.extractBatchOutputSchema";
 export const LOCKFILE_CONTRACT = "x402-url-extractor.lockfilePinDeltaOutputSchema";
 export const SELLER_INTEGRITY_CONTRACT = "x402-url-extractor.sellerIntegrityAuditOutputSchema";
+export const MORPHO_POSITION_CONTRACT = "x402-url-extractor.morphoPositionOutputSchema";
+
+/**
+ * The 2026-10-05 Morpho paid_success event has no retained response body.
+ * A later process must not emit a validation row that pretends to be that call.
+ */
+export const CLOSED_UNRETAINED_PAID_EVIDENCE_IDS = Object.freeze([
+  "e87c5642-c177-49bb-809a-05912264d7e3",
+]);
+
+export function httpDeliveryEmissionAllowed(paidEvidenceId) {
+  return !CLOSED_UNRETAINED_PAID_EVIDENCE_IDS.includes(paidEvidenceId);
+}
 
 export const CANONICAL_PIN = Object.freeze({
   merchantSha: GENERATED.merchantSha,
@@ -47,6 +61,7 @@ export function bindOwningContracts({
   batchHttpParse,
   lockfileHttpParse,
   sellerIntegrityHttpParse,
+  morphoPositionHttpParse,
 } = {}) {
   owningParsers = {
     [RESOURCES.EXTRACT]: wrapOwningParse(extractSuccessParse),
@@ -54,6 +69,7 @@ export function bindOwningContracts({
     [RESOURCES.EXTRACT_BATCH]: wrapOwningParse(batchHttpParse),
     [RESOURCES.LOCKFILE]: wrapOwningParse(lockfileHttpParse),
     [RESOURCES.SELLER_INTEGRITY]: wrapOwningParse(sellerIntegrityHttpParse),
+    [RESOURCES.MORPHO_POSITION]: wrapOwningParse(morphoPositionHttpParse),
   };
 }
 
@@ -67,11 +83,13 @@ export function contractNameForResource(resource) {
   if (resource === RESOURCES.EXTRACT_BATCH) return EXTRACT_BATCH_CONTRACT;
   if (resource === RESOURCES.LOCKFILE) return LOCKFILE_CONTRACT;
   if (resource === RESOURCES.SELLER_INTEGRITY) return SELLER_INTEGRITY_CONTRACT;
+  if (resource === RESOURCES.MORPHO_POSITION) return MORPHO_POSITION_CONTRACT;
   return null;
 }
 
 export function isSupportedTarget(method, resource) {
   if (resource === RESOURCES.EXTRACT || resource === RESOURCES.READ) return method === "GET";
+  if (resource === RESOURCES.MORPHO_POSITION) return method === "GET";
   if (resource === RESOURCES.SELLER_INTEGRITY) return method === "GET" || method === "POST";
   if (resource === RESOURCES.EXTRACT_BATCH || resource === RESOURCES.LOCKFILE) return method === "POST";
   return false;

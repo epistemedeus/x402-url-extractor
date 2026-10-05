@@ -19,6 +19,9 @@ export {
   EXTRACT_BATCH_CONTRACT,
   LOCKFILE_CONTRACT,
   SELLER_INTEGRITY_CONTRACT,
+  MORPHO_POSITION_CONTRACT,
+  CLOSED_UNRETAINED_PAID_EVIDENCE_IDS,
+  httpDeliveryEmissionAllowed,
   CANONICAL_PIN,
   MAX_RESPONSE_BYTES,
   bindOwningContracts,
@@ -44,6 +47,7 @@ export {
   isCompletedMerchantHttp,
   classifyParsedBody,
   evaluateResponseBytes,
+  evaluateMcpToolDelivery,
 } from "./classify.mjs";
 export {
   PAID_DIAGNOSTIC_MEASUREMENT,
@@ -59,4 +63,6 @@ export {
   openStore,
   recordFromObservedResponse,
   canonicalizeValidationRecord,
+  validationAttachesToHistorical,
 } from "./store.mjs";
+export { declareCallerUsefulness } from "./caller-declaration.mjs";
