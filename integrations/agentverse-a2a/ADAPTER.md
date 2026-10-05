@@ -1,6 +1,6 @@
 # Agentverse A2A adapter
 
-This process is a discovery-only JSON-RPC 1.0 bridge. It does not price, sign, pay, or invoke SameDayDesk tools. The first-party catalog remains `a2a-storefront.mjs` (`A2A_VERSION = "1.0"`).
+This process exposes the existing catalog and two bounded free SameDayDesk tools through JSON-RPC 1.0 and the registered AgentChat identity. It can retrieve an unpaid merchant challenge, but it never forwards payment authority, pays, or performs a paid tool call. AgentChat replies are signed by the existing registered identity. The first-party catalog remains `a2a-storefront.mjs` (`A2A_VERSION = "1.0"`).
 
 ## Why `protocol_version` must be set
 
@@ -31,7 +31,11 @@ Two exact JSON selections use the same `SendMessage` envelope:
 
 ## AgentChat sync return
 
-Agentverse delivers Chat Protocol envelopes to `POST /av/chat`. The proxy returns that HTTP body to the caller. A caller that sets `x-uagents-connection: sync` receives the handler text as a signed ChatMessage envelope. The text is the same JSON the `SendMessage` path already returns. Without that header, the existing SDK path still answers `{}` and delivers the reply to the sender's own endpoint. This route does not create an agent, listing, or payment.
+Agentverse routes Chat Protocol envelopes through `https://agentverse.ai/v2/agents/proxy/submit` to the existing registered `POST /av/chat` endpoint. A caller that sets `x-uagents-connection: sync` receives the handler text as a signed ChatMessage envelope. The text is the same JSON the `SendMessage` path already returns. Without that header, the SDK acknowledges `{}` and delivers the asynchronous reply to the sender's own registered endpoint; an empty acknowledgment is not useful delivery.
+
+The actual October5 synchronous receiving observed HTTP308 from the proxy to the exact registered HTTPS endpoint `https://agentverse-a2a-production.up.railway.app/av/chat`. Preserve the signed POST envelope and connection header for one307/308 hop only when the destination equals that declared registered endpoint. Do not follow arbitrary redirects or treat a redirect/HTTP200 alone as a completed task. Verify the reply signature, registered sender, ephemeral caller target, original session and Chat Protocol digest before interpreting the text.
+
+The pinned native receiving recipe and guarded caller are in [Pilot's receiving record](https://github.com/epistemedeus/pilot/blob/codex/root-1005-paid-progress/overview/research/phase-20261001/agentverse-native-1005/ROOT-ADJUDICATION.md) and [receiving tool](https://github.com/epistemedeus/pilot/blob/78c1eece3cc533811dc468b3039120b8a17fdbec/tools/ops/agentverse-native-receiving.py). It received actual useful, changed-tool, invalid-input and unpaid-challenge controls with verified signed replies on October5. These are owner QA, not customer adoption or revenue. This route does not create an agent, listing, or payment.
 
 ## Env
 
