@@ -17,6 +17,8 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 
 from catalog_proxy import DEFAULT_UPSTREAM_URL, CatalogProxyExecutor
+from chat_sync import chat_endpoint
+from uagents_core.identity import Identity
 
 
 skill = AgentSkill(
@@ -91,7 +93,12 @@ def create_app(
         or CatalogProxyExecutor(upstream_url=DEFAULT_UPSTREAM_URL),
         task_store=InMemoryTaskStore(),
     )
-    routes = [Route("/health", health, methods=["GET"])]
+    # /av/chat is first so a sync caller gets the reply body. The SDK adds
+    # the same path later for the asynchronous Agentverse delivery path.
+    routes = [
+        Route("/av/chat", chat_endpoint, methods=["POST"]),
+        Route("/health", health, methods=["GET"]),
+    ]
     routes.extend(create_agent_card_routes(agent_card))
     # JSON-RPC is advertised at the card URL itself. Leave v0.3 compat off:
     # the first-party catalog and these handlers are lf.a2a.v1 / 1.0 only.
@@ -105,6 +112,9 @@ def create_app(
     app = Starlette(routes=routes)
     app.state.agent_card = agent_card
     app.state.request_handler = handler
+    # Used only when this process was not initialized as the registered agent.
+    # It is not registered and not written down.
+    app.state.chat_signer = Identity.generate()
     return app
 
 

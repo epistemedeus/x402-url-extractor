@@ -21,4 +21,4 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 
 [tool.setuptools]
-py-modules = ["catalog_proxy", "main"]
+py-modules = ["catalog_proxy", "chat_sync", "main"]
