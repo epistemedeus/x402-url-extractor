@@ -18,7 +18,16 @@ curl -sS "$PUBLIC_URL/.well-known/agent-card.json"
 
 Expect `supportedInterfaces[0].protocolBinding` = `JSONRPC`, `protocolVersion` = `1.0`, and no top-level `protocolVersion` of `0.3`. JSON-RPC is `POST $PUBLIC_URL/` with header `A2A-Version: 1.0`, method `SendMessage`, and `message.role` = `ROLE_USER`.
 
-Discovery returns the live seller-integrity audit `route` / `priceAtomicUsdc` / `exampleUrl`. Callers pay the merchant URL themselves.
+Plain text still returns the live seller-integrity audit `route` / `priceAtomicUsdc` / `exampleUrl`. Callers pay the merchant URL themselves. The bridge does not infer a payment header from the message and does not pay.
+
+Two exact JSON selections use the same `SendMessage` envelope:
+
+```json
+{"kind":"free-tool","tool":"check_ai_readiness","arguments":{"url":"https://example.com"}}
+{"kind":"paid-challenge"}
+```
+
+`check_ai_readiness` and `check_agent_readiness` are the apex free tools at `https://samedaydesk.com/mcp`. Any other tool name is a refusal. `paid-challenge` reads the catalog example URL with `X-SameDayDesk-Agent-Source: agentverse-a2a-v1` and returns the merchant 402. That header is caller-declared metadata, not attribution. A 200, redirect, event stream, or oversized body is refused. The optional later paid call is the caller's own request to `selectedAction.exampleUrl`. The existing merchant outcome header `x-samedaydesk-outcome-task` is not written here.
 
 ## Env
 

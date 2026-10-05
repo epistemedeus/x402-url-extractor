@@ -24,12 +24,16 @@ skill = AgentSkill(
     name="Discover SameDayDesk payment integrity",
     description=(
         "Returns the canonical SameDayDesk x402 and MPP action catalog, including "
-        "the current-price seller-integrity audit and its exact invocation contract."
+        "the current-price seller-integrity audit and its exact invocation contract. "
+        "A free-tool message calls the public apex readiness tool. A paid-challenge "
+        "message returns the live unpaid challenge and does not pay."
     ),
     tags=["x402", "payment integrity", "machine commerce"],
     examples=[
         "Find the seller-integrity audit and its exact current price.",
         "List the machine-paid actions SameDayDesk offers.",
+        '{"kind":"free-tool","tool":"check_ai_readiness","arguments":{"url":"https://example.com"}}',
+        '{"kind":"paid-challenge"}',
     ],
 )
 
