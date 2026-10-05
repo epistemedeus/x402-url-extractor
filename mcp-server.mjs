@@ -28,6 +28,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { x402ResourceServer } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { createPaymentWrapper } from "@x402/mcp";
+import { sealObservedMcpToolResult } from "./http-delivery-evidence/mcp-delivery.mjs";
 import { classifyDeclaredAgentDiscoverySource, listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
 import {
   buildRegisteredCatalog,
@@ -381,8 +382,11 @@ function registerOfficialLifecycleHooks(resourceServer) {
   });
   resourceServer.onAfterSettle((context) => {
     const result = context?.result;
+    const success = result?.success === true ? true : result?.success === false ? false : undefined;
+    const transaction = typeof result?.transaction === "string" ? result.transaction : undefined;
     mcpTypedAttemptAls.getStore()?.observeSettleOutcome({
-      success: result?.success === true ? true : result?.success === false ? false : undefined,
+      success,
+      settlementReference: success === true ? transaction : undefined,
     });
     return undefined;
   });
@@ -408,13 +412,13 @@ function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) 
     entry.resolve();
   }
 
-  function invokeUser(decision, requestAttribution, declaredSource, entry) {
+  function invokeUser(decision, requestAttribution, declaredSource, delivery, entry) {
     let assimilated;
     try {
       // Assimilate without probing result.then first: a throwing `then` accessor
       // or Proxy trap is consumed by the resolving functions as a rejection and
       // stays inside this failure-safe terminal path.
-      assimilated = Promise.resolve(onAppend(decision, requestAttribution, declaredSource));
+      assimilated = Promise.resolve(onAppend(decision, requestAttribution, declaredSource, delivery));
     } catch {
       failures += 1;
       finishEntry(entry);
@@ -429,7 +433,7 @@ function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) 
     );
   }
 
-  function schedule(decision, requestAttribution = null, declaredSource = null) {
+  function schedule(decision, requestAttribution = null, declaredSource = null, delivery = null) {
     if (sealed || typeof onAppend !== "function") return;
     let resolve;
     const done = new Promise((next) => {
@@ -439,7 +443,7 @@ function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) 
     pending.add(entry);
     const launch = () => {
       entry.timer = null;
-      invokeUser(decision, requestAttribution, declaredSource, entry);
+      invokeUser(decision, requestAttribution, declaredSource, delivery, entry);
     };
     if (jsonResponse && decision?.result !== "paid_success") {
       queueMicrotask(launch);
@@ -506,8 +510,22 @@ function decorateTransportSend(transport, attempt) {
     if (attempt && !used && isJsonRpcResponseMessage(message)) {
       used = true;
       const kind = classifyOutboundKind(message);
-      if (kind === "tool_result" && message.result?.isError === true) {
-        attempt.overrideFinalApplicationError();
+      if (kind === "tool_result") {
+        try {
+          if (message.result?.isError === true) attempt.overrideFinalApplicationError();
+          const delivery = sealObservedMcpToolResult({
+            tool: attempt.binding?.tool,
+            productSku: attempt.binding?.productSku,
+            resource: attempt.binding?.resource,
+            issuedOfferDigest: attempt.binding?.issuedOfferDigest,
+            callId: Object.hasOwn(message, "id") ? message.id : null,
+            result: message.result,
+            settlementReference: attempt.readSettlementReference?.() || null,
+          });
+          if (delivery) attempt.noteToolDelivery(delivery);
+        } catch {
+          // Delivery capture must not change the MCP response.
+        }
       }
       attempt.finalize({
         responseId: Object.hasOwn(message, "id") ? message.id : null,
@@ -537,7 +555,12 @@ function createTypedAttemptForBody(body, catalog, onAppend, requestAttribution =
     },
     // The inner HTTP request owns paidHttp source attribution. Preserve typed
     // diagnostics, but never attach a second source count to that same hop.
-    onAppend: (decision) => onAppend(decision, requestAttribution, registered?.httpOwned ? null : declaredSource),
+    onAppend: (decision, delivery) => onAppend(
+      decision,
+      requestAttribution,
+      registered?.httpOwned ? null : declaredSource,
+      registered?.httpOwned ? null : delivery,
+    ),
   });
   if (!hasId) {
     attempt.finalize({ responseId: null, kind: "no_response" });
@@ -575,7 +598,7 @@ export async function mountMcp(app, {
     ? createTypedTelemetryLifecycle(typedTelemetry.onAppend, { jsonResponse })
     : null;
   const onAppend = typedLifecycle
-    ? (decision, requestAttribution, declaredSource) => typedLifecycle.schedule(decision, requestAttribution, declaredSource)
+    ? (decision, requestAttribution, declaredSource, delivery) => typedLifecycle.schedule(decision, requestAttribution, declaredSource, delivery)
     : undefined;
   const paidTools = tools.filter((tool) => tool?.free !== true);
   const freeTools = tools.filter((tool) => tool?.free === true);

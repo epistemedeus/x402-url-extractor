@@ -4244,8 +4244,8 @@ import("./mcp-server.mjs")
       serverInfo: { name: "x402-data-gateway", version: SERVICE_VERSION },
       typedTelemetry: {
         enabled: true,
-        onAppend: (decision, requestAttribution, declaredSource) =>
-          commerceTelemetry.appendMcpTypedDecision(decision, requestAttribution, declaredSource),
+        onAppend: (decision, requestAttribution, declaredSource, toolDelivery) =>
+          commerceTelemetry.appendMcpTypedDecision(decision, requestAttribution, declaredSource, toolDelivery),
         attributionForRequest: (req) => commerceTelemetry.mcpTypedAttributionForRequest(req),
         declaredSourceForRequest: (req) => commerceTelemetry.mcpTypedDeclaredSourceForRequest(req),
       },

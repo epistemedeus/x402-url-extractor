@@ -23,18 +23,6 @@ export const LOCKFILE_CONTRACT = "x402-url-extractor.lockfilePinDeltaOutputSchem
 export const SELLER_INTEGRITY_CONTRACT = "x402-url-extractor.sellerIntegrityAuditOutputSchema";
 export const MORPHO_POSITION_CONTRACT = "x402-url-extractor.morphoPositionOutputSchema";
 
-/**
- * The 2026-10-05 Morpho paid_success event has no retained response body.
- * A later process must not emit a validation row that pretends to be that call.
- */
-export const CLOSED_UNRETAINED_PAID_EVIDENCE_IDS = Object.freeze([
-  "e87c5642-c177-49bb-809a-05912264d7e3",
-]);
-
-export function httpDeliveryEmissionAllowed(paidEvidenceId) {
-  return !CLOSED_UNRETAINED_PAID_EVIDENCE_IDS.includes(paidEvidenceId);
-}
-
 export const CANONICAL_PIN = Object.freeze({
   merchantSha: GENERATED.merchantSha,
   binding: GENERATED.binding,

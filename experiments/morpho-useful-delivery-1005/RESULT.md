@@ -25,7 +25,7 @@ The owner is `http-delivery-evidence`, bound to `morphoPositionOutputSchema()`. 
 
 A future row attaches only when method, route, event id, and response digest match the paid-success row. A non-null settlement reference or request digest must match too. A conflicting value does not attach. Caller usefulness is `declareCallerUsefulness`: an explicit `caller` disposition bound to the same request, event, and settlement. A delivery class, a model, or an inference does not fill it in.
 
-Event `e87c5642-c177-49bb-809a-05912264d7e3` has no retained body. `recordFromObservedResponse` refuses that id. Buyer predicate and earlier-payer continuity stay unknown.
+Event `e87c5642-c177-49bb-809a-05912264d7e3` has no retained body. A caller-supplied digest that was not produced from observed bytes is refused for every event id, so this call stays uncaptured. Buyer predicate and earlier-payer continuity stay unknown.
 
 ## Free-index comparison
 

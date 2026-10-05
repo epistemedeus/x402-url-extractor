@@ -20,14 +20,17 @@ import {
 } from "./commerce-outcome-binding.mjs";
 import { bindMerchantHttpDeliveryContracts } from "./http-delivery-evidence/bind-merchant-contracts.mjs";
 import {
+  MCP_DELIVERY_FILENAME,
   isSupportedTarget,
   MAX_RESPONSE_BYTES,
   openStore,
   publicPaidDiagnosticMeasurement,
+  recordFromObservedMcpDelivery,
   recordFromObservedResponse,
   SETTLEMENT_CLASS,
   VALIDATION_FILENAME,
 } from "./http-delivery-evidence/index.mjs";
+import { sealStreamedHttpCapture } from "./http-delivery-evidence/observation.mjs";
 import { isReceiptReferralId } from "./receipt-referral.mjs";
 import {
   PAID_OPERATION_PATH,
@@ -593,6 +596,7 @@ function buildHttpDeliveryValidationRecord({
   payerClass,
   paidEvidenceId,
   requestDigest = null,
+  observation = null,
 }) {
   try {
     if (!isSupportedTarget(method, resource)) return null;
@@ -609,6 +613,7 @@ function buildHttpDeliveryValidationRecord({
       payerClass: payerClass || "unclassified",
       paidEvidenceId,
       requestDigest,
+      observation,
     });
   } catch {
     return null;
@@ -696,11 +701,20 @@ export function capturePaidEvidenceResponseDigest(res, method, resource = "") {
     if (finalized || !valid || !originalEnd || !endObserved) return null;
     finalized = true;
     try {
+      const digest = hash.digest("hex");
+      const bytes = observed.length ? Buffer.concat(observed, retainedLength) : Buffer.alloc(0);
       return {
-        digest: hash.digest("hex"),
-        bytes: observed.length ? Buffer.concat(observed, retainedLength) : Buffer.alloc(0),
+        digest,
+        bytes,
         byteLength: actualLength,
         retainedByteLength: retainedLength,
+        observation: sealStreamedHttpCapture({
+          digest,
+          byteLength: actualLength,
+          bytes,
+          method: String(method || "GET").toUpperCase(),
+          resource,
+        }),
       };
     } catch {
       return null;
@@ -3109,6 +3123,7 @@ export function createCommerceTelemetry({
   const rotatedPath = path.join(dataDir, "commerce-events.1.ndjson");
   const paidEvidencePath = path.join(dataDir, "commerce-paid-success-evidence.ndjson");
   const httpDeliveryEvidencePath = path.join(dataDir, VALIDATION_FILENAME);
+  const mcpToolDeliveryPath = path.join(dataDir, MCP_DELIVERY_FILENAME);
   const rareFunnelPath = path.join(dataDir, "commerce-rare-funnel-evidence.ndjson");
   const rareFunnelRotatedPath = path.join(dataDir, "commerce-rare-funnel-evidence.1.ndjson");
   const outcomeBinding = createForwardOutcomeWriter({ dataDir, maxBytes, internalToken });
@@ -3316,7 +3331,7 @@ export function createCommerceTelemetry({
     });
   }
 
-  function appendMcpTypedDecision(decision, attestedAttribution = null, declaredSource = null) {
+  function appendMcpTypedDecision(decision, attestedAttribution = null, declaredSource = null, toolDelivery = null) {
     // Adapt, validate, and copy synchronously before any queue scheduling, so
     // the queued closure owns the canonical event and later caller mutation of
     // the original decision cannot alter, relabel, or add to the stored row.
@@ -3354,11 +3369,32 @@ export function createCommerceTelemetry({
         event = isCanonicalMcpTypedCommerceEvent(merged) ? merged : baseEvent;
       }
     }
+    let mcpDeliveryRecord = null;
+    if (event && toolDelivery) {
+      try {
+        bindMerchantHttpDeliveryContracts();
+        mcpDeliveryRecord = recordFromObservedMcpDelivery({
+          observation: toolDelivery,
+          settlementState: event.settlementState,
+          paidEvidenceId: event.id,
+          settlementClass: httpDeliverySettlementClass(),
+        });
+      } catch {
+        mcpDeliveryRecord = null;
+      }
+    }
     return enqueueExclusive(async () => {
       if (!event) return;
       await appendEvent(event);
       const rareEvidence = rareFunnelEvidenceFromMcpTypedEvent(event);
       if (rareEvidence) await appendRareFunnelEvidence(rareEvidence);
+      if (mcpDeliveryRecord) {
+        try {
+          await openStore(dataDir).appendMcpDelivery(mcpDeliveryRecord);
+        } catch {
+          // Observational MCP delivery rows must not fail the typed commerce event.
+        }
+      }
     }).catch((error) => {
       console.error(`commerce telemetry write failed: ${error.message}`);
     });
@@ -3634,6 +3670,7 @@ export function createCommerceTelemetry({
             payerClass: paidEvidenceRequest.payerClass,
             paidEvidenceId: eventId,
             requestDigest: paidEvidenceRequest.requestDigest,
+            observation: captured.observation,
           });
         }
       }
@@ -4294,6 +4331,7 @@ export function createCommerceTelemetry({
       rotatedPath,
       paidEvidencePath,
       httpDeliveryEvidencePath,
+      mcpToolDeliveryPath,
       rareFunnelPath,
       rareFunnelRotatedPath,
       outcomeBindingPath: outcomeBinding.currentPath,

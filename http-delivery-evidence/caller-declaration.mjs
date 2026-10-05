@@ -1,5 +1,5 @@
-import { httpDeliveryEmissionAllowed } from "./contract.mjs";
 import { USEFULNESS_UNKNOWN } from "./classify.mjs";
+import { httpDeliveryEmissionAllowed, recordObservation } from "./observation.mjs";
 
 const DISPOSITIONS = new Set(["useful", "not_useful"]);
 
@@ -30,7 +30,7 @@ export function declareCallerUsefulness({ validation, declaration } = {}) {
   if (!validation || validation.usefulness !== USEFULNESS_UNKNOWN) {
     return absent("validation_usefulness_must_stay_unknown");
   }
-  if (!httpDeliveryEmissionAllowed(validation.paidEvidenceId)) {
+  if (!httpDeliveryEmissionAllowed(validation.paidEvidenceId, recordObservation(validation))) {
     return absent("historical_intent_not_retained");
   }
   const sameEvent = declaration.paidEvidenceId === validation.paidEvidenceId;

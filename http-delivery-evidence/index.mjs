@@ -1,4 +1,20 @@
-export { digestResponseBytes, RESPONSE_DIGEST_DOMAIN, asBytes, isDigestHex } from "./digest.mjs";
+export {
+  digestResponseBytes,
+  digestMcpPayload,
+  digestMcpCallId,
+  digestMcpDeliveryBinding,
+  RESPONSE_DIGEST_DOMAIN,
+  MCP_PAYLOAD_DIGEST_DOMAIN,
+  asBytes,
+  isDigestHex,
+} from "./digest.mjs";
+export {
+  httpDeliveryEmissionAllowed,
+  isSealedDeliveryObservation,
+  recordObservation,
+  bindDeliveryObservation,
+  observationPayload,
+} from "./observation.mjs";
 export {
   HISTORICAL_V1,
   HISTORICAL_VALIDATOR_VERDICT,
@@ -20,8 +36,6 @@ export {
   LOCKFILE_CONTRACT,
   SELLER_INTEGRITY_CONTRACT,
   MORPHO_POSITION_CONTRACT,
-  CLOSED_UNRETAINED_PAID_EVIDENCE_IDS,
-  httpDeliveryEmissionAllowed,
   CANONICAL_PIN,
   MAX_RESPONSE_BYTES,
   bindOwningContracts,
@@ -42,6 +56,7 @@ export {
   SETTLEMENT_CLASS,
   VALIDATOR_AUTHORITY,
   VALIDATOR_SOURCE,
+  MCP_TOOL_VALIDATOR_SOURCE,
   USEFULNESS_UNKNOWN,
   PROHIBITED_INFERENCES,
   isCompletedMerchantHttp,
@@ -66,3 +81,13 @@ export {
   validationAttachesToHistorical,
 } from "./store.mjs";
 export { declareCallerUsefulness } from "./caller-declaration.mjs";
+export {
+  MCP_DELIVERY_FILENAME,
+  MCP_DELIVERY_SCHEMA,
+  MCP_MORPHO_RESOURCE,
+  MCP_DELIVERY_KEYS,
+  sealObservedMcpToolResult,
+  recordFromObservedMcpDelivery,
+  canonicalizeMcpDeliveryRecord,
+  mcpDeliveryAttaches,
+} from "./mcp-delivery.mjs";

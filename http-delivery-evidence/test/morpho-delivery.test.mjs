@@ -12,19 +12,25 @@ import { morphoPosition } from "../../morpho-position.mjs";
 import { runMeasurement } from "../../experiments/morpho-useful-delivery-1005/measure.mjs";
 import { FIXTURE_ADDRESS, FREE_INDEX_ITEM, fixtureFetch, graphqlPage } from "../../experiments/morpho-useful-delivery-1005/fixture.mjs";
 import { bindMerchantHttpDeliveryContracts } from "../bind-merchant-contracts.mjs";
+import { sealStreamedHttpCapture } from "../observation.mjs";
 import {
-  CLOSED_UNRETAINED_PAID_EVIDENCE_IDS,
   DELIVERY,
   MAX_RESPONSE_BYTES,
+  MCP_MORPHO_RESOURCE,
+  MCP_TOOL_VALIDATOR_SOURCE,
   RESOURCES,
   SETTLEMENT_CLASS,
   VERDICT,
   checkDeclaredContract,
   declareCallerUsefulness,
+  digestResponseBytes,
   evaluateMcpToolDelivery,
   evaluateResponseBytes,
+  mcpDeliveryAttaches,
   openStore,
+  recordFromObservedMcpDelivery,
   recordFromObservedResponse,
+  sealObservedMcpToolResult,
 } from "../index.mjs";
 import { historicalV1Row, validExtractBody } from "./helpers.mjs";
 
@@ -32,7 +38,8 @@ bindMerchantHttpDeliveryContracts();
 
 const EVENT = "44444444-4444-4444-8444-444444444444";
 const OTHER_EVENT = "55555555-5555-4555-8555-555555555555";
-const CLOSED_EVENT = CLOSED_UNRETAINED_PAID_EVIDENCE_IDS[0];
+const UNRETAINED_A = "77777777-7777-4777-8777-777777777777";
+const UNRETAINED_B = "88888888-8888-4888-8888-888888888888";
 const SETTLEMENT = `0x${"a".repeat(64)}`;
 const OTHER_SETTLEMENT = `0x${"b".repeat(64)}`;
 const REQUEST = "d".repeat(64);
@@ -216,47 +223,99 @@ test("validation attaches only to the same route, event, settlement, and request
   }
 });
 
-test("the unretained 2026-10-05 event cannot gain a validation row", async () => {
+test("uncaptured output is refused for every event id", async () => {
   const body = await snapshot();
-  assert.throws(
-    () => record(body, { paidEvidenceId: CLOSED_EVENT }),
-    /retained output is absent/,
-  );
-  const declared = declareCallerUsefulness({
-    validation: {
-      paidEvidenceId: CLOSED_EVENT,
-      settlementReference: SETTLEMENT,
-      requestDigest: REQUEST,
-      usefulness: "unknown",
-    },
-    declaration: {
-      source: "caller",
-      disposition: "useful",
-      paidEvidenceId: CLOSED_EVENT,
-      settlementReference: SETTLEMENT,
-      requestDigest: REQUEST,
-    },
-  });
-  assert.equal(declared.present, false);
-  assert.equal(declared.reason, "historical_intent_not_retained");
+  const bytes = Buffer.from(JSON.stringify(body));
+  const honestDigest = digestResponseBytes(bytes);
+  for (const paidEvidenceId of [UNRETAINED_A, UNRETAINED_B]) {
+    assert.throws(
+      () => record(body, {
+        paidEvidenceId,
+        responseDigest: "f".repeat(64),
+        responseByteLength: bytes.length,
+      }),
+      /retained output is absent/,
+    );
+    assert.throws(
+      () => record(body, {
+        paidEvidenceId,
+        observation: {
+          streamHashed: true,
+          captured: true,
+          outputRetained: true,
+          source: "http_response_capture",
+          responseDigest: honestDigest,
+          responseByteLength: bytes.length,
+        },
+      }),
+      /retained output is absent/,
+    );
+    const sealed = record(body, { paidEvidenceId });
+    const revived = JSON.parse(JSON.stringify(sealed));
+    assert.throws(
+      () => recordFromObservedResponse({
+        method: "GET",
+        resource: RESOURCES.MORPHO_POSITION,
+        responseBytes: bytes,
+        responseDigest: honestDigest,
+        merchantHttpStatus: 200,
+        settlementClass: SETTLEMENT_CLASS.SIMULATED,
+        paidEvidenceId,
+        observation: revived,
+      }),
+      /retained output is absent/,
+    );
+    const declared = declareCallerUsefulness({
+      validation: {
+        paidEvidenceId,
+        settlementReference: SETTLEMENT,
+        requestDigest: REQUEST,
+        usefulness: "unknown",
+      },
+      declaration: {
+        source: "caller",
+        disposition: "useful",
+        paidEvidenceId,
+        settlementReference: SETTLEMENT,
+        requestDigest: REQUEST,
+      },
+    });
+    assert.equal(declared.present, false);
+    assert.equal(declared.reason, "historical_intent_not_retained");
+    assert.equal(declared.usefulness, "unknown");
+  }
+  for (const relative of ["contract.mjs", "store.mjs", "caller-declaration.mjs", "index.mjs"]) {
+    const source = readFileSync(new URL(`../${relative}`, import.meta.url), "utf8");
+    assert.equal(source.includes("e87c5642-c177-49bb-809a-05912264d7e3"), false);
+  }
 });
 
 test("bounded morpho capture is not a complete snapshot and drops the address", async () => {
   const prefix = Buffer.from(JSON.stringify(await snapshot()));
-  const digest = "f".repeat(64);
+  const full = Buffer.concat([prefix, Buffer.alloc(MAX_RESPONSE_BYTES + 1 - prefix.length, 0x20)]);
+  const digest = digestResponseBytes(full);
+  const observation = sealStreamedHttpCapture({
+    digest,
+    byteLength: full.length,
+    bytes: prefix,
+    method: "GET",
+    resource: RESOURCES.MORPHO_POSITION,
+  });
   const stored = recordFromObservedResponse({
     method: "GET",
     resource: RESOURCES.MORPHO_POSITION,
     responseBytes: prefix,
     responseDigest: digest,
-    responseByteLength: MAX_RESPONSE_BYTES + 1,
+    responseByteLength: full.length,
     merchantHttpStatus: 200,
     settlementClass: SETTLEMENT_CLASS.SIMULATED,
     settlementReference: SETTLEMENT,
     paidEvidenceId: EVENT,
+    observation,
   });
   assert.equal(stored.retainedByteLength, prefix.length);
   assert.equal(stored.responseByteLength, MAX_RESPONSE_BYTES + 1);
+  assert.equal(stored.responseDigest, digest);
   assert.equal(stored.deliveryClass, DELIVERY.TRUNCATED_PARTIAL);
   assert.equal(JSON.stringify(stored).includes(FIXTURE_ADDRESS.toLowerCase()), false);
 
@@ -293,6 +352,9 @@ test("MCP text and isError results use the same classes as HTTP", async () => {
   });
   assert.equal(mcpOk.deliveryClass, DELIVERY.COMPLETE_USEFUL);
   assert.equal(mcpOk.usefulness, "unknown");
+  assert.equal(mcpOk.transport, "mcp");
+  assert.equal(mcpOk.validatorSource, MCP_TOOL_VALIDATOR_SOURCE);
+  assert.notEqual(mcpOk.validatorSource, "caller_observed_http_bytes");
 
   const failed = {
     ...asToolResult({ ok: false, error: "Morpho API HTTP 502", charged: false }),
@@ -353,6 +415,73 @@ test("caller usefulness is a bound declaration and is not inferred from delivery
   assert.equal(declared.disposition, "not_useful");
   assert.equal(declared.usefulness, "unknown");
   assert.equal(validation.usefulness, "unknown");
+});
+
+test("observed mcp delivery is not an HTTP row and a spread copy cannot append", async () => {
+  const body = await snapshot();
+  const offer = "ab".repeat(32);
+  const seal = sealObservedMcpToolResult({
+    tool: "morpho_position",
+    productSku: "samedaydesk-morpho-position",
+    resource: MCP_MORPHO_RESOURCE,
+    issuedOfferDigest: offer,
+    callId: 41,
+    result: asToolResult(body),
+    settlementReference: SETTLEMENT,
+  });
+  const row = recordFromObservedMcpDelivery({
+    observation: seal,
+    settlementState: "succeeded",
+    paidEvidenceId: EVENT,
+    settlementClass: SETTLEMENT_CLASS.SIMULATED,
+  });
+  assert.equal(row.transport, "mcp");
+  assert.equal(row.resource, MCP_MORPHO_RESOURCE);
+  assert.equal(row.validatorSource, MCP_TOOL_VALIDATOR_SOURCE);
+  assert.equal(row.deliveryClass, DELIVERY.COMPLETE_USEFUL);
+  assert.equal(row.usefulness, "unknown");
+  assert.equal(row.callId, "41");
+  assert.equal(row.settlementReference, SETTLEMENT);
+  assert.equal(Object.hasOwn(row, "method"), false);
+  assert.equal(JSON.stringify(row).includes(FIXTURE_ADDRESS.toLowerCase()), false);
+  assert.equal(sealObservedMcpToolResult({
+    tool: "enrich",
+    productSku: "samedaydesk-enrich",
+    resource: "mcp://tool/enrich",
+    issuedOfferDigest: offer,
+    callId: 1,
+    result: asToolResult(body),
+  }), null);
+  const dir = await mkdtemp(path.join(tmpdir(), "mcp-delivery-row-"));
+  try {
+    const store = openStore(dir);
+    await store.appendMcpDelivery(row);
+    const read = await store.readMcpDeliveries();
+    assert.equal(read.length, 1);
+    const claim = {
+      tool: "morpho_position",
+      paidEvidenceId: EVENT,
+      callDigest: row.callDigest,
+      responseDigest: row.responseDigest,
+      resource: MCP_MORPHO_RESOURCE,
+      settlementReference: SETTLEMENT,
+      issuedOfferDigest: offer,
+    };
+    assert.equal(mcpDeliveryAttaches(read[0], claim), true);
+    assert.equal(mcpDeliveryAttaches(read[0], { ...claim, paidEvidenceId: OTHER_EVENT }), false);
+    assert.equal(mcpDeliveryAttaches(read[0], { ...claim, tool: "enrich" }), false);
+    assert.equal(mcpDeliveryAttaches(read[0], { ...claim, callDigest: "c".repeat(64) }), false);
+    assert.equal(mcpDeliveryAttaches(read[0], { ...claim, responseDigest: "d".repeat(64) }), false);
+    assert.equal(mcpDeliveryAttaches(read[0], { ...claim, resource: RESOURCES.MORPHO_POSITION }), false);
+    assert.equal(mcpDeliveryAttaches(read[0], { ...claim, settlementReference: OTHER_SETTLEMENT }), false);
+    assert.equal(mcpDeliveryAttaches(read[0], { ...claim, issuedOfferDigest: "e".repeat(64) }), false);
+    await assert.rejects(
+      store.appendMcpDelivery({ ...row, recordId: `mtd_${"a".repeat(32)}` }),
+      /retained output is absent/,
+    );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });
 
 test("payment price and the HTTP 200 catch stay on the existing handlers", () => {

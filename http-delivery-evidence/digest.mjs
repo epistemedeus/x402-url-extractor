@@ -31,3 +31,48 @@ export function asBytes(bytes) {
 export function isDigestHex(value) {
   return typeof value === "string" && DIGEST_HEX_RE.test(value);
 }
+
+/** Distinct from the HTTP response domain so an MCP payload is not an HTTP body. */
+export const MCP_PAYLOAD_DIGEST_DOMAIN = "samedaydesk.mcp-tool-delivery.payload.v1\0";
+const MCP_CALL_DIGEST_DOMAIN = "samedaydesk.mcp-tool-delivery.call.v1\0";
+const MCP_BINDING_DIGEST_DOMAIN = "samedaydesk.mcp-tool-delivery.binding.v1\0";
+
+export function digestMcpPayload(bytes) {
+  const buffer = asBytes(bytes);
+  const hash = createHash("sha256");
+  hash.update(MCP_PAYLOAD_DIGEST_DOMAIN, "utf8");
+  hash.update(buffer);
+  return hash.digest("hex");
+}
+
+function updateLengthFramed(hash, value) {
+  const bytes = Buffer.isBuffer(value) ? value : Buffer.from(String(value), "utf8");
+  const length = Buffer.alloc(8);
+  length.writeBigUInt64BE(BigInt(bytes.length));
+  hash.update(length);
+  hash.update(bytes);
+}
+
+function canonicalCallText(id) {
+  if (typeof id === "string") return id;
+  if (typeof id === "number" && Number.isSafeInteger(id)) return String(id);
+  return "";
+}
+
+/** Identity of the JSON-RPC call. The raw id is not required on the journal row. */
+export function digestMcpCallId(id) {
+  const hash = createHash("sha256");
+  hash.update(MCP_CALL_DIGEST_DOMAIN, "utf8");
+  updateLengthFramed(hash, canonicalCallText(id));
+  return hash.digest("hex");
+}
+
+/** Tool, call, and issued offer only. Arguments are not inputs. */
+export function digestMcpDeliveryBinding({ tool, callDigest, issuedOfferDigest } = {}) {
+  const hash = createHash("sha256");
+  hash.update(MCP_BINDING_DIGEST_DOMAIN, "utf8");
+  updateLengthFramed(hash, tool || "");
+  updateLengthFramed(hash, callDigest || "");
+  updateLengthFramed(hash, issuedOfferDigest || "");
+  return hash.digest("hex");
+}

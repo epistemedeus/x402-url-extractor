@@ -132,11 +132,15 @@ test("join emits one row per historical id even when response digests match", as
     const store = openStore(dir);
     await store.appendValidation(matching);
     await store.appendValidation(refused);
-    await store.appendValidation({
-      ...matching,
-      recordId: "hrv_" + "d".repeat(32),
+    const duplicate = recordFromObservedResponse({
+      method: "GET",
+      resource: RESOURCES.EXTRACT,
+      responseBytes: bytes,
+      merchantHttpStatus: 200,
+      settlementClass: SETTLEMENT_CLASS.SIMULATED,
       paidEvidenceId: firstId,
     });
+    await store.appendValidation(duplicate);
     const joined = await store.join({ currentValidatorVerdict: "validated" });
     assert.equal(joined.length, 3);
     const byId = Object.fromEntries(joined.map((row) => [row.historical.id, row]));

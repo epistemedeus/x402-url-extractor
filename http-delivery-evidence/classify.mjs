@@ -48,6 +48,7 @@ export const SETTLEMENT_CLASS = Object.freeze({
 
 export const VALIDATOR_AUTHORITY = "merchant_declared_schema";
 export const VALIDATOR_SOURCE = "caller_observed_http_bytes";
+export const MCP_TOOL_VALIDATOR_SOURCE = "caller_observed_mcp_tool_result";
 export const USEFULNESS_UNKNOWN = "unknown";
 
 export const PROHIBITED_INFERENCES = Object.freeze([
@@ -462,6 +463,19 @@ function classifyMorphoPosition({ body, contract, truncateMarks, oversized }) {
  * or the paid handler's ok:false text when the tool throws. isError never
  * promotes that text into a complete snapshot.
  */
+function asMcpClassification(evaluated, toolName) {
+  return {
+    ...evaluated,
+    transport: "mcp",
+    toolName: toolName || null,
+    validatorSource: MCP_TOOL_VALIDATOR_SOURCE,
+  };
+}
+
+/**
+ * Classification lens for a morpho_position tool result. The GET resource is
+ * only the JSON contract view. Persisted MCP rows must not copy method or resource.
+ */
 export function evaluateMcpToolDelivery({
   toolName,
   toolResult,
@@ -470,61 +484,30 @@ export function evaluateMcpToolDelivery({
   payerClass = "unclassified",
   capturedAt,
   recordId,
+  responseByteLength,
 } = {}) {
-  if (toolName !== "morpho_position") {
-    return evaluateResponseBytes({
-      method: "GET",
-      resource: toolName ? `/mcp/${toolName}` : "",
-      responseBytes: Buffer.alloc(0),
-      merchantHttpStatus: 200,
-      settlementClass,
-      settlementReference,
-      payerClass,
-      capturedAt,
-      recordId,
-    });
-  }
-  const extracted = bodyFromMcpToolResult(toolResult);
-  if (!extracted.ok && extracted.reason === "malformed") {
-    return evaluateResponseBytes({
-      method: "GET",
-      resource: RESOURCES.MORPHO_POSITION,
-      responseBytes: Buffer.from("{"),
-      merchantHttpStatus: 200,
-      settlementClass,
-      settlementReference,
-      payerClass,
-      capturedAt,
-      recordId,
-    });
-  }
-  if (!extracted.ok) {
-    return evaluateResponseBytes({
-      method: "GET",
-      resource: RESOURCES.MORPHO_POSITION,
-      responseBytes: Buffer.alloc(0),
-      merchantHttpStatus: 200,
-      settlementClass,
-      settlementReference,
-      payerClass,
-      capturedAt,
-      recordId,
-    });
-  }
-  const payload = extracted.isError && extracted.body?.ok !== false
-    ? { ok: false, error: "tool_execution_failed", charged: false }
-    : extracted.body;
-  return evaluateResponseBytes({
+  const lens = (responseBytes) => asMcpClassification(evaluateResponseBytes({
     method: "GET",
-    resource: RESOURCES.MORPHO_POSITION,
-    responseBytes: Buffer.from(JSON.stringify(payload)),
+    resource: toolName === "morpho_position"
+      ? RESOURCES.MORPHO_POSITION
+      : (toolName ? `/mcp/${toolName}` : ""),
+    responseBytes,
     merchantHttpStatus: 200,
     settlementClass,
     settlementReference,
     payerClass,
     capturedAt,
     recordId,
-  });
+    responseByteLength,
+  }), toolName);
+  if (toolName !== "morpho_position") return lens(Buffer.alloc(0));
+  const extracted = bodyFromMcpToolResult(toolResult);
+  if (!extracted.ok && extracted.reason === "malformed") return lens(Buffer.from("{"));
+  if (!extracted.ok) return lens(Buffer.alloc(0));
+  const payload = extracted.isError && extracted.body?.ok !== false
+    ? { ok: false, error: "tool_execution_failed", charged: false }
+    : extracted.body;
+  return lens(Buffer.from(JSON.stringify(payload)));
 }
 
 function bodyFromMcpToolResult(result) {
