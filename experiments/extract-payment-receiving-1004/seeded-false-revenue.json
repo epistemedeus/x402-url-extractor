@@ -1,0 +1,47 @@
+{
+  "schema": "samedaydesk.extract-payment-receiving.v1",
+  "recognizedRevenue": true,
+  "recognizedRevenueAtomic": "10000",
+  "completeCensus": true,
+  "independentCustomer": true,
+  "rollingWindowsAreDeltas": true,
+  "laterRead": {
+    "sha256": "d3514e5a19241bb55d40bbb22fb281dc163a97410710dc8f23959ec2bcfdab7e"
+  },
+  "chainJoin": {
+    "extract": [
+      {
+        "timestamp": "2026-10-04T14:16:09.000Z",
+        "settlementReference": "0x1d9f6315c0c0c2c9c5976dc8fa567ca0bb226e360cd3d3c64814f4d8da176b37",
+        "amountAtomic": "10000",
+        "chainFromSha256_12": "761193f9b887",
+        "replay": false
+      },
+      {
+        "timestamp": "2026-10-03T12:00:00.000Z",
+        "settlementReference": "0x1d9f6315c0c0c2c9c5976dc8fa567ca0bb226e360cd3d3c64814f4d8da176b37",
+        "amountAtomic": "10000",
+        "chainFromSha256_12": "41a1a825bcef",
+        "replay": true
+      }
+    ],
+    "knownSeller": { "chainFromSha256_12": "761193f9b887" },
+    "ledgerDeltaAmountAtomic": "10000",
+    "ledgerDeltaSettlements": 2
+  },
+  "attempts": [
+    {
+      "commerceEventId": "invented-event",
+      "bankedRecognizedRevenue": true,
+      "paymentClass": "independent",
+      "duplicateOfPriorLedgerEntry": true
+    }
+  ],
+  "delivery": { "body": "useful", "usefulness": "true" },
+  "repeatSemantics": {
+    "paidSuccessActors": 1,
+    "repeatPaidSuccessActors": 1,
+    "sellerPlanePaidSuccess": 2
+  },
+  "attribution": { "absentInternalMarkerProvesOutsideBuyer": true }
+}
