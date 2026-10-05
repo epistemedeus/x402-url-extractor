@@ -29,6 +29,10 @@ Two exact JSON selections use the same `SendMessage` envelope:
 
 `check_ai_readiness` and `check_agent_readiness` are the apex free tools at `https://samedaydesk.com/mcp`. Any other tool name is a refusal. `paid-challenge` reads the catalog example URL with `X-SameDayDesk-Agent-Source: agentverse-a2a-v1` and returns the merchant 402. That header is caller-declared metadata, not attribution. A 200, redirect, event stream, or oversized body is refused. The optional later paid call is the caller's own request to `selectedAction.exampleUrl`. The existing merchant outcome header `x-samedaydesk-outcome-task` is not written here.
 
+## AgentChat sync return
+
+Agentverse delivers Chat Protocol envelopes to `POST /av/chat`. The proxy returns that HTTP body to the caller. A caller that sets `x-uagents-connection: sync` receives the handler text as a signed ChatMessage envelope. The text is the same JSON the `SendMessage` path already returns. Without that header, the existing SDK path still answers `{}` and delivers the reply to the sender's own endpoint. This route does not create an agent, listing, or payment.
+
 ## Env
 
 | Name | Role |
