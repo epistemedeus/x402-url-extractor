@@ -15,6 +15,7 @@ Schema pass is not a sold outcome. Historical v1 paid-success rows stay
 | `GET /read` | `readMcpOutputSchema` |
 | `POST /extract/batch` | `extractBatchOutputSchema()` JSON Schema, **not** MCP Zod |
 | `POST /lockfile-pin-delta` | `lockfilePinDeltaOutputSchema()` JSON Schema |
+| `GET /defi/morpho-position` | `morphoPositionOutputSchema()` JSON Schema. HTTP and MCP share this success object. An HTTP 200 `{ ok:false }` catch is upstream failure, not this schema. |
 
 Generated JSON under `http-delivery-evidence/canonical-contracts.generated.json`
 is a pin-time snapshot for equivalence tests. Production binds the live exports.
@@ -24,8 +25,10 @@ is a pin-time snapshot for equivalence tests. Production binds the live exports.
 After a `paid_success` v1 row is written, the merchant hashes every transferred
 byte into the same `responseDigest` and may retain a **copied** prefix of at
 most 10 MiB for supported routes only (`GET /extract`, `GET /read`,
-`POST /extract/batch`, `POST /lockfile-pin-delta`). Unsupported paid routes
-hash without retaining body bytes.
+`POST /extract/batch`, `POST /lockfile-pin-delta`, `GET /defi/morpho-position`).
+Unsupported paid routes hash without retaining body bytes. The retained prefix
+is classified and discarded. The validation row stores the digest and class,
+not the wallet address.
 
 Fields:
 

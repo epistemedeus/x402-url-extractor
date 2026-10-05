@@ -419,3 +419,103 @@ export const MORPHO_POSITION_CONSTANTS = {
   WAD: WAD.toString(),
   ORACLE_PRICE_SCALE: ORACLE_PRICE_SCALE.toString(),
 };
+
+/**
+ * Success body of morphoPosition(). The HTTP 200 catch envelope
+ * `{ ok:false, address, error, boundary }` is outside this schema.
+ * Nested indexer fields stay open so a new oracle key is not a delivery failure.
+ */
+export function morphoPositionOutputSchema() {
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: [
+      "ok",
+      "address",
+      "chain",
+      "fetchedAt",
+      "latestIndexedAt",
+      "positionCount",
+      "truncated",
+      "positions",
+      "source",
+      "boundary",
+    ],
+    properties: {
+      ok: { type: "boolean", const: true },
+      address: { type: "string", pattern: "^0x[0-9a-f]{40}$" },
+      chain: {
+        type: "object",
+        additionalProperties: false,
+        required: ["id", "name"],
+        properties: {
+          id: { type: "integer", const: BASE_CHAIN_ID },
+          name: { type: "string", const: "Base mainnet" },
+        },
+      },
+      fetchedAt: { type: "string", format: "date-time" },
+      latestIndexedAt: { anyOf: [{ type: "string", format: "date-time" }, { type: "null" }] },
+      positionCount: { type: "integer", minimum: 0, maximum: 100 },
+      truncated: { type: "boolean" },
+      positions: {
+        type: "array",
+        maxItems: 100,
+        items: {
+          type: "object",
+          required: ["marketId", "risk", "scenarios"],
+          properties: {
+            marketId: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" },
+            risk: {
+              type: "object",
+              required: ["healthFactor", "currentLtvPct", "liquidatableAtIndexedState"],
+              properties: {
+                healthFactor: { type: ["number", "null"] },
+                currentLtvPct: { type: ["number", "null"] },
+                liquidatableAtIndexedState: { type: "boolean" },
+              },
+            },
+            scenarios: {
+              type: "array",
+              maxItems: 8,
+              items: {
+                type: "object",
+                required: ["collateralPriceShockPct", "liquidatable"],
+                properties: {
+                  collateralPriceShockPct: { type: "number" },
+                  liquidatable: { type: ["boolean", "null"] },
+                },
+              },
+            },
+          },
+        },
+      },
+      source: {
+        type: "object",
+        required: ["provider", "authority", "directRpc"],
+        properties: {
+          provider: { type: "string" },
+          authority: { type: "string" },
+          directRpc: {
+            type: "object",
+            required: ["verdict", "checkedPositions"],
+            properties: {
+              verdict: {
+                type: "string",
+                enum: [
+                  "exact_match",
+                  "core_position_match_oracle_moved",
+                  "mismatch",
+                  "unavailable",
+                  "not_applicable",
+                  "disabled",
+                ],
+              },
+              checkedPositions: { type: "integer", minimum: 0 },
+            },
+          },
+        },
+      },
+      boundary: { type: "string" },
+    },
+  };
+}

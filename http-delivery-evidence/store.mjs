@@ -20,6 +20,19 @@ import {
   parseNdjson,
 } from "./historical.mjs";
 import { MAX_RESPONSE_BYTES, contractNameForResource } from "./contract.mjs";
+import {
+  MCP_DELIVERY_FILENAME,
+  canonicalizeMcpDeliveryRecord,
+} from "./mcp-delivery.mjs";
+import {
+  attachRecordObservation,
+  bindDeliveryObservation,
+  httpDeliveryEmissionAllowed,
+  isSealedDeliveryObservation,
+  observationPayload,
+  recordObservation,
+  sealDirectBytes,
+} from "./observation.mjs";
 
 export const VALIDATION_FILENAME = "http-response-validation.v1.ndjson";
 
@@ -34,6 +47,7 @@ export const VALIDATION_KEYS = Object.freeze([
   "payerClass",
   "prohibitedInferences",
   "recordId",
+  "requestDigest",
   "resource",
   "responseByteLength",
   "responseDigest",
@@ -50,7 +64,7 @@ export const VALIDATION_KEYS = Object.freeze([
 const RECORD_ID_RE = /^hrv_[0-9a-f]{32}$/;
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const METHOD_RE = /^(GET|POST)$/;
-const RESOURCE_RE = /^\/(extract|read|extract\/batch|lockfile-pin-delta|commerce\/seller-integrity-audit)$/;
+const RESOURCE_RE = /^\/(extract|read|extract\/batch|lockfile-pin-delta|commerce\/seller-integrity-audit|defi\/morpho-position)$/;
 const TX_RE = /^0x[0-9a-fA-F]{64}$/;
 const DIGEST_RE = /^[0-9a-f]{64}$/;
 const VERDICTS = new Set(["pass", "invalid", "unknown"]);
@@ -64,26 +78,61 @@ const FORBIDDEN_SUBSTRINGS = [
   "raw-query",
 ];
 
+async function appendPrivateLine(dir, filePath, canonical) {
+  await mkdir(dir, { recursive: true, mode: 0o700 });
+  await chmod(dir, 0o700).catch(() => {});
+  await appendFile(filePath, `${JSON.stringify(canonical)}\n`, {
+    encoding: "utf8",
+    mode: 0o600,
+  });
+  await chmod(filePath, 0o600).catch(() => {});
+  return canonical;
+}
+
 export function openStore(dir) {
   if (typeof dir !== "string" || dir.length === 0) {
     throw new Error("store directory is required");
   }
   const validationPath = path.join(dir, VALIDATION_FILENAME);
   const historicalPath = path.join(dir, PAID_EVIDENCE_FILENAME);
+  const mcpDeliveryPath = path.join(dir, MCP_DELIVERY_FILENAME);
   return {
     dir,
     validationPath,
     historicalPath,
+    mcpDeliveryPath,
     async appendValidation(record) {
+      if (!httpDeliveryEmissionAllowed(record?.paidEvidenceId, recordObservation(record))) {
+        throw new Error("retained output is absent for this paid evidence id");
+      }
       const canonical = canonicalizeValidationRecord(record);
-      await mkdir(dir, { recursive: true, mode: 0o700 });
-      await chmod(dir, 0o700).catch(() => {});
-      await appendFile(validationPath, `${JSON.stringify(canonical)}\n`, {
-        encoding: "utf8",
-        mode: 0o600,
-      });
-      await chmod(validationPath, 0o600).catch(() => {});
-      return canonical;
+      return appendPrivateLine(dir, validationPath, canonical);
+    },
+    async appendMcpDelivery(record) {
+      const observation = recordObservation(record);
+      if (!httpDeliveryEmissionAllowed(record?.paidEvidenceId, observation)) {
+        throw new Error("retained output is absent for this paid evidence id");
+      }
+      if (observation.source !== "mcp_tool_result" || observation.tool !== "morpho_position") {
+        throw new Error("retained output is absent for this paid evidence id");
+      }
+      const canonical = canonicalizeMcpDeliveryRecord(record);
+      return appendPrivateLine(dir, mcpDeliveryPath, canonical);
+    },
+    async readMcpDeliveries() {
+      const text = await readFile(mcpDeliveryPath, "utf8").catch((error) => (
+        error?.code === "ENOENT" ? "" : Promise.reject(error)
+      ));
+      const rows = [];
+      for (const row of parseNdjson(text)) {
+        if (row?._unparseable) continue;
+        try {
+          rows.push(canonicalizeMcpDeliveryRecord(row));
+        } catch {
+          // A row that cannot be canonicalized does not attach.
+        }
+      }
+      return rows;
     },
     async readHistorical({ currentValidatorVerdict } = {}) {
       const text = await readFile(historicalPath, "utf8").catch((error) => (
@@ -130,7 +179,7 @@ export function openStore(dir) {
         if (!id || !PAID_EVIDENCE_ID_PATTERN.test(id)) continue;
         const existing = byId.get(id);
         if (!existing) continue;
-        if (validation.responseDigest !== existing.historical.responseDigest) continue;
+        if (!validationAttachesToHistorical(validation, existing.historical)) continue;
         existing.validations.push(validation);
       }
       return [...byId.values()];
@@ -149,18 +198,68 @@ export function recordFromObservedResponse({
   capturedAt,
   recordId,
   paidEvidenceId,
+  requestDigest = null,
   responseDigest,
   responseByteLength,
+  observation = null,
 } = {}) {
-  const bytes = Buffer.from(responseBytes || []);
-  const actualLength = Number.isInteger(responseByteLength) ? responseByteLength : bytes.length;
-  if (actualLength !== bytes.length && (typeof responseDigest !== "string" || !DIGEST_RE.test(responseDigest))) {
-    throw new Error("full response digest required when retained bytes are a prefix");
+  const supplied = Buffer.from(responseBytes || []);
+  const sealed = Boolean(observation && isSealedDeliveryObservation(observation));
+  if (observation && !sealed) {
+    throw new Error("retained output is absent for this paid evidence id");
   }
-  const retained = bytes.length > MAX_RESPONSE_BYTES ? bytes.subarray(0, MAX_RESPONSE_BYTES) : bytes;
-  const digest = typeof responseDigest === "string" && DIGEST_RE.test(responseDigest)
-    ? responseDigest
-    : digestResponseBytes(bytes);
+  let digest;
+  let actualLength;
+  let retained;
+  let boundObservation;
+  if (sealed) {
+    if (observation.paidEvidenceId && observation.paidEvidenceId !== paidEvidenceId) {
+      throw new Error("retained output is absent for this paid evidence id");
+    }
+    digest = observation.responseDigest;
+    actualLength = observation.responseByteLength;
+    if (!Number.isInteger(actualLength) || actualLength < 0 || actualLength < supplied.length) {
+      throw new Error("retained output is absent for this paid evidence id");
+    }
+    if (typeof responseDigest === "string" && responseDigest !== digest) {
+      throw new Error("retained output is absent for this paid evidence id");
+    }
+    if (Number.isInteger(responseByteLength) && responseByteLength !== actualLength) {
+      throw new Error("retained output is absent for this paid evidence id");
+    }
+    if (actualLength === supplied.length && digest !== digestResponseBytes(supplied)) {
+      throw new Error("retained output is absent for this paid evidence id");
+    }
+    if (actualLength !== supplied.length && observation.source !== "http_response_capture") {
+      throw new Error("retained output is absent for this paid evidence id");
+    }
+    const payload = observationPayload(observation);
+    if (payload && payload.length === supplied.length && !payload.equals(supplied)) {
+      throw new Error("retained output is absent for this paid evidence id");
+    }
+    retained = supplied.length > MAX_RESPONSE_BYTES ? supplied.subarray(0, MAX_RESPONSE_BYTES) : supplied;
+    boundObservation = bindDeliveryObservation(observation, { paidEvidenceId });
+    if (!boundObservation) throw new Error("retained output is absent for this paid evidence id");
+  } else {
+    if (typeof responseDigest === "string" && responseDigest !== digestResponseBytes(supplied)) {
+      throw new Error("retained output is absent for this paid evidence id");
+    }
+    if (Number.isInteger(responseByteLength) && responseByteLength !== supplied.length) {
+      throw new Error("retained output is absent for this paid evidence id");
+    }
+    actualLength = supplied.length;
+    digest = digestResponseBytes(supplied);
+    retained = supplied.length > MAX_RESPONSE_BYTES ? supplied.subarray(0, MAX_RESPONSE_BYTES) : supplied;
+    boundObservation = sealDirectBytes({
+      paidEvidenceId,
+      responseDigest: digest,
+      responseByteLength: actualLength,
+      method,
+      resource,
+      payload: retained,
+    });
+    if (!boundObservation) throw new Error("retained output is absent for this paid evidence id");
+  }
   const evaluated = evaluateResponseBytes({
     method,
     resource,
@@ -173,13 +272,14 @@ export function recordFromObservedResponse({
     recordId,
     responseByteLength: actualLength,
   });
-  return canonicalizeValidationRecord({
+  const canonical = canonicalizeValidationRecord({
     schemaVersion: SCHEMA,
     recordId: recordId || makeRecordId(),
     capturedAt: capturedAt || new Date().toISOString(),
     method,
     resource,
     paidEvidenceId,
+    requestDigest: requestDigest || null,
     contractName: evaluated.contractName || contractNameForResource(resource),
     responseDigest: digest,
     responseByteLength: actualLength,
@@ -196,6 +296,7 @@ export function recordFromObservedResponse({
     counters: evaluated.counters,
     prohibitedInferences: [...PROHIBITED_INFERENCES],
   });
+  return attachRecordObservation(canonical, boundObservation);
 }
 
 export function canonicalizeValidationRecord(value) {
@@ -207,6 +308,7 @@ export function canonicalizeValidationRecord(value) {
     method: value.method,
     resource: value.resource,
     paidEvidenceId: value.paidEvidenceId,
+    requestDigest: value.requestDigest ?? null,
     contractName: value.contractName,
     responseDigest: value.responseDigest,
     responseByteLength: value.responseByteLength,
@@ -249,6 +351,7 @@ export function assertValidationRecord(value) {
   }
   if (!DIGEST_RE.test(value.responseDigest)) throw new Error("invalid responseDigest");
   if (!PAID_EVIDENCE_ID_PATTERN.test(value.paidEvidenceId)) throw new Error("invalid paidEvidenceId");
+  if (value.requestDigest !== null && !DIGEST_RE.test(value.requestDigest)) throw new Error("invalid requestDigest");
   requireFiniteInteger(value.responseByteLength, "responseByteLength", 0, Number.MAX_SAFE_INTEGER);
   requireFiniteInteger(value.retainedByteLength, "retainedByteLength", 0, MAX_RESPONSE_BYTES);
   if (value.retainedByteLength > value.responseByteLength) {
@@ -285,6 +388,22 @@ export function assertValidationRecord(value) {
   if (value.validatorVerdict === HISTORICAL_VALIDATOR_VERDICT) {
     throw new Error("new records must not reuse historical not_checked");
   }
+}
+
+export function validationAttachesToHistorical(validation, historical) {
+  if (!validation || !historical) return false;
+  if (validation.paidEvidenceId !== historical.id) return false;
+  if (validation.responseDigest !== historical.responseDigest) return false;
+  if (validation.method !== historical.method) return false;
+  if (validation.resource !== historical.route) return false;
+  if (validation.settlementReference) {
+    if (!historical.settlementReference) return false;
+    if (String(validation.settlementReference).toLowerCase() !== String(historical.settlementReference).toLowerCase()) {
+      return false;
+    }
+  }
+  if (validation.requestDigest && validation.requestDigest !== historical.requestDigest) return false;
+  return true;
 }
 
 function makeRecordId() {

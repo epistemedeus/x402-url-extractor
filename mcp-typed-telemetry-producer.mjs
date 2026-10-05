@@ -641,11 +641,11 @@ export function evaluateMcpTypedTelemetryOutcome(input) {
   return emptyDecision("invalid_typed_outcome");
 }
 
-function enqueueAppend(onAppend, decision) {
+function enqueueAppend(onAppend, decision, delivery = null) {
   if (typeof onAppend !== "function") return;
   const run = () => {
     try {
-      const result = onAppend(decision);
+      const result = onAppend(decision, delivery);
       if (result && typeof result.then === "function") {
         result.then(() => undefined, () => undefined);
       }
@@ -679,6 +679,8 @@ export function createMcpTypedTelemetryAttempt({ binding, request, onAppend } = 
   let finalized = false;
   let invalidReason = null;
   let lastDecision = null;
+  let settlementReference = null;
+  let toolDelivery = null;
 
   function markInvalid(reason = "invalid_typed_outcome") {
     if (!invalidReason) invalidReason = reason;
@@ -796,8 +798,11 @@ export function createMcpTypedTelemetryAttempt({ binding, request, onAppend } = 
     credentialRejected();
   }
 
-  function observeSettleOutcome({ success } = {}) {
+  function observeSettleOutcome({ success, settlementReference: reference } = {}) {
     if (success === true) {
+      if (typeof reference === "string" && /^0x[0-9a-fA-F]{64}$/.test(reference)) {
+        settlementReference = reference.toLowerCase();
+      }
       settlementFinished({
         state: "succeeded",
         offerDigest: ownedBinding.issuedOfferDigest,
@@ -831,6 +836,15 @@ export function createMcpTypedTelemetryAttempt({ binding, request, onAppend } = 
 
   function noteTransportError() {
     transportError = true;
+  }
+
+  function readSettlementReference() {
+    return settlementReference;
+  }
+
+  function noteToolDelivery(delivery) {
+    if (finalized) return;
+    toolDelivery = delivery ?? null;
   }
 
   function buildInput(overrides = {}) {
@@ -872,7 +886,13 @@ export function createMcpTypedTelemetryAttempt({ binding, request, onAppend } = 
     lastDecision = invalidReason
       ? emptyDecision(invalidReason)
       : evaluateMcpTypedTelemetryOutcome(input);
-    enqueueAppend(onAppend, lastDecision);
+    let delivery = null;
+    try {
+      delivery = toolDelivery;
+    } catch {
+      delivery = null;
+    }
+    enqueueAppend(onAppend, lastDecision, delivery);
     return lastDecision;
   }
 
@@ -894,6 +914,8 @@ export function createMcpTypedTelemetryAttempt({ binding, request, onAppend } = 
     observeVerifiedCancellation,
     overrideFinalApplicationError,
     noteTransportError,
+    readSettlementReference,
+    noteToolDelivery,
     finalize,
   };
 }

@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { createCommerceTelemetry } from "../../commerce-events.mjs";
 import { sellerIntegrityAudit } from "../../seller-integrity-audit.mjs";
 import { bindMerchantHttpDeliveryContracts } from "../bind-merchant-contracts.mjs";
+import { sealStreamedHttpCapture } from "../observation.mjs";
 import {
   DELIVERY,
   MAX_RESPONSE_BYTES,
@@ -21,6 +22,7 @@ import {
   USEFULNESS_UNKNOWN,
   VERDICT,
   checkDeclaredContract,
+  digestResponseBytes,
   evaluateResponseBytes,
   isDeliveredSellerDiagnostic,
   openStore,
@@ -179,15 +181,25 @@ test("incomplete, malformed, truncated, and oversized bodies are not delivered d
   assert.equal(oversized.deliveryClass, DELIVERY.TRUNCATED_PARTIAL);
   assert.equal(oversized.validatorVerdict, VERDICT.UNKNOWN);
   assert.equal(isDeliveredSellerDiagnostic(oversized), false);
+  const repairBytes = bytesOf(repair);
+  const full = Buffer.concat([repairBytes, Buffer.alloc((MAX_RESPONSE_BYTES + 40) - repairBytes.length, 0x20)]);
+  const fullDigest = digestResponseBytes(full);
   const stored = recordFromObservedResponse({
     method: "GET",
     resource: RESOURCES.SELLER_INTEGRITY,
-    responseBytes: bytesOf(repair),
-    responseByteLength: MAX_RESPONSE_BYTES + 40,
-    responseDigest: "d".repeat(64),
+    responseBytes: repairBytes,
+    responseByteLength: full.length,
+    responseDigest: fullDigest,
     merchantHttpStatus: 200,
     settlementClass: SETTLEMENT_CLASS.REAL_UNVERIFIED,
     paidEvidenceId: "11111111-1111-4111-8111-111111111111",
+    observation: sealStreamedHttpCapture({
+      digest: fullDigest,
+      byteLength: full.length,
+      bytes: repairBytes,
+      method: "GET",
+      resource: RESOURCES.SELLER_INTEGRITY,
+    }),
   });
   assert.equal(stored.deliveryClass, DELIVERY.TRUNCATED_PARTIAL);
   assert.equal(stored.validatorVerdict, VERDICT.UNKNOWN);

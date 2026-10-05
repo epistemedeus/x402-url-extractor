@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { capturePaidEvidenceResponseDigest } from "../../commerce-events.mjs";
-import { MAX_RESPONSE_BYTES } from "../index.mjs";
+import { MAX_RESPONSE_BYTES, isSealedDeliveryObservation, recordFromObservedResponse } from "../index.mjs";
 
 function fakeRes() {
   return {
@@ -45,6 +45,22 @@ test("oversized bodies retain a prefix while hashing the full length", () => {
   assert.equal(captured.retainedByteLength, MAX_RESPONSE_BYTES);
   assert.equal(captured.bytes.length, MAX_RESPONSE_BYTES);
   assert.ok(captured.byteLength > captured.retainedByteLength);
+  assert.equal(isSealedDeliveryObservation(captured.observation), true);
+  const recorded = recordFromObservedResponse({
+    method: "GET",
+    resource: "/extract",
+    responseBytes: captured.bytes,
+    responseDigest: captured.digest,
+    responseByteLength: captured.byteLength,
+    merchantHttpStatus: 200,
+    settlementClass: "simulated",
+    paidEvidenceId: "11111111-1111-4111-8111-111111111111",
+    observation: captured.observation,
+  });
+  assert.equal(recorded.responseByteLength, captured.byteLength);
+  assert.equal(recorded.retainedByteLength, MAX_RESPONSE_BYTES);
+  assert.equal(recorded.responseDigest, captured.digest);
+  assert.notEqual(recorded.deliveryClass, "full_bounded_capture");
 });
 
 test("unsupported paid routes hash without retaining body bytes", () => {

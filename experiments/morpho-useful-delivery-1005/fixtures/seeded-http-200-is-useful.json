@@ -1,0 +1,21 @@
+{
+  "schema": "samedaydesk.morpho-useful-delivery-1005.v1",
+  "classes": {
+    "okSnapshot": "complete_useful",
+    "http200OkFalse": "complete_useful",
+    "noPosition": "complete_useful",
+    "truncated": "complete_useful"
+  },
+  "historical": {
+    "eventId": "e87c5642-c177-49bb-809a-05912264d7e3",
+    "outputRetained": true,
+    "backfilled": true,
+    "buyerPredicate": "wants-liquidation-hedge",
+    "usefulness": "useful"
+  },
+  "usefulnessOnMeasuredClasses": "useful",
+  "incrementalUtility": true,
+  "proposeNewPaidOffer": true,
+  "paymentTimingChanged": false,
+  "responseShapeChanged": false
+}

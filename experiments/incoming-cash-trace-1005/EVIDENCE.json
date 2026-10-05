@@ -1,0 +1,232 @@
+{
+  "schema": "samedaydesk.incoming-cash-trace-1005.evidence.v1",
+  "jobId": "ROOT-1005-INCOMING-CASH-TRACE",
+  "provenance": {
+    "operation": "ROOT-1005-INCOMING-CASH-TRACE",
+    "session": "b5c0a8a2-8814-41b2-b894-398139dd9b55",
+    "vmHostname": "cursor",
+    "enrollmentFile": "enrollment-cloud-f.json",
+    "model": "grok-4.7",
+    "effort": "xhigh",
+    "merchantSourceSha": "355c525a6112ad271ac58fe69016a8fb1b1a4dd3",
+    "pilotTipSha": "3c5e484d2b08dc7e0a36ac8a51dcb4eac464200e",
+    "pilotTipCommittedAt": "2026-10-05T05:37:33Z",
+    "adjudicationBlobsMatchPilotTip": {
+      "extract-payment-1004/ROOT-ADJUDICATION.md": "e42a09b1ed0daff095dad9522e3a63d63a3fc46a",
+      "traffic-provenance-1004/ROOT-ADJUDICATION.md": "c20504eecc4341fc64e16d3847e65f801dc91563",
+      "extract-task-receiving-1004/ROOT-ADJUDICATION.md": "992a37c0d3d417813cd94775f4fe410165c94938"
+    },
+    "railwayCli": "not_installed_and_no_token",
+    "nativeReadRoute": "GET /.well-known/useful-result-reuse/current.json requires COMMERCE_INTERNAL_TOKEN; unset, not called",
+    "chainRpc": ["https://mainnet.base.org", "https://base.drpc.org"]
+  },
+  "join": {
+    "settlementReference": "0x2439870db33f6e81157beffed44c26b02aad663aff595424929ac04f9030008d",
+    "route": "/defi/morpho-position",
+    "tool": "GET /defi/morpho-position",
+    "protocol": "x402",
+    "newSettlementCount": 1,
+    "amountAtomic": "20000",
+    "displayUsdc": "0.020",
+    "catalogPrice": "$0.02",
+    "paymentClass": "unclassified",
+    "countsPayoutAsSettlement": false,
+    "payoutReference": "0x6c51682c8678b4779548e8b717b327ab1b9dfb06141850cce92eb220075e3a20",
+    "eventId": "unknown",
+    "reason": "One new reconciled settlement since the 2026-10-04T17:34:41Z public ledger. The only route that moved is /defi/morpho-position by one settlement and 20000 atomic. The one-day treasury inflow set contains exactly one 20000 transfer, and it is this transaction. The two 5000 inflows are the already reconciled extract pair."
+  },
+  "chain": {
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "treasury": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    "observation": {
+      "observedAt": "2026-10-05T06:13:49.302Z",
+      "block": 52195740,
+      "usdc": "24.413292",
+      "eth": "0.000248350976449192",
+      "readback": "eth_call balanceOf and eth_getBalance at block 52195740 on mainnet.base.org"
+    },
+    "balancesAtomic": {
+      "52195370": "24493292",
+      "52195371": "24393292",
+      "52195376": "24413292",
+      "52195740": "24413292"
+    },
+    "payoutReference": "0x6c51682c8678b4779548e8b717b327ab1b9dfb06141850cce92eb220075e3a20",
+    "payoutBlock": 52195371,
+    "payoutTime": "2026-10-05T06:01:29Z",
+    "payoutAmountAtomic": "100000",
+    "payoutDirection": "outgoing_plain_transfer",
+    "payoutSelector": "0xa9059cbb",
+    "incoming": {
+      "tx": "0x2439870db33f6e81157beffed44c26b02aad663aff595424929ac04f9030008d",
+      "block": 52195376,
+      "time": "2026-10-05T06:01:39Z",
+      "logIndex": 322,
+      "status": "success",
+      "selector": "0xe3ee160e",
+      "selectorName": "transferWithAuthorization",
+      "toUsdc": true,
+      "valueAtomic": "20000",
+      "authorizationMatchesTransferLog": true,
+      "recipientIsTreasury": true,
+      "senderIsTreasury": false,
+      "senderIsBroadcaster": false,
+      "authorizationValidAfter": "2026-10-05T06:00:36Z",
+      "authorizationValidBefore": "2026-10-05T06:03:36Z",
+      "secondProvider": "base.drpc.org receipt status success, same block, log, amount, and treasury recipient"
+    },
+    "treasuryInflows": [
+      {
+        "tx": "0x3e3dee90f56fb88f9f1ec334dd4b78b119ab2a408c8181c273e8e22685d12090",
+        "block": 52167011,
+        "time": "2026-10-04T14:16:09Z",
+        "logIndex": 673,
+        "atomic": "5000",
+        "selector": "0xe3ee160e",
+        "role": "prior_extract_settlement"
+      },
+      {
+        "tx": "0x104467b62ad4edff622eb0f008e9d127b59c75075947ce3962dbf7c4d622887f",
+        "block": 52169245,
+        "time": "2026-10-04T15:30:37Z",
+        "logIndex": 487,
+        "atomic": "5000",
+        "selector": "0xe3ee160e",
+        "role": "prior_extract_settlement"
+      },
+      {
+        "tx": "0x2439870db33f6e81157beffed44c26b02aad663aff595424929ac04f9030008d",
+        "block": 52195376,
+        "time": "2026-10-05T06:01:39Z",
+        "logIndex": 322,
+        "atomic": "20000",
+        "selector": "0xe3ee160e",
+        "role": "new_settlement"
+      }
+    ],
+    "inflowScan": {
+      "fromBlock": 52153088,
+      "fromTime": "2026-10-04T06:32:03Z",
+      "toBlock": 52195740,
+      "filter": "USDC Transfer to the merchant treasury",
+      "count": 3
+    }
+  },
+  "ledgerDelta": {
+    "priorGeneratedAt": "2026-10-04T17:34:41.039Z",
+    "priorSource": "https://github.com/epistemedeus/x402-url-extractor/blob/heavy/root-1004-extract-payment-receiving/experiments/extract-payment-receiving-1004/later-public-demand.json blob 1de80e5793549966c8ddbdd1848d965d524c819a",
+    "currentGeneratedAt": "2026-10-05T06:32:03.995Z",
+    "currentSource": "https://x402-url-extractor-production.up.railway.app/v0/commerce-demand.json?days=1",
+    "priorSettlements": 46,
+    "currentSettlements": 47,
+    "priorAmountAtomic": "1047000",
+    "currentAmountAtomic": "1067000",
+    "settlementDelta": 1,
+    "amountAtomicDelta": "20000",
+    "route": "/defi/morpho-position",
+    "routeSettlements": { "prior": 6, "current": 7 },
+    "routeAmountAtomic": { "prior": "120000", "current": "140000" },
+    "extractSettlementDelta": 0,
+    "extractSettlements": 20,
+    "paymentClass": "unclassified",
+    "unclassifiedSettlements": { "prior": 33, "current": 34 },
+    "unclassifiedAmountAtomic": { "prior": "460000", "current": "480000" },
+    "internalSettlementsUnchanged": 12,
+    "validationSettlementsUnchanged": 1,
+    "otherRoutesUnchanged": 9,
+    "lastRunAt": "2026-10-05T06:31:17.612Z",
+    "lastError": null,
+    "issueCount": 0,
+    "eligibleRetainedReferences": 4,
+    "alreadyReconciledRetainedReferences": 4,
+    "reconciledThisRun": 0
+  },
+  "demandWindow": {
+    "generatedAt": "2026-10-05T06:32:03.995Z",
+    "start": "2026-10-04T06:32:03.995Z",
+    "end": "2026-10-05T06:32:03.995Z",
+    "streamCoverage": "complete",
+    "rareCoverage": "unknown_for_full_window",
+    "paidSuccessByRoute": {
+      "/extract": 2,
+      "/defi/morpho-position": 1
+    },
+    "paidSuccessByClass": { "unclassified": 3 },
+    "paidSuccessByProtocol": { "x402": 3 },
+    "paidSuccessByDiscoverySource": { "direct-or-unattributed": 3 },
+    "settlementReferencePaidSuccesses": 3,
+    "missingSettlementReferencePaidSuccesses": 0,
+    "replaySuccessEvents": 0,
+    "paidSuccessActors": 2,
+    "repeatPaidSuccessActors": 1,
+    "independentPaidSuccessActors": 0,
+    "repeatIndependentPaidSuccessActors": 0,
+    "trafficProvenancePaidSuccesses": {
+      "verifiedInternal": 0,
+      "selfReportedOwnerMonitor": 0,
+      "scanner": 0,
+      "crawler": 0,
+      "unattributedExternal": 3
+    },
+    "facilitator": "cdp",
+    "liveMorphoPositionPrice": "$0.02",
+    "liveExtractPrice": "$0.005"
+  },
+  "delivery": {
+    "class": "not_emitted_unsupported_target",
+    "httpResult": "paid_success",
+    "httpStatus": "2xx",
+    "copiedFromExtractPair": false,
+    "usefulness": "unknown",
+    "buyerPredicate": "unknown",
+    "queryKeys": "unknown",
+    "responseBytes": "not_retained",
+    "schemaVerdict": "not_emitted",
+    "truncateMarks": "not_emitted",
+    "sourceRefusalMarks": "not_emitted",
+    "producer": "buildHttpDeliveryValidationRecord returns null when isSupportedTarget is false. Supported routes are /extract, /read, /extract/batch, /lockfile-pin-delta, and /commerce/seller-integrity-audit. GET /defi/morpho-position is not among them.",
+    "routeContract": "Read-only Morpho borrower snapshot. The handler can set truncated when the indexed count exceeds 100, and its catch returns HTTP 200 with ok false. Neither outcome was observed for this call.",
+    "priorExtractPair": {
+      "deliveryClass": "truncated_partial",
+      "amountAtomic": "5000",
+      "usefulness": "unknown",
+      "buyerPredicate": "unknown",
+      "appliedToThisSettlement": false
+    }
+  },
+  "caller": {
+    "origin": "unattributed_external",
+    "paymentClass": "unclassified",
+    "verifiedInternal": false,
+    "selfReportedOwnerMonitor": false,
+    "ownerMarkerAbsenceProvesOutsideBuyer": false,
+    "sameOnchainPayerAsExtractPair": false,
+    "repeatPayerWithinWindow": false,
+    "continuityWithEarlierMorphoPayers": "unknown",
+    "independentBuyer": false,
+    "declaredPredicate": "unknown",
+    "addressExported": false
+  },
+  "revenue": {
+    "recognizedUsdc": "10.955",
+    "promotedToOrganicSale": false,
+    "walletBalanceIsRevenue": false,
+    "thisSettlementClass": "unclassified_settled_use"
+  },
+  "experiment": {
+    "id": "morpho-position-delivery-class",
+    "bottleneck": "The settled route has no HTTP delivery evidence row, so this 0.020 cannot be scored useful, useful-negative, partial, or refused.",
+    "action": "Unpaid in-process comparison of morphoPosition against the free Morpho index on one non-customer fixture. Score ok snapshot, HTTP 200 ok false, and truncated separately. Do not pay, sign, broadcast, or backfill this payer.",
+    "notTheBottleneck": "Another extract excerpt change, a new store, or treating this unclassified settlement as an organic sale."
+  },
+  "unknowns": [
+    "commerce event id",
+    "actual query keys and shocks",
+    "buyer predicate",
+    "whether the unseen body was ok, truncated, or an upstream error wrapped as HTTP 200",
+    "usefulness",
+    "continuity with the six earlier morpho-position settlements",
+    "live deployment id; the health response did not include a git SHA"
+  ]
+}
