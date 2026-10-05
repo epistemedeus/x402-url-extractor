@@ -1,4 +1,5 @@
 import json
+from ipaddress import ip_address
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -149,21 +150,31 @@ def payment_fields(payload: dict) -> list[str]:
     return found
 
 
+def public_readiness_host(host: str) -> bool:
+    if not host or host == "localhost" or host.endswith(".local"):
+        return False
+    try:
+        return ip_address(host).is_global
+    except ValueError:
+        return "." in host
+
+
 def valid_readiness_url(value: str) -> bool:
-    parsed = urlparse(value.strip())
-    host = (parsed.hostname or "").lower().rstrip(".")
-    if parsed.scheme != "https" or parsed.username or parsed.password or parsed.port not in (None, 443):
+    try:
+        parsed = urlparse(value.strip())
+        host = (parsed.hostname or "").lower().rstrip(".")
+        if parsed.scheme != "https" or parsed.username or parsed.password or parsed.port not in (None, 443):
+            return False
+    except ValueError:
         return False
-    if host in {"localhost", "127.0.0.1", "0.0.0.0", "::1"} or host.endswith(".local") or "." not in host:
-        return False
-    return True
+    return public_readiness_host(host)
 
 
 def valid_readiness_host(value: str) -> bool:
     host = value.strip().lower().rstrip(".")
     if "://" in host or "/" in host or "@" in host or " " in host:
         return False
-    if host in {"localhost", "127.0.0.1", "0.0.0.0", "::1"} or host.endswith(".local") or "." not in host:
+    if not public_readiness_host(host):
         return False
     return host.replace(".", "").replace("-", "").isalnum()
 
@@ -293,22 +304,17 @@ class CatalogProxyExecutor(AgentExecutor):
         self._readiness_url = readiness_url
         self._client = client
 
-    async def _discovery_text(self, user_input: str, context_id: str | None) -> str:
-        response = await self._client.post(
+    async def _discovery_text(self, user_input: str, context_id: str | None, client: httpx.AsyncClient) -> str:
+        async with client.stream(
+            "POST",
             self._upstream_url,
             headers={VERSION_HEADER: PROTOCOL_VERSION_1_0},
             json=build_upstream_request(user_input, context_id),
             follow_redirects=False,
-        )
-        if response.status_code in REDIRECT_STATUSES:
-            raise CatalogProxyError("redirect_refused")
-        content_type = response.headers.get("content-type", "")
-        if "text/event-stream" in content_type.lower():
-            raise CatalogProxyError("stream_refused")
-        response.raise_for_status()
-        if len(response.content) > MAX_UPSTREAM_BYTES:
-            raise CatalogProxyError("upstream response exceeds the byte ceiling")
-        catalog = extract_catalog_response(response.json())
+        ) as response:
+            body = await read_bounded(response)
+            response.raise_for_status()
+        catalog = extract_catalog_response(json.loads(body))
         selected_action = select_payment_integrity_action(catalog)
         return dumps({
             "authority": "agents.samedaydesk.com",
@@ -323,8 +329,8 @@ class CatalogProxyExecutor(AgentExecutor):
             "selectedAction": selected_action,
         })
 
-    async def _load_selected_action(self, user_input: str, context_id: str | None) -> dict:
-        async with self._client.stream(
+    async def _load_selected_action(self, user_input: str, context_id: str | None, client: httpx.AsyncClient) -> dict:
+        async with client.stream(
             "POST",
             self._upstream_url,
             headers={VERSION_HEADER: PROTOCOL_VERSION_1_0},
@@ -337,7 +343,7 @@ class CatalogProxyExecutor(AgentExecutor):
         catalog = extract_catalog_response(json.loads(body))
         return select_payment_integrity_action(catalog)
 
-    async def _free_tool_text(self, selection: dict) -> str:
+    async def _free_tool_text(self, selection: dict, client: httpx.AsyncClient) -> str:
         tool = selection["tool"]
         arguments = selection["arguments"]
         request = {
@@ -346,7 +352,7 @@ class CatalogProxyExecutor(AgentExecutor):
             "method": "tools/call",
             "params": {"name": tool, "arguments": arguments},
         }
-        async with self._client.stream(
+        async with client.stream(
             "POST",
             self._readiness_url,
             headers={
@@ -399,15 +405,15 @@ class CatalogProxyExecutor(AgentExecutor):
             payload["truncated"] = True
             return dumps(payload)
 
-    async def _paid_challenge_text(self, selection: dict, context_id: str | None) -> str:
-        selected = await self._load_selected_action("List the current paid actions.", context_id)
+    async def _paid_challenge_text(self, selection: dict, context_id: str | None, client: httpx.AsyncClient) -> str:
+        selected = await self._load_selected_action("List the current paid actions.", context_id, client)
         example_url = selected.get("exampleUrl")
         action_url = selected.get("url")
         if not isinstance(example_url, str) or not isinstance(action_url, str):
             return refusal("invalid_request", "catalog action has no bound example URL")
         if urlparse(example_url).hostname != urlparse(action_url).hostname:
             return refusal("invalid_request", "example URL host does not match the catalog action")
-        async with self._client.stream(
+        async with client.stream(
             "GET",
             example_url,
             headers={
@@ -454,18 +460,17 @@ class CatalogProxyExecutor(AgentExecutor):
             timeout=httpx.Timeout(20.0),
             follow_redirects=False,
         )
-        self._client = client
         selection = parse_caller_selection(context.get_user_input())
         try:
             if selection["kind"] == "invalid":
                 extra = {"tool": selection["tool"]} if selection.get("tool") else {}
                 text = refusal(selection["reason"], selection.get("detail"), **extra)
             elif selection["kind"] == "free-tool":
-                text = await self._free_tool_text(selection)
+                text = await self._free_tool_text(selection, client)
             elif selection["kind"] == "paid-challenge":
-                text = await self._paid_challenge_text(selection, context.context_id)
+                text = await self._paid_challenge_text(selection, context.context_id, client)
             else:
-                text = await self._discovery_text(context.get_user_input(), context.context_id)
+                text = await self._discovery_text(context.get_user_input(), context.context_id, client)
         except (httpx.HTTPError, ValueError, CatalogProxyError) as exc:
             reason = str(exc)
             if selection["kind"] == "discovery" and reason not in {
@@ -490,7 +495,6 @@ class CatalogProxyExecutor(AgentExecutor):
         finally:
             if owns_client:
                 await client.aclose()
-                self._client = None
 
         await event_queue.enqueue_event(agent_message(text, context.context_id))
 
