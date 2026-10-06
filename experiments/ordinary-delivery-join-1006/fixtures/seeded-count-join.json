@@ -1,0 +1,25 @@
+{
+  "schema": "samedaydesk.ordinary-delivery-join.v1",
+  "aggregateRouteDeltaIsNotAnIndividualJoin": true,
+  "schemaValidityIsBuyerUsefulness": false,
+  "customerPlane": {
+    "attributableCustomerCount": null,
+    "buyerValidDeliveryCount": null,
+    "repeatIndependentCustomerCount": null
+  },
+  "boundaries": {
+    "settlementNeverProvesBuyerValidDelivery": true
+  },
+  "rows": [
+    {
+      "disposition": "exact_join",
+      "individualJoin": true,
+      "usefulness": "useful",
+      "httpAttached": 0,
+      "mcpAttached": 0,
+      "reasons": ["route_count_delta"],
+      "route": "/extract",
+      "amountAtomic": "5000"
+    }
+  ]
+}
