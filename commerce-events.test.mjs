@@ -16,7 +16,12 @@ import {
   classifyCommerceResult,
   classifyCommerceRoute,
   classifyExtractBatchRequestConstruction,
+  classifyPaymentFailure,
   classifyPaymentFailureCode,
+  facilitatorRejectionClaimRejected,
+  paymentFailureCallerAction,
+  PAYMENT_FAILURE_EVIDENCE_NOT_RETAINED,
+  provesFacilitatorRejectedValidPayment,
   COMMERCE_COVERAGE_COMPLETE,
   COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW,
   COMMERCE_INTEGRITY_OK,
@@ -831,6 +836,69 @@ test("payment failure codes stay bounded and preserve required-input aliases", (
   assert.equal(classifyPaymentFailureCode({ route: "/extract", status: 200, queryKeys: [] }), null);
 });
 
+test("payment failure evidence names the selector and rejects a facilitator-proof claim", () => {
+  const cases = [
+    [{ route: "/extract", status: 402, queryKeys: [] }, "missing_required_input", "request_shape"],
+    [{ route: "/enrich", status: 402, queryKeys: ["url"] }, "payment_verification_failed", "generic_402"],
+    [{ route: "/wallet-enrich", status: 402, queryKeys: ["wallet"], error: "authorization signature mismatch" }, "signature_invalid", "verifier_text"],
+    [{ route: "/extract", status: 402, queryKeys: ["url"], error: "extension_echo_mismatch" }, "extension_mismatch", "verifier_text"],
+    [{ route: "/extract", status: 402, queryKeys: ["url"], error: "no matching payment requirements" }, "payment_terms_mismatch", "verifier_text"],
+    [{ route: "/extract", status: 402, queryKeys: ["url"], error: "expired" }, "payment_expired", "verifier_text"],
+    [{ route: "/extract", status: 402, queryKeys: ["url"], error: "not valid yet" }, "payment_expired", "verifier_text"],
+    [{ route: "/extract", status: 402, queryKeys: ["url"], error: "already used nonce" }, "payment_replay_rejected", "verifier_text"],
+    [{ route: "/extract", status: 402, queryKeys: ["url"], error: "insufficient funds" }, "insufficient_funds", "verifier_text"],
+    [{
+      route: "/commerce/seller-integrity-audit",
+      status: 402,
+      queryKeys: ["origin", "route"],
+      error: "Facilitator verify failed (400): 'paymentPayload' is invalid: must match one of [x402V2Pay]",
+    }, "payment_verification_failed", "verifier_text"],
+    [{
+      route: "/commerce/seller-integrity-audit",
+      status: 402,
+      queryKeys: ["origin", "route"],
+      error: "Facilitator verify failed (503): upstream temporarily unavailable",
+    }, "payment_service_unavailable", "verifier_text"],
+    [{ route: "/extract", status: 503, queryKeys: ["url"] }, "payment_service_unavailable", "http_status"],
+    [{ route: "/extract", status: 502, queryKeys: ["url"] }, "payment_service_unavailable", "http_status"],
+    [{ route: "/extract", status: 409, queryKeys: ["url"] }, "request_binding_conflict", "http_status"],
+    [{ route: "/extract", status: 400, queryKeys: ["url"] }, "application_validation_failed", "http_status"],
+    [{ route: "/extract", status: 402, queryKeys: ["url"], error: "unrecognized facilitator phrase" }, "payment_verification_failed", "generic_402"],
+    [{ route: "/extract", status: 200, queryKeys: ["url"] }, null, null],
+  ];
+  for (const [input, code, evidence] of cases) {
+    assert.equal(classifyPaymentFailureCode(input), code, JSON.stringify(input));
+    assert.deepEqual(classifyPaymentFailure(input), { code, evidence });
+  }
+  for (const evidence of ["generic_402", "not_retained", "verifier_text", "request_shape", "http_status", null]) {
+    assert.equal(provesFacilitatorRejectedValidPayment(evidence), false, String(evidence));
+  }
+  assert.equal(facilitatorRejectionClaimRejected({
+    paymentFailureCode: "payment_verification_failed",
+    paymentFailureEvidence: "generic_402",
+    facilitatorVerifiedValidPayment: true,
+    claim: "facilitator_rejected_valid_payment",
+  }), true);
+  assert.equal(facilitatorRejectionClaimRejected({
+    paymentFailureCode: "payment_verification_failed",
+    claim: "facilitator_rejected_valid_payment",
+  }), true);
+  assert.equal(facilitatorRejectionClaimRejected({
+    paymentFailureEvidence: PAYMENT_FAILURE_EVIDENCE_NOT_RETAINED,
+    provesFacilitatorRejectedValidPayment: true,
+  }), true);
+  assert.equal(facilitatorRejectionClaimRejected({
+    paymentFailureCode: "signature_invalid",
+    paymentFailureEvidence: "verifier_text",
+  }), false);
+  assert.equal(paymentFailureCallerAction("generic_402"), "read_caller_held_402_payment_required_error");
+  assert.equal(paymentFailureCallerAction("verifier_text"), "use_stored_failure_code");
+  assert.equal(paymentFailureCallerAction("request_shape"), "supply_required_input");
+  assert.equal(paymentFailureCallerAction("http_status"), "use_stored_failure_code");
+  assert.equal(paymentFailureCallerAction("not_retained"), "historical_reason_unknown");
+  assert.equal(paymentFailureCallerAction("raw_error"), null);
+});
+
 function evidenceTestResponse({ statusCode = 200, headers = {}, locals = {} } = {}) {
   const listeners = new Map();
   const output = [];
@@ -1446,6 +1514,10 @@ test("durable rare funnel deduplicates duplicate ids and retains parseable crede
   assert.equal(rows[0].paymentCredentialParsed, true);
   assert.equal(rows[0].result, "challenge");
   assert.equal(rows[0].paymentFailureCode, "payment_verification_failed");
+  assert.equal(rows[0].paymentFailureEvidence, "generic_402");
+  const ignoredHeaderJournal = await readFile(telemetry.paths.currentPath, "utf8");
+  assert.equal(ignoredHeaderJournal.includes("authorization signature mismatch"), false);
+  assert.equal(ignoredHeaderJournal.includes("generic_402"), true);
   await appendFile(telemetry.paths.rareFunnelPath, `${JSON.stringify(rows[0])}\n`);
   const snapshot = await telemetry.snapshot({ days: 90 });
   assert.equal(snapshot.durableRareFunnel.parseableCredentialAttemptEvents, 1);
@@ -3753,6 +3825,11 @@ test("every legitimate writer-emitted vocabulary value still passes", async () =
   for (const code of WRITER_PAYMENT_FAILURE_CODES) {
     assert.equal(snapshot.credentialAttemptByFailureCode[code], 1, `writer failure ${code} missing`);
   }
+  assert.equal(
+    snapshot.credentialAttemptByFailureEvidence.not_retained,
+    WRITER_PAYMENT_FAILURE_CODES.length,
+  );
+  assert.equal(snapshot.credentialAttemptByFailureEvidence.generic_402, undefined);
   const serialized = JSON.stringify(snapshot);
   assert.ok(serialized.length < PUBLIC_SNAPSHOT_MAX_CHARS * 4);
   await rm(dataDir, { recursive: true, force: true });
@@ -5042,4 +5119,243 @@ test("writer process gate accepts only the safe integer 1", async () => {
     await rm(badDir, { recursive: true, force: true });
     await rm(goodDir, { recursive: true, force: true });
   }
+});
+
+function sdkPaymentRequiredHeader(error) {
+  return Buffer.from(JSON.stringify({
+    x402Version: 2,
+    error,
+    resource: { url: "https://agents.samedaydesk.com/extract", method: "GET" },
+    accepts: [],
+  })).toString("base64url");
+}
+
+function parseableAttemptCredential(payer, marker) {
+  return Buffer.from(JSON.stringify({
+    x402Version: 2,
+    accepted: {
+      scheme: "exact",
+      network: "eip155:8453",
+      amount: "5000",
+      asset: "0x5555555555555555555555555555555555555555",
+      payTo: "0x6666666666666666666666666666666666666666",
+    },
+    payload: { authorization: { from: payer }, marker },
+  })).toString("base64");
+}
+
+test("mounted HTTP and MCP producers record failure evidence without private text", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-failure-evidence-"));
+  const sentinelError = "SENTINEL-ERROR-9f3a-DO-NOT-STORE verification failed";
+  const sentinelCredentialMarker = "SENTINEL-CRED-9f3a-DO-NOT-STORE";
+  const sentinelPayer = "0x5e4719e1c0de00000000000000000000000009f3";
+  const sentinelQuery = "SENTINEL-QUERY-9f3a-DO-NOT-STORE";
+  const sentinelMalformed = "SENTINEL-MALFORMED-9f3a-DO-NOT-STORE";
+  const sentinelIgnoredHeader = "SENTINEL-IGNORED-HEADER-9f3a signature mismatch";
+  const credential = parseableAttemptCredential(sentinelPayer, sentinelCredentialMarker);
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "failure-evidence-secret",
+    credentialAttemptSince: "2020-01-01T00:00:00.000Z",
+  });
+  const paid = (requestPath, query, statusCode, responseHeaders = {}) => {
+    emitEvidenceTestResponse(telemetry, {
+      requestPath,
+      originalUrl: requestPath,
+      query,
+      headers: { "payment-signature": credential },
+      statusCode,
+      responseHeaders,
+      ip: "203.0.113.50",
+      responseChunks: [Buffer.from("bounded-output")],
+    });
+  };
+  paid("/extract", { url: `https://example.com/${sentinelQuery}` }, 402, {
+    "payment-required": sdkPaymentRequiredHeader(sentinelError),
+  });
+  paid("/read", { url: "https://example.com/read" }, 402, {
+    "x402-error": sentinelIgnoredHeader,
+  });
+  paid("/scan", { repo: "example/repo" }, 402, {
+    "payment-required": sdkPaymentRequiredHeader("no matching payment requirements"),
+  });
+  paid("/schemaforge", { site: "https://example.com" }, 402, {
+    "payment-required": sdkPaymentRequiredHeader("expired"),
+  });
+  paid("/enrich", { url: "https://example.com/enrich" }, 402, {
+    "payment-required": sdkPaymentRequiredHeader("already used nonce"),
+  });
+  paid("/wallet-enrich", { wallet: "0x1111111111111111111111111111111111111111" }, 402, {
+    "payment-required": sdkPaymentRequiredHeader("authorization signature mismatch"),
+  });
+  paid("/deep-audit", { url: "https://example.com/audit" }, 402, {
+    "payment-required": sdkPaymentRequiredHeader("insufficient funds"),
+  });
+  paid("/defi/morpho-position", { wallet: "0x2222222222222222222222222222222222222222" }, 402, {
+    "payment-required": sdkPaymentRequiredHeader("upstream temporarily unavailable"),
+  });
+  paid("/commerce/payment-offer-preflight", { url: "https://example.com/offer" }, 503);
+  paid("/commerce/seller-integrity-audit", { origin: "https://example.com", route: "/extract" }, 409);
+  paid("/commerce/contract-qualified-search", { query: "extract", requiredPaths: "/url" }, 400);
+  paid("/extract", {}, 402);
+  paid("/read", { url: "https://example.com/paid" }, 200);
+  emitEvidenceTestResponse(telemetry, {
+    requestPath: "/distribution/agent-discoverability-audit",
+    originalUrl: "/distribution/agent-discoverability-audit",
+    query: { origin: "https://example.com", intent: "audit" },
+    headers: { "payment-signature": sentinelMalformed },
+    statusCode: 402,
+    ip: "203.0.113.51",
+    responseChunks: [Buffer.from("malformed")],
+  });
+  const digest = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  const challenge = typedChallengeDecision({ credentialState: "rejected" });
+  const applicationFailure = evaluateMcpTypedTelemetryOutcome({
+    schemaVersion: "samedaydesk.mcp-typed-telemetry-input.v1",
+    binding: {
+      tool: "enrich",
+      productSku: "samedaydesk-enrich",
+      resource: "mcp://tool/enrich",
+      issuedOfferDigest: digest,
+    },
+    request: { jsonrpc: "2.0", hasId: true, id: 12, method: "tools/call" },
+    response: { hasId: true, id: 12, kind: "tool_result" },
+    credential: { state: "verified", offerDigest: digest },
+    execution: { state: "handler_error", handlerInvoked: true, resultIsError: true },
+    settlement: { state: "not_attempted", offerDigest: null },
+  });
+  assert.equal(challenge.result, "challenge");
+  assert.equal(applicationFailure.result, "application_failure");
+  telemetry.appendMcpTypedDecision(challenge, null, null);
+  telemetry.appendMcpTypedDecision(applicationFailure, null, null);
+  await telemetry.flush();
+
+  const journal = await readFile(telemetry.paths.currentPath, "utf8");
+  const rareJournal = await readFile(telemetry.paths.rareFunnelPath, "utf8");
+  const events = journal.split("\n").filter(Boolean).map((line) => JSON.parse(line));
+  const httpEvents = events.filter((event) => event.v === 3);
+  const byRouteStatus = (route, status, queryKey) => httpEvents.find((event) => (
+    event.route === route
+    && event.status === status
+    && (queryKey === undefined || event.queryKeys.includes(queryKey))
+  ));
+  const verifier = byRouteStatus("/extract", 402, "url");
+  const generic = byRouteStatus("/read", 402, "url");
+  const terms = byRouteStatus("/scan", 402, "repo");
+  const expired = byRouteStatus("/schemaforge", 402, "site");
+  const replay = byRouteStatus("/enrich", 402, "url");
+  const signature = byRouteStatus("/wallet-enrich", 402, "wallet");
+  const funds = byRouteStatus("/deep-audit", 402, "url");
+  const transient = byRouteStatus("/defi/morpho-position", 402, "wallet");
+  const unavailable = byRouteStatus("/commerce/payment-offer-preflight", 503, "url");
+  const conflict = byRouteStatus("/commerce/seller-integrity-audit", 409, "origin");
+  const malformedBody = byRouteStatus("/commerce/contract-qualified-search", 400, "query");
+  const missingInput = httpEvents.find((event) => event.route === "/extract" && event.status === 402 && event.queryKeys.length === 0);
+  const paidSuccess = httpEvents.find((event) => event.route === "/read" && event.status === 200);
+  const malformed = byRouteStatus("/distribution/agent-discoverability-audit", 402, "origin");
+  assert.equal(verifier.paymentFailureCode, "payment_verification_failed");
+  assert.equal(verifier.paymentFailureEvidence, "verifier_text");
+  assert.equal(verifier.result, "challenge");
+  assert.equal(generic.paymentFailureCode, "payment_verification_failed");
+  assert.equal(generic.paymentFailureEvidence, "generic_402");
+  assert.equal(terms.paymentFailureCode, "payment_terms_mismatch");
+  assert.equal(terms.paymentFailureEvidence, "verifier_text");
+  assert.equal(expired.paymentFailureCode, "payment_expired");
+  assert.equal(expired.paymentFailureEvidence, "verifier_text");
+  assert.equal(replay.paymentFailureCode, "payment_replay_rejected");
+  assert.equal(replay.paymentFailureEvidence, "verifier_text");
+  assert.equal(signature.paymentFailureCode, "signature_invalid");
+  assert.equal(signature.paymentFailureEvidence, "verifier_text");
+  assert.equal(funds.paymentFailureCode, "insufficient_funds");
+  assert.equal(funds.paymentFailureEvidence, "verifier_text");
+  assert.equal(transient.paymentFailureCode, "payment_service_unavailable");
+  assert.equal(transient.paymentFailureEvidence, "verifier_text");
+  assert.equal(unavailable.paymentFailureCode, "payment_service_unavailable");
+  assert.equal(unavailable.paymentFailureEvidence, "http_status");
+  assert.equal(conflict.paymentFailureCode, "request_binding_conflict");
+  assert.equal(conflict.paymentFailureEvidence, "http_status");
+  assert.equal(malformedBody.paymentFailureCode, "application_validation_failed");
+  assert.equal(malformedBody.paymentFailureEvidence, "http_status");
+  assert.equal(missingInput.paymentFailureCode, "missing_required_input");
+  assert.equal(missingInput.paymentFailureEvidence, "request_shape");
+  assert.equal(paidSuccess.result, "paid_success");
+  assert.equal(paidSuccess.paymentFailureCode, null);
+  assert.equal(paidSuccess.paymentFailureEvidence, null);
+  assert.equal(malformed.paymentCredentialParsed, false);
+  assert.equal(malformed.paymentFailureEvidence, "generic_402");
+  const rareRows = await readRareFunnelRows(telemetry);
+  const rareByCode = Object.fromEntries(rareRows.filter((row) => row.captureProvenance === "http_middleware").map((row) => [
+    `${row.route}:${row.status}:${row.paymentFailureCode}`,
+    row.paymentFailureEvidence,
+  ]));
+  assert.equal(rareByCode["/extract:402:payment_verification_failed"], "verifier_text");
+  assert.equal(rareByCode["/read:402:payment_verification_failed"], "generic_402");
+  const mcpRare = rareRows.filter((row) => row.captureProvenance === "mcp_typed_adapter");
+  assert.equal(mcpRare.length, 2);
+  assert.equal(mcpRare.every((row) => row.paymentFailureEvidence === "http_status"), true);
+  assert.ok(mcpRare.some((row) => row.paymentFailureCode === "unknown_failure" && row.result === "challenge"));
+  assert.ok(mcpRare.some((row) => row.paymentFailureCode === "application_validation_failed" && row.result === "service_failure"));
+
+  const restarted = createCommerceTelemetry({
+    dataDir,
+    secret: "failure-evidence-secret",
+    credentialAttemptSince: "2020-01-01T00:00:00.000Z",
+  });
+  const snapshot = await restarted.snapshot({ days: 1 });
+  assert.equal(snapshot.byResult.paid_success, 1);
+  assert.equal(snapshot.credentialAttemptByFailureEvidence.verifier_text >= 1, true);
+  assert.equal(snapshot.credentialAttemptByFailureEvidence.generic_402 >= 1, true);
+  assert.equal(snapshot.credentialAttemptByFailureEvidence.request_shape, 1);
+  assert.equal(snapshot.credentialAttemptByFailureEvidence.http_status >= 1, true);
+  assert.equal(snapshot.credentialAttemptByFailureEvidence.not_retained, undefined);
+  assert.equal(snapshot.credentialAttemptPolicy.includes("generic_402"), true);
+  assert.equal(snapshot.credentialAttemptPolicy.includes("not_retained"), true);
+  const published = `${JSON.stringify(snapshot)}\n${journal}\n${rareJournal}`;
+  for (const secret of [sentinelError, sentinelCredentialMarker, sentinelPayer, sentinelQuery, sentinelMalformed, sentinelIgnoredHeader, credential]) {
+    assert.equal(published.includes(secret), false, `retained private value ${secret.slice(0, 24)}`);
+  }
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("historical failure rows stay not_retained and inconsistent evidence is unusable", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-failure-evidence-history-"));
+  const end = new Date(Date.now() - 1000).toISOString();
+  const historical = {
+    ...challengeWithFailureCode(end, "payment_verification_failed", "aaaaaaaaaaaaaaaaaaaaaaab"),
+    id: "00000000-0000-4000-8000-0000000000a1",
+  };
+  const classified = {
+    ...challengeWithFailureCode(end, "payment_verification_failed", "aaaaaaaaaaaaaaaaaaaaaaac"),
+    id: "00000000-0000-4000-8000-0000000000a2",
+    paymentFailureEvidence: "generic_402",
+  };
+  const poisoned = {
+    ...challengeWithFailureCode(end, "signature_invalid", "aaaaaaaaaaaaaaaaaaaaaaad"),
+    id: "00000000-0000-4000-8000-0000000000a3",
+    paymentFailureEvidence: "generic_402",
+    facilitatorVerifiedValidPayment: true,
+    claim: "facilitator_rejected_valid_payment",
+  };
+  const storedNotRetained = {
+    ...challengeWithFailureCode(end, "payment_verification_failed", "aaaaaaaaaaaaaaaaaaaaaaae"),
+    id: "00000000-0000-4000-8000-0000000000a4",
+    paymentFailureEvidence: "not_retained",
+  };
+  await seedEventFiles(dataDir, { current: [historical, classified, poisoned, storedNotRetained] });
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "failure-evidence-history-secret",
+    credentialAttemptSince: "2020-01-01T00:00:00.000Z",
+  });
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.coverage.integrity.currentFile.unusableRecordCount, 2);
+  assert.equal(snapshot.credentialAttemptByFailureCode.payment_verification_failed, 2);
+  assert.equal(snapshot.credentialAttemptByFailureCode.signature_invalid, undefined);
+  assert.equal(snapshot.credentialAttemptByFailureEvidence.not_retained, 1);
+  assert.equal(snapshot.credentialAttemptByFailureEvidence.generic_402, 1);
+  assert.equal(facilitatorRejectionClaimRejected(poisoned), true);
+  const serialized = JSON.stringify(snapshot);
+  assert.equal(serialized.includes("facilitatorVerifiedValidPayment"), false);
+  assert.equal(serialized.includes("facilitator_rejected_valid_payment"), false);
+  await rm(dataDir, { recursive: true, force: true });
 });

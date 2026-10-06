@@ -906,14 +906,90 @@ const PAYMENT_FAILURE_CODE = Object.freeze({
   unknownFailure: "unknown_failure",
 });
 const CANONICAL_PAYMENT_FAILURE_CODES = new Set(Object.values(PAYMENT_FAILURE_CODE));
+const PAYMENT_FAILURE_EVIDENCE = Object.freeze({
+  verifierText: "verifier_text",
+  generic402: "generic_402",
+  requestShape: "request_shape",
+  httpStatus: "http_status",
+});
+// Reader label only. Historical rows omit paymentFailureEvidence; do not store this value.
+export const PAYMENT_FAILURE_EVIDENCE_NOT_RETAINED = "not_retained";
+const CANONICAL_PAYMENT_FAILURE_EVIDENCE = new Set(Object.values(PAYMENT_FAILURE_EVIDENCE));
+const VERIFIER_TEXT_FAILURE_CODES = new Set([
+  PAYMENT_FAILURE_CODE.extensionMismatch,
+  PAYMENT_FAILURE_CODE.paymentTermsMismatch,
+  PAYMENT_FAILURE_CODE.signatureInvalid,
+  PAYMENT_FAILURE_CODE.paymentExpired,
+  PAYMENT_FAILURE_CODE.paymentReplayRejected,
+  PAYMENT_FAILURE_CODE.insufficientFunds,
+  PAYMENT_FAILURE_CODE.paymentServiceUnavailable,
+  PAYMENT_FAILURE_CODE.paymentVerificationFailed,
+]);
+const HTTP_STATUS_FAILURE_CODES = new Set([
+  PAYMENT_FAILURE_CODE.paymentServiceUnavailable,
+  PAYMENT_FAILURE_CODE.requestBindingConflict,
+  PAYMENT_FAILURE_CODE.applicationValidationFailed,
+  PAYMENT_FAILURE_CODE.unknownFailure,
+]);
+const FAILURE_TEXT_TIMEOUT = /temporarily unavailable|timed? out|timeout|connection (?:refused|reset)|(?:facilitator|upstream).*\b5\d\d\b/;
 
-export function classifyPaymentFailureCode({ route, status, queryKeys = [], error = "", problem = null } = {}) {
+export function paymentFailureEvidenceMatchesCode(evidence, paymentFailureCode) {
+  if (evidence === null) return paymentFailureCode === null;
+  if (typeof evidence !== "string" || !CANONICAL_PAYMENT_FAILURE_EVIDENCE.has(evidence)) return false;
+  if (typeof paymentFailureCode !== "string") return false;
+  if (evidence === PAYMENT_FAILURE_EVIDENCE.generic402) {
+    return paymentFailureCode === PAYMENT_FAILURE_CODE.paymentVerificationFailed;
+  }
+  if (evidence === PAYMENT_FAILURE_EVIDENCE.requestShape) {
+    return paymentFailureCode === PAYMENT_FAILURE_CODE.missingRequiredInput;
+  }
+  if (evidence === PAYMENT_FAILURE_EVIDENCE.verifierText) return VERIFIER_TEXT_FAILURE_CODES.has(paymentFailureCode);
+  if (evidence === PAYMENT_FAILURE_EVIDENCE.httpStatus) return HTTP_STATUS_FAILURE_CODES.has(paymentFailureCode);
+  return false;
+}
+
+function storedPaymentFailureEvidenceAccepted(value) {
+  if (!hasOwn(value, "paymentFailureEvidence")) return true;
+  return paymentFailureEvidenceMatchesCode(value.paymentFailureEvidence, value.paymentFailureCode);
+}
+
+// No retained class proves a facilitator verified a valid payment and rejected it.
+export function provesFacilitatorRejectedValidPayment(evidence) {
+  void evidence;
+  return false;
+}
+
+export function facilitatorRejectionClaimRejected(record) {
+  if (!record || typeof record !== "object" || Array.isArray(record)) return true;
+  const claimsProof = record.facilitatorVerifiedValidPayment === true
+    || record.provesFacilitatorRejectedValidPayment === true
+    || record.claim === "facilitator_rejected_valid_payment";
+  if (!claimsProof) return false;
+  const evidence = hasOwn(record, "paymentFailureEvidence")
+    ? record.paymentFailureEvidence
+    : PAYMENT_FAILURE_EVIDENCE_NOT_RETAINED;
+  return provesFacilitatorRejectedValidPayment(evidence) === false;
+}
+
+export function paymentFailureCallerAction(evidence) {
+  if (evidence === PAYMENT_FAILURE_EVIDENCE.verifierText) return "use_stored_failure_code";
+  if (evidence === PAYMENT_FAILURE_EVIDENCE.generic402) return "read_caller_held_402_payment_required_error";
+  if (evidence === PAYMENT_FAILURE_EVIDENCE.requestShape) return "supply_required_input";
+  if (evidence === PAYMENT_FAILURE_EVIDENCE.httpStatus) return "use_stored_failure_code";
+  if (evidence === PAYMENT_FAILURE_EVIDENCE_NOT_RETAINED) return "historical_reason_unknown";
+  return null;
+}
+
+export function classifyPaymentFailure({ route, status, queryKeys = [], error = "", problem = null } = {}) {
   const code = Number(status);
-  if (!Number.isInteger(code) || code < 400) return null;
+  if (!Number.isInteger(code) || code < 400) return { code: null, evidence: null };
   const presentKeys = new Set(Array.isArray(queryKeys) ? queryKeys.filter((key) => typeof key === "string") : []);
   const requiredGroups = REQUIRED_QUERY_KEY_GROUPS_BY_ROUTE.get(String(route || "")) || [];
   if (requiredGroups.some((group) => !group.some((key) => presentKeys.has(key)))) {
-    return PAYMENT_FAILURE_CODE.missingRequiredInput;
+    return {
+      code: PAYMENT_FAILURE_CODE.missingRequiredInput,
+      evidence: PAYMENT_FAILURE_EVIDENCE.requestShape,
+    };
   }
 
   const problemRecord = problem && typeof problem === "object" && !Array.isArray(problem) ? problem : {};
@@ -921,29 +997,60 @@ export function classifyPaymentFailureCode({ route, status, queryKeys = [], erro
     .map(boundedFailureText)
     .filter(Boolean)
     .join(" ");
-  if (/extension.*(?:echo|mismatch)|extension_echo_mismatch/.test(text)) return PAYMENT_FAILURE_CODE.extensionMismatch;
+  if (/extension.*(?:echo|mismatch)|extension_echo_mismatch/.test(text)) {
+    return { code: PAYMENT_FAILURE_CODE.extensionMismatch, evidence: PAYMENT_FAILURE_EVIDENCE.verifierText };
+  }
   if (/no matching payment requirements|requirements?.*mismatch|wrong (?:network|asset|amount|recipient|payto)/.test(text)) {
-    return PAYMENT_FAILURE_CODE.paymentTermsMismatch;
+    return { code: PAYMENT_FAILURE_CODE.paymentTermsMismatch, evidence: PAYMENT_FAILURE_EVIDENCE.verifierText };
   }
   if (/signature|authorization.*(?:invalid|mismatch)|invalid.*authorization/.test(text)) {
-    return PAYMENT_FAILURE_CODE.signatureInvalid;
+    return { code: PAYMENT_FAILURE_CODE.signatureInvalid, evidence: PAYMENT_FAILURE_EVIDENCE.verifierText };
   }
-  if (/expired|not valid yet/.test(text)) return PAYMENT_FAILURE_CODE.paymentExpired;
-  if (/already (?:used|processed)|replay|nonce/.test(text)) return PAYMENT_FAILURE_CODE.paymentReplayRejected;
-  if (/insufficient|balance|funds/.test(text)) return PAYMENT_FAILURE_CODE.insufficientFunds;
-  if (
-    code >= 500
-    || /temporarily unavailable|timed? out|timeout|connection (?:refused|reset)|(?:facilitator|upstream).*\b5\d\d\b/.test(text)
-  ) {
-    return PAYMENT_FAILURE_CODE.paymentServiceUnavailable;
+  if (/expired|not valid yet/.test(text)) {
+    return { code: PAYMENT_FAILURE_CODE.paymentExpired, evidence: PAYMENT_FAILURE_EVIDENCE.verifierText };
   }
-  if (/verification|verify|invalid payment|invalid credential|paymentpayload.*invalid/.test(text) || code === 402) {
-    return PAYMENT_FAILURE_CODE.paymentVerificationFailed;
+  if (/already (?:used|processed)|replay|nonce/.test(text)) {
+    return { code: PAYMENT_FAILURE_CODE.paymentReplayRejected, evidence: PAYMENT_FAILURE_EVIDENCE.verifierText };
   }
-  if (/facilitator|upstream/.test(text)) return PAYMENT_FAILURE_CODE.paymentServiceUnavailable;
-  if (code === 409) return PAYMENT_FAILURE_CODE.requestBindingConflict;
-  if (code >= 400 && code < 500) return PAYMENT_FAILURE_CODE.applicationValidationFailed;
-  return PAYMENT_FAILURE_CODE.unknownFailure;
+  if (/insufficient|balance|funds/.test(text)) {
+    return { code: PAYMENT_FAILURE_CODE.insufficientFunds, evidence: PAYMENT_FAILURE_EVIDENCE.verifierText };
+  }
+  const timeoutText = FAILURE_TEXT_TIMEOUT.test(text);
+  if (code >= 500 || timeoutText) {
+    return {
+      code: PAYMENT_FAILURE_CODE.paymentServiceUnavailable,
+      evidence: timeoutText ? PAYMENT_FAILURE_EVIDENCE.verifierText : PAYMENT_FAILURE_EVIDENCE.httpStatus,
+    };
+  }
+  if (/verification|verify|invalid payment|invalid credential|paymentpayload.*invalid/.test(text)) {
+    return {
+      code: PAYMENT_FAILURE_CODE.paymentVerificationFailed,
+      evidence: PAYMENT_FAILURE_EVIDENCE.verifierText,
+    };
+  }
+  if (code === 402) {
+    return {
+      code: PAYMENT_FAILURE_CODE.paymentVerificationFailed,
+      evidence: PAYMENT_FAILURE_EVIDENCE.generic402,
+    };
+  }
+  if (/facilitator|upstream/.test(text)) {
+    return {
+      code: PAYMENT_FAILURE_CODE.paymentServiceUnavailable,
+      evidence: PAYMENT_FAILURE_EVIDENCE.verifierText,
+    };
+  }
+  if (code === 409) {
+    return { code: PAYMENT_FAILURE_CODE.requestBindingConflict, evidence: PAYMENT_FAILURE_EVIDENCE.httpStatus };
+  }
+  if (code >= 400 && code < 500) {
+    return { code: PAYMENT_FAILURE_CODE.applicationValidationFailed, evidence: PAYMENT_FAILURE_EVIDENCE.httpStatus };
+  }
+  return { code: PAYMENT_FAILURE_CODE.unknownFailure, evidence: PAYMENT_FAILURE_EVIDENCE.httpStatus };
+}
+
+export function classifyPaymentFailureCode(input = {}) {
+  return classifyPaymentFailure(input).code;
 }
 
 function x402FailureError(res) {
@@ -1465,6 +1572,7 @@ function isCanonicalCommerceEvent(value) {
   })) {
     return false;
   }
+  if (!storedPaymentFailureEvidenceAccepted(value)) return false;
   if (!isCanonicalProtocolList(value.protocolsOffered)) return false;
   if (typeof value.replayed !== "boolean") return false;
   if (!isCanonicalSettlementReference(value.settlementReference)) return false;
@@ -1925,15 +2033,19 @@ function canonicalPaidSuccessEvidence(value) {
   }
 }
 
+function rareFunnelEvidenceKeysAccepted(value) {
+  const seen = [];
+  for (const key of Object.keys(value).sort()) {
+    if (key === "paymentFailureEvidence") continue;
+    seen.push(key);
+  }
+  return seen.length === RARE_FUNNEL_EVIDENCE_KEYS.length
+    && seen.every((key, index) => key === RARE_FUNNEL_EVIDENCE_KEYS[index]);
+}
+
 function isCanonicalRareFunnelEvidence(value) {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
-  const keys = Object.keys(value).sort();
-  if (
-    keys.length !== RARE_FUNNEL_EVIDENCE_KEYS.length
-    || keys.some((key, index) => key !== RARE_FUNNEL_EVIDENCE_KEYS[index])
-  ) {
-    return false;
-  }
+  if (!rareFunnelEvidenceKeysAccepted(value)) return false;
   if (value.v !== 1 || value.schemaVersion !== RARE_FUNNEL_EVIDENCE_SCHEMA) return false;
   if (value.captureVersion !== RARE_FUNNEL_CAPTURE_VERSION) return false;
   if (
@@ -1967,6 +2079,7 @@ function isCanonicalRareFunnelEvidence(value) {
   })) {
     return false;
   }
+  if (!storedPaymentFailureEvidenceAccepted(value)) return false;
   if (typeof value.replayed !== "boolean") return false;
   if (!isBoundedString(value.result, 32)) return false;
   if (value.usefulness !== RARE_FUNNEL_USEFULNESS_UNKNOWN) return false;
@@ -1994,6 +2107,9 @@ function canonicalRareFunnelEvidence(value) {
       paymentCredentialParsed: value?.paymentCredentialParsed,
       paymentProtocol: value?.paymentProtocol,
       paymentFailureCode: value?.paymentFailureCode ?? null,
+      ...(hasOwn(value, "paymentFailureEvidence")
+        ? { paymentFailureEvidence: value.paymentFailureEvidence ?? null }
+        : {}),
       result: value?.result,
       status: value?.status,
       replayed: value?.replayed,
@@ -2027,6 +2143,9 @@ function rareFunnelEvidenceFromHttpEvent(event, { captureProvenance = RARE_FUNNE
     paymentCredentialParsed: event.paymentCredentialParsed === true,
     paymentProtocol: event.paymentProtocol,
     paymentFailureCode: event.paymentFailureCode,
+    ...(hasOwn(event, "paymentFailureEvidence")
+      ? { paymentFailureEvidence: event.paymentFailureEvidence }
+      : {}),
     result: event.result,
     status: event.status,
     replayed: event.replayed === true,
@@ -2098,6 +2217,7 @@ function rareFunnelEvidenceFromMcpTypedEvent(event) {
         ? PAYMENT_FAILURE_CODE.applicationValidationFailed
         : PAYMENT_FAILURE_CODE.unknownFailure)
       : null,
+    paymentFailureEvidence: status >= 400 ? PAYMENT_FAILURE_EVIDENCE.httpStatus : null,
     result,
     status,
     replayed: event.result === "replay_success",
@@ -3565,15 +3685,15 @@ export function createCommerceTelemetry({
         query: req.query || {},
         body: req.body,
       });
-      const paymentFailureCode = paymentPresent
-        ? classifyPaymentFailureCode({
+      const paymentFailure = paymentPresent
+        ? classifyPaymentFailure({
             route: route.route,
             status,
             queryKeys: Object.keys(req.query || {}),
             error: x402FailureError(res),
             problem: responseProblem,
           })
-        : null;
+        : { code: null, evidence: null };
       const result = classifyCommerceResult({
         route: route.route,
         kind: route.kind,
@@ -3604,7 +3724,8 @@ export function createCommerceTelemetry({
         paymentPresent,
         paymentCredentialParsed: paymentMetadata.credentialParsed === true,
         paymentProtocol: protocol,
-        paymentFailureCode,
+        paymentFailureCode: paymentFailure.code,
+        paymentFailureEvidence: paymentFailure.evidence,
         protocolsOffered,
         replayed,
         paymentActor,
@@ -3901,6 +4022,7 @@ export function createCommerceTelemetry({
     const credentialAttemptBySource = emptyCounts();
     const credentialAttemptByClass = emptyCounts();
     const credentialAttemptByFailureCode = emptyCounts();
+    const credentialAttemptByFailureEvidence = emptyCounts();
     const credentialAttemptActors = new Map();
     for (const event of credentialAttemptEvents) {
       if (event.paymentProtocol) increment(credentialAttemptByProtocol, event.paymentProtocol);
@@ -3920,7 +4042,19 @@ export function createCommerceTelemetry({
         status: event.status,
         queryKeys: event.queryKeys,
       });
-      if (failureCode) increment(credentialAttemptByFailureCode, failureCode);
+      if (failureCode) {
+        increment(credentialAttemptByFailureCode, failureCode);
+        // Absent evidence stays not_retained. Do not backfill generic_402 from status alone.
+        const storedEvidence = hasOwn(event, "paymentFailureEvidence")
+          ? event.paymentFailureEvidence
+          : null;
+        increment(
+          credentialAttemptByFailureEvidence,
+          paymentFailureEvidenceMatchesCode(storedEvidence, failureCode)
+            ? storedEvidence
+            : PAYMENT_FAILURE_EVIDENCE_NOT_RETAINED,
+        );
+      }
       const attemptActor = event.paymentActor || event.actor;
       credentialAttemptActors.set(attemptActor, (credentialAttemptActors.get(attemptActor) || 0) + 1);
     }
@@ -4201,6 +4335,7 @@ export function createCommerceTelemetry({
       credentialAttemptBySource,
       credentialAttemptByClass,
       credentialAttemptByFailureCode,
+      credentialAttemptByFailureEvidence,
       paidSuccessByRoute,
       paidSuccessByProtocol,
       paidSuccessByDiscoverySource,
@@ -4241,7 +4376,7 @@ export function createCommerceTelemetry({
       unmatched: unmatchedRequests,
       paymentClassPolicy: "Explicit known-payer rules classify internal, marketplace validation, incentivized, affiliated, or independently confirmed buyers. Unknown or missing payer identities remain unclassified and never become independent by inference.",
       discoveryConversionPolicy: "A submitted payment credential overrides crawler classification so paying agents remain in economic telemetry. Controlled user-agent source labels attribute the client channel but are self-declared and do not independently authenticate a registry referral. Challenge-to-paid conversion uses the same secret-keyed network-and-user-agent actor before and after the challenge and is therefore a conservative continuity lower bound, not an identity claim. SameDayDesk owner monitors remain excluded before this rule.",
-      credentialAttemptPolicy: "After the declared credential-attempt baseline, a parseable attempt must carry a syntactically complete x402 v2 exact Base-style binding or MPP evm/charge credential. Signature validity and settlement are separate later outcomes. Controlled failure codes are derived from required query-key presence, x402 response error classes, or MPP Problem Details. Public output contains only aggregate protocol, result, route, source, payer class, and failure-code counts; raw credentials, errors, bodies, query values, actors, and payer addresses are not exposed.",
+      credentialAttemptPolicy: "After the declared credential-attempt baseline, a parseable attempt must carry a syntactically complete x402 v2 exact Base-style binding or MPP evm/charge credential. Signature validity and settlement are separate later outcomes. Controlled failure codes are derived from required query-key presence, x402 response error classes, or MPP Problem Details. paymentFailureEvidence records only which allowlisted selector produced the code: verifier_text, generic_402, request_shape, or http_status. generic_402 means HTTP 402 alone selected payment_verification_failed and is not proof a facilitator rejected a valid payment. A failure code with no stored evidence is counted not_retained and its historical reason is unknown. Public output contains only aggregate protocol, result, route, source, payer class, failure-code, and failure-evidence counts; raw credentials, errors, bodies, query values, actors, and payer addresses are not exposed.",
       requestConstructionPolicy: "Prospective seller-declared GET measurement, plus the exact declared paid POST /extract/batch body. A constructed GET must target an exact paid route, carry a non-empty scalar for every required non-secret query key from that route's canonical Bazaar request contract, and receive an HTTP 402 challenge rather than validation failure. A constructed POST /extract/batch must pass the merchant's synchronous input validator (1 to 5 bounded public HTTPS URL strings, valid optional fields and no extra keys) and receive an HTTP 402 challenge. GET values are inspected for scalar non-emptiness; POST bodies use that validator without DNS lookup or source fetching. Invalid or incomplete POST input is classified missing_required_input. Values are neither retained nor published. Header, cookie, path, other POST bodies, unsafe unpaid POST, credential-like required names, and undeclared contracts remain unmeasured. Public output contains aggregate events, distinct secret-keyed actor counts, controlled source labels, and canonical routes only. Construction proves neither input validity, buyer intent, payment authorization, settlement, nor demand.",
       settlementEvidencePolicy: "After the declared settlement-evidence baseline, a successful paid response should carry a valid Base transaction reference in PAYMENT-RESPONSE or Payment-Receipt. Raw response headers and transaction references remain private; public output exposes only coverage counts by evidence class.",
       paidDiagnosticReportContract,
