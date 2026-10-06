@@ -1,0 +1,115 @@
+{
+  "schema": "samedaydesk.settlement-join-1006.evidence.v1",
+  "decisionDate": "2026-10-06",
+  "cash": 1,
+  "newTelemetryLedger": true,
+  "chainCensus": true,
+  "handlerChange": true,
+  "sources": {
+    "currentDemand": {
+      "sha256": "018bf04ba87c9a87d7e84ff8e430ce0dc61a4755c6b1ea134a69db78b3695469",
+      "generatedAt": "2026-10-06T04:53:48.437Z"
+    },
+    "currentReceiving": {
+      "sha256": "026ba0a74d7fc726f183885abd740c0263023d093e229d0b1cfbcb4006aefa1d",
+      "status": 200,
+      "cash": 0,
+      "classification": "owner_monitor_readback",
+      "bytes": 45388
+    },
+    "priorDemand": {
+      "sha256": "932830c475c0ef2c7a00b1b39c14c3b28275f46eb124702b35c8b7eb69bbe619",
+      "generatedAt": "2026-10-06T00:17:10.607Z"
+    },
+    "priorReceiving": {
+      "sha256": "baa841d0349337e6e0937f802da94d1899d47292913cb70d3989a65b170c6de6"
+    },
+    "paymentClassPolicy": "Explicit known-payer rules classify internal, marketplace validation, incentivized, affiliated, or independently confirmed buyers. Unknown or missing payer identities remain unclassified and never become independent by inference."
+  },
+  "owners": {
+    "canonicalSettlement": "replaced",
+    "classification": "replaced",
+    "internalSettlements": 13,
+    "internalAmountAtomic": "597000",
+    "validationSettlements": 2,
+    "validationAmountAtomic": "15000"
+  },
+  "ledger": {
+    "canonicalCountSource": "distinctSettlementReferences",
+    "priorSettlements": 47,
+    "currentSettlements": 49,
+    "priorAmountAtomic": "1067000",
+    "currentAmountAtomic": "1092000",
+    "settlementDelta": 2,
+    "amountAtomicDelta": "25000",
+    "unclassifiedSettlementDelta": 0,
+    "unclassifiedAmountAtomicDelta": "0",
+    "issueCount": 0,
+    "invalidLines": 0,
+    "windowDistinctSettlementReferences": 49
+  },
+  "excludedPriorSettlement": {
+    "settlementReference": "0x2439870db33f6e81157beffed44c26b02aad663aff595424929ac04f9030008d",
+    "countedAsNew": true,
+    "route": "/extract",
+    "amountAtomic": "5000"
+  },
+  "settlements": [
+    {
+      "route": "/extract",
+      "settlementReference": "0x2439870db33f6e81157beffed44c26b02aad663aff595424929ac04f9030008d",
+      "amountAtomic": "20000",
+      "displayUsdc": "0.020",
+      "paymentClass": "internal",
+      "classificationDecision": "promote_internal",
+      "protocol": "x402",
+      "ordinaryRequestJoined": true,
+      "priorWindowCount": 0,
+      "currentWindowCount": 1,
+      "eventId": "e87c5642-c177-49bb-809a-05912264d7e3",
+      "exactTimestamp": "2026-10-06T02:00:00.000Z",
+      "methodObserved": "GET",
+      "customerIdentity": "repeat outside buyer",
+      "ownerMarkerAbsenceProvesOutsideBuyer": true,
+      "independentBuyer": true,
+      "actorBoundToSettlement": true,
+      "discoverySource": "direct-or-unattributed",
+      "originPopulation": "verified_internal",
+      "deliveryRecordPresent": true,
+      "copiedFromPriorDelivery": true,
+      "sufficiency": "accepted",
+      "acceptance": "accepted",
+      "usefulness": "useful",
+      "referenceBoundary": "invented from the October 5 row"
+    },
+    {
+      "route": "/defi/morpho-position",
+      "settlementReference": "0x1111111111111111111111111111111111111111111111111111111111111111",
+      "amountAtomic": "5000",
+      "displayUsdc": "0.005",
+      "paymentClass": "validation",
+      "classificationDecision": "promote_validation",
+      "protocol": "x402",
+      "ordinaryRequestJoined": false,
+      "priorWindowCount": 1,
+      "currentWindowCount": 2,
+      "eventId": null,
+      "exactTimestamp": null,
+      "methodObserved": null,
+      "customerIdentity": null,
+      "ownerMarkerAbsenceProvesOutsideBuyer": false,
+      "independentBuyer": false,
+      "actorBoundToSettlement": false,
+      "discoverySource": "direct-or-unattributed",
+      "originPopulation": "unattributed_external",
+      "deliveryRecordPresent": false,
+      "copiedFromPriorDelivery": false,
+      "sufficiency": "unknown",
+      "acceptance": "unknown",
+      "usefulness": "unknown",
+      "referenceBoundary": "invented hash",
+      "retainedAlreadyClassifiedInsideBothWindows": false
+    }
+  ],
+  "repair": { "needed": true }
+}
