@@ -6,10 +6,14 @@ import { FILE_CLASSES, receiveOrdinaryDeliveryJoin, reportViolations } from "./o
 
 const HELP = `ordinary-delivery-join
 
-Read canonical settlement, paid-success, HTTP validation, MCP delivery, and
-task/outcome files. Join one settlement to its captured delivery by
-paidEvidenceId, digest, route, and settlement reference. Aggregate route
-counts are not a join. Schema validity is not buyer usefulness.
+Read canonical settlement, HTTP v1 paid-success, typed MCP commerce events,
+HTTP validation, MCP delivery, and task/outcome files. HTTP joins use the v1
+paid-success id, digest, route, and settlement reference. MCP joins use the
+typed commerce event (sourceContract mcp_typed_outcome) by sourceEventId,
+settlement reference, tool, resource, issued offer, recomputed callDigest, and
+tool-text output digest. An MCP row is not joined by inventing an HTTP v1
+record. Aggregate route counts are not a join. Schema validity is not buyer
+usefulness.
 
 Usage
   node ordinary-delivery-join-cli.mjs \\
@@ -22,6 +26,8 @@ Usage
 File classes (read, never created)
   ${FILE_CLASSES.settlementLedger}
   ${FILE_CLASSES.paidSuccessEvidence}
+  ${FILE_CLASSES.commerceEvents}
+  ${FILE_CLASSES.commerceEventsRotated}
   ${FILE_CLASSES.httpValidation}
   ${FILE_CLASSES.mcpDelivery}
   ${FILE_CLASSES.outcomeBinding}

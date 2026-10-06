@@ -32,6 +32,7 @@ import {
 } from "./http-delivery-evidence/index.mjs";
 import { declareCallerUsefulness } from "./http-delivery-evidence/caller-declaration.mjs";
 import { mountMcp } from "./mcp-server.mjs";
+import { proveMountedDeliveryJoin } from "./ordinary-delivery-join-observe.mjs";
 
 const requireFromHere = createRequire(import.meta.url);
 const express = requireFromHere("express");
@@ -624,6 +625,21 @@ test("mounted morpho HTTP and MCP producers capture delivery from the live paths
   assert.equal(names.includes(VALIDATION_FILENAME), true);
   assert.equal(names.includes(MCP_DELIVERY_FILENAME), true);
   assert.equal(names.includes(PAID_EVIDENCE_FILENAME), true);
+
+  const proved = await proveMountedDeliveryJoin(dataDir);
+  assert.equal(proved.producerUnchanged, true);
+  assert.equal(proved.identicalBodyDistinct, true);
+  assert.equal(proved.foreignRefused, true);
+  assert.equal(proved.mcpJoinedWithoutHttpV1, true);
+  for (const name of ["complete_useful", "useful_negative", "truncated_partial", "upstream_failed"]) {
+    assert.ok(proved.classes.includes(name), name);
+  }
+  const sdkJoined = proved.isolated.find((item) => item.id === sdkRow.paidEvidenceId);
+  assert.equal(sdkJoined.disposition, "exact_join");
+  assert.equal(sdkJoined.responseDigest, sdkDigest);
+  assert.equal(sdkJoined.kind, "mcp");
+  const paidText = await readFile(path.join(dataDir, PAID_EVIDENCE_FILENAME), "utf8");
+  assert.equal(paidText.includes(sdkRow.paidEvidenceId), false);
 });
 
 test("mounted mcp producer records malformed, missing, and replay without an HTTP payment row", { timeout: 60_000 }, async () => {
@@ -768,6 +784,16 @@ test("mounted mcp producer records malformed, missing, and replay without an HTT
     assert.equal(journal.includes(payer.toLowerCase()), false);
     assert.equal(journal.includes("payment-signature"), false);
     assert.equal(journal.includes("example"), false);
+    const proved = await proveMountedDeliveryJoin(dataDir);
+    assert.equal(proved.producerUnchanged, true);
+    assert.equal(proved.foreignRefused, true);
+    assert.equal(proved.replayRefused, true);
+    assert.ok(proved.classes.includes("malformed_body"));
+    assert.ok(proved.classes.includes("missing_body"));
+    const paidText = await readFile(path.join(dataDir, PAID_EVIDENCE_FILENAME), "utf8").catch((error) => (
+      error?.code === "ENOENT" ? "" : Promise.reject(error)
+    ));
+    for (const event of events) assert.equal(paidText.includes(event.id), false, event.id);
   } finally {
     server.closeAllConnections?.();
     await new Promise((resolve) => server.close(resolve));

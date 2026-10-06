@@ -23,6 +23,7 @@ import {
   parseNdjson,
 } from "./http-delivery-evidence/index.mjs";
 import { historicalV1Row } from "./http-delivery-evidence/test/helpers.mjs";
+import { proveMountedDeliveryJoin } from "./ordinary-delivery-join-observe.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const PAYER = `0x${"2".repeat(40)}`;
@@ -324,4 +325,17 @@ test("mounted extract captures HTTP delivery evidence without changing v1 paid-s
   assert.notEqual(firstJoined.historical.id, secondJoined.historical.id);
   assert.ok(firstJoined.validations.every((item) => item.paidEvidenceId === firstJoined.historical.id));
   assert.ok(secondJoined.validations.every((item) => item.paidEvidenceId === secondJoined.historical.id));
+
+  const proved = await proveMountedDeliveryJoin(dataDir);
+  assert.equal(proved.producerUnchanged, true);
+  assert.equal(proved.identicalBodyDistinct, true);
+  assert.equal(proved.foreignRefused, true);
+  assert.ok(proved.classes.includes("full_bounded_capture"));
+  assert.ok(proved.classes.includes("truncated_partial"));
+  assert.ok(proved.classes.includes("source_refusal"));
+  const joinedOk = proved.isolated.find((item) => item.id === liveOk.id);
+  assert.equal(joinedOk.disposition, "exact_join");
+  assert.equal(joinedOk.responseDigest, digestResponseBytes(ok.bytes));
+  assert.equal(joinedOk.deliveryClass, "full_bounded_capture");
+  assert.equal(proved.identicalBodyDistinct, true);
 });

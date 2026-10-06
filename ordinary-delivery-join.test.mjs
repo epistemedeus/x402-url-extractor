@@ -6,6 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { isCanonicalMcpTypedCommerceEvent } from "./commerce-events.mjs";
 import { SCHEMA_VERSION } from "./commerce-settlement-reconciler.mjs";
 import {
   authorizeOutcomeBinding,
@@ -16,6 +17,7 @@ import {
 } from "./commerce-outcome-binding.mjs";
 import { bindMerchantHttpDeliveryContracts } from "./http-delivery-evidence/bind-merchant-contracts.mjs";
 import { SETTLEMENT_CLASS } from "./http-delivery-evidence/classify.mjs";
+import { digestMcpCallId, digestMcpPayload, digestResponseBytes } from "./http-delivery-evidence/digest.mjs";
 import { MCP_MORPHO_RESOURCE } from "./http-delivery-evidence/mcp-delivery.mjs";
 import {
   recordFromObservedMcpDelivery,
@@ -158,7 +160,86 @@ function runCli(args) {
   });
 }
 
-test("mounted producer captures join by event, digest, route, and reference", async () => {
+function typedEvent({ id: eventId, timestamp, result, offer = OFFER }) {
+  const paid = result === "paid_success";
+  const replay = result === "replay_success";
+  const event = {
+    v: 4,
+    sourceContract: "mcp_typed_outcome",
+    id: eventId,
+    ts: timestamp,
+    authority: "seller_declared",
+    evidenceClass: "seller_operational",
+    accounting: false,
+    revenue: false,
+    demand: false,
+    independentUse: false,
+    chainTruth: false,
+    payerIdentity: false,
+    action: "emit",
+    result,
+    reason: paid ? "typed_paid_success" : replay ? "typed_replay_success" : "typed_application_failure",
+    paymentPresent: true,
+    paymentCredentialParsed: true,
+    handlerInvoked: !replay,
+    applicationOutcome: paid ? "success" : replay ? "replay" : "error",
+    settlementState: result === "application_failure" ? "not_attempted" : "succeeded",
+    binding: {
+      tool: "morpho_position",
+      productSku: "samedaydesk-morpho-position",
+      resource: MCP_MORPHO_RESOURCE,
+      issuedOfferDigest: offer,
+    },
+  };
+  assert.equal(isCanonicalMcpTypedCommerceEvent(event), true, eventId);
+  return event;
+}
+
+function emptyMorphoBody() {
+  return {
+    ok: true,
+    address: "0x1111111111111111111111111111111111111111",
+    chain: { id: 8453, name: "Base mainnet" },
+    fetchedAt: "2026-10-06T01:12:00.000Z",
+    latestIndexedAt: null,
+    positionCount: 0,
+    truncated: false,
+    positions: [],
+    source: {
+      provider: "synthetic",
+      authority: "indexed",
+      directRpc: { verdict: "disabled", checkedPositions: 0 },
+    },
+    boundary: "synthetic-boundary",
+  };
+}
+
+function mcpObserved(paidEvidenceId, settlementReference, callId, body, isError = false) {
+  const text = JSON.stringify(body);
+  const seal = sealObservedMcpToolResult({
+    tool: "morpho_position",
+    productSku: "samedaydesk-morpho-position",
+    resource: MCP_MORPHO_RESOURCE,
+    issuedOfferDigest: OFFER,
+    callId,
+    result: { content: [{ type: "text", text }], isError },
+    settlementReference,
+  });
+  const row = recordFromObservedMcpDelivery({
+    observation: seal,
+    settlementState: isError ? "not_attempted" : "succeeded",
+    paidEvidenceId,
+    settlementClass: SETTLEMENT_CLASS.REAL_UNVERIFIED,
+    capturedAt: WINDOW_START,
+  });
+  assert.ok(row, callId);
+  assert.equal(row.callDigest, digestMcpCallId(callId));
+  assert.equal(row.responseDigest, digestMcpPayload(Buffer.from(text, "utf8")));
+  assert.notEqual(row.responseDigest, digestResponseBytes(Buffer.from(text, "utf8")));
+  return row;
+}
+
+test("constructed records join by event, digest, route, and reference", async () => {
   const sameBody = validExtractBody();
   const requestA = fingerprint(1);
   const requestB = fingerprint(2);
@@ -266,16 +347,7 @@ test("mounted producer captures join by event, digest, route, and reference", as
   });
   const paid6 = paidFrom(http6, { timestamp: at(6), fingerprint: "16".repeat(32), settlementReference: ref(6) });
   const paid7 = paidFrom(http7, { timestamp: at(7), fingerprint: "17".repeat(32), settlementReference: ref(7) });
-  const paid8 = paidFrom(null, {
-    id: id(8),
-    timestamp: at(8),
-    method: "GET",
-    route: "/defi/morpho-position",
-    requestDigest: "18".repeat(32),
-    responseDigest: "cd".repeat(32),
-    settlementReference: ref(8),
-    fingerprint: "18".repeat(32),
-  });
+  const typed8 = typedEvent({ id: id(8), timestamp: at(8), result: "application_failure" });
   const paid9 = paidFrom(null, {
     id: id(9),
     timestamp: at(9),
@@ -316,16 +388,7 @@ test("mounted producer captures join by event, digest, route, and reference", as
     capturedAt: at(16),
   });
   const paid18 = paidFrom(http18, { timestamp: at(18), fingerprint: "28".repeat(32), settlementReference: ref("c") });
-  const paid19 = paidFrom(null, {
-    id: id(19),
-    timestamp: at(19),
-    method: "GET",
-    route: "/defi/morpho-position",
-    requestDigest: "29".repeat(32),
-    responseDigest: "ee".repeat(32),
-    settlementReference: ref("e"),
-    fingerprint: "29".repeat(32),
-  });
+  const typed19 = typedEvent({ id: id(19), timestamp: at(19), result: "application_failure" });
   const duplicatePaid = paidFrom(http1, {
     id: id(21),
     timestamp: at(21),
@@ -355,8 +418,9 @@ test("mounted producer captures join by event, digest, route, and reference", as
     payerClass: "independent",
   });
   const mcp8 = mcpFailed(id(8), ref(8), "call-e8", UPSTREAM);
-  assert.notEqual(mcp8.responseDigest, paid8.responseDigest);
+  assert.notEqual(mcp8.responseDigest, digestResponseBytes(Buffer.from(JSON.stringify({ ok: false, error: UPSTREAM, charged: false }))));
   assert.equal(mcp8.deliveryClass, "upstream_failed");
+  const typed18 = typedEvent({ id: id(18), timestamp: at(18), result: "application_failure" });
   const mcp18 = mcpFailed(id(18), ref("c"), "call-e18", UPSTREAM);
   const mcp19a = mcpFailed(id(19), ref("e"), "call-e19a", UPSTREAM);
   const mcp19b = mcpFailed(id(19), ref("e"), "call-e19b", `${UPSTREAM}-other`);
@@ -461,14 +525,30 @@ test("mounted producer captures join by event, digest, route, and reference", as
         ledgerFrom(paid5, { timestamp: at(5), paymentClass: "unclassified", amountAtomic: "5000" }),
         ledgerFrom(paid6, { timestamp: at(6), paymentClass: "unclassified", amountAtomic: "5000" }),
         ledgerFrom(paid7, { timestamp: at(7), paymentClass: "unclassified", amountAtomic: "20000" }),
-        ledgerFrom(paid8, { timestamp: at(8), paymentClass: "unclassified", amountAtomic: "20000" }),
+        ledgerFrom(null, {
+          timestamp: at(8),
+          paymentClass: "unclassified",
+          amountAtomic: "20000",
+          sourceEventId: id(8),
+          route: "/mcp",
+          protocol: "x402",
+          settlementReference: ref(8),
+        }),
         ledgerFrom(paid9, { timestamp: at(9), paymentClass: "unclassified", amountAtomic: "5000", settlementReference: ref(1) }),
         ledgerFrom(paidOutside, { timestamp: "2026-10-05T12:00:00.000Z", paymentClass: "unclassified", amountAtomic: "5000" }),
         ledgerFrom(paid11, { timestamp: at(11), paymentClass: "unclassified", amountAtomic: "5000" }),
         ledgerFrom(paid15, { timestamp: at(15), paymentClass: "unclassified", amountAtomic: "5000" }),
         ledgerFrom(paid16, { timestamp: at(16), paymentClass: "unclassified", amountAtomic: "5000", protocol: "x402" }),
         ledgerFrom(paid18, { timestamp: at(18), paymentClass: "unclassified", amountAtomic: "5000" }),
-        ledgerFrom(paid19, { timestamp: at(19), paymentClass: "unclassified", amountAtomic: "20000" }),
+        ledgerFrom(null, {
+          timestamp: at(19),
+          paymentClass: "unclassified",
+          amountAtomic: "20000",
+          sourceEventId: id(19),
+          route: "/mcp",
+          protocol: "x402",
+          settlementReference: ref("e"),
+        }),
         ledgerFrom(duplicatePaid, { timestamp: at(21), paymentClass: "unclassified", amountAtomic: "5000" }),
         ledgerFrom(null, {
           timestamp: at(22),
@@ -482,7 +562,7 @@ test("mounted producer captures join by event, digest, route, and reference", as
       ]),
       [FILE_CLASSES.paidSuccessEvidence]: ndjson([
         "{v:1}",
-        paid1, paid2, paid3, paid4, paid5, paid6, paid7, paid8, paid9, paid11, paid15, paid16, paid18, paid19,
+        paid1, paid2, paid3, paid4, paid5, paid6, paid7, paid9, paid11, paid15, paid16, paid18,
         duplicatePaid, duplicatePaidAgain, paidOutside, orphan,
       ]),
       [FILE_CLASSES.httpValidation]: ndjson([
@@ -498,6 +578,12 @@ test("mounted producer captures join by event, digest, route, and reference", as
         JSON.parse(JSON.stringify(http16)),
         JSON.parse(JSON.stringify(http18)),
         { paidEvidenceId: id(5) },
+      ]),
+      [FILE_CLASSES.commerceEvents]: ndjson([
+        { sourceContract: "mcp_typed_outcome", v: 4 },
+        typed8,
+        typed18,
+        typed19,
       ]),
       [FILE_CLASSES.mcpDelivery]: ndjson([
         JSON.parse(JSON.stringify(mcp8)),
@@ -542,10 +628,12 @@ test("mounted producer captures join by event, digest, route, and reference", as
     assert.equal(report.withheldOutsideWindow, 1);
     assert.ok(report.rejectedLines.some((item) => item.file === FILE_CLASSES.httpValidation && item.count >= 2));
     assert.ok(report.rejectedLines.some((item) => item.file === FILE_CLASSES.settlementLedger && item.count >= 1));
+    assert.ok(report.rejectedLines.some((item) => item.file === FILE_CLASSES.commerceEvents && item.count >= 1));
 
     const exact = rowAt(report, at(1));
     const twin = rowAt(report, at(2));
     assert.equal(exact.disposition, "exact_join");
+    assert.equal(exact.eventCanonical, "http_v1");
     assert.equal(exact.individualJoin, true);
     assert.equal(exact.httpAttached, 1);
     assert.equal(exact.mcpAttached, 0);
@@ -597,6 +685,8 @@ test("mounted producer captures join by event, digest, route, and reference", as
 
     const mcpOnly = rowAt(report, at(8));
     assert.equal(mcpOnly.disposition, "rejected_schema");
+    assert.equal(mcpOnly.eventCanonical, "mcp_typed_outcome");
+    assert.equal(mcpOnly.paidEvidencePresent, false);
     assert.equal(mcpOnly.httpAttached, 0);
     assert.equal(mcpOnly.mcpAttached, 1);
     assert.equal(mcpOnly.deliveryClass, "upstream_failed");
@@ -627,6 +717,7 @@ test("mounted producer captures join by event, digest, route, and reference", as
 
     const channelConflict = rowAt(report, at(18));
     assert.equal(channelConflict.disposition, "conflicting_join");
+    assert.equal(channelConflict.eventCanonical, "http_v1+mcp_typed_outcome");
     assert.ok(channelConflict.reasons.includes("capture_channel_conflict"));
     assert.equal(channelConflict.reasons.includes("capture_digest_conflict"), false);
     assert.equal(channelConflict.httpAttached, 1);
@@ -634,6 +725,8 @@ test("mounted producer captures join by event, digest, route, and reference", as
 
     const mcpConflict = rowAt(report, at(19));
     assert.equal(mcpConflict.disposition, "conflicting_join");
+    assert.equal(mcpConflict.eventCanonical, "mcp_typed_outcome");
+    assert.equal(mcpConflict.paidEvidencePresent, false);
     assert.ok(mcpConflict.reasons.includes("capture_digest_conflict"));
     assert.equal(mcpConflict.mcpAttached, 2);
 
@@ -752,6 +845,9 @@ test("a count join without capture is refused", () => {
   assert.equal(help.status, 0);
   assert.match(help.stdout, /commerce-settlements\.ndjson/);
   assert.match(help.stdout, /commerce-paid-success-evidence\.ndjson/);
+  assert.match(help.stdout, /commerce-events\.ndjson/);
+  assert.match(help.stdout, /commerce-events\.1\.ndjson/);
+  assert.match(help.stdout, /mcp_typed_outcome/);
   assert.match(help.stdout, /http-response-validation\.v1\.ndjson/);
   assert.match(help.stdout, /mcp-tool-delivery\.v1\.ndjson/);
   assert.match(help.stdout, /2026-10-06T00:17:10\.607Z/);
@@ -768,7 +864,134 @@ test("the receiver does not write ledgers or import the payment server", async (
     assert.equal(source.includes("mkdir"), false);
     assert.equal(source.includes("server.js"), false);
   }
+  assert.equal(library.includes("isCanonicalMcpTypedCommerceEvent"), true);
+  assert.equal(library.includes("commerce-events.ndjson"), true);
+  assert.equal(library.includes("callDigest: record.callDigest"), false);
+  assert.equal(library.includes("historicalV1Row"), false);
   assert.throws(() => joinOrdinaryDeliveries({}), /window start and end are required/);
+});
+
+test("typed MCP canonical joins without an HTTP v1 row", async () => {
+  const body = emptyMorphoBody();
+  const left = mcpObserved(id(12), ref(4), "call-left", body);
+  const right = mcpObserved(id(13), ref(5), "call-right", body);
+  assert.equal(left.responseDigest, right.responseDigest);
+  assert.notEqual(left.callDigest, right.callDigest);
+  assert.notEqual(left.paidEvidenceId, right.paidEvidenceId);
+  const typedLeft = typedEvent({ id: id(12), timestamp: at(12), result: "paid_success" });
+  const typedRight = typedEvent({ id: id(13), timestamp: at(13), result: "paid_success" });
+  const settlements = [
+    ledgerFrom(null, {
+      timestamp: at(12),
+      paymentClass: "unclassified",
+      amountAtomic: "20000",
+      sourceEventId: id(12),
+      route: "/mcp",
+      protocol: "x402",
+      settlementReference: ref(4),
+    }),
+    ledgerFrom(null, {
+      timestamp: at(13),
+      paymentClass: "unclassified",
+      amountAtomic: "20000",
+      sourceEventId: id(13),
+      route: "/mcp",
+      protocol: "x402",
+      settlementReference: ref(5),
+    }),
+  ];
+  const joined = joinOrdinaryDeliveries({
+    settlements,
+    paidEvidence: [],
+    typedEvents: [typedLeft, typedRight],
+    mcpDeliveries: [left, right],
+    windowStart: WINDOW_START,
+    windowEnd: WINDOW_END,
+    sourceSha: SHA,
+    includeLocalIds: true,
+  });
+  assert.deepEqual(reportViolations(joined), []);
+  const first = rowAt(joined, at(12));
+  const second = rowAt(joined, at(13));
+  assert.equal(first.disposition, "exact_join");
+  assert.equal(second.disposition, "exact_join");
+  assert.equal(first.eventCanonical, "mcp_typed_outcome");
+  assert.equal(second.eventCanonical, "mcp_typed_outcome");
+  assert.equal(first.paidEvidencePresent, false);
+  assert.equal(first.httpAttached, 0);
+  assert.equal(first.mcpAttached, 1);
+  assert.equal(first.usefulness, "unknown");
+  assert.equal(first.deliveryClass, "useful_negative");
+  assert.notEqual(first.local.sourceEventId, second.local.sourceEventId);
+  assert.equal(JSON.stringify(joined).includes(id(12)), true);
+
+  const foreignCall = { ...left, callDigest: "ab".repeat(32) };
+  const foreignOffer = typedEvent({ id: id(12), timestamp: at(12), result: "paid_success", offer: "cd".repeat(32) });
+  const foreignReference = joinOrdinaryDeliveries({
+    settlements: [settlements[0]],
+    typedEvents: [typedLeft],
+    mcpDeliveries: [{ ...left, settlementReference: ref(9) }],
+    windowStart: WINDOW_START,
+    windowEnd: WINDOW_END,
+    sourceSha: SHA,
+  });
+  const callReport = joinOrdinaryDeliveries({
+    settlements: [settlements[0]],
+    typedEvents: [typedLeft],
+    mcpDeliveries: [foreignCall],
+    windowStart: WINDOW_START,
+    windowEnd: WINDOW_END,
+    sourceSha: SHA,
+  });
+  const offerReport = joinOrdinaryDeliveries({
+    settlements: [settlements[0]],
+    typedEvents: [foreignOffer],
+    mcpDeliveries: [left],
+    windowStart: WINDOW_START,
+    windowEnd: WINDOW_END,
+    sourceSha: SHA,
+  });
+  assert.equal(rowAt(callReport, at(12)).disposition, "conflicting_join");
+  assert.ok(rowAt(callReport, at(12)).reasons.includes("foreign_call"));
+  assert.equal(rowAt(callReport, at(12)).individualJoin, false);
+  assert.equal(rowAt(offerReport, at(12)).disposition, "conflicting_join");
+  assert.ok(rowAt(offerReport, at(12)).reasons.includes("foreign_offer"));
+  assert.equal(rowAt(foreignReference, at(12)).disposition, "conflicting_join");
+  assert.ok(rowAt(foreignReference, at(12)).reasons.includes("foreign_reference"));
+
+  const replay = typedEvent({ id: id(14), timestamp: at(14), result: "replay_success" });
+  const replayed = joinOrdinaryDeliveries({
+    settlements: [ledgerFrom(null, {
+      timestamp: at(14),
+      paymentClass: "unclassified",
+      amountAtomic: "20000",
+      sourceEventId: id(14),
+      route: "/mcp",
+      protocol: "x402",
+      settlementReference: ref(6),
+    })],
+    typedEvents: [replay],
+    mcpDeliveries: [mcpObserved(id(14), ref(6), "call-replay", body)],
+    windowStart: WINDOW_START,
+    windowEnd: WINDOW_END,
+    sourceSha: SHA,
+  });
+  assert.equal(rowAt(replayed, at(14)).disposition, "replayed_or_unknown_settlement");
+  assert.ok(rowAt(replayed, at(14)).reasons.includes("typed_replay"));
+  assert.equal(rowAt(replayed, at(14)).individualJoin, false);
+
+  const unknown = joinOrdinaryDeliveries({
+    settlements: [],
+    typedEvents: [typedLeft],
+    mcpDeliveries: [left],
+    windowStart: WINDOW_START,
+    windowEnd: WINDOW_END,
+    sourceSha: SHA,
+  });
+  assert.equal(unknown.rows.length, 1);
+  assert.equal(unknown.rows[0].disposition, "replayed_or_unknown_settlement");
+  assert.ok(unknown.rows[0].reasons.includes("settlement_not_in_canonical_ledger"));
+  assert.equal(unknown.rows[0].usefulness, "unknown");
 });
 
 async function stamp(dir) {
