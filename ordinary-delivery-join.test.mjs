@@ -1003,3 +1003,56 @@ async function stamp(dir) {
   }
   return out;
 }
+test("canonical settlement cannot borrow another transport, protocol, time or event canon", () => {
+  const eventId = id(41);
+  const event = typedEvent({ id: eventId, timestamp: at(41), result: "paid_success" });
+  const capture = mcpObserved(eventId, ref(4), "call-root-domain", emptyMorphoBody());
+  const canonical = ledgerFrom(null, {
+    timestamp: at(41), paymentClass: "unclassified", amountAtomic: "20000",
+    sourceEventId: eventId, route: "/mcp", protocol: "x402", settlementReference: ref(4),
+  });
+  const base = {
+    settlements: [canonical], typedEvents: [event], mcpDeliveries: [capture],
+    windowStart: WINDOW_START, windowEnd: WINDOW_END, sourceSha: SHA,
+  };
+  assert.equal(joinOrdinaryDeliveries(base).rows[0].disposition, "exact_join");
+  for (const [change, reason] of [
+    [{ route: "/extract" }, "foreign_route"],
+    [{ protocol: "mpp" }, "foreign_protocol"],
+    [{ sourceEventTimestamp: at(42) }, "foreign_event_time"],
+  ]) {
+    const row = joinOrdinaryDeliveries({ ...base, settlements: [{ ...canonical, ...change }] }).rows[0];
+    assert.equal(row.disposition, "conflicting_join", reason);
+    assert.equal(row.individualJoin, false, reason);
+    assert.ok(row.reasons.includes(reason), reason);
+  }
+  const paid = paidFrom(null, {
+    id: eventId, timestamp: at(41), method: "POST", route: "/mcp",
+    requestDigest: capture.requestDigest, responseDigest: capture.responseDigest,
+    settlementReference: ref(4), fingerprint: "61".repeat(32),
+  });
+  const collision = joinOrdinaryDeliveries({ ...base, paidEvidence: [paid] }).rows[0];
+  assert.equal(collision.disposition, "conflicting_join");
+  assert.ok(collision.reasons.includes("multiple_event_canons"));
+  assert.equal(collision.individualJoin, false);
+
+  const httpCapture = observeHttp({
+    paidEvidenceId: id(43), resource: "/extract", body: validExtractBody(),
+    settlementReference: ref(8), requestDigest: "62".repeat(32), capturedAt: at(43),
+  });
+  const httpPaid = paidFrom(httpCapture, { timestamp: at(43), fingerprint: "63".repeat(32) });
+  const httpLedger = ledgerFrom(httpPaid, {
+    timestamp: at(43), paymentClass: "unclassified", amountAtomic: "5000",
+  });
+  const http = {
+    settlements: [httpLedger], paidEvidence: [httpPaid], validations: [httpCapture],
+    windowStart: WINDOW_START, windowEnd: WINDOW_END, sourceSha: SHA,
+  };
+  assert.equal(joinOrdinaryDeliveries(http).rows[0].disposition, "exact_join");
+  const wrongTime = joinOrdinaryDeliveries({
+    ...http, settlements: [{ ...httpLedger, sourceEventTimestamp: at(44) }],
+  }).rows[0];
+  assert.equal(wrongTime.disposition, "conflicting_join");
+  assert.equal(wrongTime.individualJoin, false);
+  assert.ok(wrongTime.reasons.includes("settlement_does_not_match_paid_event"));
+});

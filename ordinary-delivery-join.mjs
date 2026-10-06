@@ -140,6 +140,9 @@ function eventCanonicalOf(paid, typed) {
 function mcpMismatchReason(record, event, settlement) {
   if (!isCanonicalMcpTypedCommerceEvent(event)) return "typed_event_absent";
   if (record?.paidEvidenceId !== event.id || event.id !== settlement.sourceEventId) return "typed_event_mismatch";
+  if (settlement.route !== "/mcp") return "foreign_route";
+  if (settlement.protocol !== "x402") return "foreign_protocol";
+  if (Date.parse(settlement.sourceEventTimestamp) !== Date.parse(event.ts)) return "foreign_event_time";
   const binding = event.binding;
   if (record.tool !== binding.tool || record.resource !== binding.resource) return "foreign_tool";
   if (record.tool !== MCP_MORPHO_TOOL || record.resource !== MCP_MORPHO_RESOURCE) return "foreign_tool";
@@ -405,6 +408,7 @@ export function joinOrdinaryDeliveries({
         !sameReference(paid.settlementReference, reference)
         || paid.route !== settlement.route
         || paid.paymentProtocol !== settlement.protocol
+        || Date.parse(paid.responseFinishedAt) !== Date.parse(settlement.sourceEventTimestamp)
       )
     ) {
       rows.push(blankRow({
@@ -451,6 +455,13 @@ export function joinOrdinaryDeliveries({
         reasons,
         deliveryClass: judged.deliveryClass,
         validatorVerdict: judged.validatorVerdict,
+      };
+    }
+    if (paid && typed) {
+      judged = {
+        ...judged,
+        disposition: "conflicting_join",
+        reasons: [...judged.reasons, "multiple_event_canons"],
       };
     }
     if (typed?.result === "paid_success" && typed.settlementState !== "succeeded" && judged.disposition === "exact_join") {
