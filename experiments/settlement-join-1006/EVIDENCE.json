@@ -5,7 +5,7 @@
   "excludedPriorSettlement": {
     "amountAtomic": "20000",
     "countedAsNew": false,
-    "reason": "This reference is the already classified 2026-10-05 Morpho settlement inside both one-day windows. The current window's second Morpho paid success is the new row.",
+    "reason": "This is the already classified 2026-10-05 Morpho settlement inside both one-day windows. It is excluded from the new ledger delta. Aggregate counts do not directly bind the new settlement to an individual paid-success event.",
     "route": "/defi/morpho-position",
     "settlementReference": "0x2439870db33f6e81157beffed44c26b02aad663aff595424929ac04f9030008d",
     "time": "2026-10-05T06:01:39Z"
@@ -59,8 +59,9 @@
   "pilotMainHeadAtAdmit": "5f9f50de08181d7980b2adca1ffdb7a946e4bda2",
   "pilotMainHeadVerifiedThisRun": false,
   "repair": {
-    "needed": false,
-    "reason": "Each new atomic amount joins one route by the ledger delta, and the complete paid-success stream moves by the same one count on that route. The receipt's known-payer rule leaves both unclassified because no payer identity is present. No delivery row is in the receipt to correct. Publishing the withheld transaction references, backfilling a body, or opening a new telemetry ledger is outside this receipt."
+    "attributionCompletionNeeded": true,
+    "handlerChangeIndicated": false,
+    "reason": "The canonical ledger attributes each amount increment to a route, and rolling paid-success counts move consistently. No individual event-to-settlement join is present in these aggregate receipts. Both increments remain unclassified; delivery and acceptance are unknown. Complete the existing private producer join and prospective delivery capture, without inventing historical bodies or opening a second ledger."
   },
   "schema": "samedaydesk.settlement-join-1006.evidence.v1",
   "settlements": [
@@ -68,6 +69,8 @@
       "acceptance": "unknown",
       "actorBoundToSettlement": false,
       "amountAtomic": "5000",
+      "attributionBasis": "aggregate_route_delta",
+      "attributionScope": "aggregate-only",
       "callerBoundary": "Every paid success in the current complete window is direct-or-unattributed and in unattributedExternal. Verified internal, owner-monitor, scanner, and crawler paid successes are 0. The window has 2 paid-success actors and 1 repeat across 3 successes, with no actor-to-route binding. A missing owner marker does not prove an outside buyer. independentPaidSuccessActors is 0.",
       "classificationDecision": "remain_unclassified",
       "copiedFromPriorDelivery": false,
@@ -84,10 +87,11 @@
       "ledgerDelta": 1,
       "methodBoundary": "The receipt identifies the path. Merchant source 91e14dce binds this path with app.get. The captured method of this call is not in the receipt.",
       "methodObserved": null,
-      "ordinaryRequestJoined": true,
-      "ordinaryRequestKind": "paid_success",
+      "ordinaryRequestJoined": false,
+      "ordinaryRequestKind": null,
       "originPopulation": "unattributed_external",
       "ownerMarkerAbsenceProvesOutsideBuyer": false,
+      "paidSuccessCountMatchesDelta": true,
       "paymentClass": "unclassified",
       "priorWindowCount": 0,
       "protocol": "x402",
@@ -97,13 +101,15 @@
       "routeTableMethod": "GET",
       "settlementReference": null,
       "sufficiency": "unknown",
-      "timestampBoundary": "The row is inside the current complete one-day stream and absent from the prior complete one-day stream. The receipt does not publish the event id or the exact event time.",
+      "timestampBoundary": "The route ledger and rolling paid-success counts increased between the received snapshots. These are aggregate observations, not an individual event-to-settlement join or an exact event time.",
       "usefulness": "unknown"
     },
     {
       "acceptance": "unknown",
       "actorBoundToSettlement": false,
       "amountAtomic": "20000",
+      "attributionBasis": "aggregate_route_delta",
+      "attributionScope": "aggregate-only",
       "callerBoundary": "Every paid success in the current complete window is direct-or-unattributed and in unattributedExternal. Verified internal, owner-monitor, scanner, and crawler paid successes are 0. The window has 2 paid-success actors and 1 repeat across 3 successes, with no actor-to-route binding. A missing owner marker does not prove an outside buyer. independentPaidSuccessActors is 0.",
       "classificationDecision": "remain_unclassified",
       "copiedFromPriorDelivery": false,
@@ -120,10 +126,11 @@
       "ledgerDelta": 1,
       "methodBoundary": "The receipt identifies the path. Merchant source 91e14dce binds this path with app.get. The captured method of this call is not in the receipt.",
       "methodObserved": null,
-      "ordinaryRequestJoined": true,
-      "ordinaryRequestKind": "paid_success",
+      "ordinaryRequestJoined": false,
+      "ordinaryRequestKind": null,
       "originPopulation": "unattributed_external",
       "ownerMarkerAbsenceProvesOutsideBuyer": false,
+      "paidSuccessCountMatchesDelta": true,
       "paymentClass": "unclassified",
       "priorWindowCount": 1,
       "protocol": "x402",
@@ -133,7 +140,7 @@
       "routeTableMethod": "GET",
       "settlementReference": null,
       "sufficiency": "unknown",
-      "timestampBoundary": "The row is inside the current complete one-day stream and absent from the prior complete one-day stream. The receipt does not publish the event id or the exact event time.",
+      "timestampBoundary": "The route ledger and rolling paid-success counts increased between the received snapshots. These are aggregate observations, not an individual event-to-settlement join or an exact event time.",
       "usefulness": "unknown"
     }
   ],

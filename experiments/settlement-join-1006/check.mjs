@@ -20,7 +20,7 @@ const PINS = Object.freeze({
 });
 
 function settlementByRoute(evidence, route) {
-  return (evidence.settlements || []).find((row) => row && row.route === route) || null;
+  return (Array.isArray(evidence.settlements) ? evidence.settlements : []).find((row) => row && row.route === route) || null;
 }
 
 export function violations(evidence) {
@@ -35,7 +35,8 @@ export function violations(evidence) {
   if (evidence.newTelemetryLedger === true) bad("new_telemetry_ledger");
   if (evidence.chainCensus === true) bad("chain_census");
   if (evidence.handlerChange === true) bad("handler_owner_replaced");
-  if (evidence.repair?.needed === true) bad("repair_not_indicated");
+  if (evidence.repair?.handlerChangeIndicated !== false) bad("handler_repair_unsupported");
+  if (evidence.repair?.attributionCompletionNeeded !== true) bad("attribution_gap_hidden");
 
   const sources = evidence.sources || {};
   if (sources.currentDemand?.sha256 !== PINS.currentDemandSha256) bad("current_demand_pin");
@@ -97,7 +98,7 @@ export function violations(evidence) {
   for (const hash of hashes) {
     if (hash.toLowerCase() !== PRIOR_REFERENCE) bad("invented_settlement_reference");
   }
-  if (rows?.some((row) => row && row.settlementReference)) bad("invented_settlement_reference");
+  if (Array.isArray(rows) && rows.some((row) => row && row.settlementReference)) bad("invented_settlement_reference");
   if (serialized.includes(PRIOR_REFERENCE) && excluded.settlementReference !== PRIOR_REFERENCE) {
     bad("prior_reference_context");
   }
@@ -110,7 +111,9 @@ function checkRow(row, expected, bad) {
   if (row.paymentClass !== "unclassified" || row.classificationDecision !== "remain_unclassified") bad("payment_class");
   if (row.amountAtomic !== expected.amountAtomic || row.displayUsdc !== expected.displayUsdc) bad("row_amount");
   if (row.protocol !== "x402") bad("protocol");
-  if (row.ordinaryRequestJoined !== true) bad("ordinary_request");
+  if (row.ordinaryRequestJoined !== false || row.ordinaryRequestKind !== null) bad("ordinary_request_join_invented");
+  if (row.attributionBasis !== "aggregate_route_delta" || row.attributionScope !== "aggregate-only") bad("aggregate_attribution_scope");
+  if (row.paidSuccessCountMatchesDelta !== true) bad("aggregate_count_consistency");
   if (row.priorWindowCount !== expected.priorWindowCount || row.currentWindowCount !== expected.currentWindowCount) {
     bad("window_count");
   }

@@ -172,14 +172,17 @@ function row({
     classificationDecision: "remain_unclassified",
     decisionDate: "2026-10-06",
     protocol: "x402",
-    ordinaryRequestJoined: true,
-    ordinaryRequestKind: "paid_success",
+    ordinaryRequestJoined: false,
+    ordinaryRequestKind: null,
+    attributionBasis: "aggregate_route_delta",
+    attributionScope: "aggregate-only",
+    paidSuccessCountMatchesDelta: true,
     priorWindowCount,
     currentWindowCount,
     ledgerDelta: 1,
     eventId: null,
     exactTimestamp: null,
-    timestampBoundary: "The row is inside the current complete one-day stream and absent from the prior complete one-day stream. The receipt does not publish the event id or the exact event time.",
+    timestampBoundary: "The route ledger and rolling paid-success counts increased between the received snapshots. These are aggregate observations, not an individual event-to-settlement join or an exact event time.",
     discoverySource: "direct-or-unattributed",
     originPopulation: "unattributed_external",
     actorBoundToSettlement: false,
@@ -301,7 +304,7 @@ export function buildEvidence(parts) {
       amountAtomic: priorClassified.join.amountAtomic,
       time: priorClassified.chain.incoming.time,
       countedAsNew: false,
-      reason: "This reference is the already classified 2026-10-05 Morpho settlement inside both one-day windows. The current window's second Morpho paid success is the new row.",
+      reason: "This is the already classified 2026-10-05 Morpho settlement inside both one-day windows. It is excluded from the new ledger delta. Aggregate counts do not directly bind the new settlement to an individual paid-success event.",
     },
     settlements: [
       row({
@@ -324,8 +327,9 @@ export function buildEvidence(parts) {
       reason: "Current-window credential attempts on /schemaforge and /read are not paid successes and did not move the settlement ledger.",
     },
     repair: {
-      needed: false,
-      reason: "Each new atomic amount joins one route by the ledger delta, and the complete paid-success stream moves by the same one count on that route. The receipt's known-payer rule leaves both unclassified because no payer identity is present. No delivery row is in the receipt to correct. Publishing the withheld transaction references, backfilling a body, or opening a new telemetry ledger is outside this receipt.",
+      handlerChangeIndicated: false,
+      attributionCompletionNeeded: true,
+      reason: "The canonical ledger attributes each amount increment to a route, and rolling paid-success counts move consistently. No individual event-to-settlement join is present in these aggregate receipts. Both increments remain unclassified; delivery and acceptance are unknown. Complete the existing private producer join and prospective delivery capture, without inventing historical bodies or opening a second ledger.",
     },
   };
 }

@@ -1,4 +1,4 @@
-# Settlement join, 2026-10-06
+# Aggregate settlement-route attribution, 2026-10-06
 
 Status: two new unclassified settlements. Transaction strings and captured bodies are not in the authorized receipt. No handler change.
 
@@ -22,15 +22,14 @@ Both stream windows report `requestedWindowCoverage: complete`. The only ledger 
 ### 1. `/extract` — 5000 atomic / 0.005 USDC — 2026-10-06 — remain unclassified
 
 - Settlement reference: not in either receipt. `settlementEvidencePolicy` keeps raw transaction references private. Reference stays null.
-- Ordinary request: the complete one-day `paid_success` count for `/extract` moved 0 to 1, matching the ledger delta of 1. Protocol `x402`. Event id and exact time are absent. The row is inside the current window and absent from the prior window.
+- Aggregate consistency: rolling `/extract` `paid_success` count moved 0 to 1 and its ledger count moved by 1. This does not directly join an individual request to the new settlement. Exact event ID, timestamp, reference and body are absent.
 - Caller: `direct-or-unattributed`, population `unattributedExternal`. Verified-internal, owner-monitor, scanner, and crawler paid successes are 0. The window has 2 paid-success actors and 1 repeat across 3 successes, with no actor-to-route binding. No customer identity. `independentPaidSuccessActors` is 0. A missing owner marker is not an outside buyer.
 - Delivery: no validation row, digest, schema verdict, or body in this receipt. Sufficiency unknown. Acceptance unknown. `buyerValidDeliveryCount` is null. The October 4 extract `truncated_partial` pair is not copied.
 
 ### 2. `/defi/morpho-position` — 20000 atomic / 0.020 USDC — 2026-10-06 — remain unclassified
 
 - Settlement reference: not in either receipt. Not `0x2439870db33f6e81157beffed44c26b02aad663aff595424929ac04f9030008d`.
-- That prior reference is the already classified 2026-10-05T06:01:39Z row. It sits inside both complete windows, and the prior window has exactly one Morpho `paid_success`, so it accounts for that one. The current window has two. The second is this new ledger row.
-- Ordinary request: `paid_success`, `x402`, ledger delta 1. Event id and exact time are absent.
+- That prior reference is the already classified 2026-10-05T06:01:39Z row inside both windows. It is not recounted. The current ledger has one new Morpho settlement and its rolling paid-success count moves 1 to 2; this is aggregate consistency, not a directly observed individual request join.
 - Caller: same population boundary as the extract row. No actor is bound to this settlement.
 - Delivery: no captured validation row in this receipt. Sufficiency unknown. Acceptance unknown. The 2026-10-05 uncaptured Morpho body is not copied. Rare-funnel coverage is `unknown_for_full_window`, so that store is not the delivery record.
 
@@ -38,7 +37,7 @@ Both stream windows report `requestedWindowCoverage: complete`. The only ledger 
 
 ## Repair
 
-None. The receipt already joins each new amount to one route and to one new `paid_success`. The classification owner already returns unclassified when the payer is missing. A public hash export, a body backfill, or a new telemetry ledger would go past this receipt.
+No handler defect is established by these receipts. Attribution is incomplete: route-ledger deltas and matching rolling request counts do not identify an individual event-to-settlement relation. Root corrected the unsupported `ordinaryRequestJoined:true` assertion. Both amounts remain unclassified, with unknown output sufficiency, acceptance and usefulness. Complete the existing authorized private producer join and ordinary future delivery capture; do not infer a buyer, publish private bodies or create a second ledger.
 
 ## Checks
 
@@ -49,4 +48,8 @@ node experiments/settlement-join-1006/check.mjs experiments/settlement-join-1006
 node experiments/settlement-join-1006/check.mjs experiments/settlement-join-1006/fixtures/seeded-invented-reference.json
 ```
 
-The first three exit 0. The seeded file invents a hash, recounts the October 5 Morpho reference as extract, moves internal and validation, backfills usefulness, and names a buyer. It exits 1.
+The builder's pre-amendment first three commands exited 0, and its seeded file exited 1. Those tests incorrectly pinned the aggregate inference as a direct request join. Root's amendment adds single-defect controls for that overclaim, a hidden attribution gap and malformed rows. Receive the amended source remotely before promoting its test result.
+
+```sh
+node --test experiments/settlement-join-1006/check.test.mjs
+```
