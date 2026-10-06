@@ -120,6 +120,36 @@ function sameKeys(value, expected) {
   return keys.length === expected.length && keys.every((key, index) => key === expected[index]);
 }
 
+const PAYMENT_FAILURE_EVIDENCE_KEY = "paymentFailureEvidence";
+const VERIFIER_TEXT_CODES = new Set([
+  "extension_mismatch", "payment_terms_mismatch", "signature_invalid", "payment_expired",
+  "payment_replay_rejected", "insufficient_funds", "payment_service_unavailable",
+  "payment_verification_failed",
+]);
+const HTTP_STATUS_CODES = new Set([
+  "payment_service_unavailable", "request_binding_conflict", "application_validation_failed",
+  "unknown_failure",
+]);
+
+function withOptionalPaymentFailureEvidence(keys, value) {
+  const copy = [...keys];
+  if (hasOwn(value, PAYMENT_FAILURE_EVIDENCE_KEY)) copy.push(PAYMENT_FAILURE_EVIDENCE_KEY);
+  return copy;
+}
+
+function paymentFailureEvidenceOk(value) {
+  if (!hasOwn(value, PAYMENT_FAILURE_EVIDENCE_KEY)) return true;
+  const evidence = value.paymentFailureEvidence;
+  const code = value.paymentFailureCode;
+  if (evidence === null) return code === null;
+  if (typeof evidence !== "string" || typeof code !== "string") return false;
+  if (evidence === "generic_402") return code === "payment_verification_failed";
+  if (evidence === "request_shape") return code === "missing_required_input";
+  if (evidence === "verifier_text") return VERIFIER_TEXT_CODES.has(code);
+  if (evidence === "http_status") return HTTP_STATUS_CODES.has(code);
+  return false;
+}
+
 function isoMs(value) {
   if (typeof value !== "string" || !ISO.test(value)) return null;
   const parsed = new Date(value);
@@ -221,7 +251,8 @@ function originCrossOk(value) {
 function isV3(value) {
   if (!value || typeof value !== "object" || Array.isArray(value) || value.v !== 3) return false;
   const split = V3_SPLIT_KEYS.filter((key) => hasOwn(value, key));
-  const expected = split.length === 0 ? V3_KEYS : [...V3_KEYS, ...V3_SPLIT_KEYS].sort();
+  const base = split.length === 0 ? V3_KEYS : [...V3_KEYS, ...V3_SPLIT_KEYS];
+  const expected = withOptionalPaymentFailureEvidence(base, value).sort();
   if (split.length !== 0 && split.length !== V3_SPLIT_KEYS.length) return false;
   if (!sameKeys(value, expected)) return false;
   if (!UUID_V4.test(value.id) || isoMs(value.ts) === null || !ACTOR_KEY.test(value.actor)) return false;
@@ -249,6 +280,7 @@ function isV3(value) {
   }
   if (!Number.isInteger(value.status) || value.status < 100 || value.status > 999) return false;
   if (value.paymentFailureCode !== null && (typeof value.paymentFailureCode !== "string" || value.paymentFailureCode.length > 64)) return false;
+  if (!paymentFailureEvidenceOk(value)) return false;
   if (!RESULTS.has(value.result) || !Number.isInteger(value.durationMs) || value.durationMs < 0) return false;
   if (value.result !== classifyResult(value)) return false;
   if (split.length === 3) {
@@ -276,7 +308,9 @@ function isPaidEvidence(value) {
 }
 
 function isRare(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value) || !sameKeys(value, RARE_KEYS)) return false;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  if (!sameKeys(value, withOptionalPaymentFailureEvidence(RARE_KEYS, value).sort())) return false;
+  if (!paymentFailureEvidenceOk(value)) return false;
   if (value.v !== 1 || value.schemaVersion !== RARE_SCHEMA) return false;
   if (value.captureVersion !== "rare_funnel_capture_v1") return false;
   if (value.captureProvenance !== "http_middleware" && value.captureProvenance !== "mcp_typed_adapter") return false;
