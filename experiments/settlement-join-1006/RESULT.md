@@ -48,7 +48,7 @@ node experiments/settlement-join-1006/check.mjs experiments/settlement-join-1006
 node experiments/settlement-join-1006/check.mjs experiments/settlement-join-1006/fixtures/seeded-invented-reference.json
 ```
 
-The builder's pre-amendment first three commands exited 0, and its seeded file exited 1. Those tests incorrectly pinned the aggregate inference as a direct request join. Root's amendment adds single-defect controls for that overclaim, a hidden attribution gap and malformed rows. Receive the amended source remotely before promoting its test result.
+The builder's pre-amendment first three commands exited 0, and its seeded file exited 1. Those tests incorrectly pinned the aggregate inference as a direct request join. Root's amendment adds single-defect controls for that overclaim, a hidden attribution gap and malformed rows. Independent cloud-d receiving at 2026-10-06T05:38:56.470–05:38:56.639Z passes all eight unit checks, same-receipt live reconstruction, self-test and positive evidence; the existing seeded invalid evidence exits 1. The exact tested source is48621a76fbcf49738ecfc75eb70ce38df8d7bffe and stays unchanged. Receipts are in /home/ubuntu/root-settlement-receiving1006.
 
 ```sh
 node --test experiments/settlement-join-1006/check.test.mjs
