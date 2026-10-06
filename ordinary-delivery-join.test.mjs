@@ -718,10 +718,11 @@ test("constructed records join by event, digest, route, and reference", async ()
     const channelConflict = rowAt(report, at(18));
     assert.equal(channelConflict.disposition, "conflicting_join");
     assert.equal(channelConflict.eventCanonical, "http_v1+mcp_typed_outcome");
-    assert.ok(channelConflict.reasons.includes("capture_channel_conflict"));
+    assert.ok(channelConflict.reasons.includes("foreign_route"));
+    assert.ok(channelConflict.reasons.includes("multiple_event_canons"));
     assert.equal(channelConflict.reasons.includes("capture_digest_conflict"), false);
     assert.equal(channelConflict.httpAttached, 1);
-    assert.equal(channelConflict.mcpAttached, 1);
+    assert.equal(channelConflict.mcpAttached, 0);
 
     const mcpConflict = rowAt(report, at(19));
     assert.equal(mcpConflict.disposition, "conflicting_join");
