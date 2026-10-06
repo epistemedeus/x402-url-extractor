@@ -18,10 +18,6 @@ import {
   classifyExtractBatchRequestConstruction,
   classifyPaymentFailure,
   classifyPaymentFailureCode,
-  facilitatorRejectionClaimRejected,
-  paymentFailureCallerAction,
-  PAYMENT_FAILURE_EVIDENCE_NOT_RETAINED,
-  provesFacilitatorRejectedValidPayment,
   COMMERCE_COVERAGE_COMPLETE,
   COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW,
   COMMERCE_INTEGRITY_OK,
@@ -836,7 +832,7 @@ test("payment failure codes stay bounded and preserve required-input aliases", (
   assert.equal(classifyPaymentFailureCode({ route: "/extract", status: 200, queryKeys: [] }), null);
 });
 
-test("payment failure evidence names the selector and rejects a facilitator-proof claim", () => {
+test("payment failure evidence names the actual bounded selector", () => {
   const cases = [
     [{ route: "/extract", status: 402, queryKeys: [] }, "missing_required_input", "request_shape"],
     [{ route: "/enrich", status: 402, queryKeys: ["url"] }, "payment_verification_failed", "generic_402"],
@@ -870,33 +866,7 @@ test("payment failure evidence names the selector and rejects a facilitator-proo
     assert.equal(classifyPaymentFailureCode(input), code, JSON.stringify(input));
     assert.deepEqual(classifyPaymentFailure(input), { code, evidence });
   }
-  for (const evidence of ["generic_402", "not_retained", "verifier_text", "request_shape", "http_status", null]) {
-    assert.equal(provesFacilitatorRejectedValidPayment(evidence), false, String(evidence));
-  }
-  assert.equal(facilitatorRejectionClaimRejected({
-    paymentFailureCode: "payment_verification_failed",
-    paymentFailureEvidence: "generic_402",
-    facilitatorVerifiedValidPayment: true,
-    claim: "facilitator_rejected_valid_payment",
-  }), true);
-  assert.equal(facilitatorRejectionClaimRejected({
-    paymentFailureCode: "payment_verification_failed",
-    claim: "facilitator_rejected_valid_payment",
-  }), true);
-  assert.equal(facilitatorRejectionClaimRejected({
-    paymentFailureEvidence: PAYMENT_FAILURE_EVIDENCE_NOT_RETAINED,
-    provesFacilitatorRejectedValidPayment: true,
-  }), true);
-  assert.equal(facilitatorRejectionClaimRejected({
-    paymentFailureCode: "signature_invalid",
-    paymentFailureEvidence: "verifier_text",
-  }), false);
-  assert.equal(paymentFailureCallerAction("generic_402"), "read_caller_held_402_payment_required_error");
-  assert.equal(paymentFailureCallerAction("verifier_text"), "use_stored_failure_code");
-  assert.equal(paymentFailureCallerAction("request_shape"), "supply_required_input");
-  assert.equal(paymentFailureCallerAction("http_status"), "use_stored_failure_code");
-  assert.equal(paymentFailureCallerAction("not_retained"), "historical_reason_unknown");
-  assert.equal(paymentFailureCallerAction("raw_error"), null);
+
 });
 
 function evidenceTestResponse({ statusCode = 200, headers = {}, locals = {} } = {}) {
@@ -5353,7 +5323,6 @@ test("historical failure rows stay not_retained and inconsistent evidence is unu
   assert.equal(snapshot.credentialAttemptByFailureCode.signature_invalid, undefined);
   assert.equal(snapshot.credentialAttemptByFailureEvidence.not_retained, 1);
   assert.equal(snapshot.credentialAttemptByFailureEvidence.generic_402, 1);
-  assert.equal(facilitatorRejectionClaimRejected(poisoned), true);
   const serialized = JSON.stringify(snapshot);
   assert.equal(serialized.includes("facilitatorVerifiedValidPayment"), false);
   assert.equal(serialized.includes("facilitator_rejected_valid_payment"), false);

@@ -953,33 +953,6 @@ function storedPaymentFailureEvidenceAccepted(value) {
   return paymentFailureEvidenceMatchesCode(value.paymentFailureEvidence, value.paymentFailureCode);
 }
 
-// No retained class proves a facilitator verified a valid payment and rejected it.
-export function provesFacilitatorRejectedValidPayment(evidence) {
-  void evidence;
-  return false;
-}
-
-export function facilitatorRejectionClaimRejected(record) {
-  if (!record || typeof record !== "object" || Array.isArray(record)) return true;
-  const claimsProof = record.facilitatorVerifiedValidPayment === true
-    || record.provesFacilitatorRejectedValidPayment === true
-    || record.claim === "facilitator_rejected_valid_payment";
-  if (!claimsProof) return false;
-  const evidence = hasOwn(record, "paymentFailureEvidence")
-    ? record.paymentFailureEvidence
-    : PAYMENT_FAILURE_EVIDENCE_NOT_RETAINED;
-  return provesFacilitatorRejectedValidPayment(evidence) === false;
-}
-
-export function paymentFailureCallerAction(evidence) {
-  if (evidence === PAYMENT_FAILURE_EVIDENCE.verifierText) return "use_stored_failure_code";
-  if (evidence === PAYMENT_FAILURE_EVIDENCE.generic402) return "read_caller_held_402_payment_required_error";
-  if (evidence === PAYMENT_FAILURE_EVIDENCE.requestShape) return "supply_required_input";
-  if (evidence === PAYMENT_FAILURE_EVIDENCE.httpStatus) return "use_stored_failure_code";
-  if (evidence === PAYMENT_FAILURE_EVIDENCE_NOT_RETAINED) return "historical_reason_unknown";
-  return null;
-}
-
 export function classifyPaymentFailure({ route, status, queryKeys = [], error = "", problem = null } = {}) {
   const code = Number(status);
   if (!Number.isInteger(code) || code < 400) return { code: null, evidence: null };
