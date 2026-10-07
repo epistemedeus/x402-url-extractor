@@ -9,6 +9,8 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 
 import {
   callerResultFeedbackPublicContract,
+  issueCallerResultFeedbackToken,
+  readCallerResultFeedbackToken,
   CALLER_RESULT_DISPOSITIONS as MERCHANT_DISPOSITIONS,
   CALLER_RESULT_REASON_CATEGORIES as MERCHANT_REASONS,
 } from "../../../caller-result-feedback.mjs";
@@ -106,7 +108,7 @@ function assertClean(value, token) {
   assert.equal(text.includes(MAC), false);
 }
 
-function openSession({ kind = "get", token, link, onPost, partial = false } = {}) {
+function openSession({ kind = "get", token, link, onPost, partial = false, transformPaidBody } = {}) {
   const auth = normalizeAuthorization(kind === "batch" ? DEFAULT_BATCH_AUTHORIZATION : DEFAULT_AUTHORIZATION);
   const inner = kind === "batch"
     ? createBatchFixtureFetch({
@@ -137,7 +139,8 @@ function openSession({ kind = "get", token, link, onPost, partial = false } = {}
     }
     const response = await inner.fetchImpl(input, init);
     if (token === undefined || response.status === 402) return response;
-    const bytes = Buffer.from(await response.arrayBuffer());
+    let bytes = Buffer.from(await response.arrayBuffer());
+    if (transformPaidBody) bytes = Buffer.from(JSON.stringify(transformPaidBody(JSON.parse(bytes))));
     const headers = new Headers(response.headers);
     headers.set(CALLER_RESULT_FEEDBACK_HEADER, token);
     if (link !== false) {
@@ -443,6 +446,65 @@ test("a bearer echo, stdout, attempt receipt, and JSON copy do not retain the to
     assert.equal(session.result.attemptReceiptWritten, true);
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("paid-body bearer echoes never escape via result keys, values, stdout, or receipts", async () => {
+  const key = "fixture-only-signing-key-never-production";
+  const now = 1_700_000_000_000;
+  const signed = issueCallerResultFeedbackToken({
+    key,
+    eventId: "11111111-1111-4111-8111-111111111111",
+    method: "GET",
+    route: "/extract",
+    requestDigest: "a".repeat(64),
+    responseDigest: "b".repeat(64),
+    now,
+  });
+  assert.equal(readCallerResultFeedbackToken(signed, key, now).ok, true);
+  for (const token of [signed, fixtureToken()]) {
+    const dir = mkdtempSync(join(tmpdir(), "caller-result-paid-echo-"));
+    const receiptPath = join(dir, "attempt.json");
+    try {
+      const session = await purchase({
+        token,
+        transformPaidBody: (body) => ({
+          ...body,
+          extra: {
+            [token]: "top-level key echo",
+            nested: [{ [`prefix-${token}-suffix`]: "nested key echo", note: `echo ${token}` }],
+            ordinary: "retain this usable field",
+          },
+        }),
+      }, { attemptReceiptPath: receiptPath });
+      const logs = [];
+      const original = console.log;
+      console.log = (...args) => logs.push(args.map(String).join(" "));
+      try {
+        printPurchase(session.result);
+      } finally {
+        console.log = original;
+      }
+      assertClean(JSON.stringify(session.result), token);
+      assertClean(safeJson(session.result), token);
+      assertClean(logs.join("\n"), token);
+      assertClean(readFileSync(receiptPath, "utf8"), token);
+      assert.equal(session.result.evidence.retainedBody.extra.ordinary, "retain this usable field");
+      assert.equal(session.result.outcome, OUTCOMES.VALID_DELIVERED);
+      assert.equal(session.result.evidence.outputValid, true);
+      assert.equal(session.posts.length, 0);
+      assert.equal(paidCount(session.calls), 1);
+      const report = await reportCallerResult(session.result, { disposition: "useful" }, {
+        fetchImpl: session.fetchImpl,
+      });
+      assert.equal(report.accepted, true);
+      assert.equal(session.posts[0].token, token);
+      assert.equal(session.posts.length, 1);
+      assert.equal(paidCount(session.calls), 1);
+      assertClean(report, token);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   }
 });
 
