@@ -21,6 +21,7 @@ import {
   COMMERCE_COVERAGE_COMPLETE,
   COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW,
   COMMERCE_INTEGRITY_OK,
+  COMMERCE_PROSPECTIVE_SEGMENT_COUNT,
   COMMERCE_INTEGRITY_SOURCE_LOCAL_DRIFT,
   COMMERCE_INTEGRITY_UNUSABLE_RECORDS,
   conservativeRetainedUtcBounds,
@@ -1421,7 +1422,7 @@ test("durable rare funnel evidence survives ordinary traffic rotations and strea
   });
   await telemetry.flush();
   const originalRare = await readFile(telemetry.paths.rareFunnelPath, "utf8");
-  for (let index = 0; index < 3; index += 1) {
+  for (let index = 0; index < COMMERCE_PROSPECTIVE_SEGMENT_COUNT; index += 1) {
     emitEvidenceTestResponse(telemetry, {
       requestPath: "/openapi.json",
       originalUrl: "/openapi.json",
@@ -2000,7 +2001,7 @@ test("aggregate snapshot excludes internal and crawler events and exposes no act
   const storage = await telemetry.storageStatus();
   assert.equal(storage.ready, true);
   assert.ok(storage.currentBytes > 0);
-  assert.equal(storage.boundedBytes, 2 * 1024 * 1024);
+  assert.equal(storage.boundedBytes, COMMERCE_PROSPECTIVE_SEGMENT_COUNT * 1024 * 1024);
   const snapshot = await telemetry.snapshot({ days: 1 });
   assert.equal(snapshot.externalEvents, 11);
   assert.equal(snapshot.externalActors, 1);
@@ -2709,6 +2710,7 @@ test("two rotations erase an older construction event and keep the 90-day zero u
     dataDir,
     secret: "test-secret",
     maxBytes: 1,
+    retentionSegments: 2,
     requestConstructionSince: "2020-01-01T00:00:00.000Z",
     agentDiscoverySince: "2020-01-01T00:00:00.000Z",
   });
@@ -3246,7 +3248,7 @@ test("snapshot capture is atomic against a response-triggered 5 MiB rotation", a
   const snapshot = await snapshotPromise;
   await telemetry.flush();
   const storage = await telemetry.storageStatus();
-  assert.equal(storage.boundedBytes, maxBytes * 2);
+  assert.equal(storage.boundedBytes, maxBytes * COMMERCE_PROSPECTIVE_SEGMENT_COUNT);
   assert.ok(storage.currentBytes >= 0);
   assert.ok(storage.rotatedBytes >= 0);
   if (
