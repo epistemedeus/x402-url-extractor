@@ -3497,7 +3497,7 @@ export function createCommerceTelemetry({
       if (!read.filePresent) continue;
       // A segment we cannot prove is entirely older stays. Deleting it would
       // either follow an unsafe node or invent a gap in front of a newer one.
-      if (read.unsafe || read.oversized || read.unstable || read.newestRetainedMs === null) break;
+      if (read.unsafe || read.oversized || read.unstable || read.unusableRecordCount > 0 || read.newestRetainedMs === null) break;
       if (read.newestRetainedMs > cutoffMs) break;
       await assertSafeAttemptSegment(filePath);
       await unlink(filePath);
