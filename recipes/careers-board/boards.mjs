@@ -400,8 +400,8 @@ async function requestJson(url, { method, payload, timeoutMs, fetchImpl, maxByte
     if (reader) {
       const aborted = new Promise((resolve, reject) => {
         onAbort = () => {
-          void reader.cancel("request aborted").catch(() => {});
           reject(new DOMException("request timed out", "AbortError"));
+          void reader.cancel("request aborted").catch(() => {});
         };
         controller.signal.addEventListener("abort", onAbort, { once: true });
       });
