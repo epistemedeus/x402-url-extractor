@@ -137,6 +137,7 @@ import {
   CALLER_RESULT_FEEDBACK_HEADER,
   CALLER_RESULT_FEEDBACK_PATH,
   createCallerResultFeedbackService,
+  callerResultFeedbackPublicContract,
 } from "./caller-result-feedback.mjs";
 import {
   CONTRACT_QUALIFIED_SEARCH_EXAMPLE,
@@ -2097,6 +2098,10 @@ app.get(["/mpp-openapi.json", "/openapi.mpp.json"], (_req, res) => {
 // Optional, free, result-scoped caller statement. Registered before both payment
 // rails. The paid JSON body is unchanged. The capability arrives on the paid
 // response and is not accepted from a URL.
+app.get(CALLER_RESULT_FEEDBACK_PATH, (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  return res.json(callerResultFeedbackPublicContract());
+});
 app.post(CALLER_RESULT_FEEDBACK_PATH, async (req, res) => {
   res.set("Cache-Control", "no-store");
   const header = req.get(CALLER_RESULT_FEEDBACK_HEADER) || "";

@@ -221,9 +221,7 @@ export function attachCallerResultFeedbackHeader(res, input = {}) {
   }
 }
 
-export function callerResultFeedbackMetaFromHeaders(headers) {
-  const token = headerValue(headers, CALLER_RESULT_FEEDBACK_HEADER).trim();
-  if (!TOKEN_RE.test(token)) return null;
+export function callerResultFeedbackPublicContract() {
   return {
     optional: true,
     charged: false,
@@ -232,10 +230,15 @@ export function callerResultFeedbackMetaFromHeaders(headers) {
     method: "POST",
     path: CALLER_RESULT_FEEDBACK_PATH,
     header: CALLER_RESULT_FEEDBACK_HEADER,
-    token,
     dispositions: [...CALLER_RESULT_DISPOSITIONS],
     reasonCategories: [...CALLER_RESULT_REASON_CATEGORIES],
   };
+}
+
+export function callerResultFeedbackMetaFromHeaders(headers) {
+  const token = headerValue(headers, CALLER_RESULT_FEEDBACK_HEADER).trim();
+  if (!TOKEN_RE.test(token)) return null;
+  return { ...callerResultFeedbackPublicContract(), token };
 }
 
 function statementIdFor(eventId) {

@@ -314,6 +314,23 @@ test("mounted caller can report one retained result without changing the paid bo
   const catalogBody = await catalog.json();
   assert.equal(Object.hasOwn(catalogBody.paths || {}, CALLER_RESULT_FEEDBACK_PATH), false);
 
+  // A normal HTTP caller follows the advertised Link without private journals
+  // or a source-code read to discover how to supply its optional statement.
+  const contractResponse = await fetch(`${merchant.base}${CALLER_RESULT_FEEDBACK_PATH}`);
+  assert.equal(contractResponse.status, 200);
+  const contract = await contractResponse.json();
+  assert.equal(contract.method, "POST");
+  assert.equal(contract.path, CALLER_RESULT_FEEDBACK_PATH);
+  assert.equal(contract.header, CALLER_RESULT_FEEDBACK_HEADER);
+  assert.equal(contract.optional, true);
+  assert.equal(contract.charged, false);
+  assert.equal(contract.payerIdentity, false);
+  assert.equal(contract.usefulness, "unknown");
+  assert.deepEqual(contract.dispositions, ["useful", "not_useful"]);
+  assert.equal(contract.reasonCategories.includes("matched_task"), true);
+  assert.equal(Object.hasOwn(contract, "token"), false);
+  assert.equal(containsToken(JSON.stringify(contract), feedbackKey), false);
+
   const first = await paidGet(merchant.base, "https://ok.example/");
   assert.equal(first.paid.status, 200);
   assert.equal(extractMcpOutputSchema.safeParse(first.body).success, true);
