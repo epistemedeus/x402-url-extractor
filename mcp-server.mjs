@@ -29,6 +29,7 @@ import { x402ResourceServer } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { createPaymentWrapper } from "@x402/mcp";
 import { sealObservedMcpToolResult } from "./http-delivery-evidence/mcp-delivery.mjs";
+import { callerResultFeedbackMetaFromHeaders } from "./caller-result-feedback.mjs";
 import { classifyDeclaredAgentDiscoverySource, listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
 import {
   buildRegisteredCatalog,
@@ -259,6 +260,8 @@ function httpRouteToolHandler(tool, baseUrl) {
       const result = withoutSuccessShapedStructuredContent({ ...asToolResult(value, { structured: true }),
         ...(!(response.statusCode >= 200 && response.statusCode < 300) || value.error ? { isError: true } : {}),
         _meta: { "samedaydesk/http": { resource: resource.href, status: response.statusCode, headers: publicHeaders } } });
+      const feedbackMeta = callerResultFeedbackMetaFromHeaders(response.headers);
+      if (feedbackMeta) result._meta["samedaydesk/caller-result-feedback"] = feedbackMeta;
       const proof = response.headers["payment-response"];
       if (proof) {
         try { result._meta["x402/payment-response"] = JSON.parse(Buffer.from(proof, "base64").toString("utf8")); }

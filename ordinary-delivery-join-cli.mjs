@@ -34,7 +34,10 @@ File classes (read, never created)
   ${FILE_CLASSES.outcomeBindingRotated}
   ${FILE_CLASSES.taskRef}
   ${FILE_CLASSES.taskRefRotated}
+  ${FILE_CLASSES.callerResultFeedback}
+  ${FILE_CLASSES.callerResultFeedbackRotated}
   optional --caller-declarations <ndjson>  operator input, not a ledger
+  Caller feedback journals are read and never created. A missing file stays empty.
 
 Contract
   Exit 0 prints samedaydesk.ordinary-delivery-join.v1. Missing files stay empty.
@@ -44,6 +47,7 @@ Contract
   Do not commit that output. Public rows omit bodies, digests, queries, and references.
   --check-report <file> prints violation codes and exits 1 when any are present.
   customerPlane stays null. usefulness stays unknown. An exact join requires a capture.
+  callerResultFeedback counts only rows in this window. It is not a global funnel.
 `;
 
 function value(flag) {
