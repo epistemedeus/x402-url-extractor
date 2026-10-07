@@ -486,6 +486,7 @@ test("paid-body bearer echoes never escape via result keys, values, stdout, or r
         console.log = original;
       }
       assertClean(JSON.stringify(session.result), token);
+      assert.equal(JSON.stringify(session.result).includes(token.split(".")[1]), false);
       assertClean(safeJson(session.result), token);
       assertClean(logs.join("\n"), token);
       assertClean(readFileSync(receiptPath, "utf8"), token);

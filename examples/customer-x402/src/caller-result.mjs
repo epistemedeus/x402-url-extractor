@@ -109,13 +109,37 @@ function readPresentedToken(response) {
   return { status: "ok", token: value };
 }
 
+// A remote body can echo a header capability in values or property names.
+// Remove its exact parts too: general redaction may already have replaced the
+// long payload while leaving the MAC fragment. Keep the purchase object identity.
+function scrubPresentedBearer(value, token, seen = new WeakSet()) {
+  const parts = [token, ...token.split(".")];
+  const cleanText = (text) => parts.reduce(
+    (clean, part) => clean.split(part).join("[caller-capability-redacted]"),
+    text,
+  );
+  const visit = (item) => {
+    if (typeof item === "string") return cleanText(item);
+    if (!item || typeof item !== "object" || seen.has(item)) return item;
+    seen.add(item);
+    for (const [key, child] of Object.entries(item)) {
+      if (parts.some((part) => key.includes(part))) delete item[key];
+      else item[key] = visit(child);
+    }
+    return item;
+  };
+  return visit(value);
+}
+
 /**
  * Attach the optional action to the in-process purchase result.
- * Missing or malformed capabilities do not change outcome or evidence.
+ * Missing or malformed capabilities do not change delivery classification.
+ * Any echoed valid capability is removed from serializable evidence.
  */
 export function bindCallerResultFeedback(result, { response, resourceUrl } = {}) {
   if (!result || typeof result !== "object") return result;
   try {
+    bearers.delete(result);
     const presented = readPresentedToken(response);
     if (presented.status === "absent") {
       result.callerResultFeedback = publicView({ available: false, reason: "absent" });
@@ -125,6 +149,7 @@ export function bindCallerResultFeedback(result, { response, resourceUrl } = {})
       result.callerResultFeedback = publicView({ available: false, reason: "malformed_capability" });
       return result;
     }
+    scrubPresentedBearer(result, presented.token);
     const url = statementDestination(resourceUrl);
     if (!url) {
       result.callerResultFeedback = publicView({ available: false, reason: "untrusted_origin" });
