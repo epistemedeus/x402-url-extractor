@@ -1,6 +1,7 @@
 import { extractBatchOutputSchema } from "../extract-batch.mjs";
 import { extractMcpOutputSchema, readMcpOutputSchema } from "../extract.mjs";
 import { lockfilePinDeltaOutputSchema } from "../lockfile-pin-delta.mjs";
+import { careersBoardOutputSchema } from "../careers-board-read.mjs";
 import { morphoPositionOutputSchema } from "../morpho-position.mjs";
 import { sellerIntegrityAuditOutputSchema } from "../seller-integrity-audit.mjs";
 import { bindOwningContracts, resetOwningContracts } from "./contract.mjs";
@@ -17,6 +18,7 @@ export function bindMerchantHttpDeliveryContracts() {
     lockfileHttpParse: () => lockfilePinDeltaOutputSchema(),
     sellerIntegrityHttpParse: () => sellerIntegrityAuditOutputSchema(),
     morphoPositionHttpParse: () => morphoPositionOutputSchema(),
+    careersBoardHttpParse: () => careersBoardOutputSchema(),
   });
   bound = true;
 }

@@ -3,7 +3,7 @@ import { createPublicKey } from "node:crypto";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { verifyServiceDeploymentStatement } from "agent-payment-policy";
+import { createServiceDeploymentStatement, verifyServiceDeploymentStatement } from "agent-payment-policy";
 import { loadServiceDeploymentPublication } from "./service-deployment-publication.mjs";
 import { SERVICE_DEPLOYMENT_ROUTES } from "./service-deployment-routes.mjs";
 import { SOLANA_AGENT_REGISTRATION } from "./solana-agent-registration.mjs";
@@ -28,16 +28,20 @@ function publication(overrides = {}) {
   });
 }
 
-test("binds every declared standard route to both exact Base settlement protocols", () => {
+test("binds every signed standard route and leaves the careers route pending", () => {
   const value = publication();
+  const signed = SERVICE_DEPLOYMENT_ROUTES.filter((route) => route.path !== "/data/careers-board");
   assert.equal(value.active, true);
-  assert.equal(value.routeCount, SERVICE_DEPLOYMENT_ROUTES.length);
   assert.equal(value.routeCount, 25);
+  assert.equal(value.registryRouteCount, SERVICE_DEPLOYMENT_ROUTES.length);
+  assert.equal(value.registryRouteCount, 26);
+  assert.equal(signed.length, 25);
+  assert.deepEqual(value.pendingRoutes, [{ method: "GET", path: "/data/careers-board" }]);
   assert.equal(value.settlementCount, 2);
   assert.equal(value.operationalWallet, SOLANA_AGENT_REGISTRATION.merchantWallet);
   assert.match(value.publicKeyFingerprint, /^sha256:[0-9a-f]{64}$/);
   assert.equal(value.envelope.metadata, undefined);
-  for (const route of SERVICE_DEPLOYMENT_ROUTES) {
+  for (const route of signed) {
     for (const protocol of ["x402", "mpp"]) {
       const report = verifyServiceDeploymentStatement(value.envelope, {
         publicKey: value.publicKeyPem,
@@ -50,6 +54,12 @@ test("binds every declared standard route to both exact Base settlement protocol
       assert.doesNotMatch(JSON.stringify(report), /private|value/);
     }
   }
+  assert.throws(() => verifyServiceDeploymentStatement(value.envelope, {
+    publicKey: value.publicKeyPem,
+    request: { method: "GET", url: `${ORIGIN}/data/careers-board?board=acxiom` },
+    runtimeOffer: { protocol: "x402", network: NETWORK, asset: ASSET, recipient: RECIPIENT, decimals: 6 },
+    now: NOW,
+  }), /not authorized/);
 });
 
 test("identity-binding declaration is stable across rollout flags and does not authorize payment", () => {
@@ -89,7 +99,38 @@ test("fails closed on production origin, route, settlement, or registered-wallet
   const payload = JSON.parse(Buffer.from(altered.payload, "base64url").toString("utf8"));
   payload.deployments[0].routes.pop();
   altered.payload = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  assert.throws(() => publication({ envelope: altered }), /routes do not match|signature/);
+  assert.throws(() => publication({ envelope: altered }), /routes do not match|signature|statementId is invalid/);
+  const foreign = structuredClone(publication().envelope);
+  const foreignPayload = JSON.parse(Buffer.from(foreign.payload, "base64url").toString("utf8"));
+  foreignPayload.deployments[0].routes.push({ method: "GET", path: "/not-a-production-route" });
+  foreign.payload = Buffer.from(JSON.stringify(foreignPayload)).toString("base64url");
+  assert.throws(() => publication({ envelope: foreign }), /routes do not match/);
+});
+
+test("unsigned successor names the pending careers route without a signature or private key", () => {
+  const value = publication();
+  const successor = JSON.parse(readFileSync(new URL("./service-deployment-statement-unsigned-successor.json", import.meta.url), "utf8"));
+  assert.deepEqual(successor, JSON.parse(JSON.stringify(value.unsignedSuccessorInput)));
+  assert.equal(successor.deployments[0].routes.length, 26);
+  assert.equal(successor.deployments[0].routes.some((route) => route.method === "GET" && route.path === "/data/careers-board"), true);
+  assert.equal(Object.hasOwn(successor, "signature"), false);
+  assert.equal(JSON.stringify(successor).includes("secretKey"), false);
+  assert.equal(JSON.stringify(successor).includes("PRIVATE"), false);
+  const statement = createServiceDeploymentStatement(successor, { now: NOW, ttlMs: 86_400_000 });
+  assert.equal(statement.deployments[0].routes.length, 26);
+  assert.equal(statement.deployments[0].routes.some((route) => route.method === "GET" && route.path === "/data/careers-board"), true);
+  assert.deepEqual(statement.deployments[0].settlement.map((item) => ({
+    protocol: item.protocol,
+    network: item.network,
+    asset: item.asset,
+    recipient: item.recipient,
+    decimals: item.decimals,
+  })), [
+    { protocol: "mpp", network: NETWORK, asset: ASSET.toLowerCase(), recipient: RECIPIENT.toLowerCase(), decimals: 6 },
+    { protocol: "x402", network: NETWORK, asset: ASSET.toLowerCase(), recipient: RECIPIENT.toLowerCase(), decimals: 6 },
+  ]);
+  assert.equal(Object.hasOwn(statement, "signature"), false);
+  assert.equal(statement.canonicalOrigin, ORIGIN);
 });
 
 test("keeps expired static evidence visible but inactive for rotation monitoring", () => {

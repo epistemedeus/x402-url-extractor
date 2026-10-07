@@ -58,19 +58,23 @@ export function loadServiceDeploymentPublication({
   if (!Number.isFinite(expiresAtMs) || !Number.isFinite(issuedAtMs) || expiresAtMs <= issuedAtMs) {
     throw new Error("service deployment validity window is invalid");
   }
-  const expectedRoutes = [...SERVICE_DEPLOYMENT_ROUTES].sort((left, right) => `${left.method} ${left.path}`.localeCompare(`${right.method} ${right.path}`));
+  const registryRoutes = [...SERVICE_DEPLOYMENT_ROUTES].sort((left, right) => `${left.method} ${left.path}`.localeCompare(`${right.method} ${right.path}`));
   const expectedSettlement = ["mpp", "x402"].map((protocol) => ({ asset: asset.toLowerCase(), decimals: 6, network, protocol, recipient: recipient.toLowerCase() }));
   if (payload.canonicalOrigin !== canonicalOrigin || payload.deployments?.length !== 1 || payload.deployments[0].origin !== canonicalOrigin) {
     throw new Error("service deployment origin does not match production");
   }
-  if (JSON.stringify(payload.deployments[0].routes) !== JSON.stringify(expectedRoutes)) {
+  const signedRoutes = Array.isArray(payload.deployments[0].routes) ? payload.deployments[0].routes : [];
+  const registryKeys = new Set(registryRoutes.map((route) => `${route.method} ${route.path}`));
+  const signedKeys = new Set(signedRoutes.map((route) => `${route.method} ${route.path}`));
+  if (signedRoutes.length === 0 || signedRoutes.some((route) => !registryKeys.has(`${route.method} ${route.path}`))) {
     throw new Error("service deployment routes do not match production");
   }
+  const pendingRoutes = registryRoutes.filter((route) => !signedKeys.has(`${route.method} ${route.path}`));
   if (JSON.stringify(payload.deployments[0].settlement) !== JSON.stringify(expectedSettlement)) {
     throw new Error("service deployment settlement does not match production");
   }
   const signatureVerificationTime = Math.min(now, expiresAtMs - 1);
-  for (const route of expectedRoutes) {
+  for (const route of signedRoutes) {
     for (const settlement of expectedSettlement) {
       verifyServiceDeploymentStatement(envelope, {
         publicKey,
@@ -88,7 +92,17 @@ export function loadServiceDeploymentPublication({
     expiresAt: payload.expiresAt,
     active: now >= issuedAtMs && now < expiresAtMs,
     expiresInMs: expiresAtMs - now,
-    routeCount: expectedRoutes.length,
+    routeCount: signedRoutes.length,
+    registryRouteCount: registryRoutes.length,
+    pendingRoutes: Object.freeze(pendingRoutes.map((route) => Object.freeze({ method: route.method, path: route.path }))),
+    unsignedSuccessorInput: Object.freeze({
+      canonicalOrigin,
+      deployments: Object.freeze([Object.freeze({
+        origin: canonicalOrigin,
+        routes: registryRoutes,
+        settlement: expectedSettlement,
+      })]),
+    }),
     settlementCount: expectedSettlement.length,
     publicKeyFingerprint: fingerprint,
     operationalWallet: derivedWallet,

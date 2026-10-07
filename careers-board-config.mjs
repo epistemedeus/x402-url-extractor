@@ -14,9 +14,9 @@ export const CAREERS_BOARD_MAX_CACHE_MS = 300_000;
 export const CAREERS_BOARD_DEFAULT_TIMEOUT_MS = 15_000;
 export const CAREERS_BOARD_MAX_BYTES = 1_000_000;
 
-export const CAREERS_BOARD_DESCRIPTION = "Named public careers board: title, location or null, posting URL, source, fetchedAt, and explicit coverage. Config selects the current primary source. Rows are the full board, not a title filter. Partial, missing, duplicate, listed, empty, changed, and unavailable stay explicit. Source failure is not an empty board and is not charged. Pages, bytes, and timeouts are bounded. Default quote is $0.005 USDC, not a margin or demand claim.";
+export const CAREERS_BOARD_DESCRIPTION = "Named public careers board. Returns title, location or null, posting URL, source, fetchedAt, and explicit coverage for one configured board. Partial, missing, duplicate, listed, empty, and changed stay explicit. A source failure is unavailable and is not an empty board. Pages, bytes, and timeouts are bounded. Price is $0.005 USDC.";
 
-export const CAREERS_BOARD_QUOTE_MEANING = "Flat quote for one named-board observation. Not a margin, subscription, or proof of demand.";
+export const CAREERS_BOARD_QUOTE_MEANING = "Price for one named-board observation.";
 
 if ([...CAREERS_BOARD_DESCRIPTION].length > 500) {
   throw new Error("careers board description exceeds 500 code points");

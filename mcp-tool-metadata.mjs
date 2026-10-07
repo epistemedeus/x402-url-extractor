@@ -99,7 +99,7 @@ const TOOL_METADATA = Object.freeze({
   },
   careers_board: {
     title: "Read Named Public Careers Board",
-    description: "Read one configured public careers board and return title, location or null, posting URL, source, fetchedAt, and explicit coverage for the full board. Use `careers_board_cold` for the acquired free recipe. Rows are not a title filter. Partial, missing, duplicate, listed, empty, changed, and unavailable stay explicit. Source failure is not an empty board. The HTTP route prepares the observation before either payment rail and does not settle a source failure. This MCP wrapper still settles after the handler.",
+    description: "Read one configured public careers board and return title, location or null, posting URL, source, fetchedAt, and explicit coverage. Use `careers_board_cold` for the acquired free recipe. Partial, missing, duplicate, listed, empty, and changed stay explicit. A source failure is unavailable and is not an empty board. Price is $0.005 USDC.",
   },
   careers_board_cold: {
     title: "Return Acquired Careers Board Recipe",

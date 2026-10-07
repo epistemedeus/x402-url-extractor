@@ -245,6 +245,7 @@ import {
   CAREERS_BOARD_AMOUNT_ATOMIC,
   CAREERS_BOARD_COLD_PATH,
   CAREERS_BOARD_DESCRIPTION,
+  CAREERS_BOARD_MAX_BYTES,
   CAREERS_BOARD_PATH,
   CAREERS_BOARD_PRICE_USD,
   resolveNamedBoardQuery,
@@ -4351,6 +4352,8 @@ import("./mcp-server.mjs")
             board: z.string().describe("Named board id or alias. Initial reference ids are acxiom and liveramp."),
             company: z.string().optional().describe("Optional alias. When board is also set, both must resolve to the same id."),
           },
+          method: "GET",
+          route: CAREERS_BOARD_PATH,
           outputSchema: z.object({
             ok: z.boolean(),
             product: z.string(),
@@ -4369,20 +4372,12 @@ import("./mcp-server.mjs")
             fetchedAt: z.string().nullable(),
             roleFilter: z.null(),
           }).passthrough(),
-          run: async (args) => {
-            const decision = resolveNamedBoardQuery({
-              board: args.board,
-              ...(args.company ? { company: args.company } : {}),
-            });
-            if (!decision.ok) {
-              return { ok: false, charged: false, emptyBoard: false, outcome: "unavailable", error: decision.error, rows: [] };
-            }
-            const prepared = await readNamedCareersBoard(decision.board.id);
-            return {
-              ...prepared.body,
-              charged: prepared.deliverable,
-              mcpSettlement: "existing MCP wrapper verifies, runs this handler, then settles. HTTP GET prepares before either rail and does not settle a source failure.",
-            };
+          paidHttp: {
+            method: "GET",
+            path: CAREERS_BOARD_PATH,
+            resourceUrl: `${PUBLIC_URL}${CAREERS_BOARD_PATH}`,
+            maxRequestBytes: 2048,
+            maxResponseBytes: CAREERS_BOARD_MAX_BYTES,
           },
           tags: ["careers", "job-board", "coverage"],
         },

@@ -1,0 +1,130 @@
+{
+  "canonicalOrigin": "https://agents.samedaydesk.com",
+  "deployments": [
+    {
+      "origin": "https://agents.samedaydesk.com",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/chain/solana-transaction-receipt"
+        },
+        {
+          "method": "GET",
+          "path": "/chain/transaction-receipt"
+        },
+        {
+          "method": "GET",
+          "path": "/commerce/contract-qualified-search"
+        },
+        {
+          "method": "GET",
+          "path": "/commerce/payment-offer-preflight"
+        },
+        {
+          "method": "GET",
+          "path": "/commerce/seller-integrity-audit"
+        },
+        {
+          "method": "GET",
+          "path": "/commerce/settlement-proof"
+        },
+        {
+          "method": "GET",
+          "path": "/data/careers-board"
+        },
+        {
+          "method": "GET",
+          "path": "/deep-audit"
+        },
+        {
+          "method": "GET",
+          "path": "/defi/morpho-market-underwrite"
+        },
+        {
+          "method": "GET",
+          "path": "/defi/morpho-position"
+        },
+        {
+          "method": "GET",
+          "path": "/defi/morpho-preliquidation-replay"
+        },
+        {
+          "method": "GET",
+          "path": "/defi/morpho-protection"
+        },
+        {
+          "method": "GET",
+          "path": "/distribution/agent-discoverability-audit"
+        },
+        {
+          "method": "GET",
+          "path": "/distribution/agent-surface-budget-audit"
+        },
+        {
+          "method": "GET",
+          "path": "/enrich"
+        },
+        {
+          "method": "GET",
+          "path": "/extract"
+        },
+        {
+          "method": "GET",
+          "path": "/read"
+        },
+        {
+          "method": "GET",
+          "path": "/scan"
+        },
+        {
+          "method": "GET",
+          "path": "/schemaforge"
+        },
+        {
+          "method": "GET",
+          "path": "/wallet-enrich"
+        },
+        {
+          "method": "GET",
+          "path": "/work/opportunity-preflight"
+        },
+        {
+          "method": "POST",
+          "path": "/commerce/payment-offer-preflight"
+        },
+        {
+          "method": "POST",
+          "path": "/extract/batch"
+        },
+        {
+          "method": "POST",
+          "path": "/security/stateful-wallet-policy-conformance"
+        },
+        {
+          "method": "POST",
+          "path": "/security/wallet-policy-conformance"
+        },
+        {
+          "method": "POST",
+          "path": "/work/opportunity-preflight"
+        }
+      ],
+      "settlement": [
+        {
+          "asset": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "decimals": 6,
+          "network": "eip155:8453",
+          "protocol": "mpp",
+          "recipient": "0x8904df3de6dfee6a7c8cc38619d2f17806213cee"
+        },
+        {
+          "asset": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "decimals": 6,
+          "network": "eip155:8453",
+          "protocol": "x402",
+          "recipient": "0x8904df3de6dfee6a7c8cc38619d2f17806213cee"
+        }
+      ]
+    }
+  ]
+}

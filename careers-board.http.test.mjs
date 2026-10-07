@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { createServer as createHttpServer } from "node:http";
 import { createServer as createNetServer } from "node:net";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -12,8 +13,16 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { evm as evmClient, Mppx as ClientMppx } from "mppx/client";
 import { privateKeyToAccount } from "viem/accounts";
 
-import { mppAssetForNetwork } from "./mpp-dual-stack.mjs";
+import {
+  CALLER_RESULT_FEEDBACK_FILENAME,
+  CALLER_RESULT_FEEDBACK_HEADER,
+  CALLER_RESULT_FEEDBACK_PATH,
+  issueCallerResultFeedbackToken,
+} from "./caller-result-feedback.mjs";
 import { CAREERS_BOARD_COLD_PATH, CAREERS_BOARD_PATH } from "./careers-board-config.mjs";
+import { PAID_EVIDENCE_FILENAME, parseNdjson } from "./http-delivery-evidence/historical.mjs";
+import { VALIDATION_FILENAME } from "./http-delivery-evidence/store.mjs";
+import { mppAssetForNetwork } from "./mpp-dual-stack.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const PAYER = `0x${"2".repeat(40)}`;
@@ -61,7 +70,7 @@ async function startFakeFacilitator() {
   return { calls, close: () => new Promise((resolve) => server.close(resolve)), url: `http://127.0.0.1:${server.address().port}` };
 }
 
-async function startMerchant({ dataDir, facilitatorUrl, scenarioFile, fetchLog }) {
+async function startMerchant({ dataDir, facilitatorUrl, scenarioFile, fetchLog, extraEnv = {} }) {
   const port = await unusedPort();
   const child = spawn(process.execPath, ["server.js"], {
     cwd,
@@ -84,6 +93,7 @@ async function startMerchant({ dataDir, facilitatorUrl, scenarioFile, fetchLog }
       CAREERS_BOARD_SCENARIO_FILE: scenarioFile,
       CAREERS_BOARD_FETCH_LOG: fetchLog,
       NODE_OPTIONS: [process.env.NODE_OPTIONS, `--import ${hook}`].filter(Boolean).join(" "),
+      ...extraEnv,
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -444,4 +454,269 @@ test("named-board read charges only a prepared observation on both rails", { tim
   assert.notEqual(unlisted.body.outcome, "useful_empty");
   assert.equal(facilitator.calls.verify, verifiedBeforeStale + 3);
   assert.equal(facilitator.calls.settle, settledBeforeStale + 3);
+});
+
+function containsToken(value, token) {
+  return typeof token === "string" && token.length > 0 && String(value).includes(token);
+}
+
+async function postFeedback(base, token, body) {
+  const response = await fetch(`${base}${CALLER_RESULT_FEEDBACK_PATH}`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...(token ? { [CALLER_RESULT_FEEDBACK_HEADER]: token } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+  const text = await response.text();
+  let parsed = null;
+  try { parsed = JSON.parse(text); } catch { parsed = null; }
+  return { status: response.status, body: parsed, text };
+}
+
+async function waitForRows(file, minCount) {
+  const started = Date.now();
+  while (Date.now() - started < 8_000) {
+    const text = await readFile(file, "utf8").catch((error) => (error?.code === "ENOENT" ? "" : Promise.reject(error)));
+    const rows = parseNdjson(text).filter((row) => !row?._unparseable);
+    if (rows.length >= minCount) return rows;
+    await sleep(50);
+  }
+  throw new Error(`timed out waiting for ${minCount} rows in ${path.basename(file)}`);
+}
+
+async function mcpCall(base, name, args, payment) {
+  const response = await fetch(`${base}/mcp`, {
+    method: "POST",
+    headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 91,
+      method: "tools/call",
+      params: {
+        name,
+        arguments: args,
+        ...(payment ? { _meta: { "x402/payment": payment } } : {}),
+      },
+    }),
+  });
+  const text = await response.text();
+  const parsed = response.headers.get("content-type")?.includes("text/event-stream")
+    ? JSON.parse(text.split("\n").find((line) => line.startsWith("data: ")).slice(6))
+    : JSON.parse(text);
+  return parsed;
+}
+
+function paymentObject(challenge, id, resourceUrl) {
+  const payment = JSON.parse(Buffer.from(testPayment(challenge, id), "base64").toString("utf8"));
+  if (resourceUrl) payment.resource = { ...payment.resource, url: resourceUrl };
+  return payment;
+}
+
+test("explicit feedback binds one paid careers result and the MCP rail settles only useful output", { timeout: 120_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "careers-feedback-"));
+  const scenarioFile = path.join(dataDir, "scenario.json");
+  const fetchLog = path.join(dataDir, "fetches.log");
+  const feedbackKey = randomBytes(32).toString("hex");
+  await setMode(scenarioFile, "fail-closed");
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => {
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({
+    dataDir,
+    facilitatorUrl: facilitator.url,
+    scenarioFile,
+    fetchLog,
+    extraEnv: { CALLER_RESULT_FEEDBACK_KEY: feedbackKey },
+  });
+  const deadline = Date.now() + 20_000;
+  while (!merchant.output().includes("MCP server:  POST /mcp (23 paid tools)")) {
+    if (Date.now() > deadline) throw new Error(`MCP mount timed out:\n${merchant.output().slice(-2000)}`);
+    await sleep(50);
+  }
+  const base = merchant.base;
+  const origin = "https://agents.samedaydesk.com";
+
+  const unpaid = await fetch(`${base}${CAREERS_BOARD_PATH}?board=acxiom`);
+  assert.equal(unpaid.status, 402);
+  assert.equal(unpaid.headers.get(CALLER_RESULT_FEEDBACK_HEADER), null);
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+  const acxiomChallenge = decodePaymentRequired(unpaid);
+  const acxiomPayment = testPayment(acxiomChallenge, "careers_feedback_invalid1");
+  const invalid = await fetch(`${base}${CAREERS_BOARD_PATH}?board=not-a-board`, {
+    headers: { "payment-signature": acxiomPayment },
+  });
+  const invalidBody = await invalid.json();
+  assert.equal(invalid.status, 400, JSON.stringify(invalidBody));
+  assert.equal(invalidBody.ok, false);
+  assert.equal(invalidBody.charged, false);
+  assert.equal(invalidBody.emptyBoard, false);
+  assert.equal(invalid.headers.get(CALLER_RESULT_FEEDBACK_HEADER), null);
+  assert.equal(facilitator.calls.settle, 0);
+
+  await setMode(scenarioFile, "acxiom-403");
+  const deniedPayment = testPayment(acxiomChallenge, "careers_feedback_denied01");
+  const denied = await fetch(`${base}${CAREERS_BOARD_PATH}?board=acxiom`, {
+    headers: { "payment-signature": deniedPayment },
+  });
+  const deniedBody = await denied.json();
+  assert.equal(denied.status, 503, JSON.stringify(deniedBody));
+  assert.equal(deniedBody.charged, false);
+  assert.equal(deniedBody.outcome, "unavailable");
+  assert.equal(deniedBody.coverage.status, "source_failure");
+  assert.equal(denied.headers.get(CALLER_RESULT_FEEDBACK_HEADER), null);
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+
+  const mcpDeniedChallenge = await mcpCall(base, "careers_board", { board: "acxiom" }, null);
+  assert.equal(mcpDeniedChallenge.result?.isError, true);
+  assert.equal(mcpDeniedChallenge.result?.structuredContent?.x402Version, 2);
+  assert.equal(mcpDeniedChallenge.result?.structuredContent?.resource?.url, `${origin}${CAREERS_BOARD_PATH}?board=acxiom`);
+  const mcpDenied = await mcpCall(
+    base,
+    "careers_board",
+    { board: "acxiom" },
+    paymentObject(mcpDeniedChallenge.result.structuredContent, "careers_mcp_denied_12345"),
+  );
+  assert.equal(mcpDenied.result?.isError, true);
+  assert.equal(mcpDenied.result?.structuredContent?.charged, false);
+  assert.equal(mcpDenied.result?.structuredContent?.outcome, "unavailable");
+  assert.equal(mcpDenied.result?._meta?.["samedaydesk/caller-result-feedback"], undefined);
+  assert.equal(facilitator.calls.settle, 0);
+
+  const invalidResource = `${origin}${CAREERS_BOARD_PATH}?board=not-a-board`;
+  const mcpInvalid = await mcpCall(
+    base,
+    "careers_board",
+    { board: "not-a-board" },
+    paymentObject(mcpDeniedChallenge.result.structuredContent, "careers_mcp_invalid_1234", invalidResource),
+  );
+  assert.equal(mcpInvalid.result?.isError, true);
+  assert.equal(mcpInvalid.result?.structuredContent?.ok, false);
+  assert.equal(mcpInvalid.result?.structuredContent?.charged, false);
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+
+  await setMode(scenarioFile, "acxiom-partial");
+  const partialPayment = testPayment(acxiomChallenge, "careers_feedback_partial1");
+  const partialResponse = await fetch(`${base}${CAREERS_BOARD_PATH}?board=acxiom`, {
+    headers: { "payment-signature": partialPayment },
+  });
+  const partialBytes = Buffer.from(await partialResponse.arrayBuffer());
+  const partial = JSON.parse(partialBytes.toString("utf8"));
+  assert.equal(partialResponse.status, 200, partialBytes.toString("utf8"));
+  assert.equal(partial.charged, true);
+  assert.equal(partial.outcome, "partial");
+  assert.equal(partial.rows[0].title.length > 0, true);
+  assert.equal(facilitator.calls.verify, 1);
+  assert.equal(facilitator.calls.settle, 1);
+  const token = partialResponse.headers.get(CALLER_RESULT_FEEDBACK_HEADER);
+  assert.equal(typeof token, "string");
+  assert.match(partialResponse.headers.get("link") || "", /rel="caller-result-feedback"/);
+  assert.equal(containsToken(partialBytes, token), false);
+  assert.equal(containsToken(merchant.output(), token), false);
+  assert.equal(containsToken(merchant.output(), feedbackKey), false);
+  assert.equal(partial.nextSteps.callerResultFeedback.invoked, false);
+
+  const replay = await fetch(`${base}${CAREERS_BOARD_PATH}?board=acxiom`, {
+    headers: { "payment-signature": partialPayment },
+  });
+  const replayBytes = Buffer.from(await replay.arrayBuffer());
+  assert.equal(replay.status, 200);
+  assert.equal(replay.headers.get(CALLER_RESULT_FEEDBACK_HEADER), null);
+  assert.equal(containsToken(replayBytes, token), false);
+  assert.equal(facilitator.calls.settle, 1);
+
+  await waitForRows(path.join(dataDir, PAID_EVIDENCE_FILENAME), 1);
+  const validations = await waitForRows(path.join(dataDir, VALIDATION_FILENAME), 1);
+  assert.equal(validations.some((row) => (
+    row.resource === CAREERS_BOARD_PATH
+    && row.method === "GET"
+    && row.validatorVerdict === "pass"
+    && row.deliveryClass === "truncated_partial"
+    && row.usefulness === "unknown"
+  )), true);
+  const useful = await postFeedback(base, token, { disposition: "useful", reasonCategory: "matched_task" });
+  assert.equal(useful.status, 200, useful.text);
+  assert.equal(useful.body.accepted, true);
+  assert.equal(useful.body.charged, false);
+  assert.equal(useful.body.disposition, "useful");
+  assert.equal(useful.body.usefulness, "unknown");
+  assert.equal(containsToken(useful.text, token), false);
+  const journal = await readFile(path.join(dataDir, CALLER_RESULT_FEEDBACK_FILENAME), "utf8");
+  const journalRows = parseNdjson(journal).filter((row) => !row?._unparseable);
+  assert.equal(journalRows.length, 1);
+  assert.equal(journalRows[0].route, CAREERS_BOARD_PATH);
+  assert.equal(journalRows[0].disposition, "useful");
+  assert.equal(containsToken(journal, token), false);
+  assert.equal(containsToken(journal, feedbackKey), false);
+  assert.equal(containsToken(merchant.output(), token), false);
+
+  const foreign = issueCallerResultFeedbackToken({
+    key: feedbackKey,
+    eventId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+    method: "GET",
+    route: CAREERS_BOARD_PATH,
+    requestDigest: "3".repeat(64),
+    responseDigest: "4".repeat(64),
+  });
+  const foreignResult = await postFeedback(base, foreign, { disposition: "useful" });
+  assert.equal(foreignResult.status, 409);
+  assert.equal(foreignResult.body.code, "missing_capture");
+  assert.equal(foreignResult.body.accepted, false);
+  const tampered = await postFeedback(
+    base,
+    `${token.slice(0, -1)}${token.endsWith("A") ? "B" : "A"}`,
+    { disposition: "useful" },
+  );
+  assert.equal(tampered.status, 401);
+  assert.equal(tampered.body.code, "tampered_capability");
+  const unpaidFeedback = await postFeedback(base, null, { disposition: "useful" });
+  assert.notEqual(unpaidFeedback.status, 200);
+  assert.equal(unpaidFeedback.body?.accepted, false);
+
+  await setMode(scenarioFile, "liveramp-listed");
+  const settleBeforeSuccess = facilitator.calls.settle;
+  const mcpUnpaid = await mcpCall(base, "careers_board", { board: "liveramp" }, null);
+  assert.equal(mcpUnpaid.result?.isError, true);
+  assert.equal(mcpUnpaid.result?.structuredContent?.resource?.url, `${origin}${CAREERS_BOARD_PATH}?board=liveramp`);
+  assert.equal(facilitator.calls.settle, settleBeforeSuccess);
+  const mcpPaid = await mcpCall(
+    base,
+    "careers_board",
+    { board: "liveramp" },
+    paymentObject(mcpUnpaid.result.structuredContent, "careers_mcp_listed_12345"),
+  );
+  assert.equal(mcpPaid.result?.isError, undefined);
+  assert.equal(mcpPaid.result?.structuredContent?.charged, true);
+  assert.equal(mcpPaid.result?.structuredContent?.outcome, "listed");
+  assert.equal(mcpPaid.result?.structuredContent?.rows?.[0]?.title, "Listed");
+  assert.equal(mcpPaid.result?.structuredContent?.rows?.[0]?.location, "New York");
+  assert.match(mcpPaid.result?.structuredContent?.rows?.[0]?.url || "", /^https:\/\/jobs\.ashbyhq\.com\/liveramp-inc\//);
+  assert.equal(mcpPaid.result?.structuredContent?.source?.sourceChange?.read, false);
+  const feedbackMeta = mcpPaid.result?._meta?.["samedaydesk/caller-result-feedback"];
+  assert.equal(feedbackMeta?.optional, true);
+  assert.equal(feedbackMeta?.charged, false);
+  assert.equal(feedbackMeta?.path, CALLER_RESULT_FEEDBACK_PATH);
+  assert.equal(typeof feedbackMeta?.token, "string");
+  assert.equal(containsToken(JSON.stringify(mcpPaid.result.structuredContent), feedbackMeta.token), false);
+  assert.equal(mcpPaid.result._meta["samedaydesk/http"].headers[CALLER_RESULT_FEEDBACK_HEADER], undefined);
+  assert.equal(facilitator.calls.settle, settleBeforeSuccess + 1);
+  assert.equal(facilitator.calls.verify, settleBeforeSuccess + 1);
+  const mcpFeedback = await postFeedback(base, feedbackMeta.token, { disposition: "not_useful", reasonCategory: "not_actionable" });
+  assert.equal(mcpFeedback.status, 200, mcpFeedback.text);
+  assert.equal(mcpFeedback.body.disposition, "not_useful");
+  assert.equal(mcpFeedback.body.charged, false);
+  assert.equal(containsToken(mcpFeedback.text, feedbackMeta.token), false);
+  const finalJournal = await readFile(path.join(dataDir, CALLER_RESULT_FEEDBACK_FILENAME), "utf8");
+  assert.equal(containsToken(finalJournal, token), false);
+  assert.equal(containsToken(finalJournal, feedbackMeta.token), false);
+  assert.equal(containsToken(merchant.output(), feedbackMeta.token), false);
+  assert.equal(containsToken(await readFile(path.join(dataDir, "idempotency-replay.json"), "utf8"), token), false);
 });

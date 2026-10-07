@@ -1,8 +1,15 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
 
+import { issueCallerResultFeedbackToken } from "./caller-result-feedback.mjs";
 import {
   CAREERS_BOARD_AMOUNT_ATOMIC,
+  CAREERS_BOARD_DESCRIPTION,
   CAREERS_BOARD_PRICE_USD,
   CAREERS_BOARD_QUOTE_MEANING,
   careersBoardCacheMs,
@@ -13,9 +20,19 @@ import {
 import {
   CAREERS_BOARD_DISCOVERY_EXAMPLE,
   assertHonestCoverage,
+  careersBoardColdRecipeBody,
   readNamedCareersBoard,
   resetCareersBoardCache,
 } from "./careers-board-read.mjs";
+import { bindMerchantHttpDeliveryContracts } from "./http-delivery-evidence/bind-merchant-contracts.mjs";
+import {
+  DELIVERY,
+  RESOURCES,
+  SETTLEMENT_CLASS,
+  VERDICT,
+  evaluateResponseBytes,
+  isSupportedTarget,
+} from "./http-delivery-evidence/index.mjs";
 import { assessCompletenessClaim, gateRequest } from "./recipes/careers-board/boards.mjs";
 import { runFixtures } from "./recipes/careers-board/check-boards.mjs";
 
@@ -99,7 +116,10 @@ test("price and bounds stay on the existing configurable machinery", () => {
   assert.equal(careersBoardCacheMs({}, 0), 0);
   assert.throws(() => careersBoardCacheMs({}, 300_001), /300000/);
   assert.throws(() => careersBoardTimeoutMs({}, 15_001), /15000/);
-  assert.match(CAREERS_BOARD_QUOTE_MEANING, /Not a margin/);
+  assert.match(CAREERS_BOARD_QUOTE_MEANING, /one named-board observation/);
+  assert.match(CAREERS_BOARD_DESCRIPTION, /\$0\.005 USDC/);
+  assert.match(CAREERS_BOARD_DESCRIPTION, /source failure/i);
+  assert.doesNotMatch(`${CAREERS_BOARD_DESCRIPTION} ${CAREERS_BOARD_QUOTE_MEANING}`, /margin|proof of demand|demand claim/i);
   assert.equal(JSON.stringify(CAREERS_BOARD_DISCOVERY_EXAMPLE).includes("paidMarginalValue"), false);
   assert.equal(CAREERS_BOARD_DISCOVERY_EXAMPLE.roleFilter, null);
 });
@@ -253,4 +273,135 @@ test("one flight serves concurrent readers, a fresh hit does not refetch, and a 
   assert.equal(stale.body.rows[0].stale, true);
   assert.equal(stale.body.rows[0].title, "Analyst");
   assert.ok(calls >= beforeFailure);
+});
+
+function evaluateCareers(body, extra = {}) {
+  return evaluateResponseBytes({
+    method: "GET",
+    resource: RESOURCES.CAREERS_BOARD,
+    responseBytes: Buffer.from(JSON.stringify(body)),
+    merchantHttpStatus: 200,
+    settlementClass: SETTLEMENT_CLASS.SIMULATED,
+    ...extra,
+  });
+}
+
+test("the owning parser binds a paid careers result and refuses unpaid, failed, and foreign targets", () => {
+  bindMerchantHttpDeliveryContracts();
+  assert.equal(isSupportedTarget("GET", "/data/careers-board"), true);
+  assert.equal(isSupportedTarget("POST", "/data/careers-board"), false);
+  assert.equal(isSupportedTarget("GET", "/scan"), false);
+  const claims = {
+    key: "k".repeat(32),
+    eventId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    requestDigest: "1".repeat(64),
+    responseDigest: "2".repeat(64),
+  };
+  assert.equal(typeof issueCallerResultFeedbackToken({ ...claims, method: "GET", route: "/data/careers-board" }), "string");
+  assert.equal(issueCallerResultFeedbackToken({ ...claims, method: "POST", route: "/data/careers-board" }), null);
+  assert.equal(issueCallerResultFeedbackToken({ ...claims, method: "GET", route: "/scan" }), null);
+
+  const listed = structuredClone(CAREERS_BOARD_DISCOVERY_EXAMPLE);
+  listed.charged = true;
+  const listedResult = evaluateCareers(listed);
+  assert.equal(listedResult.validatorVerdict, VERDICT.PASS);
+  assert.equal(listedResult.deliveryClass, DELIVERY.FULL_BOUNDED_CAPTURE);
+  assert.equal(listedResult.contractName, "x402-url-extractor.careersBoardOutputSchema");
+
+  const partial = structuredClone(listed);
+  partial.outcome = "partial";
+  partial.coverage.status = "partial";
+  const partialResult = evaluateCareers(partial);
+  assert.equal(partialResult.validatorVerdict, VERDICT.PASS);
+  assert.equal(partialResult.deliveryClass, DELIVERY.TRUNCATED_PARTIAL);
+
+  const empty = structuredClone(listed);
+  empty.outcome = "useful_empty";
+  empty.rows = [];
+  empty.coverage = { ...empty.coverage, status: "empty_board", emptyBoard: true, declaredTotal: 0, remaining: 0, missing: [] };
+  empty.missing = [];
+  const emptyResult = evaluateCareers(empty);
+  assert.equal(emptyResult.validatorVerdict, VERDICT.PASS);
+  assert.equal(emptyResult.deliveryClass, DELIVERY.USEFUL_NEGATIVE);
+
+  const unpaid = structuredClone(listed);
+  unpaid.charged = false;
+  assert.notEqual(evaluateCareers(unpaid).validatorVerdict, VERDICT.PASS);
+  const failed = structuredClone(listed);
+  failed.ok = false;
+  failed.charged = false;
+  failed.outcome = "unavailable";
+  failed.rows = [];
+  failed.coverage = { status: "source_failure", emptyBoard: false };
+  const failedResult = evaluateCareers(failed);
+  assert.equal(failedResult.validatorVerdict, VERDICT.INVALID);
+  assert.equal(failedResult.deliveryClass, DELIVERY.UPSTREAM_FAILED);
+  const foreign = evaluateCareers(listed, { method: "POST" });
+  assert.equal(foreign.deliveryClass, DELIVERY.UNSUPPORTED_TARGET);
+  assert.notEqual(foreign.validatorVerdict, VERDICT.PASS);
+});
+
+test("acquired cold files execute and keep partial, empty, and unavailable distinct", async () => {
+  const body = careersBoardColdRecipeBody();
+  const dir = await mkdtemp(path.join(tmpdir(), "careers-cold-"));
+  try {
+    await writeFile(path.join(dir, "boards.mjs"), body.files["boards.mjs"]);
+    await writeFile(path.join(dir, "boards.public.test.mjs"), body.files["boards.public.test.mjs"]);
+    const env = { ...process.env };
+    delete env.NODE_TEST_CONTEXT;
+    const result = spawnSync(process.execPath, ["--test", "--test-reporter", "tap", "boards.public.test.mjs"], {
+      cwd: dir,
+      encoding: "utf8",
+      env,
+    });
+    const output = `${result.stdout}\n${result.stderr}`;
+    assert.equal(result.status, 0, output);
+    assert.match(output, /# tests 8\n# suites 0\n# pass 8\n# fail 0/);
+    const returned = await import(pathToFileURL(path.join(dir, "boards.mjs")).href);
+    const fetchedAt = "2026-10-07T00:00:00.000Z";
+    const workday = {
+      boardUrl: "https://acxiomllc.wd5.myworkdayjobs.com/en-US/AcxiomUSA",
+      source: "https://acxiomllc.wd5.myworkdayjobs.com/wday/cxs/acxiomllc/AcxiomUSA/jobs",
+      fetchedAt,
+    };
+    const partial = returned.normalizeWorkday({
+      pages: [{
+        offset: 0,
+        httpStatus: 200,
+        body: { total: 2, jobPostings: [{ title: "Analyst", externalPath: "/job/A/Analyst_1", locationsText: "Remote" }] },
+      }],
+    }, workday);
+    assert.equal(partial.coverage.status, "partial");
+    assert.equal(partial.coverage.emptyBoard, false);
+    assert.equal(partial.rows.length, 1);
+    assert.equal(partial.rows[0].title, "Analyst");
+    assert.equal(partial.rows[0].location, "Remote");
+    assert.equal(partial.rows[0].url, "https://acxiomllc.wd5.myworkdayjobs.com/en-US/AcxiomUSA/job/A/Analyst_1");
+    assert.equal(partial.rows[0].source, workday.source);
+    assert.equal(partial.rows[0].fetchedAt, fetchedAt);
+    const ashby = {
+      boardUrl: "https://jobs.ashbyhq.com/liveramp-inc",
+      source: "https://api.ashbyhq.com/posting-api/job-board/liveramp-inc",
+      fetchedAt,
+    };
+    const empty = returned.normalizeAshby({ httpStatus: 200, body: { jobs: [] } }, ashby);
+    assert.equal(empty.coverage.emptyBoard, true);
+    assert.deepEqual(empty.rows, []);
+    const unavailable = returned.normalizeAshby({ httpStatus: 500, body: { message: "down" } }, ashby);
+    assert.equal(unavailable.coverage.status, "source_failure");
+    assert.equal(unavailable.coverage.emptyBoard, false);
+    assert.deepEqual(unavailable.rows, []);
+    const listed = returned.normalizeAshby({
+      httpStatus: 200,
+      body: { jobs: [{ title: "Listed", location: "New York", isListed: true, jobUrl: "https://jobs.ashbyhq.com/liveramp-inc/listed" }] },
+    }, ashby);
+    assert.equal(listed.coverage.emptyBoard, false);
+    assert.equal(listed.rows[0].title, "Listed");
+    assert.equal(listed.rows[0].location, "New York");
+    assert.equal(listed.rows[0].url, "https://jobs.ashbyhq.com/liveramp-inc/listed");
+    assert.equal(listed.rows[0].source, ashby.source);
+    assert.equal(listed.rows[0].fetchedAt, fetchedAt);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });
