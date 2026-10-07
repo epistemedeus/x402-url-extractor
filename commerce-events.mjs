@@ -2,6 +2,7 @@ import { constants as journalFs } from "node:fs";
 import { authenticateJournalCut } from "./commerce-journal-cut-auth.mjs";
 import { admitCommerceJournal, noteJournalRotation, noteJournalWrite, noteJournalFault, registerJournalProducer, registerJournalTaskBinding } from "./commerce-journal-admission.mjs";
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { attachCallerResultFeedbackHeader } from "./caller-result-feedback.mjs";
 import { appendFile, chmod, lstat, mkdir, open, readFile, rename, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 import { Credential } from "mppx";
@@ -159,6 +160,7 @@ const EXACT_ROUTES = new Map([
   ["/a2a/message:send", { route: "/a2a/message:send", kind: "discovery" }],
   ["/v0/commerce-demand.json", { route: "/v0/commerce-demand.json", kind: "excluded" }],
   ["/commerce/referral-recheck", { route: "/commerce/referral-recheck", kind: "excluded" }],
+  ["/commerce/caller-result-feedback", { route: "/commerce/caller-result-feedback", kind: "excluded" }],
   ["/schemas/platform-health-card-v0.json", { route: "/schemas/platform-health-card-v0.json", kind: "discovery" }],
   ["/schemas/wallet-policy-conformance-v1.json", { route: "/schemas/wallet-policy-conformance-v1.json", kind: "discovery" }],
   ["/schemas/stateful-wallet-policy-conformance-v1.json", { route: "/schemas/stateful-wallet-policy-conformance-v1.json", kind: "discovery" }],
@@ -628,7 +630,8 @@ function responseBodyIsTransferred(method, statusCode) {
     && status !== 304;
 }
 
-export function capturePaidEvidenceResponseDigest(res, method, resource = "") {
+export function capturePaidEvidenceResponseDigest(res, method, resource = "", options = {}) {
+  const onCompleteBody = typeof options?.onCompleteBody === "function" ? options.onCompleteBody : null;
   const hash = createHash("sha256");
   hash.update(PAID_EVIDENCE_RESPONSE_DOMAIN, "utf8");
   const observed = [];
@@ -679,6 +682,16 @@ export function capturePaidEvidenceResponseDigest(res, method, resource = "") {
       res.end = function paidEvidenceEnd(chunk, encoding) {
         endObserved = true;
         observe(chunk, encoding);
+        if (valid && onCompleteBody && !res.headersSent) {
+          try {
+            onCompleteBody({
+              digest: hash.copy().digest("hex"),
+              byteLength: actualLength,
+            });
+          } catch {
+            // A feedback advertisement cannot change or delay the paid body.
+          }
+        }
         try {
           return Reflect.apply(originalEnd, this, arguments);
         } catch (error) {
@@ -3625,7 +3638,22 @@ export function createCommerceTelemetry({
       && route.route === "/chain/transaction-receipt" && req.method === "GET"
       && !paymentPresent && headerValue(headers, "x-samedaydesk-observe-free-result") === "1";
     const finishPaidEvidenceResponseDigest = paidEvidenceRequest || freeObservationRequested
-      ? capturePaidEvidenceResponseDigest(res, paidEvidenceRequest?.method || req.method, route.route)
+      ? capturePaidEvidenceResponseDigest(res, paidEvidenceRequest?.method || req.method, route.route, {
+        onCompleteBody: paidEvidenceRequest
+          ? (observed) => {
+            attachCallerResultFeedbackHeader(res, {
+              key: process.env.CALLER_RESULT_FEEDBACK_KEY || "",
+              eventId: causalEvents.get(res)?.id,
+              method: paidEvidenceRequest.method,
+              route: route.route,
+              requestDigest: paidEvidenceRequest.requestDigest,
+              responseDigest: observed.digest,
+              statusCode: Number(res.statusCode || 0),
+              replayed: String(res.getHeader?.("x-payment-replay") || "").toLowerCase() === "hit",
+            });
+          }
+          : null,
+      })
       : null;
 
     res.once("finish", () => {

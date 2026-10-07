@@ -134,6 +134,12 @@ import {
   receiptReferralRecheckRequestSchema,
 } from "./receipt-referral-recheck.mjs";
 import {
+  CALLER_RESULT_FEEDBACK_HEADER,
+  CALLER_RESULT_FEEDBACK_PATH,
+  createCallerResultFeedbackService,
+  callerResultFeedbackPublicContract,
+} from "./caller-result-feedback.mjs";
+import {
   CONTRACT_QUALIFIED_SEARCH_EXAMPLE,
   ContractQualifiedSearchError,
   contractQualifiedSearch,
@@ -919,6 +925,10 @@ app.get("/go/manychat", async (_req, res) => {
 // domain crawlers) self-discover our paid resources. Free route, before the paywall.
 const USDC_ASSET = usdcTermsForNetwork(NETWORK).asset;
 const receiptReferralClaimStore = createReceiptReferralClaimStore();
+const callerResultFeedback = createCallerResultFeedbackService({
+  dataDir: process.env.COMMERCE_DATA_DIR || `${process.cwd()}/data`,
+  key: process.env.CALLER_RESULT_FEEDBACK_KEY || "",
+});
 const serviceDeploymentPublication = loadServiceDeploymentPublication({
   canonicalOrigin: PUBLIC_URL,
   network: NETWORK,
@@ -2083,6 +2093,25 @@ app.get(["/openapi.json", "/openapi.yaml", "/swagger.json"], (_req, res) => {
 
 app.get(["/mpp-openapi.json", "/openapi.mpp.json"], (_req, res) => {
   return res.json(buildOpenApiDocument({ profile: "mpp" }));
+});
+
+// Optional, free, result-scoped caller statement. Registered before both payment
+// rails. The paid JSON body is unchanged. The capability arrives on the paid
+// response and is not accepted from a URL.
+app.get(CALLER_RESULT_FEEDBACK_PATH, (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  return res.json(callerResultFeedbackPublicContract());
+});
+app.post(CALLER_RESULT_FEEDBACK_PATH, async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  const header = req.get(CALLER_RESULT_FEEDBACK_HEADER) || "";
+  const result = await callerResultFeedback.submit({
+    token: header,
+    body: req.body,
+    rawBody: req.rawBody,
+    query: req.query,
+  });
+  return res.status(result.statusCode).json(result.body);
 });
 
 // Free receipt-bound referral reward. It is registered before idempotency and

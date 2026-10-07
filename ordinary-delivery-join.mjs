@@ -17,6 +17,11 @@ import {
   isTaskRefRecord,
 } from "./commerce-outcome-binding.mjs";
 import { declareCallerUsefulness } from "./http-delivery-evidence/caller-declaration.mjs";
+import {
+  CALLER_RESULT_FEEDBACK_FILENAME,
+  CALLER_RESULT_FEEDBACK_ROTATED_FILENAME,
+  createCallerResultFeedbackService,
+} from "./caller-result-feedback.mjs";
 import { digestMcpCallId, digestMcpDeliveryBinding } from "./http-delivery-evidence/digest.mjs";
 import {
   PAID_EVIDENCE_FILENAME,
@@ -38,6 +43,7 @@ import {
 
 export const PRODUCER_BASE_SHA = "cbfed005c5200f76feb419ebb3a4ce8ffee49644";
 export const REPORT_SCHEMA = "samedaydesk.ordinary-delivery-join.v1";
+export const CALLER_FEEDBACK_AGGREGATE_SCHEMA = "samedaydesk.caller-result-feedback-aggregate.v1";
 export const SETTLEMENT_LEDGER_FILENAME = "commerce-settlements.ndjson";
 
 export const COMMERCE_EVENTS_FILENAME = "commerce-events.ndjson";
@@ -53,6 +59,8 @@ export const FILE_CLASSES = Object.freeze({
   outcomeBindingRotated: FORWARD_BINDING_ROTATED_FILENAME,
   taskRef: TASK_REF_FILENAME,
   taskRefRotated: TASK_REF_ROTATED_FILENAME,
+  callerResultFeedback: CALLER_RESULT_FEEDBACK_FILENAME,
+  callerResultFeedbackRotated: CALLER_RESULT_FEEDBACK_ROTATED_FILENAME,
 });
 
 const TYPED_DELIVERY_RESULTS = new Set([
@@ -166,6 +174,24 @@ function mcpMatchesTyped(record, event, settlement) {
   return mcpMismatchReason(record, event, settlement) === null;
 }
 
+function sameCallerDeclaration(left, right) {
+  return left?.source === right?.source
+    && left?.disposition === right?.disposition
+    && left?.paidEvidenceId === right?.paidEvidenceId
+    && left?.requestDigest === right?.requestDigest
+    && String(left?.settlementReference || "").toLowerCase() === String(right?.settlementReference || "").toLowerCase();
+}
+
+function mergeCallerDeclarations(feedbackDeclarations, callerDeclarations) {
+  const merged = [];
+  for (const item of [...(feedbackDeclarations || []), ...(callerDeclarations || [])]) {
+    if (!item || typeof item !== "object") continue;
+    if (merged.some((existing) => sameCallerDeclaration(existing, item))) continue;
+    merged.push(item);
+  }
+  return merged;
+}
+
 function assessCaller(validation, paid, declaration) {
   if (!declaration) {
     return { callerAcceptance: "absent", callerDisposition: null, reason: "declaration_absent" };
@@ -203,6 +229,8 @@ function blankRow(fields) {
     callerAcceptance: fields.callerAcceptance,
     callerDisposition: fields.callerDisposition ?? null,
     callerReason: fields.callerReason ?? null,
+    callerSuppliedDisposition: fields.callerSuppliedDisposition ?? null,
+    callerSuppliedReasonCategory: fields.callerSuppliedReasonCategory ?? null,
     usefulness: "unknown",
     individualJoin: fields.disposition === "exact_join",
     route: fields.route ?? null,
@@ -284,6 +312,7 @@ export function joinOrdinaryDeliveries({
   forwardRecords = [],
   taskRefs = [],
   callerDeclarations = [],
+  feedbackDeclarations = [],
   windowStart,
   windowEnd,
   coverage = "unknown_for_full_window",
@@ -312,6 +341,33 @@ export function joinOrdinaryDeliveries({
   }
   const seenReferences = new Set();
   const rows = [];
+  const declarations = mergeCallerDeclarations(feedbackDeclarations, callerDeclarations);
+  const callerFor = (validation, paid, eventId) => {
+    const matches = declarations.filter((item) => item?.paidEvidenceId === eventId);
+    if (matches.length > 1) {
+      return {
+        callerAcceptance: "foreign",
+        callerDisposition: null,
+        reason: "multiple_declarations",
+        suppliedDisposition: null,
+        suppliedReasonCategory: null,
+      };
+    }
+    if (matches.length === 0) return null;
+    const assessed = assessCaller(validation, paid, matches[0]);
+    const identityHeld = assessed.callerAcceptance === "bound"
+      || assessed.reason === "historical_intent_not_retained"
+      || assessed.reason === "validation_absent"
+      || assessed.reason === "validation_usefulness_must_stay_unknown";
+    const supplied = identityHeld && (matches[0].disposition === "useful" || matches[0].disposition === "not_useful")
+      ? matches[0].disposition
+      : null;
+    return {
+      ...assessed,
+      suppliedDisposition: supplied,
+      suppliedReasonCategory: supplied ? (matches[0].reasonCategory ?? null) : null,
+    };
+  };
   let withheldOutsideWindow = 0;
   const consumedIds = new Set();
 
@@ -499,22 +555,16 @@ export function joinOrdinaryDeliveries({
       requestDigest: callerSubject?.requestDigest || null,
       settlementReference: settlement.settlementReference,
     } : null);
-    const caller = assessCaller(
-      callerSubject,
-      callerPaid,
-      callerDeclarations.find((item) => item?.paidEvidenceId === settlement.sourceEventId) || null,
-    );
-    if (callerDeclarations.filter((item) => item?.paidEvidenceId === settlement.sourceEventId).length > 1) {
-      caller.callerAcceptance = "foreign";
-      caller.callerDisposition = null;
-      caller.reason = "multiple_declarations";
-    }
+    const caller = callerFor(callerSubject, callerPaid, settlement.sourceEventId)
+      || assessCaller(callerSubject, callerPaid, null);
     rows.push(blankRow({
       disposition: judged.disposition,
       reasons: [...new Set(judged.reasons)],
       callerAcceptance: caller.callerAcceptance,
       callerDisposition: caller.callerDisposition,
       callerReason: caller.reason,
+      callerSuppliedDisposition: caller.suppliedDisposition ?? null,
+      callerSuppliedReasonCategory: caller.suppliedReasonCategory ?? null,
       route: settlement.route,
       method: paid?.method || null,
       amountAtomic: settlement.amountAtomic,
@@ -538,10 +588,19 @@ export function joinOrdinaryDeliveries({
     if (consumedIds.has(paid.id)) continue;
     if (!inWindow(paid.responseFinishedAt, startMs, endMs)) continue;
     consumedIds.add(paid.id);
+    const named = validations.filter((record) => record.paidEvidenceId === paid.id);
+    const callerSubject = named.find((record) => (
+      record.requestDigest === paid.requestDigest && record.responseDigest === paid.responseDigest
+    )) || null;
+    const caller = callerFor(callerSubject, paid, paid.id);
     rows.push(blankRow({
       disposition: "replayed_or_unknown_settlement",
       reasons: ["settlement_not_in_canonical_ledger"],
-      callerAcceptance: "unknown",
+      callerAcceptance: caller?.callerAcceptance || "unknown",
+      callerDisposition: caller?.callerDisposition || null,
+      callerReason: caller?.reason || null,
+      callerSuppliedDisposition: caller?.suppliedDisposition || null,
+      callerSuppliedReasonCategory: caller?.suppliedReasonCategory || null,
       route: paid.route,
       method: paid.method,
       protocol: paid.paymentProtocol,
@@ -615,6 +674,41 @@ export function joinOrdinaryDeliveries({
     rejectedLines: rejectedLineCounts,
     counts,
     rows,
+    callerResultFeedback: callerFeedbackAggregate(rows),
+  };
+}
+
+function callerFeedbackAggregate(rows) {
+  let suppliedUseful = 0;
+  let suppliedNotUseful = 0;
+  let absent = 0;
+  let unboundOrForeign = 0;
+  let sealBoundUseful = 0;
+  let sealBoundNotUseful = 0;
+  for (const row of rows) {
+    if (row.callerAcceptance === "bound" && row.callerDisposition === "useful") sealBoundUseful += 1;
+    else if (row.callerAcceptance === "bound" && row.callerDisposition === "not_useful") sealBoundNotUseful += 1;
+    if (row.callerSuppliedDisposition === "useful") suppliedUseful += 1;
+    else if (row.callerSuppliedDisposition === "not_useful") suppliedNotUseful += 1;
+    else if (row.callerAcceptance === "absent") absent += 1;
+    else unboundOrForeign += 1;
+  }
+  return {
+    schema: CALLER_FEEDBACK_AGGREGATE_SCHEMA,
+    population: "rows_in_this_window",
+    globalFunnel: false,
+    customerCount: null,
+    measuredUsefulness: "unknown",
+    technicalValidationIsSeparate: true,
+    settlementIsSeparate: true,
+    sealBoundIsSeparate: true,
+    suppliedUseful,
+    suppliedNotUseful,
+    absent,
+    unboundOrForeign,
+    sealBoundUseful,
+    sealBoundNotUseful,
+    boundary: "counts cover only rows in this report window; a missing statement is not inferred; usefulness stays unknown",
   };
 }
 
@@ -622,7 +716,7 @@ export async function readOrdinaryDeliveryStores(dataDir) {
   if (typeof dataDir !== "string" || dataDir.length === 0) throw new Error("data directory is required");
   const info = await stat(dataDir);
   if (!info.isDirectory()) throw new Error("data directory is required");
-  const [settlementText, paidText, commerceText, commerceRotated, validationText, mcpText, forwardText, forwardRotated, taskText, taskRotated] = await Promise.all([
+  const [settlementText, paidText, commerceText, commerceRotated, validationText, mcpText, forwardText, forwardRotated, taskText, taskRotated, feedbackRead] = await Promise.all([
     readText(dataDir, FILE_CLASSES.settlementLedger),
     readText(dataDir, FILE_CLASSES.paidSuccessEvidence),
     readText(dataDir, FILE_CLASSES.commerceEvents),
@@ -633,6 +727,7 @@ export async function readOrdinaryDeliveryStores(dataDir) {
     readText(dataDir, FILE_CLASSES.outcomeBindingRotated),
     readText(dataDir, FILE_CLASSES.taskRef),
     readText(dataDir, FILE_CLASSES.taskRefRotated),
+    createCallerResultFeedbackService({ dataDir }).readDeclarations(),
   ]);
   const rejectedLineCounts = [];
   const note = (file, count) => {
@@ -705,6 +800,7 @@ export async function readOrdinaryDeliveryStores(dataDir) {
     else badTask += 1;
   }
   note(FILE_CLASSES.taskRef, badTask);
+  note(FILE_CLASSES.callerResultFeedback, feedbackRead.rejected);
   return {
     settlements,
     paidEvidence,
@@ -715,6 +811,7 @@ export async function readOrdinaryDeliveryStores(dataDir) {
     rejectedMcp,
     forwardRecords,
     taskRefs,
+    feedbackDeclarations: feedbackRead.declarations,
     rejectedLineCounts,
   };
 }
@@ -737,6 +834,42 @@ export function reportViolations(report) {
     bad("customer_plane_filled");
   }
   if (report.boundaries?.settlementNeverProvesBuyerValidDelivery !== true) bad("settlement_proves_delivery");
+  const feedback = report.callerResultFeedback;
+  if (
+    !feedback
+    || feedback.schema !== CALLER_FEEDBACK_AGGREGATE_SCHEMA
+    || feedback.population !== "rows_in_this_window"
+    || feedback.globalFunnel !== false
+    || feedback.customerCount !== null
+    || feedback.measuredUsefulness !== "unknown"
+    || feedback.technicalValidationIsSeparate !== true
+    || feedback.settlementIsSeparate !== true
+    || feedback.sealBoundIsSeparate !== true
+  ) {
+    bad("caller_feedback_overclaimed");
+  }
+  let suppliedUseful = 0;
+  let suppliedNotUseful = 0;
+  let absent = 0;
+  let unboundOrForeign = 0;
+  for (const row of report.rows || []) {
+    if (row.callerSuppliedDisposition === "useful") suppliedUseful += 1;
+    else if (row.callerSuppliedDisposition === "not_useful") suppliedNotUseful += 1;
+    else if (row.callerAcceptance === "absent") absent += 1;
+    else unboundOrForeign += 1;
+  }
+  const covered = suppliedUseful + suppliedNotUseful + absent + unboundOrForeign;
+  if (
+    !feedback
+    || feedback.suppliedUseful !== suppliedUseful
+    || feedback.suppliedNotUseful !== suppliedNotUseful
+    || feedback.absent !== absent
+    || feedback.unboundOrForeign !== unboundOrForeign
+    || covered !== (report.rows || []).length
+    || feedback.suppliedUseful + feedback.suppliedNotUseful < (feedback.sealBoundUseful || 0) + (feedback.sealBoundNotUseful || 0)
+  ) {
+    bad("caller_feedback_coverage");
+  }
   for (const row of report.rows || []) {
     if (row.usefulness !== "unknown") bad("usefulness_filled");
     if (row.disposition === "exact_join" && row.httpAttached + row.mcpAttached < 1) bad("exact_join_without_capture");
