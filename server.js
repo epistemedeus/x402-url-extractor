@@ -3874,6 +3874,17 @@ app.use(async function prepareCareersBoardObservation(req, res, next) {
       res.set("Cache-Control", "no-store");
       return res.status(503).json(prepared.body);
     }
+    // Payment must not settle for a body the HTTP/MCP transport cannot return.
+    // Use the exact serialized paid response, not a sum of upstream page sizes.
+    const wireBytes = Buffer.byteLength(JSON.stringify({ ...prepared.body, charged: true }), "utf8");
+    if (wireBytes > CAREERS_BOARD_MAX_BYTES) {
+      res.set("Cache-Control", "no-store");
+      return res.status(503).json({
+        ok: false, product: "samedaydesk-careers-board", charged: false,
+        emptyBoard: false, outcome: "unavailable",
+        error: "careers_board_result_too_large", rows: [],
+      });
+    }
     res.locals.careersBoard = prepared.body;
     return next();
   } catch {

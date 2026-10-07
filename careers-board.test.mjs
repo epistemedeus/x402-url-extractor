@@ -33,14 +33,14 @@ import {
   evaluateResponseBytes,
   isSupportedTarget,
 } from "./http-delivery-evidence/index.mjs";
-import { assessCompletenessClaim, gateRequest } from "./recipes/careers-board/boards.mjs";
+import { assessCompletenessClaim, fetchAshby, gateRequest } from "./recipes/careers-board/boards.mjs";
 import { runFixtures } from "./recipes/careers-board/check-boards.mjs";
 
 const ACXIOM_JOB = { title: "Analyst", externalPath: "/job/A/Analyst_1", locationsText: "Remote" };
 
 function jsonResponse(status, body) {
   const text = typeof body === "string" ? body : JSON.stringify(body);
-  return { status, text: async () => text };
+  return new Response(text, { status });
 }
 
 function acxiomFetch(pages) {
@@ -404,4 +404,61 @@ test("acquired cold files execute and keep partial, empty, and unavailable disti
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test("raw UTF-8 byte limits apply before parsing, not to string length", async () => {
+  const body = JSON.stringify({ jobs: [{ title: "界".repeat(20), location: "Remote",
+    isListed: true, jobUrl: "https://jobs.ashbyhq.com/liveramp-inc/utf8" }] });
+  const byteLength = new TextEncoder().encode(body).byteLength;
+  assert.ok(body.length < byteLength);
+  const ctx = { boardUrl: "https://jobs.ashbyhq.com/liveramp-inc",
+    source: "https://api.ashbyhq.com/posting-api/job-board/liveramp-inc",
+    fetchedAt: "2026-10-07T00:00:00.000Z" };
+  const rejected = await fetchAshby(ctx, { maxBytes: body.length + 1,
+    fetchImpl: async () => new Response(body) });
+  assert.equal(rejected.coverage.requests[0].error, "response_too_large");
+  assert.equal(rejected.coverage.emptyBoard, false);
+  const accepted = await fetchAshby(ctx, { maxBytes: byteLength,
+    fetchImpl: async () => new Response(body) });
+  assert.equal(accepted.rows[0].title, "界".repeat(20));
+  assert.equal(accepted.coverage.requests[0].bytes, byteLength);
+});
+
+test("streaming limit cancels before reading the remaining source body", async () => {
+  let pulled = 0;
+  let cancelled = false;
+  const stream = new ReadableStream({
+    pull(controller) {
+      pulled += 1;
+      controller.enqueue(new Uint8Array(11));
+    },
+    cancel() { cancelled = true; },
+  }, { highWaterMark: 0 });
+  const response = new Response(stream);
+  response.text = () => { throw new Error("unbounded body reader called"); };
+  const result = await fetchAshby({
+    source: "https://api.ashbyhq.com/posting-api/job-board/liveramp-inc",
+    boardUrl: "https://jobs.ashbyhq.com/liveramp-inc",
+    fetchedAt: "2026-10-07T00:00:00.000Z",
+  }, { maxBytes: 16, fetchImpl: async () => response });
+  assert.equal(result.coverage.requests[0].error, "response_too_large");
+  assert.equal(result.coverage.requests[0].bytes, 22);
+  assert.equal(pulled, 2);
+  assert.equal(cancelled, true);
+});
+
+test("timeout also cancels a body that stalls after successful headers", async () => {
+  let cancelled = false;
+  const response = new Response(new ReadableStream({
+    pull() { return new Promise(() => {}); },
+    cancel() { cancelled = true; },
+  }, { highWaterMark: 0 }));
+  const result = await fetchAshby({
+    source: "https://api.ashbyhq.com/posting-api/job-board/liveramp-inc",
+    boardUrl: "https://jobs.ashbyhq.com/liveramp-inc",
+    fetchedAt: "2026-10-07T00:00:00.000Z",
+  }, { timeoutMs: 20, fetchImpl: async () => response });
+  assert.equal(result.coverage.requests[0].error, "timeout");
+  assert.equal(result.coverage.emptyBoard, false);
+  assert.equal(cancelled, true);
 });

@@ -321,6 +321,24 @@ test("named-board read charges only a prepared observation on both rails", { tim
   assert.equal(huge.body.emptyBoard, false);
   assert.equal(facilitator.calls.settle, 0);
 
+  await setMode(scenarioFile, "acxiom-aggregate");
+  const oversized = await payX402("?board=acxiom", "careers_aggregate_x402_1");
+  assert.equal(oversized.response.status, 503);
+  assert.equal(oversized.body.error, "careers_board_result_too_large");
+  assert.equal(oversized.body.charged, false);
+  assert.equal(oversized.response.headers.get("payment-response"), null);
+  const aggregateChallenge = await fetch(`${base}${CAREERS_BOARD_PATH}?board=acxiom`);
+  const aggregateAuthorization = await createMppCredential(aggregateChallenge);
+  const aggregateMpp = await fetch(`${base}${CAREERS_BOARD_PATH}?board=acxiom`, {
+    headers: { authorization: aggregateAuthorization },
+  });
+  assert.equal(aggregateMpp.status, 503);
+  assert.equal((await aggregateMpp.json()).charged, false);
+  assert.equal(aggregateMpp.headers.get("payment-receipt"), null);
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+  await sleep(1000);
+
   await setMode(scenarioFile, "acxiom-partial");
   const partial = await payX402("?board=acxiom", "careers_partial_123456789");
   assert.equal(partial.response.status, 200, JSON.stringify(partial.body));
@@ -602,6 +620,18 @@ test("explicit feedback binds one paid careers result and the MCP rail settles o
   assert.equal(mcpInvalid.result?.structuredContent?.charged, false);
   assert.equal(facilitator.calls.verify, 0);
   assert.equal(facilitator.calls.settle, 0);
+
+  await setMode(scenarioFile, "acxiom-aggregate");
+  const aggregateMcpChallenge = await mcpCall(base, "careers_board", { board: "acxiom" }, null);
+  const aggregateMcp = await mcpCall(base, "careers_board", { board: "acxiom" },
+    paymentObject(aggregateMcpChallenge.result.structuredContent, "careers_aggregate_mcp_01"));
+  assert.equal(aggregateMcp.result?.isError, true);
+  assert.equal(aggregateMcp.result?.structuredContent?.charged, false);
+  assert.equal(aggregateMcp.result?.structuredContent?.error, "careers_board_result_too_large");
+  assert.equal(aggregateMcp.result?._meta?.["samedaydesk/caller-result-feedback"], undefined);
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+  await sleep(1000);
 
   await setMode(scenarioFile, "acxiom-partial");
   const partialPayment = testPayment(acxiomChallenge, "careers_feedback_partial1");

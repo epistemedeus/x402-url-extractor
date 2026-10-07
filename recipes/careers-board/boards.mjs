@@ -380,6 +380,8 @@ async function requestJson(url, { method, payload, timeoutMs, fetchImpl, maxByte
   const fetchFn = typeof fetchImpl === "function" ? fetchImpl : fetch;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let reader;
+  let onAbort;
   try {
     const headers = { accept: "application/json", "user-agent": USER_AGENT };
     if (payload !== undefined) headers["content-type"] = "application/json";
@@ -390,18 +392,41 @@ async function requestJson(url, { method, payload, timeoutMs, fetchImpl, maxByte
       body: payload === undefined ? undefined : JSON.stringify(payload),
       signal: controller.signal,
     });
-    const text = await response.text();
-    if (text.length > cap) {
-      return {
-        url,
-        method,
-        httpStatus: response.status,
-        body: null,
-        elapsedMs: Date.now() - started,
-        bytes: text.length,
-        error: "response_too_large",
-      };
+    // Bound raw bytes before decoding or parsing, including a stalled body.
+    // Never fall back to response.text(), which buffers the entire response.
+    reader = response.body?.getReader();
+    const chunks = [];
+    let bytes = 0;
+    if (reader) {
+      const aborted = new Promise((resolve, reject) => {
+        onAbort = () => {
+          void reader.cancel("request aborted").catch(() => {});
+          reject(new DOMException("request timed out", "AbortError"));
+        };
+        controller.signal.addEventListener("abort", onAbort, { once: true });
+      });
+      if (controller.signal.aborted) onAbort();
+      while (true) {
+        const { done, value } = await Promise.race([reader.read(), aborted]);
+        if (done) break;
+        bytes += value.byteLength;
+        if (bytes > cap) {
+          controller.abort();
+          return {
+            url, method, httpStatus: response.status, body: null,
+            elapsedMs: Date.now() - started, bytes, error: "response_too_large",
+          };
+        }
+        chunks.push(value);
+      }
     }
+    const raw = new Uint8Array(bytes);
+    let offset = 0;
+    for (const chunk of chunks) {
+      raw.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    const text = new TextDecoder().decode(raw);
     let body = null;
     try {
       body = JSON.parse(text);
@@ -414,7 +439,7 @@ async function requestJson(url, { method, payload, timeoutMs, fetchImpl, maxByte
       httpStatus: response.status,
       body,
       elapsedMs: Date.now() - started,
-      bytes: text.length,
+      bytes,
       error: null,
     };
   } catch (error) {
@@ -429,6 +454,8 @@ async function requestJson(url, { method, payload, timeoutMs, fetchImpl, maxByte
     };
   } finally {
     clearTimeout(timer);
+    if (onAbort) controller.signal.removeEventListener("abort", onAbort);
+    if (reader) reader.releaseLock();
   }
 }
 

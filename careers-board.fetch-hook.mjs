@@ -22,7 +22,7 @@ function log(url) {
 
 function response(status, body) {
   const text = typeof body === "string" ? body : JSON.stringify(body);
-  return { status, text: async () => text };
+  return new Response(text, { status });
 }
 
 function acxiom(current, init) {
@@ -30,6 +30,14 @@ function acxiom(current, init) {
   if (current.mode === "acxiom-empty") return response(200, { total: 0, jobPostings: [] });
   const payload = JSON.parse(init?.body || "{}");
   const offset = Number(payload.offset) || 0;
+  if (current.mode === "acxiom-aggregate") {
+    const pageOffset = offset >= 80 ? 0 : offset;
+    return response(200, { total: 80, jobPostings: Array.from({ length: 20 }, (_, index) => ({
+      title: "R".repeat(16_000),
+      externalPath: `/job/A/Role_${pageOffset + index}`,
+      locationsText: "Remote",
+    })) });
+  }
   const good = {
     title: current.title || "Analyst",
     externalPath: current.path || "/job/A/Analyst_1",
