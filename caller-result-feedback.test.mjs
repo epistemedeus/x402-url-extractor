@@ -311,7 +311,11 @@ test("statements bind one retained capture and reject every other authority", as
     const missing = await submit(service, foreign, { disposition: "useful" });
     assert.equal(missing.statusCode, 409);
     assert.equal(missing.body.code, "missing_capture");
-    const tampered = await submit(service, `${usefulToken.slice(0, -1)}${usefulToken.endsWith("A") ? "B" : "A"}`, { disposition: "useful" });
+    const tamperedParts = usefulToken.split(".");
+    const tamperedMac = Buffer.from(tamperedParts.at(-1), "base64url");
+    tamperedMac[0] ^= 1;
+    tamperedParts[tamperedParts.length - 1] = tamperedMac.toString("base64url");
+    const tampered = await submit(service, tamperedParts.join("."), { disposition: "useful" });
     assert.equal(tampered.statusCode, 401);
     assert.equal(tampered.body.code, "tampered_capability");
     assert.equal(tampered.body.accepted, false);
