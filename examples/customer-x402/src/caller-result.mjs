@@ -112,23 +112,35 @@ function readPresentedToken(response) {
 // A remote body can echo a header capability in values or property names.
 // Remove its exact parts too: general redaction may already have replaced the
 // long payload while leaving the MAC fragment. Keep the purchase object identity.
-function scrubPresentedBearer(value, token, seen = new WeakSet()) {
+function scrubPresentedBearer(value, token) {
   const parts = [token, ...token.split(".")];
   const cleanText = (text) => parts.reduce(
     (clean, part) => clean.split(part).join("[caller-capability-redacted]"),
     text,
   );
+  const copies = new WeakMap();
   const visit = (item) => {
     if (typeof item === "string") return cleanText(item);
-    if (!item || typeof item !== "object" || seen.has(item)) return item;
-    seen.add(item);
+    if (!item || typeof item !== "object") return item;
+    if (copies.has(item)) return copies.get(item);
+    // Some classification/authorization subtrees are frozen. Copy them instead
+    // of mutating them, while preserving the outer purchase object's identity.
+    const copy = Array.isArray(item) ? [] : {};
+    copies.set(item, copy);
     for (const [key, child] of Object.entries(item)) {
-      if (parts.some((part) => key.includes(part))) delete item[key];
-      else item[key] = visit(child);
+      if (parts.some((part) => key.includes(part))) continue;
+      Object.defineProperty(copy, key, {
+        value: visit(child), enumerable: true, writable: true, configurable: true,
+      });
     }
-    return item;
+    return copy;
   };
-  return visit(value);
+  const clean = visit(value);
+  for (const key of Object.keys(value)) {
+    if (parts.some((part) => key.includes(part))) delete value[key];
+  }
+  Object.assign(value, clean);
+  return value;
 }
 
 /**
