@@ -400,8 +400,8 @@ async function requestJson(url, { method, payload, timeoutMs, fetchImpl, maxByte
     if (reader) {
       const aborted = new Promise((resolve, reject) => {
         onAbort = () => {
-          reject(new DOMException("request timed out", "AbortError"));
           void reader.cancel("request aborted").catch(() => {});
+          reject(new DOMException("request timed out", "AbortError"));
         };
         controller.signal.addEventListener("abort", onAbort, { once: true });
       });
@@ -473,6 +473,7 @@ function requestLog(entry, extra = {}) {
 
 export async function fetchAcxiom(ctx, options = {}) {
   const timeoutMs = options.timeoutMs ?? 15000;
+  const deadline = Date.now() + timeoutMs;
   const limit = 20;
   const maxPages = options.maxPages ?? 4;
   const endpoint = BOARDS.acxiom.endpoint;
@@ -480,10 +481,14 @@ export async function fetchAcxiom(ctx, options = {}) {
   const requests = [];
 
   const load = async (offset) => {
-    const entry = await requestJson(endpoint, {
+    const remainingMs = deadline - Date.now();
+    const entry = remainingMs <= 0 ? {
+      url: endpoint, method: "POST", httpStatus: 0, body: null,
+      elapsedMs: 0, bytes: 0, error: "timeout",
+    } : await requestJson(endpoint, {
       method: "POST",
       payload: { appliedFacets: {}, limit, offset, searchText: "" },
-      timeoutMs,
+      timeoutMs: remainingMs,
       fetchImpl: options.fetchImpl,
       maxBytes: options.maxBytes,
     });

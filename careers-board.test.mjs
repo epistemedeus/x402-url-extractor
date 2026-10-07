@@ -33,7 +33,7 @@ import {
   evaluateResponseBytes,
   isSupportedTarget,
 } from "./http-delivery-evidence/index.mjs";
-import { assessCompletenessClaim, fetchAshby, gateRequest } from "./recipes/careers-board/boards.mjs";
+import { assessCompletenessClaim, fetchAcxiom, fetchAshby, gateRequest } from "./recipes/careers-board/boards.mjs";
 import { runFixtures } from "./recipes/careers-board/check-boards.mjs";
 
 const ACXIOM_JOB = { title: "Analyst", externalPath: "/job/A/Analyst_1", locationsText: "Remote" };
@@ -461,4 +461,33 @@ test("timeout also cancels a body that stalls after successful headers", async (
   assert.equal(result.coverage.requests[0].error, "timeout");
   assert.equal(result.coverage.emptyBoard, false);
   assert.equal(cancelled, true);
+});
+
+test("Workday pagination and its end probe share one total deadline", async () => {
+  const originalNow = Date.now;
+  let clock = 0;
+  let calls = 0;
+  Date.now = () => clock;
+  try {
+    const result = await fetchAcxiom({
+      boardUrl: "https://acxiomllc.wd5.myworkdayjobs.com/en-US/AcxiomUSA",
+      source: "https://acxiomllc.wd5.myworkdayjobs.com/wday/cxs/acxiomllc/AcxiomUSA/jobs",
+      fetchedAt: "2026-10-07T00:00:00.000Z",
+    }, {
+      timeoutMs: 100,
+      fetchImpl: async () => {
+        calls += 1;
+        clock += 101;
+        return jsonResponse(200, { total: 2, jobPostings: [ACXIOM_JOB] });
+      },
+    });
+    assert.equal(calls, 1, "no second network request after the overall budget expires");
+    assert.equal(result.coverage.requests.length, 2);
+    assert.equal(result.coverage.requests[1].error, "timeout");
+    assert.equal(result.rows.length, 1);
+    assert.equal(result.coverage.status, "partial");
+    assert.equal(result.coverage.emptyBoard, false);
+  } finally {
+    Date.now = originalNow;
+  }
 });

@@ -55,7 +55,7 @@ export function careersBoardColdRecipeBody() {
     charged: false,
     gistId: CAREERS_BOARD_GIST_ID,
     revision: CAREERS_BOARD_GIST_REVISION,
-    adapterDelta: "requestJson accepts optional fetchImpl and a streaming raw-byte maxBytes (default 1000000), with body cancellation on limit or timeout. Normalizers are unchanged.",
+    adapterDelta: "requestJson accepts optional fetchImpl and a streaming raw-byte maxBytes (default 1000000), with body cancellation on limit or timeout and one total Workday pagination deadline. Normalizers are unchanged.",
     files: coldFiles,
     run: "node --test boards.public.test.mjs && node boards.mjs --stdout",
     paidRoute: CAREERS_BOARD_PATH,
