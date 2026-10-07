@@ -236,6 +236,40 @@ retry system. Receipts retain redacted output, `bodyDigest`, and
 validation/payment-header observations, not raw payment headers or signatures;
 redaction can remove opaque output values.
 
+## Optional caller result statement
+
+A paid success may include the response header
+`x-samedaydesk-caller-result-feedback`. The header is an optional free
+capability for that response. It is not validation, settlement, payer identity,
+or measured usefulness. `runAuthorizedPurchase` keeps the bearer in process
+memory and returns only the public availability view in `callerResultFeedback`.
+The bearer is absent from JSON, stdout, attempt receipts, and statement errors.
+
+Inspect the result yourself, then call `reportCallerResult` with `useful` or
+`not_useful` and an optional reason (`matched_task`, `saved_a_step`,
+`wrong_output`, `missing_field`, `not_actionable`). Schema success never makes
+that call. The post goes to the authorized merchant origin plus the exact path
+`/commerce/caller-result-feedback`, with the bearer in the same header. `Link`
+text, redirects, payment headers, wallet access, and automatic retry are not
+used. A failed statement does not erase the delivery or authorize repurchase.
+
+An unsatisfied caller can use the already-existing free visitor entry at
+`https://samedaydesk.com/api/correspondence/v1/visitor-entry`. That entry is
+separate: contribution and identity proof are not required, and funding is
+voluntary. This library does not register, post a task, or pay because a
+statement was `not_useful`. Feedback authority is not project, posting, or
+payment authority.
+
+Cold fixture recipe, with no account file and no production payment:
+
+```bash
+node recipes/caller-result-feedback.mjs
+```
+
+The recipe purchases through the local `@x402/fetch` fixture, refuses a seeded
+`useful_delivered` disposition, then sends one explicit `useful` statement.
+It prints no bearer.
+
 Do not transplant HTTP payment credentials into `mcp://` resources. Official
 `@x402/mcp` exists but is out of scope here. Native Claude/Goose marketplace
 install is already accepted; this example does not make those hosts

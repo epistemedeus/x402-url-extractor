@@ -50,3 +50,20 @@ For reusable advanced payment details (HTTP `@x402/fetch`, optional before-send
 unsigned attempt receipt, read-only reconcile), see
 `https://github.com/epistemedeus/x402-url-extractor/tree/master/examples/customer-x402`
 instead of copying a wallet into this skill.
+
+A paid HTTP success may also carry the optional response header
+`x-samedaydesk-caller-result-feedback`. That header is a free reporting
+capability for that response only. It is not a price, a settlement, payer
+identity, or measured usefulness. After you inspect the record, you may
+explicitly say `useful` or `not_useful`. HTTP 200 and schema success do not
+make that choice, and this skill does not report automatically. The customer
+example posts only to the same merchant origin plus
+`/commerce/caller-result-feedback`, carrying the capability in that header. It does
+not follow `Link` text, redirects, or a second paid call. A failed statement
+leaves the original delivery in place.
+
+An unsatisfied caller who wants operator help uses the separate free visitor
+entry `https://samedaydesk.com/api/correspondence/v1/visitor-entry`
+(`contributionRequired` and `identityProofRequired` are false; funding is
+voluntary). This header does not grant project, posting, or payment authority,
+and a `not_useful` statement does not submit that entry.
