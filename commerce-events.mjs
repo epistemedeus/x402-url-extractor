@@ -1,6 +1,19 @@
 import { constants as journalFs } from "node:fs";
 import { authenticateJournalCut } from "./commerce-journal-cut-auth.mjs";
 import { admitCommerceJournal, noteJournalRotation, noteJournalWrite, noteJournalFault, registerJournalProducer, registerJournalTaskBinding } from "./commerce-journal-admission.mjs";
+import {
+  attemptSegmentName,
+  prospectiveTailReport,
+  resolveProspectiveRetention,
+} from "./commerce-prospective-retention.mjs";
+export {
+  COMMERCE_PROSPECTIVE_MAX_AGE_MS,
+  COMMERCE_PROSPECTIVE_SEGMENT_COUNT,
+  COMMERCE_PROSPECTIVE_SEGMENT_LIMIT,
+  COMMERCE_PROSPECTIVE_TAIL_SCHEMA,
+  COMMERCE_SEGMENT_READ_SLACK_BYTES,
+  resolveProspectiveRetention,
+} from "./commerce-prospective-retention.mjs";
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { attachCallerResultFeedbackHeader } from "./caller-result-feedback.mjs";
 import { appendFile, chmod, lstat, mkdir, open, readFile, rename, stat, unlink } from "node:fs/promises";
@@ -1259,53 +1272,148 @@ function buildAgentSourceFunnel({
   return funnel;
 }
 
-async function readEvents(filePath, internalToken) {
-  try {
-    const contents = await readFile(filePath, "utf8");
-    const events = [];
-    const mcpTypedEvents = [];
-    let unusableRecordCount = 0;
-    let mcpTypedUnusableRecordCount = 0;
-    for (const line of contents.split("\n")) {
-      if (!line.trim()) continue;
-      try {
-        const parsed = JSON.parse(line);
-        // Authenticated capture metadata is not a commerce event or an
-        // unusable event. It changes neither public counts nor their identity.
-        if (authenticateJournalCut(parsed, internalToken)) continue;
-        if (isCanonicalCommerceEvent(parsed)) {
-          events.push(parsed);
-          continue;
-        }
-        if (isCanonicalMcpTypedCommerceEvent(parsed)) {
-          mcpTypedEvents.push(parsed);
-          continue;
-        }
-        unusableRecordCount += 1;
-        if (declaresMcpTypedSource(parsed)) mcpTypedUnusableRecordCount += 1;
-      } catch {
-        unusableRecordCount += 1;
+function emptyAttemptRead() {
+  return {
+    events: [],
+    mcpTypedEvents: [],
+    unusableRecordCount: 0,
+    mcpTypedUnusableRecordCount: 0,
+    filePresent: false,
+    unsafe: false,
+    oversized: false,
+    unstable: false,
+    byteLength: 0,
+    newestRetainedMs: null,
+  };
+}
+
+function considerNewest(newest, ms) {
+  if (!Number.isFinite(ms)) return newest;
+  return newest === null || ms > newest ? ms : newest;
+}
+
+function parseAttemptBuffer(buffer, internalToken) {
+  const events = [];
+  const mcpTypedEvents = [];
+  let unusableRecordCount = 0;
+  let mcpTypedUnusableRecordCount = 0;
+  let newestRetainedMs = null;
+  const contents = buffer.toString("utf8");
+  for (const line of contents.split("\n")) {
+    if (!line.trim()) continue;
+    try {
+      const parsed = JSON.parse(line);
+      // Authenticated capture metadata is not a commerce event or an
+      // unusable event. It changes neither public counts nor their identity.
+      if (authenticateJournalCut(parsed, internalToken)) {
+        newestRetainedMs = considerNewest(newestRetainedMs, Date.parse(parsed.asOf));
+        continue;
       }
+      if (isCanonicalCommerceEvent(parsed)) {
+        events.push(parsed);
+        newestRetainedMs = considerNewest(newestRetainedMs, eventTimestampMs(parsed));
+        continue;
+      }
+      if (isCanonicalMcpTypedCommerceEvent(parsed)) {
+        mcpTypedEvents.push(parsed);
+        newestRetainedMs = considerNewest(newestRetainedMs, eventTimestampMs(parsed));
+        continue;
+      }
+      unusableRecordCount += 1;
+      if (declaresMcpTypedSource(parsed)) mcpTypedUnusableRecordCount += 1;
+    } catch {
+      unusableRecordCount += 1;
     }
-    return {
-      events,
-      mcpTypedEvents,
-      unusableRecordCount,
-      mcpTypedUnusableRecordCount,
-      filePresent: true,
-    };
+  }
+  return {
+    events,
+    mcpTypedEvents,
+    unusableRecordCount,
+    mcpTypedUnusableRecordCount,
+    filePresent: true,
+    unsafe: false,
+    oversized: false,
+    unstable: false,
+    byteLength: buffer.length,
+    newestRetainedMs,
+  };
+}
+
+function attemptReadRefusal(byteLength, reason) {
+  return {
+    ...emptyAttemptRead(),
+    filePresent: true,
+    unsafe: reason === "unsafe",
+    oversized: reason === "oversized",
+    unstable: reason === "unstable",
+    byteLength,
+  };
+}
+
+async function ownedAttemptEntry(filePath) {
+  try {
+    return await lstat(filePath);
   } catch (error) {
-    if (error?.code === "ENOENT") {
-      return {
-        events: [],
-        mcpTypedEvents: [],
-        unusableRecordCount: 0,
-        mcpTypedUnusableRecordCount: 0,
-        filePresent: false,
-      };
-    }
+    if (error?.code === "ENOENT") return null;
     throw error;
   }
+}
+
+function entryIsUnsafe(entry) {
+  return !entry
+    || entry.isSymbolicLink()
+    || entry.isFIFO()
+    || !entry.isFile()
+    || entry.nlink !== 1
+    || entry.uid !== process.getuid();
+}
+
+// Bounded, non-following read of one admitted segment. Oversized, unstable,
+// or unsafe files are not parsed and do not become a complete window.
+async function readOwnedAttemptSegment(filePath, internalToken, readCapBytes) {
+  const entry = await ownedAttemptEntry(filePath);
+  if (!entry) return emptyAttemptRead();
+  if (entryIsUnsafe(entry)) return attemptReadRefusal(entry.size, "unsafe");
+  if (entry.size > readCapBytes) return attemptReadRefusal(entry.size, "oversized");
+  let handle;
+  try {
+    handle = await open(
+      filePath,
+      journalFs.O_RDONLY | journalFs.O_NOFOLLOW | journalFs.O_NONBLOCK,
+    );
+    const current = await handle.stat();
+    if (entryIsUnsafe(current) || current.ino !== entry.ino || current.size > readCapBytes) {
+      return attemptReadRefusal(current.size, current.size > readCapBytes ? "oversized" : "unsafe");
+    }
+    const buffer = Buffer.alloc(current.size);
+    let used = 0;
+    while (used < buffer.length) {
+      const read = await handle.read(buffer, used, buffer.length - used, used);
+      if (!read.bytesRead) break;
+      used += read.bytesRead;
+    }
+    const after = await handle.stat();
+    if (used !== current.size || after.size !== current.size || after.ino !== current.ino) {
+      return attemptReadRefusal(after.size, "unstable");
+    }
+    return parseAttemptBuffer(buffer.subarray(0, used), internalToken);
+  } catch (error) {
+    if (error?.code === "ENOENT") return emptyAttemptRead();
+    if (error?.code === "ELOOP" || error?.code === "EAGAIN") return attemptReadRefusal(entry.size, "unsafe");
+    throw error;
+  } finally {
+    await handle?.close();
+  }
+}
+
+function mergeAttemptReads(reads) {
+  return {
+    events: reads.flatMap((read) => read.events),
+    mcpTypedEvents: reads.flatMap((read) => read.mcpTypedEvents),
+    unusableRecordCount: reads.reduce((sum, read) => sum + read.unusableRecordCount, 0),
+    mcpTypedUnusableRecordCount: reads.reduce((sum, read) => sum + read.mcpTypedUnusableRecordCount, 0),
+    filePresent: reads.some((read) => read.filePresent),
+  };
 }
 
 export const COMMERCE_COVERAGE_COMPLETE = "complete";
@@ -3117,9 +3225,19 @@ export function describeRetentionCoverage({
   const requestedWindowStartMs = generatedAtMs - safeDays * DAY_MS;
   const currentFile = fileIntegrityView(integrity.currentFile || {});
   const rotatedFile = fileIntegrityView(integrity.rotatedFile || {});
-  const integrityStatus = currentFile.unusableRecordCount > 0 || rotatedFile.unusableRecordCount > 0
+  const older = integrity.olderSegments || null;
+  const olderUnusable = Number(older?.unusableRecordCount) || 0;
+  const retentionDrift = Number(integrity.futureRecordCount) > 0
+    || integrity.capacityWithheld === true
+    || integrity.gap === true
+    || integrity.unsafeSegment === true;
+  const integrityStatus = currentFile.unusableRecordCount > 0
+    || rotatedFile.unusableRecordCount > 0
+    || olderUnusable > 0
     ? COMMERCE_INTEGRITY_UNUSABLE_RECORDS
-    : COMMERCE_INTEGRITY_OK;
+    : retentionDrift
+      ? COMMERCE_INTEGRITY_SOURCE_LOCAL_DRIFT
+      : COMMERCE_INTEGRITY_OK;
   const integrityOk = integrityStatus === COMMERCE_INTEGRITY_OK;
   const requested = metricCoverageStatus({
     generatedAtMs,
@@ -3165,7 +3283,19 @@ export function describeRetentionCoverage({
       status: integrityStatus,
       currentFile,
       rotatedFile,
+      ...(older ? {
+        olderSegments: {
+          fileCount: Number(older.fileCount) || 0,
+          presentCount: Number(older.presentCount) || 0,
+          parseableRecordCount: Number(older.parseableRecordCount) || 0,
+          unusableRecordCount: olderUnusable,
+        },
+      } : {}),
+      ...(Number(integrity.futureRecordCount) > 0
+        ? { futureRecordCount: Number(integrity.futureRecordCount) }
+        : {}),
     },
+    ...(integrity.prospectiveTail ? { prospectiveTail: integrity.prospectiveTail } : {}),
     ...coarse,
     metrics,
   };
@@ -3208,6 +3338,9 @@ export function createCommerceTelemetry({
   writerProcessCount = 1,
   mcpTypedSince = process.env.COMMERCE_MCP_TYPED_SINCE || "",
   mcpTypedFreshnessMaxAgeMs = 900_000,
+  retentionSegments,
+  aggregateMaxBytes,
+  maxAgeMs,
 } = {}) {
   if (!Number.isSafeInteger(writerProcessCount) || writerProcessCount !== 1) {
     throw new Error("commerce telemetry supports exactly one writer process; writerProcessCount must be the safe integer 1 until cross-process coordination exists");
@@ -3223,13 +3356,22 @@ export function createCommerceTelemetry({
   const boundedRareMaxBytes = Number.isSafeInteger(rareMaxBytes) && rareMaxBytes > 0
     ? rareMaxBytes
     : DEFAULT_RARE_FUNNEL_MAX_BYTES;
+  const retention = resolveProspectiveRetention({
+    maxBytes,
+    retentionSegments,
+    aggregateMaxBytes,
+    maxAgeMs,
+  });
   const writerGate = Object.freeze({
     mode: "single_process_only",
     configuredProcesses: 1,
     crossProcessSafe: false,
   });
-  const currentPath = path.join(dataDir, "commerce-events.ndjson");
-  const rotatedPath = path.join(dataDir, "commerce-events.1.ndjson");
+  const segmentPaths = Array.from({ length: retention.segmentCount }, (_, index) => (
+    path.join(dataDir, attemptSegmentName(index))
+  ));
+  const currentPath = segmentPaths[0];
+  const rotatedPath = segmentPaths[1];
   const paidEvidencePath = path.join(dataDir, "commerce-paid-success-evidence.ndjson");
   const httpDeliveryEvidencePath = path.join(dataDir, VALIDATION_FILENAME);
   const mcpToolDeliveryPath = path.join(dataDir, MCP_DELIVERY_FILENAME);
@@ -3342,20 +3484,44 @@ export function createCommerceTelemetry({
     if (writerFailure) throw writerFailure;
   }
 
+  async function assertSafeAttemptSegment(filePath) {
+    const entry = await ownedAttemptEntry(filePath);
+    if (entry && entryIsUnsafe(entry)) throw new Error("unsafe commerce journal file");
+    return entry;
+  }
+
+  async function dropSegmentsProvenOlderThan(cutoffMs) {
+    for (let index = segmentPaths.length - 1; index >= 1; index -= 1) {
+      const filePath = segmentPaths[index];
+      const read = await readOwnedAttemptSegment(filePath, internalToken, retention.readCapBytes);
+      if (!read.filePresent) continue;
+      // A segment we cannot prove is entirely older stays. Deleting it would
+      // either follow an unsafe node or invent a gap in front of a newer one.
+      if (read.unsafe || read.oversized || read.unstable || read.newestRetainedMs === null) break;
+      if (read.newestRetainedMs > cutoffMs) break;
+      await assertSafeAttemptSegment(filePath);
+      await unlink(filePath);
+    }
+  }
+
+  async function rotateAttemptSegments() {
+    const present = [];
+    for (const filePath of segmentPaths) present.push(await assertSafeAttemptSegment(filePath));
+    const oldest = segmentPaths[segmentPaths.length - 1];
+    if (present[present.length - 1]) await unlink(oldest);
+    for (let index = segmentPaths.length - 2; index >= 0; index -= 1) {
+      if (!present[index]) continue;
+      await rename(segmentPaths[index], segmentPaths[index + 1]);
+    }
+    noteJournalRotation(dataDir, "attempts");
+    await dropSegmentsProvenOlderThan(Date.now() - retention.maxAgeMs);
+  }
+
   async function appendEvent(event) {
     await mkdir(dataDir, { recursive: true, mode: 0o700 });
     await chmod(dataDir, 0o700).catch(() => {});
-    const currentEntry = await lstat(currentPath).catch(error => error.code === "ENOENT" ? null : Promise.reject(error));
-    if (currentEntry && (!currentEntry.isFile() || currentEntry.uid !== process.getuid() || currentEntry.nlink !== 1)) throw new Error("unsafe commerce journal file");
-    if (currentEntry && currentEntry.size >= maxBytes) {
-      await unlink(rotatedPath).catch((error) => {
-        if (error?.code !== "ENOENT") throw error;
-      });
-      noteJournalRotation(dataDir, "attempts");
-      await rename(currentPath, rotatedPath).catch((error) => {
-        if (error?.code !== "ENOENT") throw error;
-      });
-    }
+    const currentEntry = await assertSafeAttemptSegment(currentPath);
+    if (currentEntry && currentEntry.size >= retention.segmentMaxBytes) await rotateAttemptSegments();
     const handle = await open(currentPath, journalFs.O_WRONLY | journalFs.O_CREAT | journalFs.O_APPEND | journalFs.O_NOFOLLOW | journalFs.O_NONBLOCK, 0o600);
     try {
       const current = await handle.stat();
@@ -3842,8 +4008,13 @@ export function createCommerceTelemetry({
     const externalCutoffMs = externalSinceMs === null
       ? windowCutoff
       : Math.max(windowCutoff, externalSinceMs);
-    const rotatedRead = await readEvents(rotatedPath, internalToken);
-    const currentRead = await readEvents(currentPath, internalToken);
+    const segmentReads = [];
+    for (const filePath of segmentPaths) {
+      segmentReads.push(await readOwnedAttemptSegment(filePath, internalToken, retention.readCapBytes));
+    }
+    const currentRead = segmentReads[0];
+    const rotatedRead = segmentReads[1] || emptyAttemptRead();
+    const olderReads = segmentReads.slice(2);
     const rareRotatedRead = await readRareFunnelEvidence(rareFunnelRotatedPath);
     const rareCurrentRead = await readRareFunnelEvidence(rareFunnelPath);
     const rareById = new Map();
@@ -3851,13 +4022,36 @@ export function createCommerceTelemetry({
       if (!rareById.has(record.id)) rareById.set(record.id, record);
     }
     const retainedRareRecords = [...rareById.values()];
-    const retainedEvents = [...rotatedRead.events, ...currentRead.events];
-    const retainedTypedEvents = [...rotatedRead.mcpTypedEvents, ...currentRead.mcpTypedEvents];
+    const retainedEvents = [];
+    const retainedTypedEvents = [];
+    for (let index = segmentReads.length - 1; index >= 0; index -= 1) {
+      retainedEvents.push(...segmentReads[index].events);
+      retainedTypedEvents.push(...segmentReads[index].mcpTypedEvents);
+    }
     const retainedTimes = retainedEvents
       .map(eventTimestampMs)
       .filter((ms) => ms !== null);
     const retainedObservationStartMs = retainedTimes.length ? Math.min(...retainedTimes) : null;
     const retainedObservationEndMs = retainedTimes.length ? Math.max(...retainedTimes) : null;
+    let maxPresent = -1;
+    for (let index = 0; index < segmentReads.length; index += 1) {
+      if (segmentReads[index].filePresent) maxPresent = index;
+    }
+    let gap = false;
+    for (let index = 1; index < maxPresent; index += 1) {
+      if (!segmentReads[index].filePresent) gap = true;
+    }
+    const capacityWithheld = segmentReads.some((read) => read.oversized || read.unstable);
+    const unsafeSegment = segmentReads.some((read) => read.unsafe);
+    const futureRecordCount = retainedTimes.filter((ms) => ms > generatedAtMs).length;
+    const occupiedSegments = segmentReads.filter((read) => read.filePresent).length;
+    const retainedBytes = segmentReads.reduce((sum, read) => sum + (Number.isFinite(read.byteLength) ? read.byteLength : 0), 0);
+    const olderParseable = olderReads.reduce(
+      (sum, read) => sum + read.events.length + read.mcpTypedEvents.length,
+      0,
+    );
+    const olderUnusable = olderReads.reduce((sum, read) => sum + read.unusableRecordCount, 0);
+    const typedRotatedRead = mergeAttemptReads(segmentReads.slice(1));
     const coverage = describeRetentionCoverage({
       generatedAtMs,
       requestedWindowDays: safeDays,
@@ -3875,6 +4069,24 @@ export function createCommerceTelemetry({
           parseableRecordCount: rotatedRead.events.length,
           unusableRecordCount: rotatedRead.unusableRecordCount,
         },
+        olderSegments: {
+          fileCount: olderReads.length,
+          presentCount: olderReads.filter((read) => read.filePresent).length,
+          parseableRecordCount: olderParseable,
+          unusableRecordCount: olderUnusable,
+        },
+        futureRecordCount,
+        capacityWithheld,
+        gap,
+        unsafeSegment,
+        prospectiveTail: prospectiveTailReport({
+          retention,
+          occupiedSegments,
+          retainedBytes,
+          gap,
+          capacityWithheld,
+          unsafeSegment,
+        }),
       },
       baselines: {
         external: { declaredMs: externalSinceMs, cutoffMs: externalSinceMs },
@@ -4262,7 +4474,7 @@ export function createCommerceTelemetry({
           requestedWindowDays: safeDays,
           retainedTypedEvents,
           currentRead,
-          rotatedRead,
+          rotatedRead: typedRotatedRead,
           mcpTypedSinceMs,
           mcpTypedFreshnessMaxAgeMs: typedFreshnessMaxAgeMs,
         }),
@@ -4390,41 +4602,57 @@ export function createCommerceTelemetry({
     };
   }
 
+  async function ownedSegmentBytes(filePath) {
+    const entry = await ownedAttemptEntry(filePath);
+    if (!entry) return 0;
+    if (entryIsUnsafe(entry)) throw new Error("unsafe commerce journal file");
+    return entry.size;
+  }
+
   async function storageStatus() {
+    const unavailable = {
+      ready: false,
+      currentBytes: null,
+      rotatedBytes: null,
+      paidEvidenceBytes: null,
+      rareFunnelBytes: null,
+      rareFunnelRotatedBytes: null,
+      boundedBytes: retention.aggregateMaxBytes,
+      rareBoundedBytes: boundedRareMaxBytes * 2,
+      writerGate,
+      prospectiveTail: prospectiveTailReport({ retention }),
+    };
     try {
       return await enqueueExclusive(async () => {
         await mkdir(dataDir, { recursive: true, mode: 0o700 });
-        const [currentBytes, rotatedBytes, paidEvidenceBytes, rareFunnelBytes, rareFunnelRotatedBytes] = await Promise.all([
-          stat(currentPath).then((entry) => entry.size).catch(() => 0),
-          stat(rotatedPath).then((entry) => entry.size).catch(() => 0),
+        const segmentBytes = [];
+        for (const filePath of segmentPaths) segmentBytes.push(await ownedSegmentBytes(filePath));
+        const [paidEvidenceBytes, rareFunnelBytes, rareFunnelRotatedBytes] = await Promise.all([
           stat(paidEvidencePath).then((entry) => entry.size).catch(() => 0),
           stat(rareFunnelPath).then((entry) => entry.size).catch(() => 0),
           stat(rareFunnelRotatedPath).then((entry) => entry.size).catch(() => 0),
         ]);
+        const retainedBytes = segmentBytes.reduce((sum, size) => sum + size, 0);
         return {
           ready: true,
-          currentBytes,
-          rotatedBytes,
+          currentBytes: segmentBytes[0] || 0,
+          rotatedBytes: segmentBytes[1] || 0,
           paidEvidenceBytes,
           rareFunnelBytes,
           rareFunnelRotatedBytes,
-          boundedBytes: maxBytes * 2,
+          boundedBytes: retention.aggregateMaxBytes,
           rareBoundedBytes: boundedRareMaxBytes * 2,
           writerGate,
+          prospectiveTail: prospectiveTailReport({
+            retention,
+            occupiedSegments: segmentBytes.filter((size) => size > 0).length,
+            retainedBytes,
+            capacityWithheld: segmentBytes.some((size) => size > retention.readCapBytes),
+          }),
         };
       });
     } catch {
-      return {
-        ready: false,
-        currentBytes: null,
-        rotatedBytes: null,
-        paidEvidenceBytes: null,
-        rareFunnelBytes: null,
-        rareFunnelRotatedBytes: null,
-        boundedBytes: maxBytes * 2,
-        rareBoundedBytes: boundedRareMaxBytes * 2,
-        writerGate,
-      };
+      return unavailable;
     }
   }
 
@@ -4468,6 +4696,7 @@ export function createCommerceTelemetry({
     paths: {
       currentPath,
       rotatedPath,
+      segmentPaths,
       paidEvidencePath,
       httpDeliveryEvidencePath,
       mcpToolDeliveryPath,
