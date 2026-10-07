@@ -543,7 +543,7 @@ for (const [route, expectedQuery] of [
     const source = result.sources["x402jobs-public-search"];
     assert.equal(source.status, "ok");
     assert.equal(source.queryUsed, expectedQuery);
-    assert.equal(source.queryUsed.split(/\\s+/).length, 2);
+    assert.equal(source.queryUsed.split(/\s+/).length, 2);
     assert.equal(source.queryUsed.includes("api.example.com"), false);
   });
 }
