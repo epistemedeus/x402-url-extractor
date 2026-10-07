@@ -263,7 +263,7 @@ test("flag off leaves live extract and catalogs unchanged", { timeout: 60_000 },
   });
   merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url, enabled: false, fetchLogPath });
   const deadline = Date.now() + 20_000;
-  while (!merchant.output().includes("MCP server:  POST /mcp (22 paid tools)")) {
+  while (!merchant.output().includes("MCP server:  POST /mcp (23 paid tools)")) {
     if (Date.now() > deadline) throw new Error(`MCP mount timed out:\n${merchant.output().slice(-2000)}`);
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
@@ -274,8 +274,8 @@ test("flag off leaves live extract and catalogs unchanged", { timeout: 60_000 },
     fetch(`${merchant.base}/.well-known/x402`).then((r) => r.json()),
   ]);
   assert.equal(openapi.paths[EXTRACT_BATCH_PATH], undefined);
-  assert.equal(Object.values(openapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length, 25);
-  assert.equal(catalog.actions.length, 22);
+  assert.equal(Object.values(openapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length, 26);
+  assert.equal(catalog.actions.length, 23);
   assert.equal(catalog.actions.some((action) => action.route === EXTRACT_BATCH_PATH), false);
   assert.equal(manifest.items.some((item) => item.resource?.routeTemplate === EXTRACT_BATCH_PATH), false);
   assert.equal(extract.status, 402);
@@ -285,7 +285,7 @@ test("flag off leaves live extract and catalogs unchanged", { timeout: 60_000 },
   await client.connect(new StreamableHTTPClientTransport(new URL(`${merchant.base}/mcp`)));
   try {
     const tools = (await client.listTools()).tools;
-    assert.equal(tools.length, 22);
+    assert.equal(tools.length, 24);
     assert.equal(tools.some((tool) => tool.name === "extract_batch"), false);
   } finally {
     await client.close();
@@ -351,7 +351,7 @@ test("unpaid valid requests issue x402 and MPP challenges without fetching sourc
   const openapi = await fetch(`${merchant.base}/openapi.json`).then((r) => r.json());
   assert.equal(openapi.paths[EXTRACT_BATCH_PATH].post["x-payment-info"].price.amount, "0.01");
   assert.equal(openapi.paths[EXTRACT_BATCH_PATH].post.operationId, "extractPublicUrlsBatch");
-  assert.equal(Object.values(openapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length, 26);
+  assert.equal(Object.values(openapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length, 27);
   const mppOpenapi = await fetch(`${merchant.base}/mpp-openapi.json`).then((r) => r.json());
   assert.deepEqual(mppOpenapi.paths[EXTRACT_BATCH_PATH].post.requestBody, openapi.paths[EXTRACT_BATCH_PATH].post.requestBody);
   assert.deepEqual(mppOpenapi.paths[EXTRACT_BATCH_PATH].post.responses["200"], openapi.paths[EXTRACT_BATCH_PATH].post.responses["200"]);
@@ -378,7 +378,7 @@ test("flag on projects the batch offer across MCP tools/list with matching schem
   });
   merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url, enabled: true });
   const deadline = Date.now() + 20_000;
-  while (!merchant.output().includes("MCP server:  POST /mcp (23 paid tools)")) {
+  while (!merchant.output().includes("MCP server:  POST /mcp (24 paid tools)")) {
     if (Date.now() > deadline) throw new Error(`MCP mount timed out:\n${merchant.output().slice(-2000)}`);
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
@@ -427,7 +427,7 @@ test("flag on projects the batch offer across MCP tools/list with matching schem
   assert.equal(batch.outputSchema?.required?.includes("staging"), false);
   assert.match(batch.description, /https:\/\/agents\.samedaydesk\.com\/extract\/batch, not mcp:\/\//);
   const catalog = await fetch(`${merchant.base}/api/actions`).then((r) => r.json());
-  assert.equal(catalog.actions.length, 23);
+  assert.equal(catalog.actions.length, 24);
   const effects = await fetch(`${merchant.base}/.well-known/paid-action-effects.json`).then((r) => r.json());
   assert.equal(effects.operations.some((op) => op.method === "POST" && op.path === EXTRACT_BATCH_PATH), true);
   const evidence = await fetch(`${merchant.base}/.well-known/agent-payment-evidence.json`).then((r) => r.json());
@@ -714,7 +714,7 @@ test("mounted MCP same paid batch replays across restart without a second settle
   async function start() {
     merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url, fetchLogPath });
     const deadline = Date.now() + 20000;
-    while (!merchant.output().includes("MCP server:  POST /mcp (23 paid tools)")) {
+    while (!merchant.output().includes("MCP server:  POST /mcp (24 paid tools)")) {
       if (Date.now() > deadline) throw new Error(`MCP startup timeout: ${merchant.output().slice(-3000)}`);
       await new Promise((resolve) => setTimeout(resolve, 20));
     }
@@ -762,7 +762,7 @@ for (const protocol of ["x402", "mpp"]) for (const mode of ["denied", "unknown"]
   async function start() {
     merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url, fetchLogPath });
     const deadline = Date.now() + 20000;
-    while (!merchant.output().includes("MCP server:  POST /mcp (23 paid tools)")) {
+    while (!merchant.output().includes("MCP server:  POST /mcp (24 paid tools)")) {
       if (Date.now() > deadline) throw new Error("MCP startup timeout");
       await new Promise((resolve) => setTimeout(resolve, 20));
     }

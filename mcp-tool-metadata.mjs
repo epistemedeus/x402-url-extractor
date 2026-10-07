@@ -97,6 +97,14 @@ const TOOL_METADATA = Object.freeze({
     title: "Evaluate Stateful Wallet Policy Conformance",
     description: "Evaluate safe standardized observations from wallet policies that track prior or concurrent requests. Use `wallet_policy_conformance` instead for one-request action shape, method, chain, token, recipient, amount, and function controls. This tool separately tests sequential cumulative limits, signed-but-unbroadcast accounting, ABI extraction, concurrent oversubscription, counter-reference failure, and application serialization. It accepts no credentials, counter values, wallet or resource IDs, signatures, transactions, or raw provider responses and does not run the provider tests itself.",
   },
+  careers_board: {
+    title: "Read Named Public Careers Board",
+    description: "Read one configured public careers board and return title, location or null, posting URL, source, fetchedAt, and explicit coverage for the full board. Use `careers_board_cold` for the acquired free recipe. Rows are not a title filter. Partial, missing, duplicate, listed, empty, changed, and unavailable stay explicit. Source failure is not an empty board. The HTTP route prepares the observation before either payment rail and does not settle a source failure. This MCP wrapper still settles after the handler.",
+  },
+  careers_board_cold: {
+    title: "Return Acquired Careers Board Recipe",
+    description: "Return the acquired cold careers-board recipe and its public tests. This tool is free: charged is false, it does not fetch a live board, and it does not accept payment. Use `careers_board` when you need one named-board observation. Direct free execution remains available.",
+  },
 });
 
 export function decorateMcpTool(tool) {

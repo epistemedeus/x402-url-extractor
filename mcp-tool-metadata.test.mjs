@@ -5,18 +5,23 @@ import { decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
 
 test("publishes unique action-oriented titles for every live MCP tool", () => {
   const metadata = listMcpToolMetadata();
-  const paid = metadata.filter((entry) => entry.name !== "page_change");
-  const free = metadata.filter((entry) => entry.name === "page_change");
-  assert.equal(paid.length, 24);
-  assert.equal(free.length, 1);
+  const freeNames = new Set(["page_change", "careers_board_cold"]);
+  const paid = metadata.filter((entry) => !freeNames.has(entry.name));
+  const free = metadata.filter((entry) => freeNames.has(entry.name));
+  assert.equal(paid.length, 25);
+  assert.equal(free.length, 2);
   assert.equal(new Set(metadata.map((entry) => entry.name)).size, metadata.length);
   assert.equal(new Set(metadata.map((entry) => entry.title)).size, metadata.length);
   for (const entry of paid) {
     assert.match(entry.title, /^(?:Extract|Read|Scan|Generate|Enrich|Audit|Inspect|Plan|Underwrite|Replay|Preflight|Verify|Evaluate|Search)\b/);
   }
-  assert.match(free[0].title, /^Compare\b/);
-  assert.match(free[0].description, /charged is false/);
-  assert.doesNotMatch(free[0].description, /USDC/);
+  for (const entry of free) {
+    assert.match(entry.description, /charged is false/);
+    assert.doesNotMatch(entry.description, /USDC/);
+  }
+  const pageChange = free.find((entry) => entry.name === "page_change");
+  assert.match(pageChange.title, /^Compare\b/);
+  assert.match(free.find((entry) => entry.name === "careers_board_cold").title, /^Return\b/);
 });
 
 test("makes each overlapping web and company tool chooseable without renaming it", () => {

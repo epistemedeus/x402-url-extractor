@@ -242,6 +242,21 @@ import {
 } from "./page-change-http.mjs";
 import { buildRouteBindingReport } from "./route-binding-inspect.mjs";
 import {
+  CAREERS_BOARD_AMOUNT_ATOMIC,
+  CAREERS_BOARD_COLD_PATH,
+  CAREERS_BOARD_DESCRIPTION,
+  CAREERS_BOARD_PATH,
+  CAREERS_BOARD_PRICE_USD,
+  resolveNamedBoardQuery,
+} from "./careers-board-config.mjs";
+import {
+  CAREERS_BOARD_DISCOVERY_EXAMPLE,
+  careersBoardColdOutputSchema,
+  careersBoardColdRecipeBody,
+  careersBoardOutputSchema,
+  readNamedCareersBoard,
+} from "./careers-board-read.mjs";
+import {
   LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC,
   LOCKFILE_PIN_DELTA_DESCRIPTION,
   LOCKFILE_PIN_DELTA_PATH,
@@ -558,6 +573,10 @@ app.use((req, res, next) => {
 });
 app.use(legacyCompatibleX402Body);
 mountPageChangeHttp(app);
+app.get(CAREERS_BOARD_COLD_PATH, function serveCareersBoardColdRecipe(_req, res) {
+  res.set("Cache-Control", "public, max-age=300");
+  return res.json(careersBoardColdRecipeBody());
+});
 mountLockfilePinDeltaParser(app);
 
 function parseCommerceWriterProcessCount(raw = process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES) {
@@ -605,6 +624,7 @@ const idempotencyReplay = createIdempotencyReplay({
   ]),
   routes: new Set([
     ...DEFAULT_PAID_ROUTES,
+    CAREERS_BOARD_PATH,
     ...(EXTRACT_BATCH_ENABLED ? [EXTRACT_BATCH_PATH] : []),
     ...(LOCKFILE_PIN_DELTA_ENABLED ? [LOCKFILE_PIN_DELTA_PATH] : []),
   ]),
@@ -788,6 +808,7 @@ app.get("/healthz", async (_req, res) => {
       "solana-transaction-receipt": SOLANA_TRANSACTION_RECEIPT_PRICE,
       "wallet-policy-conformance": WALLET_POLICY_CONFORMANCE_PRICE,
       "stateful-wallet-policy-conformance": STATEFUL_WALLET_POLICY_CONFORMANCE_PRICE,
+      "careers-board": CAREERS_BOARD_PRICE_USD,
       ...(LOCKFILE_PIN_DELTA_ENABLED ? { "lockfile-pin-delta": LOCKFILE_PIN_DELTA_PRICE_USD } : {}),
       ...(EXTRACT_BATCH_ENABLED ? { "extract/batch": EXTRACT_BATCH_AMOUNT_ATOMIC } : {}),
     },
@@ -967,6 +988,7 @@ const RESOURCES = [
   { url: `${PUBLIC_URL}/commerce/seller-integrity-audit`, amount: priceToAtomic(SELLER_INTEGRITY_AUDIT_PRICE), description: "x402 and MPP seller integrity audit for one exact paid GET or POST route after a buyer integration fails, a seller changes the route, or before the next paid retry or release. Returns machine_buyable, contract_ready, or repair_required with exact repair actions. Checks constructible non-secret input, live unpaid GET terms, optional Bazaar metadata, and buyer-required success paths. Uses no credential or target payment, follows no redirect, and sends no target POST.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/commerce/contract-qualified-search`, amount: priceToAtomic(CONTRACT_QUALIFIED_SEARCH_PRICE), description: "Search Agent402 and the official MPP catalog for paid machine services that both match a capability intent and guarantee buyer-required JSON output paths. Returns bounded machine-buyable or contract-ready candidates plus controlled rejection reasons. Rejects unresolved routes and owned supply before audit, uses no credentials or wallet, sends no seller POST or target payment, reads no paid response body, and retains only a query digest.", mimeType: "application/json" },
   { url: `${PUBLIC_URL}/distribution/agent-surface-budget-audit`, amount: priceToAtomic(AGENT_SURFACE_BUDGET_AUDIT_PRICE), description: "Measure one public service's free MCP tools/list, OpenAPI, or both before an agent calls or pays. Returns byte counts, byte-derived token estimates, missing selection contracts, heaviest definitions, budget decisions, and progressive-discovery fixes. Unselected surfaces are not fetched or judged. Uses public pinned DNS, follows no redirect, sends no credential or target payment, and calls no target tool.", mimeType: "application/json" },
+  { url: `${PUBLIC_URL}${CAREERS_BOARD_PATH}`, amount: CAREERS_BOARD_AMOUNT_ATOMIC, description: CAREERS_BOARD_DESCRIPTION, mimeType: "application/json" },
   ...(EXTRACT_BATCH_ENABLED ? [extractBatchResource({ publicUrl: PUBLIC_URL })] : []),
   ...(LOCKFILE_PIN_DELTA_ENABLED ? [lockfilePinDeltaResource({ publicUrl: PUBLIC_URL })] : []),
 ];
@@ -1123,6 +1145,7 @@ const RESOURCE_DISCOVERY_METADATA = {
   "/chain/solana-transaction-receipt": { operationId: "getSolanaTransactionReceipt", tags: ["Blockchain"] },
   "/security/wallet-policy-conformance": { operationId: "evaluateWalletPolicyConformance", tags: ["Security"] },
   "/security/stateful-wallet-policy-conformance": { operationId: "evaluateStatefulWalletPolicyConformance", tags: ["Security"] },
+  [CAREERS_BOARD_PATH]: { operationId: "readNamedCareersBoard", tags: ["Web Data"] },
 };
 
 const mppDualStack = createMppDualStack({
@@ -1300,15 +1323,26 @@ const machineActionCatalog = () => ({
       response: response ? { mimeType: "application/json", ...response } : null,
     };
   }),
-  freeRecipes: isPageChangeHttpEnabled() ? [{
-    name: "page_change",
-    method: "POST",
-    route: PAGE_CHANGE_HTTP_PATH,
-    url: `${PUBLIC_URL}${PAGE_CHANGE_HTTP_PATH}`,
-    charged: false,
-    priceAtomicUsdc: null,
-    description: "Compare two already-held extract-batch JSON artifacts. Not a paid SKU. No 402.",
-  }] : [],
+  freeRecipes: [
+    ...(isPageChangeHttpEnabled() ? [{
+      name: "page_change",
+      method: "POST",
+      route: PAGE_CHANGE_HTTP_PATH,
+      url: `${PUBLIC_URL}${PAGE_CHANGE_HTTP_PATH}`,
+      charged: false,
+      priceAtomicUsdc: null,
+      description: "Compare two already-held extract-batch JSON artifacts. Not a paid SKU. No 402.",
+    }] : []),
+    {
+      name: "careers_board_cold",
+      method: "GET",
+      route: CAREERS_BOARD_COLD_PATH,
+      url: `${PUBLIC_URL}${CAREERS_BOARD_COLD_PATH}`,
+      charged: false,
+      priceAtomicUsdc: null,
+      description: "Acquired cold careers-board recipe. Direct free execution remains available. charged is false.",
+    },
+  ],
   discovery: {
     manifest: `${PUBLIC_URL}/.well-known/x402`,
     openapi: `${PUBLIC_URL}/openapi.json`,
@@ -1447,12 +1481,20 @@ app.get("/mcp", (_req, res) => {
     endpoint: `${PUBLIC_URL}/mcp`,
     method: "POST",
     toolCount: RESOURCES.length,
-    freeTools: isPageChangeHttpEnabled() ? [{
-      name: "page_change",
-      method: "POST",
-      route: PAGE_CHANGE_HTTP_PATH,
-      charged: false,
-    }] : [],
+    freeTools: [
+      ...(isPageChangeHttpEnabled() ? [{
+        name: "page_change",
+        method: "POST",
+        route: PAGE_CHANGE_HTTP_PATH,
+        charged: false,
+      }] : []),
+      {
+        name: "careers_board_cold",
+        method: "GET",
+        route: CAREERS_BOARD_COLD_PATH,
+        charged: false,
+      },
+    ],
     payment: "x402 USDC on Base per paid MCP tool call; page_change is free and HTTP actions also accept native MPP",
     manifest: `${PUBLIC_URL}/.well-known/x402`,
     openapi: `${PUBLIC_URL}/openapi.json`,
@@ -1875,6 +1917,7 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       "/defi/morpho-protection": { get: { summary: RESOURCES[8].description, parameters: [{ name: "address", in: "query", required: true, schema: { type: "string", pattern: "^0x[0-9a-fA-F]{40}$" } }, { name: "targetHealthFactor", in: "query", required: false, description: "Target Morpho health factor after the stress scenario.", schema: { type: "number", exclusiveMinimum: 1, maximum: 5, default: 1.25 } }, { name: "protectAgainstShockPct", in: "query", required: false, description: "Collateral-price shock percentage to withstand.", schema: { type: "number", minimum: -99, maximum: 0, default: -10 } }, { name: "executionBufferBps", in: "query", required: false, description: "Explicit amount buffer for debt accrual and integer rounding.", schema: { type: "integer", minimum: 0, maximum: 500, default: 25 } }], responses: { "200": { description: "deterministic protection quote with unsigned transaction templates" }, "400": { description: "invalid request, charged nothing" }, "402": { description: `payment required (x402, ${MORPHO_PROTECTION_PRICE} USDC base)` } } } },
       "/defi/morpho-market-underwrite": { get: { summary: RESOURCES[9].description, parameters: [{ name: "marketId", in: "query", required: true, description: "Morpho market ID on Base mainnet.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" } }], responses: { "200": { description: "deterministic multi-source Morpho market underwriting evidence" }, "400": { description: "invalid request, charged nothing" }, "402": { description: `payment required (x402, ${MORPHO_MARKET_UNDERWRITE_PRICE} USDC base)` } } } },
       "/defi/morpho-preliquidation-replay": { get: { summary: RESOURCES[10].description, parameters: [{ name: "transactionHash", in: "query", required: true, description: "Successful Base transaction containing a Morpho PreLiquidate event.", schema: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" } }], responses: { "200": { description: "historical deterministic Morpho PreLiquidation event replay" }, "400": { description: "invalid request, charged nothing" }, "402": { description: `payment required (x402, ${MORPHO_PRELIQUIDATION_REPLAY_PRICE} USDC base)` } } } },
+      "/data/careers-board": { get: { summary: CAREERS_BOARD_DESCRIPTION, parameters: [{ name: "board", in: "query", required: true, description: "Named board id or alias. Initial reference ids are acxiom and liveramp. A bare credential-free GET still returns unsigned terms.", schema: { type: "string", example: "acxiom" } }, { name: "company", in: "query", required: false, description: "Optional alias. When board is also set, both must resolve to the same id.", schema: { type: "string" } }], responses: { "200": { description: "Prepared named-board observation after payment. Coverage stays explicit. HTTP 200 is not a claim that every company role was returned." }, "400": { description: "invalid named board, charged nothing" }, "402": { description: `payment required (x402 or MPP, ${CAREERS_BOARD_PRICE_USD} USDC)` }, "503": { description: "source unavailable before settlement, charged nothing, not an empty board" } } } },
     },
   };
   document.paths["/work/opportunity-preflight"].post = {
@@ -2026,6 +2069,19 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
       },
     };
   }
+  document.paths[CAREERS_BOARD_COLD_PATH] = {
+    get: {
+      operationId: "getCareersBoardColdRecipe",
+      tags: ["Web Data"],
+      summary: "Acquired cold careers-board recipe. charged is false. Direct free execution remains available.",
+      responses: {
+        "200": {
+          description: "Cold recipe with charged false. No payment is accepted.",
+          content: { "application/json": { schema: careersBoardColdOutputSchema() } },
+        },
+      },
+    },
+  };
   const freeOperationMetadata = {
     "/v0/cards.json": { operationId: "listPlatformHealthCards", tags: ["Settlement Radar"] },
     "/v0/commerce-demand.json": { operationId: "getCommerceDemand", tags: ["Settlement Radar"] },
@@ -2263,6 +2319,16 @@ app.get("/extract", (req, res, next) => {
 // settlement. Changed admitted request bindings fail with an uncharged 409.
 if (EXTRACT_BATCH_ENABLED) app.post(EXTRACT_BATCH_PATH, validateExtractBatchRequest);
 if (LOCKFILE_PIN_DELTA_ENABLED) app.post(LOCKFILE_PIN_DELTA_PATH, validateLockfilePinDeltaRequest);
+app.get(CAREERS_BOARD_PATH, function validateCareersBoardRequest(req, res, next) {
+  if (isUnsignedDiscoveryProbe(req)) return next();
+  const decision = resolveNamedBoardQuery(req.query);
+  if (!decision.ok) {
+    res.set("Cache-Control", "no-store");
+    return res.status(400).json({ ok: false, error: decision.error, charged: false, emptyBoard: false });
+  }
+  res.locals.careersBoardRequest = decision;
+  return next();
+});
 app.use((req, res, next) => idempotencyReplay.middleware(req, res, next).catch(next));
 
 app.get("/read", (req, res, next) => requireStringQuery(req, res, next, {
@@ -3613,6 +3679,30 @@ const x402Paywall = paymentMiddleware(
           }),
         },
       },
+      [`GET ${CAREERS_BOARD_PATH}`]: {
+        ...bazaarResourceMetadataFor(CAREERS_BOARD_PATH),
+        accepts: [{ scheme: "exact", price: CAREERS_BOARD_PRICE_USD, network: NETWORK, payTo: PAY_TO }],
+        description: CAREERS_BOARD_DESCRIPTION,
+        mimeType: "application/json",
+        extensions: {
+          ...COMMON_COMMERCE_EXTENSIONS,
+          ...declareDiscoveryContract({
+            routeKey: `GET ${CAREERS_BOARD_PATH}`,
+            input: { board: "acxiom" },
+            inputSchema: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                board: { type: "string", description: "Named board id or alias. Initial reference ids are acxiom and liveramp." },
+                company: { type: "string", description: "Optional alias. When board is also set, both must resolve to the same id." },
+              },
+              required: ["board"],
+            },
+            output: { example: CAREERS_BOARD_DISCOVERY_EXAMPLE },
+            outputSchema: careersBoardOutputSchema(),
+          }),
+        },
+      },
       ...(EXTRACT_BATCH_ENABLED ? extractBatchX402Route({
         network: NETWORK,
         payTo: PAY_TO,
@@ -3772,6 +3862,32 @@ installPaidReceiptRetention(app, () => retainDeliveredReceipt, {
   causalEventProof: (res) => commerceTelemetry.causalCommerceEventProof(res),
   causalTaskBinding: (res) => commerceTelemetry.causalCommerceTaskBinding(res),
 });
+app.use(async function prepareCareersBoardObservation(req, res, next) {
+  if (req.method !== "GET" || req.path !== CAREERS_BOARD_PATH) return next();
+  if (!hasPaymentCredential(req)) return next();
+  const decision = res.locals.careersBoardRequest;
+  if (!decision?.ok) return next();
+  try {
+    const prepared = await readNamedCareersBoard(decision.board.id);
+    if (!prepared.deliverable) {
+      res.set("Cache-Control", "no-store");
+      return res.status(503).json(prepared.body);
+    }
+    res.locals.careersBoard = prepared.body;
+    return next();
+  } catch {
+    res.set("Cache-Control", "no-store");
+    return res.status(503).json({
+      ok: false,
+      product: "samedaydesk-careers-board",
+      charged: false,
+      emptyBoard: false,
+      outcome: "unavailable",
+      error: "careers_board_prepare_failed",
+      rows: [],
+    });
+  }
+});
 app.use(mppDualStack.middleware);
 app.use((req, res, next) => {
   if (res.locals?.samedaydeskPayment?.protocol === "mpp") return next();
@@ -3784,6 +3900,22 @@ app.use((req, res, next) => {
 });
 
 // Handler runs ONLY after payment is verified/settled by the middleware.
+app.get(CAREERS_BOARD_PATH, function serveCareersBoard(req, res) {
+  const body = res.locals.careersBoard;
+  res.set("Cache-Control", "no-store");
+  if (!body) {
+    return res.status(503).json({
+      ok: false,
+      product: "samedaydesk-careers-board",
+      charged: false,
+      emptyBoard: false,
+      outcome: "unavailable",
+      error: "observation_not_prepared",
+      rows: [],
+    });
+  }
+  return res.status(200).json({ ...body, charged: true });
+});
 app.get("/extract", async (req, res) => {
   const url = req.query.url;
   if (!url || typeof url !== "string") {
@@ -4200,6 +4332,60 @@ import("./mcp-server.mjs")
           run: (args) => executePageChangeComparison(args),
           tags: ["page-change", "diff", "free"],
         }] : []),
+        {
+          name: "careers_board_cold",
+          free: true,
+          method: "GET",
+          route: CAREERS_BOARD_COLD_PATH,
+          description: "Acquired cold careers-board recipe. charged is false. Direct free execution remains available. Not a second intake.",
+          price: "$0",
+          inputSchema: {},
+          run: () => careersBoardColdRecipeBody(),
+          tags: ["careers", "recipe", "free"],
+        },
+        {
+          name: "careers_board",
+          description: CAREERS_BOARD_DESCRIPTION,
+          price: CAREERS_BOARD_PRICE_USD,
+          inputSchema: {
+            board: z.string().describe("Named board id or alias. Initial reference ids are acxiom and liveramp."),
+            company: z.string().optional().describe("Optional alias. When board is also set, both must resolve to the same id."),
+          },
+          outputSchema: z.object({
+            ok: z.boolean(),
+            product: z.string(),
+            charged: z.boolean(),
+            board: z.string(),
+            outcome: z.string(),
+            rows: z.array(z.object({
+              title: z.string(),
+              location: z.string().nullable(),
+              url: z.string(),
+              source: z.string(),
+              fetchedAt: z.string(),
+            }).passthrough()),
+            coverage: z.record(z.string(), z.any()),
+            source: z.record(z.string(), z.any()),
+            fetchedAt: z.string().nullable(),
+            roleFilter: z.null(),
+          }).passthrough(),
+          run: async (args) => {
+            const decision = resolveNamedBoardQuery({
+              board: args.board,
+              ...(args.company ? { company: args.company } : {}),
+            });
+            if (!decision.ok) {
+              return { ok: false, charged: false, emptyBoard: false, outcome: "unavailable", error: decision.error, rows: [] };
+            }
+            const prepared = await readNamedCareersBoard(decision.board.id);
+            return {
+              ...prepared.body,
+              charged: prepared.deliverable,
+              mcpSettlement: "existing MCP wrapper verifies, runs this handler, then settles. HTTP GET prepares before either rail and does not settle a source failure.",
+            };
+          },
+          tags: ["careers", "job-board", "coverage"],
+        },
         { name: "extract", description: RESOURCES[0].description, price: EXTRACT_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL. Choose extract for metadata, JSON-LD, headings, links, and a bounded text excerpt; use read for longer bounded Markdown. Content is fetched without JavaScript rendering. Check status/sourceOk/error/capture; ok means a typed extract record, not source completeness."), textExcerptLimitChars: z.number().int().min(1).max(EXTRACT_TEXT_EXCERPT_MAX_CHARS).optional().describe(`Optional excerpt budget. Default ${EXTRACT_TEXT_EXCERPT_CHARS}. Maximum ${EXTRACT_TEXT_EXCERPT_MAX_CHARS}. Rejected before fetch. Does not purchase /read or change the price.`) }, outputSchema: extractMcpOutputSchema, run: (a) => extract(a.url, { textExcerptLimitChars: a.textExcerptLimitChars }), tags: ["web", "extract", "structured-data"] },
         ...(EXTRACT_BATCH_ENABLED ? [{
           name: "extract_batch",

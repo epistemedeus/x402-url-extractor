@@ -93,7 +93,7 @@ async function startMerchant(t, extraEnv = {}) {
       const timer = setTimeout(() => reject(new Error(`startup timed out: ${output.slice(-4000)}`)), 20_000);
       const onData = (chunk) => {
         output = `${output}${chunk}`.slice(-20_000);
-        if (output.includes("x402-merchant listening") && output.includes("MCP server:  POST /mcp (23 paid tools)")) {
+        if (output.includes("x402-merchant listening") && output.includes("MCP server:  POST /mcp (24 paid tools)")) {
           clearTimeout(timer);
           resolve();
         }
@@ -233,8 +233,8 @@ test("R8 contest health metadata stays disjoint and MCP remains 23 tools", { tim
   const proof = await fetch(`${merchant.base}/.well-known/xagent-verification.json`);
   assert.equal(proof.status, 404);
   const mcp = await fetch(`${merchant.base}/mcp`).then((r) => r.json());
-  assert.equal(mcp.toolCount, 23);
-  assert.match(merchant.output, /MCP server:  POST \/mcp \(23 paid tools\)/);
+  assert.equal(mcp.toolCount, 24);
+  assert.match(merchant.output, /MCP server:  POST \/mcp \(24 paid tools\)/);
   const card = await fetch(`${merchant.base}/.well-known/agent-card.json`).then((r) => r.json());
   assert.equal(card.skills.some((skill) => skill.id === "web-extract"), false);
   const healthz = await fetch(`${merchant.base}/healthz`).then((r) => r.json());

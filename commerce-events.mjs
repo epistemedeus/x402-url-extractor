@@ -80,6 +80,7 @@ const REQUIRED_QUERY_KEY_GROUPS_BY_ROUTE = new Map([
   ["/commerce/seller-integrity-audit", [["origin"], ["route"]]],
   ["/commerce/contract-qualified-search", [["query"], ["requiredPaths"]]],
   ["/distribution/agent-surface-budget-audit", [["origin"]]],
+  ["/data/careers-board", [["board", "company"]]],
 ]);
 const AI_PROVIDER_SOURCE_PATTERNS = [
   ["openai-search", /\bOAI-SearchBot\b/i],
@@ -195,6 +196,8 @@ const EXACT_ROUTES = new Map([
   ["/security/stateful-wallet-policy-conformance", { route: "/security/stateful-wallet-policy-conformance", kind: "paid" }],
   ["/gateway/commerce/payment-offer-preflight", { route: "/gateway/commerce/payment-offer-preflight", kind: "paid" }],
   ["/mcp", { route: "/mcp", kind: "paid" }],
+  ["/data/careers-board", { route: "/data/careers-board", kind: "paid" }],
+  ["/recipes/careers-board-cold", { route: "/recipes/careers-board-cold", kind: "discovery" }],
 ]);
 
 // Classifier-produced public route forms only. Unmatched traffic is stored as

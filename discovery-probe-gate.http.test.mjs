@@ -62,6 +62,7 @@ const ROUTES = [
     invalid: "?origin=not-a-url",
     valid: "?origin=https%3A%2F%2Fexample.com&surfaceMode=openapi",
   },
+  { path: "/data/careers-board", invalid: "?board=not-a-board", valid: "?board=acxiom" },
 ];
 
 function unusedPort() {
@@ -179,7 +180,7 @@ test("all paid GET routes expose bare terms without letting malformed paid reque
   });
   merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
 
-  assert.equal(ROUTES.length, 20);
+  assert.equal(ROUTES.length, 21);
   const openapi = await fetch(`${merchant.base}/openapi.json`).then((response) => response.json());
   for (const route of ROUTES) {
     const bare = await expectStatus(merchant.base, route.path, 402);

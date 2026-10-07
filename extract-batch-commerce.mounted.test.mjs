@@ -156,7 +156,7 @@ globalThis.__SAMEDAYDESK_EXTRACT_BATCH_FETCH__ = async (url) => {
       const onData = (chunk) => {
         output = `${output}${chunk}`.slice(-40_000);
         if (output.includes(`x402-merchant listening on :${port}`)
-          && output.includes("MCP server:  POST /mcp (23 paid tools)")) finish();
+          && output.includes("MCP server:  POST /mcp (24 paid tools)")) finish();
       };
       const onExit = (code, signal) => finish(new Error(`startup exited before listening: code=${code} signal=${signal}`));
       const onError = (error) => finish(error);
