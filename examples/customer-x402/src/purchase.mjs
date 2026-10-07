@@ -19,6 +19,7 @@ import { AuthorizationRefusal, assertAcceptMatchesAuthorization, assertRequestMa
   normalizeAuthorization } from "./authorization.mjs";
 import { assertPurchaseReady } from "./request-construction.mjs";
 import { assertChallengeResource, decodeChallengeFromResponse, selectExactAccept } from "./challenge.mjs";
+import { bindCallerResultFeedback } from "./caller-result.mjs";
 import { classifyPaidResponse } from "./outcome.mjs";
 import { resolveBuyerAccount } from "./wallet.mjs";
 import { redactValue, safeJson } from "./redact.mjs";
@@ -225,7 +226,7 @@ export async function runAuthorizedPurchase({ authorization, url, account = null
         SETTLEMENT_STATES.OBSERVED_HTTP,
       );
     }
-    return {
+    const result = {
       ...classified,
       ...state,
       matched: redactValue(matched),
@@ -233,6 +234,9 @@ export async function runAuthorizedPurchase({ authorization, url, account = null
         ? "One in-process attempt with optional customer-owned unsigned attempt receipt. No durable budget, automatic paid replay, or implied retry from chain usage."
         : "One in-process attempt only. Without --attempt-receipt, unsigned EIP-3009 nonce/validBefore are not retained for reconciliation. No durable budget, chain settlement verification, or automatic paid replay.",
     };
+    // Optional and explicit. Schema success does not report usefulness.
+    bindCallerResultFeedback(result, { response, resourceUrl: matched.url });
+    return result;
   } catch (error) {
     if (receiptPersisted) {
       preserveReceiptStage(
@@ -261,9 +265,11 @@ export async function runAuthorizedPurchase({ authorization, url, account = null
       };
     }
     if (state.paymentSent && error.response && matched) {
-      return { ...classifyPaidResponse({ response: error.response, body: null,
+      const result = { ...classifyPaidResponse({ response: error.response, body: null,
         bodyError: "response exceeds authorized byte limit", requiredOutput: matched.requiredOutput,
         authorization: matched }), ...state };
+      bindCallerResultFeedback(result, { response: error.response, resourceUrl: matched.url });
+      return result;
     }
     const refused = error instanceof AuthorizationRefusal && !signStarted && !state.paymentSent;
     return { outcome: refused ? OUTCOMES.AUTHORIZATION_REFUSED : OUTCOMES.UNKNOWN,

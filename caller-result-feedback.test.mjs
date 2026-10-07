@@ -120,7 +120,12 @@ test("a response capability is optional, scoped, and not an owner token", async 
   const read = readCallerResultFeedbackToken(token, secret, issuedAt);
   assert.equal(read.ok, true);
   assert.equal(read.claims.eventId, pair.paid.id);
-  const tampered = `${token.slice(0, -1)}${token.endsWith("A") ? "B" : "A"}`;
+  // Change a decoded MAC byte, not unused base64url padding bits.
+  const [payload, encodedMac] = token.split(".");
+  const changedMac = Buffer.from(encodedMac, "base64url");
+  changedMac[0] ^= 1;
+  const tampered = `${payload}.${changedMac.toString("base64url")}`;
+  assert.notDeepEqual(Buffer.from(encodedMac, "base64url"), changedMac);
   assert.equal(readCallerResultFeedbackToken(tampered, secret, issuedAt).code, "tampered_capability");
   assert.equal(readCallerResultFeedbackToken(token, secret, issuedAt + CALLER_RESULT_FEEDBACK_TTL_MS).code, "expired_capability");
   assert.equal(readCallerResultFeedbackToken(token, "", issuedAt).code, "key_absent");
