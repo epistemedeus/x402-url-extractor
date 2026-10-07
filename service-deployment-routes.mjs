@@ -19,6 +19,7 @@ export const SERVICE_DEPLOYMENT_ROUTES = Object.freeze([
   ["GET", "/commerce/seller-integrity-audit"],
   ["GET", "/commerce/contract-qualified-search"],
   ["GET", "/distribution/agent-surface-budget-audit"],
+  ["GET", "/data/careers-board"],
   ["GET", "/commerce/settlement-proof"],
   ["GET", "/chain/transaction-receipt"],
   ["GET", "/chain/solana-transaction-receipt"],

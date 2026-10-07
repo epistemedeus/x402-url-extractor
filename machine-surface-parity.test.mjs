@@ -230,9 +230,12 @@ test("fails when Circle is promoted onto a killed surface", () => {
 
 test("live MCP metadata still matches one tool per canonical route shape", () => {
   const names = listMcpToolMetadata().map((entry) => entry.name).sort();
-  const paid = names.filter((name) => name !== "page_change");
-  assert.equal(paid.length, 24);
+  const freeNames = new Set(["page_change", "careers_board_cold"]);
+  const paid = names.filter((name) => !freeNames.has(name));
+  assert.equal(paid.length, 25);
   assert.ok(names.includes("page_change"));
+  assert.ok(names.includes("careers_board"));
+  assert.ok(names.includes("careers_board_cold"));
   assert.ok(names.includes("extract_batch"));
   assert.ok(names.includes("lockfile_pin_delta"));
   assert.ok(names.includes("morpho_protection"));

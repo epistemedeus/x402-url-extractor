@@ -421,9 +421,13 @@ test("mounted caller can report one retained result without changing the paid bo
   assert.equal(mcpFeedback.body.usefulness, "unknown");
   assert.equal(containsToken(merchant.output(), mcpToken), false);
 
+  const tamperedParts = token.split(".");
+  const tamperedMac = Buffer.from(tamperedParts.at(-1), "base64url");
+  tamperedMac[0] ^= 1;
+  tamperedParts[tamperedParts.length - 1] = tamperedMac.toString("base64url");
   const tampered = await postFeedback(
     merchant.base,
-    `${token.slice(0, -1)}${token.endsWith("A") ? "B" : "A"}`,
+    tamperedParts.join("."),
     { disposition: "useful" },
   );
   assert.equal(tampered.status, 401);

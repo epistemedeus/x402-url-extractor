@@ -231,6 +231,10 @@ function classifyLayers({
     return classifyMorphoPosition({ body, contract, truncateMarks, oversized });
   }
 
+  if (resource === RESOURCES.CAREERS_BOARD) {
+    return classifyCareersBoard({ body, contract, truncateMarks });
+  }
+
   const typedFailure = typedFailureDelivery(body);
   if (typedFailure) {
     return wrap({
@@ -369,6 +373,52 @@ function classifyLayers({
     contract,
     truncateMarks,
     sourceRefusalMarks,
+    schemaConformance: SCHEMA_CONFORMANCE.HOLDS,
+  });
+}
+
+function classifyCareersBoard({ body, contract, truncateMarks }) {
+  const outcome = body?.outcome;
+  const coverageStatus = body?.coverage?.status;
+  const deliverable = body?.ok === true
+    && body?.charged === true
+    && (outcome === "listed" || outcome === "partial" || outcome === "useful_empty");
+  if (!contract?.ok || !deliverable) {
+    return wrap({
+      verdict: VERDICT.INVALID,
+      deliveryClass: body?.ok === false ? DELIVERY.UPSTREAM_FAILED : DELIVERY.MALFORMED_BODY,
+      contract: contract?.ok ? { ok: false, schemaErrors: 0, requiredPresent: 0, codes: ["careers_board"] } : contract,
+      truncateMarks,
+      sourceRefusalMarks: 0,
+      schemaConformance: SCHEMA_CONFORMANCE.FAILS,
+    });
+  }
+  if (outcome === "useful_empty") {
+    return wrap({
+      verdict: VERDICT.PASS,
+      deliveryClass: DELIVERY.USEFUL_NEGATIVE,
+      contract,
+      truncateMarks: 0,
+      sourceRefusalMarks: 0,
+      schemaConformance: SCHEMA_CONFORMANCE.HOLDS,
+    });
+  }
+  if (outcome === "partial" || (typeof coverageStatus === "string" && coverageStatus.startsWith("partial")) || truncateMarks > 0) {
+    return wrap({
+      verdict: VERDICT.PASS,
+      deliveryClass: DELIVERY.TRUNCATED_PARTIAL,
+      contract,
+      truncateMarks: boundCounter(Math.max(1, truncateMarks)),
+      sourceRefusalMarks: 0,
+      schemaConformance: SCHEMA_CONFORMANCE.HOLDS,
+    });
+  }
+  return wrap({
+    verdict: VERDICT.PASS,
+    deliveryClass: DELIVERY.FULL_BOUNDED_CAPTURE,
+    contract,
+    truncateMarks: 0,
+    sourceRefusalMarks: 0,
     schemaConformance: SCHEMA_CONFORMANCE.HOLDS,
   });
 }

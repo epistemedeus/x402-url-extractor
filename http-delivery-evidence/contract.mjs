@@ -14,6 +14,7 @@ export const RESOURCES = Object.freeze({
   LOCKFILE: "/lockfile-pin-delta",
   SELLER_INTEGRITY: "/commerce/seller-integrity-audit",
   MORPHO_POSITION: "/defi/morpho-position",
+  CAREERS_BOARD: "/data/careers-board",
 });
 
 export const EXTRACT_CONTRACT = "x402-url-extractor.extractMcpOutputSchema";
@@ -22,6 +23,7 @@ export const EXTRACT_BATCH_CONTRACT = "x402-url-extractor.extractBatchOutputSche
 export const LOCKFILE_CONTRACT = "x402-url-extractor.lockfilePinDeltaOutputSchema";
 export const SELLER_INTEGRITY_CONTRACT = "x402-url-extractor.sellerIntegrityAuditOutputSchema";
 export const MORPHO_POSITION_CONTRACT = "x402-url-extractor.morphoPositionOutputSchema";
+export const CAREERS_BOARD_CONTRACT = "x402-url-extractor.careersBoardOutputSchema";
 
 export const CANONICAL_PIN = Object.freeze({
   merchantSha: GENERATED.merchantSha,
@@ -50,6 +52,7 @@ export function bindOwningContracts({
   lockfileHttpParse,
   sellerIntegrityHttpParse,
   morphoPositionHttpParse,
+  careersBoardHttpParse,
 } = {}) {
   owningParsers = {
     [RESOURCES.EXTRACT]: wrapOwningParse(extractSuccessParse),
@@ -58,6 +61,7 @@ export function bindOwningContracts({
     [RESOURCES.LOCKFILE]: wrapOwningParse(lockfileHttpParse),
     [RESOURCES.SELLER_INTEGRITY]: wrapOwningParse(sellerIntegrityHttpParse),
     [RESOURCES.MORPHO_POSITION]: wrapOwningParse(morphoPositionHttpParse),
+    [RESOURCES.CAREERS_BOARD]: wrapOwningParse(careersBoardHttpParse),
   };
 }
 
@@ -72,12 +76,14 @@ export function contractNameForResource(resource) {
   if (resource === RESOURCES.LOCKFILE) return LOCKFILE_CONTRACT;
   if (resource === RESOURCES.SELLER_INTEGRITY) return SELLER_INTEGRITY_CONTRACT;
   if (resource === RESOURCES.MORPHO_POSITION) return MORPHO_POSITION_CONTRACT;
+  if (resource === RESOURCES.CAREERS_BOARD) return CAREERS_BOARD_CONTRACT;
   return null;
 }
 
 export function isSupportedTarget(method, resource) {
   if (resource === RESOURCES.EXTRACT || resource === RESOURCES.READ) return method === "GET";
   if (resource === RESOURCES.MORPHO_POSITION) return method === "GET";
+  if (resource === RESOURCES.CAREERS_BOARD) return method === "GET";
   if (resource === RESOURCES.SELLER_INTEGRITY) return method === "GET" || method === "POST";
   if (resource === RESOURCES.EXTRACT_BATCH || resource === RESOURCES.LOCKFILE) return method === "POST";
   return false;

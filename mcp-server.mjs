@@ -187,28 +187,58 @@ function withRevivedArgs(handler, inputSchema) {
   return async (args, extra) => handler(reviveJsonStructuredArgs(args, inputSchema), extra);
 }
 
+function boundedGetArguments(args, maxBytes) {
+  const cap = Number.isInteger(maxBytes) && maxBytes > 0 ? maxBytes : 2048;
+  if (!args || typeof args !== "object" || Array.isArray(args)) return { error: "invalid_arguments" };
+  const keys = Object.keys(args);
+  if (keys.length > 8) return { error: "request_arguments_too_large" };
+  const params = new URLSearchParams();
+  for (const key of [...keys].sort()) {
+    if (!/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(key)) return { error: "invalid_arguments" };
+    const value = args[key];
+    if (typeof value !== "string" || value.length === 0 || value.length > 200) return { error: "invalid_arguments" };
+    params.append(key, value);
+  }
+  const query = params.toString();
+  if (Buffer.byteLength(query) > cap) return { error: "request_arguments_too_large" };
+  return { query };
+}
+
 // Project only explicitly configured tools onto an existing paid HTTP route.
 // The HTTP route owns admission, payment, replay and source work; do not also
 // enter the MCP payment wrapper. No caller-controlled target URL is accepted.
+// GET arguments are bounded scalar query keys on that fixed path. POST bodies
+// stay the existing bridge.
 function httpRouteToolHandler(tool, baseUrl) {
   const base = new URL(baseUrl);
   if (base.protocol !== "http:" || !["127.0.0.1", "[::1]"].includes(base.hostname)) {
     throw new Error("MCP HTTP bridge requires a loopback HTTP origin");
   }
   const route = tool.paidHttp;
-  if (route.method !== "POST" || !/^\/(?!\/)[^?#]*$/.test(route.path)) throw new Error("invalid MCP HTTP route");
-  const target = new URL(route.path, base);
+  const method = String(route.method || "");
+  if (!["GET", "POST"].includes(method) || !/^\/(?!\/)[^?#]*$/.test(route.path)) throw new Error("invalid MCP HTTP route");
   const resource = new URL(route.resourceUrl);
   if (resource.protocol !== "https:" || resource.pathname !== route.path || resource.search || resource.hash || resource.username || resource.password) {
     throw new Error("MCP HTTP bridge requires a fixed public HTTPS resource");
   }
   return async (_args, extra) => {
     const request = mcpHttpRequestAls.getStore();
-    const body = JSON.stringify(request?.body?.params?.arguments ?? _args);
-    if (Buffer.byteLength(body) > route.maxRequestBytes) {
-      return { ...asToolResult({ ok: false, error: "request_body_too_large", charged: false }), isError: true };
+    let requestPath = route.path;
+    let body = null;
+    if (method === "GET") {
+      const bounded = boundedGetArguments(_args, route.maxRequestBytes);
+      if (bounded.error) {
+        return { ...asToolResult({ ok: false, error: bounded.error, charged: false }), isError: true };
+      }
+      requestPath = bounded.query ? `${route.path}?${bounded.query}` : route.path;
+    } else {
+      body = JSON.stringify(request?.body?.params?.arguments ?? _args);
+      if (Buffer.byteLength(body) > route.maxRequestBytes) {
+        return { ...asToolResult({ ok: false, error: "request_body_too_large", charged: false }), isError: true };
+      }
     }
-    const headers = { "content-type": "application/json", host: resource.host, "x-forwarded-proto": "https" };
+    const headers = { host: resource.host, "x-forwarded-proto": "https" };
+    if (method === "POST") headers["content-type"] = "application/json";
     // Retain only a canonical, caller-declared source on the existing HTTP
     // writer. Never forward owner tokens, identity headers or arbitrary labels.
     const sourceHeader = request?.headers?.["x-samedaydesk-agent-source"];
@@ -228,7 +258,7 @@ function httpRouteToolHandler(tool, baseUrl) {
       if (!headers[name]) continue;
       try {
         const credential = JSON.parse(Buffer.from(headers[name], "base64").toString("utf8"));
-        if (credential.resource?.url !== resource.href) throw new Error("wrong resource");
+        if (credential.resource?.url !== `${resource.origin}${requestPath}`) throw new Error("wrong resource");
       } catch {
         return { ...asToolResult({ ok: false, error: "payment_resource_mismatch", charged: false,
           resource: resource.href }), isError: true };
@@ -236,10 +266,10 @@ function httpRouteToolHandler(tool, baseUrl) {
     }
     try {
       const response = await new Promise((resolve, reject) => {
-        const req = requestHttp(target, { method: "POST", headers,
+        const req = requestHttp(new URL(requestPath, base), { method, headers,
           signal: AbortSignal.timeout(60_000) }, resolve);
         req.on("error", reject);
-        req.end(body);
+        req.end(body ?? undefined);
       });
       const chunks = [];
       let bytes = 0;

@@ -553,7 +553,7 @@ test("MCP extract_batch challenge projects required payment-identifier", { timeo
   });
   merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url, fetchLogPath });
   const deadline = Date.now() + 20_000;
-  while (!merchant.output().includes("MCP server:  POST /mcp (23 paid tools)")) {
+  while (!merchant.output().includes("MCP server:  POST /mcp (24 paid tools)")) {
     if (Date.now() > deadline) throw new Error(`MCP mount timed out:\n${merchant.output().slice(-2000)}`);
     await new Promise((resolve) => setTimeout(resolve, 50));
   }

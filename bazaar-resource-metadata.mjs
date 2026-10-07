@@ -100,6 +100,10 @@ export const BAZAAR_RESOURCE_METADATA = Object.freeze({
     serviceName: "SameDayDesk",
     tags: Object.freeze(["wallet-policy", "spend-cap", "stateful-policy", "concurrency", "agent-safety"]),
   }),
+  "/data/careers-board": Object.freeze({
+    serviceName: "SameDayDesk",
+    tags: Object.freeze(["careers", "job-board", "coverage", "ashby", "workday"]),
+  }),
 });
 
 export function validateBazaarResourceMetadata(metadata = BAZAAR_RESOURCE_METADATA) {

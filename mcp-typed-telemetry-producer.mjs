@@ -267,6 +267,12 @@ const CLOSED_MCP_PRODUCTS = Object.freeze({
     resource: "mcp://tool/stateful_wallet_policy_conformance",
     httpRoute: "/security/stateful-wallet-policy-conformance",
   }),
+  careers_board: Object.freeze({
+    tool: "careers_board",
+    productSku: "samedaydesk-careers-board",
+    resource: "mcp://tool/careers_board",
+    httpRoute: "/data/careers-board",
+  }),
 });
 
 const utf8Encoder = new TextEncoder();

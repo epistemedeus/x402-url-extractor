@@ -32,7 +32,7 @@ test("binds every declared standard route to both exact Base settlement protocol
   const value = publication();
   assert.equal(value.active, true);
   assert.equal(value.routeCount, SERVICE_DEPLOYMENT_ROUTES.length);
-  assert.equal(value.routeCount, 25);
+  assert.equal(value.routeCount, 26);
   assert.equal(value.settlementCount, 2);
   assert.equal(value.operationalWallet, SOLANA_AGENT_REGISTRATION.merchantWallet);
   assert.match(value.publicKeyFingerprint, /^sha256:[0-9a-f]{64}$/);
@@ -58,7 +58,7 @@ test("identity-binding declaration is stable across rollout flags and does not a
     for (const flag of ["0", "1"]) {
       process.env.EXTRACT_BATCH_ENABLED = flag;
       const value = publication();
-      assert.equal(value.routeCount, 25);
+      assert.equal(value.routeCount, 26);
       const report = verifyServiceDeploymentStatement(value.envelope, {
         publicKey: value.publicKeyPem,
         request: { method: "POST", url: `${ORIGIN}/extract/batch` },
@@ -96,4 +96,10 @@ test("keeps expired static evidence visible but inactive for rotation monitoring
   const value = publication({ now: Date.parse(STATIC_PAYLOAD.expiresAt) + 1_000 });
   assert.equal(value.active, false);
   assert.equal(value.expiresInMs < 0, true);
+});
+
+test("refuses the valid signed predecessor when its route scope omits careers", () => {
+  const predecessor = JSON.parse(readFileSync(new URL("./fixtures/service-deployment/careers-predecessor.json", import.meta.url), "utf8"));
+  const claims = JSON.parse(Buffer.from(predecessor.payload, "base64url").toString("utf8"));
+  assert.throws(() => publication({ envelope: predecessor, now: Date.parse(claims.issuedAt) + 1000 }), /routes do not match/);
 });

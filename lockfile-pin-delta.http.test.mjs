@@ -181,7 +181,7 @@ test("flag off leaves live extract and catalogs unchanged", { timeout: 60_000 },
   });
   merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url, enabled: false });
   const deadline = Date.now() + 20_000;
-  while (!merchant.output().includes("MCP server:  POST /mcp (22 paid tools)")) {
+  while (!merchant.output().includes("MCP server:  POST /mcp (23 paid tools)")) {
     if (Date.now() > deadline) throw new Error(`MCP mount timed out:\n${merchant.output().slice(-2000)}`);
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
@@ -192,7 +192,7 @@ test("flag off leaves live extract and catalogs unchanged", { timeout: 60_000 },
     fetch(`${merchant.base}/.well-known/x402`).then((r) => r.json()),
   ]);
   assert.equal(openapi.paths[LOCKFILE_PIN_DELTA_PATH], undefined);
-  assert.equal(Object.values(openapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length, 25);
+  assert.equal(Object.values(openapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length, 26);
   assert.equal(catalog.actions.some((action) => action.route === LOCKFILE_PIN_DELTA_PATH), false);
   assert.equal(manifest.items.some((item) => item.resource?.routeTemplate === LOCKFILE_PIN_DELTA_PATH), false);
   assert.equal(extract.status, 402);
@@ -308,7 +308,7 @@ test("mounted success, no-change, malformed, oversize, and wrong-replay-input", 
   });
   merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
   const deadline = Date.now() + 20_000;
-  while (!merchant.output().includes("MCP server:  POST /mcp (23 paid tools)")) {
+  while (!merchant.output().includes("MCP server:  POST /mcp (24 paid tools)")) {
     if (Date.now() > deadline) throw new Error(`MCP mount timed out:\n${merchant.output().slice(-2000)}`);
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
@@ -341,14 +341,14 @@ test("mounted success, no-change, malformed, oversize, and wrong-replay-input", 
 
   const openapi = await fetch(`${merchant.base}/openapi.json`).then((r) => r.json());
   assert.equal(openapi.paths[LOCKFILE_PIN_DELTA_PATH].post.operationId, "compareLockfilePinDelta");
-  assert.equal(Object.values(openapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length, 26);
+  assert.equal(Object.values(openapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length, 27);
   const lockfileProtocols = (openapi.paths[LOCKFILE_PIN_DELTA_PATH].post["x-payment-info"]?.protocols || [])
     .flatMap((entry) => Object.keys(entry || {}));
   assert.deepEqual(lockfileProtocols, ["x402"]);
   const mppOpenapi = await fetch(`${merchant.base}/mpp-openapi.json`).then((r) => r.json());
   assert.equal(mppOpenapi.paths[LOCKFILE_PIN_DELTA_PATH], undefined);
   const mppPaid = Object.values(mppOpenapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length;
-  assert.equal(mppPaid, 24, "MPP OpenAPI stays the dual-stack catalog without this x402-only route");
+  assert.equal(mppPaid, 25, "MPP OpenAPI stays the dual-stack catalog without this x402-only route");
   const catalog = await fetch(`${merchant.base}/api/actions`).then((r) => r.json());
   const lockfileAction = catalog.actions.find((action) => action.route === LOCKFILE_PIN_DELTA_PATH);
   assert.deepEqual(lockfileAction.paymentProtocols, ["x402"]);
@@ -445,7 +445,7 @@ test("mounted success, no-change, malformed, oversize, and wrong-replay-input", 
   await client.connect(new StreamableHTTPClientTransport(new URL(`${merchant.base}/mcp`)));
   try {
     const tools = (await client.listTools()).tools;
-    assert.equal(tools.length, 23);
+    assert.equal(tools.length, 25);
     const tool = tools.find((entry) => entry.name === "lockfile_pin_delta");
     assert.ok(tool);
     assert.match(tool.description, /https:\/\/agents\.samedaydesk\.com\/lockfile-pin-delta, not mcp:\/\//);
@@ -583,7 +583,7 @@ test("lockfile flag does not disable production extract_batch", { timeout: 60_00
     extraEnv: { EXTRACT_BATCH_ENABLED: "1" },
   });
   const deadline = Date.now() + 20_000;
-  while (!merchant.output().includes("MCP server:  POST /mcp (24 paid tools)")) {
+  while (!merchant.output().includes("MCP server:  POST /mcp (25 paid tools)")) {
     if (Date.now() > deadline) throw new Error(`MCP mount timed out:\n${merchant.output().slice(-2000)}`);
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
@@ -595,7 +595,7 @@ test("lockfile flag does not disable production extract_batch", { timeout: 60_00
   ]);
   assert.equal(openapi.paths[EXTRACT_BATCH_PATH].post.operationId, "extractPublicUrlsBatch");
   assert.equal(openapi.paths[LOCKFILE_PIN_DELTA_PATH].post.operationId, "compareLockfilePinDelta");
-  assert.equal(Object.values(openapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length, 27);
+  assert.equal(Object.values(openapi.paths).flatMap(Object.values).filter((op) => op?.["x-payment-info"]).length, 28);
   assert.equal(catalog.actions.some((action) => action.route === EXTRACT_BATCH_PATH), true);
   assert.equal(catalog.actions.some((action) => action.route === LOCKFILE_PIN_DELTA_PATH), true);
   assert.equal(batch.status, 402);
@@ -610,7 +610,7 @@ test("lockfile flag does not disable production extract_batch", { timeout: 60_00
   await client.connect(new StreamableHTTPClientTransport(new URL(`${merchant.base}/mcp`)));
   try {
     const tools = (await client.listTools()).tools;
-    assert.equal(tools.length, 24);
+    assert.equal(tools.length, 26);
     assert.ok(tools.some((tool) => tool.name === "extract_batch"));
     assert.ok(tools.some((tool) => tool.name === "lockfile_pin_delta"));
   } finally {

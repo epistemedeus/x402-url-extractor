@@ -278,8 +278,8 @@ export function validateMachineSurfaceParity({
   }
 
   const expectedMcp = actionRoutes.map((action) => mcpToolNameForRoute(action.route)).sort();
-  // page_change is the free recipe, not a priced action, so it is not catalog drift.
-  const freeUnpaidMcpTools = new Set(["page_change"]);
+  // Free recipes are not priced actions, so they are not catalog drift.
+  const freeUnpaidMcpTools = new Set(["page_change", "careers_board_cold"]);
   const actualMcp = [...new Set(mcpToolNames || [])].filter((name) => !freeUnpaidMcpTools.has(name)).sort();
   if (expectedMcp.join("\n") !== actualMcp.join("\n")) {
     fail("MCP tool names drifted from canonical paid actions");
