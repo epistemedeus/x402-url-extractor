@@ -557,20 +557,17 @@ function tokens(value) {
   return new Set(String(value || "").toLowerCase().match(/[a-z0-9]{2,}/g) || []);
 }
 
-const X402_JOBS_GENERIC_ROUTE_TERMS = new Set(["api", "v0", "v1", "defi", "commerce", "distribution", "work"]);
+const X402_JOBS_GENERIC_ROUTE_TERMS = new Set(["api", "v0", "v1", "defi", "commerce", "distribution", "work", "data"]);
 const X402_JOBS_STOP_TERMS = new Set(["the", "and", "for", "from", "into", "with", "without", "one", "https"]);
 
 function x402JobsLexicalQuery(input) {
   const routeTerms = [...tokens(input.route)].filter((term) => !X402_JOBS_GENERIC_ROUTE_TERMS.has(term));
   const intentTerms = [...tokens(input.intent)].filter((term) => !X402_JOBS_STOP_TERMS.has(term));
   const selected = [];
-  for (const term of routeTerms) {
+  // Route and intent share one query budget, including routes already holding two terms.
+  for (const term of [...routeTerms, ...intentTerms]) {
     if (!selected.includes(term)) selected.push(term);
-    if (selected.length === 2) break;
-  }
-  for (const term of intentTerms) {
-    if (!selected.includes(term)) selected.push(term);
-    if (selected.length === 2) break;
+    if (selected.length >= 2) break;
   }
   return selected.join(" ");
 }

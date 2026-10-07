@@ -526,3 +526,24 @@ test("keeps dynamic or absent MPPScan prices unknown rather than free", async ()
   assert.equal(result.sources["mppscan-public-search"].topResults[0].priceUsd, null);
   assert.equal(result.sources["mppscan-public-search"].topResults[0].score, null);
 });
+
+for (const [route, expectedQuery] of [
+  ["/data/careers-board", "careers board"],
+  ["/api/v1/catalog/products", "catalog products"],
+  ["/reports/monthly-payments", "reports monthly"],
+]) {
+  test(`x402.jobs keeps a bounded task query for ${route}`, async () => {
+    const result = await agentDiscoverabilityAudit({
+      origin: "https://api.example.com",
+      route,
+      intent: "Fetch current public jobs from a company careers board with explicit source and completeness coverage",
+    }, {
+      fetchImpl: async () => response({ resources: [], services: [], data: [], results: [] }),
+    });
+    const source = result.sources["x402jobs-public-search"];
+    assert.equal(source.status, "ok");
+    assert.equal(source.queryUsed, expectedQuery);
+    assert.equal(source.queryUsed.split(/\s+/).length, 2);
+    assert.equal(source.queryUsed.includes("api.example.com"), false);
+  });
+}
