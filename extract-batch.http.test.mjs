@@ -823,6 +823,7 @@ test("mounted semantic refusal contract is shared by HTTP, OpenAPI, and MCP", { 
   const cases = [
     { body: ["https://example.com/"], code: "body_not_object" },
     { body: { urls: ["https://127.0.0.1/do-not-store"], [secret]: secretValue }, code: "unexpected_field", secrets: [secret, secretValue, "do-not-store"] },
+    { body: { urls: ["https://example.com/"], fields: [secret] }, code: "fields_unknown", secrets: [secret] },
     { body: {}, code: "urls_invalid" },
     { body: { urls: [] }, code: "urls_invalid" },
     { body: { urls: Array.from({ length: 6 }, (_, index) => `https://example.com/${index}`) }, code: "urls_invalid" },
@@ -962,7 +963,7 @@ test("mounted semantic refusal contract is shared by HTTP, OpenAPI, and MCP", { 
     const result = await mcpCall(merchant.base, entry.body);
     const text = result.result?.content?.[0]?.text || "";
     const parsed = tryJson(text);
-    if (handlerCodes.has(entry.code)) {
+    if (entry.body && !Array.isArray(entry.body) && typeof entry.body === "object") {
       assert.equal(result.result?.isError, true, `${entry.code} ${text}`);
       assert.equal(result.result?.structuredContent, undefined);
       assert.equal(readExtractBatchInputRefusalCode(parsed), entry.code, text);
@@ -981,10 +982,15 @@ test("mounted semantic refusal contract is shared by HTTP, OpenAPI, and MCP", { 
       for (const forbidden of entry.secrets || []) assert.equal(text.includes(forbidden), false);
     }
   }
-  const sdkRejected = await mcpCall(merchant.base, { urls: ["https://example.com/"], fields: ["unsupported"] });
+  const sdkRejected = await mcpCall(merchant.base, { urls: ["https://example.com/"], fields: [secret] });
   const sdkText = sdkRejected.result?.content?.[0]?.text || JSON.stringify(sdkRejected.error || {});
   assert.ok(sdkRejected.error || sdkRejected.result?.isError);
-  assert.equal(sdkText.includes(declaration.schemaVersion), false, sdkText);
+  assert.equal(readExtractBatchInputRefusalCode(tryJson(sdkText)), "fields_unknown", sdkText);
+  assert.equal(JSON.stringify(sdkRejected).includes(secret), false);
+  assert.equal(sdkRejected.result?.structuredContent, undefined);
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+  assert.deepEqual(await readFetchLog(fetchLogPath), []);
 
   const validMcp = await mcpCall(merchant.base, { urls: ["https://alpha.example/"], fields: ["title"] });
   assert.equal(validMcp.result?.structuredContent?.resource?.url, "https://agents.samedaydesk.com/extract/batch");

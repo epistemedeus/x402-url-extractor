@@ -721,6 +721,7 @@ export async function mountMcp(app, {
       outputSchema: t.outputSchema,
       paymentMeta: createX402ToolMeta(accepts),
       inputRefusalMeta: t.inputRefusalMeta,
+      guardedHttpInput: Boolean(t.paidHttp && t.inputRefusalMeta),
       operationIdentity: t.operationIdentity,
       handler,
       binding,
@@ -741,16 +742,21 @@ export async function mountMcp(app, {
   }
 
   // A fresh MCP server per request (stateless mode requires server+transport per call).
-  const makeServer = () => {
+  const makeServer = (requestBody) => {
     const server = new McpServer(serverInfo);
     for (const t of prepared) {
       const operationMeta = t.operationIdentity
         ? { samedaydesk: { operation: t.operationIdentity } }
         : {};
+      // This call's original ALS arguments go unchanged to the HTTP guard.
+      // Let that guard produce static refusals rather than SDK/Zod value echoes.
+      // Discovery and every other call retain their advertised input schema.
+      const guardedCall = t.guardedHttpInput && requestBody?.jsonrpc === "2.0"
+        && requestBody?.method === "tools/call" && requestBody?.params?.name === t.name;
       server.registerTool(t.name, {
         title: t.title,
         description: t.description,
-        inputSchema: t.inputSchema,
+        inputSchema: guardedCall ? z.object(t.inputSchema).passthrough().catch({}) : t.inputSchema,
         outputSchema: t.outputSchema,
         _meta: { ...t.paymentMeta, ...operationMeta, ...(t.inputRefusalMeta || {}) },
       }, t.handler);
@@ -797,7 +803,7 @@ export async function mountMcp(app, {
       res.set("Cache-Control", "no-store");
       return res.status(200).json(unknownTool);
     }
-    const server = makeServer();
+    const server = makeServer(req.body);
     const transport = new StreamableHTTPServerTransport(transportOptions);
     if (created.attempt) decorateTransportSend(transport, created.attempt);
     res.on("close", () => {
