@@ -188,10 +188,18 @@ export function mountUsefulResultReuse(app, options = {}) {
   // The callback receives the same service/store, not another shared writer.
   const observationHandler = typeof options.freeTaskObservation === "function"
     ? options.freeTaskObservation(service) : null;
-  app.use((req, res, next) => {
+  // Published methods are real Express routes so inspection sees the same
+  // dispatcher the request runs. An all-method route is skipped by that
+  // inspection. The fallback keeps unpublished methods (405 and observation
+  // posts) on these paths without a second route catalog.
+  function dispatchUsefulResultReuse(req, res, next) {
     if (typeof observationHandler === "function" && observationHandler(req, res) === true) return;
     if (handleUsefulResultReuse(req, res, service) === false) return next();
     return undefined;
-  });
+  }
+  app.get(CURRENT_PATH, dispatchUsefulResultReuse);
+  app.get(GRANT_READ_PATH, dispatchUsefulResultReuse);
+  app.post(GRANT_READ_PATH, dispatchUsefulResultReuse);
+  app.use(dispatchUsefulResultReuse);
   return { mounted: true, service };
 }

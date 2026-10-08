@@ -28,12 +28,36 @@ function ensureMethod(entry, method) {
   return entry.methods[method];
 }
 
-function consumeRoute(route, into) {
+function joinRoutePath(prefix, routePath) {
+  const path = normalizePath(routePath);
+  if (!prefix) return path;
+  if (!path || path === "/") return prefix;
+  return normalizePath(`${prefix}${path.startsWith("/") ? path : `/${path}`}`);
+}
+
+// Express 4 stores a router mount only in its regexp. Recover a static prefix
+// so nested routes and path aliases keep the public path. A parameter or an
+// unrecognized regexp adds nothing, which leaves those layers on the parent path.
+function staticMountPrefix(layer) {
+  if (!layer || layer.route || layer.regexp?.fast_slash || layer.regexp?.fast_star) return "";
+  const source = layer.regexp?.source;
+  if (typeof source !== "string") return "";
+  const suffix = "\\/?(?=\\/|$)";
+  if (!source.endsWith(suffix)) return "";
+  const body = source.slice(0, -suffix.length);
+  if (body.includes("(")) return "";
+  const match = /^\^((?:\\\/(?:\\.|[^\\])+)*)/.exec(body);
+  if (!match?.[1]) return "";
+  const decoded = match[1].replace(/\\(.)/g, "$1");
+  return decoded.startsWith("/") ? normalizePath(decoded) : "";
+}
+
+function consumeRoute(route, into, prefix = "") {
   if (!route || isAllMethodRoute(route.methods)) return;
   const paths = Array.isArray(route.path) ? route.path : [route.path];
   for (const rawPath of paths) {
     if (typeof rawPath !== "string" || !rawPath.startsWith("/")) continue;
-    const path = normalizePath(rawPath);
+    const path = joinRoutePath(prefix, rawPath);
     if (!into.has(path)) into.set(path, { path, methods: {} });
     const entry = into.get(path);
     for (const layer of route.stack || []) {
@@ -48,10 +72,13 @@ function consumeRoute(route, into) {
   }
 }
 
-function walk(stack, into) {
+function walk(stack, into, prefix = "") {
   for (const layer of stack || []) {
-    if (layer?.route) consumeRoute(layer.route, into);
-    else if (Array.isArray(layer?.handle?.stack)) walk(layer.handle.stack, into);
+    if (layer?.route) consumeRoute(layer.route, into, prefix);
+    else if (Array.isArray(layer?.handle?.stack)) {
+      const mounted = staticMountPrefix(layer);
+      walk(layer.handle.stack, into, mounted ? joinRoutePath(prefix, mounted) : prefix);
+    }
   }
 }
 

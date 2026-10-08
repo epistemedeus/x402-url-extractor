@@ -1,12 +1,19 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import express from "express";
+import { collectExpressBindings, routeBindingProblems } from "../route-binding-inspect.mjs";
+import { CURRENT_PATH, CURRENT_SCHEMA, GRANT_READ_PATH } from "../useful-result-reuse/constants.mjs";
+import { mountUsefulResultReuse } from "../useful-result-reuse/http.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cli = path.join(root, "tools/verify/cli.mjs");
+const REUSE_TOKEN = "useful-result-reuse-grant-token-32b-minimum-value";
 
 function run(args) {
   const result = spawnSync(process.execPath, [cli, ...args], {
@@ -123,6 +130,155 @@ test("counterexample fixtures pass", () => {
     assert.equal(result.status, 0, `${name} ${result.stderr}`);
     assert.equal(result.json.evidence[0].observed.defect, false, name);
     assert.equal(result.json.boundary.settled, false);
+  }
+});
+
+function reuseOpenApi() {
+  return {
+    paths: {
+      [CURRENT_PATH]: {
+        get: { operationId: "getUsefulResultReuseCurrent", responses: { "200": { description: "current" } } },
+      },
+      [GRANT_READ_PATH]: {
+        get: { operationId: "readRetainedUsefulResult", responses: { "200": { description: "read" } } },
+        post: { operationId: "mutateRetainedUsefulResult", responses: { "200": { description: "mutate" } } },
+      },
+    },
+  };
+}
+
+function handlerCount(bindings, routePath, method) {
+  return bindings.find((entry) => entry.path === routePath)?.methods?.[method]?.handlerCount || 0;
+}
+
+async function listenReuse(dataDir, options = {}) {
+  const app = express();
+  app.use(express.json({ limit: "16kb" }));
+  const mounted = mountUsefulResultReuse(app, { dataDir, internalToken: REUSE_TOKEN, ...options });
+  const server = app.listen(0, "127.0.0.1");
+  await new Promise((resolve, reject) => {
+    server.once("listening", resolve);
+    server.once("error", reject);
+  });
+  return {
+    app,
+    mounted,
+    server,
+    base: `http://127.0.0.1:${server.address().port}`,
+    close: () => new Promise((resolve) => server.close(() => resolve())),
+  };
+}
+
+test("useful-result reuse registration is inspected on a cold mount and still rejects gaps", async () => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "reuse-route-bind-"));
+  const seen = [];
+  const first = await listenReuse(dataDir, {
+    freeTaskObservation: () => (req, res) => {
+      if (req.method === "POST" && req.path === CURRENT_PATH && req.get("x-samedaydesk-result-action") === "start-attempt-capture") {
+        seen.push("post-current");
+        res.status(200).json({ ok: true, paymentPermitted: false });
+        return true;
+      }
+      return false;
+    },
+  });
+  try {
+    const bindings = collectExpressBindings(first.app);
+    assert.ok(handlerCount(bindings, CURRENT_PATH, "GET") >= 1);
+    assert.ok(handlerCount(bindings, GRANT_READ_PATH, "GET") >= 1);
+    assert.ok(handlerCount(bindings, GRANT_READ_PATH, "POST") >= 1);
+    assert.equal(
+      bindings.find((entry) => entry.path === GRANT_READ_PATH)?.methods?.POST?.handlerNames?.includes("dispatchUsefulResultReuse"),
+      true,
+    );
+    const published = routeBindingProblems({
+      bindings,
+      catalog: { actions: [], freeRecipes: [] },
+      openapi: reuseOpenApi(),
+      mcpTools: [],
+    });
+    assert.deepEqual(published.filter((problem) => problem.includes("useful-result-reuse")), []);
+
+    const openapi = reuseOpenApi();
+    openapi.paths["/.well-known/useful-result-reuse/absent"] = {
+      get: { responses: { "200": { description: "not registered" } } },
+    };
+    openapi.paths[CURRENT_PATH].post = { responses: { "200": { description: "not a published method" } } };
+    const rejected = routeBindingProblems({
+      bindings,
+      catalog: { actions: [], freeRecipes: [] },
+      openapi,
+      mcpTools: [],
+    });
+    assert.ok(rejected.includes("missing-handler GET /.well-known/useful-result-reuse/absent"));
+    assert.ok(rejected.includes(`method-mismatch ${CURRENT_PATH} openapi POST express GET`));
+
+    const aliasApp = express();
+    const aliasRouter = express.Router();
+    aliasRouter.get(["/leaf", "/leaf-alias"], function aliasLeaf(_req, res) { res.end("ok"); });
+    aliasApp.use("/.well-known/alias-prefix", aliasRouter);
+    aliasApp.get(["/direct-alias", "/direct-alias-b"], function directAlias(_req, res) { res.end("ok"); });
+    const aliasBindings = collectExpressBindings(aliasApp);
+    assert.equal(handlerCount(aliasBindings, "/.well-known/alias-prefix/leaf", "GET") >= 1, true);
+    assert.equal(handlerCount(aliasBindings, "/.well-known/alias-prefix/leaf-alias", "GET") >= 1, true);
+    assert.equal(handlerCount(aliasBindings, "/direct-alias", "GET") >= 1, true);
+    assert.equal(handlerCount(aliasBindings, "/direct-alias-b", "GET") >= 1, true);
+    const aliasProblems = routeBindingProblems({
+      bindings: aliasBindings,
+      catalog: { actions: [], freeRecipes: [] },
+      openapi: { paths: { "/.well-known/alias-prefix/missing": { post: { responses: { "200": { description: "absent" } } } } } },
+      mcpTools: [],
+    });
+    assert.ok(aliasProblems.includes("missing-handler POST /.well-known/alias-prefix/missing"));
+
+    const current = await fetch(`${first.base}${CURRENT_PATH}`);
+    const currentBody = await current.json();
+    assert.equal(current.status, 200);
+    assert.equal(currentBody.schema, CURRENT_SCHEMA);
+    assert.equal(currentBody.customerRetention.read.route, GRANT_READ_PATH);
+    assert.equal(current.headers.get("payment-required"), null);
+    const head = await fetch(`${first.base}${CURRENT_PATH}`, { method: "HEAD" });
+    assert.equal(head.status, 200);
+    assert.equal(await head.text(), "");
+    const retained = await fetch(`${first.base}${GRANT_READ_PATH}`);
+    assert.equal(retained.status, 401);
+    assert.equal((await retained.json()).error, "grant_required");
+    assert.equal(retained.headers.get("payment-required"), null);
+    const wrongMethod = await fetch(`${first.base}${GRANT_READ_PATH}`, { method: "PUT" });
+    assert.equal(wrongMethod.status, 405);
+    assert.equal((await wrongMethod.json()).error, "method_rejected");
+    const wrongCurrent = await fetch(`${first.base}${CURRENT_PATH}`, { method: "DELETE" });
+    assert.equal(wrongCurrent.status, 405);
+    assert.equal((await wrongCurrent.json()).error, "method_rejected");
+    const observed = await fetch(`${first.base}${CURRENT_PATH}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-samedaydesk-result-action": "start-attempt-capture" },
+      body: "{}",
+    });
+    assert.equal(observed.status, 200);
+    assert.equal((await observed.json()).paymentPermitted, false);
+    assert.deepEqual(seen, ["post-current"]);
+    const absent = await fetch(`${first.base}/.well-known/useful-result-reuse/absent`);
+    assert.equal(absent.status, 404);
+  } finally {
+    await first.close();
+    await rm(dataDir, { recursive: true, force: true });
+  }
+
+  const againDir = await mkdtemp(path.join(tmpdir(), "reuse-route-bind-cold-"));
+  const again = await listenReuse(againDir);
+  try {
+    const bindings = collectExpressBindings(again.app);
+    assert.ok(handlerCount(bindings, CURRENT_PATH, "GET") >= 1);
+    assert.ok(handlerCount(bindings, GRANT_READ_PATH, "GET") >= 1);
+    assert.ok(handlerCount(bindings, GRANT_READ_PATH, "POST") >= 1);
+    const current = await fetch(`${again.base}${CURRENT_PATH}`);
+    assert.equal(current.status, 200);
+    assert.equal((await current.json()).schema, CURRENT_SCHEMA);
+    assert.equal(current.headers.get("payment-required"), null);
+  } finally {
+    await again.close();
+    await rm(againDir, { recursive: true, force: true });
   }
 });
 
