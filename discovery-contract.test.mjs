@@ -6,6 +6,7 @@ import {
   declareDiscoveryContract,
   getDiscoveryOutputContract,
   getDiscoveryRequestContract,
+  isDiscoveryQueryValuePresent,
   projectDiscoveryRequest,
 } from "./discovery-contract.mjs";
 
@@ -78,6 +79,92 @@ test("places the authored output schema in the Bazaar v2 response contract", () 
   assert.deepEqual(classifyDiscoveryRequestConstruction("GET /missing", ["url"]), {
     status: "undeclared",
     requiredKeyCount: 0,
+  });
+});
+
+test("presence predicate matches construction for empty, scalar, and repeated values", () => {
+  declareDiscoveryContract({
+    routeKey: "GET /presence-contract",
+    input: { alpha: "present", beta: "present" },
+    inputSchema: {
+      type: "object",
+      properties: {
+        alpha: { type: "string" },
+        beta: { type: "string" },
+      },
+      required: ["alpha", "beta"],
+    },
+    output: { example: { ok: true } },
+    outputSchema: {
+      type: "object",
+      properties: { ok: { type: "boolean" } },
+      required: ["ok"],
+    },
+  });
+
+  const absentValues = [
+    "",
+    "   ",
+    "\n\t",
+    null,
+    undefined,
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    {},
+    { nested: "x" },
+    [],
+    ["", "  "],
+    [null],
+    [Number.NaN],
+    [{}],
+  ];
+  for (const value of absentValues) {
+    assert.equal(isDiscoveryQueryValuePresent(value), false, `absent ${JSON.stringify(value)}`);
+  }
+  const presentValues = [
+    "https://example.com",
+    "0",
+    "false",
+    0,
+    -0,
+    1,
+    false,
+    true,
+    ["", "https://example.com"],
+    ["  ", 0],
+    [false],
+  ];
+  for (const value of presentValues) {
+    assert.equal(isDiscoveryQueryValuePresent(value), true, `present ${JSON.stringify(value)}`);
+  }
+
+  const cases = [
+    [{ alpha: "https://example.com", beta: "ok" }, "constructed"],
+    [{}, "missing_required_input"],
+    [{ alpha: "https://example.com" }, "missing_required_input"],
+    [{ alpha: "", beta: "   " }, "missing_required_input"],
+    [{ alpha: ["", ""], beta: [" ", "\t"] }, "missing_required_input"],
+    [{ alpha: ["", "https://example.com"], beta: ["  ", "ok"] }, "constructed"],
+    [{ alpha: 0, beta: false }, "constructed"],
+    [{ alpha: Number.NaN, beta: null }, "missing_required_input"],
+    [{ alpha: { nested: true }, beta: Number.POSITIVE_INFINITY }, "missing_required_input"],
+    [{ alpha: "https://example.com", beta: "", note: "" }, "missing_required_input"],
+  ];
+  for (const [query, status] of cases) {
+    assert.deepEqual(
+      classifyDiscoveryRequestConstruction("GET /presence-contract", query),
+      { status, requiredKeyCount: 2 },
+      JSON.stringify(query),
+    );
+  }
+  assert.deepEqual(classifyDiscoveryRequestConstruction("GET /presence-contract", ["alpha", "beta"]), {
+    status: "constructed",
+    requiredKeyCount: 2,
+  });
+  assert.deepEqual(classifyDiscoveryRequestConstruction("GET /presence-contract", ["alpha"]), {
+    status: "missing_required_input",
+    requiredKeyCount: 2,
   });
 });
 

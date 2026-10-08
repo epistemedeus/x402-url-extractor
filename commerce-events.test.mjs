@@ -5336,3 +5336,367 @@ test("historical failure rows stay not_retained and inconsistent evidence is unu
   assert.equal(serialized.includes("facilitator_rejected_valid_payment"), false);
   await rm(dataDir, { recursive: true, force: true });
 });
+
+test("writer query keys use the shared presence predicate and round-trip through snapshot", async () => {
+  declareDiscoveryContract({
+    routeKey: "GET /work/opportunity-preflight",
+    input: { alpha: "present", beta: "present" },
+    inputSchema: {
+      type: "object",
+      properties: {
+        alpha: { type: "string" },
+        beta: { type: "string" },
+      },
+      required: ["alpha", "beta"],
+    },
+    output: { example: { ok: true } },
+    outputSchema: {
+      type: "object",
+      properties: { ok: { type: "boolean" } },
+      required: ["ok"],
+    },
+  });
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-presence-round-trip-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "presence-round-trip-secret",
+    requestConstructionSince: "2020-01-01T00:00:00.000Z",
+  });
+  const sentinel = "https://private.example/presence-do-not-store";
+  function finish({ requestPath, method = "GET", query = {}, status = 402, headers = {}, body }) {
+    const listeners = new Map();
+    telemetry.middleware({
+      path: requestPath,
+      url: requestPath,
+      method,
+      headers,
+      query,
+      body,
+      ip: "203.0.113.60",
+      socket: {},
+    }, {
+      statusCode: status,
+      once(name, listener) { listeners.set(name, listener); },
+      getHeader() { return undefined; },
+    }, () => {});
+    const listener = listeners.get("finish");
+    assert.ok(listener, `finish listener for ${method} ${requestPath}`);
+    listener();
+  }
+
+  const absentFillers = Object.fromEntries(
+    Array.from({ length: 20 }, (_, index) => [`k${String(index).padStart(2, "0")}`, ""]),
+  );
+  const cases = [
+    {
+      requestPath: "/openapi.json",
+      status: 200,
+      headers: { "user-agent": "Agent402/1.0" },
+      query: { empty: "   ", kept: "label" },
+      expect: { requestConstruction: "not_measured", requiredKeyCount: 0, queryKeys: ["kept"], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract",
+      headers: { "user-agent": "Agent402/1.0" },
+      query: { url: sentinel },
+      expect: { requestConstruction: "constructed", requiredKeyCount: 1, queryKeys: ["url"], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract",
+      headers: { "user-agent": "curl/8.0" },
+      query: {},
+      expect: { requestConstruction: "missing_required_input", requiredKeyCount: 1, queryKeys: [], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract",
+      query: { url: "" },
+      expect: { requestConstruction: "missing_required_input", requiredKeyCount: 1, queryKeys: [], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract",
+      query: { url: "   " },
+      expect: { requestConstruction: "missing_required_input", requiredKeyCount: 1, queryKeys: [], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract",
+      query: { url: ["", ""] },
+      expect: { requestConstruction: "missing_required_input", requiredKeyCount: 1, queryKeys: [], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract",
+      query: { url: ["  ", "\t"] },
+      expect: { requestConstruction: "missing_required_input", requiredKeyCount: 1, queryKeys: [], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract",
+      query: { url: ["", sentinel] },
+      expect: { requestConstruction: "constructed", requiredKeyCount: 1, queryKeys: ["url"], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract",
+      query: { url: 0 },
+      expect: { requestConstruction: "constructed", requiredKeyCount: 1, queryKeys: ["url"], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract",
+      query: { url: false },
+      expect: { requestConstruction: "constructed", requiredKeyCount: 1, queryKeys: ["url"], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract",
+      query: { url: Number.NaN },
+      expect: { requestConstruction: "missing_required_input", requiredKeyCount: 1, queryKeys: [], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract",
+      query: { url: Number.POSITIVE_INFINITY },
+      expect: { requestConstruction: "missing_required_input", requiredKeyCount: 1, queryKeys: [], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract",
+      query: { url: null },
+      expect: { requestConstruction: "missing_required_input", requiredKeyCount: 1, queryKeys: [], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract",
+      query: { url: { nested: sentinel } },
+      expect: { requestConstruction: "missing_required_input", requiredKeyCount: 1, queryKeys: [], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract",
+      query: { url: sentinel, note: "", optional: "   " },
+      expect: { requestConstruction: "constructed", requiredKeyCount: 1, queryKeys: ["url"], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract",
+      query: { ...absentFillers, url: sentinel },
+      expect: { requestConstruction: "constructed", requiredKeyCount: 1, queryKeys: ["url"], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/work/opportunity-preflight",
+      query: { alpha: "one", beta: "two", note: "" },
+      expect: { requestConstruction: "constructed", requiredKeyCount: 2, queryKeys: ["alpha", "beta"], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/work/opportunity-preflight",
+      query: { alpha: "one", beta: "" },
+      expect: { requestConstruction: "missing_required_input", requiredKeyCount: 2, queryKeys: ["alpha"], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/work/opportunity-preflight",
+      query: { alpha: ["", ""], beta: ["  ", "kept"] },
+      expect: { requestConstruction: "missing_required_input", requiredKeyCount: 2, queryKeys: ["beta"], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/work/opportunity-preflight",
+      query: { alpha: 0, beta: false },
+      expect: { requestConstruction: "constructed", requiredKeyCount: 2, queryKeys: ["alpha", "beta"], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/work/opportunity-preflight",
+      query: { alpha: null, beta: { nested: true } },
+      expect: { requestConstruction: "missing_required_input", requiredKeyCount: 2, queryKeys: [], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/read",
+      query: { url: sentinel },
+      expect: { requestConstruction: "undeclared", requiredKeyCount: 0, queryKeys: ["url"], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract/batch",
+      method: "POST",
+      status: 400,
+      body: {},
+      expect: { requestConstruction: "missing_required_input", requiredKeyCount: 1, queryKeys: [], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract/batch",
+      method: "POST",
+      status: 402,
+      body: { urls: [sentinel, "https://beta.example/"] },
+      expect: { requestConstruction: "constructed", requiredKeyCount: 1, queryKeys: [], paymentFailureCode: null },
+    },
+    {
+      requestPath: "/extract",
+      status: 402,
+      headers: { "payment-signature": "not-a-credential", "user-agent": "curl/8.0" },
+      query: { url: "", note: "" },
+      expect: {
+        requestConstruction: "missing_required_input",
+        requiredKeyCount: 1,
+        queryKeys: [],
+        paymentFailureCode: "payment_verification_failed",
+        paymentPresent: true,
+      },
+    },
+    {
+      requestPath: "/extract",
+      status: 402,
+      headers: { "payment-signature": "not-a-credential", "user-agent": "curl/8.0" },
+      query: {},
+      expect: {
+        requestConstruction: "missing_required_input",
+        requiredKeyCount: 1,
+        queryKeys: [],
+        paymentFailureCode: "missing_required_input",
+        paymentPresent: true,
+      },
+    },
+  ];
+
+  for (const entry of cases) finish(entry);
+  const digest = "ab".repeat(32);
+  const decision = evaluateMcpTypedTelemetryOutcome({
+    schemaVersion: "samedaydesk.mcp-typed-telemetry-input.v1",
+    binding: {
+      tool: "enrich",
+      productSku: "samedaydesk-enrich",
+      resource: "mcp://tool/enrich",
+      issuedOfferDigest: digest,
+    },
+    request: { jsonrpc: "2.0", hasId: true, id: 7, method: "tools/call" },
+    response: { hasId: true, id: 7, kind: "tool_result" },
+    credential: { state: "verified", offerDigest: digest },
+    execution: { state: "handler_success", handlerInvoked: true, resultIsError: false },
+    settlement: { state: "succeeded", offerDigest: digest },
+  });
+  assert.equal(decision.action, "emit");
+  telemetry.appendMcpTypedDecision(decision);
+  await telemetry.flush();
+
+  const raw = await readFile(telemetry.paths.currentPath, "utf8");
+  assert.equal(raw.includes(sentinel), false);
+  assert.equal(raw.includes("private.example"), false);
+  assert.equal(raw.includes("not-a-credential"), false);
+  const rows = raw.trim().split("\n").map((line) => JSON.parse(line));
+  const httpRows = rows.filter((row) => row.v === 3);
+  assert.equal(httpRows.length, cases.length);
+  httpRows.forEach((row, index) => {
+    const expected = cases[index].expect;
+    assert.equal(row.method, cases[index].method || "GET", cases[index].requestPath);
+    assert.equal(row.route, cases[index].requestPath.startsWith("/extract/batch") ? "/extract/batch" : cases[index].requestPath);
+    assert.equal(row.requestConstruction, expected.requestConstruction, `${cases[index].requestPath} ${index}`);
+    assert.equal(row.requestConstructionRequiredKeyCount, expected.requiredKeyCount);
+    assert.deepEqual(row.queryKeys, expected.queryKeys, `${cases[index].requestPath} ${index}`);
+    assert.equal(row.paymentFailureCode, expected.paymentFailureCode);
+    if (expected.paymentPresent) assert.equal(row.paymentPresent, true);
+    assert.equal(JSON.stringify(row).includes(sentinel), false);
+  });
+  assert.equal(rows.filter((row) => row.v === 4).length, 1);
+
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  const constructedChallenges = cases.filter((entry) => (
+    entry.expect.requestConstruction === "constructed" && (entry.status || 402) === 402
+  )).length;
+  assert.equal(snapshot.integrityStatus, COMMERCE_INTEGRITY_OK);
+  assert.equal(snapshot.coverage.integrity.currentFile.unusableRecordCount, 0);
+  assert.equal(snapshot.coverage.integrity.rotatedFile.unusableRecordCount, 0);
+  assert.equal(snapshot.coverage.retainedParseableEventCount, cases.length);
+  assert.equal(snapshot.mcpTyped.parseableRecordCount, 1);
+  assert.equal(snapshot.constructedRequestEvents, constructedChallenges);
+  assert.match(snapshot.requestConstructionPolicy, /shared presence predicate/);
+  assert.match(snapshot.requestConstructionPolicy, /not backfilled/);
+  assert.match(snapshot.requestConstructionPolicy, /do not alter payment-failure classification/);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("old construction mismatches and damaged lines stay rejected without backfill", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-presence-reject-"));
+  const mismatched = privacySafeEvent({
+    ts: new Date(Date.now() - 60_000).toISOString(),
+    id: "00000000-0000-4000-8000-0000000000b1",
+    queryKeys: ["url"],
+    requestConstruction: "missing_required_input",
+    status: 402,
+    result: "challenge",
+  });
+  await seedEventFiles(dataDir, { current: [mismatched] });
+  await appendFile(
+    path.join(dataDir, "commerce-events.ndjson"),
+    "not-json\n{\"v\":99}\n",
+  );
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "presence-reject-secret",
+    requestConstructionSince: "2020-01-01T00:00:00.000Z",
+  });
+  const seeded = await telemetry.snapshot({ days: 1 });
+  assert.equal(seeded.integrityStatus, COMMERCE_INTEGRITY_UNUSABLE_RECORDS);
+  assert.equal(seeded.coverage.integrity.currentFile.unusableRecordCount, 3);
+  assert.equal(seeded.coverage.retainedParseableEventCount, 0);
+  assert.equal(seeded.constructedRequestEvents, 0);
+
+  await appendFile(path.join(dataDir, "commerce-events.ndjson"), "{");
+  const torn = await telemetry.snapshot({ days: 1 });
+  assert.equal(torn.coverage.integrity.currentFile.unusableRecordCount, 4);
+  assert.equal(torn.coverage.retainedParseableEventCount, 0);
+  assert.equal(torn.coverage.prospectiveTail.capacityWithheld, false);
+
+  function finishDiscovery() {
+    const listeners = new Map();
+    telemetry.middleware({
+      path: "/openapi.json",
+      url: "/openapi.json",
+      method: "GET",
+      headers: { "user-agent": "Agent402/1.0" },
+      query: {},
+      ip: "203.0.113.61",
+      socket: {},
+    }, {
+      statusCode: 200,
+      once(name, listener) { listeners.set(name, listener); },
+      getHeader() { return undefined; },
+    }, () => {});
+    listeners.get("finish")();
+  }
+  finishDiscovery();
+  await telemetry.flush();
+  const fused = await telemetry.snapshot({ days: 1 });
+  assert.equal(fused.coverage.retainedParseableEventCount, 0);
+  assert.equal(fused.coverage.integrity.currentFile.unusableRecordCount, 4);
+  finishDiscovery();
+  await telemetry.flush();
+  const later = await telemetry.snapshot({ days: 1 });
+  assert.equal(later.coverage.retainedParseableEventCount, 1);
+  assert.equal(later.coverage.integrity.currentFile.unusableRecordCount, 4);
+  assert.equal(later.integrityStatus, COMMERCE_INTEGRITY_UNUSABLE_RECORDS);
+  const raw = await readFile(path.join(dataDir, "commerce-events.ndjson"), "utf8");
+  assert.equal(raw.startsWith(`${JSON.stringify(mismatched)}\n`), true);
+  assert.match(raw, /not-json/);
+  assert.match(raw, /\{"v":99\}/);
+  await rm(dataDir, { recursive: true, force: true });
+});
+
+test("a finished status of 0 stays outside the canonical range", async () => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "commerce-status0-observed-"));
+  const telemetry = createCommerceTelemetry({
+    dataDir,
+    secret: "status0-observed-secret",
+    requestConstructionSince: "2020-01-01T00:00:00.000Z",
+  });
+  const listeners = new Map();
+  telemetry.middleware({
+    path: "/openapi.json",
+    url: "/openapi.json",
+    method: "GET",
+    headers: { "user-agent": "Agent402/1.0" },
+    query: {},
+    ip: "203.0.113.62",
+    socket: {},
+  }, {
+    statusCode: 0,
+    once(name, listener) { listeners.set(name, listener); },
+    getHeader() { return undefined; },
+  }, () => {});
+  listeners.get("finish")();
+  await telemetry.flush();
+  const raw = await readFile(telemetry.paths.currentPath, "utf8");
+  const row = JSON.parse(raw.trim());
+  assert.equal(row.status, 0);
+  assert.equal(row.requestConstruction, "not_measured");
+  const snapshot = await telemetry.snapshot({ days: 1 });
+  assert.equal(snapshot.integrityStatus, COMMERCE_INTEGRITY_UNUSABLE_RECORDS);
+  assert.equal(snapshot.coverage.integrity.currentFile.unusableRecordCount, 1);
+  assert.equal(snapshot.coverage.retainedParseableEventCount, 0);
+  await rm(dataDir, { recursive: true, force: true });
+});

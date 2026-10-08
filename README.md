@@ -143,8 +143,9 @@ buffers, revalidation requirements, and economic postconditions. It never
 accesses a wallet, signs, broadcasts, or takes custody.
 
 The service also keeps a privacy-safe demand telescope on a persistent Railway
-volume. It records route families, query key names, challenge/success classes,
-and pseudonymous repeat-use signals. External fetches are acquisition signals,
+volume. It records route families, query key names whose runtime values pass
+the shared GET presence test, challenge/success classes, and pseudonymous
+repeat-use signals. External fetches are acquisition signals,
 not verified buyers, because unidentified automated indexers can remain.
 Recognized crawler and agent-indexer user agents are reduced at ingestion to a
 controlled source label and reported in a separate machine-discovery lens with
