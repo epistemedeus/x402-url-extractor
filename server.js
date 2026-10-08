@@ -43,6 +43,7 @@ import {
 import {
   mcpToolNameForRoute,
   renderLlmsTxt,
+  buildRootPaidRoutes,
   validateMachineSurfaceParity,
 } from "./machine-surface-parity.mjs";
 import {
@@ -1399,6 +1400,10 @@ const constructionParityReceipt = () => {
     mcpToolNames: RESOURCES.map((resource) => mcpToolNameForRoute(new URL(resource.url).pathname)),
     agentCard: currentAgentCard(),
     catalog,
+    rootPaidRoutes: buildRootPaidRoutes({
+      actions: catalog.actions,
+      alternate: catalog.alternateAccess ? { ...catalog.alternateAccess, description: CIRCLE_GATEWAY_RESOURCE.description } : null,
+    }),
     llms: renderLlmsTxt({
       origin: PUBLIC_URL,
       facilitator: FACILITATOR,
@@ -4301,7 +4306,15 @@ app.get("/", (req, res) => {
     res.set("Cache-Control", "public, max-age=300, stale-while-revalidate=3600");
     return res.type("html").send(renderGatewayLanding(gateway));
   }
-  return res.json(gateway);
+  const catalog = machineActionCatalog();
+  return res.json({
+    ...gateway,
+    paidRoutes: buildRootPaidRoutes({
+      actions: catalog.actions,
+      alternate: catalog.alternateAccess ? { ...catalog.alternateAccess, description: CIRCLE_GATEWAY_RESOURCE.description } : null,
+      hints: gateway.paidRoutes,
+    }),
+  });
 });
 
 const constructionAcceptance = constructionParityReceipt();

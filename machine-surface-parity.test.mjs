@@ -9,6 +9,7 @@ import {
   mcpToolNameForRoute,
   parseLlmsPaidRoutes,
   renderLlmsTxt,
+  buildRootPaidRoutes,
   validateMachineSurfaceParity,
 } from "./machine-surface-parity.mjs";
 
@@ -252,4 +253,63 @@ test("maps extract/batch to extract_batch for MCP parity", () => {
   assert.equal(mcpToolNameForRoute("/lockfile-pin-delta"), "lockfile_pin_delta");
   assert.equal(mcpToolNameForRoute("/extract"), "extract");
   assert.equal(mcpToolNameForRoute("/security/wallet-policy-conformance"), "wallet_policy_conformance");
+});
+
+test("root JSON derives configured actions, preserving hints without mutating the human map", () => {
+  const careers = {
+    method: "GET", route: "/data/careers-board", description: "Read a named careers board.",
+    priceAtomicUsdc: "5000",
+    request: { schema: { properties: { queryParams: { required: ["board"] } } } },
+  };
+  const hints = {
+    "GET /extract?url=": "$999 - obsolete price",
+    "GET /removed": "$1 - stale listing",
+  };
+  const before = structuredClone(hints);
+  const root = buildRootPaidRoutes({
+    actions: [...actions, careers],
+    alternate: { ...alternate, description: "Same preflight via Circle." },
+    hints,
+  });
+  assert.deepEqual(hints, before);
+  assert.equal(root["GET /extract?url="], "$0.005 - URL -> structured JSON.");
+  assert.equal(root["GET /data/careers-board?board="], "$0.005 - Read a named careers board.");
+  assert.equal(Object.hasOwn(root, "GET /removed"), false);
+  assert.equal(Object.hasOwn(root, "POST /security/wallet-policy-conformance"), true);
+  assert.equal(Object.keys(root).length, actions.length + 2);
+  assert.equal(Object.keys(buildRootPaidRoutes({ actions })).length, actions.length);
+});
+
+test("root parity rejects any missing, stale, duplicate or wrongly priced configured operation", () => {
+  const root = buildRootPaidRoutes({ actions, alternate: { ...alternate, description: "Same preflight via Circle." } });
+  assert.equal(validateMachineSurfaceParity(surfaces({ rootPaidRoutes: root })).ok, true);
+  for (const label of Object.keys(root)) {
+    const missing = { ...root };
+    delete missing[label];
+    assert.throws(() => validateMachineSurfaceParity(surfaces({ rootPaidRoutes: missing })), /missing from root paidRoutes/);
+  }
+  assert.throws(() => validateMachineSurfaceParity(surfaces({
+    rootPaidRoutes: { ...root, "GET /stale": "$1 - stale" },
+  })), /undeclared operation/);
+  assert.throws(() => validateMachineSurfaceParity(surfaces({
+    rootPaidRoutes: { ...root, "GET /extract?other=": root["GET /extract"] },
+  })), /duplicate root paid operation/);
+  assert.throws(() => validateMachineSurfaceParity(surfaces({
+    rootPaidRoutes: { ...root, "GET /extract": "$0.50 - wrong" },
+  })), /root price drifted/);
+  const noAlternate = surfaces({ alternate: null });
+  noAlternate.catalog.alternateAccess = null;
+  noAlternate.rootPaidRoutes = buildRootPaidRoutes({ actions });
+  assert.equal(validateMachineSurfaceParity(noAlternate).ok, true);
+  noAlternate.rootPaidRoutes["GET " + alternate.route] = "$0.005 - stale alternate";
+  assert.throws(() => validateMachineSurfaceParity(noAlternate), /undeclared operation/);
+});
+
+test("root builder refuses malformed or duplicate hints and does not invent free recipes", () => {
+  assert.throws(() => buildRootPaidRoutes({ actions, hints: { "not a route": "bad" } }), /invalid root paid-route label/);
+  assert.throws(() => buildRootPaidRoutes({
+    actions, hints: { "GET /extract?url=": "a", "GET /extract?x=": "b" },
+  }), /duplicate root paid operation/);
+  const root = buildRootPaidRoutes({ actions });
+  assert.equal(Object.keys(root).some((key) => key.includes("page-change") || key.includes("recipes/")), false);
 });

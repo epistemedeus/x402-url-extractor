@@ -167,6 +167,7 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     Buffer.byteLength(encodedSellerIntegrityChallenge) < 14_000,
     `seller-integrity payment-required header exceeds the Node-compatible budget: ${Buffer.byteLength(encodedSellerIntegrityChallenge)} bytes`,
   );
+  const humanBefore = await (await fetch(base + "/", { headers: { Accept: "text/html" } })).text();
   const [llms, skill, catalog, gateway, agentCard, openapi, mppOpenapi, manifest, mcpDescriptor, commerceDemand] = await Promise.all([
     readText(base, "/llms.txt"),
     readText(base, "/skill.md"),
@@ -201,7 +202,12 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     agentCard,
     catalog,
     llms,
+    rootPaidRoutes: gateway.paidRoutes,
   });
+  const humanAfter = await (await fetch(base + "/", { headers: { Accept: "text/html" } })).text();
+  assert.equal(humanAfter, humanBefore, "machine root construction mutated the human map");
+  assert.equal(Object.keys(gateway.paidRoutes).length, catalog.actions.length + (catalog.alternateAccess ? 1 : 0));
+  assert.match(gateway.paidRoutes["GET /data/careers-board?board="], /^\$0\.005 - /);
   assert.equal(receipt.ok, true);
   const sellerIntegritySummary = openapi.paths[SELLER_INTEGRITY_ROUTE].get.summary;
   assert.equal(sellerIntegritySummary.length, 469);
