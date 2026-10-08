@@ -2,7 +2,7 @@
 
 The cheap Stage1 hypothesis did not hold on this VM. A caller who can run Node takes fewer manual steps and less wall time with `bin/extract.mjs` and `bin/retrieve.mjs` than with the same scripts behind n8n. The asset is the tested workflow pair and its truthful partial and refused outputs. Receiving it is not adoption, savings, or revenue.
 
-Token cost was zero. No model was called. Cash cost was zero. Settlement was `not_performed`, purchase fetches were 0, and no wallet or signer was used.
+The workflow executions made no model calls and consumed no inference tokens. Building this example was a separate native Heavy task:119 model calls,652,891 input,11,732,864 cache-read and133,229 output tokens, with2.76208444USD API-equivalent modeled usage, not a cash charge or complete review cost. Workflow cash cost was zero. Settlement was `not_performed`, purchase fetches were0, and no wallet or signer was used.
 
 ## Source and pins
 
@@ -126,7 +126,9 @@ Manual steps once the repository and Node 22 are present: two node commands, the
 - Internal Python task runner did not start. JS execution of Execute Command did.
 - n8n outside a container is deprecated by this n8n build. This trial used the Server CLI on the VM.
 
-## Next outside-use trial
+## Possible fixture reproduction, not a launched integration
+
+This recipe currently reads injected page fixtures. It is not a live network extraction or paid merchant workflow. Reproducing it can test compatibility, but cannot establish outside useful delivery. Root retained the recipe after the direct CLI won the measured comparison; no distribution or production launch is approved by this report.
 
 A visitor with their own self-hosted n8n 2.42.x, Node 24, and `NODES_EXCLUDE=[]` imports the two committed JSON files, sets `N8N_EXTRACT_HOME`, `N8N_EXTRACT_TASK`, and `N8N_EXTRACT_STORE`, executes `SdExtract0000001`, then in a later process executes `SdRetrieve000001` with `N8N_EXTRACT_ARTIFACT`. They keep the editor port off 5679. They read stdout `status`, not the n8n execution status. A settled purchase stays a separate approval. This artifact does not grant one.
 
