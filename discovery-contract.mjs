@@ -63,6 +63,21 @@ const SENSITIVE_INPUT_NAME = /(?:^|[-_.])(auth|authorization|bearer|cookie|crede
 const SENSITIVE_INPUT_NAME_COLLAPSED = /(?:api|access|auth|authorization|bearer|client|cookie|credential|private|session)?(?:jwt|key|otp|pass|password|secret|signature|token)$/i;
 
 /**
+ * Pure presence test for one runtime query value. Empty and whitespace
+ * strings, arrays of only absent values, null, objects, and non-finite
+ * numbers are absent. Finite numbers, including 0, and booleans, including
+ * false, are present. The writer projects query key names with this same
+ * function and does not store the value.
+ */
+export function isDiscoveryQueryValuePresent(value) {
+  if (typeof value === "string") return value.trim().length > 0;
+  if (typeof value === "number") return Number.isFinite(value);
+  if (typeof value === "boolean") return true;
+  if (Array.isArray(value)) return value.some(isDiscoveryQueryValuePresent);
+  return false;
+}
+
+/**
  * Classify whether a runtime GET request carries every required, non-secret
  * query key from its canonical Bazaar request contract. This is intentionally
  * narrower than general request validation: it never evaluates values, never
@@ -91,14 +106,7 @@ export function classifyDiscoveryRequestConstruction(routeKey, queryInput = []) 
     : Object.fromEntries((Array.isArray(queryInput) ? queryInput : [])
       .filter((name) => typeof name === "string")
       .map((name) => [name, true]));
-  const scalarNonEmpty = (value) => {
-    if (typeof value === "string") return value.trim().length > 0;
-    if (typeof value === "number") return Number.isFinite(value);
-    if (typeof value === "boolean") return true;
-    if (Array.isArray(value)) return value.some(scalarNonEmpty);
-    return false;
-  };
-  const complete = required.every((name) => scalarNonEmpty(query[name]));
+  const complete = required.every((name) => isDiscoveryQueryValuePresent(query[name]));
   return {
     status: complete ? "constructed" : "missing_required_input",
     requiredKeyCount: required.length,
