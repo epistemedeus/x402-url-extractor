@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createServer as createHttpServer } from "node:http";
 import { createServer as createNetServer } from "node:net";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -11,6 +11,8 @@ import { evm as evmClient, Mppx as ClientMppx } from "mppx/client";
 import { privateKeyToAccount } from "viem/accounts";
 import { mppAssetForNetwork } from "./mpp-dual-stack.mjs";
 import { EXTRACT_BATCH_PATH } from "./extract-batch-config.mjs";
+import { createCommerceTelemetry } from "./commerce-events.mjs";
+import { readExtractBatchInputRefusalCode } from "./extract-batch.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const PAYER = `0x${"2".repeat(40)}`;
@@ -527,5 +529,123 @@ test("batch fixture startup timeout reaps a SIGTERM-resistant child", { timeout:
   } finally {
     if (child) await stopChild(child);
     await rm(dataDir, { recursive: true, force: true });
+  }
+});
+
+test("mounted refusal evidence carries only semantic codes through HTTP MCP and aggregate", { timeout: 90_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "batch-refusal-evidence-"));
+  const facilitator = await startFakeFacilitator();
+  const fetchLogPath = path.join(dataDir, "source-fetches.log");
+  let merchant;
+  t.after(async () => {
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url, fetchLogPath });
+  const valid = { urls: ["https://alpha.example/"], fields: ["title"] };
+  const challengeResponse = await fetch(`${merchant.base}${EXTRACT_BATCH_PATH}`, jsonPost(valid,
+    { host: "agents.samedaydesk.com", "x-forwarded-proto": "https" }));
+  assert.equal(challengeResponse.status, 402);
+  const payment = testPayment(decodePaymentRequired(challengeResponse));
+  await challengeResponse.text();
+  const validMcp = await mcpCall(merchant.base, { name: "extract_batch", args: valid });
+  assert.equal(validMcp.result._meta["samedaydesk/http"].status, 402);
+  const mcpPayment = JSON.parse(Buffer.from(testPayment(validMcp.result.structuredContent), "base64").toString("utf8"));
+  const secret = "sk_live_REFUSAL_EVIDENCE_SYNTHETIC";
+  const value = "caller-prose-refusal-evidence-canary";
+  const cases = [
+    { body: { ...valid, [secret]: value }, code: "unexpected_field" },
+    { body: { ...valid, fields: [secret] }, code: "fields_unknown" },
+    { body: { urls: [`https://user:${value}@example.com/${secret}`] }, code: "url_credentials" },
+  ];
+  for (const { body, code } of cases) {
+    for (const credentialPresent of [false, true]) {
+      const response = await fetch(`${merchant.base}${EXTRACT_BATCH_PATH}`, jsonPost(body,
+        credentialPresent ? { "payment-signature": payment } : {}));
+      const payload = await response.json();
+      assert.equal(response.status, 400);
+      assert.equal(readExtractBatchInputRefusalCode(payload), code);
+      const rpc = await mcpCall(merchant.base, { name: "extract_batch", args: body,
+        ...(credentialPresent ? { payment: mcpPayment } : {}) });
+      assert.equal(rpc.result.isError, true);
+      assert.equal(rpc.result.structuredContent, undefined);
+      assert.equal(rpc.result._meta?.["samedaydesk/http"]?.status, 400, `${code}/${credentialPresent}: ${JSON.stringify(rpc)}`);
+      assert.equal(readExtractBatchInputRefusalCode(JSON.parse(rpc.result.content[0].text)), code);
+      for (const serialized of [JSON.stringify(payload), JSON.stringify(rpc)]) {
+        assert.equal(serialized.includes(secret), false);
+        assert.equal(serialized.includes(value), false);
+      }
+    }
+  }
+  const parserResponses = [];
+  for (const route of [EXTRACT_BATCH_PATH, "/mcp"]) {
+    const response = await fetch(`${merchant.base}${route}`, {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: "sk_live_SYNTHETIC",
+    });
+    assert.equal(response.status, 400);
+    parserResponses.push(await response.text());
+  }
+  for (const [route, method] of [[EXTRACT_BATCH_PATH, "DELETE"], ["/security/wallet-policy-conformance", "POST"]]) {
+    const response = await fetch(`${merchant.base}${route}`, { ...jsonPost({ [secret]: value }), method });
+    await response.text();
+  }
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+  await assert.rejects(readFile(fetchLogPath), { code: "ENOENT" });
+  await assert.rejects(readFile(path.join(dataDir, "idempotency-replay.json")), { code: "ENOENT" });
+
+  const response = await fetch(`${merchant.base}/v0/commerce-demand.json?days=90`);
+  assert.equal(response.status, 200);
+  const demand = await response.json();
+  await stopChild(merchant.child); merchant = null;
+  const { raw, http, typed } = await readEvents(dataDir);
+  const batch = http.filter((row) => row.route === EXTRACT_BATCH_PATH);
+  assert.equal(batch.length, 14, "two eligible challenges and twelve semantic refusals only");
+  assert.equal(http.some((row) => row.route === "/mcp" || row.route === "/security/wallet-policy-conformance"), false);
+  assert.equal(typed.filter((row) => row.action === "emit").length, 0,
+    "HTTP-owned batch must not mint a typed MCP economic observation");
+  assert.equal(typed.every((row) => !Object.hasOwn(row, "extractBatchInputRefusalCode")), true);
+  const refused = batch.filter((row) => row.status === 400);
+  for (const { code } of cases) {
+    assert.equal(refused.filter((row) => row.extractBatchInputRefusalCode === code).length, 4,
+      `eligible mounted ${code} missing its validator code`);
+  }
+  for (const row of refused) {
+    assert.equal(row.result, "validation_failure");
+    assert.equal(row.requestConstruction, "missing_required_input");
+    assert.equal(row.settlementReference, null);
+    assert.equal(row.settlementAmountAtomic, null);
+    assert.equal(row.replayed, false);
+    assert.equal(row.paymentFailureCode, row.paymentPresent ? "application_validation_failed" : null);
+  }
+  assert.equal(refused.filter((row) => row.paymentPresent && row.paymentCredentialParsed).length, 6);
+  const reader = createCommerceTelemetry({ dataDir });
+  const snapshot = await reader.snapshot({ days: 90 });
+  const expectedCounts = { unexpected_field: 4, fields_unknown: 4, url_credentials: 4 };
+  for (const projection of [snapshot.extractBatchInputRefusals, demand.extractBatchInputRefusals]) {
+    assert.equal(projection.retainedValidationEvents, 12);
+    assert.equal(projection.knownCodeEvents, 12);
+    assert.equal(projection.unknownCodeEvents, 0);
+    assert.deepEqual({ ...projection.byCode }, expectedCounts);
+    assert.equal(projection.windowCoverage, "unknown_for_full_window");
+    assert.equal(projection.usefulness, "unknown");
+  }
+  for (const serialized of [raw, JSON.stringify(snapshot), JSON.stringify(demand), ...parserResponses]) {
+    assert.equal(serialized.includes(secret), false);
+    assert.equal(serialized.includes(value), false);
+    assert.equal(serialized.includes("sk_live_SYNTHETIC"), false);
+  }
+  for (const parserResponse of parserResponses) {
+    let parsed = null;
+    try { parsed = JSON.parse(parserResponse); } catch { /* legacy parser responses can be HTML */ }
+    assert.equal(readExtractBatchInputRefusalCode(parsed), null);
+  }
+  for (const file of (await readdir(dataDir)).filter((name) => name.endsWith(".ndjson") || name.endsWith(".json"))) {
+    const retained = await readFile(path.join(dataDir, file), "utf8");
+    for (const forbidden of [secret, value, "sk_live_SYNTHETIC"]) {
+      assert.equal(retained.includes(forbidden), false, `${file} leaked caller input`);
+    }
   }
 });

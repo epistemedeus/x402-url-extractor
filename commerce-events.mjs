@@ -24,7 +24,11 @@ import {
   EXTRACT_BATCH_METHOD,
   EXTRACT_BATCH_PATH,
 } from "./extract-batch-config.mjs";
-import { normalizeExtractBatchInput } from "./extract-batch.mjs";
+import {
+  extractBatchInputRefusalDeclaration,
+  normalizeExtractBatchInput,
+  readExtractBatchInputRefusalCode,
+} from "./extract-batch.mjs";
 import {
   authorizeOutcomeBinding,
   buildHttpFinishForwardRecords,
@@ -289,6 +293,8 @@ const DEFAULT_RARE_FUNNEL_MAX_BYTES = 1 * 1024 * 1024;
 // remain measurement, unlike wallet-policy and other unsafe unpaid POSTs.
 const MEASURED_UNPAID_PAID_POST_ROUTES = new Set([EXTRACT_BATCH_PATH]);
 const EXTRACT_BATCH_REQUIRED_BODY_KEY_COUNT = 1;
+const EXTRACT_BATCH_INPUT_REFUSAL_CONTRACT = extractBatchInputRefusalDeclaration();
+const EXTRACT_BATCH_INPUT_REFUSAL_CODES = new Set(EXTRACT_BATCH_INPUT_REFUSAL_CONTRACT.codes);
 
 function safePathSegment(value) {
   const segment = String(value || "").toLowerCase();
@@ -339,6 +345,47 @@ function isWriterMeasuredPaidExtractBatchPost(value) {
     && value.matched === true
     && value.method === EXTRACT_BATCH_METHOD
     && value.route === EXTRACT_BATCH_PATH;
+}
+
+function isExtractBatchInputRefusalObservation(value) {
+  return isWriterMeasuredPaidExtractBatchPost(value)
+    && value.status === 400
+    && value.result === "validation_failure";
+}
+
+function acceptsExtractBatchInputRefusalCode(value, code) {
+  return typeof code === "string"
+    && EXTRACT_BATCH_INPUT_REFUSAL_CODES.has(code)
+    && isExtractBatchInputRefusalObservation(value)
+    && value.requestConstruction === "missing_required_input"
+    && value.requestConstructionRequiredKeyCount === EXTRACT_BATCH_REQUIRED_BODY_KEY_COUNT
+    && value.replayed === false
+    && value.settlementReference === null
+    && value.settlementAmountAtomic === null
+    && value.settlementNetwork === null
+    && value.settlementCurrency === null;
+}
+
+function summarizeExtractBatchInputRefusals(events, windowCoverage) {
+  const observations = events.filter(isExtractBatchInputRefusalObservation);
+  const byCode = emptyCounts();
+  let knownCodeEvents = 0;
+  for (const event of observations) {
+    if (!acceptsExtractBatchInputRefusalCode(event, event.extractBatchInputRefusalCode)) continue;
+    increment(byCode, event.extractBatchInputRefusalCode);
+    knownCodeEvents += 1;
+  }
+  return {
+    contract: EXTRACT_BATCH_INPUT_REFUSAL_CONTRACT.schemaVersion,
+    retainedValidationEvents: observations.length,
+    knownCodeEvents,
+    unknownCodeEvents: observations.length - knownCodeEvents,
+    codeCoverage: observations.length ? knownCodeEvents / observations.length : null,
+    byCode,
+    windowCoverage,
+    usefulness: "unknown",
+    policy: "Retained external POST /extract/batch HTTP 400 validation observations only, including the owning MCP HTTP hop. Codes come from the validator's strict static refusal contract. Missing historical codes stay unknown; parser failures are not semantic codes. Counts are retained observations, not complete-window zeroes, settlement, useful delivery, customers or demand. Existing observation eligibility and retention bounds apply.",
+  };
 }
 
 function omitsUnpaidPaidPost({ kind, route, method, paymentPresent }) {
@@ -1673,6 +1720,11 @@ function isCanonicalCommerceEvent(value) {
     return false;
   }
   if (!storedPaymentFailureEvidenceAccepted(value)) return false;
+  // Old v3 rows remain readable. A present unknown or crossed code is corrupt,
+  // rather than a historical reason to infer or a known code to count.
+  if (hasOwn(value, "extractBatchInputRefusalCode")
+    && value.extractBatchInputRefusalCode !== null
+    && !acceptsExtractBatchInputRefusalCode(value, value.extractBatchInputRefusalCode)) return false;
   if (!isCanonicalProtocolList(value.protocolsOffered)) return false;
   if (typeof value.replayed !== "boolean") return false;
   if (!isCanonicalSettlementReference(value.settlementReference)) return false;
@@ -3778,6 +3830,7 @@ export function createCommerceTelemetry({
     }
     const queryKeys = normalizeQueryKeyNames(req.query);
     let responseProblem = null;
+    let responseInputRefusalCode = null;
     let journeyResponseBody;
     let journeyBodySeen = false;
     const originalJson = typeof res.json === "function" ? res.json.bind(res) : null;
@@ -3785,6 +3838,10 @@ export function createCommerceTelemetry({
     if (originalJson) {
       res.json = function telemetryJson(body) {
         responseProblem ||= problemDetails(body);
+        // Inspect only the exact owning response contract; retain no body,
+        // caller keys, values or prose. The finish gate still owns eligibility.
+        responseInputRefusalCode = isWriterMeasuredPaidExtractBatchPost({ ...route, method: req.method })
+          && Number(res.statusCode) === 400 ? readExtractBatchInputRefusalCode(body) : null;
         if (journeyClaim && route.route === PAID_OPERATION_PATH) {
           journeyBodySeen = true;
           try {
@@ -3911,6 +3968,9 @@ export function createCommerceTelemetry({
         result,
         durationMs: Math.max(0, Date.now() - startedAt),
       };
+      if (acceptsExtractBatchInputRefusalCode(event, responseInputRefusalCode)) {
+        event.extractBatchInputRefusalCode = responseInputRefusalCode;
+      }
       const paidUsefulJourney = paidUsefulJourneyMetadata(journeyClaim, {
         status,
         paymentPresent,
@@ -4461,6 +4521,7 @@ export function createCommerceTelemetry({
       retainedParseableEventCount: coverage.retainedParseableEventCount,
       integrityStatus: coverage.integrityStatus,
       coverage,
+      extractBatchInputRefusals: summarizeExtractBatchInputRefusals(events, coverage.requestedWindowCoverage),
       durableRareFunnel: summarizeDurableRareFunnel({
         generatedAtMs,
         requestedWindowDays: safeDays,
