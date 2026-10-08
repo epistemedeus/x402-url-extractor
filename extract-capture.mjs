@@ -10,6 +10,7 @@ export {
   READ_MARKDOWN_MAX_CHARS,
   parseTextExcerptLimit,
 } from "./extract-excerpt-budget.mjs";
+import { TextDecoder as WhatwgTextDecoder } from "@exodus/bytes/encoding.js";
 import { publicFetch } from "./extract-batch-c1/public-fetch.mjs";
 
 /**
@@ -74,6 +75,16 @@ function decoderLabel(charset) {
   }
 }
 
+// Some supported Node runtimes misdecode the Windows-1252 C1 range. Use a
+// maintained WHATWG decoder for this resolved encoding, including its defined
+// control-code mappings; the reported label still names the codec that ran.
+function decodeBytes(buffer, encoding) {
+  if (encoding === "windows-1252") {
+    return new WhatwgTextDecoder("windows-1252", { fatal: false }).decode(buffer);
+  }
+  return new TextDecoder(encoding, { fatal: false }).decode(buffer);
+}
+
 export function decodeHttpBody(bytes, { contentType, allowHtmlMeta = true } = {}) {
   const buffer = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
   let charset = parseCharsetFromContentType(contentType);
@@ -92,7 +103,7 @@ export function decodeHttpBody(bytes, { contentType, allowHtmlMeta = true } = {}
     charsetSource = "invalid-charset-fallback";
   }
   charset = supported || "utf-8";
-  const html = new TextDecoder(charset, { fatal: false }).decode(buffer);
+  const html = decodeBytes(buffer, charset);
   return { html, charset, charsetSource, bytes: buffer.byteLength };
 }
 

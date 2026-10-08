@@ -14,6 +14,20 @@ if (process.env.COMMERCE_DATA_DIR || process.env.COMMERCE_INTERNAL_TOKEN || proc
   process.exit(2);
 }
 
+// Evaluation instant only. Unset uses the wall clock, so an expired grant
+// stays rejected. A supplied clock does not grant payment permission.
+function evaluationNow() {
+  if (!Object.hasOwn(process.env, "USEFUL_RESULT_NOW")) return Date.now();
+  const parsed = Date.parse(process.env.USEFUL_RESULT_NOW);
+  if (!Number.isFinite(parsed)) {
+    process.stderr.write("clock_rejected\n");
+    process.exit(2);
+  }
+  return parsed;
+}
+
+const evaluatedAt = evaluationNow();
+
 const derivativePath = process.env.USEFUL_RESULT_DERIVATIVE || "";
 const receiptPath = process.env.USEFUL_RESULT_RECEIPT || "";
 const directPath = process.env.USEFUL_RESULT_DIRECT_RECEIPT || receiptPath;
@@ -121,7 +135,7 @@ const memory = () => ({
 });
 const retention = createCustomerRetention({
   customerStore: memory(),
-  now: () => Date.now(),
+  now: () => evaluatedAt,
   remember: async (kind) => { kinds.push(kind); },
   sharedStore: memory(),
 });
