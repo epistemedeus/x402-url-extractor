@@ -59,70 +59,241 @@ export const EXTRACT_BATCH_READ_ONLY_POST = Object.freeze({
 
 const ALLOWED_BODY_KEYS = new Set(["urls", "fields", "textExcerptLimitChars"]);
 
+export const EXTRACT_BATCH_INPUT_REFUSAL_SCHEMA_VERSION = "samedaydesk.extract-batch.input-refusal.v1";
+
+// Static text only. Codes are chosen by the branch, never by reading error text.
+const INPUT_REFUSAL_TEXT = Object.freeze({
+  body_not_object: Object.freeze({
+    error: "request body must be a JSON object",
+    guidance: "Send one JSON object. Arrays, null, and other JSON types are refused before payment.",
+  }),
+  unexpected_field: Object.freeze({
+    error: "unexpected field",
+    guidance: "Only urls, fields, and textExcerptLimitChars are accepted.",
+  }),
+  urls_invalid: Object.freeze({
+    error: `urls must be an array of 1 to ${EXTRACT_BATCH_MAX_URLS} public HTTPS URLs`,
+    guidance: "urls must be an array of 1 to 5 public HTTPS URL strings.",
+  }),
+  url_item_invalid: Object.freeze({
+    error: "each url must be a public HTTPS URL",
+    guidance: "Each urls item must be a non-empty string.",
+  }),
+  url_too_long: Object.freeze({
+    error: `url exceeds ${EXTRACT_BATCH_MAX_URL_LENGTH} characters`,
+    guidance: "Each URL must stay within the 2048 character limit.",
+  }),
+  url_malformed: Object.freeze({
+    error: "url is not a valid absolute URL",
+    guidance: "Each urls item must be an absolute URL.",
+  }),
+  url_credentials: Object.freeze({
+    error: "URL credentials are unsupported",
+    guidance: "Remove username and password from each URL.",
+  }),
+  url_scheme_not_https: Object.freeze({
+    error: "only public HTTPS URLs are accepted",
+    guidance: "Use the https scheme. Plain http is refused before fetch.",
+  }),
+  url_scheme_unsupported: Object.freeze({
+    error: "only public HTTPS URLs are accepted",
+    guidance: "Use the https scheme. Other protocols are refused before fetch.",
+  }),
+  url_not_public: Object.freeze({
+    error: "private, loopback, or unsupported addresses are blocked",
+    guidance: "Use a public HTTPS host. Loopback, private, and unsupported addresses are blocked.",
+  }),
+  url_normalized_too_long: Object.freeze({
+    error: "normalized url exceeds length limit",
+    guidance: "The normalized URL must stay within the 2048 character limit.",
+  }),
+  fields_invalid: Object.freeze({
+    error: "fields must be a non-empty unique bounded array",
+    guidance: "fields must be a non-empty array of unique known field names.",
+  }),
+  fields_unknown: Object.freeze({
+    error: "unsupported extraction field",
+    guidance: `Each fields item must be one of: ${ALL_FIELDS.join(", ")}.`,
+  }),
+  text_excerpt_limit_invalid: Object.freeze({
+    error: `textExcerptLimitChars must be an integer from 1 through ${EXTRACT_TEXT_EXCERPT_MAX_CHARS}`,
+    guidance: "Omit textExcerptLimitChars for the default, or send an integer from 1 through 40000.",
+  }),
+  text_excerpt_ceiling: Object.freeze({
+    error: "textExcerptLimitChars exceeds the batch response ceiling for the admitted URL count",
+    guidance: "Lower textExcerptLimitChars so it fits the batch response ceiling for the admitted URL count.",
+  }),
+  excerpt_ceiling_unavailable: Object.freeze({
+    error: "batch response ceiling cannot admit the default excerpt",
+    guidance: "The batch response ceiling cannot admit the default excerpt for this URL count.",
+  }),
+});
+
+const REFUSAL_BOUNDARY = Object.freeze({
+  sourceFetch: false,
+  settlement: false,
+  guaranteedUrlSuccess: false,
+});
+const REFUSAL_BODY_KEYS = Object.freeze(["ok", "product", "schemaVersion", "code", "error", "guidance", "charged", "boundary"]);
+const REFUSAL_BOUNDARY_KEYS = Object.freeze(["sourceFetch", "settlement", "guaranteedUrlSuccess"]);
+
+function refusalText(code) {
+  if (!Object.hasOwn(INPUT_REFUSAL_TEXT, code)) throw new Error("unknown extract batch input refusal code");
+  return INPUT_REFUSAL_TEXT[code];
+}
+
+export class ExtractBatchInputError extends Error {
+  constructor(reason) {
+    const text = refusalText(reason);
+    super(text.error);
+    this.name = "ExtractBatchInputError";
+    // Fetch classification already treats invalid_* as a known failure after a hop.
+    // The public reason stays on `reason` so a downgrade is not reported as unknown.
+    this.code = "invalid_batch_input";
+    this.reason = reason;
+    this.guidance = text.guidance;
+  }
+}
+
+function refusal(code) {
+  throw new ExtractBatchInputError(code);
+}
+
+export function extractBatchInputRefusalPayload(code) {
+  const text = refusalText(code);
+  return {
+    ok: false,
+    product: EXTRACT_BATCH_PRODUCT,
+    schemaVersion: EXTRACT_BATCH_INPUT_REFUSAL_SCHEMA_VERSION,
+    code,
+    error: text.error,
+    guidance: text.guidance,
+    charged: false,
+    boundary: { ...REFUSAL_BOUNDARY },
+  };
+}
+
+export function extractBatchInputRefusalDeclaration() {
+  return Object.freeze({
+    schemaVersion: EXTRACT_BATCH_INPUT_REFUSAL_SCHEMA_VERSION,
+    codes: Object.freeze(Object.keys(INPUT_REFUSAL_TEXT)),
+  });
+}
+
+export function readExtractBatchInputRefusalCode(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return null;
+  if (Object.keys(body).some((key) => !REFUSAL_BODY_KEYS.includes(key))) return null;
+  if (body.schemaVersion !== EXTRACT_BATCH_INPUT_REFUSAL_SCHEMA_VERSION) return null;
+  if (body.ok !== false || body.charged !== false || body.product !== EXTRACT_BATCH_PRODUCT) return null;
+  if (!Object.hasOwn(INPUT_REFUSAL_TEXT, body.code)) return null;
+  const text = INPUT_REFUSAL_TEXT[body.code];
+  if (body.error !== text.error || body.guidance !== text.guidance) return null;
+  const boundary = body.boundary;
+  if (!boundary || typeof boundary !== "object" || Array.isArray(boundary)) return null;
+  if (Object.keys(boundary).some((key) => !REFUSAL_BOUNDARY_KEYS.includes(key))) return null;
+  if (boundary.sourceFetch !== false || boundary.settlement !== false || boundary.guaranteedUrlSuccess !== false) return null;
+  return body.code;
+}
+
+export function extractBatchInputRefusalSchema() {
+  const codes = Object.keys(INPUT_REFUSAL_TEXT);
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: [...REFUSAL_BODY_KEYS],
+    properties: {
+      ok: { const: false },
+      product: { const: EXTRACT_BATCH_PRODUCT },
+      schemaVersion: { const: EXTRACT_BATCH_INPUT_REFUSAL_SCHEMA_VERSION },
+      code: { enum: [...codes] },
+      error: { type: "string", minLength: 1, maxLength: 240 },
+      guidance: { type: "string", minLength: 1, maxLength: 400 },
+      charged: { const: false },
+      boundary: {
+        type: "object",
+        additionalProperties: false,
+        required: [...REFUSAL_BOUNDARY_KEYS],
+        properties: {
+          sourceFetch: { const: false },
+          settlement: { const: false },
+          guaranteedUrlSuccess: { const: false },
+        },
+      },
+    },
+    oneOf: codes.map((code) => ({
+      required: ["code", "error", "guidance"],
+      properties: {
+        code: { const: code },
+        error: { const: INPUT_REFUSAL_TEXT[code].error },
+        guidance: { const: INPUT_REFUSAL_TEXT[code].guidance },
+      },
+    })),
+  };
+}
+
 // Keep the merchant's public error type while sharing the pure ceiling with callers.
 export function maxAdmittedBatchExcerptChars(urlCount) {
   try {
     return sharedBatchExcerptCeiling(urlCount);
   } catch (error) {
-    throw new ExtractBatchInputError(error.message);
+    if (error instanceof RangeError) refusal("urls_invalid");
+    refusal("excerpt_ceiling_unavailable");
   }
 }
 const inProcessJobs = new Map();
 
-export class ExtractBatchInputError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "ExtractBatchInputError";
-    this.code = "invalid_batch_input";
-  }
-}
-
 export function assertPublicHttpsUrl(raw) {
-  if (typeof raw !== "string" || raw.trim() === "") {
-    throw new ExtractBatchInputError("each url must be a public HTTPS URL");
+  if (typeof raw !== "string" || raw.trim() === "") refusal("url_item_invalid");
+  if (raw.length > EXTRACT_BATCH_MAX_URL_LENGTH) refusal("url_too_long");
+  let parsed;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    refusal("url_malformed");
   }
-  if (raw.length > EXTRACT_BATCH_MAX_URL_LENGTH) {
-    throw new ExtractBatchInputError(`url exceeds ${EXTRACT_BATCH_MAX_URL_LENGTH} characters`);
+  if (parsed.username || parsed.password) refusal("url_credentials");
+  let url;
+  try {
+    url = assertPublicHttpUrl(raw);
+  } catch (error) {
+    if (error?.code === "invalid_protocol") refusal("url_scheme_unsupported");
+    if (error?.code === "ssrf_blocked") refusal("url_not_public");
+    if (error?.code === "invalid_url") refusal("url_malformed");
+    throw error;
   }
-  const url = assertPublicHttpUrl(raw);
-  if (url.protocol !== "https:") {
-    throw new ExtractBatchInputError("only public HTTPS URLs are accepted");
-  }
-  if (url.href.length > EXTRACT_BATCH_MAX_URL_LENGTH) throw new ExtractBatchInputError("normalized url exceeds length limit");
+  if (url.protocol !== "https:") refusal("url_scheme_not_https");
+  if (url.href.length > EXTRACT_BATCH_MAX_URL_LENGTH) refusal("url_normalized_too_long");
   return url.href;
 }
 
 export function normalizeExtractBatchInput(body) {
-  if (body == null || typeof body !== "object" || Array.isArray(body)) {
-    throw new ExtractBatchInputError("request body must be a JSON object");
-  }
+  if (body == null || typeof body !== "object" || Array.isArray(body)) refusal("body_not_object");
   const extra = Object.keys(body).filter((key) => !ALLOWED_BODY_KEYS.has(key));
-  if (extra.length) {
-    throw new ExtractBatchInputError(`unexpected field: ${extra[0]}`);
-  }
-  if (!Array.isArray(body.urls) || body.urls.length < 1 || body.urls.length > EXTRACT_BATCH_MAX_URLS) {
-    throw new ExtractBatchInputError(`urls must be an array of 1 to ${EXTRACT_BATCH_MAX_URLS} public HTTPS URLs`);
-  }
+  if (extra.length) refusal("unexpected_field");
+  if (!Array.isArray(body.urls) || body.urls.length < 1 || body.urls.length > EXTRACT_BATCH_MAX_URLS) refusal("urls_invalid");
   const urls = body.urls.map((value) => assertPublicHttpsUrl(value));
-  if (body.fields !== undefined && (!Array.isArray(body.fields) || body.fields.length < 1 || body.fields.length > ALL_FIELDS.length || new Set(body.fields).size !== body.fields.length)) {
-    throw new ExtractBatchInputError("fields must be a non-empty unique bounded array");
+  if (body.fields !== undefined) {
+    const fields = body.fields;
+    const shapeOk = Array.isArray(fields)
+      && fields.length >= 1
+      && fields.length <= ALL_FIELDS.length
+      && fields.every((item) => typeof item === "string")
+      && new Set(fields).size === fields.length;
+    if (!shapeOk) refusal("fields_invalid");
+    if (fields.some((item) => !ALL_FIELDS.includes(item))) refusal("fields_unknown");
   }
   let requirement;
   try {
     requirement = normalizeRequirement(body.fields === undefined ? {} : { fields: body.fields });
-  } catch (error) {
-    throw new ExtractBatchInputError(error.message || "invalid fields");
+  } catch {
+    refusal("fields_invalid");
   }
   let textExcerptLimitChars;
   if (Object.prototype.hasOwnProperty.call(body, "textExcerptLimitChars")) {
     const parsed = parseTextExcerptLimit(body.textExcerptLimitChars);
-    if (!parsed.ok) throw new ExtractBatchInputError(parsed.error);
+    if (!parsed.ok) refusal("text_excerpt_limit_invalid");
     const ceiling = maxAdmittedBatchExcerptChars(urls.length);
-    if (parsed.value > ceiling) {
-      throw new ExtractBatchInputError(
-        `textExcerptLimitChars exceeds ${ceiling} for ${urls.length} URL(s) under the ${EXTRACT_BATCH_MAX_RESPONSE_BYTES}-byte batch response ceiling`,
-      );
-    }
+    if (parsed.value > ceiling) refusal("text_excerpt_ceiling");
     textExcerptLimitChars = parsed.value;
   }
   return Object.freeze({
@@ -450,14 +621,14 @@ export function validateExtractBatchRequest(req, res, next) {
     res.set("X-SameDayDesk-Extract-Batch", "enabled");
     return next();
   } catch (error) {
-    const message = error instanceof ExtractBatchInputError
-      ? error.message
-      : "invalid extract batch request";
     res.set("Cache-Control", "no-store");
+    if (error instanceof ExtractBatchInputError) {
+      return res.status(400).json(extractBatchInputRefusalPayload(error.reason));
+    }
     return res.status(400).json({
       ok: false,
       product: EXTRACT_BATCH_PRODUCT,
-      error: message,
+      error: "invalid extract batch request",
       charged: false,
       boundary: {
         sourceFetch: false,
@@ -573,7 +744,10 @@ export function extractBatchOpenApiPath({ paymentInfo }) {
           description: "bounded batch attempt with truthful per-source success, partial, failure, or unknown facts",
           content: { "application/json": { schema: extractBatchOutputSchema() } },
         },
-        "400": { description: "invalid input, charged nothing, no source fetch" },
+        "400": {
+          description: "Semantic input refusal before payment, source fetch, settlement, or replay reservation. Malformed JSON and body-limit failures are parser errors and are not this schema. Payment-binding failures keep their own bodies.",
+          content: { "application/json": { schema: extractBatchInputRefusalSchema() } },
+        },
         "402": { description: `payment required (x402 or MPP, ${EXTRACT_BATCH_PRICE_USD} introductory flat batch quote)` },
         "409": { description: "payment identifier already bound to a different request body" },
         "413": { description: "JSON request exceeds the 16 KiB request ceiling; no authorization or source fetch" },
