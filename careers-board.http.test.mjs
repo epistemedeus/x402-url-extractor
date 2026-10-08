@@ -700,9 +700,14 @@ test("explicit feedback binds one paid careers result and the MCP rail settles o
   assert.equal(foreignResult.status, 409);
   assert.equal(foreignResult.body.code, "missing_capture");
   assert.equal(foreignResult.body.accepted, false);
+  // Change signed bytes, not base64url's unused final-character bits.
+  const [feedbackPayload, encodedFeedbackMac] = token.split(".");
+  const changedFeedbackMac = Buffer.from(encodedFeedbackMac, "base64url");
+  changedFeedbackMac[0] ^= 1;
+  assert.notDeepEqual(changedFeedbackMac, Buffer.from(encodedFeedbackMac, "base64url"));
   const tampered = await postFeedback(
     base,
-    `${token.slice(0, -1)}${token.endsWith("A") ? "B" : "A"}`,
+    `${feedbackPayload}.${changedFeedbackMac.toString("base64url")}`,
     { disposition: "useful" },
   );
   assert.equal(tampered.status, 401);
