@@ -28,12 +28,48 @@ function ensureMethod(entry, method) {
   return entry.methods[method];
 }
 
-function consumeRoute(route, into) {
+function joinRoutePath(prefix, routePath) {
+  const path = normalizePath(routePath);
+  if (!prefix) return path;
+  if (!path || path === "/") return prefix;
+  return normalizePath(`${prefix}${path.startsWith("/") ? path : `/${path}`}`);
+}
+
+// Express 4 stores a router mount only in its regexp. Recover a static prefix
+// so nested routes and path aliases keep the public path. Unknown mounts are
+// withheld, not flattened onto a parent path that never registered the handler.
+function staticMountPrefix(layer) {
+  if (!layer || layer.route || !layer.regexp) return null;
+  if (layer.regexp.fast_slash) return "";
+  if (layer.regexp.fast_star || /[gy]/.test(layer.regexp.flags || "")) return null;
+  const source = layer.regexp?.source;
+  if (typeof source !== "string") return null;
+  const suffix = "\\/?(?=\\/|$)";
+  if (!source.startsWith("^") || !source.endsWith(suffix)) return null;
+  const body = source.slice(0, -suffix.length);
+  let decoded = "";
+  for (let index = 1; index < body.length; index += 1) {
+    const char = body[index];
+    if (char === "\\") {
+      const literal = body[++index];
+      if (!literal || !"/\\.^$*+?()[]{}|".includes(literal)) return null;
+      decoded += literal;
+    } else {
+      if (".^$*+?()[]{}|".includes(char)) return null;
+      decoded += char;
+    }
+  }
+  // '?' is a literal only when escaped in the regexp, but normalizePath treats
+  // it as a query separator. Do not claim that unsupported literal as a path.
+  return decoded.startsWith("/") && !decoded.includes("?") ? normalizePath(decoded) : null;
+}
+
+function consumeRoute(route, into, prefix = "") {
   if (!route || isAllMethodRoute(route.methods)) return;
   const paths = Array.isArray(route.path) ? route.path : [route.path];
   for (const rawPath of paths) {
     if (typeof rawPath !== "string" || !rawPath.startsWith("/")) continue;
-    const path = normalizePath(rawPath);
+    const path = joinRoutePath(prefix, rawPath);
     if (!into.has(path)) into.set(path, { path, methods: {} });
     const entry = into.get(path);
     for (const layer of route.stack || []) {
@@ -48,10 +84,14 @@ function consumeRoute(route, into) {
   }
 }
 
-function walk(stack, into) {
+function walk(stack, into, prefix = "") {
   for (const layer of stack || []) {
-    if (layer?.route) consumeRoute(layer.route, into);
-    else if (Array.isArray(layer?.handle?.stack)) walk(layer.handle.stack, into);
+    if (layer?.route) consumeRoute(layer.route, into, prefix);
+    else if (Array.isArray(layer?.handle?.stack)) {
+      const mounted = staticMountPrefix(layer);
+      if (mounted === null) continue;
+      walk(layer.handle.stack, into, joinRoutePath(prefix, mounted));
+    }
   }
 }
 
