@@ -1,6 +1,6 @@
 {
   "name": "x402-merchant",
-  "version": "1.23.50",
+  "version": "1.23.51",
   "description": "Dual-stack x402 and MPP paid HTTP capabilities that settle USDC to our own Base wallet",
   "type": "module",
   "main": "server.js",
@@ -34,11 +34,12 @@
     "test:public-acquisition": "node --test machine-acquisition.test.mjs public-acquisition/engine.test.mjs public-acquisition/receiving-lifecycle.test.mjs public-acquisition/receiving-file-bounds.test.mjs"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.19.0"
   },
   "dependencies": {
     "@circle-fin/x402-batching": "3.3.0",
     "@coinbase/x402": "2.1.0",
+    "@exodus/bytes": "1.16.0",
     "@modelcontextprotocol/sdk": "1.30.0",
     "@x402/core": "2.16.0",
     "@x402/evm": "2.16.0",
@@ -48,7 +49,6 @@
     "agent-payment-integrity": "https://github.com/epistemedeus/agent-payment-integrity/archive/0b58000ef619c46a1173096614f1dd973d90f26d.tar.gz",
     "agent-payment-policy": "0.12.0",
     "express": "^4.21.2",
-    "iconv-lite": "0.7.3",
     "mppx": "^0.8.15",
     "viem": "2.55.11",
     "zod": "3.25.76"
