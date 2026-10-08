@@ -1,0 +1,21 @@
+{
+  "urls": ["https://alpha.example/product"],
+  "fields": ["notAField"],
+  "mapping": {
+    "schemaVersion": "pilot.c29.buyer-record-projection.mapping.v1",
+    "kind": "extract_batch",
+    "artifact": "extract-batch.json",
+    "itemPointer": "/data/jsonLd",
+    "fields": {
+      "name": { "from": "/name", "required": true }
+    }
+  },
+  "schema": {
+    "type": "object",
+    "properties": { "name": { "type": "string" } },
+    "required": ["name"]
+  },
+  "pages": {
+    "https://alpha.example/product": "<!doctype html><html><head><title>Alpha</title></head></html>"
+  }
+}

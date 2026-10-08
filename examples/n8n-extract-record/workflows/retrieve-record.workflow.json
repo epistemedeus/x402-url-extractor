@@ -1,0 +1,48 @@
+{
+  "id": "SdRetrieve000001",
+  "name": "SameDayDesk retrieve record",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "7c1a0a4e-6e2b-4c1d-9a11-0e5b1a000003",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "command": "node \"$N8N_EXTRACT_HOME/bin/retrieve.mjs\"",
+        "executeOnce": true
+      },
+      "id": "7c1a0a4e-6e2b-4c1d-9a11-0e5b1a000004",
+      "name": "Read stored artifact",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [520, 300],
+      "notes": "Reads the caller-owned artifact for N8N_EXTRACT_ARTIFACT and refuses a changed task. It does not call the merchant handler or pay."
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read stored artifact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

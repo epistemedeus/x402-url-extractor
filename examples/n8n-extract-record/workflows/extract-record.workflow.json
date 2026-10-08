@@ -1,0 +1,48 @@
+{
+  "id": "SdExtract0000001",
+  "name": "SameDayDesk extract record",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "7c1a0a4e-6e2b-4c1d-9a11-0e5b1a000001",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "command": "node \"$N8N_EXTRACT_HOME/bin/extract.mjs\"",
+        "executeOnce": true
+      },
+      "id": "7c1a0a4e-6e2b-4c1d-9a11-0e5b1a000002",
+      "name": "Project records",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [520, 300],
+      "notes": "Runs the pinned executeExtractBatch no-funds harness and examples/customer-x402/bin/record.mjs. It does not purchase, sign, or send caller feedback."
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Project records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

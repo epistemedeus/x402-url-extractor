@@ -1,0 +1,19 @@
+{
+  "name": "samedaydesk-n8n-extract-record",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cold-importable n8n workflows that project extract-batch handler output into caller-owned records and retrieve the same artifact later.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test test/n8n-extract-record.test.mjs",
+    "extract": "node bin/extract.mjs",
+    "retrieve": "node bin/retrieve.mjs"
+  },
+  "dependencies": {
+    "n8n": "2.42.5"
+  },
+  "license": "MIT"
+}

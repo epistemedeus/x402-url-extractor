@@ -1,0 +1,26 @@
+{
+  "urls": ["https://alpha.example/product"],
+  "fields": ["title", "jsonLd"],
+  "mapping": {
+    "schemaVersion": "pilot.c29.buyer-record-projection.mapping.v1",
+    "kind": "extract_batch",
+    "artifact": "extract-batch.json",
+    "itemPointer": "/data/jsonLd",
+    "fields": {
+      "name": { "from": "/name", "required": true },
+      "sku": { "from": "/sku", "required": true }
+    }
+  },
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["name", "sku"],
+    "properties": {
+      "name": { "type": "string" },
+      "sku": { "type": "string" }
+    }
+  },
+  "pages": {
+    "https://alpha.example/product": "<!doctype html><html><head><title>Alpha</title><script type=\"application/ld+json\">{\"@type\":\"Product\",\"name\":\"Alpha\",\"sku\":\"A-1\"}</script></head><body><h1>Alpha</h1></body></html>"
+  }
+}
