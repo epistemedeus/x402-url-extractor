@@ -110,7 +110,11 @@ test('windows-1252 bytes stay labeled and decoded across single, read, and batch
   const hole = decodeHttpBody(Uint8Array.of(0x81), { contentType: 'text/html; charset=windows-1252' });
   assert.equal(hole.charset, 'windows-1252');
   assert.equal(hole.charsetSource, 'content-type');
-  assert.equal(hole.html, '\uFFFD');
+  assert.equal(hole.html, '\u0081');
+  // These bytes are defined control-code mappings, not replacement characters.
+  const controls = decodeHttpBody(Uint8Array.of(0x81, 0x8d, 0x8f, 0x90, 0x9d),
+    { contentType: 'text/html; charset=windows-1252' });
+  assert.equal(controls.html, '\u0081\u008d\u008f\u0090\u009d');
   assert.notEqual(hole.html, '€');
 
   const fallback = decodeHttpBody(Uint8Array.of(0x80), {});

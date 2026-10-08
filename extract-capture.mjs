@@ -10,7 +10,7 @@ export {
   READ_MARKDOWN_MAX_CHARS,
   parseTextExcerptLimit,
 } from "./extract-excerpt-budget.mjs";
-import iconvLite from "iconv-lite";
+import { TextDecoder as WhatwgTextDecoder } from "@exodus/bytes/encoding.js";
 import { publicFetch } from "./extract-batch-c1/public-fetch.mjs";
 
 /**
@@ -75,12 +75,12 @@ function decoderLabel(charset) {
   }
 }
 
-// Node 22.22.0 TextDecoder reports the WHATWG name windows-1252 for iso-8859-1
-// but decodes 0x80-0x9F as C1 controls. iconv-lite is the codec for that
-// encoding, so the returned label matches the bytes actually decoded.
+// Some supported Node runtimes misdecode the Windows-1252 C1 range. Use a
+// maintained WHATWG decoder for this resolved encoding, including its defined
+// control-code mappings; the reported label still names the codec that ran.
 function decodeBytes(buffer, encoding) {
   if (encoding === "windows-1252") {
-    return iconvLite.decode(Buffer.from(buffer), "windows-1252");
+    return new WhatwgTextDecoder("windows-1252", { fatal: false }).decode(buffer);
   }
   return new TextDecoder(encoding, { fatal: false }).decode(buffer);
 }
