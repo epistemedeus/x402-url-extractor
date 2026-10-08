@@ -31,6 +31,7 @@ import { createPaymentWrapper } from "@x402/mcp";
 import { sealObservedMcpToolResult } from "./http-delivery-evidence/mcp-delivery.mjs";
 import { callerResultFeedbackMetaFromHeaders } from "./caller-result-feedback.mjs";
 import { classifyDeclaredAgentDiscoverySource, listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
+import { readExtractBatchInputRefusalCode } from "./extract-batch.mjs";
 import {
   buildRegisteredCatalog,
   createMcpTypedTelemetryAttempt,
@@ -287,7 +288,10 @@ function httpRouteToolHandler(tool, baseUrl) {
       for (const name of ["www-authenticate", "payment-receipt", "payment-required", "payment-response"]) {
         if (typeof response.headers[name] === "string") publicHeaders[name] = response.headers[name];
       }
-      const result = withoutSuccessShapedStructuredContent({ ...asToolResult(value, { structured: true }),
+      // A semantic refusal is not a paid-200 body. The success outputSchema rejects
+      // it, so the exact JSON stays in text and isError stays true.
+      const structured = readExtractBatchInputRefusalCode(value) === null;
+      const result = withoutSuccessShapedStructuredContent({ ...asToolResult(value, { structured }),
         ...(!(response.statusCode >= 200 && response.statusCode < 300) || value.error ? { isError: true } : {}),
         _meta: { "samedaydesk/http": { resource: resource.href, status: response.statusCode, headers: publicHeaders } } });
       const feedbackMeta = callerResultFeedbackMetaFromHeaders(response.headers);
@@ -716,6 +720,7 @@ export async function mountMcp(app, {
       inputSchema: t.inputSchema,
       outputSchema: t.outputSchema,
       paymentMeta: createX402ToolMeta(accepts),
+      inputRefusalMeta: t.inputRefusalMeta,
       operationIdentity: t.operationIdentity,
       handler,
       binding,
@@ -747,7 +752,7 @@ export async function mountMcp(app, {
         description: t.description,
         inputSchema: t.inputSchema,
         outputSchema: t.outputSchema,
-        _meta: { ...t.paymentMeta, ...operationMeta },
+        _meta: { ...t.paymentMeta, ...operationMeta, ...(t.inputRefusalMeta || {}) },
       }, t.handler);
     }
     return server;

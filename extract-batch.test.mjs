@@ -17,8 +17,17 @@ import {
   formatMerchantResult,
   serveExtractBatch,
   extractBatchOutputSchema,
+  extractBatchOutputExample,
+  extractBatchMcpOutputSchema,
+  extractBatchInputRefusalSchema,
+  extractBatchInputRefusalPayload,
+  extractBatchInputRefusalDeclaration,
+  readExtractBatchInputRefusalCode,
+  validateExtractBatchRequest,
+  maxAdmittedBatchExcerptChars,
+  ExtractBatchInputError,
 } from "./extract-batch.mjs";
-import { DEFAULT_EXTRACT_BATCH_COST, extractBatchCostParameters, isExtractBatchEnabled } from "./extract-batch-config.mjs";
+import { DEFAULT_EXTRACT_BATCH_COST, EXTRACT_BATCH_MAX_URL_LENGTH, extractBatchCostParameters, isExtractBatchEnabled } from "./extract-batch-config.mjs";
 import { publicFetch } from "./extract-batch-c1/public-fetch.mjs";
 
 const ALPHA = `<!doctype html><html lang="en"><head><title>Alpha</title><meta name="description" content="A"></head><body><h1>Alpha</h1><script type="application/ld+json">{"@type":"WebPage"}</script></body></html>`;
@@ -225,3 +234,105 @@ test("exception response retains every source and all declared required fields w
     await rm(dataDir, { recursive: true, force: true });
   }
 });
+
+test("semantic refusal codes are static, strict, and do not echo caller values", () => {
+  const validateRefusal = new Ajv2020({ strict: false, allErrors: true }).compile(extractBatchInputRefusalSchema());
+  const declaration = extractBatchInputRefusalDeclaration();
+  const secret = "sk_live_SYNTHETIC";
+  const secretValue = "hunter2";
+  const cases = [
+    [null, "body_not_object"],
+    [["https://example.com/"], "body_not_object"],
+    [{ urls: ["https://example.com/"], [secret]: secretValue }, "unexpected_field"],
+    [{}, "urls_invalid"],
+    [{ urls: [] }, "urls_invalid"],
+    [{ urls: Array.from({ length: 6 }, (_, index) => `https://example.com/${index}`) }, "urls_invalid"],
+    [{ urls: "https://example.com/" }, "urls_invalid"],
+    [{ urls: [""] }, "url_item_invalid"],
+    [{ urls: ["   "] }, "url_item_invalid"],
+    [{ urls: [1] }, "url_item_invalid"],
+    [{ urls: [`https://example.com/${"a".repeat(EXTRACT_BATCH_MAX_URL_LENGTH)}`] }, "url_too_long"],
+    [{ urls: ["not a url"] }, "url_malformed"],
+    [{ urls: ["https://s3cret-user:s3cret-pass@example.com/hidden"] }, "url_credentials"],
+    [{ urls: ["http://example.com/"] }, "url_scheme_not_https"],
+    [{ urls: ["ftp://example.com/"] }, "url_scheme_unsupported"],
+    [{ urls: ["https://127.0.0.1/do-not-store"] }, "url_not_public"],
+    [{ urls: ["https://10.9.8.7/do-not-store"] }, "url_not_public"],
+    [{ urls: ["https://192.168.1.20/do-not-store"] }, "url_not_public"],
+    [{ urls: ["https://172.16.0.5/do-not-store"] }, "url_not_public"],
+    [{ urls: ["https://[::1]/do-not-store"] }, "url_not_public"],
+    [{ urls: ["https://localhost/do-not-store"] }, "url_not_public"],
+    [{ urls: ["https://printer.local/do-not-store"] }, "url_not_public"],
+    [{ urls: ["http://127.0.0.1/do-not-store"] }, "url_not_public"],
+    [{ urls: [expandedUrl()] }, "url_normalized_too_long"],
+    [{ urls: ["https://example.com/"], fields: "title" }, "fields_invalid"],
+    [{ urls: ["https://example.com/"], fields: [] }, "fields_invalid"],
+    [{ urls: ["https://example.com/"], fields: ["title", "title"] }, "fields_invalid"],
+    [{ urls: ["https://example.com/"], fields: [1] }, "fields_invalid"],
+    [{ urls: ["https://example.com/"], fields: ["nope"] }, "fields_unknown"],
+    [{ urls: ["https://example.com/"], textExcerptLimitChars: null }, "text_excerpt_limit_invalid"],
+    [{ urls: ["https://example.com/"], textExcerptLimitChars: "" }, "text_excerpt_limit_invalid"],
+    [{ urls: ["https://example.com/"], textExcerptLimitChars: 1.5 }, "text_excerpt_limit_invalid"],
+    [{ urls: ["https://example.com/"], textExcerptLimitChars: 0 }, "text_excerpt_limit_invalid"],
+    [{ urls: Array.from({ length: 5 }, (_, index) => `https://example.com/${index}`), textExcerptLimitChars: 3000 }, "text_excerpt_ceiling"],
+  ];
+  const seen = new Set();
+  for (const [body, code] of cases) {
+    assert.throws(() => normalizeExtractBatchInput(body), (error) => {
+      assert.equal(error instanceof ExtractBatchInputError, true);
+      assert.equal(error.code, "invalid_batch_input");
+      assert.equal(error.reason, code);
+      const payload = extractBatchInputRefusalPayload(error.reason);
+      assert.equal(validateRefusal(payload), true, JSON.stringify(validateRefusal.errors));
+      assert.equal(validateOutput(payload), false);
+      assert.equal(extractBatchMcpOutputSchema.safeParse(payload).success, false);
+      assert.equal(payload.ok, false);
+      assert.equal(payload.charged, false);
+      assert.deepEqual(payload.boundary, { sourceFetch: false, settlement: false, guaranteedUrlSuccess: false });
+      assert.equal(Object.hasOwn(payload, "jobId"), false);
+      assert.equal(Object.hasOwn(payload, "sources"), false);
+      const encoded = JSON.stringify(payload);
+      for (const forbidden of [secret, secretValue, "s3cret-user", "s3cret-pass", "do-not-store", "nope", "hidden"]) {
+        assert.equal(encoded.includes(forbidden), false, `${code} echoed ${forbidden}`);
+      }
+      seen.add(code);
+      return true;
+    });
+  }
+  assert.deepEqual([...seen].sort(), declaration.codes.filter((code) => code !== "excerpt_ceiling_unavailable").sort());
+  const unavailable = extractBatchInputRefusalPayload("excerpt_ceiling_unavailable");
+  assert.equal(validateRefusal(unavailable), true, JSON.stringify(validateRefusal.errors));
+  assert.equal(unavailable.error, "batch response ceiling cannot admit the default excerpt");
+  assert.throws(() => maxAdmittedBatchExcerptChars(0), (error) => error instanceof ExtractBatchInputError && error.reason === "urls_invalid");
+  const one = normalizeExtractBatchInput({ urls: ["https://example.com/"], textExcerptLimitChars: 3000 });
+  assert.equal(one.textExcerptLimitChars, 3000);
+  const omitted = normalizeExtractBatchInput({ urls: ["https://example.com/", "https://example.com/"] });
+  assert.equal(Object.hasOwn(omitted, "textExcerptLimitChars"), false);
+  assert.equal(omitted.urls.length, 2);
+  assert.equal(normalizeExtractBatchInput({ urls: ["https://example.com/"], textExcerptLimitChars: "2000" }).textExcerptLimitChars, 2000);
+  const unknown = { ...extractBatchInputRefusalPayload("unexpected_field"), code: "not_a_code" };
+  assert.equal(validateRefusal(unknown), false);
+  assert.equal(validateRefusal({ ...extractBatchInputRefusalPayload("url_not_public"), schemaVersion: "samedaydesk.extract-batch.v0" }), false);
+  assert.equal(validateRefusal(extractBatchOutputExample()), false);
+  assert.equal(readExtractBatchInputRefusalCode(unknown), null);
+  assert.equal(readExtractBatchInputRefusalCode(extractBatchInputRefusalPayload("fields_unknown")), "fields_unknown");
+  let statusCode;
+  let payload;
+  validateExtractBatchRequest({ method: "POST", path: EXTRACT_BATCH_PATH, body: { urls: ["https://example.com/"], [secret]: secretValue } }, {
+    locals: {},
+    set() {},
+    status(code) { statusCode = code; return this; },
+    json(value) { payload = value; return this; },
+  }, () => { throw new Error("invalid input must not continue"); });
+  assert.equal(statusCode, 400);
+  assert.equal(payload.code, "unexpected_field");
+  assert.equal(JSON.stringify(payload).includes(secret), false);
+});
+
+function expandedUrl() {
+  const base = "https://example.com/";
+  const raw = `${base}${"é".repeat(EXTRACT_BATCH_MAX_URL_LENGTH - base.length)}`;
+  assert.equal(raw.length, EXTRACT_BATCH_MAX_URL_LENGTH);
+  assert.ok(new URL(raw).href.length > EXTRACT_BATCH_MAX_URL_LENGTH);
+  return raw;
+}
