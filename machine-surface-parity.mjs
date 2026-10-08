@@ -185,6 +185,59 @@ function operationKey(method, route) {
   return `${String(method || "GET").toUpperCase()} ${route}`;
 }
 
+function rootOperationKey(label) {
+  const match = /^(GET|POST|PUT|PATCH|DELETE) (\/[^?#]*)(?:\?[^#]*)?$/.exec(label);
+  if (!match) fail(`invalid root paid-route label ${label}`);
+  return operationKey(match[1], match[2]);
+}
+
+// Configured actions own the machine inventory. Existing human-map labels are
+// optional query hints, not a second authority for inclusion, price or effect.
+export function buildRootPaidRoutes({ actions, alternate = null, hints = {} } = {}) {
+  if (!Array.isArray(actions) || actions.length === 0) fail("actions are required");
+  const labels = new Map();
+  for (const label of Object.keys(hints)) {
+    const key = rootOperationKey(label);
+    if (labels.has(key)) fail(`duplicate root paid operation ${key}`);
+    labels.set(key, label);
+  }
+  const routes = {};
+  for (const action of [...actions, ...(alternate ? [alternate] : [])]) {
+    const method = String(action.method || "GET").toUpperCase();
+    const key = operationKey(method, action.route);
+    if (!/^\/[^?#]+$/.test(action.route || "")) fail(`invalid action route ${action.route}`);
+    const required = action.request?.schema?.properties?.queryParams?.required || [];
+    const query = method === "GET" && required.length
+      ? "?" + [...required].sort().map((name) => `${encodeURIComponent(name)}=`).join("&")
+      : "";
+    const label = labels.get(key) || key + query;
+    if (Object.hasOwn(routes, label)) fail(`duplicate root paid operation ${key}`);
+    if (!action.description) fail(`${key} lacks a description`);
+    routes[label] = `${formatLlmsPrice(action.priceAtomicUsdc)} - ${flatten(action.description)}`;
+  }
+  return routes;
+}
+
+function validateRootPaidRoutes(routes, actions, alternate) {
+  if (!routes || typeof routes !== "object" || Array.isArray(routes)) fail("root paidRoutes must be an object");
+  const actual = new Map();
+  for (const [label, value] of Object.entries(routes)) {
+    const key = rootOperationKey(label);
+    if (actual.has(key)) fail(`duplicate root paid operation ${key}`);
+    actual.set(key, value);
+  }
+  const expected = [...actions, ...(alternate ? [alternate] : [])];
+  for (const action of expected) {
+    const key = operationKey(action.method || "GET", action.route);
+    if (!actual.has(key)) fail(`${key} is missing from root paidRoutes`);
+    if (!String(actual.get(key)).startsWith(`${formatLlmsPrice(action.priceAtomicUsdc)} - `)) {
+      fail(`${key} root price drifted from configured action`);
+    }
+    actual.delete(key);
+  }
+  if (actual.size) fail(`root paidRoutes contains undeclared operation ${actual.keys().next().value}`);
+}
+
 export function validateMachineSurfaceParity({
   actions,
   alternate = null,
@@ -195,6 +248,7 @@ export function validateMachineSurfaceParity({
   agentCard,
   catalog,
   llms,
+  rootPaidRoutes,
 } = {}) {
   if (!Array.isArray(actions) || actions.length === 0) fail("actions are required");
   const actionRoutes = actions.map((action) => {
@@ -216,6 +270,8 @@ export function validateMachineSurfaceParity({
       fail("Circle alternate must not duplicate a canonical action");
     }
   }
+
+  if (rootPaidRoutes !== undefined) validateRootPaidRoutes(rootPaidRoutes, actionRoutes, alternate);
 
   const catalogActions = Array.isArray(catalog?.actions) ? catalog.actions : [];
   if (alternate && catalogActions.some((action) => action.route === alternate.route)) {
