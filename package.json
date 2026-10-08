@@ -48,6 +48,7 @@
     "agent-payment-integrity": "https://github.com/epistemedeus/agent-payment-integrity/archive/0b58000ef619c46a1173096614f1dd973d90f26d.tar.gz",
     "agent-payment-policy": "0.12.0",
     "express": "^4.21.2",
+    "iconv-lite": "0.7.3",
     "mppx": "^0.8.15",
     "viem": "2.55.11",
     "zod": "3.25.76"

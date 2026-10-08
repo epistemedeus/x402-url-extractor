@@ -10,6 +10,7 @@ export {
   READ_MARKDOWN_MAX_CHARS,
   parseTextExcerptLimit,
 } from "./extract-excerpt-budget.mjs";
+import iconvLite from "iconv-lite";
 import { publicFetch } from "./extract-batch-c1/public-fetch.mjs";
 
 /**
@@ -74,6 +75,16 @@ function decoderLabel(charset) {
   }
 }
 
+// Node 22.22.0 TextDecoder reports the WHATWG name windows-1252 for iso-8859-1
+// but decodes 0x80-0x9F as C1 controls. iconv-lite is the codec for that
+// encoding, so the returned label matches the bytes actually decoded.
+function decodeBytes(buffer, encoding) {
+  if (encoding === "windows-1252") {
+    return iconvLite.decode(Buffer.from(buffer), "windows-1252");
+  }
+  return new TextDecoder(encoding, { fatal: false }).decode(buffer);
+}
+
 export function decodeHttpBody(bytes, { contentType, allowHtmlMeta = true } = {}) {
   const buffer = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
   let charset = parseCharsetFromContentType(contentType);
@@ -92,7 +103,7 @@ export function decodeHttpBody(bytes, { contentType, allowHtmlMeta = true } = {}
     charsetSource = "invalid-charset-fallback";
   }
   charset = supported || "utf-8";
-  const html = new TextDecoder(charset, { fatal: false }).decode(buffer);
+  const html = decodeBytes(buffer, charset);
   return { html, charset, charsetSource, bytes: buffer.byteLength };
 }
 

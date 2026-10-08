@@ -410,14 +410,17 @@ test("a later process replays useful and negative output without payment authori
 
     const derivativeFile = path.join(dataDir, "derivative.json");
     await writeFile(derivativeFile, JSON.stringify(shared.share));
-    const consumer = spawnSync(process.execPath, ["useful-result-reuse/compatibility-consumer.mjs"], {
+    const consumerEnv = {
+      USEFUL_RESULT_DERIVATIVE: derivativeFile,
+      USEFUL_RESULT_RECEIPT: fileURLToPath(CAPTURED_RECEIPT),
+    };
+    const spawnConsumer = (extra = {}) => spawnSync(process.execPath, ["useful-result-reuse/compatibility-consumer.mjs"], {
       cwd: root,
-      env: {
-        USEFUL_RESULT_DERIVATIVE: derivativeFile,
-        USEFUL_RESULT_RECEIPT: fileURLToPath(CAPTURED_RECEIPT),
-      },
+      env: { ...consumerEnv, ...extra },
       encoding: "utf8",
     });
+    const sameClock = new Date(clock.value).toISOString();
+    const consumer = spawnConsumer({ USEFUL_RESULT_NOW: sameClock });
     assert.equal(consumer.status, 0, `${consumer.stdout}\n${consumer.stderr}`);
     const consumerBody = JSON.parse(consumer.stdout);
     assert.equal(consumerBody.sameUsefulOutput, true);
@@ -429,6 +432,68 @@ test("a later process replays useful and negative output without payment authori
     assert.equal(consumerBody.directReceiptCalls, 1);
     assert.equal(consumer.stdout.includes("8904df3d"), false);
     assert.equal(consumer.stdout.includes(kept.grant), false);
+
+    const expired = spawnConsumer({ USEFUL_RESULT_NOW: shared.share.expiresAt });
+    assert.equal(expired.status, 0, `${expired.stdout}\n${expired.stderr}`);
+    const expiredBody = JSON.parse(expired.stdout);
+    assert.equal(expiredBody.sameUsefulOutput, false);
+    assert.equal(expiredBody.reason, "expired_scope");
+    assert.equal(expiredBody.paymentPermitted, false);
+    assert.equal(expiredBody.executionSaved, false);
+    assert.equal(expiredBody.recognizedRevenueAtomic, "0");
+    assert.equal(expiredBody.laterDecision, null);
+    assert.equal(expired.stdout.includes(kept.grant), false);
+
+    const wall = spawnConsumer();
+    assert.equal(wall.status, 0, `${wall.stdout}\n${wall.stderr}`);
+    const wallBody = JSON.parse(wall.stdout);
+    if (Date.now() >= Date.parse(shared.share.expiresAt)) {
+      assert.equal(wallBody.sameUsefulOutput, false);
+      assert.equal(wallBody.reason, "expired_scope");
+    } else {
+      assert.equal(wallBody.sameUsefulOutput, true);
+      assert.equal(wallBody.laterDecision, "found");
+    }
+    assert.equal(wallBody.paymentPermitted, false);
+    assert.equal(wallBody.recognizedRevenueAtomic, "0");
+
+    const tampered = structuredClone(shared.share);
+    tampered.evidence.evidenceDigest = "0".repeat(64);
+    const corruptFile = path.join(dataDir, "corrupt-derivative.json");
+    await writeFile(corruptFile, JSON.stringify(tampered));
+    const corrupt = spawnConsumer({
+      USEFUL_RESULT_DERIVATIVE: corruptFile,
+      USEFUL_RESULT_NOW: sameClock,
+    });
+    assert.equal(corrupt.status, 0, `${corrupt.stdout}\n${corrupt.stderr}`);
+    const corruptBody = JSON.parse(corrupt.stdout);
+    assert.equal(corruptBody.sameUsefulOutput, false);
+    assert.equal(corruptBody.reason, "source_changed");
+    assert.equal(corruptBody.paymentPermitted, false);
+    assert.equal(corruptBody.executionSaved, false);
+    assert.equal(corruptBody.recognizedRevenueAtomic, "0");
+    assert.equal(corrupt.stdout.includes(kept.grant), false);
+
+    const forged = structuredClone(shared.share);
+    forged.schema = "forged.compatibility";
+    const forgedFile = path.join(dataDir, "forged-derivative.json");
+    await writeFile(forgedFile, JSON.stringify(forged));
+    const forgedConsumer = spawnConsumer({
+      USEFUL_RESULT_DERIVATIVE: forgedFile,
+      USEFUL_RESULT_NOW: sameClock,
+    });
+    assert.equal(forgedConsumer.status, 0, `${forgedConsumer.stdout}\n${forgedConsumer.stderr}`);
+    const forgedBody = JSON.parse(forgedConsumer.stdout);
+    assert.equal(forgedBody.sameUsefulOutput, false);
+    assert.equal(forgedBody.reason, "not_compatibility");
+    assert.equal(forgedBody.paymentPermitted, false);
+    assert.equal(forgedBody.recognizedRevenueAtomic, "0");
+
+    const badClock = spawnConsumer({ USEFUL_RESULT_NOW: "not-a-clock" });
+    assert.notEqual(badClock.status, 0);
+    assert.match(badClock.stderr, /clock_rejected/);
+    assert.equal(badClock.stdout.includes("sameUsefulOutput"), false);
+    assert.equal(badClock.stdout.includes(kept.grant), false);
 
     const drifted = receiptClient({ fee: 9n });
     const sourceChanged = await api.consumeDeliveredKnowledge({
