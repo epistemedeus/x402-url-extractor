@@ -36,20 +36,32 @@ function joinRoutePath(prefix, routePath) {
 }
 
 // Express 4 stores a router mount only in its regexp. Recover a static prefix
-// so nested routes and path aliases keep the public path. A parameter or an
-// unrecognized regexp adds nothing, which leaves those layers on the parent path.
+// so nested routes and path aliases keep the public path. Unknown mounts are
+// withheld, not flattened onto a parent path that never registered the handler.
 function staticMountPrefix(layer) {
-  if (!layer || layer.route || layer.regexp?.fast_slash || layer.regexp?.fast_star) return "";
+  if (!layer || layer.route || !layer.regexp) return null;
+  if (layer.regexp.fast_slash) return "";
+  if (layer.regexp.fast_star || /[gy]/.test(layer.regexp.flags || "")) return null;
   const source = layer.regexp?.source;
-  if (typeof source !== "string") return "";
+  if (typeof source !== "string") return null;
   const suffix = "\\/?(?=\\/|$)";
-  if (!source.endsWith(suffix)) return "";
+  if (!source.startsWith("^") || !source.endsWith(suffix)) return null;
   const body = source.slice(0, -suffix.length);
-  if (body.includes("(")) return "";
-  const match = /^\^((?:\\\/(?:\\.|[^\\])+)*)/.exec(body);
-  if (!match?.[1]) return "";
-  const decoded = match[1].replace(/\\(.)/g, "$1");
-  return decoded.startsWith("/") ? normalizePath(decoded) : "";
+  let decoded = "";
+  for (let index = 1; index < body.length; index += 1) {
+    const char = body[index];
+    if (char === "\\") {
+      const literal = body[++index];
+      if (!literal || !"/\\.^$*+?()[]{}|".includes(literal)) return null;
+      decoded += literal;
+    } else {
+      if (".^$*+?()[]{}|".includes(char)) return null;
+      decoded += char;
+    }
+  }
+  // '?' is a literal only when escaped in the regexp, but normalizePath treats
+  // it as a query separator. Do not claim that unsupported literal as a path.
+  return decoded.startsWith("/") && !decoded.includes("?") ? normalizePath(decoded) : null;
 }
 
 function consumeRoute(route, into, prefix = "") {
@@ -77,7 +89,8 @@ function walk(stack, into, prefix = "") {
     if (layer?.route) consumeRoute(layer.route, into, prefix);
     else if (Array.isArray(layer?.handle?.stack)) {
       const mounted = staticMountPrefix(layer);
-      walk(layer.handle.stack, into, mounted ? joinRoutePath(prefix, mounted) : prefix);
+      if (mounted === null) continue;
+      walk(layer.handle.stack, into, joinRoutePath(prefix, mounted));
     }
   }
 }

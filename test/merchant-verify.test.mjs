@@ -282,6 +282,66 @@ test("useful-result reuse registration is inspected on a cold mount and still re
   }
 });
 
+test("router inspection preserves default root and multiple static prefixes", () => {
+  for (const explicitRoot of [false, true]) {
+    const app = express();
+    const router = express.Router();
+    router.get("/leaf", function leaf(_req, res) { res.end("ok"); });
+    if (explicitRoot) app.use("/", router);
+    else app.use(router);
+    assert.equal(handlerCount(collectExpressBindings(app), "/leaf", "GET"), 1);
+  }
+  const app = express();
+  const outer = express.Router();
+  const inner = express.Router();
+  inner.get(["/leaf", "/leaf-alias"], function leaf(_req, res) { res.end("ok"); });
+  outer.use("/v1.2", inner);
+  app.use("/outer", outer);
+  const bindings = collectExpressBindings(app);
+  assert.equal(handlerCount(bindings, "/outer/v1.2/leaf", "GET"), 1);
+  assert.equal(handlerCount(bindings, "/outer/v1.2/leaf-alias", "GET"), 1);
+  assert.equal(handlerCount(bindings, "/leaf", "GET"), 0);
+});
+
+test("router inspection never flattens unsupported mounts into fabricated handlers", () => {
+  const cases = [
+    ["/ab?cd", "/ab/leaf"],
+    ["/ab+cd", "/ab+cd/leaf"],
+    ["/ab[cd]", "/ab[cd]/leaf"],
+    ["/prefix/:tenant", "/leaf"],
+    ["/prefix/:tenant?", "/leaf"],
+    ["/prefix/*", "/leaf"],
+    [["/alias-a", "/alias-b"], "/leaf"],
+    [/^\/regex-[0-9]+\/?(?=\/|$)/, "/leaf"],
+    [/^\/static\/?(?=\/|$)/g, "/static/leaf"],
+    [/^\/static\/?(?=\/|$)/y, "/static/leaf"],
+  ];
+  for (const [mount, fabricated] of cases) {
+    const app = express();
+    const router = express.Router();
+    router.get("/leaf", function leaf(_req, res) { res.end("ok"); });
+    app.use(mount, router);
+    app.get("/unrelated", function unrelated(_req, res) { res.end("ok"); });
+    const bindings = collectExpressBindings(app);
+    assert.equal(handlerCount(bindings, fabricated, "GET"), 0, String(mount));
+    assert.equal(handlerCount(bindings, "/unrelated", "GET"), 1, String(mount));
+    const problems = routeBindingProblems({
+      bindings,
+      openapi: { paths: { [fabricated]: { get: { responses: { "200": { description: "fabricated" } } } } } },
+    });
+    assert.ok(problems.includes("missing-handler GET " + fabricated), String(mount));
+  }
+  const app = express();
+  const outer = express.Router();
+  const inner = express.Router();
+  inner.get("/leaf", function leaf(_req, res) { res.end("ok"); });
+  outer.use("/:tenant", inner);
+  app.use("/outer", outer);
+  const bindings = collectExpressBindings(app);
+  assert.equal(handlerCount(bindings, "/outer/leaf", "GET"), 0);
+  assert.equal(handlerCount(bindings, "/leaf", "GET"), 0);
+});
+
 test("route binding accepts a matched handler and rejects a method mismatch or missing handler", () => {
   const ok = run(["routes", "inspect", "--profile", "local", "--fixture", "route-binding-ok", "--json"]);
   assert.equal(ok.status, 0, ok.stderr);
