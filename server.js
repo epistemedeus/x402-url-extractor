@@ -574,6 +574,14 @@ app.use((req, res, next) => {
   if (isScopedRepairPath(req.path) || isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
   return jsonParser(req, res, next);
 });
+// Parsing precedes observation and the semantic validator. Keep that boundary:
+// no event or semantic code, and no default parser message echoing caller bytes.
+app.use((error, req, res, next) => {
+  if (error?.type !== "entity.parse.failed"
+    || !(req.path === "/mcp" || (EXTRACT_BATCH_ENABLED && req.path === EXTRACT_BATCH_PATH))) return next(error);
+  res.set("Cache-Control", "no-store");
+  return res.status(400).json({ ok: false, error: "invalid_json", charged: false });
+});
 app.use(legacyCompatibleX402Body);
 mountPageChangeHttp(app);
 app.get(CAREERS_BOARD_COLD_PATH, function serveCareersBoardColdRecipe(_req, res) {
