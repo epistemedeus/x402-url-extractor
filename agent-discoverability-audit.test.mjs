@@ -3,13 +3,22 @@ import { EventEmitter } from "node:events";
 import { Readable } from "node:stream";
 import test from "node:test";
 
+import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, cpSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import {
   agentDiscoverabilityAudit,
   auditCoinbaseMaterialization,
   auditTargetDiscoverySurfaces,
+  CATALOG_RESPONSE_MAX_BYTES,
+  fetchJson,
   fetchPinnedTargetJson,
   normalizeDiscoverabilityAuditInput,
 } from "./agent-discoverability-audit.mjs";
+import { SOURCE } from "task-discoverability";
 
 function response(payload, status = 200) {
   return new Response(JSON.stringify(payload), {
@@ -113,32 +122,75 @@ test("distinguishes Coinbase eligibility from exact catalog materialization", as
         assert.deepEqual(JSON.parse(options.body), { resource, method: "POST" });
         return response(validation, validationStatus);
       }
-      assert.match(target, /urlSubstring=https%3A%2F%2Fapi\.example\.com%2Fextract/);
+      const parsed = new URL(target);
+      assert.equal(parsed.searchParams.has("urlSubstring"), false);
+      assert.equal(parsed.searchParams.has("curatedOnly"), false);
+      assert.deepEqual([...parsed.searchParams.keys()].sort(), ["limit", "query"]);
+      for (const key of parsed.searchParams.keys()) assert.ok(SOURCE.sdkSearchQuery.includes(key));
       return response({ resources }, catalogStatus);
     },
   });
 
   const accepted = await run({ valid: true, simulation: { outcome: "accepted" }, index: null }, []);
-  assert.equal(accepted.state, "provider_accepted_not_materialized");
+  assert.equal(accepted.state, "query_window_catalog_presence_unknown");
+  assert.equal(accepted.validator.eligibility, "provider_reported_eligible");
   assert.equal(accepted.validator.indexReturned, false);
-  assert.equal(accepted.catalog.exactResourceFound, false);
+  assert.equal(accepted.catalog.catalogPresence, "unknown");
+  assert.equal(accepted.catalog.exactMatchCount, 0);
+  assert.equal(accepted.catalog.measuredZero, true);
+  assert.equal(accepted.catalog.declaredReturnedCount, 0);
+  assert.equal(accepted.catalog.inspectedCount, 0);
+  assert.equal(JSON.stringify(accepted).includes("not_materialized"), false);
+  assert.equal(JSON.stringify(accepted).includes("request_provider_ingestion"), false);
 
   const rejected = await run({ valid: false, simulation: { outcome: "rejected" }, index: null }, []);
-  assert.equal(rejected.state, "seller_not_provider_eligible");
+  assert.equal(rejected.state, "query_window_catalog_presence_unknown");
+  assert.equal(rejected.validator.eligibility, "provider_reported_not_eligible");
+  assert.equal(rejected.catalog.catalogPresence, "unknown");
 
   const materialized = await run({ valid: false, simulation: { outcome: "rejected" } }, [{ resource }]);
-  assert.equal(materialized.state, "materialized");
+  assert.equal(materialized.state, "observed_in_query_window");
+  assert.equal(materialized.validator.eligibility, "provider_reported_not_eligible");
   assert.equal(materialized.catalog.exactMatchCount, 1);
+  assert.equal(materialized.catalog.catalogPresence, "observed-in-inspected-rows");
 
   const unresolved = await run({}, [], 503, 503);
   assert.equal(unresolved.state, "unresolved");
   assert.equal(unresolved.validator.status, "error");
+  assert.equal(unresolved.validator.eligibility, "unknown");
   assert.equal(unresolved.catalog.status, "error");
+
+  const empty = await run({}, []);
+  assert.equal(empty.validator.status, "ok");
+  assert.equal(empty.validator.eligibility, "unknown");
+  assert.equal(empty.validator.eligibilityReason, "malformed");
+  assert.equal(empty.validator.valid, null);
+  assert.equal(empty.state, "query_window_catalog_presence_unknown");
+
+  const nonboolean = await run({ valid: "true", simulation: { outcome: "accepted" } }, []);
+  assert.equal(nonboolean.validator.eligibility, "unknown");
+  assert.equal(nonboolean.validator.eligibilityReason, "nonboolean-valid");
+
+  const missingSimulation = await run({ valid: false }, []);
+  assert.equal(missingSimulation.validator.eligibility, "unknown");
+  assert.equal(missingSimulation.validator.eligibilityReason, "unknown-outcome");
+
+  const unknownOutcome = await run({ valid: true, simulation: { outcome: "pending" } }, []);
+  assert.equal(unknownOutcome.validator.eligibility, "unknown");
+  assert.equal(unknownOutcome.validator.eligibilityReason, "unknown-outcome");
+
+  const contradictory = await run({ valid: true, simulation: { outcome: "rejected" } }, []);
+  assert.equal(contradictory.validator.eligibility, "unknown");
+  assert.equal(contradictory.validator.eligibilityReason, "contradictory");
+  const opposite = await run({ valid: false, simulation: { outcome: "accepted" } }, []);
+  assert.equal(opposite.validator.eligibility, "unknown");
+  assert.equal(opposite.validator.eligibilityReason, "contradictory");
 });
 
 test("turns materialization evidence into a specific action without replacing the core audit", async () => {
   const fetchImpl = async (url) => {
     const target = String(url);
+    if (target.endsWith("/x402/validate")) return response({ valid: true, simulation: { outcome: "accepted" }, index: null });
     if (target.includes("coinbase.com")) return response({ resources: [] });
     if (target.includes("agent402.tools")) return response({ results: [] });
     if (target.includes("agentic.market")) return response({ services: [] });
@@ -157,19 +209,43 @@ test("turns materialization evidence into a specific action without replacing th
     route: "/extract",
     materializationAudit: true,
   };
-  const accepted = await agentDiscoverabilityAudit(input, {
-    fetchImpl,
+  const accepted = await agentDiscoverabilityAudit(input, { fetchImpl, now: 0 });
+  assert.equal(accepted.summary.coinbaseMaterializationState, "query_window_catalog_presence_unknown");
+  assert.equal(accepted.sources["coinbase-bazaar"].coverage.catalogPresence, "unknown");
+  assert.equal(accepted.sources["coinbase-bazaar"].request.plane, "actual-transport");
+  assert.equal(accepted.sources["coinbase-bazaar"].discovery.provenance.kind, "supplied-body");
+  assert.equal(accepted.sources["coinbase-bazaar"].discovery.provenance.officialLiveRead, false);
+  assert.equal(accepted.sources["coinbase-bazaar"].discovery.provenance.networkSent, false);
+  assert.equal(accepted.sources["coinbase-bazaar"].requestConstruction, null);
+  assert.equal(accepted.findings.some((item) => item.finding === "provider_accepted_exact_route_not_materialized"), false);
+  assert.equal(accepted.nextActions.some((item) => item.action === "request_provider_ingestion_disposition_or_supported_reindex"), false);
+  assert.ok(accepted.findings.some((item) => item.source === "coinbase-bazaar" && item.finding === "target_not_in_inspected_window"));
+  assert.equal(accepted.nextActions.some((item) => item.source === "coinbase-bazaar"), false);
+  assert.equal(accepted.nextActions.some((item) => item.action === "repair_seller_provider_eligibility"), false);
+
+  const malformedValidator = await agentDiscoverabilityAudit(input, {
+    fetchImpl: async (url) => {
+      const target = String(url);
+      if (target.endsWith("/x402/validate")) return response({});
+      return fetchImpl(url);
+    },
     now: 0,
-    coinbaseMaterializationImpl: async () => ({
-      requested: true,
-      state: "provider_accepted_not_materialized",
-      resource: "https://api.example.com/extract",
-    }),
   });
-  assert.equal(accepted.summary.coinbaseMaterializationState, "provider_accepted_not_materialized");
-  assert.ok(accepted.findings.some((item) => item.finding === "provider_accepted_exact_route_not_materialized"));
-  assert.ok(accepted.nextActions.some((item) => item.action === "request_provider_ingestion_disposition_or_supported_reindex"));
-  assert.equal(accepted.findings.some((item) => item.source === "coinbase-bazaar" && item.finding === "target_absent_from_ranked_results"), false);
+  assert.equal(malformedValidator.sources["coinbase-bazaar"].materialization.validator.eligibility, "unknown");
+  assert.equal(malformedValidator.nextActions.some((item) => item.action === "repair_seller_provider_eligibility"), false);
+
+  const rejectedValidator = await agentDiscoverabilityAudit(input, {
+    fetchImpl: async (url) => {
+      const target = String(url);
+      if (target.endsWith("/x402/validate")) return response({ valid: false, simulation: { outcome: "rejected" }, index: null });
+      return fetchImpl(url);
+    },
+    now: 0,
+  });
+  assert.equal(rejectedValidator.sources["coinbase-bazaar"].materialization.validator.eligibility, "provider_reported_not_eligible");
+  assert.ok(rejectedValidator.nextActions.some((item) => item.action === "repair_seller_provider_eligibility"));
+  assert.equal(rejectedValidator.sources["coinbase-bazaar"].coverage.catalogPresence, "unknown");
+  assert.equal(JSON.stringify(rejectedValidator.nextActions).includes("unlisted"), false);
 
   const unresolved = await agentDiscoverabilityAudit(input, {
     fetchImpl,
@@ -177,7 +253,7 @@ test("turns materialization evidence into a specific action without replacing th
     coinbaseMaterializationImpl: async () => ({ requested: true, state: "unresolved" }),
   });
   assert.ok(unresolved.findings.some((item) => item.finding === "materialization_state_unresolved"));
-  assert.ok(unresolved.findings.some((item) => item.source === "coinbase-bazaar" && item.finding === "target_absent_from_ranked_results"));
+  assert.ok(unresolved.findings.some((item) => item.source === "coinbase-bazaar" && item.finding === "target_not_in_inspected_window"));
 });
 
 test("audits three fixed target discovery documents only when explicitly requested", async () => {
@@ -353,8 +429,18 @@ test("preserves registry ranks and identifies the target by origin or payTo", as
   assert.equal(result.summary.independentTargetFoundSourceCount, 7);
   assert.match(result.sourceDependencies["payanagent-public-search"], /not independent underlying supply/);
   assert.match(result.sourceDependencies["8004market-public-search"], /identity propagation/);
-  assert.ok(result.findings.some((finding) => finding.source === "circle-marketplace" && finding.finding === "target_absent_from_ranked_results"));
-  assert.ok(result.nextActions.some((action) => action.source === "circle-marketplace"));
+  assert.ok(result.findings.some((finding) => finding.source === "circle-marketplace" && finding.finding === "target_not_in_inspected_window"));
+  assert.equal(result.sources["circle-marketplace"].coverage.catalogPresence, "unknown");
+  assert.equal(result.sources["circle-marketplace"].coverage.declaredReturnedCount, "unknown");
+  assert.equal(result.sources["circle-marketplace"].coverage.inspectedCount, 0);
+  assert.equal(result.sources["circle-marketplace"].coverage.measuredZero, false);
+  assert.equal(result.sources["circle-marketplace"].requestConstruction, null);
+  assert.equal(result.nextActions.some((action) => action.source === "circle-marketplace"), false);
+  assert.equal(result.sources["coinbase-bazaar"].targetFound, true);
+  assert.equal(result.sources["coinbase-bazaar"].coverage.catalogPresence, "unknown");
+  assert.equal(result.sources["coinbase-bazaar"].coverage.exactTargetCount, 0);
+  assert.equal(result.sources["coinbase-bazaar"].request.suppliedBodyPlane, "supplied-body");
+  assert.equal(result.sources["coinbase-bazaar"].request.plane, "actual-transport");
   assert.equal(result.safety.paymentSentToCatalogs, false);
   assert.equal(result.input.brandBlind, true);
   assert.equal(result.input.expectedPriceAtomic, "50000");
@@ -438,7 +524,7 @@ test("uses one coherent live unsigned offer as the catalog price reference", asy
     payTo: `0x${"1".repeat(40)}`,
     expectedPriceUsd: "0.05",
   }, { fetchImpl, paymentPreflightImpl, now: 0 });
-  assert.equal(result.version, "1.11.0");
+  assert.equal(result.version, "1.13.0");
   assert.deepEqual(result.summary.priceReference, {
     basis: "live_unsigned_offer",
     amountAtomic: "5000",
@@ -547,3 +633,407 @@ for (const [route, expectedQuery] of [
     assert.equal(source.queryUsed.includes("api.example.com"), false);
   });
 }
+
+function constructibleResource(resource = "https://api.example.com/extract") {
+  return {
+    resource,
+    type: "http",
+    accepts: [{
+      scheme: "exact",
+      network: "eip155:8453",
+      asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      amount: "5000",
+      payTo: "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    }],
+    extensions: {
+      bazaar: {
+        info: { input: { type: "http", method: "GET", queryParams: { url: "https://example.com" } }, output: { example: { title: "Example" } } },
+        schema: {
+          $schema: "https://json-schema.org/draft/2020-12/schema",
+          type: "object",
+          properties: {
+            input: {
+              type: "object",
+              properties: {
+                type: { const: "http" },
+                method: { enum: ["GET", "HEAD", "DELETE"] },
+                queryParams: { type: "object", properties: { url: { type: "string" } }, required: ["url"] },
+              },
+              required: ["type", "method"],
+            },
+          },
+          required: ["input"],
+        },
+      },
+    },
+  };
+}
+
+function catalogFetch(coinbaseBody, { circle = { items: [] }, validation = { valid: true, simulation: { outcome: "accepted" }, index: null } } = {}) {
+  return async (url) => {
+    const target = String(url);
+    if (target.endsWith("/x402/validate")) return response(validation);
+    if (target.includes("coinbase.com")) return response(coinbaseBody);
+    if (target.includes("agent402.tools")) return response({ results: [] });
+    if (target.includes("agentic.market")) return response({ services: [] });
+    if (target.includes("circle.com")) return response(circle);
+    if (target.includes("agentictrade.io")) return response({ services: [] });
+    if (target.includes("mpp.dev")) return response({ services: [] });
+    if (target.includes("mppscan.com")) return response({ result: { data: { json: [] } } });
+    if (target.includes("payanagent.com")) return response({ offers: [] });
+    if (target.includes("x402.jobs")) return response({ resources: [] });
+    if (target.includes("8004market.io")) return market8004Response({ target: false });
+    throw new Error(`unexpected ${target}`);
+  };
+}
+
+test("consumes the pinned interpretation for a constructible row and an insufficient window", async () => {
+  const input = {
+    origin: "https://api.example.com",
+    intent: "extract a public website into structured JSON metadata",
+    route: "/extract",
+    materializationAudit: true,
+  };
+  const useful = await agentDiscoverabilityAudit(input, {
+    fetchImpl: catalogFetch({ resources: [constructibleResource()], partialResults: false }),
+    now: 0,
+  });
+  const bazaar = useful.sources["coinbase-bazaar"];
+  assert.equal(useful.version, "1.13.0");
+  assert.equal(useful.discoveryInterpretation.version, "0.3.0");
+  assert.equal(useful.discoveryInterpretation.implementation, "0cf1e465c714991ab70fbde349ed51baddf64c12");
+  assert.equal(bazaar.coverage.catalogPresence, "observed-in-inspected-rows");
+  assert.equal(bazaar.coverage.exactTargetCount, 1);
+  assert.equal(bazaar.coverage.inspectedCount, 1);
+  assert.equal(bazaar.requestConstruction.method, "GET");
+  assert.equal(bazaar.requestConstruction.invoked, false);
+  assert.equal(bazaar.requestConstruction.paid, false);
+  assert.equal(bazaar.request.plane, "actual-transport");
+  assert.equal(bazaar.discovery.provenance.kind, "supplied-body");
+  assert.equal(bazaar.discovery.provenance.networkSent, false);
+  assert.equal(bazaar.discovery.provenance.officialLiveRead, false);
+  assert.ok(useful.findings.some((item) => item.finding === "exact_target_request_constructible" && item.invoked === false && item.paid === false));
+  assert.ok(useful.nextActions.some((item) => item.action === "inspect_constructed_request" && item.invoked === false && item.paid === false));
+  assert.equal(JSON.stringify(useful.nextActions).includes("visitor"), false);
+  assert.equal(JSON.stringify(useful.nextActions).includes("revenue"), false);
+  assert.equal(JSON.stringify(useful.nextActions).includes("reindex"), false);
+
+  const missing = await agentDiscoverabilityAudit(input, {
+    fetchImpl: catalogFetch({
+      resources: [{ resource: "https://other.example/extract", accepts: [{ amount: "1000", payTo: `0x${"2".repeat(40)}` }] }],
+      itemCount: 11,
+      partialResults: false,
+    }),
+    now: 0,
+  });
+  const window = missing.sources["coinbase-bazaar"];
+  assert.equal(missing.summary.coinbaseMaterializationState, "query_window_catalog_presence_unknown");
+  assert.equal(window.coverage.declaredReturnedCount, 11);
+  assert.equal(window.coverage.inspectedCount, 1);
+  assert.equal(window.coverage.exactTargetCount, 0);
+  assert.equal(window.coverage.countConflict, true);
+  assert.equal(window.coverage.catalogPresence, "unknown");
+  assert.equal(window.coverage.partialResults, false);
+  assert.notEqual(window.coverage.declaredReturnedCount, window.coverage.exactTargetCount);
+  assert.equal(window.requestConstruction, null);
+  assert.equal(missing.nextActions.some((item) => item.action === "request_provider_ingestion_disposition_or_supported_reindex"), false);
+  assert.equal(missing.nextActions.some((item) => item.source === "coinbase-bazaar"), false);
+  assert.ok(missing.findings.some((item) => item.finding === "count_contract_not_usable" && item.declaredReturnedCount === 11 && item.inspectedCount === 1 && item.exactTargetCount === 0));
+});
+
+test("keeps malformed, contradictory, and incomplete discovery evidence from becoming an absence claim", async () => {
+  const input = {
+    origin: "https://api.example.com",
+    intent: "extract a public website into structured JSON metadata",
+    route: "/extract",
+  };
+  const malformed = await agentDiscoverabilityAudit(input, {
+    fetchImpl: catalogFetch({ ok: true }),
+    now: 0,
+  });
+  assert.equal(malformed.sources["coinbase-bazaar"].status, "error");
+  assert.equal(malformed.nextActions.some((item) => item.action === "request_provider_ingestion_disposition_or_supported_reindex"), false);
+
+  const contradictory = await agentDiscoverabilityAudit(input, {
+    fetchImpl: catalogFetch({
+      resources: [
+        constructibleResource(),
+        constructibleResource(),
+      ].map((item, index) => ({
+        ...item,
+        accepts: [{ ...item.accepts[0], amount: index === 0 ? "5000" : "9000" }],
+      })),
+    }),
+    now: 0,
+  });
+  assert.equal(contradictory.sources["coinbase-bazaar"].coverage.exactTargetCount, 2);
+  assert.equal(contradictory.sources["coinbase-bazaar"].requestConstruction, null);
+  assert.equal(contradictory.nextActions.some((item) => item.action === "inspect_constructed_request"), false);
+
+  const incomplete = constructibleResource();
+  delete incomplete.extensions;
+  const schemaShort = await agentDiscoverabilityAudit(input, {
+    fetchImpl: catalogFetch({ resources: [incomplete] }),
+    now: 0,
+  });
+  assert.equal(schemaShort.sources["coinbase-bazaar"].coverage.catalogPresence, "observed-in-inspected-rows");
+  assert.equal(schemaShort.sources["coinbase-bazaar"].requestConstruction, null);
+  assert.equal(schemaShort.nextActions.some((item) => item.action === "inspect_constructed_request"), false);
+
+  const counted = await agentDiscoverabilityAudit(input, {
+    fetchImpl: catalogFetch({ resources: [], itemCount: 0, pagination: { total: 9 } }, {
+      circle: {
+        itemCount: "0",
+        pagination: { total: 40 },
+        items: [
+          { resource: "https://other.example/a" },
+          { resource: "https://other.example/b" },
+        ],
+      },
+    }),
+    now: 0,
+  });
+  const circle = counted.sources["circle-marketplace"].coverage;
+  assert.equal(circle.declaredReturnedCount, "unknown");
+  assert.equal(circle.rawReturnedCount, 2);
+  assert.equal(circle.inspectedCount, 2);
+  assert.equal(circle.reportedPageTotal, "unknown");
+  assert.equal(circle.countConflict, false);
+  assert.equal(circle.adapterReduced, false);
+  assert.equal(circle.measuredZero, false);
+  assert.equal(circle.catalogPresence, "unknown");
+  assert.deepEqual(circle.providerCounts, [
+    { field: "itemCount", semantic: "unknown", state: "measured", value: 0 },
+    { field: "pagination.total", semantic: "unknown", state: "measured", value: 40 },
+  ]);
+  assert.equal(counted.sources["coinbase-bazaar"].coverage.declaredReturnedCount, 0);
+  assert.equal(counted.sources["coinbase-bazaar"].coverage.reportedPageTotal, 9);
+  assert.equal(counted.sources["coinbase-bazaar"].coverage.countConflict, false);
+  assert.equal(counted.findings.some((item) => item.finding === "count_contract_not_usable"), false);
+  assert.equal(counted.nextActions.some((item) => item.source === "circle-marketplace"), false);
+
+  const invalidCount = await agentDiscoverabilityAudit(input, {
+    fetchImpl: catalogFetch({ resources: [] }, { circle: { itemCount: "01", pagination: { total: true }, items: [] } }),
+    now: 0,
+  });
+  const invalidCircle = invalidCount.sources["circle-marketplace"].coverage;
+  assert.equal(invalidCircle.countState, "unknown");
+  assert.equal(invalidCircle.declaredReturnedCount, "unknown");
+  assert.equal(invalidCircle.countConflict, false);
+  assert.equal(invalidCircle.catalogPresence, "unknown");
+  assert.deepEqual(invalidCircle.providerCounts, [
+    { field: "itemCount", semantic: "unknown", state: "invalid", value: null },
+    { field: "pagination.total", semantic: "unknown", state: "invalid", value: null },
+  ]);
+  assert.equal(invalidCount.findings.some((item) => item.source === "circle-marketplace" && item.finding === "count_contract_not_usable"), false);
+  assert.equal(invalidCount.nextActions.some((item) => item.source === "circle-marketplace"), false);
+});
+
+test("keeps a provider total and an adapter slice separate from inspected rows", async () => {
+  const input = {
+    origin: "https://api.example.com",
+    intent: "extract a public website into structured JSON metadata",
+    route: "/extract",
+  };
+  const row = (path) => ({
+    origin: "https://other.example",
+    title: `Row ${path}`,
+    endpoint: { method: "GET", path, summary: "other route", price: "1 USD" },
+  });
+  const result = await agentDiscoverabilityAudit(input, {
+    fetchImpl: async (url) => {
+      const target = String(url);
+      if (target.includes("mppscan.com")) {
+        return response({
+          pagination: { total: 80 },
+          result: { data: { json: [row("/a"), row("/b"), row("/c")] } },
+        });
+      }
+      return catalogFetch({ resources: [{ resource: "https://other.example/extract" }], pagination: { total: 80 } })(url);
+    },
+    limit: 1,
+    now: 0,
+  });
+  const scanned = result.sources["mppscan-public-search"].coverage;
+  assert.equal(scanned.rawReturnedCount, 3);
+  assert.equal(scanned.inspectedCount, 1);
+  assert.equal(scanned.adapterReduced, true);
+  assert.equal(scanned.declaredReturnedCount, "unknown");
+  assert.equal(scanned.reportedPageTotal, "unknown");
+  assert.equal(scanned.countConflict, false);
+  assert.deepEqual(scanned.providerCounts, [
+    { field: "pagination.total", semantic: "unknown", state: "measured", value: 80 },
+  ]);
+  assert.equal(result.findings.some((item) => item.source === "mppscan-public-search" && item.finding === "count_contract_not_usable"), false);
+  const bazaar = result.sources["coinbase-bazaar"].coverage;
+  assert.equal(bazaar.reportedPageTotal, 80);
+  assert.notEqual(bazaar.declaredReturnedCount, 80);
+  assert.equal(bazaar.rawReturnedCount, 1);
+  assert.equal(bazaar.inspectedCount, 1);
+});
+
+test("bounds catalog bodies by streamed bytes and cancels the unread remainder", async () => {
+  assert.equal(CATALOG_RESPONSE_MAX_BYTES, 10_000_000);
+  const url = "https://catalog.example/search";
+  const streamOf = (chunks, init = {}) => {
+    const state = { pulls: 0, cancelled: false };
+    const stream = new ReadableStream({
+      pull(controller) {
+        if (state.pulls >= chunks.length) {
+          controller.close();
+          return;
+        }
+        controller.enqueue(chunks[state.pulls]);
+        state.pulls += 1;
+      },
+      cancel() {
+        state.cancelled = true;
+      },
+    }, new CountQueuingStrategy({ highWaterMark: 0 }));
+    return { response: new Response(stream, init), state };
+  };
+
+  const capped = streamOf([new Uint8Array(3), new Uint8Array(3), new Uint8Array([1])]);
+  await assert.rejects(fetchJson(url, {
+    fetchImpl: async (_target, options) => {
+      assert.equal(options.redirect, "error");
+      return capped.response;
+    },
+    maxBytes: 4,
+  }), (error) => error?.code === "body-cap" && /exceeded 4 bytes/.test(error.message));
+  assert.equal(capped.state.pulls, 2);
+  assert.equal(capped.state.cancelled, true);
+
+  const huge = streamOf([new Uint8Array(CATALOG_RESPONSE_MAX_BYTES + 1)]);
+  await assert.rejects(fetchJson(url, {
+    fetchImpl: async () => huge.response,
+  }), /catalog response exceeded 10 MB/);
+  assert.equal(huge.state.cancelled, true);
+
+  const multibyte = streamOf([Buffer.from("éé")]);
+  await assert.rejects(fetchJson(url, {
+    fetchImpl: async () => multibyte.response,
+    maxBytes: 3,
+  }), (error) => error?.code === "body-cap");
+
+  const missingLength = streamOf([Buffer.from('{"ok":true}')]);
+  const read = await fetchJson(url, { fetchImpl: async () => missingLength.response });
+  assert.equal(read.transport.bodyBound, "stream");
+  assert.equal(read.transport.contentLength, null);
+  assert.equal(read.transport.contentLengthHonored, false);
+  assert.equal(read.transport.bytes, Buffer.byteLength('{"ok":true}'));
+  assert.deepEqual(read.body, { ok: true });
+
+  const lying = streamOf([Buffer.from('{"ok":true,"extra":"0123456789"}')], {
+    headers: { "content-length": "1" },
+  });
+  await assert.rejects(fetchJson(url, {
+    fetchImpl: async () => lying.response,
+    maxBytes: 8,
+  }), (error) => error?.code === "body-cap");
+
+  let errorPulls = 0;
+  let errorCancelled = false;
+  await assert.rejects(fetchJson(url, {
+    fetchImpl: async () => new Response(new ReadableStream({
+      pull(controller) {
+        errorPulls += 1;
+        controller.enqueue(new Uint8Array([1]));
+      },
+      cancel() {
+        errorCancelled = true;
+      },
+    }), { status: 500 }),
+  }), /catalog returned HTTP 500/);
+  assert.equal(errorCancelled, true);
+  assert.equal(errorPulls, 1);
+
+  let redirectPulls = 0;
+  let redirectCancelled = false;
+  await assert.rejects(fetchJson(url, {
+    fetchImpl: async (_target, options) => {
+      assert.equal(options.redirect, "error");
+      return new Response(new ReadableStream({
+        pull(controller) {
+          redirectPulls += 1;
+          controller.enqueue(new Uint8Array([1]));
+        },
+        cancel() {
+          redirectCancelled = true;
+        },
+      }), { status: 302, headers: { location: "https://evil.example/next" } });
+    },
+  }), /catalog redirect was rejected/);
+  assert.equal(redirectCancelled, true);
+  assert.equal(redirectPulls, 1);
+
+  await assert.rejects(fetchJson(url, {
+    fetchImpl: async (_target, options) => new Promise((_resolve, reject) => {
+      options.signal.addEventListener("abort", () => reject(Object.assign(new Error("aborted"), { name: "AbortError" })));
+    }),
+    timeoutMs: 20,
+  }), /catalog request timed out/);
+
+  await assert.rejects(fetchJson(url, {
+    fetchImpl: async () => new Response(new ReadableStream({
+      pull() {
+        return new Promise(() => {});
+      },
+    })),
+    timeoutMs: 20,
+  }), /catalog request timed out/);
+
+  await assert.rejects(fetchJson(url, {
+    fetchImpl: async () => new Response(new ReadableStream({
+      pull(controller) {
+        controller.enqueue("not-bytes");
+      },
+    })),
+  }), (error) => error?.code === "stream-failed");
+});
+
+test("replays the pinned discoverability package from a cold install", { timeout: 120_000 }, () => {
+  const archive = readFileSync(new URL("./vendor/task-discoverability-0.3.0.tar.gz", import.meta.url));
+  assert.equal(archive.byteLength, 36215);
+  assert.equal(createHash("sha256").update(archive).digest("hex"), "1c999d1144c39bc4283a8dc8a6f6149788fd91c438f738fe63ea7c64e9162f57");
+  const root = mkdtempSync(join(tmpdir(), "task-discoverability-"));
+  try {
+    cpSync(new URL("./vendor/task-discoverability", import.meta.url), root, { recursive: true });
+    const installed = spawnSync("npm", ["ci", "--ignore-scripts"], { cwd: root, encoding: "utf8" });
+    assert.equal(installed.status, 0, installed.stderr);
+    const replay = spawnSync(process.execPath, ["--input-type=module", "-e", `
+      import { measure, PACKAGE } from "./src/index.mjs";
+      const body = { resources: [], itemCount: 2 };
+      const missing = await measure({ serviceUrl: "https://api.example.com/extract", body });
+      if (missing.provenance.kind !== "supplied-body") throw new Error("supplied plane missing");
+      if (missing.provenance.networkSent !== false) throw new Error("supplied body was treated as transport");
+      if (missing.service.catalogMembership !== "unknown") throw new Error("catalog membership was closed");
+      if (missing.coverage.declaredReturnedCount !== 2) throw new Error("declared count changed");
+      if (missing.coverage.inspectedCount !== 0) throw new Error("inspected count changed");
+      if (missing.service.inInspectedRows !== false) throw new Error("exact observation changed");
+      const seen = await measure({
+        serviceUrl: "https://api.example.com/extract",
+        body: { resources: [{ resource: "https://api.example.com/extract" }] },
+      });
+      if (seen.service.inInspectedRows !== true) throw new Error("exact row was not observed");
+      if (seen.service.catalogMembership !== "unknown") throw new Error("one row became catalog membership");
+      if (seen.requestConstructibility.fromThisResponse !== false) throw new Error("incomplete row was constructible");
+      if (PACKAGE.version !== "0.3.0") throw new Error("package version drifted");
+      console.log("cold-replay-ok");
+    `], { cwd: root, encoding: "utf8" });
+    assert.equal(replay.status, 0, replay.stderr);
+    assert.match(replay.stdout, /cold-replay-ok/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("served machine copy withdraws the unsupported reindex state", () => {
+  const server = readFileSync(new URL("./server.js", import.meta.url), "utf8");
+  const skill = readFileSync(new URL("./skill-contract.mjs", import.meta.url), "utf8");
+  assert.equal(server.includes("provider_accepted_not_materialized"), false);
+  assert.equal(server.includes("request_provider_ingestion_disposition_or_supported_reindex"), false);
+  assert.match(server, /version: "1\.13\.0"/);
+  assert.match(server, /unknown catalog presence/);
+  assert.match(skill, /unknown catalog presence/);
+});

@@ -1,0 +1,23 @@
+{
+  "name": "task-discoverability",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline task-discoverability measurement for one supplied discovery response, with one explicit free CDP search.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "task-discoverability": "./src/cli.mjs"
+  },
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "dependencies": {
+    "ajv": "8.20.0"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}

@@ -393,14 +393,24 @@ retiring a third-party endpoint on circumstantial evidence.
 
 Version 1.23.35 extends that existing audit without adding a route or changing
 its 0.05-USDC price. With `materializationAudit=true`, an exact GET or POST
-route is checked through Coinbase's current seller validator and exact-resource
-Bazaar readback. The result distinguishes `materialized`,
-`provider_accepted_not_materialized`, `seller_not_provider_eligible`, and
-`unresolved` instead of treating every missing ranked result alike. Validation
-acceptance remains provider-returned point-in-time evidence, not listing,
-demand, settlement, or reindex authority. The opt-in check uses no credential,
-signature, or payment; Coinbase may make one unpaid request to the seller using
-the requested method.
+route can be sent to Coinbase's current seller validator. The opt-in check uses
+no credential, signature, or payment; Coinbase may make one unpaid request to
+the seller using the requested method.
+
+The discoverability response version 1.12.0 withdraws
+`provider_accepted_not_materialized`, `seller_not_provider_eligible` as a
+combined catalog state, and the reindex action. Validator eligibility stays on
+its own plane. The catalog read is one supported task-search window. A missing
+exact target in that window is unknown catalog presence for the query. The
+0.05-USDC price is unchanged.
+
+Response version 1.13.0 corrects two readings inside that contract. A
+successful Coinbase validator body is eligible only when `valid` is boolean
+true and `simulation.outcome` is `accepted`, and not eligible only when
+`valid` is boolean false and `simulation.outcome` is `rejected`. Any other
+successful body stays unknown and does not propose a repair. On catalogs other
+than the CDP search document, a provider total or an unrecognized count is
+not a returned count and is not compared with normalized rows.
 
 Version 1.16.4 replaced the route-audit's private identity classifier with the
 public, provenance-bearing `agent-payment-policy@0.8.0` primitive. Catalogs
