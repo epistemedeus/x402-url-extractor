@@ -20,16 +20,16 @@ await sdk.listTools();
 const paid = new x402MCPClient(sdk, configuredPaymentClient, { autoPayment: false });
 const caller = bindPaidMcpCallerResult(paid);
 const purchase = await caller.payWithPayment("morpho_position", args, authorizedPayment);
-if (purchase.capability.present) {
+if (purchase.capability.present && callerDecision) {
   await caller.report({
     token: purchase.capability.token,
-    disposition: "useful",
-    reasonCategory: "matched_task",
+    disposition: callerDecision.disposition,
+    reasonCategory: callerDecision.reasonCategory,
   });
 }
 ```
 
-`mcpUrl`, `args`, `configuredPaymentClient` and `authorizedPayment` come from your existing authorized task/payment flow. This helper does not initialize a wallet or decide to buy. To inspect installation or a no-fit, no production purchase is needed.
+`mcpUrl`, `args`, `configuredPaymentClient` and `authorizedPayment` come from your existing authorized task/payment flow. `callerDecision` is your optional decision after checking whether the delivered result helped the task; leave it null to skip reporting. A successful schema or payment does not choose a useful/not_useful statement. This helper does not initialize a wallet or decide to buy. To inspect installation or a no-fit, no production purchase is needed.
 
 Official `@x402/mcp` `callTool` omits `_meta`. This helper reads the sealed capability from `onAfterPayment` and keeps it with that result's content array. Reporting calls the raw MCP SDK client on the wrapper (`.client`) and does not pay again. A tool that advertises an output schema rejects the unpaid probe after `listTools`; pass an explicit payment to `caller.payWithPayment(name, args, payment)`. The same package exports `bindCallerResultFeedback` and `reportCallerResult` for the existing HTTP header on the paid response's origin.
 
