@@ -99,14 +99,14 @@ export async function reportMcpCallerResult(client, { token, disposition, reason
   let result;
   try {
     if (!client || typeof client.callTool !== "function") return refused("transport_failed");
-    // x402MCPClient.callTool(name, args) is positional. The MCP SDK Client
-    // callTool takes one object. onAfterPayment identifies the official wrapper.
-    result = typeof client.onAfterPayment === "function"
-      ? await client.callTool(MCP_CALLER_RESULT_TOOL, args)
-      : await client.callTool({
-        name: MCP_CALLER_RESULT_TOOL,
-        arguments: args,
-      });
+    // Reporting must never enter the wrapper's automatic payment path.
+    // The official x402MCPClient exposes its raw SDK client through .client.
+    const sdkClient = typeof client.onAfterPayment === "function" ? client.client : client;
+    if (!sdkClient || typeof sdkClient.callTool !== "function") return refused("transport_failed");
+    result = await sdkClient.callTool({
+      name: MCP_CALLER_RESULT_TOOL,
+      arguments: args,
+    });
   } catch {
     return refused("transport_failed");
   }
@@ -136,15 +136,19 @@ export function bindPaidMcpCallerResult(x402Client) {
   if (!x402Client || typeof x402Client.onAfterPayment !== "function" || typeof x402Client.callTool !== "function") {
     throw new TypeError("official_mcp_client_required");
   }
-  let captured = { present: false, token: null, tool: null, reason: "absent" };
+  // Pinned official callTool/callToolWithPayment return the same content array
+  // passed to onAfterPayment. Associate by that result, not a shared last hook.
+  const captures = new WeakMap();
   x402Client.onAfterPayment((context) => {
-    captured = readMcpCallerResultCapability(context?.result);
+    const content = context?.result?.content;
+    if (Array.isArray(content)) captures.set(content, readMcpCallerResultCapability(context.result));
   });
   return {
     client: x402Client,
     async pay(name, args) {
-      captured = { present: false, token: null, tool: null, reason: "absent" };
       const paid = await x402Client.callTool(name, args);
+      const captured = captures.get(paid?.content) || { present: false, reason: "absent" };
+      captures.delete(paid?.content);
       const returned = readMcpCallerResultCapability(paid);
       return {
         paymentMade: paid?.paymentMade === true,
@@ -157,11 +161,12 @@ export function bindPaidMcpCallerResult(x402Client) {
       };
     },
     async payWithPayment(name, args, payment) {
-      captured = { present: false, token: null, tool: null, reason: "absent" };
       if (typeof x402Client.callToolWithPayment !== "function") {
         throw new TypeError("official_mcp_client_required");
       }
       const paid = await x402Client.callToolWithPayment(name, args, payment);
+      const captured = captures.get(paid?.content) || { present: false, reason: "absent" };
+      captures.delete(paid?.content);
       const returned = readMcpCallerResultCapability(paid);
       return {
         paymentMade: paid?.paymentMade === true,
