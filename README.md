@@ -404,6 +404,14 @@ its own plane. The catalog read is one supported task-search window. A missing
 exact target in that window is unknown catalog presence for the query. The
 0.05-USDC price is unchanged.
 
+Response version 1.13.0 corrects two readings inside that contract. A
+successful Coinbase validator body is eligible only when `valid` is boolean
+true and `simulation.outcome` is `accepted`, and not eligible only when
+`valid` is boolean false and `simulation.outcome` is `rejected`. Any other
+successful body stays unknown and does not propose a repair. On catalogs other
+than the CDP search document, a provider total or an unrecognized count is
+not a returned count and is not compared with normalized rows.
+
 Version 1.16.4 replaced the route-audit's private identity classifier with the
 public, provenance-bearing `agent-payment-policy@0.8.0` primitive. Catalogs
 that return no matching records are now still recorded as checked and

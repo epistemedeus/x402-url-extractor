@@ -3330,7 +3330,7 @@ const x402Paywall = paymentMiddleware(
               example: {
                 ok: true,
                 product: "samedaydesk-agent-discoverability-audit",
-                version: "1.12.0",
+                version: "1.13.0",
                 generatedAt: "2026-08-09T00:00:00.000Z",
                 input: { origin: "https://agents.samedaydesk.com", intent: "extract a public web page into structured JSON metadata headings links and JSON-LD", route: "/extract", runtimeUrl: "https://agents.samedaydesk.com/extract?url=https%3A%2F%2Fexample.com", expectedPriceUsd: 0.005, expectedPriceAtomic: "5000" },
                 summary: { sourceCount: 10, availableSourceCount: 10, targetFoundSourceCount: 4, expectedRouteFoundSourceCount: 4, sourceFamilyCount: 9, targetFoundSourceFamilyCount: 4, priceReference: { basis: "live_unsigned_offer", amountAtomic: "5000", amountUsd: 0.005, protocols: ["mpp", "x402"] }, matchedPriceSourceCount: 3, driftedPriceSourceCount: 1, identityObservationSourceCount: 10, identityConflictSourceCount: 1, identityConflictSources: ["agent402-router"] },

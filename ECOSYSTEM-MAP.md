@@ -8,9 +8,10 @@ supported task-search window using the maintained SDK parameters. A missing
 exact target in that window is unknown catalog presence for the query. It does
 not prove the route is unlisted and it does not support a reindex action.
 
-Response version 1.12.0 withdraws `provider_accepted_not_materialized` and the
-reindex action. `seller_not_provider_eligible` is no longer a combined catalog
-state. The price stays 0.05 USDC.
+Response version 1.13.0 keeps the withdrawal of
+`provider_accepted_not_materialized` and the reindex action.
+`seller_not_provider_eligible` is no longer a combined catalog state. The
+price stays 0.05 USDC.
 
 ## Earlier observation
 
@@ -36,9 +37,12 @@ question.
 1. A validator result that reports eligibility, plus no exact row in the
    inspected window, stays `query_window_catalog_presence_unknown`. There is
    no reindex action.
-2. A validator result that does not report eligibility is
-   `provider_reported_not_eligible` on the validator plane. Catalog presence
-   stays unknown unless an exact row was inspected.
+2. A validator body is `provider_reported_not_eligible` only when `valid` is
+   boolean false and `simulation.outcome` is `rejected`. A successful `{}`,
+   a missing or non-boolean `valid`, an unknown outcome, or a contradiction
+   between `valid` and `simulation.outcome` stays unknown and does not
+   propose a repair. Catalog presence stays unknown unless an exact row was
+   inspected.
 3. An exact resource string in the inspected rows is
    `observed_in_query_window` even when the validator does not report
    eligibility. Catalog membership beyond those rows stays unknown.

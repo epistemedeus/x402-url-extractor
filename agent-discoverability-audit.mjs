@@ -32,7 +32,7 @@ const TARGET_SURFACE_MAX_BYTES = 512 * 1024;
 const TARGET_SURFACE_TIMEOUT_MS = 5_000;
 export const CATALOG_RESPONSE_MAX_BYTES = 10_000_000;
 const CATALOG_TIMEOUT_MS = 10_000;
-const DISCOVERABILITY_AUDIT_VERSION = "1.12.0";
+const DISCOVERABILITY_AUDIT_VERSION = "1.13.0";
 const DISCOVERY_IMPLEMENTATION = "0cf1e465c714991ab70fbde349ed51baddf64c12";
 const DISCOVERY_INTERPRETER_INCOMPATIBLE = "task-discoverability measure() decodes one CDP discovery document and labels that provider. collectBounded also refuses every base other than the pinned search URL, is GET-only, and stops at 262144 bytes. This source keeps the count and request-construction contract: declared, inspected, and exact counts stay separate, catalog presence stays unknown when the exact target is outside the inspected rows, and request construction stays null. The body is not passed through that CDP decoder.";
 
@@ -240,8 +240,10 @@ async function interpretCoinbaseRead(read, input) {
     },
     coverage: {
       declaredReturnedCount: document.coverage?.declaredReturnedCount ?? "unknown",
+      rawReturnedCount: Array.isArray(read.body?.resources) ? read.body.resources.length : "unknown",
       inspectedCount: document.coverage?.inspectedCount ?? "unknown",
       uninspectedCount: document.coverage?.uninspectedCount ?? "unknown",
+      reportedPageTotal: document.coverage?.reportedPageTotal ?? "unknown",
       exactTargetCount,
       exactRouteCount: input.route ? exactTargetCount : null,
       countState: document.coverage?.countState ?? "unknown",
@@ -258,14 +260,46 @@ async function interpretCoinbaseRead(read, input) {
   };
 }
 
-function explicitDeclaredCount(payload) {
-  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return { state: "unknown", value: null, reason: "absent" };
-  if (Object.prototype.hasOwnProperty.call(payload, "itemCount")) return { field: "itemCount", ...parseCount(payload.itemCount) };
-  if (payload.pagination && typeof payload.pagination === "object" && !Array.isArray(payload.pagination)
-    && Object.prototype.hasOwnProperty.call(payload.pagination, "total")) {
-    return { field: "pagination.total", ...parseCount(payload.pagination.total) };
+function providerCount(field, value) {
+  const parsed = parseCount(value);
+  return {
+    field,
+    semantic: "unknown",
+    state: parsed.state,
+    value: parsed.state === "measured" ? parsed.value : null,
+  };
+}
+
+function unknownProviderCounts(payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return [];
+  const counts = [];
+  if (Object.prototype.hasOwnProperty.call(payload, "itemCount")) counts.push(providerCount("itemCount", payload.itemCount));
+  const pagination = payload.pagination;
+  if (pagination && typeof pagination === "object" && !Array.isArray(pagination)
+    && Object.prototype.hasOwnProperty.call(pagination, "total")) {
+    counts.push(providerCount("pagination.total", pagination.total));
   }
-  return { state: "unknown", value: null, reason: "absent" };
+  return counts;
+}
+
+function rawReturnedCountFor(source, payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return "unknown";
+  if (source === "agent402-router") return Array.isArray(payload.results) ? payload.results.length : "unknown";
+  if (source === "circle-marketplace") {
+    const items = payload.items ?? payload.resources;
+    return Array.isArray(items) ? items.length : "unknown";
+  }
+  if (source === "coinbase-agentic-market" || source === "official-mpp-catalog") {
+    if (!Array.isArray(payload.services)) return "unknown";
+    return payload.services.reduce((sum, service) => sum + (Array.isArray(service?.endpoints) ? service.endpoints.length : 0), 0);
+  }
+  if (source === "agentictrade-catalog") return Array.isArray(payload.services) ? payload.services.length : "unknown";
+  if (source === "mppscan-public-search") {
+    return Array.isArray(payload.result?.data?.json) ? payload.result.data.json.length : "unknown";
+  }
+  if (source === "payanagent-public-search") return Array.isArray(payload.offers) ? payload.offers.length : "unknown";
+  if (source === "x402jobs-public-search") return Array.isArray(payload.resources) ? payload.resources.length : "unknown";
+  return "unknown";
 }
 
 function requestQuery(source, url, input) {
@@ -280,16 +314,12 @@ function requestQuery(source, url, input) {
 }
 
 function interpretGeneralRead(source, read, items, input) {
-  const declared = explicitDeclaredCount(read.body);
   const inspectedCount = items.length;
+  const rawReturnedCount = rawReturnedCountFor(source, read.body);
   const exactTargetCount = items.filter((item) => targetMatch(item, input)).length;
   const exactRouteCount = input.route
     ? items.filter((item) => targetMatch(item, input) && routeMatch(item, input.route)).length
     : null;
-  const declaredReturnedCount = declared.state === "measured"
-    ? declared.value
-    : declared.state === "invalid" ? "invalid" : "unknown";
-  const countConflict = typeof declaredReturnedCount === "number" && declaredReturnedCount !== inspectedCount;
   return {
     applied: false,
     reason: DISCOVERY_INTERPRETER_INCOMPATIBLE,
@@ -302,13 +332,17 @@ function interpretGeneralRead(source, read, items, input) {
       suppliedBodyPlane: "supplied-body",
     },
     coverage: {
-      declaredReturnedCount,
+      declaredReturnedCount: "unknown",
+      rawReturnedCount,
       inspectedCount,
+      reportedPageTotal: "unknown",
+      providerCounts: unknownProviderCounts(read.body),
       exactTargetCount,
       exactRouteCount,
-      countState: declared.state === "measured" ? "measured" : declared.state === "invalid" ? "invalid" : "unknown",
-      countConflict,
-      measuredZero: declaredReturnedCount === 0 && inspectedCount === 0 && countConflict === false,
+      countState: "unknown",
+      countConflict: false,
+      adapterReduced: typeof rawReturnedCount === "number" && rawReturnedCount !== inspectedCount,
+      measuredZero: false,
       catalogPresence: exactTargetCount > 0 ? "observed-in-inspected-rows" : "unknown",
       queryVisibility: exactTargetCount > 0 ? "in-this-response" : "not-in-inspected-rows",
     },
@@ -331,11 +365,15 @@ function interpretUninstrumented(items, input) {
     request: null,
     coverage: {
       declaredReturnedCount: "unknown",
+      rawReturnedCount: "unknown",
       inspectedCount: items.length,
+      reportedPageTotal: "unknown",
+      providerCounts: [],
       exactTargetCount,
       exactRouteCount,
       countState: "unknown",
       countConflict: false,
+      adapterReduced: false,
       measuredZero: false,
       catalogPresence: exactTargetCount > 0 ? "observed-in-inspected-rows" : "unknown",
       queryVisibility: exactTargetCount > 0 ? "in-this-response" : "not-in-inspected-rows",
@@ -349,6 +387,35 @@ async function discoveryFor(source, read, items, input) {
   if (source === "coinbase-bazaar" && read) return interpretCoinbaseRead(read, input);
   if (read) return interpretGeneralRead(source, read, items, input);
   return interpretUninstrumented(items, input);
+}
+
+function validatorReport(body) {
+  const plain = body && typeof body === "object" && !Array.isArray(body);
+  const valid = plain && (body.valid === true || body.valid === false) ? body.valid : null;
+  const simulation = plain && body.simulation && typeof body.simulation === "object" && !Array.isArray(body.simulation)
+    ? body.simulation
+    : null;
+  const outcome = typeof simulation?.outcome === "string" ? simulation.outcome : null;
+  const outcomeKnown = outcome === "accepted" || outcome === "rejected";
+  let eligibility = "unknown";
+  let eligibilityReason = "malformed";
+  if (valid === null && outcomeKnown) eligibilityReason = "nonboolean-valid";
+  else if (valid !== null && !outcomeKnown) eligibilityReason = "unknown-outcome";
+  else if (valid === true && outcome === "accepted") {
+    eligibility = "provider_reported_eligible";
+    eligibilityReason = null;
+  } else if (valid === false && outcome === "rejected") {
+    eligibility = "provider_reported_not_eligible";
+    eligibilityReason = null;
+  } else if (valid !== null && outcomeKnown) eligibilityReason = "contradictory";
+  return {
+    status: "ok",
+    valid,
+    simulationOutcome: outcome ? cleanString(outcome, 80) : null,
+    indexReturned: plain && body.index !== null && body.index !== undefined,
+    eligibility,
+    eligibilityReason,
+  };
 }
 
 export async function auditCoinbaseMaterialization(input, { fetchImpl = fetch, limit = 20, catalogRead = null } = {}) {
@@ -365,16 +432,8 @@ export async function auditCoinbaseMaterialization(input, { fetchImpl = fetch, l
   ]);
   const validationBody = validationResult.status === "fulfilled" ? validationResult.value?.body : null;
   const validator = validationResult.status === "fulfilled"
-    ? {
-        status: "ok",
-        valid: validationBody?.valid === true,
-        simulationOutcome: cleanString(validationBody?.simulation?.outcome, 80),
-        indexReturned: validationBody?.index !== null && validationBody?.index !== undefined,
-        eligibility: validationBody?.valid === true && cleanString(validationBody?.simulation?.outcome, 80) === "accepted"
-          ? "provider_reported_eligible"
-          : "provider_reported_not_eligible",
-      }
-    : { status: "error", eligibility: "unknown", error: cleanString(validationResult.reason?.message || "validator unavailable", 200) };
+    ? validatorReport(validationBody)
+    : { status: "error", eligibility: "unknown", eligibilityReason: "unavailable", error: cleanString(validationResult.reason?.message || "validator unavailable", 200) };
   let discovery = null;
   let catalog;
   if (catalogResult.status === "fulfilled") {
@@ -391,7 +450,9 @@ export async function auditCoinbaseMaterialization(input, { fetchImpl = fetch, l
         queryVisibility: discovery.coverage.queryVisibility,
         exactMatchCount: discovery.coverage.exactTargetCount,
         declaredReturnedCount: discovery.coverage.declaredReturnedCount,
+        rawReturnedCount: discovery.coverage.rawReturnedCount,
         inspectedCount: discovery.coverage.inspectedCount,
+        reportedPageTotal: discovery.coverage.reportedPageTotal,
         measuredZero: discovery.coverage.measuredZero,
         countState: discovery.coverage.countState,
         countConflict: discovery.coverage.countConflict,
@@ -1530,7 +1591,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
     targetSurfaces,
     findings,
     nextActions,
-    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata. For an exact route, every source also reports whether the matched records are canonical, duplicated, alias-only, or collide across canonical and non-canonical origins. A non-canonical record becomes an alias candidate only when it matches the caller-supplied payTo and exact route; that links advertised settlement identity but does not prove hostname ownership. When runtimeUrl is supplied, one same-origin, exact-route, credentials-free headers-only request derives the comparison amount only from a parseable coherent live offer. Otherwise an optional caller-supplied expected price remains clearly labeled as caller expected. When explicitly requested, the target-surface check reads only three fixed same-origin public JSON documents after payment. Response version 1.12.0 withdraws provider_accepted_not_materialized and the reindex action. The opt-in Coinbase check keeps validator eligibility on its own plane. The catalog read is one supported task-search window. A missing exact target in that window is unknown catalog presence for the query, not proof the route is unlisted.",
+    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata. For an exact route, every source also reports whether the matched records are canonical, duplicated, alias-only, or collide across canonical and non-canonical origins. A non-canonical record becomes an alias candidate only when it matches the caller-supplied payTo and exact route; that links advertised settlement identity but does not prove hostname ownership. When runtimeUrl is supplied, one same-origin, exact-route, credentials-free headers-only request derives the comparison amount only from a parseable coherent live offer. Otherwise an optional caller-supplied expected price remains clearly labeled as caller expected. When explicitly requested, the target-surface check reads only three fixed same-origin public JSON documents after payment. Response version 1.13.0 keeps the withdrawal of provider_accepted_not_materialized and the reindex action. Validator eligibility is provider_reported_eligible only when valid is boolean true and simulation.outcome is accepted, and provider_reported_not_eligible only when valid is boolean false and simulation.outcome is rejected. Any other successful validator body stays unknown and does not propose a repair. A provider total or an unrecognized count is not a returned count. The catalog read is one supported task-search window. A missing exact target in that window is unknown catalog presence for the query, not proof the route is unlisted.",
     sourceDependencies: DEPENDENT_SOURCES,
     safety: {
       credentialsUsed: false,
