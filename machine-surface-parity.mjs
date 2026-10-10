@@ -12,6 +12,8 @@
  * because those surfaces would advertise a distinct x402+MPP buyable action.
  */
 
+import { renderCallerResultClientGuide } from "./caller-result-client-entry.mjs";
+
 export const CIRCLE_ALTERNATE_KIND = "circle-alternate";
 
 export const SURFACE_POLICY = Object.freeze({
@@ -106,6 +108,7 @@ export function renderLlmsTxt({
   buyerPolicyRelease,
   purchaseEvidencePath,
   freeRecipes = [],
+  callerResultClient = null,
 } = {}) {
   if (!origin || !facilitator || !payTo) fail("origin, facilitator, and payTo are required");
   if (!Array.isArray(actions) || actions.length === 0) fail("actions are required");
@@ -131,6 +134,7 @@ export function renderLlmsTxt({
     return `- ${String(recipe.method || "POST").toUpperCase()} ${recipe.route} (charged: false). ${flatten(recipe.description)}`;
   });
   const freeSection = freeLines.length ? `\n## Free recipes\n${freeLines.join("\n")}\n` : "\n";
+  const callerGuide = renderCallerResultClientGuide(callerResultClient);
   return `# SameDayDesk machine commerce gateway
 
 > Machine-discoverable HTTP capabilities settle USDC on Base through either x402 or native MPP Payment authentication. Payment-offer preflight also has a Circle Gateway x402 path for gasless batched USDC Nanopayments. MCP remains Base x402-gated. No account or subscription is required. Current standard facilitator: ${facilitator}. payTo ${payTo}.
@@ -159,7 +163,9 @@ ${freeSection}
 - Wallet-policy conformance contract: ${publicOrigin}/schemas/wallet-policy-conformance-v1.json
 - Stateful wallet-policy conformance contract: ${publicOrigin}/schemas/stateful-wallet-policy-conformance-v1.json
 - Source: https://github.com/epistemedeus/x402-url-extractor
-`;
+${callerResultClient ? `- Optional caller client descriptor: ${callerResultClient.descriptorUrl}
+- Optional caller client archive: ${callerResultClient.archiveUrl}
+` : ""}${callerGuide ? `\n${callerGuide}` : ""}`;
 }
 
 function paidOpenApiOperations(document) {
@@ -249,6 +255,7 @@ export function validateMachineSurfaceParity({
   catalog,
   llms,
   rootPaidRoutes,
+  callerResultClient = null,
 } = {}) {
   if (!Array.isArray(actions) || actions.length === 0) fail("actions are required");
   const actionRoutes = actions.map((action) => {
@@ -358,6 +365,27 @@ export function validateMachineSurfaceParity({
     const listed = llmsByRoute.get(alternate.route);
     if (!listed) fail(`alternate ${alternate.route} is missing from llms.txt`);
     if (!listed.sameProduct) fail("Circle alternate llms line must say it is the same preflight product");
+  }
+  if (callerResultClient) {
+    const text = String(llms || "");
+    if (callerResultClient.optional !== true || callerResultClient.charged !== false || callerResultClient.paymentRequired !== false) {
+      fail("caller result client must stay optional, free, and unpaid");
+    }
+    const facts = [
+      callerResultClient.archiveUrl,
+      callerResultClient.descriptorUrl,
+      callerResultClient.sha256,
+      callerResultClient.sourceUrl,
+      callerResultClient.modules?.mcp?.exportName,
+      ...(callerResultClient.modules?.http?.exportNames || []),
+      callerResultClient.feedback?.http?.path,
+      callerResultClient.feedback?.mcp?.tool,
+    ];
+    for (const fact of facts) {
+      if (!fact || !text.includes(fact)) fail(`llms.txt is missing caller result client fact ${fact || "empty"}`);
+    }
+    if (text.includes("createCallerResultFeedback")) fail("llms.txt invents createCallerResultFeedback");
+    if (!text.includes("Feedback is optional and free.")) fail("llms.txt does not keep caller feedback optional and free");
   }
 
   return {

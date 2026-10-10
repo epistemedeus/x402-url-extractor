@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { CALLER_RESULT_CLIENT_ENTRY } from "./caller-result-client-entry.mjs";
 import { listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
 import {
   CIRCLE_KILLED_SURFACES,
@@ -170,6 +171,35 @@ test("maps HTTP routes to MCP tool names and formats llms prices", () => {
   assert.equal(formatLlmsPrice("100000"), "$0.10");
   assert.equal(formatLlmsPrice("2000"), "$0.002");
   assert.equal(formatLlmsPrice("250000"), "$0.25");
+});
+
+test("declared caller client is absent until the served guide opts in", () => {
+  const plain = surfaces().llms;
+  assert.equal(plain.includes(CALLER_RESULT_CLIENT_ENTRY.archiveUrl), false);
+  assert.equal(plain.includes("not-served"), false);
+  assert.equal(plain.includes("createCallerResultFeedback"), false);
+  const llms = renderLlmsTxt({
+    origin,
+    facilitator: "cdp",
+    payTo: "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    actions,
+    alternate,
+    buyerPolicyRelease: "https://github.com/epistemedeus/agent-payment-policy/releases/tag/v0.4.0",
+    purchaseEvidencePath: "/.well-known/agent-payment-evidence.json",
+    callerResultClient: CALLER_RESULT_CLIENT_ENTRY,
+  });
+  assert.equal(validateMachineSurfaceParity(surfaces({
+    llms,
+    callerResultClient: CALLER_RESULT_CLIENT_ENTRY,
+  })).ok, true);
+  assert.equal(parseLlmsPaidRoutes(llms).length, 4);
+  assert.match(llms, /Feedback is optional and free\./);
+  assert.match(llms, /bindPaidMcpCallerResult/);
+  assert.match(llms, /bindCallerResultFeedback/);
+  assert.match(llms, /reportCallerResult/);
+  assert.match(llms, /callTool omits _meta/);
+  assert.equal(llms.includes("createCallerResultFeedback"), false);
+  assert.equal(/\$[0-9]/.test(llms.split("## Optional caller client\n")[1]), false);
 });
 
 test("renders every canonical paid route plus a labeled Circle alternate", () => {
