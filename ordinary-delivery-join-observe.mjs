@@ -42,7 +42,17 @@ function expectedDisposition(deliveryClass, validatorVerdict) {
   return "incomplete_capture";
 }
 
-function settlementFor({ sourceEventId, timestamp, route, protocol, settlementReference, amountAtomic }) {
+function settlementFor({
+  sourceEventId,
+  timestamp,
+  route,
+  protocol,
+  settlementReference,
+  amountAtomic,
+  network,
+  asset,
+  treasury,
+}) {
   return {
     schemaVersion: SCHEMA_VERSION,
     state: "reconciled",
@@ -53,7 +63,22 @@ function settlementFor({ sourceEventId, timestamp, route, protocol, settlementRe
     paymentClass: "unclassified",
     settlementReference,
     amountAtomic,
+    ...(typeof network === "string" ? { network } : {}),
+    ...(typeof asset === "string" ? { asset } : {}),
+    ...(typeof treasury === "string" ? { treasury } : {}),
   };
+}
+
+function matchingMcpParent(event, fields) {
+  const facts = typeof event?.settlementAmountAtomic === "string"
+    ? {
+      amountAtomic: event.settlementAmountAtomic,
+      network: event.settlementNetwork,
+      asset: event.settlementCurrency,
+      treasury: event.settlementPayee,
+    }
+    : { amountAtomic: fields.amountAtomic };
+  return settlementFor({ ...fields, ...facts });
 }
 
 async function fingerprint(dir) {
@@ -197,7 +222,7 @@ export async function proveMountedDeliveryJoin(dataDir) {
     }
     const capture = captures[0] || null;
     const reference = capture?.settlementReference || `0x${"e".repeat(64)}`;
-    const ledger = settlementFor({
+    const ledger = matchingMcpParent(event, {
       sourceEventId: event.id,
       timestamp: event.ts,
       route: "/mcp",
@@ -271,7 +296,7 @@ export async function proveMountedDeliveryJoin(dataDir) {
         [FILE_CLASSES.httpValidation]: [left.capture, right.capture],
       }
       : {
-        [FILE_CLASSES.settlementLedger]: [left, right].map((item) => settlementFor({
+        [FILE_CLASSES.settlementLedger]: [left, right].map((item) => matchingMcpParent(item.event, {
           sourceEventId: item.id,
           timestamp: item.timestamp,
           route: "/mcp",
@@ -354,10 +379,14 @@ export async function proveMountedDeliveryJoin(dataDir) {
       }),
       settlementReference: twinReference,
     };
-    const twinEvent = { ...mcpExact.event, id: twinId };
+    const twinEvent = {
+      ...mcpExact.event,
+      id: twinId,
+      ...(typeof mcpExact.event.settlementReference === "string" ? { settlementReference: twinReference } : {}),
+    };
     const report = await receive({
       [FILE_CLASSES.settlementLedger]: [
-        settlementFor({
+        matchingMcpParent(mcpExact.event, {
           sourceEventId: mcpExact.id,
           timestamp: mcpExact.timestamp,
           route: "/mcp",
@@ -365,7 +394,7 @@ export async function proveMountedDeliveryJoin(dataDir) {
           settlementReference: capture.settlementReference,
           amountAtomic: "20000",
         }),
-        settlementFor({
+        matchingMcpParent(twinEvent, {
           sourceEventId: twinId,
           timestamp: mcpExact.timestamp,
           route: "/mcp",
@@ -410,7 +439,7 @@ export async function proveMountedDeliveryJoin(dataDir) {
   if (mcpOne) {
     const capture = mcpOne.captures[0];
     const base = {
-      [FILE_CLASSES.settlementLedger]: [settlementFor({
+      [FILE_CLASSES.settlementLedger]: [matchingMcpParent(mcpOne.event, {
         sourceEventId: mcpOne.id,
         timestamp: mcpOne.timestamp,
         route: "/mcp",
