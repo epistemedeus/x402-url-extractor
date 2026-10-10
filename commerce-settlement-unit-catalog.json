@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "samedaydesk.commerce-settlement-unit-catalog.v1",
+  "checkedAt": "2026-10-10T10:32:30.000Z",
+  "entries": [
+    {
+      "network": "eip155:8453",
+      "chainId": 8453,
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "symbol": "USDC",
+      "decimals": 6,
+      "sources": [
+        {
+          "name": "circle-usdc-contract-addresses",
+          "url": "https://developers.circle.com/stablecoins/usdc-contract-addresses",
+          "observed": "Base mainnet USDC 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "decimalsOnPage": false
+        },
+        {
+          "name": "base-public-rpc-eth-chainId",
+          "url": "https://mainnet.base.org",
+          "method": "eth_chainId",
+          "observed": "0x2105"
+        },
+        {
+          "name": "base-public-rpc-decimals",
+          "url": "https://mainnet.base.org",
+          "method": "eth_call",
+          "selector": "0x313ce567",
+          "to": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "observed": "0x0000000000000000000000000000000000000000000000000000000000000006"
+        },
+        {
+          "name": "base-public-rpc-symbol",
+          "url": "https://mainnet.base.org",
+          "method": "eth_call",
+          "selector": "0x95d89b41",
+          "to": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "observed": "0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000045553444300000000000000000000000000000000000000000000000000000000",
+          "decoded": "USDC"
+        }
+      ]
+    }
+  ]
+}
