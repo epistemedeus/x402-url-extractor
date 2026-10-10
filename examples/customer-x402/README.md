@@ -268,7 +268,21 @@ node recipes/caller-result-feedback.mjs
 
 The recipe purchases through the local `@x402/fetch` fixture, refuses a seeded
 `useful_delivered` disposition, then sends one explicit `useful` statement.
-It prints no bearer.
+It prints no bearer. That fixture invents the capability and accepts its own
+post. It does not receive the merchant token or the prospective journal.
+
+The loopback recipe runs the same `runAuthorizedPurchase` and
+`reportCallerResult` functions against a local `server.js`, a fake facilitator,
+and an in-process receipt client. It does not broadcast a transaction, call a
+model, use a production signer, or post feedback to the public host.
+
+```bash
+node recipes/caller-result-feedback-loopback.mjs
+```
+
+Run it from this directory after `npm ci`, with the merchant dependencies
+installed at the repository root. Schema success still does not send a
+statement. A failed statement does not repurchase.
 
 Do not transplant HTTP payment credentials into `mcp://` resources. Official
 `@x402/mcp` exists but is out of scope here. Native Claude/Goose marketplace
