@@ -967,9 +967,11 @@ app.get("/go/manychat", async (_req, res) => {
 // domain crawlers) self-discover our paid resources. Free route, before the paywall.
 const USDC_ASSET = usdcTermsForNetwork(NETWORK).asset;
 const receiptReferralClaimStore = createReceiptReferralClaimStore();
+const callerResultFeedbackMaxFileBytes = Number(process.env.CALLER_RESULT_FEEDBACK_MAX_FILE_BYTES);
 const callerResultFeedback = createCallerResultFeedbackService({
   dataDir: process.env.COMMERCE_DATA_DIR || `${process.cwd()}/data`,
   key: process.env.CALLER_RESULT_FEEDBACK_KEY || "",
+  ...(Number.isSafeInteger(callerResultFeedbackMaxFileBytes) ? { maxFileBytes: callerResultFeedbackMaxFileBytes } : {}),
 });
 const serviceDeploymentPublication = loadServiceDeploymentPublication({
   canonicalOrigin: PUBLIC_URL,
@@ -1518,6 +1520,11 @@ app.get("/mcp", (_req, res) => {
         method: "GET",
         route: CAREERS_BOARD_COLD_PATH,
         charged: false,
+      },
+      {
+        name: "report_caller_result",
+        charged: false,
+        channel: "mcp",
       },
     ],
     payment: "x402 USDC on Base per paid MCP tool call; page_change is free and HTTP actions also accept native MPP",
@@ -4359,7 +4366,7 @@ if (!routeBindingInspectOnly) {
 // facilitator. Mounted AFTER listen, async + NON-FATAL: any MCP setup failure
 // leaves the 6 HTTP paid routes fully intact (logged, never thrown).
 import("./mcp-server.mjs")
-  .then(({ mountMcp }) => {
+  .then(({ mountMcp, mcpCallArguments }) => {
     const mcpTools = [
         ...(isPageChangeHttpEnabled() ? [{
           name: "page_change",
@@ -4386,6 +4393,19 @@ import("./mcp-server.mjs")
           inputSchema: {},
           run: () => careersBoardColdRecipeBody(),
           tags: ["careers", "recipe", "free"],
+        },
+        {
+          name: "report_caller_result",
+          free: true,
+          description: "Optional free statement for one current paid morpho_position result. charged is false.",
+          price: "$0",
+          inputSchema: {
+            token: z.string().describe("Capability copied from the paid result meta. Not a payer, price, or event id."),
+            disposition: z.enum(["useful", "not_useful"]).describe("Explicit statement after you inspect the result."),
+            reasonCategory: z.enum(["matched_task", "saved_a_step", "wrong_output", "missing_field", "not_actionable"]).optional().describe("Optional reason. Omit it to leave the reason empty."),
+          },
+          run: (args) => callerResultFeedback.submitMcp({ arguments: mcpCallArguments(args) }).then((result) => result.body),
+          tags: ["feedback", "free"],
         },
         {
           name: "careers_board",
@@ -4504,6 +4524,7 @@ import("./mcp-server.mjs")
         declaredSourceForRequest: (req) => commerceTelemetry.mcpTypedDeclaredSourceForRequest(req),
       },
       tools: mcpTools,
+      callerResultFeedbackKey: process.env.CALLER_RESULT_FEEDBACK_KEY || "",
     });
   })
   .then((r) => {

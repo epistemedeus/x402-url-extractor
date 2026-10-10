@@ -848,6 +848,12 @@ export function createMcpTypedTelemetryAttempt({ binding, request, onAppend } = 
     return settlementReference;
   }
 
+  function acceptsCallerResultFeedback() {
+    return execution.state === "handler_success"
+      && settlement.state === "succeeded"
+      && typeof settlementReference === "string";
+  }
+
   function noteToolDelivery(delivery) {
     if (finalized) return;
     toolDelivery = delivery ?? null;
@@ -921,6 +927,7 @@ export function createMcpTypedTelemetryAttempt({ binding, request, onAppend } = 
     overrideFinalApplicationError,
     noteTransportError,
     readSettlementReference,
+    acceptsCallerResultFeedback,
     noteToolDelivery,
     finalize,
   };
