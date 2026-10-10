@@ -81,7 +81,9 @@ test("mcp capability rejects foreign, expired, tampered, and client event identi
   assert.equal(readMcpCallerResultFeedbackToken(resign({ ...claims, t: "extract" }), KEY, NOW).code, "foreign_tool");
   assert.equal(readMcpCallerResultFeedbackToken(resign({ ...claims, x: NOW - 1 }), KEY, NOW).code, "expired_capability");
   assert.equal(readMcpCallerResultFeedbackToken(resign({ ...claims, e: "11111111-1111-4111-8111-111111111111" }), KEY, NOW).code, "tampered_capability");
-  const flipped = `${issued.slice(0, -1)}${issued.endsWith("a") ? "b" : "a"}`;
+  const signatureStart = issued.indexOf(".") + 1;
+  const flipped = issued.slice(0, signatureStart)
+    + (issued[signatureStart] === "a" ? "b" : "a") + issued.slice(signatureStart + 1);
   assert.equal(readMcpCallerResultFeedbackToken(flipped, KEY, NOW).code, "tampered_capability");
   assert.equal(readMcpCallerResultFeedbackToken(issued, KEY, NOW + CALLER_RESULT_FEEDBACK_TTL_MS).code, "expired_capability");
 });
@@ -200,6 +202,9 @@ test("the official wrapper hook retains the sealed result and callTool stays pos
   const hooks = [];
   const calls = [];
   const client = {
+    get client() {
+      return { callTool: (params) => this.callTool(params.name, params.arguments) };
+    },
     onAfterPayment(hook) {
       hooks.push(hook);
       return this;
@@ -207,13 +212,14 @@ test("the official wrapper hook retains the sealed result and callTool stays pos
     async callTool(name, args) {
       calls.push({ name, args, form: "positional" });
       if (name === "morpho_position") {
+        const content = [{ type: "text", text: "{\"ok\":true}" }];
         await hooks[0]({
           result: {
-            content: [{ type: "text", text: "{\"ok\":true}" }],
+            content,
             _meta: { "samedaydesk/mcp-caller-result": contract },
           },
         });
-        return { content: [{ type: "text", text: "{\"ok\":true}" }], paymentMade: true };
+        return { content, paymentMade: true };
       }
       return {
         content: [{
@@ -260,4 +266,65 @@ test("the official wrapper hook retains the sealed result and callTool stays pos
   assert.equal(calls[2].form, "upfront");
   assert.equal(calls[2].name, "opportunity_preflight");
   assert.equal(JSON.stringify(reported).includes(issued), false);
+});
+
+test("overlapping purchases keep their own sealed capability", async () => {
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  const hooks = [];
+  const issuedA = `${"A".repeat(24)}.${"A".repeat(43)}`;
+  const issuedB = `${"B".repeat(24)}.${"B".repeat(43)}`;
+  const client = {
+    onAfterPayment(hook) { hooks.push(hook); },
+    async callTool(name, args) {
+      const content = [{ type: "text", text: args.id }];
+      await wait(args.id === "A" ? 0 : 5);
+      for (const hook of hooks) await hook({
+        toolName: name,
+        result: { content, _meta: { "samedaydesk/mcp-caller-result": {
+          ...mcpCallerResultFeedbackPublicContract(),
+          token: args.id === "A" ? issuedA : issuedB,
+        } } },
+      });
+      await wait(args.id === "A" ? 15 : 0);
+      return { content, paymentMade: true };
+    },
+  };
+  const paid = bindPaidMcpCallerResult(client);
+  const [a, b] = await Promise.all([
+    paid.pay("morpho_position", { id: "A" }),
+    paid.pay("morpho_position", { id: "B" }),
+  ]);
+  assert.equal(a.content[0].text, "A");
+  assert.equal(a.capability.token, issuedA);
+  assert.equal(b.content[0].text, "B");
+  assert.equal(b.capability.token, issuedB);
+});
+
+test("free reporting uses the raw SDK and cannot invoke automatic payment", async () => {
+  let paymentCalls = 0;
+  let sdkCalls = 0;
+  const issued = token();
+  const client = {
+    onAfterPayment() {},
+    async callTool() { paymentCalls += 1; throw new Error("automatic payment path"); },
+    client: {
+      async callTool(params) {
+        sdkCalls += 1;
+        assert.equal(params.name, "report_caller_result");
+        assert.equal(params.arguments.token, issued);
+        return { content: [{ type: "text", text: JSON.stringify({
+          ok: true, accepted: true, bound: false, parent: "pending",
+          charged: false, disposition: "useful",
+        }) }] };
+      },
+    },
+  };
+  const result = await reportMcpCallerResult(client, { token: issued, disposition: "useful" });
+  assert.equal(result.accepted, true);
+  assert.equal(sdkCalls, 1);
+  assert.equal(paymentCalls, 0);
+  delete client.client;
+  const absent = await reportMcpCallerResult(client, { token: issued, disposition: "useful" });
+  assert.equal(absent.code, "transport_failed");
+  assert.equal(paymentCalls, 0);
 });
