@@ -351,8 +351,8 @@ const summary = {
   skipped: leftUnreported,
   reportedDisposition: statement.disposition,
   accepted: statement.accepted === true && httpStatement.accepted === true,
-  bound: statement.bound === false && httpStatement.bound === false,
-  returnedCapability: skipped.returnedCapability === false && reported.returnedCapability === false,
+  bound: statement.bound === true || httpStatement.bound === true,
+  wrapperReturnedCapability: skipped.returnedCapability === true || reported.returnedCapability === true,
   wrapperStrippedMeta: true,
   reportUsedRawClient: raw.length === 1,
   reportPaidPath: false,
@@ -379,7 +379,7 @@ process.stdout.write(JSON.stringify(summary) + "\\n");
   assert.equal(summary.reportedDisposition, "not_useful");
   assert.equal(summary.accepted, true);
   assert.equal(summary.bound, false);
-  assert.equal(summary.returnedCapability, false);
+  assert.equal(summary.wrapperReturnedCapability, false);
   assert.equal(summary.wrapperStrippedMeta, true);
   assert.equal(summary.reportUsedRawClient, true);
   assert.equal(summary.reportPaidPath, false);
