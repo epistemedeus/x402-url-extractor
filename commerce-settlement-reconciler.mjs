@@ -2947,8 +2947,8 @@ async function readProspectiveDeliveryForStatus(dataDir, admission) {
       admission,
     });
   } catch {
-    const { absentProspectiveDelivery } = await import("./commerce-prospective-delivery.mjs");
-    return absentProspectiveDelivery();
+    const { unavailableProspectiveDelivery } = await import("./commerce-prospective-delivery.mjs");
+    return unavailableProspectiveDelivery(admission);
   }
 }
 
@@ -3140,13 +3140,11 @@ export function createCommerceSettlementReconciler({
         for (const record of result.newRecords) noteJournalWrite(dataDir, "settlements", record);
 
         try {
-          if (result.newRecords.length > 0) {
-            const { retainProspectiveDeliveries } = await import("./commerce-prospective-delivery.mjs");
-            await retainProspectiveDeliveries({
-              dataDir,
-              settlementReferences: result.newRecords.map((record) => record.settlementReference),
-            });
-          }
+          const { retainProspectiveDeliveries } = await import("./commerce-prospective-delivery.mjs");
+          await retainProspectiveDeliveries({
+            dataDir,
+            settlementReferences: result.newRecords.map((record) => record.settlementReference),
+          });
         } catch {
           // Prospective retention cannot change ledger bytes, scheduling, or the parent catch.
         }

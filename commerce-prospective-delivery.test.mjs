@@ -1,14 +1,20 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { appendFile, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { appendFile, mkdtemp, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import Ajv from "ajv";
+import { encodeAbiParameters, encodeEventTopics, getAddress, parseAbiItem } from "viem";
 
+import {
+  CALLER_RESULT_FEEDBACK_TTL_MS,
+  createCallerResultFeedbackService,
+  issueCallerResultFeedbackToken,
+} from "./caller-result-feedback.mjs";
 import { authorizeOutcomeBinding, buildTaskRefRecord } from "./commerce-outcome-binding.mjs";
 import {
   BASE_USDC,
@@ -25,9 +31,11 @@ import { MCP_MORPHO_RESOURCE } from "./http-delivery-evidence/mcp-delivery.mjs";
 import { FILE_CLASSES } from "./ordinary-delivery-join.mjs";
 import {
   PROSPECTIVE_FILENAME,
+  PROSPECTIVE_RESPONSE_BOUNDARY_MS,
   PROSPECTIVE_SOURCE_VERSION,
   appendProspectiveObservations,
   applyDeclaredFeedback,
+  bindStoredCallerResultFeedback,
   classifyProspectiveObservation,
   commerceProspectiveDeliveryOutputSchema,
   observationFromJoin,
@@ -36,6 +44,7 @@ import {
   readProspectiveDelivery,
   recordProspectiveFeedback,
   retainProspectiveDeliveries,
+  unavailableProspectiveDelivery,
 } from "./commerce-prospective-delivery.mjs";
 
 bindMerchantHttpDeliveryContracts();
@@ -213,6 +222,15 @@ function assertHonestCoverage(packet) {
   assert.equal(packet.boundaries.declaredFeedbackIsNotVerifiedUsefulness, true);
   assert.equal(packet.boundaries.ownerQaIsNotACustomer, true);
   assert.equal(packet.boundaries.parentAdmissionRemainsMoneyAuthority, true);
+  assert.equal(packet.boundaries.callerTechnicalClaimIsNotAuthority, true);
+  assert.equal(packet.boundaries.technicalRevisionAuthority, "ordinary_delivery_join");
+  assert.equal(packet.boundaries.technicalRevisionClock, "first_observed_at");
+  assert.equal(packet.boundaries.lateTechnicalRevisionIsNotLastWriteWins, true);
+  assert.equal(packet.boundaries.noResponseRequiresResponseBoundary, true);
+  assert.equal(packet.coverage.evidenceUnavailable, false);
+  assert.equal(packet.coverage.responseBoundaryMs, PROSPECTIVE_RESPONSE_BOUNDARY_MS);
+  assert.equal(Number.isInteger(packet.coverage.unadmittedRecords), true);
+  assert.equal(Number.isInteger(packet.technicalRevisions), true);
   assert.equal(validatePacket(packet), true, JSON.stringify(validatePacket.errors));
 }
 
@@ -271,6 +289,14 @@ test("classification keeps technical delivery apart from duplicate, conflict, an
     disposition: "replayed_or_unknown_settlement",
     reasons: ["duplicate_paid_evidence"],
   }), "unknown");
+  assert.equal(classifyProspectiveObservation({
+    disposition: "missing_capture",
+    reasons: ["capture_absent"],
+  }, { responsePending: true }), "unknown");
+  assert.equal(classifyProspectiveObservation({
+    disposition: "missing_capture",
+    reasons: ["capture_absent"],
+  }, { responsePending: false }), "no_response");
   const source = readFileSync(new URL("./commerce-prospective-delivery.mjs", import.meta.url), "utf8");
   assert.equal(source.includes("amountAtomic +="), false);
   assert.equal(source.includes("parseLines"), false);
@@ -483,7 +509,9 @@ test("feedback, replay, corruption, mismatch, and saturation stay bounded", asyn
       disposition: "useful",
       seal: "binds_declaration",
     });
-    assert.equal(early.reason, "record_absent");
+    assert.equal(early.ok, false);
+    assert.equal(early.reason, "caller_claim_refused");
+    assert.equal(early.record, null);
     const dropped = observation(reference, "dropped_connection");
     assert.equal(dropped.technical, "dropped_connection");
     await appendProspectiveObservations(dir, [dropped], { now: NOW });
@@ -497,73 +525,33 @@ test("feedback, replay, corruption, mismatch, and saturation stay bounded", asyn
     const journalBefore = await stat(path.join(dir, PROSPECTIVE_FILENAME));
     await appendProspectiveObservations(dir, [dropped], { now: NOW + 5000 });
     assert.equal((await stat(path.join(dir, PROSPECTIVE_FILENAME))).size, journalBefore.size);
-    const filled = await recordProspectiveFeedback(dir, {
-      evidenceKey: key,
-      disposition: "useful",
-      seal: "binds_declaration",
-      taskClass: "external_unknown",
-      receivedAt: "2026-10-10T12:40:00.000Z",
-      expiresAt: "2026-10-17T12:40:00.000Z",
+    const filled = { ...dropped, feedback: "declared_useful", feedbackSeal: "binds_declaration" };
+    const beforeClaim = (await stat(path.join(dir, PROSPECTIVE_FILENAME))).size;
+    await appendProspectiveObservations(dir, [filled], { now: NOW });
+    assert.equal((await stat(path.join(dir, PROSPECTIVE_FILENAME))).size, beforeClaim);
+    await appendFile(path.join(dir, PROSPECTIVE_FILENAME), `${JSON.stringify(filled)}\n`, { mode: 0o600 });
+    const afterFill = await readProspectiveDelivery({
+      dataDir: dir,
+      ledger: ndjson(ledger),
+      generatedAt: "2026-10-10T13:00:00.000Z",
     });
-    assert.equal(filled.ok, true);
-    assert.equal(filled.record.technical, "dropped_connection");
-    assert.equal(filled.record.feedback, "declared_useful");
-    const conflict = await recordProspectiveFeedback(dir, {
-      evidenceKey: key,
-      disposition: "not_useful",
-      seal: "binds_declaration",
-    });
-    assert.equal(conflict.reason, "conflicting_declaration");
-    assert.equal(conflict.record.feedback, "declared_useful");
-    const replay = await recordProspectiveFeedback(dir, {
-      evidenceKey: key,
-      disposition: "useful",
-      seal: "binds_declaration",
-    });
-    assert.equal(replay.idempotentReplay, true);
-    const foreign = applyDeclaredFeedback(filled.record, {
-      evidenceKey: prospectiveEvidenceKey(ref("d4")),
-      disposition: "useful",
-      seal: "binds_declaration",
-    });
-    assert.equal(foreign.reason, "foreign");
-    assert.equal(foreign.record.technical, "dropped_connection");
-    const late = applyDeclaredFeedback(filled.record, {
+    assert.equal(afterFill.technical.dropped_connection, 1);
+    assert.equal(afterFill.declaredFeedback.declared_useful, 1);
+    assert.equal(afterFill.usefulness, "unknown");
+    const fillSize = (await stat(path.join(dir, PROSPECTIVE_FILENAME))).size;
+    await appendProspectiveObservations(dir, [{ ...filled, feedback: "declared_not_useful" }], { now: NOW });
+    assert.equal((await stat(path.join(dir, PROSPECTIVE_FILENAME))).size, fillSize);
+    const forged = applyDeclaredFeedback(filled, {
       evidenceKey: key,
       disposition: "not_useful",
       seal: "binds_declaration",
       late: true,
-    });
-    assert.equal(late.reason, "late");
-    const expired = applyDeclaredFeedback(filled.record, {
-      evidenceKey: key,
-      disposition: "not_useful",
-      seal: "binds_declaration",
       expired: true,
-    });
-    assert.equal(expired.reason, "expired");
-    const pastExpiry = applyDeclaredFeedback(filled.record, {
-      evidenceKey: key,
-      disposition: "not_useful",
-      seal: "binds_declaration",
-      receivedAt: "2026-10-18T00:00:00.000Z",
-      expiresAt: "2026-10-17T00:00:00.000Z",
-    });
-    assert.equal(pastExpiry.reason, "expired");
-    const cross = applyDeclaredFeedback({ ...filled.record, taskClass: "external_unknown", feedback: "absent", feedbackSeal: "none" }, {
-      evidenceKey: key,
-      disposition: "useful",
-      seal: "binds_declaration",
       taskClass: "owner_qa",
     });
-    assert.equal(cross.reason, "cross_task");
-    assert.equal(cross.record.technical, "dropped_connection");
-    const unsealed = applyDeclaredFeedback({ ...filled.record, feedback: "absent", feedbackSeal: "none" }, {
-      evidenceKey: key,
-      disposition: "useful",
-      seal: "none",
-    });
-    assert.equal(unsealed.reason, "unsealed");
+    assert.equal(forged.reason, "caller_claim_refused");
+    assert.equal(forged.record.technical, "dropped_connection");
+    assert.equal(forged.record.feedback, "declared_useful");
     const technicalChange = observation(reference, "validated_response");
     const sizeBeforeConflict = (await stat(path.join(dir, PROSPECTIVE_FILENAME))).size;
     await appendProspectiveObservations(dir, [technicalChange], { now: NOW });
@@ -745,9 +733,545 @@ test("status echoes the parent admission and an empty store is not historical ze
     const source = readFileSync(new URL("./commerce-settlement-reconciler.mjs", import.meta.url), "utf8");
     assert.match(source, /retainProspectiveDeliveries/);
     assert.match(source, /readProspectiveDeliveryForStatus/);
-    const retained = source.slice(source.indexOf("retainProspectiveDeliveries") - 180, source.indexOf("retainProspectiveDeliveries") + 420);
-    assert.match(retained, /result\.newRecords\.length > 0/);
+    const retainAt = source.indexOf("await retainProspectiveDeliveries");
+    const retained = source.slice(retainAt - 320, retainAt + 420);
+    assert.match(retained, /settlementReferences: result\.newRecords\.map/);
+    assert.equal(/if \(result\.newRecords\.length > 0\)/.test(retained), false);
     assert.match(retained, /catch/);
+    assert.match(source, /unavailableProspectiveDelivery/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+function observedStamps(journalText, reference) {
+  const key = prospectiveEvidenceKey(reference);
+  return journalText.split("\n").flatMap((line) => {
+    if (!line) return [];
+    try {
+      const row = JSON.parse(line);
+      return row.evidenceKey === key ? [row.observedAt] : [];
+    } catch {
+      return [];
+    }
+  });
+}
+
+test("a later ordinary-join capture advances unknown and no_response without rewriting the first clock", async () => {
+  const dir = await tempDir();
+  const pending = ref("b1");
+  const aged = ref("b2");
+  const historical = ref("b3");
+  const partialRef = ref("b4");
+  const eventAt = Date.parse("2026-10-10T12:00:00.000Z");
+  const inside = eventAt + 60_000;
+  const outside = eventAt + PROSPECTIVE_RESPONSE_BOUNDARY_MS + 1_000;
+  const pendingRow = settled({ eventId: id(61), reference: pending, timestamp: new Date(eventAt).toISOString(), amount: "5000" });
+  const agedRow = settled({ eventId: id(62), reference: aged, timestamp: new Date(eventAt - PROSPECTIVE_RESPONSE_BOUNDARY_MS - 60_000).toISOString(), amount: "7000" });
+  const historicalRow = settled({ eventId: id(63), reference: historical, timestamp: at(3), amount: "9000" });
+  const partialRow = settled({ eventId: id(64), reference: partialRef, timestamp: new Date(eventAt).toISOString(), amount: "4000" });
+  const pendingHttp = observeHttp({
+    paidEvidenceId: pendingRow.sourceEventId,
+    resource: "/extract",
+    body: validExtractBody(),
+    settlementReference: pending,
+    requestDigest: fingerprint(1),
+    capturedAt: pendingRow.sourceEventTimestamp,
+  });
+  const partialHttp = observeHttp({
+    paidEvidenceId: partialRow.sourceEventId,
+    resource: "/extract",
+    body: validExtractBody({ capture: extractCapture({ textTruncated: true }) }),
+    settlementReference: partialRef,
+    requestDigest: fingerprint(3),
+    capturedAt: partialRow.sourceEventTimestamp,
+  });
+  const agedPaid = historicalV1Row({
+    id: agedRow.sourceEventId,
+    requestStartedAt: agedRow.sourceEventTimestamp,
+    responseFinishedAt: agedRow.sourceEventTimestamp,
+    settlementReference: aged,
+    requestDigest: fingerprint(2),
+    credentialFingerprint: fingerprint(7),
+  });
+  try {
+    await writeStores(dir, {
+      [FILE_CLASSES.settlementLedger]: [pendingRow, agedRow, historicalRow, partialRow],
+      [FILE_CLASSES.paidSuccessEvidence]: [
+        paidFrom(pendingHttp, { timestamp: pendingRow.sourceEventTimestamp, fingerprint: fingerprint(7), settlementReference: pending }),
+        agedPaid,
+        paidFrom(partialHttp, { timestamp: partialRow.sourceEventTimestamp, fingerprint: fingerprint(7), settlementReference: partialRef }),
+      ],
+    });
+    await retainProspectiveDeliveries({
+      dataDir: dir,
+      settlementReferences: [pending, aged, partialRef],
+      now: inside,
+    });
+    const opened = await readProspectiveDelivery({
+      dataDir: dir,
+      ledger: ndjson([pendingRow, agedRow, historicalRow, partialRow]),
+      generatedAt: "2026-10-10T13:00:00.000Z",
+    });
+    assert.equal(opened.technical.unknown, 2);
+    assert.equal(opened.technical.no_response, 1);
+    assert.equal(opened.coverage.admittedWithoutProspectiveObservation, 1);
+    assert.equal(opened.bindsToParent.amountAtomic, "25000");
+    assert.equal(opened.technicalRevisions, 0);
+    const journalBeforeClaim = await readFile(path.join(dir, PROSPECTIVE_FILENAME), "utf8");
+    const firstClock = observedStamps(journalBeforeClaim, pending)[0];
+    await appendProspectiveObservations(dir, [observation(pending, "validated_response", { observedAt: firstClock })], { now: inside });
+    assert.equal(await readFile(path.join(dir, PROSPECTIVE_FILENAME), "utf8"), journalBeforeClaim);
+    await retainProspectiveDeliveries({
+      dataDir: dir,
+      settlementReferences: [],
+      now: outside,
+    });
+    const agedOut = await readFile(path.join(dir, PROSPECTIVE_FILENAME), "utf8");
+    const pendingPacket = await readProspectiveDelivery({
+      dataDir: dir,
+      ledger: ndjson([pendingRow, agedRow, historicalRow, partialRow]),
+      generatedAt: "2026-10-10T13:00:00.000Z",
+    });
+    assert.equal(pendingPacket.technical.unknown, 0);
+    assert.equal(pendingPacket.technical.no_response, 3);
+    assert.equal(observedStamps(agedOut, pending).every((stamp) => stamp === firstClock), true);
+    assert.equal(agedOut.includes(historical), false);
+    assert.equal(pendingHttp.validatorVerdict, "pass");
+    assert.equal(partialHttp.deliveryClass, "truncated_partial");
+    await writeFile(path.join(dir, FILE_CLASSES.httpValidation), ndjson([pendingHttp, partialHttp]), { mode: 0o600 });
+    const beforeAdvance = await stat(path.join(dir, PROSPECTIVE_FILENAME));
+    await retainProspectiveDeliveries({ dataDir: dir, settlementReferences: [], now: outside + 5_000 });
+    await retainProspectiveDeliveries({ dataDir: dir, settlementReferences: [pending, partialRef], now: outside + 5_000 });
+    const advancedText = await readFile(path.join(dir, PROSPECTIVE_FILENAME), "utf8");
+    const advanced = await readProspectiveDelivery({
+      dataDir: dir,
+      ledger: ndjson([pendingRow, agedRow, historicalRow, partialRow]),
+      generatedAt: "2026-10-10T13:00:00.000Z",
+    });
+    assert.equal(advanced.technical.validated_response, 1);
+    assert.equal(advanced.technical.partial, 1);
+    assert.equal(advanced.technical.no_response, 1);
+    assert.equal(advanced.technical.unknown, 0);
+    assert.equal(advanced.technicalRevisions, 4);
+    assert.equal(advanced.coverage.admittedWithoutProspectiveObservation, 1);
+    assert.equal(advanced.bindsToParent.amountAtomic, "25000");
+    assert.equal(advanced.comparable, true);
+    assert.equal(observedStamps(advancedText, pending).every((stamp) => stamp === firstClock), true);
+    assert.equal(observedStamps(advancedText, partialRef).every((stamp) => stamp === observedStamps(journalBeforeClaim, partialRef)[0]), true);
+    assert.equal(advancedText.includes(pending), false);
+    assert.equal(advancedText.includes("https://"), false);
+    const replaySize = (await stat(path.join(dir, PROSPECTIVE_FILENAME))).size;
+    assert.equal(replaySize > beforeAdvance.size, true);
+    await retainProspectiveDeliveries({ dataDir: dir, settlementReferences: [], now: outside + 9_000 });
+    assert.equal((await stat(path.join(dir, PROSPECTIVE_FILENAME))).size, replaySize);
+    const replaced = observeHttp({
+      paidEvidenceId: pendingRow.sourceEventId,
+      resource: "/extract",
+      body: { nope: true },
+      settlementReference: pending,
+      requestDigest: fingerprint(1),
+      capturedAt: pendingRow.sourceEventTimestamp,
+    });
+    await writeFile(path.join(dir, FILE_CLASSES.httpValidation), ndjson([replaced, partialHttp]), { mode: 0o600 });
+    await retainProspectiveDeliveries({ dataDir: dir, settlementReferences: [pending], now: eventAt - 60_000 });
+    const held = await readProspectiveDelivery({
+      dataDir: dir,
+      ledger: ndjson([pendingRow, agedRow, historicalRow, partialRow]),
+      generatedAt: "2026-10-10T13:00:00.000Z",
+    });
+    assert.equal(held.technical.validated_response, 1);
+    assert.equal(held.technical.partial, 1);
+    assert.equal(held.technical.no_response, 1);
+    assert.equal(held.technical.unknown, 0);
+    assert.equal((await stat(path.join(dir, PROSPECTIVE_FILENAME))).size, replaySize);
+    assertHonestCoverage(held);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("technical counts follow the admitted identity set across a mixed and lagging cut", async () => {
+  const dir = await tempDir();
+  const admitted = ref("c1");
+  const orphan = ref("c2");
+  const missing = ref("c3");
+  const rows = [
+    settled({ eventId: id(65), reference: admitted, timestamp: at(1), amount: "4000" }),
+    settled({ eventId: id(66), reference: missing, timestamp: at(2), amount: "6000" }),
+  ];
+  const lagging = [rows[0]];
+  try {
+    await Promise.all([
+      appendProspectiveObservations(dir, [observation(admitted, "validated_response")], { now: NOW }),
+      appendProspectiveObservations(dir, [observation(orphan, "failure_after_settlement", { technical: "failure_after_settlement" })], { now: NOW }),
+    ]);
+    const admission = readCommerceSettlementAdmission(ndjson(rows));
+    const mixed = await readProspectiveDelivery({
+      dataDir: dir,
+      admission,
+      generatedAt: "2026-10-10T13:00:00.000Z",
+    });
+    assert.equal(mixed.technical.validated_response, 1);
+    assert.equal(mixed.technical.failure_after_settlement, 0);
+    assert.equal(Object.values(mixed.technical).reduce((sum, value) => sum + value, 0), 1);
+    assert.equal(mixed.coverage.unadmittedRecords, 1);
+    assert.equal(mixed.coverage.admittedWithoutProspectiveObservation, 1);
+    assert.equal(mixed.comparable, false);
+    assert.equal(mixed.coverage.historicalComplete, false);
+    assert.equal(mixed.bindsToParent.amountAtomic, "10000");
+    assert.equal(mixed.bindsToParent.admissionCutId, admission.admissionCutId);
+    const behind = await readProspectiveDelivery({
+      dataDir: dir,
+      admission: readCommerceSettlementAdmission(ndjson(lagging)),
+      generatedAt: "2026-10-10T13:00:00.000Z",
+    });
+    assert.equal(behind.technical.validated_response, 1);
+    assert.equal(behind.technical.failure_after_settlement, 0);
+    assert.equal(behind.coverage.unadmittedRecords, 1);
+    assert.equal(behind.coverage.admittedWithoutProspectiveObservation, 0);
+    assert.equal(behind.comparable, false);
+    assert.equal(behind.bindsToParent.amountAtomic, "4000");
+    assert.equal(behind.bindsToParent.reconciledSettlements, 1);
+    const source = readFileSync(new URL("./commerce-prospective-delivery.mjs", import.meta.url), "utf8");
+    assert.equal(source.includes("amountAtomic +="), false);
+    assertHonestCoverage(mixed);
+    assertHonestCoverage(behind);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("caller feedback binds from the stored statement, then survives raw deletion", async () => {
+  const dir = await tempDir();
+  const reference = ref("d5");
+  const mismatched = ref("d6");
+  const eventId = id(71);
+  const otherId = id(72);
+  const secret = "p".repeat(32);
+  const issuedAt = Date.parse("2026-10-10T12:00:00.000Z");
+  const http = observeHttp({
+    paidEvidenceId: eventId,
+    resource: "/extract",
+    body: validExtractBody(),
+    settlementReference: reference,
+    requestDigest: fingerprint(4),
+    capturedAt: at(1),
+  });
+  const otherHttp = observeHttp({
+    paidEvidenceId: otherId,
+    resource: "/extract",
+    body: validExtractBody(),
+    settlementReference: mismatched,
+    requestDigest: fingerprint(5),
+    capturedAt: at(2),
+  });
+  const paid = paidFrom(http, { timestamp: at(1), fingerprint: fingerprint(6), settlementReference: reference });
+  const otherPaid = paidFrom(otherHttp, { timestamp: at(2), fingerprint: fingerprint(8), settlementReference: mismatched });
+  const rows = [
+    settled({ eventId, reference, timestamp: at(1), amount: "5000" }),
+    settled({ eventId: otherId, reference: mismatched, timestamp: at(2), amount: "5000" }),
+  ];
+  const task = taskFor(eventId, "external_unknown", "op-prospective-feedback");
+  const otherTask = taskFor(otherId, "external_unknown", "op-prospective-other");
+  const service = createCallerResultFeedbackService({ dataDir: dir, key: secret, now: () => issuedAt });
+  const submit = (token, body) => service.submit({ token, body, rawBody: Buffer.from(JSON.stringify(body)), query: {} });
+  const tokenFor = (row, digestRow, when = issuedAt) => issueCallerResultFeedbackToken({
+    key: secret,
+    eventId: row.id,
+    method: "GET",
+    route: "/extract",
+    requestDigest: row.requestDigest,
+    responseDigest: digestRow.responseDigest,
+    now: when,
+  });
+  try {
+    const earlyDir = await tempDir();
+    const earlyHttp = observeHttp({
+      paidEvidenceId: id(73),
+      resource: "/extract",
+      body: validExtractBody(),
+      settlementReference: ref("d7"),
+      requestDigest: fingerprint(9),
+      capturedAt: at(4),
+    });
+    const earlyPaid = paidFrom(earlyHttp, { id: id(73), timestamp: at(4), fingerprint: fingerprint("b"), settlementReference: ref("d7") });
+    await writeStores(earlyDir, {
+      [FILE_CLASSES.paidSuccessEvidence]: [earlyPaid],
+      [FILE_CLASSES.httpValidation]: [JSON.parse(JSON.stringify(earlyHttp))],
+    });
+    const earlyService = createCallerResultFeedbackService({ dataDir: earlyDir, key: secret, now: () => issuedAt });
+    const earlyToken = issueCallerResultFeedbackToken({
+      key: secret,
+      eventId: earlyPaid.id,
+      method: "GET",
+      route: "/extract",
+      requestDigest: earlyPaid.requestDigest,
+      responseDigest: earlyPaid.responseDigest,
+      now: issuedAt,
+    });
+    const early = await earlyService.submit({
+      token: earlyToken,
+      body: { disposition: "useful" },
+      rawBody: Buffer.from(JSON.stringify({ disposition: "useful" })),
+      query: {},
+    });
+    assert.equal(early.statusCode, 200);
+    await assert.rejects(stat(path.join(earlyDir, PROSPECTIVE_FILENAME)));
+    await rm(earlyDir, { recursive: true, force: true });
+
+    await writeStores(dir, {
+      [FILE_CLASSES.settlementLedger]: rows,
+      [FILE_CLASSES.paidSuccessEvidence]: [paid, otherPaid],
+      [FILE_CLASSES.httpValidation]: [http, otherHttp].map((row) => JSON.parse(JSON.stringify(row))),
+      [FILE_CLASSES.taskRef]: [task, otherTask],
+    });
+    await retainProspectiveDeliveries({
+      dataDir: dir,
+      settlementReferences: [reference, mismatched],
+      now: Date.parse(at(1)) + 60_000,
+    });
+    const before = await readProspectiveDelivery({
+      dataDir: dir,
+      ledger: ndjson(rows),
+      generatedAt: "2026-10-10T13:00:00.000Z",
+    });
+    assert.equal(before.technical.validated_response, 2);
+    assert.equal(before.declaredFeedback.absent, 2);
+    const unsigned = await submit("not-a-token", { disposition: "useful" });
+    assert.equal(unsigned.statusCode, 401);
+    const expiredService = createCallerResultFeedbackService({
+      dataDir: dir,
+      key: secret,
+      now: () => issuedAt + CALLER_RESULT_FEEDBACK_TTL_MS,
+    });
+    const expired = await expiredService.submit({
+      token: tokenFor(paid, http),
+      body: { disposition: "useful" },
+      rawBody: Buffer.from(JSON.stringify({ disposition: "useful" })),
+      query: {},
+    });
+    assert.equal(expired.statusCode, 401);
+    const foreign = await submit(tokenFor({ id: id(99), requestDigest: paid.requestDigest }, http), { disposition: "useful" });
+    assert.equal(foreign.statusCode, 409);
+    await writeFile(path.join(dir, FILE_CLASSES.taskRef), ndjson([
+      task,
+      taskFor(otherId, "owner_qa", "op-prospective-shifted"),
+    ]), { mode: 0o600 });
+    const shifted = await submit(tokenFor(otherPaid, otherHttp), { disposition: "useful" });
+    assert.equal(shifted.statusCode, 200);
+    const shiftedBind = await bindStoredCallerResultFeedback(dir);
+    assert.equal(shiftedBind.reason, "cross_task");
+    const accepted = await submit(tokenFor(paid, http), { disposition: "useful", reasonCategory: "matched_task" });
+    assert.equal(accepted.statusCode, 200);
+    assert.equal(accepted.body.usefulness, "unknown");
+    assert.equal(accepted.body.idempotentReplay, false);
+    const conflict = await submit(tokenFor(paid, http), { disposition: "not_useful" });
+    assert.equal(conflict.statusCode, 409);
+    assert.equal(conflict.body.retainedDisposition, "useful");
+    const replay = await submit(tokenFor(paid, http), { disposition: "useful", reasonCategory: "matched_task" });
+    assert.equal(replay.statusCode, 200);
+    assert.equal(replay.body.idempotentReplay, true);
+    const bound = await readProspectiveDelivery({
+      dataDir: dir,
+      ledger: ndjson(rows),
+      generatedAt: "2026-10-10T13:00:00.000Z",
+    });
+    assert.equal(bound.declaredFeedback.declared_useful, 1);
+    assert.equal(bound.declaredFeedback.absent, 1);
+    assert.equal(bound.technical.validated_response, 2);
+    assert.equal(bound.usefulness, "unknown");
+    assert.equal(bound.declaredTaskClass.external_unknown, 2);
+    await rm(path.join(dir, FILE_CLASSES.paidSuccessEvidence));
+    await rm(path.join(dir, FILE_CLASSES.httpValidation));
+    await rm(path.join(dir, FILE_CLASSES.taskRef));
+    await rm(path.join(dir, FILE_CLASSES.callerResultFeedback));
+    const retained = await readProspectiveDelivery({
+      dataDir: dir,
+      ledger: ndjson(rows),
+      generatedAt: "2026-10-10T13:00:00.000Z",
+    });
+    assert.equal(retained.declaredFeedback.declared_useful, 1);
+    assert.equal(retained.technical.validated_response, 2);
+    assert.equal(retained.usefulness, "unknown");
+    assertHonestCoverage(retained);
+    const journal = await readFile(path.join(dir, PROSPECTIVE_FILENAME), "utf8");
+    assertPrivacy(journal, [reference, eventId, task.taskRef, secret, "https://", "matched_task"]);
+    const child = spawnSync(process.execPath, [path.join(ROOT, "commerce-prospective-delivery-cold.mjs"), dir], {
+      cwd: ROOT,
+      encoding: "utf8",
+      env: { ...process.env, PROSPECTIVE_GENERATED_AT: "2026-10-10T13:00:00.000Z" },
+    });
+    assert.equal(child.status, 0, child.stderr);
+    const cold = JSON.parse(child.stdout);
+    assert.equal(cold.declaredFeedback.declared_useful, 1);
+    assert.equal(cold.technical.validated_response, 2);
+    assert.equal(cold.usefulness, "unknown");
+    assert.equal(cold.coverage.historicalComplete, false);
+    const feedbackSource = readFileSync(new URL("./caller-result-feedback.mjs", import.meta.url), "utf8");
+    assert.match(feedbackSource, /bindStoredCallerResultFeedback/);
+    assert.equal(feedbackSource.includes("binds_declaration"), false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("reconcile admits payment before response evidence and a later pass advances it", async () => {
+  const dir = await tempDir();
+  const recent = ref("e5");
+  const aged = ref("e6");
+  const historical = ref("e7");
+  const recentId = id(81);
+  const agedId = id(82);
+  const treasury = "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee";
+  const payer = "0x1111111111111111111111111111111111111111";
+  const transfer = parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 value)");
+  const recentAt = new Date(Date.now() - 60_000).toISOString();
+  const agedAt = new Date(Date.now() - PROSPECTIVE_RESPONSE_BOUNDARY_MS - 120_000).toISOString();
+  const receiptFor = (amount) => ({
+    status: "success",
+    blockNumber: 123n,
+    logs: [{
+      address: getAddress(BASE_USDC),
+      topics: encodeEventTopics({
+        abi: [transfer],
+        eventName: "Transfer",
+        args: { from: getAddress(payer), to: getAddress(treasury) },
+      }),
+      data: encodeAbiParameters([{ type: "uint256" }], [amount]),
+    }],
+  });
+  const client = {
+    async getTransactionReceipt({ hash }) {
+      if (hash === recent) return receiptFor(5000n);
+      if (hash === aged) return receiptFor(7000n);
+      throw new Error("receipt unavailable");
+    },
+    async getBlock() {
+      return { timestamp: 1_760_000_000n };
+    },
+  };
+  const eventFor = (eventId, reference, timestamp, amount) => ({
+    v: 1,
+    id: eventId,
+    ts: timestamp,
+    route: "/extract",
+    result: "paid_success",
+    paymentProtocol: "x402",
+    settlementReference: reference,
+    settlementAmountAtomic: amount,
+    settlementNetwork: "eip155:8453",
+    settlementCurrency: BASE_USDC,
+  });
+  const recentHttp = observeHttp({
+    paidEvidenceId: recentId,
+    resource: "/extract",
+    body: validExtractBody(),
+    settlementReference: recent,
+    requestDigest: fingerprint(1),
+    capturedAt: recentAt,
+  });
+  const agedPaid = historicalV1Row({
+    id: agedId,
+    requestStartedAt: agedAt,
+    responseFinishedAt: agedAt,
+    settlementReference: aged,
+    requestDigest: fingerprint(2),
+    credentialFingerprint: fingerprint(4),
+  });
+  try {
+    await writeStores(dir, {
+      [FILE_CLASSES.settlementLedger]: [
+        settled({ eventId: id(80), reference: historical, timestamp: at(1), amount: "9000" }),
+      ],
+      [FILE_CLASSES.commerceEvents]: [
+        eventFor(recentId, recent, recentAt, "5000"),
+        eventFor(agedId, aged, agedAt, "7000"),
+      ],
+      [FILE_CLASSES.paidSuccessEvidence]: [
+        paidFrom(recentHttp, { timestamp: recentAt, fingerprint: fingerprint(4), settlementReference: recent }),
+        agedPaid,
+      ],
+    });
+    const reconciler = createCommerceSettlementReconciler({
+      actorSecret: "prospective-reconcile-secret",
+      asset: BASE_USDC,
+      client,
+      dataDir: dir,
+      network: "eip155:8453",
+      settlementEvidenceSince: "2026-10-01T00:00:00.000Z",
+      treasury,
+    });
+    const first = await reconciler.reconcile();
+    assert.equal(first.lastError, null);
+    assert.equal(first.ledger.amountAtomic, "21000");
+    assert.equal(first.prospectiveDelivery.technical.unknown, 1);
+    assert.equal(first.prospectiveDelivery.technical.no_response, 1);
+    assert.equal(first.prospectiveDelivery.technical.validated_response, 0);
+    assert.equal(first.prospectiveDelivery.coverage.admittedWithoutProspectiveObservation, 1);
+    assert.equal(first.prospectiveDelivery.coverage.historicalComplete, false);
+    const ledgerBefore = await readFile(reconciler.ledgerPath, "utf8");
+    const admittedRecord = ledgerBefore.trim().split("\n").map((line) => JSON.parse(line)).find((row) => row.sourceEventId === recentId);
+    const firstIdentity = admittedRecord.reconciliationId;
+    assert.equal(typeof firstIdentity, "string");
+    const journal = await readFile(path.join(dir, PROSPECTIVE_FILENAME), "utf8");
+    const firstClock = observedStamps(journal, recent);
+    assert.equal(firstClock.length, 1);
+    assert.equal(journal.includes(recent), false);
+    assert.equal(journal.includes(recentId), false);
+    await writeFile(path.join(dir, FILE_CLASSES.httpValidation), ndjson([JSON.parse(JSON.stringify(recentHttp))]), { mode: 0o600 });
+    const second = await reconciler.reconcile();
+    assert.equal(second.lastError, null);
+    assert.equal(second.ledger.amountAtomic, "21000");
+    assert.equal(second.prospectiveDelivery.technical.validated_response, 1);
+    assert.equal(second.prospectiveDelivery.technical.no_response, 1);
+    assert.equal(second.prospectiveDelivery.technical.unknown, 0);
+    assert.equal(second.prospectiveDelivery.technicalRevisions, 1);
+    assert.equal(second.prospectiveDelivery.bindsToParent.amountAtomic, second.ledger.amountAtomic);
+    assert.equal(second.prospectiveDelivery.bindsToParent.admissionCutId, first.prospectiveDelivery.bindsToParent.admissionCutId);
+    const advanced = await readFile(path.join(dir, PROSPECTIVE_FILENAME), "utf8");
+    assert.equal(observedStamps(advanced, recent).every((stamp) => stamp === firstClock[0]), true);
+    const ledgerMid = await readFile(reconciler.ledgerPath, "utf8");
+    assert.equal(ledgerMid.trim().split("\n").map((line) => JSON.parse(line)).find((row) => row.sourceEventId === recentId).reconciliationId, firstIdentity);
+    await rm(path.join(dir, FILE_CLASSES.commerceEvents));
+    await rm(path.join(dir, FILE_CLASSES.paidSuccessEvidence));
+    await rm(path.join(dir, FILE_CLASSES.httpValidation));
+    const child = spawnSync(process.execPath, [path.join(ROOT, "commerce-prospective-delivery-cold.mjs"), dir], {
+      cwd: ROOT,
+      encoding: "utf8",
+      env: { ...process.env, PROSPECTIVE_GENERATED_AT: "2026-10-10T13:00:00.000Z" },
+    });
+    assert.equal(child.status, 0, child.stderr);
+    const cold = JSON.parse(child.stdout);
+    assert.equal(cold.technical.validated_response, 1);
+    assert.equal(cold.technical.no_response, 1);
+    assert.equal(cold.bindsToParent.amountAtomic, "21000");
+    assert.equal(cold.coverage.historicalComplete, false);
+    assert.equal(cold.coverage.admittedWithoutProspectiveObservation, 1);
+    assertPrivacy(child.stdout, [recent, aged, historical, recentId, agedId]);
+    await rm(path.join(dir, PROSPECTIVE_FILENAME));
+    await symlink(PROSPECTIVE_FILENAME, path.join(dir, PROSPECTIVE_FILENAME));
+    await writeFile(path.join(dir, FILE_CLASSES.commerceEvents), ndjson([
+      eventFor(id(83), ref("e8"), recentAt, "3000"),
+    ]), { mode: 0o600 });
+    client.getTransactionReceipt = async ({ hash }) => {
+      if (hash === ref("e8")) return receiptFor(3000n);
+      throw new Error("receipt unavailable");
+    };
+    const failedRetain = await reconciler.reconcile();
+    const ledgerAfter = await readFile(reconciler.ledgerPath, "utf8");
+    assert.equal(failedRetain.lastError, null);
+    assert.equal(failedRetain.ledger.amountAtomic, "24000");
+    assert.equal(failedRetain.prospectiveDelivery.decision, "unreadable");
+    assert.equal(failedRetain.prospectiveDelivery.comparable, false);
+    assert.equal(failedRetain.prospectiveDelivery.coverage.evidenceUnavailable, true);
+    assert.equal(failedRetain.prospectiveDelivery.coverage.historicalComplete, false);
+    assert.equal(failedRetain.prospectiveDelivery.bindsToParent.amountAtomic, "24000");
+    assert.equal(validatePacket(failedRetain.prospectiveDelivery), true, JSON.stringify(validatePacket.errors));
+    const parsedLedger = ledgerAfter.trim().split("\n").map((line) => JSON.parse(line));
+    assert.equal(parsedLedger.find((row) => row.sourceEventId === recentId).reconciliationId, firstIdentity);
+    assert.equal(parsedLedger.some((row) => row.sourceEventId === id(83)), true);
+    assert.equal(ledgerAfter.includes(ref("e8")), true);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -773,6 +1297,8 @@ test("cold fixture packet keeps the parent amount and withholds historical compl
   assert.equal(packet.bindsToParent.amountAtomic, "80000");
   assert.equal(packet.bindsToParent.matchesSuppliedSummary, null);
   assert.equal(packet.coverage.admittedWithoutProspectiveObservation, 1);
+  assert.equal(packet.coverage.unadmittedRecords, 0);
+  assert.equal(packet.technicalRevisions, 0);
   assert.equal(packet.declaredFeedback.absent, 1);
   assert.equal(packet.declaredTaskClass.absent, 1);
   assertHonestCoverage(packet);

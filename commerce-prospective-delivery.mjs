@@ -18,6 +18,24 @@ export const PROSPECTIVE_RECORD_SCHEMA = "samedaydesk.commerce-prospective-deliv
 export const PROSPECTIVE_PUBLIC_SCHEMA = "samedaydesk.commerce-prospective-delivery.v1";
 export const PROSPECTIVE_FILENAME = "commerce-prospective-delivery.ndjson";
 export const PROSPECTIVE_MAX_RECORDS = 1024;
+// Missing capture stays unknown until this long after the settlement source
+// event. Ten minutes is several reconciler cycles (15s minimum, 60s default)
+// and is not the 7-day caller-feedback capability. After the boundary, still
+// missing capture is no_response. A later ordinary-join capture may advance
+// unknown or no_response. The first observedAt stays. A different terminal
+// class conflicts and the first one wins.
+export const PROSPECTIVE_RESPONSE_BOUNDARY_MS = 10 * 60 * 1000;
+const OPEN_TECHNICAL = new Set(["unknown", "no_response"]);
+const TERMINAL_TECHNICAL = new Set([
+  "validated_response",
+  "schema_invalid",
+  "partial",
+  "dropped_connection",
+  "failure_after_settlement",
+  "channel_conflict",
+]);
+const ORDINARY_JOIN = Symbol("ordinary-join");
+const STORED_STATEMENT = Symbol("stored-statement");
 
 const TECHNICAL = Object.freeze([
   "validated_response",
@@ -134,7 +152,7 @@ export function classifyProspectiveObservation(row, context = {}) {
     || delivery === "missing_body"
     || reasons.has("capture_absent")
     || reasons.has("paid_evidence_absent")
-  ) return "no_response";
+  ) return context.responsePending === true ? "unknown" : "no_response";
   if (
     row.disposition === "incomplete_capture"
     || delivery === "truncated_partial"
@@ -207,6 +225,8 @@ export function parseProspectiveJournal(text) {
     records: [],
     duplicateIgnored: 0,
     conflictRestatements: 0,
+    technicalRevisions: 0,
+    revisedKeys: [],
     corruptLines: 0,
     saturated: false,
   };
@@ -267,6 +287,20 @@ export function parseProspectiveJournal(text) {
       seen.set(parsed.evidenceKey, updated);
       continue;
     }
+    if (authorizedTechnicalRevision(prior, parsed)) {
+      const updated = {
+        ...prior,
+        technical: parsed.technical,
+        channel: parsed.channel,
+        taskClass: parsed.taskClass,
+      };
+      const index = result.records.indexOf(prior);
+      result.records[index] = updated;
+      seen.set(parsed.evidenceKey, updated);
+      result.technicalRevisions += 1;
+      result.revisedKeys.push(parsed.evidenceKey);
+      continue;
+    }
     result.conflictRestatements += 1;
   }
   return result;
@@ -314,11 +348,11 @@ async function appendLines(dataDir, lines) {
   await syncDirectory(dataDir);
 }
 
-function countsFor(parsed) {
+function countsFor(records) {
   const technical = emptyTechnical();
   const declaredFeedback = emptyFeedback();
   const declaredTaskClass = emptyTasks();
-  for (const record of parsed.records) {
+  for (const record of records) {
     technical[record.technical] += 1;
     declaredFeedback[record.feedback] += 1;
     declaredTaskClass[record.taskClass] += 1;
@@ -346,11 +380,22 @@ export function projectProspectiveDelivery({
   const summary = admission?.summary || null;
   const cutId = admission?.admissionCutId || null;
   const admitted = Array.isArray(admission?.admitted) ? admission.admitted : [];
-  const keys = new Set(parsed.records.map((record) => record.evidenceKey));
+  const admittedKeys = new Set();
+  for (const record of admitted) {
+    const key = prospectiveEvidenceKey(record?.settlementReference);
+    if (key) admittedKeys.add(key);
+  }
+  const boundRecords = [];
+  let unadmittedRecords = 0;
+  for (const record of parsed.records) {
+    if (admittedKeys.has(record.evidenceKey)) boundRecords.push(record);
+    else unadmittedRecords += 1;
+  }
+  const journalKeys = new Set(parsed.records.map((record) => record.evidenceKey));
   let admittedWithoutProspectiveObservation = 0;
   for (const record of admitted) {
     const key = prospectiveEvidenceKey(record?.settlementReference);
-    if (!key || !keys.has(key)) admittedWithoutProspectiveObservation += 1;
+    if (!key || !journalKeys.has(key)) admittedWithoutProspectiveObservation += 1;
   }
   const bound = Boolean(summary)
     && (suppliedSummary == null || sameSummary(suppliedSummary, summary))
@@ -358,8 +403,12 @@ export function projectProspectiveDelivery({
   let decision = parsed.decision;
   if (decision === "prospective" && !bound && (suppliedSummary != null || suppliedCutId != null)) decision = "stale_cut";
   if (decision === "prospective" && parsed.saturated) decision = "saturated";
-  const { technical, declaredFeedback, declaredTaskClass } = countsFor(parsed);
-  const comparable = decision === "prospective" && bound && parsed.corruptLines === 0;
+  const { technical, declaredFeedback, declaredTaskClass } = countsFor(boundRecords);
+  const technicalRevisions = (parsed.revisedKeys || []).filter((key) => admittedKeys.has(key)).length;
+  const comparable = decision === "prospective"
+    && bound
+    && parsed.corruptLines === 0
+    && unadmittedRecords === 0;
   return {
     schemaVersion: PROSPECTIVE_PUBLIC_SCHEMA,
     decision,
@@ -381,6 +430,7 @@ export function projectProspectiveDelivery({
     declaredTaskClass,
     duplicateIgnored: parsed.duplicateIgnored,
     conflictRestatements: parsed.conflictRestatements,
+    technicalRevisions,
     coverage: {
       historicalBackfill: false,
       historicalComplete: false,
@@ -388,9 +438,12 @@ export function projectProspectiveDelivery({
       zeroProspectiveIsNotHistoricalZero: true,
       prospectiveSince: parsed.header?.prospectiveSince || null,
       admittedWithoutProspectiveObservation,
+      unadmittedRecords,
       corruptLines: parsed.corruptLines,
       projectionSaturated: parsed.saturated,
       retainedEventFilesRequired: false,
+      evidenceUnavailable: false,
+      responseBoundaryMs: PROSPECTIVE_RESPONSE_BOUNDARY_MS,
     },
     boundaries: {
       technicalValidationIsNotUsefulness: true,
@@ -401,6 +454,11 @@ export function projectProspectiveDelivery({
       parentAdmissionRemainsMoneyAuthority: true,
       noHistoricalBackfill: true,
       ownerQaIsNotACustomer: true,
+      callerTechnicalClaimIsNotAuthority: true,
+      technicalRevisionAuthority: "ordinary_delivery_join",
+      technicalRevisionClock: "first_observed_at",
+      lateTechnicalRevisionIsNotLastWriteWins: true,
+      noResponseRequiresResponseBoundary: true,
     },
     recognizedIncomeAtomic: null,
     customerAttribution: null,
@@ -460,6 +518,20 @@ function feedbackFill(prior, next) {
     && next.feedbackSeal === "binds_declaration";
 }
 
+function authorizedTechnicalRevision(prior, next) {
+  if (prior.evidenceKey !== next.evidenceKey || prior.observedAt !== next.observedAt) return false;
+  if (prior.feedback !== next.feedback || prior.feedbackSeal !== next.feedbackSeal) return false;
+  if (!OPEN_TECHNICAL.has(prior.technical) || next.technical === prior.technical) return false;
+  if (next.technical === "unknown") return false;
+  if (next.technical === "no_response") return prior.technical === "unknown";
+  if (!TERMINAL_TECHNICAL.has(next.technical)) return false;
+  if (next.technical === "channel_conflict") {
+    if (next.channel !== "conflict") return false;
+  } else if (prior.channel !== "none" && next.channel !== prior.channel) return false;
+  if (prior.taskClass !== "absent" && next.taskClass !== prior.taskClass) return false;
+  return true;
+}
+
 function lineFor(observation) {
   if (!isObservation(observation)) return null;
   return `${JSON.stringify(observation)}\n`;
@@ -469,14 +541,19 @@ export async function appendProspectiveObservations(dataDir, observations, {
   now = Date.now(),
   sourceVersion = packageVersion,
   maxRecords = PROSPECTIVE_MAX_RECORDS,
+  [ORDINARY_JOIN]: ordinaryJoin = false,
+  [STORED_STATEMENT]: storedStatement = false,
 } = {}) {
   return admitCommerceJournal(dataDir, async () => {
     let parsed = await ensureHeader(dataDir, now, sourceVersion);
     if (parsed.decision === "version_mismatch" || parsed.decision === "unreadable") return parsed;
     const lines = [];
     let blocked = false;
-    for (const observation of observations) {
-      if (!observation || observation.duplicateIgnored === true || !isObservation(observation)) continue;
+    for (const supplied of observations) {
+      if (!supplied || supplied.duplicateIgnored === true || !isObservation(supplied)) continue;
+      const observation = ordinaryJoin === true || storedStatement === true
+        ? supplied
+        : { ...supplied, feedback: "absent", feedbackSeal: "none" };
       const prior = parsed.records.find((record) => record.evidenceKey === observation.evidenceKey);
       if (prior) {
         if (sameObservation(prior, observation)) continue;
@@ -486,6 +563,15 @@ export async function appendProspectiveObservations(dataDir, observations, {
           lines.push(line);
           prior.feedback = observation.feedback;
           prior.feedbackSeal = observation.feedbackSeal;
+          continue;
+        }
+        if (ordinaryJoin === true && authorizedTechnicalRevision(prior, observation)) {
+          const line = lineFor(observation);
+          if (!line) continue;
+          lines.push(line);
+          prior.technical = observation.technical;
+          prior.channel = observation.channel;
+          prior.taskClass = observation.taskClass;
         }
         continue;
       }
@@ -509,45 +595,103 @@ export async function appendProspectiveObservations(dataDir, observations, {
   });
 }
 
-export async function recordProspectiveFeedback(dataDir, feedback, options = {}) {
+export function applyDeclaredFeedback(record, feedback) {
+  void feedback;
+  return {
+    ok: false,
+    reason: "caller_claim_refused",
+    record: record && isObservation(record) ? { ...record } : record ?? null,
+  };
+}
+
+export async function recordProspectiveFeedback(dataDir, feedback) {
+  if (feedback && typeof feedback === "object") {
+    return { ok: false, reason: "caller_claim_refused", record: null, bound: 0 };
+  }
+  return bindStoredCallerResultFeedback(dataDir);
+}
+
+export async function bindStoredCallerResultFeedback(dataDir, {
+  now = Date.now(),
+  sourceVersion = packageVersion,
+} = {}) {
   return admitCommerceJournal(dataDir, async () => {
     const parsed = parseProspectiveJournal(await readJournal(dataDir));
     if (parsed.decision === "version_mismatch" || parsed.decision === "unreadable") {
-      return { ok: false, reason: parsed.decision, record: null };
+      return { ok: false, reason: parsed.decision, record: null, bound: 0, rejections: [] };
     }
-    const record = parsed.records.find((item) => item.evidenceKey === feedback?.evidenceKey);
-    const applied = applyDeclaredFeedback(record, feedback);
-    if (!applied.ok || applied.idempotentReplay) return applied;
-    await appendProspectiveObservations(dataDir, [applied.record], options);
+    if (parsed.records.length === 0) {
+      return { ok: false, reason: "record_absent", record: null, bound: 0, rejections: [] };
+    }
+    const stores = await readOrdinaryDeliveryStores(dataDir);
+    const wanted = new Set(parsed.records.map((record) => record.evidenceKey));
+    const selected = stores.settlements.filter((settlement) => wanted.has(prospectiveEvidenceKey(settlement.settlementReference)));
+    const stamps = selected.map((settlement) => Date.parse(settlement.sourceEventTimestamp)).filter(Number.isFinite);
+    const report = stamps.length === 0 ? null : joinOrdinaryDeliveries({
+      ...stores,
+      windowStart: new Date(Math.min(...stamps)).toISOString(),
+      windowEnd: new Date(Math.max(...stamps)).toISOString(),
+      coverage: "unknown_for_full_window",
+      includeLocalIds: true,
+    });
+    const observations = [];
+    const rejections = [];
+    for (const record of parsed.records) {
+      const settlement = selected.find((item) => prospectiveEvidenceKey(item.settlementReference) === record.evidenceKey);
+      if (!settlement) continue;
+      const row = report?.rows.find((item) => item.local?.settlementReference === settlement.settlementReference
+        && item.local?.sourceEventId === settlement.sourceEventId) || null;
+      const task = taskClassFor(stores, settlement.sourceEventId);
+      if (record.taskClass !== "absent" && (task.taskConflict || task.taskClass !== record.taskClass)) {
+        rejections.push({ evidenceKey: record.evidenceKey, reason: "cross_task" });
+        continue;
+      }
+      if (row?.callerAcceptance === "foreign") {
+        rejections.push({ evidenceKey: record.evidenceKey, reason: "foreign" });
+        continue;
+      }
+      const captured = Number(row?.httpAttached || 0) + Number(row?.mcpAttached || 0) > 0;
+      const declared = row?.callerAcceptance === "bound"
+        ? row.callerDisposition
+        : captured
+          ? row?.callerSuppliedDisposition
+          : null;
+      const stated = declared === "useful"
+        ? "declared_useful"
+        : declared === "not_useful"
+          ? "declared_not_useful"
+          : null;
+      if (!stated) continue;
+      if (record.feedback === stated && record.feedbackSeal === "binds_declaration") continue;
+      if (record.feedback !== "absent") {
+        rejections.push({ evidenceKey: record.evidenceKey, reason: "conflicting_declaration" });
+        continue;
+      }
+      observations.push({ ...record, feedback: stated, feedbackSeal: "binds_declaration" });
+    }
+    if (observations.length === 0) {
+      return {
+        ok: false,
+        reason: rejections[0]?.reason || "declaration_absent",
+        record: null,
+        bound: 0,
+        rejections,
+      };
+    }
+    await appendProspectiveObservations(dataDir, observations, {
+      now,
+      sourceVersion,
+      [STORED_STATEMENT]: true,
+    });
     const next = parseProspectiveJournal(await readJournal(dataDir));
-    const updated = next.records.find((item) => item.evidenceKey === applied.record.evidenceKey) || applied.record;
-    return { ...applied, record: updated };
+    return {
+      ok: true,
+      reason: null,
+      bound: observations.length,
+      rejections,
+      record: next.records.find((item) => item.evidenceKey === observations[0].evidenceKey) || observations[0],
+    };
   });
-}
-
-export function applyDeclaredFeedback(record, feedback) {
-  if (!record || !isObservation(record)) return { ok: false, reason: "record_absent", record };
-  const next = { ...record };
-  if (!feedback || typeof feedback !== "object") return { ok: false, reason: "feedback_absent", record: next };
-  if (feedback.evidenceKey !== record.evidenceKey) return { ok: false, reason: "foreign", record: next };
-  if (feedback.late === true) return { ok: false, reason: "late", record: next };
-  if (feedback.expired === true) return { ok: false, reason: "expired", record: next };
-  if (typeof feedback.expiresAt === "string" && ISO.test(feedback.expiresAt) && feedback.receivedAt > feedback.expiresAt) {
-    return { ok: false, reason: "expired", record: next };
-  }
-  if (feedback.taskClass && record.taskClass !== "absent" && feedback.taskClass !== record.taskClass) {
-    return { ok: false, reason: "cross_task", record: next };
-  }
-  if (feedback.seal !== "binds_declaration") return { ok: false, reason: "unsealed", record: next };
-  if (feedback.disposition !== "useful" && feedback.disposition !== "not_useful") {
-    return { ok: false, reason: "disposition_rejected", record: next };
-  }
-  const stated = feedback.disposition === "useful" ? "declared_useful" : "declared_not_useful";
-  if (record.feedback === stated) return { ok: true, idempotentReplay: true, record: next };
-  if (record.feedback !== "absent") return { ok: false, reason: "conflicting_declaration", record: next };
-  next.feedback = stated;
-  next.feedbackSeal = "binds_declaration";
-  return { ok: true, idempotentReplay: false, record: next, technicalUnchanged: next.technical === record.technical };
 }
 
 function typedResultFor(stores, sourceEventId) {
@@ -561,6 +705,12 @@ function taskClassFor(stores, sourceEventId) {
   return { taskClass: TASKS.includes(matches[0].cohort) ? matches[0].cohort : "absent", taskConflict: false };
 }
 
+function responsePending(settlement, now) {
+  const eventMs = Date.parse(settlement?.sourceEventTimestamp || "");
+  if (!Number.isFinite(eventMs) || !Number.isFinite(now)) return true;
+  return now - eventMs < PROSPECTIVE_RESPONSE_BOUNDARY_MS;
+}
+
 export async function retainProspectiveDeliveries({
   dataDir,
   settlementReferences = [],
@@ -568,16 +718,31 @@ export async function retainProspectiveDeliveries({
   sourceVersion = packageVersion,
   maxRecords = PROSPECTIVE_MAX_RECORDS,
 } = {}) {
-  const wanted = [...new Set(settlementReferences.map((reference) => String(reference || "").toLowerCase()).filter((reference) => TX.test(reference)))];
-  if (wanted.length === 0) {
-    const text = await readJournal(dataDir);
-    return parseProspectiveJournal(text);
-  }
+  const explicit = [...new Set(
+    settlementReferences.map((reference) => String(reference || "").toLowerCase()).filter((reference) => TX.test(reference)),
+  )];
+  const existing = parseProspectiveJournal(await readJournal(dataDir));
+  const openKeys = new Set(
+    existing.records.filter((record) => OPEN_TECHNICAL.has(record.technical)).map((record) => record.evidenceKey),
+  );
+  if (explicit.length === 0 && openKeys.size === 0) return existing;
   const stores = await readOrdinaryDeliveryStores(dataDir);
-  const selected = stores.settlements.filter((settlement) => wanted.includes(settlement.settlementReference));
+  const wanted = new Set(explicit);
+  if (openKeys.size > 0) {
+    for (const settlement of stores.settlements) {
+      const key = prospectiveEvidenceKey(settlement.settlementReference);
+      if (key && openKeys.has(key)) wanted.add(settlement.settlementReference);
+    }
+  }
+  const selected = [];
+  const seen = new Set();
+  for (const settlement of stores.settlements) {
+    if (!wanted.has(settlement.settlementReference) || seen.has(settlement.settlementReference)) continue;
+    seen.add(settlement.settlementReference);
+    selected.push(settlement);
+  }
   const observations = [];
   if (selected.length > 0) {
-    const observedAt = new Date(now).toISOString();
     const stamps = selected.map((settlement) => Date.parse(settlement.sourceEventTimestamp)).filter(Number.isFinite);
     const report = stamps.length === 0 ? null : joinOrdinaryDeliveries({
       ...stores,
@@ -589,21 +754,37 @@ export async function retainProspectiveDeliveries({
     for (const settlement of selected) {
       const evidenceKey = prospectiveEvidenceKey(settlement.settlementReference);
       if (!evidenceKey) continue;
+      const prior = existing.records.find((record) => record.evidenceKey === evidenceKey) || null;
       const row = report?.rows.find((item) => item.local?.settlementReference === settlement.settlementReference
         && item.local?.sourceEventId === settlement.sourceEventId) || null;
       const task = taskClassFor(stores, settlement.sourceEventId);
-      observations.push(observationFromJoin(row, {
+      let observation = observationFromJoin(row, {
         evidenceKey,
-        technical: report ? undefined : "unknown",
+        responsePending: responsePending(settlement, now),
         typedResult: typedResultFor(stores, settlement.sourceEventId),
         taskClass: task.taskClass,
         taskConflict: task.taskConflict,
         callerAcceptance: row?.callerAcceptance,
         callerDisposition: row?.callerDisposition,
-      }, observedAt));
+      }, prior?.observedAt || new Date(now).toISOString());
+      if (prior && prior.feedback !== "absent") {
+        observation = { ...observation, feedback: prior.feedback, feedbackSeal: prior.feedbackSeal };
+      }
+      observations.push(observation);
     }
   }
-  return appendProspectiveObservations(dataDir, observations, { now, sourceVersion, maxRecords });
+  if (observations.length > 0) {
+    await appendProspectiveObservations(dataDir, observations, {
+      now,
+      sourceVersion,
+      maxRecords,
+      [ORDINARY_JOIN]: true,
+    });
+  }
+  if (observations.length > 0 || existing.records.length > 0) {
+    await bindStoredCallerResultFeedback(dataDir, { now, sourceVersion });
+  }
+  return parseProspectiveJournal(await readJournal(dataDir));
 }
 
 export async function readProspectiveDelivery({
@@ -630,6 +811,25 @@ export async function readProspectiveDelivery({
 
 export function absentProspectiveDelivery(generatedAt = null) {
   return projectProspectiveDelivery({ journalText: "", admission: null, generatedAt });
+}
+
+export function unavailableProspectiveDelivery(admission = null, generatedAt = null) {
+  const packet = projectProspectiveDelivery({ journalText: "", admission, generatedAt });
+  return {
+    ...packet,
+    decision: "unreadable",
+    comparable: false,
+    technicalRevisions: 0,
+    coverage: {
+      ...packet.coverage,
+      historicalComplete: false,
+      admittedWithoutProspectiveObservation: 0,
+      unadmittedRecords: 0,
+      corruptLines: 0,
+      projectionSaturated: false,
+      evidenceUnavailable: true,
+    },
+  };
 }
 
 function nullable(schema) {
@@ -686,6 +886,7 @@ export function commerceProspectiveDeliveryOutputSchema() {
       declaredTaskClass: countSchema(TASKS),
       duplicateIgnored: { type: "integer", minimum: 0 },
       conflictRestatements: { type: "integer", minimum: 0 },
+      technicalRevisions: { type: "integer", minimum: 0 },
       coverage: {
         type: "object",
         additionalProperties: false,
@@ -696,9 +897,12 @@ export function commerceProspectiveDeliveryOutputSchema() {
           zeroProspectiveIsNotHistoricalZero: { type: "boolean", const: true },
           prospectiveSince: nullable({ type: "string" }),
           admittedWithoutProspectiveObservation: { type: "integer", minimum: 0 },
+          unadmittedRecords: { type: "integer", minimum: 0 },
           corruptLines: { type: "integer", minimum: 0 },
           projectionSaturated: { type: "boolean" },
           retainedEventFilesRequired: { type: "boolean", const: false },
+          evidenceUnavailable: { type: "boolean" },
+          responseBoundaryMs: { type: "integer", const: PROSPECTIVE_RESPONSE_BOUNDARY_MS },
         },
         required: [
           "historicalBackfill",
@@ -707,9 +911,12 @@ export function commerceProspectiveDeliveryOutputSchema() {
           "zeroProspectiveIsNotHistoricalZero",
           "prospectiveSince",
           "admittedWithoutProspectiveObservation",
+          "unadmittedRecords",
           "corruptLines",
           "projectionSaturated",
           "retainedEventFilesRequired",
+          "evidenceUnavailable",
+          "responseBoundaryMs",
         ],
       },
       boundaries: {
@@ -724,6 +931,11 @@ export function commerceProspectiveDeliveryOutputSchema() {
           parentAdmissionRemainsMoneyAuthority: { type: "boolean", const: true },
           noHistoricalBackfill: { type: "boolean", const: true },
           ownerQaIsNotACustomer: { type: "boolean", const: true },
+          callerTechnicalClaimIsNotAuthority: { type: "boolean", const: true },
+          technicalRevisionAuthority: { type: "string", const: "ordinary_delivery_join" },
+          technicalRevisionClock: { type: "string", const: "first_observed_at" },
+          lateTechnicalRevisionIsNotLastWriteWins: { type: "boolean", const: true },
+          noResponseRequiresResponseBoundary: { type: "boolean", const: true },
         },
         required: [
           "technicalValidationIsNotUsefulness",
@@ -734,6 +946,11 @@ export function commerceProspectiveDeliveryOutputSchema() {
           "parentAdmissionRemainsMoneyAuthority",
           "noHistoricalBackfill",
           "ownerQaIsNotACustomer",
+          "callerTechnicalClaimIsNotAuthority",
+          "technicalRevisionAuthority",
+          "technicalRevisionClock",
+          "lateTechnicalRevisionIsNotLastWriteWins",
+          "noResponseRequiresResponseBoundary",
         ],
       },
       recognizedIncomeAtomic: { type: "null" },
@@ -755,6 +972,7 @@ export function commerceProspectiveDeliveryOutputSchema() {
       "declaredTaskClass",
       "duplicateIgnored",
       "conflictRestatements",
+      "technicalRevisions",
       "coverage",
       "boundaries",
       "recognizedIncomeAtomic",

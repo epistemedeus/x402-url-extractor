@@ -518,7 +518,16 @@ export function createCallerResultFeedbackService({
         if (JSON.stringify(record).includes(token)) return refusal("bearer_retained", 500);
         const existing = await readFiles();
         const prior = existing.rows.filter((row) => row.paidEvidenceId === record.paidEvidenceId);
+        async function retainProspectiveCallerFeedback() {
+          try {
+            const { bindStoredCallerResultFeedback } = await import("./commerce-prospective-delivery.mjs");
+            await bindStoredCallerResultFeedback(dataDir);
+          } catch {
+            // Prospective retention cannot refuse an already accepted caller statement.
+          }
+        }
         if (prior.some((row) => sameStatement(row, record))) {
+          await retainProspectiveCallerFeedback();
           return acceptance({
             disposition: record.disposition,
             reasonCategory: record.reasonCategory,
@@ -537,6 +546,7 @@ export function createCallerResultFeedbackService({
           };
         }
         await appendStatement(record);
+        await retainProspectiveCallerFeedback();
         return acceptance({
           disposition: record.disposition,
           reasonCategory: record.reasonCategory,
