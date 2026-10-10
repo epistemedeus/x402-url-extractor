@@ -19,6 +19,10 @@ import {
   projectCommerceSettlementUnit,
   unprojectedSettlementUnit,
 } from "./commerce-settlement-unit.mjs";
+import {
+  absentProspectiveDelivery,
+  commerceProspectiveDeliveryOutputSchema,
+} from "./commerce-prospective-delivery.mjs";
 import checkedUnitCatalog from "./commerce-settlement-unit-catalog.json" with { type: "json" };
 
 const RECORD_SCHEMA = "samedaydesk.commerce-settlement-reconciliation.v1";
@@ -460,11 +464,16 @@ test("commerce-demand schema accepts an old body and an extended unit body", () 
     properties: {
       paymentEvidence: commercePaymentEvidenceOutputSchema(),
       settlementUnit: commerceSettlementUnitOutputSchema(),
+      prospectiveDelivery: commerceProspectiveDeliveryOutputSchema(),
     },
     required: ["paymentEvidence"],
   });
   assert.equal(validateDemand({ paymentEvidence }), true, JSON.stringify(validateDemand.errors));
-  const extended = { paymentEvidence, settlementUnit: unprojectedSettlementUnit() };
+  const extended = {
+    paymentEvidence,
+    settlementUnit: unprojectedSettlementUnit(),
+    prospectiveDelivery: absentProspectiveDelivery(),
+  };
   assert.equal(validateDemand(extended), true, JSON.stringify(validateDemand.errors));
   const qualified = project([row()]);
   assert.equal(validateDemand({ paymentEvidence, settlementUnit: qualified.unit }), true, JSON.stringify(validateDemand.errors));
@@ -478,8 +487,10 @@ test("absent projection and direct JSON round trip stay schema valid", () => {
   assert.deepEqual(JSON.parse(JSON.stringify(unit)), unit);
   const handler = readFileSync(new URL("./server.js", import.meta.url), "utf8");
   assert.match(handler, /settlementUnit: commerceSettlementUnitOutputSchema\(\)/);
+  assert.match(handler, /prospectiveDelivery: commerceProspectiveDeliveryOutputSchema\(\)/);
   assert.match(handler, /const settlementUnit = settlementReconciliation\.settlementUnit \?\? unprojectedSettlementUnit\(\)/);
-  assert.match(handler, /paymentEvidence, settlementReconciliation, settlementUnit/);
+  assert.match(handler, /const prospectiveDelivery = settlementReconciliation\.prospectiveDelivery \?\? absentProspectiveDelivery\(\)/);
+  assert.match(handler, /paymentEvidence, settlementReconciliation, settlementUnit, prospectiveDelivery/);
 });
 
 test("lowercase asset still matches the checked catalog entry", () => {
