@@ -13,10 +13,10 @@
       "sha256": "7bbdfe0f99f8a3cb5a1047d2aa5985e1845c015da793124324200941fd307ab3"
     },
     {
-      "bytes": 2107,
+      "bytes": 2148,
       "kind": "file",
       "path": "README.md",
-      "sha256": "a34eeef10b0288ab4dc7fe771a354958cacf9be656392ffce50411090cf30f0d"
+      "sha256": "00d3e6c9e500e42c2923cce9fbc16629ae2a51a8bb8d2c2428e8220c622e0c7e"
     },
     {
       "bytes": 419,
@@ -25,10 +25,10 @@
       "sha256": "51687074c2846944f603710af12486c30080563ae4af256cd7f7ab490f45d10e"
     },
     {
-      "bytes": 14541,
+      "bytes": 14650,
       "kind": "file",
       "path": "bin/cold-consumer.mjs",
-      "sha256": "8eb658e2c6162e1a4ab6de3f86bd5f2f09e0c41afea84cc54b020943934c3409"
+      "sha256": "fec6953687d43443d37c0769ffdc600c67d8a84da9e83db4a22e6dac13478ca1"
     },
     {
       "bytes": 44488,

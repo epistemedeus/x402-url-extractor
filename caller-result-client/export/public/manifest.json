@@ -23,8 +23,8 @@
       "role": "archive",
       "filename": "samedaydesk-caller-result-0.1.0.tar.gz",
       "relativePath": "samedaydesk-caller-result/0.1.0/samedaydesk-caller-result-0.1.0.tar.gz",
-      "bytes": 23879,
-      "sha256": "2ea58285c37a024e2104fc9a6408d1ac8f0578ba6c1f38ef7778d9a080cf50c6",
+      "bytes": 23929,
+      "sha256": "080ddc4740b98f913423b37343327036586f51d5ba39305ca542df7ccb0f042f",
       "mediaType": "application/gzip",
       "originContentType": "application/gzip",
       "originalUrl": "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.0/samedaydesk-caller-result-0.1.0.tar.gz",
@@ -49,7 +49,7 @@
       ],
       "inventory": {
         "path": "inventories/samedaydesk-caller-result-0.1.0.json",
-        "fileSha256": "c6010905bfa5f7714a9835bae54dc129d2127edc5320f9bc7d32e44b5b0d2cd9",
+        "fileSha256": "8882e769e6070c6957cd32767714b5c6810a84457fb229273c7982638b09b194",
         "memberCount": 12
       }
     },

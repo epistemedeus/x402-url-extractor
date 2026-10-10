@@ -112,6 +112,7 @@ async function challengeFor(mcpUrl, name, args) {
 async function openCaller(mcpUrl) {
   const sdk = new Client({ name: "samedaydesk-caller-result", version: "0.1.0" });
   await sdk.connect(new StreamableHTTPClientTransport(new URL(mcpUrl)));
+  await sdk.listTools();
   const wrapped = new x402MCPClient(sdk, {
     async handlePaymentResponse() {
       return { recovered: false };
@@ -160,7 +161,9 @@ async function httpSelfCheck() {
       }), { status: 200, headers: { "content-type": "application/json" } });
     },
   });
-  if (!independent(reported)) fail("http_accepted_bound");
+  if (reported.accepted !== true || reported.bound !== false || Object.hasOwn(reported, "parent")) {
+    fail("http_accepted_bound");
+  }
   if (result.delivered !== true) fail("http_delivery_lost");
   if (posts.length !== 1 || posts[0] !== `https://agents.samedaydesk.com${CALLER_RESULT_FEEDBACK_PATH}`) {
     fail("http_origin");
@@ -198,7 +201,7 @@ async function localRefusals() {
   });
   const absent = readMcpCallerResultCapability({ content: [{ type: "text", text: "{}" }] });
   if (link.reason !== "unbounded_field") fail("link_not_refused");
-  if (foreign.reason !== "foreign_tool") fail("foreign_tool_not_refused");
+  if (foreign.reason !== "contract_rejected") fail("foreign_tool_not_refused");
   if (absent.reason !== "absent") fail("absent_not_refused");
   const malformed = await reportMcpCallerResult({
     async callTool() { fail("malformed_reached_transport"); },

@@ -21,6 +21,8 @@ import {
   MCP_CALLER_RESULT_META_KEY,
   MCP_CALLER_RESULT_METHOD,
   MCP_CALLER_RESULT_TOOL,
+  callerResultFeedbackPublicContract,
+  mcpCallerResultFeedbackPublicContract,
 } from "./caller-result-client/src/contract.mjs";
 import { isSupportedTarget } from "./http-delivery-evidence/contract.mjs";
 import { digestMcpDeliveryBinding } from "./http-delivery-evidence/digest.mjs";

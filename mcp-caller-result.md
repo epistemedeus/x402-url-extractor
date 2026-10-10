@@ -10,6 +10,7 @@ import { bindPaidMcpCallerResult } from "./src/mcp-caller-result.mjs";
 
 const sdk = new Client({ name: "caller", version: "1" });
 await sdk.connect(new StreamableHTTPClientTransport(new URL(mcpUrl)));
+await sdk.listTools();
 const paid = new x402MCPClient(sdk, {
   async handlePaymentResponse() {
     return { recovered: false };
@@ -26,4 +27,4 @@ if (purchase.capability.present) {
 }
 ```
 
-Official `callTool` omits `_meta`. The helper reads the sealed capability from `onAfterPayment` and associates it with that result's content array. Reporting uses the wrapper's raw `.client` and does not pay again. `accepted` means the statement was captured. `bound` is true only when the current parent admits that settlement. A tool with an output schema rejects the unpaid probe; pay it with `caller.payWithPayment(name, args, payment)`. Skipping the statement leaves the purchase. A failed report leaves the delivered result. The same package exports `bindCallerResultFeedback` and `reportCallerResult` for the existing HTTP header.
+Official `callTool` omits `_meta`. The helper reads the sealed capability from `onAfterPayment` and associates it with that result's content array. Reporting uses the wrapper's raw `.client` and does not pay again. `accepted` means the statement was captured. `bound` is true only when the current parent admits that settlement. A tool with an output schema rejects the unpaid probe after `listTools`; pay it with `caller.payWithPayment(name, args, payment)`. Skipping the statement leaves the purchase. A failed report leaves the delivered result. The same package exports `bindCallerResultFeedback` and `reportCallerResult` for the existing HTTP header.

@@ -287,7 +287,10 @@ test("installed caller consumer reaches the mounted parent without merchant sour
   assert.equal(typeof foreignTool, "string");
   assert.equal(typeof httpChannel, "string");
   const facilitator = await startFakeFacilitator();
-  let merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url, feedbackKey, actorSecret });
+  let merchant = null;
+  let consumer = null;
+  try {
+  merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url, feedbackKey, actorSecret });
   const deadPort = await unusedPort();
   const inputPath = path.join(work, "input.json");
   await writeFile(inputPath, JSON.stringify({
@@ -298,7 +301,7 @@ test("installed caller consumer reaches the mounted parent without merchant sour
     deadPort,
     refusals: { expired, foreignTool, httpChannel },
   }));
-  const consumer = spawn(process.execPath, ["bin/cold-consumer.mjs", "input.json"], {
+  consumer = spawn(process.execPath, ["bin/cold-consumer.mjs", "input.json"], {
     cwd: work,
     env: { PATH: process.env.PATH, HOME: process.env.HOME },
     stdio: ["ignore", "pipe", "pipe"],
@@ -398,7 +401,10 @@ test("installed caller consumer reaches the mounted parent without merchant sour
   assert.equal(coldPacket.declaredFeedback.declared_not_useful, 1);
   assert.equal(stdout.includes(expired), false);
   assert.equal(stdout.includes("http://"), false);
-  await stopChild(merchant.child);
-  await facilitator.close();
-  await rm(root, { recursive: true, force: true });
+  } finally {
+    if (consumer && consumer.exitCode === null && consumer.signalCode === null) consumer.kill("SIGTERM");
+    if (merchant?.child) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(root, { recursive: true, force: true });
+  }
 });
