@@ -2939,6 +2939,20 @@ async function runPublication({ hadNewRecords, runFailed }) {
 // classification (OPERATIONAL_SPLIT, PINNED_PARENT_APPEND).
 // ---------------------------------------------------------------------------
 
+async function readProspectiveDeliveryForStatus(dataDir, admission) {
+  try {
+    const { readProspectiveDelivery } = await import("./commerce-prospective-delivery.mjs");
+    return await readProspectiveDelivery({
+      dataDir,
+      admission,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch {
+    const { absentProspectiveDelivery } = await import("./commerce-prospective-delivery.mjs");
+    return absentProspectiveDelivery();
+  }
+}
+
 export function createCommerceSettlementReconciler({
   actorSecret = process.env.COMMERCE_ACTOR_SECRET || "",
   asset = BASE_USDC,
@@ -3027,6 +3041,7 @@ export function createCommerceSettlementReconciler({
         admissionCutId: admission.admissionCutId,
         paymentClassBySourceEventId,
       }),
+      prospectiveDelivery: await readProspectiveDeliveryForStatus(dataDir, admission),
     };
   }
 
@@ -3124,6 +3139,18 @@ export function createCommerceSettlementReconciler({
         }
 
         for (const record of result.newRecords) noteJournalWrite(dataDir, "settlements", record);
+
+        try {
+          if (result.newRecords.length > 0) {
+            const { retainProspectiveDeliveries } = await import("./commerce-prospective-delivery.mjs");
+            await retainProspectiveDeliveries({
+              dataDir,
+              settlementReferences: result.newRecords.map((record) => record.settlementReference),
+            });
+          }
+        } catch {
+          // Prospective retention cannot change ledger bytes, scheduling, or the parent catch.
+        }
 
         // Parent operational success transition happens at the same logical
         // point with identical fields and values as original parent behavior.

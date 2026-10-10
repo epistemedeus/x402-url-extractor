@@ -12,6 +12,7 @@ const REQUIRED_NONLIVE_FILES = Object.freeze([
   "commerce-trust.test.mjs",
   "commerce-payment-evidence.test.mjs",
   "commerce-settlement-unit.test.mjs",
+  "commerce-prospective-delivery.test.mjs",
   "commerce-settlement-reconciler.test.mjs",
   "commerce-settlement-source-delivery.test.mjs",
   "settlement-proof.test.mjs",

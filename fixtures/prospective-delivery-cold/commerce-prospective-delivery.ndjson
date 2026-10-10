@@ -1,0 +1,2 @@
+{"schemaVersion":"samedaydesk.commerce-prospective-delivery-header.v1","captureVersion":"prospective_delivery_v1","prospectiveSince":"2026-10-10T12:00:00.000Z","sourceVersion":"1.23.51"}
+{"schemaVersion":"samedaydesk.commerce-prospective-delivery-record.v1","evidenceKey":"dc70486ba63e5111f3e401f6c83814074f2b34f44cd652e34aecce72ed18fb71","technical":"validated_response","channel":"http","taskClass":"absent","feedback":"absent","feedbackSeal":"none","observedAt":"2026-10-10T12:06:00.000Z"}
