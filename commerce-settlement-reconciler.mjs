@@ -27,6 +27,7 @@ import {
   summarizeSettlementSourceDelivery,
 } from "./commerce-events.mjs";
 import { isProxy } from "node:util/types";
+import { projectCommerceSettlementUnit } from "./commerce-settlement-unit.mjs";
 
 const SCHEMA_VERSION = "samedaydesk.commerce-settlement-reconciliation.v1";
 const TRANSACTION_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
@@ -2987,6 +2988,7 @@ export function createCommerceSettlementReconciler({
       })
       : new Map();
     const run = lastRun || { lastRunAt: null, lastError: null, lastIssueCounts: {} };
+    const ledgerSummary = summarizeCommerceSettlementLedger(ledger, { paymentClassBySourceEventId });
     return {
       enabled,
       settlementEvidenceSince: Number.isFinite(Date.parse(settlementEvidenceSince))
@@ -2996,7 +2998,8 @@ export function createCommerceSettlementReconciler({
       lastError: run.lastError,
       issues: run.lastIssueCounts,
       lastScan,
-      ledger: summarizeCommerceSettlementLedger(ledger, { paymentClassBySourceEventId }),
+      ledger: ledgerSummary,
+      settlementUnit: projectCommerceSettlementUnit(ledger, { parentSummary: ledgerSummary }),
     };
   }
 
