@@ -1,0 +1,81 @@
+import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+const PKG = join(dirname(fileURLToPath(import.meta.url)), "..");
+const MERCHANT = join(PKG, "..", "..");
+const ready = existsSync(join(MERCHANT, "server.js")) && existsSync(join(MERCHANT, "node_modules"));
+
+test("loopback caller receives the server token and prospective binding", { timeout: 180_000, skip: ready ? false : "merchant runtime is not installed" }, () => {
+  const run = spawnSync(process.execPath, ["recipes/caller-result-feedback-loopback.mjs"], {
+    cwd: PKG,
+    encoding: "utf8",
+    timeout: 170_000,
+  });
+  assert.equal(run.status, 0, run.stderr || run.stdout);
+  assert.equal(run.stdout.includes("evil.example"), false);
+  assert.equal(/[A-Za-z0-9_-]{20,1500}\.[A-Za-z0-9_-]{43}/.test(run.stdout), false);
+  const summary = JSON.parse(run.stdout);
+  assert.equal(summary.recipe, "caller-result-feedback-loopback");
+  assert.equal(summary.productionPayment, false);
+  assert.equal(summary.productionHost, false);
+  assert.equal(summary.chainTransfer, false);
+  assert.equal(summary.productionSigner, false);
+  assert.equal(summary.host, "loopback");
+  assert.equal(summary.purchases, 5);
+  assert.deepEqual(summary.outcomes, Array(5).fill("valid_delivered"));
+  assert.deepEqual(summary.technicalDelivery, Array(5).fill("useful"));
+  assert.deepEqual(summary.taskSatisfied, Array(5).fill(false));
+  assert.equal(summary.postsBeforeExplicitReport, 0);
+  assert.equal(summary.paymentSends, 5);
+  assert.equal(summary.paymentSendsAfterReports, 5);
+  assert.equal(summary.bearerMatchedPaidCapture, true);
+  assert.equal(summary.seededFailure.code, "disposition_rejected");
+  assert.equal(summary.useful.accepted, true);
+  assert.equal(summary.useful.disposition, "useful");
+  assert.equal(summary.useful.usefulness, "unknown");
+  assert.equal(summary.useful.paymentAttempted, false);
+  assert.equal(summary.duplicate.idempotentReplay, true);
+  assert.equal(summary.conflict.code, "conflicting_statement");
+  assert.equal(summary.conflict.retainedDisposition, "useful");
+  assert.equal(summary.conflict.repurchaseAuthorized, false);
+  assert.equal(summary.notUseful.disposition, "not_useful");
+  assert.equal(summary.notUseful.usefulness, "unknown");
+  assert.equal(summary.routeMismatch, "route_mismatch");
+  assert.equal(summary.restoredReplay.idempotentReplay, true);
+  assert.equal(summary.foreign.code, "missing_capture");
+  assert.equal(summary.expired.code, "expired_capability");
+  assert.equal(summary.reportFailure.code, "transport_failed");
+  assert.equal(summary.reportFailure.paymentAttempted, false);
+  assert.equal(summary.absentPurchaseReported, false);
+  assert.equal(summary.rotation.rotated, true);
+  assert.equal(summary.rotation.restarted, true);
+  assert.equal(summary.rotation.replay.idempotentReplay, true);
+  assert.equal(summary.evilFollowed, false);
+  assert.equal(summary.taskSubmitted, false);
+  assert.equal(summary.visitorEntryInvoked, false);
+  assert.equal(summary.beforeResponse.technical.unknown, 5);
+  assert.equal(summary.beforeResponse.declaredFeedback.absent, 5);
+  assert.equal(summary.beforeResponse.technicalRevisions, 0);
+  assert.equal(summary.afterResponse.technical.validated_response, 5);
+  assert.equal(summary.afterResponse.declaredFeedback.absent, 5);
+  assert.equal(summary.afterResponse.technicalRevisions, 5);
+  assert.equal(summary.afterResponse.usefulness, "unknown");
+  assert.equal(summary.cold.decision, "prospective");
+  assert.equal(summary.cold.comparable, true);
+  assert.equal(summary.cold.usefulness, "unknown");
+  assert.equal(summary.cold.technical.validated_response, 5);
+  assert.equal(summary.cold.declaredFeedback.declared_useful, 2);
+  assert.equal(summary.cold.declaredFeedback.declared_not_useful, 1);
+  assert.equal(summary.cold.declaredFeedback.absent, 2);
+  assert.equal(summary.cold.declaredTaskClass.absent, 5);
+  assert.equal(summary.cold.amountAtomic, "25000");
+  assert.equal(summary.cold.reconciledSettlements, 5);
+  assert.equal(summary.cold.historicalBackfill, false);
+  assert.equal(summary.cold.customerAttribution, null);
+  assert.equal(summary.cold.technicalValidationIsNotUsefulness, true);
+  assert.equal(summary.hostedSource.includes("not contacted"), true);
+});
