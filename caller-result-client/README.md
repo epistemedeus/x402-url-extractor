@@ -1,0 +1,36 @@
+# SameDayDesk caller result
+
+Optional free statement for one paid result. Unpack the archive, install the pinned dependencies, and use the helper below. `accepted` means the statement was captured. `bound` is true only when the current parent admits that settlement. Skipping the statement leaves the purchase. A failed report leaves the delivered result.
+
+```bash
+mkdir samedaydesk-caller-result && tar -xzf samedaydesk-caller-result-0.1.0.tar.gz -C samedaydesk-caller-result
+cd samedaydesk-caller-result
+npm ci
+```
+
+```js
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { x402MCPClient } from "@x402/mcp";
+import { bindPaidMcpCallerResult } from "./src/mcp-caller-result.mjs";
+
+const sdk = new Client({ name: "caller", version: "1" });
+await sdk.connect(new StreamableHTTPClientTransport(new URL(mcpUrl)));
+await sdk.listTools();
+const paid = new x402MCPClient(sdk, configuredPaymentClient, { autoPayment: false });
+const caller = bindPaidMcpCallerResult(paid);
+const purchase = await caller.payWithPayment("morpho_position", args, authorizedPayment);
+if (purchase.capability.present && callerDecision) {
+  await caller.report({
+    token: purchase.capability.token,
+    disposition: callerDecision.disposition,
+    reasonCategory: callerDecision.reasonCategory,
+  });
+}
+```
+
+`mcpUrl`, `args`, `configuredPaymentClient` and `authorizedPayment` come from your existing authorized task/payment flow. `callerDecision` is your optional decision after checking whether the delivered result helped the task; leave it null to skip reporting. A successful schema or payment does not choose a useful/not_useful statement. This helper does not initialize a wallet or decide to buy. To inspect installation or a no-fit, no production purchase is needed.
+
+Official `@x402/mcp` `callTool` omits `_meta`. This helper reads the sealed capability from `onAfterPayment` and keeps it with that result's content array. Reporting calls the raw MCP SDK client on the wrapper (`.client`) and does not pay again. A tool that advertises an output schema rejects the unpaid probe after `listTools`; pass an explicit payment to `caller.payWithPayment(name, args, payment)`. The same package exports `bindCallerResultFeedback` and `reportCallerResult` for the existing HTTP header on the paid response's origin.
+
+Pinned dependencies: `@modelcontextprotocol/sdk` 1.30.0 and `@x402/mcp` 2.16.0. License MIT. This package is private. Publication of an npm tarball is a separate Root action and is not required to install the archive.

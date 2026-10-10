@@ -1,0 +1,76 @@
+{
+  "members": [
+    {
+      "bytes": 1068,
+      "kind": "file",
+      "path": "LICENSE",
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c"
+    },
+    {
+      "bytes": 880,
+      "kind": "file",
+      "path": "PIN.json",
+      "sha256": "7bbdfe0f99f8a3cb5a1047d2aa5985e1845c015da793124324200941fd307ab3"
+    },
+    {
+      "bytes": 2633,
+      "kind": "file",
+      "path": "README.md",
+      "sha256": "6b309ff155ef21a51757685c5dd99eeb626427025bc6be4f2e0686294cd7daa8"
+    },
+    {
+      "bytes": 419,
+      "kind": "file",
+      "path": "SOURCE-NOTICE.txt",
+      "sha256": "51687074c2846944f603710af12486c30080563ae4af256cd7f7ab490f45d10e"
+    },
+    {
+      "bytes": 14650,
+      "kind": "file",
+      "path": "bin/cold-consumer.mjs",
+      "sha256": "fec6953687d43443d37c0769ffdc600c67d8a84da9e83db4a22e6dac13478ca1"
+    },
+    {
+      "bytes": 44488,
+      "kind": "file",
+      "path": "package-lock.json",
+      "sha256": "b8564cb6d26713cf1523689b9c92f2f03b29a999c3f07dcae0306ac376272ce9"
+    },
+    {
+      "bytes": 534,
+      "kind": "file",
+      "path": "package.json",
+      "sha256": "4dfb93975921da3c8afa93adf2b2891c9189c03d676c1e0bbf720ecf75dbdec1"
+    },
+    {
+      "bytes": 1953,
+      "kind": "file",
+      "path": "src/contract.mjs",
+      "sha256": "59c40aafbcac837a99081c9345c84019807edfb3affe83ee2c1dc2e6960e96bc"
+    },
+    {
+      "bytes": 12703,
+      "kind": "file",
+      "path": "src/http-caller-result.mjs",
+      "sha256": "8fe3eee467a3326696d8a1bb7e52d16fe393fb536973e5378f5a6333aef5ee94"
+    },
+    {
+      "bytes": 703,
+      "kind": "file",
+      "path": "src/index.mjs",
+      "sha256": "2a4fc79cc999410c1f16b471c64a58e2f924cf74c53eeafeaa2f89c1e099325c"
+    },
+    {
+      "bytes": 7664,
+      "kind": "file",
+      "path": "src/mcp-caller-result.mjs",
+      "sha256": "286ef8adf64e089b8eb18930a1872c81cbb1d9155cd6add17aeeaa3ee89cef4b"
+    },
+    {
+      "bytes": 5401,
+      "kind": "file",
+      "path": "test/client.test.mjs",
+      "sha256": "b79fe15ff7ca33e89c9408b50e839fab11a3c961f1455796ff49ea9da924558c"
+    }
+  ]
+}
