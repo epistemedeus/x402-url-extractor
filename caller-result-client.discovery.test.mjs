@@ -173,7 +173,9 @@ test("a local machine entry serves the released client and an offline caller can
     assert.match(document, /bindCallerResultFeedback/);
     assert.match(document, /reportCallerResult/);
     assert.match(document, /callTool omits _meta/);
-    assert.match(document, /is not itself useful/);
+    assert.match(document, /are separate facts/);
+    assert.match(document, /Usefulness stays unknown until you choose/);
+    assert.doesNotMatch(document, /every result is useful/i);
     assert.equal(document.includes("createCallerResultFeedback"), false);
     assert.equal(document.includes(entry.archiveUrl), true);
     assert.equal(document.includes(entry.sha256), true);
