@@ -1,0 +1,21 @@
+{
+  "name": "samedaydesk-caller-result",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Optional free statement for one paid SameDayDesk HTTP or native MCP result.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./contract": "./src/contract.mjs",
+    "./http": "./src/http-caller-result.mjs",
+    "./mcp": "./src/mcp-caller-result.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "@x402/mcp": "2.16.0"
+  },
+  "license": "MIT"
+}

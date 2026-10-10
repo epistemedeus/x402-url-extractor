@@ -8,6 +8,20 @@ import path from "node:path";
 
 import { admitCommerceJournal } from "./commerce-journal-admission.mjs";
 import { USEFULNESS_UNKNOWN } from "./http-delivery-evidence/classify.mjs";
+import {
+  CALLER_RESULT_DISPOSITIONS,
+  CALLER_RESULT_FEEDBACK_HEADER,
+  CALLER_RESULT_FEEDBACK_LINK,
+  CALLER_RESULT_FEEDBACK_MCP_SCHEMA,
+  CALLER_RESULT_FEEDBACK_PATH,
+  CALLER_RESULT_FEEDBACK_SCHEMA,
+  CALLER_RESULT_REASON_CATEGORIES,
+  CALLER_RESULT_TOKEN_RE as TOKEN_RE,
+  CALLER_RESULT_USEFULNESS,
+  MCP_CALLER_RESULT_META_KEY,
+  MCP_CALLER_RESULT_METHOD,
+  MCP_CALLER_RESULT_TOOL,
+} from "./caller-result-client/src/contract.mjs";
 import { isSupportedTarget } from "./http-delivery-evidence/contract.mjs";
 import { digestMcpDeliveryBinding } from "./http-delivery-evidence/digest.mjs";
 import {
@@ -24,33 +38,36 @@ import {
   openStore,
 } from "./http-delivery-evidence/store.mjs";
 
-export const CALLER_RESULT_FEEDBACK_PATH = "/commerce/caller-result-feedback";
-export const CALLER_RESULT_FEEDBACK_HEADER = "x-samedaydesk-caller-result-feedback";
-export const CALLER_RESULT_FEEDBACK_LINK = `</commerce/caller-result-feedback>; rel="caller-result-feedback"`;
-export const CALLER_RESULT_FEEDBACK_SCHEMA = "samedaydesk.caller-result-feedback.v1";
-export const CALLER_RESULT_FEEDBACK_MCP_SCHEMA = "samedaydesk.caller-result-feedback.mcp.v1";
-export const MCP_CALLER_RESULT_TOOL = "report_caller_result";
-export const MCP_CALLER_RESULT_META_KEY = "samedaydesk/mcp-caller-result";
-export const MCP_CALLER_RESULT_METHOD = "tools/call";
+if (USEFULNESS_UNKNOWN !== CALLER_RESULT_USEFULNESS) {
+  throw new Error("caller_result_usefulness_diverged");
+}
+
+export {
+  CALLER_RESULT_DISPOSITIONS,
+  CALLER_RESULT_FEEDBACK_HEADER,
+  CALLER_RESULT_FEEDBACK_LINK,
+  CALLER_RESULT_FEEDBACK_MCP_SCHEMA,
+  CALLER_RESULT_FEEDBACK_PATH,
+  CALLER_RESULT_FEEDBACK_SCHEMA,
+  CALLER_RESULT_REASON_CATEGORIES,
+  CALLER_RESULT_USEFULNESS,
+  MCP_CALLER_RESULT_META_KEY,
+  MCP_CALLER_RESULT_METHOD,
+  MCP_CALLER_RESULT_TOOL,
+  callerResultFeedbackPublicContract,
+  mcpCallerResultFeedbackPublicContract,
+} from "./caller-result-client/src/contract.mjs";
+
 export const CALLER_RESULT_FEEDBACK_FILENAME = "caller-result-feedback.ndjson";
 export const CALLER_RESULT_FEEDBACK_ROTATED_FILENAME = "caller-result-feedback.1.ndjson";
 export const CALLER_RESULT_FEEDBACK_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const CALLER_RESULT_FEEDBACK_DURABILITY = "local-filesystem-fsync-v1";
-export const CALLER_RESULT_DISPOSITIONS = Object.freeze(["useful", "not_useful"]);
-export const CALLER_RESULT_REASON_CATEGORIES = Object.freeze([
-  "matched_task",
-  "saved_a_step",
-  "wrong_output",
-  "missing_field",
-  "not_actionable",
-]);
 
 const DISPOSITIONS = new Set(CALLER_RESULT_DISPOSITIONS);
 const REASONS = new Set(CALLER_RESULT_REASON_CATEGORIES);
 const HEX64 = /^[0-9a-f]{64}$/;
 const TX = /^0x[0-9a-fA-F]{64}$/;
 const METHODS = new Set(["GET", "POST"]);
-const TOKEN_RE = /^[A-Za-z0-9_-]{20,1500}\.[A-Za-z0-9_-]{43}$/;
 const STATEMENT_ID_RE = /^crf_[0-9a-f]{32}$/;
 const PARENT_LEDGER_SCHEMA = "samedaydesk.commerce-settlement-reconciliation.v1";
 const PARENT_BASE_USDC = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
@@ -234,20 +251,6 @@ export function readCallerResultFeedbackToken(token, key, now = Date.now()) {
   };
 }
 
-export function mcpCallerResultFeedbackPublicContract() {
-  return {
-    optional: true,
-    charged: false,
-    payerIdentity: false,
-    usefulness: USEFULNESS_UNKNOWN,
-    channel: "mcp",
-    schema: CALLER_RESULT_FEEDBACK_MCP_SCHEMA,
-    tool: MCP_CALLER_RESULT_TOOL,
-    dispositions: [...CALLER_RESULT_DISPOSITIONS],
-    reasonCategories: [...CALLER_RESULT_REASON_CATEGORIES],
-  };
-}
-
 function mcpFeedbackClaims(observation) {
   if (!isSealedDeliveryObservation(observation)) return null;
   if (observation.source !== "mcp_tool_result" || observation.applicationIsError === true) return null;
@@ -401,20 +404,6 @@ export function attachCallerResultFeedbackHeader(res, input = {}) {
   } catch {
     return false;
   }
-}
-
-export function callerResultFeedbackPublicContract() {
-  return {
-    optional: true,
-    charged: false,
-    payerIdentity: false,
-    usefulness: USEFULNESS_UNKNOWN,
-    method: "POST",
-    path: CALLER_RESULT_FEEDBACK_PATH,
-    header: CALLER_RESULT_FEEDBACK_HEADER,
-    dispositions: [...CALLER_RESULT_DISPOSITIONS],
-    reasonCategories: [...CALLER_RESULT_REASON_CATEGORIES],
-  };
 }
 
 export function callerResultFeedbackMetaFromHeaders(headers) {

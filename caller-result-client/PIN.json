@@ -1,0 +1,27 @@
+{
+  "schema": "samedaydesk.caller-result-client.pin.v1",
+  "package": "samedaydesk-caller-result",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "sourceRepository": "https://github.com/epistemedeus/x402-url-extractor",
+  "sourcePaths": [
+    "caller-result-client/src/contract.mjs",
+    "caller-result-client/src/http-caller-result.mjs",
+    "caller-result-client/src/mcp-caller-result.mjs",
+    "caller-result-client/src/index.mjs",
+    "caller-result-client/bin/cold-consumer.mjs"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "@x402/mcp": "2.16.0"
+  },
+  "contract": {
+    "httpSchema": "samedaydesk.caller-result-feedback.v1",
+    "mcpSchema": "samedaydesk.caller-result-feedback.mcp.v1",
+    "tool": "report_caller_result",
+    "path": "/commerce/caller-result-feedback"
+  },
+  "node": "22.23.3",
+  "publication": "draft-archive"
+}
