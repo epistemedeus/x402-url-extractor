@@ -29,7 +29,7 @@ import { x402ResourceServer } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { createPaymentWrapper } from "@x402/mcp";
 import { sealObservedMcpToolResult } from "./http-delivery-evidence/mcp-delivery.mjs";
-import { callerResultFeedbackMetaFromHeaders } from "./caller-result-feedback.mjs";
+import { attachMcpCallerResultFeedback, callerResultFeedbackMetaFromHeaders } from "./caller-result-feedback.mjs";
 import { classifyDeclaredAgentDiscoverySource, listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
 import { readExtractBatchInputRefusalCode } from "./extract-batch.mjs";
 import {
@@ -529,10 +529,35 @@ function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) 
   };
 }
 
-function decorateTransportSend(transport, attempt) {
+function sealToolResultForSend(message, attempt, callerResultFeedbackKey) {
+  if (!attempt || !isJsonRpcResponseMessage(message)) return null;
+  if (classifyOutboundKind(message) !== "tool_result") return null;
+  try {
+    const delivery = sealObservedMcpToolResult({
+      tool: attempt.binding?.tool,
+      productSku: attempt.binding?.productSku,
+      resource: attempt.binding?.resource,
+      issuedOfferDigest: attempt.binding?.issuedOfferDigest,
+      callId: Object.hasOwn(message, "id") ? message.id : null,
+      result: message.result,
+      settlementReference: attempt.readSettlementReference?.() || null,
+    });
+    attachMcpCallerResultFeedback(message.result, {
+      key: callerResultFeedbackKey,
+      observation: delivery,
+      eligible: attempt.acceptsCallerResultFeedback?.() === true,
+    });
+    return delivery;
+  } catch {
+    return null;
+  }
+}
+
+function decorateTransportSend(transport, attempt, callerResultFeedbackKey = "") {
   const originalSend = transport.send;
   let used = false;
   transport.send = async function typedSend(message, options) {
+    const prepared = used ? null : sealToolResultForSend(message, attempt, callerResultFeedbackKey);
     let delegateResult;
     try {
       delegateResult = await originalSend.call(this, message, options);
@@ -550,16 +575,7 @@ function decorateTransportSend(transport, attempt) {
       if (kind === "tool_result") {
         try {
           if (message.result?.isError === true) attempt.overrideFinalApplicationError();
-          const delivery = sealObservedMcpToolResult({
-            tool: attempt.binding?.tool,
-            productSku: attempt.binding?.productSku,
-            resource: attempt.binding?.resource,
-            issuedOfferDigest: attempt.binding?.issuedOfferDigest,
-            callId: Object.hasOwn(message, "id") ? message.id : null,
-            result: message.result,
-            settlementReference: attempt.readSettlementReference?.() || null,
-          });
-          if (delivery) attempt.noteToolDelivery(delivery);
+          if (prepared) attempt.noteToolDelivery(prepared);
         } catch {
           // Delivery capture must not change the MCP response.
         }
@@ -628,6 +644,7 @@ export async function mountMcp(app, {
   streamableHttpOptions = undefined,
   configureResourceServer = null,
   httpBaseUrl = null,
+  callerResultFeedbackKey = "",
 } = {}) {
   const typedEnabled = typedTelemetry?.enabled === true;
   const jsonResponse = streamableHttpOptions?.enableJsonResponse === true;
@@ -805,7 +822,7 @@ export async function mountMcp(app, {
     }
     const server = makeServer(req.body);
     const transport = new StreamableHTTPServerTransport(transportOptions);
-    if (created.attempt) decorateTransportSend(transport, created.attempt);
+    if (created.attempt) decorateTransportSend(transport, created.attempt, callerResultFeedbackKey);
     res.on("close", () => {
       try { transport.close(); } catch { /* noop */ }
       try { server.close?.(); } catch { /* noop */ }
@@ -848,6 +865,13 @@ export async function mountMcp(app, {
     };
   }
   return mountResult;
+}
+
+export function mcpCallArguments(fallback) {
+  const request = mcpHttpRequestAls.getStore();
+  const raw = request?.body?.params?.arguments;
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw;
+  return fallback && typeof fallback === "object" && !Array.isArray(fallback) ? fallback : {};
 }
 
 export { mcpTypedAttemptAls, productSkuForTool, resourceForTool };

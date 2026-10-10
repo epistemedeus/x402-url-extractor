@@ -9,21 +9,29 @@ import path from "node:path";
 import { admitCommerceJournal } from "./commerce-journal-admission.mjs";
 import { USEFULNESS_UNKNOWN } from "./http-delivery-evidence/classify.mjs";
 import { isSupportedTarget } from "./http-delivery-evidence/contract.mjs";
+import { digestMcpDeliveryBinding } from "./http-delivery-evidence/digest.mjs";
 import {
   PAID_EVIDENCE_FILENAME,
   PAID_EVIDENCE_ID_PATTERN,
   isHistoricalV1PaidSuccess,
   parseNdjson,
 } from "./http-delivery-evidence/historical.mjs";
+import { MCP_MORPHO_RESOURCE, MCP_MORPHO_TOOL } from "./http-delivery-evidence/mcp-delivery.mjs";
+import { isSealedDeliveryObservation } from "./http-delivery-evidence/observation.mjs";
 import {
   VALIDATION_FILENAME,
   canonicalizeValidationRecord,
+  openStore,
 } from "./http-delivery-evidence/store.mjs";
 
 export const CALLER_RESULT_FEEDBACK_PATH = "/commerce/caller-result-feedback";
 export const CALLER_RESULT_FEEDBACK_HEADER = "x-samedaydesk-caller-result-feedback";
 export const CALLER_RESULT_FEEDBACK_LINK = `</commerce/caller-result-feedback>; rel="caller-result-feedback"`;
 export const CALLER_RESULT_FEEDBACK_SCHEMA = "samedaydesk.caller-result-feedback.v1";
+export const CALLER_RESULT_FEEDBACK_MCP_SCHEMA = "samedaydesk.caller-result-feedback.mcp.v1";
+export const MCP_CALLER_RESULT_TOOL = "report_caller_result";
+export const MCP_CALLER_RESULT_META_KEY = "samedaydesk/mcp-caller-result";
+export const MCP_CALLER_RESULT_METHOD = "tools/call";
 export const CALLER_RESULT_FEEDBACK_FILENAME = "caller-result-feedback.ndjson";
 export const CALLER_RESULT_FEEDBACK_ROTATED_FILENAME = "caller-result-feedback.1.ndjson";
 export const CALLER_RESULT_FEEDBACK_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -204,6 +212,158 @@ export function readCallerResultFeedbackToken(token, key, now = Date.now()) {
   };
 }
 
+export function mcpCallerResultFeedbackPublicContract() {
+  return {
+    optional: true,
+    charged: false,
+    payerIdentity: false,
+    usefulness: USEFULNESS_UNKNOWN,
+    channel: "mcp",
+    schema: CALLER_RESULT_FEEDBACK_MCP_SCHEMA,
+    tool: MCP_CALLER_RESULT_TOOL,
+    dispositions: [...CALLER_RESULT_DISPOSITIONS],
+    reasonCategories: [...CALLER_RESULT_REASON_CATEGORIES],
+  };
+}
+
+function mcpFeedbackClaims(observation) {
+  if (!isSealedDeliveryObservation(observation)) return null;
+  if (observation.source !== "mcp_tool_result" || observation.applicationIsError === true) return null;
+  if (observation.tool !== MCP_MORPHO_TOOL || observation.resource !== MCP_MORPHO_RESOURCE) return null;
+  if (typeof observation.settlementReference !== "string" || !TX.test(observation.settlementReference)) return null;
+  if (!HEX64.test(observation.callDigest || "") || !HEX64.test(observation.issuedOfferDigest || "")) return null;
+  if (!HEX64.test(observation.responseDigest || "")) return null;
+  const requestDigest = digestMcpDeliveryBinding({
+    tool: observation.tool,
+    callDigest: observation.callDigest,
+    issuedOfferDigest: observation.issuedOfferDigest,
+  });
+  if (!HEX64.test(requestDigest)) return null;
+  return {
+    tool: observation.tool,
+    resource: observation.resource,
+    requestDigest,
+    responseDigest: observation.responseDigest,
+    callDigest: observation.callDigest,
+    issuedOfferDigest: observation.issuedOfferDigest,
+    settlementReference: observation.settlementReference.toLowerCase(),
+  };
+}
+
+export function issueMcpCallerResultFeedbackToken({
+  key,
+  observation,
+  now = Date.now(),
+  ttlMs = CALLER_RESULT_FEEDBACK_TTL_MS,
+} = {}) {
+  try {
+    if (!keyReady(key)) return null;
+    const bound = mcpFeedbackClaims(observation);
+    if (!bound) return null;
+    if (!Number.isSafeInteger(ttlMs) || ttlMs <= 0 || ttlMs > CALLER_RESULT_FEEDBACK_TTL_MS) return null;
+    const issuedAt = Number(now);
+    if (!Number.isSafeInteger(issuedAt)) return null;
+    const payload = Buffer.from(JSON.stringify({
+      v: 1,
+      c: "mcp",
+      t: bound.tool,
+      u: bound.resource,
+      q: bound.requestDigest,
+      b: bound.responseDigest,
+      d: bound.callDigest,
+      o: bound.issuedOfferDigest,
+      s: bound.settlementReference,
+      x: issuedAt + ttlMs,
+    }));
+    const mac = createHmac("sha256", key).update(payload).digest();
+    return `${payload.toString("base64url")}.${mac.toString("base64url")}`;
+  } catch {
+    return null;
+  }
+}
+
+export function readMcpCallerResultFeedbackToken(token, key, now = Date.now()) {
+  if (!keyReady(key)) return { ok: false, code: "key_absent" };
+  if (typeof token !== "string" || !TOKEN_RE.test(token)) return { ok: false, code: "malformed_capability" };
+  const dot = token.indexOf(".");
+  let payload;
+  let mac;
+  try {
+    payload = Buffer.from(token.slice(0, dot), "base64url");
+    mac = Buffer.from(token.slice(dot + 1), "base64url");
+  } catch {
+    return { ok: false, code: "malformed_capability" };
+  }
+  if (payload.length === 0 || payload.length > 1024 || mac.length !== 32) {
+    return { ok: false, code: "malformed_capability" };
+  }
+  const expected = createHmac("sha256", key).update(payload).digest();
+  if (!sameBytes(mac, expected)) return { ok: false, code: "tampered_capability" };
+  let claims;
+  try {
+    claims = JSON.parse(payload.toString("utf8"));
+  } catch {
+    return { ok: false, code: "tampered_capability" };
+  }
+  if (!plain(claims) || claims.v !== 1) return { ok: false, code: "tampered_capability" };
+  if (claims.c !== "mcp") return { ok: false, code: "channel_rejected" };
+  const claimKeys = Object.keys(claims).sort();
+  const mcpClaimKeys = ["b", "c", "d", "o", "q", "s", "t", "u", "v", "x"];
+  if (claimKeys.length !== mcpClaimKeys.length || claimKeys.some((item, index) => item !== mcpClaimKeys[index])) {
+    return { ok: false, code: "tampered_capability" };
+  }
+  if (claims.t !== MCP_MORPHO_TOOL || claims.u !== MCP_MORPHO_RESOURCE) {
+    return { ok: false, code: "foreign_tool" };
+  }
+  if (!HEX64.test(claims.q || "") || !HEX64.test(claims.b || "") || !HEX64.test(claims.d || "") || !HEX64.test(claims.o || "")) {
+    return { ok: false, code: "tampered_capability" };
+  }
+  if (typeof claims.s !== "string" || !TX.test(claims.s)) return { ok: false, code: "tampered_capability" };
+  if (!Number.isSafeInteger(claims.x)) return { ok: false, code: "tampered_capability" };
+  const clock = Number(now);
+  if (!Number.isSafeInteger(clock) || clock >= claims.x) return { ok: false, code: "expired_capability" };
+  const serialized = JSON.stringify(claims);
+  if (serialized.includes("http://") || serialized.includes("https://") || serialized.includes("?")) {
+    return { ok: false, code: "tampered_capability" };
+  }
+  return {
+    ok: true,
+    claims: {
+      tool: claims.t,
+      resource: claims.u,
+      requestDigest: claims.q,
+      responseDigest: claims.b,
+      callDigest: claims.d,
+      issuedOfferDigest: claims.o,
+      settlementReference: claims.s.toLowerCase(),
+      expiresAtMs: claims.x,
+      channel: "mcp",
+    },
+  };
+}
+
+export function attachMcpCallerResultFeedback(result, { key, observation, eligible } = {}) {
+  try {
+    if (eligible !== true || !result || typeof result !== "object" || Array.isArray(result)) return false;
+    const token = issueMcpCallerResultFeedbackToken({ key, observation });
+    if (!token) return false;
+    const text = result.content?.[0]?.text;
+    if (typeof text === "string" && text.includes(token)) return false;
+    const meta = { ...mcpCallerResultFeedbackPublicContract(), token };
+    const published = JSON.stringify(meta);
+    if (published.includes("http://") || published.includes("https://") || published.includes(CALLER_RESULT_FEEDBACK_PATH)) {
+      return false;
+    }
+    result._meta = {
+      ...(result._meta && typeof result._meta === "object" && !Array.isArray(result._meta) ? result._meta : {}),
+      [MCP_CALLER_RESULT_META_KEY]: meta,
+    };
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function attachCallerResultFeedbackHeader(res, input = {}) {
   try {
     if (!res || res.headersSent) return false;
@@ -281,6 +441,42 @@ function canonicalStatement(value) {
   };
 }
 
+function canonicalMcpStatement(value) {
+  if (!plain(value)) return null;
+  const keys = Object.keys(value).sort();
+  if (keys.length !== STATEMENT_KEYS.length || keys.some((key, index) => key !== STATEMENT_KEYS[index])) return null;
+  if (value.schemaVersion !== CALLER_RESULT_FEEDBACK_MCP_SCHEMA) return null;
+  if (!STATEMENT_ID_RE.test(value.statementId || "")) return null;
+  if (!PAID_EVIDENCE_ID_PATTERN.test(value.paidEvidenceId || "")) return null;
+  if (value.statementId !== statementIdFor(value.paidEvidenceId)) return null;
+  if (value.method !== MCP_CALLER_RESULT_METHOD || value.route !== MCP_MORPHO_RESOURCE) return null;
+  if (!HEX64.test(value.requestDigest || "") || !HEX64.test(value.responseDigest || "")) return null;
+  if (!HEX64.test(value.capabilityHash || "")) return null;
+  if (typeof value.settlementReference !== "string" || !TX.test(value.settlementReference)) return null;
+  if (!DISPOSITIONS.has(value.disposition)) return null;
+  if (value.reasonCategory !== null && !REASONS.has(value.reasonCategory)) return null;
+  if (value.channel !== "mcp" || value.source !== "caller") return null;
+  if (value.usefulness !== USEFULNESS_UNKNOWN) return null;
+  if (!ISO_RE.test(value.receivedAt || "")) return null;
+  return {
+    schemaVersion: value.schemaVersion,
+    statementId: value.statementId,
+    paidEvidenceId: value.paidEvidenceId,
+    requestDigest: value.requestDigest,
+    responseDigest: value.responseDigest,
+    route: value.route,
+    method: value.method,
+    settlementReference: value.settlementReference.toLowerCase(),
+    disposition: value.disposition,
+    reasonCategory: value.reasonCategory,
+    capabilityHash: value.capabilityHash,
+    channel: "mcp",
+    receivedAt: value.receivedAt,
+    usefulness: USEFULNESS_UNKNOWN,
+    source: "caller",
+  };
+}
+
 function sameStatement(left, right) {
   return left.disposition === right.disposition
     && left.reasonCategory === right.reasonCategory
@@ -289,7 +485,8 @@ function sameStatement(left, right) {
     && left.route === right.route
     && left.method === right.method
     && left.settlementReference === right.settlementReference
-    && left.paidEvidenceId === right.paidEvidenceId;
+    && left.paidEvidenceId === right.paidEvidenceId
+    && left.channel === right.channel;
 }
 
 function declarationFrom(statement) {
@@ -331,7 +528,7 @@ function statementsFrom(text) {
       rejected += 1;
       continue;
     }
-    const statement = canonicalStatement(row);
+    const statement = canonicalStatement(row) || canonicalMcpStatement(row);
     if (!statement) rejected += 1;
     else rows.push(statement);
   }
@@ -514,44 +711,176 @@ export function createCallerResultFeedbackService({
           usefulness: USEFULNESS_UNKNOWN,
           source: "caller",
         });
-        if (!record) return refusal("malformed_statement", 400);
-        if (JSON.stringify(record).includes(token)) return refusal("bearer_retained", 500);
-        const existing = await readFiles();
-        const prior = existing.rows.filter((row) => row.paidEvidenceId === record.paidEvidenceId);
-        async function retainProspectiveCallerFeedback() {
-          try {
-            const { bindStoredCallerResultFeedback } = await import("./commerce-prospective-delivery.mjs");
-            await bindStoredCallerResultFeedback(dataDir);
-          } catch {
-            // Prospective retention cannot refuse an already accepted caller statement.
-          }
-        }
-        if (prior.some((row) => sameStatement(row, record))) {
-          await retainProspectiveCallerFeedback();
-          return acceptance({
-            disposition: record.disposition,
-            reasonCategory: record.reasonCategory,
-            idempotentReplay: true,
-          });
-        }
-        if (prior.length > 0) {
-          const retained = prior[0];
-          return {
-            statusCode: 409,
-            body: {
-              ...refusal("conflicting_statement", 409).body,
-              retainedDisposition: retained.disposition,
-              retainedReasonCategory: retained.reasonCategory,
-            },
-          };
-        }
-        await appendStatement(record);
-        await retainProspectiveCallerFeedback();
-        return acceptance({
-          disposition: record.disposition,
-          reasonCategory: record.reasonCategory,
-          idempotentReplay: false,
+        return commitStatement(record, token);
+      });
+    } catch {
+      return refusal("journal_write_failed", 503);
+    }
+  }
+
+  function parseMcpArguments(args) {
+    if (!plain(args)) return { ok: false, code: "malformed_body" };
+    const keys = Object.keys(args).sort();
+    const allowed = args.reasonCategory === undefined
+      ? ["disposition", "token"]
+      : ["disposition", "reasonCategory", "token"];
+    if (keys.length !== allowed.length || keys.some((item, index) => item !== allowed[index])) {
+      return { ok: false, code: "unbounded_field" };
+    }
+    if (typeof args.token !== "string" || !TOKEN_RE.test(args.token)) return { ok: false, code: "malformed_capability" };
+    if (!DISPOSITIONS.has(args.disposition)) return { ok: false, code: "disposition_rejected" };
+    if (args.reasonCategory !== undefined && !REASONS.has(args.reasonCategory)) {
+      return { ok: false, code: "reason_rejected" };
+    }
+    const serialized = JSON.stringify({ disposition: args.disposition, reasonCategory: args.reasonCategory ?? null });
+    if (serialized.includes(args.token) || serialized.includes("http://") || serialized.includes("https://")) {
+      return { ok: false, code: "unbounded_field" };
+    }
+    return {
+      ok: true,
+      token: args.token,
+      disposition: args.disposition,
+      reasonCategory: args.reasonCategory === undefined ? null : args.reasonCategory,
+    };
+  }
+
+  async function loadMcpCaptures() {
+    const { isCanonicalMcpTypedCommerceEvent } = await import("./commerce-events.mjs");
+    const deliveries = await openStore(dataDir).readMcpDeliveries();
+    const current = await readRegular(path.join(dataDir, "commerce-events.ndjson"));
+    const rotated = await readRegular(path.join(dataDir, "commerce-events.1.ndjson"));
+    const events = [];
+    for (const row of parseNdjson(`${rotated.text}\n${current.text}`)) {
+      if (row?._unparseable) continue;
+      if (isCanonicalMcpTypedCommerceEvent(row)) events.push(row);
+    }
+    return { deliveries, events };
+  }
+
+  function bindMcpClaims(claims, captures) {
+    const sameSettlement = captures.deliveries.filter((row) => (
+      typeof row.settlementReference === "string"
+      && row.settlementReference.toLowerCase() === claims.settlementReference
+    ));
+    const matches = sameSettlement.filter((row) => (
+      row.tool === claims.tool
+      && row.resource === claims.resource
+      && row.requestDigest === claims.requestDigest
+      && row.responseDigest === claims.responseDigest
+      && row.callDigest === claims.callDigest
+      && row.issuedOfferDigest === claims.issuedOfferDigest
+      && row.usefulness === USEFULNESS_UNKNOWN
+    ));
+    if (matches.length === 0) {
+      if (sameSettlement.length === 0) return { ok: false, code: "missing_capture" };
+      if (sameSettlement.some((row) => row.tool !== claims.tool || row.resource !== claims.resource)) {
+        return { ok: false, code: "foreign_tool" };
+      }
+      if (sameSettlement.some((row) => row.requestDigest !== claims.requestDigest || row.callDigest !== claims.callDigest)) {
+        return { ok: false, code: "request_mismatch" };
+      }
+      if (sameSettlement.some((row) => row.responseDigest !== claims.responseDigest)) {
+        return { ok: false, code: "response_mismatch" };
+      }
+      return { ok: false, code: "missing_capture" };
+    }
+    if (matches.length > 1) return { ok: false, code: "duplicate_capture" };
+    const delivery = matches[0];
+    const events = captures.events.filter((event) => event.id === delivery.paidEvidenceId);
+    if (events.length !== 1) return { ok: false, code: "missing_capture" };
+    const event = events[0];
+    if (event.binding?.tool !== claims.tool || event.binding?.resource !== claims.resource) {
+      return { ok: false, code: "foreign_tool" };
+    }
+    if (event.result !== "paid_success" || event.settlementState !== "succeeded") {
+      return { ok: false, code: "settlement_unbound" };
+    }
+    return {
+      ok: true,
+      eventId: event.id,
+      settlementReference: delivery.settlementReference.toLowerCase(),
+    };
+  }
+
+  async function retainProspectiveCallerFeedback() {
+    try {
+      const { bindStoredCallerResultFeedback } = await import("./commerce-prospective-delivery.mjs");
+      await bindStoredCallerResultFeedback(dataDir);
+    } catch {
+      // Prospective retention cannot refuse an already accepted caller statement.
+    }
+  }
+
+  async function commitStatement(record, token) {
+    if (!record) return refusal("malformed_statement", 400);
+    if (typeof token !== "string" || token.length === 0 || JSON.stringify(record).includes(token)) {
+      return refusal("bearer_retained", 500);
+    }
+    const existing = await readFiles();
+    const prior = existing.rows.filter((row) => row.paidEvidenceId === record.paidEvidenceId && row.channel === record.channel);
+    if (prior.some((row) => sameStatement(row, record))) {
+      await retainProspectiveCallerFeedback();
+      return acceptance({
+        disposition: record.disposition,
+        reasonCategory: record.reasonCategory,
+        idempotentReplay: true,
+      });
+    }
+    if (prior.length > 0) {
+      const retained = prior[0];
+      return {
+        statusCode: 409,
+        body: {
+          ...refusal("conflicting_statement", 409).body,
+          retainedDisposition: retained.disposition,
+          retainedReasonCategory: retained.reasonCategory,
+        },
+      };
+    }
+    await appendStatement(record);
+    await retainProspectiveCallerFeedback();
+    return acceptance({
+      disposition: record.disposition,
+      reasonCategory: record.reasonCategory,
+      idempotentReplay: false,
+    });
+  }
+
+  async function submitMcp({ arguments: args } = {}) {
+    if (!keyReady(key)) return refusal("key_absent", 503);
+    const parsed = parseMcpArguments(args);
+    if (!parsed.ok) {
+      const status = parsed.code === "malformed_capability" ? 401 : 400;
+      return refusal(parsed.code, status);
+    }
+    const verified = readMcpCallerResultFeedbackToken(parsed.token, key, now());
+    if (!verified.ok) {
+      const status = verified.code === "key_absent" ? 503 : 401;
+      return refusal(verified.code, status);
+    }
+    try {
+      return await admitCommerceJournal(dataDir, async () => {
+        const captures = await loadMcpCaptures();
+        const bound = bindMcpClaims(verified.claims, captures);
+        if (!bound.ok) return refusal(bound.code, 409);
+        const record = canonicalMcpStatement({
+          schemaVersion: CALLER_RESULT_FEEDBACK_MCP_SCHEMA,
+          statementId: statementIdFor(bound.eventId),
+          paidEvidenceId: bound.eventId,
+          requestDigest: verified.claims.requestDigest,
+          responseDigest: verified.claims.responseDigest,
+          route: verified.claims.resource,
+          method: MCP_CALLER_RESULT_METHOD,
+          settlementReference: bound.settlementReference,
+          disposition: parsed.disposition,
+          reasonCategory: parsed.reasonCategory,
+          capabilityHash: sha256(parsed.token),
+          channel: "mcp",
+          receivedAt: new Date(now()).toISOString(),
+          usefulness: USEFULNESS_UNKNOWN,
+          source: "caller",
         });
+        return commitStatement(record, parsed.token);
       });
     } catch {
       return refusal("journal_write_failed", 503);
@@ -575,6 +904,7 @@ export function createCallerResultFeedbackService({
     rotatedPath,
     durability: CALLER_RESULT_FEEDBACK_DURABILITY,
     submit,
+    submitMcp,
     readDeclarations,
   });
 }

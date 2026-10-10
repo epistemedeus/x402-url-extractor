@@ -246,6 +246,7 @@ export function routeBindingProblems({ bindings = [], catalog = {}, openapi = nu
   const knownNames = new Set([
     ...actions.map((action) => mcpToolNameForRoute(action.route)),
     ...freeRecipes.map((recipe) => mcpToolNameForRoute(recipe.route)),
+    "report_caller_result",
   ]);
   for (const tool of tools) {
     const hasRun = typeof tool.run === "function";
