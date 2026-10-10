@@ -101,6 +101,10 @@ const TOOL_METADATA = Object.freeze({
     title: "Read Named Public Careers Board",
     description: "Read one configured public careers board and return title, location or null, posting URL, source, fetchedAt, and explicit coverage. Use `careers_board_cold` for the acquired free recipe. Partial, missing, duplicate, listed, empty, and changed stay explicit. A source failure is unavailable and is not an empty board. Price is $0.005 USDC.",
   },
+  report_caller_result: {
+    title: "Report One Caller Result",
+    description: "Optionally state whether the current paid morpho_position result was useful or not_useful. This tool is free: charged is false, it does not repay, and it does not change the delivered purchase. Read the capability only from the paid result meta samedaydesk/mcp-caller-result. Schema success is not a statement. Absence is not useful or not_useful. Do not follow a link, do not send the capability to another origin, and do not pay again to report.",
+  },
   careers_board_cold: {
     title: "Return Acquired Careers Board Recipe",
     description: "Return the acquired cold careers-board recipe and its public tests. This tool is free: charged is false, it does not fetch a live board, and it does not accept payment. Use `careers_board` when you need one named-board observation. Direct free execution remains available.",

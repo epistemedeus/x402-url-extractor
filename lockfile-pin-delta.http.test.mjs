@@ -445,7 +445,8 @@ test("mounted success, no-change, malformed, oversize, and wrong-replay-input", 
   await client.connect(new StreamableHTTPClientTransport(new URL(`${merchant.base}/mcp`)));
   try {
     const tools = (await client.listTools()).tools;
-    assert.equal(tools.length, 25);
+    assert.equal(tools.length, 26);
+    assert.equal(tools.some((tool) => tool.name === "report_caller_result"), true);
     const tool = tools.find((entry) => entry.name === "lockfile_pin_delta");
     assert.ok(tool);
     assert.match(tool.description, /https:\/\/agents\.samedaydesk\.com\/lockfile-pin-delta, not mcp:\/\//);
@@ -610,9 +611,10 @@ test("lockfile flag does not disable production extract_batch", { timeout: 60_00
   await client.connect(new StreamableHTTPClientTransport(new URL(`${merchant.base}/mcp`)));
   try {
     const tools = (await client.listTools()).tools;
-    assert.equal(tools.length, 26);
+    assert.equal(tools.length, 27);
     assert.ok(tools.some((tool) => tool.name === "extract_batch"));
     assert.ok(tools.some((tool) => tool.name === "lockfile_pin_delta"));
+    assert.equal(tools.some((tool) => tool.name === "report_caller_result"), true);
   } finally {
     await client.close();
   }

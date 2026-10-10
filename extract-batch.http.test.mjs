@@ -291,8 +291,9 @@ test("flag off leaves live extract and catalogs unchanged", { timeout: 60_000 },
   await client.connect(new StreamableHTTPClientTransport(new URL(`${merchant.base}/mcp`)));
   try {
     const tools = (await client.listTools()).tools;
-    assert.equal(tools.length, 24);
+    assert.equal(tools.length, 25);
     assert.equal(tools.some((tool) => tool.name === "extract_batch"), false);
+    assert.equal(tools.some((tool) => tool.name === "report_caller_result"), true);
   } finally {
     await client.close();
   }
