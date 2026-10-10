@@ -2945,7 +2945,6 @@ async function readProspectiveDeliveryForStatus(dataDir, admission) {
     return await readProspectiveDelivery({
       dataDir,
       admission,
-      generatedAt: new Date().toISOString(),
     });
   } catch {
     const { absentProspectiveDelivery } = await import("./commerce-prospective-delivery.mjs");

@@ -340,7 +340,7 @@ export function projectProspectiveDelivery({
   admission,
   suppliedSummary = null,
   suppliedCutId = null,
-  generatedAt = new Date().toISOString(),
+  generatedAt = null,
 } = {}) {
   const parsed = parseProspectiveJournal(journalText);
   const summary = admission?.summary || null;
@@ -367,7 +367,7 @@ export function projectProspectiveDelivery({
     prospectiveSince: parsed.header?.prospectiveSince || null,
     sourceVersion: parsed.header?.sourceVersion || null,
     captureVersion: parsed.header?.captureVersion || null,
-    generatedAt,
+    generatedAt: generatedAt || parsed.header?.prospectiveSince || null,
     bindsToParent: summary ? {
       summarySchema: summary.schemaVersion,
       reconciledSettlements: summary.reconciledSettlements,
@@ -612,7 +612,7 @@ export async function readProspectiveDelivery({
   admission = null,
   suppliedSummary = null,
   suppliedCutId = null,
-  generatedAt = new Date().toISOString(),
+  generatedAt = null,
   paymentClassBySourceEventId,
 } = {}) {
   const journalText = dataDir ? await readJournal(dataDir) : "";
@@ -628,7 +628,7 @@ export async function readProspectiveDelivery({
   });
 }
 
-export function absentProspectiveDelivery(generatedAt = new Date().toISOString()) {
+export function absentProspectiveDelivery(generatedAt = null) {
   return projectProspectiveDelivery({ journalText: "", admission: null, generatedAt });
 }
 
@@ -660,7 +660,7 @@ export function commerceProspectiveDeliveryOutputSchema() {
       prospectiveSince: nullable({ type: "string" }),
       sourceVersion: nullable({ type: "string" }),
       captureVersion: nullable({ type: "string" }),
-      generatedAt: { type: "string" },
+      generatedAt: nullable({ type: "string" }),
       bindsToParent: nullable({
         type: "object",
         additionalProperties: false,
