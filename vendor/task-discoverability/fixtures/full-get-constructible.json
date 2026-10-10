@@ -1,0 +1,59 @@
+{
+  "x402Version": 2,
+  "partialResults": false,
+  "pagination": null,
+  "url": "https://api.cdp.coinbase.com/platform/v2/x402/discovery/search?query=synthetic+constructible+get&type=http&limit=20",
+  "resources": [
+    {
+      "resource": "https://agents.samedaydesk.com/extract",
+      "type": "http",
+      "x402Version": 2,
+      "lastUpdated": "2026-10-10T18:00:00.000Z",
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "amount": "5000",
+          "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+        }
+      ],
+      "extensions": {
+        "bazaar": {
+          "info": {
+            "input": {
+              "type": "http",
+              "method": "GET",
+              "queryParams": { "url": "https://example.com" }
+            },
+            "output": { "example": { "title": "Example" } }
+          },
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "type": { "const": "http" },
+                  "method": { "enum": ["GET", "HEAD", "DELETE"] },
+                  "queryParams": {
+                    "type": "object",
+                    "properties": { "url": { "type": "string" } },
+                    "required": ["url"]
+                  }
+                },
+                "required": ["type", "method"]
+              },
+              "output": {
+                "type": "object",
+                "properties": { "title": { "type": "string" } }
+              }
+            },
+            "required": ["input"]
+          }
+        }
+      }
+    }
+  ]
+}

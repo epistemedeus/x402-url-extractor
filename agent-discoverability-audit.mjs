@@ -10,6 +10,7 @@ import {
   resolvePublicAddress,
 } from "./payment-offer-preflight.mjs";
 import { searchMarket8004 } from "./market8004-discovery.mjs";
+import { buildSearchUrl, measure, PACKAGE, parseCount, SOURCE } from "task-discoverability";
 
 const BAZAAR_SEARCH = "https://api.cdp.coinbase.com/platform/v2/x402/discovery/search";
 const BAZAAR_VALIDATE = "https://api.cdp.coinbase.com/platform/v2/x402/validate";
@@ -29,6 +30,11 @@ const TARGET_SURFACES = Object.freeze({
 });
 const TARGET_SURFACE_MAX_BYTES = 512 * 1024;
 const TARGET_SURFACE_TIMEOUT_MS = 5_000;
+export const CATALOG_RESPONSE_MAX_BYTES = 10_000_000;
+const CATALOG_TIMEOUT_MS = 10_000;
+const DISCOVERABILITY_AUDIT_VERSION = "1.12.0";
+const DISCOVERY_IMPLEMENTATION = "0cf1e465c714991ab70fbde349ed51baddf64c12";
+const DISCOVERY_INTERPRETER_INCOMPATIBLE = "task-discoverability measure() decodes one CDP discovery document and labels that provider. collectBounded also refuses every base other than the pinned search URL, is GET-only, and stops at 262144 bytes. This source keeps the count and request-construction contract: declared, inspected, and exact counts stay separate, catalog presence stays unknown when the exact target is outside the inspected rows, and request construction stays null. The body is not passed through that CDP decoder.";
 
 const SOURCE_ORDER = [
   "coinbase-bazaar",
@@ -156,50 +162,247 @@ export function normalizeDiscoverabilityAuditInput(raw = {}) {
   };
 }
 
-export async function auditCoinbaseMaterialization(input, { fetchImpl = fetch } = {}) {
+function coinbaseSearchUrl(query, limit) {
+  const url = buildSearchUrl({ query, limit });
+  const sent = [...new URL(url).searchParams.keys()];
+  const unsupported = sent.filter((key) => !SOURCE.sdkSearchQuery.includes(key));
+  if (unsupported.length > 0) throw new Error(`unsupported Coinbase search parameters: ${unsupported.join(",")}`);
+  return url;
+}
+
+function serviceUrlFor(input) {
+  return input.route ? `${input.origin}${input.route}` : input.origin;
+}
+
+function discoveryPackage() {
+  return {
+    name: PACKAGE.name,
+    version: PACKAGE.version,
+    license: PACKAGE.license,
+    schema: PACKAGE.schema,
+    implementation: DISCOVERY_IMPLEMENTATION,
+  };
+}
+
+function constructedRequestFor(document, serviceUrl) {
+  const constructible = document?.requestConstructibility?.fromThisResponse === true
+    || document?.service?.requestConstructible === true;
+  if (!constructible) return null;
+  const row = (document.rows || []).find((item) => item.resource === serviceUrl && item.constructedRequest);
+  return row ? row.constructedRequest : null;
+}
+
+function requestWindow(read, extra = {}) {
+  return {
+    method: read.transport.method,
+    url: read.transport.url,
+    httpStatus: read.transport.httpStatus,
+    observedAt: read.transport.completedAt,
+    startedAt: read.transport.startedAt,
+    plane: "actual-transport",
+    window: {
+      timeoutMs: read.transport.timeoutMs,
+      maxBytes: read.transport.maxBytes,
+      bytes: read.transport.bytes,
+      bodyBound: read.transport.bodyBound,
+      elapsedMs: read.transport.elapsedMs,
+      contentLength: read.transport.contentLength,
+      contentLengthHonored: false,
+      ...extra,
+    },
+  };
+}
+
+async function interpretCoinbaseRead(read, input) {
+  const serviceUrl = serviceUrlFor(input);
+  const document = await measure({
+    serviceUrl,
+    body: read.body,
+    observedAt: read.transport.completedAt,
+  });
+  const inspected = document.service?.inInspectedRows;
+  const exactTargetCount = inspected === true
+    ? document.service.ranks.length
+    : inspected === false ? 0 : "unknown";
+  return {
+    applied: true,
+    package: discoveryPackage(),
+    provenance: document.provenance,
+    transport: read.transport,
+    request: {
+      ...requestWindow(read, {
+        limit: new URL(read.transport.url).searchParams.get("limit"),
+        inspectedCount: document.coverage?.inspectedCount ?? "unknown",
+      }),
+      query: input.intent,
+      suppliedBodyPlane: document.provenance?.kind || "supplied-body",
+      sentParams: [...new URL(read.transport.url).searchParams.keys()],
+    },
+    coverage: {
+      declaredReturnedCount: document.coverage?.declaredReturnedCount ?? "unknown",
+      inspectedCount: document.coverage?.inspectedCount ?? "unknown",
+      uninspectedCount: document.coverage?.uninspectedCount ?? "unknown",
+      exactTargetCount,
+      exactRouteCount: input.route ? exactTargetCount : null,
+      countState: document.coverage?.countState ?? "unknown",
+      countConflict: document.coverage?.countConflict === true,
+      measuredZero: document.coverage?.measuredZero === true,
+      partialResults: document.coverage?.partialResults ?? "unknown",
+      catalogPresence: inspected === true ? "observed-in-inspected-rows" : "unknown",
+      queryVisibility: document.service?.queryVisibility ?? "unknown",
+    },
+    filter: document.filter || { assumedHonored: false },
+    requestConstruction: constructedRequestFor(document, serviceUrl),
+    nextAction: document.nextAction || null,
+    service: document.service || null,
+  };
+}
+
+function explicitDeclaredCount(payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return { state: "unknown", value: null, reason: "absent" };
+  if (Object.prototype.hasOwnProperty.call(payload, "itemCount")) return { field: "itemCount", ...parseCount(payload.itemCount) };
+  if (payload.pagination && typeof payload.pagination === "object" && !Array.isArray(payload.pagination)
+    && Object.prototype.hasOwnProperty.call(payload.pagination, "total")) {
+    return { field: "pagination.total", ...parseCount(payload.pagination.total) };
+  }
+  return { state: "unknown", value: null, reason: "absent" };
+}
+
+function requestQuery(source, url, input) {
+  if (source === "agent402-router") return input.intent;
+  if (source === "official-mpp-catalog") return null;
+  try {
+    const params = new URL(url).searchParams;
+    return params.get("query") || params.get("q") || params.get("search");
+  } catch {
+    return null;
+  }
+}
+
+function interpretGeneralRead(source, read, items, input) {
+  const declared = explicitDeclaredCount(read.body);
+  const inspectedCount = items.length;
+  const exactTargetCount = items.filter((item) => targetMatch(item, input)).length;
+  const exactRouteCount = input.route
+    ? items.filter((item) => targetMatch(item, input) && routeMatch(item, input.route)).length
+    : null;
+  const declaredReturnedCount = declared.state === "measured"
+    ? declared.value
+    : declared.state === "invalid" ? "invalid" : "unknown";
+  const countConflict = typeof declaredReturnedCount === "number" && declaredReturnedCount !== inspectedCount;
+  return {
+    applied: false,
+    reason: DISCOVERY_INTERPRETER_INCOMPATIBLE,
+    package: discoveryPackage(),
+    provenance: { kind: "supplied-body", officialLiveRead: false, networkSent: false, credentialSent: false },
+    transport: read.transport,
+    request: {
+      ...requestWindow(read, { inspectedCount }),
+      query: requestQuery(source, read.transport.url, input),
+      suppliedBodyPlane: "supplied-body",
+    },
+    coverage: {
+      declaredReturnedCount,
+      inspectedCount,
+      exactTargetCount,
+      exactRouteCount,
+      countState: declared.state === "measured" ? "measured" : declared.state === "invalid" ? "invalid" : "unknown",
+      countConflict,
+      measuredZero: declaredReturnedCount === 0 && inspectedCount === 0 && countConflict === false,
+      catalogPresence: exactTargetCount > 0 ? "observed-in-inspected-rows" : "unknown",
+      queryVisibility: exactTargetCount > 0 ? "in-this-response" : "not-in-inspected-rows",
+    },
+    requestConstruction: null,
+    nextAction: null,
+  };
+}
+
+function interpretUninstrumented(items, input) {
+  const exactTargetCount = items.filter((item) => targetMatch(item, input)).length;
+  const exactRouteCount = input.route
+    ? items.filter((item) => targetMatch(item, input) && routeMatch(item, input.route)).length
+    : null;
+  return {
+    applied: false,
+    reason: "8004Market search is an HTML adapter outside shared fetchJson. This result does not claim an HTTP status or a byte window.",
+    package: discoveryPackage(),
+    provenance: null,
+    transport: null,
+    request: null,
+    coverage: {
+      declaredReturnedCount: "unknown",
+      inspectedCount: items.length,
+      exactTargetCount,
+      exactRouteCount,
+      countState: "unknown",
+      countConflict: false,
+      measuredZero: false,
+      catalogPresence: exactTargetCount > 0 ? "observed-in-inspected-rows" : "unknown",
+      queryVisibility: exactTargetCount > 0 ? "in-this-response" : "not-in-inspected-rows",
+    },
+    requestConstruction: null,
+    nextAction: null,
+  };
+}
+
+async function discoveryFor(source, read, items, input) {
+  if (source === "coinbase-bazaar" && read) return interpretCoinbaseRead(read, input);
+  if (read) return interpretGeneralRead(source, read, items, input);
+  return interpretUninstrumented(items, input);
+}
+
+export async function auditCoinbaseMaterialization(input, { fetchImpl = fetch, limit = 20, catalogRead = null } = {}) {
   if (!input.materializationAudit) return { requested: false };
   const resource = `${input.origin}${input.route}`;
-  const searchUrl = new URL(BAZAAR_SEARCH);
-  searchUrl.searchParams.set("query", input.intent);
-  searchUrl.searchParams.set("urlSubstring", resource);
-  searchUrl.searchParams.set("curatedOnly", "false");
-  searchUrl.searchParams.set("limit", "20");
+  const searchUrl = coinbaseSearchUrl(input.intent, limit);
   const [validationResult, catalogResult] = await Promise.allSettled([
     fetchJson(BAZAAR_VALIDATE, {
       fetchImpl,
       method: "POST",
       body: { resource, method: input.method },
     }),
-    fetchJson(searchUrl, { fetchImpl }),
+    catalogRead ? Promise.resolve(catalogRead) : fetchJson(searchUrl, { fetchImpl }),
   ]);
+  const validationBody = validationResult.status === "fulfilled" ? validationResult.value?.body : null;
   const validator = validationResult.status === "fulfilled"
     ? {
         status: "ok",
-        valid: validationResult.value?.valid === true,
-        simulationOutcome: cleanString(validationResult.value?.simulation?.outcome, 80),
-        indexReturned: validationResult.value?.index !== null && validationResult.value?.index !== undefined,
+        valid: validationBody?.valid === true,
+        simulationOutcome: cleanString(validationBody?.simulation?.outcome, 80),
+        indexReturned: validationBody?.index !== null && validationBody?.index !== undefined,
+        eligibility: validationBody?.valid === true && cleanString(validationBody?.simulation?.outcome, 80) === "accepted"
+          ? "provider_reported_eligible"
+          : "provider_reported_not_eligible",
       }
-    : { status: "error", error: cleanString(validationResult.reason?.message || "validator unavailable", 200) };
-  let exactMatchCount = null;
+    : { status: "error", eligibility: "unknown", error: cleanString(validationResult.reason?.message || "validator unavailable", 200) };
+  let discovery = null;
   let catalog;
   if (catalogResult.status === "fulfilled") {
-    const resources = catalogResult.value?.resources;
-    if (Array.isArray(resources)) {
-      exactMatchCount = resources.filter((item) => item?.resource === resource).length;
-      catalog = { status: "ok", exactResourceFound: exactMatchCount > 0, exactMatchCount };
-    } else {
+    const read = catalogResult.value;
+    if (!read?.body || !Array.isArray(read.body.resources)) {
       catalog = { status: "error", error: "catalog response is missing resources" };
+    } else if (read.transport?.url && read.transport.url !== searchUrl) {
+      catalog = { status: "error", error: "catalog read did not use the supported search URL" };
+    } else {
+      discovery = await interpretCoinbaseRead(read, input);
+      catalog = {
+        status: "ok",
+        catalogPresence: discovery.coverage.catalogPresence,
+        queryVisibility: discovery.coverage.queryVisibility,
+        exactMatchCount: discovery.coverage.exactTargetCount,
+        declaredReturnedCount: discovery.coverage.declaredReturnedCount,
+        inspectedCount: discovery.coverage.inspectedCount,
+        measuredZero: discovery.coverage.measuredZero,
+        countState: discovery.coverage.countState,
+        countConflict: discovery.coverage.countConflict,
+      };
     }
   } else {
     catalog = { status: "error", error: cleanString(catalogResult.reason?.message || "catalog unavailable", 200) };
   }
   let state = "unresolved";
-  if (catalog.exactResourceFound === true) state = "materialized";
-  else if (catalog.status === "ok" && validator.status === "ok" && validator.valid && validator.simulationOutcome === "accepted") {
-    state = "provider_accepted_not_materialized";
-  } else if (catalog.status === "ok" && validator.status === "ok" && (!validator.valid || validator.simulationOutcome !== "accepted")) {
-    state = "seller_not_provider_eligible";
-  }
+  if (catalog.status === "ok" && catalog.catalogPresence === "observed-in-inspected-rows") state = "observed_in_query_window";
+  else if (catalog.status === "ok") state = "query_window_catalog_presence_unknown";
   return {
     requested: true,
     provider: "coinbase-cdp",
@@ -209,7 +412,13 @@ export async function auditCoinbaseMaterialization(input, { fetchImpl = fetch } 
     state,
     validator,
     catalog,
-    boundary: "This compares one current Coinbase validation result with one exact-resource Bazaar readback. Validation acceptance does not prove catalog materialization, demand, settlement, or a supported reindex action. Coinbase may make one unpaid request to the seller using the requested method; no credential, signature, or payment is supplied.",
+    discovery,
+    search: {
+      url: searchUrl,
+      supportedParams: SOURCE.sdkSearchQuery.slice(),
+      sentParams: [...new URL(searchUrl).searchParams.keys()],
+    },
+    boundary: "Validator eligibility stays on its own plane. The catalog read is one supported task-search window using the maintained SDK parameters. A missing exact target in that window is unknown catalog presence for the query. It does not prove the route is unlisted and it does not support a reindex action. Coinbase may make one unpaid request to the seller when validation is requested; no credential, signature, or payment is supplied.",
   };
 }
 
@@ -622,27 +831,218 @@ function normalizeMpp(payload, intent, limit) {
     || String(left.url).localeCompare(String(right.url))).slice(0, limit);
 }
 
-async function fetchJson(urlValue, { fetchImpl, method = "GET", body } = {}) {
+function asBytes(value) {
+  if (Buffer.isBuffer(value)) return value;
+  if (value instanceof Uint8Array) return Buffer.from(value.buffer, value.byteOffset, value.byteLength);
+  return null;
+}
+
+async function cancelUnread(response, reason) {
+  const body = response && response.body;
+  if (!body || typeof body.cancel !== "function" || body.locked) return;
+  try {
+    await body.cancel(reason);
+  } catch {
+    // A closed stream has nothing left to stop.
+  }
+}
+
+function capError(maxBytes, bytes) {
+  const error = new Error(maxBytes === CATALOG_RESPONSE_MAX_BYTES
+    ? "catalog response exceeded 10 MB"
+    : `catalog response exceeded ${maxBytes} bytes`);
+  error.code = "body-cap";
+  error.bytes = bytes;
+  return error;
+}
+
+function headerValue(headers, name) {
+  if (!headers) return null;
+  if (typeof headers.get === "function") return headers.get(name);
+  const want = name.toLowerCase();
+  for (const [key, value] of Object.entries(headers)) {
+    if (String(key).toLowerCase() === want) return value == null ? null : String(value);
+  }
+  return null;
+}
+
+async function readStream(response, maxBytes, signal) {
+  const reader = response.body.getReader();
+  const onAbort = () => {
+    reader.cancel("timeout").catch(() => {});
+  };
+  if (signal) {
+    if (signal.aborted) {
+      await reader.cancel("timeout");
+      const error = new Error("catalog request timed out");
+      error.name = "TimeoutError";
+      error.bodyBound = "stream";
+      throw error;
+    }
+    signal.addEventListener("abort", onAbort, { once: true });
+  }
+  const chunks = [];
+  let total = 0;
+  let rejectAbort = () => {};
+  const aborted = new Promise((_, reject) => {
+    rejectAbort = reject;
+  });
+  const failTimeout = () => {
+    const error = new Error("catalog request timed out");
+    error.name = "TimeoutError";
+    error.bodyBound = "stream";
+    rejectAbort(error);
+  };
+  if (signal) signal.addEventListener("abort", failTimeout, { once: true });
+  try {
+    while (true) {
+      const next = await Promise.race([reader.read(), aborted]);
+      if (signal?.aborted) {
+        const error = new Error("catalog request timed out");
+        error.name = "TimeoutError";
+        error.bodyBound = "stream";
+        throw error;
+      }
+      if (next.done) break;
+      const chunk = asBytes(next.value);
+      if (!chunk) {
+        await reader.cancel("stream-failed").catch(() => {});
+        const error = new Error("catalog response stream failed");
+        error.code = "stream-failed";
+        error.bodyBound = "stream";
+        throw error;
+      }
+      if (total + chunk.byteLength > maxBytes) {
+        await reader.cancel("body-cap");
+        const error = capError(maxBytes, total + chunk.byteLength);
+        error.bodyBound = "stream";
+        throw error;
+      }
+      chunks.push(chunk);
+      total += chunk.byteLength;
+    }
+    return {
+      bytes: total,
+      text: Buffer.concat(chunks, total).toString("utf8"),
+      bodyBound: "stream",
+    };
+  } catch (error) {
+    if (signal?.aborted || (error && (error.name === "TimeoutError" || error.name === "AbortError"))) {
+      const timed = new Error("catalog request timed out");
+      timed.name = "TimeoutError";
+      timed.bodyBound = "stream";
+      throw timed;
+    }
+    if (error && (error.code === "body-cap" || error.code === "stream-failed")) throw error;
+    await reader.cancel("stream-failed").catch(() => {});
+    const failed = new Error("catalog response stream failed");
+    failed.code = "stream-failed";
+    failed.bodyBound = "stream";
+    throw failed;
+  } finally {
+    if (signal) {
+      signal.removeEventListener("abort", onAbort);
+      signal.removeEventListener("abort", failTimeout);
+    }
+  }
+}
+
+async function readBuffered(response, maxBytes) {
+  let bytes;
+  if (typeof response.arrayBuffer === "function") bytes = Buffer.from(await response.arrayBuffer());
+  else if (typeof response.text === "function") bytes = Buffer.from(String(await response.text()));
+  else bytes = Buffer.alloc(0);
+  if (bytes.byteLength > maxBytes) {
+    const error = capError(maxBytes, bytes.byteLength);
+    error.bodyBound = "buffered-fallback";
+    throw error;
+  }
+  return { bytes: bytes.byteLength, text: bytes.toString("utf8"), bodyBound: "buffered-fallback" };
+}
+
+export async function fetchJson(urlValue, {
+  fetchImpl,
+  method = "GET",
+  body,
+  timeoutMs = CATALOG_TIMEOUT_MS,
+  maxBytes = CATALOG_RESPONSE_MAX_BYTES,
+} = {}) {
   const url = httpsUrl(urlValue);
   if (!url) throw new Error("catalog endpoint must use HTTPS");
-  const response = await fetchImpl(url, {
-    method,
-    redirect: "error",
-    signal: AbortSignal.timeout(10_000),
-    headers: {
-      accept: "application/json",
-      "content-type": "application/json",
-      "user-agent": "SameDayDesk-Discoverability-Audit/1.0",
-    },
-    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-  });
-  if (!response?.ok) throw new Error(`catalog returned HTTP ${response?.status}`);
-  const text = await response.text();
-  if (text.length > 10_000_000) throw new Error("catalog response exceeded 10 MB");
+  const startedMs = Date.now();
+  const startedAt = new Date(startedMs).toISOString();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const signal = controller.signal;
   try {
-    return JSON.parse(text);
+  let response;
+  try {
+    response = await fetchImpl(url, {
+      method,
+      redirect: "error",
+      signal,
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        "user-agent": "SameDayDesk-Discoverability-Audit/1.0",
+      },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+  } catch (error) {
+    if (error && (error.name === "TimeoutError" || error.name === "AbortError" || signal.aborted)) {
+      throw new Error("catalog request timed out");
+    }
+    throw error;
+  }
+  const status = Number.isInteger(response?.status) ? response.status : null;
+  if (status !== null && status >= 300 && status < 400) {
+    await cancelUnread(response, "redirect");
+    throw new Error("catalog redirect was rejected");
+  }
+  if (!response?.ok) {
+    await cancelUnread(response, "http-error");
+    throw new Error(`catalog returned HTTP ${response?.status}`);
+  }
+  const contentLength = headerValue(response.headers, "content-length");
+  let read;
+  try {
+    read = response.body && typeof response.body.getReader === "function"
+      ? await readStream(response, maxBytes, signal)
+      : await readBuffered(response, maxBytes);
+  } catch (error) {
+    if (error && (error.name === "TimeoutError" || error.name === "AbortError" || signal.aborted)) {
+      throw new Error("catalog request timed out");
+    }
+    throw error;
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(read.text);
   } catch {
     throw new Error("catalog response was not valid JSON");
+  }
+  const completedMs = Date.now();
+  return {
+    body: parsed,
+    transport: {
+      plane: "actual-transport",
+      method,
+      url: url.toString(),
+      httpStatus: status,
+      bytes: read.bytes,
+      bodyBound: read.bodyBound,
+      contentLength,
+      contentLengthHonored: false,
+      elapsedMs: completedMs - startedMs,
+      startedAt,
+      completedAt: new Date(completedMs).toISOString(),
+      timeoutMs,
+      maxBytes,
+      redirectsFollowed: 0,
+    },
+  };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -809,36 +1209,86 @@ export async function agentDiscoverabilityAudit(rawInput, {
   const x402JobsQuery = x402JobsLexicalQuery(input);
   const mppscanUrl = new URL(MPPSCAN_SEARCH);
   mppscanUrl.searchParams.set("input", JSON.stringify({ json: { query: input.intent } }));
+  const reads = new Map();
+  let bazaarRead;
+  const readBazaar = () => {
+    if (!bazaarRead) bazaarRead = fetchJson(coinbaseSearchUrl(input.intent, limit), { fetchImpl });
+    return bazaarRead;
+  };
   const calls = {
-    "coinbase-bazaar": async () => normalizeBazaar(await fetchJson(`${BAZAAR_SEARCH}?query=${encoded}&limit=${limit}`, { fetchImpl })),
-    "agent402-router": async () => normalizeAgent402(await fetchJson(AGENT402_ROUTE, {
-      fetchImpl,
-      method: "POST",
-      body: { query: input.intent, top: limit, include: "all" },
-    })),
-    "circle-marketplace": async () => normalizeCircle(await fetchJson(`${CIRCLE_SEARCH}?query=${encoded}&limit=${limit}`, { fetchImpl })),
-    "coinbase-agentic-market": async () => normalizeAgenticMarket(await fetchJson(`${AGENTIC_MARKET_SEARCH}?q=${encoded}`, { fetchImpl })),
-    "agentictrade-catalog": async () => normalizeAgenticTrade(await fetchJson(`${AGENTICTRADE_SEARCH}?q=${encoded}&limit=${limit}`, { fetchImpl })),
-    "official-mpp-catalog": async () => normalizeMpp(await fetchJson(MPP_CATALOG, { fetchImpl }), input.intent, limit),
-    "mppscan-public-search": async () => normalizeMppscan(await fetchJson(mppscanUrl, { fetchImpl })).slice(0, limit),
-    "payanagent-public-search": async () => normalizePayanAgent(await fetchJson(`${PAYANAGENT_SEARCH}?q=${encoded}&limit=${limit}`, { fetchImpl })),
-    "x402jobs-public-search": async () => normalizeX402Jobs(await fetchJson(`${X402_JOBS_SEARCH}?search=${encodeURIComponent(x402JobsQuery)}&limit=${limit}&sort=popular`, { fetchImpl })),
+    "coinbase-bazaar": async () => {
+      const read = await readBazaar();
+      reads.set("coinbase-bazaar", read);
+      return normalizeBazaar(read.body);
+    },
+    "agent402-router": async () => {
+      const read = await fetchJson(AGENT402_ROUTE, {
+        fetchImpl,
+        method: "POST",
+        body: { query: input.intent, top: limit, include: "all" },
+      });
+      reads.set("agent402-router", read);
+      return normalizeAgent402(read.body);
+    },
+    "circle-marketplace": async () => {
+      const read = await fetchJson(`${CIRCLE_SEARCH}?query=${encoded}&limit=${limit}`, { fetchImpl });
+      reads.set("circle-marketplace", read);
+      return normalizeCircle(read.body);
+    },
+    "coinbase-agentic-market": async () => {
+      const read = await fetchJson(`${AGENTIC_MARKET_SEARCH}?q=${encoded}`, { fetchImpl });
+      reads.set("coinbase-agentic-market", read);
+      return normalizeAgenticMarket(read.body);
+    },
+    "agentictrade-catalog": async () => {
+      const read = await fetchJson(`${AGENTICTRADE_SEARCH}?q=${encoded}&limit=${limit}`, { fetchImpl });
+      reads.set("agentictrade-catalog", read);
+      return normalizeAgenticTrade(read.body);
+    },
+    "official-mpp-catalog": async () => {
+      const read = await fetchJson(MPP_CATALOG, { fetchImpl });
+      reads.set("official-mpp-catalog", read);
+      return normalizeMpp(read.body, input.intent, limit);
+    },
+    "mppscan-public-search": async () => {
+      const read = await fetchJson(mppscanUrl, { fetchImpl });
+      reads.set("mppscan-public-search", read);
+      return normalizeMppscan(read.body).slice(0, limit);
+    },
+    "payanagent-public-search": async () => {
+      const read = await fetchJson(`${PAYANAGENT_SEARCH}?q=${encoded}&limit=${limit}`, { fetchImpl });
+      reads.set("payanagent-public-search", read);
+      return normalizePayanAgent(read.body);
+    },
+    "x402jobs-public-search": async () => {
+      const read = await fetchJson(`${X402_JOBS_SEARCH}?search=${encodeURIComponent(x402JobsQuery)}&limit=${limit}&sort=popular`, { fetchImpl });
+      reads.set("x402jobs-public-search", read);
+      return normalizeX402Jobs(read.body);
+    },
     "8004market-public-search": async () => normalizeMarket8004(await searchMarket8004(input.intent, { fetchImpl, limit })),
   };
   const materializationPromise = input.materializationAudit
-    ? coinbaseMaterializationImpl(input, { fetchImpl })
+    ? coinbaseMaterializationImpl(input, { fetchImpl, limit, catalogRead: readBazaar() })
     : Promise.resolve({ requested: false });
   const [settled, coinbaseMaterialization] = await Promise.all([
     Promise.allSettled(SOURCE_ORDER.map((source) => calls[source]())),
     materializationPromise,
   ]);
   const sources = {};
-  SOURCE_ORDER.forEach((source, index) => {
+  for (let index = 0; index < SOURCE_ORDER.length; index += 1) {
+    const source = SOURCE_ORDER[index];
     const result = settled[index];
-    sources[source] = result.status === "fulfilled"
-      ? summarizeSource(source, result.value, comparisonInput)
-      : { status: "error", error: cleanString(result.reason?.message || "catalog unavailable", 200) };
-  });
+    if (result.status !== "fulfilled") {
+      sources[source] = { status: "error", error: cleanString(result.reason?.message || "catalog unavailable", 200) };
+      continue;
+    }
+    const summary = summarizeSource(source, result.value, comparisonInput);
+    summary.discovery = await discoveryFor(source, reads.get(source) || null, result.value, input);
+    summary.coverage = summary.discovery.coverage;
+    summary.request = summary.discovery.request;
+    summary.requestConstruction = summary.discovery.requestConstruction;
+    sources[source] = summary;
+  }
   sources["coinbase-bazaar"].materialization = coinbaseMaterialization;
   if (sources["x402jobs-public-search"].status === "ok") {
     sources["x402jobs-public-search"].queryUsed = x402JobsQuery;
@@ -891,32 +1341,13 @@ export async function agentDiscoverabilityAudit(rawInput, {
   for (const source of SOURCE_ORDER) {
     const observation = sources[source];
     if (source === "coinbase-bazaar" && coinbaseMaterialization.requested) {
-      if (coinbaseMaterialization.state === "provider_accepted_not_materialized") {
-        findings.push({ source, finding: "provider_accepted_exact_route_not_materialized", resource: coinbaseMaterialization.resource });
-        nextActions.push({
-          source,
-          action: "request_provider_ingestion_disposition_or_supported_reindex",
-          basis: "Coinbase currently accepts the exact seller route, but exact-resource Bazaar readback is absent. Preserve this distinction when requesting an ingestion disposition or supported reindex path.",
-        });
-        continue;
-      }
-      if (coinbaseMaterialization.state === "seller_not_provider_eligible") {
-        findings.push({ source, finding: "exact_route_not_provider_eligible", resource: coinbaseMaterialization.resource });
+      if (coinbaseMaterialization.validator?.eligibility === "provider_reported_not_eligible") {
+        findings.push({ source, finding: "exact_route_not_provider_eligible", resource: coinbaseMaterialization.resource, plane: "validator" });
         nextActions.push({
           source,
           action: "repair_seller_provider_eligibility",
-          basis: "The current Coinbase validator did not accept the exact seller route, so seller eligibility must be repaired before catalog materialization can be expected.",
+          basis: "The Coinbase validator did not report this exact route as eligible. Validator eligibility is its own plane and does not prove the route is absent from the catalog.",
         });
-        continue;
-      }
-      if (coinbaseMaterialization.state === "materialized" && !observation.targetFound) {
-        findings.push({ source, finding: "exact_route_materialized_but_not_ranked_for_intent", resource: coinbaseMaterialization.resource });
-        nextActions.push({
-          source,
-          action: "compare_task_outcome_metadata_with_ranked_results",
-          basis: "Exact-resource Bazaar readback succeeded, but the service did not appear in the first ranked window for this brand-blind intent.",
-        });
-        continue;
       }
       if (coinbaseMaterialization.state === "unresolved") {
         findings.push({ source, finding: "materialization_state_unresolved" });
@@ -927,14 +1358,44 @@ export async function agentDiscoverabilityAudit(rawInput, {
       nextActions.push({ source, action: "rerun_after_source_recovers", basis: "No rank conclusion is valid while the source is unavailable." });
       continue;
     }
+    if (observation.coverage && (observation.coverage.countState === "invalid" || observation.coverage.countConflict === true)) {
+      findings.push({
+        source,
+        finding: "count_contract_not_usable",
+        countState: observation.coverage.countState,
+        declaredReturnedCount: observation.coverage.declaredReturnedCount,
+        inspectedCount: observation.coverage.inspectedCount,
+        exactTargetCount: observation.coverage.exactTargetCount,
+      });
+    }
     if (!observation.targetFound) {
-      findings.push({ source, finding: "target_absent_from_ranked_results" });
-      nextActions.push({ source, action: "verify_listing_then_refresh_task_outcome_metadata", basis: "The target did not appear in the first ranked result window for this exact brand-blind intent." });
+      findings.push({
+        source,
+        finding: "target_not_in_inspected_window",
+        catalogPresence: observation.coverage?.catalogPresence || "unknown",
+        declaredReturnedCount: observation.coverage?.declaredReturnedCount ?? "unknown",
+        inspectedCount: observation.coverage?.inspectedCount ?? "unknown",
+        exactTargetCount: observation.coverage?.exactTargetCount ?? "unknown",
+      });
       continue;
     }
+    if (observation.requestConstruction) {
+      findings.push({ source, finding: "exact_target_request_constructible", invoked: false, paid: false });
+      nextActions.push({
+        source,
+        action: "inspect_constructed_request",
+        basis: observation.discovery?.nextAction || "A structured request can be read from the supplied schema. Writing it does not invoke or pay.",
+        invoked: false,
+        paid: false,
+      });
+    }
     if (input.route && !observation.expectedRouteFound) {
-      findings.push({ source, finding: "origin_found_expected_route_absent", bestTargetRank: observation.bestTargetRank });
-      nextActions.push({ source, action: "index_or_reconcile_expected_route", basis: "The seller appeared, but the requested route did not." });
+      findings.push({
+        source,
+        finding: "origin_found_expected_route_absent",
+        bestTargetRank: observation.bestTargetRank,
+        catalogPresence: "unknown",
+      });
       continue;
     }
     if (observation.identityObservation && ["alias_collision", "alias_only", "duplicate_records"].includes(observation.identityObservation.status)) {
@@ -1016,7 +1477,8 @@ export async function agentDiscoverabilityAudit(rawInput, {
   return {
     ok: true,
     product: "samedaydesk-agent-discoverability-audit",
-    version: "1.11.0",
+    version: DISCOVERABILITY_AUDIT_VERSION,
+    discoveryInterpretation: discoveryPackage(),
     generatedAt: new Date(now).toISOString(),
     input: {
       origin: input.origin,
@@ -1068,7 +1530,7 @@ export async function agentDiscoverabilityAudit(rawInput, {
     targetSurfaces,
     findings,
     nextActions,
-    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata. For an exact route, every source also reports whether the matched records are canonical, duplicated, alias-only, or collide across canonical and non-canonical origins. A non-canonical record becomes an alias candidate only when it matches the caller-supplied payTo and exact route; that links advertised settlement identity but does not prove hostname ownership. When runtimeUrl is supplied, one same-origin, exact-route, credentials-free headers-only request derives the comparison amount only from a parseable coherent live offer. Otherwise an optional caller-supplied expected price remains clearly labeled as caller expected. When explicitly requested, the target-surface check reads only three fixed same-origin public JSON documents after payment. The separate opt-in Coinbase materialization check compares the provider's exact-route validator with exact-resource catalog readback; it never treats validation acceptance as proof of listing.",
+    method: "The capability intent is sent without the target origin or payTo. Registry order is preserved for Bazaar, Agentic Market, Agent402, Circle, AgenticTrade, MPPScan, PayanAgent, x402.jobs, and 8004Market public search. Coinbase Bazaar and Agentic Market are two views in one source family and are not counted as independent reach. PayanAgent aggregates ecosystem supply, including Coinbase-origin records, so it is labeled dependent rather than treated as independent underlying supply. x402.jobs is a directly registerable resource and workflow market whose search order and zero-or-positive call and value metrics remain point-in-time observations, not proof of independent demand. 8004Market is a search view over Solana Agent Registry identities, so it is also dependency-labeled and its retrieval is identity propagation rather than buyer demand. Official MPP exposes a flat catalog, so its order is a declared local lexical rank over official metadata. For an exact route, every source also reports whether the matched records are canonical, duplicated, alias-only, or collide across canonical and non-canonical origins. A non-canonical record becomes an alias candidate only when it matches the caller-supplied payTo and exact route; that links advertised settlement identity but does not prove hostname ownership. When runtimeUrl is supplied, one same-origin, exact-route, credentials-free headers-only request derives the comparison amount only from a parseable coherent live offer. Otherwise an optional caller-supplied expected price remains clearly labeled as caller expected. When explicitly requested, the target-surface check reads only three fixed same-origin public JSON documents after payment. Response version 1.12.0 withdraws provider_accepted_not_materialized and the reindex action. The opt-in Coinbase check keeps validator eligibility on its own plane. The catalog read is one supported task-search window. A missing exact target in that window is unknown catalog presence for the query, not proof the route is unlisted.",
     sourceDependencies: DEPENDENT_SOURCES,
     safety: {
       credentialsUsed: false,

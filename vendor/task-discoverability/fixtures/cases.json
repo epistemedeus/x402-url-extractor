@@ -1,0 +1,503 @@
+{
+  "envelopePost": {
+    "status": 200,
+    "partialResults": false,
+    "resources": [
+      {
+        "resource": "https://example.test/extract",
+        "type": "http",
+        "x402Version": 2,
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "5000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ],
+        "extensions": {
+          "bazaar": {
+            "info": {
+              "input": {
+                "type": "http",
+                "method": "POST",
+                "bodyType": "json",
+                "body": { "url": "https://example.com" }
+              }
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "object",
+                  "properties": {
+                    "type": { "const": "http" },
+                    "method": { "enum": ["POST", "PUT", "PATCH"] },
+                    "bodyType": { "enum": ["json", "form-data", "text"] },
+                    "body": {
+                      "type": "object",
+                      "properties": { "url": { "type": "string" } }
+                    }
+                  },
+                  "required": ["type", "method", "bodyType", "body"]
+                }
+              },
+              "required": ["input"]
+            }
+          }
+        }
+      }
+    ]
+  },
+  "missingOutput": {
+    "status": 200,
+    "partialResults": false,
+    "resources": [
+      {
+        "resource": "https://agents.samedaydesk.com/extract",
+        "type": "http",
+        "x402Version": 2,
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "5000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ],
+        "extensions": {
+          "bazaar": {
+            "info": {
+              "input": {
+                "type": "http",
+                "method": "GET",
+                "queryParams": { "url": "https://example.com" }
+              }
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "object",
+                  "properties": {
+                    "type": { "const": "http" },
+                    "method": { "enum": ["GET"] },
+                    "queryParams": {
+                      "type": "object",
+                      "properties": { "url": { "type": "string" } },
+                      "required": ["url"]
+                    }
+                  },
+                  "required": ["type", "method"]
+                }
+              },
+              "required": ["input"]
+            }
+          }
+        }
+      }
+    ]
+  },
+  "queryExampleOnly": {
+    "status": 200,
+    "resources": [
+      {
+        "resource": "https://example.test/read",
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0xabc",
+            "amount": "1",
+            "payTo": "0xdef"
+          }
+        ],
+        "extensions": {
+          "bazaar": {
+            "info": {
+              "input": {
+                "type": "http",
+                "method": "GET",
+                "queryParams": { "url": "https://example.com" }
+              }
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "object",
+                  "properties": {
+                    "type": { "const": "http" },
+                    "method": { "enum": ["GET"] }
+                  },
+                  "required": ["type", "method"]
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "invalidSchema": {
+    "status": 200,
+    "resources": [
+      {
+        "resource": "https://example.test/bad",
+        "extensions": {
+          "bazaar": {
+            "info": { "input": { "type": "http", "method": "GET" } },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "object",
+                  "properties": { "type": { "const": "http" } },
+                  "required": ["type", "method"]
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "contradictoryDuplicates": {
+    "status": 200,
+    "partialResults": false,
+    "resources": [
+      {
+        "resource": "https://agents.samedaydesk.com/extract",
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "5000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ],
+        "extensions": {
+          "bazaar": {
+            "info": {
+              "input": { "type": "http", "method": "GET", "queryParams": { "url": "https://example.com" } }
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "object",
+                  "properties": {
+                    "method": { "enum": ["GET"] },
+                    "queryParams": {
+                      "type": "object",
+                      "properties": { "url": { "type": "string" } },
+                      "required": ["url"]
+                    }
+                  },
+                  "required": ["method"]
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "resource": "https://agents.samedaydesk.com/extract",
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "9000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ],
+        "extensions": {
+          "bazaar": {
+            "info": {
+              "input": { "type": "http", "method": "GET", "queryParams": { "url": "https://example.com" } }
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "object",
+                  "properties": {
+                    "method": { "enum": ["GET"] },
+                    "queryParams": {
+                      "type": "object",
+                      "properties": { "url": { "type": "string" } },
+                      "required": ["url"]
+                    }
+                  },
+                  "required": ["method"]
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "crossNetwork": {
+    "status": 200,
+    "resources": [
+      {
+        "resource": "https://agents.samedaydesk.com/extract",
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "5000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          },
+          {
+            "scheme": "exact",
+            "network": "eip155:1",
+            "asset": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+            "amount": "5000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ],
+        "extensions": {
+          "bazaar": {
+            "info": {
+              "input": { "type": "http", "method": "GET", "queryParams": { "url": "https://example.com" } }
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "object",
+                  "properties": {
+                    "method": { "enum": ["GET"] },
+                    "queryParams": {
+                      "type": "object",
+                      "properties": { "url": { "type": "string" } },
+                      "required": ["url"]
+                    }
+                  },
+                  "required": ["method"]
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "ignoredPayTo": {
+    "baseline": {
+      "name": "verified-list",
+      "status": 200,
+      "bytes": 81541,
+      "url": "https://api.cdp.coinbase.com/platform/v2/x402/discovery/resources?type=http&limit=20&offset=0",
+      "pagination": { "limit": 20, "offset": 0, "total": 32247 },
+      "items": [{ "resource": "https://www.ax1.vc/api/dashboard/q-verdict/resource" }]
+    },
+    "filtered": {
+      "name": "merchant-payto-list",
+      "status": 200,
+      "bytes": 81541,
+      "url": "https://api.cdp.coinbase.com/platform/v2/x402/discovery/resources?type=http&limit=20&offset=0&payTo=0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+      "pagination": { "limit": 20, "offset": 0, "total": 32247 },
+      "items": [{ "resource": "https://www.ax1.vc/api/dashboard/q-verdict/resource" }]
+    },
+    "changed": {
+      "status": 200,
+      "bytes": 100,
+      "url": "https://api.cdp.coinbase.com/platform/v2/x402/discovery/resources?type=http&limit=20&offset=0&payTo=0x1111111111111111111111111111111111111111",
+      "pagination": { "limit": 20, "offset": 0, "total": 3 },
+      "items": [{ "resource": "https://example.test/other" }]
+    }
+  },
+  "partialTrue": {
+    "status": 200,
+    "partialResults": true,
+    "pagination": null,
+    "url": "https://api.cdp.coinbase.com/platform/v2/x402/discovery/search?query=extract&type=http&limit=20",
+    "resources": [
+      {
+        "resource": "https://example.test/other",
+        "method": "POST",
+        "accepts": []
+      }
+    ]
+  },
+  "missingPagination": {
+    "status": 200,
+    "partialResults": false,
+    "pagination": null,
+    "url": "https://api.cdp.coinbase.com/platform/v2/x402/discovery/search?query=extract&type=http&limit=20",
+    "resources": [
+      { "resource": "https://example.test/a", "accepts": [] },
+      { "resource": "https://example.test/b", "accepts": [] }
+    ]
+  },
+  "clocks": {
+    "status": 200,
+    "resources": [
+      { "resource": "https://example.test/old", "lastUpdated": "2026-01-01T00:00:00.000Z", "accepts": [] },
+      { "resource": "https://example.test/noclock", "accepts": [] }
+    ]
+  },
+  "timeout": {
+    "timedOut": true,
+    "error": "timeout",
+    "url": "https://api.cdp.coinbase.com/platform/v2/x402/discovery/search?query=extract&type=http&limit=20"
+  },
+  "refusal": {
+    "status": 405,
+    "allow": "GET",
+    "method": "OPTIONS",
+    "url": "https://api.cdp.coinbase.com/platform/v2/x402/discovery/resources?type=http&limit=20&offset=0"
+  },
+  "callsZero": {
+    "status": 200,
+    "partialResults": false,
+    "resources": [
+      {
+        "resource": "https://agents.samedaydesk.com/extract",
+        "quality": { "l30DaysTotalCalls": 0 },
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "amount": "5000",
+            "payTo": "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee"
+          }
+        ]
+      }
+    ]
+  },
+  "callsUnknown": {
+    "status": 200,
+    "resources": [
+      { "resource": "https://example.test/no-quality", "accepts": [] }
+    ]
+  },
+  "boundedBody": {
+    "status": 200,
+    "rawBody": "0123456789abcdef",
+    "resources": [
+      { "resource": "https://agents.samedaydesk.com/extract" }
+    ]
+  },
+  "emptyResources": {
+    "status": 200,
+    "partialResults": false,
+    "url": "https://api.cdp.coinbase.com/platform/v2/x402/discovery/search?query=none&type=http&limit=20",
+    "resources": []
+  },
+  "statusWithoutList": {
+    "status": 200,
+    "partialResults": false,
+    "url": "https://api.cdp.coinbase.com/platform/v2/x402/discovery/search?query=extract&type=http&limit=20"
+  },
+  "unresolvedRef": {
+    "status": 200,
+    "resources": [
+      {
+        "resource": "https://example.test/ref",
+        "accepts": [
+          {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "asset": "0xabc",
+            "amount": "1",
+            "payTo": "0xdef"
+          }
+        ],
+        "extensions": {
+          "bazaar": {
+            "info": {
+              "input": { "type": "http", "method": "POST", "bodyType": "json", "body": {} }
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "object",
+                  "properties": {
+                    "method": { "enum": ["POST"] },
+                    "bodyType": { "enum": ["json"] },
+                    "body": {
+                      "type": "object",
+                      "properties": { "url": { "$ref": "#/$defs/Url" } },
+                      "required": ["url"]
+                    }
+                  },
+                  "required": ["method", "bodyType", "body"]
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "scoreIgnored": {
+    "status": 200,
+    "resources": [
+      { "resource": "https://example.test/scored", "score": 0.99, "accepts": [] },
+      { "resource": "https://example.test/second", "score": 0.1, "accepts": [] }
+    ]
+  },
+  "limitIgnored": {
+    "status": 200,
+    "url": "https://api.cdp.coinbase.com/platform/v2/x402/discovery/search?query=extract&type=http&limit=2",
+    "resources": [
+      { "resource": "https://example.test/1", "accepts": [] },
+      { "resource": "https://example.test/2", "accepts": [] },
+      { "resource": "https://example.test/3", "accepts": [] }
+    ]
+  },
+  "retainedSearch": {
+    "name": "task-search",
+    "method": "GET",
+    "status": 200,
+    "elapsedMs": 953.2,
+    "url": "https://api.cdp.coinbase.com/platform/v2/x402/discovery/search?query=Extract+the+readable+text+from+one+public+web+page+URL+into+structured+JSON.&type=http&limit=20",
+    "pagination": null,
+    "partialResults": false,
+    "itemCount": 11,
+    "oursCount": 0,
+    "ours": [],
+    "constructibleCount": 11,
+    "top": [
+      {
+        "resource": "https://api.oblique.markets/api/v1/paid/web-extract",
+        "method": "POST",
+        "hasInput": true,
+        "inputRequired": ["type", "method", "bodyType", "body"],
+        "hasOutputExample": true,
+        "hasOutputSchema": true,
+        "acceptCount": 2,
+        "amount": "30000",
+        "network": "eip155:8453",
+        "assetPresent": true,
+        "constructible": true,
+        "lastUpdated": "2026-10-08T06:11:44.567Z"
+      },
+      {
+        "resource": "https://web.openverbs.com/v1/extract",
+        "method": "POST",
+        "hasInput": true,
+        "inputRequired": ["type", "method", "bodyType", "body"],
+        "hasOutputExample": false,
+        "hasOutputSchema": false,
+        "acceptCount": 1,
+        "amount": "6000",
+        "network": "eip155:8453",
+        "assetPresent": true,
+        "constructible": true,
+        "lastUpdated": "2026-10-02T17:28:42.078Z"
+      }
+    ]
+  }
+}

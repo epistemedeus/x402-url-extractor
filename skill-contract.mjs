@@ -73,7 +73,7 @@ ${actionsMarkdown}
 - Wallet-policy conformance evaluates safe caller-supplied outcomes from a standardized provider test matrix. It accepts no credentials or raw provider payloads and does not independently run, sign, or verify those provider tests.
 - Stateful wallet-policy conformance separately evaluates cumulative limits, signed-but-unbroadcast accounting, metric extraction, concurrent oversubscription, counter-reference failure, and application serialization. It accepts no counter values, resource IDs, credentials, or raw provider payloads and does not run concurrent requests itself.
 - Opportunity preflight uses caller-supplied cost and selection assumptions plus dated categorical platform evidence. It makes no claim, bid, payment, or submission on the source platform.
-- Agent discoverability audit sends one brand-blind capability intent to public catalogs. An explicit surfaceAudit option also checks three fixed public same-origin discovery documents with pinned public DNS, no redirects, bounded time, and bounded response size. It measures point-in-time rank and coverage, not demand, conversion, reliability, or future rank.
+- Agent discoverability audit sends one brand-blind capability intent to public catalogs. An explicit surfaceAudit option also checks three fixed public same-origin discovery documents with pinned public DNS, no redirects, bounded time, and bounded response size. It measures point-in-time rank and coverage, not demand, conversion, reliability, or future rank. A missing catalog row in one limited query window is unknown catalog presence, not proof the service is unlisted.
 - Demand telemetry is aggregate and does not expose buyer identities or raw request data.
 ${callerGuide ? `\n${callerGuide}` : ""}`;
 }

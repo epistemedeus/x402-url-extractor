@@ -1,56 +1,46 @@
-# Ecosystem map: provider acceptance versus catalog materialization
+# Ecosystem map: validator eligibility versus one task-search window
 
-## Frozen job
+## Current contract
 
-For one exact public x402 route, distinguish a seller eligibility failure from
-a provider-accepted route that has not materialized in the provider's buyer
-catalog. The output must change the operator's next action without asserting
-demand, settlement, or a provider-supported reindex mechanism.
+The opt-in Coinbase check keeps two planes apart. Validator eligibility is
+whatever the current seller validator returns. The catalog read is one
+supported task-search window using the maintained SDK parameters. A missing
+exact target in that window is unknown catalog presence for the query. It does
+not prove the route is unlisted and it does not support a reindex action.
 
-## Evidence and recurrence
+Response version 1.12.0 withdraws `provider_accepted_not_materialized` and the
+reindex action. `seller_not_provider_eligible` is no longer a combined catalog
+state. The price stays 0.05 USDC.
 
-SameDayDesk, Atinamos, and an independently operated Thryve route have each
-produced the same observable split: Coinbase's endpoint validator accepted the
-route while exact-resource Bazaar readback remained absent. This establishes a
-repeated operational state across three sellers, not prevalence or willingness
-to pay.
+## Earlier observation
+
+SameDayDesk, Atinamos, and an independently operated Thryve route each showed
+a validator result that accepted the route while one Bazaar read did not
+contain that exact resource. That was a repeated split across three sellers,
+not prevalence and not proof of catalog absence. The withdrawn classifier
+treated that split as non-materialization. A limited query cannot close that
+question.
 
 ## Reuse decision
 
-- Reuse Coinbase's official seller validator as the provider-eligibility view.
-- Reuse Coinbase Bazaar search as the provider materialization view.
+- Reuse Coinbase's official seller validator as the eligibility plane.
+- Reuse one supported CDP discovery search as the query window.
 - Reuse the existing SameDayDesk Agent Discoverability Audit for cross-registry
   rank, route, price, and identity evidence.
-- Add one replaceable, source-labeled opt-in adapter. Do not build a validator
-  wrapper, a new SKU, a new registry, a poller, or a reindex service.
+- Reuse task-discoverability 0.3.0 for coverage and request construction.
+- Do not build a validator wrapper, a new SKU, a new registry, a poller, or a
+  reindex service.
 
-The residual invariant is the comparison Coinbase's two provider surfaces do
-not return themselves: validation acceptance is not catalog materialization.
+## Hostile cases
 
-## Integration and authority boundary
-
-`materializationAudit=true` requires an exact route and an explicit GET or POST
-method. The adapter performs one provider validation and one exact-resource
-catalog readback, then returns only bounded normalized facts. Provider results
-remain provider-returned point-in-time evidence. The audit never promotes them
-to settlement, demand, seller trust, independent runtime validity, or reindex
-authority. Adapter unavailability leaves the cross-registry audit intact.
-
-## Hostile acceptance cases
-
-1. Accepted validator plus absent exact resource becomes
-   `provider_accepted_not_materialized`.
-2. Rejected validator plus absent exact resource becomes
-   `seller_not_provider_eligible`.
-3. Exact-resource readback becomes `materialized` even if the current validator
-   later rejects.
-4. Missing or malformed provider evidence becomes `unresolved`; it never
-   becomes accepted, rejected, or materialized by default.
-
-## Adoption and kill conditions
-
-Continue only if an independent seller or operator reports that the distinction
-changed a repair or escalation action, or if the existing paid audit receives
-independent use. Remove the adapter if Coinbase publishes authoritative
-ingestion disposition or supported reindex state through one official surface,
-or if the adapter creates no external use after the bounded experiment.
+1. A validator result that reports eligibility, plus no exact row in the
+   inspected window, stays `query_window_catalog_presence_unknown`. There is
+   no reindex action.
+2. A validator result that does not report eligibility is
+   `provider_reported_not_eligible` on the validator plane. Catalog presence
+   stays unknown unless an exact row was inspected.
+3. An exact resource string in the inspected rows is
+   `observed_in_query_window` even when the validator does not report
+   eligibility. Catalog membership beyond those rows stays unknown.
+4. Missing or malformed provider evidence stays `unresolved`. It does not
+   become eligibility, observation, or absence by default.

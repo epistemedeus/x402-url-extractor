@@ -1,0 +1,24 @@
+{
+  "package": "task-discoverability",
+  "version": "0.3.0",
+  "license": "MIT",
+  "layout": "flat",
+  "implementation": "0cf1e465c714991ab70fbde349ed51baddf64c12",
+  "implementationTree": "c89d85373bdd46cc64f54fbe3bbab6255f11604a",
+  "evidence": "9b1b7bce436c2d982ced011ebd770067105efc82",
+  "archiveBlob": "ee1a7b33b941f811f659e3de1bc51876ae6ef2b8",
+  "archiveSha256": "1c999d1144c39bc4283a8dc8a6f6149788fd91c438f738fe63ea7c64e9162f57",
+  "archiveBytes": 36215,
+  "archiveFile": "vendor/task-discoverability-0.3.0.tar.gz",
+  "ajv": "8.20.0",
+  "ajvLicense": "MIT",
+  "sdk": {
+    "package": "@x402/extensions",
+    "version": "2.28.0",
+    "license": "Apache-2.0",
+    "commit": "f8f83309706b14cc696962f0a002eeeb66c3dc26",
+    "client": "typescript/packages/extensions/src/bazaar/facilitatorClient.ts"
+  },
+  "publicLaunch": false,
+  "incompatible": "collectBounded refuses any base other than the pinned CDP search URL, is GET-only, and stops at 262144 bytes. Shared fetchJson still serves every catalog family and the validator POST at the existing 10 MB cap, so it follows that incremental byte, cancel, and abort contract instead of calling collectBounded. measure() names one CDP provider, so other source families keep its count and construction contract without being labeled as that provider."
+}
