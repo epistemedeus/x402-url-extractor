@@ -107,6 +107,9 @@ function canonicalSettlement(record) {
     paymentClass: record.paymentClass,
     settlementReference: String(record.settlementReference).toLowerCase(),
     amountAtomic: String(record.amountAtomic),
+    network: typeof record.network === "string" ? record.network : "",
+    asset: typeof record.asset === "string" ? record.asset : "",
+    treasury: typeof record.treasury === "string" ? record.treasury : "",
   };
 }
 
@@ -157,6 +160,13 @@ function mcpMismatchReason(record, event, settlement) {
   if (record.issuedOfferDigest !== binding.issuedOfferDigest) return "foreign_offer";
   if (record.settlementReference || settlement.settlementReference) {
     if (!sameReference(record.settlementReference, settlement.settlementReference)) return "foreign_reference";
+  }
+  if (typeof event.settlementAmountAtomic === "string") {
+    if (String(settlement.amountAtomic) !== event.settlementAmountAtomic) return "amount_mismatch";
+    if (String(settlement.network || "") !== String(event.settlementNetwork || "")) return "network_mismatch";
+    if (String(settlement.asset || "").toLowerCase() !== String(event.settlementCurrency || "").toLowerCase()) return "asset_mismatch";
+    if (String(settlement.treasury || "").toLowerCase() !== String(event.settlementPayee || "").toLowerCase()) return "payee_mismatch";
+    if (!sameReference(event.settlementReference, settlement.settlementReference)) return "foreign_reference";
   }
   const callDigest = digestMcpCallId(record.callId);
   if (record.callDigest !== callDigest) return "foreign_call";

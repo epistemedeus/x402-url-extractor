@@ -1,7 +1,8 @@
 // Optional native-MCP statement for one sealed morpho_position result.
 // The capability lives only in result _meta. It is not a payer, a price,
-// or an event id. Official @x402/mcp callTool omits _meta, so this reader
-// uses the MCP SDK Client result that still carries it.
+// or an event id. Official @x402/mcp 2.16.0 x402MCPClient.callTool returns
+// no _meta. Its onAfterPayment hook receives the sealed MCP result, and
+// the MCP SDK Client still carries _meta on its own callTool result.
 import {
   MCP_CALLER_RESULT_META_KEY,
   MCP_CALLER_RESULT_TOOL,
@@ -63,6 +64,7 @@ function safeBody(body) {
       ? body.reasonCategory
       : null,
     idempotentReplay: body.idempotentReplay === true,
+    parent: body.parent === "bound" || body.parent === "pending" || body.parent === "unbound" ? body.parent : null,
     retainedDisposition: body.retainedDisposition === "useful" || body.retainedDisposition === "not_useful"
       ? body.retainedDisposition
       : null,
@@ -85,6 +87,7 @@ export async function reportMcpCallerResult(client, { token, disposition, reason
     disposition: null,
     reasonCategory: null,
     idempotentReplay: false,
+    parent: null,
     retainedDisposition: null,
     retainedReasonCategory: null,
     coverage: null,
@@ -96,10 +99,14 @@ export async function reportMcpCallerResult(client, { token, disposition, reason
   let result;
   try {
     if (!client || typeof client.callTool !== "function") return refused("transport_failed");
-    result = await client.callTool({
-      name: MCP_CALLER_RESULT_TOOL,
-      arguments: args,
-    });
+    // x402MCPClient.callTool(name, args) is positional. The MCP SDK Client
+    // callTool takes one object. onAfterPayment identifies the official wrapper.
+    result = typeof client.onAfterPayment === "function"
+      ? await client.callTool(MCP_CALLER_RESULT_TOOL, args)
+      : await client.callTool({
+        name: MCP_CALLER_RESULT_TOOL,
+        arguments: args,
+      });
   } catch {
     return refused("transport_failed");
   }
@@ -123,4 +130,51 @@ export async function reportMcpCallerResult(client, { token, disposition, reason
   const body = safeBody(parsed);
   if (!body) return refused("malformed_result");
   return body;
+}
+
+export function bindPaidMcpCallerResult(x402Client) {
+  if (!x402Client || typeof x402Client.onAfterPayment !== "function" || typeof x402Client.callTool !== "function") {
+    throw new TypeError("official_mcp_client_required");
+  }
+  let captured = { present: false, token: null, tool: null, reason: "absent" };
+  x402Client.onAfterPayment((context) => {
+    captured = readMcpCallerResultCapability(context?.result);
+  });
+  return {
+    client: x402Client,
+    async pay(name, args) {
+      captured = { present: false, token: null, tool: null, reason: "absent" };
+      const paid = await x402Client.callTool(name, args);
+      const returned = readMcpCallerResultCapability(paid);
+      return {
+        paymentMade: paid?.paymentMade === true,
+        returnedCapability: returned.present === true,
+        capability: captured.present === true
+          ? { present: true, token: captured.token, tool: captured.tool, reason: null }
+          : { present: false, token: null, tool: null, reason: captured.reason || "absent" },
+        content: Array.isArray(paid?.content) ? paid.content : [],
+        isError: paid?.isError === true,
+      };
+    },
+    async payWithPayment(name, args, payment) {
+      captured = { present: false, token: null, tool: null, reason: "absent" };
+      if (typeof x402Client.callToolWithPayment !== "function") {
+        throw new TypeError("official_mcp_client_required");
+      }
+      const paid = await x402Client.callToolWithPayment(name, args, payment);
+      const returned = readMcpCallerResultCapability(paid);
+      return {
+        paymentMade: paid?.paymentMade === true,
+        returnedCapability: returned.present === true,
+        capability: captured.present === true
+          ? { present: true, token: captured.token, tool: captured.tool, reason: null }
+          : { present: false, token: null, tool: null, reason: captured.reason || "absent" },
+        content: Array.isArray(paid?.content) ? paid.content : [],
+        isError: paid?.isError === true,
+      };
+    },
+    report(input) {
+      return reportMcpCallerResult(x402Client, input);
+    },
+  };
 }

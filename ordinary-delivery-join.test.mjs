@@ -1057,3 +1057,67 @@ test("canonical settlement cannot borrow another transport, protocol, time or ev
   assert.equal(wrongTime.individualJoin, false);
   assert.ok(wrongTime.reasons.includes("settlement_does_not_match_paid_event"));
 });
+
+test("a disk parent keeps amount, network, asset, and payee for the typed join", async () => {
+  const eventId = id(51);
+  const body = emptyMorphoBody();
+  const capture = mcpObserved(eventId, ref(7), "call-parent-money", body);
+  const event = {
+    ...typedEvent({ id: eventId, timestamp: at(51), result: "paid_success" }),
+    paymentProtocol: "x402",
+    route: "/mcp",
+    settlementAmountAtomic: "20000",
+    settlementCurrency: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    settlementNetwork: "eip155:8453",
+    settlementPayee: "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    settlementReference: ref(7),
+  };
+  assert.equal(isCanonicalMcpTypedCommerceEvent(event), true);
+  const ledger = {
+    ...ledgerFrom(null, {
+      timestamp: at(51),
+      paymentClass: "unclassified",
+      amountAtomic: "20000",
+      sourceEventId: eventId,
+      route: "/mcp",
+      protocol: "x402",
+      settlementReference: ref(7),
+    }),
+    network: "eip155:8453",
+    asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    treasury: "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+  };
+  const dir = await mkdtemp(path.join(tmpdir(), "ordinary-join-money-"));
+  try {
+    await writeFile(path.join(dir, FILE_CLASSES.commerceEvents), ndjson([event]));
+    await writeFile(path.join(dir, FILE_CLASSES.mcpDelivery), ndjson([capture]));
+    await writeFile(path.join(dir, FILE_CLASSES.settlementLedger), ndjson([ledger]));
+    const joined = await receiveOrdinaryDeliveryJoin({
+      dataDir: dir,
+      windowStart: WINDOW_START,
+      windowEnd: WINDOW_END,
+      sourceSha: SHA,
+    });
+    assert.equal(joined.rows[0].disposition, "exact_join");
+    assert.equal(joined.rows[0].mcpAttached, 1);
+    for (const [change, reason] of [
+      [{ amountAtomic: "1" }, "amount_mismatch"],
+      [{ network: "eip155:1" }, "network_mismatch"],
+      [{ asset: "0x1111111111111111111111111111111111111111" }, "asset_mismatch"],
+      [{ treasury: "0x2222222222222222222222222222222222222222" }, "payee_mismatch"],
+    ]) {
+      await writeFile(path.join(dir, FILE_CLASSES.settlementLedger), ndjson([{ ...ledger, ...change }]));
+      const report = await receiveOrdinaryDeliveryJoin({
+        dataDir: dir,
+        windowStart: WINDOW_START,
+        windowEnd: WINDOW_END,
+        sourceSha: SHA,
+      });
+      assert.equal(report.rows[0].disposition, "conflicting_join", reason);
+      assert.equal(report.rows[0].mcpAttached, 0, reason);
+      assert.ok(report.rows[0].reasons.includes(reason), reason);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});

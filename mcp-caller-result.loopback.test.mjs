@@ -35,9 +35,14 @@ test("mounted native MCP caller journey reaches the current handlers", { timeout
   const summary = JSON.parse(stdout.trim().split("\n").at(-1));
   assert.equal(summary.outcome, "ready_for_receiving");
   assert.equal(summary.initialFailure, null);
-  assert.equal(summary.controls.projectionDeclaredUseful, 1);
-  assert.equal(summary.controls.mountedDeclaredUseful, 0);
-  assert.equal(summary.controls.mountedEligible, 0);
+  assert.equal(summary.remainingContract, null);
+  assert.equal(summary.controls.coldDeclaredUseful, 1);
+  assert.equal(summary.controls.coldDeclaredNotUseful, 1);
+  assert.equal(summary.controls.usefulBound, true);
+  assert.equal(summary.controls.wrapperReturnedCapability, false);
+  assert.equal(summary.controls.hookRetainsCapability, true);
+  assert.equal(summary.controls.chainTruth, false);
+  assert.equal(summary.counts.parentAdmitted > 0, true);
   assert.equal(summary.counts.declaredUseful, 1);
   assert.equal(summary.counts.declaredNotUseful, 1);
   const encoded = JSON.stringify(summary);

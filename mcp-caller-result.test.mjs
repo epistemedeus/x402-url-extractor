@@ -14,7 +14,9 @@ import {
 import { digestMcpCallId, digestMcpPayload } from "./http-delivery-evidence/digest.mjs";
 import { MCP_MORPHO_RESOURCE, MCP_MORPHO_TOOL } from "./http-delivery-evidence/mcp-delivery.mjs";
 import { createDeliveryObservation } from "./http-delivery-evidence/observation.mjs";
-import { readMcpCallerResultCapability, reportMcpCallerResult } from "./mcp-caller-result.mjs";
+import { adaptMcpTypedDecisionToCommerceEvent, isCanonicalMcpTypedCommerceEvent } from "./commerce-events.mjs";
+import { evaluateMcpTypedTelemetryOutcome } from "./mcp-typed-telemetry-producer.mjs";
+import { bindPaidMcpCallerResult, readMcpCallerResultCapability, reportMcpCallerResult } from "./mcp-caller-result.mjs";
 
 const KEY = randomBytes(32).toString("hex");
 const NOW = Date.parse("2026-10-10T16:00:00.000Z");
@@ -146,4 +148,116 @@ test("the mcp client reports through callTool and does not echo a transport fail
   assert.equal(failed.code, "transport_failed");
   assert.equal(failed.usefulness, "unknown");
   assert.equal(JSON.stringify(failed).includes(issued), false);
+});
+
+test("facilitator settlement facts stay canonical without becoming chain truth", () => {
+  const digest = "ab".repeat(32);
+  const decision = evaluateMcpTypedTelemetryOutcome({
+    schemaVersion: "samedaydesk.mcp-typed-telemetry-input.v1",
+    binding: {
+      tool: "morpho_position",
+      productSku: "samedaydesk-morpho-position",
+      resource: "mcp://tool/morpho_position",
+      issuedOfferDigest: digest,
+    },
+    request: { jsonrpc: "2.0", hasId: true, id: 7, method: "tools/call" },
+    response: { hasId: true, id: 7, kind: "tool_result" },
+    credential: { state: "verified", offerDigest: digest },
+    execution: { state: "handler_success", handlerInvoked: true, resultIsError: false },
+    settlement: { state: "succeeded", offerDigest: digest },
+  });
+  const bare = adaptMcpTypedDecisionToCommerceEvent(decision, {
+    facilitatorSettlement: { transaction: TX },
+  });
+  assert.equal(bare.settlementReference, undefined);
+  assert.equal(bare.chainTruth, false);
+  assert.equal(isCanonicalMcpTypedCommerceEvent(bare), true);
+  const settled = adaptMcpTypedDecisionToCommerceEvent(decision, {
+    facilitatorSettlement: {
+      transaction: TX,
+      network: "eip155:8453",
+      amount: "20000",
+      asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      payee: "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    },
+  });
+  assert.equal(settled.route, "/mcp");
+  assert.equal(settled.paymentProtocol, "x402");
+  assert.equal(settled.settlementReference, TX);
+  assert.equal(settled.settlementAmountAtomic, "20000");
+  assert.equal(settled.chainTruth, false);
+  assert.equal(settled.accounting, false);
+  assert.equal(settled.revenue, false);
+  assert.equal(settled.payerIdentity, false);
+  assert.equal(isCanonicalMcpTypedCommerceEvent(settled), true);
+  assert.equal(isCanonicalMcpTypedCommerceEvent({ ...settled, chainTruth: true }), false);
+  assert.equal(isCanonicalMcpTypedCommerceEvent({ ...bare, settlementReference: TX }), false);
+});
+
+test("the official wrapper hook retains the sealed result and callTool stays positional", async () => {
+  const issued = token();
+  const contract = { ...mcpCallerResultFeedbackPublicContract(), token: issued };
+  const hooks = [];
+  const calls = [];
+  const client = {
+    onAfterPayment(hook) {
+      hooks.push(hook);
+      return this;
+    },
+    async callTool(name, args) {
+      calls.push({ name, args, form: "positional" });
+      if (name === "morpho_position") {
+        await hooks[0]({
+          result: {
+            content: [{ type: "text", text: "{\"ok\":true}" }],
+            _meta: { "samedaydesk/mcp-caller-result": contract },
+          },
+        });
+        return { content: [{ type: "text", text: "{\"ok\":true}" }], paymentMade: true };
+      }
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            ok: true,
+            accepted: true,
+            bound: false,
+            parent: "pending",
+            charged: false,
+            payerIdentity: false,
+            usefulness: "unknown",
+            disposition: "useful",
+            reasonCategory: "matched_task",
+            idempotentReplay: false,
+            coverage: "this_retained_result_only",
+          }),
+        }],
+      };
+    },
+    async callToolWithPayment(name, args, payment) {
+      calls.push({ name, args, payment: Boolean(payment), form: "upfront" });
+      return { content: [{ type: "text", text: "{\"ok\":true}" }], paymentMade: true, isError: false };
+    },
+  };
+  const paid = bindPaidMcpCallerResult(client);
+  const purchase = await paid.pay("morpho_position", { address: "fixture" });
+  assert.equal(purchase.paymentMade, true);
+  assert.equal(purchase.returnedCapability, false);
+  assert.equal(purchase.capability.present, true);
+  assert.equal(purchase.capability.token, issued);
+  const reported = await paid.report({ token: issued, disposition: "useful", reasonCategory: "matched_task" });
+  assert.equal(reported.accepted, true);
+  assert.equal(reported.bound, false);
+  assert.equal(reported.parent, "pending");
+  assert.equal(calls[0].name, "morpho_position");
+  assert.equal(calls[0].form, "positional");
+  assert.equal(calls[1].name, "report_caller_result");
+  assert.equal(calls[1].args.disposition, "useful");
+  const upfront = await paid.payWithPayment("opportunity_preflight", { rewardUsd: 10 }, { accepted: true });
+  assert.equal(upfront.paymentMade, true);
+  assert.equal(upfront.returnedCapability, false);
+  assert.equal(upfront.capability.present, false);
+  assert.equal(calls[2].form, "upfront");
+  assert.equal(calls[2].name, "opportunity_preflight");
+  assert.equal(JSON.stringify(reported).includes(issued), false);
 });

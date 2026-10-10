@@ -647,11 +647,11 @@ export function evaluateMcpTypedTelemetryOutcome(input) {
   return emptyDecision("invalid_typed_outcome");
 }
 
-function enqueueAppend(onAppend, decision, delivery = null) {
+function enqueueAppend(onAppend, decision, delivery = null, facilitatorSettlement = null) {
   if (typeof onAppend !== "function") return;
   const run = () => {
     try {
-      const result = onAppend(decision, delivery);
+      const result = onAppend(decision, delivery, facilitatorSettlement);
       if (result && typeof result.then === "function") {
         result.then(() => undefined, () => undefined);
       }
@@ -686,6 +686,7 @@ export function createMcpTypedTelemetryAttempt({ binding, request, onAppend } = 
   let invalidReason = null;
   let lastDecision = null;
   let settlementReference = null;
+  let facilitatorSettlement = null;
   let toolDelivery = null;
 
   function markInvalid(reason = "invalid_typed_outcome") {
@@ -804,10 +805,23 @@ export function createMcpTypedTelemetryAttempt({ binding, request, onAppend } = 
     credentialRejected();
   }
 
-  function observeSettleOutcome({ success, settlementReference: reference } = {}) {
+  function observeSettleOutcome({ success, settlementReference: reference, facilitatorSettlement: snapshot } = {}) {
     if (success === true) {
       if (typeof reference === "string" && /^0x[0-9a-fA-F]{64}$/.test(reference)) {
         settlementReference = reference.toLowerCase();
+      }
+      try {
+        facilitatorSettlement = snapshot && typeof snapshot === "object" && !Array.isArray(snapshot)
+          ? {
+            transaction: typeof snapshot.transaction === "string" ? snapshot.transaction : null,
+            network: typeof snapshot.network === "string" ? snapshot.network : null,
+            amount: typeof snapshot.amount === "string" ? snapshot.amount : null,
+            asset: typeof snapshot.asset === "string" ? snapshot.asset : null,
+            payee: typeof snapshot.payee === "string" ? snapshot.payee : null,
+          }
+          : null;
+      } catch {
+        facilitatorSettlement = null;
       }
       settlementFinished({
         state: "succeeded",
@@ -904,7 +918,13 @@ export function createMcpTypedTelemetryAttempt({ binding, request, onAppend } = 
     } catch {
       delivery = null;
     }
-    enqueueAppend(onAppend, lastDecision, delivery);
+    let settlementSnapshot = null;
+    try {
+      settlementSnapshot = facilitatorSettlement ? { ...facilitatorSettlement } : null;
+    } catch {
+      settlementSnapshot = null;
+    }
+    enqueueAppend(onAppend, lastDecision, delivery, settlementSnapshot);
     return lastDecision;
   }
 

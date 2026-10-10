@@ -4518,8 +4518,8 @@ import("./mcp-server.mjs")
       serverInfo: { name: "x402-data-gateway", version: SERVICE_VERSION },
       typedTelemetry: {
         enabled: true,
-        onAppend: (decision, requestAttribution, declaredSource, toolDelivery) =>
-          commerceTelemetry.appendMcpTypedDecision(decision, requestAttribution, declaredSource, toolDelivery),
+        onAppend: (decision, requestAttribution, declaredSource, toolDelivery, facilitatorSettlement) =>
+          commerceTelemetry.appendMcpTypedDecision(decision, requestAttribution, declaredSource, toolDelivery, facilitatorSettlement),
         attributionForRequest: (req) => commerceTelemetry.mcpTypedAttributionForRequest(req),
         declaredSourceForRequest: (req) => commerceTelemetry.mcpTypedDeclaredSourceForRequest(req),
       },

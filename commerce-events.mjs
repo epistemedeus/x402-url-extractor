@@ -15,6 +15,7 @@ export {
   resolveProspectiveRetention,
 } from "./commerce-prospective-retention.mjs";
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { getAddress } from "viem";
 import { attachCallerResultFeedbackHeader } from "./caller-result-feedback.mjs";
 import { appendFile, chmod, lstat, mkdir, open, readFile, rename, stat, unlink } from "node:fs/promises";
 import path from "node:path";
@@ -2659,6 +2660,34 @@ const MCP_TYPED_ATTRIBUTED_SOURCED_COMMERCE_KEYS = Object.freeze([
   ...MCP_TYPED_ATTRIBUTED_COMMERCE_KEYS,
   MCP_TYPED_DECLARED_SOURCE_KEY,
 ]);
+const MCP_TYPED_SETTLEMENT_FACT_KEYS = Object.freeze([
+  "paymentProtocol",
+  "route",
+  "settlementAmountAtomic",
+  "settlementCurrency",
+  "settlementNetwork",
+  "settlementPayee",
+  "settlementReference",
+]);
+const MCP_TYPED_SETTLED_COMMERCE_KEYS = Object.freeze([
+  ...MCP_TYPED_COMMERCE_KEYS,
+  ...MCP_TYPED_SETTLEMENT_FACT_KEYS,
+]);
+const MCP_TYPED_ATTRIBUTED_SETTLED_COMMERCE_KEYS = Object.freeze([
+  ...MCP_TYPED_ATTRIBUTED_COMMERCE_KEYS,
+  ...MCP_TYPED_SETTLEMENT_FACT_KEYS,
+]);
+const MCP_TYPED_SOURCED_SETTLED_COMMERCE_KEYS = Object.freeze([
+  ...MCP_TYPED_SOURCED_COMMERCE_KEYS,
+  ...MCP_TYPED_SETTLEMENT_FACT_KEYS,
+]);
+const MCP_TYPED_ATTRIBUTED_SOURCED_SETTLED_COMMERCE_KEYS = Object.freeze([
+  ...MCP_TYPED_ATTRIBUTED_SOURCED_COMMERCE_KEYS,
+  ...MCP_TYPED_SETTLEMENT_FACT_KEYS,
+]);
+const MCP_TYPED_TX = /^0x[0-9a-f]{64}$/;
+const MCP_TYPED_NETWORK = /^[a-z0-9]+:[a-z0-9._-]+$/;
+const MCP_TYPED_AMOUNT = /^[1-9]\d{0,77}$/;
 const MCP_TYPED_HEX = /^[0-9a-f]{64}$/u;
 const MCP_TYPED_TOKEN = /^[a-z][a-z0-9_]{0,63}$/u;
 const MCP_TYPED_SKU = /^[a-z][a-z0-9-]{0,95}$/u;
@@ -2904,12 +2933,57 @@ function declaresMcpTypedSource(value) {
   );
 }
 
+function canonicalMcpFacilitatorSettlement(snapshot) {
+  if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) return null;
+  try {
+    const reference = typeof snapshot.transaction === "string" ? snapshot.transaction.toLowerCase() : "";
+    if (!MCP_TYPED_TX.test(reference)) return null;
+    const network = typeof snapshot.network === "string" ? snapshot.network.toLowerCase() : "";
+    if (!MCP_TYPED_NETWORK.test(network)) return null;
+    const amount = typeof snapshot.amount === "string" ? snapshot.amount : "";
+    if (!MCP_TYPED_AMOUNT.test(amount)) return null;
+    const currency = getAddress(snapshot.asset);
+    const payee = getAddress(snapshot.payee);
+    return {
+      paymentProtocol: "x402",
+      route: "/mcp",
+      settlementAmountAtomic: amount,
+      settlementCurrency: currency,
+      settlementNetwork: network,
+      settlementPayee: payee,
+      settlementReference: reference,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function validMcpTypedSettlementFacts(value) {
+  if (value.result !== "paid_success" || value.settlementState !== "succeeded") return false;
+  if (value.route !== "/mcp" || value.paymentProtocol !== "x402") return false;
+  if (typeof value.settlementReference !== "string" || !MCP_TYPED_TX.test(value.settlementReference)) return false;
+  if (typeof value.settlementNetwork !== "string" || !MCP_TYPED_NETWORK.test(value.settlementNetwork)) return false;
+  if (typeof value.settlementAmountAtomic !== "string" || !MCP_TYPED_AMOUNT.test(value.settlementAmountAtomic)) return false;
+  try {
+    if (getAddress(value.settlementCurrency) !== value.settlementCurrency) return false;
+    if (getAddress(value.settlementPayee) !== value.settlementPayee) return false;
+  } catch {
+    return false;
+  }
+  return value.chainTruth === false;
+}
+
 export function isCanonicalMcpTypedCommerceEvent(value) {
   const legacy = exactObjectKeys(value, MCP_TYPED_COMMERCE_KEYS);
   const attributed = exactObjectKeys(value, MCP_TYPED_ATTRIBUTED_COMMERCE_KEYS);
   const sourced = exactObjectKeys(value, MCP_TYPED_SOURCED_COMMERCE_KEYS);
   const attributedSourced = exactObjectKeys(value, MCP_TYPED_ATTRIBUTED_SOURCED_COMMERCE_KEYS);
-  if (!legacy && !attributed && !sourced && !attributedSourced) return false;
+  const settled = exactObjectKeys(value, MCP_TYPED_SETTLED_COMMERCE_KEYS);
+  const attributedSettled = exactObjectKeys(value, MCP_TYPED_ATTRIBUTED_SETTLED_COMMERCE_KEYS);
+  const sourcedSettled = exactObjectKeys(value, MCP_TYPED_SOURCED_SETTLED_COMMERCE_KEYS);
+  const attributedSourcedSettled = exactObjectKeys(value, MCP_TYPED_ATTRIBUTED_SOURCED_SETTLED_COMMERCE_KEYS);
+  const settledShape = settled || attributedSettled || sourcedSettled || attributedSourcedSettled;
+  if (!legacy && !attributed && !sourced && !attributedSourced && !settledShape) return false;
   if (value.v !== 4) return false;
   if (value.sourceContract !== MCP_TYPED_COMMERCE_SOURCE) return false;
   if (eventTimestampMs(value) === null) return false;
@@ -2922,21 +2996,22 @@ export function isCanonicalMcpTypedCommerceEvent(value) {
   if (value.independentUse !== false) return false;
   if (value.chainTruth !== false) return false;
   if (value.payerIdentity !== false) return false;
-  if ((attributed || attributedSourced) && !isCanonicalMcpTypedAttribution(value.requestAttribution)) {
+  if ((attributed || attributedSourced || attributedSettled || attributedSourcedSettled) && !isCanonicalMcpTypedAttribution(value.requestAttribution)) {
     return false;
   }
   if (
-    (sourced || attributedSourced)
+    (sourced || attributedSourced || sourcedSettled || attributedSourcedSettled)
     && (typeof value.declaredAgentDiscoverySource !== "string"
       || canonicalMcpTypedDeclaredSource(value.declaredAgentDiscoverySource)
         !== value.declaredAgentDiscoverySource)
   ) {
     return false;
   }
+  if (settledShape && !validMcpTypedSettlementFacts(value)) return false;
   return isStoredMcpTypedDecisionFields(value);
 }
 
-export function adaptMcpTypedDecisionToCommerceEvent(decision, { id, ts } = {}) {
+export function adaptMcpTypedDecisionToCommerceEvent(decision, { id, ts, facilitatorSettlement } = {}) {
   if (!decision || typeof decision !== "object" || Array.isArray(decision)) return null;
   const event = {
     v: 4,
@@ -2968,7 +3043,12 @@ export function adaptMcpTypedDecisionToCommerceEvent(decision, { id, ts } = {}) 
       }
       : null,
   };
-  return isCanonicalMcpTypedCommerceEvent(event) ? event : null;
+  if (!isCanonicalMcpTypedCommerceEvent(event)) return null;
+  if (event.result !== "paid_success" || event.settlementState !== "succeeded") return event;
+  const facts = canonicalMcpFacilitatorSettlement(facilitatorSettlement);
+  if (!facts) return event;
+  const settledEvent = { ...event, ...facts };
+  return isCanonicalMcpTypedCommerceEvent(settledEvent) ? settledEvent : event;
 }
 
 function summarizeMcpTypedView(events) {
@@ -3661,7 +3741,7 @@ export function createCommerceTelemetry({
     });
   }
 
-  function appendMcpTypedDecision(decision, attestedAttribution = null, declaredSource = null, toolDelivery = null) {
+  function appendMcpTypedDecision(decision, attestedAttribution = null, declaredSource = null, toolDelivery = null, facilitatorSettlement = null) {
     // Adapt, validate, and copy synchronously before any queue scheduling, so
     // the queued closure owns the canonical event and later caller mutation of
     // the original decision cannot alter, relabel, or add to the stored row.
@@ -3672,7 +3752,7 @@ export function createCommerceTelemetry({
     // writer ordering and flush semantics are unchanged.
     let event = null;
     try {
-      event = adaptMcpTypedDecisionToCommerceEvent(decision);
+      event = adaptMcpTypedDecisionToCommerceEvent(decision, { facilitatorSettlement });
     } catch {
       event = null;
     }

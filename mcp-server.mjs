@@ -419,11 +419,24 @@ function registerOfficialLifecycleHooks(resourceServer) {
   });
   resourceServer.onAfterSettle((context) => {
     const result = context?.result;
+    const requirements = context?.requirements;
     const success = result?.success === true ? true : result?.success === false ? false : undefined;
     const transaction = typeof result?.transaction === "string" ? result.transaction : undefined;
+    const amount = typeof result?.amount === "string"
+      ? result.amount
+      : typeof requirements?.amount === "string"
+        ? requirements.amount
+        : null;
     mcpTypedAttemptAls.getStore()?.observeSettleOutcome({
       success,
       settlementReference: success === true ? transaction : undefined,
+      facilitatorSettlement: success === true ? {
+        transaction: transaction ?? null,
+        network: typeof result?.network === "string" ? result.network : null,
+        amount,
+        asset: typeof requirements?.asset === "string" ? requirements.asset : null,
+        payee: typeof requirements?.payTo === "string" ? requirements.payTo : null,
+      } : null,
     });
     return undefined;
   });
@@ -449,13 +462,13 @@ function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) 
     entry.resolve();
   }
 
-  function invokeUser(decision, requestAttribution, declaredSource, delivery, entry) {
+  function invokeUser(decision, requestAttribution, declaredSource, delivery, facilitatorSettlement, entry) {
     let assimilated;
     try {
       // Assimilate without probing result.then first: a throwing `then` accessor
       // or Proxy trap is consumed by the resolving functions as a rejection and
       // stays inside this failure-safe terminal path.
-      assimilated = Promise.resolve(onAppend(decision, requestAttribution, declaredSource, delivery));
+      assimilated = Promise.resolve(onAppend(decision, requestAttribution, declaredSource, delivery, facilitatorSettlement));
     } catch {
       failures += 1;
       finishEntry(entry);
@@ -470,7 +483,7 @@ function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) 
     );
   }
 
-  function schedule(decision, requestAttribution = null, declaredSource = null, delivery = null) {
+  function schedule(decision, requestAttribution = null, declaredSource = null, delivery = null, facilitatorSettlement = null) {
     if (sealed || typeof onAppend !== "function") return;
     let resolve;
     const done = new Promise((next) => {
@@ -480,7 +493,7 @@ function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) 
     pending.add(entry);
     const launch = () => {
       entry.timer = null;
-      invokeUser(decision, requestAttribution, declaredSource, delivery, entry);
+      invokeUser(decision, requestAttribution, declaredSource, delivery, facilitatorSettlement, entry);
     };
     if (jsonResponse && decision?.result !== "paid_success") {
       queueMicrotask(launch);
@@ -608,11 +621,12 @@ function createTypedAttemptForBody(body, catalog, onAppend, requestAttribution =
     },
     // The inner HTTP request owns paidHttp source attribution. Preserve typed
     // diagnostics, but never attach a second source count to that same hop.
-    onAppend: (decision, delivery) => onAppend(
+    onAppend: (decision, delivery, facilitatorSettlement) => onAppend(
       decision,
       requestAttribution,
       registered?.httpOwned ? null : declaredSource,
       registered?.httpOwned ? null : delivery,
+      facilitatorSettlement,
     ),
   });
   if (!hasId) {
@@ -652,7 +666,13 @@ export async function mountMcp(app, {
     ? createTypedTelemetryLifecycle(typedTelemetry.onAppend, { jsonResponse })
     : null;
   const onAppend = typedLifecycle
-    ? (decision, requestAttribution, declaredSource, delivery) => typedLifecycle.schedule(decision, requestAttribution, declaredSource, delivery)
+    ? (decision, requestAttribution, declaredSource, delivery, facilitatorSettlement) => typedLifecycle.schedule(
+      decision,
+      requestAttribution,
+      declaredSource,
+      delivery,
+      facilitatorSettlement,
+    )
     : undefined;
   const paidTools = tools.filter((tool) => tool?.free !== true);
   const freeTools = tools.filter((tool) => tool?.free === true);

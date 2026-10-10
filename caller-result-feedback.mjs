@@ -52,6 +52,8 @@ const TX = /^0x[0-9a-fA-F]{64}$/;
 const METHODS = new Set(["GET", "POST"]);
 const TOKEN_RE = /^[A-Za-z0-9_-]{20,1500}\.[A-Za-z0-9_-]{43}$/;
 const STATEMENT_ID_RE = /^crf_[0-9a-f]{32}$/;
+const PARENT_LEDGER_SCHEMA = "samedaydesk.commerce-settlement-reconciliation.v1";
+const PARENT_BASE_USDC = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const MAX_BODY_BYTES = 512;
 const MAX_FILE_BYTES = 256 * 1024;
@@ -119,6 +121,26 @@ function acceptance({ disposition, reasonCategory, idempotentReplay }) {
       ok: true,
       accepted: true,
       bound: true,
+      idempotentReplay: idempotentReplay === true,
+      charged: false,
+      payerIdentity: false,
+      usefulness: USEFULNESS_UNKNOWN,
+      disposition,
+      reasonCategory,
+      coverage: "this_retained_result_only",
+    },
+  };
+}
+
+function mcpAcceptance({ disposition, reasonCategory, idempotentReplay, parent }) {
+  const state = parent === "bound" || parent === "unbound" ? parent : "pending";
+  return {
+    statusCode: 200,
+    body: {
+      ok: true,
+      accepted: true,
+      bound: state === "bound",
+      parent: state,
       idempotentReplay: idempotentReplay === true,
       charged: false,
       payerIdentity: false,
@@ -776,6 +798,9 @@ export function createCallerResultFeedbackService({
       if (sameSettlement.some((row) => row.tool !== claims.tool || row.resource !== claims.resource)) {
         return { ok: false, code: "foreign_tool" };
       }
+      if (sameSettlement.some((row) => row.callDigest === claims.callDigest && row.issuedOfferDigest !== claims.issuedOfferDigest)) {
+        return { ok: false, code: "foreign_offer" };
+      }
       if (sameSettlement.some((row) => row.requestDigest !== claims.requestDigest || row.callDigest !== claims.callDigest)) {
         return { ok: false, code: "request_mismatch" };
       }
@@ -792,14 +817,89 @@ export function createCallerResultFeedbackService({
     if (event.binding?.tool !== claims.tool || event.binding?.resource !== claims.resource) {
       return { ok: false, code: "foreign_tool" };
     }
+    if (event.binding?.issuedOfferDigest !== claims.issuedOfferDigest) {
+      return { ok: false, code: "foreign_offer" };
+    }
+    if (typeof event.settlementReference === "string" && event.settlementReference !== claims.settlementReference) {
+      return { ok: false, code: "settlement_unbound" };
+    }
     if (event.result !== "paid_success" || event.settlementState !== "succeeded") {
       return { ok: false, code: "settlement_unbound" };
     }
     return {
       ok: true,
       eventId: event.id,
+      event,
       settlementReference: delivery.settlementReference.toLowerCase(),
     };
+  }
+
+  async function readMcpParent(event, claims) {
+    if (!event || typeof event.settlementReference !== "string" || event.settlementReference !== claims.settlementReference) {
+      return "pending";
+    }
+    if (typeof event.settlementAmountAtomic !== "string" || typeof event.settlementPayee !== "string") return "pending";
+    const current = await readRegular(path.join(dataDir, "commerce-settlements.ndjson"));
+    const rotated = await readRegular(path.join(dataDir, "commerce-settlements.1.ndjson"));
+    const rows = [];
+    for (const row of parseNdjson(`${rotated.text}\n${current.text}`)) {
+      if (!row || row._unparseable) continue;
+      if (row.schemaVersion !== PARENT_LEDGER_SCHEMA || row.state !== "reconciled") continue;
+      if (String(row.settlementReference || "").toLowerCase() !== claims.settlementReference) continue;
+      rows.push(row);
+    }
+    if (rows.length === 0) return "pending";
+    if (rows.length !== 1) return "unbound";
+    const row = rows[0];
+    const sameMoney = row.sourceEventId === event.id
+      && row.route === "/mcp"
+      && row.protocol === "x402"
+      && Date.parse(row.sourceEventTimestamp) === Date.parse(event.ts)
+      && String(row.amountAtomic) === String(event.settlementAmountAtomic)
+      && String(row.network) === String(event.settlementNetwork)
+      && String(row.asset || "").toLowerCase() === String(event.settlementCurrency || "").toLowerCase()
+      && String(row.treasury || "").toLowerCase() === String(event.settlementPayee || "").toLowerCase()
+      && String(row.asset || "").toLowerCase() === PARENT_BASE_USDC;
+    return sameMoney ? "bound" : "unbound";
+  }
+
+  async function commitMcpStatement(record, token, event, claims) {
+    if (!record) return refusal("malformed_statement", 400);
+    if (typeof token !== "string" || token.length === 0 || JSON.stringify(record).includes(token)) {
+      return refusal("bearer_retained", 500);
+    }
+    const parent = await readMcpParent(event, claims);
+    const existing = await readFiles();
+    const prior = existing.rows.filter((row) => row.paidEvidenceId === record.paidEvidenceId && row.channel === record.channel);
+    if (prior.some((row) => sameStatement(row, record))) {
+      await retainProspectiveCallerFeedback();
+      return mcpAcceptance({
+        disposition: record.disposition,
+        reasonCategory: record.reasonCategory,
+        idempotentReplay: true,
+        parent,
+      });
+    }
+    if (prior.length > 0) {
+      const retained = prior[0];
+      return {
+        statusCode: 409,
+        body: {
+          ...refusal("conflicting_statement", 409).body,
+          retainedDisposition: retained.disposition,
+          retainedReasonCategory: retained.reasonCategory,
+          parent,
+        },
+      };
+    }
+    await appendStatement(record);
+    await retainProspectiveCallerFeedback();
+    return mcpAcceptance({
+      disposition: record.disposition,
+      reasonCategory: record.reasonCategory,
+      idempotentReplay: false,
+      parent,
+    });
   }
 
   async function retainProspectiveCallerFeedback() {
@@ -880,7 +980,7 @@ export function createCallerResultFeedbackService({
           usefulness: USEFULNESS_UNKNOWN,
           source: "caller",
         });
-        return commitStatement(record, parsed.token);
+        return commitMcpStatement(record, parsed.token, bound.event, verified.claims);
       });
     } catch {
       return refusal("journal_write_failed", 503);
