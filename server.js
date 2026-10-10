@@ -46,6 +46,7 @@ import {
   buildRootPaidRoutes,
   validateMachineSurfaceParity,
 } from "./machine-surface-parity.mjs";
+import { CALLER_RESULT_CLIENT_ENTRY } from "./caller-result-client-entry.mjs";
 import {
   billingBasisForRoute,
   operationIdForRoute,
@@ -1377,10 +1378,25 @@ const machineActionCatalog = () => ({
     glamaVerification: `${PUBLIC_URL}/.well-known/glama.json`,
     solanaAgentRegistration: `${PUBLIC_URL}/.well-known/agent-registration.json`,
     purchaseEvidenceManifest: `${PUBLIC_URL}${PURCHASE_EVIDENCE_MANIFEST_PATH}`,
+    callerResultClient: CALLER_RESULT_CLIENT_ENTRY.descriptorUrl,
   },
+  callerResultClient: CALLER_RESULT_CLIENT_ENTRY,
 });
 
 const machineActions = machineActionCatalog().actions;
+function renderServedLlmsTxt(catalog = machineActionCatalog()) {
+  return renderLlmsTxt({
+    origin: PUBLIC_URL,
+    facilitator: FACILITATOR,
+    payTo: PAY_TO,
+    actions: catalog.actions,
+    alternate: catalog.alternateAccess,
+    buyerPolicyRelease: BUYER_POLICY_REFERENCE.release,
+    purchaseEvidencePath: PURCHASE_EVIDENCE_MANIFEST_PATH,
+    freeRecipes: catalog.freeRecipes,
+    callerResultClient: catalog.callerResultClient,
+  });
+}
 const currentAgentCard = () => buildAgentCard({
   publicUrl: PUBLIC_URL,
   serviceVersion: SERVICE_VERSION,
@@ -1425,15 +1441,8 @@ const constructionParityReceipt = () => {
       actions: catalog.actions,
       alternate: catalog.alternateAccess ? { ...catalog.alternateAccess, description: CIRCLE_GATEWAY_RESOURCE.description } : null,
     }),
-    llms: renderLlmsTxt({
-      origin: PUBLIC_URL,
-      facilitator: FACILITATOR,
-      payTo: PAY_TO,
-      actions: catalog.actions,
-      alternate: catalog.alternateAccess,
-      buyerPolicyRelease: BUYER_POLICY_REFERENCE.release,
-      purchaseEvidencePath: PURCHASE_EVIDENCE_MANIFEST_PATH,
-    }),
+    llms: renderServedLlmsTxt(catalog),
+    callerResultClient: catalog.callerResultClient,
   });
   return { ...construction, ...surface };
 };
@@ -1525,8 +1534,10 @@ app.get("/mcp", (_req, res) => {
         name: "report_caller_result",
         charged: false,
         channel: "mcp",
+        optional: true,
       },
     ],
+    callerResultClient: CALLER_RESULT_CLIENT_ENTRY,
     payment: "x402 USDC on Base per paid MCP tool call; page_change is free and HTTP actions also accept native MPP",
     manifest: `${PUBLIC_URL}/.well-known/x402`,
     openapi: `${PUBLIC_URL}/openapi.json`,
@@ -1596,7 +1607,8 @@ if (existsSync(usefulResultReuseMount)) {
 
 app.get(["/skill.md", "/SKILL.md"], (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
-  return res.type("text/markdown").send(buildSkillContract(PUBLIC_URL, machineActionCatalog().actions));
+  const catalog = machineActionCatalog();
+  return res.type("text/markdown").send(buildSkillContract(PUBLIC_URL, catalog.actions, catalog.callerResultClient));
 });
 
 app.get("/api/actions", (req, res) => {
@@ -1643,17 +1655,7 @@ app.post("/a2a/message:send", (req, res) => {
 // --- /llms.txt: agent/LLM-native discovery surface (llmstxt.org convention).
 // Generated from the canonical paid-action catalog plus the Circle alternate.
 app.get("/llms.txt", (_req, res) => {
-  const catalog = machineActionCatalog();
-  res.type("text/plain").send(renderLlmsTxt({
-    origin: PUBLIC_URL,
-    facilitator: FACILITATOR,
-    payTo: PAY_TO,
-    actions: catalog.actions,
-    alternate: catalog.alternateAccess,
-    buyerPolicyRelease: BUYER_POLICY_REFERENCE.release,
-    purchaseEvidencePath: PURCHASE_EVIDENCE_MANIFEST_PATH,
-    freeRecipes: catalog.freeRecipes,
-  }));
+  res.type("text/plain").send(renderServedLlmsTxt());
 });
 
 app.get("/schemas/wallet-policy-conformance-v1.json", (_req, res) => {
@@ -1757,7 +1759,10 @@ const buildOpenApiDocument = ({ profile = "agentcash" } = {}) => {
         llms: `${PUBLIC_URL}/llms.txt`,
         buyerPolicyReference: BUYER_POLICY_REFERENCE.repository,
         purchaseEvidence: `${PUBLIC_URL}${PURCHASE_EVIDENCE_MANIFEST_PATH}`,
+        callerResultClient: CALLER_RESULT_CLIENT_ENTRY.descriptorUrl,
+        callerResultArchive: CALLER_RESULT_CLIENT_ENTRY.archiveUrl,
       },
+      callerResultClient: CALLER_RESULT_CLIENT_ENTRY,
     },
     servers: [{ url: PUBLIC_URL }],
     tags: [
@@ -4335,6 +4340,10 @@ app.get("/", (req, res) => {
   const catalog = machineActionCatalog();
   return res.json({
     ...gateway,
+    machineCommerce: {
+      ...gateway.machineCommerce,
+      callerResultClient: CALLER_RESULT_CLIENT_ENTRY,
+    },
     paidRoutes: buildRootPaidRoutes({
       actions: catalog.actions,
       alternate: catalog.alternateAccess ? { ...catalog.alternateAccess, description: CIRCLE_GATEWAY_RESOURCE.description } : null,

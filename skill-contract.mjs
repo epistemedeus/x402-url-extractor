@@ -1,3 +1,5 @@
+import { renderCallerResultClientGuide } from "./caller-result-client-entry.mjs";
+
 function actionLines(actions) {
   if (!Array.isArray(actions) || actions.length === 0) {
     throw new TypeError("actions must be a non-empty array");
@@ -20,9 +22,10 @@ function actionLines(actions) {
   }).join("\n");
 }
 
-export function buildSkillContract(publicUrl, actions) {
+export function buildSkillContract(publicUrl, actions, callerResultClient = null) {
   const origin = new URL(publicUrl).origin;
   const actionsMarkdown = actionLines(actions);
+  const callerGuide = renderCallerResultClientGuide(callerResultClient);
   return `# SameDayDesk machine commerce gateway
 
 Use this service when an agent needs deterministic web, company, wallet, AI-search-readiness, repository-risk, exact-action or stateful delegated-signer policy conformance, work-opportunity economics, cross-registry discoverability, x402 and MPP offer preflight, Morpho borrower risk, market underwriting, historical PreLiquidation replay, or unsigned Morpho protection plans and can pay exact USDC on Base through x402 or native MPP Payment authentication.
@@ -72,5 +75,5 @@ ${actionsMarkdown}
 - Opportunity preflight uses caller-supplied cost and selection assumptions plus dated categorical platform evidence. It makes no claim, bid, payment, or submission on the source platform.
 - Agent discoverability audit sends one brand-blind capability intent to public catalogs. An explicit surfaceAudit option also checks three fixed public same-origin discovery documents with pinned public DNS, no redirects, bounded time, and bounded response size. It measures point-in-time rank and coverage, not demand, conversion, reliability, or future rank.
 - Demand telemetry is aggregate and does not expose buyer identities or raw request data.
-`;
+${callerGuide ? `\n${callerGuide}` : ""}`;
 }

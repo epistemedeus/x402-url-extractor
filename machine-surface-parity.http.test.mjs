@@ -203,6 +203,7 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
     catalog,
     llms,
     rootPaidRoutes: gateway.paidRoutes,
+    callerResultClient: catalog.callerResultClient,
   });
   const humanAfter = await (await fetch(base + "/", { headers: { Accept: "text/html" } })).text();
   assert.equal(humanAfter, humanBefore, "machine root construction mutated the human map");
