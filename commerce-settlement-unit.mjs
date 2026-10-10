@@ -1,11 +1,10 @@
 import { createHash } from "node:crypto";
 
+import { readCommerceSettlementAdmission } from "./commerce-settlement-reconciler.mjs";
 import checkedUnitCatalog from "./commerce-settlement-unit-catalog.json" with { type: "json" };
 
 export const SETTLEMENT_UNIT_SCHEMA = "samedaydesk.commerce-settlement-unit.v1";
 const SUMMARY_SCHEMA = "samedaydesk.commerce-settlement-summary.v1";
-const RECORD_SCHEMA = "samedaydesk.commerce-settlement-reconciliation.v1";
-const TRANSACTION_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 const NETWORK_PATTERN = /^eip155:[1-9][0-9]{0,9}$/;
 const ADDRESS_PATTERN = /^0x[0-9a-fA-F]{40}$/;
 const SYMBOL_PATTERN = /^[A-Z0-9]{2,12}$/;
@@ -39,18 +38,78 @@ function absent(value) {
   return value === undefined || value === null;
 }
 
-function parseLines(contents) {
-  let invalidLines = 0;
-  const records = String(contents || "").split("\n").filter(Boolean).flatMap((line) => {
-    try {
-      const parsed = JSON.parse(line);
-      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? [parsed] : [];
-    } catch {
-      invalidLines += 1;
-      return [];
+function stableValue(value) {
+  if (Array.isArray(value)) return value.map(stableValue);
+  if (value && typeof value === "object") {
+    return Object.keys(value).sort().reduce((out, key) => {
+      out[key] = stableValue(value[key]);
+      return out;
+    }, {});
+  }
+  return value;
+}
+
+function sameValue(left, right) {
+  return JSON.stringify(stableValue(left)) === JSON.stringify(stableValue(right));
+}
+
+function claimedStatus(catalog) {
+  const stack = [catalog];
+  const seen = new Set();
+  while (stack.length) {
+    const current = stack.pop();
+    if (!current || typeof current !== "object" || seen.has(current)) continue;
+    seen.add(current);
+    for (const [key, item] of Object.entries(current)) {
+      if (/^(status|qualified|verified|completeness|usableentries|complete)$/i.test(key)) return true;
+      if (item && typeof item === "object") stack.push(item);
     }
-  });
-  return { invalidLines, records };
+  }
+  return false;
+}
+
+function sameCheckedEntry(entry) {
+  const checked = checkedUnitCatalog.entries[0];
+  return Boolean(
+    entry
+    && entry.network === checked.network
+    && entry.chainId === checked.chainId
+    && entry.asset === checked.asset
+    && entry.symbol === checked.symbol
+    && entry.decimals === checked.decimals,
+  );
+}
+
+function catalogFailure(catalog) {
+  if (!catalog || typeof catalog !== "object" || Array.isArray(catalog)) return "catalog_incomplete";
+  if (catalog.schemaVersion !== checkedUnitCatalog.schemaVersion || catalog.checkedAt !== checkedUnitCatalog.checkedAt) {
+    return "catalog_provenance";
+  }
+  if (claimedStatus(catalog)) return "catalog_claimed_status";
+  if (!Array.isArray(catalog.entries)) return "catalog_incomplete";
+  const usable = usableEntries(catalog);
+  if (usable.length !== catalog.entries.length) return "catalog_incomplete";
+  const seen = new Map();
+  for (const entry of usable) {
+    const key = `${entry.network}|${entry.asset.toLowerCase()}`;
+    const prior = seen.get(key);
+    if (prior) {
+      if (prior.decimals !== entry.decimals || prior.symbol !== entry.symbol || prior.chainId !== entry.chainId) {
+        return "catalog_conflict";
+      }
+      return "catalog_duplicate";
+    }
+    seen.set(key, entry);
+  }
+  if (usable.length !== 1 || !sameCheckedEntry(usable[0])) return "catalog_unsupported";
+  return "catalog_provenance";
+}
+
+function assessCatalog(catalog) {
+  if (sameValue(catalog, checkedUnitCatalog)) {
+    return { entries: usableEntries(catalog), invalid: false, reason: null };
+  }
+  return { entries: [], invalid: true, reason: catalogFailure(catalog) };
 }
 
 function usableEntries(catalog) {
@@ -123,56 +182,32 @@ function emptyCoverage() {
   };
 }
 
-function admitLedger(contents) {
-  const parsed = parseLines(contents);
-  const references = new Set();
-  const admitted = [];
-  let duplicateReferencesIgnored = 0;
-  for (const record of parsed.records) {
-    if (record?.schemaVersion !== RECORD_SCHEMA || record?.state !== "reconciled") continue;
-    if (!TRANSACTION_HASH_PATTERN.test(String(record.settlementReference || ""))) continue;
-    if (!/^\d+$/.test(String(record.amountAtomic || ""))) continue;
-    const reference = String(record.settlementReference).toLowerCase();
-    if (references.has(reference)) {
-      duplicateReferencesIgnored += 1;
-      continue;
-    }
-    references.add(reference);
-    admitted.push(record);
-  }
-  let amountAtomic = 0n;
-  for (const record of admitted) amountAtomic += BigInt(record.amountAtomic);
-  return {
-    admitted,
-    duplicateReferencesIgnored,
-    invalidLines: parsed.invalidLines,
-    reconciledSettlements: admitted.length,
-    amountAtomic: amountAtomic.toString(),
-  };
+function summaryFieldsMatch(supplied, summary) {
+  if (!supplied || typeof supplied !== "object" || Array.isArray(supplied)) return false;
+  return supplied.schemaVersion === summary.schemaVersion
+    && supplied.reconciledSettlements === summary.reconciledSettlements
+    && supplied.distinctSettlementReferences === summary.distinctSettlementReferences
+    && supplied.amountAtomic === summary.amountAtomic
+    && supplied.invalidLines === summary.invalidLines
+    && sameValue(supplied.byClass, summary.byClass)
+    && sameValue(supplied.byRoute, summary.byRoute);
 }
 
-function parentBinding(walk, parentSummary) {
-  if (parentSummary == null) {
+function parentBinding(admission, parentSummary, admissionCutId) {
+  const summary = admission.summary;
+  if (parentSummary == null && admissionCutId == null) {
     return {
-      reconciledSettlements: walk.reconciledSettlements,
-      amountAtomic: walk.amountAtomic,
+      reconciledSettlements: summary.reconciledSettlements,
+      amountAtomic: summary.amountAtomic,
+      admissionCutId: admission.admissionCutId,
       matchesSuppliedSummary: null,
     };
   }
-  const supplied = parentSummary && typeof parentSummary === "object" && !Array.isArray(parentSummary)
-    ? parentSummary
-    : null;
-  const schemaOk = supplied?.schemaVersion == null || supplied.schemaVersion === SUMMARY_SCHEMA;
-  const matches = Boolean(
-    supplied
-    && schemaOk
-    && supplied.reconciledSettlements === walk.reconciledSettlements
-    && supplied.amountAtomic === walk.amountAtomic,
-  );
   return {
-    reconciledSettlements: walk.reconciledSettlements,
-    amountAtomic: walk.amountAtomic,
-    matchesSuppliedSummary: matches,
+    reconciledSettlements: summary.reconciledSettlements,
+    amountAtomic: summary.amountAtomic,
+    admissionCutId: admission.admissionCutId,
+    matchesSuppliedSummary: summaryFieldsMatch(parentSummary, summary) && admissionCutId === admission.admissionCutId,
   };
 }
 
@@ -220,9 +255,9 @@ function decide(rows) {
   return "conflicting";
 }
 
-function reasonFor(decision, catalogInvalid) {
+function reasonFor(decision, catalogReason) {
   const reasons = [];
-  if (catalogInvalid) reasons.push("catalog_invalid");
+  if (catalogReason) reasons.push("catalog_invalid", catalogReason);
   const byDecision = {
     qualified: "qualified_single_catalog_unit",
     missing: "missing_unit_metadata",
@@ -241,27 +276,29 @@ function reasonFor(decision, catalogInvalid) {
 
 export function projectCommerceSettlementUnit(contents, options = {}) {
   const catalog = options.catalog === undefined ? checkedUnitCatalog : options.catalog;
-  const entries = usableEntries(catalog);
-  const catalogInvalid = entries.length === 0;
+  const assessment = assessCatalog(catalog);
+  const entries = assessment.entries;
+  const catalogReason = assessment.invalid ? assessment.reason : null;
   if (typeof contents !== "string") {
     const projection = baseProjection(catalog, entries.length, null);
     projection.decision = "unreadable";
-    projection.reasons = reasonFor("unreadable", catalogInvalid);
+    projection.reasons = reasonFor("unreadable", catalogReason);
     projection.coverage = null;
     return projection;
   }
-  const walk = admitLedger(contents);
-  const binding = parentBinding(walk, options.parentSummary);
+  const admission = readCommerceSettlementAdmission(contents, {
+    paymentClassBySourceEventId: options.paymentClassBySourceEventId,
+  });
+  const binding = parentBinding(admission, options.parentSummary, options.admissionCutId);
   const rows = [];
   const rejectedReasons = {};
-  for (const record of walk.admitted) {
+  for (const record of admission.admitted) {
     let row;
     try {
       row = classifyRecord(record, entries);
     } catch {
       row = { kind: "rejected", reason: "hostile_unit_metadata" };
     }
-    if (catalogInvalid && row.kind === "qualified") row = { kind: "unmapped", network: row.entry.network, asset: row.entry.asset.toLowerCase() };
     if (row.kind === "rejected") rejectedReasons[row.reason] = (rejectedReasons[row.reason] || 0) + 1;
     rows.push(row);
   }
@@ -270,22 +307,23 @@ export function projectCommerceSettlementUnit(contents, options = {}) {
   const projection = baseProjection(catalog, entries.length, sha256(contents));
   projection.decision = decision;
   projection.comparable = decision === "qualified";
-  projection.reasons = reasonFor(decision, catalogInvalid && decision !== "stale_cut" && decision !== "empty");
+  projection.reasons = reasonFor(decision, catalogReason && decision !== "stale_cut" && decision !== "empty" ? catalogReason : null);
   projection.rejectedReasons = rejectedReasons;
   projection.bindsToParent = {
     summarySchema: SUMMARY_SCHEMA,
     reconciledSettlements: binding.reconciledSettlements,
     amountAtomic: binding.amountAtomic,
+    admissionCutId: binding.admissionCutId,
     matchesSuppliedSummary: binding.matchesSuppliedSummary,
   };
   projection.coverage = {
-    admittedRecords: walk.admitted.length,
+    admittedRecords: admission.admitted.length,
     missingUnit: rows.filter((row) => row.kind === "missing").length,
     qualifiedUnit: rows.filter((row) => row.kind === "qualified").length,
     unmappedUnit: rows.filter((row) => row.kind === "unmapped").length,
     rejectedUnit: rows.filter((row) => row.kind === "rejected").length,
-    duplicateReferencesIgnored: walk.duplicateReferencesIgnored,
-    invalidLines: walk.invalidLines,
+    duplicateReferencesIgnored: admission.duplicateReferencesIgnored,
+    invalidLines: admission.summary.invalidLines,
   };
   if (decision === "qualified") {
     const entry = rows[0].entry;
@@ -358,9 +396,10 @@ export function commerceSettlementUnitOutputSchema() {
           summarySchema: { type: "string", const: SUMMARY_SCHEMA },
           reconciledSettlements: { type: "integer", minimum: 0 },
           amountAtomic: { type: "string", pattern: "^\\d+$" },
+          admissionCutId: { type: "string", pattern: "^[0-9a-f]{64}$" },
           matchesSuppliedSummary: nullable({ type: "boolean" }),
         },
-        required: ["summarySchema", "reconciledSettlements", "amountAtomic", "matchesSuppliedSummary"],
+        required: ["summarySchema", "reconciledSettlements", "amountAtomic", "admissionCutId", "matchesSuppliedSummary"],
       }),
       coverage: nullable({
         type: "object",

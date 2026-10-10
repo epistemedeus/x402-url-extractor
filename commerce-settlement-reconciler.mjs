@@ -27,7 +27,6 @@ import {
   summarizeSettlementSourceDelivery,
 } from "./commerce-events.mjs";
 import { isProxy } from "node:util/types";
-import { projectCommerceSettlementUnit } from "./commerce-settlement-unit.mjs";
 
 const SCHEMA_VERSION = "samedaydesk.commerce-settlement-reconciliation.v1";
 const TRANSACTION_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
@@ -91,40 +90,63 @@ function addAmount(bucket, key, amount) {
   bucket[key].amountAtomic = (BigInt(bucket[key].amountAtomic) + amount).toString();
 }
 
-export function summarizeCommerceSettlementLedger(contents, {
+function settlementAdmissionCutId(admitted) {
+  const body = admitted.map((record) => [
+    String(record.settlementReference).toLowerCase(),
+    BigInt(record.amountAtomic).toString(),
+    record.network == null ? "" : String(record.network),
+    record.asset == null ? "" : String(record.asset).toLowerCase(),
+  ].join("\t")).join("\n");
+  return sha256(body);
+}
+
+export function readCommerceSettlementAdmission(contents, {
   paymentClassBySourceEventId = new Map(),
 } = {}) {
   const parsed = parseLines(contents);
   const byClass = Object.create(null);
   const byRoute = Object.create(null);
   const references = new Set();
-  let reconciledSettlements = 0;
+  const admitted = [];
+  let duplicateReferencesIgnored = 0;
   let amountAtomic = 0n;
   for (const record of parsed.records) {
     if (record?.schemaVersion !== SCHEMA_VERSION || record?.state !== "reconciled") continue;
     if (!TRANSACTION_HASH_PATTERN.test(String(record.settlementReference || ""))) continue;
     if (!/^\d+$/.test(String(record.amountAtomic || ""))) continue;
     const reference = String(record.settlementReference).toLowerCase();
-    if (references.has(reference)) continue;
+    if (references.has(reference)) {
+      duplicateReferencesIgnored += 1;
+      continue;
+    }
     references.add(reference);
     const amount = BigInt(record.amountAtomic);
-    reconciledSettlements += 1;
     amountAtomic += amount;
     const currentPaymentClass = paymentClassBySourceEventId.get(String(record.sourceEventId || ""))
       || record.paymentClass
       || "unclassified";
     addAmount(byClass, String(currentPaymentClass), amount);
     addAmount(byRoute, String(record.route || "/:unknown"), amount);
+    admitted.push(record);
   }
   return {
-    schemaVersion: "samedaydesk.commerce-settlement-summary.v1",
-    reconciledSettlements,
-    distinctSettlementReferences: references.size,
-    amountAtomic: amountAtomic.toString(),
-    byClass,
-    byRoute,
-    invalidLines: parsed.invalidLines,
+    summary: {
+      schemaVersion: "samedaydesk.commerce-settlement-summary.v1",
+      reconciledSettlements: admitted.length,
+      distinctSettlementReferences: references.size,
+      amountAtomic: amountAtomic.toString(),
+      byClass,
+      byRoute,
+      invalidLines: parsed.invalidLines,
+    },
+    admitted,
+    duplicateReferencesIgnored,
+    admissionCutId: settlementAdmissionCutId(admitted),
   };
+}
+
+export function summarizeCommerceSettlementLedger(contents, options) {
+  return readCommerceSettlementAdmission(contents, options).summary;
 }
 
 export { summarizeSettlementSourceDelivery };
@@ -2988,7 +3010,8 @@ export function createCommerceSettlementReconciler({
       })
       : new Map();
     const run = lastRun || { lastRunAt: null, lastError: null, lastIssueCounts: {} };
-    const ledgerSummary = summarizeCommerceSettlementLedger(ledger, { paymentClassBySourceEventId });
+    const admission = readCommerceSettlementAdmission(ledger, { paymentClassBySourceEventId });
+    const { projectCommerceSettlementUnit } = await import("./commerce-settlement-unit.mjs");
     return {
       enabled,
       settlementEvidenceSince: Number.isFinite(Date.parse(settlementEvidenceSince))
@@ -2998,8 +3021,12 @@ export function createCommerceSettlementReconciler({
       lastError: run.lastError,
       issues: run.lastIssueCounts,
       lastScan,
-      ledger: ledgerSummary,
-      settlementUnit: projectCommerceSettlementUnit(ledger, { parentSummary: ledgerSummary }),
+      ledger: admission.summary,
+      settlementUnit: projectCommerceSettlementUnit(ledger, {
+        parentSummary: admission.summary,
+        admissionCutId: admission.admissionCutId,
+        paymentClassBySourceEventId,
+      }),
     };
   }
 

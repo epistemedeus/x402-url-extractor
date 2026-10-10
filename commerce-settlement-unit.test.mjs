@@ -12,7 +12,7 @@ import {
   buildCommercePaymentEvidenceReadout,
   commercePaymentEvidenceOutputSchema,
 } from "./commerce-payment-evidence.mjs";
-import { createCommerceSettlementReconciler, summarizeCommerceSettlementLedger } from "./commerce-settlement-reconciler.mjs";
+import { createCommerceSettlementReconciler, readCommerceSettlementAdmission, summarizeCommerceSettlementLedger } from "./commerce-settlement-reconciler.mjs";
 import {
   SETTLEMENT_UNIT_SCHEMA,
   commerceSettlementUnitOutputSchema,
@@ -55,11 +55,16 @@ function ledger(rows) {
 
 function project(rows, options = {}) {
   const text = ledger(rows);
-  const parentSummary = summarizeCommerceSettlementLedger(text);
+  const admission = readCommerceSettlementAdmission(text, {
+    paymentClassBySourceEventId: options.paymentClassBySourceEventId,
+  });
+  const parentSummary = Object.hasOwn(options, "parentSummary") ? options.parentSummary : admission.summary;
+  const admissionCutId = Object.hasOwn(options, "admissionCutId") ? options.admissionCutId : admission.admissionCutId;
   return {
     text,
-    parentSummary,
-    unit: projectCommerceSettlementUnit(text, { parentSummary, ...options }),
+    parentSummary: admission.summary,
+    admission,
+    unit: projectCommerceSettlementUnit(text, { ...options, parentSummary, admissionCutId }),
   };
 }
 
@@ -98,7 +103,7 @@ test("checked catalog decimals and chain id come from the recorded primary obser
 });
 
 test("uniform writer network and asset qualify without a second money sum", () => {
-  const { parentSummary, unit } = project([row({ settlementReference: CANARY_REF })]);
+  const { parentSummary, admission, unit } = project([row({ settlementReference: CANARY_REF })]);
   assert.equal(validateUnit(unit), true, JSON.stringify(validateUnit.errors));
   assert.equal(unit.schemaVersion, SETTLEMENT_UNIT_SCHEMA);
   assert.equal(unit.decision, "qualified");
@@ -114,6 +119,7 @@ test("uniform writer network and asset qualify without a second money sum", () =
   assert.equal(unit.bindsToParent.amountAtomic, "50000");
   assert.equal(unit.bindsToParent.reconciledSettlements, 1);
   assert.equal(unit.bindsToParent.matchesSuppliedSummary, true);
+  assert.equal(unit.bindsToParent.admissionCutId, admission.admissionCutId);
   assert.equal(unit.recognizedIncomeAtomic, null);
   assert.equal(unit.customerAttribution, null);
   assert.equal(unit.boundaries.parentSummaryRemainsMoneyAuthority, true);
@@ -161,9 +167,11 @@ test("legacy rows without network or asset stay missing and ignore route and ser
     route: "/extract",
     settlementReference: CANARY_REF,
   })]);
-  const parentSummary = summarizeCommerceSettlementLedger(text);
+  const admission = readCommerceSettlementAdmission(text);
+  const parentSummary = admission.summary;
   const unit = projectCommerceSettlementUnit(text, {
     parentSummary,
+    admissionCutId: admission.admissionCutId,
     asset: ENTRY.asset,
     network: ENTRY.network,
     currency: "USD",
@@ -252,8 +260,12 @@ test("duplicate references follow the parent first-write and do not import the l
       network: "eip155:1",
     }),
   ]);
-  const parentSummary = summarizeCommerceSettlementLedger(text);
-  const unit = projectCommerceSettlementUnit(text, { parentSummary });
+  const admission = readCommerceSettlementAdmission(text);
+  const parentSummary = admission.summary;
+  const unit = projectCommerceSettlementUnit(text, {
+    parentSummary,
+    admissionCutId: admission.admissionCutId,
+  });
   assert.equal(parentSummary.reconciledSettlements, 1);
   assert.equal(parentSummary.amountAtomic, "50000");
   assert.equal(unit.decision, "qualified");
@@ -264,9 +276,11 @@ test("duplicate references follow the parent first-write and do not import the l
 
 test("a stale or non-string parent summary cannot qualify the walked cut", () => {
   const text = ledger([row()]);
-  const parentSummary = summarizeCommerceSettlementLedger(text);
+  const admission = readCommerceSettlementAdmission(text);
+  const parentSummary = admission.summary;
   const stale = projectCommerceSettlementUnit(text, {
     parentSummary: { ...parentSummary, amountAtomic: "1" },
+    admissionCutId: admission.admissionCutId,
   });
   assert.equal(stale.decision, "stale_cut");
   assert.equal(stale.comparable, false);
@@ -277,6 +291,7 @@ test("a stale or non-string parent summary cannot qualify the walked cut", () =>
 
   const numeric = projectCommerceSettlementUnit(text, {
     parentSummary: { ...parentSummary, amountAtomic: 50000 },
+    admissionCutId: admission.admissionCutId,
   });
   assert.equal(numeric.decision, "stale_cut");
   assert.equal(numeric.unit, null);
@@ -288,8 +303,10 @@ test("a stale or non-string parent summary cannot qualify the walked cut", () =>
 });
 
 test("empty cuts, rejected rows, invalid lines, and overflow stay exact strings", () => {
+  const emptyAdmission = readCommerceSettlementAdmission("");
   const empty = projectCommerceSettlementUnit("", {
-    parentSummary: summarizeCommerceSettlementLedger(""),
+    parentSummary: emptyAdmission.summary,
+    admissionCutId: emptyAdmission.admissionCutId,
   });
   assert.equal(empty.decision, "empty");
   assert.equal(empty.comparable, false);
@@ -311,8 +328,12 @@ test("empty cuts, rejected rows, invalid lines, and overflow stay exact strings"
   assertNoIdentity(overflow.unit);
 
   const noisy = `${ledger([row()])}{\n[]\n${JSON.stringify(row({ state: "observed", settlementReference: reference(4) }))}\n`;
-  const noisySummary = summarizeCommerceSettlementLedger(noisy);
-  const noisyUnit = projectCommerceSettlementUnit(noisy, { parentSummary: noisySummary });
+  const noisyAdmission = readCommerceSettlementAdmission(noisy);
+  const noisySummary = noisyAdmission.summary;
+  const noisyUnit = projectCommerceSettlementUnit(noisy, {
+    parentSummary: noisySummary,
+    admissionCutId: noisyAdmission.admissionCutId,
+  });
   assert.equal(noisySummary.invalidLines, 1);
   assert.equal(noisySummary.reconciledSettlements, 1);
   assert.equal(noisyUnit.decision, "qualified");
@@ -322,14 +343,73 @@ test("empty cuts, rejected rows, invalid lines, and overflow stay exact strings"
 
 test("reclassification of payment class does not stale a matching amount", () => {
   const text = ledger([row({ sourceEventId: "event-owned-canary", paymentClass: "unclassified" })]);
-  const parentSummary = summarizeCommerceSettlementLedger(text, {
-    paymentClassBySourceEventId: new Map([["event-owned-canary", "internal"]]),
+  const paymentClassBySourceEventId = new Map([["event-owned-canary", "internal"]]);
+  const admission = readCommerceSettlementAdmission(text, { paymentClassBySourceEventId });
+  const parentSummary = admission.summary;
+  const unit = projectCommerceSettlementUnit(text, {
+    parentSummary,
+    admissionCutId: admission.admissionCutId,
+    paymentClassBySourceEventId,
   });
-  const unit = projectCommerceSettlementUnit(text, { parentSummary });
   assert.equal(parentSummary.byClass.internal.amountAtomic, "50000");
   assert.equal(unit.decision, "qualified");
   assert.equal(unit.bindsToParent.matchesSuppliedSummary, true);
   assert.equal(JSON.stringify(unit).includes("event-owned-canary"), false);
+});
+
+test("the parent admission is the only money authority and a same-total different cut is stale", () => {
+  const left = ledger([row({ settlementReference: reference(1), amountAtomic: "50000" })]);
+  const right = ledger([row({ settlementReference: reference(2), amountAtomic: "50000" })]);
+  const leftAdmission = readCommerceSettlementAdmission(left);
+  const rightAdmission = readCommerceSettlementAdmission(right);
+  assert.deepEqual(leftAdmission.summary, summarizeCommerceSettlementLedger(left));
+  assert.equal(leftAdmission.admitted.length, leftAdmission.summary.reconciledSettlements);
+  assert.equal(leftAdmission.summary.amountAtomic, rightAdmission.summary.amountAtomic);
+  assert.equal(leftAdmission.summary.reconciledSettlements, rightAdmission.summary.reconciledSettlements);
+  assert.notEqual(leftAdmission.admissionCutId, rightAdmission.admissionCutId);
+  const swapped = projectCommerceSettlementUnit(left, {
+    parentSummary: rightAdmission.summary,
+    admissionCutId: rightAdmission.admissionCutId,
+  });
+  assert.equal(swapped.decision, "stale_cut");
+  assert.equal(swapped.comparable, false);
+  assert.equal(swapped.unit, null);
+  assert.equal(swapped.bindsToParent.amountAtomic, leftAdmission.summary.amountAtomic);
+  assert.equal(swapped.bindsToParent.admissionCutId, leftAdmission.admissionCutId);
+  const source = readFileSync(new URL("./commerce-settlement-unit.mjs", import.meta.url), "utf8");
+  assert.equal(source.includes("amountAtomic +"), false);
+  assert.equal(source.includes("parseLines"), false);
+  assert.equal(source.includes("admitLedger"), false);
+  assert.equal(source.includes("readCommerceSettlementAdmission"), true);
+});
+
+test("only the checked catalog entry can qualify", () => {
+  const checked = project([row()]);
+  assert.equal(checked.unit.decision, "qualified");
+  const entry = checkedUnitCatalog.entries[0];
+  const cases = [
+    ["catalog_duplicate", { ...checkedUnitCatalog, entries: [entry, { ...entry }] }],
+    ["catalog_conflict", { ...checkedUnitCatalog, entries: [entry, { ...entry, decimals: 18 }] }],
+    ["catalog_unsupported", { ...checkedUnitCatalog, entries: [entry, { ...entry, network: "eip155:1", chainId: 1, asset: OTHER_ASSET }] }],
+    ["catalog_unsupported", { ...checkedUnitCatalog, entries: [{ ...entry, symbol: "USDT" }] }],
+    ["catalog_provenance", { ...checkedUnitCatalog, checkedAt: "2020-01-01T00:00:00.000Z" }],
+    ["catalog_incomplete", { ...checkedUnitCatalog, entries: [{ network: entry.network, asset: entry.asset }] }],
+    ["catalog_claimed_status", { ...checkedUnitCatalog, status: "verified" }],
+    ["catalog_claimed_status", { ...checkedUnitCatalog, completeness: "complete" }],
+    ["catalog_claimed_status", { ...checkedUnitCatalog, usableEntries: 1 }],
+    ["catalog_claimed_status", { ...checkedUnitCatalog, entries: [{ ...entry, complete: true }] }],
+  ];
+  for (const [reason, catalog] of cases) {
+    const hostile = project([row()], { catalog });
+    assert.notEqual(hostile.unit.decision, "qualified", reason);
+    assert.equal(hostile.unit.comparable, false, reason);
+    assert.equal(hostile.unit.atomicScale, null, reason);
+    assert.equal(hostile.unit.unit?.symbol ?? null, null, reason);
+    assert.equal(hostile.unit.unit?.decimals ?? null, null, reason);
+    assert.equal(hostile.unit.reasons.includes("catalog_invalid"), true, reason);
+    assert.equal(hostile.unit.reasons.includes(reason), true, `${reason} ${hostile.unit.reasons.join(",")}`);
+    assert.equal(hostile.unit.recognizedIncomeAtomic, null);
+  }
 });
 
 test("status projects the same ledger bytes the parent summary admits", async () => {
@@ -366,6 +446,28 @@ test("status projects the same ledger bytes the parent summary admits", async ()
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test("commerce-demand schema accepts an old body and an extended unit body", () => {
+  const paymentEvidence = buildCommercePaymentEvidenceReadout({
+    settlementReconciliation: {
+      enabled: false,
+      ledger: summarizeCommerceSettlementLedger(""),
+    },
+  });
+  const validateDemand = new Ajv({ allErrors: true, strict: false }).compile({
+    type: "object",
+    properties: {
+      paymentEvidence: commercePaymentEvidenceOutputSchema(),
+      settlementUnit: commerceSettlementUnitOutputSchema(),
+    },
+    required: ["paymentEvidence"],
+  });
+  assert.equal(validateDemand({ paymentEvidence }), true, JSON.stringify(validateDemand.errors));
+  const extended = { paymentEvidence, settlementUnit: unprojectedSettlementUnit() };
+  assert.equal(validateDemand(extended), true, JSON.stringify(validateDemand.errors));
+  const qualified = project([row()]);
+  assert.equal(validateDemand({ paymentEvidence, settlementUnit: qualified.unit }), true, JSON.stringify(validateDemand.errors));
 });
 
 test("absent projection and direct JSON round trip stay schema valid", () => {
