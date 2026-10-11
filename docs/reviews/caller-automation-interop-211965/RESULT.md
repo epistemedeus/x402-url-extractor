@@ -12,9 +12,13 @@ The 18:41 UTC inquiry supplied no failing schema, workflow, or evidence. The 0.1
 | Branch | `codex/caller-automation-interop-211965` |
 | Base | `31434c53f1271af94de843368d30fd51fbb62835` |
 | Base tree | `5cc599727d04af6e7bf91571cd50804fe297072f` |
+| Comparison commit | `678e6c9f347b66bdfdab4a6289d894a0b7a06dbc` |
+| Comparison tree | `5118d4cdc3ceea29d38b84cee6f3eeb621e07981` |
 | Changed paths | `caller-result-client/test/automation-json-boundary.mjs`, `caller-result-client/test/automation-json-boundary.test.mjs`, `docs/reviews/caller-automation-interop-211965/RESULT.md`, `docs/reviews/caller-automation-interop-211965/ECOSYSTEM-MAP.md` |
 | Package sources | unchanged. `src/`, bins, README, `package.json`, and `PIN.json` are the base bytes |
 | Archives | 0.1.0 is 24149 bytes, sha256 `3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b`. 0.1.1 is 32421 bytes, sha256 `693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3` |
+
+The comparison commit is the parent that contains the tests and the first receipt. The child commit only names those two ids. That child's tree is the branch tip from `git rev-parse HEAD^{tree}` and is left out of this file, because writing it would change the tree.
 
 ## Pins read before the run
 
