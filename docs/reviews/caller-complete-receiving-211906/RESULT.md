@@ -1,8 +1,8 @@
 # Caller complete receiving 211906
 
-Cold receiving was replayed on the frozen merchant feature, and the Neomorphic materializer now rejects absent, extra, empty, and malformed archive parts before it writes. This is not a hosted acquisition and not a joined-site pass. Root owns merges, Railway, Hostinger, and anonymous readback. No pull request, deploy, payment, signing, or new database was used.
+Two surfaces were received on this Cursor Cloud VM with Node v22.23.3 and npm 10.9.9. The merchant cold client installed the extracted 0.1.1 archive and resumed with the merchant checkout absent. The Neomorphic checkout ran ordinary `npm ci`, prebuild, an 80-page build, and unmodified `node scripts/normal-release.mjs`. This is not a hosted acquisition and not a joined-site pass. Root owns merges, Railway, Hostinger, and anonymous readback. No pull request, deploy, payment, signing, or new database was used.
 
-`hostedAcquisitionVerified` stays false. `sourceQualification` stays unknown. `paidLaunch` stays false. `recognizedRevenueAtomic` stays `"0"`. Sealed 0.1.0 is unchanged. No 0.1.2 was added.
+`hostedAcquisitionVerified` stays false. `sourceQualification` stays unknown. `paidLaunch` stays false. `recognizedRevenueAtomic` stays `"0"`. Sealed 0.1.0 is unchanged. No 0.1.2 was added. The 29-asset index and the 32421-byte 0.1.1 archive remain candidate facts.
 
 ## Merchant
 
@@ -17,17 +17,17 @@ Cold receiving was replayed on the frozen merchant feature, and the Neomorphic m
 | Evidence of 211888 | `c9d5e1aa6fce251d2de432016f257f9bad2c2ed5` in this repository, not Pilot |
 | This closure branch | `codex/caller-complete-receiving-211906` |
 
-No merchant product file changed. Authorization, grants, paid execution, cold-command needles, and the combined index stay as `31434c53` left them. The first six failures stay in that history: version-only archive selection, then five lifecycle `partial` results before the two identity cold commands. The retained suite on that head is `npm test` 1171 tests, 1167 pass, 0 fail, 4 skip, exit 0, and `test:nonlive` 194/194. It was not re-run, and it was not edited to look greener.
+No merchant product file changed. Authorization, grants, paid execution, cold-command needles, and the combined index stay as `31434c53` left them. The first six failures stay in that history: version-only archive selection, then five lifecycle `partial` results before the two identity cold commands. The retained suite on that head is `npm test` 1171 tests, 1167 pass, 0 fail, 4 skip, exit 0, and `test:nonlive` 194/194. It was not re-run.
 
 ### Cold recovery replay
 
-Runtime: Node `v22.23.3` (`/tmp/native-task-recovery-211210-runtime/node-v22.23.3-linux-x64/bin/node`), npm `10.9.9`.
+Runtime: Node `v22.23.3` at `/tmp/native-task-recovery-211210-runtime/node-v22.23.3-linux-x64/bin/node`, npm `10.9.9`.
 
-Command: `node --test --test-timeout=240000 caller-result-client.distribution.test.mjs` filtered to `advertised caller archive installs recovery with the merchant checkout absent`.
+Command: `node --test --test-timeout=240000 caller-result-client.distribution.test.mjs`, filtered to `advertised caller archive installs recovery with the merchant checkout absent`.
 
-Exit 0. 1 pass, 0 fail, `duration_ms` 5336.948436. The harness installed the extracted 0.1.1 package and called `resume` with the merchant checkout absent. `secondPaidVerify` false. `secondPaidSettle` false. The same test still covers tenant, grant, origin, expired, revoked, and budget refusals without a second paid verify or settle. Identity `node -e` cold commands were left in place so lifecycle disposition stays `received`.
+Exit 0. 1 pass, 0 fail. The harness installed the extracted 0.1.1 package and called `resume` with the merchant checkout absent. `merchantCheckoutPresent` false. `secondPaidVerify` false. `secondPaidSettle` false. `publishedArchiveCanary` false. `combinedMountedIndex` true.
 
-Receipt fields: archive URL `https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/samedaydesk-caller-result-0.1.1.tar.gz`, sha256 `693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3`, version `0.1.1`, `publishedArchiveCanary` false, `combinedMountedIndex` true, `merchantCheckoutPresent` false.
+Receipt archive URL `https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/samedaydesk-caller-result-0.1.1.tar.gz`, sha256 `693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3`.
 
 ## Neomorphic source gate
 
@@ -35,70 +35,77 @@ Receipt fields: archive URL `https://neomorphic.io/downloads/samedaydesk-caller-
 | --- | --- |
 | Repository | `epistemedeus/neomorphic-io` |
 | Branch | `codex/caller-complete-receiving-211906` |
-| Head | `79190370f56309e2c86b10ca5418b4b92011f78d` |
-| Previous commit on that branch | `c0ee80c30b75882f3763b50cbf5654c02f155c30` |
-| Static feature | `codex/caller-recovery-static-211888` still at `c0ee80c30b75882f3763b50cbf5654c02f155c30` |
+| Published head | `79190370f56309e2c86b10ca5418b4b92011f78d` |
+| Parent | `c0ee80c30b75882f3763b50cbf5654c02f155c30` |
+| Static feature | `codex/caller-recovery-static-211888` still at `c0ee80c3` |
 | Base | `df2ab3d26b767c3889db219fc2a1003603901e73` |
-| Materializer blob | `c461c2ad66f850d1ee3ea9827a994cc4dc29dfe9` (was `ef73d3db5e47968a9b54811f09300ea26fa7bb3b`) |
-| Parts test blob | `32d859836ddb1be3b10066fc91bed79649285c93` |
-| `package.json` | unchanged blob `b9491c3c80d8db3e26fbf1cdf141dbb8ed424bc2` |
+| Checkout used for gates | `79190370` plus the Hermes cache-reuse bytes below |
 
-Allowlisted delta versus `c0ee80c3`:
+`79190370` only changes `scripts/materialize-caller-result-0.1.1.mjs` and adds `tests/caller-result-0.1.1-parts.test.mjs`. The materializer requires exactly parts `00` through `05`, rejects any other directory entry, checks base64 before length, and does not rewrite sealed 0.1.0.
 
-```
-scripts/materialize-caller-result-0.1.1.mjs
-tests/caller-result-0.1.1-parts.test.mjs
-```
+### Allowlisted Hermes delta
 
-The contents API did not return a commit tree id. `c0ee80c3` and `3c37bbee` tree ids were also not returned.
+The declared Hermes paths in `receiving-inputs.json` are absent on this VM. A pin-matching cache already exists at `/tmp/neomorphic-normal/1000`. The previous planner treated that cache as a cold materialization and then refused to replace the interpreter that was already there. `planHermes` now reuses a cache whose head and `tools/skills_guard.py` blob match pin `2f80ae0a6a91932b1808a53f9c55f8b3f313d6cc` when the cached Python is usable, and it still refuses a cache that exists and does not match the pin.
 
-### Source-only gate
+These three blobs are the checkout delta. They are copied under `shipping-source/`. They are not a new commit on `codex/caller-complete-receiving-211906`. The shell GitHub credential cannot see the private repository, so that branch was left at `79190370` instead of being recreated from `main`.
 
-Runtime: Node `v22.23.3`, npm `10.9.9`.
+| File | Blob |
+| --- | --- |
+| `scripts/normal-release.mjs` | `3d813b6476edf73f058fa260f61cd813255752c0` |
+| `scripts/normal-release-lib.mjs` | `50e3ba728a7eb130fbe417ff7334c6b0d993d768` |
+| `tests/normal-release.test.mjs` | `d7ece0f8a02f6c094498c764aca0aea5fd8a96fb` |
 
-Command: `node --test tests/caller-result-0.1.1-static.test.mjs tests/caller-result-0.1.1-parts.test.mjs`
+`package.json` blob stays `b9491c3c80d8db3e26fbf1cdf141dbb8ed424bc2`. The materializer blob stays `c461c2ad66f850d1ee3ea9827a994cc4dc29dfe9`.
 
-Exit 0. 5 pass, 0 fail, `duration_ms` 304.860202. Cases: wrapped part 03 materializes sha `69365256…` and 32421 bytes; a sibling 0.1.0 sentinel is not rewritten; a second run is idempotent; a different existing tar is refused; unexpected `0300`, whitespace-only `06`, and `notes.txt` are refused; missing part 03 is refused; `!!!!not-base64!!!!` and a whitespace-only part 02 are refused before a length check.
+### Runtime and commands
 
-Before that edit, the unmodified `c0ee80c3` materializer exited 0 for an extra `notes.txt`, and it reported only a length mismatch for extra numeric `0300`, a missing part 03, and malformed part 00.
+Supported runtime: Node `v22.23.3`, npm `10.9.9`, Python `3.14.8` at `/tmp/neomorphic-normal/1000/hermes-venv/bin/python`, Hermes pin `2f80ae0a6a91932b1808a53f9c55f8b3f313d6cc`, scanner `skills-guard-v8`.
 
-### Install and build on the partial checkout
-
-`npm ci --ignore-scripts` added 206 packages, exit 0. Ordinary `npm ci` without `--ignore-scripts` was not run. `npm run prebuild` on that checkout exited 0 and wrote the 32421-byte archive at sha256 `693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3`.
-
-`npm run build` is not a full-site pass. An earlier run, before the nested pages were present, built 16 pages and exited 0 through `astro build`, `build.js`, and `record-lab-licenses.mjs`. After the nested pages were added, the same command exited 1. The current stop is Vite `UNRESOLVED_IMPORT` of `src/lib/reward-receiving/publish.mjs` from `src/pages/api/bounties.json.ts`. Further page imports are still absent, including several browser UI scripts and `src/lib/effort-workflow/assemble.ts`. About 200 repository files are in the local checkout. That is not the site.
-
-`node scripts/normal-release.mjs` was not run. `normal-release.mjs` is not in the partial checkout. This VM has Python 3.12.3. `python3.14` and `uv` are absent, so the Hermes step in that gate would fail closed. It was not stubbed.
-
-## Archives
-
-| Archive | Bytes | sha256 |
+| Command | Exit | Result |
 | --- | --- | --- |
-| Sealed 0.1.0 | 24149 | `3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b` |
-| 0.1.0 git blob | | `4a7a485258ff344db8a8cc881e6596725e5d2fe1` |
-| Final 0.1.1 | 32421 | `693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3` |
-| Earlier unreleased 0.1.1 on `6ea1294` | 32489 | `ed5a00d52e15ccd098a7c054db00b2a929d884df3e926c9437bb3514af5c65fc` |
+| `npm ci` | 0 | 206 packages |
+| `npm run build` (prebuild, then Astro, `build.js`, lab licenses) | 0 | 80 pages. Prebuild rewrote nothing: 0.1.1 stayed 32421 bytes, sha256 `693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3` |
+| `node scripts/normal-release.mjs` | 1 | Prefix suites 20, 12, 9, 26, 9, and 3 tests, all pass. `tests/*.test.mjs`: 501 tests, 500 pass, 1 fail, 0 skip, `duration_ms` 124328.34697. The one failure is `tests/product-purity.test.mjs`: `git ls-files` exits 128, `fatal: not a git repository`. `npm run test:regression-corpus` was not reached |
 
-Both sealed and final archives were hash-checked on disk in the partial checkout after prebuild. The 29-asset index and the 32421-byte archive remain candidate facts until Root's anonymous readback.
+`NORMAL_INPUTS` on that run reused Node v22.23.3 and the Hermes cache above. It did not reinstall Hermes.
 
-## Shadow versus 3c
+Public cold workflow in the same suite: `anonymous HTTP acquires both executables and exercises the cold workflow` passed. Caller file `tests/received-useful-work-caller.test.mjs`: 3 pass, 0 fail, exit 0, `duration_ms` 17396.168005. The five-library stripped run passed in 15658.505341 ms. Receipt: `trial=legacy_projection_refusal`, `retained=useful_read`, `compose=admissible`, `conflict=enrollment_conflict`, `mismatch=mismatch`, `stale=source_not_current`. No new payment.
 
-Recorded separately from the c0 source-only gate. `3c37bbee5c2c6d4196175b5cebb70321ae3d2533` was not modified. `main` at `df2ab3d26b767c3889db219fc2a1003603901e73` was not modified. The Astra review queue was not touched.
+### Archive identities
 
-`3c37bbee` only adds `deploy/service-launch-211863/**`. Its parent `659c0392ee5b4f768318de9cbd8a446ebedde995` changes correspondence continuation sources, `scripts/pack-correspondence-mcp.mjs`, `scripts/test-pack-correspondence-mcp.mjs`, and the 211870/211881 continuation archives. None of those paths are in the `79190370` delta, and that commit does not change root `package.json`. The caller prebuild prefix and the correspondence packer are additive. No shadow tree was checked out, and the combined prebuild, build, and normal-release were not run. A passing caller package is not that joined-site result.
+| Archive | Bytes | sha256 | Git blob |
+| --- | --- | --- | --- |
+| `samedaydesk-caller-result-0.1.0.tar.gz` | 24149 | `3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b` | `4a7a485258ff344db8a8cc881e6596725e5d2fe1` |
+| `samedaydesk-caller-result-0.1.1.tar.gz` | 32421 | `693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3` | candidate, not hosted |
+
+Both public and `dist` copies matched after `npm run build`. Route-lock and release-gate packs match their frozen archives when the bin files are mode `0755`, which is the mode already in those frozen tarballs. npm 10.9.9 copies the filesystem mode.
+
+## Shadow integration
+
+Candidate `3c37bbee5c2c6d4196175b5cebb70321ae3d2533`, tree `881cd5997aa4134718926eda91520b4a81a0788c`, same base `df2ab3d`. It only adds `deploy/service-launch-211863/` (27 files). No path overlaps the caller materializer, prebuild, or the public packers. The `3c` branch, `main`, and the Astra review were not modified. The overlay was copied onto a disposable tree of the source checkout.
+
+| Command on the shadow | Exit | Result |
+| --- | --- | --- |
+| `npm ci` | 0 | 206 packages |
+| `npm run build` | 0 | 80 pages. 0.1.0 and 0.1.1 identities unchanged |
+| `node scripts/normal-release.mjs` | 1 | Same shape as the source gate: prefix suites green, 501 tests, 500 pass, 1 fail (`product-purity`, not a git repository), `duration_ms` 123120.704746. Regression corpus not reached |
+| `npm ci --prefix services/correspondence && npm run build --prefix services/correspondence` | 0 | `tsc` only. No database |
+| `node --test` on `deploy/service-launch-211863/tests/manifest.test.mjs` and `gates.test.mjs` | 1 | 9 tests, 7 pass, 2 fail |
+
+The two remaining deploy failures are environmental. `stale stop refuses an unrelated live process` stops because `/usr/local/lib/node-v22.23.2-linux-x64/bin/node` is absent. `help and source closure check exit 0` runs `git diff --name-only 659c0392ee5b4f768318de9cbd8a446ebedde995` and the shadow is not a git repository. Passing tests cover the engine pin `22.23.2`, wrong-node refusal before a runtime directory, invalid-origin refusal, compose manifest, secret checker, role-script refusal, and the unaccepted 22.14 rate-10000 receipt.
+
+`launch-readiness.test.mjs` and `rate-limit.test.mjs` were not run. Both cold-bootstrap Postgres. No new database was created.
+
+The source-only gate and this shadow stay separate. A passing isolated package is not this joined-site result, and this result is not a hosted daemon.
 
 ## Root release order
 
-1. Keep merchant `31434c53` frozen. Do not drop the original 21 assets or the first six failures.
-2. Review Neomorphic `79190370` on top of `c0ee80c3`. The only product change is the stricter materializer and its regression test.
-3. Finish a byte-exact checkout of that head, then run unmodified `npm ci`, `npm run prebuild`, `npm run build`, and `node scripts/normal-release.mjs` with Python 3.14. Do not treat the partial build as the site.
-4. Overlay the 3c continuation files onto a disposable copy of that same tree and repeat those gates. Leave the 3c branch alone.
-5. Anonymous readback of the 0.1.1 URL and the live 29-asset index. Until that readback, hosted acquisition stays false.
+1. Keep merchant `31434c53` frozen. Do not drop the first six failures or the four historical skips.
+2. Review Neomorphic `79190370` and the three Hermes blobs in `shipping-source/` before any merge.
+3. A byte-exact git checkout is still required before `product-purity` and the regression corpus can run. Do not invent an index.
+4. Anonymous readback of the 0.1.1 archive and the 29-asset index is still required before `hostedAcquisitionVerified` can become true.
+5. The 22.23.2 binary and a real git worktree are still required before the two remaining deploy checks can pass. Do not start the Postgres launch tests as a substitute.
 
-## Remaining
+## Observations
 
-- The private site is not attached to this VM. File-scoped contents downloads were the authenticated path. They are not a complete checkout.
-- Joined `npm run build` and `normal-release` have not passed.
-- The shadow integration has not been built.
-- Plain `npm ci` without `--ignore-scripts` was not recorded.
-- Python 3.14, uv, and Hermes are not on this VM.
+The public-delivery cold path needed `packs/bounty-discovery/src/five-source/` and `packs/bounty-discovery/vendor-readonly/h02-five-source/src/`, plus `packages/retained-task/test/support.mjs`. Those files were fetched from `79190370` and checked with `git hash-object` before use. The checkout is still not the full git tree, which is why `product-purity` fails closed.
