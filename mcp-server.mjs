@@ -35,6 +35,7 @@ import { classifyDeclaredAgentDiscoverySource, listDeclaredAgentDiscoverySources
 import { readExtractBatchInputRefusalCode } from "./extract-batch.mjs";
 import { MCP_RECOVERY_META, MCP_RECOVERY_TOOL, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
 import { MCP_JSON_RPC_MAX_BYTES, mcpJsonRpcOverlimitBody } from "./mcp-json-rpc-limit.mjs";
+import { advertiseDeclaredHttpRoute } from "./mcp-tool-metadata.mjs";
 import {
   buildRegisteredCatalog,
   createMcpTypedTelemetryAttempt,
@@ -639,6 +640,27 @@ function createTypedAttemptForBody(body, catalog, onAppend, requestAttribution =
   return { attempt };
 }
 
+function advertisedToolDescription(tool) {
+  const paid = tool.paidHttp && typeof tool.paidHttp === "object" ? tool.paidHttp : null;
+  const declared = tool.declaredRoute && typeof tool.declaredRoute === "object" ? tool.declaredRoute : null;
+  if (!paid && !declared) return tool.description;
+  if (paid && declared) {
+    const paidMethod = String(paid.method || "").toUpperCase();
+    const declaredMethod = String(declared.method || "").toUpperCase();
+    let paidUrl;
+    try {
+      paidUrl = new URL(String(paid.resourceUrl || ""));
+    } catch {
+      throw new Error(`mcp_route_declaration_disagrees:${tool.name}`);
+    }
+    if (paidMethod !== declaredMethod || paid.path !== declared.path || paidUrl.pathname !== declared.path) {
+      throw new Error(`mcp_route_declaration_disagrees:${tool.name}`);
+    }
+  }
+  const source = declared || { method: paid.method, path: paid.path, resourceUrl: paid.resourceUrl };
+  return advertiseDeclaredHttpRoute(tool.description, source);
+}
+
 /**
  * Mount a paid MCP server at POST /mcp on an existing Express app.
  *
@@ -796,7 +818,7 @@ export async function mountMcp(app, {
     prepared.push({
       name: t.name,
       title: t.title,
-      description: t.paidHttp ? `${t.description} Payment challenge and credentials are bound to ${t.paidHttp.resourceUrl}, not mcp://. Retry the identical authorized arguments and credential.` : t.description,
+      description: advertisedToolDescription(t),
       inputSchema: t.inputSchema,
       outputSchema: t.outputSchema,
       paymentMeta: createX402ToolMeta(accepts),

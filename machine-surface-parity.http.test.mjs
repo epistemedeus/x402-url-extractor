@@ -11,7 +11,7 @@ import Ajv from "ajv";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-import { parseLlmsPaidRoutes, validateMachineSurfaceParity } from "./machine-surface-parity.mjs";
+import { mcpToolNameForRoute, parseLlmsPaidRoutes, validateMachineSurfaceParity } from "./machine-surface-parity.mjs";
 import { listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
 import { opportunityPreflight } from "./opportunity-preflight.mjs";
 import { CDP_RESOURCE_DESCRIPTION_MAX_CODE_POINTS } from "./x402-resource-compat.mjs";
@@ -197,6 +197,20 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   assert.equal(recoveryTool._meta?.samedaydesk?.paymentRequired, false);
   assert.equal(recoveryTool._meta?.x402?.paymentRequired, undefined);
   assert.equal(mcpToolNames.filter((name) => name === "recover_paid_result").length, 1);
+  for (const action of catalog.actions) {
+    const tool = mcpTools.find((entry) => entry.name === mcpToolNameForRoute(action.route));
+    assert.ok(tool, `missing MCP tool for ${action.method} ${action.route}`);
+    assert.equal(tool.description.includes(`bound to ${action.method} ${action.url}, not mcp://`), true, tool.description);
+    assert.equal(String(action.description).includes("not mcp://"), false);
+    const skill = agentCard.skills.find((entry) => entry.description.includes(`direct ${action.method} ${action.route} `));
+    assert.ok(skill, `A2A skill omitted ${action.method} ${action.route}`);
+  }
+  for (const name of ["careers_board_cold", "report_caller_result", "recover_paid_result"]) {
+    const tool = mcpTools.find((entry) => entry.name === name);
+    assert.ok(tool, `missing free tool ${name}`);
+    assert.equal(String(tool.description).includes("not mcp://"), false);
+    assert.equal(tool._meta?.samedaydesk?.charged, false);
+  }
 
   const receipt = validateMachineSurfaceParity({
     actions: catalog.actions,

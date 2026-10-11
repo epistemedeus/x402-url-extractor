@@ -310,7 +310,7 @@ import {
 } from "./directory-verification.mjs";
 import { renderGatewayLanding, wantsGatewayHtml } from "./gateway-landing.mjs";
 import { browserAgentCorsMiddleware } from "./gateway-cors.mjs";
-import { decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
+import { bindDeclaredHttpRoute, decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
 import { BUYER_POLICY_REFERENCE } from "./buyer-policy-reference.mjs";
 import {
   buildSolanaAgentRegistration,
@@ -4517,7 +4517,8 @@ import("./mcp-server.mjs")
         if (tool.free) return tool;
         const action = machineActions.find((entry) => mcpToolNameForRoute(entry.route) === tool.name);
         if (!action) throw new Error(`MCP tool ${tool.name} has no catalog operation`);
-        return { ...tool, operationIdentity: operationIdentity({ route: action.route, priceAtomic: action.priceAtomicUsdc }) };
+        const bound = bindDeclaredHttpRoute(tool, action);
+        return { ...bound, operationIdentity: operationIdentity({ route: action.route, priceAtomic: action.priceAtomicUsdc }) };
       });
     if (routeBindingInspectOnly) {
       const report = buildRouteBindingReport({

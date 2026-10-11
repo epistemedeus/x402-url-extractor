@@ -8,8 +8,8 @@ import {
 } from "./a2a-storefront.mjs";
 
 const actions = [
-  { name: "extract", route: "/extract", priceAtomicUsdc: "5000", tags: ["extraction"], request: { exampleUrl: "https://agents.example/extract?url=https%3A%2F%2Fexample.com" } },
-  { name: "defi_morpho_position", route: "/defi/morpho-position", priceAtomicUsdc: "20000", tags: ["defi"] },
+  { name: "extract", method: "GET", route: "/extract", priceAtomicUsdc: "5000", tags: ["extraction"], request: { exampleUrl: "https://agents.example/extract?url=https%3A%2F%2Fexample.com" } },
+  { name: "defi_morpho_position", method: "GET", route: "/defi/morpho-position", priceAtomicUsdc: "20000", tags: ["defi"] },
 ];
 
 test("agent card exposes aggregate and route-discovery skills over A2A HTTP+JSON", () => {
@@ -29,6 +29,8 @@ test("agent card exposes aggregate and route-discovery skills over A2A HTTP+JSON
     ["discover-paid-action-extract", "discover-paid-action-defi_morpho_position"],
   );
   assert.match(card.skills[1].description, /Discovery only/);
+  assert.match(card.skills[1].description, /direct GET \/extract machine-paid action/);
+  assert.match(card.skills[1].name, /GET \/extract/);
   assert.match(card.skills[1].description, /5000 atomic USDC/);
   assert.match(card.skills[1].description, /extract\?url=/);
   assert.match(card.skills[1].examples[0], /https%3A%2F%2Fexample.com/);

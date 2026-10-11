@@ -111,6 +111,70 @@ const TOOL_METADATA = Object.freeze({
   },
 });
 
+const DECLARED_HTTP_METHODS = new Set(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]);
+
+function declaredHttpSentence(method, resourceUrl) {
+  return `Payment challenge and credentials are bound to ${method} ${resourceUrl}, not mcp://. Retry the identical authorized arguments and credential.`;
+}
+
+export function advertiseDeclaredHttpRoute(description, declaration) {
+  if (!declaration || typeof declaration !== "object") throw new Error("declared_http_route_required");
+  const method = String(declaration.method || "").toUpperCase();
+  const routePath = String(declaration.path || "");
+  const resourceUrl = String(declaration.resourceUrl || "");
+  if (!DECLARED_HTTP_METHODS.has(method)) throw new Error("declared_http_method_required");
+  if (!routePath.startsWith("/") || /[?#]/.test(routePath)) throw new Error("declared_http_path_required");
+  let parsed;
+  try {
+    parsed = new URL(resourceUrl);
+  } catch {
+    throw new Error("declared_http_resource_url_required");
+  }
+  if (parsed.pathname !== routePath) throw new Error("declared_http_path_disagrees");
+  const base = String(description || "").trim();
+  if (!base) throw new Error("declared_http_description_required");
+  const sentence = declaredHttpSentence(method, resourceUrl);
+  if (base.includes(sentence)) return base;
+  return `${base} ${sentence}`;
+}
+
+export function bindDeclaredHttpRoute(tool, action) {
+  if (!tool || typeof tool !== "object") throw new Error("declared_http_tool_required");
+  const method = String(action?.method || "").toUpperCase();
+  const route = String(action?.route || "");
+  const actionUrl = String(action?.url || "");
+  if (!DECLARED_HTTP_METHODS.has(method) || !route.startsWith("/")) {
+    throw new Error(`declared_catalog_route_required:${tool.name || "unnamed"}`);
+  }
+  let catalogUrl;
+  try {
+    catalogUrl = new URL(actionUrl);
+  } catch {
+    throw new Error(`declared_catalog_route_required:${tool.name || "unnamed"}`);
+  }
+  if (catalogUrl.pathname !== route) throw new Error(`declared_http_path_disagrees:${tool.name || "unnamed"}`);
+  if (tool.paidHttp) {
+    const paidMethod = String(tool.paidHttp.method || "").toUpperCase();
+    let paidUrl;
+    try {
+      paidUrl = new URL(String(tool.paidHttp.resourceUrl || ""));
+    } catch {
+      throw new Error(`paid_http_disagrees:${tool.name}`);
+    }
+    if (paidMethod !== method || tool.paidHttp.path !== route || paidUrl.pathname !== route || paidUrl.origin !== catalogUrl.origin) {
+      throw new Error(`paid_http_disagrees:${tool.name}`);
+    }
+  }
+  return {
+    ...tool,
+    declaredRoute: {
+      method,
+      path: route,
+      resourceUrl: tool.paidHttp?.resourceUrl || actionUrl,
+    },
+  };
+}
+
 export function decorateMcpTool(tool) {
   if (!tool || typeof tool !== "object") throw new Error("MCP tool config is required");
   const name = String(tool.name || "");
