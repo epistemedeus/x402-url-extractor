@@ -1,0 +1,56 @@
+{
+  "parser": {
+    "seen": [
+      {
+        "requestBytes": 154,
+        "status": 200,
+        "contentType": "text/event-stream",
+        "body": "event: message\ndata: {\"result\":{\"protocolVersion\":\"2025-11-25\",\"capabilities\":{\"tools\":{\"listChanged\":true}},\"serverInfo\":{\"name\":\"x402-data-gateway\",\"version\":\"1.23.51\"}},\"jsonrpc\":\"2.0\",\"id\":0}\n\n"
+      },
+      {
+        "requestBytes": 54,
+        "status": 202,
+        "contentType": null,
+        "body": ""
+      },
+      {
+        "requestBytes": 0,
+        "status": 200,
+        "contentType": "application/json; charset=utf-8",
+        "body": "{\"name\":\"x402-data-gateway\",\"transport\":\"streamable-http\",\"endpoint\":\"https://agents.samedaydesk.com/mcp\",\"method\":\"POST\",\"toolCount\":23,\"freeTools\":[{\"name\":\"careers_board_cold\",\"method\":\"GET\",\"route\":\"/recipes/careers-board-cold\",\"charged\":false},{\"name\":\"report_caller_result\",\"charged\":false,\"channel\":\"mcp\",\"optional\":true}],\"callerResultClient\":{\"schema\":\"samedaydesk.caller-result-client.v1\",\"name\":\"samedaydesk-caller-result\",\"version\":\"0.1.0\",\"license\":\"MIT\",\"optional\":true,\"charged\":false,"
+      },
+      {
+        "requestBytes": 20480,
+        "status": 413,
+        "contentType": "text/html; charset=utf-8",
+        "body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>PayloadTooLargeError: request entity too large<br> &nbsp; &nbsp;at readStream (/agent/repos/x402-url-extractor/node_modules/raw-body/index.js:163:17)<br> &nbsp; &nbsp;at getRawBody (/agent/repos/x402-url-extractor/node_modules/raw-body/index.js:116:12)<br> &nbsp; &nbsp;at read (/agent/repos/x402-url-extractor/node_modules/body-parser/lib/read.js:79:3)<br> &nbsp; &nbsp;at jsonParser (/agent/rep",
+        "sdkError": "Streamable HTTP error: Error POSTing to endpoint: <!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>PayloadTooLargeError: request entity too large<br> &nbsp; &nbsp;at readStream (/agent/repos/x402-url-extractor/node_modules/raw-body/index.js:163:"
+      }
+    ],
+    "ordinary": {
+      "requestBytes": 20490,
+      "status": 413,
+      "body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>PayloadTooLargeError: request entity too large<br> &nbsp; &nbsp;at readStream (/agent/repos/x402-url-extractor/node_modules/raw-body/index.js:163:17)<br> &nbsp; &nbsp;at getRawBody (/agent/repos/x"
+    },
+    "note": "ordinary probe ran after stop; recorded separately"
+  },
+  "budget": {
+    "mode": "600",
+    "loadAccepted": true,
+    "digestUnchanged": true,
+    "resultDigest": "18a6c750e0ad0f772160914c37a4fd978b43fb561d525dc0c67bc03c927c1e48",
+    "possibleBefore": "50000",
+    "possibleAfter": "0",
+    "reportedAfter": "50000",
+    "sourceAfter": "stored_provider_response_unverified"
+  },
+  "map": {
+    "executions": 1,
+    "firstPersisted": false,
+    "recoveredTextLength": 4000,
+    "recoveredError": null,
+    "secondReplay": true,
+    "diskBodyPresent": false,
+    "pendingPersistence": 1
+  }
+}

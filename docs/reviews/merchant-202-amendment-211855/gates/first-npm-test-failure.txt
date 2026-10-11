@@ -1,0 +1,48 @@
+first default npm test on 45db520
+BEGIN 2026-10-11T11:16:17Z
+END exit=1 2026-10-11T11:18:14Z
+tests 1164
+pass 1159
+fail 1
+skipped 4
+nonlive on that same tree already exit 0, 194/194
+focused on that same tree already exit 0, 63/63
+
+not ok 51 - installed caller consumer reaches the mounted parent without merchant source
+  ---
+  duration_ms: 6339.485423
+  type: 'test'
+  location: '/tmp/merchant-202-amend/caller-result-client.cold.test.mjs:223:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    
+    fetch failed
+    
+    ed in schema at path "#/properties/output/properties/example/properties/evaluatedAt"
+    unknown format "date-time" ignored in schema at path "#/properties/output/properties/example/properties/evaluatedAt"
+    unknown format "date-time" ignored in schema at path "#/properties/output/properties/example/properties/evaluatedAt"
+    unknown format "date-time" ignored in schema at path "#/properties/output/properties/example/properties/evaluatedAt"
+    x402-merchant listening on :43213
+      payTo:       0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee
+      network:     eip155:8453
+      price:       $0.05
+      facilitator: xpay (http://127.0.0.1:43973)
+      protocols:   x402 + MPP (disabled)
+      paid route:  GET /extract
+      construction: 23 actions (21 GET examples, 2 POST bodies, 1 alternate)
+      MCP server:  POST /mcp (23 paid tools)
+    
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/merchant-202-amend/caller-result-client.cold.test.mjs:374:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...

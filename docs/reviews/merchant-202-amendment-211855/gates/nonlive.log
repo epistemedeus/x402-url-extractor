@@ -1,0 +1,1188 @@
+
+> x402-merchant@1.23.51 test:nonlive
+> node --test commerce-nonlive-suite.test.mjs commerce-traffic-provenance.test.mjs commerce-privacy-coverage.test.mjs commerce-trust.test.mjs commerce-payment-evidence.test.mjs commerce-settlement-unit.test.mjs ordinary-delivery-join.test.mjs commerce-prospective-delivery.test.mjs caller-result-feedback.test.mjs mcp-caller-result.test.mjs caller-result-client.source.test.mjs caller-result-client/test/client.test.mjs commerce-settlement-reconciler.test.mjs commerce-settlement-source-delivery.test.mjs settlement-proof.test.mjs purchase-evidence-manifest.test.mjs payment-offer-preflight.test.mjs discovery-drift.test.mjs transaction-receipt.test.mjs circle-gateway-route.test.mjs commerce-rare-funnel.mounted.test.mjs
+
+TAP version 13
+# Subtest: server and installed clients share one public capability contract
+ok 1 - server and installed clients share one public capability contract
+  ---
+  duration_ms: 0.522946
+  type: 'test'
+  ...
+# Subtest: package sources do not import the merchant server
+ok 2 - package sources do not import the merchant server
+  ---
+  duration_ms: 5.580352
+  type: 'test'
+  ...
+# Subtest: mcp contract stays free of links and chain claims
+ok 3 - mcp contract stays free of links and chain claims
+  ---
+  duration_ms: 0.184109
+  type: 'test'
+  ...
+# Subtest: overlapping results keep separate capabilities and reporting does not pay
+ok 4 - overlapping results keep separate capabilities and reporting does not pay
+  ---
+  duration_ms: 0.807326
+  type: 'test'
+  ...
+# Subtest: http report stays on the paid origin and does not treat accepted as bound
+ok 5 - http report stays on the paid origin and does not treat accepted as bound
+  ---
+  duration_ms: 16.916422
+  type: 'test'
+  ...
+# Subtest: a response capability is optional, scoped, and not an owner token
+ok 6 - a response capability is optional, scoped, and not an owner token
+  ---
+  duration_ms: 8.507108
+  type: 'test'
+  ...
+# Subtest: statements bind one retained capture and reject every other authority
+ok 7 - statements bind one retained capture and reject every other authority
+  ---
+  duration_ms: 65.17985
+  type: 'test'
+  ...
+# Subtest: torn, rotated, and unwritable journals keep prior statements and refuse new ones
+ok 8 - torn, rotated, and unwritable journals keep prior statements and refuse new ones
+  ---
+  duration_ms: 27.425612
+  type: 'test'
+  ...
+# Subtest: the ordinary join reports supplied statements inside this window only
+ok 9 - the ordinary join reports supplied statements inside this window only
+  ---
+  duration_ms: 24.504419
+  type: 'test'
+  ...
+# Subtest: builds a Base representative contract and official middleware
+ok 10 - builds a Base representative contract and official middleware
+  ---
+  duration_ms: 1.611893
+  type: 'test'
+  ...
+# Subtest: projects exact service metadata into the direct payment-required resource
+ok 11 - projects exact service metadata into the direct payment-required resource
+  ---
+  duration_ms: 0.513555
+  type: 'test'
+  ...
+# Subtest: projects AgentCash-readable bazaar schemas into the payment-required payload
+ok 12 - projects AgentCash-readable bazaar schemas into the payment-required payload
+  ---
+  duration_ms: 0.375036
+  type: 'test'
+  ...
+# Subtest: kill switch preserves discovery metadata without constructing middleware
+ok 13 - kill switch preserves discovery metadata without constructing middleware
+  ---
+  duration_ms: 0.160254
+  type: 'test'
+  ...
+# Subtest: fails closed on invalid seller, price, or middleware
+ok 14 - fails closed on invalid seller, price, or middleware
+  ---
+  duration_ms: 0.40835
+  type: 'test'
+  ...
+# Subtest: test:nonlive owns local commerce unit paths and excludes live payment scripts
+ok 15 - test:nonlive owns local commerce unit paths and excludes live payment scripts
+  ---
+  duration_ms: 0.916321
+  type: 'test'
+  ...
+# Subtest: mounted rare-funnel is in npm test and test:nonlive without joining live scripts
+ok 16 - mounted rare-funnel is in npm test and test:nonlive without joining live scripts
+  ---
+  duration_ms: 0.160424
+  type: 'test'
+  ...
+# Subtest: non-live suite files do not target live MCP or construct provider RPC clients
+ok 17 - non-live suite files do not target live MCP or construct provider RPC clients
+  ---
+  duration_ms: 5.527783
+  type: 'test'
+  ...
+# unknown format "date-time" ignored in schema at path "\#/properties/settlementPlane/properties/baseline/anyOf/0"
+# unknown format "date-time" ignored in schema at path "\#/properties/settlementPlane/properties/baseline/anyOf/0"
+# Subtest: durable settlements outlive rotated paid-success events without becoming customers
+ok 18 - durable settlements outlive rotated paid-success events without becoming customers
+  ---
+  duration_ms: 1.178371
+  type: 'test'
+  ...
+# Subtest: retained paid events and durable settlements remain separate positive planes
+ok 19 - retained paid events and durable settlements remain separate positive planes
+  ---
+  duration_ms: 0.155939
+  type: 'test'
+  ...
+# Subtest: complete event coverage admits an exact requested-window zero
+ok 20 - complete event coverage admits an exact requested-window zero
+  ---
+  duration_ms: 0.159568
+  type: 'test'
+  ...
+# Subtest: a complete event slice cannot manufacture a zero before settlement coverage begins
+ok 21 - a complete event slice cannot manufacture a zero before settlement coverage begins
+  ---
+  duration_ms: 0.111569
+  type: 'test'
+  ...
+# Subtest: an unreconciled retained paid event remains pending instead of becoming revenue
+ok 22 - an unreconciled retained paid event remains pending instead of becoming revenue
+  ---
+  duration_ms: 0.096256
+  type: 'test'
+  ...
+# Subtest: missing planes stay unknown rather than fabricating zero
+ok 23 - missing planes stay unknown rather than fabricating zero
+  ---
+  duration_ms: 0.070018
+  type: 'test'
+  ...
+# Subtest: the exported schema accepts the readout and rejects invented customer authority
+ok 24 - the exported schema accepts the readout and rejects invented customer authority
+  ---
+  duration_ms: 34.166842
+  type: 'test'
+  ...
+# Subtest: public aggregate contains no raw buyer fields
+ok 25 - public aggregate contains no raw buyer fields
+  ---
+  duration_ms: 20.35825
+  type: 'test'
+  ...
+# Subtest: incomplete coverage cannot be reported as a full-window zero
+ok 26 - incomplete coverage cannot be reported as a full-window zero
+  ---
+  duration_ms: 4.060564
+  type: 'test'
+  ...
+# Subtest: classification keeps technical delivery apart from duplicate, conflict, and failure
+ok 27 - classification keeps technical delivery apart from duplicate, conflict, and failure
+  ---
+  duration_ms: 0.928076
+  type: 'test'
+  ...
+# Subtest: validated settlement stays after raw event deletion and a fresh process
+ok 28 - validated settlement stays after raw event deletion and a fresh process
+  ---
+  duration_ms: 651.846748
+  type: 'test'
+  ...
+# Subtest: same amount and different references stay distinct while http plus mcp counts once
+ok 29 - same amount and different references stay distinct while http plus mcp counts once
+  ---
+  duration_ms: 21.976639
+  type: 'test'
+  ...
+# Subtest: feedback, replay, corruption, mismatch, and saturation stay bounded
+ok 30 - feedback, replay, corruption, mismatch, and saturation stay bounded
+  ---
+  duration_ms: 38.949461
+  type: 'test'
+  ...
+# Subtest: concurrent writes, stale cuts, and unexpected units do not invent a second amount
+ok 31 - concurrent writes, stale cuts, and unexpected units do not invent a second amount
+  ---
+  duration_ms: 19.646944
+  type: 'test'
+  ...
+# Subtest: status echoes the parent admission and an empty store is not historical zero
+ok 32 - status echoes the parent admission and an empty store is not historical zero
+  ---
+  duration_ms: 29.506838
+  type: 'test'
+  ...
+# Subtest: a later ordinary-join capture advances unknown and no_response without rewriting the first clock
+ok 33 - a later ordinary-join capture advances unknown and no_response without rewriting the first clock
+  ---
+  duration_ms: 75.208745
+  type: 'test'
+  ...
+# Subtest: technical counts follow the admitted identity set across a mixed and lagging cut
+ok 34 - technical counts follow the admitted identity set across a mixed and lagging cut
+  ---
+  duration_ms: 25.512236
+  type: 'test'
+  ...
+# Subtest: caller feedback binds from the stored statement, then survives raw deletion
+ok 35 - caller feedback binds from the stored statement, then survives raw deletion
+  ---
+  duration_ms: 673.819567
+  type: 'test'
+  ...
+# Subtest: reconcile admits payment before response evidence and a later pass advances it
+ok 36 - reconcile admits payment before response evidence and a later pass advances it
+  ---
+  duration_ms: 722.961758
+  type: 'test'
+  ...
+# Subtest: cold fixture packet keeps the parent amount and withholds historical completeness
+ok 37 - cold fixture packet keeps the parent amount and withholds historical completeness
+  ---
+  duration_ms: 597.606579
+  type: 'test'
+  ...
+# Subtest: mounted /v0/commerce-demand.json exposes durableRareFunnel after rare capture
+ok 38 - mounted /v0/commerce-demand.json exposes durableRareFunnel after rare capture
+  ---
+  duration_ms: 1671.527778
+  type: 'test'
+  ...
+# Subtest: reconciles one canonical Base USDC transfer with payer continuity
+ok 39 - reconciles one canonical Base USDC transfer with payer continuity
+  ---
+  duration_ms: 4.444567
+  type: 'test'
+  ...
+# Subtest: reclassifies an existing settlement summary from current payer policy without rewriting the ledger
+ok 40 - reclassifies an existing settlement summary from current payer policy without rewriting the ledger
+  ---
+  duration_ms: 0.204379
+  type: 'test'
+  ...
+# Subtest: fails closed on duplicate references and canonical settlement mismatches
+ok 41 - fails closed on duplicate references and canonical settlement mismatches
+  ---
+  duration_ms: 2.111406
+  type: 'test'
+  ...
+# Subtest: does not reconcile a reference that is already in the private ledger
+ok 42 - does not reconcile a reference that is already in the private ledger
+  ---
+  duration_ms: 0.713705
+  type: 'test'
+  ...
+# Subtest: H6/H16: accepted complete-present manifest yields exact ok generation and observation IDs
+ok 43 - H6/H16: accepted complete-present manifest yields exact ok generation and observation IDs
+  ---
+  duration_ms: 29.204785
+  type: 'test'
+  ...
+# Subtest: H21a: missing configured data directory is never_run without creation
+ok 44 - H21a: missing configured data directory is never_run without creation
+  ---
+  duration_ms: 1.136049
+  type: 'test'
+  ...
+# Subtest: H21b: trusted directory with manifest and ledger absent is never_run
+ok 45 - H21b: trusted directory with manifest and ledger absent is never_run
+  ---
+  duration_ms: 1.149583
+  type: 'test'
+  ...
+# Subtest: H21c: manifest missing over a populated ledger withholds as retryable unstable
+ok 46 - H21c: manifest missing over a populated ledger withholds as retryable unstable
+  ---
+  duration_ms: 1.283006
+  type: 'test'
+  ...
+# Subtest: H25a/H28-temp: trusted fixed temp withholds before manifest A; symlink temp is untrusted without activation
+ok 47 - H25a/H28-temp: trusted fixed temp withholds before manifest A; symlink temp is untrusted without activation
+  ---
+  duration_ms: 2.596023
+  type: 'test'
+  ...
+# Subtest: H28-temp: wrong-mode temp is publication_temp_untrusted
+ok 48 - H28-temp: wrong-mode temp is publication_temp_untrusted
+  ---
+  duration_ms: 1.233612
+  type: 'test'
+  ...
+# Subtest: H28: complete-absent manifest restarts pending with the exact lifecycle ID form
+ok 49 - H28: complete-absent manifest restarts pending with the exact lifecycle ID form
+  ---
+  duration_ms: 1.556143
+  type: 'test'
+  ...
+# Subtest: H16: failed manifest is unstable reconciliation_failed with no summary
+ok 50 - H16: failed manifest is unstable reconciliation_failed with no summary
+  ---
+  duration_ms: 1.809801
+  type: 'test'
+  ...
+# Subtest: H1: equal-size A/B rewrite of ledger content after the manifest is a mismatch withhold
+ok 51 - H1: equal-size A/B rewrite of ledger content after the manifest is a mismatch withhold
+  ---
+  duration_ms: 2.055494
+  type: 'test'
+  ...
+# Subtest: H2/H3: stable append after the manifest never reads ok; changed manifest B withholds
+ok 52 - H2/H3: stable append after the manifest never reads ok; changed manifest B withholds
+  ---
+  duration_ms: 5.000774
+  type: 'test'
+  ...
+# Subtest: H10/H28: oversized and non-regular manifests are terminal with exact reasons
+ok 53 - H10/H28: oversized and non-regular manifests are terminal with exact reasons
+  ---
+  duration_ms: 6.375072
+  type: 'test'
+  ...
+# Subtest: H16: noncanonical manifest bytes and run-ID mismatch are terminal subtypes
+ok 54 - H16: noncanonical manifest bytes and run-ID mismatch are terminal subtypes
+  ---
+  duration_ms: 4.125054
+  type: 'test'
+  ...
+# Subtest: H13a/b: callable proxy ledgerPath and callable outer options reject before traps with zero attempts
+ok 55 - H13a/b: callable proxy ledgerPath and callable outer options reject before traps with zero attempts
+  ---
+  duration_ms: 0.252313
+  type: 'test'
+  ...
+# Subtest: H28-clock: invalid path rejection uses zero filesystem and zero system-clock calls
+ok 56 - H28-clock: invalid path rejection uses zero filesystem and zero system-clock calls
+  ---
+  duration_ms: 0.121929
+  type: 'test'
+  ...
+# Subtest: H28/LEDGER_PATH_GRAMMAR: path grammar table returns exact zero-I/O reasons
+ok 57 - H28/LEDGER_PATH_GRAMMAR: path grammar table returns exact zero-I/O reasons
+  ---
+  duration_ms: 3.525635
+  type: 'test'
+  ...
+# Subtest: H14: hostile limits make zero I/O; plain raised values are clamped
+ok 58 - H14: hostile limits make zero I/O; plain raised values are clamped
+  ---
+  duration_ms: 0.231543
+  type: 'test'
+  ...
+# Subtest: H22: unchanged complete generation observed twice keeps content IDs and changes only observation
+ok 59 - H22: unchanged complete generation observed twice keeps content IDs and changes only observation
+  ---
+  duration_ms: 11.975436
+  type: 'test'
+  ...
+# Subtest: H17-public: private publication failure leaves public parent output unchanged
+ok 60 - H17-public: private publication failure leaves public parent output unchanged
+  ---
+  duration_ms: 53.617861
+  type: 'test'
+  ...
+# Subtest: H17-writer: successful reconcile publishes a canonical manifest bound to the exact ledger
+ok 61 - H17-writer: successful reconcile publishes a canonical manifest bound to the exact ledger
+  ---
+  duration_ms: 18.551607
+  type: 'test'
+  ...
+# Subtest: H17-contender: existing owner temp receives exactly one poison byte at offset 8192 and parent continues
+ok 62 - H17-contender: existing owner temp receives exactly one poison byte at offset 8192 and parent continues
+  ---
+  duration_ms: 7.964439
+  type: 'test'
+  ...
+# Subtest: H25/H28: pre-existing nlink=2 hard-linked temp gets zero poison and victim stays unchanged
+ok 63 - H25/H28: pre-existing nlink=2 hard-linked temp gets zero poison and victim stays unchanged
+  ---
+  duration_ms: 4.975981
+  type: 'test'
+  ...
+# Subtest: OUTSIDE_SAME_UID_ATOMIC_BOUNDARY label: excluded same-UID syscall-gap action is named, never claimed atomic
+ok 64 - OUTSIDE_SAME_UID_ATOMIC_BOUNDARY label: excluded same-UID syscall-gap action is named, never claimed atomic
+  ---
+  duration_ms: 0.108951
+  type: 'test'
+  ...
+# Subtest: H18/H19: money summary parity and one-parse-per-line hold on captured bytes
+ok 65 - H18/H19: money summary parity and one-parse-per-line hold on captured bytes
+  ---
+  duration_ms: 9.985483
+  type: 'test'
+  ...
+# Subtest: H7: fresh process status stays cold while private capture reconstructs from the manifest alone
+ok 66 - H7: fresh process status stays cold while private capture reconstructs from the manifest alone
+  ---
+  duration_ms: 8.359372
+  type: 'test'
+  ...
+# Subtest: V5/V5a: candidate names all twelve closure labels and the full H1..H28 inventory
+ok 67 - V5/V5a: candidate names all twelve closure labels and the full H1..H28 inventory
+  ---
+  duration_ms: 1.28138
+  type: 'test'
+  ...
+# Subtest: S2: source states the same-effective-UID check/action gap exclusion explicitly
+ok 68 - S2: source states the same-effective-UID check/action gap exclusion explicitly
+  ---
+  duration_ms: 0.419331
+  type: 'test'
+  ...
+# Subtest: M2: exported lifecycle and reason authorities match the frozen enums
+ok 69 - M2: exported lifecycle and reason authorities match the frozen enums
+  ---
+  duration_ms: 0.141748
+  type: 'test'
+  ...
+# Subtest: H24: recursive-budget failures reject before authority in the io record
+ok 70 - H24: recursive-budget failures reject before authority in the io record
+  ---
+  duration_ms: 0.788215
+  type: 'test'
+  ...
+# Subtest: H12: throwing getters on outer options never execute
+ok 71 - H12: throwing getters on outer options never execute
+  ---
+  duration_ms: 0.210705
+  type: 'test'
+  ...
+# Subtest: H23: caller buffer mutation after pure-boundary call cannot change the result
+ok 72 - H23: caller buffer mutation after pure-boundary call cannot change the result
+  ---
+  duration_ms: 1.105686
+  type: 'test'
+  ...
+# Subtest: H23: nonexact Buffer forms reject at the pure boundary
+ok 73 - H23: nonexact Buffer forms reject at the pure boundary
+  ---
+  duration_ms: 0.695933
+  type: 'test'
+  ...
+# Subtest: H11: literal regularFile:false cut returns ledger_not_regular_file with null facts
+ok 74 - H11: literal regularFile:false cut returns ledger_not_regular_file with null facts
+  ---
+  duration_ms: 0.427903
+  type: 'test'
+  ...
+# Subtest: H16: manifest invalid JSON and invalid UTF-8 are terminal subtypes
+ok 75 - H16: manifest invalid JSON and invalid UTF-8 are terminal subtypes
+  ---
+  duration_ms: 4.405722
+  type: 'test'
+  ...
+# Subtest: RETRY_TAXONOMY: exhausted retries report the last retryable reason with total attempts
+ok 76 - RETRY_TAXONOMY: exhausted retries report the last retryable reason with total attempts
+  ---
+  duration_ms: 7.693995
+  type: 'test'
+  ...
+# Subtest: MISSING_DIRECTORY: wrong-mode data directory blocks T4a as untrusted while parent path continues
+ok 77 - MISSING_DIRECTORY: wrong-mode data directory blocks T4a as untrusted while parent path continues
+  ---
+  duration_ms: 1.250668
+  type: 'test'
+  ...
+# Subtest: ACYCLIC_IDS: changing any finalized fact changes only the permitted IDs
+ok 78 - ACYCLIC_IDS: changing any finalized fact changes only the permitted IDs
+  ---
+  duration_ms: 0.198646
+  type: 'test'
+  ...
+# Subtest: V6: candidate carries every frozen lifecycle and reason literal
+ok 79 - V6: candidate carries every frozen lifecycle and reason literal
+  ---
+  duration_ms: 0.704056
+  type: 'test'
+  ...
+# Subtest: FIXED_TEMP: writers never delete, truncate, adopt, or replace temp content
+ok 80 - FIXED_TEMP: writers never delete, truncate, adopt, or replace temp content
+  ---
+  duration_ms: 0.293028
+  type: 'test'
+  ...
+# Subtest: WRITER_FAULT_SEAM: production module exposes no injection hook or mutable export
+ok 81 - WRITER_FAULT_SEAM: production module exposes no injection hook or mutable export
+  ---
+  duration_ms: 0.164574
+  type: 'test'
+  ...
+# Subtest: OPERATIONAL_SPLIT: publishedGeneration cache stays private across captures
+ok 82 - OPERATIONAL_SPLIT: publishedGeneration cache stays private across captures
+  ---
+  duration_ms: 11.169427
+  type: 'test'
+  ...
+# Subtest: H22b: changing attemptsUsed changes only the observation ID
+ok 83 - H22b: changing attemptsUsed changes only the observation ID
+  ---
+  duration_ms: 3.258503
+  type: 'test'
+  ...
+# Subtest: H16: manifest with a numeric-leading issue code is schema-invalid
+ok 84 - H16: manifest with a numeric-leading issue code is schema-invalid
+  ---
+  duration_ms: 4.441228
+  type: 'test'
+  ...
+# Subtest: H16: manifest namespace mismatch is terminal
+ok 85 - H16: manifest namespace mismatch is terminal
+  ---
+  duration_ms: 10.422703
+  type: 'test'
+  ...
+# Subtest: H28-temp: mode 000/0400/0644/0660 temps are publication_temp_untrusted
+ok 86 - H28-temp: mode 000/0400/0644/0660 temps are publication_temp_untrusted
+  ---
+  duration_ms: 2.518852
+  type: 'test'
+  ...
+# Subtest: H28: oversize temp (8194 bytes) is publication_temp_untrusted
+ok 87 - H28: oversize temp (8194 bytes) is publication_temp_untrusted
+  ---
+  duration_ms: 0.900155
+  type: 'test'
+  ...
+# Subtest: H15: at most eight attempts and seven sleeps across the shared budget
+ok 88 - H15: at most eight attempts and seven sleeps across the shared budget
+  ---
+  duration_ms: 0.220353
+  type: 'test'
+  ...
+# Subtest: ALLOCATION_METRIC: no ledger allocation before admitted manifest count and cap
+ok 89 - ALLOCATION_METRIC: no ledger allocation before admitted manifest count and cap
+  ---
+  duration_ms: 2.91002
+  type: 'test'
+  ...
+# Subtest: PINNED_TEMP_IDENTITY: capture never opens the fixed temp write-capable
+ok 90 - PINNED_TEMP_IDENTITY: capture never opens the fixed temp write-capable
+  ---
+  duration_ms: 0.313731
+  type: 'test'
+  ...
+# Subtest: H26: parent append uses only the descriptor namespace pinned before append
+ok 91 - H26: parent append uses only the descriptor namespace pinned before append
+  ---
+  duration_ms: 0.199038
+  type: 'test'
+  ...
+# (node:158166) Warning: Closing file descriptor 21 on garbage collection
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:158166) [DEP0137] DeprecationWarning: Closing a FileHandle object on garbage collection is deprecated. Please close FileHandle objects explicitly using FileHandle.prototype.close(). In the future, an error will be thrown if a file descriptor is closed during garbage collection.
+# (node:158166) Warning: Closing file descriptor 22 on garbage collection
+# Subtest: H27b: writer starting after completed rename records the new manifest as base and may publish
+ok 92 - H27b: writer starting after completed rename records the new manifest as base and may publish
+  ---
+  duration_ms: 19.687696
+  type: 'test'
+  ...
+# Subtest: H28c: FIFO temp is untrusted without activation
+ok 93 - H28c: FIFO temp is untrusted without activation
+  ---
+  duration_ms: 9.663786
+  type: 'test'
+  ...
+# Subtest: H28d: directory-shaped manifest is generation_manifest_not_regular_file
+ok 94 - H28d: directory-shaped manifest is generation_manifest_not_regular_file
+  ---
+  duration_ms: 3.933846
+  type: 'test'
+  ...
+# Subtest: H16b: manifest without final newline is noncanonical
+ok 95 - H16b: manifest without final newline is noncanonical
+  ---
+  duration_ms: 2.954943
+  type: 'test'
+  ...
+# Subtest: H21d: capture never creates the configured data directory
+ok 96 - H21d: capture never creates the configured data directory
+  ---
+  duration_ms: 0.644971
+  type: 'test'
+  ...
+# Subtest: reconcile snapshots allowlisted source and delivery facts and they survive event rotation
+ok 97 - reconcile snapshots allowlisted source and delivery facts and they survive event rotation
+  ---
+  duration_ms: 95.844216
+  type: 'test'
+  ...
+# Subtest: legacy events without split stay truthful unknown and do not invent a declared source
+ok 98 - legacy events without split stay truthful unknown and do not invent a declared source
+  ---
+  duration_ms: 0.796005
+  type: 'test'
+  ...
+# Subtest: source spoof and unknown identity stay unverified and never become customers
+ok 99 - source spoof and unknown identity stay unverified and never become customers
+  ---
+  duration_ms: 1.01014
+  type: 'test'
+  ...
+# Subtest: published runtime declared sources stay unverified through settlement composition
+ok 100 - published runtime declared sources stay unverified through settlement composition
+  ---
+  duration_ms: 0.912962
+  type: 'test'
+  ...
+# Subtest: contradictory or invalid metadata is omitted without blocking valid settlement
+ok 101 - contradictory or invalid metadata is omitted without blocking valid settlement
+  ---
+  duration_ms: 0.430127
+  type: 'test'
+  ...
+# Subtest: hostile extra fields never copy secrets, bodies, URLs, or credentials into the ledger
+ok 102 - hostile extra fields never copy secrets, bodies, URLs, or credentials into the ledger
+  ---
+  duration_ms: 1.003473
+  type: 'test'
+  ...
+# Subtest: legacy ledger rows stay unchanged and the helper reports truthful unknown
+ok 103 - legacy ledger rows stay unchanged and the helper reports truthful unknown
+  ---
+  duration_ms: 0.28739
+  type: 'test'
+  ...
+# Subtest: duplicate replay does not rewrite an existing row or backfill attribution
+ok 104 - duplicate replay does not rewrite an existing row or backfill attribution
+  ---
+  duration_ms: 0.704591
+  type: 'test'
+  ...
+# Subtest: concurrent eligible references still fail closed on duplicates and preserve one-write semantics
+ok 105 - concurrent eligible references still fail closed on duplicates and preserve one-write semantics
+  ---
+  duration_ms: 0.768419
+  type: 'test'
+  ...
+# Subtest: public payment-evidence schema consumers keep customer and buyer-valid planes null
+ok 106 - public payment-evidence schema consumers keep customer and buyer-valid planes null
+  ---
+  duration_ms: 0.481423
+  type: 'test'
+  ...
+# Subtest: baseline limitation: HTTP 200 paid_success is not buyer-valid output and settlement is not demand
+ok 107 - baseline limitation: HTTP 200 paid_success is not buyer-valid output and settlement is not demand
+  ---
+  duration_ms: 0.183367
+  type: 'test'
+  ...
+# Subtest: real HTTP writer to reconciliation and rotation keeps source claims distinct from token authority
+ok 108 - real HTTP writer to reconciliation and rotation keeps source claims distinct from token authority
+  ---
+  duration_ms: 197.578612
+  type: 'test'
+  ...
+# Subtest: malformed optional ledger attribution stays unknown without changing money, identity, or replay
+ok 109 - malformed optional ledger attribution stays unknown without changing money, identity, or replay
+  ---
+  duration_ms: 1.405342
+  type: 'test'
+  ...
+# unknown format "date-time" ignored in schema at path "\#/properties/settlementPlane/properties/baseline/anyOf/0"
+# unknown format "date-time" ignored in schema at path "\#/properties/settlementPlane/properties/baseline/anyOf/0"
+# Subtest: checked catalog decimals and chain id come from the recorded primary observations
+ok 110 - checked catalog decimals and chain id come from the recorded primary observations
+  ---
+  duration_ms: 0.854037
+  type: 'test'
+  ...
+# Subtest: uniform writer network and asset qualify without a second money sum
+ok 111 - uniform writer network and asset qualify without a second money sum
+  ---
+  duration_ms: 3.274657
+  type: 'test'
+  ...
+# Subtest: v1 payment readout stays exact when a unit projection is attached beside it
+ok 112 - v1 payment readout stays exact when a unit projection is attached beside it
+  ---
+  duration_ms: 1.329253
+  type: 'test'
+  ...
+# Subtest: legacy rows without network or asset stay missing and ignore route and server defaults
+ok 113 - legacy rows without network or asset stay missing and ignore route and server defaults
+  ---
+  duration_ms: 0.564708
+  type: 'test'
+  ...
+# Subtest: partial, conflicting, unmapped, rejected, and forged metadata do not label the parent total
+ok 114 - partial, conflicting, unmapped, rejected, and forged metadata do not label the parent total
+  ---
+  duration_ms: 0.965761
+  type: 'test'
+  ...
+# Subtest: duplicate references follow the parent first-write and do not import the later asset
+ok 115 - duplicate references follow the parent first-write and do not import the later asset
+  ---
+  duration_ms: 0.214337
+  type: 'test'
+  ...
+# Subtest: a stale or non-string parent summary cannot qualify the walked cut
+ok 116 - a stale or non-string parent summary cannot qualify the walked cut
+  ---
+  duration_ms: 0.336012
+  type: 'test'
+  ...
+# Subtest: empty cuts, rejected rows, invalid lines, and overflow stay exact strings
+ok 117 - empty cuts, rejected rows, invalid lines, and overflow stay exact strings
+  ---
+  duration_ms: 0.381763
+  type: 'test'
+  ...
+# Subtest: reclassification of payment class does not stale a matching amount
+ok 118 - reclassification of payment class does not stale a matching amount
+  ---
+  duration_ms: 0.43211
+  type: 'test'
+  ...
+# Subtest: the parent admission is the only money authority and a same-total different cut is stale
+ok 119 - the parent admission is the only money authority and a same-total different cut is stale
+  ---
+  duration_ms: 0.651601
+  type: 'test'
+  ...
+# Subtest: only the checked catalog entry can qualify
+ok 120 - only the checked catalog entry can qualify
+  ---
+  duration_ms: 1.104806
+  type: 'test'
+  ...
+# unknown format "date-time" ignored in schema at path "\#/properties/paymentEvidence/properties/settlementPlane/properties/baseline/anyOf/0"
+# unknown format "date-time" ignored in schema at path "\#/properties/paymentEvidence/properties/settlementPlane/properties/baseline/anyOf/0"
+# Subtest: status projects the same ledger bytes the parent summary admits
+ok 121 - status projects the same ledger bytes the parent summary admits
+  ---
+  duration_ms: 14.17775
+  type: 'test'
+  ...
+# Subtest: commerce-demand schema accepts an old body and an extended unit body
+ok 122 - commerce-demand schema accepts an old body and an extended unit body
+  ---
+  duration_ms: 41.814102
+  type: 'test'
+  ...
+# Subtest: absent projection and direct JSON round trip stay schema valid
+ok 123 - absent projection and direct JSON round trip stay schema valid
+  ---
+  duration_ms: 1.452422
+  type: 'test'
+  ...
+# Subtest: lowercase asset still matches the checked catalog entry
+ok 124 - lowercase asset still matches the checked catalog entry
+  ---
+  duration_ms: 0.200894
+  type: 'test'
+  ...
+# Subtest: verified owner work, self-reported QA, and unattributed activity stay separate
+ok 125 - verified owner work, self-reported QA, and unattributed activity stay separate
+  ---
+  duration_ms: 25.869592
+  type: 'test'
+  ...
+# Subtest: forged, invalid, and reused validation markers do not grant trust or drop the event
+ok 126 - forged, invalid, and reused validation markers do not grant trust or drop the event
+  ---
+  duration_ms: 6.215707
+  type: 'test'
+  ...
+# Subtest: mounted commerce-demand keeps the same producer populations
+ok 127 - mounted commerce-demand keeps the same producer populations
+  ---
+  duration_ms: 1769.253116
+  type: 'test'
+  ...
+# Subtest: disables signed commerce artifacts when no receipt key is configured
+ok 128 - disables signed commerce artifacts when no receipt key is configured
+  ---
+  duration_ms: 0.934844
+  type: 'test'
+  ...
+# Subtest: fails closed on malformed receipt keys and networks
+ok 129 - fails closed on malformed receipt keys and networks
+  ---
+  duration_ms: 0.417863
+  type: 'test'
+  ...
+# Subtest: includeTxHash only changes route extensions, not the signer identity
+ok 130 - includeTxHash only changes route extensions, not the signer identity
+  ---
+  duration_ms: 27.020155
+  type: 'test'
+  ...
+# Subtest: signs independently verifiable EIP-712 offers and receipts
+ok 131 - signs independently verifiable EIP-712 offers and receipts
+  ---
+  duration_ms: 19.930378
+  type: 'test'
+  ...
+# Subtest: pins the copy-paste operator command and status vocabulary
+ok 132 - pins the copy-paste operator command and status vocabulary
+  ---
+  duration_ms: 1.65991
+  type: 'test'
+  ...
+# Subtest: records T1 S94 amount match without claiming reindex or lastUpdated cause
+ok 133 - records T1 S94 amount match without claiming reindex or lastUpdated cause
+  ---
+  duration_ms: 7.285732
+  type: 'test'
+  ...
+# Subtest: mismatch: seller-integrity fixture 5000 vs live catalog 10000
+ok 134 - mismatch: seller-integrity fixture 5000 vs live catalog 10000
+  ---
+  duration_ms: 0.978176
+  type: 'test'
+  ...
+# Subtest: unknown: missing amountAtomic is not treated as drift or converted units
+ok 135 - unknown: missing amountAtomic is not treated as drift or converted units
+  ---
+  duration_ms: 0.61351
+  type: 'test'
+  ...
+# Subtest: stale: economics match and lastUpdated exceeds an explicit horizon
+ok 136 - stale: economics match and lastUpdated exceeds an explicit horizon
+  ---
+  duration_ms: 0.384693
+  type: 'test'
+  ...
+# Subtest: reordered-multiple-offer preserves the offer set and does not invent drift
+ok 137 - reordered-multiple-offer preserves the offer set and does not invent drift
+  ---
+  duration_ms: 0.314911
+  type: 'test'
+  ...
+# Subtest: network-mismatch does not compare amounts as decimals
+ok 138 - network-mismatch does not compare amounts as decimals
+  ---
+  duration_ms: 0.41445
+  type: 'test'
+  ...
+# Subtest: asset-mismatch keeps atomic strings exact and does not equate units
+ok 139 - asset-mismatch keeps atomic strings exact and does not equate units
+  ---
+  duration_ms: 0.488646
+  type: 'test'
+  ...
+# Subtest: extracts Bazaar accepts amount strings and ignores example price_usd
+ok 140 - extracts Bazaar accepts amount strings and ignores example price_usd
+  ---
+  duration_ms: 0.367748
+  type: 'test'
+  ...
+# Subtest: live adapter keeps only valid unpaid offers and redirect/payment flags
+ok 141 - live adapter keeps only valid unpaid offers and redirect/payment flags
+  ---
+  duration_ms: 0.335077
+  type: 'test'
+  ...
+# Subtest: observe reuses payment-offer-preflight and bazaar fetch without credentials or payment
+ok 142 - observe reuses payment-offer-preflight and bazaar fetch without credentials or payment
+  ---
+  duration_ms: 2.867618
+  type: 'test'
+  ...
+# Subtest: repeat-change compares two snapshots without fetching
+ok 143 - repeat-change compares two snapshots without fetching
+  ---
+  duration_ms: 1.814044
+  type: 'test'
+  ...
+# Subtest: CLI replay-t1 and compare emit match JSON
+ok 144 - CLI replay-t1 and compare emit match JSON
+  ---
+  duration_ms: 4.181975
+  type: 'test'
+  ...
+# Subtest: CLI binary replay-t1 is a one-shot unpaid fixture command
+ok 145 - CLI binary replay-t1 is a one-shot unpaid fixture command
+  ---
+  duration_ms: 334.009241
+  type: 'test'
+  ...
+# Subtest: all offers participate: second amount drift, extra offers and ambiguous joins cannot match
+ok 146 - all offers participate: second amount drift, extra offers and ambiguous joins cannot match
+  ---
+  duration_ms: 0.815896
+  type: 'test'
+  ...
+# Subtest: zero is known, unsafe numeric amounts and missing network are unknown; asset case stays significant
+ok 147 - zero is known, unsafe numeric amounts and missing network are unknown; asset case stays significant
+  ---
+  duration_ms: 0.695435
+  type: 'test'
+  ...
+# Subtest: truncated offers and non-402 or invalid-offer preflights cannot produce a match
+ok 148 - truncated offers and non-402 or invalid-offer preflights cannot produce a match
+  ---
+  duration_ms: 0.931767
+  type: 'test'
+  ...
+# Subtest: catalog pagination is explicitly incomplete and unrelated or duplicate source URLs are not selected
+ok 149 - catalog pagination is explicitly incomplete and unrelated or duplicate source URLs are not selected
+  ---
+  duration_ms: 0.813044
+  type: 'test'
+  ...
+# Subtest: freshness does not invent capture times or accept future dates and includes live capture age
+ok 150 - freshness does not invent capture times or accept future dates and includes live capture age
+  ---
+  duration_ms: 0.439546
+  type: 'test'
+  ...
+# Subtest: successive reports retain source identity and detect every offer, not only the first
+ok 151 - successive reports retain source identity and detect every offer, not only the first
+  ---
+  duration_ms: 0.707745
+  type: 'test'
+  ...
+# Subtest: CLI rejects unknown or ignored options before network; injected live source must match target
+ok 152 - CLI rejects unknown or ignored options before network; injected live source must match target
+  ---
+  duration_ms: 0.616289
+  type: 'test'
+  ...
+# Subtest: actual catalog transport bounds chunked data, deadline and redirects; merchant identity stays exact
+ok 153 - actual catalog transport bounds chunked data, deadline and redirects; merchant identity stays exact
+  ---
+  duration_ms: 329.334297
+  type: 'test'
+  ...
+# Subtest: mcp capability is channel qualified and stays out of the http reader
+ok 154 - mcp capability is channel qualified and stays out of the http reader
+  ---
+  duration_ms: 1.992932
+  type: 'test'
+  ...
+# Subtest: mcp capability rejects foreign, expired, tampered, and client event identity
+ok 155 - mcp capability rejects foreign, expired, tampered, and client event identity
+  ---
+  duration_ms: 0.562489
+  type: 'test'
+  ...
+# Subtest: attach publishes the capability only on eligible sealed morpho meta
+ok 156 - attach publishes the capability only on eligible sealed morpho meta
+  ---
+  duration_ms: 0.53843
+  type: 'test'
+  ...
+# Subtest: the mcp client reports through callTool and does not echo a transport failure
+ok 157 - the mcp client reports through callTool and does not echo a transport failure
+  ---
+  duration_ms: 0.511529
+  type: 'test'
+  ...
+# Subtest: facilitator settlement facts stay canonical without becoming chain truth
+ok 158 - facilitator settlement facts stay canonical without becoming chain truth
+  ---
+  duration_ms: 1.761734
+  type: 'test'
+  ...
+# Subtest: the official wrapper hook retains the sealed result and callTool stays positional
+ok 159 - the official wrapper hook retains the sealed result and callTool stays positional
+  ---
+  duration_ms: 0.716867
+  type: 'test'
+  ...
+# Subtest: overlapping purchases keep their own sealed capability
+ok 160 - overlapping purchases keep their own sealed capability
+  ---
+  duration_ms: 19.092566
+  type: 'test'
+  ...
+# Subtest: free reporting uses the raw SDK and cannot invoke automatic payment
+ok 161 - free reporting uses the raw SDK and cannot invoke automatic payment
+  ---
+  duration_ms: 0.428419
+  type: 'test'
+  ...
+# Subtest: a paid capture that lands after the statement is accepted, and a capture that never appears stays refused
+ok 162 - a paid capture that lands after the statement is accepted, and a capture that never appears stays refused
+  ---
+  duration_ms: 349.690435
+  type: 'test'
+  ...
+# Subtest: constructed records join by event, digest, route, and reference
+ok 163 - constructed records join by event, digest, route, and reference
+  ---
+  duration_ms: 1107.648886
+  type: 'test'
+  ...
+# Subtest: empty stores stay empty and a missing directory is not created
+ok 164 - empty stores stay empty and a missing directory is not created
+  ---
+  duration_ms: 1029.556643
+  type: 'test'
+  ...
+# Subtest: a count join without capture is refused
+ok 165 - a count join without capture is refused
+  ---
+  duration_ms: 971.27167
+  type: 'test'
+  ...
+# Subtest: the receiver does not write ledgers or import the payment server
+ok 166 - the receiver does not write ledgers or import the payment server
+  ---
+  duration_ms: 5.627485
+  type: 'test'
+  ...
+# Subtest: typed MCP canonical joins without an HTTP v1 row
+ok 167 - typed MCP canonical joins without an HTTP v1 row
+  ---
+  duration_ms: 2.576705
+  type: 'test'
+  ...
+# Subtest: canonical settlement cannot borrow another transport, protocol, time or event canon
+ok 168 - canonical settlement cannot borrow another transport, protocol, time or event canon
+  ---
+  duration_ms: 1.395684
+  type: 'test'
+  ...
+# Subtest: a disk parent keeps amount, network, asset, and payee for the typed join
+ok 169 - a disk parent keeps amount, network, asset, and payee for the typed join
+  ---
+  duration_ms: 11.908257
+  type: 'test'
+  ...
+# Subtest: normalizes only credential-free public HTTPS targets
+ok 170 - normalizes only credential-free public HTTPS targets
+  ---
+  duration_ms: 5.394154
+  type: 'test'
+  ...
+# Subtest: public address policy rejects private, reserved, and documentation ranges
+ok 171 - public address policy rejects private, reserved, and documentation ranges
+  ---
+  duration_ms: 0.240083
+  type: 'test'
+  ...
+# Subtest: pinned DNS lookup supports scalar and all-address Node callback contracts
+ok 172 - pinned DNS lookup supports scalar and all-address Node callback contracts
+  ---
+  duration_ms: 0.602584
+  type: 'test'
+  ...
+# Subtest: normalizes matching x402 and MPP offers without credentials or payment
+ok 173 - normalizes matching x402 and MPP offers without credentials or payment
+  ---
+  duration_ms: 16.037033
+  type: 'test'
+  ...
+# Subtest: compares caller-supplied catalog metadata with each live unsigned offer
+ok 174 - compares caller-supplied catalog metadata with each live unsigned offer
+  ---
+  duration_ms: 1.524467
+  type: 'test'
+  ...
+# Subtest: compares a protocol-specific catalog candidate only with that live protocol
+ok 175 - compares a protocol-specific catalog candidate only with that live protocol
+  ---
+  duration_ms: 1.335155
+  type: 'test'
+  ...
+# Subtest: turns explicit catalog to runtime drift into review-required before authorization
+ok 176 - turns explicit catalog to runtime drift into review-required before authorization
+  ---
+  duration_ms: 0.726869
+  type: 'test'
+  ...
+# Subtest: rejects malformed catalog metadata before any target request
+ok 177 - rejects malformed catalog metadata before any target request
+  ---
+  duration_ms: 0.256435
+  type: 'test'
+  ...
+# Subtest: flags economic drift across protocols
+ok 178 - flags economic drift across protocols
+  ---
+  duration_ms: 0.951383
+  type: 'test'
+  ...
+# Subtest: fails closed on resource binding, realm, and expiry errors
+ok 179 - fails closed on resource binding, realm, and expiry errors
+  ---
+  duration_ms: 1.029132
+  type: 'test'
+  ...
+# Subtest: reports a non-402 target without reading a response body
+ok 180 - reports a non-402 target without reading a response body
+  ---
+  duration_ms: 0.512796
+  type: 'test'
+  ...
+# Subtest: rejects a changed final URL
+ok 181 - rejects a changed final URL
+  ---
+  duration_ms: 0.363969
+  type: 'test'
+  ...
+# Subtest: marks a parseable payment offer review-required when the seller omits its success response schema
+ok 182 - marks a parseable payment offer review-required when the seller omits its success response schema
+  ---
+  duration_ms: 0.43964
+  type: 'test'
+  ...
+# Subtest: builds bounded seller-declared authorization evidence for exact operations
+ok 183 - builds bounded seller-declared authorization evidence for exact operations
+  ---
+  duration_ms: 14.195339
+  type: 'test'
+  ...
+# Subtest: rejects missing response contracts, undeclared effects, and cross-origin resources
+ok 184 - rejects missing response contracts, undeclared effects, and cross-origin resources
+  ---
+  duration_ms: 0.605083
+  type: 'test'
+  ...
+# Subtest: advertises the manifest through one standard describedby link on configured paid or discovery routes
+ok 185 - advertises the manifest through one standard describedby link on configured paid or discovery routes
+  ---
+  duration_ms: 0.430583
+  type: 'test'
+  ...
+# Subtest: machine documentation links name the existing OpenAPI document and x402 catalog
+ok 186 - machine documentation links name the existing OpenAPI document and x402 catalog
+  ---
+  duration_ms: 0.147826
+  type: 'test'
+  ...
+# Subtest: normalizes the exact bounded Base-USDC proof request
+ok 187 - normalizes the exact bounded Base-USDC proof request
+  ---
+  duration_ms: 2.213063
+  type: 'test'
+  ...
+# Subtest: verifies one exact successful canonical Base USDC transfer
+ok 188 - verifies one exact successful canonical Base USDC transfer
+  ---
+  duration_ms: 6.831915
+  type: 'test'
+  ...
+# Subtest: fails closed on recipient, amount, payer, duplicate, status, and block mismatches
+ok 189 - fails closed on recipient, amount, payer, duplicate, status, and block mismatches
+  ---
+  duration_ms: 5.230949
+  type: 'test'
+  ...
+# Subtest: returns a bounded diagnostic when the public receipt is unavailable
+ok 190 - returns a bounded diagnostic when the public receipt is unavailable
+  ---
+  duration_ms: 1.194276
+  type: 'test'
+  ...
+# Subtest: normalizes a bounded Base or Ethereum receipt request
+ok 191 - normalizes a bounded Base or Ethereum receipt request
+  ---
+  duration_ms: 1.364821
+  type: 'test'
+  ...
+# Subtest: returns normalized fee, block, and decoded transfer evidence
+ok 192 - returns normalized fee, block, and decoded transfer evidence
+  ---
+  duration_ms: 4.803363
+  type: 'test'
+  ...
+# Subtest: preserves a useful receipt when the block timestamp is unavailable
+ok 193 - preserves a useful receipt when the block timestamp is unavailable
+  ---
+  duration_ms: 1.615794
+  type: 'test'
+  ...
+# Subtest: distinguishes a missing receipt from RPC unavailability
+ok 194 - distinguishes a missing receipt from RPC unavailability
+  ---
+  duration_ms: 0.309489
+  type: 'test'
+  ...
+1..194
+# tests 194
+# suites 0
+# pass 194
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8291.608998

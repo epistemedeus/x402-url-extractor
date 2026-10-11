@@ -1,0 +1,390 @@
+TAP version 13
+# Subtest: persisted original operation precedes the one paid send and successful handoff closes afterwards
+ok 1 - persisted original operation precedes the one paid send and successful handoff closes afterwards
+  ---
+  duration_ms: 3.234497
+  type: 'test'
+  ...
+# Subtest: a failed handoff retains the same useful execution and open client, then saves without re-executing
+ok 2 - a failed handoff retains the same useful execution and open client, then saves without re-executing
+  ---
+  duration_ms: 2.048368
+  type: 'test'
+  ...
+# Subtest: a store's explicit failed persistence never permits dispatch or detach
+ok 3 - a store's explicit failed persistence never permits dispatch or detach
+  ---
+  duration_ms: 0.714004
+  type: 'test'
+  ...
+# Subtest: a lost response is recovered by the read tool alone with the original credential and context
+ok 4 - a lost response is recovered by the read tool alone with the original credential and context
+  ---
+  duration_ms: 1.007322
+  type: 'test'
+  ...
+# Subtest: all changed scope/input/terms/reservation, revoked and expired grants refuse before a cold request
+    # Subtest: tenant
+    ok 1 - tenant
+      ---
+      duration_ms: 0.226097
+      type: 'test'
+      ...
+    # Subtest: endpoint
+    ok 2 - endpoint
+      ---
+      duration_ms: 0.147222
+      type: 'test'
+      ...
+    # Subtest: principal
+    ok 3 - principal
+      ---
+      duration_ms: 0.12783
+      type: 'test'
+      ...
+    # Subtest: input
+    ok 4 - input
+      ---
+      duration_ms: 0.180225
+      type: 'test'
+      ...
+    # Subtest: quote
+    ok 5 - quote
+      ---
+      duration_ms: 0.250957
+      type: 'test'
+      ...
+    # Subtest: credential
+    ok 6 - credential
+      ---
+      duration_ms: 0.273296
+      type: 'test'
+      ...
+    # Subtest: operation
+    ok 7 - operation
+      ---
+      duration_ms: 0.894287
+      type: 'test'
+      ...
+    # Subtest: reservation
+    ok 8 - reservation
+      ---
+      duration_ms: 0.168613
+      type: 'test'
+      ...
+    # Subtest: budget
+    ok 9 - budget
+      ---
+      duration_ms: 0.112488
+      type: 'test'
+      ...
+    # Subtest: revoked
+    ok 10 - revoked
+      ---
+      duration_ms: 0.100739
+      type: 'test'
+      ...
+    # Subtest: expired
+    ok 11 - expired
+      ---
+      duration_ms: 0.089815
+      type: 'test'
+      ...
+    # Subtest: widenedExpiry
+    ok 12 - widenedExpiry
+      ---
+      duration_ms: 0.085775
+      type: 'test'
+      ...
+    1..12
+ok 5 - all changed scope/input/terms/reservation, revoked and expired grants refuse before a cold request
+  ---
+  duration_ms: 3.83125
+  type: 'test'
+  ...
+# Subtest: pending or missing remote output never becomes a replacement paid call
+ok 6 - pending or missing remote output never becomes a replacement paid call
+  ---
+  duration_ms: 0.637104
+  type: 'test'
+  ...
+# Subtest: changed current quote prevents even the initial paid dispatch
+ok 7 - changed current quote prevents even the initial paid dispatch
+  ---
+  duration_ms: 0.403209
+  type: 'test'
+  ...
+# Subtest: a changed timeout in the complete current quote also prevents dispatch
+ok 8 - a changed timeout in the complete current quote also prevents dispatch
+  ---
+  duration_ms: 0.386036
+  type: 'test'
+  ...
+# Subtest: read-only recovery keeps original terms after a current price change and original payment expiry
+ok 9 - read-only recovery keeps original terms after a current price change and original payment expiry
+  ---
+  duration_ms: 0.748741
+  type: 'test'
+  ...
+# Subtest: cancellation acknowledgement remains unknown stopped/refunded even when remote work completes
+ok 10 - cancellation acknowledgement remains unknown stopped/refunded even when remote work completes
+  ---
+  duration_ms: 14.070768
+  type: 'test'
+  ...
+# Subtest: recovery rejects an invalid payload lineage and reuses the SDK original output codec
+ok 11 - recovery rejects an invalid payload lineage and reuses the SDK original output codec
+  ---
+  duration_ms: 0.889389
+  type: 'test'
+  ...
+# Subtest: exclusive private file checkpoint resists a duplicate start, symlink, result corruption and stale save
+ok 12 - exclusive private file checkpoint resists a duplicate start, symlink, result corruption and stale save
+  ---
+  duration_ms: 27.006749
+  type: 'test'
+  ...
+# Subtest: unbound payment-response success cannot zero possible exposure, and a bound flip fails integrity
+ok 13 - unbound payment-response success cannot zero possible exposure, and a bound flip fails integrity
+  ---
+  duration_ms: 22.099315
+  type: 'test'
+  ...
+# Subtest: ordinary x402 payment without a resource url executes once and replays on the same tool
+ok 14 - ordinary x402 payment without a resource url executes once and replays on the same tool
+  ---
+  duration_ms: 38.597414
+  type: 'test'
+  ...
+# Subtest: native reservation pins its original credential and operation across process restart
+ok 15 - native reservation pins its original credential and operation across process restart
+  ---
+  duration_ms: 41.297174
+  type: 'test'
+  ...
+# Subtest: native completed output survives failed persistence in its execution and can save without re-execution
+ok 16 - native completed output survives failed persistence in its execution and can save without re-execution
+  ---
+  duration_ms: 36.546689
+  type: 'test'
+  ...
+# Subtest: native unknown payment stays quarantined; missing, expired and corrupt recovery never executes
+ok 17 - native unknown payment stays quarantined; missing, expired and corrupt recovery never executes
+  ---
+  duration_ms: 52.668582
+  type: 'test'
+  ...
+# Subtest: native unpaid terminal refusal keeps its useful result without inventing settlement
+ok 18 - native unpaid terminal refusal keeps its useful result without inventing settlement
+  ---
+  duration_ms: 17.793825
+  type: 'test'
+  ...
+# Subtest: concurrent native continuation never starts a second execution while the first runs
+ok 19 - concurrent native continuation never starts a second execution while the first runs
+  ---
+  duration_ms: 43.814097
+  type: 'test'
+  ...
+# Subtest: persistent identity and capacity preserve pending claims, corrupt state fails closed
+ok 20 - persistent identity and capacity preserve pending claims, corrupt state fails closed
+  ---
+  duration_ms: 22.16396
+  type: 'test'
+  ...
+# Subtest: canonical replay URL binds sorted query keys and values
+ok 21 - canonical replay URL binds sorted query keys and values
+  ---
+  duration_ms: 5.407225
+  type: 'test'
+  ...
+# Subtest: payment decoder requires a complete x402 v2 exact payment binding
+ok 22 - payment decoder requires a complete x402 v2 exact payment binding
+  ---
+  duration_ms: 0.374139
+  type: 'test'
+  ...
+# Subtest: same payment ID and canonical request replays without a second handler run
+ok 23 - same payment ID and canonical request replays without a second handler run
+  ---
+  duration_ms: 34.529734
+  type: 'test'
+  ...
+# Subtest: same payment ID on changed input or payer fails with uncharged 409
+ok 24 - same payment ID on changed input or payer fails with uncharged 409
+  ---
+  duration_ms: 37.39553
+  type: 'test'
+  ...
+# Subtest: cached x402 response requires the exact credential that originally settled
+ok 25 - cached x402 response requires the exact credential that originally settled
+  ---
+  duration_ms: 11.957243
+  type: 'test'
+  ...
+# Subtest: paid POST replay binds the exact request bytes and rejects body drift before the handler
+ok 26 - paid POST replay binds the exact request bytes and rejects body drift before the handler
+  ---
+  duration_ms: 9.940568
+  type: 'test'
+  ...
+# Subtest: expired records return to normal payment processing
+ok 27 - expired records return to normal payment processing
+  ---
+  duration_ms: 16.560372
+  type: 'test'
+  ...
+# Subtest: a newly settled response is durable before the network response ends
+ok 28 - a newly settled response is durable before the network response ends
+  ---
+  duration_ms: 14.741447
+  type: 'test'
+  ...
+# Subtest: in-flight claim prevents a twin POST from running a second handler
+ok 29 - in-flight claim prevents a twin POST from running a second handler
+  ---
+  duration_ms: 234.082515
+  type: 'test'
+  ...
+# Subtest: required replay paths classify missing identifier separately from unbounded validity
+ok 30 - required replay paths classify missing identifier separately from unbounded validity
+  ---
+  duration_ms: 1.87392
+  type: 'test'
+  ...
+# Subtest: oversized completed MCP output is unrecoverable and is not executed again
+ok 31 - oversized completed MCP output is unrecoverable and is not executed again
+  ---
+  duration_ms: 33.149063
+  type: 'test'
+  ...
+# Subtest: retryable MCP persistence stays bounded by expiry and entry pressure without a second settlement
+ok 32 - retryable MCP persistence stays bounded by expiry and entry pressure without a second settlement
+  ---
+  duration_ms: 66.442621
+  type: 'test'
+  ...
+# Subtest: ephemeral MCP bytes above the cap drop the older body and do not settle it again
+ok 33 - ephemeral MCP bytes above the cap drop the older body and do not settle it again
+  ---
+  duration_ms: 54.182352
+  type: 'test'
+  ...
+# Subtest: the MCP JSON-RPC ceiling is the advertised argument budget plus one envelope allowance
+ok 34 - the MCP JSON-RPC ceiling is the advertised argument budget plus one envelope allowance
+  ---
+  duration_ms: 2.64042
+  type: 'test'
+  ...
+# Subtest: mounted SDK requests accept the MCP byte ceiling and refuse one byte past it as JSON-RPC
+ok 35 - mounted SDK requests accept the MCP byte ceiling and refuse one byte past it as JSON-RPC
+  ---
+  duration_ms: 1942.847996
+  type: 'test'
+  ...
+# Subtest: ordinary cold CLI retrieves the same whole outcome after lost response and provider/client process restart
+ok 36 - ordinary cold CLI retrieves the same whole outcome after lost response and provider/client process restart
+  ---
+  duration_ms: 2046.928323
+  type: 'test'
+  ...
+# {"coldRecovery":true,"synthetic":true,"settle":1,"usefulAcceptance":"unknown","paidLiveCalls":0}
+# Subtest: a completed ordinary cold client consumes its local output when the provider is unavailable
+ok 37 - a completed ordinary cold client consumes its local output when the provider is unavailable
+  ---
+  duration_ms: 1044.953463
+  type: 'test'
+  ...
+# Subtest: an ordinary process interrupted during the current asynchronous receipt task resumes its retained partial output
+ok 38 - an ordinary process interrupted during the current asynchronous receipt task resumes its retained partial output
+  ---
+  duration_ms: 3216.368215
+  type: 'test'
+  ...
+# Subtest: cold recovery consumes current useful refusal, valid empty and partial results without a paid retry
+ok 39 - cold recovery consumes current useful refusal, valid empty and partial results without a paid retry
+  ---
+  duration_ms: 5339.723383
+  type: 'test'
+  ...
+# Subtest: wrong tenant/endpoint/input/quote/recipient/credential refuse at the actual lookup with no new effects
+ok 40 - wrong tenant/endpoint/input/quote/recipient/credential refuse at the actual lookup with no new effects
+  ---
+  duration_ms: 2824.09914
+  type: 'test'
+  ...
+# Subtest: provider quote changes preserve retrieval of the original purchase without adopting new terms
+ok 41 - provider quote changes preserve retrieval of the original purchase without adopting new terms
+  ---
+  duration_ms: 1819.535441
+  type: 'test'
+  ...
+# Subtest: unknown payment survives restart and reconciliation reads never create another paid request
+ok 42 - unknown payment survives restart and reconciliation reads never create another paid request
+  ---
+  duration_ms: 1840.965588
+  type: 'test'
+  ...
+# Subtest: revoked/expired grants and widened budgets refuse in a fresh ordinary process before lookup
+ok 43 - revoked/expired grants and widened budgets refuse in a fresh ordinary process before lookup
+  ---
+  duration_ms: 1304.838064
+  type: 'test'
+  ...
+# Subtest: existing x402 unknown settlement is durable across retry and restart
+ok 44 - existing x402 unknown settlement is durable across retry and restart
+  ---
+  duration_ms: 3261.876014
+  type: 'test'
+  ...
+# Subtest: existing x402 successful response replays after restart without settlement
+ok 45 - existing x402 successful response replays after restart without settlement
+  ---
+  duration_ms: 2963.726443
+  type: 'test'
+  ...
+# Subtest: existing x402 definite verification rejection permits a valid retry
+ok 46 - existing x402 definite verification rejection permits a valid retry
+  ---
+  duration_ms: 1508.815909
+  type: 'test'
+  ...
+# Subtest: existing mpp unknown settlement is durable across retry and restart
+ok 47 - existing mpp unknown settlement is durable across retry and restart
+  ---
+  duration_ms: 3101.321586
+  type: 'test'
+  ...
+# Subtest: existing mpp successful response replays after restart without settlement
+ok 48 - existing mpp successful response replays after restart without settlement
+  ---
+  duration_ms: 2958.007892
+  type: 'test'
+  ...
+# Subtest: existing mpp definite verification rejection permits a valid retry
+ok 49 - existing mpp definite verification rejection permits a valid retry
+  ---
+  duration_ms: 1545.294032
+  type: 'test'
+  ...
+# Subtest: existing x402 without optional payment ID still works and gets restart replay
+ok 50 - existing x402 without optional payment ID still works and gets restart replay
+  ---
+  duration_ms: 2919.610032
+  type: 'test'
+  ...
+# Subtest: changing only the x402 payment identifier cannot reuse a settled authorization
+ok 51 - changing only the x402 payment identifier cannot reuse a settled authorization
+  ---
+  duration_ms: 1422.817389
+  type: 'test'
+  ...
+1..51
+# tests 63
+# suites 0
+# pass 63
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 23232.707191
