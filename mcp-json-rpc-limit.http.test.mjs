@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -43,6 +44,10 @@ test("the MCP JSON-RPC ceiling is the advertised argument budget plus one envelo
   const raw = Buffer.byteLength(JSON.stringify(message));
   assert.ok(raw > ORDINARY_HTTP_JSON_MAX_BYTES);
   assert.ok(raw <= MCP_JSON_RPC_MAX_BYTES);
+  assert.equal(MCP_CONTINUATION_OPERATION_MAX_BYTES, 64 * 1024);
+  const callerRecovery = readFileSync(new URL("./caller-result-client/src/mcp-recovery.mjs", import.meta.url), "utf8");
+  assert.equal(callerRecovery.includes("mcp-json-rpc-limit.mjs"), false);
+  assert.match(callerRecovery, /const MCP_CONTINUATION_OPERATION_MAX_BYTES = 64 \* 1024;/);
 });
 
 test("mounted SDK requests accept the MCP byte ceiling and refuse one byte past it as JSON-RPC", { timeout: 60000 }, async (t) => {

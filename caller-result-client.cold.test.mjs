@@ -3,7 +3,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { createHmac, randomBytes } from "node:crypto";
 import { createServer as createHttpServer } from "node:http";
 import { createServer as createNetServer } from "node:net";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -369,7 +369,12 @@ test("installed caller consumer reaches the mounted parent without merchant sour
   });
   await stopChild(merchant.child);
   merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url, feedbackKey, actorSecret });
-  await writeFile(path.join(signalDir, "restart-ready"), JSON.stringify({ mcpUrl: `${merchant.base}/mcp` }));
+  // Publish the new URL by rename. A partial writeFile is visible, fails JSON
+  // parse in the frozen consumer, and falls back to the stopped merchant.
+  const restartReady = path.join(signalDir, "restart-ready");
+  const restartTemporary = path.join(signalDir, `.restart-ready.${process.pid}.tmp`);
+  await writeFile(restartTemporary, JSON.stringify({ mcpUrl: `${merchant.base}/mcp` }));
+  await rename(restartTemporary, restartReady);
   const code = await new Promise((resolve) => consumer.once("exit", resolve));
   assert.equal(code, 0, `${stdout}\n${stderr}\n${merchant.output().slice(-800)}`);
   const summary = JSON.parse(stdout.trim());

@@ -4,7 +4,10 @@ import { createHash, randomBytes } from "node:crypto";
 import { constants } from "node:fs";
 import { mkdir, open, rename, unlink } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { MCP_CONTINUATION_OPERATION_MAX_BYTES } from "../../mcp-json-rpc-limit.mjs";
+
+// Journal record bound. The merchant names the same 64 KiB ceiling; this package
+// does not import merchant source. The raw POST /mcp body limit is larger.
+const MCP_CONTINUATION_OPERATION_MAX_BYTES = 64 * 1024;
 
 const META = "samedaydesk/recovery";
 const READ_TOOL = "recover_paid_result";
