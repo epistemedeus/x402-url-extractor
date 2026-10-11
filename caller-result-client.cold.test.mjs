@@ -241,9 +241,13 @@ test("installed caller consumer reaches the mounted parent without merchant sour
   assert.equal(loaded.document.draft, true);
   assert.equal(loaded.document.hostedAcquisitionVerified, false);
   const committed = JSON.parse(await readFile(committedManifest, "utf8"));
-  const committedArchive = committed.assets.find((asset) => asset.role === "archive");
+  const frozenArchive = committed.assets.find((asset) => asset.role === "archive" && asset.version === "0.1.0");
+  const committedArchive = committed.assets.find((asset) => asset.role === "archive" && asset.version === fresh.version);
+  assert.equal(frozenArchive.sha256, "3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b");
+  assert.equal(fresh.version, "0.1.1");
   assert.equal(committedArchive.sha256, fresh.archiveSha256);
-  const archive = loaded.files.get("samedaydesk-caller-result/0.1.0/samedaydesk-caller-result-0.1.0.tar.gz");
+  assert.notEqual(fresh.archiveSha256, frozenArchive.sha256);
+  const archive = loaded.files.get(fresh.relativePath);
   await writeFile(path.join(root, "archive.tar.gz"), archive.bytes);
   const unpacked = spawnSync("tar", ["-xzf", path.join(root, "archive.tar.gz"), "-C", work], { encoding: "utf8" });
   assert.equal(unpacked.status, 0, unpacked.stderr);

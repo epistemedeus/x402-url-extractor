@@ -1,17 +1,21 @@
 {
   "name": "samedaydesk-caller-result",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
-  "description": "Optional free statement for one paid SameDayDesk HTTP or native MCP result.",
+  "description": "Optional free statement for one paid SameDayDesk HTTP or native MCP result, and optional recovery of one already authorized paid result.",
   "type": "module",
   "engines": {
     "node": ">=22.12.0"
+  },
+  "bin": {
+    "recover-mcp": "bin/recover-mcp.mjs"
   },
   "exports": {
     ".": "./src/index.mjs",
     "./contract": "./src/contract.mjs",
     "./http": "./src/http-caller-result.mjs",
-    "./mcp": "./src/mcp-caller-result.mjs"
+    "./mcp": "./src/mcp-caller-result.mjs",
+    "./recovery": "./src/mcp-recovery.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.30.0",

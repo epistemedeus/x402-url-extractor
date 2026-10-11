@@ -28,8 +28,10 @@ test("package sources do not import the merchant server", async () => {
     "src/contract.mjs",
     "src/http-caller-result.mjs",
     "src/mcp-caller-result.mjs",
+    "src/mcp-recovery.mjs",
     "src/index.mjs",
     "bin/cold-consumer.mjs",
+    "bin/recover-mcp.mjs",
   ];
   const banned = [
     "caller-result-" + "feedback.mjs",

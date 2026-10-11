@@ -9,12 +9,16 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import express from "express";
+
 import {
   CALLER_RESULT_CLIENT_COMMITTED_ARCHIVE,
   CALLER_RESULT_CLIENT_ENTRY,
+  CALLER_RESULT_CLIENT_FEEDBACK_ARCHIVE,
 } from "./caller-result-client-entry.mjs";
 import { buildSkillContract } from "./skill-contract.mjs";
 import { listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
+import { mountPublicAcquisition, PUBLIC_ACQUISITION_INDEX_PATH } from "./public-acquisition/engine.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const entry = CALLER_RESULT_CLIENT_ENTRY;
@@ -33,10 +37,19 @@ function unusedPort() {
 test("released caller client entry matches the hosted archive and the shared contract", () => {
   const bytes = readFileSync(path.join(cwd, CALLER_RESULT_CLIENT_COMMITTED_ARCHIVE));
   assert.equal(createHash("sha256").update(bytes).digest("hex"), entry.sha256);
-  assert.equal(entry.sha256, "3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b");
-  assert.equal(entry.archiveUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.0/samedaydesk-caller-result-0.1.0.tar.gz");
-  assert.equal(entry.descriptorUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.0/descriptor.json");
-  assert.equal(entry.sourceUrl, "https://github.com/epistemedeus/x402-url-extractor/tree/f842baecfd298dcc02682d2f404699653ea42625/caller-result-client");
+  assert.equal(entry.version, "0.1.1");
+  assert.equal(entry.sha256, "ed5a00d52e15ccd098a7c054db00b2a929d884df3e926c9437bb3514af5c65fc");
+  assert.equal(entry.archiveUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/samedaydesk-caller-result-0.1.1.tar.gz");
+  assert.equal(entry.descriptorUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/descriptor.json");
+  assert.equal(entry.sourceUrl, "https://github.com/epistemedeus/x402-url-extractor/tree/REPLACE_SOURCE_COMMIT/caller-result-client");
+  assert.match(entry.sourceUrl, /^https:\/\/github\.com\/epistemedeus\/x402-url-extractor\/tree\/[0-9a-f]{40}\/caller-result-client$/);
+  const feedbackBytes = readFileSync(path.join(cwd, CALLER_RESULT_CLIENT_FEEDBACK_ARCHIVE.relativePath));
+  assert.equal(createHash("sha256").update(feedbackBytes).digest("hex"), "3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b");
+  assert.equal(entry.feedbackArchive.sha256, "3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b");
+  assert.equal(entry.feedbackArchive.archiveUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.0/samedaydesk-caller-result-0.1.0.tar.gz");
+  assert.equal(entry.feedbackArchive.containsRecovery, false);
+  assert.equal(entry.modules.recovery.packageExport, "samedaydesk-caller-result/recovery");
+  assert.equal(entry.modules.recovery.bin, "bin/recover-mcp.mjs");
   assert.equal(entry.optional, true);
   assert.equal(entry.charged, false);
   assert.equal(entry.paymentRequired, false);
@@ -51,13 +64,29 @@ test("released caller client entry matches the hosted archive and the shared con
     "caller-result-client/src/contract.mjs",
     "caller-result-client/src/http-caller-result.mjs",
     "caller-result-client/src/mcp-caller-result.mjs",
+    "caller-result-client/src/mcp-recovery.mjs",
     "caller-result-client/src/index.mjs",
     "caller-result-client/bin/cold-consumer.mjs",
+    "caller-result-client/bin/recover-mcp.mjs",
   ]);
+  assert.equal(pin.recovery.optional, true);
+  assert.equal(pin.recovery.charged, false);
   const listed = spawnSync("tar", ["-tzf", path.join(cwd, CALLER_RESULT_CLIENT_COMMITTED_ARCHIVE)], { encoding: "utf8" });
   assert.equal(listed.status, 0, listed.stderr);
   assert.equal(listed.stdout.includes("caller-result-client-entry.mjs"), false);
   assert.equal(listed.stdout.includes("server.js"), false);
+  assert.equal(listed.stdout.includes("src/mcp-recovery.mjs"), true);
+  assert.equal(listed.stdout.includes("bin/recover-mcp.mjs"), true);
+  const feedbackListed = spawnSync("tar", ["-tzf", path.join(cwd, CALLER_RESULT_CLIENT_FEEDBACK_ARCHIVE.relativePath)], { encoding: "utf8" });
+  assert.equal(feedbackListed.status, 0, feedbackListed.stderr);
+  assert.equal(feedbackListed.stdout.includes("src/mcp-recovery.mjs"), false);
+  assert.equal(feedbackListed.stdout.includes("bin/recover-mcp.mjs"), false);
+  const frozenPackage = spawnSync("tar", ["-xOf", path.join(cwd, CALLER_RESULT_CLIENT_FEEDBACK_ARCHIVE.relativePath), "package.json"], { encoding: "utf8" });
+  assert.equal(frozenPackage.status, 0, frozenPackage.stderr);
+  const frozenPkg = JSON.parse(frozenPackage.stdout);
+  assert.equal(frozenPkg.version, "0.1.0");
+  assert.equal(frozenPkg.exports["./mcp"], "./src/mcp-caller-result.mjs");
+  assert.equal(frozenPkg.exports["./recovery"], undefined);
   const report = listMcpToolMetadata().find((item) => item.name === "report_caller_result");
   assert.match(report.description, /charged is false/);
   assert.doesNotMatch(report.description, /https?:\/\//);
@@ -68,7 +97,10 @@ test("released caller client entry matches the hosted archive and the shared con
     paymentProtocols: ["x402", "mpp"],
   }], entry);
   assert.match(skill, new RegExp(entry.archiveUrl.replaceAll(".", "\\.")));
+  assert.match(skill, new RegExp(entry.feedbackArchive.archiveUrl.replaceAll(".", "\\.")));
   assert.match(skill, /Feedback is optional and free\./);
+  assert.match(skill, /node bin\/recover-mcp\.mjs/);
+  assert.match(skill, /is not customer acceptance/);
   assert.equal(skill.includes("createCallerResultFeedback"), false);
   const plainSkill = buildSkillContract("https://agents.samedaydesk.com/ignored", [{
     method: "GET",
@@ -165,13 +197,22 @@ test("a local machine entry serves the released client and an offline caller can
   assert.match(home, /Agent infrastructure humans can/);
   assert.equal(home.includes(entry.archiveUrl), false);
   assert.equal(home.includes(entry.sha256), false);
+  assert.equal(home.includes(entry.feedbackArchive.archiveUrl), false);
+  assert.equal(home.includes(entry.feedbackArchive.sha256), false);
   assert.equal(home.includes("bindPaidMcpCallerResult"), false);
   assert.equal(platforms.includes(entry.archiveUrl), false);
+  assert.equal(platforms.includes(entry.feedbackArchive.archiveUrl), false);
   for (const document of [llms, skill]) {
     assert.match(document, /Feedback is optional and free\./);
     assert.match(document, /bindPaidMcpCallerResult/);
     assert.match(document, /bindCallerResultFeedback/);
     assert.match(document, /reportCallerResult/);
+    assert.match(document, /startPaidMcpResult/);
+    assert.match(document, /resumePaidMcpResult/);
+    assert.match(document, /samedaydesk-caller-result\/recovery/);
+    assert.match(document, /node bin\/recover-mcp\.mjs/);
+    assert.equal(document.includes(entry.feedbackArchive.archiveUrl), true);
+    assert.equal(document.includes(entry.feedbackArchive.sha256), true);
     assert.match(document, /callTool omits _meta/);
     assert.match(document, /are separate facts/);
     assert.match(document, /Usefulness stays unknown until you choose/);
@@ -195,11 +236,14 @@ test("a local machine entry serves the released client and an offline caller can
   t.after(async () => {
     await rm(work, { recursive: true, force: true });
   });
-  const archiveName = "samedaydesk-caller-result-0.1.0.tar.gz";
-  await writeFile(path.join(work, archiveName), await readFile(path.join(cwd, CALLER_RESULT_CLIENT_COMMITTED_ARCHIVE)));
+  const archiveName = new URL(served.archiveUrl).pathname.split("/").pop();
+  const acquired = await acquireAdvertisedArchive(served);
+  assert.equal(acquired.sha256, served.sha256);
+  assert.equal(acquired.version, served.version);
+  await writeFile(path.join(work, archiveName), acquired.bytes);
   const hashed = createHash("sha256").update(await readFile(path.join(work, archiveName))).digest("hex");
   assert.equal(hashed, served.sha256);
-  const installed = spawnSync("bash", ["-c", `set -e\n${install}`], {
+  const installed = spawnSync("bash", ["-c", `set -e\n${served.install.join("\n")}`], {
     cwd: work,
     encoding: "utf8",
     env: {
@@ -390,3 +434,38 @@ process.stdout.write(JSON.stringify(summary) + "\\n");
   assert.equal(offline.stdout.includes("http://"), false);
   assert.equal(offline.stdout.includes("https://"), false);
 });
+
+async function acquireAdvertisedArchive(advertised) {
+  const port = await unusedPort();
+  const origin = `http://127.0.0.1:${port}`;
+  const app = express();
+  mountPublicAcquisition(app, {
+    publicUrl: origin,
+    manifestPath: path.join(cwd, "caller-result-client/export/public/manifest.json"),
+    bytesRoot: path.join(cwd, "caller-result-client/export/public/bytes"),
+  });
+  const server = await new Promise((resolve) => {
+    const listening = app.listen(port, "127.0.0.1", () => resolve(listening));
+  });
+  try {
+    const indexResponse = await fetch(`${origin}${PUBLIC_ACQUISITION_INDEX_PATH}`);
+    assert.equal(indexResponse.status, 200);
+    const index = await indexResponse.json();
+    const asset = index.assets.find((item) => item.role === "archive"
+      && item.originalUrl === advertised.archiveUrl
+      && item.version === advertised.version
+      && item.sha256 === advertised.sha256);
+    assert.ok(asset, "advertised archive is not in the acquisition index");
+    assert.equal(asset.alternatePath, `/.well-known/public-acquisition/assets/samedaydesk-caller-result/${advertised.version}/samedaydesk-caller-result-${advertised.version}.tar.gz`);
+    assert.equal(asset.alternateUrl, `${origin}${asset.alternatePath}`);
+    const body = await fetch(asset.alternateUrl);
+    assert.equal(body.status, 200);
+    const bytes = Buffer.from(await body.arrayBuffer());
+    const sha256 = createHash("sha256").update(bytes).digest("hex");
+    assert.equal(sha256, asset.sha256);
+    assert.equal(bytes.length, asset.bytes);
+    return { bytes, sha256, version: asset.version };
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+}

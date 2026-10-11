@@ -1,6 +1,6 @@
 # Report one native MCP result
 
-Unpack `caller-result-client/export/public/bytes/samedaydesk-caller-result/0.1.0/samedaydesk-caller-result-0.1.0.tar.gz` into a new directory, run `npm ci`, and import `bindPaidMcpCallerResult` from `./src/mcp-caller-result.mjs`.
+Install the current caller archive named by the machine caller-result client entry. The sealed 0.1.0 archive is feedback only and does not include recovery. Unpack the current archive into a new directory, run `npm ci --ignore-scripts`, and import `bindPaidMcpCallerResult` from `./src/mcp-caller-result.mjs`. Optional recovery from that same install is `node bin/recover-mcp.mjs`.
 
 ```js
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
