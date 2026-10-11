@@ -3,12 +3,24 @@ import { spawn, spawnSync } from "node:child_process";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { copyFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { createServer } from "node:net";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const TOKEN = "loopback-useful-result-grant-token-32bytes-min";
+
+async function freeLoopbackPort() {
+  const server = createServer();
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+  const { port } = server.address();
+  await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  return port;
+}
 
 function run(args, env) {
   return spawnSync(process.execPath, args, { cwd: root, env: { ...process.env, ...env }, encoding: "utf8" });
@@ -43,11 +55,13 @@ test("clean loopback caller retrieves a scoped result and leaves paid routes unp
     "--asserted-digest", "ab".repeat(32),
   ]);
   assert.equal(bound.status, 0, bound.stderr);
+  const port = await freeLoopbackPort();
+  const base = "http://127.0.0.1:" + port;
   const child = spawn(process.execPath, ["server.js"], {
     cwd: root,
     env: {
       ...process.env,
-      PORT: "39114",
+      PORT: String(port),
       COMMERCE_DATA_DIR: dataDir,
       COMMERCE_INTERNAL_TOKEN: TOKEN,
       COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
@@ -62,7 +76,7 @@ test("clean loopback caller retrieves a scoped result and leaves paid routes unp
       const timer = setTimeout(() => reject(new Error(output.slice(-2000))), 20000);
       const onData = (chunk) => {
         output += chunk;
-        if (output.includes("x402-merchant listening on :39114")) {
+        if (output.includes("x402-merchant listening on :" + port)) {
           clearTimeout(timer);
           resolve();
         }
@@ -75,7 +89,7 @@ test("clean loopback caller retrieves a scoped result and leaves paid routes unp
       });
     });
     const caller = run(["useful-result-reuse/cold-caller.mjs"], {
-      USEFUL_RESULT_BASE: "http://127.0.0.1:39114",
+      USEFUL_RESULT_BASE: base,
       USEFUL_RESULT_TOKEN: TOKEN,
       USEFUL_RESULT_TASK: "caller-unpaid-receipt",
       USEFUL_RESULT_OPERATION: "read-unpaid-receipt",
@@ -102,14 +116,14 @@ test("clean loopback caller retrieves a scoped result and leaves paid routes unp
       "--class", "owner",
     ]);
     assert.equal(shared.status, 0, shared.stderr);
-    const after = await fetch("http://127.0.0.1:39114/.well-known/useful-result-reuse/current.json");
+    const after = await fetch(base + "/.well-known/useful-result-reuse/current.json");
     const current = await after.json();
     assert.equal(current.schema, "samedaydesk.useful-result-reuse.current.v1");
     assert.equal(current.items.length, 1);
     assert.equal(current.items[0].derived.code, "unpaid_receipt_readable");
     assert.equal(JSON.stringify(current).includes("caller-unpaid-receipt"), false);
     assert.equal(JSON.stringify(current).includes(TOKEN), false);
-    const descriptor = await fetch("http://127.0.0.1:39114/mcp").then((response) => response.json());
+    const descriptor = await fetch(base + "/mcp").then((response) => response.json());
     assert.equal(descriptor.usefulResultReuse, "https://agents.samedaydesk.com/.well-known/useful-result-reuse/current.json");
     const sentinel = "sentinel-private-reuse-100224";
     await writeFile(path.join(dataDir, "PRIVATE_SENTINEL"), sentinel);
@@ -137,7 +151,7 @@ test("clean loopback caller retrieves a scoped result and leaves paid routes unp
     copyFileSync(fixture, path.join(work, "receipt.json"));
     try {
       const exercised = run(["useful-result-reuse/cold-caller.mjs"], {
-        USEFUL_RESULT_BASE: "http://127.0.0.1:39114",
+        USEFUL_RESULT_BASE: base,
         USEFUL_RESULT_TOKEN: TOKEN,
         USEFUL_RESULT_TASK: "caller-unpaid-receipt",
         USEFUL_RESULT_OPERATION: "read-unpaid-receipt",
