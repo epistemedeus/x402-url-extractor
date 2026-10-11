@@ -1,18 +1,24 @@
 import assert from "node:assert/strict";
 import { createHmac, randomBytes } from "node:crypto";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
 
 import {
   CALLER_RESULT_FEEDBACK_TTL_MS,
   attachMcpCallerResultFeedback,
+  createCallerResultFeedbackService,
   issueCallerResultFeedbackToken,
   issueMcpCallerResultFeedbackToken,
   mcpCallerResultFeedbackPublicContract,
   readCallerResultFeedbackToken,
   readMcpCallerResultFeedbackToken,
 } from "./caller-result-feedback.mjs";
+import { SETTLEMENT_CLASS } from "./http-delivery-evidence/classify.mjs";
 import { digestMcpCallId, digestMcpPayload } from "./http-delivery-evidence/digest.mjs";
-import { MCP_MORPHO_RESOURCE, MCP_MORPHO_TOOL } from "./http-delivery-evidence/mcp-delivery.mjs";
+import { MCP_MORPHO_RESOURCE, MCP_MORPHO_TOOL, recordFromObservedMcpDelivery } from "./http-delivery-evidence/mcp-delivery.mjs";
+import { openStore } from "./http-delivery-evidence/store.mjs";
 import { createDeliveryObservation } from "./http-delivery-evidence/observation.mjs";
 import { adaptMcpTypedDecisionToCommerceEvent, isCanonicalMcpTypedCommerceEvent } from "./commerce-events.mjs";
 import { evaluateMcpTypedTelemetryOutcome } from "./mcp-typed-telemetry-producer.mjs";
@@ -327,4 +333,78 @@ test("free reporting uses the raw SDK and cannot invoke automatic payment", asyn
   const absent = await reportMcpCallerResult(client, { token: issued, disposition: "useful" });
   assert.equal(absent.code, "transport_failed");
   assert.equal(paymentCalls, 0);
+});
+
+function settledMorphoEvent(id) {
+  const digest = "ab".repeat(32);
+  const decision = evaluateMcpTypedTelemetryOutcome({
+    schemaVersion: "samedaydesk.mcp-typed-telemetry-input.v1",
+    binding: {
+      tool: "morpho_position",
+      productSku: "samedaydesk-morpho-position",
+      resource: "mcp://tool/morpho_position",
+      issuedOfferDigest: digest,
+    },
+    request: { jsonrpc: "2.0", hasId: true, id: 7, method: "tools/call" },
+    response: { hasId: true, id: 7, kind: "tool_result" },
+    credential: { state: "verified", offerDigest: digest },
+    execution: { state: "handler_success", handlerInvoked: true, resultIsError: false },
+    settlement: { state: "succeeded", offerDigest: digest },
+  });
+  return adaptMcpTypedDecisionToCommerceEvent(decision, {
+    id,
+    ts: new Date(NOW).toISOString(),
+    facilitatorSettlement: {
+      transaction: TX,
+      network: "eip155:8453",
+      amount: "20000",
+      asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      payee: "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee",
+    },
+  });
+}
+
+test("a paid capture that lands after the statement is accepted, and a capture that never appears stays refused", async () => {
+  const lateDir = await mkdtemp(path.join(tmpdir(), "mcp-late-capture-"));
+  const missingDir = await mkdtemp(path.join(tmpdir(), "mcp-missing-capture-"));
+  try {
+    const paidEvidenceId = "66666666-6666-4666-8666-666666666666";
+    const late = createCallerResultFeedbackService({ dataDir: lateDir, key: KEY, now: () => NOW });
+    const pending = late.submitMcp({
+      arguments: { token: token(), disposition: "useful", reasonCategory: "matched_task" },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    const row = recordFromObservedMcpDelivery({
+      observation: observation(),
+      settlementState: "succeeded",
+      paidEvidenceId,
+      settlementClass: SETTLEMENT_CLASS.SIMULATED,
+    });
+    assert.ok(row);
+    await openStore(lateDir).appendMcpDelivery(row);
+    const event = settledMorphoEvent(paidEvidenceId);
+    assert.equal(isCanonicalMcpTypedCommerceEvent(event), true);
+    await writeFile(path.join(lateDir, "commerce-events.ndjson"), `${JSON.stringify(event)}\n`, { mode: 0o600 });
+    const accepted = await pending;
+    assert.equal(accepted.statusCode, 200);
+    assert.equal(accepted.body.accepted, true);
+    assert.equal(accepted.body.bound, false);
+    assert.equal(accepted.body.parent, "pending");
+    assert.equal(accepted.body.charged, false);
+
+    const missing = createCallerResultFeedbackService({ dataDir: missingDir, key: KEY, now: () => NOW });
+    const began = Date.now();
+    const refused = await missing.submitMcp({
+      arguments: { token: token(), disposition: "useful", reasonCategory: "matched_task" },
+    });
+    const waited = Date.now() - began;
+    assert.equal(refused.statusCode, 409);
+    assert.equal(refused.body.accepted, false);
+    assert.equal(refused.body.code, "missing_capture");
+    assert.equal(waited >= 200, true);
+    assert.equal(waited < 1000, true);
+  } finally {
+    await rm(lateDir, { recursive: true, force: true });
+    await rm(missingDir, { recursive: true, force: true });
+  }
 });
