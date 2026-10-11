@@ -1,0 +1,43 @@
+{
+  "synthetic": true,
+  "server": "server.js",
+  "paidLiveCalls": 0,
+  "chainTransfersObserved": 0,
+  "ownerQaIsNotCustomerOrRevenue": true,
+  "mounted": {
+    "seam": "real_server_lost_reply_sigkill_restart",
+    "paidTools": 23,
+    "listedTools": 26,
+    "addedTool": "recover_paid_result",
+    "decision": "attempt",
+    "expectedSurplusUsd": 7,
+    "directEqual": true,
+    "directRoute": "opportunityPreflight",
+    "verify": 1,
+    "settle": 1,
+    "chainTransfersObserved": 0,
+    "killedSignal": "SIGKILL",
+    "freeReadAfterRestart": true,
+    "localReadWithServerDown": true,
+    "widenedRevokedExpiredRefused": true,
+    "wrongTenantRefused": true,
+    "replacementNonceRefused": true,
+    "changedInputRefused": true,
+    "identicalReplaySettleCount": 1,
+    "missingCaptureIsError": true,
+    "malformedCaptureIsError": true,
+    "newPaymentPermitted": false,
+    "paidLiveCalls": 0
+  },
+  "unknownSettlement": {
+    "state": "unresolved",
+    "settlementAttempted": true,
+    "verify": 1,
+    "settle": 1,
+    "secondSettlement": false,
+    "possibleAtomic": "50000",
+    "remoteStopped": "unknown",
+    "refunded": "unknown",
+    "chainTransfersObserved": 0
+  }
+}

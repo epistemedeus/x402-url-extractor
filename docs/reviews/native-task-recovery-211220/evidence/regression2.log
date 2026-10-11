@@ -1,0 +1,154 @@
+TAP version 13
+# Subtest: installed caller consumer reaches the mounted parent without merchant source
+ok 1 - installed caller consumer reaches the mounted parent without merchant source
+  ---
+  duration_ms: 6411.659274
+  type: 'test'
+  ...
+# Subtest: ordinary x402 payment without a resource url executes once and replays on the same tool
+ok 2 - ordinary x402 payment without a resource url executes once and replays on the same tool
+  ---
+  duration_ms: 28.629209
+  type: 'test'
+  ...
+# Subtest: native reservation pins its original credential and operation across process restart
+ok 3 - native reservation pins its original credential and operation across process restart
+  ---
+  duration_ms: 42.751112
+  type: 'test'
+  ...
+# Subtest: native completed output survives failed persistence in its execution and can save without re-execution
+ok 4 - native completed output survives failed persistence in its execution and can save without re-execution
+  ---
+  duration_ms: 16.998986
+  type: 'test'
+  ...
+# Subtest: native unknown payment stays quarantined; missing, expired and corrupt recovery never executes
+ok 5 - native unknown payment stays quarantined; missing, expired and corrupt recovery never executes
+  ---
+  duration_ms: 48.543581
+  type: 'test'
+  ...
+# Subtest: native unpaid terminal refusal keeps its useful result without inventing settlement
+ok 6 - native unpaid terminal refusal keeps its useful result without inventing settlement
+  ---
+  duration_ms: 10.755049
+  type: 'test'
+  ...
+# Subtest: concurrent native continuation never starts a second execution while the first runs
+ok 7 - concurrent native continuation never starts a second execution while the first runs
+  ---
+  duration_ms: 27.893769
+  type: 'test'
+  ...
+# Subtest: persistent identity and capacity preserve pending claims, corrupt state fails closed
+ok 8 - persistent identity and capacity preserve pending claims, corrupt state fails closed
+  ---
+  duration_ms: 18.180155
+  type: 'test'
+  ...
+# Subtest: canonical replay URL binds sorted query keys and values
+ok 9 - canonical replay URL binds sorted query keys and values
+  ---
+  duration_ms: 6.075294
+  type: 'test'
+  ...
+# Subtest: payment decoder requires a complete x402 v2 exact payment binding
+ok 10 - payment decoder requires a complete x402 v2 exact payment binding
+  ---
+  duration_ms: 0.385182
+  type: 'test'
+  ...
+# Subtest: same payment ID and canonical request replays without a second handler run
+ok 11 - same payment ID and canonical request replays without a second handler run
+  ---
+  duration_ms: 16.279487
+  type: 'test'
+  ...
+# Subtest: same payment ID on changed input or payer fails with uncharged 409
+ok 12 - same payment ID on changed input or payer fails with uncharged 409
+  ---
+  duration_ms: 21.875284
+  type: 'test'
+  ...
+# Subtest: cached x402 response requires the exact credential that originally settled
+ok 13 - cached x402 response requires the exact credential that originally settled
+  ---
+  duration_ms: 9.434226
+  type: 'test'
+  ...
+# Subtest: paid POST replay binds the exact request bytes and rejects body drift before the handler
+ok 14 - paid POST replay binds the exact request bytes and rejects body drift before the handler
+  ---
+  duration_ms: 17.969937
+  type: 'test'
+  ...
+# Subtest: expired records return to normal payment processing
+ok 15 - expired records return to normal payment processing
+  ---
+  duration_ms: 31.739573
+  type: 'test'
+  ...
+# Subtest: a newly settled response is durable before the network response ends
+ok 16 - a newly settled response is durable before the network response ends
+  ---
+  duration_ms: 18.900085
+  type: 'test'
+  ...
+# Subtest: in-flight claim prevents a twin POST from running a second handler
+ok 17 - in-flight claim prevents a twin POST from running a second handler
+  ---
+  duration_ms: 226.180938
+  type: 'test'
+  ...
+# Subtest: required replay paths classify missing identifier separately from unbounded validity
+ok 18 - required replay paths classify missing identifier separately from unbounded validity
+  ---
+  duration_ms: 1.234512
+  type: 'test'
+  ...
+# Subtest: mounted native MCP caller journey reaches the current handlers
+ok 19 - mounted native MCP caller journey reaches the current handlers
+  ---
+  duration_ms: 5676.922198
+  type: 'test'
+  ...
+# Subtest: mounted morpho HTTP and MCP producers capture delivery from the live paths
+not ok 20 - mounted morpho HTTP and MCP producers capture delivery from the live paths
+  ---
+  duration_ms: 4008.223853
+  type: 'test'
+  location: '/agent/repos/x402-url-extractor/morpho-producer.mounted.test.mjs:284:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    9 !== 10
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 10
+  actual: 9
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///agent/repos/x402-url-extractor/morpho-producer.mounted.test.mjs:557:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: mounted mcp producer records malformed, missing, and replay without an HTTP payment row
+ok 21 - mounted mcp producer records malformed, missing, and replay without an HTTP payment row
+  ---
+  duration_ms: 632.318107
+  type: 'test'
+  ...
+1..21
+# tests 21
+# suites 0
+# pass 20
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7027.248014
+EXIT:1

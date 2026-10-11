@@ -1,0 +1,2 @@
+0.28.1
+/tmp/native-task-recovery-211210-runtime/python-deps/httpx/__init__.py

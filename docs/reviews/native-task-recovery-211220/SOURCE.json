@@ -1,0 +1,98 @@
+{
+  "admission": {
+    "initialExport": "686bf94d127172cd8dcf3fdc9441dbed8d7899de",
+    "initialTree": "7e51416c27bd3d74f0da108504551c9d0c0c22ce",
+    "initialAheadBehindMaster": "4/0",
+    "master": "32267493d29ff1339c5199185d8231012daf0acd",
+    "masterTree": "24ce30d298a375e8b993ac29218b8540d1fb7de7",
+    "masterAheadBehindAtFinish": "0/8 before this review commit",
+    "executableSource": "18bd473162b2795b80ee9b98ef5731bdabad7072",
+    "sourceTree": "fc086b705e1c7e8ce226110001ba1f089fbca87e",
+    "carrier": "3b5914cf0583bd92db9d9f5b2936f03bda09417f",
+    "carrierBranch": "codex/sol-structural-211200",
+    "carrierTree": "d60bb0ce97779c72eb7a997492b87ac2b7f512fc",
+    "pilotContext": "8b68ef35107223f9098c629c5bf8a5b96b011edb",
+    "review211200Unchanged": true,
+    "review211210Unchanged": true,
+    "publishedArchiveSha256": "62f82d80bdc5f82a0706990afb8040331f9e04d2f66dabdcad00bcb6c5af0f19"
+  },
+  "integration": {
+    "parentOfReview": "48d255890c6facec79dcef0c655214fd530cb2fc",
+    "parentTree": "0c5596b7ebafd4963c13b7d401fcd6c37353bc8e",
+    "commits": [
+      {
+        "commit": "4647868e0485a4071cf0d73e7f681b393e1a7adf",
+        "subject": "Mount native MCP recovery on the shared server."
+      },
+      {
+        "commit": "0e5cc789c709304a8d842e17021dab819356fe80",
+        "tree": "8d9dc11b988268b957075d3ccd2b1a5f3d4edead",
+        "subject": "Bind ordinary paid MCP calls that omit a resource URL."
+      },
+      {
+        "commit": "dcb9a79155368207275b4c1e40e0a897c2fce467",
+        "tree": "8fef415c2a8f65e0479c6d9bb040e9f094218655",
+        "subject": "Let unpaid MCP discovery skip the recovery journal."
+      },
+      {
+        "commit": "48d255890c6facec79dcef0c655214fd530cb2fc",
+        "tree": "0c5596b7ebafd4963c13b7d401fcd6c37353bc8e",
+        "subject": "Treat a repeated MCP credential as a retained replay."
+      }
+    ],
+    "filesSha256": {
+      "server.js": "55bb6cb98a6aa2957c1f29faa8c736d78f5037bf1f9faf2aadfe870bad257acf",
+      "package.json": "3bc315ae3c20cbfdf93aa527235a8568815a10309e615928536aae71e9b9ee3b",
+      "extract-batch.http.test.mjs": "362eea3ed0d802879f158dd0bcd65dcbfbde80b9f22920dac992f7c49bde2e0e",
+      "lockfile-pin-delta.http.test.mjs": "25c61944df2c6466a81cd93358c90c2f24399ab926f9d854b7a2000b42032876",
+      "idempotency-replay.mjs": "2cdfeda431f784c1d9df74e2b848fd73a22b228dd7db43f4ae69d2d4f5fb9d38",
+      "idempotency-replay.test.mjs": "779d8a9c8e37b4dc7671e53e002f1e5d376088368729620522bc08c07914c6a8",
+      "machine-surface-parity.mjs": "0cad550917e96b3978213b874489035e21203af051fdf7a11dc18d95998ee11c",
+      "machine-surface-parity.test.mjs": "b5d382a1a5e9499233428697f9cfcd84dfe1af0c5885ae5e131d960eae683014",
+      "machine-surface-parity.http.test.mjs": "5de3bd59e7bfddfc77b0f01eec72b4f5d653ddaa60495a56c2fdb6b4e123c958",
+      "mcp-server.mjs": "97b2b2dc4653547bff022850f2c34eb6c1ca83fc682cb600e3730d5d42d96fde",
+      "morpho-producer.mounted.test.mjs": "e5e5a4e2027971010b4c95e9a3e0cc62b994253bca364dac26715b87bdee5dfb"
+    }
+  },
+  "run": {
+    "bcId": "bc-90382a85-b84f-45c9-a660-87044b71adff",
+    "url": "https://cursor.com/agents/bc-90382a85-b84f-45c9-a660-87044b71adff",
+    "originalModelName": "grok-4.7",
+    "source": "api",
+    "requestedModel": "grok-4.7",
+    "requestedEffort": "xhigh",
+    "requestedContext": "256k",
+    "requestedFast": false,
+    "observedEffort": "unknown",
+    "observedFast": "unknown",
+    "chargedCents": "unknown",
+    "pushedBranch": "cursor/pilot-211210-complete-task-recovery-receiving-702e"
+  },
+  "node": {
+    "version": "v22.23.3",
+    "tarball": "node-v22.23.3-linux-x64.tar.xz",
+    "sha256": "df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de"
+  },
+  "gates": {
+    "pretest": { "tests": 19, "pass": 19, "fail": 0, "duration_ms": 62.215693 },
+    "npmTest": { "tests": 1158, "pass": 1154, "fail": 0, "skip": 4, "exit": 0, "duration_ms": 115132.439006 },
+    "nonlive": { "tests": 194, "pass": 194, "fail": 0, "exit": 0, "duration_ms": 7857.282511 },
+    "focused": { "tests": 57, "pass": 57, "fail": 0, "exit": 0, "duration_ms": 21521.669007 },
+    "concurrencyFlag": "none",
+    "skips": [
+      "deployed extract advertises machine documentation",
+      "official offline validator accepts exact commit package when pin is supplied",
+      "sidecar detects a skip-worktree modification to the official validator",
+      "unpaid initialize-era initialize and tools/list require extract and extract_batch"
+    ]
+  },
+  "mounted": {
+    "paidLiveCalls": 0,
+    "chainTransfersObserved": 0,
+    "unmountedVerify": 2,
+    "unmountedSettle": 2,
+    "mountedVerify": 1,
+    "mountedSettle": 1
+  },
+  "publishedArchiveUnchanged": true
+}
