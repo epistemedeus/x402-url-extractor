@@ -1,0 +1,27 @@
+First npm test invocation exited 1 before PYTHONPATH was set.
+The only failure was ModuleNotFoundError: No module named 'httpx' in public-acquisition/engine.test.mjs.
+That run is not the release gate. The authoritative rerun used httpx 0.28.1 and exited 0.
+
+5788:not ok 912 - cold node and python httpx clients unpack the mount and run the declared commands
+5789:  ---
+5790:  duration_ms: 1427.537506
+5791:  type: 'test'
+5792:  location: '/tmp/merchant-202-release/public-acquisition/engine.test.mjs:355:1'
+5793:  failureType: 'testCodeFailure'
+5794:  error: |-
+5795:    ModuleNotFoundError: No module named 'httpx'
+5796:    
+5797:    
+5798:    2 !== 0
+5799:    
+5800:  code: 'ERR_ASSERTION'
+5801:  name: 'AssertionError'
+5802:  expected: 0
+5803:  actual: 2
+5804:  operator: 'strictEqual'
+5805:  stack: |-
+5806:    TestContext.<anonymous> (file:///tmp/merchant-202-release/public-acquisition/engine.test.mjs:388:12)
+5807:    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+5808:    async Test.run (node:internal/test_runner/test:1054:7)
+5809:    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+5810:  ...
