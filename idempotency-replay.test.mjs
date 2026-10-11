@@ -660,3 +660,120 @@ test("required replay paths classify missing identifier separately from unbounde
 
   await rm(dataDir, { recursive: true, force: true });
 });
+
+test("oversized completed MCP output is unrecoverable and is not executed again", async (t) => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "native-replay-oversize-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  const options = { dataDir, secret: "native-test-secret", ttlMs: 60_000, maxResponseBytes: 1024 };
+  const journal = createIdempotencyReplay(options);
+  const input = nativeOperation();
+  const missing = await journal.recoverMcpResult(input);
+  assert.equal(JSON.parse(missing.content[0].text).error, "recovery_not_found_or_expired");
+  const huge = { content: [{ type: "text", text: "x".repeat(4000) }], structuredContent: { decision: "attempt" },
+    _meta: { "x402/payment-response": { success: true } } };
+  let executions = 0;
+  let settlements = 0;
+  const facilitator = trackReplaySettlementAttempts({ async settle() { settlements += 1; return { success: true }; } });
+  const delivered = await journal.runMcpTool(input, async () => { executions += 1; await facilitator.settle(); return huge; });
+  assert.equal(delivered.content[0].text.length, 4000);
+  assert.equal(delivered._meta[MCP_RECOVERY_META].persisted, false);
+  assert.equal(delivered._meta[MCP_RECOVERY_META].retention, "unrecoverable");
+  assert.equal(delivered._meta[MCP_RECOVERY_META].usefulness, "unknown");
+  const disk = await readFile(journal.storePath, "utf8");
+  assert.equal(disk.includes(huge.content[0].text), false);
+  assert.equal(JSON.parse(disk).records[0].unrecoverable, "mcp_result_exceeds_replay_bounds");
+  const refused = await journal.recoverMcpResult(input);
+  assert.equal(JSON.parse(refused.content[0].text).error, "mcp_result_exceeds_replay_bounds");
+  assert.equal(JSON.parse(refused.content[0].text).usefulness, "unknown");
+  assert.equal(JSON.parse(refused.content[0].text).newSettlementAttempt, false);
+  const restarted = createIdempotencyReplay(options);
+  const cold = await restarted.recoverMcpResult(input);
+  assert.equal(JSON.parse(cold.content[0].text).error, "mcp_result_exceeds_replay_bounds");
+  const again = await restarted.runMcpTool(input, async () => { executions += 1; await facilitator.settle(); return huge; });
+  assert.equal(JSON.parse(again.content[0].text).error, "mcp_result_exceeds_replay_bounds");
+  assert.equal(executions, 1);
+  assert.equal(settlements, 1);
+});
+
+test("retryable MCP persistence stays bounded by expiry and entry pressure without a second settlement", async (t) => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "native-replay-bounded-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  let clock = Date.now();
+  const obstruction = path.join(dataDir, "idempotency-replay.tmp.json");
+  const options = { dataDir, secret: "native-test-secret", ttlMs: 60_000, maxEntries: 4, maxUnpersistedEntries: 1,
+    maxResponseBytes: 8192, now: () => clock };
+  const journal = createIdempotencyReplay(options);
+  let executions = 0;
+  let settlements = 0;
+  const facilitator = trackReplaySettlementAttempts({ async settle() { settlements += 1; return { success: true }; } });
+  const resultFor = (label) => ({ content: [{ type: "text", text: label }], structuredContent: { decision: "attempt" },
+    _meta: { "x402/payment-response": { success: true } } });
+  const first = nativeOperation(clock);
+  const second = nativeOperation(clock);
+  second.payment.extensions["payment-identifier"].info.id = "replacement_order_123456";
+  second.payment.payload.authorization.nonce = `0x${"8".repeat(64)}`;
+  second.context = { ...second.context, reservationId: "reservation-b" };
+  const run = (input, label) => journal.runMcpTool(input, async () => {
+    executions += 1;
+    await facilitator.settle();
+    await mkdir(obstruction);
+    return resultFor(label);
+  });
+  const delivered = await run(first, "first-result");
+  assert.equal(delivered._meta[MCP_RECOVERY_META].retention, "retryable");
+  assert.equal(delivered._meta[MCP_RECOVERY_META].usefulness, "unknown");
+  const retained = await journal.recoverMcpResult(first);
+  assert.equal(retained.content[0].text, "first-result");
+  assert.equal(retained._meta[MCP_RECOVERY_META].retention, "retryable");
+  assert.equal(retained._meta[MCP_RECOVERY_META].newSettlementAttempt, false);
+  await rm(obstruction, { recursive: true });
+  const displaced = await run(second, "second-result");
+  assert.equal(displaced._meta[MCP_RECOVERY_META].retention, "retryable");
+  const evicted = await journal.recoverMcpResult(first);
+  assert.equal(JSON.parse(evicted.content[0].text).error, "mcp_result_retention_evicted");
+  assert.equal(JSON.parse(evicted.content[0].text).usefulness, "unknown");
+  clock += 91_000;
+  const expired = await journal.recoverMcpResult(second);
+  assert.equal(JSON.parse(expired.content[0].text).error, "mcp_result_retention_expired");
+  await rm(obstruction, { recursive: true });
+  assert.equal(JSON.parse((await journal.recoverMcpResult(first)).content[0].text).error, "mcp_result_retention_evicted");
+  assert.equal(JSON.parse((await journal.recoverMcpResult(second)).content[0].text).error, "mcp_result_retention_expired");
+  const restarted = createIdempotencyReplay(options);
+  const coldFirst = await restarted.runMcpTool(first, async () => { executions += 1; await facilitator.settle(); });
+  const coldSecond = await restarted.recoverMcpResult(second);
+  assert.equal(JSON.parse(coldFirst.content[0].text).error, "mcp_result_retention_evicted");
+  assert.equal(JSON.parse(coldSecond.content[0].text).error, "mcp_result_retention_expired");
+  assert.equal(executions, 2);
+  assert.equal(settlements, 2);
+});
+
+test("ephemeral MCP bytes above the cap drop the older body and do not settle it again", async (t) => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "native-replay-bytes-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  const obstruction = path.join(dataDir, "idempotency-replay.tmp.json");
+  const journal = createIdempotencyReplay({ dataDir, secret: "native-test-secret", ttlMs: 60_000,
+    maxEntries: 4, maxUnpersistedBytes: 20_000, maxResponseBytes: 20_000 });
+  let executions = 0;
+  let settlements = 0;
+  const facilitator = trackReplaySettlementAttempts({ async settle() { settlements += 1; return { success: true }; } });
+  const bulky = (label) => ({ content: [{ type: "text", text: `${label}:${"y".repeat(12_000)}` }],
+    structuredContent: { decision: "attempt" }, _meta: { "x402/payment-response": { success: true } } });
+  const run = (input, label) => journal.runMcpTool(input, async () => {
+    executions += 1; await facilitator.settle(); await mkdir(obstruction); return bulky(label);
+  });
+  const first = nativeOperation();
+  const second = nativeOperation();
+  second.payment.extensions["payment-identifier"].info.id = "bytecap_order_12345678";
+  second.payment.payload.authorization.nonce = `0x${"7".repeat(64)}`;
+  second.context = { ...second.context, reservationId: "reservation-byte" };
+  await run(first, "older");
+  await rm(obstruction, { recursive: true });
+  const newer = await run(second, "newer");
+  assert.equal(newer._meta[MCP_RECOVERY_META].retention, "retryable");
+  assert.equal(JSON.parse((await journal.recoverMcpResult(first)).content[0].text).error, "mcp_result_retention_evicted");
+  await rm(obstruction, { recursive: true });
+  const again = await journal.runMcpTool(first, async () => { executions += 1; await facilitator.settle(); });
+  assert.equal(JSON.parse(again.content[0].text).error, "mcp_result_retention_evicted");
+  assert.equal(executions, 2);
+  assert.equal(settlements, 2);
+});

@@ -4,6 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { constants } from "node:fs";
 import { mkdir, open, rename, unlink } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
+import { MCP_CONTINUATION_OPERATION_MAX_BYTES } from "../../mcp-json-rpc-limit.mjs";
 
 const META = "samedaydesk/recovery";
 const READ_TOOL = "recover_paid_result";
@@ -14,9 +15,18 @@ const clone = value => JSON.parse(JSON.stringify(value));
 const plain = value => Boolean(value) && typeof value === "object" && !Array.isArray(value);
 const fail = code => { const error = new Error(code); error.code = code; throw error; };
 
+const PAYMENT_RESPONSE = "x402/payment-response";
+
 export function mcpResultDigest(result) {
   return digest({ content: result?.content, structuredContent: result?.structuredContent ?? null,
     isError: result?.isError === true });
+}
+
+// Settlement exposure reads payment-response success. That field is not part of
+// the usefulness digest, so a completed checkpoint binds it separately. A legacy
+// checkpoint without this binding stays valid and does not reduce exposure.
+export function mcpAccountingDigest(result) {
+  return digest({ paymentResponseSuccess: result?._meta?.[PAYMENT_RESPONSE]?.success === true });
 }
 
 // Caller-owned checkpoint, not a merchant journal. Credentials belong only in
@@ -92,7 +102,7 @@ function normalizeInput(input) {
   value.inputDigest = digest(value.arguments);
   value.termsDigest = digest(terms);
   value.paymentDigest = digest(value.payment);
-  if (Buffer.byteLength(JSON.stringify(value)) > 64 * 1024) fail("operation_too_large");
+  if (Buffer.byteLength(JSON.stringify(value)) > MCP_CONTINUATION_OPERATION_MAX_BYTES) fail("operation_too_large");
   return value;
 }
 
@@ -101,7 +111,8 @@ function validateCheckpoint(value) {
   const input = normalizeInput(value.input);
   if (value.fingerprint !== digest(input)) fail("checkpoint_binding_changed");
   if (value.state === "completed" && (!Array.isArray(value.result?.content)
-    || value.resultDigest !== mcpResultDigest(value.result) || !checkedResult(value.result, input))) fail("checkpoint_result_integrity");
+    || value.resultDigest !== mcpResultDigest(value.result) || !checkedResult(value.result, input)
+    || (Object.hasOwn(value, "accountingDigest") && value.accountingDigest !== mcpAccountingDigest(value.result)))) fail("checkpoint_result_integrity");
   return value;
 }
 
@@ -171,6 +182,7 @@ function execution({ client, store, checkpoint, loadGrant, now, resume }) {
         }
         checkpoint.result = clone(result);
         checkpoint.resultDigest = mcpResultDigest(result);
+        checkpoint.accountingDigest = mcpAccountingDigest(result);
         checkpoint.state = "completed";
         delete checkpoint.failure;
       } else {
@@ -235,7 +247,9 @@ export async function resumePaidMcpResult({ client, store, loadGrant, now = () =
 export function mcpRecoveryBudget(checkpoint) {
   validateCheckpoint(checkpoint);
   const amount = checkpoint.input.payment.accepted.amount;
-  const providerReportedSuccess = checkpoint.result?._meta?.["x402/payment-response"]?.success === true;
+  const accountingBound = typeof checkpoint.accountingDigest === "string"
+    && checkpoint.accountingDigest === mcpAccountingDigest(checkpoint.result);
+  const providerReportedSuccess = accountingBound && checkpoint.result?._meta?.[PAYMENT_RESPONSE]?.success === true;
   return { reservationId: checkpoint.input.reservationId, reservedAtomic: amount,
     reportedSettledAtomic: providerReportedSuccess ? amount : null, possibleAtomic: providerReportedSuccess ? "0" : amount,
     settlementSource: providerReportedSuccess ? "stored_provider_response_unverified" : "unknown",

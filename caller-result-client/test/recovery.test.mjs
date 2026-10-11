@@ -4,7 +4,7 @@ import { mkdtemp, chmod, readFile, rm, symlink, writeFile } from "node:fs/promis
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { mcpRecoveryBudget, mcpRecoveryFileStore, mcpResultDigest, resumePaidMcpResult, startPaidMcpResult } from "../src/mcp-recovery.mjs";
+import { mcpAccountingDigest, mcpRecoveryBudget, mcpRecoveryFileStore, mcpResultDigest, resumePaidMcpResult, startPaidMcpResult } from "../src/mcp-recovery.mjs";
 
 const copy = value => structuredClone(value);
 const hash = value => createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -215,4 +215,37 @@ test("exclusive private file checkpoint resists a duplicate start, symlink, resu
   const wrongLineage = copy(completed);
   wrongLineage.result._meta["samedaydesk/recovery"].contextDigest = "different-operation";
   await writeFile(file, JSON.stringify(wrongLineage)); await assert.rejects(f.store.load(), /checkpoint_result_integrity/);
+});
+
+test("unbound payment-response success cannot zero possible exposure, and a bound flip fails integrity", async (t) => {
+  const directory = await mkdtemp(path.join(tmpdir(), "mcp-accounting-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const file = path.join(directory, "checkpoint.json");
+  const f = fixture();
+  f.result._meta["x402/payment-response"].success = false;
+  f.result._meta["samedaydesk/recovery"].resultDigest = mcpResultDigest(f.result);
+  f.store = mcpRecoveryFileStore(file);
+  f.client.callTool = async () => copy(f.result);
+  const saved = await (await startPaidMcpResult(f)).handoff();
+  assert.equal(saved.accountingDigest, mcpAccountingDigest(saved.result));
+  assert.equal(mcpRecoveryBudget(saved).possibleAtomic, "50000");
+  assert.equal(mcpRecoveryBudget(saved).settlementSource, "unknown");
+  const bound = JSON.parse(await readFile(file, "utf8"));
+  const digest = bound.resultDigest;
+  bound.result._meta["x402/payment-response"].success = true;
+  await writeFile(file, `${JSON.stringify(bound)}\n`, { mode: 0o600 });
+  await chmod(file, 0o600);
+  await assert.rejects(f.store.load(), /checkpoint_result_integrity/);
+  delete bound.accountingDigest;
+  bound.resultDigest = digest;
+  await writeFile(file, `${JSON.stringify(bound)}\n`, { mode: 0o600 });
+  await chmod(file, 0o600);
+  const legacy = await f.store.load();
+  assert.equal(legacy.resultDigest, digest);
+  const budget = mcpRecoveryBudget(legacy);
+  assert.equal(budget.possibleAtomic, "50000");
+  assert.equal(budget.reportedSettledAtomic, null);
+  assert.equal(budget.settlementSource, "unknown");
+  assert.equal(budget.newPaymentPermitted, false);
+  assert.equal(budget.usefulness, "unknown");
 });

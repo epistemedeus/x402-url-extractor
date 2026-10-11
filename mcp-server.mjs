@@ -15,7 +15,8 @@
 //  - STATELESS streamable-HTTP: a fresh McpServer + transport per POST /mcp request
 //    (sessionIdGenerator: undefined). The expensive async setup (resourceServer
 //    initialize + buildPaymentRequirements per tool) is done ONCE at mount time.
-//  - express.json() is scoped to /mcp only, so it never touches the GET paywall routes.
+//  - POST /mcp is exempt from the ordinary 16 KiB JSON parser. This route's
+//    parser is the authoritative MCP JSON-RPC byte limit.
 //
 // Verified against @x402/mcp@2.16.0 + @modelcontextprotocol/sdk@1.29.0 (June 2026).
 
@@ -33,6 +34,7 @@ import { attachMcpCallerResultFeedback, callerResultFeedbackMetaFromHeaders } fr
 import { classifyDeclaredAgentDiscoverySource, listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
 import { readExtractBatchInputRefusalCode } from "./extract-batch.mjs";
 import { MCP_RECOVERY_META, MCP_RECOVERY_TOOL, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
+import { MCP_JSON_RPC_MAX_BYTES, mcpJsonRpcOverlimitBody } from "./mcp-json-rpc-limit.mjs";
 import {
   buildRegisteredCatalog,
   createMcpTypedTelemetryAttempt,
@@ -869,8 +871,24 @@ export async function mountMcp(app, {
     sessionIdGenerator: undefined,
   };
 
-  // Stateless streamable-HTTP transport. express.json() scoped to this route only.
-  app.post("/mcp", express.json({ limit: "1mb" }), async (req, res) => {
+  // Authoritative raw JSON-RPC body limit. Over-limit is a JSON-RPC error, not Express 413.
+  const mcpJsonParser = express.json({
+    limit: MCP_JSON_RPC_MAX_BYTES,
+    type: ["application/json", "application/*+json"],
+  });
+  function parseMcpJson(req, res, next) {
+    mcpJsonParser(req, res, (error) => {
+      if (!error) return next();
+      res.set("Cache-Control", "no-store");
+      if (error.type === "entity.parse.failed") {
+        return res.status(400).json({ ok: false, error: "invalid_json", charged: false });
+      }
+      if (error.type === "entity.too.large") return res.status(200).json(mcpJsonRpcOverlimitBody());
+      return next(error);
+    });
+  }
+
+  app.post("/mcp", parseMcpJson, async (req, res) => {
     injectPaymentSignatureHeader(req);
     let requestAttribution = null;
     let declaredSource = null;

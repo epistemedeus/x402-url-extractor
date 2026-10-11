@@ -4,6 +4,7 @@ import { constants, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chmod, mkdir, open, readFile, rename } from "node:fs/promises";
 import path from "node:path";
 import { Credential } from "mppx";
+import { MCP_CONTINUATION_OPERATION_MAX_BYTES } from "./mcp-json-rpc-limit.mjs";
 
 const PAYMENT_HEADERS = ["payment-signature", "x-payment", "x-payment-signature"];
 const settlementContext = new AsyncLocalStorage();
@@ -214,6 +215,8 @@ export function createIdempotencyReplay({
   ttlMs = boundedInteger(process.env.IDEMPOTENCY_TTL_MS, 15 * 60_000, 60_000, 24 * 60 * 60_000),
   maxEntries = boundedInteger(process.env.IDEMPOTENCY_MAX_ENTRIES, 256, 1, 2_000),
   maxResponseBytes = boundedInteger(process.env.IDEMPOTENCY_MAX_RESPONSE_BYTES, 512 * 1024, 1_024, 2 * 1024 * 1024),
+  maxUnpersistedEntries = maxEntries,
+  maxUnpersistedBytes = maxResponseBytes * Math.min(maxEntries, 8),
   routes = DEFAULT_PAID_ROUTES,
   inFlightPaths = routes,
   requiredReplayPaths = new Set(),
@@ -225,6 +228,13 @@ export function createIdempotencyReplay({
   const tempPath = path.join(dataDir, "idempotency-replay.tmp.json");
   let queue = Promise.resolve();
   const unpersistedMcpResults = new Map();
+  const doomedMcpResults = new Map();
+  if (!Number.isInteger(maxUnpersistedEntries) || maxUnpersistedEntries < 1 || maxUnpersistedEntries > maxEntries) {
+    throw new Error("invalid unpersisted entry cap");
+  }
+  if (!Number.isInteger(maxUnpersistedBytes) || maxUnpersistedBytes < maxResponseBytes || maxUnpersistedBytes > maxResponseBytes * maxEntries) {
+    throw new Error("invalid unpersisted byte cap");
+  }
   const replaySecret = secret || persistentReplaySecret(dataDir);
 
   const digest = (label, value) => createHmac("sha256", replaySecret).update(`${label}:${value}`).digest("hex");
@@ -410,7 +420,7 @@ export function createIdempotencyReplay({
       typeof context[key] !== "string" || !/^[A-Za-z0-9_.:-]{1,128}$/.test(context[key]))
       || Object.keys(context).length !== 4)) return null;
     const bodyBytes = JSON.stringify({ name, arguments: args, ...endpoint, context });
-    if (Buffer.byteLength(bodyBytes) > 64 * 1024) return null;
+    if (Buffer.byteLength(bodyBytes) > MCP_CONTINUATION_OPERATION_MAX_BYTES) return null;
     const binding = bindingFor({ method: "POST", url: endpoint.endpointUrl,
       headers: { "payment-signature": Buffer.from(JSON.stringify(payment)).toString("base64") }, bodyBytes });
     const paymentBinding = decodeReplayPayment({ "payment-signature": Buffer.from(JSON.stringify(payment)).toString("base64") });
@@ -430,19 +440,109 @@ export function createIdempotencyReplay({
       newSettlementAttempt: false, usefulness: "unknown" }) }] };
   }
 
-  function mcpRecovered(binding, result, { persisted = true, replayed = true } = {}) {
+  function mcpRecovered(binding, result, { persisted = true, replayed = true, retention = null } = {}) {
     return { ...result, _meta: { ...result._meta, [MCP_RECOVERY_META]: {
       version: 1, ...binding.scope, operationRef: binding.key,
       name: binding.name, inputDigest: binding.inputDigest, termsDigest: binding.termsDigest,
       paymentDigest: binding.paymentDigest, contextDigest: binding.contextDigest,
-      resultDigest: mcpRecoveryResultDigest(result), persisted, replayed,
+      resultDigest: mcpRecoveryResultDigest(result), persisted,
+      retention: retention || (persisted ? "stored" : "retryable"),
+      replayed,
       newSettlementAttempt: !replayed && result?._meta?.["x402/payment-response"]?.success === true,
       usefulness: "unknown",
     } } };
   }
 
+  function memoryExpiry(binding) {
+    const currentTime = now();
+    return Math.max(currentTime + ttlMs, Number.isFinite(binding.validUntilMs) ? binding.validUntilMs + 60_000 : 0);
+  }
+
+  function unpersistedByteTotal() {
+    let total = 0;
+    for (const entry of unpersistedMcpResults.values()) total += entry.bytes;
+    return total;
+  }
+
+  function rememberDoomed(binding, reason, byteLength) {
+    doomedMcpResults.delete(binding.key);
+    doomedMcpResults.set(binding.key, { binding, reason, bytes: byteLength });
+    while (doomedMcpResults.size > maxEntries) doomedMcpResults.delete(doomedMcpResults.keys().next().value);
+  }
+
+  async function persistUnrecoverable(binding, reason, byteLength) {
+    const createdAt = now();
+    const record = {
+      v: 1,
+      key: binding.key,
+      credentialKey: binding.credentialKey,
+      fingerprint: binding.fingerprint,
+      protected: true,
+      createdAt,
+      expiresAt: memoryExpiry(binding),
+      status: 200,
+      kind: "mcp",
+      headers: {},
+      unrecoverable: reason,
+      bodyBytes: byteLength,
+    };
+    return mutate(async (records) => ({
+      records: [record, ...records.filter((entry) => entry.key !== record.key)],
+      result: true,
+    }));
+  }
+
+  async function sweepDoomed() {
+    for (const [key, entry] of [...doomedMcpResults]) {
+      try {
+        await persistUnrecoverable(entry.binding, entry.reason, entry.bytes);
+        doomedMcpResults.delete(key);
+      } catch { /* The original reservation still blocks a second execution. */ }
+    }
+  }
+
+  async function pruneUnpersisted(protectKey = null) {
+    const currentTime = now();
+    for (const [key, entry] of [...unpersistedMcpResults]) {
+      if (entry.expiresAt > currentTime) continue;
+      unpersistedMcpResults.delete(key);
+      rememberDoomed(entry.binding, "mcp_result_retention_expired", entry.bytes);
+    }
+    const evictOldest = () => {
+      const oldest = [...unpersistedMcpResults.keys()].find((key) => key !== protectKey);
+      if (!oldest) return false;
+      const entry = unpersistedMcpResults.get(oldest);
+      unpersistedMcpResults.delete(oldest);
+      rememberDoomed(entry.binding, "mcp_result_retention_evicted", entry.bytes);
+      return true;
+    };
+    while (unpersistedMcpResults.size > maxUnpersistedEntries) {
+      if (!evictOldest()) break;
+    }
+    while (unpersistedByteTotal() > maxUnpersistedBytes) {
+      if (!evictOldest()) break;
+    }
+    if (protectKey && unpersistedMcpResults.has(protectKey)
+      && (unpersistedMcpResults.size > maxUnpersistedEntries || unpersistedByteTotal() > maxUnpersistedBytes)) {
+      const entry = unpersistedMcpResults.get(protectKey);
+      unpersistedMcpResults.delete(protectKey);
+      rememberDoomed(entry.binding, "mcp_result_retention_evicted", entry.bytes);
+    }
+    await sweepDoomed();
+  }
+
+  async function markUnrecoverable(binding, reason, byteLength) {
+    try {
+      await persistUnrecoverable(binding, reason, byteLength);
+      doomedMcpResults.delete(binding.key);
+    } catch {
+      rememberDoomed(binding, reason, byteLength);
+    }
+  }
+
   function decodeMcpRecord(binding, record) {
     if (record.kind !== "mcp") return mcpFailure("recovery_record_kind_rejected");
+    if (typeof record.unrecoverable === "string") return mcpFailure(record.unrecoverable, null);
     const bytes = Buffer.from(record.bodyBase64 || "", "base64");
     if (!bytes.length || bytes.length > maxResponseBytes
       || createHash("sha256").update(bytes).digest("hex") !== record.bodySha256) return mcpFailure("recovery_record_integrity");
@@ -455,29 +555,53 @@ export function createIdempotencyReplay({
 
   async function retainMcpResult(binding, result) {
     const payload = Buffer.from(JSON.stringify(result));
-    // If saving fails, keep the completed execution in memory. A manual flush
-    // or read can retry saving it; never re-execute to repair a persistence error.
-    unpersistedMcpResults.set(binding.key, { binding, result });
+    // Size is decided before any ephemeral retention. A permanently oversized
+    // completed result is not kept, and it is not executed again to repair storage.
+    if (payload.length > maxResponseBytes) {
+      await markUnrecoverable(binding, "mcp_result_exceeds_replay_bounds", payload.length);
+      return mcpRecovered(binding, result, { persisted: false, replayed: false, retention: "unrecoverable" });
+    }
+    doomedMcpResults.delete(binding.key);
+    unpersistedMcpResults.delete(binding.key);
+    unpersistedMcpResults.set(binding.key, {
+      binding, result, bytes: payload.length, expiresAt: memoryExpiry(binding),
+    });
+    await pruneUnpersisted(binding.key);
+    if (!unpersistedMcpResults.has(binding.key)) {
+      return mcpRecovered(binding, result, { persisted: false, replayed: false, retention: "unrecoverable" });
+    }
     try {
-      if (payload.length > maxResponseBytes) throw new Error("mcp_result_exceeds_replay_bounds");
       await persistResponse(binding, { status: 200, headers: {}, payload, kind: "mcp" });
       unpersistedMcpResults.delete(binding.key);
-      return mcpRecovered(binding, result, { replayed: false });
+      return mcpRecovered(binding, result, { replayed: false, retention: "stored" });
     } catch {
-      return mcpRecovered(binding, result, { persisted: false, replayed: false });
+      // Bounded retryable failure only. Flush or a later read can save it.
+      return mcpRecovered(binding, result, { persisted: false, replayed: false, retention: "retryable" });
     }
+  }
+
+  function doomedFailure(binding) {
+    const doomed = doomedMcpResults.get(binding.key);
+    if (!doomed) return null;
+    if (doomed.binding.fingerprint !== binding.fingerprint) return mcpFailure("payment_identifier_request_conflict", false);
+    return mcpFailure(doomed.reason, null);
   }
 
   async function recoverMcpResult(input) {
     let binding;
     try { binding = mcpBinding(input); } catch { return mcpFailure("recovery_scope_rejected", false); }
     if (!binding) return mcpFailure("recovery_binding_rejected", false);
+    await pruneUnpersisted();
+    const refused = doomedFailure(binding);
+    if (refused) return refused;
     const retained = unpersistedMcpResults.get(binding.key);
     if (retained && retained.binding.fingerprint !== binding.fingerprint) return mcpFailure("payment_identifier_request_conflict", false);
     if (retained) {
       const saved = await retainMcpResult(binding, retained.result);
-      saved._meta[MCP_RECOVERY_META].replayed = true;
-      saved._meta[MCP_RECOVERY_META].newSettlementAttempt = false;
+      if (saved._meta?.[MCP_RECOVERY_META]) {
+        saved._meta[MCP_RECOVERY_META].replayed = true;
+        saved._meta[MCP_RECOVERY_META].newSettlementAttempt = false;
+      }
       return saved;
     }
     try {
@@ -622,6 +746,16 @@ export function createIdempotencyReplay({
         boundary: "The payment identifier is already bound to a different canonical request, payer, or payment term.",
       });
     }
+    if (cached.kind === "hit" && !cached.record.bodyBase64) {
+      res.set("Cache-Control", "no-store");
+      return res.status(409).json({
+        ok: false,
+        error: cached.record.unrecoverable || "recovery_record_integrity",
+        charged: null,
+        newSettlementAttempt: false,
+        usefulness: "unknown",
+      });
+    }
     if (cached.kind === "hit") {
       for (const [name, value] of Object.entries(cached.record.headers || {})) res.set(name, value);
       res.set("Cache-Control", "no-store");
@@ -703,6 +837,7 @@ export function createIdempotencyReplay({
     recoverMcpResult,
     mcpRecoveryProfile: scope => ({ version: 1, tool: MCP_RECOVERY_TOOL, ...mcpScope(scope) }),
     async flushMcpResults() {
+      await pruneUnpersisted();
       for (const { binding, result } of [...unpersistedMcpResults.values()]) await retainMcpResult(binding, result);
       return { pendingPersistence: unpersistedMcpResults.size };
     },

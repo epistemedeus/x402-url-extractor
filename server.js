@@ -269,6 +269,11 @@ import {
   readNamedCareersBoard,
 } from "./careers-board-read.mjs";
 import {
+  MCP_JSON_RPC_MAX_BYTES,
+  MCP_TOOL_ARGUMENT_MAX_BYTES,
+  ORDINARY_HTTP_JSON_MAX_BYTES,
+} from "./mcp-json-rpc-limit.mjs";
+import {
   LOCKFILE_PIN_DELTA_AMOUNT_ATOMIC,
   LOCKFILE_PIN_DELTA_DESCRIPTION,
   LOCKFILE_PIN_DELTA_PATH,
@@ -573,14 +578,15 @@ const app = express();
 app.set("trust proxy", 1);
 app.use(browserAgentCorsMiddleware);
 const jsonParser = express.json({
-  limit: "16kb",
+  limit: ORDINARY_HTTP_JSON_MAX_BYTES,
   type: ["application/json", "application/*+json"],
   verify(req, _res, buffer) {
     req.rawBody = Buffer.from(buffer);
   },
 });
 app.use((req, res, next) => {
-  if (isScopedRepairPath(req.path) || isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
+  // POST /mcp owns MCP_JSON_RPC_MAX_BYTES. The ordinary parser must not run first.
+  if (req.path === "/mcp" || isScopedRepairPath(req.path) || isPageChangeHttpPath(req.path) || isLockfilePinDeltaPath(req.path)) return next();
   return jsonParser(req, res, next);
 });
 // Parsing precedes observation and the semantic validator. Keep that boundary:
@@ -1538,6 +1544,12 @@ app.get("/mcp", (_req, res) => {
       },
     ],
     callerResultClient: CALLER_RESULT_CLIENT_ENTRY,
+    jsonRpc: {
+      maxBytes: MCP_JSON_RPC_MAX_BYTES,
+      toolArgumentMaxBytes: MCP_TOOL_ARGUMENT_MAX_BYTES,
+      ordinaryHttpJsonMaxBytes: ORDINARY_HTTP_JSON_MAX_BYTES,
+      overLimit: { httpStatus: 200, code: -32600, message: "mcp_json_rpc_too_large" },
+    },
     payment: "x402 USDC on Base per paid MCP tool call; page_change is free and HTTP actions also accept native MPP",
     manifest: `${PUBLIC_URL}/.well-known/x402`,
     openapi: `${PUBLIC_URL}/openapi.json`,
@@ -4465,7 +4477,7 @@ import("./mcp-server.mjs")
           },
           outputSchema: extractBatchMcpOutputSchema,
           inputRefusalMeta: { "samedaydesk/input-refusal": extractBatchInputRefusalDeclaration() },
-          paidHttp: { method: "POST", path: EXTRACT_BATCH_PATH, resourceUrl: `${PUBLIC_URL}${EXTRACT_BATCH_PATH}`, maxRequestBytes: 16 * 1024, maxResponseBytes: 160 * 1024 },
+          paidHttp: { method: "POST", path: EXTRACT_BATCH_PATH, resourceUrl: `${PUBLIC_URL}${EXTRACT_BATCH_PATH}`, maxRequestBytes: ORDINARY_HTTP_JSON_MAX_BYTES, maxResponseBytes: 160 * 1024 },
           tags: ["web", "batch-extract", "structured-json", "multi-url"],
         }] : []),
         ...(LOCKFILE_PIN_DELTA_ENABLED ? [{
@@ -4477,7 +4489,7 @@ import("./mcp-server.mjs")
             after: z.record(z.any()).describe("npm package-lock.json object (lockfileVersion 2 or 3). Not a filesystem path, URL, or command."),
           },
           outputSchema: lockfilePinDeltaMcpOutputSchema,
-          paidHttp: { method: "POST", path: LOCKFILE_PIN_DELTA_PATH, resourceUrl: `${PUBLIC_URL}${LOCKFILE_PIN_DELTA_PATH}`, maxRequestBytes: 256 * 1024, maxResponseBytes: 160 * 1024 },
+          paidHttp: { method: "POST", path: LOCKFILE_PIN_DELTA_PATH, resourceUrl: `${PUBLIC_URL}${LOCKFILE_PIN_DELTA_PATH}`, maxRequestBytes: MCP_TOOL_ARGUMENT_MAX_BYTES, maxResponseBytes: 160 * 1024 },
           tags: ["lockfile", "npm", "pin-delta", "dependency-diff", "sbom"],
         }] : []),
         { name: "read", description: RESOURCES[1].description, price: READ_PRICE, inputSchema: { url: z.string().describe("Public HTTP(S) URL whose readable body is needed as Markdown. Content is fetched without JavaScript rendering and may be truncated at 40,000 characters. Check status/sourceOk/error/truncated/capture; missing discussion text is not proof of absence.") }, outputSchema: readMcpOutputSchema, run: (a) => readMarkdown(a.url), tags: ["web", "markdown", "llm-context"] },
