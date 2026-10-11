@@ -1,0 +1,19 @@
+{"seam":"native_paid_mcp_lost_response_process_restart","capabilities":{"tools":{"listChanged":true}},"decision":"attempt","counts":{"verify":2,"settle":2},"replayJournalEntries":0,"readOnlyResume":false,"synthetic":true,"paidLiveCalls":0}
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: cold recovery must not offer the same paid obligation to settlement a second time
+
+2 !== 1
+
+    at file:///agent/repos/x402-url-extractor/docs/reviews/native-task-recovery-211200/reproduce.mjs:111:10 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 2,
+  expected: 1,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.23.3

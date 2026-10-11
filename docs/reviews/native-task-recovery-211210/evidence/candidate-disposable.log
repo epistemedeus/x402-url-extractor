@@ -1,0 +1,1 @@
+{"seam":"native_paid_mcp_lost_response_process_restart","capabilities":{"tools":{"listChanged":true}},"decision":"attempt","counts":{"verify":1,"settle":1},"replayJournalEntries":1,"readOnlyResume":true,"synthetic":true,"paidLiveCalls":0}

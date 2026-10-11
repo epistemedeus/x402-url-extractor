@@ -1,0 +1,16 @@
+TAP version 13
+# Subtest: lockfile flag does not disable production extract_batch
+ok 1 - lockfile flag does not disable production extract_batch
+  ---
+  duration_ms: 1602.84581
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2205.136076

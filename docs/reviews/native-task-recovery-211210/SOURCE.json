@@ -1,0 +1,45 @@
+{
+  "admission": {
+    "merchantCandidate": "3b5914cf0583bd92db9d9f5b2936f03bda09417f",
+    "carrierBranch": "codex/sol-structural-211200",
+    "carrierTree": "d60bb0ce97779c72eb7a997492b87ac2b7f512fc",
+    "executableSource": "18bd473162b2795b80ee9b98ef5731bdabad7072",
+    "sourceTree": "fc086b705e1c7e8ce226110001ba1f089fbca87e",
+    "parent": "32267493d29ff1339c5199185d8231012daf0acd",
+    "parentTree": "24ce30d298a375e8b993ac29218b8540d1fb7de7",
+    "pilotContext": "8b68ef35107223f9098c629c5bf8a5b96b011edb",
+    "ancestryChecked": true
+  },
+  "productFix": {
+    "commit": "306e3523f9687c35e575f812d3964ddf4ca296c7",
+    "tree": "d1446e744495912df231db7a914972d09cb342a9",
+    "parent": "3b5914cf0583bd92db9d9f5b2936f03bda09417f",
+    "files": {
+      "caller-result-feedback.mjs": "5759c0d54be993ac46582a66d8c9417d6c178b8c0218619d0ec595c16fab17f3",
+      "mcp-caller-result.test.mjs": "c01878b5e458ac6ae18b2e1716532b309dfa8c35cfc704337a85bef347b4282c"
+    }
+  },
+  "run": {
+    "bcId": "bc-90382a85-b84f-45c9-a660-87044b71adff",
+    "url": "https://cursor.com/agents/bc-90382a85-b84f-45c9-a660-87044b71adff",
+    "originalModelName": "grok-4.7",
+    "source": "api",
+    "requestedModel": "grok-4.7",
+    "requestedEffort": "xhigh",
+    "requestedContext": "256k",
+    "requestedFast": false,
+    "observedEffort": "unknown",
+    "observedFast": "unknown",
+    "chargedCents": "unknown",
+    "pushedBranch": "cursor/pilot-211210-complete-task-recovery-receiving-702e",
+    "namedSuccessorBranch": "codex/cursor-task-recovery-211210"
+  },
+  "node": {
+    "version": "v22.23.3",
+    "tarball": "node-v22.23.3-linux-x64.tar.xz",
+    "sha256": "df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de"
+  },
+  "owningServerUnchanged": true,
+  "publishedArchiveUnchanged": true,
+  "review211200Unchanged": true
+}

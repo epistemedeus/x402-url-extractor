@@ -1,0 +1,42 @@
+{
+  "synthetic": true,
+  "paidLiveCalls": 0,
+  "ownerQaIsNotCustomerOrRevenue": true,
+  "opportunity": {
+    "seam": "lost_reply_provider_restart",
+    "state": "completed",
+    "decision": "attempt",
+    "expectedSurplusUsd": 7,
+    "directEqual": true,
+    "verify": 1,
+    "settle": 1,
+    "calls": [
+      "opportunity_preflight",
+      "recover_paid_result"
+    ],
+    "newPaymentPermitted": false,
+    "usefulness": "unknown",
+    "widenedBudgetRefused": true,
+    "paidLiveCalls": 0
+  },
+  "receipt": {
+    "seam": "kill_during_receipt_provider_restart",
+    "state": "completed",
+    "decision": "found",
+    "blockTimestamp": null,
+    "finding": "block_timestamp_unavailable",
+    "directEqual": true,
+    "directRoute": "transactionReceipt",
+    "verify": 1,
+    "settle": 1,
+    "calls": [
+      "transaction_receipt",
+      "recover_paid_result"
+    ],
+    "newPaymentPermitted": false,
+    "remoteStopped": "unknown",
+    "refunded": "unknown",
+    "usefulness": "unknown",
+    "paidLiveCalls": 0
+  }
+}

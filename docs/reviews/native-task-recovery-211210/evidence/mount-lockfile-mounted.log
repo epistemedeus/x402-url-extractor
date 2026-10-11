@@ -1,0 +1,16 @@
+TAP version 13
+# Subtest: mounted success, no-change, malformed, oversize, and wrong-replay-input
+ok 1 - mounted success, no-change, malformed, oversize, and wrong-replay-input
+  ---
+  duration_ms: 1751.04818
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2336.923123

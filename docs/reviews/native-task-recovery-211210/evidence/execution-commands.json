@@ -1,0 +1,113 @@
+{
+  "runtime": {
+    "node": "v22.23.3",
+    "nodePath": "/tmp/native-task-recovery-211210-runtime/node-v22.23.3-linux-x64/bin/node",
+    "nodeTarballSha256": "df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de",
+    "pythonHttpx": "0.28.1",
+    "pythonHttpxPath": "/tmp/native-task-recovery-211210-runtime/python-deps/httpx/__init__.py",
+    "pythonPath": "/tmp/native-task-recovery-211210-runtime/python-deps"
+  },
+  "commands": [
+    {
+      "name": "stock-two-attempt",
+      "command": "node docs/reviews/native-task-recovery-211200/reproduce.mjs",
+      "exitCode": 1,
+      "result": "verify 2, settle 2, replayJournalEntries 0, assertion 2 !== 1",
+      "log": "stock-two-attempt.log"
+    },
+    {
+      "name": "candidate-disposable",
+      "command": "node docs/reviews/native-task-recovery-211200/reproduce.mjs --candidate",
+      "exitCode": 0,
+      "result": "verify 1, settle 1, replayJournalEntries 1, decision attempt, readOnlyResume true",
+      "log": "candidate-disposable.log"
+    },
+    {
+      "name": "httpx-absent",
+      "command": "python3 -c 'import httpx'",
+      "exitCode": 1,
+      "result": "ModuleNotFoundError: No module named 'httpx'",
+      "log": "httpx-absent.txt"
+    },
+    {
+      "name": "cold-parent-before",
+      "command": "eight parallel: node --test caller-result-client.cold.test.mjs",
+      "exitCode": 1,
+      "result": "first wave 4 fail / 2 pass; second wave 4 fail / 4 pass; failure consumer_exited_early pending_bound",
+      "log": "cold-parent-before.log"
+    },
+    {
+      "name": "caller-result-regression",
+      "command": "node --test mcp-caller-result.test.mjs",
+      "exitCode": 0,
+      "result": "9 pass, including late capture accepted and permanent missing_capture refused inside 1s"
+    },
+    {
+      "name": "cold-parent-after",
+      "command": "eight parallel: node --test caller-result-client.cold.test.mjs",
+      "exitCode": 0,
+      "result": "8 pass / 0 fail",
+      "log": "cold-parallel-1.log"
+    },
+    {
+      "name": "normal-one-worker",
+      "command": "node docs/reviews/native-task-recovery-211200/run-normal.mjs",
+      "exitCode": 0,
+      "startedAt": "2026-10-11T04:47:44Z",
+      "endedAt": "2026-10-11T04:52:32Z",
+      "result": "pretest 18 pass; test 1125 tests, 1121 pass, 0 fail, 4 skip; duration_ms 287668.210795",
+      "log": "normal-one-worker.log"
+    },
+    {
+      "name": "nonlive",
+      "command": "npm run test:nonlive",
+      "exitCode": 0,
+      "startedAt": "2026-10-11T04:52:32Z",
+      "endedAt": "2026-10-11T04:52:40Z",
+      "result": "194 pass, 0 fail; duration_ms 8169.678955",
+      "log": "nonlive.log"
+    },
+    {
+      "name": "default-concurrency",
+      "command": "npm test",
+      "exitCode": 0,
+      "startedAt": "2026-10-11T04:52:40Z",
+      "endedAt": "2026-10-11T04:54:31Z",
+      "result": "pretest 18 pass; test 1125 tests, 1121 pass, 0 fail, 4 skip; duration_ms 110457.940583",
+      "log": "default-concurrency.log"
+    },
+    {
+      "name": "focused",
+      "command": "node --test idempotency-replay.test.mjs caller-result-client/test/recovery.test.mjs mcp-task-recovery.test.mjs replay-boundary.http.test.mjs",
+      "exitCode": 0,
+      "result": "56 pass, 0 fail; duration_ms 21891.933821",
+      "log": "focused.log"
+    },
+    {
+      "name": "cold-receipt",
+      "command": "node docs/reviews/native-task-recovery-211210/cold-receipt.mjs",
+      "exitCode": 0,
+      "result": "opportunity attempt equals opportunityPreflight; receipt found equals transactionReceipt; each verify 1 settle 1",
+      "log": "cold-receipt.json"
+    },
+    {
+      "name": "mount-length-before",
+      "command": "disposable server.js mount only; node --test --test-name-pattern 'flag off leaves live extract and catalogs unchanged' extract-batch.http.test.mjs",
+      "exitCode": 1,
+      "result": "26 !== 25",
+      "log": "mount-length-before.log"
+    },
+    {
+      "name": "mount-length-after",
+      "command": "same disposable tree after tools.length 26/27/28; three named catalog tests",
+      "exitCode": 0,
+      "result": "batch flag-off, lockfile mounted, and lockfile-plus-batch each 1 pass",
+      "log": "mount-batch-flag-off.log"
+    },
+    {
+      "name": "shared-mount-apply-check",
+      "command": "git apply --check docs/reviews/native-task-recovery-211210/SHARED-MOUNT.patch",
+      "exitCode": 0
+    }
+  ]
+}
