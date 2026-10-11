@@ -71,7 +71,7 @@ async function fixture(t, { unknown = false } = {}) {
     const configFile = path.join(directory, "receiver.json");
     await writeFile(configFile, JSON.stringify({ dataDir, port, endpointUrl, tenantId: "tenant-a",
       facilitatorUrl: `http://127.0.0.1:${facilitatorPort}`, ...extra }));
-    child = spawn(process.execPath, ["docs/reviews/native-task-recovery-211200/loopback-service.mjs", configFile], {
+    child = spawn(process.execPath, ["fixtures/mcp-task-recovery-loopback.mjs", configFile], {
       cwd: root, env: { PATH: process.env.PATH }, stdio: ["ignore", "pipe", "pipe"],
     });
     let output = "";
