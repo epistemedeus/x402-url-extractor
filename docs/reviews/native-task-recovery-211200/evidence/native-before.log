@@ -1,0 +1,15 @@
+node:internal/fs/promises:638
+  return new FileHandle(await PromisePrototypeThen(
+                        ^
+
+Error: ENOENT: no such file or directory, open '/tmp/mcp-recovery-admission-1SyRYA/idempotency-replay.json'
+    at async open (node:internal/fs/promises:638:25)
+    at async readFile (node:internal/fs/promises:1242:14)
+    at async file:///home/ubuntu/root211-control/work/211200/docs/reviews/native-task-recovery-211200/reproduce.mjs:88:30 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/tmp/mcp-recovery-admission-1SyRYA/idempotency-replay.json'
+}
+
+Node.js v22.14.0

@@ -1,0 +1,6 @@
+{
+  "version": "v22.23.3",
+  "source": "https://nodejs.org/dist/v22.23.3/",
+  "officialSumLine": "df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de  node-v22.23.3-linux-x64.tar.xz",
+  "actualSha256": "df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de"
+}

@@ -1,0 +1,16 @@
+TAP version 13
+# Subtest: installed caller consumer reaches the mounted parent without merchant source
+ok 1 - installed caller consumer reaches the mounted parent without merchant source
+  ---
+  duration_ms: 4892.354885
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5366.946061

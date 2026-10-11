@@ -1,0 +1,2 @@
+# Raw failed-command stdout retains its original bytes, including trailing space.
+evidence/*.log whitespace=-blank-at-eol

@@ -1,0 +1,18 @@
+[
+  {
+    "timestamp": "2026-10-11T03:19:59.747Z",
+    "command": [
+      "/bin/bash",
+      "-lc",
+      "python3 -m venv /tmp/native-task-recovery-211200-runtime/python && /tmp/native-task-recovery-211200-runtime/python/bin/pip install 'httpx==0.28.1' > docs/reviews/native-task-recovery-211200/evidence/python-install.log 2>&1; rc=$?; tail -5 docs/reviews/native-task-recovery-211200/evidence/python-install.log; exit \"$rc\""
+    ],
+    "cwd": "file:///home/ubuntu/root211-control/work/211200",
+    "status": "failed",
+    "aggregated_output": "The virtual environment was not created successfully because ensurepip is not\navailable.  On Debian/Ubuntu systems, you need to install the python3-venv\npackage using the following command.\n\n    apt install python3.12-venv\n\nYou may need to use sudo with that command.  After installing the python3-venv\npackage, recreate your virtual environment.\n\nFailing command: /tmp/native-task-recovery-211200-runtime/python/bin/python3\n\ntail: cannot open 'docs/reviews/native-task-recovery-211200/evidence/python-install.log' for reading: No such file or directory\n",
+    "exit_code": 1,
+    "duration": {
+      "secs": 0,
+      "nanos": 2726
+    }
+  }
+]

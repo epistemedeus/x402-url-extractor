@@ -1,0 +1,14 @@
+[
+  {
+    "timestamp": "2026-10-11T03:43:40.992Z",
+    "command": [
+      "/bin/bash",
+      "-lc",
+      "git commit -m 'Add scoped native MCP result recovery through the existing replay journal'"
+    ],
+    "cwd": "file:///home/ubuntu/root211-control/work/211200",
+    "status": "failed",
+    "aggregated_output": "Author identity unknown\n\n*** Please tell me who you are.\n\nRun\n\n  git config --global user.email \"you@example.com\"\n  git config --global user.name \"Your Name\"\n\nto set your account's default identity.\nOmit --global to set the identity only in this repository.\n\nfatal: unable to auto-detect email address (got 'ubuntu@cursor.(none)')\n",
+    "exit_code": 128
+  }
+]

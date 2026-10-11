@@ -1,0 +1,16 @@
+TAP version 13
+# Subtest: an ordinary process interrupted during the current asynchronous receipt task resumes its retained partial output
+ok 1 - an ordinary process interrupted during the current asynchronous receipt task resumes its retained partial output
+  ---
+  duration_ms: 2988.598834
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3122.956816

@@ -1,0 +1,7 @@
+diff --git a/server.js b/server.js
+--- a/server.js
++++ b/server.js
+@@ -4535,2 +4535,3 @@
+       tools: mcpTools,
++      nativeRecovery: { journal: idempotencyReplay, endpointUrl: `${PUBLIC_URL}/mcp`, tenantId: "public" },
+       callerResultFeedbackKey: process.env.CALLER_RESULT_FEEDBACK_KEY || "",

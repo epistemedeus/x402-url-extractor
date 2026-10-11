@@ -1,0 +1,653 @@
+{
+  "observedCommands": [
+    {
+      "timestamp": "2026-10-11T02:55:56.913Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "mkdir -p docs/reviews/native-task-recovery-211200/evidence && npm ci --ignore-scripts > docs/reviews/native-task-recovery-211200/evidence/install.log 2>&1; rc=$?; cat docs/reviews/native-task-recovery-211200/evidence/install.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T02:58:35.272Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "sed -n '395,440p' docs/reviews/native-task-recovery-211200/evidence/baseline-normal.log && tail -18 docs/reviews/native-task-recovery-211200/evidence/baseline-normal.log && ps -eo pid,ppid,etime,args | rg 'node --test|mcp-caller-result.loopback|server.js' | head -30"
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T02:58:50.497Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "npm test > docs/reviews/native-task-recovery-211200/evidence/baseline-normal.log 2>&1; rc=$?; tail -18 docs/reviews/native-task-recovery-211200/evidence/baseline-normal.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "failed",
+      "exitCode": 1
+    },
+    {
+      "timestamp": "2026-10-11T03:01:49.231Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "node docs/reviews/native-task-recovery-211200/reproduce.mjs > docs/reviews/native-task-recovery-211200/evidence/native-before.log 2>&1; rc=$?; cat docs/reviews/native-task-recovery-211200/evidence/native-before.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "failed",
+      "exitCode": 1
+    },
+    {
+      "timestamp": "2026-10-11T03:02:07.763Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH node --test caller-result-client.cold.test.mjs > docs/reviews/native-task-recovery-211200/evidence/baseline-cold-node22.log 2>&1; rc=$?; tail -28 docs/reviews/native-task-recovery-211200/evidence/baseline-cold-node22.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:02:16.420Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH node docs/reviews/native-task-recovery-211200/reproduce.mjs > docs/reviews/native-task-recovery-211200/evidence/native-before-corrected-probe.log 2>&1; rc=$?; cat docs/reviews/native-task-recovery-211200/evidence/native-before-corrected-probe.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "failed",
+      "exitCode": 1
+    },
+    {
+      "timestamp": "2026-10-11T03:10:45.211Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH node --test caller-result-client/test/recovery.test.mjs idempotency-replay.test.mjs > docs/reviews/native-task-recovery-211200/evidence/first-unit.log 2>&1; rc=$?; tail -35 docs/reviews/native-task-recovery-211200/evidence/first-unit.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "failed",
+      "exitCode": 1
+    },
+    {
+      "timestamp": "2026-10-11T03:11:54.844Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH node --test caller-result-client/test/recovery.test.mjs idempotency-replay.test.mjs > docs/reviews/native-task-recovery-211200/evidence/unit-corrected.log 2>&1; rc=$?; tail -12 docs/reviews/native-task-recovery-211200/evidence/unit-corrected.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:15:13.630Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH node --test mcp-task-recovery.test.mjs caller-result-client/test/recovery.test.mjs > docs/reviews/native-task-recovery-211200/evidence/first-integration.log 2>&1; rc=$?; tail -38 docs/reviews/native-task-recovery-211200/evidence/first-integration.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:16:28.076Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH npm run test:nonlive > docs/reviews/native-task-recovery-211200/evidence/final-nonlive.log 2>&1; rc=$?; tail -14 docs/reviews/native-task-recovery-211200/evidence/final-nonlive.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:17:22.859Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH node docs/reviews/native-task-recovery-211200/reproduce.mjs --candidate > docs/reviews/native-task-recovery-211200/evidence/full-server-candidate.log 2>&1; rc=$?; cat docs/reviews/native-task-recovery-211200/evidence/full-server-candidate.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:18:20.691Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH npm test > docs/reviews/native-task-recovery-211200/evidence/final-normal.log 2>&1; rc=$?; tail -14 docs/reviews/native-task-recovery-211200/evidence/final-normal.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "failed",
+      "exitCode": 1
+    },
+    {
+      "timestamp": "2026-10-11T03:19:34.359Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH node --test mcp-task-recovery.test.mjs caller-result-client/test/recovery.test.mjs > docs/reviews/native-task-recovery-211200/evidence/reservation-integration.log 2>&1; rc=$?; tail -16 docs/reviews/native-task-recovery-211200/evidence/reservation-integration.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:19:59.747Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "python3 -m venv /tmp/native-task-recovery-211200-runtime/python && /tmp/native-task-recovery-211200-runtime/python/bin/pip install 'httpx==0.28.1' > docs/reviews/native-task-recovery-211200/evidence/python-install.log 2>&1; rc=$?; tail -5 docs/reviews/native-task-recovery-211200/evidence/python-install.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "failed",
+      "exitCode": 1
+    },
+    {
+      "timestamp": "2026-10-11T03:20:42.704Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "python3 -m pip install --target /tmp/native-task-recovery-211200-runtime/python-deps --no-compile 'httpx==0.28.1' > docs/reviews/native-task-recovery-211200/evidence/python-target-install.log 2>&1; rc=$?; tail -6 docs/reviews/native-task-recovery-211200/evidence/python-target-install.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:24:57.650Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH node --test idempotency-replay.test.mjs caller-result-client/test/recovery.test.mjs mcp-task-recovery.test.mjs > docs/reviews/native-task-recovery-211200/evidence/focused-final.log 2>&1; rc=$?; tail -22 docs/reviews/native-task-recovery-211200/evidence/focused-final.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:26:31.324Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH node --test idempotency-replay.test.mjs caller-result-client/test/recovery.test.mjs mcp-task-recovery.test.mjs > docs/reviews/native-task-recovery-211200/evidence/focused-price-final.log 2>&1; rc=$?; tail -22 docs/reviews/native-task-recovery-211200/evidence/focused-price-final.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:27:28.480Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH node --test --test-name-pattern='process interrupted' mcp-task-recovery.test.mjs > docs/reviews/native-task-recovery-211200/evidence/interrupt-seam.log 2>&1; rc=$?; cat docs/reviews/native-task-recovery-211200/evidence/interrupt-seam.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:28:17.733Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH PYTHONPATH=/tmp/native-task-recovery-211200-runtime/python-deps node docs/reviews/native-task-recovery-211200/run-normal.mjs > docs/reviews/native-task-recovery-211200/evidence/normal-serial-final.log 2>&1; rc=$?; tail -22 docs/reviews/native-task-recovery-211200/evidence/normal-serial-final.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:28:50.316Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH node --test idempotency-replay.test.mjs caller-result-client/test/recovery.test.mjs mcp-task-recovery.test.mjs > docs/reviews/native-task-recovery-211200/evidence/focused-complete-final.log 2>&1; rc=$?; tail -22 docs/reviews/native-task-recovery-211200/evidence/focused-complete-final.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:29:54.263Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH node docs/reviews/native-task-recovery-211200/reproduce.mjs --candidate > docs/reviews/native-task-recovery-211200/evidence/full-server-release.log 2>&1; rc=$?; cat docs/reviews/native-task-recovery-211200/evidence/full-server-release.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:30:23.745Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH node --test idempotency-replay.test.mjs caller-result-client/test/recovery.test.mjs mcp-task-recovery.test.mjs replay-boundary.http.test.mjs > docs/reviews/native-task-recovery-211200/evidence/recovery-release.log 2>&1; rc=$?; tail -22 docs/reviews/native-task-recovery-211200/evidence/recovery-release.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:31:00.264Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "python3 - <<'PY'\nimport json\nfrom pathlib import Path\nlog = Path('/home/ubuntu/.codex/sessions/2026/10/11/rollout-2026-10-11T02-54-50-01a128e2-6f97-7192-ae73-7b4129848bf7.jsonl')\nfound = {}\nfor line in log.open():\n    record = json.loads(line)\n    payload = record.get('payload', {})\n    if payload.get('type') == 'function_call' and payload.get('name') == 'functions.exec' and 'python3 -m venv' in payload.get('arguments', ''):\n        found[payload['call_id']] = {'timestamp': record.get('timestamp'), 'tool': payload['name'], 'arguments': payload['arguments']}\n    elif payload.get('type') == 'function_call_output' and payload.get('call_id') in found:\n        found[payload['call_id']]['output'] = payload.get('output')\npath = Path('docs/reviews/native-task-recovery-211200/evidence/venv-original-attempt.json')\npath.write_text(json.dumps(list(found.values()), indent=2)+'\\n')\nprint(json.dumps({'originalAttempts': len(found), 'path': str(path), 'bytes': path.stat().st_size}))\nPY"
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:34:12.249Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH node --test idempotency-replay.test.mjs caller-result-client/test/recovery.test.mjs mcp-task-recovery.test.mjs replay-boundary.http.test.mjs > docs/reviews/native-task-recovery-211200/evidence/recovery-durable-final.log 2>&1; rc=$?; tail -22 docs/reviews/native-task-recovery-211200/evidence/recovery-durable-final.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:38:18.677Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH node docs/reviews/native-task-recovery-211200/reproduce.mjs --candidate > docs/reviews/native-task-recovery-211200/evidence/full-server-durable-final.log 2>&1; rc=$?; cat docs/reviews/native-task-recovery-211200/evidence/full-server-durable-final.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:38:19.304Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH PYTHONPATH=/tmp/native-task-recovery-211200-runtime/python-deps node docs/reviews/native-task-recovery-211200/run-normal.mjs > docs/reviews/native-task-recovery-211200/evidence/normal-durable-final.log 2>&1; rc=$?; tail -22 docs/reviews/native-task-recovery-211200/evidence/normal-durable-final.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-10-11T03:38:22.881Z",
+      "argv": [
+        "/bin/bash",
+        "-lc",
+        "PATH=/tmp/native-task-recovery-211200-runtime/node-v22.23.3-linux-x64/bin:$PATH npm run test:nonlive > docs/reviews/native-task-recovery-211200/evidence/nonlive-durable-final.log 2>&1; rc=$?; tail -14 docs/reviews/native-task-recovery-211200/evidence/nonlive-durable-final.log; exit \"$rc\""
+      ],
+      "cwd": "file:///home/ubuntu/root211-control/work/211200",
+      "status": "completed",
+      "exitCode": 0
+    }
+  ],
+  "logReceipts": [
+    {
+      "file": "baseline-cold-node22.log",
+      "bytes": 346,
+      "sha256": "34b2b3f3da7523a4c9d8b7dfc84656de1bcc6d96786215bc94f53087b6f76373",
+      "tapSummaries": [
+        {
+          "tests": 1,
+          "pass": 1,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 5366.946061
+        }
+      ]
+    },
+    {
+      "file": "baseline-normal.log",
+      "bytes": 255704,
+      "sha256": "e06e5b22670b6f4822dada311a6d8877fd8d4f4fb24e2f594078066827b53ae9",
+      "tapSummaries": [
+        {
+          "tests": 18,
+          "pass": 18,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 51.941056
+        },
+        {
+          "tests": 1119,
+          "pass": 1111,
+          "fail": 4,
+          "cancelled": 0,
+          "skipped": 4,
+          "todo": 0,
+          "duration_ms": 127609.078594
+        }
+      ]
+    },
+    {
+      "file": "final-nonlive.log",
+      "bytes": 44212,
+      "sha256": "03adb121cfa521ffbb3ee8f7748d398fa965eab146b12e26a0414812dd724b40",
+      "tapSummaries": [
+        {
+          "tests": 193,
+          "pass": 193,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 12520.408308
+        }
+      ]
+    },
+    {
+      "file": "final-normal.log",
+      "bytes": 251810,
+      "sha256": "e92f0a811bd778cd23a44ec7f1334998d368cf00f9f041a90ed6c3f60d4f8e70",
+      "tapSummaries": [
+        {
+          "tests": 18,
+          "pass": 18,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 69.527985
+        },
+        {
+          "tests": 1119,
+          "pass": 1113,
+          "fail": 2,
+          "cancelled": 0,
+          "skipped": 4,
+          "todo": 0,
+          "duration_ms": 125032.055945
+        }
+      ]
+    },
+    {
+      "file": "first-integration.log",
+      "bytes": 4916,
+      "sha256": "33489d881c4d36abf82b52b30ddc58967521631745900f80d39c17971ce7dcd8",
+      "tapSummaries": [
+        {
+          "tests": 24,
+          "pass": 24,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 11270.6437
+        }
+      ]
+    },
+    {
+      "file": "first-unit.log",
+      "bytes": 6471,
+      "sha256": "53b0764ddfc170ffeea3bb618ba9a681f983add3566740888e666eb3ba7dad6f",
+      "tapSummaries": [
+        {
+          "tests": 30,
+          "pass": 29,
+          "fail": 1,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 507.012575
+        }
+      ]
+    },
+    {
+      "file": "focused-complete-final.log",
+      "bytes": 10249,
+      "sha256": "e6c3ab60fee2b0659d78296d42a404586f1164352e162159ba3e48125841d7a8",
+      "tapSummaries": [
+        {
+          "tests": 48,
+          "pass": 48,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 17254.187469
+        }
+      ]
+    },
+    {
+      "file": "focused-final.log",
+      "bytes": 8514,
+      "sha256": "dfe341e69661b0066fb70d1ea37f1793b5c2ff5cb8e209aebbec1e814fd38689",
+      "tapSummaries": [
+        {
+          "tests": 40,
+          "pass": 40,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 13540.953634
+        }
+      ]
+    },
+    {
+      "file": "focused-price-final.log",
+      "bytes": 9270,
+      "sha256": "9acc6f290b4b354724de336baf3c35a56c856a00c4d147af04830a48e71fc683",
+      "tapSummaries": [
+        {
+          "tests": 44,
+          "pass": 44,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 15264.875488
+        }
+      ]
+    },
+    {
+      "file": "full-server-candidate.log",
+      "bytes": 239,
+      "sha256": "534f10222783a3dbc089684cd0cdf0ffd6fa08ccb0cf848b37b4f82117d9c826",
+      "tapSummaries": []
+    },
+    {
+      "file": "full-server-durable-final.log",
+      "bytes": 239,
+      "sha256": "534f10222783a3dbc089684cd0cdf0ffd6fa08ccb0cf848b37b4f82117d9c826",
+      "tapSummaries": []
+    },
+    {
+      "file": "full-server-release.log",
+      "bytes": 239,
+      "sha256": "534f10222783a3dbc089684cd0cdf0ffd6fa08ccb0cf848b37b4f82117d9c826",
+      "tapSummaries": []
+    },
+    {
+      "file": "install.log",
+      "bytes": 324,
+      "sha256": "418679ad4d8ed5c5489b47422e2d7809fc324c0a35c2aed91cb487663d01a5a3",
+      "tapSummaries": []
+    },
+    {
+      "file": "interrupt-seam.log",
+      "bytes": 418,
+      "sha256": "d83a5b3bfed9d011e7669a0415fff327bf4567f87b63e99dc0ba5dad2a5fa0d4",
+      "tapSummaries": [
+        {
+          "tests": 1,
+          "pass": 1,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 3122.956816
+        }
+      ]
+    },
+    {
+      "file": "native-before-corrected-probe.log",
+      "bytes": 675,
+      "sha256": "6e5abbf647e57ac66691b94c09df532dc26b1b9c9131bb88c067b19ebd1f23dd",
+      "tapSummaries": []
+    },
+    {
+      "file": "native-before.log",
+      "bytes": 591,
+      "sha256": "f10d8d65b490398378a31cc490b15ed667fc6b5d9039f1ecd7b95900f7732666",
+      "tapSummaries": []
+    },
+    {
+      "file": "nonlive-durable-final.log",
+      "bytes": 44196,
+      "sha256": "b40f8d60412ff41833836dcc8b9dc843f0cb2d4db41f19d4cb8f508e15ba2e7b",
+      "tapSummaries": [
+        {
+          "tests": 193,
+          "pass": 193,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 9452.769458
+        }
+      ]
+    },
+    {
+      "file": "normal-durable-final.log",
+      "bytes": 257535,
+      "sha256": "15268b7f87e903eba00d8c9fad770da9be7a15539315f251ace7cf95faae4a4c",
+      "tapSummaries": [
+        {
+          "tests": 18,
+          "pass": 18,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 110.471329
+        },
+        {
+          "tests": 1124,
+          "pass": 1120,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 4,
+          "todo": 0,
+          "duration_ms": 270226.384085
+        }
+      ]
+    },
+    {
+      "file": "normal-serial-final.log",
+      "bytes": 257531,
+      "sha256": "dd570b6b9cfce8c024171e3795f4106496feaf3d6f63947d914aa23330f0f0b0",
+      "tapSummaries": [
+        {
+          "tests": 18,
+          "pass": 18,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 95.079085
+        },
+        {
+          "tests": 1124,
+          "pass": 1120,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 4,
+          "todo": 0,
+          "duration_ms": 269779.560399
+        }
+      ]
+    },
+    {
+      "file": "python-target-install.log",
+      "bytes": 2296,
+      "sha256": "c3e2e73593e439bb5622c2863e3b13069ecc12af86ae5d0981023905207390f3",
+      "tapSummaries": []
+    },
+    {
+      "file": "recovery-durable-final.log",
+      "bytes": 11996,
+      "sha256": "953990999b4abfe77f06d4605a22f0cc2364043cd280fde9708d7a0883b0f665",
+      "tapSummaries": [
+        {
+          "tests": 56,
+          "pass": 56,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 23351.791628
+        }
+      ]
+    },
+    {
+      "file": "recovery-release.log",
+      "bytes": 11994,
+      "sha256": "00864c24b3719daf30935d896ed0dd0338f44a38354f938a2ea06fe57ffca14d",
+      "tapSummaries": [
+        {
+          "tests": 56,
+          "pass": 56,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 36864.827298
+        }
+      ]
+    },
+    {
+      "file": "reservation-integration.log",
+      "bytes": 4920,
+      "sha256": "fbb534df4723c66cb4830ca49529b86bbc0530866724ebc0b36f4d0a06552e2e",
+      "tapSummaries": [
+        {
+          "tests": 24,
+          "pass": 24,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 12014.317845
+        }
+      ]
+    },
+    {
+      "file": "unit-corrected.log",
+      "bytes": 5809,
+      "sha256": "b0a57f6d1f421cd6437de2488abfb5cbd2c6eff16a55888a6b5049839bde63fa",
+      "tapSummaries": [
+        {
+          "tests": 30,
+          "pass": 30,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0,
+          "duration_ms": 550.398948
+        }
+      ]
+    }
+  ]
+}

@@ -32,6 +32,7 @@ import { sealObservedMcpToolResult } from "./http-delivery-evidence/mcp-delivery
 import { attachMcpCallerResultFeedback, callerResultFeedbackMetaFromHeaders } from "./caller-result-feedback.mjs";
 import { classifyDeclaredAgentDiscoverySource, listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
 import { readExtractBatchInputRefusalCode } from "./extract-batch.mjs";
+import { MCP_RECOVERY_TOOL, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
 import {
   buildRegisteredCatalog,
   createMcpTypedTelemetryAttempt,
@@ -659,7 +660,18 @@ export async function mountMcp(app, {
   configureResourceServer = null,
   httpBaseUrl = null,
   callerResultFeedbackKey = "",
+  // Inject the existing HTTP replay journal. No second store or automatic
+  // task backend is constructed by this optional native-result port.
+  nativeRecovery = null,
 } = {}) {
+  const recoveryJournal = nativeRecovery?.journal;
+  const recoveryScope = nativeRecovery ? {
+    endpointUrl: nativeRecovery.endpointUrl,
+    tenantId: nativeRecovery.tenantId,
+  } : null;
+  const recoveryProfile = nativeRecovery ? recoveryJournal?.mcpRecoveryProfile(recoveryScope) : null;
+  if (nativeRecovery && (!recoveryProfile || typeof recoveryJournal.runMcpTool !== "function"
+    || typeof recoveryJournal.recoverMcpResult !== "function")) throw new Error("native_recovery_journal_required");
   const typedEnabled = typedTelemetry?.enabled === true;
   const jsonResponse = streamableHttpOptions?.enableJsonResponse === true;
   const typedLifecycle = typedEnabled
@@ -692,7 +704,8 @@ export async function mountMcp(app, {
   }
 
   // Dedicated resource server for MCP, sharing the facilitator with the HTTP routes.
-  const resourceServer = new x402ResourceServer(facilitatorClient).register(network, new ExactEvmScheme());
+  const resourceServer = new x402ResourceServer(nativeRecovery
+    ? trackReplaySettlementAttempts(facilitatorClient) : facilitatorClient).register(network, new ExactEvmScheme());
   await resourceServer.initialize();
   if (typeof configureResourceServer === "function") {
     await configureResourceServer(resourceServer);
@@ -735,7 +748,14 @@ export async function mountMcp(app, {
     // a structured ok:false so a paid call never yields an opaque failure.
     const inner = t.paidHttp ? httpRouteToolHandler(t, httpBaseUrl)
       : paid(typedEnabled ? observedPaidHandler(t) : baselinePaidHandler(t));
-    const revived = withRevivedArgs(inner, t.inputSchema);
+    const recoverable = nativeRecovery && !t.paidHttp ? async (args, extra) => {
+      const request = mcpHttpRequestAls.getStore();
+      return recoveryJournal.runMcpTool({ name: t.name,
+        arguments: request?.body?.params?.arguments ?? args,
+        payment: extra?._meta?.[MCP_PAYMENT_META_KEY], scope: recoveryScope,
+        context: extra?._meta?.["samedaydesk/recovery-call"] ?? null }, () => inner(args, extra));
+    } : inner;
+    const revived = withRevivedArgs(recoverable, t.inputSchema);
     const handler = typedEnabled
       ? async (args, extra) => {
         const attempt = mcpTypedAttemptAls.getStore();
@@ -760,6 +780,7 @@ export async function mountMcp(app, {
       inputRefusalMeta: t.inputRefusalMeta,
       guardedHttpInput: Boolean(t.paidHttp && t.inputRefusalMeta),
       operationIdentity: t.operationIdentity,
+      recoveryProfile: nativeRecovery && !t.paidHttp ? recoveryProfile : null,
       handler,
       binding,
     });
@@ -777,6 +798,24 @@ export async function mountMcp(app, {
       binding: null,
     });
   }
+  if (nativeRecovery) {
+    if (catalogByName.has(MCP_RECOVERY_TOOL)) throw new Error("native_recovery_tool_collision");
+    const nativeTools = new Set(paidTools.filter(tool => !tool.paidHttp).map(tool => tool.name));
+    catalogByName.set(MCP_RECOVERY_TOOL, { tool: MCP_RECOVERY_TOOL, free: true, binding: null });
+    prepared.push({
+      name: MCP_RECOVERY_TOOL, free: true,
+      description: "Read the stored outcome of an earlier native paid call using its original input and credential. This call cannot execute or pay.",
+      inputSchema: { name: z.string(), arguments: z.record(z.any()) },
+      paymentMeta: { samedaydesk: { charged: false, paymentRequired: false } },
+      handler: async (args, extra) => {
+        if (!nativeTools.has(args.name)) return { ...asToolResult({ ok: false, error: "recovery_tool_rejected", charged: false }), isError: true };
+        return recoveryJournal.recoverMcpResult({ name: args.name, arguments: args.arguments,
+          payment: extra?._meta?.[MCP_PAYMENT_META_KEY], scope: recoveryScope,
+          context: extra?._meta?.["samedaydesk/recovery-call"] ?? null });
+      },
+      binding: null,
+    });
+  }
 
   // A fresh MCP server per request (stateless mode requires server+transport per call).
   const makeServer = (requestBody) => {
@@ -785,6 +824,9 @@ export async function mountMcp(app, {
       const operationMeta = t.operationIdentity
         ? { samedaydesk: { operation: t.operationIdentity } }
         : {};
+      if (t.recoveryProfile) operationMeta.samedaydesk = {
+        ...operationMeta.samedaydesk, recovery: t.recoveryProfile,
+      };
       // This call's original ALS arguments go unchanged to the HTTP guard.
       // Let that guard produce static refusals rather than SDK/Zod value echoes.
       // Discovery and every other call retain their advertised input schema.

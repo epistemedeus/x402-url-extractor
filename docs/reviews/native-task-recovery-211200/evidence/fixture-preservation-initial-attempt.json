@@ -1,0 +1,14 @@
+[
+  {
+    "timestamp": "2026-10-11T03:40:21.222Z",
+    "command": [
+      "/bin/bash",
+      "-lc",
+      "python3 - <<'PY'\nimport json,hashlib,subprocess\nfrom pathlib import Path\np=Path('public-acquisition/loopback-profile.json')\nraw=p.read_bytes(); profile=json.loads(raw)\nassert profile['node']['meta']['node']['version']=='v22.23.3'\ne=Path('docs/reviews/native-task-recovery-211200/evidence')\n(e/'normal-generated-loopback-profile.json').write_bytes(raw)\nbase=subprocess.check_output(['git','show','32267493d29ff1339c5199185d8231012daf0acd:public-acquisition/loopback-profile.json'])\n(e/'generated-fixture-disposition.json').write_text(json.dumps({'path':str(p),'emitter':'public-acquisition/engine.test.mjs:395','generatedSha256':hashlib.sha256(raw).hexdigest(),'originalSha256':hashlib.sha256(base).hexdigest(),'disposition':'Generated owner QA retained privately; original public fixture restored to admitted source; excluded from export delta.'},indent=2)+'\\n')\nsubprocess.run(['git','restore','--source=32267493d29ff1339c5199185d8231012daf0acd','--',str(p)],check=True)\nassert p.read_bytes()==base\nprint('Original acquisition fixture restored; generated QA retained privately.')\nPY"
+    ],
+    "cwd": "file:///home/ubuntu/root211-control/work/211200",
+    "status": "failed",
+    "aggregated_output": "Traceback (most recent call last):\n  File \"<stdin>\", line 5, in <module>\nKeyError: 'meta'\n",
+    "exit_code": 1
+  }
+]
