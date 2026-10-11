@@ -4533,6 +4533,7 @@ import("./mcp-server.mjs")
         declaredSourceForRequest: (req) => commerceTelemetry.mcpTypedDeclaredSourceForRequest(req),
       },
       tools: mcpTools,
+      nativeRecovery: { journal: idempotencyReplay, endpointUrl: `${PUBLIC_URL}/mcp`, tenantId: "public" },
       callerResultFeedbackKey: process.env.CALLER_RESULT_FEEDBACK_KEY || "",
     });
   })

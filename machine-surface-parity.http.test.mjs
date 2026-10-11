@@ -191,6 +191,12 @@ test("live free surfaces keep canonical paid routes and kill Circle as a 23rd ac
   } finally {
     await client.close();
   }
+  const recoveryTool = mcpTools.find((tool) => tool.name === "recover_paid_result");
+  assert.ok(recoveryTool, "mounted server lists the free recovery read");
+  assert.equal(recoveryTool._meta?.samedaydesk?.charged, false);
+  assert.equal(recoveryTool._meta?.samedaydesk?.paymentRequired, false);
+  assert.equal(recoveryTool._meta?.x402?.paymentRequired, undefined);
+  assert.equal(mcpToolNames.filter((name) => name === "recover_paid_result").length, 1);
 
   const receipt = validateMachineSurfaceParity({
     actions: catalog.actions,

@@ -542,6 +542,7 @@ test("mounted morpho HTTP and MCP producers capture delivery from the live paths
   assert.equal(typedEvents.filter((row) => row.result === "replay_success").length, 0);
 
   const settleBeforeResend = facilitator.calls.settle;
+  const verifyBeforeResend = facilitator.calls.verify;
   const resend = await postMcp(merchant.base, {
     jsonrpc: "2.0",
     id: 92,
@@ -554,12 +555,16 @@ test("mounted morpho HTTP and MCP producers capture delivery from the live paths
   });
   assert.equal(resend.status, 200);
   assert.equal(resend.json?.result?.isError, undefined);
-  assert.equal(facilitator.calls.settle, settleBeforeResend + 1);
+  assert.equal(toolText(resend.json), toolText(duplicatePaid.json));
+  assert.equal(resend.json?.result?._meta?.["samedaydesk/recovery"]?.replayed, true);
+  assert.equal(resend.json?.result?._meta?.["samedaydesk/recovery"]?.newSettlementAttempt, false);
+  assert.equal(facilitator.calls.settle, settleBeforeResend);
+  assert.equal(facilitator.calls.verify, verifyBeforeResend);
   const resendDigest = digestMcpPayload(Buffer.from(toolText(resend.json), "utf8"));
   const resendRows = await waitFor(
     () => store.readMcpDeliveries(),
     (rows) => rows.some((row) => row.responseDigest === resendDigest && row.callId === "92"),
-    "same payment resent on the live mcp wrapper",
+    "same payment replayed by the mounted journal",
   );
   const resent = resendRows.find((row) => row.callId === "92");
   assert.equal(resent.settlementState, "succeeded");
@@ -576,9 +581,12 @@ test("mounted morpho HTTP and MCP producers capture delivery from the live paths
   }), false);
   const eventsAfterResend = (await readLines(path.join(dataDir, "commerce-events.ndjson")))
     .filter((row) => row.sourceContract === "mcp_typed_outcome" && row.binding?.tool === "morpho_position");
-  assert.equal(eventsAfterResend.filter((row) => row.result === "paid_success").length, morphoPaid.length + 1);
-  assert.equal(eventsAfterResend.filter((row) => row.result === "replay_success").length, 0);
-  assert.equal(eventsAfterResend.some((row) => row.id === resent.paidEvidenceId && row.result === "paid_success"), true);
+  assert.equal(eventsAfterResend.filter((row) => row.result === "paid_success").length, morphoPaid.length);
+  assert.equal(eventsAfterResend.filter((row) => row.result === "replay_success").length, 1);
+  const replayEvent = eventsAfterResend.find((row) => row.result === "replay_success");
+  assert.equal(replayEvent.handlerInvoked, false);
+  assert.equal(replayEvent.settlementState, "succeeded");
+  assert.equal(replayEvent.id, resent.paidEvidenceId);
   assert.equal((await readLines(path.join(dataDir, PAID_EVIDENCE_FILENAME))).length, evidenceBeforeMcp);
 
   const names = await readdir(dataDir);

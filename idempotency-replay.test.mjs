@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -8,12 +8,172 @@ import {
   canonicalReplayUrl,
   createIdempotencyReplay,
   decodeReplayPayment,
+  MCP_RECOVERY_META,
+  mcpRecoveryResultDigest,
+  trackReplaySettlementAttempts,
 } from "./idempotency-replay.mjs";
 
 const payer = "0x1111111111111111111111111111111111111111";
 const payTo = "0x2222222222222222222222222222222222222222";
 const asset = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const paymentId = "order_1234567890abcdef";
+
+function nativeOperation(now = Date.now()) {
+  const payment = JSON.parse(Buffer.from(encodedPayment(), "base64").toString());
+  payment.resource = { url: "mcp://tool/opportunity_preflight" };
+  Object.assign(payment.payload.authorization, { to: payTo, value: payment.accepted.amount,
+    nonce: `0x${"9".repeat(64)}`, validBefore: String(Math.floor(now / 1000) + 30) });
+  return { name: "opportunity_preflight", arguments: { rewardUsd: 10, hours: 1 }, payment,
+    scope: { endpointUrl: "http://127.0.0.1:21120/mcp", tenantId: "tenant-a" },
+    context: { operationId: "operation-a", reservationId: "reservation-a", principalId: "principal-a", grantId: "grant-a" } };
+}
+
+const nativeResult = { content: [{ type: "text", text: '{"decision":"attempt"}' }],
+  structuredContent: { decision: "attempt" }, _meta: { "x402/payment-response": { success: true } } };
+
+test("ordinary x402 payment without a resource url executes once and replays on the same tool", async t => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "native-replay-ordinary-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  const journal = createIdempotencyReplay({ dataDir, secret: "native-test-secret", ttlMs: 60_000 });
+  const input = nativeOperation();
+  delete input.payment.resource;
+  delete input.context;
+  let executions = 0;
+  let discoveries = 0;
+  const discovery = await journal.runMcpTool({ ...input, payment: undefined }, async () => {
+    discoveries++;
+    return { content: [{ type: "text", text: "challenge" }] };
+  });
+  assert.equal(discoveries, 1);
+  assert.equal(discovery.isError, undefined);
+  assert.equal(discovery.content[0].text, "challenge");
+  const delivered = await journal.runMcpTool(input, async () => { executions++; return nativeResult; });
+  assert.equal(delivered.isError, undefined);
+  assert.equal(delivered._meta[MCP_RECOVERY_META].replayed, false);
+  assert.equal(delivered._meta[MCP_RECOVERY_META].newSettlementAttempt, true);
+  assert.deepEqual(delivered.structuredContent, nativeResult.structuredContent);
+  const replay = await journal.runMcpTool(input, () => { executions++; return nativeResult; });
+  assert.equal(replay._meta[MCP_RECOVERY_META].replayed, true);
+  assert.equal(replay._meta[MCP_RECOVERY_META].newSettlementAttempt, false);
+  const recovered = await journal.recoverMcpResult(input);
+  assert.deepEqual(recovered.structuredContent, nativeResult.structuredContent);
+  const redirected = structuredClone(input);
+  redirected.payment.resource = { url: "mcp://tool/extract" };
+  const rejected = await journal.runMcpTool(redirected, () => { executions++; return nativeResult; });
+  assert.equal(JSON.parse(rejected.content[0].text).error, "recovery_binding_rejected");
+  assert.equal(executions, 1);
+});
+
+test("native reservation pins its original credential and operation across process restart", async t => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "native-replay-binding-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  const options = { dataDir, secret: "native-test-secret", ttlMs: 60_000 };
+  const journal = createIdempotencyReplay(options), input = nativeOperation();
+  let executions = 0;
+  const result = await journal.runMcpTool(input, async () => { executions++; return nativeResult; });
+  assert.equal(result._meta[MCP_RECOVERY_META].persisted, true);
+  assert.equal(result._meta[MCP_RECOVERY_META].resultDigest, mcpRecoveryResultDigest(nativeResult));
+  const restarted = createIdempotencyReplay(options);
+  assert.deepEqual((await restarted.recoverMcpResult(input)).structuredContent, nativeResult.structuredContent);
+  assert.equal((await restarted.runMcpTool(input, () => { executions++; }))._meta[MCP_RECOVERY_META].replayed, true);
+  const replacement = structuredClone(input);
+  replacement.payment.extensions["payment-identifier"].info.id = "replacement_credential_12345";
+  replacement.payment.payload.authorization.nonce = `0x${"8".repeat(64)}`;
+  replacement.payment.payload.signature = "0xreplacement";
+  for (const changed of [replacement, { ...input, context: { ...input.context, principalId: "principal-b" } },
+    { ...input, context: { ...input.context, operationId: "operation-b" } }]) {
+    const rejected = await restarted.runMcpTool(changed, () => { executions++; });
+    assert.equal(rejected.isError, true);
+    assert.equal(JSON.parse(rejected.content[0].text).error, "payment_identifier_request_conflict");
+  }
+  assert.equal(executions, 1);
+});
+
+test("native completed output survives failed persistence in its execution and can save without re-execution", async t => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "native-replay-save-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  const options = { dataDir, secret: "native-test-secret", ttlMs: 60_000 };
+  const journal = createIdempotencyReplay(options), input = nativeOperation();
+  let executions = 0, settlements = 0;
+  const facilitator = trackReplaySettlementAttempts({ async settle() {
+    settlements++;
+    const disk = JSON.parse(await readFile(journal.storePath, "utf8"));
+    assert.equal(disk.records[0].settlementAttempted, true);
+    return { success: true };
+  } });
+  const obstruction = path.join(dataDir, "idempotency-replay.tmp.json");
+  const delivered = await journal.runMcpTool(input, async () => {
+    executions++; await facilitator.settle(); await mkdir(obstruction); return nativeResult;
+  });
+  assert.equal(delivered._meta[MCP_RECOVERY_META].persisted, false);
+  assert.deepEqual(delivered.structuredContent, nativeResult.structuredContent);
+  const retained = await journal.recoverMcpResult(input);
+  assert.equal(retained._meta[MCP_RECOVERY_META].persisted, false);
+  assert.equal(retained._meta[MCP_RECOVERY_META].newSettlementAttempt, false);
+  assert.equal((await journal.flushMcpResults()).pendingPersistence, 1);
+  await rm(obstruction, { recursive: true });
+  assert.equal((await journal.flushMcpResults()).pendingPersistence, 0);
+  const cold = await createIdempotencyReplay(options).recoverMcpResult(input);
+  assert.equal(cold._meta[MCP_RECOVERY_META].persisted, true);
+  assert.deepEqual(cold.structuredContent, nativeResult.structuredContent);
+  assert.equal(executions, 1); assert.equal(settlements, 1);
+});
+
+test("native unknown payment stays quarantined; missing, expired and corrupt recovery never executes", async t => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "native-replay-unknown-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  let clock = Date.now(), executions = 0;
+  const options = { dataDir, secret: "native-test-secret", ttlMs: 60_000, now: () => clock };
+  const journal = createIdempotencyReplay(options), input = nativeOperation(clock);
+  assert.equal(JSON.parse((await journal.recoverMcpResult(input)).content[0].text).error, "recovery_not_found_or_expired");
+  assert.equal(JSON.parse(await readFile(journal.storePath, "utf8")).records.length, 0);
+  const facilitator = trackReplaySettlementAttempts({ async settle() { throw new Error("unknown_provider_reply"); } });
+  const unknown = await journal.runMcpTool(input, async () => { executions++; await facilitator.settle(); });
+  assert.equal(JSON.parse(unknown.content[0].text).charged, null);
+  const restarted = createIdempotencyReplay(options);
+  const pending = await restarted.runMcpTool(input, () => { executions++; });
+  assert.equal(JSON.parse(pending.content[0].text).error, "payment_execution_in_flight_or_unknown");
+  assert.equal(JSON.parse(await readFile(journal.storePath, "utf8")).records[0].settlementAttempted, true);
+  clock += 120_000;
+  assert.equal(JSON.parse((await restarted.recoverMcpResult(input)).content[0].text).error, "recovery_not_found_or_expired");
+  assert.equal(JSON.parse((await restarted.runMcpTool(input, () => { executions++; })).content[0].text).error, "payment_replay_expired");
+  await writeFile(journal.storePath, "corrupt");
+  assert.equal(JSON.parse((await restarted.recoverMcpResult(input)).content[0].text).error, "recovery_storage_unavailable");
+  assert.equal(await readFile(journal.storePath, "utf8"), "corrupt");
+  assert.equal(executions, 1);
+});
+
+test("native unpaid terminal refusal keeps its useful result without inventing settlement", async t => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "native-replay-refusal-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  const journal = createIdempotencyReplay({ dataDir, secret: "native-test-secret", ttlMs: 60_000 });
+  const input = nativeOperation();
+  const refusal = { isError: true, content: [{ type: "text", text: '{"error":"unsupported_network","charged":false}' }] };
+  await journal.runMcpTool(input, async () => refusal);
+  const cold = await journal.recoverMcpResult(input);
+  assert.deepEqual(cold.content, refusal.content);
+  assert.equal(cold.isError, true);
+  assert.equal(cold._meta["x402/payment-response"], undefined);
+  assert.equal(cold._meta[MCP_RECOVERY_META].newSettlementAttempt, false);
+});
+
+test("concurrent native continuation never starts a second execution while the first runs", async t => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "native-replay-inflight-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  const journal = createIdempotencyReplay({ dataDir, secret: "native-test-secret", ttlMs: 60_000 });
+  const input = nativeOperation();
+  let executions = 0, finish, entered;
+  const ready = new Promise(resolve => { entered = resolve; });
+  const first = journal.runMcpTool(input, async () => {
+    executions++; entered(); await new Promise(resolve => { finish = resolve; }); return nativeResult;
+  });
+  await ready;
+  const second = await journal.runMcpTool(input, () => { executions++; });
+  assert.equal(JSON.parse(second.content[0].text).error, "payment_execution_in_flight_or_unknown");
+  finish(); await first;
+  assert.deepEqual((await journal.recoverMcpResult(input)).structuredContent, nativeResult.structuredContent);
+  assert.equal(executions, 1);
+});
 
 function encodedPayment({ id = paymentId, from = payer, amount = "20000", signature = "0xsigned-original" } = {}) {
   return Buffer.from(JSON.stringify({

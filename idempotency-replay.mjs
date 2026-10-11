@@ -1,12 +1,25 @@
 import { createHash, createHmac, randomBytes } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { chmod, mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { constants, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { chmod, mkdir, open, readFile, rename } from "node:fs/promises";
 import path from "node:path";
 import { Credential } from "mppx";
 
 const PAYMENT_HEADERS = ["payment-signature", "x-payment", "x-payment-signature"];
 const settlementContext = new AsyncLocalStorage();
+
+export const MCP_RECOVERY_TOOL = "recover_paid_result";
+export const MCP_RECOVERY_META = "samedaydesk/recovery";
+
+// The useful payload has its own lineage; payment/delivery signatures are not
+// a usefulness verdict and may acquire transport metadata after this boundary.
+export function mcpRecoveryResultDigest(result) {
+  return createHash("sha256").update(JSON.stringify({
+    content: result?.content,
+    structuredContent: result?.structuredContent ?? null,
+    isError: result?.isError === true,
+  })).digest("hex");
+}
 
 // Observe the existing facilitator call, without replacing either payment rail.
 // The possible-spend marker is durable BEFORE the external mutation begins.
@@ -211,6 +224,7 @@ export function createIdempotencyReplay({
   const storePath = path.join(dataDir, "idempotency-replay.json");
   const tempPath = path.join(dataDir, "idempotency-replay.tmp.json");
   let queue = Promise.resolve();
+  const unpersistedMcpResults = new Map();
   const replaySecret = secret || persistentReplaySecret(dataDir);
 
   const digest = (label, value) => createHmac("sha256", replaySecret).update(`${label}:${value}`).digest("hex");
@@ -266,9 +280,15 @@ export function createIdempotencyReplay({
       const bounded = [...protectedRecords, ...mutation.records.filter((record) => !record.protected)
         .sort((left, right) => Number(right.createdAt) - Number(left.createdAt))
         .slice(0, maxEntries - protectedRecords.length)];
-      await writeFile(tempPath, `${JSON.stringify({ v: 1, records: bounded })}\n`, { encoding: "utf8", mode: 0o600 });
-      await chmod(tempPath, 0o600).catch(() => {});
+      const temporary = await open(tempPath, constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | constants.O_NOFOLLOW, 0o600);
+      try {
+        await temporary.writeFile(`${JSON.stringify({ v: 1, records: bounded })}\n`, "utf8");
+        await temporary.chmod(0o600);
+        await temporary.sync();
+      } finally { await temporary.close(); }
       await rename(tempPath, storePath);
+      const directory = await open(dataDir, constants.O_RDONLY);
+      try { await directory.sync(); } finally { await directory.close(); }
       await chmod(storePath, 0o600).catch(() => {});
     });
     await queue;
@@ -339,6 +359,12 @@ export function createIdempotencyReplay({
     if (!safeHeaders["payment-response"] && !safeHeaders["payment-receipt"] && !safeHeaders["x-payment-response"]) {
       return false;
     }
+    return persistResponse(binding, { status, headers: safeHeaders, payload });
+  }
+
+  // One existing store/queue for HTTP and native MCP. The native port can also
+  // retain an unpaid terminal refusal, without inventing a settlement proof.
+  async function persistResponse(binding, { status, headers, payload, kind = "http" }) {
     const createdAt = now();
     const record = {
       v: 1,
@@ -349,7 +375,8 @@ export function createIdempotencyReplay({
       createdAt,
       expiresAt: Math.max(createdAt + ttlMs, Number.isFinite(binding.validUntilMs) ? binding.validUntilMs + 60_000 : 0),
       status,
-      headers: safeHeaders,
+      kind,
+      headers,
       bodyBase64: payload.toString("base64"),
       bodySha256: createHash("sha256").update(payload).digest("hex"),
     };
@@ -357,6 +384,151 @@ export function createIdempotencyReplay({
       records: [record, ...records.filter((entry) => entry.key !== record.key)],
       result: true,
     }));
+  }
+
+  function mcpScope(scope) {
+    const endpoint = new URL(scope?.endpointUrl);
+    if (endpoint.username || endpoint.password || endpoint.search || endpoint.hash
+      || endpoint.pathname !== "/mcp"
+      || !(endpoint.protocol === "https:" || endpoint.protocol === "http:" && ["127.0.0.1", "[::1]"].includes(endpoint.hostname))) {
+      throw new Error("invalid_mcp_recovery_endpoint");
+    }
+    if (typeof scope?.tenantId !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(scope.tenantId)) {
+      throw new Error("invalid_mcp_recovery_tenant");
+    }
+    return { endpointUrl: endpoint.href, tenantId: scope.tenantId };
+  }
+
+  function mcpBinding({ name, arguments: args = {}, payment, scope, context = null }) {
+    const endpoint = mcpScope(scope);
+    if (!/^[A-Za-z0-9_-]{1,128}$/.test(name || "")) return null;
+    // Ordinary SDK payments omit resource. The invoked tool name is the binding.
+    // A supplied resource must name this tool and cannot be redirected.
+    if (Object.hasOwn(payment || {}, "resource") && payment.resource?.url !== `mcp://tool/${name}`) return null;
+    if (!payment || typeof payment !== "object" || Array.isArray(payment)) return null;
+    if (context !== null && (!context || ["operationId", "reservationId", "principalId", "grantId"].some(key =>
+      typeof context[key] !== "string" || !/^[A-Za-z0-9_.:-]{1,128}$/.test(context[key]))
+      || Object.keys(context).length !== 4)) return null;
+    const bodyBytes = JSON.stringify({ name, arguments: args, ...endpoint, context });
+    if (Buffer.byteLength(bodyBytes) > 64 * 1024) return null;
+    const binding = bindingFor({ method: "POST", url: endpoint.endpointUrl,
+      headers: { "payment-signature": Buffer.from(JSON.stringify(payment)).toString("base64") }, bodyBytes });
+    const paymentBinding = decodeReplayPayment({ "payment-signature": Buffer.from(JSON.stringify(payment)).toString("base64") });
+    return binding ? { ...binding, protected: true, scope: endpoint, name,
+      // One reservation cannot acquire a replacement nonce/credential. The
+      // signed payer is authoritative here; app principal labels remain claims.
+      key: context ? digest("mcp-reservation", JSON.stringify([endpoint, paymentBinding.payer, context.reservationId])) : binding.key,
+      contextDigest: createHash("sha256").update(JSON.stringify(context)).digest("hex"),
+      inputDigest: createHash("sha256").update(JSON.stringify(args)).digest("hex"),
+      termsDigest: createHash("sha256").update(JSON.stringify(payment.accepted)).digest("hex"),
+      paymentDigest: createHash("sha256").update(JSON.stringify(payment)).digest("hex"),
+    } : null;
+  }
+
+  function mcpFailure(error, charged = null) {
+    return { isError: true, content: [{ type: "text", text: JSON.stringify({ ok: false, error, charged,
+      newSettlementAttempt: false, usefulness: "unknown" }) }] };
+  }
+
+  function mcpRecovered(binding, result, { persisted = true, replayed = true } = {}) {
+    return { ...result, _meta: { ...result._meta, [MCP_RECOVERY_META]: {
+      version: 1, ...binding.scope, operationRef: binding.key,
+      name: binding.name, inputDigest: binding.inputDigest, termsDigest: binding.termsDigest,
+      paymentDigest: binding.paymentDigest, contextDigest: binding.contextDigest,
+      resultDigest: mcpRecoveryResultDigest(result), persisted, replayed,
+      newSettlementAttempt: !replayed && result?._meta?.["x402/payment-response"]?.success === true,
+      usefulness: "unknown",
+    } } };
+  }
+
+  function decodeMcpRecord(binding, record) {
+    if (record.kind !== "mcp") return mcpFailure("recovery_record_kind_rejected");
+    const bytes = Buffer.from(record.bodyBase64 || "", "base64");
+    if (!bytes.length || bytes.length > maxResponseBytes
+      || createHash("sha256").update(bytes).digest("hex") !== record.bodySha256) return mcpFailure("recovery_record_integrity");
+    try {
+      const result = JSON.parse(bytes.toString("utf8"));
+      if (!Array.isArray(result?.content)) return mcpFailure("recovery_record_integrity");
+      return mcpRecovered(binding, result);
+    } catch { return mcpFailure("recovery_record_integrity"); }
+  }
+
+  async function retainMcpResult(binding, result) {
+    const payload = Buffer.from(JSON.stringify(result));
+    // If saving fails, keep the completed execution in memory. A manual flush
+    // or read can retry saving it; never re-execute to repair a persistence error.
+    unpersistedMcpResults.set(binding.key, { binding, result });
+    try {
+      if (payload.length > maxResponseBytes) throw new Error("mcp_result_exceeds_replay_bounds");
+      await persistResponse(binding, { status: 200, headers: {}, payload, kind: "mcp" });
+      unpersistedMcpResults.delete(binding.key);
+      return mcpRecovered(binding, result, { replayed: false });
+    } catch {
+      return mcpRecovered(binding, result, { persisted: false, replayed: false });
+    }
+  }
+
+  async function recoverMcpResult(input) {
+    let binding;
+    try { binding = mcpBinding(input); } catch { return mcpFailure("recovery_scope_rejected", false); }
+    if (!binding) return mcpFailure("recovery_binding_rejected", false);
+    const retained = unpersistedMcpResults.get(binding.key);
+    if (retained && retained.binding.fingerprint !== binding.fingerprint) return mcpFailure("payment_identifier_request_conflict", false);
+    if (retained) {
+      const saved = await retainMcpResult(binding, retained.result);
+      saved._meta[MCP_RECOVERY_META].replayed = true;
+      saved._meta[MCP_RECOVERY_META].newSettlementAttempt = false;
+      return saved;
+    }
+    try {
+      // Lookup only: a missing, expired or unresolved operation is never claimed
+      // or executed by recovery, even if a caller still holds a valid credential.
+      const cached = await lookup(binding);
+      if (cached.kind === "hit") return decodeMcpRecord(binding, cached.record);
+      if (cached.kind === "conflict") return mcpFailure("payment_identifier_request_conflict", false);
+      return mcpFailure(cached.kind === "pending" ? "payment_execution_in_flight_or_unknown" : "recovery_not_found_or_expired");
+    } catch { return mcpFailure("recovery_storage_unavailable"); }
+  }
+
+  async function runMcpTool(input, execute) {
+    // Unpaid discovery remains the official wrapper's responsibility. A supplied
+    // malformed paid binding is refused before an effect rather than bypassing it.
+    if (!input.payment) return execute();
+    let binding;
+    try { binding = mcpBinding(input); } catch { return mcpFailure("recovery_scope_rejected", false); }
+    if (!binding) return mcpFailure("recovery_binding_rejected", false);
+    if (!Number.isFinite(binding.validUntilMs) || binding.validUntilMs > now() + ttlMs) {
+      return mcpFailure("bounded_payment_validity_required", false);
+    }
+    let cached;
+    try { cached = await claim(binding); } catch { return mcpFailure("recovery_storage_unavailable", false); }
+    if (cached.kind === "hit") return decodeMcpRecord(binding, cached.record);
+    if (cached.kind === "conflict") return mcpFailure("payment_identifier_request_conflict", false);
+    if (cached.kind === "pending") return recoverMcpResult(input);
+    if (cached.kind === "expired" || cached.kind === "capacity") return mcpFailure(`payment_replay_${cached.kind}`, false);
+    let attempted = false;
+    const markAttempt = async () => {
+      if (attempted) return;
+      await mutate(async records => ({ records: records.map(record => record.key === binding.key
+        && record.fingerprint === binding.fingerprint ? { ...record, settlementAttempted: true } : record), result: true }));
+      attempted = true;
+      markAttempt.attempted = true;
+    };
+    let result;
+    try { result = await settlementContext.run(markAttempt, execute); }
+    catch {
+      if (!attempted) await release(binding).catch(() => {});
+      return mcpFailure("paid_mcp_outcome_unresolved", attempted ? null : false);
+    }
+    const proof = result?._meta?.["x402/payment-response"];
+    const challenge = result?.structuredContent?.x402Version === 2 && Array.isArray(result.structuredContent.accepts);
+    if (proof?.success === true || !attempted && !challenge && result?.isError === true) {
+      return retainMcpResult(binding, result);
+    }
+    if (!attempted) await release(binding).catch(() => {});
+    // A failed settlement response or cancellation acknowledgement cannot release
+    // possible spend. The pending journal entry stays quarantined across restart.
+    return result;
   }
 
   async function storageStatus() {
@@ -527,6 +699,13 @@ export function createIdempotencyReplay({
     claim,
     release,
     store,
+    runMcpTool,
+    recoverMcpResult,
+    mcpRecoveryProfile: scope => ({ version: 1, tool: MCP_RECOVERY_TOOL, ...mcpScope(scope) }),
+    async flushMcpResults() {
+      for (const { binding, result } of [...unpersistedMcpResults.values()]) await retainMcpResult(binding, result);
+      return { pendingPersistence: unpersistedMcpResults.size };
+    },
     storageStatus,
     publicProfile,
     flush: () => queue,
