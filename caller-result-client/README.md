@@ -3,9 +3,10 @@
 Optional free statement for one paid result. Unpack the archive, install the pinned dependencies, and use the helper below. `accepted` means the statement was captured. `bound` is true only when the current parent admits that settlement. Skipping the statement leaves the purchase. A failed report leaves the delivered result.
 
 ```bash
-mkdir samedaydesk-caller-result && tar -xzf samedaydesk-caller-result-0.1.0.tar.gz -C samedaydesk-caller-result
+mkdir samedaydesk-caller-result
+tar -xzf samedaydesk-caller-result-0.1.1.tar.gz -C samedaydesk-caller-result
 cd samedaydesk-caller-result
-npm ci
+npm ci --ignore-scripts
 ```
 
 ```js
@@ -32,5 +33,16 @@ if (purchase.capability.present && callerDecision) {
 `mcpUrl`, `args`, `configuredPaymentClient` and `authorizedPayment` come from your existing authorized task/payment flow. `callerDecision` is your optional decision after checking whether the delivered result helped the task; leave it null to skip reporting. A successful schema or payment does not choose a useful/not_useful statement. This helper does not initialize a wallet or decide to buy. To inspect installation or a no-fit, no production purchase is needed.
 
 Official `@x402/mcp` `callTool` omits `_meta`. This helper reads the sealed capability from `onAfterPayment` and keeps it with that result's content array. Reporting calls the raw MCP SDK client on the wrapper (`.client`) and does not pay again. A tool that advertises an output schema rejects the unpaid probe after `listTools`; pass an explicit payment to `caller.payWithPayment(name, args, payment)`. The same package exports `bindCallerResultFeedback` and `reportCallerResult` for the existing HTTP header on the paid response's origin.
+
+Optional recovery of one already authorized paid result runs from this install in a second process. The merchant checkout is not required. The command does not sign, does not settle again, and does not create a wallet. Exit 0 prints the retained result. Exit 2 means unresolved or denied. The sealed 0.1.0 archive is feedback only and does not include this command.
+
+```bash
+node bin/recover-mcp.mjs start operation.json checkpoint.json grant.json
+node bin/recover-mcp.mjs resume checkpoint.json grant.json
+```
+
+```js
+import { startPaidMcpResult, resumePaidMcpResult } from "samedaydesk-caller-result/recovery";
+```
 
 Pinned dependencies: `@modelcontextprotocol/sdk` 1.30.0 and `@x402/mcp` 2.16.0. License MIT. This package is private. Publication of an npm tarball is a separate Root action and is not required to install the archive.
