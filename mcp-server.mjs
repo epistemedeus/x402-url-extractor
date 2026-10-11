@@ -32,7 +32,7 @@ import { sealObservedMcpToolResult } from "./http-delivery-evidence/mcp-delivery
 import { attachMcpCallerResultFeedback, callerResultFeedbackMetaFromHeaders } from "./caller-result-feedback.mjs";
 import { classifyDeclaredAgentDiscoverySource, listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
 import { readExtractBatchInputRefusalCode } from "./extract-batch.mjs";
-import { MCP_RECOVERY_TOOL, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
+import { MCP_RECOVERY_META, MCP_RECOVERY_TOOL, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
 import {
   buildRegisteredCatalog,
   createMcpTypedTelemetryAttempt,
@@ -764,7 +764,28 @@ export async function mountMcp(app, {
           attempt.bindRequestId(extra.requestId);
         }
         const result = await revived(args, extra);
-        if (!t.paidHttp && attempt && !isTypedPaymentRequiredResult(result) && result?.isError !== true) {
+        const recovery = result?._meta?.[MCP_RECOVERY_META];
+        if (!t.paidHttp && attempt && recovery?.replayed === true && result?.isError !== true) {
+          const proof = result?._meta?.["x402/payment-response"];
+          if (proof?.success === true) {
+            // The journal already verified and settled this credential. Report the
+            // retained settlement as a replay and do not ask the facilitator again.
+            attempt.credentialVerified({ offerDigest: attempt.binding?.issuedOfferDigest });
+            const transaction = typeof proof.transaction === "string" ? proof.transaction : undefined;
+            attempt.observeSettleOutcome({
+              success: true,
+              settlementReference: transaction,
+              facilitatorSettlement: {
+                transaction: transaction ?? null,
+                network: typeof proof.network === "string" ? proof.network : null,
+                amount: typeof proof.amount === "string" ? proof.amount : null,
+                asset: typeof proof.asset === "string" ? proof.asset : null,
+                payee: typeof proof.payee === "string" ? proof.payee : null,
+              },
+            });
+            attempt.replayConfirmed();
+          }
+        } else if (!t.paidHttp && attempt && !isTypedPaymentRequiredResult(result) && result?.isError !== true) {
           attempt.maybeReplayConfirmed();
         }
         return result;
