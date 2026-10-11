@@ -40,5 +40,5 @@
   },
   "node": "22.23.3",
   "publication": "draft-archive",
-  "note": "originalUrl is a path convention. This draft is not a hosted acquisition and not an npm publication. Optional recovery is included. Installation and upkeep are not customer acceptance, recognized revenue, or demand."
+  "note": "originalUrl is a path convention. This draft is not a hosted acquisition and not an npm publication. Optional recovery is included."
 }

@@ -15,7 +15,7 @@
   "measuredSavings": false,
   "independentDemand": false,
   "sourceQualification": "unknown",
-  "note": "Draft caller-result consumer. Version 0.1.0 is feedback only and does not include recovery. The current archive adds optional recovery. originalUrl is a path convention and is not a hosted acquisition. Install from the archive bytes. npm publication is a separate Root action. Installation is not customer acceptance.",
+  "note": "Draft caller-result consumer. Version 0.1.0 is feedback only and does not include recovery. The current archive adds optional recovery. originalUrl is a path convention and is not a hosted acquisition. Install from the archive bytes. npm publication is a separate Root action.",
   "assets": [
     {
       "id": "samedaydesk-caller-result",
@@ -126,8 +126,8 @@
       "role": "archive",
       "filename": "samedaydesk-caller-result-0.1.1.tar.gz",
       "relativePath": "samedaydesk-caller-result/0.1.1/samedaydesk-caller-result-0.1.1.tar.gz",
-      "bytes": 32489,
-      "sha256": "ed5a00d52e15ccd098a7c054db00b2a929d884df3e926c9437bb3514af5c65fc",
+      "bytes": 32421,
+      "sha256": "693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3",
       "mediaType": "application/gzip",
       "originContentType": "application/gzip",
       "originalUrl": "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/samedaydesk-caller-result-0.1.1.tar.gz",
@@ -152,7 +152,7 @@
       ],
       "inventory": {
         "path": "inventories/samedaydesk-caller-result-0.1.1.json",
-        "fileSha256": "5347c8a715c105eb232702287402272d2bf21f09bb8f5c87f10d031203f07158",
+        "fileSha256": "2072942b7baf1916ac11c77ef906647df9e3057d62706aa14215157327fdfd06",
         "memberCount": 15
       }
     },
@@ -162,8 +162,8 @@
       "role": "provenance",
       "filename": "provenance.json",
       "relativePath": "samedaydesk-caller-result/0.1.1/provenance.json",
-      "bytes": 1653,
-      "sha256": "f7b501b7f0d125f0e4a69ce73513beb1afe3716b8b8fa3da4091647cc8aea8fe",
+      "bytes": 1569,
+      "sha256": "f41891ae7d926971eb5ec597af375f30028d1ee5a4c6e30f40157e67697f69ce",
       "mediaType": "application/json; charset=utf-8",
       "originContentType": "text/plain; charset=utf-8",
       "originalUrl": "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/provenance.json",
@@ -207,8 +207,8 @@
       "role": "source-notice",
       "filename": "SOURCE-NOTICE.txt",
       "relativePath": "samedaydesk-caller-result/0.1.1/SOURCE-NOTICE.txt",
-      "bytes": 655,
-      "sha256": "8c13b5a8d005d38b706ebf5aa696f1016c85f1dbb41967d305ae45219f7b64e8",
+      "bytes": 557,
+      "sha256": "45b2b240d5bbd8412a399b3bd5e93f38c3d30a8496e71693ab58a2177170e850",
       "mediaType": "text/plain; charset=utf-8",
       "originContentType": "text/plain; charset=utf-8",
       "originalUrl": "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/SOURCE-NOTICE.txt",

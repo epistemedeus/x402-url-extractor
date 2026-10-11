@@ -10,6 +10,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { inventoryArchive, loadPublicAcquisition } from "../../public-acquisition/engine.mjs";
+import { publishCallerAcquisition } from "./publish-combined.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const pkg = path.resolve(here, "..");
@@ -144,7 +145,7 @@ try {
     recovery: pin.recovery,
     node: pin.node,
     publication: "draft-archive",
-    note: "originalUrl is a path convention. This draft is not a hosted acquisition and not an npm publication. Optional recovery is included. Installation and upkeep are not customer acceptance, recognized revenue, or demand.",
+    note: "originalUrl is a path convention. This draft is not a hosted acquisition and not an npm publication. Optional recovery is included.",
   };
   const provenanceBytes = Buffer.from(`${JSON.stringify(provenance, null, 2)}\n`);
   const licenseBytes = readFileSync(path.join(pkg, "LICENSE"));
@@ -220,7 +221,7 @@ try {
     measuredSavings: false,
     independentDemand: false,
     sourceQualification: "unknown",
-    note: "Draft caller-result consumer. Version 0.1.0 is feedback only and does not include recovery. The current archive adds optional recovery. originalUrl is a path convention and is not a hosted acquisition. Install from the archive bytes. npm publication is a separate Root action. Installation is not customer acceptance.",
+    note: "Draft caller-result consumer. Version 0.1.0 is feedback only and does not include recovery. The current archive adds optional recovery. originalUrl is a path convention and is not a hosted acquisition. Install from the archive bytes. npm publication is a separate Root action.",
     assets: [...retained, ...created],
   };
   const manifestBytes = Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`);
@@ -234,12 +235,17 @@ try {
     manifestPath,
     bytesRoot: path.join(out, "bytes"),
   });
+  const defaultOut = path.resolve(here, "public");
+  const combined = path.resolve(out) === defaultOut
+    ? publishCallerAcquisition({ callerPublic: out })
+    : null;
   process.stdout.write(`${JSON.stringify({
     archiveSha256: sha256(archiveBytes),
     version,
     relativePath: `${id}/${version}/${archiveName}`,
     members: inventory.length,
     out,
+    combined,
   })}\n`);
 } finally {
   rmSync(stage, { recursive: true, force: true });

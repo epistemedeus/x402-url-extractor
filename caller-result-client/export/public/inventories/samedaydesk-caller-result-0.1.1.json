@@ -13,16 +13,16 @@
       "sha256": "a2efcd34564b3553c0265ce83403a35ea6943a2561508aba5eef5eb0ff23b234"
     },
     {
-      "bytes": 3327,
+      "bytes": 3264,
       "kind": "file",
       "path": "README.md",
-      "sha256": "1d4ff968afdad39845ca435c2f43d802f757600aeeba2901623e6f1f14899cf2"
+      "sha256": "14a4b3c1e360bd7a04df518f4d6c9f008c4f6805fb8c521f16c487c365be6619"
     },
     {
-      "bytes": 655,
+      "bytes": 557,
       "kind": "file",
       "path": "SOURCE-NOTICE.txt",
-      "sha256": "8c13b5a8d005d38b706ebf5aa696f1016c85f1dbb41967d305ae45219f7b64e8"
+      "sha256": "45b2b240d5bbd8412a399b3bd5e93f38c3d30a8496e71693ab58a2177170e850"
     },
     {
       "bytes": 14650,

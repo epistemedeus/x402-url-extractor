@@ -18,7 +18,8 @@ import {
 } from "./caller-result-client-entry.mjs";
 import { buildSkillContract } from "./skill-contract.mjs";
 import { listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
-import { mountPublicAcquisition, PUBLIC_ACQUISITION_INDEX_PATH } from "./public-acquisition/engine.mjs";
+import { PUBLIC_ACQUISITION_INDEX_PATH } from "./public-acquisition/engine.mjs";
+import { mountPublicAcquisitionIfPresent } from "./public-acquisition/optional-mount.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const entry = CALLER_RESULT_CLIENT_ENTRY;
@@ -38,7 +39,7 @@ test("released caller client entry matches the hosted archive and the shared con
   const bytes = readFileSync(path.join(cwd, CALLER_RESULT_CLIENT_COMMITTED_ARCHIVE));
   assert.equal(createHash("sha256").update(bytes).digest("hex"), entry.sha256);
   assert.equal(entry.version, "0.1.1");
-  assert.equal(entry.sha256, "ed5a00d52e15ccd098a7c054db00b2a929d884df3e926c9437bb3514af5c65fc");
+  assert.equal(entry.sha256, "693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3");
   assert.equal(entry.archiveUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/samedaydesk-caller-result-0.1.1.tar.gz");
   assert.equal(entry.descriptorUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/descriptor.json");
   assert.equal(entry.sourceUrl, "https://github.com/epistemedeus/x402-url-extractor/tree/a1ff92e1d0f3c44b396b9baed3d48cb6654d616f/caller-result-client");
@@ -100,7 +101,10 @@ test("released caller client entry matches the hosted archive and the shared con
   assert.match(skill, new RegExp(entry.feedbackArchive.archiveUrl.replaceAll(".", "\\.")));
   assert.match(skill, /Feedback is optional and free\./);
   assert.match(skill, /node bin\/recover-mcp\.mjs/);
-  assert.match(skill, /is not customer acceptance/);
+  assert.match(skill, /explicit payment authorization/);
+  assert.match(skill, /0\.1\.0 archive does not contain/);
+  assert.doesNotMatch(skill, /customer acceptance/);
+  assert.doesNotMatch(skill, /recognized revenue/i);
   assert.equal(skill.includes("createCallerResultFeedback"), false);
   const plainSkill = buildSkillContract("https://agents.samedaydesk.com/ignored", [{
     method: "GET",
@@ -222,7 +226,26 @@ test("a local machine entry serves the released client and an offline caller can
     assert.equal(document.includes(entry.sha256), true);
     assert.equal(document.includes(entry.descriptorUrl), true);
     assert.equal(document.includes(entry.sourceUrl), true);
+    assert.doesNotMatch(document, /customer acceptance/);
+    assert.doesNotMatch(document, /recognized revenue/i);
   }
+  const acquisition = await fetch(`${base}${PUBLIC_ACQUISITION_INDEX_PATH}`);
+  assert.equal(acquisition.status, 200);
+  const acquisitionIndex = await acquisition.json();
+  assert.equal(acquisitionIndex.hostedAcquisitionVerified, false);
+  assert.equal(acquisitionIndex.productionHosted, false);
+  assert.equal(acquisitionIndex.draft, true);
+  const retained = acquisitionIndex.assets.filter((asset) => !String(asset.originalUrl).includes("/downloads/samedaydesk-caller-result/"));
+  assert.equal(retained.length, 21);
+  const currentAsset = acquisitionIndex.assets.find((asset) => asset.role === "archive" && asset.version === entry.version && asset.originalUrl === entry.archiveUrl);
+  assert.equal(currentAsset.sha256, entry.sha256);
+  assert.equal(currentAsset.alternateUrl, `https://agents.samedaydesk.com${currentAsset.alternatePath}`);
+  const anonymous = await fetch(`${base}${currentAsset.alternatePath}`, { redirect: "error" });
+  assert.equal(anonymous.status, 200);
+  const anonymousBytes = Buffer.from(await anonymous.arrayBuffer());
+  assert.equal(createHash("sha256").update(anonymousBytes).digest("hex"), entry.sha256);
+  const feedbackAsset = acquisitionIndex.assets.find((asset) => asset.role === "archive" && asset.version === "0.1.0" && asset.originalUrl === entry.feedbackArchive.archiveUrl);
+  assert.equal(feedbackAsset.sha256, entry.feedbackArchive.sha256);
   const section = llms.split("## Optional caller client\n")[1];
   assert.equal(/\$[0-9]/.test(section), false);
   const fence = llms.match(/```js\n([\s\S]*?)```/);
@@ -439,11 +462,9 @@ async function acquireAdvertisedArchive(advertised) {
   const port = await unusedPort();
   const origin = `http://127.0.0.1:${port}`;
   const app = express();
-  mountPublicAcquisition(app, {
-    publicUrl: origin,
-    manifestPath: path.join(cwd, "caller-result-client/export/public/manifest.json"),
-    bytesRoot: path.join(cwd, "caller-result-client/export/public/bytes"),
-  });
+  const enginePath = fileURLToPath(new URL("./public-acquisition/engine.mjs", import.meta.url));
+  const mounted = await mountPublicAcquisitionIfPresent(app, { publicUrl: origin }, enginePath);
+  assert.equal(mounted.mounted, true);
   const server = await new Promise((resolve) => {
     const listening = app.listen(port, "127.0.0.1", () => resolve(listening));
   });

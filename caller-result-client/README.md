@@ -45,4 +45,4 @@ node bin/recover-mcp.mjs resume checkpoint.json grant.json
 import { startPaidMcpResult, resumePaidMcpResult } from "samedaydesk-caller-result/recovery";
 ```
 
-Installing or keeping this package is not customer acceptance. Pinned dependencies: `@modelcontextprotocol/sdk` 1.30.0 and `@x402/mcp` 2.16.0. License MIT. This package is private. Publication of an npm tarball is a separate Root action and is not required to install the archive.
+Pinned dependencies: `@modelcontextprotocol/sdk` 1.30.0 and `@x402/mcp` 2.16.0. License MIT. This package is private. Publication of an npm tarball is a separate Root action and is not required to install the archive.

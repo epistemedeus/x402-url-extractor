@@ -1,0 +1,6 @@
+samedaydesk-caller-result is a draft consumer for one optional free statement.
+It is not a hosted acquisition, a wallet, a payment rail, or a checkout.
+The archive carries the public capability contract and the HTTP and native MCP helpers.
+It does not carry merchant server source, HMAC keys, journals, or signers.
+Recognized revenue on this consumer stays 0.
+Private receipts and customer data are not in this export.

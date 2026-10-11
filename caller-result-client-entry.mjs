@@ -16,7 +16,7 @@ import {
 } from "./caller-result-client/src/contract.mjs";
 
 const SOURCE_COMMIT = "a1ff92e1d0f3c44b396b9baed3d48cb6654d616f";
-const ARCHIVE_SHA256 = "ed5a00d52e15ccd098a7c054db00b2a929d884df3e926c9437bb3514af5c65fc";
+const ARCHIVE_SHA256 = "693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3";
 const FEEDBACK_ARCHIVE_SHA256 = "3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b";
 const SDK = Object.freeze({
   "@modelcontextprotocol/sdk": "1.30.0",
@@ -123,7 +123,7 @@ export const CALLER_RESULT_CLIENT_ENTRY = Object.freeze({
     }),
   }),
   feedbackArchive: CALLER_RESULT_CLIENT_FEEDBACK_ARCHIVE,
-  nextAction: "Download the current archive, verify sha256, unpack with the install lines, and import bindPaidMcpCallerResult. Optional recovery of an already authorized paid result imports startPaidMcpResult and resumePaidMcpResult from samedaydesk-caller-result/recovery, or runs node bin/recover-mcp.mjs in a second process. The 0.1.0 archive is feedback only. Installing either archive is not customer acceptance. Report useful or not_useful only when you choose. Skipping the statement leaves the purchase.",
+  nextAction: "Download the current archive, verify sha256, unpack with the install lines, and import bindPaidMcpCallerResult. Optional recovery of an already authorized paid result imports startPaidMcpResult and resumePaidMcpResult from samedaydesk-caller-result/recovery, or runs node bin/recover-mcp.mjs in a second process. The 0.1.0 archive is feedback only. Report useful or not_useful only when you choose. Skipping the statement leaves the purchase.",
 });
 
 export function renderCallerResultClientGuide(entry) {
@@ -164,7 +164,7 @@ export function renderCallerResultClientGuide(entry) {
   const recoveryNames = recovery.exportNames.join(" and ");
   return `## Optional caller client
 
-Feedback is optional and free. Download the released client, install it, and use it only with your existing payment client and an explicit payment authorization. Skipping the statement leaves the purchase. A failed report leaves the delivered result. This client is not an npm package. Installing it is not customer acceptance.
+Feedback is optional and free. Download the released client, install it, and use it only with your existing payment client and an explicit payment authorization. Skipping the statement leaves the purchase. A failed report leaves the delivered result. This client is not an npm package.
 
 Archive: ${entry.archiveUrl}
 sha256: ${entry.sha256}

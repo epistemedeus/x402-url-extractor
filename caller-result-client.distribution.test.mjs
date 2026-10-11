@@ -20,6 +20,8 @@ import {
   mountPublicAcquisition,
   PUBLIC_ACQUISITION_INDEX_PATH,
 } from "./public-acquisition/engine.mjs";
+import { mountPublicAcquisitionIfPresent } from "./public-acquisition/optional-mount.mjs";
+import { publishCallerAcquisition } from "./caller-result-client/export/publish-combined.mjs";
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 const entry = CALLER_RESULT_CLIENT_ENTRY;
@@ -61,20 +63,20 @@ async function unusedPort() {
   return port;
 }
 
+const combinedEngine = fileURLToPath(new URL("./public-acquisition/engine.mjs", import.meta.url));
+
 async function mountIndex(t) {
   const port = await unusedPort();
   const origin = `http://127.0.0.1:${port}`;
   const app = express();
-  mountPublicAcquisition(app, {
-    publicUrl: origin,
-    manifestPath: path.join(publicDir, "manifest.json"),
-    bytesRoot: path.join(publicDir, "bytes"),
-  });
+  const mounted = await mountPublicAcquisitionIfPresent(app, { publicUrl: origin }, combinedEngine);
+  assert.equal(mounted.mounted, true);
+  assert.equal(mounted.result.files > 21, true);
   const server = await new Promise((resolve) => {
     const listening = app.listen(port, "127.0.0.1", () => resolve(listening));
   });
   t.after(() => new Promise((resolve) => server.close(resolve)));
-  const response = await fetch(`${origin}${PUBLIC_ACQUISITION_INDEX_PATH}`);
+  const response = await fetch(`${origin}${PUBLIC_ACQUISITION_INDEX_PATH}`, { redirect: "error" });
   assert.equal(response.status, 200);
   const index = await response.json();
   return { origin, index };
@@ -369,14 +371,95 @@ test("published index refuses a missing, changed, or oversize caller artifact", 
   }
 });
 
+test("combined mount refuses a missing, malformed, or colliding index before serving current status", async () => {
+  const sourceRoot = path.join(cwd, "public-acquisition");
+  const root = await mkdtemp(path.join(tmpdir(), "combined-caller-refuse-"));
+  try {
+    const cases = [
+      ["missing", async (dir) => {
+        await rm(path.join(dir, "bytes/samedaydesk-caller-result/0.1.1/provenance.json"));
+        return "missing_asset";
+      }],
+      ["malformed", async (dir) => {
+        const manifestPath = path.join(dir, "manifest.json");
+        const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+        const archive = manifest.assets.find((asset) => asset.relativePath.endsWith("samedaydesk-caller-result-0.1.1.tar.gz"));
+        archive.sha256 = "0".repeat(64);
+        await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+        return "changed_bytes";
+      }],
+      ["collision", async (dir) => {
+        const manifestPath = path.join(dir, "manifest.json");
+        const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+        const archive = manifest.assets.find((asset) => asset.relativePath.endsWith("samedaydesk-caller-result-0.1.1.tar.gz"));
+        manifest.assets.push({ ...archive });
+        await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+        return "unsafe_addition";
+      }],
+    ];
+    for (const [label, mutate] of cases) {
+      const dir = path.join(root, label);
+      await cp(sourceRoot, dir, { recursive: true });
+      const code = await mutate(dir);
+      let registered = false;
+      const app = { use() { registered = true; } };
+      assert.throws(() => mountPublicAcquisition(app, {
+        publicUrl: "http://127.0.0.1",
+        manifestPath: path.join(dir, "manifest.json"),
+        bytesRoot: path.join(dir, "bytes"),
+      }), (error) => error.code === code);
+      assert.equal(registered, false, label);
+    }
+    const collisionRoot = path.join(root, "producer");
+    await cp(sourceRoot, collisionRoot, { recursive: true });
+    const before = await readFile(path.join(collisionRoot, "manifest.json"));
+    const callerPublic = path.join(root, "caller-public");
+    await cp(publicDir, callerPublic, { recursive: true });
+    const callerManifest = JSON.parse(await readFile(path.join(callerPublic, "manifest.json"), "utf8"));
+    const archive = callerManifest.assets.find((asset) => asset.role === "archive" && asset.version === "0.1.1");
+    const extraPath = "samedaydesk-caller-result/0.1.1/extra-license.txt";
+    callerManifest.assets.push({
+      ...archive,
+      role: "license",
+      filename: "extra-license.txt",
+      relativePath: extraPath,
+      bytes: 4,
+      sha256: sha256(Buffer.from("nope")),
+    });
+    await writeFile(path.join(callerPublic, "manifest.json"), `${JSON.stringify(callerManifest, null, 2)}\n`);
+    await writeFile(path.join(callerPublic, "bytes", extraPath), Buffer.from("nope"));
+    assert.throws(() => publishCallerAcquisition({ callerPublic, combinedRoot: collisionRoot }), /role collision/);
+    assert.deepEqual(await readFile(path.join(collisionRoot, "manifest.json")), before);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("advertised caller archive installs recovery with the merchant checkout absent", { timeout: 240_000 }, async (t) => {
   const { index } = await mountIndex(t);
   assert.equal(index.draft, true);
   assert.equal(index.hostedAcquisitionVerified, false);
+  assert.equal(index.productionHosted, false);
   assert.equal(index.paidLaunch, false);
   assert.equal(index.measuredSavings, false);
   assert.equal(index.independentDemand, false);
   assert.equal(index.sourceQualification, "unknown");
+  const predecessor = spawnSync("git", ["show", "6ea1294b8693f2c655d239f0870800e93bfff040:public-acquisition/manifest.json"], {
+    cwd,
+    encoding: "utf8",
+  });
+  assert.equal(predecessor.status, 0, predecessor.stderr);
+  const predecessorAssets = JSON.parse(predecessor.stdout).assets;
+  assert.equal(predecessorAssets.length, 21);
+  const combinedManifest = JSON.parse(await readFile(path.join(cwd, "public-acquisition/manifest.json"), "utf8"));
+  for (const asset of predecessorAssets) {
+    assert.deepEqual(combinedManifest.assets.find((item) => item.relativePath === asset.relativePath), asset);
+  }
+  assert.equal(combinedManifest.assets.filter((asset) => asset.id !== "samedaydesk-caller-result").length, 21);
+  const roleKeys = combinedManifest.assets.map((asset) => `${asset.id}@${asset.version}:${asset.role}`);
+  assert.equal(new Set(roleKeys).size, roleKeys.length);
+  const retainedOnIndex = index.assets.filter((asset) => !String(asset.originalUrl).includes("/downloads/samedaydesk-caller-result/"));
+  assert.equal(retainedOnIndex.length, 21);
   const current = indexArchive(index, entry.version);
   const feedback = indexArchive(index, "0.1.0");
   assert.equal(current.originalUrl, entry.archiveUrl);
@@ -537,7 +620,8 @@ test("advertised caller archive installs recovery with the merchant checkout abs
     sha256: entry.sha256,
     version: entry.version,
     firstConsumerCommand: `${entry.install.join(" && ")} && node bin/recover-mcp.mjs resume checkpoint.json grant.json`,
-    publishedArchiveCanary: true,
+    publishedArchiveCanary: false,
+    combinedMountedIndex: true,
     merchantCheckoutPresent: false,
     secondPaidVerify: false,
     secondPaidSettle: false,

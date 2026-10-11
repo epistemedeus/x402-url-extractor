@@ -3,5 +3,4 @@ It is not a hosted acquisition, a wallet, a payment rail, or a checkout.
 The sealed 0.1.0 archive is feedback only and does not include recovery.
 This archive carries the public capability contract, the HTTP and native MCP helpers, and the optional recovery module.
 It does not carry merchant server source, HMAC keys, journals, or signers.
-Installation and upkeep are not customer acceptance. Recognized revenue on this consumer stays 0.
 Private receipts and customer data are not in this export.
