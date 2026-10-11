@@ -31,6 +31,31 @@ function nativeOperation(now = Date.now()) {
 const nativeResult = { content: [{ type: "text", text: '{"decision":"attempt"}' }],
   structuredContent: { decision: "attempt" }, _meta: { "x402/payment-response": { success: true } } };
 
+test("ordinary x402 payment without a resource url executes once and replays on the same tool", async t => {
+  const dataDir = await mkdtemp(path.join(os.tmpdir(), "native-replay-ordinary-"));
+  t.after(() => rm(dataDir, { recursive: true, force: true }));
+  const journal = createIdempotencyReplay({ dataDir, secret: "native-test-secret", ttlMs: 60_000 });
+  const input = nativeOperation();
+  delete input.payment.resource;
+  delete input.context;
+  let executions = 0;
+  const delivered = await journal.runMcpTool(input, async () => { executions++; return nativeResult; });
+  assert.equal(delivered.isError, undefined);
+  assert.equal(delivered._meta[MCP_RECOVERY_META].replayed, false);
+  assert.equal(delivered._meta[MCP_RECOVERY_META].newSettlementAttempt, true);
+  assert.deepEqual(delivered.structuredContent, nativeResult.structuredContent);
+  const replay = await journal.runMcpTool(input, () => { executions++; return nativeResult; });
+  assert.equal(replay._meta[MCP_RECOVERY_META].replayed, true);
+  assert.equal(replay._meta[MCP_RECOVERY_META].newSettlementAttempt, false);
+  const recovered = await journal.recoverMcpResult(input);
+  assert.deepEqual(recovered.structuredContent, nativeResult.structuredContent);
+  const redirected = structuredClone(input);
+  redirected.payment.resource = { url: "mcp://tool/extract" };
+  const rejected = await journal.runMcpTool(redirected, () => { executions++; return nativeResult; });
+  assert.equal(JSON.parse(rejected.content[0].text).error, "recovery_binding_rejected");
+  assert.equal(executions, 1);
+});
+
 test("native reservation pins its original credential and operation across process restart", async t => {
   const dataDir = await mkdtemp(path.join(os.tmpdir(), "native-replay-binding-"));
   t.after(() => rm(dataDir, { recursive: true, force: true }));

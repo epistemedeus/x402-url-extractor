@@ -401,7 +401,10 @@ export function createIdempotencyReplay({
 
   function mcpBinding({ name, arguments: args = {}, payment, scope, context = null }) {
     const endpoint = mcpScope(scope);
-    if (!/^[A-Za-z0-9_-]{1,128}$/.test(name || "") || payment?.resource?.url !== `mcp://tool/${name}`) return null;
+    if (!/^[A-Za-z0-9_-]{1,128}$/.test(name || "")) return null;
+    // Ordinary SDK payments omit resource. The invoked tool name is the binding.
+    // A supplied resource must name this tool and cannot be redirected.
+    if (Object.hasOwn(payment || {}, "resource") && payment.resource?.url !== `mcp://tool/${name}`) return null;
     if (context !== null && (!context || ["operationId", "reservationId", "principalId", "grantId"].some(key =>
       typeof context[key] !== "string" || !/^[A-Za-z0-9_.:-]{1,128}$/.test(context[key]))
       || Object.keys(context).length !== 4)) return null;
