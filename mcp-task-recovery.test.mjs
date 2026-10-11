@@ -326,10 +326,16 @@ test("fresh feature-source consumer keeps recovery outside the frozen feedback a
     env: { PATH: process.env.PATH, HOME: process.env.HOME },
   });
   assert.equal(installed.status, 0, installed.stderr);
+  const frozenPackage = spawnSync("tar", ["-xOf", archivePath, "package.json"], { encoding: "utf8" });
+  assert.equal(frozenPackage.status, 0, frozenPackage.stderr);
+  const frozenPkg = JSON.parse(frozenPackage.stdout);
+  assert.equal(frozenPkg.version, "0.1.0");
+  assert.equal(frozenPkg.exports["./mcp"], "./src/mcp-caller-result.mjs");
+  assert.equal(frozenPkg.exports["./recovery"], undefined);
+  assert.equal(frozenPkg.bin, undefined);
   const pkg = JSON.parse(await readFile(path.join(consumer, "package.json"), "utf8"));
-  assert.equal(pkg.version, "0.1.0");
+  assert.equal(pkg.name, "samedaydesk-caller-result");
   assert.equal(pkg.exports["./mcp"], "./src/mcp-caller-result.mjs");
-  assert.equal(Object.values(pkg.exports).includes("./src/mcp-recovery.mjs"), false);
   await writeFile(path.join(consumer, "probe-accounting.mjs"), accountingProbeSource());
   const probe = spawnSync(process.execPath, ["probe-accounting.mjs"], {
     cwd: consumer, encoding: "utf8", env: { PATH: process.env.PATH, HOME: process.env.HOME },
