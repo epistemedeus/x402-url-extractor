@@ -1,0 +1,430 @@
+{
+  "schema": "native-task-recovery-211200.source.v1",
+  "createdAt": "2026-10-11T03:46:59.566132+00:00",
+  "repository": "https://github.com/epistemedeus/x402-url-extractor",
+  "featureBranch": "codex/sol-structural-211200",
+  "sourceCommit": "18bd473162b2795b80ee9b98ef5731bdabad7072",
+  "sourceTree": "fc086b705e1c7e8ce226110001ba1f089fbca87e",
+  "baseCommit": "32267493d29ff1339c5199185d8231012daf0acd",
+  "baseTree": "24ce30d298a375e8b993ac29218b8540d1fb7de7",
+  "exportCarrier": "A later receipt-only commit on this feature branch; executable source is exactly sourceCommit/sourceTree.",
+  "allowlist": {
+    "exactPaths": [
+      "idempotency-replay.mjs",
+      "idempotency-replay.test.mjs",
+      "mcp-server.mjs",
+      "mcp-task-recovery.test.mjs",
+      "caller-result-client/src/mcp-recovery.mjs",
+      "caller-result-client/bin/recover-mcp.mjs",
+      "caller-result-client/test/recovery.test.mjs"
+    ],
+    "privatePrefix": "docs/reviews/native-task-recovery-211200/"
+  },
+  "changedSourcePaths": [
+    "caller-result-client/bin/recover-mcp.mjs",
+    "caller-result-client/src/mcp-recovery.mjs",
+    "caller-result-client/test/recovery.test.mjs",
+    "docs/reviews/native-task-recovery-211200/.gitattributes",
+    "docs/reviews/native-task-recovery-211200/ADMISSION.md",
+    "docs/reviews/native-task-recovery-211200/CONTRACT.md",
+    "docs/reviews/native-task-recovery-211200/SHARED-INTEGRATION.md",
+    "docs/reviews/native-task-recovery-211200/SHARED-INTEGRATION.patch",
+    "docs/reviews/native-task-recovery-211200/evidence/baseline-cold-node22.log",
+    "docs/reviews/native-task-recovery-211200/evidence/baseline-normal.log",
+    "docs/reviews/native-task-recovery-211200/evidence/documentation-patch-failure.json",
+    "docs/reviews/native-task-recovery-211200/evidence/execution-commands.json",
+    "docs/reviews/native-task-recovery-211200/evidence/ext-tasks-package.json",
+    "docs/reviews/native-task-recovery-211200/evidence/final-nonlive.log",
+    "docs/reviews/native-task-recovery-211200/evidence/final-normal.log",
+    "docs/reviews/native-task-recovery-211200/evidence/first-integration.log",
+    "docs/reviews/native-task-recovery-211200/evidence/first-unit-source.json",
+    "docs/reviews/native-task-recovery-211200/evidence/first-unit.log",
+    "docs/reviews/native-task-recovery-211200/evidence/fixture-preservation-initial-attempt.json",
+    "docs/reviews/native-task-recovery-211200/evidence/focused-complete-final.log",
+    "docs/reviews/native-task-recovery-211200/evidence/focused-final.log",
+    "docs/reviews/native-task-recovery-211200/evidence/focused-price-final.log",
+    "docs/reviews/native-task-recovery-211200/evidence/full-server-candidate.log",
+    "docs/reviews/native-task-recovery-211200/evidence/full-server-durable-final.log",
+    "docs/reviews/native-task-recovery-211200/evidence/full-server-release.log",
+    "docs/reviews/native-task-recovery-211200/evidence/generated-fixture-disposition.json",
+    "docs/reviews/native-task-recovery-211200/evidence/initial-commit-attempt.json",
+    "docs/reviews/native-task-recovery-211200/evidence/install.log",
+    "docs/reviews/native-task-recovery-211200/evidence/interrupt-seam.log",
+    "docs/reviews/native-task-recovery-211200/evidence/native-before-corrected-probe.log",
+    "docs/reviews/native-task-recovery-211200/evidence/native-before.log",
+    "docs/reviews/native-task-recovery-211200/evidence/native-model-receipt.json",
+    "docs/reviews/native-task-recovery-211200/evidence/node-runtime-sha256.json",
+    "docs/reviews/native-task-recovery-211200/evidence/nonlive-durable-final.log",
+    "docs/reviews/native-task-recovery-211200/evidence/normal-durable-final.log",
+    "docs/reviews/native-task-recovery-211200/evidence/normal-generated-loopback-profile.json",
+    "docs/reviews/native-task-recovery-211200/evidence/normal-serial-final.log",
+    "docs/reviews/native-task-recovery-211200/evidence/python-target-install.log",
+    "docs/reviews/native-task-recovery-211200/evidence/recovery-durable-final.log",
+    "docs/reviews/native-task-recovery-211200/evidence/recovery-release.log",
+    "docs/reviews/native-task-recovery-211200/evidence/reproduce-initial.mjs",
+    "docs/reviews/native-task-recovery-211200/evidence/reservation-integration.log",
+    "docs/reviews/native-task-recovery-211200/evidence/unit-corrected.log",
+    "docs/reviews/native-task-recovery-211200/evidence/venv-original-attempt.json",
+    "docs/reviews/native-task-recovery-211200/loopback-service.mjs",
+    "docs/reviews/native-task-recovery-211200/original-cold-replay.mjs",
+    "docs/reviews/native-task-recovery-211200/reproduce.mjs",
+    "docs/reviews/native-task-recovery-211200/run-normal.mjs",
+    "idempotency-replay.mjs",
+    "idempotency-replay.test.mjs",
+    "mcp-server.mjs",
+    "mcp-task-recovery.test.mjs"
+  ],
+  "sourceFileReceipts": [
+    {
+      "path": "caller-result-client/bin/recover-mcp.mjs",
+      "sha256": "02d6da2ff46f5d81bcd2a2df5815db657b1f437b831cd430ad7a2eded70ea2ee",
+      "gitBlob": "07b04edc309ed579c4596ca436cb450fe7a5a781"
+    },
+    {
+      "path": "caller-result-client/src/mcp-recovery.mjs",
+      "sha256": "1fea1b7ed29e65a49c9f3de15e0e1beb80b432c08d283f0705e5c6c17804bf21",
+      "gitBlob": "a6f0e97abe978c880bb9232a3a7061117ff841fd"
+    },
+    {
+      "path": "caller-result-client/test/recovery.test.mjs",
+      "sha256": "414895371d8e2f713a42cb76c5406efe8e237a4218a787240bc8a850c4b16017",
+      "gitBlob": "52c839da7c3973b17773f8f1d7226e5005046229"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/.gitattributes",
+      "sha256": "b0ffe450393c67094e88ebcf2480f6a0d7ee0c264e7094c31f0a80021a0f183c",
+      "gitBlob": "026e24e6239c1cca8df21aa7cc79d282e9e45a61"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/ADMISSION.md",
+      "sha256": "0fee08afa28bfd82ecf3276766613201356b39196eddf18f63307f1744e0a6a3",
+      "gitBlob": "1bbdd20f74104f44c6ab60fc725185c6cdcb3f83"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/CONTRACT.md",
+      "sha256": "6fbe60f7edb619efb0f36d883f4d511c4118f6bb2aa148ed01790866cdefb420",
+      "gitBlob": "ade68e59d94f2be7f5a2a5358703e9d876ff9858"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/SHARED-INTEGRATION.md",
+      "sha256": "98db22d4fbbb6f70bc3d2031b49f5379b4a05f72e4b7dc082d9110d321da9f13",
+      "gitBlob": "dc0bfad2eac34ff28e3ea81d752b07d19ad8e13b"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/SHARED-INTEGRATION.patch",
+      "sha256": "0ece285a9f624c536b49a1d48581508199158280ff1762338fcf57eae4f969c3",
+      "gitBlob": "369c4f26df34558b8229e2272d4efe64b254bfb3"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/baseline-cold-node22.log",
+      "sha256": "34b2b3f3da7523a4c9d8b7dfc84656de1bcc6d96786215bc94f53087b6f76373",
+      "gitBlob": "9b4b5aae0b0bfb11270d310b239c2e67cae33fa0"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/baseline-normal.log",
+      "sha256": "e06e5b22670b6f4822dada311a6d8877fd8d4f4fb24e2f594078066827b53ae9",
+      "gitBlob": "147e1286e572a2ac2d81ec10cdbbf2b25833ab9a"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/documentation-patch-failure.json",
+      "sha256": "a0553c083617957095d97cfb03f83e2d985d58c98e0953d68c1a61d07f3210c0",
+      "gitBlob": "f0e61f5c6c5758f98d0fae2a03977474cbca5f15"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/execution-commands.json",
+      "sha256": "90151a5332d8c2733508a52797ef4e9fc6222af076e0f6366e34c9e7534673c6",
+      "gitBlob": "bb9aac78d013bcaaf9edaa13f80af73b0cd19530"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/ext-tasks-package.json",
+      "sha256": "208f660ee00d6ec939a57de968d456b212e359c33fc79589ffdc9910732cd795",
+      "gitBlob": "66c7412d2e67a70ba3d62dd5901049c6fdf4066e"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/final-nonlive.log",
+      "sha256": "03adb121cfa521ffbb3ee8f7748d398fa965eab146b12e26a0414812dd724b40",
+      "gitBlob": "3c9529fcb5dead8e84edcb716f71060dc8213824"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/final-normal.log",
+      "sha256": "e92f0a811bd778cd23a44ec7f1334998d368cf00f9f041a90ed6c3f60d4f8e70",
+      "gitBlob": "bd2477cca44f33a148d801b588e24b363a97c9d5"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/first-integration.log",
+      "sha256": "33489d881c4d36abf82b52b30ddc58967521631745900f80d39c17971ce7dcd8",
+      "gitBlob": "5e0948daa786b6a0dd4a86226c143552010c728c"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/first-unit-source.json",
+      "sha256": "2808840a869e8bc2d518661c43d8daf52b3914b492d3ad9fc9949da0b601b1fc",
+      "gitBlob": "4da7eb1ca7b358162d8ecf0d4c8a1b574ba95a38"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/first-unit.log",
+      "sha256": "53b0764ddfc170ffeea3bb618ba9a681f983add3566740888e666eb3ba7dad6f",
+      "gitBlob": "264ad9fe74bc07fab10f11e0be9fcca40f23a28a"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/fixture-preservation-initial-attempt.json",
+      "sha256": "4b62b712adac248ea82e7bd08ac0efe89d25f317610ee3590be0091ee747b122",
+      "gitBlob": "e777b5824d2ac7871f5a2181c48734acfcf78efb"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/focused-complete-final.log",
+      "sha256": "e6c3ab60fee2b0659d78296d42a404586f1164352e162159ba3e48125841d7a8",
+      "gitBlob": "5dd5c47f951e01fb2a2d22f353489ae4bf8c8e84"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/focused-final.log",
+      "sha256": "dfe341e69661b0066fb70d1ea37f1793b5c2ff5cb8e209aebbec1e814fd38689",
+      "gitBlob": "c3cf8e549878e873cac25ad20a9d87464aebeffc"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/focused-price-final.log",
+      "sha256": "9acc6f290b4b354724de336baf3c35a56c856a00c4d147af04830a48e71fc683",
+      "gitBlob": "f0c7a9fe8b77d19f15f2858eed3161bff1c3724a"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/full-server-candidate.log",
+      "sha256": "534f10222783a3dbc089684cd0cdf0ffd6fa08ccb0cf848b37b4f82117d9c826",
+      "gitBlob": "5c115c997278525672930e2598760ca88746adda"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/full-server-durable-final.log",
+      "sha256": "534f10222783a3dbc089684cd0cdf0ffd6fa08ccb0cf848b37b4f82117d9c826",
+      "gitBlob": "5c115c997278525672930e2598760ca88746adda"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/full-server-release.log",
+      "sha256": "534f10222783a3dbc089684cd0cdf0ffd6fa08ccb0cf848b37b4f82117d9c826",
+      "gitBlob": "5c115c997278525672930e2598760ca88746adda"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/generated-fixture-disposition.json",
+      "sha256": "bba632f160aa58b1ccf12a2813531a2733a6f4d21c91dadbfe5e533d5d2ecaa9",
+      "gitBlob": "962716dfd7b7eb2316f00ff8692f798e1289b8db"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/initial-commit-attempt.json",
+      "sha256": "900b1ee2d6cc296d0d3d1af96d9863c53e4e4c4ac0a7d1cd999a08699eaa0db8",
+      "gitBlob": "1dc7f30e1691fbd8ae171419ae08986693dd4b62"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/install.log",
+      "sha256": "418679ad4d8ed5c5489b47422e2d7809fc324c0a35c2aed91cb487663d01a5a3",
+      "gitBlob": "fdde5248c7e067e3c9a94731ade020f33a960a1d"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/interrupt-seam.log",
+      "sha256": "d83a5b3bfed9d011e7669a0415fff327bf4567f87b63e99dc0ba5dad2a5fa0d4",
+      "gitBlob": "2435e076aa41e456c902f1e392de1046f328fef8"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/native-before-corrected-probe.log",
+      "sha256": "6e5abbf647e57ac66691b94c09df532dc26b1b9c9131bb88c067b19ebd1f23dd",
+      "gitBlob": "94b96b31de6b7c3be8e96745171673d3d6282932"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/native-before.log",
+      "sha256": "f10d8d65b490398378a31cc490b15ed667fc6b5d9039f1ecd7b95900f7732666",
+      "gitBlob": "db4dce781770713cea32554002f9ac3ff618667e"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/native-model-receipt.json",
+      "sha256": "f81a374c40abfd9c7a788ab94702e65c624bcda8165d5ec9949d67f30fde0169",
+      "gitBlob": "66583f4f7a4ba1d055d5391bc80c4b88f0f071e5"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/node-runtime-sha256.json",
+      "sha256": "104fa7560900bbc0c9d8ba005e6693b552596c027cefca7617097b115e0e324b",
+      "gitBlob": "25f5884aa2b15f1c864f9707b4a8f42666828146"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/nonlive-durable-final.log",
+      "sha256": "b40f8d60412ff41833836dcc8b9dc843f0cb2d4db41f19d4cb8f508e15ba2e7b",
+      "gitBlob": "66cce25b594ec26f96a57b393c4bd1c7c24d5f48"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/normal-durable-final.log",
+      "sha256": "15268b7f87e903eba00d8c9fad770da9be7a15539315f251ace7cf95faae4a4c",
+      "gitBlob": "1fd86e8fbadc3c2570d7350efbfce46fae57e9c8"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/normal-generated-loopback-profile.json",
+      "sha256": "e18e2339c445fc133c946911a000e2536b9ec462ee6bc633a33b4d718e160829",
+      "gitBlob": "2bf206da5583c702e8e27a8ba9ae44c07904154c"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/normal-serial-final.log",
+      "sha256": "dd570b6b9cfce8c024171e3795f4106496feaf3d6f63947d914aa23330f0f0b0",
+      "gitBlob": "9310d24b6e434ffa854574066e42f64ff1ce5ef1"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/python-target-install.log",
+      "sha256": "c3e2e73593e439bb5622c2863e3b13069ecc12af86ae5d0981023905207390f3",
+      "gitBlob": "f9959f4affada241f900af2e91ab8be732e673a1"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/recovery-durable-final.log",
+      "sha256": "953990999b4abfe77f06d4605a22f0cc2364043cd280fde9708d7a0883b0f665",
+      "gitBlob": "c041cc679be75380ae9cf34590f877456e479eb5"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/recovery-release.log",
+      "sha256": "00864c24b3719daf30935d896ed0dd0338f44a38354f938a2ea06fe57ffca14d",
+      "gitBlob": "1added3c8a16d9d0d089dbfd17bc6633e1e704c0"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/reproduce-initial.mjs",
+      "sha256": "98cbc8ed81ce962a51dfcf6fa3ad3ac17d22bbda3213b32cd899ff6db5bb10ca",
+      "gitBlob": "f8cc755541c43269470c665784d9a29d2262a23b"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/reservation-integration.log",
+      "sha256": "fbb534df4723c66cb4830ca49529b86bbc0530866724ebc0b36f4d0a06552e2e",
+      "gitBlob": "fb2d3f978d10dd505ff140235330a306b5457dde"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/unit-corrected.log",
+      "sha256": "b0a57f6d1f421cd6437de2488abfb5cbd2c6eff16a55888a6b5049839bde63fa",
+      "gitBlob": "95111c7706a4c311343d5a2a129ae20f42f6f314"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/evidence/venv-original-attempt.json",
+      "sha256": "ac3cb6da7a2c8fde79b20ad47a19be76b52efc356f0455cd37287e7bbd228b0e",
+      "gitBlob": "9658f5fa57fe4a115b456af4c5d6d8981a106a2c"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/loopback-service.mjs",
+      "sha256": "a94edc17feec16f8dd9e3515f1e9440648e6401c77ab722d5aa88429daef747b",
+      "gitBlob": "50a7e31618f0bf25cc03e0b130ab60c93128c4eb"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/original-cold-replay.mjs",
+      "sha256": "926bdae2498cc30d8112b11c95d83586ce8566373a95ac070091685eb74321e9",
+      "gitBlob": "4d664fe565075fa9cf861689132409853e96b35d"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/reproduce.mjs",
+      "sha256": "dd7c3f23b61d181ed23c3b68331a389c4b960ae8b96c41b2ceaa44476999755b",
+      "gitBlob": "8ea534442d60311fe66b7d4169583af9bf826b7f"
+    },
+    {
+      "path": "docs/reviews/native-task-recovery-211200/run-normal.mjs",
+      "sha256": "e6372db64a6002d4aec65469f913860a6d677f9f0fe201fcd17bcb8b23d39d21",
+      "gitBlob": "86d19f0db6980dca0712d2588cae0beb4ca42359"
+    },
+    {
+      "path": "idempotency-replay.mjs",
+      "sha256": "b20f3994da2576dc77e2b5cddc23fa731c28284c06124cb2b92fed20b68a23e7",
+      "gitBlob": "9f155265a96505e00f47fdaa6e16c7965afa2194"
+    },
+    {
+      "path": "idempotency-replay.test.mjs",
+      "sha256": "9bf07d20d084f4a5278bcd77cb91836a31a4ab28bc6975600c02c7dbfc75a418",
+      "gitBlob": "afd5773a2338865237615c38ced2d0388a6c547b"
+    },
+    {
+      "path": "mcp-server.mjs",
+      "sha256": "3cee45dd0c5980fc13efc0eebf199c803761c39e16d2d0cafdd2cf891951852c",
+      "gitBlob": "3b80ec8552344890763b0ff434f7dc4b63668dd0"
+    },
+    {
+      "path": "mcp-task-recovery.test.mjs",
+      "sha256": "0198bb229f56666c1f46cce97de7835010d0221bc0fbde46eaf46854f5c73861",
+      "gitBlob": "1330647db8eed17c7204ced3e0af265a95788b06"
+    }
+  ],
+  "execution": {
+    "model": "gpt-6.1-sol",
+    "effort": "max",
+    "sessionId": "01a128e2-6f97-7192-ae73-7b4129848bf7",
+    "cli": "0.162.1",
+    "vmBootId": "3f8d7d88-2f2c-452a-8a63-701e8eea0eb9",
+    "cwd": "/home/ubuntu/root211-control/work/211200",
+    "children": 0,
+    "modelRoute": "native subscribed Codex; no Cursor inference, model API dispatch or Bots",
+    "node": "v22.23.3",
+    "pythonDependency": "httpx==0.28.1, installed only in /tmp/native-task-recovery-211200-runtime/python-deps",
+    "credentialsOrCustomerDataInExport": false
+  },
+  "inputs": {
+    "phaseCommit": "16010f66c0566c4d438c182cf29304788574325a",
+    "phasePaths": [
+      "overview/self-evaluations/2026-10-11-structural-revenue-window/CURRENT-PROJECT-AND-PHASE.md",
+      "overview/self-evaluations/2026-10-11-structural-revenue-window/PARALLEL-FANOUT-PLAN.md",
+      "overview/self-evaluations/2026-10-11-structural-revenue-window/QUESTIONS-FOR-OUTSIDE-PERSPECTIVES.md"
+    ],
+    "astraCommit": "4d0f7aae4d000837abe7c024f378b2150013d389",
+    "astraPath": "overview/self-evaluations/2026-10-11-structural-revenue-window/ANSWERS-CHATGPT-ASTRA-PRO.md",
+    "currentPilotCommit": "694d28e350dfbb4b7d48b3f10bca364c3eceb4ea",
+    "october9Paths": [
+      "overview/self-evaluations/2026-10-09-scalable-agentic-revenue/INTEGRATED-DECISIONS.md",
+      "overview/self-evaluations/2026-10-09-scalable-agentic-revenue/CARRY-FORWARD.md"
+    ],
+    "predecessorReceivings": [
+      "native157400/Root157410",
+      "portable157500/Root157510",
+      "observatory160200/Root160210"
+    ],
+    "adviceIsTestExecution": false
+  },
+  "tests": {
+    "normal": {
+      "runner": "node docs/reviews/native-task-recovery-211200/run-normal.mjs",
+      "workerCount": 1,
+      "unmodifiedNormalScriptAllFiles": true,
+      "pretest": {
+        "pass": 18,
+        "fail": 0
+      },
+      "test": {
+        "pass": 1120,
+        "fail": 0,
+        "skip": 4
+      },
+      "log": "evidence/normal-durable-final.log"
+    },
+    "nonlive": {
+      "command": "npm run test:nonlive",
+      "pass": 193,
+      "fail": 0,
+      "log": "evidence/nonlive-durable-final.log"
+    },
+    "focused": {
+      "command": "node --test idempotency-replay.test.mjs caller-result-client/test/recovery.test.mjs mcp-task-recovery.test.mjs replay-boundary.http.test.mjs",
+      "pass": 56,
+      "fail": 0,
+      "log": "evidence/recovery-durable-final.log"
+    },
+    "fullMountedCandidate": {
+      "command": "node docs/reviews/native-task-recovery-211200/reproduce.mjs --candidate",
+      "verifyAttempts": 1,
+      "settlementAttempts": 1,
+      "journalResults": 1,
+      "log": "evidence/full-server-durable-final.log"
+    },
+    "exactCommandsAndHashes": "evidence/execution-commands.json"
+  },
+  "receiving": {
+    "owner": "Root, shared merchant integration owner",
+    "nextConsumer": "Root ordinary cold CLI receiving of transaction_receipt, then independently supplied prospective acceptance by Pilot211300 if applicable",
+    "sharedProposal": "SHARED-INTEGRATION.md / SHARED-INTEGRATION.patch",
+    "deployed": false,
+    "externalAdoption": "unknown",
+    "independentUsefulAcceptance": "unknown",
+    "realSettlementTruth": "unknown",
+    "customerRevenueOrSavings": "unmeasured; owner fixtures are not customers",
+    "strongestDirectRoute": "opportunityPreflight(args) free local calculation; transactionReceipt(args,{client}) existing direct receipt implementation"
+  },
+  "retainedUnknowns": [
+    "No historical attribution or acceptance is upgraded.",
+    "Caller current-grant callback is application authority, not a new provider ACL.",
+    "Cancel acknowledgement does not establish stopped/refunded.",
+    "Uncertain settlement remains reserved; no replacement paid request is permitted by this continuation.",
+    "Failed persistence plus total host loss before recovery cannot guarantee output recovery.",
+    "Single provider process per journal, single active caller writer per checkpoint.",
+    "Real provider reconciliation, production integration and third-party adoption are unexecuted."
+  ]
+}
