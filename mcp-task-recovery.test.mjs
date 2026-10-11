@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
+import { existsSync } from "node:fs";
 import { createServer } from "node:http";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -108,10 +109,10 @@ async function fixture(t, { unknown = false } = {}) {
     await writeFile(inputFile, JSON.stringify(input), { mode: 0o600 }); await writeFile(grantFile, JSON.stringify(grant), { mode: 0o600 });
     return { input, grant, inputFile, checkpoint, grantFile };
   }
-  async function cli(action, op, { interruptOnReceipt = false } = {}) {
+  async function cli(action, op, { interruptOnReceipt = false, cwd: clientCwd = root, entry = "caller-result-client/bin/recover-mcp.mjs" } = {}) {
     const argv = action === "start" ? [action, op.inputFile, op.checkpoint, op.grantFile] : [action, op.checkpoint, op.grantFile];
-    const processChild = spawn(process.execPath, ["caller-result-client/bin/recover-mcp.mjs", ...argv], {
-      cwd: root, env: { PATH: process.env.PATH }, stdio: ["ignore", "pipe", "pipe"],
+    const processChild = spawn(process.execPath, [entry, ...argv], {
+      cwd: clientCwd, env: { PATH: process.env.PATH, HOME: process.env.HOME }, stdio: ["ignore", "pipe", "pipe"],
     });
     let stdout = "", stderr = "";
     processChild.stdout.on("data", chunk => { stdout += chunk; }); processChild.stderr.on("data", chunk => { stderr += chunk; });
@@ -297,3 +298,122 @@ test("revoked/expired grants and widened budgets refuse in a fresh ordinary proc
   assert.equal(f.proxyState.requests, requests);
   assert.equal(f.counts.settle, 1); assert.equal(f.counts.verify, 1);
 });
+
+const FEEDBACK_ARCHIVE = "caller-result-client/export/public/bytes/samedaydesk-caller-result/0.1.0/samedaydesk-caller-result-0.1.0.tar.gz";
+const FEEDBACK_ARCHIVE_SHA256 = "3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b";
+
+test("fresh feature-source consumer keeps recovery outside the frozen feedback archive", { timeout: 120000 }, async t => {
+  const archivePath = path.join(root, FEEDBACK_ARCHIVE);
+  const archiveBytes = await readFile(archivePath);
+  assert.equal(createHash("sha256").update(archiveBytes).digest("hex"), FEEDBACK_ARCHIVE_SHA256);
+  const listed = spawnSync("tar", ["-tzf", archivePath], { encoding: "utf8" });
+  assert.equal(listed.status, 0, listed.stderr);
+  assert.equal(listed.stdout.includes("mcp-recovery.mjs"), false);
+  assert.equal(listed.stdout.includes("recover-mcp.mjs"), false);
+  const f = await fixture(t);
+  const consumer = path.join(f.directory, "consumer");
+  await mkdir(path.join(consumer, "src"), { recursive: true });
+  await mkdir(path.join(consumer, "bin"), { recursive: true });
+  await copyFile(path.join(root, "caller-result-client/src/mcp-recovery.mjs"), path.join(consumer, "src/mcp-recovery.mjs"));
+  await copyFile(path.join(root, "caller-result-client/bin/recover-mcp.mjs"), path.join(consumer, "bin/recover-mcp.mjs"));
+  await copyFile(path.join(root, "caller-result-client/package.json"), path.join(consumer, "package.json"));
+  await copyFile(path.join(root, "caller-result-client/package-lock.json"), path.join(consumer, "package-lock.json"));
+  assert.equal(existsSync(path.join(consumer, "server.js")), false);
+  assert.equal(existsSync(path.join(consumer, "src/index.mjs")), false);
+  const installed = spawnSync("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], {
+    cwd: consumer,
+    encoding: "utf8",
+    env: { PATH: process.env.PATH, HOME: process.env.HOME },
+  });
+  assert.equal(installed.status, 0, installed.stderr);
+  const pkg = JSON.parse(await readFile(path.join(consumer, "package.json"), "utf8"));
+  assert.equal(pkg.version, "0.1.0");
+  assert.equal(pkg.exports["./mcp"], "./src/mcp-caller-result.mjs");
+  assert.equal(Object.values(pkg.exports).includes("./src/mcp-recovery.mjs"), false);
+  await writeFile(path.join(consumer, "probe-accounting.mjs"), accountingProbeSource());
+  const probe = spawnSync(process.execPath, ["probe-accounting.mjs"], {
+    cwd: consumer, encoding: "utf8", env: { PATH: process.env.PATH, HOME: process.env.HOME },
+  });
+  assert.equal(probe.status, 0, probe.stderr);
+  const accounting = JSON.parse(probe.stdout);
+  assert.equal(accounting.possibleAtomic, "50000");
+  assert.equal(accounting.reportedSettledAtomic, null);
+  assert.equal(accounting.settlementSource, "unknown");
+  assert.equal(accounting.serverPresent, false);
+  const op = await f.operation();
+  f.proxyState.loseNextPaidResponse = true;
+  const first = await f.cli("start", op, { cwd: consumer, entry: "bin/recover-mcp.mjs" });
+  assert.equal(first.code, 2, first.stderr);
+  assert.equal(first.body.state, "unresolved");
+  assert.equal(f.counts.settle, 1);
+  assert.equal(f.counts.verify, 1);
+  await f.start();
+  const cold = await f.cli("resume", op, { cwd: consumer, entry: "bin/recover-mcp.mjs" });
+  assert.equal(cold.code, 0, cold.stderr);
+  assert.equal(cold.body.state, "completed");
+  assert.notEqual(first.pid, cold.pid);
+  assert.deepEqual(cold.body.output, opportunityPreflight(args));
+  assert.equal(cold.body.budget.reportedSettledAtomic, "50000");
+  assert.equal(cold.body.budget.newPaymentPermitted, false);
+  assert.equal(f.counts.settle, 1);
+  assert.equal(f.counts.verify, 1);
+  assert.equal((await f.handlerCounts()).opportunity, 0);
+  t.diagnostic(JSON.stringify({
+    install: "feature-source copy of caller-result-client/src/mcp-recovery.mjs and bin/recover-mcp.mjs, then npm ci of the existing caller lock",
+    publishedArchiveCanary: false,
+    archive: FEEDBACK_ARCHIVE,
+    archiveSha256: FEEDBACK_ARCHIVE_SHA256,
+    archiveContainsRecovery: false,
+    merchantCheckoutPresent: false,
+    secondPaidVerify: false,
+    secondPaidSettle: false,
+  }));
+});
+
+function accountingProbeSource() {
+  return [
+    'import assert from "node:assert/strict";',
+    'import { createHash } from "node:crypto";',
+    'import { existsSync } from "node:fs";',
+    'import { chmod, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";',
+    'import { tmpdir } from "node:os";',
+    'import path from "node:path";',
+    'import { mcpAccountingDigest, mcpRecoveryBudget, mcpRecoveryFileStore, mcpResultDigest, startPaidMcpResult } from "./src/mcp-recovery.mjs";',
+    'if (existsSync(new URL("./server.js", import.meta.url))) throw new Error("merchant_checkout_present");',
+    "const copy = value => structuredClone(value);",
+    'const hash = value => createHash("sha256").update(JSON.stringify(value)).digest("hex");',
+    'const scope = { endpointUrl: "https://merchant.example/mcp", tenantId: "tenant-a" };',
+    'const accepted = { scheme: "exact", network: "eip155:8453", amount: "50000", asset: "0x" + "a".repeat(40), payTo: "0x" + "b".repeat(40) };',
+    'const input = { ...scope, name: "opportunity_preflight", principalId: "principal-a", grantId: "grant-a", operationId: "operation-a", reservationId: "reservation-a", maxAtomic: "50000", arguments: { rewardUsd: 10 }, payment: { x402Version: 2, resource: { url: "mcp://tool/opportunity_preflight" }, accepted, payload: { signature: "0x" + "4".repeat(130), authorization: { from: "0x" + "2".repeat(40), to: accepted.payTo, value: accepted.amount, validBefore: String(Math.floor(Date.now() / 1000) + 300) } } } };',
+    "const grant = { endpointUrl: input.endpointUrl, tenantId: input.tenantId, principalId: input.principalId, grantId: input.grantId, operationId: input.operationId, reservationId: input.reservationId, name: input.name, maxAtomic: input.maxAtomic, inputDigest: hash(input.arguments), termsDigest: hash(input.payment.accepted), paymentDigest: hash(input.payment), expiresAt: new Date(Date.now() + 300000).toISOString(), execute: true, readResult: true, revoked: false };",
+    'const body = { ok: true, decision: "attempt", requiredChecks: [] };',
+    'const result = { content: [{ type: "text", text: JSON.stringify(body) }], structuredContent: body, _meta: { "x402/payment-response": { success: false } } };',
+    'result._meta["samedaydesk/recovery"] = { version: 1, ...scope, persisted: true, resultDigest: mcpResultDigest(result), name: input.name, inputDigest: hash(input.arguments), termsDigest: hash(accepted), paymentDigest: hash(input.payment), contextDigest: hash({ operationId: input.operationId, reservationId: input.reservationId, principalId: input.principalId, grantId: input.grantId }) };',
+    'const directory = await mkdtemp(path.join(tmpdir(), "installed-accounting-"));',
+    'const file = path.join(directory, "checkpoint.json");',
+    "const store = mcpRecoveryFileStore(file);",
+    'const client = { listTools: async () => ({ tools: [{ name: input.name, _meta: { x402: { accepts: [accepted] }, samedaydesk: { recovery: { version: 1, tool: "recover_paid_result", ...scope } } } }, { name: "recover_paid_result", _meta: { samedaydesk: { paymentRequired: false } } }] }), callTool: async () => copy(result), close: async () => {} };',
+    "const saved = await (await startPaidMcpResult({ client, store, input, loadGrant: async () => copy(grant) })).handoff();",
+    "assert.equal(saved.accountingDigest, mcpAccountingDigest(saved.result));",
+    'assert.equal(mcpRecoveryBudget(saved).possibleAtomic, "50000");',
+    'const bound = JSON.parse(await readFile(file, "utf8"));',
+    "const digest = bound.resultDigest;",
+    'bound.result._meta["x402/payment-response"].success = true;',
+    'await writeFile(file, JSON.stringify(bound) + "\\n", { mode: 0o600 });',
+    "await chmod(file, 0o600);",
+    "await assert.rejects(store.load(), /checkpoint_result_integrity/);",
+    "delete bound.accountingDigest;",
+    "bound.resultDigest = digest;",
+    'await writeFile(file, JSON.stringify(bound) + "\\n", { mode: 0o600 });',
+    "await chmod(file, 0o600);",
+    "const legacy = await store.load();",
+    "const budget = mcpRecoveryBudget(legacy);",
+    'assert.equal(budget.possibleAtomic, "50000");',
+    "assert.equal(budget.reportedSettledAtomic, null);",
+    'assert.equal(budget.settlementSource, "unknown");',
+    "assert.equal(budget.newPaymentPermitted, false);",
+    "await rm(directory, { recursive: true, force: true });",
+    'process.stdout.write(JSON.stringify({ possibleAtomic: budget.possibleAtomic, reportedSettledAtomic: budget.reportedSettledAtomic, settlementSource: budget.settlementSource, serverPresent: false }) + "\\n");',
+    "",
+  ].join("\n");
+}
