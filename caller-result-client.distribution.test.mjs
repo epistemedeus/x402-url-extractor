@@ -83,7 +83,7 @@ async function mountIndex(t) {
 }
 
 function indexArchive(index, version) {
-  return index.assets.find((asset) => asset.role === "archive" && asset.version === version);
+  return index.assets.find((asset) => asset.id === "samedaydesk-caller-result" && asset.role === "archive" && asset.version === version);
 }
 
 async function fetchAsset(asset) {
@@ -467,7 +467,7 @@ test("advertised caller archive installs recovery with the merchant checkout abs
   assert.equal(current.alternateUrl.endsWith(current.alternatePath), true);
   assert.equal(feedback.sha256, FEEDBACK_SHA256);
   assert.equal(feedback.originalUrl, entry.feedbackArchive.archiveUrl);
-  const provenanceAsset = index.assets.find((asset) => asset.role === "provenance" && asset.version === entry.version);
+  const provenanceAsset = index.assets.find((asset) => asset.id === "samedaydesk-caller-result" && asset.role === "provenance" && asset.version === entry.version);
   const provenance = JSON.parse(await (await fetch(provenanceAsset.alternateUrl)).text());
   assert.equal(provenance.sourceQualification, "unknown");
   assert.equal(provenance.hostedAcquisitionVerified, false);
