@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
+import { advertiseDeclaredHttpRoute, bindDeclaredHttpRoute, decorateMcpTool, listMcpToolMetadata } from "./mcp-tool-metadata.mjs";
 
 test("publishes unique action-oriented titles for every live MCP tool", () => {
   const metadata = listMcpToolMetadata();
@@ -92,4 +92,36 @@ test("makes each overlapping web and company tool chooseable without renaming it
 test("fails closed when a live tool lacks explicit selection metadata", () => {
   assert.throws(() => decorateMcpTool({ name: "new_tool", description: "new" }), /Missing MCP selection metadata/);
   assert.throws(() => decorateMcpTool({ name: "extract", description: "" }), /Missing MCP description/);
+});
+
+test("declared route advertisement names the catalog method and refuses a mismatched path", () => {
+  const origin = "https://agents.samedaydesk.com";
+  const cases = [
+    ["extract", "GET", "/extract"],
+    ["extract_batch", "POST", "/extract/batch"],
+    ["lockfile_pin_delta", "POST", "/lockfile-pin-delta"],
+  ];
+  for (const [name, method, route] of cases) {
+    const tool = decorateMcpTool({ name, description: `${name} base contract` });
+    const bound = bindDeclaredHttpRoute(tool, { method, route, url: `${origin}${route}` });
+    const advertised = advertiseDeclaredHttpRoute(tool.description, bound.declaredRoute);
+    assert.equal(bound.declaredRoute.method, method);
+    assert.equal(bound.declaredRoute.path, route);
+    assert.match(advertised, new RegExp(`bound to ${method} ${origin}${route}, not mcp://`));
+    assert.doesNotMatch(tool.description, /not mcp:\/\//);
+  }
+  assert.throws(
+    () => advertiseDeclaredHttpRoute("Extract", { method: "POST", path: "/extract/batch", resourceUrl: `${origin}/extract` }),
+    /declared_http_path_disagrees/,
+  );
+  assert.throws(
+    () => bindDeclaredHttpRoute(
+      { name: "extract_batch", description: "batch", paidHttp: { method: "GET", path: "/extract/batch", resourceUrl: `${origin}/extract/batch` } },
+      { method: "POST", route: "/extract/batch", url: `${origin}/extract/batch` },
+    ),
+    /paid_http_disagrees/,
+  );
+  const free = decorateMcpTool({ name: "report_caller_result", description: "report base" });
+  assert.match(free.description, /charged is false/);
+  assert.doesNotMatch(free.description, /not mcp:\/\//);
 });

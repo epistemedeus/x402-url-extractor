@@ -19,18 +19,23 @@ export function buildPaidActionSkills(actions = []) {
     const id = `discover-paid-action-${slug}`;
     if (seen.has(id)) throw new Error(`duplicate paid action skill: ${id}`);
     seen.add(id);
+    const method = String(action.method || "").toUpperCase();
     const route = String(action.route || "");
+    if (!/^(GET|POST|PUT|PATCH|DELETE|HEAD)$/.test(method) || !route.startsWith("/")) {
+      throw new Error(`paid action ${slug} needs its declared HTTP method and path`);
+    }
+    const routeLabel = `${method} ${route}`;
     const price = String(action.priceAtomicUsdc || "");
     const exampleUrl = typeof action?.request?.exampleUrl === "string" ? action.request.exampleUrl : null;
     return {
       id,
       operation: operationIdentity({ route, priceAtomic: price }),
-      name: `Discover paid action ${route || slug}`,
-      description: `Discover the direct ${route || slug} machine-paid action, its ${price || "current"} atomic USDC price, and x402/MPP invocation contract. Discovery only; invoke the returned exact request directly.${exampleUrl ? ` Complete example: ${exampleUrl}` : ""}`,
+      name: `Discover paid action ${routeLabel}`,
+      description: `Discover the direct ${routeLabel} machine-paid action, its ${price || "current"} atomic USDC price, and x402/MPP invocation contract. Discovery only; invoke the returned exact request directly.${exampleUrl ? ` Complete example: ${exampleUrl}` : ""}`,
       tags: [...new Set(["x402", "mpp", "paid-action", "discovery", ...(action.tags || [])])],
       examples: [exampleUrl
-        ? `Find the ${route || slug} paid action, then call ${exampleUrl}`
-        : `Find the ${route || slug} paid action and its exact current price.`],
+        ? `Find the ${routeLabel} paid action, then call ${exampleUrl}`
+        : `Find the ${routeLabel} paid action and its exact current price.`],
       inputModes: ["text/plain", "application/json"],
       outputModes: ["application/json"],
     };

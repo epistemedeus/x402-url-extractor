@@ -238,6 +238,19 @@ test("fails when llms omits a canonical paid route, matching the 2026-08-20 snap
   );
 });
 
+test("free recover_paid_result is not a paid action and an unknown tool still drifts", () => {
+  const current = surfaces();
+  const withRecovery = surfaces({
+    mcpToolNames: [...current.mcpToolNames, "recover_paid_result", "page_change", "careers_board_cold", "report_caller_result"],
+  });
+  const receipt = validateMachineSurfaceParity(withRecovery);
+  assert.equal(receipt.ok, true);
+  assert.equal(receipt.mcpToolCount, current.mcpToolNames.length);
+  assert.equal(listMcpToolMetadata().some((entry) => entry.name === "recover_paid_result"), false);
+  const stranger = surfaces({ mcpToolNames: [...current.mcpToolNames, "recover_paid_result", "circle_gateway"] });
+  assert.throws(() => validateMachineSurfaceParity(stranger), /MCP tool names drifted/);
+});
+
 test("fails when Circle is promoted onto a killed surface", () => {
   const withCatalogAction = surfaces({
     catalog: { actions: [...actions, { ...extract, route: alternate.route }], alternateAccess: alternate },

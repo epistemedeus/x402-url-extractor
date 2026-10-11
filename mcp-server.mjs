@@ -15,7 +15,8 @@
 //  - STATELESS streamable-HTTP: a fresh McpServer + transport per POST /mcp request
 //    (sessionIdGenerator: undefined). The expensive async setup (resourceServer
 //    initialize + buildPaymentRequirements per tool) is done ONCE at mount time.
-//  - express.json() is scoped to /mcp only, so it never touches the GET paywall routes.
+//  - POST /mcp is exempt from the ordinary 16 KiB JSON parser. This route's
+//    parser is the authoritative MCP JSON-RPC byte limit.
 //
 // Verified against @x402/mcp@2.16.0 + @modelcontextprotocol/sdk@1.29.0 (June 2026).
 
@@ -32,6 +33,9 @@ import { sealObservedMcpToolResult } from "./http-delivery-evidence/mcp-delivery
 import { attachMcpCallerResultFeedback, callerResultFeedbackMetaFromHeaders } from "./caller-result-feedback.mjs";
 import { classifyDeclaredAgentDiscoverySource, listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
 import { readExtractBatchInputRefusalCode } from "./extract-batch.mjs";
+import { MCP_RECOVERY_META, MCP_RECOVERY_TOOL, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
+import { MCP_JSON_RPC_MAX_BYTES, mcpJsonRpcOverlimitBody } from "./mcp-json-rpc-limit.mjs";
+import { advertiseDeclaredHttpRoute } from "./mcp-tool-metadata.mjs";
 import {
   buildRegisteredCatalog,
   createMcpTypedTelemetryAttempt,
@@ -636,6 +640,27 @@ function createTypedAttemptForBody(body, catalog, onAppend, requestAttribution =
   return { attempt };
 }
 
+function advertisedToolDescription(tool) {
+  const paid = tool.paidHttp && typeof tool.paidHttp === "object" ? tool.paidHttp : null;
+  const declared = tool.declaredRoute && typeof tool.declaredRoute === "object" ? tool.declaredRoute : null;
+  if (!paid && !declared) return tool.description;
+  if (paid && declared) {
+    const paidMethod = String(paid.method || "").toUpperCase();
+    const declaredMethod = String(declared.method || "").toUpperCase();
+    let paidUrl;
+    try {
+      paidUrl = new URL(String(paid.resourceUrl || ""));
+    } catch {
+      throw new Error(`mcp_route_declaration_disagrees:${tool.name}`);
+    }
+    if (paidMethod !== declaredMethod || paid.path !== declared.path || paidUrl.pathname !== declared.path) {
+      throw new Error(`mcp_route_declaration_disagrees:${tool.name}`);
+    }
+  }
+  const source = declared || { method: paid.method, path: paid.path, resourceUrl: paid.resourceUrl };
+  return advertiseDeclaredHttpRoute(tool.description, source);
+}
+
 /**
  * Mount a paid MCP server at POST /mcp on an existing Express app.
  *
@@ -659,7 +684,18 @@ export async function mountMcp(app, {
   configureResourceServer = null,
   httpBaseUrl = null,
   callerResultFeedbackKey = "",
+  // Inject the existing HTTP replay journal. No second store or automatic
+  // task backend is constructed by this optional native-result port.
+  nativeRecovery = null,
 } = {}) {
+  const recoveryJournal = nativeRecovery?.journal;
+  const recoveryScope = nativeRecovery ? {
+    endpointUrl: nativeRecovery.endpointUrl,
+    tenantId: nativeRecovery.tenantId,
+  } : null;
+  const recoveryProfile = nativeRecovery ? recoveryJournal?.mcpRecoveryProfile(recoveryScope) : null;
+  if (nativeRecovery && (!recoveryProfile || typeof recoveryJournal.runMcpTool !== "function"
+    || typeof recoveryJournal.recoverMcpResult !== "function")) throw new Error("native_recovery_journal_required");
   const typedEnabled = typedTelemetry?.enabled === true;
   const jsonResponse = streamableHttpOptions?.enableJsonResponse === true;
   const typedLifecycle = typedEnabled
@@ -692,7 +728,8 @@ export async function mountMcp(app, {
   }
 
   // Dedicated resource server for MCP, sharing the facilitator with the HTTP routes.
-  const resourceServer = new x402ResourceServer(facilitatorClient).register(network, new ExactEvmScheme());
+  const resourceServer = new x402ResourceServer(nativeRecovery
+    ? trackReplaySettlementAttempts(facilitatorClient) : facilitatorClient).register(network, new ExactEvmScheme());
   await resourceServer.initialize();
   if (typeof configureResourceServer === "function") {
     await configureResourceServer(resourceServer);
@@ -735,7 +772,14 @@ export async function mountMcp(app, {
     // a structured ok:false so a paid call never yields an opaque failure.
     const inner = t.paidHttp ? httpRouteToolHandler(t, httpBaseUrl)
       : paid(typedEnabled ? observedPaidHandler(t) : baselinePaidHandler(t));
-    const revived = withRevivedArgs(inner, t.inputSchema);
+    const recoverable = nativeRecovery && !t.paidHttp ? async (args, extra) => {
+      const request = mcpHttpRequestAls.getStore();
+      return recoveryJournal.runMcpTool({ name: t.name,
+        arguments: request?.body?.params?.arguments ?? args,
+        payment: extra?._meta?.[MCP_PAYMENT_META_KEY], scope: recoveryScope,
+        context: extra?._meta?.["samedaydesk/recovery-call"] ?? null }, () => inner(args, extra));
+    } : inner;
+    const revived = withRevivedArgs(recoverable, t.inputSchema);
     const handler = typedEnabled
       ? async (args, extra) => {
         const attempt = mcpTypedAttemptAls.getStore();
@@ -744,7 +788,28 @@ export async function mountMcp(app, {
           attempt.bindRequestId(extra.requestId);
         }
         const result = await revived(args, extra);
-        if (!t.paidHttp && attempt && !isTypedPaymentRequiredResult(result) && result?.isError !== true) {
+        const recovery = result?._meta?.[MCP_RECOVERY_META];
+        if (!t.paidHttp && attempt && recovery?.replayed === true && result?.isError !== true) {
+          const proof = result?._meta?.["x402/payment-response"];
+          if (proof?.success === true) {
+            // The journal already verified and settled this credential. Report the
+            // retained settlement as a replay and do not ask the facilitator again.
+            attempt.credentialVerified({ offerDigest: attempt.binding?.issuedOfferDigest });
+            const transaction = typeof proof.transaction === "string" ? proof.transaction : undefined;
+            attempt.observeSettleOutcome({
+              success: true,
+              settlementReference: transaction,
+              facilitatorSettlement: {
+                transaction: transaction ?? null,
+                network: typeof proof.network === "string" ? proof.network : null,
+                amount: typeof proof.amount === "string" ? proof.amount : null,
+                asset: typeof proof.asset === "string" ? proof.asset : null,
+                payee: typeof proof.payee === "string" ? proof.payee : null,
+              },
+            });
+            attempt.replayConfirmed();
+          }
+        } else if (!t.paidHttp && attempt && !isTypedPaymentRequiredResult(result) && result?.isError !== true) {
           attempt.maybeReplayConfirmed();
         }
         return result;
@@ -753,13 +818,14 @@ export async function mountMcp(app, {
     prepared.push({
       name: t.name,
       title: t.title,
-      description: t.paidHttp ? `${t.description} Payment challenge and credentials are bound to ${t.paidHttp.resourceUrl}, not mcp://. Retry the identical authorized arguments and credential.` : t.description,
+      description: advertisedToolDescription(t),
       inputSchema: t.inputSchema,
       outputSchema: t.outputSchema,
       paymentMeta: createX402ToolMeta(accepts),
       inputRefusalMeta: t.inputRefusalMeta,
       guardedHttpInput: Boolean(t.paidHttp && t.inputRefusalMeta),
       operationIdentity: t.operationIdentity,
+      recoveryProfile: nativeRecovery && !t.paidHttp ? recoveryProfile : null,
       handler,
       binding,
     });
@@ -777,6 +843,24 @@ export async function mountMcp(app, {
       binding: null,
     });
   }
+  if (nativeRecovery) {
+    if (catalogByName.has(MCP_RECOVERY_TOOL)) throw new Error("native_recovery_tool_collision");
+    const nativeTools = new Set(paidTools.filter(tool => !tool.paidHttp).map(tool => tool.name));
+    catalogByName.set(MCP_RECOVERY_TOOL, { tool: MCP_RECOVERY_TOOL, free: true, binding: null });
+    prepared.push({
+      name: MCP_RECOVERY_TOOL, free: true,
+      description: "Read the stored outcome of an earlier native paid call using its original input and credential. This call cannot execute or pay.",
+      inputSchema: { name: z.string(), arguments: z.record(z.any()) },
+      paymentMeta: { samedaydesk: { charged: false, paymentRequired: false } },
+      handler: async (args, extra) => {
+        if (!nativeTools.has(args.name)) return { ...asToolResult({ ok: false, error: "recovery_tool_rejected", charged: false }), isError: true };
+        return recoveryJournal.recoverMcpResult({ name: args.name, arguments: args.arguments,
+          payment: extra?._meta?.[MCP_PAYMENT_META_KEY], scope: recoveryScope,
+          context: extra?._meta?.["samedaydesk/recovery-call"] ?? null });
+      },
+      binding: null,
+    });
+  }
 
   // A fresh MCP server per request (stateless mode requires server+transport per call).
   const makeServer = (requestBody) => {
@@ -785,6 +869,9 @@ export async function mountMcp(app, {
       const operationMeta = t.operationIdentity
         ? { samedaydesk: { operation: t.operationIdentity } }
         : {};
+      if (t.recoveryProfile) operationMeta.samedaydesk = {
+        ...operationMeta.samedaydesk, recovery: t.recoveryProfile,
+      };
       // This call's original ALS arguments go unchanged to the HTTP guard.
       // Let that guard produce static refusals rather than SDK/Zod value echoes.
       // Discovery and every other call retain their advertised input schema.
@@ -806,8 +893,24 @@ export async function mountMcp(app, {
     sessionIdGenerator: undefined,
   };
 
-  // Stateless streamable-HTTP transport. express.json() scoped to this route only.
-  app.post("/mcp", express.json({ limit: "1mb" }), async (req, res) => {
+  // Authoritative raw JSON-RPC body limit. Over-limit is a JSON-RPC error, not Express 413.
+  const mcpJsonParser = express.json({
+    limit: MCP_JSON_RPC_MAX_BYTES,
+    type: ["application/json", "application/*+json"],
+  });
+  function parseMcpJson(req, res, next) {
+    mcpJsonParser(req, res, (error) => {
+      if (!error) return next();
+      res.set("Cache-Control", "no-store");
+      if (error.type === "entity.parse.failed") {
+        return res.status(400).json({ ok: false, error: "invalid_json", charged: false });
+      }
+      if (error.type === "entity.too.large") return res.status(200).json(mcpJsonRpcOverlimitBody());
+      return next(error);
+    });
+  }
+
+  app.post("/mcp", parseMcpJson, async (req, res) => {
     injectPaymentSignatureHeader(req);
     let requestAttribution = null;
     let declaredSource = null;

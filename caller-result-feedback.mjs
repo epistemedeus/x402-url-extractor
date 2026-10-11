@@ -557,6 +557,11 @@ async function syncDirectory(dataDir) {
   }
 }
 
+// Paid capture is scheduled after the MCP response so a slow append cannot
+// delay that response. A statement can arrive in the gap. Re-read only a
+// missing capture, briefly, and still refuse when it never appears.
+const MCP_CAPTURE_VISIBILITY_WAIT_MS = 250;
+
 export function createCallerResultFeedbackService({
   dataDir,
   key = "",
@@ -949,32 +954,39 @@ export function createCallerResultFeedbackService({
       const status = verified.code === "key_absent" ? 503 : 401;
       return refusal(verified.code, status);
     }
-    try {
-      return await admitCommerceJournal(dataDir, async () => {
-        const captures = await loadMcpCaptures();
-        const bound = bindMcpClaims(verified.claims, captures);
-        if (!bound.ok) return refusal(bound.code, 409);
-        const record = canonicalMcpStatement({
-          schemaVersion: CALLER_RESULT_FEEDBACK_MCP_SCHEMA,
-          statementId: statementIdFor(bound.eventId),
-          paidEvidenceId: bound.eventId,
-          requestDigest: verified.claims.requestDigest,
-          responseDigest: verified.claims.responseDigest,
-          route: verified.claims.resource,
-          method: MCP_CALLER_RESULT_METHOD,
-          settlementReference: bound.settlementReference,
-          disposition: parsed.disposition,
-          reasonCategory: parsed.reasonCategory,
-          capabilityHash: sha256(parsed.token),
-          channel: "mcp",
-          receivedAt: new Date(now()).toISOString(),
-          usefulness: USEFULNESS_UNKNOWN,
-          source: "caller",
+    const started = Date.now();
+    for (;;) {
+      try {
+        const result = await admitCommerceJournal(dataDir, async () => {
+          const captures = await loadMcpCaptures();
+          const bound = bindMcpClaims(verified.claims, captures);
+          if (!bound.ok) return refusal(bound.code, 409);
+          const record = canonicalMcpStatement({
+            schemaVersion: CALLER_RESULT_FEEDBACK_MCP_SCHEMA,
+            statementId: statementIdFor(bound.eventId),
+            paidEvidenceId: bound.eventId,
+            requestDigest: verified.claims.requestDigest,
+            responseDigest: verified.claims.responseDigest,
+            route: verified.claims.resource,
+            method: MCP_CALLER_RESULT_METHOD,
+            settlementReference: bound.settlementReference,
+            disposition: parsed.disposition,
+            reasonCategory: parsed.reasonCategory,
+            capabilityHash: sha256(parsed.token),
+            channel: "mcp",
+            receivedAt: new Date(now()).toISOString(),
+            usefulness: USEFULNESS_UNKNOWN,
+            source: "caller",
+          });
+          return commitMcpStatement(record, parsed.token, bound.event, verified.claims);
         });
-        return commitMcpStatement(record, parsed.token, bound.event, verified.claims);
-      });
-    } catch {
-      return refusal("journal_write_failed", 503);
+        if (result?.body?.code !== "missing_capture" || Date.now() - started >= MCP_CAPTURE_VISIBILITY_WAIT_MS) {
+          return result;
+        }
+      } catch {
+        return refusal("journal_write_failed", 503);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
     }
   }
 
