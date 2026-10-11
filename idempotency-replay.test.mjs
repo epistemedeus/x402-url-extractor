@@ -39,6 +39,14 @@ test("ordinary x402 payment without a resource url executes once and replays on 
   delete input.payment.resource;
   delete input.context;
   let executions = 0;
+  let discoveries = 0;
+  const discovery = await journal.runMcpTool({ ...input, payment: undefined }, async () => {
+    discoveries++;
+    return { content: [{ type: "text", text: "challenge" }] };
+  });
+  assert.equal(discoveries, 1);
+  assert.equal(discovery.isError, undefined);
+  assert.equal(discovery.content[0].text, "challenge");
   const delivered = await journal.runMcpTool(input, async () => { executions++; return nativeResult; });
   assert.equal(delivered.isError, undefined);
   assert.equal(delivered._meta[MCP_RECOVERY_META].replayed, false);

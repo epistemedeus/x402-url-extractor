@@ -405,6 +405,7 @@ export function createIdempotencyReplay({
     // Ordinary SDK payments omit resource. The invoked tool name is the binding.
     // A supplied resource must name this tool and cannot be redirected.
     if (Object.hasOwn(payment || {}, "resource") && payment.resource?.url !== `mcp://tool/${name}`) return null;
+    if (!payment || typeof payment !== "object" || Array.isArray(payment)) return null;
     if (context !== null && (!context || ["operationId", "reservationId", "principalId", "grantId"].some(key =>
       typeof context[key] !== "string" || !/^[A-Za-z0-9_.:-]{1,128}$/.test(context[key]))
       || Object.keys(context).length !== 4)) return null;
@@ -490,11 +491,11 @@ export function createIdempotencyReplay({
   }
 
   async function runMcpTool(input, execute) {
-    let binding;
-    try { binding = mcpBinding(input); } catch { return mcpFailure("recovery_scope_rejected", false); }
     // Unpaid discovery remains the official wrapper's responsibility. A supplied
     // malformed paid binding is refused before an effect rather than bypassing it.
     if (!input.payment) return execute();
+    let binding;
+    try { binding = mcpBinding(input); } catch { return mcpFailure("recovery_scope_rejected", false); }
     if (!binding) return mcpFailure("recovery_binding_rejected", false);
     if (!Number.isFinite(binding.validUntilMs) || binding.validUntilMs > now() + ttlMs) {
       return mcpFailure("bounded_payment_validity_required", false);
