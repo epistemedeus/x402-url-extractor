@@ -15,7 +15,7 @@ import {
   MCP_CALLER_RESULT_TOOL,
 } from "./caller-result-client/src/contract.mjs";
 
-const SOURCE_COMMIT = "REPLACE_SOURCE_COMMIT";
+const SOURCE_COMMIT = "a1ff92e1d0f3c44b396b9baed3d48cb6654d616f";
 const ARCHIVE_SHA256 = "ed5a00d52e15ccd098a7c054db00b2a929d884df3e926c9437bb3514af5c65fc";
 const FEEDBACK_ARCHIVE_SHA256 = "3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b";
 const SDK = Object.freeze({

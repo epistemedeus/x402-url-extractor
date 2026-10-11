@@ -41,7 +41,7 @@ test("released caller client entry matches the hosted archive and the shared con
   assert.equal(entry.sha256, "ed5a00d52e15ccd098a7c054db00b2a929d884df3e926c9437bb3514af5c65fc");
   assert.equal(entry.archiveUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/samedaydesk-caller-result-0.1.1.tar.gz");
   assert.equal(entry.descriptorUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/descriptor.json");
-  assert.equal(entry.sourceUrl, "https://github.com/epistemedeus/x402-url-extractor/tree/REPLACE_SOURCE_COMMIT/caller-result-client");
+  assert.equal(entry.sourceUrl, "https://github.com/epistemedeus/x402-url-extractor/tree/a1ff92e1d0f3c44b396b9baed3d48cb6654d616f/caller-result-client");
   assert.match(entry.sourceUrl, /^https:\/\/github\.com\/epistemedeus\/x402-url-extractor\/tree\/[0-9a-f]{40}\/caller-result-client$/);
   const feedbackBytes = readFileSync(path.join(cwd, CALLER_RESULT_CLIENT_FEEDBACK_ARCHIVE.relativePath));
   assert.equal(createHash("sha256").update(feedbackBytes).digest("hex"), "3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b");
