@@ -160,6 +160,9 @@ async function readback(dir, exercise) {
     };
     await exercise(get);
   } finally { await stop(child); }
+  const calls = output.split('\n').filter(line => line.startsWith('{"readbackCalls":')).map(JSON.parse);
+  assert.ok(calls.length > 0, 'mounted disk status must return its actual receipt call count');
+  for (const call of calls) assert.deepEqual(call.readbackCalls, { receipt: 0, block: 0 });
 }
 
 before(async () => {
@@ -225,11 +228,16 @@ test('cold installed producer to committed parent, pending first capture, recove
   assert.equal(first.status.ledger.amountAtomic, '509000');
   assert.deepEqual(parentBytes.subarray(0, history.length), history);
   assert.deepEqual(first.calls, { receipt: 1, block: 1 });
+  assert.equal(first.status.prospectiveCaptureRecovery.pendingCandidates, 1);
+  assert.equal(first.status.prospectiveDelivery.technical.validated_response, 0);
   const intent = rows(await bytes(dir, pendingName))[0];
   const candidate = intent.batches[0].candidates[0];
   assert.equal(candidate.evidenceKey, expectedKey);
   assert.equal(candidate.parentDigest, await admitted(dir, produced));
   assert.equal(intent.batches[0].baseByteDigest, digest(history));
+  assert.equal(intent.batches[0].baseByteCount, history.length);
+  assert.equal(intent.batches[0].baseAdmissionCutId, digest(rows(history).map(row =>
+    [row.settlementReference, row.amountAtomic, row.network, row.asset.toLowerCase()].join('\t')).join('\n')));
   await clearObstruction(dir);
   const recovered = processRun('receive', dir);
   assert.deepEqual(recovered.calls, { receipt: 0, block: 0 });
@@ -256,7 +264,10 @@ test('cold installed producer to committed parent, pending first capture, recove
     parentDigest: candidate.parentDigest, historySha256: digest(history), parentSha256: digest(parentBytes),
     observationSha256: digest(observationBytes), firstClock: candidate.observedAt,
     calls: [produced.calls, first.calls, recovered.calls, duplicate.calls], historicalExcluded: 56,
-    canonicalIdentities: 1, parentBytesUnchanged: true, observationBytesUnchangedOnRetryAndReadback: true });
+    canonicalIdentities: 1, parentBytesUnchanged: true, observationBytesUnchangedOnRetryAndReadback: true,
+    pendingBeforeRecovery: first.status.prospectiveCaptureRecovery.pendingCandidates,
+    captureFailureDecision: first.status.prospectiveCaptureRecovery.decision,
+    moneyError: first.status.lastError, mountedReadbackReceiptAndBlockCalls: 0 });
 });
 
 test('cold process loss before parent commit requires a fresh receipt, then committed retry needs none', { timeout: 45_000 }, async () => {

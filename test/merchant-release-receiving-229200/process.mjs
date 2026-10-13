@@ -112,7 +112,12 @@ if (mode === 'produce') {
     ...merchant,
     createCommerceSettlementReconciler: supplied => {
       const reconciler = merchant.createCommerceSettlementReconciler({ ...supplied, ...options });
-      return { ...reconciler, schedule: () => () => {} };
+      return { ...reconciler, schedule: () => () => {}, status: async (...args) => {
+        const status = await reconciler.status(...args);
+        assert.deepEqual(receiptCalls, { receipt: 0, block: 0 });
+        console.log(JSON.stringify({ readbackCalls: receiptCalls }));
+        return status;
+      } };
     },
   } });
   const express = (await import('express')).default;
