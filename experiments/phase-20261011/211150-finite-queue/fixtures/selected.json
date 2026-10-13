@@ -1,0 +1,46 @@
+{
+  "synthetic": true,
+  "acquiredAt": "2026-10-13T00:10:00.000Z",
+  "acquisition": {
+    "requests": 1,
+    "pages": 1,
+    "elapsedMs": 0,
+    "network": false,
+    "redirect": "manual",
+    "maxResponseBytes": 1000000,
+    "timeoutMs": 15000,
+    "maxPages": 4,
+    "maxRequests": 6
+  },
+  "data": {
+    "httpStatus": 200,
+    "body": {
+      "jobs": [
+        {
+          "title": "Data Platform Engineer",
+          "location": "Remote US",
+          "isListed": true,
+          "jobUrl": "https://jobs.ashbyhq.com/liveramp-inc/synthetic-data-platform"
+        },
+        {
+          "title": "Data Steward",
+          "location": "Remote EU",
+          "isListed": true,
+          "jobUrl": "https://jobs.ashbyhq.com/liveramp-inc/synthetic-steward"
+        },
+        {
+          "title": "Sales Engineer",
+          "location": "Remote US",
+          "isListed": true,
+          "jobUrl": "https://jobs.ashbyhq.com/liveramp-inc/synthetic-sales"
+        },
+        {
+          "title": "Data Contractor",
+          "location": "Remote US",
+          "isListed": false,
+          "jobUrl": "https://jobs.ashbyhq.com/liveramp-inc/synthetic-unlisted"
+        }
+      ]
+    }
+  }
+}

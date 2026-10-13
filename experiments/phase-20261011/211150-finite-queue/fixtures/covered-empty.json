@@ -1,0 +1,38 @@
+{
+  "synthetic": true,
+  "acquiredAt": "2026-10-13T00:10:00.000Z",
+  "acquisition": {
+    "requests": 1,
+    "pages": 1,
+    "elapsedMs": 0,
+    "network": false,
+    "redirect": "manual",
+    "maxResponseBytes": 1000000,
+    "timeoutMs": 15000,
+    "maxPages": 4,
+    "maxRequests": 6
+  },
+  "data": {
+    "pages": [
+      {
+        "offset": 0,
+        "httpStatus": 200,
+        "body": {
+          "total": 2,
+          "jobPostings": [
+            {
+              "title": "Site Reliability Engineer",
+              "locationsText": "Remote US",
+              "externalPath": "/job/Synthetic/SRE_2"
+            },
+            {
+              "title": "Data Analyst",
+              "locationsText": "Austin TX",
+              "externalPath": "/job/Synthetic/Data_3"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

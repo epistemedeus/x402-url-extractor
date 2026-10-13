@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "queueId": "finite-caller-queue-228300",
+  "limits": {
+    "maxInputs": 3,
+    "maxSnapshotBytes": 65536,
+    "maxAggregateBytes": 196608,
+    "maxAggregateRequests": 6,
+    "maxAggregatePages": 6,
+    "maxAggregateElapsedMs": 45000
+  },
+  "support": {
+    "maxCorrectionRounds": 1,
+    "end": "Final finite handback; unresolved inputs returned to caller; no automatic retry or renewal"
+  },
+  "inputs": [
+    {
+      "callerId": "synthetic-caller-228300",
+      "taskId": "synthetic-task-1",
+      "inputId": "input-1",
+      "source": {
+        "recipeCommit": "32267493d29ff1339c5199185d8231012daf0acd",
+        "recipeBlob": "18dfbe6e4b7721bc13bb8fb788df92de0e454f92",
+        "reader": "liverampAshby"
+      },
+      "predicate": {
+        "version": 1,
+        "titleStartsWith": "Data ",
+        "locationEquals": "Remote US",
+        "requiredFields": [
+          "title",
+          "location",
+          "url",
+          "source",
+          "fetchedAt"
+        ]
+      },
+      "freshnessNeed": {
+        "id": "synthetic-need-1-1",
+        "notBefore": "2026-10-13T00:00:00.000Z",
+        "reason": "Caller requests this distinct synthetic snapshot decision"
+      },
+      "snapshot": {
+        "path": "fixtures/selected.json",
+        "bytes": 1184,
+        "sha256": "08f8f060cb03cde40b10d9f26552d7674e95cc2221a379cdae89cf364557a27c",
+        "acquiredAt": "2026-10-13T00:10:00.000Z",
+        "acquisition": {
+          "requests": 1,
+          "pages": 1,
+          "elapsedMs": 0,
+          "network": false,
+          "redirect": "manual",
+          "maxResponseBytes": 1000000,
+          "timeoutMs": 15000,
+          "maxPages": 4,
+          "maxRequests": 6
+        }
+      }
+    },
+    {
+      "callerId": "synthetic-caller-228300",
+      "taskId": "synthetic-task-2",
+      "inputId": "input-2",
+      "source": {
+        "recipeCommit": "32267493d29ff1339c5199185d8231012daf0acd",
+        "recipeBlob": "18dfbe6e4b7721bc13bb8fb788df92de0e454f92",
+        "reader": "acxiom"
+      },
+      "predicate": {
+        "version": 1,
+        "titleStartsWith": "Data ",
+        "locationEquals": "Remote US",
+        "requiredFields": [
+          "title",
+          "location",
+          "url",
+          "source",
+          "fetchedAt"
+        ]
+      },
+      "freshnessNeed": {
+        "id": "synthetic-need-2-1",
+        "notBefore": "2026-10-13T00:00:00.000Z",
+        "reason": "Caller requests this distinct synthetic snapshot decision"
+      },
+      "snapshot": {
+        "path": "fixtures/covered-empty.json",
+        "bytes": 826,
+        "sha256": "6fa89859b1b584f9146dbd86c59cd85163cde5effd921554237e425424a5229f",
+        "acquiredAt": "2026-10-13T00:10:00.000Z",
+        "acquisition": {
+          "requests": 1,
+          "pages": 1,
+          "elapsedMs": 0,
+          "network": false,
+          "redirect": "manual",
+          "maxResponseBytes": 1000000,
+          "timeoutMs": 15000,
+          "maxPages": 4,
+          "maxRequests": 6
+        }
+      }
+    },
+    {
+      "callerId": "synthetic-caller-228300",
+      "taskId": "synthetic-task-3",
+      "inputId": "input-3",
+      "source": {
+        "recipeCommit": "32267493d29ff1339c5199185d8231012daf0acd",
+        "recipeBlob": "18dfbe6e4b7721bc13bb8fb788df92de0e454f92",
+        "reader": "acxiom"
+      },
+      "predicate": {
+        "version": 1,
+        "titleStartsWith": "Data ",
+        "locationEquals": "Remote US",
+        "requiredFields": [
+          "title",
+          "location",
+          "url",
+          "source",
+          "fetchedAt"
+        ]
+      },
+      "freshnessNeed": {
+        "id": "synthetic-need-3-1",
+        "notBefore": "2026-10-13T00:00:00.000Z",
+        "reason": "Caller requests this distinct synthetic snapshot decision"
+      },
+      "snapshot": {
+        "path": "fixtures/partial.json",
+        "bytes": 1115,
+        "sha256": "3c65965340f8cc8a175312dc64f409e5c8c901b1fc1336047b08a4a419fdde1a",
+        "acquiredAt": "2026-10-13T00:10:00.000Z",
+        "acquisition": {
+          "requests": 2,
+          "pages": 2,
+          "elapsedMs": 0,
+          "network": false,
+          "redirect": "manual",
+          "maxResponseBytes": 1000000,
+          "timeoutMs": 15000,
+          "maxPages": 4,
+          "maxRequests": 6
+        }
+      }
+    }
+  ]
+}

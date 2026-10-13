@@ -1,0 +1,63 @@
+{
+  "queueId": "finite-caller-queue-228300",
+  "cases": [
+    {
+      "inputId": "input-1",
+      "status": "accepted_rows",
+      "accepted": true,
+      "due": "due",
+      "coverageStatus": "complete_for_returned_listed_set",
+      "selectedTitles": [
+        "Data Platform Engineer"
+      ],
+      "selectedUrls": [
+        "https://jobs.ashbyhq.com/liveramp-inc/synthetic-data-platform"
+      ],
+      "unknownLocations": 0,
+      "missingRows": 0,
+      "uniqueRows": 3,
+      "remaining": null,
+      "unlistedWithheld": 1
+    },
+    {
+      "inputId": "input-2",
+      "status": "accepted_empty",
+      "accepted": true,
+      "due": "due",
+      "coverageStatus": "complete_for_declared_total",
+      "selectedTitles": [],
+      "selectedUrls": [],
+      "unknownLocations": 0,
+      "missingRows": 0,
+      "uniqueRows": 2,
+      "remaining": 0,
+      "unlistedWithheld": 0
+    },
+    {
+      "inputId": "input-3",
+      "status": "partial",
+      "accepted": false,
+      "due": "due",
+      "coverageStatus": "partial",
+      "selectedTitles": [
+        "Data Engineering Fellow"
+      ],
+      "selectedUrls": [
+        "https://acxiomllc.wd5.myworkdayjobs.com/en-US/AcxiomUSA/job/Synthetic/Fellow_4"
+      ],
+      "unknownLocations": 1,
+      "missingRows": 1,
+      "uniqueRows": 2,
+      "remaining": 2,
+      "unlistedWithheld": 0
+    }
+  ],
+  "summary": {
+    "accepted": 2,
+    "unresolved": 1,
+    "selectedRows": 2,
+    "uniqueInputs": 3,
+    "requests": 4,
+    "pages": 4
+  }
+}

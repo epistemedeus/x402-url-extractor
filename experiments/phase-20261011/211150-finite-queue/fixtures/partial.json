@@ -1,0 +1,50 @@
+{
+  "synthetic": true,
+  "acquiredAt": "2026-10-13T00:10:00.000Z",
+  "acquisition": {
+    "requests": 2,
+    "pages": 2,
+    "elapsedMs": 0,
+    "network": false,
+    "redirect": "manual",
+    "maxResponseBytes": 1000000,
+    "timeoutMs": 15000,
+    "maxPages": 4,
+    "maxRequests": 6
+  },
+  "data": {
+    "pages": [
+      {
+        "offset": 0,
+        "httpStatus": 200,
+        "body": {
+          "total": 4,
+          "jobPostings": [
+            {
+              "title": "Data Engineering Fellow",
+              "locationsText": "Remote US",
+              "externalPath": "/job/Synthetic/Fellow_4"
+            },
+            {
+              "bulletFields": [
+                "SYNTHETIC-MISSING-TITLE-PATH"
+              ]
+            },
+            {
+              "title": "Data Analyst",
+              "externalPath": "/job/Synthetic/UnknownLocation_5"
+            }
+          ]
+        }
+      },
+      {
+        "offset": 3,
+        "httpStatus": 503,
+        "body": {
+          "errorCode": "SYNTHETIC-UNAVAILABLE",
+          "message": "Synthetic later page unavailable"
+        }
+      }
+    ]
+  }
+}

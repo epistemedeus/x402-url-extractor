@@ -1,0 +1,149 @@
+{
+  "repository": "epistemedeus/x402-url-extractor",
+  "base": "82a51274e7dc7a7600b90f1317a6be6b28442592",
+  "acceptedRecipeCommit": "32267493d29ff1339c5199185d8231012daf0acd",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "acquired/LICENSE",
+      "sourcePath": "LICENSE",
+      "commit": "82a51274e7dc7a7600b90f1317a6be6b28442592",
+      "gitBlob": "34e784554d75f424552ad2198708c8d99c5b4b67",
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c",
+      "bytes": 1068,
+      "historicalByteIdentical": true
+    },
+    {
+      "path": "acquired/careers-board-config.mjs",
+      "sourcePath": "careers-board-config.mjs",
+      "commit": "82a51274e7dc7a7600b90f1317a6be6b28442592",
+      "gitBlob": "3769421ef7a85f01c5141c1c4ed55566db28d249",
+      "sha256": "0a9160296bd8211105e4135020a188dfffd8b34adac1bf09fc1586f32bab6a19",
+      "bytes": 6816,
+      "historicalByteIdentical": true
+    },
+    {
+      "path": "acquired/recipes/careers-board/boards.mjs",
+      "sourcePath": "recipes/careers-board/boards.mjs",
+      "commit": "82a51274e7dc7a7600b90f1317a6be6b28442592",
+      "gitBlob": "18dfbe6e4b7721bc13bb8fb788df92de0e454f92",
+      "sha256": "d062c790660979b38a6ca4fa2bb85850cd710d06bca83ac4a029a5a32f8a3308",
+      "bytes": 21701,
+      "historicalByteIdentical": true
+    },
+    {
+      "path": "acquired/recipes/careers-board/boards.public.test.mjs",
+      "sourcePath": "recipes/careers-board/boards.public.test.mjs",
+      "commit": "82a51274e7dc7a7600b90f1317a6be6b28442592",
+      "gitBlob": "ddf3161a5efa5c00c456c7f81e55e8444fdb2b8c",
+      "sha256": "5a0539e3752c726b2bfa5c2dd2cc5b1afc2c6430c7e6c54eae0c83cd215e715f",
+      "bytes": 4702,
+      "historicalByteIdentical": true
+    },
+    {
+      "path": "acquired/recipes/careers-board/boards.root.test.mjs",
+      "sourcePath": "recipes/careers-board/boards.root.test.mjs",
+      "commit": "82a51274e7dc7a7600b90f1317a6be6b28442592",
+      "gitBlob": "1ffa9128933b3502192a40b6edff363d93738a95",
+      "sha256": "895d39208c09da370f40de7454121d7755ec73ddc1b19e98fdb196b539aaedcb",
+      "bytes": 5724,
+      "historicalByteIdentical": true
+    },
+    {
+      "path": "acquired/recipes/careers-board/check-boards.mjs",
+      "sourcePath": "recipes/careers-board/check-boards.mjs",
+      "commit": "82a51274e7dc7a7600b90f1317a6be6b28442592",
+      "gitBlob": "4de74a99b83bf35f5ffb084ae0b0b8d77aa46f4e",
+      "sha256": "ade1197d7a028918edff73bd6c90ca592774ab4b0f461f2d446d544d1205c366",
+      "bytes": 15103,
+      "historicalByteIdentical": true
+    },
+    {
+      "path": "acquired/recipes/careers-board/PUBLIC-RECIPE.md",
+      "sourcePath": "recipes/careers-board/PUBLIC-RECIPE.md",
+      "commit": "82a51274e7dc7a7600b90f1317a6be6b28442592",
+      "gitBlob": "9272895d0aef0e315f82ac64fdd5bf19be5e5bac",
+      "sha256": "dfc3580a135056a59cea36d1962bd15e94dcbf72018618a042569e4a4097bd8b",
+      "bytes": 2966,
+      "historicalByteIdentical": true
+    }
+  ],
+  "runtimeEdges": {
+    "direct-handback.mjs": [
+      "./acquired/recipes/careers-board/boards.mjs",
+      "node:crypto",
+      "node:fs",
+      "node:path",
+      "node:url"
+    ],
+    "receive.mjs": [
+      "node:assert/strict",
+      "node:crypto",
+      "node:fs",
+      "node:path",
+      "node:url"
+    ],
+    "measure-arms.mjs": [
+      "node:assert/strict",
+      "node:child_process",
+      "node:fs",
+      "node:path",
+      "node:perf_hooks",
+      "node:url"
+    ],
+    "network-tripwire.mjs": [
+      "node:http",
+      "node:https",
+      "node:module",
+      "node:net",
+      "node:tls"
+    ],
+    "offline-cli-fixtures.mjs": [
+      "node:assert/strict"
+    ],
+    "queue.test.mjs": [
+      "./direct-handback.mjs",
+      "./receive.mjs",
+      "node:assert/strict",
+      "node:child_process",
+      "node:fs",
+      "node:os",
+      "node:path",
+      "node:test",
+      "node:url"
+    ],
+    "fetch-controls.test.mjs": [
+      "./acquired/recipes/careers-board/boards.mjs",
+      "node:assert/strict",
+      "node:child_process",
+      "node:net",
+      "node:path",
+      "node:test",
+      "node:url"
+    ],
+    "acquired/careers-board-config.mjs": [],
+    "acquired/recipes/careers-board/boards.mjs": [
+      "node:fs",
+      "node:path",
+      "node:url"
+    ],
+    "acquired/recipes/careers-board/boards.public.test.mjs": [
+      "./boards.mjs",
+      "node:assert/strict",
+      "node:test"
+    ],
+    "acquired/recipes/careers-board/boards.root.test.mjs": [
+      "./boards.mjs",
+      "./check-boards.mjs",
+      "node:assert/strict",
+      "node:test"
+    ],
+    "acquired/recipes/careers-board/check-boards.mjs": [
+      "./boards.mjs",
+      "node:fs",
+      "node:path",
+      "node:url"
+    ]
+  },
+  "externalPackages": []
+}
