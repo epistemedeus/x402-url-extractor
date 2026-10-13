@@ -77,3 +77,24 @@ refusal, capacity limits, namespace substitution and nonregular target safety.
 Receiving adds revalidated admission after a failed parent append, a synthetic
 56-parent exclusion check, failed fsync, corrupt readback and FIFO substitution
 at both observation and interrupted-temp sync opens.
+
+Finite installed receiving is available with `npm run test:merchant-release-receiving`.
+Commit the candidate first: the harness archives exact HEAD, records every member,
+materializes outside the checkout and installs its own dependencies using
+`npm ci --ignore-scripts --no-audit --no-fund`. Use a normal supported Node/npm
+distribution; the full merchant compatibility suite also contains an archive
+consumer with a Node 22.22 minimum. The installed-skill compatibility prerequisite
+expects npm next to its Node executable.
+
+The installed harness sends one supplied useful extract response through the
+actual telemetry/evidence middleware and statement producer. Its unsigned
+loopback facilitator and injected Transfer receipt are explicitly synthetic;
+they test no payment signing, provider execution or outside acceptance. Separate
+cold processes admit, interrupt and recover, with receipt/handler/settlement call
+counts and parent/observation hashes. Real `server.js` serves the existing demand
+endpoint for disk readback with only reconciler scheduling disabled. Receiver
+processes reject nonloopback sockets before network I/O. No retry service runs.
+The accepted finite fault suite is also replayed inside the installed artifact.
+Set `MERCHANT_RECEIVING_EVIDENCE_DIR` to a task-owned directory to retain compact
+artifact, manifest and receiving evidence. Private synthetic stores are removed
+after the finite run.
