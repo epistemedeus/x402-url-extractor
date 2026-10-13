@@ -125,7 +125,9 @@ if (mode === 'produce') {
   });
   Object.assign(process.env, { PORT: argument, COMMERCE_DATA_DIR: directory, COMMERCE_ACTOR_SECRET: secret,
     COMMERCE_SETTLEMENT_EVIDENCE_SINCE: options.settlementEvidenceSince, NETWORK: options.network, PAY_TO: treasury,
-    PUBLIC_URL: `http://127.0.0.1:${argument}`, FACILITATOR: 'xpay',
+    // The retained public statement binds this metadata origin. Transport
+    // remains numeric loopback and the guard rejects any public connection.
+    PUBLIC_URL: 'https://agents.samedaydesk.com', FACILITATOR: 'xpay',
     FACILITATOR_URL: `http://127.0.0.1:${server.address().port}`, MORPHO_BASE_RPC_URLS: `http://127.0.0.1:${server.address().port}/refused-rpc`, MPP_SECRET_KEY: '' });
   await import('../../server.js');
 } else { throw new Error('229200 mode rejected'); }
