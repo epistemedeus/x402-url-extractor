@@ -922,7 +922,7 @@ async function savePending(dataDir, pinned, loaded, state) {
     if (error.code !== "EEXIST") throw error;
     const prior = await readRegular(temp, { pending: true });
     if (!prior || !prior.bytes.equals(bytes)) throw captureError("pending_temp_conflict");
-    handle = await open(temp, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+    handle = await open(temp, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW | fsConstants.O_NONBLOCK);
     if (!sameFile(prior.info, await handle.stat())) {
       await handle.close();
       throw captureError("torn");
@@ -965,22 +965,32 @@ export async function prepareProspectiveCapture({ dataDir, pinned, parentBytes, 
     const old = new Set(base.admitted.map((record) => prospectiveEvidenceKey(record.settlementReference)));
     const existing = new Map(loaded.state.batches.flatMap((batch) => batch.candidates.map((candidate) => [candidate.evidenceKey, candidate])));
     const candidates = [];
+    const replaced = new Set();
     for (const record of newRecords) {
       const evidenceKey = prospectiveEvidenceKey(record.settlementReference);
       const parentDigest = sha256(JSON.stringify(record));
       if (!evidenceKey || old.has(evidenceKey)) throw captureError("unbound");
-      if (existing.has(evidenceKey)) {
-        if (existing.get(evidenceKey).parentDigest !== parentDigest) throw captureError("unbound");
-        continue;
-      }
-      existing.set(evidenceKey, { parentDigest });
-      candidates.push({ evidenceKey, parentDigest, observedAt: new Date(now).toISOString() });
+      const prior = existing.get(evidenceKey);
+      if (prior?.parentDigest === parentDigest) continue;
+      if (candidates.some((candidate) => candidate.evidenceKey === evidenceKey)) throw captureError("unbound");
+      // A failed parent append can leave an intent with the earlier attempt's
+      // reconciledAt. Only fresh producer-returned records absent from the
+      // exact current parent cut may rebind it; committed parents were refused
+      // above. Keep the first capture clock and require the new full digest on
+      // recovery, rather than treating the earlier intent as money authority.
+      if (prior) replaced.add(evidenceKey);
+      const candidate = { evidenceKey, parentDigest, observedAt: prior?.observedAt || new Date(now).toISOString() };
+      existing.set(evidenceKey, candidate);
+      candidates.push(candidate);
     }
     if (existing.size > PROSPECTIVE_PENDING_MAX_CANDIDATES) throw captureError("saturated");
     if (candidates.length) {
-      loaded.state.batches.push({ baseByteCount: parentBytes.length, baseByteDigest: sha256(parentBytes),
+      const next = { ...loaded.state, batches: loaded.state.batches.map((batch) => ({ ...batch,
+        candidates: batch.candidates.filter((candidate) => !replaced.has(candidate.evidenceKey)) })).filter((batch) => batch.candidates.length) };
+      next.batches.push({ baseByteCount: parentBytes.length, baseByteDigest: sha256(parentBytes),
         baseAdmissionCutId: base.admissionCutId, candidates });
-      await savePending(dataDir, pinned, loaded, loaded.state);
+      await savePending(dataDir, pinned, loaded, next);
+      return pendingStatus(next);
     }
     return pendingStatus(loaded.state);
   } catch (error) { return pendingFailure(error); }
@@ -1021,7 +1031,7 @@ export async function recoverProspectiveCapture({ dataDir, pinned } = {}) {
       await pendingNamespace(dataDir, pinned);
       const file = await readRegular(storePath(pinned.procPrefix));
       if (!file) throw captureError("observation_missing");
-      const handle = await open(storePath(pinned.procPrefix), fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+      const handle = await open(storePath(pinned.procPrefix), fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW | fsConstants.O_NONBLOCK);
       try {
         if (!sameFile(file.info, await handle.stat())) throw captureError("torn");
         await handle.sync();

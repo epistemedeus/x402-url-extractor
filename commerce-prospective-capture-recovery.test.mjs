@@ -30,7 +30,7 @@ function childFault(fixture, stage, expectedCode) {
   const child = spawnSync(process.execPath, ['--experimental-test-module-mocks',
     path.resolve('test/prospective-capture-fault-child.mjs'), fixture.dir, stage], { encoding: 'utf8', timeout: 15000 });
   assert.equal(child.status, expectedCode, child.stderr);
-  const result = JSON.parse(child.stdout.trim());
+  const result = JSON.parse(child.stdout.trim().split('\n').at(-1));
   assert.equal(result.receiptLookups, 1);
   return result;
 }
@@ -96,6 +96,111 @@ for (const stage of ['before-parent', 'parent-write-error']) {
     } finally { await fixture.cleanup(); }
   });
 }
+
+for (const stage of ['before-parent', 'parent-write-error']) {
+  test(`${stage}: a revalidated uncommitted admission can recover its later failed capture`, async () => {
+    const fixture = await captureFixture();
+    try {
+      await mkdir(journalPath(fixture));
+      childFault(fixture, stage, stage === 'before-parent' ? 77 : 0);
+      assert.deepEqual(await fixture.ledgerBytes(), fixture.oldBytes);
+      const firstIntent = JSON.parse(await readFile(pendingPath(fixture), 'utf8')).batches[0].candidates[0];
+      const retried = await fixture.restart().reconcile();
+      assert.equal(retried.lastError, null);
+      const parentBytes = await fixture.ledgerBytes();
+      assert.deepEqual(parentBytes.subarray(0, fixture.oldBytes.length), fixture.oldBytes);
+      const admitted = JSON.parse(parentBytes.toString().trim().split('\n').at(-1));
+      assert.notEqual(digest(JSON.stringify(admitted)), firstIntent.parentDigest);
+      await rm(journalPath(fixture), { recursive: true });
+      const recovered = await fixture.restart().reconcile();
+      const duplicate = await fixture.restart().reconcile();
+      console.log(JSON.stringify({ experiment: 'revalidated-parent', stage,
+        parents: recovered.ledger.reconciledSettlements, amountAtomic: recovered.ledger.amountAtomic,
+        receiptLookupsAfterUncommittedAttempt: fixture.receiptLookups(),
+        restartObserved: recovered.prospectiveDelivery.technical.validated_response,
+        restartMissing: recovered.prospectiveDelivery.coverage.admittedWithoutProspectiveObservation,
+        recovery: recovered.prospectiveCaptureRecovery.decision }));
+      assert.deepEqual(await fixture.ledgerBytes(), parentBytes);
+      assert.equal(fixture.receiptLookups(), 1); // Failed child lookup is separate; no lookup after commit.
+      assert.equal(recovered.ledger.reconciledSettlements, 3);
+      assert.equal(recovered.ledger.amountAtomic, '23000');
+      assert.equal(recovered.prospectiveDelivery.technical.validated_response, 1);
+      assert.equal(duplicate.prospectiveDelivery.technical.validated_response, 1);
+      assert.equal(recovered.prospectiveDelivery.coverage.admittedWithoutProspectiveObservation, 2);
+      assert.equal(recovered.prospectiveCaptureRecovery.pendingCandidates, 0);
+      const observed = prospective.parseProspectiveJournal(await readFile(journalPath(fixture), 'utf8')).records;
+      assert.equal(observed.length, 1);
+      assert.equal(observed[0].observedAt, firstIntent.observedAt);
+    } finally { await fixture.cleanup(); }
+  });
+}
+
+for (const target of ['historical', 'current']) {
+  test(`${target}: an admitted parent cannot be rebound by preparation`, async () => {
+    const fixture = await blockedFixture();
+    const pinned = await pin(fixture);
+    try {
+      const parentBytes = await fixture.ledgerBytes();
+      const pendingBytes = await readFile(pendingPath(fixture));
+      const record = target === 'historical' ? fixture.oldRecords[0]
+        : JSON.parse(parentBytes.toString().trim().split('\n').at(-1));
+      const refused = await prospective.prepareProspectiveCapture({ dataDir: fixture.dir, pinned, parentBytes,
+        newRecords: [{ ...record, reconciledAt: '2026-10-13T01:00:00.000Z' }] });
+      assert.equal(refused.decision, 'unbound');
+      assert.deepEqual(await readFile(pendingPath(fixture)), pendingBytes);
+      assert.deepEqual(await fixture.ledgerBytes(), parentBytes);
+      await rm(journalPath(fixture), { recursive: true });
+      const recovered = await fixture.restart().reconcile();
+      assert.equal(recovered.prospectiveDelivery.technical.validated_response, 1);
+      assert.equal(recovered.prospectiveDelivery.coverage.admittedWithoutProspectiveObservation, 2);
+      assert.equal(fixture.receiptLookups(), 1);
+    } finally { await pinned.handle.close(); await fixture.cleanup(); }
+  });
+}
+
+test('conflicting producer candidates cannot publish a malformed pending snapshot', async () => {
+  const fixture = await captureFixture();
+  const pinned = await pin(fixture);
+  try {
+    const record = { ...fixture.oldRecords[0], sourceEventId: eventId(3), settlementReference: fixture.newReference };
+    const refused = await prospective.prepareProspectiveCapture({ dataDir: fixture.dir, pinned, parentBytes: fixture.oldBytes,
+      newRecords: [record, { ...record, amountAtomic: '5000' }] });
+    assert.equal(refused.decision, 'unbound');
+    await assert.rejects(readFile(pendingPath(fixture)), { code: 'ENOENT' });
+    await assert.rejects(readFile(`${pendingPath(fixture)}.tmp`), { code: 'ENOENT' });
+    assert.deepEqual(await fixture.ledgerBytes(), fixture.oldBytes);
+    assert.equal(fixture.receiptLookups(), 0);
+  } finally { await pinned.handle.close(); await fixture.cleanup(); }
+});
+
+test('fifty-six synthetic historical parents stay byte-exact and outside prospective recovery', async () => {
+  const fixture = await captureFixture();
+  try {
+    const oldRecords = [...fixture.oldRecords, ...Array.from({ length: 54 }, (_, n) => ({
+      ...fixture.oldRecords[0], sourceEventId: eventId(n + 100), settlementReference: reference(n + 100),
+    }))];
+    const oldBytes = Buffer.from(ndjson(oldRecords));
+    await writeFile(path.join(fixture.dir, FILE_CLASSES.settlementLedger), oldBytes, { mode: 0o600 });
+    await mkdir(journalPath(fixture));
+    const first = await fixture.restart().reconcile();
+    assert.equal(first.ledger.reconciledSettlements, 57);
+    const parentBytes = await fixture.ledgerBytes();
+    assert.deepEqual(parentBytes.subarray(0, oldBytes.length), oldBytes);
+    await rm(journalPath(fixture), { recursive: true });
+    const recovered = await fixture.restart().reconcile();
+    await fixture.restart().reconcile();
+    assert.equal(recovered.ledger.reconciledSettlements, 57);
+    assert.equal(recovered.ledger.amountAtomic, '509000');
+    assert.equal(recovered.prospectiveDelivery.technical.validated_response, 1);
+    assert.equal(recovered.prospectiveDelivery.coverage.admittedWithoutProspectiveObservation, 56);
+    assert.equal(recovered.prospectiveDelivery.coverage.historicalComplete, false);
+    const records = prospective.parseProspectiveJournal(await readFile(journalPath(fixture), 'utf8')).records;
+    assert.equal(records.length, 1);
+    assert.equal(records[0].evidenceKey, prospective.prospectiveEvidenceKey(fixture.newReference));
+    assert.deepEqual(await fixture.ledgerBytes(), parentBytes);
+    assert.equal(fixture.receiptLookups(), 1);
+  } finally { await fixture.cleanup(); }
+});
 
 test('after observation append: restart clears only after readback and preserves first classification, feedback and clock', async () => {
   const fixture = await captureFixture();
@@ -396,3 +501,66 @@ test('read-only status reports current corrupt state instead of a prior successf
     assert.equal(status.ledger.amountAtomic, '23000');
   } finally { await fixture.cleanup(); }
 });
+
+for (const stage of ['observation-sync-error', 'observation-readback-invalid']) {
+  test(`${stage}: observation acknowledgment waits for successful fsync and valid readback`, async () => {
+    const fixture = await captureFixture();
+    try {
+      const fault = childFault(fixture, stage, 0);
+      assert.equal(fault.lastError, null);
+      assert.equal(fault.recovery.decision, stage === 'observation-sync-error' ? 'unreadable' : 'observation_invalid');
+      const parentBytes = await fixture.ledgerBytes();
+      assert.deepEqual(parentBytes.subarray(0, fixture.oldBytes.length), fixture.oldBytes);
+      const pending = await readFile(pendingPath(fixture));
+      const intent = JSON.parse(pending.toString()).batches[0].candidates[0];
+      const before = prospective.parseProspectiveJournal(await readFile(journalPath(fixture), 'utf8'));
+      assert.equal(JSON.parse(pending.toString()).batches[0].candidates.length, 1);
+      if (stage === 'observation-readback-invalid') {
+        assert.equal(before.corruptLines, 1);
+        const refused = await fixture.restart().reconcile();
+        assert.equal(refused.prospectiveCaptureRecovery.decision, 'observation_invalid');
+        assert.deepEqual(await readFile(pendingPath(fixture)), pending);
+        // Repair only the known synthetic corruption in this task-owned fixture.
+        const bytes = await readFile(journalPath(fixture));
+        assert.equal(bytes.subarray(-2).toString(), '{\n');
+        await writeFile(journalPath(fixture), bytes.subarray(0, -2), { mode: 0o600 });
+      }
+      const recovered = await fixture.restart().reconcile();
+      assert.equal(recovered.prospectiveCaptureRecovery.pendingCandidates, 0);
+      assert.equal(recovered.prospectiveDelivery.technical.validated_response, 1);
+      const observations = prospective.parseProspectiveJournal(await readFile(journalPath(fixture), 'utf8')).records;
+      assert.equal(observations.length, 1);
+      assert.equal(observations[0].observedAt, intent.observedAt);
+      assert.deepEqual(await fixture.ledgerBytes(), parentBytes);
+      assert.equal(fixture.receiptLookups(), 0);
+    } finally { await fixture.cleanup(); }
+  });
+}
+
+for (const stage of ['observation-sync-fifo', 'pending-sync-fifo']) {
+  test(`${stage}: substitution before a sync open cannot block the parent owner`, async () => {
+    const fixture = await captureFixture();
+    try {
+      if (stage === 'pending-sync-fifo') childFault(fixture, 'after-observation', 78);
+      const child = spawnSync(process.execPath, ['--experimental-test-module-mocks',
+        path.resolve('test/prospective-capture-fault-child.mjs'), fixture.dir, stage], { encoding: 'utf8', timeout: 2500 });
+      assert.equal(child.status, 0, JSON.stringify({ error: child.error?.code, signal: child.signal, stdout: child.stdout, stderr: child.stderr }));
+      const reports = child.stdout.trim().split('\n').map(JSON.parse);
+      assert.equal(reports[0].injected, stage);
+      assert.equal(reports.at(-1).lastError, null);
+      const parentBytes = await fixture.ledgerBytes();
+      assert.deepEqual(parentBytes.subarray(0, fixture.oldBytes.length), fixture.oldBytes);
+      assert.equal(readCommerceSettlementAdmission(parentBytes.toString()).summary.amountAtomic, '23000');
+      const name = stage === 'observation-sync-fifo' ? journalPath(fixture) : `${pendingPath(fixture)}.tmp`;
+      assert.equal((await lstat(name)).isFIFO(), true);
+      assert.equal(JSON.parse(await readFile(pendingPath(fixture), 'utf8')).batches[0].candidates.length, 1);
+      await rm(name);
+      await rename(`${name}.preserved`, name);
+      const recovered = await fixture.restart().reconcile();
+      assert.equal(recovered.prospectiveCaptureRecovery.pendingCandidates, 0);
+      assert.equal(recovered.prospectiveDelivery.technical.validated_response, 1);
+      assert.deepEqual(await fixture.ledgerBytes(), parentBytes);
+      assert.equal(fixture.receiptLookups(), 0);
+    } finally { await fixture.cleanup(); }
+  });
+}

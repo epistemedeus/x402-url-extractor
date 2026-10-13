@@ -3180,14 +3180,15 @@ export function createCommerceSettlementReconciler({
           const preparationFailure = prospectiveCaptureRecovery?.pendingCandidates === null ? prospectiveCaptureRecovery : null;
           const recovered = await recoverProspectiveCapture({ dataDir, pinned: pinnedParent });
           prospectiveCaptureRecovery = preparationFailure || recovered;
-          // Explicit current-run admissions still get their ordinary capture
-          // attempt if pending storage failed. Never reconstruct old inputs.
+          // Recovery owns prepared admissions and their first capture clocks.
+          // If preparation failed, explicit current-run admissions still get
+          // their ordinary attempt. Existing open observations always refresh.
           if (pinnedParent) {
             const current = await fsLstat(dataDir);
             if (current.isDirectory() && String(current.dev) === pinnedParent.dev && String(current.ino) === pinnedParent.ino) {
               await retainProspectiveDeliveries({
                 dataDir: pinnedParent.procPrefix,
-                settlementReferences: result.newRecords.map((record) => record.settlementReference),
+                ...(preparationFailure ? { settlementReferences: result.newRecords.map((record) => record.settlementReference) } : {}),
               });
             }
           }
