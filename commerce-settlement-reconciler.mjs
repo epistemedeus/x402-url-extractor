@@ -305,8 +305,20 @@ export async function reconcileCommerceSettlementEvents(eventContents, ledgerCon
   };
 }
 
+async function readRegularLedger(file, encoding = "utf8") {
+  const before = await fsLstat(file);
+  if (!before.isFile() || before.nlink !== 1) throw new Error("nonregular settlement ledger");
+  const handle = await fsOpen(file, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW | fsConstants.O_NONBLOCK);
+  try {
+    const info = await handle.stat();
+    if (!info.isFile() || info.dev !== before.dev || info.ino !== before.ino) throw new Error("substituted settlement ledger");
+    return await handle.readFile(encoding);
+  } finally { await handle.close(); }
+}
+
 async function readExisting(file) {
   try {
+    if (path.basename(file) === "commerce-settlements.ndjson") return await readRegularLedger(file);
     return await readFile(file, "utf8");
   } catch (error) {
     if (error?.code === "ENOENT") return "";
@@ -2845,7 +2857,7 @@ async function runPublication({ hadNewRecords, runFailed }) {
     let ledgerBytes = Buffer.alloc(0);
     let ledgerPresent = false;
     try {
-      ledgerBytes = await readFile(`${pinned.procPrefix}${LEDGER_NAME}`);
+      ledgerBytes = await readRegularLedger(`${pinned.procPrefix}${LEDGER_NAME}`, null);
       ledgerPresent = true;
     } catch (error) {
       if (errorCode(error) !== "ENOENT") return { published: false };
@@ -2997,6 +3009,7 @@ export function createCommerceSettlementReconciler({
   };
   let running = Promise.resolve();
   let publishedGeneration = null;
+  let prospectiveCaptureRecovery = null;
 
   function capturePlane(options = {}) {
     return captureCommerceSettlementPlane({
@@ -3010,7 +3023,7 @@ export function createCommerceSettlementReconciler({
     });
   }
 
-  async function status({ pinnedPrefix = null } = {}) {
+  async function status({ pinnedPrefix = null, pinned = null, recovery = null } = {}) {
     const [ledger, eventParts] = await Promise.all([
       pinnedPrefix ? readExisting(`${pinnedPrefix}${LEDGER_NAME}`) : readExisting(ledgerPath),
       Promise.all(paths.map(readExisting)),
@@ -3025,6 +3038,13 @@ export function createCommerceSettlementReconciler({
     const run = lastRun || { lastRunAt: null, lastError: null, lastIssueCounts: {} };
     const admission = readCommerceSettlementAdmission(ledger, { paymentClassBySourceEventId });
     const { projectCommerceSettlementUnit } = await import("./commerce-settlement-unit.mjs");
+    const { readProspectiveCapturePending } = await import("./commerce-prospective-delivery.mjs");
+    let ownPin = null;
+    if (!pinned) {
+      try { ownPin = await pinnedOpenDirectory(dataDir); } catch { /* status is read-only */ }
+    }
+    const pendingStatus = await readProspectiveCapturePending({ dataDir, pinned: pinned || ownPin });
+    if (ownPin?.handle) await safeClose(ownPin.handle);
     return {
       enabled,
       settlementEvidenceSince: Number.isFinite(Date.parse(settlementEvidenceSince))
@@ -3040,7 +3060,9 @@ export function createCommerceSettlementReconciler({
         admissionCutId: admission.admissionCutId,
         paymentClassBySourceEventId,
       }),
-      prospectiveDelivery: await readProspectiveDeliveryForStatus(dataDir, admission),
+      prospectiveDelivery: await readProspectiveDeliveryForStatus(pinnedPrefix || dataDir, admission),
+      prospectiveCaptureRecovery: ["pending", "empty", "absent", "saturated", "pending_temp_present"].includes(pendingStatus.decision)
+        ? recovery || pendingStatus : pendingStatus,
     };
   }
 
@@ -3051,6 +3073,7 @@ export function createCommerceSettlementReconciler({
     reconcileInFlight += 1;
     running = running.then(() => admitCommerceJournal(dataDir, async () => {
       try {
+        prospectiveCaptureRecovery = null;
         // Establish the trusted pinned namespace before any parent ledger
         // append; every ledger operation below uses the pinned alias so the
         // write cannot be moved to another namespace by an ancestor swap
@@ -3082,7 +3105,7 @@ export function createCommerceSettlementReconciler({
             if (errorCode(error) !== "ENOENT") baseManifestBytes = undefined;
           }
           try {
-            preRunLedgerBytes = await readFile(`${pinnedParent.procPrefix}${LEDGER_NAME}`);
+            preRunLedgerBytes = await readRegularLedger(`${pinnedParent.procPrefix}${LEDGER_NAME}`, null);
             preRunLedgerPresent = true;
           } catch (error) {
             if (errorCode(error) !== "ENOENT") {
@@ -3106,6 +3129,17 @@ export function createCommerceSettlementReconciler({
           settlementEvidenceSince,
           treasury,
         });
+        // Durable intent precedes the append, but is never parent authority.
+        // Analytics failure stays outside the parent's money/error transition.
+        if (result.newRecords.length) {
+          try {
+            const { prepareProspectiveCapture } = await import("./commerce-prospective-delivery.mjs");
+            prospectiveCaptureRecovery = await prepareProspectiveCapture({ dataDir, pinned: pinnedParent,
+              parentBytes: preRunLedgerBytes, newRecords: result.newRecords });
+          } catch {
+            prospectiveCaptureRecovery = { decision: "unreadable", pendingCandidates: null, recoveredThisRun: 0 };
+          }
+        }
         if (result.newRecords.length) {
           await mkdir(dataDir, { recursive: true, mode: 0o700 });
           const appendBytes = Buffer.from(
@@ -3119,10 +3153,12 @@ export function createCommerceSettlementReconciler({
             // remain identical to the parent's ordinary-path append.
             const appendHandle = await fsOpen(
               `${pinnedParent.procPrefix}${LEDGER_NAME}`,
-              fsConstants.O_WRONLY | fsConstants.O_APPEND | fsConstants.O_CREAT | fsConstants.O_NOFOLLOW,
+              fsConstants.O_WRONLY | fsConstants.O_APPEND | fsConstants.O_CREAT | fsConstants.O_NOFOLLOW | fsConstants.O_NONBLOCK,
               0o600,
             );
             try {
+              const appendStat = await appendHandle.stat();
+              if (!appendStat.isFile() || appendStat.nlink !== 1) throw new Error("nonregular settlement ledger");
               const complete = await completeWrite(appendHandle, appendBytes);
               if (!complete) throw new Error("short ledger append through pinned namespace");
               await appendHandle.sync().catch(() => {});
@@ -3140,11 +3176,21 @@ export function createCommerceSettlementReconciler({
         for (const record of result.newRecords) noteJournalWrite(dataDir, "settlements", record);
 
         try {
-          const { retainProspectiveDeliveries } = await import("./commerce-prospective-delivery.mjs");
-          await retainProspectiveDeliveries({
-            dataDir,
-            settlementReferences: result.newRecords.map((record) => record.settlementReference),
-          });
+          const { recoverProspectiveCapture, retainProspectiveDeliveries } = await import("./commerce-prospective-delivery.mjs");
+          const preparationFailure = prospectiveCaptureRecovery?.pendingCandidates === null ? prospectiveCaptureRecovery : null;
+          const recovered = await recoverProspectiveCapture({ dataDir, pinned: pinnedParent });
+          prospectiveCaptureRecovery = preparationFailure || recovered;
+          // Explicit current-run admissions still get their ordinary capture
+          // attempt if pending storage failed. Never reconstruct old inputs.
+          if (pinnedParent) {
+            const current = await fsLstat(dataDir);
+            if (current.isDirectory() && String(current.dev) === pinnedParent.dev && String(current.ino) === pinnedParent.ino) {
+              await retainProspectiveDeliveries({
+                dataDir: pinnedParent.procPrefix,
+                settlementReferences: result.newRecords.map((record) => record.settlementReference),
+              });
+            }
+          }
         } catch {
           // Prospective retention cannot change ledger bytes, scheduling, or the parent catch.
         }
@@ -3229,7 +3275,7 @@ export function createCommerceSettlementReconciler({
     }));
     await running;
     const resultStatus = pinnedParent
-      ? await status({ pinnedPrefix: pinnedParent.procPrefix })
+      ? await status({ pinnedPrefix: pinnedParent.procPrefix, pinned: pinnedParent, recovery: prospectiveCaptureRecovery })
       : await status();
     if (pinnedParent) {
       void safeClose(pinnedParent.handle);

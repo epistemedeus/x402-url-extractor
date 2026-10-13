@@ -4,7 +4,7 @@
 // settlement references, or event ids. A hash is the idempotency key.
 import { createHash } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
-import { mkdir, open, readFile, rename, rm, stat } from "node:fs/promises";
+import { lstat, mkdir, open, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import { readFileSync } from "node:fs";
 
@@ -36,6 +36,11 @@ const TERMINAL_TECHNICAL = new Set([
 ]);
 const ORDINARY_JOIN = Symbol("ordinary-join");
 const STORED_STATEMENT = Symbol("stored-statement");
+const PENDING_CLOCKS = Symbol("pending-capture-clocks");
+export const PROSPECTIVE_PENDING_FILENAME = "commerce-prospective-capture-pending.json";
+export const PROSPECTIVE_PENDING_MAX_CANDIDATES = 1024;
+export const PROSPECTIVE_PENDING_MAX_BYTES = 512 * 1024;
+const PENDING_SCHEMA = "samedaydesk.commerce-prospective-capture-pending.v1";
 
 const TECHNICAL = Object.freeze([
   "validated_response",
@@ -311,14 +316,49 @@ function storePath(dataDir) {
 }
 
 async function readJournal(dataDir) {
-  try {
-    const info = await stat(storePath(dataDir));
-    if (!info.isFile()) return "";
-    return await readFile(storePath(dataDir), "utf8");
-  } catch (error) {
-    if (error?.code === "ENOENT") return "";
+  return (await readRegular(storePath(dataDir)))?.bytes.toString("utf8") || "";
+}
+
+function captureError(reason) {
+  return Object.assign(new Error(`prospective capture: ${reason}`), { captureReason: reason });
+}
+
+function sameFile(left, right) {
+  return left.dev === right.dev && left.ino === right.ino;
+}
+
+// Inspect before opening so a FIFO/device is never activated. NOFOLLOW and
+// descriptor identity checks prevent final-target substitution. Pending is a
+// private single-link file; ordinary observation reads keep their old modes.
+async function readRegular(file, { pending = false } = {}) {
+  let info;
+  try { info = await lstat(file); } catch (error) {
+    if (error.code === "ENOENT") return null;
     throw error;
   }
+  if (!info.isFile() || info.nlink !== 1) throw captureError("nonregular");
+  if (pending && ((info.mode & 0o777) !== 0o600
+    || (typeof process.geteuid === "function" && info.uid !== process.geteuid()))) {
+    throw captureError("unreadable");
+  }
+  if (pending && info.size > PROSPECTIVE_PENDING_MAX_BYTES) throw captureError("saturated");
+  const handle = await open(file, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW | fsConstants.O_NONBLOCK);
+  try {
+    const pinned = await handle.stat();
+    if (!pinned.isFile() || !sameFile(info, pinned)) throw captureError("nonregular");
+    const bytes = pending ? Buffer.alloc(info.size) : await handle.readFile();
+    if (pending) {
+      let offset = 0;
+      while (offset < bytes.length) {
+        const { bytesRead } = await handle.read(bytes, offset, bytes.length - offset, offset);
+        if (!bytesRead) throw captureError("torn");
+        offset += bytesRead;
+      }
+    }
+    const after = await handle.stat();
+    if (after.size !== bytes.length || !sameFile(info, await lstat(file))) throw captureError("torn");
+    return { bytes, info };
+  } finally { await handle.close(); }
 }
 
 async function syncDirectory(dir) {
@@ -333,8 +373,12 @@ async function syncDirectory(dir) {
 async function appendLines(dataDir, lines) {
   await mkdir(dataDir, { recursive: true, mode: 0o700 });
   const payload = Buffer.from(lines.join(""), "utf8");
-  const handle = await open(storePath(dataDir), fsConstants.O_APPEND | fsConstants.O_CREAT | fsConstants.O_WRONLY, 0o600);
+  const file = storePath(dataDir);
+  const before = await lstat(file);
+  if (!before.isFile() || before.nlink !== 1) throw captureError("nonregular");
+  const handle = await open(file, fsConstants.O_APPEND | fsConstants.O_WRONLY | fsConstants.O_NOFOLLOW | fsConstants.O_NONBLOCK);
   try {
+    if (!sameFile(before, await handle.stat())) throw captureError("nonregular");
     let offset = 0;
     while (offset < payload.length) {
       const { bytesWritten } = await handle.write(payload.subarray(offset));
@@ -468,12 +512,14 @@ export function projectProspectiveDelivery({
 }
 
 async function ensureHeader(dataDir, now, sourceVersion) {
-  const existing = await readJournal(dataDir);
-  if (existing.length > 0) return parseProspectiveJournal(existing);
+  const existing = await readRegular(storePath(dataDir));
+  if (existing) {
+    if (existing.bytes.length === 0) throw captureError("torn");
+    return parseProspectiveJournal(existing.bytes.toString("utf8"));
+  }
   const header = headerRecord(now, sourceVersion);
-  const temp = path.join(dataDir, `.${PROSPECTIVE_FILENAME}.${process.pid}.${Math.random().toString(16).slice(2)}.tmp`);
   await mkdir(dataDir, { recursive: true, mode: 0o700 });
-  const handle = await open(temp, fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_WRONLY, 0o600);
+  const handle = await open(storePath(dataDir), fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_WRONLY | fsConstants.O_NOFOLLOW, 0o600);
   try {
     const payload = Buffer.from(`${JSON.stringify(header)}\n`, "utf8");
     let offset = 0;
@@ -485,14 +531,6 @@ async function ensureHeader(dataDir, now, sourceVersion) {
     await handle.sync();
   } finally {
     await handle.close();
-  }
-  try {
-    await rename(temp, storePath(dataDir));
-  } catch (error) {
-    await rm(temp, { force: true });
-    const raced = await readJournal(dataDir);
-    if (raced.length > 0) return parseProspectiveJournal(raced);
-    throw error;
   }
   await syncDirectory(dataDir);
   return parseProspectiveJournal(`${JSON.stringify(header)}\n`);
@@ -717,6 +755,7 @@ export async function retainProspectiveDeliveries({
   now = Date.now(),
   sourceVersion = packageVersion,
   maxRecords = PROSPECTIVE_MAX_RECORDS,
+  [PENDING_CLOCKS]: pendingClocks = new Map(),
 } = {}) {
   const explicit = [...new Set(
     settlementReferences.map((reference) => String(reference || "").toLowerCase()).filter((reference) => TX.test(reference)),
@@ -766,7 +805,7 @@ export async function retainProspectiveDeliveries({
         taskConflict: task.taskConflict,
         callerAcceptance: row?.callerAcceptance,
         callerDisposition: row?.callerDisposition,
-      }, prior?.observedAt || new Date(now).toISOString());
+      }, prior?.observedAt || pendingClocks.get(evidenceKey) || new Date(now).toISOString());
       if (prior && prior.feedback !== "absent") {
         observation = { ...observation, feedback: prior.feedback, feedbackSeal: prior.feedbackSeal };
       }
@@ -785,6 +824,221 @@ export async function retainProspectiveDeliveries({
     await bindStoredCallerResultFeedback(dataDir, { now, sourceVersion });
   }
   return parseProspectiveJournal(await readJournal(dataDir));
+}
+
+// A bounded retry input, never money authority. Each batch names the exact
+// pre-append cut and only producer-returned new identities (hashes, not raw
+// references). A restart must independently find their exact admitted parent.
+async function pendingNamespace(dataDir, pinned) {
+  if (!pinned?.trusted || pinned.procPrefix !== `/proc/self/fd/${pinned.handle?.fd}/`) {
+    throw captureError("namespace_unavailable");
+  }
+  const info = await pinned.handle.stat();
+  const current = await lstat(dataDir);
+  if (!info.isDirectory() || (info.mode & 0o777) !== 0o700
+    || (typeof process.geteuid === "function" && info.uid !== process.geteuid())
+    || !current.isDirectory() || !sameFile(info, current)
+    || String(info.dev) !== pinned.dev || String(info.ino) !== pinned.ino) {
+    throw captureError("namespace_mismatch");
+  }
+  return sha256(`${pinned.dev}:${pinned.ino}`);
+}
+
+function pendingCount(state) {
+  return state.batches.reduce((count, batch) => count + batch.candidates.length, 0);
+}
+
+function parsePending(bytes, namespaceId) {
+  if (!bytes.length || bytes.at(-1) !== 10) throw captureError("torn");
+  let state;
+  try { state = JSON.parse(bytes.toString("utf8")); } catch { throw captureError("corrupt"); }
+  if (state?.schemaVersion !== PENDING_SCHEMA) throw captureError("version_mismatch");
+  if (!exactKeys(state, ["schemaVersion", "namespaceId", "batches"])
+    || state.namespaceId !== namespaceId || !Array.isArray(state.batches)) throw captureError("corrupt");
+  if (state.batches.length > PROSPECTIVE_PENDING_MAX_CANDIDATES) throw captureError("saturated");
+  const seen = new Set();
+  for (const batch of state.batches) {
+    if (!exactKeys(batch, ["baseByteCount", "baseByteDigest", "baseAdmissionCutId", "candidates"])
+      || !Number.isSafeInteger(batch.baseByteCount) || batch.baseByteCount < 0
+      || !HEX64.test(batch.baseByteDigest || "") || !HEX64.test(batch.baseAdmissionCutId || "")
+      || !Array.isArray(batch.candidates) || !batch.candidates.length) throw captureError("corrupt");
+    for (const candidate of batch.candidates) {
+      if (!exactKeys(candidate, ["evidenceKey", "parentDigest", "observedAt"])
+        || !HEX64.test(candidate.evidenceKey || "") || !HEX64.test(candidate.parentDigest || "")
+        || !ISO.test(candidate.observedAt || "") || !Number.isFinite(Date.parse(candidate.observedAt))
+        || seen.has(candidate.evidenceKey)) throw captureError("corrupt");
+      seen.add(candidate.evidenceKey);
+      if (seen.size > PROSPECTIVE_PENDING_MAX_CANDIDATES) throw captureError("saturated");
+    }
+  }
+  if (!Buffer.from(`${JSON.stringify(state)}\n`).equals(bytes)) throw captureError("corrupt");
+  return state;
+}
+
+async function loadPending(dataDir, pinned) {
+  const namespaceId = await pendingNamespace(dataDir, pinned);
+  const file = await readRegular(`${pinned.procPrefix}${PROSPECTIVE_PENDING_FILENAME}`, { pending: true });
+  const state = file ? parsePending(file.bytes, namespaceId) : { schemaVersion: PENDING_SCHEMA, namespaceId, batches: [] };
+  let temp;
+  try {
+    temp = await readRegular(`${pinned.procPrefix}${PROSPECTIVE_PENDING_FILENAME}.tmp`, { pending: true });
+    if (temp) parsePending(temp.bytes, namespaceId);
+  } catch (error) { throw captureError(error.captureReason === "saturated" ? "saturated" : "pending_temp_conflict"); }
+  return { file, state, temp };
+}
+
+function pendingStatus(state, decision = null) {
+  const count = pendingCount(state);
+  return { decision: decision || (count >= PROSPECTIVE_PENDING_MAX_CANDIDATES ? "saturated" : count ? "pending" : "empty"),
+    pendingCandidates: count, recoveredThisRun: 0 };
+}
+
+function pendingFailure(error) {
+  return { decision: error.captureReason || "unreadable", pendingCandidates: null, recoveredThisRun: 0 };
+}
+
+export async function readProspectiveCapturePending({ dataDir, pinned } = {}) {
+  try {
+    const { state, file, temp } = await loadPending(dataDir, pinned);
+    return pendingStatus(state, temp ? "pending_temp_present" : file ? null : "absent");
+  } catch (error) { return pendingFailure(error); }
+}
+
+// One fixed temp bounds disk state across interruptions. A restart can finish
+// only an exact, private next-state snapshot independently derived again from
+// parent/observation authority; every other temp is preserved as a conflict.
+async function savePending(dataDir, pinned, loaded, state) {
+  const bytes = Buffer.from(`${JSON.stringify(state)}\n`);
+  if (bytes.length > PROSPECTIVE_PENDING_MAX_BYTES) throw captureError("saturated");
+  await pendingNamespace(dataDir, pinned);
+  const target = `${pinned.procPrefix}${PROSPECTIVE_PENDING_FILENAME}`;
+  const temp = `${target}.tmp`;
+  let handle;
+  let created = false;
+  try {
+    handle = await open(temp, fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_WRONLY | fsConstants.O_NOFOLLOW, 0o600);
+    created = true;
+  } catch (error) {
+    if (error.code !== "EEXIST") throw error;
+    const prior = await readRegular(temp, { pending: true });
+    if (!prior || !prior.bytes.equals(bytes)) throw captureError("pending_temp_conflict");
+    handle = await open(temp, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+    if (!sameFile(prior.info, await handle.stat())) {
+      await handle.close();
+      throw captureError("torn");
+    }
+  }
+  try {
+    if (created) {
+      let offset = 0;
+      while (offset < bytes.length) {
+        const { bytesWritten } = await handle.write(bytes.subarray(offset));
+        if (!bytesWritten) throw captureError("torn");
+        offset += bytesWritten;
+      }
+    }
+    await handle.sync();
+    await pendingNamespace(dataDir, pinned);
+    const current = await readRegular(target, { pending: true });
+    if (loaded.file ? !current || !sameFile(loaded.file.info, current.info)
+      || !loaded.file.bytes.equals(current.bytes) : current !== null) throw captureError("torn");
+    if (!sameFile(await handle.stat(), await lstat(temp))) throw captureError("torn");
+    await rename(temp, target);
+    await pinned.handle.sync();
+  } finally {
+    // Only a temp created by this operation can be cleaned up on failure.
+    const owned = await handle.stat();
+    await handle.close();
+    try { if (created && sameFile(owned, await lstat(temp))) await rm(temp); } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+  }
+}
+
+export async function prepareProspectiveCapture({ dataDir, pinned, parentBytes, newRecords, now = Date.now() } = {}) {
+  try {
+    const loaded = await loadPending(dataDir, pinned);
+    const parent = await readRegular(`${pinned.procPrefix}commerce-settlements.ndjson`);
+    if (!Buffer.isBuffer(parentBytes) || !(parent?.bytes || Buffer.alloc(0)).equals(parentBytes)
+      || (parentBytes.length && parentBytes.at(-1) !== 10)) throw captureError("unbound");
+    const base = readCommerceSettlementAdmission(parentBytes.toString("utf8"));
+    const old = new Set(base.admitted.map((record) => prospectiveEvidenceKey(record.settlementReference)));
+    const existing = new Map(loaded.state.batches.flatMap((batch) => batch.candidates.map((candidate) => [candidate.evidenceKey, candidate])));
+    const candidates = [];
+    for (const record of newRecords) {
+      const evidenceKey = prospectiveEvidenceKey(record.settlementReference);
+      const parentDigest = sha256(JSON.stringify(record));
+      if (!evidenceKey || old.has(evidenceKey)) throw captureError("unbound");
+      if (existing.has(evidenceKey)) {
+        if (existing.get(evidenceKey).parentDigest !== parentDigest) throw captureError("unbound");
+        continue;
+      }
+      existing.set(evidenceKey, { parentDigest });
+      candidates.push({ evidenceKey, parentDigest, observedAt: new Date(now).toISOString() });
+    }
+    if (existing.size > PROSPECTIVE_PENDING_MAX_CANDIDATES) throw captureError("saturated");
+    if (candidates.length) {
+      loaded.state.batches.push({ baseByteCount: parentBytes.length, baseByteDigest: sha256(parentBytes),
+        baseAdmissionCutId: base.admissionCutId, candidates });
+      await savePending(dataDir, pinned, loaded, loaded.state);
+    }
+    return pendingStatus(loaded.state);
+  } catch (error) { return pendingFailure(error); }
+}
+
+export async function recoverProspectiveCapture({ dataDir, pinned } = {}) {
+  try {
+    const loaded = await loadPending(dataDir, pinned);
+    if (!pendingCount(loaded.state)) return pendingStatus(loaded.state,
+      loaded.temp ? "pending_temp_present" : loaded.file ? "empty" : "absent");
+    const parentBytes = (await readRegular(`${pinned.procPrefix}commerce-settlements.ndjson`))?.bytes || Buffer.alloc(0);
+    const admission = readCommerceSettlementAdmission(parentBytes.toString("utf8"));
+    const parents = new Map(admission.admitted.map((record) => [prospectiveEvidenceKey(record.settlementReference), record]));
+    const eligible = [];
+    let decision = "pending";
+    for (const batch of loaded.state.batches) {
+      const prefix = parentBytes.subarray(0, batch.baseByteCount);
+      const base = readCommerceSettlementAdmission(prefix.toString("utf8"));
+      if (prefix.length !== batch.baseByteCount || sha256(prefix) !== batch.baseByteDigest
+        || base.admissionCutId !== batch.baseAdmissionCutId) { decision = "unbound"; continue; }
+      const old = new Set(base.admitted.map((record) => prospectiveEvidenceKey(record.settlementReference)));
+      for (const candidate of batch.candidates) {
+        const parent = parents.get(candidate.evidenceKey);
+        if (!parent) { if (decision !== "unbound") decision = "awaiting_parent"; continue; }
+        if (old.has(candidate.evidenceKey) || sha256(JSON.stringify(parent)) !== candidate.parentDigest) {
+          decision = "unbound"; continue;
+        }
+        eligible.push({ candidate, parent });
+      }
+    }
+    if (eligible.length) {
+      await pendingNamespace(dataDir, pinned);
+      await retainProspectiveDeliveries({ dataDir: pinned.procPrefix,
+        settlementReferences: eligible.map(({ parent }) => parent.settlementReference),
+        [PENDING_CLOCKS]: new Map(eligible.map(({ candidate }) => [candidate.evidenceKey, candidate.observedAt])) });
+      // An append/return value is insufficient: sync and independently parse
+      // the exact regular observation file before acknowledging any intent.
+      await pendingNamespace(dataDir, pinned);
+      const file = await readRegular(storePath(pinned.procPrefix));
+      if (!file) throw captureError("observation_missing");
+      const handle = await open(storePath(pinned.procPrefix), fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+      try {
+        if (!sameFile(file.info, await handle.stat())) throw captureError("torn");
+        await handle.sync();
+      } finally { await handle.close(); }
+      await pinned.handle.sync();
+      const parsed = parseProspectiveJournal(await readJournal(pinned.procPrefix));
+      if (parsed.decision !== "prospective" || parsed.corruptLines) throw captureError("observation_invalid");
+      const observed = new Set(parsed.records.map((record) => record.evidenceKey));
+      const completed = new Set(eligible.filter(({ candidate }) => observed.has(candidate.evidenceKey)).map(({ candidate }) => candidate.evidenceKey));
+      const next = { ...loaded.state, batches: loaded.state.batches.map((batch) => ({ ...batch,
+        candidates: batch.candidates.filter((candidate) => !completed.has(candidate.evidenceKey)) })).filter((batch) => batch.candidates.length) };
+      if (completed.size) await savePending(dataDir, pinned, loaded, next);
+      if (parsed.saturated) decision = "saturated";
+      return { ...pendingStatus(next, pendingCount(next) ? decision : parsed.saturated ? "saturated" : "empty"), recoveredThisRun: completed.size };
+    }
+    return pendingStatus(loaded.state, decision);
+  } catch (error) { return pendingFailure(error); }
 }
 
 export async function readProspectiveDelivery({
