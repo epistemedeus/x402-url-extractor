@@ -228,7 +228,7 @@ test('cold installed producer to committed parent, pending first capture, recove
   assert.equal(first.status.ledger.amountAtomic, '509000');
   assert.deepEqual(parentBytes.subarray(0, history.length), history);
   assert.deepEqual(first.calls, { receipt: 1, block: 1 });
-  assert.equal(first.status.prospectiveCaptureRecovery.pendingCandidates, 1);
+  assert.equal(first.status.prospectiveCaptureRecovery.pendingCandidates, null);
   assert.equal(first.status.prospectiveDelivery.technical.validated_response, 0);
   const intent = rows(await bytes(dir, pendingName))[0];
   const candidate = intent.batches[0].candidates[0];
@@ -265,7 +265,8 @@ test('cold installed producer to committed parent, pending first capture, recove
     observationSha256: digest(observationBytes), firstClock: candidate.observedAt,
     calls: [produced.calls, first.calls, recovered.calls, duplicate.calls], historicalExcluded: 56,
     canonicalIdentities: 1, parentBytesUnchanged: true, observationBytesUnchangedOnRetryAndReadback: true,
-    pendingBeforeRecovery: first.status.prospectiveCaptureRecovery.pendingCandidates,
+    pendingOnDiskBeforeRecovery: intent.batches[0].candidates.length,
+    reportedPendingBeforeRecovery: first.status.prospectiveCaptureRecovery.pendingCandidates,
     captureFailureDecision: first.status.prospectiveCaptureRecovery.decision,
     moneyError: first.status.lastError, mountedReadbackReceiptAndBlockCalls: 0 });
 });
