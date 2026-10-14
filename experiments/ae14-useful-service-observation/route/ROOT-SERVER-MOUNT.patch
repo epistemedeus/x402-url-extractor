@@ -1,0 +1,58 @@
+diff --git a/commerce-events.mjs b/commerce-events.mjs
+--- a/commerce-events.mjs
++++ b/commerce-events.mjs
+@@ -16,7 +16,7 @@ export {
+ } from "./commerce-prospective-retention.mjs";
+ import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+ import { getAddress } from "viem";
+-import { attachCallerResultFeedbackHeader } from "./caller-result-feedback.mjs";
++import { decoratePaidResponse } from "./experiments/ae14-useful-service-observation/src/mount.mjs";
+ import { appendFile, chmod, lstat, mkdir, open, readFile, rename, stat, unlink } from "node:fs/promises";
+ import path from "node:path";
+ import { Credential } from "mppx";
+@@ -3950,7 +3950,7 @@ export function commerceTelemetry(options = {}) {
+       ? capturePaidEvidenceResponseDigest(res, paidEvidenceRequest?.method || req.method, route.route, {
+         onCompleteBody: paidEvidenceRequest
+           ? (observed) => {
+-            attachCallerResultFeedbackHeader(res, {
++            decoratePaidResponse(res, {
+               key: process.env.CALLER_RESULT_FEEDBACK_KEY || "",
+               eventId: causalEvents.get(res)?.id,
+               method: paidEvidenceRequest.method,
+diff --git a/server.js b/server.js
+--- a/server.js
++++ b/server.js
+@@ -149,6 +149,7 @@ import {
+   createCallerResultFeedbackService,
+   callerResultFeedbackPublicContract,
+ } from "./caller-result-feedback.mjs";
++import { createUsefulServiceObservation } from "./experiments/ae14-useful-service-observation/src/extend-handback.mjs";
+ import {
+   CONTRACT_QUALIFIED_SEARCH_EXAMPLE,
+   ContractQualifiedSearchError,
+@@ -980,6 +981,11 @@ const callerResultFeedback = createCallerResultFeedbackService({
+   key: process.env.CALLER_RESULT_FEEDBACK_KEY || "",
+   ...(Number.isSafeInteger(callerResultFeedbackMaxFileBytes) ? { maxFileBytes: callerResultFeedbackMaxFileBytes } : {}),
+ });
++const usefulServiceObservation = createUsefulServiceObservation({
++  dataDir: process.env.COMMERCE_DATA_DIR || `${process.cwd()}/data`,
++  key: process.env.CALLER_RESULT_FEEDBACK_KEY || "",
++  feedback: callerResultFeedback,
++});
+ const serviceDeploymentPublication = loadServiceDeploymentPublication({
+   canonicalOrigin: PUBLIC_URL,
+   network: NETWORK,
+@@ -2210,11 +2216,12 @@ app.get(CALLER_RESULT_FEEDBACK_PATH, (_req, res) => {
+ app.post(CALLER_RESULT_FEEDBACK_PATH, async (req, res) => {
+   res.set("Cache-Control", "no-store");
+   const header = req.get(CALLER_RESULT_FEEDBACK_HEADER) || "";
+-  const result = await callerResultFeedback.submit({
++  const result = await usefulServiceObservation.submitExtension({
+     token: header,
++    priorCapability: req.get("x-samedaydesk-prior-caller-result") || "",
+     body: req.body,
+     rawBody: req.rawBody,
+     query: req.query,
+   });
+   return res.status(result.statusCode).json(result.body);
+ });

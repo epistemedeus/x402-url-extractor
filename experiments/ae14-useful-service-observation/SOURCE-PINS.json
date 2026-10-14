@@ -1,0 +1,70 @@
+{
+  "schema": "ae14.useful-service-observation.pins.v1",
+  "serving": {
+    "repo": "epistemedeus/x402-url-extractor",
+    "commit": "82a51274e7dc7a7600b90f1317a6be6b28442592",
+    "tree": "f95a351e763cc903f7caa4159788cb4ceacddf91",
+    "version": "1.23.52",
+    "role": "pinned serving source and canonical observation writers"
+  },
+  "behaviorEquivalentPrior": {
+    "commit": "838abb50ec9ddac9e93d39d9f8c91f1f3ca44a35",
+    "note": "Root receipt: tests, fixtures, and the package test command differ; runtime behavior stays 1.23.52"
+  },
+  "samedaydesk": {
+    "repo": "epistemedeus/samedaydesk",
+    "commit": "d8cea059213e06d2f263be67f82e498f8052a50f",
+    "tree": "98f0b9f601fdebf40c1e2f7914c8eb21c08aa2d5",
+    "paths": ["tools/result-reuse", "tools/recurring-job-recipes"],
+    "role": "read-only result reuse and recurring recipes; purchasing does not require them"
+  },
+  "e06": {
+    "repo": "epistemedeus/neomorphic-io",
+    "commit": "75312c3ac1590dbf913ae516b7fb76c9db6e74d9",
+    "tree": "2919c38894e9e87c056b5006860d87fb7384601f",
+    "path": "experiments/ae14-task-economics/",
+    "role": "qualified; observed and declared effort stay separate, unknown stays unknown"
+  },
+  "e12": {
+    "repo": "epistemedeus/neomorphic-io",
+    "commit": "272bce6b5c6aec144c9e0eda7438967d5ff67f7a",
+    "tree": "19ac899bdedc1f3f787664e530d10d3cf4171561",
+    "path": "experiments/ae14-task-native-acquisition/",
+    "role": "qualified; self-reported usefulness is not promoted, HTTP 200 is not useful work"
+  },
+  "measurement227900": {
+    "repo": "epistemedeus/neomorphic-io",
+    "commit": "301711b8eac39cdeda16466bc72e3d379fd91486",
+    "tree": "a4f6304496bb97fb817edc5c93eb564d78e26cc1",
+    "path": "experiments/contributor-network-measurement-227900/",
+    "pathTree": "5ad6d5d77ff12a802f93fb80d7be7e2938aecfd0",
+    "role": "canonical metric contract; this package does not ingest"
+  },
+  "e18": {
+    "repo": "epistemedeus/neomorphic-io",
+    "commit": "11871c33e294ad6acecd0fa7049d9104d9152723",
+    "tree": "f232a170736629e083ffc31337b545fd9925fc79",
+    "branch": "codex/ae14-e18-market-attribution-consumer",
+    "status": "pending-join",
+    "role": "interface only; head recorded at inventory, not a Root receipt"
+  },
+  "e08": {
+    "repo": "epistemedeus/x402-url-extractor",
+    "commit": "d5c5ab3606ba2f79d5bdfec6afb347b566966573",
+    "tree": "a6356b16a27ae52cdea92043b79378a6e31925e8",
+    "path": "experiments/ae14-async-delivery/",
+    "role": "contract only; usefulWork stays false and async delivery is not built"
+  },
+  "pilot": {
+    "portfolio": "7428845d6429b78573801ee8035953e26c610eaf",
+    "composition": "2286f21057106354a01d7b3db5677fe2d354430d",
+    "hMatrix": "ecf78d29c2c592dd03b5daef4eeba2f29772c8ae",
+    "stageNative": "c3436e8647bd111a04359193c55f2c97be77e180"
+  },
+  "rootReceipt": {
+    "path": "overview/research/phase-20261013/commerce-delivery-receiving-232910/ROOT-RECEIVING-232950.md",
+    "commit": "2286f21057106354a01d7b3db5677fe2d354430d",
+    "companionsInTree": false,
+    "note": "comparison.json, RESULT.md, and ROOT-RECEIVING-232950.json are cited by the receipt and are not in that commit tree"
+  }
+}

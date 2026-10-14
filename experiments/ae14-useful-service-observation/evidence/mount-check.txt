@@ -1,0 +1,4 @@
+command: git apply --check experiments/ae14-useful-service-observation/route/ROOT-SERVER-MOUNT.patch
+exit: 0
+result: patch applies cleanly and was not applied
+serving files unchanged: server.js commerce-events.mjs

@@ -1,0 +1,288 @@
+command: node --test caller-result-feedback.test.mjs mcp-caller-result.test.mjs commerce-prospective-retention.test.mjs ordinary-delivery-join.test.mjs caller-result-client.source.test.mjs caller-result-client/test/client.test.mjs http-delivery-evidence/test/store.test.mjs http-delivery-evidence/test/contract.test.mjs
+exit: 0
+tests: 50 pass: 50 fail: 0
+
+(node:43124) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:43130) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: server and installed clients share one public capability contract
+ok 1 - server and installed clients share one public capability contract
+  ---
+  duration_ms: 0.538768
+  ...
+# (node:43131) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: package sources do not import the merchant server
+ok 2 - package sources do not import the merchant server
+  ---
+  duration_ms: 6.972786
+  ...
+# Subtest: mcp contract stays free of links and chain claims
+ok 3 - mcp contract stays free of links and chain claims
+  ---
+  duration_ms: 0.167834
+  ...
+# Subtest: overlapping results keep separate capabilities and reporting does not pay
+ok 4 - overlapping results keep separate capabilities and reporting does not pay
+  ---
+  duration_ms: 0.73659
+  ...
+# Subtest: http report stays on the paid origin and does not treat accepted as bound
+ok 5 - http report stays on the paid origin and does not treat accepted as bound
+  ---
+  duration_ms: 16.239651
+  ...
+# (node:43137) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: a response capability is optional, scoped, and not an owner token
+ok 6 - a response capability is optional, scoped, and not an owner token
+  ---
+  duration_ms: 7.434697
+  ...
+# Subtest: statements bind one retained capture and reject every other authority
+ok 7 - statements bind one retained capture and reject every other authority
+  ---
+  duration_ms: 73.983378
+  ...
+# Subtest: torn, rotated, and unwritable journals keep prior statements and refuse new ones
+ok 8 - torn, rotated, and unwritable journals keep prior statements and refuse new ones
+  ---
+  duration_ms: 20.736437
+  ...
+# Subtest: the ordinary join reports supplied statements inside this window only
+ok 9 - the ordinary join reports supplied statements inside this window only
+  ---
+  duration_ms: 30.174647
+  ...
+# (node:43163) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: bad prospective bounds are rejected by the producer
+ok 10 - bad prospective bounds are rejected by the producer
+  ---
+  duration_ms: 1.425642
+  ...
+# Subtest: a new or short producer stays unknown instead of a complete-window zero
+ok 11 - a new or short producer stays unknown instead of a complete-window zero
+  ---
+  duration_ms: 24.77984
+  ...
+# Subtest: two-file rotations still discard a 24-hour boundary and stay unknown
+ok 12 - two-file rotations still discard a 24-hour boundary and stay unknown
+  ---
+  duration_ms: 7.701765
+  ...
+# Subtest: prospective segments keep a 24-hour boundary across ordinary rotations until capacity is exhausted
+ok 13 - prospective segments keep a 24-hour boundary across ordinary rotations until capacity is exhausted
+  ---
+  duration_ms: 22.878135
+  ...
+# Subtest: restart and a shorter admission list do not rewrite or delete unadmitted segments
+ok 14 - restart and a shorter admission list do not rewrite or delete unadmitted segments
+  ---
+  duration_ms: 1623.6748
+  ...
+# Subtest: existing current and rotated files migrate by read without new segments or rewritten rows
+ok 15 - existing current and rotated files migrate by read without new segments or rewritten rows
+  ---
+  duration_ms: 12.614977
+  ...
+# Subtest: damaged, missing, oversized, bad, and future segments withhold completeness without rewriting survivors
+ok 16 - damaged, missing, oversized, bad, and future segments withhold completeness without rewriting survivors
+  ---
+  duration_ms: 10.515473
+  ...
+# Subtest: authenticated cuts survive in-capacity rotation once and are lost rather than duplicated past capacity
+ok 17 - authenticated cuts survive in-capacity rotation once and are lost rather than duplicated past capacity
+  ---
+  duration_ms: 7.631903
+  ...
+# commerce telemetry write failed: unsafe commerce journal file
+# commerce telemetry write failed: unsafe commerce journal file
+# commerce telemetry write failed: unsafe commerce journal file
+# commerce telemetry write failed: unsafe commerce journal file
+# Subtest: unsafe segment nodes and foreign files are refused or left untouched
+ok 18 - unsafe segment nodes and foreign files are refused or left untouched
+  ---
+  duration_ms: 31.220785
+  ...
+# Subtest: age expiry drops only a segment proved entirely older, and a snapshot does not delete it
+ok 19 - age expiry drops only a segment proved entirely older, and a snapshot does not delete it
+  ---
+  duration_ms: 8.018736
+  ...
+# PROSPECTIVE_MEASUREMENT {"count":400,"retained":400,"complete":false,"disk":335600,"files":1,"lineBytes":838,"writeMs":121,"snapMs":10,"hwmKb":147536,"boundedBytes":20971520}
+# Subtest: concurrent writes and capture stay on the admission queue and parse as whole rows
+ok 20 - concurrent writes and capture stay on the admission queue and parse as whole rows
+  ---
+  duration_ms: 15.407394
+  ...
+# Subtest: measured producer load stays inside the prospective byte cap
+ok 21 - measured producer load stays inside the prospective byte cap
+  ---
+  duration_ms: 915.744305
+  ...
+# (node:43174) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: live schemas agree with generated snapshot and HTTP batch is not MCP Zod
+ok 22 - live schemas agree with generated snapshot and HTTP batch is not MCP Zod
+  ---
+  duration_ms: 4.100093
+  ...
+# Subtest: HTTP 200 plus nonempty text is not a pass without the declared contract
+ok 23 - HTTP 200 plus nonempty text is not a pass without the declared contract
+  ---
+  duration_ms: 0.827558
+  ...
+# Subtest: missing and malformed bodies stay unknown or invalid, never pass
+ok 24 - missing and malformed bodies stay unknown or invalid, never pass
+  ---
+  duration_ms: 0.207817
+  ...
+# Subtest: declared extract distinguishes refusal, truncation, and full capture
+ok 25 - declared extract distinguishes refusal, truncation, and full capture
+  ---
+  duration_ms: 0.562172
+  ...
+# Subtest: source refusal is principal when truncation is also present
+ok 26 - source refusal is principal when truncation is also present
+  ---
+  duration_ms: 0.291368
+  ...
+# Subtest: schema-shaped HTTP 500 is not completed delivery
+ok 27 - schema-shaped HTTP 500 is not completed delivery
+  ---
+  duration_ms: 0.242301
+  ...
+# Subtest: unsupported method or resource stays unknown
+ok 28 - unsupported method or resource stays unknown
+  ---
+  duration_ms: 0.222311
+  ...
+# Subtest: timeout and unsupported encoding stay distinct from source refusal
+ok 29 - timeout and unsupported encoding stay distinct from source refusal
+  ---
+  duration_ms: 0.449108
+  ...
+# Subtest: read, batch, and lockfile no-change hold as completed capture
+ok 30 - read, batch, and lockfile no-change hold as completed capture
+  ---
+  duration_ms: 3.411242
+  ...
+# Subtest: bounded oversized capture is never full_bounded_capture
+ok 31 - bounded oversized capture is never full_bounded_capture
+  ---
+  duration_ms: 127.306719
+  ...
+# (node:43206) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: optional validation records survive restart and still join unchanged v1 rows
+ok 32 - optional validation records survive restart and still join unchanged v1 rows
+  ---
+  duration_ms: 9.241076
+  ...
+# Subtest: join emits one row per historical id even when response digests match
+ok 33 - join emits one row per historical id even when response digests match
+  ---
+  duration_ms: 3.19228
+  ...
+# Subtest: body-only validation without paidEvidenceId does not attach to any purchase
+ok 34 - body-only validation without paidEvidenceId does not attach to any purchase
+  ---
+  duration_ms: 1.89671
+  ...
+# (node:43217) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: mcp capability is channel qualified and stays out of the http reader
+ok 35 - mcp capability is channel qualified and stays out of the http reader
+  ---
+  duration_ms: 1.994183
+  ...
+# Subtest: mcp capability rejects foreign, expired, tampered, and client event identity
+ok 36 - mcp capability rejects foreign, expired, tampered, and client event identity
+  ---
+  duration_ms: 0.554628
+  ...
+# Subtest: attach publishes the capability only on eligible sealed morpho meta
+ok 37 - attach publishes the capability only on eligible sealed morpho meta
+  ---
+  duration_ms: 0.604633
+  ...
+# Subtest: the mcp client reports through callTool and does not echo a transport failure
+ok 38 - the mcp client reports through callTool and does not echo a transport failure
+  ---
+  duration_ms: 0.497969
+  ...
+# Subtest: facilitator settlement facts stay canonical without becoming chain truth
+ok 39 - facilitator settlement facts stay canonical without becoming chain truth
+  ---
+  duration_ms: 1.939542
+  ...
+# Subtest: the official wrapper hook retains the sealed result and callTool stays positional
+ok 40 - the official wrapper hook retains the sealed result and callTool stays positional
+  ---
+  duration_ms: 0.710091
+  ...
+# Subtest: overlapping purchases keep their own sealed capability
+ok 41 - overlapping purchases keep their own sealed capability
+  ---
+  duration_ms: 29.036475
+  ...
+# Subtest: free reporting uses the raw SDK and cannot invoke automatic payment
+ok 42 - free reporting uses the raw SDK and cannot invoke automatic payment
+  ---
+  duration_ms: 0.565595
+  ...
+# Subtest: a paid capture that lands after the statement is accepted, and a capture that never appears stays refused
+ok 43 - a paid capture that lands after the statement is accepted, and a capture that never appears stays refused
+  ---
+  duration_ms: 334.378499
+  ...
+# (node:43239) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: constructed records join by event, digest, route, and reference
+ok 44 - constructed records join by event, digest, route, and reference
+  ---
+  duration_ms: 1463.33342
+  ...
+# Subtest: empty stores stay empty and a missing directory is not created
+ok 45 - empty stores stay empty and a missing directory is not created
+  ---
+  duration_ms: 1240.356088
+  ...
+# Subtest: a count join without capture is refused
+ok 46 - a count join without capture is refused
+  ---
+  duration_ms: 1335.088261
+  ...
+# Subtest: the receiver does not write ledgers or import the payment server
+ok 47 - the receiver does not write ledgers or import the payment server
+  ---
+  duration_ms: 3.506387
+  ...
+# Subtest: typed MCP canonical joins without an HTTP v1 row
+ok 48 - typed MCP canonical joins without an HTTP v1 row
+  ---
+  duration_ms: 2.914084
+  ...
+# Subtest: canonical settlement cannot borrow another transport, protocol, time or event canon
+ok 49 - canonical settlement cannot borrow another transport, protocol, time or event canon
+  ---
+  duration_ms: 1.512914
+  ...
+# Subtest: a disk parent keeps amount, network, asset, and payee for the typed join
+ok 50 - a disk parent keeps amount, network, asset, and payee for the typed join
+  ---
+  duration_ms: 10.121493
+  ...
+1..50
+# tests 50
+# suites 0
+# pass 50
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6556.722017
+EXIT:0

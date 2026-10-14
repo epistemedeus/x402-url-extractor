@@ -1,0 +1,28 @@
+{
+  "direct": {
+    "route": "existing_validation_and_feedback_journals",
+    "setupReads": 3,
+    "latencyMs": 1.267,
+    "reviewFields": [
+      "delivered.schemaValid",
+      "declared.usefulnessDisposition"
+    ],
+    "retainedUse": "unknown",
+    "observedRepeat": "unknown"
+  },
+  "extended": {
+    "route": "existing_journals_plus_optional_handback",
+    "setupReads": 4,
+    "latencyMs": 0.979,
+    "reviewFields": [
+      "delivered.schemaValid",
+      "declared.usefulnessDisposition",
+      "declared.retainedUse",
+      "observedRepeat.class"
+    ],
+    "retainedUse": "retained",
+    "observedRepeat": "entitled_reuse"
+  },
+  "equallyEquipped": true,
+  "outsideUsefulAnswerArrived": false
+}

@@ -1,0 +1,1035 @@
+
+> x402-merchant@1.23.52 test:nonlive
+> node --test commerce-nonlive-suite.test.mjs commerce-traffic-provenance.test.mjs commerce-privacy-coverage.test.mjs commerce-trust.test.mjs commerce-payment-evidence.test.mjs commerce-settlement-unit.test.mjs ordinary-delivery-join.test.mjs commerce-prospective-delivery.test.mjs caller-result-feedback.test.mjs mcp-caller-result.test.mjs caller-result-client.source.test.mjs caller-result-client/test/client.test.mjs commerce-settlement-reconciler.test.mjs commerce-settlement-source-delivery.test.mjs settlement-proof.test.mjs purchase-evidence-manifest.test.mjs payment-offer-preflight.test.mjs discovery-drift.test.mjs transaction-receipt.test.mjs circle-gateway-route.test.mjs commerce-rare-funnel.mounted.test.mjs
+
+(node:45936) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:45942) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: server and installed clients share one public capability contract
+ok 1 - server and installed clients share one public capability contract
+  ---
+  duration_ms: 0.517967
+  ...
+# (node:45943) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: package sources do not import the merchant server
+ok 2 - package sources do not import the merchant server
+  ---
+  duration_ms: 5.234255
+  ...
+# Subtest: mcp contract stays free of links and chain claims
+ok 3 - mcp contract stays free of links and chain claims
+  ---
+  duration_ms: 0.266339
+  ...
+# Subtest: overlapping results keep separate capabilities and reporting does not pay
+ok 4 - overlapping results keep separate capabilities and reporting does not pay
+  ---
+  duration_ms: 0.812159
+  ...
+# Subtest: http report stays on the paid origin and does not treat accepted as bound
+ok 5 - http report stays on the paid origin and does not treat accepted as bound
+  ---
+  duration_ms: 18.180136
+  ...
+# (node:45946) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: a response capability is optional, scoped, and not an owner token
+ok 6 - a response capability is optional, scoped, and not an owner token
+  ---
+  duration_ms: 11.347671
+  ...
+# Subtest: statements bind one retained capture and reject every other authority
+ok 7 - statements bind one retained capture and reject every other authority
+  ---
+  duration_ms: 64.977442
+  ...
+# Subtest: torn, rotated, and unwritable journals keep prior statements and refuse new ones
+ok 8 - torn, rotated, and unwritable journals keep prior statements and refuse new ones
+  ---
+  duration_ms: 15.490831
+  ...
+# Subtest: the ordinary join reports supplied statements inside this window only
+ok 9 - the ordinary join reports supplied statements inside this window only
+  ---
+  duration_ms: 18.901703
+  ...
+# (node:45975) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: builds a Base representative contract and official middleware
+ok 10 - builds a Base representative contract and official middleware
+  ---
+  duration_ms: 1.631617
+  ...
+# Subtest: projects exact service metadata into the direct payment-required resource
+ok 11 - projects exact service metadata into the direct payment-required resource
+  ---
+  duration_ms: 0.52317
+  ...
+# Subtest: projects AgentCash-readable bazaar schemas into the payment-required payload
+ok 12 - projects AgentCash-readable bazaar schemas into the payment-required payload
+  ---
+  duration_ms: 0.460495
+  ...
+# Subtest: kill switch preserves discovery metadata without constructing middleware
+ok 13 - kill switch preserves discovery metadata without constructing middleware
+  ---
+  duration_ms: 0.123719
+  ...
+# Subtest: fails closed on invalid seller, price, or middleware
+ok 14 - fails closed on invalid seller, price, or middleware
+  ---
+  duration_ms: 0.503297
+  ...
+# (node:45982) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: test:nonlive owns local commerce unit paths and excludes live payment scripts
+ok 15 - test:nonlive owns local commerce unit paths and excludes live payment scripts
+  ---
+  duration_ms: 0.838386
+  ...
+# Subtest: mounted rare-funnel is in npm test and test:nonlive without joining live scripts
+ok 16 - mounted rare-funnel is in npm test and test:nonlive without joining live scripts
+  ---
+  duration_ms: 0.14882
+  ...
+# Subtest: non-live suite files do not target live MCP or construct provider RPC clients
+ok 17 - non-live suite files do not target live MCP or construct provider RPC clients
+  ---
+  duration_ms: 3.260787
+  ...
+# (node:45997) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# unknown format "date-time" ignored in schema at path "\#/properties/settlementPlane/properties/baseline/anyOf/0"
+# unknown format "date-time" ignored in schema at path "\#/properties/settlementPlane/properties/baseline/anyOf/0"
+# Subtest: durable settlements outlive rotated paid-success events without becoming customers
+ok 18 - durable settlements outlive rotated paid-success events without becoming customers
+  ---
+  duration_ms: 1.038878
+  ...
+# Subtest: retained paid events and durable settlements remain separate positive planes
+ok 19 - retained paid events and durable settlements remain separate positive planes
+  ---
+  duration_ms: 0.140234
+  ...
+# Subtest: complete event coverage admits an exact requested-window zero
+ok 20 - complete event coverage admits an exact requested-window zero
+  ---
+  duration_ms: 0.100228
+  ...
+# Subtest: a complete event slice cannot manufacture a zero before settlement coverage begins
+ok 21 - a complete event slice cannot manufacture a zero before settlement coverage begins
+  ---
+  duration_ms: 0.093601
+  ...
+# Subtest: an unreconciled retained paid event remains pending instead of becoming revenue
+ok 22 - an unreconciled retained paid event remains pending instead of becoming revenue
+  ---
+  duration_ms: 0.082322
+  ...
+# Subtest: missing planes stay unknown rather than fabricating zero
+ok 23 - missing planes stay unknown rather than fabricating zero
+  ---
+  duration_ms: 0.067833
+  ...
+# Subtest: the exported schema accepts the readout and rejects invented customer authority
+ok 24 - the exported schema accepts the readout and rejects invented customer authority
+  ---
+  duration_ms: 32.957781
+  ...
+# (node:46008) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: public aggregate contains no raw buyer fields
+ok 25 - public aggregate contains no raw buyer fields
+  ---
+  duration_ms: 22.842036
+  ...
+# Subtest: incomplete coverage cannot be reported as a full-window zero
+ok 26 - incomplete coverage cannot be reported as a full-window zero
+  ---
+  duration_ms: 8.556614
+  ...
+# (node:46019) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: classification keeps technical delivery apart from duplicate, conflict, and failure
+ok 27 - classification keeps technical delivery apart from duplicate, conflict, and failure
+  ---
+  duration_ms: 0.840349
+  ...
+# Subtest: validated settlement stays after raw event deletion and a fresh process
+ok 28 - validated settlement stays after raw event deletion and a fresh process
+  ---
+  duration_ms: 950.697638
+  ...
+# Subtest: same amount and different references stay distinct while http plus mcp counts once
+ok 29 - same amount and different references stay distinct while http plus mcp counts once
+  ---
+  duration_ms: 29.400074
+  ...
+# Subtest: feedback, replay, corruption, mismatch, and saturation stay bounded
+ok 30 - feedback, replay, corruption, mismatch, and saturation stay bounded
+  ---
+  duration_ms: 32.556609
+  ...
+# Subtest: concurrent writes, stale cuts, and unexpected units do not invent a second amount
+ok 31 - concurrent writes, stale cuts, and unexpected units do not invent a second amount
+  ---
+  duration_ms: 11.762044
+  ...
+# Subtest: status echoes the parent admission and an empty store is not historical zero
+ok 32 - status echoes the parent admission and an empty store is not historical zero
+  ---
+  duration_ms: 22.063668
+  ...
+# Subtest: a later ordinary-join capture advances unknown and no_response without rewriting the first clock
+ok 33 - a later ordinary-join capture advances unknown and no_response without rewriting the first clock
+  ---
+  duration_ms: 42.553323
+  ...
+# Subtest: technical counts follow the admitted identity set across a mixed and lagging cut
+ok 34 - technical counts follow the admitted identity set across a mixed and lagging cut
+  ---
+  duration_ms: 6.170221
+  ...
+# Subtest: caller feedback binds from the stored statement, then survives raw deletion
+ok 35 - caller feedback binds from the stored statement, then survives raw deletion
+  ---
+  duration_ms: 912.474312
+  ...
+# Subtest: reconcile admits payment before response evidence and a later pass advances it
+ok 36 - reconcile admits payment before response evidence and a later pass advances it
+  ---
+  duration_ms: 930.220517
+  ...
+# Subtest: cold fixture packet keeps the parent amount and withholds historical completeness
+ok 37 - cold fixture packet keeps the parent amount and withholds historical completeness
+  ---
+  duration_ms: 753.10571
+  ...
+# (node:46030) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: mounted /v0/commerce-demand.json exposes durableRareFunnel after rare capture
+ok 38 - mounted /v0/commerce-demand.json exposes durableRareFunnel after rare capture
+  ---
+  duration_ms: 2153.817018
+  ...
+# (node:46041) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: reconciles one canonical Base USDC transfer with payer continuity
+ok 39 - reconciles one canonical Base USDC transfer with payer continuity
+  ---
+  duration_ms: 4.761394
+  ...
+# Subtest: reclassifies an existing settlement summary from current payer policy without rewriting the ledger
+ok 40 - reclassifies an existing settlement summary from current payer policy without rewriting the ledger
+  ---
+  duration_ms: 0.252424
+  ...
+# Subtest: fails closed on duplicate references and canonical settlement mismatches
+ok 41 - fails closed on duplicate references and canonical settlement mismatches
+  ---
+  duration_ms: 2.161592
+  ...
+# Subtest: does not reconcile a reference that is already in the private ledger
+ok 42 - does not reconcile a reference that is already in the private ledger
+  ---
+  duration_ms: 0.725997
+  ...
+# Subtest: H6/H16: accepted complete-present manifest yields exact ok generation and observation IDs
+ok 43 - H6/H16: accepted complete-present manifest yields exact ok generation and observation IDs
+  ---
+  duration_ms: 49.162606
+  ...
+# Subtest: H21a: missing configured data directory is never_run without creation
+ok 44 - H21a: missing configured data directory is never_run without creation
+  ---
+  duration_ms: 1.6269
+  ...
+# Subtest: H21b: trusted directory with manifest and ledger absent is never_run
+ok 45 - H21b: trusted directory with manifest and ledger absent is never_run
+  ---
+  duration_ms: 1.260272
+  ...
+# Subtest: H21c: manifest missing over a populated ledger withholds as retryable unstable
+ok 46 - H21c: manifest missing over a populated ledger withholds as retryable unstable
+  ---
+  duration_ms: 2.733996
+  ...
+# Subtest: H25a/H28-temp: trusted fixed temp withholds before manifest A; symlink temp is untrusted without activation
+ok 47 - H25a/H28-temp: trusted fixed temp withholds before manifest A; symlink temp is untrusted without activation
+  ---
+  duration_ms: 3.084738
+  ...
+# Subtest: H28-temp: wrong-mode temp is publication_temp_untrusted
+ok 48 - H28-temp: wrong-mode temp is publication_temp_untrusted
+  ---
+  duration_ms: 1.438283
+  ...
+# Subtest: H28: complete-absent manifest restarts pending with the exact lifecycle ID form
+ok 49 - H28: complete-absent manifest restarts pending with the exact lifecycle ID form
+  ---
+  duration_ms: 1.819482
+  ...
+# Subtest: H16: failed manifest is unstable reconciliation_failed with no summary
+ok 50 - H16: failed manifest is unstable reconciliation_failed with no summary
+  ---
+  duration_ms: 2.316507
+  ...
+# Subtest: H1: equal-size A/B rewrite of ledger content after the manifest is a mismatch withhold
+ok 51 - H1: equal-size A/B rewrite of ledger content after the manifest is a mismatch withhold
+  ---
+  duration_ms: 4.362109
+  ...
+# Subtest: H2/H3: stable append after the manifest never reads ok; changed manifest B withholds
+ok 52 - H2/H3: stable append after the manifest never reads ok; changed manifest B withholds
+  ---
+  duration_ms: 3.661166
+  ...
+# Subtest: H10/H28: oversized and non-regular manifests are terminal with exact reasons
+ok 53 - H10/H28: oversized and non-regular manifests are terminal with exact reasons
+  ---
+  duration_ms: 4.856717
+  ...
+# Subtest: H16: noncanonical manifest bytes and run-ID mismatch are terminal subtypes
+ok 54 - H16: noncanonical manifest bytes and run-ID mismatch are terminal subtypes
+  ---
+  duration_ms: 3.874775
+  ...
+# Subtest: H13a/b: callable proxy ledgerPath and callable outer options reject before traps with zero attempts
+ok 55 - H13a/b: callable proxy ledgerPath and callable outer options reject before traps with zero attempts
+  ---
+  duration_ms: 0.267907
+  ...
+# Subtest: H28-clock: invalid path rejection uses zero filesystem and zero system-clock calls
+ok 56 - H28-clock: invalid path rejection uses zero filesystem and zero system-clock calls
+  ---
+  duration_ms: 0.133266
+  ...
+# Subtest: H28/LEDGER_PATH_GRAMMAR: path grammar table returns exact zero-I/O reasons
+ok 57 - H28/LEDGER_PATH_GRAMMAR: path grammar table returns exact zero-I/O reasons
+  ---
+  duration_ms: 0.940969
+  ...
+# Subtest: H14: hostile limits make zero I/O; plain raised values are clamped
+ok 58 - H14: hostile limits make zero I/O; plain raised values are clamped
+  ---
+  duration_ms: 0.197246
+  ...
+# Subtest: H22: unchanged complete generation observed twice keeps content IDs and changes only observation
+ok 59 - H22: unchanged complete generation observed twice keeps content IDs and changes only observation
+  ---
+  duration_ms: 5.419822
+  ...
+# Subtest: H17-public: private publication failure leaves public parent output unchanged
+ok 60 - H17-public: private publication failure leaves public parent output unchanged
+  ---
+  duration_ms: 70.701419
+  ...
+# Subtest: H17-writer: successful reconcile publishes a canonical manifest bound to the exact ledger
+ok 61 - H17-writer: successful reconcile publishes a canonical manifest bound to the exact ledger
+  ---
+  duration_ms: 30.281343
+  ...
+# Subtest: H17-contender: existing owner temp receives exactly one poison byte at offset 8192 and parent continues
+ok 62 - H17-contender: existing owner temp receives exactly one poison byte at offset 8192 and parent continues
+  ---
+  duration_ms: 16.711943
+  ...
+# Subtest: H25/H28: pre-existing nlink=2 hard-linked temp gets zero poison and victim stays unchanged
+ok 63 - H25/H28: pre-existing nlink=2 hard-linked temp gets zero poison and victim stays unchanged
+  ---
+  duration_ms: 8.443087
+  ...
+# Subtest: OUTSIDE_SAME_UID_ATOMIC_BOUNDARY label: excluded same-UID syscall-gap action is named, never claimed atomic
+ok 64 - OUTSIDE_SAME_UID_ATOMIC_BOUNDARY label: excluded same-UID syscall-gap action is named, never claimed atomic
+  ---
+  duration_ms: 0.141254
+  ...
+# Subtest: H18/H19: money summary parity and one-parse-per-line hold on captured bytes
+ok 65 - H18/H19: money summary parity and one-parse-per-line hold on captured bytes
+  ---
+  duration_ms: 6.170915
+  ...
+# Subtest: H7: fresh process status stays cold while private capture reconstructs from the manifest alone
+ok 66 - H7: fresh process status stays cold while private capture reconstructs from the manifest alone
+  ---
+  duration_ms: 3.009691
+  ...
+# Subtest: V5/V5a: candidate names all twelve closure labels and the full H1..H28 inventory
+ok 67 - V5/V5a: candidate names all twelve closure labels and the full H1..H28 inventory
+  ---
+  duration_ms: 1.13195
+  ...
+# Subtest: S2: source states the same-effective-UID check/action gap exclusion explicitly
+ok 68 - S2: source states the same-effective-UID check/action gap exclusion explicitly
+  ---
+  duration_ms: 0.286638
+  ...
+# Subtest: M2: exported lifecycle and reason authorities match the frozen enums
+ok 69 - M2: exported lifecycle and reason authorities match the frozen enums
+  ---
+  duration_ms: 0.091285
+  ...
+# Subtest: H24: recursive-budget failures reject before authority in the io record
+ok 70 - H24: recursive-budget failures reject before authority in the io record
+  ---
+  duration_ms: 0.56804
+  ...
+# Subtest: H12: throwing getters on outer options never execute
+ok 71 - H12: throwing getters on outer options never execute
+  ---
+  duration_ms: 0.133625
+  ...
+# Subtest: H23: caller buffer mutation after pure-boundary call cannot change the result
+ok 72 - H23: caller buffer mutation after pure-boundary call cannot change the result
+  ---
+  duration_ms: 0.637928
+  ...
+# Subtest: H23: nonexact Buffer forms reject at the pure boundary
+ok 73 - H23: nonexact Buffer forms reject at the pure boundary
+  ---
+  duration_ms: 0.242403
+  ...
+# Subtest: H11: literal regularFile:false cut returns ledger_not_regular_file with null facts
+ok 74 - H11: literal regularFile:false cut returns ledger_not_regular_file with null facts
+  ---
+  duration_ms: 0.159649
+  ...
+# Subtest: H16: manifest invalid JSON and invalid UTF-8 are terminal subtypes
+ok 75 - H16: manifest invalid JSON and invalid UTF-8 are terminal subtypes
+  ---
+  duration_ms: 3.196795
+  ...
+# Subtest: RETRY_TAXONOMY: exhausted retries report the last retryable reason with total attempts
+ok 76 - RETRY_TAXONOMY: exhausted retries report the last retryable reason with total attempts
+  ---
+  duration_ms: 5.322253
+  ...
+# Subtest: MISSING_DIRECTORY: wrong-mode data directory blocks T4a as untrusted while parent path continues
+ok 77 - MISSING_DIRECTORY: wrong-mode data directory blocks T4a as untrusted while parent path continues
+  ---
+  duration_ms: 1.753965
+  ...
+# Subtest: ACYCLIC_IDS: changing any finalized fact changes only the permitted IDs
+ok 78 - ACYCLIC_IDS: changing any finalized fact changes only the permitted IDs
+  ---
+  duration_ms: 0.203782
+  ...
+# Subtest: V6: candidate carries every frozen lifecycle and reason literal
+ok 79 - V6: candidate carries every frozen lifecycle and reason literal
+  ---
+  duration_ms: 0.787107
+  ...
+# Subtest: FIXED_TEMP: writers never delete, truncate, adopt, or replace temp content
+ok 80 - FIXED_TEMP: writers never delete, truncate, adopt, or replace temp content
+  ---
+  duration_ms: 0.308952
+  ...
+# Subtest: WRITER_FAULT_SEAM: production module exposes no injection hook or mutable export
+ok 81 - WRITER_FAULT_SEAM: production module exposes no injection hook or mutable export
+  ---
+  duration_ms: 0.18051
+  ...
+# Subtest: OPERATIONAL_SPLIT: publishedGeneration cache stays private across captures
+ok 82 - OPERATIONAL_SPLIT: publishedGeneration cache stays private across captures
+  ---
+  duration_ms: 4.5668
+  ...
+# Subtest: H22b: changing attemptsUsed changes only the observation ID
+ok 83 - H22b: changing attemptsUsed changes only the observation ID
+  ---
+  duration_ms: 4.205528
+  ...
+# Subtest: H16: manifest with a numeric-leading issue code is schema-invalid
+ok 84 - H16: manifest with a numeric-leading issue code is schema-invalid
+  ---
+  duration_ms: 1.905992
+  ...
+# Subtest: H16: manifest namespace mismatch is terminal
+ok 85 - H16: manifest namespace mismatch is terminal
+  ---
+  duration_ms: 2.135861
+  ...
+# Subtest: H28-temp: mode 000/0400/0644/0660 temps are publication_temp_untrusted
+ok 86 - H28-temp: mode 000/0400/0644/0660 temps are publication_temp_untrusted
+  ---
+  duration_ms: 11.592853
+  ...
+# Subtest: H28: oversize temp (8194 bytes) is publication_temp_untrusted
+ok 87 - H28: oversize temp (8194 bytes) is publication_temp_untrusted
+  ---
+  duration_ms: 3.090105
+  ...
+# Subtest: H15: at most eight attempts and seven sleeps across the shared budget
+ok 88 - H15: at most eight attempts and seven sleeps across the shared budget
+  ---
+  duration_ms: 0.218864
+  ...
+# Subtest: ALLOCATION_METRIC: no ledger allocation before admitted manifest count and cap
+ok 89 - ALLOCATION_METRIC: no ledger allocation before admitted manifest count and cap
+  ---
+  duration_ms: 4.051031
+  ...
+# Subtest: PINNED_TEMP_IDENTITY: capture never opens the fixed temp write-capable
+ok 90 - PINNED_TEMP_IDENTITY: capture never opens the fixed temp write-capable
+  ---
+  duration_ms: 0.291399
+  ...
+# Subtest: H26: parent append uses only the descriptor namespace pinned before append
+ok 91 - H26: parent append uses only the descriptor namespace pinned before append
+  ---
+  duration_ms: 0.202317
+  ...
+# Subtest: H27b: writer starting after completed rename records the new manifest as base and may publish
+ok 92 - H27b: writer starting after completed rename records the new manifest as base and may publish
+  ---
+  duration_ms: 10.320092
+  ...
+# Subtest: H28c: FIFO temp is untrusted without activation
+ok 93 - H28c: FIFO temp is untrusted without activation
+  ---
+  duration_ms: 5.628354
+  ...
+# Subtest: H28d: directory-shaped manifest is generation_manifest_not_regular_file
+ok 94 - H28d: directory-shaped manifest is generation_manifest_not_regular_file
+  ---
+  duration_ms: 1.577742
+  ...
+# Subtest: H16b: manifest without final newline is noncanonical
+ok 95 - H16b: manifest without final newline is noncanonical
+  ---
+  duration_ms: 1.695498
+  ...
+# Subtest: H21d: capture never creates the configured data directory
+ok 96 - H21d: capture never creates the configured data directory
+  ---
+  duration_ms: 0.907953
+  ...
+# (node:46075) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: reconcile snapshots allowlisted source and delivery facts and they survive event rotation
+ok 97 - reconcile snapshots allowlisted source and delivery facts and they survive event rotation
+  ---
+  duration_ms: 111.573711
+  ...
+# Subtest: legacy events without split stay truthful unknown and do not invent a declared source
+ok 98 - legacy events without split stay truthful unknown and do not invent a declared source
+  ---
+  duration_ms: 0.845528
+  ...
+# Subtest: source spoof and unknown identity stay unverified and never become customers
+ok 99 - source spoof and unknown identity stay unverified and never become customers
+  ---
+  duration_ms: 1.018297
+  ...
+# Subtest: published runtime declared sources stay unverified through settlement composition
+ok 100 - published runtime declared sources stay unverified through settlement composition
+  ---
+  duration_ms: 0.925256
+  ...
+# Subtest: contradictory or invalid metadata is omitted without blocking valid settlement
+ok 101 - contradictory or invalid metadata is omitted without blocking valid settlement
+  ---
+  duration_ms: 0.45554
+  ...
+# Subtest: hostile extra fields never copy secrets, bodies, URLs, or credentials into the ledger
+ok 102 - hostile extra fields never copy secrets, bodies, URLs, or credentials into the ledger
+  ---
+  duration_ms: 0.983932
+  ...
+# Subtest: legacy ledger rows stay unchanged and the helper reports truthful unknown
+ok 103 - legacy ledger rows stay unchanged and the helper reports truthful unknown
+  ---
+  duration_ms: 3.938237
+  ...
+# Subtest: duplicate replay does not rewrite an existing row or backfill attribution
+ok 104 - duplicate replay does not rewrite an existing row or backfill attribution
+  ---
+  duration_ms: 0.887937
+  ...
+# Subtest: concurrent eligible references still fail closed on duplicates and preserve one-write semantics
+ok 105 - concurrent eligible references still fail closed on duplicates and preserve one-write semantics
+  ---
+  duration_ms: 0.874177
+  ...
+# Subtest: public payment-evidence schema consumers keep customer and buyer-valid planes null
+ok 106 - public payment-evidence schema consumers keep customer and buyer-valid planes null
+  ---
+  duration_ms: 0.508888
+  ...
+# Subtest: baseline limitation: HTTP 200 paid_success is not buyer-valid output and settlement is not demand
+ok 107 - baseline limitation: HTTP 200 paid_success is not buyer-valid output and settlement is not demand
+  ---
+  duration_ms: 0.224641
+  ...
+# Subtest: real HTTP writer to reconciliation and rotation keeps source claims distinct from token authority
+ok 108 - real HTTP writer to reconciliation and rotation keeps source claims distinct from token authority
+  ---
+  duration_ms: 137.177662
+  ...
+# Subtest: malformed optional ledger attribution stays unknown without changing money, identity, or replay
+ok 109 - malformed optional ledger attribution stays unknown without changing money, identity, or replay
+  ---
+  duration_ms: 1.557681
+  ...
+# (node:46097) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# unknown format "date-time" ignored in schema at path "\#/properties/settlementPlane/properties/baseline/anyOf/0"
+# unknown format "date-time" ignored in schema at path "\#/properties/settlementPlane/properties/baseline/anyOf/0"
+# Subtest: checked catalog decimals and chain id come from the recorded primary observations
+ok 110 - checked catalog decimals and chain id come from the recorded primary observations
+  ---
+  duration_ms: 0.872903
+  ...
+# Subtest: uniform writer network and asset qualify without a second money sum
+ok 111 - uniform writer network and asset qualify without a second money sum
+  ---
+  duration_ms: 2.719801
+  ...
+# Subtest: v1 payment readout stays exact when a unit projection is attached beside it
+ok 112 - v1 payment readout stays exact when a unit projection is attached beside it
+  ---
+  duration_ms: 1.293852
+  ...
+# Subtest: legacy rows without network or asset stay missing and ignore route and server defaults
+ok 113 - legacy rows without network or asset stay missing and ignore route and server defaults
+  ---
+  duration_ms: 0.485872
+  ...
+# Subtest: partial, conflicting, unmapped, rejected, and forged metadata do not label the parent total
+ok 114 - partial, conflicting, unmapped, rejected, and forged metadata do not label the parent total
+  ---
+  duration_ms: 0.970743
+  ...
+# Subtest: duplicate references follow the parent first-write and do not import the later asset
+ok 115 - duplicate references follow the parent first-write and do not import the later asset
+  ---
+  duration_ms: 0.215397
+  ...
+# Subtest: a stale or non-string parent summary cannot qualify the walked cut
+ok 116 - a stale or non-string parent summary cannot qualify the walked cut
+  ---
+  duration_ms: 0.321574
+  ...
+# Subtest: empty cuts, rejected rows, invalid lines, and overflow stay exact strings
+ok 117 - empty cuts, rejected rows, invalid lines, and overflow stay exact strings
+  ---
+  duration_ms: 0.370292
+  ...
+# Subtest: reclassification of payment class does not stale a matching amount
+ok 118 - reclassification of payment class does not stale a matching amount
+  ---
+  duration_ms: 0.40125
+  ...
+# Subtest: the parent admission is the only money authority and a same-total different cut is stale
+ok 119 - the parent admission is the only money authority and a same-total different cut is stale
+  ---
+  duration_ms: 0.631373
+  ...
+# Subtest: only the checked catalog entry can qualify
+ok 120 - only the checked catalog entry can qualify
+  ---
+  duration_ms: 1.086678
+  ...
+# unknown format "date-time" ignored in schema at path "\#/properties/paymentEvidence/properties/settlementPlane/properties/baseline/anyOf/0"
+# unknown format "date-time" ignored in schema at path "\#/properties/paymentEvidence/properties/settlementPlane/properties/baseline/anyOf/0"
+# Subtest: status projects the same ledger bytes the parent summary admits
+ok 121 - status projects the same ledger bytes the parent summary admits
+  ---
+  duration_ms: 14.14361
+  ...
+# Subtest: commerce-demand schema accepts an old body and an extended unit body
+ok 122 - commerce-demand schema accepts an old body and an extended unit body
+  ---
+  duration_ms: 50.036982
+  ...
+# Subtest: absent projection and direct JSON round trip stay schema valid
+ok 123 - absent projection and direct JSON round trip stay schema valid
+  ---
+  duration_ms: 1.581941
+  ...
+# Subtest: lowercase asset still matches the checked catalog entry
+ok 124 - lowercase asset still matches the checked catalog entry
+  ---
+  duration_ms: 0.222106
+  ...
+# (node:46119) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: verified owner work, self-reported QA, and unattributed activity stay separate
+ok 125 - verified owner work, self-reported QA, and unattributed activity stay separate
+  ---
+  duration_ms: 36.298175
+  ...
+# Subtest: forged, invalid, and reused validation markers do not grant trust or drop the event
+ok 126 - forged, invalid, and reused validation markers do not grant trust or drop the event
+  ---
+  duration_ms: 19.697867
+  ...
+# Subtest: mounted commerce-demand keeps the same producer populations
+ok 127 - mounted commerce-demand keeps the same producer populations
+  ---
+  duration_ms: 2037.053679
+  ...
+# (node:46130) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: disables signed commerce artifacts when no receipt key is configured
+ok 128 - disables signed commerce artifacts when no receipt key is configured
+  ---
+  duration_ms: 0.854267
+  ...
+# Subtest: fails closed on malformed receipt keys and networks
+ok 129 - fails closed on malformed receipt keys and networks
+  ---
+  duration_ms: 0.37649
+  ...
+# Subtest: includeTxHash only changes route extensions, not the signer identity
+ok 130 - includeTxHash only changes route extensions, not the signer identity
+  ---
+  duration_ms: 23.787293
+  ...
+# Subtest: signs independently verifiable EIP-712 offers and receipts
+ok 131 - signs independently verifiable EIP-712 offers and receipts
+  ---
+  duration_ms: 21.384182
+  ...
+# (node:46152) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: pins the copy-paste operator command and status vocabulary
+ok 132 - pins the copy-paste operator command and status vocabulary
+  ---
+  duration_ms: 1.53057
+  ...
+# Subtest: records T1 S94 amount match without claiming reindex or lastUpdated cause
+ok 133 - records T1 S94 amount match without claiming reindex or lastUpdated cause
+  ---
+  duration_ms: 7.311819
+  ...
+# Subtest: mismatch: seller-integrity fixture 5000 vs live catalog 10000
+ok 134 - mismatch: seller-integrity fixture 5000 vs live catalog 10000
+  ---
+  duration_ms: 1.007172
+  ...
+# Subtest: unknown: missing amountAtomic is not treated as drift or converted units
+ok 135 - unknown: missing amountAtomic is not treated as drift or converted units
+  ---
+  duration_ms: 0.554792
+  ...
+# Subtest: stale: economics match and lastUpdated exceeds an explicit horizon
+ok 136 - stale: economics match and lastUpdated exceeds an explicit horizon
+  ---
+  duration_ms: 0.382115
+  ...
+# Subtest: reordered-multiple-offer preserves the offer set and does not invent drift
+ok 137 - reordered-multiple-offer preserves the offer set and does not invent drift
+  ---
+  duration_ms: 0.372285
+  ...
+# Subtest: network-mismatch does not compare amounts as decimals
+ok 138 - network-mismatch does not compare amounts as decimals
+  ---
+  duration_ms: 0.338372
+  ...
+# Subtest: asset-mismatch keeps atomic strings exact and does not equate units
+ok 139 - asset-mismatch keeps atomic strings exact and does not equate units
+  ---
+  duration_ms: 0.367566
+  ...
+# Subtest: extracts Bazaar accepts amount strings and ignores example price_usd
+ok 140 - extracts Bazaar accepts amount strings and ignores example price_usd
+  ---
+  duration_ms: 0.366969
+  ...
+# Subtest: live adapter keeps only valid unpaid offers and redirect/payment flags
+ok 141 - live adapter keeps only valid unpaid offers and redirect/payment flags
+  ---
+  duration_ms: 0.331145
+  ...
+# Subtest: observe reuses payment-offer-preflight and bazaar fetch without credentials or payment
+ok 142 - observe reuses payment-offer-preflight and bazaar fetch without credentials or payment
+  ---
+  duration_ms: 2.661176
+  ...
+# Subtest: repeat-change compares two snapshots without fetching
+ok 143 - repeat-change compares two snapshots without fetching
+  ---
+  duration_ms: 1.837854
+  ...
+# Subtest: CLI replay-t1 and compare emit match JSON
+ok 144 - CLI replay-t1 and compare emit match JSON
+  ---
+  duration_ms: 1.584558
+  ...
+# Subtest: CLI binary replay-t1 is a one-shot unpaid fixture command
+ok 145 - CLI binary replay-t1 is a one-shot unpaid fixture command
+  ---
+  duration_ms: 506.788307
+  ...
+# Subtest: all offers participate: second amount drift, extra offers and ambiguous joins cannot match
+ok 146 - all offers participate: second amount drift, extra offers and ambiguous joins cannot match
+  ---
+  duration_ms: 0.920177
+  ...
+# Subtest: zero is known, unsafe numeric amounts and missing network are unknown; asset case stays significant
+ok 147 - zero is known, unsafe numeric amounts and missing network are unknown; asset case stays significant
+  ---
+  duration_ms: 0.758484
+  ...
+# Subtest: truncated offers and non-402 or invalid-offer preflights cannot produce a match
+ok 148 - truncated offers and non-402 or invalid-offer preflights cannot produce a match
+  ---
+  duration_ms: 1.11755
+  ...
+# Subtest: catalog pagination is explicitly incomplete and unrelated or duplicate source URLs are not selected
+ok 149 - catalog pagination is explicitly incomplete and unrelated or duplicate source URLs are not selected
+  ---
+  duration_ms: 0.962607
+  ...
+# Subtest: freshness does not invent capture times or accept future dates and includes live capture age
+ok 150 - freshness does not invent capture times or accept future dates and includes live capture age
+  ---
+  duration_ms: 0.486745
+  ...
+# Subtest: successive reports retain source identity and detect every offer, not only the first
+ok 151 - successive reports retain source identity and detect every offer, not only the first
+  ---
+  duration_ms: 0.75185
+  ...
+# Subtest: CLI rejects unknown or ignored options before network; injected live source must match target
+ok 152 - CLI rejects unknown or ignored options before network; injected live source must match target
+  ---
+  duration_ms: 2.098881
+  ...
+# Subtest: actual catalog transport bounds chunked data, deadline and redirects; merchant identity stays exact
+ok 153 - actual catalog transport bounds chunked data, deadline and redirects; merchant identity stays exact
+  ---
+  duration_ms: 332.334411
+  ...
+# (node:46185) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: mcp capability is channel qualified and stays out of the http reader
+ok 154 - mcp capability is channel qualified and stays out of the http reader
+  ---
+  duration_ms: 2.258852
+  ...
+# Subtest: mcp capability rejects foreign, expired, tampered, and client event identity
+ok 155 - mcp capability rejects foreign, expired, tampered, and client event identity
+  ---
+  duration_ms: 0.570009
+  ...
+# Subtest: attach publishes the capability only on eligible sealed morpho meta
+ok 156 - attach publishes the capability only on eligible sealed morpho meta
+  ---
+  duration_ms: 0.614694
+  ...
+# Subtest: the mcp client reports through callTool and does not echo a transport failure
+ok 157 - the mcp client reports through callTool and does not echo a transport failure
+  ---
+  duration_ms: 0.59194
+  ...
+# Subtest: facilitator settlement facts stay canonical without becoming chain truth
+ok 158 - facilitator settlement facts stay canonical without becoming chain truth
+  ---
+  duration_ms: 1.949434
+  ...
+# Subtest: the official wrapper hook retains the sealed result and callTool stays positional
+ok 159 - the official wrapper hook retains the sealed result and callTool stays positional
+  ---
+  duration_ms: 0.808812
+  ...
+# Subtest: overlapping purchases keep their own sealed capability
+ok 160 - overlapping purchases keep their own sealed capability
+  ---
+  duration_ms: 17.724934
+  ...
+# Subtest: free reporting uses the raw SDK and cannot invoke automatic payment
+ok 161 - free reporting uses the raw SDK and cannot invoke automatic payment
+  ---
+  duration_ms: 0.399531
+  ...
+# Subtest: a paid capture that lands after the statement is accepted, and a capture that never appears stays refused
+ok 162 - a paid capture that lands after the statement is accepted, and a capture that never appears stays refused
+  ---
+  duration_ms: 355.182805
+  ...
+# (node:46196) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: constructed records join by event, digest, route, and reference
+ok 163 - constructed records join by event, digest, route, and reference
+  ---
+  duration_ms: 1527.99348
+  ...
+# Subtest: empty stores stay empty and a missing directory is not created
+ok 164 - empty stores stay empty and a missing directory is not created
+  ---
+  duration_ms: 1301.778618
+  ...
+# Subtest: a count join without capture is refused
+ok 165 - a count join without capture is refused
+  ---
+  duration_ms: 1353.653071
+  ...
+# Subtest: the receiver does not write ledgers or import the payment server
+ok 166 - the receiver does not write ledgers or import the payment server
+  ---
+  duration_ms: 2.812514
+  ...
+# Subtest: typed MCP canonical joins without an HTTP v1 row
+ok 167 - typed MCP canonical joins without an HTTP v1 row
+  ---
+  duration_ms: 2.997708
+  ...
+# Subtest: canonical settlement cannot borrow another transport, protocol, time or event canon
+ok 168 - canonical settlement cannot borrow another transport, protocol, time or event canon
+  ---
+  duration_ms: 1.744272
+  ...
+# Subtest: a disk parent keeps amount, network, asset, and payee for the typed join
+ok 169 - a disk parent keeps amount, network, asset, and payee for the typed join
+  ---
+  duration_ms: 12.319667
+  ...
+# (node:46207) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: normalizes only credential-free public HTTPS targets
+ok 170 - normalizes only credential-free public HTTPS targets
+  ---
+  duration_ms: 6.080073
+  ...
+# Subtest: public address policy rejects private, reserved, and documentation ranges
+ok 171 - public address policy rejects private, reserved, and documentation ranges
+  ---
+  duration_ms: 0.235467
+  ...
+# Subtest: pinned DNS lookup supports scalar and all-address Node callback contracts
+ok 172 - pinned DNS lookup supports scalar and all-address Node callback contracts
+  ---
+  duration_ms: 0.565641
+  ...
+# Subtest: normalizes matching x402 and MPP offers without credentials or payment
+ok 173 - normalizes matching x402 and MPP offers without credentials or payment
+  ---
+  duration_ms: 16.652926
+  ...
+# Subtest: compares caller-supplied catalog metadata with each live unsigned offer
+ok 174 - compares caller-supplied catalog metadata with each live unsigned offer
+  ---
+  duration_ms: 1.498602
+  ...
+# Subtest: compares a protocol-specific catalog candidate only with that live protocol
+ok 175 - compares a protocol-specific catalog candidate only with that live protocol
+  ---
+  duration_ms: 1.415358
+  ...
+# Subtest: turns explicit catalog to runtime drift into review-required before authorization
+ok 176 - turns explicit catalog to runtime drift into review-required before authorization
+  ---
+  duration_ms: 0.953753
+  ...
+# Subtest: rejects malformed catalog metadata before any target request
+ok 177 - rejects malformed catalog metadata before any target request
+  ---
+  duration_ms: 0.28591
+  ...
+# Subtest: flags economic drift across protocols
+ok 178 - flags economic drift across protocols
+  ---
+  duration_ms: 1.118225
+  ...
+# Subtest: fails closed on resource binding, realm, and expiry errors
+ok 179 - fails closed on resource binding, realm, and expiry errors
+  ---
+  duration_ms: 2.03804
+  ...
+# Subtest: reports a non-402 target without reading a response body
+ok 180 - reports a non-402 target without reading a response body
+  ---
+  duration_ms: 0.522468
+  ...
+# Subtest: rejects a changed final URL
+ok 181 - rejects a changed final URL
+  ---
+  duration_ms: 0.439327
+  ...
+# Subtest: marks a parseable payment offer review-required when the seller omits its success response schema
+ok 182 - marks a parseable payment offer review-required when the seller omits its success response schema
+  ---
+  duration_ms: 0.475635
+  ...
+# (node:46230) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: builds bounded seller-declared authorization evidence for exact operations
+ok 183 - builds bounded seller-declared authorization evidence for exact operations
+  ---
+  duration_ms: 12.696035
+  ...
+# Subtest: rejects missing response contracts, undeclared effects, and cross-origin resources
+ok 184 - rejects missing response contracts, undeclared effects, and cross-origin resources
+  ---
+  duration_ms: 0.609836
+  ...
+# Subtest: advertises the manifest through one standard describedby link on configured paid or discovery routes
+ok 185 - advertises the manifest through one standard describedby link on configured paid or discovery routes
+  ---
+  duration_ms: 0.462124
+  ...
+# Subtest: machine documentation links name the existing OpenAPI document and x402 catalog
+ok 186 - machine documentation links name the existing OpenAPI document and x402 catalog
+  ---
+  duration_ms: 0.145023
+  ...
+# (node:46241) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: normalizes the exact bounded Base-USDC proof request
+ok 187 - normalizes the exact bounded Base-USDC proof request
+  ---
+  duration_ms: 2.419004
+  ...
+# Subtest: verifies one exact successful canonical Base USDC transfer
+ok 188 - verifies one exact successful canonical Base USDC transfer
+  ---
+  duration_ms: 4.842252
+  ...
+# Subtest: fails closed on recipient, amount, payer, duplicate, status, and block mismatches
+ok 189 - fails closed on recipient, amount, payer, duplicate, status, and block mismatches
+  ---
+  duration_ms: 2.776352
+  ...
+# Subtest: returns a bounded diagnostic when the public receipt is unavailable
+ok 190 - returns a bounded diagnostic when the public receipt is unavailable
+  ---
+  duration_ms: 0.513793
+  ...
+# (node:46247) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: normalizes a bounded Base or Ethereum receipt request
+ok 191 - normalizes a bounded Base or Ethereum receipt request
+  ---
+  duration_ms: 1.199348
+  ...
+# Subtest: returns normalized fee, block, and decoded transfer evidence
+ok 192 - returns normalized fee, block, and decoded transfer evidence
+  ---
+  duration_ms: 5.109349
+  ...
+# Subtest: preserves a useful receipt when the block timestamp is unavailable
+ok 193 - preserves a useful receipt when the block timestamp is unavailable
+  ---
+  duration_ms: 1.879924
+  ...
+# Subtest: distinguishes a missing receipt from RPC unavailability
+ok 194 - distinguishes a missing receipt from RPC unavailability
+  ---
+  duration_ms: 0.3589
+  ...
+1..194
+# tests 194
+# suites 0
+# pass 194
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11068.817481
+EXIT:0

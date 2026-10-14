@@ -1,0 +1,64 @@
+{
+  "schema": "samedaydesk.useful-service-observation.release-candidate.v1",
+  "machineOnly": true,
+  "humanCopyChange": false,
+  "paidProbe": false,
+  "livePurchase": false,
+  "deployment": "not_performed",
+  "appliedToServing": false,
+  "mount": "route/ROOT-SERVER-MOUNT.patch",
+  "mountOwner": "existing serving owner + Root",
+  "next": "Procurement lead -> dr eggbot -> Root",
+  "servingSource": "82a51274e7dc7a7600b90f1317a6be6b28442592",
+  "servingVersion": "1.23.52",
+  "extension": {
+    "schema": "samedaydesk.useful-service-observation.v1",
+    "optional": true,
+    "charged": false,
+    "payerIdentity": false,
+    "usefulness": "unknown",
+    "path": "/commerce/caller-result-feedback",
+    "priorHeader": "x-samedaydesk-prior-caller-result",
+    "dispositions": [
+      "useful",
+      "not_useful"
+    ],
+    "reasonCategories": [
+      "matched_task",
+      "saved_a_step",
+      "wrong_output",
+      "missing_field",
+      "not_actionable"
+    ],
+    "retainedUse": [
+      "retained",
+      "not_retained"
+    ],
+    "nextTaskRelations": [
+      "distinct_later_task",
+      "same_task",
+      "none"
+    ],
+    "originLabels": [
+      "owner_qa",
+      "sponsored",
+      "external_unknown"
+    ],
+    "coverage": "this_retained_result_only",
+    "windowCoverage": "unknown_for_full_window",
+    "declineOmitsDisposition": true,
+    "e08UsefulWork": false,
+    "measurementIngested": false,
+    "hJoin": "pending-join"
+  },
+  "coldReplay": "node bin/cold-replay.mjs <data-dir>",
+  "hJoin": {
+    "status": "pending-join",
+    "ran": false
+  },
+  "e18": {
+    "status": "pending-join",
+    "ingested": false
+  },
+  "e08AsyncDeliveryBuilt": false
+}

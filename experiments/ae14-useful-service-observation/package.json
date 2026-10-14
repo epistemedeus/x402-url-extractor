@@ -1,0 +1,8 @@
+{
+  "name": "ae14-useful-service-observation",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/*.test.mjs"
+  }
+}

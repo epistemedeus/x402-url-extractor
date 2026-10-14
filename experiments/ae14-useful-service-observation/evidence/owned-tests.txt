@@ -1,0 +1,71 @@
+command: node --test --test-concurrency=1 experiments/ae14-useful-service-observation/test/*.test.mjs
+exit: 0
+tests: 10 pass: 10 fail: 0
+
+(node:42821) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:42827) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: the mount preserves the paid JSON body and the existing feedback contract
+ok 1 - the mount preserves the paid JSON body and the existing feedback contract
+  ---
+  duration_ms: 102.770079
+  ...
+# Subtest: the existing client hook still refuses an unextended server's extra fields without touching delivery
+ok 2 - the existing client hook still refuses an unextended server's extra fields without touching delivery
+  ---
+  duration_ms: 8.607204
+  ...
+# (node:42848) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: a real retained extract response stays schema-valid with usefulness unknown
+ok 3 - a real retained extract response stays schema-valid with usefulness unknown
+  ---
+  duration_ms: 4.144524
+  ...
+# Subtest: callers that send only the existing disposition get the canonical response
+ok 4 - callers that send only the existing disposition get the canonical response
+  ---
+  duration_ms: 53.84368
+  ...
+# Subtest: retained-use and next-task stay declared, survive restart, and omit bearers
+ok 5 - retained-use and next-task stay declared, survive restart, and omit bearers
+  ---
+  duration_ms: 12.360104
+  ...
+# Subtest: decline, omission, malformation, tamper, wrong result, receipt, source, and tenant stay unbound
+ok 6 - decline, omission, malformation, tamper, wrong result, receipt, source, and tenant stay unbound
+  ---
+  duration_ms: 9.608903
+  ...
+# Subtest: duplicate capture, lost response, and a source gap stay unknown rather than demand
+ok 7 - duplicate capture, lost response, and a source gap stay unknown rather than demand
+  ---
+  duration_ms: 4.406753
+  ...
+# Subtest: distinct later-task purchase, same-task retry, pseudonym continuity, and free retrieval stay apart
+ok 8 - distinct later-task purchase, same-task retry, pseudonym continuity, and free retrieval stay apart
+  ---
+  duration_ms: 29.415499
+  ...
+# Subtest: a foreign tenant cannot adopt another tenant's declaration
+ok 9 - a foreign tenant cannot adopt another tenant's declaration
+  ---
+  duration_ms: 6.168118
+  ...
+# Subtest: the serving mount is not applied and the price file is untouched by this package
+ok 10 - the serving mount is not applied and the price file is untouched by this package
+  ---
+  duration_ms: 2.302901
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1653.687918
+EXIT:0
