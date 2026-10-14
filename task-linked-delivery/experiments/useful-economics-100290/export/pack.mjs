@@ -54,6 +54,8 @@ const packed = spawnSync("tar", [
   "--owner=0",
   "--group=0",
   "--numeric-owner",
+  // Sealed bytes are mode 0644. Without this, umask 0077 stores 0600 and changes the digest.
+  "--mode=0644",
   "-czf",
   archiveName,
   ...members,

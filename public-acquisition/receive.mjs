@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { nodeEngineSatisfies } from "../machine-acquisition.mjs";
+import { nodeEngineSatisfies, resolveColdCommandNode } from "../machine-acquisition.mjs";
 import { loadPublicAcquisition } from "./engine.mjs";
 import {
   ARTIFACT_SCHEMA,
@@ -193,7 +193,7 @@ function runColdCommand(command, bytes, filename, signal) {
     const steps = [];
     for (const step of command.steps) {
       if (signal?.aborted) return { coverage: "partial", steps };
-      const argv = step.argv.map((part, index) => (index === 0 && part === "node" ? process.execPath : part));
+      const argv = step.argv.map((part, index) => (index === 0 && part === "node" ? resolveColdCommandNode() : part));
       const child = spawnSync(argv[0], argv.slice(1), { cwd, encoding: "utf8", timeout: 30_000, maxBuffer: 1_048_576 });
       const stdout = child.stdout || "";
       const missing = (step.stdoutIncludes || []).filter((needle) => !stdout.includes(needle));

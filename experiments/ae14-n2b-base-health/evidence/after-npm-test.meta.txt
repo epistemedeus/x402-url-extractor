@@ -1,0 +1,11 @@
+command: npm test
+cwd: /home/ubuntu/ae14-work/n2b
+node: v22.14.0 /exec-daemon/node
+NODE_env: unset
+npm: 10.9.9
+python: Python 3.12.3 httpx=0.28.1
+umask: 0077
+started: 2026-10-14T18:00:53Z
+exit:0
+ended: 2026-10-14T18:03:47Z
+restored: public-acquisition/loopback-profile.json

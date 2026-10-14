@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { nodeEngineSatisfies } from "../machine-acquisition.mjs";
+import { nodeEngineSatisfies, resolveColdCommandNode } from "../machine-acquisition.mjs";
 
 const COMMANDS_URL = new URL("./cold-commands.json", import.meta.url);
 
@@ -48,7 +48,7 @@ async function fetchManual(url, method = "GET") {
 }
 
 function runStep(step, cwd) {
-  const argv = step.argv.map((part, index) => (index === 0 && part === "node" ? process.execPath : part));
+  const argv = step.argv.map((part, index) => (index === 0 && part === "node" ? resolveColdCommandNode() : part));
   const child = spawnSync(argv[0], argv.slice(1), { cwd, encoding: "utf8" });
   const stdout = child.stdout || "";
   const missing = (step.stdoutIncludes || []).filter((needle) => !stdout.includes(needle));
