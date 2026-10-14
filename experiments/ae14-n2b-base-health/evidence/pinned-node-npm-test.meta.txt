@@ -1,0 +1,13 @@
+command: PATH=/home/ubuntu/.nvm/versions/node/v22.23.3/bin:$PATH /home/ubuntu/.nvm/versions/node/v22.23.3/bin/npm test
+cwd: /home/ubuntu/ae14-work/n2b
+node: v22.23.3 /home/ubuntu/.nvm/versions/node/v22.23.3/bin/node
+npm: 10.9.9 (/home/ubuntu/.nvm/versions/node/v22.23.3/bin/npm)
+python: Python 3.12.3 httpx=0.28.1
+umask: 0077
+pin: engines cold consumer >=22.22.0; this process satisfies it; no binary swap
+started: 2026-10-14T18:58:51Z
+exit:0
+ended: 2026-10-14T19:01:10Z
+ public-acquisition/loopback-profile.json | 156 ++++++++++++++++++++++++++-----
+ 1 file changed, 134 insertions(+), 22 deletions(-)
+restored: public-acquisition/loopback-profile.json

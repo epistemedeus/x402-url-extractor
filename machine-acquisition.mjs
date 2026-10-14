@@ -1,8 +1,7 @@
-import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readFileSync, readdirSync } from "node:fs";
+import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, readdirSync } from "node:fs";
 import { mkdtemp, rename, rm, mkdir, writeFile } from "node:fs/promises";
-import { homedir, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -54,60 +53,6 @@ export function assertNodeEngine(version, range) {
     error.code = "node_engine_unsatisfied";
     throw error;
   }
-}
-
-// The sealed seller-repair 0.4.1 consumer exits 2 below this pin. Cold commands
-// keep the current process when it already qualifies, and otherwise use an
-// installed Node that does. Receiving still reports process.version.
-export const COLD_COMMAND_NODE_RANGE = ">=22.22.0";
-let coldCommandNode;
-
-function installedNodeCandidates() {
-  const roots = [];
-  if (process.env.NVM_DIR) roots.push(join(process.env.NVM_DIR, "versions/node"));
-  roots.push(join(homedir(), ".nvm/versions/node"));
-  const bins = [];
-  for (const root of roots) {
-    let entries = [];
-    try {
-      entries = readdirSync(root);
-    } catch {
-      continue;
-    }
-    for (const entry of entries) bins.push(join(root, entry, "bin/node"));
-  }
-  bins.push("/usr/local/bin/node", "/usr/bin/node");
-  return bins.filter((bin) => bin !== process.execPath && existsSync(bin));
-}
-
-function versionOfNodeBinary(bin) {
-  const named = /\/v(\d+\.\d+\.\d+)\/bin\/node$/.exec(bin);
-  if (named) return named[1];
-  const probe = spawnSync(bin, ["-e", "process.stdout.write(process.versions.node)"], {
-    encoding: "utf8",
-    timeout: 15000,
-  });
-  const version = (probe.stdout || "").trim();
-  if (probe.status !== 0 || !/^\d+\.\d+\.\d+$/.test(version)) return null;
-  return version;
-}
-
-export function resolveColdCommandNode(range = COLD_COMMAND_NODE_RANGE) {
-  if (coldCommandNode?.range === range) return coldCommandNode.bin;
-  if (nodeEngineSatisfies(process.version, range)) {
-    coldCommandNode = { range, bin: process.execPath };
-    return process.execPath;
-  }
-  const satisfying = [];
-  for (const bin of installedNodeCandidates()) {
-    const version = versionOfNodeBinary(bin);
-    if (!version || !nodeEngineSatisfies(version, range)) continue;
-    satisfying.push({ bin, version });
-  }
-  satisfying.sort((left, right) => compareNodeVersion(left.version, right.version));
-  const bin = satisfying[0]?.bin || process.execPath;
-  coldCommandNode = { range, bin };
-  return bin;
 }
 
 function sha256(bytes) {

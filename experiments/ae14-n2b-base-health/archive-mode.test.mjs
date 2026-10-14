@@ -6,8 +6,6 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { COLD_COMMAND_NODE_RANGE, nodeEngineSatisfies, resolveColdCommandNode } from "../../machine-acquisition.mjs";
-
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
 function sha256(file) {
@@ -46,17 +44,5 @@ test("caller and useful-economics packs reproduce sealed archives under umask 00
     const sealed = sha256(path.join(root, item.sealed));
     const fresh = sha256(path.join(out.stdout.trim(), item.packed));
     assert.equal(fresh, sealed, item.script);
-  }
-});
-
-test("cold command node satisfies the sealed consumer pin", () => {
-  const bin = resolveColdCommandNode();
-  const probe = spawnSync(bin, ["-e", "process.stdout.write(process.versions.node)"], { encoding: "utf8" });
-  assert.equal(probe.status, 0, probe.stderr);
-  assert.equal(nodeEngineSatisfies(probe.stdout.trim(), COLD_COMMAND_NODE_RANGE), true);
-  if (nodeEngineSatisfies(process.version, COLD_COMMAND_NODE_RANGE)) {
-    assert.equal(bin, process.execPath);
-  } else {
-    assert.notEqual(bin, process.execPath);
   }
 });

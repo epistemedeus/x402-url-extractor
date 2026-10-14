@@ -22,59 +22,6 @@ def fail(message: str, code: int = 2) -> None:
     raise SystemExit(code)
 
 
-def node_version(binary: str) -> str | None:
-    probe = subprocess.run(
-        [binary, "-e", "process.stdout.write(process.versions.node)"],
-        text=True,
-        capture_output=True,
-    )
-    version = (probe.stdout or "").strip()
-    if probe.returncode != 0 or not version:
-        return None
-    return version
-
-
-def version_at_least(version: str, minimum: tuple[int, int, int]) -> bool:
-    parts = []
-    for part in version.split("."):
-        if not part.isdigit():
-            return False
-        parts.append(int(part))
-    while len(parts) < 3:
-        parts.append(0)
-    return tuple(parts[:3]) >= minimum
-
-
-def resolve_node() -> str:
-    """Prefer NODE only when that binary satisfies the sealed seller-repair pin.
-    npm sets NODE to the process running the suite, which may be older."""
-    minimum = (22, 22, 0)
-    explicit = os.environ.get("NODE")
-    if explicit:
-        version = node_version(explicit)
-        if version and version_at_least(version, minimum):
-            return explicit
-    current = shutil.which("node")
-    if not current:
-        fail("node is not on PATH")
-    repo = Path(__file__).resolve().parents[1]
-    probe = subprocess.run(
-        [
-            current,
-            "--input-type=module",
-            "-e",
-            "import { resolveColdCommandNode } from './machine-acquisition.mjs'; process.stdout.write(resolveColdCommandNode())",
-        ],
-        cwd=repo,
-        text=True,
-        capture_output=True,
-    )
-    chosen = probe.stdout.strip()
-    if probe.returncode != 0 or not chosen:
-        fail(probe.stderr.strip() or "cold command node could not be resolved")
-    return chosen
-
-
 def fetch_manual(client, url: str, method: str = "GET"):
     response = client.request(method, url, follow_redirects=False)
     if 300 <= response.status_code < 400:
@@ -96,7 +43,9 @@ def main() -> int:
 
     commands = json.loads(Path(args.commands).read_text())
     base = args.base if args.base.endswith("/") else args.base + "/"
-    node = resolve_node()
+    node = os.environ.get("NODE") or shutil.which("node")
+    if not node:
+        fail("node is not on PATH")
     hermes_version = None
     try:
         hermes_version = dist_version("hermes-agent")
