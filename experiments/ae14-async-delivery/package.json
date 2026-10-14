@@ -1,0 +1,13 @@
+{
+  "name": "@x402/ae14-async-delivery",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Acceptance-sensitive async service. Second funding/receipt consumer. Not a rail and not a live pay route.",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/*.test.mjs"
+  },
+  "dependencies": {
+    "pg": "8.23.0"
+  }
+}

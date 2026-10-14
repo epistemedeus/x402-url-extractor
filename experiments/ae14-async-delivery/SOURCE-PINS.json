@@ -1,0 +1,63 @@
+{
+  "outcome": "E08 acceptance-sensitive async service as second funding/receipt consumer",
+  "base": "82a51274e7dc7a7600b90f1317a6be6b28442592",
+  "runtime": "1.23.52",
+  "writerPath": "experiments/ae14-async-delivery",
+  "branch": "codex/ae14-e08-async-delivery",
+  "portfolio": {
+    "repository": "https://github.com/epistemedeus/pilot.git",
+    "commit": "7428845d6429b78573801ee8035953e26c610eaf",
+    "paths": [
+      "overview/self-evaluations/2026-10-14-agent-economy/EXPANSION-PORTFOLIO.md",
+      "overview/self-evaluations/2026-10-14-agent-economy/GRAND-PLAN.md",
+      "overview/self-evaluations/2026-10-14-agent-economy/INTEGRATED-DECISIONS.md",
+      "overview/self-evaluations/2026-10-14-agent-economy/EXECUTION.md",
+      "overview/self-evaluations/2026-10-14-agent-economy/ROOT-CANDIDATE-RECEIVING.md"
+    ]
+  },
+  "joinedHMatrix": {
+    "repository": "https://github.com/epistemedeus/pilot.git",
+    "commit": "ecf78d29c2c592dd03b5daef4eeba2f29772c8ae",
+    "path": "overview/self-evaluations/2026-10-14-agent-economy/GRAND-PLAN.md",
+    "section": "Composed receiving matrix for the actual amended exports",
+    "executedHere": false,
+    "label": "pending-join"
+  },
+  "railInterface": {
+    "repository": "https://github.com/epistemedeus/pilot.git",
+    "commit": "f89939a09feaf6b710d04abf8109c4a0b790f05c",
+    "branch": "codex/ae14-a-wallet-rail",
+    "path": "tools/agent-economy-rail",
+    "checkedAgainst": "A amend f89939a0 CapturePort, FundingAuthority, and CommercePaymentsRail readback/capture",
+    "foundationNamedByThatPin": "e16f7812c7eaa563c3effcbbbb99c8f42df3cdbc",
+    "priorPortfolioPinNotUsedForThisInterface": "af5773e18f1f4863fe4c6143b746ba3c7925ce63",
+    "realJoin": "held for A3/B3",
+    "label": "pending-join",
+    "consumed": [
+      "CapturePort readback/capture plus protocol pin",
+      "FundingAuthority readProof and rail stage/authorityId",
+      "unjournaled operator capture and clock expiry read back as unknown",
+      "mined void/reclaim reads back as expired_reclaimed",
+      "per-capture floor(capture*500/10000)",
+      "CommercePaymentsPin",
+      "disposable quote symbol USDC on eip155:31337"
+    ],
+    "notConsumed": "chain adapter, wallet keystore, canonical acceptance writer, Anvil, live capture"
+  },
+  "commercePayments": {
+    "repository": "https://github.com/base/commerce-payments",
+    "commit": "6b0a5ef3f0df973857f558e2d6b5dd645b5e97f9",
+    "tag": "v1.1.0",
+    "abiSha256": "4eadfac88b44c0ff00c9274f98821031f6600145e57800d8ced405f2452c03d5"
+  },
+  "seam": {
+    "source": "https://github.com/x402-foundation/x402/blob/e95b06661e1a2a8a9a21fce34cc28b9934834650/specs/schemes/auth-capture/scheme_auth_capture_evm.md",
+    "commit": "e95b06661e1a2a8a9a21fce34cc28b9934834650",
+    "license": "Apache-2.0",
+    "licensePath": "LICENSE",
+    "section": "Sync and async finalize",
+    "integratedDelta": "deferred capture is journaled and gated on requester review; a lost callback or lost capture response restarts by readback and does not issue a second capture POST"
+  },
+  "liveRoutes": "unchanged. Immediate-pay routes and the paid /read free-reader wrapper were not edited.",
+  "nextIntegrationOwner": "dr eggbot -> Root"
+}

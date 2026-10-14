@@ -1,0 +1,20 @@
+Owned suite, from experiments/ae14-async-delivery, Node v22.14.0, local PostgreSQL 16.15 over the unix socket:
+
+node --test --test-concurrency=1 test/*.test.mjs
+
+Exit 0. 25 passed, 0 failed. Output: evidence/owned-suite.log
+
+Inherited suite, from the repository root, unchanged package.json scripts, not re-run in the export step:
+
+npm test
+
+That command runs pretest, then the root test script. Exit 1. tests 1173, pass 1162, fail 6, skipped 5. Output: evidence/inherited-suite.log
+
+The six failures are outside experiments/ae14-async-delivery and were left unchanged:
+
+- caller-result-client.cold.test.mjs: installed caller consumer reaches the mounted parent without merchant source
+- caller-result-client.distribution.test.mjs: caller generation keeps the sealed feedback archive and matches the current source
+- public-acquisition/engine.test.mjs: cold node and python httpx clients unpack the mount and run the declared commands
+- public-acquisition/receiving-lifecycle.test.mjs: loopback receiving observes the mounted bytes and cold commands without publishing
+- public-acquisition/receiving-lifecycle.test.mjs: a public proof parses a readback and does not publish when the runtime pin is unmet
+- task-linked-delivery/experiments/useful-economics-100290/test/cold-export.test.mjs: two cold consumers accept the public fixture and reject the seeded controls

@@ -1,0 +1,146 @@
+(node:1616136) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:1616142) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: per-capture floor hits the 19, 20 and 21 atomic boundaries
+ok 1 - per-capture floor hits the 19, 20 and 21 atomic boundaries
+  ---
+  duration_ms: 1.12309
+  ...
+# Subtest: a split is not priced as one cumulative floor
+ok 2 - a split is not priced as one cumulative floor
+  ---
+  duration_ms: 1.117009
+  ...
+# Subtest: legacy 221400 and 234100 terms are not repriced
+ok 3 - legacy 221400 and 234100 terms are not repriced
+  ---
+  duration_ms: 0.300537
+  ...
+# Subtest: new quotes keep rail cost separate and refuse production assets
+ok 4 - new quotes keep rail cost separate and refuse production assets
+  ---
+  duration_ms: 1.095912
+  ...
+# (node:1616153) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: the stand-in matches the A amend port and stays pending-join
+ok 5 - the stand-in matches the A amend port and stays pending-join
+  ---
+  duration_ms: 128.283227
+  ...
+# Subtest: a clock expiry is unknown and a mined reclaim is the expiry winner
+ok 6 - a clock expiry is unknown and a mined reclaim is the expiry winner
+  ---
+  duration_ms: 93.043301
+  ...
+# Subtest: a leaked captured receipt without the consumer post stays an incident
+ok 7 - a leaked captured receipt without the consumer post stays an incident
+  ---
+  duration_ms: 96.525217
+  ...
+# Subtest: a port authority that is not the quote authority cannot fund the job
+ok 8 - a port authority that is not the quote authority cannot fund the job
+  ---
+  duration_ms: 97.194385
+  ...
+# (node:1616181) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: certificate-verified restart keeps a lost callback from becoming a second capture
+ok 9 - certificate-verified restart keeps a lost callback from becoming a second capture
+  ---
+  duration_ms: 812.929353
+  ...
+# Subtest: a crash after the capture fence does not send a second capture on restart
+ok 10 - a crash after the capture fence does not send a second capture on restart
+  ---
+  duration_ms: 719.941056
+  ...
+# Subtest: rail mode without the amended export exits pending-join
+ok 11 - rail mode without the amended export exits pending-join
+  ---
+  duration_ms: 46.873409
+  ...
+# Subtest: an untrusted callback certificate is not an acknowledgement
+ok 12 - an untrusted callback certificate is not an acknowledgement
+  ---
+  duration_ms: 602.145308
+  ...
+# (node:1616296) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: signature and submitted funding are not reserved
+ok 13 - signature and submitted funding are not reserved
+  ---
+  duration_ms: 90.675307
+  ...
+# Subtest: one receipt cannot fund a second job and one job cannot take a second proof
+ok 14 - one receipt cannot fund a second job and one job cannot take a second proof
+  ---
+  duration_ms: 27.986408
+  ...
+# Subtest: output HTTP-equivalent 200 is not acceptance and a client assent annotation is ignored
+ok 15 - output HTTP-equivalent 200 is not acceptance and a client assent annotation is ignored
+  ---
+  duration_ms: 18.919313
+  ...
+# Subtest: accepted repair stays approval_pending until the canonical join and does not capture twice
+ok 16 - accepted repair stays approval_pending until the canonical join and does not capture twice
+  ---
+  duration_ms: 35.054734
+  ...
+# Subtest: accepted no-fit stays distinct from a repair and can be reused without a new payment
+ok 17 - accepted no-fit stays distinct from a repair and can be reused without a new payment
+  ---
+  duration_ms: 25.224703
+  ...
+# Subtest: rejection does not capture
+ok 18 - rejection does not capture
+  ---
+  duration_ms: 18.723353
+  ...
+# Subtest: expiry wins without a funded acceptance and a later expiry cannot undo capture
+ok 19 - expiry wins without a funded acceptance and a later expiry cannot undo capture
+  ---
+  duration_ms: 31.388929
+  ...
+# Subtest: a lost capture response is resolved by readback and is not posted again
+ok 20 - a lost capture response is resolved by readback and is not posted again
+  ---
+  duration_ms: 31.79553
+  ...
+# Subtest: an unjournaled operator capture is unknown and is not accepted
+ok 21 - an unjournaled operator capture is unknown and is not accepted
+  ---
+  duration_ms: 17.14093
+  ...
+# Subtest: the wrong tenant, reviewer or contributor cannot move the job
+ok 22 - the wrong tenant, reviewer or contributor cannot move the job
+  ---
+  duration_ms: 25.533583
+  ...
+# Subtest: legacy terms open nothing and a direct route matches the callback route
+ok 23 - legacy terms open nothing and a direct route matches the callback route
+  ---
+  duration_ms: 34.205769
+  ...
+# Subtest: a post-capture refund is not a reclaim and charges no second fee
+ok 24 - a post-capture refund is not a reclaim and charges no second fee
+  ---
+  duration_ms: 27.160284
+  ...
+# Subtest: a quote that is already expired cannot be funded
+ok 25 - a quote that is already expired cannot be funded
+  ---
+  duration_ms: 155.383969
+  ...
+1..25
+# tests 25
+# suites 0
+# pass 25
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3403.739318
+EXIT:0
