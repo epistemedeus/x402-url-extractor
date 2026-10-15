@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, rm, symlink } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -7,14 +8,58 @@ import { promisify } from "node:util";
 
 const exec = promisify(execFile);
 
+function envPath(name) {
+  const value = process.env[name];
+  if (typeof value !== "string" || value.trim() === "") return "";
+  return value.trim();
+}
+
+const missingHarnessEnv = ["AE20_NEO_DIR", "AE20_GATEWAY_NODE_MODULES"].filter((name) => envPath(name) === "");
+if (missingHarnessEnv.length > 0) {
+  const listed = missingHarnessEnv.join(" and ");
+  const verb = missingHarnessEnv.length === 1 ? "is" : "are";
+  throw new Error(
+    `${listed} ${verb} unset. Set ${listed} to absolute paths before loading the AE20 gateway harness. There is no /tmp or /home/ubuntu fallback.`,
+  );
+}
+
 export const GATEWAY_667 = "667fba353e9082d8a0842437442dabc42843abf8";
 export const GATEWAY_7E = "7e5078bbf213ae3d1ff8d4638199ff8d1d1d81a8";
 export const ASYNC_PIN = "1b5fd425408d34be232cd1c2ce059d3571b56c63";
-export const NEO = "/tmp/ae20-x1-pins/neo";
-export const AJV_MODULES = "/tmp/242003-gateway-i9refh4z/services/machine-gateway/node_modules";
+export const NEO = envPath("AE20_NEO_DIR");
+export const AJV_MODULES = envPath("AE20_GATEWAY_NODE_MODULES");
 export const TOKEN = "local_unsigned_tenant_a_credential_000001";
 
+async function assertGatewayModules() {
+  let info;
+  try {
+    info = await stat(AJV_MODULES);
+  } catch {
+    throw new Error(
+      `AE20_GATEWAY_NODE_MODULES is not a directory (${AJV_MODULES}). Set it to the machine-gateway node_modules path. There is no /tmp fallback.`,
+    );
+  }
+  if (!info.isDirectory()) {
+    throw new Error(`AE20_GATEWAY_NODE_MODULES is not a directory (${AJV_MODULES}).`);
+  }
+}
+
+async function installGatewayLockfile(gateway) {
+  const shrinkwrap = join(gateway, "npm-shrinkwrap.json");
+  const lockfile = join(gateway, "package-lock.json");
+  if (!existsSync(shrinkwrap) && !existsSync(lockfile)) {
+    throw new Error(
+      `Gateway copy ${gateway} has no npm-shrinkwrap.json or package-lock.json, so npm ci cannot install it.`,
+    );
+  }
+  await exec("npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], {
+    cwd: gateway,
+    maxBuffer: 16 * 1024 * 1024,
+  });
+}
+
 export async function materializeGateway(pin, { patchFile = null } = {}) {
+  await assertGatewayModules();
   const root = await mkdtemp(join(tmpdir(), "ae20-x1-gw-"));
   try {
     await exec("bash", ["-c", "git -C \"$1\" archive \"$2\" services/machine-gateway | tar -C \"$3\" -x", "bash", NEO, pin, root]);
@@ -22,7 +67,7 @@ export async function materializeGateway(pin, { patchFile = null } = {}) {
     if (patchFile) {
       await exec("patch", ["-p1", "--forward", "--batch", `--input=${patchFile}`], { cwd: gateway });
     }
-    await symlink(AJV_MODULES, join(gateway, "node_modules"), "dir");
+    await installGatewayLockfile(gateway);
     return { root, gateway };
   } catch (error) {
     await rm(root, { recursive: true, force: true });

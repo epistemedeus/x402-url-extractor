@@ -85,6 +85,18 @@ T12 mounts a detached neo worktree at `7e5078bb` and the neo clone that contains
 - Patches were applied only in temporary copies. N2's gateway worktree was not entered, written, reset, or fetched.
 - HTTP 200 on a failed receipt is not treated as useful work. Useful reads require the stored title, status, requested URL, fetch mode, completion, and a stable digest.
 
+## U7 portable harness
+
+`support/gateway.mjs` reads `AE20_NEO_DIR` and `AE20_GATEWAY_NODE_MODULES`. If either is unset, loading the module throws and names the missing variable. It does not fall back to `/tmp` or `/home/ubuntu`. Each archived gateway copy installs from its own `npm-shrinkwrap.json` or `package-lock.json` with `npm ci`. `npm ci` in this package also installs `experiments/ae19-paid-continuation` from that package's lockfile.
+
+G4 `test/gateway-mount.test.mjs` reads `AE19_GATEWAY_REPO` and `AE19_NEO_ROOT` and throws if either is unset. Maintenance roots come only from `AE19_MAINTENANCE_ROOT`, `AE19_SDS_ROOT`, `AE19_MERCHANT_INPUT`, and `AE19_GATEWAY_INPUT`. Unset maintenance roots stay `pending-join`.
+
+Unset env, `node --test --test-concurrency=1 --test-timeout=120000 test/*.test.mjs`: exit 1. Error: `AE20_NEO_DIR and AE20_GATEWAY_NODE_MODULES are unset.`
+
+With `AE20_NEO_DIR` and `AE20_GATEWAY_NODE_MODULES` set, the same command: tests 11, pass 11, fail 0.
+
+G4 `node --test --test-concurrency=1 --test-timeout=120000 test/*.test.mjs` with `AE19_GATEWAY_REPO` and `AE19_NEO_ROOT` set: tests 20, pass 20, fail 0.
+
 ## Next integration owner
 
 Helm with the G4 owner, then Root. N2 applies the gateway patch. The 242007 owner applies G4's existing async patch if that submit path should leave `e08_extraction_submit_pending_join`.

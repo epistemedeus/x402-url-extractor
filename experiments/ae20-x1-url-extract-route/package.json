@@ -8,7 +8,8 @@
     "node": ">=22.14.0 <23"
   },
   "scripts": {
-    "test": "node --test --test-concurrency=1 --test-timeout=120000 test/*.test.mjs"
+    "test": "node --test --test-concurrency=1 --test-timeout=120000 test/*.test.mjs",
+    "postinstall": "npm ci --ignore-scripts --no-audit --no-fund --prefix ../ae19-paid-continuation"
   },
   "dependencies": {
     "pg": "8.23.0"

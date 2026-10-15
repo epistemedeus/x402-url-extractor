@@ -3,12 +3,11 @@ import { existsSync } from "node:fs";
 import test from "node:test";
 import { MAINTENANCE_EXPORT_TIP, MAINTENANCE_TESTED_HEAD, runMaintenanceExport } from "../maintenance/applicability.mjs";
 
-const maintenanceRoot = process.env.AE19_MAINTENANCE_ROOT
-  || "/tmp/ae18-244005-replay-EANA1z/source/tools/ae18-maintenance-delivery";
+const maintenanceRoot = process.env.AE19_MAINTENANCE_ROOT || "";
 const env = {
-  SDS_INPUT_ROOT: process.env.AE19_SDS_ROOT || "/home/ubuntu/root-sol-window100337/244005/source",
-  MERCHANT_INPUT_ROOT: process.env.AE19_MERCHANT_INPUT || "/tmp/ae18-244005-inputs-TjCnvs/merchant",
-  GATEWAY_INPUT_ROOT: process.env.AE19_GATEWAY_INPUT || "/tmp/ae18-244005-inputs-TjCnvs/gateway/services/machine-gateway",
+  SDS_INPUT_ROOT: process.env.AE19_SDS_ROOT || "",
+  MERCHANT_INPUT_ROOT: process.env.AE19_MERCHANT_INPUT || "",
+  GATEWAY_INPUT_ROOT: process.env.AE19_GATEWAY_INPUT || "",
 };
 
 test("244005 export is consumed when its pinned roots are present", { timeout: 120_000 }, async () => {

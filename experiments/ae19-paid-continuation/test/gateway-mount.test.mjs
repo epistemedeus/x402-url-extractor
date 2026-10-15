@@ -15,8 +15,19 @@ import { delay, ensureMerchantModules, htmlResponse, repoRoot, withService, writ
 const exec = promisify(execFile);
 const GATEWAY_PIN = "7e5078bbf213ae3d1ff8d4638199ff8d1d1d81a8";
 const ASYNC_PIN = "1b5fd425408d34be232cd1c2ce059d3571b56c63";
-const GATEWAY_REPO = "/home/ubuntu/root-sol-window100337/240200/source";
-const NEO = "/home/ubuntu/root-sol-window100337/232600/neo";
+
+function requiredPath(name) {
+  const value = process.env[name];
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new Error(
+      `${name} is unset. Set ${name} to the neo checkout previously hardcoded under /home/ubuntu/root-sol-window100337. This test does not read that path.`,
+    );
+  }
+  return value.trim();
+}
+
+const GATEWAY_REPO = requiredPath("AE19_GATEWAY_REPO");
+const NEO = requiredPath("AE19_NEO_ROOT");
 const FORBIDDEN_OLDER = "728f27ec";
 const ALLOWED = `j${"0".repeat(32)}`;
 const ACTOR = { tenantId: "tenant-a", actorId: "later-a", role: "later-consumer" };

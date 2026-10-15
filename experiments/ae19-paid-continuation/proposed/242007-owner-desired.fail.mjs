@@ -7,7 +7,12 @@ import { pathToFileURL } from "node:url";
 import test from "node:test";
 
 const PIN = "1b5fd425408d34be232cd1c2ce059d3571b56c63";
-const NEO = process.env.AE19_NEO_ROOT || "/home/ubuntu/root-sol-window100337/232600/neo";
+const NEO = process.env.AE19_NEO_ROOT;
+if (typeof NEO !== "string" || NEO.trim() === "") {
+  throw new Error(
+    "AE19_NEO_ROOT is unset. Set it to the neo clone that contains 1b5fd425. This file does not read /home/ubuntu/root-sol-window100337.",
+  );
+}
 
 function archive(dir) {
   return new Promise((resolve, reject) => {

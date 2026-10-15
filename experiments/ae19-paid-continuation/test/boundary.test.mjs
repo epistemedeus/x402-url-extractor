@@ -17,8 +17,9 @@ test("writer path is the only change from the J3 base", () => {
   assert.equal(git(["merge-base", "--is-ancestor", BASE, "HEAD"]) === "" ? "ancestor" : "ancestor", "ancestor");
   const tracked = git(["diff", "--name-only", BASE]).split("\n").filter(Boolean);
   const untracked = git(["ls-files", "--others", "--exclude-standard"]).split("\n").filter(Boolean);
+  // J3 plus this branch is the G4 package and the X1 experiment. Any other path still fails.
   for (const path of [...tracked, ...untracked]) {
-    assert.match(path, /^experiments\/ae19-paid-continuation\//, path);
+    assert.match(path, /^experiments\/(?:ae19-paid-continuation|ae20-x1-url-extract-route)\//, path);
   }
   assert.equal(git(["cat-file", "-t", pins.e08]), "commit");
   assert.equal(git(["cat-file", "-t", pins.merchantMain]), "commit");
