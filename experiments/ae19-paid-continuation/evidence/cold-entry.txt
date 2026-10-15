@@ -1,0 +1,147 @@
+=== cold clone ===
+Cloning into '/tmp/ae19-g4-cold'...
+CLONE:0
+dcd1b8c1d475d43840dd34646cf1877a482ac3ab
+commit
+E08_OBJECT:present
+=== npm install ===
+(node:2375169) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+added 16 packages in 271ms
+NPM:0
+=== node --test ===
+(node:2375182) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:2375188) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: writer path is the only change from the J3 base
+ok 1 - writer path is the only change from the J3 base
+  ---
+  duration_ms: 52.092703
+  ...
+# Subtest: the package does not arm a timer or open sqlite
+ok 2 - the package does not arm a timer or open sqlite
+  ---
+  duration_ms: 6.42921
+  ...
+# (node:2375211) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: a free no-fit is retained and a fit does not fetch
+ok 3 - a free no-fit is retained and a fit does not fetch
+  ---
+  duration_ms: 113.577277
+  ...
+# Subtest: submit runs the extractor once, rereads after a lost body, and does not repurchase
+ok 4 - submit runs the extractor once, rereads after a lost body, and does not repurchase
+  ---
+  duration_ms: 129.799357
+  ...
+# Subtest: title acceptance no-fit is distinct from a repair
+ok 5 - title acceptance no-fit is distinct from a repair
+  ---
+  duration_ms: 90.462391
+  ...
+# Subtest: abort and deadline do not call a finished extraction
+ok 6 - abort and deadline do not call a finished extraction
+  ---
+  duration_ms: 96.417563
+  ...
+# Subtest: a restarted service recovers a leased job from postgres
+ok 7 - a restarted service recovers a leased job from postgres
+  ---
+  duration_ms: 211.6489
+  ...
+# Subtest: source change admits one bounded occurrence and a later need reads the stored digest
+ok 8 - source change admits one bounded occurrence and a later need reads the stored digest
+  ---
+  duration_ms: 103.025676
+  ...
+# Subtest: merchant extract runs through the public fetch hook and keeps fetch mode
+ok 9 - merchant extract runs through the public fetch hook and keeps fetch mode
+  ---
+  duration_ms: 126.45075
+  ...
+# (node:2375245) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: per-capture floor is not a cumulative reprice
+ok 10 - per-capture floor is not a cumulative reprice
+  ---
+  duration_ms: 0.58015
+  ...
+# Subtest: a capture mismatch stays unknown
+ok 11 - a capture mismatch stays unknown
+  ---
+  duration_ms: 0.393342
+  ...
+# (node:2375256) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: free fit-check takes no payment and returns a useful no-fit
+ok 12 - free fit-check takes no payment and returns a useful no-fit
+  ---
+  duration_ms: 30.001744
+  ...
+# Subtest: runtime terms are read and not rewritten
+ok 13 - runtime terms are read and not rewritten
+  ---
+  duration_ms: 5.077908
+  ...
+# Subtest: terms command prints the unchanged runtime price
+ok 14 - terms command prints the unchanged runtime price
+  ---
+  duration_ms: 24.644213
+  ...
+# (node:2375289) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: unchanged E08 accepts one extraction artifact and reuse does not capture again
+ok 15 - unchanged E08 accepts one extraction artifact and reuse does not capture again
+  ---
+  duration_ms: 338.703991
+  ...
+# Subtest: a late callback is reconciled without a second capture
+ok 16 - a late callback is reconciled without a second capture
+  ---
+  duration_ms: 380.455247
+  ...
+# (node:2375420) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: gateway pin is 7e5078bb and 242007 is mounted from 1b5fd425
+ok 17 - gateway pin is 7e5078bb and 242007 is mounted from 1b5fd425
+  ---
+  duration_ms: 13.355682
+  ...
+# (node:2375420) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# Subtest: unpatched 242007 submit through the pinned gateway stays the extraction gap
+ok 18 - unpatched 242007 submit through the pinned gateway stays the extraction gap
+  ---
+  duration_ms: 178.546714
+  ...
+# Subtest: a real URL through patched 242007 returns an extraction readable by job id
+ok 19 - a real URL through patched 242007 returns an extraction readable by job id
+  ---
+  duration_ms: 880.378994
+  ...
+# (node:2375450) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: 244005 export is consumed when its pinned roots are present
+ok 20 - 244005 export is consumed when its pinned roots are present
+  ---
+  duration_ms: 570.243296
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3719.007535
+TEST:0
+=== fit ===
+{"schema":"ae19.fit.v1","fit":false,"reason":"ssrf_blocked","paymentAttempts":0,"newPayment":false}
+FIT:0
+=== terms ===
+{"schema":"ae19.terms.v1","route":"GET /extract","sourceDefault":"$0.005","effective":"$0.005","atomic":"5000","envOverride":false,"formula":"priceToAtomic","network":"eip155:8453","asset":"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913","assetName":"USD Coin","assetVersion":"2","changed":false}
+TERMS:0
