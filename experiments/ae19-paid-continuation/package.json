@@ -1,0 +1,30 @@
+{
+  "name": "@x402/ae19-paid-continuation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Paid continuation: URL extraction contract, E08 seam, and durable readback. Does not modify the merchant runtime.",
+  "engines": {
+    "node": ">=22.14.0 <23"
+  },
+  "bin": {
+    "ae19-paid-continuation": "./bin/ae19-paid-continuation.mjs"
+  },
+  "exports": {
+    ".": "./extraction-contract/service.mjs",
+    "./fit": "./extraction-contract/fit.mjs",
+    "./terms": "./extraction-contract/terms.mjs",
+    "./http": "./extraction-contract/http.mjs",
+    "./seam": "./seam/e08-pin.mjs",
+    "./fee": "./reconcile/fee.mjs",
+    "./monitor": "./delivery/monitor.mjs"
+  },
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/*.test.mjs"
+  },
+  "dependencies": {
+    "@exodus/bytes": "1.16.0",
+    "pg": "8.23.0",
+    "zod": "3.25.76"
+  }
+}

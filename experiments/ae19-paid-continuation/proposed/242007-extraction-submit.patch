@@ -1,0 +1,152 @@
+diff -ruN a/adapters/gateway-240200/index.mjs b/adapters/gateway-240200/index.mjs
+--- a/adapters/gateway-240200/index.mjs	2026-10-15 07:30:15.977239621 +0000
++++ b/adapters/gateway-240200/index.mjs	2026-10-15 07:28:33.041153021 +0000
+@@ -1,5 +1,5 @@
+ import { readFileSync } from "node:fs";
+-import { jobId, SUBMIT_GAP } from "../../src/e08-client.mjs";
++import { JOB_ID, SUBMIT_GAP } from "../../src/e08-client.mjs";
+ import { requireThat } from "../../src/errors.mjs";
+ 
+ const contracts = JSON.parse(readFileSync(new URL("../../schemas/contracts.json", import.meta.url), "utf8"));
+@@ -23,24 +23,41 @@
+   requireThat(/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,54}$/.test(routePrefix), "invalid_route_prefix");
+   requireThat(Array.isArray(allowedJobIds) && allowedJobIds.length > 0, "explicit_job_allowlist_required");
+   requireThat(Number.isInteger(timeoutMs) && timeoutMs >= 10 && timeoutMs <= 30000, "invalid_timeout");
+-  const allowed = new Set(allowedJobIds.map(jobId));
++  const allowed = new Set(allowedJobIds.map((value) => {
++    requireThat(JOB_ID.test(value), "invalid_job_id");
++    return value;
++  }));
++  const extraction = client.extractionEnabled === true;
+   return ["submit", "poll", "result"].map(operation => ({
+     id: `${routePrefix}.${operation}`, version: "1", provider: "e08-async-test-readback",
+-    description: operation === "submit" ? "Pending E08 URL-extraction submit contract; fails closed."
++    description: operation === "submit"
++      ? (extraction
++        ? "Submit a public URL to the extraction contract. Read the result back by job id."
++        : "Pending E08 URL-extraction submit contract; fails closed.")
+       : `Read an allowlisted E08 job ${operation} in disposable test mode.`,
+     price: { amount: 0, unit: budgetUnit }, timeoutMs, maxOutputBytes: 32768,
+     inputSchema: structuredClone(inputSchemas[operation]), outputSchema: structuredClone(outputSchema),
+     preflight(input) {
+-      if (operation !== "submit" && !allowed.has(input.jobId)) throw gatewayError("e08_job_forbidden", 403);
++      if (operation === "submit") return;
++      if (allowed.has(input.jobId)) return;
++      // Extraction jobs are created by submit and are not known at process start.
++      // A well-formed id may enter run(); run still forbids it after a 404.
++      if (extraction && JOB_ID.test(input.jobId)) return;
++      throw gatewayError("e08_job_forbidden", 403);
+     },
+     async run(input, { signal }) {
+       signal.throwIfAborted();
+       try {
+         if (operation === "submit") return await client.submit(input, { signal });
++        if (extraction && typeof client.lookupExtraction === "function") {
++          const found = await client.lookupExtraction(input.jobId, operation, { signal });
++          if (found) return found;
++        }
+         if (!allowed.has(input.jobId)) throw gatewayError("e08_job_forbidden", 403);
+         return await client[operation](input.jobId, { signal });
+       } catch (error) {
+         if (signal.aborted) throw signal.reason;
++        if (error?.code === "e08_job_forbidden") throw error;
+         throw gatewayError(error?.code === SUBMIT_GAP ? SUBMIT_GAP
+           : ["reuse_not_granted", "rights_withdrawn", "job_absent", "forbidden", "e08_job_forbidden"].includes(error?.code)
+             ? error.code : "e08_readback_failed", 502);
+diff -ruN a/src/e08-client.mjs b/src/e08-client.mjs
+--- a/src/e08-client.mjs	2026-10-15 07:30:15.973239618 +0000
++++ b/src/e08-client.mjs	2026-10-15 07:28:33.041153021 +0000
+@@ -36,13 +36,48 @@
+   };
+ }
+ 
+-export function createE08Client({ origin, ca, actor, mode, timeoutMs = 3000 }) {
++function artifactOf(view) {
++  const artifact = view.artifact;
++  if (!artifact) return null;
++  requireThat(["repair", "no_fit"].includes(artifact.kind) && typeof artifact.body === "string"
++    && artifact.body.length >= 1 && artifact.body.length <= 4000, "artifact_digest_mismatch", 502);
++  requireThat(artifact.digest === digest({ kind: artifact.kind, body: artifact.body }), "artifact_digest_mismatch", 502);
++  return { kind: artifact.kind, digest: artifact.digest, body: artifact.body };
++}
++
++/** Project an extraction-contract job into the closed journey job schema. */
++export function projectExtraction(view, operation, tenantId) {
++  requireThat(view?.ok === true && view.schema === "ae19.extraction-job.v1", "extraction_contract_mismatch", 502);
++  requireThat(typeof view.jobId === "string" && JOB_ID.test(view.jobId), "invalid_job_id");
++  requireThat(view.tenantId === tenantId, "extraction_binding_mismatch", 502);
++  requireThat(view.paymentAttempts === 0 && view.newPayment === false, "extraction_payment_mismatch", 502);
++  const pending = view.state === "queued" || view.state === "running";
++  const ready = view.state === "ready" || view.state === "no_fit" || view.state === "fit";
++  const failed = view.state === "failed" || view.state === "aborted" || view.state === "timed_out";
++  requireThat(pending || ready || failed, "extraction_state_unknown", 502);
++  const artifact = ready ? artifactOf(view) : null;
++  if ((view.state === "ready" || view.state === "no_fit") && !artifact) {
++    throw new JobError("extraction_contract_mismatch", { status: 502 });
++  }
++  return {
++    schema: "journey-x402-async.job.v1", mode: "test", qualification: "pending-join", railJoin: "pending-join",
++    evidence: "disposable-stand-in", operation, jobId: view.jobId,
++    state: pending ? "quoted" : ready ? "output_ready" : "rejected",
++    completion: pending ? "pending" : ready ? "ready" : "failed",
++    complete: ready, resultReady: Boolean(ready && (artifact || view.state === "fit")),
++    paymentAttempts: 0, newPayment: false, gap: null, paymentCompleted: false,
++    artifact,
++  };
++}
++
++export function createE08Client({ origin, ca, actor, mode, timeoutMs = 3000, extractionOrigin = null }) {
+   requireThat(mode === "test", "test_mode_required");
+   const base = serviceOrigin(origin, { tlsOnly: true });
+   requireThat(ca && Buffer.byteLength(ca) > 0, "ca_required");
+   requireThat(actor?.role === "later-consumer", "later_consumer_required");
+   id(actor.tenantId, "invalid_actor"); id(actor.actorId, "invalid_actor");
+   const identity = Object.freeze({ tenantId: actor.tenantId, actorId: actor.actorId, role: "later-consumer" });
++  const extraction = extractionOrigin ? serviceOrigin(extractionOrigin, { tlsOnly: false }) : null;
+   const call = async (path, options = {}) => {
+     const response = await requestJson(new URL(path, base), { ca, timeoutMs, ...options });
+     if (response.status < 200 || response.status >= 300 || response.body?.ok === false) {
+@@ -52,7 +87,16 @@
+     }
+     return response.body;
+   };
++  const extractionCall = async (path, options = {}) => {
++    const response = await requestJson(new URL(path, extraction), { timeoutMs, ...options });
++    if (response.status === 404) return null;
++    if (response.status < 200 || response.status >= 300 || response.body?.ok === false) {
++      throw new JobError("extraction_refused", { status: response.status });
++    }
++    return response.body;
++  };
+   return Object.freeze({
++    extractionEnabled: extraction !== null,
+     async health({ signal } = {}) {
+       const view = await call("/v1/health", { signal });
+       requireThat(view.schemaVersion === "ae14.async-delivery.v1" && view.qualification === "pending-join"
+@@ -63,9 +107,23 @@
+       signal?.throwIfAborted();
+       const parsed = new URL(url);
+       requireThat(["http:", "https:"].includes(parsed.protocol) && !parsed.username && !parsed.password, "invalid_extraction_url");
+-      // This exact pin has no URL job endpoint or execution worker. Do not map
+-      // URL requests onto openJob (a money/terms workflow), or invent a service.
+-      throw new JobError(SUBMIT_GAP, { status: 503 });
++      // Without an extraction origin this pin still has no URL job endpoint.
++      // Do not map URL requests onto openJob.
++      if (!extraction) throw new JobError(SUBMIT_GAP, { status: 503 });
++      const view = await extractionCall("/v1/extractions", {
++        method: "POST",
++        body: { tenantId: identity.tenantId, actorId: identity.actorId, url },
++        signal,
++      });
++      return projectExtraction(view, "submit", identity.tenantId);
++    },
++    async lookupExtraction(value, operation = "poll", { signal } = {}) {
++      if (!extraction) return null;
++      const selected = jobId(value);
++      const query = new URLSearchParams({ tenantId: identity.tenantId });
++      const view = await extractionCall(`/v1/extractions/${selected}?${query}`, { signal });
++      if (!view) return null;
++      return projectExtraction(view, operation, identity.tenantId);
+     },
+     async poll(value, { signal } = {}) {
+       const selected = jobId(value);

@@ -1,0 +1,18 @@
+{
+  "schema": "ae19.paid-continuation.pins.v1",
+  "writer": "experiments/ae19-paid-continuation",
+  "branch": "codex/ae19-g4-paid-continuation",
+  "base": "9520a1e30c806fcf18ba03461ca337ce3c8d3b98",
+  "merchantMain": "82a51274e7dc7a7600b90f1317a6be6b28442592",
+  "plan": "3c8cdf63a21164ce06960733c5b98ba9b6acf9fc",
+  "ae18Map": "697c9e57918ecbdb5cc24e2cee11580d044ceeb5",
+  "e08": "d5c5ab3606ba2f79d5bdfec6afb347b566966573",
+  "gateway": "7e5078bbf213ae3d1ff8d4638199ff8d1d1d81a8",
+  "gatewayNotUsed": "728f27ec",
+  "asyncProvider": "1b5fd425408d34be232cd1c2ce059d3571b56c63",
+  "retainedOps": "ed7417b085fc595c1c7dc98831c2ef57ddf32736",
+  "maintenanceTestedHead": "7c902ac54a992666aea1b2c044c145caaa0901ae",
+  "maintenanceExportTip": "46175775c06f7c115a69cd5eae2286131b43b651",
+  "ccb": "bac2ab2e64325cf76de32f9f97a9f09ac9d6d68e",
+  "successor243002": "pending-join"
+}
