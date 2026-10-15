@@ -849,8 +849,11 @@ export async function mountMcp(app, {
     catalogByName.set(MCP_RECOVERY_TOOL, { tool: MCP_RECOVERY_TOOL, free: true, binding: null });
     prepared.push({
       name: MCP_RECOVERY_TOOL, free: true,
-      description: "Read the stored outcome of an earlier native paid call using its original input and credential. This call cannot execute or pay.",
-      inputSchema: { name: z.string(), arguments: z.record(z.any()) },
+      description: "Free. Use after a native paid tools/call whose response was lost (timeout, disconnect): re-read the stored outcome by sending the same tool name, the identical arguments, and the same payment credential in _meta. Not for a first call, a new purchase, or HTTP-paid (paidHttp) routes; call the paid tool itself for those. This call cannot execute or pay.",
+      inputSchema: {
+        name: z.string().describe("Name of the earlier native paid tool, e.g. morpho_position"),
+        arguments: z.record(z.any()).describe("The exact arguments object sent in the original paid call"),
+      },
       paymentMeta: { samedaydesk: { charged: false, paymentRequired: false } },
       handler: async (args, extra) => {
         if (!nativeTools.has(args.name)) return { ...asToolResult({ ok: false, error: "recovery_tool_rejected", charged: false }), isError: true };
