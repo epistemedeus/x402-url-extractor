@@ -203,6 +203,7 @@ import {
 } from "./stateful-wallet-policy-conformance.mjs";
 import { createReferralResolver } from "./referral.mjs";
 import { fulfillThe402Job, verifyThe402Webhook } from "./the402.mjs";
+import { bindMerchantHttpDeliveryContracts } from "./http-delivery-evidence/bind-merchant-contracts.mjs";
 import {
   createCommerceTelemetry,
   drainCommerceTelemetryForShutdown,
@@ -610,6 +611,8 @@ function parseCommerceWriterProcessCount(raw = process.env.COMMERCE_TELEMETRY_WR
   return Number(raw);
 }
 
+// Live same-repo HTTP contracts. Response sealing stays on the commerce middleware.
+bindMerchantHttpDeliveryContracts();
 const commerceTelemetry = createCommerceTelemetry({
   writerProcessCount: parseCommerceWriterProcessCount(process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES),
 });

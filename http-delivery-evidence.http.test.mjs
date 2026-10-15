@@ -10,13 +10,18 @@ import test from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { extractMcpOutputSchema } from "./extract.mjs";
+import { bindMerchantHttpDeliveryContracts } from "./http-delivery-evidence/bind-merchant-contracts.mjs";
 import {
   DELIVERY,
+  EXTRACT_CONTRACT,
   PAID_EVIDENCE_FILENAME,
   RESOURCES,
   SETTLEMENT_CLASS,
   VALIDATION_FILENAME,
+  VALIDATOR_AUTHORITY,
+  VALIDATOR_SOURCE,
   digestResponseBytes,
+  evaluateResponseBytes,
   isHistoricalV1PaidSuccess,
   joinKey,
   openStore,
@@ -70,10 +75,22 @@ async function startFakeFacilitator() {
   return { calls, close: () => new Promise((resolve) => server.close(resolve)), url: `http://127.0.0.1:${server.address().port}` };
 }
 
-async function startMerchant({ dataDir, facilitatorUrl }) {
+async function startMerchant({ dataDir, facilitatorUrl, settlementClass = "simulated" }) {
   const preloadPath = path.join(dataDir, "extract-fetch-hook.mjs");
   const longHtml = `<html><head><title>Long</title></head><body><p>${"x".repeat(2000)}</p></body></html>`;
   await writeFile(preloadPath, `
+const nativeJsonStringify = JSON.stringify;
+JSON.stringify = function httpDeliveryFixtureStringify(value, replacer, space) {
+  if (
+    value && typeof value === "object" && !Array.isArray(value)
+    && (value.url === "https://invalid-json.example/" || value.url === "https://schema-fail.example/")
+    && Object.hasOwn(value, "requestedUrl")
+  ) {
+    if (value.url === "https://invalid-json.example/") return "{not-json";
+    return nativeJsonStringify({ ok: true });
+  }
+  return arguments.length === 1 ? nativeJsonStringify(value) : nativeJsonStringify(value, replacer, space);
+};
 globalThis.__SAMEDAYDESK_EXTRACT_TIMEOUT_MS__ = 50;
 globalThis.__SAMEDAYDESK_EXTRACT_FETCH__ = async (input, init) => {
   const url = String(typeof input === "string" || input instanceof URL ? input : input.url);
@@ -83,6 +100,8 @@ globalThis.__SAMEDAYDESK_EXTRACT_FETCH__ = async (input, init) => {
     "https://long.example/": { status: 200, url: "https://long.example/", body: ${JSON.stringify(longHtml)} },
     "https://gzip.example/": { status: 200, url: "https://gzip.example/", body: "ignored", encoding: "gzip" },
     "https://slow.example/": { hang: true },
+    "https://invalid-json.example/": { status: 200, url: "https://invalid-json.example/", body: "<html><head><title>Invalid</title></head><body><p>bad</p></body></html>" },
+    "https://schema-fail.example/": { status: 200, url: "https://schema-fail.example/", body: "<html><head><title>Schema</title></head><body><p>gap</p></body></html>" },
   };
   const page = pages[url];
   if (!page) throw Object.assign(new Error("unmapped extract fixture"), { code: "fetch_error" });
@@ -123,20 +142,22 @@ globalThis.__SAMEDAYDESK_EXTRACT_FETCH__ = async (input, init) => {
 `, "utf8");
   const port = await unusedPort();
   const existingNodeOptions = String(process.env.NODE_OPTIONS || "").trim();
+  const env = {
+    ...process.env,
+    PORT: String(port),
+    COMMERCE_DATA_DIR: dataDir,
+    COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
+    FACILITATOR: "xpay",
+    FACILITATOR_URL: facilitatorUrl,
+    MPP_SECRET_KEY: "",
+    PUBLIC_URL: "https://agents.samedaydesk.com",
+    NODE_OPTIONS: [existingNodeOptions, `--import=${pathToFileURL(preloadPath).href}`].filter(Boolean).join(" "),
+  };
+  if (settlementClass == null) delete env.HTTP_DELIVERY_EVIDENCE_SETTLEMENT_CLASS;
+  else env.HTTP_DELIVERY_EVIDENCE_SETTLEMENT_CLASS = settlementClass;
   const child = spawn(process.execPath, ["server.js"], {
     cwd,
-    env: {
-      ...process.env,
-      PORT: String(port),
-      COMMERCE_DATA_DIR: dataDir,
-      COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
-      FACILITATOR: "xpay",
-      FACILITATOR_URL: facilitatorUrl,
-      MPP_SECRET_KEY: "",
-      PUBLIC_URL: "https://agents.samedaydesk.com",
-      HTTP_DELIVERY_EVIDENCE_SETTLEMENT_CLASS: "simulated",
-      NODE_OPTIONS: [existingNodeOptions, `--import=${pathToFileURL(preloadPath).href}`].filter(Boolean).join(" "),
-    },
+    env,
     stdio: ["ignore", "pipe", "pipe"],
   });
   let output = "";
@@ -216,15 +237,48 @@ async function paidGet(base, route, target, extraHeaders = {}) {
   return { unpaid, paid, bytes, body, challenge, payment };
 }
 
-async function waitForRows(file, minCount) {
+async function waitForRows(file, minCount, predicate = null) {
   const started = Date.now();
   while (Date.now() - started < 8_000) {
     const text = await readFile(file, "utf8").catch((error) => (error?.code === "ENOENT" ? "" : Promise.reject(error)));
     const rows = parseNdjson(text).filter((row) => !row?._unparseable);
-    if (rows.length >= minCount) return rows;
+    if (rows.length >= minCount && (predicate === null || predicate(rows))) return rows;
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
   throw new Error(`timed out waiting for ${minCount} rows in ${file}`);
+}
+
+function assertNoPrivateMaterial(row) {
+  const text = JSON.stringify(row);
+  for (const needle of ["ok.example", "403.example", "invalid-json.example", "schema-fail.example", "payment-signature", PAYER, "?url="]) {
+    assert.equal(text.includes(needle), false, needle);
+  }
+  assert.equal(Object.hasOwn(row, "parsed"), false);
+  assert.equal(row.usefulness, "unknown");
+}
+
+function assertObservedValidation(row, bytes, { status = 200, settlementClass } = {}) {
+  bindMerchantHttpDeliveryContracts();
+  const evaluated = evaluateResponseBytes({
+    method: "GET",
+    resource: RESOURCES.EXTRACT,
+    responseBytes: bytes,
+    merchantHttpStatus: status,
+    settlementClass,
+  });
+  assert.equal(row.method, "GET");
+  assert.equal(row.resource, RESOURCES.EXTRACT);
+  assert.equal(row.contractName, EXTRACT_CONTRACT);
+  assert.equal(row.responseDigest, digestResponseBytes(bytes));
+  assert.equal(row.responseByteLength, bytes.length);
+  assert.equal(row.merchantHttpStatus, status);
+  assert.equal(row.deliveryClass, evaluated.deliveryClass);
+  assert.equal(row.validatorVerdict, evaluated.validatorVerdict);
+  assert.equal(row.validatorAuthority, VALIDATOR_AUTHORITY);
+  assert.equal(row.validatorSource, VALIDATOR_SOURCE);
+  assert.deepEqual(row.counters, evaluated.counters);
+  assert.equal(row.settlementClass, settlementClass);
+  assertNoPrivateMaterial(row);
 }
 
 test("mounted extract captures HTTP delivery evidence without changing v1 paid-success bytes", { timeout: 120_000 }, async (t) => {
@@ -338,4 +392,208 @@ test("mounted extract captures HTTP delivery evidence without changing v1 paid-s
   assert.equal(joinedOk.responseDigest, digestResponseBytes(ok.bytes));
   assert.equal(joinedOk.deliveryClass, "full_bounded_capture");
   assert.equal(proved.identicalBodyDistinct, true);
+});
+
+test("paid extract records invalid JSON and schema failure from the observed bytes", { timeout: 120_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "http-delivery-schema-"));
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => {
+    await stopChild(merchant?.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url, settlementClass: null });
+
+  const invalid = await paidGet(merchant.base, "/extract", "https://invalid-json.example/");
+  assert.equal(invalid.paid.status, 200);
+  assert.equal(invalid.bytes.toString("utf8"), "{not-json");
+  assert.equal(invalid.body, null);
+
+  const schemaFail = await paidGet(merchant.base, "/extract", "https://schema-fail.example/");
+  assert.equal(schemaFail.paid.status, 200);
+  assert.equal(schemaFail.bytes.toString("utf8"), "{\"ok\":true}");
+  assert.equal(extractMcpOutputSchema.safeParse(schemaFail.body).success, false);
+
+  const v1 = await waitForRows(path.join(dataDir, PAID_EVIDENCE_FILENAME), 2);
+  const validations = await waitForRows(path.join(dataDir, VALIDATION_FILENAME), 2);
+  assert.equal(validations.length, 2);
+  const invalidRow = validations.find((row) => row.responseDigest === digestResponseBytes(invalid.bytes));
+  const schemaRow = validations.find((row) => row.responseDigest === digestResponseBytes(schemaFail.bytes));
+  assert.ok(invalidRow);
+  assert.ok(schemaRow);
+  assertObservedValidation(invalidRow, invalid.bytes, { settlementClass: SETTLEMENT_CLASS.REAL_UNVERIFIED });
+  assertObservedValidation(schemaRow, schemaFail.bytes, { settlementClass: SETTLEMENT_CLASS.REAL_UNVERIFIED });
+  assert.equal(invalidRow.deliveryClass, DELIVERY.MALFORMED_BODY);
+  assert.equal(schemaRow.deliveryClass, DELIVERY.MALFORMED_BODY);
+  assert.equal(invalidRow.validatorVerdict, "invalid");
+  assert.equal(schemaRow.validatorVerdict, "invalid");
+  assert.notEqual(invalidRow.counters.schemaErrors, schemaRow.counters.schemaErrors);
+  assert.equal(invalidRow.settlementReference, FAKE_TX);
+  assert.equal(schemaRow.settlementReference, FAKE_TX);
+
+  for (const row of [invalidRow, schemaRow]) {
+    const paid = v1.find((item) => item.id === row.paidEvidenceId);
+    assert.ok(paid);
+    assert.equal(paid.validatorVerdict, "not_checked");
+    assert.equal(paid.responseDigest, row.responseDigest);
+    assert.equal(paid.settlementReference, row.settlementReference);
+    assert.equal(paid.requestDigest, row.requestDigest);
+    assert.equal(paid.route, "/extract");
+  }
+  assert.notEqual(invalidRow.paidEvidenceId, schemaRow.paidEvidenceId);
+  const joined = await openStore(dataDir).join({ currentValidatorVerdict: "validated" });
+  assert.equal(joined.length, 2);
+  for (const item of joined) {
+    assert.equal(item.validations.length, 1);
+    assert.equal(item.validations[0].paidEvidenceId, item.historical.id);
+    assert.equal(item.historical.validatorVerdict, "not_checked");
+  }
+});
+
+test("restart keeps the same paid-evidence join and does not backfill history", { timeout: 120_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "http-delivery-restart-"));
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => {
+    await stopChild(merchant?.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  const prior = historicalV1Row({
+    id: "33333333-3333-4333-8333-333333333333",
+    responseDigest: "a".repeat(64),
+    settlementReference: `0x${"b".repeat(64)}`,
+  });
+  const paidPath = path.join(dataDir, PAID_EVIDENCE_FILENAME);
+  const validationPath = path.join(dataDir, VALIDATION_FILENAME);
+  await writeFile(paidPath, `${JSON.stringify(prior)}\n`, "utf8");
+
+  merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
+  const first = await paidGet(merchant.base, "/extract", "https://ok.example/");
+  assert.equal(first.paid.status, 200);
+  await waitForRows(validationPath, 1);
+  await waitForRows(paidPath, 2);
+  const paidBefore = await readFile(paidPath, "utf8");
+  const validationBefore = await readFile(validationPath, "utf8");
+  await stopChild(merchant.child);
+  merchant.child = null;
+  assert.equal(await readFile(paidPath, "utf8"), paidBefore);
+  assert.equal(await readFile(validationPath, "utf8"), validationBefore);
+
+  merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
+  assert.equal(await readFile(paidPath, "utf8"), paidBefore);
+  assert.equal(await readFile(validationPath, "utf8"), validationBefore);
+  const joinedBefore = await openStore(dataDir).join({ currentValidatorVerdict: "validated" });
+  const historical = joinedBefore.find((row) => row.historical.id === prior.id);
+  assert.equal(historical.historical.validatorVerdict, "not_checked");
+  assert.equal(historical.validations.length, 0);
+  const live = joinedBefore.find((row) => row.historical.id !== prior.id);
+  assert.equal(live.validations.length, 1);
+  assert.equal(live.validations[0].paidEvidenceId, live.historical.id);
+  assert.equal(live.validations[0].responseDigest, live.historical.responseDigest);
+  assert.equal(live.historical.validatorVerdict, "not_checked");
+
+  const second = await paidGet(merchant.base, "/extract", "https://ok.example/");
+  assert.equal(second.paid.status, 200);
+  const paidAfter = await waitForRows(paidPath, 3);
+  const validationsAfter = await waitForRows(validationPath, 2);
+  const paidText = await readFile(paidPath, "utf8");
+  const validationText = await readFile(validationPath, "utf8");
+  assert.equal(paidText.startsWith(paidBefore), true);
+  assert.equal(validationText.startsWith(validationBefore), true);
+  assert.equal(new Set(paidAfter.map((row) => row.id)).size, paidAfter.length);
+  assert.equal(validationsAfter.length, 2);
+  const joinedAfter = await openStore(dataDir).join({ currentValidatorVerdict: "validated" });
+  assert.equal(joinedAfter.find((row) => row.historical.id === prior.id).validations.length, 0);
+  for (const item of joinedAfter) {
+    if (item.historical.id === prior.id) continue;
+    assert.equal(item.validations.length, 1);
+    assert.equal(item.validations[0].paidEvidenceId, item.historical.id);
+    assert.equal(item.validations[0].responseDigest, item.historical.responseDigest);
+    assert.equal(item.historical.validatorVerdict, "not_checked");
+    assertNoPrivateMaterial(item.validations[0]);
+  }
+});
+
+test("one receipt's validation stays on that paid event across replay and nearby 402s", { timeout: 120_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "http-delivery-causal-"));
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => {
+    await stopChild(merchant?.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url });
+  const attemptsPath = path.join(dataDir, "commerce-events.ndjson");
+  const validationPath = path.join(dataDir, VALIDATION_FILENAME);
+  const paidPath = path.join(dataDir, PAID_EVIDENCE_FILENAME);
+
+  const firstChallenge = await fetch(`${merchant.base}/extract?url=${encodeURIComponent("https://ok.example/")}`);
+  assert.equal(firstChallenge.status, 402);
+  const good = await paidGet(merchant.base, "/extract", "https://ok.example/");
+  assert.equal(good.paid.status, 200);
+  assert.equal(extractMcpOutputSchema.safeParse(good.body).success, true);
+  const secondChallenge = await fetch(`${merchant.base}/extract?url=${encodeURIComponent("https://403.example/")}`);
+  assert.equal(secondChallenge.status, 402);
+  await waitForRows(validationPath, 1);
+  const validationBeforeReplay = await readFile(validationPath, "utf8");
+
+  const replay = await fetch(`${merchant.base}/extract?url=${encodeURIComponent("https://ok.example/")}`, {
+    headers: { "payment-signature": good.payment },
+  });
+  assert.equal(replay.status, 200);
+  assert.equal(replay.headers.get("x-payment-replay"), "hit");
+  const replayBytes = Buffer.from(await replay.arrayBuffer());
+  assert.equal(digestResponseBytes(replayBytes), digestResponseBytes(good.bytes));
+  await waitForRows(attemptsPath, 1, (rows) => rows.some((row) => row.replayed === true && row.route === "/extract" && row.status === 200));
+  assert.equal(await readFile(validationPath, "utf8"), validationBeforeReplay);
+  assert.equal(facilitator.calls.settle, 1);
+
+  const refused = await paidGet(merchant.base, "/extract", "https://403.example/");
+  assert.equal(refused.paid.status, 200);
+  assert.equal(refused.body.sourceOk, false);
+  const again = await paidGet(merchant.base, "/extract", "https://ok.example/");
+  assert.equal(again.paid.status, 200);
+  assert.equal(facilitator.calls.settle, 3);
+
+  const paid = await waitForRows(paidPath, 3);
+  const validations = await waitForRows(validationPath, 3);
+  const attempts = await waitForRows(attemptsPath, 1, (rows) => rows.some((row) => row.replayed === true));
+  assert.equal(paid.length, 3);
+  assert.equal(validations.length, 3);
+  const challengeIds = new Set(attempts.filter((row) => row.status === 402 || row.result === "challenge").map((row) => row.id));
+  const replayIds = new Set(attempts.filter((row) => row.replayed === true).map((row) => row.id));
+  assert.ok(challengeIds.size >= 2);
+  assert.ok(replayIds.size >= 1);
+  for (const row of validations) {
+    assert.equal(challengeIds.has(row.paidEvidenceId), false);
+    assert.equal(replayIds.has(row.paidEvidenceId), false);
+    const event = paid.find((item) => item.id === row.paidEvidenceId);
+    assert.ok(event);
+    assert.equal(event.responseDigest, row.responseDigest);
+    assert.equal(event.requestDigest, row.requestDigest);
+    assert.equal(event.settlementReference, row.settlementReference);
+    assert.equal(event.settlementReference, FAKE_TX);
+    assert.equal(row.settlementClass, SETTLEMENT_CLASS.SIMULATED);
+    assert.equal(event.validatorVerdict, "not_checked");
+    assertNoPrivateMaterial(row);
+  }
+  assert.equal(new Set(validations.map((row) => row.paidEvidenceId)).size, 3);
+  const goodRow = validations.find((row) => row.responseDigest === digestResponseBytes(good.bytes));
+  const refusedRow = validations.find((row) => row.responseDigest === digestResponseBytes(refused.bytes));
+  const againRow = validations.find((row) => row.responseDigest === digestResponseBytes(again.bytes));
+  assert.equal(goodRow.deliveryClass, DELIVERY.FULL_BOUNDED_CAPTURE);
+  assert.equal(refusedRow.deliveryClass, DELIVERY.SOURCE_REFUSAL);
+  assert.equal(againRow.deliveryClass, DELIVERY.FULL_BOUNDED_CAPTURE);
+  assert.notEqual(goodRow.paidEvidenceId, againRow.paidEvidenceId);
+  assert.notEqual(goodRow.paidEvidenceId, refusedRow.paidEvidenceId);
+  const joined = await openStore(dataDir).join({ currentValidatorVerdict: "validated" });
+  assert.equal(joined.length, 3);
+  for (const item of joined) {
+    assert.equal(item.validations.length, 1);
+    assert.equal(item.validations[0].paidEvidenceId, item.historical.id);
+    assert.equal(item.validations[0].responseDigest, item.historical.responseDigest);
+  }
 });
