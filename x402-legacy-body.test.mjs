@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildLegacyCompatiblePaymentRequired,
+  isEmptyPaymentRequiredBody,
   legacyCompatibleX402Body,
 } from "./x402-legacy-body.mjs";
 
@@ -107,6 +108,9 @@ test("middleware replaces only an empty 402 JSON body", () => {
       writes.push(value);
       return this;
     },
+    end() {
+      return this;
+    },
   };
   let nextCalled = false;
   legacyCompatibleX402Body({}, res, () => { nextCalled = true; });
@@ -117,4 +121,38 @@ test("middleware replaces only an empty 402 JSON body", () => {
   res.statusCode = 400;
   res.json({ error: "bad input" });
   assert.deepEqual(writes[1], { error: "bad input" });
+});
+
+test("middleware mirrors an empty 402 written with res.end, as Circle Gateway does", () => {
+  const ended = [];
+  const res = {
+    statusCode: 402,
+    headers: { "payment-required": encoded(), "content-length": "2" },
+    getHeader(name) {
+      return this.headers[name.toLowerCase()];
+    },
+    setHeader(name, value) {
+      this.headers[name.toLowerCase()] = value;
+    },
+    json() {
+      throw new Error("Circle Gateway does not call res.json");
+    },
+    end(chunk) {
+      ended.push(chunk);
+    },
+  };
+  legacyCompatibleX402Body({}, res, () => {});
+  res.end("{}");
+  const body = JSON.parse(ended[0]);
+  assert.equal(body.x402Version, 2);
+  assert.equal(body.accepts[0].amount, "5000");
+  assert.equal(body.accepts[0].maxAmountRequired, "5000");
+  assert.equal(body.accepts[0].payTo, paymentRequired.accepts[0].payTo);
+  assert.equal(res.headers["content-length"], Buffer.byteLength(ended[0]));
+
+  res.statusCode = 400;
+  res.end(Buffer.from("{}"));
+  assert.equal(ended[1].toString(), "{}");
+  assert.equal(isEmptyPaymentRequiredBody("{}"), true);
+  assert.equal(isEmptyPaymentRequiredBody('{"error":"kept"}'), false);
 });

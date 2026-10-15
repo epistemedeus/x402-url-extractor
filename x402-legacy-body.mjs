@@ -80,27 +80,61 @@ export function buildLegacyCompatiblePaymentRequired(value) {
   };
 }
 
+function paymentRequiredHeader(res) {
+  const header = res.getHeader("payment-required");
+  return Array.isArray(header) ? header[0] : header;
+}
+
+export function isEmptyPaymentRequiredBody(body) {
+  if (body == null || typeof body === "function") return false;
+  if (Buffer.isBuffer(body) || body instanceof Uint8Array) {
+    return isEmptyPaymentRequiredBody(Buffer.from(body).toString("utf8"));
+  }
+  if (typeof body === "string") return body.trim() === "{}";
+  return typeof body === "object" && !Array.isArray(body) && Object.keys(body).length === 0;
+}
+
 // x402 v2 uses the Payment-Required header and intentionally emits `{}` as
 // the HTTP body. Some live registries still index only the legacy JSON body.
 // Preserve the canonical v2 header while mirroring its public offer data into
 // the otherwise-empty body, including v1 field aliases those indexers expect.
+// Circle Gateway (and any other middleware that calls res.end("{}") instead of
+// res.json({})) must take the same path: the header is already set, and a cold
+// client that reads only the body otherwise sees no price, network, asset, or payTo.
 export function legacyCompatibleX402Body(_req, res, next) {
   const originalJson = res.json.bind(res);
+  const originalEnd = res.end.bind(res);
+  let replaced = false;
+
+  function mirroredBody() {
+    if (res.statusCode !== 402) return null;
+    return buildLegacyCompatiblePaymentRequired(paymentRequiredHeader(res));
+  }
+
   res.json = function compatibleJson(body) {
-    if (
-      res.statusCode === 402 &&
-      body &&
-      typeof body === "object" &&
-      !Array.isArray(body) &&
-      Object.keys(body).length === 0
-    ) {
-      const header = res.getHeader("payment-required");
-      const compatible = buildLegacyCompatiblePaymentRequired(
-        Array.isArray(header) ? header[0] : header,
-      );
-      if (compatible) return originalJson(compatible);
+    if (!replaced && isEmptyPaymentRequiredBody(body)) {
+      const compatible = mirroredBody();
+      if (compatible) {
+        replaced = true;
+        return originalJson(compatible);
+      }
     }
     return originalJson(body);
+  };
+
+  res.end = function compatibleEnd(chunk, encoding, callback) {
+    if (!replaced && isEmptyPaymentRequiredBody(chunk)) {
+      const compatible = mirroredBody();
+      if (compatible) {
+        replaced = true;
+        const payload = JSON.stringify(compatible);
+        if (res.getHeader("content-length") != null) {
+          res.setHeader("content-length", Buffer.byteLength(payload));
+        }
+        return originalEnd(payload, encoding, callback);
+      }
+    }
+    return originalEnd(chunk, encoding, callback);
   };
   return next();
 }
