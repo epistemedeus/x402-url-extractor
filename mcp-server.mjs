@@ -250,6 +250,9 @@ function httpRouteToolHandler(tool, baseUrl) {
     const declaredSource = typeof sourceHeader === "string" ? classifyDeclaredAgentDiscoverySource(sourceHeader) : null;
     const declaredHeader = listDeclaredAgentDiscoverySources().find(({ source }) => source === declaredSource);
     if (declaredHeader) headers["x-samedaydesk-agent-source"] = declaredHeader.value;
+    // AE22: forward the opaque journey token unchanged to the HTTP hop that owns the paid event (digested there, never stored raw).
+    const journeyHeader = request?.headers?.["x-samedaydesk-journey"];
+    if (typeof journeyHeader === "string" && /^[A-Za-z0-9._~-]{16,128}$/.test(journeyHeader)) headers["x-samedaydesk-journey"] = journeyHeader;
     for (const name of ["authorization", "payment-signature", "x-payment", "x-payment-signature"]) {
       const value = request?.headers?.[name];
       if (typeof value === "string") headers[name] = value;
