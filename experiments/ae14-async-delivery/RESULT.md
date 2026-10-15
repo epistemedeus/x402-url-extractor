@@ -1,58 +1,74 @@
-# AE14 E08 acceptance-sensitive async delivery
+# AE14 E08 unpaid URL jobs
 
-Verdict: delta. The isolated second funding/receipt consumer is in this directory. The selected rail was not attached. Qualification is `pending-join`. The real-rail join is held for A3/B3.
+Verdict: the unpaid test-only URL submit/worker/result contract is in this directory. `POST /v1/jobs` remains the terms/funding workflow and is not the extraction API. Result access for a URL job is independent of funding. Qualification of the rail stays `pending-join`. No capture, fee, or funding row is written by the URL path.
 
 ## Identity
 
-- Base: `82a51274e7dc7a7600b90f1317a6be6b28442592` (actual 204, runtime 1.23.52)
-- Branch: `codex/ae14-e08-async-delivery`
-- Writer path: `experiments/ae14-async-delivery`
-- Head: the commit that adds this file on the branch above. This file cannot contain its own commit id. `git rev-parse HEAD` after the export commit is the head.
-- Next integration owner: dr eggbot -> Root
+- Base: `d5c5ab3606ba2f79d5bdfec6afb347b566966573` on `codex/ae14-e08-async-delivery` (the previous E08 export).
+- Branch: `codex/ae21-e08u-unpaid-url-jobs`.
+- Writer path: `experiments/ae14-async-delivery`.
+- Failing-first commit: `38845c45150bf55f534414f9ef9564b27d735dfb`.
+- Head: the commit that adds this file. This file cannot contain its own commit id. `git rev-parse HEAD` after that commit is the head.
+- Owner: AE14 Work Network Lead `65d4d8cb-8724-40d2-a551-b88f1b6879ce` (pilot `b8ead33382b7007df337e8adf7c1536e9fb2b5c3`, `EXECUTION.md:503`).
+- Pins: `PINS.json`. Monitor handback: `HANDBACK.md`.
 
-## Consumed inputs
+## What the URL contract does
 
-- Portfolio pin `7428845d6429b78573801ee8035953e26c610eaf` on `https://github.com/epistemedeus/pilot.git`, directory `overview/self-evaluations/2026-10-14-agent-economy/` (`EXPANSION-PORTFOLIO.md`, `GRAND-PLAN.md`, `INTEGRATED-DECISIONS.md`, `EXECUTION.md`, `ROOT-CANDIDATE-RECEIVING.md`).
-- Joined H matrix `ecf78d29c2c592dd03b5daef4eeba2f29772c8ae`, `GRAND-PLAN.md` section "Composed receiving matrix for the actual amended exports". Not executed here.
-- Rail interface checked at A amend `f89939a09feaf6b710d04abf8109c4a0b790f05c` (`codex/ae14-a-wallet-rail`, `tools/agent-economy-rail`). That tree's `SOURCE-PINS.json` names foundation `e16f7812c7eaa563c3effcbbbb99c8f42df3cdbc`. The older pin `af5773e18f1f4863fe4c6143b746ba3c7925ce63` was not used for this interface check.
-- commerce-payments pin `6b0a5ef3f0df973857f558e2d6b5dd645b5e97f9` tag `v1.1.0`, abi sha256 `4eadfac88b44c0ff00c9274f98821031f6600145e57800d8ced405f2452c03d5`. Not vendored and not executed.
-- x402 auth-capture deferred-capture seam `e95b06661e1a2a8a9a21fce34cc28b9934834650`, Apache-2.0, section "Sync and async finalize". See `THIRD-PARTY.md`.
-- Live immediate-pay routes and the paid `/read` wrapper were not edited.
+`POST /v1/url-jobs` accepts `{ "url" }` plus a required `Idempotency-Key`. The same tenant, key, and normalized URL return the same job. A changed body for that key is 409. The response is `unpaid: true` and `mode: "test-only"`. There is no quote.
 
-## What this consumer does
+The worker imports the repository `extract` function. It does not copy or edit that file. Concurrency is bounded. Each job has a deadline. Cancel of `working` is terminal. States are `working`, `completed`, `failed`, and `cancelled`. A missing persisted fact reads as `unknown`. Rows are in `ae14_async_url_job` in the existing PostgreSQL journal. Restart marks an already-started extraction `failed` with `restart_interrupted` and does not submit it again. A job that had not started is resumed once.
 
-It quotes one capture at `floor(gross * 500 / 10000)`, keeps rail cost separate, and refuses terms `221400` and `234100` without a new fee or wallet. Disposable quotes use symbol `USDC` on `eip155:31337` and refuse the production USDC address. Signature and submitted funding are not reserved. Requester acceptance is journaled before capture. A mined reclaim wins over acceptance and does not capture. A later expiry does not replace a captured outcome. A clock expiry, and an unjournaled operator capture, read back as `unknown` and do not capture. A captured receipt this consumer did not post, or a fee or recipient mismatch, stays an incident. Lost capture responses restart by readback and do not send a second capture. Callbacks are notification-only. The direct route is the authority. Reuse of an accepted final artifact adds no paid task. Refund is distinct from reclaim and charges no second fee. Canonical acceptance stays `approval_pending` / `pending-join`.
+`GET /v1/url-jobs/{jobId}/result` returns the stored bytes (base64) and the sha256 of those bytes. A re-read returns the stored bytes. It does not read quote, funding, capture, or acceptance.
+
+`GET /v1/url-jobs/{jobId}/completion` returns `{ jobId, state, digest, updatedAt }`. Identity is only `Authorization: Bearer <tenant-scoped token>`. The query string is ignored. Missing bearer is 401. Wrong tenant is 404. Both bodies use `state: "unknown"` and are never `completed`.
+
+Completion URL for 240300: `https://{publicHost}/v1/url-jobs/{jobId}/completion` with header `Authorization: Bearer <tenant-scoped token>`. No query string. Loopback remains the default bind for disposable tests. A public origin is an explicit `https` origin whose hostname matches the bind host. A non-loopback bind without that origin is still `loopback_only`.
+
+Outside disposable mode, a private or loopback target is refused at submit with `private_target` and is not inserted. The maintained kernel still refuses loopback itself (`ssrf_blocked`) when disposable mode hands it a loopback fixture. The positive test uses `https://fixture.example/page` and the existing fetch hook pointed at a local server. Tests do not fetch an external host.
 
 ## Tests
 
-Owned, local PostgreSQL 16.15, Node v22.14.0:
+Failing first, commit `38845c45150bf55f534414f9ef9564b27d735dfb`:
 
 ```sh
-node --test --test-concurrency=1 test/*.test.mjs
+FORCE_COLOR=0 node --test --test-concurrency=1 test/url-job-gap.test.mjs
 ```
 
-Exit 0. 25 passed, 0 failed. Output: `evidence/owned-suite.log`.
+Exit 1. tests 3, pass 0, fail 3. Output: `evidence/url-job-gap-failing.txt`.
 
-Inherited root suite, unchanged, recorded from the run already completed in this workspace. It was not started again.
+Owned suite, from `experiments/ae14-async-delivery`, Node v22.22.2, local PostgreSQL 16.15:
 
 ```sh
-npm test
+FORCE_COLOR=0 node --test --test-concurrency=1 test/*.test.mjs
 ```
 
-Exit 1. tests 1173, pass 1162, fail 6, skipped 5. Output: `evidence/inherited-suite.log`. The six failures are outside this writer path and were not modified:
+Exit 0. tests 35, pass 35, fail 0, skipped 0. Output: `evidence/owned-suite.log`. The original 25 funding tests are in that 35 and passed unchanged.
+
+Inherited root suite, this worktree, Node v22.22.2, after `npm ci --ignore-scripts`:
+
+```sh
+FORCE_COLOR=0 npm test
+```
+
+Exit 1. Pretest: tests 19, pass 19. Main script: tests 1173, pass 1165, fail 3, skipped 5. Duration about 121 seconds. Output: `evidence/inherited-suite.log`.
+
+The previously recorded inherited run was Node v22.14.0 with 6 failures. Three of those pass here because the cold acquisition pin requires Node `>=22.22.0`. The old error was `node_pin_unsatisfied v22.14.0 requires >=22.22.0`. No new failure appeared. The three that still fail are outside this writer path:
 
 - `caller-result-client.cold.test.mjs`: installed caller consumer reaches the mounted parent without merchant source
 - `caller-result-client.distribution.test.mjs`: caller generation keeps the sealed feedback archive and matches the current source
-- `public-acquisition/engine.test.mjs`: cold node and python httpx clients unpack the mount and run the declared commands
-- `public-acquisition/receiving-lifecycle.test.mjs`: loopback receiving observes the mounted bytes and cold commands without publishing
-- `public-acquisition/receiving-lifecycle.test.mjs`: a public proof parses a readback and does not publish when the runtime pin is unmet
 - `task-linked-delivery/experiments/useful-economics-100290/test/cold-export.test.mjs`: two cold consumers accept the public fixture and reject the seeded controls
+
+`public-acquisition/engine.test.mjs` rewrites `public-acquisition/loopback-profile.json` when the node pin is met. That file was restored after the run and is not in this change.
+
+## Joins that are not done here
+
+- 242007 `@neomorphic/journey-x402-async` at `1b5fd425408d34be232cd1c2ce059d3571b56c63` still throws `e08_extraction_submit_pending_join` from `submit()`. Proposed patch: `proposed/242007-unpaid-url-submit.patch`. pk4 HEAD `ed5fec791ef2aadf78c71acb98ff166a76bcf038` has diverged (`+99/-22` on `e08-client.mjs`). The owner rebases. This session did not edit that package.
+- 240300 at `667fba353e9082d8a0842437442dabc42843abf8` still sends no `Authorization` and rejects a query string. Proposed patch: `proposed/240300-target-auth-header.patch`. Not applied.
+- Rail join stays `pending-join` for A3/B3. The stand-in is not a rail. No live money, signer, wallet, publication, or deployment.
 
 ## Limits
 
-- The stand-in uses `provenance: fake` and the label `stand-in-not-rail`. It is not local-chain or production qualification, and mock parity is not claimed.
+- Market B is the only capture writer. This package writes no capture, `capture_evidence`, fee, or funding.
+- No measured-economics claim. `paymentCompleted`, `acceptedSettled`, and `fundedAcceptance` stay false.
+- The URL worker does not edit `extract.mjs`. Loopback targets are not fetched.
 - H was not run. Anvil, the wallet keystore, and the canonical acceptance writer were not run.
-- A lost capture that never landed is not auto-retried, so a second POST cannot be inferred.
-- `acceptedSettled`, `paymentCompleted`, and `fundedAcceptance` stay false.
-- No measured-economics claim. No production signer, funds, payment, or deployment.
-- Old net promises and the frozen 234100 terms are not repriced.

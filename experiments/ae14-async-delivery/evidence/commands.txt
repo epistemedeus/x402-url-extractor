@@ -1,20 +1,25 @@
-Owned suite, from experiments/ae14-async-delivery, Node v22.14.0, local PostgreSQL 16.15 over the unix socket:
+Failing-first reproduction, from experiments/ae14-async-delivery, before the URL contract existed. Commit 38845c45150bf55f534414f9ef9564b27d735dfb.
 
-node --test --test-concurrency=1 test/*.test.mjs
+FORCE_COLOR=0 node --test --test-concurrency=1 test/url-job-gap.test.mjs
 
-Exit 0. 25 passed, 0 failed. Output: evidence/owned-suite.log
+Exit 1. tests 3, pass 0, fail 3. Output: evidence/url-job-gap-failing.txt. The three failures were 404 !== 201 on submit, 404 !== 201 on completion (submit had no job), and a public origin still throwing loopback_only.
 
-Inherited suite, from the repository root, unchanged package.json scripts, not re-run in the export step:
+Owned suite after the contract, from experiments/ae14-async-delivery, Node v22.22.2, local PostgreSQL 16.15 over the unix socket:
 
-npm test
+FORCE_COLOR=0 node --test --test-concurrency=1 test/*.test.mjs
 
-That command runs pretest, then the root test script. Exit 1. tests 1173, pass 1162, fail 6, skipped 5. Output: evidence/inherited-suite.log
+Exit 0. tests 35, pass 35, fail 0, skipped 0. Output: evidence/owned-suite.log. That count is the original 25 funding tests plus 3 gap tests plus 7 URL-job tests.
 
-The six failures are outside experiments/ae14-async-delivery and were left unchanged:
+Inherited root suite, this worktree, Node v22.22.2. npm ci --ignore-scripts had just restored the lockfile install. The command is the unchanged package.json script:
+
+FORCE_COLOR=0 npm test
+
+Exit 1. pretest tests 19, pass 19. Main script tests 1173, pass 1165, fail 3, skipped 5. Output: evidence/inherited-suite.log.
+
+The previously recorded run was Node v22.14.0 and listed 6 failures. Three of those now pass on v22.22.2 because the cold acquisition pin requires Node >=22.22.0 (the old error was node_pin_unsatisfied v22.14.0 requires >=22.22.0). No new failures. The three that still fail are outside this writer path:
 
 - caller-result-client.cold.test.mjs: installed caller consumer reaches the mounted parent without merchant source
 - caller-result-client.distribution.test.mjs: caller generation keeps the sealed feedback archive and matches the current source
-- public-acquisition/engine.test.mjs: cold node and python httpx clients unpack the mount and run the declared commands
-- public-acquisition/receiving-lifecycle.test.mjs: loopback receiving observes the mounted bytes and cold commands without publishing
-- public-acquisition/receiving-lifecycle.test.mjs: a public proof parses a readback and does not publish when the runtime pin is unmet
 - task-linked-delivery/experiments/useful-economics-100290/test/cold-export.test.mjs: two cold consumers accept the public fixture and reject the seeded controls
+
+public-acquisition/engine.test.mjs writes public-acquisition/loopback-profile.json when it passes. That file was restored and is not part of this change.

@@ -1,0 +1,87 @@
+diff -ru a/services/continuous-monitoring/src/config.mjs b/services/continuous-monitoring/src/config.mjs
+--- a/services/continuous-monitoring/src/config.mjs	2026-10-15 11:59:47.924638162 +0000
++++ b/services/continuous-monitoring/src/config.mjs	2026-10-15 11:59:47.924638162 +0000
+@@ -30,7 +30,7 @@
+   return options;
+ }
+ export function monitorConfig(input, tenant, now, options) {
+-  object(input, ['url', 'mode', 'pointers', 'sourceId', 'intervalMs', 'expiresAt', 'budget', 'retentionDays']);
++  object(input, ['url', 'mode', 'pointers', 'sourceId', 'intervalMs', 'expiresAt', 'budget', 'retentionDays', 'targetAuthorization']);
+   const limit = LIMITS[tenant.plan];
+   const url = targetUrl(input.url, options).href;
+   const mode = input.mode || 'http';
+@@ -61,6 +61,17 @@
+     maxBodyBytes: integer(budget.maxBodyBytes ?? 65536, 256, 262144),
+   };
+   requireThat(parsed.maxBytes >= parsed.maxBodyBytes + 65536 && parsed.maxRuntimeMs >= parsed.timeoutMs, 'budget_cannot_reserve_one_check');
+-  return { url, mode, pointers, sourceId, intervalMs, expiresAt, budget: parsed,
+-    retentionDays: integer(input.retentionDays ?? 7, 1, limit.days), scopeKey: digestJson({ url, mode, pointers, sourceId }), sourceKey: digestJson({ url }) };
++  // Optional upstream bearer. Kept out of scopeKey and sourceKey so the secret
++  // is not a monitor identity and a 304 validator is not confused with target auth.
++  let targetAuthorization;
++  if (input.targetAuthorization !== undefined) {
++    requireThat(typeof input.targetAuthorization === 'string'
++      && /^[A-Za-z0-9_-]{8,128}$/.test(input.targetAuthorization), 'invalid_target_authorization');
++    targetAuthorization = input.targetAuthorization;
++  }
++  const config = { url, mode, pointers, sourceId, intervalMs, expiresAt, budget: parsed,
++    retentionDays: integer(input.retentionDays ?? 7, 1, limit.days),
++    scopeKey: digestJson({ url, mode, pointers, sourceId }), sourceKey: digestJson({ url }) };
++  if (targetAuthorization !== undefined) config.targetAuthorization = targetAuthorization;
++  return config;
+ }
+diff -ru a/services/continuous-monitoring/src/store.mjs b/services/continuous-monitoring/src/store.mjs
+--- a/services/continuous-monitoring/src/store.mjs	2026-10-15 11:59:47.924638162 +0000
++++ b/services/continuous-monitoring/src/store.mjs	2026-10-15 11:59:47.924638162 +0000
+@@ -116,7 +116,9 @@
+     requireThat(row, 'not_found', 404); return row;
+   }
+   publicMonitor(row) {
+-    const config = parse(row.config), core = parse(row.core);
++    const stored = parse(row.config), core = parse(row.core);
++    const config = { ...stored };
++    delete config.targetAuthorization;
+     return { id: row.id, status: row.status, createdAt: iso(row.created_at), expiresAt: iso(row.expires_at),
+       nextDueAt: iso(row.next_due), config, initialEvidenceId: row.initial_evidence,
+       currentEvidenceId: row.current_evidence, currentClass: core.subscription.currentClass,
+@@ -175,6 +177,7 @@
+       const config = monitorConfig({ url: old.url, mode: old.mode,
+         ...(old.mode === 'json' ? { pointers: old.pointers } : {}),
+         ...(old.mode === 'observatory' ? { sourceId: old.sourceId } : {}),
++        ...(old.targetAuthorization ? { targetAuthorization: old.targetAuthorization } : {}),
+         intervalMs: patch.intervalMs ?? old.intervalMs, expiresAt: patch.expiresAt ?? iso(old.expiresAt),
+         retentionDays: patch.retentionDays ?? old.retentionDays, budget: { ...old.budget, ...patch.budget } }, tenant, now, this.options);
+       requireThat(config.budget.maxChecks >= row.checks && config.budget.maxBytes >= row.charged_bytes
+diff -ru a/services/continuous-monitoring/src/worker.mjs b/services/continuous-monitoring/src/worker.mjs
+--- a/services/continuous-monitoring/src/worker.mjs	2026-10-15 11:59:47.924638162 +0000
++++ b/services/continuous-monitoring/src/worker.mjs	2026-10-15 11:59:47.924638162 +0000
+@@ -21,10 +21,17 @@
+     const cancellation = setInterval(() => {
+       if (!store.stillActive(claim, now())) controller.abort();
+     }, 50);
+-    const baseline = store.baseline(claim.monitorId), headers = {};
++    const baseline = store.baseline(claim.monitorId);
+     const validators = baseline?.nonSemantic?.validators;
+-    if (validators?.etag) headers['if-none-match'] = validators.etag;
+-    else if (validators?.lastModified) headers['if-modified-since'] = validators.lastModified;
++    // Validator headers alone decide a 304. Authorization is target auth and
++    // must not make Object.keys(headers) look like a confirmed unchanged body.
++    const validatorHeaders = {};
++    if (validators?.etag) validatorHeaders['if-none-match'] = validators.etag;
++    else if (validators?.lastModified) validatorHeaders['if-modified-since'] = validators.lastModified;
++    const headers = { ...validatorHeaders };
++    if (typeof claim.config.targetAuthorization === 'string' && claim.config.targetAuthorization.length > 0) {
++      headers.authorization = `Bearer ${claim.config.targetAuthorization}`;
++    }
+     let response;
+     try {
+       response = await boundedGet(claim.config.url, {
+@@ -35,7 +42,7 @@
+       });
+     } finally { clearInterval(cancellation); }
+     let normalized;
+-    if (response.status === 304 && !response.failure && baseline && Object.keys(headers).length) {
++    if (response.status === 304 && !response.failure && baseline && Object.keys(validatorHeaders).length) {
+       normalized = { ...baseline, observedAt: iso(now()) };
+     } else {
+       normalized = normalize(claim.config, response, now());

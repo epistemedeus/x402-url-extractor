@@ -1,0 +1,112 @@
+diff -ru a/packages/journey-x402-async/src/e08-client.mjs b/packages/journey-x402-async/src/e08-client.mjs
+--- a/packages/journey-x402-async/src/e08-client.mjs	2026-10-15 11:59:47.928638135 +0000
++++ b/packages/journey-x402-async/src/e08-client.mjs	2026-10-15 11:59:47.928638135 +0000
+@@ -1,3 +1,4 @@
++import { createHash } from "node:crypto";
+ import { id } from "../vendor/e08/boundary.mjs";
+ import { digest } from "../vendor/e08/digest.mjs";
+ import { JobError, requireThat } from "./errors.mjs";
+@@ -36,15 +37,35 @@
+   };
+ }
+ 
+-export function createE08Client({ origin, ca, actor, mode, timeoutMs = 3000 }) {
++
++const URL_STATES = Object.freeze(["working", "completed", "failed", "cancelled"]);
++
++function projectUrlJob(view, operation, artifact = null) {
++  requireThat(view?.ok === true && view.schemaVersion === "ae14.url-job.v1", "e08_contract_mismatch", 502);
++  requireThat(view.unpaid === true && view.mode === "test-only" && view.fundingRequired === false
++    && view.resultAccess === "independent-of-funding" && view.paymentCompleted === false, "e08_authority_mismatch", 502);
++  requireThat(JOB_ID.test(view.jobId) && URL_STATES.includes(view.state), "e08_binding_mismatch", 502);
++  const ready = view.state === "completed" && typeof view.digest === "string" && /^[a-f0-9]{64}$/.test(view.digest);
++  const failed = view.state === "failed" || view.state === "cancelled";
++  return {
++    schema: "journey-x402-async.job.v1", mode: "test", qualification: "pending-join", railJoin: "pending-join",
++    evidence: "unpaid-url-job", operation, jobId: view.jobId, state: view.state,
++    completion: ready ? "ready" : failed ? "failed" : "pending",
++    complete: ready, resultReady: operation === "result" ? ready && artifact !== null : ready,
++    paymentAttempts: 0, newPayment: false, gap: null, paymentCompleted: false, artifact,
++  };
++}
++
++export function createE08Client({ origin, ca, actor, mode, timeoutMs = 3000, urlToken = null }) {
+   requireThat(mode === "test", "test_mode_required");
+   const base = serviceOrigin(origin, { tlsOnly: true });
+   requireThat(ca && Buffer.byteLength(ca) > 0, "ca_required");
+   requireThat(actor?.role === "later-consumer", "later_consumer_required");
+   id(actor.tenantId, "invalid_actor"); id(actor.actorId, "invalid_actor");
+   const identity = Object.freeze({ tenantId: actor.tenantId, actorId: actor.actorId, role: "later-consumer" });
++  const raw = (path, options = {}) => requestJson(new URL(path, base), { ca, timeoutMs, ...options });
+   const call = async (path, options = {}) => {
+-    const response = await requestJson(new URL(path, base), { ca, timeoutMs, ...options });
++    const response = await raw(path, options);
+     if (response.status < 200 || response.status >= 300 || response.body?.ok === false) {
+       const code = response.body?.code;
+       // Never expose raw upstream error text.
+@@ -59,16 +80,38 @@
+         && view.railQualification === "stand-in-not-rail" && view.liveImmediatePay === false, "test_standin_required", 502);
+       return view;
+     },
+-    async submit({ url }, { signal } = {}) {
++    async submit({ url, idempotencyKey } = {}, { signal } = {}) {
+       signal?.throwIfAborted();
+       const parsed = new URL(url);
+       requireThat(["http:", "https:"].includes(parsed.protocol) && !parsed.username && !parsed.password, "invalid_extraction_url");
+-      // This exact pin has no URL job endpoint or execution worker. Do not map
+-      // URL requests onto openJob (a money/terms workflow), or invent a service.
+-      throw new JobError(SUBMIT_GAP, { status: 503 });
++      // Without a configured tenant token the join stays the explicit gap.
++      // Never map a URL submit onto openJob (a terms/funding workflow).
++      if (urlToken == null) throw new JobError(SUBMIT_GAP, { status: 503 });
++      requireThat(typeof urlToken === "string" && /^[A-Za-z0-9_-]{8,128}$/.test(urlToken), "invalid_url_token");
++      requireThat(typeof idempotencyKey === "string" && /^[A-Za-z0-9._:-]{1,128}$/.test(idempotencyKey), "idempotency_key_required");
++      const response = await raw("/v1/url-jobs", {
++        method: "POST", body: { url: parsed.href }, token: urlToken, key: idempotencyKey, signal,
++      });
++      if (response.status === 409 && response.body?.code === "idempotency_conflict") {
++        throw new JobError("idempotency_conflict", { status: 409 });
++      }
++      if (response.status < 200 || response.status >= 300 || response.body?.ok === false) {
++        const code = response.body?.code;
++        throw new JobError(["private_target", "invalid_url", "idempotency_key_required", "idempotency_key_invalid"].includes(code) ? code : "e08_refused", { status: response.status });
++      }
++      return projectUrlJob(response.body, "submit");
+     },
+     async poll(value, { signal } = {}) {
+       const selected = jobId(value);
++      if (typeof urlToken === "string") {
++        const probed = await raw(`/v1/url-jobs/${selected}`, { token: urlToken, signal });
++        if (probed.status !== 404) {
++          if (probed.status < 200 || probed.status >= 300 || probed.body?.ok === false) {
++            throw new JobError("e08_refused", { status: probed.status });
++          }
++          return projectUrlJob(probed.body, "poll");
++        }
++      }
+       const query = new URLSearchParams(identity);
+       const view = await call(`/v1/jobs/${selected}?${query}`, { signal });
+       checkView(view, selected, identity.tenantId);
+@@ -76,6 +119,22 @@
+     },
+     async result(value, { signal } = {}) {
+       const selected = jobId(value);
++      if (typeof urlToken === "string") {
++        const probed = await raw(`/v1/url-jobs/${selected}/result`, { token: urlToken, signal });
++        if (probed.status === 409 && probed.body?.code === "result_not_ready") {
++          throw new JobError("e08_result_not_ready", { status: 409 });
++        }
++        if (probed.status !== 404) {
++          if (probed.status < 200 || probed.status >= 300 || probed.body?.ok === false) {
++            throw new JobError("e08_refused", { status: probed.status });
++          }
++          const view = probed.body;
++          requireThat(view.encoding === "base64" && typeof view.bytes === "string", "artifact_digest_mismatch", 502);
++          const bytes = Buffer.from(view.bytes, "base64");
++          requireThat(createHash("sha256").update(bytes).digest("hex") === view.digest, "artifact_digest_mismatch", 502);
++          return projectUrlJob(view, "result", { encoding: "base64", digest: view.digest, bytes: view.bytes });
++        }
++      }
+       // E08's reuse route is a readback: newPayment:false. Never calls accept,
+       // funding, output, capture or any wallet/rail operation; never retries.
+       const view = await call(`/v1/jobs/${selected}/reuse`, { method: "POST", body: { actor: identity }, signal });

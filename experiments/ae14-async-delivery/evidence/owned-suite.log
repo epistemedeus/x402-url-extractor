@@ -1,146 +1,234 @@
-(node:1616136) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-(Use `node --trace-warnings ...` to show where the warning was created)
 TAP version 13
-# (node:1616142) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: per-capture floor hits the 19, 20 and 21 atomic boundaries
 ok 1 - per-capture floor hits the 19, 20 and 21 atomic boundaries
   ---
-  duration_ms: 1.12309
+  duration_ms: 4.789779
+  type: 'test'
   ...
 # Subtest: a split is not priced as one cumulative floor
 ok 2 - a split is not priced as one cumulative floor
   ---
-  duration_ms: 1.117009
+  duration_ms: 0.407617
+  type: 'test'
   ...
 # Subtest: legacy 221400 and 234100 terms are not repriced
 ok 3 - legacy 221400 and 234100 terms are not repriced
   ---
-  duration_ms: 0.300537
+  duration_ms: 0.239969
+  type: 'test'
   ...
 # Subtest: new quotes keep rail cost separate and refuse production assets
 ok 4 - new quotes keep rail cost separate and refuse production assets
   ---
-  duration_ms: 1.095912
+  duration_ms: 0.944165
+  type: 'test'
   ...
-# (node:1616153) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: the stand-in matches the A amend port and stays pending-join
 ok 5 - the stand-in matches the A amend port and stays pending-join
   ---
-  duration_ms: 128.283227
+  duration_ms: 95.84085
+  type: 'test'
   ...
 # Subtest: a clock expiry is unknown and a mined reclaim is the expiry winner
 ok 6 - a clock expiry is unknown and a mined reclaim is the expiry winner
   ---
-  duration_ms: 93.043301
+  duration_ms: 75.549435
+  type: 'test'
   ...
 # Subtest: a leaked captured receipt without the consumer post stays an incident
 ok 7 - a leaked captured receipt without the consumer post stays an incident
   ---
-  duration_ms: 96.525217
+  duration_ms: 59.81765
+  type: 'test'
   ...
 # Subtest: a port authority that is not the quote authority cannot fund the job
 ok 8 - a port authority that is not the quote authority cannot fund the job
   ---
-  duration_ms: 97.194385
+  duration_ms: 48.188695
+  type: 'test'
   ...
-# (node:1616181) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: certificate-verified restart keeps a lost callback from becoming a second capture
 ok 9 - certificate-verified restart keeps a lost callback from becoming a second capture
   ---
-  duration_ms: 812.929353
+  duration_ms: 819.522974
+  type: 'test'
   ...
 # Subtest: a crash after the capture fence does not send a second capture on restart
 ok 10 - a crash after the capture fence does not send a second capture on restart
   ---
-  duration_ms: 719.941056
+  duration_ms: 891.983969
+  type: 'test'
   ...
 # Subtest: rail mode without the amended export exits pending-join
 ok 11 - rail mode without the amended export exits pending-join
   ---
-  duration_ms: 46.873409
+  duration_ms: 42.756696
+  type: 'test'
   ...
 # Subtest: an untrusted callback certificate is not an acknowledgement
 ok 12 - an untrusted callback certificate is not an acknowledgement
   ---
-  duration_ms: 602.145308
+  duration_ms: 347.856817
+  type: 'test'
   ...
-# (node:1616296) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: signature and submitted funding are not reserved
 ok 13 - signature and submitted funding are not reserved
   ---
-  duration_ms: 90.675307
+  duration_ms: 61.265226
+  type: 'test'
   ...
 # Subtest: one receipt cannot fund a second job and one job cannot take a second proof
 ok 14 - one receipt cannot fund a second job and one job cannot take a second proof
   ---
-  duration_ms: 27.986408
+  duration_ms: 14.668189
+  type: 'test'
   ...
 # Subtest: output HTTP-equivalent 200 is not acceptance and a client assent annotation is ignored
 ok 15 - output HTTP-equivalent 200 is not acceptance and a client assent annotation is ignored
   ---
-  duration_ms: 18.919313
+  duration_ms: 12.072838
+  type: 'test'
   ...
 # Subtest: accepted repair stays approval_pending until the canonical join and does not capture twice
 ok 16 - accepted repair stays approval_pending until the canonical join and does not capture twice
   ---
-  duration_ms: 35.054734
+  duration_ms: 18.330056
+  type: 'test'
   ...
 # Subtest: accepted no-fit stays distinct from a repair and can be reused without a new payment
 ok 17 - accepted no-fit stays distinct from a repair and can be reused without a new payment
   ---
-  duration_ms: 25.224703
+  duration_ms: 23.796449
+  type: 'test'
   ...
 # Subtest: rejection does not capture
 ok 18 - rejection does not capture
   ---
-  duration_ms: 18.723353
+  duration_ms: 23.105783
+  type: 'test'
   ...
 # Subtest: expiry wins without a funded acceptance and a later expiry cannot undo capture
 ok 19 - expiry wins without a funded acceptance and a later expiry cannot undo capture
   ---
-  duration_ms: 31.388929
+  duration_ms: 20.566327
+  type: 'test'
   ...
 # Subtest: a lost capture response is resolved by readback and is not posted again
 ok 20 - a lost capture response is resolved by readback and is not posted again
   ---
-  duration_ms: 31.79553
+  duration_ms: 23.293679
+  type: 'test'
   ...
 # Subtest: an unjournaled operator capture is unknown and is not accepted
 ok 21 - an unjournaled operator capture is unknown and is not accepted
   ---
-  duration_ms: 17.14093
+  duration_ms: 11.039585
+  type: 'test'
   ...
 # Subtest: the wrong tenant, reviewer or contributor cannot move the job
 ok 22 - the wrong tenant, reviewer or contributor cannot move the job
   ---
-  duration_ms: 25.533583
+  duration_ms: 17.939535
+  type: 'test'
   ...
 # Subtest: legacy terms open nothing and a direct route matches the callback route
 ok 23 - legacy terms open nothing and a direct route matches the callback route
   ---
-  duration_ms: 34.205769
+  duration_ms: 19.657823
+  type: 'test'
   ...
 # Subtest: a post-capture refund is not a reclaim and charges no second fee
 ok 24 - a post-capture refund is not a reclaim and charges no second fee
   ---
-  duration_ms: 27.160284
+  duration_ms: 13.045512
+  type: 'test'
   ...
 # Subtest: a quote that is already expired cannot be funded
 ok 25 - a quote that is already expired cannot be funded
   ---
-  duration_ms: 155.383969
+  duration_ms: 71.521227
+  type: 'test'
   ...
-1..25
-# tests 25
-# suites 0
-# pass 25
+# Subtest: unpaid url job contract gaps
+    # Subtest: submit of https://example.com/ returns an unpaid url job
+    ok 1 - submit of https://example.com/ returns an unpaid url job
+      ---
+      duration_ms: 332.626466
+      type: 'test'
+      ...
+    # Subtest: url job completion is readable without a query-string actor
+    ok 2 - url job completion is readable without a query-string actor
+      ---
+      duration_ms: 427.918598
+      type: 'test'
+      ...
+    # Subtest: a configured public origin is not refused as loopback_only
+    ok 3 - a configured public origin is not refused as loopback_only
+      ---
+      duration_ms: 351.566059
+      type: 'test'
+      ...
+    1..3
+ok 26 - unpaid url job contract gaps
+  ---
+  duration_ms: 1112.795461
+  type: 'suite'
+  ...
+# Subtest: unpaid url extraction jobs
+    # Subtest: local fixture extraction completes and the result is stable across restart
+    ok 1 - local fixture extraction completes and the result is stable across restart
+      ---
+      duration_ms: 179.465651
+      type: 'test'
+      ...
+    # Subtest: idempotency, bearer, and query-string negatives do not create a second job
+    ok 2 - idempotency, bearer, and query-string negatives do not create a second job
+      ---
+      duration_ms: 58.644539
+      type: 'test'
+      ...
+    # Subtest: private and loopback targets are refused outside disposable mode
+    ok 3 - private and loopback targets are refused outside disposable mode
+      ---
+      duration_ms: 65.082714
+      type: 'test'
+      ...
+    # Subtest: disposable mode still uses the maintained kernel for a loopback fixture
+    ok 4 - disposable mode still uses the maintained kernel for a loopback fixture
+      ---
+      duration_ms: 46.946172
+      type: 'test'
+      ...
+    # Subtest: a deadline fails the job and cancellation is terminal
+    ok 5 - a deadline fails the job and cancellation is terminal
+      ---
+      duration_ms: 113.636827
+      type: 'test'
+      ...
+    # Subtest: restart terminally marks an interrupted extraction and does not extract again
+    ok 6 - restart terminally marks an interrupted extraction and does not extract again
+      ---
+      duration_ms: 61.235439
+      type: 'test'
+      ...
+    # Subtest: bounded concurrency does not overlap when the limit is one
+    ok 7 - bounded concurrency does not overlap when the limit is one
+      ---
+      duration_ms: 105.959292
+      type: 'test'
+      ...
+    1..7
+ok 27 - unpaid url extraction jobs
+  ---
+  duration_ms: 1086.465706
+  type: 'suite'
+  ...
+1..27
+# tests 35
+# suites 2
+# pass 35
 # fail 0
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 3403.739318
-EXIT:0
+# duration_ms 5313.689713
