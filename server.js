@@ -299,6 +299,7 @@ import {
   mountMachineAcquisition,
 } from "./machine-acquisition.mjs";
 import { legacyCompatibleX402Body } from "./x402-legacy-body.mjs";
+import { loadMcpRegistryDescriptor, mountPublicDiscoveryAliases } from "./public-discovery-aliases.mjs";
 import {
   VIBES_DISCOVERABILITY_PATH,
   VIBES_DISCOVERABILITY_SLUG,
@@ -1635,6 +1636,10 @@ app.get("/api/actions", (req, res) => {
 app.get(["/.well-known/agent-card.json", "/.well-known/agent.json"], (_req, res) => {
   res.set("Cache-Control", "public, max-age=300");
   return res.json(currentAgentCard());
+});
+mountPublicDiscoveryAliases(app, {
+  descriptor: loadMcpRegistryDescriptor(new URL("./server.json", import.meta.url)),
+  agentCard: currentAgentCard,
 });
 
 app.get("/a2a", (_req, res) => {
