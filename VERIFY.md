@@ -54,9 +54,9 @@ Base result: tests 21, pass 18, fail 3, exit 1. Same names and assertions. Not f
 
 ## Final head
 
-Source head after both patches and no further code changes: `f7801399240ac16f0a5372b9852a38915508f7b4`.
-
-The branch tip is the commit that adds this `VERIFY.md` on top of that source head. A commit cannot store its own sha. The tip sha is `git rev-parse HEAD` on `codex/ae24-j9-gateway-verified` after this file is committed.
+- Source head (both patches, no further code changes): `f7801399240ac16f0a5372b9852a38915508f7b4`
+- Verification record (this file, including the full `npm test` log): `93cf25c726e4cdd31b0bc8ca692be8cf1520668d`
+- Branch tip: the child of `93cf25c726e4cdd31b0bc8ca692be8cf1520668d`, which only records that sha here. A commit cannot contain its own sha.
 
 ## Full npm test output
 
