@@ -299,6 +299,7 @@ import {
   mountMachineAcquisition,
 } from "./machine-acquisition.mjs";
 import { legacyCompatibleX402Body } from "./x402-legacy-body.mjs";
+import { paidHeadChallenges } from "./paid-head-challenge.mjs";
 import {
   VIBES_DISCOVERABILITY_PATH,
   VIBES_DISCOVERABILITY_SLUG,
@@ -2733,7 +2734,7 @@ function declareOpportunityPreflightContract(routeKey) {
 // while the existing extension-rich x402 middleware remains authoritative for
 // x402 credentials. A settled MPP credential bypasses only the duplicate gate.
 const x402Paywall = paymentMiddleware(
-    {
+    paidHeadChallenges({
       "GET /extract": {
         ...bazaarResourceMetadataFor("/extract"),
         accepts: [
@@ -3762,7 +3763,7 @@ const x402Paywall = paymentMiddleware(
         payTo: PAY_TO,
         extensions: COMMON_COMMERCE_EXTENSIONS,
       }) : {}),
-    },
+    }),
     resourceServer
   );
 
