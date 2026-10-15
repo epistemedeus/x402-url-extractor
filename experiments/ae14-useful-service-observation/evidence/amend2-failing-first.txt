@@ -1,0 +1,96 @@
+(node:53313) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:53319) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: a absent canonical capture stays unknown on the loaded and cold paths
+not ok 1 - a absent canonical capture stays unknown on the loaded and cold paths
+  ---
+  duration_ms: 9.763142
+  location: '/home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/unique-capture.test.mjs:77:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    loaded result: outside
+    
+    true !== 'unknown'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'unknown'
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    assertUnknown (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/unique-capture.test.mjs:34:10)
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/unique-capture.test.mjs:90:8)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: b duplicate canonical capture stays unknown on the loaded and cold paths
+not ok 2 - b duplicate canonical capture stays unknown on the loaded and cold paths
+  ---
+  duration_ms: 11.235094
+  location: '/home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/unique-capture.test.mjs:96:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    loaded result: outside
+    
+    true !== 'unknown'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'unknown'
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    assertUnknown (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/unique-capture.test.mjs:34:10)
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/unique-capture.test.mjs:113:8)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: c mismatched canonical capture stays unknown on the loaded and cold paths
+not ok 3 - c mismatched canonical capture stays unknown on the loaded and cold paths
+  ---
+  duration_ms: 5.5544
+  location: '/home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/unique-capture.test.mjs:121:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    named loaded result: outside
+    
+    true !== 'unknown'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'unknown'
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    assertUnknown (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/unique-capture.test.mjs:34:10)
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/unique-capture.test.mjs:136:8)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: d a unique matching capture still qualifies positive and negative facts
+ok 4 - d a unique matching capture still qualifies positive and negative facts
+  ---
+  duration_ms: 8.043222
+  ...
+# Subtest: e a global H fact stays in operator scope and does not qualify a tenant or result
+ok 5 - e a global H fact stays in operator scope and does not qualify a tenant or result
+  ---
+  duration_ms: 3.477413
+  ...
+# Subtest: public extension still cannot submit observed_fact when a unique capture exists
+ok 6 - public extension still cannot submit observed_fact when a unique capture exists
+  ---
+  duration_ms: 3.058007
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 3
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 751.964545
+EXIT:1

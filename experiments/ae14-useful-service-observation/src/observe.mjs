@@ -203,7 +203,8 @@ function named(value) {
 
 // Root t187u: a fact qualifies a tenant or a result only when it names the requested tenant, a bound paid-evidence
 // subject and a non-blank source recordId. Missing or cross-tenant scope is not a match (stays unknown, never a
-// positive, negative or conflict). paidSubjects: a Set of paid ids the tenant/report may bind to; paidEvidenceId: one result.
+// positive, negative or conflict). paidSubjects: ids with exactly one canonical capture; paidEvidenceId: one result
+// that itself has exactly one canonical capture (Root t207u).
 function observedFacts(rows, { tenant, paidEvidenceId, paidSubjects } = {}) {
   return (rows || []).filter((row) => {
     if (row?.kind !== "observed_fact" || row.evidence !== "observed" || row.synthetic === true) return false;
@@ -273,6 +274,19 @@ function labelReason(rows, paidEvidenceId) {
     && row.originLabel !== "unknown"
   ));
   return labeled ? "label_is_not_outsider" : "outside_useful_answer_absent";
+}
+
+function uniquePaidIds(paids) {
+  const counts = new Map();
+  for (const row of paids || []) {
+    if (!named(row?.id)) continue;
+    counts.set(row.id, (counts.get(row.id) || 0) + 1);
+  }
+  const subjects = new Set();
+  for (const [id, count] of counts) {
+    if (count === 1) subjects.add(id);
+  }
+  return subjects;
 }
 
 function derivedFlags(rows, { gap, paidEvidenceId, tenant, paidSubjects }) {
@@ -433,7 +447,9 @@ export function observeLoaded({
   });
   const gap = windowCoverage === COVERAGE_GAP;
   const qualifiedRepeat = gap ? blankRepeat("source_gap_stays_unknown") : repeat;
-  const flags = derivedFlags(extensionRows, { gap, paidEvidenceId, tenant });
+  const flags = derivedFlags(extensionRows, copies.length === 1
+    ? { gap, paidEvidenceId, tenant }
+    : { gap, tenant });
   return {
     schema: OBSERVATION_SCHEMA,
     paidEvidenceId,
@@ -513,7 +529,7 @@ export function reportLoaded(input) {
     ...derivedFlags(input.extensionRows, {
       gap: input.windowCoverage === COVERAGE_GAP,
       tenant: input.tenant,
-      paidSubjects: new Set(input.paids.map((paid) => paid.id)),
+      paidSubjects: uniquePaidIds(input.paids),
     }),
     operatorScope: {
       scope: "global",

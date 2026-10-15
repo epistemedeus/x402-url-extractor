@@ -1,0 +1,254 @@
+(node:53357) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:53363) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: D1 reversed chronology is not a distinct later-task purchase
+ok 1 - D1 reversed chronology is not a distinct later-task purchase
+  ---
+  duration_ms: 64.629289
+  ...
+# Subtest: D1 equal chronology is not a distinct later-task purchase
+ok 2 - D1 equal chronology is not a distinct later-task purchase
+  ---
+  duration_ms: 13.052133
+  ...
+# Subtest: D1 missing or malformed time stays chronology_unproven
+ok 3 - D1 missing or malformed time stays chronology_unproven
+  ---
+  duration_ms: 2.551069
+  ...
+# Subtest: D1 duplicate and case-differing settlements are not distinct purchases
+ok 4 - D1 duplicate and case-differing settlements are not distinct purchases
+  ---
+  duration_ms: 7.720102
+  ...
+# Subtest: D1 positive control counts only a strictly later distinct settlement
+ok 5 - D1 positive control counts only a strictly later distinct settlement
+  ---
+  duration_ms: 13.304262
+  ...
+# Subtest: D1 same-task retry with unproven time stays unknown
+ok 6 - D1 same-task retry with unproven time stays unknown
+  ---
+  duration_ms: 2.037829
+  ...
+# Subtest: D1 unproven chronology increases repeatUnknown and not purchases
+ok 7 - D1 unproven chronology increases repeatUnknown and not purchases
+  ---
+  duration_ms: 2.479752
+  ...
+# (node:53374) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: D2 a cold client discovers and submits the extension from the served link
+ok 8 - D2 a cold client discovers and submits the extension from the served link
+  ---
+  duration_ms: 90.023039
+  ...
+# Subtest: D2 MCP meta keeps the canonical contract and does not carry the HTTP extension
+ok 9 - D2 MCP meta keeps the canonical contract and does not carry the HTTP extension
+  ---
+  duration_ms: 0.763781
+  ...
+# (node:53385) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: matching scope (tenant + paid subject + recordId) qualifies result and tenant report, positives and negatives
+ok 10 - matching scope (tenant + paid subject + recordId) qualifies result and tenant report, positives and negatives
+  ---
+  duration_ms: 12.537722
+  ...
+# Subtest: missing scope: recordId absent stays unknown for result and tenant report
+ok 11 - missing scope: recordId absent stays unknown for result and tenant report
+  ---
+  duration_ms: 3.009245
+  ...
+# Subtest: missing scope: recordId empty stays unknown for result and tenant report
+ok 12 - missing scope: recordId empty stays unknown for result and tenant report
+  ---
+  duration_ms: 1.996242
+  ...
+# Subtest: missing scope: recordId whitespace stays unknown for result and tenant report
+ok 13 - missing scope: recordId whitespace stays unknown for result and tenant report
+  ---
+  duration_ms: 1.97591
+  ...
+# Subtest: missing scope: recordId non-string stays unknown for result and tenant report
+ok 14 - missing scope: recordId non-string stays unknown for result and tenant report
+  ---
+  duration_ms: 2.036073
+  ...
+# Subtest: missing scope: recordId null stays unknown for result and tenant report
+ok 15 - missing scope: recordId null stays unknown for result and tenant report
+  ---
+  duration_ms: 1.654514
+  ...
+# Subtest: missing scope: tenant missing stays unknown for result and tenant report
+ok 16 - missing scope: tenant missing stays unknown for result and tenant report
+  ---
+  duration_ms: 1.644855
+  ...
+# Subtest: missing scope: tenant blank stays unknown for result and tenant report
+ok 17 - missing scope: tenant blank stays unknown for result and tenant report
+  ---
+  duration_ms: 2.525486
+  ...
+# Subtest: missing scope: cross tenant stays unknown for result and tenant report
+ok 18 - missing scope: cross tenant stays unknown for result and tenant report
+  ---
+  duration_ms: 2.423566
+  ...
+# Subtest: paid binding missing stays unknown
+ok 19 - paid binding missing stays unknown
+  ---
+  duration_ms: 1.977601
+  ...
+# Subtest: paid binding other paid id stays unknown
+ok 20 - paid binding other paid id stays unknown
+  ---
+  duration_ms: 1.604533
+  ...
+# Subtest: paid binding non-array stays unknown
+ok 21 - paid binding non-array stays unknown
+  ---
+  duration_ms: 1.278506
+  ...
+# Subtest: paid binding blank ids stays unknown
+ok 22 - paid binding blank ids stays unknown
+  ---
+  duration_ms: 1.259138
+  ...
+# Subtest: mixed tenant: another tenant's opposite fact neither qualifies nor conflicts; each tenant sees only its own
+ok 23 - mixed tenant: another tenant's opposite fact neither qualifies nor conflicts; each tenant sees only its own
+  ---
+  duration_ms: 2.399438
+  ...
+# Subtest: conflict inside one scope stays a conflict; cross-tenant rows do not create one
+ok 24 - conflict inside one scope stays a conflict; cross-tenant rows do not create one
+  ---
+  duration_ms: 1.531096
+  ...
+# Subtest: global H fact stays in operator scope and never qualifies a tenant or result
+ok 25 - global H fact stays in operator scope and never qualifies a tenant or result
+  ---
+  duration_ms: 1.555415
+  ...
+# Subtest: public extension cannot submit observed_fact (refused, nothing qualifies)
+ok 26 - public extension cannot submit observed_fact (refused, nothing qualifies)
+  ---
+  duration_ms: 46.243864
+  ...
+# Subtest: actual loaded path + restart: journal rows on disk qualify only in scope after a fresh handle
+ok 27 - actual loaded path + restart: journal rows on disk qualify only in scope after a fresh handle
+  ---
+  duration_ms: 5.998517
+  ...
+# (node:53396) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: the mount preserves the paid JSON body and the existing feedback contract
+ok 28 - the mount preserves the paid JSON body and the existing feedback contract
+  ---
+  duration_ms: 96.483312
+  ...
+# Subtest: the existing client hook still refuses an unextended server's extra fields without touching delivery
+ok 29 - the existing client hook still refuses an unextended server's extra fields without touching delivery
+  ---
+  duration_ms: 6.03953
+  ...
+# (node:53408) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: a real retained extract response stays schema-valid with usefulness unknown
+ok 30 - a real retained extract response stays schema-valid with usefulness unknown
+  ---
+  duration_ms: 3.874927
+  ...
+# Subtest: callers that send only the existing disposition get the canonical response
+ok 31 - callers that send only the existing disposition get the canonical response
+  ---
+  duration_ms: 50.980999
+  ...
+# Subtest: retained-use and next-task stay declared, survive restart, and omit bearers
+ok 32 - retained-use and next-task stay declared, survive restart, and omit bearers
+  ---
+  duration_ms: 12.190009
+  ...
+# Subtest: decline, omission, malformation, tamper, wrong result, receipt, source, and tenant stay unbound
+ok 33 - decline, omission, malformation, tamper, wrong result, receipt, source, and tenant stay unbound
+  ---
+  duration_ms: 9.34077
+  ...
+# Subtest: duplicate capture, lost response, and a source gap stay unknown rather than demand
+ok 34 - duplicate capture, lost response, and a source gap stay unknown rather than demand
+  ---
+  duration_ms: 4.621381
+  ...
+# Subtest: distinct later-task purchase, same-task retry, pseudonym continuity, and free retrieval stay apart
+ok 35 - distinct later-task purchase, same-task retry, pseudonym continuity, and free retrieval stay apart
+  ---
+  duration_ms: 37.58303
+  ...
+# Subtest: a foreign tenant cannot adopt another tenant's declaration
+ok 36 - a foreign tenant cannot adopt another tenant's declaration
+  ---
+  duration_ms: 6.576489
+  ...
+# Subtest: the serving mount is applied on this branch and the price file is untouched by this package
+ok 37 - the serving mount is applied on this branch and the price file is untouched by this package
+  ---
+  duration_ms: 2.05381
+  ...
+# (node:53419) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: D4 a later qualified fact is reported and absence or a gap stays unknown
+ok 38 - D4 a later qualified fact is reported and absence or a gap stays unknown
+  ---
+  duration_ms: 11.092161
+  ...
+# (node:53430) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: D3 the branch server discovers, accepts, replays, and restarts the extension
+ok 39 - D3 the branch server discovers, accepts, replays, and restarts the extension
+  ---
+  duration_ms: 4151.438506
+  ...
+# (node:53463) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: a absent canonical capture stays unknown on the loaded and cold paths
+ok 40 - a absent canonical capture stays unknown on the loaded and cold paths
+  ---
+  duration_ms: 9.48962
+  ...
+# Subtest: b duplicate canonical capture stays unknown on the loaded and cold paths
+ok 41 - b duplicate canonical capture stays unknown on the loaded and cold paths
+  ---
+  duration_ms: 10.842694
+  ...
+# Subtest: c mismatched canonical capture stays unknown on the loaded and cold paths
+ok 42 - c mismatched canonical capture stays unknown on the loaded and cold paths
+  ---
+  duration_ms: 5.483582
+  ...
+# Subtest: d a unique matching capture still qualifies positive and negative facts
+ok 43 - d a unique matching capture still qualifies positive and negative facts
+  ---
+  duration_ms: 6.816912
+  ...
+# Subtest: e a global H fact stays in operator scope and does not qualify a tenant or result
+ok 44 - e a global H fact stays in operator scope and does not qualify a tenant or result
+  ---
+  duration_ms: 4.089676
+  ...
+# Subtest: public extension still cannot submit observed_fact when a unique capture exists
+ok 45 - public extension still cannot submit observed_fact when a unique capture exists
+  ---
+  duration_ms: 3.496442
+  ...
+1..45
+# tests 45
+# suites 0
+# pass 45
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9692.722005
+EXIT:0

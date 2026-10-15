@@ -6,12 +6,12 @@ Base: `82a51274e7dc7a7600b90f1317a6be6b28442592`
 Tree: `f95a351e763cc903f7caa4159788cb4ceacddf91`  
 Runtime: `1.23.52`  
 Branch: `codex/ae14-useful-service-observation`  
-Head: tip of this branch that contains this file. Parent of the amendment is `2db5dceaee53019eb1e182043f4af076a7d37987`. Parent of the first outcome is the base above.  
+Head: tip of this branch that contains this file. Parent of amendment 2 is `fad90bf6ff07814dba5409a9f6617fc8a006e78b`. Parent of amendment 1 is `8fd06bf5b6157c46c22f3552612b2ecfbe7e8c0a`. Parent of the first outcome is the base above.  
 Writer: `experiments/ae14-useful-service-observation/` plus the mount targets `server.js` and `commerce-events.mjs`  
 Next integration owner: Procurement lead -> dr eggbot -> Root  
 Shared-serving mount: applied on this branch only (`appliedToServing: "branch_only"`). Not deployed. Not merged.
 
-Tests: 228/228 passed (owned 21/21, npm run test:nonlive 194/194, http-delivery-evidence store and contract 13/13, fail 0).
+Tests: experiment 45/45 passed. `npm test` 1162 passed, 6 failed, 5 skipped (1173). The 6 failures are outside this writer path.
 
 ## Inventory
 
@@ -81,7 +81,7 @@ Other classes stay as before:
 
 Missing capture, duplicate capture, and `windowCoverage: gap` stay `unknown` (`source_gap_stays_unknown` on the repeat). They are not failure and not a zero customer count. `rates` stays null. `outsideCustomerCount` stays null because a label or a pseudonym is not an identity. The reason is `no_identity_assumption`. Null is not zero.
 
-Runtime qualification is read from `observed_fact` rows in the observation journal (`outside_useful_answer`, `h_join`, `e08_useful_work`), with `evidence: "observed"`, `synthetic !== true`, and named `recordId` sources. A fact qualifies a tenant or a result only when it also names the requested `tenant` and a bound paid-evidence subject (`sourcePaidEvidenceIds`); a missing or blank `recordId`, a missing or cross-tenant scope, or an unbound subject stays `unknown` (not a positive, negative or conflict) and never contaminates another tenant. An explicit `scope: "global"` H fact is reported only under the report's `operatorScope` and never qualifies a tenant or result (Root t187u). The value is `true`, `false` only with that qualified evidence, or `unknown`. Absence or a gap is `unknown`, never `false` and never a zero count. Conflicting facts stay `unknown`. An `external_unknown` label is `label_is_not_outsider`, not an arrived outsider. `hJoin.ran` is `true` or `false` only when an H result is present in the inputs; otherwise `ran` is `"unknown"`. Callers cannot self-declare these facts on the HTTP extension. The submit acknowledgement leaves `e08UsefulWork` as `"unknown"`. The report and cold replay derive the value from the rows they read.
+Runtime qualification is read from `observed_fact` rows in the observation journal (`outside_useful_answer`, `h_join`, `e08_useful_work`), with `evidence: "observed"`, `synthetic !== true`, and named `recordId` sources. A fact qualifies a tenant or a result only when it also names the requested `tenant` and a bound paid-evidence subject (`sourcePaidEvidenceIds`); a missing or blank `recordId`, a missing or cross-tenant scope, or an unbound subject stays `unknown` (not a positive, negative or conflict) and never contaminates another tenant. An explicit `scope: "global"` H fact is reported only under the report's `operatorScope` and never qualifies a tenant or result (Root t187u). Amendment 2 (Root t207u) also requires exactly one canonical paid capture of that subject. Zero copies, more than one copy, or a capture whose id is not the named subject stays `unknown` on the loaded `observeLoaded` / `reportLoaded` path and on the cold `observe()` / `report()` path. A unique matching capture still qualifies a positive fact and a qualified negative fact. The value is `true`, `false` only with that qualified evidence, or `unknown`. Absence or a gap is `unknown`, never `false` and never a zero count. Conflicting facts stay `unknown`. An `external_unknown` label is `label_is_not_outsider`, not an arrived outsider. `hJoin.ran` is `true` or `false` only when an H result is present in the inputs; otherwise `ran` is `"unknown"`. Callers cannot self-declare these facts on the HTTP extension. The submit acknowledgement leaves `e08UsefulWork` as `"unknown"`. The report and cold replay derive the value from the rows they read.
 
 This run's QA receipt, which is not a runtime constant, is in `candidate/release-candidate.json` under `receipt`: no qualified outside answer was in the journals exercised here, H was not run, and E08 async delivery was not built.
 
@@ -136,6 +136,41 @@ Mount: `git diff 82a51274e7dc7a7600b90f1317a6be6b28442592 -- server.js commerce-
 
 Release candidate: `node experiments/ae14-useful-service-observation/bin/export-candidate.mjs` writes `candidate/release-candidate.json`. `machineOnly` true, `appliedToServing` `"branch_only"`, `deployment` `not_performed`, `paidProbe` false, `livePurchase` false, `humanCopyChange` false. Runtime reports are `derived_from_observations`. The QA facts live under `receipt`.
 
+## Amendment 2
+
+`fad90bf6` is kept. It scopes an operator fact to the requested tenant, the named paid-evidence subject, and a non-blank `recordId`, and it keeps a global H fact in `operatorScope`. The remaining gap was that `observeLoaded` still passed that subject into qualification when the canonical paid capture was missing or duplicated, and `reportLoaded` treated a duplicated id as one subject.
+
+Before the repair, on `fad90bf6`, `node --test --test-concurrency=1 experiments/ae14-useful-service-observation/test/unique-capture.test.mjs` ran 6 tests: 3 passed, 3 failed. Log: `evidence/amend2-failing-first.txt`.
+
+Failed before the repair, with the outside-answer value `true` where `unknown` was required:
+
+- `a absent canonical capture stays unknown on the loaded and cold paths`
+- `b duplicate canonical capture stays unknown on the loaded and cold paths`
+- `c mismatched canonical capture stays unknown on the loaded and cold paths`
+
+Passed before the repair:
+
+- `d a unique matching capture still qualifies positive and negative facts`
+- `e a global H fact stays in operator scope and does not qualify a tenant or result`
+- `public extension still cannot submit observed_fact when a unique capture exists`
+
+After the repair the same file passed 6/6. Log: `evidence/amend2-unique-capture.txt`. Unknown here is not a positive, not a negative, not `qualification_conflict`, and the other tenant stays unknown. Case (d) still reports `outside_useful_answer` true and `e08_useful_work` false with the source record ids. Case (e) leaves tenant and result `hJoin.ran` unknown and reports the global fact only under `operatorScope`.
+
+Owned, after the repair:
+
+`node --test --test-concurrency=1 experiments/ae14-useful-service-observation/test/*.test.mjs`  
+45 passed, 0 failed. Log: `evidence/amend2-owned-tests.txt`. That is the operator head's 39 tests plus these 6.
+
+Repo-wide:
+
+`npm test`  
+1173 tests, 1162 passed, 6 failed, 5 skipped. Log: `evidence/amend2-npm-test.txt`. The failures are outside `experiments/ae14-useful-service-observation/` and this amendment does not change those files:
+
+- `installed caller consumer reaches the mounted parent without merchant source` (`caller-result-client.cold.test.mjs`) and `caller generation keeps the sealed feedback archive and matches the current source` (`caller-result-client.distribution.test.mjs`): the fresh caller archive digest does not match the sealed manifest digest.
+- `cold node and python httpx clients unpack the mount and run the declared commands` (`public-acquisition/engine.test.mjs`): `node_pin_unsatisfied`, this host is Node v22.14.0 and the pin requires `>=22.22.0`.
+- `loopback receiving observes the mounted bytes and cold commands without publishing` and `a public proof parses a readback and does not publish when the runtime pin is unmet` (`public-acquisition/receiving-lifecycle.test.mjs`): the same runtime pin leaves cold commands unsatisfied.
+- `two cold consumers accept the public fixture and reject the seeded controls` (`task-linked-delivery/experiments/useful-economics-100290/test/cold-export.test.mjs`): the fresh package archive digest does not match the committed manifest.
+
 ## Limits
 
-No qualified outside useful answer was present in the journals exercised for the receipt. No production settlement was reclassified. Full-window coverage remains `unknown_for_full_window`, so this package publishes no rate and no customer denominator. E18 measurement ingest and the H harness are pending-join. E08 async delivery was not built. The repository `npm test` script was not run; it includes HTTP journeys outside this no-paid-probe boundary. No deployment, live purchase, signer use, or default-branch merge was performed.
+No qualified outside useful answer was present in the journals exercised for the receipt. No production settlement was reclassified. Full-window coverage remains `unknown_for_full_window`, so this package publishes no rate and no customer denominator. E18 measurement ingest and the H harness are pending-join. E08 async delivery was not built. `npm test` was run; its six failures are the inherited archive-digest and Node pin cases named above, and they were not changed. No deployment, live purchase, signer use, or default-branch merge was performed.
