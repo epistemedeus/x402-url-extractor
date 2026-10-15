@@ -1,0 +1,14 @@
+{
+  "schema": "ae20.x1.url-extract-route.pins.v1",
+  "writer": "experiments/ae20-x1-url-extract-route",
+  "branch": "codex/ae20-x1-url-extract-route",
+  "base": "6dd7a040f80f3e3ce1d914383172721751de59a2",
+  "g4Package": "experiments/ae19-paid-continuation",
+  "g4Patch": "experiments/ae19-paid-continuation/proposed/242007-extraction-submit.patch",
+  "e08": "d5c5ab3606ba2f79d5bdfec6afb347b566966573",
+  "gateway7e5078bb": "7e5078bbf213ae3d1ff8d4638199ff8d1d1d81a8",
+  "gateway667fba35": "667fba353e9082d8a0842437442dabc42843abf8",
+  "asyncProvider": "1b5fd425408d34be232cd1c2ce059d3571b56c63",
+  "pilotPlan": "b8ead33382b7007df337e8adf7c1536e9fb2b5c3",
+  "monitorForRoutesTest": "0ad6691f79225cfba782971a910c0e79d371c8f3"
+}

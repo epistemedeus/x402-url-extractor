@@ -1,0 +1,16 @@
+{
+  "name": "@x402/ae20-x1-url-extract-route",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Free/test url.extract gateway route. Mounts the AE19 extraction contract. Does not pay, capture, or modify the gateway tree.",
+  "engines": {
+    "node": ">=22.14.0 <23"
+  },
+  "scripts": {
+    "test": "node --test --test-concurrency=1 --test-timeout=120000 test/*.test.mjs"
+  },
+  "dependencies": {
+    "pg": "8.23.0"
+  }
+}
