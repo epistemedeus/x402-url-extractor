@@ -1,0 +1,61 @@
+cd experiments/ae20-d-mcp-a2a-adapter && node --test --test-concurrency=1 --test-timeout=180000 test/adapter.test.mjs
+(node:1557552) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:1557558) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: D1 MCP list tools match the X1 contract schemas
+ok 1 - D1 MCP list tools match the X1 contract schemas
+  ---
+  duration_ms: 588.85778
+  ...
+# Subtest: D2 MCP submit status result against the fixture
+ok 2 - D2 MCP submit status result against the fixture
+  ---
+  duration_ms: 560.354732
+  ...
+# Subtest: D3 MCP idempotent resubmit returns the same job id
+ok 3 - D3 MCP idempotent resubmit returns the same job id
+  ---
+  duration_ms: 328.603433
+  ...
+# Subtest: D4 A2A agent card message/send and tasks/get
+ok 4 - D4 A2A agent card message/send and tasks/get
+  ---
+  duration_ms: 201.259521
+  ...
+# Subtest: D5 error mapping does not create extra jobs
+ok 5 - D5 error mapping does not create extra jobs
+  ---
+  duration_ms: 405.568933
+  ...
+# Subtest: D6 adapter restart resumes by id and does not resubmit
+ok 6 - D6 adapter restart resumes by id and does not resubmit
+  ---
+  duration_ms: 635.395761
+  ...
+# Subtest: D7 price is 0 and a non-zero quote is not executed
+ok 7 - D7 price is 0 and a non-zero quote is not executed
+  ---
+  duration_ms: 301.033084
+  ...
+# Subtest: D8 qualification against X1 real export
+ok 8 - D8 qualification against X1 real export
+  ---
+  duration_ms: 957.005645
+  ...
+# Subtest: recorded fixture request/response pairs
+ok 9 - recorded fixture request/response pairs
+  ---
+  duration_ms: 133.218517
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4313.128159
+EXIT:0
