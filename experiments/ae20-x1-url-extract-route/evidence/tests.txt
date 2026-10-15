@@ -1,0 +1,470 @@
+===== INDEX =====
+T1-T4 transcript is section ROUTES. The routes test file is unchanged.
+T5-T11 are subtests of the single T13 process. Their transcript is section T13.
+T12 transcript is section T12. T13 transcript is section T13.
+
+===== ROUTES T1-T4 =====
+ROUTES_TEST_SHA256 d9fa93748e57e12e0533f0597edd35a8ee6805d9203d3beb4413ea6e0ebb2216
+ROUTES_TEST_SOURCE pilot@501c407f7a1f73ddb57de3526ff85177e3d461e9 ae14-launch/accept/ae19/test/routes.test.mjs
+cmp against git show of that blob: match
+AE19_MON=/tmp/ae20-x1-pins/mon-root
+AE19_MON_PIN 0ad6691f79225cfba782971a910c0e79d371c8f3 services/continuous-monitoring/openapi.json
+
+======== T1 unpatched 7e5078bb AE19_GW=/tmp/ae20-x1-unpatched-7e ========
+COMMAND: AE19_GW=/tmp/ae20-x1-unpatched-7e AE19_MON=/tmp/ae20-x1-pins/mon-root node --test --test-concurrency=1 /tmp/ae20-x1-pins/routes.test.mjs
+(node:1159629) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:1159649) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: gateway free routes present
+ok 1 - gateway free routes present
+  ---
+  duration_ms: 0.521944
+  ...
+# Subtest: monitor delivery/ack routes present
+ok 2 - monitor delivery/ack routes present
+  ---
+  duration_ms: 0.105752
+  ...
+# Subtest: x2 gateway authorization route exists (expected FAIL at 7e5078bb)
+not ok 3 - x2 gateway authorization route exists (expected FAIL at 7e5078bb)
+  ---
+  duration_ms: 0.463014
+  location: '/tmp/ae20-x1-pins/routes.test.mjs:8:1'
+  failureType: 'testCodeFailure'
+  error: 'no authorize path'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/ae20-x1-pins/routes.test.mjs:8:90)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:677:18)
+    Test.postRun (node:internal/test_runner/test:1090:19)
+    Test.run (node:internal/test_runner/test:1018:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: x1 URL-extraction route discoverable (expected FAIL at 7e5078bb)
+not ok 4 - x1 URL-extraction route discoverable (expected FAIL at 7e5078bb)
+  ---
+  duration_ms: 0.309078
+  location: '/tmp/ae20-x1-pins/routes.test.mjs:9:1'
+  failureType: 'testCodeFailure'
+  error: 'no URL extraction route'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/ae20-x1-pins/routes.test.mjs:9:89)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:677:18)
+    Test.postRun (node:internal/test_runner/test:1090:19)
+    Test.run (node:internal/test_runner/test:1018:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 2
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 44.308605
+EXIT:1
+
+======== T2 unpatched 667fba35 AE19_GW=/tmp/ae20-x1-unpatched-667 ========
+COMMAND: AE19_GW=/tmp/ae20-x1-unpatched-667 AE19_MON=/tmp/ae20-x1-pins/mon-root node --test --test-concurrency=1 /tmp/ae20-x1-pins/routes.test.mjs
+(node:1159671) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:1159679) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: gateway free routes present
+ok 1 - gateway free routes present
+  ---
+  duration_ms: 0.526969
+  ...
+# Subtest: monitor delivery/ack routes present
+ok 2 - monitor delivery/ack routes present
+  ---
+  duration_ms: 0.105629
+  ...
+# Subtest: x2 gateway authorization route exists (expected FAIL at 7e5078bb)
+not ok 3 - x2 gateway authorization route exists (expected FAIL at 7e5078bb)
+  ---
+  duration_ms: 0.462555
+  location: '/tmp/ae20-x1-pins/routes.test.mjs:8:1'
+  failureType: 'testCodeFailure'
+  error: 'no authorize path'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/ae20-x1-pins/routes.test.mjs:8:90)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:677:18)
+    Test.postRun (node:internal/test_runner/test:1090:19)
+    Test.run (node:internal/test_runner/test:1018:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: x1 URL-extraction route discoverable (expected FAIL at 7e5078bb)
+not ok 4 - x1 URL-extraction route discoverable (expected FAIL at 7e5078bb)
+  ---
+  duration_ms: 0.285592
+  location: '/tmp/ae20-x1-pins/routes.test.mjs:9:1'
+  failureType: 'testCodeFailure'
+  error: 'no URL extraction route'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/ae20-x1-pins/routes.test.mjs:9:89)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:677:18)
+    Test.postRun (node:internal/test_runner/test:1090:19)
+    Test.run (node:internal/test_runner/test:1018:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 2
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 41.711832
+EXIT:1
+
+======== T3 patched 667fba35 AE19_GW=/tmp/ae20-x1-apply667 ========
+COMMAND: AE19_GW=/tmp/ae20-x1-apply667 AE19_MON=/tmp/ae20-x1-pins/mon-root node --test --test-concurrency=1 /tmp/ae20-x1-pins/routes.test.mjs
+(node:1159707) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:1159717) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: gateway free routes present
+ok 1 - gateway free routes present
+  ---
+  duration_ms: 0.513673
+  ...
+# Subtest: monitor delivery/ack routes present
+ok 2 - monitor delivery/ack routes present
+  ---
+  duration_ms: 0.107852
+  ...
+# Subtest: x2 gateway authorization route exists (expected FAIL at 7e5078bb)
+not ok 3 - x2 gateway authorization route exists (expected FAIL at 7e5078bb)
+  ---
+  duration_ms: 0.446421
+  location: '/tmp/ae20-x1-pins/routes.test.mjs:8:1'
+  failureType: 'testCodeFailure'
+  error: 'no authorize path'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/ae20-x1-pins/routes.test.mjs:8:90)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:677:18)
+    Test.postRun (node:internal/test_runner/test:1090:19)
+    Test.run (node:internal/test_runner/test:1018:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: x1 URL-extraction route discoverable (expected FAIL at 7e5078bb)
+ok 4 - x1 URL-extraction route discoverable (expected FAIL at 7e5078bb)
+  ---
+  duration_ms: 0.264955
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 3
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 41.698963
+EXIT:1
+
+======== T4 patched 7e5078bb AE19_GW=/tmp/ae20-x1-apply7e ========
+COMMAND: AE19_GW=/tmp/ae20-x1-apply7e AE19_MON=/tmp/ae20-x1-pins/mon-root node --test --test-concurrency=1 /tmp/ae20-x1-pins/routes.test.mjs
+(node:1159729) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:1159736) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: gateway free routes present
+ok 1 - gateway free routes present
+  ---
+  duration_ms: 0.504998
+  ...
+# Subtest: monitor delivery/ack routes present
+ok 2 - monitor delivery/ack routes present
+  ---
+  duration_ms: 0.12482
+  ...
+# Subtest: x2 gateway authorization route exists (expected FAIL at 7e5078bb)
+not ok 3 - x2 gateway authorization route exists (expected FAIL at 7e5078bb)
+  ---
+  duration_ms: 0.448029
+  location: '/tmp/ae20-x1-pins/routes.test.mjs:8:1'
+  failureType: 'testCodeFailure'
+  error: 'no authorize path'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/ae20-x1-pins/routes.test.mjs:8:90)
+    Test.runInAsyncScope (node:async_hooks:211:14)
+    Test.run (node:internal/test_runner/test:979:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:677:18)
+    Test.postRun (node:internal/test_runner/test:1090:19)
+    Test.run (node:internal/test_runner/test:1018:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: x1 URL-extraction route discoverable (expected FAIL at 7e5078bb)
+ok 4 - x1 URL-extraction route discoverable (expected FAIL at 7e5078bb)
+  ---
+  duration_ms: 0.264877
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 3
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 42.306045
+EXIT:1
+
+===== T12 =====
+COMMAND: unshare --user --map-root-user --mount (tmpfs on /home/ubuntu/root-sol-window100337; bind /tmp/ae20-x1-gw-head -> .../240200/source at 7e5078bb; bind /tmp/ae20-x1-pins/neo -> .../232600/neo)
+THEN: cd /tmp/ae20-x1-g4-clean/experiments/ae19-paid-continuation && node --test --test-concurrency=1 --test-timeout=120000
+CLEAN_HEAD 6dd7a040f80f3e3ce1d914383172721751de59a2
+PGUSER=ubuntu USER=ubuntu (node-pg). Host path 240200 is not created.
+MOUNTED_GW 7e5078bbf213ae3d1ff8d4638199ff8d1d1d81a8
+MOUNTED_NEO_ASYNC 1b5fd425408d34be232cd1c2ce059d3571b56c63
+(node:1159643) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:1159660) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: writer path is the only change from the J3 base
+ok 1 - writer path is the only change from the J3 base
+  ---
+  duration_ms: 17.129483
+  ...
+# Subtest: the package does not arm a timer or open sqlite
+ok 2 - the package does not arm a timer or open sqlite
+  ---
+  duration_ms: 5.317039
+  ...
+# (node:1159700) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: a free no-fit is retained and a fit does not fetch
+ok 3 - a free no-fit is retained and a fit does not fetch
+  ---
+  duration_ms: 63.994249
+  ...
+# Subtest: submit runs the extractor once, rereads after a lost body, and does not repurchase
+ok 4 - submit runs the extractor once, rereads after a lost body, and does not repurchase
+  ---
+  duration_ms: 72.448419
+  ...
+# Subtest: title acceptance no-fit is distinct from a repair
+ok 5 - title acceptance no-fit is distinct from a repair
+  ---
+  duration_ms: 44.406393
+  ...
+# Subtest: abort and deadline do not call a finished extraction
+ok 6 - abort and deadline do not call a finished extraction
+  ---
+  duration_ms: 53.267917
+  ...
+# Subtest: a restarted service recovers a leased job from postgres
+ok 7 - a restarted service recovers a leased job from postgres
+  ---
+  duration_ms: 146.421407
+  ...
+# Subtest: source change admits one bounded occurrence and a later need reads the stored digest
+ok 8 - source change admits one bounded occurrence and a later need reads the stored digest
+  ---
+  duration_ms: 44.493895
+  ...
+# Subtest: merchant extract runs through the public fetch hook and keeps fetch mode
+ok 9 - merchant extract runs through the public fetch hook and keeps fetch mode
+  ---
+  duration_ms: 67.457623
+  ...
+# (node:1159786) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: per-capture floor is not a cumulative reprice
+ok 10 - per-capture floor is not a cumulative reprice
+  ---
+  duration_ms: 0.586763
+  ...
+# Subtest: a capture mismatch stays unknown
+ok 11 - a capture mismatch stays unknown
+  ---
+  duration_ms: 0.325365
+  ...
+# (node:1159797) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: free fit-check takes no payment and returns a useful no-fit
+ok 12 - free fit-check takes no payment and returns a useful no-fit
+  ---
+  duration_ms: 28.060661
+  ...
+# Subtest: runtime terms are read and not rewritten
+ok 13 - runtime terms are read and not rewritten
+  ---
+  duration_ms: 4.598458
+  ...
+# Subtest: terms command prints the unchanged runtime price
+ok 14 - terms command prints the unchanged runtime price
+  ---
+  duration_ms: 22.715919
+  ...
+# (node:1159841) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: unchanged E08 accepts one extraction artifact and reuse does not capture again
+ok 15 - unchanged E08 accepts one extraction artifact and reuse does not capture again
+  ---
+  duration_ms: 223.383729
+  ...
+# Subtest: a late callback is reconciled without a second capture
+ok 16 - a late callback is reconciled without a second capture
+  ---
+  duration_ms: 338.336413
+  ...
+# (node:1159979) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: gateway pin is 7e5078bb and 242007 is mounted from 1b5fd425
+ok 17 - gateway pin is 7e5078bb and 242007 is mounted from 1b5fd425
+  ---
+  duration_ms: 13.005568
+  ...
+# (node:1159979) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# Subtest: unpatched 242007 submit through the pinned gateway stays the extraction gap
+ok 18 - unpatched 242007 submit through the pinned gateway stays the extraction gap
+  ---
+  duration_ms: 152.593237
+  ...
+# Subtest: a real URL through patched 242007 returns an extraction readable by job id
+ok 19 - a real URL through patched 242007 returns an extraction readable by job id
+  ---
+  duration_ms: 685.479845
+  ...
+# (node:1160043) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: 244005 export is consumed when its pinned roots are present
+ok 20 - 244005 export is consumed when its pinned roots are present
+  ---
+  duration_ms: 0.684925
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2339.324351
+EXIT:0
+
+===== T13 (includes T5-T11) =====
+COMMAND: cd /home/ubuntu/ae20-work/x1/experiments/ae20-x1-url-extract-route && node --test --test-concurrency=1 --test-timeout=120000 test/*.test.mjs
+PGUSER=ubuntu
+(node:1160121) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:1160127) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: gateway patch matches the provider source and openapi stays in sync
+ok 1 - gateway patch matches the provider source and openapi stays in sync
+  ---
+  duration_ms: 441.686696
+  ...
+# Subtest: the same gateway patch applies on 7e5078bb
+ok 2 - the same gateway patch applies on 7e5078bb
+  ---
+  duration_ms: 452.61476
+  ...
+# Subtest: JOB_ID matches the 242007 pin and G4's async patch is unchanged
+ok 3 - JOB_ID matches the 242007 pin and G4's async patch is unchanged
+  ---
+  duration_ms: 76.698598
+  ...
+# (node:1160127) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# Subtest: discovery lists url.extract schema paths when the patch is mounted
+ok 4 - discovery lists url.extract schema paths when the patch is mounted
+  ---
+  duration_ms: 133.033323
+  ...
+# Subtest: T5 injected public fetch returns a job id, stored fields, and a stable digest
+ok 5 - T5 injected public fetch returns a job id, stored fields, and a stable digest
+  ---
+  duration_ms: 147.275492
+  ...
+# Subtest: T6 private loopback is no_fit ssrf_blocked with zero attempts
+ok 6 - T6 private loopback is no_fit ssrf_blocked with zero attempts
+  ---
+  duration_ms: 86.899346
+  ...
+# Subtest: T7 a lost submit body retries onto the same job and one extraction
+ok 7 - T7 a lost submit body retries onto the same job and one extraction
+  ---
+  duration_ms: 106.156261
+  ...
+# Subtest: T8 unknown well-formed job id is forbidden after a 404 and a malformed id is 400
+ok 8 - T8 unknown well-formed job id is forbidden after a 404 and a malformed id is 400
+  ---
+  duration_ms: 93.143557
+  ...
+# Subtest: T9 tampered stored bytes are digest_mismatch and verdict unknown
+ok 9 - T9 tampered stored bytes are digest_mismatch and verdict unknown
+  ---
+  duration_ms: 96.250534
+  ...
+# Subtest: T10 a new process and pool recover a leased job with the same id and digest
+ok 10 - T10 a new process and pool recover a leased job with the same id and digest
+  ---
+  duration_ms: 292.034602
+  ...
+# Subtest: T11 quote and test are price 0 with no capture and no payment fields
+ok 11 - T11 quote and test are price 0 with no capture and no payment fields
+  ---
+  duration_ms: 87.026814
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2124.433115
+EXIT:0

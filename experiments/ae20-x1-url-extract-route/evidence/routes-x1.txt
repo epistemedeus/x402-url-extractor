@@ -1,0 +1,45 @@
+routes.test.mjs unchanged.
+source: epistemedeus/pilot 501c407f7a1f73ddb57de3526ff85177e3d461e9 ae14-launch/accept/ae19/test/routes.test.mjs
+sha256: d9fa93748e57e12e0533f0597edd35a8ee6805d9203d3beb4413ea6e0ebb2216
+AE19_MON: /tmp/ae20-x1-pins/mon-root (neo 0ad6691f79225cfba782971a910c0e79d371c8f3 services/continuous-monitoring/openapi.json)
+Assertion: JSON.stringify(openapi).match(/url[._-]?extract/i) or error 'no URL extraction route'.
+
+x1 status:
+- T1 unpatched 7e5078bb (openapi 0.1.0, no url.extract paths): RED. not ok, error 'no URL extraction route'. exit 1. pass 2 fail 2.
+- T2 unpatched 667fba35 (openapi 0.1.1, no url.extract paths): RED. not ok, error 'no URL extraction route'. exit 1. pass 2 fail 2.
+- T3 patched 667fba35 (openapi version stays 0.1.1, six url.extract schema paths): GREEN. ok 4. exit 1 because x2 is still red. pass 3 fail 1.
+- T4 patched 7e5078bb (openapi version stays 0.1.0, same six paths): GREEN. ok 4. exit 1 because x2 is still red. pass 3 fail 1. Patch applies.
+
+x2 stays red on every pin (error 'no authorize path'). Gateway free routes and monitor routes stay ok. Those subtests are unchanged between T2 and T3, and between T1 and T4.
+
+Exact x1 and summary lines from the transcript:
+======== T1 unpatched 7e5078bb AE19_GW=/tmp/ae20-x1-unpatched-7e ========
+# Subtest: x1 URL-extraction route discoverable (expected FAIL at 7e5078bb)
+not ok 4 - x1 URL-extraction route discoverable (expected FAIL at 7e5078bb)
+  error: 'no URL extraction route'
+# tests 4
+# pass 2
+# fail 2
+EXIT:1
+======== T2 unpatched 667fba35 AE19_GW=/tmp/ae20-x1-unpatched-667 ========
+# Subtest: x1 URL-extraction route discoverable (expected FAIL at 7e5078bb)
+not ok 4 - x1 URL-extraction route discoverable (expected FAIL at 7e5078bb)
+  error: 'no URL extraction route'
+# tests 4
+# pass 2
+# fail 2
+EXIT:1
+======== T3 patched 667fba35 AE19_GW=/tmp/ae20-x1-apply667 ========
+# Subtest: x1 URL-extraction route discoverable (expected FAIL at 7e5078bb)
+ok 4 - x1 URL-extraction route discoverable (expected FAIL at 7e5078bb)
+# tests 4
+# pass 3
+# fail 1
+EXIT:1
+======== T4 patched 7e5078bb AE19_GW=/tmp/ae20-x1-apply7e ========
+# Subtest: x1 URL-extraction route discoverable (expected FAIL at 7e5078bb)
+ok 4 - x1 URL-extraction route discoverable (expected FAIL at 7e5078bb)
+# tests 4
+# pass 3
+# fail 1
+EXIT:1
