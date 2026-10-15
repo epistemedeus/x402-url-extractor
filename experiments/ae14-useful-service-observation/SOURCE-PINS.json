@@ -46,14 +46,16 @@
     "tree": "f232a170736629e083ffc31337b545fd9925fc79",
     "branch": "codex/ae14-e18-market-attribution-consumer",
     "status": "pending-join",
-    "role": "interface only; head recorded at inventory, not a Root receipt"
+    "lsRemote": "11871c33e294ad6acecd0fa7049d9104d9152723",
+    "lsRemoteDate": "2026-10-15",
+    "role": "interface only; head rechecked unchanged; not a Root receipt"
   },
   "e08": {
     "repo": "epistemedeus/x402-url-extractor",
     "commit": "d5c5ab3606ba2f79d5bdfec6afb347b566966573",
     "tree": "a6356b16a27ae52cdea92043b79378a6e31925e8",
     "path": "experiments/ae14-async-delivery/",
-    "role": "contract only; usefulWork stays false and async delivery is not built"
+    "role": "contract only; async delivery is not built; runtime useful work stays unknown until an observed fact"
   },
   "pilot": {
     "portfolio": "7428845d6429b78573801ee8035953e26c610eaf",

@@ -1,0 +1,191 @@
+(node:50012) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:50018) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: D1 reversed chronology is not a distinct later-task purchase
+ok 1 - D1 reversed chronology is not a distinct later-task purchase
+  ---
+  duration_ms: 55.853345
+  ...
+# Subtest: D1 equal chronology is not a distinct later-task purchase
+ok 2 - D1 equal chronology is not a distinct later-task purchase
+  ---
+  duration_ms: 10.465154
+  ...
+# Subtest: D1 missing or malformed time stays chronology_unproven
+ok 3 - D1 missing or malformed time stays chronology_unproven
+  ---
+  duration_ms: 2.334207
+  ...
+# Subtest: D1 duplicate and case-differing settlements are not distinct purchases
+ok 4 - D1 duplicate and case-differing settlements are not distinct purchases
+  ---
+  duration_ms: 6.278709
+  ...
+# Subtest: D1 positive control counts only a strictly later distinct settlement
+ok 5 - D1 positive control counts only a strictly later distinct settlement
+  ---
+  duration_ms: 11.628063
+  ...
+# Subtest: D1 same-task retry with unproven time stays unknown
+ok 6 - D1 same-task retry with unproven time stays unknown
+  ---
+  duration_ms: 1.676759
+  ...
+# Subtest: D1 unproven chronology increases repeatUnknown and not purchases
+ok 7 - D1 unproven chronology increases repeatUnknown and not purchases
+  ---
+  duration_ms: 1.99681
+  ...
+# (node:50029) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ReferenceError: callerResultFeedbackPublicContract is not defined
+#     at usefulServiceObservationPublicContract (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/src/contract.mjs:97:3)
+#     at file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/src/mount.mjs:18:21
+#     at Layer.handle [as handle_request] (/home/ubuntu/ae14-work/j3/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/ae14-work/j3/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/ae14-work/j3/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/ae14-work/j3/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/ae14-work/j3/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/ae14-work/j3/node_modules/express/lib/router/index.js:346:12)
+#     at next (/home/ubuntu/ae14-work/j3/node_modules/express/lib/router/index.js:280:10)
+#     at jsonParser (/home/ubuntu/ae14-work/j3/node_modules/body-parser/lib/types/json.js:117:7)
+# Subtest: D2 a cold client discovers and submits the extension from the served link
+not ok 8 - D2 a cold client discovers and submits the extension from the served link
+  ---
+  duration_ms: 41.629788
+  location: '/home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/discover.test.mjs:33:1'
+  failureType: 'testCodeFailure'
+  error: `Unexpected token '<', "<!DOCTYPE "... is not valid JSON`
+  code: 'ERR_TEST_FAILURE'
+  name: 'SyntaxError'
+  stack: |-
+    JSON.parse (<anonymous>)
+    parseJSONFromBytes (node:internal/deps/undici/undici:5738:19)
+    successSteps (node:internal/deps/undici/undici:5719:27)
+    fullyReadBody (node:internal/deps/undici/undici:4609:9)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async consumeBody (node:internal/deps/undici/undici:5728:7)
+    async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/discover.test.mjs:68:22)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: D2 MCP meta keeps the canonical contract and does not carry the HTTP extension
+ok 9 - D2 MCP meta keeps the canonical contract and does not carry the HTTP extension
+  ---
+  duration_ms: 1.904612
+  ...
+# (node:50040) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# ReferenceError: callerResultFeedbackPublicContract is not defined
+#     at usefulServiceObservationPublicContract (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/src/contract.mjs:97:3)
+#     at file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/src/mount.mjs:18:21
+#     at Layer.handle [as handle_request] (/home/ubuntu/ae14-work/j3/node_modules/express/lib/router/layer.js:95:5)
+#     at next (/home/ubuntu/ae14-work/j3/node_modules/express/lib/router/route.js:149:13)
+#     at Route.dispatch (/home/ubuntu/ae14-work/j3/node_modules/express/lib/router/route.js:119:3)
+#     at Layer.handle [as handle_request] (/home/ubuntu/ae14-work/j3/node_modules/express/lib/router/layer.js:95:5)
+#     at /home/ubuntu/ae14-work/j3/node_modules/express/lib/router/index.js:284:15
+#     at Function.process_params (/home/ubuntu/ae14-work/j3/node_modules/express/lib/router/index.js:346:12)
+#     at next (/home/ubuntu/ae14-work/j3/node_modules/express/lib/router/index.js:280:10)
+#     at jsonParser (/home/ubuntu/ae14-work/j3/node_modules/body-parser/lib/types/json.js:117:7)
+# Subtest: the mount preserves the paid JSON body and the existing feedback contract
+not ok 10 - the mount preserves the paid JSON body and the existing feedback contract
+  ---
+  duration_ms: 33.833307
+  location: '/home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/http-mount.test.mjs:37:1'
+  failureType: 'testCodeFailure'
+  error: `Unexpected token '<', "<!DOCTYPE "... is not valid JSON`
+  code: 'ERR_TEST_FAILURE'
+  name: 'SyntaxError'
+  stack: |-
+    JSON.parse (<anonymous>)
+    parseJSONFromBytes (node:internal/deps/undici/undici:5738:19)
+    successSteps (node:internal/deps/undici/undici:5719:27)
+    fullyReadBody (node:internal/deps/undici/undici:4609:9)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async consumeBody (node:internal/deps/undici/undici:5728:7)
+    async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/http-mount.test.mjs:88:26)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: the existing client hook still refuses an unextended server's extra fields without touching delivery
+ok 11 - the existing client hook still refuses an unextended server's extra fields without touching delivery
+  ---
+  duration_ms: 13.175939
+  ...
+# (node:50052) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: a real retained extract response stays schema-valid with usefulness unknown
+ok 12 - a real retained extract response stays schema-valid with usefulness unknown
+  ---
+  duration_ms: 4.110837
+  ...
+# Subtest: callers that send only the existing disposition get the canonical response
+ok 13 - callers that send only the existing disposition get the canonical response
+  ---
+  duration_ms: 42.873082
+  ...
+# Subtest: retained-use and next-task stay declared, survive restart, and omit bearers
+ok 14 - retained-use and next-task stay declared, survive restart, and omit bearers
+  ---
+  duration_ms: 10.13548
+  ...
+# Subtest: decline, omission, malformation, tamper, wrong result, receipt, source, and tenant stay unbound
+ok 15 - decline, omission, malformation, tamper, wrong result, receipt, source, and tenant stay unbound
+  ---
+  duration_ms: 8.084027
+  ...
+# Subtest: duplicate capture, lost response, and a source gap stay unknown rather than demand
+ok 16 - duplicate capture, lost response, and a source gap stay unknown rather than demand
+  ---
+  duration_ms: 3.852348
+  ...
+# Subtest: distinct later-task purchase, same-task retry, pseudonym continuity, and free retrieval stay apart
+ok 17 - distinct later-task purchase, same-task retry, pseudonym continuity, and free retrieval stay apart
+  ---
+  duration_ms: 33.910675
+  ...
+# Subtest: a foreign tenant cannot adopt another tenant's declaration
+ok 18 - a foreign tenant cannot adopt another tenant's declaration
+  ---
+  duration_ms: 6.494272
+  ...
+# Subtest: the serving mount is applied on this branch and the price file is untouched by this package
+not ok 19 - the serving mount is applied on this branch and the price file is untouched by this package
+  ---
+  duration_ms: 2.279549
+  location: '/home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/observation.test.mjs:406:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/observation.test.mjs:411:10)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# (node:50063) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: D4 a later qualified fact is reported and absence or a gap stays unknown
+ok 20 - D4 a later qualified fact is reported and absence or a gap stays unknown
+  ---
+  duration_ms: 11.564393
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 17
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3533.360371
+EXIT:1

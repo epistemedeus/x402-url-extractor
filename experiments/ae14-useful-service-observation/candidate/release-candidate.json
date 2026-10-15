@@ -5,7 +5,7 @@
   "paidProbe": false,
   "livePurchase": false,
   "deployment": "not_performed",
-  "appliedToServing": false,
+  "appliedToServing": "branch_only",
   "mount": "route/ROOT-SERVER-MOUNT.patch",
   "mountOwner": "existing serving owner + Root",
   "next": "Procurement lead -> dr eggbot -> Root",
@@ -19,6 +19,7 @@
     "usefulness": "unknown",
     "path": "/commerce/caller-result-feedback",
     "priorHeader": "x-samedaydesk-prior-caller-result",
+    "maxExtensionBytes": 1024,
     "dispositions": [
       "useful",
       "not_useful"
@@ -44,21 +45,54 @@
       "sponsored",
       "external_unknown"
     ],
+    "fields": [
+      "disposition",
+      "reasonCategory",
+      "retainedUse",
+      "nextTask",
+      "originLabel",
+      "tenant",
+      "sourceSha",
+      "priorBinding",
+      "decline"
+    ],
+    "nextTaskFields": [
+      "relation",
+      "taskRef"
+    ],
+    "priorBindingFields": [
+      "paidEvidenceId",
+      "taskRef"
+    ],
     "coverage": "this_retained_result_only",
     "windowCoverage": "unknown_for_full_window",
-    "declineOmitsDisposition": true,
-    "e08UsefulWork": false,
-    "measurementIngested": false,
-    "hJoin": "pending-join"
+    "declineOmitsDisposition": true
   },
   "coldReplay": "node bin/cold-replay.mjs <data-dir>",
-  "hJoin": {
-    "status": "pending-join",
-    "ran": false
+  "runtimeReports": "derived_from_observations",
+  "repeatRule": "later_request_started_strictly_after_prior_response_finished_and_distinct_settlement_effect",
+  "settlementClassInMountTest": "simulated_loopback",
+  "tests": {
+    "line": "228/228 passed (owned 21/21, npm run test:nonlive 194/194, http-delivery-evidence store and contract 13/13, fail 0)",
+    "owned": "node --test --test-concurrency=1 experiments/ae14-useful-service-observation/test/*.test.mjs",
+    "nonlive": "npm run test:nonlive",
+    "storeContract": "node --test http-delivery-evidence/test/store.test.mjs http-delivery-evidence/test/contract.test.mjs"
   },
   "e18": {
+    "repo": "epistemedeus/neomorphic-io",
+    "branch": "codex/ae14-e18-market-attribution-consumer",
+    "head": "11871c33e294ad6acecd0fa7049d9104d9152723",
     "status": "pending-join",
-    "ingested": false
+    "lsRemote": "unchanged_2026-10-15"
   },
-  "e08AsyncDeliveryBuilt": false
+  "receipt": {
+    "note": "QA receipt for this amendment. Runtime reports do not encode these facts.",
+    "outsideUsefulAnswerArrived": false,
+    "outsideUsefulAnswerReason": "no qualified outside answer was present in the journals exercised here",
+    "hJoinRan": false,
+    "hJoinReason": "no H result was present in the inputs",
+    "e08AsyncDeliveryBuilt": false,
+    "e08UsefulWork": "unknown",
+    "finding": "D4 was a source-inspection finding, reproduced by a qualified fact and by absence"
+  }
 }

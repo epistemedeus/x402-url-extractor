@@ -1,10 +1,9 @@
 import {
   CALLER_RESULT_FEEDBACK_HEADER,
   CALLER_RESULT_FEEDBACK_PATH,
-  callerResultFeedbackPublicContract,
 } from "../../../caller-result-feedback.mjs";
 import { attachCallerResultFeedbackHeader } from "../../../caller-result-feedback.mjs";
-import { OBSERVATION_LINK, PRIOR_CAPABILITY_HEADER } from "./contract.mjs";
+import { OBSERVATION_LINK, PRIOR_CAPABILITY_HEADER, usefulServiceObservationPublicContract } from "./contract.mjs";
 
 export function decoratePaidResponse(res, input = {}) {
   const attached = attachCallerResultFeedbackHeader(res, input);
@@ -16,7 +15,7 @@ export function decoratePaidResponse(res, input = {}) {
 export function mountUsefulServiceObservation(app, observation) {
   app.get(CALLER_RESULT_FEEDBACK_PATH, (_req, res) => {
     res.set("Cache-Control", "no-store");
-    return res.json(callerResultFeedbackPublicContract());
+    return res.json(usefulServiceObservationPublicContract());
   });
   app.post(CALLER_RESULT_FEEDBACK_PATH, async (req, res) => {
     res.set("Cache-Control", "no-store");

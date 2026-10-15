@@ -1,0 +1,196 @@
+(node:49536) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:49542) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: D1 reversed chronology is not a distinct later-task purchase
+not ok 1 - D1 reversed chronology is not a distinct later-task purchase
+  ---
+  duration_ms: 58.646215
+  location: '/home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/chronology.test.mjs:47:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    [32mactual[39m [31mexpected[39m
+    
+    [39m'[39m[32md[39m[32mi[39m[32ms[39m[32mt[39m[32mi[39m[31mu[39m[39mn[39m[32mc[39m[32mt[39m[32m_[39m[32ml[39m[32ma[39m[32mt[39m[32me[39m[32mr[39m[32m_[39m[32mt[39m[32ma[39m[32ms[39m[39mk[39m[32m_[39m[32mp[39m[32mu[39m[32mr[39m[32mc[39m[32mh[39m[32ma[39m[32ms[39m[32me[39m[31mn[39m[31mo[39m[31mw[39m[31mn[39m[39m'[39m
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'unknown'
+  actual: 'distinct_later_task_purchase'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/chronology.test.mjs:56:12)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: D1 equal chronology is not a distinct later-task purchase
+not ok 2 - D1 equal chronology is not a distinct later-task purchase
+  ---
+  duration_ms: 11.212266
+  location: '/home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/chronology.test.mjs:65:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    [32mactual[39m [31mexpected[39m
+    
+    [39m'[39m[32md[39m[32mi[39m[32ms[39m[32mt[39m[32mi[39m[32mn[39m[39mc[39m[32mt[39m[31mh[39m[31mr[39m[31mo[39m[31mn[39m[31mo[39m[31ml[39m[31mo[39m[31mg[39m[31my[39m[39m_[39m[31mn[39m[31mo[39m[39mt[39m[32ma[39m[32ms[39m[32mk[39m[39m_[39m[39ma[39m[32mn[39m[32md[39m[32m_[39m[32ml[39m[32ma[39m[31mf[39m[39mt[39m[39me[39m[39mr[39m[32m_[39m[32ms[39m[32me[39m[32mt[39m[32mt[39m[32ml[39m[32me[39m[32mm[39m[32me[39m[32mn[39m[32mt[39m[39m'[39m
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'chronology_not_after'
+  actual: 'distinct_task_and_later_settlement'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/chronology.test.mjs:74:12)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: D1 missing or malformed time stays chronology_unproven
+not ok 3 - D1 missing or malformed time stays chronology_unproven
+  ---
+  duration_ms: 2.74912
+  location: '/home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/chronology.test.mjs:82:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    [32mactual[39m [31mexpected[39m
+    
+    [39m'[39m[31mc[39m[31mh[39m[39mr[39m[32me[39m[32mp[39m[32me[39m[32ma[39m[32mt[39m[32m_[39m[31mo[39m[39mn[39m[39mo[39m[32mt[39m[32m_[39m[31ml[39m[39mo[39m[32mb[39m[32ms[39m[32me[39m[31mg[39m[31my[39m[31m_[39m[31mu[39m[31mn[39m[31mp[39m[39mr[39m[31mo[39m[39mv[39m[39me[39m[32md[39m[31mn[39m[39m'[39m
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'chronology_unproven'
+  actual: 'repeat_not_observed'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/chronology.test.mjs:111:14)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: D1 duplicate and case-differing settlements are not distinct purchases
+not ok 4 - D1 duplicate and case-differing settlements are not distinct purchases
+  ---
+  duration_ms: 1.918276
+  location: '/home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/chronology.test.mjs:137:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/chronology.test.mjs:147:10)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: D1 positive control counts only a strictly later distinct settlement
+ok 5 - D1 positive control counts only a strictly later distinct settlement
+  ---
+  duration_ms: 11.798205
+  ...
+# Subtest: D1 same-task retry with unproven time stays unknown
+not ok 6 - D1 same-task retry with unproven time stays unknown
+  ---
+  duration_ms: 2.041352
+  location: '/home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/chronology.test.mjs:199:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    [32mactual[39m [31mexpected[39m
+    
+    [39m'[39m[31mc[39m[31mh[39m[39mr[39m[32me[39m[32mp[39m[32me[39m[32ma[39m[32mt[39m[32m_[39m[31mo[39m[39mn[39m[39mo[39m[32mt[39m[32m_[39m[31ml[39m[39mo[39m[32mb[39m[32ms[39m[32me[39m[31mg[39m[31my[39m[31m_[39m[31mu[39m[31mn[39m[31mp[39m[39mr[39m[31mo[39m[39mv[39m[39me[39m[32md[39m[31mn[39m[39m'[39m
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'chronology_unproven'
+  actual: 'repeat_not_observed'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/chronology.test.mjs:225:12)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# Subtest: D1 unproven chronology increases repeatUnknown and not purchases
+not ok 7 - D1 unproven chronology increases repeatUnknown and not purchases
+  ---
+  duration_ms: 2.647626
+  location: '/home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/chronology.test.mjs:233:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/chronology.test.mjs:279:12)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:677:7)
+  ...
+# (node:49553) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: D2 a cold client discovers and submits the extension from the served link
+not ok 8 - D2 a cold client discovers and submits the extension from the served link
+  ---
+  duration_ms: 33.37016
+  location: '/home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/discover.test.mjs:33:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'optional')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/discover.test.mjs:74:28)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: D2 MCP meta keeps the canonical contract and does not carry the HTTP extension
+ok 9 - D2 MCP meta keeps the canonical contract and does not carry the HTTP extension
+  ---
+  duration_ms: 1.33776
+  ...
+# (node:49564) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: D4 a later qualified fact is reported and absence or a gap stays unknown
+not ok 10 - D4 a later qualified fact is reported and absence or a gap stays unknown
+  ---
+  duration_ms: 13.469266
+  location: '/home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/qualified-report.test.mjs:7:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    [32m+ actual[39m [31m- expected[39m
+    
+    [32m+[39m undefined
+    [31m- [39m'unknown'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'unknown'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///home/ubuntu/ae14-work/j3/experiments/ae14-useful-service-observation/test/qualified-report.test.mjs:15:12)
+    async Test.run (node:internal/test_runner/test:980:9)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 2
+# fail 8
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2223.459192
+EXIT:1

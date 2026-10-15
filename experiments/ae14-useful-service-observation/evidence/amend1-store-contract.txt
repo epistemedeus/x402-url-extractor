@@ -1,0 +1,82 @@
+(node:50295) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:50308) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: live schemas agree with generated snapshot and HTTP batch is not MCP Zod
+ok 1 - live schemas agree with generated snapshot and HTTP batch is not MCP Zod
+  ---
+  duration_ms: 4.114134
+  ...
+# Subtest: HTTP 200 plus nonempty text is not a pass without the declared contract
+ok 2 - HTTP 200 plus nonempty text is not a pass without the declared contract
+  ---
+  duration_ms: 0.825671
+  ...
+# Subtest: missing and malformed bodies stay unknown or invalid, never pass
+ok 3 - missing and malformed bodies stay unknown or invalid, never pass
+  ---
+  duration_ms: 0.213666
+  ...
+# Subtest: declared extract distinguishes refusal, truncation, and full capture
+ok 4 - declared extract distinguishes refusal, truncation, and full capture
+  ---
+  duration_ms: 0.573738
+  ...
+# Subtest: source refusal is principal when truncation is also present
+ok 5 - source refusal is principal when truncation is also present
+  ---
+  duration_ms: 0.310987
+  ...
+# Subtest: schema-shaped HTTP 500 is not completed delivery
+ok 6 - schema-shaped HTTP 500 is not completed delivery
+  ---
+  duration_ms: 0.241055
+  ...
+# Subtest: unsupported method or resource stays unknown
+ok 7 - unsupported method or resource stays unknown
+  ---
+  duration_ms: 0.281634
+  ...
+# Subtest: timeout and unsupported encoding stay distinct from source refusal
+ok 8 - timeout and unsupported encoding stay distinct from source refusal
+  ---
+  duration_ms: 0.447797
+  ...
+# Subtest: read, batch, and lockfile no-change hold as completed capture
+ok 9 - read, batch, and lockfile no-change hold as completed capture
+  ---
+  duration_ms: 6.210493
+  ...
+# Subtest: bounded oversized capture is never full_bounded_capture
+ok 10 - bounded oversized capture is never full_bounded_capture
+  ---
+  duration_ms: 124.767236
+  ...
+# (node:50323) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: optional validation records survive restart and still join unchanged v1 rows
+ok 11 - optional validation records survive restart and still join unchanged v1 rows
+  ---
+  duration_ms: 23.857644
+  ...
+# Subtest: join emits one row per historical id even when response digests match
+ok 12 - join emits one row per historical id even when response digests match
+  ---
+  duration_ms: 24.52015
+  ...
+# Subtest: body-only validation without paidEvidenceId does not attach to any purchase
+ok 13 - body-only validation without paidEvidenceId does not attach to any purchase
+  ---
+  duration_ms: 3.272462
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1572.13948
+EXIT:0

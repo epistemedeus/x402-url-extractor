@@ -1,0 +1,25 @@
+(node:50936) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:50944) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: mounted caller can report one retained result without changing the paid body
+ok 1 - mounted caller can report one retained result without changing the paid body
+  ---
+  duration_ms: 4153.287487
+  ...
+# Subtest: a merchant without the feedback key still delivers and refuses the report
+ok 2 - a merchant without the feedback key still delivers and refuses the report
+  ---
+  duration_ms: 1632.832634
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6424.733202
+EXIT:0

@@ -94,7 +94,7 @@ test("retained-use and next-task stay declared, survive restart, and omit bearer
     assert.equal(accepted.body.retainedUse, "retained");
     assert.equal(accepted.body.observedRepeat, "unknown");
     assert.equal(accepted.body.usefulness, "unknown");
-    assert.equal(accepted.body.e08UsefulWork, false);
+    assert.equal(accepted.body.e08UsefulWork, "unknown");
     const replay = await submit(observation, token, body);
     assert.equal(replay.body.idempotentReplay, true);
     const reopened = observationFor(dir, key);
@@ -105,7 +105,7 @@ test("retained-use and next-task stay declared, survive restart, and omit bearer
     assert.equal(view.declared.retainedUse, "retained");
     assert.equal(view.declared.nextTask.taskRef, "task-a");
     assert.equal(view.observedRepeat.class, "unknown");
-    assert.equal(view.outsideUsefulAnswerArrived, false);
+    assert.equal(view.outsideUsefulAnswerArrived.value, "unknown");
     const stored = await readText(path.join(dir, OBSERVATION_FILENAME));
     assert.equal(stored.includes(token), false);
     assert.equal(stored.includes("ok.example"), false);
@@ -215,7 +215,7 @@ test("duplicate capture, lost response, and a source gap stay unknown rather tha
   assert.equal(absent.delivered.schemaValid, "unknown");
   assert.equal(absent.delivered.reason, "missing_capture");
   assert.equal(absent.declared.usefulnessDisposition, "unknown");
-  assert.equal(absent.outsideUsefulAnswerArrived, false);
+  assert.equal(absent.outsideUsefulAnswerArrived.value, "unknown");
   const gap = await observation.report({ windowCoverage: "gap" });
   assert.equal(gap.rates, null);
   assert.equal(gap.outsideCustomerCount, null);
@@ -231,6 +231,12 @@ test("distinct later-task purchase, same-task retry, pseudonym continuity, and f
   const prior = observedPair();
   const later = observedPair();
   const retry = observedPair({ requestDigest: prior.paid.requestDigest });
+  prior.paid.requestStartedAt = "2026-09-10T00:00:00.000Z";
+  prior.paid.responseFinishedAt = "2026-09-10T00:00:01.000Z";
+  later.paid.requestStartedAt = "2026-09-10T00:00:02.000Z";
+  later.paid.responseFinishedAt = "2026-09-10T00:00:03.000Z";
+  retry.paid.requestStartedAt = "2026-09-10T00:00:04.000Z";
+  retry.paid.responseFinishedAt = "2026-09-10T00:00:05.000Z";
   const solo = observedPair();
   const pseudoLater = observedPair();
   await writeCaptures(dir, [prior, later, retry, solo, pseudoLater]);
@@ -259,7 +265,8 @@ test("distinct later-task purchase, same-task retry, pseudonym continuity, and f
     assert.equal(priorView.observedRepeat.countsAsRepeatPurchase, true);
     assert.equal(priorView.observedRepeat.payment, "observed");
     assert.equal(priorView.observedRepeat.link, "caller_declared");
-    assert.equal(priorView.outsideUsefulAnswerArrived, false);
+    assert.equal(priorView.outsideUsefulAnswerArrived.value, "unknown");
+    assert.equal(priorView.outsideUsefulAnswerArrived.reason, "label_is_not_outsider");
     assert.equal(priorView.declared.originLabel, "external_unknown");
 
     const wrongCaller = await submit(observationFor(dir, key), tokenFor(pseudoLater, key), {
@@ -282,6 +289,8 @@ test("distinct later-task purchase, same-task retry, pseudonym continuity, and f
     const retryOnlyDir = await tempDir();
     const retryPrior = observedPair();
     const retryLater = observedPair({ requestDigest: retryPrior.paid.requestDigest });
+    retryLater.paid.requestStartedAt = "2026-09-10T00:00:02.000Z";
+    retryLater.paid.responseFinishedAt = "2026-09-10T00:00:03.000Z";
     await writeCaptures(retryOnlyDir, [retryPrior, retryLater]);
     const retryObservation = observationFor(retryOnlyDir, key);
     const retryPriorToken = tokenFor(retryPrior, key);
@@ -344,11 +353,11 @@ test("distinct later-task purchase, same-task retry, pseudonym continuity, and f
     const report = await observation.report();
     assert.equal(report.rates, null);
     assert.equal(report.outsideCustomerCount, null);
-    assert.equal(report.outsideUsefulAnswerArrived, false);
-    assert.equal(report.e08UsefulWork, false);
-    assert.equal(report.measurement.ingested, false);
-    assert.equal(report.measurement.pendingJoin, "E18");
-    assert.equal(report.hJoin.ran, false);
+    assert.equal(report.outsideUsefulAnswerArrived.value, "unknown");
+    assert.equal(report.e08UsefulWork.value, "unknown");
+    assert.equal(report.measurement.ingested, "unknown");
+    assert.equal(report.measurement.e18HeadUsed, "11871c33e294ad6acecd0fa7049d9104d9152723");
+    assert.equal(report.hJoin.ran, "unknown");
     assert.ok(report.tally.observedDistinctLaterTaskPurchases >= 1);
     assert.ok(report.tally.observedPseudonymContinuity >= 1);
     const comparison = await freeObservation.compareEquippedRoutes(freePrior.paid.id);
@@ -357,11 +366,11 @@ test("distinct later-task purchase, same-task retry, pseudonym continuity, and f
     assert.equal(comparison.direct.setupReads < comparison.extended.setupReads, true);
     assert.equal(typeof comparison.direct.latencyMs, "number");
     assert.equal(typeof comparison.extended.latencyMs, "number");
-    assert.equal(comparison.outsideUsefulAnswerArrived, false);
+    assert.equal(comparison.outsideUsefulAnswerArrived.value, "unknown");
 
     const replay = await coldReplay(freeDir);
     assert.equal(replay.network, false);
-    assert.equal(replay.outsideUsefulAnswerArrived, false);
+    assert.equal(replay.outsideUsefulAnswerArrived.value, "unknown");
     assert.equal(replay.tally.observedEntitledReuses, 1);
     await removeDir(retryOnlyDir);
     await removeDir(freeDir);
@@ -394,13 +403,14 @@ test("a foreign tenant cannot adopt another tenant's declaration", async () => {
   }
 });
 
-test("the serving mount is not applied and the price file is untouched by this package", async () => {
+test("the serving mount is applied on this branch and the price file is untouched by this package", async () => {
   const server = await readFile(new URL("../../../server.js", import.meta.url), "utf8");
   const commerce = await readFile(new URL("../../../commerce-events.mjs", import.meta.url), "utf8");
-  assert.equal(server.includes("callerResultFeedback.submit"), true);
-  assert.equal(server.includes("createUsefulServiceObservation"), false);
-  assert.equal(commerce.includes("attachCallerResultFeedbackHeader"), true);
-  assert.equal(commerce.includes("decoratePaidResponse"), false);
+  assert.equal(server.includes("usefulServiceObservation.submitExtension"), true);
+  assert.equal(server.includes("usefulServiceObservationPublicContract"), true);
+  assert.equal(/callerResultFeedback\.submit\(/.test(server), false);
+  assert.equal(server.includes("callerResultFeedback.submitMcp"), true);
+  assert.equal(commerce.includes("decoratePaidResponse"), true);
   const mount = await readFile(new URL("../src/mount.mjs", import.meta.url), "utf8");
   assert.equal(mount.includes("5000"), false);
   assert.equal(mount.includes("payTo"), false);

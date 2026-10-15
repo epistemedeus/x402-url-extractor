@@ -1,0 +1,123 @@
+(node:50127) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:50133) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: D1 reversed chronology is not a distinct later-task purchase
+ok 1 - D1 reversed chronology is not a distinct later-task purchase
+  ---
+  duration_ms: 105.572804
+  ...
+# Subtest: D1 equal chronology is not a distinct later-task purchase
+ok 2 - D1 equal chronology is not a distinct later-task purchase
+  ---
+  duration_ms: 27.177416
+  ...
+# Subtest: D1 missing or malformed time stays chronology_unproven
+ok 3 - D1 missing or malformed time stays chronology_unproven
+  ---
+  duration_ms: 3.371111
+  ...
+# Subtest: D1 duplicate and case-differing settlements are not distinct purchases
+ok 4 - D1 duplicate and case-differing settlements are not distinct purchases
+  ---
+  duration_ms: 9.095362
+  ...
+# Subtest: D1 positive control counts only a strictly later distinct settlement
+ok 5 - D1 positive control counts only a strictly later distinct settlement
+  ---
+  duration_ms: 19.40062
+  ...
+# Subtest: D1 same-task retry with unproven time stays unknown
+ok 6 - D1 same-task retry with unproven time stays unknown
+  ---
+  duration_ms: 3.667333
+  ...
+# Subtest: D1 unproven chronology increases repeatUnknown and not purchases
+ok 7 - D1 unproven chronology increases repeatUnknown and not purchases
+  ---
+  duration_ms: 3.384883
+  ...
+# (node:50134) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: D2 a cold client discovers and submits the extension from the served link
+ok 8 - D2 a cold client discovers and submits the extension from the served link
+  ---
+  duration_ms: 140.515252
+  ...
+# Subtest: D2 MCP meta keeps the canonical contract and does not carry the HTTP extension
+ok 9 - D2 MCP meta keeps the canonical contract and does not carry the HTTP extension
+  ---
+  duration_ms: 0.868468
+  ...
+# (node:50138) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: the mount preserves the paid JSON body and the existing feedback contract
+ok 10 - the mount preserves the paid JSON body and the existing feedback contract
+  ---
+  duration_ms: 126.624202
+  ...
+# Subtest: the existing client hook still refuses an unextended server's extra fields without touching delivery
+ok 11 - the existing client hook still refuses an unextended server's extra fields without touching delivery
+  ---
+  duration_ms: 6.876343
+  ...
+# (node:50166) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: a real retained extract response stays schema-valid with usefulness unknown
+ok 12 - a real retained extract response stays schema-valid with usefulness unknown
+  ---
+  duration_ms: 3.791182
+  ...
+# Subtest: callers that send only the existing disposition get the canonical response
+ok 13 - callers that send only the existing disposition get the canonical response
+  ---
+  duration_ms: 53.904778
+  ...
+# Subtest: retained-use and next-task stay declared, survive restart, and omit bearers
+ok 14 - retained-use and next-task stay declared, survive restart, and omit bearers
+  ---
+  duration_ms: 10.614928
+  ...
+# Subtest: decline, omission, malformation, tamper, wrong result, receipt, source, and tenant stay unbound
+ok 15 - decline, omission, malformation, tamper, wrong result, receipt, source, and tenant stay unbound
+  ---
+  duration_ms: 9.545003
+  ...
+# Subtest: duplicate capture, lost response, and a source gap stay unknown rather than demand
+ok 16 - duplicate capture, lost response, and a source gap stay unknown rather than demand
+  ---
+  duration_ms: 4.386922
+  ...
+# Subtest: distinct later-task purchase, same-task retry, pseudonym continuity, and free retrieval stay apart
+ok 17 - distinct later-task purchase, same-task retry, pseudonym continuity, and free retrieval stay apart
+  ---
+  duration_ms: 32.419343
+  ...
+# Subtest: a foreign tenant cannot adopt another tenant's declaration
+ok 18 - a foreign tenant cannot adopt another tenant's declaration
+  ---
+  duration_ms: 5.362026
+  ...
+# Subtest: the serving mount is applied on this branch and the price file is untouched by this package
+ok 19 - the serving mount is applied on this branch and the price file is untouched by this package
+  ---
+  duration_ms: 1.671054
+  ...
+# (node:50177) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: D4 a later qualified fact is reported and absence or a gap stays unknown
+ok 20 - D4 a later qualified fact is reported and absence or a gap stays unknown
+  ---
+  duration_ms: 15.307156
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1787.069936
+EXIT:0

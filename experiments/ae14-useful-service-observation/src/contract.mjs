@@ -7,6 +7,7 @@ import {
   CALLER_RESULT_FEEDBACK_PATH,
   CALLER_RESULT_REASON_CATEGORIES,
   CALLER_RESULT_USEFULNESS,
+  callerResultFeedbackPublicContract,
 } from "../../../caller-result-client/src/contract.mjs";
 
 export const OBSERVATION_SCHEMA = "samedaydesk.useful-service-observation.v1";
@@ -39,10 +40,6 @@ export const TX = /^0x[a-f0-9]{64}$/;
 export const MAX_EXTENSION_BYTES = 1024;
 export const MAX_OBSERVATION_FILE_BYTES = 256 * 1024;
 
-// E08 names usefulWork only after accepted review and final bound capture.
-// This legacy observation does not build that path and does not borrow the flag.
-export const E08_USEFUL_WORK = false;
-
 export const BLIND_SPOTS = Object.freeze([
   "missing_response_stays_unknown",
   "usefulness_measurement_stays_unknown",
@@ -53,10 +50,11 @@ export const BLIND_SPOTS = Object.freeze([
   "task_link_is_not_payer_identity",
   "full_window_coverage_is_not_assumed",
   "origin_label_is_not_an_outside_customer",
-  "no_outside_useful_answer_in_this_run",
   "declared_task_link_is_not_an_observed_purchase",
-  "e18_measurement_ingest_pending_join",
-  "h_harness_not_run",
+  "outside_answer_requires_observed_qualification",
+  "e08_useful_work_requires_observed_review",
+  "h_join_requires_an_h_result_in_inputs",
+  "measurement_journal_not_read",
 ]);
 
 export const E18_HEAD_USED = "11871c33e294ad6acecd0fa7049d9104d9152723";
@@ -81,16 +79,24 @@ export function extensionPublicFields() {
     usefulness: USEFULNESS_UNKNOWN,
     path: CALLER_RESULT_FEEDBACK_PATH,
     priorHeader: PRIOR_CAPABILITY_HEADER,
+    maxExtensionBytes: MAX_EXTENSION_BYTES,
     dispositions: [...CALLER_RESULT_DISPOSITIONS],
     reasonCategories: [...CALLER_RESULT_REASON_CATEGORIES],
     retainedUse: [...RETAINED_USE],
     nextTaskRelations: [...NEXT_TASK_RELATIONS],
     originLabels: [...ORIGIN_LABELS],
+    fields: ["disposition", "reasonCategory", "retainedUse", "nextTask", "originLabel", "tenant", "sourceSha", "priorBinding", "decline"],
+    nextTaskFields: ["relation", "taskRef"],
+    priorBindingFields: ["paidEvidenceId", "taskRef"],
     coverage: COVERAGE_RESULT,
     windowCoverage: COVERAGE_WINDOW,
     declineOmitsDisposition: true,
-    e08UsefulWork: E08_USEFUL_WORK,
-    measurementIngested: false,
-    hJoin: "pending-join",
+  };
+}
+
+export function usefulServiceObservationPublicContract() {
+  return {
+    ...callerResultFeedbackPublicContract(),
+    usefulServiceObservation: extensionPublicFields(),
   };
 }

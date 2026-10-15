@@ -16,7 +16,7 @@ export {
 } from "./commerce-prospective-retention.mjs";
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { getAddress } from "viem";
-import { attachCallerResultFeedbackHeader } from "./caller-result-feedback.mjs";
+import { decoratePaidResponse } from "./experiments/ae14-useful-service-observation/src/mount.mjs";
 import { appendFile, chmod, lstat, mkdir, open, readFile, rename, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 import { Credential } from "mppx";
@@ -3950,7 +3950,7 @@ export function createCommerceTelemetry({
       ? capturePaidEvidenceResponseDigest(res, paidEvidenceRequest?.method || req.method, route.route, {
         onCompleteBody: paidEvidenceRequest
           ? (observed) => {
-            attachCallerResultFeedbackHeader(res, {
+            decoratePaidResponse(res, {
               key: process.env.CALLER_RESULT_FEEDBACK_KEY || "",
               eventId: causalEvents.get(res)?.id,
               method: paidEvidenceRequest.method,

@@ -147,8 +147,9 @@ import {
   CALLER_RESULT_FEEDBACK_HEADER,
   CALLER_RESULT_FEEDBACK_PATH,
   createCallerResultFeedbackService,
-  callerResultFeedbackPublicContract,
 } from "./caller-result-feedback.mjs";
+import { createUsefulServiceObservation } from "./experiments/ae14-useful-service-observation/src/extend-handback.mjs";
+import { usefulServiceObservationPublicContract } from "./experiments/ae14-useful-service-observation/src/contract.mjs";
 import {
   CONTRACT_QUALIFIED_SEARCH_EXAMPLE,
   ContractQualifiedSearchError,
@@ -979,6 +980,11 @@ const callerResultFeedback = createCallerResultFeedbackService({
   dataDir: process.env.COMMERCE_DATA_DIR || `${process.cwd()}/data`,
   key: process.env.CALLER_RESULT_FEEDBACK_KEY || "",
   ...(Number.isSafeInteger(callerResultFeedbackMaxFileBytes) ? { maxFileBytes: callerResultFeedbackMaxFileBytes } : {}),
+});
+const usefulServiceObservation = createUsefulServiceObservation({
+  dataDir: process.env.COMMERCE_DATA_DIR || `${process.cwd()}/data`,
+  key: process.env.CALLER_RESULT_FEEDBACK_KEY || "",
+  feedback: callerResultFeedback,
 });
 const serviceDeploymentPublication = loadServiceDeploymentPublication({
   canonicalOrigin: PUBLIC_URL,
@@ -2205,13 +2211,14 @@ app.get(["/mpp-openapi.json", "/openapi.mpp.json"], (_req, res) => {
 // response and is not accepted from a URL.
 app.get(CALLER_RESULT_FEEDBACK_PATH, (_req, res) => {
   res.set("Cache-Control", "no-store");
-  return res.json(callerResultFeedbackPublicContract());
+  return res.json(usefulServiceObservationPublicContract());
 });
 app.post(CALLER_RESULT_FEEDBACK_PATH, async (req, res) => {
   res.set("Cache-Control", "no-store");
   const header = req.get(CALLER_RESULT_FEEDBACK_HEADER) || "";
-  const result = await callerResultFeedback.submit({
+  const result = await usefulServiceObservation.submitExtension({
     token: header,
+    priorCapability: req.get("x-samedaydesk-prior-caller-result") || "",
     body: req.body,
     rawBody: req.rawBody,
     query: req.query,

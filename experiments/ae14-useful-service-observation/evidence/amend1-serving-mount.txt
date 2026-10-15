@@ -1,0 +1,20 @@
+(node:50194) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:50200) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: D3 the branch server discovers, accepts, replays, and restarts the extension
+ok 1 - D3 the branch server discovers, accepts, replays, and restarts the extension
+  ---
+  duration_ms: 3868.429638
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3944.984607
+EXIT:0

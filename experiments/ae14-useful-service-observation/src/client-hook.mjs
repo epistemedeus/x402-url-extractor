@@ -34,7 +34,7 @@ function fail(code) {
     repurchaseAuthorized: false,
     taskSubmitted: false,
     paymentAttempted: false,
-    e08UsefulWork: false,
+    e08UsefulWork: "unknown",
   };
 }
 
@@ -119,6 +119,8 @@ export async function reportUsefulServiceObservation(result, statement, {
     repurchaseAuthorized: false,
     taskSubmitted: false,
     paymentAttempted: false,
-    e08UsefulWork: false,
+    e08UsefulWork: parsed.e08UsefulWork === true || parsed.e08UsefulWork === false || parsed.e08UsefulWork === "unknown"
+      ? parsed.e08UsefulWork
+      : "unknown",
   };
 }

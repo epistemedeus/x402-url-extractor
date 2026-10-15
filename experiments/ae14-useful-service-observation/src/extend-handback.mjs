@@ -72,7 +72,7 @@ function refusal(code, statusCode) {
       usefulness: USEFULNESS_UNKNOWN,
       code,
       coverage: COVERAGE_RESULT,
-      e08UsefulWork: false,
+      e08UsefulWork: "unknown",
     },
   };
 }
@@ -255,7 +255,7 @@ export function createUsefulServiceObservation({
         charged: false,
         payerIdentity: false,
         coverage: COVERAGE_RESULT,
-        e08UsefulWork: false,
+        e08UsefulWork: "unknown",
       },
     };
   }
@@ -292,7 +292,7 @@ export function createUsefulServiceObservation({
                 usefulness: USEFULNESS_UNKNOWN,
                 code: null,
                 coverage: COVERAGE_RESULT,
-                e08UsefulWork: false,
+                e08UsefulWork: "unknown",
               },
             };
           }
@@ -338,7 +338,7 @@ export function createUsefulServiceObservation({
               disposition: null,
               code: null,
               coverage: COVERAGE_RESULT,
-              e08UsefulWork: false,
+              e08UsefulWork: "unknown",
             },
           };
         }
@@ -564,7 +564,7 @@ export function createUsefulServiceObservation({
         observedRepeat: extended.observedRepeat.class,
       },
       equallyEquipped: true,
-      outsideUsefulAnswerArrived: false,
+      outsideUsefulAnswerArrived: extended.outsideUsefulAnswerArrived,
     };
   }
 

@@ -85,7 +85,14 @@ test("the mount preserves the paid JSON body and the existing feedback contract"
     assert.equal(token, tokenFor(pair, key));
 
     const contract = await fetch(`${base}/commerce/caller-result-feedback`);
-    assert.deepEqual(await contract.json(), callerResultFeedbackPublicContract());
+    const contractBody = await contract.json();
+    const canonical = callerResultFeedbackPublicContract();
+    for (const [key, value] of Object.entries(canonical)) {
+      assert.deepEqual(contractBody[key], value);
+    }
+    assert.equal(contractBody.usefulServiceObservation.optional, true);
+    assert.equal(contractBody.usefulServiceObservation.charged, false);
+    assert.equal(contractBody.usefulServiceObservation.priorHeader, "x-samedaydesk-prior-caller-result");
 
     const direct = createCallerResultFeedbackService({ dataDir: dir, key, now: () => NOW });
     const canonicalBody = { disposition: "useful", reasonCategory: "matched_task" };
