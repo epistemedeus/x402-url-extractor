@@ -142,6 +142,10 @@ export function renderLlmsTxt({
 ## Endpoints
 ${lines.join("\n")}
 ${freeSection}
+## Free readiness MCP (separate server)
+- The free readiness tools are not on this gateway. They live on a separate unpaid MCP: https://samedaydesk.com/mcp (Streamable HTTP, 7 tools: check_ai_readiness, check_agent_readiness, generate_complete_fix_pack, plan_taskmarket_delegation, browse_taskmarket_tasks, track_taskmarket_task, project_funnel_evidence). Its own tools/list is authoritative; generate_complete_fix_pack there is paid.
+- Use https://samedaydesk.com/mcp to check whether a site is visible to AI search or callable by agents, or to read TaskMarket. Use this gateway for priced data, risk, settlement and audit actions paid per call.
+
 ## How to pay
 1. GET an endpoint such as ${publicOrigin}/enrich?domain=stripe.com. One HTTP 402 advertises both protocols.
 2. For x402, use PAYMENT-REQUIRED with an x402 v2 client and replay with PAYMENT-SIGNATURE. A successful response carries PAYMENT-RESPONSE.
