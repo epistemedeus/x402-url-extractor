@@ -1,0 +1,10 @@
+{
+  "base": "6dd7a040f80f3e3ce1d914383172721751de59a2",
+  "x1HeadAtStart": "79b5e55f82e3bed9eaaf694ffd74d591160f6616",
+  "x1TestedHead": "7e4840f95b424bf5b7d6446d89b9fe94cdc320c3",
+  "contractSha256": "1f2e54d87cc33ceb92579dc95cd2a94842c60825f4b8a059a9bafcb4b8a963bd",
+  "gateway667fba35": "667fba353e9082d8a0842437442dabc42843abf8",
+  "asyncProvider1b5fd425": "1b5fd425408d34be232cd1c2ce059d3571b56c63",
+  "mcpSdk": "1.30.0",
+  "a2aSpec": "1.0.0"
+}

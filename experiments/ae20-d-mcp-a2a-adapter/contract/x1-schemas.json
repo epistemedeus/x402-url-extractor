@@ -1,0 +1,441 @@
+{
+  "url_extract_submit_input": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      },
+      "idempotencyKey": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 128,
+        "pattern": "^[A-Za-z0-9_.-]{8,128}$"
+      }
+    },
+    "required": [
+      "url",
+      "idempotencyKey"
+    ],
+    "additionalProperties": false
+  },
+  "url_extract_submit_output": {
+    "type": "object",
+    "properties": {
+      "jobId": {
+        "type": "string",
+        "pattern": "^j[a-f0-9]{32}$"
+      },
+      "status": {
+        "enum": [
+          "queued",
+          "ready"
+        ]
+      },
+      "digest": {
+        "anyOf": [
+          {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "state": {
+        "enum": [
+          "queued",
+          "running",
+          "ready",
+          "no_fit",
+          "fit",
+          "failed",
+          "aborted",
+          "timed_out",
+          "unknown"
+        ]
+      },
+      "reason": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "attempts": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1000000
+      },
+      "paymentAttempts": {
+        "const": 0
+      },
+      "newPayment": {
+        "const": false
+      },
+      "fetch_mode": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "completion": {
+        "enum": [
+          "pending",
+          "ready",
+          "failed"
+        ]
+      }
+    },
+    "required": [
+      "jobId",
+      "status",
+      "digest",
+      "state",
+      "reason",
+      "attempts",
+      "paymentAttempts",
+      "newPayment",
+      "fetch_mode",
+      "completion"
+    ],
+    "additionalProperties": false
+  },
+  "url_extract_poll_input": {
+    "type": "object",
+    "properties": {
+      "jobId": {
+        "type": "string",
+        "pattern": "^j[a-f0-9]{32}$"
+      }
+    },
+    "required": [
+      "jobId"
+    ],
+    "additionalProperties": false
+  },
+  "url_extract_poll_output": {
+    "type": "object",
+    "properties": {
+      "jobId": {
+        "type": "string",
+        "pattern": "^j[a-f0-9]{32}$"
+      },
+      "title": {
+        "anyOf": [
+          {
+            "type": "string",
+            "maxLength": 4000
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "status": {
+        "anyOf": [
+          {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 599
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "requestedUrl": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "fetch_mode": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "completion": {
+        "enum": [
+          "pending",
+          "ready",
+          "failed"
+        ]
+      },
+      "digest": {
+        "anyOf": [
+          {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "state": {
+        "enum": [
+          "queued",
+          "running",
+          "ready",
+          "no_fit",
+          "fit",
+          "failed",
+          "aborted",
+          "timed_out",
+          "unknown"
+        ]
+      },
+      "reason": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "attempts": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1000000
+      },
+      "paymentAttempts": {
+        "const": 0
+      },
+      "newPayment": {
+        "const": false
+      },
+      "verdict": {
+        "anyOf": [
+          {
+            "const": "unknown"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "code": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": [
+      "jobId",
+      "title",
+      "status",
+      "requestedUrl",
+      "fetch_mode",
+      "completion",
+      "digest",
+      "state",
+      "reason",
+      "attempts",
+      "paymentAttempts",
+      "newPayment",
+      "verdict",
+      "code"
+    ],
+    "additionalProperties": false
+  },
+  "url_extract_result_input": {
+    "type": "object",
+    "properties": {
+      "jobId": {
+        "type": "string",
+        "pattern": "^j[a-f0-9]{32}$"
+      }
+    },
+    "required": [
+      "jobId"
+    ],
+    "additionalProperties": false
+  },
+  "url_extract_result_output": {
+    "type": "object",
+    "properties": {
+      "jobId": {
+        "type": "string",
+        "pattern": "^j[a-f0-9]{32}$"
+      },
+      "title": {
+        "anyOf": [
+          {
+            "type": "string",
+            "maxLength": 4000
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "status": {
+        "anyOf": [
+          {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 599
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "requestedUrl": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "fetch_mode": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "completion": {
+        "enum": [
+          "pending",
+          "ready",
+          "failed"
+        ]
+      },
+      "digest": {
+        "anyOf": [
+          {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "state": {
+        "enum": [
+          "queued",
+          "running",
+          "ready",
+          "no_fit",
+          "fit",
+          "failed",
+          "aborted",
+          "timed_out",
+          "unknown"
+        ]
+      },
+      "reason": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "attempts": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1000000
+      },
+      "paymentAttempts": {
+        "const": 0
+      },
+      "newPayment": {
+        "const": false
+      },
+      "verdict": {
+        "anyOf": [
+          {
+            "const": "unknown"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "code": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": [
+      "jobId",
+      "title",
+      "status",
+      "requestedUrl",
+      "fetch_mode",
+      "completion",
+      "digest",
+      "state",
+      "reason",
+      "attempts",
+      "paymentAttempts",
+      "newPayment",
+      "verdict",
+      "code"
+    ],
+    "additionalProperties": false
+  }
+}

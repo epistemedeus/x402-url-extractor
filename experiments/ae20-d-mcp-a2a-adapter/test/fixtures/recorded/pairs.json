@@ -1,0 +1,873 @@
+{
+  "fixture": "ae20-d-x1-contract-fixture",
+  "label": "Recorded against the in-memory X1 contract fixture. Not a live extraction.",
+  "deterministic": true,
+  "nowMs": 1700000000000,
+  "cases": [
+    {
+      "name": "discover",
+      "request": {
+        "method": "GET",
+        "path": "/v1/discover",
+        "auth": false,
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "schema": "neomorphic.machine-gateway.discovery.v1",
+          "fixture": true,
+          "fixtureLabel": "AE20-D contract fixture for X1 url.extract. Not the X1 process. Does not fetch.",
+          "version": "0.1.1",
+          "basePath": "/api/machine-gateway",
+          "budgetUnit": "usd-micros",
+          "paymentsEnabled": false,
+          "paths": {
+            "quote": "/api/machine-gateway/v1/quote",
+            "test": "/api/machine-gateway/v1/test",
+            "execute": "/api/machine-gateway/v1/execute",
+            "receipt": "/api/machine-gateway/v1/receipts/{id}"
+          },
+          "routes": [
+            {
+              "id": "url.extract.submit",
+              "version": "1",
+              "provider": "ae19-extraction-contract",
+              "description": "fixture",
+              "price": {
+                "amount": 0,
+                "unit": "usd-micros"
+              },
+              "timeoutMs": 15000,
+              "maxOutputBytes": 16384,
+              "executable": true,
+              "inputSchemaPath": "/api/machine-gateway/v1/routes/url.extract.submit/input.schema.json",
+              "outputSchemaPath": "/api/machine-gateway/v1/routes/url.extract.submit/output.schema.json"
+            },
+            {
+              "id": "url.extract.poll",
+              "version": "1",
+              "provider": "ae19-extraction-contract",
+              "description": "fixture",
+              "price": {
+                "amount": 0,
+                "unit": "usd-micros"
+              },
+              "timeoutMs": 15000,
+              "maxOutputBytes": 16384,
+              "executable": true,
+              "inputSchemaPath": "/api/machine-gateway/v1/routes/url.extract.poll/input.schema.json",
+              "outputSchemaPath": "/api/machine-gateway/v1/routes/url.extract.poll/output.schema.json"
+            },
+            {
+              "id": "url.extract.result",
+              "version": "1",
+              "provider": "ae19-extraction-contract",
+              "description": "fixture",
+              "price": {
+                "amount": 0,
+                "unit": "usd-micros"
+              },
+              "timeoutMs": 15000,
+              "maxOutputBytes": 16384,
+              "executable": true,
+              "inputSchemaPath": "/api/machine-gateway/v1/routes/url.extract.result/input.schema.json",
+              "outputSchemaPath": "/api/machine-gateway/v1/routes/url.extract.result/output.schema.json"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "schema_submit_input",
+      "request": {
+        "method": "GET",
+        "path": "/v1/routes/url.extract.submit/input.schema.json",
+        "auth": false,
+        "headers": {},
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            },
+            "idempotencyKey": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9_.-]{8,128}$"
+            }
+          },
+          "required": [
+            "url",
+            "idempotencyKey"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "name": "quote_submit",
+      "request": {
+        "method": "POST",
+        "path": "/v1/quote",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "routeId": "url.extract.submit",
+          "input": {
+            "url": "https://ok.example/recorded",
+            "idempotencyKey": "recorded-key-0001"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "schema": "neomorphic.machine-gateway.quote.v1",
+          "quoteId": "00000000-0000-4000-8000-000000000001",
+          "routeId": "url.extract.submit",
+          "routeDigest": "ea64ed99e2515960a4f6d1a66ab371ce163d8793541bfe6f28b81bef403d7e4f",
+          "inputDigest": "78becbedd5803c9e9a9768f56d812a55d83150457acab6d2a6bc0e5fd64b53b8",
+          "expiresAt": 1700000060001,
+          "tenantBound": true,
+          "executable": true,
+          "price": {
+            "amount": 0,
+            "unit": "usd-micros"
+          },
+          "requirements": null
+        }
+      }
+    },
+    {
+      "name": "submit",
+      "request": {
+        "method": "POST",
+        "path": "/v1/execute",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json",
+          "idempotency-key": "recorded-exec-0001"
+        },
+        "body": {
+          "quoteId": "00000000-0000-4000-8000-000000000001",
+          "input": {
+            "url": "https://ok.example/recorded",
+            "idempotencyKey": "recorded-key-0001"
+          },
+          "maxUnits": 0
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "schema": "neomorphic.machine-gateway.receipt.v1",
+          "id": "00000000-0000-4000-8000-000000000002",
+          "quoteId": "00000000-0000-4000-8000-000000000001",
+          "routeId": "url.extract.submit",
+          "routeVersion": "1",
+          "requestDigest": "08056b463afcfeb8487c5d8b7535c206516600f5677070303d199c5d2efbc7ec",
+          "inputDigest": "78becbedd5803c9e9a9768f56d812a55d83150457acab6d2a6bc0e5fd64b53b8",
+          "createdAt": 1700000000002,
+          "deadlineAt": 1700000015002,
+          "completedAt": 1700000000002,
+          "status": "completed",
+          "price": {
+            "amount": 0,
+            "unit": "usd-micros"
+          },
+          "payment": {
+            "state": "not_required",
+            "adapter": null,
+            "evidence": "none",
+            "reference": null,
+            "network": null
+          },
+          "output": {
+            "jobId": "j1d5980aa2e0baf93eb35adabdf4e4c6a",
+            "status": "ready",
+            "digest": "5dcf24f9265e0982916ef19d837623c52e2f50754e918f5527455199ef2ee516",
+            "state": "ready",
+            "reason": null,
+            "attempts": 0,
+            "paymentAttempts": 0,
+            "newPayment": false,
+            "fetch_mode": "fixture",
+            "completion": "ready"
+          },
+          "error": null,
+          "readbackPath": "/api/machine-gateway/v1/receipts/00000000-0000-4000-8000-000000000001"
+        }
+      }
+    },
+    {
+      "name": "quote_result",
+      "request": {
+        "method": "POST",
+        "path": "/v1/quote",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "routeId": "url.extract.result",
+          "input": {
+            "jobId": "j1d5980aa2e0baf93eb35adabdf4e4c6a"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "schema": "neomorphic.machine-gateway.quote.v1",
+          "quoteId": "00000000-0000-4000-8000-000000000003",
+          "routeId": "url.extract.result",
+          "routeDigest": "38b7a0a14560b40ef17102cc3178979824a130a9f53212f24570acc473966812",
+          "inputDigest": "9166b1bcba9d499bdd8d5ea080b964406a67c0e899e8e7dc76e2b46818359faa",
+          "expiresAt": 1700000060003,
+          "tenantBound": true,
+          "executable": true,
+          "price": {
+            "amount": 0,
+            "unit": "usd-micros"
+          },
+          "requirements": null
+        }
+      }
+    },
+    {
+      "name": "result",
+      "request": {
+        "method": "POST",
+        "path": "/v1/execute",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json",
+          "idempotency-key": "recorded-exec-0002"
+        },
+        "body": {
+          "quoteId": "00000000-0000-4000-8000-000000000003",
+          "input": {
+            "jobId": "j1d5980aa2e0baf93eb35adabdf4e4c6a"
+          },
+          "maxUnits": 0
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "schema": "neomorphic.machine-gateway.receipt.v1",
+          "id": "00000000-0000-4000-8000-000000000004",
+          "quoteId": "00000000-0000-4000-8000-000000000003",
+          "routeId": "url.extract.result",
+          "routeVersion": "1",
+          "requestDigest": "9ee7cc673de8932bcc5b605d9b43c01c87d52136ad9d5be35ea27e24684dca97",
+          "inputDigest": "9166b1bcba9d499bdd8d5ea080b964406a67c0e899e8e7dc76e2b46818359faa",
+          "createdAt": 1700000000004,
+          "deadlineAt": 1700000015004,
+          "completedAt": 1700000000004,
+          "status": "completed",
+          "price": {
+            "amount": 0,
+            "unit": "usd-micros"
+          },
+          "payment": {
+            "state": "not_required",
+            "adapter": null,
+            "evidence": "none",
+            "reference": null,
+            "network": null
+          },
+          "output": {
+            "jobId": "j1d5980aa2e0baf93eb35adabdf4e4c6a",
+            "title": "Fixture Page",
+            "status": 200,
+            "requestedUrl": "https://ok.example/recorded",
+            "fetch_mode": "fixture",
+            "completion": "ready",
+            "digest": "5dcf24f9265e0982916ef19d837623c52e2f50754e918f5527455199ef2ee516",
+            "state": "ready",
+            "reason": null,
+            "attempts": 0,
+            "paymentAttempts": 0,
+            "newPayment": false,
+            "verdict": null,
+            "code": null
+          },
+          "error": null,
+          "readbackPath": "/api/machine-gateway/v1/receipts/00000000-0000-4000-8000-000000000003"
+        }
+      }
+    },
+    {
+      "name": "quote_poll",
+      "request": {
+        "method": "POST",
+        "path": "/v1/quote",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "routeId": "url.extract.poll",
+          "input": {
+            "jobId": "j1d5980aa2e0baf93eb35adabdf4e4c6a"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "schema": "neomorphic.machine-gateway.quote.v1",
+          "quoteId": "00000000-0000-4000-8000-000000000005",
+          "routeId": "url.extract.poll",
+          "routeDigest": "d7e7ac279330de6dd11af8a8937ac388e27bb50d29dbd7d6162132bd5b14e162",
+          "inputDigest": "9166b1bcba9d499bdd8d5ea080b964406a67c0e899e8e7dc76e2b46818359faa",
+          "expiresAt": 1700000060005,
+          "tenantBound": true,
+          "executable": true,
+          "price": {
+            "amount": 0,
+            "unit": "usd-micros"
+          },
+          "requirements": null
+        }
+      }
+    },
+    {
+      "name": "poll",
+      "request": {
+        "method": "POST",
+        "path": "/v1/execute",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json",
+          "idempotency-key": "recorded-exec-0003"
+        },
+        "body": {
+          "quoteId": "00000000-0000-4000-8000-000000000005",
+          "input": {
+            "jobId": "j1d5980aa2e0baf93eb35adabdf4e4c6a"
+          },
+          "maxUnits": 0
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "schema": "neomorphic.machine-gateway.receipt.v1",
+          "id": "00000000-0000-4000-8000-000000000006",
+          "quoteId": "00000000-0000-4000-8000-000000000005",
+          "routeId": "url.extract.poll",
+          "routeVersion": "1",
+          "requestDigest": "956dcdec70c14d6c2aafe39d865b58f35eb1ffbcf4e607dfcccf727648a26d04",
+          "inputDigest": "9166b1bcba9d499bdd8d5ea080b964406a67c0e899e8e7dc76e2b46818359faa",
+          "createdAt": 1700000000006,
+          "deadlineAt": 1700000015006,
+          "completedAt": 1700000000006,
+          "status": "completed",
+          "price": {
+            "amount": 0,
+            "unit": "usd-micros"
+          },
+          "payment": {
+            "state": "not_required",
+            "adapter": null,
+            "evidence": "none",
+            "reference": null,
+            "network": null
+          },
+          "output": {
+            "jobId": "j1d5980aa2e0baf93eb35adabdf4e4c6a",
+            "title": "Fixture Page",
+            "status": 200,
+            "requestedUrl": "https://ok.example/recorded",
+            "fetch_mode": "fixture",
+            "completion": "ready",
+            "digest": "5dcf24f9265e0982916ef19d837623c52e2f50754e918f5527455199ef2ee516",
+            "state": "ready",
+            "reason": null,
+            "attempts": 0,
+            "paymentAttempts": 0,
+            "newPayment": false,
+            "verdict": null,
+            "code": null
+          },
+          "error": null,
+          "readbackPath": "/api/machine-gateway/v1/receipts/00000000-0000-4000-8000-000000000005"
+        }
+      }
+    },
+    {
+      "name": "quote_resubmit",
+      "request": {
+        "method": "POST",
+        "path": "/v1/quote",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "routeId": "url.extract.submit",
+          "input": {
+            "url": "https://ok.example/recorded",
+            "idempotencyKey": "recorded-key-0001"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "schema": "neomorphic.machine-gateway.quote.v1",
+          "quoteId": "00000000-0000-4000-8000-000000000007",
+          "routeId": "url.extract.submit",
+          "routeDigest": "ea64ed99e2515960a4f6d1a66ab371ce163d8793541bfe6f28b81bef403d7e4f",
+          "inputDigest": "78becbedd5803c9e9a9768f56d812a55d83150457acab6d2a6bc0e5fd64b53b8",
+          "expiresAt": 1700000060007,
+          "tenantBound": true,
+          "executable": true,
+          "price": {
+            "amount": 0,
+            "unit": "usd-micros"
+          },
+          "requirements": null
+        }
+      }
+    },
+    {
+      "name": "resubmit",
+      "request": {
+        "method": "POST",
+        "path": "/v1/execute",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json",
+          "idempotency-key": "recorded-exec-0004"
+        },
+        "body": {
+          "quoteId": "00000000-0000-4000-8000-000000000007",
+          "input": {
+            "url": "https://ok.example/recorded",
+            "idempotencyKey": "recorded-key-0001"
+          },
+          "maxUnits": 0
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "schema": "neomorphic.machine-gateway.receipt.v1",
+          "id": "00000000-0000-4000-8000-000000000008",
+          "quoteId": "00000000-0000-4000-8000-000000000007",
+          "routeId": "url.extract.submit",
+          "routeVersion": "1",
+          "requestDigest": "08056b463afcfeb8487c5d8b7535c206516600f5677070303d199c5d2efbc7ec",
+          "inputDigest": "78becbedd5803c9e9a9768f56d812a55d83150457acab6d2a6bc0e5fd64b53b8",
+          "createdAt": 1700000000008,
+          "deadlineAt": 1700000015008,
+          "completedAt": 1700000000008,
+          "status": "completed",
+          "price": {
+            "amount": 0,
+            "unit": "usd-micros"
+          },
+          "payment": {
+            "state": "not_required",
+            "adapter": null,
+            "evidence": "none",
+            "reference": null,
+            "network": null
+          },
+          "output": {
+            "jobId": "j1d5980aa2e0baf93eb35adabdf4e4c6a",
+            "status": "ready",
+            "digest": "5dcf24f9265e0982916ef19d837623c52e2f50754e918f5527455199ef2ee516",
+            "state": "ready",
+            "reason": null,
+            "attempts": 0,
+            "paymentAttempts": 0,
+            "newPayment": false,
+            "fetch_mode": "fixture",
+            "completion": "ready"
+          },
+          "error": null,
+          "readbackPath": "/api/machine-gateway/v1/receipts/00000000-0000-4000-8000-000000000007"
+        }
+      }
+    },
+    {
+      "name": "quote_ssrf",
+      "request": {
+        "method": "POST",
+        "path": "/v1/quote",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "routeId": "url.extract.submit",
+          "input": {
+            "url": "http://127.0.0.1/private",
+            "idempotencyKey": "recorded-ssrf-0001"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "schema": "neomorphic.machine-gateway.quote.v1",
+          "quoteId": "00000000-0000-4000-8000-000000000009",
+          "routeId": "url.extract.submit",
+          "routeDigest": "ea64ed99e2515960a4f6d1a66ab371ce163d8793541bfe6f28b81bef403d7e4f",
+          "inputDigest": "977124210715cf9aac86701c251a86ca1182348b733919a5f2bd0fe2d0e43b17",
+          "expiresAt": 1700000060009,
+          "tenantBound": true,
+          "executable": true,
+          "price": {
+            "amount": 0,
+            "unit": "usd-micros"
+          },
+          "requirements": null
+        }
+      }
+    },
+    {
+      "name": "ssrf",
+      "request": {
+        "method": "POST",
+        "path": "/v1/execute",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json",
+          "idempotency-key": "recorded-exec-0005"
+        },
+        "body": {
+          "quoteId": "00000000-0000-4000-8000-000000000009",
+          "input": {
+            "url": "http://127.0.0.1/private",
+            "idempotencyKey": "recorded-ssrf-0001"
+          },
+          "maxUnits": 0
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "schema": "neomorphic.machine-gateway.receipt.v1",
+          "id": "00000000-0000-4000-8000-00000000000a",
+          "quoteId": "00000000-0000-4000-8000-000000000009",
+          "routeId": "url.extract.submit",
+          "routeVersion": "1",
+          "requestDigest": "7f412aefd1165a260c7738dbe58817501c273d858b9238123aa65ab0688994c3",
+          "inputDigest": "977124210715cf9aac86701c251a86ca1182348b733919a5f2bd0fe2d0e43b17",
+          "createdAt": 1700000000010,
+          "deadlineAt": 1700000015010,
+          "completedAt": 1700000000010,
+          "status": "completed",
+          "price": {
+            "amount": 0,
+            "unit": "usd-micros"
+          },
+          "payment": {
+            "state": "not_required",
+            "adapter": null,
+            "evidence": "none",
+            "reference": null,
+            "network": null
+          },
+          "output": {
+            "jobId": "j808862d7011064972f47b2e29db6850c",
+            "status": "ready",
+            "digest": "15dfc9d110249ba852a64509e7f7060cbc1a22f931a4f4948f807ff23926c018",
+            "state": "no_fit",
+            "reason": "ssrf_blocked",
+            "attempts": 0,
+            "paymentAttempts": 0,
+            "newPayment": false,
+            "fetch_mode": "none",
+            "completion": "ready"
+          },
+          "error": null,
+          "readbackPath": "/api/machine-gateway/v1/receipts/00000000-0000-4000-8000-000000000009"
+        }
+      }
+    },
+    {
+      "name": "malformed",
+      "request": {
+        "method": "POST",
+        "path": "/v1/quote",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "routeId": "url.extract.poll",
+          "input": {
+            "jobId": "not-a-job"
+          }
+        }
+      },
+      "response": {
+        "status": 400,
+        "body": {
+          "error": {
+            "code": "request_schema_invalid"
+          }
+        }
+      }
+    },
+    {
+      "name": "quote_forbidden",
+      "request": {
+        "method": "POST",
+        "path": "/v1/quote",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "routeId": "url.extract.result",
+          "input": {
+            "jobId": "jabababababababababababababababab"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "schema": "neomorphic.machine-gateway.quote.v1",
+          "quoteId": "00000000-0000-4000-8000-00000000000b",
+          "routeId": "url.extract.result",
+          "routeDigest": "38b7a0a14560b40ef17102cc3178979824a130a9f53212f24570acc473966812",
+          "inputDigest": "3c967c8a0b3fd474bcd090ef974d66edb3a398f6d288d2b1c75bac04752d8b19",
+          "expiresAt": 1700000060011,
+          "tenantBound": true,
+          "executable": true,
+          "price": {
+            "amount": 0,
+            "unit": "usd-micros"
+          },
+          "requirements": null
+        }
+      }
+    },
+    {
+      "name": "forbidden",
+      "request": {
+        "method": "POST",
+        "path": "/v1/execute",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json",
+          "idempotency-key": "recorded-exec-0006"
+        },
+        "body": {
+          "quoteId": "00000000-0000-4000-8000-00000000000b",
+          "input": {
+            "jobId": "jabababababababababababababababab"
+          },
+          "maxUnits": 0
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "schema": "neomorphic.machine-gateway.receipt.v1",
+          "id": "00000000-0000-4000-8000-00000000000c",
+          "quoteId": "00000000-0000-4000-8000-00000000000b",
+          "routeId": "url.extract.result",
+          "routeVersion": "1",
+          "requestDigest": "5a57888e10f0d292d95ea273d3b37eee1b9d1c59fda568d13b62ddc44faf19e6",
+          "inputDigest": "3c967c8a0b3fd474bcd090ef974d66edb3a398f6d288d2b1c75bac04752d8b19",
+          "createdAt": 1700000000012,
+          "deadlineAt": 1700000015012,
+          "completedAt": 1700000000012,
+          "status": "failed",
+          "price": {
+            "amount": 0,
+            "unit": "usd-micros"
+          },
+          "payment": {
+            "state": "not_required",
+            "adapter": null,
+            "evidence": "none",
+            "reference": null,
+            "network": null
+          },
+          "output": null,
+          "error": {
+            "code": "e08_job_forbidden"
+          },
+          "readbackPath": "/api/machine-gateway/v1/receipts/00000000-0000-4000-8000-00000000000b"
+        }
+      }
+    },
+    {
+      "name": "tamper",
+      "request": {
+        "method": "POST",
+        "path": "/__fixture/tamper",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "jobId": "j1d5980aa2e0baf93eb35adabdf4e4c6a"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "ok": true,
+          "jobId": "j1d5980aa2e0baf93eb35adabdf4e4c6a",
+          "fixture": true
+        }
+      }
+    },
+    {
+      "name": "quote_mismatch",
+      "request": {
+        "method": "POST",
+        "path": "/v1/quote",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "routeId": "url.extract.result",
+          "input": {
+            "jobId": "j1d5980aa2e0baf93eb35adabdf4e4c6a"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "schema": "neomorphic.machine-gateway.quote.v1",
+          "quoteId": "00000000-0000-4000-8000-00000000000d",
+          "routeId": "url.extract.result",
+          "routeDigest": "38b7a0a14560b40ef17102cc3178979824a130a9f53212f24570acc473966812",
+          "inputDigest": "9166b1bcba9d499bdd8d5ea080b964406a67c0e899e8e7dc76e2b46818359faa",
+          "expiresAt": 1700000060013,
+          "tenantBound": true,
+          "executable": true,
+          "price": {
+            "amount": 0,
+            "unit": "usd-micros"
+          },
+          "requirements": null
+        }
+      }
+    },
+    {
+      "name": "digest_mismatch",
+      "request": {
+        "method": "POST",
+        "path": "/v1/execute",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json",
+          "idempotency-key": "recorded-exec-0007"
+        },
+        "body": {
+          "quoteId": "00000000-0000-4000-8000-00000000000d",
+          "input": {
+            "jobId": "j1d5980aa2e0baf93eb35adabdf4e4c6a"
+          },
+          "maxUnits": 0
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "schema": "neomorphic.machine-gateway.receipt.v1",
+          "id": "00000000-0000-4000-8000-00000000000e",
+          "quoteId": "00000000-0000-4000-8000-00000000000d",
+          "routeId": "url.extract.result",
+          "routeVersion": "1",
+          "requestDigest": "9ee7cc673de8932bcc5b605d9b43c01c87d52136ad9d5be35ea27e24684dca97",
+          "inputDigest": "9166b1bcba9d499bdd8d5ea080b964406a67c0e899e8e7dc76e2b46818359faa",
+          "createdAt": 1700000000014,
+          "deadlineAt": 1700000015014,
+          "completedAt": 1700000000014,
+          "status": "completed",
+          "price": {
+            "amount": 0,
+            "unit": "usd-micros"
+          },
+          "payment": {
+            "state": "not_required",
+            "adapter": null,
+            "evidence": "none",
+            "reference": null,
+            "network": null
+          },
+          "output": {
+            "jobId": "j1d5980aa2e0baf93eb35adabdf4e4c6a",
+            "title": null,
+            "status": null,
+            "requestedUrl": null,
+            "fetch_mode": "fixture",
+            "completion": "failed",
+            "digest": null,
+            "state": "unknown",
+            "reason": "digest_mismatch",
+            "attempts": 0,
+            "paymentAttempts": 0,
+            "newPayment": false,
+            "verdict": "unknown",
+            "code": "digest_mismatch"
+          },
+          "error": null,
+          "readbackPath": "/api/machine-gateway/v1/receipts/00000000-0000-4000-8000-00000000000d"
+        }
+      }
+    },
+    {
+      "name": "test_route",
+      "request": {
+        "method": "POST",
+        "path": "/v1/test",
+        "auth": true,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "routeId": "url.extract.submit"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "schema": "neomorphic.machine-gateway.test.v1",
+          "routeId": "url.extract.submit",
+          "fixture": true,
+          "paymentAttempts": 0,
+          "output": {
+            "jobId": "j00000000000000000000000000000000",
+            "status": "ready",
+            "digest": null,
+            "state": "ready",
+            "reason": null,
+            "attempts": 0,
+            "paymentAttempts": 0,
+            "newPayment": false,
+            "fetch_mode": "none",
+            "completion": "ready"
+          }
+        }
+      }
+    }
+  ]
+}

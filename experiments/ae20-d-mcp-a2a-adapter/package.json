@@ -1,0 +1,23 @@
+{
+  "name": "@x402/ae20-d-mcp-a2a-adapter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Free/test MCP and A2A adapters over X1 url.extract. No extraction, job store, payment, or capture.",
+  "engines": {
+    "node": ">=22.14.0 <23"
+  },
+  "scripts": {
+    "test": "node --test --test-concurrency=1 --test-timeout=180000 test/*.test.mjs",
+    "record-fixtures": "node test/fixtures/record-pairs.mjs",
+    "start:fixture": "node test/fixtures/x1-http-fixture.mjs",
+    "start:mcp": "node bin/mcp-stdio.mjs",
+    "start:mcp-http": "node bin/mcp-http.mjs",
+    "start:a2a": "node bin/a2a.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "ajv": "8.20.0",
+    "pg": "8.23.0"
+  }
+}
