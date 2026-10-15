@@ -1,0 +1,103 @@
+{
+  "outcome": "E08 unpaid test-only URL submit/worker/result contract",
+  "repository": "https://github.com/epistemedeus/x402-url-extractor.git",
+  "writerPath": "experiments/ae14-async-delivery",
+  "branch": "codex/ae21-e08u-unpaid-url-jobs",
+  "baseBranch": "codex/ae14-e08-async-delivery",
+  "baseCommit": "d5c5ab3606ba2f79d5bdfec6afb347b566966573",
+  "failingFirstCommit": "38845c45150bf55f534414f9ef9564b27d735dfb",
+  "head": "the commit that adds this file; git rev-parse HEAD after that commit",
+  "owner": {
+    "name": "AE14 Work Network Lead",
+    "id": "65d4d8cb-8724-40d2-a551-b88f1b6879ce",
+    "owns": ["E02", "E03", "E08", "E11"],
+    "repository": "https://github.com/epistemedeus/pilot.git",
+    "commit": "b8ead33382b7007df337e8adf7c1536e9fb2b5c3",
+    "path": "overview/self-evaluations/2026-10-14-agent-economy/EXECUTION.md",
+    "blob": "c000d3e6f3b927d1e9d1c686b448a3f0fe2d5329",
+    "line": 503
+  },
+  "reproduction": {
+    "httpMjs": {
+      "commit": "d5c5ab3606ba2f79d5bdfec6afb347b566966573",
+      "path": "experiments/ae14-async-delivery/src/http.mjs",
+      "blob": "366dd0c79c70d4c6c0bf4a63f04f443c0fc4a211",
+      "lines": {
+        "48-49": "loopback_only throw",
+        "67-82": "GET /v1/jobs reads actor from url.searchParams tenantId/actorId/role",
+        "68-70": "POST /v1/jobs is openJob terms/funding"
+      }
+    },
+    "extract": {
+      "commit": "d5c5ab3606ba2f79d5bdfec6afb347b566966573",
+      "path": "extract.mjs",
+      "blob": "2f27b32abc2bdbccf47fbab869421b2ad01da1a6",
+      "use": "read-only dynamic import of export async function extract"
+    },
+    "urlGuard": {
+      "commit": "d5c5ab3606ba2f79d5bdfec6afb347b566966573",
+      "path": "extract-batch-c1/url-guard.mjs",
+      "blob": "cd6f4a0a9ac1c2ead689075ce4550dc579ccb56b"
+    },
+    "extractCapture": {
+      "commit": "d5c5ab3606ba2f79d5bdfec6afb347b566966573",
+      "path": "extract-capture.mjs",
+      "blob": "287a7d61d9885fd52349205ebde92e0373d23ab7",
+      "hook": "globalThis.__SAMEDAYDESK_EXTRACT_FETCH__"
+    }
+  },
+  "consumer242007": {
+    "package": "@neomorphic/journey-x402-async",
+    "repository": "https://github.com/epistemedeus/neomorphic-io.git",
+    "branch": "codex/ae14-b2-x402async-242007",
+    "commit": "1b5fd425408d34be232cd1c2ce059d3571b56c63",
+    "blobs": {
+      "packages/journey-x402-async/RESULT.md": "ec1361b1f67d6258f396c722fe18f6b1519650fd",
+      "packages/journey-x402-async/HANDOFF.md": "9b348bf450d5558fa7384680065395dbc6c4427f",
+      "packages/journey-x402-async/src/e08-client.mjs": "37d3d3fddd68252fce464caa1cf25005b2b92ee7"
+    },
+    "resultLines": {
+      "82": "E08 must implement the unpaid URL submit/worker/result contract using its existing extraction implementation. Its current /v1/jobs is a terms/funding workflow and cannot be substituted for extraction.",
+      "84": "240300 rejects E08's actor query/loopback HTTPS target and has no target-auth header hook"
+    },
+    "observedGateway": "e08.async.submit fails with e08_extraction_submit_pending_join",
+    "laterHeadNotUsedAsPatchBase": "ed5fec791ef2aadf78c71acb98ff166a76bcf038",
+    "e08ClientDivergenceFromPin": { "insertions": 99, "deletions": 22 },
+    "proposedPatch": "proposed/242007-unpaid-url-submit.patch",
+    "appliedHere": false
+  },
+  "monitor240300": {
+    "installer": {
+      "repository": "samedaydesk",
+      "commit": "daa3bdee79c441ba89559ea4eb2c749e312435fd",
+      "path": "server/lib/machine-services/PINS.json",
+      "blob": "4556ad42092f0b2f7a249e74db17d37334450961",
+      "lines": "13-22"
+    },
+    "continuousMonitoring": {
+      "repository": "https://github.com/epistemedeus/neomorphic-io.git",
+      "commit": "667fba353e9082d8a0842437442dabc42843abf8",
+      "path": "services/continuous-monitoring",
+      "tree": "46e4be5460168417d702de864dbd3ac71bf07b29",
+      "blobs": {
+        "src/worker.mjs": "45b418cd61fc3cb8e5b642afe2ee308281bb5251",
+        "src/config.mjs": "d00cb307b0730063439bba6162a528d7708c0acc",
+        "src/policy.mjs": "6923193667116420372a75f23794d170f9c894c3",
+        "src/http.mjs": "8e49d2403954583f3ae20a01dfbd0e3822271f99"
+      }
+    },
+    "changeMonitorFoundation": {
+      "repository": "https://github.com/epistemedeus/neomorphic-io.git",
+      "commit": "0ad6691f79225cfba782971a910c0e79d371c8f3",
+      "path": "packages/change-monitor",
+      "tree": "37048fa8f369ef1a6c0a8104a8eab8c2b7820535",
+      "workerBlobAtSameCommitUnderContinuousMonitoring": "b144644744eedb4369a5014d1bd78ddadac77166",
+      "note": "Not the HTTP worker to patch. Diff of services/continuous-monitoring src worker/config/http from this commit to 667fba35 is 12 insertions and 1 deletion."
+    },
+    "proposedPatch": "proposed/240300-target-auth-header.patch",
+    "appliedHere": false,
+    "completionUrlTemplate": "https://{publicHost}/v1/url-jobs/{jobId}/completion",
+    "completionHeader": "Authorization: Bearer <tenant-scoped token>"
+  },
+  "capture": "Market B is the sole capture writer. This package writes no capture, capture_evidence, fee, or funding."
+}

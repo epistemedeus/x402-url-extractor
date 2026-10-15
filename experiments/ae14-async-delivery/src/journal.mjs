@@ -50,6 +50,14 @@ export class PgJournal {
         proof_id text PRIMARY KEY,
         job_id text NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS ae14_async_url_job (
+        job_id text PRIMARY KEY,
+        tenant_id text NOT NULL,
+        idempotency_key text NOT NULL,
+        body_sha256 text NOT NULL,
+        record jsonb NOT NULL,
+        UNIQUE (tenant_id, idempotency_key)
+      );
     `);
   }
 
@@ -107,5 +115,83 @@ export class PgJournal {
   async unackedCallbacks() {
     const { rows } = await this.pool.query(`SELECT record FROM ae14_async_job`);
     return rows.map((row) => row.record).filter((job) => job.callback && job.output && job.callback.acked !== true);
+  }
+
+  async insertUrlJob({ jobId, tenantId, idempotencyKey, bodySha256, record }) {
+    return this.transaction(async (client) => {
+      const existing = await client.query(
+        `SELECT record, body_sha256 FROM ae14_async_url_job WHERE tenant_id = $1 AND idempotency_key = $2 FOR UPDATE`,
+        [tenantId, idempotencyKey],
+      );
+      if (existing.rows[0]) {
+        return {
+          record: existing.rows[0].record,
+          replayed: true,
+          conflict: existing.rows[0].body_sha256 !== bodySha256,
+        };
+      }
+      await client.query(
+        `INSERT INTO ae14_async_url_job (job_id, tenant_id, idempotency_key, body_sha256, record)
+         VALUES ($1, $2, $3, $4, $5::jsonb)`,
+        [jobId, tenantId, idempotencyKey, bodySha256, JSON.stringify(record)],
+      );
+      return { record, replayed: false, conflict: false };
+    });
+  }
+
+  async readUrlJob(jobId) {
+    const { rows } = await this.pool.query(`SELECT record FROM ae14_async_url_job WHERE job_id = $1`, [jobId]);
+    return rows[0]?.record ?? null;
+  }
+
+  async readUrlJobByKey(tenantId, idempotencyKey) {
+    const { rows } = await this.pool.query(
+      `SELECT record, body_sha256 FROM ae14_async_url_job WHERE tenant_id = $1 AND idempotency_key = $2`,
+      [tenantId, idempotencyKey],
+    );
+    return rows[0] ?? null;
+  }
+
+  async updateUrlJob(jobId, updater) {
+    return this.transaction(async (client) => {
+      const { rows } = await client.query(
+        `SELECT record FROM ae14_async_url_job WHERE job_id = $1 FOR UPDATE`,
+        [jobId],
+      );
+      if (!rows[0]) throw new BoundaryError("url_job_absent");
+      const next = await updater(rows[0].record, client);
+      await client.query(
+        `UPDATE ae14_async_url_job SET record = $2::jsonb, body_sha256 = $3 WHERE job_id = $1`,
+        [jobId, JSON.stringify(next), next.bodySha256],
+      );
+      return next;
+    });
+  }
+
+  async listUrlJobs() {
+    const { rows } = await this.pool.query(
+      `SELECT record FROM ae14_async_url_job ORDER BY record->>'createdAt' ASC, job_id ASC`,
+    );
+    return rows.map((row) => row.record);
+  }
+
+  async claimUrlJob(decide) {
+    return this.transaction(async (client) => {
+      const { rows } = await client.query(`
+        SELECT record FROM ae14_async_url_job
+        WHERE record->>'state' = 'working'
+          AND COALESCE((record->>'extractStarted')::boolean, false) = false
+        ORDER BY record->>'createdAt' ASC, job_id ASC
+        FOR UPDATE SKIP LOCKED
+        LIMIT 1
+      `);
+      if (!rows[0]) return null;
+      const next = await decide(rows[0].record);
+      await client.query(
+        `UPDATE ae14_async_url_job SET record = $2::jsonb, body_sha256 = $3 WHERE job_id = $1`,
+        [next.jobId, JSON.stringify(next), next.bodySha256],
+      );
+      return next;
+    });
   }
 }

@@ -1,5 +1,6 @@
 import https from "node:https";
 import { caught } from "./service.mjs";
+import { completionDenied, completionUrlTemplate, createUrlJobs, UrlJobError } from "./url-job.mjs";
 
 export const ROUTES = Object.freeze([
   "POST /v1/jobs",
@@ -10,8 +11,33 @@ export const ROUTES = Object.freeze([
   "POST /v1/jobs/:jobId/reuse",
   "POST /v1/jobs/:jobId/rights",
   "GET /v1/jobs/:jobId",
+  "POST /v1/url-jobs",
+  "GET /v1/url-jobs/:jobId",
+  "GET /v1/url-jobs/:jobId/result",
+  "GET /v1/url-jobs/:jobId/completion",
+  "POST /v1/url-jobs/:jobId/cancel",
   "GET /v1/health",
 ]);
+
+export function listenPolicy({ host = "127.0.0.1", publicOrigin = null } = {}) {
+  if (publicOrigin == null || publicOrigin === "") {
+    if (host !== "127.0.0.1") throw new Error("loopback_only");
+    return { host, publicOrigin: null, disposable: true };
+  }
+  let origin;
+  try { origin = new URL(publicOrigin); }
+  catch { throw new Error("public_origin_invalid"); }
+  if (origin.protocol !== "https:") throw new Error("public_origin_tls_required");
+  if (origin.username || origin.password || origin.search || origin.hash || (origin.pathname !== "/" && origin.pathname !== "")) {
+    throw new Error("public_origin_invalid");
+  }
+  if (origin.port && origin.port !== "443") throw new Error("public_origin_port_invalid");
+  if (origin.hostname !== host) throw new Error("public_origin_host_mismatch");
+  if (host === "127.0.0.1" || host === "localhost" || host === "::1" || host === "0.0.0.0") {
+    throw new Error("public_origin_requires_public_bind");
+  }
+  return { host, publicOrigin: origin.origin, disposable: false };
+}
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -45,9 +71,46 @@ function send(res, status, body) {
   res.end(payload);
 }
 
-export function startServer({ service, tls, host = "127.0.0.1", port = 0 }) {
-  if (host !== "127.0.0.1") throw new Error("loopback_only");
+function sendView(res, view) {
+  const { statusCode, ...body } = view;
+  send(res, statusCode || 200, body);
+}
+
+function idempotencyKey(req) {
+  const value = req.headers["idempotency-key"];
+  if (value == null || value === "") throw new UrlJobError("idempotency_key_required", 400);
+  if (typeof value !== "string" || !/^[A-Za-z0-9._:-]{1,128}$/.test(value)) throw new UrlJobError("idempotency_key_invalid", 400);
+  return value;
+}
+
+export function startServer({
+  service,
+  tls,
+  host = "127.0.0.1",
+  port = 0,
+  publicOrigin = null,
+  urlJobs = null,
+  urlJobTokens = [],
+  urlJobExtract = null,
+  urlJobConcurrency = 2,
+  urlJobDeadlineMs = 10_000,
+  urlJobDisposable = false,
+  urlJobFixtureOrigin = null,
+  now,
+} = {}) {
+  const policy = listenPolicy({ host, publicOrigin });
+  const jobs = urlJobs || createUrlJobs({
+    journal: service?.journal,
+    tokens: urlJobTokens,
+    extract: urlJobExtract,
+    concurrency: urlJobConcurrency,
+    deadlineMs: urlJobDeadlineMs,
+    disposable: urlJobDisposable,
+    fixtureOrigin: urlJobFixtureOrigin,
+    now,
+  });
   const server = https.createServer({ key: tls.key, cert: tls.cert, ca: tls.ca }, async (req, res) => {
+    let completionId = null;
     try {
       const url = new URL(req.url, "https://127.0.0.1");
       if (req.method === "GET" && url.pathname === "/v1/health") {
@@ -58,10 +121,48 @@ export function startServer({ service, tls, host = "127.0.0.1", port = 0 }) {
           railQualification: service.railQualification,
           routes: ROUTES,
           liveImmediatePay: false,
-          bind: host,
+          bind: policy.host,
+          publicOrigin: policy.publicOrigin,
+          completionUrlTemplate: policy.publicOrigin ? completionUrlTemplate(policy.publicOrigin) : null,
+          completionAuthorization: "Authorization: Bearer <tenant-scoped token>",
           paymentCompleted: false,
           usefulWork: false,
         });
+        return;
+      }
+      const urlJobMatch = url.pathname.match(/^\/v1\/url-jobs(?:\/(j[a-f0-9]{32})(?:\/(result|completion|cancel))?)?$/);
+      if (urlJobMatch) {
+        const jobId = urlJobMatch[1] || "";
+        const action = urlJobMatch[2] || "";
+        if (action === "completion") completionId = jobId;
+        // Identity is the bearer token only. Query parameters are never actors.
+        if (req.method === "POST" && !jobId && !action) {
+          const body = await readBody(req);
+          const tenantId = jobs.tenantFromAuthorization(req.headers.authorization);
+          sendView(res, await jobs.submit(tenantId, idempotencyKey(req), body));
+          return;
+        }
+        if (req.method === "GET" && jobId && action === "completion") {
+          const tenantId = jobs.tenantFromAuthorization(req.headers.authorization);
+          send(res, 200, await jobs.completion(tenantId, jobId));
+          return;
+        }
+        if (req.method === "GET" && jobId && action === "") {
+          const tenantId = jobs.tenantFromAuthorization(req.headers.authorization);
+          sendView(res, await jobs.get(tenantId, jobId));
+          return;
+        }
+        if (req.method === "GET" && jobId && action === "result") {
+          const tenantId = jobs.tenantFromAuthorization(req.headers.authorization);
+          sendView(res, await jobs.result(tenantId, jobId));
+          return;
+        }
+        if (req.method === "POST" && jobId && action === "cancel") {
+          const tenantId = jobs.tenantFromAuthorization(req.headers.authorization);
+          sendView(res, await jobs.cancel(tenantId, jobId));
+          return;
+        }
+        send(res, 404, { ok: false, code: "not_found", qualification: "pending-join", liveImmediatePay: false, usefulWork: false, paymentCompleted: false });
         return;
       }
       const jobMatch = url.pathname.match(/^\/v1\/jobs\/([A-Za-z0-9][A-Za-z0-9._:-]{0,159})(?:\/(funding|output|accept|reject|reuse|rights))?$/);
@@ -102,6 +203,26 @@ export function startServer({ service, tls, host = "127.0.0.1", port = 0 }) {
       }
       send(res, view.statusCode || 200, view);
     } catch (error) {
+      if (completionId) {
+        const status = error instanceof UrlJobError ? error.statusCode : 500;
+        send(res, status, completionDenied(completionId));
+        return;
+      }
+      if (error instanceof UrlJobError) {
+        send(res, error.statusCode, {
+          ok: false,
+          schemaVersion: "ae14.url-job.v1",
+          code: error.code,
+          state: error.fields?.state || "unknown",
+          unpaid: true,
+          mode: "test-only",
+          qualification: "pending-join",
+          paymentCompleted: false,
+          fundingRequired: false,
+          resultAccess: "independent-of-funding",
+        });
+        return;
+      }
       if (error?.code === "body" || error?.code === "json") {
         send(res, 400, { ok: false, code: error.code, qualification: "pending-join", usefulWork: false, paymentCompleted: false });
         return;
@@ -114,10 +235,23 @@ export function startServer({ service, tls, host = "127.0.0.1", port = 0 }) {
       }
     }
   });
-  return new Promise((resolve) => {
-    server.listen(port, host, () => {
+  return new Promise((resolve, reject) => {
+    const onError = (error) => {
+      server.close();
+      reject(error);
+    };
+    server.once("error", onError);
+    server.listen(port, policy.host, () => {
+      server.off("error", onError);
       const address = server.address();
-      resolve({ server, host, port: address.port });
+      resolve({
+        server,
+        host: policy.host,
+        port: address.port,
+        publicOrigin: policy.publicOrigin,
+        urlJobs: jobs,
+        completionUrlTemplate: policy.publicOrigin ? completionUrlTemplate(policy.publicOrigin) : null,
+      });
     });
   });
 }
