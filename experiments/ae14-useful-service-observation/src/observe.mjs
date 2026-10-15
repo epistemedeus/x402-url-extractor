@@ -197,12 +197,31 @@ function purchaseShape(prior, later, paids, taskRef, priorTaskRef, relation) {
   return { ok: false, reason: "task_unbound" };
 }
 
-function observedFacts(rows, paidEvidenceId) {
+function named(value) {
+  return typeof value === "string" && value.trim() !== "";
+}
+
+// Root t187u: a fact qualifies a tenant or a result only when it names the requested tenant, a bound paid-evidence
+// subject and a non-blank source recordId. Missing or cross-tenant scope is not a match (stays unknown, never a
+// positive, negative or conflict). paidSubjects: a Set of paid ids the tenant/report may bind to; paidEvidenceId: one result.
+function observedFacts(rows, { tenant, paidEvidenceId, paidSubjects } = {}) {
+  return (rows || []).filter((row) => {
+    if (row?.kind !== "observed_fact" || row.evidence !== "observed" || row.synthetic === true) return false;
+    if (!named(row.recordId) || row.scope === "global") return false;
+    if (!named(tenant) || row.tenant !== tenant) return false;
+    const bound = Array.isArray(row.sourcePaidEvidenceIds) ? row.sourcePaidEvidenceIds.filter(named) : [];
+    if (bound.length === 0) return false;
+    if (paidEvidenceId !== undefined) return bound.includes(paidEvidenceId);
+    return paidSubjects instanceof Set && bound.some((id) => paidSubjects.has(id));
+  });
+}
+
+// An explicit operator/global H fact (scope "global", no tenant) is reported only in the operator scope; it never
+// qualifies a tenant or a result.
+function globalFacts(rows) {
   return (rows || []).filter((row) => (
-    row?.kind === "observed_fact"
-    && row.evidence === "observed"
-    && row.synthetic !== true
-    && (paidEvidenceId === undefined || (Array.isArray(row.sourcePaidEvidenceIds) && row.sourcePaidEvidenceIds.includes(paidEvidenceId)))
+    row?.kind === "observed_fact" && row.evidence === "observed" && row.synthetic !== true
+    && row.scope === "global" && row.tenant === undefined && named(row.recordId)
   ));
 }
 
@@ -256,8 +275,8 @@ function labelReason(rows, paidEvidenceId) {
   return labeled ? "label_is_not_outsider" : "outside_useful_answer_absent";
 }
 
-function derivedFlags(rows, { gap, paidEvidenceId }) {
-  const facts = observedFacts(rows, paidEvidenceId);
+function derivedFlags(rows, { gap, paidEvidenceId, tenant, paidSubjects }) {
+  const facts = observedFacts(rows, { tenant, paidEvidenceId, paidSubjects });
   return {
     outsideUsefulAnswerArrived: qualifyBoolean(facts, "outside_useful_answer", gap, labelReason(rows, paidEvidenceId)),
     e08UsefulWork: qualifyBoolean(facts, "e08_useful_work", gap, "e08_review_absent"),
@@ -414,7 +433,7 @@ export function observeLoaded({
   });
   const gap = windowCoverage === COVERAGE_GAP;
   const qualifiedRepeat = gap ? blankRepeat("source_gap_stays_unknown") : repeat;
-  const flags = derivedFlags(extensionRows, { gap, paidEvidenceId });
+  const flags = derivedFlags(extensionRows, { gap, paidEvidenceId, tenant });
   return {
     schema: OBSERVATION_SCHEMA,
     paidEvidenceId,
@@ -491,7 +510,16 @@ export function reportLoaded(input) {
     windowCoverage: input.windowCoverage === COVERAGE_GAP ? COVERAGE_GAP : COVERAGE_WINDOW,
     notAWindowDenominator: true,
     rates: null,
-    ...derivedFlags(input.extensionRows, { gap: input.windowCoverage === COVERAGE_GAP }),
+    ...derivedFlags(input.extensionRows, {
+      gap: input.windowCoverage === COVERAGE_GAP,
+      tenant: input.tenant,
+      paidSubjects: new Set(input.paids.map((paid) => paid.id)),
+    }),
+    operatorScope: {
+      scope: "global",
+      qualifiesTenantOrResult: false,
+      hJoin: qualifyHJoin(globalFacts(input.extensionRows), input.windowCoverage === COVERAGE_GAP),
+    },
     unclassifiedSettlementsAreNotCustomers: true,
     absenceIsNotFailure: true,
     absenceIsNotNoRepeat: true,
