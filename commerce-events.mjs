@@ -57,6 +57,7 @@ import {
   paidUsefulJourneyMetadata,
   parsePaidUsefulJourneyHeader,
 } from "./paid-useful-journey.mjs";
+import { journeyDigestFromHeaders } from "./journey-digest.mjs"; // Growth AE22 helper (apply its patch first)
 
 const CRAWLER_PATTERN = /bot|crawler|spider|slurp|uptime|monitor|observer|probe|indexer|headless|preview|liveness|healthcheck|sentineloracle|mcpbeat|agentreeve|agent402|trust[- ]?oracle/i;
 const EXPLOIT_PROBE_PATH_PATTERN = /(?:^|\/)\.(?:env|git)(?:[./]|$)|^\/(?:wp-admin|wp-login\.php|wp-json|xmlrpc\.php)(?:\/|$)|^\/(?:api\/)?(?:config|env|settings)(?:[./]|$)|^\/js\/(?:config|env)\.js$/i;
@@ -3841,6 +3842,8 @@ export function createCommerceTelemetry({
     } catch {
       journeyClaim = null;
     }
+    // AE21 J9 / AE22: single digest function (Growth journey-digest.mjs, same HMAC/domain as J9-LOG). Raw token never stored.
+    const journeyDigest = journeyDigestFromHeaders(headers);
     const protocol = paymentProtocol(headers);
     const paymentPresent = Boolean(protocol);
     const originClass = safeEqual(suppliedInternal, internalToken)
@@ -4065,6 +4068,7 @@ export function createCommerceTelemetry({
         route: route.route,
       });
       if (paidUsefulJourney) event.paidUsefulJourney = paidUsefulJourney;
+      if (journeyDigest && result === "paid_success") event.journeyDigest = journeyDigest;
       let paidEvidence = null;
       let httpDeliveryRecord = null;
       let captured = null;
