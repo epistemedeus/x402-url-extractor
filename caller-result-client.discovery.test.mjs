@@ -42,7 +42,7 @@ test("draft caller client entry matches the committed draft archive and the shar
   assert.equal(entry.sha256, "df8cf4e24d437a0d49779cd2fee87b8145c6c8cb171a0b9f68b1c1a2195c322c");
   assert.equal(entry.archiveUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.2/samedaydesk-caller-result-0.1.2.tar.gz");
   assert.equal(entry.descriptorUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.2/descriptor.json");
-  assert.equal(entry.sourceUrl, "https://github.com/epistemedeus/x402-url-extractor/tree/429f20a0a082eba712f1feadd47d937ea64e1fe4/caller-result-client");
+  assert.equal(entry.sourceUrl, "https://github.com/epistemedeus/x402-url-extractor/tree/f8b939c5dc7a66d59b2b2d6358f3158dfa56d542/caller-result-client");
   assert.match(entry.sourceUrl, /^https:\/\/github\.com\/epistemedeus\/x402-url-extractor\/tree\/[0-9a-f]{40}\/caller-result-client$/);
   const feedbackBytes = readFileSync(path.join(cwd, CALLER_RESULT_CLIENT_FEEDBACK_ARCHIVE.relativePath));
   assert.equal(createHash("sha256").update(feedbackBytes).digest("hex"), "3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b");
