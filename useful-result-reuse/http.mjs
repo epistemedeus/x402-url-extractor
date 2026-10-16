@@ -1,4 +1,4 @@
-import { CURRENT_PATH, CURRENT_SCHEMA, GRANT_READ_PATH } from "./constants.mjs";
+import { CURRENT_PATH, CURRENT_SCHEMA, GRANT_HEADER, GRANT_READ_PATH, GRANT_REQUIRED_NEXT } from "./constants.mjs";
 import { createUsefulResultReuse } from "./service.mjs";
 
 function header(req, name) {
@@ -19,6 +19,16 @@ function send(res, status, body, method) {
   res.end(encoded);
 }
 
+function grantRequiredBody() {
+  return {
+    schema: CURRENT_SCHEMA,
+    error: "grant_required",
+    header: GRANT_HEADER,
+    next: GRANT_REQUIRED_NEXT,
+    paymentRequired: false,
+  };
+}
+
 function queryHasCredential(url) {
   for (const key of url.searchParams.keys()) {
     if (/grant|token|authorization|signature/i.test(key)) return true;
@@ -29,7 +39,12 @@ function queryHasCredential(url) {
 async function handleCustomerGrant(req, res, service) {
   const url = new URL(req.originalUrl || req.url || "/", "http://127.0.0.1");
   if (queryHasCredential(url)) {
-    send(res, 400, { schema: CURRENT_SCHEMA, error: "credential_in_url" }, req.method);
+    send(res, 400, {
+      schema: CURRENT_SCHEMA,
+      error: "credential_in_url",
+      next: "Next: remove grant, token, authorization, and signature query keys. Send the grant in the x-samedaydesk-result-grant header.",
+      paymentRequired: false,
+    }, req.method);
     return;
   }
   const token = header(req, "x-samedaydesk-result-grant");
@@ -42,7 +57,7 @@ async function handleCustomerGrant(req, res, service) {
       return;
     }
     if (!token) {
-      send(res, 401, { schema: CURRENT_SCHEMA, error: "grant_required" }, req.method);
+      send(res, 401, grantRequiredBody(), req.method);
       return;
     }
     const retrieved = await service.readDeliveredReceipt({
@@ -80,12 +95,17 @@ async function handleCustomerGrant(req, res, service) {
     return;
   }
   if (req.method !== "POST") {
-    send(res, 405, { schema: CURRENT_SCHEMA, error: "method_rejected" }, req.method);
+    send(res, 405, {
+      schema: CURRENT_SCHEMA,
+      error: "method_rejected",
+      next: "Next: GET to read a retained result, or POST with x-samedaydesk-result-action set to revoke, share-knowledge, or correct-knowledge.",
+      paymentRequired: false,
+    }, req.method);
     return;
   }
   const action = header(req, "x-samedaydesk-result-action");
   if (!token) {
-    send(res, 401, { schema: CURRENT_SCHEMA, error: "grant_required" }, req.method);
+    send(res, 401, grantRequiredBody(), req.method);
     return;
   }
   if (action === "revoke") {

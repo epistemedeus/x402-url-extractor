@@ -49,6 +49,14 @@ export function readMcpCallerResultCapability(result) {
   };
 }
 
+function safeParentSettlement(value) {
+  if (!plain(value)) return null;
+  const { settlementReference, reconciliationId } = value;
+  if (typeof settlementReference !== "string" || !/^0x[0-9a-f]{64}$/.test(settlementReference)) return null;
+  if (typeof reconciliationId !== "string" || !/^sddsr_[0-9a-f]{40}$/.test(reconciliationId)) return null;
+  return { settlementReference, reconciliationId };
+}
+
 function safeBody(body) {
   if (!plain(body)) return null;
   return {
@@ -65,6 +73,7 @@ function safeBody(body) {
       : null,
     idempotentReplay: body.idempotentReplay === true,
     parent: body.parent === "bound" || body.parent === "pending" || body.parent === "unbound" ? body.parent : null,
+    parentSettlement: body.parent === "bound" && body.bound === true ? safeParentSettlement(body.parentSettlement) : null,
     retainedDisposition: body.retainedDisposition === "useful" || body.retainedDisposition === "not_useful"
       ? body.retainedDisposition
       : null,
@@ -88,6 +97,7 @@ export async function reportMcpCallerResult(client, { token, disposition, reason
     reasonCategory: null,
     idempotentReplay: false,
     parent: null,
+    parentSettlement: null,
     retainedDisposition: null,
     retainedReasonCategory: null,
     coverage: null,

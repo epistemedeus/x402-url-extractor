@@ -1,0 +1,6 @@
+This directory consumes the current caller-result client, the caller-result
+feedback contract, the idempotency replay contract, and the ordinary delivery
+join reader. It does not replace those modules.
+
+It does not modify server.js, the AE35 boot binder, the AE35 regression
+export, G4 experiments/ae19-paid-continuation, or master.

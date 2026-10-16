@@ -1,4 +1,4 @@
-// Public discovery record for the released caller-result archive.
+// Public discovery record for the draft caller-result archive (publication: draft-archive).
 // Feedback path, tool, and header stay owned by the shared capability contract.
 // HMAC, journals, and server filenames stay out of this module.
 import { readFileSync } from "node:fs";
@@ -15,8 +15,8 @@ import {
   MCP_CALLER_RESULT_TOOL,
 } from "./caller-result-client/src/contract.mjs";
 
-const SOURCE_COMMIT = "72ef93bd0350b8bcd67a6ec0f048515d0533f199";
-const ARCHIVE_SHA256 = "693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3";
+const SOURCE_COMMIT = "f8b939c5dc7a66d59b2b2d6358f3158dfa56d542";
+const ARCHIVE_SHA256 = "df8cf4e24d437a0d49779cd2fee87b8145c6c8cb171a0b9f68b1c1a2195c322c";
 const FEEDBACK_ARCHIVE_SHA256 = "3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b";
 const SDK = Object.freeze({
   "@modelcontextprotocol/sdk": "1.30.0",
@@ -55,6 +55,7 @@ if (clientPackage.name !== "samedaydesk-caller-result") diverged("package");
 if (clientPackage.exports["./mcp"] !== "./src/mcp-caller-result.mjs") diverged("mcp_export_map");
 if (clientPackage.exports["./recovery"] !== "./src/mcp-recovery.mjs") diverged("recovery_export_map");
 if (clientPackage.bin?.["recover-mcp"] !== "bin/recover-mcp.mjs") diverged("bin");
+if (clientPackage.exports["./continuation"] !== "./src/continuation.mjs") diverged("continuation_export_map");
 
 const descriptorUrl = new URL(ARCHIVE_URL);
 descriptorUrl.pathname = descriptorUrl.pathname.replace(/[^/]+$/, "descriptor.json");
@@ -102,6 +103,11 @@ export const CALLER_RESULT_CLIENT_ENTRY = Object.freeze({
       packageExport: "samedaydesk-caller-result/recovery",
       bin: "bin/recover-mcp.mjs",
     }),
+    continuation: Object.freeze({
+      exportNames: Object.freeze(["discoverHttpNextActions", "discoverSdkNextActions", "retrieveEntitledHttp"]),
+      specifier: "./src/continuation.mjs",
+      packageExport: "samedaydesk-caller-result/continuation",
+    }),
   }),
   feedback: Object.freeze({
     optional: true,
@@ -131,6 +137,7 @@ export function renderCallerResultClientGuide(entry) {
   const mcp = entry.modules?.mcp;
   const http = entry.modules?.http;
   const recovery = entry.modules?.recovery;
+  const continuation = entry.modules?.continuation;
   const feedback = entry.feedback;
   if (entry.optional !== true || entry.charged !== false || entry.paymentRequired !== false) {
     diverged("payment");
@@ -150,6 +157,11 @@ export function renderCallerResultClientGuide(entry) {
     || recovery.exportNames?.join(",") !== "startPaidMcpResult,resumePaidMcpResult") {
     diverged("recovery_export");
   }
+  if (continuation?.packageExport !== "samedaydesk-caller-result/continuation"
+    || continuation.specifier !== "./src/continuation.mjs"
+    || continuation.exportNames?.join(",") !== "discoverHttpNextActions,discoverSdkNextActions,retrieveEntitledHttp") {
+    diverged("continuation_export");
+  }
   if (feedback?.optional !== true || feedback?.charged !== false || feedback?.usefulness !== "unknown") {
     diverged("feedback");
   }
@@ -164,7 +176,7 @@ export function renderCallerResultClientGuide(entry) {
   const recoveryNames = recovery.exportNames.join(" and ");
   return `## Optional caller client
 
-Feedback is optional and free. Download the released client, install it, and use it only with your existing payment client and an explicit payment authorization. Skipping the statement leaves the purchase. A failed report leaves the delivered result. This client is not an npm package.
+Feedback is optional and free. Download the draft-archive client, verify its sha256, install it, and use it only with your existing payment client and an explicit payment authorization. Skipping the statement leaves the purchase. A failed report leaves the delivered result. This client is not an npm package.
 
 Archive: ${entry.archiveUrl}
 sha256: ${entry.sha256}
@@ -181,9 +193,12 @@ ${entry.install.join("\n")}
 import { ${mcp.exportName} } from "${mcp.specifier}";
 import { ${http.exportNames.join(", ")} } from "${http.specifier}";
 import { ${recovery.exportNames.join(", ")} } from "${recovery.specifier}";
+import { ${continuation.exportNames.join(", ")} } from "${continuation.specifier}";
 \`\`\`
 
-Import ${mcp.exportName} from ${mcp.specifier} (package export ${mcp.packageExport}). Import ${httpNames} from ${http.specifier} (package export ${http.packageExport}). Import ${recoveryNames} from ${recovery.specifier} (package export ${recovery.packageExport}).
+Import ${mcp.exportName} from ${mcp.specifier} (package export ${mcp.packageExport}). Import ${httpNames} from ${http.specifier} (package export ${http.packageExport}). Import ${recoveryNames} from ${recovery.specifier} (package export ${recovery.packageExport}). Import ${continuation.exportNames.join(", ")} from ${continuation.specifier} (package export ${continuation.packageExport}).
+
+Optional continuation of one delivered result uses this archive. \`report_result\` and \`retrieve_entitled\` are uncharged and bound to that result. A charged \`new_paid_task\` is not one of those next actions. Entitled retrieval does not settle again.
 
 The ${entry.feedbackArchive.version} archive does not contain ${recovery.specifier} or ${recovery.bin}. Optional recovery of an already authorized paid result uses this archive. In a second process, with the original merchant checkout absent, run \`node ${recovery.bin} start operation.json checkpoint.json grant.json\` or \`node ${recovery.bin} resume checkpoint.json grant.json\`. Exit 0 is a decoded retained result. Exit 2 is unresolved or denied. The command does not create a wallet, sign, or settle again.
 

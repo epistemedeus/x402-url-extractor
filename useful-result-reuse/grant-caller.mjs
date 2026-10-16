@@ -36,6 +36,7 @@ const payload = {
   blockNumber: result?.transaction?.blockNumber ?? null,
   decision: result?.decision ?? null,
   error: body.error || null,
+  next: body.next || null,
   hasResult: Boolean(result),
   method,
   paidValidDelivery: body.paidValidDelivery ?? null,

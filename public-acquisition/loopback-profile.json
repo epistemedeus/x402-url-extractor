@@ -5,8 +5,8 @@
     "productionAcceptance": false,
     "hostedAcquisitionVerified": false,
     "node": {
-      "version": "v22.22.2",
-      "execPath": "/home/ubuntu/.nvm/versions/node/v22.22.2/bin/node",
+      "version": "v22.23.2",
+      "execPath": "/workspace/pilot/toolchain/node-v22.23.2-linux-x64/bin/node",
       "rootInstall": false,
       "skillEnginePin": ">=22.20.0",
       "skillEngineSatisfied": true
@@ -27,12 +27,12 @@
         "bytes": 66166,
         "sha256": "11d5a0e2df86282b6d4edbeab84b6d8ab5ccdb26b44364042cf76c9576c23817",
         "originalUrl": "https://neomorphic.io/downloads/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
-        "fetchedFrom": "http://127.0.0.1:36287/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
         "contentType": "application/x-gtar",
         "steps": [
           {
             "argv": [
-              "/home/ubuntu/.nvm/versions/node/v22.22.2/bin/node",
+              "/workspace/pilot/toolchain/node-v22.23.2-linux-x64/bin/node",
               "package/bin/decide.mjs",
               "self-check"
             ],
@@ -41,7 +41,7 @@
           },
           {
             "argv": [
-              "/home/ubuntu/.nvm/versions/node/v22.22.2/bin/node",
+              "/workspace/pilot/toolchain/node-v22.23.2-linux-x64/bin/node",
               "package/bin/decide.mjs",
               "inspect",
               "--case",
@@ -59,12 +59,12 @@
         "bytes": 107420,
         "sha256": "350629b7bf1a14b092d94e0c27579f2e05114bf7f2f05a33c33d32b4c68176de",
         "originalUrl": "https://neomorphic.io/downloads/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
-        "fetchedFrom": "http://127.0.0.1:36287/.well-known/public-acquisition/assets/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
         "contentType": "application/gzip",
         "steps": [
           {
             "argv": [
-              "/home/ubuntu/.nvm/versions/node/v22.22.2/bin/node",
+              "/workspace/pilot/toolchain/node-v22.23.2-linux-x64/bin/node",
               "--input-type=module",
               "-e",
               "import { writeFileSync } from 'node:fs'; import { projectReading, x402Reading } from './packages/retained-task/test/support.mjs'; writeFileSync('capture.json', JSON.stringify(projectReading(x402Reading({ sellers: 10 })))); writeFileSync('receivers.json', JSON.stringify({ 'local-vm': { kind: 'local-http', baseUrl: 'http://127.0.0.1:9' } }));"
@@ -74,7 +74,7 @@
           },
           {
             "argv": [
-              "/home/ubuntu/.nvm/versions/node/v22.22.2/bin/node",
+              "/workspace/pilot/toolchain/node-v22.23.2-linux-x64/bin/node",
               "packages/retained-task/src/cli.mjs",
               "open",
               "--home",
@@ -97,7 +97,7 @@
           },
           {
             "argv": [
-              "/home/ubuntu/.nvm/versions/node/v22.22.2/bin/node",
+              "/workspace/pilot/toolchain/node-v22.23.2-linux-x64/bin/node",
               "packages/retained-task/src/cli.mjs",
               "resume",
               "--home",
@@ -121,12 +121,12 @@
         "bytes": 477108,
         "sha256": "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0",
         "originalUrl": "https://neomorphic.io/downloads/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
-        "fetchedFrom": "http://127.0.0.1:36287/.well-known/public-acquisition/assets/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
         "contentType": "application/gzip",
         "steps": [
           {
             "argv": [
-              "/home/ubuntu/.nvm/versions/node/v22.22.2/bin/node",
+              "/workspace/pilot/toolchain/node-v22.23.2-linux-x64/bin/node",
               "l09-next-action-0.1.0/experiments/l09-bounty-next-093076/bin/l09.mjs",
               "task-spec"
             ],
@@ -142,12 +142,12 @@
         "bytes": 30462,
         "sha256": "86e55a75f7e7e5c5ad188de8b20c64648f40c236b11981186b56abeb6d11350f",
         "originalUrl": "https://neomorphic.io/downloads/seller-repair-external-consumer/0.2.0/seller-repair-external-consumer-0.2.0.tar.gz",
-        "fetchedFrom": "http://127.0.0.1:36287/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.2.0/seller-repair-external-consumer-0.2.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.2.0/seller-repair-external-consumer-0.2.0.tar.gz",
         "contentType": "application/gzip",
         "steps": [
           {
             "argv": [
-              "/home/ubuntu/.nvm/versions/node/v22.22.2/bin/node",
+              "/workspace/pilot/toolchain/node-v22.23.2-linux-x64/bin/node",
               "package/bin/seller-repair.mjs",
               "deliver"
             ],
@@ -156,7 +156,7 @@
           },
           {
             "argv": [
-              "/home/ubuntu/.nvm/versions/node/v22.22.2/bin/node",
+              "/workspace/pilot/toolchain/node-v22.23.2-linux-x64/bin/node",
               "package/bin/seller-repair.mjs",
               "reproduce",
               "--case",
@@ -174,12 +174,12 @@
         "bytes": 40891,
         "sha256": "64dbe1ee7f69dd40ebf71741eed92f1f3f893c44af8eadf18b71c0fac82227b8",
         "originalUrl": "https://neomorphic.io/downloads/seller-repair-external-consumer/0.4.1/seller-repair-external-consumer-0.4.1.tar.gz",
-        "fetchedFrom": "http://127.0.0.1:36287/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.4.1/seller-repair-external-consumer-0.4.1.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.4.1/seller-repair-external-consumer-0.4.1.tar.gz",
         "contentType": "application/gzip",
         "steps": [
           {
             "argv": [
-              "/home/ubuntu/.nvm/versions/node/v22.22.2/bin/node",
+              "/workspace/pilot/toolchain/node-v22.23.2-linux-x64/bin/node",
               "--input-type=module",
               "-e",
               "await import('data:text/javascript;base64,'+Buffer.from(process.argv.slice(1).join('')).toString('base64'))",
@@ -196,6 +196,92 @@
             "missing": []
           }
         ]
+      },
+      {
+        "id": "scoped-repair-commerce-100348",
+        "version": "0.1.2",
+        "filename": "scoped-repair-commerce-100348-0.1.2.tar.gz",
+        "bytes": 37921,
+        "sha256": "f95db152722ac820d57975cdab9b2bb486888f2faf023dc271b82da5eba84656",
+        "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz",
+        "contentType": "application/gzip",
+        "steps": [
+          {
+            "argv": [
+              "/workspace/pilot/toolchain/node-v22.23.2-linux-x64/bin/node",
+              "bin/check-cold.mjs"
+            ],
+            "exitCode": 0,
+            "missing": []
+          }
+        ]
+      },
+      {
+        "id": "samedaydesk-caller-result",
+        "version": "0.1.0",
+        "filename": "samedaydesk-caller-result-0.1.0.tar.gz",
+        "bytes": 24149,
+        "sha256": "3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b",
+        "originalUrl": "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.0/samedaydesk-caller-result-0.1.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/samedaydesk-caller-result/0.1.0/samedaydesk-caller-result-0.1.0.tar.gz",
+        "contentType": "application/gzip",
+        "steps": [
+          {
+            "argv": [
+              "/workspace/pilot/toolchain/node-v22.23.2-linux-x64/bin/node",
+              "--input-type=module",
+              "-e",
+              "import { existsSync, readFileSync } from 'node:fs'; const pkg = JSON.parse(readFileSync('package.json','utf8')); const recovery = existsSync('src/mcp-recovery.mjs') && existsSync('bin/recover-mcp.mjs'); if (pkg.name !== 'samedaydesk-caller-result' || pkg.private !== true) process.exit(1); process.stdout.write(JSON.stringify({ name: pkg.name, version: pkg.version, recovery, paymentSent: false, charged: false }));"
+            ],
+            "exitCode": 0,
+            "missing": []
+          }
+        ]
+      },
+      {
+        "id": "samedaydesk-caller-result",
+        "version": "0.1.1",
+        "filename": "samedaydesk-caller-result-0.1.1.tar.gz",
+        "bytes": 32421,
+        "sha256": "693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3",
+        "originalUrl": "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/samedaydesk-caller-result-0.1.1.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/samedaydesk-caller-result/0.1.1/samedaydesk-caller-result-0.1.1.tar.gz",
+        "contentType": "application/gzip",
+        "steps": [
+          {
+            "argv": [
+              "/workspace/pilot/toolchain/node-v22.23.2-linux-x64/bin/node",
+              "--input-type=module",
+              "-e",
+              "import { existsSync, readFileSync } from 'node:fs'; const pkg = JSON.parse(readFileSync('package.json','utf8')); const recovery = existsSync('src/mcp-recovery.mjs') && existsSync('bin/recover-mcp.mjs'); if (pkg.name !== 'samedaydesk-caller-result' || pkg.private !== true) process.exit(1); process.stdout.write(JSON.stringify({ name: pkg.name, version: pkg.version, recovery, paymentSent: false, charged: false }));"
+            ],
+            "exitCode": 0,
+            "missing": []
+          }
+        ]
+      },
+      {
+        "id": "samedaydesk-caller-result",
+        "version": "0.1.2",
+        "filename": "samedaydesk-caller-result-0.1.2.tar.gz",
+        "bytes": 34755,
+        "sha256": "df8cf4e24d437a0d49779cd2fee87b8145c6c8cb171a0b9f68b1c1a2195c322c",
+        "originalUrl": "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.2/samedaydesk-caller-result-0.1.2.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/samedaydesk-caller-result/0.1.2/samedaydesk-caller-result-0.1.2.tar.gz",
+        "contentType": "application/gzip",
+        "steps": [
+          {
+            "argv": [
+              "/workspace/pilot/toolchain/node-v22.23.2-linux-x64/bin/node",
+              "--input-type=module",
+              "-e",
+              "import { existsSync, readFileSync } from 'node:fs'; const pkg = JSON.parse(readFileSync('package.json','utf8')); const recovery = existsSync('src/mcp-recovery.mjs') && existsSync('bin/recover-mcp.mjs'); const continuation = existsSync('src/continuation.mjs'); if (pkg.name !== 'samedaydesk-caller-result' || pkg.private !== true || continuation !== true) process.exit(1); process.stdout.write(JSON.stringify({ name: pkg.name, version: pkg.version, recovery, continuation, paymentSent: false, charged: false }));"
+            ],
+            "exitCode": 0,
+            "missing": []
+          }
+        ]
       }
     ]
   },
@@ -206,8 +292,8 @@
     "productionAcceptance": false,
     "hostedAcquisitionVerified": false,
     "python": {
-      "version": "3.12.3",
-      "executable": "/usr/bin/python3",
+      "version": "3.13.5",
+      "executable": "/tmp/ae56py/bin/python3",
       "httpx": "0.28.1",
       "userAgent": "python-httpx/0.28.1",
       "rootInstall": false,
@@ -215,7 +301,7 @@
     },
     "hermes": {
       "invoked": false,
-      "installedVersion": "0.0.0",
+      "installedVersion": null,
       "officialDistribution": "PyPI",
       "officialPackage": "hermes-agent",
       "officialVersion": "0.19.0",
@@ -230,7 +316,7 @@
         "bytes": 66166,
         "sha256": "11d5a0e2df86282b6d4edbeab84b6d8ab5ccdb26b44364042cf76c9576c23817",
         "originalUrl": "https://neomorphic.io/downloads/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
-        "fetchedFrom": "http://127.0.0.1:36287/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/composition-route-knowledge/0.1.0/composition-route-knowledge-0.1.0.tgz",
         "contentType": "application/x-gtar",
         "steps": [
           {
@@ -250,7 +336,7 @@
         "bytes": 107420,
         "sha256": "350629b7bf1a14b092d94e0c27579f2e05114bf7f2f05a33c33d32b4c68176de",
         "originalUrl": "https://neomorphic.io/downloads/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
-        "fetchedFrom": "http://127.0.0.1:36287/.well-known/public-acquisition/assets/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/retained-task/0.1.0/retained-task-0.1.0.tar.gz",
         "contentType": "application/gzip",
         "steps": [
           {
@@ -274,7 +360,7 @@
         "bytes": 477108,
         "sha256": "23bf8574b37c485b4b99f2e15f9b77a3239d0b2308a9048c25e118425a7f63d0",
         "originalUrl": "https://neomorphic.io/downloads/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
-        "fetchedFrom": "http://127.0.0.1:36287/.well-known/public-acquisition/assets/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/l09-next-action/0.1.0/l09-next-action-0.1.0.tar.gz",
         "contentType": "application/gzip",
         "steps": [
           {
@@ -290,7 +376,7 @@
         "bytes": 30462,
         "sha256": "86e55a75f7e7e5c5ad188de8b20c64648f40c236b11981186b56abeb6d11350f",
         "originalUrl": "https://neomorphic.io/downloads/seller-repair-external-consumer/0.2.0/seller-repair-external-consumer-0.2.0.tar.gz",
-        "fetchedFrom": "http://127.0.0.1:36287/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.2.0/seller-repair-external-consumer-0.2.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.2.0/seller-repair-external-consumer-0.2.0.tar.gz",
         "contentType": "application/gzip",
         "steps": [
           {
@@ -310,7 +396,71 @@
         "bytes": 40891,
         "sha256": "64dbe1ee7f69dd40ebf71741eed92f1f3f893c44af8eadf18b71c0fac82227b8",
         "originalUrl": "https://neomorphic.io/downloads/seller-repair-external-consumer/0.4.1/seller-repair-external-consumer-0.4.1.tar.gz",
-        "fetchedFrom": "http://127.0.0.1:36287/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.4.1/seller-repair-external-consumer-0.4.1.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/seller-repair-external-consumer/0.4.1/seller-repair-external-consumer-0.4.1.tar.gz",
+        "contentType": "application/gzip",
+        "steps": [
+          {
+            "exitCode": 0,
+            "missing": []
+          }
+        ]
+      },
+      {
+        "id": "scoped-repair-commerce-100348",
+        "version": "0.1.2",
+        "filename": "scoped-repair-commerce-100348-0.1.2.tar.gz",
+        "bytes": 37921,
+        "sha256": "f95db152722ac820d57975cdab9b2bb486888f2faf023dc271b82da5eba84656",
+        "originalUrl": "https://neomorphic.io/downloads/scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/scoped-repair-commerce-100348/0.1.2/scoped-repair-commerce-100348-0.1.2.tar.gz",
+        "contentType": "application/gzip",
+        "steps": [
+          {
+            "exitCode": 0,
+            "missing": []
+          }
+        ]
+      },
+      {
+        "id": "samedaydesk-caller-result",
+        "version": "0.1.0",
+        "filename": "samedaydesk-caller-result-0.1.0.tar.gz",
+        "bytes": 24149,
+        "sha256": "3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b",
+        "originalUrl": "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.0/samedaydesk-caller-result-0.1.0.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/samedaydesk-caller-result/0.1.0/samedaydesk-caller-result-0.1.0.tar.gz",
+        "contentType": "application/gzip",
+        "steps": [
+          {
+            "exitCode": 0,
+            "missing": []
+          }
+        ]
+      },
+      {
+        "id": "samedaydesk-caller-result",
+        "version": "0.1.1",
+        "filename": "samedaydesk-caller-result-0.1.1.tar.gz",
+        "bytes": 32421,
+        "sha256": "693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3",
+        "originalUrl": "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/samedaydesk-caller-result-0.1.1.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/samedaydesk-caller-result/0.1.1/samedaydesk-caller-result-0.1.1.tar.gz",
+        "contentType": "application/gzip",
+        "steps": [
+          {
+            "exitCode": 0,
+            "missing": []
+          }
+        ]
+      },
+      {
+        "id": "samedaydesk-caller-result",
+        "version": "0.1.2",
+        "filename": "samedaydesk-caller-result-0.1.2.tar.gz",
+        "bytes": 34755,
+        "sha256": "df8cf4e24d437a0d49779cd2fee87b8145c6c8cb171a0b9f68b1c1a2195c322c",
+        "originalUrl": "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.2/samedaydesk-caller-result-0.1.2.tar.gz",
+        "fetchedFrom": "http://127.0.0.1:44123/.well-known/public-acquisition/assets/samedaydesk-caller-result/0.1.2/samedaydesk-caller-result-0.1.2.tar.gz",
         "contentType": "application/gzip",
         "steps": [
           {

@@ -303,6 +303,8 @@ async function main() {
   if (usefulBound.bound !== true || usefulBound.parent !== "bound" || usefulBound.idempotentReplay !== true) fail("useful_not_bound");
   if (notUsefulBound.bound !== true || notUsefulBound.parent !== "bound" || notUsefulBound.idempotentReplay !== true) fail("not_useful_not_bound");
   if (usefulBound.accepted !== true) fail("bound_not_accepted");
+  if (!usefulBound.parentSettlement || !notUsefulBound.parentSettlement) fail("bound_parent_unnamed");
+  if (usefulBound.parentSettlement.settlementReference === notUsefulBound.parentSettlement.settlementReference) fail("bound_parent_shared");
   await session.sdk.close().catch(() => {});
   await writeFile(`${input.signalDir}/bound`, "ok");
   await waitForFile(`${input.signalDir}/restart-ready`);

@@ -9,6 +9,8 @@ export const CUSTOMER_SCHEMA = "samedaydesk.useful-result-reuse.customer-grant.v
 export const COMPATIBILITY_SCHEMA = "samedaydesk.useful-result-reuse.compatibility.v1";
 export const CURRENT_PATH = "/.well-known/useful-result-reuse/current.json";
 export const GRANT_READ_PATH = "/.well-known/useful-result-reuse/retained";
+export const GRANT_HEADER = "x-samedaydesk-result-grant";
+export const GRANT_REQUIRED_NEXT = "Next: send the customer-held grant in the x-samedaydesk-result-grant header. Do not put the grant in the URL. This route does not take a payment header.";
 
 export const PRIVATE_FILE = "useful-result-private.ndjson";
 export const SHARED_FILE = "useful-result-shared.ndjson";
@@ -82,7 +84,12 @@ export const CUSTOMER_RETENTION_DESCRIPTOR = Object.freeze({
   credentialInUrl: false,
   internalTokenRequired: false,
   price: "free",
-  read: Object.freeze({ method: "GET", route: GRANT_READ_PATH }),
+  read: Object.freeze({
+    method: "GET",
+    route: GRANT_READ_PATH,
+    header: GRANT_HEADER,
+    next: GRANT_REQUIRED_NEXT,
+  }),
   revoke: Object.freeze({ method: "POST", route: GRANT_READ_PATH, action: "revoke" }),
   share: Object.freeze({ method: "POST", route: GRANT_READ_PATH, action: "share-knowledge" }),
   correct: Object.freeze({ method: "POST", route: GRANT_READ_PATH, action: "correct-knowledge" }),

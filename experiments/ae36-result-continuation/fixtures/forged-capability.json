@@ -1,0 +1,5 @@
+{
+  "schema": "samedaydesk.ae36.forged-capability.v1",
+  "note": "Token shape only. It is not an issued receipt for any result.",
+  "token": "aaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}

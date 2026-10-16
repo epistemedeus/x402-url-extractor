@@ -1,0 +1,21 @@
+{
+  "schema": "samedaydesk.ae36.supported-next-actions.v1",
+  "actions": [
+    {
+      "id": "report_result",
+      "charged": false,
+      "dispositions": ["useful", "not_useful"],
+      "bindsTo": "this_result"
+    },
+    {
+      "id": "retrieve_entitled",
+      "charged": false,
+      "bindsTo": "this_result",
+      "mismatchStatus": 409
+    }
+  ],
+  "paidTask": {
+    "id": "new_paid_task",
+    "charged": true
+  }
+}

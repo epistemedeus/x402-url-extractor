@@ -1,0 +1,41 @@
+{
+  "schema": "samedaydesk.ae36.exchange-classes.v1",
+  "http": [
+    {
+      "status": 200,
+      "replay": null,
+      "idempotency": null,
+      "kind": "new_paid_task",
+      "repurchase": true
+    },
+    {
+      "status": 200,
+      "replay": "hit",
+      "idempotency": "replay",
+      "kind": "entitled_retrieval",
+      "repurchase": false
+    },
+    {
+      "status": 409,
+      "replay": null,
+      "idempotency": "conflict",
+      "kind": "rejected",
+      "repurchase": false,
+      "code": "wrong_receipt"
+    }
+  ],
+  "sdk": [
+    {
+      "replayed": false,
+      "newSettlementAttempt": true,
+      "kind": "new_paid_task",
+      "repurchase": true
+    },
+    {
+      "replayed": true,
+      "newSettlementAttempt": false,
+      "kind": "entitled_retrieval",
+      "repurchase": false
+    }
+  ]
+}

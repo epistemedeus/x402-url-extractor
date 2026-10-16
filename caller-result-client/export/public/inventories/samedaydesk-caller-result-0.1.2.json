@@ -1,0 +1,100 @@
+{
+  "members": [
+    {
+      "bytes": 1068,
+      "kind": "file",
+      "path": "LICENSE",
+      "sha256": "c9e2795d29bf1008cbd36ac045bd3c77d537438a51d8dda34e158f4e82a6a27c"
+    },
+    {
+      "bytes": 1405,
+      "kind": "file",
+      "path": "PIN.json",
+      "sha256": "6798597e292bd0c4e0b0d00485d778ed64a6b5623d136a981a6caae0ed23c6bd"
+    },
+    {
+      "bytes": 3734,
+      "kind": "file",
+      "path": "README.md",
+      "sha256": "1d7ff3f5c7abf6e9adfdc6b59857163eb419f33fd4a6f1f84747f77b2a4ceef7"
+    },
+    {
+      "bytes": 608,
+      "kind": "file",
+      "path": "SOURCE-NOTICE.txt",
+      "sha256": "d76564004486036b9440f2f4f9da6afdb7af0d05609ffd293a569b912613bd5f"
+    },
+    {
+      "bytes": 14894,
+      "kind": "file",
+      "path": "bin/cold-consumer.mjs",
+      "sha256": "56441d74f135ee580b231a5310dc0df86b3fc7c872e15c7512be0bcfca51ed59"
+    },
+    {
+      "bytes": 2767,
+      "kind": "file",
+      "path": "bin/recover-mcp.mjs",
+      "sha256": "02d6da2ff46f5d81bcd2a2df5815db657b1f437b831cd430ad7a2eded70ea2ee"
+    },
+    {
+      "bytes": 44557,
+      "kind": "file",
+      "path": "package-lock.json",
+      "sha256": "3fc93f4f5e3fa702be0c631a4c356b027c8c5947c0c8749ec7022b01dcca8fe8"
+    },
+    {
+      "bytes": 799,
+      "kind": "file",
+      "path": "package.json",
+      "sha256": "a820b6515c894e9ddc5b5b743b01411bd0f389fcd8d38fee9d64650dd0c72d16"
+    },
+    {
+      "bytes": 7880,
+      "kind": "file",
+      "path": "src/continuation.mjs",
+      "sha256": "ce328166050ffd15f1b86865780fa28d65f76c970b63b56acfed10e8a05a4aa8"
+    },
+    {
+      "bytes": 1953,
+      "kind": "file",
+      "path": "src/contract.mjs",
+      "sha256": "59c40aafbcac837a99081c9345c84019807edfb3affe83ee2c1dc2e6960e96bc"
+    },
+    {
+      "bytes": 12703,
+      "kind": "file",
+      "path": "src/http-caller-result.mjs",
+      "sha256": "8fe3eee467a3326696d8a1bb7e52d16fe393fb536973e5378f5a6333aef5ee94"
+    },
+    {
+      "bytes": 703,
+      "kind": "file",
+      "path": "src/index.mjs",
+      "sha256": "2a4fc79cc999410c1f16b471c64a58e2f924cf74c53eeafeaa2f89c1e099325c"
+    },
+    {
+      "bytes": 8218,
+      "kind": "file",
+      "path": "src/mcp-caller-result.mjs",
+      "sha256": "eb191b0b9db88ab8ad14f5ae8e0a417903626093a37bbdbfbff5148e09a0318e"
+    },
+    {
+      "bytes": 14274,
+      "kind": "file",
+      "path": "src/mcp-recovery.mjs",
+      "sha256": "749e5b3e9d904887cb4e77893fba6f8630b569b647a41527c35b339e96f00035"
+    },
+    {
+      "bytes": 5484,
+      "kind": "file",
+      "path": "test/client.test.mjs",
+      "sha256": "0e3c7c709f07d09d7a5213881caf471fb8766afe7bd265c9f04a7c3baeaa9702"
+    },
+    {
+      "bytes": 15436,
+      "kind": "file",
+      "path": "test/recovery.test.mjs",
+      "sha256": "230e4815cd1ae23829c69e380ac92589b81bca89f99a057b1a8e92ff8690bbf3"
+    }
+  ]
+}
