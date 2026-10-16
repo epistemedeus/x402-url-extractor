@@ -506,11 +506,15 @@ test("a second HTTP client retrieves a retained receipt with only the returned g
     USEFUL_RESULT_GRANT: grant,
     USEFUL_RESULT_METHOD: "GET",
   }).error, "action_rejected");
-  assert.equal(coldJson({
+  const omittedGrant = coldJson({
     USEFUL_RESULT_BASE: merchant.base,
     USEFUL_RESULT_GRANT: grant,
     USEFUL_RESULT_OMIT_GRANT: "1",
-  }).error, "grant_required");
+  });
+  assert.equal(omittedGrant.error, "grant_required");
+  assert.equal(omittedGrant.status, 401);
+  assert.match(omittedGrant.next, /x-samedaydesk-result-grant/);
+  assert.match(omittedGrant.next, /payment header/);
   assert.equal(coldJson({
     USEFUL_RESULT_BASE: merchant.base,
     USEFUL_RESULT_GRANT: "ab".repeat(32),
@@ -538,6 +542,8 @@ test("a second HTTP client retrieves a retained receipt with only the returned g
   assert.equal(current.customerRetention.internalTokenRequired, false);
   assert.equal(current.customerRetention.credentialInUrl, false);
   assert.equal(current.customerRetention.read.route, "/.well-known/useful-result-reuse/retained");
+  assert.equal(current.customerRetention.read.header, "x-samedaydesk-result-grant");
+  assert.match(current.customerRetention.read.next, /x-samedaydesk-result-grant/);
   assert.equal(current.compatibility.length, 1);
   assert.equal(current.knowledge.length, 0);
   assert.equal(containsAccount(current), false);
