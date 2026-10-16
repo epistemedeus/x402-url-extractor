@@ -4,7 +4,7 @@
 // A later version is written beside them. Existing version bytes are not rewritten.
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -98,20 +98,31 @@ try {
     const needles = rel === "package-lock.json" ? contentForbidden : pathForbidden;
     if (needles.some((needle) => bytes.includes(Buffer.from(needle)))) fail(`private source: ${rel}`);
     writeFileSync(target, bytes);
+    // Explicit modes: the packer's umask must not reach the archive headers.
+    chmodSync(target, rel.startsWith("bin/") ? 0o755 : 0o644);
   }
   const archiveName = `${id}-${version}.tar.gz`;
+  // Every archive header field is fixed so the bytes do not depend on the
+  // packer's umask, clock, user, locale or gzip environment: bin entries are
+  // 0755 and other files 0644 (set by chmod above), ownership is 0/0, mtime is fixed and members are name-sorted.
   const packed = spawnSync("tar", [
     "--sort=name",
     "--mtime=UTC 2026-10-10",
     "--owner=0",
     "--group=0",
     "--numeric-owner",
-    "-czf",
-    archiveName,
+    "-cf",
+    "-",
     ...members,
-  ], { cwd: stage, encoding: "utf8", env: { ...process.env, GZIP: "-n" } });
-  if (packed.status !== 0) fail(packed.stderr || "tar failed");
-  const archiveBytes = readFileSync(path.join(stage, archiveName));
+  ], { cwd: stage, maxBuffer: 4_194_304, env: { PATH: process.env.PATH, LC_ALL: "C" } });
+  if (packed.status !== 0) fail(String(packed.stderr || "tar failed"));
+  const zipped = spawnSync("gzip", ["-n", "-6", "-c"], {
+    input: packed.stdout,
+    maxBuffer: 4_194_304,
+    env: { PATH: process.env.PATH, LC_ALL: "C" },
+  });
+  if (zipped.status !== 0) fail(String(zipped.stderr || "gzip failed"));
+  const archiveBytes = zipped.stdout;
   if (archiveBytes.length > 1_048_576) fail("archive exceeds the public acquisition byte limit");
   const inventory = inventoryArchive(archiveBytes);
   for (const member of inventory) {

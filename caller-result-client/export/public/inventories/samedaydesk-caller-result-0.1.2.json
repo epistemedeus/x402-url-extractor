@@ -25,10 +25,10 @@
       "sha256": "d76564004486036b9440f2f4f9da6afdb7af0d05609ffd293a569b912613bd5f"
     },
     {
-      "bytes": 14650,
+      "bytes": 14894,
       "kind": "file",
       "path": "bin/cold-consumer.mjs",
-      "sha256": "fec6953687d43443d37c0769ffdc600c67d8a84da9e83db4a22e6dac13478ca1"
+      "sha256": "56441d74f135ee580b231a5310dc0df86b3fc7c872e15c7512be0bcfca51ed59"
     },
     {
       "bytes": 2767,
@@ -73,10 +73,10 @@
       "sha256": "2a4fc79cc999410c1f16b471c64a58e2f924cf74c53eeafeaa2f89c1e099325c"
     },
     {
-      "bytes": 7664,
+      "bytes": 8218,
       "kind": "file",
       "path": "src/mcp-caller-result.mjs",
-      "sha256": "286ef8adf64e089b8eb18930a1872c81cbb1d9155cd6add17aeeaa3ee89cef4b"
+      "sha256": "eb191b0b9db88ab8ad14f5ae8e0a417903626093a37bbdbfbff5148e09a0318e"
     },
     {
       "bytes": 14274,

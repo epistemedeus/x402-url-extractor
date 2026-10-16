@@ -35,11 +35,11 @@ function unusedPort() {
   });
 }
 
-test("released caller client entry matches the hosted archive and the shared contract", () => {
+test("draft caller client entry matches the committed draft archive and the shared contract", () => {
   const bytes = readFileSync(path.join(cwd, CALLER_RESULT_CLIENT_COMMITTED_ARCHIVE));
   assert.equal(createHash("sha256").update(bytes).digest("hex"), entry.sha256);
   assert.equal(entry.version, "0.1.2");
-  assert.equal(entry.sha256, "678b7260897f5626cfdc912675e8143b680afda69fd46bf92115d70c7d24c3fb");
+  assert.equal(entry.sha256, "df8cf4e24d437a0d49779cd2fee87b8145c6c8cb171a0b9f68b1c1a2195c322c");
   assert.equal(entry.archiveUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.2/samedaydesk-caller-result-0.1.2.tar.gz");
   assert.equal(entry.descriptorUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.2/descriptor.json");
   assert.equal(entry.sourceUrl, "https://github.com/epistemedeus/x402-url-extractor/tree/429f20a0a082eba712f1feadd47d937ea64e1fe4/caller-result-client");
@@ -129,7 +129,7 @@ test("released caller client entry matches the hosted archive and the shared con
   assert.doesNotMatch(pkg.scripts["test:nonlive"], /caller-result-client\.discovery\.test\.mjs/);
 });
 
-test("a local machine entry serves the released client and an offline caller can install it", { timeout: 240_000 }, async (t) => {
+test("a local machine entry serves the draft client and an offline caller can install it", { timeout: 240_000 }, async (t) => {
   const dataDir = await mkdtemp(path.join(tmpdir(), "caller-discovery-"));
   const port = await unusedPort();
   const child = spawn(process.execPath, ["server.js"], {

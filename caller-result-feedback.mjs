@@ -151,8 +151,22 @@ function acceptance({ disposition, reasonCategory, idempotentReplay }) {
   };
 }
 
+function mcpParentState(parent) {
+  const state = parent?.state;
+  return state === "bound" || state === "unbound" ? state : "pending";
+}
+
+// A bound parent names the one reconciled settlement row it was matched to.
+function mcpParentSettlement(parent) {
+  if (mcpParentState(parent) !== "bound") return null;
+  return {
+    settlementReference: parent.settlementReference,
+    reconciliationId: parent.reconciliationId,
+  };
+}
+
 function mcpAcceptance({ disposition, reasonCategory, idempotentReplay, parent }) {
-  const state = parent === "bound" || parent === "unbound" ? parent : "pending";
+  const state = mcpParentState(parent);
   return {
     statusCode: 200,
     body: {
@@ -160,6 +174,7 @@ function mcpAcceptance({ disposition, reasonCategory, idempotentReplay, parent }
       accepted: true,
       bound: state === "bound",
       parent: state,
+      parentSettlement: mcpParentSettlement(parent),
       idempotentReplay: idempotentReplay === true,
       charged: false,
       payerIdentity: false,
@@ -832,9 +847,9 @@ export function createCallerResultFeedbackService({
 
   async function readMcpParent(event, claims) {
     if (!event || typeof event.settlementReference !== "string" || event.settlementReference !== claims.settlementReference) {
-      return "pending";
+      return { state: "pending" };
     }
-    if (typeof event.settlementAmountAtomic !== "string" || typeof event.settlementPayee !== "string") return "pending";
+    if (typeof event.settlementAmountAtomic !== "string" || typeof event.settlementPayee !== "string") return { state: "pending" };
     const current = await readRegular(path.join(dataDir, "commerce-settlements.ndjson"));
     const rotated = await readRegular(path.join(dataDir, "commerce-settlements.1.ndjson"));
     const rows = [];
@@ -844,8 +859,8 @@ export function createCallerResultFeedbackService({
       if (String(row.settlementReference || "").toLowerCase() !== claims.settlementReference) continue;
       rows.push(row);
     }
-    if (rows.length === 0) return "pending";
-    if (rows.length !== 1) return "unbound";
+    if (rows.length === 0) return { state: "pending" };
+    if (rows.length !== 1) return { state: "unbound" };
     const row = rows[0];
     const sameMoney = row.sourceEventId === event.id
       && row.route === "/mcp"
@@ -856,7 +871,12 @@ export function createCallerResultFeedbackService({
       && String(row.asset || "").toLowerCase() === String(event.settlementCurrency || "").toLowerCase()
       && String(row.treasury || "").toLowerCase() === String(event.settlementPayee || "").toLowerCase()
       && String(row.asset || "").toLowerCase() === PARENT_BASE_USDC;
-    return sameMoney ? "bound" : "unbound";
+    if (!sameMoney || typeof row.reconciliationId !== "string") return { state: "unbound" };
+    return {
+      state: "bound",
+      settlementReference: String(row.settlementReference).toLowerCase(),
+      reconciliationId: row.reconciliationId,
+    };
   }
 
   async function commitMcpStatement(record, token, event, claims) {
@@ -884,7 +904,7 @@ export function createCallerResultFeedbackService({
           ...refusal("conflicting_statement", 409).body,
           retainedDisposition: retained.disposition,
           retainedReasonCategory: retained.reasonCategory,
-          parent,
+          parent: mcpParentState(parent),
         },
       };
     }

@@ -41,12 +41,14 @@ try{
   member(prefix+'/export/client-package.json','package.json');
   member(prefix+'/export/portable.test.mjs','test/portable.test.mjs');
   // Exact installed public dependency from the merchant lock, with its license.
-  const lock=JSON.parse(read(path.join(repo,'package-lock.json')));
-  const locked=lock.packages['node_modules/agent-payment-policy'];
+  // The pinned dependency comes from the lock at the source commit. Later
+  // unrelated lock changes are allowed only if this one entry is unchanged.
+  const lockBytes=run('git',['show',sourceCommit+':package-lock.json'],{cwd:repo});
+  const locked=JSON.parse(lockBytes).packages['node_modules/agent-payment-policy'];
+  const current=JSON.parse(read(path.join(repo,'package-lock.json'))).packages['node_modules/agent-payment-policy'];
   const actual=JSON.parse(read(path.join(repo,'node_modules/agent-payment-policy/package.json')));
   if(locked.version!=='0.12.0'||actual.version!==locked.version||actual.license!=='MIT')die('policy_pin_changed');
-  const lockBytes=run('git',['show',sourceCommit+':package-lock.json'],{cwd:repo});
-  if(!lockBytes.equals(readFileSync(path.join(repo,'package-lock.json'))))die('lock_commit_mismatch');
+  if(JSON.stringify(current)!==JSON.stringify(locked))die('lock_commit_mismatch');
   for(const file of ['core.mjs','LICENSE']){
     const bytes=read(path.join(repo,'node_modules/agent-payment-policy',file));
     const dest=path.join(stage,'vendor/policy',file);mkdirSync(path.dirname(dest),{recursive:true});writeFileSync(dest,bytes);
@@ -56,7 +58,8 @@ try{
     publicDependenciesOnly:true,privateAuthorityIncluded:false,providerExecutionIncluded:false};
   writeFileSync(path.join(stage,'PINS.json'),JSON.stringify(pin,null,2)+'\n');
   const members=transforms.map(x=>x.member).concat(['vendor/policy/core.mjs','vendor/policy/LICENSE','PINS.json']).sort();
-  run('tar',['--sort=name','--mtime=@0','--owner=0','--group=0','--numeric-owner','--format=ustar','-cf',path.join(stage,'archive.tar'),...members],{cwd:stage});
+  // Mode is fixed (0644) so the packer's umask never reaches the archive headers.
+  run('tar',['--sort=name','--mtime=@0','--owner=0','--group=0','--numeric-owner','--mode=a=r,u+w','--format=ustar','-cf',path.join(stage,'archive.tar'),...members],{cwd:stage});
   const bytes=run('gzip',['-n','-c',path.join(stage,'archive.tar')]);
   const inventory=inventoryArchive(bytes);
   if(inventory.length!==members.length||inventory.some(m=>!members.includes(m.path)))die('unexpected_member');

@@ -8,6 +8,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { encodeAbiParameters, encodeEventTopics, getAddress, parseAbiItem } from "viem";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 import { FIXTURE_ADDRESS } from "../../../experiments/morpho-useful-delivery-1005/fixture.mjs";
@@ -18,6 +19,7 @@ import {
   startPaidMcpResult,
 } from "../../../caller-result-client/src/mcp-recovery.mjs";
 import { reportMcpCallerResult } from "../../../caller-result-client/src/mcp-caller-result.mjs";
+import { createCommerceSettlementReconciler } from "../../../commerce-settlement-reconciler.mjs";
 import {
   classifySdkResult,
   discoverSdkNextActions,
@@ -29,6 +31,33 @@ import {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const payer = `0x${"2".repeat(40)}`;
+// The loopback receiver's payTo and the canonical Base USDC asset.
+const treasury = `0x${"b".repeat(40)}`;
+const baseUsdc = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+const transferEvent = parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 value)");
+
+// Chain reader double: answers only for the listed settlement references.
+function receiptFor(specs, { to = treasury } = {}) {
+  const byHash = new Map(specs.map((spec) => [String(spec.hash).toLowerCase(), spec]));
+  return {
+    async getTransactionReceipt({ hash: reference }) {
+      const spec = byHash.get(String(reference).toLowerCase());
+      if (!spec) throw new Error("unavailable");
+      return {
+        status: "success",
+        blockNumber: 1n,
+        logs: [{
+          address: getAddress(baseUsdc),
+          topics: encodeEventTopics({ abi: [transferEvent], eventName: "Transfer", args: { from: getAddress(payer), to: getAddress(to) } }),
+          data: encodeAbiParameters([{ type: "uint256" }], [spec.amount]),
+        }],
+      };
+    },
+    async getBlock() {
+      return { timestamp: 1760000000n };
+    },
+  };
+}
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const listen = (server) => new Promise((resolve, reject) => {
   server.listen(0, "127.0.0.1", () => resolve(server.address().port));
@@ -484,6 +513,64 @@ test("a cold SDK client discovers, reports, and retrieves one result without a s
   assert.equal(coldReport.charged, false);
   assert.equal(counts.settle, 3);
   assert.equal(counts.verify, 3);
+
+  // Before the parent settlement is reconciled the statement stays honestly pending.
+  assert.equal(coldReport.bound, false);
+  assert.equal(coldReport.parent, "pending");
+  assert.equal(coldReport.parentSettlement, null);
+
+  // Reconcile the canonical parent ledger from the merchant's own paid events.
+  const eventText = await readFile(path.join(dataDir, "commerce-events.ndjson"), "utf8");
+  const paidEvents = eventText.split("\n").filter(Boolean).map((line) => JSON.parse(line))
+    .filter((row) => row.result === "paid_success" && typeof row.settlementReference === "string");
+  assert.equal(paidEvents.length >= 2, true);
+  const usefulEvent = paidEvents.find((row) => row.settlementReference === `0x${(2).toString(16).padStart(64, "0")}`);
+  assert.ok(usefulEvent, "useful result paid event");
+  const reconcile = (specs, options) => createCommerceSettlementReconciler({
+    actorSecret: randomBytes(24).toString("hex"),
+    client: receiptFor(specs, options),
+    dataDir,
+    network: "eip155:8453",
+    settlementEvidenceSince: "2020-01-01T00:00:00.000Z",
+    treasury,
+  }).reconcile();
+
+  // Foreign parent: a transfer to another treasury does not reconcile, so the
+  // statement stays pending rather than binding to a foreign settlement.
+  await reconcile([{ hash: usefulEvent.settlementReference, amount: BigInt(usefulEvent.settlementAmountAtomic) }], { to: `0x${"c".repeat(40)}` });
+  const foreignParent = await reportSdkResult(openClient(), capability, { disposition: "useful", reasonCategory: "matched_task" });
+  assert.equal(foreignParent.bound, false);
+  assert.equal(foreignParent.parent, "pending");
+
+  const admitted = await reconcile(paidEvents.map((row) => ({ hash: row.settlementReference, amount: BigInt(row.settlementAmountAtomic) })));
+  assert.equal(admitted.ledger.reconciledSettlements, paidEvents.length);
+  const ledgerRows = (await readFile(path.join(dataDir, "commerce-settlements.ndjson"), "utf8"))
+    .split("\n").filter(Boolean).map((line) => JSON.parse(line));
+  const parentRow = ledgerRows.find((row) => row.sourceEventId === usefulEvent.id);
+  assert.ok(parentRow, "reconciled parent row");
+  const boundReport = await reportSdkResult(openClient(), capability, { disposition: "useful", reasonCategory: "matched_task" });
+  assert.equal(boundReport.accepted, true);
+  assert.equal(boundReport.idempotentReplay, true);
+  assert.equal(boundReport.charged, false);
+  assert.equal(boundReport.bound, true);
+  assert.equal(boundReport.parent, "bound");
+  assert.deepEqual(boundReport.parentSettlement, {
+    settlementReference: usefulEvent.settlementReference,
+    reconciliationId: parentRow.reconciliationId,
+  });
+  const boundNegative = await reportSdkResult(openClient(), negativeCapability, { disposition: "not_useful", reasonCategory: "missing_field" });
+  assert.equal(boundNegative.bound, true);
+  assert.equal(boundNegative.parentSettlement.settlementReference === usefulEvent.settlementReference, false);
+
+  // Ambiguous parent: two reconciled rows for one reference bind to neither.
+  await writeFile(path.join(dataDir, "commerce-settlements.ndjson"), `${ledgerRows.map((row) => JSON.stringify(row)).join("\n")}\n${JSON.stringify({ ...parentRow, reconciliationId: `sddsr_${"0".repeat(40)}` })}\n`);
+  const ambiguous = await reportSdkResult(openClient(), capability, { disposition: "useful", reasonCategory: "matched_task" });
+  assert.equal(ambiguous.accepted, true);
+  assert.equal(ambiguous.bound, false);
+  assert.equal(ambiguous.parent, "unbound");
+  assert.equal(ambiguous.parentSettlement, null);
+  await writeFile(path.join(dataDir, "commerce-settlements.ndjson"), `${ledgerRows.map((row) => JSON.stringify(row)).join("\n")}\n`);
+  assert.equal(counts.settle, 3);
 
   const stored = JSON.parse(await readFile(discoveredOp.checkpoint, "utf8"));
   stored.result.content = [{ type: "text", text: JSON.stringify({ ok: true, tampered: true }) }];

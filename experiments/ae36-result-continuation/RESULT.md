@@ -14,7 +14,7 @@ That missing client integration now ships in caller archive 0.1.2 as `caller-res
 
 (a) Discover the supported next actions `report_result` and `retrieve_entitled`. Both are uncharged and bound to this result. `report_result` accepts `useful` and `not_useful`. `retrieve_entitled` uses mismatch status 409. `new_paid_task` is charged and is not one of those next actions.
 
-(b) Report `useful` or `not_useful` for the exact result. HTTP acceptance is bound to that paid capture. SDK acceptance is bound to the issued capability; the parent settlement ledger stays pending, so the MCP body reports `bound: false` and `parent: pending`. A conflicting statement is refused and the retained disposition stays. A second result takes its own statement.
+(b) Report `useful` or `not_useful` for the exact result. HTTP acceptance is bound to that paid capture. SDK acceptance is bound to the issued capability. Until the canonical settlement reconciler has written exactly one matching row, the MCP body reports `bound: false` and `parent: pending`. After reconciliation the same statement reports `bound: true`, `parent: bound` and `parentSettlement` naming that row's `settlementReference` and `reconciliationId`. A transfer to another treasury stays pending, and two rows for one reference report `parent: unbound`. A conflicting statement is refused and the retained disposition stays. A second result takes its own statement.
 
 (c) Retrieve an already entitled output without a new settlement. HTTP replay returns the same bytes and does not attach a feedback header. SDK `recover_paid_result` returns the stored output, does not run the handler again, and leaves `newPaymentPermitted` false.
 

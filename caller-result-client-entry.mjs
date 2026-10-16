@@ -1,4 +1,4 @@
-// Public discovery record for the released caller-result archive.
+// Public discovery record for the draft caller-result archive (publication: draft-archive).
 // Feedback path, tool, and header stay owned by the shared capability contract.
 // HMAC, journals, and server filenames stay out of this module.
 import { readFileSync } from "node:fs";
@@ -16,7 +16,7 @@ import {
 } from "./caller-result-client/src/contract.mjs";
 
 const SOURCE_COMMIT = "429f20a0a082eba712f1feadd47d937ea64e1fe4";
-const ARCHIVE_SHA256 = "678b7260897f5626cfdc912675e8143b680afda69fd46bf92115d70c7d24c3fb";
+const ARCHIVE_SHA256 = "df8cf4e24d437a0d49779cd2fee87b8145c6c8cb171a0b9f68b1c1a2195c322c";
 const FEEDBACK_ARCHIVE_SHA256 = "3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b";
 const SDK = Object.freeze({
   "@modelcontextprotocol/sdk": "1.30.0",
@@ -176,7 +176,7 @@ export function renderCallerResultClientGuide(entry) {
   const recoveryNames = recovery.exportNames.join(" and ");
   return `## Optional caller client
 
-Feedback is optional and free. Download the released client, install it, and use it only with your existing payment client and an explicit payment authorization. Skipping the statement leaves the purchase. A failed report leaves the delivered result. This client is not an npm package.
+Feedback is optional and free. Download the draft-archive client, verify its sha256, install it, and use it only with your existing payment client and an explicit payment authorization. Skipping the statement leaves the purchase. A failed report leaves the delivered result. This client is not an npm package.
 
 Archive: ${entry.archiveUrl}
 sha256: ${entry.sha256}
