@@ -8,7 +8,7 @@ The producer base exercised here is `82a51274e7dc7a7600b90f1317a6be6b28442592`. 
 
 The current SDK recovery client can discover the free tools, report a statement, retrieve a stored outcome, and label a paid call against a replay. The current HTTP client can bind and report feedback only. It had no entitled-retrieval call and no shared classification of a new paid task against a replay.
 
-That missing client integration is finished only in this directory. Payment, journals, and bearers stay in the current modules. Entitled retrieval does not reissue a feedback bearer. A report uses the result the client still holds.
+That missing client integration now ships in caller archive 0.1.2 as `caller-result-client/src/continuation.mjs`. This directory re-exports that module for the conformance tests. Payment, journals, and bearers stay in the current modules. Entitled retrieval does not reissue a feedback bearer. A report uses the result the client still holds.
 
 ## What a cold client can do
 

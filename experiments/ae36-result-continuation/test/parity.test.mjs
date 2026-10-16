@@ -43,11 +43,14 @@ const sdkDiscovery = {
 };
 
 test("current source advertises the same next actions on HTTP and SDK", async () => {
-  const source = await readFile(new URL("../src/cold-client.mjs", import.meta.url), "utf8");
-  assert.equal(source.includes("server.js"), false);
-  assert.equal(source.includes("caller-result-feedback.mjs"), false);
-  assert.equal(source.includes("bindMerchantHttpDeliveryContracts"), false);
-  assert.equal(source.includes("experiments/ae19-paid-continuation"), false);
+  const source = await readFile(new URL("../../../caller-result-client/src/continuation.mjs", import.meta.url), "utf8");
+  const reexport = await readFile(new URL("../src/cold-client.mjs", import.meta.url), "utf8");
+  for (const text of [source, reexport]) {
+    assert.equal(text.includes("server.js"), false);
+    assert.equal(text.includes("caller-result-feedback.mjs"), false);
+    assert.equal(text.includes("bindMerchantHttpDeliveryContracts"), false);
+    assert.equal(text.includes("experiments/ae19-paid-continuation"), false);
+  }
   const http = discoverHttpNextActions(httpDiscovery);
   const sdk = discoverSdkNextActions(sdkDiscovery);
   assert.equal(matchesSupportedNextActions(http, expected), true);

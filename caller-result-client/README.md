@@ -4,7 +4,7 @@ Optional free statement for one paid result. Unpack the archive, install the pin
 
 ```bash
 mkdir samedaydesk-caller-result
-tar -xzf samedaydesk-caller-result-0.1.1.tar.gz -C samedaydesk-caller-result
+tar -xzf samedaydesk-caller-result-0.1.2.tar.gz -C samedaydesk-caller-result
 cd samedaydesk-caller-result
 npm ci --ignore-scripts
 ```
@@ -43,6 +43,16 @@ node bin/recover-mcp.mjs resume checkpoint.json grant.json
 
 ```js
 import { startPaidMcpResult, resumePaidMcpResult } from "samedaydesk-caller-result/recovery";
+```
+
+Optional continuation of one already delivered result is in this archive. It discovers the uncharged next actions `report_result` and `retrieve_entitled`, retrieves an entitled output without a new settlement, and separates that retrieval from a charged `new_paid_task`. It does not create a wallet, sign, or settle again.
+
+```js
+import {
+  discoverHttpNextActions,
+  discoverSdkNextActions,
+  retrieveEntitledHttp,
+} from "samedaydesk-caller-result/continuation";
 ```
 
 Pinned dependencies: `@modelcontextprotocol/sdk` 1.30.0 and `@x402/mcp` 2.16.0. License MIT. This package is private. Publication of an npm tarball is a separate Root action and is not required to install the archive.

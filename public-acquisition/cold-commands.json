@@ -258,6 +258,29 @@
           ]
         }
       ]
+    },
+    {
+      "id": "samedaydesk-caller-result",
+      "version": "0.1.2",
+      "filename": "samedaydesk-caller-result-0.1.2.tar.gz",
+      "cwd": ".",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "--input-type=module",
+            "-e",
+            "import { existsSync, readFileSync } from 'node:fs'; const pkg = JSON.parse(readFileSync('package.json','utf8')); const recovery = existsSync('src/mcp-recovery.mjs') && existsSync('bin/recover-mcp.mjs'); const continuation = existsSync('src/continuation.mjs'); if (pkg.name !== 'samedaydesk-caller-result' || pkg.private !== true || continuation !== true) process.exit(1); process.stdout.write(JSON.stringify({ name: pkg.name, version: pkg.version, recovery, continuation, paymentSent: false, charged: false }));"
+          ],
+          "stdoutIncludes": [
+            "\"version\":\"0.1.2\"",
+            "\"recovery\":true",
+            "\"continuation\":true",
+            "\"paymentSent\":false",
+            "\"charged\":false"
+          ]
+        }
+      ]
     }
   ]
 }

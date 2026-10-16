@@ -38,10 +38,10 @@ function unusedPort() {
 test("released caller client entry matches the hosted archive and the shared contract", () => {
   const bytes = readFileSync(path.join(cwd, CALLER_RESULT_CLIENT_COMMITTED_ARCHIVE));
   assert.equal(createHash("sha256").update(bytes).digest("hex"), entry.sha256);
-  assert.equal(entry.version, "0.1.1");
-  assert.equal(entry.sha256, "693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3");
-  assert.equal(entry.archiveUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/samedaydesk-caller-result-0.1.1.tar.gz");
-  assert.equal(entry.descriptorUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.1/descriptor.json");
+  assert.equal(entry.version, "0.1.2");
+  assert.equal(entry.sha256, "678b7260897f5626cfdc912675e8143b680afda69fd46bf92115d70c7d24c3fb");
+  assert.equal(entry.archiveUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.2/samedaydesk-caller-result-0.1.2.tar.gz");
+  assert.equal(entry.descriptorUrl, "https://neomorphic.io/downloads/samedaydesk-caller-result/0.1.2/descriptor.json");
   assert.equal(entry.sourceUrl, "https://github.com/epistemedeus/x402-url-extractor/tree/72ef93bd0350b8bcd67a6ec0f048515d0533f199/caller-result-client");
   assert.match(entry.sourceUrl, /^https:\/\/github\.com\/epistemedeus\/x402-url-extractor\/tree\/[0-9a-f]{40}\/caller-result-client$/);
   const feedbackBytes = readFileSync(path.join(cwd, CALLER_RESULT_CLIENT_FEEDBACK_ARCHIVE.relativePath));
@@ -51,6 +51,8 @@ test("released caller client entry matches the hosted archive and the shared con
   assert.equal(entry.feedbackArchive.containsRecovery, false);
   assert.equal(entry.modules.recovery.packageExport, "samedaydesk-caller-result/recovery");
   assert.equal(entry.modules.recovery.bin, "bin/recover-mcp.mjs");
+  assert.equal(entry.modules.continuation.packageExport, "samedaydesk-caller-result/continuation");
+  assert.equal(entry.modules.continuation.specifier, "./src/continuation.mjs");
   assert.equal(entry.optional, true);
   assert.equal(entry.charged, false);
   assert.equal(entry.paymentRequired, false);
@@ -66,17 +68,21 @@ test("released caller client entry matches the hosted archive and the shared con
     "caller-result-client/src/http-caller-result.mjs",
     "caller-result-client/src/mcp-caller-result.mjs",
     "caller-result-client/src/mcp-recovery.mjs",
+    "caller-result-client/src/continuation.mjs",
     "caller-result-client/src/index.mjs",
     "caller-result-client/bin/cold-consumer.mjs",
     "caller-result-client/bin/recover-mcp.mjs",
   ]);
   assert.equal(pin.recovery.optional, true);
   assert.equal(pin.recovery.charged, false);
+  assert.equal(pin.continuation.optional, true);
+  assert.equal(pin.continuation.charged, false);
   const listed = spawnSync("tar", ["-tzf", path.join(cwd, CALLER_RESULT_CLIENT_COMMITTED_ARCHIVE)], { encoding: "utf8" });
   assert.equal(listed.status, 0, listed.stderr);
   assert.equal(listed.stdout.includes("caller-result-client-entry.mjs"), false);
   assert.equal(listed.stdout.includes("server.js"), false);
   assert.equal(listed.stdout.includes("src/mcp-recovery.mjs"), true);
+  assert.equal(listed.stdout.includes("src/continuation.mjs"), true);
   assert.equal(listed.stdout.includes("bin/recover-mcp.mjs"), true);
   const feedbackListed = spawnSync("tar", ["-tzf", path.join(cwd, CALLER_RESULT_CLIENT_FEEDBACK_ARCHIVE.relativePath)], { encoding: "utf8" });
   assert.equal(feedbackListed.status, 0, feedbackListed.stderr);

@@ -244,7 +244,7 @@ test("installed caller consumer reaches the mounted parent without merchant sour
   const frozenArchive = committed.assets.find((asset) => asset.role === "archive" && asset.version === "0.1.0");
   const committedArchive = committed.assets.find((asset) => asset.role === "archive" && asset.version === fresh.version);
   assert.equal(frozenArchive.sha256, "3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b");
-  assert.equal(fresh.version, "0.1.1");
+  assert.equal(fresh.version, "0.1.2");
   assert.equal(committedArchive.sha256, fresh.archiveSha256);
   assert.notEqual(fresh.archiveSha256, frozenArchive.sha256);
   const archive = loaded.files.get(fresh.relativePath);

@@ -16,7 +16,7 @@ import {
 } from "./caller-result-client/src/contract.mjs";
 
 const SOURCE_COMMIT = "72ef93bd0350b8bcd67a6ec0f048515d0533f199";
-const ARCHIVE_SHA256 = "693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3";
+const ARCHIVE_SHA256 = "678b7260897f5626cfdc912675e8143b680afda69fd46bf92115d70c7d24c3fb";
 const FEEDBACK_ARCHIVE_SHA256 = "3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b";
 const SDK = Object.freeze({
   "@modelcontextprotocol/sdk": "1.30.0",
@@ -55,6 +55,7 @@ if (clientPackage.name !== "samedaydesk-caller-result") diverged("package");
 if (clientPackage.exports["./mcp"] !== "./src/mcp-caller-result.mjs") diverged("mcp_export_map");
 if (clientPackage.exports["./recovery"] !== "./src/mcp-recovery.mjs") diverged("recovery_export_map");
 if (clientPackage.bin?.["recover-mcp"] !== "bin/recover-mcp.mjs") diverged("bin");
+if (clientPackage.exports["./continuation"] !== "./src/continuation.mjs") diverged("continuation_export_map");
 
 const descriptorUrl = new URL(ARCHIVE_URL);
 descriptorUrl.pathname = descriptorUrl.pathname.replace(/[^/]+$/, "descriptor.json");
@@ -102,6 +103,11 @@ export const CALLER_RESULT_CLIENT_ENTRY = Object.freeze({
       packageExport: "samedaydesk-caller-result/recovery",
       bin: "bin/recover-mcp.mjs",
     }),
+    continuation: Object.freeze({
+      exportNames: Object.freeze(["discoverHttpNextActions", "discoverSdkNextActions", "retrieveEntitledHttp"]),
+      specifier: "./src/continuation.mjs",
+      packageExport: "samedaydesk-caller-result/continuation",
+    }),
   }),
   feedback: Object.freeze({
     optional: true,
@@ -131,6 +137,7 @@ export function renderCallerResultClientGuide(entry) {
   const mcp = entry.modules?.mcp;
   const http = entry.modules?.http;
   const recovery = entry.modules?.recovery;
+  const continuation = entry.modules?.continuation;
   const feedback = entry.feedback;
   if (entry.optional !== true || entry.charged !== false || entry.paymentRequired !== false) {
     diverged("payment");
@@ -149,6 +156,11 @@ export function renderCallerResultClientGuide(entry) {
     || recovery.bin !== "bin/recover-mcp.mjs"
     || recovery.exportNames?.join(",") !== "startPaidMcpResult,resumePaidMcpResult") {
     diverged("recovery_export");
+  }
+  if (continuation?.packageExport !== "samedaydesk-caller-result/continuation"
+    || continuation.specifier !== "./src/continuation.mjs"
+    || continuation.exportNames?.join(",") !== "discoverHttpNextActions,discoverSdkNextActions,retrieveEntitledHttp") {
+    diverged("continuation_export");
   }
   if (feedback?.optional !== true || feedback?.charged !== false || feedback?.usefulness !== "unknown") {
     diverged("feedback");
@@ -181,9 +193,12 @@ ${entry.install.join("\n")}
 import { ${mcp.exportName} } from "${mcp.specifier}";
 import { ${http.exportNames.join(", ")} } from "${http.specifier}";
 import { ${recovery.exportNames.join(", ")} } from "${recovery.specifier}";
+import { ${continuation.exportNames.join(", ")} } from "${continuation.specifier}";
 \`\`\`
 
-Import ${mcp.exportName} from ${mcp.specifier} (package export ${mcp.packageExport}). Import ${httpNames} from ${http.specifier} (package export ${http.packageExport}). Import ${recoveryNames} from ${recovery.specifier} (package export ${recovery.packageExport}).
+Import ${mcp.exportName} from ${mcp.specifier} (package export ${mcp.packageExport}). Import ${httpNames} from ${http.specifier} (package export ${http.packageExport}). Import ${recoveryNames} from ${recovery.specifier} (package export ${recovery.packageExport}). Import ${continuation.exportNames.join(", ")} from ${continuation.specifier} (package export ${continuation.packageExport}).
+
+Optional continuation of one delivered result uses this archive. \`report_result\` and \`retrieve_entitled\` are uncharged and bound to that result. A charged \`new_paid_task\` is not one of those next actions. Entitled retrieval does not settle again.
 
 The ${entry.feedbackArchive.version} archive does not contain ${recovery.specifier} or ${recovery.bin}. Optional recovery of an already authorized paid result uses this archive. In a second process, with the original merchant checkout absent, run \`node ${recovery.bin} start operation.json checkpoint.json grant.json\` or \`node ${recovery.bin} resume checkpoint.json grant.json\`. Exit 0 is a decoded retained result. Exit 2 is unresolved or denied. The command does not create a wallet, sign, or settle again.
 

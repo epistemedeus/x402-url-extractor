@@ -314,7 +314,7 @@ test("caller generation keeps the sealed feedback archive and matches the curren
   assert.equal(fresh.archiveSha256, entry.sha256);
   assert.equal(fresh.version, entry.version);
   assert.equal(sha256(frozen), FEEDBACK_SHA256);
-  const inventory = JSON.parse(await readFile(path.join(publicDir, "inventories/samedaydesk-caller-result-0.1.1.json"), "utf8"));
+  const inventory = JSON.parse(await readFile(path.join(publicDir, `inventories/samedaydesk-caller-result-${entry.version}.json`), "utf8"));
   assert.equal(inventory.members.length, current.inventory.memberCount);
   for (const member of inventory.members) {
     const source = await readFile(path.join(cwd, "caller-result-client", member.path));
@@ -323,6 +323,7 @@ test("caller generation keeps the sealed feedback archive and matches the curren
   }
   assert.equal(inventory.members.some((member) => member.path === "src/mcp-recovery.mjs"), true);
   assert.equal(inventory.members.some((member) => member.path === "bin/recover-mcp.mjs"), true);
+  assert.equal(inventory.members.some((member) => member.path === "src/continuation.mjs"), true);
   const feedbackInventory = JSON.parse(await readFile(path.join(publicDir, "inventories/samedaydesk-caller-result-0.1.0.json"), "utf8"));
   assert.equal(feedbackInventory.members.some((member) => member.path.includes("mcp-recovery") || member.path.includes("recover-mcp")), false);
   } finally {
@@ -479,6 +480,9 @@ test("advertised caller archive installs recovery with the merchant checkout abs
   assert.equal(provenance.recovery.optional, true);
   assert.equal(provenance.recovery.charged, false);
   assert.equal(provenance.recovery.packageExport, "./recovery");
+  assert.equal(provenance.continuation.optional, true);
+  assert.equal(provenance.continuation.charged, false);
+  assert.equal(provenance.continuation.packageExport, "./continuation");
 
   const work = await mkdtemp(path.join(tmpdir(), "caller-public-install-"));
   t.after(() => rm(work, { recursive: true, force: true }));
@@ -521,7 +525,9 @@ test("advertised caller archive installs recovery with the merchant checkout abs
   assert.equal(pkg.version, entry.version);
   assert.equal(pkg.exports["./mcp"], "./src/mcp-caller-result.mjs");
   assert.equal(pkg.exports["./recovery"], "./src/mcp-recovery.mjs");
+  assert.equal(pkg.exports["./continuation"], "./src/continuation.mjs");
   assert.equal(pkg.bin["recover-mcp"], "bin/recover-mcp.mjs");
+  assert.equal(existsSync(path.join(unpacked, "src/continuation.mjs")), true);
   assert.deepEqual(pkg.dependencies, entry.sdk);
   const sdk = JSON.parse(await readFile(path.join(unpacked, "node_modules/@modelcontextprotocol/sdk/package.json"), "utf8"));
   const x402 = JSON.parse(await readFile(path.join(unpacked, "node_modules/@x402/mcp/package.json"), "utf8"));

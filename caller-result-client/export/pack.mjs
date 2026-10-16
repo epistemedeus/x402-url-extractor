@@ -29,6 +29,7 @@ const members = [
   "src/http-caller-result.mjs",
   "src/mcp-caller-result.mjs",
   "src/mcp-recovery.mjs",
+  "src/continuation.mjs",
   "src/index.mjs",
   "bin/cold-consumer.mjs",
   "bin/recover-mcp.mjs",
@@ -47,7 +48,10 @@ const pathForbidden = [...contentForbidden, "node_modules"];
 const FROZEN_ARCHIVE_SHA256 = {
   "samedaydesk-caller-result/0.1.0/samedaydesk-caller-result-0.1.0.tar.gz":
     "3c134598697aadb038a98bfee4ad6e82472df34d3fa325e19507a33ed5dc974b",
+  "samedaydesk-caller-result/0.1.1/samedaydesk-caller-result-0.1.1.tar.gz":
+    "693652564f9cd587e4c269ff4da4653c19b1c68f42c3debe5241f34f42bf9de3",
 };
+const FROZEN_VERSIONS = new Set(["0.1.0", "0.1.1"]);
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -81,6 +85,7 @@ if (!/^\d+\.\d+\.\d+$/.test(version)) fail(`package version is not a release tri
 if (clientPackage.name !== id) fail(`package name is not ${id}`);
 if (clientPackage.exports?.["./mcp"] !== "./src/mcp-caller-result.mjs") fail("mcp export is not the feedback module");
 if (clientPackage.exports?.["./recovery"] !== "./src/mcp-recovery.mjs") fail("recovery export is missing");
+if (clientPackage.exports?.["./continuation"] !== "./src/continuation.mjs") fail("continuation export is missing");
 if (clientPackage.bin?.["recover-mcp"] !== "bin/recover-mcp.mjs") fail("recover-mcp bin is missing");
 assertFrozenArchives();
 
@@ -125,6 +130,8 @@ try {
   const pin = JSON.parse(readFileSync(path.join(pkg, "PIN.json"), "utf8"));
   if (pin.version !== version) fail("PIN version does not match package.json");
   if (pin.recovery?.optional !== true || pin.recovery?.charged !== false) fail("PIN recovery is not optional and free");
+  if (pin.continuation?.optional !== true || pin.continuation?.charged !== false) fail("PIN continuation is not optional and free");
+  if (pin.continuation?.packageExport !== "./continuation") fail("PIN continuation export is missing");
   const provenance = {
     schema: "samedaydesk.caller-result-client.provenance.v1",
     package: id,
@@ -143,9 +150,10 @@ try {
     dependencies: pin.dependencies,
     contract: pin.contract,
     recovery: pin.recovery,
+    continuation: pin.continuation,
     node: pin.node,
     publication: "draft-archive",
-    note: "Download originalUrl and verify sha256 before install. npm publication is separate. Optional recovery is included.",
+    note: "Download originalUrl and verify sha256 before install. npm publication is separate. Optional recovery and optional continuation are included.",
   };
   const provenanceBytes = Buffer.from(`${JSON.stringify(provenance, null, 2)}\n`);
   const licenseBytes = readFileSync(path.join(pkg, "LICENSE"));
@@ -189,9 +197,9 @@ try {
   const existing = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, "utf8")) : null;
   const retained = (existing?.assets || []).filter((asset) => asset.version !== version);
   for (const previous of existing?.assets || []) {
-    if (previous.version !== "0.1.0") continue;
+    if (!FROZEN_VERSIONS.has(previous.version)) continue;
     const kept = retained.find((item) => item.relativePath === previous.relativePath);
-    if (JSON.stringify(kept) !== JSON.stringify(previous)) fail(`refusing to rewrite 0.1.0 descriptor ${previous.relativePath}`);
+    if (JSON.stringify(kept) !== JSON.stringify(previous)) fail(`refusing to rewrite ${previous.version} descriptor ${previous.relativePath}`);
   }
   const created = [
     asset("archive", archiveName, archiveBytes, {
@@ -221,7 +229,7 @@ try {
     measuredSavings: false,
     independentDemand: false,
     sourceQualification: "unknown",
-    note: "Draft caller-result consumer. Version 0.1.0 is feedback only and does not include recovery. The current archive download is originalUrl and adds optional recovery. npm publication is a separate Root action.",
+    note: "Draft caller-result consumer. Version 0.1.0 is feedback only and does not include recovery. Version 0.1.1 adds optional recovery. The current archive download is originalUrl and adds optional continuation of one delivered result. npm publication is a separate Root action.",
     assets: [...retained, ...created],
   };
   const manifestBytes = Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`);
