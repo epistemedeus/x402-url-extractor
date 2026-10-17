@@ -472,6 +472,14 @@ test("mounted commerce-demand keeps the same producer populations", async () => 
     assert.equal(populations.unattributedExternal.independentDemand, false);
     assert.equal(demand.independentPaidSuccessActors, 0);
     assert.equal(demand.trafficProvenance.historicalBackfill, false);
+    assert.equal(demand.paymentEvidence.lineage.schemaVersion, "samedaydesk.commerce-settlement-lineage.v1");
+    assert.equal(demand.paymentEvidence.lineage.historicalBackfill, false);
+    assert.equal(demand.paymentEvidence.lineage.actorCorrespondence, "unproven");
+    assert.equal(demand.paymentEvidence.lineage.customerAttribution, null);
+    assert.equal(demand.paymentEvidence.lineage.usefulness, "unknown");
+    assert.equal(demand.paymentEvidence.lineage.canonicalChainReplay, false);
+    assert.equal(demand.paymentEvidence.customerPlane.attributableCustomerCount, null);
+    assert.equal(/0x[0-9a-fA-F]{64}/.test(demandText), false);
     assert.equal(demandText.includes(TOKEN), false);
     assert.equal(demandText.includes("claimed-not-proven"), false);
     const stored = await readJsonLines(path.join(dataDir, "commerce-events.ndjson"));

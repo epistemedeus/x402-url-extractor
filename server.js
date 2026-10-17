@@ -74,6 +74,9 @@ import { createCommerceTrust } from "./commerce-trust.mjs";
 import {
   buildCommercePaymentEvidenceReadout,
   commercePaymentEvidenceOutputSchema,
+  lineageAdmittedOf,
+  lineageEventsOf,
+  lineageProspectiveOf,
 } from "./commerce-payment-evidence.mjs";
 import {
   commerceSettlementUnitOutputSchema,
@@ -896,12 +899,17 @@ app.get("/v0/commerce-demand.json", async (req, res) => {
       commerceTelemetry.snapshot({ days }),
       commerceSettlementReconciler?.status() || Promise.resolve({ enabled: false }),
     ]);
+    const settlementUnit = settlementReconciliation.settlementUnit ?? unprojectedSettlementUnit();
+    const prospectiveDelivery = settlementReconciliation.prospectiveDelivery ?? absentProspectiveDelivery();
     const paymentEvidence = buildCommercePaymentEvidenceReadout({
       eventSnapshot: snapshot,
       settlementReconciliation,
+      lineageInputs: {
+        events: lineageEventsOf(snapshot),
+        admitted: lineageAdmittedOf(settlementReconciliation),
+        prospective: lineageProspectiveOf(prospectiveDelivery),
+      },
     });
-    const settlementUnit = settlementReconciliation.settlementUnit ?? unprojectedSettlementUnit();
-    const prospectiveDelivery = settlementReconciliation.prospectiveDelivery ?? absentProspectiveDelivery();
     res.set("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     return res.json({ ...snapshot, paymentEvidence, settlementReconciliation, settlementUnit, prospectiveDelivery });
   } catch (error) {
