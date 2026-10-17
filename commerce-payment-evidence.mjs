@@ -230,6 +230,9 @@ function commerceSettlementLineageSchema() {
     "incompleteCoverageIsNotHistoricalZero",
     "noHistoricalBackfill",
     "populationsAreNotSummed",
+    "lossyAdmissionIsNotCompleteCorrespondence",
+    "laterExternalObservationIsNotRequestedCoverage",
+    "incompleteProspectiveCohortIsUnknown",
   ];
   return {
     type: "object",
@@ -239,6 +242,9 @@ function commerceSettlementLineageSchema() {
       historicalBackfill: { type: "boolean", const: false },
       population: { type: "string", enum: [POPULATION, "unreceived"] },
       requestedWindowCoverage: nullable({ type: "string" }),
+      externalObservationStart: nullable({ type: "string" }),
+      externalObservationCoverage: nullable({ type: "string" }),
+      externalObservationCoversRequestedWindow: nullable({ type: "boolean" }),
       settlementBaselineCoversWindow: nullable({ type: "boolean" }),
       paidSuccessEvents: nullableNonnegativeIntegerSchema(),
       paidSuccessActors: nullableNonnegativeIntegerSchema(),
@@ -246,6 +252,7 @@ function commerceSettlementLineageSchema() {
       eventReferencesMissing: nullableNonnegativeIntegerSchema(),
       duplicateEventReferences: nullableNonnegativeIntegerSchema(),
       duplicateAdmittedReferences: nullableNonnegativeIntegerSchema(),
+      admittedUnreadableLines: nullableNonnegativeIntegerSchema(),
       eventReferencesAdmittedInWindow: nullableNonnegativeIntegerSchema(),
       eventReferencesAdmittedOutsideWindow: nullableNonnegativeIntegerSchema(),
       eventReferencesAdmittedClockAbsent: nullableNonnegativeIntegerSchema(),
@@ -309,6 +316,9 @@ function commerceSettlementLineageSchema() {
       "historicalBackfill",
       "population",
       "requestedWindowCoverage",
+      "externalObservationStart",
+      "externalObservationCoverage",
+      "externalObservationCoversRequestedWindow",
       "settlementBaselineCoversWindow",
       "paidSuccessEvents",
       "paidSuccessActors",
@@ -316,6 +326,7 @@ function commerceSettlementLineageSchema() {
       "eventReferencesMissing",
       "duplicateEventReferences",
       "duplicateAdmittedReferences",
+      "admittedUnreadableLines",
       "eventReferencesAdmittedInWindow",
       "eventReferencesAdmittedOutsideWindow",
       "eventReferencesAdmittedClockAbsent",
@@ -448,6 +459,17 @@ function normalizeEvents(value) {
     windowStartMs,
     windowEndMs,
     windowCoverage: typeof value.windowCoverage === "string" ? value.windowCoverage : null,
+    externalObservationStart: typeof value.externalObservationStart === "string"
+      ? value.externalObservationStart
+      : null,
+    externalObservationCoverage: typeof value.externalObservationCoverage === "string"
+      ? value.externalObservationCoverage
+      : null,
+    externalObservationCoversRequestedWindow: value.externalObservationCoversRequestedWindow === true
+      ? true
+      : value.externalObservationCoversRequestedWindow === false
+        ? false
+        : null,
     settlementBaseline: typeof value.settlementBaseline === "string" ? value.settlementBaseline : null,
     rows: value.rows.map(normalizeEventRow),
   };
@@ -509,6 +531,9 @@ function lineageBoundaries() {
     incompleteCoverageIsNotHistoricalZero: true,
     noHistoricalBackfill: true,
     populationsAreNotSummed: true,
+    lossyAdmissionIsNotCompleteCorrespondence: true,
+    laterExternalObservationIsNotRequestedCoverage: true,
+    incompleteProspectiveCohortIsUnknown: true,
     canonicalChainReplay: false,
   };
 }
@@ -519,6 +544,9 @@ function lineageResult(values) {
     historicalBackfill: false,
     population: values.population,
     requestedWindowCoverage: values.requestedWindowCoverage ?? null,
+    externalObservationStart: values.externalObservationStart ?? null,
+    externalObservationCoverage: values.externalObservationCoverage ?? null,
+    externalObservationCoversRequestedWindow: values.externalObservationCoversRequestedWindow ?? null,
     settlementBaselineCoversWindow: values.settlementBaselineCoversWindow ?? null,
     paidSuccessEvents: values.paidSuccessEvents ?? null,
     paidSuccessActors: values.paidSuccessActors ?? null,
@@ -526,6 +554,7 @@ function lineageResult(values) {
     eventReferencesMissing: values.eventReferencesMissing ?? null,
     duplicateEventReferences: values.duplicateEventReferences ?? null,
     duplicateAdmittedReferences: values.duplicateAdmittedReferences ?? null,
+    admittedUnreadableLines: values.admittedUnreadableLines ?? null,
     eventReferencesAdmittedInWindow: values.eventReferencesAdmittedInWindow ?? null,
     eventReferencesAdmittedOutsideWindow: values.eventReferencesAdmittedOutsideWindow ?? null,
     eventReferencesAdmittedClockAbsent: values.eventReferencesAdmittedClockAbsent ?? null,
@@ -610,23 +639,54 @@ function prospectiveForCohort(records, cohort) {
   };
 }
 
+// Admission already drops repeated references and keeps malformed lines on the
+// summary. The cut carries both so a deduplicated row list cannot become
+// one_to_one. A supplied array is that caller's whole population.
+export function lineageAdmissionCut(admission) {
+  const rows = Array.isArray(admission?.admitted) ? admission.admitted.slice() : [];
+  return Object.freeze({
+    rows: Object.freeze(rows),
+    duplicateReferencesIgnored: nonnegativeInteger(admission?.duplicateReferencesIgnored),
+    invalidLines: nonnegativeInteger(admission?.summary?.invalidLines),
+  });
+}
+
+function admissionInput(value) {
+  if (Array.isArray(value)) {
+    return {
+      rows: value.map(normalizeAdmittedRow),
+      duplicateReferencesIgnored: 0,
+      invalidLines: 0,
+    };
+  }
+  if (!value || typeof value !== "object" || !Array.isArray(value.rows)) return null;
+  return {
+    rows: value.rows.map(normalizeAdmittedRow),
+    duplicateReferencesIgnored: nonnegativeInteger(value.duplicateReferencesIgnored),
+    invalidLines: nonnegativeInteger(value.invalidLines),
+  };
+}
+
+function admittedDuplicateCount(admission, indexedDuplicates) {
+  if (admission.duplicateReferencesIgnored === null) return null;
+  return indexedDuplicates + admission.duplicateReferencesIgnored;
+}
+
 export function buildCommerceSettlementLineage(lineageInputs = {}) {
   const events = normalizeEvents(lineageInputs?.events);
-  const admittedRows = Array.isArray(lineageInputs?.admitted)
-    ? lineageInputs.admitted.map(normalizeAdmittedRow)
-    : null;
+  const admission = admissionInput(lineageInputs?.admitted);
   const prospectiveRecords = Array.isArray(lineageInputs?.prospective) ? lineageInputs.prospective : null;
   if (!events) {
-    const admittedOnly = admittedRows
-      ? indexAdmitted(admittedRows)
-      : null;
-    return unreceivedLineage(admittedRows ? {
-      duplicateAdmittedReferences: admittedOnly.duplicateAdmittedReferences,
-      admittedClockAbsent: admittedRows.filter((row) => {
+    if (!admission) return unreceivedLineage();
+    const admittedOnly = indexAdmitted(admission.rows);
+    return unreceivedLineage({
+      duplicateAdmittedReferences: admittedDuplicateCount(admission, admittedOnly.duplicateAdmittedReferences),
+      admittedUnreadableLines: admission.invalidLines,
+      admittedClockAbsent: admission.rows.filter((row) => {
         if (row.reference && admittedOnly.byReference.get(row.reference) !== row) return false;
         return row.timestamp == null;
       }).length,
-    } : {});
+    });
   }
 
   const baselineMs = instant(events.settlementBaseline);
@@ -653,6 +713,9 @@ export function buildCommerceSettlementLineage(lineageInputs = {}) {
   const eventSide = {
     population: POPULATION,
     requestedWindowCoverage: events.windowCoverage,
+    externalObservationStart: events.externalObservationStart,
+    externalObservationCoverage: events.externalObservationCoverage,
+    externalObservationCoversRequestedWindow: events.externalObservationCoversRequestedWindow,
     settlementBaselineCoversWindow,
     paidSuccessEvents: events.rows.length,
     paidSuccessActors: events.paidSuccessActors,
@@ -660,14 +723,17 @@ export function buildCommerceSettlementLineage(lineageInputs = {}) {
     eventReferencesMissing,
     duplicateEventReferences,
   };
-  if (!admittedRows) {
+  if (!admission) {
     return lineageResult({
       ...eventSide,
       referenceCorrespondence: "unreceived",
     });
   }
 
-  const { byReference, duplicateAdmittedReferences } = indexAdmitted(admittedRows);
+  const indexed = indexAdmitted(admission.rows);
+  const { byReference } = indexed;
+  const duplicateAdmittedReferences = admittedDuplicateCount(admission, indexed.duplicateAdmittedReferences);
+  const admittedRows = admission.rows;
   const placed = [
     ...byReference.values(),
     ...admittedRows.filter((row) => !row.reference),
@@ -724,12 +790,17 @@ export function buildCommerceSettlementLineage(lineageInputs = {}) {
     payerContinuity[member.admitted.payerContinuity] += 1;
     discoverySourceKind[discoveryKindFor(member.eventRows, member.admitted)] += 1;
   }
+  const externalObservationComplete = events.externalObservationCoversRequestedWindow === true
+    && events.externalObservationCoverage === COMPLETE;
+  const admissionIntegrityComplete = admission.invalidLines === 0
+    && duplicateAdmittedReferences === 0;
   const oneToOne = events.windowCoverage === COMPLETE
+    && externalObservationComplete
     && settlementBaselineCoversWindow
+    && admissionIntegrityComplete
     && admittedClockAbsent === 0
     && eventReferencesMissing === 0
     && duplicateEventReferences === 0
-    && duplicateAdmittedReferences === 0
     && conflictingReferenceJoins === 0
     && referenceMatchedIncomplete === 0
     && eventReferencesUnadmitted === 0
@@ -744,6 +815,7 @@ export function buildCommerceSettlementLineage(lineageInputs = {}) {
   return lineageResult({
     ...eventSide,
     duplicateAdmittedReferences,
+    admittedUnreadableLines: admission.invalidLines,
     eventReferencesAdmittedInWindow,
     eventReferencesAdmittedOutsideWindow,
     eventReferencesAdmittedClockAbsent,

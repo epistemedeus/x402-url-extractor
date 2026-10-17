@@ -4772,14 +4772,30 @@ export function createCommerceTelemetry({
       durableRareFunnelPolicy: "Credential-attempt and rare payment-outcome rows are mirrored into a separately rotated rare-funnel store so ordinary /mcp probe volume cannot erase them from the shared event stream. The durableRareFunnel plane reports its own window coverage, capture version, reset policy, and provenance. It never backfills pre-capture history, never stores raw credentials or addresses, treats actor hashes as continuity keys rather than identity, leaves usefulness unknown without separate authority, and does not invent revenue classification. Public payment counters on this plane count originClass external only. Verified internal-token rows and self-reported owner-monitor rows remain in originPopulations; they are not external demand and not independent. A rare row keeps the origin class stored at capture. Stream-local counters remain stream-local; settlement ledger and private paid-success evidence stay separate accepted planes.",
       boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, SameDayDesk-owned monitor, crawler, and exploit-probe traffic is excluded from demand and reported as separate retained populations, but unidentified automated fetchers can remain. Unattributed external activity stays unattributed and is not independent. Separately reported agent-discovery observations begin at their own declared baseline and are user-agent-declared crawler or indexer fetches of known discovery and paid routes; SameDayDesk-owned monitor user agents are excluded, and the remainder are neither authenticated catalog referrals nor buyer intent. Unmatched requests are acquisition misses, not intents. Known MCP transport probes and semantic-unmatched counts remain acquisition-friction evidence and do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Payment classes are applied against those pseudonyms at read time, so known marketplace verification can be reclassified without storing a raw address. Unknown payers remain unclassified. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Settlement-reference coverage begins only at its declared baseline; raw transaction references remain on the private volume and are not returned publicly. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts. Historical rows are not re-identified from timing, address, or user-agent.",
     };
-    rememberLineageEvents(publicSnapshot, {
+    const externalMetric = coverage.metrics?.external || null;
+    const externalObservationStart = typeof externalMetric?.observationStart === "string"
+      ? externalMetric.observationStart
+      : null;
+    const requestedStartMs = Date.parse(publicSnapshot.requestedWindowStart);
+    const externalObservationStartMs = Date.parse(externalObservationStart);
+    // Paid-success rows are already clipped at max(requested start, externalSince).
+    // Keep the requested window, and do not call that clip complete coverage of it.
+    rememberLineageEvents(publicSnapshot, Object.freeze({
       paidSuccessActors: paidActors.size,
       windowStart: publicSnapshot.requestedWindowStart,
       windowEnd: publicSnapshot.requestedWindowEnd,
       windowCoverage: publicSnapshot.requestedWindowCoverage,
+      externalObservationStart,
+      externalObservationCoverage: typeof externalMetric?.coverage === "string"
+        ? externalMetric.coverage
+        : null,
+      externalObservationCoversRequestedWindow: Number.isFinite(externalObservationStartMs)
+        && Number.isFinite(requestedStartMs)
+        ? externalObservationStartMs <= requestedStartMs
+        : null,
       settlementBaseline: publicSnapshot.settlementEvidenceSince,
-      rows: paidSuccessEvents.map(lineageEventRow),
-    });
+      rows: Object.freeze(paidSuccessEvents.map(lineageEventRow)),
+    }));
     return publicSnapshot;
   }
 

@@ -26,7 +26,7 @@ import {
   sanitizeSettlementSourceDeliveryAttribution,
   summarizeSettlementSourceDelivery,
 } from "./commerce-events.mjs";
-import { rememberLineageAdmitted } from "./commerce-payment-evidence.mjs";
+import { lineageAdmissionCut, rememberLineageAdmitted } from "./commerce-payment-evidence.mjs";
 import { isProxy } from "node:util/types";
 
 const SCHEMA_VERSION = "samedaydesk.commerce-settlement-reconciliation.v1";
@@ -3043,7 +3043,7 @@ export function createCommerceSettlementReconciler({
       }),
       prospectiveDelivery: await readProspectiveDeliveryForStatus(dataDir, admission),
     };
-    rememberLineageAdmitted(packet, admission.admitted);
+    rememberLineageAdmitted(packet, lineageAdmissionCut(admission));
     return packet;
   }
 

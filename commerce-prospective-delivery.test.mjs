@@ -27,6 +27,7 @@ import { SETTLEMENT_CLASS } from "./http-delivery-evidence/classify.mjs";
 import { recordFromObservedResponse as recordHttp } from "./http-delivery-evidence/store.mjs";
 import { extractCapture, historicalV1Row, validExtractBody } from "./http-delivery-evidence/test/helpers.mjs";
 import { isCanonicalMcpTypedCommerceEvent } from "./commerce-events.mjs";
+import { lineageProspectiveOf } from "./commerce-payment-evidence.mjs";
 import { MCP_MORPHO_RESOURCE } from "./http-delivery-evidence/mcp-delivery.mjs";
 import { FILE_CLASSES } from "./ordinary-delivery-join.mjs";
 import {
@@ -1391,6 +1392,62 @@ test("continuation transmission separates an offered silent result from one that
     const offeredLines = journal.split("\n").filter((line) => line.includes(prospectiveEvidenceKey(offered)));
     assert.equal(offeredLines.some((line) => line.includes("\"continuationTransmission\":\"transmitted\"")), true);
     assert.equal(offeredLines.some((line) => line.includes("not_transmitted")), false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("lineage keeps only a comparable prospective cohort", async () => {
+  const dir = await tempDir();
+  const rows = [settled({ eventId: id(71), reference: ref("aa"), timestamp: at(1), amount: "5000" })];
+  const ledger = ndjson(rows);
+  try {
+    const absent = await readProspectiveDelivery({ dataDir: dir, ledger, generatedAt: "2026-10-10T13:00:00.000Z" });
+    assert.equal(absent.decision, "not_started");
+    assert.equal(lineageProspectiveOf(absent), null);
+
+    await writeFile(path.join(dir, PROSPECTIVE_FILENAME), "{not-json\n", { mode: 0o600 });
+    const unreadable = await readProspectiveDelivery({ dataDir: dir, ledger, generatedAt: "2026-10-10T13:00:00.000Z" });
+    assert.equal(unreadable.decision, "unreadable");
+    assert.equal(lineageProspectiveOf(unreadable), null);
+
+    await writeFile(path.join(dir, PROSPECTIVE_FILENAME), `${JSON.stringify({
+      schemaVersion: "samedaydesk.commerce-prospective-delivery-header.v0",
+      captureVersion: "prospective_delivery_v0",
+      prospectiveSince: at(1),
+      sourceVersion: "0",
+    })}\n`, { mode: 0o600 });
+    const mismatched = await readProspectiveDelivery({ dataDir: dir, ledger, generatedAt: "2026-10-10T13:00:00.000Z" });
+    assert.equal(mismatched.decision, "version_mismatch");
+    assert.equal(lineageProspectiveOf(mismatched), null);
+
+    await rm(path.join(dir, PROSPECTIVE_FILENAME));
+    await appendProspectiveObservations(dir, [
+      observation(ref("aa"), "validated_response"),
+      observation(ref("ab"), "partial", { technical: "partial" }),
+    ], { now: NOW, maxRecords: 1 });
+    const saturated = await readProspectiveDelivery({ dataDir: dir, ledger, generatedAt: "2026-10-10T13:00:00.000Z" });
+    assert.equal(saturated.decision, "saturated");
+    assert.equal(saturated.comparable, false);
+    assert.equal(lineageProspectiveOf(saturated), null);
+
+    await appendFile(path.join(dir, PROSPECTIVE_FILENAME), "{", { mode: 0o600 });
+    const torn = await readProspectiveDelivery({ dataDir: dir, ledger, generatedAt: "2026-10-10T13:00:00.000Z" });
+    assert.equal(torn.comparable, false);
+    assert.equal(lineageProspectiveOf(torn), null);
+
+    await rm(path.join(dir, PROSPECTIVE_FILENAME));
+    await appendProspectiveObservations(dir, [], { now: NOW });
+    const empty = await readProspectiveDelivery({ dataDir: dir, ledger, generatedAt: "2026-10-10T13:00:00.000Z" });
+    assert.equal(empty.decision, "prospective");
+    assert.equal(empty.comparable, true);
+    assert.deepEqual(lineageProspectiveOf(empty), []);
+
+    await appendProspectiveObservations(dir, [observation(ref("aa"), "validated_response")], { now: NOW });
+    const recovered = await readProspectiveDelivery({ dataDir: dir, ledger, generatedAt: "2026-10-10T13:00:00.000Z" });
+    assert.equal(recovered.comparable, true);
+    assert.equal(lineageProspectiveOf(recovered).length, 1);
+    assert.equal(JSON.stringify(recovered).includes(ref("aa")), false);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

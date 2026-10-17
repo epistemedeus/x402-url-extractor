@@ -438,7 +438,11 @@ test("status projects the same ledger bytes the parent summary admits", async ()
     assert.equal(status.ledger.amountAtomic, "50010");
     assert.equal(status.ledger.reconciledSettlements, 2);
     assert.equal(Object.hasOwn(status, "admitted"), false);
-    assert.equal(lineageAdmittedOf(status).length, 2);
+    const admittedCut = lineageAdmittedOf(status);
+    assert.equal(admittedCut.rows.length, 2);
+    assert.equal(admittedCut.duplicateReferencesIgnored, 0);
+    assert.equal(admittedCut.invalidLines, 0);
+    assert.equal(Object.isFrozen(admittedCut), true);
     assert.equal(JSON.stringify(status).includes(reference(1)), false);
     assert.equal(JSON.stringify(status).includes(reference(2)), false);
     assert.equal(status.settlementUnit.decision, "partial");

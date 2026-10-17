@@ -501,8 +501,21 @@ export function projectProspectiveDelivery({
     independentRepeat: null,
     usefulness: "unknown",
   };
-  rememberLineageProspective(packet, boundRecords.map(lineageProspectiveRow));
+  // A comparable prospective read is the cohort, including a genuine empty
+  // journal. Unreadable, mismatched, saturated, stale, and corrupt projections
+  // stay unassociated so lineage does not turn them into withoutRecord zeros.
+  if (lineageProspectiveTrustworthy(packet)) {
+    rememberLineageProspective(packet, Object.freeze(boundRecords.map(lineageProspectiveRow)));
+  }
   return packet;
+}
+
+function lineageProspectiveTrustworthy(packet) {
+  return packet.decision === "prospective"
+    && packet.comparable === true
+    && packet.coverage?.corruptLines === 0
+    && packet.coverage?.projectionSaturated === false
+    && packet.coverage?.evidenceUnavailable !== true;
 }
 
 function lineageProspectiveRow(record) {
