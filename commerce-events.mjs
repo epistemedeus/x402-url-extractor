@@ -57,6 +57,7 @@ import {
   paidUsefulJourneyMetadata,
   parsePaidUsefulJourneyHeader,
 } from "./paid-useful-journey.mjs";
+import { rememberLineageEvents } from "./commerce-payment-evidence.mjs";
 
 const CRAWLER_PATTERN = /bot|crawler|spider|slurp|uptime|monitor|observer|probe|indexer|headless|preview|liveness|healthcheck|sentineloracle|mcpbeat|agentreeve|agent402|trust[- ]?oracle/i;
 const EXPLOIT_PROBE_PATH_PATTERN = /(?:^|\/)\.(?:env|git)(?:[./]|$)|^\/(?:wp-admin|wp-login\.php|wp-json|xmlrpc\.php)(?:\/|$)|^\/(?:api\/)?(?:config|env|settings)(?:[./]|$)|^\/js\/(?:config|env)\.js$/i;
@@ -543,7 +544,7 @@ const WRITER_DISCOVERY_SOURCE_KINDS = new Set([
   "observed_user_agent",
   "none",
 ]);
-const LEDGER_DISCOVERY_SOURCE_KINDS = new Set([
+export const LEDGER_DISCOVERY_SOURCE_KINDS = new Set([
   ...WRITER_DISCOVERY_SOURCE_KINDS,
   "unknown",
 ]);
@@ -3456,6 +3457,21 @@ export async function drainCommerceTelemetryForShutdown({
   await commerceTelemetry.flush();
 }
 
+function lineageEventRow(event) {
+  const referenceText = String(event?.settlementReference || "");
+  const amountText = event?.settlementAmountAtomic;
+  return {
+    reference: TRANSACTION_HASH_PATTERN.test(referenceText) ? referenceText.toLowerCase() : null,
+    route: typeof event?.route === "string" && event.route.length > 0 ? event.route : null,
+    protocol: typeof event?.paymentProtocol === "string" && event.paymentProtocol.length > 0
+      ? event.paymentProtocol
+      : null,
+    amountAtomic: typeof amountText === "string" && /^\d+$/.test(amountText) ? amountText : null,
+    timestamp: typeof event?.ts === "string" && Number.isFinite(Date.parse(event.ts)) ? event.ts : null,
+    discoverySourceKind: typeof event?.discoverySourceKind === "string" ? event.discoverySourceKind : null,
+  };
+}
+
 export function createCommerceTelemetry({
   dataDir = process.env.COMMERCE_DATA_DIR || path.join(process.cwd(), "data"),
   secret = process.env.COMMERCE_ACTOR_SECRET || randomBytes(32).toString("hex"),
@@ -4601,7 +4617,7 @@ export function createCommerceTelemetry({
       paymentClassByActor,
     });
 
-    return {
+    const publicSnapshot = {
       generatedAt,
       windowDays: safeDays,
       requestedWindowDays: safeDays,
@@ -4756,6 +4772,15 @@ export function createCommerceTelemetry({
       durableRareFunnelPolicy: "Credential-attempt and rare payment-outcome rows are mirrored into a separately rotated rare-funnel store so ordinary /mcp probe volume cannot erase them from the shared event stream. The durableRareFunnel plane reports its own window coverage, capture version, reset policy, and provenance. It never backfills pre-capture history, never stores raw credentials or addresses, treats actor hashes as continuity keys rather than identity, leaves usefulness unknown without separate authority, and does not invent revenue classification. Public payment counters on this plane count originClass external only. Verified internal-token rows and self-reported owner-monitor rows remain in originPopulations; they are not external demand and not independent. A rare row keeps the origin class stored at capture. Stream-local counters remain stream-local; settlement ledger and private paid-success evidence stay separate accepted planes.",
       boundary: "Aggregate external observations after the declared experiment baseline only. Known internal, SameDayDesk-owned monitor, crawler, and exploit-probe traffic is excluded from demand and reported as separate retained populations, but unidentified automated fetchers can remain. Unattributed external activity stays unattributed and is not independent. Separately reported agent-discovery observations begin at their own declared baseline and are user-agent-declared crawler or indexer fetches of known discovery and paid routes; SameDayDesk-owned monitor user agents are excluded, and the remainder are neither authenticated catalog referrals nor buyer intent. Unmatched requests are acquisition misses, not intents. Known MCP transport probes and semantic-unmatched counts remain acquisition-friction evidence and do not become demand until an independent caller repeats or converts. Paid-success actors use a secret-keyed payer pseudonym when an x402 payload exposes a valid EVM payer, otherwise the network/user-agent pseudonym. Payment classes are applied against those pseudonyms at read time, so known marketplace verification can be reclassified without storing a raw address. Unknown payers remain unclassified. Protocol counts distinguish submitted x402 and MPP credentials plus protocols advertised by a 402; they do not expose credentials. Settlement-reference coverage begins only at its declared baseline; raw transaction references remain on the private volume and are not returned publicly. Idempotent replay successes are reported separately and do not create a second paid-success event. Counts are not public buyer identities or calibrated forecasts. Historical rows are not re-identified from timing, address, or user-agent.",
     };
+    rememberLineageEvents(publicSnapshot, {
+      paidSuccessActors: paidActors.size,
+      windowStart: publicSnapshot.requestedWindowStart,
+      windowEnd: publicSnapshot.requestedWindowEnd,
+      windowCoverage: publicSnapshot.requestedWindowCoverage,
+      settlementBaseline: publicSnapshot.settlementEvidenceSince,
+      rows: paidSuccessEvents.map(lineageEventRow),
+    });
+    return publicSnapshot;
   }
 
   async function ownedSegmentBytes(filePath) {

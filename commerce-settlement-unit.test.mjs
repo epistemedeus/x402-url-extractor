@@ -11,6 +11,7 @@ import {
   COMMERCE_PAYMENT_EVIDENCE_SCHEMA,
   buildCommercePaymentEvidenceReadout,
   commercePaymentEvidenceOutputSchema,
+  lineageAdmittedOf,
 } from "./commerce-payment-evidence.mjs";
 import { createCommerceSettlementReconciler, readCommerceSettlementAdmission, summarizeCommerceSettlementLedger } from "./commerce-settlement-reconciler.mjs";
 import {
@@ -436,6 +437,10 @@ test("status projects the same ledger bytes the parent summary admits", async ()
     const status = await reconciler.status();
     assert.equal(status.ledger.amountAtomic, "50010");
     assert.equal(status.ledger.reconciledSettlements, 2);
+    assert.equal(Object.hasOwn(status, "admitted"), false);
+    assert.equal(lineageAdmittedOf(status).length, 2);
+    assert.equal(JSON.stringify(status).includes(reference(1)), false);
+    assert.equal(JSON.stringify(status).includes(reference(2)), false);
     assert.equal(status.settlementUnit.decision, "partial");
     assert.equal(status.settlementUnit.comparable, false);
     assert.equal(status.settlementUnit.bindsToParent.amountAtomic, status.ledger.amountAtomic);
@@ -491,6 +496,9 @@ test("absent projection and direct JSON round trip stay schema valid", () => {
   assert.match(handler, /const settlementUnit = settlementReconciliation\.settlementUnit \?\? unprojectedSettlementUnit\(\)/);
   assert.match(handler, /const prospectiveDelivery = settlementReconciliation\.prospectiveDelivery \?\? absentProspectiveDelivery\(\)/);
   assert.match(handler, /paymentEvidence, settlementReconciliation, settlementUnit, prospectiveDelivery/);
+  assert.match(handler, /lineageEventsOf\(snapshot\)/);
+  assert.match(handler, /lineageAdmittedOf\(settlementReconciliation\)/);
+  assert.match(handler, /lineageProspectiveOf\(prospectiveDelivery\)/);
 });
 
 test("lowercase asset still matches the checked catalog entry", () => {

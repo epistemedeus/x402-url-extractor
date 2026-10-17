@@ -26,6 +26,7 @@ import {
   sanitizeSettlementSourceDeliveryAttribution,
   summarizeSettlementSourceDelivery,
 } from "./commerce-events.mjs";
+import { rememberLineageAdmitted } from "./commerce-payment-evidence.mjs";
 import { isProxy } from "node:util/types";
 
 const SCHEMA_VERSION = "samedaydesk.commerce-settlement-reconciliation.v1";
@@ -3025,7 +3026,7 @@ export function createCommerceSettlementReconciler({
     const run = lastRun || { lastRunAt: null, lastError: null, lastIssueCounts: {} };
     const admission = readCommerceSettlementAdmission(ledger, { paymentClassBySourceEventId });
     const { projectCommerceSettlementUnit } = await import("./commerce-settlement-unit.mjs");
-    return {
+    const packet = {
       enabled,
       settlementEvidenceSince: Number.isFinite(Date.parse(settlementEvidenceSince))
         ? new Date(settlementEvidenceSince).toISOString()
@@ -3042,6 +3043,8 @@ export function createCommerceSettlementReconciler({
       }),
       prospectiveDelivery: await readProspectiveDeliveryForStatus(dataDir, admission),
     };
+    rememberLineageAdmitted(packet, admission.admitted);
+    return packet;
   }
 
   async function reconcile() {

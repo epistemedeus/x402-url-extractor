@@ -12,6 +12,7 @@ import path from "node:path";
 import { readFileSync } from "node:fs";
 
 import { admitCommerceJournal, noteJournalWrite } from "./commerce-journal-admission.mjs";
+import { rememberLineageProspective } from "./commerce-payment-evidence.mjs";
 import { readCommerceSettlementAdmission } from "./commerce-settlement-reconciler.mjs";
 import { joinOrdinaryDeliveries, readOrdinaryDeliveryStores } from "./ordinary-delivery-join.mjs";
 
@@ -439,7 +440,7 @@ export function projectProspectiveDelivery({
     && bound
     && parsed.corruptLines === 0
     && unadmittedRecords === 0;
-  return {
+  const packet = {
     schemaVersion: PROSPECTIVE_PUBLIC_SCHEMA,
     decision,
     comparable,
@@ -500,6 +501,21 @@ export function projectProspectiveDelivery({
     independentRepeat: null,
     usefulness: "unknown",
   };
+  rememberLineageProspective(packet, boundRecords.map(lineageProspectiveRow));
+  return packet;
+}
+
+function lineageProspectiveRow(record) {
+  const reduced = {
+    evidenceKey: record.evidenceKey,
+    technical: record.technical,
+    feedback: record.feedback,
+    taskClass: record.taskClass,
+  };
+  if (record && Object.hasOwn(record, "continuationTransmission")) {
+    reduced.continuationTransmission = record.continuationTransmission;
+  }
+  return reduced;
 }
 
 async function ensureHeader(dataDir, now, sourceVersion) {

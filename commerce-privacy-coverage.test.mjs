@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { buildCommercePaymentEvidenceReadout } from "./commerce-payment-evidence.mjs";
+import { buildCommercePaymentEvidenceReadout, lineageEventsOf } from "./commerce-payment-evidence.mjs";
 import {
   COMMERCE_COVERAGE_UNKNOWN_FOR_FULL_WINDOW,
   COMMERCE_INTEGRITY_OK,
@@ -165,7 +166,17 @@ test("public aggregate contains no raw buyer fields", async () => {
   assert.equal(Object.hasOwn(snapshot, "payer"), false);
   assert.equal(aggregate.paymentEvidence.customerPlane.buyerValidDeliveryCount, null);
   assert.equal(aggregate.paymentEvidence.customerPlane.attributableCustomerCount, null);
-  assertNoRawBuyerFields(serialized, [paymentSignature, paymentResponse]);
+  assert.equal(lineageEventsOf(snapshot).rows.some((row) => row.reference === BUYER_SETTLEMENT), true);
+  assert.equal(lineageEventsOf(aggregate), null);
+  assert.equal(aggregate.paymentEvidence.lineage.population, "unreceived");
+  assert.equal(aggregate.paymentEvidence.lineage.paidSuccessEvents, null);
+  assert.equal(aggregate.paymentEvidence.lineage.referenceCorrespondence, "unreceived");
+  assert.equal(aggregate.paymentEvidence.lineage.actorCorrespondence, "unproven");
+  assertNoRawBuyerFields(serialized, [
+    paymentSignature,
+    paymentResponse,
+    createHash("sha256").update(BUYER_SETTLEMENT).digest("hex"),
+  ]);
 
   await rm(dataDir, { recursive: true, force: true });
 });
