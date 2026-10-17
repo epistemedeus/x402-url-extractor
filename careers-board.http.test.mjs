@@ -526,6 +526,15 @@ async function mcpCall(base, name, args, payment) {
   return parsed;
 }
 
+function mcpPaymentChallenge(result) {
+  assert.equal(result?.isError, true);
+  assert.equal(result?.structuredContent, undefined, JSON.stringify(result));
+  const body = JSON.parse(result.content[0].text);
+  assert.equal(body?.x402Version, 2);
+  assert.ok(Array.isArray(body?.accepts));
+  return body;
+}
+
 function paymentObject(challenge, id, resourceUrl) {
   const payment = JSON.parse(Buffer.from(testPayment(challenge, id), "base64").toString("utf8"));
   if (resourceUrl) payment.resource = { ...payment.resource, url: resourceUrl };
@@ -593,14 +602,13 @@ test("explicit feedback binds one paid careers result and the MCP rail settles o
   assert.equal(facilitator.calls.settle, 0);
 
   const mcpDeniedChallenge = await mcpCall(base, "careers_board", { board: "acxiom" }, null);
-  assert.equal(mcpDeniedChallenge.result?.isError, true);
-  assert.equal(mcpDeniedChallenge.result?.structuredContent?.x402Version, 2);
-  assert.equal(mcpDeniedChallenge.result?.structuredContent?.resource?.url, `${origin}${CAREERS_BOARD_PATH}?board=acxiom`);
+  const deniedOffer = mcpPaymentChallenge(mcpDeniedChallenge.result);
+  assert.equal(deniedOffer.resource?.url, `${origin}${CAREERS_BOARD_PATH}?board=acxiom`);
   const mcpDenied = await mcpCall(
     base,
     "careers_board",
     { board: "acxiom" },
-    paymentObject(mcpDeniedChallenge.result.structuredContent, "careers_mcp_denied_12345"),
+    paymentObject(deniedOffer, "careers_mcp_denied_12345"),
   );
   assert.equal(mcpDenied.result?.isError, true);
   assert.equal(mcpDenied.result?.structuredContent?.charged, false);
@@ -613,21 +621,26 @@ test("explicit feedback binds one paid careers result and the MCP rail settles o
     base,
     "careers_board",
     { board: "not-a-board" },
-    paymentObject(mcpDeniedChallenge.result.structuredContent, "careers_mcp_invalid_1234", invalidResource),
+    paymentObject(deniedOffer, "careers_mcp_invalid_1234", invalidResource),
   );
   assert.equal(mcpInvalid.result?.isError, true);
-  assert.equal(mcpInvalid.result?.structuredContent?.ok, false);
-  assert.equal(mcpInvalid.result?.structuredContent?.charged, false);
+  assert.equal(mcpInvalid.result?.structuredContent, undefined);
+  const invalidMcpBody = JSON.parse(mcpInvalid.result.content[0].text);
+  assert.equal(invalidMcpBody.ok, false);
+  assert.equal(invalidMcpBody.charged, false);
   assert.equal(facilitator.calls.verify, 0);
   assert.equal(facilitator.calls.settle, 0);
 
   await setMode(scenarioFile, "acxiom-aggregate");
   const aggregateMcpChallenge = await mcpCall(base, "careers_board", { board: "acxiom" }, null);
+  const aggregateOffer = mcpPaymentChallenge(aggregateMcpChallenge.result);
   const aggregateMcp = await mcpCall(base, "careers_board", { board: "acxiom" },
-    paymentObject(aggregateMcpChallenge.result.structuredContent, "careers_aggregate_mcp_01"));
+    paymentObject(aggregateOffer, "careers_aggregate_mcp_01"));
   assert.equal(aggregateMcp.result?.isError, true);
-  assert.equal(aggregateMcp.result?.structuredContent?.charged, false);
-  assert.equal(aggregateMcp.result?.structuredContent?.error, "careers_board_result_too_large");
+  assert.equal(aggregateMcp.result?.structuredContent, undefined);
+  const aggregateBody = JSON.parse(aggregateMcp.result.content[0].text);
+  assert.equal(aggregateBody.charged, false);
+  assert.equal(aggregateBody.error, "careers_board_result_too_large");
   assert.equal(aggregateMcp.result?._meta?.["samedaydesk/caller-result-feedback"], undefined);
   assert.equal(facilitator.calls.verify, 0);
   assert.equal(facilitator.calls.settle, 0);
@@ -719,14 +732,14 @@ test("explicit feedback binds one paid careers result and the MCP rail settles o
   await setMode(scenarioFile, "liveramp-listed");
   const settleBeforeSuccess = facilitator.calls.settle;
   const mcpUnpaid = await mcpCall(base, "careers_board", { board: "liveramp" }, null);
-  assert.equal(mcpUnpaid.result?.isError, true);
-  assert.equal(mcpUnpaid.result?.structuredContent?.resource?.url, `${origin}${CAREERS_BOARD_PATH}?board=liveramp`);
+  const listedOffer = mcpPaymentChallenge(mcpUnpaid.result);
+  assert.equal(listedOffer.resource?.url, `${origin}${CAREERS_BOARD_PATH}?board=liveramp`);
   assert.equal(facilitator.calls.settle, settleBeforeSuccess);
   const mcpPaid = await mcpCall(
     base,
     "careers_board",
     { board: "liveramp" },
-    paymentObject(mcpUnpaid.result.structuredContent, "careers_mcp_listed_12345"),
+    paymentObject(listedOffer, "careers_mcp_listed_12345"),
   );
   assert.equal(mcpPaid.result?.isError, undefined);
   assert.equal(mcpPaid.result?.structuredContent?.charged, true);

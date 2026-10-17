@@ -285,6 +285,14 @@ async function mcpCall(base, body) {
   return JSON.parse(text);
 }
 
+function mcpPaymentChallenge(result) {
+  assert.equal(result?.structuredContent, undefined, JSON.stringify(result));
+  const body = JSON.parse(result.content[0].text);
+  assert.equal(body?.x402Version, 2);
+  assert.ok(Array.isArray(body?.accepts));
+  return body;
+}
+
 test("seller free discovery declares payment-identifier required only on batch", { timeout: 60_000 }, async (t) => {
   const dataDir = await mkdtemp(path.join(tmpdir(), "sdk-interop-discovery-"));
   const fetchLogPath = path.join(dataDir, "source-fetches.log");
@@ -558,8 +566,7 @@ test("MCP extract_batch challenge projects required payment-identifier", { timeo
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
   const unpaid = await mcpCall(merchant.base, { urls: ["https://alpha.example/"], fields: ["title"] });
-  const challenge = unpaid.result?.structuredContent;
-  assert.equal(challenge?.x402Version, 2, JSON.stringify(unpaid));
+  const challenge = mcpPaymentChallenge(unpaid.result);
   assert.equal(challenge.extensions?.[PAYMENT_IDENTIFIER]?.info?.required, true);
   assert.ok(unpaid.result?._meta?.["samedaydesk/http"]?.headers?.["payment-required"]
     || unpaid.result?._meta?.["samedaydesk/http"]?.headers?.["PAYMENT-REQUIRED"]);

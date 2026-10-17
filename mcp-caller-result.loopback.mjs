@@ -370,25 +370,27 @@ async function payMorpho(session, base, dataDir) {
   return { paid, text, digest, delivery, event, capability: paid.capability };
 }
 
+// At 884587ba, pay("opportunity_preflight") threw SDK -32602 because the challenge
+// object failed the tool output schema. This harness then required that failure and
+// paid through payWithPayment. The failure characterized the serializer. The journey
+// checked here is one ordinary official-SDK pay of the content-text challenge.
 async function payPreflight(session, base, dataDir) {
   const args = { rewardUsd: 10, hours: 1, hourlyCostUsd: 50 };
-  let probeCode = null;
-  try {
-    await session.paid.pay("opportunity_preflight", args);
-    probeCode = "probe_succeeded";
-  } catch (error) {
-    probeCode = error?.code === -32602 ? "output_schema_rejected_challenge" : "probe_failed";
-  }
-  if (probeCode !== "output_schema_rejected_challenge") fail("schema_probe");
   const unpaid = await postMcp(base, {
     jsonrpc: "2.0",
     id: randomBytes(4).toString("hex"),
     method: "tools/call",
     params: { name: "opportunity_preflight", arguments: args },
   });
+  if (unpaid.json?.result?.structuredContent) fail("preflight_challenge_structured");
+  const text = unpaid.json?.result?.content?.[0]?.text;
+  let parsed = null;
+  try { parsed = typeof text === "string" ? JSON.parse(text) : null; } catch { parsed = null; }
+  if (!parsed?.accepts?.[0]) fail("preflight_challenge_text");
   const accepted = acceptsFrom(unpaid.json);
-  if (!accepted) fail("challenge_missing_preflight");
-  const paid = await session.paid.payWithPayment("opportunity_preflight", args, paymentObject({ accepts: [accepted] }));
+  if (!accepted || accepted.amount !== "50000") fail("challenge_missing_preflight");
+  session.arm(paymentObject(parsed));
+  const paid = await session.paid.pay("opportunity_preflight", args);
   if (paid.paymentMade !== true) fail("preflight_payment_not_made");
   if (paid.returnedCapability !== false || paid.capability.present !== false) fail("preflight_capability");
   const events = await waitFor(
@@ -403,7 +405,7 @@ async function payPreflight(session, base, dataDir) {
   const event = events.find((row) => row.binding?.tool === "opportunity_preflight" && row.result === "paid_success");
   if (!isCanonicalMcpTypedCommerceEvent(event)) fail("preflight_event_shape");
   if (event.chainTruth !== false || event.settlementAmountAtomic !== "50000") fail("preflight_amount");
-  return { ...paid, probeCode, event };
+  return { ...paid, probeCode: "ordinary_pay", event };
 }
 
 function receiptFor(specs) {

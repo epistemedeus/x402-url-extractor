@@ -148,10 +148,12 @@ function isPaymentRequiredBody(body) {
     && Array.isArray(body.accepts);
 }
 
-// Official Client.callTool validates structuredContent even when isError is true.
-// Native extract's payment challenge fails extractMcpOutputSchema, so that challenge
-// stays in content text, the required x402 encoding. Other tools keep their current
-// challenge object: the sealed 0.1.2 caller probes opportunity_preflight for -32602.
+// Official Client.callTool validates structuredContent against outputSchema even when
+// isError is true. A body that schema rejects, including an x402 payment challenge,
+// stays in content text so an ordinary pay() can read it. A body the schema accepts
+// stays structured, including a real tool error. Tools with no outputSchema are unchanged.
+// At 884587ba the sealed 0.1.2 caller required opportunity_preflight to throw -32602.
+// That was a harness observation of this mismatch, not a reason to keep the invalid object.
 export function withoutSchemaRejectedErrorStructuredContent(result, outputSchema) {
   if (!result || result.isError !== true || !outputSchema) return result;
   const body = result.structuredContent;
@@ -847,8 +849,10 @@ export async function mountMcp(app, {
         context: extra?._meta?.["samedaydesk/recovery-call"] ?? null }, () => inner(args, extra));
     } : inner;
     const revived = withRevivedArgs(recoverable, t.inputSchema);
+    // The recovery journal already classified this result. Strip only the copy
+    // returned to the client, after that classification.
     const exposeOfficialResult = (result) => (
-      t.name === "extract" && !t.paidHttp
+      t.outputSchema
         ? withoutSchemaRejectedErrorStructuredContent(result, t.outputSchema)
         : result
     );
