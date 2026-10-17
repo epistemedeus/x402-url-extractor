@@ -36,6 +36,7 @@ import {
   appendProspectiveObservations,
   applyDeclaredFeedback,
   bindStoredCallerResultFeedback,
+  noteContinuationTransmission,
   classifyProspectiveObservation,
   commerceProspectiveDeliveryOutputSchema,
   observationFromJoin,
@@ -227,6 +228,13 @@ function assertHonestCoverage(packet) {
   assert.equal(packet.boundaries.technicalRevisionClock, "first_observed_at");
   assert.equal(packet.boundaries.lateTechnicalRevisionIsNotLastWriteWins, true);
   assert.equal(packet.boundaries.noResponseRequiresResponseBoundary, true);
+  assert.equal(packet.boundaries.continuationTransmissionIsNotClientObservation, true);
+  assert.equal(packet.boundaries.continuationTransmissionIsNotADeclaration, true);
+  assert.equal(packet.boundaries.omittedContinuationTransmissionIsUnknown, true);
+  assert.equal(packet.boundaries.notTransmittedIsNotACallerRefusal, true);
+  assert.equal(Number.isInteger(packet.continuationTransmission.transmitted), true);
+  assert.equal(Number.isInteger(packet.continuationTransmission.not_transmitted), true);
+  assert.equal(Number.isInteger(packet.continuationTransmission.unknown), true);
   assert.equal(packet.coverage.evidenceUnavailable, false);
   assert.equal(packet.coverage.responseBoundaryMs, PROSPECTIVE_RESPONSE_BOUNDARY_MS);
   assert.equal(Number.isInteger(packet.coverage.unadmittedRecords), true);
@@ -1301,9 +1309,89 @@ test("cold fixture packet keeps the parent amount and withholds historical compl
   assert.equal(packet.technicalRevisions, 0);
   assert.equal(packet.declaredFeedback.absent, 1);
   assert.equal(packet.declaredTaskClass.absent, 1);
+  assert.equal(packet.continuationTransmission.unknown, 1);
+  assert.equal(packet.continuationTransmission.transmitted, 0);
+  assert.equal(packet.continuationTransmission.not_transmitted, 0);
   assertHonestCoverage(packet);
   assertPrivacy(child.stdout, [ref("11"), ref("22"), id(1), id(2), "evidenceKey"]);
   const journal = readFileSync(path.join(FIXTURE, PROSPECTIVE_FILENAME), "utf8");
   assert.equal(journal.includes(ref("11")), false);
   assert.equal(journal.includes(id(1)), false);
+});
+
+test("continuation transmission separates an offered silent result from one that was not offered", async () => {
+  const dir = await tempDir();
+  const offered = ref("d1");
+  const withheld = ref("d2");
+  const historical = ref("d3");
+  const rows = [
+    settled({ eventId: id(91), reference: offered, timestamp: at(1), amount: "5000" }),
+    settled({ eventId: id(92), reference: withheld, timestamp: at(2), amount: "5000" }),
+    settled({ eventId: id(93), reference: historical, timestamp: at(3), amount: "5000" }),
+  ];
+  try {
+    await appendProspectiveObservations(dir, [observation(historical, "validated_response")], { now: NOW });
+    const created = await noteContinuationTransmission(dir, {
+      settlementReference: offered,
+      transmission: "transmitted",
+      now: NOW,
+    });
+    assert.equal(created.ok, true);
+    assert.equal(created.reason, "created");
+    assert.equal(created.record.feedback, "absent");
+    assert.equal(created.record.continuationTransmission, "transmitted");
+    const withheldNote = await noteContinuationTransmission(dir, {
+      settlementReference: withheld,
+      transmission: "not_transmitted",
+      now: NOW,
+    });
+    assert.equal(withheldNote.reason, "created");
+    const repeat = await noteContinuationTransmission(dir, {
+      settlementReference: offered,
+      transmission: "transmitted",
+      now: NOW + 1000,
+    });
+    assert.equal(repeat.reason, "unchanged");
+    const clash = await noteContinuationTransmission(dir, {
+      settlementReference: offered,
+      transmission: "not_transmitted",
+      now: NOW + 2000,
+    });
+    assert.equal(clash.ok, false);
+    assert.equal(clash.reason, "transmission_conflict");
+    assert.equal(clash.record.continuationTransmission, "transmitted");
+    assert.equal((await recordProspectiveFeedback(dir, { disposition: "useful" })).reason, "caller_claim_refused");
+    await writeFile(path.join(dir, FILE_CLASSES.settlementLedger), ndjson(rows), { mode: 0o600 });
+    await retainProspectiveDeliveries({
+      dataDir: dir,
+      settlementReferences: [offered, withheld, historical],
+      now: NOW + 11 * 60 * 1000,
+    });
+    const packet = await readProspectiveDelivery({
+      dataDir: dir,
+      ledger: ndjson(rows),
+      generatedAt: "2026-10-10T13:00:00.000Z",
+    });
+    assert.equal(packet.continuationTransmission.transmitted, 1);
+    assert.equal(packet.continuationTransmission.not_transmitted, 1);
+    assert.equal(packet.continuationTransmission.unknown, 1);
+    assert.equal(packet.declaredFeedback.absent, 3);
+    assert.equal(packet.declaredFeedback.declared_useful, 0);
+    assert.equal(packet.usefulness, "unknown");
+    assert.equal(packet.customerAttribution, null);
+    assert.equal(packet.recognizedIncomeAtomic, null);
+    assert.equal(packet.independentRepeat, null);
+    assertHonestCoverage(packet);
+    const journal = await readFile(path.join(dir, PROSPECTIVE_FILENAME), "utf8");
+    assert.equal(journal.includes(offered), false);
+    assert.equal(journal.includes(withheld), false);
+    assert.equal(journal.includes("https://"), false);
+    const historicalLine = journal.split("\n").find((line) => line.includes(prospectiveEvidenceKey(historical)));
+    assert.equal(historicalLine.includes("continuationTransmission"), false);
+    const offeredLines = journal.split("\n").filter((line) => line.includes(prospectiveEvidenceKey(offered)));
+    assert.equal(offeredLines.some((line) => line.includes("\"continuationTransmission\":\"transmitted\"")), true);
+    assert.equal(offeredLines.some((line) => line.includes("not_transmitted")), false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });

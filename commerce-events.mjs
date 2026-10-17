@@ -3946,11 +3946,12 @@ export function createCommerceTelemetry({
       && outcomeClaim.operationId === "normalized-transaction-receipt"
       && route.route === "/chain/transaction-receipt" && req.method === "GET"
       && !paymentPresent && headerValue(headers, "x-samedaydesk-observe-free-result") === "1";
+    let continuationTransmission = null;
     const finishPaidEvidenceResponseDigest = paidEvidenceRequest || freeObservationRequested
       ? capturePaidEvidenceResponseDigest(res, paidEvidenceRequest?.method || req.method, route.route, {
         onCompleteBody: paidEvidenceRequest
           ? (observed) => {
-            attachCallerResultFeedbackHeader(res, {
+            const attached = attachCallerResultFeedbackHeader(res, {
               key: process.env.CALLER_RESULT_FEEDBACK_KEY || "",
               eventId: causalEvents.get(res)?.id,
               method: paidEvidenceRequest.method,
@@ -3960,6 +3961,7 @@ export function createCommerceTelemetry({
               statusCode: Number(res.statusCode || 0),
               replayed: String(res.getHeader?.("x-payment-replay") || "").toLowerCase() === "hit",
             });
+            continuationTransmission = attached === true ? "transmitted" : "not_transmitted";
           }
           : null,
       })
@@ -4129,6 +4131,16 @@ export function createCommerceTelemetry({
         taskRefRecord = buildTaskRefRecord({ claim: outcomeClaim, commerceEventId: event.id });
       } catch {
         taskRefRecord = null;
+      }
+      if (result === "paid_success" && !replayed && settlement?.reference) {
+        const transmission = continuationTransmission || "not_transmitted";
+        const reference = settlement.reference;
+        import("./commerce-prospective-delivery.mjs").then((mod) => mod.noteContinuationTransmission(dataDir, {
+          settlementReference: reference,
+          transmission,
+        })).catch(() => {
+          // A continuation measurement cannot change the paid response or the commerce row.
+        });
       }
       if (causal) causal.enqueued = true;
       enqueue(event, paidEvidence, httpDeliveryRecord, forwardRecords, taskRefRecord);
