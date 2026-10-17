@@ -429,7 +429,8 @@ test("unpaid extract stays a payment challenge, not a typed success body", async
     assert.equal(Number.isInteger(body.x402Version), true);
     assert.equal(Array.isArray(body.accepts), true);
     assert.equal(extractMcpOutputSchema.safeParse(body).success, false);
-    assert.equal(extractMcpOutputSchema.safeParse(unpaid.json.result.structuredContent).success, false);
+    assert.equal(Object.hasOwn(unpaid.json.result, "structuredContent"), false);
+    assert.equal(JSON.parse(unpaid.json.result.content[0].text).x402Version, body.x402Version);
   } finally {
     await mounted.close();
   }

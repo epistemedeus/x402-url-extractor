@@ -2,6 +2,9 @@
 // The parent admission helper remains the only count and amount authority.
 // This file stores no raw bodies, URLs, query strings, credentials, addresses,
 // settlement references, or event ids. A hash is the idempotency key.
+// continuationTransmission is whether the settling response carried the free
+// continuation capability. Omission is unknown, not a historical zero. It is
+// not a client observation, a caller declaration, or measured usefulness.
 import { createHash } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
 import { mkdir, open, readFile, rename, rm, stat } from "node:fs/promises";
@@ -48,6 +51,18 @@ const TECHNICAL = Object.freeze([
   "unknown",
 ]);
 const FEEDBACK = Object.freeze(["absent", "declared_useful", "declared_not_useful", "rejected"]);
+const TRANSMISSION_OBSERVED = Object.freeze(["transmitted", "not_transmitted"]);
+const TRANSMISSION = Object.freeze(["transmitted", "not_transmitted", "unknown"]);
+const OBSERVATION_KEYS = Object.freeze([
+  "channel",
+  "evidenceKey",
+  "feedback",
+  "feedbackSeal",
+  "observedAt",
+  "schemaVersion",
+  "taskClass",
+  "technical",
+]);
 const SEALS = Object.freeze(["none", "binds_declaration"]);
 const CHANNELS = Object.freeze(["http", "mcp", "none", "conflict"]);
 const TASKS = Object.freeze(["absent", "controlled_test", "external_unknown", "owner_qa", "sponsored_trial"]);
@@ -80,6 +95,17 @@ function emptyTasks() {
   return Object.fromEntries(TASKS.map((key) => [key, 0]));
 }
 
+function emptyTransmission() {
+  return Object.fromEntries(TRANSMISSION.map((key) => [key, 0]));
+}
+
+function transmissionOf(record) {
+  if (!record || !Object.hasOwn(record, "continuationTransmission")) return "unknown";
+  return TRANSMISSION_OBSERVED.includes(record.continuationTransmission)
+    ? record.continuationTransmission
+    : "unknown";
+}
+
 function exactKeys(value, keys) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const actual = Object.keys(value).sort();
@@ -107,17 +133,12 @@ function isHeader(value) {
 }
 
 function isObservation(value) {
-  return exactKeys(value, [
-    "channel",
-    "evidenceKey",
-    "feedback",
-    "feedbackSeal",
-    "observedAt",
-    "schemaVersion",
-    "taskClass",
-    "technical",
-  ])
-    && value.schemaVersion === PROSPECTIVE_RECORD_SCHEMA
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const continuation = Object.hasOwn(value, "continuationTransmission");
+  if (continuation && !TRANSMISSION_OBSERVED.includes(value.continuationTransmission)) return false;
+  const baseKeys = Object.keys(value).filter((key) => key !== "continuationTransmission");
+  if (!exactKeys(Object.fromEntries(baseKeys.map((key) => [key, true])), OBSERVATION_KEYS)) return false;
+  return value.schemaVersion === PROSPECTIVE_RECORD_SCHEMA
     && HEX64.test(value.evidenceKey || "")
     && TECHNICAL.includes(value.technical)
     && CHANNELS.includes(value.channel)
@@ -280,6 +301,13 @@ export function parseProspectiveJournal(text) {
       result.duplicateIgnored += 1;
       continue;
     }
+    if (transmissionFill(prior, parsed)) {
+      const updated = { ...prior, continuationTransmission: parsed.continuationTransmission };
+      const index = result.records.indexOf(prior);
+      result.records[index] = updated;
+      seen.set(parsed.evidenceKey, updated);
+      continue;
+    }
     if (feedbackFill(prior, parsed)) {
       const updated = { ...prior, feedback: parsed.feedback, feedbackSeal: parsed.feedbackSeal };
       const index = result.records.indexOf(prior);
@@ -352,12 +380,14 @@ function countsFor(records) {
   const technical = emptyTechnical();
   const declaredFeedback = emptyFeedback();
   const declaredTaskClass = emptyTasks();
+  const continuationTransmission = emptyTransmission();
   for (const record of records) {
     technical[record.technical] += 1;
     declaredFeedback[record.feedback] += 1;
     declaredTaskClass[record.taskClass] += 1;
+    continuationTransmission[transmissionOf(record)] += 1;
   }
-  return { technical, declaredFeedback, declaredTaskClass };
+  return { technical, declaredFeedback, declaredTaskClass, continuationTransmission };
 }
 
 function sameSummary(supplied, summary) {
@@ -403,7 +433,7 @@ export function projectProspectiveDelivery({
   let decision = parsed.decision;
   if (decision === "prospective" && !bound && (suppliedSummary != null || suppliedCutId != null)) decision = "stale_cut";
   if (decision === "prospective" && parsed.saturated) decision = "saturated";
-  const { technical, declaredFeedback, declaredTaskClass } = countsFor(boundRecords);
+  const { technical, declaredFeedback, declaredTaskClass, continuationTransmission } = countsFor(boundRecords);
   const technicalRevisions = (parsed.revisedKeys || []).filter((key) => admittedKeys.has(key)).length;
   const comparable = decision === "prospective"
     && bound
@@ -428,6 +458,7 @@ export function projectProspectiveDelivery({
     technical,
     declaredFeedback,
     declaredTaskClass,
+    continuationTransmission,
     duplicateIgnored: parsed.duplicateIgnored,
     conflictRestatements: parsed.conflictRestatements,
     technicalRevisions,
@@ -450,6 +481,10 @@ export function projectProspectiveDelivery({
       schemaPassIsNotAcceptance: true,
       paymentIsNotACustomer: true,
       declaredFeedbackIsNotVerifiedUsefulness: true,
+      continuationTransmissionIsNotClientObservation: true,
+      continuationTransmissionIsNotADeclaration: true,
+      omittedContinuationTransmissionIsUnknown: true,
+      notTransmittedIsNotACallerRefusal: true,
       sealBindsDeclarationOnly: true,
       parentAdmissionRemainsMoneyAuthority: true,
       noHistoricalBackfill: true,
@@ -504,7 +539,8 @@ function sameObservation(left, right) {
     && left.taskClass === right.taskClass
     && left.feedback === right.feedback
     && left.feedbackSeal === right.feedbackSeal
-    && left.evidenceKey === right.evidenceKey;
+    && left.evidenceKey === right.evidenceKey
+    && transmissionOf(left) === transmissionOf(right);
 }
 
 function feedbackFill(prior, next) {
@@ -512,15 +548,29 @@ function feedbackFill(prior, next) {
     && prior.channel === next.channel
     && prior.taskClass === next.taskClass
     && prior.evidenceKey === next.evidenceKey
+    && transmissionOf(prior) === transmissionOf(next)
     && prior.feedback === "absent"
     && prior.feedbackSeal === "none"
     && (next.feedback === "declared_useful" || next.feedback === "declared_not_useful")
     && next.feedbackSeal === "binds_declaration";
 }
 
+function transmissionFill(prior, next) {
+  return prior.technical === next.technical
+    && prior.channel === next.channel
+    && prior.taskClass === next.taskClass
+    && prior.feedback === next.feedback
+    && prior.feedbackSeal === next.feedbackSeal
+    && prior.evidenceKey === next.evidenceKey
+    && prior.observedAt === next.observedAt
+    && transmissionOf(prior) === "unknown"
+    && TRANSMISSION_OBSERVED.includes(next.continuationTransmission);
+}
+
 function authorizedTechnicalRevision(prior, next) {
   if (prior.evidenceKey !== next.evidenceKey || prior.observedAt !== next.observedAt) return false;
   if (prior.feedback !== next.feedback || prior.feedbackSeal !== next.feedbackSeal) return false;
+  if (transmissionOf(prior) !== transmissionOf(next)) return false;
   if (!OPEN_TECHNICAL.has(prior.technical) || next.technical === prior.technical) return false;
   if (next.technical === "unknown") return false;
   if (next.technical === "no_response") return prior.technical === "unknown";
@@ -770,6 +820,9 @@ export async function retainProspectiveDeliveries({
       if (prior && prior.feedback !== "absent") {
         observation = { ...observation, feedback: prior.feedback, feedbackSeal: prior.feedbackSeal };
       }
+      if (prior && TRANSMISSION_OBSERVED.includes(prior.continuationTransmission)) {
+        observation = { ...observation, continuationTransmission: prior.continuationTransmission };
+      }
       observations.push(observation);
     }
   }
@@ -785,6 +838,55 @@ export async function retainProspectiveDeliveries({
     await bindStoredCallerResultFeedback(dataDir, { now, sourceVersion });
   }
   return parseProspectiveJournal(await readJournal(dataDir));
+}
+
+export async function noteContinuationTransmission(dataDir, {
+  settlementReference,
+  transmission,
+  now = Date.now(),
+  sourceVersion = packageVersion,
+} = {}) {
+  if (!TRANSMISSION_OBSERVED.includes(transmission)) {
+    return { ok: false, reason: "transmission_unobserved", record: null };
+  }
+  const evidenceKey = prospectiveEvidenceKey(settlementReference);
+  if (!evidenceKey) return { ok: false, reason: "reference_absent", record: null };
+  const observedAt = new Date(now).toISOString();
+  if (!ISO.test(observedAt)) return { ok: false, reason: "clock_invalid", record: null };
+  return admitCommerceJournal(dataDir, async () => {
+    const parsed = await ensureHeader(dataDir, now, sourceVersion);
+    if (parsed.decision === "version_mismatch" || parsed.decision === "unreadable") {
+      return { ok: false, reason: parsed.decision, record: null };
+    }
+    const prior = parsed.records.find((record) => record.evidenceKey === evidenceKey) || null;
+    if (prior && transmissionOf(prior) === transmission) {
+      return { ok: true, reason: "unchanged", record: prior };
+    }
+    if (prior && transmissionOf(prior) !== "unknown") {
+      return { ok: false, reason: "transmission_conflict", record: prior };
+    }
+    if (!prior && (parsed.saturated || parsed.records.length >= PROSPECTIVE_MAX_RECORDS)) {
+      return { ok: false, reason: "saturated", record: null };
+    }
+    const observation = prior
+      ? { ...prior, continuationTransmission: transmission }
+      : {
+        schemaVersion: PROSPECTIVE_RECORD_SCHEMA,
+        evidenceKey,
+        technical: "unknown",
+        channel: "none",
+        taskClass: "absent",
+        feedback: "absent",
+        feedbackSeal: "none",
+        continuationTransmission: transmission,
+        observedAt,
+      };
+    const line = lineFor(observation);
+    if (!line) return { ok: false, reason: "observation_rejected", record: null };
+    await appendLines(dataDir, [line]);
+    noteJournalWrite(dataDir, "prospective-delivery", { appended: 1 });
+    return { ok: true, reason: prior ? "filled" : "created", record: observation };
+  });
 }
 
 export async function readProspectiveDelivery({
@@ -884,6 +986,7 @@ export function commerceProspectiveDeliveryOutputSchema() {
       technical: countSchema(TECHNICAL),
       declaredFeedback: countSchema(FEEDBACK),
       declaredTaskClass: countSchema(TASKS),
+      continuationTransmission: countSchema(TRANSMISSION),
       duplicateIgnored: { type: "integer", minimum: 0 },
       conflictRestatements: { type: "integer", minimum: 0 },
       technicalRevisions: { type: "integer", minimum: 0 },
@@ -927,6 +1030,10 @@ export function commerceProspectiveDeliveryOutputSchema() {
           schemaPassIsNotAcceptance: { type: "boolean", const: true },
           paymentIsNotACustomer: { type: "boolean", const: true },
           declaredFeedbackIsNotVerifiedUsefulness: { type: "boolean", const: true },
+          continuationTransmissionIsNotClientObservation: { type: "boolean", const: true },
+          continuationTransmissionIsNotADeclaration: { type: "boolean", const: true },
+          omittedContinuationTransmissionIsUnknown: { type: "boolean", const: true },
+          notTransmittedIsNotACallerRefusal: { type: "boolean", const: true },
           sealBindsDeclarationOnly: { type: "boolean", const: true },
           parentAdmissionRemainsMoneyAuthority: { type: "boolean", const: true },
           noHistoricalBackfill: { type: "boolean", const: true },
@@ -942,6 +1049,10 @@ export function commerceProspectiveDeliveryOutputSchema() {
           "schemaPassIsNotAcceptance",
           "paymentIsNotACustomer",
           "declaredFeedbackIsNotVerifiedUsefulness",
+          "continuationTransmissionIsNotClientObservation",
+          "continuationTransmissionIsNotADeclaration",
+          "omittedContinuationTransmissionIsUnknown",
+          "notTransmittedIsNotACallerRefusal",
           "sealBindsDeclarationOnly",
           "parentAdmissionRemainsMoneyAuthority",
           "noHistoricalBackfill",
@@ -970,6 +1081,7 @@ export function commerceProspectiveDeliveryOutputSchema() {
       "technical",
       "declaredFeedback",
       "declaredTaskClass",
+      "continuationTransmission",
       "duplicateIgnored",
       "conflictRestatements",
       "technicalRevisions",

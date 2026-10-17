@@ -140,6 +140,38 @@ export function withoutSuccessShapedStructuredContent(result) {
   return next;
 }
 
+function isPaymentRequiredBody(body) {
+  return Boolean(body)
+    && typeof body === "object"
+    && !Array.isArray(body)
+    && Number.isInteger(body.x402Version)
+    && Array.isArray(body.accepts);
+}
+
+// Official Client.callTool validates structuredContent even when isError is true.
+// Native extract's payment challenge fails extractMcpOutputSchema, so that challenge
+// stays in content text, the required x402 encoding. Other tools keep their current
+// challenge object: the sealed 0.1.2 caller probes opportunity_preflight for -32602.
+export function withoutSchemaRejectedErrorStructuredContent(result, outputSchema) {
+  if (!result || result.isError !== true || !outputSchema) return result;
+  const body = result.structuredContent;
+  if (!body || typeof body !== "object" || Array.isArray(body)) return result;
+  let accepted = false;
+  try {
+    accepted = typeof outputSchema.safeParse === "function" && outputSchema.safeParse(body).success === true;
+  } catch {
+    accepted = false;
+  }
+  if (accepted) return result;
+  const next = { ...result };
+  delete next.structuredContent;
+  const text = next.content?.[0]?.text;
+  if (typeof text !== "string") {
+    next.content = [{ type: "text", text: JSON.stringify(body) }];
+  }
+  return next;
+}
+
 export function unknownRegisteredToolError(body, catalog) {
   if (!isJsonRpcObject(body) || body.jsonrpc !== "2.0" || body.method !== "tools/call") return null;
   if (!jsonRpcHasId(body)) return null;
@@ -336,12 +368,21 @@ function isJsonRpcResponseMessage(message) {
   );
 }
 
+function paymentRequiredFromToolResult(result) {
+  if (!result || typeof result !== "object" || Array.isArray(result) || result.isError !== true) return null;
+  if (isPaymentRequiredBody(result.structuredContent)) return result.structuredContent;
+  const text = result.content?.[0]?.text;
+  if (typeof text !== "string" || text.length === 0 || text[0] !== "{") return null;
+  try {
+    const parsed = JSON.parse(text);
+    return isPaymentRequiredBody(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 function isTypedPaymentRequiredResult(result) {
-  if (!result || typeof result !== "object" || Array.isArray(result)) return false;
-  if (result.isError !== true) return false;
-  const body = result.structuredContent;
-  if (!body || typeof body !== "object" || Array.isArray(body)) return false;
-  return Number.isInteger(body.x402Version) && Array.isArray(body.accepts);
+  return paymentRequiredFromToolResult(result) !== null;
 }
 
 function classifyOutboundKind(message) {
@@ -546,7 +587,7 @@ function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) 
   };
 }
 
-function sealToolResultForSend(message, attempt, callerResultFeedbackKey) {
+function sealToolResultForSend(message, attempt, callerResultFeedbackKey, dataDir = "") {
   if (!attempt || !isJsonRpcResponseMessage(message)) return null;
   if (classifyOutboundKind(message) !== "tool_result") return null;
   try {
@@ -559,22 +600,33 @@ function sealToolResultForSend(message, attempt, callerResultFeedbackKey) {
       result: message.result,
       settlementReference: attempt.readSettlementReference?.() || null,
     });
-    attachMcpCallerResultFeedback(message.result, {
+    const eligible = attempt.acceptsCallerResultFeedback?.() === true;
+    const attached = attachMcpCallerResultFeedback(message.result, {
       key: callerResultFeedbackKey,
       observation: delivery,
-      eligible: attempt.acceptsCallerResultFeedback?.() === true,
+      eligible,
     });
+    const reference = attempt.readSettlementReference?.() || null;
+    if (eligible && typeof reference === "string" && dataDir) {
+      const transmission = attached === true ? "transmitted" : "not_transmitted";
+      import("./commerce-prospective-delivery.mjs").then((mod) => mod.noteContinuationTransmission(dataDir, {
+        settlementReference: reference,
+        transmission,
+      })).catch(() => {
+        // A continuation measurement cannot change the tool result.
+      });
+    }
     return delivery;
   } catch {
     return null;
   }
 }
 
-function decorateTransportSend(transport, attempt, callerResultFeedbackKey = "") {
+function decorateTransportSend(transport, attempt, callerResultFeedbackKey = "", dataDir = "") {
   const originalSend = transport.send;
   let used = false;
   transport.send = async function typedSend(message, options) {
-    const prepared = used ? null : sealToolResultForSend(message, attempt, callerResultFeedbackKey);
+    const prepared = used ? null : sealToolResultForSend(message, attempt, callerResultFeedbackKey, dataDir);
     let delegateResult;
     try {
       delegateResult = await originalSend.call(this, message, options);
@@ -684,6 +736,7 @@ export async function mountMcp(app, {
   configureResourceServer = null,
   httpBaseUrl = null,
   callerResultFeedbackKey = "",
+  commerceDataDir = "",
   // Inject the existing HTTP replay journal. No second store or automatic
   // task backend is constructed by this optional native-result port.
   nativeRecovery = null,
@@ -780,6 +833,11 @@ export async function mountMcp(app, {
         context: extra?._meta?.["samedaydesk/recovery-call"] ?? null }, () => inner(args, extra));
     } : inner;
     const revived = withRevivedArgs(recoverable, t.inputSchema);
+    const exposeOfficialResult = (result) => (
+      t.name === "extract" && !t.paidHttp
+        ? withoutSchemaRejectedErrorStructuredContent(result, t.outputSchema)
+        : result
+    );
     const handler = typedEnabled
       ? async (args, extra) => {
         const attempt = mcpTypedAttemptAls.getStore();
@@ -812,9 +870,9 @@ export async function mountMcp(app, {
         } else if (!t.paidHttp && attempt && !isTypedPaymentRequiredResult(result) && result?.isError !== true) {
           attempt.maybeReplayConfirmed();
         }
-        return result;
+        return exposeOfficialResult(result);
       }
-      : revived;
+      : async (args, extra) => exposeOfficialResult(await revived(args, extra));
     prepared.push({
       name: t.name,
       title: t.title,
@@ -945,7 +1003,7 @@ export async function mountMcp(app, {
     }
     const server = makeServer(req.body);
     const transport = new StreamableHTTPServerTransport(transportOptions);
-    if (created.attempt) decorateTransportSend(transport, created.attempt, callerResultFeedbackKey);
+    if (created.attempt) decorateTransportSend(transport, created.attempt, callerResultFeedbackKey, commerceDataDir);
     res.on("close", () => {
       try { transport.close(); } catch { /* noop */ }
       try { server.close?.(); } catch { /* noop */ }
