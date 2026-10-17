@@ -587,7 +587,7 @@ function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) 
   };
 }
 
-function sealToolResultForSend(message, attempt, callerResultFeedbackKey, dataDir = "") {
+function sealToolResultForSend(message, attempt, callerResultFeedbackKey) {
   if (!attempt || !isJsonRpcResponseMessage(message)) return null;
   if (classifyOutboundKind(message) !== "tool_result") return null;
   try {
@@ -607,26 +607,31 @@ function sealToolResultForSend(message, attempt, callerResultFeedbackKey, dataDi
       eligible,
     });
     const reference = attempt.readSettlementReference?.() || null;
-    if (eligible && typeof reference === "string" && dataDir) {
-      const transmission = attached === true ? "transmitted" : "not_transmitted";
-      import("./commerce-prospective-delivery.mjs").then((mod) => mod.noteContinuationTransmission(dataDir, {
-        settlementReference: reference,
-        transmission,
-      })).catch(() => {
-        // A continuation measurement cannot change the tool result.
-      });
-    }
-    return delivery;
+    return {
+      delivery,
+      attached: attached === true,
+      reference: eligible && typeof reference === "string" ? reference : null,
+    };
   } catch {
     return null;
   }
+}
+
+function noteEstablishedContinuation(dataDir, reference, transmission) {
+  if (!dataDir || (transmission !== "transmitted" && transmission !== "not_transmitted")) return;
+  import("./commerce-prospective-delivery.mjs").then((mod) => mod.noteContinuationTransmission(dataDir, {
+    settlementReference: reference,
+    transmission,
+  })).catch(() => {
+    // A continuation measurement cannot change or replay the tool result.
+  });
 }
 
 function decorateTransportSend(transport, attempt, callerResultFeedbackKey = "", dataDir = "") {
   const originalSend = transport.send;
   let used = false;
   transport.send = async function typedSend(message, options) {
-    const prepared = used ? null : sealToolResultForSend(message, attempt, callerResultFeedbackKey, dataDir);
+    const prepared = used ? null : sealToolResultForSend(message, attempt, callerResultFeedbackKey);
     let delegateResult;
     try {
       delegateResult = await originalSend.call(this, message, options);
@@ -636,6 +641,8 @@ function decorateTransportSend(transport, attempt, callerResultFeedbackKey = "",
         attempt.noteTransportError();
         attempt.finalize({ kind: "transport_error" });
       }
+      // The delegate rejected the send. Leave continuationTransmission absent
+      // (unknown). That is not a caller refusing feedback.
       throw error;
     }
     if (attempt && !used && isJsonRpcResponseMessage(message)) {
@@ -644,9 +651,16 @@ function decorateTransportSend(transport, attempt, callerResultFeedbackKey = "",
       if (kind === "tool_result") {
         try {
           if (message.result?.isError === true) attempt.overrideFinalApplicationError();
-          if (prepared) attempt.noteToolDelivery(prepared);
+          if (prepared?.delivery) attempt.noteToolDelivery(prepared.delivery);
         } catch {
           // Delivery capture must not change the MCP response.
+        }
+        if (prepared?.reference) {
+          noteEstablishedContinuation(
+            dataDir,
+            prepared.reference,
+            prepared.attached === true ? "transmitted" : "not_transmitted",
+          );
         }
       }
       attempt.finalize({
