@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
-import { createHmac, randomBytes } from "node:crypto";
+import { createHash, createHmac, randomBytes } from "node:crypto";
 import { createServer as createHttpServer } from "node:http";
 import { createServer as createNetServer } from "node:net";
 import { mkdtemp, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
@@ -220,7 +220,76 @@ function resign(token, key, mutate) {
   return `${payload.toString("base64url")}.${mac.toString("base64url")}`;
 }
 
-test("installed caller consumer reaches the mounted parent without merchant source", { timeout: 300_000 }, async () => {
+const SEALED_PREFLIGHT_PROBE = `  let probe = "probe_succeeded";
+  try {
+    await session.caller.pay("opportunity_preflight", input.preflight);
+  } catch (error) {
+    probe = error?.code === -32602 ? "output_schema_rejected_challenge" : "probe_failed";
+  }
+  if (probe !== "output_schema_rejected_challenge") fail("schema_probe");
+  const accepted = await challengeFor(input.mcpUrl, "opportunity_preflight", input.preflight);
+  const preflightPayment = syntheticPayment({ accepts: accepted ? [accepted] : [] });
+  if (!preflightPayment) fail("preflight_challenge");
+  const preflight = await session.caller.payWithPayment("opportunity_preflight", input.preflight, preflightPayment);
+  if (preflight.paymentMade !== true || preflight.capability.present !== false) fail("preflight_capability");`;
+
+const ORDINARY_PREFLIGHT_PROBE = `  const preflight = await session.caller.pay("opportunity_preflight", input.preflight);
+  if (preflight.paymentMade !== true || preflight.capability.present !== false) fail("preflight_capability");
+  const probe = "ordinary_pay";`;
+
+async function observeSealedSchemaProbe({ work, feedbackKey, actorSecret, refusals }) {
+  const probeRoot = await mkdtemp(path.join(tmpdir(), "caller-result-sealed-probe-"));
+  const probeData = path.join(probeRoot, "data");
+  const probeSignals = path.join(probeRoot, "signals");
+  await mkdir(probeData);
+  await mkdir(probeSignals);
+  const facilitator = await startFakeFacilitator();
+  let merchant = null;
+  let consumer = null;
+  let stderr = "";
+  let stdout = "";
+  try {
+    merchant = await startMerchant({
+      dataDir: probeData,
+      facilitatorUrl: facilitator.url,
+      feedbackKey,
+      actorSecret,
+    });
+    const inputPath = path.join(work, "sealed-input.json");
+    await writeFile(inputPath, JSON.stringify({
+      mcpUrl: `${merchant.base}/mcp`,
+      signalDir: probeSignals,
+      morpho: { address: FIXTURE_ADDRESS, shocks: [-10, -50] },
+      preflight: { rewardUsd: 10, hours: 1, hourlyCostUsd: 50 },
+      deadPort: await unusedPort(),
+      refusals,
+    }));
+    consumer = spawn(process.execPath, ["bin/cold-consumer.mjs", "sealed-input.json"], {
+      cwd: work,
+      env: { PATH: process.env.PATH, HOME: process.env.HOME },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    consumer.stdout.on("data", (chunk) => { stdout += chunk; });
+    consumer.stderr.on("data", (chunk) => { stderr += chunk; });
+    const code = await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error(`sealed_probe_timeout\n${stderr}\n${stdout}\n${merchant.output().slice(-800)}`)), 90_000);
+      consumer.once("exit", (status) => {
+        clearTimeout(timer);
+        resolve(status);
+      });
+    });
+    assert.equal(code, 1, `${stdout}\n${stderr}`);
+    assert.equal(stderr, "schema_probe\n");
+    await assert.rejects(readFile(path.join(probeSignals, "captured")), { code: "ENOENT" });
+  } finally {
+    if (consumer && consumer.exitCode === null && consumer.signalCode === null) consumer.kill("SIGTERM");
+    if (merchant?.child) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(probeRoot, { recursive: true, force: true });
+  }
+}
+
+test("installed caller consumer reaches the mounted parent without merchant source", { timeout: 420_000 }, async () => {
   const root = await mkdtemp(path.join(tmpdir(), "caller-result-cold-"));
   const work = path.join(root, "consumer");
   const signalDir = path.join(root, "signals");
@@ -268,6 +337,16 @@ test("installed caller consumer reaches the mounted parent without merchant sour
     encoding: "utf8",
   });
   assert.equal(merchantImport.status, 1);
+  const sealedBin = await readFile(path.join(work, "bin/cold-consumer.mjs"), "utf8");
+  assert.equal(sealedBin.includes(SEALED_PREFLIGHT_PROBE), true);
+  const ordinaryBin = sealedBin.replace(SEALED_PREFLIGHT_PROBE, ORDINARY_PREFLIGHT_PROBE);
+  assert.notEqual(ordinaryBin, sealedBin);
+  await writeFile(path.join(work, "bin/ordinary-consumer.mjs"), ordinaryBin, "utf8");
+  assert.equal(await readFile(path.join(work, "bin/cold-consumer.mjs"), "utf8"), sealedBin);
+  assert.equal(
+    createHash("sha256").update(await readFile(path.join(root, "archive.tar.gz"))).digest("hex"),
+    fresh.archiveSha256,
+  );
 
   const feedbackKey = randomBytes(32).toString("hex");
   const actorSecret = randomBytes(24).toString("hex");
@@ -294,6 +373,13 @@ test("installed caller consumer reaches the mounted parent without merchant sour
   let merchant = null;
   let consumer = null;
   try {
+  await observeSealedSchemaProbe({
+    work,
+    feedbackKey,
+    actorSecret,
+    refusals: { expired, foreignTool, httpChannel },
+  });
+  assert.equal(await readFile(path.join(work, "bin/cold-consumer.mjs"), "utf8"), sealedBin);
   merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url, feedbackKey, actorSecret });
   const deadPort = await unusedPort();
   const inputPath = path.join(work, "input.json");
@@ -305,7 +391,7 @@ test("installed caller consumer reaches the mounted parent without merchant sour
     deadPort,
     refusals: { expired, foreignTool, httpChannel },
   }));
-  consumer = spawn(process.execPath, ["bin/cold-consumer.mjs", "input.json"], {
+  consumer = spawn(process.execPath, ["bin/ordinary-consumer.mjs", "input.json"], {
     cwd: work,
     env: { PATH: process.env.PATH, HOME: process.env.HOME },
     stdio: ["ignore", "pipe", "pipe"],
@@ -393,7 +479,12 @@ test("installed caller consumer reaches the mounted parent without merchant sour
   assert.equal(summary.notUsefulBound, true);
   assert.equal(summary.restartReplay, true);
   assert.equal(summary.contentPreserved, true);
-  assert.equal(summary.outputSchemaProbe, "output_schema_rejected_challenge");
+  assert.equal(summary.outputSchemaProbe, "ordinary_pay");
+  assert.equal(await readFile(path.join(work, "bin/cold-consumer.mjs"), "utf8"), sealedBin);
+  assert.equal(
+    createHash("sha256").update(await readFile(path.join(root, "archive.tar.gz"))).digest("hex"),
+    fresh.archiveSha256,
+  );
   assert.equal(summary.refusals.tampered, "tampered_capability");
   assert.equal(summary.refusals.expired, "expired_capability");
   assert.equal(summary.refusals.foreignToolServer, "foreign_tool");

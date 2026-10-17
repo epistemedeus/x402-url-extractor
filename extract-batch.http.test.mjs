@@ -712,6 +712,14 @@ async function mcpCall(base, body, payment, headers = {}) {
   return JSON.parse(text);
 }
 
+function mcpPaymentChallenge(result) {
+  assert.equal(result?.structuredContent, undefined, JSON.stringify(result));
+  const body = JSON.parse(result.content[0].text);
+  assert.equal(Number.isInteger(body?.x402Version), true);
+  assert.ok(Array.isArray(body?.accepts));
+  return body;
+}
+
 test("mounted MCP same paid batch replays across restart without a second settlement", { timeout: 90_000 }, async (t) => {
   const dataDir = await mkdtemp(path.join(tmpdir(), "batch-mcp-replay-"));
   const fetchLogPath = path.join(dataDir, "source-fetches.log");
@@ -729,7 +737,7 @@ test("mounted MCP same paid batch replays across restart without a second settle
   await start();
   const body = { urls: ["https://alpha.example/"], fields: ["title"] };
   const unpaid = await mcpCall(merchant.base, body, null, { "x-forwarded-host": "attacker.example", "x-forwarded-proto": "http" });
-  const challenge = unpaid.result?.structuredContent;
+  const challenge = mcpPaymentChallenge(unpaid.result);
   assert.equal(challenge?.resource?.url, "https://agents.samedaydesk.com/extract/batch", JSON.stringify(unpaid));
   const payment = JSON.parse(Buffer.from(testPayment(challenge), "base64").toString());
   for (const url of ["mcp://samedaydesk/extract_batch", "https://attacker.example/extract/batch", "https://agents.samedaydesk.com/extract"]) {
@@ -748,7 +756,8 @@ test("mounted MCP same paid batch replays across restart without a second settle
   assert.equal((await readFetchLog(fetchLogPath)).length, 1);
   const mppBody = { urls: ["https://beta.example/"], fields: ["title"] };
   const mppChallenge = await mcpCall(merchant.base, mppBody);
-  const credential = await createMppCredential(new Response(JSON.stringify(mppChallenge.result.structuredContent), {
+  const mppOffer = mcpPaymentChallenge(mppChallenge.result);
+  const credential = await createMppCredential(new Response(JSON.stringify(mppOffer), {
     status: 402, headers: mppChallenge.result._meta["samedaydesk/http"].headers,
   }));
   const mppPaid = await mcpCall(merchant.base, mppBody, null, { authorization: credential });
@@ -777,8 +786,9 @@ for (const protocol of ["x402", "mpp"]) for (const mode of ["denied", "unknown"]
   await start();
   const body = { urls: ["https://alpha.example/"], fields: ["title"] };
   const unpaid = await mcpCall(merchant.base, body);
-  const payment = JSON.parse(Buffer.from(testPayment(unpaid.result.structuredContent), "base64").toString());
-  const credential = protocol === "mpp" ? await createMppCredential(new Response(JSON.stringify(unpaid.result.structuredContent), {
+  const offer = mcpPaymentChallenge(unpaid.result);
+  const payment = JSON.parse(Buffer.from(testPayment(offer), "base64").toString());
+  const credential = protocol === "mpp" ? await createMppCredential(new Response(JSON.stringify(offer), {
     status: 402, headers: unpaid.result._meta["samedaydesk/http"].headers,
   })) : null;
   const callPaid = () => mcpCall(merchant.base, body, protocol === "x402" ? payment : null,
@@ -994,8 +1004,9 @@ test("mounted semantic refusal contract is shared by HTTP, OpenAPI, and MCP", { 
   assert.deepEqual(await readFetchLog(fetchLogPath), []);
 
   const validMcp = await mcpCall(merchant.base, { urls: ["https://alpha.example/"], fields: ["title"] });
-  assert.equal(validMcp.result?.structuredContent?.resource?.url, "https://agents.samedaydesk.com/extract/batch");
-  assert.equal(readExtractBatchInputRefusalCode(validMcp.result?.structuredContent), null);
+  const validOffer = mcpPaymentChallenge(validMcp.result);
+  assert.equal(validOffer?.resource?.url, "https://agents.samedaydesk.com/extract/batch");
+  assert.equal(readExtractBatchInputRefusalCode(validOffer), null);
 
   const paid = await fetch(`${merchant.base}${EXTRACT_BATCH_PATH}`, jsonPost({
     urls: ["https://alpha.example/"],

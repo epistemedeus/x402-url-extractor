@@ -275,6 +275,14 @@ async function mcpCall(base, { name, args, payment, headers = {}, id = 77 }) {
   return JSON.parse(text);
 }
 
+function mcpPaymentChallenge(result) {
+  assert.equal(result?.structuredContent, undefined, JSON.stringify(result));
+  const body = JSON.parse(result.content[0].text);
+  assert.equal(Number.isInteger(body?.x402Version), true);
+  assert.ok(Array.isArray(body?.accepts));
+  return body;
+}
+
 function assertExactBatchHttp(event, { status, result, construction, paymentPresent, declared = null }) {
   assert.equal(event.v, 3);
   assert.equal(event.method, "POST");
@@ -464,7 +472,7 @@ test("combined Claude Goose and no-source sessions retain one owning event per r
     assert.equal(batch.result._meta["samedaydesk/http"].status, 402);
     return batch.result;
   }));
-  const credential = JSON.parse(Buffer.from(testPayment(challenges[0].structuredContent,
+  const credential = JSON.parse(Buffer.from(testPayment(mcpPaymentChallenge(challenges[0]),
     { id: "combined_x402_1234567890ab" }), "base64").toString());
   const mppChallenge = new Response(null, { status: 402,
     headers: challenges[1]._meta["samedaydesk/http"].headers });
@@ -551,7 +559,7 @@ test("mounted refusal evidence carries only semantic codes through HTTP MCP and 
   await challengeResponse.text();
   const validMcp = await mcpCall(merchant.base, { name: "extract_batch", args: valid });
   assert.equal(validMcp.result._meta["samedaydesk/http"].status, 402);
-  const mcpPayment = JSON.parse(Buffer.from(testPayment(validMcp.result.structuredContent), "base64").toString("utf8"));
+  const mcpPayment = JSON.parse(Buffer.from(testPayment(mcpPaymentChallenge(validMcp.result)), "base64").toString("utf8"));
   const secret = "sk_live_REFUSAL_EVIDENCE_SYNTHETIC";
   const value = "caller-prose-refusal-evidence-canary";
   const cases = [

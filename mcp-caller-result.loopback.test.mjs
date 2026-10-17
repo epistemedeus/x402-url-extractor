@@ -42,6 +42,8 @@ test("mounted native MCP caller journey reaches the current handlers", { timeout
   assert.equal(summary.controls.wrapperReturnedCapability, false);
   assert.equal(summary.controls.hookRetainsCapability, true);
   assert.equal(summary.controls.chainTruth, false);
+  assert.equal(summary.controls.outputSchemaProbe, "ordinary_pay");
+  assert.equal(summary.controls.preflightCapability, false);
   assert.equal(summary.counts.parentAdmitted > 0, true);
   assert.equal(summary.counts.declaredUseful, 1);
   assert.equal(summary.counts.declaredNotUseful, 1);

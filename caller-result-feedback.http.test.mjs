@@ -294,6 +294,14 @@ async function mcpCall(base, body, payment) {
   return parsed;
 }
 
+function mcpPaymentChallenge(result) {
+  assert.equal(result?.structuredContent, undefined, JSON.stringify(result));
+  const body = JSON.parse(result.content[0].text);
+  assert.equal(Number.isInteger(body?.x402Version), true);
+  assert.ok(Array.isArray(body?.accepts));
+  return body;
+}
+
 function containsToken(value, token) {
   return typeof token === "string" && token.length > 0 && String(value).includes(token);
 }
@@ -402,7 +410,7 @@ test("mounted caller can report one retained result without changing the paid bo
 
   const batchBody = { urls: ["https://alpha.example/"], fields: ["title"] };
   const unpaidMcp = await mcpCall(merchant.base, batchBody, null);
-  const payment = JSON.parse(Buffer.from(testPayment(unpaidMcp.result.structuredContent), "base64").toString("utf8"));
+  const payment = JSON.parse(Buffer.from(testPayment(mcpPaymentChallenge(unpaidMcp.result)), "base64").toString("utf8"));
   const mcpPaid = await mcpCall(merchant.base, batchBody, payment);
   assert.equal(mcpPaid.result?.structuredContent?.sources?.[0]?.data?.title, "Alpha");
   const feedbackMeta = mcpPaid.result?._meta?.["samedaydesk/caller-result-feedback"];

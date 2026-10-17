@@ -4548,6 +4548,7 @@ import("./mcp-server.mjs")
       tools: mcpTools,
       nativeRecovery: { journal: idempotencyReplay, endpointUrl: `${PUBLIC_URL}/mcp`, tenantId: "public" },
       callerResultFeedbackKey: process.env.CALLER_RESULT_FEEDBACK_KEY || "",
+      commerceDataDir: process.env.COMMERCE_DATA_DIR || `${process.cwd()}/data`,
     });
   })
   .then((r) => {
