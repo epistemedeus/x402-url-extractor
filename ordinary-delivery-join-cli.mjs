@@ -48,6 +48,9 @@ Contract
   --check-report <file> prints violation codes and exits 1 when any are present.
   customerPlane stays null. usefulness stays unknown. An exact join requires a capture.
   callerResultFeedback counts only rows in this window. It is not a global funnel.
+  sellerAuditOutcomes counts only joined, versioned seller-audit summaries in this
+  window, with missing/invalid/unsupported counts separate. Raw response bytes and
+  response digests are omitted. Old output stays unknown; no backfill is performed.
 `;
 
 function value(flag) {

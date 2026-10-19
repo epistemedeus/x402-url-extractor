@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { mkdtemp, open, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, open, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -9,6 +9,8 @@ import { fileURLToPath } from "node:url";
 
 import { createCommerceTelemetry } from "../../commerce-events.mjs";
 import { sellerIntegrityAudit } from "../../seller-integrity-audit.mjs";
+import { SCHEMA_VERSION } from "../../commerce-settlement-reconciler.mjs";
+import { FILE_CLASSES, receiveOrdinaryDeliveryJoin } from "../../ordinary-delivery-join.mjs";
 import { bindMerchantHttpDeliveryContracts } from "../bind-merchant-contracts.mjs";
 import { sealStreamedHttpCapture } from "../observation.mjs";
 import {
@@ -433,6 +435,23 @@ test("ordinary paid seller responses join contract, causal event, and settlement
       assert.equal(row.usefulness, USEFULNESS_UNKNOWN);
       assert.equal(row.resource, RESOURCES.SELLER_INTEGRITY);
     }
+    assert.equal(validations.filter((row) => row.outcomeSummaryStatus === "available").length, 4);
+    assert.equal(validations[0].outcomeSummary.decision, "repair_required");
+    assert.equal(validations[0].outcomeSummary.responseDigest, digestResponseBytes(bytesOf(repair)));
+    assert.equal(validations[0].outcomeSummary.unknownFindings, 1);
+    assert.equal(validations.find((row) => row.deliveryClass === DELIVERY.INCOMPLETE_REPORT).outcomeSummary.failureCategory, "openapi_unavailable");
+    // Fixture-only canonical settlement exercises the normal restarted operator receiver.
+    await writeFile(path.join(dir, FILE_CLASSES.settlementLedger), `${JSON.stringify({
+      schemaVersion: SCHEMA_VERSION, state: "reconciled", sourceEventId: evidence[0].id,
+      sourceEventTimestamp: evidence[0].responseFinishedAt, route: evidence[0].route,
+      protocol: evidence[0].paymentProtocol, paymentClass: "unclassified", settlementReference: SETTLEMENT, amountAtomic: "10000",
+    })}\n`);
+    const joined = await receiveOrdinaryDeliveryJoin({ dataDir: dir, windowStart: "2020-01-01T00:00:00.000Z", windowEnd: "2100-01-01T00:00:00.000Z" });
+    assert.equal(joined.rows.find((row) => row.disposition === "exact_join").outcomeSummary.decision, "repair_required");
+    assert.equal(joined.sellerAuditOutcomes.counts.available, 1);
+    assert.equal(joined.sellerAuditOutcomes.decisions.repair_required, 1);
+    assert.equal(joined.callerResultFeedback.suppliedUseful, 0);
+    assert.equal(JSON.stringify(joined).includes(CANARY), false);
     const quietValidations = await openStore(path.join(dir, "quiet")).readValidations();
     assert.deepEqual(quietValidations, []);
 
@@ -469,6 +488,27 @@ test("ordinary paid seller responses join contract, causal event, and settlement
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test("a lost summary append preserves the paid event and never retries delivery", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "diagnostic-lost-write-"));
+  try {
+    const store = openStore(dir);
+    await mkdir(store.validationPath);
+    const telemetry = createCommerceTelemetry({ dataDir: dir, secret: "lost-summary-secret" });
+    const repair = await completedReport("repair_required");
+    emitPaid(telemetry, { body: JSON.stringify(repair), settlement: SETTLEMENT, doubleFinish: true });
+    await telemetry.flush();
+    const evidence = (await readFile(telemetry.paths.paidEvidencePath, "utf8")).trim().split("\n").map(JSON.parse);
+    assert.equal(evidence.length, 1);
+    assert.equal(evidence[0].responseDigest, digestResponseBytes(bytesOf(repair)));
+    await rm(store.validationPath, { recursive: true });
+    assert.deepEqual(await openStore(dir).readValidations(), []);
+    assert.equal((await openStore(dir).join())[0].validations.length, 0);
+    await telemetry.flush();
+    assert.deepEqual(await openStore(dir).readValidations(), []);
+    assert.equal((await readFile(telemetry.paths.paidEvidencePath, "utf8")).trim().split("\n").length, 1);
+  } finally { await rm(dir, { recursive: true, force: true }); }
 });
 
 test("cold receiver accepts a matching repair and rejects the changed later task", async () => {

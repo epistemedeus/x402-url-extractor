@@ -40,6 +40,7 @@ import {
   canonicalizeValidationRecord,
   validationAttachesToHistorical,
 } from "./http-delivery-evidence/store.mjs";
+import { SELLER_OUTCOME_SCHEMA, isPublicSellerOutcome, sellerOutcomeForJoin } from "./http-delivery-evidence/seller-outcome.mjs";
 
 export const PRODUCER_BASE_SHA = "cbfed005c5200f76feb419ebb3a4ce8ffee49644";
 export const REPORT_SCHEMA = "samedaydesk.ordinary-delivery-join.v1";
@@ -251,6 +252,8 @@ function blankRow(fields) {
     sourceEventTimestamp: fields.sourceEventTimestamp ?? null,
     deliveryClass: fields.deliveryClass ?? null,
     validatorVerdict: fields.validatorVerdict ?? null,
+    outcomeSummaryStatus: fields.outcomeSummaryStatus ?? (fields.route === "/commerce/seller-integrity-audit" ? "missing" : "not_applicable"),
+    outcomeSummary: fields.outcomeSummary ?? null,
     settlementReferencePresent: Boolean(fields.settlementReferencePresent),
     paidEvidencePresent: Boolean(fields.paidEvidencePresent),
     httpAttached: fields.httpAttached ?? 0,
@@ -567,7 +570,14 @@ export function joinOrdinaryDeliveries({
     } : null);
     const caller = callerFor(callerSubject, callerPaid, settlement.sourceEventId)
       || assessCaller(callerSubject, callerPaid, null);
+    const semantic = settlement.route === "/commerce/seller-integrity-audit"
+      ? sellerOutcomeForJoin(attached, judged.disposition) : {};
+    if (semantic.outcomeSummary) {
+      const { responseDigest, ...publicSummary } = semantic.outcomeSummary;
+      semantic.outcomeSummary = publicSummary;
+    }
     rows.push(blankRow({
+      ...semantic,
       disposition: judged.disposition,
       reasons: [...new Set(judged.reasons)],
       callerAcceptance: caller.callerAcceptance,
@@ -685,6 +695,33 @@ export function joinOrdinaryDeliveries({
     counts,
     rows,
     callerResultFeedback: callerFeedbackAggregate(rows),
+    sellerAuditOutcomes: sellerAuditOutcomeAggregate(rows),
+  };
+}
+
+function sellerAuditOutcomeAggregate(rows) {
+  const counts = { available: 0, missing: 0, unavailable: 0, invalid: 0, unsupported: 0 };
+  const decisions = { machine_buyable: 0, contract_ready: 0, repair_required: 0 };
+  const runtimeCoverage = { verified: 0, static_post: 0, target_unconstructible: 0, probe_failed: 0, challenge_unverified: 0, incomplete: 0, unknown: 0 };
+  let auditCompleted = 0;
+  let auditIncomplete = 0;
+  for (const row of rows) {
+    if (row.route !== "/commerce/seller-integrity-audit") continue;
+    const status = row.outcomeSummaryStatus || "missing";
+    if (Object.hasOwn(counts, status)) counts[status] += 1;
+    const s = row.outcomeSummary;
+    if (status !== "available" || !s) continue;
+    if (Object.hasOwn(decisions, s.decision)) decisions[s.decision] += 1;
+    if (Object.hasOwn(runtimeCoverage, s.runtimeCoverage)) runtimeCoverage[s.runtimeCoverage] += 1;
+    if (s.auditCompleted === true) auditCompleted += 1;
+    else auditIncomplete += 1;
+  }
+  return {
+    schema: SELLER_OUTCOME_SCHEMA,
+    population: "seller_audit_rows_in_this_window",
+    counts, decisions, runtimeCoverage, auditCompleted, auditIncomplete,
+    historicalBackfill: false,
+    measuredUsefulness: "unknown",
   };
 }
 
@@ -844,6 +881,9 @@ export function reportViolations(report) {
     bad("customer_plane_filled");
   }
   if (report.boundaries?.settlementNeverProvesBuyerValidDelivery !== true) bad("settlement_proves_delivery");
+  if (report.sellerAuditOutcomes && JSON.stringify(report.sellerAuditOutcomes) !== JSON.stringify(sellerAuditOutcomeAggregate(report.rows || []))) {
+    bad("seller_outcome_coverage");
+  }
   const feedback = report.callerResultFeedback;
   if (
     !feedback
@@ -863,6 +903,10 @@ export function reportViolations(report) {
   let absent = 0;
   let unboundOrForeign = 0;
   for (const row of report.rows || []) {
+    if (row.outcomeSummaryStatus === "available") {
+      if (row.route !== "/commerce/seller-integrity-audit" || !["exact_join", "incomplete_capture"].includes(row.disposition)
+        || row.httpAttached < 1 || !isPublicSellerOutcome(row.outcomeSummary, row.validatorVerdict, row.deliveryClass)) bad("seller_outcome_unbound");
+    } else if (row.outcomeSummary) bad("seller_outcome_unbound");
     if (row.callerSuppliedDisposition === "useful") suppliedUseful += 1;
     else if (row.callerSuppliedDisposition === "not_useful") suppliedNotUseful += 1;
     else if (row.callerAcceptance === "absent") absent += 1;
