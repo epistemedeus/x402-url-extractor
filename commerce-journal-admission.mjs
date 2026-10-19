@@ -63,6 +63,7 @@ export function commerceRuntime(app) { return runtimes.get(app) || { entrypoint:
 // and nesting those waits deadlocks. path.resolve stays the same key when the
 // directory is created later; realpath does not.
 const observationTails = new Map();
+const observationCounts = new Map();
 let observationProbe = null;
 
 function observationKey(dir) {
@@ -86,6 +87,12 @@ function ownJournalObservation(dir, start) {
     if (observationProbe) await observationProbe(dir);
     return start();
   }).then(() => undefined, () => undefined);
+  observationCounts.set(key, (observationCounts.get(key) || 0) + 1);
+  job.then(() => {
+    const pending = (observationCounts.get(key) || 1) - 1;
+    if (pending > 0) observationCounts.set(key, pending);
+    else observationCounts.delete(key);
+  });
   const previous = observationTails.get(key) || Promise.resolve();
   const tail = previous.then(() => job);
   observationTails.set(key, tail);
@@ -96,18 +103,42 @@ function ownJournalObservation(dir, start) {
   return job;
 }
 
-export function drainJournalObservations(dir) {
+export function journalObservationStatus(dir) {
   const key = observationKey(dir);
-  if (!key) return Promise.resolve();
-  const tail = observationTails.get(key);
-  if (!tail) return Promise.resolve();
-  return tail.then(() => {
-    const again = observationTails.get(key);
-    if (again && again !== tail) return drainJournalObservations(dir);
-  }, () => {
-    const again = observationTails.get(key);
-    if (again && again !== tail) return drainJournalObservations(dir);
-  });
+  const pending = key ? observationCounts.get(key) || 0 : 0;
+  return { drained: pending === 0, pending };
+}
+
+export async function drainJournalObservations(dir, { timeoutMs } = {}) {
+  const key = observationKey(dir);
+  if (!key) return journalObservationStatus(dir);
+  const budget = Number(timeoutMs);
+  const deadline = Number.isFinite(budget) ? Date.now() + Math.max(0, budget) : null;
+  while (true) {
+    const tail = observationTails.get(key);
+    if (!tail) break;
+    if (deadline === null) {
+      await tail.then(() => undefined, () => undefined);
+      continue;
+    }
+    const remaining = Math.max(0, deadline - Date.now());
+    if (remaining === 0) break;
+    let timer;
+    try {
+      const settled = await Promise.race([
+        tail.then(() => true, () => true),
+        new Promise((resolve) => {
+          timer = setTimeout(() => resolve(false), remaining);
+        }),
+      ]);
+      if (!settled) break;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  // Timing out does not forget or cancel the owned work. An omitted budget
+  // retains the existing unbounded HTTP flush behavior.
+  return journalObservationStatus(dir);
 }
 
 export function observeContinuationTransmission(dir, fields) {

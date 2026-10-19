@@ -17,6 +17,7 @@ import {
   isCanonicalMcpTypedCommerceEvent,
 } from "./commerce-events.mjs";
 import { mountMcp } from "./mcp-server.mjs";
+import { setJournalObservationProbe } from "./commerce-journal-admission.mjs";
 import {
   createMcpTypedTelemetryAttempt,
   evaluateMcpTypedTelemetryOutcome,
@@ -268,6 +269,7 @@ async function startMounted(options = {}) {
     tools: options.tools || createTools(calls),
     streamableHttpOptions: options.streamableHttpOptions,
     configureResourceServer: options.configureResourceServer,
+    commerceDataDir: options.commerceDataDir || "",
     typedTelemetry: {
       enabled: options.typedEnabled === true,
       onAppend: (decision, requestAttribution, declaredSource) => {
@@ -1400,3 +1402,82 @@ test("hostile then-getter callback result is one contained append failure", { ti
     await disabled.close();
   }
 });
+
+for (const method of ["flush", "shutdown"]) {
+  test("mounted MCP " + method + " shares its deadline with continuation work", { timeout: 20_000 }, async (t) => {
+    const dataDir = await mkdtemp(path.join(os.tmpdir(), "mcp-continuation-deadline-"));
+    let releaseTyped;
+    let releaseObservation;
+    let enteredTyped;
+    let enteredObservation;
+    const typedHold = new Promise((resolve) => { releaseTyped = resolve; });
+    const observationHold = new Promise((resolve) => { releaseObservation = resolve; });
+    const typedEntered = new Promise((resolve) => { enteredTyped = resolve; });
+    const observationEntered = new Promise((resolve) => { enteredObservation = resolve; });
+    let observations = 0;
+    const previousProbe = setJournalObservationProbe((dir) => {
+      if (path.resolve(dir) !== dataDir) return;
+      observations += 1;
+      enteredObservation();
+      return observationHold;
+    });
+    let instance;
+    let restoreClock = () => {};
+    t.after(async () => {
+      releaseTyped();
+      releaseObservation();
+      restoreClock();
+      setJournalObservationProbe(previousProbe);
+      if (instance) await instance.close();
+      await rm(dataDir, { recursive: true, force: true });
+    });
+    instance = await startMounted({
+      typedEnabled: true,
+      wrapResponse: false,
+      commerceDataDir: dataDir,
+      onAppend(decision) {
+        if (decision.result !== "paid_success") throw new Error("contained challenge append failure");
+        enteredTyped();
+        return typedHold;
+      },
+    });
+    const lifecycle = instance.mountResult.typedTelemetryLifecycle;
+    const { accepts } = await unpaidAccepts(instance.origin, "enrich", "domain", "example.invalid", 260);
+    assert.deepEqual(await lifecycle.flush(), { drained: true, pending: 0, failures: 1 });
+    // A real mounted paid response must finish while both observational paths
+    // are held. The fake facilitator never sends a payment outside loopback.
+    const response = await postMcp(instance.origin, paidCall(261, "enrich", "domain", "example.invalid", accepts));
+    assert.equal(response.status, 200);
+    assert.notEqual(response.json?.result?.isError, true);
+    await Promise.all([typedEntered, observationEntered]);
+    assert.deepEqual(await lifecycle.flush({ timeoutMs: 0 }), { drained: false, pending: 2, failures: 1 });
+
+    // Advance only the deadline clock after phase one starts. No sleeps,
+    // retries, or elapsed-wall-time assertions are needed to catch a fresh
+    // second-phase budget or the original unbounded continuation wait.
+    let now = Date.now();
+    const clock = t.mock.method(Date, "now", () => now);
+    restoreClock = () => clock.mock.restore();
+    const bounded = lifecycle[method]({ timeoutMs: 60_000 });
+    now += 60_000;
+    releaseTyped();
+    assert.deepEqual(await bounded, { drained: false, pending: 1, failures: 1 });
+    restoreClock();
+    restoreClock = () => {};
+    assert.deepEqual(await lifecycle.flush({ timeoutMs: 0 }), { drained: false, pending: 1, failures: 1 });
+    assert.equal(instance.calls.verify, 1);
+    assert.equal(instance.calls.settle, 1);
+    assert.equal(instance.calls.handler.enrich, 1);
+
+    releaseObservation();
+    assert.deepEqual(await lifecycle.flush(), { drained: true, pending: 0, failures: 1 });
+    assert.deepEqual(await lifecycle.flush({ timeoutMs: 0 }), { drained: true, pending: 0, failures: 1 });
+    const journal = await readFile(path.join(dataDir, "commerce-prospective-delivery.ndjson"), "utf8");
+    assert.equal(journal.trim().split("\n").filter((line) => line.includes('"continuationTransmission"')).length, 1);
+    assert.equal(observations, 1);
+    assert.equal(instance.calls.verify, 1);
+    assert.equal(instance.calls.settle, 1);
+    assert.equal(instance.calls.handler.enrich, 1);
+    assert.equal(instance.calls.external, 0);
+  });
+}
