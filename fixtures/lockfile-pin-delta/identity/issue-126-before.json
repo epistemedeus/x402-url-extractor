@@ -1,0 +1,32 @@
+{
+  "name": "lock-alias-reproduction",
+  "version": "1.0.0",
+  "lockfileVersion": 2,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "lock-alias-reproduction",
+      "version": "1.0.0",
+      "dependencies": {
+        "renamed-is-number": "npm:is-number@7.0.0"
+      }
+    },
+    "node_modules/renamed-is-number": {
+      "name": "is-number",
+      "version": "7.0.0",
+      "resolved": "https://registry.npmjs.org/is-number/-/is-number-7.0.0.tgz",
+      "integrity": "sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==",
+      "license": "MIT",
+      "engines": {
+        "node": ">=0.12.0"
+      }
+    }
+  },
+  "dependencies": {
+    "renamed-is-number": {
+      "version": "npm:is-number@7.0.0",
+      "resolved": "https://registry.npmjs.org/is-number/-/is-number-7.0.0.tgz",
+      "integrity": "sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng=="
+    }
+  }
+}

@@ -3,12 +3,26 @@
   "package": "@samedaydesk/lockfile-pin-delta",
   "source": {
     "repo": "epistemedeus/samedaydesk",
-    "sha": "fba9d14872bc4c04214e527b9edfb30c2123c9e7",
+    "sha": "83f252ad6dae6ffa19455576ce11a524bff46efc",
     "path": "tools/lockfile-pin-delta/",
+    "packageTree": "51c1bf199882e40ea45aafccdd93e46fdd15f51b",
+    "baseSha": "d8cea059213e06d2f263be67f82e498f8052a50f",
+    "importedFrom": "55b2dd385ab399d3919e1922dd4a0b11edccbb4a",
+    "repairBase": "fba9d14872bc4c04214e527b9edfb30c2123c9e7",
     "ownerAssignment": "W5-M03",
     "catalogAssignment": "W5-M01",
-    "catalogSha": "a20232b0f777b0f737cdffefb64a9ca9d9c9ba0e"
+    "catalogSha": "a20232b0f777b0f737cdffefb64a9ca9d9c9ba0e",
+    "repair": "ROOT688 whole-segment scoped names and locked npm-alias decoding",
+    "placement": "ROOT704 current SameDayDesk main; draft 82 was not merged"
   },
+  "projectedFileCount": 34,
+  "preservedBytes": ["LICENSE", "NOTICE"],
+  "sourceOnly": [
+    "RECEIPT.md remains the historical W4/W5 receipt and is not a second provenance record.",
+    "PLACEMENT.md records the current-main import and stays beside the SameDayDesk producer.",
+    "test/cli.test.mjs, test/local-runtime.test.mjs, and test/identity.test.mjs stay beside the SameDayDesk producer. test/identity.test.mjs is the ROOT688 producer regression.",
+    "NOTICE still names the original projection SHA fba9d14872bc4c04214e527b9edfb30c2123c9e7. This PROVENANCE.json sha is the current source export."
+  ],
   "not": [
     "full-samedaydesk-checkout",
     "second-payment-stack",

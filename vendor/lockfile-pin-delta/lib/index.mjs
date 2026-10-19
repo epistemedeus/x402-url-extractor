@@ -9,7 +9,7 @@ export {
   pinFieldsEqual,
   stableStringify,
 } from "./hash-terms.mjs";
-export { gitCommitFromResolved, parseLockfileText, extractPins, looksLikeHtml } from "./parse-lockfile.mjs";
+export { decodeLockedNpmAlias, gitCommitFromResolved, parseLockfileText, extractPins, looksLikeHtml } from "./parse-lockfile.mjs";
 export { compareLockfileTexts, comparePinMaps } from "./compare.mjs";
 export { toMarkdown } from "./format.mjs";
 export { runLockfileDelta, ROOT, JOURNEY_BEFORE, JOURNEY_AFTER } from "./run.mjs";

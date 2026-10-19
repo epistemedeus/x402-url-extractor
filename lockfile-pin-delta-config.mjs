@@ -5,7 +5,7 @@ export const LOCKFILE_PIN_DELTA_SCHEMA_VERSION = "samedaydesk.lockfile-pin-delta
 export const LOCKFILE_PIN_DELTA_ENGINE_SCHEMA = "samedaydesk.lockfile-pin-delta.v1";
 
 export const LOCKFILE_PIN_DELTA_ENGINE_REPO = "epistemedeus/samedaydesk";
-export const LOCKFILE_PIN_DELTA_ENGINE_SHA = "fba9d14872bc4c04214e527b9edfb30c2123c9e7";
+export const LOCKFILE_PIN_DELTA_ENGINE_SHA = "83f252ad6dae6ffa19455576ce11a524bff46efc";
 export const LOCKFILE_PIN_DELTA_ENGINE_PATH = "tools/lockfile-pin-delta/";
 export const LOCKFILE_PIN_DELTA_CATALOG_SHA = "a20232b0f777b0f737cdffefb64a9ca9d9c9ba0e";
 

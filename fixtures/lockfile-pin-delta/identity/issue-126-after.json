@@ -1,0 +1,13 @@
+{
+  "name": "lock-alias-reproduction",
+  "version": "1.0.0",
+  "lockfileVersion": 2,
+  "requires": true,
+  "dependencies": {
+    "renamed-is-number": {
+      "version": "npm:is-number@7.0.0",
+      "resolved": "https://registry.npmjs.org/is-number/-/is-number-7.0.0.tgz",
+      "integrity": "sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng=="
+    }
+  }
+}
