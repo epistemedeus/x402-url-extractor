@@ -56,3 +56,98 @@ export function registerCommerceRuntime(app, runtime) {
   runtimes.set(app, Object.freeze({ ...runtime }));
 }
 export function commerceRuntime(app) { return runtimes.get(app) || { entrypoint: 'isolated_express_mount', deploymentId: null, source: null }; }
+
+// Continuation measurement starts after the paid response is already finished.
+// Its promise has to stay owned without entering this module's journal gate:
+// the producer and noteContinuationTransmission both call admitCommerceJournal,
+// and nesting those waits deadlocks. path.resolve stays the same key when the
+// directory is created later; realpath does not.
+const observationTails = new Map();
+const observationCounts = new Map();
+let observationProbe = null;
+
+function observationKey(dir) {
+  if (typeof dir !== "string" || dir.length === 0) return null;
+  return path.resolve(dir);
+}
+
+export function setJournalObservationProbe(probe) {
+  if (probe !== null && typeof probe !== "function") {
+    throw new Error("journal observation probe must be a function or null");
+  }
+  const previous = observationProbe;
+  observationProbe = probe;
+  return previous;
+}
+
+function ownJournalObservation(dir, start) {
+  const key = observationKey(dir);
+  if (!key || typeof start !== "function") return Promise.resolve();
+  const job = Promise.resolve().then(async () => {
+    if (observationProbe) await observationProbe(dir);
+    return start();
+  }).then(() => undefined, () => undefined);
+  observationCounts.set(key, (observationCounts.get(key) || 0) + 1);
+  job.then(() => {
+    const pending = (observationCounts.get(key) || 1) - 1;
+    if (pending > 0) observationCounts.set(key, pending);
+    else observationCounts.delete(key);
+  });
+  const previous = observationTails.get(key) || Promise.resolve();
+  const tail = previous.then(() => job);
+  observationTails.set(key, tail);
+  const forget = () => {
+    if (observationTails.get(key) === tail) observationTails.delete(key);
+  };
+  tail.then(forget, forget);
+  return job;
+}
+
+export function journalObservationStatus(dir) {
+  const key = observationKey(dir);
+  const pending = key ? observationCounts.get(key) || 0 : 0;
+  return { drained: pending === 0, pending };
+}
+
+export async function drainJournalObservations(dir, { timeoutMs } = {}) {
+  const key = observationKey(dir);
+  if (!key) return journalObservationStatus(dir);
+  const budget = Number(timeoutMs);
+  const deadline = Number.isFinite(budget) ? Date.now() + Math.max(0, budget) : null;
+  while (true) {
+    const tail = observationTails.get(key);
+    if (!tail) break;
+    if (deadline === null) {
+      await tail.then(() => undefined, () => undefined);
+      continue;
+    }
+    const remaining = Math.max(0, deadline - Date.now());
+    if (remaining === 0) break;
+    let timer;
+    try {
+      const settled = await Promise.race([
+        tail.then(() => true, () => true),
+        new Promise((resolve) => {
+          timer = setTimeout(() => resolve(false), remaining);
+        }),
+      ]);
+      if (!settled) break;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  // Timing out does not forget or cancel the owned work. An omitted budget
+  // retains the existing unbounded HTTP flush behavior.
+  return journalObservationStatus(dir);
+}
+
+export function observeContinuationTransmission(dir, fields) {
+  const transmission = fields?.transmission;
+  if (typeof dir !== "string" || dir.length === 0) return Promise.resolve();
+  if (transmission !== "transmitted" && transmission !== "not_transmitted") return Promise.resolve();
+  const settlementReference = fields.settlementReference;
+  return ownJournalObservation(dir, async () => {
+    const mod = await import("./commerce-prospective-delivery.mjs");
+    await mod.noteContinuationTransmission(dir, { settlementReference, transmission });
+  });
+}

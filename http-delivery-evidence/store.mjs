@@ -20,6 +20,7 @@ import {
   parseNdjson,
 } from "./historical.mjs";
 import { MAX_RESPONSE_BYTES, contractNameForResource } from "./contract.mjs";
+import { canonicalSellerOutcome, deriveSellerOutcome } from "./seller-outcome.mjs";
 import {
   MCP_DELIVERY_FILENAME,
   canonicalizeMcpDeliveryRecord,
@@ -77,6 +78,17 @@ const FORBIDDEN_SUBSTRINGS = [
   "?url=",
   "raw-query",
 ];
+// Append accepts only the semantic projection produced with this live capture.
+// This seal retains metadata, never the parsed body or transient bytes.
+const observedOutcomes = new WeakMap();
+function outcomeAppendBinding(record) {
+  return JSON.stringify([
+    record.method, record.resource, record.contractName, record.responseDigest,
+    record.responseByteLength, record.retainedByteLength, record.merchantHttpStatus,
+    record.validatorAuthority, record.validatorSource, record.validatorVerdict,
+    record.deliveryClass, record.counters, record.outcomeSummaryStatus, record.outcomeSummary,
+  ]);
+}
 
 async function appendPrivateLine(dir, filePath, canonical) {
   await mkdir(dir, { recursive: true, mode: 0o700 });
@@ -105,7 +117,11 @@ export function openStore(dir) {
       if (!httpDeliveryEmissionAllowed(record?.paidEvidenceId, recordObservation(record))) {
         throw new Error("retained output is absent for this paid evidence id");
       }
-      const canonical = canonicalizeValidationRecord(record);
+      const changedOutcome = (Object.hasOwn(record, "outcomeSummary") || Object.hasOwn(record, "outcomeSummaryStatus"))
+        && observedOutcomes.get(record) !== outcomeAppendBinding(record);
+      const canonical = canonicalizeValidationRecord(changedOutcome
+        ? { ...record, outcomeSummaryStatus: "invalid", outcomeSummary: null }
+        : record);
       return appendPrivateLine(dir, validationPath, canonical);
     },
     async appendMcpDelivery(record) {
@@ -272,7 +288,7 @@ export function recordFromObservedResponse({
     recordId,
     responseByteLength: actualLength,
   });
-  const canonical = canonicalizeValidationRecord({
+  const fields = {
     schemaVersion: SCHEMA,
     recordId: recordId || makeRecordId(),
     capturedAt: capturedAt || new Date().toISOString(),
@@ -295,7 +311,14 @@ export function recordFromObservedResponse({
     usefulness: USEFULNESS_UNKNOWN,
     counters: evaluated.counters,
     prohibitedInferences: [...PROHIBITED_INFERENCES],
-  });
+  };
+  const foreignObservation = sealed && (observation.method !== method || observation.httpResource !== resource
+    || !["observed_response_bytes", "http_response_capture"].includes(observation.source));
+  const outcome = foreignObservation && resource === "/commerce/seller-integrity-audit"
+    ? { outcomeSummaryStatus: "invalid", outcomeSummary: null }
+    : deriveSellerOutcome(evaluated, fields);
+  const canonical = canonicalizeValidationRecord({ ...fields, ...outcome });
+  if (Object.hasOwn(canonical, "outcomeSummary")) observedOutcomes.set(canonical, outcomeAppendBinding(canonical));
   return attachRecordObservation(canonical, boundObservation);
 }
 
@@ -332,16 +355,25 @@ export function canonicalizeValidationRecord(value) {
       ? [...value.prohibitedInferences]
       : [...PROHIBITED_INFERENCES],
   };
+  Object.assign(canonical, canonicalSellerOutcome({ ...canonical,
+    ...(Object.hasOwn(value, "outcomeSummary") ? { outcomeSummary: value.outcomeSummary } : {}),
+    ...(Object.hasOwn(value, "outcomeSummaryStatus") ? { outcomeSummaryStatus: value.outcomeSummaryStatus } : {}),
+  }));
   assertValidationRecord(canonical);
   return canonical;
 }
 
 export function assertValidationRecord(value) {
-  const keys = Object.keys(value).sort();
+  const keys = Object.keys(value).filter((key) => key !== "outcomeSummary" && key !== "outcomeSummaryStatus").sort();
   if (keys.length !== VALIDATION_KEYS.length || keys.some((key, i) => key !== VALIDATION_KEYS[i])) {
     throw new Error("validation record has unexpected keys");
   }
   if (value.schemaVersion !== SCHEMA) throw new Error("unsupported validation schema");
+  const outcome = canonicalSellerOutcome(value);
+  if (Object.hasOwn(value, "outcomeSummary") || Object.hasOwn(value, "outcomeSummaryStatus")) {
+    if (JSON.stringify(outcome.outcomeSummary) !== JSON.stringify(value.outcomeSummary)
+      || outcome.outcomeSummaryStatus !== value.outcomeSummaryStatus) throw new Error("invalid outcome summary");
+  }
   if (!RECORD_ID_RE.test(value.recordId)) throw new Error("invalid recordId");
   if (!ISO_RE.test(value.capturedAt)) throw new Error("invalid capturedAt");
   if (!METHOD_RE.test(value.method)) throw new Error("invalid method");

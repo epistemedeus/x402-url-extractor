@@ -1,14 +1,18 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { mkdtemp, open, readFile, rm, writeFile } from "node:fs/promises";
+import { watch } from "node:fs";
+import { mkdir, mkdtemp, open, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { createCommerceTelemetry } from "../../commerce-events.mjs";
+import { setJournalObservationProbe } from "../../commerce-journal-admission.mjs";
 import { sellerIntegrityAudit } from "../../seller-integrity-audit.mjs";
+import { SCHEMA_VERSION } from "../../commerce-settlement-reconciler.mjs";
+import { FILE_CLASSES, receiveOrdinaryDeliveryJoin } from "../../ordinary-delivery-join.mjs";
 import { bindMerchantHttpDeliveryContracts } from "../bind-merchant-contracts.mjs";
 import { sealStreamedHttpCapture } from "../observation.mjs";
 import {
@@ -433,6 +437,23 @@ test("ordinary paid seller responses join contract, causal event, and settlement
       assert.equal(row.usefulness, USEFULNESS_UNKNOWN);
       assert.equal(row.resource, RESOURCES.SELLER_INTEGRITY);
     }
+    assert.equal(validations.filter((row) => row.outcomeSummaryStatus === "available").length, 4);
+    assert.equal(validations[0].outcomeSummary.decision, "repair_required");
+    assert.equal(validations[0].outcomeSummary.responseDigest, digestResponseBytes(bytesOf(repair)));
+    assert.equal(validations[0].outcomeSummary.unknownFindings, 1);
+    assert.equal(validations.find((row) => row.deliveryClass === DELIVERY.INCOMPLETE_REPORT).outcomeSummary.failureCategory, "openapi_unavailable");
+    // Fixture-only canonical settlement exercises the normal restarted operator receiver.
+    await writeFile(path.join(dir, FILE_CLASSES.settlementLedger), `${JSON.stringify({
+      schemaVersion: SCHEMA_VERSION, state: "reconciled", sourceEventId: evidence[0].id,
+      sourceEventTimestamp: evidence[0].responseFinishedAt, route: evidence[0].route,
+      protocol: evidence[0].paymentProtocol, paymentClass: "unclassified", settlementReference: SETTLEMENT, amountAtomic: "10000",
+    })}\n`);
+    const joined = await receiveOrdinaryDeliveryJoin({ dataDir: dir, windowStart: "2020-01-01T00:00:00.000Z", windowEnd: "2100-01-01T00:00:00.000Z" });
+    assert.equal(joined.rows.find((row) => row.disposition === "exact_join").outcomeSummary.decision, "repair_required");
+    assert.equal(joined.sellerAuditOutcomes.counts.available, 1);
+    assert.equal(joined.sellerAuditOutcomes.decisions.repair_required, 1);
+    assert.equal(joined.callerResultFeedback.suppliedUseful, 0);
+    assert.equal(JSON.stringify(joined).includes(CANARY), false);
     const quietValidations = await openStore(path.join(dir, "quiet")).readValidations();
     assert.deepEqual(quietValidations, []);
 
@@ -467,6 +488,225 @@ test("ordinary paid seller responses join contract, causal event, and settlement
     assert.equal(privateValidation.includes(QUERY_CANARY), false);
     assert.equal(privateValidation.includes(CREDENTIAL_CANARY), false);
   } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a lost summary append preserves the paid event and never retries delivery", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "diagnostic-lost-write-"));
+  try {
+    const store = openStore(dir);
+    await mkdir(store.validationPath);
+    const telemetry = createCommerceTelemetry({ dataDir: dir, secret: "lost-summary-secret" });
+    const repair = await completedReport("repair_required");
+    emitPaid(telemetry, { body: JSON.stringify(repair), settlement: SETTLEMENT, doubleFinish: true });
+    await telemetry.flush();
+    const evidence = (await readFile(telemetry.paths.paidEvidencePath, "utf8")).trim().split("\n").map(JSON.parse);
+    assert.equal(evidence.length, 1);
+    assert.equal(evidence[0].responseDigest, digestResponseBytes(bytesOf(repair)));
+    await rm(store.validationPath, { recursive: true });
+    assert.deepEqual(await openStore(dir).readValidations(), []);
+    assert.equal((await openStore(dir).join())[0].validations.length, 0);
+    await telemetry.flush();
+    assert.deepEqual(await openStore(dir).readValidations(), []);
+    assert.equal((await readFile(telemetry.paths.paidEvidencePath, "utf8")).trim().split("\n").length, 1);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+function waitForText(file, predicate) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const watcher = watch(path.dirname(file), () => { check(); });
+    const finish = (error, value) => {
+      if (settled) return;
+      settled = true;
+      watcher.close();
+      if (error) reject(error);
+      else resolve(value);
+    };
+    const check = () => {
+      readFile(file, "utf8").then((text) => {
+        if (predicate(text)) finish(null, text);
+      }).catch((error) => {
+        if (error?.code !== "ENOENT") finish(error);
+      });
+    };
+    watcher.on("error", finish);
+    check();
+  });
+}
+
+function continuationRows(text) {
+  return text.trim().split("\n").filter((line) => line.includes("\"continuationTransmission\""));
+}
+
+test("a delayed continuation observation is drained before teardown", { timeout: 5_000 }, async (t) => {
+  const dir = await mkdtemp(path.join(tmpdir(), "diagnostic-delayed-observation-"));
+  let release = () => {};
+  const hold = new Promise((resolve) => { release = resolve; });
+  let entered = false;
+  let pending = Promise.resolve();
+  const previous = setJournalObservationProbe(() => {
+    entered = true;
+    return hold;
+  });
+  t.after(() => {
+    release();
+    setJournalObservationProbe(previous);
+  });
+  try {
+    const store = openStore(dir);
+    await mkdir(store.validationPath);
+    const telemetry = createCommerceTelemetry({ dataDir: dir, secret: "delayed-observation-secret" });
+    const repair = await completedReport("repair_required");
+    emitPaid(telemetry, { body: JSON.stringify(repair), settlement: SETTLEMENT, doubleFinish: true });
+    let settled = false;
+    pending = telemetry.flush().then(() => { settled = true; });
+    const evidenceText = await waitForText(telemetry.paths.paidEvidencePath, (text) => text.trim().length > 0);
+    assert.equal(entered, true);
+    assert.equal(settled, false);
+    assert.equal(evidenceText.trim().split("\n").length, 1);
+    release();
+    await pending;
+    assert.equal(settled, true);
+    const evidence = evidenceText.trim().split("\n").map((line) => JSON.parse(line));
+    assert.equal(evidence[0].responseDigest, digestResponseBytes(bytesOf(repair)));
+    await rm(store.validationPath, { recursive: true });
+    assert.deepEqual(await openStore(dir).readValidations(), []);
+    await telemetry.flush();
+    assert.deepEqual(await openStore(dir).readValidations(), []);
+    assert.equal((await readFile(telemetry.paths.paidEvidencePath, "utf8")).trim().split("\n").length, 1);
+    const journal = await readFile(path.join(dir, "commerce-prospective-delivery.ndjson"), "utf8");
+    assert.equal(continuationRows(journal).length, 1);
+    assert.equal(journal.includes("\"continuationTransmission\":\"not_transmitted\""), true);
+    for (const secret of [CANARY, QUERY_CANARY, CREDENTIAL_CANARY, SETTLEMENT]) {
+      assert.equal(journal.includes(secret), false, `continuation journal leaked ${secret}`);
+    }
+  } finally {
+    release();
+    setJournalObservationProbe(previous);
+    await pending.catch(() => {});
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a rejected continuation observation does not retry or charge the paid event", { timeout: 5_000 }, async (t) => {
+  const dir = await mkdtemp(path.join(tmpdir(), "diagnostic-rejected-observation-"));
+  const blocked = await mkdtemp(path.join(tmpdir(), "diagnostic-blocked-observation-"));
+  const previous = setJournalObservationProbe(() => {
+    throw new Error("observation rejected");
+  });
+  t.after(() => {
+    setJournalObservationProbe(previous);
+  });
+  try {
+    const telemetry = createCommerceTelemetry({ dataDir: dir, secret: "rejected-observation-secret" });
+    const repair = await completedReport("repair_required");
+    emitPaid(telemetry, { body: JSON.stringify(repair), settlement: SETTLEMENT, doubleFinish: true });
+    await telemetry.flush();
+    const paid = telemetry.paths.paidEvidencePath;
+    assert.equal((await readFile(paid, "utf8")).trim().split("\n").length, 1);
+    assert.equal((await openStore(dir).readValidations()).length, 1);
+    await assert.rejects(readFile(path.join(dir, "commerce-prospective-delivery.ndjson"), "utf8"), { code: "ENOENT" });
+    await telemetry.flush();
+    assert.equal((await readFile(paid, "utf8")).trim().split("\n").length, 1);
+    assert.equal((await openStore(dir).readValidations()).length, 1);
+
+    setJournalObservationProbe(previous);
+    await mkdir(path.join(blocked, "commerce-prospective-delivery.ndjson"));
+    const writer = createCommerceTelemetry({ dataDir: blocked, secret: "blocked-observation-secret" });
+    emitPaid(writer, { body: JSON.stringify(repair), settlement: OLD_SETTLEMENT, doubleFinish: true });
+    await writer.flush();
+    assert.equal((await readFile(writer.paths.paidEvidencePath, "utf8")).trim().split("\n").length, 1);
+    await writer.flush();
+    assert.equal((await readFile(writer.paths.paidEvidencePath, "utf8")).trim().split("\n").length, 1);
+    const blockedStat = await stat(path.join(blocked, "commerce-prospective-delivery.ndjson"));
+    assert.equal(blockedStat.isDirectory(), true);
+  } finally {
+    setJournalObservationProbe(previous);
+    await rm(dir, { recursive: true, force: true });
+    await rm(blocked, { recursive: true, force: true });
+  }
+});
+
+test("commerce writes proceed while a continuation observation is delayed", { timeout: 5_000 }, async (t) => {
+  const dir = await mkdtemp(path.join(tmpdir(), "diagnostic-concurrent-observation-"));
+  const second = `0x${"c3".repeat(32)}`;
+  let release = () => {};
+  const hold = new Promise((resolve) => { release = resolve; });
+  let held = 0;
+  let pending = Promise.resolve();
+  const previous = setJournalObservationProbe(() => {
+    held += 1;
+    return hold;
+  });
+  t.after(() => {
+    release();
+    setJournalObservationProbe(previous);
+  });
+  try {
+    const telemetry = createCommerceTelemetry({ dataDir: dir, secret: "concurrent-observation-secret" });
+    const repair = await completedReport("repair_required");
+    const body = JSON.stringify(repair);
+    emitPaid(telemetry, { body, settlement: SETTLEMENT });
+    let settled = false;
+    pending = telemetry.flush().then(() => { settled = true; });
+    await waitForText(telemetry.paths.paidEvidencePath, (text) => text.trim().split("\n").length === 1);
+    emitPaid(telemetry, { body, settlement: second });
+    const both = await waitForText(
+      telemetry.paths.paidEvidencePath,
+      (text) => text.trim().split("\n").length === 2,
+    );
+    assert.equal(held >= 1, true);
+    assert.equal(settled, false);
+    assert.equal(both.trim().split("\n").length, 2);
+    release();
+    await pending;
+    assert.equal(held, 2);
+    const journal = await readFile(path.join(dir, "commerce-prospective-delivery.ndjson"), "utf8");
+    assert.equal(continuationRows(journal).length, 2);
+    assert.equal(journal.includes(SETTLEMENT), false);
+    assert.equal(journal.includes(second), false);
+    await telemetry.flush();
+    assert.equal((await readFile(telemetry.paths.paidEvidencePath, "utf8")).trim().split("\n").length, 2);
+  } finally {
+    release();
+    setJournalObservationProbe(previous);
+    await pending.catch(() => {});
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a later paid success recovers after a rejected continuation observation", { timeout: 5_000 }, async (t) => {
+  const dir = await mkdtemp(path.join(tmpdir(), "diagnostic-recovered-observation-"));
+  const second = `0x${"d4".repeat(32)}`;
+  const previous = setJournalObservationProbe(() => {
+    throw new Error("observation rejected");
+  });
+  t.after(() => {
+    setJournalObservationProbe(previous);
+  });
+  try {
+    const telemetry = createCommerceTelemetry({ dataDir: dir, secret: "recovered-observation-secret" });
+    const repair = await completedReport("repair_required");
+    const body = JSON.stringify(repair);
+    emitPaid(telemetry, { body, settlement: SETTLEMENT });
+    await telemetry.flush();
+    assert.equal((await readFile(telemetry.paths.paidEvidencePath, "utf8")).trim().split("\n").length, 1);
+    await assert.rejects(readFile(path.join(dir, "commerce-prospective-delivery.ndjson"), "utf8"), { code: "ENOENT" });
+    setJournalObservationProbe(previous);
+    emitPaid(telemetry, { body, settlement: second });
+    await telemetry.flush();
+    const journal = await readFile(path.join(dir, "commerce-prospective-delivery.ndjson"), "utf8");
+    assert.equal(continuationRows(journal).length, 1);
+    assert.equal(journal.includes(SETTLEMENT), false);
+    assert.equal(journal.includes(second), false);
+    assert.equal((await readFile(telemetry.paths.paidEvidencePath, "utf8")).trim().split("\n").length, 2);
+    await telemetry.flush();
+    assert.equal((await readFile(telemetry.paths.paidEvidencePath, "utf8")).trim().split("\n").length, 2);
+    assert.equal(continuationRows(await readFile(path.join(dir, "commerce-prospective-delivery.ndjson"), "utf8")).length, 1);
+  } finally {
+    setJournalObservationProbe(previous);
     await rm(dir, { recursive: true, force: true });
   }
 });

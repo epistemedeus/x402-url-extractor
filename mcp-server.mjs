@@ -32,6 +32,7 @@ import { createPaymentWrapper } from "@x402/mcp";
 import { sealObservedMcpToolResult } from "./http-delivery-evidence/mcp-delivery.mjs";
 import { attachMcpCallerResultFeedback, callerResultFeedbackMetaFromHeaders } from "./caller-result-feedback.mjs";
 import { classifyDeclaredAgentDiscoverySource, listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
+import { drainJournalObservations, journalObservationStatus, observeContinuationTransmission } from "./commerce-journal-admission.mjs";
 import { readExtractBatchInputRefusalCode } from "./extract-batch.mjs";
 import { MCP_RECOVERY_META, MCP_RECOVERY_TOOL, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
 import { MCP_JSON_RPC_MAX_BYTES, mcpJsonRpcOverlimitBody } from "./mcp-json-rpc-limit.mjs";
@@ -581,6 +582,7 @@ function createTypedTelemetryLifecycle(onAppend, { jsonResponse = false } = {}) 
 
   return {
     schedule,
+    status: () => ({ drained: pending.size === 0, pending: pending.size, failures }),
     flush: (options) => drain(options),
     shutdown(options) {
       sealed = true;
@@ -620,13 +622,16 @@ function sealToolResultForSend(message, attempt, callerResultFeedbackKey) {
 }
 
 function noteEstablishedContinuation(dataDir, reference, transmission) {
-  if (!dataDir || (transmission !== "transmitted" && transmission !== "not_transmitted")) return;
-  import("./commerce-prospective-delivery.mjs").then((mod) => mod.noteContinuationTransmission(dataDir, {
+  // The tool result is already handed to the transport. Do not await the
+  // measurement on the send path; the typed lifecycle drain owns it.
+  observeContinuationTransmission(dataDir, {
     settlementReference: reference,
     transmission,
-  })).catch(() => {
-    // A continuation measurement cannot change or replay the tool result.
   });
+}
+
+async function drainMountedContinuation(dataDir, options) {
+  return drainJournalObservations(dataDir, options);
 }
 
 function decorateTransportSend(transport, attempt, callerResultFeedbackKey = "", dataDir = "") {
@@ -1058,9 +1063,25 @@ export async function mountMcp(app, {
     )),
   };
   if (typedLifecycle) {
+    const drain = async (method, options) => {
+      const budget = Number(options?.timeoutMs);
+      const deadline = Number.isFinite(budget) ? Date.now() + Math.max(0, budget) : null;
+      const remaining = () => deadline === null ? undefined : Math.max(0, deadline - Date.now());
+      await typedLifecycle[method](deadline === null ? options : { ...options, timeoutMs: remaining() });
+      await drainMountedContinuation(commerceDataDir, { timeoutMs: remaining() });
+      // Re-read both populations: typed work may finish while observations
+      // drain, and an expired deadline never removes outstanding work.
+      const typed = typedLifecycle.status();
+      const observations = journalObservationStatus(commerceDataDir);
+      return {
+        ...typed,
+        drained: typed.drained && observations.drained,
+        pending: typed.pending + observations.pending,
+      };
+    };
     mountResult.typedTelemetryLifecycle = {
-      flush: (options) => typedLifecycle.flush(options),
-      shutdown: (options) => typedLifecycle.shutdown(options),
+      flush: (options) => drain("flush", options),
+      shutdown: (options) => drain("shutdown", options),
     };
   }
   return mountResult;

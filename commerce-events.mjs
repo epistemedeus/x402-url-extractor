@@ -1,6 +1,6 @@
 import { constants as journalFs } from "node:fs";
 import { authenticateJournalCut } from "./commerce-journal-cut-auth.mjs";
-import { admitCommerceJournal, noteJournalRotation, noteJournalWrite, noteJournalFault, registerJournalProducer, registerJournalTaskBinding } from "./commerce-journal-admission.mjs";
+import { admitCommerceJournal, drainJournalObservations, noteJournalRotation, noteJournalWrite, noteJournalFault, observeContinuationTransmission, registerJournalProducer, registerJournalTaskBinding } from "./commerce-journal-admission.mjs";
 import {
   attemptSegmentName,
   prospectiveTailReport,
@@ -3631,7 +3631,11 @@ export function createCommerceTelemetry({
   }
 
   async function flush() {
+    // The queue snapshot stays the commerce-event durability boundary.
+    // Already-started continuation measurement is drained afterwards, still
+    // outside this queue, so a late journal create cannot outlive flush.
     await queue;
+    await drainJournalObservations(dataDir);
     if (writerFailure) throw writerFailure;
   }
 
@@ -4149,13 +4153,12 @@ export function createCommerceTelemetry({
         taskRefRecord = null;
       }
       if (result === "paid_success" && !replayed && settlement?.reference) {
-        const transmission = continuationTransmission || "not_transmitted";
-        const reference = settlement.reference;
-        import("./commerce-prospective-delivery.mjs").then((mod) => mod.noteContinuationTransmission(dataDir, {
-          settlementReference: reference,
-          transmission,
-        })).catch(() => {
-          // A continuation measurement cannot change the paid response or the commerce row.
+        // The HTTP response has already finished. Do not await this measurement
+        // here; flush owns it. A failure stays observational: no retry, charge,
+        // or second commerce row.
+        observeContinuationTransmission(dataDir, {
+          settlementReference: settlement.reference,
+          transmission: continuationTransmission || "not_transmitted",
         });
       }
       if (causal) causal.enqueued = true;
