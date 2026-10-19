@@ -2,7 +2,7 @@
 
 Offline SameDayDesk job. Compares two npm `package-lock.json` files (lockfileVersion 2 or 3) and emits added, removed, and changed name+version+integrity+resolved pins. Equality uses those lockfile fields. `termsHash` is an annotation. Vendor-budget-impact remains curated pricing rows; this job is lockfile pins only.
 
-Current contract export (W5-M03 on this branch). Consumers bind this CLI and `lib/index.mjs`. Do not inject I01 `hashRequest` as pin equality. That hasher covers a different document.
+Current contract export. Consumers bind this CLI and `lib/index.mjs`. Do not inject I01 `hashRequest` as pin equality. That hasher covers a different document.
 
 | Goal | Entrypoint | Command | State | Tests | Prerequisite |
 | --- | --- | --- | --- | --- | --- |
@@ -27,3 +27,7 @@ The packages map and the legacy dependencies fallback export the same package na
 Locked alias grammar is `npm:` plus a package name plus `@` plus a strict semver version (`1.2.3`, `1.2.3-rc.1`, `1.2.3+build.1`). Scoped targets use `npm:@scope/name@1.2.3`. The decoder does not fetch metadata, install a dependency, or treat equal integrity as proof of identity.
 
 ROOT678 recorded the pre-repair behavior of source `fba9d148` separately from this contract. A scope containing the text `node_modules` was truncated to the text after that substring. A legacy alias kept the install key as `name` and the whole `npm:` specifier as `version`. Those observations belong to that frozen export. Current behavior is the contract above. Contributor-minimized issue bodies are qualification inputs, not this package's fixtures. Optional-peer absence remains unproved for the supplied issue 124 record, so incomplete, optional, dev, and peer pins stay in the delta.
+
+## Placement
+
+The maintained package is `tools/lockfile-pin-delta` on current SameDayDesk main `d8cea059213e06d2f263be67f82e498f8052a50f`. Its bytes were imported from `55b2dd385ab399d3919e1922dd4a0b11edccbb4a`, a fast-forward of `fba9d14872bc4c04214e527b9edfb30c2123c9e7`. The historical draft branch was not merged. `RECEIPT.md` remains the historical W4 receipt, including that receipt's original pin counts. W5-M03 is the original contract assignment, not the name of the current branch. `PLACEMENT.md` records the import. It stays with the SameDayDesk producer.

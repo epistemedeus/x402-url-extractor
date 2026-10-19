@@ -55,7 +55,7 @@ test("flag stays off unless explicitly enabled", () => {
   assert.match(LOCKFILE_PIN_DELTA_DESCRIPTION, /customer-x402/);
   assert.doesNotMatch(LOCKFILE_PIN_DELTA_DESCRIPTION, /kit 1\.1\.0/);
   assert.ok([...LOCKFILE_PIN_DELTA_DESCRIPTION].length <= 500);
-  assert.equal(LOCKFILE_PIN_DELTA_ENGINE_SHA, "55b2dd385ab399d3919e1922dd4a0b11edccbb4a");
+  assert.equal(LOCKFILE_PIN_DELTA_ENGINE_SHA, "83f252ad6dae6ffa19455576ce11a524bff46efc");
   assert.equal(LOCKFILE_PIN_DELTA_CATALOG_SHA, "a20232b0f777b0f737cdffefb64a9ca9d9c9ba0e");
   assert.doesNotMatch(LOCKFILE_PIN_DELTA_QUOTE_MEANING, /D26|EC2/i);
   const release = readFileSync(join(here, "docs/wave5-paid-useful-job/RELEASE.md"), "utf8");
