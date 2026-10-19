@@ -74,13 +74,28 @@ supplies no caller statement, identity, usefulness or revenue classification.
 
 Base: `b309c6e2a1e1794a324c1c422c1c841a76038686` on `master`.
 The draft PR records the exact final head/tree and actual command receipts.
-Remote checks ran serially with `NODE_OPTIONS=--max-old-space-size=384`:
-seller route 7/7, HTTP evidence 45/45, existing non-live group 214/214,
-payment/replay/feedback lifecycle group 162/162, and construction/version group
-20/20. The final HTTP and ordinary-join replays pass 45/45 and 7/7 after the
-last semantic-counter check. These groups overlap; their counts are not added.
-There were no failures or skips. The complete repository-wide `npm test` was
-not run. The frozen-base serializer compatibility check exits 0.
+Service version for this successor is `1.23.55` in `package.json`, both
+`package-lock.json` version fields, `server.json`, and
+`plugins/samedaydesk-x402/plugin.json`.
+
+The first same-process HTTP run reported 45/45. Root's later cold replay was
+44/45: `diagnostic-delivery.test.mjs` lost-summary teardown raised `ENOTEMPTY`
+because a paid response started `noteContinuationTransmission` as an untracked
+dynamic import while `flush` waited only for the commerce-event queue. The
+successor owns that already-started measurement and drains it from `flush` and
+from the typed MCP lifecycle, without awaiting it on the response or send path
+and without nesting journal admission. An observation failure does not retry
+the paid event, rewrite the summary, or charge.
+
+Successor checks on Node v22.14.0 ran serially with
+`NODE_OPTIONS=--max-old-space-size=384` and exited 0: cold lost-summary 1/1,
+HTTP evidence 49/49, seller route 7/7, non-live 214/214, payment/replay/
+feedback/continuation lifecycle 166/166, construction/machine/version 20/20,
+deployment publication 6/6, startup and runtime-source 4/4, and machine-surface
+HTTP 1/1. Plugin manifest checks passed 7/7; the pre-existing unpaid live
+initialize test stays skipped unless `SAMEDAYDESK_EXPECTED_LIVE_VERSION` is
+set. These groups overlap and are not added. The complete repository-wide
+`npm test` is not the receipt. Draft PR 212 records the commands and limits.
 
 The regressions exercise the real seller producer, capture middleware,
 canonical append/restart reader, ordinary join and operator CLI. They cover

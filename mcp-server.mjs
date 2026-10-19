@@ -32,6 +32,7 @@ import { createPaymentWrapper } from "@x402/mcp";
 import { sealObservedMcpToolResult } from "./http-delivery-evidence/mcp-delivery.mjs";
 import { attachMcpCallerResultFeedback, callerResultFeedbackMetaFromHeaders } from "./caller-result-feedback.mjs";
 import { classifyDeclaredAgentDiscoverySource, listDeclaredAgentDiscoverySources } from "./commerce-events.mjs";
+import { drainJournalObservations, observeContinuationTransmission } from "./commerce-journal-admission.mjs";
 import { readExtractBatchInputRefusalCode } from "./extract-batch.mjs";
 import { MCP_RECOVERY_META, MCP_RECOVERY_TOOL, trackReplaySettlementAttempts } from "./idempotency-replay.mjs";
 import { MCP_JSON_RPC_MAX_BYTES, mcpJsonRpcOverlimitBody } from "./mcp-json-rpc-limit.mjs";
@@ -620,13 +621,17 @@ function sealToolResultForSend(message, attempt, callerResultFeedbackKey) {
 }
 
 function noteEstablishedContinuation(dataDir, reference, transmission) {
-  if (!dataDir || (transmission !== "transmitted" && transmission !== "not_transmitted")) return;
-  import("./commerce-prospective-delivery.mjs").then((mod) => mod.noteContinuationTransmission(dataDir, {
+  // The tool result is already handed to the transport. Do not await the
+  // measurement on the send path; the typed lifecycle drain owns it.
+  observeContinuationTransmission(dataDir, {
     settlementReference: reference,
     transmission,
-  })).catch(() => {
-    // A continuation measurement cannot change or replay the tool result.
   });
+}
+
+async function drainMountedContinuation(dataDir) {
+  if (typeof dataDir !== "string" || dataDir.length === 0) return;
+  await drainJournalObservations(dataDir);
 }
 
 function decorateTransportSend(transport, attempt, callerResultFeedbackKey = "", dataDir = "") {
@@ -1059,8 +1064,16 @@ export async function mountMcp(app, {
   };
   if (typedLifecycle) {
     mountResult.typedTelemetryLifecycle = {
-      flush: (options) => typedLifecycle.flush(options),
-      shutdown: (options) => typedLifecycle.shutdown(options),
+      flush: async (options) => {
+        const result = await typedLifecycle.flush(options);
+        await drainMountedContinuation(commerceDataDir);
+        return result;
+      },
+      shutdown: async (options) => {
+        const result = await typedLifecycle.shutdown(options);
+        await drainMountedContinuation(commerceDataDir);
+        return result;
+      },
     };
   }
   return mountResult;

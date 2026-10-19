@@ -56,3 +56,67 @@ export function registerCommerceRuntime(app, runtime) {
   runtimes.set(app, Object.freeze({ ...runtime }));
 }
 export function commerceRuntime(app) { return runtimes.get(app) || { entrypoint: 'isolated_express_mount', deploymentId: null, source: null }; }
+
+// Continuation measurement starts after the paid response is already finished.
+// Its promise has to stay owned without entering this module's journal gate:
+// the producer and noteContinuationTransmission both call admitCommerceJournal,
+// and nesting those waits deadlocks. path.resolve stays the same key when the
+// directory is created later; realpath does not.
+const observationTails = new Map();
+let observationProbe = null;
+
+function observationKey(dir) {
+  if (typeof dir !== "string" || dir.length === 0) return null;
+  return path.resolve(dir);
+}
+
+export function setJournalObservationProbe(probe) {
+  if (probe !== null && typeof probe !== "function") {
+    throw new Error("journal observation probe must be a function or null");
+  }
+  const previous = observationProbe;
+  observationProbe = probe;
+  return previous;
+}
+
+function ownJournalObservation(dir, start) {
+  const key = observationKey(dir);
+  if (!key || typeof start !== "function") return Promise.resolve();
+  const job = Promise.resolve().then(async () => {
+    if (observationProbe) await observationProbe(dir);
+    return start();
+  }).then(() => undefined, () => undefined);
+  const previous = observationTails.get(key) || Promise.resolve();
+  const tail = previous.then(() => job);
+  observationTails.set(key, tail);
+  const forget = () => {
+    if (observationTails.get(key) === tail) observationTails.delete(key);
+  };
+  tail.then(forget, forget);
+  return job;
+}
+
+export function drainJournalObservations(dir) {
+  const key = observationKey(dir);
+  if (!key) return Promise.resolve();
+  const tail = observationTails.get(key);
+  if (!tail) return Promise.resolve();
+  return tail.then(() => {
+    const again = observationTails.get(key);
+    if (again && again !== tail) return drainJournalObservations(dir);
+  }, () => {
+    const again = observationTails.get(key);
+    if (again && again !== tail) return drainJournalObservations(dir);
+  });
+}
+
+export function observeContinuationTransmission(dir, fields) {
+  const transmission = fields?.transmission;
+  if (typeof dir !== "string" || dir.length === 0) return Promise.resolve();
+  if (transmission !== "transmitted" && transmission !== "not_transmitted") return Promise.resolve();
+  const settlementReference = fields.settlementReference;
+  return ownJournalObservation(dir, async () => {
+    const mod = await import("./commerce-prospective-delivery.mjs");
+    await mod.noteContinuationTransmission(dir, { settlementReference, transmission });
+  });
+}
