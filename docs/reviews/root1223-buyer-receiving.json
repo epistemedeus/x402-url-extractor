@@ -50,7 +50,7 @@
     "original1107CheckoutBranchProcessSessionTouched": false
   },
   "limits": [
-    "No actual signing or paid network call; SDK signing exercises use disposable synthetic test accounts.",
+    "No live signing or paid network call; SDK signing exercises use disposable synthetic test accounts.",
     "No original213 update, installation, hosting, merge, answer publication, credentials or payment.",
     "Source-ready draft only; original1107 terminal continuity and original152 qualification remain with receiving Root.",
     "Full example and focused test groups overlap; no summed unique-coverage claim."
