@@ -73,8 +73,11 @@ bindGetExtractResourceUrl("https://example.com");
 Empty, missing, duplicate, or malformed `url` is `authorization_refused` before
 wallet lookup, signing, facilitator verify, or settle. The same client requires
 JSON `{before, after}` objects for `POST /lockfile-pin-delta`. Empty `{}` is
-unpaid lockfile discovery and is not a purchase. This example still supports
-only `GET /extract`, `POST /extract/batch`, and `POST /lockfile-pin-delta`.
+unpaid lockfile discovery and is not a purchase. This example admits
+`GET /extract`, `POST /extract/batch`, `POST /lockfile-pin-delta`, and
+`GET /commerce/seller-integrity-audit`. The seller-audit cold command is
+`node bin/seller-audit.mjs contract` (no wallet, no network, no signature).
+Default `npm start` remains the unpaid batch preflight.
 
 ## Lockfile pin-delta (same client; not the default command)
 

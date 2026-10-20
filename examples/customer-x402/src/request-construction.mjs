@@ -5,7 +5,9 @@ import {
   LIVE_EXTRACT_PATH,
   LIVE_LOCKFILE_PATH,
   LIVE_ORIGIN,
+  LIVE_SELLER_AUDIT_PATH,
 } from "./constants.mjs";
+import { classifySellerAuditUrl } from "./seller-audit.mjs";
 
 function fail(message, field = "url") {
   throw new AuthorizationRefusal(message, { field });
@@ -149,6 +151,18 @@ export function classifyRequestConstruction(requestUrl, { method = "GET", body =
     });
   }
 
+  if (url.pathname === LIVE_SELLER_AUDIT_PATH && methodUpper === "GET") {
+    const classified = classifySellerAuditUrl(url);
+    return freezeConstruction({
+      kind: classified.kind,
+      purchaseReady: classified.purchaseReady === true,
+      missing: classified.missing,
+      reason: classified.reason,
+      boundUrl: classified.boundUrl || url.href,
+      targetUrl: classified.query?.origin || null,
+    });
+  }
+
   if (url.pathname === LIVE_LOCKFILE_PATH && methodUpper === "POST") {
     let parsed;
     try {
@@ -222,7 +236,7 @@ export function classifyRequestConstruction(requestUrl, { method = "GET", body =
     kind: "undeclared",
     purchaseReady: false,
     missing: [],
-    reason: "this client constructs GET /extract, POST /extract/batch, and POST /lockfile-pin-delta only",
+    reason: "this client constructs GET /extract, POST /extract/batch, POST /lockfile-pin-delta, and GET /commerce/seller-integrity-audit only",
   });
 }
 

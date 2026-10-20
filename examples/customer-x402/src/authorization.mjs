@@ -1,6 +1,6 @@
 import { getAddress } from "viem";
 
-import { parseTextExcerptLimit } from "../../../extract-capture.mjs";
+import { parseTextExcerptLimit } from "../../../extract-excerpt-budget.mjs";
 
 import {
   admitExtractBatchBody,
@@ -13,10 +13,13 @@ import {
   DEFAULT_BATCH_REQUIRED_OUTPUT,
   DEFAULT_LOCKFILE_REQUIRED_OUTPUT,
   DEFAULT_REQUIRED_OUTPUT,
+  DEFAULT_SELLER_AUDIT_REQUIRED_OUTPUT,
   LIVE_BATCH_METHOD,
   LIVE_LOCKFILE_METHOD,
   LIVE_METHOD,
+  LIVE_SELLER_AUDIT_PATH,
 } from "./constants.mjs";
+import { classifySellerAuditUrl, SellerAuditAdmissionError } from "./seller-audit.mjs";
 
 export class AuthorizationRefusal extends Error {
   constructor(message, { field = null } = {}) {
@@ -103,13 +106,48 @@ function normalizeRequiredOutput(requiredOutput, { batch }) {
   });
 }
 
+function normalizeGetSellerAuditAuthorization(input, url) {
+  if (input.body !== undefined && input.body !== null) {
+    fail("authorization for GET /commerce/seller-integrity-audit must not include a body", "body");
+  }
+  if (input.requiredOutput?.task != null) {
+    fail("seller-audit authorization must not declare an extract task", "requiredOutput");
+  }
+  let classified;
+  try {
+    classified = classifySellerAuditUrl(url);
+  } catch (error) {
+    if (error instanceof SellerAuditAdmissionError) fail(error.message, error.field || "url");
+    throw error;
+  }
+  if (classified.kind !== "bound_request") fail(classified.reason, classified.missing[0] || "url");
+  return {
+    method: "GET",
+    url: classified.boundUrl,
+    origin: url.origin,
+    path: url.pathname,
+    query: url.search,
+    bodyRaw: null,
+    bodyDigest: null,
+    bodyBytes: 0,
+    batch: null,
+    sellerAudit: true,
+    sellerAuditQuery: classified.query,
+    requiredOutput: normalizeRequiredOutput(
+      input.requiredOutput || DEFAULT_SELLER_AUDIT_REQUIRED_OUTPUT,
+      { batch: false },
+    ),
+  };
+}
+
 function normalizeGetAuthorization(input) {
   const method = String(input.method || LIVE_METHOD).toUpperCase();
   if (method !== "GET") fail("authorization method must be GET", "method");
+  const url = normalizeHttpsUrl(input.url, "url");
+  if (url.pathname === LIVE_SELLER_AUDIT_PATH) return normalizeGetSellerAuditAuthorization(input, url);
   if (input.body !== undefined && input.body !== null) {
     fail("authorization for GET /extract must not include a body", "body");
   }
-  const url = normalizeHttpsUrl(input.url, "url");
   if (url.pathname !== "/extract") fail("authorization path must be /extract", "url");
   const targets = url.searchParams.getAll("url");
   if (targets.length !== 1 || !targets[0]) fail("authorization query must include url=", "url");
@@ -289,6 +327,7 @@ function postRouteFor(input) {
  * HTTP payment credentials must never be transplanted into mcp:// resources.
  * POST /extract/batch also binds exact request body bytes and selected fields.
  * POST /lockfile-pin-delta binds exact {before, after} body bytes the same way.
+ * GET /commerce/seller-integrity-audit binds the exact canonical query.
  */
 export function normalizeAuthorization(input) {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
@@ -342,7 +381,9 @@ export function assertRequestMatchesAuthorization(requestUrl, authorization, { m
   }
   if (auth.method === "GET") {
     if (body !== undefined && body !== null && body !== "") {
-      fail("request body is not authorized for GET /extract", "body");
+      fail(auth.sellerAudit
+        ? "request body is not authorized for GET /commerce/seller-integrity-audit"
+        : "request body is not authorized for GET /extract", "body");
     }
     return auth;
   }

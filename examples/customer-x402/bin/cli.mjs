@@ -61,6 +61,10 @@ Notes:
     and exact {before, after} body bytes. Default commands still do not pay
     lockfile; there is no auto-approve and no PAYMENT_SIGNATURE prerequisite.
     See fixtures/authorization-lockfile.json.
+  - GET /commerce/seller-integrity-audit uses the same inspect/approve/reconcile
+    path once the URL is the exact canonical query. Default commands do not pay
+    it. Cold contract: node bin/seller-audit.mjs contract. See
+    fixtures/authorization-seller-audit.json.
   - --approve binds exact HTTPS URL, method, body bytes, network, asset, recipient,
     amount cap, and buyer-required output before invoking @x402/fetch.
   - Without --attempt-receipt, unsigned EIP-3009 nonce/validBefore are not retained.

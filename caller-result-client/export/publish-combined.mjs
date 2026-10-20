@@ -10,7 +10,7 @@ import { loadPublicAcquisition } from "../../public-acquisition/engine.mjs";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const CALLER_ID = "samedaydesk-caller-result";
 const SEALED_VERSION = "0.1.0";
-const PREDECESSOR_ASSET_COUNT = 21;
+const PREDECESSOR_ASSET_COUNT = 25;
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
