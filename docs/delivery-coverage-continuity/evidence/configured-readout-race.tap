@@ -1,0 +1,146 @@
+TAP version 13
+# Subtest: mounted caller can report one retained result without changing the paid body
+ok 1 - mounted caller can report one retained result without changing the paid body
+  ---
+  duration_ms: 5711.806512
+  type: 'test'
+  ...
+# Subtest: a merchant without the feedback key still delivers and refuses the report
+ok 2 - a merchant without the feedback key still delivers and refuses the report
+  ---
+  duration_ms: 1686.176692
+  type: 'test'
+  ...
+# Subtest: mounted extract captures HTTP delivery evidence without changing v1 paid-success bytes
+not ok 3 - mounted extract captures HTTP delivery evidence without changing v1 paid-success bytes
+  ---
+  duration_ms: 4207.430332
+  type: 'test'
+  location: '/home/ubuntu/ae14-work/root1595-delivery-coverage-continuity/http-delivery-evidence.http.test.mjs:234:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      [
+        [
+          'caller-result-feedback.ndjson',
+          '307091e05d71d455b975c5d194975b4c0498016e47cd86e076961a42b3bc0368',
+          686
+    ...
+          'commerce-events.ndjson',
+    +     'c97f0a03e75c4b8c35ac68c39f809822085b191760c7df5cf3ca013c598fc14a',
+    +     17568
+    -     '077b51ee08b43d4fd34c6a43fcc7b0e5e74836aaf258105c12061e259a22f36c',
+    -     16761
+        ],
+        [
+          'commerce-paid-success-evidence.ndjson',
+          '3fd66c85290657a7cbcb96dd8201c280bb0544e4480c82f1de32a247a55a9f6a',
+          5425
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0:
+      0: 'caller-result-feedback.ndjson'
+      1: '307091e05d71d455b975c5d194975b4c0498016e47cd86e076961a42b3bc0368'
+      2: 686
+    1:
+      0: 'commerce-events.ndjson'
+      1: '077b51ee08b43d4fd34c6a43fcc7b0e5e74836aaf258105c12061e259a22f36c'
+      2: 16761
+    2:
+      0: 'commerce-paid-success-evidence.ndjson'
+      1: '3fd66c85290657a7cbcb96dd8201c280bb0544e4480c82f1de32a247a55a9f6a'
+      2: 5425
+    3:
+      0: 'commerce-prospective-delivery.ndjson'
+      1: 'eab86dc52b099e377109886a3aace393488f47bb819539dd917e452919690334'
+      2: 523
+    4:
+      0: 'commerce-rare-funnel-evidence.ndjson'
+      1: '133ed726f3a4cd7884f6c93cab3535a03c19855dccd306f0dbe12f4233fe240e'
+      2: 4418
+    5:
+      0: 'extract-fetch-hook.mjs'
+      1: 'a40e4910dd80e9f3aa8aa6f221683af91faa7523c0a5fe062e05ad8ca25c6d00'
+      2: 3892
+    6:
+      0: 'http-response-validation.v1.ndjson'
+      1: '86f15f08e044fc0d10257a8116c75c764f2da6276101e184692caf274452af52'
+      2: 8311
+    7:
+      0: 'idempotency-replay.json'
+      1: '893463375bda4a6869f4adbcd9c6cdc44e435d4083ef9c812841fbd2d99ac7b9'
+      2: 11700
+    8:
+      0: 'idempotency-replay.key'
+      1: '83481ff6322d03e7f56f4dd86991e4d08df0dcf1fb2c8544727d10143e224518'
+      2: 64
+  actual:
+    0:
+      0: 'caller-result-feedback.ndjson'
+      1: '307091e05d71d455b975c5d194975b4c0498016e47cd86e076961a42b3bc0368'
+      2: 686
+    1:
+      0: 'commerce-events.ndjson'
+      1: 'c97f0a03e75c4b8c35ac68c39f809822085b191760c7df5cf3ca013c598fc14a'
+      2: 17568
+    2:
+      0: 'commerce-paid-success-evidence.ndjson'
+      1: '3fd66c85290657a7cbcb96dd8201c280bb0544e4480c82f1de32a247a55a9f6a'
+      2: 5425
+    3:
+      0: 'commerce-prospective-delivery.ndjson'
+      1: 'eab86dc52b099e377109886a3aace393488f47bb819539dd917e452919690334'
+      2: 523
+    4:
+      0: 'commerce-rare-funnel-evidence.ndjson'
+      1: '133ed726f3a4cd7884f6c93cab3535a03c19855dccd306f0dbe12f4233fe240e'
+      2: 4418
+    5:
+      0: 'extract-fetch-hook.mjs'
+      1: 'a40e4910dd80e9f3aa8aa6f221683af91faa7523c0a5fe062e05ad8ca25c6d00'
+      2: 3892
+    6:
+      0: 'http-response-validation.v1.ndjson'
+      1: '86f15f08e044fc0d10257a8116c75c764f2da6276101e184692caf274452af52'
+      2: 8311
+    7:
+      0: 'idempotency-replay.json'
+      1: '893463375bda4a6869f4adbcd9c6cdc44e435d4083ef9c812841fbd2d99ac7b9'
+      2: 11700
+    8:
+      0: 'idempotency-replay.key'
+      1: '83481ff6322d03e7f56f4dd86991e4d08df0dcf1fb2c8544727d10143e224518'
+      2: 64
+  operator: 'deepStrictEqual'
+  stack: |-
+    proveMountedDeliveryJoin (file:///home/ubuntu/ae14-work/root1595-delivery-coverage-continuity/ordinary-delivery-join-observe.mjs:487:10)
+    async TestContext.<anonymous> (file:///home/ubuntu/ae14-work/root1595-delivery-coverage-continuity/http-delivery-evidence.http.test.mjs:358:18)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: mounted morpho HTTP and MCP producers capture delivery from the live paths
+ok 4 - mounted morpho HTTP and MCP producers capture delivery from the live paths
+  ---
+  duration_ms: 6579.15016
+  type: 'test'
+  ...
+# Subtest: mounted mcp producer records malformed, missing, and replay without an HTTP payment row
+ok 5 - mounted mcp producer records malformed, missing, and replay without an HTTP payment row
+  ---
+  duration_ms: 699.756426
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 4
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8505.285561

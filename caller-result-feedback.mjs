@@ -6,7 +6,7 @@ import { constants } from "node:fs";
 import { chmod, lstat, mkdir, open, readFile, rename, unlink } from "node:fs/promises";
 import path from "node:path";
 
-import { admitCommerceJournal } from "./commerce-journal-admission.mjs";
+import { admitCommerceJournal, noteJournalFault, noteJournalRotation, noteJournalWrite, registerJournalProducer } from "./commerce-journal-admission.mjs";
 import { USEFULNESS_UNKNOWN } from "./http-delivery-evidence/classify.mjs";
 import {
   CALLER_RESULT_DISPOSITIONS,
@@ -582,6 +582,7 @@ export function createCallerResultFeedbackService({
   key = "",
   maxFileBytes = MAX_FILE_BYTES,
   now = () => Date.now(),
+  readOnly = false,
 } = {}) {
   if (typeof dataDir !== "string" || dataDir.length === 0) throw new Error("data directory is required");
   const currentPath = path.join(dataDir, CALLER_RESULT_FEEDBACK_FILENAME);
@@ -600,6 +601,12 @@ export function createCallerResultFeedbackService({
   }
 
   async function appendStatement(record) {
+    if (readOnly) throw new Error("read-only feedback service");
+    try { return await appendStatementBytes(record); }
+    catch (error) { noteJournalFault(dataDir, ["feedback"]); throw error; }
+  }
+
+  async function appendStatementBytes(record) {
     const line = `${JSON.stringify(record)}\n`;
     await mkdir(dataDir, { recursive: true, mode: 0o700 });
     const entry = await lstat(currentPath).catch((error) => (error?.code === "ENOENT" ? null : Promise.reject(error)));
@@ -616,6 +623,7 @@ export function createCallerResultFeedbackService({
         if (error?.code !== "ENOENT") throw error;
       });
       await rename(currentPath, rotatedPath);
+      noteJournalRotation(dataDir, "feedback");
     }
     const handle = await open(
       currentPath,
@@ -638,6 +646,7 @@ export function createCallerResultFeedbackService({
       await handle.close();
     }
     await syncDirectory(dataDir);
+    noteJournalWrite(dataDir, "feedback", record);
   }
 
   async function loadCaptures() {
@@ -1021,7 +1030,7 @@ export function createCallerResultFeedbackService({
     return { declarations, rejected: loaded.rejected };
   }
 
-  return Object.freeze({
+  const service = Object.freeze({
     dataDir,
     currentPath,
     rotatedPath,
@@ -1030,4 +1039,5 @@ export function createCallerResultFeedbackService({
     submitMcp,
     readDeclarations,
   });
+  return readOnly ? service : registerJournalProducer(service, dataDir, keyReady(key) ? ["feedback"] : []);
 }

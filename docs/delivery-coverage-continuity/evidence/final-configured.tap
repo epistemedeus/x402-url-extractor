@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: mounted caller can report one retained result without changing the paid body
+ok 1 - mounted caller can report one retained result without changing the paid body
+  ---
+  duration_ms: 6070.444854
+  type: 'test'
+  ...
+# Subtest: a merchant without the feedback key still delivers and refuses the report
+ok 2 - a merchant without the feedback key still delivers and refuses the report
+  ---
+  duration_ms: 1748.279145
+  type: 'test'
+  ...
+# Subtest: mounted extract captures HTTP delivery evidence without changing v1 paid-success bytes
+ok 3 - mounted extract captures HTTP delivery evidence without changing v1 paid-success bytes
+  ---
+  duration_ms: 4966.799356
+  type: 'test'
+  ...
+# Subtest: mounted morpho HTTP and MCP producers capture delivery from the live paths
+ok 4 - mounted morpho HTTP and MCP producers capture delivery from the live paths
+  ---
+  duration_ms: 6946.499833
+  type: 'test'
+  ...
+# Subtest: mounted mcp producer records malformed, missing, and replay without an HTTP payment row
+ok 5 - mounted mcp producer records malformed, missing, and replay without an HTTP payment row
+  ---
+  duration_ms: 722.163201
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8829.759009

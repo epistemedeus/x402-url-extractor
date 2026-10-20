@@ -1,0 +1,45 @@
+{
+  "schema": "root1595.source-receiving.v1",
+  "productBase": "077b25417d6c4da729986d7108e829a0e17c2291",
+  "operatingCommit": "0f1c3dcaa441df9f9267858fc5949674ebe71ee4",
+  "receiptSha256": "6a82df17277b5ea15d5d522f35b6dc74255e4122fcfbd1c7b0f09cd955d4ed7c",
+  "usefulCheckpoint": "9427a94afa6448c442f00d63dc0dfe671d457719",
+  "owningSourceDigest": "1a471717242640bbc99e7c42b1a4361a22ac1d44440d6b995c7b7c7fea668821",
+  "node": "v22.23.3",
+  "tests": {
+    "regression": {
+      "passed": 135,
+      "failed": 0,
+      "skipped": 0
+    },
+    "configured": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "protectedBytes": {
+    "package.json": {
+      "sha256": "d7cfdce4bc42fd64e0be97a07e47844f391ceef9b9634ada8ec764cc75fdfdc5",
+      "unchangedFromAdmission": true
+    },
+    "package-lock.json": {
+      "sha256": "212c78b62206723b04af693e8c828541953b97db92342cd8135268f854236be7",
+      "unchangedFromAdmission": true
+    },
+    "service-deployment-statement.json": {
+      "sha256": "319660d13b9d37ee5d113a12c5b5da53490421698d0bc3a127a38893edb95113",
+      "unchangedFromAdmission": true
+    },
+    "service-deployment-ed25519-public.pem": {
+      "sha256": "629bfa2f96b9ecc8add9866dac3ce4f51ac312796e712f79d8e0fa349321d56b",
+      "unchangedFromAdmission": true
+    }
+  },
+  "installedReceiving": "not_performed",
+  "customerAcceptance": "unknown",
+  "remainingAuthorityLimits": [
+    "cross_process_exclusivity_unproven",
+    "event_time_is_not_append_time"
+  ]
+}
