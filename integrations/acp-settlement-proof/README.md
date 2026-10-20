@@ -41,9 +41,9 @@ const operation = await fulfillAcpSettlementProof({
 The SDK job object contains the offering **name**, not its registry offering ID
 or the requirement message. Root must establish that ID, original message sender,
 job and agreement association from its original record before calling. The adapter
-checks that supplied ID and fetched provider/name/fee, not an invented on-chain ID
-association. It requires a loaded funded provider job and refuses working-funds
-requests. Canonical Base/USDC are constants; extra network/asset fields, scalars,
+checks that supplied ID and fetched provider/name/fee; the original registry-ID
+association remains a caller prerequisite. It requires a loaded funded provider
+job with no intents or custom hooks, and rechecks it after receipt RPC. Canonical Base/USDC are constants; extra network/asset fields, scalars,
 JSON strings, arrays, malformed inputs and numeric/over-cap amounts refuse before
 RPC or SDK authentication. Omitted payer is allowed; an explicit null is not.
 The three reader decisions remain `verified`, `not_verified`, `receipt_unavailable`;
@@ -51,7 +51,7 @@ a mismatch or unavailable RPC is useful delivered evidence, not fabricated succe
 
 `journal.read(key)` returns the retained operation or null.
 `journal.compareAndSet(key, expected, next)` must atomically compare full JSON
-values, durably persist `next`, and return true only after persistence completes.
+values (object key order is immaterial), durably persist `next`, and return true only after persistence completes.
 Use the key `acp:8453:<original decimal job ID>` within the existing journal namespace.
 Read/create/update must share its existing cross-process transaction/lock. Never
 implement this contract as an unprotected read then write, or use the tests' Map
@@ -109,6 +109,11 @@ HTTP, authentication-signature and transaction sentinels. The fake SDK host is
 `https://acp.invalid`; every fetch is intercepted and checked. SDK listeners and
 real providers are never constructed. The SDK's EVM client inherits the default
 non-stale classification; generic lost responses do not trigger its reprepare loop.
+
+The existing merchant `idempotency-replay.mjs` journals paid HTTP credentials and
+facilitator effects. It does not own an ACP job or SDK submission; this adapter
+therefore requires the original job owner's journal rather than mixing those
+financial authorities or inventing another accounting store.
 
 The fake journal proves use of the CAS contract, including a competing-call case;
 it does not qualify Root's durable journal implementation. Fake funded state,

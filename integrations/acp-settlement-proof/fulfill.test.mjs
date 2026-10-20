@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { isDeepStrictEqual } from 'node:util';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import test from 'node:test';
@@ -25,9 +26,11 @@ function setup(t, options = {}) {
   const journal = {
     async read(key) { return copy(records.get(key) ?? null); },
     async compareAndSet(key, previous, next) {
-      if (options.persistFail) throw Error('disk unavailable');
-      if (JSON.stringify(records.get(key) ?? null) !== JSON.stringify(previous)) return false;
-      records.set(key, copy(next)); calls.writes.push(next.state); return true;
+      if (options.persistFail || options.persistFailState === next.state) throw Error('disk unavailable');
+      if (!isDeepStrictEqual(records.get(key) ?? null, previous)) return false;
+      records.set(key, copy(next)); calls.writes.push(next.state);
+      if (options.persistThrowAfterState === next.state) throw Error('crash after persistence');
+      return true;
     },
   };
   const job = {
@@ -53,8 +56,11 @@ function setup(t, options = {}) {
       return { ok: true, status: 200 };
     }
     assert.equal(url, 'https://acp.invalid/jobs/8453/123');
-    if (++reads > 1 && options.readbackFail) throw Error('readback down');
-    if (reads > 1 && options.drift) job.clientAddress = PAYER;
+    reads++;
+    if (calls.sends > 0 && options.readbackFail) throw Error('readback down');
+    if (calls.sends > 0 && options.drift) job.clientAddress = PAYER;
+    if (reads > 1 && options.preSendUnfunded) job.jobStatus = 'OPEN';
+    if (reads > 1 && options.preSendDrift) job.clientAddress = PAYER;
     return { ok: true, status: 200, json: async () => ({ data: copy(job) }) };
   });
   const signer = {
@@ -151,8 +157,10 @@ for (const options of [{ postResponseLost: true }, { signerRefuse: true }]) test
 });
 
 test('lost readback persists unknown; later original-job read recovers', async t => {
-  const h = setup(t, { readbackFail: true }); assert.equal((await h.run()).state, 'sent_unknown');
+  const options = { readbackFail: true }; const h = setup(t, options);
+  assert.equal((await h.run()).state, 'sent_unknown');
   await assert.rejects(h.run(), /readback/); assert.equal(h.calls.sends, 1); assert.equal(h.calls.receipt, 1);
+  options.readbackFail = false; assert.equal((await h.run()).state, 'received'); assert.equal(h.calls.sends, 1);
 });
 test('same job cannot replace original request/artifact on retry', async t => {
   const h = setup(t); await h.run(); await assert.rejects(h.run({ ...requirement, amountAtomic: '5001' }), /binding changed/); assert.equal(h.calls.sends, 1); assert.equal(h.calls.receipt, 1);
@@ -167,4 +175,52 @@ test('no-evaluator auto-completion readback is carriage evidence', async t => {
 });
 test('readback cannot receive changed original identity', async t => {
   const h = setup(t, { drift: true }); await assert.rejects(h.run(), /binding changed/); assert.equal(h.records.get('acp:8453:123').state, 'sent_unknown'); assert.equal(h.calls.sends, 1);
+});
+
+test('refuses custom hooks on the no-working-funds path', async t => {
+  const h = setup(t, { job: { hookAddress: OTHER } }); await assert.rejects(h.run(), /custom-hook/); assert.equal(h.calls.receipt, 0); assertNoDelivery(h.calls);
+});
+test('rechecks funded state after receipt RPC and before dispatch', async t => {
+  const h = setup(t, { preSendUnfunded: true }); await assert.rejects(h.run(), /Funded/); assert.equal(h.calls.receipt, 1); assertNoDelivery(h.calls);
+  assert.equal(h.records.get('acp:8453:123').state, 'prepared');
+});
+test('failed durable sent marker leaves original prepared artifact and sends nothing', async t => {
+  const options = { persistFailState: 'sent_unknown' }; const h = setup(t, options);
+  await assert.rejects(h.run(), /disk/); assertNoDelivery(h.calls); const artifact = h.records.get('acp:8453:123').artifact;
+  options.persistFailState = null; const record = await h.run(); assert.equal(record.state, 'received'); assert.equal(record.artifact, artifact); assert.equal(h.calls.receipt, 1); assert.equal(h.calls.sends, 1);
+});
+test('crash after durable sent marker never auto-replays an unobserved dispatch', async t => {
+  const options = { persistThrowAfterState: 'sent_unknown' }; const h = setup(t, options);
+  await assert.rejects(h.run(), /crash/); assertNoDelivery(h.calls); const original = copy(h.records.get('acp:8453:123'));
+  options.persistThrowAfterState = null; assert.deepEqual(await h.run(), original); assertNoDelivery(h.calls); assert.equal(h.calls.receipt, 1);
+});
+test('competing sends of a persisted prepared artifact have one CAS winner', async t => {
+  const options = { persistFailState: 'sent_unknown' }; const h = setup(t, options);
+  await assert.rejects(h.run(), /disk/); options.persistFailState = null;
+  const results = await Promise.allSettled([h.run(), h.run()]);
+  assert.ok(results.some(r => r.status === 'fulfilled')); assert.equal(h.calls.sends, 1); assert.equal(h.calls.receipt, 1);
+});
+test('submitted state with different artifact stays unknown and cannot overwrite original', async t => {
+  const h = setup(t, { signerRefuse: true }); const original = await h.run();
+  h.job.jobStatus = 'SUBMITTED'; h.job.deliverable = 'different artifact';
+  assert.equal((await h.run()).state, 'sent_unknown'); assert.equal(h.records.get('acp:8453:123').artifact, original.artifact); assert.equal(h.calls.sends, 1);
+});
+test('reader cap remains inclusive and positive with no payer', async t => {
+  const h = setup(t, { logs: [transfer({ amount: 1000000000000000n })] });
+  const record = await h.run({ transactionHash: TX, recipient: RECIPIENT, amountAtomic: '1000000000000000' });
+  assert.equal(JSON.parse(record.artifact).decision, 'verified');
+});
+test('binding readback tolerates storage reordering without changing artifact bytes', async t => {
+  const h = setup(t, { signerRefuse: true }); const first = await h.run();
+  const stored = h.records.get('acp:8453:123');
+  stored.binding = Object.fromEntries(Object.entries(stored.binding).reverse());
+  stored.binding.request = Object.fromEntries(Object.entries(stored.binding.request).reverse());
+  assert.equal((await h.run()).artifact, first.artifact); assert.equal(h.calls.sends, 1);
+});
+test('changed original client after receipt RPC refuses before dispatch', async t => {
+  const h = setup(t, { preSendDrift: true }); await assert.rejects(h.run(), /binding changed/); assertNoDelivery(h.calls);
+});
+test('escrow intent is outside the original no-working-funds job', async t => {
+  const h = setup(t, { job: { intents: [{ intentId: '1', actor: 'provider', isEscrow: true, isSigned: false, fromAddress: PAYER, recipientAddress: OTHER, amount: '1', tokenAddress: BASE_USDC }] } });
+  await assert.rejects(h.run(), /custom-hook/); assert.equal(h.calls.receipt, 0); assertNoDelivery(h.calls);
 });
