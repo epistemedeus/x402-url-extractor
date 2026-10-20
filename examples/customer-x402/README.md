@@ -527,3 +527,39 @@ the exact deployed commit, health must have status `ok`, proof must have exactly
 headers must match their bodies. A missing, invalid or conflicting pin is a
 failed binding, not authorization to overwrite it. These are verification
 instructions only; this source review performs no deployment or online sidecar.
+
+### Receiving the draft seller-audit buyer
+
+The seller-audit paid-response path applies the caller's structural output
+contract (non-null required dotted fields and response byte limit) before audit
+semantics. Present `false`, zero and empty strings remain present values. Audit
+refusals and incomplete audits keep their own semantics and one-send recovery;
+extract-task predicates are not applied to this product.
+
+`export/pack-seller-audit.mjs` reads every packed source/vendor module and the
+lockfile from one committed revision. It binds the producer and its local code
+dependencies by blob and SHA256, checks consumed working/index inputs are clean,
+and records the source tree and archive digest in the draft provenance. The
+explicit input list is the dirty-input boundary; generated artifacts and
+unrelated working files are not represented as packed source. The packer refuses
+a sealed or hosted target. Other acquisition assets retain their bytes.
+
+Commit source first, then run:
+
+```sh
+node examples/customer-x402/export/pack-seller-audit.mjs --source-commit FULL_SOURCE_COMMIT
+node --test examples/customer-x402/test/seller-audit-buyer.test.mjs examples/customer-x402/test/seller-audit-merchant-compat.test.mjs examples/customer-x402/test/seller-audit-provenance.test.mjs examples/customer-x402/test/seller-audit-pack.test.mjs
+```
+
+Run these commands from the repository root. Commit the resulting draft archive,
+provenance, inventory and manifest afterwards. The source revision deliberately
+precedes the artifact commit. The pack test extracts outside the checkout,
+executes the unpaid contract before installation, installs the exact lockfile,
+resolves SDK2.16.0 from that unpack and runs the synthetic SDK self-check. The
+provenance test compares actual packed/source/lock bytes and exercises dirty,
+stale-revision and sealed-target refusals.
+
+This receiving prepares an unhosted draft for review. It does not update the
+original ROOT1107 checkout, invoke a live purchase, publish the archive, or grant
+merchant release authority. To discard this candidate, leave the predecessor
+assets/installation in place; no live rollback is needed.

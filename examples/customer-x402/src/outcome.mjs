@@ -1,7 +1,7 @@
 import { OUTCOMES } from "./constants.mjs";
 import { validateBatchBuyerOutput } from "./batch-output.mjs";
 import { decodeSettlementHeader } from "./challenge.mjs";
-import { validateBuyerOutput } from "./output.mjs";
+import { validateBuyerOutput, validateRequiredOutput } from "./output.mjs";
 import { classifySellerAuditBody } from "./seller-audit.mjs";
 import { redactValue } from "./redact.mjs";
 
@@ -24,7 +24,12 @@ export function classifyPaidResponse({
   if (bodyError || mediaType !== requiredOutput.mediaType) {
     output = { valid: false, delivery: "invalid", reason: bodyError || "response Content-Type is not application/json", report: null };
   } else if (authorization?.sellerAudit) {
-    output = classifySellerAuditBody(body, authorization);
+    try {
+      validateRequiredOutput(body, requiredOutput);
+      output = classifySellerAuditBody(body, authorization);
+    } catch (error) {
+      output = { valid: false, delivery: "invalid", reason: error.message, report: null };
+    }
   } else if (batch) {
     output = validateBatchBuyerOutput(body, authorization);
   } else {

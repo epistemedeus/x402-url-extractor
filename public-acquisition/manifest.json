@@ -845,8 +845,8 @@
       "role": "archive",
       "filename": "samedaydesk-seller-audit-buyer-0.1.0.tar.gz",
       "relativePath": "samedaydesk-seller-audit-buyer/0.1.0/samedaydesk-seller-audit-buyer-0.1.0.tar.gz",
-      "bytes": 51406,
-      "sha256": "b9102b6526f7ed670f9d6a43cd804f65588e5ace05dcb9b92d8aed32471d470e",
+      "bytes": 51471,
+      "sha256": "e7ce5fffcd5cc7351037e2ada4008aace9a66eaa7bbb9b0f2ec8ece36de3f399",
       "mediaType": "application/gzip",
       "originContentType": "application/gzip",
       "originalUrl": "https://neomorphic.io/downloads/samedaydesk-seller-audit-buyer/0.1.0/samedaydesk-seller-audit-buyer-0.1.0.tar.gz",
@@ -873,7 +873,7 @@
       ],
       "inventory": {
         "path": "inventories/samedaydesk-seller-audit-buyer-0.1.0.json",
-        "fileSha256": "dbd546175fdd047f2a6e5a75b5aa6a43f0bd320cc628ecbe6c00f6f3785ad16e",
+        "fileSha256": "24f60a56723ea31ec66a0b182fb1087e74c31cda292e7358f6a704c5dfd97cf9",
         "memberCount": 29
       }
     },
@@ -883,8 +883,8 @@
       "role": "provenance",
       "filename": "provenance.json",
       "relativePath": "samedaydesk-seller-audit-buyer/0.1.0/provenance.json",
-      "bytes": 1098,
-      "sha256": "c49efc23e1ea8015be544751eef5462ca2940218a0b0f357fdbff699d443e89f",
+      "bytes": 10371,
+      "sha256": "e30be2c806604b4acce0e56ddc9b0f4583d02a853e79feae4eb1aa10aa175400",
       "mediaType": "application/json; charset=utf-8",
       "originContentType": "text/plain; charset=utf-8",
       "originalUrl": "https://neomorphic.io/downloads/samedaydesk-seller-audit-buyer/0.1.0/provenance.json",

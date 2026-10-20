@@ -6,6 +6,20 @@ function withTask(result, task) {
   return { ...result, task };
 }
 
+/** Caller structural policy, independent of the purchased product's semantics. */
+export function validateRequiredOutput(body, requiredOutput) {
+  const report = validateOutput(body, {
+    mediaType: requiredOutput.mediaType || "application/json",
+    requiredFields: requiredOutput.requiredFields,
+    maxResponseBytes: requiredOutput.maxResponseBytes,
+  });
+  for (const field of requiredOutput.requiredFields) {
+    const value = field.split(".").reduce((current, key) => current?.[key], body);
+    if (value === null || value === undefined) throw new Error(`required field is null or missing: ${field}`);
+  }
+  return report;
+}
+
 export function validateBuyerOutput(body, requiredOutput) {
   const task = decideExtractTask(body, requiredOutput?.task ?? null);
   if (task.delivery === "invalid") {
@@ -30,15 +44,7 @@ export function validateBuyerOutput(body, requiredOutput) {
         report,
       }, task);
     }
-    const report = validateOutput(body, {
-      mediaType: requiredOutput.mediaType || "application/json",
-      requiredFields: requiredOutput.requiredFields,
-      maxResponseBytes: requiredOutput.maxResponseBytes,
-    });
-    for (const field of requiredOutput.requiredFields) {
-      const value = field.split(".").reduce((current, key) => current?.[key], body);
-      if (value === null || value === undefined) throw new Error(`required field is null or missing: ${field}`);
-    }
+    const report = validateRequiredOutput(body, requiredOutput);
     if (task.delivery === "source_refused" || task.delivery === "partial" || task.delivery === "metadata_sufficient" || task.delivery === "excerpt_sufficient") {
       return withTask({
         valid: true,

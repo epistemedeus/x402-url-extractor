@@ -85,16 +85,16 @@
       "sha256": "43276a454b4ce09a36cca93087feeb41470d60852ff6bb083a601a68832c8b13"
     },
     {
-      "bytes": 5384,
+      "bytes": 5591,
       "kind": "file",
       "path": "src/outcome.mjs",
-      "sha256": "b1d2511842b03a87f3b4c0858807feb962dfef9a1a70382c629dd3576ee3da1f"
+      "sha256": "279a3ef4e577b1c31de84ddff8cca93151564e32838dbd81868fef323de30c06"
     },
     {
-      "bytes": 2091,
+      "bytes": 2304,
       "kind": "file",
       "path": "src/output.mjs",
-      "sha256": "6564c8ea541a866b7c3f36e91191ff8d35dccb1fb217adab8efaa2457078666d"
+      "sha256": "1dace7765031611aea695dab9e1b6d38ca47a82515891d764c0b6dfa27b453be"
     },
     {
       "bytes": 5442,
