@@ -66,9 +66,30 @@ test('packer refuses dirty source/vendor/lock/producer and stale provenance befo
    const r=run();assert.notEqual(r.status,0,rel);assert.match(r.stderr,/dirty committed input/);
    assert.equal(digest(readFileSync(manifest)),before);git(['restore','--',rel],work);
   }
+  const staged='examples/customer-x402/src/output.mjs';
+  const original=readFileSync(path.join(work,staged));
+  writeFileSync(path.join(work,staged),Buffer.concat([original,Buffer.from('\n ')]));
+  git(['add','--',staged],work);writeFileSync(path.join(work,staged),original);
+  const stagedResult=run();assert.notEqual(stagedResult.status,0);assert.match(stagedResult.stderr,/dirty committed input/);
+  git(['restore','--staged','--worktree','--',staged],work);
   // An explicit old commit cannot label newer consumed bytes as that source.
   const stale=run(['--source-commit','aab96934b6b5e9a623089949d37b672ea826055b']);
   assert.notEqual(stale.status,0);assert.match(stale.stderr,/dirty input|dirty committed input/);
   assert.equal(digest(readFileSync(manifest)),before);
+ } finally {rmSync(work,{recursive:true,force:true});}
+});
+
+test('packer refuses a sealed draft target before replacing any archive',()=>{
+ const work=mkdtempSync(path.join(tmpdir(),'seller-audit-sealed-'));
+ try {
+  git(['clone','--quiet','--shared',REPO,work]);
+  const relative='public-acquisition/manifest.json', manifest=path.join(work,relative);
+  const data=JSON.parse(readFileSync(manifest));
+  for(const asset of data.assets) if(asset.id==='samedaydesk-seller-audit-buyer') asset.publicationStatus='sealed';
+  writeFileSync(manifest,JSON.stringify(data));
+  const relativeArchive=path.relative(REPO,archive),before=digest(readFileSync(path.join(work,relativeArchive)));
+  const r=spawnSync(process.execPath,['examples/customer-x402/export/pack-seller-audit.mjs'],{cwd:work,encoding:'utf8'});
+  assert.notEqual(r.status,0);assert.match(r.stderr,/sealed or hosted asset/);
+  assert.equal(digest(readFileSync(path.join(work,relativeArchive))),before);
  } finally {rmSync(work,{recursive:true,force:true});}
 });

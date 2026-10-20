@@ -1,0 +1,58 @@
+{
+  "schema": "samedaydesk.root1223.buyer-receiving.v1",
+  "base": "aab96934b6b5e9a623089949d37b672ea826055b",
+  "packedSourceCommit": "ab939cc16f01a9ea308498a36f18ee94f2f3e222",
+  "archive": {
+    "bytes": 51471,
+    "sha256": "e7ce5fffcd5cc7351037e2ada4008aace9a66eaa7bbb9b0f2ec8ece36de3f399",
+    "members": 29,
+    "deterministicRegeneration": true
+  },
+  "reproductions": [
+    "Caller missing required extra field was delivered as valid.",
+    "Caller byte limit was bypassed for audit output.",
+    "Old provenance cd0609e5ad68e0b5a9e0fa90e17d26a8998235e7 does not contain the packed seller-audit implementation."
+  ],
+  "fixes": [
+    "Neutral required-field/null/byte-size policy precedes seller-audit semantics.",
+    "All consumed source/vendor/lock and producer dependencies are bound to exact committed blobs/hash bytes; dirty working or staged inputs refuse.",
+    "Draft archive regenerated after source commit; sealed/hosted target refuses; predecessor assets remain unchanged."
+  ],
+  "focusedTests": {
+    "command": "node --test examples/customer-x402/test/seller-audit-buyer.test.mjs examples/customer-x402/test/seller-audit-merchant-compat.test.mjs examples/customer-x402/test/seller-audit-provenance.test.mjs examples/customer-x402/test/seller-audit-pack.test.mjs",
+    "tests": 19,
+    "passed": 19,
+    "failed": 0,
+    "skipped": 0
+  },
+  "exampleSuite": {
+    "command": "cd examples/customer-x402 && npm test",
+    "tests": 239,
+    "passed": 238,
+    "failed": 0,
+    "skipped": 1,
+    "skip": "bounded credential-free production preflight (live opt-in)"
+  },
+  "coverage": [
+    "Missing/null extra and nested fields; false/zero/empty present values; exact byte limit and overflow.",
+    "Complete, refused, incomplete, query/product/boundary mismatch and one-send recovery paths.",
+    "Actual archive/source/vendor/lock equivalence and producer provenance; dirty worktree/index, stale source and sealed output refusal.",
+    "Outside-checkout unpaid contract before npm ci --ignore-scripts; actual SDK2.16.0 import resolution and synthetic one-send self-check."
+  ],
+  "preservation": {
+    "changedAcquisitionPaths": [
+      "public-acquisition/bytes/samedaydesk-seller-audit-buyer/0.1.0/provenance.json",
+      "public-acquisition/bytes/samedaydesk-seller-audit-buyer/0.1.0/samedaydesk-seller-audit-buyer-0.1.0.tar.gz",
+      "public-acquisition/inventories/samedaydesk-seller-audit-buyer-0.1.0.json",
+      "public-acquisition/manifest.json"
+    ],
+    "otherAcquisitionAssetsUnchanged": true,
+    "original1107CheckoutBranchProcessSessionTouched": false
+  },
+  "limits": [
+    "No actual signing or paid network call; SDK signing exercises use disposable synthetic test accounts.",
+    "No original213 update, installation, hosting, merge, answer publication, credentials or payment.",
+    "Source-ready draft only; original1107 terminal continuity and original152 qualification remain with receiving Root.",
+    "Full example and focused test groups overlap; no summed unique-coverage claim."
+  ]
+}
