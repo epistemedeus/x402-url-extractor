@@ -30,6 +30,8 @@ const PAYER = `0x${"2".repeat(40)}`;
 const PAY_TO = "0x8904dF3DE6DFEe6a7C8cc38619d2f17806213Cee";
 const NETWORK = "eip155:8453";
 const PRICE_ATOMIC = "5000";
+const CONTINUITY_TOKEN = "http-delivery-continuity-owner-32-bytes";
+const CONTINUITY_FEEDBACK_KEY = "http-delivery-continuity-feedback-32-bytes";
 const FAKE_TX = `0x${"3".repeat(64)}`;
 
 function unusedPort() {
@@ -129,6 +131,8 @@ globalThis.__SAMEDAYDESK_EXTRACT_FETCH__ = async (input, init) => {
       ...process.env,
       PORT: String(port),
       COMMERCE_DATA_DIR: dataDir,
+      COMMERCE_INTERNAL_TOKEN: CONTINUITY_TOKEN,
+      CALLER_RESULT_FEEDBACK_KEY: CONTINUITY_FEEDBACK_KEY,
       COMMERCE_RECONCILIATION_INTERVAL_MS: "86400000",
       FACILITATOR: "xpay",
       FACILITATOR_URL: facilitatorUrl,
@@ -325,6 +329,31 @@ test("mounted extract captures HTTP delivery evidence without changing v1 paid-s
   assert.notEqual(firstJoined.historical.id, secondJoined.historical.id);
   assert.ok(firstJoined.validations.every((item) => item.paidEvidenceId === firstJoined.historical.id));
   assert.ok(secondJoined.validations.every((item) => item.paidEvidenceId === secondJoined.historical.id));
+
+  const feedbackToken = ok.paid.headers.get("x-samedaydesk-caller-result-feedback");
+  assert.equal(typeof feedbackToken, "string");
+  const feedbackResponse = await fetch(`${merchant.base}/commerce/caller-result-feedback`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-samedaydesk-caller-result-feedback": feedbackToken },
+    body: JSON.stringify({ disposition: "useful" }),
+  });
+  assert.equal(feedbackResponse.status, 200);
+  const coverageResponse = await fetch(`${merchant.base}/v0/ordinary-delivery-join.json`, {
+    headers: { "x-samedaydesk-internal": CONTINUITY_TOKEN },
+  });
+  assert.equal(coverageResponse.status, 200);
+  const ordinaryReport = await coverageResponse.json();
+  assert.equal(ordinaryReport.window.exhaustive, false);
+  assert.equal(ordinaryReport.deliveryJournalCoverage.population, "registered_process_journal_appends");
+  assert.equal(ordinaryReport.deliveryJournalCoverage.planes.paid_success.coverage, "complete");
+  assert.equal(ordinaryReport.deliveryJournalCoverage.planes.paid_success.writes, 6);
+  assert.equal(ordinaryReport.deliveryJournalCoverage.planes.http_validation.coverage, "complete");
+  assert.equal(ordinaryReport.deliveryJournalCoverage.planes.http_validation.writes, 6);
+  assert.equal(ordinaryReport.deliveryJournalCoverage.planes.feedback.coverage, "complete");
+  assert.equal(ordinaryReport.deliveryJournalCoverage.planes.feedback.writes, 1);
+  assert.equal(ordinaryReport.deliveryJournalCoverage.planes.settlements.coverage, "unknown");
+  assert.equal(ordinaryReport.customerPlane.attributableCustomerCount, null);
+  assert.equal(facilitator.calls.settle, 6);
 
   const proved = await proveMountedDeliveryJoin(dataDir);
   assert.equal(proved.producerUnchanged, true);

@@ -1,3 +1,4 @@
+import { admitCommerceJournal, noteJournalWrite, noteJournalFault } from "../commerce-journal-admission.mjs";
 import { randomUUID } from "node:crypto";
 import { appendFile, chmod, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
@@ -91,14 +92,20 @@ function outcomeAppendBinding(record) {
 }
 
 async function appendPrivateLine(dir, filePath, canonical) {
-  await mkdir(dir, { recursive: true, mode: 0o700 });
-  await chmod(dir, 0o700).catch(() => {});
-  await appendFile(filePath, `${JSON.stringify(canonical)}\n`, {
-    encoding: "utf8",
-    mode: 0o600,
+  const plane = path.basename(filePath) === VALIDATION_FILENAME ? "http_validation" : "mcp_delivery";
+  return admitCommerceJournal(dir, async () => {
+    try {
+      await mkdir(dir, { recursive: true, mode: 0o700 });
+      await chmod(dir, 0o700).catch(() => {});
+      await appendFile(filePath, `${JSON.stringify(canonical)}\n`, { encoding: "utf8", mode: 0o600 });
+      noteJournalWrite(dir, plane, canonical);
+      await chmod(filePath, 0o600).catch(() => {});
+      return canonical;
+    } catch (error) {
+      noteJournalFault(dir, [plane]);
+      throw error;
+    }
   });
-  await chmod(filePath, 0o600).catch(() => {});
-  return canonical;
 }
 
 export function openStore(dir) {

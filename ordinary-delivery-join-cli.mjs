@@ -28,6 +28,7 @@ File classes (read, never created)
   ${FILE_CLASSES.paidSuccessEvidence}
   ${FILE_CLASSES.commerceEvents}
   ${FILE_CLASSES.commerceEventsRotated}
+  Existing numbered event segments through commerce-events.15.ndjson are also read.
   ${FILE_CLASSES.httpValidation}
   ${FILE_CLASSES.mcpDelivery}
   ${FILE_CLASSES.outcomeBinding}
@@ -38,6 +39,15 @@ File classes (read, never created)
   ${FILE_CLASSES.callerResultFeedbackRotated}
   optional --caller-declarations <ndjson>  operator input, not a ledger
   Caller feedback journals are read and never created. A missing file stays empty.
+  Finite delivery cuts are read from the existing event segments, authenticated
+  with the existing COMMERCE_INTERNAL_TOKEN environment value. No CLI flag can
+  certify coverage. --coverage is retained as requestedCoverage only.
+  Producer continuity covers registered-process appends, not event-time traffic.
+  Cross-process exclusivity remains unproven, so store-wide exhaustive stays false.
+  Historical windows without a received cut stay unknown. The private configured
+  GET /v0/ordinary-delivery-join.json creates a finite cut and receives this report.
+  Owner-authenticated empty POST there begins a new finite interval after repair;
+  earlier cuts and their gaps remain retained under the existing rotation.
 
 Contract
   Exit 0 prints samedaydesk.ordinary-delivery-join.v1. Missing files stay empty.

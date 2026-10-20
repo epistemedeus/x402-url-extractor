@@ -1,3 +1,4 @@
+import { mountDeliveryJournalCoverage } from "./delivery-journal-coverage-http.mjs";
 import { registerCommerceRuntime } from "./commerce-journal-admission.mjs";
 // x402-merchant — a paid HTTP endpoint that charges AI agents in USDC and
 // settles directly to OUR OWN Base wallet.
@@ -1001,6 +1002,18 @@ commerceSettlementReconciler = createCommerceSettlementReconciler({
   network: NETWORK,
   treasury: PAY_TO,
 });
+registerCommerceRuntime(app, {
+  entrypoint: "server.js",
+  serviceVersion: SERVICE_VERSION,
+  publicUrl: PUBLIC_URL,
+  deploymentId: process.env.RAILWAY_DEPLOYMENT_ID || null,
+  source: process.env.RAILWAY_GIT_COMMIT_SHA || null,
+});
+mountDeliveryJournalCoverage(app, {
+  telemetry: commerceTelemetry, settlement: commerceSettlementReconciler, feedback: callerResultFeedback,
+  dataDir: process.env.COMMERCE_DATA_DIR || `${process.cwd()}/data`,
+  internalToken: process.env.COMMERCE_INTERNAL_TOKEN || "",
+});
 const acceptsFor = createExactUsdcAcceptsFor({ network: NETWORK, payTo: PAY_TO });
 const EXTRACT_DISCOVERY_DESCRIPTION = `Extract a public HTTP(S) page into JSON: title, description, JSON-LD, Open Graph, headings, links, and AI-readiness signals. No JavaScript; 12-second timeout; 3 MB cap. Paid JSON keeps requestedUrl, finalUrl, status, sourceOk, error, and capture limits. Default excerpt ${EXTRACT_TEXT_EXCERPT_CHARS}. Optional textExcerptLimitChars 1-${EXTRACT_TEXT_EXCERPT_MAX_CHARS} is rejected before payment; price unchanged. Not the full page. Use /read for Markdown.`;
 const RESOURCES = [
@@ -1596,13 +1609,6 @@ if (existsSync(usefulResultReuseMount)) {
   try {
     const { mountUsefulResultReuse } = await import(new URL("./useful-result-reuse/http.mjs", import.meta.url).href);
     const { merchant161ObservationMount } = await import(new URL("./task-linked-delivery/experiments/attempt-useful-view-1005/src/enroll.mjs", import.meta.url).href);
-    registerCommerceRuntime(app, {
-      entrypoint: "server.js",
-      serviceVersion: SERVICE_VERSION,
-      publicUrl: PUBLIC_URL,
-      deploymentId: process.env.RAILWAY_DEPLOYMENT_ID || null,
-      source: process.env.RAILWAY_GIT_COMMIT_SHA || null,
-    });
     const observationMount = merchant161ObservationMount({
       app, telemetry: commerceTelemetry, settlement: commerceSettlementReconciler,
       dataDir: process.env.COMMERCE_DATA_DIR || `${process.cwd()}/data`,

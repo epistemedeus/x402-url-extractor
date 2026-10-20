@@ -179,6 +179,7 @@ const EXACT_ROUTES = new Map([
   ["/a2a", { route: "/a2a", kind: "discovery" }],
   ["/a2a/message:send", { route: "/a2a/message:send", kind: "discovery" }],
   ["/v0/commerce-demand.json", { route: "/v0/commerce-demand.json", kind: "excluded" }],
+  ["/v0/ordinary-delivery-join.json", { route: "/v0/ordinary-delivery-join.json", kind: "excluded" }],
   ["/commerce/referral-recheck", { route: "/commerce/referral-recheck", kind: "excluded" }],
   ["/commerce/caller-result-feedback", { route: "/commerce/caller-result-feedback", kind: "excluded" }],
   ["/schemas/platform-health-card-v0.json", { route: "/schemas/platform-health-card-v0.json", kind: "discovery" }],
@@ -3625,6 +3626,7 @@ export function createCommerceTelemetry({
       () => undefined,
       (error) => {
         writerFailure ||= error instanceof Error ? error : new Error(String(error));
+        noteJournalFault(dataDir, ["attempts", "paid_success", "http_validation", "mcp_delivery"]);
       },
     );
     return run;
@@ -3692,6 +3694,7 @@ export function createCommerceTelemetry({
     await mkdir(dataDir, { recursive: true, mode: 0o700 });
     await chmod(dataDir, 0o700).catch(() => {});
     await appendFile(paidEvidencePath, `${JSON.stringify(evidence)}\n`, { encoding: "utf8", mode: 0o600 });
+    noteJournalWrite(dataDir, "paid_success", evidence);
     await chmod(paidEvidencePath, 0o600).catch(() => {});
   }
 
@@ -3725,6 +3728,7 @@ export function createCommerceTelemetry({
         try {
           await openStore(dataDir).appendValidation(httpDeliveryRecord);
         } catch {
+          noteJournalFault(dataDir, ["http_validation"]);
           // Observational HTTP delivery rows must not fail paid-success writes.
         }
       }
@@ -3822,6 +3826,7 @@ export function createCommerceTelemetry({
         try {
           await openStore(dataDir).appendMcpDelivery(mcpDeliveryRecord);
         } catch {
+          noteJournalFault(dataDir, ["mcp_delivery"]);
           // Observational MCP delivery rows must not fail the typed commerce event.
         }
       }
@@ -4891,7 +4896,10 @@ export function createCommerceTelemetry({
       if (result.failure) throw result.failure;
       return result.value;
     },
-    persistJournalCut: record => admitCommerceJournal(dataDir, () => appendEvent(record)),
+    persistJournalCut: record => admitCommerceJournal(dataDir, async () => {
+      try { return await appendEvent(record); }
+      catch (error) { noteJournalFault(dataDir, ["attempts"]); throw error; }
+    }),
     flush,
     paths: {
       currentPath,
@@ -4907,5 +4915,5 @@ export function createCommerceTelemetry({
       taskRefPath: outcomeBinding.taskRefPath,
       taskRefRotatedPath: outcomeBinding.taskRefRotatedPath,
     },
-  }, dataDir, ["attempts", "task_refs", "forward"]);
+  }, dataDir, ["attempts", "task_refs", "forward", "paid_success", "http_validation", "mcp_delivery"]);
 }

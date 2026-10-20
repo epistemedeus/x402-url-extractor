@@ -1,8 +1,10 @@
+import { authenticateDeliveryCut, DELIVERY_CUT_SCHEMA } from './commerce-delivery-cut-auth.mjs';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 export const JOURNAL_CUT_SCHEMA = 'samedaydesk.attempt-useful.journal-cut.v1';
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
 export function authenticateJournalCut(record, token) {
+  if (record?.schema === DELIVERY_CUT_SCHEMA) return authenticateDeliveryCut(record, token);
   if (!record || typeof record !== 'object' || Array.isArray(record) || typeof token !== 'string' || Buffer.byteLength(token) < 32
     || record.schema !== JOURNAL_CUT_SCHEMA || record.kind !== 'attempt_useful_capture'
     || !uuid.test(record.cutId || '') || !uuid.test(record.sessionId || '') || !/^[0-9]+:[0-9]+$/.test(record.namespace || '')

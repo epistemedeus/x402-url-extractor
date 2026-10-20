@@ -1,3 +1,6 @@
+import { admitCommerceJournal } from "./commerce-journal-admission.mjs";
+import { COMMERCE_PROSPECTIVE_SEGMENT_LIMIT, attemptSegmentName } from "./commerce-prospective-retention.mjs";
+import { isReceivedDeliveryCoverage, readDeliveryJournalCoverage } from "./delivery-journal-coverage.mjs";
 // Read-only join of one canonical settlement to its captured delivery.
 // Identity is paidEvidenceId plus digest, route, and settlement reference.
 // Aggregate route counts are not a join. Schema validity is not buyer usefulness.
@@ -332,6 +335,7 @@ export function joinOrdinaryDeliveries({
   sourceSha = null,
   includeLocalIds = false,
   rejectedLineCounts = [],
+  deliveryJournalCoverage = null,
 } = {}) {
   const startMs = Date.parse(windowStart || "");
   const endMs = Date.parse(windowEnd || "");
@@ -672,8 +676,10 @@ export function joinOrdinaryDeliveries({
   for (const row of rows) {
     if (Object.hasOwn(counts, row.disposition)) counts[row.disposition] += 1;
   }
+  const receivedCoverage = isReceivedDeliveryCoverage(deliveryJournalCoverage, { windowStart, windowEnd }) ? deliveryJournalCoverage : null;
+  const effectiveCoverage = receivedCoverage?.coverage || "unknown_for_full_window";
   const paymentEvidence = buildCommercePaymentEvidenceReadout({
-    eventSnapshot: { requestedWindowCoverage: coverage },
+    eventSnapshot: { requestedWindowCoverage: effectiveCoverage },
     settlementReconciliation: null,
   });
   return {
@@ -683,9 +689,11 @@ export function joinOrdinaryDeliveries({
     window: {
       start: new Date(startMs).toISOString(),
       end: new Date(endMs).toISOString(),
-      coverage,
-      exhaustive: coverage === "complete",
+      requestedCoverage: coverage,
+      coverage: effectiveCoverage,
+      exhaustive: false,
     },
+    deliveryJournalCoverage: receivedCoverage,
     aggregateRouteDeltaIsNotAnIndividualJoin: true,
     schemaValidityIsBuyerUsefulness: false,
     customerPlane: paymentEvidence.customerPlane,
@@ -763,18 +771,17 @@ export async function readOrdinaryDeliveryStores(dataDir) {
   if (typeof dataDir !== "string" || dataDir.length === 0) throw new Error("data directory is required");
   const info = await stat(dataDir);
   if (!info.isDirectory()) throw new Error("data directory is required");
-  const [settlementText, paidText, commerceText, commerceRotated, validationText, mcpText, forwardText, forwardRotated, taskText, taskRotated, feedbackRead] = await Promise.all([
+  const [settlementText, paidText, commerceTexts, validationText, mcpText, forwardText, forwardRotated, taskText, taskRotated, feedbackRead] = await Promise.all([
     readText(dataDir, FILE_CLASSES.settlementLedger),
     readText(dataDir, FILE_CLASSES.paidSuccessEvidence),
-    readText(dataDir, FILE_CLASSES.commerceEvents),
-    readText(dataDir, FILE_CLASSES.commerceEventsRotated),
+    Promise.all(Array.from({ length: COMMERCE_PROSPECTIVE_SEGMENT_LIMIT }, (_, index) => readText(dataDir, attemptSegmentName(index)))),
     readText(dataDir, FILE_CLASSES.httpValidation),
     readText(dataDir, FILE_CLASSES.mcpDelivery),
     readText(dataDir, FILE_CLASSES.outcomeBinding),
     readText(dataDir, FILE_CLASSES.outcomeBindingRotated),
     readText(dataDir, FILE_CLASSES.taskRef),
     readText(dataDir, FILE_CLASSES.taskRefRotated),
-    createCallerResultFeedbackService({ dataDir }).readDeclarations(),
+    createCallerResultFeedbackService({ dataDir, readOnly: true }).readDeclarations(),
   ]);
   const rejectedLineCounts = [];
   const note = (file, count) => {
@@ -797,7 +804,7 @@ export async function readOrdinaryDeliveryStores(dataDir) {
   note(FILE_CLASSES.paidSuccessEvidence, badPaid);
   const typedEvents = [];
   let badTyped = 0;
-  for (const row of parseNdjson(`${commerceText}\n${commerceRotated}`)) {
+  for (const row of parseNdjson(commerceTexts.join("\n"))) {
     if (row?._unparseable) {
       badTyped += 1;
       continue;
@@ -864,8 +871,11 @@ export async function readOrdinaryDeliveryStores(dataDir) {
 }
 
 export async function receiveOrdinaryDeliveryJoin(options) {
-  const stores = await readOrdinaryDeliveryStores(options.dataDir);
-  return joinOrdinaryDeliveries({ ...stores, ...options });
+  return admitCommerceJournal(options.dataDir, async () => {
+    const stores = await readOrdinaryDeliveryStores(options.dataDir);
+    const deliveryJournalCoverage = await readDeliveryJournalCoverage(options);
+    return joinOrdinaryDeliveries({ ...options, ...stores, deliveryJournalCoverage });
+  });
 }
 
 export function reportViolations(report) {
@@ -874,6 +884,7 @@ export function reportViolations(report) {
     if (!found.includes(code)) found.push(code);
   };
   if (!report || report.schema !== REPORT_SCHEMA) return ["schema"];
+  if (report.window?.exhaustive === true || report.window?.coverage === "complete") bad("journal_coverage_overclaimed");
   if (report.aggregateRouteDeltaIsNotAnIndividualJoin !== true) bad("aggregate_join_claimed");
   if (report.schemaValidityIsBuyerUsefulness !== false) bad("schema_called_useful");
   const plane = report.customerPlane || {};

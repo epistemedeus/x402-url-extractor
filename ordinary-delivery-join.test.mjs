@@ -1,3 +1,5 @@
+// Keep continuity regressions in the existing normal test command without changing the runtime manifest.
+import "./ordinary-delivery-coverage.cases.mjs";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
@@ -805,7 +807,7 @@ test("empty stores stay empty and a missing directory is not created", async () 
       coverage: "complete",
       sourceSha: SHA,
     });
-    assert.equal(report.window.exhaustive, true);
+    assert.equal(report.window.exhaustive, false);
     assert.deepEqual(report.counts, {
       exact_join: 0,
       conflicting_join: 0,
@@ -1120,4 +1122,23 @@ test("a disk parent keeps amount, network, asset, and payee for the typed join",
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test("ordinary receiver uses the existing retained event tail beyond the first rotation", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "ordinary-retained-tail-"));
+  try {
+    const eventId = id(53), timestamp = at(53);
+    const event = typedEvent({ id: eventId, timestamp, result: "paid_success" });
+    const capture = mcpObserved(eventId, ref(3), "retained-tail-call", emptyMorphoBody());
+    const settlement = ledgerFrom(null, { timestamp, paymentClass: "unclassified", amountAtomic: "20000", sourceEventId: eventId, route: "/mcp", protocol: "x402", settlementReference: ref(3) });
+    await writeFile(path.join(dir, "commerce-events.3.ndjson"), ndjson([event]));
+    await writeFile(path.join(dir, FILE_CLASSES.mcpDelivery), ndjson([capture]));
+    await writeFile(path.join(dir, FILE_CLASSES.settlementLedger), ndjson([settlement]));
+    const report = await receiveOrdinaryDeliveryJoin({ dataDir: dir, windowStart: WINDOW_START, windowEnd: WINDOW_END });
+    assert.equal(report.rows.length, 1);
+    assert.equal(report.rows[0].eventCanonical, "mcp_typed_outcome");
+    assert.equal(report.rows[0].disposition, "exact_join");
+    assert.equal(report.rows[0].usefulness, "unknown");
+    assert.equal(report.window.exhaustive, false);
+  } finally { await rm(dir, { recursive: true, force: true }); }
 });
