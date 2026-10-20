@@ -44,19 +44,26 @@ function receiveCatalog(detail) {
  */
 export function configureSettlementProofDelivery({ session, history, catalog, journalDirectory, client, now, selectionPolicy }) {
   requireThat(selectionPolicy === 'provider-name-terms', 'Explicit provider-name-terms policy required; SDK cannot prove registry job entitlement');
-  requireThat(session?.chainId === 8453 && /^[1-9][0-9]*$/.test(session.jobId) && session.roles?.includes('provider') && [...session.agentAddresses].some(a => sameAddress(a, PROVIDER)), 'Existing original provider session required');
+  function requireSession() {
+    requireThat(session?.chainId === 8453 && typeof session.jobId === 'string' && /^[1-9][0-9]{0,77}$/.test(session.jobId) && BigInt(session.jobId) < 2n ** 256n && session.roles?.includes('provider') && [...session.agentAddresses].some(a => sameAddress(a, PROVIDER)), 'Existing original provider session required');
+  }
+  requireSession();
+  const jobId = session.jobId;
+  function requireOriginalSession() { requireSession(); requireThat(session.jobId === jobId, 'Configured original session identity changed'); }
   requireThat(typeof history?.getHistory === 'function' && typeof catalog?.getAgentByWalletAddress === 'function', 'Explicit history and catalog clients required');
   requireThat(client && typeof client.getTransactionReceipt === 'function' && typeof client.getBlock === 'function', 'Explicit receipt RPC client required');
   const journal = openDeliveryJournal(journalDirectory);
-  const key = `acp:8453:${session.jobId}`;
+  const key = `acp:8453:${jobId}`;
   return Object.freeze({
     async run() {
+      requireOriginalSession();
       // Existing obligations are received against retained terms, even when the
       // public catalog changes later. The job/message binding is always fresh.
       if (!await journal.read(key)) receiveCatalog(await catalog.getAgentByWalletAddress(PROVIDER));
       const initial = selectClientRequirement(await history.getHistory(8453, session.jobId), session, await session.fetchJob());
       return fulfillAcpSettlementProof({ session, offeringId: OFFERING_ID, requirements: initial.request, journal, client, now,
         async bindSource(job) {
+          requireOriginalSession();
           const fresh = selectClientRequirement(await history.getHistory(8453, session.jobId), session, job);
           requireThat(isDeepStrictEqual(fresh, initial), 'Original requirement changed during delivery');
           return fresh.source;

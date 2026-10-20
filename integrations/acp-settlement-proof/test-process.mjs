@@ -11,6 +11,10 @@ fs.fsyncSync = function(fd) {
     const name = fs.readlinkSync(`/proc/self/fd/${fd}`);
     if (name.includes('.delivery-') && JSON.parse(fs.readFileSync(name)).state === 'sent_unknown') throw Error('injected marker fsync failure');
   }
+  if (fault === 'fail-directory-sync' && entry.isDirectory()) {
+    const file = path.join(directory, 'delivery', '8453-123.json');
+    if (fs.existsSync(file) && JSON.parse(fs.readFileSync(file)).state === 'sent_unknown') throw Error('injected directory fsync failure after rename');
+  }
   const result = sync(fd);
   if (fault === 'crash-after-marker' && entry.isDirectory()) {
     // This is after BOTH the file sync and atomic rename + directory sync.

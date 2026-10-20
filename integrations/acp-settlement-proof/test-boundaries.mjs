@@ -51,12 +51,13 @@ export function createBoundary(serverDirectory, journalDirectory) {
     assert.ok(url.startsWith('https://acp.invalid/'), `network escape: ${url}`);
     const action = update(data => {
       data.calls.http.push({ url, method: init.method ?? 'GET' });
-      if (url.endsWith('/auth/agent')) return { data: { token: `offline.${Buffer.from(JSON.stringify({ exp: 4102444800 })).toString('base64url')}.sentinel` } };
+      if (url.endsWith('/auth/agent')) return { data: { token: `offline.${Buffer.from(JSON.stringify({ exp: 4102444800, wallet: JSON.parse(init.body).walletAddress })).toString('base64url')}.sentinel` } };
       assert.match(init.headers.Authorization, /^Bearer offline\./);
+      const wallet = JSON.parse(Buffer.from(init.headers.Authorization.split('.')[1], 'base64url')).wallet;
       if (url.endsWith(`/agents/wallet/${PROVIDER}`)) return { data: data.catalog };
       if (url.endsWith('/chats/8453/123/message')) {
         assert.equal(init.method, 'POST');
-        data.history.push({ kind: 'message', chainId: 8453, onChainJobId: '123', from: CLIENT, timestamp: 1792533600000, ...JSON.parse(init.body) });
+        data.history.push({ kind: 'message', chainId: 8453, onChainJobId: '123', from: wallet, timestamp: 1792533600000, ...JSON.parse(init.body) });
         return {};
       }
       if (url.endsWith('/chats/8453/123/history')) {
@@ -64,6 +65,7 @@ export function createBoundary(serverDirectory, journalDirectory) {
         return { entries: data.history };
       }
       if (url.endsWith('/jobs/8453/123/deliverable')) {
+        assert.equal(wallet, PROVIDER);
         assert.equal(init.method, 'POST'); assert.equal(journal.read(KEY).state, 'sent_unknown');
         data.job.deliverable = JSON.parse(init.body).deliverable;
         return data.options.postResponseLost ? { failure: 'lost HTTP response' } : {};

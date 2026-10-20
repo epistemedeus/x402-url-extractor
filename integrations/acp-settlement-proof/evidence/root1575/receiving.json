@@ -1,0 +1,142 @@
+{
+  "command": "node integrations/acp-settlement-proof/receive-offline.mjs <owned-disposable-directory> (twice, separate processes)",
+  "first": {
+    "directory": "/tmp/root1575-final-receive-_6muwtzr",
+    "state": "received",
+    "artifactSha256": "59d3c5a28bb5d446a14fb1502bad641e8c20aa836ad1b900bb524b27e9bdccf4",
+    "binding": {
+      "offeringId": "019ff030-09d4-7456-91b5-213ec48246b7",
+      "chainId": 8453,
+      "jobId": "123",
+      "provider": "0x561901cf20080e2bed6802ce718c4a17008a1ca2",
+      "client": "0x3333333333333333333333333333333333333333",
+      "evaluator": "0x3333333333333333333333333333333333333333",
+      "description": "Settlement Proof",
+      "expiredAt": "1792620000",
+      "hookAddress": "0x0000000000000000000000000000000000000000",
+      "servicePriceAtomic": "5000",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "request": {
+        "transactionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+        "recipient": "0x2222222222222222222222222222222222222222",
+        "amountAtomic": "5000",
+        "payer": "0x1111111111111111111111111111111111111111"
+      },
+      "source": {
+        "selection": "configured-provider-name-terms/v1",
+        "registryOfferingId": "019ff030-09d4-7456-91b5-213ec48246b7",
+        "registryJobAssociation": "unavailable-in-sdk",
+        "slaMinutes": 1440,
+        "message": {
+          "chainId": 8453,
+          "jobId": "123",
+          "from": "0x3333333333333333333333333333333333333333",
+          "timestamp": 1792533600000,
+          "contentType": "requirement",
+          "content": "{\"transactionHash\":\"0x1111111111111111111111111111111111111111111111111111111111111111\",\"recipient\":\"0x2222222222222222222222222222222222222222\",\"amountAtomic\":\"5000\",\"payer\":\"0x1111111111111111111111111111111111111111\"}"
+        },
+        "contentSha256": "78bd83f4d975d3c5244f9015e7a8f24d9bd6c9c47b6b0a6341e128d336390d55"
+      }
+    }
+  },
+  "second": {
+    "directory": "/tmp/root1575-final-receive-_6muwtzr",
+    "state": "received",
+    "artifactSha256": "59d3c5a28bb5d446a14fb1502bad641e8c20aa836ad1b900bb524b27e9bdccf4",
+    "binding": {
+      "offeringId": "019ff030-09d4-7456-91b5-213ec48246b7",
+      "chainId": 8453,
+      "jobId": "123",
+      "provider": "0x561901cf20080e2bed6802ce718c4a17008a1ca2",
+      "client": "0x3333333333333333333333333333333333333333",
+      "evaluator": "0x3333333333333333333333333333333333333333",
+      "description": "Settlement Proof",
+      "expiredAt": "1792620000",
+      "hookAddress": "0x0000000000000000000000000000000000000000",
+      "servicePriceAtomic": "5000",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "request": {
+        "transactionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+        "recipient": "0x2222222222222222222222222222222222222222",
+        "amountAtomic": "5000",
+        "payer": "0x1111111111111111111111111111111111111111"
+      },
+      "source": {
+        "selection": "configured-provider-name-terms/v1",
+        "registryOfferingId": "019ff030-09d4-7456-91b5-213ec48246b7",
+        "registryJobAssociation": "unavailable-in-sdk",
+        "slaMinutes": 1440,
+        "message": {
+          "chainId": 8453,
+          "jobId": "123",
+          "from": "0x3333333333333333333333333333333333333333",
+          "timestamp": 1792533600000,
+          "contentType": "requirement",
+          "content": "{\"transactionHash\":\"0x1111111111111111111111111111111111111111111111111111111111111111\",\"recipient\":\"0x2222222222222222222222222222222222222222\",\"amountAtomic\":\"5000\",\"payer\":\"0x1111111111111111111111111111111111111111\"}"
+        },
+        "contentSha256": "78bd83f4d975d3c5244f9015e7a8f24d9bd6c9c47b6b0a6341e128d336390d55"
+      }
+    }
+  },
+  "effectCounts": {
+    "receipt": 1,
+    "block": 1,
+    "authSigns": 4,
+    "prepares": 1,
+    "sends": 1
+  },
+  "deliverablePosts": 1,
+  "retainedFiles": [
+    "8453-123.json"
+  ],
+  "artifactMatchesPostedBytes": true,
+  "artifact": {
+    "ok": true,
+    "product": "samedaydesk-base-usdc-settlement-proof",
+    "version": "1.0.0",
+    "checkedAt": "2026-10-20T22:00:00.000Z",
+    "decision": "verified",
+    "request": {
+      "transactionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+      "recipient": "0x2222222222222222222222222222222222222222",
+      "amountAtomic": "5000",
+      "payer": "0x1111111111111111111111111111111111111111"
+    },
+    "chain": {
+      "id": 8453,
+      "name": "Base mainnet",
+      "network": "eip155:8453"
+    },
+    "asset": {
+      "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "symbol": "USDC",
+      "decimals": 6
+    },
+    "transaction": {
+      "hash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+      "status": "success",
+      "blockNumber": "123",
+      "blockTimestamp": "2026-10-20T22:00:00.000Z"
+    },
+    "settlement": {
+      "verified": true,
+      "exactTransferCount": 1,
+      "recipientTransferCount": 1,
+      "observed": {
+        "payer": "0x1111111111111111111111111111111111111111",
+        "recipient": "0x2222222222222222222222222222222222222222",
+        "amountAtomic": "5000",
+        "amountUsdc": "0.005"
+      }
+    },
+    "findings": [],
+    "boundary": {
+      "source": "public Base mainnet receipt and logs",
+      "privateLedgerRead": false,
+      "auditedTransactionModified": false,
+      "walletAccessed": false,
+      "executionAuthorized": false
+    }
+  },
+  "boundary": "All SDK HTTP, receipt RPC, auth signatures and transaction effects are fake; no real provider enrollment or signing."
+}

@@ -54,7 +54,7 @@ const operation = await delivery.run();
 Retain the same directory, original job and authenticated clients on reopen.
 There is no live CLI loader, default signer, secret-store reader or listener.
 Root owns actual account/secret-store enrollment. SDK reads may sign an
- authentication challenge; they are not signature-free live recovery.
+authentication challenge; they are not signature-free live recovery.
 
 The explicit policy is necessary: SDK0.1.15 `createJobFromOffering` writes only
 an offering **name** into the job and posts JSON with contentType `requirement`.
@@ -94,7 +94,8 @@ shared across processes and released by process exit. Callbacks are synchronous;
 no lock spans awaited network calls. Each CAS compares structural JSON, writes
 an exclusive temporary file, fsyncs it, atomically renames and fsyncs the directory
 before success. The directory must be stable, exclusively owned and on a local
-filesystem supporting flock/rename/fsync. Replacing/deleting it or its records
+filesystem supporting flock/rename/fsync. Its parent must already be provisioned
+and stable; the journal syncs that parent's entry before use. Replacing/deleting it or its records
 invalidates the contract; network filesystems are unqualified. Crash temporary
 files are ignored. There is no lock stealing, record reset or automatic migration.
 

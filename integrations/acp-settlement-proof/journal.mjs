@@ -9,9 +9,16 @@ import { withDirectoryLock } from '../../experiments/scoped-surface-delivery-100
 // directory fsync extends the experiment's rename-only crash contract here.
 export function openDeliveryJournal(directory) {
   if (typeof directory !== 'string' || !path.isAbsolute(directory)) throw Error('Absolute declared journal directory required');
-  fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
+  // Parent storage is explicitly provisioned by the owner. Sync its directory
+  // entry even when another opener created this directory, before any dispatch.
+  try { fs.mkdirSync(directory, { mode: 0o700 }); }
+  catch (error) { if (error.code !== 'EEXIST') throw error; }
   if (fs.realpathSync(directory) !== path.resolve(directory) || !fs.lstatSync(directory).isDirectory()) throw Error('Journal must be a real directory');
+  const owner = fs.statSync(directory);
+  if (owner.uid !== process.getuid() || (owner.mode & 0o077) !== 0) throw Error('Journal directory must be private and process-owned');
   const dir = fs.realpathSync(directory);
+  const parent = fs.openSync(path.dirname(dir), 'r');
+  try { fs.fsyncSync(parent); } finally { fs.closeSync(parent); }
   function fileFor(key) {
     const match = /^acp:8453:([1-9][0-9]*)$/.exec(key);
     if (!match || match[1].length > 78) throw Error('Invalid operation key');

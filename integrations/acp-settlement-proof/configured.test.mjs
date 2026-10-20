@@ -50,15 +50,24 @@ test('configured installed SDK + history + catalog + reader retains one exact cl
 });
 
 test('published producer sends requirement into original job but omits registry ID and stable message ID', async t => {
-  const h = harness(t); let created;
+  const h = harness(t); let created; let creations = 0;
   h.update(data => { data.history = []; });
-  const producer = { async createJob(chain, params) { assert.equal(chain, 8453); created = params; return 123n; }, async sendMessage(...args) { return h.history.postMessage(...args); } };
+  const producerClient = {
+    async createJob(chain, params) { assert.equal(chain, 8453); created = params; return { params }; },
+    async submitPrepared(chain, prepared) { assert.equal(chain, 8453); assert.equal(prepared.length, 1); creations++; return 'OFFLINE_CREATE_SENTINEL'; },
+    async getJobIdFromTxHash(chain, hash) { assert.equal(chain, 8453); assert.equal(hash, 'OFFLINE_CREATE_SENTINEL'); return 123n; },
+    isStalePrepareError: sdk.BaseAcpClient.prototype.isStalePrepareError,
+  };
+  const producerHistory = new sdk.SseTransport({ serverUrl: 'https://acp.invalid' });
+  producerHistory.setContext({ providerSupportedChainIds: [8453], agentAddresses: { evm: CLIENT }, async signMessage() { return 'OFFLINE_CLIENT_AUTH_SENTINEL'; } });
+  const producer = new sdk.AcpAgent(new Map([['evm', producerClient]]), producerHistory, h.api);
   const offer = h.data().catalog.offerings[0];
-  assert.equal(await sdk.AcpAgent.prototype.createJobFromOffering.call(producer, 8453, offer, PROVIDER, REQUEST), 123n);
+  assert.equal(await producer.createJobFromOffering(8453, offer, PROVIDER, REQUEST), 123n); assert.equal(creations, 1);
   assert.equal(created.description, 'Settlement Proof'); assert.equal(created.providerAddress, PROVIDER);
   assert.equal(Object.hasOwn(created, 'offeringId'), false); assert.equal(Object.hasOwn(created, 'requirement'), false);
   const messages = await h.history.getHistory(8453, '123');
   assert.equal(messages.length, 1); assert.equal(messages[0].contentType, 'requirement');
+  assert.equal(messages[0].from, CLIENT);
   assert.equal(Object.hasOwn(messages[0], 'id'), false); assert.equal(Object.hasOwn(messages[0], 'offeringId'), false);
   assert.equal((await h.run()).state, 'received');
 });
@@ -83,6 +92,8 @@ for (const [name, change] of [
   ['wrong service', d => { d.job.description = 'Payment Preflight'; }],
   ['wrong provider job', d => { d.job.providerAddress = CLIENT; }],
   ['wrong service fee', d => { d.job.budget = '50000'; }],
+  ['subscription job', d => { d.job.clientSubscription = { packageId: 1, price: 0.005, name: 'extra', duration: 86400 }; }],
+  ['custom hook config', d => { d.job.hookConfigs = { submit: ['0x0000000000000000000000000000000000000000'] }; }],
 ]) test(`configured refuses ${name} before reader or dispatch`, async t => {
   const h = harness(t); h.update(change); await assert.rejects(h.run()); noDelivery(h); assert.equal(h.journal.read(KEY), null);
 });
@@ -91,6 +102,20 @@ test('requires explicit selection policy and existing provider role before netwo
   const h = harness(t);
   assert.throws(() => configureSettlementProofDelivery({ ...h.configuration, selectionPolicy: undefined }), /policy/);
   h.session.roles = ['client']; assert.throws(() => configureSettlementProofDelivery(h.configuration), /provider session/); assert.equal(h.data().calls.http.length, 0);
+});
+
+test('configured consumer refuses mutable session job or role before network', async t => {
+  const h = harness(t); const delivery = configureSettlementProofDelivery(h.configuration);
+  h.session.jobId = '124'; await assert.rejects(delivery.run(), /identity changed/);
+  h.session.jobId = '123'; h.session.roles = ['client']; await assert.rejects(delivery.run(), /provider session/);
+  assert.equal(h.data().calls.http.length, 0); assert.equal(h.journal.read(KEY), null);
+});
+test('refuses noncanonical or over-uint256 session identifiers before network', async t => {
+  const h = harness(t);
+  for (const id of [123, '0123', '0', (2n ** 256n).toString(), '1'.repeat(79)]) {
+    h.session.jobId = id; assert.throws(() => configureSettlementProofDelivery(h.configuration), /provider session/);
+  }
+  assert.equal(h.data().calls.http.length, 0);
 });
 
 for (const [name, change] of [
@@ -144,6 +169,12 @@ test('marker fsync failure retains prepared operation; fresh process resumes exa
   const reopen = await child(w.directory); assert.equal(reopen.code, 0, reopen.stderr); assert.equal(JSON.parse(reopen.stdout).artifactSha256, original.artifactSha256);
   assert.equal(w.data().calls.sends, 1); assert.equal(w.data().calls.receipt, 1);
 });
+test('directory fsync failure after rename refuses dispatch and visible uncertainty cannot replay', async t => {
+  const w = workspace(t); const failed = await child(w.directory, 'fail-directory-sync'); assert.equal(failed.code, 1); assert.match(failed.stderr, /directory fsync failure/);
+  const original = openDeliveryJournal(w.journalDir).read(KEY); assert.equal(original.state, 'sent_unknown'); assert.equal(w.data().calls.sends, 0);
+  const reopen = await child(w.directory); assert.equal(reopen.code, 0, reopen.stderr); assert.equal(JSON.parse(reopen.stdout).state, 'sent_unknown');
+  assert.equal(w.data().calls.sends, 0); assert.deepEqual(openDeliveryJournal(w.journalDir).read(KEY), original);
+});
 
 for (const [name, options, expected, sends] of [
   ['lost transaction response', { responseLost: true }, 'received', 1],
@@ -173,4 +204,14 @@ test('journal refuses artifact replacement and backwards state transitions', asy
   const h = harness(t); const record = await h.run();
   assert.throws(() => h.journal.compareAndSet(KEY, record, { ...record, artifact: 'replacement', state: 'prepared' }), /transition/);
   assert.deepEqual(h.journal.read(KEY), record);
+});
+test('unbound legacy retained operation cannot silently acquire a message association', async t => {
+  const h = harness(t, { signerRefuse: true }); const record = await h.run(); delete record.binding.source;
+  fs.writeFileSync(path.join(h.journalDir, '8453-123.json'), JSON.stringify(record));
+  await assert.rejects(h.run(), /binding changed/); assert.equal(h.data().calls.sends, 1); assert.equal(h.data().calls.receipt, 1);
+});
+test('existing shared journal directory refuses instead of changing another owner permissions', t => {
+  const w = workspace(t); fs.mkdirSync(w.journalDir, { mode: 0o755 }); fs.chmodSync(w.journalDir, 0o755);
+  assert.throws(() => openDeliveryJournal(w.journalDir), /private and process-owned/);
+  assert.equal(fs.statSync(w.journalDir).mode & 0o777, 0o755);
 });
