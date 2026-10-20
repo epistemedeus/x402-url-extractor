@@ -1,0 +1,8 @@
+{
+  "name": "acp-settlement-proof-validation",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@virtuals-protocol/acp-node-v2": "0.1.15"
+  }
+}

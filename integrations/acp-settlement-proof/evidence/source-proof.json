@@ -1,0 +1,68 @@
+{
+  "generatedAt": "2026-10-20T21:39:19.059889+00:00",
+  "productBase": {
+    "repository": "https://github.com/epistemedeus/x402-url-extractor.git",
+    "commit": "cd0609e5ad68e0b5a9e0fa90e17d26a8998235e7"
+  },
+  "operatingCommit": "21deebdcc36d21141182b7af4ce853dd214dbd4d",
+  "inputReceiptSha256": "b834e80ca08a1950955bdd4a55c636a35601c18860fed7d0c789a37c9c99cf06",
+  "verifiedInputMembers": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "66e98cbe583bdef5a1ba57496a231fcc7b2da9f1963c4d1a91833db45545c747",
+      "blob": "7160548ef97a8eaccbf88e6a44c266a3ad21295d",
+      "bytes": 32107
+    },
+    {
+      "path": "overview/STATE.md",
+      "sha256": "0fdb1374d4a58f5bb568c07ee00df4a29a604086d8b5baa76fe479fe071149cf",
+      "blob": "d6e0eabbb33582397cee4f1aa80cc1308e64954a",
+      "bytes": 32270
+    },
+    {
+      "path": "overview/MACHINE-COMMERCE-EXECUTION-PLAN.md",
+      "sha256": "07cc863e5f9d15423f3be537043ba48941a7f8d7d2878d3eaaadc9547752baef",
+      "blob": "72e256ebecb3de0a6c5c50ecd98f3dcaaba6460c",
+      "bytes": 34502
+    },
+    {
+      "path": "overview/remote-worker/assignments/ROOT1548-ACP-RECEIPT-FULFILLMENT.md",
+      "sha256": "c826ec8be5b04beaa5debf8cb0f5584cfa70763f9a032952fc686168c6d19f0b",
+      "blob": "3714d485f84026178305eeba83741b5b4fa3729d",
+      "bytes": 3687
+    }
+  ],
+  "sdk": {
+    "name": "@virtuals-protocol/acp-node-v2",
+    "version": "0.1.15",
+    "licenseDeclaration": "ISC",
+    "registryGitHeadObserved": "713392c9fd2cda924026be42d2c8f1b54fa93df4",
+    "integrity": "sha512-8hf92cjFiEx532PpwCTejbogqwJfCNlTn4rdYzcM96vIOvALy6hE3OJ0qU2F5H8bMPiPzdTJ8vnBIgtktPFigg==",
+    "installedFileSha256": {
+      "dist/jobSession.js": "c338166368a066de6898690e30a6e5c3b1c109fe0ada498a36e08487477f31cd",
+      "dist/acpAgent.js": "af7835b9f58e74969945b66c94361cd91e16d49570f5693c2d1e2483fb190731",
+      "dist/acpJob.js": "33f8f58703e04bf495b0e31af98639866f1cef67d113df94ad09d488972e05ad",
+      "dist/events/acpApiClient.js": "84c683f62c5e80319c3a9212ea2e90bac6a6fe9fb7c00a179e371ac371fcd9f0",
+      "dist/events/acpHttpClient.js": "1e9a4aa7477a133e96b398cc9c09d0b59c4fce7906d0c342aee4b05846e5f9e1",
+      "dist/core/reprepareRetry.js": "8ab2c89b2e6ee5664d268849ef982d5e8567a354aab0ccfe3c6ec5efc5f4f10a",
+      "dist/clients/baseAcpClient.js": "2d905f9238def13fa9f0596dcbde243ca3e09c1bacff70b0e1a3757bd42d3716",
+      "dist/clients/evmAcpClient.js": "c2b6776084cf503bee3f346290054390c954890120de19cd5fd296536a94e75c"
+    }
+  },
+  "node": "v22.14.0",
+  "sourceSha256": {
+    "settlement-proof.mjs": "de111b8a27a08e4ea2442ebafced2fb4927fcd251ef60df401352c6c198cf772",
+    "transaction-receipt.mjs": "68e420952a517ab5c820babc2f02c2f43b29f3b7e24c69d92cf70863e189793f",
+    "integrations/acp-settlement-proof/fulfill.mjs": "3a8cc3cb263ccc4d8dbd46aed4e15b0e66537837f29a1130be9e96be51056244",
+    "integrations/acp-settlement-proof/fulfill.test.mjs": "a0e71b7f8fc868394024e5bdd080087c644a2c04db23496518297f832a605351"
+  },
+  "tests": {
+    "integration": 56,
+    "existingReceiptSiblings": 8,
+    "total": 64,
+    "fail": 0,
+    "skip": 0,
+    "command": "node --test integrations/acp-settlement-proof/fulfill.test.mjs settlement-proof.test.mjs transaction-receipt.test.mjs"
+  },
+  "boundary": "Actual installed SDK and maintained reader; all ACP HTTP, receipt RPC, auth signatures and transaction dispatch are fake sentinels. No live ACP/provider execution."
+}
