@@ -29,7 +29,7 @@ function sessionKey(session, offeringId) {
   return `acp:8453:${session.jobId}`;
 }
 
-function bindJob(session, job, request) {
+function bindJob(session, job, request, source) {
   requireThat(job && job.chainId === 8453 && String(job.id) === session.jobId, 'Fetched job identity mismatch');
   requireThat(sameAddress(job.providerAddress, PROVIDER) && job.description === 'Settlement Proof', 'Fetched provider/offering name mismatch');
   requireThat(job.budget?.rawAmount === 5000n && sameAddress(job.budget.address, BASE_USDC), 'Original 0.005 USDC service price required');
@@ -39,6 +39,7 @@ function bindJob(session, job, request) {
     provider: PROVIDER, client: job.clientAddress, evaluator: job.evaluatorAddress,
     description: job.description, expiredAt: String(job.expiredAt), hookAddress: job.hookAddress,
     servicePriceAtomic: '5000', asset: BASE_USDC, request,
+    ...(source === undefined ? {} : { source }),
   };
 }
 
@@ -62,12 +63,13 @@ function canSubmit(session, job) {
  * the caller's existing job record: read(key), compareAndSet(key, old, next).
  * CAS must atomically persist before resolving, including across processes.
  */
-export async function fulfillAcpSettlementProof({ session, offeringId, requirements, journal, client, now }) {
+export async function fulfillAcpSettlementProof({ session, offeringId, requirements, journal, client, now, bindSource }) {
   const request = validateRequirement(requirements);
   const key = sessionKey(session, offeringId);
   requireThat(journal && typeof journal.read === 'function' && typeof journal.compareAndSet === 'function', 'Existing durable job journal required');
   let job = await session.fetchJob();
-  const binding = bindJob(session, job, request);
+  const bindingFor = async job => bindJob(session, job, request, bindSource ? await bindSource(job) : undefined);
+  const binding = await bindingFor(job);
   let record = await journal.read(key);
   if (!record) {
     canSubmit(session, job);
@@ -82,7 +84,7 @@ export async function fulfillAcpSettlementProof({ session, offeringId, requireme
     // Receipt RPC can take time; recheck the original job immediately before
     // claiming the one dispatch. SDK/chain guards still own concurrent changes.
     job = await session.fetchJob();
-    requireThat(isDeepStrictEqual(bindJob(session, job, request), binding), 'Pre-send job binding changed');
+    requireThat(isDeepStrictEqual(await bindingFor(job), binding), 'Pre-send job binding changed');
     canSubmit(session, job);
     const sent = { ...record, state: 'sent_unknown' };
     // Durable uncertainty precedes the SDK's HTTP POST and financial submission.
@@ -98,7 +100,7 @@ export async function fulfillAcpSettlementProof({ session, offeringId, requireme
   }
   // On re-entry sent_unknown only reads. HTTP artifact storage alone is not the
   // chain transition: require both submitted/completed state and exact bytes.
-  requireThat(isDeepStrictEqual(bindJob(session, job, request), binding), 'Readback job binding changed');
+  requireThat(isDeepStrictEqual(await bindingFor(job), binding), 'Readback job binding changed');
   if (!['SUBMITTED', 'COMPLETED'].includes(job.status) || job.deliverable !== record.artifact) return record;
   const received = { ...record, state: 'received' };
   requireThat(await journal.compareAndSet(key, record, received), 'Concurrent receiving; read original job operation');

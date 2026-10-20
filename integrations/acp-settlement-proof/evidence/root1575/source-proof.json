@@ -1,0 +1,34 @@
+{
+  "receiptSha256": "e34d94affc63cde5521c24bf7736ceccc5275e793a8be777544025445f6e66ba",
+  "productBase": {
+    "repository": "https://github.com/epistemedeus/x402-url-extractor.git",
+    "commit": "3ff402701a0941c36014c154d5651862fdd59b68"
+  },
+  "operatingCommit": "36a5078e4d1f8955d3a1c697f97e428586ca69f5",
+  "members": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 32107,
+      "sha256": "66e98cbe583bdef5a1ba57496a231fcc7b2da9f1963c4d1a91833db45545c747",
+      "blob": "7160548ef97a8eaccbf88e6a44c266a3ad21295d"
+    },
+    {
+      "path": "overview/STATE.md",
+      "bytes": 15851,
+      "sha256": "d184abdeb42d29f15b7d22d5d8c079148dec7154f8ea44593691dfa528cc620a",
+      "blob": "039a825eedc8c3938a82d8201d1fda99671059f6"
+    },
+    {
+      "path": "overview/MACHINE-COMMERCE-EXECUTION-PLAN.md",
+      "bytes": 36184,
+      "sha256": "e709f33da517cbefb99ecd849c3b5d4d94d83278563d12121679c54d8bdaef0d",
+      "blob": "371d78646eb636909b49477f74188385cc05d30f"
+    },
+    {
+      "path": "overview/remote-worker/assignments/ROOT1575-ACP-CONFIGURED-DELIVERY-CLOSURE.md",
+      "bytes": 5676,
+      "sha256": "8ff6d1ea6aaae488d85406155579ddf6e821b53f2a990b6133feb68651673469",
+      "blob": "12b9b520bd2b176f8bcef00c745a53740faefc82"
+    }
+  ]
+}

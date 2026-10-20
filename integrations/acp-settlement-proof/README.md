@@ -1,130 +1,138 @@
-# Existing ACP Settlement Proof delivery
+# Configured ACP Settlement Proof delivery
 
-This small optional adapter connects the maintained `settlementProof()` reader
-straight to SDK `JobSession.executeTool('submit', { deliverable })`. It uses no
-paid merchant HTTP route and creates no jobs, accounts, wallets, listener or ledger.
-It is source-tested preparation; no provider installation or real job is qualified.
+`configured.mjs` consumes an explicitly supplied existing provider `JobSession`,
+SDK history/catalog clients, receipt RPC and declared journal directory. It
+selects the original client's sole requirement message, validates strict reader
+input, retains exact message bytes and one receipt artifact, and invokes the
+installed SDK's guarded submit tool. A fresh process reopens the same disk
+operation. Uncertainty never causes automatic resend. This is tested source and
+an executable **offline** receiving path, not an enrolled/live provider.
 
-The original offering is `019ff030-09d4-7456-91b5-213ec48246b7`, provider
-`0x561901cf20080e2bed6802ce718c4a17008a1ca2`: fixed **0.005 USDC**, **1440 minutes**,
-**no working funds**, Base canonical USDC receipt evidence. These terms and the
-listing stay unchanged. The service fee is distinct from the receipt's target
-`amountAtomic`. The latter retains the reader's positive cap of `1000000000000000`.
+Original offer: `019ff030-09d4-7456-91b5-213ec48246b7`, provider
+`0x561901cf20080e2bed6802ce718c4a17008a1ca2`, fixed **0.005 USDC**, **1440 minutes**,
+**no working funds**. No listing, old obligation, merchant dependency/lock or
+runtime1.23.55 changes. The receipt target amount remains distinct from the fee.
 
-## Receiving recipe
+## Execute offline receiving
 
-A later genuine requester, original job/request record, existing enrolled provider
-and separately authorized SDK execution are prerequisites. This branch executes
-only offline sentinels. There is no executable live CLI or default credential route.
-The documented CLI `serve` command is absent from the previously received release;
-this recipe composes the already available SDK primitives.
-
-Root supplies the existing `JobSession` for the original Base job and an adapter
-onto its **existing authoritative job journal**, retaining the artifact and this
-operation as fields of that original job record:
-
-```js
-import { fulfillAcpSettlementProof, OFFERING_ID } from './fulfill.mjs';
-
-// Explicit transport decoding, once, after receiving the original client's
-// authenticated requirement message in this same job. Do not parse arbitrary
-// follow-up text or substitute a different sender's requirement.
-const requirements = JSON.parse(originalRequirementMessage.content);
-const operation = await fulfillAcpSettlementProof({
-  session: originalProviderJobSession,
-  offeringId: originalJobRecord.offeringId, // must equal OFFERING_ID
-  requirements,
-  journal: existingJobJournalAdapter,
-});
-```
-
-The SDK job object contains the offering **name**, not its registry offering ID
-or the requirement message. Root must establish that ID, original message sender,
-job and agreement association from its original record before calling. The adapter
-checks that supplied ID and fetched provider/name/fee; the original registry-ID
-association remains a caller prerequisite. It requires a loaded funded provider
-job with no intents or custom hooks, and rechecks it after receipt RPC. Canonical Base/USDC are constants; extra network/asset fields, scalars,
-JSON strings, arrays, malformed inputs and numeric/over-cap amounts refuse before
-RPC or SDK authentication. Omitted payer is allowed; an explicit null is not.
-The three reader decisions remain `verified`, `not_verified`, `receipt_unavailable`;
-a mismatch or unavailable RPC is useful delivered evidence, not fabricated success.
-
-`journal.read(key)` returns the retained operation or null.
-`journal.compareAndSet(key, expected, next)` must atomically compare full JSON
-values (object key order is immaterial), durably persist `next`, and return true only after persistence completes.
-Use the key `acp:8453:<original decimal job ID>` within the existing journal namespace.
-Read/create/update must share its existing cross-process transaction/lock. Never
-implement this contract as an unprotected read then write, or use the tests' Map
-as production persistence. Persistence failure refuses before dispatch. No new
-journal implementation or financial accounting store is introduced here.
-
-The artifact is serialized once, retained with SHA256 and immutable request/job
-binding, and persisted as `prepared`. A CAS persists `sent_unknown` **before**
-the SDK's HTTP POST or transaction action. Only the CAS winner dispatches.
-The SDK path calls its ordinary guarded tool method, not direct `session.submit()`.
-No budget, fund, complete, reject, transfer, or new job method is called.
-
-A response loss, refused signer, crash after marking, failed readback, or content
-POST without a submitted state remains `sent_unknown`. Run the same function
-with the same original requirements, job and journal to **read back only**.
-Never delete/reset the record, replace its artifact, create a second operation,
-or automatically resend even when a readback still says funded. A later actual
-submitted/completed readback with byte-identical content can mark `received`.
-Root must resolve genuinely unresolved financial state on the original operation;
-this adapter deliberately offers no manual promotion or automatic resend path.
-A received operation returns its retained receipt without producing another result.
-
-## SDK identity and offline proof
-
-Public npm metadata observed October20,2026 still selects
-`@virtuals-protocol/acp-node-v2@0.1.15`, gitHead
-`713392c9fd2cda924026be42d2c8f1b54fa93df4`, ISC declared in its package manifest.
-The earlier retained source main was a different commit; tests execute the actual
-published package, not an extracted method or mock SDK. npm's integrity-checked
-archive is pinned in `validation/package-lock.json`:
-
-```text
-sha512-8hf92cjFiEx532PpwCTejbogqwJfCNlTn4rdYzcM96vIOvALy6hE3OJ0qU2F5H8bMPiPzdTJ8vnBIgtktPFigg==
-```
-
-Primary package/source:
-[registry](https://registry.npmjs.org/@virtuals-protocol/acp-node-v2/0.1.15),
-[JobSession](https://github.com/Virtual-Protocol/acp-node-v2/blob/713392c9fd2cda924026be42d2c8f1b54fa93df4/src/jobSession.ts),
-[AcpAgent](https://github.com/Virtual-Protocol/acp-node-v2/blob/713392c9fd2cda924026be42d2c8f1b54fa93df4/src/acpAgent.ts).
-ISC is a metadata declaration; it is not an independent license audit.
-
-On the actual Cursor VM, from the product root:
+On the actual Cursor VM, from the repository root:
 
 ```sh
 npm ci --ignore-scripts --no-audit --no-fund
 npm ci --prefix integrations/acp-settlement-proof/validation --ignore-scripts --no-audit --no-fund
-node --test integrations/acp-settlement-proof/fulfill.test.mjs settlement-proof.test.mjs transaction-receipt.test.mjs
+node --test integrations/acp-settlement-proof/configured.test.mjs integrations/acp-settlement-proof/fulfill.test.mjs settlement-proof.test.mjs transaction-receipt.test.mjs
+scratch=$(mktemp -d /tmp/acp-receive.XXXXXX)
+node integrations/acp-settlement-proof/receive-offline.mjs "$scratch"
+node integrations/acp-settlement-proof/receive-offline.mjs "$scratch"
 ```
 
-Only the optional test harness installs the SDK; the merchant runtime manifest,
-lockfile, paid routes and release version stay unchanged. Tests run the actual
-installed `JobSession`, `AcpJob`, `AcpAgent.internalSubmit`, API authentication,
-`postDeliverable`, and Base retry classification with fake receipt/block RPC,
-HTTP, authentication-signature and transaction sentinels. The fake SDK host is
-`https://acp.invalid`; every fetch is intercepted and checked. SDK listeners and
-real providers are never constructed. The SDK's EVM client inherits the default
-non-stale classification; generic lost responses do not trigger its reprepare loop.
+Both invocations return the same received artifact digest. The second process
+repeats neither receipt RPC nor SDK submission. The command constructs only
+sentinel RPC/HTTP/signing against `https://acp.invalid`; no real provider,
+credentials, listener, job creation/funding or paid route exists. Only the
+optional validation install includes the SDK. Tests use owned disposable data
+and ordinary Node processes, never model children.
 
-The existing merchant `idempotency-replay.mjs` journals paid HTTP credentials and
-facilitator effects. It does not own an ACP job or SDK submission; this adapter
-therefore requires the original job owner's journal rather than mixing those
-financial authorities or inventing another accounting store.
+## Existing-provider installation recipe
 
-The fake journal proves use of the CAS contract, including a competing-call case;
-it does not qualify Root's durable journal implementation. Fake funded state,
-SDK/API readback and a digest establish the tested source path and carriage
-checks, not authentic escrow, inclusion/finality, original entitlement, evaluator
-approval, useful buyer acceptance, independent demand, settlement or revenue.
-SDK read/authentication itself may sign: no claim of signature-free live recovery
-is made. No live ACP request, signature, job, submission, payment or release was run.
+After separate admission of actual provider signing and a genuine supplied job,
+Root composes the already enrolled account/session without account discovery:
 
-Smallest next Root action: receive this source, bind the existing original-job
-journal to the documented CAS contract and original-message association, and run
-its configured adapter against sentinels. A real delivery additionally needs a
-genuine supplied job and separately admitted provider financial authority; do not
-create/fund an owner job to qualify this preparation.
+```js
+import { configureSettlementProofDelivery } from './integrations/acp-settlement-proof/configured.mjs';
+const delivery = configureSettlementProofDelivery({
+  session: originalExistingProviderSession,
+  history: existingSdkTransport, // getHistory(chainId, jobId); no connect here
+  catalog: existingSdkApi,       // getAgentByWalletAddress(provider)
+  journalDirectory: '/absolute/owned/acp-delivery-operations',
+  client: explicitBaseReceiptRpc,
+  selectionPolicy: 'provider-name-terms',
+});
+const operation = await delivery.run();
+```
+
+Retain the same directory, original job and authenticated clients on reopen.
+There is no live CLI loader, default signer, secret-store reader or listener.
+Root owns actual account/secret-store enrollment. SDK reads may sign an
+ authentication challenge; they are not signature-free live recovery.
+
+The explicit policy is necessary: SDK0.1.15 `createJobFromOffering` writes only
+an offering **name** into the job and posts JSON with contentType `requirement`.
+Neither job nor message contains a registry offering ID, original-message link
+or stable message ID. Public catalog data supplies the exact offer ID and terms;
+the consumer verifies that unique current entry on first preparation. This
+proves catalog selection, **not authenticated registry entitlement of the job**.
+The binding records `registryJobAssociation: unavailable-in-sdk`. This policy
+handles a matching provider-owned service job. Where original registry-ID
+entitlement is required, the smallest upstream producer/server change must
+persist the selected offering ID and original requirement-message ID on the job,
+scope them to its authenticated client, and return both through getJob/history.
+That is independent of1573's schema repair; no unreleased package is assumed.
+
+The fetched job binds chain/job/client/provider/evaluator, name, exact fee,
+canonical Base USDC, expiry and absence of intents/custom hooks. Requirement
+selection binds chain/job, client sender, exact content and timestamp; duplicate,
+absent, wrong-sender or subscription requirements refuse. A byte digest is a
+retention binding, never an invented server message ID. Authenticated API/history
+is the trust boundary, not independent chain or message-signature proof. SLA1440
+is checked catalog policy, not proven original creation duration: the job gives
+only its expiry. Job/history are rechecked after receipt RPC and on readback.
+The strict reader preserves verified/not_verified/receipt_unavailable, the
+inclusive amount cap and optional payer semantics. Negative evidence is delivered.
+
+## Durable operation contract
+
+`journal.mjs` retains operation fields only, not another accounting ledger or a
+fictional pre-existing ACP account/job record. Root explicitly declares its new
+operation-retention directory. One `8453-<original decimal job ID>.json` retains
+the immutable binding, artifact and digest plus prepared → sent_unknown → received.
+Files are private, bounded and never rotated/deleted by this code. Corruption,
+unsupported transitions, symlinks and write faults refuse.
+
+Read/CAS reuse the scoped-surface experiment's Linux directory-inode flock,
+shared across processes and released by process exit. Callbacks are synchronous;
+no lock spans awaited network calls. Each CAS compares structural JSON, writes
+an exclusive temporary file, fsyncs it, atomically renames and fsyncs the directory
+before success. The directory must be stable, exclusively owned and on a local
+filesystem supporting flock/rename/fsync. Replacing/deleting it or its records
+invalidates the contract; network filesystems are unqualified. Crash temporary
+files are ignored. There is no lock stealing, record reset or automatic migration.
+
+The durable sent marker precedes every SDK POST/signing action. A marking fault
+refuses dispatch. A crash/lost response after marking reopens read-only. HTTP
+storage alone stays uncertain; only submitted/completed API status and identical
+deliverable bytes advance to received. Catalog changes do not rewrite old
+obligations; original fetched job/message must still match. A legacy retained
+record without the new source binding refuses rather than gaining authority.
+
+Storage review: commerce-journal-admission gates one process only;
+http-delivery-evidence/store appends evidence without ACP CAS/fsync;
+useful-result-reuse/store has in-process admission and bounded rotation; the
+scoped-surface journal has fitting cross-process locking/rename but different
+records and no fsync. We reuse its lock directly and add only the missing ACP
+operation persistence. idempotency-replay remains the paid merchant credential/
+effect authority and is not used for ACP.
+
+## Source and evidence
+
+Merchant and reused lock source are this repository's MIT code (root LICENSE).
+Unchanged optional pin: @virtuals-protocol/acp-node-v2@0.1.15, registry gitHead
+713392c9fd2cda924026be42d2c8f1b54fa93df4, ISC declared by its manifest,
+integrity-pinned in validation/package-lock.json. Primary sources:
+[JobSession](https://github.com/Virtual-Protocol/acp-node-v2/blob/713392c9fd2cda924026be42d2c8f1b54fa93df4/src/jobSession.ts),
+[producer/submit](https://github.com/Virtual-Protocol/acp-node-v2/blob/713392c9fd2cda924026be42d2c8f1b54fa93df4/src/acpAgent.ts),
+[package](https://registry.npmjs.org/@virtuals-protocol/acp-node-v2/0.1.15).
+This is metadata attribution, not an independent license audit.
+
+[Public discovery receipt](evidence/root1575/public-discovery.json) receives the
+same original offering/terms anonymously. Bounded search snapshots using valid
+all/online/offline filters return different sets; none includes our provider in
+the top five. This is not a causal test of changing our online state and does
+not explain the prior omission or guarantee future visibility.
+
+See [1575checkpoint](CHECKPOINT1575.md), [1548 historical result](RESULT.md) and
+TAP under evidence/root1575. Readback proves carriage, not chain finality,
+useful customer acceptance, settlement, revenue or live provider readiness.
+The real remaining boundary is a genuine original job and separately admitted
+existing-provider enrollment/signing, plus upstream fields if authenticated
+registry-ID association is required.
