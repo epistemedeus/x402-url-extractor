@@ -77,7 +77,7 @@ existing signed deployment statement. It does not change x402 or MPP terms and
 is not authorization to spend; buyers must still verify the live challenge,
 paid output, receipt, and settlement.
 
-[![Smithery listing](https://smithery.ai/badge/epistemedeus/x402-data-gateway)](https://smithery.ai/servers/epistemedeus/x402-data-gateway)
+[![Smithery listing](https://smithery.ai/badge/epistemedeus/samedaydesk-machine-commerce)](https://smithery.ai/servers/epistemedeus/samedaydesk-machine-commerce)
 
 Twenty pay-per-call tools for deterministic agent-work opportunity preflight,
 machine-service discoverability, payment-offer preflight, Morpho borrower and
@@ -87,8 +87,8 @@ generation, transaction receipt evidence, delegated-signer policy conformance,
 settlement proof, and AI-search readiness audits.
 
 - Product page: https://samedaydesk.com/x402
-- Smithery: https://smithery.ai/servers/epistemedeus/x402-data-gateway
-- Remote MCP: https://agents.samedaydesk.com/mcp
+- Remote MCP (direct, no Smithery account): https://agents.samedaydesk.com/mcp
+- Optional Smithery directory: https://smithery.ai/servers/epistemedeus/samedaydesk-machine-commerce
 - Agent Plugins 1.0 local package: [`plugins/samedaydesk-x402`](plugins/samedaydesk-x402) (not marketplace-listed)
 - Claude Code marketplace: [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) plus [`plugins/samedaydesk-extract`](plugins/samedaydesk-extract) (`samedaydesk-extract@samedaydesk-claude`; not an Anthropic official directory listing)
 - Goose native config: [`goose/`](goose/) (YAML, session flag, and deeplink; not a Goose installer)
