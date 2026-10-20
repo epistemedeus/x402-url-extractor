@@ -683,8 +683,9 @@ export function joinOrdinaryDeliveries({
     window: {
       start: new Date(startMs).toISOString(),
       end: new Date(endMs).toISOString(),
-      coverage,
-      exhaustive: coverage === "complete",
+      requestedCoverage: coverage,
+      coverage: "unknown_for_full_window",
+      exhaustive: false,
     },
     aggregateRouteDeltaIsNotAnIndividualJoin: true,
     schemaValidityIsBuyerUsefulness: false,

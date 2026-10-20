@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: a caller coverage label and SHA cannot certify an uncovered empty journal
+ok 1 - a caller coverage label and SHA cannot certify an uncovered empty journal
+  ---
+  duration_ms: 8.569136
+  type: 'test'
+  ...
+# Subtest: constructed records join by event, digest, route, and reference
+ok 2 - constructed records join by event, digest, route, and reference
+  ---
+  duration_ms: 1112.727676
+  type: 'test'
+  ...
+# Subtest: empty stores stay empty and a missing directory is not created
+ok 3 - empty stores stay empty and a missing directory is not created
+  ---
+  duration_ms: 1060.103269
+  type: 'test'
+  ...
+# Subtest: a count join without capture is refused
+ok 4 - a count join without capture is refused
+  ---
+  duration_ms: 1261.780406
+  type: 'test'
+  ...
+# Subtest: the receiver does not write ledgers or import the payment server
+ok 5 - the receiver does not write ledgers or import the payment server
+  ---
+  duration_ms: 2.009086
+  type: 'test'
+  ...
+# Subtest: typed MCP canonical joins without an HTTP v1 row
+ok 6 - typed MCP canonical joins without an HTTP v1 row
+  ---
+  duration_ms: 2.902059
+  type: 'test'
+  ...
+# Subtest: canonical settlement cannot borrow another transport, protocol, time or event canon
+ok 7 - canonical settlement cannot borrow another transport, protocol, time or event canon
+  ---
+  duration_ms: 1.449927
+  type: 'test'
+  ...
+# Subtest: a disk parent keeps amount, network, asset, and payee for the typed join
+ok 8 - a disk parent keeps amount, network, asset, and payee for the typed join
+  ---
+  duration_ms: 10.821126
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4078.839611

@@ -805,7 +805,7 @@ test("empty stores stay empty and a missing directory is not created", async () 
       coverage: "complete",
       sourceSha: SHA,
     });
-    assert.equal(report.window.exhaustive, true);
+    assert.equal(report.window.exhaustive, false);
     assert.deepEqual(report.counts, {
       exact_join: 0,
       conflicting_join: 0,
