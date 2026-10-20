@@ -8,6 +8,10 @@ export const LIVE_EXTRACT_URL =
 export const LIVE_EXTRACT_BATCH_URL = `${LIVE_ORIGIN}${LIVE_EXTRACT_BATCH_PATH}`;
 export const LIVE_LOCKFILE_PATH = "/lockfile-pin-delta";
 export const LIVE_LOCKFILE_URL = `${LIVE_ORIGIN}${LIVE_LOCKFILE_PATH}`;
+export const LIVE_SELLER_AUDIT_PATH = "/commerce/seller-integrity-audit";
+export const LIVE_SELLER_AUDIT_AMOUNT_ATOMIC = "10000";
+export const LIVE_SELLER_AUDIT_PRODUCT = "samedaydesk-seller-integrity-audit";
+export const LIVE_SELLER_AUDIT_VERSION = "1.3.0";
 
 export const LIVE_NETWORK = "eip155:8453";
 export const LIVE_ASSET = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
@@ -69,6 +73,25 @@ export const DEFAULT_BATCH_REQUIRED_OUTPUT = Object.freeze({
     "quote.amountAtomic",
   ]),
   maxResponseBytes: 128 * 1024,
+});
+
+export const DEFAULT_SELLER_AUDIT_REQUIRED_OUTPUT = Object.freeze({
+  mediaType: "application/json",
+  requiredFields: Object.freeze([
+    "ok",
+    "product",
+    "version",
+    "checkedAt",
+    "decision",
+    "request.origin",
+    "request.route",
+    "request.method",
+    "report.auditCompleted",
+    "boundary.credentialsUsed",
+    "boundary.targetPaymentSigned",
+    "boundary.targetPaymentSent",
+  ]),
+  maxResponseBytes: 128_000,
 });
 
 export const DEFAULT_LOCKFILE_REQUIRED_OUTPUT = Object.freeze({

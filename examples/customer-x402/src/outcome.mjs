@@ -2,6 +2,7 @@ import { OUTCOMES } from "./constants.mjs";
 import { validateBatchBuyerOutput } from "./batch-output.mjs";
 import { decodeSettlementHeader } from "./challenge.mjs";
 import { validateBuyerOutput } from "./output.mjs";
+import { classifySellerAuditBody } from "./seller-audit.mjs";
 import { redactValue } from "./redact.mjs";
 
 /**
@@ -22,6 +23,8 @@ export function classifyPaidResponse({
   let output;
   if (bodyError || mediaType !== requiredOutput.mediaType) {
     output = { valid: false, delivery: "invalid", reason: bodyError || "response Content-Type is not application/json", report: null };
+  } else if (authorization?.sellerAudit) {
+    output = classifySellerAuditBody(body, authorization);
   } else if (batch) {
     output = validateBatchBuyerOutput(body, authorization);
   } else {
@@ -67,6 +70,27 @@ export function classifyPaidResponse({
   }
 
   if (response.status >= 200 && response.status < 300) {
+    if (output.valid && output.delivery === "audit_complete") {
+      return {
+        outcome: OUTCOMES.VALID_DELIVERED,
+        message: "validated complete seller audit matches the authorized request; settlement remains unverified; caller feedback was not required",
+        evidence,
+      };
+    }
+    if (output.valid && output.delivery === "audit_incomplete") {
+      return {
+        outcome: OUTCOMES.PARTIAL_DELIVERED,
+        message: "useful incomplete seller audit with a typed failure; not a second purchase; settlement remains unverified; caller feedback was not required",
+        evidence,
+      };
+    }
+    if (output.valid && output.delivery === "audit_refused") {
+      return {
+        outcome: OUTCOMES.PARTIAL_DELIVERED,
+        message: "useful seller-audit refusal; not a second purchase; settlement remains unverified; caller feedback was not required",
+        evidence,
+      };
+    }
     if (output.valid && output.delivery === "useful") {
       return {
         outcome: batch ? OUTCOMES.USEFUL_DELIVERED : OUTCOMES.VALID_DELIVERED,

@@ -281,6 +281,32 @@
           ]
         }
       ]
+    },
+    {
+      "id": "samedaydesk-seller-audit-buyer",
+      "version": "0.1.0",
+      "filename": "samedaydesk-seller-audit-buyer-0.1.0.tar.gz",
+      "cwd": ".",
+      "steps": [
+        {
+          "argv": [
+            "node",
+            "bin/seller-audit.mjs",
+            "contract"
+          ],
+          "stdoutIncludes": [
+            "\"walletAccessed\":false",
+            "\"paymentSigned\":false",
+            "\"paymentSent\":false",
+            "\"charged\":false",
+            "\"livePaymentRefusedByDefault\":true",
+            "\"respend\":false",
+            "\"feedbackRequired\":false",
+            "\"sdk\":\"@x402/fetch@2.16.0\"",
+            "/commerce/seller-integrity-audit"
+          ]
+        }
+      ]
     }
   ]
 }
