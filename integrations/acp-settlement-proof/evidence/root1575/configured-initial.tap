@@ -1,0 +1,280 @@
+TAP version 13
+# Subtest: configured installed SDK + history + catalog + reader retains one exact client-bound artifact
+ok 1 - configured installed SDK + history + catalog + reader retains one exact client-bound artifact
+  ---
+  duration_ms: 91.39286
+  type: 'test'
+  ...
+# Subtest: published producer sends requirement into original job but omits registry ID and stable message ID
+ok 2 - published producer sends requirement into original job but omits registry ID and stable message ID
+  ---
+  duration_ms: 62.393418
+  type: 'test'
+  ...
+# Subtest: configured refuses absent requirement before reader or dispatch
+ok 3 - configured refuses absent requirement before reader or dispatch
+  ---
+  duration_ms: 21.359032
+  type: 'test'
+  ...
+# Subtest: configured refuses duplicate requirement before reader or dispatch
+ok 4 - configured refuses duplicate requirement before reader or dispatch
+  ---
+  duration_ms: 21.486722
+  type: 'test'
+  ...
+# Subtest: configured refuses wrong message sender before reader or dispatch
+ok 5 - configured refuses wrong message sender before reader or dispatch
+  ---
+  duration_ms: 20.565388
+  type: 'test'
+  ...
+# Subtest: configured refuses wrong message job before reader or dispatch
+ok 6 - configured refuses wrong message job before reader or dispatch
+  ---
+  duration_ms: 20.006474
+  type: 'test'
+  ...
+# Subtest: configured refuses wrong message chain before reader or dispatch
+ok 7 - configured refuses wrong message chain before reader or dispatch
+  ---
+  duration_ms: 20.488322
+  type: 'test'
+  ...
+# Subtest: configured refuses subscription message before reader or dispatch
+ok 8 - configured refuses subscription message before reader or dispatch
+  ---
+  duration_ms: 19.779918
+  type: 'test'
+  ...
+# Subtest: configured refuses malformed JSON before reader or dispatch
+ok 9 - configured refuses malformed JSON before reader or dispatch
+  ---
+  duration_ms: 19.382166
+  type: 'test'
+  ...
+# Subtest: configured refuses primitive requirement before reader or dispatch
+ok 10 - configured refuses primitive requirement before reader or dispatch
+  ---
+  duration_ms: 20.700494
+  type: 'test'
+  ...
+# Subtest: configured refuses unsupported offering before reader or dispatch
+ok 11 - configured refuses unsupported offering before reader or dispatch
+  ---
+  duration_ms: 12.277956
+  type: 'test'
+  ...
+# Subtest: configured refuses duplicate offering name before reader or dispatch
+ok 12 - configured refuses duplicate offering name before reader or dispatch
+  ---
+  duration_ms: 12.211022
+  type: 'test'
+  ...
+# Subtest: configured refuses changed registry price before reader or dispatch
+ok 13 - configured refuses changed registry price before reader or dispatch
+  ---
+  duration_ms: 12.195801
+  type: 'test'
+  ...
+# Subtest: configured refuses changed registry SLA before reader or dispatch
+ok 14 - configured refuses changed registry SLA before reader or dispatch
+  ---
+  duration_ms: 12.319226
+  type: 'test'
+  ...
+# Subtest: configured refuses registry working funds before reader or dispatch
+ok 15 - configured refuses registry working funds before reader or dispatch
+  ---
+  duration_ms: 12.313363
+  type: 'test'
+  ...
+# Subtest: configured refuses wrong provider catalog before reader or dispatch
+ok 16 - configured refuses wrong provider catalog before reader or dispatch
+  ---
+  duration_ms: 11.931081
+  type: 'test'
+  ...
+# Subtest: configured refuses unfunded original job before reader or dispatch
+ok 17 - configured refuses unfunded original job before reader or dispatch
+  ---
+  duration_ms: 25.989157
+  type: 'test'
+  ...
+# Subtest: configured refuses wrong job before reader or dispatch
+ok 18 - configured refuses wrong job before reader or dispatch
+  ---
+  duration_ms: 23.981758
+  type: 'test'
+  ...
+# Subtest: configured refuses wrong service before reader or dispatch
+ok 19 - configured refuses wrong service before reader or dispatch
+  ---
+  duration_ms: 25.231393
+  type: 'test'
+  ...
+# Subtest: configured refuses wrong provider job before reader or dispatch
+ok 20 - configured refuses wrong provider job before reader or dispatch
+  ---
+  duration_ms: 24.652056
+  type: 'test'
+  ...
+# Subtest: configured refuses wrong service fee before reader or dispatch
+ok 21 - configured refuses wrong service fee before reader or dispatch
+  ---
+  duration_ms: 23.929101
+  type: 'test'
+  ...
+# Subtest: requires explicit selection policy and existing provider role before network
+ok 22 - requires explicit selection policy and existing provider role before network
+  ---
+  duration_ms: 1.502265
+  type: 'test'
+  ...
+# Subtest: persistent retry refuses changed original client
+ok 23 - persistent retry refuses changed original client
+  ---
+  duration_ms: 68.92361
+  type: 'test'
+  ...
+# Subtest: persistent retry refuses changed original evaluator
+ok 24 - persistent retry refuses changed original evaluator
+  ---
+  duration_ms: 69.122101
+  type: 'test'
+  ...
+# Subtest: persistent retry refuses changed original expiry
+ok 25 - persistent retry refuses changed original expiry
+  ---
+  duration_ms: 67.557366
+  type: 'test'
+  ...
+# Subtest: persistent retry refuses changed original fee
+ok 26 - persistent retry refuses changed original fee
+  ---
+  duration_ms: 64.390133
+  type: 'test'
+  ...
+# Subtest: persistent retry refuses changed original message bytes
+ok 27 - persistent retry refuses changed original message bytes
+  ---
+  duration_ms: 64.428105
+  type: 'test'
+  ...
+# Subtest: persistent retry refuses changed original message timestamp
+ok 28 - persistent retry refuses changed original message timestamp
+  ---
+  duration_ms: 65.804238
+  type: 'test'
+  ...
+# Subtest: persistent retry refuses changed original message sender
+ok 29 - persistent retry refuses changed original message sender
+  ---
+  duration_ms: 59.546473
+  type: 'test'
+  ...
+# Subtest: persistent retry refuses changed original message duplication
+ok 30 - persistent retry refuses changed original message duplication
+  ---
+  duration_ms: 60.502345
+  type: 'test'
+  ...
+# Subtest: fresh pre-send history drift refuses while retaining prepared artifact
+ok 31 - fresh pre-send history drift refuses while retaining prepared artifact
+  ---
+  duration_ms: 35.517732
+  type: 'test'
+  ...
+# Subtest: fresh pre-send job drift refuses before SDK submission
+ok 32 - fresh pre-send job drift refuses before SDK submission
+  ---
+  duration_ms: 37.834885
+  type: 'test'
+  ...
+# Subtest: configured carries unchanged useful mismatch reader result
+ok 33 - configured carries unchanged useful mismatch reader result
+  ---
+  duration_ms: 53.563074
+  type: 'test'
+  ...
+# Subtest: configured carries unchanged useful unavailable RPC reader result
+ok 34 - configured carries unchanged useful unavailable RPC reader result
+  ---
+  duration_ms: 50.172783
+  type: 'test'
+  ...
+# Subtest: another process reopens received artifact without RPC or SDK replay
+ok 35 - another process reopens received artifact without RPC or SDK replay
+  ---
+  duration_ms: 1613.686803
+  type: 'test'
+  ...
+# Subtest: competing processes share real flock/CAS and dispatch at most once
+ok 36 - competing processes share real flock/CAS and dispatch at most once
+  ---
+  duration_ms: 1057.642165
+  type: 'test'
+  ...
+# Subtest: actual process crash after synced uncertainty marker cannot replay unobserved dispatch
+ok 37 - actual process crash after synced uncertainty marker cannot replay unobserved dispatch
+  ---
+  duration_ms: 1609.241728
+  type: 'test'
+  ...
+# Subtest: marker fsync failure retains prepared operation; fresh process resumes exact bytes once
+ok 38 - marker fsync failure retains prepared operation; fresh process resumes exact bytes once
+  ---
+  duration_ms: 1636.376537
+  type: 'test'
+  ...
+# Subtest: fresh-process recovery after lost transaction response never resubmits
+ok 39 - fresh-process recovery after lost transaction response never resubmits
+  ---
+  duration_ms: 1643.12128
+  type: 'test'
+  ...
+# Subtest: fresh-process recovery after lost HTTP response never resubmits
+ok 40 - fresh-process recovery after lost HTTP response never resubmits
+  ---
+  duration_ms: 1690.666275
+  type: 'test'
+  ...
+# Subtest: fresh-process recovery after refused signer never resubmits
+ok 41 - fresh-process recovery after refused signer never resubmits
+  ---
+  duration_ms: 1648.92019
+  type: 'test'
+  ...
+# Subtest: fresh-process recovery after lost readback never resubmits
+ok 42 - fresh-process recovery after lost readback never resubmits
+  ---
+  duration_ms: 1661.534447
+  type: 'test'
+  ...
+# Subtest: catalog changes do not rewrite or strand an old retained obligation
+ok 43 - catalog changes do not rewrite or strand an old retained obligation
+  ---
+  duration_ms: 75.042175
+  type: 'test'
+  ...
+# Subtest: corrupt or symlink operation refuses instead of treating prior operation as absent
+ok 44 - corrupt or symlink operation refuses instead of treating prior operation as absent
+  ---
+  duration_ms: 63.49883
+  type: 'test'
+  ...
+# Subtest: journal refuses artifact replacement and backwards state transitions
+ok 45 - journal refuses artifact replacement and backwards state transitions
+  ---
+  duration_ms: 62.824262
+  type: 'test'
+  ...
+1..45
+# tests 45
+# suites 0
+# pass 45
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 14885.831383
