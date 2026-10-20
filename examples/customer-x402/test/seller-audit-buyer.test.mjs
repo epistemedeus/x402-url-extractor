@@ -408,3 +408,38 @@ test("seller-audit delivery does not use the extract task classifier", () => {
   assert.equal(classified.evidence.task, null);
   assert.equal(classifySellerAuditBody({ ok: true }, authorization).delivery, "invalid");
 });
+
+test('caller-required seller-audit fields reject missing/null values and preserve false/nested values', async () => {
+  const base = fixtureAuth();
+  const requiredFields = [...base.requiredOutput.requiredFields, 'caller.extra'];
+  const authorization = normalizeAuthorization({ ...base, requiredOutput:{...base.requiredOutput,requiredFields} });
+  for (const [extra, valid] of [[undefined,false], [null,false], [false,true], [{nested:false},true]]) {
+    const body = auditBody(authorization.sellerAuditQuery);
+    if (extra !== undefined) body.caller = {extra};
+    const {result,paidSends} = await buy(authorization,{body});
+    assert.equal(paidSends,1);
+    assert.equal(result.outcome, valid ? OUTCOMES.VALID_DELIVERED : OUTCOMES.PAID_INVALID_OUTPUT, `extra=${JSON.stringify(extra)}`);
+  }
+  const nested = normalizeAuthorization({...base, requiredOutput:{...base.requiredOutput, requiredFields:[...base.requiredOutput.requiredFields,'caller.extra.nested']}});
+  for (const value of [null,undefined,false,0,'']) {
+    const body = auditBody(nested.sellerAuditQuery); body.caller={extra:{nested:value}};
+    const {result} = await buy(nested,{body});
+    assert.equal(result.outcome, value == null ? OUTCOMES.PAID_INVALID_OUTPUT : OUTCOMES.VALID_DELIVERED);
+  }
+});
+
+test('caller seller-audit byte limit applies to complete/refused/incomplete output without extract semantics', async () => {
+  const base = fixtureAuth();
+  for (const patch of [{}, {ok:false,decision:'repair_required'}, {ok:false,decision:'repair_required',report:{auditCompleted:false,failureCode:'openapi_unavailable'}}]) {
+    const body = auditBody(base.sellerAuditQuery,patch);
+    const bytes = Buffer.byteLength(JSON.stringify(body));
+    for (const [limit, valid] of [[bytes-1,false],[bytes,true]]) {
+      const authorization = normalizeAuthorization({...base,requiredOutput:{...base.requiredOutput,maxResponseBytes:limit}});
+      const {result,paidSends}=await buy(authorization,{body});
+      assert.equal(paidSends,1);
+      assert.equal(result.evidence.outputValid,valid);
+      if (!valid) assert.equal(result.outcome,OUTCOMES.PAID_INVALID_OUTPUT);
+      else assert.equal(result.evidence.outputDelivery, patch.report ? 'audit_incomplete' : patch.ok===false ? 'audit_refused' : 'audit_complete');
+    }
+  }
+});

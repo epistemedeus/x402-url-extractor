@@ -3,7 +3,7 @@
 // any public-acquisition asset that is not this package.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { chmodSync, cpSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -93,30 +93,64 @@ function writeRegular(file, contents, mode) {
   chmodSync(file, mode);
 }
 
-function stageTree() {
+const VENDOR_FILES = [
+  ["extract-excerpt-budget.mjs", "vendor/extract-excerpt-budget.mjs"],
+  ["extract-batch-config.mjs", "vendor/extract-batch-config.mjs"],
+  ["caller-result-client/src/http-caller-result.mjs", "vendor/caller-result/http-caller-result.mjs"],
+  ["caller-result-client/src/contract.mjs", "vendor/caller-result/contract.mjs"],
+  ["LICENSE", "LICENSE"],
+];
+const PRODUCER_FILES = [
+  "examples/customer-x402/export/pack-seller-audit.mjs", "public-acquisition/engine.mjs",
+  "public-acquisition/receiving-lifecycle.mjs", "machine-acquisition.mjs",
+];
+function git(args) {
+  const result = spawnSync("git", args, {cwd:REPO, maxBuffer:16 * 1024 * 1024});
+  if (result.status !== 0) fail(`committed input unavailable: ${args[0]}`);
+  return result.stdout;
+}
+function committedInputs() {
+  const args = process.argv.slice(2);
+  if (args.length && (args.length !== 2 || args[0] !== "--source-commit" || !/^[a-f0-9]{40}$/.test(args[1]))) fail("expected --source-commit SHA40");
+  const commit = git(["rev-parse", "--verify", `${args[1] || 'HEAD'}^{commit}`]).toString().trim();
+  const names = [...new Set([...SOURCE_FILES.map(rel => `examples/customer-x402/${rel}`),
+    ...VENDOR_FILES.map(([rel]) => rel), ...PRODUCER_FILES, "examples/customer-x402/package-lock.json"])].sort();
+  if (git(["status", "--porcelain", "--untracked-files=all", "--", ...names]).length) fail("dirty committed input");
+  const contents = new Map(), inputs = [];
+  for (const rel of names) {
+    const tree = git(["ls-tree", commit, "--", rel]).toString().trim();
+    const match = tree.match(/^(100644|100755) blob ([a-f0-9]{40})\t/);
+    if (!match) fail(`not a committed regular input: ${rel}`);
+    const bytes = git(["show", `${commit}:${rel}`]);
+    const local = path.join(REPO,rel);
+    if (!lstatSync(local).isFile() || !readFileSync(local).equals(bytes)) fail(`dirty input: ${rel}`);
+    contents.set(rel,bytes);
+    const packedPath = rel.startsWith('examples/customer-x402/') && SOURCE_FILES.includes(rel.slice('examples/customer-x402/'.length))
+      ? rel.slice('examples/customer-x402/'.length) : VENDOR_FILES.find(([source]) => source === rel)?.[1] || null;
+    inputs.push({path:rel, gitBlob:match[2], mode:match[1], bytes:bytes.length, sha256:sha256(bytes), packedPath});
+  }
+  return {commit, tree:git(["rev-parse", `${commit}^{tree}`]).toString().trim(), contents, inputs,
+    read:rel => {if (!contents.has(rel)) fail(`undeclared input: ${rel}`); return contents.get(rel);}};
+}
+
+function stageTree(source) {
   const stage = path.join(tmpdir(), `seller-audit-pack-${process.pid}`);
   rmSync(stage, { recursive: true, force: true });
   mkdirSync(stage, { recursive: true });
   for (const rel of SOURCE_FILES) {
     const destination = path.join(stage, rel);
     mkdirSync(path.dirname(destination), { recursive: true });
-    const source = readFileSync(path.join(EXAMPLE, rel), "utf8");
-    writeRegular(destination, rewriteImports(rel, source), rel.startsWith("bin/") ? 0o755 : 0o644);
+    const text = source.read(`examples/customer-x402/${rel}`).toString("utf8");
+    writeRegular(destination, rewriteImports(rel, text), rel.startsWith("bin/") ? 0o755 : 0o644);
   }
   const vendorDir = path.join(stage, "vendor");
   mkdirSync(path.join(vendorDir, "caller-result"), { recursive: true });
-  for (const [from, to] of [
-    [path.join(REPO, "extract-excerpt-budget.mjs"), path.join(vendorDir, "extract-excerpt-budget.mjs")],
-    [path.join(REPO, "extract-batch-config.mjs"), path.join(vendorDir, "extract-batch-config.mjs")],
-    [path.join(REPO, "caller-result-client/src/http-caller-result.mjs"), path.join(vendorDir, "caller-result/http-caller-result.mjs")],
-    [path.join(REPO, "caller-result-client/src/contract.mjs"), path.join(vendorDir, "caller-result/contract.mjs")],
-    [path.join(REPO, "LICENSE"), path.join(stage, "LICENSE")],
-  ]) {
-    cpSync(from, to);
-    chmodSync(to, 0o644);
+  for (const [from, to] of VENDOR_FILES) {
+    const destination = path.join(stage, to);
+    writeRegular(destination, source.read(from), 0o644);
   }
   writeRegular(path.join(stage, "package.json"), `${JSON.stringify(PACKAGE_JSON, null, 2)}\n`, 0o644);
-  const lock = JSON.parse(readFileSync(path.join(EXAMPLE, "package-lock.json"), "utf8"));
+  const lock = JSON.parse(source.read("examples/customer-x402/package-lock.json").toString("utf8"));
   lock.name = ID;
   lock.version = VERSION;
   lock.packages[""].name = ID;
@@ -218,7 +252,7 @@ function assetShell({ role, filename, bytes, digest, extra = {} }) {
   };
 }
 
-function publish(archiveBytes) {
+function publish(archiveBytes, source) {
   const members = inventoryArchive(archiveBytes);
   const inventory = { members };
   const inventoryBytes = Buffer.from(`${JSON.stringify(inventory, null, 2)}\n`);
@@ -237,7 +271,11 @@ function publish(archiveBytes) {
     independentDemand: false,
     recognizedRevenueAtomic: "0",
     sourceRepository: "https://github.com/epistemedeus/x402-url-extractor",
-    sourceCommit: "cd0609e5ad68e0b5a9e0fa90e17d26a8998235e7",
+    sourceCommit: source.commit,
+    sourceTree: source.tree,
+    producer: "examples/customer-x402/export/pack-seller-audit.mjs",
+    inputs: source.inputs,
+    packedArchiveSha256: sha256(archiveBytes),
     route: { method: "GET", path: "/commerce/seller-integrity-audit" },
     product: "samedaydesk-seller-integrity-audit",
     outputVersion: "1.3.0",
@@ -254,7 +292,7 @@ function publish(archiveBytes) {
     note: "Download originalUrl and verify sha256 before install. npm publication is separate. Default contract does not read a wallet or sign.",
   };
   const provenanceBytes = Buffer.from(`${JSON.stringify(provenance, null, 2)}\n`);
-  const licenseBytes = readFileSync(path.join(REPO, "LICENSE"));
+  const licenseBytes = source.read("LICENSE");
   const noticeBytes = Buffer.from([
     "samedaydesk-seller-audit-buyer is a draft buyer for one explicitly authorized GET /commerce/seller-integrity-audit purchase.",
     "It is not a hosted acquisition, a wallet, or a checkout.",
@@ -294,10 +332,10 @@ function publish(archiveBytes) {
   ];
   const manifestPath = path.join(ACQUISITION, "manifest.json");
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-  const kept = manifest.assets.filter((asset) => asset.id !== ID);
-  if (kept.length + assets.length !== manifest.assets.filter((asset) => asset.id !== ID).length + assets.length) {
-    fail("asset filter drifted");
-  }
+  const replaced = asset => asset.id === ID && asset.version === VERSION;
+  if (manifest.assets.filter(replaced).some(asset => asset.publicationStatus !== "candidate"
+    || asset.hostedAcquisitionVerified !== false || asset.paidLaunch !== false)) fail("sealed or hosted asset");
+  const kept = manifest.assets.filter(asset => !replaced(asset));
   for (const asset of kept) {
     const previous = manifest.assets.find((item) => item.relativePath === asset.relativePath);
     if (JSON.stringify(previous) !== JSON.stringify(asset)) fail(`unrelated asset changed: ${asset.relativePath}`);
@@ -308,7 +346,7 @@ function publish(archiveBytes) {
   }
   const commandsPath = path.join(ACQUISITION, "cold-commands.json");
   const commands = JSON.parse(readFileSync(commandsPath, "utf8"));
-  commands.commands = commands.commands.filter((command) => command.id !== ID);
+  commands.commands = commands.commands.filter((command) => !(command.id === ID && command.version === VERSION));
   commands.commands.push({
     id: ID,
     version: VERSION,
@@ -349,12 +387,13 @@ function publish(archiveBytes) {
   };
 }
 
-const stage = stageTree();
+const source = committedInputs();
+const stage = stageTree(source);
 try {
   const first = archiveStage(stage);
   const second = archiveStage(stage);
   if (!first.equals(second)) fail("archive bytes were not deterministic");
-  const published = publish(first);
+  const published = publish(first, source);
   process.stdout.write(`${JSON.stringify(published)}\n`);
 } finally {
   rmSync(stage, { recursive: true, force: true });
