@@ -72,8 +72,15 @@ test('packer refuses dirty source/vendor/lock/producer and stale provenance befo
   git(['add','--',staged],work);writeFileSync(path.join(work,staged),original);
   const stagedResult=run();assert.notEqual(stagedResult.status,0);assert.match(stagedResult.stderr,/dirty committed input/);
   git(['restore','--staged','--worktree','--',staged],work);
-  // An explicit old commit cannot label newer consumed bytes as that source.
-  const stale=run(['--source-commit','aab96934b6b5e9a623089949d37b672ea826055b']);
+  // Make the mismatched committed input locally. A shallow/shared checkout
+  // must exercise stale provenance, not fail first on an unavailable old SHA.
+  const base=git(['rev-parse','HEAD'],work).toString().trim();
+  writeFileSync(path.join(work,staged),Buffer.concat([original,Buffer.from('\n// stale fixture input\n')]));
+  git(['add','--',staged],work);
+  git(['-c','user.name=Provenance fixture','-c','user.email=fixture@example.invalid','commit','--quiet','-m','Create stale consumed-input fixture'],work);
+  const staleCommit=git(['rev-parse','HEAD'],work).toString().trim();
+  git(['checkout','--quiet','--detach',base],work);
+  const stale=run(['--source-commit',staleCommit]);
   assert.notEqual(stale.status,0);assert.match(stale.stderr,/dirty input|dirty committed input/);
   assert.equal(digest(readFileSync(manifest)),before);
  } finally {rmSync(work,{recursive:true,force:true});}
