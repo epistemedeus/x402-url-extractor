@@ -1,5 +1,5 @@
 import { constants as journalFs } from "node:fs";
-import { authenticateJournalCut } from "./commerce-journal-cut-auth.mjs";
+import { authenticateJournalCut, isJournalCutRecord } from "./commerce-journal-cut-auth.mjs";
 import { admitCommerceJournal, drainJournalObservations, noteJournalRotation, noteJournalWrite, noteJournalFault, observeContinuationTransmission, registerJournalProducer, registerJournalTaskBinding } from "./commerce-journal-admission.mjs";
 import {
   attemptSegmentName,
@@ -1349,6 +1349,7 @@ function emptyAttemptRead() {
     events: [],
     mcpTypedEvents: [],
     unusableRecordCount: 0,
+    unverifiedJournalCutCount: 0,
     mcpTypedUnusableRecordCount: 0,
     filePresent: false,
     unsafe: false,
@@ -1368,6 +1369,7 @@ function parseAttemptBuffer(buffer, internalToken) {
   const events = [];
   const mcpTypedEvents = [];
   let unusableRecordCount = 0;
+  let unverifiedJournalCutCount = 0;
   let mcpTypedUnusableRecordCount = 0;
   let newestRetainedMs = null;
   const contents = buffer.toString("utf8");
@@ -1379,6 +1381,12 @@ function parseAttemptBuffer(buffer, internalToken) {
       // unusable event. It changes neither public counts nor their identity.
       if (authenticateJournalCut(parsed, internalToken)) {
         newestRetainedMs = considerNewest(newestRetainedMs, Date.parse(parsed.asOf));
+        continue;
+      }
+      if (isJournalCutRecord(parsed)) {
+        // Retained metadata may use a retired HMAC generation. Its shape is
+        // neither a writer defect nor proof of coverage, time, or authenticity.
+        unverifiedJournalCutCount += 1;
         continue;
       }
       if (isCanonicalCommerceEvent(parsed)) {
@@ -1401,6 +1409,7 @@ function parseAttemptBuffer(buffer, internalToken) {
     events,
     mcpTypedEvents,
     unusableRecordCount,
+    unverifiedJournalCutCount,
     mcpTypedUnusableRecordCount,
     filePresent: true,
     unsafe: false,
@@ -1789,6 +1798,7 @@ function isCanonicalCommerceEvent(value) {
   if (value.v !== 3) return false;
   if (eventTimestampMs(value) === null) return false;
   if (!isCanonicalEventId(value.id) || !isCanonicalActorKey(value.actor)) return false;
+  if (hasOwn(value, "actorEpoch") && !isCanonicalActorKey(value.actorEpoch)) return false;
   if (!CANONICAL_EVENT_ORIGIN_CLASSES.has(value.originClass)) return false;
   if (value.agentDiscoverySource !== null && !CANONICAL_AGENT_DISCOVERY_SOURCES.has(value.agentDiscoverySource)) {
     return false;
@@ -2281,7 +2291,7 @@ function canonicalPaidSuccessEvidence(value) {
 function rareFunnelEvidenceKeysAccepted(value) {
   const seen = [];
   for (const key of Object.keys(value).sort()) {
-    if (key === "paymentFailureEvidence") continue;
+    if (key === "paymentFailureEvidence" || key === "actorEpoch") continue;
     seen.push(key);
   }
   return seen.length === RARE_FUNNEL_EVIDENCE_KEYS.length
@@ -2301,6 +2311,7 @@ function isCanonicalRareFunnelEvidence(value) {
   }
   if (eventTimestampMs(value) === null) return false;
   if (!isCanonicalEventId(value.id) || !isCanonicalActorKey(value.actor)) return false;
+  if (hasOwn(value, "actorEpoch") && !isCanonicalActorKey(value.actorEpoch)) return false;
   if (!CANONICAL_EVENT_ORIGIN_CLASSES.has(value.originClass)) return false;
   if (value.agentDiscoverySource !== null && !CANONICAL_AGENT_DISCOVERY_SOURCES.has(value.agentDiscoverySource)) {
     return false;
@@ -2342,6 +2353,7 @@ function canonicalRareFunnelEvidence(value) {
       ts: value?.ts,
       originClass: value?.originClass,
       actor: value?.actor,
+      ...(hasOwn(value, "actorEpoch") ? { actorEpoch: value.actorEpoch } : {}),
       paymentActor: value?.paymentActor ?? null,
       agentDiscoverySource: value?.agentDiscoverySource ?? null,
       method: value?.method,
@@ -2378,6 +2390,7 @@ function rareFunnelEvidenceFromHttpEvent(event, { captureProvenance = RARE_FUNNE
     ts: event.ts,
     originClass: event.originClass,
     actor: event.actor,
+    ...(hasOwn(event, "actorEpoch") ? { actorEpoch: event.actorEpoch } : {}),
     paymentActor: event.paymentActor,
     agentDiscoverySource: event.agentDiscoverySource,
     method: event.method,
@@ -3584,6 +3597,7 @@ export function createCommerceTelemetry({
   aggregateMaxBytes,
   maxAgeMs,
 } = {}) {
+  const actorEpoch = createHmac("sha256", secret).update("samedaydesk.actor-epoch.v1").digest("hex").slice(0, 24);
   if (!Number.isSafeInteger(writerProcessCount) || writerProcessCount !== 1) {
     throw new Error("commerce telemetry supports exactly one writer process; writerProcessCount must be the safe integer 1 until cross-process coordination exists");
   }
@@ -3948,7 +3962,7 @@ export function createCommerceTelemetry({
         if (recorded) return;
         recorded = true;
         const event = {
-          v: 3, id: randomUUID(), ts: new Date().toISOString(), actor, originClass,
+          v: 3, id: randomUUID(), ts: new Date().toISOString(), actor, actorEpoch, originClass,
           agentDiscoverySource: sourceSplit.agentDiscoverySource,
           declaredAgentDiscoverySource: sourceSplit.declaredAgentDiscoverySource,
           observedAgentDiscoverySource: sourceSplit.observedAgentDiscoverySource,
@@ -4174,6 +4188,7 @@ export function createCommerceTelemetry({
         id: eventId,
         ts: responseFinishedAt,
         actor,
+        actorEpoch,
         originClass,
         agentDiscoverySource,
         declaredAgentDiscoverySource: sourceSplit.declaredAgentDiscoverySource,
@@ -4759,6 +4774,20 @@ export function createCommerceTelemetry({
 
     const publicSnapshot = {
       generatedAt,
+      actorContinuity: {
+        scope: "key_generation_pseudonyms",
+        currentEpoch: actorEpoch,
+        observedEpochCount: new Set(windowedEvents.map(event => event.actorEpoch).filter(Boolean)).size,
+        legacyEventsWithoutEpoch: windowedEvents.filter(event => !event.actorEpoch).length,
+        crossEpochIdentity: "unavailable",
+        distinctPeople: null,
+        newUsers: null,
+        policy: "Actor counters count opaque pseudonyms, not people or acquisition. Rotation can split one caller across epochs; historical rows are not re-identified. Settlement and revenue require their existing evidence.",
+      },
+      journalCaptureMetadata: {
+        unverifiedRecords: segmentReads.reduce((sum, read) => sum + read.unverifiedJournalCutCount, 0),
+        policy: "Structurally recognized cuts without current-key authentication establish no coverage or observation time. Rotation, tampering, and an unknown key are indistinguishable here; retained rows are not a fresh writer-defect finding.",
+      },
       windowDays: safeDays,
       requestedWindowDays: safeDays,
       requestedWindowStart: coverage.requestedWindowStart,

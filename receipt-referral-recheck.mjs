@@ -205,7 +205,7 @@ function parseSignedAuditUrl(resourceUrl, { canonicalOrigin, expectedReferral, l
   }
 }
 
-async function verifyMerchantReceipt(normalized, merchantSigner, label) {
+async function verifyMerchantReceipt(normalized, merchantSigner, retiredMerchantSigners, label) {
   let verified;
   try {
     verified = await verifyReceiptSignatureEIP712(normalized.receipt);
@@ -213,6 +213,14 @@ async function verifyMerchantReceipt(normalized, merchantSigner, label) {
     fail(`${label} receipt signature is invalid`, { code: "invalid_receipt_signature" });
   }
   if (String(verified.signer).toLowerCase() !== merchantSigner.toLowerCase()) {
+    // Retirement is diagnostic metadata, never a second signing authority.
+    // An exposed key can manufacture both timestamps and signed resource URLs.
+    if (retiredMerchantSigners.has(String(verified.signer).toLowerCase())) {
+      fail(`${label} receipt uses a retired signer; historical issuance requires separately received evidence and the obligation remains unresolved`, {
+        code: "historical_receipt_verification_unavailable",
+        statusCode: 503,
+      });
+    }
     fail(`${label} receipt was not signed by the configured merchant receipt signer`, {
       code: "foreign_receipt_signer",
       statusCode: 403,
@@ -279,6 +287,7 @@ function duplicateClaim() {
 
 export async function receiptReferralRecheck(input, {
   merchantSigner,
+  retiredMerchantSigners = [],
   network,
   publicUrl,
   claimStore = createReceiptReferralClaimStore(),
@@ -292,12 +301,27 @@ export async function receiptReferralRecheck(input, {
       statusCode: 503,
     });
   }
+  if (!Array.isArray(retiredMerchantSigners) || retiredMerchantSigners.some(signer => !EVM_ADDRESS.test(String(signer)))
+    || retiredMerchantSigners.some(signer => signer.toLowerCase() === merchantSigner.toLowerCase())) {
+    fail("receipt signer retirement metadata is not configured correctly", {
+      code: "receipt_verification_unavailable", statusCode: 503,
+    });
+  }
+  const retired = new Set(retiredMerchantSigners.map(signer => signer.toLowerCase()));
+  const referralId = receiptReferralId(normalized.original.receipt);
+  // The existing atomic marker owns consumption, including after rotation.
+  // Reading it grants no authority and must precede historical proof recovery.
+  try {
+    if (await claimStore.isClaimed(referralId)) duplicateClaim();
+  } catch (error) {
+    if (error instanceof ReceiptReferralRecheckError) throw error;
+    fail("referral claim storage is unavailable", { code: "claim_storage_unavailable", statusCode: 503 });
+  }
 
   const [originalPayload, downstreamPayload] = await Promise.all([
-    verifyMerchantReceipt(normalized.original, merchantSigner, "original"),
-    verifyMerchantReceipt(normalized.downstream, merchantSigner, "downstream"),
+    verifyMerchantReceipt(normalized.original, merchantSigner, retired, "original"),
+    verifyMerchantReceipt(normalized.downstream, merchantSigner, retired, "downstream"),
   ]);
-  const referralId = receiptReferralId(normalized.original.receipt);
   const originalSignedTarget = parseSignedAuditUrl(originalPayload.resourceUrl, {
     canonicalOrigin,
     expectedReferral: null,
