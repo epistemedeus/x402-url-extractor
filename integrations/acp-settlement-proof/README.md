@@ -35,8 +35,9 @@ node integrations/acp-settlement-proof/receive-offline.mjs "$scratch"
 Both invocations return the same received artifact digest. The second process
 repeats neither receipt RPC nor SDK submission. The command constructs only
 sentinel RPC/HTTP/signing against `https://acp.invalid`; no real provider,
-credentials, listener, job creation/funding or paid route exists. Only the
-optional validation install includes the SDK. Tests use owned disposable data
+credentials, listener, job creation/funding or paid route exists. This lower-level
+command uses the isolated validation SDK; the optional operating runtime pins
+its own compatible SDK closure. Tests use owned disposable data
 and ordinary Node processes, never model children.
 
 ## Existing-provider installation recipe
@@ -66,7 +67,8 @@ The explicit policy is necessary: SDK0.1.15 `createJobFromOffering` writes only
 an offering **name** into the job and posts JSON with contentType `requirement`.
 Neither job nor message contains a registry offering ID, original-message link
 or stable message ID. Public catalog data supplies the exact offer ID and terms;
-the consumer verifies that unique current entry on first preparation. This
+the consumer verifies that unique current entry on first operation, or receives
+an exact already-received quote binding under its retained original terms. This
 proves catalog selection, **not authenticated registry entitlement of the job**.
 The binding records `registryJobAssociation: unavailable-in-sdk`. This policy
 handles a matching provider-owned service job. Where original registry-ID
