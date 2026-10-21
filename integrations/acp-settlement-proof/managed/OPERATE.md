@@ -212,17 +212,23 @@ readback remains required and was not performed by this source owner.
 
 ## Exact Root upload commands
 
-The exporter places the dedicated managed/railway.json at the context root. It
-pins Dockerfile, one replica, restart NEVER, zero overlap and50second draining
-without touching merchant's repository-level platform config. Root must still
-receive the account's memory/CPU limits, dedicated volume, private networking
-and start override. These commands are provided for Root, not executed here:
+October21 actual platform receiving rejects the retired `railwayConfigFile`
+setting as Config-as-Code deprecated. The exporter therefore omits both root
+and nested legacy platform files, with an executable context regression. Do not
+set that field or migrate the merchant just to deploy this isolated service.
+Apply/read back the explicit service-instance settings through the current
+GraphQL API: Dockerfile path, one replica, restart NEVER/0, zero overlap and
+50second draining, plus memory/CPU, dedicated volume and bounded start override.
+The live `Builder` enum has RAILPACK but no DOCKERFILE; use the supported
+Dockerfile path and receive the actual Docker build rather than sending an
+invalid builder enum. The historical nested JSON is not deployed. These upload
+commands are provided for Root, not executed by the source owner:
 
 ```sh
 # Use Root's existing authenticated CLI. Supply exact target IDs on each command.
-railway volume list --project 39cd108e-7036-40cd-97a7-8a86efa1cfd0 \
+railway volume --project 39cd108e-7036-40cd-97a7-8a86efa1cfd0 \
   --environment 02b78d43-d0f3-48b0-91ed-a2763ef8d2bd \
-  --service 153e79b1-f365-4edc-96f8-64082f5a0345 --json
+  --service 153e79b1-f365-4edc-96f8-64082f5a0345 list --json
 # Create only if no dedicated volume already exists, after Root's budget check:
 railway volume add --project 39cd108e-7036-40cd-97a7-8a86efa1cfd0 \
   --environment 02b78d43-d0f3-48b0-91ed-a2763ef8d2bd \

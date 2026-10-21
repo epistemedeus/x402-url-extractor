@@ -16,6 +16,10 @@ test('allowlisted context contains production root modules and no credentials/te
   const { dir } = context(t); const identity = JSON.parse(fs.readFileSync(path.join(dir, 'source-identity.json')));
   assert.ok(identity.hashes['.npmrc']); assert.ok(identity.hashes['settlement-proof.mjs']); assert.ok(identity.hashes['experiments/scoped-surface-delivery-100312/src/lock.mjs']);
   for (const name of Object.keys(identity.hashes)) assert.doesNotMatch(name, /node_modules|\.test\.mjs|\.env|worker\.json|evidence\//);
+  for (const name of ['railway.json', 'railway.toml', 'integrations/acp-settlement-proof/managed/railway.json']) {
+    assert.equal(fs.existsSync(path.join(dir, name)), false, 'No retired platform config in deploy context');
+    assert.equal(Object.hasOwn(identity.hashes, name), false);
+  }
   assert.throws(() => execFileSync(process.execPath, [exporter, dir], { stdio: 'pipe' }));
 });
 test('cold context with only pruned reader and optional runtime resolves real production/native closure', t => {

@@ -5,7 +5,6 @@
 !package-lock.json
 !settlement-proof.mjs
 !source-identity.json
-!railway.json
 !vendor/
 !vendor/task-discoverability/
 !vendor/task-discoverability/**
@@ -22,7 +21,6 @@
 !integrations/acp-settlement-proof/runtime/worker.example.json
 !integrations/acp-settlement-proof/managed/
 !integrations/acp-settlement-proof/managed/*.mjs
-!integrations/acp-settlement-proof/managed/railway.json
 !integrations/acp-settlement-proof/managed/Dockerfile
 !integrations/acp-settlement-proof/managed/Dockerfile.dockerignore
 **/node_modules
