@@ -737,7 +737,23 @@ export async function executePageChangeComparison(body, env = process.env) {
   };
 }
 
-export function mountPageChangeHttp(app, { env = process.env } = {}) {
+// Reduce only the owning execution's bounded result. Never inspect document values.
+export function pageChangeServiceOutcome(value, error = null) {
+  if (error) {
+    if (["request_aborted", "request_timeout", "compare_timeout"].includes(error.code)) return "aborted";
+    if (error.code === "compare_failed" || !(error instanceof PageChangeHttpError) || error.status >= 500 && error.code !== "page_change_busy") return "failed";
+    return "refused";
+  }
+  const report = value?.report;
+  if (value?.ok !== true || value.charged !== false || report?.schema !== "pilot/page-change-brief/v1") return "unavailable";
+  if (report.claims?.complete === true && report.claims?.comparable === true
+    && ["changed", "unchanged", "reordered"].includes(report.verdict)) return report.verdict;
+  if (["changed", "unchanged", "reordered", "incomplete", "ambiguous"].includes(report.verdict)
+    && report.summary?.matched > 0) return "partial";
+  return "unavailable";
+}
+
+export function mountPageChangeHttp(app, { env = process.env, observe = null } = {}) {
   const enabled = isPageChangeHttpEnabled(env);
   const limits = enabled ? pageChangeHttpLimits(env) : pageChangeHttpLimits({});
 
@@ -781,6 +797,9 @@ export function mountPageChangeHttp(app, { env = process.env } = {}) {
   app.all(XAGENT_VERIFICATION_PATH, methodNotAllowed("GET"));
 
   app.post(PAGE_CHANGE_HTTP_PATH, async (req, res) => {
+    let noteOutcome = () => {};
+    try { if (enabled && typeof observe === "function") noteOutcome = observe(req, res) || noteOutcome; } catch { /* Optional measurement. */ }
+    const note = outcome => { try { noteOutcome(outcome); } catch { /* Optional measurement. */ } };
     res.set("Cache-Control", "no-store");
     res.set("X-Robots-Tag", "noindex, nofollow");
     if (!enabled) {
@@ -841,8 +860,10 @@ export function mountPageChangeHttp(app, { env = process.env } = {}) {
         report,
       };
       if (encodedBytes(output) > limits.maxOutputBytes) throw new PageChangeHttpError("response exceeds server ceiling", { status: 413, code: "output_too_large" });
+      note(abort.signal.aborted ? "aborted" : pageChangeServiceOutcome(output));
       return res.status(200).json(output);
     } catch (error) {
+      note(abort.signal.aborted ? "aborted" : pageChangeServiceOutcome(null, error));
       if (res.writableEnded) return;
       drainRequest(req, res);
       if (abort.signal.aborted && !(error instanceof PageChangeHttpError)) {

@@ -145,6 +145,7 @@ const CANONICAL_AGENT_DISCOVERY_SOURCES = new Set([
 ]);
 
 const EXACT_ROUTES = new Map([
+  ["/recipes/page-change", { route: "/recipes/page-change", kind: "free" }],
   // Known free calls use the existing non-paid request classification.
   ...["deliver", "reuse", "accept", "review"].map((command) => {
     const route = `/commerce/scoped-repair/${command}`;
@@ -1502,7 +1503,7 @@ const CANONICAL_EVENT_ORIGIN_CLASSES = new Set([
   "external",
   "crawler",
 ]);
-const CANONICAL_EVENT_KINDS = new Set(["discovery", "referral", "paid", "unmatched", "excluded"]);
+const CANONICAL_EVENT_KINDS = new Set(["discovery", "referral", "paid", "free", "unmatched", "excluded"]);
 const CANONICAL_PAYMENT_PROTOCOLS = new Set(["x402", "mpp"]);
 const CANONICAL_REQUEST_CONSTRUCTION = new Set([
   "undeclared",
@@ -1720,6 +1721,65 @@ function isCanonicalPaymentCrossFields(value) {
   return true;
 }
 
+function summarizeFreePageChange(events, { capture, writerHealthy, requestedWindowCoverage }) {
+  const transports = {};
+  for (const transport of ["http", "mcp"]) {
+    const rows = events.filter(event => event.pageChangeOutcome?.transport === transport);
+    const external = rows.filter(event => event.originClass === "external");
+    const byOutcome = Object.fromEntries([...PAGE_CHANGE_OUTCOMES].map(outcome => [outcome, 0]));
+    const populations = {};
+    for (const row of rows) {
+      populations[row.originClass] ||= Object.fromEntries([...PAGE_CHANGE_OUTCOMES].map(outcome => [outcome, 0]));
+      populations[row.originClass][row.pageChangeOutcome.outcome]++;
+    }
+    for (const row of external) byOutcome[row.pageChangeOutcome.outcome]++;
+    transports[transport] = {
+      captureVersion: capture.has(transport) ? 1 : null,
+      captureStartedAt: capture.get(transport) || null,
+      scope: transport === "http" ? "enabled_route_posts" : "parsed_page_change_tools_call",
+      coverage: capture.has(transport) && writerHealthy ? "prospective_process_only" : "unmeasured",
+      requestedWindowComplete: false,
+      retainedWindowCoverage: requestedWindowCoverage,
+      observations: external.length, byOutcome, populations,
+    };
+  }
+  return {
+    schemaVersion: "samedaydesk.free-page-change-outcomes.v1", transports,
+    historicalUse: "unknown", usefulness: "unknown", callerIdentity: "unknown",
+    policy: "Retained invocation outcomes, not usefulness, independent customers or revenue. External counts exclude known internal, owner-monitor, crawler and scanner populations, which remain separate. Capture starts only on this producer's transport registration; restarts, parser failures before MCP tool selection, missing metadata and lost journal history are not backfilled. Repeated calls are separate invocations, without caller joins or retry deduplication. Completed comparisons describe supplied artifacts only.",
+  };
+}
+
+function commerceOriginClass(req, internalToken, agentDiscoverySource, paymentPresent) {
+  const headers = req?.headers || {};
+  if (safeEqual(headerValue(headers, "x-samedaydesk-internal"), internalToken)) return "internal";
+  if (EXPLOIT_PROBE_PATH_PATTERN.test(req.path || req.url || "")) return "scanner";
+  if (OWNER_MONITOR_USER_AGENT_PATTERN.test(headerValue(headers, "user-agent"))) return "owner_monitor";
+  if (paymentPresent) return "external";
+  return agentDiscoverySource ? "crawler" : "external";
+}
+
+const PAGE_CHANGE_OUTCOMES = new Set(["changed", "unchanged", "reordered", "partial", "unavailable", "refused", "failed", "aborted"]);
+
+function acceptsPageChangeOutcome(event) {
+  if (!hasOwn(event, "pageChangeOutcome")) return event.kind !== "free" || event.route === "/recipes/page-change";
+  const metadata = event.pageChangeOutcome;
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)
+    || Object.keys(metadata).sort().join(",") !== "outcome,transport,v"
+    || metadata.v !== 1 || !PAGE_CHANGE_OUTCOMES.has(metadata.outcome)) return false;
+  if (metadata.transport !== "http" && metadata.transport !== "mcp") return false;
+  if (event.route !== (metadata.transport === "http" ? "/recipes/page-change" : "/mcp")
+    || event.kind !== "free" || event.method !== "POST" || event.matched !== true
+    || event.paymentPresent !== false || event.replayed !== false
+    || event.settlementReference !== null || event.protocolsOffered?.length !== 0
+    || event.queryKeys?.length !== 0 || event.requestConstruction !== "not_measured") return false;
+  const completedReport = ["changed", "unchanged", "reordered", "partial", "unavailable"].includes(metadata.outcome);
+  if (completedReport && event.status !== 200) return false;
+  if (metadata.transport === "http" && metadata.outcome === "refused"
+    && !(event.status >= 400 && event.status < 500 || event.status === 503)) return false;
+  return true;
+}
+
 function isCanonicalCommerceEvent(value) {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
   if (value.v !== 3) return false;
@@ -1731,7 +1791,9 @@ function isCanonicalCommerceEvent(value) {
   }
   if (!isCanonicalHttpMethod(value.method)) return false;
   if (!CANONICAL_EVENT_KINDS.has(value.kind) || typeof value.matched !== "boolean") return false;
-  if (!isCanonicalClassifierRoute(value.route, value.kind, value.matched)) return false;
+  const freeMcp = value.kind === "free" && value.route === "/mcp" && hasOwn(value, "pageChangeOutcome");
+  if (!freeMcp && !isCanonicalClassifierRoute(value.route, value.kind, value.matched)) return false;
+  if (!acceptsPageChangeOutcome(value)) return false;
   if (!isCanonicalQueryKeys(value.queryKeys)) return false;
   if (!isCanonicalRequestConstructionFields(value)) return false;
   if (!isCanonicalPaymentCrossFields(value)) return false;
@@ -2241,7 +2303,9 @@ function isCanonicalRareFunnelEvidence(value) {
   }
   if (!isCanonicalHttpMethod(value.method)) return false;
   if (value.kind !== "paid" || value.matched !== true) return false;
-  if (!isCanonicalClassifierRoute(value.route, value.kind, value.matched)) return false;
+  const freeMcp = value.kind === "free" && value.route === "/mcp" && hasOwn(value, "pageChangeOutcome");
+  if (!freeMcp && !isCanonicalClassifierRoute(value.route, value.kind, value.matched)) return false;
+  if (!acceptsPageChangeOutcome(value)) return false;
   if (value.paymentPresent !== true) return false;
   if (typeof value.paymentCredentialParsed !== "boolean") return false;
   if (!CANONICAL_PAYMENT_PROTOCOLS.has(value.paymentProtocol)) return false;
@@ -3859,6 +3923,55 @@ export function createCommerceTelemetry({
     });
   }
 
+  // Registration is process-local: a restart never backdates transport coverage.
+  const pageChangeCapture = new Map();
+  function freePageChangeObserver(transport) {
+    if (transport !== "http" && transport !== "mcp") throw new Error("unsupported free page-change transport");
+    if (!pageChangeCapture.has(transport)) pageChangeCapture.set(transport, new Date().toISOString());
+    return function begin(req, res) {
+      const startedAt = Date.now();
+      const headers = req?.headers || {};
+      const userAgent = headerValue(headers, "user-agent");
+      const sourceSplit = classifyCommerceDiscoverySourceSplit({
+        declaredHeader: classifyDeclaredAgentDiscoverySource(headerValue(headers, "x-samedaydesk-agent-source")),
+        receiptReferral: false,
+        observed: classifyAgentDiscoverySource(userAgent),
+      });
+      const originClass = commerceOriginClass(req, internalToken, sourceSplit.agentDiscoverySource, false);
+      const actor = createHmac("sha256", secret)
+        .update(`${req.ip || req.socket?.remoteAddress || "unknown"}|${userAgent}`).digest("hex").slice(0, 24);
+      let outcome = "refused";
+      let recorded = false;
+      const record = (closed = false) => {
+        if (recorded) return;
+        recorded = true;
+        const event = {
+          v: 3, id: randomUUID(), ts: new Date().toISOString(), actor, originClass,
+          agentDiscoverySource: sourceSplit.agentDiscoverySource,
+          declaredAgentDiscoverySource: sourceSplit.declaredAgentDiscoverySource,
+          observedAgentDiscoverySource: sourceSplit.observedAgentDiscoverySource,
+          discoverySourceKind: sourceSplit.discoverySourceKind,
+          method: "POST", route: transport === "http" ? "/recipes/page-change" : "/mcp",
+          matched: true, kind: "free", queryKeys: [],
+          requestConstruction: "not_measured", requestConstructionRequiredKeyCount: 0,
+          paymentPresent: false, paymentCredentialParsed: false, paymentProtocol: null,
+          paymentFailureCode: null, paymentFailureEvidence: null, protocolsOffered: [], replayed: false,
+          paymentActor: null, paymentIdentifier: null, settlementReference: null,
+          settlementAmountAtomic: null, settlementNetwork: null, settlementCurrency: null,
+          status: Number(res.statusCode || 200), result: "request", durationMs: Math.max(0, Date.now() - startedAt),
+          pageChangeOutcome: { v: 1, transport, outcome: closed ? "aborted" : outcome },
+        };
+        if (!isCanonicalCommerceEvent(event)) return;
+        enqueueExclusive(() => appendEvent(event)).catch(() => {});
+      };
+      res.once("finish", () => { try { record(); } catch { /* Observational only. */ } });
+      res.once("close", () => { try { record(true); } catch { /* Observational only. */ } });
+      return (observed) => {
+        if (PAGE_CHANGE_OUTCOMES.has(observed)) outcome = observed;
+      };
+    };
+  }
+
   function middleware(req, res, next) {
     const route = classifyCommerceRoute(req.path || req.url);
     if (route.kind === "excluded") return next();
@@ -3892,17 +4005,7 @@ export function createCommerceTelemetry({
     }
     const protocol = paymentProtocol(headers);
     const paymentPresent = Boolean(protocol);
-    const originClass = safeEqual(suppliedInternal, internalToken)
-      ? "internal"
-      : EXPLOIT_PROBE_PATH_PATTERN.test(req.path || req.url || "")
-        ? "scanner"
-      : OWNER_MONITOR_USER_AGENT_PATTERN.test(userAgent)
-        ? "owner_monitor"
-      : paymentPresent
-        ? "external"
-      : agentDiscoverySource
-        ? "crawler"
-        : "external";
+    const originClass = commerceOriginClass(req, internalToken, agentDiscoverySource, paymentPresent);
     const actorMaterial = `${req.ip || req.socket?.remoteAddress || "unknown"}|${userAgent}`;
     const actor = createHmac("sha256", secret).update(actorMaterial).digest("hex").slice(0, 24);
     const paymentMetadata = decodePaymentMetadata(headers);
@@ -4665,6 +4768,10 @@ export function createCommerceTelemetry({
       retainedParseableEventCount: coverage.retainedParseableEventCount,
       integrityStatus: coverage.integrityStatus,
       coverage,
+      freePageChange: summarizeFreePageChange(windowedEvents, {
+        capture: pageChangeCapture, writerHealthy: !writerFailure,
+        requestedWindowCoverage: coverage.requestedWindowCoverage,
+      }),
       extractBatchInputRefusals: summarizeExtractBatchInputRefusals(events, coverage.requestedWindowCoverage),
       durableRareFunnel: summarizeDurableRareFunnel({
         generatedAtMs,
@@ -4903,6 +5010,7 @@ export function createCommerceTelemetry({
 
   return registerJournalProducer({
     middleware,
+    freePageChangeObserver,
     snapshot,
     storageStatus,
     appendMcpTypedDecision,

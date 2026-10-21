@@ -602,7 +602,6 @@ app.use((error, req, res, next) => {
   return res.status(400).json({ ok: false, error: "invalid_json", charged: false });
 });
 app.use(legacyCompatibleX402Body);
-mountPageChangeHttp(app);
 app.get(CAREERS_BOARD_COLD_PATH, function serveCareersBoardColdRecipe(_req, res) {
   res.set("Cache-Control", "public, max-age=300");
   return res.json(careersBoardColdRecipeBody());
@@ -616,6 +615,9 @@ function parseCommerceWriterProcessCount(raw = process.env.COMMERCE_TELEMETRY_WR
 
 const commerceTelemetry = createCommerceTelemetry({
   writerProcessCount: parseCommerceWriterProcessCount(process.env.COMMERCE_TELEMETRY_WRITER_PROCESSES),
+});
+mountPageChangeHttp(app, {
+  observe: isPageChangeHttpEnabled() ? commerceTelemetry.freePageChangeObserver("http") : null,
 });
 let mcpMountResult = null;
 let commerceWriterDrainStarted = false;
@@ -4552,6 +4554,7 @@ import("./mcp-server.mjs")
       network: NETWORK,
       payTo: PAY_TO,
       serverInfo: { name: "x402-data-gateway", version: SERVICE_VERSION },
+      freePageChangeObserver: isPageChangeHttpEnabled() ? commerceTelemetry.freePageChangeObserver("mcp") : null,
       typedTelemetry: {
         enabled: true,
         onAppend: (decision, requestAttribution, declaredSource, toolDelivery, facilitatorSettlement) =>
