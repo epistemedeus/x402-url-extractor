@@ -29,10 +29,10 @@ function sessionKey(session, offeringId) {
   return `acp:8453:${session.jobId}`;
 }
 
-function bindJob(session, job, request, source) {
+export function bindJob(session, job, request, source, { allowUnquoted = false } = {}) {
   requireThat(job && job.chainId === 8453 && String(job.id) === session.jobId, 'Fetched job identity mismatch');
   requireThat(sameAddress(job.providerAddress, PROVIDER) && job.description === 'Settlement Proof', 'Fetched provider/offering name mismatch');
-  requireThat(job.budget?.rawAmount === 5000n && sameAddress(job.budget.address, BASE_USDC), 'Original 0.005 USDC service price required');
+  requireThat((job.budget?.rawAmount === 5000n || (allowUnquoted && job.status === 'OPEN' && job.budget?.rawAmount === 0n)) && sameAddress(job.budget.address, BASE_USDC), 'Original 0.005 USDC service price required');
   requireThat(!job.getFundRequestIntent() && job.intents.length === 0 && !job.clientSubscription && (!job.hookConfigs || Object.keys(job.hookConfigs).length === 0) && sameAddress(job.hookAddress, `0x${'0'.repeat(40)}`), 'Working-funds, subscription or custom-hook job is outside this offering');
   return {
     offeringId: OFFERING_ID, chainId: 8453, jobId: session.jobId,

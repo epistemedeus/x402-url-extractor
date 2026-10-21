@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
-import { fulfillAcpSettlementProof, validateRequirement, OFFERING_ID, PROVIDER } from './fulfill.mjs';
+import { fulfillAcpSettlementProof, validateRequirement, bindJob, OFFERING_ID, PROVIDER } from './fulfill.mjs';
 import { openDeliveryJournal } from './journal.mjs';
 
 const sameAddress = (a, b) => typeof a === 'string' && typeof b === 'string' && a.toLowerCase() === b.toLowerCase();
@@ -30,7 +30,7 @@ export function selectClientRequirement(entries, session, job) {
   return { request, source };
 }
 
-function receiveCatalog(detail) {
+export function receiveCatalog(detail) {
   requireThat(detail && sameAddress(detail.walletAddress, PROVIDER), 'Original provider catalog required');
   const matches = detail.offerings?.filter(o => o.name === 'Settlement Proof') ?? [];
   requireThat(matches.length === 1, 'Unique configured offering required');
@@ -59,8 +59,17 @@ export function configureSettlementProofDelivery({ session, history, catalog, jo
       requireOriginalSession();
       // Existing obligations are received against retained terms, even when the
       // public catalog changes later. The job/message binding is always fresh.
-      if (!await journal.read(key)) receiveCatalog(await catalog.getAgentByWalletAddress(PROVIDER));
-      const initial = selectClientRequirement(await history.getHistory(8453, session.jobId), session, await session.fetchJob());
+      const job = await session.fetchJob();
+      const initial = selectClientRequirement(await history.getHistory(8453, session.jobId), session, job);
+      if (!await journal.read(key)) {
+        // A received quote is an already retained obligation under its old
+        // terms. Receive that exact disk binding instead of repricing it from
+        // today's catalog. No caller-certified bypass or second terms ledger.
+        const quote = await openDeliveryJournal(journalDirectory, { phase: 'quote' }).read(key);
+        if (quote) {
+          requireThat(quote.state === 'received' && quote.artifact === '{"amount":0.005}' && quote.artifactSha256 === createHash('sha256').update(quote.artifact).digest('hex') && isDeepStrictEqual(quote.binding, bindJob(session, job, validateRequirement(initial.request), initial.source)), 'Received original quote binding required');
+        } else receiveCatalog(await catalog.getAgentByWalletAddress(PROVIDER));
+      }
       return fulfillAcpSettlementProof({ session, offeringId: OFFERING_ID, requirements: initial.request, journal, client, now,
         async bindSource(job) {
           requireOriginalSession();

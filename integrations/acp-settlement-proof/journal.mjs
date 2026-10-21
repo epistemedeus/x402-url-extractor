@@ -7,7 +7,9 @@ import { withDirectoryLock } from '../../experiments/scoped-surface-delivery-100
 // Explicit operation retention, not an ACP account, entitlement or money ledger.
 // Reuse the existing Linux directory-inode flock. Atomic replace plus file AND
 // directory fsync extends the experiment's rename-only crash contract here.
-export function openDeliveryJournal(directory) {
+export function openDeliveryJournal(directory, { phase = 'delivery' } = {}) {
+  if (!['delivery', 'quote'].includes(phase)) throw Error('Unsupported operation phase');
+  const schema = `acp-settlement-proof-${phase}/v1`;
   if (typeof directory !== 'string' || !path.isAbsolute(directory)) throw Error('Absolute declared journal directory required');
   // Parent storage is explicitly provisioned by the owner. Sync its directory
   // entry even when another opener created this directory, before any dispatch.
@@ -22,7 +24,7 @@ export function openDeliveryJournal(directory) {
   function fileFor(key) {
     const match = /^acp:8453:([1-9][0-9]*)$/.exec(key);
     if (!match || match[1].length > 78) throw Error('Invalid operation key');
-    return path.join(dir, `8453-${match[1]}.json`);
+    return path.join(dir, `8453-${match[1]}${phase === 'quote' ? '.quote' : ''}.json`);
   }
   function read(file) {
     let fd;
@@ -32,7 +34,7 @@ export function openDeliveryJournal(directory) {
       const stat = fs.fstatSync(fd);
       if (!stat.isFile() || stat.size > 1024 * 1024) throw Error('Invalid retained operation file');
       const data = JSON.parse(fs.readFileSync(fd, 'utf8'));
-      if (!data || data.schema !== 'acp-settlement-proof-delivery/v1') throw Error('Invalid retained operation');
+      if (!data || data.schema !== schema) throw Error('Invalid retained operation');
       return data;
     } finally { fs.closeSync(fd); }
   }
@@ -61,7 +63,7 @@ export function openDeliveryJournal(directory) {
         const file = fileFor(key);
         const current = read(file);
         if (!isDeepStrictEqual(current, expected)) return false;
-        if (next?.schema !== 'acp-settlement-proof-delivery/v1') throw Error('Invalid operation schema');
+        if (next?.schema !== schema) throw Error('Invalid operation schema');
         if (current === null) {
           if (next.state !== 'prepared' || next.binding?.jobId !== key.split(':')[2]) throw Error('Invalid operation preparation');
         } else {

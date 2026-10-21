@@ -1,0 +1,32 @@
+[Unit]
+Description=Finite SameDayDesk exact-offer ACP receiver
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=samedaydesk-acp
+Group=samedaydesk-acp
+WorkingDirectory=/opt/samedaydesk-acp
+Environment=NODE_OPTIONS=--max-old-space-size=768
+Environment=HOME=/var/lib/samedaydesk-acp
+Environment=ACP_CONFIG_DIR=/var/lib/samedaydesk-acp/profile
+ExecStart=/usr/bin/node /opt/samedaydesk-acp/integrations/acp-settlement-proof/start.mjs serve /var/lib/samedaydesk-acp/worker.json
+Restart=no
+RuntimeMaxSec=900
+TimeoutStopSec=50
+KillMode=control-group
+MemoryMax=2G
+MemorySwapMax=0
+TasksMax=64
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/samedaydesk-acp
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
