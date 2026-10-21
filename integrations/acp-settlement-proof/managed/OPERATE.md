@@ -47,12 +47,31 @@ project39cd108e-7036-40cd-97a7-8a86efa1cfd0 / production
 activation: one replica; Linux AMD64;2048MiB memory; one vCPU; restart NEVER;
 no public domain/port, healthcheck, cron, autosleep or automatic Git deployment.
 Mount one NEW dedicated private local persistent volume at `/var/lib/acp-worker`.
-Do not attach merchant storage. Set `ACP_DATA_DIR=/var/lib/acp-worker`,
+Do not attach merchant storage. Set `ACP_DATA_DIR=/var/lib/acp-worker/receiver`,
 `NODE_OPTIONS=--max-old-space-size=768`, `RAILWAY_RUN_UID=0` for narrow bootstrap,
 `RAILWAY_DOCKERFILE_PATH=integrations/acp-settlement-proof/managed/Dockerfile`,
 `RAILWAY_DEPLOYMENT_OVERLAP_SECONDS=0`,
 `RAILWAY_DEPLOYMENT_DRAINING_SECONDS=50`.
 No ACP credentials belong in Railway environment variables.
+
+The received Railway mount is a root-owned0755 filesystem containing
+`lost+found`, not an empty application directory. Keep that platform-owned mount
+and metadata unchanged. Use its explicit private child
+`/var/lib/acp-worker/receiver` as ACP_DATA_DIR. Initial Root bootstrap creates
+only that new0700child; the unchanged entry then checks it and drops it to1000.
+Do not delete `lost+found`, recursively chown the volume or weaken store checks.
+For a fresh volume, the one-time start preparation may be:
+
+```sh
+/bin/sh -c 'set -eu; p=/var/lib/acp-worker/receiver; if [ ! -e "$p" ]; then mkdir -m 700 -- "$p"; fi; exec /usr/bin/tini -s -- node /opt/acp/integrations/acp-settlement-proof/managed/entry.mjs enrollment-hold 900'
+```
+
+An existing symlink, foreign owner or conflicting store still refuses through
+the real entry. After initialization, use the normal complete command below.
+Root's October21actual mounted receiving creates this child once, reopens it in
+two separate native processes with the same41-file source identity, and receives
+the normal deployment's running instance plus private SSH. No auth is attempted
+by these receiving commands.
 
 Use the exported context as source, Dockerfile
 `integrations/acp-settlement-proof/managed/Dockerfile`, context root `/`, no
@@ -80,7 +99,7 @@ railway ssh --project 39cd108e-7036-40cd-97a7-8a86efa1cfd0 \
   --service 153e79b1-f365-4edc-96f8-64082f5a0345
 # Inside that private shell; every invocation drops to UID/GID1000 itself:
 acp1677() {
-  ACP_DATA_DIR=/var/lib/acp-worker NODE_OPTIONS=--max-old-space-size=768 \
+  ACP_DATA_DIR=/var/lib/acp-worker/receiver NODE_OPTIONS=--max-old-space-size=768 \
     node /opt/acp/integrations/acp-settlement-proof/managed/entry.mjs "$@"
 }
 acp1677 receive
@@ -88,7 +107,7 @@ acp1677 cli configure start
 ```
 
 Native CLI stdout is saved0600 at
-`/var/lib/acp-worker/enrollment/last-result.json`; platform logs contain only its
+`/var/lib/acp-worker/receiver/enrollment/last-result.json`; platform logs contain only its
 path. Root reads it only in the private shell, not deployment logs or receipts.
 Disable shell tracing/terminal recording before reading it. Consume it only
 after a successful CLI exit: a failed/interrupted command preserves the previous
@@ -124,13 +143,13 @@ platform deployment/image digest readback alongside this source receipt.
 The sole persistent volume has this layout (all directories0700, owned1000):
 
 ```text
-/var/lib/acp-worker/.managed-layout.json  #0600, layout/UID/GID only
-/var/lib/acp-worker/home/                 # native HOME and XDG backend data
-/var/lib/acp-worker/profile/              # official CLI profile/auth
-/var/lib/acp-worker/empty/                # must stay empty
-/var/lib/acp-worker/operations/           # original immutable-intent journal
-/var/lib/acp-worker/enrollment/           # private CLI results
-/var/lib/acp-worker/worker.json           #0600, explicit fixed worker configuration
+/var/lib/acp-worker/receiver/.managed-layout.json  #0600, layout/UID/GID only
+/var/lib/acp-worker/receiver/home/                 # native HOME and XDG backend data
+/var/lib/acp-worker/receiver/profile/              # official CLI profile/auth
+/var/lib/acp-worker/receiver/empty/                # must stay empty
+/var/lib/acp-worker/receiver/operations/           # original immutable-intent journal
+/var/lib/acp-worker/receiver/enrollment/           # private CLI results
+/var/lib/acp-worker/receiver/worker.json           #0600, explicit fixed worker configuration
 ```
 
 After Root receives the original provider/agent identity, exact signerId and
@@ -239,6 +258,14 @@ railway up /tmp/root1677-build --path-as-root \
   --environment 02b78d43-d0f3-48b0-91ed-a2763ef8d2bd \
   --service 153e79b1-f365-4edc-96f8-64082f5a0345 --detach
 ```
+
+Changing service settings and then `railway redeploy` can preserve the old
+deployment's frozen manifest. Receive the actual new manifest; use a fresh
+`railway up` of the same clean context when the current settings must apply.
+A deploymentSUCCESS badge alone is not running-process evidence: independently
+read `deploymentStopped` and its instance state, then run private SSH receiving.
+For blank structured logs, `railway logs --json --lines 20 DEPLOYMENT_ID`
+preserves the attributes that a message-only viewer omits.
 
 Upload only a freshly exported source-only context. A local cold-test context
 contains node_modules and a disposable test volume; never upload that directory.
