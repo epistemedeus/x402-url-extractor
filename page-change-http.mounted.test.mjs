@@ -457,3 +457,32 @@ test("conflicting host pins emit neither proof nor source header", {timeout:6000
   const health=await fetch(`${merchant.base}/recipes/page-change/health`);assert.equal(health.headers.get('x-source-commit'),null);const body=await health.json();assert.equal(body.commit,null);assert.equal(body.reason,'source_commit_mismatch');
   const proof=await fetch(`${merchant.base}/.well-known/xagent-verification.json`);assert.equal(proof.status,404);assert.equal(proof.headers.get('x-source-commit'),null);assert.equal((await proof.json()).error,'xagent_verification_unavailable');
 });
+
+// This regression must exercise server.js's actual mounts, not a copied route.
+test("free HTTP and MCP outcomes reach the normal operator summary", { timeout: 60_000 }, async (t) => {
+  const merchant = await startMerchant({ extraEnv: { PAGE_CHANGE_HTTP_ENABLED: "1" } });
+  t.after(() => merchant.close());
+  const payload = { before: load("merchant", "unchanged-before.json"), after: load("merchant", "unchanged-after.json"), fields: ["title"] };
+  const http = await postJson(merchant.base, payload);
+  assert.equal(http.response.status, 200);
+  assert.equal(http.json.report.verdict, "unchanged");
+  // server.js mounts MCP asynchronously after listen.
+  let mcp;
+  for (let n = 0; n < 100; n++) {
+    const response = await fetch(`${merchant.base}/mcp`, {
+      method: "POST", headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 2131, method: "tools/call", params: { name: "page_change", arguments: payload } }),
+    });
+    if (response.status === 404) { await delay(30); continue; }
+    const wire = await response.text();
+    mcp = JSON.parse(wire.startsWith("event:") ? wire.split("data: ")[1].trim() : wire);
+    break;
+  }
+  assert.ok(mcp?.result, JSON.stringify(mcp));
+  assert.notEqual(mcp.result.isError, true);
+  await delay(100);
+  const summary = await (await fetch(`${merchant.base}/v0/commerce-demand.json`)).json();
+  assert.ok(summary.freePageChange, `missing free outcome observation: HTTP and MCP succeeded; paidSuccesses=${summary.paidSuccesses}`);
+  assert.equal(summary.freePageChange.transports.http.byOutcome.unchanged, 1);
+  assert.equal(summary.freePageChange.transports.mcp.byOutcome.unchanged, 1);
+});
