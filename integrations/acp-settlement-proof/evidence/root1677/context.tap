@@ -7,9 +7,9 @@ not ok 1 - allowlisted context contains production root modules and no credentia
   failureType: 'testCodeFailure'
   error: |-
     The input was expected to not match the regular expression /node_modules|\.test\.mjs|\.env|worker\.json|evidence\//. Input:
-    
+
     'vendor/task-discoverability/test/completion-164000.test.mjs'
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected:
