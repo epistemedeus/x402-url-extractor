@@ -1,0 +1,15 @@
+{
+  "base": "f31abbce319037bfe7bb98dcd859b598ef041ee5",
+  "sourceHead": "5dbeb8d3cd303a77be7745695171ad0c4c070218",
+  "comparedAPIs": [
+    "extractBatchInputRefusalDeclaration",
+    "extractBatchInputRefusalSchema",
+    "extractBatchInputSchema",
+    "extractBatchOutputSchema",
+    "extractBatchOutputExample",
+    "extractBatchQuote",
+    "extractBatchBoundary"
+  ],
+  "comparedRefusalPayloads": 16,
+  "result": "identical"
+}

@@ -1,0 +1,15 @@
+TAP version 13
+# Subtest: prospective URL shapes reach the mounted journal and normal summary
+ok 1 - prospective URL shapes reach the mounted journal and normal summary
+  ---
+  duration_ms: 1520.69479
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2194.053238

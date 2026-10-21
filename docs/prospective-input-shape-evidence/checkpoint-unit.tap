@@ -1,0 +1,45 @@
+TAP version 13
+# Subtest: producer and strict reader use every code from the accepted refusal contract
+ok 1 - producer and strict reader use every code from the accepted refusal contract
+  ---
+  duration_ms: 27.447341
+  ...
+# Subtest: producer does not infer a code from input, arbitrary enums, prose or crossed responses
+ok 2 - producer does not infer a code from input, arbitrary enums, prose or crossed responses
+  ---
+  duration_ms: 6.935877
+  ...
+# Subtest: strict reader quarantines unknown and crossed codes while old and null codes remain unknown
+ok 3 - strict reader quarantines unknown and crossed codes while old and null codes remain unknown
+  ---
+  duration_ms: 6.137705
+  ...
+# Subtest: existing observation suppression never creates a journal to capture a code
+ok 4 - existing observation suppression never creates a journal to capture a code
+  ---
+  duration_ms: 4.143066
+  ...
+# Subtest: code projection follows the existing external population and cutoff
+ok 5 - code projection follows the existing external population and cutoff
+  ---
+  duration_ms: 4.552709
+  ...
+# Subtest: complete retained window keeps partial historical code coverage explicit
+ok 6 - complete retained window keeps partial historical code coverage explicit
+  ---
+  duration_ms: 3.172044
+  ...
+# Subtest: concurrent refusal append and snapshot remain strict through bounded rotations and restart
+ok 7 - concurrent refusal append and snapshot remain strict through bounded rotations and restart
+  ---
+  duration_ms: 41.740441
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 715.511952

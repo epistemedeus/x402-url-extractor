@@ -26,7 +26,10 @@ import {
   EXTRACT_BATCH_PATH,
 } from "./extract-batch-config.mjs";
 import {
+  EXTRACT_BATCH_INPUT_SHAPE_CONTRACT,
   extractBatchInputRefusalDeclaration,
+  observedExtractBatchInputRefusalShape,
+  readExtractBatchInputRefusalShape,
   normalizeExtractBatchInput,
   readExtractBatchInputRefusalCode,
 } from "./extract-batch.mjs";
@@ -369,16 +372,34 @@ function acceptsExtractBatchInputRefusalCode(value, code) {
     && value.settlementCurrency === null;
 }
 
+function acceptsExtractBatchInputRefusalShape(value, shape) {
+  return acceptsExtractBatchInputRefusalCode(value, value.extractBatchInputRefusalCode)
+    && readExtractBatchInputRefusalShape(shape, value.extractBatchInputRefusalCode) !== null;
+}
+
 function summarizeExtractBatchInputRefusals(events, windowCoverage) {
   const observations = events.filter(isExtractBatchInputRefusalObservation);
   const byCode = emptyCounts();
   let knownCodeEvents = 0;
+  let knownShapeEvents = 0;
+  const byShape = emptyCounts();
   for (const event of observations) {
     if (!acceptsExtractBatchInputRefusalCode(event, event.extractBatchInputRefusalCode)) continue;
     increment(byCode, event.extractBatchInputRefusalCode);
     knownCodeEvents += 1;
+    if (acceptsExtractBatchInputRefusalShape(event, event.extractBatchInputRefusalShape)) {
+      const shape = event.extractBatchInputRefusalShape;
+      const key = `${event.extractBatchInputRefusalCode}:${shape.stage}:${shape.bodyType}:${shape.urlsType}:${shape.urlsCount ?? "none"}`;
+      increment(byShape, key);
+      knownShapeEvents += 1;
+    }
   }
   return {
+    shapeContract: EXTRACT_BATCH_INPUT_SHAPE_CONTRACT,
+    knownShapeEvents,
+    unknownShapeEvents: observations.length - knownShapeEvents,
+    shapeCoverage: observations.length ? knownShapeEvents / observations.length : null,
+    byShape,
     contract: EXTRACT_BATCH_INPUT_REFUSAL_CONTRACT.schemaVersion,
     retainedValidationEvents: observations.length,
     knownCodeEvents,
@@ -387,7 +408,7 @@ function summarizeExtractBatchInputRefusals(events, windowCoverage) {
     byCode,
     windowCoverage,
     usefulness: "unknown",
-    policy: "Retained external POST /extract/batch HTTP 400 validation observations only, including the owning MCP HTTP hop. Codes come from the validator's strict static refusal contract. Missing historical codes stay unknown; parser failures are not semantic codes. Counts are retained observations, not complete-window zeroes, settlement, useful delivery, customers or demand. Existing observation eligibility and retention bounds apply.",
+    policy: "Retained external POST /extract/batch HTTP 400 validation observations only, including the owning MCP HTTP hop. Codes come from the validator's strict static refusal contract. Optional shapes come from the observed owning validation stage with declared types and capped URL array counts, never caller contents. Missing or null historical codes and shapes stay unknown; parser failures have neither semantic codes nor shapes. Counts are retained observations, not complete-window zeroes, settlement, useful delivery, customers or demand. Existing observation eligibility and retention bounds apply.",
   };
 }
 
@@ -1728,6 +1749,9 @@ function isCanonicalCommerceEvent(value) {
   if (hasOwn(value, "extractBatchInputRefusalCode")
     && value.extractBatchInputRefusalCode !== null
     && !acceptsExtractBatchInputRefusalCode(value, value.extractBatchInputRefusalCode)) return false;
+  if (hasOwn(value, "extractBatchInputRefusalShape")
+    && value.extractBatchInputRefusalShape !== null
+    && !acceptsExtractBatchInputRefusalShape(value, value.extractBatchInputRefusalShape)) return false;
   if (!isCanonicalProtocolList(value.protocolsOffered)) return false;
   if (typeof value.replayed !== "boolean") return false;
   if (!isCanonicalSettlementReference(value.settlementReference)) return false;
@@ -4077,6 +4101,10 @@ export function createCommerceTelemetry({
       };
       if (acceptsExtractBatchInputRefusalCode(event, responseInputRefusalCode)) {
         event.extractBatchInputRefusalCode = responseInputRefusalCode;
+        try {
+          const shape = observedExtractBatchInputRefusalShape(res, responseInputRefusalCode);
+          if (acceptsExtractBatchInputRefusalShape(event, shape)) event.extractBatchInputRefusalShape = shape;
+        } catch { /* Optional metadata must not suppress the base attempt. */ }
       }
       const paidUsefulJourney = paidUsefulJourneyMetadata(journeyClaim, {
         status,

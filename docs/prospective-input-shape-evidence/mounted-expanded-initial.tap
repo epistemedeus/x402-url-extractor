@@ -1,0 +1,22 @@
+TAP version 13
+# Subtest: prospective URL shapes reach the mounted journal and normal summary
+ok 1 - prospective URL shapes reach the mounted journal and normal summary
+  ---
+  duration_ms: 1682.512926
+  ...
+# {"observedHttpShapes":{"urls_invalid:urls:object:absent:none":2,"urls_invalid:urls:object:scalar:none":6,"urls_invalid:urls:object:null:none":2,"urls_invalid:urls:object:object:none":2,"urls_invalid:urls:object:array:empty":2,"urls_invalid:urls:object:array:over_limit":4,"body_not_object:body:array:not_inspected:none":2,"unexpected_field:body_keys:object:not_inspected:none":2,"url_item_invalid:url_items:object:array:in_range":2,"url_credentials:url_items:object:array:in_range":2,"fields_invalid:fields:object:array:in_range":2,"fields_unknown:fields:object:array:in_range":2,"text_excerpt_limit_invalid:text_excerpt:object:array:in_range":2,"text_excerpt_ceiling:text_excerpt:object:array:in_range":2},"normalSummary":{"shapeContract":{"schemaVersion":"samedaydesk.extract-batch.input-shape.v1","stages":["body","body_keys","urls","url_items","fields","text_excerpt"],"types":["absent","null","scalar","object","array"],"arrayCounts":["empty","in_range","over_limit"]},"knownShapeEvents":34,"unknownShapeEvents":0,"shapeCoverage":1,"byShape":{"urls_invalid:urls:object:absent:none":2,"urls_invalid:urls:object:scalar:none":6,"urls_invalid:urls:object:null:none":2,"urls_invalid:urls:object:object:none":2,"urls_invalid:urls:object:array:empty":2,"urls_invalid:urls:object:array:over_limit":4,"body_not_object:body:array:not_inspected:none":2,"unexpected_field:body_keys:object:not_inspected:none":2,"url_item_invalid:url_items:object:array:in_range":2,"url_credentials:url_items:object:array:in_range":2,"fields_invalid:fields:object:array:in_range":2,"fields_unknown:fields:object:array:in_range":2,"text_excerpt_limit_invalid:text_excerpt:object:array:in_range":2,"text_excerpt_ceiling:text_excerpt:object:array:in_range":2},"contract":"samedaydesk.extract-batch.input-refusal.v1","retainedValidationEvents":34,"knownCodeEvents":34,"unknownCodeEvents":0,"codeCoverage":1,"byCode":{"urls_invalid":18,"body_not_object":2,"unexpected_field":2,"url_item_invalid":2,"url_credentials":2,"fields_invalid":2,"fields_unknown":2,"text_excerpt_limit_invalid":2,"text_excerpt_ceiling":2},"windowCoverage":"unknown_for_full_window","usefulness":"unknown","policy":"Retained external POST /extract/batch HTTP 400 validation observations only, including the owning MCP HTTP hop. Codes come from the validator's strict static refusal contract. Optional shapes come from the observed owning validation stage with declared types and capped URL array counts, never caller contents. Missing or null historical codes and shapes stay unknown; parser failures have neither semantic codes nor shapes. Counts are retained observations, not complete-window zeroes, settlement, useful delivery, customers or demand. Existing observation eligibility and retention bounds apply."},"verify":1,"settle":1,"sourceFetches":1,"replay":"hit"}
+# Subtest: mounted shape appends and reads retain bounded rotations, restart and recovery
+ok 2 - mounted shape appends and reads retain bounded rotations, restart and recovery
+  ---
+  duration_ms: 3451.162175
+  ...
+# {"concurrentRefusals":12,"rotations":5,"retainedSegments":4,"retainedShapeEvents":4,"restartShapeEvents":4,"recoveredShapeEvents":5,"recoveryIntegrity":"unusable_records_present"}
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5802.990968

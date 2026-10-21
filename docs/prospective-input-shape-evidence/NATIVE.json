@@ -1,0 +1,42 @@
+{
+  "task": "ROOT1862",
+  "runId": "ROOT-SOL-ROOT1862-261021",
+  "originalSessionId": "01a15ce7-9aa5-74a1-93da-92d3b39c174b",
+  "observedNativeRecords": [
+    {
+      "recordType": "session_meta",
+      "timestamp": "2026-10-21T05:20:45.091Z",
+      "id": "01a15ce7-9aa5-74a1-93da-92d3b39c174b",
+      "cwd": "/home/ubuntu/ae14-work/root1862-input-shape",
+      "originator": "codex_exec",
+      "cli_version": "0.163.0",
+      "source": "exec",
+      "model_provider": "openai"
+    },
+    {
+      "recordType": "turn_context",
+      "timestamp": "2026-10-21T05:20:45.901Z",
+      "cwd": "/home/ubuntu/ae14-work/root1862-input-shape",
+      "model": "gpt-6.1-sol",
+      "effort": "xhigh"
+    }
+  ],
+  "admittedModel": "gpt-6.1-sol",
+  "admittedEffort": "xhigh",
+  "admittedAt": "2026-10-21T05:20:41.565Z",
+  "hostAdmission": {
+    "provider": "cursor",
+    "agentId": "bc-6e5f431f-1802-41d9-b126-3b3e9f834864",
+    "bootId": "3a6279ce-c7de-4cc6-a8f2-6ada4e553ce3"
+  },
+  "actualBootId": "3a6279ce-c7de-4cc6-a8f2-6ada4e553ce3",
+  "frozenProductBase": "f31abbce319037bfe7bb98dcd859b598ef041ee5",
+  "operatingInputReceiptSha256": "8bb35fb87a2452c30994f1f95aa2c1a58b22c47eb2a98d49d216c37fcd2b3948",
+  "frozenOperatingCommit": "0d3ed6d3c7333c26b98adbccd97d44de17bdafd9",
+  "checkpoint": "c9739fc7c3d8cf60b5bf45c2f983f879d42f5d78",
+  "checkpointCommittedAt": "2026-10-21T05:24:12+00:00",
+  "checkpointRemoteObservedBy": "2026-10-21T05:24:42Z (draft PR creation returned exact checkpoint head)",
+  "pullRequest": "https://github.com/epistemedeus/x402-url-extractor/pull/222",
+  "frozenPrBaseBranch": "codex/root1862-frozen-base-f31abbce",
+  "receivingOwner": "Root; no deployment or production-store access by worker"
+}

@@ -23,6 +23,8 @@ import {
   extractBatchInputRefusalPayload,
   extractBatchInputRefusalDeclaration,
   readExtractBatchInputRefusalCode,
+  readExtractBatchInputRefusalShape,
+  observedExtractBatchInputRefusalShape,
   validateExtractBatchRequest,
   maxAdmittedBatchExcerptChars,
   ExtractBatchInputError,
@@ -336,3 +338,81 @@ function expandedUrl() {
   assert.ok(new URL(raw).href.length > EXTRACT_BATCH_MAX_URL_LENGTH);
   return raw;
 }
+
+
+test("shape evidence follows the owning validator stage and never retains caller content", () => {
+  const secret = "sk_live_ROOT1862_VALIDATOR_SECRET";
+  const valid = { urls: ["https://example.com/"] };
+  const cases = [
+    [undefined, "body_not_object", "body", "absent", "not_inspected", null],
+    [null, "body_not_object", "body", "null", "not_inspected", null],
+    [secret, "body_not_object", "body", "scalar", "not_inspected", null],
+    [42, "body_not_object", "body", "scalar", "not_inspected", null],
+    [false, "body_not_object", "body", "scalar", "not_inspected", null],
+    [[], "body_not_object", "body", "array", "not_inspected", null],
+    [{ urls: null, [secret]: secret }, "unexpected_field", "body_keys", "object", "not_inspected", null],
+    [{}, "urls_invalid", "urls", "object", "absent", null],
+    [{ urls: null }, "urls_invalid", "urls", "object", "null", null],
+    [{ urls: secret }, "urls_invalid", "urls", "object", "scalar", null],
+    [{ urls: 0 }, "urls_invalid", "urls", "object", "scalar", null],
+    [{ urls: false }, "urls_invalid", "urls", "object", "scalar", null],
+    [{ urls: { [secret]: secret } }, "urls_invalid", "urls", "object", "object", null],
+    [{ urls: [] }, "urls_invalid", "urls", "object", "array", "empty"],
+    [{ urls: Array(6).fill(secret) }, "urls_invalid", "urls", "object", "array", "over_limit"],
+    [{ urls: Array(100).fill(secret) }, "urls_invalid", "urls", "object", "array", "over_limit"],
+    [{ urls: [secret], fields: [secret] }, "url_malformed", "url_items", "object", "array", "in_range"],
+    [{ urls: [null], fields: [] }, "url_item_invalid", "url_items", "object", "array", "in_range"],
+    [{ ...valid, fields: [], textExcerptLimitChars: null }, "fields_invalid", "fields", "object", "array", "in_range"],
+    [{ ...valid, fields: [secret] }, "fields_unknown", "fields", "object", "array", "in_range"],
+    [{ ...valid, textExcerptLimitChars: null }, "text_excerpt_limit_invalid", "text_excerpt", "object", "array", "in_range"],
+    [{ urls: Array(5).fill(valid.urls[0]), textExcerptLimitChars: 3000 }, "text_excerpt_ceiling", "text_excerpt", "object", "array", "in_range"],
+  ];
+  for (const [body, code, stage, bodyType, urlsType, urlsCount] of cases) {
+    assert.throws(() => normalizeExtractBatchInput(body), (error) => {
+      assert.ok(error instanceof ExtractBatchInputError);
+      assert.equal(error.reason, code);
+      const expected = { stage, bodyType, urlsType, urlsCount };
+      assert.deepEqual(error.inputShape, expected);
+      assert.deepEqual(readExtractBatchInputRefusalShape(error.inputShape, code), expected);
+      assert.equal(Object.isFrozen(error.inputShape), true);
+      assert.equal(JSON.stringify(error.inputShape).includes(secret), false);
+      return true;
+    });
+  }
+  for (const count of [1, 5]) assert.equal(normalizeExtractBatchInput({ urls: Array(count).fill(valid.urls[0]) }).urls.length, count);
+});
+
+test("optional metadata failure cannot replace a semantic refusal or gate valid input", () => {
+  let reads = 0;
+  const input = { get urls() { reads += 1; if (reads > 1) throw new Error("metadata unavailable"); return null; } };
+  assert.throws(() => normalizeExtractBatchInput(input), (error) => {
+    assert.equal(error.reason, "urls_invalid");
+    assert.equal(error.inputShape, undefined);
+    return true;
+  });
+  const res = { locals: {}, set() { return this; }, status(code) { this.statusCode = code; return this; },
+    json(body) { this.body = body; return this; } };
+  validateExtractBatchRequest({ method: "POST", path: EXTRACT_BATCH_PATH, body: { urls: null } }, res, () => assert.fail("invalid input continued"));
+  assert.deepEqual(res.body, extractBatchInputRefusalPayload("urls_invalid"));
+  assert.equal(observedExtractBatchInputRefusalShape(res, "fields_invalid"), null);
+  assert.equal(observedExtractBatchInputRefusalShape({}, "urls_invalid"), null);
+  const goodRes = { locals: {}, set() { return this; } };
+  let continued = 0;
+  validateExtractBatchRequest({ method: "POST", path: EXTRACT_BATCH_PATH, body: { urls: ["https://example.com/"] } }, goodRes, () => { continued += 1; });
+  assert.equal(continued, 1);
+  assert.equal(observedExtractBatchInputRefusalShape(goodRes, "urls_invalid"), null);
+});
+
+
+test("early refusal does not inspect later inputs while collecting evidence", () => {
+  let inspected = 0;
+  const body = { unknownSecretKey: "sk_live_ROOT1862_ORDER_SECRET", get urls() {
+    inspected += 1; throw new Error("later input was inspected");
+  } };
+  assert.throws(() => normalizeExtractBatchInput(body), (error) => {
+    assert.equal(error.reason, "unexpected_field");
+    assert.deepEqual(error.inputShape, { stage: "body_keys", bodyType: "object", urlsType: "not_inspected", urlsCount: null });
+    return true;
+  });
+  assert.equal(inspected, 0);
+});

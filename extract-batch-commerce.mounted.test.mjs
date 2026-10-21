@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createServer as createHttpServer } from "node:http";
 import { createServer as createNetServer } from "node:net";
-import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { appendFile, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -656,4 +656,196 @@ test("mounted refusal evidence carries only semantic codes through HTTP MCP and 
       assert.equal(retained.includes(forbidden), false, `${file} leaked caller input`);
     }
   }
+});
+
+test("prospective URL shapes reach the mounted journal and normal summary", { timeout: 90_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "batch-input-shapes-"));
+  const facilitator = await startFakeFacilitator();
+  const internalToken = "root1862-owned-disposable-internal-token";
+  let merchant;
+  t.after(async () => {
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url,
+    extraEnv: { COMMERCE_INTERNAL_TOKEN: internalToken } });
+  const marker = "sk_live_ROOT1862_SHAPE_SECRET";
+  const valid = { urls: ["https://alpha.example/"], fields: ["title"] };
+  const challenge = await fetch(`${merchant.base}${EXTRACT_BATCH_PATH}`, jsonPost(valid));
+  assert.equal(challenge.status, 402);
+  const payment = testPayment(decodePaymentRequired(challenge), { id: "root1862_shape_1234567890" });
+  await challenge.text();
+  const cases = [
+    [{}, "urls_invalid", "urls", "object", "absent", null],
+    [{ urls: marker }, "urls_invalid", "urls", "object", "scalar", null],
+    [{ urls: 0 }, "urls_invalid", "urls", "object", "scalar", null],
+    [{ urls: false }, "urls_invalid", "urls", "object", "scalar", null],
+    [{ urls: null }, "urls_invalid", "urls", "object", "null", null],
+    [{ urls: { [marker]: marker } }, "urls_invalid", "urls", "object", "object", null],
+    [{ urls: [] }, "urls_invalid", "urls", "object", "array", "empty"],
+    [{ urls: Array(6).fill(`https://example.com/${marker}`) }, "urls_invalid", "urls", "object", "array", "over_limit"],
+    [{ urls: Array(50).fill(marker) }, "urls_invalid", "urls", "object", "array", "over_limit"],
+    [[], "body_not_object", "body", "array", "not_inspected", null],
+    [{ urls: null, [marker]: marker }, "unexpected_field", "body_keys", "object", "not_inspected", null],
+    [{ urls: [null], fields: [marker] }, "url_item_invalid", "url_items", "object", "array", "in_range"],
+    [{ urls: [`https://user:${marker}@example.com/`] }, "url_credentials", "url_items", "object", "array", "in_range"],
+    [{ ...valid, fields: [] }, "fields_invalid", "fields", "object", "array", "in_range"],
+    [{ ...valid, fields: [marker] }, "fields_unknown", "fields", "object", "array", "in_range"],
+    [{ ...valid, textExcerptLimitChars: null }, "text_excerpt_limit_invalid", "text_excerpt", "object", "array", "in_range"],
+    [{ urls: Array(5).fill(valid.urls[0]), textExcerptLimitChars: 3000 }, "text_excerpt_ceiling", "text_excerpt", "object", "array", "in_range"],
+  ];
+  for (const [body, code] of cases) {
+    for (const headers of [{}, { "payment-signature": payment }]) {
+      const response = await fetch(`${merchant.base}${EXTRACT_BATCH_PATH}`, jsonPost(body, headers));
+      assert.equal(response.status, 400);
+      const payload = await response.json();
+      assert.equal(readExtractBatchInputRefusalCode(payload), code);
+      assert.equal(response.headers.get("cache-control"), "no-store");
+      assert.equal(response.headers.has("payment-required"), false);
+      assert.equal(Object.hasOwn(payload, "extractBatchInputRefusalShape"), false);
+      assert.equal(JSON.stringify(payload).includes(marker), false);
+    }
+  }
+  for (const body of ["{", "null", "false", JSON.stringify(marker), JSON.stringify({ urls: [marker.repeat(1000)] })]) {
+    const response = await fetch(`${merchant.base}${EXTRACT_BATCH_PATH}`, {
+      method: "POST", headers: { "content-type": "application/json", "payment-signature": payment }, body,
+    });
+    assert.equal(response.status, body.length > 16_384 ? 413 : 400);
+    const responseText = await response.text();
+    let parsed; try { parsed = JSON.parse(responseText); } catch { /* unchanged parser error */ }
+    assert.equal(readExtractBatchInputRefusalCode(parsed), null);
+    assert.equal(responseText.includes(marker), false);
+  }
+  for (const [route, method] of [[EXTRACT_BATCH_PATH, "GET"], [EXTRACT_BATCH_PATH, "DELETE"],
+    [EXTRACT_BATCH_PATH, "PUT"], ["/extract/batch/extra", "POST"],
+    ["/security/wallet-policy-conformance", "POST"], ["/mcp", "POST"]]) {
+    const init = ["GET", "HEAD"].includes(method) ? { method } : { ...jsonPost({ urls: marker }), method };
+    const response = await fetch(`${merchant.base}${route}`, init);
+    await response.text();
+  }
+  for (const headers of [{ "x-samedaydesk-internal": internalToken },
+    { "user-agent": "SameDayDesk-Monitor/1" }, { "user-agent": "GPTBot/1" }]) {
+    const response = await fetch(`${merchant.base}${EXTRACT_BATCH_PATH}`, jsonPost({ urls: null }, headers));
+    assert.equal(response.status, 400); await response.text();
+  }
+  assert.equal(facilitator.calls.verify, 0, "semantic/parser refusals and unpaid challenge precede verification");
+  assert.equal(facilitator.calls.settle, 0);
+  await assert.rejects(readFile(path.join(dataDir, "source-fetches.log")), { code: "ENOENT" });
+  await assert.rejects(readFile(path.join(dataDir, "idempotency-replay.json")), { code: "ENOENT" });
+  const paid = await fetch(`${merchant.base}${EXTRACT_BATCH_PATH}`, jsonPost(valid, { "payment-signature": payment }));
+  assert.equal(paid.status, 200); const delivered = await paid.json();
+  assert.equal(delivered.sources[0].data.title, "Alpha");
+  const replay = await fetch(`${merchant.base}${EXTRACT_BATCH_PATH}`, jsonPost(valid, { "payment-signature": payment }));
+  assert.equal(replay.status, 200);
+  assert.equal(replay.headers.get("x-payment-replay"), "hit");
+  assert.deepEqual(await replay.json(), delivered);
+  const demand = await fetch(`${merchant.base}/v0/commerce-demand.json?days=90`).then((r) => r.json());
+  await stopChild(merchant.child); merchant = null;
+  const { raw, http } = await readEvents(dataDir);
+  const refused = http.filter((row) => row.extractBatchInputRefusalCode);
+  const expected = cases.flatMap(([, code, stage, bodyType, urlsType, urlsCount]) => [false, true].map((paymentPresent) => ({
+    code, shape: { stage, bodyType, urlsType, urlsCount }, paymentPresent,
+  })));
+  assert.deepEqual(refused.slice(0, expected.length).map((row) => ({ code: row.extractBatchInputRefusalCode,
+    shape: row.extractBatchInputRefusalShape, paymentPresent: row.paymentPresent })), expected);
+  assert.equal(refused.length, expected.length + 3, "three extra origin populations stay retained");
+  for (const row of http.filter((row) => !row.extractBatchInputRefusalCode)) {
+    assert.equal(Object.hasOwn(row, "extractBatchInputRefusalShape"), false);
+  }
+  assert.equal(http.some((row) => row.method === "DELETE" || row.method === "PUT"), false);
+  const snapshot = await createCommerceTelemetry({ dataDir }).snapshot();
+  const byShape = {};
+  for (const { code, shape } of expected) {
+    const key = `${code}:${shape.stage}:${shape.bodyType}:${shape.urlsType}:${shape.urlsCount ?? "none"}`;
+    byShape[key] = (byShape[key] || 0) + 1;
+  }
+  for (const summary of [snapshot.extractBatchInputRefusals, demand.extractBatchInputRefusals]) {
+    assert.equal(summary.knownShapeEvents, expected.length);
+    assert.equal(summary.unknownShapeEvents, 0);
+    assert.equal(summary.shapeCoverage, 1);
+    assert.deepEqual({ ...summary.byShape }, byShape);
+    assert.equal(summary.usefulness, "unknown");
+    assert.equal(summary.windowCoverage, "unknown_for_full_window");
+  }
+  const clipped = await createCommerceTelemetry({ dataDir, externalSince: new Date(Date.now() + 60_000).toISOString() }).snapshot();
+  assert.equal(clipped.extractBatchInputRefusals.knownShapeEvents, 0);
+  assert.equal(clipped.extractBatchInputRefusals.shapeCoverage, null);
+  assert.equal(facilitator.calls.verify, 1);
+  assert.equal(facilitator.calls.settle, 1);
+  assert.equal((await readFile(path.join(dataDir, "source-fetches.log"), "utf8")).trim(), valid.urls[0]);
+  assert.equal(raw.includes(marker), false);
+  assert.equal(JSON.stringify(demand).includes(marker), false);
+  for (const file of (await readdir(dataDir)).filter((name) => name.endsWith(".ndjson") || name.endsWith(".json"))) {
+    assert.equal((await readFile(path.join(dataDir, file), "utf8")).includes(marker), false, file);
+  }
+  t.diagnostic(JSON.stringify({ observedHttpShapes: byShape, normalSummary: demand.extractBatchInputRefusals,
+    verify: facilitator.calls.verify, settle: facilitator.calls.settle, sourceFetches: 1, replay: "hit" }));
+});
+
+test("mounted shape appends and reads retain bounded rotations, restart and recovery", { timeout: 90_000 }, async (t) => {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "batch-shape-rotation-"));
+  const facilitator = await startFakeFacilitator();
+  let merchant;
+  t.after(async () => {
+    if (merchant) await stopChild(merchant.child);
+    await facilitator.close();
+    await rm(dataDir, { recursive: true, force: true });
+  });
+  const start = async () => { merchant = await startMerchant({ dataDir, facilitatorUrl: facilitator.url }); };
+  const summary = async () => {
+    const response = await fetch(`${merchant.base}/v0/commerce-demand.json?days=90`);
+    assert.equal(response.status, 200); return response.json();
+  };
+  const refuse = async (body) => {
+    const response = await fetch(`${merchant.base}${EXTRACT_BATCH_PATH}`, jsonPost(body));
+    assert.equal(response.status, 400); assert.equal((await response.json()).code, "urls_invalid");
+  };
+  await start();
+  await Promise.all(Array.from({ length: 12 }, (_, index) => Promise.all([
+    refuse(index % 2 ? { urls: [] } : { urls: null }), summary().then((value) => {
+      assert.equal(value.integrityStatus, "ok");
+      assert.equal(value.extractBatchInputRefusals.unknownShapeEvents, 0);
+      assert.equal(Object.values(value.extractBatchInputRefusals.byShape).reduce((a, b) => a + b, 0), value.extractBatchInputRefusals.knownShapeEvents);
+    }),
+  ])));
+  assert.equal((await summary()).extractBatchInputRefusals.knownShapeEvents, 12);
+  // Exercise the actual 5 MiB writer threshold using owned whitespace padding,
+  // never changing a retained event or production file. This is a control, not
+  // evidence of continuous observation; ROOT1595's contract stays unchanged.
+  const journal = path.join(dataDir, "commerce-events.ndjson");
+  for (let index = 0; index < 5; index += 1) {
+    const size = (await stat(journal)).size;
+    const padding = 5 * 1024 * 1024 - size;
+    assert.ok(padding > 0);
+    await appendFile(journal, " ".repeat(padding - 1) + "\n");
+    await refuse(index % 2 ? { urls: [] } : { urls: null });
+    assert.equal((await summary()).integrityStatus, "ok");
+  }
+  const rotated = await summary();
+  const retained = rotated.extractBatchInputRefusals.knownShapeEvents;
+  assert.ok(retained > 0 && retained < 17, "bounded rotation must discard old shapes");
+  const segments = (await readdir(dataDir)).filter((name) => /^commerce-events(?:\.\d+)?\.ndjson$/.test(name));
+  assert.equal(segments.length, 4);
+  assert.equal(rotated.coverage.prospectiveTail.segmentCount, 4);
+  await stopChild(merchant.child); merchant = null;
+  await start();
+  const restarted = await summary();
+  assert.equal(restarted.extractBatchInputRefusals.knownShapeEvents, retained);
+  assert.deepEqual(restarted.extractBatchInputRefusals.byShape, rotated.extractBatchInputRefusals.byShape);
+  await appendFile(journal, '{"sk_live_ROOT1862_CORRUPT_SECRET":BROKEN}\n');
+  await refuse({ urls: "sk_live_ROOT1862_RECOVERY_SECRET" });
+  const recovered = await summary();
+  assert.equal(recovered.integrityStatus, "unusable_records_present");
+  assert.equal(recovered.extractBatchInputRefusals.knownShapeEvents, retained + 1);
+  assert.equal(recovered.extractBatchInputRefusals.unknownShapeEvents, 0);
+  assert.equal(recovered.extractBatchInputRefusals.windowCoverage, "unknown_for_full_window");
+  assert.equal(JSON.stringify(recovered).includes("sk_live_ROOT1862_"), false);
+  assert.equal((await readFile(journal, "utf8")).includes("sk_live_ROOT1862_RECOVERY_SECRET"), false);
+  assert.equal(facilitator.calls.verify, 0);
+  assert.equal(facilitator.calls.settle, 0);
+  t.diagnostic(JSON.stringify({ concurrentRefusals: 12, rotations: 5, retainedSegments: segments.length,
+    retainedShapeEvents: retained, restartShapeEvents: restarted.extractBatchInputRefusals.knownShapeEvents,
+    recoveredShapeEvents: recovered.extractBatchInputRefusals.knownShapeEvents,
+    recoveryIntegrity: recovered.integrityStatus }));
 });
